@@ -1,0 +1,22 @@
+<2012-02-01 Wed 17:02>
+
+Skype chat with Gabriel.
+
+Suggested that he should start with computation of the demag field, following Andreas Thesis. 
+
+Explained physical role of demagnetisation field.
+
+Initially (before we meet in Southampton next week) to look at simplified computation where space is meshed outside the magnetic body, and we use Dirichlet boundary conditions at the boundary of the meshed region.
+
+Suggest to use a region that is about 5 times as large as the central magnetic body.
+
+Suggest to start with spherical magnetic body and uniform magnetisation in sphere as the result is analytically known. An example is in the nmag manual at http://nmag.soton.ac.uk/nmag/0.2/manual/html/example1/doc.html
+
+Andreas thesis is in shared Dropbox/finmag folder, relevant section is 2.2.
+
+Hopefully, this is a task that is sufficiently simple to start from, yet of great importance for the whole project.
+
+Plan to review who is doing what when we get together next week.
+
+
+
