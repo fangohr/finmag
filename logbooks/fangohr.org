@@ -1,4 +1,4 @@
-<2012-02-01 Wed 17:02>
+* <2012-02-01 Wed 17:02>
 
 Skype chat with Gabriel.
 
@@ -18,5 +18,13 @@ Hopefully, this is a task that is sufficiently simple to start from, yet of grea
 
 Plan to review who is doing what when we get together next week.
 
+* <2012-02-02 Thu> Discussion with Marijan about Individual Research Project
 
+Will attempt to find Skyrmion state (ignoring demagnetisation fields initially). Will need to find and implement Dzyaloshinsky-Moriya term, and use together with LLG time integration and exchange (and maybe anisotropy or applied field) exchange.
+
+* <2012-02-02 Thu> Discussion with Weiwei about Individual Research Project
+
+Will attempt to implement the Baryakhter (B) damping term, and study its effect on dynamics (spin wave dynamics, spectra, dispersion relation?) in comparison to conventional damping term.
+
+The B damping term is likely to introduce a new (pico second?) time scale into the problem. Efficient time integration (using CVODE, say) will be crucial.
 
