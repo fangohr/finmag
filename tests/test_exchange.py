@@ -1,10 +1,12 @@
 import numpy
 import dolfin
+import pytest
 from scipy.integrate import odeint
 
 from ..src.llg import LLG
 from ..src.helpers import make_vectors_function,angle
 
+@pytest.mark.xfail
 def test_all_orientations():
 
   length = 20e-9 # m
