@@ -2,13 +2,13 @@ import dolfin as df
 import numpy
 
 interval = df.UnitInterval(3)
-V = df.FunctionSpace(interval, "Lagrange", 1)
+V = df.VectorFunctionSpace(interval, "Lagrange", 1, dim=3)
 
 M    = df.Function(V)
 #M.assign(df.Expression("3 * x[0]"))
-#M.assign(df.Constant(1))
-m = numpy.array([0., 1., 0., 0.])
-M.vector()[:] = m
+M.assign(df.Constant((1, 1, 1)))
+#m = numpy.array([0., 1., 0., 0.])
+#M.vector()[:] = m
 
 H_ex = df.TrialFunction(V)
 v    = df.TestFunction(V)
