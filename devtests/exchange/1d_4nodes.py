@@ -24,9 +24,9 @@ df.solve(A, H_ex.vector(), b)
 
 print "M"
 print M.vector().array()
-print "\nMatrix A(H_ex, v)"
-print numpy.matrix(A.array())
-print "\ninverse of A(H_ex, v)"
-print numpy.matrix(A.array()).I
+print "\nMatrix b(v)"
+print numpy.matrix(b.array())
+print "\ninverse of b(v)"
+print numpy.matrix(b.array()).I
 print "\nH_ex"
 print H_ex.vector().array()
