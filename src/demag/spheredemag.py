@@ -1,6 +1,8 @@
 "The demagnetisation field for a unit sphere is computed given a Mag field"
 "(1,0,0) and an approximation of the infinite domain"
 
+#At the moment the boundary of the magnetic core is not calculated properly, causing a bad solution
+
 __author__ = "Gabriel Balaban"
 __copyright__ = __author__
 __license__  = "GNU GPL Version 3 or any later version"
