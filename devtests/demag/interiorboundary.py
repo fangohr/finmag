@@ -12,13 +12,14 @@ class InteriorBoundary():
         self.boundaries = []
 
 #TODO add the possibility of several subdomains        
-    def create_boundary(self,submesh):
+    def create_boundary(self,subdomain):
         #Compute FSI boundary and orientation markers on Omega
+        self.mesh.init()
         newboundary = FacetFunction("uint",self.mesh,self.D)
         neworientation= self.mesh.data().create_mesh_function("facet_orientation", self.D - 1)
         neworientation.set_all(0)
         newboundary.set_all(0)
-        self.mesh.init(self.D - 1, self.D)
+        #self.mesh.init(self.D - 1, self.D)
         for facet in facets(self.mesh):
             # Skip facets on the boundary
             cells = facet.entities(self.D)
@@ -37,12 +38,13 @@ class InteriorBoundary():
             p1 = cell1.midpoint()
 
             # Check if the points are inside
-            p0_inside = submesh.intersected_cell(p0)
-            p1_inside = submesh.intersected_cell(p1)
-            [translate(p) for p in [p0_inside,p1_inside]]
-            
-##            p0_inside = Subdomain.inside(p0, False)
-##            p1_inside = Subdomain.inside(p1, False)
+##            p0_inside = submesh.intersected_cell(p0)
+##            p1_inside = submesh.intersected_cell(p1)
+##            p0_inside = translate(p0_inside)
+##            p1_inside = translate(p1_inside)
+
+            p0_inside = subdomain.inside(p0, False)
+            p1_inside = subdomain.inside(p1, False)
             # Just set c0, will be set only for facets below
             neworientation[facet.index()] = c0
 
@@ -67,7 +69,7 @@ class InteriorBoundary():
         self.orientation += [neworientation]
 
 def create_intbound(mesh,subdomain):
-    #Automatically generates the boundary and return the facet function
+    #Automatically generates the boundary and returns the facet function
     # '2' is the interior boundary
     intbound = InteriorBoundary(mesh)
     intbound.create_boundary(subdomain)
@@ -80,6 +82,7 @@ def translate(p):
         p = False
     else:
         p = True
+    return p
 
 class TestProblem():
     def __init__(self):
@@ -104,8 +107,12 @@ class TestProblem():
 if __name__ == "__main__":
     problem = TestProblem()
     intbound = InteriorBoundary(problem.mesh)
-    intbound.create_boundary(problem.submesh)
-
+    intbound.create_boundary(problem.Structure())
+    intfacet = intbound.boundaries[0]
+    intboundmesh = SubMesh(problem.mesh,intfacet,2)
+    plot(problem.mesh)
+    interactive()
+    
     N_S = FacetNormal(problem.submesh)
     V = FunctionSpace(problem.mesh,"CG",1)
     u = TrialFunction(V)
@@ -128,5 +135,3 @@ if __name__ == "__main__":
     solve(A,sol.vector(),F,"lu")
     plot(sol)
     interactive()
-
-    

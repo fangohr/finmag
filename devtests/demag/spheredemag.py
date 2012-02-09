@@ -37,7 +37,7 @@ dxC = dx(1)
 ###################################
 intbound = InteriorBoundary(mesh)
 coremesh = SubMesh(mesh,corefunc,1)
-intbound.create_boundary(coremesh)
+intbound.create_boundary(MagCore())
 intfacet = intbound.boundaries[0]
 ##coreboundfacets = create_intbound(mesh,MagCore())
 N = FacetNormal(coremesh)
