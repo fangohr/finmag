@@ -36,15 +36,15 @@ dxC = dx(1)
 #Define the magnetic boundary layer
 ###################################
 intbound = InteriorBoundary(mesh)
-intbound.create_boundary(MagCore())
+coremesh = SubMesh(mesh,corefunc,1)
+intbound.create_boundary(coremesh)
 intfacet = intbound.boundaries[0]
 ##coreboundfacets = create_intbound(mesh,MagCore())
-coremesh = SubMesh(mesh,corefunc,1)
 N = FacetNormal(coremesh)
 dSC = dS(2)
 
 corebound = SubMesh(mesh,intfacet,2)
-plot(coremesh)
+plot(corebound)
 interactive()
 
 #Forms for Poisson Equation

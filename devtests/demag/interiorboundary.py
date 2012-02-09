@@ -4,24 +4,6 @@
 #TODO Expand the class InteriorBoundary so it can handle multiple Boundaries 
 from dolfin import *
 
-class TestProblem():
-    def __init__(self):
-        self.mesh = Rectangle(0.0,0.0,4,4,4,4)
-        #plot(self.mesh)
-        self.cell_domains = MeshFunction("uint", self.mesh, 2)
-        class Structure(SubDomain):
-            def inside(self, x, on_boundary):
-                return x[1] < 2 + DOLFIN_EPS
-        
-        #Create Submesh
-        self.Structure = Structure
-        self.cell_domains.set_all(0)
-        subdomain0 = Structure()
-        subdomain0.mark(self.cell_domains,1)
-        self.submesh = SubMesh(self.mesh,self.cell_domains,1)
-        #plot(submesh)
-
-
 class InteriorBoundary():
     def __init__(self,mesh):
         self.D = mesh.topology().dim()
@@ -30,7 +12,7 @@ class InteriorBoundary():
         self.boundaries = []
 
 #TODO add the possibility of several subdomains        
-    def create_boundary(self,Subdomain):
+    def create_boundary(self,submesh):
         #Compute FSI boundary and orientation markers on Omega
         newboundary = FacetFunction("uint",self.mesh,self.D)
         neworientation= self.mesh.data().create_mesh_function("facet_orientation", self.D - 1)
@@ -55,8 +37,12 @@ class InteriorBoundary():
             p1 = cell1.midpoint()
 
             # Check if the points are inside
-            p0_inside = Subdomain.inside(p0, False)
-            p1_inside = Subdomain.inside(p1, False)
+            p0_inside = submesh.intersected_cell(p0)
+            p1_inside = submesh.intersected_cell(p1)
+            [translate(p) for p in [p0_inside,p1_inside]]
+            
+##            p0_inside = Subdomain.inside(p0, False)
+##            p1_inside = Subdomain.inside(p1, False)
             # Just set c0, will be set only for facets below
             neworientation[facet.index()] = c0
 
@@ -88,14 +74,39 @@ def create_intbound(mesh,subdomain):
     intfacet = intbound.boundaries[0]
     return intfacet
 
-#Test Case
+def translate(p):
+    #Translate the result of the Mesh.intersected_cells method into a true or false statement
+    if p == -1:
+        p = False
+    else:
+        p = True
+
+class TestProblem():
+    def __init__(self):
+        self.mesh = Rectangle(0.0,0.0,4,4,4,4)
+        #plot(self.mesh)
+        self.cell_domains = MeshFunction("uint", self.mesh, 2)
+        class Structure(SubDomain):
+            def inside(self, x, on_boundary):
+                return x[1] < 2 + DOLFIN_EPS
+        
+        #Create Submesh
+        self.Structure = Structure
+        self.cell_domains.set_all(0)
+        subdomain0 = Structure()
+        subdomain0.mark(self.cell_domains,1)
+        self.submesh = SubMesh(self.mesh,self.cell_domains,1)
+        #plot(submesh)
+
+#Test Case for the module
+#Solve a test Laplace Equation with a Neumann boundary on the interior
+#Changing the F should change the solution
 if __name__ == "__main__":
     problem = TestProblem()
     intbound = InteriorBoundary(problem.mesh)
-    intbound.create_boundary(problem.Structure())
+    intbound.create_boundary(problem.submesh)
 
     N_S = FacetNormal(problem.submesh)
-    #Create a test Laplace Equation with a Neumann boundary on the interior
     V = FunctionSpace(problem.mesh,"CG",1)
     u = TrialFunction(V)
     v = TestFunction(V)
@@ -103,6 +114,7 @@ if __name__ == "__main__":
     A = inner(grad(u),grad(v))*dx(1)
     vec = Constant((3,1))
     F = (dot(vec,N_S)*v)('-')*dS(2)
+   ## F = sol*v*dx  #If sol is initial this form is 0 when assembled 
     A = assemble(A,cell_domains=problem.cell_domains,interior_facet_domains=intbound.boundaries[0])
     F = assemble(F,cell_domains=problem.cell_domains,interior_facet_domains=intbound.boundaries[0])
     #Dirichlet BC
