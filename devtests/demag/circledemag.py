@@ -1,4 +1,4 @@
-"The demagnetisation field for a unit sphere is computed given a Mag field"
+"The demagnetisation field for a unit cicle is computed given a Mag field"
 "(1,0,0) and an approximation of the infinite domain"
 
 #The boundary of the magnetic core seems to be calculated fine. The number of facets found is the same
@@ -12,10 +12,10 @@ __license__  = "GNU GPL Version 3 or any later version"
 from dolfin import *
 from interiorboundary import *
 import math
-mesh = UnitSphere(10)
-print mesh.coordinates()
 import numpy as np
 np.set_printoptions(edgeitems= 200)
+
+mesh = UnitCircle(20)
 
 V = FunctionSpace(mesh,"CG",2)
 VV = VectorFunctionSpace(mesh,"CG",2)
@@ -24,15 +24,15 @@ v = TrialFunction(V)
 phi = Function(V)
 
 #Define the magnetisation
-M = interpolate(Expression(("1","0","0")),VV)
+M = interpolate(Expression(("1","0")),VV)
 
 #Define the Magnetic domain
 r = 0.2 #Radius of magnetic Core
 class MagCore(SubDomain):
     def inside(self, x, on_boundary):
-        return x[0]*x[0] + x[1]*x[1] + x[2]*x[2] < 0.04 + DOLFIN_EPS
+        return x[0]*x[0] + x[1]*x[1] < r*r + DOLFIN_EPS
     
-corefunc = MeshFunction("uint", mesh, 3)
+corefunc = MeshFunction("uint", mesh, 2)
 corefunc.set_all(0)
 coredom = MagCore()  
 coredom.mark(corefunc,1)
@@ -56,7 +56,7 @@ print "Number of facets in submesh", coreboundmesh.num_cells()
 #Forms for Poisson Equation
 a = dot(grad(u),grad(v))*dx
 f = (-div(M)*v)*dxC  #Source term in core
-f += (-dot(M,N)*v)('-')*dSC       #Neumann condition on core boundary
+f += (dot(M,N)*v)*dSC       #Neumann condition on core boundary
 
 #Dirichlet BC at our approximate boundary
 dbc = DirichletBC(V,0.0,"on_boundary")
@@ -83,18 +83,18 @@ print "Volume of magnetic core using generated boundary", vol
 ##volform = one*dx
 ##vol = assemble(volform)
 ##print "Volume of magnetic core usig boundary of submesh", vol
-print "Exact surface area of a sphere with same radius as magnetic core", 4*math.pi*r*r
+print "Exact surface area of a sphere with same radius as magnetic core", 2*math.pi*r
 
 ###############################
 #Post process
 ##############################
 ##demagfile = File("demag.pvd")
 ##demagfile << sol
-print "value of Demag field on the boundary point (1,0,0)"
-print "x", sol[0]((1,0,0))
-print "y", sol[1]((1,0,0))
-print "z", sol[2]((1,0,0))
-print "somewhere else", sol[0]((0.1,0,0))
+##print "value of Demag field on the boundary point (1,0,0)"
+##print "x", sol[0]((1,0,0))
+##print "y", sol[1]((1,0,0))
+##print "z", sol[2]((1,0,0))
+##print "somewhere else", sol[0]((0.1,0,0))
 
 plot(phi)
 interactive()
