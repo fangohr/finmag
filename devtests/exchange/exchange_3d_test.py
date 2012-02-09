@@ -21,7 +21,7 @@ def compute_b(m):
 
     H_ex = df.Function(V)
     df.solve(A, H_ex.vector(), b)
-    return b.array()
+    return H_ex.vector().array()
 
 def rotate(v, a):
     return np.array([
@@ -31,7 +31,8 @@ def rotate(v, a):
     ])
 
 for m in np.eye(N*3):
-    print compute_b(m)
+    #print compute_b(m)
+    pass
 
 def cross(a, b):
     assert a.shape[0] == 3
@@ -51,4 +52,4 @@ b = compute_b(m)
 m.shape = (3, -1)
 b.shape = (3, -1)
 
-print cross(m, b)
+print np.round(cross(m, b),decimals=2)
