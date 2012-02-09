@@ -12,7 +12,7 @@ class InteriorBoundary():
         self.boundaries = []
 
 #TODO add the possibility of several subdomains        
-    def create_boundary(self,subdomain):
+    def create_boundary(self,submesh):
         #Compute FSI boundary and orientation markers on Omega
         self.mesh.init()
         newboundary = FacetFunction("uint",self.mesh,self.D)
@@ -20,6 +20,7 @@ class InteriorBoundary():
         neworientation.set_all(0)
         newboundary.set_all(0)
         #self.mesh.init(self.D - 1, self.D)
+        c = 0
         for facet in facets(self.mesh):
             # Skip facets on the boundary
             cells = facet.entities(self.D)
@@ -38,13 +39,13 @@ class InteriorBoundary():
             p1 = cell1.midpoint()
 
             # Check if the points are inside
-##            p0_inside = submesh.intersected_cell(p0)
-##            p1_inside = submesh.intersected_cell(p1)
-##            p0_inside = translate(p0_inside)
-##            p1_inside = translate(p1_inside)
-
-            p0_inside = subdomain.inside(p0, False)
-            p1_inside = subdomain.inside(p1, False)
+            p0_inside = submesh.intersected_cell(p0)
+            p1_inside = submesh.intersected_cell(p1)
+            p0_inside = translate(p0_inside)
+            p1_inside = translate(p1_inside)
+            
+##            p0_inside = subdomain.inside(p0, False)
+##            p1_inside = subdomain.inside(p1, False)
             # Just set c0, will be set only for facets below
             neworientation[facet.index()] = c0
 
@@ -58,18 +59,30 @@ class InteriorBoundary():
             if p0_inside and not p1_inside:
                 newboundary[facet_index] = 2
                 neworientation[facet_index] = c1
+##                print "Found boundary facet"
+##                print "length of inside midpoint", length(p0.x(),p0.y(),p0.z())
+##                print "length of outside midpoint", length(p1.x(),p1.y(),p1.z())
+                c += 1
             elif p1_inside and not p0_inside:
                 newboundary[facet_index] = 2
                 neworientation[facet_index] = c0
+##                print "Found boundary facet"
+##                print "length of inside midpoint", length(p1.x(),p1.y(),p1.z())
+##                print "length of outside midpoint", length(p0.x(),p0.y(),p0.z())
+                c += 1
             elif p0_inside and p1_inside:
                 newboundary[facet_index] = 1
             else:
                 newboundary[facet_index] = 0
+        print "Number of boundary facets found manually", c
         self.boundaries += [newboundary]
         self.orientation += [neworientation]
 
+def length(x,y,z):
+    return sqrt(x*x + y*y + z*z)
+
 def create_intbound(mesh,subdomain):
-    #Automatically generates the boundary and returns the facet function
+    #Automatically generates the boundary and return the facet function
     # '2' is the interior boundary
     intbound = InteriorBoundary(mesh)
     intbound.create_boundary(subdomain)
@@ -83,7 +96,9 @@ def translate(p):
     else:
         p = True
     return p
-
+#######################################################################
+#Module Tests
+#######################################################################
 class TestProblem():
     def __init__(self):
         self.mesh = Rectangle(0.0,0.0,4,4,4,4)
@@ -101,17 +116,30 @@ class TestProblem():
         self.submesh = SubMesh(self.mesh,self.cell_domains,1)
         #plot(submesh)
 
+class TestProblemCube():
+    def __init__(self):
+        self.mesh = UnitCube(4,4,4)
+        #plot(self.mesh)
+        self.cell_domains = MeshFunction("uint", self.mesh, 3)
+        class Structure(SubDomain):
+            def inside(self, x, on_boundary):
+                return x[2] < 0.75 + DOLFIN_EPS
+        
+        #Create Submesh
+        self.Structure = Structure
+        self.cell_domains.set_all(0)
+        subdomain = Structure()
+        subdomain.mark(self.cell_domains,1)
+        self.submesh = SubMesh(self.mesh,self.cell_domains,1)
+
 #Test Case for the module
 #Solve a test Laplace Equation with a Neumann boundary on the interior
 #Changing the F should change the solution
 if __name__ == "__main__":
     problem = TestProblem()
     intbound = InteriorBoundary(problem.mesh)
-    intbound.create_boundary(problem.Structure())
+    intbound.create_boundary(problem.submesh)
     intfacet = intbound.boundaries[0]
-    intboundmesh = SubMesh(problem.mesh,intfacet,2)
-    plot(problem.mesh)
-    interactive()
     
     N_S = FacetNormal(problem.submesh)
     V = FunctionSpace(problem.mesh,"CG",1)
@@ -135,3 +163,5 @@ if __name__ == "__main__":
     solve(A,sol.vector(),F,"lu")
     plot(sol)
     interactive()
+
+    
