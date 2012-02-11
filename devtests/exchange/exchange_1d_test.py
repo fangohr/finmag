@@ -12,14 +12,15 @@ def compute_b(m):
     H_ex = df.TrialFunction(V)
     v = df.TestFunction(V)
     a = df.inner(H_ex, v) * df.dx
-    L = - df.inner(df.grad(M), df.grad(v)) * df.dx
+    n = df.FacetNormal(interval)
+    L = - df.inner(df.grad(M), df.grad(v)) * df.dx + df.grad(M)*n*v*df.ds
     A = df.assemble(a)
     b = df.assemble(L)
     H_ex = df.Function(V)
     df.solve(A, H_ex.vector(), b)
     return H_ex.vector().array()
 
-for m in np.eye(5):
-    print compute_b(m)
+#for m in np.eye(5):
+#    print compute_b(m)
 
-print "\n", compute_b(range(5))
+print "\n", compute_b([0,1,2,3,4])

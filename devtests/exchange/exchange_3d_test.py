@@ -2,7 +2,7 @@ import dolfin as df
 import numpy as np
 import math
 
-N = 5
+N = 6
 def compute_b(m):
     interval = df.UnitInterval(N-1)
     V = df.VectorFunctionSpace(interval, "Lagrange", 1, dim=3)
@@ -16,7 +16,8 @@ def compute_b(m):
     a = df.inner(H_ex, v) * df.dx
     A = df.assemble(a)
 
-    L = - df.inner(df.grad(M), df.grad(v)) * df.dx
+    n = df.FacetNormal(interval)
+    L = - df.inner(df.grad(M), df.grad(v)) * df.dx + df.inner(df.grad(M), v)*n*df.ds
     b = df.assemble(L)
 
     H_ex = df.Function(V)
