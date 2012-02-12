@@ -2,6 +2,12 @@ import dolfin as df
 import numpy as np
 import math
 
+def boundary1(x, on_boundary):
+    return x==[0.]
+
+def boundary2(x, on_boundary):
+    return x == [1.]
+
 N = 6
 def compute_b(m):
     interval = df.UnitInterval(N-1)
@@ -14,15 +20,13 @@ def compute_b(m):
     v    = df.TestFunction(V)
 
     a = df.inner(H_ex, v) * df.dx
-    A = df.assemble(a)
+    U = df.inner(df.grad(M), df.grad(M)) * df.dx
+    H_ex_form = df.derivative(U, M, v)
 
-    n = df.FacetNormal(interval)
-    L = - df.inner(df.grad(M), df.grad(v)) * df.dx + df.inner(df.grad(M), v)*n*df.ds
-    b = df.assemble(L)
+    V = df.assemble(df.dot(v, df.Constant([1,1,1])) * df.dx).array()
+    dU_dM = df.assemble(H_ex_form).array()
+    return dU_dM / V
 
-    H_ex = df.Function(V)
-    df.solve(A, H_ex.vector(), b)
-    return H_ex.vector().array()
 
 def rotate(v, a):
     return np.array([
