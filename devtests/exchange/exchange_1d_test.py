@@ -19,7 +19,11 @@ def compute_b(m):
     dU_dM = df.assemble(H_ex_form).array()
     return dU_dM/V
 
-#for m in np.eye(5):
-#    print compute_b(m)
+for m in np.eye(5):
+    print compute_b(m)
 
-print "\n", compute_b([0,1,2,3,4])
+print ""
+
+xs = [np.zeros(5), np.ones(5), [1,1,2,1,1], [1,2,1,1,1], [0,1,2,3,4]]
+for x in xs:
+    print "{0:<25} -> {1}".format(x, compute_b(x))
