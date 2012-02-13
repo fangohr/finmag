@@ -50,10 +50,6 @@ class LLG(object):
     def H_app(self, value):
         self._H_app = df.interpolate(df.Constant(value), self.V)
 
-    @property
-    def H_ex(self):
-        return self._H_ex.vector().array()
-    
     def load_c_code(self):
         __location__ = os.path.realpath(
             os.path.join(os.getcwd(), os.path.dirname(__file__)))
@@ -85,22 +81,26 @@ class LLG(object):
         if exchange_flag:
             self.setup_exchange()
         else:
-            self._H_ex = df.interpolate(df.Constant((0,0,0)), self.V)
+            self.H_ex = df.interpolate(df.Constant((0,0,0)), self.V).array()
 
     def setup_exchange(self):
-        self.ex = df.TrialFunction(self.V)
-        self.v = df.TestFunction(self.V)
-        a = df.inner(self.ex, self.v) * df.dx
-        self.A = df.assemble(a)
-        self._H_ex = df.Function(self.V)
-
         C = 1.3e-11 # J/m exchange constant
         mu0 = 4 * numpy.pi * 10**-7 # Vs/Am
-        ex_fac = - 2 * C / (mu0 * self.MS)
+        ex_fac = df.Constant(- 2 * C / (mu0 * self.MS))
 
-        self.L = ex_fac * df.inner(df.grad(self._M), df.grad(self.v)) * df.dx
+        ex = df.TrialFunction(self.V)
+        v = df.TestFunction(self.V)
+
+        a = df.inner(ex, v) * df.dx
+        U = - ex_fac * df.inner(df.grad(self._M), df.grad(self._M)) * df.dx
+        H_ex_form = df.derivative(U, self._M, v) 
+
+        V = df.assemble(df.dot(v, df.Constant([1,1,1])) * df.dx).array()
+        self.H_ex_matrix = df.assemble(H_ex_form).array() / V
+        print self.H_ex_matrix, self.H_ex_matrix.shape
+        self.H_ex = self.H_ex_matrix * self.M 
+        print self.H_ex, self.H_ex.shape
    
     def solve_exchange(self):
         if self.exchange_flag:
-            b = df.assemble(self.L)
-            df.solve(self.A, self._H_ex.vector(), b)
+            self.H_ex = self.H_ex_matrix * self.M
