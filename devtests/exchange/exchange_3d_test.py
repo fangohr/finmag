@@ -21,6 +21,7 @@ def compute_b(m):
 
     a = df.inner(H_ex, v) * df.dx
     U = df.inner(df.grad(M), df.grad(M)) * df.dx
+    print "Energy U=",df.assemble(U)
     H_ex_form = df.derivative(U, M, v)
 
     V = df.assemble(df.dot(v, df.Constant([1,1,1])) * df.dx).array()
