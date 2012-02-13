@@ -92,15 +92,12 @@ class LLG(object):
         v = df.TestFunction(self.V)
 
         a = df.inner(ex, v) * df.dx
-        U = - ex_fac * df.inner(df.grad(self._M), df.grad(self._M)) * df.dx
-        H_ex_form = df.derivative(U, self._M, v) 
+        U = ex_fac * df.inner(df.grad(self._M), df.grad(self._M)) * df.dx
+        self.H_ex_form = df.derivative(U, self._M, v) 
 
-        V = df.assemble(df.dot(v, df.Constant([1,1,1])) * df.dx).array()
-        self.H_ex_matrix = df.assemble(H_ex_form).array() / V
-        print self.H_ex_matrix, self.H_ex_matrix.shape
-        self.H_ex = self.H_ex_matrix * self.M 
-        print self.H_ex, self.H_ex.shape
+        self.vol = df.assemble(df.dot(v, df.Constant([1,1,1])) * df.dx).array()
+        self.H_ex = df.assemble(self.H_ex_form).array() / self.vol
    
     def solve_exchange(self):
         if self.exchange_flag:
-            self.H_ex = self.H_ex_matrix * self.M
+            self.H_ex = df.assemble(self.H_ex_form).array() / self.vol
