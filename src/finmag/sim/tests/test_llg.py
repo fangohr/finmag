@@ -1,7 +1,7 @@
 import numpy
 import dolfin
 from scipy.integrate import odeint
-from ..src.llg import LLG
+from finmag.sim.llg import LLG
 
 length = 20e-9 # m
 simplices = 10

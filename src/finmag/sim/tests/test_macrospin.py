@@ -2,7 +2,7 @@ import dolfin
 import numpy
 from scipy.integrate import odeint
 
-from ..src.llg import LLG
+from finmag.sim.llg import LLG
 
 """
 The analytical solution of the LLG equation for a constant

@@ -2,8 +2,8 @@ import numpy
 import dolfin
 from scipy.integrate import odeint
 
-from ..src.llg import LLG
-from ..src.helpers import make_vectors_function,angle
+from finmag.sim.llg import LLG
+from finmag.sim.helpers import make_vectors_function,angle
 
 TOLERANCE = 5e-10
 
