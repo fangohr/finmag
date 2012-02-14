@@ -10,21 +10,24 @@
 #ifndef __FINMAG_INCLUDES_H
 #define __FINMAG_INCLUDES_H
 
-#include <omp.h>
-
+// Standard C/C++ includes
 #include <cstring>
 #include <cmath>
 #include <cstdlib>
 
+// OpenMP
+#include <omp.h>
+
+// Boost includes
 #ifndef IDE_ERROR_BLOCK
 #include <boost/mpl/map.hpp>
 #include <boost/mpl/range_c.hpp>
 #include <boost/python.hpp>
 #include <boost/typeof/typeof.hpp>
 #include <boost/thread.hpp>
-// #include <boost/math/bindings/mpreal.hpp>
-#else
-#define static_assert (a, b)
 #endif
+
+// CVODE/Sundials
+#include <cvode/cvode.h>
 
 #endif
