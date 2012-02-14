@@ -18,7 +18,7 @@ V = VectorFunctionSpace(mesh, "CG", 1)
 K1 = Constant(K1)
 
 # Initial direction of the magnetic field.
-M = project(Constant((1,0,0)), V)
+M = project(Constant((0.5,0,0.5)), V)
 
 # Easy axes
 a = Constant((0,0,1))

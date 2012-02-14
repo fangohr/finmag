@@ -1,6 +1,8 @@
 ##Test of assembling and subdomains
 ##Gabriel Balaban
 
+#Note when restricting forms ('+') will be on the outside of the submesh,
+#and ('-') will be on the inside
 #TODO Expand the class InteriorBoundary so it can handle multiple Boundaries 
 from dolfin import *
 

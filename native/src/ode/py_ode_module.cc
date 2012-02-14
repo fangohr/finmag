@@ -12,7 +12,11 @@
 
 #include "util/np_array.h"
 
-BOOST_PYTHON_MODULE(finmag)
+#include "ode/sundials_cvode.h"
+
+BOOST_PYTHON_MODULE(ode)
 {
     initialise_np_array();
+
+    finmag::ode::register_sundials_cvode();
 }
