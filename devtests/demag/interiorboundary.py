@@ -15,10 +15,10 @@ class InteriorBoundary():
     def create_boundary(self,submesh):
         #Compute FSI boundary and orientation markers on Omega
         self.mesh.init()
-        newboundary = FacetFunction("uint",self.mesh,self.D)
+        newboundfunc = MeshFunction("uint",self.mesh,self.D-1)
         neworientation= self.mesh.data().create_mesh_function("facet_orientation", self.D - 1)
         neworientation.set_all(0)
-        newboundary.set_all(0)
+        newboundfunc.set_all(0)
         #self.mesh.init(self.D - 1, self.D)
         c = 0
         for facet in facets(self.mesh):
@@ -57,27 +57,26 @@ class InteriorBoundary():
             # Look for points where exactly one is inside the Subdomain
             facet_index = facet.index()
             if p0_inside and not p1_inside:
-                newboundary[facet_index] = 2
+                newboundfunc[facet_index] = 2
                 neworientation[facet_index] = c1
-##                print "Found boundary facet"
-##                print "length of inside midpoint", length(p0.x(),p0.y(),p0.z())
-##                print "length of outside midpoint", length(p1.x(),p1.y(),p1.z())
                 c += 1
             elif p1_inside and not p0_inside:
-                newboundary[facet_index] = 2
+                newboundfunc[facet_index] = 2
                 neworientation[facet_index] = c0
-##                print "Found boundary facet"
-##                print "length of inside midpoint", length(p1.x(),p1.y(),p1.z())
-##                print "length of outside midpoint", length(p0.x(),p0.y(),p0.z())
                 c += 1
             elif p0_inside and p1_inside:
-                newboundary[facet_index] = 1
+                newboundfunc[facet_index] = 1
             else:
-                newboundary[facet_index] = 0
+                newboundfunc[facet_index] = 0
         print "Number of boundary facets found manually", c
-        self.boundaries += [newboundary]
+        boundmesh = BoundaryMesh(submesh)
+        M = boundmesh.num_cells()
+##This test should be moved to an external test suite as it only makes sense if the submesh is completely contained in the rest of the mesh
+##        assert c == M, "Internal Error in Interiorboundary. c=%d != M=%d" % (c,M)
+        self.boundaries += [newboundfunc]
         self.orientation += [neworientation]
 
+#Used to check that points were inside or outside a sphere
 def length(x,y,z):
     return sqrt(x*x + y*y + z*z)
 
@@ -163,5 +162,3 @@ if __name__ == "__main__":
     solve(A,sol.vector(),F,"lu")
     plot(sol)
     interactive()
-
-    
