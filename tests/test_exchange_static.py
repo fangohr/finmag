@@ -1,6 +1,5 @@
 import numpy
 import dolfin
-import pytest
 from scipy.integrate import odeint
 
 from ..src.llg import LLG
