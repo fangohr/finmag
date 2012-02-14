@@ -38,9 +38,15 @@ def angles_after_a_nanosecond(initial_M, pins=[]):
 def test_all_orientations_without_pinning():
     for M0 in possible_orientations:
         angles = angles_after_a_nanosecond(M0)
+        print angles
         assert angles.max() < TOLERANCE
 
 def test_all_orientations_with_pinning():
     for M0 in possible_orientations:
         angles = angles_after_a_nanosecond(M0, [0, 10])
+        print angles
         assert abs(angles.max() - angles.min()) < TOLERANCE
+
+if __name__== "__main__":
+    test_all_orientations_with_pinning()
+    test_all_orientations_without_pinning()
