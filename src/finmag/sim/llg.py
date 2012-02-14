@@ -65,7 +65,7 @@ class LLG(object):
     
     def solve(self):
         if self.exchange_flag:
-            self.solve_exchange()
+            self.H_ex = self.exchange.compute()
         self.update_H_eff()
 
         status, dMdt = self._solve(self.alpha, self.gamma, self.MS, self.c,
@@ -86,6 +86,3 @@ class LLG(object):
         else:
             zero = df.Constant((0, 0, 0))
             self.H_ex = df.interpolate(zero, self.V).vector().array()
-
-    def solve_exchange(self):
-        self.H_ex = self.exchange.compute()
