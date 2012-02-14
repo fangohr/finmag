@@ -1,6 +1,7 @@
 from dolfin import *
 from scipy.integrate import ode
 from numpy import linspace
+from values import c, M0
 
 set_log_level(21)
 
@@ -16,14 +17,13 @@ v = TestFunction(V)
 alpha = 0.5
 gamma = 2.211e5
 p = Constant(gamma/(1 + alpha**2))
-c = Constant(1e10)
+c = c()
 
 # Applied field.
 H = Constant((0, 1e5, 0))
 
 # Initial direction of the magnetic field.
-Ms = 8e5
-M0 = Constant((Ms, 0, 0))
+Ms, M0 = M0()
 M = Function(V)
 M.assign(M0)
 

@@ -1,10 +1,10 @@
 from dolfin import *
 from scipy.integrate import odeint
 from numpy import linspace
+from values import c, M0
 
 set_log_level(21)
 
-counter = 0
 m = 1e-5
 mesh = Box(0,m,0,m,0,m,1,1,1)
 
@@ -17,14 +17,13 @@ v = TestFunction(V)
 alpha = 0.5
 gamma = 2.211e5
 p = Constant(gamma/(1 + alpha**2))
-c = Constant(1e10)
+c = c()
 
 # Applied field.
 H = Constant((0, 1e5, 0))
 
 # Initial direction of the magnetic field.
-Ms = 8e5
-M0 = Constant((Ms, 0, 0))
+Ms, M0 = M0()
 M = Function(V)
 M.assign(M0)
 
@@ -36,7 +35,9 @@ L = inner((-p*cross(M,H)
 
 # Time derivative of the magnetic field.
 dM = Function(V)
+J = derivative(L, M)
 
+counter = 0
 def f(y, t):
     global counter
     counter += 1
@@ -44,10 +45,9 @@ def f(y, t):
     solve(a==L, dM)
     return dM.vector().array()
 
-def j(y, t):
-    J = derivative(L, M)
-    J = assemble(J)
-    return J.array() 
+def j(y, t): 
+    Jac = assemble(J)
+    return Jac.array() 
 
 ts = linspace(0, 1e-9, 100)
 y0 = M.vector().array()

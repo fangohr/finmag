@@ -2,3 +2,12 @@ fangohr: Still testing ...
 2012-02-12 21:32:46 fangohr: And more testing.
 2012-02-12 21:33:40 fangohr: Working on logging this session automatically.
 2012-02-12 21:42:44 fangohr: If all goes well, then this note will be auto-committed tonight to the mercurial repository.
+2012-02-13 09:19:35 HansFangohr: Morning everybody.
+2012-02-13 11:24:25 ww1g11: Hello, this is Weiwei.
+2012-02-13 11:24:52 HansFangohr: Yuuhouu, well done Weiwei :)
+2012-02-13 12:06:41 HansFangohr: Anybody up for lunch? When? 12:30? 13:00?
+2012-02-13 12:46:53 mb8g11: 13:00 is good.
+2012-02-13 12:54:14 HansFangohr: Okay, let's make it so.
+2012-02-13 12:54:55 andersej: I'll join!
+2012-02-13 16:31:45 mb8g11: How can I make sure if I work on a matrix or a vector?
+2012-02-13 17:14:43 HansFangohr: If I understand the question correctly, and this is about numpy.arrays, you can use the 'shape' attribute of an array to distingish them.
