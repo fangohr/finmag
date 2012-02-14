@@ -22,13 +22,13 @@ h = 1.0/n
 
 V = FunctionSpace(mesh,"CG",1)
 L = FunctionSpace(mesh,"CG",1)
-W = MixedFunctionSpace((V,L))
-##VV = VectorFunctionSpace(mesh,"CG",2)
+W = MixedFunctionSpace((V,V))
 u0,u1 = TestFunctions(W)
 v0,v1 = TrialFunctions(W)
 sol = Function(W) 
+phi0 = Function(V)
 phi1 = Function(V)
-phi2 = Function(L)
+phitot = Function(V)
 
 #Define the magnetisation
 M = interpolate(Expression("1"),V)
@@ -65,6 +65,7 @@ print "Submesh coordinates", coremesh.coordinates()
 jumpu = u1('-') - u0('+')
 avggradu = (grad(u1('-')) + grad(u0('+')))*0.5
 jumpv = (v1('-') - v0('+'))
+avgv = (v1('-') + v0('+'))*0.5
 avggradv = (grad(v1('-')) + grad(v0('+')))*0.5
 
 #Forms for Poisson with Nitsche Method
@@ -73,7 +74,7 @@ a1 = dot(grad(u1),grad(v1))*dx(1) #Core
 
 #right hand side
 f = (div(M)*v1)*dx(1)   #Source term in core
-
+f += (dot(M('-'),N('+'))*avgv )*dSC  #Presribed outer normal derivative
 #Cross terms on the interior boundary
 c = (-dot(avggradu,N('+'))*jumpv - dot(avggradv,N('+'))*jumpu + gamma*(1/h)*jumpu*jumpv)*dSC  
 
@@ -94,15 +95,17 @@ A.ident_zeros()
 ##print F.array()
 ##md.diagnose(A.array(),"Jacobian")
 solve(A, sol.vector(),F)
-solphi1,solphi2 = sol.split()
+solphi0,solphi1 = sol.split()
 
 ##print "Lagrange mult DOFS", phi.vector().array()
 #demag = project(grad(phi),VV)
 ##print "Solution DOFS", phi.vector().array()
+phi0.assign(solphi0)
+plot(phi0, title = "phi0")
 phi1.assign(solphi1)
 plot(phi1, title = "phi1")
-phi2.assign(solphi2)
-plot(phi2, title = "phi2")
+phitot = phi0 + phi1
+plot(phitot, title = "phi total")
 interactive()
 
 
