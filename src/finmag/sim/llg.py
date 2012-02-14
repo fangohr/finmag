@@ -83,7 +83,6 @@ class LLG(object):
         self.exchange_flag = exchange_flag
         if exchange_flag:
             self.exchange = Exchange(self.V, self._M, self.C, self.MS)
-            self.H_ex = self.exchange.compute()
         else:
             zero = df.Constant((0, 0, 0))
             self.H_ex = df.interpolate(zero, self.V).vector().array()
