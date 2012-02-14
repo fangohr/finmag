@@ -48,5 +48,7 @@ def test_all_orientations_with_pinning():
         assert abs(angles.max() - angles.min()) < TOLERANCE
 
 if __name__== "__main__":
-    test_all_orientations_with_pinning()
+    print "without pinning"
     test_all_orientations_without_pinning()
+    print "with pinning"
+    test_all_orientations_with_pinning()
