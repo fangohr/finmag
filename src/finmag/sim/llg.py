@@ -2,6 +2,7 @@ import dolfin as df
 import instant
 import os
 import numpy
+from finmag.sim.exchange import Exchange
 
 class LLG(object):
 
@@ -12,6 +13,7 @@ class LLG(object):
         self.alpha = 0.5
         self.gamma = 2.211e5 # m/(As)
         self.c = 1e12 # 1/s numerical scaling correction
+        self.C = 1.3e-11 # J/m exchange constant
 
         self.MS = 8.6e5 # A/m
         self.H_app = (0, 0, 0)
@@ -62,7 +64,8 @@ class LLG(object):
         return instant.inline_with_numpy(c_code, arrays = args)
     
     def solve(self):
-        self.solve_exchange()
+        if self.exchange_flag:
+            self.solve_exchange()
         self.update_H_eff()
 
         status, dMdt = self._solve(self.alpha, self.gamma, self.MS, self.c,
@@ -79,26 +82,11 @@ class LLG(object):
     def setup(self, exchange_flag=True):
         self.exchange_flag = exchange_flag
         if exchange_flag:
-            self.setup_exchange()
+            self.exchange = Exchange(self.V, self._M, self.C, self.MS)
+            self.H_ex = self.exchange.compute()
         else:
             zero = df.Constant((0, 0, 0))
             self.H_ex = df.interpolate(zero, self.V).vector().array()
 
-    def setup_exchange(self):
-        C = 1.3e-11 # J/m exchange constant
-        mu0 = 4 * numpy.pi * 10**-7 # Vs/Am
-        ex_fac = df.Constant(- 2 * C / (mu0 * self.MS))
-
-        ex = df.TrialFunction(self.V)
-        v = df.TestFunction(self.V)
-
-        a = df.inner(ex, v) * df.dx
-        U = ex_fac * df.inner(df.grad(self._M), df.grad(self._M)) * df.dx
-        self.H_ex_form = df.derivative(U, self._M, v) 
-
-        self.vol = df.assemble(df.dot(v, df.Constant([1,1,1])) * df.dx).array()
-        self.H_ex = df.assemble(self.H_ex_form).array() / self.vol
-   
     def solve_exchange(self):
-        if self.exchange_flag:
-            self.H_ex = df.assemble(self.H_ex_form).array() / self.vol
+        self.H_ex = self.exchange.compute()
