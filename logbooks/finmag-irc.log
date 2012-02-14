@@ -11,3 +11,58 @@ fangohr: Still testing ...
 2012-02-13 12:54:55 andersej: I'll join!
 2012-02-13 16:31:45 mb8g11: How can I make sure if I work on a matrix or a vector?
 2012-02-13 17:14:43 HansFangohr: If I understand the question correctly, and this is about numpy.arrays, you can use the 'shape' attribute of an array to distingish them.
+2012-02-14 09:44:31 andersej: Good morning, Hans!
+2012-02-14 09:46:43 HansFangohr: Good morning, Sir :)
+2012-02-14 09:54:58 HansFangohr: Hi Anders, I played a little with your code, and added a comment to the story in pivotal -- not sure whether you get email notification for this?
+2012-02-14 09:56:31 HansFangohr: Marc-Antonio (mb8g11), as you rightly say, we should make the 'stories' as small as possible. I have thus accepted the 'exchange' story as completed, and added two new ones, each suggesting a test for the exchange interaction. Feel free to add more as you go along.
+2012-02-14 09:56:49 HansFangohr: I am busy all morning with Interviews of new PhD students; I hope to have some time in the early afternoon.
+2012-02-14 10:00:25 andersej: Yes, I got the notification. Will take a closer look at it. If it is zero initially, it will always be zero in this simple case. Perhaps it changes if there are other contributions to the equation.
+2012-02-14 11:44:19 GabrielB: Hi everyone can anyone advise me with mercurial? I have added a "documentation" subdirectory to /demag and am not quite sure how to get HG to see it and push it up into Bitbucket.
+2012-02-14 11:52:46 andersej: Think it is just hg add file, hg commit -m 'Message of what is changed', and then hg push.
+2012-02-14 11:53:26 andersej: Where file of course is the name of the file you want to add.
+2012-02-14 11:58:29 mb8g11: Are there files in that directory?
+2012-02-14 12:39:52 andersej: Anyone up for lunch sometime between now and 1?
+2012-02-14 12:42:19 mb8g11: 13:00 is good.
+2012-02-14 12:51:55 GabrielB: thanks Anders! I will try with -m instead of the normal commit.
+2012-02-14 12:52:51 GabrielB: I have just spoken to Anders Logg, he  recommended Nitsche's method in order to get the demag field.
+2012-02-14 13:49:50 HansFangohr: Hi Gabriel, that's great. What is Nitsche's method ? ;-) Do you have a reference for it? I haven't heard of the name yet.
+2012-02-14 13:54:50 mb8g11:  1ffd48ebd533b81339e58e1f185c32a8ebeedce8
+2012-02-14 13:55:01 mb8g11: J.A. Nitsche, Uber ein Variationsprinzip zur Loesung von Dirichlet-Problemen bei Verwendung von Teilraeumen, die keinen Randbedingungen unterworfen sind, Abhandlungen aus
+2012-02-14 13:55:04 mb8g11: dem Mathematischen Seminar der Universitaet Hamburg 36 (1970/71), 9–15. MR0341903(49:6649)
+2012-02-14 13:55:17 mb8g11: disregard the first message, that was a paste gone wrong
+2012-02-14 13:58:32 mb8g11: @GabrielB it is not possible to represent an empty directory in Mercurial. As soon as you put a file in it though, you can simply commit the file and the repository will get added as well.
+2012-02-14 13:58:46 mb8g11: *and the directory
+2012-02-14 14:00:09 GabrielB: When I commited I think my file was stored locally and not as part of the project attached to the Bitbucket depo.
+2012-02-14 14:02:37 GabrielB: my folder "documentation" does not show up in the source when I look at it in bitbucket
+2012-02-14 14:03:57 mb8g11: Let's say you have the file doc.tex in there.
+2012-02-14 14:04:07 mb8g11: hg add documentation/doc.tex
+2012-02-14 14:04:17 mb8g11: hg ci (or hg ci documentation/doc.tex)
+2012-02-14 14:04:30 mb8g11: hg push
+2012-02-14 14:06:38 GabrielB: thanks this is what i get
+2012-02-14 14:06:40 GabrielB: gaba@ubuntu:~/devmag/finmag/devtests/demag/documentation$ hg add truncdemag1.tex
+2012-02-14 14:06:40 GabrielB: truncdemag1.tex already tracked!
+2012-02-14 14:06:41 GabrielB: gaba@ubuntu:~/devmag/finmag/devtests/demag/documentation$ hg ci
+2012-02-14 14:06:41 GabrielB: nothing changed
+2012-02-14 14:06:41 GabrielB: gaba@ubuntu:~/devmag/finmag/devtests/demag/documentation$ hg push
+2012-02-14 14:06:41 GabrielB: pushing to default-push
+2012-02-14 14:06:43 GabrielB: abort: repository default-push not found!
+2012-02-14 14:08:37 GabrielB: This description of the method is the closest to what was shown to me by Anders.
+2012-02-14 14:08:38 GabrielB: www.ann.jussieu.fr/2007/PDFSeminaires/RolfStenberg071207.pdf
+2012-02-14 14:08:57 GabrielB: If it works I will include it in the Docu of course :-)
+2012-02-14 14:10:51 mb8g11: In the repository root, open the file .hg/hgrc. You want it to look like that http://www.pastebucket.com/1484
+2012-02-14 14:11:09 mb8g11: I assumed you use https and not ssh.
+2012-02-14 14:20:15 mb8g11: If all fails, check out a new copy of the repo and copy the files by hand. And while you're at it, set up SSH, there is a nice guide in the bitbucket documentation.
+2012-02-14 14:20:31 mb8g11: That way, you won't have to enter your password when pushing.
+2012-02-14 14:28:52 GabrielB: ok the repository root already has the pastebucket code. I am guessing I shouldnt try adding it to .hg/hgrc in the new directory
+2012-02-14 14:29:10 mb8g11: Correct.
+2012-02-14 14:31:05 mb8g11: Try hg push https://gabrielb@bitbucket.org/fangohr/finmag
+2012-02-14 14:55:54 GabrielB: implemented a 1-d Nitsche method. The results seem to look similar to that obtained by Fredkin- Koehler.
+2012-02-14 14:57:55 GabrielB: the results can be seem in nitschetest.py
+2012-02-14 14:59:07 GabrielB: I moved the documentation out of the new folder for now thanks for the help so far mb8g11 (Mark I guess!), I will keep trying later to get the new folder in place and clean up a bit
+2012-02-14 14:59:49 Marc-Antonio: Yes, Marc
+2012-02-14 15:04:52 GabrielB: lol I am off to pick up my daughter! see everyone tomorrow
+2012-02-14 15:18:21 andersej: @Marc-Antonio, can you take a look at my program when you have time?
+2012-02-14 15:20:58 Marc-Antonio: 16:00?
+2012-02-14 15:21:10 andersej: Great
+2012-02-14 15:30:12 HansFangohr: Hi all, what is a good IRC client for Linux (Ubuntu)?
+2012-02-14 15:31:51 andersej: I'm happy with xchat now.
