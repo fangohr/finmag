@@ -81,7 +81,8 @@ class LLG(object):
         if exchange_flag:
             self.setup_exchange()
         else:
-            self.H_ex = df.interpolate(df.Constant((0,0,0)), self.V).array()
+            zero = df.Constant((0, 0, 0))
+            self.H_ex = df.interpolate(zero, self.V).vector().array()
 
     def setup_exchange(self):
         C = 1.3e-11 # J/m exchange constant
