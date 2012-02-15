@@ -3,14 +3,21 @@ import dolfin as df
 
 class Exchange(object):
     def __init__(self, V, M, C, Ms):
-        """Some documentation ..."""
+        """
+        Compute the exchange field.
+        
+        The constructor takes the parameters
+            V a dolfin VectorFunctionSpace
+            M the dolfin object representing the magnetisation
+            C the exchange constant
+            Ms the saturation magnetisation
+        
+        """
+
         mu0 = 4 * np.pi * 10**-7 # Vs/(Am)
         self.exchange_factor = df.Constant(-2 * C / (mu0 * Ms))
 
-        u = df.TrialFunction(V)
         v = df.TestFunction(V)
-        #get rid of a? Also u?
-        a = df.inner(u, v) * df.dx
         E = self.exchange_factor * df.inner(df.grad(M), df.grad(M)) * df.dx
         self.dE_dM = df.derivative(E, M, v)
 

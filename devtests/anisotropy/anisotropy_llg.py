@@ -3,6 +3,8 @@ from numpy import linspace, sqrt
 from scipy.integrate import odeint
 import numpy as np
 
+#FIXME: Divide by volume according to box method (eq (14) in W. Scholz et al.)
+#FIXME: Clean up and make a normal and stable program
 set_log_level(21)
 
 # Mesh
@@ -62,7 +64,7 @@ dM = Function(V)
 def f(y, t):  
     M.vector()[:] = y
     H_ani = assemble(g_ani_form)
-    print H_ani.array()
+    #print H_ani.array()
     H_eff.vector()[:] = H_ani.array() + H_app.vector()
     
     solve(a==L, dM)
