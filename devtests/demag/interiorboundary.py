@@ -70,11 +70,11 @@ class InteriorBoundary():
                 newboundfunc[facet_index] = 1
             else:
                 newboundfunc[facet_index] = 0
-        print "Number of boundary facets found manually", c
-        boundmesh = BoundaryMesh(submesh)
-        M = boundmesh.num_cells()
-##This test should be moved to an external test suite as it only makes sense if the submesh is completely contained in the rest of the mesh
-##        assert c == M, "Internal Error in Interiorboundary. c=%d != M=%d" % (c,M)
+##        ##print "Number of boundary facets found manually", c
+##        boundmesh = BoundaryMesh(submesh)
+##        M = boundmesh.num_cells()
+####This test should be moved to an external test suite as it only makes sense if the submesh is completely contained in the rest of the mesh
+####        assert c == M, "Internal Error in Interiorboundary. c=%d != M=%d" % (c,M)
         self.boundaries += [newboundfunc]
         self.orientation += [neworientation]
 

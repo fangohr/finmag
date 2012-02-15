@@ -14,14 +14,14 @@ import numpy as np
 import pylab as pl
 
 #Parameter to tweak the method
-gamma = 5
+gamma = 0.001
 
-n = 10
+n = 50
 mesh = UnitInterval(n)
 h = 1.0/n
 
-V = FunctionSpace(mesh,"CG",1)
-L = FunctionSpace(mesh,"CG",1)
+V = FunctionSpace(mesh,"CG",2)
+L = FunctionSpace(mesh,"CG",2)
 W = MixedFunctionSpace((V,V))
 u0,u1 = TestFunctions(W)
 v0,v1 = TrialFunctions(W)
@@ -34,7 +34,7 @@ phitot = Function(V)
 M = interpolate(Expression("1"),V)
 
 #Define the Magnetic domain
-r = 0.3 #Radius of magnetic Core
+r = 0.1 #Radius of magnetic Core
 class MagCore(SubDomain):
     def inside(self, x, on_boundary):
         return x[0]< 0.5 + r + DOLFIN_EPS and x[0] > 0.5 - r - DOLFIN_EPS
@@ -57,8 +57,8 @@ N = FacetNormal(coremesh)
 dSC = dS(2)
 
 coreboundmesh = BoundaryMesh(coremesh)
-print "Mesh coordinates", mesh.coordinates()
-print "Submesh coordinates", coremesh.coordinates()
+##print "Mesh coordinates", mesh.coordinates()
+##print "Submesh coordinates", coremesh.coordinates()
 ##print "Number of facets in submesh", coreboundmesh.num_cells()
 
 #Define jumps and averages accross the boundary
@@ -101,16 +101,51 @@ solphi0,solphi1 = sol.split()
 #demag = project(grad(phi),VV)
 ##print "Solution DOFS", phi.vector().array()
 phi0.assign(solphi0)
-plot(phi0, title = "phi0")
+####plot(phi0, title = "phi0")
 phi1.assign(solphi1)
-plot(phi1, title = "phi1")
-phitot = phi0 + phi1
+####plot(phi1, title = "phi1")
+#phitot = phi0 + phi1
+phitot.vector()[:] = phi0.vector() + phi1.vector()
 plot(phitot, title = "phi total")
 interactive()
 
+###############################
+#Test the Solution
+###############################
+#1 Test dirichlet boundary condition on outside
+one = interpolate(Constant(1),V)
+a = abs(phitot)*ds
+c = one*ds
+L1error = assemble(a)/assemble(c)
+print "Average Error in Outer Dirichlet BC", L1error
+
+#2 Test Continuity accross the interior boundary
+one = interpolate(Constant(1),V)
+jumpphi = phi1('-') - phi0('+')
+a1 = abs(jumpphi)*dSC
+a2 = abs(jump(phitot))*dSC
+c = one('-')*dSC
+L1error1 = assemble(a1,interior_facet_domains = intfacet )/assemble(c,interior_facet_domains = intfacet)
+L1error2 = assemble(a2,interior_facet_domains = intfacet )/assemble(c,interior_facet_domains = intfacet)
+print "Average Error in continuity in inner boundary for phi1 and phi2", L1error1
+print "Average Error in continuity in inner boundary for phi total", L1error2
+
+
+#3 Test jump in normal derivative across the interior boundary
+one = interpolate(Constant(1),V)
+jumpphinor = dot(grad(phi1('-') - phi0('+')),N('+'))
+a1 = abs(jumpphinor - dot(M,N)('-'))*dSC
+a2 = abs(dot(jump(grad(phitot)),N('+')) - dot(M,N)('+'))*dSC
+c = one('-')*dSC
+L1error1 = assemble(a1,interior_facet_domains = intfacet )/assemble(c,interior_facet_domains = intfacet)
+L1error2 = assemble(a2,interior_facet_domains = intfacet )/assemble(c,interior_facet_domains = intfacet)
+print "Average Error in jump in normal derivative in inner boundary for phi1 and phi2", L1error1
+print "Average Error in jump in normal derivative in inner boundary for phi total", L1error1
+
+
 
 ###############################
-#Give the Volume of the surface of the magnetic core
+#Gives the Volume of the surface of the magnetic core
 ###############################
 #one = interpolate(Constant(1),V)
 #volform = one('-')*dSC
