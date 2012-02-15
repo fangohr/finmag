@@ -14,4 +14,3 @@ load all of its symbols into this module's namespace.
 """
 from ..util.native_compiler import make_modules as _make_modules
 _make_modules()
-from ..native.finmag import *

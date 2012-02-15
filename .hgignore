@@ -3,6 +3,6 @@ syntax:glob
 *~
 .idea
 __pycache__
-finmag.so
+src/finmag/native/*.so
 *.o
 *.d

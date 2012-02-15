@@ -2,8 +2,8 @@ import numpy
 import dolfin
 from scipy.integrate import odeint
 
-from ..src.llg import LLG
-from ..src.helpers import make_vectors_function,angle
+from finmag.sim.llg import LLG
+from finmag.sim.helpers import make_vectors_function,angle
 
 TOLERANCE = 5e-10
 
@@ -38,9 +38,17 @@ def angles_after_a_nanosecond(initial_M, pins=[]):
 def test_all_orientations_without_pinning():
     for M0 in possible_orientations:
         angles = angles_after_a_nanosecond(M0)
+        print angles
         assert angles.max() < TOLERANCE
 
 def test_all_orientations_with_pinning():
     for M0 in possible_orientations:
         angles = angles_after_a_nanosecond(M0, [0, 10])
+        print angles
         assert abs(angles.max() - angles.min()) < TOLERANCE
+
+if __name__== "__main__":
+    print "without pinning"
+    test_all_orientations_without_pinning()
+    print "with pinning"
+    test_all_orientations_with_pinning()
