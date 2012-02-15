@@ -66,3 +66,20 @@ fangohr: Still testing ...
 2012-02-14 15:21:10 andersej: Great
 2012-02-14 15:30:12 HansFangohr: Hi all, what is a good IRC client for Linux (Ubuntu)?
 2012-02-14 15:31:51 andersej: I'm happy with xchat now.
+2012-02-15 08:54:57 HansFangohr: Morning Anders.
+2012-02-15 08:56:00 andersej: Good morning! Just read your email, I'll have it done by the end of the day.
+2012-02-15 08:58:21 HansFangohr: No rush -- it may just be fun to do this :) I also had another idea for a good test, and will add this to the tracker in a moment.
+2012-02-15 09:01:26 HansFangohr: This is the extra test for the Jacobian: https://www.pivotaltracker.com/story/show/24971625
+2012-02-15 09:04:33 HansFangohr: Anders, I added a story for the test I suggested in the email: https://www.pivotaltracker.com/story/show/24971705
+2012-02-15 09:06:26 andersej: Okay, i thought you combined it in the first one. Sorry. I don't mean to steal all stories.
+2012-02-15 09:16:32 HansFangohr: You steal as many as you like :)
+2012-02-15 09:40:22 HansFangohr: Hi Gabriel.
+2012-02-15 09:40:45 HansFangohr: Andersej, just to add; I think the reason I didn't see those stories started is that you didn't click on 'save' yet or so -- It is all here now.
+2012-02-15 11:19:47 andersej: HansFangohr, do you have time today to explain the two time scales scheme a bit more detailed than in the story description?
+2012-02-15 11:48:56 HansFangohr: Not at the moment (but later this afternoon). You don't need to worry about it: Use an exchange interaction strength that is realistic (ask MA, or the Nmag Manual) and an applied field that has the strength of 1 Tesla (that is very roughly 1e6 A/m, the same magnitude as the saturation magnetisation), and you should have the two timescales. I think Marc-Antonio maybe able to explain as well.
+2012-02-15 14:36:00 HansFangohr: Andersej, are you okay to come to my office to talk through your code?
+2012-02-15 14:36:46 andersej: Yes, I'm there in two minutes. Will just push what I'm doing.
+2012-02-15 14:37:47 HansFangohr: Okay, great.
+2012-02-15 14:50:25 mb8g11: Hans, I'm afraid that the loading of the C-code works perfectly fine on my machine.
+2012-02-15 15:08:22 HansFangohr: Marc-Antonio, I have created an account for you on the machine. It is called 'osiris.sesnet.soton.ac.uk'.
+2012-02-15 15:10:00 mb8g11: (by the way, the volume is a vector)
