@@ -16,6 +16,7 @@ class LLG(object):
         self.C = 1.3e-11 # J/m exchange constant
 
         self.MS = 8.6e5 # A/m
+        self.t = 0 #s
         self.H_app = (0, 0, 0)
 
         self.pins = [] # nodes where the magnetisation gets pinned
@@ -72,11 +73,12 @@ class LLG(object):
             self.M, self.H_eff, self.M.shape[0], self.pins)
         if status == 0:
             return dMdt
-        raise Exception("An error was encountered in the C-code.")
+        raise Exception("An error was encountered in the C-code; status=%d" % status)
         return None
 
     def solve_for(self, M, t):
         self.M = M
+        self.t = t
         return self.solve()
 
     def setup(self, exchange_flag=True):
