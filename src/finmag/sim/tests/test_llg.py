@@ -1,7 +1,7 @@
 import numpy
 import dolfin
 from scipy.integrate import odeint
-from ..src.llg import LLG
+from finmag.sim.llg import LLG
 
 length = 20e-9 # m
 simplices = 10
@@ -91,6 +91,5 @@ def test_exchange_field_should_change_when_M_changes():
     assert not numpy.array_equal(old_M, llg.M)
     # If we now solve the LLG again, we expect the new value of the
     # exchange field to change (because the magnetisation has changed).
-    llg.solve_exchange()
-    new_H_ex = llg.H_ex
+    new_H_ex = llg.exchange.compute()
     assert not numpy.array_equal(old_H_ex, new_H_ex), "H_ex hasn't changed."
