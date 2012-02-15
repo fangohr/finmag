@@ -1,7 +1,7 @@
 import dolfin
 import numpy
 from scipy.integrate import odeint
-from llg import LLG
+from finmag.sim.llg import LLG
 
 """
 Compute the behaviour of a one-dimensional strip of magnetic material,

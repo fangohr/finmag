@@ -1,6 +1,6 @@
 import numpy
 import pylab
-from helpers import make_vectors_function, norm, angle
+from finmag.sim.helpers import make_vectors_function, norm, angle
 
 # Load the data which dolfin has created and odeint has integrated. 
 Ms = numpy.genfromtxt("1d_M.txt")
