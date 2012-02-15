@@ -6,7 +6,8 @@ import numpy as np
 set_log_level(21)
 
 # Mesh
-m = 1e-5
+m = 1e-9
+m = 1
 mesh = Box(0,m,0,m,0,m,1,1,1)
 
 # Functionspace and functions
@@ -20,12 +21,15 @@ gamma = 2.211e5
 p     = Constant(gamma/(1 + alpha**2))
 c     = 1e10
 K1    = Constant(48e3) # 48e3for Fe (J/m^3) 48e15 is interesting
+K1    = Constant(520e3) # Fo Co (J/m^3), according to Nmag (0.2.1) example 2.10
 
 # Initial direction of the magnetic field.
 Ms = 1# 17e5
 #M0 = Constant((0,0.9,sqrt(0.19)))
 #M0 = Constant((1,0,0))
-M0 = Constant((1, 0, 0))
+
+M0 = Constant((1./np.sqrt(2), 0, 1./np.sqrt(2)))
+
 
 M  = Function(V)
 M.assign(M0)
@@ -34,7 +38,7 @@ M.assign(M0)
 a = Constant((0, 0, 1))
 
 # Anisotropy energy
-E_ani = K1*(1 - (dot(a, M))**2)*dx
+E_ani = -K1*(1 - (dot(a, M))**2)*dx
 g_ani_form = derivative(E_ani, M)
 
 # Manually derivative
@@ -43,7 +47,7 @@ g_ani_form = K1*(2*dot(a, M)*dot(a, W))*dx
 
 H_eff = Function(V)
 H_ani = assemble(g_ani_form)
-H_app = project(Constant((0,1,0)), V)
+H_app = project(Constant((0,0,0)), V)
 H_eff.vector()[:] = H_ani.array() + H_app.vector()
 
 # Variational forms of LLG
@@ -69,4 +73,5 @@ def f(y, t):
 ts = linspace(0, 1e-9, 1000)
 y0 = M.vector().array()
 ys = odeint(f, y0, ts)
-#interactive()
+#f(y0,ts[0])
+interactive()
