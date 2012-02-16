@@ -5,6 +5,8 @@ from scipy.integrate import odeint, ode
 
 # FIXME: Figure out of this extreme inconsistency between ode and odeint
 # FIXME: Make odeint convert when adding applied field
+# FIXME: Figure out why ode gives the same result with and without an 
+# applied field.
 
 set_log_level(21)
 
