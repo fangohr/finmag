@@ -20,13 +20,13 @@ class TruncDemagProblem(object):
         self.M = M
 
         #Mesh Function
-        corefunc = MeshFunction("uint", mesh, mesh.topology().dim())
-        corefunc.set_all(0)
-        subdomain.mark(corefunc,1)
+        self.corefunc = MeshFunction("uint", mesh, mesh.topology().dim())
+        self.corefunc.set_all(0)
+        subdomain.mark(self.corefunc,1)
         
         #generate submesh for the core and vacuum
-        self.coremesh = SubMesh(mesh,corefunc,1)
-        self.vacmesh = SubMesh(mesh,corefunc,0)
+        self.coremesh = SubMesh(mesh,self.corefunc,1)
+        self.vacmesh = SubMesh(mesh,self.corefunc,0)
 
         #generate interior boundary
         self.corebound = InteriorBoundary(mesh)
