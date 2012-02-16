@@ -3,6 +3,7 @@ import instant
 import os
 import numpy
 from finmag.sim.exchange import Exchange
+from finmag.sim.dmi import DMI
 
 class LLG(object):
 
@@ -18,6 +19,7 @@ class LLG(object):
         self.MS = 8.6e5 # A/m
         self.t = 0 #s
         self.H_app = (0, 0, 0)
+        self.H_dmi = (0, 0, 0) #DMI for Skyrmions
 
         self.pins = [] # nodes where the magnetisation gets pinned
 
@@ -43,7 +45,9 @@ class LLG(object):
         self._M = df.interpolate(self.M0, self.V)
 
     def update_H_eff(self):
-        self.H_eff = self.H_app + self.H_ex
+        self.H_eff = self.H_app + self.H_ex 
+        if self.use_dmi:
+            self.H_eff += self.H_dmi
 
     @property
     def H_app(self):
@@ -66,7 +70,9 @@ class LLG(object):
     
     def solve(self):
         if self.exchange_flag:
-            self.H_ex = self.exchange.compute()
+            self.H_ex = self.exchange.compute_field()
+        if self.use_dmi:
+            self.dmi.compute_field()
         self.update_H_eff()
 
         status, dMdt = self._solve(self.alpha, self.gamma, self.MS, self.c,
@@ -81,10 +87,17 @@ class LLG(object):
         self.t = t
         return self.solve()
 
-    def setup(self, exchange_flag=True):
+    def setup(self, exchange_flag=True, use_dmi=False):
         self.exchange_flag = exchange_flag
         if exchange_flag:
             self.exchange = Exchange(self.V, self._M, self.C, self.MS)
         else:
             zero = df.Constant((0, 0, 0))
             self.H_ex = df.interpolate(zero, self.V).vector().array()
+
+        self.use_dmi = use_dmi
+
+        if use_dmi:
+            self.dmi = DMI(self.V, self._M, self.C, self.MS)
+
+
