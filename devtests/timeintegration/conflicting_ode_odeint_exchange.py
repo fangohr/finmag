@@ -6,6 +6,7 @@ from scipy.integrate import odeint, ode
 set_log_level(21)
 
 # FIXME: Figure out of this extreme inconsistency between ode and odeint
+# FIXME: Make odeint convert when using jacobian
 # FIXME: Make odeint convert when adding applied field
 # FIXME: Figure out why ode gives the same result with and without an 
 # applied field.
@@ -46,11 +47,11 @@ M = interpolate(M0, V)
 H_exch1 = Exchange(V, M, C, Ms)
 
 # Applied
-H_app = interpolate(Constant((0, 0, 1e5)), V)
+H_app = project(Constant((0, 0, 1e5)), V)
 
 # Effective
 H_eff = Function(V)
-H_eff.vector()[:] = H_exch1.compute()# + H_app.vector()
+H_eff.vector()[:] = H_exch1.compute_field()# + H_app.vector()
 
 Ms = Constant(Ms)
 
@@ -69,7 +70,7 @@ J = derivative(L, M)
 def f(y, t):
     # Update M and H_eff
     M.vector()[:] = y
-    H_eff.vector()[:] = H_exch1.compute()# + H_app.vector()
+    H_eff.vector()[:] = H_exch1.compute_field()# + H_app.vector()
     solve(a==L, dM)
     return dM.vector().array()
 
