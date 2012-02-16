@@ -8,7 +8,8 @@
 
 __author__ = "Gabriel Balaban"
 __copyright__ = __author__
-__license__  = "GNU GPL Version 3 or any later version"
+__project__ = "Finmag"
+__organisation__ = "University of Southampton"
 
 from dolfin import *
 from interiorboundary import *

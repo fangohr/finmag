@@ -1,8 +1,9 @@
-#A Unit Interval with Uniform Magnetisation
+#Standard Demagnetisation Testproblems 
 
 __author__ = "Gabriel Balaban"
 __copyright__ = __author__
-__license__  = "GNU GPL Version 3 or any later version"
+__project__ = "Finmag"
+__organisation__ = "University of Southampton"
         
 from dolfin import *
 from prob_demag import *

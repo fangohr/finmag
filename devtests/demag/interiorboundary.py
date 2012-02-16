@@ -1,5 +1,9 @@
-##Test of assembling and subdomains
-##Gabriel Balaban
+#A Utility Module for generating interior boundaries in Fenics
+
+__author__ = "Gabriel Balaban"
+__copyright__ = __author__
+__project__ = "Finmag"
+__organisation__ = "University of Southampton"
 
 #Note when restricting forms ('+') will be on the outside of the submesh,
 #and ('-') will be on the inside

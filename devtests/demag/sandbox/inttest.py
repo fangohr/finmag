@@ -1,7 +1,9 @@
 #Test of 1d poisson equation with a discontinous source term
 
-from dolfin import *
-from interiorboundary import *
+__author__ = "Gabriel Balaban"
+__copyright__ = __author__
+__project__ = "Finmag"
+__organisation__ = "University of Southampton"
 
 mesh = UnitInterval(100)
 V = FunctionSpace(mesh,"CG",2)
