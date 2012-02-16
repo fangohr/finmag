@@ -18,7 +18,7 @@ llg.initial_M_expr((
         '0',
         '0',
         'Ms'), L=length, Ms=llg.MS)
-llg.setup()
+llg.setup(use_dmi=True)
 
 
 print "Solving problem..."
