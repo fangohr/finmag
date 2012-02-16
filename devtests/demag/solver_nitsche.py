@@ -25,10 +25,10 @@ class NitscheSolver(object):
         W = MixedFunctionSpace((V,V))
         u0,u1 = TestFunctions(W)
         v0,v1 = TrialFunctions(W)
-        self.sol = Function(W) 
-        self.phi0 = Function(V)
-        self.phi1 = Function(V)
-        self.phitot = Function(V)
+        sol = Function(W) 
+        phi0 = Function(V)
+        phi1 = Function(V)
+        phitot = Function(V)
         h = self.problem.mesh.hmin()
 
         #Define the magnetisation
@@ -71,48 +71,21 @@ class NitscheSolver(object):
         solve(A, self.sol.vector(),F)
 
         #Seperate the mixed function and then add the parts
-        solphi0,solphi1 = self.sol.split()
-        self.phi0.assign(solphi0)
-        self.phi1.assign(solphi1)
+        solphi0,solphi1 = sol.split()
+        phi0.assign(solphi0)
+        phi1.assign(solphi1)
 
         #This might or might not be a better way to add phi1 and phi0
         #phitot = phi0 + phi1 
 
-        self.phitot.vector()[:] = self.phi0.vector() + self.phi1.vector()
-        return self.phitot
+        self.phitot.vector()[:] = phi0.vector() + phi1.vector()
+
+        #Store variables for outside testing
+        self.V = V
+        self.phitot = phitot
+        self.phi0 = phi0
+        self.phi1 = phi1
+        self.sol = sol
+        M = self.M
+        return phitot
         
-#Move this to a test suite
-##
-##        ###############################
-##        #Test the Solution
-##        ###############################
-##        #1 Test dirichlet boundary condition on outside
-##        one = interpolate(Constant(1),V)
-##        a = abs(phitot)*ds
-##        c = one*ds
-##        L1error = assemble(a)/assemble(c)
-##        print "Average Error in Outer Dirichlet BC", L1error
-##
-##        #2 Test Continuity accross the interior boundary
-##        one = interpolate(Constant(1),V)
-##        jumpphi = phi1('-') - phi0('+')
-##        a1 = abs(jumpphi)*dSC
-##        a2 = abs(jump(phitot))*dSC
-##        c = one('-')*dSC
-##        L1error1 = assemble(a1,interior_facet_domains = intfacet )/assemble(c,interior_facet_domains = intfacet)
-##        L1error2 = assemble(a2,interior_facet_domains = intfacet )/assemble(c,interior_facet_domains = intfacet)
-##        print "Average Error in continuity in inner boundary for phi1 and phi2", L1error1
-##        print "Average Error in continuity in inner boundary for phi total", L1error2
-##
-##
-##        #3 Test jump in normal derivative across the interior boundary
-##        one = interpolate(Constant(1),V)
-##        jumpphinor = dot(grad(phi1('-') - phi0('+')),N('+'))
-##        a1 = abs(jumpphinor - dot(M,N)('-'))*dSC
-##        a2 = abs(dot(jump(grad(phitot)),N('+')) - dot(M,N)('+'))*dSC
-##        c = one('-')*dSC
-##        L1error1 = assemble(a1,interior_facet_domains = intfacet )/assemble(c,interior_facet_domains = intfacet)
-##        L1error2 = assemble(a2,interior_facet_domains = intfacet )/assemble(c,interior_facet_domains = intfacet)
-##        print "Average Error in jump in normal derivative in inner boundary for phi1 and phi2", L1error1
-##        print "Average Error in jump in normal derivative in inner boundary for phi total", L1error1
-##
