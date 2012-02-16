@@ -24,5 +24,15 @@ class Exchange(object):
         self.vol = df.assemble(df.dot(v, df.Constant([1,1,1])) * df.dx).array()
 
     def compute(self):
+        """Assembles vector with H_exchange, and returns effective field as 
+        numpy array.
+        
+        Question: How fast is assemble? Would it be faster to compute
+        the matrix G as in (22) in Scholz etal, Computational
+        Materials Science 28 (2003) 366-383, and just to carry out a
+        matrix vector multiplication here? (Might be able to exploit
+        that the matrix G looks the same for the x, y and z component?)
+        """
+
         return df.assemble(self.dE_dM).array() / self.vol
 
