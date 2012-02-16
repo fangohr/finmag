@@ -6,46 +6,63 @@ from finmag.sim.llg import LLG
 from finmag.sim.tests.test_macrospin import make_analytical_solution
 from scipy.integrate import odeint
 
+"""
+We gather the deviation between the analytical solution and the computed one
+for some values of the tolerance of the time integrator and several values
+for the damping term alpha.
+
+"""
+
+rtols_powers_of_ten = [-7, -8, -9, -10, -11] # easier LaTeX formatting
+alphas = numpy.linspace(0.01, 0.99, 100)
+
 mesh = dolfin.Box(0,1, 0,1, 0,1, 1,1,1)
 
-alphas = numpy.linspace(0.01, 0.99, 1000)
-max_deviations = []
-mean_deviations = []
+mean_deviationss = []
+for rtol_power_of_ten in rtols_powers_of_ten:
+    rtol = pow(10, rtol_power_of_ten)
+    print "#### New series for rtol={0}. ####".format(rtol)
 
-for alpha in alphas:
-    llg = LLG(mesh)
-    llg.alpha = alpha
-    llg.initial_M((llg.MS, 0, 0))
-    llg.H_app = (0, 0, 1e5)
+    # One entry in this array corresponds to the average deviation between
+    # the analytical solution and the computed solution for one value of alpha.
+    mean_deviations = []
+    for alpha in alphas:
+        print "Solving for alpha={0}.".format(alpha)
 
-    EXCHANGE = False
-    llg.setup(EXCHANGE)
+        llg = LLG(mesh)
+        llg.alpha = alpha
+        llg.initial_M((llg.MS, 0, 0))
+        llg.H_app = (0, 0, 1e5)
+        llg.setup(False)
 
-    ts = numpy.linspace(0, 1e-9, num=100)
-    ys = odeint(llg.solve_for, llg.M, ts)
+        M_analytical = make_analytical_solution(llg.MS, 1e5, llg.alpha, llg.gamma) 
+    
+        ts = numpy.linspace(0, 1e-9, num=100)
+        ys = odeint(llg.solve_for, llg.M, ts, rtol=rtol)
 
-    M_analytical = make_analytical_solution(llg.MS, 1e5,
-        alpha=llg.alpha, gamma=llg.gamma)
+        # One entry in this array corresponds to the deviation between the two
+        # solutions for one particular moment during the simulation.
+        deviations = []
+        for i in range(len(ts)):
+            M_computed = numpy.mean(ys[i].reshape((3, -1)), 1)
+            M_ref = M_analytical(ts[i])
+            # The difference of the two vectors has 3 components. The
+            # deviation is the average over these components.
+            deviations.append(numpy.mean(numpy.abs(M_computed - M_ref)))
 
-    deviations = []
-    for i in range(len(ts)):
+        # This represents the addition of one point to the graph.
+        mean_deviations.append(numpy.mean(deviations))
 
-        M_computed = numpy.mean(ys[i].reshape((3, -1)), 1)
-        M_ref = M_analytical(ts[i])
+    # This represents one additional series in the graph.
+    mean_deviationss.append(mean_deviations)
 
-        # deviation as the average of the 3 components of the difference
-        difference = numpy.abs(M_computed - M_ref)
-        deviation = numpy.mean(difference)
-        deviations.append(deviation)
-    max_deviations.append(numpy.max(deviations))
-    mean_deviations.append(numpy.mean(deviations))
-    if numpy.max(deviations) > 0.3:
-        print alpha, " max: ", numpy.max(deviations), " mean: ", numpy.mean(deviations)
-
-plt.plot(alphas, max_deviations, "r.", label="max")
-plt.plot(alphas, mean_deviations, "b.", label="mean")
+for i in range(len(rtols_powers_of_ten)):
+    label = r"$rtol=1\cdot 10^{" + str(rtols_powers_of_ten[i]) + r"}$"
+    plt.plot(alphas, mean_deviationss[i], ".", label=label)
 plt.legend()
-plt.title("deviation over alpha")
+plt.title(r"Influence of $\alpha$ and rtol on the Deviation")
 plt.ylabel("deviation")
-plt.xlabel("alpha")
-plt.savefig("deviation_over_alpha.pdf")
+plt.xlabel(r"$\alpha$")
+plt.ylim((0, 0.1))
+plt.savefig("deviation_over_alpha_rtols.pdf")
+
