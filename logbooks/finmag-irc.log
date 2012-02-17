@@ -88,3 +88,6 @@ fangohr: Still testing ...
 2012-02-16 10:32:22 andersej: 12:30?
 2012-02-16 10:37:00 HansFangohr: Okay, fine. Dmitri and I have a meeting at 11;00 in physics. We'll come back to the office before lunch then -- probably takes only 30 or 45 minutes.
 2012-02-16 10:56:59 mb8g11: Oki.
+2012-02-17 09:23:07 HansFangohr: Morning Anders and DokosBot.
+2012-02-17 09:23:40 andersej: Good morning, Hans!
+2012-02-17 13:18:15 andersej: Which PETSc version are you using? I'm on 3.2-p5 and I get PETSc error when I try to run /examples/exchange_1D/run_visual.py. It is caused by the last line of the first for loop (line 52).
