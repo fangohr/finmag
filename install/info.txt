@@ -1,0 +1,1 @@
+install/on-fresh-ubuntu-11.10: some scripts to install required libraries to run finmag on a fresh Ubuntu install
