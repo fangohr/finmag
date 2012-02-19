@@ -13,7 +13,8 @@ class LLG(object):
 
         self.alpha = 0.5
         self.gamma = 2.211e5 # m/(As)
-        self.c = 1e12 # 1/s numerical scaling correction
+        self.c = 1e11 # 1/s numerical scaling correction
+                      # 0.1e12 1/s is the value used by default in nmag 0.2
         self.C = 1.3e-11 # J/m exchange constant
 
         self.MS = 8.6e5 # A/m
