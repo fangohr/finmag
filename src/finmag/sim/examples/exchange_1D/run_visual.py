@@ -27,14 +27,23 @@ simplexes = 10
 mesh = dolfin.Interval(simplexes, 0, length)
 
 llg = LLG(mesh)
-llg.alpha=0.02
+llg.alpha=0.1
 llg.H_app=(0,0,llg.MS)
+#llg.initial_M_expr((
+#        'MS * (2*x[0]/L - 1)',
+#        'sqrt(MS*MS - MS*MS*(2*x[0]/L - 1)*(2*x[0]/L - 1))',
+#        '0'), L=length*10, MS=llg.MS)
 llg.initial_M_expr((
-        'MS * (2*x[0]/L - 1)',
-        'sqrt(MS*MS - MS*MS*(2*x[0]/L - 1)*(2*x[0]/L - 1))',
-        '0'), L=length, MS=llg.MS)
+        'MS',
+        '0',
+        '0'), MS=llg.MS)
 llg.setup()
 #llg.pins = [0, 10]
+
+
+#import sys
+#sys.exit(0)
+
 
 print "Solving problem..."
 
@@ -51,14 +60,15 @@ for i in range(y.shape[1]):
     
     arrows.append(visual.arrow(pos=pos,axis=tuple(thisM)))
 
-ts = numpy.linspace(0, 1e-10, 20)
+ts = numpy.linspace(0, 1e-10, 200)
+tol = 100
 for i in range(len(ts)-1):
-    ys,infodict = odeint(llg.solve_for, llg.M, [ts[i],ts[i+1]], full_output=True,printmessg=True)
+    ys,infodict = odeint(llg.solve_for, llg.M, [ts[i],ts[i+1]], full_output=True,printmessg=True,rtol=tol,atol=tol)
     y = ys[-1,:]/llg.MS
     y.shape=(3,len(llg.M)/3)
     for j in range(y.shape[1]):
         arrows[j].axis=tuple(y[:,j])
-    print("i=%d/%d, t=%s" % (i,len(ts),ts[i]))
-    print infodict
+    print("i=%d/%d, t=%s" % (i,len(ts),ts[i])),
+    print "nfe=%d, nje=%d" % (infodict['nfe'],infodict['nje'])
 
 print "Done"
