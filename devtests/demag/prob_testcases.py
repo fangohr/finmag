@@ -22,7 +22,7 @@ class MagUnitInterval(TruncDemagProblem):
 
 class MagUnitCircle(TruncDemagProblem):
     def __init__(self):
-        mesh = UnitCircle(10)
+        mesh = UnitCircle(20)
         self.r = 0.2 #Radius of magnetic Core
         r = self.r
         class MagUnitCircle(SubDomain):
