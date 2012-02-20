@@ -13,7 +13,7 @@ llg.alpha = 0.1
 llg.MS = 0.86e6 # A/m
 llg.C = 1.3e-11 # J/m
 llg.H_app = (0.43e6, 0, 0) # A/m
-llg.initial_M_expr(("MS*sqrt(2)", "MS*sqrt(2)", "0"), MS=llg.MS)
+llg.initial_M_expr(("MS/sqrt(2)", "MS/sqrt(2)", "0"), MS=llg.MS)
 llg.setup(exchange_flag=False)
 
 t0 = 0; dt = 1e-11; tmax = 1e-9 # s
