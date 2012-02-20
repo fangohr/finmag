@@ -1,9 +1,15 @@
-meshgen:
+meshgen-nmag:
 	netgen -geofile=bar.geo -meshfiletype="Neutral Format" -meshfile=bar.neutral -batchmode
 
-meshconvert:
+meshgen-dolfin:
+	netgen -geofile=bar.geo -meshfiletype="Gmsh2 Format" -meshfile=bar.gmsh -batchmode
+
+meshconvert-nmag:
 	nmeshimport --netgen bar.neutral bar.nmesh.h5
 	gzip -f bar.neutral
+
+meshconvert-colfin:
+	dolfin-convert bar.gmsh bar.xml
 
 meshshow:
 	nmeshpp --vtk bar.nmesh.h5 bar.vtk

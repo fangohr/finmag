@@ -18,4 +18,4 @@ sim.set_m([1, 1, 0])
 
 sim.set_params(stopping_dm_dt=1*degrees_per_ns,
         ts_rel_tol=1e-6, ts_abs_tol=1e-6)
-sim.relax(save=[('fields', every('time', SI(1e-11, "s")))])
+sim.relax(save=[('averages', every('time', SI(1e-11, "s")))])
