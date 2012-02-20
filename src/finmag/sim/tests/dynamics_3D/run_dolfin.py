@@ -4,6 +4,8 @@ import numpy as np
 from scipy.integrate import ode
 from finmag.sim.llg import LLG
 
+fh = open("data_M_dolfin.txt", "w")
+
 mesh = df.Mesh("bar.xml")
 llg = LLG(mesh)
 
@@ -18,8 +20,8 @@ t0 = 0; dt = 1e-11; tmax = 1e-9 # s
 llg_wrap = lambda t, y: llg.solve_for(y, t)
 r = ode(llg_wrap).set_integrator("vode", method="bdf", with_jacobian=False)
 r.set_initial_value(llg.M, t0)
-print llg.average_M()
 while r.successful() and r.t <= tmax:
+    Mx, My, Mz = llg.average_M()
+    fh.write(str(r.t) + " " + str(Mx) + " " + str(My) + " " + str(Mz) + "\n")
     r.integrate(r.t+dt)
-    print r.t, llg.average_M(),"\n\n"
-
+fh.close()
