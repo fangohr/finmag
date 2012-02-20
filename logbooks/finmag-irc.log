@@ -91,3 +91,8 @@ fangohr: Still testing ...
 2012-02-17 09:23:07 HansFangohr: Morning Anders and DokosBot.
 2012-02-17 09:23:40 andersej: Good morning, Hans!
 2012-02-17 13:18:15 andersej: Which PETSc version are you using? I'm on 3.2-p5 and I get PETSc error when I try to run /examples/exchange_1D/run_visual.py. It is caused by the last line of the first for loop (line 52).
+2012-02-20 08:55:38 HansFangohr: Morning DokosBot.
+2012-02-20 09:11:44 mb8g11: Good morning!
+2012-02-20 09:12:23 HansFangohr: Good Morning. I am just moving the (very handy) DokosBot from eta to summer.kk - a good opportunity to document this here.
+2012-02-20 09:28:57 mb8g11: So is summer the newly installed machine?
+2012-02-20 09:29:31 HansFangohr: Yes; the machine was around before but I had to upgrade the OS somewhat severly (done now).
