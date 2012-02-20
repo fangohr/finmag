@@ -12,8 +12,7 @@ import math
 
 #Global Tolerance for inexact comparisons in percent
 TOL = 0.02
-class TestProblems(object):
-
+class TestMeshSetup(object):
     def test_1d(self):
         problem = MagUnitInterval()
         #Test to see if the Volume is correct
@@ -39,7 +38,23 @@ class TestProblems(object):
 ##        cactual = self.bound_facets(problem)
 ##        assert cfound == cactual, "Error in 2-d internal boundary creation, the number of facets in the generated boundary \
 ##                                  %d does not equal that of the coremesh boundary %d"%(cfound,cactual)
-        
+
+    def test_3d(self):
+        problem = MagUnitSphere()
+        #Test to see if the Volume is correct
+        vol = self.bound_volume(problem)
+        print "Volume of core boundary",vol
+        voltrue = 4*problem.r*problem.r*math.pi
+        print "True volume of a sphere with radius %g"%(voltrue)
+        print self.compare(vol,voltrue)
+        assert self.compare(vol,voltrue), "Error in 3D internal boundary creation, error in approximate volume %g is not within TOL %g of \
+                                      the true volume %g"%(vol,TOL,voltrue)
+##        #Test to see if the number of facets is correct
+##        cfound = problem.corebound.countfacets
+##        cactual = self.bound_facets(problem)
+##        assert cfound == cactual, "Error in 3-d internal boundary creation, the number of facets in the generated boundary \
+##                                  %d does not equal that of the coremesh boundary %d"%(cfound,cactual)
+
     def bound_volume(self,problem):
         #Gives the volume of the surface of the magnetic core
         V = FunctionSpace(problem.mesh,"CG",1)
@@ -57,3 +72,6 @@ class TestProblems(object):
         relerror = abs((est - trueval)/trueval )
         print relerror
         return relerror < TOL
+
+tester = TestMeshSetup()
+tester.test_3d()
