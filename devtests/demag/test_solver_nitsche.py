@@ -7,7 +7,7 @@ __project__ = "Finmag"
 __organisation__ = "University of Southampton"
 
 from dolfin import *
-from prob_testcases import *
+from problems import *
 from solver_nitsche import NitscheSolver
 
 #This suite tests the solutions for the demag scalar potential function from the Nitsche Solver.
