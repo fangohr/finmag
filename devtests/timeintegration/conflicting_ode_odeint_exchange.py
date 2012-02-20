@@ -3,12 +3,17 @@ from finmag.sim.exchange import Exchange
 from numpy import linspace
 from scipy.integrate import odeint, ode
 
+set_log_level(21)
+
 # FIXME: Figure out of this extreme inconsistency between ode and odeint
+# FIXME: Make odeint convert when using jacobian
 # FIXME: Make odeint convert when adding applied field
 # FIXME: Figure out why ode gives the same result with and without an 
 # applied field.
+#
+# TODO: When the fixmes above are solved, compare run with and without 
+# jacobian. This should show that we get a speedup with the jacobian.
 
-set_log_level(21)
 
 # Parameters
 alpha = 0.5
@@ -26,6 +31,10 @@ V = VectorFunctionSpace(mesh, 'CG', 1, dim=3)
 u = TrialFunction(V)
 v = TestFunction(V)
 
+# Initially distributed in an arch along the x-axis, pointing in y-direction.
+# Applied field in z-directions, so we expect the magnetisation to become
+# uniform quickly and align in z-direction. 
+
 # Orientations
 left_right = 'MS * (2*x[0]/L - 1)'
 up_down = 'sqrt(MS*MS - MS*MS*(2*x[0]/L - 1)*(2*x[0]/L - 1))'
@@ -38,11 +47,11 @@ M = interpolate(M0, V)
 H_exch1 = Exchange(V, M, C, Ms)
 
 # Applied
-H_app = interpolate(Constant((0, 0, 1e5)), V)
+H_app = project(Constant((0, 0, 1e5)), V)
 
 # Effective
 H_eff = Function(V)
-H_eff.vector()[:] = H_exch1.compute()# + H_app.vector()
+H_eff.vector()[:] = H_exch1.compute_field()# + H_app.vector()
 
 Ms = Constant(Ms)
 
@@ -61,7 +70,7 @@ J = derivative(L, M)
 def f(y, t):
     # Update M and H_eff
     M.vector()[:] = y
-    H_eff.vector()[:] = H_exch1.compute()# + H_app.vector()
+    H_eff.vector()[:] = H_exch1.compute_field()# + H_app.vector()
     solve(a==L, dM)
     return dM.vector().array()
 

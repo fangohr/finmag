@@ -1,10 +1,11 @@
 import numpy as np
 import dolfin as df
 
-class Exchange(object):
+#This file needs updating for DMI -- based on exchange.py
+class DMI(object):
     def __init__(self, V, M, C, Ms, method='box'):
         """
-        Compute the exchange field.
+        Compute the DMI field 
         
         The constructor takes the parameters
             V a dolfin VectorFunctionSpace
