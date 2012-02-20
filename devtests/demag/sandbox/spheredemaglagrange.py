@@ -81,8 +81,8 @@ print phi.vector().array()
 print phi
 #demag = project(grad(phi),VV)
 
-plot(phi)
-interactive()
+#plot(phi)
+#interactive()
 
 
 ###############################
