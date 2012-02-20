@@ -23,11 +23,11 @@ class MagUnitInterval(TruncDemagProblem):
 class MagUnitCircle(TruncDemagProblem):
     def __init__(self):
         mesh = UnitCircle(10)
-        self.r = 0.1 #Radius of magnetic Core
+        self.r = 0.2 #Radius of magnetic Core
         r = self.r
         class MagUnitCircle(SubDomain):
             def inside(self, x, on_boundary):
-                return np.linalg.norm(x,2) < r
+                return np.linalg.norm(x,2) < r + DOLFIN_EPS
         M = ("1","0")
         #Initialize Base Class
         TruncDemagProblem.__init__(self,mesh,MagUnitCircle(),M)
@@ -35,15 +35,18 @@ class MagUnitCircle(TruncDemagProblem):
 class MagUnitSphere(TruncDemagProblem):
     def __init__(self):
         mesh = UnitSphere(10)
-        self.r = 0.1 #Radius of magnetic Core
+        self.r = 0.2 #Radius of magnetic Core
         r = self.r
         class SphereCore(SubDomain):
             def inside(self, x, on_boundary):
-                return np.linalg.norm(x,2) < r
+                return x[0]*x[0] + x[1]*x[1] + x[2]*x[2] < r*r + DOLFIN_EPS
         M = ("1","0","0")
         #Initialize Base Class
         TruncDemagProblem.__init__(self,mesh,SphereCore(),M)
 
-
-problem = MagUnitSphere()
-print problem.r
+if __name__ == "__main__":
+    problem = MagUnitSphere()
+    print problem.r
+    print problem.coremesh.coordinates()
+    plot(problem.coremesh)
+    interactive()
