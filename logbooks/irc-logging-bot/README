@@ -1,0 +1,8 @@
+Dokos 
+
+simple IRC bot which connects to a single channel and logs channel messages.
+
+Used in finmag project to archive IRC communication to the repository once a day.
+
+Author: Marc-Antonio Bisotti (very minor modifications by HF)
+
