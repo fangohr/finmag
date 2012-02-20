@@ -17,7 +17,8 @@ class TestMeshSetup(object):
         problem = MagUnitInterval()
         #Test to see if the Volume is correct
         vol = self.bound_volume(problem)
-        assert near(vol,2.0), "Error in 1-d internal boundary creation, approximate volume %g does not equal 2"%(vol)
+        voltrue = self.submesh_volume(problem)
+        assert near(vol,voltrue), "Error in 1-d internal boundary creation, approximate volume %g does not equal 2"%(vol)
         #Test to see if the number of facets is correct
         cfound = problem.corebound.countfacets
         cactual = self.bound_facets(problem)
