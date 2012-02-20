@@ -8,7 +8,7 @@ meshconvert-nmag:
 	nmeshimport --netgen bar.neutral bar.nmesh.h5
 	gzip -f bar.neutral
 
-meshconvert-colfin:
+meshconvert-dolfin:
 	dolfin-convert bar.gmsh bar.xml
 
 meshshow:
