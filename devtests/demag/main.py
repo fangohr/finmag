@@ -2,7 +2,7 @@
 from solver_nitsche import *
 from prob_testcases import *
 
-problem = MagUnitInterval()
+problem = MagUnitSphere()
 solver = NitscheSolver(problem)
 solution = solver.solve()
 plot(solution)
