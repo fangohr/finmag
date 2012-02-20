@@ -5,7 +5,7 @@ from scipy.integrate import odeint
 from finmag.sim.llg import LLG
 from finmag.sim.helpers import make_vectors_function,angle
 
-TOLERANCE = 5e-10
+TOLERANCE = 1.5e-9
 
 # define the mesh
 length = 20e-9 #m
@@ -44,7 +44,8 @@ def test_all_orientations_without_pinning():
 def test_all_orientations_with_pinning():
     for M0 in possible_orientations:
         angles = angles_after_a_nanosecond(M0, [0, 10])
-        print angles
+        print "angles:", angles
+        print "abs(angles.max()-angles.min())",abs(angles.max() - angles.min())
         assert abs(angles.max() - angles.min()) < TOLERANCE
 
 if __name__== "__main__":
