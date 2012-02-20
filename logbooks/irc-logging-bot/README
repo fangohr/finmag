@@ -6,3 +6,9 @@ Used in finmag project to archive IRC communication to the repository once a day
 
 Author: Marc-Antonio Bisotti (very minor modifications by HF)
 
+
+The bot is currently running on summer.kk in fangohr's home, started
+via cronjob at reboot, and committed via cronjob at 23:59 every day.
+
+
+
