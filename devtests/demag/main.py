@@ -2,8 +2,11 @@
 from solver_nitsche import *
 from prob_testcases import *
 
-problem = MagUnitInterval()
-solver = NitscheSolver(problem)
+problem = MagUnitCircle()
+solver = NitscheSolver(problem, degree = 1)
 solution = solver.solve()
-plot(solution)
+gradphi = grad(solution)
+demag = project(gradphi, solver.Mspace)
+plot(solution, title = "phi")
+plot(demag, title = "demag field")
 interactive()
