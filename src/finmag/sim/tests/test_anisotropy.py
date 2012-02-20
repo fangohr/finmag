@@ -49,20 +49,20 @@ a = Constant((0, 0, 1))
 def test_parallel():
     # Case 1
     M = project(Constant((0, 0, 1)), V)
-    energy = Anisotropy(V, M, Ms, K1, a).energy()
+    energy = Anisotropy(V, M, K1, a).energy()
     assert abs(energy) < TOL
 
 def test_orthogonal():
     # Case 2
     M = project(Constant((0,1,0)), V)   
-    energy = Anisotropy(V, M, Ms, K1, a).energy()
-    vol = K*assemble(Constant(1)*dx, mesh=mesh)
-    assert abs(energy - vol) < TOL
+    energy = Anisotropy(V, M, K1, a).energy()
+    volK = K*assemble(Constant(1)*dx, mesh=mesh)
+    assert abs(energy - volK) < TOL
 
 def test_gradient():
     # Case 3
     M = project(Constant((1./np.sqrt(2), 0, 1./np.sqrt(2))), V)
-    dE_dM = Anisotropy(V, M, Ms, K1, a).compute()
+    dE_dM = Anisotropy(V, M, K1, a).compute()
     
     # Manually derivative
     w = TestFunction(V)
