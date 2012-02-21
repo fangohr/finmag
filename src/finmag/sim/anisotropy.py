@@ -1,7 +1,7 @@
 from dolfin import *
 
 class Anisotropy(object):
-    def __init__(self, V, M, Ms, K1, a):
+    def __init__(self, V, M, K1, a):
 
         # Local testfunction
         w = TestFunction(V)
@@ -14,7 +14,6 @@ class Anisotropy(object):
 
         # Volume
         self.vol = assemble(dot(w, Constant((1,1,1)))*dx).array()
-        self.Ms  = Ms
 
     def compute(self):
         return assemble(self.dE_dM).array() / self.vol

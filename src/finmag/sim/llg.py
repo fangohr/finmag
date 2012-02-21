@@ -10,6 +10,7 @@ class LLG(object):
     def __init__(self, mesh, order=1):
         self.mesh = mesh
         self.V = df.VectorFunctionSpace(self.mesh, 'Lagrange', order, dim=3)
+        self.Volume = df.assemble(df.Constant(1)*df.dx, mesh=self.mesh)
 
         self.alpha = 0.5
         self.gamma = 2.211e5 # m/(As)
@@ -33,6 +34,12 @@ class LLG(object):
     @M.setter
     def M(self, value):
         self._M.vector()[:] = value
+
+    def average_M(self):
+        Mx = df.assemble(df.dot(self._M, df.Constant([1,0,0])) * df.dx)
+        My = df.assemble(df.dot(self._M, df.Constant([0,1,0])) * df.dx)
+        Mz = df.assemble(df.dot(self._M, df.Constant([0,0,1])) * df.dx)
+        return (Mx/self.Volume, My/self.Volume, Mz/self.Volume)
 
     def initial_M(self, value):
         self.M0 = df.Constant(value)
