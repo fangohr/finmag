@@ -69,7 +69,7 @@ def test_macrospin_default_damping():
 
     M_analytical = make_analytical_solution(llg.MS, 1e5, llg.alpha, llg.gamma)
 
-    TOLERANCE = 3e-2
+    TOLERANCE = 4e-2
 
     for i in range(len(ts)):
         
