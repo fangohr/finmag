@@ -31,7 +31,7 @@ namespace finmag { namespace sundials {
 
         ~array_nvector() {
             if (vec) {
-                N_VDestroy(vec);
+                N_VDestroy_Serial(vec);
                 vec = 0;
             }
         }
