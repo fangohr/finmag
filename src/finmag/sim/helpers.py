@@ -50,5 +50,5 @@ def perturbed_vectors(n, direction=[1,0,0], length=1):
     """
     displacements = numpy.random.rand(n, 3) - 0.5
     vectors = direction + displacements
-    normalised_vectors = [length*v/norm(v) for v in vectors]
+    normalised_vectors = numpy.array([length*v/norm(v) for v in vectors])
     return normalised_vectors
