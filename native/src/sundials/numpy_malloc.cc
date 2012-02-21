@@ -32,7 +32,9 @@ namespace finmag { namespace sundials {
             malloc_release(){}
             malloc_release(void* p) { set_ptr(p); }
 
-            void set_ptr(void *p) { ptr.reset(p, std::ptr_fun(free)); }
+            void set_ptr(void *p) {
+                ptr.reset(p, std::ptr_fun(free));
+            }
 
         private:
             boost::shared_ptr<void> ptr;
