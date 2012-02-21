@@ -93,4 +93,3 @@ class NitscheSolver(object):
         self.M = M
         self.Mspace = Mspace
         return phitot
-        
