@@ -11,7 +11,7 @@
 #ifndef __FINMAG_ODE_SUNDIALS_CVODE_H
 #define __FINMAG_ODE_SUNDIALS_CVODE_H
 
-namespace finmag { namespace ode {
+namespace finmag { namespace sundials {
 
     class sundials_nvector {
 

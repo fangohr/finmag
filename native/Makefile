@@ -20,20 +20,26 @@ all : parallel
 # The directory where to place the extension modules
 MODULE_DIR = ../src/finmag/native
 # The list of extension modules to build
-MODULES = ode.so
+MODULES = sundials.so
 # The directory to store the precompiled header file.
 PRECOMPILED_HEADER_DIR ?= /tmp/$(USER)/finmag-pch
+# Name of the binary that runs all unit tests
+UNIT_TEST_BINARY=tests/run_ci_tests.bin
+# Directory for CI unit test results
+UNIT_TEST_RESULTS_DIR=../test-reports/boost
 # Explicit dependencies to tell how the module files are linked
-$(MODULE_DIR)/ode.so : src/ode/py_ode_module.o src/util/np_array.o
-ode_LDFLAGS = -lsundials_cvode -llapack
+$(MODULE_DIR)/sundials.so : src/sundials/py_sundials_module.o src/util/np_array.o
+sundials_LDFLAGS = -lsundials_cvode -llapack
+$(UNIT_TEST_BINARY) : tests/run_ci_tests.o src/util/np_array.o src/sundials/tests/sundials_tests.o src/sundials/numpy_malloc.o
+run_ci_tests_LDFLAGS=-lboost_prg_exec_monitor /usr/lib/libboost_unit_test_framework.a src/sundials/nvec_serial/nvector_serial_custom_malloc.so
 
 #######################################
 # Other variables
 #
 # The list of output binary files to link
-BUILD_TARGETS = $(addprefix $(MODULE_DIR)/,$(MODULES))
+BUILD_TARGETS = $(addprefix $(MODULE_DIR)/,$(MODULES)) $(UNIT_TEST_BINARY)
 # The list of source files to be compiled
-SOURCES = $(shell find src -name \*.cc)
+SOURCES = $(shell find src tests -name \*.cc)
 # The list of object files to be compiled
 OBJECT_FILES = $(patsubst %.cc,%.o,$(SOURCES))
 
@@ -62,17 +68,24 @@ parallel:
 	@echo ------------------
 	@echo Building object files: $(OBJECT_FILES)
 	@echo ------------------
-	make -j $(N_SIMULTANEOUS_JOBS) object-files
+	$(MAKE) -j $(N_SIMULTANEOUS_JOBS) object-files subprojects
 	@echo ------------------
 	@echo Linking: $(BUILD_TARGETS)
 	@echo ------------------
-	make -j $(N_SIMULTANEOUS_JOBS) build-targets
+	$(MAKE) -j $(N_SIMULTANEOUS_JOBS) build-targets
 
 # Links the object files and creates the binaries
 build-targets : $(BUILD_TARGETS)
 
 # Compiles the source files into object files
 object-files : $(OBJECT_FILES)
+
+# Builds subprojects that have separate makefiles
+subprojects : nvec_serial
+
+# Build the custom nvector_serial library
+nvec_serial :
+	@$(MAKE) -C src/sundials/nvec_serial
 
 # Builds an object file from a .cc file
 %.o : %.cc $(PRECOMPILED_HEADER_FILE) Makefile
@@ -86,17 +99,28 @@ $(PRECOMPILED_HEADER_FILE) : src/finmag_includes.h Makefile
 	@mkdir -p $(PRECOMPILED_HEADER_DIR)
 	@$(CXX) $(CFLAGS_NOPCH) -o $@ -c $<
 
+# Runs Boost.Test unit tests in native code
+run-ci-tests:
+	$(MAKE) -j $(NUM_PROCS) $(UNIT_TEST_BINARY)
+	mkdir -p $(UNIT_TEST_RESULTS_DIR)
+	./$(UNIT_TEST_BINARY) --output_format=XML --report_level=no --log_level=test_suite > $(UNIT_TEST_RESULTS_DIR)/run_ci_tests_output.xml
+
 # Removes all temporary files
 clean:
 	rm -f $(BUILD_TARGETS) $(PRECOMPILED_HEADER_FILE)
-	find . \( -name \*.o -o -name \*.d -o -name \*.o.nm -o -name \*.gen.cc -o -name \*.gen.h \) -exec rm {} +
+	find . \( -name \*.o -o -name \*.d -o -name \*.o.nm -o -name \*.gen.cc -o -name \*.gen.h -o -name \*.so \) -exec rm {} +
 
-.PHONY: clean pch all object-files build-targets parallel
+.PHONY: clean pch all object-files build-targets parallel run-ci-tests subprojects
 
 # Use .SECONDEXPANSION to use the per-library linking flags *_LDFLAGS
 .SECONDEXPANSION:
 
-# Builds the extension module
+# Links a Python extension module
 %.so :
 	@echo Building shared library: $@
 	$(CXX) $^ $(CFLAGS) $(MODULE_FLAGS) $($(patsubst %.so,%,$(notdir $@))_LDFLAGS) -shared -o $@
+
+# Links a binary executable
+%.bin :
+	@echo Building binary: $@
+	$(CXX) $^ $(CFLAGS) $(MODULE_FLAGS) $($(patsubst %.bin,%,$(notdir $@))_LDFLAGS) -o $@
