@@ -3,9 +3,9 @@ import dolfin
 from scipy.integrate import odeint
 
 from finmag.sim.llg import LLG
-from finmag.sim.helpers import make_vectors_function,angle
+from finmag.sim.helpers import vectors,angle
 
-TOLERANCE = 5e-10
+TOLERANCE = 2e-9
 
 # define the mesh
 length = 20e-9 #m
@@ -30,7 +30,6 @@ def angles_after_a_nanosecond(initial_M, pins=[]):
     ts = numpy.linspace(0, 1e-9, 2)
     ys, infodict = odeint(llg.solve_for, llg.M, ts, atol=10, full_output=True)
 
-    vectors = make_vectors_function(ys[0])
     M = vectors(ys[-1])
     angles = numpy.array([angle(M[i], M[i+1]) for i in xrange(len(M)-1)])
     return angles

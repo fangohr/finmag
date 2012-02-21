@@ -1,13 +1,11 @@
 import numpy
 import pylab
-from finmag.sim.helpers import make_vectors_function, norm, angle
+from finmag.sim.helpers import vectors, norm, angle
 
 # Load the data which dolfin has created and odeint has integrated. 
 Ms = numpy.genfromtxt("1d_M.txt")
 # Each entry in ys is M for a particular moment in time.
 # Each M is all the x-values of M on the mesh, followed by the y and z-values.
-
-vectors = make_vectors_function(Ms[0])
 
 """
 Norm of M at each node, and the angles between M at

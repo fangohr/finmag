@@ -1,14 +1,12 @@
 import numpy
 import pylab
 from finmag.sim.helpers import norm, angle, components, \
-    make_vectors_function, rows_to_columns
+        vectors, rows_to_columns 
 
 # Load the data which dolfin has created and odeint has integrated. 
 Ms = numpy.genfromtxt("1d_M.txt")
 # Each entry in ys is M for a particular moment in time.
 # Each M is all the x-values of M on the mesh, followed by the y and z-values.
-
-vectors = make_vectors_function(Ms[0])
 
 """
 The time series of the average value of M across the mesh.
