@@ -19,6 +19,9 @@ namespace finmag { namespace sundials {
 
     np_array<double> nvector_to_array(N_Vector p);
 
+    extern "C" void * numpy_malloc(size_t len, size_t el_size);
+    extern "C" void numpy_free(void *ptr);
+
     /* Wrapper class for Sundials NVectorSerial */
     class array_nvector {
     public:

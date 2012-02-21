@@ -9,10 +9,12 @@
  */
 
 #ifndef __FINMAG_UTIL_SUNDIALS_NVECTOR_CUSTOM_MALLOC_IMPL_H
+#define __FINMAG_UTIL_SUNDIALS_NVECTOR_CUSTOM_MALLOC_IMPL_H
+
+#include <stdlib.h>
 
 #include "../nvector_custom_malloc.h"
 
-#define __FINMAG_UTIL_SUNDIALS_NVECTOR_CUSTOM_MALLOC_IMPL_H
 
 #ifdef __cplusplus
 extern "C" {
