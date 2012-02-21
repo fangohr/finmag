@@ -36,7 +36,7 @@ def test_rows_to_columns():
     assert numpy.array_equal(y, rows_to_columns(x))
 
 def test_perturbed_vectors():
-    quantity = 10; direction = [1, 0, 0]; length = 1
+    quantity = 10; direction = [1, 0, 0]; length = 5
     # I could pass a fake random function to perturbed_vectors for testing,
     # but the exact behaviour of perturbed_vectors is unspecified except
     # for the number of vectors returned and their length anyways.
@@ -46,4 +46,4 @@ def test_perturbed_vectors():
 
     for v in vector_field:
         assert len(v) == 3
-        assert norm(v) - 1 < TOLERANCE
+        assert norm(v) - 5 < TOLERANCE
