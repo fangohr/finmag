@@ -1,4 +1,7 @@
 "A Solver for the demagnetization field using the Fredkin Koehler approach" 
+#This solver does not work yet. The Neumann problem needs to be specified
+#somehow. The current solution of fixing a boundary point creates an incorrect
+#solution
 
 __author__ = "Gabriel Balaban"
 __copyright__ = __author__
@@ -8,14 +11,14 @@ __organisation__ = "University of Southampton"
 from dolfin import *
 import numpy as np
 
-
-class NitscheSolver(object):
+class FKSolver(object):
     def __init__(self,problem, degree = 1):
         self.problem = problem
         self.degree = degree
         
-    def solve():
-        V = FunctionSpace(mesh,"CG",self.degree)
+    def solve(self):
+        #Set up spaces,functions, measures etc.
+        V = FunctionSpace(self.problem.mesh,"CG",self.degree)
         if self.problem.mesh.topology().dim() == 1:
             Mspace = FunctionSpace(self.problem.mesh,"DG",self.degree)
         else:
@@ -23,19 +26,23 @@ class NitscheSolver(object):
         phi0 = Function(V)
         phi1 = Function(V)
 
+        dxC = self.problem.dxC
+        dSC = self.problem.dSC
+        N = FacetNormal(self.problem.coremesh)
+
         #Define the magnetisation
-        M = interpolate(Expression("1"),Mspace)
+        M = interpolate(Expression(self.problem.M),Mspace)
 
         ########################################
         #Solve for phi0
         ########################################
-##
 ##        #A boundary point used to specify the pure neumann problem
-##        class BoundPoint(SubDomain):
-##            def inside(self, x, on_boundary):
-##                return near(x[0], 0.5 - r)
-##
-##        dbc1 = DirichletBC(V, 0.0, BoundPoint())
+        r = self.problem.r
+        class BoundPoint(SubDomain):
+            def inside(self, x, on_boundary):
+                return near(x[0], 0.5 - r)
+
+        dbc1 = DirichletBC(V, 0.0, BoundPoint())
 
         #Forms for Neumann Poisson Equation for phi0
 
@@ -43,20 +50,21 @@ class NitscheSolver(object):
         v = TestFunction(V)
         a = dot(grad(u),grad(v))*dxC
         f = (div(M)*v)*dxC  #Source term in core
-        f += (dot(M,N)*v)('+')*dSC   #Neumann Conditions on edge of core
+        f += (dot(M,N)*v)('-')*dSC   #Neumann Conditions on edge of core
 
         A = assemble(a,cell_domains = self.problem.corefunc, interior_facet_domains = self.problem.coreboundfunc)
         F = assemble(f,cell_domains = self.problem.corefunc, interior_facet_domains = self.problem.coreboundfunc)
 
-        #dbc1.apply(A,F)
+        dbc1.apply(A,F)
         A.ident_zeros()
+        print A.array()
         solve(A,phi0.vector(),F)
 
         ########################################
         #Solve for phi1
         ########################################
-        L = FunctionSpace(mesh,"CG",degree)
-        VD = FunctionSpace(mesh,"DG",degree)
+        L = FunctionSpace(self.problem.mesh,"CG",self.degree)
+        VD = FunctionSpace(self.problem.mesh,"DG",self.degree)
         W = MixedFunctionSpace((V,L))
         u,l = TrialFunctions(W)
         v,q = TestFunctions(W)
@@ -82,6 +90,8 @@ class NitscheSolver(object):
         phi1.assign(solphi)
 
         phitot = Function(V)
+        print phi0.vector().array()
+        print phi1.vector().array()
         phitot.vector()[:] = phi0.vector() + phi1.vector()
 
         #Store Variables for outside testing

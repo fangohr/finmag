@@ -1,16 +1,18 @@
 #Main Module to run the other modules from
 from solver_nitsche import *
+from solver_fk import *
 from prob_testcases import *
 
-problem = MagUnitCircle()
-coreboundmesh = BoundaryMesh(problem.coremesh)
-coreboundverticies = compute_vertex_map(problem.mesh,coreboundmesh)
-print coreboundverticies
+problem = MagUnitInterval()
+solver = FKSolver(problem)
+solution = solver.solve()
 
 ##solver = NitscheSolver(problem, degree = 1)
 ##solution = solver.solve()
 ##gradphi = grad(solution)
 ##demag = project(gradphi, solver.Mspace)
-##plot(solution, title = "phi")
-##plot(demag, title = "demag field")
-##interactive()
+plot(solution, title = "phitotal")
+plot(solver.phi0, title = "phi0")
+plot(solvsolverve
+####plot(demag, title = "demag field")
+interactive()
