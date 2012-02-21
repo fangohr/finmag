@@ -22,6 +22,10 @@ class NitscheSolver(object):
     def solve(self):
         #Solve the demag problem and store the Solution
         V = FunctionSpace(self.problem.mesh,"CG",self.degree)
+        if self.problem.mesh.topology().dim() == 1:
+            Mspace = FunctionSpace(self.problem.mesh,"DG",self.degree)
+        else:
+            Mspace = VectorFunctionSpace(self.problem.mesh,"DG",self.degree)
         W = MixedFunctionSpace((V,V))
         u0,u1 = TestFunctions(W)
         v0,v1 = TrialFunctions(W)
@@ -32,7 +36,7 @@ class NitscheSolver(object):
         h = self.problem.mesh.hmin()
 
         #Define the magnetisation
-        M = interpolate(Expression(self.problem.M),V)
+        M = interpolate(Expression(self.problem.M),Mspace)
 
         N = FacetNormal(self.problem.coremesh)
         dSC = self.problem.dSC #Boundary of Core
@@ -68,7 +72,7 @@ class NitscheSolver(object):
         dbc.apply(A)
         dbc.apply(F)
         A.ident_zeros()
-        solve(A, self.sol.vector(),F)
+        solve(A, sol.vector(),F)
 
         #Seperate the mixed function and then add the parts
         solphi0,solphi1 = sol.split()
@@ -78,7 +82,7 @@ class NitscheSolver(object):
         #This might or might not be a better way to add phi1 and phi0
         #phitot = phi0 + phi1 
 
-        self.phitot.vector()[:] = phi0.vector() + phi1.vector()
+        phitot.vector()[:] = phi0.vector() + phi1.vector()
 
         #Store variables for outside testing
         self.V = V
@@ -86,6 +90,7 @@ class NitscheSolver(object):
         self.phi0 = phi0
         self.phi1 = phi1
         self.sol = sol
-        M = self.M
+        self.M = M
+        self.Mspace = Mspace
         return phitot
         

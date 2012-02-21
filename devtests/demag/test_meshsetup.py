@@ -7,39 +7,49 @@ __project__ = "Finmag"
 __organisation__ = "University of Southampton"
 
 from dolfin import *
-from prob_testcases import *
+from problems import *
 import math
 
 #Global Tolerance for inexact comparisons in percent
-TOL = 0.02
-class TestProblems(object):
-
+TOL = 0.01
+class TestMeshSetup(object):
     def test_1d(self):
         problem = MagUnitInterval()
         #Test to see if the Volume is correct
         vol = self.bound_volume(problem)
-        assert near(vol,2.0), "Error in 1-d internal boundary creation, approximate volume %g does not equal 2"%(vol)
+        voltrue = self.submesh_volume(problem)
+        assert near(vol,voltrue), "Error in 1-d internal boundary creation, approximate volume %g does not equal 2"%(vol)
         #Test to see if the number of facets is correct
         cfound = problem.corebound.countfacets
         cactual = self.bound_facets(problem)
         assert cfound == cactual, "Error in 1-d internal boundary creation, the number of facets in the generated boundary \
                                   %d does not equal that of the coremesh boundary %d"%(cfound,cactual)
-## This one fails so far and should be implemented at some point
-##    def test_2d(self):
-##        problem = MagUnitCircle()
-##        #Test to see if the Volume is correct
-##        vol = self.bound_volume(problem)
-##        print vol
-##        voltrue = 2*problem.r*math.pi
-##        print self.compare(vol,voltrue)
-##        assert self.compare(vol,voltrue), "Error in 2-d internal boundary creation, error in approximate volume %g is not within TOL %g of \
-##                                      the true volume %g"%(vol,TOL,voltrue)
-##        #Test to see if the number of facets is correct
-##        cfound = problem.corebound.countfacets
-##        cactual = self.bound_facets(problem)
-##        assert cfound == cactual, "Error in 2-d internal boundary creation, the number of facets in the generated boundary \
-##                                  %d does not equal that of the coremesh boundary %d"%(cfound,cactual)
-        
+    def test_2d(self):
+        problem = MagUnitCircle()
+        #Test to see if the Volume is correct
+        vol = self.bound_volume(problem)
+        voltrue = self.submesh_volume(problem)
+        assert self.compare(vol,voltrue), "Error in 2-d internal boundary creation, error in approximate volume %g is not within TOL %g of \
+                                      the true volume %g"%(vol,TOL,voltrue)
+        #Test to see if the number of facets is correct
+        cfound = problem.corebound.countfacets
+        cactual = self.bound_facets(problem)
+        assert cfound == cactual, "Error in 2-d internal boundary creation, the number of facets in the generated boundary \
+                                  %d does not equal that of the coremesh boundary %d"%(cfound,cactual)
+
+    def test_3d(self):
+        problem = MagUnitSphere()
+        #Test to see if the Volume is correct
+        vol = self.bound_volume(problem)
+        voltrue = self.submesh_volume(problem)
+        assert self.compare(vol,voltrue), "Error in 3D internal boundary creation, error in approximate volume %g is not within TOL %g of \
+                                      the true volume %g"%(vol,TOL,voltrue)
+        #Test to see if the number of facets is correct
+        cfound = problem.corebound.countfacets
+        cactual = self.bound_facets(problem)
+        assert cfound == cactual, "Error in 3-d internal boundary creation, the number of facets in the generated boundary \
+                                  %d does not equal that of the coremesh boundary %d"%(cfound,cactual)
+
     def bound_volume(self,problem):
         #Gives the volume of the surface of the magnetic core
         V = FunctionSpace(problem.mesh,"CG",1)
@@ -47,6 +57,13 @@ class TestProblems(object):
         volform = one('-')*problem.dSC
         return assemble(volform,interior_facet_domains = problem.coreboundfunc) 
 
+    def submesh_volume(self,problem):
+        ##coreboundmesh = BoundaryMesh(problem.coremesh)
+        V = FunctionSpace(problem.coremesh,"CG",1)
+        one = interpolate(Constant(1),V)
+        volform = one*ds
+        return assemble(volform)
+    
     def bound_facets(self,problem):
         #Gives the number of facets in the boundary of the coremesh
         boundmesh = BoundaryMesh(problem.coremesh)
