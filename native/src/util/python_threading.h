@@ -23,14 +23,9 @@
     class scoped_gil_ensure
     {
     public:
-        scoped_gil_ensure() {
-            gstate = PyGILState_Ensure();
-        }
+        scoped_gil_ensure() { gstate = PyGILState_Ensure(); }
 
-        ~scoped_gil_ensure() {
-            PyGILState_Release(gstate);
-            gstate = 0;
-        }
+        ~scoped_gil_ensure() { PyGILState_Release(gstate); }
 
     private:
         PyGILState_STATE gstate;

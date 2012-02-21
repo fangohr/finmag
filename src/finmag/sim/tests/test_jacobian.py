@@ -1,71 +1,131 @@
 from dolfin import *
-from scipy.integrate import odeint
-import numpy as np
+from finmag.sim.llg import LLG
+from finmag.sim.exchange import Exchange
+from math import log
+import random
 
-set_log_level(21)
+class MyLLG(LLG):
+    """
+    Temporary extension of LLG because the current version
+    does its computations externally in C++, and doesn't 
+    compute the variational forms, and thus makes it
+    impossible to compute the jacobian.
+    """
+    def __init__(self, mesh, order=1):
+        LLG.__init__(self, mesh, order)
+        self.p = Constant(self.gamma/(1 + self.alpha**2))
 
-# Mesh and functions
+    def M(self):
+        return self._M
+
+    def H_eff(self):
+        """Very temporary function to make things simple."""
+        H_app = project((Constant((0, 1e5, 0))), self.V)
+        H_ex  = Function(self.V)
+
+        # Comment out these two lines if you don't want exchange.
+        exch  = Exchange(self.V, self._M, self.C, self.MS)
+        H_ex.vector().array()[:] = exch.compute_field()
+
+        H_eff = H_ex + H_app
+        return H_eff
+
+    def compute_variational_forms(self):
+        M, H, Ms, p, c, alpha, V = self._M, self.H_eff(), \
+                self.MS, self.p, self.c, self.alpha, self.V
+        
+        u = TrialFunction(V)
+        v = TestFunction(V)
+
+        a = inner(u, v)*dx
+        L = inner((-p*cross(M,H)
+                   -p*alpha/Ms*cross(M,cross(M,H))
+                   -c*(inner(M,M) - Ms**2)*M/Ms**2), v)*dx
+
+        self.a, self.L = a, L
+
+    def variational_forms(self):
+        self.compute_variational_forms()
+        return self.a, self.L
+
+    def compute_jacobian(self):
+        L, M = self.L, self._M
+        return derivative(L, M)
+
+
+def derivative_test(L, M, x, hs, J=None):
+    """
+    Taylor remainder test. If Jacobian J is given, use that, if not
+    don't.
+    """
+
+    L_M = assemble(L)
+    errors = []
+    for h in hs:
+        H = Function(V)
+        H.vector()[:] = h*x.vector() # h*x
+
+        P = Function(V)
+        P.vector()[:] = M.vector() + H.vector()
+
+        L_P = assemble(replace(L, {M: P}))
+
+        # Without Jacobian information
+        if J is None:
+            errors += [norm(L_P - L_M)]
+        # With Jacobian information
+        else:
+            J_M_H = assemble(action(J, H))
+            errors += [norm(L_P - L_M - J_M_H)]
+
+    return errors
+
+def convergence_rates(xs, ys):
+    assert(len(xs) == len(ys))
+    rates = [(log(ys[i]) - log(ys[i-1]))/(log(hs[i]) - log(hs[i-1]))
+             for i in range(1, len(xs))]
+    return rates
+
+
 m = 1e-5
-m = 1
-mesh = Box(0,m,0,m,0,m,1,1,1)
-V = VectorFunctionSpace(mesh, "CG", 1)
-u = TrialFunction(V)
-v = TestFunction(V)
+mesh = Box(0,m,0,m,0,m,5,5,5)
+llg = MyLLG(mesh)
+llg.initial_M((8.6e5,0,0))
+llg.setup()
 
-# Parameters
-alpha = 0.5
-gamma = 2.211e5
-p = Constant(gamma/(1 + alpha**2))
-c = Constant(1e10)
+M, V = llg.M(), llg.V
+a, L = llg.variational_forms()
 
-# Applied field.
-H = Constant((0, 1e5, 0))
-Ms = 8e5
+x = Function(V)
+s = random.random()
+#s = random.randint(0, 1e5)
+x.vector()[:] = s
+hs = [2.0/n for n in (1, 2, 4, 8, 16, 32)]
 
-# Initial magnetic field.
-M = project(Constant((Ms, 0, 0)), V)
+TOL = 1e-5
 
-# Variational forms
-a = inner(u, v)*dx
-#L = inner((-p*cross(M,H)
-#           -p*alpha/Ms*cross(M,cross(M,H))
-#           -c*(inner(M,M) - Ms**2)*M/Ms**2), v)*dx
-L = inner(M, v)*dx
+def test_convergence():
+    """All convergence rates should be 1 as the differences 
+    should convert as O(n)."""
 
+    errors = derivative_test(L, M, x, hs)
+    rates = convergence_rates(hs, errors)
+    for rate in rates:
+        assert abs(rate - 1) < TOL
 
-# Ufl jacobian
-J = derivative(L, M)
-J = assemble(J).array()
+def test_derivative():
+    """This should be zero because the rhs of LLG is linear in M."""
+    J = llg.compute_jacobian()
+    errors = derivative_test(L, M, x, hs, J=J)
+    for err in errors:
+        assert abs(err) < TOL
 
+if __name__ == '__main__':
+    errors = derivative_test(L, M, x, hs)
+    print "This should be close to one:"
+    print convergence_rates(hs, errors)
+    J = llg.compute_jacobian()
+    errors = derivative_test(L, M, x, hs, J=J)
+    print "This should be close to zero:"
+    print errors
 
-dM1 = Function(V) # f(x)
-dM2 = Function(V) # f(x+h)
-
-# Compute f(x)
-solve(a == L, dM1)
-
-# Our jacobian
-n = len(dM1.vector())
-J2 = np.zeros((n,n))
-
-h = 1 #small change relative to Ms
-for i in range(n):
-    M.vector()[i] += h
-
-    # Compute f(x + h)
-    solve(a == L, dM2)
-
-    # Forward differences
-    J2[i,:] = (dM2.vector() - dM1.vector())/h
-    #print i, M.vector().array()
-    M.vector()[i] -= h
-    
-
-
-print J[0]
-print ''
-print J2[0]
-
-
-#Observation: J2 is diagonal matrix (as expected for the chosen L), but J shows three submatrices along the diagonal.
-#Dont' know why at the moment.
