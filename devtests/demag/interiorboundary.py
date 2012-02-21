@@ -27,6 +27,7 @@ class InteriorBoundary():
         newboundfunc.set_all(0)
         #self.mesh.init(self.D - 1, self.D)
         self.countfacets = 0
+        
         for facet in facets(self.mesh):
             # Skip facets on the boundary
             cells = facet.entities(self.D)
@@ -50,8 +51,6 @@ class InteriorBoundary():
             p0_inside = translate(p0_inside)
             p1_inside = translate(p1_inside)
             
-##            p0_inside = subdomain.inside(p0, False)
-##            p1_inside = subdomain.inside(p1, False)
             # Just set c0, will be set only for facets below
             neworientation[facet.index()] = c0
 
@@ -76,10 +75,10 @@ class InteriorBoundary():
                 newboundfunc[facet_index] = 0
         self.boundaries += [newboundfunc]
         self.orientation += [neworientation]
-
-#Used to check that points were inside or outside a sphere
-def length(x,y,z):
-    return sqrt(x*x + y*y + z*z)
+        
+class inputerror(Exception):
+    def __str__(self):
+        return "Can only give Lagrange Element dimension for mesh dimensions 1-3"
 
 def create_intbound(mesh,subdomain):
     #Automatically generates the boundary and return the facet function
