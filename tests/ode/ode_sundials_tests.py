@@ -23,9 +23,6 @@ class OdeSundialsTests(unittest.TestCase):
         ref_ys = np.array([reference(t)  for t in ts])
         assert np.max(np.abs(ys - ref_ys)) < 1e-6
 
-
-
-
 if __name__ == '__main__':
     unittest.main()
 

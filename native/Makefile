@@ -20,12 +20,12 @@ all : parallel
 # The directory where to place the extension modules
 MODULE_DIR = ../src/finmag/native
 # The list of extension modules to build
-MODULES = ode.so
+MODULES = sundials.so
 # The directory to store the precompiled header file.
 PRECOMPILED_HEADER_DIR ?= /tmp/$(USER)/finmag-pch
 # Explicit dependencies to tell how the module files are linked
-$(MODULE_DIR)/ode.so : src/ode/py_ode_module.o src/util/np_array.o
-ode_LDFLAGS = -lsundials_cvode -llapack
+$(MODULE_DIR)/sundials.so : src/sundials/py_sundials_module.o src/util/np_array.o
+sundials_LDFLAGS = -lsundials_cvode -llapack
 
 #######################################
 # Other variables
