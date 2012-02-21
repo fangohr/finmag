@@ -6,7 +6,7 @@
 #
 # AUTHOR(S) OF THIS FILE: Dmitri Chernyshenko (d.chernyshenko@soton.ac.uk)
 
-import finmag.native.ode as native_ode
+import finmag.native.sundials as native_ode
 
 class cvode(object):
     def __init__(self, f):

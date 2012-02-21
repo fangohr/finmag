@@ -11,17 +11,20 @@
 #ifndef __FINMAG_UTIL_SUNDIALS_NUMPY_MALLOC_H
 #define __FINMAG_UTIL_SUNDIALS_NUMPY_MALLOC_H
 
+#include "util/np_array.h"
+#include <nvector/nvector_serial.h>
+
 namespace finmag { namespace sundials {
     void register_numpy_malloc();
 
-    np_array<double> nvector_to_array(NVector p);
+    np_array<double> nvector_to_array(N_Vector p);
 
     /* Wrapper class for Sundials NVectorSerial */
     class array_nvector {
     public:
         array_nvector(const np_array<double> &data);
 
-        NVector ptr() { return vec; }
+        N_Vector ptr() { return vec; }
 
         ~array_nvector() {
             if (vec) {
@@ -32,10 +35,10 @@ namespace finmag { namespace sundials {
     private:
         // Disallow copy constructor & assignment
         // Use auto_ptr/unique_ptr/shared_ptr for shared nvector_serial objects
-        nvector_serial(const nvector_serial&);
-        void operator=(const nvector_serial&);
+        array_nvector(const array_nvector&);
+        void operator=(const array_nvector&);
 
-        NVector vec;
+        N_Vector vec;
         // store a reference to the original array to prevent array memory from being freed
         np_array<double> arr;
     };
