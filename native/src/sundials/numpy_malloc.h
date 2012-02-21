@@ -14,14 +14,21 @@
 namespace finmag { namespace sundials {
     void register_numpy_malloc();
 
-    /* Wrapper class for Sundials NVectorSerial */
-    class nvector_serial {
-    public:
-        nvector_serial(const np_array<double> &data);
+    np_array<double> nvector_to_array(NVector p);
 
-        static np_array<double> to_np_array(NVector *p);
+    /* Wrapper class for Sundials NVectorSerial */
+    class array_nvector {
+    public:
+        array_nvector(const np_array<double> &data);
 
         NVector ptr() { return vec; }
+
+        ~array_nvector() {
+            if (vec) {
+                N_VDestroy(vec);
+                vec = 0;
+            }
+        }
     private:
         // Disallow copy constructor & assignment
         // Use auto_ptr/unique_ptr/shared_ptr for shared nvector_serial objects
@@ -29,6 +36,8 @@ namespace finmag { namespace sundials {
         void operator=(const nvector_serial&);
 
         NVector vec;
+        // store a reference to the original array to prevent array memory from being freed
+        np_array<double> arr;
     };
 }}
 
