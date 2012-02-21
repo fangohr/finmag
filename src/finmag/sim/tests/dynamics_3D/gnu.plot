@@ -1,5 +1,6 @@
 set multiplot layout 2,1 title "Dynamics 3D"
 set title "simulated with nmag"
+set xrange [0:1e-9]
 set xlabel "time (s)"
 set ylabel "magnetisation (A/m)"
 plot \
