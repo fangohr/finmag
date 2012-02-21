@@ -1,5 +1,4 @@
 #A set of tests to insure that the NitscheSolver works properly
-#So far just 1-d 
 
 __author__ = "Gabriel Balaban"
 __copyright__ = __author__
@@ -12,7 +11,10 @@ from solver_nitsche import NitscheSolver
 
 #This suite tests the solutions for the demag scalar potential function from the Nitsche Solver.
 #Global Tolerance for closeness to 0.
-TOL = 1.0 #Fixme This is a bad tolerance, maybe the nitsche solver can be made more precise?
+TOL = 1.0 #Fixme This is a bad tolerance, maybe the nitsche solver can be made more precise
+          #TODO the averaging by volume causes the error to increase since the surface volumes are <1,
+          #this gets worse for increased dimension. So get rid of averaging and recalibrate the gammas and TOL
+         
 class TestNischeSolver(object):
     #Wierd that we cannot use __init__
     def setup_class(self):
@@ -26,7 +28,7 @@ class TestNischeSolver(object):
         return self.probtest(self.problem2d)
     def test_3d(self):
         return self.probtest(self.problem3d)
-##        
+    
     def probtest(self,problem):
         solver = NitscheSolver(problem,problem.gamma)
         solution = solver.solve()
@@ -81,10 +83,8 @@ class TestNischeSolver(object):
         assert L1error1 < TOL,"Error in Nitsche Solver with 1d problem, normal derivative jump accross magnetic core boundary not satisfied for phi1 and phi2, \
                                TOL = %g, average L1error = %g"%(TOL,L1error1)
         ##This test is failed since the total function is twice as high as it should be on the boundary. When this is solved I expect this to be passed.
-##        assert L1error2 < TOL,"Error in Nitsche Solver with 1d problem, normal derivative jump accross magnetic core boundary not satisfied for phi total \
-##                               TOL = %g, average L1error = %g"%(TOL,L1error2)
-
-
+        assert L1error2 < TOL,"Error in Nitsche Solver with 1d problem, normal derivative jump accross magnetic core boundary not satisfied for phi total \
+                               TOL = %g, average L1error = %g"%(TOL,L1error2)
 
 if __name__ == "__main__":
     t = TestNischeSolver()

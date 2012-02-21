@@ -12,6 +12,7 @@ from interiorboundary import *
 import math
 import numpy as np
 import pylab as pl
+import doffinder as dff
 
 class NitscheSolver(object):
     def __init__(self,problem,gamma = 1.0, degree = 1):
@@ -33,6 +34,7 @@ class NitscheSolver(object):
         phi0 = Function(V)
         phi1 = Function(V)
         phitot = Function(V)
+        self.phitest = Function(V)
         h = self.problem.mesh.hmin()
 
         #Define the magnetisation
@@ -81,8 +83,16 @@ class NitscheSolver(object):
 
         #This might or might not be a better way to add phi1 and phi0
         #phitot = phi0 + phi1 
-
+        
         phitot.vector()[:] = phi0.vector() + phi1.vector()
+        self.phitest.assign(phitot)
+        #Divide the value of phitotal by 2 on the core boundary
+        BOUNDNUM = 2
+        corebounddofs = dff.bounddofs(V,self.degree, self.problem.coreboundfunc, BOUNDNUM)
+            
+        for index,dof in enumerate(phitot.vector()):
+            if index in corebounddofs:
+                phitot.vector()[index] = dof*0.5
 
         #Store variables for outside testing
         self.V = V
@@ -93,4 +103,3 @@ class NitscheSolver(object):
         self.M = M
         self.Mspace = Mspace
         return phitot
-        
