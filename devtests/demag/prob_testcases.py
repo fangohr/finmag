@@ -32,11 +32,14 @@ class TruncDemagProblem(object):
         self.corebound = InteriorBoundary(mesh)
         self.corebound.create_boundary(self.coremesh)
         self.coreboundfunc = self.corebound.boundaries[0]
+        
+        #Store Value of coreboundary number as a constant
+        self.COREBOUNDNUM = 2
 
         #generate measures
         self.dxC = dx(1)  #Core
         self.dxV = dx(0)  #Vacuum
-        self.dSC = dS(2)  #Core Boundary
+        self.dSC = dS(self.COREBOUNDNUM)  #Core Boundary
 
 class MagUnitInterval(TruncDemagProblem):
     def __init__(self):
