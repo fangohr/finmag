@@ -1,0 +1,4 @@
+#!/bin/bash
+
+wget -nv -O /dev/null --auth-no-challenge --http-user=build-invoker '--http-password=#Htvk(\;AgMx6PIb>J,`' http://mu.kk.soton.ac.uk:8080/job/finmag/build?delay=0sec
+
