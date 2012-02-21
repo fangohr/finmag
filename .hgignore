@@ -6,3 +6,6 @@ __pycache__
 src/finmag/native/*.so
 *.o
 *.d
+*.aux
+*.log
+*.backup
