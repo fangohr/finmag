@@ -15,8 +15,7 @@ import pylab as pl
 import doffinder as dff
 
 class NitscheSolver(object):
-    def __init__(self,problem,gamma = 1.0, degree = 1):
-        self.gamma = gamma
+    def __init__(self,problem, degree = 1):
         self.problem = problem
         self.degree = degree
 
@@ -36,6 +35,7 @@ class NitscheSolver(object):
         phitot = Function(V)
         self.phitest = Function(V)
         h = self.problem.mesh.hmin()
+        gamma = self.problem.gamma
 
         #Define the magnetisation
         M = interpolate(Expression(self.problem.M),Mspace)
@@ -60,7 +60,7 @@ class NitscheSolver(object):
         f = (div(M)*v1)*dxC   #Source term in core
         f += (dot(M('-'),N('+'))*avgv )*dSC  #Presribed outer normal derivative
         #Cross terms on the interior boundary
-        c = (-dot(avggradu,N('+'))*jumpv - dot(avggradv,N('+'))*jumpu + self.gamma*(1/h)*jumpu*jumpv)*dSC  
+        c = (-dot(avggradu,N('+'))*jumpv - dot(avggradv,N('+'))*jumpu + gamma*(1/h)*jumpu*jumpv)*dSC  
 
         a = a0 + a1 + c
 
@@ -102,4 +102,5 @@ class NitscheSolver(object):
         self.sol = sol
         self.M = M
         self.Mspace = Mspace
+        self.gamma = gamma
         return phitot
