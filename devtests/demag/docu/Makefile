@@ -1,4 +1,4 @@
-demagnetisationfield.pdf: demagnetisationfield.tex
+demagnetisationfield.pdf: demagnetisationfield.tex magstyle.sty
 	pdflatex demagnetisationfield.tex
 
 force:
