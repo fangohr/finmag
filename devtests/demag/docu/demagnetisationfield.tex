@@ -81,6 +81,7 @@ solution is allowed to be discontinuous across element boundaries. The solution 
 $\phi$ is restricted to 
 \[ V = \{ v \in H^1 (T) \mbox{ for all } T \subset \Omega \mbox{ s.t. v is discontinous over } 
 \ \partial T \} \]
+\marginpar{\scriptsize Can you spell out what you mean with ``s.t. v`` and $T$ and $H^1$? This is standard stuff, but would be useful to be spelled out here for the non-FE experts.}
 
 \noindent Where $\Omega$ denotes the mesh and $T$ a finite element domain in $\Omega$. After integrating
 equation~(\ref{phidef}) by parts we obtain the formulation.
@@ -101,6 +102,7 @@ of a function $A$ across a boundary with predefined '+' and '--' sides.
 Similarly the average is defined to be
 \[ <A> = \frac{1}{2} (A^+ + A^-) \]
 \\
+\marginpar{\scriptsize What do we mean with $[AB]$? A jump of the product of two functions $A$ and $B$? Something else?}
 A simple calculation gives the following relation
 \[ [AB] = [A]<B> + <A>[B] \]
 which we can now use on the boundary term of equation~(\ref{dgform}). The sum over boundaries of each element 
@@ -111,8 +113,7 @@ we can have different values on both sides of a facet.
 &=&  - \sum_S \int_S ( [\nabla \phi] <v> + <\nabla \phi> [v]) \cdotp n \ dS
 \end{eqnarray*}
 Here $n$ has been fixed in one of the possible directions along a facet. 
-\\
-\\
+
 Nitsche's method applied to our problem \ref{dgform} consists of adding two additional terms that are equal to 0 
 for the true solution, but which are allowed to carry a tolerable value for the discrete solution.
 The first one is
@@ -122,12 +123,11 @@ which is added for symmetry and the next one is
 which is added for stability. Here $h$ denotes the smallest diameter of an element domain in the mesh, and
 $\gamma$ is a parameter that we choose. Experiments with the code have shown that a high gamma favours better
 continuity at the cost of matching the normal derivative jump condition, and vice versa.  
-\\
-\\
+
 We can now formulate the Nitsche formulation for $\phi$. Since we are only interested in applying a jump condition
 $ [\nabla \phi]  \cdotp n =  M \cdotp n $ on the magnetic core boundary $\domM$, we can sew together two continuous functions
 together with Nitsche's method to get the result we need. Let $\phi = (\phi_0,\phi_1)$ where
-$\\supp(\phi_1) \subset \omM$ and $\supp(\phi_0) \subset \omV$. The Nitsche variational problem is to find  $\phi = (\phi_0,\phi_1)$ such that
+$\supp(\phi_1) \subset \omM$ and $\supp(\phi_0) \subset \omV$. The Nitsche variational problem is to find  $\phi = (\phi_0,\phi_1)$ such that
 
 \begin{eqnarray*}
 &&\int_{\omM} \nabla \phi_1 \cdotp \nabla v_1 \ dx + \int_{\omV} \nabla \phi_0 \cdotp \nabla v_0 \ dx \\
@@ -144,8 +144,7 @@ The Fredkin-Koehler approach splits the magnetic potential $\phi$ into two parts
 \[ \phi = \phi_1 + \phi_2 \]
 \noindent in order to get $\phi_2$ using the hybrid boundary/finite element method(FEM/BEM).
 The Fredkin-Koehler solver solves for these two directly using domain truncation (Note not working at the moment).
-\\
-\\
+
 \noindent $\phi_1$ is defined to be the solution of the Neumann problem:
 
 \[ 
@@ -157,8 +156,8 @@ The Fredkin-Koehler solver solves for these two directly using domain truncation
 \end{array}
 \right. 
 \]
-\\
-\\
+
+
 \noindent and $\phi_2$ is defined to be the solution of the Laplace problem
 \[ 
 \left\{
@@ -169,8 +168,8 @@ The Fredkin-Koehler solver solves for these two directly using domain truncation
 \end{array}
 \right. 
 \]
-\\
-\\
+
+
 \noindent Adding together the two potentials $\phi_1$ and $\phi_2$ should result in the solution to the problem described in
 truncdemag1. 
 
