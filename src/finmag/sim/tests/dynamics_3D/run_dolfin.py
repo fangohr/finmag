@@ -7,15 +7,15 @@ from finmag.sim.llg import LLG
 
 fh = open("data_M_dolfin.txt", "w")
 
-L = 30e-9; H = 10e-9; W = 10e-9
-mesh = df.Box(0, 0, 0, L, H, W, 10, 4, 4)
+mesh = df.Mesh("bar.xml")
+mesh.coordinates()[:] = 1e-9 * mesh.coordinates() # from (implied) nm to m
 llg = LLG(mesh)
 
 llg.alpha = 0.5
 llg.MS = 0.86e6 # A/m
 llg.C = 1.3e-11 # J/m
 llg.H_app = (0.43e6, 0, 0) # A/m
-llg.initial_M_expr(("2*x[0]/L - 1","2*x[1]/W - 1","1"), L=L, H=H, W=W)
+llg.initial_M_expr(("2*x[0]/L - 1","2*x[1]/W - 1","1"), L=3e-8, H=1e-8, W=1e-8)
 llg.M = h.for_dolfin(h.normalise(h.vectors(llg.M), llg.MS))
 llg.setup(exchange_flag=True)
 
