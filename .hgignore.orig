@@ -1,0 +1,12 @@
+syntax:glob
+*.pyc
+*~
+.idea
+__pycache__
+src/finmag/native/*.so
+*.o
+*.d
+*.aux
+*.log
+*.backup
+*.pdf
