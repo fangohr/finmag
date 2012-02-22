@@ -17,5 +17,5 @@ def test_aligns_with_applied_field():
 
     assert abs(Mx) < TOLERANCE
     assert abs(My) < TOLERANCE
-    assert llg.MS - Mz < TOLERANCE
+    assert abs(llg.MS - Mz) < TOLERANCE
 
