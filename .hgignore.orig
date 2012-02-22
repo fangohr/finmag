@@ -3,12 +3,10 @@ syntax:glob
 *~
 .idea
 __pycache__
-src/**.so
+src/finmag/native/*.so
 *.o
 *.d
 *.aux
 *.log
 *.backup
 *.pdf
-test-reports
-native/**.bin
