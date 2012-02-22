@@ -19,12 +19,29 @@ def vectors(vs):
     number_of_nodes = len(vs)/3
     return vs.view().reshape((number_of_nodes, -1), order="F")
 
+def for_dolfin(vs):
+    """
+    The opposite of the function vectors.
+
+    Takes a list with the shape [[x0, y0, z0], ..., [xn, yn, zn]]
+    and returns [x0, ..., xn, y0, ..., yn, z0, ..., zn].
+    """
+    return rows_to_columns(vs).flatten() 
+
 def norm(v):
     """
     Returns the euclidian norm of a vector in three dimensions.
 
     """
     return numpy.sqrt(numpy.dot(v, v))
+
+def normalise(vs, length):
+    """
+    Scale the vectors to the specified length.
+    Expects the vectors in a list of the form [[x0, y0, z0], ..., [xn, yn, zn]].
+
+    """
+    return numpy.array([length*v/norm(v) for v in vs])
 
 def angle(v1, v2):
     """
@@ -50,5 +67,4 @@ def perturbed_vectors(n, direction=[1,0,0], length=1):
     """
     displacements = numpy.random.rand(n, 3) - 0.5
     vectors = direction + displacements
-    normalised_vectors = numpy.array([length*v/norm(v) for v in vectors])
-    return normalised_vectors
+    return normalise(vectors, length)
