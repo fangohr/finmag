@@ -35,17 +35,36 @@ namespace finmag { namespace sundials {
             }
         }
 
-        void init(bp::object rhs_func, double t0, const sundials_nvector& vec) {
+        // initialisation functions
+        void init(bp::object f, double t0, const np_array<double>& vec) {
 
         }
 
-        void set_scalar_tolerances() {
+        void set_scalar_tolerances(double reltol, double abstol) {
 
         }
 
-        void advance_time() {
+        // linear soiver specification functions
+        void set_linear_solver_dense(int n) {}
 
-        }
+        void set_linear_solver_lapack_dense(int n) {}
+
+        void set_linear_solver_band(int n, int mupper, int mlower) {}
+
+        void set_linear_solver_lapack_band(int n, int mupper, int mlower) {}
+
+        void set_linear_solver_sp_gmr(int pretype, int maxl) {}
+
+        void set_linear_solver_sp_bcg(int pretype, int maxl) {}
+
+        void set_linear_solver_sp_tfqmr(int pretype, int maxl) {}
+
+        // solver functions
+        double advance_time(double tout, const np_array<double> &yout, int itask);
+
+        // optional methods
+        void set_max_order(int max_order) {}
+
     private:
         void* cvode_mem;
     };
