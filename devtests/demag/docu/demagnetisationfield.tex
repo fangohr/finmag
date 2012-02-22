@@ -10,7 +10,7 @@
 \begin{document}
 \maketitle
 \abstract{}
-In this document the mathematics of the python modules prob\_testcases.py and solver\_nitsche.py are explained.
+In this document the mathematics of the python modules \texttt{prob\_testcases.py} and \texttt{solver\_nitsche.py} are explained.
 The demagnetisation field is found using an approach that truncates an infinite domain and uses two scalar potentials.
 
 \newpage
@@ -60,8 +60,8 @@ The poisson problem for the scalar potential $\phi$ reads
 \end{subequations}
 
 \noindent Where $n$ denotes the unit outward normal. The prescribed jump in the normal derivative is a 
-consequence of the divergence theorem applied to the definition of $\dmag$, equation \ref{dmagdef}.
-Using equation \ref{nocurl} and stokes theorem we see that the tangential component of $\nabla \phi$ or $\dmag$ is
+consequence of the divergence theorem applied to the definition of $\dmag$, equation~(\ref{dmagdef}).
+Using equation~(\ref{nocurl}) and stokes theorem we see that the tangential component of $\nabla \phi$ or $\dmag$ is
 continuous over $\domM$. Which means that the scalar potential only differs by a constant as it crosses $\domM$.
 This constant is set to 0, which means that $\phi$ is continuous over $\domM$. Finally we expect the demag field $\dmag$ 
 to decay to 0 far away from the magnetic body, which results in the open boundary condition
@@ -83,7 +83,7 @@ $\phi$ is restricted to
 \ \partial T \} \]
 
 \noindent Where $\Omega$ denotes the mesh and $T$ a finite element domain in $\Omega$. After integrating
-equation \ref{phidef} by parts we obtain the formulation.
+equation~(\ref{phidef}) by parts we obtain the formulation.
 \\
 \\
 Find $\phi \in V$ such that
@@ -96,14 +96,14 @@ for $\rvec \in \omV$.
 
 \section{Nitsche's Method for $\phi$}
 Continuing with the discontinuous Galerkin formulation we introduce the notation for the jump
-of a function $A$ across a boundary with predefined '+' and '-' sides. 
+of a function $A$ across a boundary with predefined '+' and '--' sides. 
 \[ [A] = A^+ - A^- \]
 Similarly the average is defined to be
 \[ <A> = \frac{1}{2} (A^+ + A^-) \]
 \\
 A simple calculation gives the following relation
 \[ [AB] = [A]<B> + <A>[B] \]
-which we can now use on the boundary term of equation \ref{dgform}. The sum over boundaries of each element 
+which we can now use on the boundary term of equation~(\ref{dgform}). The sum over boundaries of each element 
 visits every facet twice, so we can instead replace it with a sum over each facet $\sum_S$, taking into account that
 we can have different values on both sides of a facet. 
 \begin{eqnarray*}
