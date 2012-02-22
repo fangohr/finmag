@@ -9,5 +9,6 @@ src/**.so
 *.aux
 *.log
 *.backup
+*.pdf
 test-reports
 native/**.bin
