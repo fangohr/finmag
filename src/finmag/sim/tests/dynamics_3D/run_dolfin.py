@@ -1,6 +1,7 @@
 import dolfin as df
 import numpy as np
 import finmag.sim.helpers as h
+import time
 
 from scipy.integrate import ode
 from finmag.sim.llg import LLG
@@ -22,12 +23,10 @@ print [h.norm(v) for v in vectors]
 vectors_for_dolfin = h.rows_to_columns(vectors).flatten()
 llg._M = df.Function(llg.V) # no API for initialising with pre-computed field.
 llg.M = vectors_for_dolfin
-df.plot(llg._M)
 
-llg.initial_M_expr(("MS/sqrt(2)", "MS/sqrt(2)", "0"), MS=llg.MS)
 llg.setup(exchange_flag=False)
 
-t0 = 0; dt = 1e-11; tmax = 1e-9 # s
+t0 = 0; dt = 1e-12; tmax = 1e-9 # s
 llg_wrap = lambda t, y: llg.solve_for(y, t)
 r = ode(llg_wrap).set_integrator("vode", method="bdf", with_jacobian=False)
 r.set_initial_value(llg.M, t0)
