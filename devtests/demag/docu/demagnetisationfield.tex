@@ -53,7 +53,7 @@ The poisson problem for the scalar potential $\phi$ reads
 \begin{subequations}
 \begin{align}
 &\mbox{jump} \left( \frac{\partial \phi}{\partial n} \right) = n \cdotp \magn  &\mbox{ on }  \domM \label{jumpbc} \\
-&\lim_{\overrightarrow{r} \in \omM \rightarrow \domM} \phi =  \lim_{\overrightarrow{r} \in \omV \rightarrow \domM} 
+&\lim_{\mvec{r} \in \omM \rightarrow \domM} \phi =  \lim_{\mvec{r} \in \omV \rightarrow \domM} 
 \phi & \mbox{on } \domM \label{contbc} \\
 &\phi \rightarrow 0 \ & \mbox{as} \ |\rvec| \in \omV \rightarrow \infty \label{openbc}
 \end{align}
@@ -71,7 +71,7 @@ $| \phi | \rightarrow 0  \ \mbox{as} \ |\rvec| \in \omV \rightarrow \infty$ for 
 \section{Truncation of the Domain}
 Since a computer cannot simulate an infinite domain there needs to be some way of dealing with the open boundary condition from
 \ref{openbc}
-\[\phi_2 \rightarrow 0 \ \mbox{as} \ \overrightarrow{r} \in \omV \rightarrow \infty \]
+\[\phi_2 \rightarrow 0 \ \mbox{as} \ \mvec{r} \in \omV \rightarrow \infty \]
 Here the domain $\omV$ is truncated, using the rule of thumb that it should be about 5 times as large as $\omM$ in order to get
 decent results. 
 
@@ -165,7 +165,7 @@ The Fredkin-Koehler solver solves for these two directly using domain truncation
 \begin{array}{lr}
 - \nabla^2 \phi_2 = 0 & \mbox{in } \ \omM \cup \omV \\
 \mbox{jump}(\phi_2) = \phi_1 & \mbox{on} \ \domM \\
-\ \phi_2 \rightarrow 0 & \ \mbox{as} \ \overrightarrow{r} \in \omV \rightarrow \infty
+\ \phi_2 \rightarrow 0 & \ \mbox{as} \ \mvec{r} \in \omV \rightarrow \infty
 \end{array}
 \right. 
 \]
