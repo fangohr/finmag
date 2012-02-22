@@ -61,7 +61,7 @@ The poisson problem for the scalar potential $\phi$ reads
 
 \noindent Where $n$ denotes the unit outward normal. The prescribed jump in the normal derivative is a 
 consequence of the divergence theorem applied to the definition of $\dmag$, equation~(\ref{dmagdef}).
-Using equation~(\ref{nocurl}) and stokes theorem we see that the tangential component of $\nabla \phi$ or $\dmag$ is
+Using equation~(\ref{nocurl}) and Stokes' theorem we see that the tangential component of $\nabla \phi$ or $\dmag$ is
 continuous over $\domM$. Which means that the scalar potential only differs by a constant as it crosses $\domM$.
 This constant is set to 0, which means that $\phi$ is continuous over $\domM$. Finally we expect the demag field $\dmag$ 
 to decay to 0 far away from the magnetic body, which results in the open boundary condition
@@ -114,7 +114,7 @@ Here $n$ has been fixed in one of the possible directions along a facet.
 \\
 \\
 Nitsche's method applied to our problem \ref{dgform} consists of adding two additional terms that are equal to 0 
-for the true solution, but which are allowed to carry a tolerable value for the discreet solution.
+for the true solution, but which are allowed to carry a tolerable value for the discrete solution.
 The first one is
 \[ <\partial_n v> [\phi] \]
 which is added for symmetry and the next one is
@@ -127,7 +127,7 @@ continuity at the cost of matching the normal derivative jump condition, and vic
 We can now formulate the Nitsche formulation for $\phi$. Since we are only interested in applying a jump condition
 $ [\nabla \phi]  \cdotp n =  M \cdotp n $ on the magnetic core boundary $\domM$, we can sew together two continuous functions
 together with Nitsche's method to get the result we need. Let $\phi = (\phi_0,\phi_1)$ where
-$\\supp(\phi_1) \subset \omM$ and $\supp(\phi_0) \subset \omV$. The Nitsche variational problem is find  $\phi = (\phi_0,\phi_1)$ such that
+$\\supp(\phi_1) \subset \omM$ and $\supp(\phi_0) \subset \omV$. The Nitsche variational problem is to find  $\phi = (\phi_0,\phi_1)$ such that
 
 \begin{eqnarray*}
 &&\int_{\omM} \nabla \phi_1 \cdotp \nabla v_1 \ dx + \int_{\omV} \nabla \phi_0 \cdotp \nabla v_0 \ dx \\
