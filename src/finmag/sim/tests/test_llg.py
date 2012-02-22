@@ -91,5 +91,5 @@ def test_exchange_field_should_change_when_M_changes():
     assert not numpy.array_equal(old_M, llg.M)
     # If we now solve the LLG again, we expect the new value of the
     # exchange field to change (because the magnetisation has changed).
-    new_H_ex = llg.exchange.compute()
+    new_H_ex = llg.exchange.compute_field()
     assert not numpy.array_equal(old_H_ex, new_H_ex), "H_ex hasn't changed."

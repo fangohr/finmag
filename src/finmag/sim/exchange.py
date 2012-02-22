@@ -30,6 +30,7 @@ class Exchange(object):
 
         if method=='box':
             self.vol = df.assemble(df.dot(v, df.Constant([1,1,1])) * df.dx).array()
+            self.compute_field = self.compute_field_box
         elif method=='project':
             self.v = v
             self.V = V
@@ -41,26 +42,16 @@ class Exchange(object):
             #Note that we could make this 'project' method faster by computing the matrices
             #that represent a and L, and only to solve the matrix system in 'compute'().
             #IF this method is actually useful, we can do that. HF 16 Feb 2012
+            self.compute_field = self.compute_field_project
         else:
             NotImplementedError("Only 'box' and 'project' methods are implemented")
 
-    def compute(self):
-        print "Consider using compute_field rather than compute - this is to also provide compute_energy"
-        return self.compute_field()
-        
-    def compute_field(self):
-        """Assembles vector with H_exchange, and returns effective field as 
-        numpy array.
-        """
+    def compute_field_box(self):
+        return df.assemble(self.dE_dM).array() / self.vol
 
-        if self.method == 'box':
-            box = df.assemble(self.dE_dM).array() / self.vol
-            return box
-        elif self.method == 'project':
-            df.solve( self.a==self.L, self.H_exch_project)
-            return self.H_exch_project.vector().array()
-        else: 
-            raise NotImplementedError
+    def compute_field_project(self):
+        df.solve(self.a == self.L, self.H_exch_project)
+        return self.H_exch_project.vector().array()
 
     def compute_energy(self):
         return df.assemble(self.E)
