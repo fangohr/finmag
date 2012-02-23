@@ -110,7 +110,12 @@ clean:
 	rm -f $(BUILD_TARGETS) $(PRECOMPILED_HEADER_FILE)
 	find . \( -name \*.o -o -name \*.d -o -name \*.o.nm -o -name \*.gen.cc -o -name \*.gen.h -o -name \*.so \) -exec rm {} +
 
-.PHONY: clean pch all object-files build-targets parallel run-ci-tests subprojects
+# Runs the native unit tests
+test:
+	$(MAKE) -j $(NUM_PROCS) parallel
+	./$(UNIT_TEST_BINARY)
+
+.PHONY: clean pch all object-files build-targets parallel run-ci-tests subprojects test
 
 # Use .SECONDEXPANSION to use the per-library linking flags *_LDFLAGS
 .SECONDEXPANSION:
