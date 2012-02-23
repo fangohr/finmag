@@ -14,17 +14,17 @@ simplexes = 10
 mesh = dolfin.Interval(simplexes, 0, length)
 
 llg = LLG(mesh)
-llg.initial_M_expr((
-        'Ms * (2*x[0]/L - 1)',
-        'sqrt(Ms*Ms - Ms*Ms*(2*x[0]/L - 1)*(2*x[0]/L - 1))',
-        '0'), L=length, Ms=llg.Ms)
+llg.set_m0((
+        '2*x[0]/L - 1',
+        'sqrt(1 - (2*x[0]/L - 1)*(2*x[0]/L - 1))',
+        '0'), L=length)
 llg.setup()
 llg.pins = [0, 10]
 
 print "Solving problem..."
 
 ts = numpy.linspace(0, 1e-9, 10)
-ys, infodict = odeint(llg.solve_for, llg.M, ts, atol=10, full_output=True)
+ys, infodict = odeint(llg.solve_for, llg.m, ts, full_output=True)
 
 print "Used", infodict["nfe"][-1], "function evaluations."
 print "Saving data..."
