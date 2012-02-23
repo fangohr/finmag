@@ -36,11 +36,11 @@ v = TestFunction(V)
 # uniform quickly and align in z-direction. 
 
 # Orientations
-left_right = 'MS * (2*x[0]/L - 1)'
-up_down = 'sqrt(MS*MS - MS*MS*(2*x[0]/L - 1)*(2*x[0]/L - 1))'
+left_right = 'Ms * (2*x[0]/L - 1)'
+up_down = 'sqrt(Ms*Ms - Ms*Ms*(2*x[0]/L - 1)*(2*x[0]/L - 1))'
 
 # Initial
-M0 = Expression((left_right, up_down, '0'), L=length, MS=Ms)
+M0 = Expression((left_right, up_down, '0'), L=length, Ms=Ms)
 M = interpolate(M0, V)
 
 # Exchange

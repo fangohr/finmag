@@ -17,7 +17,7 @@ llg = LLG(mesh)
 llg.initial_M_expr((
         '0',
         '0',
-        'Ms'), L=length, Ms=llg.MS)
+        'Ms'), L=length, Ms=llg.Ms)
 llg.setup(use_dmi=True)
 
 

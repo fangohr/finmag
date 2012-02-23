@@ -24,7 +24,7 @@ class MyLLG(LLG):
         H_ex  = Function(self.V)
 
         # Comment out these two lines if you don't want exchange.
-        exch  = Exchange(self.V, self._M, self.C, self.MS)
+        exch  = Exchange(self.V, self._M, self.C, self.Ms)
         H_ex.vector().array()[:] = exch.compute_field()
 
         H_eff = H_ex + H_app
@@ -32,7 +32,7 @@ class MyLLG(LLG):
 
     def compute_variational_forms(self):
         M, H, Ms, p, c, alpha, V = self._M, self.H_eff(), \
-                self.MS, self.p, self.c, self.alpha, self.V
+                self.Ms, self.p, self.c, self.alpha, self.V
         
         u = TrialFunction(V)
         v = TestFunction(V)

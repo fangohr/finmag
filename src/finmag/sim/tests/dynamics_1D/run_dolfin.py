@@ -16,12 +16,12 @@ simplexes = 10
 mesh = dolfin.Interval(simplexes, 0, length)
 
 # initial configuration of the magnetisation
-M0_x = 'MS * (2*x[0]/L - 1)'
-M0_y = 'sqrt(MS*MS - MS*MS*(2*x[0]/L - 1)*(2*x[0]/L - 1))'
+M0_x = 'Ms * (2*x[0]/L - 1)'
+M0_y = 'sqrt(Ms*Ms - Ms*Ms*(2*x[0]/L - 1)*(2*x[0]/L - 1))'
 M0_z = '0'
 
 llg = LLG(mesh)
-llg.initial_M_expr((M0_x, M0_y, M0_z), L=length, MS=llg.MS)
+llg.initial_M_expr((M0_x, M0_y, M0_z), L=length, Ms=llg.Ms)
 llg.setup(exchange_flag=True)
 print llg.exchange.compute_field()
 llg_wrap = lambda t, y: llg.solve_for(y, t) # for ode
@@ -29,7 +29,7 @@ llg_wrap = lambda t, y: llg.solve_for(y, t) # for ode
 
 #sys.exit()
 
-if True: # odeint, this works
+if False: # odeint, this works
     ts = numpy.linspace(0, 1e-13, 1e3)
     ys, infodict = odeint(llg.solve_for, llg.M, ts, atol=10, full_output=True)
 
@@ -57,7 +57,7 @@ else: # ode, this doesn't
 
             while r.successful() and r.t <= tmax:
                 print "time: ", r.t
-                if r.t > 0:
+                if r.t > 0 and False:
                     print "This is it!"
                     sys.exit()
                 r.integrate(r.t + dt)
