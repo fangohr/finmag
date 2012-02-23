@@ -34,9 +34,9 @@ def test_when_interpolating_M_you_need_to_define_the_problem_again():
 def test_updating_the_M_vector_is_okay_though():
     llg = LLG(mesh)
     llg.initial_M_expr((
-        'MS * (2*x[0]/L - 1)',
-        'sqrt(MS*MS - MS*MS*(2*x[0]/L - 1)*(2*x[0]/L - 1))',
-        '0'), L=length, MS=llg.MS)
+        'Ms * (2*x[0]/L - 1)',
+        'sqrt(Ms*Ms - Ms*Ms*(2*x[0]/L - 1)*(2*x[0]/L - 1))',
+        '0'), L=length, Ms=llg.Ms)
     llg.setup()
     llg.solve()
     old_M = llg.M
@@ -52,7 +52,7 @@ def test_updating_the_M_vector_is_okay_though():
 
 def test_there_should_be_no_exchange_field_for_uniform_M():
     llg = LLG(mesh)
-    llg.initial_M((llg.MS, 0, 0))
+    llg.initial_M((llg.Ms, 0, 0))
     llg.setup()
     llg.solve()
     H_ex = llg.H_ex

@@ -58,7 +58,7 @@ def test_macrospin_default_damping():
     nx = ny = nz = 1
     mesh = dolfin.Box(x0, x1, y0, y1, z0, z1, nx, ny, nz)
     llg = LLG(mesh)
-    llg.initial_M((llg.MS, 0, 0))
+    llg.initial_M((llg.Ms, 0, 0))
     llg.H_app = (0, 0, 1e5)
 
     EXCHANGE = False
@@ -67,7 +67,7 @@ def test_macrospin_default_damping():
     ts = numpy.linspace(0, 1e-9, num=100)
     ys = odeint(llg.solve_for, llg.M, ts)
 
-    M_analytical = make_analytical_solution(llg.MS, 1e5, llg.alpha, llg.gamma)
+    M_analytical = make_analytical_solution(llg.Ms, 1e5, llg.alpha, llg.gamma)
 
     TOLERANCE = 4e-2
 
@@ -92,7 +92,7 @@ def test_macrospin_low_damping():
     mesh = dolfin.Box(x0, x1, y0, y1, z0, z1, nx, ny, nz)
     llg = LLG(mesh)
     llg.alpha = 0.02
-    llg.initial_M((llg.MS, 0, 0))
+    llg.initial_M((llg.Ms, 0, 0))
     llg.H_app = (0, 0, 1e5)
 
     EXCHANGE = False
@@ -101,7 +101,7 @@ def test_macrospin_low_damping():
     ts = numpy.linspace(0, 1e-9, num=100)
     ys = odeint(llg.solve_for, llg.M, ts, rtol=1e-11)
 
-    M_analytical = make_analytical_solution(llg.MS, 1e5, llg.alpha, llg.gamma)
+    M_analytical = make_analytical_solution(llg.Ms, 1e5, llg.alpha, llg.gamma)
 
     TOLERANCE = 3e-3
 
