@@ -66,6 +66,8 @@ class Anisotropy(object):
         self.vol = df.assemble(df.dot(w,
                      df.Constant((1,1,1)))*df.dx).array()
 
+        self.V = V
+
     def compute_field(self):
         """
         Return the gradient divided by volume according to the *box method*.
@@ -75,7 +77,7 @@ class Anisotropy(object):
                 The effective field.
 
         """
-        return df.assemble(self.dE_dM).df.array() / self.vol
+        return df.assemble(self.dE_dM).array() / self.vol
 
     def compute_energy(self):
         """
@@ -86,5 +88,6 @@ class Anisotropy(object):
                 The anisotropy energy.
 
         """
-        return df.assemble(self.E_ani)
+        V = self.V
+        return df.assemble(self.E_ani, mesh=V.mesh())
 
