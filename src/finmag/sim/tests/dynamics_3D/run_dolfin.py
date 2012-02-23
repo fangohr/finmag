@@ -17,7 +17,6 @@ llg.Ms = 0.86e6 # A/m
 llg.C = 1.3e-11 # J/m
 #llg.H_app = (0.43e6, 0, 0) # A/m
 llg.set_m0(("2*x[0]/L - 1","2*x[1]/W - 1","1"), L=3e-8, H=1e-8, W=1e-8)
-llg.m = h.for_dolfin(h.normalise(h.vectors(llg.m)))
 llg.setup(exchange_flag=True)
 
 llg_wrap = lambda t, y: llg.solve_for(y, t)
@@ -27,6 +26,7 @@ r.set_initial_value(llg.m, t0)
 
 while r.successful() and r.t <= tmax:
     Mx, My, Mz = np.mean(h.components(llg.M), axis=1)
+    print r.t
     fh.write(str(r.t) + " " + str(Mx) + " " + str(My) + " " + str(Mz) + "\n")
     r.integrate(r.t + dt)
 
