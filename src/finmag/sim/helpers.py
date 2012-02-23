@@ -35,13 +35,21 @@ def norm(v):
     """
     return numpy.sqrt(numpy.dot(v, v))
 
-def normalise(vs, length):
+def normalise(vs, length=1):
     """
     Scale the vectors to the specified length.
     Expects the vectors in a list of the form [[x0, y0, z0], ..., [xn, yn, zn]].
 
     """
     return numpy.array([length*v/norm(v) for v in vs])
+
+def fnormalise(ar, length=1):
+    """
+    Like normalise, except it expects the arguments as an numpy.ndarray like
+    dolfin provides, so [x0, ..., xn, y0, ..., yn, z0, ..., zn].
+
+    """
+    return for_dolfin(normalise(vectors(ar), length))
 
 def angle(v1, v2):
     """

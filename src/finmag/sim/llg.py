@@ -126,15 +126,15 @@ class LLG(object):
             self.dmi.compute_field()
         self.update_H_eff()
 
-        status, dMdt = self._solve(self.alpha, self.gamma, self.Ms, self.c,
-            self.M, self.H_eff, self.M.shape[0], self.pins)
+        status, dMdt = self._solve(self.alpha, self.gamma, self.c,
+            self.m, self.H_eff, self.m.shape[0], self.pins)
         if status == 0:
             return dMdt
         raise Exception("An error was encountered in the C-code; status=%d" % status)
         return None
 
-    def solve_for(self, M, t):
-        self.M = M
+    def solve_for(self, m, t):
+        self.m = m
         self.t = t
         return self.solve()
 
