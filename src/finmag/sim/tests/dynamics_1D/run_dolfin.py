@@ -1,6 +1,8 @@
 import sys
 import numpy
 import dolfin
+import sys
+
 from scipy.integrate import odeint, ode
 
 from finmag.sim.llg import LLG
@@ -21,11 +23,14 @@ M0_z = '0'
 llg = LLG(mesh)
 llg.initial_M_expr((M0_x, M0_y, M0_z), L=length, MS=llg.MS)
 llg.setup(exchange_flag=True)
+print llg.exchange.compute_field()
 llg_wrap = lambda t, y: llg.solve_for(y, t) # for ode
-# llg.pins = [0, 10]
+#llg.pins = [0, 10]
 
-if False: # odeint, this works
-    ts = numpy.linspace(0, 1e-9, 1e5)
+#sys.exit()
+
+if True: # odeint, this works
+    ts = numpy.linspace(0, 1e-13, 1e3)
     ys, infodict = odeint(llg.solve_for, llg.M, ts, atol=10, full_output=True)
 
     for i in range(len(ts)):
