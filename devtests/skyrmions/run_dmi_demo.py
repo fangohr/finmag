@@ -29,11 +29,11 @@ llg.H_app=(0,0,0)
 llg.initial_M_expr((
         'MS * (2*x[0]/L - 1)',
         'sqrt(MS*MS - MS*MS*(2*x[0]/L - 1)*(2*x[0]/L - 1))',
-        '0'), L=length, MS=llg.MS)
+        '0'), L=length, MS=llg.Ms)
 #llg.initial_M_expr((
 #        'MS',
 #        '0',
-#        '0'), MS=llg.MS)
+#        '0'), MS=llg.Ms)
 llg.setup(use_dmi=True)
 #llg.setup(use_dmi=False)
 #llg.pins = [0, 10]
@@ -50,7 +50,7 @@ vectorlength=5
 coordinates = (mesh.coordinates()/length-0.5)*len(mesh.coordinates())*0.4
 for i in range(y.shape[1]):
     pos = list(coordinates[i])
-    thisM = y[:,i]/llg.MS*vectorlength
+    thisM = y[:,i]/llg.Ms*vectorlength
     while len(pos) < 3: #visual python needs 3d vector
         pos.append(0.0) 
     
@@ -60,7 +60,7 @@ ts = numpy.linspace(0, 5e-10, 1000)
 tol = 10
 for i in range(len(ts)-1):
     ys,infodict = odeint(llg.solve_for, llg.M, [ts[i],ts[i+1]], full_output=True,printmessg=True,rtol=tol,atol=tol)
-    y = ys[-1,:]/llg.MS*vectorlength
+    y = ys[-1,:]/llg.Ms*vectorlength
     y.shape=(3,len(llg.M)/3)
     for j in range(y.shape[1]):
         arrows[j].axis=tuple(y[:,j])
