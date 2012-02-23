@@ -58,6 +58,7 @@ class Exchange(object):
         mu0 = 4 * np.pi * 10**-7 # Vs/(Am)
         self.exchange_factor = df.Constant(-2 * C / (mu0 * Ms))
         self.method = method
+        self.Ms = Ms
 
         v = df.TestFunction(V)
         self.E = self.exchange_factor * df.inner(df.grad(M), df.grad(M)) * df.dx
@@ -90,7 +91,7 @@ class Exchange(object):
                 The effective field.
                 
         """
-        return df.assemble(self.dE_dM).array() / self.vol
+        return df.assemble(self.dE_dM).array() / (self.Ms * self.vol)
 
     def compute_field_project(self):
         """
