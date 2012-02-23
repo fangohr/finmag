@@ -1,4 +1,4 @@
-# README on generating documentation for Finmag.
+# HOWTO generate documentation for Finmag.
 # Written by Anders E. Johansen 23/2/2012
 
 To view documentation:
@@ -7,7 +7,7 @@ To view documentation:
 1. Navigate to /finmag/doc/
 2. $ python generate_doc.py
 3. $ make html
-4. $ firefox _build/html/index.html
+4. Open _build/html/index.html in your favourite browser
 
 
 Writing documentation:
@@ -15,12 +15,32 @@ Writing documentation:
 
 We are using Sphinx (http://sphinx.pocoo.org/) to generate documentation. Basic use includes simple inline markup, using mathematics in LaTeX syntax, and code snippets.
 
-See for example http://fenicsproject.org/contributing/styleguide_doc.html#styleguide-documentation for more information on this.
+When using the math environment, use :math:`E = mc^2` for inline mathematics (corresponding to $E=mc^2$ in LaTeX), and
+
+.. math::
+
+    E = mc^2
+
+for equation style mathematics (correspoding to \[ ... \]). Note that we have to use double backslash (\\nabla instead of \nabla) or else some of the interpreters think it indicates a new line, tabulator, etc. 
+
+To write python code, simply use
+
+.. code-block:: python
+
+    >>> print 'Hello, World!'
+
+For demonstration, check out finmag.sim.anisotropy and finmag.sim.exchange.
+
+For more information, see http://fenicsproject.org/contributing/styleguide_doc.html#styleguide-documentation 
 
 When you have documented your code, and want to add it to the html files, please do as follows:
 
 i)    Open /finmag/doc/modules.txt
-ii)   Add to the list of modules a line containing the name you want in the webpage header (this can be several words separated by spaces) and the path to the module (this must NOT include spaces or /).
+ii)   Add to the list of modules a line containing the name you want in the webpage header (this can be several words separated by spaces) and the path to the module (this must NOT include spaces or /). For example, if you want to add /finmag/sim/anisotropy.py, add the line
+
+Anisotropy finmag.sim.anisotropy
+
+to modules.txt.
 iii)  Repeat steps 1-4 above.
 
 
@@ -45,4 +65,4 @@ class Bar:
         Docstring should not be here.
         """
 
-The author of this README has not yet figured out how to get syntax highlighting on the code snippets without adding >>> in front of every line, so please continue with this until further notice. If someone knows how to do this, please tell me.
+The author of this HOWTO has not yet figured out how to get syntax highlighting on the code snippets without adding >>> in front of every line, so please continue with this until further notice. If someone knows how to do this, please tell me.
