@@ -13,8 +13,8 @@ simplexes = 10
 mesh = dolfin.Interval(simplexes, 0, length)
 
 # initial configuration of the magnetisation
-left_right = 'MS * (2*x[0]/L - 1)'
-up_down = 'sqrt(MS*MS - MS*MS*(2*x[0]/L - 1)*(2*x[0]/L - 1))'
+left_right = 'Ms * (2*x[0]/L - 1)'
+up_down = 'sqrt(Ms*Ms - Ms*Ms*(2*x[0]/L - 1)*(2*x[0]/L - 1))'
 
 possible_orientations = [
     (left_right, up_down, '0'), # (left_right, '0', up_down),
@@ -23,7 +23,7 @@ possible_orientations = [
 
 def angles_after_a_nanosecond(initial_M, pins=[]):
     llg = LLG(mesh)
-    llg.initial_M_expr(initial_M, L=length, MS=llg.MS)
+    llg.initial_M_expr(initial_M, L=length, Ms=llg.Ms)
     llg.setup()
     llg.pins = pins 
 

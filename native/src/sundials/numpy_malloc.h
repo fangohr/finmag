@@ -17,7 +17,13 @@
 namespace finmag { namespace sundials {
     void register_numpy_malloc();
 
+    // TODO: test that it returns the same np_array as created by N_Vector
     np_array<double> nvector_to_array(N_Vector p);
+
+    // TODO: Test this
+    bp::object nvector_to_array_object(N_Vector p);
+
+    // TODO: Performance testing (?)
 
     extern "C" void * numpy_malloc(size_t len, size_t el_size);
     extern "C" void numpy_free(void *ptr);

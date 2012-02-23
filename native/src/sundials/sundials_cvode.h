@@ -206,6 +206,8 @@ namespace finmag { namespace sundials {
 
     private:
         void* cvode_mem;
+
+        bp::object rhs_fn, dls_jac_fn, dls_band_jac_fn, spils_prec_setup_fn, spils_prec_solve_fn, spils_jac_times_vec_fn;
     };
 
     void register_sundials_cvode() {

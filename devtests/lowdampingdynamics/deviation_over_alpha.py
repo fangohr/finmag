@@ -31,11 +31,11 @@ for rtol_power_of_ten in rtols_powers_of_ten:
 
         llg = LLG(mesh)
         llg.alpha = alpha
-        llg.initial_M((llg.MS, 0, 0))
+        llg.initial_M((llg.Ms, 0, 0))
         llg.H_app = (0, 0, 1e5)
         llg.setup(False)
 
-        M_analytical = make_analytical_solution(llg.MS, 1e5, llg.alpha, llg.gamma) 
+        M_analytical = make_analytical_solution(llg.Ms, 1e5, llg.alpha, llg.gamma) 
     
         ts = numpy.linspace(0, 1e-9, num=100)
         ys = odeint(llg.solve_for, llg.M, ts, rtol=rtol)

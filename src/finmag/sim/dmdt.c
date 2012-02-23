@@ -1,4 +1,4 @@
-int dmdt(double alpha, double gamma, double MS, double c,
+int dmdt(double alpha, double gamma, double Ms, double c,
     int Mn, double* M, int Hn, double* H, int dMdtn, double* dMdt,
     int Pn, double* P);
 
@@ -9,7 +9,7 @@ int dmdt(double alpha, double gamma, double MS, double c,
     #define DLOG(...) /* nothing */
 #endif
 
-int dmdt(double alpha, double gamma, double MS, double c,
+int dmdt(double alpha, double gamma, double Ms, double c,
          int Mn, double* M, int Hn, double* H, int dMdtn, double* dMdt,
          int Pn, double* P) {
   
@@ -43,8 +43,8 @@ int dmdt(double alpha, double gamma, double MS, double c,
     const int Z = 2 * ENTRIES_PER_DIM;
 
     double p = gamma / (1 + alpha*alpha); /* precession factor of the LLG */
-    double q = gamma * alpha / ((1 + alpha*alpha)*MS); /* damping */
-    double MS_squared = MS * MS;
+    double q = gamma * alpha / ((1 + alpha*alpha)*Ms); /* damping */
+    double Ms_squared = Ms * Ms;
 
     for ( int i=0; i<ENTRIES_PER_DIM; i++ ) {
         double MM = M[X+i]*M[X+i] + M[Y+i]*M[Y+i] + M[Z+i]*M[Z+i];
@@ -53,17 +53,17 @@ int dmdt(double alpha, double gamma, double MS, double c,
             - p * (M[Y+i]*H[Z+i] - M[Z+i]*H[Y+i])
             - q * (  M[Y+i] * (M[X+i]*H[Y+i] - M[Y+i]*H[X+i])
                    - M[Z+i] * (M[Z+i]*H[X+i] - M[X+i]*H[Z+i]))
-            - c * (MM - MS_squared) * M[X+i] / MS_squared;
+            - c * (MM - Ms_squared) * M[X+i] / Ms_squared;
         dMdt[Y+i] =
             - p * (M[Z+i]*H[X+i] - M[X+i]*H[Z+i])
             - q * (  M[Z+i] * (M[Y+i]*H[Z+i] - M[Z+i]*H[Y+i])
                    - M[X+i] * (M[X+i]*H[Y+i] - M[Y+i]*H[X+i]))
-            - c * (MM - MS_squared) * M[Y+i] / MS_squared;
+            - c * (MM - Ms_squared) * M[Y+i] / Ms_squared;
         dMdt[Z+i] =
             - p * (M[X+i]*H[Y+i] - M[Y+i]*H[X+i])
             - q * (  M[X+i] * (M[Z+i]*H[X+i] - M[X+i]*H[Z+i])
                    - M[Y+i] * (M[Y+i]*H[Z+i] - M[Z+i]*H[Y+i]))
-            - c * (MM - MS_squared) * M[Z+i] / MS_squared;
+            - c * (MM - Ms_squared) * M[Z+i] / Ms_squared;
     }
 
     for ( int i=0; i<Pn; i++ ) {
