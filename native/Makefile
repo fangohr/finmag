@@ -28,7 +28,7 @@ UNIT_TEST_BINARY=tests/run_ci_tests.bin
 # Directory for CI unit test results
 UNIT_TEST_RESULTS_DIR=../test-reports/boost
 # Explicit dependencies to tell how the module files are linked
-$(MODULE_DIR)/sundials.so : src/sundials/py_sundials_module.o src/util/np_array.o
+$(MODULE_DIR)/sundials.so : src/sundials/py_sundials_module.o src/util/np_array.o src/sundials/sundials_cvode.o
 sundials_LDFLAGS = -lsundials_cvode -llapack
 $(UNIT_TEST_BINARY) : tests/run_ci_tests.o src/util/np_array.o src/sundials/tests/sundials_tests.o src/sundials/numpy_malloc.o
 run_ci_tests_LDFLAGS=-lboost_prg_exec_monitor /usr/lib/libboost_unit_test_framework.a src/sundials/nvec_serial/nvector_serial_custom_malloc.so
@@ -110,7 +110,12 @@ clean:
 	rm -f $(BUILD_TARGETS) $(PRECOMPILED_HEADER_FILE)
 	find . \( -name \*.o -o -name \*.d -o -name \*.o.nm -o -name \*.gen.cc -o -name \*.gen.h -o -name \*.so \) -exec rm {} +
 
-.PHONY: clean pch all object-files build-targets parallel run-ci-tests subprojects
+# Runs the native unit tests
+test:
+	$(MAKE) -j $(NUM_PROCS) parallel
+	./$(UNIT_TEST_BINARY)
+
+.PHONY: clean pch all object-files build-targets parallel run-ci-tests subprojects test
 
 # Use .SECONDEXPANSION to use the per-library linking flags *_LDFLAGS
 .SECONDEXPANSION:

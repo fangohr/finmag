@@ -53,7 +53,10 @@ def make_modules():
 
 def pipe_output(cmd):
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, bufsize=1)
-    for line in process.stdout:
+    while True:
+        line = process.stdout.readline()
+        if not line:
+            break
         print replace_c_errors_with_python_errors(line),
     process.communicate()
     return process.poll()

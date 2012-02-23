@@ -114,7 +114,7 @@ namespace finmag { namespace sundials {
         if (!vec) throw std::runtime_error("N_VMake_Serial returned NULL");
     }
 
-    np_array<double> nvector_to_array(N_Vector vec) {
+    bp::object nvector_to_array_object(N_Vector vec) {
         if (!vec) throw std::invalid_argument("nvector_to_array: vec is NULL");
         if (NV_OWN_DATA_S(vec) == FALSE) {
             // if own_data is false, this N_Vector was created from an nd_array
@@ -124,8 +124,11 @@ namespace finmag { namespace sundials {
 
          // Retrieve the original pointer
          PyObject *data = (PyObject *) get_malloc_payload(NV_DATA_S(vec));
-         bp::object obj(bp::handle<>(bp::borrowed(data)));
-         return bp::extract<np_array<double> >(obj);
+         return bp::object(bp::handle<>(bp::borrowed(data)));
+    }
+
+    np_array<double> nvector_to_array(N_Vector vec) {
+         return bp::extract<np_array<double> >(nvector_to_array_object(vec));
     }
 
     void register_numpy_malloc() {

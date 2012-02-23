@@ -11,18 +11,13 @@
 #ifndef __FINMAG_ODE_SUNDIALS_CVODE_H
 #define __FINMAG_ODE_SUNDIALS_CVODE_H
 
+#include "util/np_array.h"
+
 namespace finmag { namespace sundials {
 
     class cvode {
     public:
-        cvode(int lmm, int iter): cvode_mem(0) {
-            if (lmm != CV_ADAMS && lmm != CV_BDF)
-                throw std::invalid_argument("sundials_cvode: lmm parameter must be either CV_ADAMS or CV_BDF");
-            if (iter != CV_NEWTON && iter != CV_FUNCTIONAL)
-                throw std::invalid_argument("sundials_cvode: iter parameter must be either CV_NEWTON or CV_FUNCTIONAL");
-            cvode_mem = CVodeCreate(lmm, iter);
-            if (!cvode_mem) throw std::runtime_error("CVodeCreate returned NULL");
-        }
+        cvode(int lmm, int iter);
 
         ~cvode() {
             if (cvode_mem) {
@@ -87,15 +82,15 @@ namespace finmag { namespace sundials {
 
         // direct linear solver optional input functions
 
-        void set_dls_jac_fn(const bp::object &djac) {}
+        void set_dls_jac_fn(const bp::object &djac);
 
-        void set_dls_band_jac_fn(const bp::object &bjac) {}
+        void set_dls_band_jac_fn(const bp::object &bjac);
 
         // iterative linear solver optional input functions
 
-        void set_spils_preconditioner(const bp::object &psetup, const bp::object &psolve) {}
+        void set_spils_preconditioner(const bp::object &psetup, const bp::object &psolve);
 
-        void set_splis_jac_times_vec_fn(const bp::object &jtimes) {}
+        void set_splis_jac_times_vec_fn(const bp::object &jtimes);
 
         void set_spils_prec_type(int pretype) {}
 
@@ -203,6 +198,7 @@ namespace finmag { namespace sundials {
 
         int get_band_prec_num_rhs_evals() { return 0; }
 
+        void on_error(int error_code, const char *module, const char *function, char *msg);
 
     private:
         void* cvode_mem;
@@ -210,17 +206,7 @@ namespace finmag { namespace sundials {
         bp::object rhs_fn, dls_jac_fn, dls_band_jac_fn, spils_prec_setup_fn, spils_prec_solve_fn, spils_jac_times_vec_fn;
     };
 
-    void register_sundials_cvode() {
-        using namespace bp;
-
-        class_<cvode>("sundials_cvode", init<int, int>(args("lmm", "iter")))
-        ;
-
-        scope().attr("CV_ADAMS") = int(CV_ADAMS);
-        scope().attr("CV_BDF") = int(CV_BDF);
-        scope().attr("CV_NEWTON") = int(CV_NEWTON);
-        scope().attr("CV_FUNCTIONAL") = int(CV_FUNCTIONAL);
-    }
+    void register_sundials_cvode();
 }}
 
 #endif
