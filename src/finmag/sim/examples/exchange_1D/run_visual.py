@@ -23,38 +23,29 @@ mesh = dolfin.Interval(simplexes, 0, length)
 llg = LLG(mesh)
 llg.alpha=0.1
 llg.H_app=(0,0,llg.Ms)
-#llg.initial_M_expr((
-#        'Ms * (2*x[0]/L - 1)',
-#        'sqrt(Ms*Ms - Ms*Ms*(2*x[0]/L - 1)*(2*x[0]/L - 1))',
-#        '0'), L=length*10, Ms=llg.Ms)
-llg.initial_M_expr((
-        'Ms',
-        '0',
-        '0'), Ms=llg.Ms)
+llg.set_m0(('1', '0', '0'))
 llg.setup()
 #llg.pins = [0, 10]
-
 
 print "Solving problem..."
 
 import visual
-y = llg.M[:]
-y.shape=(3,len(llg.M)/3)
+y = llg.m[:]
+y.shape=(3,len(llg.m)/3)
 arrows = []
 coordinates = (mesh.coordinates()/length-0.5)*len(mesh.coordinates())*0.4
 for i in range(y.shape[1]):
     pos = list(coordinates[i])
-    thisM = y[:,i]/llg.Ms
+    thisM = y[:,i]
     while len(pos) < 3: #visual python needs 3d vector
         pos.append(0.0) 
     
     arrows.append(visual.arrow(pos=pos,axis=tuple(thisM)))
 
 ts = numpy.linspace(0, 1e-10, 200)
-tol = 100
 for i in range(len(ts)-1):
-    ys,infodict = odeint(llg.solve_for, llg.M, [ts[i],ts[i+1]], full_output=True,printmessg=True,rtol=tol,atol=tol)
-    y = ys[-1,:]/llg.Ms
+    ys,infodict = odeint(llg.solve_for, llg.m, [ts[i],ts[i+1]], full_output=True,printmessg=True)
+    y = ys[-1,:]
     y.shape=(3,len(llg.M)/3)
     for j in range(y.shape[1]):
         arrows[j].axis=tuple(y[:,j])
