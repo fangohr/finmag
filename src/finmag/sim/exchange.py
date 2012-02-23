@@ -16,8 +16,6 @@ class Exchange(object):
             the dolfin object representing the magnetisation
         C 
             the exchange constant
-        Ms 
-            the saturation magnetisation
 
     Possible methods are 'box','project'.
 
@@ -35,11 +33,10 @@ class Exchange(object):
             >>> mesh = Box(0, m, 0, m, 0, m, n, n, n)
             
             >>> V  = VectorFunctionSpace(mesh, "Lagrange", 1)
-            >>> Ms = 8.6e5 # A/m 
             >>> C  = 1.3e-11 # J/m exchange constant
             >>> M  = project((Constant((Ms, 0, 0)), V) # Initial magnetisation
 
-            >>> exchange = Exchange(V, M, C, Ms)
+            >>> exchange = Exchange(V, M, C)
 
             >>> # Print energy
             >>> print exchange.compute_energy()
@@ -58,7 +55,6 @@ class Exchange(object):
         mu0 = 4 * np.pi * 10**-7 # Vs/(Am)
         self.exchange_factor = df.Constant(-2 * C / (mu0 * Ms))
         self.method = method
-        self.Ms = Ms
 
         v = df.TestFunction(V)
         self.E = self.exchange_factor * df.inner(df.grad(M), df.grad(M)) * df.dx
@@ -91,7 +87,7 @@ class Exchange(object):
                 The effective field.
                 
         """
-        return df.assemble(self.dE_dM).array() / (self.Ms * self.vol)
+        return df.assemble(self.dE_dM).array() / self.vol
 
     def compute_field_project(self):
         """
