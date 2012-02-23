@@ -1,0 +1,3 @@
+Anisotropy finmag.sim.anisotropy
+Exchange finmag.sim.exchange
+LLG finmag.sim.llg
