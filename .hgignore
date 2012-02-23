@@ -12,3 +12,5 @@ src/**.so
 *.pdf
 test-reports
 native/**.bin
+_build
+doc/modules/
