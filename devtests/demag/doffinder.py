@@ -8,6 +8,16 @@ class inputerror(Exception):
         return "Can only give Lagrange Element dimension for mesh dimensions 0-3"
 
 def numdoflagelem(q,deg):
+    """NUM of DOF LAGrange ELEMents:
+
+    q -   order of the polynomial.
+
+    deg - is the dimension of the space.
+
+    Returns the number of degrees for the lagrange element.
+
+    """
+
 #Functions to give the dimension of lagrange elements
     if deg == 0:
         return 1
@@ -21,6 +31,17 @@ def numdoflagelem(q,deg):
         raise inputerror
 
 def bounddofs(fspace,degree, facetfunc,num):
+    """BOUNDary DOFS
+
+    fspace - function space
+    degree - polynomial degree of the basis functions
+    facetfunc - function that marks the boundary
+    num - is the number that has been used to mark the boundary
+
+    returns the set of global indices for all degrees of freedoms on the boundary
+    that has been marked with 'num'.
+    """
+
     mesh = fspace.mesh()
     d = mesh.topology().dim()
     dm = fspace.dofmap()
@@ -52,4 +73,5 @@ if __name__ == "__main__":
     mesh = UnitInterval(10)
     mesh.init()
     V =  FunctionSpace(mesh, "CG", degree)
+
     
