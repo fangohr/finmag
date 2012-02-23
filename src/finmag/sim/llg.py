@@ -1,7 +1,8 @@
 import dolfin as df
 import instant
 import os
-import numpy
+import numpy as np
+import finmag.sim.helpers as h
 from finmag.sim.exchange import Exchange
 from finmag.sim.dmi import DMI
 
@@ -12,45 +13,98 @@ class LLG(object):
         self.V = df.VectorFunctionSpace(self.mesh, 'Lagrange', order, dim=3)
         self.Volume = df.assemble(df.Constant(1)*df.dx, mesh=self.mesh)
 
+        self.set_default_values()
+        self._solve = self.load_c_code()
+
+    def set_default_values(self):
         self.alpha = 0.5
         self.gamma = 2.211e5 # m/(As)
         self.c = 1e11 # 1/s numerical scaling correction
                       # 0.1e12 1/s is the value used by default in nmag 0.2
         self.C = 1.3e-11 # J/m exchange constant
-
-        self.Ms = 8.6e5 # A/m
-        self.t = 0 #s
+        self.Ms = 8.6e5 # A/m saturation magnetisation
+        self.t = 0 # s
         self.H_app = (0, 0, 0)
         self.H_dmi = (0, 0, 0) #DMI for Skyrmions
-
         self.pins = [] # nodes where the magnetisation gets pinned
 
-        self._solve = self.load_c_code()
-        
+    def load_c_code(self):
+        """
+        Loads the C-code in the file dmdt.c, that will later
+        get called to compute the right-hand side of the LLG equation.
+
+        """
+        __location__ = os.path.realpath(
+            os.path.join(os.getcwd(), os.path.dirname(__file__)))
+
+        with open(os.path.join(__location__, 'dmdt.c'), "r") as f:
+            c_code = f.read()
+
+        args = [["Mn", "M", "in"], ["Hn", "H", "in"],
+                ["dMdtn", "dMdt", "out"], ["Pn", "P", "in"]]
+        return instant.inline_with_numpy(c_code, arrays = args)
+    
     @property
     def M(self):
-        return self._M.vector().array()
+        """ the magnetisation, with length Ms """
+        return self.Ms * self.m
 
-    @M.setter
-    def M(self, value):
-        self._M.vector()[:] = value
+    @property
+    def M_average(self):
+        """ the average magnetisation, computed with m_average() """
+        return self.Ms * self.m_average
 
-    def average_M(self):
-        Mx = df.assemble(df.dot(self._M, df.Constant([1,0,0])) * df.dx)
-        My = df.assemble(df.dot(self._M, df.Constant([0,1,0])) * df.dx)
-        Mz = df.assemble(df.dot(self._M, df.Constant([0,0,1])) * df.dx)
-        return (Mx/self.Volume, My/self.Volume, Mz/self.Volume)
+    @property
+    def m(self):
+        """ the unit magnetisation """
+        return self._m.vector().array()
 
-    def initial_M(self, value):
-        self.M0 = df.Constant(value)
-        self.reset()
+    @m.setter
+    def m(self, value):
+        # Not enforcing unit length here, as that is better done
+        # once at the initialisation of m.
+        self._m.vector()[:] = value
 
-    def initial_M_expr(self, expression, **kwargs):
-        self.M0 = df.Expression(expression, **kwargs)
-        self.reset()
-
-    def reset(self):
-        self._M = df.interpolate(self.M0, self.V)
+    @property
+    def m_average(self):
+        """
+        Compute and return the average polarisation according to the formula
+        :math:`\\langle m \\rangle = \\frac{1}{V} \int m \: \mathrm{d}V`
+        
+        """
+        mx = df.assemble(df.dot(self._m, df.Constant([1,0,0])) * df.dx)
+        my = df.assemble(df.dot(self._m, df.Constant([0,1,0])) * df.dx)
+        mz = df.assemble(df.dot(self._m, df.Constant([0,0,1])) * df.dx)
+        return numpy.array([mx, my, mz]) / self.Volume
+    
+    def set_m0(self, value, **kwargs):
+        """
+        Set the initial magnetisation (scaled automatically).
+        
+        You can either provide a dolfin.Constant or a dolfin.Expression
+        directly, or the ingredients for either, i.e. a tuple of numbers
+        or a tuple of strings (with keyword arguments if needed), or provide
+        the nodal values directly as a numpy array.
+        
+        """
+        if isinstance(value, tuple):
+            if isinstance(value[0], str):
+                # a tuple of strings is considered to be the ingredient
+                # for a dolfin expression, whereas a tuple of numbers
+                # would signify a constant
+                val = df.Expression(value, **kwargs)
+            else:
+                val = df.Constant(value)
+            self._m0 = df.interpolate(val, self.V)
+        elif isinstance(value, (df.Constant, df.Expression)):
+            self._m0 = df.interpolate(value, self.V)
+        elif isinstance(value, (list, np.ndarray)):
+            self._m0 = df.Function(self.V)
+            self._m0.vector()[:] = value
+        else:
+            raise AttributeError
+        self._m0.vector()[:] = h.fnormalise(self._m0.vector().array())
+        self._m = self._m0
 
     def update_H_eff(self):
         self.H_eff = self.H_app + self.H_ex 
@@ -65,17 +119,6 @@ class LLG(object):
     def H_app(self, value):
         self._H_app = df.interpolate(df.Constant(value), self.V)
 
-    def load_c_code(self):
-        __location__ = os.path.realpath(
-            os.path.join(os.getcwd(), os.path.dirname(__file__)))
-
-        with open(os.path.join(__location__, 'dmdt.c'), "r") as f:
-            c_code = f.read()
-
-        args = [["Mn", "M", "in"], ["Hn", "H", "in"],
-                ["dMdtn", "dMdt", "out"], ["Pn", "P", "in"]]
-        return instant.inline_with_numpy(c_code, arrays = args)
-    
     def solve(self):
         if self.exchange_flag:
             self.H_ex = self.exchange.compute_field()
@@ -98,7 +141,7 @@ class LLG(object):
     def setup(self, exchange_flag=True, use_dmi=False):
         self.exchange_flag = exchange_flag
         if exchange_flag:
-            self.exchange = Exchange(self.V, self._M, self.C, self.Ms)
+            self.exchange = Exchange(self.V, self._m, self.C, self.Ms)
         else:
             zero = df.Constant((0, 0, 0))
             self.H_ex = df.interpolate(zero, self.V).vector().array()
