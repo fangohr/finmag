@@ -80,7 +80,7 @@ class LLG(object):
         if self.exchange_flag:
             self.H_ex = self.exchange.compute_field()
         if self.use_dmi:
-            self.dmi.compute_field()
+            self.H_dmi = self.dmi.compute_field()
         self.update_H_eff()
 
         status, dMdt = self._solve(self.alpha, self.gamma, self.MS, self.c,
@@ -106,6 +106,6 @@ class LLG(object):
         self.use_dmi = use_dmi
 
         if use_dmi:
-            self.dmi = DMI(self.V, self._M, self.C, self.MS)
+            self.dmi = DMI(self.V, self._M, self.MS)
 
 
