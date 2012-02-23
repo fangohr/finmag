@@ -10,7 +10,7 @@ applied field, based on Appendix B of Matteo's PhD thesis.
 
 """
 
-def make_analytical_solution(Ms, H, alpha, gamma):
+def make_analytical_solution(H, alpha, gamma):
 	"""
 	Returns a function with computes the magnetisation vector
 	as a function of time. Takes the following parameters:
@@ -36,11 +36,11 @@ def make_analytical_solution(Ms, H, alpha, gamma):
 	    return 1 / (numpy.cosh(p * alpha * H * (t - t0)))
 
 	def x(t):
-	    return Ms * sin_theta(t) * numpy.cos(phi(t))
+	    return sin_theta(t) * numpy.cos(phi(t))
 	def y(t):
-	    return Ms * sin_theta(t) * numpy.sin(phi(t))
+	    return sin_theta(t) * numpy.sin(phi(t))
 	def z(t):
-	    return Ms * cos_theta(t)
+	    return cos_theta(t)
 
 	def M(t):
 	    return numpy.array([x(t), y(t), z(t)])
@@ -58,23 +58,25 @@ def test_macrospin_default_damping():
     nx = ny = nz = 1
     mesh = dolfin.Box(x0, x1, y0, y1, z0, z1, nx, ny, nz)
     llg = LLG(mesh)
-    llg.initial_M((llg.Ms, 0, 0))
+    llg.set_m0((1, 0, 0))
     llg.H_app = (0, 0, 1e5)
 
     EXCHANGE = False
     llg.setup(EXCHANGE)
 
     ts = numpy.linspace(0, 1e-9, num=100)
-    ys = odeint(llg.solve_for, llg.M, ts)
+    ys = odeint(llg.solve_for, llg.m, ts)
 
-    M_analytical = make_analytical_solution(llg.Ms, 1e5, llg.alpha, llg.gamma)
+    M_analytical = make_analytical_solution(1e5, llg.alpha, llg.gamma)
 
     TOLERANCE = 4e-2
 
     for i in range(len(ts)):
         
         M_computed = numpy.mean(ys[i].reshape((3, -1)), 1)
+        print M_computed
         M_ref = M_analytical(ts[i])
+        print M_ref
         diff_max = numpy.max(numpy.abs(M_computed - M_ref))
 
         assert diff_max < TOLERANCE, \
@@ -92,16 +94,16 @@ def test_macrospin_low_damping():
     mesh = dolfin.Box(x0, x1, y0, y1, z0, z1, nx, ny, nz)
     llg = LLG(mesh)
     llg.alpha = 0.02
-    llg.initial_M((llg.Ms, 0, 0))
+    llg.set_m0((1, 0, 0))
     llg.H_app = (0, 0, 1e5)
 
     EXCHANGE = False
     llg.setup(EXCHANGE)
 
     ts = numpy.linspace(0, 1e-9, num=100)
-    ys = odeint(llg.solve_for, llg.M, ts, rtol=1e-11)
+    ys = odeint(llg.solve_for, llg.m, ts, rtol=1e-11)
 
-    M_analytical = make_analytical_solution(llg.Ms, 1e5, llg.alpha, llg.gamma)
+    M_analytical = make_analytical_solution(1e5, llg.alpha, llg.gamma)
 
     TOLERANCE = 3e-3
 
