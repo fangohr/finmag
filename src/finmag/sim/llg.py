@@ -18,7 +18,7 @@ class LLG(object):
                       # 0.1e12 1/s is the value used by default in nmag 0.2
         self.C = 1.3e-11 # J/m exchange constant
 
-        self.MS = 8.6e5 # A/m
+        self.Ms = 8.6e5 # A/m
         self.t = 0 #s
         self.H_app = (0, 0, 0)
         self.H_dmi = (0, 0, 0) #DMI for Skyrmions
@@ -83,7 +83,7 @@ class LLG(object):
             self.dmi.compute_field()
         self.update_H_eff()
 
-        status, dMdt = self._solve(self.alpha, self.gamma, self.MS, self.c,
+        status, dMdt = self._solve(self.alpha, self.gamma, self.Ms, self.c,
             self.M, self.H_eff, self.M.shape[0], self.pins)
         if status == 0:
             return dMdt
@@ -98,7 +98,7 @@ class LLG(object):
     def setup(self, exchange_flag=True, use_dmi=False):
         self.exchange_flag = exchange_flag
         if exchange_flag:
-            self.exchange = Exchange(self.V, self._M, self.C, self.MS)
+            self.exchange = Exchange(self.V, self._M, self.C, self.Ms)
         else:
             zero = df.Constant((0, 0, 0))
             self.H_ex = df.interpolate(zero, self.V).vector().array()
@@ -106,6 +106,6 @@ class LLG(object):
         self.use_dmi = use_dmi
 
         if use_dmi:
-            self.dmi = DMI(self.V, self._M, self.C, self.MS)
+            self.dmi = DMI(self.V, self._M, self.C, self.Ms)
 
 

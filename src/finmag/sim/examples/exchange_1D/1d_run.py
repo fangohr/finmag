@@ -15,9 +15,9 @@ mesh = dolfin.Interval(simplexes, 0, length)
 
 llg = LLG(mesh)
 llg.initial_M_expr((
-        'MS * (2*x[0]/L - 1)',
-        'sqrt(MS*MS - MS*MS*(2*x[0]/L - 1)*(2*x[0]/L - 1))',
-        '0'), L=length, MS=llg.MS)
+        'Ms * (2*x[0]/L - 1)',
+        'sqrt(Ms*Ms - Ms*Ms*(2*x[0]/L - 1)*(2*x[0]/L - 1))',
+        '0'), L=length, Ms=llg.Ms)
 llg.setup()
 llg.pins = [0, 10]
 

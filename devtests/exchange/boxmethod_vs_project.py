@@ -10,9 +10,9 @@ V=dolfin.VectorFunctionSpace(mesh,"CG",1,dim=3)
 Ms = 0.8e6 # A/m
 
 
-left_right = 'MS * (2*x[0]/L - 1)'
-up_down = 'sqrt(MS*MS - MS*MS*(2*x[0]/L - 1)*(2*x[0]/L - 1))'
-M = dolfin.interpolate(dolfin.Expression(('0','0','MS'),L=L,MS=Ms),V)
+left_right = 'Ms * (2*x[0]/L - 1)'
+up_down = 'sqrt(Ms*Ms - Ms*Ms*(2*x[0]/L - 1)*(2*x[0]/L - 1))'
+M = dolfin.interpolate(dolfin.Expression(('0','0','Ms'),L=L,Ms=Ms),V)
 
 #playing with a uniform field
 #M=dolfin.interpolate(dolfin.Constant([0,0,Ms]),V)
@@ -42,7 +42,7 @@ print "project-box:\n",numpy.round(project-box,decimals=3)
 
 #oldMarray = M.vector().array()
 #newM = dolfin.interpolate(
-M.assign(dolfin.Expression((left_right,up_down,'0'),L=L,MS=Ms))
+M.assign(dolfin.Expression((left_right,up_down,'0'),L=L,Ms=Ms))
 
 #playing with a uniform field
 print "=== Using uniform magnetisation ===="

@@ -6,8 +6,8 @@ TOLERANCE = 1e-2
 
 def test_aligns_with_applied_field():
     llg = LLG(df.UnitCube(2, 2, 2))
-    llg.initial_M((llg.MS, 0, 0))
-    llg.H_app = (0, 0, llg.MS/2)
+    llg.initial_M((llg.Ms, 0, 0))
+    llg.H_app = (0, 0, llg.Ms/2)
     llg.setup(False)
 
     ts = [0, 1e-9]
@@ -17,5 +17,5 @@ def test_aligns_with_applied_field():
 
     assert abs(Mx) < TOLERANCE
     assert abs(My) < TOLERANCE
-    assert abs(llg.MS - Mz) < TOLERANCE
+    assert abs(llg.Ms - Mz) < TOLERANCE
 
