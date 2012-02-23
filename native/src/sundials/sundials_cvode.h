@@ -11,6 +11,8 @@
 #ifndef __FINMAG_ODE_SUNDIALS_CVODE_H
 #define __FINMAG_ODE_SUNDIALS_CVODE_H
 
+#include "util/np_array.h"
+
 namespace finmag { namespace sundials {
 
     class cvode {
@@ -87,15 +89,15 @@ namespace finmag { namespace sundials {
 
         // direct linear solver optional input functions
 
-        void set_dls_jac_fn(const bp::object &djac) {}
+        void set_dls_jac_fn(const bp::object &djac);
 
-        void set_dls_band_jac_fn(const bp::object &bjac) {}
+        void set_dls_band_jac_fn(const bp::object &bjac);
 
         // iterative linear solver optional input functions
 
-        void set_spils_preconditioner(const bp::object &psetup, const bp::object &psolve) {}
+        void set_spils_preconditioner(const bp::object &psetup, const bp::object &psolve);
 
-        void set_splis_jac_times_vec_fn(const bp::object &jtimes) {}
+        void set_splis_jac_times_vec_fn(const bp::object &jtimes);
 
         void set_spils_prec_type(int pretype) {}
 
