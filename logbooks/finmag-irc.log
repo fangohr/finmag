@@ -109,3 +109,22 @@ fangohr: Still testing ...
 2012-02-21 12:03:13 HansFangohr: Hi Anders, am on the phone right now. Lunch in 20 minutes or so?
 2012-02-21 12:20:24 andersej: Yes.
 2012-02-21 12:27:36 HansFangohr: Fab, I'll come over now.
+2012-02-22 08:44:18 HansFangohr: Morning Anders, DokosBot.
+2012-02-22 09:03:23 HansFangohr: Hi Gabriel, good to see you.
+2012-02-22 09:03:43 HansFangohr: Are you okay to delay our meeting today to 15:30 UK time? Not sure whether you have seen my email already.
+2012-02-22 09:04:27 GabrielB: Hi hans I'll read the mail
+2012-02-22 09:06:31 GabrielB: Ahh ok Doctoral training centre meeting alles klar. 15: 30 might be pushing it a little do you have any time this morning?
+2012-02-22 09:07:39 GabrielB: Ahh I mean it might be bit late and the it would be nicer to meet in the morning with less time pressure :-)
+2012-02-22 09:07:40 HansFangohr: No, teaching. How about tomorrow 10am?
+2012-02-22 09:07:51 HansFangohr: Yes, I agree ;-)
+2012-02-22 09:08:25 HansFangohr: By what time do you need to leave? Maybe we can start today, and continue tomorrow?
+2012-02-22 09:08:47 GabrielB: ok sounds good! Just to give you a quick update the Nitsche Solver passes all the tests so far now that the boundary values of phitot have been fixed.
+2012-02-22 09:09:18 GabrielB: So for tomorrow I will try to compare to the analytic solution and of course write up a summary of the nitsche method
+2012-02-22 09:09:24 HansFangohr: That sounds great. Also in 3d? ;-)
+2012-02-22 09:09:27 GabrielB: yes
+2012-02-22 09:09:34 GabrielB: 1 to 3 d :-)
+2012-02-22 09:09:49 HansFangohr: Fabulous.
+2012-02-22 09:10:58 HansFangohr: If you choose M=[1,0,0], you should fine that phi is a linear function of x inside the sphere. In particular, if you compute the negative gradient of phi, you should get a vector field that is [-1/3,0,0] inside the sphere. I guess this is the analytic solution you refer to, and would be nice to see.
+2012-02-22 09:32:30 andersej: Sorry, didn't get notified as usual.. Morning! How come you have two users always logged on, Hans?
+2012-02-22 10:59:18 HansFangohr: Anders, these are from machines that are never switched off.
+2012-02-22 11:45:02 HansFangohr: Anders, Marc-Antonio, just to say that I am not having lunch today.
