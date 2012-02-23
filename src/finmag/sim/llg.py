@@ -75,7 +75,7 @@ class LLG(object):
         mx = df.assemble(df.dot(self._m, df.Constant([1,0,0])) * df.dx)
         my = df.assemble(df.dot(self._m, df.Constant([0,1,0])) * df.dx)
         mz = df.assemble(df.dot(self._m, df.Constant([0,0,1])) * df.dx)
-        return numpy.array([mx, my, mz]) / self.Volume
+        return np.array([mx, my, mz]) / self.Volume
     
     def set_m0(self, value, **kwargs):
         """
