@@ -10,8 +10,13 @@ __organisation__ = "University of Southampton"
 #TODO Expand the class InteriorBoundary so it can handle multiple Boundaries 
 from dolfin import *
 
+
 class InteriorBoundary():
+    """Marks interior boundary and gives you a function newboundfunc
+
+    """
     def __init__(self,mesh):
+        """Expects mesh"""
         self.D = mesh.topology().dim()
         self.mesh = mesh
         self.orientation = [] 
@@ -19,10 +24,29 @@ class InteriorBoundary():
 
 #TODO add the possibility of several subdomains        
     def create_boundary(self,submesh):
+        """
+        Will find and return the boundary of the given submesh.
+
+        This appends a FacetFunction to 
+           self.boundaries.
+
+        That FacetFunction takes the value 2 for all Facets on the bounday between submesh and the mesh.
+
+        Boundary facets at the outer boundray of the mesh are not included.
+
+        Also appends something (probably also a Facetfunction, or at
+          least something like it) to self.orientation which contains
+          a reference to the cells on the outside of the boundary for
+          every facet.
+
+        """
         #Compute FSI boundary and orientation markers on Omega
         self.mesh.init()
-        newboundfunc = MeshFunction("uint",self.mesh,self.D-1)
+        newboundfunc = MeshFunction("uint",self.mesh,self.D-1) # D-1 means FacetFunction
+        
+        #The next line creates a 'facet_orientation' attribute(or function) in the mesh object
         neworientation= self.mesh.data().create_mesh_function("facet_orientation", self.D - 1)
+
         neworientation.set_all(0)
         newboundfunc.set_all(0)
         #self.mesh.init(self.D - 1, self.D)
@@ -60,10 +84,11 @@ class InteriorBoundary():
             # 2 = Boundary
 
             # Look for points where exactly one is inside the Subdomain
-            facet_index = facet.index()
+            facet_index = facet.index()      #global facet index
             if p0_inside and not p1_inside:
                 newboundfunc[facet_index] = 2
-                neworientation[facet_index] = c1
+                neworientation[facet_index] = c1 #store cell object on the 'outside' of the facet,
+                                                 #i.e. c1 is not in the given submesh.
                 self.countfacets += 1
             elif p1_inside and not p0_inside:
                 newboundfunc[facet_index] = 2
