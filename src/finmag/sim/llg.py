@@ -106,6 +106,6 @@ class LLG(object):
         self.use_dmi = use_dmi
 
         if use_dmi:
-            self.dmi = DMI(self.V, self._M, self.MS)
+            self.dmi = DMI(self.V, self._M, self.Ms)
 
 
