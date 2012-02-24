@@ -16,7 +16,7 @@ class MyLLG(LLG):
         self.p = Constant(self.gamma/(1 + self.alpha**2))
 
     def M(self):
-        return self._M
+        return self._m
 
     def H_eff(self):
         """Very temporary function to make things simple."""
@@ -24,14 +24,14 @@ class MyLLG(LLG):
         H_ex  = Function(self.V)
 
         # Comment out these two lines if you don't want exchange.
-        exch  = Exchange(self.V, self._M, self.C, self.Ms)
+        exch  = Exchange(self.V, self._m, self.C, self.Ms)
         H_ex.vector().array()[:] = exch.compute_field()
 
         H_eff = H_ex + H_app
         return H_eff
 
     def compute_variational_forms(self):
-        M, H, Ms, p, c, alpha, V = self._M, self.H_eff(), \
+        M, H, Ms, p, c, alpha, V = self._m, self.H_eff(), \
                 self.Ms, self.p, self.c, self.alpha, self.V
         
         u = TrialFunction(V)
@@ -49,7 +49,7 @@ class MyLLG(LLG):
         return self.a, self.L
 
     def compute_jacobian(self):
-        L, M = self.L, self._M
+        L, M = self.L, self._m
         return derivative(L, M)
 
 
@@ -90,10 +90,10 @@ def convergence_rates(xs, ys):
 m = 1e-5
 mesh = Box(0,m,0,m,0,m,5,5,5)
 llg = MyLLG(mesh)
-llg.initial_M((8.6e5,0,0))
+llg.set_m0((1,0,0))
 llg.setup()
 
-M, V = llg.M(), llg.V
+M, V = llg._m, llg.V
 a, L = llg.variational_forms()
 
 x = Function(V)
