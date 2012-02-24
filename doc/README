@@ -1,6 +1,15 @@
 # HOWTO generate documentation for Finmag.
 # Written by Anders E. Johansen 23/2/2012
 
+You will probably need Sphinx version 1.1.2 which can be installed using
+
+$ easy_install -U Sphinx
+
+To get syntax highlighting, you also need Pygments:
+
+$ easy_install Pygments
+
+
 To view documentation:
 ----------------------
 
