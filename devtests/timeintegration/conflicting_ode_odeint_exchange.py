@@ -22,6 +22,10 @@ c = Constant(1e12)
 C = 1.3e-11
 p = Constant(gamma/(1 + alpha**2))
 Ms = 8.6e5
+#Ms = 1
+#length = 20e-9
+#simplexes = 10
+
 length = 20e-9
 simplexes = 10
 
@@ -36,22 +40,22 @@ v = TestFunction(V)
 # uniform quickly and align in z-direction. 
 
 # Orientations
-left_right = 'Ms * (2*x[0]/L - 1)'
-up_down = 'sqrt(Ms*Ms - Ms*Ms*(2*x[0]/L - 1)*(2*x[0]/L - 1))'
+left_right = '2*x[0]/L - 1'
+up_down = 'sqrt(1 - (2*x[0]/L - 1)*(2*x[0]/L - 1))'
 
 # Initial
-M0 = Expression((left_right, up_down, '0'), L=length, Ms=Ms)
+M0 = Expression((left_right, up_down, '0.0'), L=length)
 M = interpolate(M0, V)
-
+#
 # Exchange
-H_exch1 = Exchange(V, M, C, Ms)
+H_exch = Exchange(V, M, C, Ms)
 
 # Applied
 H_app = project(Constant((0, 0, 1e5)), V)
 
 # Effective
 H_eff = Function(V)
-H_eff.vector()[:] = H_exch1.compute_field()# + H_app.vector()
+H_eff.vector()[:] = H_exch.compute_field() + H_app.vector()
 
 Ms = Constant(Ms)
 
@@ -59,18 +63,19 @@ Ms = Constant(Ms)
 a = inner(u, v)*dx
 L = inner((-p*cross(M, H_eff)
            -p*alpha/Ms*cross(M, cross(M, H_eff))
-           -c*(inner(M, M) - Ms**2)*M/Ms**2), v)*dx
+           -c*(inner(M, M) - 1)*M), v)*dx
 
 # Time derivative of the magnetic field.
 dM = Function(V)
 
 # Jacobian
 J = derivative(L, M)
-
 def f(y, t):
     # Update M and H_eff
     M.vector()[:] = y
-    H_eff.vector()[:] = H_exch1.compute_field()# + H_app.vector()
+    H_eff.vector()[:] = H_exch.compute_field() + H_app.vector()
+    #print H_eff.vector().array().reshape((3, -1))
+    print t
     solve(a==L, dM)
     return dM.vector().array()
 
@@ -79,9 +84,9 @@ def j(t, y):
 
 
 # Using odeint
-ts = linspace(0, 1e-9, 100)
+ts = linspace(0, 1e-9, 2)
 y0 = M.vector().array()
-ys, infodict = odeint(f, y0, ts, rtol=10, full_output=True)
+ys, infodict = odeint(f, y0, ts, full_output=True)
 #ys, infodict = odeint(f, y0, ts, rtol=10, Dfun=j, full_output=True)
 print ys[-1]
 #print infodict
