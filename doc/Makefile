@@ -151,3 +151,7 @@ doctest:
 	$(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) $(BUILDDIR)/doctest
 	@echo "Testing of doctests in the sources finished, look at the " \
 	      "results in $(BUILDDIR)/doctest/output.txt."
+
+#next target added to get Jenkins to run generate_doc.py before building the documentation.
+python-generate_doc:	
+	python generate_doc.py
