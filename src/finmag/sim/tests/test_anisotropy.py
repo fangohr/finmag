@@ -50,6 +50,7 @@ def test_parallel():
     # Case 1
     M = project(Constant((0, 0, 1)), V)
     energy = Anisotropy(V, M, K1, a).compute_energy()
+    print 'This sould be zero:', energy
     assert abs(energy) < TOL
 
 def test_orthogonal():
@@ -57,13 +58,15 @@ def test_orthogonal():
     M = project(Constant((0,1,0)), V)   
     energy = Anisotropy(V, M, K1, a).compute_energy()
     volK = K*assemble(Constant(1)*dx, mesh=mesh)
+    print 'These should be equal:', energy, volK
     assert abs(energy - volK) < TOL
 
-def _test_gradient():
+def test_gradient():
     # Case 3
     M = project(Constant((1./np.sqrt(2), 0, 1./np.sqrt(2))), V)
-    dE_dM = assemble(Anisotropy(V, M, K1, a).dE_dM).array()
-    
+    ani = Anisotropy(V, M, K1, a)
+    dE_dM = ani.compute_field()
+
     # Manually derivative
     w = TestFunction(V)
     g_ani = -K1*(2*dot(a, M)*dot(a, w))*dx
@@ -71,9 +74,16 @@ def _test_gradient():
     man_grad = assemble(g_ani).array() / vol
     
     l = len(dE_dM)
+    print 'These should be equal:', l, len(man_grad)
     assert l == len(man_grad)
 
     diff = dE_dM - man_grad
+    print 'This should be zeros:', diff
     for i in range(l):
         assert abs(diff[i]) < TOL
+
+if __name__ == '__main__':
+    test_parallel()
+    test_orthogonal()
+    test_gradient()
 
