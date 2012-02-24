@@ -137,3 +137,11 @@ fangohr: Still testing ...
 2012-02-23 15:37:34 mb8g11: hello Marijaan
 2012-02-23 22:08:56 mb8g11: good night
 2012-02-23 22:09:02 mb8g11: oh, weiwei was here
+2012-02-24 08:28:41 mb8g11: good morning
+2012-02-24 09:02:54 fangohr: Morning folks :)
+2012-02-24 09:09:04 fangohr-osiris: Morning Anders, are you out there?
+2012-02-24 09:13:23 andersej: Yes, I'm here! Good morning! Just reading your email. What is your queries?
+2012-02-24 09:13:37 andersej: Ok, just got it.
+2012-02-24 10:52:58 andersej: Hans, great work on the documentation! Just one question: Now it seems one have to add the modules to index.rst in addition to modules.txt. This can easily be solved by a simple script copying the information from modules.txt into index.rst. Do you want such a script? I can add it in ten minutes.
+2012-02-24 10:57:07 fangohr: I think in index.rst we want to sort them in a logical order, whereas for the modules.txt the order probably doesn't matter? I would think that it is okay to do this manually in this instance. Maybe a note that one needs to add NEW modules to both files might be useful as reminder (in the thisdocumentation.rst file, say).
+2012-02-24 11:03:29 andersej: That's right, the order in modules.txt doesn't matter, as it will be arranged alphabetically in the html file. I guess one will get a warning when building if a new module is just added in one of the files and not both.
