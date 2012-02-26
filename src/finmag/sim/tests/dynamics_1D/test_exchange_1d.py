@@ -33,15 +33,19 @@ r = ode(llg_wrap).set_integrator("vode", method="bdf")
 r.set_initial_value(llg.m, t0)
 
 averages = []
+av_f = open("averages.txt", "w")
 third_node = []
+tn_f = open("third_node.txt", "w")
 
 while r.successful() and r.t <= t1:
     mx, my, mz = llg.m_average
     averages.append([r.t, mx, my, mz])
+    av_f.write(str(r.t) + " " + str(mx) + " " + str(my) + " " + str(mz) + "\n")
 
     mx, my, mz = h.components(llg.m)
     m2x, m2y, m2z = mx[2], my[2], mz[2]
     third_node.append([r.t, m2x, m2y, m2z])
+    tn_f.write(str(r.t) + " " + str(mx) + " " + str(my) + " " + str(mz) + "\n")
 
     r.integrate(r.t + dt)
 
