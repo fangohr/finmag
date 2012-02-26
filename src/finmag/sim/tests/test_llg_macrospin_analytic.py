@@ -49,7 +49,7 @@ def make_analytic_solution(H, alpha, gamma):
 
 	return m
 
-def test_llg_macrospin_analytic(alpha=0.5):
+def test_llg_macrospin_analytic(alpha=0.5,max_t=1e-9):
     """
     Compares the C/dolfin/odeint solution to the analytical one defined above.
 
@@ -66,16 +66,18 @@ def test_llg_macrospin_analytic(alpha=0.5):
     llg = LLG(mesh)
     llg.alpha = alpha
     llg.set_m0((1, 0, 0))
-    llg.H_app = (0, 0, 1e5)
+    llg.H_app = (0, 0, 1e6)
 
     EXCHANGE = False
     llg.setup(EXCHANGE)
 
-    ts = numpy.linspace(0, 1e-9, num=100)
+    ts = numpy.linspace(0, max_t, num=100)
+    tsfine = numpy.linspace(0, max_t, num=1000)
     ys = odeint(llg.solve_for, llg.m, ts)
     print ys.shape
+    print llg.gamma
 
-    m_analytical = make_analytic_solution(1e5, alpha, llg.gamma)
+    m_analytical = make_analytic_solution(1e6, alpha, llg.gamma)
 
     TOLERANCE = 1e-6 #tolerance on Ubuntu 11.10, VM Hans, 25/02/2012
 
@@ -90,25 +92,33 @@ def test_llg_macrospin_analytic(alpha=0.5):
         assert diff_max < TOLERANCE, \
           "t=%e (i=%d) failed with diff=%e" % (ts[i],i,diff_max)
 
-    ys3d = ys.reshape((len(ys),-1,3)).mean(-2) 
+    ys3d = ys.reshape((len(ys),3,8)).mean(-1) 
     mx = ys3d[:,0]
     my = ys3d[:,1]
     mz = ys3d[:,2]
     print "mx.shape",mx.shape
     print "m_analytical.shape",m_analytical(ts).shape
+    m_exact = m_analytical(tsfine)
+    mx_exact = m_exact[0,:] 
+    my_exact = m_exact[1,:] 
+    mz_exact = m_exact[2,:] 
     #make plot
     import pylab
     pylab.plot(ts,mx,'o',label='mx')
     pylab.plot(ts,my,'x',label='my')
     pylab.plot(ts,mz,'^',label='mz')
-    pylab.plot(ts,mx,'-',label='mx (exact)')
-    pylab.plot(ts,my,'-',label='my (exact)')
-    pylab.plot(ts,mz,'-',label='mz (exact)')
+    pylab.plot(tsfine,mx_exact,'-',label='mx (exact)')
+    pylab.plot(tsfine,my_exact,'-',label='my (exact)')
+    pylab.plot(tsfine,mz_exact,'-',label='mz (exact)')
     pylab.xlabel('t [s]')
     pylab.ylabel('m=M/Ms')
+    pylab.title('Macro spin behaviour, alpha=%g' % alpha)
     pylab.grid()
     pylab.legend()
-    pylab.show()
+    pylab.savefig('llg-macrospin-alpha-%04.2f.png' % alpha)
+    #pylab.show()
+    pylab.close()
+    return ys 
 
 def test_different_alphas():
 	test_llg_macrospin_analytic(alpha=1)
@@ -116,4 +126,7 @@ def test_different_alphas():
 	test_llg_macrospin_analytic(alpha=0.02)
 	
 if __name__=="__main__":
-	test_llg_macrospin_analytic(alpha=0.1)
+	ys = test_llg_macrospin_analytic(alpha=1.0,max_t=1e-10)
+	ys = test_llg_macrospin_analytic(alpha=0.5,max_t=1e-10)
+	ys = test_llg_macrospin_analytic(alpha=0.1,max_t=2e-10)
+	ys = test_llg_macrospin_analytic(alpha=0.01,max_t=2e-9)
