@@ -32,7 +32,7 @@ default:
 	@echo 'This makefile is used for CI only; do not use directly.' 
 	
 ci: test
-	make -C doc html
+	make -C doc generate-doc html
 
 make-modules:
 	make -C $(NATIVE_DIR) all
