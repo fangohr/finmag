@@ -31,7 +31,7 @@ mat_Py = nmag.MagMaterial(name="Py",
                           Ms=SI(0.86e6, "A/m"),
                           exchange_coupling=SI(13.0e-12, "J/m"),
                           llg_gamma_G=SI(0.2211e6, "m/A s"),
-                          llg_damping=SI(0.5),
+                          llg_damping=SI(0.2),
                           llg_normalisationfactor=SI(0.001e12, "1/s"))
 
 # Create the simulation object
@@ -46,11 +46,21 @@ unidmesher.write_mesh(mesh_lists, out=mesh_file_name)
 sim.load_mesh(mesh_file_name, [("Py", mat_Py)], unit_length=mesh_unit)
 
 sim.set_m(m0)        # Set the initial magnetisation
-#sim.set_pinning(pin) # Set pinning
+sim.set_pinning(pin) # Set pinning
+sim.set_H_ext([0, 0, 1], SI(0.43e6, "A/m"))
 
-# Set additional parameters for the time-integration
+"""
 sim.set_params(stopping_dm_dt=1*degrees_per_ns,
-               ts_rel_tol=1e-6, ts_abs_tol=1e-6)
+        ts_rel_tol=1e-6, ts_abs_tol=1e-6)
 
 from nsim.when import every, at
-sim.relax(save=[('fields', every('time', SI(5e-12, "s")))])
+sim.relax(save=[('averages', every('time', SI(5e-12, "s")))])
+"""
+
+t = t0 = 0; t1 = 3.10e-10; dt = 5.e-12 # s
+while t <= t1:
+    sim.save_data("fields")
+    print sim.probe_subfield_siv("m_Py", [4e-9])
+
+    t += dt
+    sim.advance_time(SI(t, "s"))
