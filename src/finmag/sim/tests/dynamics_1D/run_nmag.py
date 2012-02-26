@@ -57,10 +57,14 @@ from nsim.when import every, at
 sim.relax(save=[('averages', every('time', SI(5e-12, "s")))])
 """
 
-t = t0 = 0; t1 = 3.10e-10; dt = 5.e-12 # s
+t = t0 = 0; t1 = 3.10e-10; dt = 5e-12 # s
+fh = open("third_node_ref.txt", "w")
 while t <= t1:
     sim.save_data("fields")
-    print sim.probe_subfield_siv("m_Py", [4e-9])
+
+    m2x, m2y, m2z = sim.probe_subfield_siv("m_Py", [4e-9]) # third node
+    fh.write(str(t) + " " + str(m2x) + " " + str(m2y) + " " + str(m2z) + "\n")
 
     t += dt
     sim.advance_time(SI(t, "s"))
+fh.close()

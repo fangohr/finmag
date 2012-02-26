@@ -1,8 +1,7 @@
 import dolfin
 import numpy
-
+import finmag.sim.helpers as h
 from finmag.sim.llg import LLG
-from finmag.sim.helpers import vectors,angle
 from scipy.integrate import odeint, ode
 
 TOLERANCE = 1e-7
@@ -29,13 +28,20 @@ llg.pins = [0, 10]
 # ode takes the parameters in the order t, y whereas odeint and we use y, t.
 llg_wrap = lambda t, y: llg.solve_for(y, t)
 
-t0 = 0; t1 = 3.10e-9; dt = 1e-11; # s
+t0 = 0; t1 = 3.10e-9; dt = 5e-12; # s
 r = ode(llg_wrap).set_integrator("vode", method="bdf")
 r.set_initial_value(llg.m, t0)
 
-log = open("averages.txt", "w")
+log1 = open("averages.txt", "w")
+log2 = open("third_node.txt", "w")
 while r.successful() and r.t <= t1:
     mx, my, mz = llg.m_average
-    log.write(str(r.t) + " " + str(mx) + " " + str(my) + " " + str(mz) + "\n")
+    log1.write(str(r.t) + " " + str(mx) + " " + str(my) + " " + str(mz) + "\n")
+
+    mx, my, mz = h.components(llg.m)
+    m2x, m2y, m2z = mx[2], my[2], mz[2]
+    log2.write(str(r.t) + " " + str(m2x) + " " + str(m2y) + " " + str(m2z) + "\n")
+
     r.integrate(r.t + dt)
-log.close()
+log1.close()
+log2.close()
