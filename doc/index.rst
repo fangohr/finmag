@@ -4,18 +4,25 @@
 Finmag
 ======
 
-TODO: Write something interesting here. Should include things like purpose, University
-logo and link to `FEniCS <http://fenicsproject.org>`_.
+FinMag - a thin layer on top of `FEniCS <http://fenicsproject.org>`_ to enable Python-scripted multi-physics micromagnetic simulations. 
+logo and link to 
 
 
-Download
---------
-Perhaps include the hg clone ...? 
+.. toctree::
+   :maxdepth: 2
+   :numbered:
 
+   thisdocumentation.rst
+   aboutfinmag.rst
+   modules/LLG.rst
+   modules/Exchange.rst
+   modules/Anisotropy.rst
 
-The Finmag Team
----------------
-Write something about us?
+.. comment:
+   background.txt
+   command_reference.txt
+   contact.txt
+   acknowledgements.txt
 
 
 Programmer's Reference

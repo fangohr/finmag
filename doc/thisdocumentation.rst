@@ -1,13 +1,28 @@
-# HOWTO generate documentation for Finmag.
-# Written by Anders E. Johansen 23/2/2012
+About the documentation
+=======================
 
-To view documentation:
-----------------------
 
-1. Navigate to /finmag/doc/
-2. $ python generate_doc.py
-3. $ make html
-4. Open _build/html/index.html in your favourite browser
+Required libraries
+------------------
+
+You will probably need Sphinx version 1.1.2 (more recent that what ships with Ubuntu 11.10) which can be installed using::
+
+  $ easy_install -U Sphinx
+
+To get syntax highlighting, you also need Pygments (the Ubuntu package 'python-pygments' does the job) or use::
+
+  $ easy_install Pygments
+
+
+To build and view documentation
+-------------------------------
+
+1. Navigate to finmag/doc/
+2. ``$ python generate_doc.py``
+3. ``$ make html``
+4. Open ``_build/html/index.html`` in your favourite browser
+
+Other formats can be created, for example pdf using ``make latexpdf`` (the output is in ``_build/latexpdf/Finmag.pdf``).
 
 
 Writing documentation:
@@ -49,20 +64,43 @@ Important:
 
 When documenting a class structure, Sphinx does not include docstrings from __init__, so please put these in the first line in the class instead. I.e. do
 
-class Foo:
-    """
-    Docstring is here.
-    """
+.. code-block:: python
 
-    def __init__(self, *args):
-
-
+   class Foo:
+       """
+       Docstring is here.
+       """
+   
+       def __init__(self, *args):
+   
+   
 instead of
 
-class Bar:
-    def __init__(self, *args):
-        """
-        Docstring should not be here.
-        """
+.. code-block:: python   
 
-The author of this HOWTO has not yet figured out how to get syntax highlighting on the code snippets without adding >>> in front of every line, so please continue with this until further notice. If someone knows how to do this, please tell me.
+   class Bar:
+       def __init__(self, *args):
+           """
+           Docstring should not be here.
+           """
+
+Lack of syntax highlighting
+---------------------------
+
+We have not yet figured out how to get syntax highlighting on the code
+snippets without adding >>> in front of every line. If someone knows
+how to do this, please tell me.
+
+
+This document as raw source
+---------------------------
+
+Here we include the source for this page
+
+.. literalinclude:: thisdocumentation.rst
+
+
+----------------
+
+# HOWTO generate documentation for Finmag.
+# Written by Anders E. Johansen 23/2/2012
