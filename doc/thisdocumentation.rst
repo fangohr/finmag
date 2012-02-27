@@ -84,12 +84,10 @@ instead of
            Docstring should not be here.
            """
 
-Lack of syntax highlighting
+Code-blocks
 ---------------------------
 
-We have not yet figured out how to get syntax highlighting on the code
-snippets without adding >>> in front of every line. If someone knows
-how to do this, please tell me.
+Please do not use '>>>' in front of every line when making code examples.
 
 
 This document as raw source

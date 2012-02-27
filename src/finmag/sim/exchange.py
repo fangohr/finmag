@@ -28,25 +28,25 @@ class Exchange(object):
 
         .. code-block:: python
 
-            >>> m    = 1e-8
-            >>> n    = 5
-            >>> mesh = Box(0, m, 0, m, 0, m, n, n, n)
+            m    = 1e-8
+            n    = 5
+            mesh = Box(0, m, 0, m, 0, m, n, n, n)
             
-            >>> V  = VectorFunctionSpace(mesh, "Lagrange", 1)
-            >>> C  = 1.3e-11 # J/m exchange constant
-            >>> M  = project((Constant((Ms, 0, 0)), V) # Initial magnetisation
+            V  = VectorFunctionSpace(mesh, "Lagrange", 1)
+            C  = 1.3e-11 # J/m exchange constant
+            M  = project(Constant((Ms, 0, 0)), V) # Initial magnetisation
 
-            >>> exchange = Exchange(V, M, C)
+            exchange = Exchange(V, M, C)
 
-            >>> # Print energy
-            >>> print exchange.compute_energy()
+            # Print energy
+            print exchange.compute_energy()
 
-            >>> # Exchange field ('box' method)
-            >>> H_exch = exchange.compute_field_box()
+            # Exchange field ('box' method)
+            H_exch = exchange.compute_field_box()
 
-            >>> # Using 'project' method
-            >>> exchange_pro = Exchange(V, M, C, Ms, method='project')
-            >>> H_exch_pro = exchange_pro.compute_field_project()
+            # Using 'project' method
+            exchange_pro = Exchange(V, M, C, Ms, method='project')
+            H_exch_pro = exchange_pro.compute_field_project()
             
     """
 
