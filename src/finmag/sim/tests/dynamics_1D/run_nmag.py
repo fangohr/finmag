@@ -47,7 +47,6 @@ sim.load_mesh(mesh_file_name, [("Py", mat_Py)], unit_length=mesh_unit)
 
 sim.set_m(m0)        # Set the initial magnetisation
 sim.set_pinning(pin) # Set pinning
-sim.set_H_ext([0, 0, 1], SI(0.43e6, "A/m"))
 
 """
 sim.set_params(stopping_dm_dt=1*degrees_per_ns,
