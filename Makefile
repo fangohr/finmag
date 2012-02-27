@@ -19,8 +19,10 @@ PYTHON_ROOTS = $(PROJECT_DIR)/src
 RUN_UNIT_TESTS = $(PROJECT_DIR)/src/finmag/util/run_ci_tests.py
 # The directory that contains native code
 NATIVE_DIR = native
-# The list of directories that contain unit tests
-TEST_ROOTS = tests/ode
+# The list of directories that contain unittest unit tests
+TEST_ROOTS = src/finmag/util/ode/tests
+# The list of directories that contain py.test unit tests
+PYTEST_ROOTS = src/finmag/sim/tests/dynamics_1D
 
 ######### Other variables
 # Directory where precompiled header files are placed during compilation
@@ -43,13 +45,16 @@ clean:
 
 % : %.c
 
-test: clean make-modules $(addsuffix /__runtests__,$(TEST_ROOTS)) run-ci-tests
+test: clean make-modules $(addsuffix /__runtests__,$(TEST_ROOTS)) $(addsuffix /__runpytests__,$(PYTEST_ROOTS)) run-ci-tests
 
 fasttest : make-modules $(addsuffix /__runtests__,$(TEST_ROOTS)) run-ci-tests
 
 %/__runtests__ :
 	(cd $(dir $@) && PYTHONPATH=$(PYTHON_ROOTS):. python $(RUN_UNIT_TESTS))
-	
+
+%/__runpytests__ :
+	(cd $(dir $@) && PYTHONPATH=$(PYTHON_ROOTS):. py.test --junitxml=$(PROJECT_DIR)/test-reports/pytest-report.xml)
+
 run-ci-tests :
 	make -C $(NATIVE_DIR) run-ci-tests
 
