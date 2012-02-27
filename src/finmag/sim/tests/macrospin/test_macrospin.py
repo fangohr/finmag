@@ -1,8 +1,11 @@
 import dolfin
+import os
 import numpy
 from scipy.integrate import odeint
 
 from finmag.sim.llg import LLG
+
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 """
 The analytical solution of the LLG equation for a constant
@@ -109,8 +112,8 @@ def save_plot(ts, ys, ts_ref, m_ref, alpha):
     plt.title('Macro spin behaviour, alpha=%g' % alpha)
     plt.grid()
     plt.legend()
-    plt.savefig('alpha-%04.2f.png' % alpha)
-    plt.savefig('alpha-%04.2f.pdf' % alpha)
+    plt.savefig(MODULE_DIR + '/alpha-%04.2f.png' % alpha)
+    plt.savefig(MODULE_DIR + '/alpha-%04.2f.pdf' % alpha)
     plt.close()
     #pylab.show()
 
