@@ -51,8 +51,8 @@ fasttest : make-modules $(addsuffix /__runtests__,$(TEST_ROOTS)) run-ci-tests
 	(cd $(dir $@) && PYTHONPATH=$(PYTHON_ROOTS):. python $(RUN_UNIT_TESTS))
 
 run-pytest-tests :
-        (cd src/finmag && PYTHONPATH=$(PYTHON_ROOTS):. py.test --junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest_finmag.xml)
-        (cd examples && PYTHONPATH=$(PYTHON_ROOTS):. py.test --junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest_examples.xml)
+	(cd src/finmag && PYTHONPATH=$(PYTHON_ROOTS):. py.test --junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest_finmag.xml)
+	(cd examples && PYTHONPATH=$(PYTHON_ROOTS):. py.test --junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest_examples.xml)
 
 run-ci-tests :
 	make -C $(NATIVE_DIR) run-ci-tests
