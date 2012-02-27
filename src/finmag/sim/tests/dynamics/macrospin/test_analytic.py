@@ -115,7 +115,8 @@ def test_llg_macrospin_analytic(alpha=0.5,max_t=1e-9):
     pylab.title('Macro spin behaviour, alpha=%g' % alpha)
     pylab.grid()
     pylab.legend()
-    pylab.savefig('llg-macrospin-alpha-%04.2f.png' % alpha)
+    pylab.savefig('alpha-%04.2f.png' % alpha)
+    pylab.savefig('alpha-%04.2f.pdf' % alpha)
     #pylab.show()
     pylab.close()
     return ys 
