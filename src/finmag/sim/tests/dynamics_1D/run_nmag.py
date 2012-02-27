@@ -56,7 +56,7 @@ from nsim.when import every, at
 sim.relax(save=[('averages', every('time', SI(5e-12, "s")))])
 """
 
-t = t0 = 0; t1 = 3.10e-10; dt = 5e-12 # s
+t = t0 = 0; t1 = 1e-10; dt = 1e-12 # s
 fh = open("third_node_ref.txt", "w")
 while t <= t1:
     sim.save_data("fields")
