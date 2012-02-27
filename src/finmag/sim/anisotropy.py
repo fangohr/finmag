@@ -29,22 +29,23 @@ class Anisotropy(object):
     *Example of Usage*
         .. code-block:: python
 
-            >>> m    = 1e-8
-            >>> n    = 5
-            >>> mesh = Box(0, m, 0, m, 0, m, n, n, n)
-            
-            >>> V = VectorFunctionSpace(mesh, "Lagrange", 1)
-            >>> K = 520e3 # For Co (J/m^3)
-            >>> a = Constant((0, 0, 1)) # Easy axis in z-direction
-            >>> M = project((Constant((1, 0, 0)), V) # Initial magnetisation
+            m    = 1e-8
+            n    = 5
+            mesh = Box(0, m, 0, m, 0, m, n, n, n)
 
-            >>> anisotropy = Anisotropy(V, M, K, a)
+            V = VectorFunctionSpace(mesh, 'Lagrange', 1)
+            K = 520e3 # For Co (J/m3)
 
-            >>> # Print energy
-            >>> print anisotropy.compute_energy()
+            a = Constant((0, 0, 1)) # Easy axis in z-direction
+            M = project(Constant((1, 0, 0)), V) # Initial magnetisation
 
-            >>> # Anisotropy field
-            >>> H_ani = anisotropy.compute_field()
+            anisotropy = Anisotropy(V, M, K, a)
+
+            # Print energy
+            print anisotropy.compute_energy()
+
+            # Anisotropy field
+            H_ani = anisotropy.compute_field()
             
         """   
     

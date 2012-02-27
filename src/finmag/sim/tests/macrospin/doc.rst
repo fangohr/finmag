@@ -7,7 +7,9 @@ The LLG equation
 
 can be solved analytically for a magnetic moment m where the effective field is given as ...
 
-.. image:: ./alpha-1.00.png
+FIXME: This link should be relative to this file, without breaking the build. If that is possible.
+
+.. image:: ../src/finmag/sim/tests/dynamics/macrospin/alpha-1.00.png
     :scale: 75
     :align: center
 
