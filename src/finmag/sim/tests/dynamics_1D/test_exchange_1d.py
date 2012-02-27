@@ -63,7 +63,7 @@ def test_angles():
     assert abs(angles.max() - angles.min()) < TOLERANCE
 
 def test_compare_averages():
-    ref = [line.strip().split() for line in open("averages_ref.txt")]
+    ref = [line.strip().split() for line in open(MODULE_DIR + "averages_ref.txt")]
 
     for i in range(len(ref)):
         t_ref, mx_ref, my_ref, mz_ref = ref[i]
@@ -77,7 +77,7 @@ def test_compare_averages():
         assert abs(float(mz_ref) - mz) < TOLERANCE
 
 def test_compare_third_node():
-    ref = [line.strip().split() for line in open("third_node_ref.txt")]
+    ref = [line.strip().split() for line in open(MODULE_DIR + "third_node_ref.txt")]
 
     for i in range(len(ref)):
         t_ref, mx_ref, my_ref, mz_ref = ref[i]
