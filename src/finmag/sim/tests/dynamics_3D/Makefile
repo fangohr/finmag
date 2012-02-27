@@ -1,20 +1,13 @@
-all: run-nmag run-dolfin
+all: nmag
 
-mesh-nmag:
+mesh:
 	- netgen -geofile=bar.geo -meshfiletype="Neutral Format" -meshfile=bar.neutral -batchmode
 	nmeshimport --netgen bar.neutral bar.nmesh.h5
 	gzip -f bar.neutral
 
-run-nmag: mesh-nmag
+nmag: mesh
 	nsim run_nmag.py --clean
-	ncol bar time M_Py_0 M_Py_1 M_Py_2 > data_M.txt
-
-mesh-dolfin:
-	- netgen -geofile=bar.geo -meshfiletype="Gmsh2 Format" -meshfile=bar.gmsh -batchmode
-	dolfin-convert bar.gmsh bar.xml
-
-run-dolfin: mesh-dolfin
-	python run_dolfin.py
+	ncol bar time m_Py_0 m_Py_1 m_Py_2 > averages_ref.txt
 
 meshshow:
 	nmeshpp --vtk bar.nmesh.h5 bar.vtk
