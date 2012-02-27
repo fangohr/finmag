@@ -145,3 +145,16 @@ fangohr: Still testing ...
 2012-02-24 10:52:58 andersej: Hans, great work on the documentation! Just one question: Now it seems one have to add the modules to index.rst in addition to modules.txt. This can easily be solved by a simple script copying the information from modules.txt into index.rst. Do you want such a script? I can add it in ten minutes.
 2012-02-24 10:57:07 fangohr: I think in index.rst we want to sort them in a logical order, whereas for the modules.txt the order probably doesn't matter? I would think that it is okay to do this manually in this instance. Maybe a note that one needs to add NEW modules to both files might be useful as reminder (in the thisdocumentation.rst file, say).
 2012-02-24 11:03:29 andersej: That's right, the order in modules.txt doesn't matter, as it will be arranged alphabetically in the html file. I guess one will get a warning when building if a new module is just added in one of the files and not both.
+2012-02-27 09:01:30 andersej: Good morning, Hans!
+2012-02-27 09:01:32 fangohr: Morning Anders and DokosBot!
+2012-02-27 09:02:52 fangohr: I have a query for you -- do you mind coming to my office for a moment?
+2012-02-27 09:04:47 andersej: I'll be there in a second.
+2012-02-27 09:05:27 fangohr: Great, there is no rush.
+2012-02-27 09:47:55 fangohr-osiris: Wasn't happy with Empathy as the IRC client on linux. Now trying xchat.
+2012-02-27 10:04:36 andersej: Hans, when I try to clone the repository in my home folder on your computer, I get "andersej@osiris:~$ hg clone ssh://hg@bitbucket.org/fangohr/finmag remote: Permission denied (publickey). abort: no suitable response from remote hg!", and when I try running from your repository I get permission denied error because I (ffc) am not allowed to write to your folder (ffc wants to create a compiled cache file).
+2012-02-27 10:05:56 fangohr: You get the ssh key error because the new account has a different ssh key then the one your machine. Try to checkout via https -- then you have to enter the bitbucket password, and it should work.
+2012-02-27 10:07:01 andersej: Great, it works, thanks!
+2012-02-27 10:48:28 andersej: I can confirm that /dynamics/macrospin/test_analytic.py runs without problem on my computer with petsc 3.2-p5. I tried installing the newest petsc locally in my home directory on your computer, Hans, but it doesn't like using the new version as it already has an older version built and installed using sudo. I've tried setting petsci_dir and petsc_arch without any luck. Will try a couple of other approaches before the weekly meeting.
+2012-02-27 10:52:29 fangohr: Thank you nice -- I'll try to upgrade PETSC then. Let me do this before you try anything else.
+2012-02-27 11:24:48 fangohr: Andersej, thanks -- have upgraded ubuntu, then re-installed fenics (as in the finmag/install/fresh-on-ubuntu/fenics.sh) and now the problem has disappeared.
+2012-02-27 11:25:13 andersej: Great!
