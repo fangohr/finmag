@@ -12,8 +12,43 @@
 #define __FINMAG_ODE_SUNDIALS_CVODE_H
 
 #include "util/np_array.h"
+#include "numpy_malloc.h"
 
 namespace finmag { namespace sundials {
+
+    class error_handler {
+    public:
+        error_handler() {
+            // We should never have an earlier unprocessed error message
+            // If this does happen, we should just call cvode_error.reset()
+            ASSERT(!cvode_error.get());
+        }
+
+        ~error_handler() {
+            cvode_error.reset();
+        }
+
+        void check_error(int retcode, const char *function) {
+            if (retcode >= 0) {
+                // success error code, we should have no error messages
+                ASSERT(!cvode_error.get());
+            } else {
+                // failure error code, we should have an error message
+                std::auto_ptr<std::string> msg(cvode_error.release());
+                if (msg.get()) {
+                    throw std::runtime_error(*msg);
+                } else {
+                    throw std::runtime_error(std::string(function) + " has returned error " + boost::lexical_cast<std::string>(retcode));
+                }
+            }
+        }
+
+    private:
+        error_handler(const error_handler&);
+        void operator=(const error_handler&);
+
+        static boost::thread_specific_ptr<std::string> cvode_error;
+    };
 
     class cvode {
     public:
@@ -27,7 +62,7 @@ namespace finmag { namespace sundials {
         }
 
         // initialisation functions
-        void init(const bp::object &f, double t0, const np_array<double>& vec) {
+        void init(const bp::object &f, double t0, const np_array<double>& y0) {
 
         }
 
@@ -51,7 +86,13 @@ namespace finmag { namespace sundials {
         void set_linear_solver_sp_tfqmr(int pretype, int maxl) {}
 
         // solver functions
-        double advance_time(double tout, const np_array<double> &yout, int itask) { return 0.; }
+        double advance_time(double tout, const np_array<double> &yout, int itask) {
+            array_nvector yout_nvec(yout);
+            double tret = 0;
+            int flag = CVode(cvode_mem, tout, yout_nvec.ptr(), &tout, itask);
+            if (flag < 0) throw std::runtime_error(std::string("CVode returned error code ") + boost::lexical_cast<std::string>(flag));
+            return tret;
+        }
 
         // main solver optional input functions
         void set_max_ord(int max_order) {}

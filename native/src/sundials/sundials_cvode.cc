@@ -17,7 +17,7 @@
 namespace finmag { namespace sundials {
     namespace {
         // Error message handler function
-        void error_handler(int error_code, const char *module, const char *function, char *msg, void *eh_data) {
+        void error_callback(int error_code, const char *module, const char *function, char *msg, void *eh_data) {
             cvode *cv = (cvode*) eh_data;
 
             cv->on_error(error_code, module, function, msg);
@@ -68,7 +68,7 @@ namespace finmag { namespace sundials {
         }
 
         // set up the error handler
-        flag = CVodeSetErrHandlerFn(cvode_mem, error_handler, this);
+        flag = CVodeSetErrHandlerFn(cvode_mem, error_callback, this);
         if (flag != CV_SUCCESS) {
             // this shouldn't happen, either...
             CVodeFree(&cvode_mem);
@@ -78,7 +78,7 @@ namespace finmag { namespace sundials {
     }
 
     void cvode::on_error(int error_code, const char *module, const char *function, char *msg) {
-        fprintf(stderr, "CVODE Error (%d): %s in %s:%s", error_code, msg, module, function);
+        fprintf(stderr, "Error in %s:%s (%d): %s", module, function, error_code, msg);
         // TODO: save the error
     }
 
@@ -86,6 +86,19 @@ namespace finmag { namespace sundials {
         using namespace bp;
 
         class_<cvode>("sundials_cvode", init<int, int>(args("lmm", "iter")))
+            // initialisation functions
+            .def("init", &cvode::init, (arg("f"), arg("t0"), arg("y0")))
+            .def("set_scalar_tolerances", &cvode::set_scalar_tolerances, (arg("reltol"), arg("abstol")))
+            // linear soiver specification functions
+            .def("set_linear_solver_dense", &cvode::set_linear_solver_dense, (arg("n")))
+            .def("set_linear_solver_lapack_dense", &cvode::set_linear_solver_lapack_dense, (arg("n")))
+            .def("set_linear_solver_band", &cvode::set_linear_solver_band, (arg("n"), arg("mupper"), arg("mlower")))
+            .def("set_linear_solver_lapack_band", &cvode::set_linear_solver_lapack_band, (arg("n"), arg("mupper"), arg("mlower")))
+            .def("set_linear_solver_sp_gmr", &cvode::set_linear_solver_sp_gmr, (arg("pretype"), arg("maxl")))
+            .def("set_linear_solver_sp_bcg", &cvode::set_linear_solver_sp_bcg, (arg("pretype"), arg("maxl")))
+            .def("set_linear_solver_sp_tfqmr", &cvode::set_linear_solver_sp_tfqmr, (arg("pretype"), arg("maxl")))
+            // solver functions
+            .def("advance_time", &cvode::advance_time, (arg("tout"), arg("yout"), arg("itask")=CV_NORMAL))
         ;
 
         scope().attr("CV_ADAMS") = int(CV_ADAMS);
