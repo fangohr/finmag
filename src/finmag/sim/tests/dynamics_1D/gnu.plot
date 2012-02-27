@@ -15,7 +15,7 @@ set tmargin 0
 set bmargin 3
 
 set xlabel "time (s)"
-set xrange [0:3.10e-10]
+set xrange [0:1e-10]
 set xtic 0, 2e-10, 8e-10
 set format x "%.0g"
 

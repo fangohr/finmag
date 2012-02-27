@@ -4,7 +4,10 @@ import finmag.sim.helpers as h
 from finmag.sim.llg import LLG
 from scipy.integrate import odeint, ode
 
-TOLERANCE = 1e-7
+TOLERANCE = 4e-1
+
+averages = []
+third_node = []
 
 # define the mesh
 length = 20e-9 # m
@@ -22,60 +25,62 @@ llg.C = 1.3e-11
 llg.alpha = 0.2
 llg.set_m0((m0_x, m0_y, m0_z), L=length)
 llg.setup(exchange_flag=True)
-#llg.H_app = (0, 0, llg.Ms/2)
 llg.pins = [0, 10]
 
 # ode takes the parameters in the order t, y whereas odeint and we use y, t.
 llg_wrap = lambda t, y: llg.solve_for(y, t)
 
-t0 = 0; t1 = 3.10e-9; dt = 5e-12; # s
-r = ode(llg_wrap).set_integrator("vode", method="bdf")
-r.set_initial_value(llg.m, t0)
+t0 = 0; t1 = 1e-10; dt = 1e-12; # s
 
-averages = []
-av_f = open("averages.txt", "w")
-third_node = []
-tn_f = open("third_node.txt", "w")
+def setup_module(module):
+    r = ode(llg_wrap).set_integrator("vode", method="bdf")
+    r.set_initial_value(llg.m, t0)
 
-while r.successful() and r.t <= t1:
-    mx, my, mz = llg.m_average
-    averages.append([r.t, mx, my, mz])
-    av_f.write(str(r.t) + " " + str(mx) + " " + str(my) + " " + str(mz) + "\n")
+    av_f = open("averages.txt", "w")
+    tn_f = open("third_node.txt", "w")
 
-    mx, my, mz = h.components(llg.m)
-    m2x, m2y, m2z = mx[2], my[2], mz[2]
-    third_node.append([r.t, m2x, m2y, m2z])
-    tn_f.write(str(r.t) + " " + str(mx) + " " + str(my) + " " + str(mz) + "\n")
+    while r.successful() and r.t <= t1:
+        mx, my, mz = llg.m_average
+        averages.append([r.t, mx, my, mz])
+        av_f.write(str(r.t) + " " + str(mx) + " " + str(my) + " " + str(mz) + "\n")
 
-    r.integrate(r.t + dt)
+        mx, my, mz = h.components(llg.m)
+        m2x, m2y, m2z = mx[2], my[2], mz[2]
+        third_node.append([r.t, m2x, m2y, m2z])
+        tn_f.write(str(r.t) + " " + str(mx) + " " + str(my) + " " + str(mz) + "\n")
+
+        r.integrate(r.t + dt)
+
+    av_f.close()
+    tn_f.close()
 
 def test_angles():
     m = h.vectors(llg.m)
     angles = numpy.array([h.angle(m[i], m[i+1]) for i in xrange(len(m)-1)])
     assert abs(angles.max() - angles.min()) < TOLERANCE
 
-def _test_compare_averages():
+def test_compare_averages():
     ref = [line.strip().split() for line in open("averages_ref.txt")]
 
     for i in range(len(ref)):
         t_ref, mx_ref, my_ref, mz_ref = ref[i]
         t, mx, my, mz = averages[i]
         
-        assert float(t_ref) == t
+        assert abs(float(t_ref) - t) < dt/2 
         print "t={0}: ref={1}|{2}|{3} computed:{4}|{5}|{6}.".format(
                 t, mx_ref, my_ref, mz_ref, mx, my, mz)
         assert abs(float(mx_ref) - mx) < TOLERANCE
         assert abs(float(my_ref) - my) < TOLERANCE
         assert abs(float(mz_ref) - mz) < TOLERANCE
 
-def _test_compare_third_node():
+def test_compare_third_node():
     ref = [line.strip().split() for line in open("third_node_ref.txt")]
 
     for i in range(len(ref)):
         t_ref, mx_ref, my_ref, mz_ref = ref[i]
         t, mx, my, mz = third_node[i]
         
-        assert float(t_ref) == t
+        assert abs(float(t_ref) - t) < dt/2
         print "t={0}: ref={1}|{2}|{3} computed:{4}|{5}|{6}.".format(
                 t, mx_ref, my_ref, mz_ref, mx, my, mz)
         assert abs(float(mx_ref) - mx) < TOLERANCE
