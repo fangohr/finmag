@@ -10,11 +10,19 @@ from finmag.util.ode import cvode
 import unittest
 import math
 import numpy as np
+import finmag.native.sundials as sundials
 
 class OdeSundialsTests(unittest.TestCase):
-    def test_simple_1d(self):
-        integrator = cvode(lambda t, y: 0.5*y)
-        return
+    def test_errors(self):
+        integrator = sundials.sundials_cvode(sundials.CV_ADAMS, sundials.CV_FUNCTIONAL)
+        y = np.zeros((5,))
+        try:
+            integrator.advance_time(1, y)
+            self.fail("Exception was not raised")
+        except RuntimeError:
+            pass
+
+    def atest_simple_1d(self):
         integrator.set_integrator('vode', rtol=1e-8, atol=1e-8)
         integrator.set_initial_value(np.array([1.]), 0)
         reference = lambda t: [math.exp(0.5*t)]
