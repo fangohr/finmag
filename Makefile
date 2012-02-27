@@ -20,7 +20,7 @@ RUN_UNIT_TESTS = $(PROJECT_DIR)/src/finmag/util/run_ci_tests.py
 # The directory that contains native code
 NATIVE_DIR = native
 # The list of directories that contain unittest unit tests
-TEST_ROOTS = src/finmag/util/ode/tests
+TEST_ROOTS = src
 
 ######### Other variables
 # Directory where precompiled header files are placed during compilation
@@ -46,7 +46,9 @@ clean:
 create-dirs:
 	mkdir -p test-reports/junit
 
-test: clean make-modules $(addsuffix /__runtests__,$(TEST_ROOTS)) run-pytest-tests run-ci-tests
+test: clean make-modules run-unittest-tests run-pytest-tests run-ci-tests
+
+run-unittest-tests : $(addsuffix /__runtests__,$(TEST_ROOTS))
 
 fasttest : make-modules $(addsuffix /__runtests__,$(TEST_ROOTS)) run-ci-tests
 
@@ -59,4 +61,4 @@ run-pytest-tests : create-dirs
 run-ci-tests :
 	make -C $(NATIVE_DIR) run-ci-tests
 
-.PHONY: ci default make-modules test run-ci-tests run-pytest-tests
+.PHONY: ci default make-modules test run-ci-tests run-pytest-tests run-unittest-tests
