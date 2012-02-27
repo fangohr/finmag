@@ -17,7 +17,7 @@ def run_simulation():
     intermediate = MODULE_DIR + "/bar.gmsh"
     meshfile     = MODULE_DIR + "/bar.xml"
 
-    create_command = 'netgen -geofile="{0}" -meshfiletype="Gmsh2 Format" -meshfile="{1}" -batchmode'.format(geofile, intermediate)
+    create_command = 'NETGENDIR=/usr/share/netgen netgen -geofile="{0}" -meshfiletype="Gmsh2 Format" -meshfile="{1}" -batchmode'.format(geofile, intermediate)
     convert_command = 'dolfin-convert "{0}" "{1}"'.format(intermediate, meshfile)
 
     subprocess.call(create_command, shell=True)
