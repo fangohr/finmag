@@ -20,9 +20,9 @@ def m0(r):
 
 sim = nmag.Simulation("bar", do_demag=False)
 sim.load_mesh("bar.nmesh.h5", [("Py", mat_Py)], unit_length=SI(1e-9, "m"))
-#sim.set_H_ext([1, 0, 0], SI(0.43e6, "A/m"))
+sim.set_H_ext([1, 0, 0], SI(0.43e6, "A/m"))
 sim.set_m(m0)
 
 sim.set_params(stopping_dm_dt=1*degrees_per_ns,
         ts_rel_tol=1e-6, ts_abs_tol=1e-6)
-sim.relax(save=[('fields', every('time', SI(1e-11, "s")))])
+sim.relax(save=[('averages', every('time', SI(1e-11, "s")))])
