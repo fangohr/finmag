@@ -5,7 +5,7 @@ We document the computational model and available extensions, together with the 
 
 
 
-.. include:: ../src/finmag/sim/tests/dynamics/macrospin/doc.rst
+.. include:: ../src/finmag/sim/tests/macrospin/doc.rst
 
 
 
