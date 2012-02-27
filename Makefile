@@ -53,7 +53,7 @@ fasttest : make-modules $(addsuffix /__runtests__,$(TEST_ROOTS)) run-ci-tests
 	(cd $(dir $@) && PYTHONPATH=$(PYTHON_ROOTS):. python $(RUN_UNIT_TESTS))
 
 %/__runpytests__ :
-	(cd $(dir $@) && PYTHONPATH=$(PYTHON_ROOTS):. py.test --junitxml=$(PROJECT_DIR)/test-reports/pytest-report.xml)
+	(cd $(dir $@) && PYTHONPATH=$(PYTHON_ROOTS):. py.test --junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml)
 
 run-ci-tests :
 	make -C $(NATIVE_DIR) run-ci-tests
