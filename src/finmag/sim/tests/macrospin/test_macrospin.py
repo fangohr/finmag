@@ -80,7 +80,7 @@ def compare_with_analytic_solution(alpha=0.5, max_t=1e-9):
         print "t= {0:.3g}, diff_max= {1:.3g}.".format(ts[i], diff_max)
 
         msg = "Diff at t= {0:.3g} too large.\nAllowed {1:.3g}. Got {2:.3g}."
-        assert diff_max < TOLERANCE/5, msg.format(ts[i], TOLERANCE, diff_max) 
+        assert diff_max < TOLERANCE, msg.format(ts[i], TOLERANCE, diff_max) 
 
 def save_plot(ts, ys, ts_ref, m_ref, alpha): 
     ys3d = ys.reshape((len(ys),3,8)).mean(-1) 
