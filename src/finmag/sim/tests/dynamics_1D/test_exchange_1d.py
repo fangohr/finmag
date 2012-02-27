@@ -1,13 +1,12 @@
+import os
 import dolfin
 import numpy
 import finmag.sim.helpers as h
 from finmag.sim.llg import LLG
-from scipy.integrate import odeint, ode
+from scipy.integrate import ode
 
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 TOLERANCE = 4e-1
-
-averages = []
-third_node = []
 
 # define the mesh
 length = 20e-9 # m
@@ -27,17 +26,21 @@ llg.set_m0((m0_x, m0_y, m0_z), L=length)
 llg.setup(exchange_flag=True)
 llg.pins = [0, 10]
 
+t0 = 0; t1 = 1e-10; dt = 1e-12; # s
 # ode takes the parameters in the order t, y whereas odeint and we use y, t.
 llg_wrap = lambda t, y: llg.solve_for(y, t)
+r = ode(llg_wrap).set_integrator("vode", method="bdf")
+r.set_initial_value(llg.m, t0)
 
-t0 = 0; t1 = 1e-10; dt = 1e-12; # s
-
+# run the simulation
 def setup_module(module):
-    r = ode(llg_wrap).set_integrator("vode", method="bdf")
-    r.set_initial_value(llg.m, t0)
+    av_f = open(MODULE_DIR + "/averages.txt", "w")
+    tn_f = open(MODULE_DIR + "/third_node.txt", "w")
 
-    av_f = open("averages.txt", "w")
-    tn_f = open("third_node.txt", "w")
+    global averages
+    averages = []
+    global third_node
+    third_node = []
 
     while r.successful() and r.t <= t1:
         mx, my, mz = llg.m_average
@@ -60,7 +63,7 @@ def test_angles():
     assert abs(angles.max() - angles.min()) < TOLERANCE
 
 def test_compare_averages():
-    ref = [line.strip().split() for line in open("averages_ref.txt")]
+    ref = [line.strip().split() for line in open(MODULE_DIR + "/averages_ref.txt")]
 
     for i in range(len(ref)):
         t_ref, mx_ref, my_ref, mz_ref = ref[i]
@@ -74,7 +77,7 @@ def test_compare_averages():
         assert abs(float(mz_ref) - mz) < TOLERANCE
 
 def test_compare_third_node():
-    ref = [line.strip().split() for line in open("third_node_ref.txt")]
+    ref = [line.strip().split() for line in open(MODULE_DIR + "/third_node_ref.txt")]
 
     for i in range(len(ref)):
         t_ref, mx_ref, my_ref, mz_ref = ref[i]

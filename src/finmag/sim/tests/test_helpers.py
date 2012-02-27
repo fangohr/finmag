@@ -1,7 +1,7 @@
 import numpy as np
 from finmag.sim.helpers import *
 
-TOLERANCE = 1e-15
+TOLERANCE = 1e-14
 
 def test_components():
     x = np.array([1, 1, 1, 2, 2, 2, 3, 3, 3])

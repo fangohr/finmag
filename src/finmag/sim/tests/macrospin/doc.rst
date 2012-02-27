@@ -9,9 +9,12 @@ can be solved analytically for a magnetic moment m where the effective field is 
 
 FIXME: This link should be relative to this file, without breaking the build. If that is possible.
 
-.. image:: ../src/finmag/sim/tests/dynamics/macrospin/alpha-1.00.png
-    :scale: 75
-    :align: center
+.. comment:
+
+  disable image for now (HF); 
+  .. image:: ../src/finmag/sim/tests/dynamics/macrospin/alpha-1.00.png
+      :scale: 75
+      :align: center
 
 Testing, done.
 
