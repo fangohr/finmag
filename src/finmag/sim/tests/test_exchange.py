@@ -7,6 +7,8 @@ length = 20e-9 # m
 simplices = 10
 mesh = df.Interval(simplices, 0, length)
 
+bigmesh = df.Interval(1000, 0, length)
+
 def test_there_should_be_no_exchange_field_for_uniform_M():
     llg = LLG(mesh)
     llg.set_m0((llg.Ms, 0, 0))
@@ -56,4 +58,32 @@ def test_exchange_field_should_change_when_M_changes():
     # exchange field to change (because the magnetisation has changed).
     new_H_ex = llg.exchange.compute_field()
     assert not np.array_equal(old_H_ex, new_H_ex), "H_ex hasn't changed."
+
+def test_exchange_field_box_assemble_equal_box_matrix():
+    """Simulation 1 is computing H_ex=dE_dM via assemble.
+    Simulation 2 is computing H_ex=g*M with a suitable pre-computed matrix g.
+    
+    Here we show that the two methods give equivalent results.
+    """
+    m_initial = (
+            '(2*x[0]-L)/L',
+            'sqrt(1 - ((2*x[0]-L)/L)*((2*x[0]-L)/L))',
+            '0')
+    llg1 = LLG(mesh)
+    llg1.set_m0(m_initial, L=length)
+    llg1.setup()
+    llg1.solve()
+    H_ex1 = llg1.H_ex
+
+    llg2 = LLG(mesh)
+    llg2.set_m0(m_initial, L=length)
+    llg2.setup(exchange_method='box-assemble')
+    llg2.solve()
+    H_ex2 = llg2.H_ex
+
+    diff = max(abs(H_ex1-H_ex2))
+    print "Difference between H_ex1 and H_ex2: max(abs(H_ex1-H_ex2))=%g" % diff
+    print "Max value = %g, relative error = %g " % (max(H_ex1), diff/max(H_ex1))
+    assert diff < 1e-8
+    assert diff/max(H_ex1)<1e-15
 

@@ -138,10 +138,10 @@ class LLG(object):
         self.t = t
         return self.solve()
 
-    def setup(self, exchange_flag=True, use_dmi=False):
+    def setup(self, exchange_flag=True, use_dmi=False, exchange_method='box'):
         self.exchange_flag = exchange_flag
         if exchange_flag:
-            self.exchange = Exchange(self.V, self._m, self.C, self.Ms)
+            self.exchange = Exchange(self.V, self._m, self.C, self.Ms, method=exchange_method)
         else:
             zero = df.Constant((0, 0, 0))
             self.H_ex = df.interpolate(zero, self.V).vector().array()
