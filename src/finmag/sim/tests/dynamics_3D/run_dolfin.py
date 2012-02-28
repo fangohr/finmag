@@ -9,35 +9,10 @@ from finmag.sim.llg import LLG
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def run_simulation():
-    """
-    Create the mesh.
-
-    """
-    geofile      = MODULE_DIR + "/bar.geo"
-    intermediate = MODULE_DIR + "/bar.gmsh"
-    meshfile     = MODULE_DIR + "/bar.xml"
-
-    create_command = 'NETGENDIR=/usr/share/netgen netgen -geofile="{0}" -meshfiletype="Gmsh2 Format" -meshfile="{1}" -batchmode'.format(geofile, intermediate)
-    convert_command = 'dolfin-convert "{0}" "{1}"'.format(intermediate, meshfile)
-
-    if not os.path.exists(intermediate):
-        print "Creating %s" % intermediate
-        subprocess.call(create_command, shell=True)
-
-    if not os.path.exists(meshfile):
-        print "Converting %s to %s" % (intermediate,meshfile)
-        subprocess.call(convert_command, shell=True)
-
-    print "Reading meshfile"
-    mesh = df.Mesh(meshfile)
-    print "Scaling mesh file coordinates"
-    mesh.coordinates()[:] = 1e-9 * mesh.coordinates() # from (implied) nm to m
-
-    """
-    Run the simulation.
-
-    """
+    L = 3e-8; W = 1e-8; H = 1e-8
+    mesh = df.Box(0, 0, 0, L, W, H, 10, 4, 4)
     print "Starting simulation"
+
     llg = LLG(mesh)
     llg.alpha = 0.1
     llg.Ms = 0.86e6 # A/m
