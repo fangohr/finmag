@@ -30,6 +30,8 @@ def run_simulation():
     Run the simulation.
 
     """
+    print "Running the simulation..."
+
     llg = LLG(mesh)
     llg.alpha = 0.1
     llg.Ms = 0.86e6 # A/m
@@ -40,7 +42,7 @@ def run_simulation():
 
     llg_wrap = lambda t, y: llg.solve_for(y, t)
     t0 = 0; dt = 1e-11; tmax = 1e-9 # s
-    r = ode(llg_wrap).set_integrator("vode", method="bdf")
+    r = ode(llg_wrap).set_integrator("vode", method="bdf", rtol=1e-3)
     r.set_initial_value(llg.m, t0)
 
     fh = open(MODULE_DIR + "/averages.txt", "w")
