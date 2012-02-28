@@ -26,6 +26,7 @@ if __name__ == "__main__":
     def do_it():
         import run_dolfin as s
         s.run_simulation()
+        test_compare_averages()
     cProfile.run("do_it()", "test_profile")
     p = pstats.Stats("test_profile")
     print "TOP10 Cumulative time:"
