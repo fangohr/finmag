@@ -1,4 +1,6 @@
 import os
+import cProfile
+import pstats
 import finmag.sim.helpers as h
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -19,3 +21,16 @@ def test_compare_averages():
         assert abs(mx - mx_ref) < TOLERANCE
         assert abs(my - my_ref) < TOLERANCE
         assert abs(mz - mz_ref) < TOLERANCE
+
+if __name__ == "__main__":
+    def do_it():
+        import run_dolfin as s
+        s.run_simulation()
+        test_compare_averages()
+    cProfile.run("do_it()", "test_profile")
+    p = pstats.Stats("test_profile")
+    print "TOP10 Cumulative time in a function:"
+    p.sort_stats("cumulative").print_stats(10)
+    print "TOP10 erm..."
+    p.sort_stats("time").print_stats(10)
+
