@@ -4,7 +4,7 @@ import pstats
 import finmag.sim.helpers as h
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
-TOLERANCE = 5e-2
+TOLERANCE = 1e-5
 
 def setup_module(module):
     import run_dolfin as s
