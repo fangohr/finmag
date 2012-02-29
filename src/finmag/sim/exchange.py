@@ -86,7 +86,13 @@ class Exchange(object):
             #only finite ones as we know the expression for the
             #energy.
             g_form = df.derivative(self.dE_dM,M)
+
+            self.g_petsc = df.PETScMatrix()
+            df.assemble(g_form,tensor=self.g_petsc)
             self.g = df.assemble(g_form).array() #store matrix as numpy array
+            self.H_ex_petsc = df.PETScVector()
+
+
         elif method=='project':
             self.v = v
             self.V = V
@@ -126,6 +132,14 @@ class Exchange(object):
         Mvec = self.M.vector().array()
         H_ex = np.dot(self.g,Mvec)
         return H_ex/self.vol
+        
+        #this is the petsc version to replace the three lines above. Works, I think, but 
+        #we should allow to choose this via a new method keyword, say 'box-matrix-petsc'
+        #and add tests
+        self.g_petsc.mult(self.M.vector(),self.H_ex_petsc)
+        return self.H_ex_petsc.array()/self.vol
+        print "Check H_ex_petsc_vector"
+        
 
 
     def compute_field_project(self):
