@@ -1,6 +1,5 @@
 import numpy as np
 import dolfin as df
-from finmag.sim.anisotropy import Anisotropy
 
 class Exchange(object):
     """
@@ -22,7 +21,7 @@ class Exchange(object):
     
         * 'box-assemble' 
         * 'box-matrix-numpy' 
-        * 'box-matrix-petsc'
+        * 'box-matrix-petsc' [Default]
         * 'project'
 
     At the moment, we think (all) 'box' methods work 
@@ -33,7 +32,7 @@ class Exchange(object):
 
     - 'box-matrix-numpy' precomputes a matrix g, so that H_ex = g*M
       (faster). Should be called 'box-matrix', but as this is the
-      default choice 'box' might be appropriate.  [Default choice]
+      default choice 'box' might be appropriate.  
 
     - 'box-matrix-petsc' is the same mathematical scheme as 'box-matrix-numpy',
       but uses a PETSc linear algebra backend that supports sparse
