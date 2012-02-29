@@ -109,10 +109,11 @@ class Exchange(object):
             #petsc version of the scheme above.
             self.vol = df.assemble(df.dot(v, df.Constant([1,1,1])) * df.dx).array()
             self.compute_field = self.compute_field_box_matrix_petsc
+            
             g_form = df.derivative(self.dE_dM,M)
             self.g_petsc = df.PETScMatrix()
+            
             df.assemble(g_form,tensor=self.g_petsc)
-            #self.g = df.assemble(g_form).array() #store matrix as numpy array
             self.H_ex_petsc = df.PETScVector()
 
 
@@ -146,7 +147,6 @@ class Exchange(object):
         return df.assemble(self.dE_dM).array() / self.vol
 
     def compute_field_box_matrix_numpy(self):
-        # TODO: Replace all compute_field_box_gmatrix with the new name
         """
         Assemble vector with H_exchange using the 'box' method
         and the pre-computed matrix g.
@@ -162,7 +162,6 @@ class Exchange(object):
         return H_ex/self.vol
 
     def compute_field_box_matrix_petsc(self):
-        # TODO: Add tests and option to choose this method
         """
         PETSc version of the function above. Takes advantage of the 
         sparsity of g.
@@ -173,7 +172,6 @@ class Exchange(object):
 
         """
         
-        print "Check H_ex_petsc_vector"
         self.g_petsc.mult(self.M.vector(),self.H_ex_petsc)
         return self.H_ex_petsc.array()/self.vol
                 
@@ -202,3 +200,4 @@ class Exchange(object):
 
         """
         return df.assemble(self.E)
+
