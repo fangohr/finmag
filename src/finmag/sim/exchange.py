@@ -73,7 +73,7 @@ class Exchange(object):
     def __init__(self, V, M, C, Ms, method=None):
         #if not specied how to compute exchange, use default
         if method == None:              
-            method = 'box-matrix-numpy' 
+            method = 'box-matrix-petsc' 
 
         print "Exchange(): method = %s" % method
         
