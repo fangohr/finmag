@@ -14,13 +14,20 @@ def test_compare_averages():
     ref = h.read_float_data(MODULE_DIR + "/averages_ref.txt")
     computed = h.read_float_data(MODULE_DIR + "/averages.txt")
 
+    highest_diff = 0
     for i in range(len(computed)):
         t_ref, mx_ref, my_ref, mz_ref = ref[i]
         t, mx, my, mz = computed[i]
 
-        assert abs(mx - mx_ref) < TOLERANCE
-        assert abs(my - my_ref) < TOLERANCE
-        assert abs(mz - mz_ref) < TOLERANCE
+        dx = abs(mx - mx_ref); dy = abs(my - my_ref); dz = abs(mz - mz_ref);
+        d = max([dx, dy, dz])
+
+        if d > highest_diff:
+            highest_diff = d
+
+        assert d < TOLERANCE
+    print "Highest difference was {0}.".format(highest_diff)
+        
 
 if __name__ == "__main__":
     def do_it():
