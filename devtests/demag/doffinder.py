@@ -7,25 +7,25 @@ class inputerror(Exception):
     def __str__(self):
         return "Can only give Lagrange Element dimension for mesh dimensions 0-3"
 
-def numdoflagelem(q,deg):
-    """NUM of DOF LAGrange ELEMents:
+def numdoflagelem(q,dim):
+    """NUM of DOF LaGrange ELEMents:
 
     q -   order of the polynomial.
 
-    deg - is the dimension of the space.
+    dim - is the dimension of the space.
 
     Returns the number of degrees for the lagrange element.
 
     """
 
 #Functions to give the dimension of lagrange elements
-    if deg == 0:
+    if dim == 0:
         return 1
-    elif deg == 1:
+    elif dim == 1:
         return q +1
-    elif deg == 2:
+    elif dim == 2:
         return (q +1)*(q+2)/2
-    elif deg == 3:
+    elif dim == 3:
         return (q+1)*(q+2)*(q+3)/6
     else:
         raise inputerror
@@ -64,7 +64,7 @@ def bounddofs(fspace,degree, facetfunc,num):
             local_facet_index = cell.index(facet)
             #Get *local* dofs
             dm.tabulate_facet_dofs(facet_dofs, local_facet_index)
-            #Map local facet dofs to global ones by slicing
+            #Add the dofs to the global dof set.
             bounddofs = bounddofs.union(set(cell_dofs[facet_dofs]))
     return bounddofs
     
@@ -73,5 +73,3 @@ if __name__ == "__main__":
     mesh = UnitInterval(10)
     mesh.init()
     V =  FunctionSpace(mesh, "CG", degree)
-
-    

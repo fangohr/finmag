@@ -1,13 +1,15 @@
-#Main Module to run the other modules from
+"""Main Module to run the other modules from"""
 from solver_nitsche import *
 from solver_fk import *
 from prob_testcases import *
+from dolfin import *
 
-problem = MagUnitSphere()
+problem = MagUnitCircle()
 solver = NitscheSolver(problem)
 solution = solver.solve()
-
-soltrue = Expression("-x[0]/3.0")
-soltrue = project(soltrue,solver.V)
-l1form = abs(solution - soltrue)*problem.dxC
-print assemble(l1form, cell_domains = problem.corefunc)
+plot(solver.phi_core)
+Hdemag = grad(solver.phi_core)
+Vec = VectorFunctionSpace(problem.coremesh,"CG",1)
+Hdemag = project(Hdemag,Vec)
+plot(Hdemag)
+interactive()
