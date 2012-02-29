@@ -8,6 +8,10 @@
 
 #######################################
 # Currently, this makefile is only used to perform the Jenkins build
+# 
+# Jenkins will call the 'ci' (for Continuous Integration) target.
+#
+# 
 
 # The absolute path for the project directory
 PROJECT_DIR = $(abspath .)
