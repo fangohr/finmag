@@ -7,7 +7,7 @@ __organisation__ = "University of Southampton"
 
 from dolfin import *
 from prob_testcases import *
-from solver_nitsche import NitscheSolver
+import solver_nitsche as sn
 
 #This suite tests the solutions for the demag scalar potential function from the Nitsche Solver.
 #Global Tolerance for closeness to 0.
@@ -22,9 +22,9 @@ class TestNischeSolver(object):
         self.problem2d = MagUnitCircle()
         self.problem3d = MagUnitSphere()
 
-        self.solver1d = NitscheSolver(self.problem1d)
-        self.solver2d = NitscheSolver(self.problem2d)
-        self.solver3d = NitscheSolver(self.problem3d)
+        self.solver1d = sn.NitscheSolver(self.problem1d)
+        self.solver2d = sn.NitscheSolver(self.problem2d)
+        self.solver3d = sn.NitscheSolver(self.problem3d)
 
         self.solution1d = self.solver1d.solve()
         self.solution2d = self.solver2d.solve()
@@ -99,6 +99,40 @@ class TestNischeSolver(object):
         ##This test is failed since the total function is twice as high as it should be on the boundary. When this is solved I expect this to be passed.
         assert L1error2 < TOL,"Error in Nitsche Solver with 1d problem, normal derivative jump accross magnetic core boundary not satisfied for phi total \
                                TOL = %g, L1error = %g"%(TOL,L1error2)
+        
+class TestTruncDemagSolver(object):
+    """Test the Solver Base Class"""
+    def test_restrictfunc(self):
+        """
+        A simple linear Function is restricted to half a square and the answer is tested against an analytic value
+        """
+        mesh = UnitSquare(2,2)
+        V = FunctionSpace(mesh,"CG",1)
+        
+        #A plane going from 0 to 1 in the x direction
+        E = Expression("1 - x[0]")
+        u = interpolate(E,V)
+        
+        #Generate the submesh
+        class Half(SubDomain):
+            def inside(self,x,on_boundary):
+                return x[0]<0.5 + DOLFIN_EPS
+        meshfunc = MeshFunction("uint",mesh,2)
+        meshfunc.set_all(0)
+        Half().mark(meshfunc,1)
+        halfmesh = SubMesh(mesh,meshfunc,1)
+
+        #Class initialized with "mesh" as a problem
+        solver = sn.TruncDeMagSolver(mesh)
+
+        #Get the restricted function
+        uhalf = solver.restrictfunc(u,halfmesh)
+
+        #The restricted function should be a plane going from 0 to 0.5 in x direction
+        exactsol = interpolate(E,uhalf.function_space())
+        a = abs(uhalf - exactsol)*dx
+        A = assemble(a)
+        assert near(A,0.0),"Error in TruncDemagSolver.restrictfunc, restricted function does not match analytical value"
             
 if __name__ == "__main__":
     t = TestNischeSolver()
