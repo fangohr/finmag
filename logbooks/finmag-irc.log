@@ -214,3 +214,30 @@ fangohr: Still testing ...
 2012-02-28 15:40:10 mb8g11: (meant 3D example btw.)
 2012-02-28 23:07:28 16WAAC4L4: Update: bitbucket may be a little unresponsive: I noted that my 'hg fetch' or 'hg pull' requests did time out. I interrupted them. Jenkins now seems to suffer the same fate -- it has been running 'hg pull' sinnce 22:47; and thus it does not build due to the latest changes. I would hope that Jenkins migth kill the pull job at some point, or that bitbucket recovers. Let's see.
 2012-02-28 23:07:44 16WAAC4L4: I am Hans, by the way. Sorry about the funny login.
+2012-02-29 09:24:21 fangohr: Morning all.
+2012-02-29 09:24:39 andersej: Morning!
+2012-02-29 10:10:09 GabrielB: Hi everyone
+2012-02-29 10:14:27 mb8g11: Hi all.
+2012-02-29 10:14:33 GabrielB: Hi Marc
+2012-02-29 10:18:32 andersej: Hello, mb8g11 and GabrielB!
+2012-02-29 10:19:38 GabrielB: HI anders
+2012-02-29 11:52:17 mb8g11: I have a PGR meeting with catering at 1300 and won't go to lunch today.
+2012-02-29 12:13:36 andersej: Okay, I know how you love free food, hehe..
+2012-02-29 12:25:27 mb8g11: Exactly!
+2012-02-29 13:34:36 fangohr_: Hi Anders, I think I know what's wrong with the exchange. A subtle bug, that I have put in earlier.
+2012-02-29 13:39:03 andersej: What do you mean? The problem that makes the odeint diverge? Or is there another problem? I know that the project method isn't working very good, is this because of the bug?
+2012-02-29 13:39:34 fangohr_: A different issue -- do you want to come over briefly?
+2012-02-29 13:44:51 andersej: Yes, just found another bug. Two seconds, pushing now.
+2012-02-29 13:45:41 fangohr_: Probably the same as I did :) Let's see. ;-)
+2012-02-29 15:05:47 fangohr: Yes, spotted the same missing 'raise'. I was not asked to merge it manually, so I guess we made *exactly* the same change to the same line, and merge can deal with that silently (assuming that if we both agree what it should be, this will be the right way to merge it). Clever.
+2012-02-29 15:29:59 andersej: Hehe, good!
+2012-02-29 15:30:58 andersej: Someone knows where these "Create layout  End Create layout" - messages are coming from?
+2012-02-29 15:31:14 fangohr: No. When do you see them?
+2012-02-29 15:31:51 andersej: python explicit_g_matrix.py
+2012-02-29 15:32:23 andersej: Seems like they occur in every methods.
+2012-02-29 15:33:25 fangohr: I don't think I can see these at all.
+2012-02-29 15:34:21 andersej: Interesting. I'll try running the script from your machine.
+2012-02-29 15:37:37 andersej: Right, I don't get those messages there...
+2012-02-29 15:38:03 fangohr: Maybe you have set some loglevel higher than normal or some other setting in your user account that triggers this behaviour?
+2012-02-29 15:41:42 andersej: Probably something like that, yes, but I have never changed any such thing on this machine. It is probably due to different versions of ffc, ufl, etc. Nothing to worry about.
+2012-02-29 17:09:17 fangohr: exit
