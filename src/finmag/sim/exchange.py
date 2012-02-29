@@ -174,7 +174,6 @@ class Exchange(object):
 
         """
         
-        print "Check H_ex_petsc_vector"
         self.g_petsc.mult(self.M.vector(),self.H_ex_petsc)
         return self.H_ex_petsc.array()/self.vol
                 
