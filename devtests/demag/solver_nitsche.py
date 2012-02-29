@@ -148,7 +148,6 @@ class NitscheSolver(TruncDeMagSolver):
 
         #Get the function restricted to the magnetic core
         self.phi_core = self.restrictfunc(phitot,self.problem.coremesh)
-
         #Store variables for outside testing
         self.V = V
         self.phitot = phitot
