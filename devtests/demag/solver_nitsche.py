@@ -45,6 +45,14 @@ class TruncDeMagSolver(object):
         for index,dof in enumerate(restrictedfunction.vector()):
             restrictedfunction.vector()[index] = function.vector()[map_to_mesh[vm[index]]]
         return restrictedfunction
+    
+    def save_function(self,function,name):
+        """
+        The function is saved as a file name.pvd under the folder ~/results.
+        It can be viewed with paraviewer or mayavi
+        """
+        file = File("results/"+ name + ".pvd")
+        file << function
 
 class NitscheSolver(TruncDeMagSolver):
     def __init__(self,problem, degree = 1):
@@ -56,7 +64,21 @@ class NitscheSolver(TruncDeMagSolver):
         self.problem = problem
         self.degree = degree
         TruncDeMagSolver.__init__(self,problem)
-
+    def get_demagfield(self,phi):
+        """
+        Returns the projection of the negative gradient of
+        phi onto a DG0 space defined on the same mesh
+        Note: Do not trust the viper solver to plot the DeMag field,
+        it can give some wierd results, paraview is recommended instead
+        """
+        if phi.function_space().mesh().topology().dim() == 1:
+            Hdemagspace = FunctionSpace(phi.function_space().mesh(),"DG",0)
+        else:
+            Hdemagspace = VectorFunctionSpace(phi.function_space().mesh(),"DG",0)
+        Hdemag = -grad(phi)
+        Hdemag = project(Hdemag,Hdemagspace)
+        return Hdemag
+ 
     def solve(self):
         """Solve the demag problem and store the Solution"""
 
@@ -148,6 +170,9 @@ class NitscheSolver(TruncDeMagSolver):
 
         #Get the function restricted to the magnetic core
         self.phi_core = self.restrictfunc(phitot,self.problem.coremesh)
+        #Save the demag field over the core
+        self.Hdemag_core = self.get_demagfield(self.phi_core)
+        self.Hdemag = self.get_demagfield(phitot)
         #Store variables for outside testing
         self.V = V
         self.phitot = phitot
