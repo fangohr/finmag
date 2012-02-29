@@ -78,9 +78,9 @@ def test_gradient():
     assert l == len(man_grad)
 
     diff = dE_dM - man_grad
-    print 'This should be zeros:', diff
-    for i in range(l):
-        assert abs(diff[i]) < TOL
+    maxdiff = max(abs(diff))
+    print 'This should be close to zero:', maxdiff
+    maxdiff < TOL
 
 if __name__ == '__main__':
     test_parallel()

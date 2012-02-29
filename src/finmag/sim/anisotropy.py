@@ -52,7 +52,7 @@ class Anisotropy(object):
     
     def __init__(self, V, M, K, a, method=None):
         if method == None:
-            method = 'box-matix-petsc'
+            method = 'box-matrix-petsc'
 
         # Local testfunction
         v = df.TestFunction(V)
@@ -187,5 +187,5 @@ class Anisotropy(object):
 
         """
         V = self.V
-        return df.assemble(self.E_ani, mesh=V.mesh())
+        return df.assemble(self.E, mesh=V.mesh())
 
