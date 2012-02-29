@@ -25,9 +25,13 @@ class Exchange(object):
     - 'box-assemble' is a slower version that assembles the H_ex for a given M in every
       iteation.
 
-    - 'box' precomputes a matrix g, so that H_ex = g*M
+    - 'box-matrix-numpy' precomputes a matrix g, so that H_ex = g*M
       (faster). Should be called 'box-matrix', but as this is the
       default choice 'box' might be appropriate.  [Default choice]
+
+    - 'box-matrix-petsc' is the same mathematical scheme as 'box-matrix-numpy',
+      but uses a PETSc linear algebra backend that supports sparse
+      matrices, to exploit the sparsity of g.
 
     - 'project': does not use the box method but 'properly project' the exchange field
       into the function space. Should explore whether this works and/or makes any difference
@@ -60,7 +64,7 @@ class Exchange(object):
             
     """
 
-    def __init__(self, V, M, C, Ms, method='box'):
+    def __init__(self, V, M, C, Ms, method='box-matrix-numpy'):
         
         mu0 = 4 * np.pi * 10**-7 # Vs/(Am)
         self.exchange_factor = df.Constant(-2 * C / (mu0 * Ms))
@@ -74,9 +78,11 @@ class Exchange(object):
         if method=='box-assemble':
             self.vol = df.assemble(df.dot(v, df.Constant([1,1,1])) * df.dx).array()
             self.compute_field = self.compute_field_box_assemble
-        elif method == 'box':
+        
+        elif method == 'box-matrix-numpy':
             self.vol = df.assemble(df.dot(v, df.Constant([1,1,1])) * df.dx).array()
-            self.compute_field = self.compute_field_box_gmatrix
+            self.compute_field = self.compute_field_box_matrix_numpy
+            
             #linearise dE_dM with respect to M. As we know this is
             #linear ( should add reference to Werner Scholz paper and
             #relevant equation for g), this creates the right matrix
@@ -85,11 +91,18 @@ class Exchange(object):
             #the first two terms (dE_dM=Hex, and ddE_dMdM=g) are the
             #only finite ones as we know the expression for the
             #energy.
-            g_form = df.derivative(self.dE_dM,M)
 
+            g_form = df.derivative(self.dE_dM, M)
+            self.g = df.assemble(g_form).array() #store matrix as numpy array
+        
+        elif method == 'box-matrix-petsc':
+            #petsc version of the scheme above.
+            self.vol = df.assemble(df.dot(v, df.Constant([1,1,1])) * df.dx).array()
+            self.compute_field = self.compute_field_box_matrix_petsc
+            g_form = df.derivative(self.dE_dM,M)
             self.g_petsc = df.PETScMatrix()
             df.assemble(g_form,tensor=self.g_petsc)
-            self.g = df.assemble(g_form).array() #store matrix as numpy array
+            #self.g = df.assemble(g_form).array() #store matrix as numpy array
             self.H_ex_petsc = df.PETScVector()
 
 
@@ -105,7 +118,11 @@ class Exchange(object):
             #IF this method is actually useful, we can do that. HF 16 Feb 2012
             self.compute_field = self.compute_field_project
         else:
-            NotImplementedError("Only 'box' and 'project' methods are implemented")
+            NotImplementedError("""Only methods currently implemented are
+                                    * 'box-assemble', 
+                                    * 'box-matrix-numpy',
+                                    * 'box-matrix-petsc'  
+                                    * 'project'""")
 
     def compute_field_box_assemble(self):
         """
@@ -118,7 +135,8 @@ class Exchange(object):
         """
         return df.assemble(self.dE_dM).array() / self.vol
 
-    def compute_field_box_gmatrix(self):
+    def compute_field_box_matrix_numpy(self):
+        # TODO: Replace all compute_field_box_gmatrix with the new name
         """
         Assemble vector with H_exchange using the 'box' method
         and the pre-computed matrix g.
@@ -132,15 +150,23 @@ class Exchange(object):
         Mvec = self.M.vector().array()
         H_ex = np.dot(self.g,Mvec)
         return H_ex/self.vol
+
+    def compute_field_box_matrix_petsc(self):
+        # TODO: Add tests and option to choose this method
+        """
+        PETSc version of the function above. Takes advantage of the 
+        sparsity of g.
         
-        #this is the petsc version to replace the three lines above. Works, I think, but 
-        #we should allow to choose this via a new method keyword, say 'box-matrix-petsc'
-        #and add tests
+        *Returns*
+            numpy.ndarray
+                The effective field
+
+        """
+        
+        print "Check H_ex_petsc_vector"
         self.g_petsc.mult(self.M.vector(),self.H_ex_petsc)
         return self.H_ex_petsc.array()/self.vol
-        print "Check H_ex_petsc_vector"
-        
-
+                
 
     def compute_field_project(self):
         """

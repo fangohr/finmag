@@ -75,7 +75,7 @@ def box_assemble_time_over_box_matrix_time(n):
 
     Ms = 0.86e6#A/m, for example Py
     exchange_object1 = exchange.Exchange(V,m,C,Ms, method='box-assemble')
-    exchange_object2 = exchange.Exchange(V,m,C,Ms, method='box')
+    exchange_object2 = exchange.Exchange(V,m,C,Ms, method='box-matrix-numpy') 
     
     Ntest = 10
     print "Calling exchange calculation %d times (%d box assemblies)" % (Ntest,Ntest)

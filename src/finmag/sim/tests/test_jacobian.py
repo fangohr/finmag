@@ -104,7 +104,7 @@ hs = [2.0/n for n in (1, 2, 4, 8, 16, 32)]
 
 TOL = 1e-5
 
-def test_convergence():
+def test_convergence_linear():
     """All convergence rates should be 1 as the differences 
     should convert as O(n)."""
 
@@ -113,7 +113,7 @@ def test_convergence():
     for rate in rates:
         assert abs(rate - 1) < TOL
 
-def test_derivative():
+def test_derivative_linear():
     """This should be zero because the rhs of LLG is linear in M."""
     J = llg.compute_jacobian()
     errors = derivative_test(L, M, x, hs, J=J)
@@ -121,11 +121,30 @@ def test_derivative():
         assert abs(err) < TOL
 
 if __name__ == '__main__':
+    # L is linear
+    print "Testing linear functional."
+    print "This should convert as O(h):"
     errors = derivative_test(L, M, x, hs)
+    print errors
     print "This should be close to one:"
     print convergence_rates(hs, errors)
     J = llg.compute_jacobian()
     errors = derivative_test(L, M, x, hs, J=J)
-    print "This should be close to zero:"
+    print "This should be close to zero since L is linear:"
     print errors
-
+    print ''
+    '''
+    # L is nonlinear
+    print "Testing nonlinear functional."
+    print "This should convert as O(h):"
+    errors = derivative_test(L, M, x, hs)
+    print errors
+    print "This should be close to one:"
+    print convergence_rates(hs, errors)
+    J = llg.compute_jacobian()
+    print "This should converge as O(h^2):"
+    errors = derivative_test(L, M, x, hs, J=J)
+    print errors
+    print "This should be close to two:"
+    print convergence_rates(hs, errors)
+    '''
