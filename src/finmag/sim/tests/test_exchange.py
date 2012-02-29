@@ -18,7 +18,7 @@ def test_there_should_be_no_exchange_field_for_uniform_M():
     print "max(H_ex)=%g" % (max(abs(H_ex)))
     if llg.exchange.method=='box-assemble':
         assert np.array_equal(H_ex, np.zeros(len(H_ex)))
-    elif llg.exchange.method=='box':
+    elif llg.exchange.method in ['box-matrix-numpy','box-matrix-petsc'] :
         assert max(abs(H_ex)) < 5e-9 #The pre-assembled matrix method is faster but less accurate.
     else:
         assert np.array_equal(H_ex, np.zeros(len(H_ex))) #this may fail -- we never tested any other method

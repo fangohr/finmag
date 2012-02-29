@@ -70,7 +70,12 @@ class Exchange(object):
             
     """
 
-    def __init__(self, V, M, C, Ms, method='box-matrix-numpy'):
+    def __init__(self, V, M, C, Ms, method=None):
+        #if not specied how to compute exchange, use default
+        if method == None:              
+            method = 'box-matrix-numpy' 
+
+        print "Exchange(): method = %s" % method
         
         mu0 = 4 * np.pi * 10**-7 # Vs/(Am)
         self.exchange_factor = df.Constant(-2 * C / (mu0 * Ms))
