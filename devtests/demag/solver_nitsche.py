@@ -11,7 +11,42 @@ from dolfin import *
 import math
 import doffinder as dff
 
-class NitscheSolver(object):
+class TruncDeMagSolver(object):
+    """Base Class for truncated Demag Solvers"""
+    def __init__(self,problem):
+        """problem - Object from class derived from TruncDemagProblem"""
+        self.problem = problem
+    def restrictfunc(self,function,submesh):
+        """
+        Restricts a function in a P1 space to a submesh
+        using the fact that the verticies and DOFS are
+        numbered the same way. A function defined on a P1
+        space is returned. This will ONLY work for P1 elements
+        For other elements the dolfin FunctionSpace.restrict()
+        should be used when it is implemented.
+        """
+        wholemesh = function.function_space().mesh()
+
+        #Since compute_vertex_map only accepts a SubMesh object we need to
+        #create a trivial "SubMesh" of the whole mesh 
+        dummymeshfunc = MeshFunction("uint",wholemesh,wholemesh.topology().dim())
+        dummymeshfunc.set_all(1)
+
+        #This is actually the whole mesh, but compute_vertex_map, only accepts a SubMesh
+        wholesubmesh = SubMesh(wholemesh,dummymeshfunc,1) #THIS CRASHES!!!!BLAH
+        #Mapping from the wholesubmesh to the wholemesh
+        map_to_mesh = wholesubmesh.data().mesh_function("parent_vertex_indices")
+
+        #This is a dictionary mapping the matching DOFS from a Submesh to a SubMesh
+        vm = compute_vertex_map(submesh,wholesubmesh) 
+        #Now we want to "restrict" the function to the restricted space
+        restrictedspace = FunctionSpace(submesh,"CG",1)
+        restrictedfunction = Function(restrictedspace)
+        for index,dof in enumerate(restrictedfunction.vector()):
+            restrictedfunction.vector()[index] = function.vector()[map_to_mesh[vm[index]]]
+        return restrictedfunction
+
+class NitscheSolver(TruncDeMagSolver):
     def __init__(self,problem, degree = 1):
         """
         problem - Object from class derived from TruncDemagProblem
@@ -20,6 +55,7 @@ class NitscheSolver(object):
         """
         self.problem = problem
         self.degree = degree
+        TruncDeMagSolver.__init__(self,problem)
 
     def solve(self):
         """Solve the demag problem and store the Solution"""
@@ -109,6 +145,9 @@ class NitscheSolver(object):
         for index,dof in enumerate(phitot.vector()):
             if index in corebounddofs:
                 phitot.vector()[index] = dof*0.5
+
+        #Get the function restricted to the magnetic core
+        self.phi_core = self.restrictfunc(phitot,self.problem.coremesh)
 
         #Store variables for outside testing
         self.V = V
