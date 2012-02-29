@@ -1,5 +1,6 @@
 import numpy as np
 import dolfin as df
+from finmag.sim.anisotropy import Anisotropy
 
 class Exchange(object):
     """
@@ -17,10 +18,15 @@ class Exchange(object):
         C 
             the exchange constant
 
-    Possible methods are 'box','box-assemble', 'project'.
+    Possible methods are 
+    
+        * 'box-assemble' 
+        * 'box-matrix-numpy' 
+        * 'box-matrix-petsc'
+        * 'project'
 
-    At the moment, we think 'box' works (and is what is used in Magpar and Nmag)
-    and is fastest.
+    At the moment, we think (all) 'box' methods work 
+    (and is what is used in Magpar and Nmag) and is fastest.
 
     - 'box-assemble' is a slower version that assembles the H_ex for a given M in every
       iteation.
@@ -55,7 +61,7 @@ class Exchange(object):
             # Print energy
             print exchange.compute_energy()
 
-            # Exchange field ('box' method)
+            # Exchange field 
             H_exch = exchange.compute_field_box()
 
             # Using 'project' method
