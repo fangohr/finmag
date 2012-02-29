@@ -14,11 +14,10 @@ print "s at (0, 0, 0.1):", solution((0.0, 0.0, 0.1))
 
 
 ##plot(solver.phi_core, title = "potential function")
-demag_space = VectorFunctionSpace(problem.coremesh,"DG",0)
-Hdemag = -grad(solver.phi_core)
-Hdemagproj = project(Hdemag,demag_space)
+Hdemagproj = solver.Hdemag_core
 
 print "Projection Gradient of potential function at 0.1,0,0",Hdemagproj((0.0,0,0))
+solver.save_function(Hdemagproj,"Hdemag")
 ##demagfile = File("results/demag.pvd")
 ##demagfile << Hdemag
 ##interactive()

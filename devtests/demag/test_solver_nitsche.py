@@ -1,4 +1,4 @@
-#A set of tests to insure that the NitscheSolver works properly
+"""A set of tests to insure that the NitscheSolver works properly"""
 
 __author__ = "Gabriel Balaban"
 __copyright__ = __author__
@@ -38,14 +38,32 @@ class TestNischeSolver(object):
         self.probtest(self.problem3d,self.solver3d,self.solution3d)
         
     def test_compare_3danalytical(self):
-        #Test against the known analytical solution
+        """Test the potential phi against the known analytical solution in the core"""
         soltrue = Expression("-x[0]/3.0")
         soltrue = project(soltrue,self.solver3d.V)
         l1form = abs(self.solution3d - soltrue)*self.problem3d.dxC
         L1error = assemble(l1form, cell_domains = self.problem3d.corefunc)
-        print "3d Analtical solution comparison L1error =",L1error
+        print "3d Analtical solution of potential, comparison L1error =",L1error
         assert L1error < TOL,"L1 Error in 3d computed solution from the analytical solution, %g is not less than the Tolerance %g"%(L1error,TOL)
-        
+
+    def test_compare_3danalytical_gradient(self):
+        """Test the Demag Field from the Nitsche Solver against the known analytical solution in the core"""
+        #Function Space of solution
+        fspace = self.solver3d.Hdemag_core.function_space()
+        #True analytical solution
+        soltrue = Expression(("-1.0/3.0","0.0","0.0"))
+        soltrue = project(soltrue,fspace)
+
+        #Dummy function to dot with to get a scalar
+        dotfodder = Expression(("1.0","1.0","1.0"))
+        dotfodder = project(dotfodder,fspace)
+
+        #Integrate this to get a global error value using L2 since I do not know how to get L1 norm of a vector
+        l2form = sqrt(dot(self.solver3d.Hdemag_core,self.solver3d.Hdemag_core ))*dx
+        L2error = assemble(l2form)
+        print "3d Analtical solution demag field, comparison L2error =",L2error
+        assert L2error < TOL,"L2 Error in 3d computed solution from the analytical solution, %g is not less than the Tolerance %g"%(L2error,TOL)
+    
     def probtest(self,problem,solver,solution):
         self.dbc_test(problem,solution)
         self.continuity_test(problem,solver,solution)
@@ -130,6 +148,7 @@ class TestTruncDemagSolver(object):
 
         #The restricted function should be a plane going from 0 to 0.5 in x direction
         exactsol = interpolate(E,uhalf.function_space())
+        
         a = abs(uhalf - exactsol)*dx
         A = assemble(a)
         assert near(A,0.0),"Error in TruncDemagSolver.restrictfunc, restricted function does not match analytical value"
@@ -149,5 +168,8 @@ if __name__ == "__main__":
     t.test_3d()
     print "gamma = ", t.problem3d.gamma
     print
-    print "* Doing Analytical comparison ======="
+    print "* Doing Analytical comparison of potential ======="
     t.test_compare_3danalytical()
+    print "* Doing Analytical comparison of Demag field ======="
+    t.test_compare_3danalytical_gradient()
+
