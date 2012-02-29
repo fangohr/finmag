@@ -79,8 +79,11 @@ def test_gradient():
 
     diff = dE_dM - man_grad
     maxdiff = max(abs(diff))
-    print 'This should be close to zero:', maxdiff
-    maxdiff < TOL
+
+    maxfield = max(abs(dE_dM))
+    print "Maximum field entry: %g" % maxfield
+    print 'This should be close to zero:', maxdiff/maxfield
+    assert maxdiff/maxfield < 1e-15
 
 if __name__ == '__main__':
     test_parallel()
