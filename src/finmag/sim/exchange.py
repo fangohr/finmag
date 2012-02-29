@@ -124,7 +124,7 @@ class Exchange(object):
             #IF this method is actually useful, we can do that. HF 16 Feb 2012
             self.compute_field = self.compute_field_project
         else:
-            NotImplementedError("""Only methods currently implemented are
+            raise NotImplementedError("""Only methods currently implemented are
                                     * 'box-assemble', 
                                     * 'box-matrix-numpy',
                                     * 'box-matrix-petsc'  
