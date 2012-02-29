@@ -1,6 +1,5 @@
 import numpy as np
 import dolfin as df
-from finmag.sim.anisotropy import Anisotropy
 
 class Exchange(object):
     """
@@ -22,7 +21,7 @@ class Exchange(object):
     
         * 'box-assemble' 
         * 'box-matrix-numpy' 
-        * 'box-matrix-petsc'
+        * 'box-matrix-petsc' [Default]
         * 'project'
 
     At the moment, we think (all) 'box' methods work 
@@ -33,7 +32,7 @@ class Exchange(object):
 
     - 'box-matrix-numpy' precomputes a matrix g, so that H_ex = g*M
       (faster). Should be called 'box-matrix', but as this is the
-      default choice 'box' might be appropriate.  [Default choice]
+      default choice 'box' might be appropriate.  
 
     - 'box-matrix-petsc' is the same mathematical scheme as 'box-matrix-numpy',
       but uses a PETSc linear algebra backend that supports sparse
@@ -70,7 +69,12 @@ class Exchange(object):
             
     """
 
-    def __init__(self, V, M, C, Ms, method='box-matrix-numpy'):
+    def __init__(self, V, M, C, Ms, method=None):
+        #if not specied how to compute exchange, use default
+        if method == None:              
+            method = 'box-matrix-petsc' 
+
+        print "Exchange(): method = %s" % method
         
         mu0 = 4 * np.pi * 10**-7 # Vs/(Am)
         self.exchange_factor = df.Constant(-2 * C / (mu0 * Ms))
@@ -124,7 +128,7 @@ class Exchange(object):
             #IF this method is actually useful, we can do that. HF 16 Feb 2012
             self.compute_field = self.compute_field_project
         else:
-            NotImplementedError("""Only methods currently implemented are
+            raise NotImplementedError("""Only methods currently implemented are
                                     * 'box-assemble', 
                                     * 'box-matrix-numpy',
                                     * 'box-matrix-petsc'  

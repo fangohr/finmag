@@ -138,7 +138,7 @@ class LLG(object):
         self.t = t
         return self.solve()
 
-    def setup(self, exchange_flag=True, use_dmi=False, exchange_method='box'):
+    def setup(self, exchange_flag=True, use_dmi=False, exchange_method=None):
         self.exchange_flag = exchange_flag
         if exchange_flag:
             self.exchange = Exchange(self.V, self._m, self.C, self.Ms, method=exchange_method)
