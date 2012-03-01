@@ -124,7 +124,7 @@ class NitscheSolver(TruncDeMagSolver):
         a1 = dot(grad(u1),grad(v1))*dxC #Core
 
         #right hand side
-        f = (div(M)*v1)*dxC   #Source term in core
+        f = (-div(M)*v1)*dxC   #Source term in core
         f += (dot(M('-'),N('+'))*avgv )*dSC  #Prescribed outer normal derivative
         #Cross terms on the interior boundary
         c = (-dot(avggradu,N('+'))*jumpv - dot(avggradv,N('+'))*jumpu + gamma*(1/h)*jumpu*jumpv)*dSC  
@@ -154,16 +154,14 @@ class NitscheSolver(TruncDeMagSolver):
         solphi0,solphi1 = sol.split()
         phi0.assign(solphi0)
         phi1.assign(solphi1)
-
-        #This might or might not be a better way to add phi1 and phi0
-        #phitot = phi0 + phi1 
         
         phitot.vector()[:] = phi0.vector() + phi1.vector()
         self.phitest.assign(phitot)
         #Divide the value of phitotal by 2 on the core boundary
         BOUNDNUM = 2
+        #Get the boundary dofs
         corebounddofs = dff.bounddofs(V,self.degree, self.problem.coreboundfunc, BOUNDNUM)
-            
+        #Halve their value    
         for index,dof in enumerate(phitot.vector()):
             if index in corebounddofs:
                 phitot.vector()[index] = dof*0.5

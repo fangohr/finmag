@@ -40,5 +40,5 @@ sim.set_m(perturbed_magnetisation)
 # let the system relax generating spin waves
 s = SI("s")
 from nsim.when import every, at
-sim.relax(save=[('averages','fields', every('time', 0.05e-12*s) | at('convergence'))],
-          do=[('exit', at('time', 5e-12*s))])
+sim.relax(save=[('averages', every('time', 0.05e-12*s) | at('convergence'))],
+          do=[('exit', at('time', 10e-12*s))])
