@@ -132,8 +132,9 @@ if __name__ == '__main__':
     ref_method = 'box-matrix-numpy'
 
     # Field for which to compare efficiency and correctness
+    # (Comment out the one you are not interested in)
     field = "anisotropy"
-    field = "exchange"
+    #field = "exchange"
 
     methods = ['box-assemble', 'box-matrix-numpy', 'box-matrix-petsc']#, 'project']
     ns = [1, 5, 10, 20, 50]
@@ -153,3 +154,4 @@ if __name__ == '__main__':
     correctness_test(methods_field, ref_method, 10e-7, 1e-14)
     print_results(methods_times, ns)
     print "These results were obtained for the %s field." % field
+

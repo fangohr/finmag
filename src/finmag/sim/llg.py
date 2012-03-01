@@ -18,7 +18,9 @@ class LLG(object):
 
     def set_default_values(self):
         self.alpha = 0.5
-        self.gamma = 2.211e5 # m/(As)
+        self.gamma =  2.210173e5 # m/(As)
+        #source for gamma:  OOMMF manual, and in Werner Scholz thesis, 
+        #after (3.7), llg_gamma_G = m/(As).
         self.c = 1e11 # 1/s numerical scaling correction
                       # 0.1e12 1/s is the value used by default in nmag 0.2
         self.C = 1.3e-11 # J/m exchange constant
