@@ -34,7 +34,7 @@ According to basic electrodynamics the two fields are related by
 
 \noindent which means that 
 
-\[ - \nabla^2 \phi = \nabla \cdotp \magn \ \ \mbox{in} \ \omM \]
+\[ - \nabla^2 \phi = -\nabla \cdotp \magn \ \ \mbox{in} \ \omM \]
 
 \noindent so that our demagnetisation field can be obtained by solving a Poisson problem.
 
@@ -83,8 +83,6 @@ $\phi$ is restricted to
  V = \{ v \in H^1 (T) \mbox{ for all } T \subset \Omega \mbox{ s.t. v is discontinous over } \ \partial T \}
 \end{equation}
 
-\marginpar{\scriptsize Can you spell out what you mean with ``s.t. v`` and $T$ and $H^1$? This is standard stuff, but would be useful to be spelled out here for the non-FE experts.}
-
 \noindent Where $\Omega$ denotes the mesh and $T$ a finite element domain in $\Omega$. More detail regarding this
 definition is give in appendix \ref{appdgspace}. After integrating
 equation~(\ref{phidef}) by parts we obtain the formulation.
@@ -132,11 +130,11 @@ $ [\nabla \phi]  \cdotp n =  M \cdotp n $ on the magnetic core boundary $\domM$,
 together with Nitsche's method to get the result we need. Let $\phi = (\phi_0,\phi_1)$ where
 $\supp(\phi_1) \subset \omM$ and $\supp(\phi_0) \subset \omV$. The Nitsche variational problem is to find  $\phi = (\phi_0,\phi_1)$ such that
 
-\begin{eqnarray*}
-&&\int_{\omM} \nabla \phi_1 \cdotp \nabla v_1 \ dx + \int_{\omV} \nabla \phi_0 \cdotp \nabla v_0 \ dx \\
-&&- \int_{\domM} <\nabla \phi> [v]  + <\partial_n v> [\phi] - \gamma h^{-1} [\phi][v] \ dS \\
-&&= \int_{\domM} M  \cdotp n \ dS + \int_{\omM} \nabla \cdotp M \ dx
-\end{eqnarray*}
+\begin{align*}
+&\int_{\omM} \nabla \phi_1 \cdotp \nabla v_1 \ dx + \int_{\omV} \nabla \phi_0 \cdotp \nabla v_0 \ dx \\
+&- \int_{\domM} <\nabla \phi> [v]  + <\partial_n v> [\phi] - \gamma h^{-1} [\phi][v] \ dS \\
+&= \int_{\domM} M  \cdotp n <v> \ dS - \int_{\omM} \nabla \cdotp M v_1 \ dx
+\end{align*}
 
 The global solution $\phi_{tot}$ is then obtained by adding together $\phi_1$ and $\phi_0$ and then halving the value
 of the degrees of freedom of $\phi_{tot}$ on $\domM$.

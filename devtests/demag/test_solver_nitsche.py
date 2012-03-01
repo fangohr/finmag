@@ -39,31 +39,80 @@ class TestNischeSolver(object):
         
     def test_compare_3danalytical(self):
         """Test the potential phi against the known analytical solution in the core"""
+        L1error = self.L1_error_3d_potential(self.solution3d)
+        print "3d Analtical solution of potential, comparison L1error =",L1error
+        assert L1error < TOL,"L1 Error in 3d computed solution from the analytical solution, %g is not less than the Tolerance %g"%(L1error,TOL)
+        
+    def L1_error_3d_potential(self,solution):
         soltrue = Expression("-x[0]/3.0")
         soltrue = project(soltrue,self.solver3d.V)
         l1form = abs(self.solution3d - soltrue)*self.problem3d.dxC
         L1error = assemble(l1form, cell_domains = self.problem3d.corefunc)
-        print "3d Analtical solution of potential, comparison L1error =",L1error
-        assert L1error < TOL,"L1 Error in 3d computed solution from the analytical solution, %g is not less than the Tolerance %g"%(L1error,TOL)
+        return L1error
 
     def test_compare_3danalytical_gradient(self):
         """Test the Demag Field from the Nitsche Solver against the known analytical solution in the core"""
-        #Function Space of solution
-        fspace = self.solver3d.Hdemag_core.function_space()
-        #True analytical solution
-        soltrue = Expression(("-1.0/3.0","0.0","0.0"))
-        soltrue = project(soltrue,fspace)
-
-        #Dummy function to dot with to get a scalar
-        dotfodder = Expression(("1.0","1.0","1.0"))
-        dotfodder = project(dotfodder,fspace)
-
-        #Integrate this to get a global error value using L2 since I do not know how to get L1 norm of a vector
-        l2form = sqrt(dot(self.solver3d.Hdemag_core,self.solver3d.Hdemag_core ))*dx
-        L2error = assemble(l2form)
+        L2error = self.L2_error_3d_demag(self.solver3d.Hdemag_core)
         print "3d Analtical solution demag field, comparison L2error =",L2error
         assert L2error < TOL,"L2 Error in 3d computed solution from the analytical solution, %g is not less than the Tolerance %g"%(L2error,TOL)
+
+    def L2_error_3d_demag(self,demag):
+        #Function Space of solution
+        fspace = demag.function_space()
+        #True analytical solution
+        soltrue = Expression(("1.0/3.0","0.0","0.0"))
+        soltrue = project(soltrue,fspace)
+        #Integrate this to get a global error value using L2 since I do not know how to get L1 norm of a vector
+        l2form = dot(self.solver3d.Hdemag_core - soltrue,self.solver3d.Hdemag_core - soltrue)*dx
+        L2error = sqrt(assemble(l2form))
+        return L2error
     
+##    def test_convergance_3d(self):
+##        """The FEM solution should converge to the analytical solution as the mesh is refined"""
+##        NUM_REFINEMENTS = 6 
+##        #Take previously calculated errors 
+##        firstpoterror = self.L1_error_3d_potential(self.solution3d)
+##        firstdemagerror = self.L2_error_3d_demag(self.solver3d.Hdemag_core)
+##
+##        #Refine the core mesh
+##        for i in range(NUM_REFINEMENTS):
+##            self.problem3d.refine_core()
+##        #Solve the demag problem again
+##        self.solver3d = sn.NitscheSolver(self.problem3d)
+##        self.solution3d = self.solver3d.solve()
+##        #get errors
+##        pot3d_errornew = self.L1_error_3d_potential(self.solution3d)
+##        demag3d_errornew = self.L2_error_3d_demag(self.solver3d.Hdemag_core)
+##        
+##        #Test the last solution against the 1st one.
+##        assert firstpoterror > pot3d_errornew,"Error in refinement of 3d problem, error in potential did not decrease on final refinement "+ str(i+1)
+##        assert firstdemagerror > demag3d_errornew,"Error in refinement of 3d problem, error in demag did not decrease on final refinement "+ str(i+1)
+    
+    def print_convergance_3d(self):
+        """
+        Since refining first increases the error it is not suitable to test convergence for the first refinements
+        to see this strange phenomena run this method.
+        """
+        NUM_REFINEMENTS = 6
+        #Take previously calculated errors 
+        pot3d_errorold  = self.L1_error_3d_potential(self.solution3d)
+        demag3d_errorold = self.L2_error_3d_demag(self.solver3d.Hdemag_core)
+
+        #Refine the core mesh and see if the errors decrease
+        print "Errors for potential,demag"
+        for i in range(NUM_REFINEMENTS):
+            self.problem3d.refine_core()
+            #Solve the demag problem
+            self.solver3d = sn.NitscheSolver(self.problem3d)
+            self.solution3d = self.solver3d.solve()
+            #Get errors
+            pot3d_errornew = self.L1_error_3d_potential(self.solution3d)
+            demag3d_errornew = self.L2_error_3d_demag(self.solver3d.Hdemag_core)
+            print pot3d_errornew, demag3d_errornew, " refinements = ", i+1
+            #Make the new errors the old errors
+            pot3d_errorold = pot3d_errornew
+            demag3d_errorold = demag3d_errornew
+
     def probtest(self,problem,solver,solution):
         self.dbc_test(problem,solution)
         self.continuity_test(problem,solver,solution)
@@ -88,13 +137,14 @@ class TestNischeSolver(object):
         a1 = abs(jumpphi)*dSC
         a2 = abs(jump(solution))*dSC
         c = one('-')*dSC
+        #Add in the commented code to get an "average" L1 error
         L1error1 = assemble(a1,interior_facet_domains = problem.coreboundfunc)#/assemble(c,interior_facet_domains = problem.coreboundfunc)
         L1error2 = assemble(a2,interior_facet_domains = problem.coreboundfunc)#/assemble(c,interior_facet_domains = problem.coreboundfunc)
         print "continuity_test: L1error1=",L1error1
         print "continuity_test: L1error2=",L1error2
-        assert L1error1 < TOL,"Error in Nitsche Solver with problem" + problem.desc() + " continuity accross magnetic core boundary not satisfied for phi1 and phi2, \
+        assert L1error1 < TOL,"Error in Nitsche Solver with problem" + problem.desc() + "continuity accross magnetic core boundary not satisfied for phi1 and phi2, \
                                TOL = %g, L1error = %g"%(TOL,L1error1)
-        assert L1error2 < TOL,"Error in Nitsche Solver with 1d problem, continuity accross magnetic core boundary not satisfied for phi total \
+        assert L1error2 < TOL,"Error in Nitsche Solver with 1d problem" + problem.desc() + "continuity accross magnetic core boundary not satisfied for phi total \
                                TOL = %g, L1error = %g"%(TOL, L1error2)
 
     def normalderivativejump_test(self,problem,solver,solution):
@@ -112,10 +162,9 @@ class TestNischeSolver(object):
         L1error2 = assemble(a2,interior_facet_domains = problem.coreboundfunc)#/assemble(c,interior_facet_domains = problem.coreboundfunc)
         print "normalderivativejump_test: L1error1=",L1error1
         print "normalderivativejump_test: L1error2=",L1error2
-        assert L1error1 < TOL,"Error in Nitsche Solver with 1d problem, normal derivative jump accross magnetic core boundary not satisfied for phi1 and phi2, \
+        assert L1error1 < TOL,"Error in Nitsche Solver with " + problem.desc() + " normal derivative jump accross magnetic core boundary not satisfied for phi1 and phi2, \
                                TOL = %g, L1error = %g"%(TOL,L1error1)
-        ##This test is failed since the total function is twice as high as it should be on the boundary. When this is solved I expect this to be passed.
-        assert L1error2 < TOL,"Error in Nitsche Solver with 1d problem, normal derivative jump accross magnetic core boundary not satisfied for phi total \
+        assert L1error2 < TOL,"Error in Nitsche Solver with " + problem.desc() + " normal derivative jump accross magnetic core boundary not satisfied for phi total \
                                TOL = %g, L1error = %g"%(TOL,L1error2)
         
 class TestTruncDemagSolver(object):
@@ -170,6 +219,9 @@ if __name__ == "__main__":
     print
     print "* Doing Analytical comparison of potential ======="
     t.test_compare_3danalytical()
+    print
     print "* Doing Analytical comparison of Demag field ======="
     t.test_compare_3danalytical_gradient()
-
+    print
+    print "* Doing Convergance test of Demag field ======="
+    t.print_convergance_3d()
