@@ -241,3 +241,26 @@ fangohr: Still testing ...
 2012-02-29 15:38:03 fangohr: Maybe you have set some loglevel higher than normal or some other setting in your user account that triggers this behaviour?
 2012-02-29 15:41:42 andersej: Probably something like that, yes, but I have never changed any such thing on this machine. It is probably due to different versions of ffc, ufl, etc. Nothing to worry about.
 2012-02-29 17:09:17 fangohr: exit
+2012-03-01 09:12:17 fangohr_: Morning Anders.
+2012-03-01 09:12:50 andersej: Good morning, Hans!
+2012-03-01 09:24:31 andersej: I've just changed all my email addresses on Jenkins to the Soton-address and pushed my code. We'll see in a few minutes if it worked.
+2012-03-01 09:27:02 andersej: Yey! It worked!
+2012-03-01 09:27:12 fangohr_: Great, thanks.
+2012-03-01 11:35:16 andersej: Hi all! I think the documentation for Exchange and Anisotropy is a bit strange, since it displays all these functions we only use internally. The user should only use exchange.compute_field(), but this is not mentioned in the documentation. But all the compute_filed_box_assemble, etc, are listed, but cannot be used. I've made a big change and gathered all methods in compute_field(). I've pushed it now, so please have a look and if you don't like i
+2012-03-01 11:35:16 andersej: t, we can revert immediately.
+2012-03-01 11:35:45 andersej: That is, I've just changed the Exchange for now.
+2012-03-01 11:56:38 mb8g11: Why didn't you just prefix these methods with __ ?
+2012-03-01 11:57:34 mb8g11: And since the documentation is only for us, it wouldn't hurt to see the different methods. But that is a matter of taste I guess.
+2012-03-01 11:57:42 andersej: I could have done that, and added a dummy method compute_field() with only documentation.
+2012-03-01 12:05:14 mb8g11: Do you mind if I edit the file a little, or are you currently working on it?
+2012-03-01 12:05:33 andersej: No, please do.
+2012-03-01 12:05:39 mb8g11: :)
+2012-03-01 12:35:28 mb8g11: pushed
+2012-03-01 12:40:13 fangohr: Just in time for lunch, I suppose :)
+2012-03-01 12:44:21 mb8g11: Yes!
+2012-03-01 12:45:21 fangohr: Just noticed that I broke the build before ... hopefully just fixed it with a new commit.
+2012-03-01 14:18:31 fangohr: Marc-Antonio, turns out that Marijan is delayed, so I have some time now -- shall we look at your tests now then?
+2012-03-01 14:23:24 mb8g11: Yes ofc
+2012-03-01 16:44:40 fangohr: Hi MA, I have got 10 minutes left before the end of the day -- have we covered all the issues or is there anything else we should talk about now?
+2012-03-01 16:44:58 mb8g11: I think that's it really :)
+2012-03-01 16:45:11 fangohr: That's fine - great. ;)
