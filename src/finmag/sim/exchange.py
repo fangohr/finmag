@@ -11,18 +11,17 @@ class Exchange(object):
         
     *Arguments*
         V 
-            a dolfin VectorFunctionSpace object.
+            a Dolfin VectorFunctionSpace object.
         M 
-            the dolfin object representing the magnetisation
+            the Dolfin object representing the magnetisation
         C 
             the exchange constant
-
-    Possible methods are 
-    
-        * 'box-assemble' 
-        * 'box-matrix-numpy' 
-        * 'box-matrix-petsc' [Default]
-        * 'project'
+        method
+            possible methods are 
+                * 'box-assemble' 
+                * 'box-matrix-numpy' 
+                * 'box-matrix-petsc' [Default]
+                * 'project'
 
     At the moment, we think (all) 'box' methods work 
     (and is what is used in Magpar and Nmag) and is fastest.
@@ -61,11 +60,11 @@ class Exchange(object):
             print exchange.compute_energy()
 
             # Exchange field 
-            H_exch = exchange.compute_field_box()
+            H_exch = exchange.compute_field()
 
-            # Using 'project' method
-            exchange_pro = Exchange(V, M, C, Ms, method='project')
-            H_exch_pro = exchange_pro.compute_field_project()
+            # Using 'box-matrix-numpy' method (fastest for small matrices)
+            exchange_np = Exchange(V, M, C, Ms, method='box-matrix-numpy')
+            H_exch_np = exchange_np.compute_field()
             
     """
 
@@ -84,14 +83,13 @@ class Exchange(object):
         v = df.TestFunction(V)
         self.E = self.exchange_factor * df.inner(df.grad(M), df.grad(M)) * df.dx
         self.dE_dM = df.derivative(self.E, M, v)
+        self.method = method
 
         if method=='box-assemble':
             self.vol = df.assemble(df.dot(v, df.Constant([1,1,1])) * df.dx).array()
-            self.compute_field = self.compute_field_box_assemble
         
         elif method == 'box-matrix-numpy':
             self.vol = df.assemble(df.dot(v, df.Constant([1,1,1])) * df.dx).array()
-            self.compute_field = self.compute_field_box_matrix_numpy
             
             #linearise dE_dM with respect to M. As we know this is
             #linear ( should add reference to Werner Scholz paper and
@@ -108,7 +106,6 @@ class Exchange(object):
         elif method == 'box-matrix-petsc':
             #petsc version of the scheme above.
             self.vol = df.assemble(df.dot(v, df.Constant([1,1,1])) * df.dx).array()
-            self.compute_field = self.compute_field_box_matrix_petsc
             
             g_form = df.derivative(self.dE_dM,M)
             self.g_petsc = df.PETScMatrix()
@@ -127,68 +124,46 @@ class Exchange(object):
             #Note that we could make this 'project' method faster by computing the matrices
             #that represent a and L, and only to solve the matrix system in 'compute'().
             #IF this method is actually useful, we can do that. HF 16 Feb 2012
-            self.compute_field = self.compute_field_project
+        
         else:
             raise NotImplementedError("""Only methods currently implemented are
                                     * 'box-assemble', 
                                     * 'box-matrix-numpy',
                                     * 'box-matrix-petsc'  
                                     * 'project'""")
-
-    def compute_field_box_assemble(self):
-        """
-        Assemble vector with H_exchange using the 'box' method.
         
-        *Returns*
+
+    def compute_field(self):
+        """
+        Compute the exchange field.
+        
+         *Returns*
             numpy.ndarray
-                The effective field.
-                
-        """
-        return df.assemble(self.dE_dM).array() / self.vol
-
-    def compute_field_box_matrix_numpy(self):
-        """
-        Assemble vector with H_exchange using the 'box' method
-        and the pre-computed matrix g.
-
-        *Returns*
-            numpy.ndarray
-                The effective field.
-                
-        """
+                The exchange field.       
         
-        Mvec = self.M.vector().array()
-        H_ex = np.dot(self.g,Mvec)
-        return H_ex/self.vol
-
-    def compute_field_box_matrix_petsc(self):
         """
-        PETSc version of the function above. Takes advantage of the 
-        sparsity of g.
+        method = self.method
         
-        *Returns*
-            numpy.ndarray
-                The effective field
+        if method == 'box-assemble':
+            return df.assemble(self.dE_dM).array() / self.vol
 
-        """
-        
-        self.g_petsc.mult(self.M.vector(),self.H_ex_petsc)
-        return self.H_ex_petsc.array()/self.vol
-                
+        elif method == 'box-matrix-numpy':
+            Mvec = self.M.vector().array()
+            H_ex = np.dot(self.g,Mvec)
+            return H_ex/self.vol
 
-    def compute_field_project(self):
-        """
-        Assemble vector with H_exchange using the 'project' method.
+        elif method == 'box-matrix-petsc':
+            self.g_petsc.mult(self.M.vector(),self.H_ex_petsc)
+            return self.H_ex_petsc.array()/self.vol
 
-        This may not work.
-        
-        *Returns*
-            numpy.ndarray
-                The effective field.
-                
-        """
-        df.solve(self.a == self.L, self.H_exch_project)
-        return self.H_exch_project.vector().array()
+        elif method == 'project':
+            df.solve(self.a == self.L, self.H_exch_project)
+            return self.H_exch_project.vector().array()
+
+        else:
+            import sys
+            sys.stderr.write("This should not happend.")
+            sys.exit(1)
 
     def compute_energy(self):
         """
