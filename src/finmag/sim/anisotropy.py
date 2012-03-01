@@ -19,13 +19,16 @@ class Anisotropy(object):
 
     *Arguments*
         V
-            a dolfin VectorFunctionSpace object.
+            A Dolfin VectorFunctionSpace object.
         M
-            the dolfin object representing the magnetisation
+            The Dolfin object representing the magnetisation
         K
-            the anisotropy constant (int or float)
+            The anisotropy constant
         a
-            the easy axis (use dolfin.Constant)
+            The easy axis (use dolfin.Constant)
+        method
+            The method used to compute the anisotropy field.
+            For alternatives and explanation, see Exchange.
         
     *Example of Usage*
         .. code-block:: python
@@ -57,8 +60,9 @@ class Anisotropy(object):
         # Local testfunction
         v = df.TestFunction(V)
         
-        # Convert K1 to dolfin.Constant
-        K = df.Constant((K))
+        # Make sure that K is dolfin.Constant
+        if not 'dolfin' in type(K):
+            K = df.Constant((K))
         
         # Anisotropy energy
         self.E = K*(1 - (df.dot(a, M))**2)*df.dx
