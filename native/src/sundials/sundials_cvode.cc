@@ -18,9 +18,20 @@ namespace finmag { namespace sundials {
     namespace {
         // Error message handler function
         void error_callback(int error_code, const char *module, const char *function, char *msg, void *eh_data) {
-            cvode *cv = (cvode*) eh_data;
+            char buf[1024];
+            buf[1023] = 0;
 
-            cv->on_error(error_code, module, function, msg);
+            std::string error_code_str;
+            if (strcmp(module, "CVODE") == 0) {
+                error_code_str = cvode::get_return_flag_name(error_code);
+            } else {
+                error_code_str = boost::lexical_cast<std::string>(error_code);
+            }
+
+            snprintf(buf, 1023, "Error in %s:%s (%s): %s", module, function, error_code_str.c_str(), msg);
+            fprintf(stderr, "%s\n", buf);
+
+            error_handler::set_error(buf);
         }
 
         // Callbacks
@@ -77,9 +88,40 @@ namespace finmag { namespace sundials {
         }
     }
 
-    void cvode::on_error(int error_code, const char *module, const char *function, char *msg) {
-        fprintf(stderr, "Error in %s:%s (%d): %s", module, function, error_code, msg);
-        // TODO: save the error
+    void error_handler::set_error(const char *msg) {
+        cvode_error.reset(new std::string(msg));
+    }
+
+    boost::thread_specific_ptr<std::string> error_handler::cvode_error;
+
+    std::string cvode::get_return_flag_name(int flag) {
+        switch (flag) {
+        case CV_SUCCESS: return "CV_SUCCESS";
+        case CV_TSTOP_RETURN: return "CV_TSTOP_RETURN";
+        case CV_ROOT_RETURN: return "CV_ROOT_RETURN";
+        case CV_WARNING: return "CV_WARNING";
+        case CV_TOO_MUCH_WORK: return "CV_TOO_MUCH_WORK";
+        case CV_TOO_MUCH_ACC: return "CV_TOO_MUCH_ACC";
+        case CV_ERR_FAILURE: return "CV_ERR_FAILURE";
+        case CV_CONV_FAILURE: return "CV_CONV_FAILURE";
+        case CV_LINIT_FAIL: return "CV_LINIT_FAIL";
+        case CV_LSETUP_FAIL: return "CV_LSETUP_FAIL";
+        case CV_LSOLVE_FAIL: return "CV_LSOLVE_FAIL";
+        case CV_RHSFUNC_FAIL: return "CV_RHSFUNC_FAIL";
+        case CV_FIRST_RHSFUNC_ERR: return "CV_FIRST_RHSFUNC_ERR";
+        case CV_REPTD_RHSFUNC_ERR: return "CV_REPTD_RHSFUNC_ERR";
+        case CV_UNREC_RHSFUNC_ERR: return "CV_UNREC_RHSFUNC_ERR";
+        case CV_RTFUNC_FAIL: return "CV_RTFUNC_FAIL";
+        case CV_MEM_FAIL: return "CV_MEM_FAIL";
+        case CV_MEM_NULL: return "CV_MEM_NULL";
+        case CV_ILL_INPUT: return "CV_ILL_INPUT";
+        case CV_NO_MALLOC: return "CV_NO_MALLOC";
+        case CV_BAD_K: return "CV_BAD_K";
+        case CV_BAD_T: return "CV_BAD_T";
+        case CV_BAD_DKY: return "CV_BAD_DKY";
+        case CV_TOO_CLOSE: return "CV_TOO_CLOSE";
+        default: return boost::lexical_cast<std::string>(flag);
+        }
     }
 
     void register_sundials_cvode() {
