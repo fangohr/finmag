@@ -80,9 +80,9 @@ class Exchange(object):
         self.E = self.exchange_factor * df.inner(df.grad(M), df.grad(M)) * df.dx
         self.dE_dM = df.derivative(self.E, M, self.v)
         self.method = method
+        self.vol = df.assemble(df.dot(self.v, df.Constant([1,1,1])) * df.dx).array()
 
         if method=='box-assemble':
-            self.__setup_field_assemble()
             self.__compute_field = self.__compute_field_assemble
         elif method == 'box-matrix-numpy':
             self.__setup_field_numpy()
@@ -122,9 +122,6 @@ class Exchange(object):
         """
         return df.assemble(self.E)
 
-    def __setup_field_assemble(self):
-        self.vol = df.assemble(df.dot(self.v, df.Constant([1,1,1])) * df.dx).array()
-
     def __setup_field_numpy(self):
         """
         Linearise dE_dM with respect to M. As we know this is
@@ -137,7 +134,6 @@ class Exchange(object):
         energy.
 
         """
-        self.vol = df.assemble(df.dot(self.v, df.Constant([1,1,1])) * df.dx).array()
         g_form = df.derivative(self.dE_dM, self.M)
         self.g = df.assemble(g_form).array() #store matrix as numpy array  
 
@@ -146,8 +142,6 @@ class Exchange(object):
         Same as __setup_field_numpy but with a petsc backend.
 
         """
-        self.vol = df.assemble(df.dot(self.v, df.Constant([1,1,1])) * df.dx).array()
-        
         g_form = df.derivative(self.dE_dM, self.M)
         self.g_petsc = df.PETScMatrix()
         
