@@ -14,7 +14,7 @@ logo and link to
 
    thisdocumentation.rst
    aboutfinmag.rst
-   model.rst
+   examples.rst
    modules/LLG.rst
    modules/Exchange.rst
    modules/Anisotropy.rst
