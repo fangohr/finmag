@@ -21,7 +21,6 @@ def run_simulation():
     llg = LLG(mesh)
     llg.Ms = 1e6
     llg.C = 1.3e-11
-    llg.c = 1e5
     llg.alpha = 0.02
 
     llg.set_m0(("1",
