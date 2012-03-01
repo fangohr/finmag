@@ -40,7 +40,7 @@ def run_simulation():
     llg.setup(exchange_flag=True)
 
     llg_wrap = lambda t, y: llg.solve_for(y, t)
-    t0 = 0; dt = 0.05e-12; t1 = 5e-12
+    t0 = 0; dt = 0.05e-12; t1 = 10e-12
     r = ode(llg_wrap).set_integrator("vode", method="bdf", rtol=1e-3)
     r.set_initial_value(llg.m, t0)
 
