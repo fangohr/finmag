@@ -21,6 +21,7 @@ def run_simulation():
     llg = LLG(mesh)
     llg.Ms = 1e6
     llg.C = 1.3e-11
+    #llg.c = 1e11
     llg.alpha = 0.02
 
     llg.set_m0(("1",
@@ -41,7 +42,7 @@ def run_simulation():
 
     llg_wrap = lambda t, y: llg.solve_for(y, t)
     t0 = 0; dt = 0.05e-12; t1 = 10e-12
-    r = ode(llg_wrap).set_integrator("vode", method="bdf", rtol=1e-3)
+    r = ode(llg_wrap).set_integrator("vode", method="bdf", rtol=1e-5, atol=1e-5)
     r.set_initial_value(llg.m, t0)
 
     fh = open(MODULE_DIR + "/averages.txt", "w")
@@ -50,8 +51,10 @@ def run_simulation():
         mx, my, mz = llg.m_average
         fh.write(str(r.t) + " " + str(mx) + " " + str(my) + " " + str(mz) + "\n")
         r.integrate(r.t + dt)
+        #df.plot(llg._m)
     fh.close()
     print "Done"
+    #df.interactive()
 
 if __name__ == "__main__":
     run_simulation()
