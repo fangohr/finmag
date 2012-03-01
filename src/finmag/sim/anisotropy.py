@@ -61,7 +61,7 @@ class Anisotropy(object):
         v = df.TestFunction(V)
         
         # Make sure that K is dolfin.Constant
-        if not 'dolfin' in type(K):
+        if not 'dolfin' in str(type(K)):
             K = df.Constant((K))
         
         # Anisotropy energy
