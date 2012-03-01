@@ -43,6 +43,8 @@ namespace finmag { namespace sundials {
             }
         }
 
+        static void set_error(const char*);
+
     private:
         error_handler(const error_handler&);
         void operator=(const error_handler&);
@@ -89,8 +91,9 @@ namespace finmag { namespace sundials {
         double advance_time(double tout, const np_array<double> &yout, int itask) {
             array_nvector yout_nvec(yout);
             double tret = 0;
-            int flag = CVode(cvode_mem, tout, yout_nvec.ptr(), &tout, itask);
-            if (flag < 0) throw std::runtime_error(std::string("CVode returned error code ") + boost::lexical_cast<std::string>(flag));
+            error_handler eh;
+            int retcode = CVode(cvode_mem, tout, yout_nvec.ptr(), &tout, itask);
+            eh.check_error(retcode, "CVode");
             return tret;
         }
 
@@ -183,7 +186,7 @@ namespace finmag { namespace sundials {
 
         bp::tuple get_nonlin_solv_stats() { return bp::tuple(); }
 
-        std::string get_return_flag_name(int flag) { return ""; }
+        static std::string get_return_flag_name(int flag);
 
         // direct linear solver optional output functions
 
@@ -195,7 +198,7 @@ namespace finmag { namespace sundials {
 
         int get_dls_last_flag() { return 0; }
 
-        std::string get_dls_return_flag_name(int flag) { return ""; }
+        static std::string get_dls_return_flag_name(int flag);
 
         // diagonal linear solver optional output functions
 
@@ -205,7 +208,7 @@ namespace finmag { namespace sundials {
 
         int get_diag_last_flag() { return 0; }
 
-        std::string get_diag_return_flag_name() { return ""; }
+        static std::string get_diag_return_flag_name(int flag);
 
         // iterative linear solver optional output functions
 
@@ -225,7 +228,7 @@ namespace finmag { namespace sundials {
 
         int get_spils_last_flag() { return 0; }
 
-        std::string get_spils_return_flag_name(int flag) { return ""; }
+        static std::string get_spils_return_flag_name(int flag);
 
         // reinitialisation functions
 
@@ -238,8 +241,6 @@ namespace finmag { namespace sundials {
         bp::tuple get_band_prec_work_space() { return bp::tuple(); }
 
         int get_band_prec_num_rhs_evals() { return 0; }
-
-        void on_error(int error_code, const char *module, const char *function, char *msg);
 
     private:
         void* cvode_mem;
