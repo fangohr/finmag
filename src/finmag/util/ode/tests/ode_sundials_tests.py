@@ -14,14 +14,14 @@ import finmag.native.sundials as sundials
 
 class OdeSundialsTests(unittest.TestCase):
     def test_errors(self):
-#        integrator = sundials.sundials_cvode(sundials.CV_ADAMS, sundials.CV_FUNCTIONAL)
+        integrator = sundials.sundials_cvode(sundials.CV_ADAMS, sundials.CV_FUNCTIONAL)
         y = np.zeros((5,))
         try:
-#            integrator.advance_time(1, y)
-#            self.fail("Exception was not raised")
+            integrator.advance_time(1, y)
+            self.fail("Exception was not raised")
             pass
-        except RuntimeError:
-            pass
+        except RuntimeError, ex:
+            print ex
 
     def atest_simple_1d(self):
         integrator.set_integrator('vode', rtol=1e-8, atol=1e-8)
