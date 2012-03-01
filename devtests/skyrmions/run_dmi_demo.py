@@ -18,15 +18,15 @@ with exchange interaction.
 
 length = 40e-9 # in meters
 simplexes = 10
-#mesh = dolfin.Interval(simplexes, 0, length)
-mesh = dolfin.Rectangle(0,0,length,length, simplexes, simplexes)
+mesh = dolfin.Interval(simplexes, 0, length)
+#mesh = dolfin.Rectangle(0,0,length,length, simplexes, simplexes)
 #mesh = dolfin.Box(0,0,0,length,length, length, simplexes, simplexes, simplexes)
 
 
 llg = LLG(mesh)
 llg.alpha=0.1
 llg.H_app=(0,0,0)
-llg.initial_M_expr((
+llg.set_m0((
         'MS * (2*x[0]/L - 1)',
         'sqrt(MS*MS - MS*MS*(2*x[0]/L - 1)*(2*x[0]/L - 1))',
         '0'), L=length, MS=llg.Ms)
@@ -34,34 +34,34 @@ llg.initial_M_expr((
 #        'MS',
 #        '0',
 #        '0'), MS=llg.Ms)
-llg.setup(use_dmi=True)
+llg.setup(use_dmi=True,exchange_flag=True)
 #llg.setup(use_dmi=False)
 #llg.pins = [0, 10]
-#llg.pins = [0]
+llg.pins = [10]
 print "point 0:",mesh.coordinates()[0]
 
 print "Solving problem..."
 
 import visual
-y = llg.M[:]
-y.shape=(3,len(llg.M)/3)
+y = llg.m[:]
+y.shape=(3,len(llg.m)/3)
 arrows = []
-vectorlength=5
+vectorlength=2
 coordinates = (mesh.coordinates()/length-0.5)*len(mesh.coordinates())*0.4
 for i in range(y.shape[1]):
     pos = list(coordinates[i])
-    thisM = y[:,i]/llg.Ms*vectorlength
+    thisM = y[:,i]*vectorlength
     while len(pos) < 3: #visual python needs 3d vector
         pos.append(0.0) 
     
     arrows.append(visual.arrow(pos=pos,axis=tuple(thisM)))
 
 ts = numpy.linspace(0, 5e-10, 1000)
-tol = 10
+tol = 1e-4
 for i in range(len(ts)-1):
-    ys,infodict = odeint(llg.solve_for, llg.M, [ts[i],ts[i+1]], full_output=True,printmessg=True,rtol=tol,atol=tol)
-    y = ys[-1,:]/llg.Ms*vectorlength
-    y.shape=(3,len(llg.M)/3)
+    ys,infodict = odeint(llg.solve_for, llg.m, [ts[i],ts[i+1]], full_output=True,printmessg=True,rtol=tol,atol=tol)
+    y = ys[-1,:]*vectorlength
+    y.shape=(3,len(llg.m)/3)
     for j in range(y.shape[1]):
         arrows[j].axis=tuple(y[:,j])
     print("i=%d/%d, t=%s" % (i,len(ts),ts[i])),
