@@ -20,8 +20,8 @@ set xlabel "time (s)"
 set ylabel "polarisation"
 
 set title "m_x"
-set yrange [0.94 : 1.00]
-set ytic 0.95, 0.05, 1.00
+#set yrange [0.94 : 1.00]
+#set ytic 0.95, 0.05, 1.00
 plot \
     @ref using 1:2 title "nmag" @nmag, \
     @new using 1:2 title "finmag" @finmag
@@ -30,15 +30,15 @@ set nokey
 
 set ylabel ""
 set title "m_y"
-set yrange [0.10 : 0.11]
-set ytic 0.10, 0.005, 0.11
+#set yrange [0.10 : 0.11]
+#set ytic 0.10, 0.005, 0.11
 plot \
     @ref using 1:3 title "nmag" @nmag, \
     @new using 1:3 title "finmag"  @finmag
 
 set title "m_z"
-set yrange [-0.0002 : 0.0005]
-set ytic 0.00, 0.0005, 0.0005
+#set yrange [-0.0002 : 0.0005]
+#set ytic 0.00, 0.0005, 0.0005
 plot \
     @ref using 1:4 title "nmag" @nmag, \
     @new using 1:4 title "finmag" @finmag
@@ -46,17 +46,17 @@ plot \
 set ylabel "difference"
 
 set title "dx"
-set yrange [0.00 : 0.01]
-set ytic 0.00, 0.005, 0.01 
-plot @refnew using 1:(abs($2-$6)) @diff 
+#set yrange [0.00 : 0.01]
+#set ytic 0.00, 0.005, 0.01 
+plot @refnew using 1:(($2-$6)) @diff 
 
 set ylabel ""
 set title "dy"
-set yrange [0.00 : 0.0025]
-set ytic 0.00, 0.001, 0.0025
-plot @refnew using 1:(abs($3-$7)) @diff 
+#set yrange [0.00 : 0.0025]
+#set ytic 0.00, 0.001, 0.0025
+plot @refnew using 1:(($3-$7)) @diff 
 
 set title "dz"
-set yrange [0.00 : 0.0004]
-set ytic 0.00, 0.0002, 0.0004
-plot @refnew using 1:(abs($4-$8)) @diff
+#set yrange [0.00 : 0.0004]
+#set ytic 0.00, 0.0002, 0.0004
+plot @refnew using 1:(($4-$8)) @diff
