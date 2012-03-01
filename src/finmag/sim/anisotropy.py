@@ -70,7 +70,8 @@ class Anisotropy(object):
         self.dE_dM = df.derivative(self.E, M)
 
         # Volume
-        self.vol = df.assemble(df.dot(self.v, df.Constant([1,1,1])) * df.dx).array()
+        self.vol = df.assemble(df.dot(self.v, 
+            df.Constant([1,1,1])) * df.dx).array()
 
         # Store for later
         self.V = V
@@ -97,22 +98,22 @@ class Anisotropy(object):
 
     def compute_field(self):
         """
-        Compute the exchange field.
+        Compute the anisotropy field.
         
          *Returns*
             numpy.ndarray
-                The exchange field.       
+                The anisotropy field.       
         
         """
         return self.__compute_field()
     
     def compute_energy(self):
         """
-        Return the exchange energy.
+        Compute the anisotropy energy.
 
         *Returns*
             Float
-                The exchange energy.
+                The anisotropy energy.
 
         """
         return df.assemble(self.E)
@@ -144,9 +145,10 @@ class Anisotropy(object):
         self.H_ani_petsc = df.PETScVector()
 
     def __setup_field_project(self):
-        #Note that we could make this 'project' method faster by computing the matrices
-        #that represent a and L, and only to solve the matrix system in 'compute_field'().
-        #IF this method is actually useful, we can do that. HF 16 Feb 2012
+        #Note that we could make this 'project' method faster by computing 
+        #the matrices that represent a and L, and only to solve the matrix 
+        #system in 'compute_field'(). IF this method is actually useful, 
+        #we can do that. HF 16 Feb 2012
         H_ani_trial = df.TrialFunction(self.V)
         self.a = df.dot(H_ani_trial, self.v) * df.dx
         self.L = self.dE_dM
