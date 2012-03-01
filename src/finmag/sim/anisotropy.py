@@ -25,7 +25,7 @@ class Anisotropy(object):
         K
             The anisotropy constant
         a
-            The easy axis (use dolfin.Constant)
+            The easy axis (use dolfin.Constant for now)
         method
             The method used to compute the anisotropy field.
             For alternatives and explanation, see Exchange.
@@ -53,16 +53,15 @@ class Anisotropy(object):
             
         """   
     
-    def __init__(self, V, M, K, a, method=None):
-        if method == None:
-            method = 'box-matrix-petsc'
+    def __init__(self, V, M, K, a, method="box-matrix-petsc"):
+        print "Anisotropy(): method = %s" % method
 
-        # Local testfunction
-        v = df.TestFunction(V)
+        # Testfunction
+        self.v = df.TestFunction(V)
         
         # Make sure that K is dolfin.Constant
         if not 'dolfin' in str(type(K)):
-            K = df.Constant((K))
+            K = df.Constant(K)
         
         # Anisotropy energy
         self.E = K*(1 - (df.dot(a, M))**2)*df.dx
@@ -70,53 +69,25 @@ class Anisotropy(object):
         # Gradient
         self.dE_dM = df.derivative(self.E, M)
 
+        # Volume
+        self.vol = df.assemble(df.dot(self.v, df.Constant([1,1,1])) * df.dx).array()
+
         # Store for later
         self.V = V
         self.M = M
-
+        self.method = method
 
         if method=='box-assemble':
-            self.vol = df.assemble(df.dot(v, df.Constant([1,1,1])) * df.dx).array()
-            self.compute_field = self.compute_field_box_assemble
-        
+            self.__compute_field = self.__compute_field_assemble
         elif method == 'box-matrix-numpy':
-            self.vol = df.assemble(df.dot(v, df.Constant([1,1,1])) * df.dx).array()
-            self.compute_field = self.compute_field_box_matrix_numpy
-            
-            #linearise dE_dM with respect to M. As we know this is
-            #linear ( should add reference to Werner Scholz paper and
-            #relevant equation for g), this creates the right matrix
-            #to compute dE_dM later as dE_dM=g*M.  We essentially
-            #compute a Taylor series of the energy in M, and know that
-            #the first two terms (dE_dM=Hex, and ddE_dMdM=g) are the
-            #only finite ones as we know the expression for the
-            #energy.
-
-            g_form = df.derivative(self.dE_dM, M)
-            self.g = df.assemble(g_form).array() #store matrix as numpy array
-        
+            self.__setup_field_numpy()
+            self.__compute_field = self.__compute_field_numpy
         elif method == 'box-matrix-petsc':
-            #petsc version of the scheme above.
-            self.vol = df.assemble(df.dot(v, df.Constant([1,1,1])) * df.dx).array()
-            self.compute_field = self.compute_field_box_matrix_petsc
-            g_form = df.derivative(self.dE_dM,M)
-            self.g_petsc = df.PETScMatrix()
-            df.assemble(g_form,tensor=self.g_petsc)
-            #self.g = df.assemble(g_form).array() #store matrix as numpy array
-            self.H_ex_petsc = df.PETScVector()
-
-
+            self.__setup_field_petsc()
+            self.__compute_field = self.__compute_field_petsc
         elif method=='project':
-            self.v = v
-            self.V = V
-            H_exch_trial = df.TrialFunction(self.V)
-            self.a = df.dot(H_exch_trial, self.v) * df.dx
-            self.L = self.dE_dM
-            self.H_exch_project = df.Function(self.V)        
-            #Note that we could make this 'project' method faster by computing the matrices
-            #that represent a and L, and only to solve the matrix system in 'compute'().
-            #IF this method is actually useful, we can do that. HF 16 Feb 2012
-            self.compute_field = self.compute_field_project
+            self.__setup_field_project()
+            self.__compute_field = self.__compute_field_project
         else:
             raise NotImplementedError("""Only methods currently implemented are
                                     * 'box-assemble', 
@@ -124,72 +95,75 @@ class Anisotropy(object):
                                     * 'box-matrix-petsc'  
                                     * 'project'""")
 
-    def compute_field_box_assemble(self):
+    def compute_field(self):
         """
-        Assemble vector with H_exchange using the 'box' method.
+        Compute the exchange field.
         
-        *Returns*
+         *Returns*
             numpy.ndarray
-                The effective field.
-                
-        """
-        return df.assemble(self.dE_dM).array() / self.vol
-
-    def compute_field_box_matrix_numpy(self):
-        """
-        Assemble vector with H_exchange using the 'box' method
-        and the pre-computed matrix g.
-
-        *Returns*
-            numpy.ndarray
-                The effective field.
-                
-        """
+                The exchange field.       
         
-        Mvec = self.M.vector().array()
-        H_ex = np.dot(self.g,Mvec)
-        return H_ex/self.vol
-
-    def compute_field_box_matrix_petsc(self):
         """
-        PETSc version of the function above. Takes advantage of the 
-        sparsity of g.
-        
-        *Returns*
-            numpy.ndarray
-                The effective field
-
-        """
-        
-        print "Check H_ex_petsc_vector"
-        self.g_petsc.mult(self.M.vector(),self.H_ex_petsc)
-        return self.H_ex_petsc.array()/self.vol
-                
-
-    def compute_field_project(self):
-        """
-        Assemble vector with H_exchange using the 'project' method.
-
-        This may not work.
-        
-        *Returns*
-            numpy.ndarray
-                The effective field.
-                
-        """
-        df.solve(self.a == self.L, self.H_exch_project)
-        return self.H_exch_project.vector().array()
-
-
+        return self.__compute_field()
+    
     def compute_energy(self):
         """
-        Return the anisotropy energy.
+        Return the exchange energy.
 
         *Returns*
             Float
-                The anisotropy energy.
+                The exchange energy.
 
         """
-        V = self.V
-        return df.assemble(self.E, mesh=V.mesh())
+        return df.assemble(self.E)
 
+    def __setup_field_numpy(self):
+        """
+        Linearise dE_dM with respect to M. As we know this is
+        linear ( should add reference to Werner Scholz paper and
+        relevant equation for g), this creates the right matrix
+        to compute dE_dM later as dE_dM=g*M.  We essentially
+        compute a Taylor series of the energy in M, and know that
+        the first two terms (dE_dM=Hex, and ddE_dMdM=g) are the
+        only finite ones as we know the expression for the
+        energy.
+
+        """
+        g_form = df.derivative(self.dE_dM, self.M)
+        self.g = df.assemble(g_form).array() #store matrix as numpy array  
+
+    def __setup_field_petsc(self):
+        """
+        Same as __setup_field_numpy but with a petsc backend.
+
+        """
+        g_form = df.derivative(self.dE_dM, self.M)
+        self.g_petsc = df.PETScMatrix()
+        
+        df.assemble(g_form,tensor=self.g_petsc)
+        self.H_ani_petsc = df.PETScVector()
+
+    def __setup_field_project(self):
+        #Note that we could make this 'project' method faster by computing the matrices
+        #that represent a and L, and only to solve the matrix system in 'compute_field'().
+        #IF this method is actually useful, we can do that. HF 16 Feb 2012
+        H_ani_trial = df.TrialFunction(self.V)
+        self.a = df.dot(H_ani_trial, self.v) * df.dx
+        self.L = self.dE_dM
+        self.H_ani_project = df.Function(self.V)        
+
+    def __compute_field_assemble(self):
+        return df.assemble(self.dE_dM).array() / self.vol
+
+    def __compute_field_numpy(self):
+        Mvec = self.M.vector().array()
+        H_ani = np.dot(self.g,Mvec)
+        return H_ani/self.vol
+
+    def __compute_field_petsc(self):
+        self.g_petsc.mult(self.M.vector(), self.H_ani_petsc)
+        return self.H_ani_petsc.array()/self.vol
+
+    def __compute_field_project(self):
+        df.solve(self.a == self.L, self.H_ani_project)
+        return self.H_ani_project.vector().array()
