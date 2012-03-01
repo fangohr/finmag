@@ -4,7 +4,7 @@ import pstats
 import finmag.sim.helpers as h
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
-TOLERANCE = 2e-2
+TOLERANCE = 3e-4
 
 def setup_module(module):
     import run_finmag as f

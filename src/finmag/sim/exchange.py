@@ -72,7 +72,7 @@ class Exchange(object):
         self.V = V
 
         mu0 = 4 * np.pi * 10**-7 # Vs/(Am)
-        self.exchange_factor = df.Constant(-2 * C / (mu0 * Ms))
+        self.exchange_factor = df.Constant(-1 * C / (mu0 * Ms))
         self.method = method
         self.M = M # keep reference to M
 
