@@ -43,7 +43,8 @@ int dmdt(double alpha, double gamma, double c,
     const int Z = 2 * ENTRIES_PER_DIM;
 
     double p = gamma / (1 + alpha*alpha); /* precession factor of the LLG */
-    double q = gamma * alpha / (1 + alpha*alpha); /* damping */
+    /* double q = gamma * alpha / (1 + alpha*alpha); */ /* damping explicit */
+    double q = alpha * p; /* marginally faster than line above */
 
     for ( int i=0; i<ENTRIES_PER_DIM; i++ ) {
         double MM = M[X+i]*M[X+i] + M[Y+i]*M[Y+i] + M[Z+i]*M[Z+i];
