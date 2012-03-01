@@ -5,19 +5,24 @@ from prob_testcases import *
 from dolfin import *
 
 problem = MagUnitSphere()
-solver = NitscheSolver(problem)
-solution = solver.solve()
-
-print "s at (0, 0, 0):", solution((0.0, 0.0, 0.0))
-
-print "s at (0, 0, 0.1):", solution((0.0, 0.0, 0.1))
+print problem.mesh.num_cells()
+problem.refine_core()
+print "num cells after refinement", problem.mesh.num_cells()
 
 
-##plot(solver.phi_core, title = "potential function")
-Hdemagproj = solver.Hdemag_core
+##solver = NitscheSolver(problem)
+##solution = solver.solve()
 
-print "Projection Gradient of potential function at 0.1,0,0",Hdemagproj((0.0,0,0))
-solver.save_function(Hdemagproj,"Hdemag")
-##demagfile = File("results/demag.pvd")
-##demagfile << Hdemag
-##interactive()
+##print "s at (0, 0, 0):", solution((0.0, 0.0, 0.0))
+##
+##print "s at (0, 0, 0.1):", solution((0.0, 0.0, 0.1))
+##
+##
+####plot(solver.phi_core, title = "potential function")
+##Hdemagproj = solver.Hdemag_core
+##
+##print "Projection Gradient of potential function at 0.1,0,0",Hdemagproj((0.0,0,0))
+##solver.save_function(Hdemagproj,"Hdemag")
+####demagfile = File("results/demag.pvd")
+####demagfile << Hdemag
+####interactive()
