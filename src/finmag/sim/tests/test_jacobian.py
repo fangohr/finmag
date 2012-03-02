@@ -55,8 +55,21 @@ class MyLLG(LLG):
 
 def derivative_test(L, M, x, hs, J=None):
     """
-    Taylor remainder test. If Jacobian J is given, use that, if not
-    don't.
+    Taylor remainder test. 
+
+    *Arguments*
+
+      L - right hand side of equation
+
+      M - magnetisation field vector around which we develop the taylor series
+
+      x - random vector
+
+      hs - sequence of step width h
+
+      We compute the taylor series of dm/dt represented by L for a statevector P = M + h*x 
+
+      J - Jacobian. If Jacobian J is given, use that, if not don't.
     """
 
     L_M = assemble(L)
@@ -68,27 +81,27 @@ def derivative_test(L, M, x, hs, J=None):
         P = Function(V)
         P.vector()[:] = M.vector() + H.vector()
 
-        L_P = assemble(replace(L, {M: P}))
+        L_P = assemble(replace(L, {M: P})) #Compute exact result
 
         # Without Jacobian information
         if J is None:
-            errors += [norm(L_P - L_M)]
+            errors.append(norm(L_P - L_M))
         # With Jacobian information
         else:
             J_M_H = assemble(action(J, H))
-            errors += [norm(L_P - L_M - J_M_H)]
+            errors.append(norm(L_P - L_M - J_M_H))
 
     return errors
 
-def convergence_rates(xs, ys):
-    assert(len(xs) == len(ys))
+def convergence_rates(hs, ys):
+    assert(len(hs) == len(ys))
     rates = [(log(ys[i]) - log(ys[i-1]))/(log(hs[i]) - log(hs[i-1]))
-             for i in range(1, len(xs))]
+             for i in range(1, len(hs))]
     return rates
 
 
 m = 1e-5
-mesh = Box(0,m,0,m,0,m,5,5,5)
+mesh = Box(0,0,0,m,m,m,5,5,5)
 llg = MyLLG(mesh)
 llg.set_m0((1,0,0))
 llg.setup()
@@ -97,12 +110,11 @@ M, V = llg._m, llg.V
 a, L = llg.variational_forms()
 
 x = Function(V)
-s = random.random()
-#s = random.randint(0, 1e5)
+s = 0.25 #some random number
 x.vector()[:] = s
 hs = [2.0/n for n in (1, 2, 4, 8, 16, 32)]
 
-TOL = 1e-5
+TOL = 1e-11
 
 def test_convergence_linear():
     """All convergence rates should be 1 as the differences 
@@ -110,14 +122,16 @@ def test_convergence_linear():
 
     errors = derivative_test(L, M, x, hs)
     rates = convergence_rates(hs, errors)
-    for rate in rates:
+    for h,rate in zip(hs,rates):
+        print "h= %g, rate=%g, rate-1=%g " % (h,rate,rate-1)
         assert abs(rate - 1) < TOL
 
 def test_derivative_linear():
     """This should be zero because the rhs of LLG is linear in M."""
     J = llg.compute_jacobian()
     errors = derivative_test(L, M, x, hs, J=J)
-    for err in errors:
+    for h,err in zip(hs,errors):
+        print "h= %g, error=%g" % (h,err)
         assert abs(err) < TOL
 
 if __name__ == '__main__':
@@ -132,6 +146,10 @@ if __name__ == '__main__':
     errors = derivative_test(L, M, x, hs, J=J)
     print "This should be close to zero since L is linear:"
     print errors
+
+    test_derivative_linear()
+    test_convergence_linear()
+
     print ''
     '''
     # L is nonlinear
