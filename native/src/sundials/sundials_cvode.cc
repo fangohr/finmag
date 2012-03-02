@@ -11,6 +11,7 @@
 #include "finmag_includes.h"
 
 #include <cvode/cvode_direct.h>
+#include <cvode/cvode_impl.h>
 
 #include "sundials_cvode.h"
 
@@ -68,6 +69,18 @@ namespace finmag { namespace sundials {
             throw std::invalid_argument("sundials_cvode: iter parameter must be either CV_NEWTON or CV_FUNCTIONAL");
         cvode_mem = CVodeCreate(lmm, iter);
         if (!cvode_mem) throw std::runtime_error("CVodeCreate returned NULL");
+
+        // Fix bug in sundials: CVodeCreate does not set all of the vector fields to NULL
+        // So when CVodeFree is called without a previous CVodeInit, a segfault occurs. Fail...
+        CVodeMem cm = (CVodeMem) cvode_mem;
+        cm->cv_Vabstol = 0;
+        for (int i = 0; i < L_MAX; i++) cm->cv_zn[i] = 0;
+        cm->cv_ewt = 0;
+        cm->cv_y = 0;
+        cm->cv_acor = 0;
+        cm->cv_tempv = 0;
+        cm->cv_ftemp = 0;
+
 
         // save this object as CVODE user data
         int flag = CVodeSetUserData(cvode_mem, this);
