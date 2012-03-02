@@ -14,7 +14,7 @@ import finmag.native.sundials as sundials
 
 class OdeSundialsTests(unittest.TestCase):
     def test_errors(self):
-        return
+#        return
         integrator = sundials.sundials_cvode(sundials.CV_ADAMS, sundials.CV_FUNCTIONAL)
         y = np.zeros((5,))
         try:
