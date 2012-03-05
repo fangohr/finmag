@@ -54,18 +54,18 @@ a = Constant((0, 0, 1))
 
 def test_parallel():
     # Case 1
-    M = project(Constant((0, 0, 1)), V)
+    M = interpolate(Constant((0, 0, 1)), V)
     energy = Anisotropy(V, M, K, a).compute_energy()
     print 'This sould be zero %g:' % energy
 
     energy_scale = K*assemble(Constant(1)*dx, mesh=mesh) #energy if a and m perpendicular
     print 'Relative energy %g:' % (energy/energy_scale)
-    print "Why is this relative energy so large?"
+    print "The relative energy is not large anymore :)"
     #assert abs(energy)/energy_scale < TOL
 
 def test_orthogonal():
     # Case 2
-    M = project(Constant((0,1,0)), V)   
+    M = interpolate(Constant((0,1,0)), V)   
     energy = Anisotropy(V, M, K, a).compute_energy()
     volK = K*assemble(Constant(1)*dx, mesh=mesh)
     print 'These should be equal: %g-%g=%g ' %( energy, volK, energy-volK)
@@ -74,7 +74,7 @@ def test_orthogonal():
 
 def test_gradient():
     # Case 3
-    M = project(Constant((1./np.sqrt(2), 0, 1./np.sqrt(2))), V)
+    M = interpolate(Constant((1./np.sqrt(2), 0, 1./np.sqrt(2))), V)
     ani = Anisotropy(V, M, K, a)
     dE_dM = ani.compute_field()
 
