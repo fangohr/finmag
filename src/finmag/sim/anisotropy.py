@@ -51,7 +51,7 @@ class Anisotropy(object):
             # Anisotropy field
             H_ani = anisotropy.compute_field()
             
-        """   
+    """   
     
     def __init__(self, V, M, K, a, method="box-matrix-petsc"):
         print "Anisotropy(): method = %s" % method
@@ -64,7 +64,7 @@ class Anisotropy(object):
             K = df.Constant(K)
         
         # Anisotropy energy
-        self.E = K*(1 - (df.dot(a, M))**2)*df.dx
+        self.E = K*(df.Constant(1) - (df.dot(a, M))**2)*df.dx
 
         # Gradient
         self.dE_dM = df.derivative(self.E, M)
