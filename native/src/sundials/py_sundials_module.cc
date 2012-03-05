@@ -12,7 +12,7 @@
 
 #include "util/np_array.h"
 
-#include "sundials/sundials_cvode.h"
+#include "sundials/sundials_cvode_impl.h"
 
 BOOST_PYTHON_MODULE(sundials)
 {
