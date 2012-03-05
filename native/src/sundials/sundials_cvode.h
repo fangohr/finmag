@@ -84,14 +84,7 @@ namespace finmag { namespace sundials {
         void set_linear_solver_sp_tfqmr(int pretype, int maxl) {}
 
         // solver functions
-        double advance_time(double tout, const np_array<double> &yout, int itask) {
-            array_nvector yout_nvec(yout);
-            double tret = 0;
-            error_handler eh;
-            int retcode = CVode(cvode_mem, tout, yout_nvec.ptr(), &tout, itask);
-            eh.check_error(retcode, "CVode");
-            return tret;
-        }
+        double advance_time(double tout, const np_array<double> &yout, int itask);
 
         // main solver optional input functions
         void set_max_ord(int max_order) {}
@@ -239,6 +232,8 @@ namespace finmag { namespace sundials {
         int get_band_prec_num_rhs_evals() { return 0; }
 
     private:
+        static int rhs_callback(realtype t, N_Vector y, N_Vector ydot, void *user_data);
+
         void* cvode_mem;
 
         bp::object rhs_fn, dls_jac_fn, dls_band_jac_fn, spils_prec_setup_fn, spils_prec_solve_fn, spils_jac_times_vec_fn;
