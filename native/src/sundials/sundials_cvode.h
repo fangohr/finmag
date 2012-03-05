@@ -64,13 +64,9 @@ namespace finmag { namespace sundials {
         }
 
         // initialisation functions
-        void init(const bp::object &f, double t0, const np_array<double>& y0) {
+        void init(const bp::object &f, double t0, const np_array<double>& y0);
 
-        }
-
-        void set_scalar_tolerances(double reltol, double abstol) {
-
-        }
+        void set_scalar_tolerances(double reltol, double abstol);
 
         // linear soiver specification functions
         void set_linear_solver_dense(int n) {}
