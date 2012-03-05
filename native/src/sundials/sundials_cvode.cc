@@ -81,7 +81,6 @@ namespace finmag { namespace sundials {
         cm->cv_tempv = 0;
         cm->cv_ftemp = 0;
 
-
         // save this object as CVODE user data
         int flag = CVodeSetUserData(cvode_mem, this);
         if (flag != CV_SUCCESS) {
@@ -103,6 +102,15 @@ namespace finmag { namespace sundials {
 
     void error_handler::set_error(const char *msg) {
         cvode_error.reset(new std::string(msg));
+    }
+
+    void cvode::init(const bp::object &f, double t0, const np_array<double>& y0) {
+    }
+
+    void cvode::set_scalar_tolerances(double reltol, double abstol) {
+        error_handler eh;
+        int retcode = CVodeSStolerances(cvode_mem, reltol, abstol);
+        eh.check_error(retcode, "CVodeSStolerances");
     }
 
     boost::thread_specific_ptr<std::string> error_handler::cvode_error;
