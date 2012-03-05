@@ -106,6 +106,7 @@ fh = open("averages_dolfin.txt", "w")
 while r.successful() and r.t <= t1:
     print "Integrating time = %gs" % (r.t)
     mx, my, mz = m_average(r.y, V, Volume)
+    print str(r.t), " ", str(mx), " ",  str(my), " ", str(mz)
     fh.write(str(r.t) + " " + str(mx) + " " + str(my) + " " + str(mz) + "\n")
     r.integrate(r.t + dt)
     plot(M)
