@@ -60,7 +60,6 @@ def test_parallel():
 
     energy_scale = K*assemble(Constant(1)*dx, mesh=mesh) #energy if a and m perpendicular
     print 'Relative energy %g:' % (energy/energy_scale)
-    print "The relative energy is not large anymore :)"
     assert abs(energy)/energy_scale < TOL
 
 def test_orthogonal():
