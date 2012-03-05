@@ -6,6 +6,13 @@ import finmag.sim.helpers as h
 import os
 import numpy as np
 
+parameters["form_compiler"]["cpp_optimize"] = True
+ffc_options = {"optimize": True, \
+               "eliminate_zeros": True, \
+               "precompute_basis_const": True, \
+               "precompute_ip_const": True, \
+               "quadrature_degree": 2}
+
 set_log_level(21)
 
 def m_average(y, V, vol):
@@ -86,7 +93,10 @@ L = inner(-p * cross(M, H_eff)
           -c * (inner(M,M) - 1) * M , v) * dx
 
 dm = Function(V)
-A = assemble(a)
+
+problem = LinearVariationalProblem(a, L, dm, form_compiler_parameters=ffc_options)
+solver = LinearVariationalSolver(problem)
+
 
 # LLG solve_for
 def solve_for(t, y):
@@ -94,9 +104,8 @@ def solve_for(t, y):
     H_ex = exchange.compute_field()
     H_eff.vector()[:] = H_ex + H_app.vector().array()
 
-    status, dMdt = dolfinsolve(A, dm, L)
-    if status == 0:
-        return dMdt
+    solver.solve()
+    return dm.vector().array()
 
 t0 = 0; dt = 0.05e-12; t1 = 10e-12
 r = ode(solve_for).set_integrator("vode", method="bdf", rtol=1e-5, atol=1e-5)
