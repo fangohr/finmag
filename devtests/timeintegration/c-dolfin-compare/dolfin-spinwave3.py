@@ -6,6 +6,7 @@ import finmag.sim.helpers as h
 import os
 import numpy as np
 
+parameters["linear_algebra_backend"] = "PETSc"
 parameters["form_compiler"]["cpp_optimize"] = True
 ffc_options = {"optimize": True, \
                "eliminate_zeros": True, \
@@ -53,8 +54,6 @@ pins = []
 
 # Defaults overwrite from spinwave program
 Ms = 1e6
-C = 1.3e-11
-#llg.c = 1e11
 alpha = 0.02
 
 m0_tuple = (("1",
