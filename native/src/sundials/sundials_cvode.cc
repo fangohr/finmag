@@ -12,8 +12,16 @@
 
 #include <cvode/cvode_direct.h>
 #include <cvode/cvode_impl.h>
+#include <sundials/sundials_iterative.h>
 
 #include "sundials_cvode.h"
+#include "util/python_threading.h"
+
+#define CHECK_SUNDIALS_RET(fn, args) do { \
+        error_handler _eh; \
+        int _retcode = fn args; \
+        _eh.check_error(_retcode, #fn); \
+    } while (0)
 
 namespace finmag { namespace sundials {
     namespace {
@@ -35,31 +43,6 @@ namespace finmag { namespace sundials {
             error_handler::set_error(buf);
         }
 
-        // Callbacks
-        // ODE right-hand side
-        int rhs_callback(realtype t, N_Vector y, N_Vector ydot, void *user_data) {
-            return 0;
-        }
-
-        // Jacobian information (direct method with dense Jacobian)
-        int dls_dense_jac_callback(int n, realtype t, N_Vector y, N_Vector fy, DlsMat Jac,
-                    void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-
-        // Jacobian information (direct method with banded Jacobian)
-        int band_jac_callback(int n, int mupper, int mlower, realtype t, N_Vector y, N_Vector fy,
-                    DlsMat Jac, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-
-        // Jacobian information (matrix-vector product)
-        int spils_jac_times_vec_callback(N_Vector v, N_Vector Jv, realtype t, N_Vector y,
-                    N_Vector fy, void *user_data, N_Vector tmp);
-
-        // Preconditioning (linear system solution)
-        int spils_prec_solve_callback(realtype t, N_Vector y, N_Vector fy, N_Vector r, N_Vector z,
-                    realtype gamma, realtype delta, int lr, void *user_data, N_Vector tmp);
-
-        // Preconditioning (Jacobian data)
-        int spils_prec_setup_callback(realtype t, N_Vector y, N_Vector fy, booleantype jok, booleantype *jcurPtr,
-                    realtype gamma, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
     }
 
     cvode::cvode(int lmm, int iter): cvode_mem(0) {
@@ -105,13 +88,53 @@ namespace finmag { namespace sundials {
     }
 
     void cvode::init(const bp::object &f, double t0, const np_array<double>& y0) {
+        rhs_fn = f;
+        array_nvector y0_nvec(y0);
+        CHECK_SUNDIALS_RET(CVodeInit, (cvode_mem, rhs_callback, t0, y0_nvec.ptr()));
     }
 
     void cvode::set_scalar_tolerances(double reltol, double abstol) {
-        error_handler eh;
-        int retcode = CVodeSStolerances(cvode_mem, reltol, abstol);
-        eh.check_error(retcode, "CVodeSStolerances");
+        CHECK_SUNDIALS_RET(CVodeSStolerances, (cvode_mem, reltol, abstol));
     }
+
+    double cvode::advance_time(double tout, const np_array<double> &yout, int itask) {
+        array_nvector yout_nvec(yout);
+        double tret = 0;
+        CHECK_SUNDIALS_RET(CVode, (cvode_mem, tout, yout_nvec.ptr(), &tout, itask));
+        return tret;
+    }
+
+    // Callbacks
+    // ODE right-hand side
+    int cvode::rhs_callback(realtype t, N_Vector y, N_Vector ydot, void *user_data) {
+        cvode *cv = (cvode*) user_data;
+
+        // call back into Python code
+        finmag::util::scoped_gil_ensure gil_ensure;
+        bp::object y_arr = nvector_to_array_object(y);
+        bp::object ydot_arr = nvector_to_array_object(ydot);
+        return bp::call<int>(cv->rhs_fn.ptr(), t, y_arr, ydot_arr);
+    }
+
+    // Jacobian information (direct method with dense Jacobian)
+    int dls_dense_jac_callback(int n, realtype t, N_Vector y, N_Vector fy, DlsMat Jac,
+                void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+
+    // Jacobian information (direct method with banded Jacobian)
+    int band_jac_callback(int n, int mupper, int mlower, realtype t, N_Vector y, N_Vector fy,
+                DlsMat Jac, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+
+    // Jacobian information (matrix-vector product)
+    int spils_jac_times_vec_callback(N_Vector v, N_Vector Jv, realtype t, N_Vector y,
+                N_Vector fy, void *user_data, N_Vector tmp);
+
+    // Preconditioning (linear system solution)
+    int spils_prec_solve_callback(realtype t, N_Vector y, N_Vector fy, N_Vector r, N_Vector z,
+                realtype gamma, realtype delta, int lr, void *user_data, N_Vector tmp);
+
+    // Preconditioning (Jacobian data)
+    int spils_prec_setup_callback(realtype t, N_Vector y, N_Vector fy, booleantype jok, booleantype *jcurPtr,
+                realtype gamma, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
 
     boost::thread_specific_ptr<std::string> error_handler::cvode_error;
 
@@ -166,7 +189,19 @@ namespace finmag { namespace sundials {
 
         scope().attr("CV_ADAMS") = int(CV_ADAMS);
         scope().attr("CV_BDF") = int(CV_BDF);
-        scope().attr("CV_NEWTON") = int(CV_NEWTON);
+
         scope().attr("CV_FUNCTIONAL") = int(CV_FUNCTIONAL);
+        scope().attr("CV_NEWTON") = int(CV_NEWTON);
+
+        scope().attr("CV_NORMAL") = int(CV_NORMAL);
+        scope().attr("CV_ONE_STEP") = int(CV_ONE_STEP);
+
+        scope().attr("PREC_NONE") = int(PREC_NONE);
+        scope().attr("PREC_LEFT") = int(PREC_LEFT);
+        scope().attr("PREC_RIGHT") = int(PREC_RIGHT);
+        scope().attr("PREC_BOTH") = int(PREC_BOTH);
+
+        scope().attr("MODIFIED_GS") = int(MODIFIED_GS);
+        scope().attr("CLASSICAL_GS") = int(CLASSICAL_GS);
     }
 }}
