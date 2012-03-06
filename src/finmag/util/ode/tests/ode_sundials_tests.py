@@ -34,7 +34,7 @@ class OdeSundialsTests(unittest.TestCase):
         ref_ys = np.array([reference(t)  for t in ts])
         assert np.max(np.abs(ys - ref_ys)) < 1e-6
 
-    def test_simple_1d(self):
+    def atest_simple_1d(self):
         def rhs(t, y, ydot):
             ydot[:] = 0.5 * y
             return 0
