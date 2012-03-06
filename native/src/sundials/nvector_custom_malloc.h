@@ -15,7 +15,14 @@
 extern "C" {
 #endif
 
-extern void set_nvector_custom_data_malloc(void * (*malloc_func)(size_t len, size_t el_size),  void (*free_func)(void *));
+#include <nvector/nvector_serial.h>
+
+extern void set_nvector_custom_allocators(
+            void * (*data_malloc_func)(size_t, size_t),
+            void (*data_free_func)(void *),
+            N_VectorContent_Serial (*nvec_malloc_func)(),
+            void (*nvec_free_func)(N_VectorContent_Serial)
+        );
 
 #ifdef __cplusplus
 }
