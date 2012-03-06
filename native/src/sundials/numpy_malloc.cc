@@ -108,6 +108,12 @@ namespace finmag { namespace sundials {
         bp::handle<> handle(payload->arr);
     }
 
+    extern "C" N_VectorContent_Serial numpy_nvec_malloc() {
+        return 0;
+    }
+
+    extern "C" void numpy_nvec_free(N_VectorContent_Serial vec) { free(vec); }
+
     array_nvector::array_nvector(const np_array<double> &arr): vec(0), arr(arr) {
         // Create an N_Vector using data as storage
         vec = N_VMake_Serial(arr.size(), arr.data());
@@ -132,7 +138,7 @@ namespace finmag { namespace sundials {
     }
 
     void register_numpy_malloc() {
-        set_nvector_custom_data_malloc(numpy_malloc, numpy_free);
+        set_nvector_custom_allocators(numpy_malloc, numpy_free, numpy_nvec_malloc, numpy_nvec_free);
 
         bp::class_<malloc_release>("_malloc_release", bp::init<>());
     }
