@@ -14,8 +14,8 @@ Happ = interpolate(Constant((5e3, 0, 0)), V)
 
 # Initial magnetisation
 m0_tuple = (("1",
-             "5 * pow(cos(pi * (x[0] * pow(10, 9) - 11) / 6), 3) \
-                * pow(cos(pi * x[1] * pow(10, 9) / 6), 3)",
+             "5 * pow(cos(pi * (x[0] * pow(10, 9) - 11) / 6.), 3) \
+                * pow(cos(pi * x[1] * pow(10, 9) / 6.), 3)",
              "0"))
 M = interpolate(Expression(m0_tuple), V)
 
