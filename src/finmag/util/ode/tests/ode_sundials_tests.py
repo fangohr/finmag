@@ -36,17 +36,28 @@ class OdeSundialsTests(unittest.TestCase):
 
     def test_simple_1d(self):
         integrator = sundials.cvode(sundials.CV_ADAMS, sundials.CV_FUNCTIONAL)
+        self.init_simple_test(integrator)
         self.run_simple_test(integrator)
         integrator = sundials.cvode(sundials.CV_BDF, sundials.CV_FUNCTIONAL)
+        self.init_simple_test(integrator)
         self.run_simple_test(integrator)
 
-    def run_simple_test(self, integrator):
+    def test_simple_1d_diag(self):
+        integrator = sundials.cvode(sundials.CV_BDF, sundials.CV_NEWTON)
+        self.init_simple_test(integrator)
+        integrator.set_linear_solver_diag()
+        self.run_simple_test(integrator)
+
+    def init_simple_test(self, integrator):
         def rhs(t, y, ydot):
             ydot[:] = 0.5 * y
             return 0
 
         integrator.init(rhs, 0, np.array([1.]))
         integrator.set_scalar_tolerances(1e-9, 1e-9)
+
+    def run_simple_test(self, integrator):
+
         reference = lambda t: [math.exp(0.5 * t)]
         yout = np.zeros(1)
         ts = np.linspace(0.001, 3, 100)
