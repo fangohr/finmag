@@ -480,7 +480,15 @@ namespace finmag { namespace sundials {
             bp::object ydot_arr = nvector_to_array_object(ydot);
 
             // TODO: catch exceptions here
-            return bp::call<int>(cv->rhs_fn.ptr(), t, y_arr, ydot_arr);
+            bp::object res_obj = cv->rhs_fn(t, y_arr, ydot_arr);
+            bp::extract<int> res(res_obj);
+            if (res.check()) {
+                return res();
+            } else {
+                // Callback did not return an integer
+                error_handler::set_error("Error in CVODE: User-supplied Python right-hand-side function must return an integer to indicate outcome of operation");
+                return -1;
+            }
         }
 
         // Jacobian information (direct method with dense Jacobian)
@@ -621,7 +629,15 @@ namespace finmag { namespace sundials {
     }
 
     void error_handler::set_error(const char *msg) {
-        cvode_error.reset(new std::string(msg));
+        std::auto_ptr<std::string> old_msg(cvode_error.release());
+        if (!old_msg.get()) {
+            // set new error message
+            cvode_error.reset(new std::string(msg));
+        } else {
+            // Append to existing error message
+            std::auto_ptr<std::string> new_msg(new std::string(*old_msg + "\n" + msg));
+            cvode_error.reset(new_msg.release());
+        }
     }
 
     void cvode::init(const bp::object &f, double t0, const np_array<double>& y0) {
@@ -678,7 +694,7 @@ namespace finmag { namespace sundials {
     void register_sundials_cvode() {
         using namespace bp;
 
-        class_<cvode> cv("sundials_cvode", init<int, int>(args("lmm", "iter")));
+        class_<cvode> cv("cvode", init<int, int>(args("lmm", "iter")));
 
         // initialisation functions
         cv.def("init", &cvode::init, (arg("f"), arg("t0"), arg("y0")));
