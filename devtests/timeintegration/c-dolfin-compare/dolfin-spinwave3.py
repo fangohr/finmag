@@ -25,11 +25,6 @@ def m_average(y, V, vol):
     mz = assemble(dot(m, Constant([0,0,1])) * dx)
     return np.array([mx, my, mz]) / vol
 
-def dolfinsolve(A, dm, L):
-    b = assemble(L)
-    solve(A, dm.vector(), b)
-    return 0, dm.vector().array()
-
 x0 = 0; x1 = 15e-9; nx = 30;
 y0 = -4.5e-9; y1 = 4.5e-9; ny = 18;
 z0 = -0.1e-9; z1 = 0.1e-9; nz = 1;
