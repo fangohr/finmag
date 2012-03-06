@@ -12,6 +12,7 @@ src/**.so
 *.pdf
 *.vtu
 *.pvd
+*.swp
 
 test-reports
 native/**.bin
