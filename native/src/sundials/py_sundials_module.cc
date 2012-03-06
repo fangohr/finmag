@@ -19,4 +19,5 @@ BOOST_PYTHON_MODULE(sundials)
     initialise_np_array();
 
     finmag::sundials::register_sundials_cvode();
+    finmag::sundials::register_numpy_malloc();
 }
