@@ -16,7 +16,8 @@
 
 namespace finmag { namespace sundials {
     namespace {
-        static const unsigned long MAGIC = 0x12345678AABBCCDDul;
+        static const unsigned long DATA_MAGIC = 0xF6833C73196E621Cul;
+        static const unsigned long NVEC_MAGIC = 0x24A3D2A040B0D56Ful;
 
         struct malloc_payload {
             PyObject *arr;
@@ -45,12 +46,28 @@ namespace finmag { namespace sundials {
             void *mem = ((char*) ptr) - 16;
             // Check the payload
             malloc_payload *payload = (malloc_payload *) mem;
-            if (payload->magic != MAGIC) {
+            if (payload->magic != DATA_MAGIC) {
                 // Abort execution rather than throw an exception
-                fprintf(stderr, "Abort: get_malloc_payload: ptr was not allocated by numpy_malloc");
+                fprintf(stderr, "Abort: get_malloc_payload: ptr was not allocated by numpy_malloc\n");
                 abort();
             }
             return payload->arr;
+        }
+
+        struct nvector_extended_content {
+            _N_VectorContent_Serial content;
+            unsigned long magic;
+            PyObject *array_data;
+        };
+
+        PyObject *& get_nvec_array_data(N_VectorContent_Serial vec) {
+            nvector_extended_content *c = (nvector_extended_content*) vec;
+            if (c->magic != NVEC_MAGIC) {
+                // Abort execution rather than throw an exception
+                fprintf(stderr, "Abort: get_nvec_array_data: pointer was not allocated by numpy_nvec_malloc\n");
+                abort();
+            }
+            return c->array_data;
         }
     }
 
@@ -82,7 +99,7 @@ namespace finmag { namespace sundials {
 
         // set up the payload
         payload->arr = arr;
-        payload->magic = MAGIC;
+        payload->magic = DATA_MAGIC;
 
         // return the array data
         return array_data;
@@ -95,9 +112,9 @@ namespace finmag { namespace sundials {
         void *mem = ((char*)ptr) - 16;
         // Check the payload
         malloc_payload *payload = (malloc_payload *) mem;
-        if (payload->magic != MAGIC) {
+        if (payload->magic != DATA_MAGIC) {
             // Abort execution rather than throw an exception
-            fprintf(stderr, "Abort: numpy_free: ptr was not allocated by numpy_malloc");
+            fprintf(stderr, "Abort: numpy_free: ptr was not allocated by numpy_malloc\n");
             abort();
         }
 
@@ -109,24 +126,54 @@ namespace finmag { namespace sundials {
     }
 
     extern "C" N_VectorContent_Serial numpy_nvec_malloc() {
-        return 0;
+        // allocate memory
+        nvector_extended_content *c = (nvector_extended_content*) malloc(sizeof(nvector_extended_content));
+        if (!c) return 0;
+        // fill out magic and zero out numpy array pointer
+        c->magic = NVEC_MAGIC;
+        c->array_data = 0;
+        // the allocated memory pointer must be the same as the contents (c->content) since it's the first field
+        ASSERT((void*)c == (void*)&c->content);
+        return &c->content;
     }
 
-    extern "C" void numpy_nvec_free(N_VectorContent_Serial vec) { free(vec); }
+    extern "C" void numpy_nvec_free(N_VectorContent_Serial vec) {
+        nvector_extended_content *c = (nvector_extended_content*) vec;
+        if (c->magic != NVEC_MAGIC) {
+            // Abort execution rather than throw an exception
+            fprintf(stderr, "Abort: numpy_nvec_free: ptr was not allocated by numpy_nvec_malloc\n");
+            abort();
+        }
+        free(vec);
+    }
 
     array_nvector::array_nvector(const np_array<double> &arr): vec(0), arr(arr) {
         // Create an N_Vector using data as storage
         vec = N_VMake_Serial(arr.size(), arr.data());
         if (!vec) throw std::runtime_error("N_VMake_Serial returned NULL");
+        // fill in the pointer to the original numpy for this NVector
+        PyObject *&array_data = get_nvec_array_data(NV_CONTENT_S(vec));
+        array_data = arr.get_object().ptr();
     }
 
     bp::object nvector_to_array_object(N_Vector vec) {
         if (!vec) throw std::invalid_argument("nvector_to_array: vec is NULL");
-        if (NV_OWN_DATA_S(vec) == FALSE) {
-            // if own_data is false, this N_Vector was created from an nd_array
-             // Currently impossible to convert it back to an nd_array as there is no way to retrieve the array object
-            throw std::invalid_argument("nvector_to_array: vec is an N_Vector created from a numpy array - cannot convert back");
+        // First, check if the array_data is filled in
+        PyObject *&array_data = get_nvec_array_data(NV_CONTENT_S(vec));
+        if (array_data) {
+            // array_data is set, use the pointer
+            // for safety, check that the data pointer in the numpy array is the same as in the NVector
+            ASSERT((void*) PyArray_BYTES(array_data) == (void*) NV_DATA_S(vec));
+            return bp::object(bp::handle<>(bp::borrowed(array_data)));
         }
+
+        // if array_data is not set but NV_OWN_DATA_S is false, then we cannot retrieve the original pointer (if any!)
+        if (NV_OWN_DATA_S(vec) == FALSE) {
+            throw std::invalid_argument("nvector_to_array: NVector was not created from a numpy array but has OWN_DATA=false, cannot convert");
+        }
+
+        // Beyond this point, we should be able to retrieve the original pointer unless the data pointer has been tampered with
+        // (someone has assigned to NV_DATA_S(vec) directly, or called N_VSetArrayPointer_Serial)
 
          // Retrieve the original pointer
          PyObject *data = (PyObject *) get_malloc_payload(NV_DATA_S(vec));
