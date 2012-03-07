@@ -7,7 +7,7 @@ __project__ = "Finmag"
 __organisation__ = "University of Southampton"
 
 from dolfin import *
-from prob_testcases import *
+from prob_trunc_testcases import *
 import math
 
 #Global Tolerance for inexact comparisons in percent
