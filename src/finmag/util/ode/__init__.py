@@ -10,4 +10,4 @@ import finmag.native.sundials as native_ode
 
 class cvode(object):
     def __init__(self, f):
-        native_ode.sundials_cvode(native_ode.CV_ADAMS, native_ode.CV_FUNCTIONAL)
+        native_ode.cvode(native_ode.CV_ADAMS, native_ode.CV_FUNCTIONAL)

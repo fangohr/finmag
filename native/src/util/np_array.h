@@ -80,6 +80,7 @@ public:
     npy_intp* strides() const { return array()->strides; }
 
     bp::object get_object() { return obj; }
+    bp::object get_object() const { return obj; }
 
     bool is_none() const { return obj.is_none(); }
 
