@@ -1,6 +1,6 @@
 #Test the dofinder module
 from doffinder import bounddofs
-from prob_testcases import *
+from prob_trunc_testcases import *
 
 
 def test_doffinder1d():

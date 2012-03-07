@@ -6,7 +6,7 @@ __project__ = "Finmag"
 __organisation__ = "University of Southampton"
 
 from dolfin import *
-from prob_testcases import *
+import prob_trunc_testcases as pttc
 import solver_nitsche as sn
 import solver_base as sb
 
@@ -19,9 +19,9 @@ TOL = 1.0 #Fixme This is a bad tolerance, maybe the nitsche solver can be made m
 class TestNischeSolver(object):
     #Wierd that we cannot use __init__
     def setup_class(self):
-        self.problem1d = MagUnitInterval()
-        self.problem2d = MagUnitCircle()
-        self.problem3d = MagUnitSphere()
+        self.problem1d = pttc.MagUnitInterval()
+        self.problem2d = pttc.MagUnitCircle()
+        self.problem3d = pttc.MagUnitSphere()
 
         self.solver1d = sn.NitscheSolver(self.problem1d)
         self.solver2d = sn.NitscheSolver(self.problem2d)

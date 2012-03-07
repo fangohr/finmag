@@ -11,7 +11,10 @@ __organisation__ = "University of Southampton"
 from dolfin import *
 import numpy as np
 
-class FKSolver(object):
+def compute_phi1(problem,point):
+    """Get phi1 defined over the coremesh of the problem"""
+
+class FKSolverTrunc(TruncDeMagSolver):
     def __init__(self,problem, degree = 1):
         self.problem = problem
         self.degree = degree
