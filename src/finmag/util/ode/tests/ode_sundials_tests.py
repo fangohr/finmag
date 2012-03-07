@@ -57,7 +57,6 @@ class OdeSundialsTests(unittest.TestCase):
         integrator.set_scalar_tolerances(1e-9, 1e-9)
 
     def run_simple_test(self, integrator):
-
         reference = lambda t: [math.exp(0.5 * t)]
         yout = np.zeros(1)
         ts = np.linspace(0.001, 3, 100)
@@ -67,6 +66,15 @@ class OdeSundialsTests(unittest.TestCase):
             ys[i] = yout.copy()
         ref_ys = np.array([reference(t)  for t in ts])
         assert np.max(np.abs(ys - ref_ys)) < 1e-6
+
+    def test_stiff_sp_gmr(self):
+        integrator = sundials.cvode(sundials.CV_BDF, sundials.CV_NEWTON)
+        self.init_simple_test(integrator)
+        def jtimes(v, Jv, t, y, fy, tmp):
+            return 0
+        integrator.set_linear_solver_sp_gmr(sundials.PREC_NONE)
+        integrator.set_splis_jac_times_vec_fn(jtimes)
+        self.run_simple_test(integrator)
 
 if __name__ == '__main__':
     unittest.main()
