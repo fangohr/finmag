@@ -12,7 +12,7 @@ import math
 
 #Global Tolerance for inexact comparisons in percent
 TOL = 0.01
-class TestMeshSetup(object):
+class TestTruncMeshSetup(object):
     def test_1d(self):
         problem = MagUnitInterval()
         self.problem_tests(problem)

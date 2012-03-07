@@ -1,7 +1,7 @@
-"A Solver for the demagnetization field using the Fredkin Koehler approach" 
+"Solvers for the demagnetization field using the Fredkin-Koehler approach" 
 #This solver does not work yet. The Neumann problem needs to be specified
 #somehow. The current solution of fixing a boundary point creates an incorrect
-#solution
+#solution.
 
 __author__ = "Gabriel Balaban"
 __copyright__ = __author__
@@ -9,12 +9,57 @@ __project__ = "Finmag"
 __organisation__ = "University of Southampton"
 
 from dolfin import *
+import solver_base as sb
 import numpy as np
 
-def compute_phi1(problem,point):
-    """Get phi1 defined over the coremesh of the problem"""
+class FKSolver(sb.DeMagSolver):
+    """Class containing methods shared by FK solvers"""
+    
+    def compute_phi1(M,V):
+        """
+        Get phi1 defined over the mesh with the point given the value 0.
+        phi1 is the solution to the inhomogeneous Neumann problem.
+        M is the magnetisation field.
+        V is a FunctionSpace
+        """
+        #Define functions
+        u = TrialFunction(V)
+        v = TestFunction(V)
+        phi1 = Function(V)
+        
+        #Define forms
+        a = dot(grad(u),grad(v))*dx
+        f = (div(M)*v)*dx  #Source term
+        f += (dot(M,N)*v)*ds #Neumann Condition
 
-class FKSolverTrunc(TruncDeMagSolver):
+        A = assemble(a)
+        F = assemble(f)
+
+        #Specify a the problem by changing a nonboundary DOF to 0.
+        nonbounddof = self.nonboundarydof(V)
+
+        #Specify the nonbounddof in A and F.
+        F[nonbounddof] = 0.0
+        #The dolfin Matrix class needs a very special input for ident
+        arr = array([nonbounddof],dtype = I,order = "C")
+        A.ident(arr)
+
+        #Solve for the DOFs in phi1
+        solve(A,phi1.vector(),F)
+        return phi1
+    
+    def nonboundarydof(functionspace):
+        """Return a DOF not on the boundary of the mesh"""
+        
+        dummyBC = DirichletBC(functionSpace,0,"on_boundary")
+        dofs = dummyBC.get_boundary_values()
+        #Search for a DOF not in the BC
+        for i in range(functionspace.dim()):
+            if i not in dofs:
+                return i
+            
+class FKSolverTrunc(sb.TruncDeMagSolver,FKSolver):
+    """FK Solver using domain truncation"""
     def __init__(self,problem, degree = 1):
         self.problem = problem
         self.degree = degree

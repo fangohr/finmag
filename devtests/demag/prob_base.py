@@ -11,10 +11,12 @@ from interiorboundary import InteriorBoundary
 
 class DeMagProblem(object):
     """Base class for all demag problems"""
-    def __init__(self,mesh):
+    def __init__(self,mesh,M):
         self.mesh = mesh
+        self.M = M
 
 class TruncDeMagProblem(DeMagProblem):
+    """Base class for demag problems with truncated domains"""
     def __init__(self,mesh,subdomain,M):
         """
         - mesh is the problem mesh
@@ -26,9 +28,8 @@ class TruncDeMagProblem(DeMagProblem):
         """
         
         #(Currently M is constant)
-        super(TruncDeMagProblem,self).__init__(mesh)
+        super(TruncDeMagProblem,self).__init__(mesh,M)
         self.subdomain = subdomain
-        self.M = M
         self.calculate_subsandbounds()
 
     def calculate_subsandbounds(self):
@@ -66,3 +67,10 @@ class TruncDeMagProblem(DeMagProblem):
         self.mesh = refine(self.mesh, cell_markers)
         #Regenerate Subdomains and boundaries
         self.calculate_subsandbounds()
+
+class FemBemDeMagProblem(DeMagProblem):
+    """Base class for FEMBEM demag problems"""
+    def __init__(self):
+        super(FEMBEMProblem,self).__init__(mesh,M)
+    
+    

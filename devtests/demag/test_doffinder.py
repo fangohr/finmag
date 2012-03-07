@@ -2,7 +2,6 @@
 from doffinder import bounddofs
 from prob_trunc_testcases import *
 
-
 def test_doffinder1d():
     problem = MagUnitInterval()
     degree = 1
