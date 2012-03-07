@@ -9,9 +9,6 @@ V = VectorFunctionSpace(mesh, 'CG', 1)
 alpha = 0.02
 gamma = 2.210173e5 # m/(As)
 
-# Applied field
-Happ = interpolate(Constant((5e3, 0, 0)), V)
-
 # Initial magnetisation
 m0_tuple = (("1",
              "5 * pow(cos(pi * (x[0] * pow(10, 9) - 11) / 6.), 3) \
@@ -23,16 +20,11 @@ M = interpolate(Expression(m0_tuple), V)
 Eex = inner(grad(M), grad(M))*dx
 Hex = derivative(Eex, M)
 
-# Effective field (sum of applied and exchange field)
-# TODO: Figure out a way to add these without using the scheme
-
-# Heff = Function(V)
-# Heff.vector()[:] = Happ.vector() + assemble(Hex)
-
-# because then we (probably) loose the information that Heff depends on M,
+# TODO: Figure out a way to do this without using this scheme
+H = Function(V)
+H.vector()[:] = assemble(Hex)
+# because then we (probably) loose the information that H depends on M,
 # which is useful later when computing the jacobian.
-# The following line fails because Hex is a ufl.form.Form
-Heff = Hex + Happ
 
 # LLG equation
 p = gamma / (1 + alpha*alpha)
@@ -40,9 +32,10 @@ q = alpha * p
 u = TrialFunction(V)
 v = TestFunction(V)
 
+# L should contain Hex instead of the "manually" assigned H, but this fails.
 a = inner(u, v)*dx
-L = inner(-p * cross(M, Heff)
-          -q * cross(M, cross(M, Heff)), v) * dx
+L = inner(-p * cross(M, H)
+          -q * cross(M, cross(M, H)), v) * dx
 
 # Jacobian 
 J = derivative(L, M)
