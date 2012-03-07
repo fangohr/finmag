@@ -35,6 +35,23 @@ BOOST_AUTO_TEST_CASE(test_array_to_nvector)
     BOOST_CHECK_EQUAL(NV_Ith_S(nvec.ptr(), 0), 3.14);
 }
 
+BOOST_AUTO_TEST_CASE(test_array_to_nvector_and_back)
+{
+    np_array<double> arr(N);
+    finmag::sundials::array_nvector nvec(arr);
+    // assign to numpy array
+    arr.data()[0] = 3.14;
+    // check NVector data
+    BOOST_CHECK_EQUAL(NV_Ith_S(nvec.ptr(), 0), 3.14);
+    // convert NVector back to numpy array
+    np_array<double> arr2 = finmag::sundials::nvector_to_array(nvec.ptr());
+    // assign to new array
+    arr2.data()[0] = 6.28;
+    // check old array data
+    BOOST_CHECK_EQUAL(arr.data()[0], 6.28);
+}
+
+
 BOOST_AUTO_TEST_CASE(test_nvector_to_array)
 {
     N_Vector vec = N_VNew_Serial(N);

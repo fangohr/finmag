@@ -15,17 +15,25 @@
 
 #include "../nvector_custom_malloc.h"
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 static void * (*nvector_custom_data_malloc)(size_t len, size_t el_size);
 static void (*nvector_custom_data_free)(void *ptr);
+static N_VectorContent_Serial (*nvector_custom_nvec_malloc)();
+static void (*nvector_custom_nvec_free)(N_VectorContent_Serial ptr);
 
-void set_nvector_custom_data_malloc(void * (*malloc_func)(size_t, size_t),  void (*free_func)(void *)) {
-    nvector_custom_data_malloc = malloc_func;
-    nvector_custom_data_free = free_func;
+void set_nvector_custom_allocators(
+            void * (*data_malloc_func)(size_t, size_t),
+            void (*data_free_func)(void *),
+            N_VectorContent_Serial (*nvec_malloc_func)(),
+            void (*nvec_free_func)(N_VectorContent_Serial)
+        ) {
+    nvector_custom_data_malloc = data_malloc_func;
+    nvector_custom_data_free = data_free_func;
+    nvector_custom_nvec_malloc = nvec_malloc_func;
+    nvector_custom_nvec_free = nvec_free_func;
 }
 
 #ifdef __cplusplus

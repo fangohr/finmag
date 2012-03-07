@@ -480,7 +480,15 @@ namespace finmag { namespace sundials {
             bp::object ydot_arr = nvector_to_array_object(ydot);
 
             // TODO: catch exceptions here
-            return bp::call<int>(cv->rhs_fn.ptr(), t, y_arr, ydot_arr);
+            bp::object res_obj = cv->rhs_fn(t, y_arr, ydot_arr);
+            bp::extract<int> res(res_obj);
+            if (res.check()) {
+                return res();
+            } else {
+                // Callback did not return an integer
+                error_handler::set_error("Error in r.h.s. callback: User-supplied Python right-hand-side function must return an integer to indicate outcome of operation");
+                return -1;
+            }
         }
 
         // Jacobian information (direct method with dense Jacobian)
@@ -517,7 +525,16 @@ namespace finmag { namespace sundials {
             bp::object tmp_arr = nvector_to_array_object(tmp);
 
             // TODO: catch exceptions here
-            return bp::call<int>(cv->spils_jac_times_vec_fn.ptr(), v_arr, Jv_arr, t, y_arr, fy_arr, tmp_arr);
+            bp::object res_obj = cv->spils_jac_times_vec_fn(v_arr, Jv_arr, t, y_arr, fy_arr, tmp_arr);
+
+            bp::extract<int> res(res_obj);
+            if (res.check()) {
+                return res();
+            } else {
+                // Callback did not return an integer
+                error_handler::set_error("Error in Jacobean-times-vector callback: User-supplied Python Jacobean-times-vector function must return an integer to indicate outcome of operation");
+                return -1;
+            }
         }
 
         // Preconditioning (linear system solution)
@@ -572,12 +589,13 @@ namespace finmag { namespace sundials {
         std::string error_code_str;
         if (strcmp(module, "CVODE") == 0) {
             error_code_str = cvode::get_return_flag_name(error_code);
+        } else if (strcmp(module, "CVSPGMR") == 0) {
+            error_code_str = cvode::get_spils_return_flag_name(error_code);
         } else {
             error_code_str = boost::lexical_cast<std::string>(error_code);
         }
 
         snprintf(buf, 1023, "Error in %s:%s (%s): %s", module, function, error_code_str.c_str(), msg);
-        fprintf(stderr, "%s\n", buf);
 
         error_handler::set_error(buf);
     }
@@ -621,7 +639,15 @@ namespace finmag { namespace sundials {
     }
 
     void error_handler::set_error(const char *msg) {
-        cvode_error.reset(new std::string(msg));
+        std::auto_ptr<std::string> old_msg(cvode_error.release());
+        if (!old_msg.get()) {
+            // set new error message
+            cvode_error.reset(new std::string(msg));
+        } else {
+            // Append to existing error message
+            std::auto_ptr<std::string> new_msg(new std::string(*old_msg + "\n" + msg));
+            cvode_error.reset(new_msg.release());
+        }
     }
 
     void cvode::init(const bp::object &f, double t0, const np_array<double>& y0) {
@@ -675,10 +701,23 @@ namespace finmag { namespace sundials {
         }
     }
 
+    std::string cvode::get_spils_return_flag_name(int flag) {
+        switch (flag) {
+        case CVSPILS_SUCCESS: return "CVSPILS_SUCCESS";
+        case CVSPILS_MEM_NULL: return "CVSPILS_MEM_NULL";
+        case CVSPILS_LMEM_NULL: return "CVSPILS_LMEM_NULL";
+        case CVSPILS_ILL_INPUT: return "CVSPILS_ILL_INPUT";
+        case CVSPILS_MEM_FAIL: return "CVSPILS_MEM_FAIL";
+        case CVSPILS_PMEM_NULL: return "CVSPILS_PMEM_NULL";
+        default: return boost::lexical_cast<std::string>(flag);
+        }
+    }
+
+
     void register_sundials_cvode() {
         using namespace bp;
 
-        class_<cvode> cv("sundials_cvode", init<int, int>(args("lmm", "iter")));
+        class_<cvode> cv("cvode", init<int, int>(args("lmm", "iter")));
 
         // initialisation functions
         cv.def("init", &cvode::init, (arg("f"), arg("t0"), arg("y0")));
@@ -689,9 +728,9 @@ namespace finmag { namespace sundials {
         cv.def("set_linear_solver_band", &cvode::set_linear_solver_band, (arg("n"), arg("mupper"), arg("mlower")));
         cv.def("set_linear_solver_lapack_band", &cvode::set_linear_solver_lapack_band, (arg("n"), arg("mupper"), arg("mlower")));
         cv.def("set_linear_solver_diag", &cvode::set_linear_solver_diag);
-        cv.def("set_linear_solver_sp_gmr", &cvode::set_linear_solver_sp_gmr, (arg("pretype"), arg("maxl")));
-        cv.def("set_linear_solver_sp_bcg", &cvode::set_linear_solver_sp_bcg, (arg("pretype"), arg("maxl")));
-        cv.def("set_linear_solver_sp_tfqmr", &cvode::set_linear_solver_sp_tfqmr, (arg("pretype"), arg("maxl")));
+        cv.def("set_linear_solver_sp_gmr", &cvode::set_linear_solver_sp_gmr, (arg("pretype"), arg("maxl")=0));
+        cv.def("set_linear_solver_sp_bcg", &cvode::set_linear_solver_sp_bcg, (arg("pretype"), arg("maxl")=0));
+        cv.def("set_linear_solver_sp_tfqmr", &cvode::set_linear_solver_sp_tfqmr, (arg("pretype"), arg("maxl")=0));
         // solver functions
         cv.def("advance_time", &cvode::advance_time, (arg("tout"), arg("yout"), arg("itask")=CV_NORMAL));
         // main solver optional input functions

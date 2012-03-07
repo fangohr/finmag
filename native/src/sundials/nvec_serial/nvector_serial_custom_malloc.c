@@ -108,7 +108,7 @@ N_Vector N_VNewEmpty_Serial(long int length)
 
   /* Create content */
   content = NULL;
-  content = (N_VectorContent_Serial) malloc(sizeof(struct _N_VectorContent_Serial));
+  content = nvector_custom_nvec_malloc();
   if (content == NULL) { free(ops); free(v); return(NULL); }
 
   content->length   = length;
@@ -322,7 +322,7 @@ N_Vector N_VCloneEmpty_Serial(N_Vector w)
 
   /* Create content */
   content = NULL;
-  content = (N_VectorContent_Serial) malloc(sizeof(struct _N_VectorContent_Serial));
+  content = nvector_custom_nvec_malloc();
   if (content == NULL) { free(ops); free(v); return(NULL); }
 
   content->length   = NV_LENGTH_S(w);
@@ -371,7 +371,7 @@ void N_VDestroy_Serial(N_Vector v)
     nvector_custom_data_free(NV_DATA_S(v));
     NV_DATA_S(v) = NULL;
   }
-  free(v->content); v->content = NULL;
+  nvector_custom_nvec_free(v->content); v->content = NULL;
   free(v->ops); v->ops = NULL;
   free(v); v = NULL;
 
