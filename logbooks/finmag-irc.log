@@ -291,3 +291,30 @@ fangohr: Still testing ...
 2012-03-05 16:41:06 maxim__: the uk layout is confusing me. had troubles with password because of exchanged y and z ;)
 2012-03-05 17:10:20 fangohr: Hi Maxim, am about to leave. I see you tomorrow around 11;00 or so. Have a nice evening.
 2012-03-05 17:18:39 maxim__: Thanks, you too.
+2012-03-06 09:06:59 fangohr: Good Morning, Anders.
+2012-03-06 09:07:07 andersej: Morning, Hans!
+2012-03-06 09:20:59 fangohr: Morning Anders, are the 'project vs interpolate' results to spectacular that we should file a query on the dolfin team list?
+2012-03-06 09:27:20 andersej: Perhaps. I've sent a mail to Anders Logg showing the results and asked why project acts as it does. Either he has a good explanation or he encourages us to file it as a bug. I'll just wait until he wakes up, hehe..
+2012-03-06 09:27:40 fangohr: Sure, thanks. Let me know the answer :)
+2012-03-06 11:51:12 fangohr: Hi Sebastian, good to see you :)
+2012-03-06 11:51:28 SebastianS: hey, jep just managed to set up IRC
+2012-03-06 11:51:43 fangohr: I need to make a few phone calls but would hope we can go for lunch around 12:30 maybe?
+2012-03-06 11:52:07 SebastianS: sounds good. I have one quick questions though:
+2012-03-06 11:52:27 SebastianS: could you invite me again to the dropbox folder? that didn't seem to work
+2012-03-06 11:52:47 SebastianS: it's sebastian.schwieger@uni-konstanz.de
+2012-03-06 11:54:04 fangohr: Yes, sorry, had a typo in the email address.
+2012-03-06 11:54:38 SebastianS: no worries! just got the invite. Thanks a lot
+2012-03-06 11:54:49 andersej: 12:30 sounds good!
+2012-03-06 12:27:25 andersej: We are leaving for lunch now. We meet up outside my office (next to the exit).
+2012-03-06 12:28:11 andersej: 2025 is the number..
+2012-03-06 12:31:35 fangohr: Maxim, Sebastian, we can't find you anywhere -- I presume you have gone to the staff club already, so we meet you there.
+2012-03-06 13:02:52 maxims: Nilson (or Nelson) asked me whether I go with him for lunch. But then I realized that we were not going to eat in staff club but buy food in this student shop instead. Sebastian is picking up his id card. I hope you met him on your way. Otherwise I can show some where he can have lunch.
+2012-03-06 14:12:20 fangohr: Sebastian -- what is your login?
+2012-03-06 14:17:46 fangohr: Got it: ss18g11 (thanks).
+2012-03-06 14:20:25 fangohr: I created an account for you on eta.kk.soton.ac.uk. Password is 'konstanz', please change asap. You connect using 'ssh ss18g11@eta.kk.soton.ac.uk'.
+2012-03-06 14:22:34 SebastianS: oh sorry! i didn't have the sound on and completely forgot to check here.
+2012-03-06 14:22:40 SebastianS: thanks a lot!
+2012-03-06 14:24:47 fangohr: Hi all, I'll be teaching and offline for the rest of the day.
+2012-03-06 14:36:31 SebastianS: clear
+2012-03-06 14:36:53 SebastianS: uups... that was supposed to go in terminal
+2012-03-06 14:36:58 SebastianS: sorry for that
