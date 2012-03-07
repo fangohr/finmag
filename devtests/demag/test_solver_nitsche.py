@@ -8,6 +8,7 @@ __organisation__ = "University of Southampton"
 from dolfin import *
 from prob_testcases import *
 import solver_nitsche as sn
+import solver_base as sb
 
 #This suite tests the solutions for the demag scalar potential function from the Nitsche Solver.
 #Global Tolerance for closeness to 0.
@@ -66,7 +67,7 @@ class TestNischeSolver(object):
         l2form = dot(self.solver3d.Hdemag_core - soltrue,self.solver3d.Hdemag_core - soltrue)*dx
         L2error = sqrt(assemble(l2form))
         return L2error
-    
+    ##FIXME convergence FAILS!
 ##    def test_convergance_3d(self):
 ##        """The FEM solution should converge to the analytical solution as the mesh is refined"""
 ##        NUM_REFINEMENTS = 6 
@@ -190,7 +191,7 @@ class TestTruncDemagSolver(object):
         halfmesh = SubMesh(mesh,meshfunc,1)
 
         #Class initialized with "mesh" as a problem
-        solver = sn.TruncDeMagSolver(mesh)
+        solver = sb.TruncDeMagSolver(mesh)
 
         #Get the restricted function
         uhalf = solver.restrictfunc(u,halfmesh)
