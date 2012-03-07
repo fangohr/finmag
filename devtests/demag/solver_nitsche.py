@@ -40,14 +40,8 @@ class NitscheSolver(sb.TruncDeMagSolver):
     def solve(self):
         """Solve the demag problem and store the Solution"""
 
-        V = FunctionSpace(self.problem.mesh,"CG",self.degree)
-
-        if self.problem.mesh.topology().dim() == 1:
-            Mspace = FunctionSpace(self.problem.mesh,"DG",self.degree)
-        else:
-            Mspace = VectorFunctionSpace(self.problem.mesh,"DG",self.degree)
-        #HF: I think this should always be
-        #Mspace = VectorFunctionSpace(self.problem.mesh,"DG",self.degree,3)
+        #Get the solution Space
+        V = self.V
 
         W = MixedFunctionSpace((V,V)) # for phi0 and phi1
         u0,u1 = TestFunctions(W)
@@ -61,7 +55,7 @@ class NitscheSolver(sb.TruncDeMagSolver):
         gamma = self.problem.gamma
 
         #Define the magnetisation
-        M = interpolate(Expression(self.problem.M),Mspace)
+        M = self.M
 
         N = FacetNormal(self.problem.coremesh) #computes normals on the submesh self.problem.coremesh
         dSC = self.problem.dSC #Boundary of Core
@@ -130,12 +124,9 @@ class NitscheSolver(sb.TruncDeMagSolver):
         self.Hdemag_core = self.get_demagfield(self.phi_core)
         self.Hdemag = self.get_demagfield(phitot)
         #Store variables for outside testing
-        self.V = V
         self.phitot = phitot
         self.phi0 = phi0
         self.phi1 = phi1
         self.sol = sol
-        self.M = M
-        self.Mspace = Mspace
         self.gamma = gamma
         return phitot

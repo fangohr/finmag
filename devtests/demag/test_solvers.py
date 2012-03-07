@@ -9,6 +9,7 @@ from dolfin import *
 import prob_trunc_testcases as pttc
 import solver_nitsche as sn
 import solver_base as sb
+import prob_trunc_testcases as ptt
 
 #This suite tests the solutions for the demag scalar potential function from the Nitsche Solver.
 #Global Tolerance for closeness to 0.
@@ -185,13 +186,15 @@ class TestTruncDemagSolver(object):
         class Half(SubDomain):
             def inside(self,x,on_boundary):
                 return x[0]<0.5 + DOLFIN_EPS
+            
         meshfunc = MeshFunction("uint",mesh,2)
         meshfunc.set_all(0)
         Half().mark(meshfunc,1)
         halfmesh = SubMesh(mesh,meshfunc,1)
 
-        #Class initialized with "mesh" as a problem
-        solver = sb.TruncDeMagSolver(mesh)
+        #Class initialized with a dummy problem
+        problem = ptt.MagUnitInterval()
+        solver = sb.TruncDeMagSolver(problem)
 
         #Get the restricted function
         uhalf = solver.restrictfunc(u,halfmesh)

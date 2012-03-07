@@ -1,4 +1,4 @@
-#Standard Demagnetisation Testproblems 
+"""Standard Demagnetisation Testproblems for truncated solvers""" 
 
 __author__ = "Gabriel Balaban"
 __copyright__ = __author__
@@ -7,7 +7,6 @@ __organisation__ = "University of Southampton"
         
 from dolfin import *
 import numpy as np
-from interiorboundary import InteriorBoundary
 import prob_base as pb
 
 class MagUnitInterval(pb.TruncDeMagProblem):
@@ -18,7 +17,7 @@ class MagUnitInterval(pb.TruncDeMagProblem):
     Can later replace this with a meshfile generated with an external 
     mesher.
 
-    Once the contstructor calls the contstructor of the base class (TruncDemagProblem), we also
+    Once the constructor calls the constructor of the base class (TruncDemagProblem), we also
     have marked facets.
     """
     def __init__(self):
