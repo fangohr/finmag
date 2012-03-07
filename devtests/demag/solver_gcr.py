@@ -10,21 +10,23 @@ import solver_base as sb
 
 class GCRDeMagSolver(sb.DeMagSolver):
      """Class containing methods shared by GCR solvers"""
-     def foo(self):
-         pass
-
-class GCRFemBemSolver(GCRDeMagSolver,sb.FemBemSolver):
+     def __init__(self,problem,degree = 1):
+         super(GCRDeMagSolver,self).__init__(problem,degree)
+         #Define the two potentials
+         self.phia = Function(self.V)
+         self.phib = Function(self.V)
+         
+class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
     """FemBem solver for Demag Problems using the GCR approach"""
     
     def __init__(self,problem,degree = 1):
-        super(GCRFemBemSolver,self).__init__(problem)
+        super(GCRFemBemDeMagSolver,self).__init__(problem,degree)
     
     def solve_phia(self,method = "lu"):
         """Solve for potential phia in the magentic region using FEM"""
         #Define functions
         u = TrialFunction(self.V)
         v = TestFunction(self.V)
-        phia = Function(self.V)
 
         #Define forms
         a = dot(grad(u),grad(v))*dx
@@ -36,6 +38,12 @@ class GCRFemBemSolver(GCRDeMagSolver,sb.FemBemSolver):
         #solve for phia
         A,F = assemble(a,f)
 
-        solve(A,phia.vector(),F,method)
-        #store solution
-        self.phia = phia
+        solve(A,self.phia.vector(),F,method)
+
+if __name__ == "__main__":
+    import prob_fembem_testcases as pft
+    problem = pft.MagUnitSphere()
+    solver = GCRFemBemDeMagSolver(problem)
+    solver.solve_phia
+    plot(solver.phia, title = "PhiA from GCR Demag method")
+    interactive()

@@ -70,7 +70,7 @@ class TruncDeMagProblem(DeMagProblem):
 
 class FemBemDeMagProblem(DeMagProblem):
     """Base class for FEMBEM demag problems"""
-    def __init__(self):
-        super(FEMBEMProblem,self).__init__(mesh,M)
+    def __init__(self,mesh,M):
+        super(FemBemDeMagProblem,self).__init__(mesh,M)
     
     

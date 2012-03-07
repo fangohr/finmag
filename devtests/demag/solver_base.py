@@ -35,10 +35,10 @@ class DeMagSolver(object):
         file = File("results/"+ name + ".pvd")
         file << function
 
-class FemBemSolver(DeMagSolver):
+class FemBemDeMagSolver(DeMagSolver):
     """Base Class for FEM/BEM Demag Solvers"""
     def __init__(self,problem,degree = 1):
-            super(TruncDeMagSolver,self).__init__(problem,degree)
+            super(FemBemDeMagSolver,self).__init__(problem,degree)
 
 class TruncDeMagSolver(DeMagSolver):
     """Base Class for truncated Demag Solvers"""
