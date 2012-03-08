@@ -480,6 +480,8 @@ namespace finmag { namespace sundials {
             bp::object ydot_arr = nvector_to_array_object(ydot);
 
             // TODO: catch exceptions here
+            // The time iteration function (CVode) should not allocate memory, so an exception
+            // propagating through sundials code should not result in a memory leak. Still this might be risky
             bp::object res_obj = cv->rhs_fn(t, y_arr, ydot_arr);
             bp::extract<int> res(res_obj);
             if (res.check()) {
@@ -524,7 +526,7 @@ namespace finmag { namespace sundials {
             bp::object fy_arr = nvector_to_array_object(fy);
             bp::object tmp_arr = nvector_to_array_object(tmp);
 
-            // TODO: catch exceptions here
+            // TODO: catch exceptions here - see comment in rhs_callback
             bp::object res_obj = cv->spils_jac_times_vec_fn(v_arr, Jv_arr, t, y_arr, fy_arr, tmp_arr);
 
             bp::extract<int> res(res_obj);
@@ -550,7 +552,7 @@ namespace finmag { namespace sundials {
             bp::object z_arr = nvector_to_array_object(z);
             bp::object tmp_arr = nvector_to_array_object(tmp);
 
-            // TODO: catch exceptions here
+            // TODO: catch exceptions here - see comment in rhs_callback
             return bp::call<int>(cv->spils_prec_setup_fn.ptr(), t, y_arr, fy_arr, r_arr, z_arr, gamma, delta, lr, tmp_arr);
         }
 
@@ -567,7 +569,7 @@ namespace finmag { namespace sundials {
             bp::object tmp2_arr = nvector_to_array_object(tmp2);
             bp::object tmp3_arr = nvector_to_array_object(tmp3);
 
-            // TODO: catch exceptions here
+            // TODO: catch exceptions here - see comment in rhs_callback
             bp::object res = bp::call<bp::tuple>(cv->spils_prec_setup_fn.ptr(), t, y_arr, fy_arr, jok, gamma, tmp1, tmp2, tmp3);
             int flag = bp::extract<int>(res[0]);
             *jcurPtr = bp::extract<bool>(res[1]);
