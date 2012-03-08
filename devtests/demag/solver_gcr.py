@@ -72,7 +72,7 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
                row[i] = bigrow[key]
           print row
 ##          
-##          
+         
           
      
      
