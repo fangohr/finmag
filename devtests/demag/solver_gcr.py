@@ -50,34 +50,32 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
      def solve_phia(self,method = "lu"):
           super(GCRFemBemDeMagSolver,self).solve_phia(phia = self.phia,method = method)
           
-     def solve_bem(self):
+     def solve_phib_boundary(self):
           """Solve for phib on the boundary using BEM (row by row)"""
 
           boundarymesh = BoundaryMesh(self.problem.mesh)
-          ###Get the DofMap
-          bdofmap = self.get_boundary_dofmap()
+          #Get the boundary dofs
+          bdofs = self.get_boundary_dofs()
           for i,x in enumerate(boundarymesh.coordinates()):
-               col = self.get_bem_row(i,x,bdofmap)
+               row = self.get_bem_row(i,x,bdofs)
           #need some way to map the vertex to a dof so we can give the row a number
 
-     def get_bem_row(self,index,R,bdofmap):
+     def get_bem_row(self,index,R,bdofs):
           """Gets the row of the BEMmatrix associated with the point R"""
           print R[0],R[1],R[2]
           w = Expression("1.0/sqrt((%g - x[0])*(%g - x[0]) + (%g - x[1])*(%g - x[1])+(%g - x[2])*(%g - x[2]))"%(R[0],R[0],R[1],R[1],R[2],R[2]))
           psi = TestFunction(self.V)
           L = 1.0/(4*math.pi)*psi*w*ds
+          #bigrow contains many 0's for nonboundary dofs
           bigrow = assemble(L)
-          row = np.zeros(len(bdofmap))
-          for i,key in enumerate(bdofmap.keys()):
+          #row contains just boundary dofs
+          row = np.zeros(len(bdofs)
+          for i,key in enumerate(bdofs.keys()):
                row[i] = bigrow[key]
-          print row
-##          
-         
-          
-     
-     
+          return row
+        
 if __name__ == "__main__":
      import prob_fembem_testcases as pft
      problem = pft.MagUnitSphere()
      solver = GCRFemBemDeMagSolver(problem)
-     solver.solve_bem()
+     solver.solve_phib_boundary()
