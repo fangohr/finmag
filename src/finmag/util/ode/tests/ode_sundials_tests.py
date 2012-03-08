@@ -76,5 +76,23 @@ class OdeSundialsTests(unittest.TestCase):
         integrator.set_splis_jac_times_vec_fn(jtimes)
         self.run_simple_test(integrator)
 
+    def test_jtimes_ex(self):
+        class MyException(Exception):
+            pass
+
+        integrator = sundials.cvode(sundials.CV_BDF, sundials.CV_NEWTON)
+        self.init_simple_test(integrator)
+        def jtimes(v, Jv, t, y, fy, tmp):
+            raise MyException()
+        integrator.set_linear_solver_sp_gmr(sundials.PREC_NONE)
+        integrator.set_splis_jac_times_vec_fn(jtimes)
+        yout = np.zeros(1)
+        try:
+            integrator.advance_time(1, yout)
+            self.fail("Exception was not raised")
+            pass
+        except MyException:
+            pass
+
 if __name__ == '__main__':
     unittest.main()

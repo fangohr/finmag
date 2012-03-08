@@ -1,4 +1,4 @@
-#A Utility Module used to locate the Dofs that lie on a common boundary
+"""A Utility Module used to locate the Dofs that lie on a common boundary"""
 
 from dolfin import * 
 import numpy as np
@@ -18,7 +18,7 @@ def numdoflagelem(q,dim):
 
     """
 
-#Functions to give the dimension of lagrange elements
+#Functions to give the dimension of Lagrange elements
     if dim == 0:
         return 1
     elif dim == 1:

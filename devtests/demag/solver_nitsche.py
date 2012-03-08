@@ -10,51 +10,9 @@ __organisation__ = "University of Southampton"
 from dolfin import *
 import math
 import doffinder as dff
+import solver_base as sb
 
-class TruncDeMagSolver(object):
-    """Base Class for truncated Demag Solvers"""
-    def __init__(self,problem):
-        """problem - Object from class derived from TruncDemagProblem"""
-        self.problem = problem
-    def restrictfunc(self,function,submesh):
-        """
-        Restricts a function in a P1 space to a submesh
-        using the fact that the verticies and DOFS are
-        numbered the same way. A function defined on a P1
-        space is returned. This will ONLY work for P1 elements
-        For other elements the dolfin FunctionSpace.restrict()
-        should be used when it is implemented.
-        """
-        wholemesh = function.function_space().mesh()
-
-        #Since compute_vertex_map only accepts a SubMesh object we need to
-        #create a trivial "SubMesh" of the whole mesh 
-        dummymeshfunc = MeshFunction("uint",wholemesh,wholemesh.topology().dim())
-        dummymeshfunc.set_all(1)
-
-        #This is actually the whole mesh, but compute_vertex_map, only accepts a SubMesh
-        wholesubmesh = SubMesh(wholemesh,dummymeshfunc,1) #THIS CRASHES!!!!BLAH
-        #Mapping from the wholesubmesh to the wholemesh
-        map_to_mesh = wholesubmesh.data().mesh_function("parent_vertex_indices")
-
-        #This is a dictionary mapping the matching DOFS from a Submesh to a SubMesh
-        vm = compute_vertex_map(submesh,wholesubmesh) 
-        #Now we want to "restrict" the function to the restricted space
-        restrictedspace = FunctionSpace(submesh,"CG",1)
-        restrictedfunction = Function(restrictedspace)
-        for index,dof in enumerate(restrictedfunction.vector()):
-            restrictedfunction.vector()[index] = function.vector()[map_to_mesh[vm[index]]]
-        return restrictedfunction
-    
-    def save_function(self,function,name):
-        """
-        The function is saved as a file name.pvd under the folder ~/results.
-        It can be viewed with paraviewer or mayavi
-        """
-        file = File("results/"+ name + ".pvd")
-        file << function
-
-class NitscheSolver(TruncDeMagSolver):
+class NitscheSolver(sb.TruncDeMagSolver):
     def __init__(self,problem, degree = 1):
         """
         problem - Object from class derived from TruncDemagProblem
@@ -63,7 +21,7 @@ class NitscheSolver(TruncDeMagSolver):
         """
         self.problem = problem
         self.degree = degree
-        TruncDeMagSolver.__init__(self,problem)
+        super(NitscheSolver,self).__init__(problem)
     def get_demagfield(self,phi):
         """
         Returns the projection of the negative gradient of
@@ -82,14 +40,8 @@ class NitscheSolver(TruncDeMagSolver):
     def solve(self):
         """Solve the demag problem and store the Solution"""
 
-        V = FunctionSpace(self.problem.mesh,"CG",self.degree)
-
-        if self.problem.mesh.topology().dim() == 1:
-            Mspace = FunctionSpace(self.problem.mesh,"DG",self.degree)
-        else:
-            Mspace = VectorFunctionSpace(self.problem.mesh,"DG",self.degree)
-        #HF: I think this should always be
-        #Mspace = VectorFunctionSpace(self.problem.mesh,"DG",self.degree,3)
+        #Get the solution Space
+        V = self.V
 
         W = MixedFunctionSpace((V,V)) # for phi0 and phi1
         u0,u1 = TestFunctions(W)
@@ -103,7 +55,7 @@ class NitscheSolver(TruncDeMagSolver):
         gamma = self.problem.gamma
 
         #Define the magnetisation
-        M = interpolate(Expression(self.problem.M),Mspace)
+        M = self.M
 
         N = FacetNormal(self.problem.coremesh) #computes normals on the submesh self.problem.coremesh
         dSC = self.problem.dSC #Boundary of Core
@@ -172,12 +124,9 @@ class NitscheSolver(TruncDeMagSolver):
         self.Hdemag_core = self.get_demagfield(self.phi_core)
         self.Hdemag = self.get_demagfield(phitot)
         #Store variables for outside testing
-        self.V = V
         self.phitot = phitot
         self.phi0 = phi0
         self.phi1 = phi1
         self.sol = sol
-        self.M = M
-        self.Mspace = Mspace
         self.gamma = gamma
         return phitot
