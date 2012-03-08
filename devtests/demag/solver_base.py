@@ -40,6 +40,11 @@ class FemBemDeMagSolver(DeMagSolver):
     def __init__(self,problem,degree = 1):
             super(FemBemDeMagSolver,self).__init__(problem,degree)
 
+    def get_boundary_dofmap(self):
+        """Gets the dofs that live on the boundary of a mesh"""
+        dummyBC = DirichletBC(self.V,0,"on_boundary")
+        return dummyBC.get_boundary_values()
+
 class TruncDeMagSolver(DeMagSolver):
     """Base Class for truncated Demag Solvers"""
     def __init__(self,problem,degree = 1):
