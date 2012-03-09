@@ -24,6 +24,7 @@ class LLG(object):
         self.c = 1e11 # 1/s numerical scaling correction
                       # 0.1e12 1/s is the value used by default in nmag 0.2
         self.C = 1.3e-11 # J/m exchange constant
+        self.D = 5e-3 # J/m DMI constant
         self.Ms = 8.6e5 # A/m saturation magnetisation
         self.t = 0 # s
         self.H_app = (0, 0, 0)
@@ -151,6 +152,6 @@ class LLG(object):
         self.use_dmi = use_dmi
 
         if use_dmi:
-            self.dmi = DMI(self.V, self._m, self.Ms)
+            self.dmi = DMI(self.V, self._m, self.D, self.Ms, method = "box-assemble")
 
 
