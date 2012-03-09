@@ -1,7 +1,6 @@
 import numpy as np
 import dolfin as df
 
-#This file needs updating for DMI -- based on exchange.py
 class DMI(object):
     def __init__(self, V, M, Ms):
         """
@@ -13,23 +12,27 @@ class DMI(object):
             Ms the saturation magnetisation
 
         """
-
-        #v = df.TestFunction(V)
-
-        self.M = M   
+        print "DMI - Default method is compute_field_assemble"
+        
+        self.M = M
         self.V = V
-
+        self.DMIconstant = df.Constant(13e-3) #Dzyaloshinsky-Moriya Constant
+        self.v = df.TestFunction(V)
+        self.E = self.DMIconstant * df.inner(self.M, df.curl(self.M)) *df.dx
+        self.dE_dM = df.derivative(self.E, M, self.v)
+        self.vol = df.assemble(df.dot(self.v, df.Constant([1,1,1]))*df.dx).array()
+        
     def compute_field(self):
         """Compute the DMI field, and return it as a numpy array
 
         Access to the current magnetisation is available through self.M 
         """
-        H_dmi_tmp = df.Constant((0,0,0.8e6))        
-        H_dmi_dolfin_field = df.project(H_dmi_tmp,self.V)
-        return H_dmi_dolfin_field.vector().array()
+    #    H_dmi_tmp = df.Constant((0,0,0.8e6))        
+    #    H_dmi_dolfin_field = df.project(H_dmi_tmp,self.V)
+    #    return H_dmi_dolfin_field.vector().array()
         
 
-    def compute_energy(self):
-        """Compute the DMI energy, and return as a number """
-        raise NotImplementedError("Compute_energy not implemented yet for DMI term")
+        return df.assemble(self.dE_dM).array() / self.vol
 
+    def compute_energy(self):
+        return df.assemble(self.E)
