@@ -59,13 +59,27 @@ class FemBemDeMagSolver(DeMagSolver):
         d = mesh.topology().dim()
         dm = self.V.dofmap()      
         boundarydofs = self.get_boundary_dofs()
-        boundmesh = BoundaryMesh(mesh)
-
-        #loop over facets in boundary mesh
-        for facet in facets(boundmesh):
+        mesh.init()
+        
+        #Build a dictionary with all dofs and their coordinates
+        #TODO Optimize me!
+        doftionary = {}
+        for facet in facets(mesh):
             cells = facet.entities(d)
-            # Create one cell (since we have CG)
+            #create one cell (since we have CG)
             cell = Cell(mesh, cells[0])
+            #Create the cell dofs and see if any
+            #of the global numbers turn up in BoundaryDofs
+            #If so update the BoundaryDic with the coordinates
+            celldofcord = dm.tabulate_coordinates(cell)
+            globaldofs = dm.cell_dofs(cells[0])
+            globalcoord = dm.tabulate_coordinates(cell)
+            for locind,dof in enumerate(globaldofs):
+                doftionary[dof] = globalcoord[locind]
+        #restrict the doftionary to the boundary
+        for x in [x for x in doftionary if x not in boundarydofs]:
+            doftionary.pop(x)
+        return doftionary
 
 class TruncDeMagSolver(DeMagSolver):
     """Base Class for truncated Demag Solvers"""
