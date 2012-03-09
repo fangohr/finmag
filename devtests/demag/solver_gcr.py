@@ -52,20 +52,23 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           
      def solve_phib_boundary(self):
           """Solve for phib on the boundary using BEM (row by row)"""
-
-          boundarymesh = BoundaryMesh(self.problem.mesh)
-          #Get the boundary dofs
-          print len(self.get_boundary_dof_coordinate_dict())
-          print boundarymesh.num_vertices()
-##          bdofs = self.get_boundary_dofs()
-##          for i,x in enumerate(boundarymesh.coordinates()):
-##               row = self.get_bem_row(i,x,bdofs)
-          #need some way to map the vertex to a dof so we can give the row a number
+          #Get the boundary dofs and their coordinates
+          dofcoordinates = self.get_boundary_dof_coordinate_dict()
+          for index,dof in enumerate(dofcoordinates):
+               row = self.get_bem_row(i,x,bdofs)
+               
+     def build_BEM_matrix(self):
+          """Build the BEM Matrix associated to the mesh and store it"""
+          dofcoordinates = self.get_boundary_dof_coordinate_dict()
+          dimbem = len(dofcoordinates)
+          self.bemmatrix = np.zeros([dimbem,dimbem]);
+          for index,dof in enumerate(dofcoordinates):
+               self.bemmatrix[index] = self.get_bem_row(i,dofcoordinates[dof],dofcoordinates.keys())
+               print self.bemmatrix[index]
 
      def get_bem_row(self,index,R,bdofs):
           """Gets the row of the BEMmatrix associated with the point R"""
           
-          print R[0],R[1],R[2]
           w = Expression("1.0/sqrt((%g - x[0])*(%g - x[0]) + (%g - x[1])*(%g - x[1])+(%g - x[2])*(%g - x[2]))"%(R[0],R[0],R[1],R[1],R[2],R[2]))
           psi = TestFunction(self.V)
           L = 1.0/(4*math.pi)*psi*w*ds
@@ -73,7 +76,7 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           bigrow = assemble(L)
           #row contains just boundary dofs
           row = np.zeros(len(bdofs))
-          for i,key in enumerate(bdofs.keys()):
+          for i,key in enumerate(bdofs):
                row[i] = bigrow[key]
           return row
         
@@ -81,4 +84,4 @@ if __name__ == "__main__":
      import prob_fembem_testcases as pft
      problem = pft.MagUnitSphere()
      solver = GCRFemBemDeMagSolver(problem)
-     solver.solve_phib_boundary()
+     solver.build_BEM_matrix()
