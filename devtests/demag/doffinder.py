@@ -58,9 +58,9 @@ def bounddofs(fspace,degree, facetfunc,num):
             cells = facet.entities(d)
             # Create one cell (since we have CG)
             cell = Cell(mesh, cells[0])
-            #Print out the DOF coordinates
-            print "cell coordinates"
-            print dm.tabulate_coordinates(cell)
+##            #Print out the DOF coordinates
+##            print "cell coordinates"
+##            print dm.tabulate_coordinates(cell)
             #Get the local to global map
             dm.tabulate_dofs(cell_dofs,cell)
             #Get the local index of the facet with respect to given cell
