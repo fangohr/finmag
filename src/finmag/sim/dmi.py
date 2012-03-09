@@ -23,15 +23,7 @@ class DMI(object):
         self.vol = df.assemble(df.dot(self.v, df.Constant([1,1,1]))*df.dx).array()
         
     def compute_field(self):
-        """Compute the DMI field, and return it as a numpy array
-
-        Access to the current magnetisation is available through self.M 
-        """
-    #    H_dmi_tmp = df.Constant((0,0,0.8e6))        
-    #    H_dmi_dolfin_field = df.project(H_dmi_tmp,self.V)
-    #    return H_dmi_dolfin_field.vector().array()
         
-
         return df.assemble(self.dE_dM).array() / self.vol
 
     def compute_energy(self):
