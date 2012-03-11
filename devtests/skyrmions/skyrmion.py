@@ -18,14 +18,16 @@ with exchange interaction.
 """
 
 nm=1e-9
-simplexes = 20
-mesh = dolfin.Box(0,0,0,60*nm,3*nm, 3*nm, simplexes, 1, 1)
+xdim = 30
+ydim = 30
+zdim = 3
+mesh = dolfin.Box(0,0,0,xdim*nm,ydim*nm, zdim*nm, xdim/3, ydim/3, zdim/3)
 
 llg = LLG(mesh)
 llg.alpha=1.0
 llg.H_app=(0,0,0)
 
-llg.C = 1.3e-11
+llg.C =1.3e-11
 llg.D = 4e-3
 
 #llg.set_m0((
@@ -42,7 +44,7 @@ print "point 0:",mesh.coordinates()[0]
 
 print "Solving problem..."
 
-ts = numpy.linspace(0, 3e-9, 150)
+ts = numpy.linspace(0, 1e-9, 50)
 tol = 1e-4
 for i in range(len(ts)-1):
     print "step=%4d, time=%12.6g " % (i,ts[i]),

@@ -29,7 +29,7 @@ import dolfin as df
     - 'box-assemble' is a slower version that assembles the H_ex for a given M in every
       iteration.
 
-    - 'box-matrix-numpy' precomputes a matrix g, so that H_ex = g*M
+    - 'box-matrix-numpy' precomputes a matrix g, so that H_dmi = g*M
 
     - 'box-matrix-petsc' is the same mathematical scheme as 'box-matrix-numpy',
       but uses a PETSc linear algebra backend that supports sparse
