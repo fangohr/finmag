@@ -67,7 +67,7 @@ import dolfin as df
 """
 
 class DMI(object):
-    def __init__(self, V, M, D, Ms, method="box-assemble"):
+    def __init__(self, V, M, D, Ms, method="box-assemble-petsc"):
         
         print "DMI(): method = %s" % method
         
