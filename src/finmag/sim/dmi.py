@@ -30,12 +30,8 @@ class DMI(object):
     - 'box-assemble' is a slower version that assembles the H_dmi for a given M in every
       iteration.
 
-<<<<<<< local
-    - 'box-matrix-numpy' precomputes a matrix g, so that H_dmi = g*M
-=======
     - 'box-matrix-numpy' precomputes a matrix g, so that H_dmi = g*M, but uses a (dense)
       numpy array to store the matrix. Inefficient for larger meshes.
->>>>>>> other
 
     - 'box-matrix-petsc' is the same mathematical scheme as 'box-matrix-numpy',
       but uses a PETSc linear algebra backend that supports sparse
