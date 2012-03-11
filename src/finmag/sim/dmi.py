@@ -25,19 +25,19 @@ class DMI(object):
                 * 'box-matrix-petsc' [Default]
                 * 'project'
 
-    At the moment, we think (all) 'box' methods work 
-    (and the method is used in Magpar and Nmag).
+    At the moment, we think (all) 'box' methods work..
 
-    - 'box-assemble' is a slower version that assembles the H_ex for a given M in every
+    - 'box-assemble' is a slower version that assembles the H_dmi for a given M in every
       iteration.
 
-    - 'box-matrix-numpy' precomputes a matrix g, so that H_ex = g*M
+    - 'box-matrix-numpy' precomputes a matrix g, so that H_dmi = g*M, but uses a (dense)
+      numpy array to store the matrix. Inefficient for larger meshes.
 
     - 'box-matrix-petsc' is the same mathematical scheme as 'box-matrix-numpy',
       but uses a PETSc linear algebra backend that supports sparse
       matrices, to exploit the sparsity of g (default choice).
 
-    - 'project': does not use the box method but 'properly projects' the exchange field
+    - 'project': does not use the box method but 'properly projects' the dmi field
       into the function space. Should explore whether this works and/or makes any difference
       (other than being slow.) Untested.
 
@@ -59,7 +59,7 @@ class DMI(object):
             # Print energy
             print dmi.compute_energy()
 
-            # Exchange field 
+            # DMI field 
             H_dmi = dmi.compute_field()
 
             # Using 'box-matrix-numpy' method (fastest for small matrices)
