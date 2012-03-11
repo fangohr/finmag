@@ -141,7 +141,7 @@ class LLG(object):
         self.t = t
         return self.solve()
 
-    def setup(self, exchange_flag=True, use_dmi=False, exchange_method="box-matrix-petsc"):
+    def setup(self, exchange_flag=True, use_dmi=False, exchange_method="box-matrix-petsc",dmi_method="box-matrix-petsc"):
         self.exchange_flag = exchange_flag
         if exchange_flag:
             self.exchange = Exchange(self.V, self._m, self.C, self.Ms, method=exchange_method)
@@ -152,6 +152,6 @@ class LLG(object):
         self.use_dmi = use_dmi
 
         if use_dmi:
-            self.dmi = DMI(self.V, self._m, self.D, self.Ms, method = "box-assemble")
+            self.dmi = DMI(self.V, self._m, self.D, self.Ms, method = dmi_method)
 
 
