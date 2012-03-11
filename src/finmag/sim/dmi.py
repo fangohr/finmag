@@ -1,6 +1,8 @@
 import numpy as np
 import dolfin as df
-"""
+
+class DMI(object):
+    """
     Compute the DMI field.
 
     .. math::
@@ -64,9 +66,8 @@ import dolfin as df
             dmi_np = Exchange(V, M, D, Ms, method='box-matrix-numpy')
             H_dmi_np = dmi_np.compute_field()
             
-"""
+    """
 
-class DMI(object):
     def __init__(self, V, M, D, Ms, method="box-assemble-petsc"):
         
         print "DMI(): method = %s" % method
