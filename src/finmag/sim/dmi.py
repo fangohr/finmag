@@ -77,7 +77,14 @@ class DMI(object):
         self.method = method
        
         self.v = df.TestFunction(V)
+        #Equation is chosen from the folowing papers
+        #Yu-Onose2010, Li-Lin2011, Elhoja-Canals2002, Bode-Heide2007, Bak-Jensen1980
         self.E = self.DMIconstant * df.inner(self.M, df.curl(self.M)) * df.dx
+        #Muhbauer2011
+        #self.E = self.E = self.DMIconstant * df.inner(self.M, df.curl(self.M)) * df.dx
+        #Rossler-Bogdanov2006
+        #self.E = self.DMIconstant * df.cross(self.M, df.curl(self.M)) * df.dx
+        
         self.dE_dM = df.derivative(self.E, M, self.v)
         self.vol = df.assemble(df.dot(self.v, df.Constant([1,1,1]))*df.dx).array()
         
