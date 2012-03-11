@@ -42,6 +42,8 @@ class DMI(object):
       (other than being slow.) Untested.
 
 
+    The equation is chosen as in the publications  Yu-Onose2010, Li-Lin2011, Elhoja-Canals2002, Bode-Heide2007, Bak-Jensen1980.
+
     *Example of Usage*
 
         .. code-block:: python
