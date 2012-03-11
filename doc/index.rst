@@ -18,6 +18,7 @@ logo and link to
    modules/LLG.rst
    modules/Exchange.rst
    modules/Anisotropy.rst
+   modules/DMI.rst
 
 .. comment:
    background.txt
