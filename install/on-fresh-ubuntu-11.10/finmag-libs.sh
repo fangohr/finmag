@@ -6,5 +6,12 @@ sudo apt-get install libboost-python-dev libboost-thread-dev libsundials-serial-
 sudo apt-get install python-matplotlib python-visual python-scipy ipython python-py
 
 #for documentation with sphinx
-sudo apt-get install python-sphinx  texlive-latex-extra texlive-latex-recommended
+sudo apt-get install texlive-latex-extra texlive-latex-recommended python-pygments 
+
+#Need more recent version of sphinx than ubuntu version
+sudo aptitude remove python-sphinx  
+#so we can use easy_install:
+sudo apt-get install python-setuptools
+sudo easy_install -U sphinx
+
 
