@@ -7,7 +7,7 @@ class DMI(object):
 
     .. math::
         
-        E_{\\text{DMI}} = \\int_\\Omega D M \\cdot rot(M)  dx
+        E_{\\text{DMI}} = \\int_\\Omega D \\vec{M} \\cdot (\\nabla \\times \\vec{M})  dx
         
     *Arguments*
         V 
