@@ -144,7 +144,7 @@ class DMI(object):
         self.g_petsc = df.PETScMatrix()
         
         df.assemble(g_form,tensor=self.g_petsc)
-        self.H_ex_petsc = df.PETScVector()
+        self.H_dmi_petsc = df.PETScVector()
 
     def __setup_field_project(self):
         #Note that we could make this 'project' method faster by computing the matrices
