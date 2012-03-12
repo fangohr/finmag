@@ -80,6 +80,13 @@ class FemBemDeMagSolver(DeMagSolver):
         for x in [x for x in doftionary if x not in boundarydofs]:
             doftionary.pop(x)
         return doftionary
+    
+    def restrict_to(self,bigvector,dofs):
+        """Restrict a vector to the dofs in dofs (usually boundary)"""
+        vector = np.zeros(len(dofs))
+        for i,key in enumerate(dofs):
+             vector[i] = bigvector[key]
+        return vector
 
 class TruncDeMagSolver(DeMagSolver):
     """Base Class for truncated Demag Solvers"""
