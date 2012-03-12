@@ -40,6 +40,7 @@ dM = Function(V)
 
 def f(t, y):
     M.vector()[:] = y
+    H.t = t
     solve(a==L, dM)
     return dM.vector().array()
 
@@ -56,7 +57,7 @@ xlist = []
 
 while r.successful() and r.t < t1-dt:
     r.integrate(r.t + dt)
-    H.t = r.t
+    print "Integrating time: %g" % r.t
     # TODO: Find out what is supposed to be plotted
     xlist.append(sum(r.y[6:12])/8.5)
 print r.y
