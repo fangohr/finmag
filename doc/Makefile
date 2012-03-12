@@ -39,7 +39,7 @@ help:
 	@echo "  changes    to make an overview of all changed/added/deprecated items"
 	@echo "  linkcheck  to check all external links for integrity"
 	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
-	
+
 clean:
 	-rm -rf $(BUILDDIR)/* modules/*
 
@@ -155,5 +155,15 @@ doctest:
 	      "results in $(BUILDDIR)/doctest/output.txt."
 
 #next target added to get Jenkins to run generate_doc.py before building the documentation.
-generate-doc:	
+generate-doc: examples-for-doc
 	python generate_doc.py
+
+#this target can be run to execute py.test ../examples to get figure
+#files ready. This will happen automatically when Jenkins runs, as
+#all tests in finmag/src and finmag/examples are run before the 
+
+examples-for-doc: ../examples/macrospin/alpha-1.00.png
+
+../examples/macrospin/alpha-1.00.png: ../examples/macrospin/test_macrospin.py
+	python ../examples/macrospin/test_macrospin.py
+

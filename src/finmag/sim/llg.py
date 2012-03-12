@@ -24,6 +24,7 @@ class LLG(object):
         self.c = 1e11 # 1/s numerical scaling correction
                       # 0.1e12 1/s is the value used by default in nmag 0.2
         self.C = 1.3e-11 # J/m exchange constant
+        self.D = 5e-3 # J/m DMI constant
         self.Ms = 8.6e5 # A/m saturation magnetisation
         self.t = 0 # s
         self.H_app = (0, 0, 0)
@@ -140,7 +141,7 @@ class LLG(object):
         self.t = t
         return self.solve()
 
-    def setup(self, exchange_flag=True, use_dmi=False, exchange_method="box-matrix-petsc"):
+    def setup(self, exchange_flag=True, use_dmi=False, exchange_method="box-matrix-petsc",dmi_method="box-matrix-petsc"):
         self.exchange_flag = exchange_flag
         if exchange_flag:
             self.exchange = Exchange(self.V, self._m, self.C, self.Ms, method=exchange_method)
@@ -151,6 +152,6 @@ class LLG(object):
         self.use_dmi = use_dmi
 
         if use_dmi:
-            self.dmi = DMI(self.V, self._m, self.Ms)
+            self.dmi = DMI(self.V, self._m, self.D, self.Ms, method = dmi_method)
 
 

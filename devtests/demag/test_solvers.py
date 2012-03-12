@@ -10,6 +10,7 @@ import prob_trunc_testcases as pttc
 import solver_nitsche as sn
 import solver_base as sb
 import prob_trunc_testcases as ptt
+import prob_fembem_testcases as pft
 
 #This suite tests the solutions for the demag scalar potential function from the Nitsche Solver.
 #Global Tolerance for closeness to 0.
@@ -17,7 +18,7 @@ TOL = 1.0 #Fixme This is a bad tolerance, maybe the nitsche solver can be made m
           #TODO the averaging by volume causes the error to increase since the surface volumes are <1,
           #this gets worse for increased dimension. So get rid of averaging and recalibrate the gammas and TOL
          
-class TestNischeSolver(object):
+class TestNitscheSolver(object):
     #Wierd that we cannot use __init__
     def setup_class(self):
         self.problem1d = pttc.MagUnitInterval()
@@ -205,9 +206,19 @@ class TestTruncDemagSolver(object):
         a = abs(uhalf - exactsol)*dx
         A = assemble(a)
         assert near(A,0.0),"Error in TruncDemagSolver.restrictfunc, restricted function does not match analytical value"
-            
+
+class TestFemBemDeMagSolver(object):
+    def setup_class(self):      
+        self.problem = pft.MagUnitSphere()
+        self.solver = sb.FemBemDeMagSolver(self.problem)
+        
+    def test_get_boundary_dof_coordinate_dict(self):
+        numdofcalc = len(self.solver.get_boundary_dof_coordinate_dict())
+        numdofactual = BoundaryMesh(self.problem.mesh).num_vertices()
+        assert numdofcalc == numdofactual,"Error in Boundary Dof Dictionary creation, number of DOFS does not match that of the Boundary Mesh"
+        
 if __name__ == "__main__":
-    t = TestNischeSolver()
+    t = TestNitscheSolver()
     t.setup_class()
     print "* Doing test 1d ==========="
     t.test_1d()

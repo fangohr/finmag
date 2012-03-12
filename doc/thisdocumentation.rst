@@ -50,13 +50,14 @@ For more information, see http://fenicsproject.org/contributing/styleguide_doc.h
 
 When you have documented your code, and want to add it to the html files, please do as follows:
 
-i)    Open /finmag/doc/modules.txt
-ii)   Add to the list of modules a line containing the name you want in the webpage header (this can be several words separated by spaces) and the path to the module (this must NOT include spaces or /). For example, if you want to add /finmag/sim/anisotropy.py, add the line
+*    Open /finmag/doc/modules.txt
+*    Add to the list of modules a line containing the name you want in the webpage header (this can be several words separated by spaces) and the path to the module (this must NOT include spaces or /). For example, if you want to add /finmag/sim/anisotropy.py, add the line::
 
-Anisotropy finmag.sim.anisotropy
+       Anisotropy finmag.sim.anisotropy
 
-to modules.txt.
-iii)  Repeat steps 1-4 above.
+     to modules.txt.
+
+and compile again.
 
 
 Important:
@@ -87,7 +88,11 @@ instead of
 Code-blocks
 ---------------------------
 
-Please do not use '>>>' in front of every line when making code examples.
+Need to be preceeded by::
+
+  .. code-block:: python
+
+and the code block has to be indented.
 
 
 This document as raw source
