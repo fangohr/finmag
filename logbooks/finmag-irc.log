@@ -345,3 +345,17 @@ fangohr: Still testing ...
 2012-03-08 12:13:47 fangohr: Yes, let's meet outside Anders office in 2 min or so.
 2012-03-08 12:14:00 SebastianS: okay. see you then
 2012-03-08 22:35:17 fangohr__: Hi Dmitri -- nice to see you here. (Or probably just your computer being logged in) :)
+2012-03-12 10:02:39 fangohr: Morning folks.
+2012-03-12 10:19:08 SebastianS: I was just looking through the first couple of NMAG examples and I was wondering whether number 11 (Cubic anisotropy) would be a good point to start.
+2012-03-12 10:32:22 fangohr: I would probably start with a system without anisotropy, say
+2012-03-12 10:32:22 fangohr: http://nmag.soton.ac.uk/nmag/0.2/manual/html/example2/doc.html
+2012-03-12 10:32:22 fangohr: Then, you may want to do something with uniaxial anisotropy (as this is the anisotropy considered in theLLB model), say
+2012-03-12 10:32:22 fangohr: http://nmag.soton.ac.uk/nmag/0.2/manual/html/example_uniaxial_anis/doc.html
+2012-03-12 10:33:10 fangohr: When you have mastered these, standard problem 3 may be nice to do (http://www.ctcms.nist.gov/~rdm/spec3.html). When you get to that point, let me know and I will dig out the Nmag script which you can use for initial guidance.
+2012-03-12 10:35:14 SebastianS: okay. thanks a lot!
+2012-03-12 12:08:17 maxim|s: Is anybody going to have lunch at staff club?
+2012-03-12 12:26:31 fangohr: Oh, yes!
+2012-03-12 12:26:46 fangohr: We are planning to go at 12:30 -- do you want to come over to Dmitri's and Anders' office now?
+2012-03-12 16:58:57 SebastianS: Sorry to bother you again, Hans. I just noticed that the second example you recommended is the one, which Dmitri already did. I took a look if there were any other uniaxial ones, but I couldn't find any. Shall I skip that and go straight to the mumag example?
+2012-03-12 17:10:23 fangohr: Yes.
+2012-03-12 17:11:40 SebastianS: okay. Thanks!
