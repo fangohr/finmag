@@ -1,4 +1,4 @@
-"""Base Classes for Demagnitization solvers"""
+"""Base Classes for Demagnetization solvers"""
 __author__ = "Gabriel Balaban"
 __copyright__ = __author__
 __project__ = "Finmag"
@@ -40,10 +40,46 @@ class FemBemDeMagSolver(DeMagSolver):
     def __init__(self,problem,degree = 1):
             super(FemBemDeMagSolver,self).__init__(problem,degree)
 
-    def get_boundary_dofmap(self):
+    def get_boundary_dofs(self):
         """Gets the dofs that live on the boundary of a mesh"""
         dummyBC = DirichletBC(self.V,0,"on_boundary")
         return dummyBC.get_boundary_values()
+
+    def get_boundary_dof_coordinate_dict(self):
+        """
+        Provides a dictionary with boundary DOF's
+        key = DOFnumber in the functionspace defined over the entire mesh
+        value = coordinates of DOF
+        The order that the dofs appear in the dic becomes their col/row
+        number in the BEM matrix.
+        """
+        
+        #objects needed
+        mesh = self.problem.mesh
+        d = mesh.topology().dim()
+        dm = self.V.dofmap()      
+        boundarydofs = self.get_boundary_dofs()
+        mesh.init()
+        
+        #Build a dictionary with all dofs and their coordinates
+        #TODO Optimize me!
+        doftionary = {}
+        for facet in facets(mesh):
+            cells = facet.entities(d)
+            #create one cell (since we have CG)
+            cell = Cell(mesh, cells[0])
+            #Create the cell dofs and see if any
+            #of the global numbers turn up in BoundaryDofs
+            #If so update the BoundaryDic with the coordinates
+            celldofcord = dm.tabulate_coordinates(cell)
+            globaldofs = dm.cell_dofs(cells[0])
+            globalcoord = dm.tabulate_coordinates(cell)
+            for locind,dof in enumerate(globaldofs):
+                doftionary[dof] = globalcoord[locind]
+        #restrict the doftionary to the boundary
+        for x in [x for x in doftionary if x not in boundarydofs]:
+            doftionary.pop(x)
+        return doftionary
 
 class TruncDeMagSolver(DeMagSolver):
     """Base Class for truncated Demag Solvers"""

@@ -21,6 +21,7 @@ extern "C" {
 
 static void * (*nvector_custom_data_malloc)(size_t len, size_t el_size);
 static void (*nvector_custom_data_free)(void *ptr);
+// TODO: rename nvector_custom_nvec_malloc -> nvector_custom_content_malloc
 static N_VectorContent_Serial (*nvector_custom_nvec_malloc)();
 static void (*nvector_custom_nvec_free)(N_VectorContent_Serial ptr);
 

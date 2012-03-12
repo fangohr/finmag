@@ -58,6 +58,9 @@ def bounddofs(fspace,degree, facetfunc,num):
             cells = facet.entities(d)
             # Create one cell (since we have CG)
             cell = Cell(mesh, cells[0])
+##            #Print out the DOF coordinates
+##            print "cell coordinates"
+##            print dm.tabulate_coordinates(cell)
             #Get the local to global map
             dm.tabulate_dofs(cell_dofs,cell)
             #Get the local index of the facet with respect to given cell
@@ -69,7 +72,9 @@ def bounddofs(fspace,degree, facetfunc,num):
     return bounddofs
     
 if __name__ == "__main__":
-    degree = 1
-    mesh = UnitInterval(10)
-    mesh.init()
-    V =  FunctionSpace(mesh, "CG", degree)
+    import prob_trunc_testcases as pttc
+    import solver_base as sb
+    
+    problem =  pttc.MagUnitCircle()
+    solver = sb.DeMagSolver(problem,2)
+    bounddofs(solver.V,2,problem.coreboundfunc,problem.COREBOUNDNUM)
