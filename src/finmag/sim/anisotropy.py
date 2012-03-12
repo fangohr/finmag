@@ -67,7 +67,7 @@ class Anisotropy(object):
         self.E = K*(df.Constant(1) - (df.dot(a, M))**2)*df.dx
 
         # Gradient
-        self.dE_dM = df.derivative(self.E, M)
+        self.dE_dM = -df.derivative(self.E, M)
 
         # Volume
         self.vol = df.assemble(df.dot(self.v, 

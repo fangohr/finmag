@@ -79,7 +79,7 @@ def test_gradient():
 
     # Manually derivative
     w = TestFunction(V)
-    g_ani = -Constant(K)*(2*dot(a, M)*dot(a, w))*dx
+    g_ani = Constant(K)*(2*dot(a, M)*dot(a, w))*dx
     vol = assemble(dot(w, Constant((1, 1, 1)))*dx).array()
     man_grad = assemble(g_ani).array() / vol
     
