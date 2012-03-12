@@ -4,9 +4,17 @@ import numpy as np
 from scipy.integrate import ode
 import pylab
 
-def Mz_exact(x):
-    """Analytical solution."""
-    return np.cos(np.pi/2 + np.arctan(np.sinh((x - 252e-9)/np.sqrt(30e-12/520e3))))
+K1=520e3  #J/m^3
+A=30e-12  #J/m
+x0=252e-9 #m
+Ms=1400e3 #A/m
+
+def Mz_exact(x,x0=x0,A=A,Ms=Ms):
+    """Analytical solution.
+    
+    """
+    #return np.cos(np.pi/2 + np.arctan(np.sinh((x - 252e-9)/np.sqrt(30e-12/520.e3))))
+    return Ms*np.cos(np.pi/2 + np.arctan(np.sinh((x - x0)/np.sqrt(A/K1))))
 
 def M0(r):
     """Return initial magnetisation (vectorized)."""
@@ -21,7 +29,7 @@ def M0(r):
     mz = np.where(max1r > 1.0, 1.0, max1r)
     return 0*mz, np.sqrt(1.0 - mz*mz), mz
 
-simplices = 200
+simplices = 202
 L = 504e-9
 dim = 3
 mesh = df.Interval(simplices, 0, L)
@@ -41,10 +49,11 @@ llg = LLG(mesh)
 # TODO: Find out how one are supposed to pin.
 # llg.pins = [0,1,-2,-1] # This is not so good
 
-llg.Ms = 1400e3                 # saturation magnetization
-llg.C = 30e-12                  # exchange coupling
-llg.K = 520e3                   # anisotropy constant
-llg.a = df.Constant((0, 0, 1))  # easy axis
+llg.Ms = Ms                 # saturation magnetization
+llg.C = A                   # exchange coupling
+llg.K = K1                  # anisotropy constant
+llg.a = df.Constant((0, 0, 1)) # easy axis
+
 
 # set initial magnetization
 x, y, z = M0(coor)
@@ -55,7 +64,7 @@ llg.setup(exchange_flag=True, anisotropy_flag=True)
 llg_wrap = lambda t, y: llg.solve_for(y, t)
 
 # Time integration
-t0 = 0; dt = 10e-12; t1 = 1e-09
+t0 = 0; dt = 10e-12; t1 = 2e-09
 r = ode(llg_wrap).set_integrator("vode", method="bdf", rtol=1e-5, atol=1e-5)
 r.set_initial_value(llg.m, t0)
 
@@ -64,16 +73,33 @@ while r.successful() and r.t < t1-dt:
     print "Integrating time: %g" % r.t
 
 # Plot magnetisation in z-direction
-zstart = 2*n//3
-mz = llg.m[zstart:]
+#zstart = 2*n//3
+#mz = llg.m[zstart:]*Ms
+mz = []
 x = np.linspace(0, L, simplices+1)
+for xpos in x:
+    mz.append(llg._m(xpos)[2])
+mz = np.array(mz)*Ms
 pylab.plot(x,mz,x,Mz_exact(x))
-pylab.axis([0, L, -1.1, 1.1])
+#pylab.axis([0, L, -1.1, 1.1])
 pylab.legend(("Finmag", "Analytical"))
 pylab.title("Domain wall example - Finmag vs analytical solution")
 pylab.xlabel("Length")
 pylab.ylabel("M.z")
-pylab.show()
+
+try:
+    import scipy.optimize
+except ImportError:
+    pass
+else:
+    popt,pcov = scipy.optimize.curve_fit(Mz_exact,x,mz,p0=(x0*1.1,A*1.1,Ms*1.1))
+    print "popt=",popt
+    
+    fittedx0,fittedA,fittedMs=popt
+    print "Error in fitted x0: %9.7f%%" % ((fittedx0-x0)/x0*100)
+    print "Error in fitted Ms: %9.7f%%" % ((fittedMs-Ms)/Ms*100)
+    print "Error in fitted A : %9.7f%%" % ((fittedA-A)/A*100)
 
 diff = abs(mz - Mz_exact(x))
 print max(diff)
+pylab.show()
