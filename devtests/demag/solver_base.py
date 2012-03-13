@@ -5,6 +5,7 @@ __project__ = "Finmag"
 __organisation__ = "University of Southampton"
 
 from dolfin import *
+import numpy as np
 
 class DeMagSolver(object):
     """Base class for Demag Solvers"""
@@ -39,7 +40,11 @@ class FemBemDeMagSolver(DeMagSolver):
     """Base Class for FEM/BEM Demag Solvers"""
     def __init__(self,problem,degree = 1):
             super(FemBemDeMagSolver,self).__init__(problem,degree)
-
+            #Paramters to use a quadrature rule that avoids the endpoints
+            #of a triangle
+            self.ffc_options = {"quadrature_rule":"canonical" \
+                                ,"fquadrature_degree":10}
+#canonical
     def get_boundary_dofs(self):
         """Gets the dofs that live on the boundary of a mesh"""
         dummyBC = DirichletBC(self.V,0,"on_boundary")
@@ -53,7 +58,6 @@ class FemBemDeMagSolver(DeMagSolver):
         The order that the dofs appear in the dic becomes their col/row
         number in the BEM matrix.
         """
-        
         #objects needed
         mesh = self.problem.mesh
         d = mesh.topology().dim()
@@ -87,7 +91,7 @@ class FemBemDeMagSolver(DeMagSolver):
         for i,key in enumerate(dofs):
              vector[i] = bigvector[key]
         return vector
-
+    
 class TruncDeMagSolver(DeMagSolver):
     """Base Class for truncated Demag Solvers"""
     def __init__(self,problem,degree = 1):
@@ -122,3 +126,22 @@ class TruncDeMagSolver(DeMagSolver):
         for index,dof in enumerate(restrictedfunction.vector()):
             restrictedfunction.vector()[index] = function.vector()[map_to_mesh[vm[index]]]
         return restrictedfunction
+
+
+#Not used now but may be useful later
+##def unit_vector_functions(self,mesh):
+##    """Builds Unit Vector functions defined over the whole mesh"""
+##    ##uvecspace = VectorFunctionSpace(mesh,"DG",0)
+##    d = mesh.topology().dim()
+##    #Create a zero vector"        
+##    zerovec = [0 for i in range(d)]
+##    #Initialize unit vector list
+##    elist = [zerovec[:] for i in range(d)]
+##    #Change an entry to get a unit vector
+##    for i in range(d):          
+##        elist[i][i] = 1
+##    #Generate constants
+##    elist = [Constant(tuple(elist[i])) for i in range(len(elist))]
+##    print elist
+##    return elist
+

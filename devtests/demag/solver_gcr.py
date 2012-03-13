@@ -9,7 +9,7 @@ from dolfin import *
 import solver_base as sb
 import math
 import numpy as np
-
+infrows = 0
 class GCRDeMagSolver(sb.DeMagSolver):
      """Class containing methods shared by GCR solvers"""
      def __init__(self,problem,degree = 1):
@@ -60,17 +60,24 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           
      def solve_phib_boundary(self,phia,doftionary):
           """Solve for phib on the boundary using BEM"""
-          q = self.assemble_qvector(phia,doftionary.keys())
-
+          q = self.assemble_qvector(phia,doftionary)
+          B = self.build_BEM_matrix(doftionary)
+          phibdofs = np.dot(B,q)
+          bdofs = doftionary.keys()
+          for i in range(len(bdofs)):
+               self.phib.vector()[bdofs[i]] = phibdofs[i]
+          print self.phib.vector().array()
+          plot(self.phib)
+          interactive()
 
      def build_BEM_matrix(self,doftionary):
           """Build the BEM Matrix associated to the mesh and store it"""
-
           dimbem = len(doftionary)
           self.bemmatrix = np.zeros([dimbem,dimbem]);
           for index,dof in enumerate(doftionary):
                self.bemmatrix[index] = self.get_bem_row(doftionary[dof],doftionary.keys())
                print self.bemmatrix[index]
+          return self.bemmatrix
 
      def get_bem_row(self,R,bdofs):
           """Gets the row of the BEMmatrix associated with the point R"""
@@ -78,13 +85,13 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           psi = TestFunction(self.V)
           L = 1.0/(4*math.pi)*psi*w*ds
           #Bigrow contains many 0's for nonboundary dofs
-          bigrow = assemble(L)
+          bigrow = assemble(L,form_compiler_parameters=self.ffc_options)
           #Row contains just boundary dofs
           row = self.restrict_to(bigrow,bdofs)
           return row
      
      def bemkernel(self,R):
-          """Get the kernel of the BEM matrix, adapting it to the dimension of the mesh"""
+          """Get the kernel of the GCR BEM matrix, adapting it to the dimension of the mesh"""
           w = "1.0/sqrt("
           dim = len(R-1)
           for i in range(dim-1):
@@ -92,21 +99,36 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           w += "(%g - x[%d])*(%g - x[%d]))"%(R[dim-1],dim -1,R[dim-1],dim-1)
           return Expression(w)     
 
-     def assemble_qvector(self,phia,bdofs):
-          """builds the vector q that we multiply the bem matrix with to get phib"""
-          #FIXME I believe project attempts to build use a facet normal on the inside and runs into trouble
-          qspace = FunctionSpace(self.problem.mesh,"DG",1)
-          #build q everywhere
-          n = FacetNormal(self.problem.mesh)
-          q = - dot(n,self.M) + dot(grad(phia),n)
-          q = project(q,qspace)
-          #restrict q to the values on the boundary
-          ##q = self.restrict_to(q.vector().array(),bdofs)
-          plot(q)
-          interactive()
-          return q
+     def assemble_qvector(self,phia,doftionary):
+          """builds the vector q that we multiply the Bem matrix with to get phib"""
+##          elist = self.unit_vector_functions(mesh)
+##          #Get an average value of the Normal at a boundary point
+##          d = self.problem.mesh.topology().dim()
+##          #Basis function included so that we assemble a vector
+##          nlist = [assemble(dot(n,elist[i])*v*ds).array() for i in range(d)]
+          #Get rid of the volume of the basis function
+
+##          nlist = [[np.array([nlist[j][i]/one[i] for i in range(d)])]for j in range(d)]
+##          
+##          #Get the gradient of the magnetisation field
+##          DV = VectorFunctionSpace(mesh,"DG",1)
+##          vec = project(self.M + grad(phia),DV)
+          V = phia.function_space()
+          mesh = V.mesh()
+          n = FacetNormal(mesh)
+          v = TestFunction(V)
           
-    
+          one = assemble(v*ds).array()
+          #build q everywhere v needed so a vector is assembled
+          q = assemble((- dot(n,self.M) + dot(grad(phia),n))*v*ds).array()
+          #Get rid of the volume of the basis function
+          one = assemble(v*ds).array()
+          #This will create a lot of NAN which are removed by the restriction
+          q = np.array([q[i]/one[i] for i in range(len(q))])
+          #restrict q to the values on the boundary
+          q = self.restrict_to(q,doftionary.keys())
+          return q
+                        
 if __name__ == "__main__":
      import prob_fembem_testcases as pft
      problem = pft.MagUnitCircle()
