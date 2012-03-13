@@ -15,6 +15,8 @@ class LLG(object):
 
         self.set_default_values()
         self._solve = self.load_c_code()
+        self._pre_rhs_callables=[]
+        self._post_rhs_callables=[]
 
     def set_default_values(self):
         self.alpha = 0.5
@@ -123,6 +125,11 @@ class LLG(object):
         self._H_app = df.interpolate(df.Constant(value), self.V)
 
     def solve(self):
+        print "Enering 'solve'"
+        for func in self._pre_rhs_callables:
+            print "About to call %s" % func
+            func(self)
+
         if self.exchange_flag:
             self.H_ex = self.exchange.compute_field()
         if self.use_dmi:
@@ -131,6 +138,10 @@ class LLG(object):
 
         status, dMdt = self._solve(self.alpha, self.gamma, self.c,
             self.m, self.H_eff, self.m.shape[0], self.pins)
+
+        for func in self._post_rhs_callables:
+            func(self)
+
         if status == 0:
             return dMdt
         raise Exception("An error was encountered in the C-code; status=%d" % status)
