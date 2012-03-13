@@ -133,7 +133,6 @@ class LLG(object):
 
     def solve(self):
         for func in self._pre_rhs_callables:
-            print "About to call %s" % func
             func(self)
 
         if self.exchange_flag:
