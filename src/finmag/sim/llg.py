@@ -122,10 +122,16 @@ class LLG(object):
 
     @H_app.setter
     def H_app(self, value):
+        #This needs reworking: need to be more flexible in the way we can set
+        #H_app. Need similar flexibility as we have for providing m0. In particular,
+        #we would like to set H_app from
+        # - a (3d) value (for example using         self._H_app = df.interpolate(df.Constant(value), self.V))
+        # - a dolfin expression 
+        # (- a numpy vector that provides values for self._H_app.vector())
+        
         self._H_app = df.interpolate(df.Constant(value), self.V)
 
     def solve(self):
-        print "Enering 'solve'"
         for func in self._pre_rhs_callables:
             print "About to call %s" % func
             func(self)
