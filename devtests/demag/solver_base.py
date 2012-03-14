@@ -28,6 +28,21 @@ class DeMagSolver(object):
         #Define the magnetisation
         self.M = interpolate(Expression(self.problem.M),self.Mspace)
         
+    def get_demagfield(self,phi):
+        """
+        Returns the projection of the negative gradient of
+        phi onto a DG0 space defined on the same mesh
+        Note: Do not trust the viper solver to plot the DeMag field,
+        it can give some wierd results, paraview is recommended instead
+        """
+        if phi.function_space().mesh().topology().dim() == 1:
+            Hdemagspace = FunctionSpace(phi.function_space().mesh(),"DG",0)
+        else:
+            Hdemagspace = VectorFunctionSpace(phi.function_space().mesh(),"DG",0)
+        Hdemag = -grad(phi)
+        Hdemag = project(Hdemag,Hdemagspace)
+        return Hdemag
+        
     def save_function(self,function,name):
         """
         The function is saved as a file name.pvd under the folder ~/results.
@@ -54,24 +69,26 @@ class FemBemDeMagSolver(DeMagSolver):
         self.phitot.vector()[:] = func1.vector()[:] + func2.vector()[:]
         return self.phitot
             
-    def get_boundary_dofs(self):
-        """Gets the dofs that live on the boundary of a mesh"""
-        dummyBC = DirichletBC(self.V,0,"on_boundary")
+    def get_boundary_dofs(self,V):
+        """Gets the dofs that live on the boundary of the mesh
+            of function space V"""
+        dummyBC = DirichletBC(V,0,"on_boundary")
         return dummyBC.get_boundary_values()
 
-    def get_boundary_dof_coordinate_dict(self):
+    def get_boundary_dof_coordinate_dict(self,V):
         """
         Provides a dictionary with boundary DOF's
         key = DOFnumber in the functionspace defined over the entire mesh
         value = coordinates of DOF
         The order that the dofs appear in the dic becomes their col/row
         number in the BEM matrix.
+        V = Function Space
         """
         #objects needed
-        mesh = self.problem.mesh
+        mesh = V.mesh()
         d = mesh.topology().dim()
-        dm = self.V.dofmap()      
-        boundarydofs = self.get_boundary_dofs()
+        dm = V.dofmap()      
+        boundarydofs = self.get_boundary_dofs(V)
         mesh.init()
         
         #Build a dictionary with all dofs and their coordinates
@@ -79,20 +96,68 @@ class FemBemDeMagSolver(DeMagSolver):
         doftionary = {}
         for facet in facets(mesh):
             cells = facet.entities(d)
-            #create one cell (since we have CG)
-            cell = Cell(mesh, cells[0])
-            #Create the cell dofs and see if any
-            #of the global numbers turn up in BoundaryDofs
-            #If so update the BoundaryDic with the coordinates
-            celldofcord = dm.tabulate_coordinates(cell)
-            globaldofs = dm.cell_dofs(cells[0])
-            globalcoord = dm.tabulate_coordinates(cell)
-            for locind,dof in enumerate(globaldofs):
-                doftionary[dof] = globalcoord[locind]
-        #restrict the doftionary to the boundary
-        for x in [x for x in doftionary if x not in boundarydofs]:
-            doftionary.pop(x)
+            if len(cells) == 2:
+                continue
+            elif len(cells) == 1:
+                #create one cell (since we have CG)
+                cell = Cell(mesh, cells[0])
+                #Create the cell dofs and see if any
+                #of the global numbers turn up in BoundaryDofs
+                #If so update the BoundaryDic with the coordinates
+                celldofcord = dm.tabulate_coordinates(cell)
+                globaldofs = dm.cell_dofs(cells[0])
+                globalcoord = dm.tabulate_coordinates(cell)
+
+                for locind,dof in enumerate(globaldofs):
+                    doftionary[dof] = globalcoord[locind]
+                #restrict the doftionary to the boundary
+                for x in [x for x in doftionary if x not in boundarydofs]:
+                    doftionary.pop(x)
+            else:
+                assert 1==2,"Expected only two cells per facet and not " + str(len(cells))
         return doftionary
+
+    def get_dof_normal_dict(self,V):
+        """
+        Provides a dictionary with all of the boundary DOF's as keys
+        and a list of facet normal components associated to the DOF as values
+        V = FunctionSpace
+        """
+        mesh = V.mesh()
+        mesh.init()
+        d = mesh.topology().dim()
+        dm = V.dofmap()
+
+        #It is very import that this  vector has the right length
+        #It holds the local dof numbers associated to a facet 
+        facetdofs = np.zeros(dm.num_facet_dofs(),dtype=np.uintc)
+
+        #Initialize dof-normal dictionary
+        doftonormal = {}
+
+        #Loop over boundary facets
+        for facet in facets(mesh):
+            cells = facet.entities(d)
+            #one cell means we are on the boundary
+            if len(cells) ==1:
+                cell = Cell(mesh,cells[0])
+                local_fi = cell.index(facet)
+                dm.tabulate_facet_dofs(facetdofs,local_fi)
+                #Local to global map
+                globaldofcell = dm.cell_dofs(cells[0])
+                #Global numbers of facet dofs
+                globaldoffacet = [globaldofcell[ld] for ld in facetdofs]
+                #add the facet's normal to every dof it contains
+                for gdof in globaldoffacet:
+                    n = facet.normal()
+                    ntup = tuple([n[i] for i in range(d)])
+                    #If gdof not in dictionary initialize a list
+                    if gdof not in doftonormal:
+                        doftonormal[gdof] = []
+                    #Prevent redundancy in Normals (for example 3d UnitCube CG1)
+                    if ntup not in doftonormal[gdof]:
+                        doftonormal[gdof].append(ntup) 
+        return doftonormal
     
     def restrict_to(self,bigvector,dofs):
         """Restrict a vector to the dofs in dofs (usually boundary)"""
@@ -143,7 +208,7 @@ class TruncDeMagSolver(DeMagSolver):
         dummymeshfunc.set_all(1)
 
         #This is actually the whole mesh, but compute_vertex_map, only accepts a SubMesh
-        wholesubmesh = SubMesh(wholemesh,dummymeshfunc,1) #THIS CRASHES!!!!BLAH
+        wholesubmesh = SubMesh(wholemesh,dummymeshfunc,1)
         #Mapping from the wholesubmesh to the wholemesh
         map_to_mesh = wholesubmesh.data().mesh_function("parent_vertex_indices")
 
@@ -155,22 +220,3 @@ class TruncDeMagSolver(DeMagSolver):
         for index,dof in enumerate(restrictedfunction.vector()):
             restrictedfunction.vector()[index] = function.vector()[map_to_mesh[vm[index]]]
         return restrictedfunction
-
-
-#Not used now but may be useful later
-##def unit_vector_functions(self,mesh):
-##    """Builds Unit Vector functions defined over the whole mesh"""
-##    ##uvecspace = VectorFunctionSpace(mesh,"DG",0)
-##    d = mesh.topology().dim()
-##    #Create a zero vector"        
-##    zerovec = [0 for i in range(d)]
-##    #Initialize unit vector list
-##    elist = [zerovec[:] for i in range(d)]
-##    #Change an entry to get a unit vector
-##    for i in range(d):          
-##        elist[i][i] = 1
-##    #Generate constants
-##    elist = [Constant(tuple(elist[i])) for i in range(len(elist))]
-##    print elist
-##    return elist
-

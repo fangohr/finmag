@@ -22,20 +22,6 @@ class NitscheSolver(sb.TruncDeMagSolver):
         self.problem = problem
         self.degree = degree
         super(NitscheSolver,self).__init__(problem)
-    def get_demagfield(self,phi):
-        """
-        Returns the projection of the negative gradient of
-        phi onto a DG0 space defined on the same mesh
-        Note: Do not trust the viper solver to plot the DeMag field,
-        it can give some wierd results, paraview is recommended instead
-        """
-        if phi.function_space().mesh().topology().dim() == 1:
-            Hdemagspace = FunctionSpace(phi.function_space().mesh(),"DG",0)
-        else:
-            Hdemagspace = VectorFunctionSpace(phi.function_space().mesh(),"DG",0)
-        Hdemag = -grad(phi)
-        Hdemag = project(Hdemag,Hdemagspace)
-        return Hdemag
  
     def solve(self):
         """Solve the demag problem and store the Solution"""

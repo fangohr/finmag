@@ -67,6 +67,7 @@ class TruncDeMagProblem(DeMagProblem):
         self.mesh = refine(self.mesh, cell_markers)
         #Regenerate Subdomains and boundaries
         self.calculate_subsandbounds()
+        
     def create_fembem_problem(self):
         """Generate a FEMBEM problem over the magnetic core submesh"""
         return FemBemDeMagProblem(self.coremesh,self.M)

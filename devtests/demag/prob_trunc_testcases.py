@@ -41,7 +41,7 @@ class MagUnitInterval(pb.TruncDeMagProblem):
 
 class MagUnitCircle(pb.TruncDeMagProblem):
     def __init__(self):
-        mesh = UnitCircle(10)
+        mesh = UnitCircle(12)
         self.r = 0.2 #Radius of magnetic Core
         self.gamma = 13.0 #Suggested parameter for nitsche solver
         r = self.r
