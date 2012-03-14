@@ -39,13 +39,20 @@ class DeMagSolver(object):
 class FemBemDeMagSolver(DeMagSolver):
     """Base Class for FEM/BEM Demag Solvers"""
     def __init__(self,problem,degree = 1):
-            super(FemBemDeMagSolver,self).__init__(problem,degree)
-            #Paramters to use a quadrature rule that avoids the endpoints
-            #of a triangle
-            self.ffc_options = {"quadrature_rule":"canonical" \
-                                ,"fquadrature_degree":1}
-            #Change the Function space to CR
-            self.V = FunctionSpace(self.problem.mesh,"CG",degree)
+        super(FemBemDeMagSolver,self).__init__(problem,degree)
+        #Paramters to use a quadrature rule that avoids the endpoints
+        #of a triangle
+        self.ffc_options = {"quadrature_rule":"canonical" \
+                            ,"fquadrature_degree":1}
+        #Change the Function space to CR
+        self.V = FunctionSpace(self.problem.mesh,"CR",degree)
+        #Total Function that we solve for
+        self.phitot = Function(self.V)
+        
+    def calc_phitot(self,func1,func2):
+        """Add two functions to get phitotal"""
+        self.phitot.vector()[:] = func1.vector()[:] + func2.vector()[:]
+        return self.phitot
             
     def get_boundary_dofs(self):
         """Gets the dofs that live on the boundary of a mesh"""
@@ -97,11 +104,8 @@ class FemBemDeMagSolver(DeMagSolver):
     def solve_laplace_inside(self,function):
         """Take a functions boundary data as a dirichlet BC and solve
             a laplace equation"""
-        print function
         V = function.function_space()
-        print V
         bc = DirichletBC(V,function, "on_boundary")
-        print "ok"
         u = TrialFunction(V)
         v = TestFunction(V)
 

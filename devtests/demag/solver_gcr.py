@@ -17,6 +17,7 @@ class GCRDeMagSolver(sb.DeMagSolver):
           #Define the two potentials
           self.phia = Function(self.V)
           self.phib = Function(self.V)
+          self.phitot = Function(self.V)
 
      def solve_phia(self,phia,method = "lu"):
           """
@@ -41,7 +42,6 @@ class GCRDeMagSolver(sb.DeMagSolver):
           F = assemble(f)
           solve(A,phia.vector(),F,method)
           
-
 class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
      """FemBem solver for Demag Problems using the GCR approach"""
     
@@ -53,7 +53,10 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
      def solve(self):
           """Solve for the Demag field using GCR and FemBem"""
           self.solve_phia()
-          self.solve_phib_boundary(self.phia,self.doftionary)
+          self.phib = self.solve_phib_boundary(self.phia,self.doftionary)
+          self.phib = self.solve_laplace_inside(self.phib)
+          self.phitot = self.calc_phitot(self.phia,self.phib)
+          return self.phitot
           
      def solve_phia(self,method = "lu"):
           super(GCRFemBemDeMagSolver,self).solve_phia(phia = self.phia,method = method)
@@ -66,20 +69,16 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           bdofs = doftionary.keys()
           for i in range(len(bdofs)):
                self.phib.vector()[bdofs[i]] = phibdofs[i]
-          print self.phib.vector().array()
-          #Project Phib into CG1 space for the plotter#
-          V = FunctionSpace(self.problem.mesh,"CG",1)
-          phib = project(phib,V)
-          plot(self.phib)
-          interactive()
+          return self.phib
 
      def build_BEM_matrix(self,doftionary):
           """Build the BEM Matrix associated to the mesh and store it"""
+          info_blue("Calculating BEM matrix")
           dimbem = len(doftionary)
           self.bemmatrix = np.zeros([dimbem,dimbem]);
           for index,dof in enumerate(doftionary):
                self.bemmatrix[index] = self.get_bem_row(doftionary[dof],doftionary.keys())
-               print self.bemmatrix[index]
+               info("BEM Matrix line "+ str(index) + str(self.bemmatrix[index]))
           return self.bemmatrix
 
      def get_bem_row(self,R,bdofs):
@@ -112,7 +111,7 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           v = TestFunction(V)
           
           one = assemble(v*ds).array()
-          #build q everywhere v needed so a vector is assembled
+          #build q everywhere v needed so a vector is assembled #This method uses an imprecise average
           q = assemble((- dot(n,self.M) + dot(grad(phia),n))*v*ds).array()
           #Get rid of the volume of the basis function
           one = assemble(v*ds).array()
@@ -126,4 +125,7 @@ if __name__ == "__main__":
      import prob_fembem_testcases as pft
      problem = pft.MagUnitCircle()
      solver = GCRFemBemDeMagSolver(problem)
-     solver.solve()
+     phitot = solver.solve()
+##     plot(phitot)
+##     interactive()
+     solver.save_function(solver.phitot, "GCR Solver Solution")
