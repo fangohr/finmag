@@ -42,6 +42,7 @@ class GCRDeMagSolver(sb.DeMagSolver):
           F = assemble(f)
           solve(A,phia.vector(),F,method)
           
+
 class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
      """FemBem solver for Demag Problems using the GCR approach"""
     
@@ -65,6 +66,12 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           """Solve for phib on the boundary using BEM"""
           q = self.assemble_qvector(phia,doftionary)
           B = self.build_BEM_matrix(doftionary)
+
+          print np.size(q)
+          print np.size(B)
+          exit()
+
+
           phibdofs = np.dot(B,q)
           bdofs = doftionary.keys()
           for i in range(len(bdofs)):
@@ -73,12 +80,11 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
 
      def build_BEM_matrix(self,doftionary):
           """Build the BEM Matrix associated to the mesh and store it"""
-          info_blue("Calculating BEM matrix")
           dimbem = len(doftionary)
           self.bemmatrix = np.zeros([dimbem,dimbem]);
           for index,dof in enumerate(doftionary):
                self.bemmatrix[index] = self.get_bem_row(doftionary[dof],doftionary.keys())
-               info("BEM Matrix line "+ str(index) + str(self.bemmatrix[index]))
+               print self.bemmatrix[index]
           return self.bemmatrix
 
      def get_bem_row(self,R,bdofs):
@@ -88,7 +94,6 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           L = 1.0/(4*math.pi)*psi*w*ds
           #Bigrow contains many 0's for nonboundary dofs
           bigrow = assemble(L,form_compiler_parameters=self.ffc_options)
-          bigrow = assemble(L)
           #Row contains just boundary dofs
           row = self.restrict_to(bigrow,bdofs)
           return row
@@ -104,14 +109,25 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
 
      def assemble_qvector(self,phia,doftionary):
           """builds the vector q that we multiply the Bem matrix with to get phib"""
+##          elist = self.unit_vector_functions(mesh)
+##          #Get an average value of the Normal at a boundary point
+##          d = self.problem.mesh.topology().dim()
+##          #Basis function included so that we assemble a vector
+##          nlist = [assemble(dot(n,elist[i])*v*ds).array() for i in range(d)]
+          #Get rid of the volume of the basis function
 
+##          nlist = [[np.array([nlist[j][i]/one[i] for i in range(d)])]for j in range(d)]
+##          
+##          #Get the gradient of the magnetisation field
+##          DV = VectorFunctionSpace(mesh,"DG",1)
+##          vec = project(self.M + grad(phia),DV)
           V = phia.function_space()
           mesh = V.mesh()
           n = FacetNormal(mesh)
           v = TestFunction(V)
           
           one = assemble(v*ds).array()
-          #build q everywhere v needed so a vector is assembled #This method uses an imprecise average
+          #build q everywhere v needed so a vector is assembled
           q = assemble((- dot(n,self.M) + dot(grad(phia),n))*v*ds).array()
           #Get rid of the volume of the basis function
           one = assemble(v*ds).array()
@@ -125,7 +141,4 @@ if __name__ == "__main__":
      import prob_fembem_testcases as pft
      problem = pft.MagUnitCircle()
      solver = GCRFemBemDeMagSolver(problem)
-     phitot = solver.solve()
-##     plot(phitot)
-##     interactive()
-     solver.save_function(solver.phitot, "GCR Solver Solution")
+     solver.solve()
