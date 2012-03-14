@@ -16,8 +16,6 @@ class LLG(object):
 
         self.set_default_values()
         self._solve = self.load_c_code()
-        self._pre_rhs_callables=[]
-        self._post_rhs_callables=[]
 
     def set_default_values(self):
         self.alpha = 0.5
@@ -33,6 +31,10 @@ class LLG(object):
         self.H_app = (0, 0, 0)
         self.H_dmi = (0, 0, 0) #DMI for Skyrmions
         self.pins = [] # nodes where the magnetisation gets pinned
+        self._pre_rhs_callables=[]
+        self._post_rhs_callables=[]
+        self._m = df.Function(self.V)
+
 
     def load_c_code(self):
         """
@@ -110,7 +112,7 @@ class LLG(object):
         else:
             raise AttributeError
         self._m0.vector()[:] = h.fnormalise(self._m0.vector().array())
-        self._m = self._m0
+        self._m.vector()[:] = self._m0.vector()[:]
 
     def update_H_eff(self):
         self.H_eff = self.H_app + self.H_ex 
@@ -158,7 +160,13 @@ class LLG(object):
         self.t = t
         return self.solve()
 
-    def setup(self, exchange_flag=True, use_dmi=False, exchange_method="box-matrix-petsc",dmi_method="box-matrix-petsc"):
+    def add_uniaxial_anisotropy(self,K,a):
+        anisotropy = Anisotropy(V, M, K, a)
+
+
+    def setup(self, exchange_flag=True, use_dmi=False, 
+              exchange_method="box-matrix-petsc",
+              dmi_method="box-matrix-petsc"):
         self.exchange_flag = exchange_flag
         if exchange_flag:
             self.exchange = Exchange(self.V, self._m, self.C, self.Ms, method=exchange_method)
