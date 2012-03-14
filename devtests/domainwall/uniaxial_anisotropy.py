@@ -1,5 +1,5 @@
 import dolfin as df
-from llg2 import LLG2 as LLG
+from finmag.sim.llg import LLG
 import numpy as np
 from scipy.integrate import ode
 import pylab
@@ -51,16 +51,16 @@ llg = LLG(mesh)
 
 llg.Ms = Ms                 # saturation magnetization
 llg.C = A                   # exchange coupling
-llg.K = K1                  # anisotropy constant
-llg.a = df.Constant((0, 0, 1)) # easy axis
+a = df.Constant((0, 0, 1)) # easy axis
 
 
 # set initial magnetization
 x, y, z = M0(coor)
 m0.vector()[:] = np.array([x, y, z]).reshape(n)
-llg.set_m0(m0)
+llg.set_m0(np.array([x, y, z]).reshape(n))
 
-llg.setup(exchange_flag=True, anisotropy_flag=True)
+llg.setup(exchange_flag=True)
+llg.add_uniaxial_anisotropy(K1,a)
 llg_wrap = lambda t, y: llg.solve_for(y, t)
 
 # Time integration
