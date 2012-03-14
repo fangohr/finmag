@@ -1,7 +1,7 @@
 import numpy as np
 import dolfin as df
 
-class Anisotropy(object):
+class UniaxialAnisotropy(object):
     """
     Compute the anisotropy field.
 

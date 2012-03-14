@@ -1,6 +1,6 @@
 from dolfin import *
 import numpy as np
-from finmag.sim.anisotropy import Anisotropy
+from finmag.sim.anisotropy import UniaxialAnisotropy
 
 """
 The equation for uniaxial anisotropy reads
@@ -55,7 +55,7 @@ a = Constant((0, 0, 1))
 def test_parallel():
     # Case 1
     M = interpolate(Constant((0, 0, 1)), V)
-    energy = Anisotropy(V, M, K, a).compute_energy()
+    energy = UniaxialAnisotropy(V, M, K, a).compute_energy()
     print 'This sould be zero %g:' % energy
 
     energy_scale = K*assemble(Constant(1)*dx, mesh=mesh) #energy if a and m perpendicular
@@ -65,7 +65,7 @@ def test_parallel():
 def test_orthogonal():
     # Case 2
     M = interpolate(Constant((0,1,0)), V)   
-    energy = Anisotropy(V, M, K, a).compute_energy()
+    energy = UniaxialAnisotropy(V, M, K, a).compute_energy()
     volK = K*assemble(Constant(1)*dx, mesh=mesh)
     print 'These should be equal: %g-%g=%g ' %( energy, volK, energy-volK)
     print 'Relative difference: %g ' %( abs(energy-volK)/volK)
@@ -74,7 +74,7 @@ def test_orthogonal():
 def test_gradient():
     # Case 3
     M = interpolate(Constant((1./np.sqrt(2), 0, 1./np.sqrt(2))), V)
-    ani = Anisotropy(V, M, K, a)
+    ani = UniaxialAnisotropy(V, M, K, a)
     dE_dM = ani.compute_field()
 
     # Manually derivative
