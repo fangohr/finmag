@@ -70,7 +70,13 @@ class FemBemFKSolver(FKSolver,sb.FemBemDeMagSolver):
 
     def solve(self):
         self.compute_phi1(self.M, self.V)
+        plot(self.phi1)
+        interactive()
         self.solve_phi2_boundary(self.doftionary)
+        self.solve_laplace_inside(self.phi2)
+        self.phitot = self.calc_phitot(self.phi1, self.phi2)
+        self.save_function(self.phitot, "fk")
+        return self.phitot
 
     def solve_phi2_boundary(self, doftionary):
         B = self.build_BEM_matrix(doftionary)
@@ -79,13 +85,7 @@ class FemBemFKSolver(FKSolver,sb.FemBemDeMagSolver):
         bdofs = doftionary.keys()
         for i in range(len(bdofs)):
             self.phi2.vector()[bdofs[i]] = phi2dofs[i]
-        print self.phi2.vector().array()
-        V2 = FunctionSpace(self.problem.mesh, "CG", 1)
-        phi2CG = project(self.phi2, V2)
-        print phi2CG.function_space()
-        self.save_function(phi2CG, 'fk_test')
-
-
+        
     def build_BEM_matrix(self, doftionary):
         n = len(doftionary)
         keys = doftionary.keys()
@@ -133,8 +133,8 @@ class FemBemFKSolver(FKSolver,sb.FemBemDeMagSolver):
         w = "pow(1.0/sqrt("
         dim = len(R-1)
         for i in range(dim-1):
-            w += "(%g - x[%d])*(%g - x[%d]) + "%(R[i],i,R[i],i)
-        w += "(%g - x[%d])*(%g - x[%d])), 3)"%(R[dim-1],dim -1,R[dim-1],dim-1)
+            w += "(%g - x[%d])*(%g - x[%d]) + " % (R[i],i,R[i],i)
+        w += "(%g - x[%d])*(%g - x[%d])), 3)" % (R[dim-1],dim -1,R[dim-1],dim-1)
         return Expression(w) 
 	
           
@@ -236,4 +236,5 @@ if __name__ == "__main__":
      import prob_fembem_testcases as pft
      problem = pft.MagUnitCircle()
      solver = FemBemFKSolver(problem)
-     solver.solve()
+     phi = solver.solve()
+     print phi.vector().array()
