@@ -67,12 +67,11 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           for i in range(len(bdofs)):
                self.phib.vector()[bdofs[i]] = phibdofs[i]
           print self.phib.vector().array()
-          V2 = FunctionSpace(self.problem.mesh, "CG", 1)
-          phibCG = project(self.phib, V2)
-          print phibCG.function_space()
-          #plot(phibCG, mesh=self.problem.mesh, rescale=True)
-          #interactive()
-          self.save_function(phibCG, 'test')
+          #Project Phib into CG1 space for the plotter#
+          V = FunctionSpace(self.problem.mesh,"CG",1)
+          phib = project(phib,V)
+          plot(self.phib)
+          interactive()
 
      def build_BEM_matrix(self,doftionary):
           """Build the BEM Matrix associated to the mesh and store it"""
@@ -90,6 +89,7 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           L = 1.0/(4*math.pi)*psi*w*ds
           #Bigrow contains many 0's for nonboundary dofs
           bigrow = assemble(L,form_compiler_parameters=self.ffc_options)
+          bigrow = assemble(L)
           #Row contains just boundary dofs
           row = self.restrict_to(bigrow,bdofs)
           return row
@@ -105,18 +105,7 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
 
      def assemble_qvector(self,phia,doftionary):
           """builds the vector q that we multiply the Bem matrix with to get phib"""
-##          elist = self.unit_vector_functions(mesh)
-##          #Get an average value of the Normal at a boundary point
-##          d = self.problem.mesh.topology().dim()
-##          #Basis function included so that we assemble a vector
-##          nlist = [assemble(dot(n,elist[i])*v*ds).array() for i in range(d)]
-          #Get rid of the volume of the basis function
 
-##          nlist = [[np.array([nlist[j][i]/one[i] for i in range(d)])]for j in range(d)]
-##          
-##          #Get the gradient of the magnetisation field
-##          DV = VectorFunctionSpace(mesh,"DG",1)
-##          vec = project(self.M + grad(phia),DV)
           V = phia.function_space()
           mesh = V.mesh()
           n = FacetNormal(mesh)

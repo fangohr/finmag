@@ -7,8 +7,6 @@ __organisation__ = "University of Southampton"
 from dolfin import *
 import numpy as np
 
-parameters["form_compiler"]["cpp_optimize"] = True
-
 class DeMagSolver(object):
     """Base class for Demag Solvers"""
     def __init__(self,problem,degree =1):
@@ -44,8 +42,8 @@ class FemBemDeMagSolver(DeMagSolver):
             super(FemBemDeMagSolver,self).__init__(problem,degree)
             #Paramters to use a quadrature rule that avoids the endpoints
             #of a triangle
-            self.ffc_options = {"quadrature_rule":"default"}
-#canonical
+            self.ffc_options = {"quadrature_rule":"canonical" \
+                                ,"fquadrature_degree":1}
     def get_boundary_dofs(self):
         """Gets the dofs that live on the boundary of a mesh"""
         dummyBC = DirichletBC(self.V,0,"on_boundary")
@@ -115,7 +113,7 @@ class TruncDeMagSolver(DeMagSolver):
         dummymeshfunc.set_all(1)
 
         #This is actually the whole mesh, but compute_vertex_map, only accepts a SubMesh
-        wholesubmesh = SubMesh(wholemesh,dummymeshfunc,1) 
+        wholesubmesh = SubMesh(wholemesh,dummymeshfunc,1) #THIS CRASHES!!!!BLAH
         #Mapping from the wholesubmesh to the wholemesh
         map_to_mesh = wholesubmesh.data().mesh_function("parent_vertex_indices")
 

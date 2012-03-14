@@ -13,7 +13,7 @@ import prob_base as pb
 #divM = 0 if M constant
 class MagUnitCircle(pb.FemBemDeMagProblem):
     def __init__(self):
-        mesh = UnitCircle(10)
+        mesh = UnitCircle(4)
         #TODO Make M three dimensional
         M = ("1","0")
         #Initialize Base Class
@@ -31,3 +31,23 @@ class MagUnitSphere(pb.FemBemDeMagProblem):
         
     def desc(self):
         return "unit sphere demagnetisation test problem fembem"
+
+class MagUnitInterval(pb.FemBemDeMagProblem):
+    """Create 1d test problem where define a mesh,
+    and a part of the mesh has been marked to be vacuum (with 0) and
+    a part has been marked to be the ferromagnetic body (with 1).
+
+    Can later replace this with a meshfile generated with an external 
+    mesher.
+
+    Once the constructor calls the constructor of the base class (TruncDemagProblem), we also
+    have marked facets.
+    """
+    def __init__(self):
+        mesh = UnitInterval(10)
+
+        #TODO: Make M into a 3d vector here
+        M = "1"
+
+        #Initialize Base Class
+        super(MagUnitInterval,self).__init__(mesh,M)
