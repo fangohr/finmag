@@ -33,6 +33,7 @@ class LLG(object):
         self.pins = [] # nodes where the magnetisation gets pinned
         self._pre_rhs_callables=[]
         self._post_rhs_callables=[]
+        self._anisotropies = []
         self._m = df.Function(self.V)
 
 
@@ -115,10 +116,8 @@ class LLG(object):
         self._m.vector()[:] = self._m0.vector()[:]
 
     def update_H_eff(self):
-        self.H_eff = self.H_app + self.H_ex 
-        if self.use_dmi:
-            self.H_eff += self.H_dmi
-
+        raise NotImplementedError,"There should be no need to call this function"
+ 
     @property
     def H_app(self):
         return self._H_app.vector().array()
@@ -138,11 +137,20 @@ class LLG(object):
         for func in self._pre_rhs_callables:
             func(self)
 
+        self.H_eff = self.H_app #can we avoid this if we don't use H_app?            
+        #self.H_eff *= 0.0 #set to zero
+
         if self.exchange_flag:
             self.H_ex = self.exchange.compute_field()
+            self.H_eff += self.H_ex
+
         if self.use_dmi:
             self.H_dmi = self.dmi.compute_field()
-        self.update_H_eff()
+            self.H_eff += self.H_dmi
+
+        for ani in self._anisotropies:
+            H_ani = ani.compute_field()
+            self.H_eff += H_ani
 
         status, dMdt = self._solve(self.alpha, self.gamma, self.c,
             self.m, self.H_eff, self.m.shape[0], self.pins)
@@ -161,8 +169,7 @@ class LLG(object):
         return self.solve()
 
     def add_uniaxial_anisotropy(self,K,a):
-        anisotropy = Anisotropy(V, M, K, a)
-
+        self.anisotropies.append(Anisotropy(self.V, self._m, K, a))
 
     def setup(self, exchange_flag=True, use_dmi=False, 
               exchange_method="box-matrix-petsc",
