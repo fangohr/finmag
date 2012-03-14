@@ -6,6 +6,9 @@ import pylab
 
 K1=520e3  #J/m^3
 A=30e-12  #J/m
+#A=3e-12  #J/m 
+#Changing A leads to changing deviations of the fitted A from the correct A
+#Needs more investigation.
 x0=252e-9 #m
 Ms=1400e3 #A/m
 
@@ -99,6 +102,11 @@ else:
     print "Error in fitted x0: %9.7f%%" % ((fittedx0-x0)/x0*100)
     print "Error in fitted Ms: %9.7f%%" % ((fittedMs-Ms)/Ms*100)
     print "Error in fitted A : %9.7f%%" % ((fittedA-A)/A*100)
+    print "fitted A  : %9g" % (fittedA)
+    print "correct A : %9g" % (A)
+    print "difference A : %9g" % (fittedA-A)
+    print "quotient A/fittedA and fittedA/A : %9g %g" % (A/fittedA,fittedA/A)
+
 
 diff = abs(mz - Mz_exact(x))
 print max(diff)
