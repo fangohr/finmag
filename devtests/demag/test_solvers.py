@@ -17,7 +17,44 @@ import prob_fembem_testcases as pft
 TOL = 1.0 #Fixme This is a bad tolerance, maybe the nitsche solver can be made more precise
           #TODO the averaging by volume causes the error to increase since the surface volumes are <1,
           #this gets worse for increased dimension. So get rid of averaging and recalibrate the gammas and TOL
-         
+
+class TestTruncDemagSolver(object):
+    """Test the Solver Base Class"""
+    def test_restrictfunc(self):
+        """
+        A simple linear Function is restricted to half a square and the answer is tested against an analytic value
+        """
+        mesh = UnitSquare(2,2)
+        V = FunctionSpace(mesh,"CG",1)
+        
+        #A plane going from 0 to 1 in the x direction
+        E = Expression("1 - x[0]")
+        u = interpolate(E,V)
+        
+        #Generate the submesh
+        class Half(SubDomain):
+            def inside(self,x,on_boundary):
+                return x[0]<0.5 + DOLFIN_EPS
+            
+        meshfunc = MeshFunction("uint",mesh,2)
+        meshfunc.set_all(0)
+        Half().mark(meshfunc,1)
+        halfmesh = SubMesh(mesh,meshfunc,1)
+
+        #Class initialized with a dummy problem
+        problem = ptt.MagUnitInterval()
+        solver = sb.TruncDeMagSolver(problem)
+
+        #Get the restricted function
+        uhalf = solver.restrictfunc(u,halfmesh)
+
+        #The restricted function should be a plane going from 0 to 0.5 in x direction
+        exactsol = interpolate(E,uhalf.function_space())
+        
+        a = abs(uhalf - exactsol)*dx
+        A = assemble(a)
+        assert near(A,0.0),"Error in TruncDemagSolver.restrictfunc, restricted function does not match analytical value"
+       
 class TestNitscheSolver(object):
     #Wierd that we cannot use __init__
     def setup_class(self):
@@ -170,44 +207,9 @@ class TestNitscheSolver(object):
         assert L1error2 < TOL,"Error in Nitsche Solver with " + problem.desc() + " normal derivative jump accross magnetic core boundary not satisfied for phi total \
                                TOL = %g, L1error = %g"%(TOL,L1error2)
         
-class TestTruncDemagSolver(object):
-    """Test the Solver Base Class"""
-    def test_restrictfunc(self):
-        """
-        A simple linear Function is restricted to half a square and the answer is tested against an analytic value
-        """
-        mesh = UnitSquare(2,2)
-        V = FunctionSpace(mesh,"CG",1)
-        
-        #A plane going from 0 to 1 in the x direction
-        E = Expression("1 - x[0]")
-        u = interpolate(E,V)
-        
-        #Generate the submesh
-        class Half(SubDomain):
-            def inside(self,x,on_boundary):
-                return x[0]<0.5 + DOLFIN_EPS
-            
-        meshfunc = MeshFunction("uint",mesh,2)
-        meshfunc.set_all(0)
-        Half().mark(meshfunc,1)
-        halfmesh = SubMesh(mesh,meshfunc,1)
-
-        #Class initialized with a dummy problem
-        problem = ptt.MagUnitInterval()
-        solver = sb.TruncDeMagSolver(problem)
-
-        #Get the restricted function
-        uhalf = solver.restrictfunc(u,halfmesh)
-
-        #The restricted function should be a plane going from 0 to 0.5 in x direction
-        exactsol = interpolate(E,uhalf.function_space())
-        
-        a = abs(uhalf - exactsol)*dx
-        A = assemble(a)
-        assert near(A,0.0),"Error in TruncDemagSolver.restrictfunc, restricted function does not match analytical value"
-
 class TestFemBemDeMagSolver(object):
+    """Test the FemBemDeMagSolver class """
+        
     def setup_class(self):      
         self.problem = pft.MagUnitSphere()
         self.solver = sb.FemBemDeMagSolver(self.problem)
@@ -216,6 +218,18 @@ class TestFemBemDeMagSolver(object):
         numdofcalc = len(self.solver.get_boundary_dof_coordinate_dict())
         numdofactual = BoundaryMesh(self.problem.mesh).num_vertices()
         assert numdofcalc == numdofactual,"Error in Boundary Dof Dictionary creation, number of DOFS does not match that of the Boundary Mesh"
+
+    def test_solve_laplace_inside(self):
+        """Solve a known laplace equation"""
+        mesh = UnitSquare(2,2)
+        V = FunctionSpace(mesh,"CG",1)
+        fold = interpolate(Expression("1-x[0]"),V)
+        fnew = interpolate(Expression("1-x[0]"),V)
+        #The Laplace equation should give the same solution as f
+        fnew = self.solver.solve_laplace_inside(fnew)
+        assert fold.vector().array().all() == fnew.vector().array().all(),"Error in method test_solve_laplace_inside(), \
+        Laplace solution does not equal original solution"
+        print "solve_laplace_inside testpassed"
         
 if __name__ == "__main__":
     t = TestNitscheSolver()
@@ -238,5 +252,11 @@ if __name__ == "__main__":
     print "* Doing Analytical comparison of Demag field ======="
     t.test_compare_3danalytical_gradient()
     print
-    print "* Doing Convergance test of Demag field ======="
-    t.print_convergance_3d()
+    #Slow uncomment with caution
+    #print "* Doing Convergance test of Demag field ======="
+    #t.print_convergance_3d()
+    
+    t1 = TestFemBemDeMagSolver()
+    t1.setup_class()
+    print "* Doing test for solve_laplace_inside"
+    t1.test_solve_laplace_inside()
