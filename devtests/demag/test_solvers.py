@@ -215,9 +215,12 @@ class TestFemBemDeMagSolver(object):
         self.solver = sb.FemBemDeMagSolver(self.problem)
         
     def test_get_boundary_dof_coordinate_dict(self):
-        numdofcalc = len(self.solver.get_boundary_dof_coordinate_dict())
-        numdofactual = BoundaryMesh(self.problem.mesh).num_vertices()
-        assert numdofcalc == numdofactual,"Error in Boundary Dof Dictionary creation, number of DOFS does not match that of the Boundary Mesh"
+        """Test only relevant for CG1"""
+        V = FunctionSpace(self.solver.problem.mesh,"CG",1)
+        numdofcalc = len(self.solver.get_boundary_dof_coordinate_dict(V))
+        numdofactual = BoundaryMesh(V.mesh()).num_vertices()
+        assert numdofcalc == numdofactual,"Error in Boundary Dof Dictionary creation, number of DOFS " +str(numdofcalc)+ \
+                                          " does not match that of the Boundary Mesh " + str(numdofactual)
 
     def test_solve_laplace_inside(self):
         """Solve a known laplace equation"""
@@ -230,6 +233,18 @@ class TestFemBemDeMagSolver(object):
         assert fold.vector().array().all() == fnew.vector().array().all(),"Error in method test_solve_laplace_inside(), \
         Laplace solution does not equal original solution"
         print "solve_laplace_inside testpassed"
+
+    def test_get_dof_normal_dict(self):
+        """Test some features of a known example """
+        mesh = UnitSquare(1,1)
+        V = FunctionSpace(mesh,"CG",1)
+        facetdic = self.solver.get_dof_normal_dict(V)
+        coord = self.solver.get_boundary_dof_coordinate_dict(V)
+        
+        #Tests
+        assert len(facetdic[0]) == 2,"Error in normal dictionary creation, 1,1 UnitSquare with CG1 has two normals per boundary dof"
+        assert facetdic.keys() == coord.keys(),"error in normal dictionary creation, boundary dofs do not agree with those obtained from \
+                                            get_boundary_dof_coordinate_dict"                                    
         
 if __name__ == "__main__":
     t = TestNitscheSolver()
