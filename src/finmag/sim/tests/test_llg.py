@@ -8,28 +8,6 @@ length = 20e-9 # m
 simplices = 10
 mesh = df.Interval(simplices, 0, length)
 
-def test_when_interpolating_M_you_need_to_define_the_problem_again():
-    """ this test documents the behaviour of the LLG class and
-    may be removed once it improves. """
-
-    llg = LLG(mesh)
-    llg.set_m0(('(2*x[0]-L)/L',
-                'sqrt(1 - ((2*x[0]-L)/L)*((2*x[0]-L)/L))',
-                '0'), L=length)
-    llg.setup()
-    llg.solve()
-    H_ex = llg.H_ex[:]
-
-    llg.set_m0(('sqrt(1 - ((2*x[0]-L)/L)*((2*x[0]-L)/L))',
-                '(2*x[0]-L)/L',
-                '0'), L=1e-5)
-    # not doing the setup again.
-    llg.solve()
-    new_H_ex = llg.H_ex
-
-    # even though M has a new value the computation of M refers to the old one
-    assert np.array_equal(H_ex, new_H_ex)
-
 def test_updating_the_M_vector_is_okay_though():
     llg = LLG(mesh)
     llg.set_m0((
