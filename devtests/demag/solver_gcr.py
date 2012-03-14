@@ -67,8 +67,12 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           for i in range(len(bdofs)):
                self.phib.vector()[bdofs[i]] = phibdofs[i]
           print self.phib.vector().array()
-          plot(self.phib)
-          interactive()
+          V2 = FunctionSpace(self.problem.mesh, "CG", 1)
+          phibCG = project(self.phib, V2)
+          print phibCG.function_space()
+          #plot(phibCG, mesh=self.problem.mesh, rescale=True)
+          #interactive()
+          self.save_function(phibCG, 'test')
 
      def build_BEM_matrix(self,doftionary):
           """Build the BEM Matrix associated to the mesh and store it"""

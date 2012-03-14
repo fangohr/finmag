@@ -14,7 +14,9 @@ import numpy as np
 
 class FKSolver(sb.DeMagSolver):
     """Class containing methods shared by FK solvers"""
-    
+    def __init__:
+          self.phi1 = Function(self.V)
+          self.phi2 = Function(self.V)
     def compute_phi1(M,V):
         """
         Get phi1 defined over the mesh with the point given the value 0.
@@ -57,7 +59,9 @@ class FKSolver(sb.DeMagSolver):
         for i in range(functionspace.dim()):
             if i not in dofs:
                 return i
-            
+class FemBemFKSolver(FKSolver,FemBemDeMagSolver):
+	
+          
 class FKSolverTrunc(sb.TruncDeMagSolver,FKSolver):
     """FK Solver using domain truncation"""
     def __init__(self,problem, degree = 1):
