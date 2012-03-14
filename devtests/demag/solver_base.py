@@ -14,7 +14,7 @@ class DeMagSolver(object):
         self.problem = problem
         self.degree = degree
         #Create the space for the potential function
-        self.V = FunctionSpace(self.problem.mesh,"CR",degree)
+        self.V = FunctionSpace(self.problem.mesh,"CG",degree)
         
         #Convert M into a function
         #HF: I think this should always be
@@ -44,6 +44,9 @@ class FemBemDeMagSolver(DeMagSolver):
             #of a triangle
             self.ffc_options = {"quadrature_rule":"canonical" \
                                 ,"fquadrature_degree":1}
+            #Change the Function space to CR
+            self.V = FunctionSpace(self.problem.mesh,"CG",degree)
+            
     def get_boundary_dofs(self):
         """Gets the dofs that live on the boundary of a mesh"""
         dummyBC = DirichletBC(self.V,0,"on_boundary")
@@ -91,6 +94,29 @@ class FemBemDeMagSolver(DeMagSolver):
              vector[i] = bigvector[key]
         return vector
     
+    def solve_laplace_inside(self,function):
+        """Take a functions boundary data as a dirichlet BC and solve
+            a laplace equation"""
+        print function
+        V = function.function_space()
+        print V
+        bc = DirichletBC(V,function, "on_boundary")
+        print "ok"
+        u = TrialFunction(V)
+        v = TestFunction(V)
+
+        #Laplace forms
+        a = inner(grad(u),grad(v))*dx
+        A = assemble(a)
+
+        #RHS = 0
+        f = Function(V).vector()
+        #Apply BC
+        bc.apply(A,f)
+
+        solve(A,function.vector(),f)
+        return function
+        
 class TruncDeMagSolver(DeMagSolver):
     """Base Class for truncated Demag Solvers"""
     def __init__(self,problem,degree = 1):
