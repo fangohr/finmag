@@ -4,6 +4,7 @@ import os
 import numpy as np
 import finmag.sim.helpers as h
 from finmag.sim.exchange import Exchange
+from finmag.sim.anisotropy import UniaxialAnisotropy
 from finmag.sim.dmi import DMI
 
 class LLG(object):
