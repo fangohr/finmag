@@ -10,6 +10,8 @@ def test_external_field_depends_on_t():
     L = 10e-9
     mesh = df.Interval(simplices, 0, L)
     omega=50*df.DOLFIN_PI/1e-9
+    GHz=1e9
+    omega= 100*GHz
     llg=LLG(mesh)
     llg.set_m0(df.Constant((1, 0, 0)))
     #This is the time dependent field
@@ -78,14 +80,15 @@ def test_external_field_depends_on_t():
         popt,pcov = scipy.optimize.curve_fit(
             sinusoidalfit,np.array(tlist),np.array(my),
             p0=(omega*1.04,0.,0.1,0.2))
+            #p0 is the set of parameters with which the fitting 
+            #routine starts 
 
         print "popt=",popt
 
         fittedomega,fittedphi,fittedA,fittedB=popt
-
         f=open("fittedresults.txt","w")
 
-        print >>f, "Fitted omega           : %9f" % (fittedomega)
+        print >>f, "Fitted omega           : %9g" % (fittedomega)
         print >>f, "Rel error in omega fit : %9g" % ((fittedomega-omega)/omega)
         print >>f, "Fitted phi             : %9f" % (fittedphi)
         print >>f, "Fitted Amplitude (A)   : %9f" % (fittedA)
@@ -93,14 +96,13 @@ def test_external_field_depends_on_t():
         pylab.plot(tlist,my,label='my - simulated')
         pylab.plot(tlist,
                    sinusoidalfit(np.array(tlist),*popt),
-                   '-',label='m_y - fit')
+                   '-x',label='m_y - fit')
         pylab.xlabel('time [s]')
         pylab.legend()
         pylab.savefig('fit.png')
-  
         deviation = np.sqrt(sum((sinusoidalfit(np.array(tlist),*popt)-my)**2))/len(tlist)
         print >>f, "stddev=%g" % deviation
-        print "Written plot to file"
+        f.close()
 
         assert (fittedomega-omega)/omega < 1e-4
         assert deviation < 5e-4
