@@ -5,17 +5,12 @@ from prob_trunc_testcases import *
 import prob_fembem_testcases as pft
 from dolfin import *
 
-#truncproblem = MagUnitCircle()
-#fembemproblem = truncproblem.create_fembem_problem()
-fembemproblem = pft.MagUnitCircle(30)
-##print truncproblem.coremesh.coordinates()
-##print fembemproblem.mesh.coordinates()
-#nitschesolver = NitscheSolver(truncproblem)
+fembemproblem = pft.MagUnitSphere(20)
 gcrsolver = GCRFemBemDeMagSolver(fembemproblem)
 gcrsol = gcrsolver.solve()
-#nitschesolver.solve()
-#plot(nitschesolver.phitot,title = "Nitsche Solution")
-plot (gcrsol ,title = "CGR Solution")
-interactive()
-
+##gcrsolver.save_function(gcrsolver.Hdemag,"Hdemag")
+print gcrsolver.Hdemag(0,0,0)
+print gcrsolver.Hdemag(0,0.5,0)
+print gcrsolver.Hdemag(0,0,0.5)
+print gcrsolver.Hdemag(0.5,0,0)
 

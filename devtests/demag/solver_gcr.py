@@ -12,13 +12,7 @@ import numpy as np
 
 #Set allow extrapolation to true#
 parameters["allow_extrapolation"] = True
-
-
-#def sorted(x):
-#     return x
      
-
-infrows = 0
 class GCRDeMagSolver(sb.DeMagSolver):
      """Class containing methods shared by GCR solvers"""
      def __init__(self,problem,degree = 1):
@@ -67,6 +61,7 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           self.phib = self.solve_phib_boundary(self.phia,self.doftionary)
           self.phib = self.solve_laplace_inside(self.phib)
           self.phitot = self.calc_phitot(self.phia,self.phib)
+          self.Hdemag = self.get_demagfield(self.phitot)
           return self.phitot
           
      def solve_phia(self,method = "lu"):
@@ -105,7 +100,6 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
      
      def bemkernel(self,R):
           """Get the kernel of the GCR BEM matrix, adapting it to the dimension of the mesh"""
-          #TODO: Rewrite the expression so that it is only compiled once or not at all 
           w = "1.0/sqrt("
           dim = len(R)
           for i in range(dim):
@@ -113,11 +107,14 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
                if not i == dim-1:
                     w += "+"
           w += ")"
-          assert dim==2
-          return Expression(w,R0=R[0],R1=R[1])     
+          #FIXME Make this more elegant and applicable to all dimensions
+          kwargs = {"R"+str(i):R[i] for i in range(dim)}
+          E = Expression(w,**kwargs)
+          return E
 
      def assemble_qvector_average(self,phia = None,doftionary = None):
           """builds the vector q that we multiply the Bem matrix with to get phib, using an average"""
+          ###At the moment it is advisable to use assemble_qvector_exact as it gives a better result###
           if phia is None:
                phia = self.phia
           V = phia.function_space()
@@ -134,8 +131,10 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           basefuncvol = assemble(v*ds).array()
           #This will create a lot of NAN which are removed by the restriction
           q = np.array([q[i]/basefuncvol[i] for i in range(len(q))])
-          #Divide out the volume of the facets
           
+          ########################################
+          #TODO Divide out the volume of the facets
+          ########################################
           
           #restrict q to the values on the boundary
           q = self.restrict_to(q,doftionary.keys())
@@ -159,15 +158,10 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
                #Take the dot product of n with M + gradphia
                q[i] = sum([n[k]*(self.M[k](tuple(ri)) + gradphia[k](tuple(ri))) for k in range(len(n))])
           return q
-               
-                        
+                                      
 if __name__ == "__main__":
      import prob_fembem_testcases as pft
      problem = pft.MagUnitCircle(10)
      solver = GCRFemBemDeMagSolver(problem)
      solver.assemble_qvector_exact()
      
-##     phitot = solver.solve()
-####     plot(phitot)
-####     interactive()
-##     solver.save_function(solver.phitot, "GCR Solver Solution")
