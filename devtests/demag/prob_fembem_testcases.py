@@ -12,8 +12,8 @@ import prob_base as pb
 #TODO need a more exciting M, GCR solver has phiA = 0 due to
 #divM = 0 if M constant
 class MagUnitCircle(pb.FemBemDeMagProblem):
-    def __init__(self):
-        mesh = UnitCircle(20)
+    def __init__(self,n= 20):
+        mesh = UnitCircle(n)
         #TODO Make M three dimensional
         M = ("1","0")
         #Initialize Base Class
