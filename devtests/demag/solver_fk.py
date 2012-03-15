@@ -1,16 +1,17 @@
 "Solvers for the demagnetization field using the Fredkin-Koehler approach" 
-#This solver does not work yet. The Neumann problem needs to be specified
-#somehow. The current solution of fixing a boundary point creates an incorrect
-#solution.
 
 __author__ = "Gabriel Balaban"
 __copyright__ = __author__
 __project__ = "Finmag"
 __organisation__ = "University of Southampton"
 
+# Modified by Anders E. Johansen, 2012
+# Last change: 15.03.2012
+
 from dolfin import *
 import solver_base as sb
 import numpy as np
+import progressbar as pb
 
 class FKSolver(sb.DeMagSolver):
     """Class containing methods shared by FK solvers"""
@@ -18,131 +19,142 @@ class FKSolver(sb.DeMagSolver):
         super(FKSolver, self).__init__(problem, degree)
         self.phi1 = Function(self.V)
         self.phi2 = Function(self.V)
+        self.degree = degree
 
-    def compute_phi1(self,M,V):
+    def compute_phi1(self, M, V):
         """
         Get phi1 defined over the mesh with the point given the value 0.
         phi1 is the solution to the inhomogeneous Neumann problem.
         M is the magnetisation field.
         V is a FunctionSpace
+
         """
-        #Define functions
+        # Define functions
         u = TrialFunction(V)
         v = TestFunction(V)
+        n = FacetNormal(V.mesh())
         
-        #Define forms
+        # Define forms
         eps = 1e-8
         a = dot(grad(u),grad(v))*dx + dot(eps*u,v)*dx 
-        f = (div(M)*v)*dx  #Source term
-        N = FacetNormal(self.problem.mesh)
-        f += (dot(M,N)*v)*ds #Neumann Condition
+        f = div(M)*v*dx + dot(M, n)*v*ds
 
-        A = assemble(a)
-        F = assemble(f)
-        """
-        #Specify a the problem by changing a nonboundary DOF to 0.
-        nonbounddof = self.nonboundarydof(V)
+        # Solve for the DOFs in phi1
+        solve(a == f, self.phi1)
 
-        #Specify the nonbounddof in A and F.
-        F[nonbounddof] = 0.0
-        #The dolfin Matrix class needs a very special input for ident
-        arr = array([nonbounddof],dtype = I,order = "C")
-        A.ident(arr)
-        """
-        #Solve for the DOFs in phi1
-        solve(A,self.phi1.vector(),F)
-        """
-        w = Function(V)
-        solve(a==f, w)
-        plot(w)
-        interactive()
-        exit()
-        """
 
-    def nonboundarydof(functionspace):
-        """Return a DOF not on the boundary of the mesh"""
-        
-        dummyBC = DirichletBC(functionSpace,0,"on_boundary")
-        dofs = dummyBC.get_boundary_values()
-        #Search for a DOF not in the BC
-        for i in range(functionspace.dim()):
-            if i not in dofs:
-                return i
-
-class FemBemFKSolver(FKSolver,sb.FemBemDeMagSolver):
+class FemBemFKSolver(FKSolver, sb.FemBemDeMagSolver):
     """FemBem solver for Demag Problems using the Fredkin-Koehler approach."""
+
     def __init__(self, problem, degree=1):
           super(FemBemFKSolver,self).__init__(problem, degree)
           self.doftionary = self.get_boundary_dof_coordinate_dict()
 
     def solve(self):
-        self.compute_phi1(self.M, self.V)
-        self.solve_phi2_boundary(self.doftionary)
-        self.solve_laplace_inside(self.phi2)
-        self.phitot = self.calc_phitot(self.phi1, self.phi2)
-        self.save_function(self.phitot, "fk")
-        return self.phitot
+        """
+        Return the magnetic scalar potential :math:`phi` of
+        equation (2.13) in Andreas Knittel's thesis, 
+        using a FemBem solver and the Fredkin-Koehler approach.
 
-    def solve_phi2_boundary(self, doftionary):
-        B = self.build_BEM_matrix(doftionary)
+        """
+        # Compute phi1 according to Knittel (2.28 - 2.29)
+        self.compute_phi1(self.M, self.V)
+
+        # Compute phi2 on the boundary
+        self.__solve_phi2_boundary(self.doftionary)
+
+        # Compute Laplace's equation (Knittel, 2.30)
+        self.solve_laplace_inside(self.phi2)
+
+        # Knittel (2.27), phi = phi1 + phi2
+        phi = self.calc_phitot(self.phi1, self.phi2)
+        return phi
+
+    def __solve_phi2_boundary(self, doftionary):
+        """Compute phi2 on the boundary."""
+        B = self.__build_BEM_matrix(doftionary)
         phi1 = self.restrict_to(self.phi1.vector().array(), doftionary.keys())
-        phi2dofs = np.dot(B,phi1)
+        phi2dofs = np.dot(B, phi1)
         bdofs = doftionary.keys()
         for i in range(len(bdofs)):
             self.phi2.vector()[bdofs[i]] = phi2dofs[i]
         
-    def build_BEM_matrix(self, doftionary):
+    def __build_BEM_matrix(self, doftionary):
+        """Build and return the Boundary Element Matrix."""
         n = len(doftionary)
         keys = doftionary.keys()
         BEM = np.zeros((n,n))
+
+        bar = pb.ProgressBar(maxval=n-1, \
+                widgets=[pb.Bar('=', '[', ']'), ' ', pb.Percentage()])
+
+        info("Building Boundary Element Matrix")
         for i, dof in enumerate(doftionary):
-            BEM[i] = self.get_BEM_row(doftionary[dof], keys, i)
-            print BEM[i]
+            bar.update(i)
+            BEM[i] = self.__get_BEM_row(doftionary[dof], keys, i)
         return BEM
 
-    def get_BEM_row(self, R, dofs, i):
-        v = self.BEMnumerator(R)
-        w = self.BEMdenominator(R)
+    def __get_BEM_row(self, R, dofs, i):
+        """Return row i in the BEM."""
+        v = self.__BEMnumerator(R)
+        w = self.__BEMdenominator(R)
         psi = TestFunction(self.V)
 
+        # First term containing integration part (Knittel, eq. (2.52)) 
         L = 1.0/(4*DOLFIN_PI)*psi*v*w*ds 
 
-        # Second term containing solid angle (Knittel, eq. (2.52))
-        # Use relation (23) - (24) in IEEE jan 2008.
+        # Second term containing solid angle (Knittel, same equation)
+        # Use relation (23) - (24) in IEEE jan 2008 for the solid angle
         L2 = 1.0/(4*DOLFIN_PI)*v*w*ds
         L2 = (assemble(L2) - 1)
-            
-        bigrow = assemble(L)
+        
+        # Create a row from the first term
+        bigrow = assemble(L, form_compiler_parameters=self.ffc_options)
         row = self.restrict_to(bigrow, dofs)
+        
+        # Insert second term
         row[i] += L2
         return row
 
-    def BEMnumerator(self, R):
-        dim = len(R)
-        v = ''
-        for i in range(dim-1):
-            v += '"%g - x[%d]", ' % (R[i], i)
-        v += '"%g - x[%d]"' % (R[-1], dim-1)
+    def __BEMnumerator(self, R):
+        """
+        Compute the numerator of the fraction in
+        the first term in Knittel (2.52)
 
-        # TODO: Do something better than this..
-        exec("v = %s" % v)
-        
-        v = Expression(v)
-        W = VectorFunctionSpace(self.problem.mesh, "CR", 1, dim=dim)
+        """
+        dim = len(R)
+        v = []
+        for i in range(dim):
+            v.append("R%d - x[%d]" % (i, i))
+        v = tuple(v)
+
+        kwargs = {"R" + str(i): R[i] for i in range(dim)}
+        v = Expression(v, **kwargs)
+
+        W = VectorFunctionSpace(self.problem.mesh, "CR", self.degree, dim=dim)
         v = interpolate(v, W)
-        n = FacetNormal(self.problem.mesh)
+        n = FacetNormal(self.V.mesh())
         v = dot(v, n)
         return v
 
-    def BEMdenominator(self, R):
+    def __BEMdenominator(self, R):
+        """
+        Compute the denominator of the fraction in
+        the first term in Knittel (2.52)
+
+        """
         w = "pow(1.0/sqrt("
-        dim = len(R-1)
-        for i in range(dim-1):
-            w += "(%g - x[%d])*(%g - x[%d]) + " % (R[i],i,R[i],i)
-        w += "(%g - x[%d])*(%g - x[%d])), 3)" % (R[dim-1],dim -1,R[dim-1],dim-1)
-        return Expression(w) 
-	
+        dim = len(R)
+        for i in range(dim):
+            w += "(R%d - x[%d])*(R%d - x[%d])" % (i, i, i, i)
+            if not i == dim-1:
+                w += "+"
+        w += "), 3)"
+
+        kwargs = {"R" + str(i): R[i] for i in range(dim)}
+        return Expression(w, **kwargs)
           
+
 class FKSolverTrunc(sb.TruncDeMagSolver,FKSolver):
     """FK Solver using domain truncation"""
     def __init__(self,problem, degree = 1):
@@ -238,11 +250,14 @@ class FKSolverTrunc(sb.TruncDeMagSolver,FKSolver):
         return phitot
 
 if __name__ == "__main__":
-     import prob_fembem_testcases as pft
-     problem = pft.MagUnitCircle(30)
-     solver = FemBemFKSolver(problem)
-     #from solver_nitsche import NitscheSolver
-     #solver = NitscheSolver(problem)
-     phi = solver.solve()
-     print phi.vector().array()
-     plot(phi, interactive=True)
+    import prob_fembem_testcases as pft
+    problem = pft.MagUnitSphere(7)
+    #problem = pft.MagUnitCircle(10)
+    
+    solver = FemBemFKSolver(problem)
+    phi = solver.solve()
+    plot(phi, interactive=True)
+    
+    #gradient = solver.get_demagfield(phi)
+    #solver.save_function(phi, "phi")
+    #solver.save_function(gradient, "grad")

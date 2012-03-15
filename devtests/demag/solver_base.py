@@ -57,8 +57,8 @@ class FemBemDeMagSolver(DeMagSolver):
         super(FemBemDeMagSolver,self).__init__(problem,degree)
         #Paramters to use a quadrature rule that avoids the endpoints
         #of a triangle
-        self.ffc_options = {"quadrature_rule":"canonical" \
-                            ,"quadrature_degree":10}
+        self.ffc_options = {"quadrature_rule":"canonical"}
+        
         #Change the Function space to CR
         self.V = FunctionSpace(self.problem.mesh,"CR",degree)
         #Total Function that we solve for
@@ -238,3 +238,22 @@ class TruncDeMagSolver(DeMagSolver):
         for index,dof in enumerate(restrictedfunction.vector()):
             restrictedfunction.vector()[index] = function.vector()[map_to_mesh[vm[index]]]
         return restrictedfunction
+
+
+#Not used now but may be useful later
+##def unit_vector_functions(self,mesh):
+##    """Builds Unit Vector functions defined over the whole mesh"""
+##    ##uvecspace = VectorFunctionSpace(mesh,"DG",0)
+##    d = mesh.topology().dim()
+##    #Create a zero vector"        
+##    zerovec = [0 for i in range(d)]
+##    #Initialize unit vector list
+##    elist = [zerovec[:] for i in range(d)]
+##    #Change an entry to get a unit vector
+##    for i in range(d):          
+##        elist[i][i] = 1
+##    #Generate constants
+##    elist = [Constant(tuple(elist[i])) for i in range(len(elist))]
+##    print elist
+##    return elist
+
