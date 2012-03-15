@@ -167,8 +167,12 @@ generate-doc: examples-for-doc
 #the right files in ../examples to create them.
 examples-for-doc: ../examples/macrospin/alpha-1.00.png ../examples/time-dependent-applied-field/fittedresults.txt ../examples/time-dependent-applied-field/fit.png ../examples/time-dependent-applied-field/results.png
 
+# The absolute path for the doc directory
+DOC_DIR = $(abspath .)
+# Paths that have to be added to PYTHONPATH prior to running the tests from here (for jenkins)
+PYTHON_ROOTS = $(DOC_DIR)/../src
 ../examples/macrospin/alpha-1.00.png: ../examples/macrospin/test_macrospin.py
-	python ../examples/macrospin/test_macrospin.py
+	python PYTHONPATH=$(PYTHON_ROOTS) python ../examples/macrospin/test_macrospin.py
 
 ../examples/time-dependent-applied-field/fittedresults.txt: ../examples/time-dependent-applied-field/test_appfield.py
-	cd ../examples/time-dependent-applied-field; python test_appfield.py
+	cd ../examples/time-dependent-applied-field && PYTHONPATH=$(PYTHON_ROOTS) python test_appfield.py
