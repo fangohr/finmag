@@ -54,7 +54,10 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           self.doftionary = self.get_boundary_dof_coordinate_dict()
 
      def solve(self):
-          """Solve for the Demag field using GCR and FemBem"""
+          """
+          Solve for the Demag field using GCR and FemBem
+          Potential is returned, demag field stored
+          """
           #Solve for phia
           self.solve_phia()
           #Solve for phia 
