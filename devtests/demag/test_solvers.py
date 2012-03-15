@@ -1,4 +1,4 @@
-"""A set of tests to insure that the NitscheSolver works properly"""
+"""A set of tests to insure that the Demag Solvers work properly"""
 
 __author__ = "Gabriel Balaban"
 __copyright__ = __author__
@@ -13,14 +13,11 @@ import prob_trunc_testcases as ptt
 import prob_fembem_testcases as pft
 import numpy as np
 
-#This suite tests the solutions for the demag scalar potential function from the Nitsche Solver.
-#Global Tolerance for closeness to 0.
-TOL = 1.0 #Fixme This is a bad tolerance, maybe the nitsche solver can be made more precise
-          #TODO the averaging by volume causes the error to increase since the surface volumes are <1,
-          #this gets worse for increased dimension. So get rid of averaging and recalibrate the gammas and TOL
+#This suite tests the solutions for the demag scalar potential function from various Solvers.
 
 class TestTruncDemagSolver(object):
     """Test the Solver Base Class"""
+
     def test_restrictfunc(self):
         """
         A simple linear Function is restricted to half a square and the answer is tested against an analytic value
@@ -57,8 +54,11 @@ class TestTruncDemagSolver(object):
         assert near(A,0.0),"Error in TruncDemagSolver.restrictfunc, restricted function does not match analytical value"
        
 class TestNitscheSolver(object):
-    #Wierd that we cannot use __init__
     def setup_class(self):
+        self.TOL = 1.0 #Fixme This is a bad tolerance, maybe the nitsche solver can be made more precise
+          #TODO the averaging by volume causes the error to increase since the surface volumes are <1,
+          #this gets worse for increased dimension. So get rid of averaging and recalibrate the gammas and TOL
+        
         self.problem1d = pttc.MagUnitInterval()
         self.problem2d = pttc.MagUnitCircle()
         self.problem3d = pttc.MagUnitSphere()
@@ -80,33 +80,31 @@ class TestNitscheSolver(object):
         
     def test_compare_3danalytical(self):
         """Test the potential phi against the known analytical solution in the core"""
-        L1error = self.L1_error_3d_potential(self.solution3d)
-        print "3d Analtical solution of potential, comparison L1error =",L1error
-        assert L1error < TOL,"L1 Error in 3d computed solution from the analytical solution, %g is not less than the Tolerance %g"%(L1error,TOL)
+        L2error = self.L2_error_3d_potential(self.solution3d)
+        print "3d Analtical solution of potential, comparison L2error =",L2error
+        assert L2error < self.TOL,"L2 Error in 3d computed solution from the analytical solution, %g is not less than the Tolerance %g"%(L2error,self.TOL)
         
-    def L1_error_3d_potential(self,solution):
+    def L2_error_3d_potential(self,solution):
         soltrue = Expression("-x[0]/3.0")
         soltrue = project(soltrue,self.solver3d.V)
-        l1form = abs(self.solution3d - soltrue)*self.problem3d.dxC
-        L1error = assemble(l1form, cell_domains = self.problem3d.corefunc)
-        return L1error
+        L2error = self.error_norm(solution,soltrue, cell_domains = self.problem3d.corefunc, dx = self.problem3d.dxC) 
+        return L2error
 
     def test_compare_3danalytical_gradient(self):
         """Test the Demag Field from the Nitsche Solver against the known analytical solution in the core"""
         L2error = self.L2_error_3d_demag(self.solver3d.Hdemag_core)
         print "3d Analtical solution demag field, comparison L2error =",L2error
-        assert L2error < TOL,"L2 Error in 3d computed solution from the analytical solution, %g is not less than the Tolerance %g"%(L2error,TOL)
+        assert L2error < self.TOL,"L2 Error in 3d computed solution from the analytical solution, %g is not less than the Tolerance %g"%(L2error,self.TOL)
 
-    def L2_error_3d_demag(self,demag):
+    def L2_error_3d_demag(self,Hdemag):
         #Function Space of solution
-        fspace = demag.function_space()
+        fspace = Hdemag.function_space()
         #True analytical solution
         soltrue = Expression(("1.0/3.0","0.0","0.0"))
         soltrue = project(soltrue,fspace)
-        #Integrate this to get a global error value using L2 since I do not know how to get L1 norm of a vector
-        l2form = dot(self.solver3d.Hdemag_core - soltrue,self.solver3d.Hdemag_core - soltrue)*dx
-        L2error = sqrt(assemble(l2form))
+        L2error = self.error_norm(Hdemag,soltrue) 
         return L2error
+    
     ##FIXME convergence FAILS!
 ##    def test_convergance_3d(self):
 ##        """The FEM solution should converge to the analytical solution as the mesh is refined"""
@@ -160,53 +158,49 @@ class TestNitscheSolver(object):
         self.normalderivativejump_test(problem,solver,solution)
 
     def dbc_test(self,problem, solution):
-        #1 Test dirichlet boundary condition on outside
-        one = interpolate(Constant(1),solution.function_space())
-        a = abs(solution)*ds
-        c = one*ds
-        L1error = assemble(a)/assemble(c)
-        print "dbc_test: L1error=",L1error
+        L2error = self.error_norm(solution,Function(solution.function_space()) , dx = ds)
+        print "dbc_test: L2error=",L2error
         errmess = "Error in Nitsche Solver with problem " + problem.desc() + \
-        "outer dirichlet BC condition not satisfied, average solution boundary integral is %g"%(L1error)
-        assert L1error < TOL,errmess 
+        "outer dirichlet BC condition not satisfied, average solution boundary integral is %g"%(L2error)
+        assert L2error < self.TOL,errmess 
 
     def continuity_test(self,problem,solver,solution):
-        #2 Test Continuity accross the interior boundary
-        dSC = problem.dSC
-        one = interpolate(Constant(1),solution.function_space())
+        #2 Test Continuity across the interior boundary
         jumpphi = solver.phi1('-') - solver.phi0('+')
-        a1 = abs(jumpphi)*dSC
-        a2 = abs(jump(solution))*dSC
-        c = one('-')*dSC
-        #Add in the commented code to get an "average" L1 error
-        L1error1 = assemble(a1,interior_facet_domains = problem.coreboundfunc)#/assemble(c,interior_facet_domains = problem.coreboundfunc)
-        L1error2 = assemble(a2,interior_facet_domains = problem.coreboundfunc)#/assemble(c,interior_facet_domains = problem.coreboundfunc)
-        print "continuity_test: L1error1=",L1error1
-        print "continuity_test: L1error2=",L1error2
-        assert L1error1 < TOL,"Error in Nitsche Solver with problem" + problem.desc() + "continuity accross magnetic core boundary not satisfied for phi1 and phi2, \
-                               TOL = %g, L1error = %g"%(TOL,L1error1)
-        assert L1error2 < TOL,"Error in Nitsche Solver with 1d problem" + problem.desc() + "continuity accross magnetic core boundary not satisfied for phi total \
-                               TOL = %g, L1error = %g"%(TOL, L1error2)
+        L2error1 = self.error_norm(jump(solution),Function(solution.function_space())('-'), interior_facet_domains = problem.coreboundfunc, dx = problem.dSC) 
+        L2error2 = self.error_norm(jumpphi,Function(solution.function_space())('-'), interior_facet_domains = problem.coreboundfunc, dx = problem.dSC) 
+    
+        print "continuity_test: L2error1=",L2error1
+        print "continuity_test: L2error2=",L2error2
+        assert L2error1 < self.TOL,"Error in Nitsche Solver with problem" + problem.desc() + "continuity accross magnetic core boundary not satisfied for phi1 and phi2, \
+                               TOL = %g, L2error = %g"%(self.TOL,L2error1)
+        assert L2error2 < self.TOL,"Error in Nitsche Solver with 1d problem" + problem.desc() + "continuity accross magnetic core boundary not satisfied for phi total \
+                               TOL = %g, L2error = %g"%(self.TOL, L2error2)
 
     def normalderivativejump_test(self,problem,solver,solution):
         #3 Test jump in normal derivative across the interior boundary
-        dSC = problem.dSC
         N = FacetNormal(problem.coremesh)
         M = solver.M
         
-        one = interpolate(Constant(1),solution.function_space())
         jumpphinor = dot(grad(solver.phi1('-') - solver.phi0('+')),N('+'))
-        a1 = abs(jumpphinor - dot(M,N)('-'))*dSC
-        a2 = abs(dot(jump(grad(solution)),N('+')) - dot(M,N)('+'))*dSC
-        c = one('-')*dSC
-        L1error1 = assemble(a1,interior_facet_domains = problem.coreboundfunc )#/assemble(c,interior_facet_domains = problem.coreboundfunc)
-        L1error2 = assemble(a2,interior_facet_domains = problem.coreboundfunc)#/assemble(c,interior_facet_domains = problem.coreboundfunc)
-        print "normalderivativejump_test: L1error1=",L1error1
-        print "normalderivativejump_test: L1error2=",L1error2
-        assert L1error1 < TOL,"Error in Nitsche Solver with " + problem.desc() + " normal derivative jump accross magnetic core boundary not satisfied for phi1 and phi2, \
-                               TOL = %g, L1error = %g"%(TOL,L1error1)
-        assert L1error2 < TOL,"Error in Nitsche Solver with " + problem.desc() + " normal derivative jump accross magnetic core boundary not satisfied for phi total \
-                               TOL = %g, L1error = %g"%(TOL,L1error2)
+        f1 =abs(jumpphinor - dot(M,N)('-'))
+        f2 = abs(dot(jump(grad(solution)),N('+')) - dot(M,N)('+'))
+        zero = Function(solution.function_space())
+
+        L2error1 = self.error_norm(f1,zero('-'),interior_facet_domains = problem.coreboundfunc, dx = problem.dSC) 
+        L2error2 = self.error_norm(f2,zero('-'), interior_facet_domains = problem.coreboundfunc, dx = problem.dSC) 
+        
+        print "normalderivativejump_test: L2error1=",L2error1
+        print "normalderivativejump_test: L2error2=",L2error2
+        assert L2error1 < self.TOL,"Error in Nitsche Solver with " + problem.desc() + " normal derivative jump accross magnetic core boundary not satisfied for phi1 and phi2, \
+                               TOL = %g, L2error = %g"%(self.TOL,L2error1)
+        assert L2error2 < self.TOL,"Error in Nitsche Solver with " + problem.desc() + " normal derivative jump accross magnetic core boundary not satisfied for phi total \
+                               TOL = %g, L2error = %g"%(self.TOL,L2error2)
+        
+    def error_norm(self,func1,func2,cell_domains = None,interior_facet_domains = None, dx = dx):
+        Eform = inner(func1-func2,func1-func2)*dx
+        E = assemble(Eform, cell_domains =  cell_domains, interior_facet_domains =interior_facet_domains)
+        return sqrt(E)
         
 class TestFemBemDeMagSolver(object):
     """Test the FemBemDeMagSolver class """
