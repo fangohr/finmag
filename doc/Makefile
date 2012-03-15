@@ -162,8 +162,13 @@ generate-doc: examples-for-doc
 #files ready. This will happen automatically when Jenkins runs, as
 #all tests in finmag/src and finmag/examples are run before the 
 
-examples-for-doc: ../examples/macrospin/alpha-1.00.png
+
+#list of files we need for documentation and which should trigger running of
+#the right files in ../examples to create them.
+examples-for-doc: ../examples/macrospin/alpha-1.00.png ../examples/time-dependent-applied-field/fittedresults.txt ../examples/time-dependent-applied-field/fit.png ../examples/time-dependent-applied-field/results.png
 
 ../examples/macrospin/alpha-1.00.png: ../examples/macrospin/test_macrospin.py
 	python ../examples/macrospin/test_macrospin.py
 
+../examples/time-dependent-applied-field/fittedresults.txt: ../examples/time-dependent-applied-field/test_appfield.py
+	cd ../examples/time-dependent-applied-field; python test_appfield.py
