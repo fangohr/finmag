@@ -11,6 +11,7 @@ import solver_nitsche as sn
 import solver_base as sb
 import prob_trunc_testcases as ptt
 import prob_fembem_testcases as pft
+import numpy as np
 
 #This suite tests the solutions for the demag scalar potential function from the Nitsche Solver.
 #Global Tolerance for closeness to 0.
@@ -234,17 +235,29 @@ class TestFemBemDeMagSolver(object):
         Laplace solution does not equal original solution"
         print "solve_laplace_inside testpassed"
 
+    def easyspace(self):
+        mesh = UnitSquare(1,1)
+        return FunctionSpace(mesh,"CG",1)
+
     def test_get_dof_normal_dict(self):
         """Test some features of a known example """
-        mesh = UnitSquare(1,1)
-        V = FunctionSpace(mesh,"CG",1)
+        V = self.easyspace()
         facetdic = self.solver.get_dof_normal_dict(V)
         coord = self.solver.get_boundary_dof_coordinate_dict(V)
         
         #Tests
         assert len(facetdic[0]) == 2,"Error in normal dictionary creation, 1,1 UnitSquare with CG1 has two normals per boundary dof"
         assert facetdic.keys() == coord.keys(),"error in normal dictionary creation, boundary dofs do not agree with those obtained from \
-                                            get_boundary_dof_coordinate_dict"                                    
+                                            get_boundary_dof_coordinate_dict"
+
+    def test_get_dof_normal_dict_avg(self):
+        """Use same case as test_get_dof_normal_dict, see if average normals
+            have length one"""
+        V = self.easyspace()
+        avgnormtionary = self.solver.get_dof_normal_dict_avg(V)
+        for k in avgnormtionary:
+            assert near(sqrt(np.dot(avgnormtionary[k],avgnormtionary[k].conj())),1),"Failure in average normal calulation, length of\
+                                                                                     normal not equal to 1"
         
 if __name__ == "__main__":
     t = TestNitscheSolver()
