@@ -2,18 +2,20 @@
 from solver_nitsche import *
 from solver_gcr import *
 from prob_trunc_testcases import *
+import prob_fembem_testcases as pft
 from dolfin import *
 
-truncproblem = MagUnitCircle()
+#truncproblem = MagUnitCircle()
 #fembemproblem = truncproblem.create_fembem_problem()
-
-#print truncproblem.coremesh.coordinates()
-#print fembemproblem.mesh.coordinates()
-nitschesolver = NitscheSolver(truncproblem)
-#gcrsolver = GCRFemBemDeMagSolver(fembemproblem)
-nitschesolver.solve()
-plot(nitschesolver.phitot,title = "Nitsche Solution")
-#plot (gcrsolver.solve(),title = "CGR Solution")
+fembemproblem = pft.MagUnitCircle()
+##print truncproblem.coremesh.coordinates()
+##print fembemproblem.mesh.coordinates()
+#nitschesolver = NitscheSolver(truncproblem)
+gcrsolver = GCRFemBemDeMagSolver(fembemproblem)
+gcrsol = gcrsolver.solve()
+#nitschesolver.solve()
+#plot(nitschesolver.phitot,title = "Nitsche Solution")
+plot (gcrsol ,title = "CGR Solution")
 interactive()
 
 

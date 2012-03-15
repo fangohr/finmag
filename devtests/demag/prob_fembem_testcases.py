@@ -13,7 +13,7 @@ import prob_base as pb
 #divM = 0 if M constant
 class MagUnitCircle(pb.FemBemDeMagProblem):
     def __init__(self):
-        mesh = UnitCircle(4)
+        mesh = UnitCircle(20)
         #TODO Make M three dimensional
         M = ("1","0")
         #Initialize Base Class

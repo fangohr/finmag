@@ -75,7 +75,7 @@ class FemBemDeMagSolver(DeMagSolver):
         dummyBC = DirichletBC(V,0,"on_boundary")
         return dummyBC.get_boundary_values()
 
-    def get_boundary_dof_coordinate_dict(self,V):
+    def get_boundary_dof_coordinate_dict(self,V = None):
         """
         Provides a dictionary with boundary DOF's
         key = DOFnumber in the functionspace defined over the entire mesh
@@ -84,6 +84,8 @@ class FemBemDeMagSolver(DeMagSolver):
         number in the BEM matrix.
         V = Function Space
         """
+        if V is None:
+            V = self.V
         #objects needed
         mesh = V.mesh()
         d = mesh.topology().dim()
@@ -117,12 +119,15 @@ class FemBemDeMagSolver(DeMagSolver):
                 assert 1==2,"Expected only two cells per facet and not " + str(len(cells))
         return doftionary
 
-    def get_dof_normal_dict(self,V):
+    def get_dof_normal_dict(self,V = None):
         """
         Provides a dictionary with all of the boundary DOF's as keys
         and a list of facet normal components associated to the DOF as values
         V = FunctionSpace
         """
+        #Take my own function space as default
+        if V is None:
+            V = self.V
         mesh = V.mesh()
         mesh.init()
         d = mesh.topology().dim()
@@ -158,6 +163,19 @@ class FemBemDeMagSolver(DeMagSolver):
                     if ntup not in doftonormal[gdof]:
                         doftonormal[gdof].append(ntup) 
         return doftonormal
+
+    def get_dof_normal_dict_avg(self,V = None):
+        """
+        Provides a dictionary with all of the boundary DOF's as keys
+        and an average of facet normal components associated to the DOF as values
+        V = FunctionSpace
+        """
+        normtionary = self.get_dof_normal_dict(V = V)
+        #Take an average of the normals in normtionary
+        avgnormtionary = {k:np.array([ float(sum(i))/float(len(i)) for i in zip(*normtionary[k])]) for k in normtionary}
+        #Renormalize the normals
+        avgnormtionary = {k: avgnormtionary[k]/sqrt(np.dot(avgnormtionary[k],avgnormtionary[k].conj())) for k in avgnormtionary}
+        return avgnormtionary
     
     def restrict_to(self,bigvector,dofs):
         """Restrict a vector to the dofs in dofs (usually boundary)"""

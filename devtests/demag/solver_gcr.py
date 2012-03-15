@@ -9,6 +9,10 @@ from dolfin import *
 import solver_base as sb
 import math
 import numpy as np
+
+#Set allow extrapolation to true#
+parameters["allow_extrapolation"] = True
+
 infrows = 0
 class GCRDeMagSolver(sb.DeMagSolver):
      """Class containing methods shared by GCR solvers"""
@@ -48,7 +52,7 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
      def __init__(self,problem,degree = 1):
           super(GCRFemBemDeMagSolver,self).__init__(problem,degree)
           #get the boundary dof - coordinate dictionary
-          self.doftionary = self.get_boundary_dof_coordinate_dict(self.V)
+          self.doftionary = self.get_boundary_dof_coordinate_dict()
 
      def solve(self):
           """Solve for the Demag field using GCR and FemBem"""
@@ -65,10 +69,10 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           
      def solve_phib_boundary(self,phia,doftionary):
           """Solve for phib on the boundary using BEM"""
-          q = self.assemble_qvector_average(phia,doftionary)
+          q = self.assemble_qvector_exact(phia,doftionary)
           B = self.build_BEM_matrix(doftionary)
           phibdofs = np.dot(B,q)
-          bdofs = doftionary.keys()
+          bdofs = sorted(doftionary.keys())
           for i in range(len(bdofs)):
                self.phib.vector()[bdofs[i]] = phibdofs[i]
           return self.phib
@@ -78,12 +82,12 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           info_blue("Calculating BEM matrix")
           dimbem = len(doftionary)
           self.bemmatrix = np.zeros([dimbem,dimbem])
-          for index,dof in enumerate(doftionary):
+          for index,dof in enumerate(sorted(doftionary)):
                self.bemmatrix[index] = self.get_bem_row(doftionary[dof],doftionary.keys())
                info("BEM Matrix line "+ str(index) + str(self.bemmatrix[index]))
           return self.bemmatrix
 
-     def get_bem_row(self,bdofs):
+     def get_bem_row(self,R,bdofs):
           """Gets the row of the BEMmatrix associated with the point R,used in the form w"""
           w = self.bemkernel(R)
           psi = TestFunction(self.V)
@@ -100,15 +104,21 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           #TODO: Rewrite the expression so that it is only compiled once or not at all 
           w = "1.0/sqrt("
           dim = len(R)
-          for i in range(dim-1):
-               w += "(%g - x[%d])*(%g - x[%d]) + "%(R[i],i,R[i],i)
-          w += "(%g - x[%d])*(%g - x[%d]))"%(R[dim-1],dim -1,R[dim-1],dim-1)
-          return Expression(w)     
+          for i in range(dim):
+               w += "(R%d - x[%d])*(R%d - x[%d])"%(i,i,i,i)
+               if not i == dim-1:
+                    w += "+"
+          w += ")"
+          assert dim==2
+          return Expression(w,R0=R[0],R1=R[1])     
 
-     def assemble_qvector_average(self,phia,doftionary):
+     def assemble_qvector_average(self,phia = None,doftionary = None):
           """builds the vector q that we multiply the Bem matrix with to get phib, using an average"""
-
+          if phia is None:
+               phia = self.phia
           V = phia.function_space()
+          if doftionary is None:
+               doftionary = self.get_boundary_dof_coordinate_dict(V)
           mesh = V.mesh()
           n = FacetNormal(mesh)
           v = TestFunction(V)
@@ -117,45 +127,62 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           #build q everywhere v needed so a vector is assembled #This method uses an imprecise average
           q = assemble((- dot(n,self.M) + dot(grad(phia),n))*v*ds).array()
           #Get rid of the volume of the basis function
-          one = assemble(v*ds).array()
+          basefuncvol = assemble(v*ds).array()
+          print set(list(basefuncvol))
           #This will create a lot of NAN which are removed by the restriction
-          q = np.array([q[i]/one[i] for i in range(len(q))])
+          q = np.array([q[i]/basefuncvol[i] for i in range(len(q))])
+          #Divide out the volume of the facets
+          
+          
           #restrict q to the values on the boundary
           q = self.restrict_to(q,doftionary.keys())
           return q
      
-     def assemble_qvector_exact(self,phia,doftionary):
+     def assemble_qvector_exact(self,phia = None,doftionary = None):
           """Builds the vector q using point evaluation"""
-          n = FacetNormal(self.problem.mesh)
-          v = TestFunction(self.V)
-          elist = self.unit_vector_functions(self.problem.mesh())
-          #Divide out the test function volumes
-          one = assemble(v*ds)
-          #assemble normal vector components with a test function in order to get a dofvector
-          nlist = [assemble(dot(e,n)*v*ds) for e in elist]
+          if phia is None:
+               phia = self.phia
+          V = phia.function_space()
+          if doftionary is None:
+               doftionary = self.get_boundary_dof_coordinate_dict(V)
+                   
+          normtionary = self.get_dof_normal_dict_avg()
+          q = np.zeros(len(normtionary))
+          #Get gradphia as a vector function
+          gradphia = project(grad(phia), VectorFunctionSpace(V.mesh(),"CG",1))
+          print normtionary
+          for i,dof in enumerate(sorted(normtionary)):
+               ri = doftionary[dof]
+               print np.linalg.norm(np.array(ri))
+               n = normtionary[dof]
+               #print self.M[0](tuple(ri)) + gradphia[0](tuple(ri))
+               q[i] = sum([n[k]*(self.M[k](tuple(ri)) + gradphia[k](tuple(ri))) for k in range(len(n))])
+          return q
+               
           
           
-     def unit_vector_functions(self,mesh):
-         """Builds Unit Vector functions defined over the whole mesh"""
-         ##uvecspace = VectorFunctionSpace(mesh,"DG",0)
-         d = mesh.topology().dim()
-         #Create a zero vector"        
-         zerovec = [0 for i in range(d)]
-         #Initialize unit vector list
-         elist = [zerovec[:] for i in range(d)]
-         #Change an entry to get a unit vector
-         for i in range(d):          
-             elist[i][i] = 1
-         #Generate constants
-         elist = [Constant(tuple(elist[i])) for i in range(len(elist))]
-         print elist
-         return elist
+##     def unit_vector_functions(self,mesh):
+##         """Builds Unit Vector functions defined over the whole mesh"""
+##         ##uvecspace = VectorFunctionSpace(mesh,"DG",0)
+##         d = mesh.topology().dim()
+##         #Create a zero vector"        
+##         zerovec = [0 for i in range(d)]
+##         #Initialize unit vector list
+##         elist = [zerovec[:] for i in range(d)]
+##         #Change an entry to get a unit vector
+##         for i in range(d):          
+##             elist[i][i] = 1
+##         #Generate constants
+##         elist = [Constant(tuple(elist[i])) for i in range(len(elist))]
+##         print elist
+##         return elist
 
                         
 if __name__ == "__main__":
      import prob_fembem_testcases as pft
      problem = pft.MagUnitCircle()
      solver = GCRFemBemDeMagSolver(problem)
+     solver.assemble_qvector_exact()
      
 ##     phitot = solver.solve()
 ####     plot(phitot)
