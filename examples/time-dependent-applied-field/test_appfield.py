@@ -32,19 +32,22 @@ def test_external_field_depends_on_t():
     llg._pre_rhs_callables.append(update_H_ext)
 
     #nothing special from here, just setting up time integration
-    llg.setup()
-    rhswrap = lambda t,y: llg.solve_for(y,t)
-    r = ode(rhswrap).set_integrator('vode', method='bdf', with_jacobian=False)
-    y0 = llg.m
-    t0 = 0
-    r.set_initial_value(y0, t0)
 
     tfinal = 0.3*1e-9
     dt = 0.001e-9
 
+    llg.setup()
+    rhswrap = lambda t,y: llg.solve_for(y,t)
+    r = ode(rhswrap).set_integrator('vode', method='bdf', 
+                                    with_jacobian=False, max_step=dt/2.)
+    y0 = llg.m
+    t0 = 0
+    r.set_initial_value(y0, t0)
+
     #to gather data for later analysis
     mlist = []
     tlist = []
+    hext = []
 
     #time loop
     while r.successful() and r.t < tfinal-dt:
@@ -52,6 +55,8 @@ def test_external_field_depends_on_t():
         print "Integrating time: %g" % r.t
         mlist.append(llg.m_average)
         tlist.append(r.t)
+        hext.append(llg._H_app((0)))
+        
 
     #only plotting and data analysis from here on
 
@@ -66,6 +71,17 @@ def test_external_field_depends_on_t():
     pylab.legend()
     pylab.savefig('results.png')
     pylab.close()
+    
+    #if max_step is not provided, or chosen too large,
+    #the external field appears not smooth in this plot.
+    #What seems to happen is that the ode integrator
+    #returns the solution without calling the rhs side again
+    #if we request very small time steps.
+    #This is only for debugging.
+    pylab.plot(tlist,hext,'-x')
+    pylab.ylabel('external field [A/m]')
+    pylab.xlabel('time [s]')
+    pylab.savefig('hext.png')
     
     #Then try to fit sinusoidal curve through results
     def sinusoidalfit(t,omega,phi,A,B):
