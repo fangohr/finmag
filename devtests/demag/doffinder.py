@@ -3,38 +3,10 @@
 from dolfin import * 
 import numpy as np
 
-class inputerror(Exception):
-    def __str__(self):
-        return "Can only give Lagrange Element dimension for mesh dimensions 0-3"
-
-def numdoflagelem(q,dim):
-    """NUM of DOF LaGrange ELEMents:
-
-    q -   order of the polynomial.
-
-    dim - is the dimension of the space.
-
-    Returns the number of degrees for the lagrange element.
-
-    """
-
-#Functions to give the dimension of Lagrange elements
-    if dim == 0:
-        return 1
-    elif dim == 1:
-        return q +1
-    elif dim == 2:
-        return (q +1)*(q+2)/2
-    elif dim == 3:
-        return (q+1)*(q+2)*(q+3)/6
-    else:
-        raise inputerror
-
-def bounddofs(fspace,degree, facetfunc,num):
+def bounddofs(fspace, facetfunc,num):
     """BOUNDary DOFS
 
     fspace - function space
-    degree - polynomial degree of the basis functions
     facetfunc - function that marks the boundary
     num - is the number that has been used to mark the boundary
 
@@ -45,11 +17,9 @@ def bounddofs(fspace,degree, facetfunc,num):
     mesh = fspace.mesh()
     d = mesh.topology().dim()
     dm = fspace.dofmap()
-    #degree = fspace.element().degree()
     
     #Array to store the facet dofs.
-    cell_dofs = np.zeros(numdoflagelem(degree,d),dtype=np.uintc)
-    facet_dofs = np.zeros(numdoflagelem(degree,d -1) ,dtype=np.uintc)
+    facet_dofs = np.zeros(dm.num_facet_dofs(),dtype=np.uintc)
 
     #Initialize bounddofset
     bounddofs= set([])
@@ -58,6 +28,8 @@ def bounddofs(fspace,degree, facetfunc,num):
             cells = facet.entities(d)
             # Create one cell (since we have CG)
             cell = Cell(mesh, cells[0])
+            # Create a vector with length exactly = #dofs in cell
+            cell_dofs = np.zeros(dm.cell_dimension(cell.index()),dtype=np.uintc)
             #Get the local to global map
             dm.tabulate_dofs(cell_dofs,cell)
             #Get the local index of the facet with respect to given cell
