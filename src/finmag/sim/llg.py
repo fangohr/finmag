@@ -137,6 +137,7 @@ class LLG(object):
         for func in self._pre_rhs_callables:
             func(self)
 
+        #compute the effective field
         self.H_eff = self.H_app #can we avoid this if we don't use H_app?            
         #self.H_eff *= 0.0 #set to zero
 
@@ -176,14 +177,13 @@ class LLG(object):
               dmi_method="box-matrix-petsc"):
         self.exchange_flag = exchange_flag
         if exchange_flag:
-            self.exchange = Exchange(self.V, self._m, self.C, self.Ms, method=exchange_method)
-        else:
-            zero = df.Constant((0, 0, 0))
-            self.H_ex = df.interpolate(zero, self.V).vector().array()
+            self.exchange = Exchange(self.V, self._m, self.C, 
+                                     self.Ms, method=exchange_method)
 
         self.use_dmi = use_dmi
 
         if use_dmi:
-            self.dmi = DMI(self.V, self._m, self.D, self.Ms, method = dmi_method)
+            self.dmi = DMI(self.V, self._m, self.D, self.Ms, 
+                           method = dmi_method)
 
 
