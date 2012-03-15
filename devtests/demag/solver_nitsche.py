@@ -98,7 +98,7 @@ class NitscheSolver(sb.TruncDeMagSolver):
         #Divide the value of phitotal by 2 on the core boundary
         BOUNDNUM = 2
         #Get the boundary dofs
-        corebounddofs = dff.bounddofs(V,self.degree, self.problem.coreboundfunc, BOUNDNUM)
+        corebounddofs = dff.bounddofs(V, self.problem.coreboundfunc, BOUNDNUM)
         #Halve their value    
         for index,dof in enumerate(phitot.vector()):
             if index in corebounddofs:
