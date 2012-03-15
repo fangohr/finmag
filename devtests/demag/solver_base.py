@@ -58,7 +58,7 @@ class FemBemDeMagSolver(DeMagSolver):
         #Paramters to use a quadrature rule that avoids the endpoints
         #of a triangle
         self.ffc_options = {"quadrature_rule":"canonical" \
-                            ,"fquadrature_degree":4}
+                            ,"quadrature_degree":10}
         #Change the Function space to CR
         self.V = FunctionSpace(self.problem.mesh,"CR",degree)
         #Total Function that we solve for

@@ -20,8 +20,8 @@ class MagUnitInterval(pb.TruncDeMagProblem):
     Once the constructor calls the constructor of the base class (TruncDemagProblem), we also
     have marked facets.
     """
-    def __init__(self):
-        mesh = UnitInterval(10)
+    def __init__(self,n=10):
+        mesh = UnitInterval(n)
         self.r = 0.1 #Radius of magnetic Core
         self.gamma = 700 #Suggested parameter for nitsche solver
         r = self.r
@@ -40,8 +40,8 @@ class MagUnitInterval(pb.TruncDeMagProblem):
         return "unit interval demagnetisation test problem"
 
 class MagUnitCircle(pb.TruncDeMagProblem):
-    def __init__(self):
-        mesh = UnitCircle(20)
+    def __init__(self,n=10):
+        mesh = UnitCircle(n)
         self.r = 0.2 #Radius of magnetic Core
         self.gamma = 13.0 #Suggested parameter for nitsche solver
         r = self.r
@@ -57,7 +57,7 @@ class MagUnitCircle(pb.TruncDeMagProblem):
         return "unit circle demagnetisation test problem"
 
 class MagUnitSphere(pb.TruncDeMagProblem):
-    def __init__(self):
+    def __init__(self,n=10):
         mesh = UnitSphere(10)
         self.r = 0.2 #Radius of magnetic Core
         self.gamma = 0.9 #Suggested parameter for nitsche solver
