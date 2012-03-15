@@ -13,6 +13,11 @@ import numpy as np
 #Set allow extrapolation to true#
 parameters["allow_extrapolation"] = True
 
+
+#def sorted(x):
+#     return x
+     
+
 infrows = 0
 class GCRDeMagSolver(sb.DeMagSolver):
      """Class containing methods shared by GCR solvers"""
@@ -72,7 +77,7 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           q = self.assemble_qvector_exact(phia,doftionary)
           B = self.build_BEM_matrix(doftionary)
           phibdofs = np.dot(B,q)
-          bdofs = sorted(doftionary.keys())
+          bdofs = doftionary.keys()
           for i in range(len(bdofs)):
                self.phib.vector()[bdofs[i]] = phibdofs[i]
           return self.phib
@@ -82,7 +87,7 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           info_blue("Calculating BEM matrix")
           dimbem = len(doftionary)
           self.bemmatrix = np.zeros([dimbem,dimbem])
-          for index,dof in enumerate(sorted(doftionary)):
+          for index,dof in enumerate(doftionary):
                self.bemmatrix[index] = self.get_bem_row(doftionary[dof],doftionary.keys())
                info("BEM Matrix line "+ str(index) + str(self.bemmatrix[index]))
           return self.bemmatrix
@@ -94,7 +99,6 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           L = 1.0/(4*math.pi)*psi*w*ds
           #Bigrow contains many 0's for nonboundary dofs
           bigrow = assemble(L,form_compiler_parameters=self.ffc_options)
-          bigrow = assemble(L)
           #Row contains just boundary dofs
           row = self.restrict_to(bigrow,bdofs)
           return row
@@ -128,7 +132,6 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           q = assemble((- dot(n,self.M) + dot(grad(phia),n))*v*ds).array()
           #Get rid of the volume of the basis function
           basefuncvol = assemble(v*ds).array()
-          print set(list(basefuncvol))
           #This will create a lot of NAN which are removed by the restriction
           q = np.array([q[i]/basefuncvol[i] for i in range(len(q))])
           #Divide out the volume of the facets
@@ -149,38 +152,18 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           normtionary = self.get_dof_normal_dict_avg()
           q = np.zeros(len(normtionary))
           #Get gradphia as a vector function
-          gradphia = project(grad(phia), VectorFunctionSpace(V.mesh(),"CG",1))
-          print normtionary
-          for i,dof in enumerate(sorted(normtionary)):
+          gradphia = project(grad(phia), VectorFunctionSpace(V.mesh(),"DG",0))
+          for i,dof in enumerate(doftionary):
                ri = doftionary[dof]
-               print np.linalg.norm(np.array(ri))
                n = normtionary[dof]
-               #print self.M[0](tuple(ri)) + gradphia[0](tuple(ri))
+               #Take the dot product of n with M + gradphia
                q[i] = sum([n[k]*(self.M[k](tuple(ri)) + gradphia[k](tuple(ri))) for k in range(len(n))])
           return q
                
-          
-          
-##     def unit_vector_functions(self,mesh):
-##         """Builds Unit Vector functions defined over the whole mesh"""
-##         ##uvecspace = VectorFunctionSpace(mesh,"DG",0)
-##         d = mesh.topology().dim()
-##         #Create a zero vector"        
-##         zerovec = [0 for i in range(d)]
-##         #Initialize unit vector list
-##         elist = [zerovec[:] for i in range(d)]
-##         #Change an entry to get a unit vector
-##         for i in range(d):          
-##             elist[i][i] = 1
-##         #Generate constants
-##         elist = [Constant(tuple(elist[i])) for i in range(len(elist))]
-##         print elist
-##         return elist
-
                         
 if __name__ == "__main__":
      import prob_fembem_testcases as pft
-     problem = pft.MagUnitCircle()
+     problem = pft.MagUnitCircle(10)
      solver = GCRFemBemDeMagSolver(problem)
      solver.assemble_qvector_exact()
      

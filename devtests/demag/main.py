@@ -7,7 +7,7 @@ from dolfin import *
 
 #truncproblem = MagUnitCircle()
 #fembemproblem = truncproblem.create_fembem_problem()
-fembemproblem = pft.MagUnitCircle()
+fembemproblem = pft.MagUnitCircle(30)
 ##print truncproblem.coremesh.coordinates()
 ##print fembemproblem.mesh.coordinates()
 #nitschesolver = NitscheSolver(truncproblem)
