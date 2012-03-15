@@ -374,3 +374,15 @@ fangohr: Still testing ...
 2012-03-14 12:08:52 SebastianS: Maxim and I are probably going a bit later, because we both didn't have breakfast so long ago...
 2012-03-14 14:08:12 fangohr: :)
 2012-03-14 17:21:24 fangohr: over and out, see you tomorrow.
+2012-03-15 09:12:46 andersej: Good morning, Hans!
+2012-03-15 09:13:03 fangohr: Morning Sir.
+2012-03-15 09:13:16 fangohr: I'll catch up with you soon. Is Gabriel in already?
+2012-03-15 09:13:23 andersej: No, not yet.
+2012-03-15 09:13:37 fangohr: Okay, that suits me fine .Need to fix something I broke earlier first :)
+2012-03-15 09:13:49 andersej: : )
+2012-03-15 12:28:04 andersej: Someone up for lunch?
+2012-03-15 12:29:14 SebastianS: yes, sounds good! if it's okay with you we might wait for another 5 minutes or so, since maxim wanted to join in as well, but he's currently in the library
+2012-03-15 12:29:36 andersej: Yes, 5 is ok.
+2012-03-15 15:33:54 GabrielB:           kwargs = {"R"+str(i):R[i] for i in range(dim)}
+2012-03-15 15:33:54 GabrielB:           E = Expression(w,**kwargs)
+2012-03-15 15:34:12 andersej: Great!
