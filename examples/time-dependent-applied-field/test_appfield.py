@@ -9,7 +9,6 @@ def test_external_field_depends_on_t():
     simplices = 2
     L = 10e-9
     mesh = df.Interval(simplices, 0, L)
-    omega=50*df.DOLFIN_PI/1e-9
     GHz=1e9
     omega= 100*GHz
     llg=LLG(mesh)
@@ -82,6 +81,7 @@ def test_external_field_depends_on_t():
     pylab.ylabel('external field [A/m]')
     pylab.xlabel('time [s]')
     pylab.savefig('hext.png')
+    pylab.close()
     
     #Then try to fit sinusoidal curve through results
     def sinusoidalfit(t,omega,phi,A,B):
