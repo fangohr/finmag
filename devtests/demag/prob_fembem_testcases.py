@@ -12,7 +12,7 @@ import prob_base as pb
 #TODO need a more exciting M, GCR solver has phiA = 0 due to
 #divM = 0 if M constant
 class MagUnitCircle(pb.FemBemDeMagProblem):
-    def __init__(self,n= 20):
+    def __init__(self,n=20):
         mesh = UnitCircle(n)
         #TODO Make M three dimensional
         M = ("1","0")
@@ -23,8 +23,8 @@ class MagUnitCircle(pb.FemBemDeMagProblem):
     
 class MagUnitSphere(pb.FemBemDeMagProblem):
     """Uniformly magnetized sphere problem for fembem solvers"""
-    def __init__(self):
-        mesh = UnitSphere(10)
+    def __init__(self, n=10):
+        mesh = UnitSphere(n)
         M = ("1","0","0")
         #Initialize Base Class
         super(MagUnitSphere,self).__init__(mesh,M)
@@ -43,8 +43,8 @@ class MagUnitInterval(pb.FemBemDeMagProblem):
     Once the constructor calls the constructor of the base class (TruncDemagProblem), we also
     have marked facets.
     """
-    def __init__(self):
-        mesh = UnitInterval(10)
+    def __init__(self, n=10):
+        mesh = UnitInterval(n)
 
         #TODO: Make M into a 3d vector here
         M = "1"
