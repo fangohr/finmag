@@ -31,7 +31,8 @@ class FKSolver(sb.DeMagSolver):
         v = TestFunction(V)
         
         #Define forms
-        a = dot(grad(u),grad(v))*dx + dot(DOLFIN_EPS*u,v)*dx 
+        eps = 1e-8
+        a = dot(grad(u),grad(v))*dx + dot(eps*u,v)*dx 
         f = (div(M)*v)*dx  #Source term
         N = FacetNormal(self.problem.mesh)
         f += (dot(M,N)*v)*ds #Neumann Condition
@@ -50,7 +51,13 @@ class FKSolver(sb.DeMagSolver):
         """
         #Solve for the DOFs in phi1
         solve(A,self.phi1.vector(),F)
- 
+        """
+        w = Function(V)
+        solve(a==f, w)
+        plot(w)
+        interactive()
+        exit()
+        """
 
     def nonboundarydof(functionspace):
         """Return a DOF not on the boundary of the mesh"""
@@ -70,8 +77,6 @@ class FemBemFKSolver(FKSolver,sb.FemBemDeMagSolver):
 
     def solve(self):
         self.compute_phi1(self.M, self.V)
-        plot(self.phi1)
-        interactive()
         self.solve_phi2_boundary(self.doftionary)
         self.solve_laplace_inside(self.phi2)
         self.phitot = self.calc_phitot(self.phi1, self.phi2)
@@ -234,7 +239,10 @@ class FKSolverTrunc(sb.TruncDeMagSolver,FKSolver):
 
 if __name__ == "__main__":
      import prob_fembem_testcases as pft
-     problem = pft.MagUnitCircle()
+     problem = pft.MagUnitCircle(30)
      solver = FemBemFKSolver(problem)
+     #from solver_nitsche import NitscheSolver
+     #solver = NitscheSolver(problem)
      phi = solver.solve()
      print phi.vector().array()
+     plot(phi, interactive=True)
