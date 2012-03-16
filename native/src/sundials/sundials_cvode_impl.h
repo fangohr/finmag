@@ -656,6 +656,7 @@ namespace finmag { namespace sundials {
         rhs_fn = f;
         array_nvector y0_nvec(y0);
         CHECK_SUNDIALS_RET(CVodeInit, (cvode_mem, rhs_callback, t0, y0_nvec.ptr()));
+        // TODO: add a flag that cvode has been initialised; raise exceptions if flag unset
     }
 
     void cvode::set_scalar_tolerances(double reltol, double abstol) {
