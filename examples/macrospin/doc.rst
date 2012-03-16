@@ -23,23 +23,34 @@ and
 
 and thus :math:`\alpha_L = \alpha_G\gamma_G` ([#Zimmermann2007]_ equation (2.21). 
 
-It is common to use it :math:`\gamma_G = 2.210173e5 \mathrm{m/(As)}` ([#Scholz2003]_ after equation (3.7), [#OOMMFManual]_) which is also known  as the gyromagnetic ratio.
+It is common to use it :math:`\gamma_G = 2.210173\cdot 10^5 \mathrm{m/(As)}` ([#Scholz2003]_ after equation (3.7), [#OOMMFManual]_) which is also known  as the gyromagnetic ratio.
 
-When we discuss a damping value :math:`\alpha` we normally refer to :math:`\alpha_L`. 
+When we discuss a damping value :math:`\alpha` we normally refer to :math:`\alpha_L`. (Really? Or do we mean :math:`\alpha_G` here?
 
 In the absence of all effective fields (such as demagnetisation, anisotropy and exchange fields) the magnetisation behaves like a macrospin, i.e. the magnetisation field :math:`\vec{M}(\vec{r},t)` is uniform and thus does not depend on the position: :math:`\vec{M}(t)`. By applying an external field, we can study the motion of this macrospin a static field, and this can be compared with an analytical solution for the system ([#Franchin2009]_, Appendix B, should add equation number here XXX).
 
-[To add: setup of simulation, briefly, some results, including plots for different damping values.]
-
-
-
+Starting with the magnetisation aligned with the x-direction, and an applied field acting in the z-direction, we obtain the following time developments for the magnetisation (for different values of :math:`\alpha`).
 
 .. image:: ../examples/macrospin/alpha-1.00.png
     :scale: 75
     :align: center
 
-Testing, done.
+.. image:: ../examples/macrospin/alpha-0.50.png
+    :scale: 75
+    :align: center
 
+.. image:: ../examples/macrospin/alpha-0.10.png
+    :scale: 75
+    :align: center
+
+.. image:: ../examples/macrospin/alpha-0.02.png
+    :scale: 75
+    :align: center
+
+
+The code used here is
+
+.. literalinclude:: ../examples/macrospin/test_macrospin.py
 
 .. rubric:: Footnotes
 
