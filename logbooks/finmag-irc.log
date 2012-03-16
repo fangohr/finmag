@@ -386,3 +386,28 @@ fangohr: Still testing ...
 2012-03-15 15:33:54 GabrielB:           kwargs = {"R"+str(i):R[i] for i in range(dim)}
 2012-03-15 15:33:54 GabrielB:           E = Expression(w,**kwargs)
 2012-03-15 15:34:12 andersej: Great!
+2012-03-16 09:27:07 fangohr: Good Morning Anders (morning DokosBot).
+2012-03-16 09:36:25 fangohr: Anders, are you around so that I can come over and admire your BEM progress bar?
+2012-03-16 09:40:20 andersej: Yes! Please come!
+2012-03-16 12:07:30 fangohr: Hi all, anybody up for lunch?
+2012-03-16 12:07:42 andersej: I'm in.
+2012-03-16 12:08:00 SebastianS: hey, I'm in as well
+2012-03-16 12:08:01 fangohr: I need to be back by 13:00 for a meeting, so would want to leave at 12:15. Sharp. German punctuality and all that.
+2012-03-16 12:08:25 andersej: Great.
+2012-03-16 12:08:26 SebastianS: right. I'll be at Anders office :D
+2012-03-16 12:09:03 andersej: Hans, can you come 12:14?
+2012-03-16 12:09:19 fangohr: Have you something to show me?
+2012-03-16 12:11:51 andersej: I (we) have a problem...
+2012-03-16 14:14:13 fangohr: ...which you have now reported as https://bugs.launchpad.net/dolfin/+bug/956939. fortunately, it does not affect the 1.0 version.
+2012-03-16 14:17:46 andersej: True and correct.
+2012-03-16 14:21:52 andersej: The bad thing is that when we first use the CR element and then project onto a discontinous Lagrange space, I think we loose all possibility of telling which vector corresponds to which coordinate.
+2012-03-16 14:32:48 andersej: I think perhaps we have to find a way to do this with CG elements. We can talk more about this on Monday.
+2012-03-16 14:39:53 fangohr: Not sure I understand the problem with the vectors and coordinates.
+2012-03-16 14:46:28 andersej: I'm not sure I understand it myself. But in the nmag example, they printed the demag field for given values of x. In our case that will be difficult, because we don't have the information of which vector corresponds to the x-coordinates of the mesh. Actually, there will be no vector on that exact coordinate, because the nodes on a CR element are between the coordinates.
+2012-03-16 15:25:18 fangohr: Anders, the trick is to ask the dolfin field object. If the field object is called Hdem, then Hdem((x,y,z)) will give you the field at position (x,y,z). It will interpolate if required.
+2012-03-16 15:26:02 andersej: Ah, I see.
+2012-03-16 15:36:01 andersej: Can that interpolation also do something with the following problem? With all the other fields, the length of the gradient is three times the number of nodes. Which makes sense for a continuous Lagrange space. But the demag gradient is much longer since it exists in another space. Are we supposed to add these gradients at some time?
+2012-03-16 15:47:01 andersej: We can talk more about this next week. Have a nice weekend everybody!
+2012-03-16 16:15:50 fangohr: If we project the final demag field into a CG1 space, all should be fine. I hope.
+2012-03-16 16:52:17 SebastianS: I'm off as well. Have a nice weekend!
+2012-03-16 16:52:51 fangohr: Me too. Bye DokosBot.
