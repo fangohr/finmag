@@ -12,6 +12,11 @@ import scipy.integrate
 n_rhs_evals = 0
 n_jac_evals = 0
 
+def robertson_reset_n_evals():
+    global n_rhs_evals, n_jac_evals
+    n_rhs_evals = 0
+    n_jac_evals = 0
+
 def robertson_rhs(t, y):
     global n_rhs_evals
     n_rhs_evals += 1
@@ -62,3 +67,4 @@ if __name__=="__main__":
     plt.semilogx(*vals)
     plt.legend(["$y_1$", "$10^4 y_2$", "$y_3$"])
     plt.show()
+
