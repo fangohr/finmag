@@ -63,12 +63,12 @@ class UniaxialAnisotropy(object):
             K = df.Constant(K)
         
         # Anisotropy energy
-        self.E = K*(df.Constant(1) - (df.dot(a, M))**2)*df.dx
+        self.E = K*(df.Constant(1) - (df.dot(a, m))**2)*df.dx
 
-        self.E = -K * (df.dot(a, M)**2) *df.dx
+        self.E = -K * (df.dot(a, m)**2) *df.dx
 
         # Gradient
-        self.dE_dM = -df.derivative(self.E, M)
+        self.dE_dM = -df.derivative(self.E, m)
 
         # Volume
         self.vol = df.assemble(df.dot(self.v, 
@@ -76,7 +76,7 @@ class UniaxialAnisotropy(object):
 
         # Store for later
         self.V = V
-        self.M = M
+        self.m = m
         self.method = method
 
         if method=='box-assemble':
@@ -131,7 +131,7 @@ class UniaxialAnisotropy(object):
         energy.
 
         """
-        g_form = df.derivative(self.dE_dM, self.M)
+        g_form = df.derivative(self.dE_dM, self.m)
         self.g = df.assemble(g_form).array() #store matrix as numpy array  
 
     def __setup_field_petsc(self):
@@ -139,7 +139,7 @@ class UniaxialAnisotropy(object):
         Same as __setup_field_numpy but with a petsc backend.
 
         """
-        g_form = df.derivative(self.dE_dM, self.M)
+        g_form = df.derivative(self.dE_dM, self.m)
         self.g_petsc = df.PETScMatrix()
         
         df.assemble(g_form,tensor=self.g_petsc)
@@ -159,12 +159,12 @@ class UniaxialAnisotropy(object):
         return df.assemble(self.dE_dM).array() / self.vol
 
     def __compute_field_numpy(self):
-        Mvec = self.M.vector().array()
+        Mvec = self.m.vector().array()
         H_ani = np.dot(self.g,Mvec)
         return H_ani/self.vol
 
     def __compute_field_petsc(self):
-        self.g_petsc.mult(self.M.vector(), self.H_ani_petsc)
+        self.g_petsc.mult(self.m.vector(), self.H_ani_petsc)
         return self.H_ani_petsc.array()/self.vol
 
     def __compute_field_project(self):
