@@ -10,11 +10,10 @@ class UniaxialAnisotropy(object):
 
     .. math::
 
-        E_{\\text{ani}} = \\int_\\Omega \\sum_j K(1 - 
-        (\\vec a \\cdot \\vec M_j)^2) dx,
+        E_{\\text{ani}} = - \\int K ( \\vec a \\cdot \\vec m)^2 \\mathrm{d}x,
 
     where :math:`K` is the anisotropy constant, 
-    :math:`\\vec a` the easy axis and :math:`\\sum_i \\vec M_i` 
+    :math:`\\vec a` the easy axis and :math:`\\vec{m}=\\vec{M}/M_\mathrm{sat}` 
     the discrete approximation of the magnetic polarization.
 
     *Arguments*
@@ -41,9 +40,9 @@ class UniaxialAnisotropy(object):
             K = 520e3 # For Co (J/m3)
 
             a = Constant((0, 0, 1)) # Easy axis in z-direction
-            M = project(Constant((1, 0, 0)), V) # Initial magnetisation
+            m = project(Constant((1, 0, 0)), V) # Initial magnetisation
 
-            anisotropy = Anisotropy(V, M, K, a)
+            anisotropy = Anisotropy(V, m, K, a)
 
             # Print energy
             print anisotropy.compute_energy()
@@ -53,7 +52,7 @@ class UniaxialAnisotropy(object):
             
     """   
     
-    def __init__(self, V, M, K, a, method="box-matrix-petsc"):
+    def __init__(self, V, m, K, a, method="box-matrix-petsc"):
         print "Anisotropy(): method = %s" % method
 
         # Testfunction
@@ -65,6 +64,8 @@ class UniaxialAnisotropy(object):
         
         # Anisotropy energy
         self.E = K*(df.Constant(1) - (df.dot(a, M))**2)*df.dx
+
+        self.E = -K * (df.dot(a, M)**2) *df.dx
 
         # Gradient
         self.dE_dM = -df.derivative(self.E, M)
