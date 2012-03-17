@@ -56,20 +56,22 @@ def test_parallel():
     # Case 1
     M = interpolate(Constant((0, 0, 1)), V)
     energy = UniaxialAnisotropy(V, M, K, a).compute_energy()
+    print 'test_parallel()'
     print 'This sould be zero %g:' % energy
 
-    energy_scale = K*assemble(Constant(1)*dx, mesh=mesh) #energy if a and m perpendicular
-    print 'Relative energy %g:' % (energy/energy_scale)
-    assert abs(energy)/energy_scale < TOL
+    energy_scale = -K*assemble(Constant(1)*dx, mesh=mesh) #energy if a and m perpendicular
+    print 'Energy difference %g:' % (energy-energy_scale)
+    print 'Relative energy difference %g:' % ((energy-energy_scale)/energy_scale)
+    assert abs(energy-energy_scale)/energy_scale < TOL
 
 def test_orthogonal():
     # Case 2
+    print "test_orthogonal:"
     M = interpolate(Constant((0,1,0)), V)   
     energy = UniaxialAnisotropy(V, M, K, a).compute_energy()
-    volK = K*assemble(Constant(1)*dx, mesh=mesh)
-    print 'These should be equal: %g-%g=%g ' %( energy, volK, energy-volK)
-    print 'Relative difference: %g ' %( abs(energy-volK)/volK)
-    assert abs(energy - volK)/abs(volK) < TOL
+    energy_direct = K*assemble(Constant(0)*dx, mesh=mesh)
+    print 'These should be equal: %g-%g=%g ' %( energy, energy_direct, energy-energy_direct)
+    assert abs(energy - energy_direct) < TOL
 
 def test_gradient():
     # Case 3
