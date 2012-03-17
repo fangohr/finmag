@@ -4,8 +4,9 @@ import numpy as np
 from scipy.integrate import ode
 import pylab
 
-K1=520e3  #J/m^3
+K1=520e3*2  #J/m^3
 A=30e-12  #J/m
+A=30e-11  #J/m
 #Changing A leads to changing deviations of the fitted A from the correct A
 #Needs more investigation.
 x0=252e-9 #m
@@ -70,7 +71,7 @@ t0 = 0; dt = 10e-12; t1 = 2e-09
 r = ode(llg_wrap).set_integrator("vode", method="bdf", rtol=1e-5, atol=1e-5)
 r.set_initial_value(llg.m, t0)
 
-while r.successful() and r.t < t1-dt:
+while (True or r.successful()) and r.t < t1-dt:
     r.integrate(r.t + dt)
     print "Integrating time: %g" % r.t
 
@@ -103,9 +104,11 @@ else:
     print "difference A : %9g" % (fittedA-A)
     print "rel difference A : %9g" % ((fittedA-A)/A)
     print "quotient A/fittedA and fittedA/A : %9g %g" % (A/fittedA,fittedA/A)
+    pylab.show()
     assert abs(fittedA-A)/A < 1e-2,"We should get this accurate to one percent I think."
+
 
 
 diff = abs(mz - Mz_exact(x))
 print max(diff)
-pylab.show()
+
