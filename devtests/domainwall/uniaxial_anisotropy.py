@@ -101,8 +101,9 @@ else:
     print "fitted A  : %9g" % (fittedA)
     print "correct A : %9g" % (A)
     print "difference A : %9g" % (fittedA-A)
+    print "rel difference A : %9g" % ((fittedA-A)/A)
     print "quotient A/fittedA and fittedA/A : %9g %g" % (A/fittedA,fittedA/A)
-    assert True
+    assert abs(fittedA-A)/A < 1e-2,"We should get this accurate to one percent I think."
 
 
 diff = abs(mz - Mz_exact(x))
