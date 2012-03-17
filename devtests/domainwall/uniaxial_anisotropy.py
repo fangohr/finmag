@@ -6,7 +6,6 @@ import pylab
 
 K1=520e3  #J/m^3
 A=30e-12  #J/m
-#A=3e-12  #J/m 
 #Changing A leads to changing deviations of the fitted A from the correct A
 #Needs more investigation.
 x0=252e-9 #m
@@ -76,15 +75,12 @@ while r.successful() and r.t < t1-dt:
     print "Integrating time: %g" % r.t
 
 # Plot magnetisation in z-direction
-#zstart = 2*n//3
-#mz = llg.m[zstart:]*Ms
 mz = []
 x = np.linspace(0, L, simplices+1)
 for xpos in x:
     mz.append(llg._m(xpos)[2])
 mz = np.array(mz)*Ms
 pylab.plot(x,mz,x,Mz_exact(x))
-#pylab.axis([0, L, -1.1, 1.1])
 pylab.legend(("Finmag", "Analytical"))
 pylab.title("Domain wall example - Finmag vs analytical solution")
 pylab.xlabel("Length")
@@ -106,6 +102,7 @@ else:
     print "correct A : %9g" % (A)
     print "difference A : %9g" % (fittedA-A)
     print "quotient A/fittedA and fittedA/A : %9g %g" % (A/fittedA,fittedA/A)
+    assert True
 
 
 diff = abs(mz - Mz_exact(x))
