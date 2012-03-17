@@ -1,6 +1,9 @@
 LLG equation
 ============
 
+Introduction LLG equation of motion
+-----------------------------------
+
 The dynamics of the magnetisation field :math:`\vec{M}(\vec{r},t)` is governed by the Landau-Lifschitz and Gilbert (LLG) equation
 
 .. math::
@@ -25,7 +28,23 @@ and thus :math:`\alpha_L = \alpha_G\gamma_G` ([#Zimmermann2007]_ equation (2.21)
 
 It is common to use it :math:`\gamma_G = 2.210173\cdot 10^5 \mathrm{m/(As)}` ([#Scholz2003]_ after equation (3.7), [#OOMMFManual]_) which is also known  as the gyromagnetic ratio.
 
-When we discuss a damping value :math:`\alpha` we normally refer to :math:`\alpha_L`. (Really? Or do we mean :math:`\alpha_G` here?
+The Gilbert damping term :math:`\alpha_G` comes from Gilbert's version of the equation of motion (equation (2.15 in [#Zimmermann2007]_) which includes the change of :math:`\vec{M}` with time :math:`t` in the damping term
+
+.. math::
+
+   \frac{\mathrm{d}\vec{M}}{\mathrm{d} t} =
+     -\gamma_L \mu_0 \, \vec{M} \times \vec{H}
+    - \frac{\alpha_G}{M_\mathrm{sat}} \, \vec{M} \times  
+    \frac{\mathrm{d}\vec{M}}{\mathrm{d}t}
+
+
+
+It is easier to understand the role of the damping constant :math:`\alpha_G` in this notation, but harder to compute numerically as the time derivative shows up on both sides.
+
+When we discuss a damping value :math:`\alpha` we normally refer to :math:`\alpha_G`, and :math:`\alpha_G=1` corresponds to critical damping.
+
+Macrospin example
+-----------------
 
 In the absence of all effective fields (such as demagnetisation, anisotropy and exchange fields) the magnetisation behaves like a macrospin, i.e. the magnetisation field :math:`\vec{M}(\vec{r},t)` is uniform and thus does not depend on the position: :math:`\vec{M}(t)`. By applying an external field, we can study the motion of this macrospin a static field, and this can be compared with an analytical solution for the system ([#Franchin2009]_, Appendix B, should add equation number here XXX).
 
