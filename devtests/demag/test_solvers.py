@@ -15,7 +15,6 @@ import prob_fembem_testcases as pft
 import numpy as np
 import solver_gcr as sgcr
 
-
 class DemagTester(object):
     """Base class for demag testers"""
     def error_norm(self,func1,func2,cell_domains = None,interior_facet_domains = None, dx = dx):
@@ -23,6 +22,23 @@ class DemagTester(object):
         Eform = inner(func1-func2,func1-func2)*dx
         E = assemble(Eform, cell_domains =  cell_domains, interior_facet_domains =interior_facet_domains)
         return sqrt(E)
+
+    def compare_to_analytical(self,compsol,analyticalsol,testname):
+        """Test a computed solution against a analytical solution"""
+        L2error = self.error_norm(compsol ,analyticalsol) 
+        print testname, "Comparison L2error = ", L2error
+        assert L2error < self.TOL,"Error in" +testname+ "L2 error %g is not less than the Tolerance %g"%(L2error,self.TOL)   
+        
+class UnitSphere_Analytical(object):
+    """
+    Class containing information regarding the 3d analytical solution of a Demag Field in a uniformly
+    demagnetized unit sphere with M = (1,0,0)
+    """
+    def __init__(self,mesh):
+        self.V = FunctionSpace(mesh,"CG",1)
+        self.VV = VectorFunctionSpace(mesh,"DG",0)
+        self.potential = project(Expression("-x[0]/3.0"),self.V)
+        self.Hdemag = project(Expression(("1.0/3.0","0.0","0.0")),self.VV)
 
 class TestTruncDemagSolver(object):
     """Test the Solver Base Class"""
@@ -62,17 +78,6 @@ class TestTruncDemagSolver(object):
         A = assemble(a)
         assert near(A,0.0),"Error in TruncDemagSolver.restrictfunc, restricted function does not match analytical value"
 
-class UnitSphere_Analytical(object):
-    """
-    Class containing information regarding the 3d analytical solution of a Demag Field in a uniformly
-    demagnetized sphere with M = (1,0,0)
-    """
-    def __init__(self,mesh):
-        self.V = FunctionSpace(mesh,"CG",1)
-        self.VV = VectorFunctionSpace(mesh,"DG",0)
-        self.potential = project(Expression("-x[0]/3.0"),self.V)
-        self.Hdemag = project(Expression(("1.0/3.0","0.0","0.0")),self.VV)
-
 class TestNitscheSolver(DemagTester):
     def setup_class(self):
         self.TOL = 1.0 #Fixme This is a bad tolerance, maybe the nitsche solver can be made more precise
@@ -95,47 +100,32 @@ class TestNitscheSolver(DemagTester):
         return "Nitsche Solver tester"
 
     def test_1d(self):
+        """Test a 1d solution of the Nitsche Solver"""
         self.probtest(self.problem1d,self.solver1d,self.solution1d)
     def test_2d(self):
+        """Test a 2d solution of the Nitsche Solver"""
         self.probtest(self.problem2d,self.solver2d,self.solution2d)
     def test_3d(self):
+        """Test a 3d solution of the Nitsche Solver"""
         self.probtest(self.problem3d,self.solver3d,self.solution3d)
         
     def test_compare_3danalytical(self):
-        """Test the potential phi against the known analytical solution in the core"""
-        L2error = self.error_norm(self.solver3d.phi_core ,self.analytical3d.potential) 
-        print "3d Analtical solution of potential"+ self.desc() +  " , comparison L2error =",L2error
-        assert L2error < self.TOL,"L2 Error in 3d computed potential from"+ self.desc() + \
-               "compared to the analytical potential, %g is not less than the Tolerance %g"%(L2error,self.TOL)
+        """
+        Test the potential phi from the Nitsche Solver against
+        the known analytical solution in the core for a uniformly magentized
+        unit sphere
+        """
+        testname = self.test_compare_3danalytical.__doc__       
+        self.compare_to_analytical(self.solver3d.phi_core,self.analytical3d.potential,testname)
         
     def test_compare_3danalytical_gradient(self):
-        """Test the Demag Field from the Nitsche Solver against the known analytical solution in the core"""
-        L2error = self.error_norm(self.solver3d.Hdemag_core ,self.analytical3d.Hdemag) 
-        #L2error = self.L2_error_3d_demag(self.solver3d.Hdemag_core)
-        print "3d Analtical solution demag field "+ self.desc() + ", comparison L2error =",L2error
-        assert L2error < self.TOL,"L2 Error in 3d computed Hdemag from " + self.desc()+  \
-               "the analytical Hdemag, %g is not less than the Tolerance %g"%(L2error,self.TOL)    
-    ##FIXME convergence FAILS!
-##    def test_convergance_3d(self):
-##        """The FEM solution should converge to the analytical solution as the mesh is refined"""
-##        NUM_REFINEMENTS = 6 
-##        #Take previously calculated errors 
-##        firstpoterror = self.L1_error_3d_potential(self.solution3d)
-##        firstdemagerror = self.L2_error_3d_demag(self.solver3d.Hdemag_core)
-##
-##        #Refine the core mesh
-##        for i in range(NUM_REFINEMENTS):
-##            self.problem3d.refine_core()
-##        #Solve the demag problem again
-##        self.solver3d = sn.NitscheSolver(self.problem3d)
-##        self.solution3d = self.solver3d.solve()
-##        #get errors
-##        pot3d_errornew = self.L1_error_3d_potential(self.solution3d)
-##        demag3d_errornew = self.L2_error_3d_demag(self.solver3d.Hdemag_core)
-##        
-##        #Test the last solution against the 1st one.
-##        assert firstpoterror > pot3d_errornew,"Error in refinement of 3d problem, error in potential did not decrease on final refinement "+ str(i+1)
-##        assert firstdemagerror > demag3d_errornew,"Error in refinement of 3d problem, error in demag did not decrease on final refinement "+ str(i+1)
+        """
+        Test the demag field from the Nitsche Solver against
+        the known analytical solution in the core for a uniformly magentized
+        unit sphere
+        """
+        testname = self.test_compare_3danalytical_gradient.__doc__
+        self.compare_to_analytical(self.solver3d.Hdemag_core,self.analytical3d.Hdemag,testname)
     
     def print_convergance_3d(self):
         """
@@ -165,7 +155,7 @@ class TestNitscheSolver(DemagTester):
             demag3d_errorold = demag3d_errornew
 
     def probtest(self,problem,solver,solution):
-        """Run various tests on a truncated problem"""
+        """Run various tests on a truncated demag problem"""
         self.dbc_test(problem,solution)
         self.continuity_test(problem,solver,solution)
         self.normalderivativejump_test(problem,solver,solution)
@@ -179,7 +169,7 @@ class TestNitscheSolver(DemagTester):
         assert L2error < self.TOL,errmess 
 
     def continuity_test(self,problem,solver,solution):
-        """2 Test Continuity across the interior boundary"""
+        """Test Continuity across the interior boundary"""
         jumpphi = solver.phi1('-') - solver.phi0('+')
         L2error1 = self.error_norm(jump(solution),Function(solution.function_space())('-'),\
                                    interior_facet_domains = problem.coreboundfunc, dx = problem.dSC) 
@@ -193,7 +183,7 @@ class TestNitscheSolver(DemagTester):
                                TOL = %g, L2error = %g"%(self.TOL,L2error1)
         assert L2error2 < self.TOL,"Error in Nitsche Solver with 1d problem" + problem.desc() \
                                + "continuity accross magnetic core boundary not satisfied for phi total \
-                               TOL = %g, L2error = %g"%(self.TOL, L2error2)
+                               TOL = %g, L2error = %g"%(self.TOL,L2error2)
 
     def normalderivativejump_test(self,problem,solver,solution):
         """ Test jump in normal derivative across the interior boundary"""
@@ -214,6 +204,28 @@ class TestNitscheSolver(DemagTester):
                                TOL = %g, L2error = %g"%(self.TOL,L2error1)
         assert L2error2 < self.TOL,"Error in Nitsche Solver with " + problem.desc() + " normal derivative jump accross magnetic core boundary not satisfied for phi total \
                                TOL = %g, L2error = %g"%(self.TOL,L2error2)
+
+        ##FIXME convergence FAILS!
+##    def test_convergance_3d(self):
+##        """The FEM solution should converge to the analytical solution as the mesh is refined"""
+##        NUM_REFINEMENTS = 6 
+##        #Take previously calculated errors 
+##        firstpoterror = self.L1_error_3d_potential(self.solution3d)
+##        firstdemagerror = self.L2_error_3d_demag(self.solver3d.Hdemag_core)
+##
+##        #Refine the core mesh
+##        for i in range(NUM_REFINEMENTS):
+##            self.problem3d.refine_core()
+##        #Solve the demag problem again
+##        self.solver3d = sn.NitscheSolver(self.problem3d)
+##        self.solution3d = self.solver3d.solve()
+##        #get errors
+##        pot3d_errornew = self.L1_error_3d_potential(self.solution3d)
+##        demag3d_errornew = self.L2_error_3d_demag(self.solver3d.Hdemag_core)
+##        
+##        #Test the last solution against the 1st one.
+##        assert firstpoterror > pot3d_errornew,"Error in refinement of 3d problem, error in potential did not decrease on final refinement "+ str(i+1)
+##        assert firstdemagerror > demag3d_errornew,"Error in refinement of 3d problem, error in demag did not decrease on final refinement "+ str(i+1)
         
 class TestFemBemDeMagSolver(object):
     """Test the FemBemDeMagSolver class """
@@ -223,7 +235,7 @@ class TestFemBemDeMagSolver(object):
         self.solver = sb.FemBemDeMagSolver(self.problem)
         
     def test_get_boundary_dof_coordinate_dict(self):
-        """Test only relevant for CG1"""
+        """Test the method get_boundary_dof_coordinate_dict"""
         V = FunctionSpace(self.solver.problem.mesh,"CG",1)
         numdofcalc = len(self.solver.get_boundary_dof_coordinate_dict(V))
         numdofactual = BoundaryMesh(V.mesh()).num_vertices()
@@ -231,7 +243,7 @@ class TestFemBemDeMagSolver(object):
                                           " does not match that of the Boundary Mesh " + str(numdofactual)
 
     def test_solve_laplace_inside(self):
-        """Solve a known laplace equation"""
+        """Solve a known laplace equation to check the method solve_laplace_inside"""
         mesh = UnitSquare(2,2)
         V = FunctionSpace(mesh,"CG",1)
         fold = interpolate(Expression("1-x[0]"),V)
@@ -247,7 +259,7 @@ class TestFemBemDeMagSolver(object):
         return FunctionSpace(mesh,"CG",1)
 
     def test_get_dof_normal_dict(self):
-        """Test some features of a known example """
+        """Test the method get_dof_normal_dict"""
         V = self.easyspace()
         facetdic = self.solver.get_dof_normal_dict(V)
         coord = self.solver.get_boundary_dof_coordinate_dict(V)
@@ -258,8 +270,10 @@ class TestFemBemDeMagSolver(object):
                                             get_boundary_dof_coordinate_dict"
 
     def test_get_dof_normal_dict_avg(self):
-        """Use same case as test_get_dof_normal_dict, see if average normals
-            have length one"""
+        """
+        Test the method get_dof_normal_dict_avg, see if average normals
+        have length one
+        """
         V = self.easyspace()
         avgnormtionary = self.solver.get_dof_normal_dict_avg(V)
         for k in avgnormtionary:
@@ -271,7 +285,7 @@ class Test_GCRFemBemDeMagSolver(DemagTester):
     def setup_class(self):
 
         #Class Tolerance 
-        self.TOL = 10000
+        self.TOL = 10
 
         #Problems,solvers, solutions
         self.problem3d = pftc.MagUnitSphere(4)
@@ -285,45 +299,49 @@ class Test_GCRFemBemDeMagSolver(DemagTester):
         return "GCR Fembem Solver Tester"
         
     def test_compare_3danalytical(self):
-        """Test the potential phi against the known analytical solution in the core"""
-        L2error = self.error_norm(self.solver3d.phitot ,self.analytical3d.potential) 
-        print "3d Analtical solution of potential" + self.desc()+ ", comparison L2error =",L2error
-        assert L2error < self.TOL,"L2 Error in 3d computed potential from"+ self.desc() + \
-               "compared to the analytical potential, %g is not less than the Tolerance %g"%(L2error,self.TOL)
+        """
+        Test the potential phi from the GCR FemBem Solver against
+        the known analytical solution in the core for a uniformly magentized
+        unit sphere
+        """
+        testname = self.test_compare_3danalytical_gradient.__doc__
+        self.compare_to_analytical(self.solver3d.phitot,self.analytical3d.potential,testname)
         
     def test_compare_3danalytical_gradient(self):
-        """Test the Demag Field from the Nitsche Solver against the known analytical solution in the core"""
-        L2error = self.error_norm(self.solver3d.Hdemag ,self.analytical3d.Hdemag) 
-        print "3d Analtical solution demag field, " + self.desc()+ "comparison L2error =",L2error
-        assert L2error < self.TOL,"L2 Error in 3d computed Hdemag from " + self.desc()+  \
-               "the analytical Hdemag, %g is not less than the Tolerance %g"%(L2error,self.TOL)
+        """
+        Test the demag field from the GCR FemBem Solver against
+        the known analytical solution in the core for a uniformly magentized
+        unit sphere
+        """
+        testname = self.test_compare_3danalytical_gradient.__doc__
+        self.compare_to_analytical(self.solver3d.Hdemag,self.analytical3d.Hdemag,testname)
 
 if __name__ == "__main__":
+    def run_tests(tests):
+        for test in tests:
+            print "* Doing",test.__doc__
+            test()
+            print
+        
     t = TestNitscheSolver()
     t.setup_class()
-    print "* Doing test 1d ==========="
-    t.test_1d()
-    print "gamma = ", t.problem1d.gamma
-    print
-    print "* Doing test 2d ==========="
-    t.test_2d()
-    print "gamma = ", t.problem2d.gamma
-    print
-    print "* Doing test 3d ==========="
-    t.test_3d()
-    print "gamma = ", t.problem3d.gamma
-    print
-    print "* Doing Analytical comparison of potential ======="
-    t.test_compare_3danalytical()
-    print
-    print "* Doing Analytical comparison of Demag field ======="
-    t.test_compare_3danalytical_gradient()
-    print
-    #Slow uncomment with caution
-    print "* Doing Convergance test of Demag field ======="
-    t.print_convergance_3d()
+    tests = [t.test_1d,t.test_2d,t.test_3d,t.test_compare_3danalytical,\
+             t.test_compare_3danalytical_gradient]
+    run_tests(tests)
+
+##    #Slow uncomment with caution
+##    print "* Doing Convergance test of Demag field Nitsche Solver======="
+##    t.print_convergance_3d()
+##    print
+##    
+    t = TestFemBemDeMagSolver()
+    t.setup_class()
+    tests = [t.test_solve_laplace_inside,t.test_get_boundary_dof_coordinate_dict, \
+             t.test_get_dof_normal_dict,t.test_get_dof_normal_dict_avg]
+    run_tests(tests)
     
-    t1 = TestFemBemDeMagSolver()
-    t1.setup_class()
-    print "* Doing test for solve_laplace_inside"
-    t1.test_solve_laplace_inside()
+
+    t = Test_GCRFemBemDeMagSolver()
+    t.setup_class()
+    tests = [t.test_compare_3danalytical_gradient, t.test_compare_3danalytical]
+    run_tests(tests)
