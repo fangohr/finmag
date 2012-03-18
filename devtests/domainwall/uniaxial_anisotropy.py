@@ -6,6 +6,7 @@ import pylab
 
 K1=520e3  #J/m^3
 A=30e-12  #J/m
+#A=30e-11  #J/m
 #Changing A leads to changing deviations of the fitted A from the correct A
 #Needs more investigation.
 x0=252e-9 #m
@@ -31,7 +32,7 @@ def M0(r):
     mz = np.where(max1r > 1.0, 1.0, max1r)
     return 0*mz, np.sqrt(1.0 - mz*mz), mz
 
-simplices = 202
+simplices = 500
 L = 504e-9
 dim = 3
 mesh = df.Interval(simplices, 0, L)
@@ -52,7 +53,12 @@ llg = LLG(mesh)
 # llg.pins = [0,1,-2,-1] # This is not so good
 
 llg.Ms = Ms                 # saturation magnetization
-llg.C = A                   # exchange coupling
+
+#with the following correction we get a good match -- but why?
+correction = 1.77 #emperical number to make match with analytical solution better
+llg.C = A*correction            # exchange coupling
+llg.C = A
+llg.alpha=1.0
 a = df.Constant((0, 0, 1)) # easy axis
 
 
@@ -62,17 +68,25 @@ m0.vector()[:] = np.array([x, y, z]).reshape(n)
 llg.set_m0(np.array([x, y, z]).reshape(n))
 
 llg.setup(exchange_flag=True)
+
 llg.add_uniaxial_anisotropy(K1,a)
 llg_wrap = lambda t, y: llg.solve_for(y, t)
 
 # Time integration
-t0 = 0; dt = 10e-12; t1 = 2e-09
-r = ode(llg_wrap).set_integrator("vode", method="bdf", rtol=1e-5, atol=1e-5)
+t0 = 0; dt = 10e-12; t1 = 1e-10
+r = ode(llg_wrap).set_integrator("vode", method="bdf",nsteps=50) #rtol=1e-5, 
+                                 #atol=1e-5,
+                                 #nsteps=50)
 r.set_initial_value(llg.m, t0)
 
-while r.successful() and r.t < t1-dt:
-    r.integrate(r.t + dt)
+f=open('data.txt','w')
+while (True or r.successful()) and r.t < t1-dt:
+    Eani = llg._anisotropies[0].compute_energy()/L
+    Eex = llg.exchange.compute_energy()/L
     print "Integrating time: %g" % r.t
+    f.write('%g\t%g\t%g\n' % (r.t,Eani,Eex))
+    r.integrate(r.t + dt)
+f.close()
 
 # Plot magnetisation in z-direction
 mz = []
@@ -103,9 +117,11 @@ else:
     print "difference A : %9g" % (fittedA-A)
     print "rel difference A : %9g" % ((fittedA-A)/A)
     print "quotient A/fittedA and fittedA/A : %9g %g" % (A/fittedA,fittedA/A)
+    pylab.show()
     assert abs(fittedA-A)/A < 1e-2,"We should get this accurate to one percent I think."
+
 
 
 diff = abs(mz - Mz_exact(x))
 print max(diff)
-pylab.show()
+
