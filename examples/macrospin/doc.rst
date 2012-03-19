@@ -12,7 +12,7 @@ The dynamics of the magnetisation field :math:`\vec{M}(\vec{r},t)` is governed b
      -\gamma_L \mu_0 \, \vec{M} \times \vec{H}
     - \frac{\alpha_L}{M_{\mathrm{sat}}} \, \vec{M} \times [ \vec{M} \times \vec{H}]
 
-where :math:`\mu0 = 4\pi10^{−7}\mathrm{N/A^2}` denotes the permeability of free space (also known as the magnetic constant), :math:`\alpha_L` the Landau-Lifshitz damping parameter, and 
+where :math:`\mu0 = 4\pi10^{-7}\mathrm{N/A^2}` denotes the permeability of free space (also known as the magnetic constant), :math:`\alpha_L` the Landau-Lifshitz damping parameter, and 
 
 .. math::
 
