@@ -7,7 +7,7 @@ __organisation__ = "University of Southampton"
         
 from dolfin import *
 import numpy as np
-from util.interiorboundary import InteriorBoundary
+from finmag.util.interiorboundary import InteriorBoundary
 
 class DeMagProblem(object):
     """Base class for all demag problems"""

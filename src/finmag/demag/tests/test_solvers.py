@@ -7,11 +7,11 @@ __organisation__ = "University of Southampton"
 
 from dolfin import *
 import numpy as np
-import demag.problems.prob_trunc_testcases as pttc
-import demag.problems.prob_fembem_testcases as pftc
-import demag.solver_nitsche as sn
-import demag.solver_base as sb
-import demag.solver_gcr as sgcr
+import finmag.demag.problems.prob_trunc_testcases as pttc
+import finmag.demag.problems.prob_fembem_testcases as pftc
+import finmag.demag.solver_nitsche as sn
+import finmag.demag.solver_base as sb
+import finmag.demag.solver_gcr as sgcr
 
 class DemagTester(object):
     """Base class for demag testers"""
