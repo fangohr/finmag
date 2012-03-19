@@ -9,7 +9,7 @@ __organisation__ = "University of Southampton"
 # Last change: 15.03.2012
 
 from dolfin import *
-import solver_base as sb
+import demag.solver_base as sb
 import numpy as np
 import progressbar as pb
 
