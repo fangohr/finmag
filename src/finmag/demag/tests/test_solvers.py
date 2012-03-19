@@ -6,14 +6,12 @@ __project__ = "Finmag"
 __organisation__ = "University of Southampton"
 
 from dolfin import *
-import prob_trunc_testcases as pttc
-import prob_fembem_testcases as pftc
-import solver_nitsche as sn
-import solver_base as sb
-import prob_trunc_testcases as ptt
-import prob_fembem_testcases as pft
 import numpy as np
-import solver_gcr as sgcr
+import demag.problems.prob_trunc_testcases as pttc
+import demag.problems.prob_fembem_testcases as pftc
+import demag.solver_nitsche as sn
+import demag.solver_base as sb
+import demag.solver_gcr as sgcr
 
 class DemagTester(object):
     """Base class for demag testers"""
@@ -65,7 +63,7 @@ class TestTruncDemagSolver(object):
         halfmesh = SubMesh(mesh,meshfunc,1)
 
         #Class initialized with a dummy problem
-        problem = ptt.MagUnitInterval()
+        problem = pttc.MagUnitInterval()
         solver = sb.TruncDeMagSolver(problem)
 
         #Get the restricted function
@@ -231,7 +229,7 @@ class TestFemBemDeMagSolver(object):
     """Test the FemBemDeMagSolver class """
         
     def setup_class(self):      
-        self.problem = pft.MagUnitSphere()
+        self.problem = pftc.MagUnitSphere()
         self.solver = sb.FemBemDeMagSolver(self.problem)
         
     def test_get_boundary_dof_coordinate_dict(self):
