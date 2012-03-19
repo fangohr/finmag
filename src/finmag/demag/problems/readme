@@ -1,0 +1,5 @@
+This folder contains demag problems that can be solved using the solvers in the parent folder demag. 
+
+prob_base.py - Contains base classes for truncation and fembem type problems.
+prob_fembem_testcases.py - Contains test problems of fembem type.
+prob_trnc_testcases.py - Contains test problems of domain truncation type. 
