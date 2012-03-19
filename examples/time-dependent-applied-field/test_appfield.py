@@ -105,7 +105,7 @@ def test_external_field_depends_on_t():
         print "popt=",popt
 
         fittedomega,fittedphi,fittedA,fittedB=popt
-        f=open("fittedresults.txt","w")
+        f=open(MODULE_DIR + "/fittedresults.txt","w")
 
         print >>f, "Fitted omega           : %9g" % (fittedomega)
         print >>f, "Rel error in omega fit : %9g" % ((fittedomega-omega)/omega)
