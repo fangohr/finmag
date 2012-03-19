@@ -9,8 +9,8 @@ __organisation__ = "University of Southampton"
 
 from dolfin import *
 import math
-import util.doffinder as dff
-import demag.solver_base as sb
+import finmag.util.doffinder as dff
+import finmag.demag.solver_base as sb
 
 class NitscheSolver(sb.TruncDeMagSolver):
     def __init__(self,problem, degree = 1):
