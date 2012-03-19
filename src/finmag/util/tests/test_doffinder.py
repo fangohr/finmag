@@ -1,6 +1,6 @@
 #Test the dofinder module
-from util.doffinder import bounddofs
-from demag.problems.prob_trunc_testcases import *
+from finmag.util.doffinder import bounddofs
+from finmag.demag.problems.prob_trunc_testcases import *
 
 def test_doffinder1d():
     problem = MagUnitInterval()

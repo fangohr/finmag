@@ -6,7 +6,7 @@ __project__ = "Finmag"
 __organisation__ = "University of Southampton"
 
 from dolfin import *
-import demag.solver_base as sb
+import finmag.demag.solver_base as sb
 import math
 import numpy as np
 
@@ -85,9 +85,15 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           info_blue("Calculating BEM matrix")
           dimbem = len(doftionary)
           self.bemmatrix = np.zeros([dimbem,dimbem])
+
+          import progressbar as pb
+          bar = pb.ProgressBar(maxval=dimbem-1, \
+                 widgets=[pb.ETA(), pb.Bar('=', '[', ']'), ' ', pb.Percentage()])
+
           for index,dof in enumerate(doftionary):
+               bar.update(index)
                self.bemmatrix[index] = self.get_bem_row(doftionary[dof],doftionary.keys())
-               info("BEM Matrix line "+ str(index) + str(self.bemmatrix[index]))
+               #info("BEM Matrix line "+ str(index) + str(self.bemmatrix[index]))
           return self.bemmatrix
 
      def get_bem_row(self,R,bdofs):
@@ -163,7 +169,7 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           return q
                                       
 if __name__ == "__main__":
-     import prob_fembem_testcases as pft
+     from finmag.demag.problems import prob_fembem_testcases as pft
      problem = pft.MagUnitCircle(10)
      solver = GCRFemBemDeMagSolver(problem)
      solver.assemble_qvector_exact()
