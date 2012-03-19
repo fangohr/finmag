@@ -7,7 +7,7 @@ __organisation__ = "University of Southampton"
 
 from dolfin import *
 import numpy as np
-import demag.problems.prob_base as pb
+import finmag.demag.problems.prob_base as pb
 
 #TODO need a more exciting M, GCR solver has phiA = 0 due to
 #divM = 0 if M constant

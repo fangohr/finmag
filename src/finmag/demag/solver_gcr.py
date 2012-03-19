@@ -6,7 +6,7 @@ __project__ = "Finmag"
 __organisation__ = "University of Southampton"
 
 from dolfin import *
-import demag.solver_base as sb
+import finmag.demag.solver_base as sb
 import math
 import numpy as np
 

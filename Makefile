@@ -36,7 +36,7 @@ default:
 	@echo 'This makefile is used for CI only; do not use directly.' 
 	
 ci: test
-	make -C doc generate-doc html
+	make -C doc generate-doc html latexpdf
 
 make-modules:
 	make -C $(NATIVE_DIR) all
