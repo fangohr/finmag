@@ -411,3 +411,72 @@ fangohr: Still testing ...
 2012-03-16 16:15:50 fangohr: If we project the final demag field into a CG1 space, all should be fine. I hope.
 2012-03-16 16:52:17 SebastianS: I'm off as well. Have a nice weekend!
 2012-03-16 16:52:51 fangohr: Me too. Bye DokosBot.
+2012-03-19 09:03:08 mb8g11: Hi all.
+2012-03-19 09:03:22 andersej: Hi! Welcome back!
+2012-03-19 09:18:24 andersej: Morning, Hans!
+2012-03-19 09:18:28 fangohr: Morning all.
+2012-03-19 09:18:42 fangohr: Marc-Antonio, are you back in Soton already, or logged in from HH?
+2012-03-19 09:18:49 fangohr: Or South Africa, in fact ;-)
+2012-03-19 09:19:14 mb8g11: No no, sitting in my office :)
+2012-03-19 09:19:22 fangohr: Lovely :)
+2012-03-19 09:23:35 andersej: Hi Hans, is there a Monday morning meeting today?
+2012-03-19 09:36:02 fangohr: Yes, was just about to email.
+2012-03-19 11:11:18 mb8g11: Does any of you know if Gabriel is currently working? I have to move some of his files to repair the build.
+2012-03-19 11:35:17 fangohr: He is writing emails, at least.
+2012-03-19 12:32:10 fangohr__: Are we set for lunch?
+2012-03-19 12:32:37 fangohr: Meeting outside Dmitri's office, I suggest.
+2012-03-19 12:33:08 andersej: I'm ready!
+2012-03-19 12:34:06 SebastianS:   jep we'll be there in a minute as well
+2012-03-19 14:49:20 fangohr: Anders, do you know whether Gabriel is fixing the broken built?
+2012-03-19 14:50:05 fangohr: I have inserted a few 'finmag.' all over his code in the import statements, and it is running now on my machine.
+2012-03-19 14:50:20 fangohr: Tempted to push but don't want to interfer with him ...
+2012-03-19 14:50:37 andersej: No, I haven't heard anything.
+2012-03-19 14:51:01 fangohr: Okay, I'll drop him an email and if there is no protest, I'll push.
+2012-03-19 14:53:04 fangohr: Actually, I am guessing that his PYTHONPATH points to 'hg/finmag/src/finmag' instead of 'hg/finmag/src' -- if so, then all his code would run correctly I think. ;-)
+2012-03-19 14:56:27 andersej: I'll wait until you have pushed this to push my tests.
+2012-03-19 15:01:40 mb8g11: Anders, have you oommf installed on your machine?
+2012-03-19 15:02:01 fangohr: Anders, I have pushed already -- do you get bitbucket email notifications?
+2012-03-19 15:02:26 andersej: No to both of you.
+2012-03-19 15:03:35 fangohr: :) Then I suggest you (and maybe also Maxim?) set up automatic email notification on pushs to bitbucket. You do this by going to the 'admin' tab when you are on the bitbucket project, then select 'Services' (on the left), then add the 'Email diff'service, and enter the email address that should get the notifications.
+2012-03-19 15:06:19 mb8g11: He shouldn't be able to see an admin tab at all.
+2012-03-19 15:06:34 fangohr: Eh, yes. Right you are.
+2012-03-19 15:07:16 fangohr: So is it not possible to schedule this for ordinary users? Marc-Antonio, have you got email notification?
+2012-03-19 15:07:28 fangohr: I can add email addresses for everybody if you like, just say.
+2012-03-19 15:08:50 andersej: Yes please, but for A.E.Johansen@soton.ac.uk, so I don't get email notifications to my phone at 07 am Sunday morning, hehe..
+2012-03-19 15:10:40 mb8g11: It isn't possible for ordinary users and I haven't got e-mail notifactions. I simply try pulling or have the bitbucket website open.
+2012-03-19 15:11:09 fangohr: Marc-Antonio, I can add your email to the email-diff service if you like?
+2012-03-19 15:11:10 mb8g11: A normal user could program his e-mail client to read the RSS feed of the repository though,.
+2012-03-19 15:12:16 mb8g11: no thanks :)
+2012-03-19 15:12:40 andersej: Actually, I always have the website open myself, so I think the e-mail notifications would just be disturbing. So could you perhaps please not add me? I get Pivotaltracker e-mails anyway when somebody pushes to stories I'm working on.
+2012-03-19 15:33:34 fangohr: Sure, makes sense.
+2012-03-19 15:34:09 fangohr: ... and as Marc-Antonio says, you could also subscribe to the RSS feed if you like to see stuff arriving in your inbox rather than the browser.
+2012-03-19 15:45:32 fangohr: Anders, does the xfail-decorator work? If so, could you commit please? I'd like to get a successful built on Jenkins.
+2012-03-19 15:46:03 fangohr: If the decorator does not work, just rename the file from test_ to xtest_ or so (or the same with the function names if you just need to disable a few test functions inside a file).
+2012-03-19 15:46:04 mb8g11: Anders is busy parametrising his tests :D
+2012-03-19 15:46:26 fangohr: Not exactly sure what it means -- but it sounds like work in progress. Good enough for me. Ta.
+2012-03-19 15:46:30 andersej: But my tests won't break the build anyway, because all asserts are commented out.
+2012-03-19 15:47:07 fangohr: Hm, then something else breaks it. Have a look at: http://summer.kk.soton.ac.uk:8080/job/finmag/lastBuild/console
+2012-03-19 15:47:46 mb8g11: progressbar
+2012-03-19 15:48:18 andersej: Of course
+2012-03-19 15:48:36 andersej: My nice little progressbar
+2012-03-19 15:53:07 andersej: Let's see now.
+2012-03-19 15:58:44 andersej: Old version of pytest on jenkins breaks the build. MA is on the case.
+2012-03-19 15:58:55 fangohr: Fails now at 'import py.test'.
+2012-03-19 15:59:02 fangohr: Is it the version or is pytest not installed?
+2012-03-19 15:59:11 fangohr: If you tell me what to change, I'll change it ;)
+2012-03-19 15:59:27 mb8g11: summer has py.test 1.3.4 instead of the new one... could you update it?
+2012-03-19 15:59:44 mb8g11: should be sudo easy_install -U pytest
+2012-03-19 15:59:53 fangohr: Can't be done with Ubuntu packages?
+2012-03-19 16:00:19 mb8g11: No.
+2012-03-19 16:01:44 fangohr: fangohr@summer:~$ dpkg -S `which py.test`
+2012-03-19 16:01:44 fangohr: python-py: /usr/bin/py.test
+2012-03-19 16:02:03 fangohr: So I uninstall python-py, and run the 'sudo easy_install -U pytest'?
+2012-03-19 16:04:47 mb8g11: We didn't uninstall python-py on Anders machine.
+2012-03-19 16:05:56 mb8g11: easy_install created a py.test-2.x. We pointed a symbolic link name py.test to it, and backed up the existing py.test as py.test-old
+2012-03-19 16:06:42 fangohr__: Can you test whether all his stuff still works if you remove the Ubuntu package?
+2012-03-19 16:08:02 andersej: Can you install the progressbar as well? apt-get install python-progressbar. Really nice to have when building the BEM.
+2012-03-19 16:14:58 andersej: I just removed the Ubuntu package and everything seems fine.
+2012-03-19 16:23:25 fangohr: Both done. fire away.
+2012-03-19 16:39:47 andersej: Yey, success.
+2012-03-19 16:50:40 fangohr: Phew ...
+2012-03-19 17:10:48 fangohr: Over and out for the day.
