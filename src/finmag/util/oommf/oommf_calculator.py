@@ -18,7 +18,7 @@ from finmag.util.oommf import ovf, lattice
 from finmag.util.oommf.mesh import MeshField, Mesh
 from subprocess import check_output, CalledProcessError
 
-CACHE_DIR = os.environ['HOME'] + "/tmp/oommf_calculator"
+CACHE_DIR = os.environ['HOME'] + "/.oommf_calculator"
 RUN_DIR = "/tmp/" +  os.environ['USER'] + "_oommf_calculator"
 
 if os.environ.has_key('OOMMF_COMMAND'):
