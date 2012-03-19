@@ -50,19 +50,19 @@ In the absence of all effective fields (such as demagnetisation, anisotropy and 
 
 Starting with the magnetisation aligned with the x-direction, and an applied field acting in the z-direction, we obtain the following time developments for the magnetisation (for different values of :math:`\alpha`).
 
-.. image:: ../examples/macrospin/alpha-1.00.png
+.. image:: ../examples/macrospin/alpha-1-00.png
     :scale: 75
     :align: center
 
-.. image:: ../examples/macrospin/alpha-0.50.png
+.. image:: ../examples/macrospin/alpha-0-50.png
     :scale: 75
     :align: center
 
-.. image:: ../examples/macrospin/alpha-0.10.png
+.. image:: ../examples/macrospin/alpha-0-10.png
     :scale: 75
     :align: center
 
-.. image:: ../examples/macrospin/alpha-0.02.png
+.. image:: ../examples/macrospin/alpha-0-02.png
     :scale: 75
     :align: center
 
