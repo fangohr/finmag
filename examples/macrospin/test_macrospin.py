@@ -112,8 +112,10 @@ def save_plot(ts, ys, ts_ref, m_ref, alpha):
     plt.title('Macro spin behaviour, alpha=%g' % alpha)
     plt.grid()
     plt.legend()
-    plt.savefig(MODULE_DIR + '/alpha-%04.2f.png' % alpha)
-    plt.savefig(MODULE_DIR + '/alpha-%04.2f.pdf' % alpha)
+    filename = ('alpha-%04.2f' % alpha)
+    #latex does not like multiple '.' in image filenames
+    filename = filename.replace('.','-') 
+    plt.savefig(os.path.join(MODULE_DIR,filename+'.png'))
     plt.close()
     #pylab.show()
 

@@ -165,22 +165,22 @@ generate-doc: examples-for-doc
 
 #list of files we need for documentation and which should trigger running of
 #the right files in ../examples to create them.
-examples-for-doc: ../examples/macrospin/alpha-1.00.png ../examples/macrospin/alpha-0.50.png ../examples/macrospin/alpha-0.10.png ../examples/macrospin/alpha-0.02.png ../examples/time-dependent-applied-field/fittedresults.txt ../examples/time-dependent-applied-field/fit.png ../examples/time-dependent-applied-field/results.png
+examples-for-doc: ../examples/macrospin/alpha-1-00.png ../examples/macrospin/alpha-0-50.png ../examples/macrospin/alpha-0-10.png ../examples/macrospin/alpha-0-02.png ../examples/time-dependent-applied-field/fittedresults.txt ../examples/time-dependent-applied-field/fit.png ../examples/time-dependent-applied-field/results.png
 
 # The absolute path for the doc directory
 DOC_DIR = $(abspath .)
 # Paths that have to be added to PYTHONPATH prior to running the tests from here (for jenkins)
 PYTHON_ROOTS = $(DOC_DIR)/../src
-../examples/macrospin/alpha-1.00.png: ../examples/macrospin/test_macrospin.py
+../examples/macrospin/alpha-1-00.png: ../examples/macrospin/test_macrospin.py
 	cd ../examples/macrospin/ && PYTHONPATH=$(PYTHON_ROOTS) python test_macrospin.py
 
-../examples/macrospin/alpha-0.50.png: ../examples/macrospin/test_macrospin.py
+../examples/macrospin/alpha-0-50.png: ../examples/macrospin/test_macrospin.py
 	cd ../examples/macrospin/ && PYTHONPATH=$(PYTHON_ROOTS) python test_macrospin.py
 
-../examples/macrospin/alpha-0.10.png: ../examples/macrospin/test_macrospin.py
+../examples/macrospin/alpha-0-10.png: ../examples/macrospin/test_macrospin.py
 	cd ../examples/macrospin/ && PYTHONPATH=$(PYTHON_ROOTS) python test_macrospin.py
 
-../examples/macrospin/alpha-0.02.png: ../examples/macrospin/test_macrospin.py
+../examples/macrospin/alpha-0-02.png: ../examples/macrospin/test_macrospin.py
 	cd ../examples/macrospin/ && PYTHONPATH=$(PYTHON_ROOTS) python test_macrospin.py
 
 ../examples/time-dependent-applied-field/fittedresults.txt ../examples/time-dependent-applied-field/fit.png ../examples/time-dependent-applied-field/results.png: ../examples/time-dependent-applied-field/test_appfield.py
