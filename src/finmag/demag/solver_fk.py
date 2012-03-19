@@ -9,7 +9,7 @@ __organisation__ = "University of Southampton"
 # Last change: 15.03.2012
 
 from dolfin import *
-import demag.solver_base as sb
+from finmag.demag import solver_base as sb
 import numpy as np
 import progressbar as pb
 
@@ -86,9 +86,9 @@ class FemBemFKSolver(FKSolver, sb.FemBemDeMagSolver):
         BEM = np.zeros((n,n))
 
         bar = pb.ProgressBar(maxval=n-1, \
-                widgets=[pb.Bar('=', '[', ']'), ' ', pb.Percentage()])
+                widgets=[pb.ETA(), pb.Bar('=', '[', ']'), ' ', pb.Percentage()])
 
-        info("Building Boundary Element Matrix")
+        info_blue("Building Boundary Element Matrix")
         for i, dof in enumerate(doftionary):
             bar.update(i)
             BEM[i] = self.__get_BEM_row(doftionary[dof], keys, i)
@@ -107,6 +107,9 @@ class FemBemFKSolver(FKSolver, sb.FemBemDeMagSolver):
         # Use relation (23) - (24) in IEEE jan 2008 for the solid angle
         L2 = 1.0/(4*DOLFIN_PI)*v*w*ds
         L2 = (assemble(L2) - 1)
+
+        # Solid angle must not exceed the unit circle
+        assert abs(L2) <= 2*np.pi
         
         # Create a row from the first term
         bigrow = assemble(L, form_compiler_parameters=self.ffc_options)
@@ -250,10 +253,10 @@ class FKSolverTrunc(sb.TruncDeMagSolver,FKSolver):
         return phitot
 
 if __name__ == "__main__":
-    import prob_fembem_testcases as pft
-    problem = pft.MagUnitSphere(7)
+    from finmag.demag.problems import prob_fembem_testcases as pft
+    problem = pft.MagUnitSphere(3)
     #problem = pft.MagUnitCircle(10)
-    
+    #problem = pft.MagSphere()
     solver = FemBemFKSolver(problem)
     phi = solver.solve()
     plot(phi, interactive=True)
