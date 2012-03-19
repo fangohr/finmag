@@ -86,12 +86,12 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           dimbem = len(doftionary)
           self.bemmatrix = np.zeros([dimbem,dimbem])
 
-          import progressbar as pb
-          bar = pb.ProgressBar(maxval=dimbem-1, \
-                 widgets=[pb.ETA(), pb.Bar('=', '[', ']'), ' ', pb.Percentage()])
+          #import progressbar as pb
+          #bar = pb.ProgressBar(maxval=dimbem-1, \
+          #       widgets=[pb.ETA(), pb.Bar('=', '[', ']'), ' ', pb.Percentage()])
 
           for index,dof in enumerate(doftionary):
-               bar.update(index)
+               #bar.update(index)
                self.bemmatrix[index] = self.get_bem_row(doftionary[dof],doftionary.keys())
                #info("BEM Matrix line "+ str(index) + str(self.bemmatrix[index]))
           return self.bemmatrix
