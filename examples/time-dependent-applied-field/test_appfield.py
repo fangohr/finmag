@@ -1,8 +1,11 @@
-from scipy.integrate import ode
+import os
 import numpy as np
 import pylab
 import dolfin as df
 from finmag.sim.llg import LLG
+from scipy.integrate import ode
+
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def test_external_field_depends_on_t():
 
@@ -68,7 +71,7 @@ def test_external_field_depends_on_t():
     pylab.plot(tlist,mz,label='m_z')
     pylab.xlabel('time [s]')
     pylab.legend()
-    pylab.savefig('results.png')
+    pylab.savefig(MODULE_DIR + '/results.png')
     pylab.close()
     
     #if max_step is not provided, or chosen too large,
@@ -80,7 +83,7 @@ def test_external_field_depends_on_t():
     pylab.plot(tlist,hext,'-x')
     pylab.ylabel('external field [A/m]')
     pylab.xlabel('time [s]')
-    pylab.savefig('hext.png')
+    pylab.savefig(MODULE_DIR + '/hext.png')
     pylab.close()
     
     #Then try to fit sinusoidal curve through results
@@ -115,7 +118,7 @@ def test_external_field_depends_on_t():
                    '-x',label='m_y - fit')
         pylab.xlabel('time [s]')
         pylab.legend()
-        pylab.savefig('fit.png')
+        pylab.savefig(MODULE_DIR + '/fit.png')
         deviation = np.sqrt(sum((sinusoidalfit(np.array(tlist),*popt)-my)**2))/len(tlist)
         print >>f, "stddev=%g" % deviation
         f.close()
@@ -126,8 +129,3 @@ def test_external_field_depends_on_t():
 
 if __name__ == "__main__":
     test_external_field_depends_on_t()
-
-
-
-
-
