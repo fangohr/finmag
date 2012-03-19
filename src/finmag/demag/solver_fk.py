@@ -11,7 +11,7 @@ __organisation__ = "University of Southampton"
 from dolfin import *
 from finmag.demag import solver_base as sb
 import numpy as np
-#import progressbar as pb
+import progressbar as pb
 
 class FKSolver(sb.DeMagSolver):
     """Class containing methods shared by FK solvers"""
@@ -85,12 +85,12 @@ class FemBemFKSolver(FKSolver, sb.FemBemDeMagSolver):
         keys = doftionary.keys()
         BEM = np.zeros((n,n))
 
-        #bar = pb.ProgressBar(maxval=n-1, \
-        #        widgets=[pb.ETA(), pb.Bar('=', '[', ']'), ' ', pb.Percentage()])
+        bar = pb.ProgressBar(maxval=n-1, \
+                widgets=[pb.ETA(), pb.Bar('=', '[', ']'), ' ', pb.Percentage()])
 
         info_blue("Building Boundary Element Matrix")
         for i, dof in enumerate(doftionary):
-            #bar.update(i)
+            bar.update(i)
             BEM[i] = self.__get_BEM_row(doftionary[dof], keys, i)
         return BEM
 
@@ -254,17 +254,17 @@ class FKSolverTrunc(sb.TruncDeMagSolver,FKSolver):
 
 if __name__ == "__main__":
     from finmag.demag.problems import prob_fembem_testcases as pft
-    problem = pft.MagUnitSphere(3)
+    problem = pft.MagUnitSphere(8)
     #problem = pft.MagUnitCircle(10)
     #problem = pft.MagSphere()
     solver = FemBemFKSolver(problem)
     phi = solver.solve()
-    #plot(phi, interactive=True)
+    plot(phi, interactive=True)
     
     gradient = solver.get_demagfield(phi)
     V = VectorFunctionSpace(problem.mesh, "CG", 1)
     grad = project(gradient, V)
-    print grad.vector().array()
+    #print grad.vector().array()
     
     #solver.save_function(phi, "phi")
     #solver.save_function(gradient, "grad")
