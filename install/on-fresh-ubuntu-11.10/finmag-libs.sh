@@ -10,9 +10,10 @@ sudo apt-get install python-matplotlib python-visual python-scipy ipython python
 sudo apt-get install texlive-latex-extra texlive-latex-recommended python-pygments 
 
 #Need more recent version of sphinx than ubuntu version
-sudo aptitude remove python-sphinx  
+sudo aptitude remove python-sphinx  python-py
 #so we can use easy_install:
 sudo apt-get install python-setuptools
 sudo easy_install -U sphinx
+sudo easy_install -U pytest
 
 
