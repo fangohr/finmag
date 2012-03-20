@@ -113,12 +113,17 @@ class Mesh(object):
         return MeshField(self, a, [dims])
 
     def iter_coords_int(self):
-        # TODO: use array order here
-        assert self.array_order == Mesh.ZYX
-        for z in xrange(self.mesh_size[2]):
-            for y in xrange(self.mesh_size[1]):
-                for x in xrange(self.mesh_size[0]):
-                    yield (x, y, z)
+        l, m, n = self.array_order
+        for i in xrange(self.mesh_size[l]):
+            for j in xrange(self.mesh_size[m]):
+                for k in xrange(self.mesh_size[n]):
+                    r = [-1] * 3
+                    r[l] = i; r[m] = j; r[n] = k;
+                    yield tuple(r)
+
+    def iter_coords(self):
+        for i in self.iter_coords_int():
+            yield([self.origin[d] + (0.5 + i[d]) * self.cell_size[d] for d in xrange(3)])
 
     endpoint = property(lambda self: self.origin + self.cell_size*self.mesh_size)
     is_zyx = property(lambda self: self.array_order == Mesh.ZYX)
