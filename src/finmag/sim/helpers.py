@@ -49,7 +49,9 @@ def fnormalise(ar, length=1):
     dolfin provides, so [x0, ..., xn, y0, ..., yn, z0, ..., zn].
 
     """
-    return for_dolfin(normalise(vectors(ar), length))
+    arr = components(ar)
+    arr /= numpy.sqrt(arr[0]*arr[0] + arr[1]*arr[1] + arr[2]*arr[2])
+    return numpy.append(arr[0],[arr[1],arr[2]]) 
 
 def angle(v1, v2):
     """
