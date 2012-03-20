@@ -15,9 +15,9 @@ from finmag.sim.llg import LLG
 import scipy.integrate
 
 # Material parameters
-Ms = 1400e3 # A/m
-K1 = 520e3 # A/m
-A = 30e-12 # J/m
+Ms_Co = 1400e3 # A/m
+K1_Co = 520e3 # A/m
+A_Co = 30e-12 # J/m
 
 LENGTH = 100e-9
 NODE_COUNT = 200
@@ -30,10 +30,10 @@ def initial_m(xi, node_count):
 
 # Analytical solution for the relaxed mz
 def reference_mz(x):
-    return math.cos(math.pi / 2 + math.atan(math.sinh((x - LENGTH / 2) / math.sqrt(A / K1))))
+    return math.cos(math.pi / 2 + math.atan(math.sinh((x - LENGTH / 2) / math.sqrt(A_Co / K1_Co))))
 
-def setup_domain_wall_cobalt(node_count=NODE_COUNT):
-    mesh = df.Interval(node_count - 1, 0, LENGTH)
+def setup_domain_wall_cobalt(node_count=NODE_COUNT, A=A_Co, Ms=Ms_Co, K1=K1_Co, length=LENGTH):
+    mesh = df.Interval(node_count - 1, 0, length)
     llg = LLG(mesh)
     llg.C = 2 * A
     llg.Ms = Ms
