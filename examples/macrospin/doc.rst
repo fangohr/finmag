@@ -12,7 +12,7 @@ The dynamics of the magnetisation field :math:`\vec{M}(\vec{r},t)` is governed b
      -\gamma_L \mu_0 \, \vec{M} \times \vec{H}
     - \frac{\alpha_L}{M_{\mathrm{sat}}} \, \vec{M} \times [ \vec{M} \times \vec{H}]
 
-where :math:`\mu0 = 4\pi10^{−7}\mathrm{N/A^2}` denotes the permeability of free space (also known as the magnetic constant), :math:`\alpha_L` the Landau-Lifshitz damping parameter, and 
+where :math:`\mu0 = 4\pi10^{-7}\mathrm{N/A^2}` denotes the permeability of free space (also known as the magnetic constant), :math:`\alpha_L` the Landau-Lifshitz damping parameter, and 
 
 .. math::
 
@@ -50,19 +50,19 @@ In the absence of all effective fields (such as demagnetisation, anisotropy and 
 
 Starting with the magnetisation aligned with the x-direction, and an applied field acting in the z-direction, we obtain the following time developments for the magnetisation (for different values of :math:`\alpha`).
 
-.. image:: ../examples/macrospin/alpha-1.00.png
+.. image:: ../examples/macrospin/alpha-1-00.png
     :scale: 75
     :align: center
 
-.. image:: ../examples/macrospin/alpha-0.50.png
+.. image:: ../examples/macrospin/alpha-0-50.png
     :scale: 75
     :align: center
 
-.. image:: ../examples/macrospin/alpha-0.10.png
+.. image:: ../examples/macrospin/alpha-0-10.png
     :scale: 75
     :align: center
 
-.. image:: ../examples/macrospin/alpha-0.02.png
+.. image:: ../examples/macrospin/alpha-0-02.png
     :scale: 75
     :align: center
 

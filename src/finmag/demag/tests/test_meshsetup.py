@@ -7,22 +7,22 @@ __project__ = "Finmag"
 __organisation__ = "University of Southampton"
 
 from dolfin import *
-from prob_trunc_testcases import *
+import finmag.demag.problems.prob_trunc_testcases as pttc
 import math
 
 #Global Tolerance for inexact comparisons in percent
 TOL = 0.01
 class TestTruncMeshSetup(object):
     def test_1d(self):
-        problem = MagUnitInterval()
+        problem = pttc.MagUnitInterval()
         self.problem_tests(problem)
 
     def test_2d(self):
-        problem = MagUnitCircle()
+        problem = pttc.MagUnitCircle()
         self.problem_tests(problem)
 
     def test_3d(self):
-        problem = MagUnitSphere()
+        problem = pttc.MagUnitSphere()
         self.problem_tests(problem)
 
     def problem_tests(self,problem):
