@@ -96,7 +96,7 @@ namespace finmag { namespace llg {
         double *m0 = m(0), *m1 = m(1), *m2 = m(2);
         double *mp0 = mp(0), *mp1 = mp(1), *mp2 = mp(2);
         double *h0 = H(0), *h1 = H(1), *h2 = H(2);
-        double *hp0 = Hp(0), *hp1 = H(1), *hp2 = H(2);
+        double *hp0 = Hp(0), *hp1 = Hp(1), *hp2 = Hp(2);
         double *jtimes0 = jtimes(0), *jtimes1 = jtimes(1), *jtimes2 = jtimes(2);
         double relax_coeff = 0.1/char_time;
 
@@ -107,9 +107,9 @@ namespace finmag { namespace llg {
                 jtimes0[i] = precession_coeff*(cross0(mp0[i], mp1[i], mp2[i], h0[i], h1[i], h2[i])
                         + cross0(m0[i], m1[i], m2[i], hp0[i], hp1[i], hp2[i]));
                 jtimes1[i] = precession_coeff*(cross1(mp0[i], mp1[i], mp2[i], h0[i], h1[i], h2[i])
-                        + cross0(m0[i], m1[i], m2[i], hp0[i], hp1[i], hp2[i]));
+                        + cross1(m0[i], m1[i], m2[i], hp0[i], hp1[i], hp2[i]));
                 jtimes2[i] = precession_coeff*(cross2(mp0[i], mp1[i], mp2[i], h0[i], h1[i], h2[i])
-                        + cross0(m0[i], m1[i], m2[i], hp0[i], hp1[i], hp2[i]));
+                        + cross2(m0[i], m1[i], m2[i], hp0[i], hp1[i], hp2[i]));
 
                 // add damping: m x (m x H) == (m.H)m - (m.m)H, multiplied by -gamma alpha
                 // derivative is [(mp.H) + (m.Hp)]m + (m.H)mp - 2(m.mp)H - (m.m)Hp
@@ -124,10 +124,10 @@ namespace finmag { namespace llg {
                 jtimes2[i] += damping_coeff*(mp_h_m_hp*m2[i] + m_h*mp2[i] + m_mp*h2[i] + m_m*hp2[i]);
 
                 // add relaxation of |m|: (1 - (m.m))m
-                // derivative is -2(m.mp)m - (m.m)mp
-                jtimes0[i] += relax_coeff*(m_mp*m0[i] + m_m*hp0[i]);
-                jtimes1[i] += relax_coeff*(m_mp*m1[i] + m_m*hp1[i]);
-                jtimes2[i] += relax_coeff*(m_mp*m2[i] + m_m*hp2[i]);
+                // derivative is -2(m.mp)m + (1-(m.m))mp
+                jtimes0[i] += relax_coeff*(m_mp*m0[i] + (1.+m_m)*mp0[i]);
+                jtimes1[i] += relax_coeff*(m_mp*m1[i] + (1.+m_m)*mp1[i]);
+                jtimes2[i] += relax_coeff*(m_mp*m2[i] + (1.+m_m)*mp2[i]);
             }
         } else {
             #pragma omp parallel for schedule(guided)
@@ -140,15 +140,15 @@ namespace finmag { namespace llg {
                 double m_mp = -2.*(m0[i]*mp0[i] + m1[i]*mp1[i] + m2[i]*mp2[i]);
                 double m_m = -(m0[i] * m0[i] + m1[i] * m1[i] + m2[i] * m2[i]);
 
-                jtimes0[i] += damping_coeff*(mp_h_m_hp*m0[i] + m_h*mp0[i] + m_mp*h0[i] + m_m*hp0[i]);
-                jtimes1[i] += damping_coeff*(mp_h_m_hp*m1[i] + m_h*mp1[i] + m_mp*h1[i] + m_m*hp1[i]);
-                jtimes2[i] += damping_coeff*(mp_h_m_hp*m2[i] + m_h*mp2[i] + m_mp*h2[i] + m_m*hp2[i]);
+                jtimes0[i] = damping_coeff*(mp_h_m_hp*m0[i] + m_h*mp0[i] + m_mp*h0[i] + m_m*hp0[i]);
+                jtimes1[i] = damping_coeff*(mp_h_m_hp*m1[i] + m_h*mp1[i] + m_mp*h1[i] + m_m*hp1[i]);
+                jtimes2[i] = damping_coeff*(mp_h_m_hp*m2[i] + m_h*mp2[i] + m_mp*h2[i] + m_m*hp2[i]);
 
                 // add relaxation of |m|: (1 - (m.m))m
-                // derivative is -2(m.mp)m - (m.m)mp
-                jtimes0[i] += relax_coeff*(m_mp*m0[i] + m_m*hp0[i]);
-                jtimes1[i] += relax_coeff*(m_mp*m1[i] + m_m*hp1[i]);
-                jtimes2[i] += relax_coeff*(m_mp*m2[i] + m_m*hp2[i]);
+                // derivative is -2(m.mp)m + (1-(m.m))mp
+                jtimes0[i] += relax_coeff*(m_mp*m0[i] + (1.+m_m)*mp0[i]);
+                jtimes1[i] += relax_coeff*(m_mp*m1[i] + (1.+m_m)*mp1[i]);
+                jtimes2[i] += relax_coeff*(m_mp*m2[i] + (1.+m_m)*mp2[i]);
             }
         }
     }
@@ -166,6 +166,17 @@ namespace finmag { namespace llg {
             arg("char_time"),
             arg("do_precession")
         ));
-        def("calc_llg_jtimes", &calc_llg_jtimes);
+        def("calc_llg_jtimes", &calc_llg_jtimes, (
+            arg("m"),
+            arg("H"),
+            arg("mp"),
+            arg("Hp"),
+            arg("t"),
+            arg("jtimes"),
+            arg("gamma_LL"),
+            arg("alpha"),
+            arg("char_time"),
+            arg("do_precession")
+        ));
     }
 }}

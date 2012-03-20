@@ -63,7 +63,9 @@ class JacobeanIntegrationTests(unittest.TestCase):
     def test_sundials_diag_adams(self):
         self.run_sundials_test_no_jacobean("adams")
 
-    def atest_sundials_test_with_jacobean(self):
+    def test_sundials_test_with_jacobean(self):
+        self.llg = setup_domain_wall_cobalt(node_count=NODE_COUNT, use_instant=False)
+
         integrator = sundials.cvode(sundials.CV_BDF, sundials.CV_NEWTON)
         integrator.init(scipy_to_cvode_rhs(self.scipy_rhs), 0, self.llg.m.copy())
         integrator.set_linear_solver_sp_gmr(sundials.PREC_NONE)

@@ -10,8 +10,8 @@ def norm(a):
     return np.sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2])
 
 # Set up the LLG with all parameters close to 1
-def setup_llg_params_near_one(node_count=5, use_instant=True):
-    llg = setup_domain_wall_cobalt(node_count=node_count, A=3.6 * 4e-7 * np.pi, Ms=6.7, K1=4.3, length=1.3, use_instant=use_instant)
+def setup_llg_params_near_one(node_count=5, use_instant=True, A=3.6 * 4e-7 * np.pi, Ms=6.7, K1=4.3, do_precession=True):
+    llg = setup_domain_wall_cobalt(node_count=node_count, A=A, Ms=Ms, K1=K1, length=1.3, use_instant=use_instant, do_precession=do_precession)
     llg.c = 1.23
     llg.gamma = 1.56
     llg.alpha = 2.35
@@ -44,9 +44,12 @@ class JacobeanComputationTests(unittest.TestCase):
     def compute_jacobean_jtimes(self, m):
         n = self.llg.m.size / 3
         jac = np.zeros((3 * n, 3 * n))
+        tmp = np.zeros(m.shape)
+        jtimes = np.zeros(m.shape)
         for j, v in enumerate(np.eye(3*n)):
-            # use fy=None and tmp=None since they are not used for the computation
-            self.assertGreaterEqual(self.llg.sundials_jtimes(v, jac[:, j], 0, m, None, None), 0)
+            # use fy=None since it's not used for the computation
+            self.assertGreaterEqual(self.llg.sundials_jtimes(v, jtimes, 0., m, None, tmp), 0)
+            jac[:, j] = jtimes
         return jac
 
     def test_compute_fd(self):
@@ -55,10 +58,17 @@ class JacobeanComputationTests(unittest.TestCase):
         # Jacobean computation should be exact with eps=1 or eps=2
         self.assertLess(np.max(np.abs(self.compute_jacobean_fd(m, eps=1) - self.compute_jacobean_fd(m, eps=2))), 1e-13)
 
-    def atest_compute_jtimes(self):
-        self.llg, m = setup_llg_params_near_one()
+    def test_compute_jtimes(self):
+        self.llg, m = setup_llg_params_near_one(use_instant=False)
+        self.assertLess(np.max(np.abs(self.compute_jacobean_jtimes(m) - self.compute_jacobean_fd(m))), 1e-13)
 
-        # TODO: implement LLG.sundials_jtimes
+    def test_compute_jtimes_pinning(self):
+        self.llg, m = setup_llg_params_near_one(use_instant=False)
+        self.llg.pins = [0,3,4]
+        self.assertLess(np.max(np.abs(self.compute_jacobean_jtimes(m) - self.compute_jacobean_fd(m))), 1e-13)
+
+    def test_compute_jtimes_no_precession(self):
+        self.llg, m = setup_llg_params_near_one(use_instant=False, do_precession=False)
         self.assertLess(np.max(np.abs(self.compute_jacobean_jtimes(m) - self.compute_jacobean_fd(m))), 1e-13)
 
 if __name__=="__main__":
