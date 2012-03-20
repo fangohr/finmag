@@ -12,10 +12,12 @@
 
 #include "util/np_array.h"
 
+#include "llg_module_impl.h"
+
 BOOST_PYTHON_MODULE(llg)
 {
     initialise_np_array();
 
     bp::scope().attr("__doc__") = "C++ routines for computing the LLG (dM/dt and the Jacobean)";
-//    finmag::sundials::register_numpy_malloc();
+    finmag::llg::register_module();
 }

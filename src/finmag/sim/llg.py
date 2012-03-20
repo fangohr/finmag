@@ -6,16 +6,20 @@ import finmag.sim.helpers as h
 from finmag.sim.exchange import Exchange
 from finmag.sim.anisotropy import UniaxialAnisotropy
 from finmag.sim.dmi import DMI
+from finmag.native import llg as native_llg
 
 class LLG(object):
 
-    def __init__(self, mesh, order=1):
+    def __init__(self, mesh, order=1, use_instant_llg=True, do_precession=True):
         self.mesh = mesh
         self.V = df.VectorFunctionSpace(self.mesh, 'Lagrange', order, dim=3)
         self.Volume = df.assemble(df.Constant(1)*df.dx, mesh=self.mesh)
 
         self.set_default_values()
-        self._solve = self.load_c_code()
+        self.use_instant_llg = use_instant_llg
+        self.do_precession = do_precession
+        if use_instant_llg:
+            self._solve = self.load_c_code()
 
     def set_default_values(self):
         self.alpha = 0.5
@@ -153,8 +157,24 @@ class LLG(object):
             H_ani = ani.compute_field()
             self.H_eff += H_ani
 
-        status, dMdt = self._solve(self.alpha, self.gamma, self.c,
-            self.m, self.H_eff, self.m.shape[0], self.pins)
+        if self.use_instant_llg:
+            status, dMdt = self._solve(self.alpha, self.gamma, self.c,
+                self.m, self.H_eff, self.m.shape[0], self.pins)
+        else:
+            # Use the same characteristic time as defined by c
+            char_time = 0.1/self.c
+            # Prepare the arrays in the correct shape
+            m = self.m
+            m.shape = (3, -1)
+            H_eff = self.H_eff
+            H_eff.shape = (3, -1)
+            dMdt = np.zeros(m.shape)
+            # Calculate dm/dt
+            native_llg.calc_llg_dmdt(m, H_eff, self.t, dMdt, self.gamma/(1.+self.alpha**2), self.alpha, char_time, self.do_precession)
+            # TODO: Store pins in a np.ndarray(dtype=int) and assign 0's in C++ code
+            dMdt[:, self.pins] = 0
+            dMdt.shape = (-1,)
+            status = 0
 
         for func in self._post_rhs_callables:
             func(self)
