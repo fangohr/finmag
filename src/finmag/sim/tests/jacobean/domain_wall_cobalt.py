@@ -32,9 +32,9 @@ def initial_m(xi, node_count):
 def reference_mz(x):
     return math.cos(math.pi / 2 + math.atan(math.sinh((x - LENGTH / 2) / math.sqrt(A_Co / K1_Co))))
 
-def setup_domain_wall_cobalt(node_count=NODE_COUNT, A=A_Co, Ms=Ms_Co, K1=K1_Co, length=LENGTH):
+def setup_domain_wall_cobalt(node_count=NODE_COUNT, A=A_Co, Ms=Ms_Co, K1=K1_Co, length=LENGTH, use_instant=True):
     mesh = df.Interval(node_count - 1, 0, length)
-    llg = LLG(mesh)
+    llg = LLG(mesh, use_instant_llg=use_instant)
     llg.C = 2 * A
     llg.Ms = Ms
     llg.add_uniaxial_anisotropy(K1, df.Constant((0, 0, 1)))
