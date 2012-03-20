@@ -137,25 +137,25 @@ class LLG(object):
         
         self._H_app = df.interpolate(df.Constant(value), self.V)
 
+    def compute_H_eff(self):
+        #compute the effective field
+        self.H_eff = self.H_app #can we avoid this if we don't use H_app?
+        #self.H_eff *= 0.0 #set to zero
+        if self.exchange_flag:
+            self.H_ex = self.exchange.compute_field()
+            self.H_eff += self.H_ex
+        if self.use_dmi:
+            self.H_dmi = self.dmi.compute_field()
+            self.H_eff += self.H_dmi
+        for ani in self._anisotropies:
+            H_ani = ani.compute_field()
+            self.H_eff += H_ani
+
     def solve(self):
         for func in self._pre_rhs_callables:
             func(self)
 
-        #compute the effective field
-        self.H_eff = self.H_app #can we avoid this if we don't use H_app?            
-        #self.H_eff *= 0.0 #set to zero
-
-        if self.exchange_flag:
-            self.H_ex = self.exchange.compute_field()
-            self.H_eff += self.H_ex
-
-        if self.use_dmi:
-            self.H_dmi = self.dmi.compute_field()
-            self.H_eff += self.H_dmi
-
-        for ani in self._anisotropies:
-            H_ani = ani.compute_field()
-            self.H_eff += H_ani
+        self.compute_H_eff()
 
         if self.use_instant_llg:
             status, dMdt = self._solve(self.alpha, self.gamma, self.c,
@@ -184,8 +184,42 @@ class LLG(object):
         raise Exception("An error was encountered in the C-code; status=%d" % status)
 
     # Computes the Jacobean-times-vector product, as used by SUNDIALS CVODE
-    def sundials_jtimes(self, v, Jv, t, y, fy, tmp):
-        # TODO: implement the Jacobean times vector computation
+    def sundials_jtimes(self, mp, J_mp, t, m, fy, tmp):
+        assert m.shape == self.m.shape
+        assert mp.shape == m.shape
+        assert tmp.shape == m.shape
+        # First, compute the derivative of H
+        Hp = tmp
+        Hp[:] = 0.
+
+        # Unfortunately we have to recompute H every time here
+        self.m = m
+        self.compute_H_eff()
+        # Might be possible to avoid it later when we use a preconditioner, by computing it in pre_setup
+
+        self.m = mp
+        if self.exchange_flag:
+            Hp += self.exchange.compute_field()
+
+        for ani in self._anisotropies:
+            Hp += ani.compute_field()
+
+        m.shape = (3, -1)
+        mp.shape = (3, -1)
+        H = self.H_eff.view()
+        H.shape = (3, -1)
+        Hp.shape = (3, -1)
+        J_mp.shape = (3, -1)
+        # Use the same characteristic time as defined by c
+        char_time = 0.1 / self.c
+        native_llg.calc_llg_jtimes(m, H, mp, Hp, t, J_mp, self.gamma/(1+self.alpha**2), self.alpha, char_time, self.do_precession)
+        # TODO: Store pins in a np.ndarray(dtype=int) and assign 0's in C++ code
+        J_mp[:, self.pins] = 0.
+        J_mp.shape = (-1, )
+        m.shape = (-1,)
+        mp.shape = (-1,)
+        tmp.shape = (-1,)
+
         # Nonnegative exit code indicates success
         return 0
 
