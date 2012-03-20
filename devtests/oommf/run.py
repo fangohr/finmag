@@ -21,7 +21,7 @@ llg.setup(exchange_flag=True)
 
 print "finmag\n\nm0"
 print llg.m
-print "\nexchange:" 
+print "\nexchange:"
 print components(llg.exchange.compute_field())
 
 """
@@ -34,12 +34,12 @@ print "\noommf\n\n"
 msh = mesh.Mesh((xn, yn, zn), size=(x1, y1, z1))
 m0 = msh.new_field(3)
 
-i = 0
-for r in msh.iter_coords():
-    x, y, z = r
-    m0.flat[0][i] = 2 * x/x1 - 1
-    m0.flat[1][i] = 2 * y/y1 -1
-    m0.flat[2][i] = 1
-    i += 1
+for i, (x, y, z) in enumerate(msh.iter_coords()):
+    m0.flat[0,i] = 2 * x/x1 - 1
+    m0.flat[1,i] = 2 * y/y1 -1
+    m0.flat[2,i] = 1
+
+# m0.flat.shape == (3, n)
+m0.flat /= np.sqrt(m0.flat[0]*m0.flat[0] + m0.flat[1]*m0.flat[1] + m0.flat[2]*m0.flat[2])
 
 print oommf_uniform_exchange(m0, llg.Ms, llg.C).flat
