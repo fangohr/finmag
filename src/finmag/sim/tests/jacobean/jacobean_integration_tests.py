@@ -12,29 +12,67 @@ import dolfin as df
 import unittest
 import math
 from finmag.sim.llg import LLG
+from domain_wall_cobalt import setup_domain_wall_cobalt, domain_wall_error
+from finmag.native import sundials
+from finmag.util.ode import scipy_to_cvode_rhs
 
-# Material parameters
-Ms = 1400e3 # A/m
-K1 = 520e3 # A/m
-A = 30e-12 # J/m
-
-LENGTH = 100e-9
-NODE_COUNT = 200
-
-# Initial m
-def initial_m(xi):
-    mz = 1. - 2. * xi / (NODE_COUNT - 1)
-    my = math.sqrt(1 - mz * mz)
-    return [0, my, mz]
+NODE_COUNT = 100
+END_TIME = 1e-10
 
 class JacobeanIntegrationTests(unittest.TestCase):
-    def test_scipy(self):
-        mesh = df.Interval(NODE_COUNT-1, 0, LENGTH)
+    def setUp(self):
+        self.n_rhs_evals = 0
 
-        llg = LLG(mesh)
-        llg.set_m0(np.array([initial_m(xi) for xi in xrange(NODE_COUNT)]).T.reshape((-1,)))
-        llg.setup()
-        llg.pins = [0, 10]
+    def scipy_rhs(self, t, y):
+        self.n_rhs_evals += 1
+        return self.llg.solve_for(y, t)
+
+    def run_scipy_test(self, method):
+        self.llg = setup_domain_wall_cobalt(node_count=NODE_COUNT)
+        integrator = scipy.integrate.ode(self.scipy_rhs)
+        integrator.set_integrator("vode", method=method, atol=1e-8, rtol=1e-8, nsteps=40000)
+        integrator.set_initial_value(self.llg.m)
+        ys = integrator.integrate(END_TIME)
+        print "scipy integration: method=%s, n_rhs_evals=%d, error=%g" % (method, self.n_rhs_evals, domain_wall_error(ys, NODE_COUNT))
+
+    def test_scipy_bdf(self):
+        self.run_scipy_test("bdf")
+
+    def test_scipy_adams(self):
+        self.run_scipy_test("adams")
+
+    def run_sundials_test_no_jacobean(self, method):
+        self.llg = setup_domain_wall_cobalt(node_count=NODE_COUNT)
+        if method=="bdf":
+            integrator = sundials.cvode(sundials.CV_BDF, sundials.CV_NEWTON)
+        else:
+            assert method=="adams"
+            integrator = sundials.cvode(sundials.CV_ADAMS, sundials.CV_FUNCTIONAL)
+        integrator.init(scipy_to_cvode_rhs(self.scipy_rhs), 0, self.llg.m.copy())
+        if method == "bdf":
+            integrator.set_linear_solver_diag()
+        integrator.set_scalar_tolerances(1e-8, 1e-8)
+        integrator.set_max_num_steps(40000)
+        ys = np.zeros(self.llg.m.shape)
+        integrator.advance_time(END_TIME, ys)
+        print "sundials integration, no jacobean (%s, diagonal): n_rhs_evals=%d, error=%g" % (method, self.n_rhs_evals, domain_wall_error(ys, NODE_COUNT))
+
+    def test_sundials_diag_bdf(self):
+        self.run_sundials_test_no_jacobean("bdf")
+
+    def test_sundials_diag_adams(self):
+        self.run_sundials_test_no_jacobean("adams")
+
+    def atest_sundials_test_with_jacobean(self):
+        integrator = sundials.cvode(sundials.CV_BDF, sundials.CV_NEWTON)
+        integrator.init(scipy_to_cvode_rhs(self.scipy_rhs), 0, self.llg.m.copy())
+        integrator.set_linear_solver_sp_gmr(sundials.PREC_NONE)
+        integrator.set_splis_jac_times_vec_fn(self.llg.sundials_jtimes)
+        integrator.set_scalar_tolerances(1e-8, 1e-8)
+        integrator.set_max_num_steps(40000)
+        ys = np.zeros(self.llg.m.shape)
+        integrator.advance_time(END_TIME, ys)
+        print "sundials integration, with jacobean: n_rhs_evals=%d, error=%g" % (self.n_rhs_evals, domain_wall_error(ys, NODE_COUNT))
 
 if __name__ == '__main__':
     unittest.main()

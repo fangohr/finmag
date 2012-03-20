@@ -162,7 +162,12 @@ class LLG(object):
         if status == 0:
             return dMdt
         raise Exception("An error was encountered in the C-code; status=%d" % status)
-        return None
+
+    # Computes the Jacobean-times-vector product, as used by SUNDIALS CVODE
+    def sundials_jtimes(self, v, Jv, t, y, fy, tmp):
+        # TODO: implement the Jacobean times vector computation
+        # Nonnegative exit code indicates success
+        return 0
 
     def solve_for(self, m, t):
         self.m = m
