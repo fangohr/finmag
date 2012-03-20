@@ -1,5 +1,7 @@
 #pragma once
 
+#include "util/python_threading.h"
+
 namespace finmag { namespace llg {
     // Components of a cross product
     inline double cross0(double a0, double a1, double a2, double b0, double b1, double b2) { return a1*b2 - a2*b1; }
@@ -28,6 +30,8 @@ namespace finmag { namespace llg {
         double *h0 = H(0), *h1 = H(1), *h2 = H(2);
         double *dm0 = dmdt(0), *dm1 = dmdt(1), *dm2 = dmdt(2);
         double relax_coeff = 0.1/char_time;
+
+        finmag::util::scoped_gil_release release_gil;
 
         // calculate dm
         if (do_precession) {
@@ -99,6 +103,8 @@ namespace finmag { namespace llg {
         double *hp0 = Hp(0), *hp1 = Hp(1), *hp2 = Hp(2);
         double *jtimes0 = jtimes(0), *jtimes1 = jtimes(1), *jtimes2 = jtimes(2);
         double relax_coeff = 0.1/char_time;
+
+        finmag::util::scoped_gil_release release_gil;
 
         if (do_precession) {
             #pragma omp parallel for schedule(guided)
