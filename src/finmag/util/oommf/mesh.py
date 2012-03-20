@@ -122,11 +122,8 @@ class Mesh(object):
                     yield tuple(r)
 
     def iter_coords(self):
-        for r in self.iter_coords_int():
-            x = self.origin[0] + self.cell_size[0]*0.5 + self.cell_size[0]*r[0]
-            y = self.origin[1] + self.cell_size[1]*0.5 + self.cell_size[1]*r[1]
-            z = self.origin[2] + self.cell_size[2]*0.5 + self.cell_size[2]*r[2]
-            yield((x, y, z))
+        for i in self.iter_coords_int():
+            yield([self.origin[d] + (0.5 + i[d]) * self.cell_size[d] for d in xrange(3)])
 
     endpoint = property(lambda self: self.origin + self.cell_size*self.mesh_size)
     is_zyx = property(lambda self: self.array_order == Mesh.ZYX)
