@@ -34,3 +34,10 @@ class TestIterCoordsInt(unittest.TestCase):
         assert np.array_equal(m.mesh_size, [2, 2, 2])
         assert m.array_order == mesh.Mesh.XYZ
         assert np.array_equal(expected, indices)
+
+class TestIterCoords(unittest.TestCase):
+    def test_zyx_ordering(self):
+        m = mesh.Mesh((3, 1, 1), cellsize=(1, 1, 1))
+        coords = [r for r in m.iter_coords()]
+        expected = [[0.5, 0.5, 0.5], [1.5, 0.5, 0.5], [2.5, 0.5, 0.5]]
+        assert np.array_equal(expected, coords)
