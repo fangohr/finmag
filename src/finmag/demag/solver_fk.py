@@ -67,8 +67,8 @@ class FemBemFKSolver(FKSolver, sb.FemBemDeMagSolver):
         self.solve_laplace_inside(self.phi2)
 
         # Knittel (2.27), phi = phi1 + phi2
-        phi = self.calc_phitot(self.phi1, self.phi2)
-        return phi
+        self.phi = self.calc_phitot(self.phi1, self.phi2)
+        return self.phi
 
     def __solve_phi2_boundary(self, doftionary):
         """Compute phi2 on the boundary."""
@@ -160,6 +160,7 @@ class FemBemFKSolver(FKSolver, sb.FemBemDeMagSolver):
 
 class FKSolverTrunc(sb.TruncDeMagSolver,FKSolver):
     """FK Solver using domain truncation"""
+    ###Only partially implemented at the moment
     def __init__(self,problem, degree = 1):
         self.problem = problem
         self.degree = degree

@@ -1,5 +1,10 @@
 """A Utility Module used to locate the Dofs that lie on a common boundary"""
 
+__author__ = "Gabriel Balaban"
+__copyright__ = __author__
+__project__ = "Finmag"
+__organisation__ = "University of Southampton"
+
 from dolfin import * 
 import numpy as np
 
