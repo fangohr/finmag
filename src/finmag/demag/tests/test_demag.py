@@ -6,7 +6,7 @@ from finmag.demag.problems import prob_fembem_testcases as pft
 
 TOL = 1e-3
 
-problems = [pft.MagUnitSphere(n) for n in (1,10)] #(2,5)
+problems = [pft.MagUnitSphere(n) for n in (1,10)] 
 #problems.append(pft.MagSphere())
 solvers = [solver_fk.FemBemFKSolver, solver_gcr.GCRFemBemDeMagSolver]
 
@@ -79,7 +79,7 @@ def test_avg_x(case, grad):
     x = grad.split(True)[0].vector().array()
     avg = np.average(x) 
 
-    print "Average of x-component minus 1/3 Ms should be %g. Is %g." % (1./3*problem.Ms, avg)
+    print "Average of x-component should be %g. Is %g." % (1./3*problem.Ms, avg)
 #    assert abs(avg-1./3*Ms) < TOL
 
 
