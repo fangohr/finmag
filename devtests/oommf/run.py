@@ -2,7 +2,6 @@ import dolfin as df
 import numpy as np
 
 from finmag.sim.llg import LLG
-from finmag.sim.helpers import components
 from finmag.util.oommf import oommf_uniform_exchange, mesh
 
 L = 20e-9; W = 10e-9; H = 1e-9;
