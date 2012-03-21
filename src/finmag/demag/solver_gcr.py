@@ -169,20 +169,8 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           return q
                                       
 if __name__ == "__main__":
-    """
      from finmag.demag.problems import prob_fembem_testcases as pft
      problem = pft.MagUnitCircle(10)
      solver = GCRFemBemDeMagSolver(problem)
      solver.assemble_qvector_exact()
-    """
-    from finmag.demag.problems.prob_base import FemBemDeMagProblem
-    mesh = Mesh("mesh/sphere10.xml")
-    M = ("1.0", "0.0", "0.0")
-    problem = FemBemDeMagProblem(mesh, M)
-    solver = GCRFemBemDeMagSolver(problem)
-    phi = solver.solve()
-    H_demag = solver.get_demagfield(phi)
-    x, y, z = H_demag.split(True)
-    for i in z.vector().array():
-        print i
 
