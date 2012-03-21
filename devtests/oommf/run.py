@@ -12,7 +12,8 @@ finmag code
 x0 = 0; y0 = z0 = 0
 x1 = 10e-9; y1 = z1 = 1e-10
 xn = 20; yn = zn = 1 
-msh = df.Interval(xn-1, x0, x1)
+#msh = df.Interval(xn-1, x0, x1)
+msh = df.Box(x0, y0, z0, x1, y1, z1, xn, yn, zn)
 
 llg = LLG(msh)
 
@@ -24,6 +25,12 @@ llg.set_m0((m0_x, m0_y, m0_z), L=x1)
 llg.setup(exchange_flag=True)
 
 print components(llg.exchange.compute_field())
+
+exc_finmag = df.Function(llg.V)
+exc_finmag.vector()[:] = llg.exchange.compute_field()
+df.plot(llg._m)
+df.plot(exc_finmag)
+df.interactive()
 
 """
 oommf code
