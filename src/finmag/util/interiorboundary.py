@@ -1,4 +1,4 @@
-#A Utility Module for generating interior boundaries in Fenics
+"""A Utility Module for generating interior boundaries in Fenics"""
 
 __author__ = "Gabriel Balaban"
 __copyright__ = __author__
