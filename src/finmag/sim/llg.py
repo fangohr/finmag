@@ -9,13 +9,18 @@ from finmag.sim.dmi import DMI
 
 class LLG(object):
 
-    def __init__(self, mesh, order=1):
+    def __init__(self, mesh, order=1, use_instant_llg=True, do_precession=True):
         self.mesh = mesh
         self.V = df.VectorFunctionSpace(self.mesh, 'Lagrange', order, dim=3)
         self.Volume = df.assemble(df.Constant(1)*df.dx, mesh=self.mesh)
 
         self.set_default_values()
-        self._solve = self.load_c_code()
+        self.use_instant_llg = use_instant_llg
+        self.do_precession = do_precession
+        if use_instant_llg:
+            self._solve = self.load_c_code()
+        else: # TODO: not beautiful, but compilation fails on my machine
+            from finmag.native import llg as native_llg
 
     def set_default_values(self):
         self.alpha = 0.5
@@ -133,28 +138,44 @@ class LLG(object):
         
         self._H_app = df.interpolate(df.Constant(value), self.V)
 
-    def solve(self):
-        for func in self._pre_rhs_callables:
-            func(self)
-
+    def compute_H_eff(self):
         #compute the effective field
-        self.H_eff = self.H_app #can we avoid this if we don't use H_app?            
+        self.H_eff = self.H_app #can we avoid this if we don't use H_app?
         #self.H_eff *= 0.0 #set to zero
-
         if self.exchange_flag:
             self.H_ex = self.exchange.compute_field()
             self.H_eff += self.H_ex
-
         if self.use_dmi:
             self.H_dmi = self.dmi.compute_field()
             self.H_eff += self.H_dmi
-
         for ani in self._anisotropies:
             H_ani = ani.compute_field()
             self.H_eff += H_ani
 
-        status, dMdt = self._solve(self.alpha, self.gamma, self.c,
-            self.m, self.H_eff, self.m.shape[0], self.pins)
+    def solve(self):
+        for func in self._pre_rhs_callables:
+            func(self)
+
+        self.compute_H_eff()
+
+        if self.use_instant_llg:
+            status, dMdt = self._solve(self.alpha, self.gamma, self.c,
+                self.m, self.H_eff, self.m.shape[0], self.pins)
+        else:
+            # Use the same characteristic time as defined by c
+            char_time = 0.1/self.c
+            # Prepare the arrays in the correct shape
+            m = self.m
+            m.shape = (3, -1)
+            H_eff = self.H_eff
+            H_eff.shape = (3, -1)
+            dMdt = np.zeros(m.shape)
+            # Calculate dm/dt
+            native_llg.calc_llg_dmdt(m, H_eff, self.t, dMdt, self.gamma/(1.+self.alpha**2), self.alpha, char_time, self.do_precession)
+            # TODO: Store pins in a np.ndarray(dtype=int) and assign 0's in C++ code
+            dMdt[:, self.pins] = 0
+            dMdt.shape = (-1,)
+            status = 0
 
         for func in self._post_rhs_callables:
             func(self)
@@ -164,8 +185,42 @@ class LLG(object):
         raise Exception("An error was encountered in the C-code; status=%d" % status)
 
     # Computes the Jacobean-times-vector product, as used by SUNDIALS CVODE
-    def sundials_jtimes(self, v, Jv, t, y, fy, tmp):
-        # TODO: implement the Jacobean times vector computation
+    def sundials_jtimes(self, mp, J_mp, t, m, fy, tmp):
+        assert m.shape == self.m.shape
+        assert mp.shape == m.shape
+        assert tmp.shape == m.shape
+        # First, compute the derivative of H
+        Hp = tmp
+        Hp[:] = 0.
+
+        # Unfortunately we have to recompute H every time here
+        self.m = m
+        self.compute_H_eff()
+        # Might be possible to avoid it later when we use a preconditioner, by computing it in pre_setup
+
+        self.m = mp
+        if self.exchange_flag:
+            Hp += self.exchange.compute_field()
+
+        for ani in self._anisotropies:
+            Hp += ani.compute_field()
+
+        m.shape = (3, -1)
+        mp.shape = (3, -1)
+        H = self.H_eff.view()
+        H.shape = (3, -1)
+        Hp.shape = (3, -1)
+        J_mp.shape = (3, -1)
+        # Use the same characteristic time as defined by c
+        char_time = 0.1 / self.c
+        native_llg.calc_llg_jtimes(m, H, mp, Hp, t, J_mp, self.gamma/(1+self.alpha**2), self.alpha, char_time, self.do_precession)
+        # TODO: Store pins in a np.ndarray(dtype=int) and assign 0's in C++ code
+        J_mp[:, self.pins] = 0.
+        J_mp.shape = (-1, )
+        m.shape = (-1,)
+        mp.shape = (-1,)
+        tmp.shape = (-1,)
+
         # Nonnegative exit code indicates success
         return 0
 

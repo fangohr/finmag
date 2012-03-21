@@ -95,13 +95,11 @@ def oommf_fixed_zeeman(s0, Ms, H):
 def oommf_dmdt(s0, Ms, A, H, alpha, gamma_G):
     assert type(s0) is MeshField and s0.dims == (3,)
 
+    # disable everything besides the external field for better comparison.
     res = calculate_oommf_fields("dmdt", s0, Ms, mesh_spec(s0.mesh) +
-                                                         "\nSpecify Oxs_FixedZeeman { field {%25.16e %25.16e %25.16e} }" % (H[0], H[1], H[2]) +
-                                                         "\nSpecify Oxs_Demag {}" +
-                                                         "\nSpecify Oxs_UniformExchange { A %25.16e }" % A,
-                                 alpha=alpha,
-                                 gamma_G=gamma_G,
-                                 fields=["Oxs_RungeKuttaEvolve:evolver:dm/dt", "Oxs_TimeDriver::Spin"])
+        "\nSpecify Oxs_FixedZeeman { field {%25.16e %25.16e %25.16e} }" % (H[0], H[1], H[2]),
+        alpha=alpha, gamma_G=gamma_G,
+        fields=["Oxs_RungeKuttaEvolve:evolver:dm/dt", "Oxs_TimeDriver::Spin"])
     field = res['Oxs_RungeKuttaEvolve-evolver-dm_dt']
     s_field = res['Oxs_TimeDriver-Spin']
 

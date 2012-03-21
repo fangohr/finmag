@@ -25,6 +25,11 @@ def test_norm():
     assert norm([-1, 0, 0]) - norm([1, 0, 0]) < TOLERANCE 
     assert 3*norm([1, 1, 1]) - norm(3*numpy.array([1, 1, 1])) < TOLERANCE
 
+def test_fnormalise():
+    a = np.array([1., 1., 2., 2., 0., 0.])
+    expected = np.array([0.45, 0.45, 0.89, 0.89, 0., 0.])
+    assert np.allclose(fnormalise(a), expected, rtol=1e-2)
+
 def test_angle():
     assert angle([1,0,0],[1,0,0])           < TOLERANCE
     assert angle([1,0,0],[0,1,0]) - np.pi/2 < TOLERANCE
