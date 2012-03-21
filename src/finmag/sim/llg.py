@@ -6,7 +6,6 @@ import finmag.sim.helpers as h
 from finmag.sim.exchange import Exchange
 from finmag.sim.anisotropy import UniaxialAnisotropy
 from finmag.sim.dmi import DMI
-from finmag.native import llg as native_llg
 
 class LLG(object):
 
@@ -20,6 +19,8 @@ class LLG(object):
         self.do_precession = do_precession
         if use_instant_llg:
             self._solve = self.load_c_code()
+        else: # TODO: not beautiful, but compilation fails on my machine
+            from finmag.native import llg as native_llg
 
     def set_default_values(self):
         self.alpha = 0.5
