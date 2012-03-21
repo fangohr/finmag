@@ -160,6 +160,7 @@ class FemBemFKSolver(FKSolver, sb.FemBemDeMagSolver):
 
 class FKSolverTrunc(sb.TruncDeMagSolver,FKSolver):
     """FK Solver using domain truncation"""
+    ###Only partially implemented at the moment
     def __init__(self,problem, degree = 1):
         self.problem = problem
         self.degree = degree

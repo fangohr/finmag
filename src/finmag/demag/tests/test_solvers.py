@@ -12,14 +12,13 @@ import finmag.demag.problems.prob_fembem_testcases as pftc
 import finmag.demag.solver_nitsche as sn
 import finmag.demag.solver_base as sb
 import finmag.demag.solver_gcr as sgcr
+import finmag.util.error_norms as en
 
 class DemagTester(object):
     """Base class for demag testers"""
     def error_norm(self,func1,func2,cell_domains = None,interior_facet_domains = None, dx = dx):
         """L2 error norm for functions func1 and func2, dx = Measure"""
-        Eform = inner(func1-func2,func1-func2)*dx
-        E = assemble(Eform, cell_domains =  cell_domains, interior_facet_domains =interior_facet_domains)
-        return sqrt(E)
+        return en.L2_error(func1,func2,cell_domains = None,interior_facet_domains = None, dx = dx)
 
     def compare_to_analytical(self,compsol,analyticalsol,testname):
         """Test a computed solution against a analytical solution"""
@@ -318,7 +317,7 @@ if __name__ == "__main__":
     def run_tests(tests):
         for test in tests:
             print "* Doing",test.__doc__
-            ptest()
+            test()
             print
         
     t = TestNitscheSolver()
