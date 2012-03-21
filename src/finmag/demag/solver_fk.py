@@ -36,8 +36,8 @@ class FKSolver(sb.DeMagSolver):
         
         # Define forms
         eps = 1e-8
-        a = dot(grad(u),grad(v))*dx + dot(eps*u,v)*dx 
-        f = div(M)*v*dx + dot(M, n)*v*ds
+        a = dot(grad(u),grad(v))*dx - dot(eps*u,v)*dx 
+        f = dot(n, M)*v*ds - div(M)*v*dx
 
         # Solve for the DOFs in phi1
         solve(a == f, self.phi1)
@@ -253,8 +253,9 @@ class FKSolverTrunc(sb.TruncDeMagSolver,FKSolver):
         return phitot
 
 if __name__ == "__main__":
+    """
     from finmag.demag.problems import prob_fembem_testcases as pft
-    problem = pft.MagUnitSphere(8)
+    problem = pft.MagUnitSphere(4)
     #problem = pft.MagUnitCircle(10)
     #problem = pft.MagSphere()
     solver = FemBemFKSolver(problem)
@@ -268,3 +269,19 @@ if __name__ == "__main__":
     
     #solver.save_function(phi, "phi")
     #solver.save_function(gradient, "grad")
+    x, y, z = grad.split(True)
+    for i in x.vector().array():
+        print i
+    """
+    from finmag.demag.problems.prob_base import FemBemDeMagProblem
+    mesh = Mesh("mesh/sphere10.xml")
+    M = ("1.0", "0.0", "0.0")
+    problem = FemBemDeMagProblem(mesh, M)
+    solver = FemBemFKSolver(problem)
+    phi = solver.solve()
+    H_demag = solver.get_demagfield(phi)
+    x, y, z = H_demag.split(True)
+    for i in y.vector().array():
+        print i
+
+
