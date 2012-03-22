@@ -112,13 +112,13 @@ with the elements of the boundary element matrix :math:`\mathbf{B}` given by
 
     B_{ij} = \frac{1}{4\pi}\int_{\Gamma_j} \psi_j(\vec r) \frac{(\vec R_i - \vec r) \cdot n(\vec r)}{\lvert \vec R_i - \vec r \rvert^3} \mathrm{d}s + \left(\frac{\Omega(\vec R_i)}{4\pi} - 1 \right) \delta_{ij}.
 
-Here, :math:`\psi` is a set of basis functions and :math:`\Omega(\vec R)` denotes the solid angle. For the solid angle, we have used the relation from eq. (23)-(24) in IEEE 2008 [#IEEE]_, which states that
+Here, :math:`\psi` is a set of basis functions and :math:`\Omega(\vec R)` denotes the solid angle. For the solid angle, we have used something that is completely wrong due to ridiculous notation in IEEE 2008 [#IEEE]_, which the author read as
 
 .. math::
 
     \Omega(\vec R_i) = \int_\Gamma \frac{(\vec R_i - \vec r) \cdot n(\vec r)}{\lvert \vec R_i - \vec r \rvert^3} \mathrm{d}s.
 
-:math:`\vec R_i` are the coordinates of the nodal points, which we have stored in a dictionary with the node numbers as keys and their coordinates as values. The rest is conviniently handled by the Dolfin Expression class. The complete code for computing the demoninator, :math:`\lvert \vec R_i - \vec r \rvert^3`, for one of the nodes with R as coordinates, reads
+This should of course be fixed as soon as possible, perhaps by using eq. (21) from the same paper. :math:`\vec R_i` are the coordinates of the nodal points, which we have stored in a dictionary with the node numbers as keys and their coordinates as values. The rest is conviniently handled by the Dolfin Expression class. The complete code for computing the demoninator, :math:`\lvert \vec R_i - \vec r \rvert^3`, for one of the nodes with R as coordinates, reads
  
 .. code-block:: python
 
