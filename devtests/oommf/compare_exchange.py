@@ -8,8 +8,8 @@ L = 20e-9; W = 10e-9; H = 1e-9;
 nL = 40; nW = 10; nH = 1;
 
 def one_dimensional_problem():
-    #msh = df.Interval(nL, 0, L)
-    msh = df.Box(0, 0, 0, L, 1e-10, 1e-10, nL, 1, 1)
+    msh = df.Interval(nL, 0, L)
+    #msh = df.Box(0, 0, 0, L, 1e-10, 1e-10, nL, 1, 1)
     llg = LLG(msh)
     m0_x = 'sqrt(x[0]/L)'
     m0_y = 'sqrt(1 - sqrt(x[0]/L)*sqrt(x[0]/L))'
@@ -34,9 +34,9 @@ llg = one_dimensional_problem()
 exc_finmag = df.Function(llg.V)
 exc_finmag.vector()[:] = llg.exchange.compute_field()
 
-df.plot(llg._m)
-df.plot(exc_finmag)
-df.interactive()
+#df.plot(llg._m)
+#df.plot(exc_finmag)
+#df.interactive()
 
 def one_dimensional_problem_oommf():
     msh = mesh.Mesh((nL, 1, 1), size=(L, 1e-11, 1e-11))
