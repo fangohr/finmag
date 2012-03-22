@@ -42,22 +42,17 @@ class FemBemAnalytical(sb.FemBemDeMagSolver):
 #Section 0 Problems and solvers
 ############################################
 
-###########################
 #This controls the fineness of the meshes
 # At the momenet UnitSphere(i)
-#where i is in fineensslist
+#where i is in finenesslist
 ###########################   
-finenesslist = range(2,4)
-###########################
+finenesslist = range(2,13)
 
 problems = [pft.MagUnitSphere(n) for n in finenesslist]
 numelement = [p.mesh.num_cells() for p in problems]
 
 #Master list of solvers####
-solvers = {"FK Solver": solver_fk.FemBemFKSolver,"GCR Solver": solver_gcr.GCRFemBemDeMagSolver,"Analytical":FemBemAnalytical}
-###########################
-
-a = FemBemAnalytical(problems[0])
+solvers = {"FK Solver": solver_fk.FemBemFKSolver,"GCR Solver": solver_gcr.FemBemGCRSolver,"Analytical":FemBemAnalytical}
 
 ############################################
 #Section 1 Functions
@@ -70,10 +65,10 @@ def componentlists(flist):
     """
     return [[f.split(True)[i] for f in flist] for i in range(3)]
 
-def build_solver_data(solverclass,problems):
+def solver_data(solverclass,problems):
     """
     Takes a Solver class and a list of problems
-    and returns a dictionary of solutions.
+    and returns a dictionary of solution functions.
     """
     solvers = [solverclass(p) for p in problems]
     #The various solutions
@@ -84,7 +79,7 @@ def build_solver_data(solverclass,problems):
     return {"solobj":solvers,"Potential":phi,"Hdemag":Hdemag,"Hdemagx":Hdemagsub[0], \
             "Hdemagy":Hdemagsub[1],"Hdemagz":Hdemagsub[2]}
 
-def convergence_test(fn_approx, fn_ana, norm):
+def convergence_data(fn_approx, fn_ana, norm):
     """
     Test the convergence of a sequence of solutions
     to some sequence of analytical values in a norm
@@ -104,12 +99,19 @@ def error_norms(sd1,sd2):
     comparing the functions in sd1 to those of sd2.
     sd = solver_data.
     """
-    return {"Potential L2": convergence_test(sd1["Potential"],sd2["Potential"], en.L2_error), \
-           "Hdemag L2": convergence_test(sd1["Hdemag"],sd2["Hdemag"], en.L2_error), \
-           "Potential Discrete Max": convergence_test(sd1["Potential"],sd2["Potential"], en.discrete_max_error), \
-           "Hdemag x Discrete Max": convergence_test(sd1["Hdemagx"],sd2["Hdemagx"], en.discrete_max_error), \
-           "Hdemag y Discrete Max": convergence_test(sd1["Hdemagy"],sd2["Hdemagy"], en.discrete_max_error), \
-           "Hdemag z Discrete Max": convergence_test(sd1["Hdemagz"],sd2["Hdemagz"], en.discrete_max_error)}
+    #TODO implement this check so that it checkes that the function space "types" are the same
+    #even if they are two different objects
+    
+    #Check that the Function Spaces match
+##    assert sd1["Potential"][0].function_space() == sd2["Potential"][0].function_space(),"Potential Function Space mismatch"
+##    assert sd1["Hdemag"][0].function_space() == sd2["Hdemag"][0].function_space(),"Hdemag Function Space mismatch"
+    
+    return {"Potential L2": convergence_data(sd1["Potential"],sd2["Potential"], en.L2_error), \
+           "Hdemag L2": convergence_data(sd1["Hdemag"],sd2["Hdemag"], en.L2_error), \
+           "Potential Discrete Max": convergence_data(sd1["Potential"],sd2["Potential"], en.discrete_max_error), \
+           "Hdemag x Discrete Max": convergence_data(sd1["Hdemagx"],sd2["Hdemagx"], en.discrete_max_error), \
+           "Hdemag y Discrete Max": convergence_data(sd1["Hdemagy"],sd2["Hdemagy"], en.discrete_max_error), \
+           "Hdemag z Discrete Max": convergence_data(sd1["Hdemagz"],sd2["Hdemagz"], en.discrete_max_error)}
 
 ############################################
 #Section 2 Data
@@ -121,9 +123,13 @@ def error_norms(sd1,sd2):
 #approximation to a sphere
 
 #Get the functions we are interested in
-solverdata = {k:build_solver_data(solvers[k],problems) for k in solvers}
+solverdata = {k:solver_data(solvers[k],problems) for k in solvers}
 #Compute error norms of functions compared to the analytical solution.
 errornorms = {k:error_norms(solverdata[k], solverdata["Analytical"]) for k in solverdata if k <> "Analytical"}
+
+############################################
+#Section 3 Command line output
+############################################
 
 #Output Report
 starline = "*****************************************************"
@@ -144,15 +150,19 @@ for solvername in errornorms:
         print errornorms[solvername][errorname]
         print
 
+############################################
+#Section 4 Data plots
+############################################
+
 #Outpot Plots
 gcrdata = errornorms["GCR Solver"]["Potential L2"]
 fkdata = errornorms["FK Solver"]["Potential L2"]
 
 #This specificies the number of rows and columns of subplots
 plotgrid = "23"
+#Generate the plots
 for i,errorname in enumerate(errornorms["GCR Solver"]):
     plotnum = plotgrid + str(i+1)
-
     plt.subplot(*plotnum)
     plt.plot(numelement,errornorms["GCR Solver"][errorname],"ro",label = "GCR")
     plt.plot(numelement,errornorms["FK Solver"][errorname],"bs",label = "FK")
