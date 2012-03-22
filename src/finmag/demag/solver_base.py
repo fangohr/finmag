@@ -15,13 +15,20 @@ class DeMagSolver(object):
         self.degree = degree
         #Create the space for the potential function
         self.V = FunctionSpace(self.problem.mesh,"CG",degree)
-        
+        #Get the dimension of the mesh
+        self.D = problem.mesh.topology().dim()
+        #Create the space for the Demag Field
+        if self.D == 1:
+            self.Hdemagspace = FunctionSpace(problem.mesh,"DG",0)
+        else:
+            self.Hdemagspace = VectorFunctionSpace(problem.mesh,"DG",0)
+
         #Convert M into a function
         #HF: I think this should always be
         #Mspace = VectorFunctionSpace(self.problem.mesh,"DG",self.degree,3)
         #GB: ToDo fix the magnetisation of the problems so Mspace is always 3d
         #Some work on taking a lower dim Unit Normal and making it 3D is needed
-        if self.problem.mesh.topology().dim() == 1:
+        if self.D == 1:
             self.Mspace = FunctionSpace(self.problem.mesh,"DG",self.degree)
         else:
             self.Mspace = VectorFunctionSpace(self.problem.mesh,"DG",self.degree)
@@ -35,12 +42,9 @@ class DeMagSolver(object):
         Note: Do not trust the viper solver to plot the DeMag field,
         it can give some wierd results, paraview is recommended instead
         """
-        if phi.function_space().mesh().topology().dim() == 1:
-            Hdemagspace = FunctionSpace(phi.function_space().mesh(),"DG",0)
-        else:
-            Hdemagspace = VectorFunctionSpace(phi.function_space().mesh(),"DG",0)
+
         Hdemag = -grad(phi)
-        Hdemag = project(Hdemag,Hdemagspace)
+        Hdemag = project(Hdemag,self.Hdemagspace)
         return Hdemag
         
     def save_function(self,function,name):
@@ -62,12 +66,12 @@ class FemBemDeMagSolver(DeMagSolver):
         #Change the Function space to CR
         self.V = FunctionSpace(self.problem.mesh,"CR",degree)
         #Total Function that we solve for
-        self.phitot = Function(self.V)
+        self.phi = Function(self.V)
         
     def calc_phitot(self,func1,func2):
         """Add two functions to get phitotal"""
-        self.phitot.vector()[:] = func1.vector()[:] + func2.vector()[:]
-        return self.phitot
+        self.phi.vector()[:] = func1.vector()[:] + func2.vector()[:]
+        return self.phi
             
     def get_boundary_dofs(self,V):
         """Gets the dofs that live on the boundary of the mesh
