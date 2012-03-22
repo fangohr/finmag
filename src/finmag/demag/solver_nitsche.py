@@ -35,7 +35,7 @@ class NitscheSolver(sb.TruncDeMagSolver):
         sol = Function(W) 
         phi0 = Function(V)
         phi1 = Function(V)
-        phitot = Function(V)
+        phi = Function(V)
         self.phitest = Function(V)
         h = self.problem.mesh.hmin() #minimum edge length or smallest diametre of mesh
         gamma = self.problem.gamma
@@ -93,26 +93,26 @@ class NitscheSolver(sb.TruncDeMagSolver):
         phi0.assign(solphi0)
         phi1.assign(solphi1)
         
-        phitot.vector()[:] = phi0.vector() + phi1.vector()
-        self.phitest.assign(phitot)
-        #Divide the value of phitotal by 2 on the core boundary
+        phi.vector()[:] = phi0.vector() + phi1.vector()
+        self.phitest.assign(phi)
+        #Divide the value of phial by 2 on the core boundary
         BOUNDNUM = 2
         #Get the boundary dofs
         corebounddofs = dff.bounddofs(V, self.problem.coreboundfunc, BOUNDNUM)
         #Halve their value    
-        for index,dof in enumerate(phitot.vector()):
+        for index,dof in enumerate(phi.vector()):
             if index in corebounddofs:
-                phitot.vector()[index] = dof*0.5
+                phi.vector()[index] = dof*0.5
 
         #Get the function restricted to the magnetic core
-        self.phi_core = self.restrictfunc(phitot,self.problem.coremesh)
+        self.phi_core = self.restrictfunc(phi,self.problem.coremesh)
         #Save the demag field over the core
-        self.Hdemag_core = self.get_demagfield(self.phi_core)
-        self.Hdemag = self.get_demagfield(phitot)
+        self.Hdemag_core = self.get_demagfield(self.phi_core,use_default_function_space = False)
+        self.Hdemag = self.get_demagfield(phi)
         #Store variables for outside testing
-        self.phitot = phitot
+        self.phi = phi
         self.phi0 = phi0
         self.phi1 = phi1
         self.sol = sol
         self.gamma = gamma
-        return phitot
+        return phi
