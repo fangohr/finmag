@@ -63,6 +63,9 @@ def run_oommf(dir, args, **kwargs):
     except CalledProcessError, ex:
         sys.stderr.write(ex.output)
         raise Exception("OOMMF invocation failed: " + " ".join(cmd))
+    except OSError, ex:
+        sys.stderr.write(ex.strerror+".\n")
+        raise Exception("Command '{0}' failed. Parameters: '{1}'.".format(cmd[0],  " ".join(cmd[1:])))
 
 # Runs an OOMMF mif file contained in str
 # Returns a hashtable of field names mapped to arrays compatible with the given mesh
