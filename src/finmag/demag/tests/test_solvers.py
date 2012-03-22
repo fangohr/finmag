@@ -277,8 +277,8 @@ class TestFemBemDeMagSolver(object):
             assert near(sqrt(np.dot(avgnormtionary[k],avgnormtionary[k].conj())),1),"Failure in average normal calulation, length of\
                                                                                      normal not equal to 1"
 
-class Test_GCRFemBemDeMagSolver(DemagTester):
-    """Tests for the Class GCRFemBemDeMagSolver"""
+class Test_FemBemGCRSolver(DemagTester):
+    """Tests for the Class FemBemGCRSolver"""
     def setup_class(self):
 
         #Class Tolerance 
@@ -286,7 +286,7 @@ class Test_GCRFemBemDeMagSolver(DemagTester):
 
         #Problems,solvers, solutions
         self.problem3d = pftc.MagUnitSphere(4)
-        self.solver3d = sgcr.GCRFemBemDeMagSolver(self.problem3d)
+        self.solver3d = sgcr.FemBemGCRSolver(self.problem3d)
         self.solution3d = self.solver3d.solve()
 
         #Generate a 3d analytical solution
@@ -338,7 +338,7 @@ if __name__ == "__main__":
     run_tests(tests)
     
 
-    t = Test_GCRFemBemDeMagSolver()
+    t = Test_FemBemGCRSolver()
     t.setup_class()
     tests = [t.test_compare_3danalytical_gradient, t.test_compare_3danalytical]
     run_tests(tests)
