@@ -49,7 +49,7 @@ class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
      """FemBem solver for Demag Problems using the GCR approach"""
     
      def __init__(self,problem,degree = 1):
-          super(GCRFemBemDeMagSolver,self).__init__(problem,degree)
+          super(FemBemGCRSolver,self).__init__(problem,degree)
           #get the boundary dof - coordinate dictionary
           self.doftionary = self.get_boundary_dof_coordinate_dict()
 
