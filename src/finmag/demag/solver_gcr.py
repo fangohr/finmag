@@ -84,7 +84,7 @@ class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           """Build the BEM Matrix associated to the mesh and store it"""
           info_blue("Calculating BEM matrix")
           dimbem = len(doftionary)
-          self.bemmatrix = np.zeros([dimbem,dimbem])
+          bemmatrix = np.zeros([dimbem,dimbem])
 
           import progressbar as pb
           bar = pb.ProgressBar(maxval=dimbem-1, \
@@ -92,9 +92,9 @@ class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
 
           for index,dof in enumerate(doftionary):
                bar.update(index)
-               self.bemmatrix[index] = self.get_bem_row(doftionary[dof],doftionary.keys())
+               bemmatrix[index] = self.get_bem_row(doftionary[dof],doftionary.keys())
                #info("BEM Matrix line "+ str(index) + str(self.bemmatrix[index]))
-          return self.bemmatrix
+          return bemmatrix
 
      def get_bem_row(self,R,bdofs):
           """Gets the row of the BEMmatrix associated with the point R,used in the form w"""
