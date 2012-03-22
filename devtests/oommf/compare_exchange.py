@@ -1,6 +1,6 @@
 import dolfin as df
 import numpy as np
-
+from mayavi import mlab
 from finmag.sim.llg import LLG
 from finmag.util.oommf import oommf_uniform_exchange, mesh
 
@@ -28,8 +28,8 @@ def three_dimensional_problem():
     llg.setup(exchange_flag=True)
     return llg
 
-llg = one_dimensional_problem()
-#llg = three_dimensional_problem()
+#llg = one_dimensional_problem()
+llg = three_dimensional_problem()
 
 exc_finmag = df.Function(llg.V)
 exc_finmag.vector()[:] = llg.exchange.compute_field()
@@ -66,13 +66,13 @@ def three_dimensional_problem_oommf():
 
     return msh, oommf_uniform_exchange(m0, llg.Ms, llg.C).flat
 
-msh, exc_oommf = one_dimensional_problem_oommf()
-#msh, exc_oommf = three_dimensional_problem_oommf()
+#msh, exc_oommf = one_dimensional_problem_oommf()
+msh, exc_oommf = three_dimensional_problem_oommf()
 
 exc_finmag_like_oommf = msh.new_field(3)
 for i, (x, y, z) in enumerate(msh.iter_coords()):
-    E_x, E_y, E_z = exc_finmag(x) # one dimension
-    #E_x, E_y, E_z = exc_finmag(x, y, z)
+    #E_x, E_y, E_z = exc_finmag(x) # one dimension
+    E_x, E_y, E_z = exc_finmag(x, y, z)
     exc_finmag_like_oommf.flat[0,i] = E_x
     exc_finmag_like_oommf.flat[1,i] = E_y
     exc_finmag_like_oommf.flat[2,i] = E_z
@@ -90,3 +90,10 @@ print "  average", np.mean(relative_difference, axis=1)
 print "  minimum", np.min(relative_difference, axis=1)
 print "  maximum", np.max(relative_difference, axis=1)
 print "  spread", np.std(relative_difference, axis=1)
+
+x, y, z = zip(* msh.iter_coords())
+figure = mlab.figure(bgcolor=(0, 0, 0), fgcolor=(1, 1, 1))
+q = mlab.quiver3d(x, y, z, difference[0], difference[1], difference[2], figure=figure)
+q.scene.z_plus_view()
+mlab.axes(figure=figure)
+mlab.show()
