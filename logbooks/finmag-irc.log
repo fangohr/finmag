@@ -494,3 +494,114 @@ fangohr: Still testing ...
 2012-03-21 12:14:43 SebastianS: yeah sure. I'm not in a rush
 2012-03-21 12:15:50 andersej: Great. Let's meet at the usual place, outside my door, in 15 minutes then.
 2012-03-21 12:25:48 mb8g11: I met Maxim at the gym, he won't be coming with us today.
+2012-03-22 09:00:16 fangohr: Good Morning DokosBot and Marc-Antonio.
+2012-03-22 12:06:48 fangohr: Hi all, I have a work meeting over lunch and will not be able to join you today.
+2012-03-22 12:07:35 andersej: Okay, is anyone else up for some food?
+2012-03-22 12:10:41 SebastianS: jep, I'd be up for lunch
+2012-03-22 12:10:54 andersej: In ten minutes, say?
+2012-03-22 12:11:07 SebastianS: sounds good
+2012-03-22 12:11:15 andersej: Great!
+2012-03-22 13:00:09 mb8g11: i.
+2012-03-22 14:41:16 fangohr: Marc-Antonio, am just trying to run the compare_exchange.py code. This fails on my machine because I haven't set the path to OOMMF yet. Could you update the code so that it prints what command it will execute before it fails (or catch the failure, and only then print what it was trying to do?). I expect thsi will be useful repeatedly, i.e. whenever somebody tries to do this on a machine where OOMMF has not been setup for this kind of test.
+2012-03-22 15:16:03 mb8g11: Yes.
+2012-03-22 16:00:26 fangohr: Thank you.
+2012-03-22 16:30:31 mb8g11: By the way, it isn't so much a path, as that you need to have "oommf" available as a command.
+2012-03-22 16:31:25 fangohr__: Sure, that's actually what I expected. But one doesn't know whether the command is 'oommf' or 'oommf.sh' or 'oommf.tcl' etc.
+2012-03-22 16:31:59 mb8g11: I'm on it now.
+2012-03-22 16:58:11 mb8g11: Pushed :)
+2012-03-22 16:58:19 fangohr: Ta.
+2012-03-22 17:02:19 fangohr_: What is your 'oommf' script like? (if that question makes any sense.)
+2012-03-22 17:06:50 mb8g11: Of course it does.
+2012-03-22 17:07:00 mb8g11: It's an executable file in my path with:
+2012-03-22 17:07:04 mb8g11: #! /bin/bash
+2012-03-22 17:07:24 mb8g11: tclsh /whereever/your/oommf/is/oommf.tcl "$@"
+2012-03-22 17:09:42 fangohr_: That's better; thank you.
+2012-03-22 17:10:10 fangohr_: It might be worth including this file into the error message, or creating the file automatically after we compile oommf?
+2012-03-22 17:10:56 fangohr_: I get one step further, but then oommf reports an error that it cannot read the mif file. [Need to stop here for today.]
+2012-03-22 17:11:34 mb8g11: If it's okay, I'll stop by your office tomorrow morning?
+2012-03-22 17:11:59 mb8g11: (will include this file into the installation script)
+2012-03-22 17:12:49 fangohr: Yes, let's do that.
+2012-03-22 20:33:36 mb8g11: Hi Hans.
+2012-03-22 20:34:17 fangohr___: Hi :) am just installing oommf on summer.
+2012-03-22 20:34:38 fangohr___: As we know create the oommf file automatically, we could include the TCL path settings into that file, right?
+2012-03-22 20:35:18 fangohr___: (Summer is the machine hosting the Jenkins autotesting.)
+2012-03-22 20:36:36 fangohr___: Marc-Antonio, by the way, have you ever tried 'Atlassian Sourcetree'? I is a Mac-only application for git and hg repositories and is meant to be great. Might give this a go at some point.
+2012-03-22 20:38:42 mb8g11: Do we need the TCL path settings post-installation?
+2012-03-22 20:39:46 fangohr___: Ah, good question. I assumed we had to, but never tested. Probably I am just wrong.
+2012-03-22 20:40:00 mb8g11: Assuming you mean OOMMF_TCL_INCLUDE_DIR and TK, we don't :)
+2012-03-22 20:40:13 mb8g11: It's just that the installation fails if they aren't defined.
+2012-03-22 20:40:37 fangohr___: Anders, are you still there as well?
+2012-03-22 20:40:44 mb8g11: Yes he is, we are fixing the build ;)
+2012-03-22 20:41:03 mb8g11: Well, he is.. I prefer breaking it.
+2012-03-22 20:42:34 mb8g11: @atlassian sourcetree: The screencast looks nice, will try it out!
+2012-03-22 20:43:18 andersej: Yes, I'm here admiring the fact that we are 7 users on at this hour ;)
+2012-03-22 20:44:15 mb8g11: 7? Did you count or shizophrenis as well? :)
+2012-03-22 20:44:34 mb8g11: *schizophrenics
+2012-03-22 20:44:48 andersej: Hehe...
+2012-03-22 20:44:51 andersej: Yes
+2012-03-22 20:45:17 fangohr___: The 3 chizophrenis are all here with me. Plus DokosBot, of course. And the two that actually do something useful :)
+2012-03-22 20:45:54 fangohr___: (and the fourth I of course)
+2012-03-22 20:46:05 andersej: Yes, we are quite busy in breaking Jenkins.
+2012-03-22 20:46:37 fangohr___: Nice.
+2012-03-22 20:46:54 fangohr___: One recipe for success seems to be to change the name of classes, such as src/finmag/demag/solver_gcr.py:71: in solve_phia
+2012-03-22 20:46:54 fangohr___: >        super(GCRFemBemDeMagSolver,self).solve_phia(phia = self.phia,method = method)
+2012-03-22 20:46:55 fangohr___: E        NameError: global name 'GCRFemBemDeMagSolver' is not defined
+2012-03-22 20:48:44 andersej: I changed that, and then Gabriel pushed, and the merge haven't worked out the way I hoped. And we've had dinner..
+2012-03-22 20:55:21 mb8g11: find . -name "*.py" -print | xargs sed -i 's/foo/bar/g'
+2012-03-22 20:55:58 andersej: Thanks!
+2012-03-22 20:56:23 mb8g11: np
+2012-03-22 21:11:33 fangohr___: The merge couldn't figure out the name change because you didn't change the name in the tests? Anyway, it will need manual fixing, and looking at the latest email you have probably done that already?
+2012-03-22 21:17:04 fangohr___: The other failure seems to relate to the Nitsche solver, and fail on my virtual machine as well. With a low level Dolfin warning.
+2012-03-22 21:17:21 fangohr___: I would recommend to mark them as expected to fail, or comment out for now?
+2012-03-22 21:19:07 andersej: I have solved all problems related to the name change now. The Nitsche solver failed before I pushed anything today, so that isn't related to the name change. I can mark them as xfail for now.
+2012-03-22 21:19:47 andersej: ... just to get a clean build before we go home.
+2012-03-22 21:21:47 mb8g11: They failed since 225, when Gabriel pushed new stuff.
+2012-03-22 21:22:20 andersej: Yes, I think he has broken the Nitsche solver.
+2012-03-22 21:22:27 mb8g11: Sorry, 225 was me (repaired since), 226 was him.
+2012-03-22 21:27:43 fangohr___: Anders, yes, that would be good (to mark them as xfail).
+2012-03-22 21:28:17 mb8g11: I think it has to do with the Hdemagspace, it changed in that commit and that's where the error happens.
+2012-03-22 21:28:40 fangohr___: Marc-Antonio, just looking at the mlab output of the devtests/oommf/compare_exchage.py file: interesting. Can we easily add a colorer to this that gives a scale for the arrows?
+2012-03-22 21:29:53 fangohr___: Another point to consider when we wrap this up as test: the mayavi module is currently not installed on summer (we could change this of course) but this seem best suited for interactive display. I would thus separate the plot from the test, and maybe only show plots when the test file is run via the __name__=="__main__" mechanism or so. Probably what you were planning anyway.
+2012-03-22 21:31:50 fangohr___: Oh, I see the colorers are already there in compare_anisotropy, nice. Now I just need to figure out what the two plots show ;-)
+2012-03-22 21:32:13 mb8g11: Does the demagspace needs to be a FunctionSpace if the mesh is 1D? Shouldnt it still be a VectorFunctionSpace?
+2012-03-22 21:34:04 mb8g11: Disregard that.
+2012-03-22 21:35:07 fangohr___: OOMMF on summer (for Jenkins): should now be available and work.
+2012-03-22 21:35:42 mb8g11: If it discovers oommf, then the tests will be considered automatically.
+2012-03-22 21:35:58 mb8g11: py.test has a nice "skipif" feature
+2012-03-22 21:36:33 mb8g11: Good idea, with the plots.
+2012-03-22 21:37:39 mb8g11: Just noticed I am plotting the absolute difference. May make more sense to show the relative one. It's easier to interpret 0, 1 or worse, instead of some numbers.
+2012-03-22 21:38:05 fangohr___: Yes.
+2012-03-22 21:38:42 mb8g11: And a heap map may be nicer than difference vectors.. quite difficult to interpret as well.
+2012-03-22 21:38:46 mb8g11: *heat map
+2012-03-22 21:39:55 mb8g11: Yay Gabriel!
+2012-03-22 21:41:46 fangohr___: Boy, it is busy here. Hi Gabriel ;-)
+2012-03-22 21:41:47 mb8g11: Difference vectors have the advantage of showing if the error is parallel to the correct field, or deviates from it.
+2012-03-22 21:41:57 fangohr___: What do you mean with 'heap map'?
+2012-03-22 21:42:03 GabrielB: hi hi
+2012-03-22 21:42:40 andersej: Gabriel, do you know what the problem is with the Nische solver that breaks the build?
+2012-03-22 21:42:50 andersej: *Nitsche
+2012-03-22 21:43:38 mb8g11: meant "heat" map, sorry. Using colors to represent the differences, instead of vectors. For instance red is a big difference, green is good or so. That would help to localise the errors (boundary or not).
+2012-03-22 21:43:58 mb8g11: But it's getting late, and I'm rambling :)
+2012-03-22 21:45:10 GabrielB: hey Anders I will try to run py.test
+2012-03-22 21:46:16 GabrielB: I have sent around some results from Convergence testing.
+2012-03-22 21:46:51 GabrielB: FK is more accurate at the moment, but GCR has the better convergence behaviour
+2012-03-22 21:47:04 fangohr___: Okay, understood. Vectors are fine I guess as their colour can be assigned by length. But try spherical glyphs instead, or even a scalar field which could be visualised with isosurafces or so. I'll try to have a look at the actual data tomorrow.
+2012-03-22 21:48:57 andersej: ? The FK solver isn't correct at all. I have removed the solid angle because it was implemented based on a wrong assumption.
+2012-03-22 21:49:39 mb8g11: The assumption beeing you were computing something else ;)
+2012-03-22 21:49:51 GabrielB: haha I like that it gets a good answer :-)
+2012-03-22 21:49:54 andersej: Yes, MA. Thanks.
+2012-03-22 21:50:01 mb8g11: Sorry ^^
+2012-03-22 21:51:17 GabrielB: I can fix the break in Nitsche Solver. I have been trying to standardize things more in order to make comparisons easier, this is a consequence.
+2012-03-22 21:51:41 andersej: Okay
+2012-03-22 21:53:13 fangohr___: The plots look nice, Gabriel. But when it says error, what does it actually mean? Is 0.6 meaning that we 60% off? Or is this an absolute error? (Magnitude of m is 1?) Or should we not discuss this at all as the FK is definitely wrong (quoting Anders here)? If so, then what has happened to the GCR solver which seems even worse?
+2012-03-22 21:53:40 fangohr___: Have you got the plot creation in a file somewhere? (and what mesh have you used -- netgen or dolfin-UnitSphere?)
+2012-03-22 21:54:50 GabrielB: The errors are given in norms, at the moment L2 (integrate over the square of the error function) and discrete max (the maximum difference in the DOF vectors)
+2012-03-22 21:55:03 GabrielB: So far I have just UnitSphere's
+2012-03-22 21:55:48 GabrielB: the plot creation happens in the python file with matplotlib
+2012-03-22 21:56:39 GabrielB: as for why the GCR solver is less accurate I am not sure what is going on? But with the solid angle missing from FK I am guessing the comparison is not really meaningful
+2012-03-22 21:59:44 fangohr___: Okay, thanks. I shouldn't really bother you with soo many questions at night.
+2012-03-22 22:00:39 andersej: Okay, good night!
+2012-03-22 22:01:36 mb8g11: Good night!
+2012-03-22 22:04:22 fangohr___: Good night folks.
+2012-03-22 22:11:40 GabrielB: good night!
+2012-03-22 22:13:16 GabrielB: ok the Nitsche solver tests should be fine now.  I am off to get some sleep good night everyone :-)
