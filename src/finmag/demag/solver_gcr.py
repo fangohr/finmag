@@ -45,7 +45,7 @@ class GCRDeMagSolver(sb.DeMagSolver):
           F = assemble(f)
           solve(A,phia.vector(),F,method)
           
-class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
+class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
      """FemBem solver for Demag Problems using the GCR approach"""
     
      def __init__(self,problem,degree = 1):
@@ -171,6 +171,6 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
 if __name__ == "__main__":
      from finmag.demag.problems import prob_fembem_testcases as pft
      problem = pft.MagUnitCircle(10)
-     solver = GCRFemBemDeMagSolver(problem)
+     solver = FemBemGCRSolver(problem)
      solver.assemble_qvector_exact()
 

@@ -29,7 +29,7 @@ phi_fk = [s.solve() for s in solvers_fk]
 Hdemag_fk = [s.get_demagfield(s.phi) for s in solvers_fk]
 
 #GCR Solver data
-solvers_gcr = [solver_gcr.GCRFemBemDeMagSolver(p) for p in problems]
+solvers_gcr = [solver_gcr.FemBemGCRSolver(p) for p in problems]
 phi_gcr = [s.solve() for s in solvers_gcr]
 Hdemag_gcr = [s.get_demagfield(s.phitot) for s in solvers_gcr]
 
