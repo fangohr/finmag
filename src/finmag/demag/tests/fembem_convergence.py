@@ -44,7 +44,7 @@ finenesslist = range(2,5)
 problems = [pft.MagUnitSphere(n) for n in finenesslist]
 
 #####Master list of solvers####
-solvers = {"FK Solver": solver_fk.FemBemFKSolver,"GCR Solver": solver_gcr.GCRFemBemDeMagSolver,"Analytical":FemBemAnalytical}
+solvers = {"FK Solver": solver_fk.FemBemFKSolver,"GCR Solver": solver_gcr.FemBemGCRSolver,"Analytical":FemBemAnalytical}
 
 a = FemBemAnalytical(problems[0])
 
