@@ -63,9 +63,9 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           #Solve for phia 
           self.phib = self.solve_phib_boundary(self.phia,self.doftionary)
           self.phib = self.solve_laplace_inside(self.phib)
-          self.phitot = self.calc_phitot(self.phia,self.phib)
+          self.phi = self.calc_phitot(self.phia,self.phib)
           self.Hdemag = self.get_demagfield(self.phitot)
-          return self.phitot
+          return self.phi
           
      def solve_phia(self,method = "lu"):
           super(GCRFemBemDeMagSolver,self).solve_phia(phia = self.phia,method = method)
