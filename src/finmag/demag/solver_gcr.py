@@ -68,7 +68,7 @@ class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           return self.phi
           
      def solve_phia(self,method = "lu"):
-          super(GCRFemBemDeMagSolver,self).solve_phia(phia = self.phia,method = method)
+          super(FemBemGCRSolver,self).solve_phia(phia = self.phia,method = method)
           
      def solve_phib_boundary(self,phia,doftionary):
           """Solve for phib on the boundary using BEM"""
