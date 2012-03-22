@@ -54,7 +54,7 @@ problems = [pft.MagUnitSphere(n) for n in finenesslist]
 numelement = [p.mesh.num_cells() for p in problems]
 
 #Master list of solvers####
-solvers = {"FK Solver": solver_fk.FemBemFKSolver,"GCR Solver": solver_gcr.GCRFemBemDeMagSolver,"Analytical":FemBemAnalytical}
+solvers = {"FK Solver": solver_fk.FemBemFKSolver,"GCR Solver": solver_gcr.FemBemGCRSolver,"Analytical":FemBemAnalytical}
 ###########################
 
 a = FemBemAnalytical(problems[0])
