@@ -71,7 +71,7 @@ msh, exc_oommf = one_dimensional_problem_oommf()
 
 exc_finmag_like_oommf = msh.new_field(3)
 for i, (x, y, z) in enumerate(msh.iter_coords()):
-    E_x, E_y, E_z = exc_finmag(x, y, z) # one dimension
+    E_x, E_y, E_z = exc_finmag(x) # one dimension
     #E_x, E_y, E_z = exc_finmag(x, y, z)
     exc_finmag_like_oommf.flat[0,i] = E_x
     exc_finmag_like_oommf.flat[1,i] = E_y
