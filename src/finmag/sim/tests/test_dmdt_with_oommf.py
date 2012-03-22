@@ -1,3 +1,5 @@
+import pytest
+import subprocess
 import dolfin as df
 import numpy as np
 
@@ -9,6 +11,7 @@ TOLERANCE = 5e-16
 L  = 20e-9; W = 10e-9; H = 1e-9;
 nL = 20;   nW = 10;   nH = 1;
 
+@pytest.mark.skipif('subprocess.call(["which", "oommf"]) != 0')
 def test_dmdt_computation_with_oommf():
     # set up finmag 
     llg = LLG(df.Box(0, 0, 0, L, W, H, nL, nW, nH))
