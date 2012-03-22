@@ -8,7 +8,7 @@ TOL = 1e-3
 
 problems = [pft.MagUnitSphere(n) for n in (1,10)] 
 #problems.append(pft.MagSphere())
-solvers = [solver_fk.FemBemFKSolver, solver_gcr.GCRFemBemDeMagSolver]
+solvers = [solver_fk.FemBemFKSolver, solver_gcr.FemBemGCRSolver]
 
 fields = []
 cases = []

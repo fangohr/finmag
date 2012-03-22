@@ -45,11 +45,11 @@ class GCRDeMagSolver(sb.DeMagSolver):
           F = assemble(f)
           solve(A,phia.vector(),F,method)
           
-class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
+class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
      """FemBem solver for Demag Problems using the GCR approach"""
     
      def __init__(self,problem,degree = 1):
-          super(GCRFemBemDeMagSolver,self).__init__(problem,degree)
+          super(FemBemGCRSolver,self).__init__(problem,degree)
           #get the boundary dof - coordinate dictionary
           self.doftionary = self.get_boundary_dof_coordinate_dict()
 
@@ -171,6 +171,6 @@ class GCRFemBemDeMagSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
 if __name__ == "__main__":
      from finmag.demag.problems import prob_fembem_testcases as pft
      problem = pft.MagUnitCircle(10)
-     solver = GCRFemBemDeMagSolver(problem)
+     solver = FemBemGCRSolver(problem)
      solver.assemble_qvector_exact()
 
