@@ -102,21 +102,21 @@ class FemBemFKSolver(FKSolver, sb.FemBemDeMagSolver):
 
         # First term containing integration part (Knittel, eq. (2.52)) 
         L = 1.0/(4*DOLFIN_PI)*psi*v*w*ds 
-
-        # Second term containing solid angle (Knittel, same equation)
-        # Use relation (23) - (24) in IEEE jan 2008 for the solid angle
-        L2 = 1.0/(4*DOLFIN_PI)*v*w*ds
-        L2 = (assemble(L2) - 1)
-
-        # Solid angle must not exceed the unit circle
-        assert abs(L2) <= 2*np.pi
         
         # Create a row from the first term
         bigrow = assemble(L, form_compiler_parameters=self.ffc_options)
         row = self.restrict_to(bigrow, dofs)
         
-        # Insert second term
-        row[i] += L2
+        # Previous implementation of solid angle is proven wrong. 
+        # Positive thing is that when implemented correctly,
+        # the solver will probably run faster.
+        #
+        # TODO: Implement solid angle.
+        SA = self.__solid_angle()
+
+        # Insert second term containing solid angle
+        row[i] += SA/(4*np.pi) - 1
+
         return row
 
     def __BEMnumerator(self, R):
@@ -156,6 +156,18 @@ class FemBemFKSolver(FKSolver, sb.FemBemDeMagSolver):
 
         kwargs = {"R" + str(i): R[i] for i in range(dim)}
         return Expression(w, **kwargs)
+
+    def __solid_angle(self):
+        """
+        TODO: Write solid angle function here.
+
+        """
+        SA = 0
+ 
+        # Solid angle must not exceed the unit circle
+        assert abs(SA) <= 2*np.pi
+
+        return SA
           
 
 class FKSolverTrunc(sb.TruncDeMagSolver,FKSolver):
@@ -256,22 +268,18 @@ class FKSolverTrunc(sb.TruncDeMagSolver,FKSolver):
 if __name__ == "__main__":
     
     from finmag.demag.problems import prob_fembem_testcases as pft
-    problem = pft.MagUnitSphere(4)
-    #problem = pft.MagUnitCircle(10)
-    #problem = pft.MagSphere()
+    problem = pft.MagUnitSphere()
     solver = FemBemFKSolver(problem)
     phi = solver.solve()
     plot(phi, interactive=True)
     
-    gradient = solver.get_demagfield(phi)
-    V = VectorFunctionSpace(problem.mesh, "CG", 1)
-    grad = project(gradient, V)
-    #print grad.vector().array()
-    
-    #solver.save_function(phi, "phi")
-    #solver.save_function(gradient, "grad")
-    x, y, z = grad.split(True)
-    for i in x.vector().array():
-        print i
+    Hdemag = solver.get_demagfield(phi)
+    x, y, z = Hdemag.split(True)
+    x, y, z = x.vector().array(), y.vector().array(), z.vector().array()
+    for i in range(len(x)):
+        print x[i], y[i], z[i]
 
+    print "Max values: x:%g, y:%g, z:%g" % (max(x), max(y), max(z))
+    print "Min values: x:%g, y:%g, z:%g" % (min(x), min(y), min(z))
+    print "Avg values: x:%g, y:%g, z:%g" % (np.average(x), np.average(y), np.average(z))
 
