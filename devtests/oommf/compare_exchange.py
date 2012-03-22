@@ -4,8 +4,8 @@ from mayavi import mlab
 from finmag.sim.llg import LLG
 from finmag.util.oommf import oommf_uniform_exchange, mesh
 
-L = 20e-9; W = 10e-9; H = 1e-9;
-nL = 40; nW = 10; nH = 1;
+L = 20e-9; W = 10e-9; H = 5e-9;
+nL = 40; nW = 10; nH = 5;
 
 def one_dimensional_problem():
     msh = df.Interval(nL, 0, L)
@@ -92,8 +92,9 @@ print "  maximum", np.max(relative_difference, axis=1)
 print "  spread", np.std(relative_difference, axis=1)
 
 x, y, z = zip(* msh.iter_coords())
-figure = mlab.figure(bgcolor=(0, 0, 0), fgcolor=(1, 1, 1))
-q = mlab.quiver3d(x, y, z, difference[0], difference[1], difference[2], figure=figure)
+figure = mlab.figure(bgcolor=(1, 1, 1), fgcolor=(0, 0, 0))
+q = mlab.quiver3d(x, y, z, difference[0], difference[1], difference[2],
+        figure=figure, mode="cone", colormap="hot")
 q.scene.z_plus_view()
 mlab.axes(figure=figure)
 mlab.show()
