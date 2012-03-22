@@ -19,6 +19,7 @@ from finmag.demag.problems import prob_fembem_testcases as pft
 import finmag.demag.solver_base as sb
 import finmag.util.error_norms as en
 import test_solvers as ts
+import matplotlib.pyplot as plt
 
 #This class mimics a FemBemDeMagSolver but returns analytical values.
 class FemBemAnalytical(sb.FemBemDeMagSolver):
@@ -40,11 +41,21 @@ class FemBemAnalytical(sb.FemBemDeMagSolver):
 ############################################
 #Section 0 Problems and solvers
 ############################################
-finenesslist = range(2,5)
-problems = [pft.MagUnitSphere(n) for n in finenesslist]
 
-#####Master list of solvers####
+###########################
+#This controls the fineness of the meshes
+# At the momenet UnitSphere(i)
+#where i is in fineensslist
+###########################   
+finenesslist = range(2,4)
+###########################
+
+problems = [pft.MagUnitSphere(n) for n in finenesslist]
+numelement = [p.mesh.num_cells() for p in problems]
+
+#Master list of solvers####
 solvers = {"FK Solver": solver_fk.FemBemFKSolver,"GCR Solver": solver_gcr.GCRFemBemDeMagSolver,"Analytical":FemBemAnalytical}
+###########################
 
 a = FemBemAnalytical(problems[0])
 
@@ -133,44 +144,21 @@ for solvername in errornorms:
         print errornorms[solvername][errorname]
         print
 
-##print
-##print starline
-##print "FK Solver L2 potential"
-##print res_fkl2pot
-##print
-##print "FK Solver L2 Hdemag"
-##print res_fkl2H
-##print
-##print "FK Solver max potential"
-##print res_fkmaxpot
-##print 
-##print "FK Solver max demag x"
-##print resmaxHx 
-##print 
-##print "FK Solver max demag y"
-##print resmaxHy
-##print
-##print "FK Solver max demag z"
-##print res_maxHz
-##print 
-##
-##print starline
-##print "GCR Solver L2 potential"
-##print convergence_test(phi_gcr,phi_ana, en.L2_error)
-##print
-##print "GCR Solver L2 Hdemag"
-##print convergence_test(Hdemag_gcr,Hdemag_ana, en.L2_error)
-##print
-##print "GCR Solver max potential"
-##print convergence_test(phi_gcr,phi_ana, en.discrete_max_error)
-##print 
-##print "GCR Solver max demag x"
-##print convergence_test([p.split(True)[0] for p in Hdemag_gcr],[p.split(True)[0] for p in Hdemag_ana], en.discrete_max_error)
-##print 
-##print "GCR Solver max demag y"
-##print convergence_test([p.split(True)[1] for p in Hdemag_gcr],[p.split(True)[1] for p in Hdemag_ana], en.discrete_max_error)
-##print
-##print "GCR Solver max demag z"
-##print convergence_test([p.split(True)[2] for p in Hdemag_gcr],[p.split(True)[2] for p in Hdemag_ana], en.discrete_max_error)
-##print 
-##
+#Outpot Plots
+gcrdata = errornorms["GCR Solver"]["Potential L2"]
+fkdata = errornorms["FK Solver"]["Potential L2"]
+
+#This specificies the number of rows and columns of subplots
+plotgrid = "23"
+for i,errorname in enumerate(errornorms["GCR Solver"]):
+    plotnum = plotgrid + str(i+1)
+
+    plt.subplot(*plotnum)
+    plt.plot(numelement,errornorms["GCR Solver"][errorname],"ro",label = "GCR")
+    plt.plot(numelement,errornorms["FK Solver"][errorname],"bs",label = "FK")
+    plt.title(errorname)
+    plt.xlabel("Number of elements")
+    plt.ylabel("Error")
+    plt.legend()
+plt.show()
+
