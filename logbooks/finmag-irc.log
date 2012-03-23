@@ -605,3 +605,66 @@ fangohr: Still testing ...
 2012-03-22 22:04:22 fangohr___: Good night folks.
 2012-03-22 22:11:40 GabrielB: good night!
 2012-03-22 22:13:16 GabrielB: ok the Nitsche solver tests should be fine now.  I am off to get some sleep good night everyone :-)
+2012-03-23 09:09:27 fangohr: Good Morning Anders, DokosBot.
+2012-03-23 09:23:07 andersej: Morning!
+2012-03-23 12:17:09 andersej: It's pretty quiet in my office today.. Anyone else hungry?
+2012-03-23 12:17:26 fangohr: Sure thing.
+2012-03-23 12:17:37 fangohr: 12:30?
+2012-03-23 12:17:51 andersej: Good.
+2012-03-23 12:20:20 SebastianS: sounds good
+2012-03-23 12:20:34 maxim|s: i'll join as well
+2012-03-23 12:20:58 fangohr: I wouldn't be surprised if Marc-Antonio shows up just before lunch .... ;-)
+2012-03-23 12:21:27 andersej: Hehe..
+2012-03-23 14:02:33 maxim|s: Hans, can you invite me to finmag, please? I need the analytical solution for one spin.
+2012-03-23 14:03:54 fangohr: what is your bitbucket username?
+2012-03-23 14:04:22 maxim|s: MaximSkripnik
+2012-03-23 15:00:39 fangohr: Maxim, you should have access to the finmag rpoject now.
+2012-03-23 15:01:46 maxim|s: thanks
+2012-03-23 15:16:32 fangohr: Maxim, go to http://summer.kk.soton.ac.uk:8080/ and create an account for you, then let me know. This should allow you to see the documentation (which is all you need), and then you don't need to compile the code and documentation from source.
+2012-03-23 15:23:14 maxim|s: it says access denied
+2012-03-23 15:23:40 fangohr: Does it somewhere say 'create account'?
+2012-03-23 15:25:03 maxim|s: yes, I created one with username MaximSkripnik
+2012-03-23 15:25:29 fangohr: Okay, let me try to activate it.
+2012-03-23 15:26:03 maxim|s: i have no read permission
+2012-03-23 15:31:00 fangohr: Maxim, could you try again?
+2012-03-23 15:33:06 maxim|s: still no access
+2012-03-23 15:40:42 maxim|s: but this is not urgent ...
+2012-03-23 15:42:34 maxim|s: works now, thanks!
+2012-03-23 15:42:55 fangohr: Yeah, got it just now :)
+2012-03-23 15:43:02 fangohr: If you go to http://summer.kk.soton.ac.uk:8080/job/finmag/FinMag_documentation/?, you should see the latest documentation.
+2012-03-23 15:43:22 fangohr: Section 3.1 is the macrospin example I mentioned.
+2012-03-23 15:44:19 fangohr: The correction term (for the length of the documentation) seems to be not documented yet. Ask me (or Marc-Antonio or Anders) when you need it, and we'll find the rigth place in the source.
+2012-03-23 15:44:35 maxim|s: ok, btw: the problem was in the code. i try to use these opencl vectorial data types now because the cross product is provided by the opencl library and it makes things infinitely less complicated ...
+2012-03-23 15:48:59 maxim|s: i get error 404 when trying to access http://summer.kk.soton.ac.uk:8080/job/finmag/FinMag_documentation/?
+2012-03-23 15:50:08 fangohr: Can you try again, please?
+2012-03-23 15:51:13 maxim|s: yes, now i can see the documentation, thanks!
+2012-03-23 15:56:49 mb8g11: Maxim, you can come by our office anytime.
+2012-03-23 16:16:01 maxim|s: I'll visit you as soon as my problems get less trivial than they are now ;)
+2012-03-23 16:28:45 andersej: Hans, do you know if py.test are run before make html on Jenkins? And is it run from the top directory?
+2012-03-23 16:40:15 andersej: I guess we'll see now...
+2012-03-23 22:13:56 mb8g11: who
+2012-03-23 22:14:36 mb8g11: Wow, you managed to push your changesets right between my merge and me trying to push my changes as well.
+2012-03-23 22:25:34 fangohr___: Hi Marc-Antonio, impressive images.
+2012-03-23 22:27:09 mb8g11: Glad to hear their creation doesn't only work on my machine. I would have prefered to save .vtk files (perhaps additionally), but I don't know how to do that yet.
+2012-03-23 22:27:10 fangohr___: Yeah, sorry about the timing  ;-)
+2012-03-23 22:27:17 mb8g11: np ;)
+2012-03-23 22:28:10 fangohr___: I think on Monday, we should have a slightly longer meeting with everybody presenting some results. Fortunately, my earlier meeting is cancelled. I'll send an email to all.
+2012-03-23 22:28:57 mb8g11: Ok, I'll prepare the same for the anisotropy then.
+2012-03-23 22:30:02 fangohr___: I know the filename encodes what is shown in the image. Is it also possible to display this when the interactive mlab window is displayed? This might be nice to look at the data together.
+2012-03-23 22:30:48 fangohr___: Also, a colorer would be nice that shows the meaning of the colours. (No need to do it now, of course.)
+2012-03-23 22:30:50 mb8g11: You mean to have the interactive windows have titles?
+2012-03-23 22:31:05 fangohr___: Yes.
+2012-03-23 22:31:59 mb8g11: @colours: It's a TODO. Basically, the images (especially the ones which show the difference) don't tell that much without a legend explaining the colours.
+2012-03-23 22:32:32 mb8g11: @window-titles: I'll look into it.
+2012-03-23 22:32:56 fangohr___: Okay, great.
+2012-03-23 22:33:26 mb8g11: Quick question, I get confused by matplotlib and mayavi.mlab... Are they the same thing underneath?
+2012-03-23 22:33:40 fangohr___: Hmm….not sure. I think not.
+2012-03-23 22:35:16 mb8g11: @window-titles: Yes.
+2012-03-23 22:35:51 mb8g11: Ok.
+2012-03-23 22:38:22 fangohr___: One more suggestion: when you work out the relative deviation of some data, you may get NaN if the true value is 0 (because you divide by zero). If this happens for a vector field for one component, then we could work around this: Imagine dx=(H2x-H1x)/H2x where H1 is the finmag solution, H2 the oommf solution and dx is the relative error. Instead of computing dx this way, we could scale the deviation relative to the total magnitude
+2012-03-23 22:38:22 fangohr___: vector H2 rather than just the relevant component. So dx2 = (H2x-H1x)/||H2||. It will need a bit of care when interpreting this, but will avoid the NaNs and should be useful.
+2012-03-23 22:39:04 fangohr___: (This is thought for printed data on the screen, as seen in finmag/devtests/oommf/compare_exchange.py at the moment.)
+2012-03-23 22:40:02 mb8g11: Didn't think that far. Changed the 1D problem so that m0 wiggles a little in the z-component. 3D shows that problem. Will implement your suggestion.
+2012-03-23 22:46:39 mb8g11: Is it difficult to save files that can be opened by mayavi?
+2012-03-23 23:09:17 mb8g11: Good night!
+2012-03-23 23:10:13 fangohr_____: I can only talk about Mayavi1: there you can save a .mv file (which keeps the configuration of what is seen but not the data) and a vtk file separately.
