@@ -36,7 +36,9 @@ def convert_mesh(inputfile, outputfile=None):
 
     .. Note::
 
-        Overwrites old files with the same name. Should perhaps fix this.
+        If the outputfile.xml.gz already exists, this is returned, 
+        even though it may not be the correct mesh corresponding
+        to the .geo file. 
 
     """
     
@@ -50,6 +52,11 @@ def convert_mesh(inputfile, outputfile=None):
             outputfile = outputfile.rstrip('.xml.gz')
     else:
         outputfile = name
+
+    outputfilename = outputfile + ".xml.gz"
+    if os.path.isfile(outputfilename):
+        print "The mesh %s already exists, and is automatically returned."
+        return outputfilename
 
     # Create Gmsh2 mesh using Netgen
     print 'Using netgen to convert %s.geo to Gmsh2 format...' % name
@@ -97,6 +104,6 @@ def convert_mesh(inputfile, outputfile=None):
     from dolfin import Mesh
     Mesh("%s.xml.gz" % name)
 
-    print 'Success! Mesh is written to %s.xml.gz.' % outputfile
+    print 'Success! Mesh is written to %s.' % outputfilename
 
-    return outputfile + ".xml.gz"
+    return outputfilename
