@@ -96,7 +96,7 @@ def read_float_data(filename):
             rows.append(columns)
     return rows
 
-def quiver(f, mesh, **kwargs):
+def quiver(f, mesh, filename, **kwargs):
     """
     Takes a numpy array of the values of a vector-valued function, defined
     over a mesh (either a dolfin mesh, or one from finmag.util.oommf.mesh)
@@ -137,4 +137,4 @@ def quiver(f, mesh, **kwargs):
     q = mlab.quiver3d(*(tuple(r)+tuple(f)), figure=figure, **kwargs)
     q.scene.z_plus_view()
     mlab.axes(figure=figure)
-    mlab.show()
+    mlab.savefig(filename)
