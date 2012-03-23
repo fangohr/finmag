@@ -55,7 +55,7 @@ def convert_mesh(inputfile, outputfile=None):
 
     outputfilename = outputfile + ".xml.gz"
     if os.path.isfile(outputfilename):
-        print "The mesh %s already exists, and is automatically returned."
+        print "The mesh %s already exists, and is automatically returned." % outputfilename
         return outputfilename
 
     # Create Gmsh2 mesh using Netgen
