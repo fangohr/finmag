@@ -183,8 +183,5 @@ PYTHON_ROOTS = $(DOC_DIR)/../src
 ../examples/macrospin/alpha-0-02.png: ../examples/macrospin/test_macrospin.py
 	cd ../examples/macrospin/ && PYTHONPATH=$(PYTHON_ROOTS) python test_macrospin.py
 
-../examples/demag/phi.png: ../examples/demag/test_demag_example.py 
-        cd ../examples/demag/ && PYTHONPATH=$(PYTHON_ROOTS) python test_demag_example.py
-
 ../examples/time-dependent-applied-field/fittedresults.txt ../examples/time-dependent-applied-field/fit.png ../examples/time-dependent-applied-field/results.png: ../examples/time-dependent-applied-field/test_appfield.py
 	cd ../examples/time-dependent-applied-field && PYTHONPATH=$(PYTHON_ROOTS) python test_appfield.py
