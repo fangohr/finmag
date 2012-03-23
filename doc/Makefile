@@ -165,7 +165,7 @@ generate-doc: examples-for-doc
 
 #list of files we need for documentation and which should trigger running of
 #the right files in ../examples to create them.
-examples-for-doc: ../examples/macrospin/alpha-1-00.png ../examples/macrospin/alpha-0-50.png ../examples/macrospin/alpha-0-10.png ../examples/macrospin/alpha-0-02.png ../examples/time-dependent-applied-field/fittedresults.txt ../examples/time-dependent-applied-field/fit.png ../examples/time-dependent-applied-field/results.png
+examples-for-doc: ../examples/macrospin/alpha-1-00.png ../examples/macrospin/alpha-0-50.png ../examples/macrospin/alpha-0-10.png ../examples/macrospin/alpha-0-02.png ../examples/time-dependent-applied-field/fittedresults.txt ../examples/time-dependent-applied-field/fit.png ../examples/time-dependent-applied-field/results.png ../examples/demag/phi.png
 
 # The absolute path for the doc directory
 DOC_DIR = $(abspath .)
