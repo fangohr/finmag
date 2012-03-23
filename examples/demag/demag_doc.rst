@@ -285,12 +285,12 @@ When :math:`\phi` is computed using the solvers solve() function, the demag fiel
  
 The following example shows how to create a problem with a mesh stored in a .geo file and user-provided initial magnetisation, solve the problem using the GCR solver, and obtain the demag field.
 
-.. literalinclude:: ../examples/demag/test_demag_example.py
+.. literalinclude:: ../examples/demag/demag_example.py
     :lines: 1-12
  
 The magnetic potential and the demag field can now be saved to files compatible with Paraview and Mayavi2.
 
-.. literalinclude:: ../examples/demag/test_demag_example.py
+.. literalinclude:: ../examples/demag/demag_example.py
     :lines: 17,18
 
 This plot shows the computed magnetic potential,
