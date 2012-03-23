@@ -138,3 +138,8 @@ def quiver(f, mesh, filename, **kwargs):
     q.scene.z_plus_view()
     mlab.axes(figure=figure)
     mlab.savefig(filename)
+
+def boxplot(arr, filename, **kwargs):
+    import matplotlib.pyplot as plt
+    plt.boxplot(list(arr), **kwargs)
+    plt.savefig(filename)
