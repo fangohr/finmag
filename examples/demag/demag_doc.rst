@@ -86,6 +86,10 @@ This is carried out by the function compute_phi1() in the FemBemFKSolver class. 
     # Solve for the DOFs in phi1
     solve(a == f, self.phi1)
 
+.. note::
+
+    TODO: Include code directly from the solvers when they are no longer in development.
+
 Correspondingly, the equations for :math:`\phi_2`, read
 
 .. math::
@@ -243,7 +247,12 @@ We have two hierarchies, one for the problems and one for the solvers. The super
 The super problem class DeMagProblem takes a mesh and the initial magnetisation as input to its constructor. The class FemBemDeMagProblem extends this class, but does not do anything else at the moment.
 For each of the test cases we construct a class, which defines its mesh and initial magnetisation in the constructor and then initialises its parent class.
 
-The super solver class DeMagSolver, takes a problem instance as input argument. Then, it interpolates the problem's magnetisation onto a Dolfin VectorFunctionSpace with Discontinouos Galerkin elements. Why we do this, I have no idea. TODO: Find out why we're not using CG. 
+The super solver class DeMagSolver, takes a problem instance as input argument. Then, it interpolates the problem's magnetisation onto a Dolfin VectorFunctionSpace with Discontinouos Galerkin elements. Why we do this, I have no idea. 
+
+.. note::
+
+    TODO: Find out why we're not using CG. 
+
 It also contains some usefull functions, like getdemagfield which returns the negative gradient, and savefunction which saves its input function in a pvd file.
 
 The class FemBemDeMagSolver contains all methods that are shared between the FK and GCR solvers. This includes the solvelaplaceinside function and a function for restricting a vector to the boundary nodes, as well as creating the dictionary with nodal coordinates. At the moment, we have defined the function space in which the magnetic potentials are defined on CR elements. These elements have their nodes on each edge midpoint instead of in the corners of the triangle for CG elements. This is to avoid singularity when computing the boundary element matrices.
@@ -261,7 +270,11 @@ The unit sphere, unit circle and unit interval are already implemented in the fi
     problem = MagUnitSphere()
     solver = FemBemFKSolver(problem)
     phi = solver.solve()
- 
+
+.. note::
+
+    The UnitSphere generates mesh of low quality. 
+
 The same applies for the Garcia-Cervera-Roma approach, the only difference is the name of the solver class.
 When :math:`\phi` is computed using the solvers solve() function, the demag field :math:`\vec H_{\mathrm{demag}} = - \nabla \phi(\vec r)` can be obtained by
 
@@ -270,25 +283,26 @@ When :math:`\phi` is computed using the solvers solve() function, the demag fiel
     phi = solver.solve()
     H_demag = solver.get_demagfield(phi)
  
-The following example shows how to create a problem with a mesh stored in a file and user-provided initial magnetisation, solve the problem using the GCR solver, and obtain the demag field.
+The following example shows how to create a problem with a mesh stored in a .geo file and user-provided initial magnetisation, solve the problem using the GCR solver, and obtain the demag field.
 
-.. code-block:: python
-
-    mesh = Mesh("sphere.xml")
-    M = ("1.0", "0.0", "0.0")
-    problem = FemBemDeMagProblem(mesh, M)
-    solver = GCRDeMagSolver(problem)
-    phi = solver.solve()
-    H_demag = solver.get_demagfield(phi)
+.. literalinclude:: ../examples/demag/demag_example.py
+    :lines: 1-12
  
-The magnetic potential and the demag field can now be saved to pvd files.
+The magnetic potential and the demag field can now be saved to files compatible with Paraview and Mayavi2.
 
-.. code-block:: python
+.. literalinclude:: ../examples/demag/demag_example.py
+    :lines: 17,18
 
-    solver.save_function(phi, "GCR_phi")
-    solver.save_function(H_demag, "GCR_demagfield")
- 
+This plot shows the computed magnetic potential,
 
+.. image:: ../examples/demag/phi.png
+
+and here we see the vectors of the demag field together with iso surfaces of the magnetic potential.
+
+.. note:: 
+
+    * TODO: Include the plot with IsoSurfaces as soon as the vectors point in the right direction and the colors seem reasonable.
+    * TODO2: Change the viper plot to the Mayavi2 plot.
 
 Further work
 ------------
@@ -309,7 +323,7 @@ Further work
  
 * A really import thing is to extend the DeMagSolver class to handle magnetisation not only as a string which is given to Dolfin Expression, but it should handle Dolfin Function instances as well. I guess it will be initiated from the LLG class, so it should be able to use the same format for M as used by LLG.
 
-* Include some results and pictures in this file.
+* Include some more results and pictures in this file.
 
 
 .. rubric:: References

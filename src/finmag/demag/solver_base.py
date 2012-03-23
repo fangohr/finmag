@@ -35,16 +35,28 @@ class DeMagSolver(object):
         #Define the magnetisation
         self.M = interpolate(Expression(self.problem.M),self.Mspace)
         
-    def get_demagfield(self,phi):
+    def get_demagfield(self,phi,use_default_function_space = True):
         """
         Returns the projection of the negative gradient of
         phi onto a DG0 space defined on the same mesh
         Note: Do not trust the viper solver to plot the DeMag field,
         it can give some wierd results, paraview is recommended instead
+
+        use_default_function_space - If true project into self.Hdemagspace,
+                                     if false project into a Vector DG0 space
+                                     over the mesh of phi.
         """
 
+
         Hdemag = -grad(phi)
-        Hdemag = project(Hdemag,self.Hdemagspace)
+        if use_default_function_space == True:
+            Hdemag = project(Hdemag,self.Hdemagspace)
+        else:
+            if self.D == 1:
+                Hspace = FunctionSpace(phi.function_space().mesh(),"DG",0)
+            else:
+                Hspace = VectorFunctionSpace(phi.function_space().mesh(),"DG",0)
+            Hdemag = project(Hdemag,Hspace)
         return Hdemag
         
     def save_function(self,function,name):
