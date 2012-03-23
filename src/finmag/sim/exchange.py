@@ -67,7 +67,7 @@ class Exchange(object):
     """
 
     def __init__(self, V, M, C, Ms, method="box-matrix-petsc"):
-        print "Exchange(): method = %s" % method
+        #print "Exchange(): method = %s" % method
        
         self.V = V
 
