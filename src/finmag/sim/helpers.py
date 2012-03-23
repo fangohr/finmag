@@ -1,4 +1,4 @@
-import numpy
+import numpy as np
 
 def components(vs):
     """
@@ -33,7 +33,7 @@ def norm(v):
     Returns the euclidian norm of a vector in three dimensions.
 
     """
-    return numpy.sqrt(numpy.dot(v, v))
+    return np.sqrt(np.dot(v, v))
 
 def normalise(vs, length=1):
     """
@@ -41,7 +41,7 @@ def normalise(vs, length=1):
     Expects the vectors in a list of the form [[x0, y0, z0], ..., [xn, yn, zn]].
 
     """
-    return numpy.array([length*v/norm(v) for v in vs])
+    return np.array([length*v/norm(v) for v in vs])
 
 def fnormalise(ar, length=1):
     """
@@ -50,15 +50,15 @@ def fnormalise(ar, length=1):
 
     """
     arr = components(ar)
-    arr /= numpy.sqrt(arr[0]*arr[0] + arr[1]*arr[1] + arr[2]*arr[2])
-    return numpy.append(arr[0],[arr[1],arr[2]]) 
+    arr /= np.sqrt(arr[0]*arr[0] + arr[1]*arr[1] + arr[2]*arr[2])
+    return np.append(arr[0],[arr[1],arr[2]]) 
 
 def angle(v1, v2):
     """
     Returns the angle between two three-dimensional vectors.
 
     """
-    return numpy.arccos(numpy.dot(v1, v2) / (norm(v1)*norm(v2)))
+    return np.arccos(np.dot(v1, v2) / (norm(v1)*norm(v2)))
 
 def rows_to_columns(arr):
     """
@@ -75,10 +75,9 @@ def perturbed_vectors(n, direction=[1,0,0], length=1):
     length. The returned array looks like [[x0, y0, z0], ..., [xn, yn, zn]].
 
     """
-    displacements = numpy.random.rand(n, 3) - 0.5
+    displacements = np.random.rand(n, 3) - 0.5
     vectors = direction + displacements
     return normalise(vectors, length)
-
 
 def read_float_data(filename):
     """
@@ -96,3 +95,25 @@ def read_float_data(filename):
             columns = [float(column) for column in line.strip().split()]
             rows.append(columns)
     return rows
+
+def quiver_dolfin(f, mesh, **kwargs):
+    """
+    Takes a dolfin function f defined over a VectorFunctionSpace and
+    a dolfin mesh and shows a quiver plot.
+
+    """
+    from mayavi import mlab
+    mc = mesh.coordinates()
+    r = mc.reshape(mc.size, order="F").reshape((mc.shape[1], -1))
+
+    codimension = 3 - r.shape[0]
+    if codimension > 0:
+        r = np.append(r, [np.zeros(r[0].shape[0])]*codimension, axis=0)
+    x, y, z = r
+    
+    fx, fy, fz = components(f.vector().array())
+    figure = mlab.figure(bgcolor=(1, 1, 1), fgcolor=(0, 0, 0))
+    q = mlab.quiver3d(x, y, z, fx, fy, fz, figure=figure, **kwargs)
+    q.scene.z_plus_view()
+    mlab.axes(figure=figure)
+    mlab.show()
