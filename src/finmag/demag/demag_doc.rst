@@ -277,7 +277,7 @@ The following example shows how to create a problem with a mesh stored in a file
     mesh = Mesh("sphere.xml")
     M = ("1.0", "0.0", "0.0")
     problem = FemBemDeMagProblem(mesh, M)
-    solver = GCRDeMagSolver(problem)
+    solver = FemBemGCRSolver(problem)
     phi = solver.solve()
     H_demag = solver.get_demagfield(phi)
  
