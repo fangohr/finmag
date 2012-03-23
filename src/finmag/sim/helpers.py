@@ -96,24 +96,45 @@ def read_float_data(filename):
             rows.append(columns)
     return rows
 
-def quiver_dolfin(f, mesh, **kwargs):
+def quiver(f, mesh, **kwargs):
     """
-    Takes a dolfin function f defined over a VectorFunctionSpace and
-    a dolfin mesh and shows a quiver plot.
+    Takes a numpy array of the values of a vector-valued function, defined
+    over a mesh (either a dolfin mesh, or one from finmag.util.oommf.mesh)
+    and shows a quiver plot of the data.
+
+    Accepts mlab quiver3d keyword arguments as keywords,
+    which it will pass down.
 
     """
+    assert isinstance(f, np.ndarray)
+
     from mayavi import mlab
-    mc = mesh.coordinates()
-    r = mc.reshape(mc.size, order="F").reshape((mc.shape[1], -1))
+    from dolfin.cpp import Mesh as dolfin_mesh
+    from finmag.util.oommf.mesh import Mesh as oommf_mesh
+    
+    if isinstance(mesh, dolfin_mesh):
+        coords = mesh.coordinates()
+    elif isinstance(mesh, oommf_mesh):
+        coords = np.array(list(mesh.iter_coords()))
+    else:
+        raise TypeError("Don't know what to do with mesh of class {0}.".format(
+            mesh.__class__))
 
+    r = coords.reshape(coords.size, order="F").reshape((coords.shape[1], -1))
+    # All 3 coordinates of the mesh points must be known to the plotter,
+    # even if the mesh is one-dimensional. If not all coordinates are known,
+    # fill the rest up with zeros.
     codimension = 3 - r.shape[0]
     if codimension > 0:
         r = np.append(r, [np.zeros(r[0].shape[0])]*codimension, axis=0)
-    x, y, z = r
+
+    if f.size == f.shape[0]:
+        # dolfin provides a flat numpy array, but we would like
+        # one with the x, y and z components as individual arrays.
+        f = components(f)
     
-    fx, fy, fz = components(f.vector().array())
     figure = mlab.figure(bgcolor=(1, 1, 1), fgcolor=(0, 0, 0))
-    q = mlab.quiver3d(x, y, z, fx, fy, fz, figure=figure, **kwargs)
+    q = mlab.quiver3d(*(tuple(r)+tuple(f)), figure=figure, **kwargs)
     q.scene.z_plus_view()
     mlab.axes(figure=figure)
     mlab.show()
