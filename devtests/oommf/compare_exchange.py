@@ -6,7 +6,7 @@ from finmag.sim.llg import LLG
 from finmag.util.oommf import oommf_uniform_exchange, mesh
 
 REL_TOLERANCE = 40 # 1e-3
-MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
 
 def test_one_dimensional_problem():
     _, rel_diff = one_dimensional_problem()
@@ -67,13 +67,13 @@ def one_dimensional_problem():
     difference = exchange_for_oommf.flat - exchange_oommf
     relative_difference = np.abs(difference / exchange_oommf)
 
-    return dict(m0=llg.m, mesh=dolfmesh, oommf_mesh=msh,
+    return dict(prob="1d", m0=llg.m, mesh=dolfmesh, oommf_mesh=msh,
             exc=exc_finmag.vector().array(), oommf_exc=exchange_oommf,
             diff=difference, rel_diff=relative_difference)
 
 def three_dimensional_problem():
     x_max = 20e-9; y_max = 10e-9; z_max = 10e-9;
-    dolfmesh = df.Box(0, 0, 0, x_max, y_max, z_max, 20, 10, 10)
+    dolfmesh = df.Box(0, 0, 0, x_max, y_max, z_max, 40, 10, 10)
     m0 = ("pow(sin(x[0] * pow(10, 9) / 3), 2)", "0", "1")
     exc_finmag, llg = compute_exc_finmag(dolfmesh, m0)
 
@@ -91,7 +91,7 @@ def three_dimensional_problem():
     difference = exchange_for_oommf.flat - exchange_oommf
     relative_difference = np.abs(difference / exchange_oommf)
 
-    return dict(m0=llg.m, mesh=dolfmesh, oommf_mesh=msh,
+    return dict(prob="3d", m0=llg.m, mesh=dolfmesh, oommf_mesh=msh,
             exc=exc_finmag.vector().array(), oommf_exc=exchange_oommf,
             diff=difference, rel_diff=relative_difference)
 
@@ -107,13 +107,15 @@ def stats(arr):
 
 if __name__ == '__main__':
     res1 = one_dimensional_problem()
-    # images are worthless if the colormap is not shown. How to do that?
-    quiver(res1["m0"], res1["mesh"], MODULE_DIR+"/1d_exchange_m0.png")
-    quiver(res1["exc"], res1["mesh"], MODULE_DIR+"/1d_exchange_finmag.png")
-    quiver(res1["oommf_exc"], res1["oommf_mesh"], MODULE_DIR+"/1d_exchange_oommf.png")
-    quiver(res1["rel_diff"], res1["oommf_mesh"], MODULE_DIR+"/1d_exchange_rel_diff.png")
-    boxplot(list(res1["rel_diff"]), MODULE_DIR+"/1d_exchange_rel_diff_stats.png")
     print "1D problem, relative difference:\n", stats(res1["rel_diff"])
-
     res3 = three_dimensional_problem()
     print "3D problem, relative difference:\n", stats(res3["rel_diff"])
+
+    # Break it down. STOP! PLOTTER TIME.
+    for res in [res1, res3]:
+        # images are worthless if the colormap is not shown. How to do that?
+        quiver(res["m0"], res["mesh"], MODULE_DIR+res["prob"]+"_exc_m0.png")
+        quiver(res["exc"], res["mesh"], MODULE_DIR+res["prob"]+"_exc_finmag.png")
+        quiver(res["oommf_exc"], res["oommf_mesh"], MODULE_DIR+res["prob"]+"_exc_oommf.png")
+        quiver(res["rel_diff"], res["oommf_mesh"], MODULE_DIR+res["prob"]+"_exc_rel_diff.png")
+        boxplot(res["rel_diff"], MODULE_DIR+res["prob"]+"_exc_rel_diff_stats.png")
