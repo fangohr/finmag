@@ -7,6 +7,14 @@ from finmag.util.oommf import oommf_uniform_exchange, mesh
 
 REL_TOLERANCE = 40 # 1e-3
 
+def test_one_dimensional_problem():
+    _, rel_diff = one_dimensional_problem()
+    assert np.nanmax(rel_diff) < REL_TOLERANCE
+
+def test_three_dimensional_problem():
+    _, rel_diff = three_dimensional_problem()
+    assert np.nanmax(rel_diff) < REL_TOLERANCE
+
 def compute_exc_finmag(mesh, m0, **kwargs):
     llg = LLG(mesh)
     llg.set_m0(m0, **kwargs)
@@ -27,7 +35,7 @@ def finmag_to_oommf(finmag_exchange, oommf_mesh, dims=1):
         exchange_finmag_for_oommf.flat[2,i] = E_z
     return exchange_finmag_for_oommf
 
-def test_one_dimensional_problem():
+def one_dimensional_problem():
     x_min = 0; x_max = 20e-9; x_n = 40
     
     # compute exchange field with finmag
@@ -57,11 +65,9 @@ def test_one_dimensional_problem():
 
     difference = exchange_for_oommf.flat - exchange_oommf
     relative_difference = np.abs(difference / exchange_oommf)
-    #assert np.nanmax(relative_difference) < REL_TOLERANCE
-
     return difference, relative_difference
 
-def test_three_dimensional_problem():
+def three_dimensional_problem():
     x_max = 20e-9; y_max = 10e-9; z_max = 10e-9;
     msh = df.Box(0, 0, 0, x_max, y_max, z_max, 20, 10, 10)
     m0 = ("pow(sin(x[0] * pow(10, 9) / 3), 2)", "0", "1")
@@ -77,10 +83,9 @@ def test_three_dimensional_problem():
     exchange_oommf = oommf_uniform_exchange(m0, Ms, C).flat
 
     exchange_for_oommf = finmag_to_oommf(exc_finmag, msh, dims=3)
+
     difference = exchange_for_oommf.flat - exchange_oommf
     relative_difference = np.abs(difference / exchange_oommf)
-    #assert np.nanmax(relative_difference) < REL_TOLERANCE
-
     return difference, relative_difference
 
 def stats_from_array_str(arr):
@@ -98,8 +103,8 @@ def boxplot(arr, filename):
     plt.show()
 
 if __name__ == '__main__':
-    diff_1d, rel_diff_1d = test_one_dimensional_problem()
+    diff_1d, rel_diff_1d = one_dimensional_problem()
     print "1D problem, relative difference:\n", stats_from_array_str(rel_diff_1d)
 
-    diff_3d, rel_diff_3d = test_three_dimensional_problem()
+    diff_3d, rel_diff_3d = three_dimensional_problem()
     print "3D problem, relative difference:\n", stats_from_array_str(rel_diff_3d)
