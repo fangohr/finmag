@@ -60,7 +60,7 @@ def convert_mesh(inputfile, outputfile=None):
 
     # Create Gmsh2 mesh using Netgen
     print 'Using netgen to convert %s.geo to Gmsh2 format...' % name
-    netgen_cmd = 'netgen -geofile=%s -meshfiletype="Gmsh2 Format" -meshfile=tmp_%s.gmsh -batchmode' % (inputfile, name)
+    netgen_cmd = 'netgen -geofile=%s -meshfiletype="Gmsh2 Format" -meshfile=%s.gmsh -batchmode' % (inputfile, name)
     status, output = commands.getstatusoutput(netgen_cmd)
     if status not in (0, 34304): # Trouble on my machine, should just be zero.
         print output
@@ -70,7 +70,7 @@ def convert_mesh(inputfile, outputfile=None):
 
     # Convert to xml using dolfin-convert
     print 'Using dolfin-convert to convert the Gmsh file to Dolfin xml...'
-    dolfin_conv_cmd = 'dolfin-convert tmp_%s.gmsh %s.xml' % (name, outputfile)
+    dolfin_conv_cmd = 'dolfin-convert %s.gmsh %s.xml' % (name, outputfile)
     status, output = commands.getstatusoutput(dolfin_conv_cmd)
     if status != 0: 
         print output
@@ -90,11 +90,11 @@ def convert_mesh(inputfile, outputfile=None):
 
     # Remove redundant files
     print 'Cleaning up...'
-    tmp_files = ["%s_physical_region.xml" % outputfile,
+    files = ["%s_physical_region.xml" % outputfile,
                  "%s_facet_region.xml" % outputfile,
                  "%s.xml.bak" % outputfile,
-                 "tmp_%s.gmsh" % name]
-    for f in tmp_files:
+                 "%s.gmsh" % name]
+    for f in files:
         if os.path.isfile(f):
             os.remove(f)
     print 'Done!'
@@ -102,7 +102,7 @@ def convert_mesh(inputfile, outputfile=None):
     # Test final mesh
     print 'Testing...'
     from dolfin import Mesh
-    Mesh("%s.xml.gz" % name)
+    Mesh(ouputfilename)
 
     print 'Success! Mesh is written to %s.' % outputfilename
 
