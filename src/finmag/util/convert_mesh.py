@@ -102,7 +102,7 @@ def convert_mesh(inputfile, outputfile=None):
     # Test final mesh
     print 'Testing...'
     from dolfin import Mesh
-    Mesh(ouputfilename)
+    Mesh(outputfilename)
 
     print 'Success! Mesh is written to %s.' % outputfilename
 
