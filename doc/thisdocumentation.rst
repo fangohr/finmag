@@ -25,8 +25,8 @@ To build and view documentation
 Other formats can be created, for example pdf using ``make latexpdf`` (the output is in ``_build/latexpdf/Finmag.pdf``).
 
 
-Writing documentation:
-----------------------
+Writing documentation
+---------------------
 
 We are using Sphinx (http://sphinx.pocoo.org/) to generate documentation. Basic use includes simple inline markup, using mathematics in LaTeX syntax, and code snippets.
 
@@ -60,8 +60,8 @@ When you have documented your code, and want to add it to the html files, please
 and compile again.
 
 
-Important:
-----------
+Important
+---------
 
 When documenting a class structure, Sphinx does not include docstrings from __init__, so please put these in the first line in the class instead. I.e. do
 
@@ -86,13 +86,22 @@ instead of
            """
 
 Code-blocks
----------------------------
+-----------
 
 Need to be preceeded by::
 
   .. code-block:: python
 
 and the code block has to be indented.
+
+There are additional options for ``.. code-block::``, and also a related command ``.. literalinclude::``. Both are explained at http://sphinx.pocoo.org/markup/code.html and provide the possibility
+
+* to include only particular lines
+* only a particular class or Python object from a given file (funky if it actually works!)
+* display of line numbers
+* and more.
+
+
 
 
 This document as raw source
