@@ -23,7 +23,7 @@ def test_norm():
     assert norm([1, 1, 0]) - np.sqrt(2) < TOLERANCE
     assert norm([1, 1, 1]) - np.sqrt(3) < TOLERANCE
     assert norm([-1, 0, 0]) - norm([1, 0, 0]) < TOLERANCE 
-    assert 3*norm([1, 1, 1]) - norm(3*numpy.array([1, 1, 1])) < TOLERANCE
+    assert 3*norm([1, 1, 1]) - norm(3*np.array([1, 1, 1])) < TOLERANCE
 
 def test_fnormalise():
     a = np.array([1., 1., 2., 2., 0., 0.])
@@ -36,9 +36,9 @@ def test_angle():
     assert angle([1,0,0],[1,1,0]) - np.pi/4 < TOLERANCE
 
 def test_rows_to_columns():
-    x = numpy.array([[1, 2, 3], [1, 2, 3], [1, 2, 3]])
-    y = numpy.array([[1, 1, 1], [2, 2, 2], [3, 3, 3]])
-    assert numpy.array_equal(y, rows_to_columns(x))
+    x = np.array([[1, 2, 3], [1, 2, 3], [1, 2, 3]])
+    y = np.array([[1, 1, 1], [2, 2, 2], [3, 3, 3]])
+    assert np.array_equal(y, rows_to_columns(x))
 
 def test_perturbed_vectors():
     quantity = 10; direction = [1, 0, 0]; length = 5
