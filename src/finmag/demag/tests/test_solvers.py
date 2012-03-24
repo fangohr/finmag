@@ -302,7 +302,7 @@ class Test_FemBemGCRSolver(DemagTester):
         unit sphere
         """
         testname = self.test_compare_3danalytical_gradient.__doc__
-        self.compare_to_analytical(self.solver3d.phitot,self.analytical3d.potential,testname)
+        self.compare_to_analytical(self.solver3d.phi,self.analytical3d.potential,testname)
         
     def test_compare_3danalytical_gradient(self):
         """
