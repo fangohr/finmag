@@ -11,16 +11,16 @@ __copyright__ = __author__
 __project__ = "Finmag"
 __organisation__ = "University of Southampton"
 
-import pytest
 from dolfin import *
-import numpy as np
 from finmag.demag import solver_fk, solver_gcr
 from finmag.demag.problems import prob_fembem_testcases as pft
 import finmag.demag.solver_base as sb
 import finmag.util.error_norms as en
-import test_solvers as ts
-import matplotlib.pyplot as plt
+import finmag.util.convergence_tester as ct
 
+##########################################
+#Extended solver classes
+#########################################
 #This class mimics a FemBemDeMagSolver but returns analytical values.
 class FemBemAnalytical(sb.FemBemDeMagSolver):
     """
@@ -32,143 +32,57 @@ class FemBemAnalytical(sb.FemBemDeMagSolver):
         
     def solve(self):
         self.phi = project(Expression("-x[0]/3.0"),self.V)
-        return self.phi
+        self.get_demagfield()
+        #Split the Demagfield into Component functions
+        self.Hdemagx,self.Hdemagy,self.Hdemagz = self.Hdemag.split(True) 
     
-    def get_demagfield(self,phi):
+    def get_demagfield(self):
         self.Hdemag = project(Expression(("1.0/3.0","0.0","0.0")),self.Hdemagspace)
-        return self.Hdemag
 
-############################################
-#Section 0 Problems and solvers
-############################################
+#Extended versions of the solvers that give us some extra functions
+class FemBemFKSolverTest(solver_fk.FemBemFKSolver):
+    """Extended verions of FemBemFKSolver used for testing in 3d"""
+    def solve(self):
+        super(FemBemFKSolverTest,self).solve()
+        #Split the Demagfield into Component functions
+        self.Hdemagx,self.Hdemagy,self.Hdemagz = self.Hdemag.split(True) 
 
-#This controls the fineness of the meshes
-# At the momenet UnitSphere(i)
-#where i is in finenesslist
-###########################   
-finenesslist = range(2,13)
+class  FemBemGCRSolverTest(solver_gcr.FemBemGCRSolver):
+    """Extended verions of  FemBemGCRSolver used for testing in 3d"""
+    def solve(self):
+        super(FemBemGCRSolverTest,self).solve()
+        #Split the Demagfield into Component functions
+        self.Hdemagx,self.Hdemagy,self.Hdemagz = self.Hdemag.split(True) 
 
+##########################################
+#Test parameters
+#########################################
+
+#Mesh fineness, ie UnitSphere(n)
+finenesslist = range(2,4)
+#Create a problem for each level of fineness
 problems = [pft.MagUnitSphere(n) for n in finenesslist]
+
+#Xaxis - Number of finite elements
 numelement = [p.mesh.num_cells() for p in problems]
+xaxis = ("Number of elements",numelement)
 
-#Master list of solvers####
-solvers = {"FK Solver": solver_fk.FemBemFKSolver,"GCR Solver": solver_gcr.FemBemGCRSolver,"Analytical":FemBemAnalytical}
+#Solvers
+test_solver_classes = {"FK Solver": FemBemFKSolverTest,"GCR Solver": FemBemGCRSolverTest}
+reference_solver_class = {"Analytical":FemBemAnalytical}
 
-############################################
-#Section 1 Functions
-############################################
+#Test solutions
+test_solutions = {"Phi":"phi","Hdemag":"Hdemag","Hdemag X":"Hdemagx",\
+                 "Hdemag Y":"Hdemagy","Hdemag Z":"Hdemagz"}
+#Norms
+norms = {"L2 Error":en.L2_error,"Discrete Max Error":en.discrete_max_error}
 
-def componentlists(flist):
-    """
-    Take a list of functions and return
-    3 lists of 3 subfunctions x,y,z
-    """
-    return [[f.split(True)[i] for f in flist] for i in range(3)]
+#cases
+cases = [("Phi","L2 Error"),("Phi","Discrete Max Error"),("Hdemag","L2 Error"), \
+         ("Hdemag X","Discrete Max Error"),("Hdemag Y","Discrete Max Error"),\
+         ("Hdemag Z","Discrete Max Error")]
 
-def solver_data(solverclass,problems):
-    """
-    Takes a Solver class and a list of problems
-    and returns a dictionary of solution functions.
-    """
-    solvers = [solverclass(p) for p in problems]
-    #The various solutions
-    phi = [s.solve() for s in solvers]
-    Hdemag = [s.get_demagfield(s.phi) for s in solvers]
-    #Split the demag field into components
-    Hdemagsub = componentlists(Hdemag)
-    return {"solobj":solvers,"Potential":phi,"Hdemag":Hdemag,"Hdemagx":Hdemagsub[0], \
-            "Hdemagy":Hdemagsub[1],"Hdemagz":Hdemagsub[2]}
-
-def convergence_data(fn_approx, fn_ana, norm):
-    """
-    Test the convergence of a sequence of solutions
-    to some sequence of analytical values in a norm
-
-    fn_approx = list of dolfin functions
-    fn_ana = list of dolfin functions
-    norm = function that takes two dolfin functions as arguments
-    """
-    tups = list(zip(fn_approx, fn_ana))
-    tups.reverse()
-    errors = [norm(s,a) for s,a in tups]
-    return errors
-
-def error_norms(sd1,sd2):
-    """
-    Calculate the various errors that we are interested in,
-    comparing the functions in sd1 to those of sd2.
-    sd = solver_data.
-    """
-    #TODO implement this check so that it checkes that the function space "types" are the same
-    #even if they are two different objects
-    
-    #Check that the Function Spaces match
-##    assert sd1["Potential"][0].function_space() == sd2["Potential"][0].function_space(),"Potential Function Space mismatch"
-##    assert sd1["Hdemag"][0].function_space() == sd2["Hdemag"][0].function_space(),"Hdemag Function Space mismatch"
-    
-    return {"Potential L2": convergence_data(sd1["Potential"],sd2["Potential"], en.L2_error), \
-           "Hdemag L2": convergence_data(sd1["Hdemag"],sd2["Hdemag"], en.L2_error), \
-           "Potential Discrete Max": convergence_data(sd1["Potential"],sd2["Potential"], en.discrete_max_error), \
-           "Hdemag x Discrete Max": convergence_data(sd1["Hdemagx"],sd2["Hdemagx"], en.discrete_max_error), \
-           "Hdemag y Discrete Max": convergence_data(sd1["Hdemagy"],sd2["Hdemagy"], en.discrete_max_error), \
-           "Hdemag z Discrete Max": convergence_data(sd1["Hdemagz"],sd2["Hdemagz"], en.discrete_max_error)}
-
-############################################
-#Section 2 Data
-############################################
-
-#Initialize problems
-#These problems should contain a sequence of finer meshes
-#Refinement is to be avoided as it does not improve the polygonal boundary
-#approximation to a sphere
-
-#Get the functions we are interested in
-solverdata = {k:solver_data(solvers[k],problems) for k in solvers}
-#Compute error norms of functions compared to the analytical solution.
-errornorms = {k:error_norms(solverdata[k], solverdata["Analytical"]) for k in solverdata if k <> "Analytical"}
-
-############################################
-#Section 3 Command line output
-############################################
-
-#Output Report
-starline = "*****************************************************"
-print starline
-print "Report of convergence for the case of a magnetized unit sphere"
-print starline
-print "Mesh Fineness"
-print finenesslist
-
-for solvername in errornorms:
-    #name of solver
-    print starline
-    print "Convergence of ", solvername
-    print starline
-    #Names of norms and their values
-    for errorname in errornorms[solvername]:
-        print errorname
-        print errornorms[solvername][errorname]
-        print
-
-############################################
-#Section 4 Data plots
-############################################
-
-#Outpot Plots
-gcrdata = errornorms["GCR Solver"]["Potential L2"]
-fkdata = errornorms["FK Solver"]["Potential L2"]
-
-#This specificies the number of rows and columns of subplots
-plotgrid = "23"
-#Generate the plots
-for i,errorname in enumerate(errornorms["GCR Solver"]):
-    plotnum = plotgrid + str(i+1)
-    plt.subplot(*plotnum)
-    plt.plot(numelement,errornorms["GCR Solver"][errorname],"ro",label = "GCR")
-    plt.plot(numelement,errornorms["FK Solver"][errorname],"bs",label = "FK")
-    plt.title(errorname)
-    plt.xlabel("Number of elements")
-    plt.ylabel("Error")
-    plt.legend()
-plt.show()
-
+#Create a ConvergenceTester and generate a report
+ct = ct.ConvergenceTester(test_solver_classes,reference_solver_class,test_solutions,problems,norms,xaxis,cases)
+ct.print_report()
+ct.plot_results()
