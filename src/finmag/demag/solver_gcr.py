@@ -20,7 +20,7 @@ class GCRDeMagSolver(sb.DeMagSolver):
           #Define the two potentials
           self.phia = Function(self.V)
           self.phib = Function(self.V)
-          self.phitot = Function(self.V)
+          self.phi = Function(self.V)
 
      def solve_phia(self,phia,method = "lu"):
           """
@@ -60,11 +60,13 @@ class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           """
           #Solve for phia
           self.solve_phia()
-          #Solve for phia 
+          #Solve for phib on the boundary with Bem 
           self.phib = self.solve_phib_boundary(self.phia,self.doftionary)
+          #Solve for phib on the inside of the mesh with Fem
           self.phib = self.solve_laplace_inside(self.phib)
+          # Add together the two potentials
           self.phi = self.calc_phitot(self.phia,self.phib)
-          self.Hdemag = self.get_demagfield(self.phitot)
+          self.Hdemag = self.get_demagfield(self.phi)
           return self.phi
           
      def solve_phia(self,method = "lu"):
