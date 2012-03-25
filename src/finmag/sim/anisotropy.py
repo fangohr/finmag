@@ -24,7 +24,8 @@ class UniaxialAnisotropy(object):
         K
             The anisotropy constant
         a
-            The easy axis (use dolfin.Constant for now)
+            The easy axis (use dolfin.Constant for now).
+            Should be a unit vector.
         method
             The method used to compute the anisotropy field.
             For alternatives and explanation, see Exchange.
