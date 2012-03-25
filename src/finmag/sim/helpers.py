@@ -96,7 +96,7 @@ def read_float_data(filename):
             rows.append(columns)
     return rows
 
-def quiver(f, mesh, filename, **kwargs):
+def quiver(f, mesh, filename, title, **kwargs):
     """
     Takes a numpy array of the values of a vector-valued function, defined
     over a mesh (either a dolfin mesh, or one from finmag.util.oommf.mesh)
@@ -132,7 +132,8 @@ def quiver(f, mesh, filename, **kwargs):
         # dolfin provides a flat numpy array, but we would like
         # one with the x, y and z components as individual arrays.
         f = components(f)
-    
+   
+    mlab.title(title)
     figure = mlab.figure(bgcolor=(1, 1, 1), fgcolor=(0, 0, 0))
     q = mlab.quiver3d(*(tuple(r)+tuple(f)), figure=figure, **kwargs)
     q.scene.z_plus_view()
@@ -143,3 +144,32 @@ def boxplot(arr, filename, **kwargs):
     import matplotlib.pyplot as plt
     plt.boxplot(list(arr), **kwargs)
     plt.savefig(filename)
+
+def finmag_to_oommf(f, oommf_mesh, dims=1):
+    """
+    Given a dolfin.Function f and a mesh oommf_mesh as defined in
+    finmag.util.oommf.mesh, it will probe the values of f at the coordinates
+    of oommf_mesh and return the resulting, oommf_compatible mesh_field.
+
+    """
+    f_for_oommf = oommf_mesh.new_field(3)
+    for i, (x, y, z) in enumerate(oommf_mesh.iter_coords()):
+        if dims == 1:
+            f_x, f_y, f_z = f(x)
+        else:
+            f_x, f_y, f_z = f(x, y, z)
+        f_for_oommf.flat[0,i] = f_x
+        f_for_oommf.flat[1,i] = f_y
+        f_for_oommf.flat[2,i] = f_z
+    return f_for_oommf
+
+def stats(arr):
+    median  = np.median(arr)
+    average = np.mean(arr, axis=1)
+    minimum = np.nanmin(arr)
+    maximum = np.nanmax(arr)
+    spread  = np.std(arr, axis=1)
+    stats= "  min, median, max = ({0}, {1} {2}),\n  means = {3}),\n  stds = {4}".format(
+            minimum, median, maximum, average, spread)
+    return stats
+

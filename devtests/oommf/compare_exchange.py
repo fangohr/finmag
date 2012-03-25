@@ -1,20 +1,21 @@
 import os
 import dolfin as df
 import numpy as np
-from finmag.sim.helpers import quiver, boxplot
+from finmag.sim.helpers import quiver, boxplot, finmag_to_oommf, stats
+
 from finmag.sim.llg import LLG
 from finmag.util.oommf import oommf_uniform_exchange, mesh
 
-REL_TOLERANCE = 40 # 1e-3
+REL_TOLERANCE = 35 # goal: < 1e-3
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
 
 def test_one_dimensional_problem():
-    _, rel_diff = one_dimensional_problem()
-    assert np.nanmax(rel_diff) < REL_TOLERANCE
+    results = one_dimensional_problem()
+    assert np.nanmax(results["rel_diff"]) < REL_TOLERANCE
 
 def test_three_dimensional_problem():
-    _, rel_diff = three_dimensional_problem()
-    assert np.nanmax(rel_diff) < REL_TOLERANCE
+    results = three_dimensional_problem()
+    assert np.nanmax(results["rel_diff"]) < REL_TOLERANCE
 
 def compute_exc_finmag(mesh, m0, **kwargs):
     llg = LLG(mesh)
@@ -24,20 +25,8 @@ def compute_exc_finmag(mesh, m0, **kwargs):
     exc_field.vector()[:] = llg.exchange.compute_field()
     return exc_field, llg
 
-def finmag_to_oommf(finmag_exchange, oommf_mesh, dims=1):
-    exchange_finmag_for_oommf = oommf_mesh.new_field(3)
-    for i, (x, y, z) in enumerate(oommf_mesh.iter_coords()):
-        if dims == 1:
-            E_x, E_y, E_z = finmag_exchange(x)
-        else:
-            E_x, E_y, E_z = finmag_exchange(x, y, z)
-        exchange_finmag_for_oommf.flat[0,i] = E_x
-        exchange_finmag_for_oommf.flat[1,i] = E_y
-        exchange_finmag_for_oommf.flat[2,i] = E_z
-    return exchange_finmag_for_oommf
-
 def one_dimensional_problem():
-    x_min = 0; x_max = 20e-9; x_n = 40
+    x_min = 0; x_max = 20e-9; x_n = 40;
     
     # compute exchange field with finmag
     dolfmesh = df.Interval(x_n, x_min, x_max)
@@ -50,7 +39,7 @@ def one_dimensional_problem():
     exc_finmag, llg = compute_exc_finmag(dolfmesh, (m0_x, m0_y, m0_z), L=x_max)
 
     # compute exchange field with oommf
-    msh = mesh.Mesh((x_n, 1, 1), size=(x_max, 1e-11, 1e-11))
+    msh = mesh.Mesh((x_n, 1, 1), size=(x_max, 1e-12, 1e-12))
     m0 = msh.new_field(3)
     for i, (x, y, z) in enumerate(msh.iter_coords()):
         m0.flat[0,i] = np.sqrt(x/x_max)
@@ -95,16 +84,6 @@ def three_dimensional_problem():
             exc=exc_finmag.vector().array(), oommf_exc=exchange_oommf,
             diff=difference, rel_diff=relative_difference)
 
-def stats(arr):
-    median  = np.median(arr)
-    average = np.mean(arr, axis=1)
-    minimum = np.nanmin(arr)
-    maximum = np.nanmax(arr)
-    spread  = np.std(arr, axis=1)
-    stats= "  min, median, max = ({0}, {1} {2}),\n  means = {3}),\n  stds = {4}".format(
-            minimum, median, maximum, average, spread)
-    return stats
-
 if __name__ == '__main__':
     res1 = one_dimensional_problem()
     print "1D problem, relative difference:\n", stats(res1["rel_diff"])
@@ -112,10 +91,11 @@ if __name__ == '__main__':
     print "3D problem, relative difference:\n", stats(res3["rel_diff"])
 
     # Break it down. STOP! PLOTTER TIME.
-    for res in [res1, res3]:
+    for res in [res1, res3]: 
+        prefix = MODULE_DIR + res["prob"] + "_exc_"
         # images are worthless if the colormap is not shown. How to do that?
-        quiver(res["m0"], res["mesh"], MODULE_DIR+res["prob"]+"_exc_m0.png")
-        quiver(res["exc"], res["mesh"], MODULE_DIR+res["prob"]+"_exc_finmag.png")
-        quiver(res["oommf_exc"], res["oommf_mesh"], MODULE_DIR+res["prob"]+"_exc_oommf.png")
-        quiver(res["rel_diff"], res["oommf_mesh"], MODULE_DIR+res["prob"]+"_exc_rel_diff.png")
-        boxplot(res["rel_diff"], MODULE_DIR+res["prob"]+"_exc_rel_diff_stats.png")
+        quiver(res["m0"], res["mesh"], prefix+"m0.png", "1d m0")
+        quiver(res["exc"], res["mesh"], prefix+"finmag.png", "1d finmag")
+        quiver(res["oommf_exc"], res["oommf_mesh"], prefix+"oommf.png", "1d oommf")
+        quiver(res["rel_diff"], res["oommf_mesh"], prefix+"rel_diff.png", "1d rel diff")
+        boxplot(res["rel_diff"], prefix+"rel_diff_box.png")

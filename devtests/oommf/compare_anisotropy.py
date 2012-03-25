@@ -1,99 +1,92 @@
+import os
 import dolfin as df
 import numpy as np
-from mayavi import mlab
 from finmag.sim.llg import LLG
 from finmag.util.oommf import oommf_uniaxial_anisotropy, mesh
-
-L = 20e-9; W = 10e-9; H = 1e-9;
-nL = 20; nW = 10; nH = 1;
+from finmag.sim.helpers import quiver, boxplot, finmag_to_oommf, stats
 
 K1 = 45e4 # J/m^3
 
+REL_TOLERANCE = 3 # goal: < 1e-3
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
+
+def test_one_dimensional_problem():
+    results = one_dimensional_problem()
+    assert np.nanmax(results["rel_diff"]) < REL_TOLERANCE
+
+def test_three_dimensional_problem():
+    results = three_dimensional_problem()
+    assert np.nanmax(results["rel_diff"]) < REL_TOLERANCE
+
+def compute_anis_finmag(mesh, m0, **kwargs):
+    llg = LLG(mesh)
+    llg.set_m0(m0, **kwargs)
+    llg.add_uniaxial_anisotropy(K1, df.Constant((1, 1, 1)))
+    llg.setup()
+    anis_field = df.Function(llg.V)
+    anis_field.vector()[:] = llg._anisotropies[0].compute_field()
+    return anis_field, llg
+
 def one_dimensional_problem():
-    msh = df.Interval(nL, 0, L)
-    llg = LLG(msh)
+    x_min = 0; x_max = 20e-9; x_n = 40;
+    dolfmesh = df.Interval(x_n, x_min, x_max)
     m0_x = '2 * x[0]/L - 1'
     m0_y = 'sqrt(1 - (2*x[0]/L - 1)*(2*x[0]/L - 1))'
     m0_z = '0'
-    llg.set_m0((m0_x, m0_y, m0_z), L=L)
-    llg.add_uniaxial_anisotropy(K1, df.Constant((0, 0, 1)))
-    llg.setup(exchange_flag=True)
-    return llg
+    anis_finmag, llg = compute_anis_finmag(dolfmesh, (m0_x, m0_y, m0_z), L=x_max)
+
+    msh = mesh.Mesh((x_n, 1, 1), size=(x_max, 1e-12, 1e-12))
+    m0 = msh.new_field(3)
+    for i, (x, y, z) in enumerate(msh.iter_coords()):
+        m0.flat[0,i] = 2 * x/x_max - 1
+        m0.flat[1,i] = np.sqrt(1 - (2*x/x_max - 1)*(2*x/x_max - 1))
+        m0.flat[2,i] = 0
+    m0.flat /= np.sqrt(m0.flat[0]*m0.flat[0] + m0.flat[1]*m0.flat[1] + m0.flat[2]*m0.flat[2])
+    anis_oommf = oommf_uniaxial_anisotropy(m0, llg.Ms, K1, (1,1,1)).flat
+    anis_for_oommf = finmag_to_oommf(anis_finmag, msh, dims=1)
+
+    difference = anis_for_oommf.flat - anis_oommf
+    relative_difference = np.abs(difference / anis_oommf)
+
+    return dict(prob="1d", m0=llg.m, mesh=dolfmesh, oommf_mesh=msh,
+            anis=anis_finmag.vector().array(), oommf_exc=anis_oommf,
+            diff=difference, rel_diff=relative_difference)
 
 def three_dimensional_problem():
-    msh = df.Box(0, 0, 0, L, W, H, nL, nW, nH)
-    llg = LLG(msh)
+    x_max = 20e-9; y_max = 10e-9; z_max = 10e-9;
+    dolfmesh = df.Box(0, 0, 0, x_max, y_max, z_max, 40, 20, 20)
     m0_x = "pow(sin(x[0]*pow(10, 9)/3), 2)"
     m0_y = "0"
-    m0_z = "1" # "pow(cos(x[0]*pow(10, 9)/3), 2)" 
-    llg.set_m0((m0_x, m0_y, m0_z))
-    llg.add_uniaxial_anisotropy(K1, df.Constant((1, 0, 0)))
-    llg.setup(exchange_flag=True)
-    return llg
+    m0_z = "1"
+    anis_finmag, llg = compute_anis_finmag(dolfmesh, (m0_x, m0_y, m0_z))
 
-#llg = one_dimensional_problem()
-llg = three_dimensional_problem()
-
-anis_finmag = df.Function(llg.V)
-# There is only one anisotropy in our example.
-anis_finmag.vector()[:] = llg._anisotropies[0].compute_field()
-
-def one_dimensional_problem_oommf():
-    msh = mesh.Mesh((nL, 1, 1), size=(L, 1e-10, 1e-10))
+    msh = mesh.Mesh((20, 10, 10), size=(x_max, y_max, z_max))
     m0 = msh.new_field(3)
-
-    for i, (x, y, z) in enumerate(msh.iter_coords()):
-        m0.flat[0,i] = 2 * x/L - 1
-        m0.flat[1,i] = np.sqrt(1 - (2*x/L - 1)*(2*x/L - 1))
-        m0.flat[2,i] = 0
-
-    # m0.flat.shape == (3, n)
-    m0.flat /= np.sqrt(m0.flat[0]*m0.flat[0] + m0.flat[1]*m0.flat[1] + m0.flat[2]*m0.flat[2])
-
-    return msh, oommf_uniaxial_anisotropy(m0, llg.Ms, K1, (0,0,1)).flat
-
-def three_dimensional_problem_oommf():
-    msh = mesh.Mesh((nL, nW, nH), size=(L, W, H))
-    m0 = msh.new_field(3)
-
     for i, (x, y, z) in enumerate(msh.iter_coords()):
         m0.flat[0,i] = np.sin(10**9 * x/3)**2
         m0.flat[1,i] = 0
-        m0.flat[2,i] = 1 # np.cos(10**9 * x/3)
-
-    # m0.flat.shape == (3, n)
+        m0.flat[2,i] = 1
     m0.flat /= np.sqrt(m0.flat[0]*m0.flat[0] + m0.flat[1]*m0.flat[1] + m0.flat[2]*m0.flat[2])
+    anis_oommf = oommf_uniaxial_anisotropy(m0, llg.Ms, K1, (1,1,1)).flat
+    anis_for_oommf = finmag_to_oommf(anis_finmag, msh, dims=3)
 
-    return msh, oommf_uniaxial_anisotropy(m0, llg.Ms, K1, (1,0,0)).flat
+    difference = anis_for_oommf.flat - anis_oommf
+    relative_difference = np.abs(difference / anis_oommf)
 
-#msh, anis_oommf = one_dimensional_problem_oommf()
-msh, anis_oommf = three_dimensional_problem_oommf()
+    return dict(prob="3d", m0=llg.m, mesh=dolfmesh, oommf_mesh=msh,
+            anis=anis_finmag.vector().array(), oommf_exc=anis_oommf,
+            diff=difference, rel_diff=relative_difference)
 
-anis_finmag_like_oommf = msh.new_field(3)
-for i, (x, y, z) in enumerate(msh.iter_coords()):
-    # A_x, A_y, A_z = anis_finmag(x) # one dimension
-    A_x, A_y, A_z = anis_finmag(x, y, z)
-    anis_finmag_like_oommf.flat[0,i] = A_x
-    anis_finmag_like_oommf.flat[1,i] = A_y
-    anis_finmag_like_oommf.flat[2,i] = A_z
+if __name__ == '__main__':
+    res1 = one_dimensional_problem()
+    print "1D problem, relative difference:\n", stats(res1["rel_diff"])
+    res3 = three_dimensional_problem()
+    print "3D problem, relative difference:\n", stats(res3["rel_diff"])
 
-difference = anis_finmag_like_oommf.flat - anis_oommf
-relative_difference = np.abs(difference / anis_oommf)
-
-print "difference (x-component)"
-print difference[0]
-print "absolute relative difference (x-component)"
-print relative_difference[0]
-print "absolute relative difference (x-component):"
-print "  median", np.median(relative_difference[0])
-print "  average", np.mean(relative_difference[0])
-print "  minimum", np.min(relative_difference[0])
-print "  maximum", np.max(relative_difference[0])
-print "  spread", np.std(relative_difference[0])
-
-x, y, z = zip(* msh.iter_coords())
-figure = mlab.figure(bgcolor=(0, 0, 0), fgcolor=(1, 1, 1))
-q = mlab.quiver3d(x, y, z, difference[0], difference[1], difference[2], figure=figure)
-q.scene.z_plus_view()
-mlab.axes(figure=figure)
-mlab.show()
+    for res in [res1, res3]: 
+        prefix = MODULE_DIR + res["prob"] + "_anis_"
+        quiver(res["m0"], res["mesh"], prefix+"m0.png", "1d m0")
+        quiver(res["exc"], res["mesh"], prefix+"finmag.png", "1d finmag")
+        quiver(res["oommf_exc"], res["oommf_mesh"], prefix+"oommf.png", "1d oommf")
+        quiver(res["rel_diff"], res["oommf_mesh"], prefix+"rel_diff.png", "1d rel diff")
+        boxplot(res["rel_diff"], prefix+"rel_diff_box.png")
