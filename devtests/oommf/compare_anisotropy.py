@@ -7,7 +7,7 @@ from finmag.sim.helpers import quiver, boxplot, finmag_to_oommf, stats
 
 K1 = 45e4 # J/m^3
 
-REL_TOLERANCE = 3 # goal: < 1e-3
+REL_TOLERANCE = 2e-1 # goal: < 1e-3
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
 
 def test_one_dimensional_problem():
@@ -21,7 +21,8 @@ def test_three_dimensional_problem():
 def compute_anis_finmag(mesh, m0, **kwargs):
     llg = LLG(mesh)
     llg.set_m0(m0, **kwargs)
-    llg.add_uniaxial_anisotropy(K1, df.Constant((1, 1, 1)))
+    invsq3 = 1/np.sqrt(3)
+    llg.add_uniaxial_anisotropy(K1, df.Constant((invsq3, invsq3, invsq3)))
     llg.setup()
     anis_field = df.Function(llg.V)
     anis_field.vector()[:] = llg._anisotropies[0].compute_field()
@@ -49,7 +50,7 @@ def one_dimensional_problem():
     relative_difference = np.abs(difference / anis_oommf)
 
     return dict(prob="1d", m0=llg.m, mesh=dolfmesh, oommf_mesh=msh,
-            anis=anis_finmag.vector().array(), oommf_exc=anis_oommf,
+            finmag=anis_finmag.vector().array(), oommf=anis_oommf,
             diff=difference, rel_diff=relative_difference)
 
 def three_dimensional_problem():
@@ -74,7 +75,7 @@ def three_dimensional_problem():
     relative_difference = np.abs(difference / anis_oommf)
 
     return dict(prob="3d", m0=llg.m, mesh=dolfmesh, oommf_mesh=msh,
-            anis=anis_finmag.vector().array(), oommf_exc=anis_oommf,
+            finmag=anis_finmag.vector().array(), oommf=anis_oommf,
             diff=difference, rel_diff=relative_difference)
 
 if __name__ == '__main__':
@@ -83,10 +84,12 @@ if __name__ == '__main__':
     res3 = three_dimensional_problem()
     print "3D problem, relative difference:\n", stats(res3["rel_diff"])
 
+    """
     for res in [res1, res3]: 
         prefix = MODULE_DIR + res["prob"] + "_anis_"
         quiver(res["m0"], res["mesh"], prefix+"m0.png", "1d m0")
-        quiver(res["exc"], res["mesh"], prefix+"finmag.png", "1d finmag")
-        quiver(res["oommf_exc"], res["oommf_mesh"], prefix+"oommf.png", "1d oommf")
+        quiver(res["finmag"], res["mesh"], prefix+"finmag.png", "1d finmag")
+        quiver(res["oommf"], res["oommf_mesh"], prefix+"oommf.png", "1d oommf")
         quiver(res["rel_diff"], res["oommf_mesh"], prefix+"rel_diff.png", "1d rel diff")
         boxplot(res["rel_diff"], prefix+"rel_diff_box.png")
+    """
