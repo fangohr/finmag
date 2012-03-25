@@ -1,12 +1,10 @@
 """
 Test the convergence of various solvers, using various problems and various
-norms. The results can be outputted as a print statement report or as plots
-using matplotlib. Plots are organised by error norm and function in one plot,
-with each solver having a sequence of points representing the solutions
-to the problems.
-
-#Note the code is little abstract and under development
-#User friendliness will be included eventually
+norms specified by the user. The results can be outputted as print statement reports or as plots
+using matplotlib. Plots are organised by one error norm-function combination per plot.
+The results from every solver are shown in every polt as a sequence of points representing the solutions
+to the problems. Please see the code after if ___name__== __main__ for an example. And the docstring of
+the class ConvergenceTester for an explanation of the interface.
 """
 
 __author__ = "Gabriel Balaban"
@@ -21,23 +19,37 @@ import matplotlib.pyplot as plt
 
 class ConvergenceTester(object):
     """Converge tester using problems,solvers, and norms"""
-    def __init__(self,test_solver_classes,reference_solver_class,test_solutions,problems,norms,xaxis,cases = None):
+    def __init__(self,test_solver_classes,reference_solver_class,test_solutions,problems,norms,xaxis,cases = None, subplots = "22"):
         """
         Explanation of parameters:
         obligatory
-            test_solver_classes    - Dictionary of solvernames:solverclasses. solverclasses will solve the problems
-            reference_solver_class - Dictionary with a solvername:solverclass. The test solvers will be compared to this one
-            test_solutions         - Dictionary with solutionname:attribute. The attributes will be fetched from all of the solutions
+            test_solver_classes    - Dictionary of {solvername:solverclass}. Solverclasses will solve the problems.
+                                     The solvers should all accept a problem in the constructor, and have a method solve().
+                                     That generates dolfin functions which are "solutions" to the problems. The solutions
+                                     should have the same name throughout all the solvers.
+                                     
+            reference_solver_class - Dictionary containing on entry {refsolvername:refsolverclass}. The test solvers will be compared to this one
+            
+            test_solutions         - Dictionary with {solutionname:attribute}. The attributes will be fetched from all of the solutions
                                      after solve() is called.
-            problems               - Dictionary with problemname:problemobject. The problemobjects will be given to the solvers 
-            norms                  - Dictionary with normname: normfunction. The normfunction must accept two dolfin functions
-                                     and return a number which should be some sort of measure of error.
-            xaxis                  - Tuple with axisname: List of numbers to plot the errors against.
+                                     
+            problems               - Dictionary with {problemname:problemobject}. The problemobjects will be given to the solvers
+            
+            norms                  - Dictionary with {normname: normfunction}. The normfunction must accept two dolfin functions
+                                     and return a number which should be a measure of error.
+                                     
+            xaxis                  - Tuple of (axisname: List of numbers to plot the errors against).
+            
         Optional
             cases                  - List of tuples(function,norm) which specifies which functions should be measured against the
-                                     reference solution in which norms.
+                                     reference solution in which norms. If not given, the programm will attempt to plot every
+                                     function with every norm.
+                                     
+            subplots               - A string containing a two digit number xy that tells the plotter to put the subplots on a grid
+                                     of size x times y per figure.
         """
-        
+
+        #Store the parameters
         self.test_solver_classes = test_solver_classes
         self.reference_solver_class = reference_solver_class
         self.test_solutions = test_solutions
@@ -45,8 +57,10 @@ class ConvergenceTester(object):
         self.norms = norms
         self.xaxis = xaxis
         self.cases = cases
+        self.subplots = subplots
+        
         #A dictionary with various styles of points for plotting in matplotlib
-        self.styledic = {0:'D',1:'p',2:',',3:'o',4:'v',5:'^',6:'<',7:'1',8:'2',9:'3',\
+        self._styledic = {0:'D',1:'p',2:',',3:'o',4:'v',5:'^',6:'<',7:'1',8:'2',9:'3',\
                          10:'4',11:'s',12:'.',13:'*',14:'h',15:'H',16:'+',17:'x',\
                          18:'-',19:'d',20:'|'} 
 
@@ -112,11 +126,11 @@ class ConvergenceTester(object):
         """
 
         if self.cases is None:
-            #Return a dictionary with all possible norm-function combinations
+            #Returns a dictionary with all possible norm-function combinations
             return {normname + " " + solname : self.__get_convergence_data(sd1[solname],sd2[solname], self.norms[normname]) \
                     for solname in test_solutions for normname in self.norms}
         else:
-            #Return only the norm-function combinations from self.cases        
+            #Returns only the norm-function combinations from self.cases        
             return {solname + " " + normname: self.__get_convergence_data(sd1[solname],sd2[solname], self.norms[normname]) for solname,normname in self.cases}
 
     def __get_convergence_data(self,fn_test, fn_ref, norm):
@@ -135,12 +149,10 @@ class ConvergenceTester(object):
 
     def plot_results(self):
         """Output the convergence data using matplotlib"""
-        assert len(self.test_solver_classes) <= len(self.styledic), \
-               "Can only plot " +str(len(self.styledic)) + "or less solvers, due to \
+        assert len(self.test_solver_classes) <= len(self._styledic), \
+               "Can only plot " +str(len(self._styledic)) + "or less solvers, due to \
                 a limited number of plotting point styles available"
-
-        #This specificies a subplot grid 2x3
-        plotgrid = "22"
+        
         #Generate the plots
         figurenum = 2
         #For every error-norm combination we want to plot...
@@ -150,13 +162,13 @@ class ConvergenceTester(object):
                 plt.figure(figurenum)
                 figurenum += 1
             #put the subplot in position i modulo 4 + 1
-            plotnum = plotgrid + str(i%4+1)
+            plotnum = self.subplots + str(i%4+1)
             plt.subplot(*plotnum)
             
             #... the solutions errors for evey solver
             for j,sol in enumerate(self.test_solver_classes):
                 #TODO plot the error data correctly
-                plt.plot(self.xaxis[1],self.errordata[sol][errorname],self.styledic[j],label = sol)
+                plt.plot(self.xaxis[1],self.errordata[sol][errorname],self._styledic[j],label = sol)
             #Give the plot titles
             plt.title(errorname)
             plt.xlabel(self.xaxis[0])
@@ -170,28 +182,11 @@ if __name__ == "__main__":
     from finmag.demag import solver_fk, solver_gcr
     import finmag.util.error_norms as en
     from finmag.demag.problems import prob_fembem_testcases as pft
-    import finmag.demag.solver_base as sb
-
     
-    #This class mimics a FemBemDeMagSolver but returns analytical values.
-    class FemBemAnalytical(sb.FemBemDeMagSolver):
-        """
-        Class containing information regarding the 3d analytical solution of a Demag Field in a uniformly
-        demagnetized unit sphere with M = (1,0,0)
-        """
-        def __init__(self,problem):
-            super(FemBemAnalytical,self).__init__(problem)
-            
-        def solve(self):
-            self.phi = project(Expression("-x[0]/3.0"),self.V)
-            self.get_demagfield()
-            #Split the Demagfield into Component functions
-            self.Hdemagx,self.Hdemagy,self.Hdemagz = self.Hdemag.split(True) 
-        
-        def get_demagfield(self):
-            self.Hdemag = project(Expression(("1.0/3.0","0.0","0.0")),self.Hdemagspace)
+    #The reference solver, a class inheriting from FemBemDeMagSolver that returns analytical values
+    from finmag.demag.tests.analytic_solutions import UniformDemagSphere
 
-    #Extended versions of the solvers that give us some extra functions
+    #Extended versions of the solvers that give us the Hdemag field x,y and z components.
     class FemBemFKSolverTest(solver_fk.FemBemFKSolver):
         """Extended verions of FemBemFKSolver used for testing in 3d"""
         def solve(self):
@@ -205,31 +200,33 @@ if __name__ == "__main__":
             super(FemBemGCRSolverTest,self).solve()
             #Split the Demagfield into Component functions
             self.Hdemagx,self.Hdemagy,self.Hdemagz = self.Hdemag.split(True) 
+
+    #Define fineness values for meshes.
+    finenesslist = range(2,4)
     
-    finenesslist = range(2,4)    
+    #Define Demag problems using the mesh fineness values
     problems = [pft.MagUnitSphere(n) for n in finenesslist]
 
-    #Xaxis
+    #The x- axis in the final plot will be "Number of elements"
     numelement = [p.mesh.num_cells() for p in problems]
     xaxis = ("Number of elements",numelement)
 
-    #Solvers
+    #Define dictionaries for the test and reference solver classes.
     test_solver_classes = {"FK Solver": FemBemFKSolverTest,"GCR Solver": FemBemGCRSolverTest}
-    reference_solver_class = {"Analytical":FemBemAnalytical}
+    reference_solver_class = {"Analytical":UniformDemagSphere}
 
-    #Test solutions
+    #Define the solutions that we are interested in "SolutionName for the plot":"solutionname as an attribute of the solver classes" 
     test_solutions = {"Phi":"phi","Hdemag":"Hdemag","Hdemag X":"Hdemagx",\
                      "Hdemag Y":"Hdemagy","Hdemag Z":"Hdemagz"}
-    
-    #Norms
+    #Define Norms
     norms = {"L2 Error":en.L2_error,"Discrete Max Error":en.discrete_max_error}
 
-    #cases
+    #Only plot the following norm-function comninations.
     cases = [("Phi","L2 Error"),("Phi","Discrete Max Error"),("Hdemag","L2 Error"), \
              ("Hdemag X","Discrete Max Error"),("Hdemag Y","Discrete Max Error"),\
              ("Hdemag Z","Discrete Max Error")]
 
-    #Create a ConvergenceTester and generate a report
+    #Create a ConvergenceTester and generate a report and a plot
     ct = ConvergenceTester(test_solver_classes,reference_solver_class,test_solutions,problems,norms,xaxis,cases)
     ct.print_report()
     ct.plot_results()
