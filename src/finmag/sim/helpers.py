@@ -96,7 +96,7 @@ def read_float_data(filename):
             rows.append(columns)
     return rows
 
-def quiver(f, mesh, filename, title, **kwargs):
+def quiver(f, mesh, filename, title="", **kwargs):
     """
     Takes a numpy array of the values of a vector-valued function, defined
     over a mesh (either a dolfin mesh, or one from finmag.util.oommf.mesh)
@@ -116,6 +116,10 @@ def quiver(f, mesh, filename, title, **kwargs):
         coords = mesh.coordinates()
     elif isinstance(mesh, oommf_mesh):
         coords = np.array(list(mesh.iter_coords()))
+    elif isinstance(mesh, np.ndarray) or isinstance(mesh, list):
+        # If you know what the data has to look like, why not
+        # be able to pass it in directly.
+        coords = mesh
     else:
         raise TypeError("Don't know what to do with mesh of class {0}.".format(
             mesh.__class__))
@@ -133,7 +137,6 @@ def quiver(f, mesh, filename, title, **kwargs):
         # one with the x, y and z components as individual arrays.
         f = components(f)
    
-    mlab.title(title)
     figure = mlab.figure(bgcolor=(1, 1, 1), fgcolor=(0, 0, 0))
     q = mlab.quiver3d(*(tuple(r)+tuple(f)), figure=figure, **kwargs)
     q.scene.z_plus_view()
