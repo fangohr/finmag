@@ -68,6 +68,9 @@ class FemBemFKSolver(FKSolver, sb.FemBemDeMagSolver):
 
         # Knittel (2.27), phi = phi1 + phi2
         self.phi = self.calc_phitot(self.phi1, self.phi2)
+
+        # Compute the demag field from phi
+        self.Hdemag = self.get_demagfield(self.phi)
         return self.phi
 
     def __solve_phi2_boundary(self, doftionary):
