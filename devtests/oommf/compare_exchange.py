@@ -78,7 +78,9 @@ def three_dimensional_problem():
     exchange_for_oommf = finmag_to_oommf(exc_finmag, msh, dims=3)
 
     difference = exchange_for_oommf.flat - exchange_oommf
-    relative_difference = np.abs(difference / exchange_oommf)
+    relative_difference = difference / exchange_oommf
+    #relative_difference = np.abs(difference / np.sqrt(
+    #    exchange_oommf[0]**2+exchange_oommf[1]**2+exchange_oommf[2]**2))
 
     return dict(prob="3d", m0=llg.m, mesh=dolfmesh, oommf_mesh=msh,
             exc=exc_finmag.vector().array(), oommf_exc=exchange_oommf,
