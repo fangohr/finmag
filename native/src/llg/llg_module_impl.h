@@ -159,6 +159,56 @@ namespace finmag { namespace llg {
         }
     }
 
+    /*
+        Computes the solid angle subtended by the triangular mesh Ts, as seen from xs
+          r - 3 x m array of points in space
+          T - 3 x 3 x n array of triangular coordinates, first index is for the spacial coordinate, second for node number
+          a (output) -  m vector of computed solid angles
+    */
+    void compute_solid_angle(const np_array<double> &r_arr, const np_array<double> &T_arr, const np_array<double> &a_arr) {
+        r_arr.check_ndim(2, "compute_solid_angle: r");
+        T_arr.check_ndim(3, "compute_solid_angle: T");
+        int m = r_arr.dim()[1];
+        int n = T_arr.dim()[2];
+
+        r_arr.check_shape(3, m, "compute_solid_angle: r");
+        T_arr.check_shape(3, 3, n, "compute_solid_angle: T");
+        a_arr.check_shape(m, "compute_solid_angle: a");
+
+        // set up the pointers
+        double *r_x = r_arr(0), *r_y = r_arr(1), *r_z = r_arr(2);
+        double *T1_x = T_arr(0, 0), *T1_y = T_arr(1, 0), *T1_z = T_arr(2, 0);
+        double *T2_x = T_arr(0, 0), *T2_y = T_arr(1, 0), *T2_z = T_arr(2, 0);
+        double *T3_x = T_arr(0, 0), *T3_y = T_arr(1, 0), *T3_z = T_arr(2, 0);
+        double *a = a_arr.data();
+
+        // i runs over points, j runs over triangles
+        #pragma omp parallel for schedule(guided)
+        for (int i = 0; i < m; i++) {
+            double omega = 0;
+            for (int j = 0; j < n; j++) {
+                double R1_x = T1_x[j] - r_x[i], R1_y = T1_y[j] - r_y[i], R1_z = T1_z[j] - r_z[i];
+                double R2_x = T2_x[j] - r_x[i], R2_y = T2_y[j] - r_y[i], R2_z = T2_z[j] - r_z[i];
+                double R3_x = T3_x[j] - r_x[i], R3_y = T3_y[j] - r_y[i], R3_z = T3_z[j] - r_z[i];
+                // Wikipedia cites
+                // Van Oosterom, A; Strackee, J (1983). "The Solid Angle of a Plane Triangle". IEEE Trans. Biom. Eng. BME-30 (2): 125–126. doi:10.1109/TBME.1983.325207
+                // Omega = 2*atan(p/q) where
+                // p = R1.R2.R3
+                double p = R1_x*(R2_y*R3_z - R2_z*R3_y) - R2_x*(R1_y*R3_z - R1_z*R3_y) + R3_x*(R1_y*R2_z - R1_z*R2_y);
+                // q = |R1||R2||R3| + |R3|R1.R2 + |R2|R1.R3 + |R1|R2.R3
+                double R1_norm = R1_x*R1_x + R1_y*R1_y + R1_z*R1_z;
+                double R2_norm = R2_x*R2_x + R2_y*R2_y + R2_z*R2_z;
+                double R3_norm = R3_x*R3_x + R3_y*R3_y + R3_z*R3_z;
+                double R1_R2 = R1_x*R2_x + R1_y*R2_y + R1_z*R2_z;
+                double R1_R3 = R1_x*R3_x + R1_y*R3_y + R1_z*R3_z;
+                double R2_R3 = R2_x*R3_x + R2_y*R3_y + R2_z*R3_z;
+                double q = R1_norm*R2_norm*R3_norm + R3_norm*R1_R2 + R2_norm*R1_R3 + R1_norm*R2_R3;
+                omega += 2*atan2(p, q);
+            }
+            a[i] = omega;
+        }
+    }
+
     void register_module() {
         using namespace bp;
 
