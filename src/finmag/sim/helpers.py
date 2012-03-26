@@ -164,7 +164,7 @@ def finmag_to_oommf(f, oommf_mesh, dims=1):
         f_for_oommf.flat[0,i] = f_x
         f_for_oommf.flat[1,i] = f_y
         f_for_oommf.flat[2,i] = f_z
-    return f_for_oommf
+    return f_for_oommf.flat
 
 def stats(arr):
     median  = np.median(arr)
