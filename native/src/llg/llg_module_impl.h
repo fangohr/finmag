@@ -178,8 +178,8 @@ namespace finmag { namespace llg {
         // set up the pointers
         double *r_x = r_arr(0), *r_y = r_arr(1), *r_z = r_arr(2);
         double *T1_x = T_arr(0, 0), *T1_y = T_arr(1, 0), *T1_z = T_arr(2, 0);
-        double *T2_x = T_arr(0, 0), *T2_y = T_arr(1, 0), *T2_z = T_arr(2, 0);
-        double *T3_x = T_arr(0, 0), *T3_y = T_arr(1, 0), *T3_z = T_arr(2, 0);
+        double *T2_x = T_arr(0, 1), *T2_y = T_arr(1, 1), *T2_z = T_arr(2, 1);
+        double *T3_x = T_arr(0, 2), *T3_y = T_arr(1, 2), *T3_z = T_arr(2, 2);
         double *a = a_arr.data();
 
         // i runs over points, j runs over triangles
