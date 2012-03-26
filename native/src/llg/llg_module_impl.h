@@ -162,7 +162,7 @@ namespace finmag { namespace llg {
     /*
         Computes the solid angle subtended by the triangular mesh Ts, as seen from xs
           r - 3 x m array of points in space
-          T - 3 x 3 x n array of triangular coordinates, first index is for the spacial coordinate, second for node number
+          T - 3 x 3 x n array of triangular coordinates, first index is for the spatial coordinate, second for node number
           a (output) -  m vector of computed solid angles
     */
     void compute_solid_angle(const np_array<double> &r_arr, const np_array<double> &T_arr, const np_array<double> &a_arr) {
@@ -233,6 +233,11 @@ namespace finmag { namespace llg {
             arg("alpha"),
             arg("char_time"),
             arg("do_precession")
+        ));
+        def("compute_solid_angle", &compute_solid_angle, (
+            arg("r"),
+            arg("T"),
+            arg("a")
         ));
     }
 }}
