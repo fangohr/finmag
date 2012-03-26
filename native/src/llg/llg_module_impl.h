@@ -193,7 +193,7 @@ namespace finmag { namespace llg {
                 // Wikipedia cites
                 // Van Oosterom, A; Strackee, J (1983). "The Solid Angle of a Plane Triangle". IEEE Trans. Biom. Eng. BME-30 (2): 125–126. doi:10.1109/TBME.1983.325207
                 // Omega = 2*atan(p/q) where
-                // p = R1.R2.R3
+                // p = R1.R2xR3
                 double p = R1_x*(R2_y*R3_z - R2_z*R3_y) - R2_x*(R1_y*R3_z - R1_z*R3_y) + R3_x*(R1_y*R2_z - R1_z*R2_y);
                 // q = |R1||R2||R3| + |R3|R1.R2 + |R2|R1.R3 + |R1|R2.R3
                 double R1_norm = R1_x*R1_x + R1_y*R1_y + R1_z*R1_z;
