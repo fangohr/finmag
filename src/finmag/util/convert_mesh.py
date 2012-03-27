@@ -61,9 +61,7 @@ def convert_mesh(inputfile, outputfile=None):
     else:
         outputfile = name
 
-    #Output the file to the folder finmag.mesh
-    meshpath =  os.path.dirname(mark.__file__)
-    outputfilename = "".join([meshpath,"/",outputfile,".xml.gz"])
+    outputfilename = "".join([outputfile,".xml.gz"])
     
     if os.path.isfile(outputfilename):
         print "The mesh %s already exists, and is automatically returned." % outputfilename
@@ -114,7 +112,6 @@ def convert_mesh(inputfile, outputfile=None):
     Mesh(outputfilename)
 
     print 'Success! Mesh is written to %s.' % outputfilename
-
     return outputfilename
 
 #This class can easily be generalized to suit other types of meshes
@@ -134,8 +131,9 @@ class GeoMeshSphereProblem(object):
         #Output the file to the folder finmag.mesh
         meshpath =  os.path.dirname(mark.__file__)
         pathgz = "".join([meshpath,"/",namegz])
+        print pathgz
         if not os.path.isfile(pathgz):
-            pathgeo = "".join([meshpath,"sphere", str(maxh),".geo"])
+            pathgeo = "".join([meshpath,"/","sphere", str(maxh),".geo"])
             #Create a geofile
             f = open(pathgeo,"w")
             content = "algebraic3d \n \n \

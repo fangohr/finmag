@@ -69,7 +69,7 @@ class MagSphereBase(pb.FemBemDeMagProblem,cm.GeoMeshSphereProblem):
         #Try to regenerate meshes if need be
         cm.GeoMeshSphereProblem.__init__(self,maxh)
         
-        mesh = Mesh("../../mesh/sphere"+str(maxh)+"1.0.xml.gz")
+        mesh = Mesh("../../mesh/sphere"+str(maxh)+".xml.gz")
         self.Ms = 1.0
         M = (str(self.Ms), "0.0", "0.0")
 
