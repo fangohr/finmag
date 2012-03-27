@@ -339,3 +339,5 @@ if __name__ == "__main__":
 
     t = Test_FemBemGCRSolver()
     t.setup_class()
+    tests = [t.test_compare_3danalytical_gradient, t.test_compare_3danalytical]
+    run_tests(tests)
