@@ -22,3 +22,5 @@ patch -p1 < magpar.patch
 
 make -f Makefile.libs
 make
+
+echo "Please add magpar-0.9/src/magpar.exe to your path."
