@@ -44,16 +44,19 @@ class FemBemGCRSolverTest(solver_gcr.FemBemGCRSolver):
 #Test parameters
 #########################################
 
+#Dolfin Meshes
 #Mesh fineness, ie UnitSphere(n)
-finenesslist = [2] #range(2,5)
+#finenesslist = [2] #range(2,5)
 #Create a problem for each level of fineness
 #problems = [pft.MagUnitSphere(n) for n in finenesslist]
-from meshing import GoodMesh
-problems = [GoodMesh()]
 
-#Xaxis - Number of finite elements
-numelement = [p.mesh.num_cells() for p in problems]
-xaxis = ("Number of elements",numelement)
+#High Quality geo meshes
+problems = [pft.MagSphere50(),pft.MagSphere()]
+
+#Xaxis - Number of verticies
+numvert = [p.mesh.num_vertices() for p in problems]
+print numvert
+xaxis = ("Number of verticies",numvert)
 
 #Solvers
 test_solver_classes = {"GCR Solver": FemBemGCRSolverTest}
