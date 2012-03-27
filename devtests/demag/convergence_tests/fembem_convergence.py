@@ -45,9 +45,11 @@ class FemBemGCRSolverTest(solver_gcr.FemBemGCRSolver):
 #########################################
 
 #Mesh fineness, ie UnitSphere(n)
-finenesslist = range(2,5)
+finenesslist = [2] #range(2,5)
 #Create a problem for each level of fineness
-problems = [pft.MagUnitSphere(n) for n in finenesslist]
+#problems = [pft.MagUnitSphere(n) for n in finenesslist]
+from meshing import GoodMesh
+problems = [GoodMesh()]
 
 #Xaxis - Number of finite elements
 numelement = [p.mesh.num_cells() for p in problems]

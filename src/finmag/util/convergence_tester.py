@@ -48,7 +48,7 @@ class ConvergenceTester(object):
             subplots               - A string containing a two digit number xy that tells the plotter to put the subplots on a grid
                                      of size x times y per figure.
         """
-
+        
         #Store the parameters
         self.test_solver_classes = test_solver_classes
         self.reference_solver_class = reference_solver_class

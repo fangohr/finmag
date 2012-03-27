@@ -52,7 +52,7 @@ UniformDemagSphere = asol.UniformDemagSphere
 #########################################
 
 #Mesh fineness, ie UnitSphere(n)
-finenesslist = range(2,8)
+finenesslist = [3,5,7,10]
 #Create a problem for each level of fineness
 problems = [pft.MagUnitSphere(n) for n in finenesslist]
 
@@ -61,7 +61,7 @@ numelement = [p.mesh.num_cells() for p in problems]
 xaxis = ("Number of elements",numelement)
 
 #Solvers
-test_solver_classes = {"QO 1": FemBemGCRSolver1,"QO 4": FemBemGCRSolver4,"QO 7": FemBemGCRSolver7,"QO 10": FemBemGCRSolver10}
+test_solver_classes = {"QO 1": FemBemGCRSolver1,"QO 4": FemBemGCRSolver4}
 reference_solver_class = {"Analytical":UniformDemagSphere}
 
 #Test solutions
@@ -73,6 +73,6 @@ norms = {"L2 Error":en.L2_error,"Discrete Max Error":en.discrete_max_error}
 cases = [("Phi","L2 Error"),("Phi","Discrete Max Error"),("Hdemag","L2 Error")]
 
 #Create a ConvergenceTester and generate a report
-ct = ct.ConvergenceTester(test_solver_classes,reference_solver_class,test_solutions,problems,norms,xaxis,cases)
+ct = ct.ConvergenceTester(test_solver_classes,reference_solver_class,test_solutions,problems,norms,xaxis,cases,subplots = "13" )
 ct.print_report()
 ct.plot_results()
