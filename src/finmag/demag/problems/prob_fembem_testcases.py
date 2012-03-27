@@ -10,6 +10,7 @@ import numpy as np
 import finmag.demag.problems.prob_base as pb
 import finmag.util.convert_mesh as cm
 import os
+import finmag.mesh.marker as mark
 
 #TODO need a more exciting M, GCR solver has phiA = 0 due to
 #divM = 0 if M constant
@@ -68,8 +69,8 @@ class MagSphereBase(pb.FemBemDeMagProblem,cm.GeoMeshSphereProblem):
     def __init__(self,maxh):
         #Try to regenerate meshes if need be
         cm.GeoMeshSphereProblem.__init__(self,maxh)
-        
-        mesh = Mesh("../../mesh/sphere"+str(maxh)+".xml.gz")
+        meshpath =  os.path.dirname(mark.__file__)
+        mesh = Mesh(meshpath+"/sphere"+str(maxh)+".xml.gz")
         self.Ms = 1.0
         M = (str(self.Ms), "0.0", "0.0")
 

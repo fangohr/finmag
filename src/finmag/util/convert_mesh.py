@@ -131,13 +131,12 @@ class GeoMeshSphereProblem(object):
         #Output the file to the folder finmag.mesh
         meshpath =  os.path.dirname(mark.__file__)
         pathgz = "".join([meshpath,"/",namegz])
-        print pathgz
         if not os.path.isfile(pathgz):
             pathgeo = "".join([meshpath,"/","sphere", str(maxh),".geo"])
             #Create a geofile
             f = open(pathgeo,"w")
             content = "algebraic3d \n \n \
-                       solid main = sphere (0, 0, 0; 10)-maxh=1.0 ; \n \n \
+                       solid main = sphere (0, 0, 0; 10)-maxh="+str(maxh)+" ; \n \n \
                        tlo main;"
             f.write(content)                   
             f.close()
