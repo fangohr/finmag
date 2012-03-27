@@ -68,3 +68,10 @@ class MagSphere(pb.FemBemDeMagProblem):
     def desc(self):
         return "Sphere demagnetisation test problem fembem, Ms=%g" % self.Ms
 
+###########################################################
+#This Section contains better quality unit sphere meshes
+#and problems that use them. Unfortunatly, it can take
+#a while to generate one of these meshes for the first time.     
+###########################################################
+
+def generate_meshes(self):
