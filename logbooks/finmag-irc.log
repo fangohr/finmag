@@ -671,3 +671,83 @@ fangohr: Still testing ...
 2012-03-26 12:06:48 SebastianS: anyone up for lunch sometime in the next hour or so?
 2012-03-26 12:39:55 fangohr: Going for lunch now.
 2012-03-26 12:40:06 SebastianS: okay i'll be up in a minute
+2012-03-27 08:59:56 GabrielB: hei Anders
+2012-03-27 09:00:02 andersej: Hei!
+2012-03-27 09:00:51 GabrielB: Godmorgen. Har du tid til å skype litt og prate litt om convert_mesh?
+2012-03-27 09:01:13 GabrielB: eller kansje vi kan skrive hvis du vil
+2012-03-27 09:01:56 GabrielB: Jeg lagd en problem fil som buker convert mesh.
+2012-03-27 09:02:17 GabrielB: Og prøve og bruke dem fra en annen fil
+2012-03-27 09:02:28 GabrielB: og få feilmelding
+2012-03-27 09:02:30 GabrielB: Using netgen to convert sphere10.geo to Gmsh2 format...
+2012-03-27 09:02:30 GabrielB: NETGEN-4.9.13
+2012-03-27 09:02:30 GabrielB: Developed at RWTH Aachen University, Germany
+2012-03-27 09:02:30 GabrielB: and Johannes Kepler University Linz, Austria
+2012-03-27 09:02:30 GabrielB: Including OpenCascade geometry kernel
+2012-03-27 09:02:31 GabrielB: Parsing ng.tcl
+2012-03-27 09:02:33 GabrielB: optfile ./ng.opt does not exist - using default values
+2012-03-27 09:02:35 GabrielB: no OpenGL
+2012-03-27 09:02:37 GabrielB:  Load geometry file sphere10.geo
+2012-03-27 09:02:39 GabrielB: Problem with input file:
+2012-03-27 09:02:41 GabrielB: geo-file should start with 'algebraic3d'
+2012-03-27 09:02:43 GabrielB: Segmentation fault
+2012-03-27 09:02:45 GabrielB: netgen failed with exit code 35584
+2012-03-27 09:19:03 fangohr: Hi folks, the netgen segfault seems to be 'normal' on the current Ubuntu. However, the segfault appears (at least in all use cases I have seen) only after Netgen finishes what it needs to finish. So it should work okay, despite the warning.
+2012-03-27 09:23:03 andersej: Hi Hans! Yes, I think it's something to do with nvidia graphic cards on Ubuntu 11.10 or something. Gabriel's problem was a relative path, I think it's sorted now.
+2012-03-27 12:27:06 andersej: Lunch?
+2012-03-27 12:28:34 mb8g11: Yes.
+2012-03-27 12:30:32 SebastianS: sounds good
+2012-03-27 13:11:50 fangohr: Hi Gabriel, did you notice that your last commit broke the autobuild? (Not sure whether you read the email account that gets those notifications -- that's why I am asking.)
+2012-03-27 13:43:15 GabrielB: How can I check the autobild locally before I send a commit?
+2012-03-27 13:43:51 fangohr: If you cd into finmag/src, and then run 'py.test' (or 'py.test -v' to get nicer colours), this should tell you.
+2012-03-27 13:44:22 fangohr: Jenkins runs more tests (for example for the native C++ code and building the documentation), but as you don't change those, the above should be all you need to check.
+2012-03-27 13:44:36 GabrielB: ok Ill check it
+2012-03-27 13:46:53 andersej: Hans, all solid angles in my case are close to zero. Is that similar to your results?
+2012-03-27 13:50:31 GabrielB: I am getting this
+2012-03-27 13:50:31 GabrielB: finmag/sim/tests/test_llg.py:4: in <module>
+2012-03-27 13:50:31 GabrielB: >   from finmag.sim.llg import LLG
+2012-03-27 13:50:31 GabrielB: finmag/sim/llg.py:9: in <module>
+2012-03-27 13:50:32 GabrielB: >   from finmag.native import llg as native_llg
+2012-03-27 13:50:32 GabrielB: finmag/native/__init__.py:16: in <module>
+2012-03-27 13:50:33 GabrielB: >   _make_modules()
+2012-03-27 13:50:33 GabrielB: finmag/util/native_compiler.py:51: in make_modules
+2012-03-27 13:50:34 GabrielB: >               run_make(["make"], cwd=NATIVE_DIR)
+2012-03-27 13:50:34 GabrielB: finmag/util/native_compiler.py:44: in run_make
+2012-03-27 13:50:35 GabrielB: >           raise Exception("make_modules: Make failed")
+2012-03-27 13:50:36 GabrielB: E           Exception: make_modules: Make failed
+2012-03-27 13:50:38 GabrielB: and I do not know where this comes from
+2012-03-27 13:50:40 GabrielB: Any help?
+2012-03-27 13:52:37 fangohr: Gabriel, this is the C++ compiler saying that it can't find some boost libraries. Run the script in finmag/install/finmag-libs.sh (or similar name) which will install the required ubuntu packages.
+2012-03-27 13:53:18 fangohr: Nearly right: finmag/install/on-fresh-ubuntu-11.10/finmag-libs.sh
+2012-03-27 13:53:45 GabrielB: ok thanks
+2012-03-27 13:54:13 fangohr: Anders, it seems to depend on the orientation. Have alook at the example committed (or rather renamed) in https://bitbucket.org/fangohr/finmag/changeset/40e348bab1f2
+2012-03-27 14:00:59 GabrielB: I am writing python code to automatically generate some meshes. And would like to have them in finmag/src/mesh is this ok?
+2012-03-27 14:01:26 fangohr: The code yes, the meshes no.
+2012-03-27 14:01:40 GabrielB: I mean the code will do that for you locally
+2012-03-27 14:01:47 fangohr: Yes, that's great.
+2012-03-27 14:01:59 fangohr: Check with Anders, he has already written a tool for this.
+2012-03-27 14:02:03 GabrielB: In which case I need to make sure everyone will be able to import from here locally
+2012-03-27 14:02:44 fangohr: Not quite sure what you mean with 'import from here locally'? Can you give an example of code, or explain?
+2012-03-27 14:03:23 GabrielB: In finmag/src/mesh there is a module marker.py. Code
+2012-03-27 14:03:30 GabrielB: import marker.py
+2012-03-27 14:03:54 GabrielB: #when I want to pick up the meshes I can now get the path to this folder with#
+2012-03-27 14:04:25 GabrielB: os.path.dirname(marker.__file__)
+2012-03-27 14:04:46 GabrielB: so that way when the meshes are picked up later on on other people's machines
+2012-03-27 14:04:49 GabrielB: they will be found
+2012-03-27 14:05:14 GabrielB: this will work as long as everybody can do the import
+2012-03-27 14:07:14 fangohr: I think this would work if you put the marker.py into finmag/src/finmag/mesh, because then you could import it as finmag.mesh.marker. However, this sounds pretty similar to what Anders has done already. Can you check his solution first, please?
+2012-03-27 14:08:10 GabrielB: ok I like your solution. I think it would be nice if everyone's meshes are put in the same place,
+2012-03-27 14:08:25 GabrielB: for organisation sake
+2012-03-27 14:30:14 GabrielB: Another question, if I set up the module prob_fembem_testcases.py  to automatically generate meshes will this be carried out by jenkins online?
+2012-03-27 14:30:25 fangohr: Hi all, will be offline for the rest of the afternoon.
+2012-03-27 14:31:26 GabrielB: Ok catch up with you later! Anyone else know by any chance?
+2012-03-27 14:31:41 fangohr: Gabriel, jenkins will run 'py.test' in the finmag/src folder. So as long as you have a function 'test_generate_meshes' or so before you use them, this should work. Or you have a check before you run a test that a mesh is in place, and it it is not, you create it. Check with Anders how he has done his stuff.
+2012-03-27 14:33:02 GabrielB: Anders did everything by hand. I am trying to automate this
+2012-03-27 14:33:29 GabrielB: I will try to use py.test and see if it triggers any mesh generation
+2012-03-27 14:33:43 fangohr: All good then, thanks. Really leaving now :)
+2012-03-27 14:33:53 GabrielB: have a good one :-)
+2012-03-27 14:34:08 andersej: Yes, I did something similar last Friday. It totally broke Jenkins. I just reverted to get a clean build before the weekend, and haven't gotten around to debug yet. The problem with auto mesh generation on Jenkins, is that it will take a really long time to build.
+2012-03-27 14:34:25 GabrielB: yeah i want to avoid this
+2012-03-27 14:34:43 GabrielB: I just want the meshes to be built by people who are interested in them
+2012-03-27 14:34:47 GabrielB: and not by jenkins
+2012-03-27 14:35:39 GabrielB: I got it! Jenkins will not touch the problem classes depending on the expensive to generate  meshes
+2012-03-27 14:36:01 GabrielB: so the problem classes can just check themselves if they need to generate meshes
