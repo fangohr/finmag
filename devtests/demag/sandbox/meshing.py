@@ -10,5 +10,5 @@ mesh = Mesh(convert_mesh("sphere10.geo"))
 
 class GoodMesh(FemBemDeMagProblem):
     def __init__(self):
-        super(GoodMesh,self).__init__(mesh,("1","0","0"))    
+        super(GoodMesh,self).__init__(mesh,("1","0","0"))
 

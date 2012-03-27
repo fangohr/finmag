@@ -253,23 +253,5 @@ class TruncDeMagSolver(DeMagSolver):
         restrictedfunction = Function(restrictedspace)
         for index,dof in enumerate(restrictedfunction.vector()):
             restrictedfunction.vector()[index] = function.vector()[map_to_mesh[vm[index]]]
-        return restrictedfunction
-
-
-#Not used now but may be useful later
-##def unit_vector_functions(self,mesh):
-##    """Builds Unit Vector functions defined over the whole mesh"""
-##    ##uvecspace = VectorFunctionSpace(mesh,"DG",0)
-##    d = mesh.topology().dim()
-##    #Create a zero vector"        
-##    zerovec = [0 for i in range(d)]
-##    #Initialize unit vector list
-##    elist = [zerovec[:] for i in range(d)]
-##    #Change an entry to get a unit vector
-##    for i in range(d):          
-##        elist[i][i] = 1
-##    #Generate constants
-##    elist = [Constant(tuple(elist[i])) for i in range(len(elist))]
-##    print elist
-##    return elist
+        return 
 

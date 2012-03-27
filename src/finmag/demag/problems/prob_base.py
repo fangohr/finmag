@@ -7,7 +7,10 @@ __organisation__ = "University of Southampton"
         
 from dolfin import *
 import numpy as np
+import os
+import tempfile as tp 
 from finmag.util.interiorboundary import InteriorBoundary
+from finmag.util.convert_mesh import convert_mesh
 
 class DeMagProblem(object):
     """Base class for all demag problems"""
@@ -71,10 +74,3 @@ class TruncDeMagProblem(DeMagProblem):
     def create_fembem_problem(self):
         """Generate a FEMBEM problem over the magnetic core submesh"""
         return FemBemDeMagProblem(self.coremesh,self.M)
-
-class FemBemDeMagProblem(DeMagProblem):
-    """Base class for FEMBEM demag problems"""
-    def __init__(self,mesh,M):
-        super(FemBemDeMagProblem,self).__init__(mesh,M)
-    
-    
