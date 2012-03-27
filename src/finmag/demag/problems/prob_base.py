@@ -74,3 +74,8 @@ class TruncDeMagProblem(DeMagProblem):
     def create_fembem_problem(self):
         """Generate a FEMBEM problem over the magnetic core submesh"""
         return FemBemDeMagProblem(self.coremesh,self.M)
+
+class FemBemDeMagProblem(DeMagProblem):
+    """Base class for FEMBEM demag problems"""
+    def __init__(self,mesh,M):
+        super(FemBemDeMagProblem,self).__init__(mesh,M)

@@ -8,6 +8,8 @@ __organisation__ = "University of Southampton"
 from dolfin import *
 import numpy as np
 import finmag.demag.problems.prob_base as pb
+from finmag.util.convert_mesh import convert_mesh
+import os
 
 #TODO need a more exciting M, GCR solver has phiA = 0 due to
 #divM = 0 if M constant
@@ -61,37 +63,24 @@ class MagUnitInterval(pb.FemBemDeMagProblem):
 #a while to generate one of these meshes for the first time.     
 ###########################################################
 
-#Could also be Sphere 1.0
-class MagSphere(pb.FemBemDeMagProblem):
-    """Using the sphere mesh from nmag example."""
-    def __init__(self):
-        mesh = Mesh("../mesh/sphere10.xml")
-        self.Ms = 1.0
-        M = (str(self.Ms), "0.0", "0.0")
-
-        #Initialize Base Class
-        super(MagSphere,self).__init__(mesh,M)
+class GeoMeshSphereProblem(object):
+    """Base class for problems using generated geomeshes"""
+    def __init__(self,maxh):
+        self.maxh = maxh
+        self.generate_spheremesh(maxh)
         
-    def desc(self):
-        return "Sphere demagnetisation test problem fembem, Ms=%g" % self.Ms
-
-def generate_meshes():
-    """
-    Creates.geo meshes in the shapes of unit spheres with
-    varying mesh fineness.
-    """
-    #Specify meshes of varying fineness
-    maxhlist = [5.0,2.5]
-
-    #Generate missing meshes
-    for maxh in maxhlist:
+    def generate_spheremesh(self,maxh):
+        """
+        Creates.geo meshes in the shapes of unit spheres with
+        varying mesh fineness.
+        """
+        
         #Check if the .gz file already exists
         pathgz =  "sphere" + str(maxh) + ".xml.gz"
         if not os.path.isfile(pathgz):
-            pathgeo = "tempsphere" + str(maxh) + ".geo"
+            pathgeo = "sphere" + str(maxh) + ".geo"
             #Create a geofile
-            #f = open(pathgeo,"w")
-            f = TemporaryFile(pathgeo,"g")
+            f = open(pathgeo,"w")
             content = "algebraic3d \n \n \
                        solid main = sphere (0, 0, 0; 10)-maxh=1.0 ; \n \n \
                        tlo main;"
@@ -103,13 +92,35 @@ def generate_meshes():
             #the file should now be in 
             #pathgeo - "geo" + ".xml.gz"#
 
-#As a defualt always try to regenerate missing meshes upon import
-generate_meshes()
-s = MagSphere()
-class MagSphere50(pb.FemBemDeMagProblem):
-    """Using the geo sphere mesh hmax  = 5.0"""
+            #Delete the file
+            print "removing file"
+            os.remove(pathgeo)
+
+
+#Note python doesn't allow . in class names so the Sphere1.0 is now Sphere10 etc...
+class MagSphere(pb.FemBemDeMagProblem,GeoMeshSphereProblem):
+    """Using the sphere mesh from nmag example. maxh = 1.0"""
     def __init__(self):
-        mesh = Mesh("../mesh/sphere5.0.xml")
+        #Try to regenerate meshes if need be
+       # GeoMeshSphereProblem.__init__(self,maxh = 1.0)
+        
+        mesh = Mesh("../../../mesh/sphere1.0.xml.gz")
+        self.Ms = 1.0
+        M = (str(self.Ms), "0.0", "0.0")
+
+        #Initialize Base Class
+        super(MagSphere,self).__init__(mesh,M)
+        
+    def desc(self):
+        return "Sphere demagnetisation test problem fembem, Ms=%g" % self.Ms
+
+class MagSphere50(pb.FemBemDeMagProblem):
+    """Using the geo sphere mesh maxh  = 5.0"""
+    def __init__(self):
+        #Try to regenerate meshes if need be
+        #GeoMeshSphereProblem.__init__(self,maxh = 5.0)
+        
+        mesh = Mesh("../../../mesh/sphere5.0.xml")
         self.Ms = 1.0
         M = (str(self.Ms), "0.0", "0.0")
 
@@ -120,9 +131,12 @@ class MagSphere50(pb.FemBemDeMagProblem):
         return "Sphere demagnetisation test problem fembem, Ms=%g"% self.Ms
 
 class MagSphere25(pb.FemBemDeMagProblem):
-    """Using the geo sphere mesh hmax  = 2.5"""
+    """Using the geo sphere mesh maxh  = 2.5"""
     def __init__(self):
-        mesh = Mesh("../mesh/sphere5.0.xml")
+        #Try to regenerate meshes if need be
+        #GeoMeshSphereProblem.__init__(self,maxh = 2.5)
+        
+        mesh = Mesh("../../../mesh/sphere2.5.xml")
         self.Ms = 1.0
         M = (str(self.Ms), "0.0", "0.0")
 
@@ -131,3 +145,6 @@ class MagSphere25(pb.FemBemDeMagProblem):
         
     def desc(self):
         return "Sphere demagnetisation test problem fembem, Ms=%g" % self.Ms
+
+#TODO Need to tell convert_mesh to look and write to finmag/mesh.
+#S = MagSphere()
