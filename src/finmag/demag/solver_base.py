@@ -253,5 +253,5 @@ class TruncDeMagSolver(DeMagSolver):
         restrictedfunction = Function(restrictedspace)
         for index,dof in enumerate(restrictedfunction.vector()):
             restrictedfunction.vector()[index] = function.vector()[map_to_mesh[vm[index]]]
-        return 
+        return restrictedfunction
 
