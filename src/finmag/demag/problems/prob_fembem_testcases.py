@@ -55,6 +55,13 @@ class MagUnitInterval(pb.FemBemDeMagProblem):
         #Initialize Base Class
         super(MagUnitInterval,self).__init__(mesh,M)
 
+###########################################################
+#This Section contains better quality unit sphere meshes
+#and problems that use them. Unfortunatly, it can take
+#a while to generate one of these meshes for the first time.     
+###########################################################
+
+#Could also be Sphere 1.0
 class MagSphere(pb.FemBemDeMagProblem):
     """Using the sphere mesh from nmag example."""
     def __init__(self):
@@ -68,3 +75,59 @@ class MagSphere(pb.FemBemDeMagProblem):
     def desc(self):
         return "Sphere demagnetisation test problem fembem, Ms=%g" % self.Ms
 
+def generate_meshes():
+    """
+    Creates.geo meshes in the shapes of unit spheres with
+    varying mesh fineness.
+    """
+    #Specify meshes of varying fineness
+    maxhlist = [5.0,2.5]
+
+    #Generate missing meshes
+    for maxh in maxhlist:
+        #Check if the .gz file already exists
+        pathgz =  "sphere" + str(maxh) + ".xml.gz"
+        if not os.path.isfile(pathgz):
+            pathgeo = "tempsphere" + str(maxh) + ".geo"
+            #Create a geofile
+            #f = open(pathgeo,"w")
+            f = TemporaryFile(pathgeo,"g")
+            content = "algebraic3d \n \n \
+                       solid main = sphere (0, 0, 0; 10)-maxh=1.0 ; \n \n \
+                       tlo main;"
+            f.write(content)                   
+            f.close()
+
+            #call the mesh generation function
+            convert_mesh(pathgeo)
+            #the file should now be in 
+            #pathgeo - "geo" + ".xml.gz"#
+
+#As a defualt always try to regenerate missing meshes upon import
+generate_meshes()
+s = MagSphere()
+class MagSphere50(pb.FemBemDeMagProblem):
+    """Using the geo sphere mesh hmax  = 5.0"""
+    def __init__(self):
+        mesh = Mesh("../mesh/sphere5.0.xml")
+        self.Ms = 1.0
+        M = (str(self.Ms), "0.0", "0.0")
+
+        #Initialize Base Class
+        super(MagSphere,self).__init__(mesh,M)
+        
+    def desc(self):
+        return "Sphere demagnetisation test problem fembem, Ms=%g"% self.Ms
+
+class MagSphere25(pb.FemBemDeMagProblem):
+    """Using the geo sphere mesh hmax  = 2.5"""
+    def __init__(self):
+        mesh = Mesh("../mesh/sphere5.0.xml")
+        self.Ms = 1.0
+        M = (str(self.Ms), "0.0", "0.0")
+
+        #Initialize Base Class
+        super(MagSphere,self).__init__(mesh,M)
+        
+    def desc(self):
+        return "Sphere demagnetisation test problem fembem, Ms=%g" % self.Ms
