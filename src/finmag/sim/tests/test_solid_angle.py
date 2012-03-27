@@ -1,6 +1,8 @@
 import math
+import numpy as np
 from finmag.native import llg as native_llg
 
+TOLERANCE = 1e-15
 
 #this is the function to compute the solid angle:
 csa = native_llg.compute_solid_angle
@@ -19,9 +21,7 @@ csa.__doc__ = \
 
      doc string taken from llg_module_impl.h.
 """
-
 #print help(csa)
-import numpy as np
 
 def solid_angle(triangles, point):
     """expect triangle as list of lists, if converted to numpy array should have shape 3x3
@@ -38,7 +38,7 @@ def solid_angle(triangles, point):
     #print "r",r.shape,
     T = np.zeros((3,3,n))
     T[:,:,0] = np.array(triangles)
-    #print "T",T.shape,T
+    #print "T",T.shape,"\n",T
     a = np.zeros(1)
     csa(r,T,a)
     return a
@@ -79,8 +79,34 @@ def test_solid_angle():
     csa(r,T,a)
     print a
 
+def test_octants_solid_angle():
+    """
+    In spherical coordinates, the solid angle is defined as
+    :math:`\\d\\Omega=\\sin\\theta\\,d\\theta\\,d\\varphi`.
     
+    This gives 4PI for the solid angle of a sphere measured
+    from a point in its interior.
+
+    From the point (0, 0, 0), the triangle defined by the vertices
+    (1, 0, 0), (0, 1, 0) and (0, 0, 1) can be identified with the azimuth
+    and zenith angles PI/2 and the integral yields PI/2.
+
+    Another way of getting to the same result is considering we are looking
+    at one of the 8 divisions of the euclidean three-dimensional
+    coordinate system (the first octant to be exact), divide the solid angle
+    of a sphere by 8 and get PI/2 again.
+
+    """
+    origin = np.zeros((3, 1))
+    triangle = np.array([[[1.],[0.],[0.]], [[0.],[1.],[0.]], [[0.],[0.],[1.]]])
+    assert triangle.shape == (3, 3, 1)
+    angle = np.zeros(1)
+
+    csa(origin, triangle, angle)
+    assert angle[0] - np.pi / 2 < TOLERANCE
+
 if __name__=="__main__":
+    test_octants_solid_angle()
     #test_solid_angle()
     pass
 
