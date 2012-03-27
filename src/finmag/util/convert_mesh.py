@@ -57,7 +57,6 @@ def convert_mesh(inputfile, outputfile=None):
     if os.path.isfile(outputfilename):
         print "The mesh %s already exists, and is automatically returned." % outputfilename
         return outputfilename
-    # Create Gmsh2 mesh using Netgen
     print 'Using netgen to convert %s.geo to Gmsh2 format...' % name
     netgen_cmd = 'netgen -geofile=%s -meshfiletype="Gmsh2 Format" -meshfile=%s.gmsh -batchmode' % (inputfile, name)
     status, output = commands.getstatusoutput(netgen_cmd)

@@ -4,9 +4,10 @@ from dolfin import *
 from finmag.util.convert_mesh import convert_mesh
 from finmag.demag.problems.prob_base import FemBemDeMagProblem 
 
+print convert_mesh("sphere10.geo")
 mesh = Mesh(convert_mesh("sphere10.geo"))
-##plot(mesh)
-##interactive()
+plot(mesh)
+interactive()
 
 class GoodMesh(FemBemDeMagProblem):
     def __init__(self):
