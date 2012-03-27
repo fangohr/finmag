@@ -99,4 +99,5 @@ class MagSphere20(MagSphereBase):
     """Demag Sphere problem Using the geo sphere mesh maxh  = 2.0"""
     def __init__(self):
         MagSphereBase.__init__(self,2.0)
+S = MagSphere20()    
 

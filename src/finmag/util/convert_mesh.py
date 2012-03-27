@@ -135,7 +135,7 @@ class GeoMeshSphereProblem(object):
         meshpath =  os.path.dirname(mark.__file__)
         pathgz = "".join([meshpath,"/",namegz])
         if not os.path.isfile(pathgz):
-            pathgeo = "sphere" + str(maxh) + ".geo"
+            pathgeo = "".join([meshpath,"sphere", str(maxh),".geo"])
             #Create a geofile
             f = open(pathgeo,"w")
             content = "algebraic3d \n \n \
