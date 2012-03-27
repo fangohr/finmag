@@ -40,7 +40,7 @@ def run_make(cmd, **kwargs):
         subprocess.check_output(cmd, stderr=subprocess.STDOUT, **kwargs)
     except subprocess.CalledProcessError, ex:
         output = replace_c_errors_with_python_errors(ex.output)
-        sys.stderr.write(output)
+        sys.stderr.write(repr(output))
         raise Exception("make_modules: Make failed")
 
 modules_compiled = False
