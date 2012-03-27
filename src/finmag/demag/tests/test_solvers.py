@@ -319,11 +319,10 @@ if __name__ == "__main__":
             print "* Doing",test.__doc__
             test()
             print
-        
     t = TestNitscheSolver()
     t.setup_class()
     tests = [t.test_1d,t.test_2d,t.test_3d,t.test_compare_3danalytical,\
-             t.test_compare_3danalytical_gradient]
+            t.test_compare_3danalytical_gradient]
     run_tests(tests)
 
 ##    #Slow uncomment with caution
