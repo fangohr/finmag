@@ -57,7 +57,6 @@ def convert_mesh(inputfile, outputfile=None):
     if os.path.isfile(outputfilename):
         print "The mesh %s already exists, and is automatically returned." % outputfilename
         return outputfilename
-
     # Create Gmsh2 mesh using Netgen
     print 'Using netgen to convert %s.geo to Gmsh2 format...' % name
     netgen_cmd = 'netgen -geofile=%s -meshfiletype="Gmsh2 Format" -meshfile=%s.gmsh -batchmode' % (inputfile, name)
@@ -107,3 +106,41 @@ def convert_mesh(inputfile, outputfile=None):
     print 'Success! Mesh is written to %s.' % outputfilename
 
     return outputfilename
+
+def create_sphere_geomesh(fineness):
+    """
+    Creates a .geo mesh in the shape of a unit sphere with
+    mesh fineness given by fineness.
+    """
+
+    # Create a file name
+    filename = "test.dat"
+
+
+    #Check if the geo file already exists
+    if os.path.isfile(outputfilename):
+        print "The geo file %s already exists, and is automatically returned." % outputfilename
+        return outputfilename
+
+    # Let's create some data:
+    done = 0
+    namelist = []
+    while not done:
+        name = raw_input("Enter a name:")
+        if type(name) == type(""):
+            namelist.append(name)
+        else:
+            break
+        
+    # Create a file object:
+    # in "write" mode
+    FILE = open(filename,"w")
+
+    # Write all the lines at once:
+    FILE.writelines(namelist)
+        
+    # Alternatively write them one by one:
+    for name in namelist:
+        FILE.write(name)
+        
+    FILE.close()
