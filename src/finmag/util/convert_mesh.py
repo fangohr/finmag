@@ -113,39 +113,40 @@ def convert_mesh(inputfile, outputfile=None):
 
     print 'Success! Mesh is written to %s.' % outputfilename
     return outputfilename
-
-#This class can easily be generalized to suit other types of meshes
-class GeoMeshSphereProblem(object):
-    """Base class for problems using generated spherical geomeshes"""
-    def __init__(self,maxh):
-        self.maxh = maxh
-        self.generate_spheremesh(maxh)
-        
-    def generate_spheremesh(self,maxh):
+            
+class MeshGenerator(object):
+    """Class for problems using generated meshes"""
+    
+    def generate_mesh(self,pathmesh,geofile):
         """
-        Creates.geo meshes in the shapes of unit spheres with
-        varying mesh fineness.
+        Checkes the path pathmesh to see if the file exists,
+        if not it is generated in the path pathmesh using
+        the information from the geofile.
         """
-        #Check if the .gz file already exists
-        namegz =  "sphere" + str(maxh) + ".xml.gz"
-        #Output the file to the folder finmag.mesh
-        meshpath =  os.path.dirname(mark.__file__)
-        pathgz = "".join([meshpath,"/",namegz])
-        if not os.path.isfile(pathgz):
-            pathgeo = "".join([meshpath,"/","sphere", str(maxh),".geo"])
+        #Check if the meshpath is of type .gz
+        name, type_ = os.path.splitext(pathmesh)
+        if type_ != '.gz':
+            print 'Only .gz files are supported as input by the class MeshGenerator.\
+                    Feel free to rewrite the class and make it more general'
+            sys.exit(1)
+            
+        #Generate the mesh if it does not exist    
+        if not os.path.isfile(pathmesh):
+            #Remove the .xml.gz ending
+            pathgeo = pathmesh.rstrip('.xml.gz')
+            #Add the ".geo"
+            pathgeo = "".join([pathgeo,".geo"])
             #Create a geofile
             f = open(pathgeo,"w")
-            content = "algebraic3d \n \n \
-                       solid main = sphere (0, 0, 0; 10)-maxh="+str(maxh)+" ; \n \n \
-                       tlo main;"
-            f.write(content)                   
+            f.write(geofile)                   
             f.close()
 
             #call the mesh generation function
             convert_mesh(pathgeo)
             #the file should now be in 
-            #pathgeo - "geo" + ".xml.gz"#
+            #pathmesh#
 
             #Delete the geofile file
             print "removing geo file"
             os.remove(pathgeo)
+
