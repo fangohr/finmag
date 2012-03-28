@@ -7,7 +7,7 @@ from finmag.demag.problems import prob_fembem_testcases as pft
 TOL = 1e-3
 
 problems = [pft.MagUnitSphere(n) for n in (1,2)] 
-#problems.append(pft.MagSphere())
+#problems.append(pft.MagSphere10())
 solvers = [solver_fk.FemBemFKSolver, solver_gcr.FemBemGCRSolver]
 
 fields = []
