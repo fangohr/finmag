@@ -21,7 +21,7 @@ def test_dmdt_computation_with_oommf():
     H_app = (h/np.sqrt(3), h/np.sqrt(3), h/np.sqrt(3))
     llg.H_app = H_app
 
-    llg.setup(exchange_flag=False)
+    llg.setup(use_exchange=False)
 
     dmdt_finmag = df.Function(llg.V)
     dmdt_finmag.vector()[:] = llg.solve()

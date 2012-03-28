@@ -23,7 +23,7 @@ llg.Ms = 0.86e6
 llg.C = 1.3e-11
 llg.alpha = 0.2
 llg.set_m0((m0_x, m0_y, m0_z), L=length)
-llg.setup(exchange_flag=True)
+llg.setup(use_exchange=True)
 llg.pins = [0, 10]
 
 t0 = 0; t1 = 1e-10; dt = 1e-12; # s

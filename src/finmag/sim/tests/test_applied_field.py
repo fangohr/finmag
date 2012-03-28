@@ -12,7 +12,7 @@ def test_uniform_external_field():
     llg.set_m0((1, 0, 0))
     llg.H_app = (0, llg.Ms/2, 0 )
     llg.alpha = 1.0 # high damping
-    llg.setup(exchange_flag=False)
+    llg.setup(use_exchange=False)
 
     ts = [0, 20e-9]
     ys = odeint(llg.solve_for, llg.m, ts)
@@ -48,7 +48,7 @@ def test_non_uniform_external_field():
     H_expr = df.Expression(("0","H*(x[0]-a)/fabs(x[0]-a)","0"),
             a=length/2, H=llg.Ms/2)
     llg._H_app = df.interpolate(H_expr, llg.V)
-    llg.setup(exchange_flag=False)
+    llg.setup(use_exchange=False)
 
     ts = [0, 10e-9]
     ys = odeint(llg.solve_for, llg.m, ts)
@@ -89,7 +89,7 @@ def test_non_uniform_external_field_with_exchange():
     H_expr = df.Expression(("0","H*(x[0]-a)/fabs(x[0]-a)","0"),
             a=length/2, H=llg.Ms/20.)
     llg._H_app = df.interpolate(H_expr, llg.V)
-    llg.setup(exchange_flag=True)
+    llg.setup(use_exchange=True)
 
     ts = [0, 1e-9]
     ys = odeint(llg.solve_for, llg.m, ts)
@@ -141,7 +141,7 @@ def _test_time_dependent_uniform_field():
     # magnitude will be constant and equal to H during that time.
     H_expr = df.Expression(("0", "H * t * pow(10,9)", "H * sqrt(1 - pow(t * pow(10,9), 2))"), t=llg.t, H=llg.Ms/2)
     llg._H_app = df.interpolate(H_expr, llg.V)
-    llg.setup(exchange_flag=False)
+    llg.setup(use_exchange=False)
 
     llg_wrap = lambda t, y: llg.solve_for(y, t)
     t0 = 0; dt = 1e-10; t1 = 1e-9;

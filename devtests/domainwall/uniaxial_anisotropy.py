@@ -67,7 +67,7 @@ x, y, z = M0(coor)
 m0.vector()[:] = np.array([x, y, z]).reshape(n)
 llg.set_m0(np.array([x, y, z]).reshape(n))
 
-llg.setup(exchange_flag=True)
+llg.setup(use_exchange=True)
 
 llg.add_uniaxial_anisotropy(K1,a)
 llg_wrap = lambda t, y: llg.solve_for(y, t)

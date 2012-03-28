@@ -141,7 +141,7 @@ class LLG(object):
         #compute the effective field
         self.H_eff = self.H_app #can we avoid this if we don't use H_app?
         #self.H_eff *= 0.0 #set to zero
-        if self.exchange_flag:
+        if self.use_exchange:
             self.H_ex = self.exchange.compute_field()
             self.H_eff += self.H_ex
         if self.use_dmi:
@@ -198,7 +198,7 @@ class LLG(object):
         # Might be possible to avoid it later when we use a preconditioner, by computing it in pre_setup
 
         self.m = mp
-        if self.exchange_flag:
+        if self.use_exchange:
             Hp += self.exchange.compute_field()
 
         for ani in self._anisotropies:
@@ -231,11 +231,11 @@ class LLG(object):
     def add_uniaxial_anisotropy(self,K,a):
         self._anisotropies.append(UniaxialAnisotropy(self.V, self._m, K, a))
 
-    def setup(self, exchange_flag=True, use_dmi=False, 
+    def setup(self, use_exchange=True, use_dmi=False, 
               exchange_method="box-matrix-petsc",
               dmi_method="box-matrix-petsc"):
-        self.exchange_flag = exchange_flag
-        if exchange_flag:
+        self.use_exchange = use_exchange
+        if use_exchange:
             self.exchange = Exchange(self.V, self._m, self.C, 
                                      self.Ms, method=exchange_method)
 

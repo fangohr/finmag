@@ -63,7 +63,7 @@ class LLG2(LLG):
             self.H_eff += self.H_dmi
 
     def solve(self):
-        if self.exchange_flag:
+        if self.use_exchange:
             self.H_ex = self.exchange.compute_field()
         if self.anisotropy_flag:
             self.H_ani = self.anisotropy.compute_field()
@@ -78,11 +78,11 @@ class LLG2(LLG):
         raise Exception("An error was encountered in the C-code; status=%d" % status)
         return None
 
-    def setup(self, exchange_flag=True, anisotropy_flag=False, use_dmi=False, exchange_method="box-matrix-petsc"):
-        self.exchange_flag = exchange_flag
+    def setup(self, use_exchange=True, anisotropy_flag=False, use_dmi=False, exchange_method="box-matrix-petsc"):
+        self.use_exchange = use_exchange
         self.anisotropy_flag = anisotropy_flag
 
-        if exchange_flag:
+        if use_exchange:
             self.exchange = Exchange(self.V, self._m, self.C, self.Ms, method=exchange_method)
         else:
             zero = df.Constant((0, 0, 0))
