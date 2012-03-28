@@ -1,31 +1,34 @@
+import numpy as np
 import dolfin as df
 
 mesh = df.UnitCube(2,2,2)
 mesh.init()
 
-"""
-class Boundary(df.SubDomain):
-    def inside(self, x, on_boundary):
-        print on_boundary
-        return on_boundary
-boundary_subdomain = Boundary()
-
-face_meshfunction = dolfin.MeshFunction('uint', mesh, 2)
-face_meshfunction.set_all(0)
-boundary_subdomain.mark(face_meshfunction, 1)
-
-"""
-
 boundary = df.DomainBoundary()
-face_is_boundary = df.FacetFunction("uint", mesh)
-face_is_boundary.set_all(0)
-boundary.mark(face_is_boundary, 1)
+facet_is_boundary = df.FacetFunction("bool", mesh)
+facet_is_boundary.set_all(False)
+boundary.mark(facet_is_boundary, True)
 
-for face in df.facets(mesh):
-    i = face.index()
-    if face_is_boundary[i]:
-        print "Face {0} is on the boundary.".format(i)
-        for vertex in df.vertices(face):
-            print vertex.index(), mesh.coordinates()[vertex.index()]
-    else:
-        print "Face {0} is not on the boundary.".format(i)
+boundary_facets = [] # shape is n, 3, 3 we will want 3 * 3 * n for csa
+boundary_vertices_indices = set() # helps us avoid duplicates
+boundary_vertices = [] # shape is m, 3
+
+for facet in df.facets(mesh):
+    if facet_is_boundary[facet.index()]:
+        triangle = []
+        for vertex in df.vertices(facet):
+            if not vertex.index() in boundary_vertices_indices:
+                boundary_vertices_indices.add(vertex.index())
+                boundary_vertices.append(mesh.coordinates()[vertex.index()])
+            triangle.append(mesh.coordinates()[vertex.index()])
+        boundary_facets.append(triangle)
+
+boundary_facets = np.array(boundary_facets)
+boundary_vertices = np.array(boundary_vertices)
+
+print "{} of {} facets are part of the boundary.".format(
+        boundary_facets.shape[0], mesh.num_facets())
+print "{} of {} vertices are part of the boundary.".format(
+        boundary_vertices.shape[0], mesh.num_vertices())
+
+# TODO: massage the data, so we can call the solid angle computation with it.
