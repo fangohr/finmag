@@ -60,7 +60,7 @@ namespace finmag { namespace llg {
         } else {
             #pragma omp parallel for schedule(guided)
             for (int i = 0; i < n; i++) {
-                // add precession: - gamma m x H
+                // add damping: m x (m x H) == (m.H)m - (m.m)H, multiplied by -gamma alpha
                 double mh = m0[i] * h0[i] + m1[i] * h1[i] + m2[i] * h2[i];
                 double mm = m0[i] * m0[i] + m1[i] * m1[i] + m2[i] * m2[i];
                 dm0[i] = damping_coeff*(m0[i] * mh - h0[i] * mm);
