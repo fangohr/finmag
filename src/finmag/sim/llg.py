@@ -159,7 +159,7 @@ class LLG(object):
 
         if self.use_instant_llg:
             status, dMdt = self._solve(self.alpha, self.gamma, self.c,
-                self.m, self.H_eff, self.m.shape[0], self.pins)
+                self.m, self.H_eff, self.m.shape[0], self.pins, self.do_precession)
         else:
             # Use the same characteristic time as defined by c
             char_time = 0.1/self.c

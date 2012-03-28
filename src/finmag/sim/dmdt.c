@@ -1,6 +1,7 @@
 int dmdt(double alpha, double gamma, double c,
     int Mn, double* M, int Hn, double* H, int dMdtn, double* dMdt,
-    int Pn, double* P);
+    int Pn, double* P,
+    bool do_precession);
 
 #define DEBUG 1
 #ifdef DEBUG
@@ -11,7 +12,8 @@ int dmdt(double alpha, double gamma, double c,
 
 int dmdt(double alpha, double gamma, double c,
          int Mn, double* M, int Hn, double* H, int dMdtn, double* dMdt,
-         int Pn, double* P) {
+         int Pn, double* P,
+         bool do_precession) {
   
     if ( Mn != Hn || Mn != dMdtn ) {
         DLOG("in '%s': ", __PRETTY_FUNCTION__);
@@ -43,6 +45,9 @@ int dmdt(double alpha, double gamma, double c,
     const int Z = 2 * ENTRIES_PER_DIM;
 
     double p = gamma / (1 + alpha*alpha); /* precession factor of the LLG */
+    if ( !do_precession )
+        p = 0;
+
     /* double q = gamma * alpha / (1 + alpha*alpha); */ /* damping explicit */
     double q = alpha * p; /* marginally faster than line above */
 
