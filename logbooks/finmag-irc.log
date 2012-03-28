@@ -751,3 +751,7 @@ fangohr: Still testing ...
 2012-03-27 14:34:47 GabrielB: and not by jenkins
 2012-03-27 14:35:39 GabrielB: I got it! Jenkins will not touch the problem classes depending on the expensive to generate  meshes
 2012-03-27 14:36:01 GabrielB: so the problem classes can just check themselves if they need to generate meshes
+2012-03-28 09:03:26 fangohr: Good morning DokosBot.
+2012-03-28 12:12:49 SebastianS: lunch anyone? ;-)
+2012-03-28 12:13:03 andersej: Definitely!
+2012-03-28 12:20:20 mb8g11: Yes.
