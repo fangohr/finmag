@@ -64,13 +64,20 @@ class MagUnitInterval(pb.FemBemDeMagProblem):
 #a while to generate one of these meshes for the first time.     
 ###########################################################
 
-class MagSphereBase(pb.FemBemDeMagProblem,cm.GeoMeshSphereProblem):
+
+class MagSphereBase(pb.FemBemDeMagProblem,cm.MeshGenerator):
     """Base class for MagSphere classes"""
     def __init__(self,maxh):
-        #Try to regenerate meshes if need be
-        cm.GeoMeshSphereProblem.__init__(self,maxh)
-        meshpath =  os.path.dirname(mark.__file__)
-        mesh = Mesh(meshpath+"/sphere"+str(maxh)+".xml.gz")
+        #Try to regenerate mesh files if need be
+        geofile = "algebraic3d \n \n \
+                   solid main = sphere (0, 0, 0; 10)-maxh="+str(maxh)+" ; \n \n \
+                   tlo main;"
+
+        meshpath = "".join([os.path.dirname(mark.__file__),"/sphere",str(maxh),\
+                            ".xml.gz"])
+        cm.MeshGenerator.generate_mesh(self,meshpath,geofile)
+        #Upload the dolfin mesh
+        self.mesh = Mesh(meshpath)
         self.Ms = 1.0
         M = (str(self.Ms), "0.0", "0.0")
 
@@ -79,13 +86,9 @@ class MagSphereBase(pb.FemBemDeMagProblem,cm.GeoMeshSphereProblem):
         
     def desc(self):
         return "Sphere demagnetisation test problem fembem, Ms=%g, maxh = %g" %(self.Ms,self.maxh)
-    
-#Note python doesn't allow :." in class names so the Sphere1.0 is now Sphere10 etc...        
-class MagSphere(MagSphereBase):
-    """Demag Sphere problem using the sphere mesh from nmag example. maxh = 1.0"""
-    def __init__(self):
-        MagSphereBase.__init__(self,1.0)
 
+
+#Note python doesn't allow :." in class names so the Sphere1.0 is now Sphere10 etc...        
 class MagSphere50(MagSphereBase):
     """Demag Sphere problem Using the geo sphere mesh maxh  = 5.0"""
     def __init__(self):
@@ -100,5 +103,21 @@ class MagSphere20(MagSphereBase):
     """Demag Sphere problem Using the geo sphere mesh maxh  = 2.0"""
     def __init__(self):
         MagSphereBase.__init__(self,2.0)
-S = MagSphere20()    
+
+class MagSphere15(MagSphereBase):
+    """Demag Sphere problem Using the geo sphere mesh maxh  = 1.5"""
+    def __init__(self):
+        MagSphereBase.__init__(self,1.5)
+
+class MagSphere12(MagSphereBase):
+    """Demag Sphere problem using the sphere mesh from nmag example. maxh = 1.2"""
+    def __init__(self):
+        MagSphereBase.__init__(self,1.2)
+       
+class MagSphere10(MagSphereBase):
+    """Demag Sphere problem using the sphere mesh from nmag example. maxh = 1.0"""
+    def __init__(self):
+        MagSphereBase.__init__(self,1.0)
+    
+S = MagSphere50()    
 

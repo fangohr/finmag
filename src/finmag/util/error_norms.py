@@ -18,7 +18,7 @@ def discrete_max_error(f1,f2):
     """Max discrete error norm (using dofs) for two functions f1 and f2"""
     #Note at the moment Vector functions are flattened out
     v = f1.vector().array() - f2.vector().array()
-    M = abs(max(v))
+    M = max(abs(v))
     return M
 
     
