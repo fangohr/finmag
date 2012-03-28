@@ -1,11 +1,12 @@
-import math
 import numpy as np
+from finmag.util.solid_angle_magpar import return_csa_magpar
 from finmag.native import llg as native_llg
 
 TOLERANCE = 1e-15
 
 #this is the function to compute the solid angle:
 csa = native_llg.compute_solid_angle
+csa_magpar = return_csa_magpar()
 
 #doc string reads (in llg_module_impl.h):
 csa.__doc__ = \
@@ -99,7 +100,10 @@ def test_solid_angle_first_octant():
     csa(origin, triangle, angle)
     assert abs(angle[0] - np.pi / 2) < TOLERANCE, \
             "The solid angle is {0}, but should be PI/2={1}.".format(angle[0], np.pi/2)
-    
+
+    magpar = csa_magpar(np.zeros(3), np.array([1, 0, 0]), np.array([0, 1, 0]), np.array([0, 0, 1]))
+    assert abs(angle[0] - magpar) < TOLERANCE
+
 def test_solid_angle_one_minus_sign():
     origin = np.zeros((3, 1))
 
@@ -111,6 +115,9 @@ def test_solid_angle_one_minus_sign():
     assert abs(angle[0] - np.pi / 2) < TOLERANCE, \
             "The solid angle is {0}, but should be PI/2={1}.".format(angle[0], np.pi/2)
 
+    magpar = csa_magpar(np.zeros(3), np.array([-1, 0, 0]), np.array([0, 1, 0]), np.array([0, 0, 1]))
+    assert abs(angle[0] - magpar) < TOLERANCE
+
 def test_solid_angle_two_minus_signs():
     origin = np.zeros((3, 1))
 
@@ -121,6 +128,9 @@ def test_solid_angle_two_minus_signs():
     csa(origin, triangle, angle)
     assert abs(angle[0] - np.pi / 2) < TOLERANCE, \
             "The solid angle is {0}, but should be PI/2={1}.".format(angle[0], np.pi/2)
+
+    magpar = csa_magpar(np.zeros(3), np.array([-1, 0, 0]), np.array([0, -1, 0]), np.array([0, 0, 1]))
+    assert abs(angle[0] - magpar) < TOLERANCE
 
 def test_octants_solid_angle():
     """
@@ -147,6 +157,21 @@ def test_octants_solid_angle():
     csa(origin, triangles, angle)
     assert abs(angle[0] - 4*np.pi) < TOLERANCE, \
         "The solid angle is {0}, but should be 4PI={1}.".format(angle[0], 4*np.pi)
+
+    front  = np.array([ 1.0,  0.0,  0.0])
+    back   = np.array([-1.0,  0.0,  0.0])
+    left   = np.array([ 0.0, -1.0,  0.0])
+    right  = np.array([ 0.0,  1.0,  0.0])
+    top    = np.array([ 0.0,  0.0,  1.0])
+    bottom = np.array([ 0.0,  0.0, -1.0])
+    
+    magpar = 0.0
+    for abscissa in [front, back]:
+        for ordinate in [left, right]:
+            for applicate in [top, bottom]:
+                magpar += csa_magpar(np.zeros(3), abscissa, ordinate, applicate)
+    assert abs(angle[0] - magpar) < TOLERANCE 
+
 
 if __name__=="__main__":
     test_octants_solid_angle()
