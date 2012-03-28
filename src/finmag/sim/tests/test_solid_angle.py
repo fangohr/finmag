@@ -108,8 +108,8 @@ def test_solid_angle_one_minus_sign():
     assert triangle.shape == (3, 3, 1)
     angle = np.zeros(1)
     csa(origin, triangle, angle)
-    assert abs(angle[0] + np.pi / 2) < TOLERANCE, \
-            "The solid angle is {0}, but should be PI/2={1}.".format(angle[0], -np.pi/2)
+    assert abs(angle[0] - np.pi / 2) < TOLERANCE, \
+            "The solid angle is {0}, but should be PI/2={1}.".format(angle[0], np.pi/2)
 
 def test_solid_angle_two_minus_signs():
     origin = np.zeros((3, 1))
@@ -126,10 +126,6 @@ def test_octants_solid_angle():
     """
     By the same reasing as above, we get 4PI for the solid angle of a sphere
     as seen by one point inside of it.
-
-    Because our implementation should actually be able to return negative angles
-    we expect opposing octants to cancel each other out
-    and a total solid angle of 0.
 
     That means that another way of getting the solid angle of a single octant
     is considering we are looking at one of the 8 divisions of the
@@ -149,7 +145,7 @@ def test_octants_solid_angle():
 
     angle = np.zeros(1)
     csa(origin, triangles, angle)
-    assert abs(angle[0]) < TOLERANCE, \
+    assert abs(angle[0] - 4*np.pi) < TOLERANCE, \
         "The solid angle is {0}, but should be 4PI={1}.".format(angle[0], 4*np.pi)
 
 if __name__=="__main__":

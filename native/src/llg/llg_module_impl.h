@@ -182,6 +182,8 @@ namespace finmag { namespace llg {
         double *T3_x = T_arr(0, 2), *T3_y = T_arr(1, 2), *T3_z = T_arr(2, 2);
         double *a = a_arr.data();
         
+        const double PI = atan2(0.0, -1.0); // used to bias negative atan
+
         // i runs over points, j runs over triangles
         #pragma omp parallel for schedule(guided)
         for (int i = 0; i < m; i++) {
@@ -203,9 +205,13 @@ namespace finmag { namespace llg {
                 double R1_R3 = R1_x*R3_x + R1_y*R3_y + R1_z*R3_z;
                 double R2_R3 = R2_x*R3_x + R2_y*R3_y + R2_z*R3_z;
                 double q = R1_norm*R2_norm*R3_norm + R3_norm*R1_R2 + R2_norm*R1_R3 + R1_norm*R2_R3;
-                // according to DOI 10.1109/TMAG.2007.908698 p.34
-                // we want a solid angle which can become negative 
-                omega += 2*atan2(p, q);
+                
+                // use abs(p) in case R1, R2 and R3 have the wrong winding.
+                double at = atan2(abs(p), q);
+                // if q is negative, the atan will as well.
+                // Correct this by biasing the result with PI.
+                if (at < 0) at += PI; 
+                omega += 2*at;
             }
             a[i] = omega;
         }
