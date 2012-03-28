@@ -24,7 +24,7 @@ class MyLLG(LLG):
         H_ex  = Function(self.V)
 
         # Comment out these two lines if you don't want exchange.
-        exch  = Exchange(self.V, self._m, self.C, self.Ms)
+        exch  = Exchange(self.V, self._m, self.A, self.Ms)
         H_ex.vector().array()[:] = exch.compute_field()
 
         H_eff = H_ex + H_app

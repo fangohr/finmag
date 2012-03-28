@@ -20,7 +20,7 @@ m0_z = '0'
 
 llg = LLG(mesh)
 llg.Ms = 0.86e6
-llg.C = 1.3e-11
+llg.A = 1.3e-11
 llg.alpha = 0.2
 llg.set_m0((m0_x, m0_y, m0_z), L=length)
 llg.setup(use_exchange=True)

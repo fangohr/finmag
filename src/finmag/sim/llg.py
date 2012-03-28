@@ -28,7 +28,7 @@ class LLG(object):
         #after (3.7), llg_gamma_G = m/(As).
         self.c = 1e11 # 1/s numerical scaling correction
                       # 0.1e12 1/s is the value used by default in nmag 0.2
-        self.C = 1.3e-11 # J/m exchange constant
+        self.A = 1.3e-11 # J/m exchange constant
         self.D = 5e-3 # J/m DMI constant
         self.Ms = 8.6e5 # A/m saturation magnetisation
         self.t = 0 # s
@@ -236,7 +236,7 @@ class LLG(object):
               dmi_method="box-matrix-petsc"):
         self.use_exchange = use_exchange
         if use_exchange:
-            self.exchange = Exchange(self.V, self._m, self.C, 
+            self.exchange = Exchange(self.V, self._m, self.A, 
                                      self.Ms, method=exchange_method)
 
         self.use_dmi = use_dmi

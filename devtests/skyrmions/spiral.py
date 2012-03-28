@@ -25,7 +25,7 @@ llg = LLG(mesh)
 llg.alpha=1.0
 llg.H_app=(0,0,0)
 
-llg.C = 1.3e-11
+llg.A = 1.3e-11
 llg.D = 4e-3
 
 #llg.set_m0((
