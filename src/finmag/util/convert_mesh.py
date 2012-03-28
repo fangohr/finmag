@@ -66,8 +66,8 @@ def convert_mesh(inputfile, outputfile=None):
     if os.path.isfile(outputfilename):
         print "The mesh %s already exists, and is automatically returned." % outputfilename
         return outputfilename
-    print 'Using netgen to convert %s.geo to Gmsh2 format...' % name
-    netgen_cmd = 'netgen -geofile=%s -meshfiletype="Gmsh2 Format" -meshfile=%s.gmsh -batchmode' % (inputfile, name)
+    print 'Using netgen to convert %s.geo to DIFFPACK format...' % name
+    netgen_cmd = 'netgen -geofile=%s -meshfiletype="DIFFPACK Format" -meshfile=%s.grid -batchmode' % (inputfile, name)
     status, output = commands.getstatusoutput(netgen_cmd)
     if status not in (0, 34304): # Trouble on my machine, should just be zero.
         print output
@@ -76,8 +76,8 @@ def convert_mesh(inputfile, outputfile=None):
     print 'Done!'
 
     # Convert to xml using dolfin-convert
-    print 'Using dolfin-convert to convert the Gmsh file to Dolfin xml...'
-    dolfin_conv_cmd = 'dolfin-convert %s.gmsh %s.xml' % (name, outputfile)
+    print 'Using dolfin-convert to convert the DIFFPACK file to Dolfin xml...'
+    dolfin_conv_cmd = 'dolfin-convert %s.grid %s.xml' % (name, outputfile)
     status, output = commands.getstatusoutput(dolfin_conv_cmd)
     if status != 0: 
         print output
@@ -97,10 +97,10 @@ def convert_mesh(inputfile, outputfile=None):
 
     # Remove redundant files
     print 'Cleaning up...'
-    files = ["%s_physical_region.xml" % outputfile,
-                 "%s_facet_region.xml" % outputfile,
-                 "%s.xml.bak" % outputfile,
-                 "%s.gmsh" % name]
+    files = ["%s.xml.bak" % outputfile,
+             "%s_mat.xml" % outputfile,
+             "%s_bi.xml" % outputfile,
+             "%s.grid" % name]
     for f in files:
         if os.path.isfile(f):
             os.remove(f)
