@@ -20,7 +20,7 @@ def run_simulation():
     llg.H_app = (0.43e6, 0, 0) # A/m
     llg.set_m0(("2*x[0]/L - 1","2*x[1]/W - 1","1"), L=3e-8, H=1e-8, W=1e-8)
     print "Starting 'setup'"
-    llg.setup(exchange_flag=True)
+    llg.setup(use_exchange=True)
 
     llg_wrap = lambda t, y: llg.solve_for(y, t)
     t0 = 0; dt = 1e-11; tmax = 1e-9 # s

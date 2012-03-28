@@ -39,7 +39,7 @@ llg.set_m0((
         'MS',
         '0',
         '0'), MS=llg.Ms)
-llg.setup(use_dmi=True,exchange_flag=True)
+llg.setup(use_dmi=True,use_exchange=True)
 llg.pins = []
 print "point 0:",mesh.coordinates()[0]
 
