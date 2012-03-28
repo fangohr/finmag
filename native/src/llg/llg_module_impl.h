@@ -2,6 +2,8 @@
 
 #include "util/python_threading.h"
 
+const double PI = atan2(0.0, -1.0);
+
 namespace finmag { namespace llg {
     // Components of a cross product
     inline double cross0(double a0, double a1, double a2, double b0, double b1, double b2) { return a1*b2 - a2*b1; }
@@ -182,8 +184,6 @@ namespace finmag { namespace llg {
         double *T3_x = T_arr(0, 2), *T3_y = T_arr(1, 2), *T3_z = T_arr(2, 2);
         double *a = a_arr.data();
         
-        const double PI = atan2(0.0, -1.0); // used to bias negative atan
-
         // i runs over points, j runs over triangles
         #pragma omp parallel for schedule(guided)
         for (int i = 0; i < m; i++) {
