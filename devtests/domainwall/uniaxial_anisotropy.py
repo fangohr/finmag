@@ -56,8 +56,8 @@ llg.Ms = Ms                 # saturation magnetization
 
 #with the following correction we get a good match -- but why?
 correction = 1.77 #emperical number to make match with analytical solution better
-llg.C = A*correction            # exchange coupling
-llg.C = A
+llg.A = A*correction            # exchange coupling
+llg.A = A
 llg.alpha=1.0
 a = df.Constant((0, 0, 1)) # easy axis
 

@@ -48,7 +48,7 @@ class LLG2(LLG):
         #after (3.7), llg_gamma_G = m/(As).
         self.c = 1e11 # 1/s numerical scaling correction
                       # 0.1e12 1/s is the value used by default in nmag 0.2
-        self.C = 1.3e-11 # J/m exchange constant
+        self.A = 1.3e-11 # J/m exchange constant
         self.Ms = 8.6e5 # A/m saturation magnetisation
         self.t = 0 # s
         self.H_app = (0, 0, 0)
@@ -83,7 +83,7 @@ class LLG2(LLG):
         self.anisotropy_flag = anisotropy_flag
 
         if use_exchange:
-            self.exchange = Exchange(self.V, self._m, self.C, self.Ms, method=exchange_method)
+            self.exchange = Exchange(self.V, self._m, self.A, self.Ms, method=exchange_method)
         else:
             zero = df.Constant((0, 0, 0))
             self.H_ex = df.interpolate(zero, self.V).vector().array()

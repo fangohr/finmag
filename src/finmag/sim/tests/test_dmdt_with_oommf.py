@@ -34,7 +34,7 @@ def test_dmdt_computation_with_oommf():
     m0.flat[2] += 1
     m0.flat /= np.sqrt(m0.flat[0]*m0.flat[0] + m0.flat[1]*m0.flat[1] + m0.flat[2]*m0.flat[2])
 
-    dmdt_oommf = oommf_dmdt(m0, llg.Ms, A=llg.C, H=H_app, alpha=llg.alpha, gamma_G=llg.gamma).flat
+    dmdt_oommf = oommf_dmdt(m0, llg.Ms, A=llg.A, H=H_app, alpha=llg.alpha, gamma_G=llg.gamma).flat
 
     # extract finmag data for comparison with oommf
     dmdt_finmag_like_oommf = msh.new_field(3)

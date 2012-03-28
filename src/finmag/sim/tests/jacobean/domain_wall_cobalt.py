@@ -35,7 +35,7 @@ def reference_mz(x):
 def setup_domain_wall_cobalt(node_count=NODE_COUNT, A=A_Co, Ms=Ms_Co, K1=K1_Co, length=LENGTH, use_instant=True, do_precession=True):
     mesh = df.Interval(node_count - 1, 0, length)
     llg = LLG(mesh, use_instant_llg=use_instant, do_precession=do_precession)
-    llg.C = 2 * A
+    llg.A = 2 * A
     llg.Ms = Ms
     llg.add_uniaxial_anisotropy(K1, df.Constant((0, 0, 1)))
     llg.set_m0(np.array([initial_m(xi, node_count) for xi in xrange(node_count)]).T.reshape((-1,)))
