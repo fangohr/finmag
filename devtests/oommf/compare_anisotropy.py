@@ -67,12 +67,13 @@ def three_dimensional_problem():
         return np.array([mx, my, mz])
 
     return compare_anisotropy(m_gen, K1, (0, 0, 1),
-            dolfin_mesh, oommf_mesh, dims=1, name="1d")
+            dolfin_mesh, oommf_mesh, name="1d")
 
 if __name__ == '__main__':
 
     res0 = small_problem()
     print "1D problem, relative difference:\n", stats(res0["rel_diff"])
+    exit()
     res1 = one_dimensional_problem()
     print "1D problem, relative difference:\n", stats(res1["rel_diff"])
     res3 = three_dimensional_problem()

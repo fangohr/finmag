@@ -7,7 +7,7 @@ from finmag.util.oommf import oommf_uniform_exchange, oommf_uniaxial_anisotropy
 def compare_anisotropy(m_gen, K1, axis, dolfin_mesh, oommf_mesh, dims=3, name=""):
     finmag_anis_field, finmag = compute_finmag_anis(m_gen, K1, axis, dolfin_mesh)
     finmag_anis = finmag_to_oommf(finmag_anis_field, oommf_mesh, dims)
-    oommf_anis = oommf_uniaxial_anisotropy(oommf_m0(m_gen, oommf_mesh), finmag.Ms, K1, axis)
+    oommf_anis = oommf_uniaxial_anisotropy(oommf_m0(m_gen, oommf_mesh), finmag.Ms, K1, axis).flat
 
     difference = np.abs(finmag_anis - oommf_anis)
     relative_difference = difference / np.sqrt(
@@ -15,7 +15,7 @@ def compare_anisotropy(m_gen, K1, axis, dolfin_mesh, oommf_mesh, dims=3, name=""
 
     return dict(name=name, m0=finmag.m,
             mesh=dolfin_mesh, oommf_mesh=oommf_mesh,
-            exc=finmag_anis_field.vector().array(), oommf_exc=oommf_anis,
+            anis=finmag_anis, oommf_anis=oommf_anis,
             diff=difference, rel_diff=relative_difference)
 
 def compute_finmag_anis(m_gen, K1, axis, dolfin_mesh):
@@ -41,7 +41,7 @@ def compare_exchange(m_gen, dolfin_mesh, oommf_mesh, dims=3, name=""):
 
     return dict(name=name, m0=finmag.m,
             mesh=dolfin_mesh, oommf_mesh=oommf_mesh,
-            exc=finmag_exc_field.vector().array(), oommf_exc=oommf_exc,
+            exc=finmag_exc, oommf_exc=oommf_exc,
             diff=difference, rel_diff=relative_difference)
 
 def compute_finmag_exc(dolfin_mesh, m_gen):
