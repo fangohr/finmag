@@ -210,7 +210,6 @@ namespace finmag { namespace llg {
                 double R2_R3 = R2_x*R3_x + R2_y*R3_y + R2_z*R3_z;
                 double q = R1_norm*R2_norm*R3_norm + R3_norm*R1_R2 + R2_norm*R1_R3 + R1_norm*R2_R3;
 
-                // use abs(p) in case R1, R2 and R3 have the wrong winding.
                 double at = atan2(p, q);
                 omega += 2*at;
             }
