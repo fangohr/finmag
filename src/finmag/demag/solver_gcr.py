@@ -72,7 +72,7 @@ class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
 
           # FIXME: Why is this here? Uncomment if it breaks the build.
           # It broke the build... TODO: Figure out why this is necessary
-          self.Hdemag = self.get_demagfield(self.phi)
+          #self.Hdemag = self.get_demagfield(self.phi)
           return self.phi
           
      def solve_phia(self,method = "lu"):

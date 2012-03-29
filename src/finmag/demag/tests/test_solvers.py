@@ -311,7 +311,9 @@ class Test_FemBemGCRSolver(DemagTester):
         unit sphere
         """
         testname = self.test_compare_3danalytical_gradient.__doc__
-        self.compare_to_analytical(self.solver3d.Hdemag,self.analytical3d.Hdemag,testname)
+        phi = self.solver3d.solve()
+        Hdemag = self.solver3d.get_demagfield(phi)
+        self.compare_to_analytical(Hdemag,self.analytical3d.Hdemag,testname)
 
 if __name__ == "__main__":
     def run_tests(tests):
