@@ -211,12 +211,7 @@ namespace finmag { namespace llg {
                 double q = R1_norm*R2_norm*R3_norm + R3_norm*R1_R2 + R2_norm*R1_R3 + R1_norm*R2_R3;
 
                 // use abs(p) in case R1, R2 and R3 have the wrong winding.
-                double at = atan2(fabs(p), q);
-                // if q is negative, the atan will as well.
-                // Correct this by biasing the result with PI.
-                if (at < 0) at += PI;
-                // if p is negative, the solid angle is negative
-                if (p < 0) at = -at;
+                double at = atan2(p, q);
                 omega += 2*at;
             }
             a[i] = omega;
