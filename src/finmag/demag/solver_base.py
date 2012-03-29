@@ -89,6 +89,9 @@ class FemBemDeMagSolver(DeMagSolver):
         self.V = FunctionSpace(self.problem.mesh,"CR",degree)
         #Total Function that we solve for
         self.phi = Function(self.V)
+
+        # Store the computed boundary element matrix
+        self.bem = None
         
     def calc_phitot(self,func1,func2):
         """Add two functions to get phitotal"""

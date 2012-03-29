@@ -75,7 +75,10 @@ class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
      def solve_phib_boundary(self,phia,doftionary):
           """Solve for phib on the boundary using BEM"""
           q = self.assemble_qvector_exact(phia,doftionary)
-          B = self.build_BEM_matrix(doftionary)
+          B = self.bem
+          if B is None:
+              B = self.build_BEM_matrix(doftionary)
+              self.bem = B
           phibdofs = np.dot(B,q)
           bdofs = doftionary.keys()
           for i in range(len(bdofs)):
