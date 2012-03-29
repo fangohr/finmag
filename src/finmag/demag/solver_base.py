@@ -32,8 +32,18 @@ class DeMagSolver(object):
             self.Mspace = FunctionSpace(self.problem.mesh,"DG",self.degree)
         else:
             self.Mspace = VectorFunctionSpace(self.problem.mesh,"DG",self.degree)
+        
         #Define the magnetisation
-        self.M = interpolate(Expression(self.problem.M),self.Mspace)
+        # At the moment this just accepts tuple of string(s) 
+        # or a dolfin.Function
+        if isinstance(self.problem.M, tuple):
+            self.M = interpolate(Expression(self.problem.M),self.Mspace)
+        elif 'dolfin.functions.function.Function' in str(type(self.problem.M)):
+            self.M = self.problem.M
+        else:
+            raise NotImplementedError("%s is not implemented." \
+                    % type(self.problem.M))
+
         
     def get_demagfield(self,phi,use_default_function_space = True):
         """
