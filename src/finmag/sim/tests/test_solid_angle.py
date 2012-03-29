@@ -40,9 +40,7 @@ def solid_angle(triangles, point):
     T = np.zeros((3,3,n))
     T[:,:,0] = np.array(triangles)
     print "T",T.shape,"\n",T
-    a = np.zeros(1)
-    csa(r,T,a)
-    return a
+    return csa(r,T)
 
 #print "Random tests"
 #print solid_angle([[1.,0,0],[-0.5,-0.5,0],[-0.5,0.5,0]],[0,0,-100])
@@ -56,7 +54,6 @@ def solid_angle(triangles, point):
 #print solid_angle([[a,-a,-a],[0,-a,a],[0,0,0]],[0,0,-1e-5])
 
 def test_solid_angle():
-
     #number of solid angles to compute
     m = 2
     #number of triangles
@@ -75,10 +72,7 @@ def test_solid_angle():
         n = 1
     else:
         n = tmp[1]
-    a = np.zeros(n)
-    print a
-    csa(r,T,a)
-    print a
+    print csa(r,T)
 
 def test_solid_angle_first_octant():
     """
@@ -96,13 +90,20 @@ def test_solid_angle_first_octant():
     # first octant (+, +, +) front-right-top
     triangle = np.array([[[1.],[0.],[0.]], [[0.],[1.],[0.]], [[0.],[0.],[1.]]])
     assert triangle.shape == (3, 3, 1)
-    angle = np.zeros(1)
-    csa(origin, triangle, angle)
+    angle = csa(origin, triangle)
     assert abs(angle[0] - np.pi / 2) < TOLERANCE, \
             "The solid angle is {0}, but should be PI/2={1}.".format(angle[0], np.pi/2)
 
     magpar = csa_magpar(np.zeros(3), np.array([1, 0, 0]), np.array([0, 1, 0]), np.array([0, 0, 1]))
     assert abs(angle[0] - magpar) < TOLERANCE
+
+
+def compare_with_magpar(r, T):
+    assert r.shape == (3,)
+    assert T.shape == (3,3)
+    # first index of T is node number, second is spatial
+
+
 
 def test_solid_angle_one_minus_sign():
     origin = np.zeros((3, 1))
@@ -110,13 +111,13 @@ def test_solid_angle_one_minus_sign():
     # (-, +, +) back-right-top
     triangle = np.array([[[-1.],[0.],[0.]], [[0.],[1.],[0.]], [[0.],[0.],[1.]]])
     assert triangle.shape == (3, 3, 1)
-    angle = np.zeros(1)
-    csa(origin, triangle, angle)
-    assert abs(angle[0] - np.pi / 2) < TOLERANCE, \
+    angle = csa(origin, triangle)[0]
+    magpar = csa_magpar(np.zeros(3), np.array([-1, 0, 0]), np.array([0, 1, 0]), np.array([0, 0, 1]))
+    print angle, magpar
+    assert abs(angle - np.pi / 2) < TOLERANCE, \
             "The solid angle is {0}, but should be PI/2={1}.".format(angle[0], np.pi/2)
 
-    magpar = csa_magpar(np.zeros(3), np.array([-1, 0, 0]), np.array([0, 1, 0]), np.array([0, 0, 1]))
-    assert abs(angle[0] - magpar) < TOLERANCE
+    assert abs(angle - magpar) < TOLERANCE
 
 def test_solid_angle_two_minus_signs():
     origin = np.zeros((3, 1))
@@ -124,8 +125,7 @@ def test_solid_angle_two_minus_signs():
     # (-, -, +) back-left-top
     triangle = np.array([[[-1.],[0.],[0.]], [[0.],[-1.],[0.]], [[0.],[0.],[1.]]])
     assert triangle.shape == (3, 3, 1)
-    angle = np.zeros(1)
-    csa(origin, triangle, angle)
+    angle = csa(origin, triangle)
     assert abs(angle[0] - np.pi / 2) < TOLERANCE, \
             "The solid angle is {0}, but should be PI/2={1}.".format(angle[0], np.pi/2)
 
@@ -153,8 +153,7 @@ def test_octants_solid_angle():
     triangles[1,1,] = np.array([1., 1., -1., -1., 1., 1., -1., -1.]) # Y, V2, 1-8
     triangles[2,2,] = np.array([1., 1., 1., 1., -1., -1., -1., -1.]) # Z, V3, 1-8
 
-    angle = np.zeros(1)
-    csa(origin, triangles, angle)
+    angle = csa(origin, triangles)
     assert abs(angle[0] - 4*np.pi) < TOLERANCE, \
         "The solid angle is {0}, but should be 4PI={1}.".format(angle[0], 4*np.pi)
 
@@ -170,10 +169,11 @@ def test_octants_solid_angle():
         for ordinate in [left, right]:
             for applicate in [top, bottom]:
                 magpar += csa_magpar(np.zeros(3), abscissa, ordinate, applicate)
-    assert abs(angle[0] - magpar) < TOLERANCE 
-
+    assert abs(angle[0] - magpar) < TOLERANCE
 
 if __name__=="__main__":
-    test_octants_solid_angle()
-    pass
-
+    for name in globals().keys():
+#        if name.startswith("test_solid_angle_invariance"):
+        if name.startswith("test_"):
+            print "Running", name
+            globals()[name]()
