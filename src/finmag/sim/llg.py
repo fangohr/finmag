@@ -252,4 +252,4 @@ class LLG(object):
 
         self.use_demag = use_demag
         if use_demag:
-            self.demag = Demag(self.V, self._m, method=demag_method)
+            self.demag = Demag(self.V, self._m, self.Ms, method=demag_method)
