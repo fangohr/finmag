@@ -58,15 +58,21 @@ class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           Solve for the Demag field using GCR and FemBem
           Potential is returned, demag field stored
           """
+          print "Solve for phia"
           #Solve for phia
           self.solve_phia()
           #Solve for phib on the boundary with Bem 
           self.phib = self.solve_phib_boundary(self.phia,self.doftionary)
           #Solve for phib on the inside of the mesh with Fem
+          print "Solve laplace on the inside"
           self.phib = self.solve_laplace_inside(self.phib)
           # Add together the two potentials
+          print "Compute phi total"
           self.phi = self.calc_phitot(self.phia,self.phib)
-          self.Hdemag = self.get_demagfield(self.phi)
+
+          # FIXME: Why is this here? Uncomment if it breaks the build.
+          # It broke the build... TODO: Figure out why this is necessary
+          #self.Hdemag = self.get_demagfield(self.phi)
           return self.phi
           
      def solve_phia(self,method = "lu"):
@@ -74,10 +80,17 @@ class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           
      def solve_phib_boundary(self,phia,doftionary):
           """Solve for phib on the boundary using BEM"""
+          print "Assemble q vector"
           q = self.assemble_qvector_exact(phia,doftionary)
-          B = self.build_BEM_matrix(doftionary)
+          B = self.bem
+          if B is None:
+              print "B is none, build bem"
+              B = self.build_BEM_matrix(doftionary)
+              self.bem = B
+          print "Dot product between B and q"
           phibdofs = np.dot(B,q)
           bdofs = doftionary.keys()
+          print "Vector assignment"
           for i in range(len(bdofs)):
                self.phib.vector()[bdofs[i]] = phibdofs[i]
           return self.phib

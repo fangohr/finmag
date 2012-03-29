@@ -32,8 +32,20 @@ class DeMagSolver(object):
             self.Mspace = FunctionSpace(self.problem.mesh,"DG",self.degree)
         else:
             self.Mspace = VectorFunctionSpace(self.problem.mesh,"DG",self.degree)
+        
         #Define the magnetisation
-        self.M = interpolate(Expression(self.problem.M),self.Mspace)
+        # At the moment this just accepts strings, tuple of strings
+        # or a dolfin.Function
+        # TODO: When the magnetisation no longer are allowed to be 
+        # one-dimensional, remove " or isinstance(self.problem.M, str)"
+        if isinstance(self.problem.M, tuple) or isinstance(self.problem.M, str):
+            self.M = interpolate(Expression(self.problem.M),self.Mspace)
+        elif 'dolfin.functions.function.Function' in str(type(self.problem.M)):
+            self.M = self.problem.M
+        else:
+            raise NotImplementedError("%s is not implemented." \
+                    % type(self.problem.M))
+
         
     def get_demagfield(self,phi,use_default_function_space = True):
         """
@@ -79,6 +91,9 @@ class FemBemDeMagSolver(DeMagSolver):
         self.V = FunctionSpace(self.problem.mesh,"CR",degree)
         #Total Function that we solve for
         self.phi = Function(self.V)
+
+        # Store the computed boundary element matrix
+        self.bem = None
         
     def calc_phitot(self,func1,func2):
         """Add two functions to get phitotal"""
