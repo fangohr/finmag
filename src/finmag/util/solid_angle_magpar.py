@@ -54,7 +54,7 @@ double SolidAngle(int xn, double *x, int v1n, double *v1, int v2n, double *v2, i
 
   double d;
   PointFromPlane(x,v1,v2,v3,&d);
-  if (abs(d)<D_EPS) {
+  if (fabs(d)<D_EPS) {
     omega=0.0;
     return(0);
   }

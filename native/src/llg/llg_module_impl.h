@@ -189,7 +189,7 @@ namespace finmag { namespace llg {
         double *a = a_arr.data();
         
         // i runs over points, j runs over triangles
-        #pragma omp parallel for schedule(guided)
+//        #pragma omp parallel for schedule(guided)
         for (int i = 0; i < m; i++) {
             double omega = 0;
             for (int j = 0; j < n; j++) {
@@ -202,19 +202,21 @@ namespace finmag { namespace llg {
                 // p = R1.R2xR3
                 double p = R1_x*(R2_y*R3_z - R2_z*R3_y) - R2_x*(R1_y*R3_z - R1_z*R3_y) + R3_x*(R1_y*R2_z - R1_z*R2_y);
                 // q = |R1||R2||R3| + |R3|R1.R2 + |R2|R1.R3 + |R1|R2.R3
-                double R1_norm = R1_x*R1_x + R1_y*R1_y + R1_z*R1_z;
-                double R2_norm = R2_x*R2_x + R2_y*R2_y + R2_z*R2_z;
-                double R3_norm = R3_x*R3_x + R3_y*R3_y + R3_z*R3_z;
+                double R1_norm = sqrt(R1_x*R1_x + R1_y*R1_y + R1_z*R1_z);
+                double R2_norm = sqrt(R2_x*R2_x + R2_y*R2_y + R2_z*R2_z);
+                double R3_norm = sqrt(R3_x*R3_x + R3_y*R3_y + R3_z*R3_z);
                 double R1_R2 = R1_x*R2_x + R1_y*R2_y + R1_z*R2_z;
                 double R1_R3 = R1_x*R3_x + R1_y*R3_y + R1_z*R3_z;
                 double R2_R3 = R2_x*R3_x + R2_y*R3_y + R2_z*R3_z;
                 double q = R1_norm*R2_norm*R3_norm + R3_norm*R1_R2 + R2_norm*R1_R3 + R1_norm*R2_R3;
-                
+
                 // use abs(p) in case R1, R2 and R3 have the wrong winding.
-                double at = atan2(abs(p), q);
+                double at = atan2(fabs(p), q);
                 // if q is negative, the atan will as well.
                 // Correct this by biasing the result with PI.
                 if (at < 0) at += PI;
+                // if p is negative, the solid angle is negative
+                if (p < 0) at = -at;
                 omega += 2*at;
             }
             a[i] = omega;

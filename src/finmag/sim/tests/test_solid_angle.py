@@ -97,14 +97,6 @@ def test_solid_angle_first_octant():
     magpar = csa_magpar(np.zeros(3), np.array([1, 0, 0]), np.array([0, 1, 0]), np.array([0, 0, 1]))
     assert abs(angle[0] - magpar) < TOLERANCE
 
-
-def compare_with_magpar(r, T):
-    assert r.shape == (3,)
-    assert T.shape == (3,3)
-    # first index of T is node number, second is spatial
-
-
-
 def test_solid_angle_one_minus_sign():
     origin = np.zeros((3, 1))
 
@@ -113,7 +105,6 @@ def test_solid_angle_one_minus_sign():
     assert triangle.shape == (3, 3, 1)
     angle = csa(origin, triangle)[0]
     magpar = csa_magpar(np.zeros(3), np.array([-1, 0, 0]), np.array([0, 1, 0]), np.array([0, 0, 1]))
-    print angle, magpar
     assert abs(angle - np.pi / 2) < TOLERANCE, \
             "The solid angle is {0}, but should be PI/2={1}.".format(angle[0], np.pi/2)
 
