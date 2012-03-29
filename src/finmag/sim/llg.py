@@ -7,6 +7,7 @@ from finmag.sim.exchange import Exchange
 from finmag.sim.anisotropy import UniaxialAnisotropy
 from finmag.sim.dmi import DMI
 from finmag.native import llg as native_llg
+from finmag.demag.demag_solver import Demag
 
 class LLG(object):
 
@@ -150,6 +151,9 @@ class LLG(object):
         for ani in self._anisotropies:
             H_ani = ani.compute_field()
             self.H_eff += H_ani
+        if self.use_demag:
+            H_demag = self.demag.compute_field()
+            self.H_eff += H_demag
 
     def solve(self):
         for func in self._pre_rhs_callables:
@@ -231,18 +235,21 @@ class LLG(object):
     def add_uniaxial_anisotropy(self,K,a):
         self._anisotropies.append(UniaxialAnisotropy(self.V, self._m, K, a))
 
-    def setup(self, use_exchange=True, use_dmi=False, 
+    def setup(self, use_exchange=True, use_dmi=False, use_demag=False,
               exchange_method="box-matrix-petsc",
-              dmi_method="box-matrix-petsc"):
+              dmi_method="box-matrix-petsc",
+              demag_method="GCR"):
+
         self.use_exchange = use_exchange
         if use_exchange:
             self.exchange = Exchange(self.V, self._m, self.A, 
                                      self.Ms, method=exchange_method)
 
         self.use_dmi = use_dmi
-
         if use_dmi:
             self.dmi = DMI(self.V, self._m, self.D, self.Ms, 
                            method = dmi_method)
 
-
+        self.use_demag = use_demag
+        if use_demag:
+            self.demag = Demag(self.V, self._m, self.Ms, method=demag_method)
