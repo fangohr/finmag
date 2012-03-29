@@ -148,24 +148,6 @@ def boxplot(arr, filename, **kwargs):
     plt.boxplot(list(arr), **kwargs)
     plt.savefig(filename)
 
-def finmag_to_oommf(f, oommf_mesh, dims=1):
-    """
-    Given a dolfin.Function f and a mesh oommf_mesh as defined in
-    finmag.util.oommf.mesh, it will probe the values of f at the coordinates
-    of oommf_mesh and return the resulting, oommf_compatible mesh_field.
-
-    """
-    f_for_oommf = oommf_mesh.new_field(3)
-    for i, (x, y, z) in enumerate(oommf_mesh.iter_coords()):
-        if dims == 1:
-            f_x, f_y, f_z = f(x)
-        else:
-            f_x, f_y, f_z = f(x, y, z)
-        f_for_oommf.flat[0,i] = f_x
-        f_for_oommf.flat[1,i] = f_y
-        f_for_oommf.flat[2,i] = f_z
-    return f_for_oommf.flat
-
 def stats(arr):
     median  = np.median(arr)
     average = np.mean(arr, axis=1)

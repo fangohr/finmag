@@ -2,9 +2,8 @@ import os
 import dolfin as df
 import numpy as np
 import finmag.sim.helpers as h
-
-from finmag.sim.llg import LLG
-from finmag.util.oommf import oommf_uniform_exchange, mesh
+from finmag.util.oommf import mesh
+from finmag.util.oommf.comparison import compare_exchange 
 
 REL_TOLERANCE = 35 # goal: < 1e-3
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
@@ -48,41 +47,6 @@ def three_dimensional_problem():
         return np.array([np.sin(1e9 * rs[0] / 3)**2, np.zeros(n), np.ones(n)])
 
     return compare_exchange(m_gen, dolfin_mesh, oommf_mesh, name="3d")
-
-def compare_exchange(m_gen, dolfin_mesh, oommf_mesh, dims=3, name=""):
-    finmag_exc_field, finmag = compute_finmag_exc(dolfin_mesh, m_gen)
-    finmag_exc = h.finmag_to_oommf(finmag_exc_field, oommf_mesh, dims)
-    oommf_exc = compute_oommf_exc(oommf_mesh, m_gen, finmag.Ms, finmag.C)
-
-    difference = np.abs(finmag_exc - oommf_exc)
-    relative_difference = difference / np.sqrt(
-        oommf_exc[0]**2 + oommf_exc[1]**2 + oommf_exc[2]**2)
-
-    return dict(name=name, m0=finmag.m,
-            mesh=dolfin_mesh, oommf_mesh=oommf_mesh,
-            exc=finmag_exc_field.vector().array(), oommf_exc=oommf_exc,
-            diff=difference, rel_diff=relative_difference)
-
-def compute_finmag_exc(dolfin_mesh, m_gen):
-    coords = np.array(zip(* dolfin_mesh.coordinates()))
-    m0 = m_gen(coords).flatten()
-
-    llg = LLG(dolfin_mesh)
-    llg.set_m0(m0)
-    llg.setup()
-    finmag_exc_field = df.Function(llg.V)
-    finmag_exc_field.vector()[:] = llg.exchange.compute_field()
-    return finmag_exc_field, llg
-
-def compute_oommf_exc(oommf_mesh, m_gen, Ms, C):
-    coords = np.array(zip(* oommf_mesh.iter_coords()))
-    m0 = oommf_mesh.new_field(3)
-    m0.flat = m_gen(coords)
-    m0.flat /= np.sqrt(
-            m0.flat[0]**2 +m0.flat[1]**2 + m0.flat[2]**2)
-    
-    oommf_exchange = oommf_uniform_exchange(m0, Ms, C).flat
-    return oommf_exchange
 
 if __name__ == '__main__':
     res1 = one_dimensional_problem()
