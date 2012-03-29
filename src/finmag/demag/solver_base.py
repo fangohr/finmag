@@ -36,7 +36,7 @@ class DeMagSolver(object):
         #Define the magnetisation
         # At the moment this just accepts tuple of string(s) 
         # or a dolfin.Function
-        if isinstance(self.problem.M, tuple):
+        if isinstance(self.problem.M, tuple) or isinstance(self.problem.M, str):
             self.M = interpolate(Expression(self.problem.M),self.Mspace)
         elif 'dolfin.functions.function.Function' in str(type(self.problem.M)):
             self.M = self.problem.M
