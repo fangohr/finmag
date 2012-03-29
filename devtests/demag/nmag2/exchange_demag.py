@@ -3,6 +3,7 @@ from dolfin import *
 from finmag.sim.llg import LLG
 from finmag.util.convert_mesh import convert_mesh
 from scipy.integrate import ode
+import pylab as p
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -22,11 +23,11 @@ r = ode(llg_wrap).set_integrator("vode", method="bdf", rtol=1e-5, atol=1e-5)
 r.set_initial_value(llg.m, 0)
 
 dt = 1.0e-12
-T1 = 5*dt
+T1 = 60*dt
 
 fh = open(MODULE_DIR + "/averages.txt", "w")
 xlist, ylist, zlist, tlist = [], [], [], []
-time_series = TimeSeries("simulation_data")
+time_series = TimeSeries("simulation_data/sim")
 
 while r.successful() and r.t <= T1:
     mx, my, mz = llg.m_average
@@ -37,12 +38,14 @@ while r.successful() and r.t <= T1:
 
     fh.write(str(r.t) + " " + str(mx) + " " + str(my) + " " + str(mz) + "\n")
     
-    time_series.store(llg_m.vector(), r.t)
+    time_series.store(llg._m.vector(), r.t)
     print "integration time", r.t + dt
     r.integrate(r.t + dt)
     plot(llg._m)
 
 
 fh.close()
+p.plot(tlist, xlist, tlist, ylist, tlist, zlist)
+p.show()
 interactive()
 
