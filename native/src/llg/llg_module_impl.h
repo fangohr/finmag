@@ -164,10 +164,12 @@ namespace finmag { namespace llg {
     /*
         Computes the solid angle subtended by the triangular mesh Ts, as seen from xs
           r - 3 x m array of points in space
-          T - 3 x 3 x n array of triangular coordinates, first index is for the spatial coordinate, second for node number
-          a (output) -  m vector of computed solid angles
+          T - 3 x 3 x n array of triangular coordinates, first index is node number, second index is spatial coordinate
+          a (output, optional) -  m vector of computed solid angles
+
+        Return a, or a newly allocated result vector if a is not provided
     */
-    void compute_solid_angle(const np_array<double> &r_arr, const np_array<double> &T_arr, const np_array<double> &a_arr) {
+    np_array<double> compute_solid_angle(const np_array<double> &r_arr, const np_array<double> &T_arr, bp::object a_obj) {
         r_arr.check_ndim(2, "compute_solid_angle: r");
         T_arr.check_ndim(3, "compute_solid_angle: T");
         int m = r_arr.dim()[1];
@@ -175,13 +177,15 @@ namespace finmag { namespace llg {
 
         r_arr.check_shape(3, m, "compute_solid_angle: r");
         T_arr.check_shape(3, 3, n, "compute_solid_angle: T");
+
+        np_array<double> a_arr = a_obj.is_none() ? np_array<double>(m) : bp::extract<np_array<double> >(a_obj);
         a_arr.check_shape(m, "compute_solid_angle: a");
 
         // set up the pointers
         double *r_x = r_arr(0), *r_y = r_arr(1), *r_z = r_arr(2);
-        double *T1_x = T_arr(0, 0), *T1_y = T_arr(1, 0), *T1_z = T_arr(2, 0);
-        double *T2_x = T_arr(0, 1), *T2_y = T_arr(1, 1), *T2_z = T_arr(2, 1);
-        double *T3_x = T_arr(0, 2), *T3_y = T_arr(1, 2), *T3_z = T_arr(2, 2);
+        double *T1_x = T_arr(0, 0), *T1_y = T_arr(0, 1), *T1_z = T_arr(0, 2);
+        double *T2_x = T_arr(1, 0), *T2_y = T_arr(1, 1), *T2_z = T_arr(1, 2);
+        double *T3_x = T_arr(2, 0), *T3_y = T_arr(2, 1), *T3_z = T_arr(2, 2);
         double *a = a_arr.data();
         
         // i runs over points, j runs over triangles
@@ -210,11 +214,13 @@ namespace finmag { namespace llg {
                 double at = atan2(abs(p), q);
                 // if q is negative, the atan will as well.
                 // Correct this by biasing the result with PI.
-                if (at < 0) at += PI; 
+                if (at < 0) at += PI;
                 omega += 2*at;
             }
             a[i] = omega;
         }
+
+        return a_arr;
     }
 
     void register_module() {
@@ -245,7 +251,7 @@ namespace finmag { namespace llg {
         def("compute_solid_angle", &compute_solid_angle, (
             arg("r"),
             arg("T"),
-            arg("a")
+            arg("a")=object()
         ));
     }
 }}
