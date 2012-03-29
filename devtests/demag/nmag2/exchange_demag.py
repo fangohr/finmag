@@ -1,0 +1,29 @@
+from finmag.sim.llg import LLG
+from finmag.util.convert_mesh import convert_mesh
+from dolfin import Mesh, plot, interactive
+from scipy.integrate import ode
+
+mesh = Mesh(convert_mesh("bar30_30_100.geo"))
+
+# Set up LLG
+llg = LLG(mesh)
+llg.Ms = 0.86e6
+llg.A = 13.0e-12
+llg.alpha = 0.5
+llg.set_m0((1,0,1))
+llg.setup(use_exchange=True, use_dmi=False, use_demag=True)
+
+# Set up time integrator
+llg_wrap = lambda t, y: llg.solve_for(y, t)
+r = ode(llg_wrap).set_integrator("vode", method="bdf", rtol=1e-5, atol=1e-5)
+r.set_initial_value(llg.m, 0)
+
+dt = 5.0e-12
+T1 = 60*dt
+while r.successful() and r.t <= T1:
+    print "integration time", r.t + dt
+    r.integrate(r.t + dt)
+    print llg.m
+    plot(llg._m)
+interactive()
+

@@ -58,6 +58,7 @@ class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           Solve for the Demag field using GCR and FemBem
           Potential is returned, demag field stored
           """
+          print "GCR Solve()"
           #Solve for phia
           self.solve_phia()
           #Solve for phib on the boundary with Bem 
@@ -74,9 +75,11 @@ class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           
      def solve_phib_boundary(self,phia,doftionary):
           """Solve for phib on the boundary using BEM"""
+          print "solve phib boundary"
           q = self.assemble_qvector_exact(phia,doftionary)
           B = self.bem
           if B is None:
+              print "B is none, build bem"
               B = self.build_BEM_matrix(doftionary)
               self.bem = B
           phibdofs = np.dot(B,q)
