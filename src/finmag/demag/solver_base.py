@@ -34,8 +34,10 @@ class DeMagSolver(object):
             self.Mspace = VectorFunctionSpace(self.problem.mesh,"DG",self.degree)
         
         #Define the magnetisation
-        # At the moment this just accepts tuple of string(s) 
+        # At the moment this just accepts strings, tuple of strings
         # or a dolfin.Function
+        # TODO: When the magnetisation no longer are allowed to be 
+        # one-dimensional, remove " or isinstance(self.problem.M, str)"
         if isinstance(self.problem.M, tuple) or isinstance(self.problem.M, str):
             self.M = interpolate(Expression(self.problem.M),self.Mspace)
         elif 'dolfin.functions.function.Function' in str(type(self.problem.M)):
