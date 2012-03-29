@@ -71,7 +71,8 @@ class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           self.phi = self.calc_phitot(self.phia,self.phib)
 
           # FIXME: Why is this here? Uncomment if it breaks the build.
-          #self.Hdemag = self.get_demagfield(self.phi)
+          # It broke the build... TODO: Figure out why this is necessary
+          self.Hdemag = self.get_demagfield(self.phi)
           return self.phi
           
      def solve_phia(self,method = "lu"):
