@@ -233,7 +233,7 @@ class LLG(object):
         return self.solve()
 
     def add_uniaxial_anisotropy(self,K,a):
-        self._anisotropies.append(UniaxialAnisotropy(self.V, self._m, K, a))
+        self._anisotropies.append(UniaxialAnisotropy(self.V, self._m, K, a, self.Ms))
 
     def setup(self, use_exchange=True, use_dmi=False, use_demag=False,
               exchange_method="box-matrix-petsc",
