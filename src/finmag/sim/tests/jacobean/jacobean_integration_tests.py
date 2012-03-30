@@ -15,6 +15,7 @@ from finmag.sim.llg import LLG
 from domain_wall_cobalt import setup_domain_wall_cobalt, domain_wall_error
 from finmag.native import sundials
 from finmag.util.ode import scipy_to_cvode_rhs
+from datetime import datetime
 
 NODE_COUNT = 100
 END_TIME = 1e-10
@@ -32,8 +33,10 @@ class JacobeanIntegrationTests(unittest.TestCase):
         integrator = scipy.integrate.ode(self.scipy_rhs)
         integrator.set_integrator("vode", method=method, atol=1e-8, rtol=1e-8, nsteps=40000)
         integrator.set_initial_value(self.llg.m)
+        t = datetime.now()
         ys = integrator.integrate(END_TIME)
-        print "scipy integration: method=%s, n_rhs_evals=%d, error=%g" % (method, self.n_rhs_evals, domain_wall_error(ys, NODE_COUNT))
+        dt = datetime.now() - t
+        print "scipy integration: method=%s, n_rhs_evals=%d, error=%g, elapsed time=%s" % (method, self.n_rhs_evals, domain_wall_error(ys, NODE_COUNT), dt)
 
     def test_scipy_bdf(self):
         self.run_scipy_test("bdf")
@@ -54,8 +57,10 @@ class JacobeanIntegrationTests(unittest.TestCase):
         integrator.set_scalar_tolerances(1e-8, 1e-8)
         integrator.set_max_num_steps(40000)
         ys = np.zeros(self.llg.m.shape)
+        t = datetime.now()
         integrator.advance_time(END_TIME, ys)
-        print "sundials integration, no jacobean (%s, diagonal): n_rhs_evals=%d, error=%g" % (method, self.n_rhs_evals, domain_wall_error(ys, NODE_COUNT))
+        dt = datetime.now() - t
+        print "sundials integration, no jacobean (%s, diagonal): n_rhs_evals=%d, error=%g, elapsed time=%s" % (method, self.n_rhs_evals, domain_wall_error(ys, NODE_COUNT), dt  )
 
     def test_sundials_diag_bdf(self):
         self.run_sundials_test_no_jacobean("bdf")
@@ -73,8 +78,10 @@ class JacobeanIntegrationTests(unittest.TestCase):
         integrator.set_scalar_tolerances(1e-8, 1e-8)
         integrator.set_max_num_steps(40000)
         ys = np.zeros(self.llg.m.shape)
+        t = datetime.now()
         integrator.advance_time(END_TIME, ys)
-        print "sundials integration, with jacobean: n_rhs_evals=%d, error=%g" % (self.n_rhs_evals, domain_wall_error(ys, NODE_COUNT))
+        dt = datetime.now() - t
+        print "sundials integration, with jacobean: n_rhs_evals=%d, error=%g, elapsed time=%s" % (self.n_rhs_evals, domain_wall_error(ys, NODE_COUNT), dt)
 
 if __name__ == '__main__':
     unittest.main()
