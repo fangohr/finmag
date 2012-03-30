@@ -77,14 +77,14 @@ def test_domain_wall_profile():
                                      #nsteps=50)
     r.set_initial_value(llg.m, t0)
 
-    f=open('data.txt','w')
+    #f=open('data.txt','w')
     while (True or r.successful()) and r.t < t1-dt:
         Eani = llg._anisotropies[0].compute_energy()/L
         Eex = llg.exchange.compute_energy()/L
         print "Integrating time: %g" % r.t
-        f.write('%g\t%g\t%g\n' % (r.t,Eani,Eex))
+        #f.write('%g\t%g\t%g\n' % (r.t,Eani,Eex))
         r.integrate(r.t + dt)
-    f.close()
+    #f.close()
 
     # Plot magnetisation in z-direction
     mz = []
@@ -116,7 +116,7 @@ def test_domain_wall_profile():
         print "difference A : %9g" % (fittedA-A)
         print "rel difference A : %9g" % ((fittedA-A)/A)
         print "quotient A/fittedA and fittedA/A : %9g %g" % (A/fittedA,fittedA/A)
-        pylab.savefig('domain-wall.png')
+        pylab.savefig('1d-domain-wall-profile.png')
         #pylab.show()
         assert abs(fittedA-A)/A < 0.004,"Fitted A to inaccurate"
 

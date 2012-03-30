@@ -131,3 +131,9 @@ def test_domain_wall_profile():
 
 if __name__=="__main__":
     test_domain_wall_profile()
+
+
+    print "Note: should check that this is the right quantitative agreement we expect"
+    print "i.e.: is it the same as with Nmag, say."
+    print "Also: plot of energie as a function of time for exchange and anisotropy energie"
+    print "doesn't quite match yet."
