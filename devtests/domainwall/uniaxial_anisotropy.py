@@ -10,7 +10,8 @@ A=30e-12  #J/m
 #Changing A leads to changing deviations of the fitted A from the correct A
 #Needs more investigation.
 x0=252e-9 #m
-Ms=1400e3 #A/m
+#Ms=1400e3 #A/m
+Ms=800e3 #A/m
 
 def Mz_exact(x,x0=x0,A=A,Ms=Ms):
     """Analytical solution.
@@ -56,7 +57,6 @@ llg.Ms = Ms                 # saturation magnetization
 
 #with the following correction we get a good match -- but why?
 correction = 1.77 #emperical number to make match with analytical solution better
-llg.A = A*correction            # exchange coupling
 llg.A = A
 llg.alpha=1.0
 a = df.Constant((0, 0, 1)) # easy axis
@@ -73,8 +73,8 @@ llg.add_uniaxial_anisotropy(K1,a)
 llg_wrap = lambda t, y: llg.solve_for(y, t)
 
 # Time integration
-t0 = 0; dt = 10e-12; t1 = 1e-10
-r = ode(llg_wrap).set_integrator("vode", method="bdf",nsteps=50) #rtol=1e-5, 
+t0 = 0; dt = 10e-12; t1 = 2e-10
+r = ode(llg_wrap).set_integrator("vode", method="bdf")#,nsteps=50) #rtol=1e-5, 
                                  #atol=1e-5,
                                  #nsteps=50)
 r.set_initial_value(llg.m, t0)
@@ -94,7 +94,8 @@ x = np.linspace(0, L, simplices+1)
 for xpos in x:
     mz.append(llg._m(xpos)[2])
 mz = np.array(mz)*Ms
-pylab.plot(x,mz,x,Mz_exact(x))
+pylab.plot(x,mz,'o',label='finmag')
+pylab.plot(x,Mz_exact(x),'-',label='analytic')
 pylab.legend(("Finmag", "Analytical"))
 pylab.title("Domain wall example - Finmag vs analytical solution")
 pylab.xlabel("Length")
@@ -117,11 +118,16 @@ else:
     print "difference A : %9g" % (fittedA-A)
     print "rel difference A : %9g" % ((fittedA-A)/A)
     print "quotient A/fittedA and fittedA/A : %9g %g" % (A/fittedA,fittedA/A)
-    pylab.show()
-    assert abs(fittedA-A)/A < 1e-2,"We should get this accurate to one percent I think."
+    pylab.savefig('domain-wall.png')
+    #pylab.show()
+    assert abs(fittedA-A)/A < 0.004,"Fitted A to inaccurate"
 
 
-
-diff = abs(mz - Mz_exact(x))
-print max(diff)
+#Maximum deviation:
+maxdiff = max(abs(mz - Mz_exact(x)))
+print "Absolute deviation in Mz",maxdiff
+assert maxdiff < 1200
+maxreldiff=maxdiff/max(Mz_exact(x))
+print "Relative deviation in Mz",maxreldiff
+assert maxreldiff< 0.0009
 
