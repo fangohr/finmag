@@ -53,7 +53,7 @@ class UniaxialAnisotropy(object):
             
     """   
     
-    def __init__(self, V, m, K, a, method="box-matrix-petsc"):
+    def __init__(self, V, m, K, a, Ms, method="box-matrix-petsc"):
         print "Anisotropy(): method = %s" % method
 
         # Testfunction
@@ -69,7 +69,8 @@ class UniaxialAnisotropy(object):
         self.E = -K * (df.dot(a, m)**2) *df.dx
 
         # Gradient
-        self.dE_dM = -df.derivative(self.E, m)
+        mu0 = 4*np.pi*1e-7
+        self.dE_dM = df.Constant(-1.0/(Ms*mu0))*df.derivative(self.E, m)
 
         # Volume
         self.vol = df.assemble(df.dot(self.v, 
