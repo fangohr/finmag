@@ -1,3 +1,4 @@
+import math
 from dolfin import *
 import numpy as np
 from finmag.sim.anisotropy import UniaxialAnisotropy
@@ -48,6 +49,7 @@ V  = VectorFunctionSpace(mesh, "CG", 1)
 K  = 520e3  # For Co (J/m^3), according to Nmag (0.2.1) example 2.10
 #K1 = Constant(K) 
 Ms = 1
+mu0=4*math.pi*1e-7
 
 # Easy axes
 a = Constant((0, 0, 1))
@@ -55,7 +57,7 @@ a = Constant((0, 0, 1))
 def test_parallel():
     # Case 1
     M = interpolate(Constant((0, 0, 1)), V)
-    energy = UniaxialAnisotropy(V, M, K, a).compute_energy()
+    energy = UniaxialAnisotropy(V, M, K, a, Ms).compute_energy()
     print 'test_parallel()'
     print 'This sould be zero %g:' % energy
 
@@ -68,7 +70,7 @@ def test_orthogonal():
     # Case 2
     print "test_orthogonal:"
     M = interpolate(Constant((0,1,0)), V)   
-    energy = UniaxialAnisotropy(V, M, K, a).compute_energy()
+    energy = UniaxialAnisotropy(V, M, K, a, Ms).compute_energy()
     energy_direct = K*assemble(Constant(0)*dx, mesh=mesh)
     print 'These should be equal: %g-%g=%g ' %( energy, energy_direct, energy-energy_direct)
     assert abs(energy - energy_direct) < TOL
@@ -76,12 +78,12 @@ def test_orthogonal():
 def test_gradient():
     # Case 3
     M = interpolate(Constant((1./np.sqrt(2), 0, 1./np.sqrt(2))), V)
-    ani = UniaxialAnisotropy(V, M, K, a)
+    ani = UniaxialAnisotropy(V, M, K, a, Ms)
     dE_dM = ani.compute_field()
 
     # Manually derivative
     w = TestFunction(V)
-    g_ani = Constant(K)*(2*dot(a, M)*dot(a, w))*dx
+    g_ani = Constant(K/(mu0*Ms))*(2*dot(a, M)*dot(a, w))*dx
     vol = assemble(dot(w, Constant((1, 1, 1)))*dx).array()
     man_grad = assemble(g_ani).array() / vol
     
