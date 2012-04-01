@@ -1,7 +1,9 @@
-import dolfin as df
-import instant
 import os
 import numpy as np
+import logging 
+import dolfin as df
+import instant
+import time
 import finmag.sim.helpers as h
 from finmag.sim.exchange import Exchange
 from finmag.sim.anisotropy import UniaxialAnisotropy
@@ -9,10 +11,19 @@ from finmag.sim.dmi import DMI
 from finmag.native import llg as native_llg
 from finmag.demag.demag_solver import Demag
 
+#default settings for logger 'finmag' set in __init__.py
+#getting access to logger here
+logger = logging.getLogger(name='finmag')
+
+
 class LLG(object):
 
     def __init__(self, mesh, order=1, use_instant_llg=True, do_precession=True):
+        logger.info('Creating LLG object (rank=%s/%s) %s' % (df.MPI.process_number(),
+                                                              df.MPI.num_processes(),
+                                                              time.asctime()))
         self.mesh = mesh
+        logger.debug("%s" % self.mesh)
         self.V = df.VectorFunctionSpace(self.mesh, 'Lagrange', order, dim=3)
         self.Volume = df.assemble(df.Constant(1)*df.dx, mesh=self.mesh)
 

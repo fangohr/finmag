@@ -1,5 +1,7 @@
 import numpy as np
 import dolfin as df
+import logging
+logger=logging.getLogger('finmag')
 
 class DMI(object):
     """
@@ -72,7 +74,7 @@ class DMI(object):
 
     def __init__(self, V, M, D, Ms, method="box-assemble-petsc"):
         
-        print "DMI(): method = %s" % method
+        logger.info("DMI(): method = %s" % method)
         
         self.V = V
         self.M = M

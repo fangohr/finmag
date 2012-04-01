@@ -1,5 +1,7 @@
 import numpy as np
 import dolfin as df
+import logging
+logger=logging.getLogger('finmag')
 
 class UniaxialAnisotropy(object):
     """
@@ -54,7 +56,7 @@ class UniaxialAnisotropy(object):
     """   
     
     def __init__(self, V, m, K, a, Ms, method="box-matrix-petsc"):
-        print "Anisotropy(): method = %s" % method
+        logger.info("Anisotropy() method = %s" % method)
 
         # Testfunction
         self.v = df.TestFunction(V)

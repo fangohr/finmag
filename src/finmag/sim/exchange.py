@@ -1,5 +1,7 @@
 import numpy as np
 import dolfin as df
+import logging
+logger=logging.getLogger('finmag')
 
 class Exchange(object):
     """
@@ -67,7 +69,7 @@ class Exchange(object):
     """
 
     def __init__(self, V, M, C, Ms, method="box-matrix-petsc"):
-        #print "Exchange(): method = %s" % method
+        logger.info("Exchange(): method = %s" % method)
        
         self.V = V
 
