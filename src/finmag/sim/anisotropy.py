@@ -1,6 +1,7 @@
 import numpy as np
 import dolfin as df
 import logging
+from finmag.util.timings import timings
 logger=logging.getLogger('finmag')
 
 class UniaxialAnisotropy(object):
@@ -58,6 +59,9 @@ class UniaxialAnisotropy(object):
     def __init__(self, V, m, K, a, Ms, method="box-matrix-petsc"):
         logger.info("Anisotropy() method = %s" % method)
 
+
+        timings.start('Anisotropy-init')
+
         # Testfunction
         self.v = df.TestFunction(V)
         
@@ -101,6 +105,8 @@ class UniaxialAnisotropy(object):
                                     * 'box-matrix-petsc'  
                                     * 'project'""")
 
+        timings.stop('Anisotropy-init')
+
     def compute_field(self):
         """
         Compute the anisotropy field.
@@ -110,7 +116,10 @@ class UniaxialAnisotropy(object):
                 The anisotropy field.       
         
         """
-        return self.__compute_field()
+        timings.start('Anisotropy-computefield')
+        H = self.__compute_field()
+        timings.stop('Anisotropy-computefield')
+        return H
     
     def compute_energy(self):
         """
@@ -121,7 +130,10 @@ class UniaxialAnisotropy(object):
                 The anisotropy energy.
 
         """
-        return df.assemble(self.E)
+        timings.start('Anisotropy-energy')
+        E=df.assemble(self.E)
+        timings.stop('Anisotropy-energy')
+        return E
 
     def __setup_field_numpy(self):
         """
@@ -160,17 +172,21 @@ class UniaxialAnisotropy(object):
         self.H_ani_project = df.Function(self.V)        
 
     def __compute_field_assemble(self):
-        return df.assemble(self.dE_dM).array() / self.vol
+        H_ani=df.assemble(self.dE_dM).array() / self.vol
+        return H_ani
 
     def __compute_field_numpy(self):
         Mvec = self.m.vector().array()
-        H_ani = np.dot(self.g,Mvec)
-        return H_ani/self.vol
+        H_ani = np.dot(self.g,Mvec)/self.vol
+        return H_ani
 
     def __compute_field_petsc(self):
         self.g_petsc.mult(self.m.vector(), self.H_ani_petsc)
-        return self.H_ani_petsc.array()/self.vol
+        H_ani = self.H_ani_petsc.array()/self.vol
+        return H_ani
 
     def __compute_field_project(self):
         df.solve(self.a == self.L, self.H_ani_project)
-        return self.H_ani_project.vector().array()
+        H_ani = self.H_ani_project.vector().array()
+        raise NotImplementedError("This has never been tested and is not meant to work.")
+        return H_ani

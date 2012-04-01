@@ -2,6 +2,7 @@ import numpy as np
 import dolfin as df
 import logging
 logger=logging.getLogger('finmag')
+from finmag.util.timings import timings
 
 class Exchange(object):
     """
@@ -70,6 +71,7 @@ class Exchange(object):
 
     def __init__(self, V, M, C, Ms, method="box-matrix-petsc"):
         logger.info("Exchange(): method = %s" % method)
+        timings.start('Exchange-init')
        
         self.V = V
 
@@ -102,6 +104,8 @@ class Exchange(object):
                                     * 'box-matrix-petsc'  
                                     * 'project'""")
 
+        timings.stop('Exchange-init')
+
     def compute_field(self):
         """
         Compute the exchange field.
@@ -111,7 +115,10 @@ class Exchange(object):
                 The exchange field.       
         
         """
-        return self.__compute_field()
+        timings.start('Exchange-computefield')
+        Hex = self.__compute_field()
+        timings.stop('Exchange-computefield')
+        return Hex
     
     def compute_energy(self):
         """
@@ -122,7 +129,10 @@ class Exchange(object):
                 The exchange energy.
 
         """
-        return df.assemble(self.E)
+        timings.start('Exchange-energy')
+        E=df.assemble(self.E)
+        timings.stop('Exchange-energy')
+        return E
 
     def __setup_field_numpy(self):
         """
