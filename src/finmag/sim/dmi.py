@@ -2,6 +2,7 @@ import numpy as np
 import dolfin as df
 import logging
 logger=logging.getLogger('finmag')
+from finmag.util.timings import timings
 
 class DMI(object):
     """
@@ -73,6 +74,7 @@ class DMI(object):
     """
 
     def __init__(self, V, M, D, Ms, method="box-assemble-petsc"):
+        timings.start("DMI-init")
         
         logger.info("DMI(): method = %s" % method)
         
@@ -110,6 +112,9 @@ class DMI(object):
                                     * 'box-matrix-numpy',
                                     * 'box-matrix-petsc'  
                                     * 'project'""")
+
+        timings.stop("DMI-init")
+
     def compute_field(self):
         """
         Compute the DMI field.
@@ -119,7 +124,11 @@ class DMI(object):
                 The DMI field.       
         
         """
-        return self.__compute_field()
+        timings.start("DMI-computefield")
+        H = self.__compute_field()
+        timings.stop("DMI-computefield")
+        return H
+
     
     def compute_energy(self):
         """
@@ -130,7 +139,10 @@ class DMI(object):
                 The DMI energy.
 
         """
-        return df.assemble(self.E)
+        timings.start("DMI-computenergy")
+        E = df.assemble(self.E)
+        timings.stop("DMI-computenergy")
+        return E
 
     def __setup_field_numpy(self):
         """

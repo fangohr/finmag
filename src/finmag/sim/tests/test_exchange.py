@@ -115,3 +115,9 @@ def test_exchange_field_box_matrix_numpy_same_as_box_matrix_petsc():
     print "Max value = %g, relative error = %g " % (max(H_ex1), diff/max(H_ex1))
     assert diff < 1e-8
     assert diff/max(H_ex1)<1e-15
+
+if __name__=="__main__":
+    test_exchange_field_box_matrix_numpy_same_as_box_matrix_petsc()
+    test_exchange_field_box_assemble_equal_box_matrix()
+    test_exchange_field_should_change_when_M_changes()
+    test_exchange_field_box_assemble_equal_box_matrix()

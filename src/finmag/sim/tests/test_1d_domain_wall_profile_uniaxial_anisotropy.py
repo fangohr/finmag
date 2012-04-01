@@ -76,6 +76,7 @@ def test_domain_wall_profile():
                                      #atol=1e-5,
                                      #nsteps=50)
     r.set_initial_value(llg.m, t0)
+    
 
     #f=open('data.txt','w')
     while (True or r.successful()) and r.t < t1-dt:
@@ -85,6 +86,8 @@ def test_domain_wall_profile():
         #f.write('%g\t%g\t%g\n' % (r.t,Eani,Eex))
         r.integrate(r.t + dt)
     #f.close()
+    llg.timings()
+
 
     # Plot magnetisation in z-direction
     mz = []

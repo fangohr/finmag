@@ -10,6 +10,7 @@ from finmag.sim.anisotropy import UniaxialAnisotropy
 from finmag.sim.dmi import DMI
 from finmag.native import llg as native_llg
 from finmag.demag.demag_solver import Demag
+from finmag.util.timings import timings
 
 #default settings for logger 'finmag' set in __init__.py
 #getting access to logger here
@@ -22,6 +23,9 @@ class LLG(object):
         logger.info('Creating LLG object (rank=%s/%s) %s' % (df.MPI.process_number(),
                                                               df.MPI.num_processes(),
                                                               time.asctime()))
+        timings.reset()
+        timings.start('LLG-init')
+        
         self.mesh = mesh
         logger.debug("%s" % self.mesh)
         self.V = df.VectorFunctionSpace(self.mesh, 'Lagrange', order, dim=3)
@@ -32,6 +36,7 @@ class LLG(object):
         self.do_precession = do_precession
         if use_instant_llg:
             self._solve = self.load_c_code()
+        timings.stop('LLG-init')
 
     def set_default_values(self):
         self.alpha = 0.5
@@ -172,6 +177,7 @@ class LLG(object):
 
         self.compute_H_eff()
 
+        timings.start("LLG-compute-dmdt")
         if self.use_instant_llg:
             status, dMdt = self._solve(self.alpha, self.gamma, self.c,
                 self.m, self.H_eff, self.m.shape[0], self.pins, self.do_precession)
@@ -191,6 +197,8 @@ class LLG(object):
             dMdt.shape = (-1,)
             status = 0
 
+        timings.stop("LLG-compute-dmdt")
+
         for func in self._post_rhs_callables:
             func(self)
 
@@ -200,6 +208,8 @@ class LLG(object):
 
     # Computes the Jacobean-times-vector product, as used by SUNDIALS CVODE
     def sundials_jtimes(self, mp, J_mp, t, m, fy, tmp):
+        timings.start("LLG-sundials-jtimes")
+
         assert m.shape == self.m.shape
         assert mp.shape == m.shape
         assert tmp.shape == m.shape
@@ -235,13 +245,16 @@ class LLG(object):
         mp.shape = (-1,)
         tmp.shape = (-1,)
 
+        timings.stop("LLG-sundials-jtimes")
+
         # Nonnegative exit code indicates success
         return 0
 
     def solve_for(self, m, t):
         self.m = m
         self.t = t
-        return self.solve()
+        value = self.solve() 
+        return value
 
     def add_uniaxial_anisotropy(self,K,a):
         self._anisotropies.append(UniaxialAnisotropy(self.V, self._m, K, a, self.Ms))
@@ -250,6 +263,9 @@ class LLG(object):
               exchange_method="box-matrix-petsc",
               dmi_method="box-matrix-petsc",
               demag_method="GCR"):
+
+        #add setup time to LLG-init
+        timings.start('LLG-init')
 
         self.use_exchange = use_exchange
         if use_exchange:
@@ -264,3 +280,11 @@ class LLG(object):
         self.use_demag = use_demag
         if use_demag:
             self.demag = Demag(self.V, self._m, self.Ms, method=demag_method)
+
+        timings.stop('LLG-init')
+
+    def timings(self,n=20):
+        """Prints an overview of wall time an number of calls for
+        subparts of the code, listing up to n items, starting from 
+        those that took the most wall time."""
+        print timings.report_str(n)
