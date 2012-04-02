@@ -226,7 +226,6 @@ def get_m0(file_name):
     field=np.array([fx,fy,fz]).reshape(1,-1)[0]
     return field
     
-
 def compute_exch_magpar(V, m, C, Ms):
     """
     Usage:
@@ -259,6 +258,7 @@ def compute_exch_magpar(V, m, C, Ms):
       
     new_path=os.path.join(os.getcwd(),base_name)
 
+    #remove files from temporary directory
     rm_cmd=("rm","-rf",new_path)
     subprocess.check_call(rm_cmd)
 

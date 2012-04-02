@@ -10,7 +10,7 @@ from finmag.sim.helpers import quiver, boxplot, stats
 #df.parameters["allow_extrapolation"] = True
 
 
-REL_TOLERANCE = 2e-1 # goal: < 1e-3
+REL_TOLERANCE = 1.5e-5 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
 
 
@@ -18,7 +18,6 @@ MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
 def test_three_dimensional_problem():
     results = three_dimensional_problem()
     assert np.nanmax(results["rel_diff"]) < REL_TOLERANCE
-
 
 
 def three_dimensional_problem():
