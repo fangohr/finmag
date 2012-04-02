@@ -148,7 +148,8 @@ class LLG(object):
         #This needs reworking: need to be more flexible in the way we can set
         #H_app. Need similar flexibility as we have for providing m0. In particular,
         #we would like to set H_app from
-        # - a (3d) value (for example using         self._H_app = df.interpolate(df.Constant(value), self.V))
+        # - a (3d) value (for example using         
+        #   self._H_app = df.interpolate(df.Constant(value), self.V))
         # - a dolfin expression 
         # (- a numpy vector that provides values for self._H_app.vector())
         
@@ -191,7 +192,9 @@ class LLG(object):
             H_eff.shape = (3, -1)
             dMdt = np.zeros(m.shape)
             # Calculate dm/dt
-            native_llg.calc_llg_dmdt(m, H_eff, self.t, dMdt, self.gamma/(1.+self.alpha**2), self.alpha, char_time, self.do_precession)
+            native_llg.calc_llg_dmdt(m, H_eff, self.t, dMdt, 
+                                     self.gamma/(1.+self.alpha**2), self.alpha, 
+                                     char_time, self.do_precession)
             # TODO: Store pins in a np.ndarray(dtype=int) and assign 0's in C++ code
             dMdt[:, self.pins] = 0
             dMdt.shape = (-1,)
@@ -220,7 +223,8 @@ class LLG(object):
         # Unfortunately we have to recompute H every time here
         self.m = m
         self.compute_H_eff()
-        # Might be possible to avoid it later when we use a preconditioner, by computing it in pre_setup
+        # Might be possible to avoid it later when we use a preconditioner, 
+        # by computing it in pre_setup
 
         self.m = mp
         if self.use_exchange:
@@ -237,7 +241,8 @@ class LLG(object):
         J_mp.shape = (3, -1)
         # Use the same characteristic time as defined by c
         char_time = 0.1 / self.c
-        native_llg.calc_llg_jtimes(m, H, mp, Hp, t, J_mp, self.gamma/(1+self.alpha**2), self.alpha, char_time, self.do_precession)
+        native_llg.calc_llg_jtimes(m, H, mp, Hp, t, J_mp, self.gamma/(1+self.alpha**2), 
+                                   self.alpha, char_time, self.do_precession)
         # TODO: Store pins in a np.ndarray(dtype=int) and assign 0's in C++ code
         J_mp[:, self.pins] = 0.
         J_mp.shape = (-1, )
