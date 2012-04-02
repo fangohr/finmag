@@ -10,7 +10,7 @@ from finmag.sim.helpers import quiver, boxplot, stats
 #df.parameters["allow_extrapolation"] = True
 
 
-REL_TOLERANCE = 2e-1 # goal: < 1e-3
+REL_TOLERANCE = 2.2e-6 # goal: < 1e-3
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
 
 
