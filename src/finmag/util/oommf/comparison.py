@@ -25,7 +25,7 @@ def compute_finmag_anis(m_gen, K1, axis, dolfin_mesh):
     llg = LLG(dolfin_mesh)
     llg.set_m0(m0)
     llg.add_uniaxial_anisotropy(K1, df.Constant(axis))
-    llg.setup()
+    llg.setup(use_exchange=False)
     anis_field = df.Function(llg.V)
     anis_field.vector()[:] = llg._anisotropies[0].compute_field()
     return anis_field, llg
