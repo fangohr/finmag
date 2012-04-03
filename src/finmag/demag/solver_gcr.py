@@ -51,6 +51,7 @@ class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           super(FemBemGCRSolver,self).__init__(problem,degree)
           #get the boundary dof - coordinate dictionary
           self.doftionary = self.get_boundary_dof_coordinate_dict()
+          self.normtionary = self.get_dof_normal_dict_avg()
 
      def solve(self):
           """
@@ -80,11 +81,11 @@ class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
      def solve_phib_boundary(self,phia,doftionary):
           """Solve for phib on the boundary using BEM"""
           print "Assemble q vector"
-          q = self.assemble_qvector_exact(phia,doftionary)
+          q = self.assemble_qvector_exact()
           B = self.bem
           if B is None:
               print "B is none, build bem"
-              B = self.build_BEM_matrix(doftionary)
+              B = self.build_BEM_matrix()
               self.bem = B
           print "Dot product between B and q"
           phibdofs = np.dot(B,q)
@@ -94,19 +95,19 @@ class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
                self.phib.vector()[bdofs[i]] = phibdofs[i]
           return self.phib
 
-     def build_BEM_matrix(self,doftionary):
+     def build_BEM_matrix(self):
           """Build the BEM Matrix associated to the mesh and store it"""
           info_blue("Calculating BEM matrix")
-          dimbem = len(doftionary)
+          dimbem = len(self.doftionary)
           bemmatrix = np.zeros([dimbem,dimbem])
 
           import progressbar as pb
           bar = pb.ProgressBar(maxval=dimbem-1, \
                  widgets=[pb.ETA(), pb.Bar('=', '[', ']'), ' ', pb.Percentage()])
 
-          for index,dof in enumerate(doftionary):
+          for index,dof in enumerate(self.doftionary):
                bar.update(index)
-               bemmatrix[index] = self.get_bem_row(doftionary[dof],doftionary.keys())
+               bemmatrix[index] = self.get_bem_row(self.doftionary[dof],self.doftionary.keys())
                #info("BEM Matrix line "+ str(index) + str(self.bemmatrix[index]))
           return bemmatrix
 
@@ -134,53 +135,50 @@ class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           E = Expression(w,**kwargs)
           return E
 
-     def assemble_qvector_average(self,phia = None,doftionary = None):
-          """builds the vector q that we multiply the Bem matrix with to get phib, using an average"""
-          ###At the moment it is advisable to use assemble_qvector_exact as it gives a better result###
-          if phia is None:
-               phia = self.phia
-          V = phia.function_space()
-          if doftionary is None:
-               doftionary = self.get_boundary_dof_coordinate_dict(V)
-          mesh = V.mesh()
-          n = FacetNormal(mesh)
-          v = TestFunction(V)
-          
-          one = assemble(v*ds).array()
-          #build q everywhere v needed so a vector is assembled #This method uses an imprecise average
-          q = assemble((- dot(n,self.M) + dot(grad(phia),n))*v*ds).array()
-          #Get rid of the volume of the basis function
-          basefuncvol = assemble(v*ds).array()
-          #This will create a lot of NAN which are removed by the restriction
-          q = np.array([q[i]/basefuncvol[i] for i in range(len(q))])
-          
-          ########################################
-          #TODO Divide out the volume of the facets
-          ########################################
-          
-          #restrict q to the values on the boundary
-          q = self.restrict_to(q,doftionary.keys())
-          return q
-     
-     def assemble_qvector_exact(self,phia = None,doftionary = None):
+     def assemble_qvector_exact(self):
           """Builds the vector q using point evaluation"""
-          if phia is None:
-               phia = self.phia
-          V = phia.function_space()
-          if doftionary is None:
-               doftionary = self.get_boundary_dof_coordinate_dict(V)
-                   
-          normtionary = self.get_dof_normal_dict_avg()
-          q = np.zeros(len(normtionary))
+
+          q = np.zeros(len(self.normtionary))
           #Get gradphia as a vector function
-          gradphia = project(grad(phia), VectorFunctionSpace(V.mesh(),"DG",0))
-          for i,dof in enumerate(doftionary):
-               ri = doftionary[dof]
-               n = normtionary[dof]
+          gradphia = project(grad(self.phia), VectorFunctionSpace(self.V.mesh(),"DG",0))
+          for i,dof in enumerate(self.doftionary):
+               ri = self.doftionary[dof]
+               n = self.normtionary[dof]
                #Take the dot product of n with M + gradphia
                q[i] = sum([n[k]*(self.M[k](tuple(ri)) + gradphia[k](tuple(ri))) for k in range(len(n))])
           return q
-                                      
+     
+#n[k]*(self.M[k](tuple(ri)) + gradphia[k](tuple(ri))) for k in range(len(n))
+
+##Not used at the moment
+##          def assemble_qvector_average(self,phia = None,doftionary = None):
+##          """builds the vector q that we multiply the Bem matrix with to get phib, using an average"""
+##          ###At the moment it is advisable to use assemble_qvector_exact as it gives a better result###
+##          if phia is None:
+##               phia = self.phia
+##          V = phia.function_space()
+##          if doftionary is None:
+##               doftionary = self.get_boundary_dof_coordinate_dict(V)
+##          mesh = V.mesh()
+##          n = FacetNormal(mesh)
+##          v = TestFunction(V)
+##          
+##          one = assemble(v*ds).array()
+##          #build q everywhere v needed so a vector is assembled #This method uses an imprecise average
+##          q = assemble((- dot(n,self.M) + dot(grad(phia),n))*v*ds).array()
+##          #Get rid of the volume of the basis function
+##          basefuncvol = assemble(v*ds).array()
+##          #This will create a lot of NAN which are removed by the restriction
+##          q = np.array([q[i]/basefuncvol[i] for i in range(len(q))])
+##          
+##          ########################################
+##          #TODO Divide out the volume of the facets
+##          ########################################
+##          
+##          #restrict q to the values on the boundary
+##          q = self.restrict_to(q,doftionary.keys())
+##          return q
+     
 if __name__ == "__main__":
      from finmag.demag.problems import prob_fembem_testcases as pft
      problem = pft.MagUnitCircle(10)
