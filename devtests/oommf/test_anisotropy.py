@@ -3,7 +3,8 @@ import dolfin as df
 import numpy as np
 from finmag.sim.llg import LLG
 from finmag.util.oommf import oommf_uniaxial_anisotropy, mesh
-from finmag.sim.helpers import quiver, boxplot, finmag_to_oommf, stats
+from finmag.sim.helpers import quiver, boxplot, stats
+from finmag.util.oommf.comparison import finmag_to_oommf
 
 K1 = 45e4 # J/m^3
 
@@ -25,8 +26,8 @@ def test_three_dimensional_problem():
 def compute_anis_finmag(mesh, m0, **kwargs):
     llg = LLG(mesh)
     llg.set_m0(m0, **kwargs)
-    invsq3 = 1/np.sqrt(2)
-    llg.add_uniaxial_anisotropy(K1, df.Constant((0, invsq3, invsq3)))
+    invsq3 = 1/np.sqrt(3)
+    llg.add_uniaxial_anisotropy(K1, df.Constant((invsq3, invsq3, invsq3)))
     llg.setup()
     anis_field = df.Function(llg.V)
     anis_field.vector()[:] = llg._anisotropies[0].compute_field()
@@ -41,9 +42,9 @@ def small_problem():
     msh = mesh.Mesh((1, 1, 1), size=(x_max, y_max, z_max))
     m0 = msh.new_field(3)
     m0.flat[0] = np.ones(len(m0.flat[0]))
-    anis_oommf = oommf_uniaxial_anisotropy(m0, llg.Ms, K1, (0,1,1)).flat
+    anis_oommf = oommf_uniaxial_anisotropy(m0, llg.Ms, K1, (1,1,1)).flat
     anis_for_oommf = finmag_to_oommf(anis_finmag, msh, dims=3).flat
-
+    print anis_finmag.vector().array()
     difference = anis_for_oommf - anis_oommf
     relative_difference = np.abs(difference / anis_oommf)
 
@@ -110,28 +111,10 @@ def three_dimensional_problem():
 if __name__ == '__main__':
 
     res0 = small_problem()
-    print "1D problem, difference:\n", stats(res0["diff"])
-    print "1D problem, relative difference:\n", stats(res0["rel_diff"])
+    print "0D problem, relative difference:\n", stats(res0["rel_diff"])
     """
     res1 = one_dimensional_problem()
     print "1D problem, relative difference:\n", stats(res1["rel_diff"])
     res3 = three_dimensional_problem()
     print "3D problem, relative difference:\n", stats(res3["rel_diff"])
- 
-    # the "small" problem has only a single node to look at.
-    # Because of this, we'll do an extra plot showing both anisotropy fields
-    # at the same time.
-    both = np.append(res0["oommf"], res0["foommf"])
-    coords_once = np.array([r for r in res0["oommf_mesh"].iter_coords()])
-    coords_twice = np.append(coords_once, coords_once, axis=0)
-    quiver(both, coords_twice, filename=MODULE_DIR+"/single_anis_both.png")
-
-    for res in [res0, res1, res3]: 
-        prefix = MODULE_DIR + res["prob"] + "_anis_"
-        quiver(res["m0"], res["mesh"], prefix+"m0.png")
-        quiver(res["finmag"], res["mesh"], prefix+"finmag.png")
-        quiver(res["oommf"], res["oommf_mesh"], prefix+"oommf.png")
-        quiver(res["foommf"], res["oommf_mesh"], prefix+"foommf.png")
-        quiver(res["rel_diff"], res["oommf_mesh"], prefix+"rel_diff.png")
-        boxplot(res["rel_diff"], prefix+"rel_diff_box.png")
     """
