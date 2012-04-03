@@ -1,12 +1,12 @@
 import numpy as np
 import dolfin as df
-from finmag.util.convert_mesh import convert_mesh
-from finmag.demag.solver_gcr import FemBemGCRSolver
 import pylab 
 import sys, os, commands
+import GCRruntime as Grt
 from finmag.sim.llg import LLG
 from finmag.demag.demag_solver import Demag
-from GCRruntime import GCRTimings
+from finmag.util.convert_mesh import convert_mesh
+from finmag.demag.solver_gcr import FemBemGCRSolver
 from finmag.demag.problems.prob_fembem_testcases import MagSphere30
 
 class DemagXtra(Demag):
@@ -14,7 +14,7 @@ class DemagXtra(Demag):
     def __init__(self, V, m, Ms, method="GCR"):
         super(DemagXtra,self).__init__(V, m, Ms, method="GCR")    
         #Change the Demag Solver        
-        self.solver = GCRTimings(self.problem)
+        self.solver = Grt.GCRtimings(self.problem)
             
 class LLGXtra(LLG):
     #llg class with more detailed demag timings
@@ -28,7 +28,8 @@ class LLGXtra(LLG):
               demag_method="GCR")
         #Change the Demag solver
         self.demag = DemagXtra(self.V, self._m, self.Ms, method=demag_method)
-
+        #Add an extra timing object for the method
+        
 ##Note maxh=3.0
 mesh = MagSphere30().mesh
 print "Using mesh with %g vertices" % mesh.num_vertices()
@@ -73,5 +74,6 @@ while r.t < tfinal-dt:
     #only plotting and data analysis from here on
 
 llg.timings(30)
+print Grt.qtime.report_str(10)
 
 
