@@ -99,7 +99,7 @@ def three_dimensional_problem():
         m0.flat[2,i] = 1
     m0.flat /= np.sqrt(m0.flat[0]*m0.flat[0] + m0.flat[1]*m0.flat[1] + m0.flat[2]*m0.flat[2])
     anis_oommf = oommf_uniaxial_anisotropy(m0, llg.Ms, K1, (1,1,1)).flat
-    anis_for_oommf = finmag_to_oommf(anis_finmag, msh, dims=3).flat
+    anis_for_oommf = finmag_to_oommf(anis_finmag, msh, dims=3)
 
     difference = anis_for_oommf - anis_oommf
     relative_difference = np.abs(difference / anis_oommf)
@@ -116,7 +116,5 @@ if __name__ == '__main__':
     print "0D problem, relative difference:\n", stats(res0["rel_diff"])
     res1 = one_dimensional_problem()
     print "1D problem, relative difference:\n", stats(res1["rel_diff"])
-    """
     res3 = three_dimensional_problem()
     print "3D problem, relative difference:\n", stats(res3["rel_diff"])
-    """
