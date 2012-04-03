@@ -10,9 +10,12 @@ from finmag.sim.helpers import quiver, boxplot, stats
 #df.parameters["allow_extrapolation"] = True
 
 
-REL_TOLERANCE = 2.2e-6 # goal: < 1e-3
-MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
+#REL_TOLERANCE = 3e-6 #passes with 'normal magpar'
+REL_TOLERANCE = 9e-8 #needs higher accuracy patch 
+                     #for saved files to pass
+                     #install magpar via finmag/install/magpar.sh to get this.
 
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
 
 
 def test_three_dimensional_problem():
