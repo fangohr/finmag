@@ -8,7 +8,7 @@ from finmag.util.oommf.comparison import finmag_to_oommf
 
 K1 = 45e4 # J/m^3
 
-REL_TOLERANCE = 2e-1 # goal: < 1e-3
+REL_TOLERANCE = 4e-2 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
 
 def test_small_problem():
