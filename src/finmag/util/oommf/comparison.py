@@ -5,7 +5,7 @@ from finmag.sim.llg import LLG
 from finmag.util.oommf import oommf_uniform_exchange, oommf_uniaxial_anisotropy
 
 def compare_anisotropy(m_gen, K1, axis, dolfin_mesh, oommf_mesh, dims=3, name=""):
-    finmag_anis_field, finmag = compute_finmag_anis(m_gen, K1, axis, dolfin_mesh)
+    finmag_anis_field, finmag = compute_finmag_anis(m_gen, K1, norm_axis(axis), dolfin_mesh)
     finmag_anis = finmag_to_oommf(finmag_anis_field, oommf_mesh, dims)
     oommf_anis = oommf_uniaxial_anisotropy(oommf_m0(m_gen, oommf_mesh), finmag.Ms, K1, axis).flat
 
@@ -17,6 +17,11 @@ def compare_anisotropy(m_gen, K1, axis, dolfin_mesh, oommf_mesh, dims=3, name=""
             mesh=dolfin_mesh, oommf_mesh=oommf_mesh,
             anis=finmag_anis, oommf_anis=oommf_anis,
             diff=difference, rel_diff=relative_difference)
+
+def norm_axis(a):
+    a = 1.0 * np.array(a)
+    a /= np.sqrt(a[0]**2 + a[1]**2 + a[2]**2)
+    return tuple(a) 
 
 def compute_finmag_anis(m_gen, K1, axis, dolfin_mesh):
     coords = np.array(zip(* dolfin_mesh.coordinates()))
