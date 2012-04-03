@@ -28,20 +28,25 @@ class GCRDeMagSolver(sb.DeMagSolver):
           V we can solve domain truncation problems as well. 
           """
           V = phia.function_space()
-          #Define functions
-          u = TrialFunction(V)
           v = TestFunction(V)
-
-          #Define forms
-          a = dot(grad(u),grad(v))*dx
+          
+          #Buffer data independant of M
+          if not hasattr(self,"formA_phia"):
+               #Define functions
+               u = TrialFunction(V)
+               a = dot(grad(u),grad(v))*dx
+               self.phia_formA = assemble(a)
+               #Define and apply Boundary Conditions
+               self.phia_bc = DirichletBC(V,0,"on_boundary")
+               self.phia_bc.apply(self.phia_formA)               
+               
+          #Source term depends on M
           f = (-div(self.M)*v)*dx  #Source term
-
-          #Define Boundary Conditions
-          bc = DirichletBC(V,0,"on_boundary")
-
-          #solve for phia
-          A = assemble(a)
           F = assemble(f)
+          self.phia_bc.apply(F)
+          
+          #Solve for phia
+          A = self.phia_formA
           solve(A,phia.vector(),F,method)
           
 class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
