@@ -11,7 +11,12 @@ def set_inital_m0(V,m0):
                 val = df.Expression(m0)
             else:
                 val = df.Constant(m0)
+
             m = df.interpolate(val, V)
+            p = m.vector().array().reshape(3,-1)
+            p = p/np.sqrt(p[0]**2+p[1]**2+p[2]**2)
+            m.vector()[:] = p.reshape(1,-1)[0]
+
             return m
     else:
         raise NotImplementedError,"only a tuple is acceptable for set_inital_m0"
@@ -130,7 +135,7 @@ def save_inp_of_inital_m(m,file_name):
     f.write(head)
     xyz=mesh.coordinates()
     for i in range(len(xyz)):
-        f.write("%d %f %f %f\n"
+        f.write("%d %0.15e %0.15e %0.15e\n"
                 %(i+1,
                   xyz[i][0]*1e9,
                   xyz[i][1]*1e9,
@@ -149,7 +154,7 @@ def save_inp_of_inital_m(m,file_name):
 
     data=m.vector().array().reshape(3,-1)
     for i in range(mesh.num_vertices()):
-        f.write("%d %e %e %e\n"
+        f.write("%d %0.15e %0.15e %0.15e\n"
                 %(i+1,
                   data[0][i],
                   data[1][i],
@@ -171,10 +176,14 @@ def get_field(base_name,field="anis"):
         fx=fields["Hexch_x"]
         fy=fields["Hexch_y"]
         fz=fields["Hexch_z"]
+    elif field=="demag":
+        fx=fields["Hdemag_x"]
+        fy=fields["Hdemag_y"]
+        fz=fields["Hdemag_z"]
     else:
         raise NotImplementedError,"only exch and anis field can be extracted now"
 
-    field=np.array([fx,fy,fz]).reshape(1,-1,order='F')[0]
+    field=np.array([fx,fy,fz]).reshape(1,-1,order='C')[0]
     field=field/(np.pi*4e-7)
 
     file_name=os.path.join(new_path,base_name+".0001.femsh")
@@ -233,16 +242,12 @@ def compute_exch_magpar(V, m, C, Ms):
     mesh = Box(0, 10e-9, 0, 1e-9, 0, 1e-9, 5, 1, 1)
 
     V = VectorFunctionSpace(mesh, 'Lagrange', 1)
-    K = 520e3 # For Co (J/m3)
-
-    a = [0,0,1] # Easy axis in z-direction
-    
+   
     m0_x = "pow(sin(x[0]*1e9), 2)"
     m0_y = "0"
     m0_z = "pow(cos(x[0]*1e9), 2)"
-    m=set_inital_m0(V,(m0_x,m0_y, m0_z))
-    Ms=14e5 
-    C=13e-12
+    m=set_inital_m0(V,(m0_x,m0_y, m0_z))pow(cos(x[0]*1e9), 2)
+    Ms=8.6e5
 
     anisotropy = compute_exch_magpar(V, m, C, Ms)
     """
@@ -264,8 +269,76 @@ def compute_exch_magpar(V, m, C, Ms):
 
     return nodes,field
 
+def compute_demag_magpar(V, m, Ms):
+    """
+    Usage:
+
+    mesh = Box(0, 10e-9, 0, 1e-9, 0, 1e-9, 5, 1, 1)
+
+    V = VectorFunctionSpace(mesh, 'Lagrange', 1)
     
+    m0_x = "pow(sin(x[0]*1e9), 2)"
+    m0_y = "0"
+    m0_z = "1"
+    m=set_inital_m0(V,(m0_x,m0_y, m0_z))
+    Ms=8.6e5
+   
+    anisotropy = compute_demag_magpar(V, m, Ms)
+    """
+    base_name="test_demag"
+
+    gen_magpar_conf(base_name,m,Ms=Ms,demag=1)
     
+    new_path=os.path.join(os.getcwd(),base_name)
+    run_magpar(base_name)
+
+    nodes,field=get_field(base_name,field="demag")
+      
+    new_path=os.path.join(os.getcwd(),base_name)
+
+    rm_cmd=("rm","-rf",new_path)
+    subprocess.check_call(rm_cmd)
+
+    return nodes,field
+
+
+def compare_field_directly(node1,field1,node2,field2):
+    """
+    acceptable fields should like this:
+    [fx0, ..., fxn, fy0, ..., fyn, fz0, ..., fzn]
+    """
+    assert(node1.shape==node2.shape)
+    assert(field1.shape==field2.shape)
+
+    field1=field1.reshape(3,-1)
+    field2=field2.reshape(3,-1)
+
+    key1=[]
+    key2=[]
+    data2={}
+    for i in range(len(node1)):
+        tmp1="%f%f%f"%(node1[i][0],node1[i][1],node1[i][2])
+        tmp2="%f%f%f"%(node2[i][0],node2[i][1],node2[i][2])
+        key1.append(tmp1)
+        key2.append(tmp2)
+        data2[tmp2]=[field2[0][i],field2[1][i],field2[2][i]]
+        
+    assert(set(key1)==set(key2))
+
+    field2_ordered=np.array([data2[k] for k in key1])
+    field2_ordered= field2_ordered.reshape(1,-1)[0]
+    field2_ordered= field2_ordered.reshape(3,-1,order='F')
+   
+    difference = np.abs(field2_ordered - field1)
+    relative_difference = difference / np.sqrt(
+        field2_ordered[0]**2 + field2_ordered[1]**2 + field2_ordered[2]**2)
+
+    return field1,field2_ordered,difference,relative_difference
+    
+        
+        
+
+
 if __name__=="__main__":
         
     mesh = Box(0, 10e-9, 0, 1e-9, 0, 1e-9, 5, 1, 1)
@@ -283,6 +356,8 @@ if __name__=="__main__":
     C=13e-12
     nodes,exch = compute_exch_magpar(V, m, C, Ms)
     print exch
-    
+
+    nodes,demag = compute_demag_magpar(V, m, Ms)
+    print demag
     
 

@@ -9,10 +9,12 @@ from finmag.sim.helpers import quiver, boxplot, stats
 
 #df.parameters["allow_extrapolation"] = True
 
+#REL_TOLERANCE = 1.5e-5 #passes with 'normal magpar'
+REL_TOLERANCE = 7e-7 #needs higher accuracy patch 
+                     #for saved files to pass
+                     #install magpar via finmag/install/magpar.sh to get this.
 
-REL_TOLERANCE = 1.5e-5 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
-
 
 
 def test_three_dimensional_problem():
@@ -33,7 +35,8 @@ def three_dimensional_problem():
     m0_x = "pow(sin(0.2*x[0]*1e9), 2)"
     m0_y = "0"
     m0_z = "pow(cos(0.2*x[0]*1e9), 2)"
-    m=magpar.set_inital_m0(V,(m0_x,m0_y, m0_z))
+
+    m=magpar.set_inital_m0(V,(1,1,1))
 
     u_anis = UniaxialAnisotropy(V, m, K, df.Constant(a), Ms)
     finmag_anis = u_anis.compute_field()
@@ -45,25 +48,17 @@ def three_dimensional_problem():
     tmp_c = mesh.coordinates()
     mesh.coordinates()[:]=tmp_c*1e9
     
-    tmp.vector()[:]=finmag_anis
-    
-    nodes_tmp=[(i[0],i[1],i[2]) for i in nodes]
-
-    finmag_anis_ordered=[tmp(i) for i in nodes_tmp]
-    finmag_anis_ordered=np.array(finmag_anis_ordered)
-    finmag_anis_ordered=finmag_anis_ordered.reshape(1,-1)[0]
-    
-
-    difference = np.abs(finmag_anis_ordered - magpar_anis)
-    relative_difference = difference / np.sqrt(
-        magpar_anis[0]**2 + magpar_anis[1]**2 + magpar_anis[2]**2)
+    finmag_anis,magpar_anis, \
+        diff,rel_diff=magpar.compare_field_directly( \
+            mesh.coordinates(),finmag_anis,\
+            nodes, magpar_anis)
 
     return dict( m0=m.vector().array(),
                  mesh=mesh,
-                 anis=finmag_anis_ordered,
+                 anis=finmag_anis,
                  magpar_anis=magpar_anis,
-                 diff=difference, 
-                 rel_diff=relative_difference)
+                 diff=diff, 
+                 rel_diff=rel_diff)
 
 
 if __name__ == '__main__':
@@ -73,11 +68,12 @@ if __name__ == '__main__':
     print "finmag:",res["anis"]
     print "magpar:",res["magpar_anis"]
     print "rel_diff:",res["rel_diff"]
-    print "max rel_diff",max(res["rel_diff"])
-     
+    print "max rel_diff",np.max(res["rel_diff"])
+
+    """
     prefix = MODULE_DIR + "_anis_"
     quiver(res["m0"], res["mesh"], prefix+"m0.png")
     quiver(res["anis"], res["mesh"], prefix+"anis.png")
     quiver(res["diff"], res["mesh"], prefix+"diff.png")
     boxplot(res["diff"], prefix+"rel_diff_box.png")
-        
+    """
