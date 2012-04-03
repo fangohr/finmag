@@ -60,8 +60,8 @@ class ConvergenceTester(object):
         self.subplots = subplots
         
         #A dictionary with various styles of points for plotting in matplotlib
-        self._styledic = {0:'D',1:'p',2:',',3:'o',4:'v',5:'^',6:'<',7:'1',8:'2',9:'3',\
-                         10:'4',11:'s',12:'.',13:'*',14:'h',15:'H',16:'+',17:'x',\
+        self._styledic = {0:'D',1:'p',2:'*',3:'o',4:'v',5:'^',6:'<',7:'1',8:'2',9:'3',\
+                         10:'4',11:'s',12:'.',13:',',14:'h',15:'H',16:'+',17:'x',\
                          18:'-',19:'d',20:'|'} 
 
         self.__main()
@@ -92,7 +92,6 @@ class ConvergenceTester(object):
         
         #Solve all the problems with the test solvers
         self.test_solverdata = {k:self.__get_solver_data(self.test_solver_classes[k],self.problems) for k in self.test_solver_classes}
-        
         #Solve all the problems with the reference solver
         self.ref_solverdata = {refsolvername:self.__get_solver_data(refsolver,self.problems)}
                                      
