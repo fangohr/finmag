@@ -83,7 +83,7 @@ class FemBemDeMagSolver(DeMagSolver):
     """Base Class for FEM/BEM Demag Solvers"""
     def __init__(self,problem,degree = 1):
         super(FemBemDeMagSolver,self).__init__(problem,degree)
-        #Paramters to use a quadrature rule that avoids the endpoints
+        #Parameters to use a quadrature rule that avoids the endpoints
         #of a triangle
         self.ffc_options = {"quadrature_rule":"canonical"}
         
@@ -164,7 +164,7 @@ class FemBemDeMagSolver(DeMagSolver):
         d = mesh.topology().dim()
         dm = V.dofmap()
 
-        #It is very import that this  vector has the right length
+        #It is very import that this vector has the right length
         #It holds the local dof numbers associated to a facet 
         facetdofs = np.zeros(dm.num_facet_dofs(),dtype=np.uintc)
 

@@ -64,7 +64,6 @@ class MagUnitInterval(pb.FemBemDeMagProblem):
 #a while to generate one of these meshes for the first time.     
 ###########################################################
 
-
 class MagSphereBase(pb.FemBemDeMagProblem,cm.MeshGenerator):
     """Base class for MagSphere classes"""
     def __init__(self,maxh):
@@ -77,7 +76,7 @@ class MagSphereBase(pb.FemBemDeMagProblem,cm.MeshGenerator):
                             ".xml.gz"])
         cm.MeshGenerator.generate_mesh(self,meshpath,geofile)
         #Upload the dolfin mesh
-        self.mesh = Mesh(meshpath)
+        mesh = Mesh(meshpath)
         self.Ms = 1.0
         M = (str(self.Ms), "0.0", "0.0")
 
@@ -117,7 +116,5 @@ class MagSphere12(MagSphereBase):
 class MagSphere10(MagSphereBase):
     """Demag Sphere problem using the sphere mesh from nmag example. maxh = 1.0"""
     def __init__(self):
-        MagSphereBase.__init__(self,1.0)
-    
-S = MagSphere50()    
+        MagSphereBase.__init__(self,1.0)   
 

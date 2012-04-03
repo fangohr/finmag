@@ -9,7 +9,6 @@ from dolfin import *
 import finmag.demag.solver_base as sb
 import math
 import numpy as np
-
 #Set allow extrapolation to true#
 parameters["allow_extrapolation"] = True
      
@@ -131,7 +130,6 @@ class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
                if not i == dim-1:
                     w += "+"
           w += ")"
-          #FIXME Make this more elegant and applicable to all dimensions
           kwargs = {"R"+str(i):R[i] for i in range(dim)}
           E = Expression(w,**kwargs)
           return E
