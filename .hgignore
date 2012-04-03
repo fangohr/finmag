@@ -14,6 +14,7 @@ src/**.so
 *.pvd
 *.swp
 *.gz
+*.png
 
 test-reports
 native/**.bin

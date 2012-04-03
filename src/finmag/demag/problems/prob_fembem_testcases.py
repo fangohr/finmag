@@ -86,7 +86,6 @@ class MagSphereBase(pb.FemBemDeMagProblem,cm.MeshGenerator):
     def desc(self):
         return "Sphere demagnetisation test problem fembem, Ms=%g, maxh = %g" %(self.Ms,self.maxh)
 
-
 #Note python doesn't allow :." in class names so the Sphere1.0 is now Sphere10 etc...        
 class MagSphere50(MagSphereBase):
     """Demag Sphere problem Using the geo sphere mesh maxh  = 5.0"""
@@ -116,5 +115,4 @@ class MagSphere12(MagSphereBase):
 class MagSphere10(MagSphereBase):
     """Demag Sphere problem using the sphere mesh from nmag example. maxh = 1.0"""
     def __init__(self):
-        MagSphereBase.__init__(self,1.0)   
-
+        MagSphereBase.__init__(self,1.0)

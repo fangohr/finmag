@@ -51,11 +51,11 @@ class FemBemGCRSolverTest(solver_gcr.FemBemGCRSolver):
 #problems = [pft.MagUnitSphere(n) for n in finenesslist]
 
 #High Quality geo meshes
-problems = [pft.MagSphere50(),pft.MagSphere()]
+problems = [pft.MagSphere50(),pft.MagSphere25(),pft.MagSphere20(), \
+            pft.MagSphere15(),pft.MagSphere12(),pft.MagSphere10()]
 
 #Xaxis - Number of verticies
 numvert = [p.mesh.num_vertices() for p in problems]
-print numvert
 xaxis = ("Number of verticies",numvert)
 
 #Solvers
