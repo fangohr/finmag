@@ -22,7 +22,7 @@ class LLGXtra(LLG):
               exchange_method="box-matrix-petsc",
               dmi_method="box-matrix-petsc",
               demag_method="GCR"):
-        super(LLGXtra,self).setup(use_exchange=True, use_dmi=False, use_demag=False,
+        super(LLGXtra,self).setup(use_exchange=use_exchange, use_dmi=use_dmi, use_demag=use_demag,
               exchange_method="box-matrix-petsc",
               dmi_method="box-matrix-petsc",
               demag_method="GCR")
@@ -36,7 +36,7 @@ print "Using mesh with %g vertices" % mesh.num_vertices()
 from scipy.integrate import ode
 
 #Add the extra timings
-llg=LLG(mesh)
+llg=LLGXtra(mesh)
 llg.set_m0(df.Constant((1, 0, 0)))
 
 tfinal = 0.3*1e-9
