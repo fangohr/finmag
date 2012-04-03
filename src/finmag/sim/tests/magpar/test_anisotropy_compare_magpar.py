@@ -14,9 +14,7 @@ REL_TOLERANCE = 7e-7 #needs higher accuracy patch
                      #for saved files to pass
                      #install magpar via finmag/install/magpar.sh to get this.
 
-REL_TOLERANCE = 1.5e-5 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
-
 
 
 def test_three_dimensional_problem():
