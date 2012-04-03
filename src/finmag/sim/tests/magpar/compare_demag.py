@@ -23,7 +23,8 @@ def test_three_dimensional_problem():
 
 def three_dimensional_problem():
     x_max = 10e-9; y_max = 1e-9; z_max = 1e-9;
-    mesh = df.Box(0, 0, 0, x_max, y_max, z_max, 40, 2, 2)
+    mesh = df.Box(0, 0, 0, x_max, y_max, z_max, 2, 2, 2)
+    mesh = df.UnitSphere(10)
 
     V = df.VectorFunctionSpace(mesh, 'Lagrange', 1)
     Ms=8.6e5
@@ -32,10 +33,13 @@ def three_dimensional_problem():
     m0_y = "0.2"
     m0_z = "1"
 
-    m=magpar.set_inital_m0(V,(1,1,1))
-
+    m=magpar.set_inital_m0(V,(1,0,0))
+    #mesh.coordinates()[:]=mesh.coordinates()*1e9
+    print 'the number of nodes in the mesh: ',mesh.num_cells()
+    print 'the theoretical demag field: (%e %e %e) '%(-Ms/3,0,0)
     demag_tmp = Demag(V, m, Ms,method="GCR")
     finmag_demag = demag_tmp.compute_field()
+    mesh.coordinates()[:]=mesh.coordinates()*1e-9
     nodes, magpar_demag = magpar.compute_demag_magpar(V, m, Ms)
     
     # Magpar have changed the order of the nodes just because the mesh extracted from dolfin can not work directly, but how to sort them ???
