@@ -97,6 +97,7 @@ def convert_mesh(inputfile, outputfile=None):
 
     # Remove redundant files
     print 'Cleaning up...'
+    print outputfile
     files = ["%s.xml.bak" % outputfile,
              "%s_mat.xml" % outputfile,
              "%s_bi.xml" % outputfile,

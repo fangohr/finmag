@@ -4,10 +4,10 @@ from finmag.util.convert_mesh import convert_mesh
 from finmag.demag.solver_gcr import FemBemGCRSolver
 import pylab 
 import sys, os, commands
-
 from finmag.sim.llg import LLG
 from finmag.demag.demag_solver import Demag
-from GCRruntime import GCRTimings 
+from GCRruntime import GCRTimings
+from finmag.demag.problems.prob_fembem_testcases import MagSphere30
 
 class DemagXtra(Demag):
     #Demag class with more detailed timings
@@ -29,27 +29,9 @@ class LLGXtra(LLG):
         #Change the Demag solver
         self.demag = DemagXtra(self.V, self._m, self.Ms, method=demag_method)
 
-
-maxh=3.
-# Create geofile
-geo = """
-algebraic3d
-
-solid main = sphere (0, 0, 0; 10)-maxh=%s ;
-
-tlo main;""" % str(maxh)
-
-absname = "sphere_maxh_%s" % str(maxh)
-geofilename = os.path.join('.', absname)
-geofile = geofilename + '.geo'
-f = open(geofile, "w")
-f.write(geo)
-f.close()
-
-# Finmag data
-mesh = df.Mesh(convert_mesh(geofile))
+##Note maxh=3.0
+mesh = MagSphere30().mesh
 print "Using mesh with %g vertices" % mesh.num_vertices()
-
 
 from scipy.integrate import ode
 
