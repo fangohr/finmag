@@ -220,19 +220,20 @@ class FemBemDeMagSolver(DeMagSolver):
             a laplace equation"""
         V = function.function_space()
         bc = DirichletBC(V,function, "on_boundary")
-        u = TrialFunction(V)
-        v = TestFunction(V)
+        
+        #Buffer data independant of M
+        if not hasattr(self,"laplace_A"):
+            v = TestFunction(V)
+            u = TrialFunction(V)
+            a = dot(grad(u),grad(v))*dx
+            self.laplace_A = assemble(a)
+            #RHS = 0
+            self.laplace_f = Function(V).vector()
 
-        #Laplace forms
-        a = inner(grad(u),grad(v))*dx
-        A = assemble(a)
-
-        #RHS = 0
-        f = Function(V).vector()
         #Apply BC
-        bc.apply(A,f)
-
-        solve(A,function.vector(),f)
+        bc.apply(self.laplace_A)
+        bc.apply(self.laplace_f)
+        solve(self.laplace_A,function.vector(),self.laplace_f)
         return function
         
 class TruncDeMagSolver(DeMagSolver):
