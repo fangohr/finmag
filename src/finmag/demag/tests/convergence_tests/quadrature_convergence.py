@@ -29,20 +29,20 @@ class FemBemGCRSolver1(FemBemGCRSplitSolver):
         super(FemBemGCRSolver1,self).__init__(problem)
         self.ffc_options = {"quadrature_rule":"canonical","quadrature_degree":1}
 
+class FemBemGCRSolver2(FemBemGCRSplitSolver):
+    def __init__(self,problem):
+        super(FemBemGCRSolver2,self).__init__(problem)
+        self.ffc_options = {"quadrature_rule":"canonical","quadrature_degree":2}
+
 class FemBemGCRSolver4(FemBemGCRSplitSolver):
     def __init__(self,problem):
         super(FemBemGCRSolver4,self).__init__(problem)
-        self.ffc_options = {"quadrature_rule":"canonical","quadrature_degree":2}
+        self.ffc_options = {"quadrature_rule":"canonical","quadrature_degree":4}
 
-class FemBemGCRSolver7(FemBemGCRSplitSolver):
+class FemBemGCRSolver6(FemBemGCRSplitSolver):
     def __init__(self,problem):
-        super(FemBemGCRSolver7,self).__init__(problem)
-        self.ffc_options = {"quadrature_rule":"canonical","quadrature_degree":1}
-
-class FemBemGCRSolver10(FemBemGCRSplitSolver):
-    def __init__(self,problem):
-        super(FemBemGCRSolver10,self).__init__(problem)
-        self.ffc_options = {"quadrature_rule":"canonical","quadrature_degree":1} 
+        super(FemBemGCRSolver6,self).__init__(problem)
+        self.ffc_options = {"quadrature_rule":"canonical","quadrature_degree":6} 
 
 #This class mimics a FemBemDeMagSolver but returns analytical values.
 UniformDemagSphere = asol.UniformDemagSphere
@@ -50,29 +50,28 @@ UniformDemagSphere = asol.UniformDemagSphere
 ##########################################
 #Test parameters
 #########################################
-
-#Mesh fineness, ie UnitSphere(n)
-finenesslist = [3,5,7,10]
-#Create a problem for each level of fineness
-problems = [pft.MagUnitSphere(n) for n in finenesslist]
+#High Quality geo meshes
+problems = [pft.MagSphere50(),pft.MagSphere25(),pft.MagSphere20(),\
+            pft.MagSphere15(),pft.MagSphere12(),pft.MagSphere10()]
 
 #Xaxis - Number of finite elements
-numelement = [p.mesh.num_cells() for p in problems]
-xaxis = ("Number of elements",numelement)
+numvertex = [p.mesh.num_vertices() for p in problems]
+xaxis = ("Number of elements",numvertex)
 
 #Solvers
-test_solver_classes = {"QO 1": FemBemGCRSolver1,"QO 4": FemBemGCRSolver4}
+test_solver_classes = {"QO 1": FemBemGCRSolver1,"QO 2": FemBemGCRSolver2,\
+                       "QO 4": FemBemGCRSolver4,"QO 6": FemBemGCRSolver6}
 reference_solver_class = {"Analytical":UniformDemagSphere}
 
 #Test solutions
-test_solutions = {"Phi":"phi","Hdemag":"Hdemag"}
+test_solutions = {"Phi":"phi","Hdemag":"Hdemag","Hdemag X":"Hdemagx"}
 #Norms
 norms = {"L2 Error":en.L2_error,"Discrete Max Error":en.discrete_max_error}
 
 #cases
-cases = [("Phi","L2 Error"),("Phi","Discrete Max Error"),("Hdemag","L2 Error")]
+cases = [("Phi","L2 Error"),("Phi","Discrete Max Error"),("Hdemag","L2 Error"),("Hdemag X","Discrete Max Error")]
 
 #Create a ConvergenceTester and generate a report
-ct = ct.ConvergenceTester(test_solver_classes,reference_solver_class,test_solutions,problems,norms,xaxis,cases,subplots = "13" )
+ct = ct.ConvergenceTester(test_solver_classes,reference_solver_class,test_solutions,problems,norms,xaxis,cases,subplots = "22" )
 ct.print_report()
 ct.plot_results()

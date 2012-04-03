@@ -10,11 +10,11 @@ class Demag(object):
         self.V = V
         mesh = V.mesh()
         self.Ms = Ms
-        problem = FBProblem(mesh, m)
+        self.problem = FBProblem(mesh, m)
         if method == "FK":
-            self.solver = FemBemFKSolver(problem)
+            self.solver = FemBemFKSolver(self.problem)
         elif method == "GCR":
-            self.solver = FemBemGCRSolver(problem)
+            self.solver = FemBemGCRSolver(self.problem)
         else:
             raise NotImplementedError("""Only methods currently implemented are
                                     * 'FK'

@@ -6,8 +6,28 @@ import pylab
 import sys, os, commands
 
 from finmag.sim.llg import LLG
+from finmag.demag.demag_solver import Demag
+from GCRruntime import GCRTimings 
 
-
+class DemagXtra(Demag):
+    #Demag class with more detailed timings
+    def __init__(self, V, m, Ms, method="GCR"):
+        super(DemagXtra,self).__init__(V, m, Ms, method="GCR")    
+        #Change the Demag Solver        
+        self.solver = GCRTimings(self.problem)
+            
+class LLGXtra(LLG):
+    #llg class with more detailed demag timings
+    def setup(self, use_exchange=True, use_dmi=False, use_demag=False,
+              exchange_method="box-matrix-petsc",
+              dmi_method="box-matrix-petsc",
+              demag_method="GCR"):
+        super(LLGXtra,self).setup(use_exchange=True, use_dmi=False, use_demag=False,
+              exchange_method="box-matrix-petsc",
+              dmi_method="box-matrix-petsc",
+              demag_method="GCR")
+        #Change the Demag solver
+        self.demag = DemagXtra(self.V, self._m, self.Ms, method=demag_method)
 
 
 maxh=3.
@@ -33,6 +53,7 @@ print "Using mesh with %g vertices" % mesh.num_vertices()
 
 from scipy.integrate import ode
 
+#Add the extra timings
 llg=LLG(mesh)
 llg.set_m0(df.Constant((1, 0, 0)))
 
@@ -69,6 +90,6 @@ while r.t < tfinal-dt:
 
     #only plotting and data analysis from here on
 
-llg.timings()
+llg.timings(30)
 
 
