@@ -58,8 +58,6 @@ class UniaxialAnisotropy(object):
     
     def __init__(self, V, m, K, a, Ms, method="box-matrix-petsc"):
         logger.info("Anisotropy() method = %s" % method)
-
-
         timings.start('Anisotropy-init')
 
         # Testfunction

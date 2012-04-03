@@ -10,9 +10,12 @@ from finmag.sim.helpers import quiver, boxplot, stats
 #df.parameters["allow_extrapolation"] = True
 
 
-REL_TOLERANCE = 2.2e-6 # goal: < 1e-3
-MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
+#REL_TOLERANCE = 3e-6 #passes with 'normal magpar'
+REL_TOLERANCE = 9e-8 #needs higher accuracy patch 
+                     #for saved files to pass
+                     #install magpar via finmag/install/magpar.sh to get this.
 
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
 
 
 def test_three_dimensional_problem():
@@ -39,7 +42,7 @@ def three_dimensional_problem():
     u_exch = Exchange(V, m, C, Ms)
     finmag_exch = u_exch.compute_field()
     nodes, magpar_exch = magpar.compute_exch_magpar(V, m, C, Ms)
-     
+    print magpar_exch
     
     #Because magpar have changed the order of the nodes!!!
     
@@ -47,25 +50,17 @@ def three_dimensional_problem():
     tmp_c = mesh.coordinates()
     mesh.coordinates()[:]=tmp_c*1e9
     
-    tmp.vector()[:]=finmag_exch
-    
-    nodes_tmp=[(i[0],i[1],i[2]) for i in nodes]
-
-    tmp2=[tmp(i) for i in nodes_tmp]
-    finmag_exch_ordered=np.array(tmp2)
-    finmag_exch_ordered=finmag_exch_ordered.reshape(1,-1)[0]
-    
-
-    difference = np.abs(finmag_exch_ordered - magpar_exch)
-    relative_difference = difference / np.sqrt(
-        magpar_exch[0]**2 + magpar_exch[1]**2 + magpar_exch[2]**2)
+    finmag_exch,magpar_exch, \
+        diff,rel_diff=magpar.compare_field_directly( \
+            mesh.coordinates(),finmag_exch,\
+            nodes, magpar_exch)
 
     return dict( m0=m.vector().array(),
                  mesh=mesh,
-                 exch=finmag_exch_ordered,
+                 exch=finmag_exch,
                  magpar_exch=magpar_exch,
-                 diff=difference, 
-                 rel_diff=relative_difference)
+                 diff=diff, 
+                 rel_diff=rel_diff)
 
 
 if __name__ == '__main__':
@@ -75,11 +70,12 @@ if __name__ == '__main__':
     print "finmag:",res["exch"]
     print "magpar:",res["magpar_exch"]
     print "rel_diff:",res["rel_diff"]
-    print "max rel_diff",max(res["rel_diff"])
-     
+    print "max rel_diff",np.max(res["rel_diff"])
+
+    """
     prefix = MODULE_DIR + "_exch_"
     quiver(res["m0"], res["mesh"], prefix+"m0.png")
     quiver(res["exch"], res["mesh"], prefix+"exch.png")
     quiver(res["diff"], res["mesh"], prefix+"diff.png")
     boxplot(res["diff"], prefix+"rel_diff_box.png")
-        
+    """
