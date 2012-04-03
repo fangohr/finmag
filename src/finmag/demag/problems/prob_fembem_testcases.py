@@ -72,7 +72,10 @@ class MagSphereBase(pb.FemBemDeMagProblem,cm.MeshGenerator):
                    solid main = sphere (0, 0, 0; 10)-maxh="+str(maxh)+" ; \n \n \
                    tlo main;"
 
-        meshpath = "".join([os.path.dirname(mark.__file__),"/sphere",str(maxh),\
+        #Get rid of "." in the file name as this confuses other programs
+        maxhstr = str(maxh).replace(".","dot")
+        
+        meshpath = "".join([os.path.dirname(mark.__file__),"/","sphere",maxhstr,\
                             ".xml.gz"])
         cm.MeshGenerator.generate_mesh(self,meshpath,geofile)
         #Upload the dolfin mesh
@@ -91,6 +94,11 @@ class MagSphere50(MagSphereBase):
     """Demag Sphere problem Using the geo sphere mesh maxh  = 5.0"""
     def __init__(self):
         MagSphereBase.__init__(self,5.0)
+
+class MagSphere30(MagSphereBase):
+    """Demag Sphere problem Using the geo sphere mesh maxh  = 3.0"""
+    def __init__(self):
+        MagSphereBase.__init__(self,3.0)
 
 class MagSphere25(MagSphereBase):
     """Demag Sphere problem Using the geo sphere mesh maxh  = 2.5"""
