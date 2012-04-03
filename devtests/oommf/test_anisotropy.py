@@ -44,9 +44,10 @@ def small_problem():
     m0.flat[0] = np.ones(len(m0.flat[0]))
     anis_oommf = oommf_uniaxial_anisotropy(m0, llg.Ms, K1, (1,1,1)).flat
     anis_for_oommf = finmag_to_oommf(anis_finmag, msh, dims=3).flat
-    print anis_finmag.vector().array()
-    difference = anis_for_oommf - anis_oommf
-    relative_difference = np.abs(difference / anis_oommf)
+
+    difference = np.abs(anis_for_oommf - anis_oommf)
+    relative_difference = difference / np.sqrt(
+        anis_oommf[0]**2 + anis_oommf[1]**2 + anis_oommf[2]**2)
 
     return dict(prob="single", m0=llg.m, mesh=dolfmesh, oommf_mesh=msh,
             finmag=anis_finmag.vector().array(),
@@ -55,7 +56,7 @@ def small_problem():
             diff=difference, rel_diff=relative_difference)
 
 def one_dimensional_problem():
-    x_min = 0; x_max = 20e-9; x_n = 40;
+    x_min = 0; x_max = 10e-9; x_n = 40;
     dolfmesh = df.Interval(x_n, x_min, x_max)
     m0_x = '2 * x[0]/L - 1'
     m0_y = 'sqrt(1 - (2*x[0]/L - 1)*(2*x[0]/L - 1))'
@@ -70,10 +71,11 @@ def one_dimensional_problem():
         m0.flat[2,i] = 0
     m0.flat /= np.sqrt(m0.flat[0]*m0.flat[0] + m0.flat[1]*m0.flat[1] + m0.flat[2]*m0.flat[2])
     anis_oommf = oommf_uniaxial_anisotropy(m0, llg.Ms, K1, (1,1,1)).flat
-    anis_for_oommf = finmag_to_oommf(anis_finmag, msh, dims=1).flat
+    anis_for_oommf = finmag_to_oommf(anis_finmag, msh, dims=1)
 
-    difference = anis_for_oommf - anis_oommf
-    relative_difference = np.abs(difference / anis_oommf)
+    difference = np.abs(anis_for_oommf - anis_oommf)
+    relative_difference = difference / np.sqrt(
+        anis_oommf[0]**2 + anis_oommf[1]**2 + anis_oommf[2]**2)
 
     return dict(prob="1d", m0=llg.m, mesh=dolfmesh, oommf_mesh=msh,
             finmag=anis_finmag.vector().array(),
@@ -112,9 +114,9 @@ if __name__ == '__main__':
 
     res0 = small_problem()
     print "0D problem, relative difference:\n", stats(res0["rel_diff"])
-    """
     res1 = one_dimensional_problem()
     print "1D problem, relative difference:\n", stats(res1["rel_diff"])
+    """
     res3 = three_dimensional_problem()
     print "3D problem, relative difference:\n", stats(res3["rel_diff"])
     """
