@@ -5,6 +5,7 @@ PREFIX="$HOME" # EDIT HERE.
 source=magpar-0.9
 
 cp magpar.patch $PREFIX
+cp magpar_code.patch $PREFIX
 cd $PREFIX
 if [ ! -e $source.tar.gz ]
 then
@@ -17,8 +18,11 @@ then
 fi
 
 mv magpar.patch $source/src
+mv magpar_code.patch $source/src
+
 cd $source/src
 patch -p1 < magpar.patch
+patch -p1 < magpar_code.patch
 
 make -f Makefile.libs
 make
