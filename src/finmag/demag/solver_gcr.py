@@ -150,7 +150,10 @@ class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
                n = self.normtionary[dof]
                
                #Take the dot product of n with M + gradphia(ri) (n dot (M+gradphia(ri))
-               q[i] = sum([n[k]*((self.M[k] + gradphia[k])) for k in range(len(n))])(tuple(ri))
+               rtup = tuple(ri)
+               M_array = np.array(self.M(rtup))
+               gphia_array = np.array(gradphia(rtup))
+               q[i] = np.dot(n,M_array+gphia_array)
           return q
      
 ##Not used at the moment
