@@ -54,15 +54,18 @@ class GCRtimings(FemBemGCRSolver):
             qtime.stop("n = self.normtionary[dof]")
 
             #Take the dot product of n with M + gradphia
-            qtime.start("q[i] = sum([n[k]*(self.M[k](tuple(ri)) + gradphia[k](tuple(ri))) for k in range(len(n))])")
+            qtime.start("rtup = tuple(ri)")
             rtup = tuple(ri)
+            qtime.stop("rtup = tuple(ri)")
+            qtime.start("M_array = np.array(self.M(rtup))")
             M_array = np.array(self.M(rtup))
+            qtime.stop("M_array = np.array(self.M(rtup))")
+            qtime.start("gphia_array = np.array(gradphia(rtup))")
             gphia_array = np.array(gradphia(rtup))
+            qtime.stop("gphia_array = np.array(gradphia(rtup))")
+            qtime.start("q[i] = np.dot(n,M_array+gphia_array)")
             q[i] = np.dot(n,M_array+gphia_array)
-            
-            ##Original line for comparison
-            ##q[i] = sum([n[k]*(self.M[k](tuple(ri)) + gradphia[k](tuple(ri))) for k in range(len(n))])
-            qtime.stop("q[i] = sum([n[k]*(self.M[k](tuple(ri)) + gradphia[k](tuple(ri))) for k in range(len(n))])")
+            qtime.stop("q[i] = np.dot(n,M_array+gphia_array)")
         ti.timings.stop("assemble_qvector_exact")
         return q
     
