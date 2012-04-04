@@ -59,6 +59,7 @@ def run_oommf(dir, args, **kwargs):
     try:
         cmd = [OOMMF_COMMAND]
         cmd.extend(args)
+        print dir
         check_output(cmd, cwd=dir, stderr=subprocess.STDOUT, **kwargs)
     except CalledProcessError, ex:
         sys.stderr.write(ex.output)
@@ -103,6 +104,8 @@ def calculate_oommf_fields(name, s0, Ms, spec=None, alpha=0., gamma_G=0., fields
 
     mif = MIF_TEMPLATE % params
 
+    #print mif
+
     # Check if the result is already known
     cachedir = os.path.join(CACHE_DIR, basename)
     try:
@@ -126,8 +129,9 @@ def calculate_oommf_fields(name, s0, Ms, spec=None, alpha=0., gamma_G=0., fields
         mif_file.close()
         # Write the starting OMF file
         fl = lattice.FieldLattice(s0.mesh.get_lattice_spec())
-        fl.field_data = s0.to_xyz_array()
-
+        print 's0.flat'*100,s0.flat
+        fl.field_data = s0.flat
+        print 'hhh'*100,  fl.field_data
         # Save it to file
         m0_file = ovf.OVFFile()
         m0_file.new(fl, version=ovf.OVF10, data_type="binary8")
@@ -173,4 +177,4 @@ Specify Oxs_Demag {}
 """
 
     mesh = Mesh((100, 25, 1), cellsize=(5e-9, 5e-9, 3e-9))
-    calculate_oommf_fields("test", mesh.new_field(3), 8e5, spec)
+    calculate_oommf_fields("testpppp", mesh.new_field(3), 8e5, spec)
