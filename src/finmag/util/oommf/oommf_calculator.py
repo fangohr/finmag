@@ -59,7 +59,6 @@ def run_oommf(dir, args, **kwargs):
     try:
         cmd = [OOMMF_COMMAND]
         cmd.extend(args)
-        print dir
         check_output(cmd, cwd=dir, stderr=subprocess.STDOUT, **kwargs)
     except CalledProcessError, ex:
         sys.stderr.write(ex.output)
@@ -129,9 +128,8 @@ def calculate_oommf_fields(name, s0, Ms, spec=None, alpha=0., gamma_G=0., fields
         mif_file.close()
         # Write the starting OMF file
         fl = lattice.FieldLattice(s0.mesh.get_lattice_spec())
-        print 's0.flat'*100,s0.flat
         fl.field_data = s0.flat
-        print 'hhh'*100,  fl.field_data
+       
         # Save it to file
         m0_file = ovf.OVFFile()
         m0_file.new(fl, version=ovf.OVF10, data_type="binary8")
