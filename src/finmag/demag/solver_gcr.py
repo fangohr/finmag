@@ -146,15 +146,14 @@ class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           q = np.zeros(len(self.normtionary))
           #Get gradphia as a vector function
           gradphia = project(grad(self.phia), VectorFunctionSpace(self.V.mesh(),"DG",0))
-          for i,dof in enumerate(self.doftionary):
+          for i,dof in enumerate(self.doftioynary):
                ri = self.doftionary[dof]
                n = self.normtionary[dof]
-               #Take the dot product of n with M + gradphia
-               q[i] = sum([n[k]*(self.M[k](tuple(ri)) + gradphia[k](tuple(ri))) for k in range(len(n))])
+               
+               #Take the dot product of n with M + gradphia(ri) (n dot (M+gradphia(ri))
+               q[i] = sum([n[k]*((self.M[k] + gradphia[k])) for k in range(len(n))])(tuple(ri))
           return q
      
-#n[k]*(self.M[k](tuple(ri)) + gradphia[k](tuple(ri))) for k in range(len(n))
-
 ##Not used at the moment
 ##          def assemble_qvector_average(self,phia = None,doftionary = None):
 ##          """builds the vector q that we multiply the Bem matrix with to get phib, using an average"""
