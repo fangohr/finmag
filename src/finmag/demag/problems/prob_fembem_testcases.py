@@ -66,17 +66,23 @@ class MagUnitInterval(pb.FemBemDeMagProblem):
 
 class MagSphereBase(pb.FemBemDeMagProblem,cm.MeshGenerator):
     """Base class for MagSphere classes"""
-    def __init__(self,maxh):
+    def __init__(self,maxh,radius=10):
         #Try to regenerate mesh files if need be
         geofile = "algebraic3d \n \n \
-                   solid main = sphere (0, 0, 0; 10)-maxh="+str(maxh)+" ; \n \n \
+                   solid main = sphere (0, 0, 0; "+str(radius)+\
+                   ")-maxh="+str(maxh)+" ; \n \n \
                    tlo main;"
 
         #Get rid of "." in the file name as this confuses other programs
         maxhstr = str(maxh).replace(".","dot")
+        radiusstr=str(radius).replace(".","dot")
         
-        meshpath = "".join([os.path.dirname(mark.__file__),"/","sphere",maxhstr,\
+        meshpath = "".join([os.path.dirname(mark.__file__),"/","sphere-",maxhstr,"-",
+                            radiusstr,\
                             ".xml.gz"])
+
+
+
         cm.MeshGenerator.generate_mesh(self,meshpath,geofile)
         #Upload the dolfin mesh
         mesh = Mesh(meshpath)
@@ -90,6 +96,12 @@ class MagSphereBase(pb.FemBemDeMagProblem,cm.MeshGenerator):
         return "Sphere demagnetisation test problem fembem, Ms=%g, maxh = %g" %(self.Ms,self.maxh)
 
 #Note python doesn't allow :." in class names so the Sphere1.0 is now Sphere10 etc...        
+
+class MagSphere(MagSphereBase):
+    """Demag Sphere problem Using the geo sphere with radius r and maxh=maxh"""
+    def __init__(self,r,hmax):
+        MagSphereBase.__init__(self,hmax,r)
+
 class MagSphere50(MagSphereBase):
     """Demag Sphere problem Using the geo sphere mesh maxh  = 5.0"""
     def __init__(self):
