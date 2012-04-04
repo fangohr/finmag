@@ -72,7 +72,7 @@ def oommf_uniaxial_anisotropy(m0, Ms, K1, axis):
     if not (np.max(np.abs(m_field.flat - m0.flat)) < 1e-14):
         print m_field.flat
         print m0.flat
-    #assert np.max(np.abs(m_field.flat - m0.flat)) < 1e-14
+    assert np.max(np.abs(m_field.flat - m0.flat)) < 1e-14
 
     return uniaxial_anisotropy_field
 
