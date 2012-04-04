@@ -7,7 +7,7 @@ from finmag.sim.llg import LLG
 from finmag.demag.demag_solver import Demag
 from finmag.util.convert_mesh import convert_mesh
 from finmag.demag.solver_gcr import FemBemGCRSolver
-from finmag.demag.problems.prob_fembem_testcases import MagSphere30
+from finmag.demag.problems.prob_fembem_testcases import MagSphere
 from finmag.util.timings import timings
 
 class DemagXtra(Demag):
@@ -39,8 +39,10 @@ class LLGXtra(LLG):
         #Add an extra timing object for the method
         
 ##Note maxh=3.0
-mesh = MagSphere30().mesh
+mesh = MagSphere(20.,3.).mesh
 print "Using mesh with %g vertices" % mesh.num_vertices()
+import time
+time.sleep(1)
 
 from scipy.integrate import ode
 
