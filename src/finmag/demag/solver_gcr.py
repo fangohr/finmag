@@ -74,10 +74,6 @@ class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           # Add together the two potentials
           print "Compute phi total"
           self.phi = self.calc_phitot(self.phia,self.phib)
-
-          # FIXME: Why is this here? Uncomment if it breaks the build.
-          # It broke the build... TODO: Figure out why this is necessary
-          #self.Hdemag = self.get_demagfield(self.phi)
           return self.phi
           
      def solve_phia(self,method = "lu"):
@@ -145,7 +141,7 @@ class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           q = np.zeros(len(self.normtionary))
           #Get gradphia as a vector function
           gradphia = project(grad(self.phia), VectorFunctionSpace(self.V.mesh(),"DG",0))
-          for i,dof in enumerate(self.doftioynary):
+          for i,dof in enumerate(self.doftionary):
                ri = self.doftionary[dof]
                n = self.normtionary[dof]
                
