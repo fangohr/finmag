@@ -208,7 +208,7 @@ class LLG(object):
             return dMdt
         raise Exception("An error was encountered in the C-code; status=%d" % status)
 
-    # Computes the Jacobean-times-vector product, as used by SUNDIALS CVODE
+    # Computes the Jacobian-times-vector product, as used by SUNDIALS CVODE
     def sundials_jtimes(self, mp, J_mp, t, m, fy, tmp):
         timings.start("LLG-sundials-jtimes")
 

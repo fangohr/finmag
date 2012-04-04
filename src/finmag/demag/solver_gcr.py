@@ -87,13 +87,12 @@ class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           """Solve for phib on the boundary using BEM"""
           print "Assemble q vector"
           q = self.assemble_qvector_exact()
-          B = self.bem
-          if B is None:
+          if self.bem is None:
               print "B is none, build bem"
-              B = self.build_BEM_matrix()
-              self.bem = B
+              self.bem = self.build_BEM_matrix()
+              
           print "Dot product between B and q"
-          phibdofs = np.dot(B,q)
+          phibdofs = np.dot(self.bem,q)
           bdofs = doftionary.keys()
           print "Vector assignment"
           for i in range(len(bdofs)):

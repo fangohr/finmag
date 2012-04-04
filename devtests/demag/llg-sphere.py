@@ -8,6 +8,7 @@ from finmag.demag.demag_solver import Demag
 from finmag.util.convert_mesh import convert_mesh
 from finmag.demag.solver_gcr import FemBemGCRSolver
 from finmag.demag.problems.prob_fembem_testcases import MagSphere30
+from finmag.util.timings import timings
 
 class DemagXtra(Demag):
     #Demag class with more detailed timings
@@ -15,6 +16,13 @@ class DemagXtra(Demag):
         super(DemagXtra,self).__init__(V, m, Ms, method="GCR")    
         #Change the Demag Solver        
         self.solver = Grt.GCRtimings(self.problem)
+    def compute_field(self):
+        phi = self.solver.solve()
+        timings.start("Demag-computefield")
+        demag_field = df.project(-df.grad(phi), self.V)
+        H = demag_field.vector().array()*self.Ms
+        timings.stop("Demag-computefield")
+        return H
             
 class LLGXtra(LLG):
     #llg class with more detailed demag timings
