@@ -28,20 +28,19 @@ class GCRDeMagSolver(sb.DeMagSolver):
           V we can solve domain truncation problems as well. 
           """
           V = phia.function_space()
-          v = TestFunction(V)
           
           #Buffer data independant of M
           if not hasattr(self,"formA_phia"):
-               #Define functions
-               u = TrialFunction(V)
-               a = dot(grad(u),grad(v))*dx
-               self.phia_formA = assemble(a)
+               #Try to use poisson_matrix if available
+               if not hasattr(self,"poisson_matrix"):
+                    self.build_poisson_matrix()
+               self.phia_formA = self.poisson_matrix
                #Define and apply Boundary Conditions
                self.phia_bc = DirichletBC(V,0,"on_boundary")
                self.phia_bc.apply(self.phia_formA)               
                
           #Source term depends on M
-          f = (-div(self.M)*v)*dx  #Source term
+          f = (-div(self.M)*self.v)*dx  #Source term
           F = assemble(f)
           self.phia_bc.apply(F)
           
@@ -55,9 +54,9 @@ class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
      def __init__(self,problem,degree = 1):
           super(FemBemGCRSolver,self).__init__(problem,degree)
           #get the boundary dof - coordinate dictionary
-          self.doftionary = self.get_boundary_dof_coordinate_dict()
-          self.normtionary = self.get_dof_normal_dict_avg()
-
+          ##self.doftionary = self.get_boundary_dof_coordinate_dict()
+          ##self.normtionary = self.get_dof_normal_dict_avg()
+          self.build_boundary_data()
      def solve(self):
           """
           Solve for the Demag field using GCR and FemBem
@@ -114,8 +113,7 @@ class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
      def get_bem_row(self,R,bdofs):
           """Gets the row of the BEMmatrix associated with the point R,used in the form w"""
           w = self.bemkernel(R)
-          psi = TestFunction(self.V)
-          L = 1.0/(4*math.pi)*psi*w*ds
+          L = 1.0/(4*math.pi)*self.v*w*ds
           #Bigrow contains many 0's for nonboundary dofs
           bigrow = assemble(L,form_compiler_parameters=self.ffc_options)
           #Row contains just boundary dofs
@@ -137,7 +135,8 @@ class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
 
      def assemble_qvector_exact(self):
           """Builds the vector q using point evaluation"""
-
+          print  sorted(self.normtionary)
+          print sorted (self.doftionary)
           q = np.zeros(len(self.normtionary))
           #Get gradphia as a vector function
           gradphia = project(grad(self.phia), VectorFunctionSpace(self.V.mesh(),"DG",0))

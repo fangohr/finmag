@@ -99,11 +99,12 @@ class GCRtimingsFull(GCRtimings):
         ti.timings.stop("get_bem_row")
         return r
 
-    def get_dof_normal_dict_avg(self,V = None):
+    def get_dof_normal_dict_avg(self,normtionary):
         ti.timings.start("get_dof_normal_dict_avg")
-        r = super(GCRtimings,self).get_dof_normal_dict_avg(V = V)
+        r = super(GCRtimings,self).get_dof_normal_dict_avg(normtionary)
         ti.timings.stop("get_dof_normal_dict_avg")
         return r
+
     def bemkernel(self,R):
         ti.timings.start("bemkernel")
         r = super(GCRtimings,self).bemkernel(R)
@@ -116,16 +117,10 @@ class GCRtimingsFull(GCRtimings):
         ti.timings.stop("get_boundary_dofs")
         return r
     
-    def get_boundary_dof_coordinate_dict(self,V = None):
-        ti.timings.start("get_boundary_dof_coordinate_dict")
-        r = super(GCRtimings,self).get_boundary_dof_coordinate_dict(V = V)
-        ti.timings.stop("get_boundary_dof_coordinate_dict")
-        return r
-    
-    def get_dof_normal_dict(self,V = None):
-        ti.timings.start("get_dof_normal_dict")
-        r = super(GCRtimings,self).get_dof_normal_dict(V = V)
-        ti.timings.stop("get_dof_normal_dict")
+    def build_boundary_data(self):
+        ti.timings.start("build_boundary_data")
+        r = super(GCRtimings,self).build_boundary_data()
+        ti.timings.stop("build_boundary_data")
         return r
     
     def restrict_to(self,bigvector,dofs):
