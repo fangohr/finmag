@@ -89,6 +89,9 @@ class FemBemDeMagSolver(DeMagSolver):
         
         #Change the Function space to CR
         self.V = FunctionSpace(self.problem.mesh,"CR",degree)
+        #Create and store a Trial and Test Function
+        self.v = TestFunction(self.V)
+        self.u= TrialFunction(self.V)
         #Total Function that we solve for
         self.phi = Function(self.V)
 
@@ -106,81 +109,72 @@ class FemBemDeMagSolver(DeMagSolver):
         dummyBC = DirichletBC(V,0,"on_boundary")
         return dummyBC.get_boundary_values()
 
-    def get_boundary_dof_coordinate_dict(self,V = None):
-        """
-        Provides a dictionary with boundary DOF's
-        key = DOFnumber in the functionspace defined over the entire mesh
-        value = coordinates of DOF
-        The order that the dofs appear in the dic becomes their col/row
-        number in the BEM matrix.
-        V = Function Space
-        """
-        if V is None:
-            V = self.V
-        #objects needed
-        mesh = V.mesh()
-        d = mesh.topology().dim()
-        dm = V.dofmap()      
-        boundarydofs = self.get_boundary_dofs(V)
-        mesh.init()
-        
-        #Build a dictionary with all dofs and their coordinates
-        #TODO Optimize me!
-        doftionary = {}
-        for facet in facets(mesh):
-            cells = facet.entities(d)
-            if len(cells) == 2:
-                continue
-            elif len(cells) == 1:
-                #create one cell (since we have CG)
-                cell = Cell(mesh, cells[0])
-                #Create the cell dofs and see if any
-                #of the global numbers turn up in BoundaryDofs
-                #If so update the BoundaryDic with the coordinates
-                celldofcord = dm.tabulate_coordinates(cell)
-                globaldofs = dm.cell_dofs(cells[0])
-                globalcoord = dm.tabulate_coordinates(cell)
-
-                for locind,dof in enumerate(globaldofs):
-                    doftionary[dof] = globalcoord[locind]
-                #restrict the doftionary to the boundary
-                for x in [x for x in doftionary if x not in boundarydofs]:
-                    doftionary.pop(x)
-            else:
-                assert 1==2,"Expected only two cells per facet and not " + str(len(cells))
-        return doftionary
-
-    def get_dof_normal_dict(self,V = None):
+    def get_dof_normal_dict_avg(self,normtionary):
         """
         Provides a dictionary with all of the boundary DOF's as keys
-        and a list of facet normal components associated to the DOF as values
+        and an average of facet normal components associated to the DOF as values
         V = FunctionSpace
         """
-        #Take my own function space as default
-        if V is None:
-            V = self.V
-        mesh = V.mesh()
+        #Take an average of the normals in normtionary
+        avgnormtionary = {k:np.array([ float(sum(i))/float(len(i)) for i in zip(*normtionary[k])]) for k in normtionary}
+        #Renormalize the normals
+        avgnormtionary = {k: avgnormtionary[k]/sqrt(np.dot(avgnormtionary[k],avgnormtionary[k].conj())) for k in avgnormtionary}
+        return avgnormtionary
+    
+    def build_boundary_data(self):
+        """
+        Builds two boundary data dictionaries
+        1.doftionary key- dofnumber, value - coordinates
+        2.normtionary key - dofnumber, value - average of all facet normal components associated to a DOF
+        """
+        
+        mesh = self.V.mesh()
+        #Initialize the mesh data
         mesh.init()
         d = mesh.topology().dim()
-        dm = V.dofmap()
+        dm = self.V.dofmap()
+        boundarydofs = self.get_boundary_dofs(self.V)
+        
 
         #It is very import that this vector has the right length
         #It holds the local dof numbers associated to a facet 
         facetdofs = np.zeros(dm.num_facet_dofs(),dtype=np.uintc)
 
-        #Initialize dof-normal dictionary
+        #Initialize dof-to-normal dictionary
         doftonormal = {}
-
+        doftionary = {}
         #Loop over boundary facets
         for facet in facets(mesh):
             cells = facet.entities(d)
             #one cell means we are on the boundary
             if len(cells) ==1:
+                #######################################
+                #Shared Data for Normal and coordinates 
+                #######################################
+                
+                #create one cell (since we have CG)
                 cell = Cell(mesh,cells[0])
-                local_fi = cell.index(facet)
-                dm.tabulate_facet_dofs(facetdofs,local_fi)
                 #Local to global map
                 globaldofcell = dm.cell_dofs(cells[0])
+
+                #######################################
+                #Find  Dof Coordinates
+                #######################################
+                        
+                #Create the cell dofs and see if any
+                #of the global numbers turn up in BoundaryDofs
+                #If so update doftionary with the coordinates
+                celldofcord = dm.tabulate_coordinates(cell)
+
+                for locind,dof in enumerate(globaldofcell):
+                    if dof in boundarydofs:
+                        doftionary[dof] = celldofcord[locind]
+                    
+                #######################################
+                #Find Normals
+                #######################################
+                local_fi = cell.index(facet)
+                dm.tabulate_facet_dofs(facetdofs,local_fi)
                 #Global numbers of facet dofs
                 globaldoffacet = [globaldofcell[ld] for ld in facetdofs]
                 #add the facet's normal to every dof it contains
@@ -193,20 +187,16 @@ class FemBemDeMagSolver(DeMagSolver):
                     #Prevent redundancy in Normals (for example 3d UnitCube CG1)
                     if ntup not in doftonormal[gdof]:
                         doftonormal[gdof].append(ntup) 
-        return doftonormal
-
-    def get_dof_normal_dict_avg(self,V = None):
-        """
-        Provides a dictionary with all of the boundary DOF's as keys
-        and an average of facet normal components associated to the DOF as values
-        V = FunctionSpace
-        """
-        normtionary = self.get_dof_normal_dict(V = V)
-        #Take an average of the normals in normtionary
-        avgnormtionary = {k:np.array([ float(sum(i))/float(len(i)) for i in zip(*normtionary[k])]) for k in normtionary}
-        #Renormalize the normals
-        avgnormtionary = {k: avgnormtionary[k]/sqrt(np.dot(avgnormtionary[k],avgnormtionary[k].conj())) for k in avgnormtionary}
-        return avgnormtionary
+                    
+            elif len(cells) == 2:
+                #we are on the inside so continue
+                continue
+            else:
+                assert 1==2,"Expected only two cells per facet and not " + str(len(cells))
+                
+        #Build the average normtionary and save data
+        self.normtionary = self.get_dof_normal_dict_avg(doftonormal)      
+        self.doftionary = doftionary
     
     def restrict_to(self,bigvector,dofs):
         """Restrict a vector to the dofs in dofs (usually boundary)"""
@@ -214,7 +204,11 @@ class FemBemDeMagSolver(DeMagSolver):
         for i,key in enumerate(dofs):
              vector[i] = bigvector[key]
         return vector
-    
+
+    def build_poisson_matrix(self):
+        a = dot(grad(self.u),grad(self.v))*dx
+        self.poisson_matrix = assemble(a)
+
     def solve_laplace_inside(self,function):
         """Take a functions boundary data as a dirichlet BC and solve
             a laplace equation"""
@@ -222,18 +216,21 @@ class FemBemDeMagSolver(DeMagSolver):
         bc = DirichletBC(V,function, "on_boundary")
         
         #Buffer data independant of M
-        if not hasattr(self,"laplace_A"):
-            v = TestFunction(V)
-            u = TrialFunction(V)
-            a = dot(grad(u),grad(v))*dx
-            self.laplace_A = assemble(a)
+        if not hasattr(self,"poisson_matrix"):
+            self.build_poisson_matrix()
+        if not hasattr(self,"laplace_F"):
             #RHS = 0
             self.laplace_f = Function(V).vector()
 
+        #Copy the poisson matrix it is shared and should
+        #not have bc applied to it.
+        laplace_A = self.poisson_matrix
         #Apply BC
-        bc.apply(self.laplace_A)
+        bc.apply(laplace_A)
+        #Boundary values of laplace_f are overwritten
+        #on each call.
         bc.apply(self.laplace_f)
-        solve(self.laplace_A,function.vector(),self.laplace_f)
+        solve(laplace_A,function.vector(),self.laplace_f)
         return function
         
 class TruncDeMagSolver(DeMagSolver):

@@ -60,8 +60,7 @@ class MagUnitInterval(pb.FemBemDeMagProblem):
 
 ###########################################################
 #This Section contains better quality unit sphere meshes
-#and problems that use them. Unfortunatly, it can take
-#a while to generate one of these meshes for the first time.     
+#and problems that use them.    
 ###########################################################
 
 class MagSphereBase(pb.FemBemDeMagProblem,cm.MeshGenerator):
