@@ -22,7 +22,7 @@ def test_one_dimensional_problem():
 
 def test_three_dimensional_problem():
     results = three_dimensional_problem()
-    REL_TOLERANCE = 0.003
+    REL_TOLERANCE = 1e-14
     print "3d: rel_diff_max:",np.nanmax(results["rel_diff"])
     assert np.nanmax(results["rel_diff"]) < REL_TOLERANCE
 
@@ -53,18 +53,15 @@ def one_dimensional_problem():
 def three_dimensional_problem():
     x_max = 20e-9; y_max = 10e-9; z_max = 10e-9;
     x_n=20; y_n=10; z_n=10
-    dolfin_mesh = df.Box(0, 0, 0, x_max, y_max, z_max, x_n*5, y_n, z_n)
+    dolfin_mesh = df.Box(0, 0, 0, x_max, y_max, z_max, x_n, y_n, z_n)
     oommf_mesh = mesh.Mesh((x_n, y_n, z_n), size=(x_max, y_max, z_max))
 
-    #TODO: HF: This tests seems fishy. If I change either the anisotropy directior
-    #or the m_gen function, the max error increases from the already large 
-    #value of 0.003. Finer meshes do not really help, and 
-    #we also use a finer mesh for dolfin here than we do for OOMMF.
-    #This should not be necessary.
+    # for a trivial magnetisation like this, the coarseness of the mesh doesn't seem
+    # to be very influential. That's a good second example for the convergence tests.
 
     def m_gen(rs):
       xs = rs[0]
-      return np.array([np.sin(1e9 * xs/3.)**2, np.zeros(len(xs)), np.ones(len(xs))])
+      return np.array([np.ones(len(xs)), np.zeros(len(xs)), np.zeros(len(xs))])
 
     from finmag.util.oommf.comparison import compare_anisotropy
     return compare_anisotropy(m_gen, K1, (1, 1, 1), dolfin_mesh, oommf_mesh, dims=3, name="3D")
