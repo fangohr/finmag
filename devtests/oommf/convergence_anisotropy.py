@@ -11,29 +11,30 @@ K1 = 45e4 # J/m^3
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
 
-rel_diff_maxs = []
-rel_diff_means = []
-vertices = []
+max_rdiffs = [[],[]]
+vertices = [[],[]]
 
-for x_n in [4, 8, 20, 40, 80]:
-  x_max = 20e-9; y_max = x_max/2; z_max = x_max/4; # proportions 4 * 2 * 1
+x_min = 0; x_max = 100e-9;
+for x_n in [1e1, 1e2, 1e3, 1e4, 1e5, 1e6]:
+    dolfin_mesh = df.Interval(int(x_n), x_min, x_max)
+    oommf_mesh = mesh.Mesh((20, 1, 1), size=(x_max, 1e-12, 1e-12))
 
-  dolfin_mesh = df.Box(0, 0, 0, x_max, y_max, z_max, x_n, x_n/2, x_n/4)
-  oommf_mesh = mesh.Mesh((x_n, x_n/2, x_n/4), size=(x_max, y_max, z_max))
+    def m_gen(rs):
+      xs = rs[0]
+      return np.array([2*xs/x_max - 1, np.sqrt(1 - (2*xs/x_max - 1)**2), np.zeros(len(xs))])
 
-  def m_gen(coords):
-      n = coords.shape[1]
-      return np.array([np.ones(n), np.zeros(n), np.zeros(n)])
+    res = compare_anisotropy(m_gen, K1, (1, 1, 1), dolfin_mesh, oommf_mesh, dims=1, name="1D")
 
-  res = compare_anisotropy(m_gen, K1, (1, 0, 0),
-          dolfin_mesh, oommf_mesh, name="small_problem")
-
-  vertices.append(dolfin_mesh.num_vertices())  
-  rel_diff_maxs.append(np.max(res["rel_diff"]))
-  rel_diff_means.append(np.mean(res["rel_diff"]))
+    vertices[0].append(dolfin_mesh.num_vertices())  
+    max_rdiffs[0].append(np.max(res["rel_diff"]))
 
 print vertices
-print rel_diff_maxs
-print rel_diff_means
-plt.plot(vertices, rel_diff_means)
+print max_rdiffs
+
+plt.xlabel("vertices")
+plt.ylabel("rel. max diff.")
+plt.loglog(vertices[0], max_rdiffs[0], "--")
+plt.loglog(vertices[0], max_rdiffs[0], "o", label="1d problem")
+plt.legend()
 plt.savefig(MODULE_DIR + "anis_convergence.png")
+plt.show()
