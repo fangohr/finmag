@@ -6,6 +6,8 @@ class Timings(object):
         n is the number of calls, and t the cumulative time it took, and st the status ('finished',STARTTIME)"""
         self.reset()
 
+        self._last = None #remember which activity we started to measure last.
+
     def reset(self):
         self.data = {}
         self.creationtime = time.time()
@@ -16,6 +18,8 @@ class Timings(object):
             self.data[name][2]=time.time()
         else:
             self.data[name]=[0,0.,time.time()]
+        self._last = name
+
     def stop(self,name):
         assert name in self.data.keys(),"name '%s' not known. Known values: %s" % self.data.keys()
         assert self.data[name][2] != 'finished',"No measurement started for name '%s'" % name
@@ -24,6 +28,14 @@ class Timings(object):
         self.data[name][0] += 1
         self.data[name][1] += timetaken
         self.data[name][2] = 'finished'
+        self._last = None
+
+    def startnext(self,name):
+        """Will stop whatever measurement has been started most recently, and start the 
+        next one with name 'name'."""
+        if self._last:
+            self.stop(self._last)
+        self.start(name)
 
     def getncalls(self,name):
         return self.data[name][0]
