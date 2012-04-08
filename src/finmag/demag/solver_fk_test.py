@@ -9,6 +9,22 @@ import finmag.util.solid_angle_magpar as solid_angle_solver
 compute_belement=belement_magpar.return_bele_magpar()
 compute_solid_angle=solid_angle_solver.return_csa_magpar()
 
+
+def compute_cell_volume(mesh):
+    V = df.FunctionSpace(mesh, 'DG', 0)
+    v = df.TestFunction(V)
+    tet_vol=df.assemble(v * df.dx)
+    return tet_vol.array()
+
+
+def compute_minus_node_volume_vector(mesh):
+    V=VectorFunctionSpace(mesh, 'Lagrange', 1)
+    v = df.TestFunction(V)
+    node_vol= df.assemble(df.dot(v, 
+            df.Constant([-1,-1,-1])) * df.dx)
+    return node_vol.array()
+
+
 def compute_BEM_matrix(demag):
     """
     Input parameter is a SimpleFKSolver class
@@ -209,6 +225,66 @@ class SimpleFKSolver():
         if debug:
             print '='*100,'K2\n',self.K2
 
+        #=============================================
+        """
+        I know we can use "project" function to obtain the magnetisation from the total phi
+        and it should be correct, Yes, but it seems that one can use some matrix method such
+        as in the reference
+
+           "Numerical Methods in Micromagnetics (Finite Element Method)
+            Thomas Schrefl1, Gino Hrkac1, Simon Bance1, Dieter Suess2, Otmar Ertl2 and Josef Fidler"
+
+        the magnetisation was extracted by multiplying some matrix,
+
+              H_demag= - L^-1 * G * phi
+
+        Is this method the same with the project function? According to the instrcutions,
+
+              demag_field = df.project(-df.grad(phi), self.Vv)
+
+        is equivalent to the follwoing statements:
+
+              w = TrialFunction(self.Vv)
+              v = TestFunction(self.Vv)
+
+              a = inner(w, v)*dx
+              L = inner(grad(u), v)*dx
+              demag_field = Function(self.Vv)
+              solve(a == L, demag_field)
+
+        Another question is how assemble the above statements into matrix form? I am lost in
+        dolfin now, ;-), I only arrived at
+
+              u=TrialFunction(self.V)
+              w = TrialFunction(self.Vv)
+              v = TestFunction(self.Vv)
+
+              a = inner(w, v)*df.dx
+              A=df.assemble(a)
+
+              b = inner(grad(u), v)*df.dx
+              B=df.assemble(b)
+
+              demag_field = Function(self.Vv)
+              solve(A, demag_field.vector(),B*phi)
+
+        but accoring to numerical experiments, I found B was the matrix we are looking for
+        and L is certainly the volume of each node. I was surprised becasue this means the
+        the following eqaution holds,
+
+              - L^-1 B = A B
+
+        I have no idea wether it is always true?  why?
+        
+        """
+
+        u = TrialFunction(self.V)
+        v = TestFunction(self.Vv)
+        a= inner(grad(u), v)*dx
+        self.G = df.assemble(a)
+        
+        self.L = compute_minus_node_volume_vector(self.mesh)
+
 
     def compute_field(self,debug=False):
         u = TrialFunction(self.V)
@@ -237,10 +313,14 @@ class SimpleFKSolver():
         if debug:
             print '='*100,'phi2\n',phi2
     
+        
         phi=Function(self.V)
         phi.vector().set_local(self.phi1.vector().array()+phi2)
-        demag_field = df.project(-df.grad(phi), self.Vv)
-        return demag_field.vector().array()
+        #demag_field = df.project(-df.grad(phi), self.Vv)
+        
+        demag_field= self.G * phi.vector()
+        
+        return demag_field.array()/self.L
 
 
 if __name__ == "__main__":
