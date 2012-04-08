@@ -245,13 +245,15 @@ class SimpleFKSolver():
 
 if __name__ == "__main__":
 
+    from finmag.demag.problems.prob_fembem_testcases import MagSphere
+    mesh = MagSphere(5,1.).mesh
+    print mesh
 
-    mesh = df.UnitSphere(5)
-    #mesh = df.Mesh('sphere.xml')
     V = df.VectorFunctionSpace(mesh, 'Lagrange', 1)
     Ms=8.6e5
 
     m = project(Constant((1, 0, 0)), V)
     demag=SimpleFKSolver(V,m,Ms)
     print demag.compute_field()
+    
     

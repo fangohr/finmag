@@ -60,9 +60,13 @@ def three_dimensional_problem():
                  rel_diff=rel_diff)
 
 def three_dimensional_problem2():
-    x_max = 10e-9; y_max = 1e-9; z_max = 1e-9;
-    mesh = df.Box(0, 0, 0, x_max, y_max, z_max, 2, 2, 2)
-    mesh = df.UnitSphere(10)
+    #x_max = 10e-9; y_max = 1e-9; z_max = 1e-9;
+    #mesh = df.Box(0, 0, 0, x_max, y_max, z_max, 2, 2, 2)
+    #mesh = df.UnitSphere(10)
+    from finmag.demag.problems.prob_fembem_testcases import MagSphere
+    mesh = MagSphere(10,2.).mesh
+    print mesh
+
 
     V = df.VectorFunctionSpace(mesh, 'Lagrange', 1)
     Ms=8.6e5
@@ -102,7 +106,7 @@ def three_dimensional_problem2():
 if __name__ == '__main__':
 
     res = three_dimensional_problem()
-
+    
     print "finmag:",res["demag"]
     print "magpar:",res["magpar_demag"]
     print "rel_diff:",res["rel_diff"]
