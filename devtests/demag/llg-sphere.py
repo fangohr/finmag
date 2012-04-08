@@ -15,7 +15,7 @@ class DemagXtra(Demag):
     def __init__(self, V, m, Ms, method="GCR"):
         super(DemagXtra,self).__init__(V, m, Ms, method="GCR")    
         #Change the Demag Solver        
-        self.solver = Grt.GCRtimings(self.problem)
+        self.solver = Grt.GCRtimingsFull(self.problem)
     def compute_field(self):
         phi = self.solver.solve()
         timings.start("Demag-computefield")
@@ -84,6 +84,6 @@ while r.t < tfinal-dt:
     #only plotting and data analysis from here on
 
 llg.timings(30)
-print Grt.qtime.report_str(10)
+##print Grt.qtime.report_str(10)
 
 

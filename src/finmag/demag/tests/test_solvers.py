@@ -232,10 +232,14 @@ class TestFemBemDeMagSolver(object):
         self.solver = sb.FemBemDeMagSolver(self.problem)
         
     def test_get_boundary_dof_coordinate_dict(self):
-        """Test the method get_boundary_dof_coordinate_dict"""
-        V = FunctionSpace(self.solver.problem.mesh,"CG",1)
-        numdofcalc = len(self.solver.get_boundary_dof_coordinate_dict(V))
-        numdofactual = BoundaryMesh(V.mesh()).num_vertices()
+        """Test the method build_boundary_data- doftionary"""
+        #Insert the special function space
+        self.solver.V = FunctionSpace(self.solver.problem.mesh,"CG",1)
+        #Call the methid
+        self.solver.build_boundary_data()
+        #test the result
+        numdofcalc = len(self.solver.doftionary)
+        numdofactual = BoundaryMesh(self.solver.V.mesh()).num_vertices()
         assert numdofcalc == numdofactual,"Error in Boundary Dof Dictionary creation, number of DOFS " +str(numdofcalc)+ \
                                           " does not match that of the Boundary Mesh " + str(numdofactual)
 
@@ -243,6 +247,12 @@ class TestFemBemDeMagSolver(object):
         """Solve a known laplace equation to check the method solve_laplace_inside"""
         mesh = UnitSquare(2,2)
         V = FunctionSpace(mesh,"CG",1)
+        #Insert V into the solver and recreate the test and trial functions
+        self.solver.V = V
+        self.solver.v = TestFunction(V)
+        self.solver.u = TrialFunction(V)
+        
+        #Test the result of the call
         fold = interpolate(Expression("1-x[0]"),V)
         fnew = interpolate(Expression("1-x[0]"),V)
         #The Laplace equation should give the same solution as f
@@ -258,8 +268,11 @@ class TestFemBemDeMagSolver(object):
     def test_get_dof_normal_dict(self):
         """Test the method get_dof_normal_dict"""
         V = self.easyspace()
-        facetdic = self.solver.get_dof_normal_dict(V)
-        coord = self.solver.get_boundary_dof_coordinate_dict(V)
+        #insert V into the solver
+        self.solver.V = V
+        self.solver.build_boundary_data()
+        facetdic = self.solver.doftonormal
+        coord = self.solver.doftionary
         
         #Tests
         assert len(facetdic[0]) == 2,"Error in normal dictionary creation, 1,1 UnitSquare with CG1 has two normals per boundary dof"
@@ -272,9 +285,12 @@ class TestFemBemDeMagSolver(object):
         have length one
         """
         V = self.easyspace()
-        avgnormtionary = self.solver.get_dof_normal_dict_avg(V)
-        for k in avgnormtionary:
-            assert near(sqrt(np.dot(avgnormtionary[k],avgnormtionary[k].conj())),1),"Failure in average normal calulation, length of\
+        #insert V into the solver
+        self.solver.V = V
+        self.solver.build_boundary_data()
+        normtionary = self.solver.normtionary
+        for k in normtionary:
+            assert near(sqrt(np.dot(normtionary[k],normtionary[k].conj())),1),"Failure in average normal calulation, length of\
                                                                                      normal not equal to 1"
 
 class Test_FemBemGCRSolver(DemagTester):

@@ -4,6 +4,7 @@ import dolfin as df
 import cProfile as cP
 import finmag.util.timings as ti
 import numpy as np
+import math
 from finmag.demag.solver_gcr import FemBemGCRSolver
 from finmag.demag.problems.prob_fembem_testcases import MagSphere20
 
@@ -95,9 +96,19 @@ class GCRtimingsFull(GCRtimings):
     
     def get_bem_row(self,R,bdofs):
         ti.timings.start("get_bem_row")
-        r = super(GCRtimings,self).get_bem_row(R,bdofs)
+        w = self.bemkernel(R)
+        L = 1.0/(4*math.pi)*self.v*w*df.ds
+        #Bigrow contains many 0's for nonboundary dofs
+        bigrow = df.assemble(L,form_compiler_parameters=self.ffc_options)
+        #Row contains just boundary dofs
+        ti.timings.start("better_restrict")
+        a = filter(lambda x: x <> 0.0,bigrow)
+        ##row = np.array([bigrow[i] for i in bdofs])
+        ti.timings.stop("better_restrict")
+        #TODO replace this with a faster operation not using for loops
+        row = self.restrict_to(bigrow,bdofs)
         ti.timings.stop("get_bem_row")
-        return r
+        return row
 
     def get_dof_normal_dict_avg(self,normtionary):
         ti.timings.start("get_dof_normal_dict_avg")
