@@ -30,6 +30,11 @@ class Timings(object):
         self.data[name][2] = 'finished'
         self._last = None
 
+    def stoplast(self):
+        """Stop the last measurement at this point."""
+        assert self._last != None
+        self.stop(self._last)
+
     def startnext(self,name):
         """Will stop whatever measurement has been started most recently, and start the 
         next one with name 'name'."""
@@ -67,10 +72,6 @@ class Timings(object):
 
     def __str__(self):
         return self.report_str()
-
-    #def __del__(self): #destructor, when the last class is destroyed, print some data
-    #    print "Timings.__del__: Summary, largest time first"
-    #x    print str(self)
 
 timings=Timings()
 
