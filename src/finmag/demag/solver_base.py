@@ -97,6 +97,9 @@ class FemBemDeMagSolver(DeMagSolver):
 
         # Store the computed boundary element matrix
         self.bem = None
+
+        #build the boundary data (normals and coordinates)
+        self.build_boundary_data()
         
     def calc_phitot(self,func1,func2):
         """Add two functions to get phitotal"""
@@ -195,6 +198,7 @@ class FemBemDeMagSolver(DeMagSolver):
                 assert 1==2,"Expected only two cells per facet and not " + str(len(cells))
                 
         #Build the average normtionary and save data
+        self.doftonormal = doftonormal
         self.normtionary = self.get_dof_normal_dict_avg(doftonormal)      
         self.doftionary = doftionary
     
@@ -206,21 +210,21 @@ class FemBemDeMagSolver(DeMagSolver):
         return vector
 
     def build_poisson_matrix(self):
+        """assemble a poisson equation 'stiffness' matrix"""
         a = dot(grad(self.u),grad(self.v))*dx
         self.poisson_matrix = assemble(a)
 
     def solve_laplace_inside(self,function):
         """Take a functions boundary data as a dirichlet BC and solve
             a laplace equation"""
-        V = function.function_space()
-        bc = DirichletBC(V,function, "on_boundary")
+        bc = DirichletBC(self.V,function, "on_boundary")
         
         #Buffer data independant of M
         if not hasattr(self,"poisson_matrix"):
             self.build_poisson_matrix()
         if not hasattr(self,"laplace_F"):
             #RHS = 0
-            self.laplace_f = Function(V).vector()
+            self.laplace_f = Function(self.V).vector()
 
         #Copy the poisson matrix it is shared and should
         #not have bc applied to it.

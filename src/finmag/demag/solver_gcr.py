@@ -56,11 +56,8 @@ class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
     
      def __init__(self,problem,degree = 1):
           super(FemBemGCRSolver,self).__init__(problem,degree)
-          #get the boundary dof - coordinate dictionary
-          ##self.doftionary = self.get_boundary_dof_coordinate_dict()
-          ##self.normtionary = self.get_dof_normal_dict_avg()
-          self.build_boundary_data()
-     def solve(self,method='lu'):
+
+     def solve(self):
           """
           Solve for the Demag field using GCR and FemBem
           Potential is returned, demag field stored
@@ -113,13 +110,13 @@ class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           return bemmatrix
 
      def get_bem_row(self,R,bdofs):
-          """Gets the row of the BEMmatrix associated with the point R,used in the form w"""
+          """Gets the row of the BEMmatrix associated with the point R, used in the form w"""
           w = self.bemkernel(R)
           L = 1.0/(4*math.pi)*self.v*w*ds
           #Bigrow contains many 0's for nonboundary dofs
           bigrow = assemble(L,form_compiler_parameters=self.ffc_options)
           #Row contains just boundary dofs
-          row = self.restrict_to(bigrow,bdofs)
+          row = np.array([bigrow[i] for i in bdofs])
           return row
      
      def bemkernel(self,R):
@@ -137,8 +134,6 @@ class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
 
      def assemble_qvector_exact(self):
           """Builds the vector q using point evaluation"""
-          print sorted(self.normtionary)
-          print sorted (self.doftionary)
           q = np.zeros(len(self.normtionary))
           #Get gradphia as a vector function
           gradphia = project(grad(self.phia), VectorFunctionSpace(self.V.mesh(),"DG",0))
@@ -186,5 +181,5 @@ if __name__ == "__main__":
      from finmag.demag.problems import prob_fembem_testcases as pft
      problem = pft.MagUnitCircle(10)
      solver = FemBemGCRSolver(problem)
-     solver.assemble_qvector_exact()
+     solver.solve()
 
