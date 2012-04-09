@@ -48,7 +48,6 @@ class FemBemFKSolver(FKSolver, sb.FemBemDeMagSolver):
 
     def __init__(self, problem, degree=1):
           super(FemBemFKSolver,self).__init__(problem, degree)
-          self.doftionary = self.get_boundary_dof_coordinate_dict()
 
     def solve(self):
         """
