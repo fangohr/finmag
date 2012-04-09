@@ -83,7 +83,7 @@ while r.t < tfinal-dt:
 
     #only plotting and data analysis from here on
 
-llg.timings(30)
+llg.timings(300)
 print Grt.qtime.report_str(10)
 
 
