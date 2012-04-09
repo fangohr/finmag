@@ -10,7 +10,9 @@ class Demag(object):
         self.V = V
         mesh = V.mesh()
         self.Ms = Ms
+        timings.startnext("Demag-init-PBProblem")
         self.problem = FBProblem(mesh, m)
+        timings.startnext("Demag-init-FemBemConstructorCall")
         if method == "FK":
             self.solver = FemBemFKSolver(self.problem)
         elif method == "GCR":
@@ -20,13 +22,12 @@ class Demag(object):
                                     * 'FK'
                                     * 'GCR'""")
 
-        timings.stop("Demag-init")
+        timings.stop("Demag-init-FemBemConstructorCall")
 
     def compute_field(self):
         timings.start("Demag-computephi")
         phi = self.solver.solve()
-        timings.stop("Demag-computephi")
-        timings.start("Demag-computefield")
+        timings.startnext("Demag-computefield")
         demag_field = df.project(-df.grad(phi), self.V)
         H = demag_field.vector().array()*self.Ms
         timings.stop("Demag-computefield")

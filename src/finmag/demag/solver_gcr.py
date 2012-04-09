@@ -7,10 +7,13 @@ __organisation__ = "University of Southampton"
 
 from dolfin import *
 import finmag.demag.solver_base as sb
+from finmag.util.timings import timings
 import math
+import logging
 import numpy as np
 #Set allow extrapolation to true#
 parameters["allow_extrapolation"] = True
+logger = logging.getLogger(name='finmag')
      
 class GCRDeMagSolver(sb.DeMagSolver):
      """Class containing methods shared by GCR solvers"""
@@ -57,21 +60,20 @@ class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           ##self.doftionary = self.get_boundary_dof_coordinate_dict()
           ##self.normtionary = self.get_dof_normal_dict_avg()
           self.build_boundary_data()
-     def solve(self):
+     def solve(self,method='lu'):
           """
           Solve for the Demag field using GCR and FemBem
           Potential is returned, demag field stored
           """
-          print "Solve for phia"
+          logger.debug("GCR: Solving for phi_a")
           #Solve for phia
           self.solve_phia()
           #Solve for phib on the boundary with Bem 
           self.phib = self.solve_phib_boundary(self.phia,self.doftionary)
           #Solve for phib on the inside of the mesh with Fem
-          print "Solve laplace on the inside"
+          logger.info("GCR: Solve for phi_b (laplace on the inside)")
           self.phib = self.solve_laplace_inside(self.phib)
           # Add together the two potentials
-          print "Compute phi total"
           self.phi = self.calc_phitot(self.phia,self.phib)
           return self.phi
           
@@ -80,16 +82,16 @@ class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           
      def solve_phib_boundary(self,phia,doftionary):
           """Solve for phib on the boundary using BEM"""
-          print "Assemble q vector"
+          logger.info("GRC: Assemble q vector")
           q = self.assemble_qvector_exact()
           if self.bem is None:
-              print "B is none, build bem"
+              logger.info("Building BEM matrix")
               self.bem = self.build_BEM_matrix()
               
-          print "Dot product between B and q"
+          logger.debug("GRC: Dot product between B and q")
           phibdofs = np.dot(self.bem,q)
           bdofs = doftionary.keys()
-          print "Vector assignment"
+          logger.info("GCR: Vector assignment")
           for i in range(len(bdofs)):
                self.phib.vector()[bdofs[i]] = phibdofs[i]
           return self.phib
@@ -135,7 +137,7 @@ class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
 
      def assemble_qvector_exact(self):
           """Builds the vector q using point evaluation"""
-          print  sorted(self.normtionary)
+          print sorted(self.normtionary)
           print sorted (self.doftionary)
           q = np.zeros(len(self.normtionary))
           #Get gradphia as a vector function
