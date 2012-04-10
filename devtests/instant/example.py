@@ -59,7 +59,7 @@ restrict_to = instant.inline_with_numpy(c_code_restrict_to, arrays=args)
 bigvec = np.array([4.0,5.0,6.0,7.0,8.0])
 resvec = np.zeros(2)
 dofs = np.array([0,3])
-
+print dofs.dtype.name
 print "\n resvec before: \n", resvec
 restrict_to(bigvec,resvec,dofs)
 print "resvec after: \n", resvec
