@@ -94,21 +94,11 @@ class GCRtimingsFull(GCRtimings):
         ti.timings.stop("solve_phib_boundary")
         return r
     
-    def get_bem_row(self,R,bdofs):
+    def get_bem_row(self,R):
         ti.timings.start("get_bem_row")
-        w = self.bemkernel(R)
-        L = 1.0/(4*math.pi)*self.v*w*df.ds
-        #Bigrow contains many 0's for nonboundary dofs
-        bigrow = df.assemble(L,form_compiler_parameters=self.ffc_options)
-        #Row contains just boundary dofs
-        ti.timings.start("better_restrict")
-        a = filter(lambda x: x <> 0.0,bigrow)
-        ##row = np.array([bigrow[i] for i in bdofs])
-        ti.timings.stop("better_restrict")
-        #TODO replace this with a faster operation not using for loops
-        row = self.restrict_to(bigrow,bdofs)
+        r = super(GCRtimings,self).get_bem_row(R)   
         ti.timings.stop("get_bem_row")
-        return row
+        return r
 
     def get_dof_normal_dict_avg(self,normtionary):
         ti.timings.start("get_dof_normal_dict_avg")
@@ -134,9 +124,9 @@ class GCRtimingsFull(GCRtimings):
         ti.timings.stop("build_boundary_data")
         return r
     
-    def restrict_to(self,bigvector,dofs):
+    def restrict_to(self,bigvector):
         ti.timings.start("restrict_to")
-        r = super(GCRtimings,self).restrict_to(bigvector,dofs)
+        r = super(GCRtimings,self).restrict_to(bigvector)
         ti.timings.stop("restrict_to")
         return r
     

@@ -6,6 +6,7 @@ __organisation__ = "University of Southampton"
 
 from dolfin import *
 import numpy as np
+import instant
 
 class DeMagSolver(object):
     """Base class for Demag Solvers"""
@@ -100,7 +101,20 @@ class FemBemDeMagSolver(DeMagSolver):
 
         #build the boundary data (normals and coordinates)
         self.build_boundary_data()
+        self.build_crestrict_to()
         
+    def build_crestrict_to(self):
+        #Create the c++ function for restrict_to
+        c_code_restrict_to = """
+        void restrict_to(int bigvec_n, double *bigvec, int resvec_n, double *resvec, int dofs_n, double *dofs) {
+            for ( int i=0; i<resvec_n; i++ )
+                { resvec[i] = bigvec[int(dofs[i])]; }
+        }
+        """
+
+        args = [["bigvec_n", "bigvec"],["resvec_n", "resvec"],["dofs_n","dofs"]]
+        self.crestrict_to = instant.inline_with_numpy(c_code_restrict_to, arrays=args)
+            
     def calc_phitot(self,func1,func2):
         """Add two functions to get phitotal"""
         self.phi.vector()[:] = func1.vector()[:] + func2.vector()[:]
@@ -201,12 +215,14 @@ class FemBemDeMagSolver(DeMagSolver):
         self.doftonormal = doftonormal
         self.normtionary = self.get_dof_normal_dict_avg(doftonormal)      
         self.doftionary = doftionary
+        #numpy array with type double for use by instant (c++)
+        self.doflist_double = np.array(doftionary.keys(),dtype = self.normtionary[self.normtionary.keys()[0]].dtype.name)
     
-    def restrict_to(self,bigvector,dofs):
+    def restrict_to(self,bigvector):
         """Restrict a vector to the dofs in dofs (usually boundary)"""
-        vector = np.zeros(len(dofs))
-        for i,key in enumerate(dofs):
-             vector[i] = bigvector[key]
+        vector = np.zeros(len(self.doflist_double))
+        #Recast bigvector as a double type array when calling restict_to
+        self.crestrict_to(bigvector.array().view(vector.dtype.name),vector,self.doflist_double)
         return vector
 
     def build_poisson_matrix(self):
