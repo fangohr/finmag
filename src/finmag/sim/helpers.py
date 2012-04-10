@@ -43,15 +43,16 @@ def normalise(vs, length=1):
     """
     return np.array([length*v/norm(v) for v in vs])
 
-def fnormalise(ar, length=1):
+def fnormalise(arr, length=1):
     """
     Like normalise, except it expects the arguments as an numpy.ndarray like
     dolfin provides, so [x0, ..., xn, y0, ..., yn, z0, ..., zn].
 
     """
-    arr = components(ar)
+    arr = arr.reshape((3, -1))
     arr /= np.sqrt(arr[0]*arr[0] + arr[1]*arr[1] + arr[2]*arr[2])
-    return np.append(arr[0],[arr[1],arr[2]]) 
+    arr = arr.ravel()
+    return arr
 
 def angle(v1, v2):
     """
