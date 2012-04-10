@@ -2,6 +2,7 @@ import numpy as np
 import dolfin as df
 import logging
 from finmag.util.timings import timings
+from finmag.sim.helpers import fnormalise
 logger=logging.getLogger('finmag')
 
 class UniaxialAnisotropy(object):
@@ -60,6 +61,9 @@ class UniaxialAnisotropy(object):
         logger.info("Anisotropy() method = %s" % method)
         timings.start('Anisotropy-init')
 
+        self._m_normed = df.Function(V)
+        self._m = m
+
         # Testfunction
         self.v = df.TestFunction(V)
         
@@ -68,13 +72,13 @@ class UniaxialAnisotropy(object):
             K = df.Constant(K)
         
         # Anisotropy energy
-        self.E = K*(df.Constant(1) - (df.dot(a, m))**2)*df.dx
+        self.E = K*(df.Constant(1) - (df.dot(a, self.m))**2)*df.dx
 
-        self.E = -K * (df.dot(a, m)**2) *df.dx
+        self.E = -K * (df.dot(a, self.m)**2) *df.dx
 
         # Gradient
         mu0 = 4*np.pi*1e-7
-        self.dE_dM = df.Constant(-1.0/(Ms*mu0))*df.derivative(self.E, m)
+        self.dE_dM = df.Constant(-1.0/(Ms*mu0))*df.derivative(self.E, self.m)
 
         # Volume
         self.vol = df.assemble(df.dot(self.v, 
@@ -82,7 +86,6 @@ class UniaxialAnisotropy(object):
 
         # Store for later
         self.V = V
-        self.m = m
         self.method = method
 
         if method=='box-assemble':
@@ -105,6 +108,12 @@ class UniaxialAnisotropy(object):
 
         timings.stop('Anisotropy-init')
 
+    def normed_m(self):
+        return self._m # old behaviour
+        #self._m_normed.vector()[:] = fnormalise(self._m.vector().array())
+        #return self._m_normed
+    m = property(normed_m)
+        
     def compute_field(self):
         """
         Compute the anisotropy field.
