@@ -15,7 +15,7 @@ class DemagXtra(Demag):
     def __init__(self, V, m, Ms, method="GCR"):
         super(DemagXtra,self).__init__(V, m, Ms, method="GCR")    
         #Change the Demag Solver        
-        self.solver = Grt.GCRtimingsFull(self.problem)
+        self.solver = Grt.GCRtimings(self.problem)
     def compute_field(self):
         phi = self.solver.solve()
         timings.start("Demag-computefield")

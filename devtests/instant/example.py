@@ -39,3 +39,27 @@ print "After calling double_entries_alt:\n", my_new_array, my_doubled_array
 
 assert np.array_equal(my_new_array, np.array([1.0, 2.0, 3.0]))
 assert np.array_equal(my_doubled_array, np.array([2.0, 4.0, 6.0]))
+
+###########################################################################
+#Gabriel @Mark Thanks for the help so far here my attempt with restrict_to
+###########################################################################
+
+c_code_restrict_to = """
+void restrict_to(int bigvec_n, double *bigvec, int resvec_n, double *resvec, int dofs_n, double *dofs) {
+    for ( int i=0; i<resvec_n; i++ )
+        { resvec[i] = bigvec[int(dofs[i])]; }
+}
+"""
+
+args = [["bigvec_n", "bigvec"],["resvec_n", "resvec"],["dofs_n","dofs"]]
+restrict_to = instant.inline_with_numpy(c_code_restrict_to, arrays=args)
+
+
+#Test restrict_to
+bigvec = np.array([4.0,5.0,6.0,7.0,8.0])
+resvec = np.zeros(2)
+dofs = np.array([0,3],dtype = bigvec.dtype.name)
+
+print "\n resvec before: \n", resvec
+restrict_to(bigvec,resvec,dofs)
+print "resvec after: \n", resvec

@@ -11,6 +11,7 @@ from finmag.util.timings import timings
 import math
 import logging
 import numpy as np
+from instant import inline_with_numpy
 #Set allow extrapolation to true#
 parameters["allow_extrapolation"] = True
 logger = logging.getLogger(name='finmag')
@@ -105,18 +106,18 @@ class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
 
           for index,dof in enumerate(self.doftionary):
                bar.update(index)
-               bemmatrix[index] = self.get_bem_row(self.doftionary[dof],self.doftionary.keys())
+               bemmatrix[index] = self.get_bem_row(self.doftionary[dof])
                #info("BEM Matrix line "+ str(index) + str(self.bemmatrix[index]))
           return bemmatrix
 
-     def get_bem_row(self,R,bdofs):
+     def get_bem_row(self,R):
           """Gets the row of the BEMmatrix associated with the point R, used in the form w"""
           w = self.bemkernel(R)
           L = 1.0/(4*math.pi)*self.v*w*ds
           #Bigrow contains many 0's for nonboundary dofs
           bigrow = assemble(L,form_compiler_parameters=self.ffc_options)
           #Row contains just boundary dofs
-          row = np.array([bigrow[i] for i in bdofs])
+          row = self.restrict_to(bigrow)
           return row
      
      def bemkernel(self,R):
@@ -147,7 +148,7 @@ class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
                gphia_array = np.array(gradphia(rtup))
                q[i] = np.dot(n,M_array+gphia_array)
           return q
-     
+
 ##Not used at the moment
 ##          def assemble_qvector_average(self,phia = None,doftionary = None):
 ##          """builds the vector q that we multiply the Bem matrix with to get phib, using an average"""
@@ -181,5 +182,7 @@ if __name__ == "__main__":
      from finmag.demag.problems import prob_fembem_testcases as pft
      problem = pft.MagUnitCircle(10)
      solver = FemBemGCRSolver(problem)
-     solver.solve()
+     sol = solver.solve()
+     plot(sol)
+     interactive()
 
