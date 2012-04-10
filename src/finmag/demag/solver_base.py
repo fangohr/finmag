@@ -106,13 +106,13 @@ class FemBemDeMagSolver(DeMagSolver):
     def build_crestrict_to(self):
         #Create the c++ function for restrict_to
         c_code_restrict_to = """
-        void restrict_to(int bigvec_n, double *bigvec, int resvec_n, double *resvec, int dofs_n, double *dofs) {
+        void restrict_to(int bigvec_n, double *bigvec, int resvec_n, double *resvec, int dofs_n, unsigned int *dofs) {
             for ( int i=0; i<resvec_n; i++ )
                 { resvec[i] = bigvec[int(dofs[i])]; }
         }
         """
 
-        args = [["bigvec_n", "bigvec"],["resvec_n", "resvec"],["dofs_n","dofs"]]
+        args = [["bigvec_n", "bigvec"],["resvec_n", "resvec"],["dofs_n","dofs","unsigned int"]]
         self.crestrict_to = instant.inline_with_numpy(c_code_restrict_to, arrays=args)
             
     def calc_phitot(self,func1,func2):
@@ -217,12 +217,13 @@ class FemBemDeMagSolver(DeMagSolver):
         self.doftionary = doftionary
         #numpy array with type double for use by instant (c++)
         self.doflist_double = np.array(doftionary.keys(),dtype = self.normtionary[self.normtionary.keys()[0]].dtype.name)
+        self.bdofs = np.array(doftionary.keys())
     
     def restrict_to(self,bigvector):
         """Restrict a vector to the dofs in dofs (usually boundary)"""
         vector = np.zeros(len(self.doflist_double))
         #Recast bigvector as a double type array when calling restict_to
-        self.crestrict_to(bigvector.array().view(vector.dtype.name),vector,self.doflist_double)
+        self.crestrict_to(bigvector.array().view(vector.dtype.name),vector,self.bdofs)
         return vector
 
     def build_poisson_matrix(self):
