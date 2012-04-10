@@ -75,7 +75,7 @@ class FemBemFKSolver(FKSolver, sb.FemBemDeMagSolver):
     def __solve_phi2_boundary(self, doftionary):
         """Compute phi2 on the boundary."""
         B = self.__build_BEM_matrix(doftionary)
-        phi1 = self.restrict_to(self.phi1.vector().array(), doftionary.keys())
+        phi1 = self.restrict_to(self.phi1.vector())
         phi2dofs = np.dot(B, phi1)
         bdofs = doftionary.keys()
         for i in range(len(bdofs)):
@@ -107,7 +107,7 @@ class FemBemFKSolver(FKSolver, sb.FemBemDeMagSolver):
         
         # Create a row from the first term
         bigrow = assemble(L, form_compiler_parameters=self.ffc_options)
-        row = self.restrict_to(bigrow, dofs)
+        row = self.restrict_to(bigrow)
         
         # Previous implementation of solid angle is proven wrong. 
         # Positive thing is that when implemented correctly,
