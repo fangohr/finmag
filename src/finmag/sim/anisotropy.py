@@ -112,14 +112,16 @@ class UniaxialAnisotropy(object):
         """
         There are three possibilities to get a magnetisation that is normalised
         for sure.
+
         1. Disrupt the whole application by normalising the shared
-           magnetisation object that was given to us. Bad.
+        magnetisation object that was given to us. Bad.
         2. Keep a reference to the original magnetisation, and create a
-           local copy of it, that is always normalised. That is what
-           is implemented.
+        local copy of it, that is always normalised. That is what
+        is implemented.
         3. Normalise the magnetisation on the fly during the computation.
-           That would be quite nice, however, we are dealing with dolfin
-           functions (or vectors) and not simply arrays.
+        That would be quite nice, however, we are dealing with dolfin
+        functions (or vectors) and not simply arrays.
+
         Note that normalisation is disabled as of now, because some tests
         fail (not because of faults, but because normalising changes the
         test results slightly). To see which, uncomment the last two lines
