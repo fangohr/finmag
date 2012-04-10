@@ -123,7 +123,18 @@ class SimpleFKSolver():
         
         u = TrialFunction(self.V)
         v = TestFunction(self.V)
+        w = TrialFunction(self.Vv)
         n = FacetNormal(self.mesh)
+
+        #=============================================
+        """
+        D * m = g1
+        """
+        b = self.Ms * inner(w, grad(v)) * dx
+        self.D=df.assemble(b)
+
+        if debug:
+            print '='*100,'D\n',self.D.array()
 
         #=============================================
         """
@@ -135,12 +146,14 @@ class SimpleFKSolver():
         if debug:
             print '='*100,'K1\n',self.K1.array()
 
+        """
         f = self.Ms*(dot(n, self.m)*v*ds - div(self.m)*v*dx)
         self.g1=df.assemble(f)
         
         if debug:
             print '='*100,'g1\n',self.g1.array()
-        
+        """
+            
         #=============================================
         """
         U1 * phi1 = u1bnd
@@ -272,9 +285,18 @@ class SimpleFKSolver():
         and L is certainly the volume of each node. I was surprised becasue this means the
         the following eqaution holds,
 
-              - L^-1 B = A B
+              L^-1 B = A^-1 B
 
         I have no idea wether it is always true?  why?
+
+        The above equation just holds when the potential is a linear function of space,
+        the projection method is obviously more accurate in general, but for some reason
+        we still can use the later method.
+
+        PS: I think the reason dividing by the volume is because dolfin already considered
+        the factor of the cell's volume (not node's volume) when assemble the corresponding 
+        matrix, but the derivatives in fact can be approached by the coefficient of the basis
+        function directly, thus we need to divide the volume of the node.
         
         """
 
@@ -291,6 +313,9 @@ class SimpleFKSolver():
         v = TestFunction(self.V)
         n = FacetNormal(self.mesh)
 
+        self.g1=self.D*self.m.vector()
+        if debug:
+            print '='*100,'g1\n',self.g1.array()
         
         solve(self.K1,self.phi1.vector(),self.g1)
         if debug:

@@ -120,3 +120,4 @@ if __name__ == '__main__':
     print "magpar:",res2["magpar_demag"]
     print "rel_diff:",res2["rel_diff"]
     print "max rel_diff",np.max(res2["rel_diff"])
+    print 'mean rel_diff',np.mean(res2["rel_diff"])
