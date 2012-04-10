@@ -1,3 +1,4 @@
+import os
 import nmag, sys
 from nmag import SI
 
@@ -40,5 +41,8 @@ exct = -1./3*np.ones(N)
 stddev = np.sqrt(1./N*sum((Hdx- exct)**2))
 
 f = open(datafile, 'a')
+print "Saving to {}.".format(datafile)
+print "Current directory: {}.".format(os.getcwd())
+
 f.write('%s %s %s\n' % (str(np.average(Hdx)), str(max(Hdx)), str(stddev)))
 f.close()

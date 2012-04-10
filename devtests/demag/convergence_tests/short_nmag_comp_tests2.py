@@ -4,7 +4,7 @@ from finmag.util.convert_mesh import convert_mesh
 from finmag.demag.solver_gcr import FemBemGCRSolver
 #from finmag.demag.problems import FemBemDeMagProblem
 import pylab as p
-import sys, os, commands
+import sys, os, commands, subprocess
 
 class FemBemDeMagProblem(object):
     """Have no idea why I can't import this now.."""
@@ -34,7 +34,7 @@ nxavg = []
 nstddev = []
 errnorm = []
 
-for maxh in (5.0, 3.0,1.5,0.5):
+for maxh in (5.0, 3.0, 1):
     
     # Create geofile
     geo = """
@@ -94,10 +94,9 @@ tlo main;""" % str(maxh)
 
     # Nmag data
 
-    # Risky test...
-    if 'nmag' in str(sys.path):
+    if subprocess.call(["which", "nsim"]) == 0:
+        print "Running nmag now."
         has_nmag = True
-        continue
     else:
         has_nmag = False
         continue
@@ -120,11 +119,11 @@ tlo main;""" % str(maxh)
     cmd3 = 'nsim run_nmag.py --clean %s.nmesh.h5 nmag_data.dat' % geofilename
     status, output = commands.getstatusoutput(cmd3)
     if status != 0:
-	print 'Running nsim failed. Aborted.'
+        print output
+        print 'Running nsim failed. Aborted.'
         sys.exit(3)
+    print "\nDone with nmag."
 
-has_nmag   =False
- 
 # Extract nmag data
 if has_nmag:
     f = open('nmag_data.dat', 'r')
