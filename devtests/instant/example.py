@@ -45,20 +45,20 @@ assert np.array_equal(my_doubled_array, np.array([2.0, 4.0, 6.0]))
 ###########################################################################
 
 c_code_restrict_to = """
-void restrict_to(int bigvec_n, double *bigvec, int resvec_n, double *resvec, int dofs_n, double *dofs) {
+void restrict_to(int bigvec_n, double *bigvec, int resvec_n, double *resvec, int dofs_n, long *dofs) {
     for ( int i=0; i<resvec_n; i++ )
-        { resvec[i] = bigvec[int(dofs[i])]; }
+        { resvec[i] = bigvec[dofs[i]]; }
 }
 """
 
-args = [["bigvec_n", "bigvec"],["resvec_n", "resvec"],["dofs_n","dofs"]]
+args = [["bigvec_n", "bigvec"],["resvec_n", "resvec"],["dofs_n","dofs", "long"]]
 restrict_to = instant.inline_with_numpy(c_code_restrict_to, arrays=args)
 
 
 #Test restrict_to
 bigvec = np.array([4.0,5.0,6.0,7.0,8.0])
 resvec = np.zeros(2)
-dofs = np.array([0,3],dtype = bigvec.dtype.name)
+dofs = np.array([0,3])
 
 print "\n resvec before: \n", resvec
 restrict_to(bigvec,resvec,dofs)
