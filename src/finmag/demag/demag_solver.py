@@ -5,7 +5,7 @@ from finmag.demag.solver_gcr import FemBemGCRSolver
 from finmag.util.timings import timings
 
 class Demag(object):
-    def __init__(self, V, m, Ms, method="CGR"):
+    def __init__(self, V, m, Ms, method="GCR"):
         timings.start("Demag-init")
         self.V = V
         mesh = V.mesh()

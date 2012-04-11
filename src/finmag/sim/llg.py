@@ -9,7 +9,8 @@ from finmag.sim.exchange import Exchange
 from finmag.sim.anisotropy import UniaxialAnisotropy
 from finmag.sim.dmi import DMI
 from finmag.native import llg as native_llg
-from finmag.demag.demag_solver import Demag
+from finmag.demag.demag_solver import Demag # Deprecated, only for comparisson now
+from finmag.demag.solver_fk_test import SimpleFKSolver
 from finmag.util.timings import timings
 
 #default settings for logger 'finmag' set in __init__.py
@@ -266,7 +267,7 @@ class LLG(object):
     def setup(self, use_exchange=True, use_dmi=False, use_demag=False,
               exchange_method="box-matrix-petsc",
               dmi_method="box-matrix-petsc",
-              demag_method="GCR"):
+              demag_method="weiwei"): 
 
         #add setup time to LLG-init
         timings.start('LLG-init')
@@ -282,9 +283,13 @@ class LLG(object):
                            method = dmi_method)
 
         self.use_demag = use_demag
+        # Using Weiwei's code as default
         if use_demag:
-            self.demag = Demag(self.V, self._m, self.Ms, method=demag_method)
-
+            if demag_method == "weiwei":
+                self.demag = SimpleFKSolver(self.V, self._m, self.Ms)
+            else:
+                self.demag = Demag(self.V, self._m, self.Ms, method=demag_method)
+        
         timings.stop('LLG-init')
 
     def timings(self,n=20):
