@@ -2,6 +2,7 @@ import numpy as np
 import dolfin as df
 from finmag.util.convert_mesh import convert_mesh
 from finmag.demag.solver_gcr import FemBemGCRSolver
+from finmag.demag.solver_fk_test import SimpleFKSolver
 #from finmag.demag.problems import FemBemDeMagProblem
 import pylab as p
 import sys, os, commands, subprocess
@@ -34,7 +35,7 @@ nxavg = []
 nstddev = []
 errnorm = []
 
-for maxh in (5.0, 3.0, 1):
+for maxh in (5, 3, 2, 1):
     
     # Create geofile
     geo = """
@@ -55,11 +56,23 @@ tlo main;""" % str(maxh)
     #mesh.coordinates()[:] = mesh.coordinates()[:]*1e-9 #this makes the results worse!!! HF
     print "Using mesh with %g vertices" % mesh.num_vertices()
     V = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
+
+    # Old code
+    """
     M = ("1.0", "0.0", "0.0")
     problem = FemBemDeMagProblem(mesh, M)
     solver = FemBemGCRSolver(problem)
     phi = solver.solve()
     H_demag = df.project(-df.grad(phi), V)
+    """
+
+    # Weiwei code
+    m = df.interpolate(df.Constant((1,0,0)), V)
+    Ms = 1
+    solver = SimpleFKSolver(V, m, Ms)
+    H_demag = df.Function(V)
+    demag = solver.compute_field()
+    H_demag.vector()[:] = demag
 
     x, y, z = H_demag.split(True)
     x, y, z = x.vector().array(), y.vector().array(), z.vector().array()
@@ -93,7 +106,6 @@ tlo main;""" % str(maxh)
     
 
     # Nmag data
-
     if subprocess.call(["which", "nsim"]) == 0:
         print "Running nmag now."
         has_nmag = True
