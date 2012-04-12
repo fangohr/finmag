@@ -360,21 +360,31 @@ class SimpleFKSolver():
         
         phi=Function(self.V)
         phi.vector().set_local(self.phi1.vector().array()+phi2)
-        #demag_field = df.project(-df.grad(phi), self.Vv)
         
-        demag_field= self.G * phi.vector()
-        
-        return demag_field.array()/self.L
+        method = 'magpar'
+        if method =='magpar':
+            #Magpar's method
+            demag_field= self.G * phi.vector()
+            return demag_field.array()/self.L
+        elif method=='project':
+            demag_field = df.project(-df.grad(phi), self.Vv)        
+            return demag_field.vector().array()
+        else:
+            raise NotImplementedError("Only 'magpar' and 'project' understood")
 
 
 if __name__ == "__main__":
 
     from finmag.demag.problems.prob_fembem_testcases import MagSphere
-    mesh = MagSphere(5,1.).mesh
-    print mesh
+    mesh = MagSphere(5,1).mesh
+    
+    #changing the mesh coordinates 
+    #to the nanoscale results in poor performance of the demag calculation
+    #mesh.coordinates()[:] *=1e-9 
+    #print mesh
 
     V = df.VectorFunctionSpace(mesh, 'Lagrange', 1)
-    Ms=8.6e5
+    Ms=1e6
 
     m = project(Constant((1, 0, 0)), V)
     demag=SimpleFKSolver(V,m,Ms)
