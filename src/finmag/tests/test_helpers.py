@@ -1,7 +1,7 @@
 import numpy as np
 from finmag.sim.helpers import *
 
-TOLERANCE = 1e-14
+TOLERANCE = 1e-15
 
 def test_components():
     x = np.array([1, 1, 1, 2, 2, 2, 3, 3, 3])
@@ -27,8 +27,15 @@ def test_norm():
 
 def test_fnormalise():
     a = np.array([1., 1., 2., 2., 0., 0.])
-    expected = np.array([0.45, 0.45, 0.89, 0.89, 0., 0.])
-    assert np.allclose(fnormalise(a), expected, rtol=1e-2)
+    norm = np.sqrt(1+2**2+0**2)
+    expected = a[:]/norm
+    assert np.allclose(fnormalise(a), expected, rtol=TOLERANCE)
+
+    a = np.array([1., 2., 0, 0., 1., 3.])
+    n1 = np.sqrt(1+0+1)
+    n2 = np.sqrt(2**2+0+3**2)
+    expected = a[:]/np.array([n1,n2,n1,n2,n1,n2])
+    assert np.allclose(fnormalise(a), expected, rtol=TOLERANCE)
 
 def test_angle():
     assert angle([1,0,0],[1,0,0])           < TOLERANCE
