@@ -44,6 +44,23 @@ def test_fnormalise():
     a2 = np.array([5*[2], 5*[0], 5*[0]])
     assert np.allclose(fnormalise(a2), expected, rtol=TOLERANCE)
 
+    #a3=np.array([0,0,3,4., 0,2,0,5, 1,0,0,0])
+
+    #this is 0   0   3   4
+    #        0   2   0   5
+    #        1   0   0   0
+    #
+    #can also write as
+    
+    a3=np.array([[0,0,1.],[0,2,0],[3,0,0],[4,5,0]]).transpose()
+
+    c=np.sqrt(4**2+5**2)
+    expected = np.array([0,0,1,4/c, 0,1,0,5/c,1,0,0,0])
+    print "a3=\n",a3
+    print "expected=\n",expected
+    print "fnormalise(a3)=\n",fnormalise(a3)
+    assert np.allclose(fnormalise(a3), expected, rtol=TOLERANCE)
+
 def test_angle():
     assert angle([1,0,0],[1,0,0])           < TOLERANCE
     assert angle([1,0,0],[0,1,0]) - np.pi/2 < TOLERANCE
