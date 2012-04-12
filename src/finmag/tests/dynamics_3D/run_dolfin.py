@@ -18,7 +18,7 @@ def run_simulation():
     llg.Ms = 0.86e6 # A/m
     llg.A = 1.3e-11 # J/m
     llg.H_app = (0.43e6, 0, 0) # A/m
-    llg.set_m0(("2*x[0]/L - 1","2*x[1]/W - 1","1"), L=3e-8, H=1e-8, W=1e-8)
+    llg.set_m(("2*x[0]/L - 1","2*x[1]/W - 1","1"), L=3e-8, H=1e-8, W=1e-8)
     print "Starting 'setup'"
     llg.setup(use_exchange=True)
 

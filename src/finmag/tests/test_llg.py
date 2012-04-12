@@ -10,7 +10,7 @@ mesh = df.Interval(simplices, 0, length)
 
 def test_updating_the_M_vector_is_okay_though():
     llg = LLG(mesh)
-    llg.set_m0((
+    llg.set_m((
         '(2*x[0]/L - 1)',
         'sqrt(1 - (2*x[0]/L - 1)*(2*x[0]/L - 1))',
         '0'), L=length)
@@ -30,7 +30,7 @@ def test_updating_the_M_vector_is_okay_though():
 
 def test_method_of_computing_the_average_matters():
     llg = LLG(mesh)
-    llg.set_m0((
+    llg.set_m((
             '(2*x[0]-L)/L',
             'sqrt(1 - ((2*x[0]-L)/L)*((2*x[0]-L)/L))',
             '0'), L=length)

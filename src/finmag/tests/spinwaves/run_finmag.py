@@ -24,7 +24,7 @@ def run_simulation():
     #llg.c = 1e11
     llg.alpha = 0.02
 
-    llg.set_m0(("1",
+    llg.set_m(("1",
         "5 * pow(cos(pi * (x[0] * pow(10, 9) - 11) / 6), 3) \
            * pow(cos(pi * x[1] * pow(10, 9) / 6), 3)",
         "0"))

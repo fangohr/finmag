@@ -107,15 +107,20 @@ class LLG(object):
         mz = df.assemble(df.dot(self._m, df.Constant([0,0,1])) * df.dx)
         return np.array([mx, my, mz]) / self.Volume
     
-    def set_m0(self, value, **kwargs):
+    def set_m(self, value, **kwargs):
         """
-        Set the initial magnetisation (scaled automatically).
+        Set the magnetisation (scaled automatically).
         
         You can either provide a dolfin.Constant or a dolfin.Expression
         directly, or the ingredients for either, i.e. a tuple of numbers
         or a tuple of strings (with keyword arguments if needed), or provide
         the nodal values directly as a numpy array.
-        
+
+        You can call this method anytime during the simulation. However, when
+        providing a numpy array during time integration, the use of
+        the attribute m instead of this method is advised for performance
+        reasons and because the attribute m doesn't normalise the vector.
+
         """
         if isinstance(value, tuple):
             if isinstance(value[0], str):
@@ -125,16 +130,16 @@ class LLG(object):
                 val = df.Expression(value, **kwargs)
             else:
                 val = df.Constant(value)
-            self._m0 = df.interpolate(val, self.V)
+            new_m = df.interpolate(val, self.V)
         elif isinstance(value, (df.Constant, df.Expression)):
-            self._m0 = df.interpolate(value, self.V)
+            new_m = df.interpolate(value, self.V)
         elif isinstance(value, (list, np.ndarray)):
-            self._m0 = df.Function(self.V)
-            self._m0.vector()[:] = value
+            new_m = df.Function(self.V)
+            new_m.vector()[:] = value
         else:
             raise AttributeError
-        self._m0.vector()[:] = h.fnormalise(self._m0.vector().array())
-        self._m.vector()[:] = self._m0.vector()[:]
+        new_m.vector()[:] = h.fnormalise(new_m.vector().array())
+        self._m.vector()[:] = new_m.vector()[:]
 
     def update_H_eff(self):
         raise NotImplementedError,"There should be no need to call this function"

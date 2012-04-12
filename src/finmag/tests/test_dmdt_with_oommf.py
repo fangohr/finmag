@@ -15,7 +15,7 @@ nL = 20;   nW = 10;   nH = 1;
 def test_dmdt_computation_with_oommf():
     # set up finmag 
     llg = LLG(df.Box(0, 0, 0, L, W, H, nL, nW, nH))
-    llg.set_m0((-3, -2, 1))
+    llg.set_m((-3, -2, 1))
 
     h = llg.Ms/2
     H_app = (h/np.sqrt(3), h/np.sqrt(3), h/np.sqrt(3))

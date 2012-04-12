@@ -38,7 +38,7 @@ def setup_domain_wall_cobalt(node_count=NODE_COUNT, A=A_Co, Ms=Ms_Co, K1=K1_Co, 
     llg.A = 2 * A
     llg.Ms = Ms
     llg.add_uniaxial_anisotropy(K1, df.Constant((0, 0, 1)))
-    llg.set_m0(np.array([initial_m(xi, node_count) for xi in xrange(node_count)]).T.reshape((-1,)))
+    llg.set_m(np.array([initial_m(xi, node_count) for xi in xrange(node_count)]).T.reshape((-1,)))
     llg.setup()
     llg.pins = [0, node_count - 1]
     return llg

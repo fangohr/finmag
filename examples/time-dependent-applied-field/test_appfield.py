@@ -15,7 +15,7 @@ def test_external_field_depends_on_t():
     GHz=1e9
     omega= 100*GHz
     llg=LLG(mesh)
-    llg.set_m0(df.Constant((1, 0, 0)))
+    llg.set_m(df.Constant((1, 0, 0)))
     #This is the time dependent field
     H = df.Expression(("0.0", "0.0","H0*sin(omega*t)"), H0=1e5, omega=omega, t=0.0)
 

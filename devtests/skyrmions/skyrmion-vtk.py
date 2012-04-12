@@ -30,11 +30,11 @@ llg.H_app=(0,0,0)
 llg.A =1.3e-11
 llg.D = 4e-3
 
-#llg.set_m0((
+#llg.set_m((
  #       'MS * (2*x[0]/L - 1)',
   #      'sqrt(MS*MS - MS*MS*(2*x[0]/L - 1)*(2*x[0]/L - 1))',
    #     '0'), L=length, MS=llg.Ms)
-llg.set_m0((
+llg.set_m((
         'MS',
         '0',
         '0'), MS=llg.Ms)

@@ -9,7 +9,7 @@ DO_PLOT=False
 
 def test_uniform_external_field():
     llg = LLG(df.UnitCube(2, 2, 2))
-    llg.set_m0((1, 0, 0))
+    llg.set_m((1, 0, 0))
     llg.H_app = (0, llg.Ms/2, 0 )
     llg.alpha = 1.0 # high damping
     llg.setup(use_exchange=False)
@@ -41,7 +41,7 @@ def test_non_uniform_external_field():
     if DO_PLOT:
         llg = LLG(df.Box(0, 0, 0, 20e-9, 1e-9, 1e-9, 9, 1, 1))
     llg.alpha = 1.0 # high damping
-    llg.set_m0((1, 0, 0))
+    llg.set_m((1, 0, 0))
     # applied field
     # (0, -H, 0) for 0 <= x <= a
     # (0, +H, 0) for a <  x <= length 
@@ -82,7 +82,7 @@ def test_non_uniform_external_field_with_exchange():
     if DO_PLOT:
         llg = LLG(df.Box(0, 0, 0, length, 1e-9, 1e-9, vertices, 1, 1))
     llg.alpha = 1.0 # high damping
-    llg.set_m0((1, 0, 0))
+    llg.set_m((1, 0, 0))
     # applied field
     # (0, -H, 0) for 0 <= x <= a
     # (0, +H, 0) for a <  x <= length 
@@ -136,7 +136,7 @@ def test_non_uniform_external_field_with_exchange():
 def _test_time_dependent_uniform_field():
     llg = LLG(df.Box(0, 0, 0, 20e-9, 1e-9, 1e-9, 10, 1, 1))
     llg.alpha = 0.8 # high damping
-    llg.set_m0((1, 0, 0))
+    llg.set_m((1, 0, 0))
     # field will change from (0, 0, H) to (0, H, 0) in one nanosecond,
     # magnitude will be constant and equal to H during that time.
     H_expr = df.Expression(("0", "H * t * pow(10,9)", "H * sqrt(1 - pow(t * pow(10,9), 2))"), t=llg.t, H=llg.Ms/2)
