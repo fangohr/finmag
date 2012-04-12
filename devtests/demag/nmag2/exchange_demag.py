@@ -22,15 +22,15 @@ llg_wrap = lambda t, y: llg.solve_for(y, t)
 r = ode(llg_wrap).set_integrator("vode", method="bdf", rtol=1e-5, atol=1e-5)
 r.set_initial_value(llg.m, 0)
 
-dt = 1.0e-12
-T1 = 50*dt
+dt = 5.0e-12
+T1 = 60*dt
 
 fh = open(MODULE_DIR + "/averages.txt", "w")
 xlist, ylist, zlist, tlist = [], [], [], []
-time_series = TimeSeries(MODULE_DIR + "/simulation_data/sim")
+#time_series = TimeSeries(MODULE_DIR + "/simulation_data/sim")
 
 while r.successful() and r.t <= T1:
-    mx, my, mz = llg.m_average
+    mx, my, mz = llg.m_average*llg.Ms
     xlist.append(mx)
     ylist.append(my)
     zlist.append(mz)
@@ -38,14 +38,19 @@ while r.successful() and r.t <= T1:
 
     fh.write(str(r.t) + " " + str(mx) + " " + str(my) + " " + str(mz) + "\n")
     
-    time_series.store(llg._m.vector(), r.t)
+    #time_series.store(llg._m.vector(), r.t)
     print "integration time", r.t + dt
     r.integrate(r.t + dt)
     plot(llg._m)
 
+    print llg.H_ex
+    print llg.H_demag
 
 fh.close()
-p.plot(tlist, xlist, tlist, ylist, tlist, zlist)
+p.plot(tlist, xlist, 'k', label='M_x')
+p.plot(tlist, ylist, 'r', label='M_y')
+p.plot(tlist, zlist, 'b', label='M_z')
+p.legend()
 p.show()
 interactive()
 
