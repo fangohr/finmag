@@ -49,8 +49,11 @@ def fnormalise(arr, length=1):
     dolfin provides, so [x0, ..., xn, y0, ..., yn, z0, ..., zn].
 
     """
+    assert arr.dtype not in [np.dtype('int32'),np.dtype('int64')]
+    #if arr happens to be of type int, the calculation below is carried
+    #out in integers, and behavious unexpectedly.
     arr = arr.reshape((3, -1))
-    arr /= np.sqrt(arr[0]*arr[0] + arr[1]*arr[1] + arr[2]*arr[2])
+    arr /= np.sqrt(arr[0]*arr[0] + arr[1]*arr[1] + arr[2]*arr[2] )
     arr = arr.ravel()
     return arr
 
