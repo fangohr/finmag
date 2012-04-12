@@ -1,7 +1,8 @@
 import numpy as np
 from finmag.sim.helpers import *
+import pytest
 
-TOLERANCE = 1e-14
+TOLERANCE = 1e-15
 
 def test_components():
     x = np.array([1, 1, 1, 2, 2, 2, 3, 3, 3])
@@ -27,8 +28,63 @@ def test_norm():
 
 def test_fnormalise():
     a = np.array([1., 1., 2., 2., 0., 0.])
-    expected = np.array([0.45, 0.45, 0.89, 0.89, 0., 0.])
-    assert np.allclose(fnormalise(a), expected, rtol=1e-2)
+    norm = np.sqrt(1+2**2+0**2)
+    expected = a[:]/norm
+    assert np.allclose(fnormalise(a), expected, rtol=TOLERANCE)
+
+    a = np.array([1., 2., 0, 0., 1., 3.])
+    n1 = np.sqrt(1+0+1)
+    n2 = np.sqrt(2**2+0+3**2)
+    expected = a[:]/np.array([n1,n2,n1,n2,n1,n2])
+    assert np.allclose(fnormalise(a), expected, rtol=TOLERANCE)
+
+    a = np.array([5*[1.], 5*[0], 5*[0]])
+    expected = a.copy().ravel()
+    assert np.allclose(fnormalise(a), expected, rtol=TOLERANCE)
+
+    a2 = np.array([5*[2.], 5*[0], 5*[0]])
+    assert np.allclose(fnormalise(a2), expected, rtol=TOLERANCE)
+
+    #a3=np.array([0,0,3,4., 0,2,0,5, 1,0,0,0])
+
+    #this is 0   0   3   4
+    #        0   2   0   5
+    #        1   0   0   0
+    #
+    #can also write as
+    
+    a3=np.array([[0,0,1.],[0,2,0],[3,0,0],[4,5,0]]).transpose()
+
+    c=np.sqrt(4**2+5**2)
+    expected = np.array([0,0,1,4/c, 0,1,0,5/c,1,0,0,0])
+    print "a3=\n",a3
+    print "expected=\n",expected
+    print "fnormalise(a3)=\n",fnormalise(a3)
+    assert np.allclose(fnormalise(a3), expected, rtol=TOLERANCE)
+
+    #check that normalisation also works if input vector happens to be an
+    #integer array
+    #first with floats
+    a4 = np.array([0., 1., 1.])
+    c=np.sqrt(1**2+1**2) #sqrt(2)
+    expected = np.array([0,1/c,1/c])
+    print "a4=\n",a4
+    print "expected=\n",expected
+    print "fnormalise(a4)=\n",fnormalise(a4)
+    assert np.allclose(fnormalise(a4), expected, rtol=TOLERANCE)
+
+    #the same test with ints (i.e.
+    a5 = np.array([0, 1, 1])
+    #) will give the wrong numerical result. To avoid this, we raise 
+    #an error in fnormalise.
+    #
+    #Maybe there are better ways of doing this, but for now we just need to
+    #identify if a call with integer data takes place.
+    #
+    #Check that the assertion error is raised:
+    with pytest.raises(AssertionError):
+        fnormalise(a5)
+
 
 def test_angle():
     assert angle([1,0,0],[1,0,0])           < TOLERANCE
