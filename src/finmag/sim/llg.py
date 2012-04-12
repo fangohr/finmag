@@ -174,8 +174,8 @@ class LLG(object):
             H_ani = ani.compute_field()
             self.H_eff += H_ani
         if self.use_demag:
-            H_demag = self.demag.compute_field()
-            self.H_eff += H_demag
+            self.H_demag = self.demag.compute_field()
+            self.H_eff += self.H_demag
 
     def solve(self):
         for func in self._pre_rhs_callables:
