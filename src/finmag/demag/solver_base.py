@@ -85,7 +85,7 @@ class FemBemDeMagSolver(DeMagSolver):
     def __init__(self,problem,degree = 1):
         super(FemBemDeMagSolver,self).__init__(problem,degree)
         #Parameters to use a quadrature rule that avoids the endpoints
-        #of a triangle
+        #of a triangle #GB NOT WORKING with CG1 elements
         self.ffc_options = {"quadrature_rule":"canonical"}
         
         #Change the Function space to CR
@@ -231,7 +231,7 @@ class FemBemDeMagSolver(DeMagSolver):
         a = dot(grad(self.u),grad(self.v))*dx
         self.poisson_matrix = assemble(a)
 
-    def solve_laplace_inside(self,function):
+    def solve_laplace_inside(self,function,solverparams = {"linear_solver":"lu"}):
         """Take a functions boundary data as a dirichlet BC and solve
             a laplace equation"""
         bc = DirichletBC(self.V,function, "on_boundary")
@@ -248,10 +248,11 @@ class FemBemDeMagSolver(DeMagSolver):
         laplace_A = self.poisson_matrix
         #Apply BC
         bc.apply(laplace_A)
-        #Boundary values of laplace_f are overwritten
-        #on each call.
+        #Boundary values of laplace_f are overwritten on each call.
         bc.apply(self.laplace_f)
-        solve(laplace_A,function.vector(),self.laplace_f)
+        solve(laplace_A,function.vector(),\
+              self.laplace_f,form_compiler_parameters={"optimize": True},\
+              solver_parameters = solverparams)
         return function
         
 class TruncDeMagSolver(DeMagSolver):

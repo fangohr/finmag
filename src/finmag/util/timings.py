@@ -63,7 +63,7 @@ class Timings(object):
                                                                            )
             else:
                 msg = "Timings %s: none completed\n" % name
-        recorded_sum=sum([ self.data[name][1] for name in self.data.keys()])
+        recorded_sum= self.recorded_sum()
         walltime = time.time()-self.creationtime
         msg+="Wall time: %.4gs (sum of time recorded: %gs=%5.1f%%)\n" % \
             (walltime,recorded_sum,recorded_sum/walltime*100.)
@@ -72,6 +72,9 @@ class Timings(object):
 
     def __str__(self):
         return self.report_str()
+
+    def recorded_sum(self):
+        return sum([ self.data[name][1] for name in self.data.keys()])
 
 timings=Timings()
 
