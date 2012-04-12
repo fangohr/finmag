@@ -84,15 +84,18 @@ class MagSphereBase(pb.FemBemDeMagProblem,cm.MeshGenerator):
 
         cm.MeshGenerator.generate_mesh(self,meshpath,geofile)
         #Upload the dolfin mesh
-        mesh = Mesh(meshpath)
+        self.mesh = Mesh(meshpath)
         self.Ms = 1.0
-        M = (str(self.Ms), "0.0", "0.0")
+        self.M = (str(self.Ms), "0.0", "0.0")
+        self.V = VectorFunctionSpace(self.mesh, "CG", 1)
+        self.m = interpolate(Expression(self.M), self.V)
+        self.maxh = maxh
 
         #Initialize Base pb.FemBemDeMagProblem
-        pb.FemBemDeMagProblem.__init__(self,mesh,M)
+        pb.FemBemDeMagProblem.__init__(self,self.mesh,self.M)
         
     def desc(self):
-        return "Sphere demagnetisation test problem fembem, Ms=%g, maxh = %g" %(self.Ms,self.maxh)
+        return "Sphere demagnetisation test problem fembem, Ms=%g, maxh=%g" %(self.Ms,self.maxh)
 
 #Note python doesn't allow :." in class names so the Sphere1.0 is now Sphere10 etc...        
 
