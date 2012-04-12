@@ -3,11 +3,15 @@ import dolfin as df
 import numpy as np
 import scipy.sparse as sp
 from scipy.sparse.linalg.dsolve import linsolve
+import progressbar as pb
 import belement
 import belement_magpar
 import finmag.util.solid_angle_magpar as solid_angle_solver
 compute_belement=belement_magpar.return_bele_magpar()
 compute_solid_angle=solid_angle_solver.return_csa_magpar()
+import logging
+
+logger = logging.getLogger(name='finmag')
 
 
 def compute_cell_volume(mesh):
@@ -42,13 +46,23 @@ def compute_BEM_matrix(demag):
 
     tmp_bele=np.array([0.,0.,0.])
     
-    for i in range(nodes_number):
+    loops = (nodes_number - sum(g2b<0))*demag.bnd_faces_number + mesh.num_cells()*4
+    loop_ctr = 0
+    bar = pb.ProgressBar(maxval=loops, \
+                widgets=[pb.ETA(), pb.Bar('=', '[', ']'), ' ', pb.Percentage()])
+    #info_blue("Building Boundary Element Matrix")
+    logger.info("Building Boundary Element Matrix")
 
+    for i in range(nodes_number):
         #skip the node not at the boundary
         if g2b[i]<0:
             continue
         
         for j in range(demag.bnd_faces_number):
+
+            loop_ctr += 1
+            bar.update(loop_ctr)
+
             #skip the node in the face
             if i in set(bfn[j]):
                 continue
@@ -59,12 +73,13 @@ def compute_BEM_matrix(demag):
                 xyz[bfn[j][1]],
                 xyz[bfn[j][2]],
                 tmp_bele)
-           
-            
+
             for k in range(3):
                 ti=g2b[i]
                 tj=g2b[bfn[j][k]]
                 B[ti][tj]+=tmp_bele[k]
+
+
 
     #the solid angle term ...
     vert_bsa=np.zeros(nodes_number)
@@ -81,12 +96,16 @@ def compute_BEM_matrix(demag):
             
             vert_bsa[mc[i][j]]+=tmp_omega
 
+            loop_ctr += 1
+            bar.update(loop_ctr)
+
     for i in range(nodes_number):
         j=g2b[i]
         if j<0:
             continue
         
         B[j][j]+=vert_bsa[i]/(4*np.pi)-1
+
 
     demag.B=B
 
