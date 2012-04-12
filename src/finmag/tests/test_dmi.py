@@ -21,13 +21,13 @@ def test_dmi_field_box_assemble_equal_box_matrix():
             'sqrt(1 - ((2*x[0]-L)/L)*((2*x[0]-L)/L))',
             '0')
     llg1 = LLG(mesh)
-    llg1.set_m0(m_initial, L=length)
+    llg1.set_m(m_initial, L=length)
     llg1.setup(use_dmi=True,dmi_method='box-matrix-numpy')
     llg1.solve()
     H_dmi1 = llg1.H_dmi
 
     llg2 = LLG(mesh)
-    llg2.set_m0(m_initial, L=length)
+    llg2.set_m(m_initial, L=length)
     llg2.setup(use_dmi=True,dmi_method='box-assemble')
     llg2.solve()
     H_dmi2 = llg2.H_dmi
@@ -51,13 +51,13 @@ def test_dmi_field_box_matrix_numpy_same_as_box_matrix_petsc():
             'sqrt(1 - ((2*x[0]-L)/L)*((2*x[0]-L)/L))',
             '0')
     llg1 = LLG(mesh)
-    llg1.set_m0(m_initial, L=length)
+    llg1.set_m(m_initial, L=length)
     llg1.setup(use_dmi=True,dmi_method='box-matrix-numpy')
     llg1.solve()
     H_dmi1 = llg1.H_dmi
 
     llg2 = LLG(mesh)
-    llg2.set_m0(m_initial, L=length)
+    llg2.set_m(m_initial, L=length)
     llg2.setup(use_dmi=True,dmi_method='box-matrix-petsc')
     llg2.solve()
     H_dmi2 = llg2.H_dmi

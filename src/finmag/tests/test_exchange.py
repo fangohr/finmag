@@ -11,7 +11,7 @@ bigmesh = df.Interval(1000, 0, length)
 
 def test_there_should_be_no_exchange_field_for_uniform_M():
     llg = LLG(mesh)
-    llg.set_m0((llg.Ms, 0, 0))
+    llg.set_m((llg.Ms, 0, 0))
     llg.setup()
     llg.solve()
     H_ex = llg.H_ex
@@ -25,7 +25,7 @@ def test_there_should_be_no_exchange_field_for_uniform_M():
 
 def test_there_should_be_an_exchange_field_for_heterogeneous_M():
     llg = LLG(mesh)
-    llg.set_m0((
+    llg.set_m((
             '(2*x[0]-L)/L',
             'sqrt(1 - ((2*x[0]-L)/L)*((2*x[0]-L)/L))',
             '0'), L=length)
@@ -36,7 +36,7 @@ def test_there_should_be_an_exchange_field_for_heterogeneous_M():
 
 def test_exchange_field_should_change_when_M_changes():
     llg = LLG(mesh)
-    llg.set_m0((
+    llg.set_m((
             '(2*x[0]-L)/L',
             'sqrt(1 - ((2*x[0]-L)/L)*((2*x[0]-L)/L))',
             '0'), L=length)
@@ -70,13 +70,13 @@ def test_exchange_field_box_assemble_equal_box_matrix():
             'sqrt(1 - ((2*x[0]-L)/L)*((2*x[0]-L)/L))',
             '0')
     llg1 = LLG(mesh)
-    llg1.set_m0(m_initial, L=length)
+    llg1.set_m(m_initial, L=length)
     llg1.setup(exchange_method='box-matrix-numpy')
     llg1.solve()
     H_ex1 = llg1.H_ex
 
     llg2 = LLG(mesh)
-    llg2.set_m0(m_initial, L=length)
+    llg2.set_m(m_initial, L=length)
     llg2.setup(exchange_method='box-assemble')
     llg2.solve()
     H_ex2 = llg2.H_ex
@@ -99,13 +99,13 @@ def test_exchange_field_box_matrix_numpy_same_as_box_matrix_petsc():
             'sqrt(1 - ((2*x[0]-L)/L)*((2*x[0]-L)/L))',
             '0')
     llg1 = LLG(mesh)
-    llg1.set_m0(m_initial, L=length)
+    llg1.set_m(m_initial, L=length)
     llg1.setup(exchange_method='box-matrix-numpy')
     llg1.solve()
     H_ex1 = llg1.H_ex
 
     llg2 = LLG(mesh)
-    llg2.set_m0(m_initial, L=length)
+    llg2.set_m(m_initial, L=length)
     llg2.setup(exchange_method='box-matrix-petsc')
     llg2.solve()
     H_ex2 = llg2.H_ex

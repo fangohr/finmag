@@ -23,7 +23,7 @@ mesh = dolfin.Interval(simplexes, 0, length)
 llg = LLG(mesh)
 llg.alpha=0.1
 llg.H_app=(0,0,llg.Ms)
-llg.set_m0(('1', '0', '0'))
+llg.set_m(('1', '0', '0'))
 llg.setup()
 #llg.pins = [0, 10]
 

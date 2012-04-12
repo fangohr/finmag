@@ -64,7 +64,7 @@ def compare_with_analytic_solution(alpha=0.5, max_t=1e-9):
 
     llg = LLG(mesh)
     llg.alpha = alpha
-    llg.set_m0((1, 0, 0))
+    llg.set_m((1, 0, 0))
     llg.H_app = (0, 0, 1e6)
     llg.setup(use_exchange=False)
 
