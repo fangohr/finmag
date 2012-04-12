@@ -3,7 +3,7 @@ import pytest
 import finmag.sim.helpers as h
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
-TOLERANCE = 1e-3
+TOLERANCE = 1e-2
 
 @pytest.mark.skipif("not os.path.exists(MODULE_DIR+ '/averages.txt')")
 def test_compare_averages():
