@@ -8,13 +8,12 @@ import pylab as p
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 mesh = Mesh(convert_mesh(MODULE_DIR + "/bar30_30_100.geo"))
-
 #mesh.coordinates()[:] *= 1e-9
 
 # Set up LLG    
 llg = LLG(mesh)
 llg.Ms = 0.86e6
-llg.A = 13.0e-12*1e18
+llg.A = 13.0e-12 * 1e18
 llg.alpha = 0.5
 llg.set_m((1,0,1))
 llg.setup(use_exchange=True, use_dmi=False, use_demag=True, demag_method="weiwei")
@@ -43,7 +42,7 @@ while r.successful() and r.t <= T1:
     #time_series.store(llg._m.vector(), r.t)
     print "integration time", r.t + dt
     r.integrate(r.t + dt)
-    plot(llg._m)
+    #plot(llg._m)
 
     print llg.H_ex
     print llg.H_demag
@@ -54,5 +53,5 @@ p.plot(tlist, ylist, 'r', label='M_y')
 p.plot(tlist, zlist, 'b', label='M_z')
 p.legend()
 p.show()
-interactive()
+#interactive()
 
