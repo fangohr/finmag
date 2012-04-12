@@ -31,7 +31,7 @@ xlist, ylist, zlist, tlist = [], [], [], []
 #time_series = TimeSeries(MODULE_DIR + "/simulation_data/sim")
 
 while r.successful() and r.t <= T1:
-    mx, my, mz = llg.m_average*llg.Ms
+    mx, my, mz = llg.m_average
     xlist.append(mx)
     ylist.append(my)
     zlist.append(mz)
