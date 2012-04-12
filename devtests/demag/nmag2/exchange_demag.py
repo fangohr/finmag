@@ -9,12 +9,20 @@ MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 mesh = Mesh(convert_mesh(MODULE_DIR + "/bar30_30_100.geo"))
 
+
 #mesh.coordinates()[:] *= 1e-9
+#print mesh.coordinates()
 
 # Set up LLG    
 llg = LLG(mesh)
 llg.Ms = 0.86e6
 llg.A = 13.0e-12*1e18
+
+#the correction above will be unnecessary when we have the mesh scale factor
+#introduced in the LLG class. See https://www.pivotaltracker.com/story/show/27923227
+
+
+#llg.A = 13.0e-12
 llg.alpha = 0.5
 llg.set_m((1,0,1))
 llg.setup(use_exchange=True, use_dmi=False, use_demag=True, demag_method="weiwei")
