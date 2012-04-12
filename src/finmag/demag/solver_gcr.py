@@ -16,22 +16,57 @@ from instant import inline_with_numpy
 parameters["allow_extrapolation"] = True
 logger = logging.getLogger(name='finmag')
      
-class GCRDeMagSolver(sb.DeMagSolver):
-     """Class containing methods shared by GCR solvers"""
+##class GCRDeMagSolver(sb.DeMagSolver):
+##     """Class containing methods shared by GCR solvers"""
+##     def __init__(self,problem,degree = 1):
+##          super(GCRDeMagSolver,self).__init__(problem,degree)
+##          #Define the two potentials
+##          self.phia = Function(self.V)
+##          self.phib = Function(self.V)
+##          self.phi = Function(self.V)
+##          
+class FemBemGCRSolver(sb.FemBemDeMagSolver):
+     """FemBem solver for Demag Problems using the GCR approach"""
+    
      def __init__(self,problem,degree = 1):
-          super(GCRDeMagSolver,self).__init__(problem,degree)
-          #Define the two potentials
+          super(FemBemGCRSolver,self).__init__(problem,degree)
+          #Define the potentials
           self.phia = Function(self.V)
           self.phib = Function(self.V)
           self.phi = Function(self.V)
+          #Default linalg solver parameters
+          self.phiasolverparams = {"linear_solver":"lu"}
+          self.phibsolverparams = {"linear_solver":"lu"}
 
-     def solve_phia(self,phia,method = "lu"):
+          #Countdown by bem assembly
+          self.countdown = True
+
+     def solve(self):
+          """
+          Solve for the Demag field using GCR and FemBem
+          Potential is returned, demag field stored
+          """
+          logger.debug("GCR: Solving for phi_a")
+          #Solve for phia
+          self.solve_phia()
+          #Solve for phib on the boundary with Bem 
+          self.phib = self.solve_phib_boundary(self.phia,self.doftionary)
+          #Solve for phib on the inside of the mesh with Fem
+          logger.info("GCR: Solve for phi_b (laplace on the inside)")
+
+          #THis FUNCTION RETURNS NONE!
+          self.phib = self.solve_laplace_inside(self.phib,solverparams = self.phibsolverparams)
+          # Add together the two potentials
+          self.phi = self.calc_phitot(self.phia,self.phib)
+          return self.phi
+          
+     def solve_phia(self):
           """
           Solve for potential phia in the Magentic region using FEM.
           By providing a Function phia defined on a space smaller than
           V we can solve domain truncation problems as well. 
           """
-          V = phia.function_space()
+          V = self.phia.function_space()
           
           #Buffer data independant of M
           if not hasattr(self,"formA_phia"):
@@ -50,33 +85,8 @@ class GCRDeMagSolver(sb.DeMagSolver):
           
           #Solve for phia
           A = self.phia_formA
-          solve(A,phia.vector(),F,method)
-          
-class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
-     """FemBem solver for Demag Problems using the GCR approach"""
-    
-     def __init__(self,problem,degree = 1):
-          super(FemBemGCRSolver,self).__init__(problem,degree)
-
-     def solve(self):
-          """
-          Solve for the Demag field using GCR and FemBem
-          Potential is returned, demag field stored
-          """
-          logger.debug("GCR: Solving for phi_a")
-          #Solve for phia
-          self.solve_phia()
-          #Solve for phib on the boundary with Bem 
-          self.phib = self.solve_phib_boundary(self.phia,self.doftionary)
-          #Solve for phib on the inside of the mesh with Fem
-          logger.info("GCR: Solve for phi_b (laplace on the inside)")
-          self.phib = self.solve_laplace_inside(self.phib)
-          # Add together the two potentials
-          self.phi = self.calc_phitot(self.phia,self.phib)
-          return self.phi
-          
-     def solve_phia(self,method = "lu"):
-          super(FemBemGCRSolver,self).solve_phia(phia = self.phia,method = method)
+          solve(A,self.phia.vector(),F, \
+          form_compiler_parameters={"optimize": True},solver_parameters = self.phiasolverparams)
           
      def solve_phib_boundary(self,phia,doftionary):
           """Solve for phib on the boundary using BEM"""
@@ -100,12 +110,14 @@ class FemBemGCRSolver(GCRDeMagSolver,sb.FemBemDeMagSolver):
           dimbem = len(self.doftionary)
           bemmatrix = np.zeros([dimbem,dimbem])
 
-          import progressbar as pb
-          bar = pb.ProgressBar(maxval=dimbem-1, \
-                 widgets=[pb.ETA(), pb.Bar('=', '[', ']'), ' ', pb.Percentage()])
+          if self.countdown == True:
+               import progressbar as pb
+               bar = pb.ProgressBar(maxval=dimbem-1, \
+                      widgets=[pb.ETA(), pb.Bar('=', '[', ']'), ' ', pb.Percentage()])
 
           for index,dof in enumerate(self.doftionary):
-               bar.update(index)
+               if self.countdown == True:
+                    bar.update(index)
                bemmatrix[index] = self.get_bem_row(self.doftionary[dof])
                #info("BEM Matrix line "+ str(index) + str(self.bemmatrix[index]))
           return bemmatrix

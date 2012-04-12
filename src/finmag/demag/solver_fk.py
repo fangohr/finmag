@@ -21,7 +21,7 @@ class FKSolver(sb.DeMagSolver):
         self.phi2 = Function(self.V)
         self.degree = degree
 
-    def compute_phi1(self, M, V):
+    def compute_phi1(self, M, V,solverparams = {"linear_solver":"lu"}):
         """
         Get phi1 defined over the mesh with the point given the value 0.
         phi1 is the solution to the inhomogeneous Neumann problem.
@@ -40,15 +40,18 @@ class FKSolver(sb.DeMagSolver):
         f = dot(n, M)*v*ds - div(M)*v*dx
 
         # Solve for the DOFs in phi1
-        solve(a == f, self.phi1)
+        solve(a == f, self.phi1,solver_parameters = solverparams)
 
 
 class FemBemFKSolver(FKSolver, sb.FemBemDeMagSolver):
     """FemBem solver for Demag Problems using the Fredkin-Koehler approach."""
 
     def __init__(self, problem, degree=1):
-          super(FemBemFKSolver,self).__init__(problem, degree)
-
+        super(FemBemFKSolver,self).__init__(problem, degree)
+        #Default linalg solver parameters
+        self.phi1solverparams = {"linear_solver":"lu"}
+        self.phi2solverparams = {"linear_solver":"lu"}
+        
     def solve(self):
         """
         Return the magnetic scalar potential :math:`phi` of
@@ -57,13 +60,13 @@ class FemBemFKSolver(FKSolver, sb.FemBemDeMagSolver):
 
         """
         # Compute phi1 according to Knittel (2.28 - 2.29)
-        self.compute_phi1(self.M, self.V)
+        self.compute_phi1(self.M, self.V,self.phi1solverparams)
 
         # Compute phi2 on the boundary
         self.__solve_phi2_boundary(self.doftionary)
 
         # Compute Laplace's equation (Knittel, 2.30)
-        self.solve_laplace_inside(self.phi2)
+        self.solve_laplace_inside(self.phi2,self.phi2solverparams)
 
         # Knittel (2.27), phi = phi1 + phi2
         self.phi = self.calc_phitot(self.phi1, self.phi2)
