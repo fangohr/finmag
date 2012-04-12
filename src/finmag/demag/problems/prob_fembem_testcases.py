@@ -89,13 +89,14 @@ class MagSphereBase(pb.FemBemDeMagProblem,cm.MeshGenerator):
         self.M = (str(self.Ms), "0.0", "0.0")
         self.V = VectorFunctionSpace(self.mesh, "CG", 1)
         self.m = interpolate(Expression(self.M), self.V)
+        self.r = radius        
         self.maxh = maxh
 
         #Initialize Base pb.FemBemDeMagProblem
         pb.FemBemDeMagProblem.__init__(self,self.mesh,self.M)
         
     def desc(self):
-        return "Sphere demagnetisation test problem fembem, Ms=%g, maxh=%g" %(self.Ms,self.maxh)
+        return "Sphere demag test problem, Ms=%g, radius=%g, maxh=%g" %(self.Ms, self.r, self.maxh)
 
 #Note python doesn't allow :." in class names so the Sphere1.0 is now Sphere10 etc...        
 
