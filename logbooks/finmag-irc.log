@@ -820,3 +820,72 @@ fangohr: Still testing ...
 2012-04-11 13:59:31 andersej: But it's the same thing for the GCR, so it's not directly a mistake to use Weiwei's code as default. It's much faster anyway.
 2012-04-11 13:59:59 fangohr: I like you optimism :)
 2012-04-11 19:55:58 fangohr: Anders, are you still working on that progress bar ;-) ?
+2012-04-12 09:14:38 fangohr-osiris: Good Morning Anders and Marc-Antonio
+2012-04-12 09:14:45 mb8g11: Good morning!
+2012-04-12 09:19:06 andersej: Morning, Hans and MA!
+2012-04-12 10:07:41 mb8g11: That's strange. My computer won't let me push to bitbucket. Name or service not known. Anybody got that before here?
+2012-04-12 10:08:38 andersej: I got something similar on my home computer because I didn't have the .hgrc file there.
+2012-04-12 10:09:44 mb8g11: brb
+2012-04-12 10:34:59 mb8g11: Was an issue with https and the new wireless router I installed yesterday. Put the old one back in for now.
+2012-04-12 11:04:40 mb8g11: I'm touched a lot of files, you may consider pulling the changes before going on with your work...
+2012-04-12 11:04:45 mb8g11: Sorry for that.
+2012-04-12 11:58:43 fangohr: Hi, anybody interested in lunch in 20 minutes?
+2012-04-12 11:58:50 andersej: Yes.
+2012-04-12 12:40:30 mb8g11: Hi Gabriel!
+2012-04-12 13:09:18 fangohr: Hi indeed. :)
+2012-04-12 13:42:29 fangohr: Hi MA, didn't manage to track down what goes wrong in the Jacobean tests. It seems not to be as simple as changing the value of K (although that has some effect). Need to do something else for now.
+2012-04-12 13:47:07 mb8g11: Thanks for having a look. Maybe I can spot it :)
+2012-04-12 13:47:35 fangohr: Ta.
+2012-04-12 15:33:46 andersej: Hi all, I want to run netgen in a makefile to create nmag compatible mesh. Is there something I can do to avoid that it aborts after the "standard" netgen error?
+2012-04-12 16:01:41 mb8g11: yes
+2012-04-12 16:01:48 andersej: Good.
+2012-04-12 16:01:52 mb8g11: prepend the command with a -
+2012-04-12 16:05:47 andersej: Great! Thanks!
+2012-04-12 16:17:57 mb8g11: no problem.
+2012-04-12 16:18:07 fangohr: Anders, any news on the nmag2 problem? (Just checking as I now explain this to Weiwei.)
+2012-04-12 16:18:12 mb8g11: So you guys are sure the exchange is too weak, and not the demag too strong?
+2012-04-12 16:19:57 fangohr: The comparison plot with the Nmag/OOMMF data should tell us this. Have you done that already?
+2012-04-12 16:24:01 mb8g11: It's the first thing I did, but I didn't notice any changes... do I have to enable this somewhere?
+2012-04-12 16:24:53 mb8g11: Aaah, you changed A in one of your tests. Didn't catch that :)
+2012-04-12 16:44:12 mb8g11: How very, very weird.
+2012-04-12 16:46:54 fangohr: I think Weiwei and I figured out why the nmag2 example fails. I'll try to write it down somewhere in a moment.
+2012-04-12 16:46:56 mb8g11: Do you mind if I copy the nmag example into that directory? Should make comparing easier.
+2012-04-12 16:47:09 mb8g11: I'll write the stuff that adds it to the plot as well.
+2012-04-12 16:47:40 fangohr__: Do you talk to me, MA?
+2012-04-12 16:50:14 mb8g11: To whoever is working on that example thingie.
+2012-04-12 16:51:28 fangohr__: We should add the *geo file(s), a makefile to produce the netgen and nmag mesh, and -- exceptionally -- a file that keeps time, mx, my, mz results of nmag so we don't need to run nmag again and again (takes 30 seconds or so). Anders should have all the files and the data file as well.
+2012-04-12 16:51:30 fangohr__: Anders, still there?
+2012-04-12 16:51:32 fangohr__: ;-)
+2012-04-12 16:53:19 mb8g11: Exactly what I planned to do - like with the other nmag comparisons in src/finmag/tests/nmag
+2012-04-12 16:53:48 fangohr: Okay, great. I have put the relevant files in /tmp/example2 on osiris.sesnet for Anders to nick, but of course you can get them as well.
+2012-04-12 16:54:21 mb8g11: Sorry, what relevant files?
+2012-04-12 16:55:05 fangohr: Just the nmag source files.
+2012-04-12 16:55:16 fangohr: (in case you don't have them already.)
+2012-04-12 16:55:16 mb8g11: Ah... I was copying them from the manual.
+2012-04-12 16:55:37 fangohr: yes, the new manual is hiding mostfiles (such as makefile etc) which is a bit annoying.
+2012-04-12 16:56:08 mb8g11: I'll copy them from the existing tests.
+2012-04-12 17:09:30 fangohr: over and out from me. Back tomorrow morning.
+2012-04-12 17:09:59 mb8g11: See you!
+2012-04-12 17:10:39 fangohr: BTW, created a new story to explain how to fix the nmag2 example probelm. https://www.pivotaltracker.com/story/show/27923227
+2012-04-12 17:11:00 mb8g11: Great. I'll push the comparison in a few minutes, it already compares, just need the plot.
+2012-04-12 17:13:20 andersej: I'm sorry, was occupied with the testing..
+2012-04-12 17:13:29 andersej: I'm finished now.
+2012-04-12 17:13:49 andersej: I'll push in a minute..
+2012-04-12 17:16:43 andersej: Okay, I see you did it already, hehe..
+2012-04-12 17:16:54 mb8g11: Okay, I just pushed the corresponding nmag code as well as a comparison and a comparative plot... that may be what you were working on...
+2012-04-12 17:18:05 mb8g11: and of course I failed the merge.
+2012-04-12 17:23:55 andersej: Marc Antonio, what are you working on now? I will try not to work on the same files, hehe.
+2012-04-12 17:28:25 mb8g11: I'm working on the anisotropy, just did this because it got me curious and I thought it was safe to do.
+2012-04-12 17:28:41 mb8g11: Had I known you were working on it, I would have let you do your thing.
+2012-04-12 17:29:45 mb8g11: So.... is it just me, or does the "fix" not fix the problem?
+2012-04-12 17:30:05 andersej: Ok, I'll just merge in some of the differences between our codes if you aren't working anymore on the nmag example.
+2012-04-12 17:30:16 mb8g11: Okay.
+2012-04-12 17:30:22 andersej: Which fix?
+2012-04-12 17:32:08 mb8g11: Multiplying the exchange with 1e18.
+2012-04-12 17:33:17 andersej: It seems to work pretty good. What are you thinking about?
+2012-04-12 17:34:52 mb8g11: It does indeed, I didn't see we were saving m*Ms for the finmag data.
+2012-04-12 17:36:06 mb8g11: Just fixing my plot and then I'll let you work in peace :)
+2012-04-12 17:36:24 andersej: Okay :)
+2012-04-12 17:39:18 mb8g11: Done. It's all yours.
+2012-04-12 17:48:58 andersej: Well, it appears that we have done almost exactly the same.. I could just go home, but it's a thunderstorm outside.
+2012-04-12 18:10:50 andersej: Seems quiet now, I'll try to go home. Over and out!
