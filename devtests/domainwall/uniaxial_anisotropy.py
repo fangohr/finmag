@@ -63,7 +63,7 @@ def test_domain_wall_profile():
     # set initial magnetization
     x, y, z = M0(coor)
     m0.vector()[:] = np.array([x, y, z]).reshape(n)
-    llg.set_m0(np.array([x, y, z]).reshape(n))
+    llg.set_m(np.array([x, y, z]).reshape(n))
 
     llg.setup(use_exchange=True)
 

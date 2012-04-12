@@ -48,7 +48,7 @@ from scipy.integrate import ode
 
 #Add the extra timings
 llg=LLGXtra(mesh)
-llg.set_m0(df.Constant((1, 0, 0)))
+llg.set_m(df.Constant((1, 0, 0)))
 
 tfinal = 0.3*1e-9
 dt = 0.001e-9

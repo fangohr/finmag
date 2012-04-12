@@ -103,7 +103,7 @@ def convergence_rates(hs, ys):
 m = 1e-5
 mesh = Box(0,0,0,m,m,m,5,5,5)
 llg = MyLLG(mesh)
-llg.set_m0((1,0,0))
+llg.set_m((1,0,0))
 llg.setup()
 
 M, V = llg._m, llg.V

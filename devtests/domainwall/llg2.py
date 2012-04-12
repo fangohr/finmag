@@ -9,7 +9,7 @@ from finmag.sim.dmi import DMI
 from finmag.sim.llg import LLG
 
 class LLG2(LLG):
-    def set_m0(self, value, **kwargs):
+    def set_m(self, value, **kwargs):
         """
         Set the initial magnetisation (scaled automatically).
         

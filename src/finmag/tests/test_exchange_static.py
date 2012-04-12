@@ -23,7 +23,7 @@ possible_orientations = [
 
 def angles_after_a_nanosecond(initial_M, pins=[]):
     llg = LLG(mesh)
-    llg.set_m0(initial_M, L=length)
+    llg.set_m(initial_M, L=length)
     llg.setup()
     llg.pins = pins 
 
