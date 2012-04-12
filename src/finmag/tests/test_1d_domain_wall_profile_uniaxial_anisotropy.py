@@ -29,7 +29,7 @@ def M0(r):
     return 0*mz, np.sqrt(1.0 - mz*mz), mz
 
 
-def test_domain_wall_profile():
+def test_domain_wall_profile(do_plot=False):
 
     simplices = 500
     L = 504e-9
@@ -88,19 +88,21 @@ def test_domain_wall_profile():
     #f.close()
     llg.timings()
 
-
-    # Plot magnetisation in z-direction
     mz = []
     x = np.linspace(0, L, simplices+1)
     for xpos in x:
         mz.append(llg._m(xpos)[2])
     mz = np.array(mz)*Ms
-    pylab.plot(x,mz,'o',label='finmag')
-    pylab.plot(x,Mz_exact(x),'-',label='analytic')
-    pylab.legend(("Finmag", "Analytical"))
-    pylab.title("Domain wall example - Finmag vs analytical solution")
-    pylab.xlabel("Length")
-    pylab.ylabel("M.z")
+
+    if do_plot:
+        # Plot magnetisation in z-direction
+        pylab.plot(x,mz,'o',label='finmag')
+        pylab.plot(x,Mz_exact(x),'-',label='analytic')
+        pylab.legend(("Finmag", "Analytical"))
+        pylab.title("Domain wall example - Finmag vs analytical solution")
+        pylab.xlabel("Length")
+        pylab.ylabel("M.z")
+        pylab.savefig('1d-domain-wall-profile.png')
 
     try:
         import scipy.optimize
@@ -119,8 +121,6 @@ def test_domain_wall_profile():
         print "difference A : %9g" % (fittedA-A)
         print "rel difference A : %9g" % ((fittedA-A)/A)
         print "quotient A/fittedA and fittedA/A : %9g %g" % (A/fittedA,fittedA/A)
-        pylab.savefig('1d-domain-wall-profile.png')
-        #pylab.show()
         assert abs(fittedA-A)/A < 0.004,"Fitted A to inaccurate"
 
 
@@ -133,4 +133,4 @@ def test_domain_wall_profile():
     assert maxreldiff< 0.0009
 
 if __name__=="__main__":
-    test_domain_wall_profile()
+    test_domain_wall_profile(do_plot=True)
