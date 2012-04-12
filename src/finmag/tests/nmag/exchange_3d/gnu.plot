@@ -50,11 +50,11 @@ set format y "%.1g"
 
 set key
 plot \
-    "averages.txt" using 1:2 title "M_x (nmag)" with lines lc rgbcolor "red", \
-    "averages.txt" using 1:3 title "M_y" with lines lc rgbcolor "blue", \
-    "averages.txt" using 1:4 title "M_z" with lines lc rgbcolor "green", \
-    "averages_ref.txt" using 1:2 title "M_x (finmag)" with points lc rgbcolor "red", \
-    "averages_ref.txt" using 1:3 title "M_y" with points lc rgbcolor "blue", \
-    "averages_ref.txt" using 1:4 title "M_z" with points lc rgbcolor "green"
+    "averages_ref.txt" using 1:2 title "M_x (nmag)" with lines lc rgbcolor "red", \
+    "averages_ref.txt" using 1:3 title "M_y" with lines lc rgbcolor "blue", \
+    "averages_ref.txt" using 1:4 title "M_z" with lines lc rgbcolor "green", \
+    "averages.txt" using 1:2 title "M_x (finmag)" with points lc rgbcolor "red", \
+    "averages.txt" using 1:3 title "M_y" with points lc rgbcolor "blue", \
+    "averages.txt" using 1:4 title "M_z" with points lc rgbcolor "green"
 
 unset multiplot 
