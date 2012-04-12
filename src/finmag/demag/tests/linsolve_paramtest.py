@@ -10,11 +10,63 @@ __copyright__ = __author__
 __project__ = "Finmag"
 __organisation__ = "University of Southampton"
 
-import dolfin as df
+from dolfin import *
 import finmag.demag.problems.prob_base as pb
 from finmag.util.timings import Timings
 from finmag.demag.solver_gcr import FemBemGCRSolver
 from finmag.demag.solver_fk import FemBemFKSolver
+
+##Default linear solver parameters to test.
+default_params =[{"linear_solver":"lu"},    \
+                 {"linear_solver":"gmres","preconditioner": "ilu"}, \
+                 {"linear_solver":"cg","preconditioner": "ilu"}]
+                 #{"linear_solver":"gmres","preconditioner":"ilu","absolute_tolerance":1.0e-5} ]
+
+class LinAlgDemagTester(object):
+    """
+    A class to test the speed of linalg solvers and preconditioners
+    used in demag calculation. 
+    """
+    def __init__(self,mesh,M,solver,testparams):
+        """
+        M          - Magnetisation field
+        solver     - "GCR" or "FK"
+        testparams - A list of dictionaries containing parameters for the linear solve.
+                     Can also give a tuple of two dictionaries if different parameters are
+                     wished for the two linear solves.
+                     
+        Note: Running groups of testparams instead of individual params saves on BEM assembly.
+
+        """
+        self.testparams = testparams
+        self.problem = pb.FemBemDeMagProblem(mesh,M)
+        if solver == "FK":
+            self.solver = FemBemFKSolverLinalgTime(self.problem)
+        elif solver == "GCR":
+            self.solver = FemBemGCRSolverLinalgTime(self.problem)
+        else:
+            raise Exception("Only 'FK, and 'GCR' solver values possible")
+                    
+    def test(self):
+
+        #Create a list of timer objects, there will be 1 timer for each set of parameters
+        self.timelist = []
+
+        for test in self.testparams:
+            #Two or one sets of parameters can be given. Depending on if we want to use
+            #different solvers for different steps.
+            try:
+                t1,t2 = test[0],test[1]
+            except KeyError:
+                t1,t2 = test,test
+            timer = Timings()
+            self.solver.setparam(t1,t2,timer)
+            self.solver.solve()
+            self.solver.report()
+            self.timelist.append(timer)
+        #After the testing is finished delete the BEM to free up memory.
+        del self.solver.bem
+            
 
 class FemBemGCRSolverLinalgTime(FemBemGCRSolver):
     """GCR solver with timings for linear solve"""
@@ -30,16 +82,55 @@ class FemBemGCRSolverLinalgTime(FemBemGCRSolver):
         self.timer = timer
 
     def solve_phia(self):
+        V = self.phia.function_space()
+      
+        #Buffer data independant of M
+        if not hasattr(self,"formA_phia"):
+           #Try to use poisson_matrix if available
+           if not hasattr(self,"poisson_matrix"):
+                self.build_poisson_matrix()
+           self.phia_formA = self.poisson_matrix
+           #Define and apply Boundary Conditions
+           self.phia_bc = DirichletBC(V,0,"on_boundary")
+           self.phia_bc.apply(self.phia_formA)               
+           
+        #Source term depends on M
+        f = (-div(self.M)*self.v)*dx  #Source term
+        F = assemble(f)
+        self.phia_bc.apply(F)
+
+        #Solve for phia
+        A = self.phia_formA
         self.timer.start("linsolve solve_phia")
-        r =FemBemGCRSolver.solve_phia(self)
+        solve(A,self.phia.vector(),F, \
+        form_compiler_parameters={"optimize": True},solver_parameters = self.phiasolverparams)
         self.timer.stop("linsolve solve_phia")
-        return r
     
-    def solve_laplace_inside(self,function,solverparams):
+    def solve_laplace_inside(self,function,solverparams):                                                          
+        """Take a functions boundary data as a dirichlet BC and solve
+            a laplace equation"""
+        
+        bc = DirichletBC(self.V,function, "on_boundary")
+        #Buffer data independant of M
+        if not hasattr(self,"poisson_matrix"):
+            self.build_poisson_matrix()
+        if not hasattr(self,"laplace_F"):
+            #RHS = 0
+            self.laplace_f = Function(self.V).vector()
+
+        #Copy the poisson matrix it is shared and should
+        #not have bc applied to it.
+        laplace_A = self.poisson_matrix
+        #Apply BC
+        bc.apply(laplace_A)
+        #Boundary values of laplace_f are overwritten on each call.
+        bc.apply(self.laplace_f)
         self.timer.start("linsolve solve_phib")
-        r =FemBemGCRSolver.solve_laplace_inside(self,function,solverparams)
-        self.timer.stop("linsolve solve_phib")                                                  
-        return r
+        solve(laplace_A,function.vector(),\
+              self.laplace_f,form_compiler_parameters={"optimize": True},\
+              solver_parameters = solverparams)
+        self.timer.stop("linsolve solve_phib")
+        return function
 
     def report(self,n = 10):
         print "\n Linear solve timings of the GCR demag solver"
@@ -84,55 +175,6 @@ class FemBemFKSolverLinalgTime(FemBemFKSolver):
         print "\n",self.timer.report_str(n)
 
 
-class LinAlgDemagTester(object):
-    """
-    A class to test the speed of linalg solvers and preconditioners
-    used in demag calculation. 
-    """
-    def __init__(self,mesh,M,solver,testparams):
-        """
-        M          - Magnetisation field
-        solver     - "GCR" or "FK"
-        testparams - A list of dictionaries containing parameters for the linear solve.
-                     Can also give a tuple of two dictionaries if different parameters are
-                     wished for the two linear solves.
-                     
-        Note: Running groups of testparams instead of indidual params saves on BEM assembly
-
-        """
-        self.testparams = testparams
-        self.problem = pb.FemBemDeMagProblem(mesh,M)
-        if solver == "FK":
-            self.solver = FemBemFKSolverLinalgTime(self.problem)
-        elif solver == "GCR":
-            self.solver = FemBemGCRSolverLinalgTime(self.problem)
-        else:
-            raise Exception("Only 'FK, and 'GCR' solver values possible")
-                    
-    def test(self):
-
-        #Create a list of timer objects, there will be 1 timer for each set of parameters
-        self.timelist = []
-
-        for test in self.testparams:
-            #Two or one sets of parameters can be given. Depending on if we want to use
-            #different solvers for different steps.
-            try:
-                t1,t2 = test[0],test[1]
-            except KeyError:
-                t1,t2 = test,test
-            timer = Timings()
-            self.solver.setparam(t1,t2,timer)
-            self.solver.solve()
-            self.solver.report()
-            self.timelist.append(timer)
-
-##Default linear solver parameters to test.
-default_params =[{"linear_solver":"lu"},    \
-                 {"linear_solver":"gmres","preconditioner": "ilu"}, \
-                 {"linear_solver":"cg","preconditioner": "ilu"}]
-                 #{"linear_solver":"gmres","preconditioner":"ilu","absolute_tolerance":1.0e-5} ]
-
 
 ###################################################################
 #To the user:
@@ -148,7 +190,7 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
     #Create a range of mesh sizes
-    sizelist = [5.0,4.0,3.0,2.0,1.0]
+    sizelist = [0.8,0.7,0.6]
     problems = [pft.MagSphere(10,hmax = i) for i in sizelist]
 
     #Run the tests
