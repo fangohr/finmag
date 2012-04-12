@@ -14,7 +14,7 @@ llg = LLG(mesh)
 llg.Ms = 0.86e6
 llg.A = 13.0e-12
 llg.alpha = 0.5
-llg.set_m0((1,0,1))
+llg.set_m((1,0,1))
 llg.setup(use_exchange=True, use_dmi=False, use_demag=True, demag_method="weiwei")
 
 # Set up time integrator

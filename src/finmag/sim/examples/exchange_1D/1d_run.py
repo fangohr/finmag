@@ -14,7 +14,7 @@ simplexes = 10
 mesh = dolfin.Interval(simplexes, 0, length)
 
 llg = LLG(mesh)
-llg.set_m0((
+llg.set_m((
         '2*x[0]/L - 1',
         'sqrt(1 - (2*x[0]/L - 1)*(2*x[0]/L - 1))',
         '0'), L=length)
