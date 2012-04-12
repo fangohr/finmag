@@ -18,7 +18,11 @@ M0  = Constant((0,0,1))
 Mp = project(M0, V)
 print "This should be an array of 0 on the first 2/3 and 1 on the last 1/3:"
 print Mp.vector().array()
-print "... but it isn't. Don't know the reason why project gives this result yet."
+print "... but it isn't. The reason is that the default tolerances for "
+print "iterative solvers in dolfin (called as part of 'project') are affected"
+print "by the scale of the coordinates, and work best if the coordinates are"
+print "of order of unity."
+print "Change L=1e-8 to L=1, and the accuracy improves."
 
 # Using interpolate
 Mi = interpolate(M0, V)
