@@ -38,6 +38,9 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
           self.phiasolverparams = {"linear_solver":"lu"}
           self.phibsolverparams = {"linear_solver":"lu"}
 
+          #Countdown by bem assembly
+          self.countdown = True
+
      def solve(self):
           """
           Solve for the Demag field using GCR and FemBem
@@ -107,12 +110,14 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
           dimbem = len(self.doftionary)
           bemmatrix = np.zeros([dimbem,dimbem])
 
-          import progressbar as pb
-          bar = pb.ProgressBar(maxval=dimbem-1, \
-                 widgets=[pb.ETA(), pb.Bar('=', '[', ']'), ' ', pb.Percentage()])
+          if self.countdown == True:
+               import progressbar as pb
+               bar = pb.ProgressBar(maxval=dimbem-1, \
+                      widgets=[pb.ETA(), pb.Bar('=', '[', ']'), ' ', pb.Percentage()])
 
           for index,dof in enumerate(self.doftionary):
-               bar.update(index)
+               if self.countdown == True:
+                    bar.update(index)
                bemmatrix[index] = self.get_bem_row(self.doftionary[dof])
                #info("BEM Matrix line "+ str(index) + str(self.bemmatrix[index]))
           return bemmatrix
