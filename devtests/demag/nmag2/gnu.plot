@@ -58,3 +58,5 @@ plot \
     "averages.txt" using 1:4 title "M_z" with points lc rgbcolor "green"
 
 unset multiplot 
+
+pause -1
