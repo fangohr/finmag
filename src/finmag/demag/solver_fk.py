@@ -52,7 +52,9 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         eps = 1e-8
         a = dot(grad(self.u),grad(self.v))*dx - dot(eps*self.u,self.v)*dx 
         f = dot(n, self.M)*self.v*ds - div(self.M)*self.v*dx
+        self.linsolve_phi1(a,f)
 
+    def linsolve_phi1(self,a,f):
         # Solve for the DOFs in phi1
         solve(a == f, self.phi1,solver_parameters = self.phi1solverparams)
 
