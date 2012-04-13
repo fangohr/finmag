@@ -231,7 +231,7 @@ class FemBemDeMagSolver(DeMagSolver):
         a = dot(grad(self.u),grad(self.v))*dx
         self.poisson_matrix = assemble(a)
 
-    def solve_laplace_inside(self,function,solverparams = {"linear_solver":"lu"}):
+    def solve_laplace_inside(self,function,solverparams):
         """Take a functions boundary data as a dirichlet BC and solve
             a laplace equation"""
         bc = DirichletBC(self.V,function, "on_boundary")

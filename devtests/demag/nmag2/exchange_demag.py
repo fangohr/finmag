@@ -4,6 +4,7 @@ from finmag.sim.llg import LLG
 from finmag.util.convert_mesh import convert_mesh
 from scipy.integrate import ode
 import pylab as p
+import progressbar as pb
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -30,7 +31,14 @@ fh = open(MODULE_DIR + "/averages.txt", "w")
 xlist, ylist, zlist, tlist = [], [], [], []
 #time_series = TimeSeries(MODULE_DIR + "/simulation_data/sim")
 
+bar = pb.ProgressBar(maxval=60, \
+                widgets=[pb.ETA(), pb.Bar('=', '[', ']'), ' ', pb.Percentage()])
+counter = 0
+print "Time integration (this may take some time..)"
 while r.successful() and r.t <= T1:
+    bar.update(counter)
+    counter += 1
+
     mx, my, mz = llg.m_average
     xlist.append(mx)
     ylist.append(my)
@@ -40,12 +48,7 @@ while r.successful() and r.t <= T1:
     fh.write(str(r.t) + " " + str(mx) + " " + str(my) + " " + str(mz) + "\n")
     
     #time_series.store(llg._m.vector(), r.t)
-    print "integration time", r.t + dt
     r.integrate(r.t + dt)
-    #plot(llg._m)
-
-    print llg.H_ex
-    print llg.H_demag
 
 fh.close()
 p.plot(tlist, xlist, 'k', label='M_x')
@@ -53,5 +56,4 @@ p.plot(tlist, ylist, 'r', label='M_y')
 p.plot(tlist, zlist, 'b', label='M_z')
 p.legend()
 p.show()
-#interactive()
 
