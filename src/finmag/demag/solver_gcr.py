@@ -85,8 +85,14 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
           
           #Solve for phia
           A = self.phia_formA
-          solve(A,self.phia.vector(),F, \
-          form_compiler_parameters={"optimize": True},solver_parameters = self.phiasolverparams)
+          self.linsolve_phia(A,F)
+         
+     def linsolve_phia(self,A,F):
+          """
+          Linear solve for phia written for the
+          convenience of changing solver parameters in subclasses
+          """
+          solve(A,self.phia.vector(),F,solver_parameters = self.phiasolverparams)
           
      def solve_phib_boundary(self,phia,doftionary):
           """Solve for phib on the boundary using BEM"""

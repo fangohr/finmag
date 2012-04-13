@@ -250,9 +250,16 @@ class FemBemDeMagSolver(DeMagSolver):
         bc.apply(laplace_A)
         #Boundary values of laplace_f are overwritten on each call.
         bc.apply(self.laplace_f)
-        solve(laplace_A,function.vector(),\
-              self.laplace_f,\
-              solver_parameters = solverparams)
+        self.linsolve_laplace_inside(function,laplace_A,solverparams)        
+        return function
+
+    def linsolve_laplace_inside(self,function,laplace_A,solverparams = None):
+        """
+        Linear solve for laplace_inside written for the
+        convenience of changing solver parameters in subclasses
+        """
+        solve(laplace_A,function.vector(),self.laplace_f,\
+                  solver_parameters = solverparams)
         return function
         
 class TruncDeMagSolver(DeMagSolver):
