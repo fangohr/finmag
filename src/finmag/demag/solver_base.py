@@ -231,7 +231,7 @@ class FemBemDeMagSolver(DeMagSolver):
         a = dot(grad(self.u),grad(self.v))*dx
         self.poisson_matrix = assemble(a)
 
-    def solve_laplace_inside(self,function,solverparams):
+    def solve_laplace_inside(self,function,solverparams = None):
         """Take a functions boundary data as a dirichlet BC and solve
             a laplace equation"""
         bc = DirichletBC(self.V,function, "on_boundary")
@@ -251,7 +251,7 @@ class FemBemDeMagSolver(DeMagSolver):
         #Boundary values of laplace_f are overwritten on each call.
         bc.apply(self.laplace_f)
         solve(laplace_A,function.vector(),\
-              self.laplace_f,form_compiler_parameters={"optimize": True},\
+              self.laplace_f,\
               solver_parameters = solverparams)
         return function
         

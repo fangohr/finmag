@@ -17,8 +17,8 @@ from finmag.demag.solver_gcr import FemBemGCRSolver
 from finmag.demag.solver_fk import FemBemFKSolver
 
 ##Default linear solver parameters to test.
-default_params =[{"linear_solver":"lu"},    \
-                 {"linear_solver":"gmres","preconditioner": "ilu"}, \
+default_params =[{"linear_solver":"gmres","preconditioner": "ilu"}, \
+                 {"linear_solver":"lu"},    \
                  {"linear_solver":"cg","preconditioner": "ilu"}]
                  #{"linear_solver":"gmres","preconditioner":"ilu","absolute_tolerance":1.0e-5} ]
 
@@ -66,20 +66,59 @@ class LinAlgDemagTester(object):
             self.timelist.append(timer)
         #After the testing is finished delete the BEM to free up memory.
         del self.solver.bem
-            
 
-class FemBemGCRSolverLinalgTime(FemBemGCRSolver):
+class LinAlgTimer(object):
+    """Class containing shared methods for the GCR and FK linalg timing classes"""
+    
+    def solve_laplace_inside(self,function,solverparams):                                                          
+        """Take a functions boundary data as a dirichlet BC and solve
+            a laplace equation"""
+        
+        bc = DirichletBC(self.V,function, "on_boundary")
+        #Buffer data independant of M
+        if not hasattr(self,"poisson_matrix"):
+            self.build_poisson_matrix()
+        if not hasattr(self,"laplace_F"):
+            #RHS = 0
+            self.laplace_f = Function(self.V).vector()
+
+        #Copy the poisson matrix it is shared and should
+        #not have bc applied to it.
+        laplace_A = self.poisson_matrix
+        #Apply BC
+        bc.apply(laplace_A)
+        #Boundary values of laplace_f are overwritten on each call.
+        bc.apply(self.laplace_f)
+        self.timer.start("linsolve 2nd solve")
+        solve(laplace_A,function.vector(),\
+              self.laplace_f,\
+              solver_parameters = self.phi2solverparams)
+        self.timer.stop("linsolve 2nd solve")
+        return function
+
+    def setparam(self,p1,p2,timer):
+        self.phi1solverparams = p1
+        self.phi2solverparams = p2
+        self.timer = timer
+    
+    def report(self,n = 10):
+        print "".join(["Linear solve timings of the ",self.name])
+        print "mesh size in verticies = ",self.problem.mesh.num_vertices()
+        print "First solve parameters"
+        print self.phi1solverparams
+        print "Second solve parameters"
+        print self.phi2solverparams
+        print "\n",self.timer.report_str(n)
+
+
+class FemBemGCRSolverLinalgTime(FemBemGCRSolver,LinAlgTimer):
     """GCR solver with timings for linear solve"""
     
     def __init__(self,problem):
         FemBemGCRSolver.__init__(self,problem)
         #Switch off the BEM countdown
         self.countdown = False
-
-    def setparam(self,p1,p2,timer):
-        self.phiasolverparams = p1
-        self.phibsolverparams = p2
-        self.timer = timer
+        self.name = "GCR Solver"
 
     def solve_phia(self):
         V = self.phia.function_space()
@@ -101,79 +140,34 @@ class FemBemGCRSolverLinalgTime(FemBemGCRSolver):
 
         #Solve for phia
         A = self.phia_formA
-        self.timer.start("linsolve solve_phia")
+        self.timer.start("linsolve 1st solve")
         solve(A,self.phia.vector(),F, \
-        form_compiler_parameters={"optimize": True},solver_parameters = self.phiasolverparams)
-        self.timer.stop("linsolve solve_phia")
-    
-    def solve_laplace_inside(self,function,solverparams):                                                          
-        """Take a functions boundary data as a dirichlet BC and solve
-            a laplace equation"""
-        
-        bc = DirichletBC(self.V,function, "on_boundary")
-        #Buffer data independant of M
-        if not hasattr(self,"poisson_matrix"):
-            self.build_poisson_matrix()
-        if not hasattr(self,"laplace_F"):
-            #RHS = 0
-            self.laplace_f = Function(self.V).vector()
-
-        #Copy the poisson matrix it is shared and should
-        #not have bc applied to it.
-        laplace_A = self.poisson_matrix
-        #Apply BC
-        bc.apply(laplace_A)
-        #Boundary values of laplace_f are overwritten on each call.
-        bc.apply(self.laplace_f)
-        self.timer.start("linsolve solve_phib")
-        solve(laplace_A,function.vector(),\
-              self.laplace_f,form_compiler_parameters={"optimize": True},\
-              solver_parameters = solverparams)
-        self.timer.stop("linsolve solve_phib")
-        return function
-
-    def report(self,n = 10):
-        print "\n Linear solve timings of the GCR demag solver"
-        print "mesh size in verticies = ",self.problem.mesh.num_vertices()
-        print "phia parameters"
-        print self.phiasolverparams
-        print "phib parameters"
-        print self.phibsolverparams
-        print "\n",self.timer.report_str(n)
+        solver_parameters = self.phi1solverparams)
+        self.timer.stop("linsolve 1st solve")
 
 
-class FemBemFKSolverLinalgTime(FemBemFKSolver):
+class FemBemFKSolverLinalgTime(FemBemFKSolver,LinAlgTimer):
     """FK solver with timings for linear solve"""
     
     def __init__(self,problem,timer):
         FemBemFKSolver.__init__(self,problem)
         #Switch off the BEM countdown
         self.countdown = False
-
-    def setparam(self,p1,p2):
-        self.phi1solverparams = p1
-        self.phi2solverparams = p2
-        self.timer = timer
+        self.name = "FK Solver"
 
     def compute_phi1(self, M, V,solverparams):
-        self.timer.start("linsolve solve_phi1")
-        FemBemFKSolver.solve_laplace_inside(self,function,solverparams)
-        self.timer.stop("linsolve solve_phi1")                                                  
-    
-    def solve_laplace_inside(self,function,solverparams):
-        self.timer.start("linsolve solve_phi2")
-        FemBemFKSolver.solve_laplace_inside(self,function,solverparams)
-        self.timer.stop("linsolve solve_phi2")                                                  
+        # Define functions
+        n = FacetNormal(V.mesh())
+        
+        # Define forms
+        eps = 1e-8
+        a = dot(grad(self.u),grad(self.v))*dx - dot(eps*self.u,self.v)*dx 
+        f = dot(n, self.M)*self.v*ds - div(self.M)*self.v*dx
 
-    def report(self,n = 10):
-        print "Linear solve timings of the FK demag solver"
-        print "mesh size in verticies = ",self.problem.mesh.num_vertices()
-        print "phi1 parameters"
-        print self.phi1solverparams
-        print "phi2 parameters"
-        print self.phi2solverparams
-        print "\n",self.timer.report_str(n)
-
+        # Solve for the DOFs in phi1
+        self.timer.start("linsolve 1st solve")
+        solve(a == f, self.phi1,solver_parameters = self.phi1solverparams)
+        self.timer.stop("linsolve 2nd solve")                                                  
 
 
 ###################################################################
@@ -190,7 +184,7 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
     #Create a range of mesh sizes
-    sizelist = [0.8,0.7,0.6]
+    sizelist = [4.0,3.0,2.0]
     problems = [pft.MagSphere(10,hmax = i) for i in sizelist]
 
     #Run the tests
@@ -212,27 +206,3 @@ if __name__ == "__main__":
     plt.title("Demag Linear Solver times")
     plt.legend()
     plt.show()
-    
-##    
-##        #Generate the plots
-##        figurenum = 2
-##        #For every error-norm combination we want to plot...
-##        for i,errorname in enumerate(self.errordata[self.errordata.keys()[0]]):
-##            if i <> 0 and i % 4 ==0:
-##                #The subplots are full so start a new page
-##                plt.figure(figurenum)
-##                figurenum += 1
-##            #put the subplot in position i modulo 4 + 1
-##            plotnum = self.subplots + str(i%4+1)
-##            plt.subplot(*plotnum)
-##            
-##            #... the solutions errors for evey solver
-##            for j,sol in enumerate(self.test_solver_classes):
-##                #TODO plot the error data correctly
-##                plt.plot(self.xaxis[1],self.errordata[sol][errorname],self._styledic[j],label = sol)
-##            #Give the plot titles
-##            plt.title(errorname)
-##            plt.xlabel(self.xaxis[0])
-##            plt.ylabel("Error")
-##            plt.legend()
-##        plt.show()
