@@ -37,38 +37,9 @@ class GCRtimings(FemBemGCRSolver):
     
     def assemble_qvector_exact(self):
         ti.timings.start("assemble_qvector_exact")
-        
-        qtime.start("q = np.zeros(len(self.normtionary))")
-        q = np.zeros(len(self.normtionary))
-        qtime.stop("q = np.zeros(len(self.normtionary))")
-        
-        #Get gradphia as a vector function
-        qtime.start("gradphia = df.project(df.grad(self.phia), VectorFunctionSpace(self.V.mesh(),'DG',0))")
-        gradphia = df.project(df.grad(self.phia), df.VectorFunctionSpace(self.V.mesh(),"DG",0))
-        qtime.stop("gradphia = df.project(df.grad(self.phia), VectorFunctionSpace(self.V.mesh(),'DG',0))")
-        for i,dof in enumerate(self.doftionary):
-            qtime.start("ri = self.doftionary[dof]")
-            ri = self.doftionary[dof]
-            qtime.stop("ri = self.doftionary[dof]")
-            qtime.start("n = self.normtionary[dof]")
-            n = self.normtionary[dof]
-            qtime.stop("n = self.normtionary[dof]")
-
-            #Take the dot product of n with M + gradphia
-            qtime.start("rtup = tuple(ri)")
-            rtup = tuple(ri)
-            qtime.stop("rtup = tuple(ri)")
-            qtime.start("M_array = np.array(self.M(rtup))")
-            M_array = np.array(self.M(rtup))
-            qtime.stop("M_array = np.array(self.M(rtup))")
-            qtime.start("gphia_array = np.array(gradphia(rtup))")
-            gphia_array = np.array(gradphia(rtup))
-            qtime.stop("gphia_array = np.array(gradphia(rtup))")
-            qtime.start("q[i] = np.dot(n,M_array+gphia_array)")
-            q[i] = np.dot(n,M_array+gphia_array)
-            qtime.stop("q[i] = np.dot(n,M_array+gphia_array)")
+        r = super(GCRtimings,self).assemble_qvector_exact()
         ti.timings.stop("assemble_qvector_exact")
-        return q
+        return r
     
     ###Methods of FemBemDeMagSolver###
     def calc_phitot(self,func1,func2):
@@ -129,10 +100,6 @@ class GCRtimingsFull(GCRtimings):
         r = super(GCRtimings,self).restrict_to(bigvector)
         ti.timings.stop("restrict_to")
         return r
-    
-
-#Create an extra timing object for the method assemble_qvector_exact
-qtime = ti.Timings()
     
 if __name__ == "__main__":
     problem = MagSphere20()
