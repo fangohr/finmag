@@ -19,3 +19,4 @@ def test_compare_averages():
         assert abs(mx - mx_ref) < TOLERANCE
         assert abs(my - my_ref) < TOLERANCE
         assert abs(mz - mz_ref) < TOLERANCE
+
