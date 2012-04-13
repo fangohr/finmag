@@ -47,6 +47,7 @@ sim.set_m(m0)
 # Save the anisotropy field once at the beginning of the simulation
 # for comparison with finmag
 np.savetxt("anis_t0_ref.txt", sim.get_subfield("H_anis_Py"))
+np.savetxt("m_t0_ref.txt", sim.get_subfield("m_Py"))
 
 with open("third_node_ref.txt", "w") as fh:
     t = t0 = 0; t1 = 3e-10; dt = 5e-12 # s
