@@ -15,20 +15,20 @@ set tmargin 0
 set bmargin 3
 
 set xlabel "time (s)"
-set xrange [0:1e-8]
+set xrange [0:3e-10]
 set xtic 0, 2e-10, 8e-10
 set format x "%.0g"
 
 set ylabel "ratio"
-set yrange [0.1 : 2]
-set ytic 0.0, 1.0, 1.9
+set yrange [0.0 : 2]
+set ytic 0.0, 0.5, 1.5
 set format y "%.1f"
 
 set nokey
 plot \
-    "< paste averages_ref.txt averages.txt" using 1:($2/$6), \
-    "< paste averages_ref.txt averages.txt" using 1:($3/$7), \
-    "< paste averages_ref.txt averages.txt" using 1:($4/$8)
+    "< paste averages_ref.txt averages.txt" using 1:($2/$6) lc rgbcolor "red", \
+    "< paste averages_ref.txt averages.txt" using 1:($3/$7) lc rgbcolor "blue", \
+    "< paste averages_ref.txt averages.txt" using 1:($4/$8) lc rgbcolor "green"
 
 #
 # UPPER GRAPH - Magnetisations.
@@ -44,7 +44,7 @@ set xlabel ""
 set format x ""
 
 set ylabel "polarisation"
-set yrange [-0.6:1]
+set yrange [-0.8:1]
 set ytic -0.5 0.5 1
 set format y "%.1g"
 

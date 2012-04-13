@@ -1,33 +1,38 @@
 import os
 import dolfin
-import numpy
+import numpy as np
 import finmag.sim.helpers as h
 from finmag.sim.llg import LLG
 from scipy.integrate import ode
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
-TOLERANCE = 4e-1
+TOLERANCE = 1e-1
 
 # define the mesh
-length = 20e-9 # m
-simplexes = 10
-mesh = dolfin.Interval(simplexes, 0, length)
+x_max = 100e-9 # m
+simplexes = 50
+mesh = dolfin.Interval(simplexes, 0, x_max)
 
-# initial configuration of the magnetisation
-m0_x = '2*x[0]/L - 1'
-m0_y = 'sqrt(1 - (2*x[0]/L - 1)*(2*x[0]/L - 1))'
-m0_z = '0'
+def m_gen(coords):
+  xs = coords[0]
+  mx = np.minimum(np.ones(len(xs)), xs/x_max)
+  mz = 0.1 * np.ones(len(xs))
+  my = np.sqrt(1.0 - (0.99*mx**2 + mz*mz))
+  return np.array([mx, my, mz])
+
+coords = np.array(zip(* mesh.coordinates()))
+m0 = m_gen(coords).flatten()
 
 K1 = 520e3 # J/m^3
 
 llg = LLG(mesh)
 llg.Ms = 0.86e6
 llg.alpha = 0.2
-llg.set_m((m0_x, m0_y, m0_z), L=length)
+llg.set_m(m0)
 llg.add_uniaxial_anisotropy(K1, dolfin.Constant((0, 0, 1)))
 llg.setup(use_exchange=False)
 
-t0 = 0; t1 = 1e-8; dt = 1e-10; # s
+t0 = 0; t1 = 3e-10; dt = 5e-12; # s
 # ode takes the parameters in the order t, y whereas odeint and we use y, t.
 llg_wrap = lambda t, y: llg.solve_for(y, t)
 r = ode(llg_wrap).set_integrator("vode", method="bdf")
@@ -51,7 +56,7 @@ def setup_module(module):
         mx, my, mz = h.components(llg.m)
         m2x, m2y, m2z = mx[2], my[2], mz[2]
         third_node.append([r.t, m2x, m2y, m2z])
-        tn_f.write(str(r.t) + " " + str(mx) + " " + str(my) + " " + str(mz) + "\n")
+        tn_f.write(str(r.t) + " " + str(m2x) + " " + str(m2y) + " " + str(m2z) + "\n")
 
         r.integrate(r.t + dt)
 

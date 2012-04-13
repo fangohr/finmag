@@ -1,11 +1,12 @@
 # One dimensional magnetic system studied using nsim
+import math
 import nmag
 from nmag import SI, mesh
 from nsim.si_units.si import mu0, degrees_per_ns
 import nmeshlib.unidmesher as unidmesher
 
 # Details about the layers and the mesh and the material
-length = 20.0             # in nanometers
+length = 100.0             # in nanometers
 mesh_unit = SI(1e-9, "m") # mesh unit (1 nm)
 layers = [(0.0, length)]  # the mesh
 discretization = 2.0      # discretization
@@ -15,9 +16,10 @@ xfactor = float(SI("m")/(length*mesh_unit))
 
 def m0(r):
   x = max(0.0, min(1.0, r[0]*xfactor))
-  mx = 2.0*x - 1.0
-  my = (1.0 - mx*mx)**0.5
-  return [mx, my, 0.0]
+  mx = x
+  mz = 0.1
+  my = (1.0 - (mx*mx*0.99 + mz*mz))**0.5
+  return [mx, my, mz]
 
 dx = 0.5*float(discretization*mesh_unit/SI("m"))
 xmin = dx
@@ -57,7 +59,7 @@ from nsim.when import every, at
 sim.relax(save=[('averages', every('time', SI(5e-12, "s")))])
 """
 
-t = t0 = 0; t1 = 1e-8; dt = 1e-10 # s
+t = t0 = 0; t1 = 3e-10; dt = 5e-12 # s
 fh = open("third_node_ref.txt", "w")
 while t <= t1:
     sim.save_data("fields")
