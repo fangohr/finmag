@@ -14,15 +14,14 @@ def test_small_problem():
 
 def test_one_dimensional_problem():
     results = one_dimensional_problem()
-    REL_TOLERANCE = 0.0006 #for 200 nodes
-    REL_TOLERANCE = 2e-9 #for 100,000 FE nodes
+    REL_TOLERANCE = 1e-9 #for 100,000 FE nodes, 6e-4 for 200 nodes
 
     print "1d: rel_diff_max:",np.nanmax(results["rel_diff"])
     assert np.nanmax(results["rel_diff"]) < REL_TOLERANCE
 
 def test_three_dimensional_problem():
     results = three_dimensional_problem()
-    REL_TOLERANCE = 1e-14
+    REL_TOLERANCE = 5e-6
     print "3d: rel_diff_max:",np.nanmax(results["rel_diff"])
     assert np.nanmax(results["rel_diff"]) < REL_TOLERANCE
 
@@ -46,25 +45,24 @@ def one_dimensional_problem():
 
     def m_gen(rs):
       xs = rs[0]
-      return np.array([2*xs/x_max - 1, np.sqrt(1 - (2*xs/x_max - 1)**2), np.zeros(len(xs))])
+      return np.array([xs/x_max, np.sqrt(1 - (xs/x_max)**2), np.zeros(len(xs))])
 
     return compare_anisotropy(m_gen, K1, (1, 1, 1), dolfin_mesh, oommf_mesh, dims=1, name="1D")
 
 def three_dimensional_problem():
-    x_max = 20e-9; y_max = 10e-9; z_max = 10e-9;
-    x_n=20; y_n=10; z_n=10
-    dolfin_mesh = df.Box(0, 0, 0, x_max, y_max, z_max, x_n, y_n, z_n)
-    oommf_mesh = mesh.Mesh((x_n, y_n, z_n), size=(x_max, y_max, z_max))
+    x_max = 100e-9; y_max = z_max = 1e-9;
+    x_n=5000; y_n = z_n = 1;
 
-    # for a trivial magnetisation like this, the coarseness of the mesh doesn't seem
-    # to be very influential. That's a good second example for the convergence tests.
+    dolfin_mesh = df.Box(0, 0, 0, x_max, y_max, z_max, x_n, y_n, z_n)
+    print dolfin_mesh.num_vertices()
+    oommf_mesh = mesh.Mesh((x_n, y_n, z_n), size=(x_max, y_max, z_max))
 
     def m_gen(rs):
       xs = rs[0]
-      return np.array([np.ones(len(xs)), np.zeros(len(xs)), np.zeros(len(xs))])
+      return np.array([xs/x_max, np.sqrt(1 - (0.9*xs/x_max)**2 - 0.01), 0.1*np.ones(len(xs))])
 
     from finmag.util.oommf.comparison import compare_anisotropy
-    return compare_anisotropy(m_gen, K1, (1, 1, 1), dolfin_mesh, oommf_mesh, dims=3, name="3D")
+    return compare_anisotropy(m_gen, K1, (0, 0, 1), dolfin_mesh, oommf_mesh, dims=3, name="3D")
 
 if __name__ == '__main__':
     res0 = small_problem()
