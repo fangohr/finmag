@@ -14,7 +14,7 @@ import numpy as np
 import progressbar as pb
 
 class FemBemFKSolver(sb.FemBemDeMagSolver):
-    """FemBem solver for Demag Problems using the Fredkin-Koehler approach."""
+    """FemBem solver for Demag Problems using the Fredkin-Koehler approach.""" 
 
     def __init__(self, problem, degree=1):
         super(FemBemFKSolver,self).__init__(problem, degree)
@@ -34,7 +34,7 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
 
         """
         # Define functions
-        n = FacetNormal(V.mesh())
+        n = FacetNormal(self.V.mesh())
         
         # Define forms
         eps = 1e-8
