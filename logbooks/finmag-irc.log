@@ -889,3 +889,45 @@ fangohr: Still testing ...
 2012-04-12 17:39:18 mb8g11: Done. It's all yours.
 2012-04-12 17:48:58 andersej: Well, it appears that we have done almost exactly the same.. I could just go home, but it's a thunderstorm outside.
 2012-04-12 18:10:50 andersej: Seems quiet now, I'll try to go home. Over and out!
+2012-04-13 08:20:35 andersej: Good morning!
+2012-04-13 09:03:36 fangohr: Good morning, all.
+2012-04-13 09:08:43 andersej: Morning, Hans!
+2012-04-13 09:12:45 mb8g11: Good morning!
+2012-04-13 09:13:00 andersej: Good morning, Marc Antonio!
+2012-04-13 09:35:28 andersej: I have cloned new repositories on both my own machine and osiris, but still I get different values in averages.txt from exchange_demag. Is there a logical explanation to this?
+2012-04-13 09:44:36 andersej: What results do you get, by the way? On time 1e-10, my x-component is -0.01086 on osiris and -0.01104 on aleph0.
+2012-04-13 09:54:20 mb8g11: I love the progressbars, btw.
+2012-04-13 09:54:28 andersej: Hehe..
+2012-04-13 09:54:59 fangohr: Me too.
+2012-04-13 09:55:28 mb8g11: -0.0108648697522
+2012-04-13 09:56:33 andersej: Exactly the same as I get on osiris. Why don't I get it here as well?
+2012-04-13 09:57:24 fangohr: Different dolfin version (buggy trunk?)
+2012-04-13 09:57:59 andersej: No, I have installed the stable build.
+2012-04-13 09:57:59 mb8g11: first batch of intel sandy bridge processors (buggy cpu?) ;)
+2012-04-13 09:59:00 andersej: That doesn't sound good..
+2012-04-13 10:04:12 mb8g11: It was meant to be a joke :-/
+2012-04-13 10:11:42 andersej: Hehe.. I have to revisit this later, I'm trying to understand Weiwei's code.
+2012-04-13 10:44:44 mb8g11: Wow. My nmag anisotropy fields has non-zero components in all directions. My finmag anisotropy only has a non-zero z-component.
+2012-04-13 10:45:50 mb8g11: $ python finmag/src/finmag/tests/nmag/anisotropy_1d/test_nmag_1d_anisotropy.py
+2012-04-13 10:45:58 fangohr: Ah, that's nothing to worry about. Nmag is making things unnecessarily complicated. The reason for this is that the term that enters the LLG is H cross M. In the process, only the components of H that are perpendicular to M survive.
+2012-04-13 10:46:16 fangohr: So this is fine as long as we do not do LLB physics or use the Baryakhter term for damping.
+2012-04-13 10:47:24 fangohr: If it is easily done, you could compare M cross H (or H cross M) for every node. This should give better agreement. Having said that, if the agreement between finmag and magpar is good, then I am happy to keep the odd nmag results with a short note (based on my comments above).
+2012-04-13 10:52:51 mb8g11: I'm nearly there, might as well go the whole way.
+2012-04-13 11:24:10 andersej: Hello, Sebastian!
+2012-04-13 11:24:19 mb8g11: Nice, it works, thanks Hans!
+2012-04-13 11:24:21 SebastianS: good morning ;-)
+2012-04-13 11:38:43 fangohr: Good Morning Sebastian. :)
+2012-04-13 12:07:25 mb8g11: Anyone working on the scaling factor for the mesh coordinates?
+2012-04-13 12:07:41 fangohr: No.
+2012-04-13 12:07:54 fangohr: I'd love to do this, but I shouldn't ...
+2012-04-13 12:09:14 mb8g11: You have a good reason not to, now... just grabbed the task on pivotal tracker :)
+2012-04-13 12:11:49 fangohr: Great.
+2012-04-13 12:11:55 fangohr: Just added the following idea to the story: Had another thought about this though: we should maybe save the attribute that carries the scaling factor in the dolfin mesh class object (!). Maybe call it something like .finmag_cscale for FINMAG CoordinateSCALE, say. It is a bit risky to just add an attribute to a class (as the dolfin folks may want to use that attribute in the future) but prepending it with 'finmag' should reduce that risk significantly.
+2012-04-13 12:11:55 fangohr: plus side is that the scale information is available everywhere (I hope?) where we have (direct) access to the mesh object but may not have access to the LLG class. So this would reduce the number of parameters we need to pass, for example, to the exchange object.
+2012-04-13 12:19:10 andersej: I'm in desperat need for some food now.
+2012-04-13 12:19:38 fangohr: Okay, then, I give in. I'll pick you up in 3 minutes. Sebastian, are you joining us as well?
+2012-04-13 12:19:45 fangohr: What about Dokosbot?
+2012-04-13 12:23:15 SebastianS: jep
+2012-04-13 12:23:18 SebastianS: on my way
+2012-04-13 13:46:37 mb8g11: Lunch, see you later.
+2012-04-13 16:16:56 fangohr: Over and out for some hours.
