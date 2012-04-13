@@ -36,9 +36,10 @@ def setup_module(module=None):
     llg.add_uniaxial_anisotropy(K1, dolfin.Constant((0, 0, 1)))
     llg.setup(use_exchange=False)
 
-    # Save H_anis at t0 for comparison with nmag
-    global H_anis
-    H_anis = llg._anisotropies[0].compute_field()
+    # Save H_anis and m at t0 for comparison with nmag
+    global H_anis_t0, m_t0
+    H_anis_t0 = llg._anisotropies[0].compute_field()
+    m_t0 = llg.m
 
     t0 = 0; t1 = 3e-10; dt = 5e-12; # s
     # ode takes the parameters in the order t, y whereas odeint and we use y, t.
@@ -88,20 +89,31 @@ def test_third_node():
     diff = np.delete(np.abs(ref - computed), [0], 1) # diff without time information
     assert np.max(diff) < TOLERANCE
 
-@pytest.mark.xfail
-def test_anisotropy_field():
-    REL_TOLERANCE = 1e-3
+def test_m_cross_H():
+    """
+    compares m x H_anis at the beginning of the simulation.
+    motivation: Hans on IRC, 13.04.2012 10:45
 
-    ref = np.genfromtxt(MODULE_DIR + "/anis_t0_ref.txt")
-    computed = h.vectors(H_anis)
+    """ 
+    REL_TOLERANCE = 5e-4
 
-    diff = np.abs(computed - ref)
-    rel_diff = diff / ref
-    print "Expected:\n", ref, "\ngot:\n", computed
+    m_ref = np.genfromtxt(MODULE_DIR + "/m_t0_ref.txt")
+    m_computed = h.vectors(m_t0)
+    assert m_ref.shape == m_computed.shape
 
-    print "Comparing the anisotropy fields of finmag and nmag."
-    print "The maximum relative difference should be smaller than 1e-3."
-    assert np.nanmax(np.abs(rel_diff)) < REL_TOLERANCE 
+    H_ref = np.genfromtxt(MODULE_DIR + "/anis_t0_ref.txt")
+    H_computed = h.vectors(H_anis_t0)
+    assert H_ref.shape == H_computed.shape
+
+    assert m_ref.shape == H_ref.shape
+    m_cross_H_ref = np.cross(m_ref, H_ref)
+    m_cross_H_computed = np.cross(m_computed, H_computed)
+
+    diff = np.abs(m_cross_H_ref - m_cross_H_computed)
+    max_norm = max([h.norm(v) for v in m_cross_H_ref])
+    rel_diff = diff/max_norm
+  
+    assert np.max(rel_diff) < REL_TOLERANCE
 
 if __name__ == '__main__':
     setup_module()
