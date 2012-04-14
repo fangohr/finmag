@@ -10,8 +10,8 @@ from finmag.demag.solver_gcr import FemBemGCRSolver
 from finmag.demag.solver_fk import FemBemFKSolver
 import finmag.demag.problems.prob_base as pb
 
-#Importing this module activates the benchmark tests
 from dolfin import *
+#Importing this module activates the benchmark tests
 from solver_benchmark import *
 
 class GCRSolverBenchmark(FemBemGCRSolver):
