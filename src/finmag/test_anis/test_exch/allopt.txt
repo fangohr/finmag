@@ -1,4 +1,0 @@
--simName test_exch
--init_mag 0
--inp 0000
--demag 0
