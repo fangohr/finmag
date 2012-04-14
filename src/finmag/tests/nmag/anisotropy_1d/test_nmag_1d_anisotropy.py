@@ -75,6 +75,7 @@ def test_averages():
     assert np.max(dt) < 1e-15, "Compare timesteps."
 
     diff = np.delete(np.abs(ref - computed), [0], 1) # diff without time information
+    print "test_averages: max diff=",np.max(diff)
     assert np.max(diff) < TOLERANCE
 
 def test_third_node():
@@ -87,6 +88,7 @@ def test_third_node():
     assert np.max(dt) < 1e-15, "Compare timesteps."
 
     diff = np.delete(np.abs(ref - computed), [0], 1) # diff without time information
+    print "test_third_node_H: max diff=",np.max(diff)
     assert np.max(diff) < TOLERANCE
 
 def test_m_cross_H():
@@ -113,6 +115,7 @@ def test_m_cross_H():
     max_norm = max([h.norm(v) for v in m_cross_H_ref])
     rel_diff = diff/max_norm
   
+    print "test_m_cross_H: max rel diff=",np.max(rel_diff)
     assert np.max(rel_diff) < REL_TOLERANCE
 
 if __name__ == '__main__':
