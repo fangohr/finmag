@@ -6,7 +6,7 @@ from finmag.sim.llg import LLG
 from scipy.integrate import ode
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
-TOLERANCE = 4e-1
+TOLERANCE = 4e-1 #why is this so large? Do we need to move to relative errors?
 
 # define the mesh
 length = 20e-9 # m
@@ -60,21 +60,29 @@ def setup_module(module):
 def test_angles():
     m = h.vectors(llg.m)
     angles = numpy.array([h.angle(m[i], m[i+1]) for i in xrange(len(m)-1)])
+    print "test_angels: max-difference=",abs(angles.max() - angles.min())
     assert abs(angles.max() - angles.min()) < TOLERANCE
 
 def test_compare_averages():
     ref = [line.strip().split() for line in open(MODULE_DIR + "/averages_ref.txt")]
 
+    print "test_compare_averages():"
     for i in range(len(ref)):
         t_ref, mx_ref, my_ref, mz_ref = ref[i]
         t, mx, my, mz = averages[i]
         
         assert abs(float(t_ref) - t) < dt/2 
-        print "t={0}: ref={1}|{2}|{3} computed:{4}|{5}|{6}.".format(
-                t, mx_ref, my_ref, mz_ref, mx, my, mz)
-        assert abs(float(mx_ref) - mx) < TOLERANCE
-        assert abs(float(my_ref) - my) < TOLERANCE
-        assert abs(float(mz_ref) - mz) < TOLERANCE
+        #print "t={0}: ref={1}|{2}|{3} computed:{4}|{5}|{6}.".format(
+        #        t, mx_ref, my_ref, mz_ref, mx, my, mz)
+        diff = abs(float(mx_ref) - mx)
+        print "mx_ref-mx =",diff,"; TOL=",TOLERANCE
+        assert  diff < TOLERANCE
+        diff = abs(float(my_ref) - my) 
+        print "my_ref-my =",diff,"; TOL=",TOLERANCE
+        assert  diff < TOLERANCE
+        diff=abs(float(mz_ref) - mz) 
+        print "mz_ref-mz =",diff,"; TOL=",TOLERANCE
+        assert  diff < TOLERANCE
 
 def test_compare_third_node():
     ref = [line.strip().split() for line in open(MODULE_DIR + "/third_node_ref.txt")]
