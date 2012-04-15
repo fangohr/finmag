@@ -14,8 +14,8 @@ from dolfin import *
 import finmag.demag.problems.prob_base as pb
 from finmag.util.timings import Timings
 from finmag.demag.solver_gcr import FemBemGCRSolver
-from finmag.demag.solver_fk import FemBemFKSolverFemBemDeMagSolver
-import finmag.demag.solver_base as sb
+from finmag.demag.solver_fk import FemBemFKSolver
+from finmag.demag.solver_base import FemBemDeMagSolver
 
 ##Default linear solver parameters to test.
 default_params =[{"linear_solver":"gmres","preconditioner": "ilu"}, \
@@ -68,7 +68,7 @@ class LinAlgDemagTester(object):
         #After the testing is finished delete the BEM to free up memory.
         del self.solver.bem
 
-class LinAlgTimer(sb.FemBemDeMagSolver):
+class LinAlgTimer(FemBemDeMagSolver):
     """Class containing shared methods for the GCR and FK linalg timing classes"""
 
     def linsolve_laplace_inside(self,function,laplace_A,solverparams = None):
@@ -78,7 +78,7 @@ class LinAlgTimer(sb.FemBemDeMagSolver):
         """
         self.timer.start("2nd linear solve")    
         function = FemBemDeMagSolver.linsolve_laplace_inside(self,function,laplace_A,solverparams)
-        self.timer.start("2nd linear solve")
+        self.timer.stop("2nd linear solve")
         return function
 
     def setparam(self,p1,p2,timer):
@@ -107,7 +107,7 @@ class FemBemGCRSolverLinalgTime(FemBemGCRSolver,LinAlgTimer):
     def linsolve_phia(self,A,F):
         """Linear solve for phia"""
         self.timer.start("1st linear solve")
-        FemBemGCRSolver.linsolve_phia(A,F)
+        FemBemGCRSolver.linsolve_phia(self,A,F)
         self.timer.stop("1st linear solve")
     
 class FemBemFKSolverLinalgTime(FemBemFKSolver,LinAlgTimer):

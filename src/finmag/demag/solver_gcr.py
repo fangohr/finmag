@@ -15,16 +15,7 @@ from instant import inline_with_numpy
 #Set allow extrapolation to true#
 parameters["allow_extrapolation"] = True
 logger = logging.getLogger(name='finmag')
-     
-##class GCRDeMagSolver(sb.DeMagSolver):
-##     """Class containing methods shared by GCR solvers"""
-##     def __init__(self,problem,degree = 1):
-##          super(GCRDeMagSolver,self).__init__(problem,degree)
-##          #Define the two potentials
-##          self.phia = Function(self.V)
-##          self.phib = Function(self.V)
-##          self.phi = Function(self.V)
-##          
+       
 class FemBemGCRSolver(sb.FemBemDeMagSolver):
      """FemBem solver for Demag Problems using the GCR approach"""
     
