@@ -21,12 +21,14 @@ class GCRSolverBenchmark(FemBemGCRSolver):
     
     def linsolve_phia(self,A,F):
         """Linear solve for phia"""
-        solve(A,self.phia.vector(),F,solver_parameters = self.phiasolverparams, return_best = 3, benchmark = True)
+        print "\n GCR Solver First linear solve Benchmark \n"
+        solve(A,self.phia.vector(),F,solver_parameters = self.phiasolverparams, benchmark = True)
         
     def linsolve_laplace_inside(self,function,laplace_A,solverparams = None):
         """Linear solve for laplace_inside"""
+        print "\n GCR Solver Second linear solve Benchmark \n"
         solve(laplace_A,function.vector(),self.laplace_f,\
-                  solver_parameters = solverparams, return_best = 3, benchmark = True)
+                  solver_parameters = solverparams, benchmark = True)
         return function
     
 def test_linalgtimes(mesh,M,solver):
@@ -43,5 +45,5 @@ def test_linalgtimes(mesh,M,solver):
 if __name__ == "__main__":
     #As a default benchmark GCR solver on a unit sphere mesh
     import finmag.demag.problems.prob_fembem_testcases as pft
-    problem = pft.MagSphere(10,2.0)
+    problem = pft.MagSphere(10,1.3)
     test_linalgtimes(problem.mesh,problem.M,"GCR")
