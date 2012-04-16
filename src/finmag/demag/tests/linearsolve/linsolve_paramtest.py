@@ -18,6 +18,8 @@ from finmag.demag.solver_gcr import FemBemGCRSolver
 from finmag.demag.solver_fk import FemBemFKSolver
 from finmag.demag.solver_base import FemBemDeMagSolver
 
+
+#Generate all possible solver parameters
 def solver_parameters(solver_exclude, preconditioner_exclude):
     linear_solver_set = ["lu"] 
     linear_solver_set += [e[0] for e in dolfin.krylov_solver_methods()]
@@ -61,7 +63,6 @@ class LinAlgDemagTester(object):
             raise Exception("Only 'FK, and 'GCR' solver values possible")
                     
     def test(self):
-
         #Create a list of timer objects, there will be 1 timer for each set of parameters
         self.timelist = []
 
@@ -147,20 +148,20 @@ class FemBemFKSolverLinalgTime(FemBemFKSolver,LinAlgTimer):
 ##df.info(df.LinearVariationalSolver.default_parameters(), 1)
 
 if __name__ == "__main__":
+    #Solver type for use in the script, "FK" or "GCR".
+    fembemsolvertype = "GCR"
 
     ##Default linear solver parameters to test.
+    ## Each entry can either be a single dictionary or a tuple/list of dictionaries.
+    ## In the single case both linear solves will be computed using the specified parameters.
+    ## If a tuple/list is given the 1st solve is done according to the 1st parameter dictionary,
+    ## and the 2nd solve according to the 2ns parameter dictionary.
+
     default_params =[{"linear_solver":"gmres","preconditioner": "ilu"}, \
                      {"linear_solver":"lu"},    \
                      {"linear_solver":"cg","preconditioner": "ilu"},
                      {"linear_solver":"gmres","preconditioner":"ilu","absolute_tolerance":1.0e-5},
                      {"linear_solver":"gmres","preconditioner":"ilu","relative_tolerance":1.0e-5}]
-
-    #have we swapped preconditioners and linear_solvers? Not sure (HF).
-    #default_params =[{"linear_solver":"ilu","preconditioner": "gmres"}, \
-    #                 {"linear_solver":"lu"},    \
-    #                 {"linear_solver":"ilu","preconditioner": "cg"},
-    #                 {"linear_solver":"ilu","preconditioner":"gmres","absolute_tolerance":1.0e-5}]
-
 
     #to use all methods, activate next line
     #default_params = solver_parameters(solver_exclude=[], preconditioner_exclude=[])
@@ -174,33 +175,47 @@ if __name__ == "__main__":
 
     #Create a range of mesh sizes
     sizelist = [4,2,1.5]
-    sizelist = reversed([4,3,2,1.5,1.0])
+    #Important use floats here so the entry order stays consistent 
+    sizelist = ([4.0,3.0,2.0,1.5,1.0])
     problems = [pft.MagSphere(10,hmax = i) for i in sizelist]
 
     #Run the tests
-    testers = [LinAlgDemagTester(p.mesh,p.M,"GCR",default_params) for p in problems]
+    testers = [LinAlgDemagTester(p.mesh,p.M,fembemsolvertype,default_params) for p in problems]
     for t in testers:
         t.test()
-
-    #Now create a plot with meshsize vs.linear solve time.
+        
     meshsizes = numpy.array([p.mesh.num_vertices() for p in problems])
+#For each linear solve..
+    solvelist = ["1st linear solve","2nd linear solve"]
+    for j,linearsolve in enumerate(solvelist):
 
-    print ("%d testers, %d parameter sets" % (len(testers),len(default_params)))
-    for i in range(len(default_params)):
-        itime = numpy.array([t.timelist[i].recorded_sum() for t in testers])/meshsizes
-        params = t.testparams[i]
-        if not 'preconditioner' in params.keys():
-            precon='(none)'
-        else:
-            precon = params['preconditioner']
-        solver=params['linear_solver']
-        other = "".join( "%8s:%s " % (key,value) for key,value in params.items() if key not in ['preconditioner','linear_solver'])
-        label='solver: %10s, precond:  %10s %s' % (solver,precon,other)
-        print "Plotting %s" % label
-        plt.plot(meshsizes,itime,label = label)
+        #Now create a plot with meshsize vs.linear solve time.
 
-    plt.xlabel("Number of Mesh vertices")
-    plt.ylabel("solver time (s) per mesh node")
-    plt.title("Demag Linear Solver times")
-    plt.legend(loc=0)
+        print ("%d testers, %d parameter sets" % (len(testers),len(default_params)))
+        for i,para in enumerate(default_params):
+            try:
+                #There are two seperate linear solve entries
+                params = para[j]
+            except:
+                #Just one entry
+                params = para
+                
+            itime = numpy.array([t.timelist[i].gettime(linearsolve) for t in testers])/meshsizes
+            if not 'preconditioner' in params.keys():
+                precon='(none)'
+            else:
+                precon = params['preconditioner']
+            solver=params['linear_solver']
+            other = "".join( "%8s:%s " % (key,value) for key,value in params.items() if key not in ['preconditioner','linear_solver'])
+            label='solver: %10s, precond:  %10s %s' % (solver,precon,other)
+            print "Plotting %s" % label
+            plt.plot(meshsizes,itime,label = label)
+
+        plt.xlabel("Number of Mesh vertices")
+        plt.ylabel("solver time (s) per mesh node")
+        plt.title(" ".join(["Demag",fembemsolvertype,linearsolve,"times"]))
+        plt.legend(loc=0)
+        #Create a new figure for each linear solve
+        if j != len(solvelist) - 1:
+            plt.figure()
     plt.show()
