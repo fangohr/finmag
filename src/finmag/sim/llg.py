@@ -26,8 +26,11 @@ class LLG(object):
         timings.reset()
         timings.start('LLG-init')
         
+        if not hasattr(mesh, 'f_scale_factor'):
+            h.monkey_patch_mesh(mesh)
         self.mesh = mesh
         logger.debug("%s" % self.mesh)
+
         self.V = df.VectorFunctionSpace(self.mesh, 'Lagrange', order, dim=3)
         self.Volume = df.assemble(df.Constant(1)*df.dx, mesh=self.mesh)
 
