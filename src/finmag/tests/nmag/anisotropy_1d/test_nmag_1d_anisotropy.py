@@ -13,8 +13,8 @@ third_node = []
 
 # run the simulation
 def setup_module(module=None):
-    x_max = 20e-9 # m
-    simplexes = 10
+    x_max = 100e-9 # m
+    simplexes = 50
     mesh = dolfin.Interval(simplexes, 0, x_max)
 
     def m_gen(coords):
@@ -66,7 +66,7 @@ def setup_module(module=None):
     tn_f.close()
 
 def test_averages():
-    TOLERANCE = 5e-2
+    REL_TOLERANCE = 7e-2
 
     ref = np.array(h.read_float_data(MODULE_DIR + "/averages_ref.txt"))
     computed = np.array(averages)
@@ -74,15 +74,21 @@ def test_averages():
     dt = ref[:,0] - computed[:,0]
     assert np.max(dt) < 1e-15, "Compare timesteps."
 
-    diff = np.delete(np.abs(ref - computed), [0], 1) # diff without time information
-    rel_diff = diff / ref[:,0]
+    ref, computed = np.delete(ref, [0], 1), np.delete(computed, [0], 1)
+    diff = ref - computed
+    rel_diff = np.abs(diff / np.sqrt(ref[0]**2 + ref[1]**2 + ref[2]**2))
 
-    print rel_diff
-    print "test_averages: max diff=",np.max(diff)
-    assert np.max(diff) < TOLERANCE
+    print "test_averages, max. relative difference per axis:"
+    print np.nanmax(rel_diff, axis=0)
+
+    rel_err = np.nanmax(rel_diff)
+    if rel_err > 1e-3:
+        print "nmag:\n", ref
+        print "finmag:\n", computed
+    assert rel_err < REL_TOLERANCE
 
 def test_third_node():
-    TOLERANCE = 4e-2
+    REL_TOLERANCE = 3e-1
 
     ref = np.array(h.read_float_data(MODULE_DIR + "/third_node_ref.txt"))
     computed = np.array(third_node)
@@ -90,9 +96,18 @@ def test_third_node():
     dt = ref[:,0] - computed[:,0]
     assert np.max(dt) < 1e-15, "Compare timesteps."
 
-    diff = np.delete(np.abs(ref - computed), [0], 1) # diff without time information
-    print "test_third_node_H: max diff=",np.max(diff)
-    assert np.max(diff) < TOLERANCE
+    ref, computed = np.delete(ref, [0], 1), np.delete(computed, [0], 1)
+    diff = ref - computed
+    rel_diff = np.abs(diff / np.sqrt(ref[0]**2 + ref[1]**2 + ref[2]**2))
+   
+    print "test_third_node: max. relative difference per axis:"
+    print np.nanmax(rel_diff, axis=0)
+
+    rel_err = np.nanmax(rel_diff)
+    if rel_err > 1e-3:
+        print "nmag:\n", ref
+        print "finmag:\n", computed
+    assert rel_err < REL_TOLERANCE
 
 def test_m_cross_H():
     """
@@ -100,7 +115,7 @@ def test_m_cross_H():
     motivation: Hans on IRC, 13.04.2012 10:45
 
     """ 
-    REL_TOLERANCE = 5e-4
+    REL_TOLERANCE = 7e-5
 
     m_ref = np.genfromtxt(MODULE_DIR + "/m_t0_ref.txt")
     m_computed = h.vectors(m_t0)
@@ -123,4 +138,6 @@ def test_m_cross_H():
 
 if __name__ == '__main__':
     setup_module()
+    test_averages()
+    test_third_node()
     test_m_cross_H() 
