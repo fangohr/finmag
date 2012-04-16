@@ -226,11 +226,12 @@ class FemBemFKSolverTrunc2(sb.FemBemDeMagSolver):
         Ms, m, u, v, w = self.Ms, self.m, self.u, self.v, self.w
 
         # These statements are equivalent
-        #b = Ms*df.inner(w, df.grad(v))*df.dx
-        #g1 = df.assemble(b)*m.vector()
-        n = df.FacetNormal(self.mesh)
-        b = df.dot(n, m)*v*df.ds - df.div(m)*v*df.dx
-        g1 = Ms*df.assemble(b)
+        b = Ms*df.inner(w, df.grad(v))*df.dx
+        g1 = df.assemble(b)*m.vector()
+        # and:
+        #n = df.FacetNormal(self.mesh)
+        #b = df.dot(n, m)*v*df.ds - df.div(m)*v*df.dx
+        #g1 = Ms*df.assemble(b)
 
         if not hasattr(self, "poisson_matrix"):
             self.build_poisson_matrix()
