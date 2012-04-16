@@ -1,7 +1,7 @@
 # One dimensional magnetic system studied using nsim
+import numpy as np
 import nmag
-from nmag import SI, mesh
-from nsim.si_units.si import mu0, degrees_per_ns
+from nmag import SI
 import nmeshlib.unidmesher as unidmesher
 
 # Details about the layers and the mesh and the material
@@ -48,13 +48,10 @@ sim.load_mesh(mesh_file_name, [("Py", mat_Py)], unit_length=mesh_unit)
 sim.set_m(m0)        # Set the initial magnetisation
 sim.set_pinning(pin) # Set pinning
 
-"""
-sim.set_params(stopping_dm_dt=1*degrees_per_ns,
-        ts_rel_tol=1e-6, ts_abs_tol=1e-6)
-
-from nsim.when import every, at
-sim.relax(save=[('averages', every('time', SI(5e-12, "s")))])
-"""
+# Save the anisotropy field once at the beginning of the simulation
+# for comparison with finmag
+np.savetxt("exc_t0_ref.txt", sim.get_subfield("H_exch_Py"))
+np.savetxt("m_t0_ref.txt", sim.get_subfield("m_Py"))
 
 t = t0 = 0; t1 = 1e-10; dt = 1e-12 # s
 fh = open("third_node_ref.txt", "w")

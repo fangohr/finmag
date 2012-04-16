@@ -31,6 +31,11 @@ def setup_module(module=None):
     llg.setup(use_exchange=True)
     llg.pins = [0, 30]
 
+    # Save H_exc and m at t0 for comparison with nmag
+    global H_exc_t0, m_t0
+    H_exc_t0 = llg.exchange.compute_field()
+    m_t0 = llg.m
+
     t0 = 0; t1 = 1e-10; dt = 1e-12; # s
     # ode takes the parameters in the order t, y whereas odeint and we use y, t.
     llg_wrap = lambda t, y: llg.solve_for(y, t)
@@ -109,8 +114,36 @@ def test_third_node():
     print np.nanmax(rel_diff, axis=0)
     assert np.nanmax(rel_diff) < REL_TOLERANCE
 
+def test_m_cross_H():
+    """
+    compares m x H_exc at the beginning of the simulation.
+
+    """ 
+    REL_TOLERANCE = 8e-8
+
+    m_ref = np.genfromtxt(MODULE_DIR + "/m_t0_ref.txt")
+    m_computed = h.vectors(m_t0)
+    assert m_ref.shape == m_computed.shape
+
+    H_ref = np.genfromtxt(MODULE_DIR + "/exc_t0_ref.txt")
+    H_computed = h.vectors(H_exc_t0)
+    assert H_ref.shape == H_computed.shape
+
+    assert m_ref.shape == H_ref.shape
+    m_cross_H_ref = np.cross(m_ref, H_ref)
+    m_cross_H_computed = np.cross(m_computed, H_computed)
+
+    diff = np.abs(m_cross_H_ref - m_cross_H_computed)
+    max_norm = max([h.norm(v) for v in m_cross_H_ref])
+    rel_diff = diff/max_norm
+  
+    print "test_m_cross_H, max. relative difference per axis:"
+    print np.nanmax(rel_diff, axis=0)
+    assert np.max(rel_diff) < REL_TOLERANCE
+
 if __name__ == '__main__':
     setup_module()
     test_angles()
     test_averages()
     test_third_node()
+    test_m_cross_H()
