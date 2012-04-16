@@ -75,6 +75,9 @@ def test_averages():
     assert np.max(dt) < 1e-15, "Compare timesteps."
 
     diff = np.delete(np.abs(ref - computed), [0], 1) # diff without time information
+    rel_diff = diff / ref[:,0]
+
+    print rel_diff
     print "test_averages: max diff=",np.max(diff)
     assert np.max(diff) < TOLERANCE
 
@@ -120,4 +123,4 @@ def test_m_cross_H():
 
 if __name__ == '__main__':
     setup_module()
-    test_anisotropy_field() 
+    test_m_cross_H() 

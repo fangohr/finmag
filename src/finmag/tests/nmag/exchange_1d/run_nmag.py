@@ -5,7 +5,7 @@ from nsim.si_units.si import mu0, degrees_per_ns
 import nmeshlib.unidmesher as unidmesher
 
 # Details about the layers and the mesh and the material
-length = 20.0             # in nanometers
+length = 60.0             # in nanometers
 mesh_unit = SI(1e-9, "m") # mesh unit (1 nm)
 layers = [(0.0, length)]  # the mesh
 discretization = 2.0      # discretization
