@@ -13,3 +13,8 @@ meshshow:
 	nmeshpp --vtk bar.nmesh.h5 bar.vtk
 	mayavi2 -d bar.vtk -m Surface
 
+finmag:
+	python exchange_demag.py
+
+show:
+	gnuplot gnu.plot
