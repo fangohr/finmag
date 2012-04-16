@@ -82,14 +82,14 @@ class DeMagSolver(object):
 
 class FemBemDeMagSolver(DeMagSolver):
     """Base Class for FEM/BEM Demag Solvers"""
-    def __init__(self,problem,degree = 1):
+    def __init__(self, problem, degree=1, element="CR"):
         super(FemBemDeMagSolver,self).__init__(problem,degree)
         #Parameters to use a quadrature rule that avoids the endpoints
         #of a triangle #GB NOT WORKING with CG1 elements
         self.ffc_options = {"quadrature_rule":"canonical"}
         
         #Change the Function space to CR
-        self.V = FunctionSpace(self.problem.mesh,"CR",degree)
+        self.V = FunctionSpace(self.problem.mesh,element,degree)
         #Create and store a Trial and Test Function
         self.v = TestFunction(self.V)
         self.u= TrialFunction(self.V)
