@@ -101,8 +101,12 @@ class FemBemDeMagSolver(DeMagSolver):
         self.bem = None
 
         #build the boundary data (normals and coordinates)
+        timings.start("Build doftionary stuff")
         self.build_boundary_data()
+        timings.stop("Build doftionary stuff")
+        timings.start("Build C-restrict to")
         self.build_crestrict_to()
+        timings.stop("Build C-restrict to")
         
     def build_crestrict_to(self):
         #Create the c++ function for restrict_to
@@ -145,7 +149,6 @@ class FemBemDeMagSolver(DeMagSolver):
         1.doftionary key- dofnumber, value - coordinates
         2.normtionary key - dofnumber, value - average of all facet normal components associated to a DOF
         """
-        timings.start("Build doftionary stuff")
         mesh = self.V.mesh()
         #Initialize the mesh data
         mesh.init()
@@ -219,7 +222,6 @@ class FemBemDeMagSolver(DeMagSolver):
         #numpy array with type double for use by instant (c++)
         self.doflist_double = np.array(doftionary.keys(),dtype = self.normtionary[self.normtionary.keys()[0]].dtype.name)
         self.bdofs = np.array(doftionary.keys())
-        timings.stop("Build doftionary stuff")
 
     def restrict_to(self,bigvector):
         """Restrict a vector to the dofs in dofs (usually boundary)"""

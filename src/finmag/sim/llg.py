@@ -295,6 +295,16 @@ class LLG(object):
         if use_demag:
             if demag_method == "weiwei":
                 self.demag = SimpleFKSolver(self.V, self._m, self.Ms)
+            # TODO: The elif block will be removed after debugging current
+            # problem. AEJ 17/04.
+            elif demag_method == "FK":
+                timings.start("Create demag problem")
+                from finmag.demag.problems.prob_base import FemBemDeMagProblem
+                from finmag.demag.solver_fk import FemBemFKSolver
+                problem = FemBemDeMagProblem(self.mesh, self._m)
+                problem.Ms = self.Ms
+                timings.stop("Create demag problem")
+                self.demag = FemBemFKSolver(problem)
             else:
                 self.demag = Demag(self.V, self._m, self.Ms, method=demag_method)
         

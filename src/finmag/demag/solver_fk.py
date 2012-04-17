@@ -25,102 +25,155 @@ from finmag.util.timings import timings
 logger = logging.getLogger(name='finmag')
 
 class FemBemFKSolver(sb.FemBemDeMagSolver):
-    def __init__(self, problem, degree=1, element="CG"):
+    def __init__(self, problem, degree=1, element="CG", method='magpar'):
+        timings.start("FKSolver init first part")
         super(FemBemFKSolver, self).__init__(problem, degree, element=element)
-        self.m = problem.M
+        self.m = self.M
         self.Ms = problem.Ms
         self.mesh = problem.mesh
         self.W = df.VectorFunctionSpace(self.mesh, element, degree, dim=3)
         self.w = df.TrialFunction(self.W)
+        self.vv = df.TestFunction(self.W)
         self.phi1 = df.Function(self.V)
         self.phi2 = df.Function(self.V)
-
-        self.bdofs = self.doftionary.keys()
+        self.method = method
         self.nodes_number = self.mesh.num_vertices()
-        self.__build_mapping()
+        timings.stop("FKSolver init first part")
+        self.bdofs = self.doftionary.keys()
 
-    def solve(self):
+        # Build stuff that doesn't change through time
+        self.__build_mapping()
+        self.__build_matrices()
+        if method == 'magpar':
+            self.__compute_volume()
+
+    def compute_field(self):
+        """Using this instead of compute_demagfield from base for now."""
+        self.__solve()
+
+        if self.method == 'magpar':
+            # Magpar method used by Weiwei
+            Hdemag = self.G*self.phi.vector()
+            return Hdemag.array()/self.L
+        elif self.method == 'project':
+            Hdemag = df.project(-df.grad(self.phi), self.W)
+            return Hdemag.vector().array()
+        else:
+            raise NotImplementedError("""Only method implemented are
+                                    * 'project'
+                                    * 'magpar'""")
+
+    def __solve(self):
         # Compute phi1 on the whole domain
-        timings.start("Compute phi1")
-        self.__compute_phi1()
-        timings.stop("Compute phi1")
+        timings.start("Solve for phi1")
+        g1 = self.D*self.m.vector()
+        df.solve(self.poisson_matrix, self.phi1.vector(), g1)
+        timings.stop("Solve for phi1")
 
         # Restrict phi1 to the boundary
         timings.start("Restrict phi1 to boundary")
         # FIXME: Why doesn't this work?
         # phi1_bnd = self.restrict_to(self.phi1.vector())
-        phi1_bnd = self.__restrict_phi1_to_bnd()
+        phi1_bnd = self.U1*self.phi1.vector()
         timings.stop("Restrict phi1 to boundary")
-
-        # Compute boundary element matrix
-        if self.bem is None:
-            timings.start("Build boundary element matrix")
-            self.bem = self.__compute_bem()
-            timings.stop("Build boundary element matrix")
-
 
         # Compute phi2 on the boundary as a df.dot product
         # between the boundary element matrix and
         # phi1 on the boundary
         timings.start("Compute phi2 on boundary")
-        phi2_bnd = np.dot(self.bem, phi1_bnd)
-        self.phi2.vector()[self.bdofs[:]] = phi2_bnd[:]
+        self.phi2_bnd = np.dot(self.bem, phi1_bnd)
+        # TODO: Find out if the following line works as it should
+        #self.phi2.vector()[self.bdofs[:]] = phi2_bnd[:]
         timings.stop("Compute phi2 on boundary")
 
         # Compute Laplace's equation inside the domain
         timings.start("Compute phi2 inside")
-        self.phi2 = self.solve_laplace_inside(self.phi2)
+        # FIXME: Are you correct?
+        #self.phi2 = self.solve_laplace_inside(self.phi2)
+        self.__do_weiwei_stuff()
         timings.stop("Compute phi2 inside")
 
         # phi = phi1 + phi2
         timings.start("Add phi1 and phi2")
         self.phi = self.calc_phitot(self.phi1, self.phi2)
         timings.stop("Add phi1 and phi2")
-        return self.phi
 
-    def __compute_phi1(self):
-        """Compute phi1."""
+    def __do_weiwei_stuff(self):
+        g2 = self.U2*self.phi2_bnd
+        self.K2 = self.K2.tocsr()
+        phi2 = linsolve.spsolve(self.K2, g2, use_umfpack=False)
+        self.phi2.vector()[:] = phi2
+
+    def __build_matrices(self):
+        """
+        Build anything that doesn't depend on m to avoid
+        things being build multiple times.
+        """
         Ms, m, u, v, w = self.Ms, self.m, self.u, self.v, self.w
 
-        # These statements are equivalent
-        timings.start("phi1 compute b")
+        # phi1 is the solution of poisson_matrix * phi1 = D*m
+        timings.start("phi1: compute D")
         b = Ms*df.inner(w, df.grad(v))*df.dx
-        timings.stop("phi1 compute b")
-        timings.start("phi1 assemble g1")
-        g1 = df.assemble(b)*m.vector()
-        timings.stop("phi1 assemble g1")
-        # and:
-        #n = df.FacetNormal(self.mesh)
-        #b = df.dot(n, m)*v*df.ds - df.div(m)*v*df.dx
-        #g1 = Ms*df.assemble(b)
+        self.D = df.assemble(b)
+        timings.stop("phi1: compute D")
 
-        if not hasattr(self, "poisson_matrix"):
-            timings.start("Build poisson matrix")
-            self.build_poisson_matrix()
-            timings.stop("Build poisson matrix")
-        timings.start("Solve for phi1")
-        df.solve(self.poisson_matrix, self.phi1.vector(), g1)
-        timings.stop("Solve for phi1")
+        timings.start("phi1: build poisson matrix")
+        self.build_poisson_matrix()
+        timings.stop("phi1: build poisson matrix")
 
-    def __restrict_phi1_to_bnd(self):
-        """Restrict phi1 to boundary."""
-        U1 = sp.lil_matrix((self.bnd_nodes_number,
+        # Compute boundary element matrix
+        timings.start("Build boundary element matrix")
+        self.bem = self.__compute_bem()
+        timings.stop("Build boundary element matrix")
+
+        # Compute U1 (used to restrict phi1 to boundary)
+        timings.start("Compute U1")
+        self.U1 = sp.lil_matrix((self.bnd_nodes_number,
                                 self.nodes_number),
+                                dtype='float32')
+        g2b = self.gnodes_to_bnodes
+        for i in range(self.nodes_number):
+            if g2b[i] >= 0:
+                self.U1[g2b[i], i] = 1
+        timings.stop("Compute U1")
+
+        ####
+        # Temporary code because solve laplace inside may be buggy
+
+        timings.start("Compute U2")
+        self.U2 = sp.lil_matrix((self.nodes_number,
+                                self.bnd_nodes_number),
                                 dtype='float32')
 
         g2b = self.gnodes_to_bnodes
+        tmp_mat = sp.lil_matrix(self.poisson_matrix.array())
+        rows,cols = tmp_mat.nonzero()
+
+        for row,col in zip(rows,cols):
+            if g2b[row] < 0 and g2b[col] >= 0:
+                self.U2[row, g2b[col]] =- tmp_mat[row, col]
 
         for i in range(self.nodes_number):
             if g2b[i] >= 0:
-                U1[g2b[i], i] = 1
-        return U1*self.phi1.vector()
+                self.U2[i, g2b[i]] = 1
+        timings.stop("Compute U2")
 
-    def compute_field(self):
-        # Should instead use self.get_demagfield() when this
-        # is renamed (?) and projected onto CG1 elements.
-        self.solve()
-        demag = df.project(-df.grad(self.phi), self.W)
-        return demag.vector().array()
+        timings.start("Compute K2")
+        self.K2 = sp.lil_matrix((self.nodes_number,
+                                 self.nodes_number),
+                                 dtype='float32')
+
+        tmp_mat = sp.lil_matrix(self.poisson_matrix.array())
+        rows, cols = tmp_mat.nonzero()
+        for row, col in zip(rows, cols):
+            if g2b[row] < 0 and g2b[col] < 0:
+                self.K2[row, col] = tmp_mat[row, col]
+
+        for i in range(self.nodes_number):
+            if g2b[i] >= 0:
+                self.K2[i, i] = 1
+        timings.stop("Compute K2")
+
 
     def __build_mapping(self):
         self.bnd_face_nodes,\
@@ -128,6 +181,15 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         self.bnd_faces_number,\
         self.bnd_nodes_number = \
                 belement.compute_bnd_mapping(self.mesh)
+
+    def __compute_volume(self):
+        # I have absolutely no idea what this is...
+        a = df.inner(df.grad(self.u), self.vv)*df.dx
+        self.G = df.assemble(a)
+
+        b = df.dot(self.vv, df.Constant((-1, -1, -1)))*df.dx
+        self.L = df.assemble(b)
+
 
     def __compute_bem(self):
         mesh = self.mesh
@@ -377,7 +439,7 @@ if __name__ == "__main__":
     problem.Ms = Ms
     problem.M = m
 
-    demag = FemBemFKSolver(problem)
+    demag = FemBemFKSolver(problem, method='project')
     print demag.compute_field()
     #demag = FemBemFKSolverOld(problem)
     #phi = demag.solve()
