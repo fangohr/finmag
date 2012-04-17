@@ -149,12 +149,10 @@ class SimpleFKSolver():
         """
         D * m = g1
         """
-        timings.start("phi1 compute b")
+        timings.start("phi1: compute D")
         b = self.Ms * inner(w, grad(v)) * dx
-        timings.stop("phi1 compute b")
-        timings.start("phi1 assemble D")
         self.D=df.assemble(b)
-        timings.stop("phi1 assemble D")
+        timings.stop("phi1: compute D")
         if debug:
             print '='*100,'D\n',self.D.array()
 
@@ -162,10 +160,10 @@ class SimpleFKSolver():
         """
         K1 * phi1 = g1
         """
-        timings.start("Poisson matrix")
+        timings.start("phi1: build poisson matrix")
         a = inner(grad(u),grad(v))*dx
         self.K1=df.assemble(a)
-        timings.stop("Poisson matrix")
+        timings.stop("phi1: build poisson matrix")
         if debug:
             print '='*100,'K1\n',self.K1.array()
 
@@ -353,7 +351,9 @@ class SimpleFKSolver():
         if debug:
             print '='*100,'phi1\n',self.phi1.vector().array()
 
+        timings.start("Restrict phi1 to boundary")
         self.u1bnd=self.U1*self.phi1.vector()
+        timings.stop("Restrict phi1 to boundary")
         if debug:
             print '='*100,'u1bnd ',type(self.u1bnd),self.u1bnd.shape,'\n',self.u1bnd
 
