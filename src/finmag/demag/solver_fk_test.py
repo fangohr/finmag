@@ -10,9 +10,9 @@ import finmag.util.solid_angle_magpar as solid_angle_solver
 compute_belement=belement_magpar.return_bele_magpar()
 compute_solid_angle=solid_angle_solver.return_csa_magpar()
 import logging
+from finmag.util.timings import timings
 
 logger = logging.getLogger(name='finmag')
-
 
 def compute_cell_volume(mesh):
     V = df.FunctionSpace(mesh, 'DG', 0)
@@ -149,9 +149,12 @@ class SimpleFKSolver():
         """
         D * m = g1
         """
+        timings.start("phi1 compute b")
         b = self.Ms * inner(w, grad(v)) * dx
+        timings.stop("phi1 compute b")
+        timings.start("phi1 assemble D")
         self.D=df.assemble(b)
-
+        timings.stop("phi1 assemble D")
         if debug:
             print '='*100,'D\n',self.D.array()
 
@@ -159,9 +162,10 @@ class SimpleFKSolver():
         """
         K1 * phi1 = g1
         """
-        a = inner(grad(u),grad(v))*dx 
+        timings.start("Poisson matrix")
+        a = inner(grad(u),grad(v))*dx
         self.K1=df.assemble(a)
-
+        timings.stop("Poisson matrix")
         if debug:
             print '='*100,'K1\n',self.K1.array()
 
@@ -172,11 +176,12 @@ class SimpleFKSolver():
         if debug:
             print '='*100,'g1\n',self.g1.array()
         """
-            
+        
         #=============================================
         """
         U1 * phi1 = u1bnd
         """
+        timings.start("Compute U1")
         self.U1= sp.lil_matrix((self.bnd_nodes_number,
                                    self.nodes_number),
             dtype='float32')
@@ -185,6 +190,7 @@ class SimpleFKSolver():
         for i in range(self.nodes_number):
             if g2b[i]>=0:
                 self.U1[g2b[i],i]=1
+        timings.stop("Compute U1")
 
         if debug:
             print '='*100,'U1\n',self.U1
@@ -194,8 +200,10 @@ class SimpleFKSolver():
         B * u1bnd = u2bnd
         """
         
+        timings.start("Build boundary element matrix")
         compute_BEM_matrix(self)
-        
+        timings.stop("Build boundary element matrix")
+
         if debug:
             print '='*100,'B\n',self.B
 
@@ -204,6 +212,7 @@ class SimpleFKSolver():
         U2 * u2bnd = g2
         """
         #in fact, I am not sure whether the following method is correct ...
+        timings.start("Compute U2")
         self.U2= sp.lil_matrix((self.nodes_number,
                                 self.bnd_nodes_number),
                             dtype='float32')
@@ -220,7 +229,7 @@ class SimpleFKSolver():
         for i in range(self.nodes_number):
             if g2b[i]>=0:
                 self.U2[i,g2b[i]]=1
-                
+        timings.stop("Compute U2")
         if debug:
             print '='*100,'U2\n',self.U2
 
@@ -231,7 +240,7 @@ class SimpleFKSolver():
         self.K2= sp.lil_matrix((self.nodes_number,
                                 self.nodes_number),
                             dtype='float32')
-        
+        timings.start("Compute K2")
         tmp_mat=sp.lil_matrix(self.K1.array())
         rows,cols = tmp_mat.nonzero()
         
@@ -242,7 +251,7 @@ class SimpleFKSolver():
         for i in range(self.nodes_number):
             if g2b[i]>=0:
                 self.K2[i,i]=1    
-
+        timings.stop("Compute K2")
         """
         self.K2=df.assemble(a)
         
@@ -321,11 +330,13 @@ class SimpleFKSolver():
 
         u = TrialFunction(self.V)
         v = TestFunction(self.Vv)
+        timings.start("Build G")
         a= inner(grad(u), v)*dx
         self.G = df.assemble(a)
-        
+        timings.stop("Build G")
+        timings.start("Compute L")
         self.L = compute_minus_node_volume_vector(self.mesh)
-
+        timings.stop("Compute L")
 
     def compute_field(self,debug=False):
         u = TrialFunction(self.V)
@@ -335,8 +346,10 @@ class SimpleFKSolver():
         self.g1=self.D*self.m.vector()
         if debug:
             print '='*100,'g1\n',self.g1.array()
-        
+
+        timings.start("Solve for phi1")
         solve(self.K1,self.phi1.vector(),self.g1)
+        timings.stop("Solve for phi1")
         if debug:
             print '='*100,'phi1\n',self.phi1.vector().array()
 
@@ -344,30 +357,38 @@ class SimpleFKSolver():
         if debug:
             print '='*100,'u1bnd ',type(self.u1bnd),self.u1bnd.shape,'\n',self.u1bnd
 
+        timings.start("Compute phi2 on boundary")
         self.u2bnd=np.dot(self.B,self.u1bnd)
+        timings.stop("Compute phi2 on boundary")
         if debug:
             print '='*100,'u2bnd\n',self.u2bnd
 
         self.g2=self.U2*self.u2bnd
         if debug:
             print '='*100,'g2\n',self.g2
-
+        timings.start("Compute phi2 inside")
         self.K2=self.K2.tocsr()
         phi2=linsolve.spsolve(self.K2,self.g2,use_umfpack = False)
+        timings.stop("Compute phi2 inside")
         if debug:
             print '='*100,'phi2\n',phi2
     
         
         phi=Function(self.V)
+        timings.start("Add phi1 and phi2")
         phi.vector().set_local(self.phi1.vector().array()+phi2)
-        
+        timings.stop("Add phi1 and phi2")        
+
         method = 'magpar'
+        #method = 'project'
         if method =='magpar':
             #Magpar's method
             demag_field= self.G * phi.vector()
             return demag_field.array()/self.L
         elif method=='project':
-            demag_field = df.project(-df.grad(phi), self.Vv)        
+            timings.start("Project demag field")
+            demag_field = df.project(-df.grad(phi), self.Vv)
+            timings.stop("Project demag field")
             return demag_field.vector().array()
         else:
             raise NotImplementedError("Only 'magpar' and 'project' understood")
