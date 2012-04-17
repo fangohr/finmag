@@ -7,6 +7,7 @@ __organisation__ = "University of Southampton"
 from dolfin import *
 import numpy as np
 import instant
+from finmag.util.timings import timings
 
 class DeMagSolver(object):
     """Base class for Demag Solvers"""
@@ -144,7 +145,7 @@ class FemBemDeMagSolver(DeMagSolver):
         1.doftionary key- dofnumber, value - coordinates
         2.normtionary key - dofnumber, value - average of all facet normal components associated to a DOF
         """
-        
+        timings.start("Build doftionary stuff")
         mesh = self.V.mesh()
         #Initialize the mesh data
         mesh.init()
@@ -218,7 +219,8 @@ class FemBemDeMagSolver(DeMagSolver):
         #numpy array with type double for use by instant (c++)
         self.doflist_double = np.array(doftionary.keys(),dtype = self.normtionary[self.normtionary.keys()[0]].dtype.name)
         self.bdofs = np.array(doftionary.keys())
-    
+        timings.stop("Build doftionary stuff")
+
     def restrict_to(self,bigvector):
         """Restrict a vector to the dofs in dofs (usually boundary)"""
         vector = np.zeros(len(self.doflist_double))
