@@ -4,14 +4,15 @@ from finmag.sim.llg import LLG
 from finmag.util.convert_mesh import convert_mesh
 from scipy.integrate import ode
 import pylab as p
+import numpy as np
 import progressbar as pb
+import finmag.sim.helpers as h
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
-
 mesh = Mesh(convert_mesh(MODULE_DIR + "/bar30_30_100.geo"))
 #mesh.coordinates()[:] *= 1e-9
 
-# Set up LLG    
+# Set up LLG
 llg = LLG(mesh, mesh_units=1e-9)
 llg.Ms = 0.86e6
 llg.A = 13.0e-12
@@ -29,7 +30,6 @@ T1 = 60*dt
 
 fh = open(MODULE_DIR + "/averages.txt", "w")
 xlist, ylist, zlist, tlist = [], [], [], []
-#time_series = TimeSeries(MODULE_DIR + "/simulation_data/sim")
 
 bar = pb.ProgressBar(maxval=60, \
                 widgets=[pb.ETA(), pb.Bar('=', '[', ']'), ' ', pb.Percentage()])
@@ -46,14 +46,23 @@ while r.successful() and r.t <= T1:
     tlist.append(r.t)
 
     fh.write(str(r.t) + " " + str(mx) + " " + str(my) + " " + str(mz) + "\n")
-    
-    #time_series.store(llg._m.vector(), r.t)
     r.integrate(r.t + dt)
-
 fh.close()
-p.plot(tlist, xlist, 'k', label='M_x')
-p.plot(tlist, ylist, 'r', label='M_y')
-p.plot(tlist, zlist, 'b', label='M_z')
-p.legend()
-p.show()
 
+# Add data points from nmag to plot
+if os.path.isfile(MODULE_DIR + "/averages_ref.txt"):
+    ref = np.array(h.read_float_data(MODULE_DIR + "/averages_ref.txt"))
+    dt = ref[:,0] - np.array(tlist)
+    assert np.max(dt) < 1e-15, "Compare timesteps."
+    t = list(ref[:,0])*3
+    y = list(ref[:,1]) + list(ref[:,2]) + list(ref[:,3])
+    p.plot(t, y, 'o', mfc='w', label='nmag')
+
+# Plot finmag data
+p.plot(tlist, xlist, 'k', label='$\mathsf{m_x}$')
+p.plot(tlist, ylist, 'r', label='$\mathsf{m_y}$')
+p.plot(tlist, zlist, 'b', label='$\mathsf{m_z}$')
+p.axis([0, T1, -0.2, 1.1])
+p.title("Finmag vs Nmag")
+p.legend(loc='center right')
+p.savefig("exchange_demag.png")
