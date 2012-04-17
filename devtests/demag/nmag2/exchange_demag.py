@@ -12,9 +12,9 @@ mesh = Mesh(convert_mesh(MODULE_DIR + "/bar30_30_100.geo"))
 #mesh.coordinates()[:] *= 1e-9
 
 # Set up LLG    
-llg = LLG(mesh)
+llg = LLG(mesh, mesh_units=1e-9)
 llg.Ms = 0.86e6
-llg.A = 13.0e-12 / llg.mesh.f_scale_factor**2
+llg.A = 13.0e-12
 llg.alpha = 0.5
 llg.set_m((1,0,1))
 llg.setup(use_exchange=True, use_dmi=False, use_demag=True, demag_method="weiwei")

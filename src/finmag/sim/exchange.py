@@ -69,14 +69,14 @@ class Exchange(object):
             
     """
 
-    def __init__(self, V, M, C, Ms, method="box-matrix-petsc"):
+    def __init__(self, V, M, C, Ms, method="box-matrix-petsc", mesh_units=1):
         logger.info("Exchange(): method = %s" % method)
         timings.start('Exchange-init')
        
         self.V = V
 
         mu0 = 4 * np.pi * 10**-7 # Vs/(Am)
-        self.exchange_factor = df.Constant(-1 * C / (mu0 * Ms))
+        self.exchange_factor = df.Constant(-1 * C / (mu0 * Ms * mesh_units**2))
         self.method = method
         self.M = M # keep reference to M
 

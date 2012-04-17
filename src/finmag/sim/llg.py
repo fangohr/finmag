@@ -17,18 +17,18 @@ from finmag.util.timings import timings
 #getting access to logger here
 logger = logging.getLogger(name='finmag')
 
-
 class LLG(object):
-    def __init__(self, mesh, order=1, use_instant_llg=True, do_precession=True):
+    def __init__(self, mesh, order=1, mesh_units=1, use_instant_llg=True, do_precession=True):
         logger.info('Creating LLG object (rank=%s/%s) %s' % (df.MPI.process_number(),
                                                               df.MPI.num_processes(),
                                                               time.asctime()))
         timings.reset()
         timings.start('LLG-init')
         
-        if not hasattr(mesh, 'f_scale_factor'):
-            h.monkey_patch_mesh(mesh)
         self.mesh = mesh
+        # save the units the mesh is expressed in,
+        # so usually 1 (for m) for dolfin meshes, but 1e-9 (for nm) for netgen.
+        self.mesh_units = mesh_units
         logger.debug("%s" % self.mesh)
 
         self.V = df.VectorFunctionSpace(self.mesh, 'Lagrange', order, dim=3)
@@ -283,7 +283,7 @@ class LLG(object):
         self.use_exchange = use_exchange
         if use_exchange:
             self.exchange = Exchange(self.V, self._m, self.A, 
-                                     self.Ms, method=exchange_method)
+              self.Ms, method=exchange_method, mesh_units=self.mesh_units)
 
         self.use_dmi = use_dmi
         if use_dmi:
