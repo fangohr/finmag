@@ -161,16 +161,3 @@ def stats(arr):
     stats= "  min, median, max = ({0}, {1} {2}),\n  means = {3}),\n  stds = {4}".format(
             minimum, median, maximum, average, spread)
     return stats
-
-def monkey_patch_mesh(mesh, scale_factor=1e-9):
-    """
-    Attach attribute f_scale_factor and bind method f_scaled_coordinates() to
-    an instance of a dolfin mesh like df.Interval or df.Box.
-
-    """
-    import types
-
-    mesh.f_scale_factor = scale_factor
-    def f_scaled_coordinates(mesh):
-        return mesh.coordinates()[:] * mesh.f_scale_factor
-    mesh.f_scaled_coordinates = types.MethodType(f_scaled_coordinates, mesh)
