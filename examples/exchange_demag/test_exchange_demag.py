@@ -10,11 +10,11 @@ import progressbar as pb
 import finmag.sim.helpers as h
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
+TOL = 1e-2
 REL_TOLERANCE = 3e-2
 
 def save_plot(t, x, y, z):
     """Save plot of finmag data and comparisson with nmag data (if exist)."""
-
     # Add data points from nmag to plot
     if os.path.isfile(MODULE_DIR + "/averages_ref.txt"):
         ref = np.array(h.read_float_data(MODULE_DIR + "/averages_ref.txt"))
@@ -76,7 +76,6 @@ def run_finmag():
     fh.close()
     save_plot(tlist, xlist, ylist, zlist)
 
-#@pytest.mark.skipif("not os.path.exists(MODULE_DIR + '/averages.txt')")
 def test_compare_averages():
     ref = np.array(h.read_float_data(MODULE_DIR + "/averages_ref.txt"))
     if not (os.path.isfile(MODULE_DIR + "/averages.txt") and
@@ -89,8 +88,10 @@ def test_compare_averages():
 
     ref, computed = np.delete(ref, [0], 1), np.delete(computed, [0], 1)
     diff = ref - computed
-    rel_diff = np.abs(diff / np.sqrt(ref[0]**2 + ref[1]**2 + ref[2]**2))
+    print "max difference: %g" % np.max(diff)
+    assert np.max(diff) < TOL, "Error = %g" % np.max(diff)
 
+    rel_diff = np.abs(diff / np.sqrt(ref[0]**2 + ref[1]**2 + ref[2]**2))
     print "test_averages, max. relative difference per axis:"
     print np.nanmax(rel_diff, axis=0)
 
@@ -99,7 +100,7 @@ def test_compare_averages():
     if err > 2.5e-2:
         print "nmag:\n", ref
         print "finmag:\n", computed
-    assert err < REL_TOLERANCE
+    assert err < REL_TOLERANCE, "Relative error = %g" % err
 
 if __name__ == '__main__':
     test_compare_averages()
