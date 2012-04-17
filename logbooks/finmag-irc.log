@@ -942,3 +942,9 @@ fangohr: Still testing ...
 2012-04-16 10:31:21 fangohr: Just to introduce nsob: he is Neil O'Brien and will help us a little with some aspects of finmag and the DYNAMAG project.
 2012-04-16 10:31:32 fangohr: (I am in a meeting now until 11:40 or so).
 2012-04-16 11:50:05 fangohr: Hi folks. My office has been vacated now, so we can start.
+2012-04-17 09:13:59 andersej: So, you beat me today, Hans.. And so did the entire "cage". Not good..
+2012-04-17 09:16:55 fangohr: Good morning Anders, Neil, DokosBot.
+2012-04-17 09:24:09 andersej: Good morning all!
+2012-04-17 11:03:17 andersej: Hans, do you have a minute?
+2012-04-17 11:08:11 andersej: Or perhaps just explain here.. I don't completely understand what you mean with the regression test in the nmag2 example? Do you want to refine the mesh or use smaller time steps, or perhaps something else?
+2012-04-17 12:50:46 fangohr: (answer given over lunch ;-))
