@@ -223,6 +223,11 @@ class LLG(object):
         return 0
 
     def sundials_psetup(self, t, m, fy, jok, gamma, tmp1, tmp2, tmp3):
+        if not jok:
+            self.m = m
+            self.compute_H_eff()
+            self._reuse_jacobean = True
+
         return 0, not jok
 
     def sundials_psolve(self, t, y, fy, r, z, gamma, delta, lr, tmp):
@@ -248,10 +253,11 @@ class LLG(object):
         for ani in self._anisotropies:
             Hp += ani.compute_field()
 
+        if not hasattr(self, '_reuse_jacobean') or not self._reuse_jacobean:
         # If the field m has changed, recompute H_eff as well
-        if not np.array_equal(self.m, m):
-            self.m = m
-            self.compute_H_eff()
+            if not np.array_equal(self.m, m):
+                self.m = m
+                self.compute_H_eff()
 
         m.shape = (3, -1)
         mp.shape = (3, -1)
