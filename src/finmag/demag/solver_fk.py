@@ -6,13 +6,13 @@ __project__ = "Finmag"
 __organisation__ = "University of Southampton"
 
 # Modified by Anders E. Johansen, 2012
-# Last change: 16.04.2012
+# Last change: 18.04.2012
 
 from finmag.demag import solver_base as sb
 import dolfin as df
 import numpy as np
-import scipy.sparse as sp
-from scipy.sparse.linalg.dsolve import linsolve
+#import scipy.sparse as sp
+#from scipy.sparse.linalg.dsolve import linsolve
 import progressbar as pb
 import belement
 import belement_magpar
@@ -28,81 +28,87 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
     def __init__(self, problem, degree=1, element="CG", method='magpar'):
         timings.start("FKSolver init first part")
         super(FemBemFKSolver, self).__init__(problem, degree, element=element)
+
+        # Data
         self.m = self.M
         self.Ms = problem.Ms
         self.mesh = problem.mesh
+
+        # Functions and functionspace
         self.W = df.VectorFunctionSpace(self.mesh, element, degree, dim=3)
         self.w = df.TrialFunction(self.W)
         self.vv = df.TestFunction(self.W)
         self.phi1 = df.Function(self.V)
         self.phi2 = df.Function(self.V)
+        self.laplace_zeros = df.Function(self.V).vector()
+
         self.method = method
         self.nodes_number = self.mesh.num_vertices()
         timings.stop("FKSolver init first part")
-        self.bdofs = self.doftionary.keys()
 
         # Build stuff that doesn't change through time
-        self.__build_mapping()
         self.__build_matrices()
         if method == 'magpar':
             self.__compute_volume()
 
+        # I think these are the fastest solvers I could find today.
+        self.phi1_solver = df.KrylovSolver(self.poisson_matrix)
+        self.phi2_solver = df.KrylovSolver()
+        self.phi1_solver.parameters["preconditioner"]["same_nonzero_pattern"] = True
+        self.phi2_solver.parameters["preconditioner"]["same_nonzero_pattern"] = True
+
     def compute_field(self):
         """Using this instead of compute_demagfield from base for now."""
         self.__solve()
-
         if self.method == 'magpar':
             # Magpar method used by Weiwei
+            timings.start("G")
             Hdemag = self.G*self.phi.vector()
-            return Hdemag.array()/self.L
+            timings.startnext("L")
+            Hd = Hdemag.array()/self.L
+            timings.stop("L")
         elif self.method == 'project':
             Hdemag = df.project(-df.grad(self.phi), self.W)
-            return Hdemag.vector().array()
+            Hd = Hdemag.vector().array()
         else:
             raise NotImplementedError("""Only method implemented are
                                     * 'project'
                                     * 'magpar'""")
+        return Hd
 
     def __solve(self):
         # Compute phi1 on the whole domain
         timings.start("Solve for phi1")
         g1 = self.D*self.m.vector()
-        df.solve(self.poisson_matrix, self.phi1.vector(), g1)
-        timings.stop("Solve for phi1")
+        self.phi1_solver.solve(self.phi1.vector(), g1)
 
         # Restrict phi1 to the boundary
-        timings.start("Restrict phi1 to boundary")
-        # FIXME: Why doesn't this work?
-        # phi1_bnd = self.restrict_to(self.phi1.vector())
-        phi1_bnd = self.U1*self.phi1.vector()
-        timings.stop("Restrict phi1 to boundary")
+        timings.startnext("Restrict phi1 to boundary")
+        phi1_bnd = self.restrict_to(self.phi1.vector())
 
-        # Compute phi2 on the boundary as a df.dot product
+        # Compute phi2 on the boundary as a dot product
         # between the boundary element matrix and
         # phi1 on the boundary
-        timings.start("Compute phi2 on boundary")
+        timings.startnext("Compute phi2 on boundary")
         self.phi2_bnd = np.dot(self.bem, phi1_bnd)
-        # TODO: Find out if the following line works as it should
-        #self.phi2.vector()[self.bdofs[:]] = phi2_bnd[:]
-        timings.stop("Compute phi2 on boundary")
+        self.phi2.vector()[self.bdofs[:]] = self.phi2_bnd[:]
 
         # Compute Laplace's equation inside the domain
-        timings.start("Compute phi2 inside")
-        # FIXME: Are you correct?
-        #self.phi2 = self.solve_laplace_inside(self.phi2)
-        self.__do_weiwei_stuff()
-        timings.stop("Compute phi2 inside")
+        timings.startnext("Compute phi2 inside")
+        self.solve_laplace_inside()
 
         # phi = phi1 + phi2
-        timings.start("Add phi1 and phi2")
+        timings.startnext("Add phi1 and phi2")
         self.phi = self.calc_phitot(self.phi1, self.phi2)
         timings.stop("Add phi1 and phi2")
 
-    def __do_weiwei_stuff(self):
-        g2 = self.U2*self.phi2_bnd
-        self.K2 = self.K2.tocsr()
-        phi2 = linsolve.spsolve(self.K2, g2, use_umfpack=False)
-        self.phi2.vector()[:] = phi2
+    def solve_laplace_inside(self):
+        """Suspect this function from solver_base to be buggy."""
+        bc = df.DirichletBC(self.V, self.phi2, df.DomainBoundary())
+        A = self.poisson_matrix.copy()
+        b = self.laplace_zeros.copy()
+        bc.apply(A, b)
+        self.phi2_solver.solve(A, self.phi2.vector(), b)
 
     def __build_matrices(self):
         """
@@ -126,72 +132,31 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         self.bem = self.__compute_bem()
         timings.stop("Build boundary element matrix")
 
-        # Compute U1 (used to restrict phi1 to boundary)
-        timings.start("Compute U1")
-        self.U1 = sp.lil_matrix((self.bnd_nodes_number,
-                                self.nodes_number),
-                                dtype='float32')
-        g2b = self.gnodes_to_bnodes
-        for i in range(self.nodes_number):
-            if g2b[i] >= 0:
-                self.U1[g2b[i], i] = 1
-        timings.stop("Compute U1")
+    def __compute_volume(self):
+        """Needed by the magpar method we may use instead of project."""
+        a = df.inner(df.grad(self.u), self.vv)*df.dx
+        self.G = df.assemble(a)
 
-        ####
-        # Temporary code because solve laplace inside may be buggy
-
-        timings.start("Compute U2")
-        self.U2 = sp.lil_matrix((self.nodes_number,
-                                self.bnd_nodes_number),
-                                dtype='float32')
-
-        g2b = self.gnodes_to_bnodes
-        tmp_mat = sp.lil_matrix(self.poisson_matrix.array())
-        rows,cols = tmp_mat.nonzero()
-
-        for row,col in zip(rows,cols):
-            if g2b[row] < 0 and g2b[col] >= 0:
-                self.U2[row, g2b[col]] =- tmp_mat[row, col]
-
-        for i in range(self.nodes_number):
-            if g2b[i] >= 0:
-                self.U2[i, g2b[i]] = 1
-        timings.stop("Compute U2")
-
-        timings.start("Compute K2")
-        self.K2 = sp.lil_matrix((self.nodes_number,
-                                 self.nodes_number),
-                                 dtype='float32')
-
-        tmp_mat = sp.lil_matrix(self.poisson_matrix.array())
-        rows, cols = tmp_mat.nonzero()
-        for row, col in zip(rows, cols):
-            if g2b[row] < 0 and g2b[col] < 0:
-                self.K2[row, col] = tmp_mat[row, col]
-
-        for i in range(self.nodes_number):
-            if g2b[i] >= 0:
-                self.K2[i, i] = 1
-        timings.stop("Compute K2")
-
+        b = df.dot(self.vv, df.Constant([-1, -1, -1]))*df.dx
+        self.L = df.assemble(b).array()
 
     def __build_mapping(self):
+        """
+        Only used by Weiwei's magpar code to
+        compute the boundary element matrix.
+        """
         self.bnd_face_nodes,\
         self.gnodes_to_bnodes,\
         self.bnd_faces_number,\
         self.bnd_nodes_number = \
                 belement.compute_bnd_mapping(self.mesh)
 
-    def __compute_volume(self):
-        # I have absolutely no idea what this is...
-        a = df.inner(df.grad(self.u), self.vv)*df.dx
-        self.G = df.assemble(a)
-
-        b = df.dot(self.vv, df.Constant((-1, -1, -1)))*df.dx
-        self.L = df.assemble(b)
-
-
     def __compute_bem(self):
+        """
+        Code written by Weiwei to compute the boundary
+        element matrix using magpar code.
+        """
+        self.__build_mapping()
         mesh = self.mesh
         xyz = mesh.coordinates()
         bfn = self.bnd_face_nodes
@@ -302,7 +267,7 @@ class FemBemFKSolverOld(sb.FemBemDeMagSolver):
 
     def linsolve_phi1(self,a,f):
         # Solve for the DOFs in phi1
-        df.solve(a == f, self.phi1, solver_parameters = self.phi1solverparams)
+        df.solve(a == f, self.phi1)#, solver_parameters = self.phi1solverparams)
 
     def solve(self):
         """
@@ -312,8 +277,9 @@ class FemBemFKSolverOld(sb.FemBemDeMagSolver):
         """
 
         # Compute phi1 according to Knittel (2.28 - 2.29)
+        print "Presolve:", type(self.phi1.vector())
         self.compute_phi1()
-
+        print "Postsolve:", type(self.phi1.vector())
         # Compute phi2 on the boundary
         self.__solve_phi2_boundary(self.doftionary)
 
@@ -331,7 +297,9 @@ class FemBemFKSolverOld(sb.FemBemDeMagSolver):
     def __solve_phi2_boundary(self, doftionary):
         """Compute phi2 on the boundary."""
         B = self.__build_BEM_matrix(doftionary)
+        print "Pre-restrict:", type(self.phi1.vector())
         phi1 = self.restrict_to(self.phi1.vector())
+        exit()
         phi2dofs = np.dot(B, phi1)
         bdofs = doftionary.keys()
         for i in range(len(bdofs)):
@@ -346,7 +314,7 @@ class FemBemFKSolverOld(sb.FemBemDeMagSolver):
         bar = pb.ProgressBar(maxval=n-1, \
                 widgets=[pb.ETA(), pb.Bar('=', '[', ']'), ' ', pb.Percentage()])
 
-        df.info_blue("Building Boundary Element Matrix")
+        #df.info_blue("Building Boundary Element Matrix")
         for i, dof in enumerate(doftionary):
             bar.update(i)
             BEM[i] = self.__get_BEM_row(doftionary[dof], keys, i)
@@ -429,18 +397,26 @@ class FemBemFKSolverOld(sb.FemBemDeMagSolver):
 
 if __name__ == "__main__":
 
-    from finmag.demag.problems.prob_fembem_testcases import MagSphere
-    problem = MagSphere(5,1)
+    #from finmag.demag.problems.prob_fembem_testcases import MagSphere
+    #problem = MagSphere(5,1.5)
 
-    V = df.VectorFunctionSpace(problem.mesh, 'Lagrange', 1)
+    from finmag.demag.problems.prob_base import FemBemDeMagProblem
+    from finmag.util.convert_mesh import convert_mesh
+    #mesh = df.Mesh("../../../examples/exchange_demag/bar30_30_100.xml.gz")
+    #mesh = df.Box(0,0,0,30,30,100,3,3,10)
+    mesh = df.UnitSphere(4)
+    V = df.VectorFunctionSpace(mesh, 'Lagrange', 1)
     Ms = 1e6
     m = df.project(df.Constant((1, 0, 0)), V)
+    problem = FemBemDeMagProblem(mesh, m)
 
     problem.Ms = Ms
-    problem.M = m
+    #problem.M = m
 
-    demag = FemBemFKSolver(problem, method='project')
-    print demag.compute_field()
+    demag = FemBemFKSolver(problem)
+    Hd = demag.compute_field()
+    Hd.shape = (3, -1)
+    print np.average(Hd[0])/Ms, np.average(Hd[1])/Ms, np.average(Hd[2])/Ms
     #demag = FemBemFKSolverOld(problem)
     #phi = demag.solve()
     #print demag.get_demagfield(phi).vector().array()
