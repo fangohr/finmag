@@ -159,6 +159,7 @@ class SimpleFKSolver():
         #=============================================
         """
         K1 * phi1 = g1
+        Eq. (51) from Schrefl et al. 2007
         """
         timings.start("phi1: build poisson matrix")
         a = inner(grad(u),grad(v))*dx
@@ -379,20 +380,22 @@ class SimpleFKSolver():
         phi.vector().set_local(self.phi1.vector().array()+phi2)
         timings.stop("Add phi1 and phi2")        
 
+        timings.start("Compute_field")
         method = 'magpar'
         #method = 'project'
         if method =='magpar':
             #Magpar's method
             demag_field= self.G * phi.vector()
-            return demag_field.array()/self.L
+            Hd = demag_field.array()/self.L
         elif method=='project':
             timings.start("Project demag field")
             demag_field = df.project(-df.grad(phi), self.Vv)
             timings.stop("Project demag field")
-            return demag_field.vector().array()
+            Hd = demag_field.vector().array()
         else:
             raise NotImplementedError("Only 'magpar' and 'project' understood")
-
+        timings.stop("Compute_field")
+        return Hd
 
 if __name__ == "__main__":
 
