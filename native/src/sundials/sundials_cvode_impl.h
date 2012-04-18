@@ -195,7 +195,7 @@ namespace finmag { namespace sundials {
             CHECK_SUNDIALS_RET(CVSpilsSetPreconditioner, (cvode_mem, &spils_prec_setup_callback, &spils_prec_solve_callback));
         }
 
-        void set_splis_jac_times_vec_fn(const bp::object &jtimes) {
+        void set_spils_jac_times_vec_fn(const bp::object &jtimes) {
             spils_jac_times_vec_fn = jtimes;
             CHECK_SUNDIALS_RET(CVSpilsSetJacTimesVecFn, (cvode_mem, &spils_jac_times_vec_callback));
         }
@@ -553,7 +553,7 @@ namespace finmag { namespace sundials {
             bp::object tmp_arr = nvector_to_array_object(tmp);
 
             // TODO: catch exceptions here - see comment in rhs_callback
-            return bp::call<int>(cv->spils_prec_setup_fn.ptr(), t, y_arr, fy_arr, r_arr, z_arr, gamma, delta, lr, tmp_arr);
+            return bp::call<int>(cv->spils_prec_solve_fn.ptr(), t, y_arr, fy_arr, r_arr, z_arr, gamma, delta, lr, tmp_arr);
         }
 
         // Preconditioning (Jacobian data)
@@ -570,7 +570,7 @@ namespace finmag { namespace sundials {
             bp::object tmp3_arr = nvector_to_array_object(tmp3);
 
             // TODO: catch exceptions here - see comment in rhs_callback
-            bp::object res = bp::call<bp::tuple>(cv->spils_prec_setup_fn.ptr(), t, y_arr, fy_arr, jok, gamma, tmp1, tmp2, tmp3);
+            bp::object res = bp::call<bp::tuple>(cv->spils_prec_setup_fn.ptr(), t, y_arr, fy_arr, jok, gamma, tmp1_arr, tmp2_arr, tmp3_arr);
             int flag = bp::extract<int>(res[0]);
             *jcurPtr = bp::extract<bool>(res[1]);
             return flag;
@@ -755,7 +755,7 @@ namespace finmag { namespace sundials {
         cv.def("set_dls_band_jac_fn", &cvode::set_dls_band_jac_fn);
         // iterative linear solver optional input functions
         cv.def("set_spils_preconditioner", &cvode::set_spils_preconditioner, (arg("psetup"), arg("psolve")));
-        cv.def("set_splis_jac_times_vec_fn", &cvode::set_splis_jac_times_vec_fn, (arg("jtimes")));
+        cv.def("set_spils_jac_times_vec_fn", &cvode::set_spils_jac_times_vec_fn, (arg("jtimes")));
         cv.def("set_spils_prec_type", &cvode::set_spils_prec_type, (arg("pretype")));
         cv.def("set_spils_gs_type", &cvode::set_spils_gs_type, (arg("gstype")));
         cv.def("set_spils_eps_lin", &cvode::set_spils_eps_lin, (arg("eplifac")));

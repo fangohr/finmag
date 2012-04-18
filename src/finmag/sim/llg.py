@@ -217,6 +217,18 @@ class LLG(object):
             return dMdt
         raise Exception("An error was encountered in the C-code; status=%d" % status)
 
+    # Computes the dm/dt right hand side ODE term, as used by SUNDIALS CVODE
+    def sundials_rhs(self, t, y, ydot):
+        ydot[:] = self.solve_for(y, t)
+        return 0
+
+    def sundials_psetup(self, t, m, fy, jok, gamma, tmp1, tmp2, tmp3):
+        return 0, not jok
+
+    def sundials_psolve(self, t, y, fy, r, z, gamma, delta, lr, tmp):
+        z[:] = r
+        return 0
+
     # Computes the Jacobian-times-vector product, as used by SUNDIALS CVODE
     def sundials_jtimes(self, mp, J_mp, t, m, fy, tmp):
         timings.start("LLG-sundials-jtimes")
@@ -224,22 +236,22 @@ class LLG(object):
         assert m.shape == self.m.shape
         assert mp.shape == m.shape
         assert tmp.shape == m.shape
-        # First, compute the derivative of H
-        Hp = tmp
-        Hp[:] = 0.
 
-        # Unfortunately we have to recompute H every time here
-        self.m = m
-        self.compute_H_eff()
-        # Might be possible to avoid it later when we use a preconditioner, 
-        # by computing it in pre_setup
-
+        # First, compute the derivative H' = dH_eff/dt
         self.m = mp
+        Hp = tmp.view()
         if self.use_exchange:
-            Hp += self.exchange.compute_field()
+            Hp[:] = self.exchange.compute_field()
+        else:
+            Hp[:] = 0.
 
         for ani in self._anisotropies:
             Hp += ani.compute_field()
+
+        # If the field m has changed, recompute H_eff as well
+        if not np.array_equal(self.m, m):
+            self.m = m
+            self.compute_H_eff()
 
         m.shape = (3, -1)
         mp.shape = (3, -1)
@@ -249,7 +261,7 @@ class LLG(object):
         J_mp.shape = (3, -1)
         # Use the same characteristic time as defined by c
         char_time = 0.1 / self.c
-        native_llg.calc_llg_jtimes(m, H, mp, Hp, t, J_mp, self.gamma/(1+self.alpha**2), 
+        native_llg.calc_llg_jtimes(m, H, mp, Hp, t, J_mp, self.gamma/(1+self.alpha**2),
                                    self.alpha, char_time, self.do_precession)
         # TODO: Store pins in a np.ndarray(dtype=int) and assign 0's in C++ code
         J_mp[:, self.pins] = 0.

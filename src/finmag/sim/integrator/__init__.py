@@ -8,8 +8,9 @@
 
 import scipy.integrate
 import numpy as np
+from finmag.native import sundials
 
-def LLGIntegrator(llg, m0, backend="scipy", **kwargs):
+def LLGIntegrator(llg, m0, backend="sundials", **kwargs):
     if backend=="scipy":
         return ScipyIntegrator(llg, m0, **kwargs)
     elif backend=="sundials":
@@ -36,10 +37,17 @@ class ScipyIntegrator(BaseIntegrator):
     def __init__(self, llg, m0, reltol=1e-8, abstol=1e-8, nsteps=10000, method="bdf", **kwargs):
         self.llg = llg
         self.cur_t = 0
-        self.ode = scipy.integrate.ode(llg.solve_for, jac=None)
+        self.ode = scipy.integrate.ode(self.rhs, jac=None)
         self.llg.m[:] = m0
         self.ode.set_integrator("vode", method=method, rtol=reltol, atol=abstol, nsteps=nsteps, **kwargs)
         self.ode.set_initial_value(m0, 0)
+        self._n_rhs_evals = 0
+
+    n_rhs_evals = property(lambda self: self._n_rhs_evals, "Number of function evaluations performed")
+
+    def rhs(self, t, y):
+        self._n_rhs_evals += 1
+        return self.llg.solve_for(y, t)
 
     def run_until(self, t):
         if t <= self.cur_t:
@@ -52,7 +60,7 @@ class ScipyIntegrator(BaseIntegrator):
 
 class SundialsIntegrator(BaseIntegrator):
     def __init__(self, llg, m0, reltol=1e-8, abstol=1e-8, nsteps=10000, method="bdf_gmres_no_prec"):
-        assert method in ("adams", "bdf_diag", "bdf_gmres_no_prec")
+        assert method in ("adams", "bdf_diag", "bdf_gmres_no_prec", "bdf_gmres_prec_id")
         self.llg = llg
         self.cur_t = 0
         self.m = m0.copy()
@@ -63,12 +71,17 @@ class SundialsIntegrator(BaseIntegrator):
             integrator = sundials.cvode(sundials.CV_BDF, sundials.CV_NEWTON)
         self.integrator = integrator
 
+        integrator.init(llg.sundials_rhs, 0, self.m)
+
         if method=="bdf_diag":
-            integrator.init(scipy_to_cvode_rhs(self.scipy_rhs), 0, self.llg.m.copy())
             integrator.set_linear_solver_diag()
         elif method=="bdf_gmres_no_prec":
             integrator.set_linear_solver_sp_gmr(sundials.PREC_NONE)
-            integrator.set_splis_jac_times_vec_fn(self.llg.sundials_jtimes)
+            integrator.set_spils_jac_times_vec_fn(self.llg.sundials_jtimes)
+        elif method=="bdf_gmres_prec_id":
+            integrator.set_linear_solver_sp_gmr(sundials.PREC_LEFT)
+            integrator.set_spils_jac_times_vec_fn(self.llg.sundials_jtimes)
+            integrator.set_spils_preconditioner(llg.sundials_psetup, llg.sundials_psolve)
 
         integrator.set_scalar_tolerances(reltol, abstol)
         integrator.set_max_num_steps(nsteps)
@@ -77,4 +90,6 @@ class SundialsIntegrator(BaseIntegrator):
         if t <= self.cur_t:
             return
 
-        integrator.advance_time(t, self.m)
+        self.integrator.advance_time(t, self.m)
+
+    n_rhs_evals = property(lambda self: self.integrator.get_num_rhs_evals(), "Number of function evaluations performed")

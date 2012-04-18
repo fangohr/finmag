@@ -46,7 +46,7 @@ class SundialsStiffOdeTests(unittest.TestCase):
         integrator.init(scipy_to_cvode_rhs(robertson_rhs), 0, ROBERTSON_Y0.copy())
 
         integrator.set_linear_solver_sp_gmr(sundials.PREC_NONE)
-        integrator.set_splis_jac_times_vec_fn(scipy_to_cvode_jtimes(robertson_jacobean))
+        integrator.set_spils_jac_times_vec_fn(scipy_to_cvode_jtimes(robertson_jacobean))
         integrator.set_scalar_tolerances(1e-8, 1e-8)
         integrator.set_max_num_steps(5000)
         yout = np.zeros(3)
@@ -59,7 +59,7 @@ class SundialsStiffOdeTests(unittest.TestCase):
         integrator.init(scipy_to_cvode_rhs(robertson_rhs), 0, ROBERTSON_Y0.copy())
 
         integrator.set_linear_solver_sp_gmr(sundials.PREC_NONE)
-        integrator.set_splis_jac_times_vec_fn(scipy_to_cvode_jtimes(lambda t, y: robertson_jacobean(t, y).T))
+        integrator.set_spils_jac_times_vec_fn(scipy_to_cvode_jtimes(lambda t, y: robertson_jacobean(t, y).T))
         integrator.set_scalar_tolerances(1e-8, 1e-8)
         integrator.set_max_num_steps(5000)
         yout = np.zeros(3)
