@@ -74,7 +74,7 @@ class JacobeanIntegrationTests(unittest.TestCase):
         integrator = sundials.cvode(sundials.CV_BDF, sundials.CV_NEWTON)
         integrator.init(scipy_to_cvode_rhs(self.scipy_rhs), 0, self.llg.m.copy())
         integrator.set_linear_solver_sp_gmr(sundials.PREC_NONE)
-        integrator.set_splis_jac_times_vec_fn(self.llg.sundials_jtimes)
+        integrator.set_spils_jac_times_vec_fn(self.llg.sundials_jtimes)
         integrator.set_scalar_tolerances(1e-8, 1e-8)
         integrator.set_max_num_steps(40000)
         ys = np.zeros(self.llg.m.shape)

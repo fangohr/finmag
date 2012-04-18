@@ -73,7 +73,7 @@ class OdeSundialsTests(unittest.TestCase):
         def jtimes(v, Jv, t, y, fy, tmp):
             return 0
         integrator.set_linear_solver_sp_gmr(sundials.PREC_NONE)
-        integrator.set_splis_jac_times_vec_fn(jtimes)
+        integrator.set_spils_jac_times_vec_fn(jtimes)
         self.run_simple_test(integrator)
 
     def test_jtimes_ex(self):
@@ -85,7 +85,7 @@ class OdeSundialsTests(unittest.TestCase):
         def jtimes(v, Jv, t, y, fy, tmp):
             raise MyException()
         integrator.set_linear_solver_sp_gmr(sundials.PREC_NONE)
-        integrator.set_splis_jac_times_vec_fn(jtimes)
+        integrator.set_spils_jac_times_vec_fn(jtimes)
         yout = np.zeros(1)
         try:
             integrator.advance_time(1, yout)

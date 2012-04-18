@@ -11,6 +11,7 @@ import scipy.integrate
 import dolfin as df
 import unittest
 import math
+from finmag.sim.integrator import LLGIntegrator
 from finmag.sim.llg import LLG
 import scipy.integrate
 
@@ -20,7 +21,7 @@ K1_Co = 520e3 # A/m
 A_Co = 30e-12 # J/m
 
 LENGTH = 100e-9
-NODE_COUNT = 200
+NODE_COUNT = 100
 
 # Initial m
 def initial_m(xi, node_count):
@@ -35,7 +36,7 @@ def reference_mz(x):
 def setup_domain_wall_cobalt(node_count=NODE_COUNT, A=A_Co, Ms=Ms_Co, K1=K1_Co, length=LENGTH, use_instant=True, do_precession=True):
     mesh = df.Interval(node_count - 1, 0, length)
     llg = LLG(mesh, use_instant_llg=use_instant, do_precession=do_precession)
-    llg.A = 2 * A
+    llg.A = A
     llg.Ms = Ms
     llg.add_uniaxial_anisotropy(K1, df.Constant((0, 0, 1)))
     llg.set_m(np.array([initial_m(xi, node_count) for xi in xrange(node_count)]).T.reshape((-1,)))
@@ -50,11 +51,9 @@ def domain_wall_error(ys, node_count):
 
 def compute_domain_wall_cobalt(end_time=1e-9):
     llg = setup_domain_wall_cobalt()
-    integrator = scipy.integrate.ode(lambda t, y: llg.solve_for(y, t))
-    integrator.set_integrator("vode", method="bdf", atol=1e-8, rtol=1e-8, nsteps=120000)
-    integrator.set_initial_value(llg.m)
-    ys = integrator.integrate(end_time)
-    return np.linspace(0, LENGTH, NODE_COUNT), ys.reshape((3, -1))
+    integrator = LLGIntegrator(llg, llg.m)
+    integrator.run_until(end_time)
+    return np.linspace(0, LENGTH, NODE_COUNT), integrator.m.reshape((3, -1))
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
