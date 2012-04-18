@@ -59,7 +59,7 @@ class ScipyIntegrator(BaseIntegrator):
         self.m = new_m
 
 class SundialsIntegrator(BaseIntegrator):
-    def __init__(self, llg, m0, reltol=1e-8, abstol=1e-8, nsteps=10000, method="bdf_gmres_no_prec"):
+    def __init__(self, llg, m0, reltol=1e-8, abstol=1e-8, nsteps=10000, method="bdf_gmres_prec_id"):
         assert method in ("adams", "bdf_diag", "bdf_gmres_no_prec", "bdf_gmres_prec_id")
         self.llg = llg
         self.cur_t = 0
