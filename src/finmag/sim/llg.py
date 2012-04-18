@@ -308,6 +308,7 @@ class LLG(object):
             self.dmi = DMI(self.V, self._m, self.D, self.Ms, 
                            method = dmi_method)
 
+        timings.stop('LLG-init')
         self.use_demag = use_demag
         # Using Weiwei's code as default
         if use_demag:
@@ -326,7 +327,6 @@ class LLG(object):
             else:
                 self.demag = Demag(self.V, self._m, self.Ms, method=demag_method)
         
-        timings.stop('LLG-init')
 
     def timings(self,n=20):
         """Prints an overview of wall time an number of calls for
