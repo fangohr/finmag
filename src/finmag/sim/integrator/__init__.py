@@ -91,5 +91,6 @@ class SundialsIntegrator(BaseIntegrator):
             return
 
         self.integrator.advance_time(t, self.m)
+        self.llg.m = self.m
 
     n_rhs_evals = property(lambda self: self.integrator.get_num_rhs_evals(), "Number of function evaluations performed")
