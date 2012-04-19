@@ -38,7 +38,7 @@ class ScipyIntegrator(BaseIntegrator):
         self.llg = llg
         self.cur_t = 0
         self.ode = scipy.integrate.ode(self.rhs, jac=None)
-        self.llg.m[:] = m0
+        self.m = self.llg.m[:] = m0
         self.ode.set_integrator("vode", method=method, rtol=reltol, atol=abstol, nsteps=nsteps, **kwargs)
         self.ode.set_initial_value(m0, 0)
         self._n_rhs_evals = 0
