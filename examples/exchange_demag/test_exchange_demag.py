@@ -74,7 +74,7 @@ def run_finmag():
         fh.write(str(t) + " " + str(mx) + " " + str(my) + " " + str(mz) + "\n")
 
     fh.close()
-    save_plot(tlist, xlist, ylist, zlist)
+    #save_plot(tlist, xlist, ylist, zlist)
 
 def test_compare_averages():
     ref = np.array(h.read_float_data(MODULE_DIR + "/averages_ref.txt"))
