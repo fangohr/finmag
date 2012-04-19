@@ -1,6 +1,7 @@
 all: rmresults xmlmesh h5mesh nmag finmag cleanup
 
 rmresults:
+	touch results.txt
 	rm results.txt
 
 xmlmesh:
