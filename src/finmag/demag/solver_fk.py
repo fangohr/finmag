@@ -11,8 +11,6 @@ __organisation__ = "University of Southampton"
 from finmag.demag import solver_base as sb
 import dolfin as df
 import numpy as np
-#import scipy.sparse as sp
-#from scipy.sparse.linalg.dsolve import linsolve
 import progressbar as pb
 import belement
 import belement_magpar
@@ -41,9 +39,7 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         self.phi1 = df.Function(self.V)
         self.phi2 = df.Function(self.V)
         self.laplace_zeros = df.Function(self.V).vector()
-
         self.method = method
-        self.nodes_number = self.mesh.num_vertices()
         timings.stop("FKSolver init first part")
 
         # Build stuff that doesn't change through time
@@ -81,10 +77,24 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         timings.start("Solve for phi1")
         g1 = self.D*self.m.vector()
         self.phi1_solver.solve(self.phi1.vector(), g1)
+        # NOTE: The computation of phi1 is equivalent to
+        #
+        #a = df.inner(df.grad(self.u), df.grad(self.v))*df.dx
+        #L = self.Ms*df.div(self.m)*self.v*df.dx
+        #df.solve(a==L, self.phi1)
+        #
+        # but the way we have implemented it is faster,
+        # because we don't have to assemble L each time.
 
         # Restrict phi1 to the boundary
         timings.startnext("Restrict phi1 to boundary")
         phi1_bnd = self.restrict_to(self.phi1.vector())
+
+        # I can't explain why this seems to work
+        #U1 = df.PETScMatrix()
+        #U1.resize(self.bnd_nodes_number, self.nodes_number)
+        #U1.ident_zeros()
+        #phi1_bnd = U1*self.phi1.vector()
 
         # Compute phi2 on the boundary as a dot product
         # between the boundary element matrix and
@@ -162,7 +172,7 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         bfn = self.bnd_face_nodes
         g2b = self.gnodes_to_bnodes
 
-        nodes_number = self.nodes_number
+        nodes_number = self.mesh.num_vertices()
 
         n = self.bnd_nodes_number
         B = np.zeros((n,n))
