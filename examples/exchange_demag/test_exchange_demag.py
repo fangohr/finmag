@@ -1,6 +1,5 @@
 import os
 from finmag.sim.llg import LLG
-from scipy.integrate import ode
 from finmag.util.convert_mesh import convert_mesh
 import pytest
 import pylab as p
@@ -8,10 +7,13 @@ import numpy as np
 import dolfin as df
 import progressbar as pb
 import finmag.sim.helpers as h
+from finmag.sim.integrator import LLGIntegrator
+import logging
+
+logger = logging.getLogger(name='finmag')
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
-TOL = 1e-2
-REL_TOLERANCE = 3e-2
+REL_TOLERANCE = 1e-4
 
 def save_plot(t, x, y, z):
     """Save plot of finmag data and comparisson with nmag data (if exist)."""
@@ -43,15 +45,10 @@ def run_finmag():
     llg.A = 13.0e-12
     llg.alpha = 0.5
     llg.set_m((1,0,1))
-    llg.setup(use_exchange=True, use_dmi=False, use_demag=True, demag_method="weiwei")
+    llg.setup(use_exchange=True, use_dmi=False, use_demag=True, demag_method="FK")
 
     # Set up time integrator
-    llg_wrap = lambda t, y: llg.solve_for(y, t)
-    r = ode(llg_wrap).set_integrator("vode", method="bdf", rtol=1e-5, atol=1e-5)
-    r.set_initial_value(llg.m, 0)
-
-    dt = 5.0e-12
-    T1 = 60*dt
+    integrator = LLGIntegrator(llg, llg.m)
 
     # Progressbar
     fh = open(MODULE_DIR + "/averages.txt", "w")
@@ -59,20 +56,23 @@ def run_finmag():
 
     bar = pb.ProgressBar(maxval=60, \
                     widgets=[pb.ETA(), pb.Bar('=', '[', ']'), ' ', pb.Percentage()])
-    counter = 0
-    print "Time integration (this may take some time..)"
-    while r.successful() and r.t <= T1:
-        bar.update(counter)
-        counter += 1
 
+    logger.info("Time integration")
+    times = np.linspace(0, 3.0e-10, 61)
+    for counter, t in enumerate(times):
+        bar.update(counter)
+
+        # Integrate
+        integrator.run_until(t)
+
+        # Save averages to file
         mx, my, mz = llg.m_average
         xlist.append(mx)
         ylist.append(my)
         zlist.append(mz)
-        tlist.append(r.t)
+        tlist.append(t)
+        fh.write(str(t) + " " + str(mx) + " " + str(my) + " " + str(mz) + "\n")
 
-        fh.write(str(r.t) + " " + str(mx) + " " + str(my) + " " + str(mz) + "\n")
-        r.integrate(r.t + dt)
     fh.close()
     save_plot(tlist, xlist, ylist, zlist)
 
@@ -87,17 +87,16 @@ def test_compare_averages():
     assert np.max(dt) < 1e-15, "Compare timesteps."
 
     ref, computed = np.delete(ref, [0], 1), np.delete(computed, [0], 1)
+
     diff = ref - computed
     print "max difference: %g" % np.max(diff)
-    assert np.max(diff) < TOL, "Error = %g" % np.max(diff)
 
     rel_diff = np.abs(diff / np.sqrt(ref[0]**2 + ref[1]**2 + ref[2]**2))
     print "test_averages, max. relative difference per axis:"
     print np.nanmax(rel_diff, axis=0)
 
     err = np.nanmax(rel_diff)
-    #if err > 1e-3:
-    if err > 2.5e-2:
+    if err > 1e-2:
         print "nmag:\n", ref
         print "finmag:\n", computed
     assert err < REL_TOLERANCE, "Relative error = %g" % err

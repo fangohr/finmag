@@ -69,7 +69,7 @@ def comparisson(method):
         t = i*dt
         integrator.run_until(t)
         ref = ref_data[i, 1:]
-        diff = np.abs(ref - llg.m.average)
+        diff = np.abs(ref - llg.m_average)
 
         if np.max(diff) > max_diff:
             max_diff = np.max(diff)

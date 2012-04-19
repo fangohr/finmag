@@ -3,7 +3,7 @@ import numpy as np
 import pylab
 import dolfin as df
 from finmag.sim.llg import LLG
-from scipy.integrate import ode
+from finmag.sim.integrator import LLGIntegrator
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -22,7 +22,7 @@ def test_external_field_depends_on_t():
     #Add time dependent expression to LLG object
     llg._H_app_expression = H
 
-    #define function that updates that expression, and the field 
+    #define function that updates that expression, and the field
     #object
     def update_H_ext(llg):
         print "update_H_ext being called for t=%g" % llg.t
@@ -39,12 +39,7 @@ def test_external_field_depends_on_t():
     dt = 0.001e-9
 
     llg.setup()
-    rhswrap = lambda t,y: llg.solve_for(y,t)
-    r = ode(rhswrap).set_integrator('vode', method='bdf', 
-                                    with_jacobian=False, max_step=dt/2.)
-    y0 = llg.m
-    t0 = 0
-    r.set_initial_value(y0, t0)
+    integrator = LLGIntegrator(llg, llg.m)
 
     #to gather data for later analysis
     mlist = []
@@ -52,13 +47,13 @@ def test_external_field_depends_on_t():
     hext = []
 
     #time loop
-    while r.successful() and r.t < tfinal-dt:
-        r.integrate(r.t + dt)
-        print "Integrating time: %g" % r.t
+    times = np.linspace(0, tfinal, tfinal/dt + 1)
+    for t in times:
+        integrator.run_until(t)
+        print "Integrating time: %g" % t
         mlist.append(llg.m_average)
-        tlist.append(r.t)
+        tlist.append(t)
         hext.append(llg._H_app((0)))
-        
 
     #only plotting and data analysis from here on
 
@@ -73,7 +68,7 @@ def test_external_field_depends_on_t():
     pylab.legend()
     pylab.savefig(MODULE_DIR + '/results.png')
     pylab.close()
-    
+
     #if max_step is not provided, or chosen too large,
     #the external field appears not smooth in this plot.
     #What seems to happen is that the ode integrator
@@ -85,7 +80,7 @@ def test_external_field_depends_on_t():
     pylab.xlabel('time [s]')
     pylab.savefig(MODULE_DIR + '/hext.png')
     pylab.close()
-    
+
     #Then try to fit sinusoidal curve through results
     def sinusoidalfit(t,omega,phi,A,B):
         return A*np.cos(omega*t+phi)+B
@@ -99,8 +94,8 @@ def test_external_field_depends_on_t():
         popt,pcov = scipy.optimize.curve_fit(
             sinusoidalfit,np.array(tlist),np.array(my),
             p0=(omega*1.04,0.,0.1,0.2))
-            #p0 is the set of parameters with which the fitting 
-            #routine starts 
+            #p0 is the set of parameters with which the fitting
+            #routine starts
 
         print "popt=",popt
 
