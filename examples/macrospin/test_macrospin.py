@@ -1,8 +1,8 @@
 import dolfin
 import os
 import numpy
-from scipy.integrate import odeint
 
+from finmag.sim.integrator import LLGIntegrator
 from finmag.sim.llg import LLG
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -21,7 +21,7 @@ def make_analytic_solution(H, alpha, gamma):
 		- H the magnitude of the applied field
 		- alpha has no dimension
 		- gamma alias oommfs gamma_G in m/A*s
-	
+
 	"""
 	p = float(gamma) / (1 + alpha**2)
 	theta0 = numpy.pi / 2
@@ -29,7 +29,7 @@ def make_analytic_solution(H, alpha, gamma):
 
 	# Matteo uses spherical coordinates,
 	# which have to be converted to cartesian coordinates.
-	
+
 	def phi(t):
 	    return p * H * t
 	def cos_theta(t):
@@ -55,7 +55,7 @@ def compare_with_analytic_solution(alpha=0.5, max_t=1e-9):
 
     """
     print "Running comparison with alpha={0}.".format(alpha)
-    
+
     # define 3d mesh
     x0 = y0 = z0 = 0
     x1 = y1 = z1 = 10e-9
@@ -67,10 +67,11 @@ def compare_with_analytic_solution(alpha=0.5, max_t=1e-9):
     llg.set_m((1, 0, 0))
     llg.H_app = (0, 0, 1e6)
     llg.setup(use_exchange=False)
-
+    integrator = LLGIntegrator(llg, llg.m, abstol=1e-12, reltol=1e-12)
     ts = numpy.linspace(0, max_t, num=100)
     tsfine = numpy.linspace(0, max_t, num=1000)
-    ys = odeint(llg.solve_for, llg.m, ts)
+    #ys = odeint(llg.solve_for, llg.m, ts)
+    ys = numpy.array([(integrator.run_until(t), integrator.m.copy())[1] for t in ts])
     m_analytical = make_analytic_solution(1e6, alpha, llg.gamma)
     save_plot(ts, ys, tsfine, m_analytical, alpha)
 
@@ -83,19 +84,19 @@ def compare_with_analytic_solution(alpha=0.5, max_t=1e-9):
         print "t= {0:.3g}, diff_max= {1:.3g}.".format(ts[i], diff_max)
 
         msg = "Diff at t= {0:.3g} too large.\nAllowed {1:.3g}. Got {2:.3g}."
-        assert diff_max < TOLERANCE, msg.format(ts[i], TOLERANCE, diff_max) 
+        assert diff_max < TOLERANCE, msg.format(ts[i], TOLERANCE, diff_max)
 
-def save_plot(ts, ys, ts_ref, m_ref, alpha): 
-    ys3d = ys.reshape((len(ys),3,8)).mean(-1) 
+def save_plot(ts, ys, ts_ref, m_ref, alpha):
+    ys3d = ys.reshape((len(ys),3,8)).mean(-1)
     mx = ys3d[:,0]
     my = ys3d[:,1]
     mz = ys3d[:,2]
     print "mx.shape",mx.shape
     print "m_analytical.shape",m_ref(ts).shape
     m_exact = m_ref(ts_ref)
-    mx_exact = m_exact[0,:] 
-    my_exact = m_exact[1,:] 
-    mz_exact = m_exact[2,:] 
+    mx_exact = m_exact[0,:]
+    my_exact = m_exact[1,:]
+    mz_exact = m_exact[2,:]
 
     import matplotlib as mpl
     mpl.use("Agg")
@@ -114,7 +115,7 @@ def save_plot(ts, ys, ts_ref, m_ref, alpha):
     plt.legend()
     filename = ('alpha-%04.2f' % alpha)
     #latex does not like multiple '.' in image filenames
-    filename = filename.replace('.','-') 
+    filename = filename.replace('.','-')
     plt.savefig(os.path.join(MODULE_DIR,filename+'.png'))
     plt.close()
     #pylab.show()
@@ -130,7 +131,7 @@ def test_macrospin_standard_damping():
 
 def test_macrospin_higher_damping():
     compare_with_analytic_solution(alpha=1, max_t=1e-10)
-	
+
 if __name__=="__main__":
     test_macrospin_very_low_damping()
     test_macrospin_low_damping()
