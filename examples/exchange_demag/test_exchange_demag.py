@@ -78,7 +78,7 @@ def run_finmag():
 
 def test_compare_averages():
     ref = np.array(h.read_float_data(MODULE_DIR + "/averages_ref.txt"))
-    if True or not (os.path.isfile(MODULE_DIR + "/averages.txt") and
+    if not (os.path.isfile(MODULE_DIR + "/averages.txt") and
             os.path.isfile(MODULE_DIR + "/exchange_demag.png")):
         run_finmag()
 
