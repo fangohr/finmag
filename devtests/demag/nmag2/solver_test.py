@@ -19,7 +19,7 @@ TOL = 1e-2
 
 ref_data = np.array(h.read_float_data(MODULE_DIR + "/../../../examples/exchange_demag/averages_ref.txt"))
 #mesh = df.Mesh(convert_mesh(MODULE_DIR + "/../../../examples/exchange_demag/bar30_30_100.geo"))
-mesh = df.Box(0,0,0,30,30,100, 6,6,20)
+mesh = df.Box(0,0,0,30,30,100, 3,3,10)
 
 # Set up LLG
 llg = LLG(mesh, mesh_units=1e-9)
@@ -44,7 +44,7 @@ bar = pb.ProgressBar(maxval=60, \
 counter = 0
 print "Time integration (this may take some time..)"
 max_diff = 0
-while r.successful() and r.t <= T1:
+while False and r.successful() and r.t <= T1:
     bar.update(counter)
     counter += 1
     mx, my, mz = llg.m_average
@@ -60,23 +60,23 @@ while r.successful() and r.t <= T1:
     r.integrate(r.t + dt)
 print "scipy ode", max_diff
 
-max_diff = 0
-# Do the same with Dmitri's time integrator
-for i in range(61):
-    t = i*dt
-    integrator.run_until(t)
+def comparisson(method):
+    llg.set_m((1,0,1))
+    integrator = LLGIntegrator(llg, llg.m, backend=method)
 
-    m = integrator.m.copy()
-    m.shape = (3, -1)
-    mx, my, mz = m
-    mx, my, mz = np.average(mx), np.average(my), np.average(mz)
-    computed = np.array([mx, my, mz])
+    max_diff = 0
+    for i in range(61):
+        t = i*dt
+        integrator.run_until(t)
+        ref = ref_data[i, 1:]
+        diff = np.abs(ref - llg.m.average)
 
-    ref = ref_data[i, 1:]
-    diff = np.abs(ref - computed)
+        if np.max(diff) > max_diff:
+            max_diff = np.max(diff)
+    return max_diff
 
-    if np.max(diff) > max_diff:
-        max_diff = np.max(diff)
-
-print "Dmitri:", max_diff
+methods = ["scipy", "sundials"]
+for method in methods:
+    diff = comparisson(method)
+    print method, diff
 
