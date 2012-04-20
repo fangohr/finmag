@@ -2,3 +2,4 @@ Anisotropy finmag.sim.anisotropy
 Exchange finmag.sim.exchange
 LLG finmag.sim.llg
 DMI finmag.sim.dmi
+FKSolver finmag.demag.solver_fk

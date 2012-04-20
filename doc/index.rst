@@ -19,6 +19,7 @@ logo and link to
    modules/Exchange.rst
    modules/Anisotropy.rst
    modules/DMI.rst
+   modules/FKSolver.rst
 
 .. comment:
    background.txt
