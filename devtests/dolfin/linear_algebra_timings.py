@@ -9,7 +9,7 @@ from dolfin import *
 import pylab
 
 # Mesh sizes to check
-mesh_sizes = [2, 3, 4, 6, 8, 11]#, 16, 23, 32, 45, 64, 91]
+mesh_sizes = [2, 3, 4, 6, 8, 11, 16, 23, 32, 45, 64, 91]
 
 # Global data for plotting
 _legends = []
@@ -83,6 +83,7 @@ bench_solver("cg", "none")
 bench_solver("cg", "ilu")
 bench_solver("gmres", "amg")
 bench_solver("cg", "amg")
+bench_solver("tfqmr", "ilu")
 
 # Finish plot
 pylab.grid(True)
@@ -90,7 +91,7 @@ pylab.title("Solving Poisson's equation with DOLFIN 1.0.0")
 pylab.xlabel("N")
 pylab.ylabel("CPU time")
 pylab.legend(_legends, "upper left")
-#pylab.savefig("linear-algebra-timings.pdf")
-#pylab.savefig("linear-algebra-timings.png")
-#print("Data plotted in linear-algebra-timings.png/pdf")
+pylab.savefig("linear-algebra-timings.pdf")
+pylab.savefig("linear-algebra-timings.png")
+print("Data plotted in linear-algebra-timings.png/pdf")
 pylab.show()
