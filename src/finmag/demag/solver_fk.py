@@ -241,8 +241,6 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
 
         return B
 
-
-
 class FemBemFKSolverOld(sb.FemBemDeMagSolver):
     # Very deprecated, should be removed soon.
     """FemBem solver for Demag Problems using the Fredkin-Koehler approach."""
