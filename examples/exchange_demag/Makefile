@@ -1,4 +1,4 @@
-all: nmag
+ all: nmag
 
 mesh:
 	- netgen -geofile=bar30_30_100.geo -meshfiletype="Neutral Format" -meshfile=bar30_30_100.neutral -batchmode
@@ -14,7 +14,7 @@ meshshow:
 	mayavi2 -d bar.vtk -m Surface
 
 finmag:
-	python exchange_demag.py
+	python test_exchange_demag.py
 
 show:
 	gnuplot gnu.plot
