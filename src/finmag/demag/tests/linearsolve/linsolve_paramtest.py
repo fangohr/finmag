@@ -25,18 +25,6 @@ def solver_parameters(solver_exclude, preconditioner_exclude):
     linear_solver_set += [e[0] for e in dolfin.krylov_solver_methods()]
     preconditioner_set = [e[0] for e in dolfin.krylov_solver_preconditioners()]
 
-    solver_parameters_set = []
-    for l in linear_solver_set:
-        if l in solver_exclude:
-            continue
-        for p in preconditioner_set:
-            if p in preconditioner_exclude:
-                continue
-            if (l == "lu" or l == "default") and p != "none":
-                continue
-            solver_parameters_set.append({"linear_solver": l, "preconditioner": p})
-    return solver_parameters_set
-
 class LinAlgDemagTester(object):
     """
     A class to test the speed of linalg solvers and preconditioners
@@ -63,6 +51,7 @@ class LinAlgDemagTester(object):
             raise Exception("Only 'FK, and 'GCR' solver values possible")
                     
     def test(self):
+
         #Create a list of timer objects, there will be 1 timer for each set of parameters
         self.timelist = []
 
@@ -157,12 +146,20 @@ if __name__ == "__main__":
     ## If a tuple/list is given the 1st solve is done according to the 1st parameter dictionary,
     ## and the 2nd solve according to the 2ns parameter dictionary.
 
-    default_params =[{"linear_solver":"gmres","preconditioner": "ilu"}, \
-                     {"linear_solver":"lu"},    \
-                     {"linear_solver":"cg","preconditioner": "ilu"},
-                     {"linear_solver":"gmres","preconditioner":"ilu","absolute_tolerance":1.0e-5},
-                     {"linear_solver":"gmres","preconditioner":"ilu","relative_tolerance":1.0e-5}]
+    default_params =[{"linear_solver":"tfqmr",'preconditioner':"ilu"}, \
+                     {"linear_solver":"tfqmr",'preconditioner':"default"},    \
+                     {"linear_solver":"bicgstab",'preconditioner':"ilu"}, \
+                     {"linear_solver":"bicgstab",'preconditioner':"default"},
+                     {"linear_solver":"tfqmr",'preconditioner':"bjacobi"}]
 
+#[1;37;34mrichardson, none: 0.003942 s#[0m
+#[1;37;34mcg, none: 0.004244 s#[0m
+#[1;37;34mbicgstab, none: 0.005020 s#[0m
+#[1;37;34mgmres, none: 0.005216 s#[0m
+
+    #have we swapped preconditioners and linear_solvers? Not sure (HF).
+    #GB The above dictionary is correct, ilu is a preconditioner and cg is a krylov solver.
+    
     #to use all methods, activate next line
     #default_params = solver_parameters(solver_exclude=[], preconditioner_exclude=[])
     #print default_params
@@ -174,9 +171,9 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
     #Create a range of mesh sizes
-    sizelist = [4,2,1.5]
+    sizelist = [4,3]
     #Important use floats here so the entry order stays consistent 
-    sizelist = ([4.0,3.0,2.0,1.5,1.0])
+    sizelist = [4.0,2.0,1.5,1.2,1.0]
     problems = [pft.MagSphere(10,hmax = i) for i in sizelist]
 
     #Run the tests
@@ -185,7 +182,10 @@ if __name__ == "__main__":
         t.test()
         
     meshsizes = numpy.array([p.mesh.num_vertices() for p in problems])
-#For each linear solve..
+    
+    #Output
+    plt.grid(True)
+    #For each linear solve..
     solvelist = ["1st linear solve","2nd linear solve"]
     for j,linearsolve in enumerate(solvelist):
 
