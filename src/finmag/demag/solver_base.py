@@ -88,7 +88,7 @@ class FemBemDeMagSolver(DeMagSolver):
         #Parameters to use a quadrature rule that avoids the endpoints
         #of a triangle #GB NOT WORKING with CG1 elements
         self.ffc_options = {"quadrature_rule":"canonical"}
-        
+
         #Change the Function space to CR
         self.V = FunctionSpace(self.problem.mesh,element,degree)
         #Create and store a Trial and Test Function
@@ -100,6 +100,15 @@ class FemBemDeMagSolver(DeMagSolver):
         # Store the computed boundary element matrix
         self.bem = None
 
+        timings.start("phi1: build poisson matrix")
+        self.build_poisson_matrix()
+        timings.stop("phi1: build poisson matrix")
+
+        self.laplace_zeros = Function(self.V).vector()
+        self.laplace_solver = KrylovSolver()
+        self.laplace_solver.parameters["preconditioner"]["same_nonzero_pattern"] = True
+
+
         #build the boundary data (normals and coordinates)
         timings.start("Build doftionary stuff")
         self.build_boundary_data()
@@ -107,7 +116,7 @@ class FemBemDeMagSolver(DeMagSolver):
         timings.start("Build C-restrict to")
         self.build_crestrict_to()
         timings.stop("Build C-restrict to")
-        
+
     def build_crestrict_to(self):
         #Create the c++ function for restrict_to
         c_code_restrict_to = """
@@ -119,12 +128,12 @@ class FemBemDeMagSolver(DeMagSolver):
 
         args = [["bigvec_n", "bigvec"],["resvec_n", "resvec"],["dofs_n","dofs","unsigned int"]]
         self.crestrict_to = instant.inline_with_numpy(c_code_restrict_to, arrays=args)
-            
+
     def calc_phitot(self,func1,func2):
         """Add two functions to get phitotal"""
         self.phi.vector()[:] = func1.vector()[:] + func2.vector()[:]
         return self.phi
-            
+
     def get_boundary_dofs(self,V):
         """Gets the dofs that live on the boundary of the mesh
             of function space V"""
@@ -142,7 +151,7 @@ class FemBemDeMagSolver(DeMagSolver):
         #Renormalize the normals
         avgnormtionary = {k: avgnormtionary[k]/sqrt(np.dot(avgnormtionary[k],avgnormtionary[k].conj())) for k in avgnormtionary}
         return avgnormtionary
-    
+
     def build_boundary_data(self):
         """
         Builds two boundary data dictionaries
@@ -155,10 +164,10 @@ class FemBemDeMagSolver(DeMagSolver):
         d = mesh.topology().dim()
         dm = self.V.dofmap()
         boundarydofs = self.get_boundary_dofs(self.V)
-        
+
 
         #It is very import that this vector has the right length
-        #It holds the local dof numbers associated to a facet 
+        #It holds the local dof numbers associated to a facet
         facetdofs = np.zeros(dm.num_facet_dofs(),dtype=np.uintc)
 
         #Initialize dof-to-normal dictionary
@@ -170,9 +179,9 @@ class FemBemDeMagSolver(DeMagSolver):
             #one cell means we are on the boundary
             if len(cells) ==1:
                 #######################################
-                #Shared Data for Normal and coordinates 
+                #Shared Data for Normal and coordinates
                 #######################################
-                
+
                 #create one cell (since we have CG)
                 cell = Cell(mesh,cells[0])
                 #Local to global map
@@ -181,7 +190,7 @@ class FemBemDeMagSolver(DeMagSolver):
                 #######################################
                 #Find  Dof Coordinates
                 #######################################
-                        
+
                 #Create the cell dofs and see if any
                 #of the global numbers turn up in BoundaryDofs
                 #If so update doftionary with the coordinates
@@ -190,7 +199,7 @@ class FemBemDeMagSolver(DeMagSolver):
                 for locind,dof in enumerate(globaldofcell):
                     if dof in boundarydofs:
                         doftionary[dof] = celldofcord[locind]
-                    
+
                 #######################################
                 #Find Normals
                 #######################################
@@ -207,17 +216,17 @@ class FemBemDeMagSolver(DeMagSolver):
                         doftonormal[gdof] = []
                     #Prevent redundancy in Normals (for example 3d UnitCube CG1)
                     if ntup not in doftonormal[gdof]:
-                        doftonormal[gdof].append(ntup) 
-                    
+                        doftonormal[gdof].append(ntup)
+
             elif len(cells) == 2:
                 #we are on the inside so continue
                 continue
             else:
                 assert 1==2,"Expected only two cells per facet and not " + str(len(cells))
-                
+
         #Build the average normtionary and save data
         self.doftonormal = doftonormal
-        self.normtionary = self.get_dof_normal_dict_avg(doftonormal)      
+        self.normtionary = self.get_dof_normal_dict_avg(doftonormal)
         self.doftionary = doftionary
         #numpy array with type double for use by instant (c++)
         self.doflist_double = np.array(doftionary.keys(),dtype = self.normtionary[self.normtionary.keys()[0]].dtype.name)
@@ -235,26 +244,14 @@ class FemBemDeMagSolver(DeMagSolver):
         a = dot(grad(self.u),grad(self.v))*dx
         self.poisson_matrix = assemble(a)
 
-    def solve_laplace_inside(self,function,solverparams = None):
+    def solve_laplace_inside(self, function, solverparams=None):
         """Take a functions boundary data as a dirichlet BC and solve
             a laplace equation"""
-        bc = DirichletBC(self.V,function, "on_boundary")
-        
-        #Buffer data independant of M
-        if not hasattr(self,"poisson_matrix"):
-            self.build_poisson_matrix()
-        if not hasattr(self,"laplace_F"):
-            #RHS = 0
-            self.laplace_f = Function(self.V).vector()
-
-        #Copy the poisson matrix it is shared and should
-        #not have bc applied to it.
-        laplace_A = self.poisson_matrix
-        #Apply BC
-        bc.apply(laplace_A)
-        #Boundary values of laplace_f are overwritten on each call.
-        bc.apply(self.laplace_f)
-        self.linsolve_laplace_inside(function,laplace_A,solverparams)        
+        bc = DirichletBC(self.V, function, DomainBoundary())
+        A = self.poisson_matrix.copy()
+        b = self.laplace_zeros.copy()
+        bc.apply(A, b)
+        self.laplace_solver.solve(A, function.vector(), b)
         return function
 
     def linsolve_laplace_inside(self,function,laplace_A,solverparams = None):

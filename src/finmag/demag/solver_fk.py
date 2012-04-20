@@ -49,9 +49,9 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
 
         # I think these are the fastest solvers I could find today.
         self.phi1_solver = df.KrylovSolver(self.poisson_matrix)
-        self.phi2_solver = df.KrylovSolver()
+        #self.phi2_solver = df.KrylovSolver()
         self.phi1_solver.parameters["preconditioner"]["same_nonzero_pattern"] = True
-        self.phi2_solver.parameters["preconditioner"]["same_nonzero_pattern"] = True
+        #self.phi2_solver.parameters["preconditioner"]["same_nonzero_pattern"] = True
 
     def compute_field(self):
         """Using this instead of compute_demagfield from base for now."""
@@ -105,20 +105,24 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
 
         # Compute Laplace's equation inside the domain
         timings.startnext("Compute phi2 inside")
-        self.solve_laplace_inside()
-
+        self.phi2 = self.solve_laplace_inside(self.phi2)
+        #self.solve_laplace_inside()
         # phi = phi1 + phi2
         timings.startnext("Add phi1 and phi2")
         self.phi = self.calc_phitot(self.phi1, self.phi2)
         timings.stop("Add phi1 and phi2")
 
+    '''
     def solve_laplace_inside(self):
         """Suspect this function from solver_base to be buggy."""
+        #NOTE: This is now fixed, but keep this until we are really
+        #sure that it's fixed.
         bc = df.DirichletBC(self.V, self.phi2, df.DomainBoundary())
         A = self.poisson_matrix.copy()
         b = self.laplace_zeros.copy()
         bc.apply(A, b)
         self.phi2_solver.solve(A, self.phi2.vector(), b)
+    '''
 
     def __build_matrices(self):
         """
@@ -132,10 +136,6 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         b = Ms*df.inner(w, df.grad(v))*df.dx
         self.D = df.assemble(b)
         timings.stop("phi1: compute D")
-
-        timings.start("phi1: build poisson matrix")
-        self.build_poisson_matrix()
-        timings.stop("phi1: build poisson matrix")
 
         # Compute boundary element matrix
         timings.start("Build boundary element matrix")
