@@ -44,8 +44,6 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
           self.phib = self.solve_phib_boundary(self.phia,self.doftionary)
           #Solve for phib on the inside of the mesh with Fem
           logger.info("GCR: Solve for phi_b (laplace on the inside)")
-
-          #THis FUNCTION RETURNS NONE!
           self.phib = self.solve_laplace_inside(self.phib,solverparams = self.phibsolverparams)
           # Add together the two potentials
           self.phi = self.calc_phitot(self.phia,self.phib)
@@ -83,7 +81,12 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
           Linear solve for phia written for the
           convenience of changing solver parameters in subclasses
           """
-          solve(A,self.phia.vector(),F,solver_parameters = self.phiasolverparams)
+          if "preconditioner" in self.phiasolverparams.keys():
+               solve(A,self.phia.vector(),F, \
+               self.phiasolverparams["linear_solver"], \
+               self.phiasolverparams["preconditioner"])
+          else:
+               solve(A,self.phia.vector(),F,self.phiasolverparams["linear_solver"])
           
      def solve_phib_boundary(self,phia,doftionary):
           """Solve for phib on the boundary using BEM"""

@@ -1,6 +1,9 @@
+#Modified By Gabriel Balaban April 20, 20012
+
 import dolfin
 import ufl
 import operator
+import numpy as np
 
 def solver_parameters(solver_exclude, preconditioner_exclude):
     linear_solver_set = ["lu"] 
@@ -101,7 +104,7 @@ def solve(*args, **kwargs):
             timer = dolfin.Timer("Solver benchmark")
             timer.start()
             try:
-                ret = solve(*new_args, **new_kwargs)
+                ret = solve(*new_args)
             except RuntimeError as e:
                 solver_failed = True
                 if 'diverged' in e.message.lower():
@@ -110,6 +113,11 @@ def solve(*args, **kwargs):
                     failure_reason = 'unknown'
                 pass
             timer.stop()
+
+            #Check to see if the solver returned a zero solution
+            if np.any(args[1].array().all() == 0.0):
+                solver_failed = True
+                failure_reason = 'Zero Solution'
 
             # Save the result
             parameters_str = parameters["linear_solver"] + ", " + parameters["preconditioner"]
@@ -131,6 +139,6 @@ def solve(*args, **kwargs):
             print_benchmark_report(solver_timings, failed_solvers) 
 
     else:
-        ret = solve(*args, **kwargs)
+        ret = solve(*args)
     return ret
 
