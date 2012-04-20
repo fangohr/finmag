@@ -1,8 +1,4 @@
-all: rmresults xmlmesh h5mesh nmag finmag cleanup
-
-rmresults:
-	touch results.txt
-	rm results.txt
+all: xmlmesh h5mesh nmag finmag cleanup
 
 xmlmesh:
 	- netgen -geofile=bar.geo -meshfiletype="DIFFPACK Format" -meshfile=bar.grid -batchmode
