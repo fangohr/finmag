@@ -6,6 +6,7 @@ __project__ = "Finmag"
 __organisation__ = "University of Southampton"
 
 from dolfin import *
+import pytest
 import numpy as np
 import finmag.demag.problems.prob_trunc_testcases as pttc
 import finmag.demag.problems.prob_fembem_testcases as pftc
@@ -243,6 +244,7 @@ class TestFemBemDeMagSolver(object):
         assert numdofcalc == numdofactual,"Error in Boundary Dof Dictionary creation, number of DOFS " +str(numdofcalc)+ \
                                           " does not match that of the Boundary Mesh " + str(numdofactual)
 
+    @pytest.mark.xfail
     def test_solve_laplace_inside(self):
         """Solve a known laplace equation to check the method solve_laplace_inside"""
         mesh = UnitSquare(2,2)
@@ -258,8 +260,8 @@ class TestFemBemDeMagSolver(object):
         #The Laplace equation should give the same solution as f
         fnew = self.solver.solve_laplace_inside(fnew)
         # FIXME: Why isn't it possible to write fnew.vector().array() now?
-        #assert fold.vector().array().all() == fnew.vector().array().all(),"Error in method test_solve_laplace_inside(), \
-        Laplace solution does not equal original solution"
+        assert fold.vector().array().all() == fnew.vector().array().all(),"Error in method test_solve_laplace_inside(), \
+            Laplace solution does not equal original solution"
         print "solve_laplace_inside testpassed"
 
     def easyspace(self):
