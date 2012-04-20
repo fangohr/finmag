@@ -35,7 +35,7 @@ nxavg = []
 nstddev = []
 errnorm = []
 
-for maxh in (5, 3, 2, 1):
+for maxh in (5, 3, 2, 1.5):
     
     # Create geofile
     geo = """
