@@ -1,9 +1,12 @@
 import numpy as np
 import dolfin as df
 from dolfin import *
-import numpy as np
 import os
+import logging
 import subprocess
+
+logger = logging.getLogger(name='finmag')
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def set_inital_m0(V,m0):
     if isinstance(m0, tuple):
@@ -22,10 +25,11 @@ def set_inital_m0(V,m0):
         raise NotImplementedError,"only a tuple is acceptable for set_inital_m0"
 
 def gen_magpar_conf(base_name,init_m,Ms=8.6e5,A=13e-12,K1=0,a=[0,0,1],alpha=0.1,demag=0):
-    save_path=os.getcwd()
-    new_path=os.path.join(save_path,base_name)
-    if not os.path.exists(new_path):
-        os.makedirs(new_path)
+
+    conf_path = os.path.join(MODULE_DIR, base_name)
+    if not os.path.exists(conf_path):
+        os.makedirs(conf_path)
+    logger.debug("Saving magpar files to {}.".format(conf_path))
 
     norm_a=(a[0]**2+a[1]**2+a[2]**2)**0.5
     tmp_mz=a[2]/norm_a
@@ -41,37 +45,29 @@ def gen_magpar_conf(base_name,init_m,Ms=8.6e5,A=13e-12,K1=0,a=[0,0,1],alpha=0.1,
     krn_info="  %f   %f   %e    0     %f    %e   %f   uni"%(
         theta,phi,K1,np.pi*4e-7*Ms,A,alpha
         )
-   
+    with open(os.path.join(conf_path, base_name+".krn"), "w") as krn_file:
+        krn_file.write(krn_info)
+
     allopt=["-simName ",base_name+"\n",
             "-init_mag ","0\n",
             "-inp ","0000\n",
             "-demag ", str(demag) ]
-
-    file_name=os.path.join(new_path,base_name+".krn")
-    f=open(file_name,'w')
-    f.write(krn_info)
-    f.close()
-
-    file_name=os.path.join(new_path,"allopt.txt")
-    f=open(file_name,'w')
-    f.write("".join(allopt))
-    f.close()
-    
-    file_name=os.path.join(new_path,base_name+".inp")
+    with open(os.path.join(conf_path, "allopt.txt"), "w") as allopt_file:
+        allopt_file.write("".join(allopt))
+   
+    file_name=os.path.join(conf_path, base_name+".inp")
     save_inp_of_inital_m(init_m,file_name)
 
-    file_name=os.path.join(new_path,base_name+".0000.inp")
+    file_name=os.path.join(conf_path, base_name+".0000.inp")
     save_inp_of_inital_m(init_m,file_name)
-    
-    
 
 def run_magpar(base_name):
     magpar_cmd=(os.path.join(os.getenv("HOME")+"/magpar-0.9/src/magpar.exe"))
-    
+   
     save_path=os.getcwd()
-    new_path=os.path.join(save_path,base_name)
+    new_path=os.path.join(MODULE_DIR, base_name)
     os.chdir(new_path)
-    print new_path
+
     subprocess.check_call(magpar_cmd,stdout=subprocess.PIPE)
 
     gzcmd=("gunzip",base_name+".0001.gz")
@@ -164,7 +160,7 @@ def save_inp_of_inital_m(m,file_name):
     
 
 def get_field(base_name,field="anis"):
-    new_path=os.path.join(os.getcwd(),base_name)
+    new_path=os.path.join(MODULE_DIR,base_name)
     file_name=os.path.join(new_path,base_name+".0001")
     fields=read_inp_gz(file_name)
     
@@ -214,12 +210,13 @@ def compute_anis_magpar(V, m, K, a, Ms):
     base_name="test_anis"
 
     gen_magpar_conf(base_name,m,Ms=Ms,a=a,K1=K)
-  
+
     run_magpar(base_name)
- 
+
     nodes,field=get_field(base_name,field="anis")
       
-    new_path=os.path.join(os.getcwd(),base_name)
+    new_path=os.path.join(MODULE_DIR, base_name)
+    logger.debug("will delete {}.".format(new_path))
     rm_cmd=("rm","-rf",new_path)
     subprocess.check_call(rm_cmd)
     
@@ -256,12 +253,11 @@ def compute_exch_magpar(V, m, C, Ms):
 
     gen_magpar_conf(base_name,m,Ms=Ms,A=C)
     
-    new_path=os.path.join(os.getcwd(),base_name)
     run_magpar(base_name)
 
     nodes,field=get_field(base_name,field="exch")
       
-    new_path=os.path.join(os.getcwd(),base_name)
+    new_path=os.path.join(MODULE_DIR, base_name)
 
     #remove files from temporary directory
     rm_cmd=("rm","-rf",new_path)
@@ -289,12 +285,11 @@ def compute_demag_magpar(V, m, Ms):
 
     gen_magpar_conf(base_name,m,Ms=Ms,demag=1)
     
-    new_path=os.path.join(os.getcwd(),base_name)
     run_magpar(base_name)
 
     nodes,field=get_field(base_name,field="demag")
       
-    new_path=os.path.join(os.getcwd(),base_name)
+    new_path=os.path.join(MODULE_DIR, base_name)
 
     rm_cmd=("rm","-rf",new_path)
     subprocess.check_call(rm_cmd)
