@@ -4,7 +4,7 @@ import numpy
 import matplotlib.pyplot as plt
 
 from finmag.sim.llg import LLG
-from finmag.sim.tests.test_macrospin import make_analytical_solution
+from test_macrospin import make_analytic_solution
 from scipy.integrate import odeint
 
 """
@@ -40,7 +40,7 @@ def test_deviations_over_alpha_and_tol(number_of_alphas=5, do_plot=False):
             llg.H_app = (0, 0, 1e5)
             llg.setup(use_exchange=False)
 
-            M_analytical = make_analytical_solution(1, 1e5, llg.alpha, llg.gamma) 
+            M_analytical = make_analytic_solution(1e5, llg.alpha, llg.gamma) 
         
             ts = numpy.linspace(0, 1e-9, num=50)
             ys = odeint(llg.solve_for, llg.m, ts, rtol=rtol, atol=rtol)
