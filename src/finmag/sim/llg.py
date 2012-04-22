@@ -30,7 +30,8 @@ class LLG(object):
         # so usually 1 (for m) for dolfin meshes, but 1e-9 (for nm) for netgen.
         self.mesh_units = mesh_units
         logger.debug("%s" % self.mesh)
-
+    
+        self.F = df.FunctionSpace(self.mesh, 'Lagrange', order)
         self.V = df.VectorFunctionSpace(self.mesh, 'Lagrange', order, dim=3)
         self.Volume = df.assemble(df.Constant(1)*df.dx, mesh=self.mesh)
 
@@ -42,7 +43,10 @@ class LLG(object):
         timings.stop('LLG-init')
 
     def set_default_values(self):
-        self.alpha = 0.5
+        self._alpha_mult = df.Function(self.F)
+        self._alpha_mult.assign(df.Constant(1))
+        self.alpha = 0.5 # alpha for dmdt.c: alpha * _alpha_mult
+
         self.gamma =  2.210173e5 # m/(As)
         #source for gamma:  OOMMF manual, and in Werner Scholz thesis, 
         #after (3.7), llg_gamma_G = m/(As).
@@ -59,8 +63,7 @@ class LLG(object):
         self._post_rhs_callables=[]
         self._anisotropies = []
         self._m = df.Function(self.V)
-
-
+    
     def load_c_code(self):
         """
         Loads the C-code in the file dmdt.c, that will later
@@ -73,10 +76,31 @@ class LLG(object):
         with open(os.path.join(__location__, 'dmdt.c'), "r") as f:
             c_code = f.read()
 
-        args = [["Mn", "M", "in"], ["Hn", "H", "in"],
+        args = [["an", "alpha", "in"], ["Mn", "M", "in"], ["Hn", "H", "in"],
                 ["dMdtn", "dMdt", "out"], ["Pn", "P", "in"]]
         return instant.inline_with_numpy(c_code, arrays = args)
-    
+
+    def spatially_varying_alpha(self, baseline_alpha, multiplicator):
+        """
+        Accepts a dolfin function over llg.F of values
+        with which to multiply the baseline alpha to get the spatially
+        varying alpha.
+
+        """
+        self._alpha_mult = multiplicator
+        self.alpha = baseline_alpha
+
+    @property
+    def alpha(self):
+        return self._alpha
+
+    @alpha.setter
+    def alpha(self, value):
+        self._alpha = value
+        # need to update the alpha vector as well, which is
+        # why we have this property at all.
+        self.alpha_vec = self._alpha * self._alpha_mult.vector().array()
+
     @property
     def M(self):
         """ the magnetisation, with length Ms """
@@ -188,7 +212,7 @@ class LLG(object):
 
         timings.start("LLG-compute-dmdt")
         if self.use_instant_llg:
-            status, dMdt = self._solve(self.alpha, self.gamma, self.c,
+            status, dMdt = self._solve(self.gamma, self.c, self.alpha_vec,
                 self.m, self.H_eff, self.m.shape[0], self.pins, self.do_precession)
         else:
             # Use the same characteristic time as defined by c
