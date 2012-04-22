@@ -30,7 +30,7 @@ class NativeLlgTests(unittest.TestCase):
         # Profile the LLG computation using pyinstant
         c = counter()
         while c.next():
-            llg._solve(llg.alpha, llg.gamma, llg.c, llg.m, llg.H_eff, llg.m.shape[0], llg.pins, llg.do_precession)
+            llg._solve(llg.gamma, llg.c, llg.alpha_vec, llg.m, llg.H_eff, llg.m.shape[0], llg.pins, llg.do_precession)
         print "Computing dm/dt via pyinstant", c
         c = counter()
         H_eff = llg.H_eff.reshape((3, -1))

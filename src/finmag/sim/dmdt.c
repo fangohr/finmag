@@ -1,7 +1,7 @@
-int dmdt(double alpha, double gamma, double c,
-    int Mn, double* M, int Hn, double* H, int dMdtn, double* dMdt,
-    int Pn, double* P,
-    bool do_precession);
+int dmdt(double gamma, double c, int an, double* alpha,
+         int Mn, double* M, int Hn, double* H, int dMdtn, double* dMdt,
+         int Pn, double* P,
+         bool do_precession);
 
 #define DEBUG 1
 #ifdef DEBUG
@@ -10,7 +10,7 @@ int dmdt(double alpha, double gamma, double c,
     #define DLOG(...) /* nothing */
 #endif
 
-int dmdt(double alpha, double gamma, double c,
+int dmdt(double gamma, double c, int an, double* alpha,
          int Mn, double* M, int Hn, double* H, int dMdtn, double* dMdt,
          int Pn, double* P,
          bool do_precession) {
@@ -35,6 +35,14 @@ int dmdt(double alpha, double gamma, double c,
 
     const int ENTRIES_PER_DIM = Mn / DIMENSIONS;
 
+    if ( an != ENTRIES_PER_DIM ) {
+        DLOG("in '%s': ", __PRETTY_FUNCTION__);
+        DLOG("Expected %d values of alpha (one per vertex).", ENTRIES_PER_DIM);
+        DLOG("alpha[%d].\n", an);
+
+        return EXIT_FAILURE;
+    }
+
     /* The first ENTRIES_PER_DIM entries correspond to the x-dimension,
     the second ENTRIES_PER_DIM entries to the y-dimension and the last
     bunch to the z-dimension. There could have been two variables called
@@ -44,31 +52,31 @@ int dmdt(double alpha, double gamma, double c,
     const int Y = ENTRIES_PER_DIM;
     const int Z = 2 * ENTRIES_PER_DIM;
 
-    double p = gamma / (1 + alpha*alpha); /* precession factor of the LLG */
-    if ( !do_precession )
-        p = 0;
-
-    /* double q = gamma * alpha / (1 + alpha*alpha); */ /* damping explicit */
-    double q = alpha * p; /* marginally faster than line above */
+    double p = 0; /* precession factor of the LLG */
+    double q; /* damping */
+    double M_squared;
 
     for ( int i=0; i<ENTRIES_PER_DIM; i++ ) {
-        double MM = M[X+i]*M[X+i] + M[Y+i]*M[Y+i] + M[Z+i]*M[Z+i];
+        if ( do_precession )
+            p = gamma / (1 + alpha[i]*alpha[i]);
+        q = gamma * alpha[i] / (1 + alpha[i]*alpha[i]);
+        M_squared = M[X+i]*M[X+i] + M[Y+i]*M[Y+i] + M[Z+i]*M[Z+i];
 
         dMdt[X+i] =
             - p * (M[Y+i]*H[Z+i] - M[Z+i]*H[Y+i])
             - q * (  M[Y+i] * (M[X+i]*H[Y+i] - M[Y+i]*H[X+i])
                    - M[Z+i] * (M[Z+i]*H[X+i] - M[X+i]*H[Z+i]))
-            - c * (MM - 1) * M[X+i];
+            - c * (M_squared - 1) * M[X+i];
         dMdt[Y+i] =
             - p * (M[Z+i]*H[X+i] - M[X+i]*H[Z+i])
             - q * (  M[Z+i] * (M[Y+i]*H[Z+i] - M[Z+i]*H[Y+i])
                    - M[X+i] * (M[X+i]*H[Y+i] - M[Y+i]*H[X+i]))
-            - c * (MM - 1) * M[Y+i];
+            - c * (M_squared - 1) * M[Y+i];
         dMdt[Z+i] =
             - p * (M[X+i]*H[Y+i] - M[Y+i]*H[X+i])
             - q * (  M[X+i] * (M[Z+i]*H[X+i] - M[X+i]*H[Z+i])
                    - M[Y+i] * (M[Y+i]*H[Z+i] - M[Z+i]*H[Y+i]))
-            - c * (MM - 1) * M[Z+i];
+            - c * (M_squared - 1) * M[Z+i];
     }
 
     for ( int i=0; i<Pn; i++ ) {
