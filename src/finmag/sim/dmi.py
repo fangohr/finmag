@@ -4,6 +4,164 @@ import logging
 logger=logging.getLogger('finmag')
 from finmag.util.timings import timings
 
+
+def dmi_term3d_dolfin(M,c):
+    return c * df.inner(M, df.curl(M)) * df.dx
+
+def dmi_term3d(M,c,debug=False):
+    """Input arguments:
+      
+       M a dolfin 3d-vector function on a 3d space
+       c the DMI constant.
+
+       Returns the form to compute the DMI energy:
+
+         c * df.inner(M, df.curl(M)) * df.dx                      (1)
+
+       Instead of using this equation, we  can spell out the curl M as:
+
+         curlx = dMzdy - dMydz
+         curly = dMxdz - dMzdx
+         curlz = dMydx - dMxdy
+
+       and do the scalar product with M manually:
+
+         E = c*(Mx*curlx + My*curly + Mz*curlz)*df.dx
+
+       and this is how we compute the rotation in this routine.
+
+       The routine itself is not very useful, the dolfin command in (1)
+       is more effective. However, once this works, we can 
+
+
+
+    """
+
+
+
+    if debug:
+        Mx, My, Mz = M.split()
+        print "Mx=",df.assemble(Mx*df.dx)
+        print "My=",df.assemble(My*df.dx)
+        print "Mz=",df.assemble(Mz*df.dx)
+
+    gradM=df.grad(M)
+
+    dMxdx=gradM[0,0]
+    dMxdy=gradM[0,1]
+    dMxdz=gradM[0,2]
+    dMydx=gradM[1,0]
+    dMydy=gradM[1,1]
+    dMydz=gradM[1,2]
+    dMzdx=gradM[2,0]
+    dMzdy=gradM[2,1]
+    dMzdz=gradM[2,2]
+    
+    if debug:
+        for i in range(3):
+            for j in range(3):
+                print "i=%d, j=%d" % (i,j),
+                print df.assemble(gradM[i,j]*df.dx)
+
+    curlx = dMzdy - dMydz
+    curly = dMxdz - dMzdx
+    curlz = dMydx - dMxdy
+
+    if debug:
+
+        print "curlx=",df.assemble(curlx*df.dx)
+        print "curly=",df.assemble(curly*df.dx)
+        print "curlz=",df.assemble(curlz*df.dx)
+
+    #original equation:
+    #E = c * df.inner(M, df.curl(M)) * df.dx
+
+    #our version:
+    E = c *( M[0]*curlx+M[1]*curly+M[2]*curlz) * df.dx
+
+    logger.debug("dmi_term3d: leaving")
+    return E
+
+
+def dmi_term2d(M,c,debug=False):
+    """Input arguments:
+      
+       M a dolfin 3d-vector function on a 2d space,
+       c the DMI constant.
+
+       Returns the form to compute the DMI energy:
+
+         c * df.inner(M, df.curl(M)) * df.dx                      (1)
+
+       However, curl(M) cannot be computed on a 2d mesh. We thus do it manually.
+
+       Instead of using (1) equation, we  can spell out the curl M as:
+
+         curlx = dMzdy - dMydz
+         curly = dMxdz - dMzdx
+         curlz = dMydx - dMxdy
+
+       and do the scalar product with M manually:
+
+         E = c*(Mx*curlx + My*curly + Mz*curlz)*df.dx
+
+       We set dMx/dz = 0, dMy/dz=0, dMz/dz=0, assuming that the 2d mesh 
+       lives in the x-y plane, and thus the physics cannot change as a function 
+       of z.
+
+       (Fully analog to dmi_term3d(M,c), which in turn is equivalent to
+        inner(M,curl(M))*dx).
+
+
+
+    """
+
+    if debug:
+        Mx, My, Mz = M.split()
+        print "Mx=",df.assemble(Mx*df.dx)
+        print "My=",df.assemble(My*df.dx)
+        print "Mz=",df.assemble(Mz*df.dx)
+
+    gradM=df.grad(M)
+
+    dMxdx=gradM[0,0]
+    dMxdy=gradM[0,1]
+    #dMxdz=gradM[0,2]
+    dMxdz = 0
+    dMydx=gradM[1,0]
+    dMydy=gradM[1,1]
+    #dMydz=gradM[1,2]
+    dMydz = 0
+    dMzdx=gradM[2,0]
+    dMzdy=gradM[2,1]
+    #dMzdz=gradM[2,2]
+    dMzdz = 0
+    
+    if debug:
+        for i in range(3):
+            for j in range(2):
+                print "i=%d, j=%d" % (i,j),
+                print df.assemble(gradM[i,j]*df.dx)
+
+    curlx = dMzdy - dMydz
+    curly = dMxdz - dMzdx
+    curlz = dMydx - dMxdy
+
+    if debug:
+        print "curlx=",df.assemble(curlx*df.dx)
+        print "curly=",df.assemble(curly*df.dx)
+        print "curlz=",df.assemble(curlz*df.dx)
+
+    #original equation:
+    #E = c * df.inner(M, df.curl(M)) * df.dx
+
+    #our version:
+    E = c *( M[0]*curlx+M[1]*curly+M[2]*curlz) * df.dx
+
+    #logger.debug("dmi_term2d: leaving")
+    return E
+
+
 class DMI(object):
     """
     Compute the DMI field.
@@ -82,11 +240,24 @@ class DMI(object):
         self.M = M
         self.DMIconstant = df.Constant(D) #Dzyaloshinsky-Moriya Constant
         self.method = method
-       
-        self.v = df.TestFunction(V)
-        #Equation is chosen from the folowing papers
+
+        self.v = df.TestFunction(V)        #Equation is chosen from the folowing papers
         #Yu-Onose2010, Li-Lin2011, Elhoja-Canals2002, Bode-Heide2007, Bak-Jensen1980
-        self.E = self.DMIconstant * df.inner(self.M, df.curl(self.M)) * df.dx
+        #self.E = self.DMIconstant * df.inner(self.M, df.curl(self.M)) * df.dx
+
+        #self.E = dmi_term3d_dolfin(self.M,self.DMIconstant)
+
+
+        mesh_shape = V.mesh().coordinates().shape
+        meshdim = mesh_shape[1]
+        logger.debug("Mesh dimension is " + str(meshdim))
+        if meshdim == 1: #2d mesh
+            NotImplementedError("Not implemented for 1d mesh yet -- should be easy though")
+        elif meshdim == 2: #2d mesh
+            self.E = dmi_term2d(self.M,self.DMIconstant,debug=False)
+        elif meshdim ==3: #3d mesh
+            self.E = dmi_term3d(self.M,self.DMIconstant,debug=False)
+
         #Muhbauer2011
         #self.E = self.E = self.DMIconstant * df.inner(self.M, df.curl(self.M)) * df.dx
         #Rossler-Bogdanov2006
