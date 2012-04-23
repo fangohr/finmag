@@ -36,43 +36,28 @@ namespace finmag { namespace llg {
 
         finmag::util::scoped_gil_release release_gil;
 
-        // calculate dm
-        if (do_precession) {
-            #pragma omp parallel for schedule(guided)
-            for (int i = 0; i < n; i++) {
+        // calculate dmdt
+        #pragma omp parallel for schedule(guided)
+        for (int i=0; i < n; i++) {
+
+            // add damping: m x (m x H) == (m.H)m - (m.m)H, multiplied by -gamma alpha
+            double mh = m0[i] * h0[i] + m1[i] * h1[i] + m2[i] * h2[i];
+            double mm = m0[i] * m0[i] + m1[i] * m1[i] + m2[i] * m2[i];
+            dm0[i] = damping_coeff*(m0[i] * mh - h0[i] * mm);
+            dm1[i] = damping_coeff*(m1[i] * mh - h1[i] * mm);
+            dm2[i] = damping_coeff*(m2[i] * mh - h2[i] * mm);
+
+            // add relaxation of |m|
+            double relax = relax_coeff*(1.-mm);
+            dm0[i] += relax*m0[i];
+            dm1[i] += relax*m1[i];
+            dm2[i] += relax*m2[i];
+
+            if (do_precession) {
                 // add precession: - gamma m x H
-                dm0[i] = precession_coeff*cross0(m0[i], m1[i], m2[i], h0[i], h1[i], h2[i]);
-                dm1[i] = precession_coeff*cross1(m0[i], m1[i], m2[i], h0[i], h1[i], h2[i]);
-                dm2[i] = precession_coeff*cross2(m0[i], m1[i], m2[i], h0[i], h1[i], h2[i]);
-
-                // add damping: m x (m x H) == (m.H)m - (m.m)H, multiplied by -gamma alpha
-                double mh = m0[i] * h0[i] + m1[i] * h1[i] + m2[i] * h2[i];
-                double mm = m0[i] * m0[i] + m1[i] * m1[i] + m2[i] * m2[i];
-                dm0[i] += damping_coeff*(m0[i] * mh - h0[i] * mm);
-                dm1[i] += damping_coeff*(m1[i] * mh - h1[i] * mm);
-                dm2[i] += damping_coeff*(m2[i] * mh - h2[i] * mm);
-
-                // add relaxation of |m|
-                double relax = relax_coeff*(1.-mm);
-                dm0[i] += relax*m0[i];
-                dm1[i] += relax*m1[i];
-                dm2[i] += relax*m2[i];
-            }
-        } else {
-            #pragma omp parallel for schedule(guided)
-            for (int i = 0; i < n; i++) {
-                // add damping: m x (m x H) == (m.H)m - (m.m)H, multiplied by -gamma alpha
-                double mh = m0[i] * h0[i] + m1[i] * h1[i] + m2[i] * h2[i];
-                double mm = m0[i] * m0[i] + m1[i] * m1[i] + m2[i] * m2[i];
-                dm0[i] = damping_coeff*(m0[i] * mh - h0[i] * mm);
-                dm1[i] = damping_coeff*(m1[i] * mh - h1[i] * mm);
-                dm2[i] = damping_coeff*(m2[i] * mh - h2[i] * mm);
-
-                // add relaxation of |m|
-                double relax = relax_coeff*(1.-mm);
-                dm0[i] += relax*m0[i];
-                dm1[i] += relax*m1[i];
-                dm2[i] += relax*m2[i];
+                dm0[i] += precession_coeff*cross0(m0[i], m1[i], m2[i], h0[i], h1[i], h2[i]);
+                dm1[i] += precession_coeff*cross1(m0[i], m1[i], m2[i], h0[i], h1[i], h2[i]);
+                dm2[i] += precession_coeff*cross2(m0[i], m1[i], m2[i], h0[i], h1[i], h2[i]);
             }
         }
 
