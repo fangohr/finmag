@@ -40,7 +40,10 @@ def run_make(cmd, **kwargs):
         subprocess.check_output(cmd, stderr=subprocess.STDOUT, **kwargs)
     except subprocess.CalledProcessError, ex:
         output = replace_c_errors_with_python_errors(ex.output)
-        sys.stderr.write(repr(output))
+        with open(MODULES_OUTPUT_DIR + "/compiler_errors.log", "w") as f:
+            f.write(output)
+        print "If you can't see the error message below, either set your term to deal with utf8, or check the file src/finmag/native/compiler_errors.log"
+        sys.stderr.write(output)
         raise Exception("make_modules: Make failed")
 
 modules_compiled = False
