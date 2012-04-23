@@ -18,7 +18,7 @@ from finmag.util.timings import timings
 logger = logging.getLogger(name='finmag')
 
 class LLG(object):
-    def __init__(self, mesh, order=1, mesh_units=1, use_instant_llg=True, do_precession=True):
+    def __init__(self, mesh, order=1, mesh_units=1, use_instant_llg=False, do_precession=True):
         logger.info('Creating LLG object (rank=%s/%s) %s' % (df.MPI.process_number(),
                                                               df.MPI.num_processes(),
                                                               time.asctime()))
