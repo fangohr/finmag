@@ -231,7 +231,7 @@ class LLG(object):
             dMdt = np.zeros(m.shape)
             # Calculate dm/dt
             native_llg.calc_llg_dmdt(m, H_eff, self.t, dMdt, self.pins,
-                                     self.gamma/(1.+self.alpha**2), self.alpha, 
+                                     self.gamma/(1.+self.alpha**2), self.alpha_vec, 
                                      char_time, self.do_precession)
             dMdt.shape = (-1,)
             status = 0
