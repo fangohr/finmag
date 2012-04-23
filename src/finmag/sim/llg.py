@@ -1,8 +1,6 @@
-import os
 import numpy as np
 import logging 
 import dolfin as df
-import instant
 import time
 import finmag.sim.helpers as h
 from finmag.sim.exchange import Exchange
@@ -18,7 +16,7 @@ from finmag.util.timings import timings
 logger = logging.getLogger(name='finmag')
 
 class LLG(object):
-    def __init__(self, mesh, order=1, mesh_units=1, use_instant_llg=False, do_precession=True):
+    def __init__(self, mesh, order=1, mesh_units=1, do_precession=True):
         logger.info('Creating LLG object (rank=%s/%s) %s' % (df.MPI.process_number(),
                                                               df.MPI.num_processes(),
                                                               time.asctime()))
@@ -36,10 +34,7 @@ class LLG(object):
         self.Volume = df.assemble(df.Constant(1)*df.dx, mesh=self.mesh)
 
         self.set_default_values()
-        self.use_instant_llg = use_instant_llg
         self.do_precession = do_precession
-        if use_instant_llg:
-            self._solve = self.load_c_code()
         timings.stop('LLG-init')
 
     def set_default_values(self):
@@ -69,22 +64,6 @@ class LLG(object):
     def pins(self):
         return self._pins
     pins = property(pins, set_pins)
-
-    def load_c_code(self):
-        """
-        Loads the C-code in the file dmdt.c, that will later
-        get called to compute the right-hand side of the LLG equation.
-
-        """
-        __location__ = os.path.realpath(
-            os.path.join(os.getcwd(), os.path.dirname(__file__)))
-
-        with open(os.path.join(__location__, 'dmdt.c'), "r") as f:
-            c_code = f.read()
-
-        args = [["an", "alpha", "in"], ["Mn", "M", "in"], ["Hn", "H", "in"],
-                ["dMdtn", "dMdt", "out"], ["Pn", "P", "in"]]
-        return instant.inline_with_numpy(c_code, arrays = args)
 
     def spatially_varying_alpha(self, baseline_alpha, multiplicator):
         """
@@ -217,33 +196,26 @@ class LLG(object):
         self.compute_H_eff()
 
         timings.start("LLG-compute-dmdt")
-        if self.use_instant_llg:
-            status, dMdt = self._solve(self.gamma, self.c, self.alpha_vec,
-                self.m, self.H_eff, self.m.shape[0], self.pins, self.do_precession)
-        else:
-            # Use the same characteristic time as defined by c
-            char_time = 0.1/self.c
-            # Prepare the arrays in the correct shape
-            m = self.m
-            m.shape = (3, -1)
-            H_eff = self.H_eff
-            H_eff.shape = (3, -1)
-            dMdt = np.zeros(m.shape)
-            # Calculate dm/dt
-            native_llg.calc_llg_dmdt(m, H_eff, self.t, dMdt, self.pins,
-                                     self.gamma/(1.+self.alpha**2), self.alpha_vec, 
-                                     char_time, self.do_precession)
-            dMdt.shape = (-1,)
-            status = 0
+        # Use the same characteristic time as defined by c
+        char_time = 0.1/self.c
+        # Prepare the arrays in the correct shape
+        m = self.m
+        m.shape = (3, -1)
+        H_eff = self.H_eff
+        H_eff.shape = (3, -1)
+        dMdt = np.zeros(m.shape)
+        # Calculate dm/dt
+        native_llg.calc_llg_dmdt(m, H_eff, self.t, dMdt, self.pins,
+                                 self.gamma/(1.+self.alpha**2), self.alpha_vec, 
+                                 char_time, self.do_precession)
+        dMdt.shape = (-1,)
 
         timings.stop("LLG-compute-dmdt")
 
         for func in self._post_rhs_callables:
             func(self)
 
-        if status == 0:
-            return dMdt
-        raise Exception("An error was encountered in the C-code; status=%d" % status)
+        return dMdt
 
     # Computes the dm/dt right hand side ODE term, as used by SUNDIALS CVODE
     def sundials_rhs(self, t, y, ydot):

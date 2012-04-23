@@ -23,7 +23,7 @@ def setup_module(module=None):
     m0 = m_gen(coords).flatten()
 
     global llg
-    llg = LLG(mesh, use_instant_llg=False)
+    llg = LLG(mesh)
     llg.Ms = 0.86e6
     llg.A = 1.3e-11
     llg.alpha = 0.2
