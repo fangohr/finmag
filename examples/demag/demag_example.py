@@ -1,11 +1,21 @@
 import numpy as np
-from dolfin import *
-from finmag.util.convert_mesh import convert_mesh
+import dolfin as df
 from finmag.demag.solver_fk import FemBemFKSolver
-from finmag.demag.problems.prob_base import FemBemDeMagProblem
+from finmag.util.convert_mesh import convert_mesh
 
-mesh = UnitSphere(10)
-m = interpolate(Constant((1,0,0)), VectorFunctionSpace(mesh, "CG", 1))
+mesh = df.UnitSphere(10)
+#mesh = df.Mesh(convert_mesh("sphere1.geo"))
+V = df.VectorFunctionSpace(mesh, "CG", 1)
+m = df.interpolate(df.Constant((1,0,0)), V)
+Ms = 1
+#solver = FemBemFKSolver(V, m, Ms)
+
+#from finmag.demag.problems.prob_fembem_testcases import FemBemDeMagProblem
+#Why didn't that work??
+class FemBemDeMagProblem:
+    def __init__(self, mesh, m):
+        self.mesh = mesh
+        self.M = m
 problem = FemBemDeMagProblem(mesh, m)
 problem.Ms = 1
 solver = FemBemFKSolver(problem)
