@@ -22,13 +22,14 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
 
     .. math::
 
-        \\Delta \\phi_1 = \\nabla \\cdot \\vec M(\\vec r), \\quad \\vec r \\in \\Omega,
+        \\Delta \\phi_1 = \\nabla \\cdot \\vec M(\\vec r), \\quad \\vec r \\in \\Omega, \\qquad
+        \\qquad
 
     with
 
     .. math::
 
-        \\frac{\partial \\phi_1}{\\partial \\vec n} = \\vec n \\cdot \\vec M
+        \\frac{\partial \\phi_1}{\\partial \\vec n} = \\vec n \\cdot \\vec M \\qquad \\qquad
 
     on :math:`\\Gamma`. In addition, :math:`\\phi_1(\\vec r) = 0` for
     :math:`\\vec r \\not \\in \\Omega`.
@@ -40,9 +41,9 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
 
         \\int_\\Omega \\nabla \\phi_1 \\cdot \\nabla v =
         \\int_\\Omega (\\nabla \\cdot \\vec
-        M)v \\mathrm{d}x
+        M)v \\mathrm{d}x \\qquad \\qquad (1)
 
-    This could be solved straight forward by
+    This could be solved straight forward by (code-block 1)
 
     .. code-block:: python
 
@@ -50,7 +51,7 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         L = self.Ms*df.div(m)*self.v*df.dx
         df.solve(a==L, self.phi1)
 
-    but we are instead using the fact that L can be written as
+    but we are instead using the fact that L can be written as (code-block 2)
 
     .. code-block:: python
 
@@ -66,20 +67,20 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
     .. math::
 
         \\Delta \\phi_2(\\vec r) = 0
-        \\quad \\hbox{for } \\vec r \\in \\Omega.
+        \\quad \\hbox{for } \\vec r \\in \\Omega. \\qquad \\qquad (2)
 
     At the boundary, :math:`\\phi_2` has a discontinuity of
 
     .. math::
 
-        \\bigtriangleup \\phi2(\\vec r) = \\phi1(\\vec r),
+        \\bigtriangleup \\phi2(\\vec r) = \\phi1(\\vec r), \\qquad \\qquad
 
     and it disappears at infinity, i.e.
 
     .. math::
 
         \\phi_2(\\vec r) \\rightarrow 0 \\quad \\mathrm{for}
-        \\quad \\lvert \\vec r \\rvert \\rightarrow \\infty.
+        \\quad \\lvert \\vec r \\rvert \\rightarrow \\infty. \\qquad \\qquad
 
     In contrast to the Poisson equation for :math:`\\phi_1`,
     which is solved straight forward in a finite domain, we now need to
@@ -89,7 +90,7 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
 
     .. math::
 
-        \\Phi_2 = \\mathbf{B} \\cdot \\Phi_1,
+        \\Phi_2 = \\mathbf{B} \\cdot \\Phi_1, \\qquad \\qquad (3)
 
     with :math:`\\Phi_1` as the vector of elements from :math:`\\phi_1` which
     is on the boundary. These are found by the 'restrict_to' function written
@@ -100,14 +101,14 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         Phi1 = self.restrict_to(self.phi1.vector())
 
     The elements of the boundary element matrix
-    :math:`\\mathbf{B}` given by
+    :math:`\\mathbf{B}` are given by
 
     .. math::
 
         B_{ij} = \\frac{1}{4\\pi}\\int_{\\Gamma_j} \\psi_j(\\vec r)
         \\frac{(\\vec R_i - \\vec r) \\cdot n(\\vec r)}
         {\\lvert \\vec R_i - \\vec r \\rvert^3} \\mathrm{d}s +
-        \\left(\\frac{\\Omega(\\vec R_i)}{4\\pi} - 1 \\right) \\delta_{ij}.
+        \\left(\\frac{\\Omega(\\vec R_i)}{4\\pi} - 1 \\right) \\delta_{ij}. \\qquad \\qquad (4)
 
     Here, :math:`\\psi` is a set of basis functions and
     :math:`\\Omega(\\vec R)` denotes the solid angle.
@@ -146,7 +147,11 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         solve(A, self.phi2.vector(), b)
 
     :math:`\\phi` is now obtained by just adding :math:`\\phi_1` and
-    :math:`\\phi_2`.
+    :math:`\\phi_2`,
+
+    .. math::
+
+        \\phi = \\phi_1 + \\phi_2 \\qquad \\qquad (5)
 
     The demag field is defined as the negative gradient of :math:`\\phi`,
     and is returned by the 'compute_field' function.
@@ -167,7 +172,7 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
     At the moment, we think both methods work for first degree basis
     functions. The 'magpar' method may not work with higher degree
     basis functions, but it is considerably faster than 'project'
-    for the kind of problems we are working with now.
+    for the kind of problems we are working on now.
 
     *Example of usage*
 
@@ -190,7 +195,6 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         self.vv = df.TestFunction(self.W)
         self.phi1 = df.Function(self.V)
         self.phi2 = df.Function(self.V)
-        self.laplace_zeros = df.Function(self.V).vector()
         self.method = method
         timings.stop("FKSolver init first part")
 
@@ -232,7 +236,8 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         return self.__compute_field()
 
     def __solve(self):
-        # Compute phi1 on the whole domain
+
+        # Compute phi1 on the whole domain (code-block 1, last line)
         timings.start("phi1 - product")
         g1 = self.D*self.m.vector()
         timings.startnext("phi1 - solve")
@@ -246,6 +251,7 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         # but the way we have implemented it is faster,
         # because we don't have to assemble L each time.
 
+
         # Restrict phi1 to the boundary
         timings.startnext("Restrict phi1 to boundary")
         Phi1 = self.restrict_to(self.phi1.vector())
@@ -256,18 +262,18 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         #U1.ident_zeros()
         #Phi1 = U1*self.phi1.vector()
 
-        # Compute phi2 on the boundary as a dot product
-        # between the boundary element matrix and
-        # phi1 on the boundary
+        # Compute phi2 on the boundary, eq. (3)
         timings.startnext("Compute phi2 on boundary")
         self.Phi2 = np.dot(self.bem, Phi1)
         self.phi2.vector()[self.bdofs[:]] = self.Phi2[:]
 
-        # Compute Laplace's equation inside the domain
+        # Compute Laplace's equation inside the domain, eq. (2)
+        # and last code-block
         timings.startnext("Compute phi2 inside")
         self.phi2 = self.solve_laplace_inside(self.phi2)
         #self.solve_laplace_inside()
-        # phi = phi1 + phi2
+
+        # phi = phi1 + phi2, eq. (5)
         timings.startnext("Add phi1 and phi2")
         self.phi = self.calc_phitot(self.phi1, self.phi2)
         timings.stop("Add phi1 and phi2")
@@ -291,7 +297,7 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         """
         Ms, m, u, v, w = self.Ms, self.m, self.u, self.v, self.w
 
-        # phi1 is the solution of poisson_matrix * phi1 = D*m
+        # Eq (1) and code-block 2 - two first lines.
         timings.start("phi1: compute D")
         b = Ms*df.inner(w, df.grad(v))*df.dx
         self.D = df.assemble(b)
@@ -304,6 +310,8 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
 
     def __setup_field_magpar(self):
         """Needed by the magpar method we may use instead of project."""
+        #FIXME: Someone with a bit more insight in this method should
+        # write something about it in the documentation.
         timings.start("Setup field magpar method")
         a = df.inner(df.grad(self.u), self.vv)*df.dx
         self.G = df.assemble(a)
