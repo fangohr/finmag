@@ -5,7 +5,7 @@ from nmag import SI
 import nmeshlib.unidmesher as unidmesher
 
 # Details about the layers and the mesh and the material
-length = 60.0             # in nanometers
+length = 20.0             # in nanometers
 mesh_unit = SI(1e-9, "m") # mesh unit (1 nm)
 layers = [(0.0, length)]  # the mesh
 discretization = 2.0      # discretization
@@ -53,7 +53,7 @@ sim.set_pinning(pin) # Set pinning
 np.savetxt("exc_t0_ref.txt", sim.get_subfield("H_exch_Py"))
 np.savetxt("m_t0_ref.txt", sim.get_subfield("m_Py"))
 
-t = t0 = 0; t1 = 1e-10; dt = 1e-12 # s
+t = t0 = 0; t1 = 5e-10; dt = 1e-11 # s
 fh = open("third_node_ref.txt", "w")
 while t <= t1:
     sim.save_data("fields")
