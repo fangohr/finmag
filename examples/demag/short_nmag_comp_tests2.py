@@ -1,17 +1,20 @@
 import numpy as np
 import dolfin as df
 from finmag.util.convert_mesh import convert_mesh
-from finmag.demag.solver_gcr import FemBemGCRSolver
-from finmag.demag.solver_fk_test import SimpleFKSolver
+#from finmag.demag.solver_gcr import FemBemGCRSolver
+#from finmag.demag.solver_fk_test import SimpleFKSolver
+from finmag.demag.solver_fk import FemBemFKSolver
 #from finmag.demag.problems import FemBemDeMagProblem
 import pylab as p
 import sys, os, commands, subprocess
+from finmag.sim.llg import LLG
 
 class FemBemDeMagProblem(object):
     """Have no idea why I can't import this now.."""
-    def __init__(self,mesh,M):
+    def __init__(self, mesh, m):
         self.mesh = mesh
-        self.M = M
+        self.M = m
+        self.Ms = 1
 
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -35,8 +38,9 @@ nxavg = []
 nstddev = []
 errnorm = []
 
+#for maxh in (2, 1, 0.8, 0.7):
 for maxh in (5, 3, 2, 1.5):
-    
+
     # Create geofile
     geo = """
 algebraic3d
@@ -67,6 +71,7 @@ tlo main;""" % str(maxh)
     """
 
     # Weiwei code
+    """
     m = df.interpolate(df.Constant((1,0,0)), V)
     Ms = 1
     solver = SimpleFKSolver(V, m, Ms)
@@ -76,14 +81,24 @@ tlo main;""" % str(maxh)
 
     x, y, z = H_demag.split(True)
     x, y, z = x.vector().array(), y.vector().array(), z.vector().array()
-    
+    """
+
+    m = df.interpolate(df.Constant((1,0,0)), V)
+    problem = FemBemDeMagProblem(mesh, m)
+    solver = FemBemFKSolver(problem)
+    H_demag = df.Function(V)
+    demag = solver.compute_field()
+    H_demag.vector()[:] = demag
+    demag.shape = (3, -1)
+    x, y, z = demag[0], demag[1], demag[2]
+
     # Find #vertices, x max and x avg
     vertices.append(mesh.num_vertices())
     xavg.append(np.average(x))
-    xmax.append(max(x))    
+    xmax.append(max(x))
     xmin.append(min(x))
-    ymax.append(max(abs(y)))    
-    zmax.append(max(abs(z)))    
+    ymax.append(max(abs(y)))
+    zmax.append(max(abs(z)))
 
     # Find standard deviation
     func = H_demag.vector().array()
@@ -97,13 +112,12 @@ tlo main;""" % str(maxh)
     exact = df.interpolate(df.Constant((-1./3, 0, 0)), V)
     sphere_volume=4/3.*np.pi*(10)**3
     errnorm.append(df.errornorm(H_demag, exact, mesh=mesh)/sphere_volume)
-    
+
     #actual error:
     tmperror = func-exct
     tmpmaxerror = max(abs(tmperror))
     errorH.append(tmperror)
     maxerror.append(tmpmaxerror)
-    
 
     # Nmag data
     if subprocess.call(["which", "nsim"]) == 0:
@@ -148,7 +162,7 @@ if has_nmag:
             nxmax.append(float(line[1]))
             nstddev.append(float(line[2]))
 
-# Plot 
+# Plot
 p.plot(vertices, xavg, 'x--',label='Finmag x-avg')
 p.plot(vertices, xmax, 'o-',label='Finmag x-max')
 p.plot(vertices, xmin, '^:',label='Finmag x-min')
@@ -196,5 +210,17 @@ p.grid()
 p.legend()
 p.savefig(os.path.join(MODULE_DIR, 'maxerror.png'))
 
+
+p.figure()
+p.loglog(vertices, stddev, label='Finmag standard deviation')
+
+if has_nmag:
+    p.loglog(vertices, nstddev, label='Nmag standard deviation')
+
+p.xlabel('vertices')
+p.title('Standard deviation (log-log)')
+p.grid()
+p.legend()
+p.savefig(os.path.join(MODULE_DIR, 'stddev_loglog.png'))
 
 print "Useful plots: maxerror.png, stddev.png, xvalues.png"
