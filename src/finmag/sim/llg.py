@@ -64,6 +64,12 @@ class LLG(object):
         self._anisotropies = []
         self._m = df.Function(self.V)
     
+    def set_pins(self, nodes):
+        self._pins = np.array(nodes, dtype="int")
+    def pins(self):
+        return self._pins
+    pins = property(pins, set_pins)
+
     def load_c_code(self):
         """
         Loads the C-code in the file dmdt.c, that will later
@@ -224,11 +230,9 @@ class LLG(object):
             H_eff.shape = (3, -1)
             dMdt = np.zeros(m.shape)
             # Calculate dm/dt
-            native_llg.calc_llg_dmdt(m, H_eff, self.t, dMdt, 
+            native_llg.calc_llg_dmdt(m, H_eff, self.t, dMdt, self.pins,
                                      self.gamma/(1.+self.alpha**2), self.alpha, 
                                      char_time, self.do_precession)
-            # TODO: Store pins in a np.ndarray(dtype=int) and assign 0's in C++ code
-            dMdt[:, self.pins] = 0
             dMdt.shape = (-1,)
             status = 0
 

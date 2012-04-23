@@ -15,6 +15,7 @@ namespace finmag { namespace llg {
             const np_array<double> &H,
             double t,
             const np_array<double> &dmdt,
+            const np_array<long> &pins,
             double gamma_LL,
             double alpha,
             double char_time,
@@ -73,6 +74,14 @@ namespace finmag { namespace llg {
                 dm1[i] += relax*m1[i];
                 dm2[i] += relax*m2[i];
             }
+        }
+
+        pins.check_ndim(1, "calc_llg_dmdt: pins");
+        const int nb_pins = pins.dim()[0];
+        for (int i = 0; i < nb_pins; i++) {
+            dm0[*pins[i]] = 0;
+            dm1[*pins[i]] = 0;
+            dm2[*pins[i]] = 0;
         }
     }
 
@@ -227,6 +236,7 @@ namespace finmag { namespace llg {
             arg("H"),
             arg("t"),
             arg("dmdt"),
+            arg("pins"),
             arg("gamma_LL"),
             arg("alpha"),
             arg("char_time"),
