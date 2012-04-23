@@ -330,7 +330,7 @@ class LLG(object):
         self.use_dmi = use_dmi
         if use_dmi:
             self.dmi = DMI(self.V, self._m, self.D, self.Ms, 
-                           method = dmi_method)
+                           method = dmi_method, mesh_units=self.mesh_units)
 
         timings.stop('LLG-init')
         self.use_demag = use_demag

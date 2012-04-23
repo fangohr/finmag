@@ -231,14 +231,14 @@ class DMI(object):
             
     """
 
-    def __init__(self, V, M, D, Ms, method="box-assemble-petsc"):
+    def __init__(self, V, M, D, Ms, method="box-assemble-petsc", mesh_units=1):
         timings.start("DMI-init")
         
         logger.info("DMI(): method = %s" % method)
         
         self.V = V
         self.M = M
-        self.DMIconstant = df.Constant(D) #Dzyaloshinsky-Moriya Constant
+        self.DMIconstant = df.Constant(D / mesh_units**2) #Dzyaloshinsky-Moriya Constant
         self.method = method
 
         self.v = df.TestFunction(V)        #Equation is chosen from the folowing papers
