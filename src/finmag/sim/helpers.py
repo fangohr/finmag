@@ -144,6 +144,7 @@ def quiver(f, mesh, filename, title="", **kwargs):
     figure = mlab.figure(bgcolor=(1, 1, 1), fgcolor=(0, 0, 0))
     q = mlab.quiver3d(*(tuple(r)+tuple(f)), figure=figure, **kwargs)
     q.scene.z_plus_view()
+    mlab.title(title)
     mlab.axes(figure=figure)
     mlab.savefig(filename)
 
@@ -152,12 +153,12 @@ def boxplot(arr, filename, **kwargs):
     plt.boxplot(list(arr), **kwargs)
     plt.savefig(filename)
 
-def stats(arr):
+def stats(arr, axis=1):
     median  = np.median(arr)
-    average = np.mean(arr, axis=1)
+    average = np.mean(arr)
     minimum = np.nanmin(arr)
     maximum = np.nanmax(arr)
-    spread  = np.std(arr, axis=1)
-    stats= "  min, median, max = ({0}, {1} {2}),\n  means = {3}),\n  stds = {4}".format(
+    spread  = np.std(arr)
+    stats= "    min, median, max = {0}, {1}, {2}\n    mean, std = {3}, {4}".format(
             minimum, median, maximum, average, spread)
     return stats
