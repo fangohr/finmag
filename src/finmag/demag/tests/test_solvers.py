@@ -244,7 +244,6 @@ class TestFemBemDeMagSolver(object):
         assert numdofcalc == numdofactual,"Error in Boundary Dof Dictionary creation, number of DOFS " +str(numdofcalc)+ \
                                           " does not match that of the Boundary Mesh " + str(numdofactual)
 
-    @pytest.mark.xfail
     def test_solve_laplace_inside(self):
         """Solve a known laplace equation to check the method solve_laplace_inside"""
         mesh = UnitSquare(2,2)
@@ -253,13 +252,17 @@ class TestFemBemDeMagSolver(object):
         self.solver.V = V
         self.solver.v = TestFunction(V)
         self.solver.u = TrialFunction(V)
-        
+
+	# Had to add these two lines here because they depend
+	# on initial mesh, V, u and v which is overwritten above.
+        self.solver.build_poisson_matrix()
+        self.solver.laplace_zeros = Function(V).vector()
+
         #Test the result of the call
         fold = interpolate(Expression("1-x[0]"),V)
         fnew = interpolate(Expression("1-x[0]"),V)
         #The Laplace equation should give the same solution as f
         fnew = self.solver.solve_laplace_inside(fnew)
-        # FIXME: Why isn't it possible to write fnew.vector().array() now?
         assert fold.vector().array().all() == fnew.vector().array().all(),"Error in method test_solve_laplace_inside(), \
             Laplace solution does not equal original solution"
         print "solve_laplace_inside testpassed"
