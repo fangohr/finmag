@@ -15,8 +15,9 @@ namespace finmag { namespace llg {
             const np_array<double> &H,
             double t,
             const np_array<double> &dmdt,
+            const np_array<long> &pins,
             double gamma_LL,
-            double alpha,
+            const np_array<double> &alpha,
             double char_time,
             bool do_precession) {
         m.check_ndim(2, "calc_llg_dmdt: m");
@@ -26,8 +27,11 @@ namespace finmag { namespace llg {
         H.check_shape(3, n, "calc_llg_dmdt: H");
         dmdt.check_shape(3, n, "calc_llg_dmdt: dmdt");
 
+        alpha.check_ndim(1, "calc_llg_dmdt: alpha");
+        alpha.check_shape(n, "calc_llg_dmdt: alpha");
+
         double precession_coeff = -gamma_LL;
-        double damping_coeff = -gamma_LL*alpha;
+        double damping_coeff;
         double *m0 = m(0), *m1 = m(1), *m2 = m(2);
         double *h0 = H(0), *h1 = H(1), *h2 = H(2);
         double *dm0 = dmdt(0), *dm1 = dmdt(1), *dm2 = dmdt(2);
@@ -35,44 +39,38 @@ namespace finmag { namespace llg {
 
         finmag::util::scoped_gil_release release_gil;
 
-        // calculate dm
-        if (do_precession) {
-            #pragma omp parallel for schedule(guided)
-            for (int i = 0; i < n; i++) {
+        // calculate dmdt
+        #pragma omp parallel for schedule(guided)
+        for (int i=0; i < n; i++) {
+
+            damping_coeff = - gamma_LL * (*alpha[i]);
+            // add damping: m x (m x H) == (m.H)m - (m.m)H, multiplied by -gamma alpha
+            double mh = m0[i] * h0[i] + m1[i] * h1[i] + m2[i] * h2[i];
+            double mm = m0[i] * m0[i] + m1[i] * m1[i] + m2[i] * m2[i];
+            dm0[i] = damping_coeff*(m0[i] * mh - h0[i] * mm);
+            dm1[i] = damping_coeff*(m1[i] * mh - h1[i] * mm);
+            dm2[i] = damping_coeff*(m2[i] * mh - h2[i] * mm);
+
+            // add relaxation of |m|
+            double relax = relax_coeff*(1.-mm);
+            dm0[i] += relax*m0[i];
+            dm1[i] += relax*m1[i];
+            dm2[i] += relax*m2[i];
+
+            if (do_precession) {
                 // add precession: - gamma m x H
-                dm0[i] = precession_coeff*cross0(m0[i], m1[i], m2[i], h0[i], h1[i], h2[i]);
-                dm1[i] = precession_coeff*cross1(m0[i], m1[i], m2[i], h0[i], h1[i], h2[i]);
-                dm2[i] = precession_coeff*cross2(m0[i], m1[i], m2[i], h0[i], h1[i], h2[i]);
-
-                // add damping: m x (m x H) == (m.H)m - (m.m)H, multiplied by -gamma alpha
-                double mh = m0[i] * h0[i] + m1[i] * h1[i] + m2[i] * h2[i];
-                double mm = m0[i] * m0[i] + m1[i] * m1[i] + m2[i] * m2[i];
-                dm0[i] += damping_coeff*(m0[i] * mh - h0[i] * mm);
-                dm1[i] += damping_coeff*(m1[i] * mh - h1[i] * mm);
-                dm2[i] += damping_coeff*(m2[i] * mh - h2[i] * mm);
-
-                // add relaxation of |m|
-                double relax = relax_coeff*(1.-mm);
-                dm0[i] += relax*m0[i];
-                dm1[i] += relax*m1[i];
-                dm2[i] += relax*m2[i];
+                dm0[i] += precession_coeff*cross0(m0[i], m1[i], m2[i], h0[i], h1[i], h2[i]);
+                dm1[i] += precession_coeff*cross1(m0[i], m1[i], m2[i], h0[i], h1[i], h2[i]);
+                dm2[i] += precession_coeff*cross2(m0[i], m1[i], m2[i], h0[i], h1[i], h2[i]);
             }
-        } else {
-            #pragma omp parallel for schedule(guided)
-            for (int i = 0; i < n; i++) {
-                // add damping: m x (m x H) == (m.H)m - (m.m)H, multiplied by -gamma alpha
-                double mh = m0[i] * h0[i] + m1[i] * h1[i] + m2[i] * h2[i];
-                double mm = m0[i] * m0[i] + m1[i] * m1[i] + m2[i] * m2[i];
-                dm0[i] = damping_coeff*(m0[i] * mh - h0[i] * mm);
-                dm1[i] = damping_coeff*(m1[i] * mh - h1[i] * mm);
-                dm2[i] = damping_coeff*(m2[i] * mh - h2[i] * mm);
+        }
 
-                // add relaxation of |m|
-                double relax = relax_coeff*(1.-mm);
-                dm0[i] += relax*m0[i];
-                dm1[i] += relax*m1[i];
-                dm2[i] += relax*m2[i];
-            }
+        pins.check_ndim(1, "calc_llg_dmdt: pins");
+        const int nb_pins = pins.dim()[0];
+        for (int i = 0; i < nb_pins; i++) {
+            dm0[*pins[i]] = 0;
+            dm1[*pins[i]] = 0;
+            dm2[*pins[i]] = 0;
         }
     }
 
@@ -227,6 +225,7 @@ namespace finmag { namespace llg {
             arg("H"),
             arg("t"),
             arg("dmdt"),
+            arg("pins"),
             arg("gamma_LL"),
             arg("alpha"),
             arg("char_time"),

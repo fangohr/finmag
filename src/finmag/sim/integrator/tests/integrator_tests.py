@@ -23,7 +23,7 @@ END_TIME = 1e-10
 
 class IntegratorTests(unittest.TestCase):
     def run_test(self, backend, method, nsteps=40000):
-        llg = setup_domain_wall_cobalt(node_count=NODE_COUNT, use_instant=False)
+        llg = setup_domain_wall_cobalt(node_count=NODE_COUNT)
         integrator = LLGIntegrator(llg, llg.m, backend, method=method, nsteps=nsteps)
         t = datetime.now()
         integrator.run_until(END_TIME)
