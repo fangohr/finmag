@@ -20,6 +20,7 @@ logo and link to
    modules/Anisotropy.rst
    modules/DMI.rst
    modules/FKSolver.rst
+   modules/GCRSolver.rst
 
 .. comment:
    background.txt
