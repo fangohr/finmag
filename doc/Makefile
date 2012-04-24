@@ -195,4 +195,4 @@ PYTHON_ROOTS = $(DOC_DIR)/../src
 	cd ../examples/demag/ && PYTHONPATH=$(PYTHON_ROOTS) python short_nmag_comp_tests2.py
 
 ../examples/exchange_demag/timings/results.rst: ../examples/exchange_demag/timings/run_finmag.py
-	cd ../examples/exchange_demag/timings/ && make
+	cd ../examples/exchange_demag/timings/ && PYTHONPATH=$(PYTHON_ROOTS) python run_finmag.py
