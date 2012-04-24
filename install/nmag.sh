@@ -1,6 +1,16 @@
 #!/bin/bash
 
+#Required libraries
+#
+echo "If required, install required libraries using"
+echo "apt-get install g++ libblas-dev libreadline-dev make m4 gawk zlib1g-dev readline-common liblapack-dev"
+
+#sudo apt-get install g++ libblas-dev libreadline-dev make m4 gawk zlib1g-dev readline-common liblapack-dev
+
+
 PREFIX="$HOME" # EDIT HERE.
+#or maybe
+#PREFIX=/usr/local/
 
 source="nmag-0.2.1"
 TARBALLNAME="$source.tar.gz"
