@@ -975,3 +975,28 @@ fangohr: Still testing ...
 2012-04-23 15:49:12 mb8g11: Cake?
 2012-04-23 16:13:45 fangohr_: Hi MA, visitors say thank you for cake. They wander is there Banana in there?
 2012-04-23 16:58:53 mb8g11: Yes, there is. 3 of them :)
+2012-04-24 09:09:23 fangohr_: Good Morning Anders, DokosBot.
+2012-04-24 09:09:33 andersej: Good morning, Hans!
+2012-04-24 10:09:09 andersej: Hans... I have no idea why I can't run nmeshimport on jenkins via python's commands.getstatusoutput when it runs flawless in every makefile we have.
+2012-04-24 11:55:42 fangohr_: Marc-Antonio, are you in the office?
+2012-04-24 11:55:47 fangohr_: Good morning, by the way.
+2012-04-24 11:56:08 mb8g11: Hi, yes!
+2012-04-24 11:56:33 fangohr_: Do you mind coming around to my office? We need your help :)
+2012-04-24 12:37:36 mb8g11: Haba haba?
+2012-04-24 12:39:16 fangohr_: Yes, absotutely.
+2012-04-24 13:27:43 mb8g11: Had the documentation built correctly on jenkins in the last few days?
+2012-04-24 13:28:12 fangohr_: Yesterday, yes.
+2012-04-24 13:28:41 fangohr_: But it may fail because it can't find nmag and needs that for the documentation. (Not sure exactly what Anders was working on.)
+2012-04-24 13:29:02 fangohr_: Am hoping that the current build (http://summer.kk.soton.ac.uk:8080/job/finmag/456/console) will pass.
+2012-04-24 13:31:26 fangohr_: wohoo. Looking good, but still running.
+2012-04-24 13:33:11 fangohr_: Hm, failed. But not due to Nmag missing -- that is now working I think.
+2012-04-24 13:34:02 fangohr_: I think I'll hand this over to Anders at this point.
+2012-04-24 13:46:00 fangohr_: Okay, couldn't resist. Have done another change that might fix this.
+2012-04-24 13:54:47 fangohr_: Phew. Compiled fine now.
+2012-04-24 13:55:10 mb8g11: Good intuition there... but how comes this needs to be set again? Isn't this variable in the environment?
+2012-04-24 13:55:43 andersej: Okay, I'm back in the office now. Thanks for fixing it.
+2012-04-24 13:56:51 fangohr_: I don't know how the make file is called -- I am guessing from inside a python script. The PYTHONPATH is not set in the jenkins enviroment, but instead jenkins knows what it is, and will pass it via "PYTHONPATH=XXX python something.py" to the execution. If that something.py then internally executes a shell command to call 'make', it will have lost that PYTHONPATH.
+2012-04-24 13:56:57 fangohr_: That's my best guess.
+2012-04-24 13:57:33 fangohr_: Will try to do some teaching preparations now, but keep me posted if you need any input etc.
+2012-04-24 15:42:52 mb8g11: reboot, problem with the graphic drivers
+2012-04-24 18:20:30 andersej: To Marc-Antonio: /src/finmag/demag/solver_fk.py
