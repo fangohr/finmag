@@ -73,7 +73,7 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
 
     .. math::
 
-        \\bigtriangleup \\phi2(\\vec r) = \\phi1(\\vec r), \\qquad \\qquad
+        \\bigtriangleup \\phi_2(\\vec r) = \\phi_1(\\vec r), \\qquad \\qquad
 
     and it disappears at infinity, i.e.
 
@@ -222,7 +222,7 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
 
         .. math::
 
-            E = 0.5 \int H_demag * M dV
+            E = 0.5 \int H_\mathrm{demag} * M dV
 
         """
         H_demag = df.Function(self.W)
