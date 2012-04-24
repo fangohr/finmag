@@ -142,6 +142,7 @@ tlo main;""" % str(maxh)
     status, output = commands.getstatusoutput(cmd2)
     if status != 0:
         print 'Nmeshimport failed. Aborted.'
+        print output
         sys.exit(2)
 
     # Run nmag
