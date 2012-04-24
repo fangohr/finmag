@@ -165,7 +165,7 @@ generate-doc: examples-for-doc
 
 #list of files we need for documentation and which should trigger running of
 #the right files in ../examples to create them.
-examples-for-doc: ../examples/macrospin/alpha-1-00.png ../examples/macrospin/alpha-0-50.png ../examples/macrospin/alpha-0-10.png ../examples/macrospin/alpha-0-02.png ../examples/time-dependent-applied-field/fittedresults.txt ../examples/time-dependent-applied-field/fit.png ../examples/time-dependent-applied-field/results.png ../examples/exchange_demag/exchange_demag.png ../examples/demag/stddev_loglog.png ../examples/demag/xvalues.png ../examples/demag/errnorm.png 
+examples-for-doc: ../examples/macrospin/alpha-1-00.png ../examples/macrospin/alpha-0-50.png ../examples/macrospin/alpha-0-10.png ../examples/macrospin/alpha-0-02.png ../examples/time-dependent-applied-field/fittedresults.txt ../examples/time-dependent-applied-field/fit.png ../examples/time-dependent-applied-field/results.png ../examples/exchange_demag/exchange_demag.png ../examples/demag/stddev_loglog.png ../examples/demag/xvalues.png ../examples/demag/errnorm.png ../examples/exchange_demag/timings/results.rst
 
 # The absolute path for the doc directory
 DOC_DIR = $(abspath .)
@@ -193,3 +193,6 @@ PYTHON_ROOTS = $(DOC_DIR)/../src
 
 ../examples/demag/stddev_loglog.png ../examples/demag/xvalues.png ../examples/demag/errnorm.png: ../examples/demag/short_nmag_comp_tests2.py
 	cd ../examples/demag/ && PYTHONPATH=$(PYTHON_ROOTS) python short_nmag_comp_tests2.py
+
+../examples/exchange_demag/timings/results.rst: ../examples/exchange_demag/timings/run_finmag.py
+	cd ../examples/exchange_demag/timings/ && make
