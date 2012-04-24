@@ -3,3 +3,4 @@ Exchange finmag.sim.exchange
 LLG finmag.sim.llg
 DMI finmag.sim.dmi
 FKSolver finmag.demag.solver_fk
+GCRSolver finmag.demag.solver_gcr

@@ -40,70 +40,9 @@ with discontinuous normal derivative,
 
 It is also required that the potential is zero at infinity, hence :math:`\phi(\vec r) \rightarrow 0` for :math:`\lvert \vec r \rvert \rightarrow \infty`.
 
-We have currently implemented two different approaches for solving the demagnetisation field, the :doc:`Fredkin-Koehler method <modules/FKSolver>` and the Garcia-Cervera-Roma method.
-
-.. note::
-
-    TODO: Move documentation to the GCR Solver and link to it in the same way as for the FK Solver.
-
-The Garcia-Cervera-Roma approach
---------------------------------
-
-This approach is similar to the Fredkin-Koehler approach, so we will just comment on the differences between the approaches. As before, the magnetic scalar potential is diveded into two parts, :math:`\phi = \phi_a + \phi_b`, but the definition of these are different. :math:`\phi_a` is the solution of the inhomogeneous Dirichlet problem defined as
-
-.. math::
-
-    \Delta \phi_a(\vec r) = \nabla \vec M(\vec r)
-
-inside the domain, and
-
-.. math::
-
-    \phi_a(\vec r) = 0
-
-on the boundary and outside the domain. This is solved in a similar manner as before, with the variational forms and boundary condition given by
-
-.. code-block:: python
-
-    #Define forms
-    a = dot(grad(u),grad(v))*dx
-    f = (-div(self.M)*v)*dx  #Source term
-
-    #Define Boundary Conditions
-    bc = DirichletBC(V,0,"on_boundary")
- 
-The second potential, :math:`\phi_b`, is the solution of the Laplace equation 
-
-.. math::
-    
-    \Delta \phi_b = 0
-
-inside the domain, its normal derivative has a discontinuity of
-
-.. math::
-
-    \Delta \left(\frac{\partial \phi_b}{\partial n}\right) = -n \cdot \vec M(\vec r) + \frac{\partial \phi_a}{\partial n}
-
-on the boundary and it vanishes at infinity, with :math:`\phi_b(\vec r) \rightarrow 0` for :math:`\lvert \vec r \rvert \rightarrow \infty`.
-As for the Fredkin-Koehler approach, the boundary problem can be solved with BEM. Unlike the Fredkin-Koehler approach, where the vector equation for the second part of the potential is the product between the boundary element matrix and the first potential on the boundary, we now have
-
-.. math::
-
-    \Phi_b = \mathbf{B} \cdot Q.
-
-The vector :math:`Q` contains the potential values :math:`q` at the sites of the surface mesh, with :math:`q` defined as the right hand side of the boundary equation,
-
-.. math::
-
-    q(\vec r) = -n \cdot \vec M(\vec r) + \frac{\partial \phi_a}{\partial n}.
-
-This vector is assembled in the function assembleqvectorexact in the CGRFemBemDeMagSolver class. The values of the boundary element matrix :math:`\mathbf{B}` is given by
-
-.. math::
-
-    B_{ij} = \frac{1}{4\pi}\int_{\Omega_j} \psi_j(\vec r)\frac{1}{\lvert \vec R_i - \vec r \rvert} \mathrm{d}s.
-
-The way this is computed in the GCR solver is practically the same as for the FK solver. Solving the Laplace equation inside the domain and adding the two potentials, is also done in the exact same way as before.
+We have currently implemented two different approaches for solving the demagnetisation field, the
+:doc:`Fredkin-Koehler method <modules/FKSolver>` and the :doc:`Garcia-Cervera-Roma method
+<modules/GCRSolver>`.
 
 Examples
 --------
