@@ -9,9 +9,9 @@ We combine Python code using Dolfin from the Fenics project, with some C++ code 
 Python class layout
 ^^^^^^^^^^^^^^^^^^^
 
-The ``LLG`` class [XXX add link] contains the physics of the LLG equation, and the central dolfin function that carries the normalised magnetisation (currently in LLG._m) which is used in the the Exchange, Anisotropy, Demag and DMI class [XXX add links] to compute the respective fields and energies.
+The :doc:`LLG <modules/LLG>` class contains the physics of the LLG equation, and the central dolfin function that carries the normalised magnetisation (currently in LLG._m) which is used in the the :doc:`Exchange <modules/Exchange>`, :doc:`Anisotropy <modules/Anisotropy>`, :doc:`Demag <modules/FKSolver>` and :doc:`DMI <modules/DMI>` class to compute the respective fields and energies.
 
-The ``TimeStepper class`` [XXX exact name, and add link] is used for time integration, and then carries the state of the independent degrees of freedom (such as the magnetisation) when sundials is used. (The LLG._m is not suitable for this, although it is used by the time integration class internally.)
+The ``TimeStepper class`` [XXX exact name, and add link (this is not yet included in the documentation)] is used for time integration, and then carries the state of the independent degrees of freedom (such as the magnetisation) when sundials is used. (The LLG._m is not suitable for this, although it is used by the time integration class internally.)
 
 We plan to have a convenience class at the top level (the ``Simulation class``) which is meant to follow the Nmag simulation Class whereever we feel there is nothing to improve upon the Nmag model. (If there is no good reason to do something different, let's keep it easy and do it the same way.) The documentation for the Nmag Simulation class is `here <http://nmag.soton.ac.uk/nmag/current/manual/html/command_reference.html#simulation>`_ although the practical usage examples in the `tutorial <http://nmag.soton.ac.uk/nmag/current/manual/html/guided_tour.html>`_ are probably more useful to follow.
 
@@ -51,4 +51,4 @@ We use the following tools:
 
 * `IRC <https://bitbucket.org/fangohr/finmag/wiki/IRC>`_ for quick questions during the day (or night).
 
-* The finmag-team mailing list at finmag-team@lists.soton.ac.uk 
+* The finmag-team mailing list at finmag-team@lists.soton.ac.uk
