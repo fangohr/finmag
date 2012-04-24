@@ -119,6 +119,7 @@ tlo main;""" % str(maxh)
     errorH.append(tmperror)
     maxerror.append(tmpmaxerror)
 
+    """
     # Nmag data
     if subprocess.call(["which", "nsim"]) == 0:
         print "Running nmag now."
@@ -126,6 +127,8 @@ tlo main;""" % str(maxh)
     else:
         has_nmag = False
         continue
+    """
+    has_nmag = True
 
     # Create neutral mesh
     cmd1 = 'netgen -geofile=%s -meshfiletype="Neutral Format" -meshfile=%s.neutral -batchmode' % (geofile, geofilename)
@@ -139,6 +142,7 @@ tlo main;""" % str(maxh)
     status, output = commands.getstatusoutput(cmd2)
     if status != 0:
         print 'Nmeshimport failed. Aborted.'
+        print output
         sys.exit(2)
 
     # Run nmag

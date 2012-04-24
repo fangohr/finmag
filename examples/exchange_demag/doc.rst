@@ -26,6 +26,11 @@ For now, our relative error from the nmag implementation is below 1e-4. This plo
     :scale: 75
     :align: center
 
+Time comparisson between the nmag and finmag implementations shows the following:
+
+.. include:: ../examples/exchange_demag/timings/results.rst
+    :literal:
+
 The complete code follows.
 
 .. literalinclude:: ../examples/exchange_demag/test_exchange_demag.py

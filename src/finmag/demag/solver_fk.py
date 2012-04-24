@@ -216,6 +216,20 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         self.phi1_solver.parameters["preconditioner"]["same_nonzero_pattern"] = True
         #self.phi2_solver.parameters["preconditioner"]["same_nonzero_pattern"] = True
 
+    def compute_energy(self):
+        """
+        Computing the demag energy defined by
+
+        .. math::
+
+            E = 0.5 \int H_demag * M dV
+
+        """
+        H_demag = df.Function(self.W)
+        H_demag.vector()[:] = self.compute_field()
+        E = 0.5*df.dot(H_demag, self.m*self.Ms)*df.dx
+        return df.assemble(E, mesh=self.mesh)
+
     def compute_field(self):
         """
         Compute the demag field.
@@ -613,3 +627,4 @@ if __name__ == "__main__":
     #demag = FemBemFKSolverOld(problem)
     #phi = demag.solve()
     #print demag.get_demagfield(phi).vector().array()
+    print demag.compute_energy()
