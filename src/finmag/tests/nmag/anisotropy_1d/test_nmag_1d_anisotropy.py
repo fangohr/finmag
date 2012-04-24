@@ -65,7 +65,7 @@ def setup_module(module=None):
     tn_f.close()
 
 def test_averages():
-    REL_TOLERANCE = 7e-2
+    REL_TOLERANCE = 9e-2
 
     ref = np.array(h.read_float_data(MODULE_DIR + "/averages_ref.txt"))
     computed = np.array(averages)

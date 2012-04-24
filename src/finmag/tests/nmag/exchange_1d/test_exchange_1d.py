@@ -9,8 +9,8 @@ MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def setup_module(module=None):
     # define the mesh
-    x_max = 60e-9 # m
-    simplexes = 30
+    x_max = 20e-9 # m
+    simplexes = 10
     mesh = Interval(simplexes, 0, x_max)
 
     def m_gen(coords):
@@ -29,14 +29,14 @@ def setup_module(module=None):
     llg.alpha = 0.2
     llg.set_m(m0)
     llg.setup(use_exchange=True)
-    llg.pins = [0, 30]
+    llg.pins = [0, 10]
 
     # Save H_exc and m at t0 for comparison with nmag
     global H_exc_t0, m_t0
     H_exc_t0 = llg.exchange.compute_field()
     m_t0 = llg.m
 
-    t0 = 0; t1 = 1e-10; dt = 1e-12; # s
+    t0 = 0; t1 = 5e-10; dt = 1e-11; # s
     # ode takes the parameters in the order t, y whereas odeint and we use y, t.
     llg_wrap = lambda t, y: llg.solve_for(y, t)
     r = ode(llg_wrap).set_integrator("vode", method="bdf")
@@ -66,18 +66,38 @@ def setup_module(module=None):
     tn_f.close()
 
 def test_angles():
-    TOLERANCE = 4e-2
+    TOLERANCE = 1e-9
 
     m = h.vectors(llg.m)
     angles = np.array([h.angle(m[i], m[i+1]) for i in xrange(len(m)-1)])
 
     max_diff = abs(angles.max() - angles.min())
+    mean_angle = np.mean(angles)
     print "test_angles: max_difference= {}.".format(max_diff)
+    print "test_angles: mean= {}.".format(mean_angle)
     assert max_diff < TOLERANCE
+    assert np.abs(mean_angle - np.pi/10) < TOLERANCE
 
 def test_averages():
-    REL_TOLERANCE = 1.001
+    TOLERANCE = 2e-3
+    """
+    We compare absolute values here, because values which should be
+    exactly zero in the idealised physical experiment (z-components of the
+    magnetisation as well as the average of the x-component) are not numerically.
 
+    In nmag, these "zeros" have the order of magnitude 1e-8, whereas
+    in finmag, they are in the order of 1e-14 and less. The difference is
+    roughly 1e-8 and the relative difference (dividing by nmag) would be 1.
+
+    That's useless for comparing. Solutions:
+    1. compute the relative difference by dividing by the norm of the vector or
+    something like this. Meh...
+    2. Check for zeros instead of comparing with nmag. But then you couldn't
+    copy&paste the comparison code anymore.
+    3. Write this comment and compare absolute values. Note that the tolerance
+    reflects the difference beetween non-zero components.
+
+    """
     ref = np.array(h.read_float_data(MODULE_DIR + "/averages_ref.txt"))
     computed = np.array(averages)
 
@@ -86,19 +106,13 @@ def test_averages():
 
     ref, computed = np.delete(ref, [0], 1), np.delete(computed, [0], 1)
     diff = ref - computed
-    rel_diff = np.abs(diff / ref)
+    print "test_averages, max. difference per axis:"
+    print np.nanmax(np.abs(diff), axis=0)
 
-    print "test_averages, max. relative difference per axis:"
-    print np.nanmax(rel_diff, axis=0)
-
-    err = np.nanmax(rel_diff)
-    if err > 1e-3:
-        print "nmag:\n", ref
-        print "finmag:\n", computed
-    assert np.nanmax(rel_diff) < REL_TOLERANCE
+    assert np.nanmax(diff) < TOLERANCE
 
 def test_third_node():
-    REL_TOLERANCE = 2e-1
+    REL_TOLERANCE = 6e-3
 
     ref = np.array(h.read_float_data(MODULE_DIR + "/third_node_ref.txt"))
     computed = np.array(third_node)
@@ -110,9 +124,12 @@ def test_third_node():
     diff = ref - computed
     rel_diff = np.abs(diff / ref)
 
+    print "test_third_node, max. difference per axis:"
+    print np.nanmax(np.abs(diff), axis=0)
     print "test_third_node, max. relative difference per axis:"
-    print np.nanmax(rel_diff, axis=0)
-    assert np.nanmax(rel_diff) < REL_TOLERANCE
+    max_diffs = np.nanmax(rel_diff, axis=0)
+    print max_diffs
+    assert max_diffs[0] < REL_TOLERANCE and max_diffs[1] < REL_TOLERANCE
 
 def test_m_cross_H():
     """

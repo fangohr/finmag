@@ -8,10 +8,7 @@
 
 import numpy as np
 import scipy.integrate
-import dolfin as df
 import unittest
-import math
-from finmag.sim.llg import LLG
 from domain_wall_cobalt import setup_domain_wall_cobalt, domain_wall_error
 from finmag.native import sundials
 from finmag.util.ode import scipy_to_cvode_rhs
@@ -69,7 +66,7 @@ class JacobeanIntegrationTests(unittest.TestCase):
         self.run_sundials_test_no_jacobean("adams")
 
     def test_sundials_test_with_jacobean(self):
-        self.llg = setup_domain_wall_cobalt(node_count=NODE_COUNT, use_instant=False)
+        self.llg = setup_domain_wall_cobalt(node_count=NODE_COUNT)
 
         integrator = sundials.cvode(sundials.CV_BDF, sundials.CV_NEWTON)
         integrator.init(scipy_to_cvode_rhs(self.scipy_rhs), 0, self.llg.m.copy())
