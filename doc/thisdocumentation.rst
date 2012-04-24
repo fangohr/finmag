@@ -2,10 +2,10 @@ About the documentation
 =======================
 
 
-Required libraries
-------------------
+Requirements
+------------
 
-You will probably need Sphinx version 1.1.2 (more recent that what ships with Ubuntu 11.10) which can be installed using::
+You will probably need Sphinx version 1.1.2 (more recent than what ships with Ubuntu 11.10) which can be installed using::
 
   $ easy_install -U Sphinx
 
@@ -13,6 +13,12 @@ To get syntax highlighting, you also need Pygments (the Ubuntu package 'python-p
 
   $ easy_install Pygments
 
+While most automatic tests that compare finmag with the other micromagnetic
+packages have the results to compare with pre-computed and stored,
+you will probably need to have nmag, oommf and magpar installed at some point.
+For your convenience, installation scripts are located in the ``install``
+directory. Make sure that oommf, magpar.exe as well as the executables
+in ``nmag/bin`` are in your PATH.
 
 To build and view documentation
 -------------------------------
