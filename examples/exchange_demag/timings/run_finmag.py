@@ -25,7 +25,6 @@ dynamicsstart = time.time()
 for t in times:
     # Integrate
     integrator.run_until(t)
-
 endtime = time.time()
 
 output = open("results.rst", "a")
