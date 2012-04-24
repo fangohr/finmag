@@ -1,4 +1,4 @@
-import time
+import os, time
 import numpy as np
 import dolfin as df
 from finmag.sim.llg import LLG
@@ -6,10 +6,11 @@ from finmag.sim.integrator import LLGIntegrator
 from finmag.util.timings import timings
 from finmag.util.convert_mesh import convert_mesh
 
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 setupstart = time.time()
 
 # Set up LLG
-mesh = df.Mesh("bar.xml.gz")
+mesh = df.Mesh(MODULE_DIR + "/bar.xml.gz")
 llg = LLG(mesh, mesh_units=1e-9)
 llg.Ms = 0.86e6
 llg.A = 13.0e-12
@@ -27,7 +28,7 @@ for t in times:
     integrator.run_until(t)
 endtime = time.time()
 
-output = open("results.rst", "a")
+output = open(MODULE_DIR + "/results.rst", "a")
 output.write("\nFinmag results:\n")
 output.write("---------------\n")
 output.write("Setup: %.3f sec.\n" % (dynamicsstart-setupstart))
