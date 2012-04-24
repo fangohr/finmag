@@ -1,3 +1,4 @@
+import commands
 import os, time
 import numpy as np
 import dolfin as df
@@ -5,6 +6,19 @@ from finmag.sim.llg import LLG
 from finmag.sim.integrator import LLGIntegrator
 from finmag.util.timings import timings
 from finmag.util.convert_mesh import convert_mesh
+
+# Create meshes
+h5mesh = '- netgen -geofile=bar.geo -meshfiletype="Neutral Format" -meshfile=bar.neutral -batchmode'
+xmlmesh = '- netgen -geofile=bar.geo -meshfiletype="DIFFPACK Format" -meshfile=bar.grid -batchmode'
+nmeshimport = 'nmeshimport --netgen bar.neutral bar.nmesh.h5'
+dolfinconvert = 'dolfin-convert bar.grid bar.xml && gzip -f bar.xml'
+commands.getstatusoutput(h5mesh)
+commands.getstatusoutput(xmlmesh)
+commands.getstatusoutput(nmeshimport)
+commands.getstatusoutput(dolfinconvert)
+
+# Run nmag
+commands.getstatusoutput("nsim run_nmag.py --clean")
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 setupstart = time.time()
@@ -36,3 +50,9 @@ output.write("Dynamics: %.3f sec.\n" % (endtime-dynamicsstart))
 output.write("\nFinmag details:\n")
 output.write(str(timings))
 output.close()
+
+# Cleanup
+files = ["bar_bi.xml", "bar.grid", "bar_mat.xml", "bar.neutral", "bar.xml.bak", "run_nmag_log.log", "bar_dat.ndt"]
+for file in files:
+    if os.path.isfile(MODULE_DIR + '/' + file):
+        os.remove(MODULE_DIR + '/' + file)
