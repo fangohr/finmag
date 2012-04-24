@@ -27,8 +27,9 @@ for i in range(0, 61):
 
 endtime = time.time()
 
-output = open("results.txt", "w")
+output = open("results.rst", "w")
 output.write("Nmag results:\n")
+output.write("-------------\n")
 output.write("Setup: %.3f sec.\n" % (dynamicsstart-setupstart))
 output.write("Dynamics: %.3f sec.\n" % (endtime-dynamicsstart))
 output.close()

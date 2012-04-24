@@ -143,12 +143,7 @@ The `errornorm <http://fenicsproject.org/documentation/dolfin/1.0.0/python/progr
     * TODO: When the building of the boundary element matrix is faster, we can increase the number of vertices.
     * TODO: Maybe include a log-log plot of the errornorm instead of the "normal" plot.
 
-For a more interesting example where we also include the exchange field, please see
-
-.. note::
-
-    TODO: Link to the exchange_demag example
-
+For a more interesting example where we also include the exchange field, please see the exchange-demag example in the next section.
 
 .. rubric:: References
 

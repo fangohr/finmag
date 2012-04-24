@@ -18,4 +18,4 @@ finmag:
 
 cleanup:
 	rm bar_bi.xml bar.grid bar_mat.xml bar.neutral bar.xml.bak run_nmag_log.log bar_dat.ndt
-	echo Results written to results.txt.
+	echo Results written to results.rst.
