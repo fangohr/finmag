@@ -16,6 +16,8 @@ logger = logging.getLogger(name='finmag')
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 REL_TOLERANCE = 1e-4
 
+mesh_units = 1e-9
+
 def save_plot(t, x, y, z):
     """Save plot of finmag data and comparisson with nmag data (if exist)."""
     # Add data points from nmag to plot
@@ -41,7 +43,7 @@ def run_finmag():
     mesh = df.Mesh(convert_mesh(MODULE_DIR + "/bar30_30_100.geo"))
 
     # Set up LLG
-    llg = LLG(mesh, mesh_units=1e-9)
+    llg = LLG(mesh, mesh_units=mesh_units)
     llg.Ms = 0.86e6
     llg.A = 13.0e-12
     llg.alpha = 0.5
@@ -124,10 +126,14 @@ def test_compare_energies():
     #vol_cells = df.assemble(df.dot(df.TestFunction(df.VectorFunctionSpace(mesh, "CG", 1)), \
     #    df.Constant((1,1,1)))*df.dx, mesh=mesh).array()
 
-    #vol = df.assemble(df.Constant(1)*df.dx, mesh=mesh)
+    vol = df.assemble(df.Constant(1)*df.dx, mesh=mesh)*mesh_units**3
 
-    exch = computed[:, 0]/-8.3e4 # What is this number?!
+    #30x30x100nm^3 = 30x30x100=9000
+
+    #exch = computed[:, 0]/-8.3e4 # What is this number?!
+    exch = computed[:, 0]/vol
     nmag = ref[:, 0]
+    p.figure()
     p.plot(exch)
     p.plot(nmag)
     p.legend(["finmag", "nmag"])

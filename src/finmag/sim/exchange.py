@@ -74,15 +74,15 @@ class Exchange(object):
         timings.start('Exchange-init')
        
         self.V = V
-
+        self.mesh_units = mesh_units #need them in compute_energy
         mu0 = 4 * np.pi * 10**-7 # Vs/(Am)
-        self.exchange_factor = df.Constant(-1 * C / (mu0 * Ms * mesh_units**2))
+        self.exchange_factor = df.Constant(1 * C / (mu0 * Ms * mesh_units**2))
         self.method = method
         self.M = M # keep reference to M
 
         self.v = df.TestFunction(V)
         self.E = self.exchange_factor * df.inner(df.grad(M), df.grad(M)) * df.dx
-        self.dE_dM = df.derivative(self.E, M, self.v)
+        self.dE_dM = -1*df.derivative(self.E, M, self.v)
         self.method = method
         self.vol = df.assemble(df.dot(self.v, df.Constant([1,1,1])) * df.dx).array()
 
@@ -130,7 +130,9 @@ class Exchange(object):
 
         """
         timings.start('Exchange-energy')
-        E=df.assemble(self.E)
+        E=df.assemble(self.E)*self.mesh_units**3
+        #do we need to take this to the power of 2 in a 2d mesh instead 
+        #of 3 for 3d mesh.
         timings.stop('Exchange-energy')
         return E
 
