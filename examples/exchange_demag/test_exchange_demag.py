@@ -120,13 +120,29 @@ def test_compare_energies():
     computed = np.array(h.read_float_data(MODULE_DIR + "/energies.txt"))
     assert np.size(ref) == np.size(computed), "Compare number of energies."
 
-    diff = ref - computed
-    exch_diff = diff[:, 0]
-    demag_diff = diff[:, 1]
+    mesh = df.Mesh(convert_mesh(MODULE_DIR + "/bar30_30_100.geo"))
+    #vol_cells = df.assemble(df.dot(df.TestFunction(df.VectorFunctionSpace(mesh, "CG", 1)), \
+    #    df.Constant((1,1,1)))*df.dx, mesh=mesh).array()
 
-    print max(exch_diff)
-    print max(demag_diff)
+    #vol = df.assemble(df.Constant(1)*df.dx, mesh=mesh)
+
+    exch = computed[:, 0]/-8.3e4 # What is this number?!
+    nmag = ref[:, 0]
+    p.plot(exch)
+    p.plot(nmag)
+    p.legend(["finmag", "nmag"])
+
+
+    p.figure()
+    demag = computed[:, 1]/-7.17e10 # And what is this? And why are they not the same?
+    nmag = ref[:, 1]
+
+    p.plot(demag)
+    p.plot(nmag)
+    p.legend(["finmag", "nmag"])
+    p.show()
+    exit()
 
 if __name__ == '__main__':
-    test_compare_averages()
+    #test_compare_averages()
     test_compare_energies()
