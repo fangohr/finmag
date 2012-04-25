@@ -227,8 +227,10 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         """
         H_demag = df.Function(self.W)
         H_demag.vector()[:] = self.compute_field()
-        E = 0.5*df.dot(H_demag, self.m*self.Ms)*df.dx
-        return df.assemble(E, mesh=self.mesh)
+        mu0 = 4 * np.pi * 10**-7 # Vs/(Am)
+        E = -0.5*mu0*df.dot(H_demag, self.m*self.Ms)*df.dx
+        mesh_units=1e-9
+        return df.assemble(E, mesh=self.mesh)*mesh_units**3
 
     def compute_field(self):
         """

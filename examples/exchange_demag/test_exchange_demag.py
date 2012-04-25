@@ -16,6 +16,9 @@ logger = logging.getLogger(name='finmag')
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 REL_TOLERANCE = 1e-4
 
+mesh_units = 1e-9
+mesh = df.Mesh(convert_mesh(MODULE_DIR + "/bar30_30_100.geo"))
+
 def save_plot(t, x, y, z):
     """Save plot of finmag data and comparisson with nmag data (if exist)."""
     # Add data points from nmag to plot
@@ -38,10 +41,9 @@ def save_plot(t, x, y, z):
 
 def run_finmag():
     """Run the finmag simulation and store data in averages.txt."""
-    mesh = df.Mesh(convert_mesh(MODULE_DIR + "/bar30_30_100.geo"))
 
     # Set up LLG
-    llg = LLG(mesh, mesh_units=1e-9)
+    llg = LLG(mesh, mesh_units=mesh_units)
     llg.Ms = 0.86e6
     llg.A = 13.0e-12
     llg.alpha = 0.5
@@ -91,6 +93,9 @@ def test_compare_averages():
     if not (os.path.isfile(MODULE_DIR + "/averages.txt") and
             os.path.isfile(MODULE_DIR + "/exchange_demag.png")):
         run_finmag()
+    elif (os.path.getctime(MODULE_DIR + "/averages.txt") <
+          os.path.getctime(os.path.abspath(__file__))):
+        run_finmag()
 
     computed = np.array(h.read_float_data(MODULE_DIR + "/averages.txt"))
     dt = ref[:,0] - computed[:,0]
@@ -111,21 +116,56 @@ def test_compare_averages():
         print "finmag:\n", computed
     assert err < REL_TOLERANCE, "Relative error = %g" % err
 
-@pytest.mark.xfail
 def test_compare_energies():
     ref = np.array(h.read_float_data(MODULE_DIR + "/energies_ref.txt"))
     if not (os.path.isfile(MODULE_DIR + "/energies.txt")):
+        run_finmag()
+    elif (os.path.getctime(MODULE_DIR + "/energies.txt") <
+          os.path.getctime(os.path.abspath(__file__))):
         run_finmag()
 
     computed = np.array(h.read_float_data(MODULE_DIR + "/energies.txt"))
     assert np.size(ref) == np.size(computed), "Compare number of energies."
 
-    diff = ref - computed
-    exch_diff = diff[:, 0]
-    demag_diff = diff[:, 1]
+    vol = df.assemble(df.Constant(1)*df.dx, mesh=mesh)*mesh_units**3
+    #30x30x100nm^3 = 30x30x100=9000
 
-    print max(exch_diff)
-    print max(demag_diff)
+    # Compare exchange energy
+    exch = computed[:, 0]/vol
+    exch_nmag = ref[:, 0]
+
+    diff = abs(exch - exch_nmag)
+    rel_diff = np.abs(diff / max(exch))
+    print "Exchange energy, max relative error:", max(rel_diff)
+    # FIXME: Why is this 100 times higher than with demag?
+    assert max(rel_diff) < 1e-1, \
+            "Max relative error in exchange energy is %g" % max(rel_diff)
+
+    # Compare demag energy
+    demag = computed[:, 1]/vol
+    demag_nmag = ref[:, 1]
+
+    diff = abs(demag - demag_nmag)
+    rel_diff = np.abs(diff / max(demag))
+    print "Demag energy, max relative error:", max(rel_diff)
+    assert max(rel_diff) < 5e-3, \
+            "Max relative error in demag energy is %g" % max(rel_diff)
+
+
+    # Plot, remove after debugging
+    p.figure()
+    p.plot(exch)
+    p.plot(exch_nmag)
+    p.legend(["Finmag", "Nmag"])
+    p.savefig(MODULE_DIR + "/exchange_energy.png")
+    p.figure()
+    p.plot(demag)
+    p.plot(demag_nmag)
+    p.legend(["Finmag", "Nmag"])
+    p.savefig(MODULE_DIR + "/demag_energy.png")
+
+    print "Finmag exchange energy divided by exchange energy from nmag:"
+    print exch/exch_nmag
 
 if __name__ == '__main__':
     test_compare_averages()
