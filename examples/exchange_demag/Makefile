@@ -8,6 +8,7 @@ mesh:
 nmag: mesh
 	nsim run_nmag.py --clean
 	ncol bar time m_Py_0 m_Py_1 m_Py_2 > averages_ref.txt
+	ncol bar E_exch_Py E_demag_Py > energies_ref.txt
 
 meshshow:
 	nmeshpp --vtk bar.nmesh.h5 bar.vtk

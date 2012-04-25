@@ -47,13 +47,16 @@ def run_finmag():
     llg.set_m((1,0,1))
     llg.setup(use_exchange=True, use_dmi=False, use_demag=True, demag_method="FK")
 
+    xlist, ylist, zlist, tlist = [], [], [], []
+    E_exch, E_demag = [], []
+
     # Set up time integrator
     integrator = LLGIntegrator(llg, llg.m)
 
-    # Progressbar
     fh = open(MODULE_DIR + "/averages.txt", "w")
-    xlist, ylist, zlist, tlist = [], [], [], []
+    fe = open(MODULE_DIR + "/energies.txt", "w")
 
+    # Progressbar
     bar = pb.ProgressBar(maxval=60, \
                     widgets=[pb.ETA(), pb.Bar('=', '[', ']'), ' ', pb.Percentage()])
 
@@ -73,7 +76,13 @@ def run_finmag():
         tlist.append(t)
         fh.write(str(t) + " " + str(mx) + " " + str(my) + " " + str(mz) + "\n")
 
+        # Energies
+        E_e = llg.exchange.compute_energy()
+        E_d = llg.demag.compute_energy()
+        fe.write(str(E_e) + " " + str(E_d) + "\n")
+
     fh.close()
+    fe.close()
     save_plot(tlist, xlist, ylist, zlist)
 
 def test_compare_averages():
@@ -101,5 +110,21 @@ def test_compare_averages():
         print "finmag:\n", computed
     assert err < REL_TOLERANCE, "Relative error = %g" % err
 
+def test_compare_energies():
+    ref = np.array(h.read_float_data(MODULE_DIR + "/energies_ref.txt"))
+    if not (os.path.isfile(MODULE_DIR + "/energies.txt")):
+        run_finmag()
+
+    computed = np.array(h.read_float_data(MODULE_DIR + "/energies.txt"))
+    assert np.size(ref) == np.size(computed), "Compare number of energies."
+
+    diff = ref - computed
+    exch_diff = diff[:, 0]
+    demag_diff = diff[:, 1]
+
+    print max(exch_diff)
+    print max(demag_diff)
+
 if __name__ == '__main__':
     test_compare_averages()
+    test_compare_energies()
