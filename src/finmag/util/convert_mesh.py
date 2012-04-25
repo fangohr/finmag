@@ -1,17 +1,13 @@
-"""Module for converting meshes into dolfin meshes"""
-
-__author__ = "Anders Johansen"
-__copyright__ = __author__
-__project__ = "Finmag"
-__organisation__ = "University of Southampton"
-import os, sys, commands
+import os, sys, commands, logging
 import finmag.mesh.marker as mark
+
+logger = logging.getLogger(name='finmag')
 
 def convert_mesh(inputfile, outputfile=None):
     """
     Convert a .geo file to a .xml.gz file compatible with Dolfin.
     The resulting file is placed in ~/finmag/mesh
-    
+
     *Arguments*
         inputfile (str)
             Name of a .geo file which is compatible with Netgen
@@ -25,15 +21,15 @@ def convert_mesh(inputfile, outputfile=None):
             Complete filename of generated mesh. See Example.
 
     *Example*
-        This example shows the simple case where one converts the file 
+        This example shows the simple case where one converts the file
         "myfile.geo" to a dolfin compatible file "myfile.xml.gz".
-    
+
         .. code-block:: python
 
             from finmag.util.convert_mesh import convert_mesh
             convert_mesh("myfile.geo")
 
-        Another example shows that this function could be given directly 
+        Another example shows that this function could be given directly
         as input to Dolfin.Mesh. In this case, the resulting mesh
         is stored in the same directory under the name "mymesh.xml.gz".
 
@@ -44,12 +40,15 @@ def convert_mesh(inputfile, outputfile=None):
 
     .. Note::
 
-        If the outputfile.xml.gz already exists, this is returned, 
+        If the outputfile.xml.gz already exists, this is returned,
         even though it may not be the correct mesh corresponding
-        to the .geo file. 
+        to the .geo file.
+
+        25.04: This should now only happend if the dolfin mesh is
+        created after the last modification of the geofile.
 
     """
-    
+
     name, type_ = os.path.splitext(inputfile)
     if type_ != '.geo':
         print 'Only .geo files are supported as input.'
@@ -62,11 +61,13 @@ def convert_mesh(inputfile, outputfile=None):
         outputfile = name
 
     outputfilename = "".join([outputfile,".xml.gz"])
-    
+
     if os.path.isfile(outputfilename):
-        print "The mesh %s already exists, and is automatically returned." % outputfilename
-        return outputfilename
-    print 'Using netgen to convert %s.geo to DIFFPACK format...' % name
+        if os.path.getctime(outputfilename) > os.path.getctime(inputfile):
+            logger.info("The mesh %s already exists, and is automatically returned." % outputfilename)
+            return outputfilename
+
+    logger.info('Using netgen to convert %s.geo to DIFFPACK format...' % name)
     netgen_cmd = 'netgen -geofile=%s -meshfiletype="DIFFPACK Format" -meshfile=%s.grid -batchmode' % (inputfile, name)
     status, output = commands.getstatusoutput(netgen_cmd)
     if status not in (0, 34304): # Trouble on my machine, should just be zero.
@@ -79,7 +80,7 @@ def convert_mesh(inputfile, outputfile=None):
     print 'Using dolfin-convert to convert the DIFFPACK file to Dolfin xml...'
     dolfin_conv_cmd = 'dolfin-convert %s.grid %s.xml' % (name, outputfile)
     status, output = commands.getstatusoutput(dolfin_conv_cmd)
-    if status != 0: 
+    if status != 0:
         print output
         print "dolfin-convert failed with exit code", status
         sys.exit(3)
@@ -114,7 +115,9 @@ def convert_mesh(inputfile, outputfile=None):
 
     print 'Success! Mesh is written to %s.' % outputfilename
     return outputfilename
-            
+
+
+
 class MeshGenerator(object):
     """Class for problems using generated meshes"""
     
