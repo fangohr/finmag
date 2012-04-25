@@ -140,7 +140,8 @@ def test_compare_energies():
 
 
     p.figure()
-    demag = computed[:, 1]/-7.17e10 # And what is this? And why are they not the same?
+    #demag = computed[:, 1]/-7.17e10 # And what is this? And why are they not the same?
+    demag = computed[:, 1]/vol
     nmag = ref[:, 1]
 
     p.plot(demag)
