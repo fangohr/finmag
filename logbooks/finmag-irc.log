@@ -1000,3 +1000,25 @@ fangohr: Still testing ...
 2012-04-24 13:57:33 fangohr_: Will try to do some teaching preparations now, but keep me posted if you need any input etc.
 2012-04-24 15:42:52 mb8g11: reboot, problem with the graphic drivers
 2012-04-24 18:20:30 andersej: To Marc-Antonio: /src/finmag/demag/solver_fk.py
+2012-04-25 08:55:36 fangohr_: Good Morning DokosBot.
+2012-04-25 11:50:05 mb8g11: I won't be going to lunch today, have a PGR meeting.
+2012-04-25 11:50:24 fangohr_: Me neither -- doing sports.
+2012-04-25 12:06:14 andersej: Are you sure about the PGR meeting?
+2012-04-25 12:06:48 mb8g11: Haha, funny. Yes. 25/04/2012 12:00 Building 5/2017. And yet... nobody there.
+2012-04-25 12:20:23 mb8g11: Gotta love this faculty.
+2012-04-25 12:21:04 andersej: Hans, are you sure you gave me the right function?  ncol bar E_exch_Py E_demag_Py gives completely different results than ours.
+2012-04-25 12:21:41 andersej: Or was this with dividing on volume? Will try..
+2012-04-25 12:22:28 maxim|s: Hi all, is anybody going to have lunch soon?
+2012-04-25 12:23:08 andersej: Yes, Marc-Antonio and I will go in about ten minutes? Do you want to join?
+2012-04-25 12:23:30 maxim|s: yes, see you at 12:30
+2012-04-25 12:38:30 andersej: I will fix the jenkins build after lunch..
+2012-04-25 13:44:21 andersej: Hello, Weiwei!
+2012-04-25 13:44:45 ww1g11_: hello
+2012-04-25 13:44:53 fangohr_: Hi Weiwei, good to see you. ;)
+2012-04-25 13:45:26 ww1g11: good to see you
+2012-04-25 14:23:22 andersej: Dividing by a scalar, the exchange and demag energies are very similar to the corresponding energies from nmag. The problem is that I can't explain the scalar factor.
+2012-04-25 14:23:43 fangohr_: Which program do I need to run to see the plot?
+2012-04-25 14:24:09 andersej: examples/exchange_demag/test_exchange_demag.py
+2012-04-25 16:03:46 mb8g11: Anders, this is your story: #28605277 https://www.pivotaltracker.com/story/show/28605277
+2012-04-25 16:03:49 mb8g11: :D
+2012-04-25 16:09:43 andersej: Thanks!
