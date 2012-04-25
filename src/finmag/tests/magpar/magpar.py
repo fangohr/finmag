@@ -24,7 +24,8 @@ def set_inital_m0(V,m0):
     else:
         raise NotImplementedError,"only a tuple is acceptable for set_inital_m0"
 
-def gen_magpar_conf(base_name,init_m,Ms=8.6e5,A=13e-12,K1=0,a=[0,0,1],alpha=0.1,demag=0):
+def gen_magpar_conf(base_name,init_m,Ms=8.6e5,A=13e-12,K1=0,a=[0,0,1],
+        alpha=0.1,demag=0,mesh_units=1e-9):
 
     conf_path = os.path.join(MODULE_DIR, base_name)
     if not os.path.exists(conf_path):
@@ -56,10 +57,10 @@ def gen_magpar_conf(base_name,init_m,Ms=8.6e5,A=13e-12,K1=0,a=[0,0,1],alpha=0.1,
         allopt_file.write("".join(allopt))
    
     file_name=os.path.join(conf_path, base_name+".inp")
-    save_inp_of_inital_m(init_m,file_name)
+    save_inp_of_inital_m(init_m,file_name, mesh_units=mesh_units)
 
     file_name=os.path.join(conf_path, base_name+".0000.inp")
-    save_inp_of_inital_m(init_m,file_name)
+    save_inp_of_inital_m(init_m,file_name, mesh_units=mesh_units)
 
 def run_magpar(base_name):
     magpar_cmd=(os.path.join(os.getenv("HOME")+"/magpar-0.9/src/magpar.exe"))
@@ -120,7 +121,8 @@ def read_inp_gz(file_name):
     return fields
     
 
-def save_inp_of_inital_m(m,file_name):
+def save_inp_of_inital_m(m,file_name, mesh_units):
+    print "Calling save_inp_of_initial_m with mesh_units={}.".format(mesh_units)
     mesh=m.function_space().mesh()
     data_type_number = 3
     f=open(file_name,"w")
@@ -133,9 +135,9 @@ def save_inp_of_inital_m(m,file_name):
     for i in range(len(xyz)):
         f.write("%d %0.15e %0.15e %0.15e\n"
                 %(i+1,
-                  xyz[i][0]*1e9,
-                  xyz[i][1]*1e9,
-                  xyz[i][2]*1e9))
+                  xyz[i][0]/mesh_units,
+                  xyz[i][1]/mesh_units,
+                  xyz[i][2]/mesh_units))
     
     for c in cells(mesh):
         id=c.index()
@@ -188,7 +190,7 @@ def get_field(base_name,field="anis"):
     return nodes,field
 
 
-def compute_anis_magpar(V, m, K, a, Ms):
+def compute_anis_magpar(V, m, K, a, Ms, mesh_units=1e-9):
     """
     Usage:
 
@@ -209,7 +211,7 @@ def compute_anis_magpar(V, m, K, a, Ms):
     """
     base_name="test_anis"
 
-    gen_magpar_conf(base_name,m,Ms=Ms,a=a,K1=K)
+    gen_magpar_conf(base_name,m,Ms=Ms,a=a,K1=K, mesh_units=mesh_units)
 
     run_magpar(base_name)
 
