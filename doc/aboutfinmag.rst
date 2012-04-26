@@ -52,3 +52,5 @@ We use the following tools:
 * `IRC <https://bitbucket.org/fangohr/finmag/wiki/IRC>`_ for quick questions during the day (or night).
 
 * The finmag-team mailing list at finmag-team@lists.soton.ac.uk
+
+.. include:: ./comparison.rst
