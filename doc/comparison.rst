@@ -1,3 +1,5 @@
+:orphan:
+
 Comparison with other micromagnetic packages
 --------------------------------------------
 
