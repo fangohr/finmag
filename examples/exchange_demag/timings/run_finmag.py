@@ -3,23 +3,20 @@ import os, time
 import numpy as np
 import dolfin as df
 from finmag.sim.llg import LLG
-from finmag.sim.integrator import LLGIntegrator
 from finmag.util.timings import timings
+from finmag.sim.integrator import LLGIntegrator
 from finmag.util.convert_mesh import convert_mesh
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Create meshes
-h5mesh = '- netgen -geofile=bar.geo -meshfiletype="Neutral Format" -meshfile=bar.neutral -batchmode'
-xmlmesh = '- netgen -geofile=bar.geo -meshfiletype="DIFFPACK Format" -meshfile=bar.grid -batchmode'
+neutralmesh = 'netgen -geofile=bar.geo -meshfiletype="Neutral Format" -meshfile=bar.neutral -batchmode'
 nmeshimport = 'nmeshimport --netgen bar.neutral bar.nmesh.h5'
-dolfinconvert = 'dolfin-convert bar.grid bar.xml && gzip -f bar.xml'
 if not os.path.isfile(MODULE_DIR + "/bar.nmesh.h5"):
-    commands.getstatusoutput(h5mesh)
+    commands.getstatusoutput(neutralmesh)
     commands.getstatusoutput(nmeshimport)
 if not os.path.isfile(MODULE_DIR + "/bar.xml.gz"):
-    commands.getstatusoutput(xmlmesh)
-    commands.getstatusoutput(dolfinconvert)
+    convert_mesh(MODULE_DIR + '/bar.geo')
 
 # Run nmag
 commands.getstatusoutput("nsim run_nmag.py --clean")
