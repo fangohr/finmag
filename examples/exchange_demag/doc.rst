@@ -8,21 +8,33 @@ The geometry we use is a bar of dimensions 30 x 30 x 100 nm. This is stored in t
 The finmag code for setting up the LLG object reads
 
 .. literalinclude:: ../examples/exchange_demag/test_exchange_demag.py
-    :lines: 42-48
+    :lines: 24-30
 
 The time integrator is created by
 
 .. literalinclude:: ../examples/exchange_demag/test_exchange_demag.py
-    :lines: 50,51
+    :lines: 32,33
 
 and for each time step, t, we call the integrator by
 
 .. literalinclude:: ../examples/exchange_demag/test_exchange_demag.py
-    :lines: 65,66
+    :lines: 47,48
 
-For now, our relative error from the nmag implementation is below 1e-4. This plot shows the comparison between the finmag and nmag results.
+For now, our relative error from the nmag implementation for the normalized magnetisation is below 1e-4. This plot shows the comparison between the finmag and nmag results.
 
 .. image:: ../examples/exchange_demag/exchange_demag.png
+    :scale: 75
+    :align: center
+
+For the exchange energy, the relative error of our implementation is also below 1e-4,
+
+.. image:: ../examples/exchange_demag/exchange_energy.png
+    :scale: 75
+    :align: center
+
+while for the demag energy, the relative error is below 1e-3.
+
+.. image:: ../examples/exchange_demag/demag_energy.png
     :scale: 75
     :align: center
 
