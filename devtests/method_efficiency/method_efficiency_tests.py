@@ -1,6 +1,6 @@
 import dolfin as df
 import time
-from finmag.sim.anisotropy import Anisotropy as ani
+from finmag.sim.anisotropy import UniaxialAnisotropy as ani
 from finmag.sim.exchange import Exchange as exch
 import numpy as np
 
@@ -22,17 +22,17 @@ def efficiency_test(method, n, field='exchange'):
     m0 = ("0.0",
           "sqrt(1 - ((2*x[0]-L)/L)*((2*x[0]-L)/L))",
           "(2*x[0]-L)/L")
-    m = df.interpolate(df.Expression(m0,L=length), V)   
-    
+    m = df.interpolate(df.Expression(m0,L=length), V)
+    Ms = 0.86e6 # A/m, for example Py
+
     if field == 'exchange':
         C = 1.3e-11 # J/m exchange constant
-        Ms = 0.86e6 # A/m, for example Py
         energy = exch(V, m, C, Ms, method=method)
-        
+
     elif field == 'anisotropy':
         a = df.Constant((0, 0, 1)) # Easy axis
         K = 520e3 # J/m^3, Co
-        energy = ani(V, m, K, a, method=method)
+        energy = ani(V, m, K, a, Ms, method=method)
 
     else:
         raise NotImplementedError("%s is not implemented." % field)
@@ -52,12 +52,12 @@ def correctness_test(results, ref_method, tol, rtol):
     """
     Test correctness of the different methods by comparing
     their results with eachother.
-    
-    Worst case scenario: Everyone is equal to eachother, but 
+
+    Worst case scenario: Everyone is equal to eachother, but
     they are all wrong. Then we have a problem...
 
     """
-    
+
     # Sanity check
     if not results.has_key(ref_method):
         print "Cannot use %s method as reference." % ref_method
@@ -65,7 +65,7 @@ def correctness_test(results, ref_method, tol, rtol):
 
     ref = results[ref_method]
     print "\n\n\n*** Comparisons ***"
-    
+
     for method in results.iterkeys():
         if method == ref_method:
             continue
@@ -78,19 +78,18 @@ def correctness_test(results, ref_method, tol, rtol):
             diff = abs(ref[i] - Hex[i])
             max_error2 = diff.max()
             rel_error2 = max_error2/max(abs(ref[i]))
-            
+
             if max_error2 > max_error:
                 max_error = max_error2
             if rel_error2 > rel_error:
-                rel_error = rel_error2 
+                rel_error = rel_error2
 
         print "\nBetween '%s' and '%s' methods:" % \
                 (ref_method, method)
 
         print "Max error:     ", max_error
-
         print "Relative error:", rel_error
-        
+
         assert max_error < tol
         assert rel_error < rtol
 
@@ -108,7 +107,7 @@ def print_results(results, ns):
 
     print "\n*** Speedup ***"
     print "(Larger than 1 means second method is faster than first method.)"
-    
+
     methods = results.keys()
     nomethods = len(methods)
 
@@ -133,8 +132,8 @@ if __name__ == '__main__':
 
     # Field for which to compare efficiency and correctness
     # (Comment out the one you are not interested in)
-    field = "anisotropy"
-    #field = "exchange"
+    #field = "anisotropy"
+    field = "exchange"
 
     methods = ['box-assemble', 'box-matrix-numpy', 'box-matrix-petsc']#, 'project']
     ns = [1, 5, 10, 20, 50]

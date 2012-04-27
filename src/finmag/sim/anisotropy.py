@@ -16,24 +16,26 @@ class UniaxialAnisotropy(object):
 
         E_{\\text{ani}} = - \\int K ( \\vec a \\cdot \\vec m)^2 \\mathrm{d}x,
 
-    where :math:`K` is the anisotropy constant, 
-    :math:`\\vec a` the easy axis and :math:`\\vec{m}=\\vec{M}/M_\mathrm{sat}` 
+    where :math:`K` is the anisotropy constant,
+    :math:`\\vec a` the easy axis and :math:`\\vec{m}=\\vec{M}/M_\mathrm{sat}`
     the discrete approximation of the magnetic polarization.
 
     *Arguments*
         V
             A Dolfin VectorFunctionSpace object.
-        M
-            The Dolfin object representing the magnetisation
+        m
+            The Dolfin object representing the (unit) magnetisation
         K
             The anisotropy constant
         a
             The easy axis (use dolfin.Constant for now).
             Should be a unit vector.
+        Ms
+            The saturation magnetisation.
         method
             The method used to compute the anisotropy field.
             For alternatives and explanation, see Exchange.
-        
+
     *Example of Usage*
         .. code-block:: python
 
@@ -46,17 +48,18 @@ class UniaxialAnisotropy(object):
 
             a = Constant((0, 0, 1)) # Easy axis in z-direction
             m = project(Constant((1, 0, 0)), V) # Initial magnetisation
+            Ms = 1e6
 
-            anisotropy = Anisotropy(V, m, K, a)
+            anisotropy = Anisotropy(V, m, K, a, Ms)
 
             # Print energy
             print anisotropy.compute_energy()
 
             # Anisotropy field
             H_ani = anisotropy.compute_field()
-            
-    """   
-    
+
+    """
+
     def __init__(self, V, m, K, a, Ms, method="box-matrix-petsc"):
         logger.info("Anisotropy() method = %s" % method)
         timings.start('Anisotropy-init')
@@ -66,11 +69,11 @@ class UniaxialAnisotropy(object):
 
         # Testfunction
         self.v = df.TestFunction(V)
-        
+
         # Make sure that K is dolfin.Constant
         if not 'dolfin' in str(type(K)):
             K = df.Constant(K)
-        
+
         # Anisotropy energy
         self.E = K*(df.Constant(1) - (df.dot(a, self.m))**2)*df.dx
 
@@ -81,7 +84,7 @@ class UniaxialAnisotropy(object):
         self.dE_dM = df.Constant(-1.0/(Ms*mu0))*df.derivative(self.E, self.m)
 
         # Volume
-        self.vol = df.assemble(df.dot(self.v, 
+        self.vol = df.assemble(df.dot(self.v,
             df.Constant([1,1,1])) * df.dx).array()
 
         # Store for later
@@ -101,9 +104,9 @@ class UniaxialAnisotropy(object):
             self.__compute_field = self.__compute_field_project
         else:
             raise NotImplementedError("""Only methods currently implemented are
-                                    * 'box-assemble', 
+                                    * 'box-assemble',
                                     * 'box-matrix-numpy',
-                                    * 'box-matrix-petsc'  
+                                    * 'box-matrix-petsc'
                                     * 'project'""")
 
         timings.stop('Anisotropy-init')
@@ -132,21 +135,21 @@ class UniaxialAnisotropy(object):
         #self._m_normed.vector()[:] = fnormalise(self._m.vector().array())
         #return self._m_normed
     m = property(normed_m)
-        
+
     def compute_field(self):
         """
         Compute the anisotropy field.
-        
+
          *Returns*
             numpy.ndarray
-                The anisotropy field.       
-        
+                The anisotropy field.
+
         """
         timings.start('Anisotropy-computefield')
         H = self.__compute_field()
         timings.stop('Anisotropy-computefield')
         return H
-    
+
     def compute_energy(self):
         """
         Compute the anisotropy energy.
@@ -174,7 +177,7 @@ class UniaxialAnisotropy(object):
 
         """
         g_form = df.derivative(self.dE_dM, self.m)
-        self.g = df.assemble(g_form).array() #store matrix as numpy array  
+        self.g = df.assemble(g_form).array() #store matrix as numpy array
 
     def __setup_field_petsc(self):
         """
@@ -183,19 +186,19 @@ class UniaxialAnisotropy(object):
         """
         g_form = df.derivative(self.dE_dM, self.m)
         self.g_petsc = df.PETScMatrix()
-        
+
         df.assemble(g_form,tensor=self.g_petsc)
         self.H_ani_petsc = df.PETScVector()
 
     def __setup_field_project(self):
-        #Note that we could make this 'project' method faster by computing 
-        #the matrices that represent a and L, and only to solve the matrix 
-        #system in 'compute_field'(). IF this method is actually useful, 
+        #Note that we could make this 'project' method faster by computing
+        #the matrices that represent a and L, and only to solve the matrix
+        #system in 'compute_field'(). IF this method is actually useful,
         #we can do that. HF 16 Feb 2012
         H_ani_trial = df.TrialFunction(self.V)
         self.a = df.dot(H_ani_trial, self.v) * df.dx
         self.L = self.dE_dM
-        self.H_ani_project = df.Function(self.V)        
+        self.H_ani_project = df.Function(self.V)
 
     def __compute_field_assemble(self):
         H_ani=df.assemble(self.dE_dM).array() / self.vol
