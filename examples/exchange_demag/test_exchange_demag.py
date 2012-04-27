@@ -117,7 +117,7 @@ def test_compare_energies():
     computed = np.array(h.read_float_data(MODULE_DIR + "/energies.txt"))
     assert np.size(ref) == np.size(computed), "Compare number of energies."
 
-    vol = df.assemble(df.Constant(1)*df.dx, mesh=mesh)*mesh_units**3
+    vol = df.assemble(df.Constant(1)*df.dx, mesh=mesh)*mesh_units**mesh.topology().dim()
     #30x30x100nm^3 = 30x30x100=9000
 
     # Compare exchange energy
