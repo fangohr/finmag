@@ -1,11 +1,19 @@
+import os
+import dolfin as df
 from numpy import pi, sqrt
-from dolfin import UnitSphere
 from finmag.sim.llg import LLG
+from finmag.util.convert_mesh import convert_mesh
 
 TOL = 1.5e-2
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# The dolfin UnitSphere gives a coarse and low quality mesh.
+# Use this instead when the lindholm formulation is implemented.
+# Then we can also set TOL = 1.5e-3
+#mesh = df.Mesh(convert_mesh(MODULE_DIR + "/sphere_fine.geo"))
 
 # Using unit sphere mesh
-mesh = UnitSphere(10)
+mesh = df.UnitSphere(10)
 mesh_units = 1
 llg = LLG(mesh, mesh_units=mesh_units)
 llg.set_m((1, 0, 0))
@@ -21,6 +29,7 @@ def test_energy():
     """
     E_demag = llg.demag.compute_energy()
     print "Demag energy:", E_demag
+    print "Numerical solution on the netgen mesh: 8758.92651323"
 
     vol = 4*pi/3
     mu0 = 4*pi*10**-7
