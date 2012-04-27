@@ -293,7 +293,7 @@ class LLG(object):
     def setup(self, use_exchange=True, use_dmi=False, use_demag=False,
               exchange_method="box-matrix-petsc",
               dmi_method="box-matrix-petsc",
-              demag_method="weiwei"): 
+              demag_method="FK"): 
 
         #add setup time to LLG-init
         timings.start('LLG-init')
@@ -316,6 +316,7 @@ class LLG(object):
                 self.demag = SimpleFKSolver(self.V, self._m, self.Ms)
             # TODO: The elif block will be removed after debugging current
             # problem. AEJ 17/04.
+            # AEJ 26/04: Keep it until story 28350139 starts
             elif demag_method == "FK":
                 timings.start("Create demag problem")
                 from finmag.demag.problems.prob_base import FemBemDeMagProblem
@@ -323,7 +324,7 @@ class LLG(object):
                 problem = FemBemDeMagProblem(self.mesh, self._m)
                 problem.Ms = self.Ms
                 timings.stop("Create demag problem")
-                self.demag = FemBemFKSolver(problem)
+                self.demag = FemBemFKSolver(problem, mesh_units=self.mesh_units)
             else:
                 self.demag = Demag(self.V, self._m, self.Ms, method=demag_method)
         
