@@ -1,12 +1,14 @@
+import os
 from dolfin import Mesh
 from numpy import average
 from finmag.sim.llg import LLG
 from finmag.util.convert_mesh import convert_mesh
 
 TOL = 1e-3
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Using mesh with radius 10 nm (nmag ex. 1)
-mesh = Mesh(convert_mesh("sphere1.geo"))
+mesh = Mesh(convert_mesh(MODULE_DIR + "/sphere1.geo"))
 mesh_units = 1e-9
 llg = LLG(mesh, mesh_units=mesh_units)
 llg.set_m((1, 0, 0))
