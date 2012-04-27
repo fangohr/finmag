@@ -164,6 +164,8 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
             the Dolfin object representing the (unit) magnetisation
         Ms
             the saturation magnetisation
+        mesh_units
+            the scale of the mesh, defaults to 1.
         method
             possible methods are
                 * 'magpar'
@@ -179,7 +181,7 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         See the exchange_demag example.
 
     """
-    def __init__(self, problem, degree=1, element="CG", method='magpar'):
+    def __init__(self, problem, degree=1, element="CG", method='magpar', mesh_units=1):
         timings.start("FKSolver init first part")
         super(FemBemFKSolver, self).__init__(problem, degree, element=element)
 
@@ -187,6 +189,7 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         self.m = self.M
         self.Ms = problem.Ms
         self.mesh = problem.mesh
+        self.mesh_units = mesh_units
 
         # Functions and functionspace (can get a lot of this from base
         # after the interface changes.
@@ -218,19 +221,24 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
 
     def compute_energy(self):
         """
-        Computing the demag energy defined by
+        Compute the demag energy defined by
 
         .. math::
 
-            E = 0.5 \int H_\mathrm{demag} * M dV
+            E_\\mathrm{demag} = -\\frac12 \\mu_0 \\int_\\Omega
+            H_\\mathrm{demag} \\cdot \\vec M \\mathrm{d}x
+
+        *Returns*
+            Float
+                The demag energy.
 
         """
         H_demag = df.Function(self.W)
         H_demag.vector()[:] = self.compute_field()
         mu0 = 4 * np.pi * 10**-7 # Vs/(Am)
         E = -0.5*mu0*df.dot(H_demag, self.m*self.Ms)*df.dx
-        mesh_units=1e-9
-        return df.assemble(E, mesh=self.mesh)*mesh_units**3
+        return df.assemble(E, mesh=self.mesh)*\
+                self.mesh_units**self.mesh.topology().dim()
 
     def compute_field(self):
         """
