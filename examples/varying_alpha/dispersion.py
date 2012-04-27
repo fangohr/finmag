@@ -9,6 +9,7 @@ import dolfin as df
 import progressbar as pb
 import finmag.sim.helpers as h
 
+
 import logging
 
 logger = logging.getLogger(name='finmag')
@@ -16,7 +17,17 @@ logger = logging.getLogger(name='finmag')
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 REL_TOLERANCE = 1e-4
 
-def compute_dispersion(data,dx,dt,file_name):
+
+def compute_dispersion(series,dx,file_name):
+    times=series.vector_times()
+    dt=times[1]-times[0]
+    data=[]
+    x=df.Vector()
+    for t in times:
+        series.retrieve(x, t, False)
+        data.append(x.array())
+
+
     res=np.fft.fft2(data)
     res=np.fft.fftshift(res)
     res=np.abs(res)
@@ -24,21 +35,25 @@ def compute_dispersion(data,dx,dt,file_name):
     res=np.log10(res)
     m,n=res.shape
     print m,n
-    file=open(file_name,'w')
-    file.write('# kx (nm^-1)        frequency (GHz)        FFT_Power (arb. unit)\n')
-    """Here we need double check ..."""
+    
+    freq=np.fft.fftfreq(m,d=dt*1e9)
+    kx=np.fft.fftfreq(n,d=dx*1e9/(2*np.pi))
+    freq=np.fft.fftshift(freq)
+    kx=np.fft.fftshift(kx)
+
+    f=open(file_name,"w")
+    f.write('# kx (nm^-1)        frequency (GHz)        FFT_Power (arb. unit)\n')
+    
     for j in range(n):
-        kx= (j+1-n/2.0)/(n*dx*1e9)*2*np.pi
         for i in range(m):
-            f=(m/2.0-i)/(m*dt*1e9)
-            file.write("%15g      %15g      %15g\n" % (kx, f, data[i][j]))
-        file.write('\n')
-    file.close()
+            f.write("%15g      %15g      %15g\n" % (kx[n-j-1], freq[i], res[i][j]))
+        f.write('\n')
+    f.close()
 
 
 def run_finmag():
-    x_max = 300; y_max = 2; z_max = 2;
-    mesh = df.Box(0, 0, 0, x_max, y_max, z_max, 150, 1, 1)
+    x_max = 2000; y_max = 2; z_max = 2;
+    mesh = df.Box(0, 0, 0, x_max, y_max, z_max, 1000, 1, 1)
     llg = LLG(mesh, mesh_units=1e-9)
     llg.Ms = 0.86e6
     llg.A = 13.0e-12
@@ -54,7 +69,7 @@ def run_finmag():
         llg._H_app=df.interpolate(H,llg.V)
     llg._pre_rhs_callables.append(update_H_ext)
     
-    llg.setup(use_exchange=True, use_dmi=False, use_demag=True, demag_method="FK")
+    llg.setup(use_exchange=True, use_dmi=False, use_demag=False, demag_method="FK")
 
     # Set up time integrator
     integrator = LLGIntegrator(llg, llg.m)
@@ -62,7 +77,9 @@ def run_finmag():
     dx = 2
     xs=[i*dx for i in xrange(0,x_max/dx)]
 
-    data=[]
+    series = df.TimeSeries("my")
+    my=df.Vector()
+    my.resize(len(xs));
     tfinal = 1e-9
     dt = 0.001e-9
     
@@ -72,16 +89,22 @@ def run_finmag():
         #update _m with values from integrator.m
         llg._m.vector()[:]=integrator.m[:] #or integrator.m
         print "Integrating time: %g" % t
-        my=[llg._m(x,1,1)[1] for x in xs]
-        data.append(my)
+        my[:]=np.array([llg._m(x,1,1)[1] for x in xs])
+        series.store(my, t)
 
     #maybe we can use a TimeSeries object to store data 
     #(http://fenicsproject.org/documentation/dolfin/dev/python/programmers-reference/cpp/TimeSeries.html)
     
 
-    return data,dx*1e-9,dt
+    return series,dx*1e-9
 
 
 if __name__ == '__main__':
-    data,dx,dt=run_finmag()
-    compute_dispersion(data,dx,dt,"dispersion.dat")
+    first_run=0
+    if first_run:
+        series,dx=run_finmag()
+        compute_dispersion(series,dx,"dispersion.dat")
+    else:
+        series = df.TimeSeries("my")
+        dx=2e-9
+        compute_dispersion(series,dx,"dispersion.dat")
