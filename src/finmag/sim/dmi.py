@@ -248,8 +248,9 @@ class DMI(object):
         #self.E = dmi_term3d_dolfin(self.M,self.DMIconstant)
 
 
-        mesh_shape = V.mesh().coordinates().shape
-        meshdim = mesh_shape[1]
+        #mesh_shape = V.mesh().coordinates().shape
+        #meshdim = mesh_shape[1]
+        meshdim = V.mesh().topology().dim()
         logger.debug("Mesh dimension is " + str(meshdim))
         if meshdim == 1: #2d mesh
             NotImplementedError("Not implemented for 1d mesh yet -- should be easy though")
