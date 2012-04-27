@@ -36,7 +36,7 @@ def compute_dispersion(data,dx,dt,file_name):
     file.close()
 
 
-def run_nmag():
+def run_finmag():
     x_max = 300; y_max = 2; z_max = 2;
     mesh = df.Box(0, 0, 0, x_max, y_max, z_max, 150, 1, 1)
     llg = LLG(mesh, mesh_units=1e-9)
@@ -49,12 +49,12 @@ def run_nmag():
     omega= 50*2*np.pi*GHz
     H = df.Expression(("0.0", "(x[0]<=2) ? ((t==0) ? H0: H0*sin(omega*t)/(omega*t)) : 0.0","0.0"), H0=1e5, omega=omega, t=0.0)
     def update_H_ext(llg):
-        print "update_H_ext being called for t=%g" % llg.t
+        #print "update_H_ext being called for t=%g" % llg.t
         H.t = llg.t
         llg._H_app=df.interpolate(H,llg.V)
     llg._pre_rhs_callables.append(update_H_ext)
     
-    llg.setup(use_exchange=True, use_dmi=False, use_demag=False, demag_method="FK")
+    llg.setup(use_exchange=True, use_dmi=False, use_demag=True, demag_method="FK")
 
     # Set up time integrator
     integrator = LLGIntegrator(llg, llg.m)
@@ -69,13 +69,19 @@ def run_nmag():
     times = np.linspace(0, tfinal, tfinal/dt + 1)
     for t in times:
         integrator.run_until(t)
+        #update _m with values from integrator.m
+        llg._m.vector()[:]=integrator.m[:] #or integrator.m
         print "Integrating time: %g" % t
         my=[llg._m(x,1,1)[1] for x in xs]
         data.append(my)
+
+    #maybe we can use a TimeSeries object to store data 
+    #(http://fenicsproject.org/documentation/dolfin/dev/python/programmers-reference/cpp/TimeSeries.html)
+    
 
     return data,dx*1e-9,dt
 
 
 if __name__ == '__main__':
-    data,dx,dt=run_nmag()
+    data,dx,dt=run_finmag()
     compute_dispersion(data,dx,dt,"dispersion.dat")
