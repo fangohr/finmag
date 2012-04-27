@@ -227,4 +227,13 @@ p.grid()
 p.legend()
 p.savefig(os.path.join(MODULE_DIR, 'stddev_loglog.png'))
 
+p.figure()
+p.loglog(vertices, errnorm, label='Finmag errornorm')
+p.xlabel('vertices')
+p.title('Error norm (log-log)')
+p.grid()
+p.legend()
+p.savefig(os.path.join(MODULE_DIR, 'errnorm_loglog.png'))
+
+
 print "Useful plots: maxerror.png, stddev.png, xvalues.png"
