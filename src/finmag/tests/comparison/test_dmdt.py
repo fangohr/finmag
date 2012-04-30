@@ -5,6 +5,7 @@ import numpy as np
 
 from finmag.sim.llg import LLG
 from finmag.util.oommf import mesh, oommf_dmdt
+from finmag.sim.helpers import stats
 
 TOLERANCE = 5e-16
 
@@ -47,21 +48,14 @@ def test_dmdt_computation_with_oommf():
     # compare
     difference = dmdt_finmag_like_oommf.flat - dmdt_oommf
     relative_difference = np.abs(difference / dmdt_oommf)
+    print "comparison with oommf, dm/dt, relative difference:"
+    print stats(relative_difference)
     assert np.max(relative_difference) < TOLERANCE
 
     return difference, relative_difference
 
 if __name__ == '__main__':
-    difference, relative_difference = test_dmdt_computation_with_oommf()
-    print "difference"
-    print difference
-    print "absolute relative difference"
-    print relative_difference
-    print "absolute relative difference:"
-    print "  median", np.median(relative_difference, axis=1)
-    print "  average", np.mean(relative_difference, axis=1)
-    print "  minimum", np.min(relative_difference, axis=1)
-    print "  maximum", np.max(relative_difference, axis=1)
-    print "  spread", np.std(relative_difference, axis=1)
+    test_dmdt_computation_with_oommf()
+
 
 
