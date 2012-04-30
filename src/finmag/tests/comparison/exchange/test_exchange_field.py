@@ -37,6 +37,8 @@ class TestExchange():
         self.m = llg.m
         H_exc = df.Function(llg.V)
         H_exc.vector()[:] = llg.exchange.compute_field()
+        if plot:
+            quiver(H_exc.vector().array(), mesh, MODULE_DIR + "exc_finmag.png")
         self.H_exc = H_exc
 
     def test_nmag(self):

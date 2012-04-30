@@ -40,6 +40,8 @@ class TestAnisotropy():
         self._m = llg._m
         H_anis = df.Function(llg.V)
         H_anis.vector()[:] = llg._anisotropies[0].compute_field()
+        if plot:
+            quiver(H_anis.vector().array(), mesh, MODULE_DIR + "anis_finmag.png")
         self.H_anis = H_anis
 
     def test_nmag(self):
@@ -98,7 +100,7 @@ class TestAnisotropy():
 
 if __name__ == '__main__':
     t = TestAnisotropy()
-    t.setup_class(plot=False)
+    t.setup_class(plot=True)
     t.test_nmag()
     t.test_oommf()
     t.test_magpar()
