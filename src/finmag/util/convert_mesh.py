@@ -64,41 +64,40 @@ def convert_mesh(inputfile, outputfile=None):
 
     if os.path.isfile(outputfilename):
         if os.path.getctime(outputfilename) > os.path.getctime(inputfile):
-            logger.info("The mesh %s already exists, and is automatically returned." % outputfilename)
+            logger.debug("The mesh %s already exists, and is automatically returned." % outputfilename)
             return outputfilename
 
-    logger.info('Using netgen to convert %s.geo to DIFFPACK format...' % name)
+    logger.debug('Using netgen to convert %s.geo to DIFFPACK format...' % name)
     netgen_cmd = 'netgen -geofile=%s -meshfiletype="DIFFPACK Format" -meshfile=%s.grid -batchmode' % (inputfile, name)
     status, output = commands.getstatusoutput(netgen_cmd)
     if status not in (0, 34304): # Trouble on my machine, should just be zero.
         print output
         print "netgen failed with exit code", status
         sys.exit(2)
-    print 'Done!'
+    logger.debug('Done!')
 
     # Convert to xml using dolfin-convert
-    print 'Using dolfin-convert to convert the DIFFPACK file to Dolfin xml...'
+    logger.debug('Using dolfin-convert to convert the DIFFPACK file to Dolfin xml...')
     dolfin_conv_cmd = 'dolfin-convert %s.grid %s.xml' % (name, outputfile)
     status, output = commands.getstatusoutput(dolfin_conv_cmd)
     if status != 0:
         print output
         print "dolfin-convert failed with exit code", status
         sys.exit(3)
-    print 'Done!'
+    logger.debug('Done!')
 
     # Compress xml file using gzip
-    print 'Compressing mesh...'
+    logger.debug('Compressing mesh...')
     compr_cmd = 'gzip -f %s.xml' % outputfile
     status, output = commands.getstatusoutput(compr_cmd)
     if status != 0:
         print output
         print "gzip failed with exit code", status
         sys.exit(4)
-    print 'Done!'
+    logger.debug('Done!')
 
     # Remove redundant files
-    print 'Cleaning up...'
-    print outputfile
+    logger.debug('Cleaning up...')
     files = ["%s.xml.bak" % outputfile,
              "%s_mat.xml" % outputfile,
              "%s_bi.xml" % outputfile,
@@ -106,14 +105,14 @@ def convert_mesh(inputfile, outputfile=None):
     for f in files:
         if os.path.isfile(f):
             os.remove(f)
-    print 'Done!'
+    logger.debug('Done!')
 
     # Test final mesh
-    print 'Testing...'
+    logger.debug('Testing...')
     from dolfin import Mesh
     Mesh(outputfilename)
 
-    print 'Success! Mesh is written to %s.' % outputfilename
+    logger.debug('Success! Mesh is written to %s.' % outputfilename)
     return outputfilename
 
 
