@@ -43,6 +43,8 @@ It is easier to understand the role of the damping constant :math:`\alpha_G` in 
 
 When we discuss a damping value :math:`\alpha` we normally refer to :math:`\alpha_G`, and :math:`\alpha_G=1` corresponds to critical damping.
 
+.. _macrospin_example:
+
 Macrospin example
 -----------------
 

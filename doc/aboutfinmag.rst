@@ -53,4 +53,158 @@ We use the following tools:
 
 * The finmag-team mailing list at finmag-team@lists.soton.ac.uk
 
-.. include:: ./comparison.rst
+Comparison with other micromagnetic packages
+--------------------------------------------
+
+To monitor the correct operation of finmag, automatic tests are set up
+to compare finmag's simulation results to other micromagnetic packages. These
+are `nmag <http://nmag.soton.ac.uk/nmag/>`_, `oommf <http://math.nist.gov/oommf/>`_
+and `magpar <http://www.magpar.net>`_.  After the same problem specification
+has been written for the four packages,
+the simulations are run and the results stored.
+
+Because magpar and nmag both use the finite element method, results
+defined on the same mesh can be compared easily to finmag. Oommf uses the finite
+difference method and uses meshes built of cubic cells. To check a field
+computed with finmag against its oommf equivalent, the former is probed at
+the locations of the vertices of the corresponding oommf mesh.
+This yields a new vector which can be used for the comparison.
+
+The relative difference between
+finmag's results and another package is computed with this formula:
+
+.. math::
+
+    \Delta = \frac{\vec{r}_{finmag} - \vec{r}_{ref}}{\max(\|\vec{r}_{ref}\|)} 
+
+The absolute difference is divided by the maximum value of the euclidean norm
+of the vectors in the reference simulation to filter out big relative errors
+due to comparing values which are supposed to be zero.
+
+The maximum relative difference is :math:`\Delta_{max}` and the mean is
+:math:`\bar{\Delta}`. The standard deviation is the square root of the average
+of the squared deviations from the mean and denoted by :math:`\sigma`.
+Usually, :math:`\Delta_{max}` is rounded up to one decimal place and used
+as a safeguard against programming mistakes, called :math:`\Delta_{test}`.
+By comparing the hard-coded :math:`\Delta_{test}` to the
+computed :math:`\Delta_{max}` and displaying an error message if
+:math:`\Delta_{max} \gt \Delta_{test}`, regressions can be identified.
+
+The Exchange Interaction
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+For the comparison of the exchange field, it is computed on a one-dimensional mesh
+with a starting magnetisation as shown in figure :ref:`m0_exchange` and described by
+
+.. math::
+    
+    m_x = ( 2x - 1 ) \cdot \frac{2}{3} 
+
+    m_y = \sqrt{1 - m_x^2 - m_z^2} 
+
+    m_z = \sin(2 \pi x) \cdot \frac{1}{2}
+
+where :math:`x \in [0; 1]`.
+
+.. _m0_exchange:
+
+.. figure:: ../src/finmag/tests/comparison/exchange/m0_finmag.png
+
+    The initial magnetisation used for the computation of the exchange field
+
+.. _exchange_field:
+
+.. figure:: ../src/finmag/tests/comparison/exchange/exc_finmag.png
+
+    The exchange field
+
+The exchange field is shown in :ref:`exchange_field` and the values
+for the relative difference are listed in :ref:`exchange_table`.
+
+.. _exchange_table:
+
+.. table:: Comparison of the exchange field computed with finmag against nmag and oommf
+
+    +---------+------------------------------+----------------------------+-----------------------------+-----------------------------+
+    |         |  :math:`\Delta_{test}`       |:math:`\Delta_{max}`        | :math:`\bar{\Delta}`        | :math:`\sigma`              |
+    +=========+==============================+============================+=============================+=============================+
+    | nmag    |  :math:`2\times 10^{-14}`    |:math:`1.35\times 10^{-14}` | :math:`3.36\times 10^{-15}` | :math:`3.91\times 10^{-15}` |
+    +---------+------------------------------+----------------------------+-----------------------------+-----------------------------+
+    | oommf   |  :math:`5\times 10^{-8}`     |:math:`4.42\times 10^{-8}`  | :math:`1.38\times 10^{-8}`  | :math:`1.39\times 10^{-8}`  |
+    +---------+------------------------------+----------------------------+-----------------------------+-----------------------------+
+
+Because this problem is defined on a one-dimensional mesh, no comparison with
+magpar is possible. However ``src/finmag/tests/magpar/test_exchange_compare_magpar.py``
+is run with :math:`\Delta_{test} = 9\times 10^{-9}`.
+
+Uniaxial Anisotropy
+^^^^^^^^^^^^^^^^^^^
+
+The initial magnetisation used for the computation of the anisotropy field
+is defined by
+
+.. math::
+
+    m_x = ( 2 - y ) \cdot ( 2x - 1) \cdot \frac{1}{4} 
+
+    m_y = \sqrt{1 - m_x^2 - m_z^2} 
+
+    m_x = ( 2 - y ) \cdot ( 2z - 1) \cdot \frac{1}{4} 
+
+where :math:`x, y, z \in [0; 1]` and shown in :ref:`m0_anis`.
+
+.. _m0_anis:
+
+.. figure:: ../src/finmag/tests/comparison/anisotropy/m0_finmag.png
+
+    The initial magnetisation used for the computation of the anisotropy field
+
+.. _anis_field:
+
+.. figure:: ../src/finmag/tests/comparison/anisotropy/anis_finmag.png
+
+    The anisotropy field
+
+The anisotropy field is shown in :ref:`anis_field` and the values
+for the relative difference are listed in :ref:`anis_table`.
+
+.. _anis_table:
+
+.. table:: Comparison of the anisotropy field computed with finmag against nmag and oommf
+
+    +---------+------------------------------+----------------------------+-----------------------------+-----------------------------+
+    |         |  :math:`\Delta_{test}`       |:math:`\Delta_{max}`        | :math:`\bar{\Delta}`        | :math:`\sigma`              |
+    +=========+==============================+============================+=============================+=============================+
+    | nmag    |  :math:`0.4`                 |:math:`0.36`                | :math:`0.07`                | :math:`0.09`                |
+    +---------+------------------------------+----------------------------+-----------------------------+-----------------------------+
+    | oommf   |  :math:`2\times 10^{-5}`     |:math:`1.29\times 10^{-5}`  | :math:`2.71\times 10^{-6}`  | :math:`4.52\times 10^{-6}`  |
+    +---------+------------------------------+----------------------------+-----------------------------+-----------------------------+
+    | magpar  |  :math:`8\times 10^{-6}`     |:math:`6.83\times 10^{-6}`  | :math:`3.79\times 10^{-7}`  | :math:`8.62\times 10^{-7}`  |
+    +---------+------------------------------+----------------------------+-----------------------------+-----------------------------+
+
+The Demagnetising field
+^^^^^^^^^^^^^^^^^^^^^^^
+
++---------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+
+|         | :math:`\Delta_{test}`       | :math:`\Delta_{max}`        | :math:`\bar{\Delta}`        | :math:`\sigma`              |
++=========+=============================+=============================+=============================+=============================+
+| nmag    | :math:`?`                   |  :math:`?`                  | :math:`?`                   | :math:`?`                   |
++---------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+
+| oommf   | :math:`?`                   |  :math:`?`                  | :math:`?`                   | :math:`?`                   |
++---------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+
+| magpar  | :math:`?`                   |  :math:`?`                  | :math:`?`                   | :math:`?`                   |
++---------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+
+
+Solution of the LLG equation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A comparison of our solution of the LLG equation with an analytical model is done
+in the section :ref:`macrospin_example`. For completeness, here is a comparison of our
+results which those of oommf, for a homogeneous effective field and starting
+magnetisation as decribed in ``finmag/tests/comparison/test_dmdt.py``.
+
++---------+---------------------------+----------------------------+-----------------------------+-----------------------------+
+|         |  :math:`\Delta_{test}`    |:math:`\Delta_{max}`        | :math:`\bar{\Delta}`        | :math:`\sigma`              |
++=========+===========================+============================+=============================+=============================+
+| oommf   |  :math:`3\times 10^{-16}` |:math:`2.28\times 10^{-16}` | :math:`1.12\times 10^{-16}` | :math:`3.86\times 10^{-17}` |
++---------+---------------------------+----------------------------+-----------------------------+-----------------------------+
