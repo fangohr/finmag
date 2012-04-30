@@ -21,5 +21,7 @@ dt = 5e-12
 
 # Integrate
 integrator.run_until(dt*10)
-E = llg.exchange.energy_density()
-print E
+E1 = llg.exchange.energy_density()
+E2 = llg.demag.energy_density()
+print E2
+

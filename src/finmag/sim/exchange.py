@@ -89,9 +89,15 @@ class Exchange(object):
         self.vol = df.assemble(df.dot(self.v, df.Constant([1,1,1])) * df.dx).array()
 
         # Needed for energy density
+        self.dim = V.mesh().topology().dim()
         FS = df.FunctionSpace(V.mesh(), "CG", 1)
         w = df.TestFunction(FS)
-        self.node_vol = df.assemble(w*df.dx).array()*mesh_units**3
+        self.nodal_vol = df.assemble(w*df.dx, mesh=V.mesh()).array() \
+                * mesh_units**self.dim
+
+        # Don't know if this is needed
+        self.total_vol = df.assemble(df.Constant(1)*df.dx, mesh=V.mesh()) \
+                * mesh_units**self.dim
 
 
         if method=='box-assemble':
@@ -138,7 +144,7 @@ class Exchange(object):
 
         """
         timings.start('Exchange-energy')
-        E=df.assemble(self.E)*self.mesh_units**3*self.Ms*self.mu0
+        E=df.assemble(self.E)*self.mesh_units**self.dim*self.Ms*self.mu0
         #do we need to take this to the power of 2 in a 2d mesh instead 
         #of 3 for 3d mesh.
         timings.stop('Exchange-energy')
@@ -146,7 +152,7 @@ class Exchange(object):
 
     def energy_density(self):
         E = self.compute_energy()
-        return E/self.node_vol
+        return E/self.nodal_vol
 
     def __setup_field_numpy(self):
         """

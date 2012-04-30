@@ -17,5 +17,6 @@ sim.set_m([1,0,1])
 dt = SI(5e-12, "s")
 
 sim.advance_time(dt*10)
-E = sim.get_subfield("E_exch_Py")
-print E
+E1 = sim.get_subfield("E_exch_Py")
+E2 = sim.get_subfield("E_demag_Py")
+print E2
