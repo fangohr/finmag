@@ -88,6 +88,12 @@ class Exchange(object):
         self.method = method
         self.vol = df.assemble(df.dot(self.v, df.Constant([1,1,1])) * df.dx).array()
 
+        # Needed for energy density
+        FS = df.FunctionSpace(V.mesh(), "CG", 1)
+        w = df.TestFunction(FS)
+        self.node_vol = df.assemble(w*df.dx).array()*mesh_units**3
+
+
         if method=='box-assemble':
             self.__compute_field = self.__compute_field_assemble
         elif method == 'box-matrix-numpy':
@@ -137,6 +143,10 @@ class Exchange(object):
         #of 3 for 3d mesh.
         timings.stop('Exchange-energy')
         return E
+
+    def energy_density(self):
+        E = self.compute_energy()
+        return E/self.node_vol
 
     def __setup_field_numpy(self):
         """
