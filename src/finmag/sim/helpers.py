@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 def components(vs):
     """
@@ -162,3 +163,25 @@ def stats(arr, axis=1):
     stats= "    min, median, max = {0}, {1}, {2}\n    mean, std = {3}, {4}".format(
             minimum, median, maximum, average, spread)
     return stats
+
+def frexp10(x, method="math"):
+    """
+    Same as math.frexp but in base 10, will return (m, e)
+    such that x == m * 10 ** e.
+
+    """
+    if method=="math":
+        lb10 = math.log10(x)
+        return 10 ** (lb10 - int(lb10)), int(lb10)
+    else:
+        nb = ("%e" % x).split("e")
+        return float(nb[0]), int(nb[1])
+
+def tex_sci(x, p=2):
+    """
+    Returns LaTeX code for the scientific notation of a floating point number.
+
+    """
+    m, e = frexp10(x)
+    return "{:.{precision}f} \times 10^{{{}}}".format(m, e, precision=p)
+
