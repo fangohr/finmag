@@ -1,4 +1,4 @@
-all: mesh
+all: mesh nmag
 
 mesh:
 	- netgen -geofile=coarse_bar.geo -meshfiletype="Neutral Format" -meshfile=coarse_bar.neutral -batchmode
@@ -8,7 +8,7 @@ mesh:
 	gzip -f coarse_bar.xml
 	rm coarse_bar.neutral coarse_bar.grid coarse_bar_bi.xml coarse_bar_mat.xml coarse_bar.xml.bak
 	
-nmag:
+nmag: mesh
 	nsim run_nmag.py --clean
 
 finmag: 

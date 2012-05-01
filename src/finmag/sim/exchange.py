@@ -95,6 +95,10 @@ class Exchange(object):
         self.nodal_vol = df.assemble(w*df.dx, mesh=V.mesh()).array() \
                 * mesh_units**self.dim
 
+        # Temp (AEJ 01.05)
+        self.w = w
+        self.F = df.Function(FS)
+
         # Don't know if this is needed
         self.total_vol = df.assemble(df.Constant(1)*df.dx, mesh=V.mesh()) \
                 * mesh_units**self.dim
@@ -133,7 +137,7 @@ class Exchange(object):
         Hex = self.__compute_field()
         timings.stop('Exchange-computefield')
         return Hex
-    
+
     def compute_energy(self):
         """
         Return the exchange energy.
@@ -145,7 +149,7 @@ class Exchange(object):
         """
         timings.start('Exchange-energy')
         E=df.assemble(self.E)*self.mesh_units**self.dim*self.Ms*self.mu0
-        #do we need to take this to the power of 2 in a 2d mesh instead 
+        #do we need to take this to the power of 2 in a 2d mesh instead
         #of 3 for 3d mesh.
         timings.stop('Exchange-energy')
         return E
@@ -153,6 +157,11 @@ class Exchange(object):
     def energy_density(self):
         E = self.compute_energy()
         return E/self.nodal_vol
+
+    def density_function(self):
+        F = self.F
+        F.vector()[:] = self.energy_density()
+        return F
 
     def __setup_field_numpy(self):
         """
