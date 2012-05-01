@@ -43,7 +43,7 @@ nmag_exch = [float(i) for i in open("nmag_exch_Edensity.txt", "r").read().split(
 nmag_demag = [float(i) for i in open("nmag_demag_Edensity.txt", "r").read().split()]
 
 # Plot all
-p.plot(R, finmag_exch, R, nmag_exch, R, nmag_demag)#, R, finmag_demag)
+p.plot(R, finmag_exch,'o-', R, nmag_exch,'x-', R, nmag_demag)#, R, finmag_demag)
 p.xlabel("nm")
 p.title("Energy density")
 p.legend(["Finmag exchange", "Nmag exchange", "Nmag demag"])#, "Finmag demag"])
