@@ -42,11 +42,20 @@ for i in R:
 nmag_exch = [float(i) for i in open("nmag_exch_Edensity.txt", "r").read().split()]
 nmag_demag = [float(i) for i in open("nmag_demag_Edensity.txt", "r").read().split()]
 
-# Plot
-p.plot(R, finmag_exch)#, R, nmag_exch)
+# Plot all
+p.plot(R, finmag_exch, R, nmag_exch, R, nmag_demag)#, R, finmag_demag)
+p.xlabel("nm")
+p.title("Energy density")
+p.legend(["Finmag exchange", "Nmag exchange", "Nmag demag"])#, "Finmag demag"])
+p.savefig("all.png")
+p.show()
+
+# Individual plots
+p.figure()
+p.plot(R, finmag_exch)
 p.xlabel("nm")
 p.title("Exchange energy density")
-p.legend(["Finmag"])#, "Nmag"]))
+p.legend(["Finmag"])
 p.savefig("finmag_exch.png")
 
 p.figure()
@@ -57,10 +66,10 @@ p.legend(["Nmag"])
 p.savefig("nmag_exch.png")
 
 p.figure()
-p.plot(R, finmag_demag)#, R, nmag_demag)
+p.plot(R, finmag_demag)
 p.xlabel("nm")
 p.title("Demag energy density")
-p.legend(["Finmag"])#, "Nmag"]))
+p.legend(["Finmag"])
 p.savefig("finmag_demag.png")
 
 p.figure()
@@ -70,5 +79,4 @@ p.title("Demag energy density")
 p.legend(["Nmag"])
 p.savefig("nmag_demag.png")
 
-print "Plots written to finmag_exch.png, nmag_exch.png, finmag_demag.png and nmag_demag.png"
-#p.show()
+print "Plots written to all.png, finmag_exch.png, nmag_exch.png, finmag_demag.png and nmag_demag.png"
