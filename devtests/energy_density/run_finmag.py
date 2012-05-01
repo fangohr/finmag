@@ -33,7 +33,7 @@ integrator.run_until(dt*10)
 exch = llg.exchange.density_function()
 demag = llg.demag.density_function()
 finmag_exch, finmag_demag = [], []
-R = range(0, 110, 10)
+R = range(100)
 for i in R:
     finmag_exch.append(exch([15, 15, i]))
     finmag_demag.append(demag([15, 15, i]))

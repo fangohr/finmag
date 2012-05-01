@@ -28,7 +28,7 @@ sim.advance_time(dt*10)
 
 f = open("nmag_exch_Edensity.txt", "w")
 f2 = open("nmag_demag_Edensity.txt", "w")
-for i in range(0, 110, 10):
+for i in range(100):
     f.write("%g " % sim.probe_subfield_siv("E_exch_Py", [15e-9, 15e-9, 1e-9*i]))
     f2.write("%g " % sim.probe_subfield_siv("E_exch_Py", [15e-9, 15e-9, 1e-9*i]))
 f.close()
