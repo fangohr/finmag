@@ -246,6 +246,11 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         E = self.compute_energy()
         return E/self.nodal_vol
 
+    def density_function(self):
+        F = df.Function(self.V)
+        F.vector()[:] = self.energy_density()
+        return F
+
     def compute_field(self):
         """
         Compute the demag field.

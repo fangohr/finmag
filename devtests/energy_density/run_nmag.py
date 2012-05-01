@@ -16,7 +16,20 @@ sim.set_m([1,0,1])
 
 dt = SI(5e-12, "s")
 
+######
+# After ten time steps, plot the energy density
+# from z=0nm to z=100nm through the center of the body.
+######
+
 sim.advance_time(dt*10)
-E1 = sim.get_subfield("E_exch_Py")
-E2 = sim.get_subfield("E_demag_Py")
-print E2
+#E1 = sim.get_subfield("E_exch_Py")
+#E2 = sim.get_subfield("E_demag_Py")
+#E3 = sim.probe_subfield_siv("E_exch_Py", [1e-9, 1e-9, 1e-9])
+
+f = open("nmag_exch_Edensity.txt", "w")
+f2 = open("nmag_demag_Edensity.txt", "w")
+for i in range(0, 110, 10):
+    f.write("%g " % sim.probe_subfield_siv("E_exch_Py", [15e-9, 15e-9, 1e-9*i]))
+    f2.write("%g " % sim.probe_subfield_siv("E_exch_Py", [15e-9, 15e-9, 1e-9*i]))
+f.close()
+f2.close()
