@@ -1,0 +1,36 @@
+# MIF 2.1
+
+Specify Oxs_BoxAtlas:atlas {
+  xrange {0 30e-9}
+  yrange {0 30e-9}
+  zrange {0 100e-9}
+}
+
+Specify Oxs_RectangularMesh:mesh {
+  cellsize {2e-9 2e-9 2e-9}
+  atlas Oxs_BoxAtlas:atlas
+}
+
+Specify Oxs_UniformExchange:exc {
+  A 1.3e-11
+} 
+
+Specify Oxs_Demag:demag { }
+
+Specify Oxs_EulerEvolve:evolver {
+  alpha 0.5
+  gamma_G 2.211e5
+}
+
+Specify Oxs_UniformVectorField:m0Vec {
+    norm  1
+    vector { 1 0 1 }
+}
+
+Specify Oxs_TimeDriver {
+  evolver :evolver
+  mesh :mesh 
+  Ms 8.6e5
+  m0 m0Vec
+  stopping_time 5e-11
+}
