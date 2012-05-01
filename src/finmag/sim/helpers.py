@@ -183,5 +183,5 @@ def tex_sci(x, p=2):
 
     """
     m, e = frexp10(x)
-    return "{:.{precision}f} \times 10^{{{}}}".format(m, e, precision=p)
+    return "{:.{precision}f} \\times 10^{{{}}}".format(m, e, precision=p)
 
