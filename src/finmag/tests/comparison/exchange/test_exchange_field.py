@@ -3,12 +3,15 @@ import dolfin as df
 import numpy as np
 from dolfin import Interval
 from finmag.sim.llg import LLG
-from finmag.sim.helpers import quiver, vectors, norm, stats
+from finmag.sim.helpers import quiver, vectors, norm, stats, sphinx_sci as s
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
 
 x0 = 0; x1 = 20e-9; xn = 10;
 Ms = 0.86e6; A = 1.3e-11
+
+table_delim   = "    " + "=" * 10 + (" " + "=" * 30) * 4 + "\n"
+table_entries = "    {:<10} {:<30} {:<30} {:<30} {:<30}\n"
 
 def m_gen(r):
     x = np.maximum(np.minimum(r[0]/x1, 1.0), 0.0)
@@ -41,6 +44,26 @@ class TestExchange():
             quiver(H_exc.vector().array(), mesh, MODULE_DIR + "exc_finmag.png")
         self.H_exc = H_exc
 
+        self.new_table()
+
+    def teardown_class(self):
+        self.table += table_delim
+        with open(MODULE_DIR + "table.rst", "w") as f:
+            f.write(self.table)
+
+    def new_table(self):
+        table  = ".. _exchange_table:\n\n"
+        table += ".. table:: Comparison of the exchange field computed with finmag against nmag and oommf\n\n"
+        table += table_delim 
+        table += table_entries.format(
+            ":math:`\,`", # hack because sphinx light table syntax does not allow an empty header
+            ":math:`\\subn{\\Delta}{test}`",
+            ":math:`\\subn{\\Delta}{max}`",
+            ":math:`\\bar{\\Delta}`",
+            ":math:`\\sigma`")
+        table += table_delim
+        self.table = table
+
     def test_nmag(self):
         REL_TOLERANCE = 2e-14
 
@@ -58,7 +81,10 @@ class TestExchange():
 
         diff = np.abs(m_cross_H_ref - m_cross_H_computed)
         rel_diff = diff/max([norm(v) for v in m_cross_H_ref])
-      
+     
+        self.table += table_entries.format(
+            "nmag", s(REL_TOLERANCE, 0), s(np.max(rel_diff)), s(np.mean(rel_diff)), s(np.std(rel_diff)))
+
         print "comparison with nmag, m x H, relative difference:"
         print stats(rel_diff)
         assert np.max(rel_diff) < REL_TOLERANCE
@@ -77,6 +103,9 @@ class TestExchange():
         diff = np.abs(oommf_exc - finmag_exc)
         rel_diff = diff / np.max(oommf_exc[0]**2 + oommf_exc[1]**2 + oommf_exc[2]**2)
 
+        self.table += table_entries.format(
+            "oommf", s(REL_TOLERANCE, 0), s(np.max(rel_diff)), s(np.mean(rel_diff)), s(np.std(rel_diff)))
+
         print "comparison with oommf, H, relative_difference:"
         print stats(rel_diff)
         assert np.max(rel_diff) < REL_TOLERANCE
@@ -90,3 +119,4 @@ if __name__ == '__main__':
     t.test_nmag()
     t.test_oommf()
     t.test_magpar()
+    t.teardown_class()
