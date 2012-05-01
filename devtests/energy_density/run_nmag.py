@@ -12,6 +12,11 @@ sim.load_mesh("coarse_bar.nmesh.h5",
               [("Py", mat_Py)],
               unit_length=SI(1e-9,"m"))
 
+
+#sim.load_mesh("bar.nmesh.h5",
+#              [("Py", mat_Py)],
+#              unit_length=SI(1e-9,"m"))
+
 sim.set_m([1,0,1])
 
 dt = SI(5e-12, "s")
@@ -30,6 +35,6 @@ f = open("nmag_exch_Edensity.txt", "w")
 f2 = open("nmag_demag_Edensity.txt", "w")
 for i in range(100):
     f.write("%g " % sim.probe_subfield_siv("E_exch_Py", [15e-9, 15e-9, 1e-9*i]))
-    f2.write("%g " % sim.probe_subfield_siv("E_exch_Py", [15e-9, 15e-9, 1e-9*i]))
+    f2.write("%g " % sim.probe_subfield_siv("E_demag_Py", [15e-9, 15e-9, 1e-9*i]))
 f.close()
 f2.close()
