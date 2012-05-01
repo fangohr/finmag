@@ -1029,3 +1029,24 @@ fangohr: Still testing ...
 2012-04-26 17:14:59 fangohr_: Over and out.
 2012-04-27 13:23:41 andersej: Hi, DokosBot! Do you want to join for lunch?
 2012-04-27 15:19:14 andersej: Over and out! Have a nice weekend, DokosBot!
+2012-05-01 09:16:27 andersej: Good morning, Hans!
+2012-05-01 09:16:31 fangohr_: Good morning Anders, DokosBot.
+2012-05-01 10:11:32 andersej: Hans, can you notify me when your visitor has left? I have a problem.
+2012-05-01 10:24:34 andersej: replace("can you ", "could you please") - I can see myself that the line was quite "Norwegian", hehe..
+2012-05-01 10:51:22 fangohr_: No worries. I am available now.
+2012-05-01 12:14:09 SebastianS: someone going for lunch anytime soon?^^
+2012-05-01 12:15:03 andersej: Yes, I think so. Just come over, we are ready in a moment.
+2012-05-01 12:17:16 SebastianS: kk
+2012-05-01 12:17:20 SebastianS: on my way
+2012-05-01 14:01:52 fangohr: Anders, this looks good.
+2012-05-01 14:02:01 fangohr: (exchange energy density).
+2012-05-01 14:02:24 fangohr: The disagreement with Nmag could have two reasons: (i) coarseness of the mesh, (ii) inappropriate simplicifications in Nmag. Or (iii) something else.
+2012-05-01 14:02:31 fangohr: Could you run this again with a finer mesh?
+2012-05-01 14:03:01 fangohr: The other useful comparison would be with OOMMF.
+2012-05-01 14:07:10 andersej: Yes, I'll do it!
+2012-05-01 14:10:26 fangohr: I am not sure whether OOMMF provides energy densities in a spatially resolved way, but I would guess it does. I think Nmag might be a bit sloppy in how it computes the volume of the base functions, and this might affect the results exactly as we see them. I trust OOMMF in this respect.
+2012-05-01 14:32:58 mb8g11: http://github.enthought.com/mayavi/mayavi/tips.html
+2012-05-01 14:52:17 SebastianS: hans, do you have a minute? I have two question regarding the temperature gradient paper.
+2012-05-01 15:07:51 fangohr_: Hi Sebastian, no, sorry, fully booked this afternoon. Can you try to find the answer yourself? If you are stuck for longer than today, feel free to put questions in email and I will see what I can do.
+2012-05-01 15:16:12 SebastianS: okay thanks. I'll see if I can work something out myself
+2012-05-01 17:34:20 mb8g11: Dmitri was here to pick up the book... Nice of him to not come this morning, he definitely looked contagious.
