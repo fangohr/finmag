@@ -94,6 +94,7 @@ class Exchange(object):
         w = df.TestFunction(FS)
         self.nodal_vol = df.assemble(w*df.dx, mesh=V.mesh()).array() \
                 * mesh_units**self.dim
+        self.E_d = df.dot(self.exchange_factor * df.inner(df.grad(M), df.grad(M)), w) * df.dx
 
         # Temp (AEJ 01.05)
         self.w = w
@@ -155,12 +156,13 @@ class Exchange(object):
         return E
 
     def energy_density(self):
-        E = self.compute_energy()
-        return E/self.nodal_vol
+        E_d = df.assemble(self.E_d).array()*self.mesh_units**self.dim*self.Ms*self.mu0
+        return E_d/self.nodal_vol
 
     def density_function(self):
+        E_d = self.energy_density()
         F = self.F
-        F.vector()[:] = self.energy_density()
+        F.vector()[:] = E_d
         return F
 
     def __setup_field_numpy(self):
