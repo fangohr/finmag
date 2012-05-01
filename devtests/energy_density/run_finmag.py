@@ -6,6 +6,8 @@ from finmag.sim.integrator import LLGIntegrator
 # Create mesh
 mu = 1e-9
 mesh = Mesh("coarse_bar.xml.gz")
+#mesh = Mesh("bar.xml.gz")
+
 
 # Setup LLG
 llg = LLG(mesh, mesh_units=mu)
@@ -42,41 +44,20 @@ for i in R:
 nmag_exch = [float(i) for i in open("nmag_exch_Edensity.txt", "r").read().split()]
 nmag_demag = [float(i) for i in open("nmag_demag_Edensity.txt", "r").read().split()]
 
-# Plot all
-p.plot(R, finmag_exch, R, nmag_exch, R, nmag_demag)#, R, finmag_demag)
+# Plot exchange energy density
+p.plot(R, finmag_exch, R, nmag_exch)
 p.xlabel("nm")
-p.title("Energy density")
-p.legend(["Finmag exchange", "Nmag exchange", "Nmag demag"])#, "Finmag demag"])
-p.savefig("all.png")
+p.title("Exchange energy density")
+p.legend(["Finmag", "Nmag"])
+p.savefig("exch.png")
+
+# Plot demag energy density
+p.figure()
+p.plot(R, finmag_demag, R, nmag_demag)
+p.xlabel("nm")
+p.title("Demag energy density")
+p.legend(["Finmag", "Nmag"])
+p.savefig("demag.png")
+
 p.show()
-
-# Individual plots
-p.figure()
-p.plot(R, finmag_exch)
-p.xlabel("nm")
-p.title("Exchange energy density")
-p.legend(["Finmag"])
-p.savefig("finmag_exch.png")
-
-p.figure()
-p.plot(R, nmag_exch)
-p.xlabel("nm")
-p.title("Exchange energy density")
-p.legend(["Nmag"])
-p.savefig("nmag_exch.png")
-
-p.figure()
-p.plot(R, finmag_demag)
-p.xlabel("nm")
-p.title("Demag energy density")
-p.legend(["Finmag"])
-p.savefig("finmag_demag.png")
-
-p.figure()
-p.plot(R, nmag_demag)
-p.xlabel("nm")
-p.title("Demag energy density")
-p.legend(["Nmag"])
-p.savefig("nmag_demag.png")
-
-print "Plots written to all.png, finmag_exch.png, nmag_exch.png, finmag_demag.png and nmag_demag.png"
+print "Plots written to exch.png and demag.png"
