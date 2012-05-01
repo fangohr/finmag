@@ -180,8 +180,16 @@ latex_elements = {
 #'pointsize': '10pt',
 
 # Additional stuff for the LaTeX preamble.
-#'preamble': '',
+'preamble': '',
 }
+
+
+# Add macros to LaTeX preamble.
+# This will work with make latexpdf, but not make html.
+# It is not possible to access the Mathjax configuration from sphynx.
+with open("latex_macros.sty") as f:
+    for macro in f:
+        latex_elements["preamble"] += macro + "\n"
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
