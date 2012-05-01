@@ -164,7 +164,7 @@ def stats(arr, axis=1):
             minimum, median, maximum, average, spread)
     return stats
 
-def frexp10(x, method="math"):
+def frexp10(x, method="string"):
     """
     Same as math.frexp but in base 10, will return (m, e)
     such that x == m * 10 ** e.
@@ -185,3 +185,10 @@ def tex_sci(x, p=2):
     m, e = frexp10(x)
     return "{:.{precision}f} \\times 10^{{{}}}".format(m, e, precision=p)
 
+def sphinx_sci(x, p=2):
+    """
+    Returns the code you need to have math mode in sphinx and the
+    scientific notation of the floating point nunber x.
+
+    """
+    return ":math:`{}`".format(tex_sci(x, p))
