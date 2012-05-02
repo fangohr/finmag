@@ -141,15 +141,15 @@ The values for the relative difference are listed in :ref:`anis_table`.
 The Demagnetising field
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-+---------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+
-|         | :math:`\subn{\Delta}{test}` | :math:`\subn{\Delta}{max}`  | :math:`\bar{\Delta}`        | :math:`\sigma`              |
-+=========+=============================+=============================+=============================+=============================+
-| nmag    | :math:`?`                   |  :math:`?`                  | :math:`?`                   | :math:`?`                   |
-+---------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+
-| oommf   | :math:`?`                   |  :math:`?`                  | :math:`?`                   | :math:`?`                   |
-+---------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+
-| magpar  | :math:`?`                   |  :math:`?`                  | :math:`?`                   | :math:`?`                   |
-+---------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+
+A sphere was magnetised in the :math:`(1, 0, 0)` direction and the demagnetising
+field computed with finmag, nmag and magpar. Those three fields were
+additionally compared to the analytical solution :math:`(-\frac{1}{3}, 0, 0)`.
+
+The values for the relative difference are listed in :ref:`demag_table`. It is
+worth noting that the nmag and finmag solution are close to each other, with
+magpar further away both from them and the analytical solution.
+
+.. include:: ../src/finmag/tests/comparison/demag/table.rst
 
 Solution of the LLG equation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
