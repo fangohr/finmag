@@ -95,7 +95,7 @@ def test_against_oommf(finmag):
 
     assert oommf_exc.shape == finmag_exc.shape
     diff = np.abs(oommf_exc - finmag_exc)
-    rel_diff = diff / np.max(oommf_exc[0]**2 + oommf_exc[1]**2 + oommf_exc[2]**2)
+    rel_diff = diff / np.sqrt(np.max(oommf_exc[0]**2 + oommf_exc[1]**2 + oommf_exc[2]**2))
 
     finmag["table"] += table_entries.format(
         "oommf", s(REL_TOLERANCE, 0), s(np.max(rel_diff)), s(np.mean(rel_diff)), s(np.std(rel_diff)))
