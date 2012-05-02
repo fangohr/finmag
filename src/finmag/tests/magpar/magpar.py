@@ -267,7 +267,7 @@ def compute_exch_magpar(V, m, C, Ms):
 
     return nodes,field
 
-def compute_demag_magpar(V, m, Ms):
+def compute_demag_magpar(V, m, Ms, mesh_units=1):
     """
     Usage:
 
@@ -285,7 +285,7 @@ def compute_demag_magpar(V, m, Ms):
     """
     base_name="test_demag"
 
-    gen_magpar_conf(base_name,m,Ms=Ms,demag=1)
+    gen_magpar_conf(base_name,m,Ms=Ms,demag=1, mesh_units=mesh_units)
     
     run_magpar(base_name)
 
