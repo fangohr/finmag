@@ -171,7 +171,8 @@ examples-for-doc: ../examples/macrospin/alpha-1-00.png ../examples/macrospin/alp
 	../examples/exchange_demag/exchange_demag.png ../examples/exchange_demag/exchange_energy.png \
 	../examples/exchange_demag/demag_energy.png ../examples/demag/stddev_loglog.png ../examples/demag/xvalues.png \
 	../examples/demag/errnorm_loglog.png ../examples/exchange_demag/timings/results.rst ../examples/demag/results_field.txt \
-	../src/finmag/tests/comparison/exchange/table.rst ../src/finmag/tests/comparison/anisotropy/table.rst
+	../src/finmag/tests/comparison/exchange/table.rst ../src/finmag/tests/comparison/anisotropy/table.rst \
+	../src/finmag/tests/comparison/demag/table.rst
 
 # The absolute path for the doc directory
 DOC_DIR = $(abspath .)
@@ -209,3 +210,6 @@ PYTHON_ROOTS = $(DOC_DIR)/../src
 
 ../src/finmag/tests/comparison/anisotropy/table.rst:
 	cd ../src/finmag/tests/comparison/anisotropy/ && PYTHONPATH=$(PYTHON_ROOTS) python test_anisotropy_field.py
+
+../src/finmag/tests/comparison/demag/table.rst:
+	cd ../src/finmag/tests/comparison/demag/ && PYTHONPATH=$(PYTHON_ROOTS) python test_demag_field.py

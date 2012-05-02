@@ -25,8 +25,8 @@ def teardown_finmag(finmag):
         f.write(finmag["table"])
 
 def start_table():
-    table  = ".. _anis_table:\n\n"
-    table += ".. table:: Comparison of the anisotropy field computed with finmag against nmag, oommf and magpar\n\n"
+    table  = ".. _demag_table:\n\n"
+    table += ".. table:: Summary of comparison of the demag field\n\n"
     table += table_delim 
     table += table_entries.format(
         ":math:`\,`", # hack because sphinx light table syntax does not allow an empty header
@@ -36,6 +36,7 @@ def start_table():
         ":math:`\\sigma`")
     table += table_delim
     return table
+
 def pytest_funcarg__finmag(request):
     finmag = request.cached_setup(setup=setup_finmag, teardown=teardown_finmag,
             scope="module")
@@ -59,18 +60,30 @@ def test_using_analytical_solution(finmag):
     assert np.max(rel_diff) < REL_TOLERANCE
 
 def test_using_nmag(finmag):
-    REL_TOLERANCE = 3e-5
+    REL_TOLERANCE = 4e-5
 
-    H_ref = np.array(zip(* np.genfromtxt(MODULE_DIR + "H_demag_nmag.txt")))
-    assert H_ref.shape == finmag["H"].shape
-    diff = np.abs(finmag["H"] - H_ref)
-    rel_diff = diff / np.sqrt(np.max(H_ref[0]**2 + H_ref[1]**2 + H_ref[2]**2))
+    H_nmag = np.array(zip(* np.genfromtxt(MODULE_DIR + "H_demag_nmag.txt")))
+    diff = np.abs(finmag["H"] - H_nmag)
+    rel_diff = diff / np.sqrt(np.max(H_nmag[0]**2 + H_nmag[1]**2 + H_nmag[2]**2))
 
     finmag["table"] += table_entries.format(
         "nmag", s(REL_TOLERANCE, 0), s(np.max(rel_diff)), s(np.mean(rel_diff)), s(np.std(rel_diff)))
-
     print "comparison with nmag, H, relative_difference:"
     print stats(rel_diff)
+
+    # Compare nmag with analytical solution
+    H_ref = np.zeros(H_nmag.shape) 
+    H_ref[0] -= 1.0/3.0
+
+    nmag_diff = np.abs(H_nmag - H_ref)
+    nmag_rel_diff = nmag_diff / np.sqrt(np.max(H_ref[0]**2 + H_ref[1]**2 + H_ref[2]**2))
+
+    finmag["table"] += table_entries.format(
+        "nmag/an.", "", s(np.max(nmag_rel_diff)), s(np.mean(nmag_rel_diff)), s(np.std(nmag_rel_diff)))
+    print "comparison beetween nmag and analytical solution, H, relative_difference:"
+    print stats(nmag_rel_diff)
+
+    # rel_diff beetween finmag and nmag
     assert np.max(rel_diff) < REL_TOLERANCE
 
 def test_using_magpar(finmag):
@@ -100,6 +113,7 @@ def test_using_magpar(finmag):
     print "comparison beetween magpar and analytical solution, H, relative_difference:"
     print stats(magpar_rel_diff)
 
+    # rel_diff beetween finmag and magpar
     assert np.max(rel_diff) < REL_TOLERANCE
 
 if __name__ == "__main__":
@@ -114,3 +128,5 @@ if __name__ == "__main__":
     test_using_analytical_solution(f)
     test_using_nmag(f)
     test_using_magpar(f)
+
+    teardown_finmag(f)
