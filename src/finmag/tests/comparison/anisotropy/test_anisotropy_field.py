@@ -100,7 +100,7 @@ class TestAnisotropy():
 
 if __name__ == '__main__':
     t = TestAnisotropy()
-    t.setup_class(plot=True)
+    t.setup_class(plot=False)
     t.test_nmag()
     t.test_oommf()
     t.test_magpar()

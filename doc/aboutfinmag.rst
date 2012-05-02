@@ -96,7 +96,7 @@ The Exchange Interaction
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 For the comparison of the exchange field, it is computed on a one-dimensional mesh
-with a starting magnetisation as shown in figure :ref:`m0_exchange` and described by
+with a starting magnetisation as described by
 
 .. math::
     
@@ -108,21 +108,9 @@ with a starting magnetisation as shown in figure :ref:`m0_exchange` and describe
 
 where :math:`x \in [0; 1]`.
 
-.. _m0_exchange:
-
-.. figure:: ../src/finmag/tests/comparison/exchange/m0_finmag.png
-
-    The initial magnetisation used for the computation of the exchange field
-
-.. _exchange_field:
-
-.. figure:: ../src/finmag/tests/comparison/exchange/exc_finmag.png
-
-    The exchange field
-
-The exchange field is shown in :ref:`exchange_field` and the values
-for the relative difference are listed in :ref:`exchange_table`. Note that the
-data in the table is re-created on the fly when compiling the documentation.
+The values for the relative difference are listed in :ref:`exchange_table`.
+Note that the data in the table is re-created on the fly when compiling
+the documentation.
 
 .. include:: ../src/finmag/tests/comparison/exchange/table.rst
 
@@ -144,22 +132,9 @@ is defined by
 
     m_x = ( 2 - y ) \cdot ( 2z - 1) \cdot \frac{1}{4} 
 
-where :math:`x, y, z \in [0; 1]` and shown in :ref:`m0_anis`.
+where :math:`x, y, z \in [0; 1]`.
 
-.. _m0_anis:
-
-.. figure:: ../src/finmag/tests/comparison/anisotropy/m0_finmag.png
-
-    The initial magnetisation used for the computation of the anisotropy field
-
-.. _anis_field:
-
-.. figure:: ../src/finmag/tests/comparison/anisotropy/anis_finmag.png
-
-    The anisotropy field
-
-The anisotropy field is shown in :ref:`anis_field` and the values
-for the relative difference are listed in :ref:`anis_table`.
+The values for the relative difference are listed in :ref:`anis_table`.
 
 .. _anis_table:
 
