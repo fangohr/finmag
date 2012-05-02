@@ -21,7 +21,9 @@
 // Boost includes
 #ifndef IDE_ERROR_BLOCK
 #include <boost/mpl/map.hpp>
+#include <boost/mpl/transform.hpp>
 #include <boost/mpl/range_c.hpp>
+#include <boost/mpl/list.hpp>
 #include <boost/python.hpp>
 #include <boost/typeof/typeof.hpp>
 #include <boost/thread.hpp>
@@ -29,5 +31,7 @@
 
 // CVODE/Sundials
 #include <cvode/cvode.h>
+// Dolfin
+#include <dolfin.h>
 
 #endif

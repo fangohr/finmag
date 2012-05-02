@@ -1,0 +1,138 @@
+/**
+ * FinMag - a thin layer on top of FEniCS to enable micromagnetic multi-physics simulations
+ * Copyright (C) 2012 University of Southampton
+ * Do not distribute
+ *
+ * CONTACT: h.fangohr@soton.ac.uk
+ *
+ * AUTHOR(S) OF THIS FILE: Dmitri Chernyshenko (d.chernyshenko@soton.ac.uk)
+ */
+
+#include "finmag_includes.h"
+
+#include "util/np_array.h"
+
+#include "vector3.h"
+
+#include "oriented_boundary_mesh.h"
+
+namespace finmag { namespace llg {
+    namespace df = dolfin;
+    namespace vector = finmag::vector;
+
+    namespace {
+    // Computes the Lindholm formula for node 1 as the selected node
+        double lindholm_L(const vector::vector3 &R, const vector::vector3 &R1, const vector::vector3 &R2, const vector::vector3 &R3) {
+            vector::vector3 r1(R1, R);
+            vector::vector3 r2(R2, R);
+            vector::vector3 r3(R3, R);
+
+            // s_i is the length of the i'th side
+            // xi_hat is the unit vector for the i'th side
+            double s_1 = (r2 - r1).length(); vector::vector3 xi_hat_1  = (r2 - r1).normalized();
+            double s_2 = (r3 - r2).length(); vector::vector3 xi_hat_2  = (r3 - r2).normalized();
+            double s_3 = (r1 - r3).length(); vector::vector3 xi_hat_3  = (r1 - r3).normalized();
+            // A_T is the area of the triangle
+            double A_T = vector::triangle_area(r1, r2, r3);
+            // zeta_hat is the vector normal to the triangle
+            vector::vector3 zeta_hat = vector::cross(r2-r1, r3-r1).normalized();
+            // zeta is the distance from R to the triangle plane
+            double zeta = vector::dot(zeta_hat, r1);
+
+            // eta_i is the distance to the i'th side projected in the triangle plane
+            vector::vector3 eta_hat_2 = vector::cross(zeta_hat, xi_hat_2);
+            double eta_2 = vector::dot(eta_hat_2, r2);
+
+            // gamma_i_j is the cosine angle between the (i+1)'th and j'th side
+            vector::vector3 gamma_1(
+                vector::dot(xi_hat_2, xi_hat_1),
+                vector::dot(xi_hat_2, xi_hat_2),
+                vector::dot(xi_hat_2, xi_hat_3)
+            );
+
+            // P is an auxiliary variable
+            double r1_len = r1.length(), r2_len = r2.length(), r3_len = r3.length();
+            vector::vector3 P(
+                log((r1_len + r2_len + s_1) / (r1_len + r2_len - s_1 + 1e-300)),
+                log((r2_len + r3_len + s_2) / (r2_len + r3_len - s_2 + 1e-300)),
+                log((r3_len + r1_len + s_3) / (r3_len + r1_len - s_3 + 1e-300))
+            );
+
+            // Sigma_T is the solid angle subtended by the triangle as seen from R
+            double Sigma_T = vector::solid_angle(r1, r2, r3);
+
+            return s_2/A_T/(8*M_PI) * (eta_2 * Sigma_T - zeta * vector::dot(gamma_1, P));
+        }
+    }
+
+    // Returns a tuple (BEM matrix, boundary-mesh-to-global-mesh vertex index mapping)
+    bp::object compute_bem(const OrientedBoundaryMesh &bm) {
+        ASSERT(bm.geometry().dim() == 3);
+        ASSERT(bm.topology().dim() == 2);
+
+        int n = bm.num_vertices();
+        np_array<double> bem(n, n);
+        // compute the boundary-to-global index mapping
+        np_array<int> b2g_map(n);
+        auto values = bm.vertex_map().values();
+        for (int i = 0; i < n; i++) b2g_map.data()[i] = values[i];
+
+        // compute the BEM
+        auto &geom = bm.geometry();
+
+        // TODO: make this parallel
+        // loop over all triangles on the surface mesh
+        for (df::CellIterator c(bm); !c.end(); ++c) {
+            // The cell must be a triangle
+            ASSERT(c->num_entities(0) == 3);
+            // Get the 3 vertices
+            int j_1 = c->entities(0)[0];
+            int j_2 = c->entities(0)[1];
+            int j_3 = c->entities(0)[2];
+            vector::vector3 R1(geom.point(j_1));
+            vector::vector3 R2(geom.point(j_2));
+            vector::vector3 R3(geom.point(j_3));
+
+            // Loop through vertices of the mesh
+            for (df::VertexIterator v_i(bm); !v_i.end(); ++v_i) {
+                int i = v_i->index();
+                vector::vector3 R(*v_i);
+
+                // Add the contribution of this triangle to B[i, j]
+                // TODO: We are computing a lot of things 3 times here, maybe return a tuple from lindholm_L?
+                // We also compute the solid angle twice...
+                bem(i)[j_1] += lindholm_L(R, R1, R2, R3);
+                bem(i)[j_2] += lindholm_L(R, R2, R3, R1);
+                bem(i)[j_3] += lindholm_L(R, R3, R1, R2);
+
+                // Add the solid angle term
+                bem(i)[i] += vector::solid_angle(R, R1, R2, R3)*(1./(4.*M_PI));
+            }
+        }
+
+        // Subtract 1 from the diagonal
+        for (int i = 0; i < n; i++) bem(i)[i] -= 1.;
+
+        return bp::make_tuple(bem, b2g_map);
+    }
+
+    np_array<double> compute_bem_element(np_array<double> r1, np_array<double> r2, np_array<double> r3) {
+        r1.check_shape(3, "compute_bem_element: r1");
+        r2.check_shape(3, "compute_bem_element: r2");
+        r3.check_shape(3, "compute_bem_element: r3");
+
+        using namespace vector;
+
+        vector3 R(0., 0., 0.);
+        np_array<double> res(3);
+        res.data()[0] = lindholm_L(R, vector3(r1.data()), vector3(r2.data()), vector3(r3.data()));
+        res.data()[1] = lindholm_L(R, vector3(r2.data()), vector3(r3.data()), vector3(r1.data()));
+        res.data()[2] = lindholm_L(R, vector3(r3.data()), vector3(r1.data()), vector3(r2.data()));
+        return res;
+    }
+
+    void register_bem() {
+        bp::def("compute_bem", &compute_bem);
+        bp::def("compute_bem_element", &compute_bem_element);
+    }
+}}
