@@ -1050,3 +1050,23 @@ fangohr: Still testing ...
 2012-05-01 15:07:51 fangohr_: Hi Sebastian, no, sorry, fully booked this afternoon. Can you try to find the answer yourself? If you are stuck for longer than today, feel free to put questions in email and I will see what I can do.
 2012-05-01 15:16:12 SebastianS: okay thanks. I'll see if I can work something out myself
 2012-05-01 17:34:20 mb8g11: Dmitri was here to pick up the book... Nice of him to not come this morning, he definitely looked contagious.
+2012-05-02 11:00:09 andersej: Hello, Neil.
+2012-05-02 11:00:28 nsob104: Hi Anders, Hans, DokosBot.
+2012-05-02 12:03:46 fangohr: @Anders: In tests/tests_dmi_terms:  test_dmi_with_analytical_solution():
+2012-05-02 12:05:06 fangohr: Iridis documentation: start from http://cmg.soton.ac.uk/iridis
+2012-05-02 12:07:53 fangohr: Request software on https://cmg.soton.ac.uk/community/projects/iridis/boards/show/12
+2012-05-02 16:28:25 fangohr_: Marc-Antonio, yes, I forgot to update /etc/shadow. Can you try to login to osiris again, please?
+2012-05-02 16:28:49 fangohr_: Anders, same story here. My mistake.
+2012-05-02 16:29:17 andersej: Yes, just sent you the email, hehe..
+2012-05-02 16:29:58 fangohr_: I see it works for anders now.
+2012-05-02 16:30:30 andersej: Yes. sudo apt-get install vim-gnome, please.
+2012-05-02 16:31:10 fangohr_: I thought you might say something like this.
+2012-05-02 16:31:35 fangohr_: Done. Anything else?
+2012-05-02 16:32:01 andersej: Thanks! Not for my part, no..
+2012-05-02 16:33:12 mb8g11: vim is good.
+2012-05-02 16:33:29 mb8g11: Thank you, all is good :)
+2012-05-02 16:38:52 mb8g11: However, summer might be running out of diskspace.
+2012-05-02 16:39:51 fangohr_: I have noticed. I have made some space, and am in the process of freeing up another 8GB. That should sort us out for some time.
+2012-05-02 16:47:59 andersej: Hans, the DMI class is not ideally constructed wrt computing energy densities, as it computes the energy in different functions depending on mesh dimension. Am I allowed to do small modifications to these functions?
+2012-05-02 16:48:13 fangohr_: Yes, please do fix this :)
+2012-05-02 17:17:17 fangohr_: Over and out for today.
