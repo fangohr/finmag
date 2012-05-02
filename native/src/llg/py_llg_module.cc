@@ -12,12 +12,20 @@
 
 #include "util/np_array.h"
 
-#include "llg_module_impl.h"
+#include "llg.h"
+#include "bem.h"
+#include "oriented_boundary_mesh.h"
+
+#include "util/swig_dolfin.h"
 
 BOOST_PYTHON_MODULE(llg)
 {
     initialise_np_array();
+    finmag::util::register_dolfin_swig_converters();
 
     bp::scope().attr("__doc__") = "C++ routines for computing the LLG (dM/dt and the Jacobean)";
-    finmag::llg::register_module();
+
+    finmag::llg::register_llg();
+    finmag::llg::register_bem();
+    finmag::llg::register_oriented_boundary_mesh();
 }

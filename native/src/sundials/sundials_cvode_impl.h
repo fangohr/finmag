@@ -641,13 +641,13 @@ namespace finmag { namespace sundials {
     }
 
     void error_handler::set_error(const char *msg) {
-        std::auto_ptr<std::string> old_msg(cvode_error.release());
+        std::unique_ptr<std::string> old_msg(cvode_error.release());
         if (!old_msg.get()) {
             // set new error message
             cvode_error.reset(new std::string(msg));
         } else {
             // Append to existing error message
-            std::auto_ptr<std::string> new_msg(new std::string(*old_msg + "\n" + msg));
+            std::unique_ptr<std::string> new_msg(new std::string(*old_msg + "\n" + msg));
             cvode_error.reset(new_msg.release());
         }
     }

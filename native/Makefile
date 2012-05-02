@@ -33,10 +33,11 @@ SUNDIALS_NVECTOR_SO=$(abspath src/sundials/nvec_serial/nvector_serial_custom_mal
 $(MODULE_DIR)/sundials.so : src/sundials/py_sundials_module.o src/util/np_array.o src/sundials/numpy_malloc.o
 sundials_LDFLAGS = -lsundials_cvode -llapack $(SUNDIALS_NVECTOR_SO) -lboost_thread
 
-$(MODULE_DIR)/llg.so : src/llg/py_llg_module.o src/util/np_array.o
+$(MODULE_DIR)/llg.so : src/llg/py_llg_module.o src/util/np_array.o src/util/swig_dolfin.o src/llg/bem.o src/llg/llg.o src/llg/oriented_boundary_mesh.o
+llg_LDFLAGS = -ldolfin
 
-$(UNIT_TEST_BINARY) : tests/run_ci_tests.o src/util/np_array.o src/sundials/tests/sundials_tests.o src/sundials/numpy_malloc.o
-run_ci_tests_LDFLAGS=-lboost_prg_exec_monitor /usr/lib/libboost_unit_test_framework.a $(SUNDIALS_NVECTOR_SO)
+$(UNIT_TEST_BINARY) : tests/run_ci_tests.o src/util/np_array.o src/sundials/tests/sundials_tests.o src/sundials/numpy_malloc.o src/llg/tests/boundary_mesh_tests.o
+run_ci_tests_LDFLAGS=-lboost_prg_exec_monitor /usr/lib/libboost_unit_test_framework.a $(SUNDIALS_NVECTOR_SO) -ldolfin
 
 #######################################
 # Other variables
@@ -57,7 +58,7 @@ CFLAGS_OPT=-O3 -funroll-loops -mfpmath=sse -march=native
 CFLAGS_PYTHON=-I/usr/include/python2.7 -fPIC -lboost_python -lpython2.7
 # -rdynamic keeps private symbols in .so files, providing more detailed stack traces
 # -MMD -MP generates .d dependency files
-CFLAGS_OTHER=-g -rdynamic -fopenmp -MMD -MP
+CFLAGS_OTHER=-g -rdynamic -fopenmp -MMD -MP -std=c++0x
 # Treat all warnings as errors
 CFLAGS_WARN=-Wall -Werror
 # Add the source code directory to the include path
