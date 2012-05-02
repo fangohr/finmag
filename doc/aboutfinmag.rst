@@ -121,19 +121,10 @@ where :math:`x \in [0; 1]`.
     The exchange field
 
 The exchange field is shown in :ref:`exchange_field` and the values
-for the relative difference are listed in :ref:`exchange_table`.
+for the relative difference are listed in :ref:`exchange_table`. Note that the
+data in the table is re-created on the fly when compiling the documentation.
 
-.. _exchange_table:
-
-.. table:: Comparison of the exchange field computed with finmag against nmag and oommf
-
-    +---------+------------------------------+----------------------------+-----------------------------+-----------------------------+
-    |         |  :math:`\subn{\Delta}{test}` |:math:`\subn{\Delta}{max}`  | :math:`\bar{\Delta}`        | :math:`\sigma`              |
-    +=========+==============================+============================+=============================+=============================+
-    | nmag    |  :math:`2\times 10^{-14}`    |:math:`1.35\times 10^{-14}` | :math:`3.36\times 10^{-15}` | :math:`3.91\times 10^{-15}` |
-    +---------+------------------------------+----------------------------+-----------------------------+-----------------------------+
-    | oommf   |  :math:`5\times 10^{-8}`     |:math:`4.42\times 10^{-8}`  | :math:`1.38\times 10^{-8}`  | :math:`1.39\times 10^{-8}`  |
-    +---------+------------------------------+----------------------------+-----------------------------+-----------------------------+
+.. include:: ../src/finmag/tests/comparison/exchange/table.rst
 
 Because this problem is defined on a one-dimensional mesh, no comparison with
 magpar is possible. However ``src/finmag/tests/magpar/test_exchange_compare_magpar.py``
@@ -172,7 +163,7 @@ for the relative difference are listed in :ref:`anis_table`.
 
 .. _anis_table:
 
-.. table:: Comparison of the anisotropy field computed with finmag against nmag and oommf
+.. table:: Comparison of the anisotropy field computed with finmag against nmag, oommf and magpar
 
     +---------+------------------------------+----------------------------+-----------------------------+-----------------------------+
     |         |  :math:`\subn{\Delta}{test}` |:math:`\subn{\Delta}{max}`  | :math:`\bar{\Delta}`        | :math:`\sigma`              |
