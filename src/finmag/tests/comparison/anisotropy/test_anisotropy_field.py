@@ -90,7 +90,7 @@ def test_oommf(finmag):
     from finmag.util.oommf import mesh, oommf_uniaxial_anisotropy
     from finmag.util.oommf.comparison import oommf_m0, finmag_to_oommf
 
-    REL_TOLERANCE = 3
+    REL_TOLERANCE = 2e-5
 
     oommf_mesh = mesh.Mesh((2, 2, 2), size=(5e-9, 5e-9, 5e-9))
     oommf_anis  = oommf_uniaxial_anisotropy(oommf_m0(lambda r: m_gen(np.array(r)*1e9), oommf_mesh), Ms, K1, a).flat
