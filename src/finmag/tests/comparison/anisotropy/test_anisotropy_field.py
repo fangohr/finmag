@@ -90,7 +90,7 @@ def test_oommf(finmag):
     from finmag.util.oommf import mesh, oommf_uniaxial_anisotropy
     from finmag.util.oommf.comparison import oommf_m0, finmag_to_oommf
 
-    REL_TOLERANCE = 2e-5
+    REL_TOLERANCE = 3
 
     oommf_mesh = mesh.Mesh((2, 2, 2), size=(5e-9, 5e-9, 5e-9))
     oommf_anis  = oommf_uniaxial_anisotropy(oommf_m0(lambda r: m_gen(np.array(r)*1e9), oommf_mesh), Ms, K1, a).flat
@@ -98,7 +98,7 @@ def test_oommf(finmag):
 
     assert oommf_anis.shape == finmag_anis.shape
     diff = np.abs(oommf_anis - finmag_anis)
-    rel_diff = diff / np.sqrt(np.max(oommf_anis[0]**2 + oommf_anis[1]**2 + oommf_anis[2]**2))
+    rel_diff = diff / (np.max(oommf_anis[0]**2 + oommf_anis[1]**2 + oommf_anis[2]**2))
 
     finmag["table"] += table_entries.format(
         "oommf", s(REL_TOLERANCE, 0), s(np.max(rel_diff)), s(np.mean(rel_diff)), s(np.std(rel_diff)))

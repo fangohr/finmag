@@ -84,7 +84,7 @@ def test_against_nmag(finmag):
     assert np.max(rel_diff) < REL_TOLERANCE
 
 def test_against_oommf(finmag):
-    REL_TOLERANCE = 5e-8
+    REL_TOLERANCE = 8e-2
 
     from finmag.util.oommf import mesh, oommf_uniform_exchange
     from finmag.util.oommf.comparison import oommf_m0, finmag_to_oommf
