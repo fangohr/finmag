@@ -59,7 +59,8 @@ def teardown_finmag():
         f.write(table)
 
 def pytest_funcarg__finmag(request):
-    finmag = request.cached_setup(setup=setup_finmag, scope="module")
+    finmag = request.cached_setup(setup=setup_finmag,
+            teardown=teardown_finmag, scope="module")
     return finmag
 
 def test_against_nmag(finmag):
