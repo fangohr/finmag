@@ -165,7 +165,13 @@ generate-doc: examples-for-doc
 
 #list of files we need for documentation and which should trigger running of
 #the right files in ../examples to create them.
-examples-for-doc: ../examples/macrospin/alpha-1-00.png ../examples/macrospin/alpha-0-50.png ../examples/macrospin/alpha-0-10.png ../examples/macrospin/alpha-0-02.png ../examples/time-dependent-applied-field/fittedresults.txt ../examples/time-dependent-applied-field/fit.png ../examples/time-dependent-applied-field/results.png ../examples/exchange_demag/exchange_demag.png ../examples/exchange_demag/exchange_energy.png ../examples/exchange_demag/demag_energy.png ../examples/demag/stddev_loglog.png ../examples/demag/xvalues.png ../examples/demag/errnorm_loglog.png ../examples/exchange_demag/timings/results.rst ../examples/demag/results_field.txt ../src/finmag/tests/comparison/exchange/table.rst
+examples-for-doc: ../examples/macrospin/alpha-1-00.png ../examples/macrospin/alpha-0-50.png ../examples/macrospin/alpha-0-10.png \
+	../examples/macrospin/alpha-0-02.png ../examples/time-dependent-applied-field/fittedresults.txt \
+	../examples/time-dependent-applied-field/fit.png ../examples/time-dependent-applied-field/results.png \
+	../examples/exchange_demag/exchange_demag.png ../examples/exchange_demag/exchange_energy.png \
+	../examples/exchange_demag/demag_energy.png ../examples/demag/stddev_loglog.png ../examples/demag/xvalues.png \
+	../examples/demag/errnorm_loglog.png ../examples/exchange_demag/timings/results.rst ../examples/demag/results_field.txt \
+	../src/finmag/tests/comparison/exchange/table.rst ../src/finmag/tests/comparison/anisotropy/table.rst
 
 # The absolute path for the doc directory
 DOC_DIR = $(abspath .)
@@ -200,3 +206,6 @@ PYTHON_ROOTS = $(DOC_DIR)/../src
 
 ../src/finmag/tests/comparison/exchange/table.rst:
 	cd ../src/finmag/tests/comparison/exchange/ && PYTHONPATH=$(PYTHON_ROOTS) python test_exchange_field.py
+
+../src/finmag/tests/comparison/anisotropy/table.rst:
+	cd ../src/finmag/tests/comparison/anisotropy/ && PYTHONPATH=$(PYTHON_ROOTS) python test_anisotropy_field.py
