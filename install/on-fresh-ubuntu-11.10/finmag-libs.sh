@@ -7,7 +7,7 @@ sudo apt-get install python-matplotlib python-visual python-scipy ipython python
 
 
 #for documentation with sphinx
-sudo apt-get install texlive-latex-extra texlive-latex-recommended python-pygments 
+sudo apt-get install texlive-latex-extra texlive-latex-recommended python-pygments texlive-fonts-recommended
 
 #Need more recent version of sphinx than ubuntu version
 sudo aptitude remove python-sphinx  python-py
