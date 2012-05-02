@@ -38,6 +38,19 @@ def test_using_analytical_solution(H):
     print stats(rel_diff)
     assert np.max(rel_diff) < REL_TOLERANCE
 
+def test_using_nmag(H):
+    REL_TOLERANCE = 3e-5
+
+    H = H.reshape((3, -1))
+    H_ref = np.array(zip(* np.genfromtxt(MODULE_DIR + "H_demag_nmag.txt")))
+
+    diff = np.abs(H - H_ref)
+    rel_diff = diff / np.sqrt(np.max(H_ref[0]**2 + H_ref[1]**2 + H_ref[2]**2))
+
+    print "comparison with nmag, H, relative_difference:"
+    print stats(rel_diff)
+    assert np.max(rel_diff) < REL_TOLERANCE
+
 if __name__ == "__main__":
     H = setup_finmag()
 
@@ -48,3 +61,4 @@ if __name__ == "__main__":
     print "demag field z-component:\n", stats(Hz)
 
     test_using_analytical_solution(H)
+    test_using_nmag(H)
