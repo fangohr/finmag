@@ -75,9 +75,7 @@ class UniaxialAnisotropy(object):
             K = df.Constant(K)
 
         # Anisotropy energy
-        self.E = K*(df.Constant(1) - (df.dot(a, self.m))**2)*df.dx
-
-        self.E = -K * (df.dot(a, self.m)**2) *df.dx
+        self.E = K * (df.Constant(1) - (df.dot(a, self.m))**2)*df.dx
 
         # Gradient
         mu0 = 4*np.pi*1e-7
