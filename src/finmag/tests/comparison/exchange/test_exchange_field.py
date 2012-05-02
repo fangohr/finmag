@@ -29,7 +29,6 @@ class TestExchange():
         m0 = m_gen(coords).flatten()
         if plot:
             quiver(m0, mesh, MODULE_DIR + "m0_finmag.png")
-
         llg.set_m(m0)
         llg.Ms = Ms
         llg.A = A
@@ -115,7 +114,7 @@ class TestExchange():
 
 if __name__ == '__main__':
     t = TestExchange()
-    t.setup_class(plot=True)
+    t.setup_class(plot=False)
     t.test_nmag()
     t.test_oommf()
     t.test_magpar()
