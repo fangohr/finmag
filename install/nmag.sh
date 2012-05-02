@@ -5,7 +5,7 @@
 echo "If required, install required libraries using"
 echo "apt-get install g++ libblas-dev libreadline-dev make m4 gawk zlib1g-dev readline-common liblapack-dev"
 
-#sudo apt-get install g++ libblas-dev libreadline-dev make m4 gawk zlib1g-dev readline-common liblapack-dev
+sudo apt-get install g++ libblas-dev libreadline-dev make m4 gawk zlib1g-dev readline-common liblapack-dev 
 
 
 PREFIX="$HOME" # EDIT HERE.
