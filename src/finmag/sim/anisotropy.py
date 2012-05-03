@@ -16,6 +16,15 @@ class UniaxialAnisotropy(object):
 
         E_{\\text{ani}} = - \\int K ( \\vec a \\cdot \\vec m)^2 \\mathrm{d}x,
 
+    .. note::
+
+        Haven't completely agreed on this yet.. Method used by Scholz and
+        Magpar:
+
+        .. math::
+
+            E_{\\text{ani}} = \\int_\\Omega K (1 - ( \\vec a \\cdot \\vec m)^2) \\mathrm{d}x
+
     where :math:`K` is the anisotropy constant,
     :math:`\\vec a` the easy axis and :math:`\\vec{m}=\\vec{M}/M_\mathrm{sat}`
     the discrete approximation of the magnetic polarization.
@@ -76,6 +85,12 @@ class UniaxialAnisotropy(object):
 
         # Anisotropy energy
         self.E = K * (df.Constant(1) - (df.dot(a, self.m))**2)*df.dx
+
+        # HF's version inline with nmag, breaks comparison with analytical
+        # solution in the energy density test for anisotropy, as this uses
+        # the Scholz-Magpar method. Should anyway be a an easy fix when we
+        # decide on method.
+        #self.E = -K*(df.dot(a, self.m))**2*df.dx
 
         # Gradient
         mu0 = 4*np.pi*1e-7
@@ -168,18 +183,40 @@ class UniaxialAnisotropy(object):
 
         """
         timings.start('Anisotropy-energy')
-        E=df.assemble(self.E)
+        E = df.assemble(self.E)
         timings.stop('Anisotropy-energy')
         return E
 
     def energy_density(self):
+        """
+        Compute the anisotropy energy density,
+
+        .. math::
+
+            \\frac{E_\\mathrm{ani}}{V},
+
+        where V is the volume of each node.
+
+        *Returns*
+            numpy.ndarray
+                The anisotropy energy density.
+
+        """
         nodal_E = df.assemble(self.nodal_E).array()
         return nodal_E/self.nodal_vol
 
-    def density_function(self):
+    def energy_density_function(self):
+        """
+        Compute the anisotropy energy density the same way as the
+        function above, but return a Function to allow probing.
+
+        *Returns*
+            dolfin.Function
+                The anisotropy energy density.
+
+        """
         self.ED.vector()[:] = self.energy_density()
         return self.ED
-
 
     def __setup_field_numpy(self):
         """
