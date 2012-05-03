@@ -219,7 +219,10 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         self.phi1_solver.parameters["preconditioner"]["same_nonzero_pattern"] = True
         #self.phi2_solver.parameters["preconditioner"]["same_nonzero_pattern"] = True
 
-        self.nodal_vol = df.assemble(self.v*df.dx, mesh=self.mesh).array()*mesh_units**3
+        self.nodal_vol = df.assemble(self.v*df.dx, mesh=self.mesh).array()
+        self.ED = df.Function(self.V)
+        self.H_demag = df.Function(self.W)
+
 
     def compute_energy(self):
         """
@@ -243,14 +246,11 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
                 self.mesh_units**self.mesh.topology().dim()
 
     def energy_density(self):
-        H_demag = df.Function(self.W)
-        H_demag.vector()[:] = self.compute_field()
-        mu0 = 4 * np.pi * 10**-7 # Vs/(Am)
-        E = df.dot(-0.5*mu0*df.dot(H_demag, self.m*self.Ms), self.v)*df.dx
+        self.H_demag.vector()[:] = self.compute_field()
+        mu0 = 4*np.pi*10**-7 # Vs/(Am)
+        E = df.dot(-0.5*mu0*df.dot(self.H_demag, self.m*self.Ms), self.v)*df.dx
         nodal_E = df.assemble(E).array()
-        nodal_vol = df.assemble(self.v*df.dx).array()
-        density = nodal_E/nodal_vol
-        return density
+        return nodal_E/self.nodal_vol
 
     def density_function(self):
         F = df.Function(self.V)
