@@ -69,7 +69,13 @@ Because magpar and nmag both use the finite element method, results
 defined on the same mesh can be compared easily to finmag. Oommf uses the finite
 difference method and uses meshes built of cubic cells. To check a field
 computed with finmag against its oommf equivalent, the former is probed at
-the locations of the vertices of the corresponding oommf mesh.
+the locations of the vertices of the corresponding oommf mesh. When fields are
+compared beetween finmag and nmag, special care has to be taken: Instead of
+the field, the cross product of the magnetisation and the
+field :math:`m \times H` has to be evaluated. Nmag takes the liberty of having
+additional contributions in their vectors, because only the perpendicular parts
+enter the LLG equation anyways.
+
 This yields a new vector which can be used for the comparison.
 
 The relative difference between

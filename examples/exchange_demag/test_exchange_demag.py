@@ -15,14 +15,14 @@ logger = logging.getLogger(name='finmag')
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 REL_TOLERANCE = 1e-4
 
-mesh_units = 1e-9
+unit_length = 1e-9
 mesh = df.Mesh(convert_mesh(MODULE_DIR + "/bar30_30_100.geo"))
 
 def run_finmag():
     """Run the finmag simulation and store data in averages.txt."""
 
     # Set up LLG
-    llg = LLG(mesh, mesh_units=mesh_units)
+    llg = LLG(mesh, unit_length=unit_length)
     llg.Ms = 0.86e6
     llg.A = 13.0e-12
     llg.alpha = 0.5
@@ -117,7 +117,7 @@ def test_compare_energies():
     computed = np.array(h.read_float_data(MODULE_DIR + "/energies.txt"))
     assert np.size(ref) == np.size(computed), "Compare number of energies."
 
-    vol = df.assemble(df.Constant(1)*df.dx, mesh=mesh)*mesh_units**mesh.topology().dim()
+    vol = df.assemble(df.Constant(1)*df.dx, mesh=mesh)*unit_length**mesh.topology().dim()
     #30x30x100nm^3 = 30x30x100=9000
 
     # Compare exchange energy

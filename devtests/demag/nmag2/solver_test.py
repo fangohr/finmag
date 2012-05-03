@@ -22,7 +22,7 @@ ref_data = np.array(h.read_float_data(MODULE_DIR + "/../../../examples/exchange_
 mesh = df.Box(0,0,0,30,30,100, 3,3,10)
 
 # Set up LLG
-llg = LLG(mesh, mesh_units=1e-9)
+llg = LLG(mesh, unit_length=1e-9)
 llg.Ms = 0.86e6
 llg.A = 13.0e-12
 llg.alpha = 0.5
