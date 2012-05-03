@@ -3,12 +3,12 @@ import dolfin as df
 import numpy as np
 from finmag.util.convert_mesh import convert_mesh
 from finmag.sim.llg import LLG
-from finmag.sim.helpers import vectors, norm, stats, sphinx_sci as s
+from finmag.sim.helpers import vectors, stats, sphinx_sci as s
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
 
 Ms = 0.86e6; K1 = 520e3; a = (1, 0, 0);
-x1 = y1 = z1 = 5; # same as in bar_5_5_5.geo file
+x1 = y1 = z1 = 20; # same as in bar_5_5_5.geo file
 
 table_delim   = "    " + "=" * 10 + (" " + "=" * 30) * 4 + "\n"
 table_entries = "    {:<10} {:<30} {:<30} {:<30} {:<30}\n"
@@ -61,7 +61,7 @@ def pytest_funcarg__finmag(request):
     return finmag
 
 def test_nmag(finmag):
-    REL_TOLERANCE = 0.4 # ???
+    REL_TOLERANCE = 6e-2
 
     m_ref = np.genfromtxt(MODULE_DIR + "m0_nmag.txt")
     m_computed = vectors(finmag["m"])
@@ -75,9 +75,18 @@ def test_nmag(finmag):
     m_cross_H_ref = np.cross(m_ref, H_ref)
     m_cross_H_computed = np.cross(m_computed, H_computed)
 
+    print "finmag m x H:"
+    print m_cross_H_computed
+    print "nmag m x H:"
+    print m_cross_H_ref
 
-    diff = np.abs(m_cross_H_ref - m_cross_H_computed)
-    rel_diff = diff/max([norm(v) for v in m_cross_H_ref])
+    mxH = m_cross_H_computed.flatten()
+    mxH_ref = m_cross_H_ref.flatten()
+    diff = np.abs(mxH - mxH_ref)
+    print "comparison with nmag, m x H, difference:"
+    print stats(diff)
+
+    rel_diff = diff/ np.sqrt(np.max(mxH_ref[0]**2 + mxH_ref[1]**2 + mxH_ref[2]**2))
 
     finmag["table"] += table_entries.format(
         "nmag", s(REL_TOLERANCE, 0), s(np.max(rel_diff)), s(np.mean(rel_diff)), s(np.std(rel_diff)))
@@ -110,7 +119,7 @@ def test_oommf(finmag):
 def test_magpar(finmag):
     from finmag.tests.magpar.magpar import compute_anis_magpar, compare_field_directly
 
-    REL_TOLERANCE = 8e-6
+    REL_TOLERANCE = 8e-3
 
     llg = finmag["llg"]
     magpar_nodes, magpar_anis = compute_anis_magpar(llg.V, llg._m, K1, a, Ms, mesh_units=1)
