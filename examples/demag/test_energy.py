@@ -14,8 +14,8 @@ MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Using unit sphere mesh
 mesh = df.UnitSphere(10)
-mesh_units = 1
-llg = LLG(mesh, mesh_units=mesh_units)
+unit_length = 1
+llg = LLG(mesh, unit_length=unit_length)
 llg.set_m((1, 0, 0))
 llg.Ms = 1e5
 llg.setup(use_demag=True)

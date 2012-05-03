@@ -13,7 +13,7 @@ table_entries = "    {:<10} {:<30} {:<30} {:<30} {:<30}\n"
 
 def setup_finmag():
     mesh = Mesh(convert_mesh(MODULE_DIR + "sphere.geo"))
-    llg = LLG(mesh, mesh_units=1e-9)
+    llg = LLG(mesh, unit_length=1e-9)
     llg.set_m((1, 0, 0))
     llg.Ms = 1
     llg.setup(use_demag=True)

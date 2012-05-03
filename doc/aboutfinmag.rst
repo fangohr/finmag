@@ -74,7 +74,7 @@ compared beetween finmag and nmag, special care has to be taken: Instead of
 the field, the cross product of the magnetisation and the
 field :math:`m \times H` has to be evaluated. Nmag takes the liberty of having
 additional contributions in their vectors, because only the perpendicular parts
-enter the LLG equations anyways.
+enter the LLG equation anyways.
 
 This yields a new vector which can be used for the comparison.
 
