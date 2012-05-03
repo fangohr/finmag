@@ -5,10 +5,12 @@ logger=logging.getLogger('finmag')
 from finmag.util.timings import timings
 
 
-def dmi_term3d_dolfin(M,c):
-    return c * df.inner(M, df.curl(M)) * df.dx
+def dmi_term3d_dolfin(M,v,c):
+    E = c * df.inner(M, df.curl(M)) * df.dx
+    nodal_E = df.dot(c * df.inner(M, df.curl(M)), v) * df.dx
+    return E, nodal_E
 
-def dmi_term3d(M,c,debug=False):
+def dmi_term3d(M,v,c,debug=False):
     """Input arguments:
       
        M a dolfin 3d-vector function on a 3d space
@@ -78,12 +80,13 @@ def dmi_term3d(M,c,debug=False):
 
     #our version:
     E = c *( M[0]*curlx+M[1]*curly+M[2]*curlz) * df.dx
+    nodal_E = df.dot(c *( M[0]*curlx+M[1]*curly+M[2]*curlz), v) * df.dx
 
     logger.debug("dmi_term3d: leaving")
-    return E
+    return E, nodal_E
 
 
-def dmi_term2d(M,c,debug=False):
+def dmi_term2d(M,v,c,debug=False):
     """Input arguments:
       
        M a dolfin 3d-vector function on a 2d space,
@@ -157,9 +160,10 @@ def dmi_term2d(M,c,debug=False):
 
     #our version:
     E = c *( M[0]*curlx+M[1]*curly+M[2]*curlz) * df.dx
+    nodal_E = df.dot(c *( M[0]*curlx+M[1]*curly+M[2]*curlz), v) * df.dx
 
     #logger.debug("dmi_term2d: leaving")
-    return E
+    return E, nodal_E
 
 
 class DMI(object):
@@ -231,7 +235,7 @@ class DMI(object):
             
     """
 
-    def __init__(self, V, M, D, Ms, method="box-assemble-petsc", mesh_units=1):
+    def __init__(self, V, M, D, Ms, method="box-matrix-petsc", mesh_units=1):
         timings.start("DMI-init")
         
         logger.info("DMI(): method = %s" % method)
@@ -247,6 +251,9 @@ class DMI(object):
 
         #self.E = dmi_term3d_dolfin(self.M,self.DMIconstant)
 
+        # Needed for energy density
+        FS = df.FunctionSpace(V.mesh(), "CG", 1)
+        w = df.TestFunction(FS)
 
         #mesh_shape = V.mesh().coordinates().shape
         #meshdim = mesh_shape[1]
@@ -255,18 +262,26 @@ class DMI(object):
         if meshdim == 1: #2d mesh
             NotImplementedError("Not implemented for 1d mesh yet -- should be easy though")
         elif meshdim == 2: #2d mesh
-            self.E = dmi_term2d(self.M,self.DMIconstant,debug=False)
+            self.E, self.nodal_E = \
+                    dmi_term2d(self.M, w, self.DMIconstant, debug=False)
         elif meshdim ==3: #3d mesh
-            self.E = dmi_term3d(self.M,self.DMIconstant,debug=False)
+            self.E, self.nodal_E = \
+                    dmi_term3d(self.M, w, self.DMIconstant, debug=False)
 
         #Muhbauer2011
         #self.E = self.E = self.DMIconstant * df.inner(self.M, df.curl(self.M)) * df.dx
         #Rossler-Bogdanov2006
         #self.E = self.DMIconstant * df.cross(self.M, df.curl(self.M)) * df.dx
-        
+
         self.dE_dM = df.derivative(self.E, M, self.v)
         self.vol = df.assemble(df.dot(self.v, df.Constant([1,1,1]))*df.dx).array()
-        
+        self.nodal_vol = df.assemble(w*df.dx, mesh=V.mesh()).array()
+
+        # This is only needed if we want the energy density
+        # as a df.Function, in order to e.g. probe.
+        self.ED = df.Function(FS)
+
+
         if method=='box-assemble':
             self.__compute_field = self.__compute_field_assemble
         elif method == 'box-matrix-numpy':
@@ -315,6 +330,14 @@ class DMI(object):
         E = df.assemble(self.E)
         timings.stop("DMI-computenergy")
         return E
+
+    def energy_density(self):
+        nodal_E = df.assemble(self.nodal_E).array()
+        return nodal_E/self.nodal_vol
+
+    def density_function(self):
+        self.ED.vector()[:] = self.energy_density()
+        return self.ED
 
     def __setup_field_numpy(self):
         """

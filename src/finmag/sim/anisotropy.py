@@ -85,6 +85,16 @@ class UniaxialAnisotropy(object):
         self.vol = df.assemble(df.dot(self.v,
             df.Constant([1,1,1])) * df.dx).array()
 
+        # Needed for energy density
+        FS = df.FunctionSpace(V.mesh(), "CG", 1)
+        w = df.TestFunction(FS)
+        self.nodal_vol = df.assemble(w*df.dx, mesh=V.mesh()).array()
+        self.nodal_E = df.dot(K*(df.Constant(1) - (df.dot(a, self.m))**2), w)*df.dx
+
+        # This is only needed if we want the energy density
+        # as a df.Function, in order to e.g. probe.
+        self.ED = df.Function(FS)
+
         # Store for later
         self.V = V
         self.method = method
@@ -161,6 +171,15 @@ class UniaxialAnisotropy(object):
         E=df.assemble(self.E)
         timings.stop('Anisotropy-energy')
         return E
+
+    def energy_density(self):
+        nodal_E = df.assemble(self.nodal_E).array()
+        return nodal_E/self.nodal_vol
+
+    def density_function(self):
+        self.ED.vector()[:] = self.energy_density()
+        return self.ED
+
 
     def __setup_field_numpy(self):
         """
