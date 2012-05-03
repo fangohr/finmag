@@ -1,4 +1,4 @@
-import os
+import os, sys
 import commands
 import numpy as np
 import dolfin as df
@@ -21,14 +21,15 @@ def test_exchange_energy_density():
 
     """
     TOL = 1e-7 # Should be lower when comparing with analytical solution
+    MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
     # run nmag
-    cmd = "nsim run_nmag_Eexch.py --clean"
+    cmd = "nsim %s/run_nmag_Eexch.py --clean" % MODULE_DIR
     status, output = commands.getstatusoutput(cmd)
     if status != 0:
         print output
         sys.exit("Error %d: Running %s failed." % (status, cmd))
-    nmag_data = np.load("nmag_exchange_energy_density.npy")
+    nmag_data = np.load("%s/nmag_exchange_energy_density.npy" % MODULE_DIR)
 
     # run finmag
     mesh = df.Interval(100, 0, 10e-9)
