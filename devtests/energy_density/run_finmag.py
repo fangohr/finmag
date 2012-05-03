@@ -10,7 +10,7 @@ mesh = Mesh("coarse_bar.xml.gz")
 #mesh = Mesh("bar.xml.gz")
 
 # Setup LLG
-llg = LLG(mesh, mesh_units=mu)
+llg = LLG(mesh, unit_length=mu)
 llg.Ms = 0.86e6
 llg.A = 13.0e-12
 llg.alpha = 0.5

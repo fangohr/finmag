@@ -26,7 +26,7 @@ setupstart = time.time()
 
 # Set up LLG
 mesh = df.Mesh(MODULE_DIR + "/bar.xml.gz")
-llg = LLG(mesh, mesh_units=1e-9)
+llg = LLG(mesh, unit_length=1e-9)
 llg.Ms = 0.86e6
 llg.A = 13.0e-12
 llg.alpha = 0.5

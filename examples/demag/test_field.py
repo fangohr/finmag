@@ -9,8 +9,8 @@ MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Using mesh with radius 10 nm (nmag ex. 1)
 mesh = Mesh(convert_mesh(MODULE_DIR + "/sphere1.geo"))
-mesh_units = 1e-9
-llg = LLG(mesh, mesh_units=mesh_units)
+unit_length = 1e-9
+llg = LLG(mesh, unit_length=unit_length)
 llg.set_m((1, 0, 0))
 llg.Ms = 1e6
 llg.setup(use_demag=True)

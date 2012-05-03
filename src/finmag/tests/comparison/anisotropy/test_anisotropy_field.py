@@ -37,7 +37,7 @@ def start_table():
 
 def setup_finmag():
     mesh = df.Mesh(convert_mesh(MODULE_DIR + "/bar_5_5_5.geo"))
-    llg = LLG(mesh, mesh_units=1e-9)
+    llg = LLG(mesh, unit_length=1e-9)
     coords = np.array(zip(* mesh.coordinates()))
     m0 = m_gen(coords).flatten()
 
@@ -122,7 +122,7 @@ def test_magpar(finmag):
     REL_TOLERANCE = 8e-3
 
     llg = finmag["llg"]
-    magpar_nodes, magpar_anis = compute_anis_magpar(llg.V, llg._m, K1, a, Ms, mesh_units=1)
+    magpar_nodes, magpar_anis = compute_anis_magpar(llg.V, llg._m, K1, a, Ms, unit_length=1)
     _, _, diff, rel_diff = compare_field_directly(
             llg.mesh.coordinates(), finmag["H"].vector().array(),
             magpar_nodes, magpar_anis)
