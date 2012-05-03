@@ -87,18 +87,19 @@ class Exchange(object):
         self.dE_dM = -1*df.derivative(self.E, M, self.v)
         self.method = method
         self.vol = df.assemble(df.dot(self.v, df.Constant([1,1,1])) * df.dx).array()
+        self.dim = V.mesh().topology().dim()
 
         # Needed for energy density
-        self.dim = V.mesh().topology().dim()
         FS = df.FunctionSpace(V.mesh(), "CG", 1)
         w = df.TestFunction(FS)
         self.nodal_vol = df.assemble(w*df.dx, mesh=V.mesh()).array() \
                 * mesh_units**self.dim
-        self.E_d = df.dot(self.exchange_factor * df.inner(df.grad(M), df.grad(M)), w) * df.dx
+        self.nodal_E = df.dot(self.exchange_factor \
+                * df.inner(df.grad(M), df.grad(M)), w)*df.dx
 
-        # Temp (AEJ 01.05)
-        self.w = w
-        self.F = df.Function(FS)
+        # This is only needed if we want the energy density
+        # as a df.Function, in order to e.g. probe.
+        self.ED = df.Function(FS)
 
         # Don't know if this is needed
         self.total_vol = df.assemble(df.Constant(1)*df.dx, mesh=V.mesh()) \
@@ -156,14 +157,13 @@ class Exchange(object):
         return E
 
     def energy_density(self):
-        E_d = df.assemble(self.E_d).array()*self.mesh_units**self.dim*self.Ms*self.mu0
-        return E_d/self.nodal_vol
+        nodal_E = df.assemble(self.nodal_E).array() \
+                * self.mesh_units**self.dim*self.Ms*self.mu0
+        return nodal_E/self.nodal_vol
 
     def density_function(self):
-        E_d = self.energy_density()
-        F = self.F
-        F.vector()[:] = E_d
-        return F
+        self.ED.vector()[:] = self.energy_density()
+        return self.ED
 
     def __setup_field_numpy(self):
         """
