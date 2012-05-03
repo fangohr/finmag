@@ -9,7 +9,6 @@ mu = 1e-9
 mesh = Mesh("coarse_bar.xml.gz")
 #mesh = Mesh("bar.xml.gz")
 
-
 # Setup LLG
 llg = LLG(mesh, mesh_units=mu)
 llg.Ms = 0.86e6
@@ -20,7 +19,6 @@ llg.setup(use_exchange=True, use_dmi=False, use_demag=True, demag_method="FK")
 
 # Set up time integrator
 integrator = LLGIntegrator(llg, llg.m)
-
 dt = 5e-12
 
 ######
@@ -28,11 +26,8 @@ dt = 5e-12
 # from z=0 to z=100 through the center of the body.
 ######
 
-
 # Integrate
 integrator.run_until(dt*10)
-#E1 = llg.exchange.energy_density()
-#E2 = llg.demag.energy_density()
 exch = llg.exchange.density_function()
 demag = llg.demag.density_function()
 finmag_exch, finmag_demag = [], []
@@ -65,5 +60,5 @@ p.title("Demag energy density")
 p.legend(["Finmag", "Nmag", "oommf"])
 p.savefig("demag.png")
 
-p.show()
+#p.show()
 print "Plots written to exch.png and demag.png"
