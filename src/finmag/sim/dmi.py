@@ -316,7 +316,6 @@ class DMI(object):
         timings.stop("DMI-computefield")
         return H
 
-    
     def compute_energy(self):
         """
         Return the DMI energy.
@@ -332,10 +331,33 @@ class DMI(object):
         return E
 
     def energy_density(self):
+        """
+        Compute the DMI energy density,
+
+        .. math::
+
+            \\frac{E_\\mathrm{DMI}}{V},
+
+        where V is the volume of each node.
+
+        *Returns*
+            numpy.ndarray
+                The DMI energy density.
+
+        """
         nodal_E = df.assemble(self.nodal_E).array()
         return nodal_E/self.nodal_vol
 
-    def density_function(self):
+    def energy_density_function(self):
+        """
+        Compute the DMI energy density the same way as the
+        function above, but return a Function to allow probing.
+
+        *Returns*
+            dolfin.Function
+                The DMI energy density.
+
+        """
         self.ED.vector()[:] = self.energy_density()
         return self.ED
 

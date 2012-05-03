@@ -28,8 +28,8 @@ dt = 5e-12
 
 # Integrate
 integrator.run_until(dt*10)
-exch = llg.exchange.density_function()
-demag = llg.demag.density_function()
+exch = llg.exchange.energy_density_function()
+demag = llg.demag.energy_density_function()
 finmag_exch, finmag_demag = [], []
 R = range(100)
 for i in R:

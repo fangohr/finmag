@@ -157,11 +157,34 @@ class Exchange(object):
         return E
 
     def energy_density(self):
+        """
+        Compute the exchange energy density,
+
+        .. math::
+
+            \\frac{E_\\mathrm{exch}}{V},
+
+        where V is the volume of each node.
+
+        *Returns*
+            numpy.ndarray
+                The exchange energy density.
+
+        """
         nodal_E = df.assemble(self.nodal_E).array() \
                 * self.unit_length**self.dim*self.Ms*self.mu0
         return nodal_E/self.nodal_vol
 
-    def density_function(self):
+    def energy_density_function(self):
+        """
+        Compute the exchange energy density the same way as the
+        function above, but return a Function to allow probing.
+
+        *Returns*
+            dolfin.Function
+                The exchange energy density.
+
+        """
         self.ED.vector()[:] = self.energy_density()
         return self.ED
 

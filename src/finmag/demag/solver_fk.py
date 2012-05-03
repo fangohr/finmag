@@ -246,13 +246,36 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
                 self.unit_length**self.mesh.topology().dim()
 
     def energy_density(self):
+        """
+        Compute the demag energy density,
+
+        .. math::
+
+            \\frac{E_\\mathrm{demag}}{V},
+
+        where V is the volume of each node.
+
+        *Returns*
+            numpy.ndarray
+                The demag energy density.
+
+        """
         self.H_demag.vector()[:] = self.compute_field()
         mu0 = 4*np.pi*10**-7 # Vs/(Am)
         E = df.dot(-0.5*mu0*df.dot(self.H_demag, self.m*self.Ms), self.v)*df.dx
         nodal_E = df.assemble(E).array()
         return nodal_E/self.nodal_vol
 
-    def density_function(self):
+    def energy_density_function(self):
+        """
+        Compute the demag energy density the same way as the
+        function above, but return a Function to allow probing.
+
+        *Returns*
+            dolfin.Function
+                The demag energy density.
+
+        """
         F = df.Function(self.V)
         F.vector()[:] = self.energy_density()
         return F
