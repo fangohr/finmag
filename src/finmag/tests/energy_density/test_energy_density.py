@@ -26,7 +26,7 @@ def test_exchange_energy_density():
     cmd = "nsim run_nmag_Eexch.py --clean"
     status, output = commands.getstatusoutput(cmd)
     if status != 0:
-        print ouput
+        print output
         sys.exit("Error %d: Running %s failed." % (status, cmd))
     nmag_data = np.load("nmag_exchange_energy_density.npy")
 
@@ -36,10 +36,12 @@ def test_exchange_energy_density():
     llg.Ms = 1
     llg.set_m(("cos(x[0]*pi/10e-9)", "sin(x[0]*pi/10e-9)", "0"))
     llg.setup(use_exchange=True, use_dmi=False, use_demag=False)
-    finmag_data = llg.exchange.energy_density()
 
-    print "Expecting low relative error when comparing with nmag."
+    finmag_data = llg.exchange.energy_density()
     rel_err = np.abs(nmag_data - finmag_data)/np.linalg.norm(nmag_data)
+
+    print "Relative error from nmag data (expect array of 0):"
+    print rel_err
     print "Max relative error:", np.max(rel_err)
     assert np.max(rel_err) < TOL, \
             "Max relative error is %g, should be zero." % np.max(rel_err)
