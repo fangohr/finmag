@@ -16,7 +16,7 @@ from finmag.util.timings import timings
 logger = logging.getLogger(name='finmag')
 
 class LLG(object):
-    def __init__(self, mesh, order=1, mesh_units=1, do_precession=True):
+    def __init__(self, mesh, order=1, unit_length=1, do_precession=True):
         logger.info('Creating LLG object (rank=%s/%s) %s' % (df.MPI.process_number(),
                                                               df.MPI.num_processes(),
                                                               time.asctime()))
@@ -26,7 +26,7 @@ class LLG(object):
         self.mesh = mesh
         # save the units the mesh is expressed in,
         # so usually 1 (for m) for dolfin meshes, but 1e-9 (for nm) for netgen.
-        self.mesh_units = mesh_units
+        self.unit_length = unit_length
         logger.debug("%s" % self.mesh)
     
         self.F = df.FunctionSpace(self.mesh, 'Lagrange', order)
@@ -301,12 +301,12 @@ class LLG(object):
         self.use_exchange = use_exchange
         if use_exchange:
             self.exchange = Exchange(self.V, self._m, self.A, 
-              self.Ms, method=exchange_method, mesh_units=self.mesh_units)
+              self.Ms, method=exchange_method, unit_length=self.unit_length)
 
         self.use_dmi = use_dmi
         if use_dmi:
             self.dmi = DMI(self.V, self._m, self.D, self.Ms, 
-                           method = dmi_method, mesh_units=self.mesh_units)
+                           method = dmi_method, unit_length=self.unit_length)
 
         timings.stop('LLG-init')
         self.use_demag = use_demag
@@ -324,7 +324,7 @@ class LLG(object):
                 problem = FemBemDeMagProblem(self.mesh, self._m)
                 problem.Ms = self.Ms
                 timings.stop("Create demag problem")
-                self.demag = FemBemFKSolver(problem, mesh_units=self.mesh_units)
+                self.demag = FemBemFKSolver(problem, unit_length=self.unit_length)
             else:
                 self.demag = Demag(self.V, self._m, self.Ms, method=demag_method)
         

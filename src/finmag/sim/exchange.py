@@ -69,14 +69,14 @@ class Exchange(object):
             
     """
 
-    def __init__(self, V, M, C, Ms, method="box-matrix-petsc", mesh_units=1):
+    def __init__(self, V, M, C, Ms, method="box-matrix-petsc", unit_length=1):
         logger.info("Exchange(): method = %s" % method)
         timings.start('Exchange-init')
        
         self.V = V
-        self.mesh_units = mesh_units #need them in compute_energy
+        self.unit_length = unit_length #need them in compute_energy
         mu0 = 4 * np.pi * 10**-7 # Vs/(Am)
-        self.exchange_factor = df.Constant(1 * C / (mu0 * Ms * mesh_units**2))
+        self.exchange_factor = df.Constant(1 * C / (mu0 * Ms * unit_length**2))
         self.method = method
         self.M = M # keep reference to M
         self.Ms = Ms
@@ -93,7 +93,7 @@ class Exchange(object):
         FS = df.FunctionSpace(V.mesh(), "CG", 1)
         w = df.TestFunction(FS)
         self.nodal_vol = df.assemble(w*df.dx, mesh=V.mesh()).array() \
-                * mesh_units**self.dim
+                * unit_length**self.dim
         self.nodal_E = df.dot(self.exchange_factor \
                 * df.inner(df.grad(M), df.grad(M)), w)*df.dx
 
@@ -103,7 +103,7 @@ class Exchange(object):
 
         # Don't know if this is needed
         self.total_vol = df.assemble(df.Constant(1)*df.dx, mesh=V.mesh()) \
-                * mesh_units**self.dim
+                * unit_length**self.dim
 
 
         if method=='box-assemble':
@@ -150,7 +150,7 @@ class Exchange(object):
 
         """
         timings.start('Exchange-energy')
-        E=df.assemble(self.E)*self.mesh_units**self.dim*self.Ms*self.mu0
+        E=df.assemble(self.E)*self.unit_length**self.dim*self.Ms*self.mu0
         #do we need to take this to the power of 2 in a 2d mesh instead
         #of 3 for 3d mesh.
         timings.stop('Exchange-energy')
@@ -158,7 +158,7 @@ class Exchange(object):
 
     def energy_density(self):
         nodal_E = df.assemble(self.nodal_E).array() \
-                * self.mesh_units**self.dim*self.Ms*self.mu0
+                * self.unit_length**self.dim*self.Ms*self.mu0
         return nodal_E/self.nodal_vol
 
     def density_function(self):

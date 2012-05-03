@@ -45,7 +45,7 @@ def extract_parameters(x,data):
 def run_nmag():
     x_max = 1000; y_max = 2; z_max = 2;
     mesh = df.Box(0, 0, 0, x_max, y_max, z_max, 500, 1, 1)
-    llg = LLG(mesh, mesh_units=1e-9)
+    llg = LLG(mesh, unit_length=1e-9)
     llg.Ms = 0.86e6
     llg.A = 13.0e-12
     llg.alpha = 0.01

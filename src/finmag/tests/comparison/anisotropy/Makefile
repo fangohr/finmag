@@ -1,11 +1,14 @@
 all: nmag
 
-mesh:
+bar_5_5_5.nmesh.h5:
 	- netgen -geofile=bar_5_5_5.geo -meshfiletype="Neutral Format" -meshfile=bar_5_5_5.neutral -batchmode
 	nmeshimport --netgen bar_5_5_5.neutral bar_5_5_5.nmesh.h5
-	gzip -f bar_5_5_5.neutral
+	rm bar_5_5_5.neutral
 
-nmag:
+clean:
+	rm bar_5_5_5.nmesh.h5
+
+nmag: bar_5_5_5.nmesh.h5
 	nsim run_nmag.py --clean
 
 meshshow: mesh
