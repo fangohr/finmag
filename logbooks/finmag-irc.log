@@ -1070,3 +1070,48 @@ fangohr: Still testing ...
 2012-05-02 16:47:59 andersej: Hans, the DMI class is not ideally constructed wrt computing energy densities, as it computes the energy in different functions depending on mesh dimension. Am I allowed to do small modifications to these functions?
 2012-05-02 16:48:13 fangohr_: Yes, please do fix this :)
 2012-05-02 17:17:17 fangohr_: Over and out for today.
+2012-05-03 11:36:20 MaximS: Hi all! Hans, can I ask you something?
+2012-05-03 11:36:51 fangohr_: Hi, sure.
+2012-05-03 11:37:00 fangohr_: (Lucky, I just returned to the office ;-))
+2012-05-03 11:41:18 MaximS: I have to calculate the distance between two spins for the dipole-dipole-interaction. This is not a problem for non-periodic boundaries. But what should I do if I have periodic boundaries?
+2012-05-03 11:42:08 MaximS: E.g. if you assume two spins in the opposite corners, their distance is not only the diagonal but also a very short connection because they are neighbours as well.
+2012-05-03 11:56:54 MaximS: Another possibility would be to define a radius for the dipole-dipole-interaction and take all spins inside a sphere with this radius around a particular spin in to account. Just like it's done for the exchange coupling where the sphere contains only the nearest neighbours.
+2012-05-03 12:25:15 andersej: Someone up for lunch?
+2012-05-03 12:29:35 MaximS: Not today.
+2012-05-03 12:30:24 andersej: mb8g11, how about you? SebastianS?
+2012-05-03 12:30:47 SebastianS: just came online and missed you conversation; what are you asking me?^^
+2012-05-03 12:31:00 andersej: Lunch in 5?
+2012-05-03 12:31:17 SebastianS: ah no sorry; i'm not in the uni right now
+2012-05-03 12:31:39 SebastianS: thanks for asking, though ;-)
+2012-05-03 12:31:50 andersej: Sure, okay..
+2012-05-03 12:32:47 mb8g11: In 5.
+2012-05-03 14:41:05 mb8g11: Hans, / on summer is full. I told Jenkins to only store the build of the last 14 days but I don't know when it will start deleting the old ones.
+2012-05-03 14:41:25 mb8g11: What can we do to get some free space?
+2012-05-03 14:41:32 fangohr_: Good point, thanks. let me continue the data clearing I started yesterday.
+2012-05-03 14:45:04 mb8g11: No worries though, we know you're busy today.
+2012-05-03 14:59:06 fangohr_: Hi MA, I have freed 3GB.
+2012-05-03 14:59:21 fangohr_: I have also freed 0.8 GB yesterday (I think), but that seems to have been eaten by today.
+2012-05-03 14:59:28 fangohr_: So something is very disk space hungry on the system.
+2012-05-03 14:59:38 fangohr_: Have you got root access to summer?
+2012-05-03 15:02:54 mb8g11: By default Jenkins stores every new build, ever. That must be space-hungry.
+2012-05-03 15:03:16 mb8g11: Limiting that storage to 14 days should keep it in check.
+2012-05-03 15:03:19 mb8g11: No root access.
+2012-05-03 15:06:33 fangohr_: Does it actually store the object files and temporary data etc? That is a lot!
+2012-05-03 15:06:49 fangohr_: Have you set this to 14 days already? So it should kickin soon?
+2012-05-03 15:06:52 andersej: Hi Hans and MA.. Regarding the lunch discussion: I noticed that it wasn't a minus sign mistake. It was a minus one mistake (of course my numbers were 0.5 and -0.5 and my K=1...). When I removed the K*1 part of the anisotropy energy I get the same as nmag. Removing this is of course no problem when computing the field, because it vanishes in the dE/dM part anyway. But when computing energy / energy density, we will have a one K  too low result. I h
+2012-05-03 15:06:52 andersej: umbly claim that this may be a bug in nmag.
+2012-05-03 15:12:59 fangohr_: I would say it is a matter of convention ;-)
+2012-05-03 15:13:09 fangohr_: What does OOMMF say on the matter?
+2012-05-03 15:14:08 fangohr_: We wrote an extension to OMMF some time ago, which is following the Nmag way (see http://www.southampton.ac.uk/~fangohr/software/oxs_uniaxial4.html), but maybe that is too biased. It computes a particular uniaxial anisotropy.
+2012-05-03 16:00:58 mb8g11: I don't know what oommf says, but magpar sides with Anders on this one.
+2012-05-03 16:01:07 mb8g11: ;0
+2012-05-03 16:11:49 andersej: Yes!
+2012-05-03 16:12:19 mb8g11: Well, it's still only a 1 :)
+2012-05-03 16:21:01 andersej: Well, I would be happy with only 1 girlfriend : )
+2012-05-03 16:35:18 mb8g11: Your girlfriend is like a real number... except her real part is 0.
+2012-05-03 16:35:46 mb8g11: *complex number. dammit. ruined it.
+2012-05-03 16:39:25 andersej: Haha! When we are already into math/programming humour: http://folk.uio.no/larsstor/
+2012-05-03 16:39:44 andersej: No. Sorry..
+2012-05-03 16:40:11 andersej: http://folk.uio.no/larsstor/motivationals/godisrealunlessint.jpeg
+2012-05-03 16:48:14 mb8g11: Have fun merging btw.
+2012-05-03 16:51:35 andersej: Let's see who breaks Jenkins first.
