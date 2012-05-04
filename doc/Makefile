@@ -173,7 +173,8 @@ examples-for-doc: ../examples/macrospin/alpha-1-00.png ../examples/macrospin/alp
 	../examples/exchange_demag/demag_energy.png ../examples/demag/stddev_loglog.png ../examples/demag/xvalues.png \
 	../examples/demag/errnorm_loglog.png ../examples/exchange_demag/timings/results.rst ../examples/demag/results_field.txt \
 	../src/finmag/tests/comparison/exchange/table.rst ../src/finmag/tests/comparison/anisotropy/table.rst \
-	../src/finmag/tests/comparison/demag/table.rst ../examples/exchange_demag/simple1D.png
+	../src/finmag/tests/comparison/demag/table.rst ../examples/exchange_demag/simple1D.png \
+	../examples/exchange_demag/finmag_exch_density.npy ../examples/exchange_demag/finmag_demag_density.npy
 
 # The absolute path for the doc directory
 DOC_DIR = $(abspath .)
@@ -217,3 +218,6 @@ PYTHON_ROOTS = $(DOC_DIR)/../src
 
 ../examples/exchange_demag/simple1D.png:
 	cd ../examples/exchange_demag/ && PYTHONPATH=$(PYTHON_ROOTS) python simple_1D_finmag.py
+
+../examples/exchange_demag/finmag_exch_density.npy ../examples/exchange_demag/finmag_demag_density.npy:
+	cd ../examples/exchange_demag/ && make nmag
