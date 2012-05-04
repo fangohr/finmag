@@ -191,9 +191,8 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
         bemmatrix = np.zeros([dimbem,dimbem])
 
         if self.countdown == True:
-            import progressbar as pb
-            bar = pb.ProgressBar(maxval=dimbem-1, \
-                widgets=[pb.ETA(), pb.Bar('=', '[', ']'), ' ', pb.Percentage()])
+            from finmag.util.progress_bar import ProgressBar
+            bar = ProgressBar(dimbem-1)
 
         for index,dof in enumerate(self.doftionary):
             if self.countdown == True:

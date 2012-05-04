@@ -3,7 +3,7 @@ import dolfin as df
 import numpy as np
 import scipy.sparse as sp
 from scipy.sparse.linalg.dsolve import linsolve
-import progressbar as pb
+from finmag.util.progress_bar import ProgressBar
 import belement
 import belement_magpar
 import finmag.util.solid_angle_magpar as solid_angle_solver
@@ -48,8 +48,7 @@ def compute_BEM_matrix(demag):
     
     loops = (nodes_number - sum(g2b<0))*demag.bnd_faces_number + mesh.num_cells()*4
     loop_ctr = 0
-    bar = pb.ProgressBar(maxval=loops, \
-                widgets=[pb.ETA(), pb.Bar('=', '[', ']'), ' ', pb.Percentage()])
+    bar = ProgressBar(loops)
     #info_blue("Building Boundary Element Matrix")
     logger.info("Building Boundary Element Matrix")
 
