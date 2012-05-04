@@ -2,11 +2,13 @@ from dolfin import Interval
 from finmag.sim.llg import LLG
 import numpy as np
 import matplotlib.pylab as plt
-import commands
+import os, commands
+
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # run nmag
-commands.getstatusoutput("nsim simple_1D_nmag.py --clean")
-nd = np.load("nmag_hansconf.npy")
+commands.getstatusoutput("nsim %s/simple_1D_nmag.py --clean" % MODULE_DIR)
+nd = np.load("%s/nmag_hansconf.npy" % MODULE_DIR)
 
 # run finmag
 mesh = Interval(100, 0, 10e-9)
@@ -48,4 +50,5 @@ upper_axis.xaxis.tick_top()
 upper_axis.tick_params(labeltop="off")
 lower_axis.xaxis.tick_bottom()
 
-plt.show()
+#plt.show()
+plt.savefig(MODULE_DIR + "/simple1D.png")
