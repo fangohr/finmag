@@ -40,8 +40,13 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
     .. math::
 
         \\int_\\Omega \\nabla \\phi_1 \\cdot \\nabla v =
+        \\int_{\\partial \\Omega} (\\vec n \\cdot vec M) v \\mathrm{ds} -
         \\int_\\Omega (\\nabla \\cdot \\vec
         M)v \\mathrm{d}x \\qquad \\qquad (1)
+
+    .. note::
+
+        Might be a -1 error here, but I think not.
 
     This could be solved straight forward by (code-block 1)
 
@@ -190,6 +195,7 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         self.Ms = problem.Ms
         self.mesh = problem.mesh
         self.unit_length = unit_length
+        self.n = df.FacetNormal(self.mesh)
 
         # Functions and functionspace (can get a lot of this from base
         # after the interface changes.
@@ -303,15 +309,16 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
 
         # Compute phi1 on the whole domain (code-block 1, last line)
         timings.start("phi1 - product")
-        g1 = self.D*self.m.vector()
+
+        # Now I'm not sure about the boundary term here..
+        #g1 = self.D*self.m.vector()
+
         timings.startnext("phi1 - solve")
+        #self.phi1_solver.solve(self.phi1.vector(), g1)
+
+        # NOTE: The (above) computation of phi1 is equivalent to
+        g1 = df.assemble(df.dot(self.n,self.m)*self.v*df.ds - self.Ms*df.div(self.m)*self.v*df.dx)
         self.phi1_solver.solve(self.phi1.vector(), g1)
-        # NOTE: The computation of phi1 is equivalent to
-        #
-        #a = df.inner(df.grad(self.u), df.grad(self.v))*df.dx
-        #L = self.Ms*df.div(self.m)*self.v*df.dx
-        #df.solve(a==L, self.phi1)
-        #
         # but the way we have implemented it is faster,
         # because we don't have to assemble L each time.
 
@@ -341,6 +348,9 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         timings.startnext("Add phi1 and phi2")
         self.phi = self.calc_phitot(self.phi1, self.phi2)
         timings.stop("Add phi1 and phi2")
+
+    def scalar_potential(self):
+        return self.phi
 
     '''
     def solve_laplace_inside(self):
@@ -654,27 +664,19 @@ class FemBemFKSolverOld(sb.FemBemDeMagSolver):
 
 if __name__ == "__main__":
 
-    #from finmag.demag.problems.prob_fembem_testcases import MagSphere
-    #problem = MagSphere(5,1.5)
+    class Problem():
+        pass
 
-    from finmag.demag.problems.prob_base import FemBemDeMagProblem
-    from finmag.util.convert_mesh import convert_mesh
-    #mesh = df.Mesh("../../../examples/exchange_demag/bar30_30_100.xml.gz")
-    #mesh = df.Box(0,0,0,30,30,100,3,3,10)
+    problem = Problem()
     mesh = df.UnitSphere(4)
+    Ms = 1
     V = df.VectorFunctionSpace(mesh, 'Lagrange', 1)
-    Ms = 1e6
-    m = df.project(df.Constant((1, 0, 0)), V)
-    problem = FemBemDeMagProblem(mesh, m)
 
+    problem.mesh = mesh
+    problem.M = df.project(df.Constant((1, 0, 0)), V)
     problem.Ms = Ms
-    #problem.M = m
 
     demag = FemBemFKSolver(problem)
     Hd = demag.compute_field()
     Hd.shape = (3, -1)
     print np.average(Hd[0])/Ms, np.average(Hd[1])/Ms, np.average(Hd[2])/Ms
-    #demag = FemBemFKSolverOld(problem)
-    #phi = demag.solve()
-    #print demag.get_demagfield(phi).vector().array()
-    print demag.compute_energy()
