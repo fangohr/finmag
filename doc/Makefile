@@ -169,10 +169,11 @@ examples-for-doc: ../examples/macrospin/alpha-1-00.png ../examples/macrospin/alp
 	../examples/macrospin/alpha-0-02.png ../examples/time-dependent-applied-field/fittedresults.txt \
 	../examples/time-dependent-applied-field/fit.png ../examples/time-dependent-applied-field/results.png \
 	../examples/exchange_demag/exchange_demag.png ../examples/exchange_demag/exchange_energy.png \
+	../examples/exchange_demag/exchange_density.png ../examples/exchange_demag/demag_density.png \
 	../examples/exchange_demag/demag_energy.png ../examples/demag/stddev_loglog.png ../examples/demag/xvalues.png \
 	../examples/demag/errnorm_loglog.png ../examples/exchange_demag/timings/results.rst ../examples/demag/results_field.txt \
 	../src/finmag/tests/comparison/exchange/table.rst ../src/finmag/tests/comparison/anisotropy/table.rst \
-	../src/finmag/tests/comparison/demag/table.rst
+	../src/finmag/tests/comparison/demag/table.rst ../examples/exchange_demag/simple1D.png
 
 # The absolute path for the doc directory
 DOC_DIR = $(abspath .)
@@ -193,7 +194,7 @@ PYTHON_ROOTS = $(DOC_DIR)/../src
 ../examples/time-dependent-applied-field/fittedresults.txt ../examples/time-dependent-applied-field/fit.png ../examples/time-dependent-applied-field/results.png: ../examples/time-dependent-applied-field/test_appfield.py
 	cd ../examples/time-dependent-applied-field && PYTHONPATH=$(PYTHON_ROOTS) python test_appfield.py
 
-../examples/exchange_demag/exchange_demag.png ../examples/exchange_demag/exchange_energy.png ../examples/exchange_demag/demag_energy.png: ../examples/exchange_demag/test_exchange_demag.py
+../examples/exchange_demag/exchange_demag.png ../examples/exchange_demag/exchange_energy.png ../examples/exchange_demag/demag_energy.png ../examples/exchange_demag/exchange_density.png ../examples/exchange_demag/demag_density.png: ../examples/exchange_demag/test_exchange_demag.py
 	cd ../examples/exchange_demag/ && PYTHONPATH=$(PYTHON_ROOTS) python test_exchange_demag.py
 
 ../examples/demag/stddev_loglog.png ../examples/demag/xvalues.png ../examples/demag/errnorm_loglog.png: ../examples/demag/short_nmag_comp_tests2.py
@@ -213,3 +214,6 @@ PYTHON_ROOTS = $(DOC_DIR)/../src
 
 ../src/finmag/tests/comparison/demag/table.rst:
 	cd ../src/finmag/tests/comparison/demag/ && PYTHONPATH=$(PYTHON_ROOTS) python test_demag_field.py
+
+../examples/exchange_demag/simple1D.png:
+	cd ../examples/exchange_demag/ && PYTHONPATH=$(PYTHON_ROOTS) python simple_1D_finmag.py

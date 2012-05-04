@@ -39,6 +39,28 @@ while for the demag energy, the relative error is below 1e-3.
     :scale: 75
     :align: center
 
+After ten time steps, we compute the energy density through the center of the bar. Comparing the exchange energy density to both nmag and oommf, shows that the finmag implementation
+actually is closer to oommf than nmag, because the nmag curve seems to have some noice.
+
+.. image:: ../examples/exchange_demag/exchange_density.png
+    :scale: 75
+    :align: center
+
+Because of this, the relative error is a bit higher in this case. The relative error from the
+nmag solution is as high as 0.028. The following plot shows the instability of nmag's energy
+density for a simple 1D case with m = (cos(x), sin(x), 0).
+
+.. image:: ../examples/exchange_demag/simple1D.png
+    :scale: 75
+    :align: center
+
+For the demag energy density, our implementation follows the
+nmag curve closer, and out relative error is approx. 0.006.
+
+.. image:: ../examples/exchange_demag/demag_density.png
+    :scale: 75
+    :align: center
+
 Time comparisson between the nmag and finmag implementations shows the following:
 
 .. include:: ../examples/exchange_demag/timings/results.rst

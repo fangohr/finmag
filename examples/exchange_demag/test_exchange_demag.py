@@ -56,6 +56,19 @@ def run_finmag():
         E_d = llg.demag.compute_energy()
         fe.write(str(E_e) + " " + str(E_d) + "\n")
 
+        # Energy densities
+        if counter == 10:
+            exch = llg.exchange.energy_density_function()
+            demag = llg.demag.energy_density_function()
+            finmag_exch, finmag_demag = [], []
+            R = range(100)
+            for i in R:
+                finmag_exch.append(exch([15, 15, i]))
+                finmag_demag.append(demag([15, 15, i]))
+            # Store data
+            np.save("finmag_exch_density.npy", np.array(finmag_exch))
+            np.save("finmag_demag_density.npy", np.array(finmag_demag))
+
     fh.close()
     fe.close()
 
@@ -105,6 +118,8 @@ def test_compare_averages():
     p.title("Finmag vs Nmag")
     p.legend(loc='center right')
     p.savefig(MODULE_DIR + "/exchange_demag.png")
+    #p.show
+    print "Comparison of development written to exchange_demag.png"
 
 def test_compare_energies():
     ref = np.array(h.read_float_data(MODULE_DIR + "/energies_ref.txt"))
@@ -156,7 +171,81 @@ def test_compare_energies():
     p.ylabel("$\mathsf{E_{demag}}$")
     p.legend()
     p.savefig(MODULE_DIR + "/demag_energy.png")
+    #p.show()
+    print "Energy plots written to exchange_energy.png and demag_energy.png"
+
+def test_compare_energy_density():
+    """
+    After ten time steps, compute the energy density through
+    the center of the bar (seen from x and y) from z=0 to z=100,
+    and compare the results with nmag and oomf.
+
+    """
+    R = range(100)
+
+    # Run simulation only if not run before or changed since last time.
+    if not (os.path.isfile(MODULE_DIR + "/finmag_exch_density.npy")):
+        run_finmag()
+    elif (os.path.getctime(MODULE_DIR + "/finmag_exch_density.npy") <
+          os.path.getctime(os.path.abspath(__file__))):
+        run_finmag()
+    if not (os.path.isfile(MODULE_DIR + "/finmag_demag_density.npy")):
+        run_finmag()
+    elif (os.path.getctime(MODULE_DIR + "/finmag_demag_density.npy") <
+          os.path.getctime(os.path.abspath(__file__))):
+        run_finmag()
+
+    # Read finmag data
+    finmag_exch = np.load(MODULE_DIR + "/finmag_exch_density.npy")
+    finmag_demag = np.load(MODULE_DIR + "/finmag_demag_density.npy")
+
+    # Read nmag data
+    nmag_exch = [float(i) for i in open(MODULE_DIR + "/nmag_exch_Edensity.txt", "r").read().split()]
+    nmag_demag = [float(i) for i in open(MODULE_DIR + "/nmag_demag_Edensity.txt", "r").read().split()]
+
+    # Compare with nmag
+    nmag_exch = np.array(nmag_exch)
+    nmag_demag = np.array(nmag_demag)
+    rel_error_exch_nmag = np.abs(finmag_exch - nmag_exch)/np.linalg.norm(nmag_exch)
+    rel_error_demag_nmag = np.abs(finmag_demag - nmag_demag)/np.linalg.norm(nmag_demag)
+    print "Exchange energy density, max relative error from nmag:", max(rel_error_exch_nmag)
+    print "Demag energy density, max relative error from nmag:", max(rel_error_demag_nmag)
+    assert max(rel_error_exch_nmag) < 3e-2, \
+        "Exchange energy density, max relative error from nmag is %g" % max(rel_error_exch_nmag)
+    assert max(rel_error_demag_nmag) < 1e-2, \
+        "Demag energy density, max relative error from nmag is %g" % max(rel_error_demag_nmag)
+
+
+    # Read oommf data
+    oommf_exch = np.genfromtxt(MODULE_DIR + "/oommf_exch_Edensity.txt")
+    oommf_demag = np.genfromtxt(MODULE_DIR + "/oommf_demag_Edensity.txt")
+    oommf_coords = np.genfromtxt(MODULE_DIR + "/oommf_coords_z_axis.txt") * 1e9
+
+    # Compare with oomf - FIXME: doesn't work at the moment
+    #rel_error_exch_oomf = np.abs(finmag_exch - oommf_exch)/np.linalg.norm(oommf_exch)
+    #rel_error_demag_oomf = np.abs(finmag_demag - oommf_demag)/np.linalg.norm(oommf_demag)
+    #print "Rel error exch, oommf:", max(rel_error_exch_oommf)
+    #print "Rel error demag, oommf:", max(rel_error_demag_oommf)
+
+    # Plot exchange energy density
+    p.figure()
+    p.plot(R, finmag_exch, 'o-', R, nmag_exch, 'x-', oommf_coords, oommf_exch, "+-")
+    p.xlabel("nm")
+    p.title("Exchange energy density")
+    p.legend(["Finmag", "Nmag", "oommf"], loc="upper center")
+    p.savefig(MODULE_DIR + "/exchange_density.png")
+
+    # Plot demag energy density
+    p.figure()
+    p.plot(R, finmag_demag, 'o-', R, nmag_demag, 'x-', oommf_coords, oommf_demag, "+-")
+    p.xlabel("nm")
+    p.title("Demag energy density")
+    p.legend(["Finmag", "Nmag", "oommf"], loc="upper center")
+    p.savefig(MODULE_DIR + "/demag_density.png")
+    #p.show()
+    print "Energy density plots written to exchange_density.png and demag_density.png"
 
 if __name__ == '__main__':
     test_compare_averages()
     test_compare_energies()
+    test_compare_energy_density()

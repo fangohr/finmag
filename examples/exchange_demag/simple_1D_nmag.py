@@ -1,7 +1,9 @@
 import numpy as np
-import nmag
+import nmag, os
 from nmag import SI
 import nmeshlib.unidmesher as unidmesher
+
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 L = 10
 mesh_unit = SI(1e-9, "m")   # mesh unit (1 nm)
@@ -28,4 +30,4 @@ sim.load_mesh(mesh_file_name,
               unit_length=mesh_unit)
 sim.set_m(m0)
 
-np.save("nmag_hansconf.npy", sim.get_subfield("E_exch_Py"))
+np.save(MODULE_DIR + "/nmag_hansconf.npy", sim.get_subfield("E_exch_Py"))
