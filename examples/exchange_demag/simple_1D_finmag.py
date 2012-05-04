@@ -52,3 +52,4 @@ lower_axis.xaxis.tick_bottom()
 
 #plt.show()
 plt.savefig(MODULE_DIR + "/simple1D.png")
+plt.close()

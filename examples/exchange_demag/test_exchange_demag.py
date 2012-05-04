@@ -119,6 +119,7 @@ def test_compare_averages():
     p.legend(loc='center right')
     p.savefig(MODULE_DIR + "/exchange_demag.png")
     #p.show
+    p.close()
     print "Comparison of development written to exchange_demag.png"
 
 def test_compare_energies():
@@ -157,14 +158,13 @@ def test_compare_energies():
             "Max relative error in demag energy is %g" % max(rel_diff)
 
     # Plot
-    p.figure()
     p.plot(exch_nmag, 'o', mfc='w', label='Nmag')
     p.plot(exch, label='Finmag')
     p.xlabel("Time step")
     p.ylabel("$\mathsf{E_{exch}}$")
     p.legend()
     p.savefig(MODULE_DIR + "/exchange_energy.png")
-    p.figure()
+    p.close()
     p.plot(demag_nmag, 'o', mfc='w', label='Nmag')
     p.plot(demag, label='Finmag')
     p.xlabel("Time step")
@@ -172,6 +172,7 @@ def test_compare_energies():
     p.legend()
     p.savefig(MODULE_DIR + "/demag_energy.png")
     #p.show()
+    p.close()
     print "Energy plots written to exchange_energy.png and demag_energy.png"
 
 def test_compare_energy_density():
@@ -228,21 +229,21 @@ def test_compare_energy_density():
     #print "Rel error demag, oommf:", max(rel_error_demag_oommf)
 
     # Plot exchange energy density
-    p.figure()
     p.plot(R, finmag_exch, 'o-', R, nmag_exch, 'x-', oommf_coords, oommf_exch, "+-")
     p.xlabel("nm")
     p.title("Exchange energy density")
     p.legend(["Finmag", "Nmag", "oommf"], loc="upper center")
     p.savefig(MODULE_DIR + "/exchange_density.png")
+    p.close()
 
     # Plot demag energy density
-    p.figure()
     p.plot(R, finmag_demag, 'o-', R, nmag_demag, 'x-', oommf_coords, oommf_demag, "+-")
     p.xlabel("nm")
     p.title("Demag energy density")
     p.legend(["Finmag", "Nmag", "oommf"], loc="upper center")
     p.savefig(MODULE_DIR + "/demag_density.png")
     #p.show()
+    p.close()
     print "Energy density plots written to exchange_density.png and demag_density.png"
 
 if __name__ == '__main__':
