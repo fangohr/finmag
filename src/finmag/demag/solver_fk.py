@@ -317,7 +317,8 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         #self.phi1_solver.solve(self.phi1.vector(), g1)
 
         # NOTE: The (above) computation of phi1 is equivalent to
-        g1 = df.assemble(df.dot(self.n,self.m)*self.v*df.ds - self.Ms*df.div(self.m)*self.v*df.dx)
+        g1 = df.assemble(self.Ms*df.dot(self.n,self.m)*self.v*df.ds \
+                - self.Ms*df.div(self.m)*self.v*df.dx)
         self.phi1_solver.solve(self.phi1.vector(), g1)
         # but the way we have implemented it is faster,
         # because we don't have to assemble L each time.
