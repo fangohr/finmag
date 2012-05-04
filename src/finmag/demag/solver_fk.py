@@ -1,7 +1,7 @@
 from finmag.demag import solver_base as sb
 import dolfin as df
 import numpy as np
-import progressbar as pb
+from finmag.util.progress_bar import ProgressBar
 import belement
 import belement_magpar
 import finmag.util.solid_angle_magpar as solid_angle_solver
@@ -431,8 +431,7 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         # Progressbar..
         loops = (nodes_number - sum(g2b<0))*len(bfn) + mesh.num_cells()*4
         loop_ctr = 0
-        bar = pb.ProgressBar(maxval=loops, \
-                widgets=[pb.ETA(), pb.Bar('=', '[', ']'), ' ', pb.Percentage()])
+        bar = ProgressBar(loops)
         logger.info("Building Boundary Element Matrix")
 
         for i in range(nodes_number):
@@ -568,8 +567,7 @@ class FemBemFKSolverOld(sb.FemBemDeMagSolver):
         keys = doftionary.keys()
         BEM = np.zeros((n,n))
 
-        bar = pb.ProgressBar(maxval=n-1, \
-                widgets=[pb.ETA(), pb.Bar('=', '[', ']'), ' ', pb.Percentage()])
+        bar = ProgressBar(n-1)
 
         #df.info_blue("Building Boundary Element Matrix")
         for i, dof in enumerate(doftionary):

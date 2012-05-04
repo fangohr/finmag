@@ -1,4 +1,6 @@
 import logging
+import configuration
+
 # create logger
 logger = logging.getLogger(name='finmag')
 
@@ -11,9 +13,22 @@ logger = logging.getLogger(name='finmag')
 logger.setLevel(logging.INFO)
 logger.setLevel(logging.DEBUG)
 
-# create console handler and set level to info
+def parse_logging_level(s, default_value):
+    if s is None:
+        return default_value
+    try:
+        return int(s)
+    except ValueError:
+        return logging._levelNames[s]
+
+# create console handler; the logging level is read from the config file
 ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
+if configuration.get_configuration().has_section("logging"):
+    console_level = parse_logging_level(configuration.get_configuration().get("logging", "console_logging_level"), logging.DEBUG)
+else:
+    console_level = logging.DEBUG
+
+ch.setLevel(console_level)
 
 # create formatter #(some options to play with)
 #formatter = logging.Formatter('%(asctime)s-%(levelname)s: %(message)s')
