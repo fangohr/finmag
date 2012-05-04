@@ -66,8 +66,8 @@ def run_finmag():
                 finmag_exch.append(exch([15, 15, i]))
                 finmag_demag.append(demag([15, 15, i]))
             # Store data
-            np.save("finmag_exch_density.npy", np.array(finmag_exch))
-            np.save("finmag_demag_density.npy", np.array(finmag_demag))
+            np.save(MODULE_DIR + "/finmag_exch_density.npy", np.array(finmag_exch))
+            np.save(MODULE_DIR + "/finmag_demag_density.npy", np.array(finmag_demag))
 
     fh.close()
     fe.close()
