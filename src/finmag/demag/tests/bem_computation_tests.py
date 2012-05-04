@@ -80,5 +80,6 @@ class BemComputationTests(unittest.TestCase):
         c = time_counter.counter()
         while c.next():
             bem, _ = compute_bem(boundary_mesh)
-        print "BEM computation for %dx%d (%g nodes/sec): %s" % (bem.shape )
+            n = bem.shape[0]
+        print "BEM computation for %dx%d (%g nodes/sec): %s" % (n, n, c.calls_per_sec(n*n), c)
 
