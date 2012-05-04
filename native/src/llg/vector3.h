@@ -27,6 +27,8 @@ namespace finmag {
             double y() const { return v[1]; }
             double z() const { return v[2]; }
 
+            double operator[](int i) const { return v[i]; }
+
             double v[3];
         };
 
