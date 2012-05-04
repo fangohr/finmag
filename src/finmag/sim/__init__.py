@@ -1,5 +1,5 @@
 import logging
-import configuration
+from finmag.util import configuration
 
 # create logger
 logger = logging.getLogger(name='finmag')
