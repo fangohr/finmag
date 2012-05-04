@@ -3,6 +3,7 @@ import numpy as np
 import math
 import dolfin as df
 from finmag.native.llg import compute_bem_element, compute_bem, OrientedBoundaryMesh
+from finmag.util import time_counter
 
 from finmag.demag import belement_magpar
 from finmag.sim.llg import LLG
@@ -64,4 +65,20 @@ class BemComputationTests(unittest.TestCase):
         self.run_bem_computation_test(df.UnitSphere(2))
         self.run_bem_computation_test(df.UnitSphere(3))
         self.run_bem_computation_test(df.UnitSphere(4))
+        self.run_bem_computation_test(df.UnitSphere(6))
+        self.run_bem_computation_test(df.UnitCube(3,3,3))
+
+    def test_bem_perf(self):
+#        mesh = df.UnitCube(30, 30, 30)
+        mesh = df.UnitCube(10, 10, 10)
+#        bem, b2g = compute_bem(OrientedBoundaryMesh(mesh))
+        boundary_mesh = OrientedBoundaryMesh(mesh)
+        c = time_counter.counter()
+        while c.next():
+            OrientedBoundaryMesh(mesh)
+        print "Boundary mesh computation for %s: %s" % (mesh, c)
+        c = time_counter.counter()
+        while c.next():
+            bem, _ = compute_bem(boundary_mesh)
+        print "BEM computation for %dx%d (%g nodes/sec): %s" % (bem.shape )
 

@@ -17,8 +17,20 @@ namespace finmag {
         void register_dolfin_swig_converters() {
             // Register the Mesh hierarchy
             // Unfortunately, the Mesh hierarchy does not declare a virtual destructor (!)
+            // TODO: not use MPL here
             typedef boost::mpl::list<
-                dolfin::UnitSphere
+                dolfin::Box,
+                dolfin::Interval,
+                dolfin::Rectangle,
+                dolfin::SubMesh,
+                dolfin::UnitCircle,
+                dolfin::UnitCube,
+                dolfin::UnitInterval,
+                dolfin::UnitSphere,
+                dolfin::UnitSquare,
+                dolfin::UnitTetrahedron,
+                dolfin::UnitTriangle,
+                dolfin::BoundaryMesh
             >::type derived_classes;
 
             register_swig_boost_shared_ptr_hierarchy<dolfin::Mesh, derived_classes>();
