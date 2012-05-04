@@ -1115,3 +1115,30 @@ fangohr: Still testing ...
 2012-05-03 16:40:11 andersej: http://folk.uio.no/larsstor/motivationals/godisrealunlessint.jpeg
 2012-05-03 16:48:14 mb8g11: Have fun merging btw.
 2012-05-03 16:51:35 andersej: Let's see who breaks Jenkins first.
+2012-05-04 09:18:57 fangohr_: Good morning, DokosBot. Fancy a coffee?
+2012-05-04 09:20:47 nsob104: Morning Hans
+2012-05-04 09:21:46 fangohr_: Morning Neil.
+2012-05-04 09:21:51 fangohr_: I'll look into permissions now.
+2012-05-04 09:23:44 fangohr_: Do you have the path to the repository handy?
+2012-05-04 09:23:48 fangohr_: (on eta)
+2012-05-04 09:24:46 nsob104: ssh://eta.kk.soton.ac.uk//home/hg/dynamag/talks/2012-05-15-36month-Ferrara is where I cloned from
+2012-05-04 09:25:23 nsob104: and I am in the group 'dynamag' on there
+2012-05-04 09:25:29 nsob104: Hi, Anders
+2012-05-04 09:25:55 fangohr_: Neil, can you try to push again, please?
+2012-05-04 09:26:02 fangohr_: (Have given the group more rights.)
+2012-05-04 09:26:07 fangohr_: Morning Anders.
+2012-05-04 09:27:45 nsob104: Hans, it worked, thanks.  I'll head over once I have some coffee.
+2012-05-04 09:27:53 fangohr_: Okay, good. Thank you.
+2012-05-04 09:36:15 andersej: Hello, good morning to all three of you
+2012-05-04 12:21:02 SebastianS: anyone going for lunch in the next hour or so?
+2012-05-04 12:23:48 andersej: Yes! Ten minutes from now! Dmitri's also in.
+2012-05-04 12:24:21 SebastianS: okay
+2012-05-04 12:24:30 SebastianS: i'll come by your office then, as usual!
+2012-05-04 13:36:10 fangohr_: Hi folks, sandwhichs outside my office for collection if you are interested.
+2012-05-04 15:40:04 andersej: Hans, still there?
+2012-05-04 15:47:39 fangohr_: Hi Anders, yes I am.
+2012-05-04 15:47:58 andersej: May I ask you one thing in five minutes from now?
+2012-05-04 15:48:06 fangohr_: Sure.
+2012-05-04 17:02:22 fangohr_: Over and out -- see you in two weeks :)
+2012-05-04 18:01:07 andersej: Yes, see you! Have a nice time!
+2012-05-04 18:43:46 andersej: Okay DokosBot, I'm leaving now. Have a nice weekend, see you next week!
