@@ -21,47 +21,71 @@ namespace finmag { namespace llg {
     namespace vector = finmag::vector;
 
     namespace {
-    // Computes the Lindholm formula for node 1 as the selected node
-        double lindholm_L(const vector::vector3 &R, const vector::vector3 &R1, const vector::vector3 &R2, const vector::vector3 &R3) {
-            vector::vector3 r1(R1, R);
-            vector::vector3 r2(R2, R);
-            vector::vector3 r3(R3, R);
+        // Computes the Lindholm formula as well as the solid angle for the specified points
+        std::pair<vector::vector3, double>
+        lindholm_L(const vector::vector3 &R, const vector::vector3 &R1, const vector::vector3 &R2, const vector::vector3 &R3) {
+            using namespace vector;
+
+            vector3 r1(R1, R);
+            vector3 r2(R2, R);
+            vector3 r3(R3, R);
 
             // s_i is the length of the i'th side
             // xi_hat is the unit vector for the i'th side
-            double s_1 = (r2 - r1).length(); vector::vector3 xi_hat_1  = (r2 - r1).normalized();
-            double s_2 = (r3 - r2).length(); vector::vector3 xi_hat_2  = (r3 - r2).normalized();
-            double s_3 = (r1 - r3).length(); vector::vector3 xi_hat_3  = (r1 - r3).normalized();
+            double s_1 = (r2 - r1).length(); vector3 xi_hat_1  = (r2 - r1).normalized();
+            double s_2 = (r3 - r2).length(); vector3 xi_hat_2  = (r3 - r2).normalized();
+            double s_3 = (r1 - r3).length(); vector3 xi_hat_3  = (r1 - r3).normalized();
             // A_T is the area of the triangle
-            double A_T = vector::triangle_area(r1, r2, r3);
+            double A_T = triangle_area(r1, r2, r3);
             // zeta_hat is the vector normal to the triangle
-            vector::vector3 zeta_hat = vector::cross(r2-r1, r3-r1).normalized();
+            vector3 zeta_hat = cross(r2-r1, r3-r1).normalized();
             // zeta is the distance from R to the triangle plane
-            double zeta = vector::dot(zeta_hat, r1);
+            double zeta = dot(zeta_hat, r1);
 
             // eta_i is the distance to the i'th side projected in the triangle plane
-            vector::vector3 eta_hat_2 = vector::cross(zeta_hat, xi_hat_2);
-            double eta_2 = vector::dot(eta_hat_2, r2);
+            vector3 eta_hat_1 = cross(zeta_hat, xi_hat_1);
+            vector3 eta_hat_2 = cross(zeta_hat, xi_hat_2);
+            vector3 eta_hat_3 = cross(zeta_hat, xi_hat_3);
+            double eta_1 = dot(eta_hat_1, r1);
+            double eta_2 = dot(eta_hat_2, r2);
+            double eta_3 = dot(eta_hat_3, r1);
 
             // gamma_i_j is the cosine angle between the (i+1)'th and j'th side
-            vector::vector3 gamma_1(
-                vector::dot(xi_hat_2, xi_hat_1),
-                vector::dot(xi_hat_2, xi_hat_2),
-                vector::dot(xi_hat_2, xi_hat_3)
+            vector3 gamma_1(
+                dot(xi_hat_2, xi_hat_1),
+                dot(xi_hat_2, xi_hat_2),
+                dot(xi_hat_2, xi_hat_3)
+            );
+            vector3 gamma_2(
+                dot(xi_hat_3, xi_hat_1),
+                dot(xi_hat_3, xi_hat_2),
+                dot(xi_hat_3, xi_hat_3)
+            );
+            vector3 gamma_3(
+                dot(xi_hat_1, xi_hat_1),
+                dot(xi_hat_1, xi_hat_2),
+                dot(xi_hat_1, xi_hat_3)
             );
 
             // P is an auxiliary variable
             double r1_len = r1.length(), r2_len = r2.length(), r3_len = r3.length();
-            vector::vector3 P(
+            vector3 P(
                 log((r1_len + r2_len + s_1) / (r1_len + r2_len - s_1 + 1e-300)),
                 log((r2_len + r3_len + s_2) / (r2_len + r3_len - s_2 + 1e-300)),
                 log((r3_len + r1_len + s_3) / (r3_len + r1_len - s_3 + 1e-300))
             );
 
             // Sigma_T is the solid angle subtended by the triangle as seen from R
-            double Sigma_T = vector::solid_angle(r1, r2, r3);
+            double Sigma_T = solid_angle(r1, r2, r3);
 
-            return s_2/A_T/(8*M_PI) * (eta_2 * Sigma_T - zeta * vector::dot(gamma_1, P));
+            return std::make_pair(
+                vector3(
+                    s_2/A_T/(8*M_PI) * (eta_2 * Sigma_T - zeta * dot(gamma_1, P)),
+                    s_3/A_T/(8*M_PI) * (eta_3 * Sigma_T - zeta * dot(gamma_2, P)),
+                    s_1/A_T/(8*M_PI) * (eta_1 * Sigma_T - zeta * dot(gamma_3, P))
+                ),
+                Sigma_T
+            );
         }
     }
 
@@ -101,12 +125,13 @@ namespace finmag { namespace llg {
                 // Add the contribution of this triangle to B[i, j]
                 // TODO: We are computing a lot of things 3 times here, maybe return a tuple from lindholm_L?
                 // We also compute the solid angle twice...
-                bem(i)[j_1] += lindholm_L(R, R1, R2, R3);
-                bem(i)[j_2] += lindholm_L(R, R2, R3, R1);
-                bem(i)[j_3] += lindholm_L(R, R3, R1, R2);
+                std::pair<vector::vector3, double> L = lindholm_L(R, R1, R2, R3);
+                bem(i)[j_1] += L.first[0];
+                bem(i)[j_2] += L.first[1];
+                bem(i)[j_3] += L.first[2];
 
                 // Add the solid angle term
-                bem(i)[i] += vector::solid_angle(R, R1, R2, R3)*(1./(4.*M_PI));
+                bem(i)[i] += L.second*(1./(4.*M_PI));
             }
         }
 
@@ -125,9 +150,10 @@ namespace finmag { namespace llg {
 
         vector3 R(0., 0., 0.);
         np_array<double> res(3);
-        res.data()[0] = lindholm_L(R, vector3(r1.data()), vector3(r2.data()), vector3(r3.data()));
-        res.data()[1] = lindholm_L(R, vector3(r2.data()), vector3(r3.data()), vector3(r1.data()));
-        res.data()[2] = lindholm_L(R, vector3(r3.data()), vector3(r1.data()), vector3(r2.data()));
+        std::pair<vector::vector3, double> L = lindholm_L(R, vector3(r1.data()), vector3(r2.data()), vector3(r3.data()));
+        res.data()[0] = L.first[0];
+        res.data()[1] = L.first[1];
+        res.data()[2] = L.first[2];
         return res;
     }
 
