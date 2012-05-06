@@ -2,6 +2,7 @@ import unittest
 import numpy as np
 import math
 import dolfin as df
+import os
 from finmag.native.llg import compute_bem_element, compute_bem, OrientedBoundaryMesh
 from finmag.util import time_counter
 
@@ -82,7 +83,8 @@ class BemComputationTests(unittest.TestCase):
         print "BEM computation for %dx%d (%.2f Mnodes/sec): %s" % (n, n, c.calls_per_sec(n*n/1e6), c)
 
     def test_bem_netgen(self):
-        netgen_mesh = df.Mesh("bem_netgen_test_mesh.xml.gz")
+        module_dir = os.path.dirname(os.path.abspath(__file__))
+        netgen_mesh = df.Mesh(os.path.join(module_dir, "bem_netgen_test_mesh.xml.gz"))
         bem, b2g_map = compute_bem(OrientedBoundaryMesh(netgen_mesh))
 
 
