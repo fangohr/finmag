@@ -151,6 +151,8 @@ namespace finmag {
 
 //            printf("registering %s\n", get_type_name<object_type>().c_str());
             boost::mpl::for_each<wrapped_derived_classes>(derived_class_shared_ptr_initialiser<BaseClass>());
+            // TODO: not use the derived class converter here (?)
+            swig_shared_ptr_derived_class_converter<BaseClass, BaseClass>::register_converter();
         }
 
         template<class DataType>

@@ -83,3 +83,8 @@ class BemComputationTests(unittest.TestCase):
             n = bem.shape[0]
         print "BEM computation for %dx%d (%g nodes/sec): %s" % (n, n, c.calls_per_sec(n*n), c)
 
+    def test_bem_netgen(self):
+        netgen_mesh = df.Mesh("bem_netgen_test_mesh.xml.gz")
+        bem, b2g_map = compute_bem(OrientedBoundaryMesh(netgen_mesh))
+
+
