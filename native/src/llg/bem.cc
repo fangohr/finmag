@@ -104,34 +104,35 @@ namespace finmag { namespace llg {
         // compute the BEM
         auto &geom = bm.geometry();
 
-        // TODO: make this parallel
-        // loop over all triangles on the surface mesh
-        for (df::CellIterator c(bm); !c.end(); ++c) {
-            // The cell must be a triangle
-            ASSERT(c->num_entities(0) == 3);
-            // Get the 3 vertices
-            int j_1 = c->entities(0)[0];
-            int j_2 = c->entities(0)[1];
-            int j_3 = c->entities(0)[2];
-            vector::vector3 R1(geom.point(j_1));
-            vector::vector3 R2(geom.point(j_2));
-            vector::vector3 R3(geom.point(j_3));
+        // Loop through vertices of the mesh
+        int n_vertices = bm.num_vertices();
+        #pragma omp parallel for schedule(guided)
+        for (int i = 0; i < n_vertices; i++) {
+            vector::vector3 R(geom.point(i));
 
-            // Loop through vertices of the mesh
-            for (df::VertexIterator v_i(bm); !v_i.end(); ++v_i) {
-                int i = v_i->index();
-                vector::vector3 R(*v_i);
+            double *bem_row = bem(i);
+
+            // loop over all triangles on the surface mesh
+            for (df::CellIterator c(bm); !c.end(); ++c) {
+                // The cell must be a triangle
+                if (c->num_entities(0) != 3) throw std::runtime_error("BEM computation: all cells in the boundary mesh must be triangles");
+
+                // Get the 3 vertices
+                int j_1 = c->entities(0)[0];
+                int j_2 = c->entities(0)[1];
+                int j_3 = c->entities(0)[2];
+                vector::vector3 R1(geom.point(j_1));
+                vector::vector3 R2(geom.point(j_2));
+                vector::vector3 R3(geom.point(j_3));
 
                 // Add the contribution of this triangle to B[i, j]
-                // TODO: We are computing a lot of things 3 times here, maybe return a tuple from lindholm_L?
-                // We also compute the solid angle twice...
                 std::pair<vector::vector3, double> L = lindholm_L(R, R1, R2, R3);
-                bem(i)[j_1] += L.first[0];
-                bem(i)[j_2] += L.first[1];
-                bem(i)[j_3] += L.first[2];
+                bem_row[j_1] += L.first[0];
+                bem_row[j_2] += L.first[1];
+                bem_row[j_3] += L.first[2];
 
                 // Add the solid angle term
-                bem(i)[i] += L.second*(1./(4.*M_PI));
+                bem_row[i] += L.second*(1./(4.*M_PI));
             }
         }
 
@@ -141,6 +142,7 @@ namespace finmag { namespace llg {
         return bp::make_tuple(bem, b2g_map);
     }
 
+    // This function is only used for testing; use compute_bem to compute the BEM itself instead
     np_array<double> compute_bem_element(np_array<double> r1, np_array<double> r2, np_array<double> r3) {
         r1.check_shape(3, "compute_bem_element: r1");
         r2.check_shape(3, "compute_bem_element: r2");
