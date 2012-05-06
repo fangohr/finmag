@@ -69,9 +69,7 @@ class BemComputationTests(unittest.TestCase):
         self.run_bem_computation_test(df.UnitCube(3,3,3))
 
     def test_bem_perf(self):
-#        mesh = df.UnitCube(30, 30, 30)
-        mesh = df.UnitCube(10, 10, 10)
-#        bem, b2g = compute_bem(OrientedBoundaryMesh(mesh))
+        mesh = df.UnitCube(15, 15, 15)
         boundary_mesh = OrientedBoundaryMesh(mesh)
         c = time_counter.counter()
         while c.next():
@@ -81,7 +79,7 @@ class BemComputationTests(unittest.TestCase):
         while c.next():
             bem, _ = compute_bem(boundary_mesh)
             n = bem.shape[0]
-        print "BEM computation for %dx%d (%g nodes/sec): %s" % (n, n, c.calls_per_sec(n*n), c)
+        print "BEM computation for %dx%d (%.2f Mnodes/sec): %s" % (n, n, c.calls_per_sec(n*n/1e6), c)
 
     def test_bem_netgen(self):
         netgen_mesh = df.Mesh("bem_netgen_test_mesh.xml.gz")
