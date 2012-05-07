@@ -1,10 +1,12 @@
 import numpy as np
 import dolfin as df
 import logging
-logger=logging.getLogger('finmag')
 from finmag.util.timings import timings
+from energy_base import EnergyBase
 
-class Exchange(object):
+logger=logging.getLogger('finmag')
+
+class Exchange(EnergyBase):
     """
     Compute the exchange field.
 
@@ -13,10 +15,6 @@ class Exchange(object):
         E_{\\text{exch}} = \\int_\\Omega A (\\nabla M)^2  dx
         
     *Arguments*
-        V 
-            a Dolfin VectorFunctionSpace object.
-        M 
-            the Dolfin object representing the magnetisation
         C 
             the exchange constant
         method
@@ -50,12 +48,13 @@ class Exchange(object):
             m    = 1e-8
             n    = 5
             mesh = Box(0, m, 0, m, 0, m, n, n, n)
-            
-            V  = VectorFunctionSpace(mesh, "Lagrange", 1)
+        
+            S3  = VectorFunctionSpace(mesh, "Lagrange", 1)
             C  = 1.3e-11 # J/m exchange constant
             M  = project(Constant((Ms, 0, 0)), V) # Initial magnetisation
 
-            exchange = Exchange(V, M, C)
+            exchange = Exchange(C, Ms)
+            exchange.setup(S3, M)
 
             # Print energy
             print exchange.compute_energy()
@@ -68,63 +67,65 @@ class Exchange(object):
             H_exch_np = exchange_np.compute_field()
             
     """
-
-    def __init__(self, V, M, C, Ms, method="box-matrix-petsc", unit_length=1):
-        logger.info("Exchange(): method = %s" % method)
-        timings.start('Exchange-init')
-       
-        self.V = V
-        self.unit_length = unit_length #need them in compute_energy
-        mu0 = 4 * np.pi * 10**-7 # Vs/(Am)
-        self.exchange_factor = df.Constant(1 * C / (mu0 * Ms * unit_length**2))
-        self.method = method
-        self.M = M # keep reference to M
+    def __init__(self, C, Ms, method="box-matrix-petsc"):
+        logger.info("Creating Exchange object.")
+        
+        self.C = C
         self.Ms = Ms
-        self.mu0 = mu0
-
-        self.v = df.TestFunction(V)
-        self.E = self.exchange_factor * df.inner(df.grad(M), df.grad(M)) * df.dx
-        self.dE_dM = -1*df.derivative(self.E, M, self.v)
         self.method = method
-        self.vol = df.assemble(df.dot(self.v, df.Constant([1,1,1])) * df.dx).array()
-        self.dim = V.mesh().topology().dim()
+      
+    def setup(self, S3, M, unit_length=1): 
+        timings.start('Exchange-setup')
+
+        self.S3 = S3
+        self.M = M # keep reference to M
+        self.unit_length = unit_length
+
+        self.mu0 = 4 * np.pi * 10**-7 # Vs/(Am)
+        self.exchange_factor = df.Constant(1 * self.C / (self.mu0 * self.Ms * self.unit_length**2))
+
+        self.v = df.TestFunction(S3)
+        self.E = self.exchange_factor * df.inner(df.grad(M), df.grad(M)) * df.dx
+        self.dE_dM = -1 * df.derivative(self.E, M, self.v)
+        self.vol = df.assemble(df.dot(self.v, df.Constant([1, 1, 1])) * df.dx).array()
+        self.dim = S3.mesh().topology().dim()
 
         # Needed for energy density
-        FS = df.FunctionSpace(V.mesh(), "CG", 1)
-        w = df.TestFunction(FS)
-        self.nodal_vol = df.assemble(w*df.dx, mesh=V.mesh()).array() \
+        S1 = df.FunctionSpace(S3.mesh(), "CG", 1)
+        w = df.TestFunction(S1)
+        self.nodal_vol = df.assemble(w * df.dx, mesh=S3.mesh()).array() \
                 * unit_length**self.dim
         self.nodal_E = df.dot(self.exchange_factor \
-                * df.inner(df.grad(M), df.grad(M)), w)*df.dx
+                * df.inner(df.grad(M), df.grad(M)), w) * df.dx
 
         # This is only needed if we want the energy density
         # as a df.Function, in order to e.g. probe.
-        self.ED = df.Function(FS)
+        self.ED = df.Function(S1)
 
         # Don't know if this is needed
-        self.total_vol = df.assemble(df.Constant(1)*df.dx, mesh=V.mesh()) \
+        self.total_vol = df.assemble(df.Constant(1) * df.dx, mesh=S3.mesh()) \
                 * unit_length**self.dim
 
-
-        if method=='box-assemble':
+        if self.method=='box-assemble':
             self.__compute_field = self.__compute_field_assemble
-        elif method == 'box-matrix-numpy':
+        elif self.method == 'box-matrix-numpy':
             self.__setup_field_numpy()
             self.__compute_field = self.__compute_field_numpy
-        elif method == 'box-matrix-petsc':
+        elif self.method == 'box-matrix-petsc':
             self.__setup_field_petsc()
             self.__compute_field = self.__compute_field_petsc
-        elif method=='project':
+        elif self.method=='project':
             self.__setup_field_project()
             self.__compute_field = self.__compute_field_project
         else:
+            print "Desired method was {}.".format(self.method)
             raise NotImplementedError("""Only methods currently implemented are
                                     * 'box-assemble', 
                                     * 'box-matrix-numpy',
                                     * 'box-matrix-petsc'  
                                     * 'project'""")
 
-        timings.stop('Exchange-init')
+        timings.stop('Exchange-setup')
 
     def compute_field(self):
         """
@@ -150,9 +151,7 @@ class Exchange(object):
 
         """
         timings.start('Exchange-energy')
-        E=df.assemble(self.E)*self.unit_length**self.dim*self.Ms*self.mu0
-        #do we need to take this to the power of 2 in a 2d mesh instead
-        #of 3 for 3d mesh.
+        E = df.assemble(self.E) * self.unit_length**self.dim * self.Ms * self.mu0
         timings.stop('Exchange-energy')
         return E
 
@@ -172,7 +171,7 @@ class Exchange(object):
 
         """
         nodal_E = df.assemble(self.nodal_E).array() \
-                * self.unit_length**self.dim*self.Ms*self.mu0
+                * self.unit_length**self.dim * self.Ms * self.mu0
         return nodal_E/self.nodal_vol
 
     def energy_density_function(self):
@@ -228,7 +227,7 @@ class Exchange(object):
 
     def __compute_field_numpy(self):
         Mvec = self.M.vector().array()
-        H_ex = np.dot(self.g,Mvec)
+        H_ex = np.dot(self.g, Mvec)
         return H_ex/self.vol
 
     def __compute_field_petsc(self):
