@@ -13,3 +13,11 @@ _parser.read(CONFIGURATION_FILES)
 
 def get_configuration():
     return _parser
+
+def get_config_option(section, name, default_value=None):
+    try:
+        return get_configuration().get(section, name)
+    except configparser.NoOptionError:
+        return default_value
+    except configparser.NoSectionError:
+        return default_value
