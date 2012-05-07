@@ -12,7 +12,7 @@ values = phi.vector().array()
 
 # Set up the visualisation
 figure = mlab.figure(bgcolor=(1, 1, 1), fgcolor=(0, 0, 0))
-# Use unconnected datapoints and scalar_scatter and interpolate using a delaynay mesh
+# Use unconnected datapoints and scalar_scatter and interpolate using a delaunay mesh
 src = mlab.pipeline.scalar_scatter(x, y, z, values)
 field = mlab.pipeline.delaunay3d(src)
 # Make the contour plot

@@ -112,13 +112,13 @@ def compute_scalar_potential_native_gcr(mesh, m_expr=df.Constant([1, 0, 0]), Ms=
     # Compute the BEM
     boundary_mesh = OrientedBoundaryMesh(mesh)
     bem, b2g = compute_bem_gcr(boundary_mesh)
-    # Compute the surface monopole density with something like the box method
-    # This is might be wildly inaccurate for geometries with corners,
+    # Compute the surface monopole density with the box method on the mesh boundary
+    # This is might be somewhat inaccurate for geometries with corners,
     # but what else can we do apart from making BEM depend both on M
     # and phi thus using 4x as much RAM
-    # P.S. looks like this is inaccurate since this does not work...
-    # How can I test this?
-    q = df.assemble(Ms*df.dot(n, -m + df.grad(phi1))*v/fa*df.ds, mesh=mesh).array()
+    q_dot_v = df.assemble(Ms*df.dot(n, -m + df.grad(phi1))*v*df.ds, mesh=mesh).array()
+    surface_node_areas = df.assemble(v*df.ds, mesh=mesh).array()+1e-300
+    q = q_dot_v/surface_node_areas
     # Compute phi2 on boundary using the BEM matrix
     phi2_boundary = np.dot(bem, q[b2g])
     # Map phi2 back to global space
@@ -214,8 +214,6 @@ class BemComputationTests(unittest.TestCase):
         error = df.errornorm(phi_a, phi_b, mesh=mesh)
         message = "Method: %s, mesh: %s, m: %s, error: %8g" % (method_name, mesh, m_expr, error)
         print message
-#        print phi_a.vector().array()
-#        print phi_b.vector().array()
         self.assertAlmostEqual(error, 0, delta=tol, msg="Error is above threshold %g, %s" % (tol, message))
 
     def test_compute_scalar_potential_fk(self):
@@ -227,14 +225,16 @@ class BemComputationTests(unittest.TestCase):
         self.run_demag_computation_test(MagSphere(1, 0.25).mesh, m1, compute_scalar_potential_native_fk, "native, FK")
         self.run_demag_computation_test(MagSphere(1, 0.25).mesh, m2, compute_scalar_potential_native_fk, "native, FK")
 
-    def atest_compute_scalar_potential_gcr(self):
+    def test_compute_scalar_potential_gcr(self):
         m1 = df.Constant([1, 0, 0])
         m2 = df.Expression(["x[0]*x[1]+3", "x[2]+5", "x[1]+7"])
-        self.run_demag_computation_test(MagSphere(1, 0.1).mesh, m1, compute_scalar_potential_native_gcr, "native, GCR", ref=compute_scalar_potential_native_fk)
-        for k in xrange(5,10+1):
-#            self.run_demag_computation_test(df.UnitCube(k,k,k), m1, compute_scalar_potential_native_gcr, "native, GCR", ref=compute_scalar_potential_native_fk)
-            self.run_demag_computation_test(df.UnitSphere(k), m1, compute_scalar_potential_native_gcr, "native, GCR", ref=compute_scalar_potential_native_fk)
-#            self.run_demag_computation_test(df.UnitSphere(k), m2, compute_scalar_potential_native_gcr, "native, GCR")
+        tol = 1e-2
+        self.run_demag_computation_test(MagSphere(1, 0.1).mesh, m1, compute_scalar_potential_native_gcr, "native, GCR", ref=compute_scalar_potential_native_fk, tol=tol)
+        for k in xrange(3,10+1,2):
+            self.run_demag_computation_test(df.UnitCube(k,k,k), m1, compute_scalar_potential_native_gcr, "native, GCR, cube", tol=tol, ref=compute_scalar_potential_native_fk)
+            self.run_demag_computation_test(df.UnitCube(k,k,k), m2, compute_scalar_potential_native_gcr, "native, GCR, cube", tol=tol, ref=compute_scalar_potential_native_fk)
+            self.run_demag_computation_test(MagSphere(1, 1./k).mesh, m1, compute_scalar_potential_native_gcr, "native, GCR, sphere", tol=tol, ref=compute_scalar_potential_native_fk)
+            self.run_demag_computation_test(MagSphere(1, 1./k).mesh, m2, compute_scalar_potential_native_gcr, "native, GCR, sphere", tol=tol, ref=compute_scalar_potential_native_fk)
 
     def run_symmetry_test(self, formula):
         func = globals()[formula]
@@ -282,4 +282,10 @@ class BemComputationTests(unittest.TestCase):
             L2 = differentiate_fd(f, 0)
             self.assertAlmostEqual(np.max(np.abs(L1 - L2)), 0, delta=1e-10)
 
+    def test_facet_normal_direction(self):
+        mesh = df.UnitCube(1,1,1)
+        field = df.Expression(["x[0]", "x[1]", "x[2]"])
+        n = df.FacetNormal(mesh)
+        # Divergence of R is 3, the volume of the unit cube is 1 so we divide by 3
+        print "Normal: +1=outward, -1=inward:", df.assemble(df.dot(field, n) * df.ds, mesh=mesh) / 3.
 

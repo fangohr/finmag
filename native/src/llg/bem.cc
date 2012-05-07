@@ -159,9 +159,12 @@ namespace finmag { namespace llg {
 
                 // Add the contribution of this triangle to B[i, j]
                 std::pair<vector::vector3, double> L = lindholm_formula<ComputeDoubleLayerPotential>(R, R1, R2, R3);
-                bem_row[j_1] += L.first[0];
-                bem_row[j_2] += L.first[1];
-                bem_row[j_3] += L.first[2];
+                // We have to change sign for the single layer potential
+                // since \int 1/|R-r| has a negative normal derivative across the boundary
+                double factor = ComputeDoubleLayerPotential ? 1 : -1;
+                bem_row[j_1] += factor*L.first[0];
+                bem_row[j_2] += factor*L.first[1];
+                bem_row[j_3] += factor*L.first[2];
 
                 if (ComputeDoubleLayerPotential) {
                     // Add the solid angle term
