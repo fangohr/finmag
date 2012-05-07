@@ -332,7 +332,7 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
 
         # Compute phi2 on the boundary, eq. (3)
         timings.startnext("Compute phi2 on boundary")
-        Phi2 = np.dot(self.bem, Phi1)
+        Phi2 = np.dot(self.bem, Phi1.array())
         self.phi2.vector()[self.b2g_map[:]] = Phi2
 
         # Compute Laplace's equation inside the domain,
