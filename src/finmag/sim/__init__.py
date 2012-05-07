@@ -1,5 +1,16 @@
 import logging
 from finmag.util import configuration
+import dolfin as df
+
+_DOLFIN_LOG_LEVELS = {
+    "DEBUG": df.DEBUG,
+    "INFO": df.INFO,
+    "WARN": df.WARNING,
+    "WARNING": df.WARNING,
+    "ERROR": df.ERROR,
+    "CRITICAL": df.CRITICAL,
+    "PROGRESS": df.PROGRESS,
+}
 
 # create logger
 logger = logging.getLogger(name='finmag')
@@ -13,22 +24,23 @@ logger = logging.getLogger(name='finmag')
 logger.setLevel(logging.INFO)
 logger.setLevel(logging.DEBUG)
 
-def parse_logging_level(s, default_value):
+def parse_logging_level(s, values=logging._levelNames):
     if s is None:
-        return default_value
+        return s
     try:
         return int(s)
     except ValueError:
-        return logging._levelNames[s]
+        return values[s]
 
 # create console handler; the logging level is read from the config file
 ch = logging.StreamHandler()
-if configuration.get_configuration().has_section("logging"):
-    console_level = parse_logging_level(configuration.get_configuration().get("logging", "console_logging_level"), logging.DEBUG)
-else:
-    console_level = logging.DEBUG
 
+# Read the logging settings from the configuration file
+console_level = parse_logging_level(configuration.get_config_option("logging", "console_logging_level", logging.DEBUG))
 ch.setLevel(console_level)
+dolfin_level = parse_logging_level(configuration.get_config_option("logging", "dolfin_logging_level"), _DOLFIN_LOG_LEVELS)
+if dolfin_level is not None:
+    df.set_log_level(dolfin_level)
 
 # create formatter #(some options to play with)
 #formatter = logging.Formatter('%(asctime)s-%(levelname)s: %(message)s')
