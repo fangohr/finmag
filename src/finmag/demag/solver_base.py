@@ -100,9 +100,7 @@ class FemBemDeMagSolver(DeMagSolver):
         # Store the computed boundary element matrix
         self.bem = None
 
-        timings.start("phi1: build poisson matrix")
         self.build_poisson_matrix()
-        timings.stop("phi1: build poisson matrix")
 
         self.laplace_zeros = Function(self.V).vector()
         self.laplace_solver = KrylovSolver()
@@ -110,12 +108,8 @@ class FemBemDeMagSolver(DeMagSolver):
 
 
         #build the boundary data (normals and coordinates)
-        timings.start("Build doftionary stuff")
         self.build_boundary_data()
-        timings.stop("Build doftionary stuff")
-        timings.start("Build C-restrict to")
         self.build_crestrict_to()
-        timings.stop("Build C-restrict to")
 
     def build_crestrict_to(self):
         #Create the c++ function for restrict_to

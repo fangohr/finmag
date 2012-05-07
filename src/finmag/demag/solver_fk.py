@@ -1,14 +1,10 @@
-from finmag.demag import solver_base as sb
-import dolfin as df
-import numpy as np
-from finmag.util.progress_bar import ProgressBar
-import belement
-import belement_magpar
-import finmag.util.solid_angle_magpar as solid_angle_solver
-compute_belement=belement_magpar.return_bele_magpar()
-compute_solid_angle=solid_angle_solver.return_csa_magpar()
 import logging
+import numpy as np
+import dolfin as df
+from finmag.demag import solver_base as sb
 from finmag.util.timings import timings
+from finmag.util.progress_bar import ProgressBar
+from finmag.native.llg import OrientedBoundaryMesh, compute_bem_fk
 
 logger = logging.getLogger(name='finmag')
 
@@ -98,12 +94,11 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         \\Phi_2 = \\mathbf{B} \\cdot \\Phi_1, \\qquad \\qquad (3)
 
     with :math:`\\Phi_1` as the vector of elements from :math:`\\phi_1` which
-    is on the boundary. These are found by the 'restrict_to' function written
-    in C-code.
+    is on the boundary. These are found by the the global-to-boundary mapping
 
     .. code-block:: python
 
-        Phi1 = self.restrict_to(self.phi1.vector())
+        Phi1 = self.phi1.vector().array()[g2b_map]
 
     The elements of the boundary element matrix
     :math:`\\mathbf{B}` are given by
@@ -117,11 +112,6 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
 
     Here, :math:`\\psi` is a set of basis functions and
     :math:`\\Omega(\\vec R)` denotes the solid angle.
-
-    .. note::
-
-        When our own boundary element matrix is implemented, write
-        something about it here.
 
     Having both :math:`\\Phi_1` and :math:`\\mathbf{B}`,
     we use numpy.dot to compute the dot product.
@@ -139,7 +129,7 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
 
     .. code-block:: python
 
-        self.phi2.vector()[self.bdofs[:]] = self.Phi2[:]
+        self.phi2.vector().array()[g2b_map] = self.Phi2
 
     And this can now be applied to DirichletBC to create boundary
     conditions. Remember that A is our previously assembled Poisson matrix,
@@ -171,7 +161,7 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
             the saturation magnetisation
         unit_length
             the scale of the mesh, defaults to 1.
-        method
+        project_method
             possible methods are
                 * 'magpar'
                 * 'project'
@@ -186,9 +176,16 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         See the exchange_demag example.
 
     """
-    def __init__(self, problem, degree=1, element="CG", method='magpar', unit_length=1):
-        timings.start("FKSolver init first part")
+    def __init__(self, problem, degree=1, element="CG", project_method='magpar', unit_length=1):
+        timings.start("FKSolver init")
         super(FemBemFKSolver, self).__init__(problem, degree, element=element)
+
+        # Solver parameters
+        #df.parameters["linear_algebra_backend"] = "PETSc"
+        #self.solver = "cg"
+        #self.preconditioner = "ilu"
+        self.phi1_solver = df.KrylovSolver(self.poisson_matrix)
+        self.phi1_solver.parameters["preconditioner"]["same_nonzero_pattern"] = True
 
         # Data
         self.m = self.M
@@ -196,38 +193,41 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         self.mesh = problem.mesh
         self.unit_length = unit_length
         self.n = df.FacetNormal(self.mesh)
+        self.mu0 = np.pi*4e-7 # Vs/(Am)
 
         # Functions and functionspace (can get a lot of this from base
-        # after the interface changes.
+        # after the interface changes).
         self.W = df.VectorFunctionSpace(self.mesh, element, degree, dim=3)
         self.w = df.TrialFunction(self.W)
         self.vv = df.TestFunction(self.W)
         self.phi1 = df.Function(self.V)
         self.phi2 = df.Function(self.V)
-        self.method = method
-        timings.stop("FKSolver init first part")
+        self.H_demag = df.Function(self.W)
+        self.method = project_method
 
-        # Build stuff that doesn't change through time
-        self.__build_matrices()
-        if method == 'magpar':
+        # Eq (1) and code-block 2 - two first lines.
+        b = self.Ms*df.inner(self.w, df.grad(self.v))*df.dx
+        self.D = df.assemble(b)
+
+        # Needed for energy density computation
+        self.nodal_vol = df.assemble(self.v*df.dx, mesh=self.mesh).array()
+        self.ED = df.Function(self.V)
+
+        if self.method == 'magpar':
+            timings.startnext("Setup field magpar method")
             self.__setup_field_magpar()
             self.__compute_field = self.__compute_field_magpar
-        elif method == 'project':
+        elif self.method == 'project':
             self.__compute_field = self.__compute_field_project
         else:
             raise NotImplementedError("""Only methods currently implemented are
                                     * 'magpar',
                                     * 'project'""")
 
-        # I think these are the fastest solvers I could find today.
-        self.phi1_solver = df.KrylovSolver(self.poisson_matrix)
-        #self.phi2_solver = df.KrylovSolver()
-        self.phi1_solver.parameters["preconditioner"]["same_nonzero_pattern"] = True
-        #self.phi2_solver.parameters["preconditioner"]["same_nonzero_pattern"] = True
-
-        self.nodal_vol = df.assemble(self.v*df.dx, mesh=self.mesh).array()
-        self.ED = df.Function(self.V)
-        self.H_demag = df.Function(self.W)
+        # Compute boundary element matrix and global-to-boundary mapping
+        timings.startnext("Build boundary element matrix")
+        self.bem, self.b2g_map = compute_bem_fk(OrientedBoundaryMesh(self.mesh))
+        timings.stop("Build boundary element matrix")
 
 
     def compute_energy(self):
@@ -244,10 +244,8 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
                 The demag energy.
 
         """
-        H_demag = df.Function(self.W)
-        H_demag.vector()[:] = self.compute_field()
-        mu0 = 4 * np.pi * 10**-7 # Vs/(Am)
-        E = -0.5*mu0*df.dot(H_demag, self.m*self.Ms)*df.dx
+        self.H_demag.vector()[:] = self.compute_field()
+        E = -0.5*self.mu0*df.dot(self.H_demag, self.m*self.Ms)*df.dx
         return df.assemble(E, mesh=self.mesh)*\
                 self.unit_length**self.mesh.topology().dim()
 
@@ -267,8 +265,7 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
 
         """
         self.H_demag.vector()[:] = self.compute_field()
-        mu0 = 4*np.pi*10**-7 # Vs/(Am)
-        E = df.dot(-0.5*mu0*df.dot(self.H_demag, self.m*self.Ms), self.v)*df.dx
+        E = df.dot(-0.5*self.mu0*df.dot(self.H_demag, self.m*self.Ms), self.v)*df.dx
         nodal_E = df.assemble(E).array()
         return nodal_E/self.nodal_vol
 
@@ -282,9 +279,8 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
                 The demag energy density.
 
         """
-        F = df.Function(self.V)
-        F.vector()[:] = self.energy_density()
-        return F
+        self.ED.vector()[:] = self.energy_density()
+        return self.ED
 
     def compute_field(self):
         """
@@ -305,364 +301,79 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         self.__solve()
         return self.__compute_field()
 
+    def scalar_potential(self):
+        """Return the scalar potential."""
+        return self.phi
+
     def __solve(self):
 
         # Compute phi1 on the whole domain (code-block 1, last line)
-        timings.start("phi1 - product")
 
         # Now I'm not sure about the boundary term here..
-        #g1 = self.D*self.m.vector()
-
-        timings.startnext("phi1 - solve")
-        #self.phi1_solver.solve(self.phi1.vector(), g1)
+        timings.start("phi1 - matrix product")
+        g1 = self.D*self.m.vector()
 
         # NOTE: The (above) computation of phi1 is equivalent to
-        g1 = df.assemble(self.Ms*df.dot(self.n,self.m)*self.v*df.ds \
-                - self.Ms*df.div(self.m)*self.v*df.dx)
-        self.phi1_solver.solve(self.phi1.vector(), g1)
+        #timings.start("phi1 - assemble")
+        #g1 = df.assemble(self.Ms*df.dot(self.n,self.m)*self.v*df.ds \
+        #        - self.Ms*df.div(self.m)*self.v*df.dx)
         # but the way we have implemented it is faster,
-        # because we don't have to assemble L each time.
+        # because we don't have to assemble L each time,
+        # and matrix multiplication is faster than assemble.
 
+        timings.startnext("phi1 - solve")
+        #df.solve(self.poisson_matrix, self.phi1.vector(), g1, \
+        #         self.solver, self.preconditioner)
+        self.phi1_solver.solve(self.phi1.vector(), g1)
 
         # Restrict phi1 to the boundary
         timings.startnext("Restrict phi1 to boundary")
-        Phi1 = self.restrict_to(self.phi1.vector())
-
-        # I can't explain why this seems to work
-        #U1 = df.PETScMatrix()
-        #U1.resize(self.bnd_nodes_number, self.nodes_number)
-        #U1.ident_zeros()
-        #Phi1 = U1*self.phi1.vector()
+        Phi1 = self.phi1.vector()[self.b2g_map]
 
         # Compute phi2 on the boundary, eq. (3)
         timings.startnext("Compute phi2 on boundary")
-        self.Phi2 = np.dot(self.bem, Phi1)
-        self.phi2.vector()[self.bdofs[:]] = self.Phi2[:]
+        Phi2 = np.dot(self.bem, Phi1)
+        self.phi2.vector()[self.b2g_map[:]] = Phi2
 
-        # Compute Laplace's equation inside the domain, eq. (2)
-        # and last code-block
+        # Compute Laplace's equation inside the domain,
+        # eq. (2) and last code-block
         timings.startnext("Compute phi2 inside")
         self.phi2 = self.solve_laplace_inside(self.phi2)
-        #self.solve_laplace_inside()
 
         # phi = phi1 + phi2, eq. (5)
         timings.startnext("Add phi1 and phi2")
-        self.phi = self.calc_phitot(self.phi1, self.phi2)
+        self.phi.vector()[:] = self.phi1.vector() \
+                             + self.phi2.vector()
         timings.stop("Add phi1 and phi2")
-
-    def scalar_potential(self):
-        return self.phi
-
-    '''
-    def solve_laplace_inside(self):
-        """Suspect this function from solver_base to be buggy."""
-        #NOTE: This is now fixed, but keep this until we are really
-        #sure that it's fixed.
-        bc = df.DirichletBC(self.V, self.phi2, df.DomainBoundary())
-        A = self.poisson_matrix.copy()
-        b = self.laplace_zeros.copy()
-        bc.apply(A, b)
-        self.phi2_solver.solve(A, self.phi2.vector(), b)
-    '''
-
-    def __build_matrices(self):
-        """
-        Build anything that doesn't depend on m to avoid
-        things being build multiple times.
-        """
-        Ms, m, u, v, w = self.Ms, self.m, self.u, self.v, self.w
-
-        # Eq (1) and code-block 2 - two first lines.
-        timings.start("phi1: compute D")
-        b = Ms*df.inner(w, df.grad(v))*df.dx
-        self.D = df.assemble(b)
-        timings.stop("phi1: compute D")
-
-        # Compute boundary element matrix
-        timings.start("Build boundary element matrix")
-        self.bem = self.__compute_bem()
-        timings.stop("Build boundary element matrix")
 
     def __setup_field_magpar(self):
         """Needed by the magpar method we may use instead of project."""
         #FIXME: Someone with a bit more insight in this method should
         # write something about it in the documentation.
-        timings.start("Setup field magpar method")
         a = df.inner(df.grad(self.u), self.vv)*df.dx
-        self.G = df.assemble(a)
-
         b = df.dot(self.vv, df.Constant([-1, -1, -1]))*df.dx
+        self.G = df.assemble(a)
         self.L = df.assemble(b).array()
-        timings.stop("Setup field magpar method")
 
     def __compute_field_magpar(self):
         """Magpar method used by Weiwei."""
-        timings.start("G")
+        timings.start("Compute field")
         Hd = self.G*self.phi.vector()
-        timings.startnext("L")
         Hd = Hd.array()/self.L
-        timings.stop("L")
+        timings.stop("Compute field")
         return Hd
 
     def __compute_field_project(self):
-        timings.start("Project")
+        """
+        Dolfin method of projecting the scalar potential
+        onto a dolfin.VectorFunctionSpace.
+
+        """
         Hdemag = df.project(-df.grad(self.phi), self.W)
-        timings.stop("Project")
         return Hdemag.vector().array()
 
-    def __build_mapping(self):
-        """
-        Only used by Weiwei's magpar code to
-        compute the boundary element matrix.
-        """
-        self.bnd_face_nodes,\
-        self.gnodes_to_bnodes,\
-        self.bnd_faces_number,\
-        self.bnd_nodes_number = \
-                belement.compute_bnd_mapping(self.mesh)
-
-    def __compute_bem(self):
-        """
-        Code written by Weiwei to compute the boundary
-        element matrix using magpar code.
-        """
-        self.__build_mapping()
-        mesh = self.mesh
-        xyz = mesh.coordinates()
-        bfn = self.bnd_face_nodes
-        g2b = self.gnodes_to_bnodes
-
-        nodes_number = self.mesh.num_vertices()
-
-        n = self.bnd_nodes_number
-        B = np.zeros((n,n))
-
-        tmp_bele = np.zeros(3)
-
-        # Progressbar..
-        loops = (nodes_number - sum(g2b<0))*len(bfn) + mesh.num_cells()*4
-        loop_ctr = 0
-        bar = ProgressBar(loops)
-        logger.info("Building Boundary Element Matrix")
-
-        for i in range(nodes_number):
-            #skip the node not at the boundary
-            if g2b[i]<0:
-                continue
-
-            for j in range(self.bnd_faces_number):
-
-                # Progressbar data
-                loop_ctr += 1
-                bar.update(loop_ctr)
-
-                #skip the node in the face
-                if i in set(bfn[j]):
-                    continue
-
-                compute_belement(
-                    xyz[i],
-                    xyz[bfn[j][0]],
-                    xyz[bfn[j][1]],
-                    xyz[bfn[j][2]],
-                tmp_bele)
-
-                for k in range(3):
-                    ti=g2b[i]
-                    tj=g2b[bfn[j][k]]
-                    B[ti][tj]+=tmp_bele[k]
-
-
-        #the solid angle term ...
-        solid_angle = np.zeros(nodes_number)
-
-        cells = mesh.cells()
-        for i in range(mesh.num_cells()):
-            for j in range(4):
-                omega = compute_solid_angle(
-                    xyz[cells[i][j]],
-                    xyz[cells[i][(j+1)%4]],
-                    xyz[cells[i][(j+2)%4]],
-                    xyz[cells[i][(j+3)%4]])
-
-                solid_angle[cells[i][j]] += omega
-
-                # Progressbar data
-                loop_ctr += 1
-                bar.update(loop_ctr)
-
-        for i in range(nodes_number):
-            j = g2b[i]
-            if j < 0:
-                continue
-
-            B[j][j] += solid_angle[i]/(4*np.pi) - 1
-
-        return B
-
-class FemBemFKSolverOld(sb.FemBemDeMagSolver):
-    # Very deprecated, should be removed soon.
-    """FemBem solver for Demag Problems using the Fredkin-Koehler approach."""
-
-    def __init__(self, problem, degree=1):
-        super(FemBemFKSolverOld,self).__init__(problem, degree)
-        #Default linalg solver parameters
-        self.phi1solverparams = {"linear_solver":"lu"}
-        self.phi2solverparams = {"linear_solver":"lu"}
-        self.degree = degree
-        self.mesh = problem.mesh
-        self.phi1 = df.Function(self.V)
-        self.phi2 = df.Function(self.V)
-
-    def compute_phi1(self):
-        """
-        Get phi1 defined over the mesh with the point given the value 0.
-        phi1 is the solution to the inhomogeneous Neumann problem.
-        M is the magnetisation field.
-        V is a df.FunctionSpace
-
-        """
-        # Define functions
-        n = df.FacetNormal(self.mesh)
-
-        # Define forms
-        eps = 1e-8
-        a = df.dot(df.grad(self.u), df.grad(self.v))*df.dx - \
-                df.dot(eps*self.u, self.v)*df.dx
-        f = df.dot(n, self.M)*self.v*df.ds - df.div(self.M)*self.v*df.dx
-        self.linsolve_phi1(a,f)
-
-    def linsolve_phi1(self,a,f):
-        # Solve for the DOFs in phi1
-        df.solve(a == f, self.phi1)#, solver_parameters = self.phi1solverparams)
-
-    def solve(self):
-        """
-        Return the magnetic scalar potential :math:`phi` of
-        equation (2.13) in Andreas Knittel's thesis,
-        using a FemBem solver and the Fredkin-Koehler approach.
-        """
-
-        # Compute phi1 according to Knittel (2.28 - 2.29)
-        print "Presolve:", type(self.phi1.vector())
-        self.compute_phi1()
-        print "Postsolve:", type(self.phi1.vector())
-        # Compute phi2 on the boundary
-        self.__solve_phi2_boundary(self.doftionary)
-
-        # Compute Laplace's equation (Knittel, 2.30)
-        self.solve_laplace_inside(self.phi2, self.phi2solverparams)
-
-        # Knittel (2.27), phi = phi1 + phi2
-        self.phi = self.calc_phitot(self.phi1, self.phi2)
-
-        # Compute the demag field from phi
-        self.Hdemag = self.get_demagfield(self.phi)
-
-        return self.phi
-
-    def __solve_phi2_boundary(self, doftionary):
-        """Compute phi2 on the boundary."""
-        B = self.__build_BEM_matrix(doftionary)
-        print "Pre-restrict:", type(self.phi1.vector())
-        phi1 = self.restrict_to(self.phi1.vector())
-        exit()
-        phi2dofs = np.dot(B, phi1)
-        bdofs = doftionary.keys()
-        for i in range(len(bdofs)):
-            self.phi2.vector()[bdofs[i]] = phi2dofs[i]
-
-    def __build_BEM_matrix(self, doftionary):
-        """Build and return the Boundary Element Matrix."""
-        n = len(doftionary)
-        keys = doftionary.keys()
-        BEM = np.zeros((n,n))
-
-        bar = ProgressBar(n-1)
-
-        #df.info_blue("Building Boundary Element Matrix")
-        for i, dof in enumerate(doftionary):
-            bar.update(i)
-            BEM[i] = self.__get_BEM_row(doftionary[dof], keys, i)
-        return BEM
-
-    def __get_BEM_row(self, R, dofs, i):
-        """Return row i in the BEM."""
-        v = self.__BEMnumerator(R)
-        w = self.__BEMdenominator(R)
-        psi = df.TestFunction(self.V)
-
-        # First term containing integration part (Knittel, eq. (2.52))
-        L = 1.0/(4*df.DOLFIN_PI)*psi*v*w*df.ds
-
-        # Create a row from the first term
-        bigrow = df.assemble(L, form_compiler_parameters=self.ffc_options)
-        row = self.restrict_to(bigrow)
-
-        # Previous implementation of solid angle is proven wrong.
-        # Positive thing is that when implemented correctly,
-        # the solver will probably run faster.
-        #
-        # TODO: Implement solid angle.
-        SA = self.__solid_angle()
-
-        # Insert second term containing solid angle
-        row[i] += SA/(4*np.pi) - 1
-
-        return row
-
-    def __BEMnumerator(self, R):
-        """
-        Compute the numerator of the fraction in
-        the first term in Knittel (2.52)
-
-        """
-        dim = len(R)
-        v = []
-        for i in range(dim):
-            v.append("R%d - x[%d]" % (i, i))
-        v = tuple(v)
-
-        kwargs = {"R" + str(i): R[i] for i in range(dim)}
-        v = df.Expression(v, **kwargs)
-
-        W = df.VectorFunctionSpace(self.problem.mesh, "CR", self.degree, dim=dim)
-        v = df.interpolate(v, W)
-        n = df.FacetNormal(self.V.mesh())
-        v = df.dot(v, n)
-        return v
-
-    def __BEMdenominator(self, R):
-        """
-        Compute the denominator of the fraction in
-        the first term in Knittel (2.52)
-
-        """
-        w = "pow(1.0/sqrt("
-        dim = len(R)
-        for i in range(dim):
-            w += "(R%d - x[%d])*(R%d - x[%d])" % (i, i, i, i)
-            if not i == dim-1:
-                w += "+"
-        w += "), 3)"
-
-        kwargs = {"R" + str(i): R[i] for i in range(dim)}
-        return df.Expression(w, **kwargs)
-
-    def __solid_angle(self):
-        """
-        TODO: Write solid angle function here.
-
-        """
-        SA = 0
-
-        # Solid angle must not exceed the unit circle
-        assert abs(SA) <= 2*np.pi
-
-        return SA
 
 if __name__ == "__main__":
-
     class Problem():
         pass
 
@@ -679,3 +390,4 @@ if __name__ == "__main__":
     Hd = demag.compute_field()
     Hd.shape = (3, -1)
     print np.average(Hd[0])/Ms, np.average(Hd[1])/Ms, np.average(Hd[2])/Ms
+    print timings
