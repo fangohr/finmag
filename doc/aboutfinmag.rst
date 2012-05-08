@@ -29,6 +29,11 @@ or::
 
   hg clone https://fangohr@bitbucket.org/fangohr/finmag
 
+Installation
+------------
+
+.. include:: install.rstext
+
 
 Team
 ----
