@@ -7,7 +7,7 @@ from finmag.util.timings import timings
 log = logging.getLogger(name="finmag")
 
 class Sim(object):
-    def __init__(self, mesh, unit_length=1):
+    def __init__(self, mesh, Ms, unit_length=1):
         timings.reset()
         timings.start("Sim-init")
 
@@ -16,6 +16,7 @@ class Sim(object):
         log.debug(mesh)
 
         self.mesh = mesh
+        self.Ms = Ms
         self.unit_length = unit_length
         self.S1 = df.FunctionSpace(mesh, "Lagrange", 1)
         self.S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
@@ -29,7 +30,7 @@ class Sim(object):
 
 
     def add(self, interaction):
-        interaction.setup(self.S3, self._m, self.unit_length)
+        interaction.setup(self.S3, self._m, Ms, self.unit_length)
         self.interactions.append(interaction)
 
     def compute_effective_field(self):

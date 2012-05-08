@@ -67,18 +67,18 @@ class Exchange(EnergyBase):
             H_exch_np = exchange_np.compute_field()
             
     """
-    def __init__(self, C, Ms, method="box-matrix-petsc"):
+    def __init__(self, C, method="box-matrix-petsc"):
         logger.info("Creating Exchange object with method {}.".format(method))
         
         self.C = C
-        self.Ms = Ms
         self.method = method
       
-    def setup(self, S3, M, unit_length=1): 
+    def setup(self, S3, M, Ms, unit_length=1): 
         timings.start('Exchange-setup')
 
         self.S3 = S3
         self.M = M # keep reference to M
+        self.Ms = Ms
         self.unit_length = unit_length
 
         self.mu0 = 4 * np.pi * 10**-7 # Vs/(Am)

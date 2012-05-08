@@ -29,6 +29,6 @@ for lfactor in range(1, 10):
     divisions = lfactor * 2
     mesh = df.Box(0, 0, 0, L, L, L, divisions, divisions, divisions)
 
-    sim = Sim(mesh)
-    sim.add(UniaxialAnisotropy(K1, [0, 0, 1], Ms))
-    sim.add(Exchange(A, Ms))
+    sim = Sim(mesh, Ms)
+    sim.add(UniaxialAnisotropy(K1, [0, 0, 1]))
+    sim.add(Exchange(A))
