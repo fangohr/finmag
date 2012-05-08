@@ -32,7 +32,7 @@ or::
 Installation
 ------------
 
-.. include:: install.rstext
+.. include:: install.txt
 
 
 Team
