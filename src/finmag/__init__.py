@@ -5,3 +5,5 @@
 # CONTACT: h.fangohr@soton.ac.uk
 #
 # AUTHOR(S) OF THIS FILE: Dmitri Chernyshenko (d.chernyshenko@soton.ac.uk)
+
+from finmag.sim.sim import Simulation
