@@ -6,7 +6,7 @@ from finmag.util.timings import timings
 
 log = logging.getLogger(name="finmag")
 
-class Sim(object):
+class Simulation(object):
     def __init__(self, mesh, Ms, unit_length=1):
         timings.reset()
         timings.start("Sim-init")
@@ -30,7 +30,7 @@ class Sim(object):
 
 
     def add(self, interaction):
-        interaction.setup(self.S3, self._m, Ms, self.unit_length)
+        interaction.setup(self.S3, self._m, self.Ms, self.unit_length)
         self.interactions.append(interaction)
 
     def compute_effective_field(self):
