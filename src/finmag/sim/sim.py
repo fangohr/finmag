@@ -3,6 +3,7 @@ import logging
 import dolfin as df
 import numpy as np
 import finmag.sim.helpers as h
+from finmag.sim.llg import LLG
 from finmag.util.timings import timings
 from finmag.energies.fkdemag import FKDemag
 
@@ -21,6 +22,7 @@ class Simulation(object):
         self.mesh = mesh
         self.Ms = Ms
         self.unit_length = unit_length
+        self.llg = LLG(mesh, unit_length=unit_length, called_from_sim=True)
         self.S1 = df.FunctionSpace(mesh, "Lagrange", 1)
         self.S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
         self.Volume = df.assemble(df.Constant(1) * df.dx, mesh=mesh)
@@ -70,12 +72,12 @@ class Simulation(object):
         self.interactions.append(interaction)
 
     def compute_effective_field(self):
-        H_eff = np.array(self._m.shape)
-        
+        H_eff = np.zeros(self._m.vector().array().shape)
         for interaction in self.interactions:
-            H_eff += interaction.compute_field(self.m, self.t)
-    
+            H_eff += interaction.compute_field()
         return H_eff
 
-    
-
+    def compute_dmdt(self):
+        return self.llg.compute_dmdt(
+            self._m.vector().array(), self.compute_effective_field()) 
+        

@@ -16,11 +16,12 @@ from finmag.util.timings import timings
 logger = logging.getLogger(name='finmag')
 
 class LLG(object):
-    def __init__(self, mesh, order=1, unit_length=1, do_precession=True):
+    def __init__(self, mesh, order=1, unit_length=1, do_precession=True, called_from_sim=False):
         logger.info('Creating LLG object (rank=%s/%s) %s' % (df.MPI.process_number(),
                                                               df.MPI.num_processes(),
                                                               time.asctime()))
-        timings.reset()
+        if not called_from_sim:
+            timings.reset()
         timings.start('LLG-init')
         
         self.mesh = mesh
@@ -216,6 +217,20 @@ class LLG(object):
             func(self)
 
         return dMdt
+
+    def compute_dmdt(self, m, H):
+        """ Called from Simulation class. """
+        timings.start("LLG-compute-dmdt")
+        char_time = 0.1/self.c
+        m.shape = (3, -1)
+        H.shape = (3, -1)
+        dmdt = np.zeros(m.shape) 
+        native_llg.calc_llg_dmdt(m, H, self.t, dmdt, self.pins,
+                                 self.gamma/(1.+self.alpha**2), self.alpha_vec, 
+                                 char_time, self.do_precession)
+        dmdt.shape = (-1, )
+        timings.stop("LLG-compute-dmdt")
+        return dmdt
 
     # Computes the dm/dt right hand side ODE term, as used by SUNDIALS CVODE
     def sundials_rhs(self, t, y, ydot):
