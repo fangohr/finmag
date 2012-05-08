@@ -3,6 +3,7 @@ import logging
 import dolfin as df
 import numpy as np
 from finmag.util.timings import timings
+from finmag.energies.fkdemag import FKDemag
 
 log = logging.getLogger(name="finmag")
 
@@ -25,6 +26,7 @@ class Simulation(object):
         self.t = 0
 
         self.interactions = []
+        self.add(FKDemag())
 
         timings.stop("Sim-init")
 
