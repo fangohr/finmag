@@ -24,7 +24,7 @@ Km    = 0.5 * mu0 * Ms**2     # magnetostatic energy density    kg/ms^2
 lexch = (A/Km)**0.5           # exchange length                 m
 K1    = 0.1 * Km
 
-for lfactor in range(1, 10):
+for lfactor in range(1, 2):
     L = lfactor * lexch       # cube length                     m
     divisions = lfactor * 2
     mesh = df.Box(0, 0, 0, L, L, L, divisions, divisions, divisions)
@@ -32,3 +32,5 @@ for lfactor in range(1, 10):
     sim = Simulation(mesh, Ms) # Demag included by default.
     sim.add(UniaxialAnisotropy(K1, [0, 0, 1]))
     sim.add(Exchange(A))
+
+    sim.set_m((0, 0, 1)) # Will relax into flower state.
