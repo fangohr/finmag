@@ -34,3 +34,4 @@ for lfactor in range(1, 2):
     sim.add(Exchange(A))
 
     sim.set_m((0, 0, 1)) # Will relax into flower state.
+    print sim.compute_dmdt()
