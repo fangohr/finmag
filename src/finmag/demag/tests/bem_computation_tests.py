@@ -161,14 +161,14 @@ class BemComputationTests(unittest.TestCase):
         llg = LLG(mesh)
         llg.set_m((1, 0, 0))
         llg.Ms = 1.
-        llg.setup(use_demag=True)
-        bem_finmag = llg.demag.bem
+        # Using the weiwei solver to compare against,
+        # because this still has the magpar bem,
+        # while the main fk solver now uses the native bem.
+        llg.setup(use_demag=True, demag_method="weiwei")
+        bem_finmag = llg.demag.B
         bem_native = np.zeros(bem_finmag.shape)
         bem, b2g = compute_bem_fk(OrientedBoundaryMesh(mesh))
-        # This doesn't exist anymore
-        #g2finmag = llg.demag.gnodes_to_bnodes
-        # The equivalent would be
-        g2finmag = llg.demag.b2g_map
+        g2finmag = llg.demag.gnodes_to_bnodes
         for i_dolfin in xrange(bem.shape[0]):
             i_finmag = g2finmag[b2g[i_dolfin]]
 
@@ -181,7 +181,6 @@ class BemComputationTests(unittest.TestCase):
             print "Difference:", np.round(bem_native - bem_finmag, 4)
             self.fail("Finmag and native computation of BEM differ, mesh: " + str(mesh))
 
-    @unittest.skip("Don't know why it fails, and don't know how to fix it -AEJ.")
     def test_bem_computation(self):
         self.run_bem_computation_test(df.UnitSphere(1))
         self.run_bem_computation_test(df.UnitSphere(2))
