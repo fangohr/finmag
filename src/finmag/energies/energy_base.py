@@ -4,7 +4,7 @@ class EnergyBase(object):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def setup(S3, m, unit_length):
+    def setup(S3, m, Ms, unit_length):
         return
 
     @abc.abstractmethod

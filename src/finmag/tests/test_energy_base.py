@@ -16,7 +16,7 @@ class MyEnergy(EnergyBase):
         """
         pass
 
-    def setup(self, S3, m, unit_length):
+    def setup(self, S3, m, Ms, unit_length):
         """
         This method is required.
 

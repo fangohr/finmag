@@ -66,7 +66,7 @@ class UniaxialAnisotropy(object):
 
     """
 
-    def __init__(self, K, a, Ms, method="box-matrix-petsc"):
+    def __init__(self, K, a, method="box-matrix-petsc"):
         logger.info("Creating Anisotropy with method {}.".format(method))
 
         # Make sure that K is dolfin.Constant
@@ -74,13 +74,13 @@ class UniaxialAnisotropy(object):
             K = df.Constant(K)
         self.K = K
 
-        self.Ms = Ms
         self.a = df.Constant(a)
         self.method = method
 
-    def setup(self, S3, m, unit_length=1):
+    def setup(self, S3, m, Ms, unit_length=1):
         timings.start('Anisotropy-setup')
 
+        self.Ms = Ms
         self._m_normed = df.Function(S3)
         self._m = m
 
