@@ -6,11 +6,15 @@
 #
 # AUTHOR(S) OF THIS FILE: Dmitri Chernyshenko (d.chernyshenko@soton.ac.uk)
 
+import logging
 import scipy.integrate
 import numpy as np
 from finmag.native import sundials
 
+log = logging.getLogger(name="finmag")
+
 def LLGIntegrator(llg, m0, backend="sundials", **kwargs):
+    log.info("Creating LLGIntegrator with backend {}.".format(backend))
     if backend=="scipy":
         return ScipyIntegrator(llg, m0, **kwargs)
     elif backend=="sundials":
@@ -28,7 +32,7 @@ class BaseIntegrator(object):
             next_t += dt
             self.run_until(next_t)
             # TODO: use a better norm for stopping
-            diff = np.max(np.abs(prev_m - self.dof))
+            diff = np.max(np.abs(prev_m - self.m))
             prev_m = self.m.copy()
             if diff < stop_tol:
                 break
