@@ -1,0 +1,17 @@
+How to install finmag
+=====================
+
+Please read doc/install.txt
+
+How to run tests?
+=================
+
+cd src && py.test 
+
+Do I need to compile something?
+===============================
+
+If you have installed all required libraries (see above), then this
+should not be necessary. Some C++ libraries will be compiled
+automatically when they are needed the first time.
+
