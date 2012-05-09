@@ -3,9 +3,10 @@ import logging
 import dolfin as df
 import numpy as np
 import finmag.sim.helpers as h
-from finmag.sim.llg import LLG
+from finmag.sim.llg2 import LLG
 from finmag.util.timings import timings
 from finmag.energies.fkdemag import FKDemag
+from finmag.sim.integrator import LLGIntegrator
 
 
 log = logging.getLogger(name="finmag")
@@ -22,62 +23,49 @@ class Simulation(object):
         self.mesh = mesh
         self.Ms = Ms
         self.unit_length = unit_length
-        self.llg = LLG(mesh, unit_length=unit_length, called_from_sim=True)
         self.S1 = df.FunctionSpace(mesh, "Lagrange", 1)
         self.S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
+        self.llg = LLG(self.S1, self.S3)
+        self.llg.Ms = Ms
         self.Volume = df.assemble(df.Constant(1) * df.dx, mesh=mesh)
-        self._m = df.Function(self.S3)
         self.t = 0
 
         self.interactions = []
         self.add(FKDemag())
 
         timings.stop("Sim-init")
-    
+   
+    def get_m(self):
+        return self.llg.m
+
     def set_m(self, value, **kwargs):
-        """
-        Set the magnetisation (scaled automatically).
-        
-        You can either provide a dolfin.Constant or a dolfin.Expression
-        directly, or the ingredients for either, i.e. a tuple of numbers
-        or a tuple of strings (with keyword arguments if needed), or provide
-        the nodal values directly as a numpy array.
+        self.llg.set_m(value, **kwargs) 
 
-        You can call this method anytime during the simulation. However, when
-        providing a numpy array during time integration, the use of
-        the attribute m instead of this method is advised for performance
-        reasons and because the attribute m doesn't normalise the vector.
-
-        """
-        if isinstance(value, tuple):
-            if isinstance(value[0], str):
-                # a tuple of strings is considered to be the ingredient
-                # for a dolfin expression, whereas a tuple of numbers
-                # would signify a constant
-                val = df.Expression(value, **kwargs)
-            else:
-                val = df.Constant(value)
-            new_m = df.interpolate(val, self.S3)
-        elif isinstance(value, (df.Constant, df.Expression)):
-            new_m = df.interpolate(value, self.S3)
-        elif isinstance(value, (list, np.ndarray)):
-            new_m = df.Function(self.S3)
-            new_m.vector()[:] = value
-        else:
-            raise AttributeError
-        self._m.vector()[:] = h.fnormalise(new_m.vector().array())
+    m = property(get_m, set_m)
 
     def add(self, interaction):
-        interaction.setup(self.S3, self._m, self.Ms, self.unit_length)
-        self.interactions.append(interaction)
+        interaction.setup(self.S3, self.llg._m, self.Ms, self.unit_length)
+        self.llg.interactions.append(interaction)
 
-    def compute_effective_field(self):
-        H_eff = np.zeros(self._m.vector().array().shape)
+    def effective_field(self):
+        self.llg.compute_effective_field()
+        return self.llg.H_eff
+
+    def dmdt(self):
+        return self.llg.solve()
+
+    def total_energy(self):
+        energy = 0.
         for interaction in self.interactions:
-            H_eff += interaction.compute_field()
-        return H_eff
+            energy += interaction.compute_energy()
+        return energy
 
-    def compute_dmdt(self):
-        return self.llg.compute_dmdt(
-            self._m.vector().array(), self.compute_effective_field()) 
-        
+    def run_until(self, t):
+        if not hasattr(self, "integrator"):
+            self.integrator = LLGIntegrator(self.llg, self.llg.m)
+        self.integrator.run_until(t)
+
+    def relax(self, stop_tol=1e-6):
+        if not hasattr(self, "integrator"):
+            self.integrator = LLGIntegrator(self.llg, self.llg.m)
+        self.integrator.run_until_relaxation(stop_tol=stop_tol)

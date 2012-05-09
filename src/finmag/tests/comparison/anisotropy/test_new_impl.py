@@ -27,8 +27,8 @@ def setup_finmag():
     m = df.Function(S3)
     m.vector()[:] = m_gen(coords).flatten()
 
-    anisotropy = UniaxialAnisotropy(K1, a, Ms) 
-    anisotropy.setup(S3, m, unit_length=1e-9)
+    anisotropy = UniaxialAnisotropy(K1, a) 
+    anisotropy.setup(S3, m, Ms, unit_length=1e-9)
 
     H_anis = df.Function(S3)
     H_anis.vector()[:] = anisotropy.compute_field()
