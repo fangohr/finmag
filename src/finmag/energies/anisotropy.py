@@ -68,7 +68,7 @@ class UniaxialAnisotropy(object):
 
     def __init__(self, K, a, method="box-matrix-petsc"):
         logger.info("Creating Anisotropy with method {}.".format(method))
-
+        self.in_jacobian = True
         # Make sure that K is dolfin.Constant
         if not 'dolfin' in str(type(K)):
             K = df.Constant(K)

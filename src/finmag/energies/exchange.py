@@ -69,7 +69,7 @@ class Exchange(EnergyBase):
     """
     def __init__(self, C, method="box-matrix-petsc"):
         logger.info("Creating Exchange object with method {}.".format(method))
-        
+        self.in_jacobian = True        
         self.C = C
         self.method = method
       

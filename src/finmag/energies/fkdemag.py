@@ -15,6 +15,7 @@ class FKDemag(EnergyBase):
 
     """
     def __init__(self):
+        self.in_jacobian = False
         log.info("Creating FKDemag object.")
 
     def setup(self, S3, m, Ms, unit_length):
@@ -28,4 +29,4 @@ class FKDemag(EnergyBase):
         return self.demag.compute_field()
 
     def compute_energy(self):
-        pass
+        return self.demag.compute_energy()

@@ -24,8 +24,8 @@ def setup_finmag():
     m = df.Function(S3)
     m.vector()[:] = m_gen(coords).flatten()
 
-    exchange = Exchange(A, Ms)  
-    exchange.setup(S3, m)
+    exchange = Exchange(A)  
+    exchange.setup(S3, m, Ms)
 
     H_exc = df.Function(S3)
     H_exc.vector()[:] = exchange.compute_field()
