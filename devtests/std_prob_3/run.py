@@ -38,4 +38,6 @@ for lfactor in range(1, 2):
     print "Magnetisation:"
     print sim.m
     # FIXME: Need to check demag.
-    print "Energy:", sim.total_energy()
+    total_energy_density = sim.total_energy()/sim.Volume
+    relative_total_energy_density = total_energy_density/Km
+    print "relative total energy:", relative_total_energy_density
