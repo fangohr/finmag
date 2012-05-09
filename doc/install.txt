@@ -1,9 +1,9 @@
 Finmag may be installed on a fresh installation of Ubuntu 12.04 as follows. The procedure for other Linux distributions will be similar, but the supplied scripts call the Debian/Ubuntu package managers ``aptitude`` and ``apt-get``, so some modification may be necessary on other distributions.
 
-1. At a shell prompt, navigate to the directory in which you would like the ``finmag`` tree located.
+1. At a shell prompt, navigate to the directory in which you would like the ``finmag`` tree located. If you bitbucket name is ``nsob104`` then clone the repository with
 2. ``hg clone https://nsob104@bitbucket.org/fangohr/finmag``
 3. ``cd finmag/install/on-fresh-ubuntu-11.10``
-4. Run ``sh do-all.sh``.  At the time of writing, this script requires some interaction.  It invokes ``aptitude`` and ``apt-get`` through ``sudo`` several times, so you will need to be ready to provide the administrative password.  Moreover, some of the package management operations will ask for confirmation before installing packages and before adding the FEniCS PPA to the ``/etc/apt/sources.list.d/`` directory.
+4. Run ``sudo sh do-all.sh``.  At the time of writing, this script requires some interaction.  It invokes ``aptitude`` and ``apt-get`` through ``sudo`` several times, so you may need to be ready to provide the administrative password.  Moreover, some of the package management operations will ask for confirmation before installing packages and before adding the FEniCS PPA to the ``/etc/apt/sources.list.d/`` directory.
 
 At this point, Finmag should be installed (should any of the above scripts have failed, check your Internet connectivity before re-trying the script).  However, in order for the included tests to run, it is necessary to install some additional software, namely OOMMF, magpar and Nmag.  By default, subdirectories under ``$HOME`` are made for each piece of additional software installed; this location may be edited in the individual scripts named below.
 
@@ -36,10 +36,5 @@ Now, ensure that the environment variables are as set in ``~/.profile`` and then
 
 Expected output will include many lines of tests, each of which should have the status ``PASSED``, and end with some statistics, for example::
 
- ================================================================================= 131 passed in 108.40 seconds ==================================================================================
-  DVODE--  At current T (=R1), MXSTEP (=I1) steps   
-       taken on this call before reaching TOUT     
-       In above message,  I1 =      5000
-       In above message,  R1 =  0.8000369437165D+00
-
+ ================== 131 passed in 108.40 seconds ===================
 
