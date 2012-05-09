@@ -30,7 +30,6 @@ class Simulation(object):
         self.Volume = df.assemble(df.Constant(1) * df.dx, mesh=mesh)
         self.t = 0
 
-        self.interactions = []
         self.add(FKDemag())
 
         timings.stop("Sim-init")
@@ -56,7 +55,7 @@ class Simulation(object):
 
     def total_energy(self):
         energy = 0.
-        for interaction in self.interactions:
+        for interaction in self.llg.interactions:
             energy += interaction.compute_energy()
         return energy
 
