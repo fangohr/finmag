@@ -235,9 +235,3 @@ class LLG(object):
         self.t = t
         value = self.solve() 
         return value
-
-    def timings(self,n=20):
-        """Prints an overview of wall time an number of calls for
-        subparts of the code, listing up to n items, starting from 
-        those that took the most wall time."""
-        print timings.report_str(n)

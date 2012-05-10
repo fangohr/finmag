@@ -8,7 +8,6 @@ from finmag.util.timings import timings
 from finmag.energies.fkdemag import FKDemag
 from finmag.sim.integrator import LLGIntegrator
 
-
 log = logging.getLogger(name="finmag")
 
 class Simulation(object):
@@ -34,13 +33,13 @@ class Simulation(object):
 
         timings.stop("Sim-init")
    
-    def get_m(self):
+    def __get_m(self):
         return self.llg.m
 
     def set_m(self, value, **kwargs):
         self.llg.set_m(value, **kwargs) 
 
-    m = property(get_m, set_m)
+    m = property(__get_m, set_m)
 
     def add(self, interaction):
         interaction.setup(self.S3, self.llg._m, self.Ms, self.unit_length)
@@ -68,3 +67,31 @@ class Simulation(object):
         if not hasattr(self, "integrator"):
             self.integrator = LLGIntegrator(self.llg, self.llg.m)
         self.integrator.run_until_relaxation(stop_tol=stop_tol)
+
+    def __get_pins(self):
+        return self.llg.pins
+
+    def __set_pins(self, nodes):
+        self.llg.pins = nodes
+
+    pins = property(__get_pins, __set_pins)
+
+    def __get_alpha(self):
+        return self.llg.alpha
+
+    def __set_alpha(self, value):
+        self.llg.alpha = value
+
+    alpha = property(__get_alpha, __set_alpha)
+
+    def spatial_alpha(self, alpha, multiplicator):
+        self.llg.spatially_varying_alpha(self, alpha, multiplicator)
+
+    def timings(self, n=20):
+        """
+        Prints an overview of wall time and number of calls for designated
+        subparts of the code, listing up to n items, starting with those
+        which took the longest.
+
+        """
+        return timings.report_str(n)
