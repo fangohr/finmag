@@ -135,7 +135,6 @@ class LLG(object):
             new_m = df.Function(self.S3)
             new_m.vector()[:] = value
         elif hasattr(value, '__call__'):
-            print "This is a function."
             coords = np.array(zip(* self.S3.mesh().coordinates()))
             new_m = df.Function(self.S3)
             new_m.vector()[:] = value(coords).flatten()

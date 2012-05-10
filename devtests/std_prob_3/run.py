@@ -1,9 +1,11 @@
+import os
 import numpy as np
 import dolfin as df
 
 from finmag import Simulation
 from finmag.energies import UniaxialAnisotropy, Exchange
 
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
 """
 Micromag Standard Problem #3
 
@@ -23,21 +25,42 @@ Km    = 0.5 * mu0 * Ms**2     # magnetostatic energy density    kg/ms^2
 lexch = (A/Km)**0.5           # exchange length                 m
 K1    = 0.1 * Km
 
-for lfactor in range(1, 2):
-    L = lfactor * lexch       # cube length                     m
-    divisions = lfactor * 2
-    mesh = df.Box(0, 0, 0, L, L, L, divisions, divisions, divisions)
+flower_init = (0, 0, 1)
+def vortex_init(rs):
+    """
+    from nmag's solution
+        http://magnonics.ex.ac.uk:3000/attachments/723/run.py
+    which cites Guslienko et al. APL 78 (24)
+        http://link.aip.org/link/doi/10.1063/1.1377850
 
-    sim = Simulation(mesh, Ms) # Demag included by default.
-    sim.add(UniaxialAnisotropy(K1, [0, 0, 1]))
-    sim.add(Exchange(A))
+    """
+    xs, ys, zs = rs
+    rho = xs**2 + ys**2
+    phi = np.arctan2(zs, xs)
+    b = 2 * lexch
+    m_phi = np.sin(2 * np.arctan(rho/b))
+    return np.array([np.sqrt(1.0 - m_phi**2), m_phi*np.cos(phi), -m_phi*np.sin(phi)])
 
-    sim.set_m((0, 0, 1)) # Will relax into flower state.
-    sim.relax()
+energies_per_state = []
+for m_init in [flower_init, vortex_init]:
+    energies_per_lfactor = [] 
+    for lfactor in [8, 9]:
+        L = lfactor * lexch # cube length in m
+        divisions = lfactor * 2
+        mesh = df.Box(0, 0, 0, L, L, L, divisions, divisions, divisions)
 
-    print "Magnetisation:"
-    print sim.m
-    # FIXME: Need to check demag.
-    total_energy_density = sim.total_energy()/sim.Volume
-    relative_total_energy_density = total_energy_density/Km
-    print "relative total energy:", relative_total_energy_density
+        sim = Simulation(mesh, Ms) # Demag included by default.
+        sim.add(UniaxialAnisotropy(K1, [0, 0, 1]))
+        sim.add(Exchange(A))
+
+        sim.set_m(m_init)
+        sim.relax()
+
+        total_energy_density = sim.total_energy()/sim.Volume
+        relative_total_energy_density = total_energy_density/Km
+        energies_per_lfactor.append(relative_total_energy_density)
+        print "relative E_tot density {} for L={}*lexch.".format(
+                relative_total_energy_density, lfactor)
+    energies_per_state.append(energies_per_lfactor)
+
+np.savetxt(MODULE_DIR + "rel_e_densities.txt", energies_per_state)
