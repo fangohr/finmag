@@ -2,7 +2,7 @@ import os
 import dolfin as df
 import numpy as np
 from finmag.util.convert_mesh import convert_mesh
-from finmag.sim.llg import LLG
+from finmag.energies import UniaxialAnisotropy
 from finmag.sim.helpers import vectors, stats, sphinx_sci as s
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
@@ -37,18 +37,18 @@ def start_table():
 
 def setup_finmag():
     mesh = df.Mesh(convert_mesh(MODULE_DIR + "/bar_5_5_5.geo"))
-    llg = LLG(mesh, unit_length=1e-9)
     coords = np.array(zip(* mesh.coordinates()))
-    m0 = m_gen(coords).flatten()
 
-    llg.set_m(m0)
-    llg.Ms = Ms
-    llg.add_uniaxial_anisotropy(K1, df.Constant(a))
-    llg.setup(use_exchange=False)
+    S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
+    m = df.Function(S3)
+    m.vector()[:] = m_gen(coords).flatten()
 
-    H_anis = df.Function(llg.V)
-    H_anis.vector()[:] = llg._anisotropies[0].compute_field()
-    return dict(m=llg.m, H=H_anis, table=start_table(), llg=llg)
+    anisotropy = UniaxialAnisotropy(K1, a) 
+    anisotropy.setup(S3, m, Ms, unit_length=1e-9)
+
+    H_anis = df.Function(S3)
+    H_anis.vector()[:] = anisotropy.compute_field()
+    return dict(m=m, H=H_anis, S3=S3, table=start_table())
 
 def teardown_finmag(finmag):
     finmag["table"] += table_delim
@@ -64,7 +64,7 @@ def test_nmag(finmag):
     REL_TOLERANCE = 6e-2
 
     m_ref = np.genfromtxt(MODULE_DIR + "m0_nmag.txt")
-    m_computed = vectors(finmag["m"])
+    m_computed = vectors(finmag["m"].vector().array())
     assert m_ref.shape == m_computed.shape
 
     H_ref = np.genfromtxt(MODULE_DIR + "H_anis_nmag.txt")
@@ -121,10 +121,9 @@ def test_magpar(finmag):
 
     REL_TOLERANCE = 8e-3
 
-    llg = finmag["llg"]
-    magpar_nodes, magpar_anis = compute_anis_magpar(llg.V, llg._m, K1, a, Ms, unit_length=1)
+    magpar_nodes, magpar_anis = compute_anis_magpar(finmag["S3"], finmag["m"], K1, a, Ms, unit_length=1)
     _, _, diff, rel_diff = compare_field_directly(
-            llg.mesh.coordinates(), finmag["H"].vector().array(),
+            finmag["S3"].mesh().coordinates(), finmag["H"].vector().array(),
             magpar_nodes, magpar_anis)
 
     finmag["table"] += table_entries.format(

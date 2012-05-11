@@ -1,8 +1,7 @@
 import os
 import dolfin as df
 import numpy as np
-from dolfin import Interval
-from finmag.sim.llg import LLG
+from finmag.energies import Exchange
 from finmag.sim.helpers import vectors, norm, stats, sphinx_sci as s
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
@@ -34,19 +33,19 @@ def start_table():
     return table
 
 def setup_finmag():
-    mesh = Interval(xn, x0, x1)
-    llg = LLG(mesh)
-
+    mesh = df.Interval(xn, x0, x1)
     coords = np.array(zip(* mesh.coordinates()))
-    m0 = m_gen(coords).flatten()
-    llg.set_m(m0)
-    llg.Ms = Ms
-    llg.A = A
-    llg.setup(use_exchange=True)
+ 
+    S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
+    m = df.Function(S3)
+    m.vector()[:] = m_gen(coords).flatten()
 
-    H_exc = df.Function(llg.V)
-    H_exc.vector()[:] = llg.exchange.compute_field()
-    return dict(m=llg.m, H=H_exc, table=start_table())
+    exchange = Exchange(A)  
+    exchange.setup(S3, m, Ms)
+
+    H_exc = df.Function(S3)
+    H_exc.vector()[:] = exchange.compute_field()
+    return dict(m=m, H=H_exc, table=start_table())
 
 def teardown_finmag(finmag):
     finmag["table"] += table_delim
@@ -62,7 +61,7 @@ def test_against_nmag(finmag):
     REL_TOLERANCE = 2e-14
 
     m_ref = np.genfromtxt(MODULE_DIR + "m0_nmag.txt")
-    m_computed = vectors(finmag["m"])
+    m_computed = vectors(finmag["m"].vector().array())
     assert m_ref.shape == m_computed.shape
 
     H_ref = np.genfromtxt(MODULE_DIR + "H_exc_nmag.txt")

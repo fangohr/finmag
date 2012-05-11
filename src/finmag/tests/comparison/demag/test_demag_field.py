@@ -24,7 +24,7 @@ def setup_finmag():
     demag.setup(S3, m, Ms, unit_length=1e-9)
     H = demag.compute_field()
 
-    return dict(m=m, H=H, Ms=Ms, S3=S3, mesh=mesh, table=start_table())
+    return dict(m=m, H=H, Ms=Ms, S3=S3, table=start_table())
 
 def teardown_finmag(finmag):
     finmag["table"] += table_delim
@@ -100,7 +100,7 @@ def test_using_magpar(finmag):
 
     magpar_nodes, magpar_H = compute_demag_magpar(finmag["S3"], finmag["m"], finmag["Ms"])
     _, _, diff, rel_diff = compare_field_directly(
-            finmag["mesh"].coordinates(), finmag["H"],
+            finmag["S3"].mesh().coordinates(), finmag["H"],
             magpar_nodes, magpar_H)
 
     finmag["table"] += table_entries.format(
