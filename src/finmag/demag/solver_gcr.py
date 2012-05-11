@@ -5,15 +5,15 @@ __copyright__ = __author__
 __project__ = "Finmag"
 __organisation__ = "University of Southampton"
 
-from dolfin import *
+import dolfin as df
 import finmag.demag.solver_base as sb
 from finmag.util.timings import timings
 import math
 import logging
 import numpy as np
-from instant import inline_with_numpy
+import instant
 #Set allow extrapolation to true#
-parameters["allow_extrapolation"] = True
+df.parameters["allow_extrapolation"] = True
 logger = logging.getLogger(name='finmag')
 
 class FemBemGCRSolver(sb.FemBemDeMagSolver):
@@ -99,15 +99,14 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
     def __init__(self,problem,degree = 1):
         super(FemBemGCRSolver,self).__init__(problem,degree)
         #Define the potentials
-        self.phia = Function(self.V)
-        self.phib = Function(self.V)
-        self.phi = Function(self.V)
-        #Default linalg solver parameters
-        self.phiasolverparams = {"linear_solver":"lu"}
-        self.phibsolverparams = {"linear_solver":"lu"}
+        self.phia = df.Function(self.V)
+        self.phib = df.Function(self.V)
 
         #Countdown by bem assembly
         self.countdown = True
+        #build the boundary data (normals and coordinates)
+        self.build_boundary_data()
+        self.build_crestrict_to()
 
     def solve(self):
         """
@@ -122,9 +121,22 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
         #Solve for phib on the inside of the mesh with Fem, eq. (3)
         logger.info("GCR: Solve for phi_b (laplace on the inside)")
         self.phib = self.solve_laplace_inside(self.phib,solverparams = self.phibsolverparams)
-        # Add together the two potentials
+        #Add together the two potentials
         self.phi = self.calc_phitot(self.phia,self.phib)
         return self.phi
+    
+    def build_crestrict_to(self):
+        #Create the c++ function for restrict_to
+        c_code_restrict_to = """
+        void restrict_to(int bigvec_n, double *bigvec, int resvec_n, double *resvec, int dofs_n, unsigned int *dofs) {
+            for ( int i=0; i<resvec_n; i++ )
+                { resvec[i] = bigvec[int(dofs[i])]; }
+        }
+        """
+
+        args = [["bigvec_n", "bigvec"],["resvec_n", "resvec"],["dofs_n","dofs","unsigned int"]]
+        self.crestrict_to = instant.inline_with_numpy(c_code_restrict_to, arrays=args)
+
 
     def solve_phia(self):
         """
@@ -143,29 +155,17 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
             self.phia_formA = self.poisson_matrix
             #Define and apply Boundary Conditions
             # Eq.(2) and code-block 1 - last line
-            self.phia_bc = DirichletBC(V,0,"on_boundary")
+            self.phia_bc = df.DirichletBC(V,0,"on_boundary")
             self.phia_bc.apply(self.phia_formA)
 
-        #Source term depends on M (code-block 1 - second line)
-        f = (-div(self.M)*self.v)*dx  #Source term
-        F = assemble(f)
+        #Source term depends on m (code-block 1 - second line)
+        f = (-df.div(self.m)*self.v)*df.dx  #Source term
+        F = df.assemble(f)
         self.phia_bc.apply(F)
 
         #Solve for phia
         A = self.phia_formA
-        self.linsolve_phia(A,F)
-
-    def linsolve_phia(self,A,F):
-        """
-        Linear solve for phia written for the
-        convenience of changing solver parameters in subclasses
-        """
-        if "preconditioner" in self.phiasolverparams.keys():
-            solve(A,self.phia.vector(),F, \
-                self.phiasolverparams["linear_solver"], \
-                self.phiasolverparams["preconditioner"])
-        else:
-            solve(A,self.phia.vector(),F,self.phiasolverparams["linear_solver"])
+        df.solve(A,self.phia.vector(),F)
 
     def solve_phib_boundary(self,phia,doftionary):
         """Solve for phib on the boundary using BEM"""
@@ -229,52 +229,130 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
         """Builds the vector q using point evaluation, eq. (5)"""
         q = np.zeros(len(self.normtionary))
         #Get gradphia as a vector function
-        gradphia = project(grad(self.phia), VectorFunctionSpace(self.V.mesh(),"DG",0))
+        gradphia = df.project(df.grad(self.phia), df.VectorFunctionSpace(self.V.mesh(),"DG",0))
         for i,dof in enumerate(self.doftionary):
             ri = self.doftionary[dof]
             n = self.normtionary[dof]
 
             #Take the dot product of n with M + gradphia(ri) (n dot (M+gradphia(ri))
             rtup = tuple(ri)
-            M_array = np.array(self.M(rtup))
+            M_array = np.array(self.m(rtup))
             gphia_array = np.array(gradphia(rtup))
             q[i] = np.dot(n,M_array+gphia_array)
         return q
 
-##Not used at the moment
-##          def assemble_qvector_average(self,phia = None,doftionary = None):
-##          """builds the vector q that we multiply the Bem matrix with to get phib, using an average"""
-##          ###At the moment it is advisable to use assemble_qvector_exact as it gives a better result###
-##          if phia is None:
-##               phia = self.phia
-##          V = phia.function_space()
-##          if doftionary is None:
-##               doftionary = self.get_boundary_dof_coordinate_dict(V)
-##          mesh = V.mesh()
-##          n = FacetNormal(mesh)
-##          v = TestFunction(V)
-##
-##          one = assemble(v*ds).array()
-##          #build q everywhere v needed so a vector is assembled #This method uses an imprecise average
-##          q = assemble((- dot(n,self.M) + dot(grad(phia),n))*v*ds).array()
-##          #Get rid of the volume of the basis function
-##          basefuncvol = assemble(v*ds).array()
-##          #This will create a lot of NAN which are removed by the restriction
-##          q = np.array([q[i]/basefuncvol[i] for i in range(len(q))])
-##
-##          ########################################
-##          #TODO Divide out the volume of the facets
-##          ########################################
-##
-##          #restrict q to the values on the boundary
-##          q = self.restrict_to(q,doftionary.keys())
-##          return q
+    def get_boundary_dofs(self,V):
+        """Gets the dofs that live on the boundary of the mesh
+            of function space V"""
+        dummyBC = df.DirichletBC(V,0,"on_boundary")
+        return dummyBC.get_boundary_values()
 
+    def get_dof_normal_dict_avg(self,normtionary):
+        """
+        Provides a dictionary with all of the boundary DOF's as keys
+        and an average of facet normal components associated to the DOF as values
+        V = FunctionSpace
+        """
+        #Take an average of the normals in normtionary
+        avgnormtionary = {k:np.array([ float(sum(i))/float(len(i)) for i in zip(*normtionary[k])]) for k in normtionary}
+        #Renormalize the normals
+        avgnormtionary = {k: avgnormtionary[k]/df.sqrt(np.dot(avgnormtionary[k],avgnormtionary[k].conj())) for k in avgnormtionary}
+        return avgnormtionary
+    
+    def build_boundary_data(self):
+        """
+        Builds two boundary data dictionaries
+        1.doftionary key- dofnumber, value - coordinates
+        2.normtionary key - dofnumber, value - average of all facet normal components associated to a DOF
+        """
+        mesh = self.V.mesh()
+        #Initialize the mesh data
+        mesh.init()
+        d = mesh.topology().dim()
+        dm = self.V.dofmap()
+        boundarydofs = self.get_boundary_dofs(self.V)
+
+
+        #It is very import that this vector has the right length
+        #It holds the local dof numbers associated to a facet
+        facetdofs = np.zeros(dm.num_facet_dofs(),dtype=np.uintc)
+
+        #Initialize dof-to-normal dictionary
+        doftonormal = {}
+        doftionary = {}
+        #Loop over boundary facets
+        for facet in df.facets(mesh):
+            cells = facet.entities(d)
+            #one cell means we are on the boundary
+            if len(cells) ==1:
+                #######################################
+                #Shared Data for Normal and coordinates
+                #######################################
+
+                #create one cell (since we have CG)
+                cell = df.Cell(mesh,cells[0])
+                #Local to global map
+                globaldofcell = dm.cell_dofs(cells[0])
+
+                #######################################
+                #Find  Dof Coordinates
+                #######################################
+
+                #Create the cell dofs and see if any
+                #of the global numbers turn up in BoundaryDofs
+                #If so update doftionary with the coordinates
+                celldofcord = dm.tabulate_coordinates(cell)
+
+                for locind,dof in enumerate(globaldofcell):
+                    if dof in boundarydofs:
+                        doftionary[dof] = celldofcord[locind]
+
+                #######################################
+                #Find Normals
+                #######################################
+                local_fi = cell.index(facet)
+                dm.tabulate_facet_dofs(facetdofs,local_fi)
+                #Global numbers of facet dofs
+                globaldoffacet = [globaldofcell[ld] for ld in facetdofs]
+                #add the facet's normal to every dof it contains
+                for gdof in globaldoffacet:
+                    n = facet.normal()
+                    ntup = tuple([n[i] for i in range(d)])
+                    #If gdof not in dictionary initialize a list
+                    if gdof not in doftonormal:
+                        doftonormal[gdof] = []
+                    #Prevent redundancy in Normals (for example 3d UnitCube CG1)
+                    if ntup not in doftonormal[gdof]:
+                        doftonormal[gdof].append(ntup)
+
+            elif len(cells) == 2:
+                #we are on the inside so continue
+                continue
+            else:
+                assert 1==2,"Expected only two cells per facet and not " + str(len(cells))
+
+        #Build the average normtionary and save data
+        self.doftonormal = doftonormal
+        self.normtionary = self.get_dof_normal_dict_avg(doftonormal)
+        self.doftionary = doftionary
+        #numpy array with type double for use by instant (c++)
+        self.doflist_double = np.array(doftionary.keys(),dtype = self.normtionary[self.normtionary.keys()[0]].dtype.name)
+        self.bdofs = np.array(doftionary.keys())
+
+    def restrict_to(self,bigvector):
+        """Restrict a vector to the dofs in dofs (usually boundary)"""
+        vector = np.zeros(len(self.doflist_double))
+        #Recast bigvector as a double type array when calling restict_to
+        self.crestrict_to(bigvector.array().view(vector.dtype.name),vector,self.bdofs)
+        return vector
+    
 if __name__ == "__main__":
      from finmag.demag.problems import prob_fembem_testcases as pft
      problem = pft.MagUnitCircle(10)
+     Mspace = df.VectorFunctionSpace(problem.mesh,"CG",1)
+     problem.M = df.interpolate(df.Expression(problem.M),Mspace)
+     
      solver = FemBemGCRSolver(problem)
      sol = solver.solve()
      plot(sol)
      interactive()
-

@@ -13,21 +13,27 @@ from finmag.util.interiorboundary import InteriorBoundary
 from finmag.util.convert_mesh import convert_mesh
 
 class DeMagProblem(object):
-    """Base class for all demag problems"""
-    def __init__(self,mesh,M):
+    """
+    Base class for all demag problems
+    M - the Dolfin object representing the (unit) magnetisation
+    Ms - the saturation magnetisation
+    """
+    def __init__(self,mesh,M, Ms = 1):
         self.mesh = mesh
         self.M = M
+        self.Ms = Ms
 
 class TruncDeMagProblem(DeMagProblem):
     """Base class for demag problems with truncated domains"""
-    def __init__(self,mesh,subdomain,M):
+    def __init__(self,mesh,subdomain,M,Ms = 1):
         """
-        - mesh is the problem mesh
+        mesh - is the problem mesh
         
-        - subdomain: Subdomain an object of type SubDomain which defines an
-          inside of the mesh (to mark the magnetic region)
+        subdomain- Subdomain an object of type SubDomain which defines an
+                   inside of the mesh (to mark the magnetic region)
 
-        - and M the initial magnetisation (Expression at the moment)
+        M - the initial magnetisation (Expression at the moment)
+        Ms - the saturation magnetisation
         """
         
         #(Currently M is constant)
@@ -77,5 +83,5 @@ class TruncDeMagProblem(DeMagProblem):
 
 class FemBemDeMagProblem(DeMagProblem):
     """Base class for FEMBEM demag problems"""
-    def __init__(self,mesh,M):
-        super(FemBemDeMagProblem,self).__init__(mesh,M)
+    def __init__(self,mesh,M,Ms = 1):
+        super(FemBemDeMagProblem,self).__init__(mesh,M,Ms)

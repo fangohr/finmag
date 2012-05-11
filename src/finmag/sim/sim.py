@@ -5,7 +5,7 @@ import numpy as np
 import finmag.sim.helpers as h
 from finmag.sim.llg2 import LLG
 from finmag.util.timings import timings
-from finmag.energies.fkdemag import FKDemag
+from finmag.energies.demag import Demag
 from finmag.sim.integrator import LLGIntegrator
 
 log = logging.getLogger(name="finmag")
