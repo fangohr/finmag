@@ -22,11 +22,9 @@ def setup_finmag():
 
     demag = Demag()
     demag.setup(S3, m, Ms, unit_length=1e-9)
+    H = demag.compute_field()
 
-    H_demag = df.Function(S3)
-    H_demag.vector()[:] = demag.compute_field()
-
-    return dict(m=m, H=H_demag, demag=demag, table=start_table())
+    return dict(m=m, H=H, Ms=Ms, S3=S3, mesh=mesh, table=start_table())
 
 def teardown_finmag(finmag):
     finmag["table"] += table_delim
@@ -70,7 +68,7 @@ def test_using_analytical_solution(finmag):
     assert np.max(rel_diff) < REL_TOLERANCE
 
 def test_using_nmag(finmag):
-    REL_TOLERANCE = 4e-5
+    REL_TOLERANCE = 5e-5
 
     H = finmag["H"].reshape((3, -1))
     H_nmag = np.array(zip(* np.genfromtxt(MODULE_DIR + "H_demag_nmag.txt")))
@@ -100,10 +98,9 @@ def test_using_nmag(finmag):
 def test_using_magpar(finmag):
     REL_TOLERANCE = 3e-1
 
-    demag = finmag["demag"]
-    magpar_nodes, magpar_H = compute_demag_magpar(demag.S3, demag.m, demag.Ms)
+    magpar_nodes, magpar_H = compute_demag_magpar(finmag["S3"], finmag["m"], finmag["Ms"])
     _, _, diff, rel_diff = compare_field_directly(
-            demag.mesh.coordinates(), finmag["H"],
+            finmag["mesh"].coordinates(), finmag["H"],
             magpar_nodes, magpar_H)
 
     finmag["table"] += table_entries.format(
@@ -129,7 +126,6 @@ def test_using_magpar(finmag):
 
 if __name__ == "__main__":
     f = setup_finmag()
-
     Hx, Hy, Hz = f["H"].reshape((3, -1))
     print "Expecting (Hx, Hy, Hz) = (-1/3, 0, 0)."
     print "demag field x-component:\n", stats(Hx)
