@@ -11,7 +11,7 @@ from finmag.sim.integrator import LLGIntegrator
 log = logging.getLogger(name="finmag")
 
 class Simulation(object):
-    def __init__(self, mesh, Ms, unit_length=1, demag=FKDemag()):
+    def __init__(self, mesh, Ms, unit_length=1, demag=None):
         timings.reset()
         timings.start("Sim-init")
 
@@ -31,7 +31,9 @@ class Simulation(object):
 
         if demag:
             self.add(demag)
-
+        elif demag==None:
+            self.add(Demag())
+          
         timings.stop("Sim-init")
    
     def __get_m(self):
