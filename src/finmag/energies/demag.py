@@ -19,7 +19,7 @@ class Demag(EnergyBase):
     """
     def __init__(self,solver = "FK"):
         self.in_jacobian = False
-        log.info("Creating Demag object with solver type" + solver)
+        log.info("Creating Demag object with " + solver + " solver.")
         if solver in ["FK","GCR"]:
             self.solver = solver
         else:
@@ -27,7 +27,7 @@ class Demag(EnergyBase):
 
     def setup(self, S3, m, Ms, unit_length):
         """S3
-                Somebody please explain what I am.
+                dolfin VectorFunctionSpace
             m
                 the Dolfin object representing the (unit) magnetisation
             Ms
@@ -37,7 +37,7 @@ class Demag(EnergyBase):
                 The scale of the mesh, default is 1.
         """
         timings.start("create-demag-problem")
-        problem = FemBemDeMagProblem(S3.mesh(), m,Ms)
+        problem = FemBemDeMagProblem(S3.mesh(), m, Ms)
         if self.solver == "FK":
             self.demag = FemBemFKSolver(problem, unit_length=unit_length)
         else:
