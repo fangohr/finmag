@@ -13,6 +13,8 @@ from finmag.native import sundials
 
 log = logging.getLogger(name="finmag")
 
+ONE_DEGREE_PER_NS = 17453292.5 # in rad/s
+
 def LLGIntegrator(llg, m0, backend="sundials", **kwargs):
     log.info("Creating LLGIntegrator with backend {}.".format(backend))
     if backend=="scipy":
@@ -23,24 +25,30 @@ def LLGIntegrator(llg, m0, backend="sundials", **kwargs):
         raise ValueError("backend must be either scipy or sundials")
 
 class BaseIntegrator(object):
-    def run_until_relaxation(self, stop_tol=1e-4):
+    def run_until_relaxation(self, stopping_dmdt=ONE_DEGREE_PER_NS):
         # TODO: use the characteristic time here
-        next_t = 1e-15
-        prev_m = self.llg.m.copy()
+        dt = 1e-15
         while True:
-            dt = next_t * 0.1
-            next_t += dt
-            self.run_until(next_t)
-            # TODO: use a better norm for stopping
-            diff = np.max(np.abs(prev_m - self.m))
-            prev_m = self.m.copy()
-            if diff < stop_tol:
+            # Why is self.cur_t alias CVodeGetCurrentTime not updated?
+            log.debug("{}: at t={:.2}, will integrate for dt={}.".format(self.__class__.__name__, self.llg.t, dt))
+            prev_m = self.llg.m.copy()
+
+            self.run_until(self.llg.t + dt)
+
+            dm = np.abs(self.m - prev_m).reshape((3, -1))
+            dm_norm = np.sqrt(dm[0]**2 + dm[1]**2 + dm[2]**2)
+            max_dmdt_norm = float(np.max(dm_norm) / dt)
+            log.debug("max_dmdt_norm = {} * stopping_dmdt.".format(max_dmdt_norm/stopping_dmdt))
+
+            if max_dmdt_norm < stopping_dmdt:
                 break
+
+            dt = dt * 1.5
 
 class ScipyIntegrator(BaseIntegrator):
     def __init__(self, llg, m0, reltol=1e-8, abstol=1e-8, nsteps=10000, method="bdf", **kwargs):
         self.llg = llg
-        self.cur_t = 0
+        self.cur_t = 0.0
         self.ode = scipy.integrate.ode(self.rhs, jac=None)
         self.m = self.llg.m[:] = m0
         self.ode.set_integrator("vode", method=method, rtol=reltol, atol=abstol, nsteps=nsteps, **kwargs)
@@ -66,7 +74,7 @@ class SundialsIntegrator(BaseIntegrator):
     def __init__(self, llg, m0, reltol=1e-8, abstol=1e-8, nsteps=10000, method="bdf_gmres_prec_id"):
         assert method in ("adams", "bdf_diag", "bdf_gmres_no_prec", "bdf_gmres_prec_id")
         self.llg = llg
-        self.cur_t = 0
+        self.cur_t = 0.0
         self.m = m0.copy()
 
         if method == "adams":

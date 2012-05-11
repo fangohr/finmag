@@ -66,10 +66,10 @@ class Simulation(object):
             self.integrator = LLGIntegrator(self.llg, self.llg.m)
         self.integrator.run_until(t)
 
-    def relax(self, stop_tol=1e-6):
+    def relax(self):
         if not hasattr(self, "integrator"):
             self.integrator = LLGIntegrator(self.llg, self.llg.m)
-        self.integrator.run_until_relaxation(stop_tol=stop_tol)
+        self.integrator.run_until_relaxation()
 
     def __get_pins(self):
         return self.llg.pins

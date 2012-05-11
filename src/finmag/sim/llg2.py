@@ -32,7 +32,7 @@ class LLG(object):
         self.c = 1e11 # 1/s numerical scaling correction \
         #               0.1e12 1/s is the value used by default in nmag 0.2
         self.Ms = 8.6e5 # A/m saturation magnetisation
-        self.t = 0 # s
+        self.t = 0.0 # s
         self.pins = [] # nodes where the magnetisation gets pinned
         self._pre_rhs_callables=[]
         self._post_rhs_callables=[]
