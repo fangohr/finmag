@@ -1,3 +1,3 @@
 from exchange import Exchange
 from anisotropy import UniaxialAnisotropy
-from fkdemag import FKDemag
+from demag import Demag
