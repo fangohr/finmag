@@ -1,7 +1,7 @@
 import os
 import numpy as np
-from dolfin import Mesh
-from finmag.sim.llg import LLG
+import dolfin as df
+from finmag.energies import Demag
 from finmag.util.convert_mesh import convert_mesh
 from finmag.sim.helpers import stats, sphinx_sci as s
 from finmag.tests.magpar.magpar import compare_field_directly, compute_demag_magpar
@@ -12,12 +12,21 @@ table_delim   = "    " + "=" * 10 + (" " + "=" * 30) * 4 + "\n"
 table_entries = "    {:<10} {:<30} {:<30} {:<30} {:<30}\n"
 
 def setup_finmag():
-    mesh = Mesh(convert_mesh(MODULE_DIR + "sphere.geo"))
-    llg = LLG(mesh, unit_length=1e-9)
-    llg.set_m((1, 0, 0))
-    llg.Ms = 1
-    llg.setup(use_demag=True)
-    return dict(H=llg.demag.compute_field().reshape((3, -1)), llg=llg, table=start_table())
+    mesh = df.Mesh(convert_mesh(MODULE_DIR + "sphere.geo"))
+    coords = np.array(zip(* mesh.coordinates()))
+
+    S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
+    m = df.Function(S3)
+    m.assign(df.Constant((1, 0, 0)))
+    Ms = 1
+
+    demag = Demag()
+    demag.setup(S3, m, Ms, unit_length=1e-9)
+
+    H_demag = df.Function(S3)
+    H_demag.vector()[:] = demag.compute_field()
+
+    return dict(m=m, H=H_demag, demag=demag, table=start_table())
 
 def teardown_finmag(finmag):
     finmag["table"] += table_delim
@@ -46,10 +55,11 @@ def test_using_analytical_solution(finmag):
     """ Expecting (-1/3, 0, 0) as a result. """
     REL_TOLERANCE = 2e-2
 
-    H_ref = np.zeros(finmag["H"].shape) 
+    H = finmag["H"].reshape((3, -1))
+    H_ref = np.zeros(H.shape) 
     H_ref[0] -= 1.0/3.0
 
-    diff = np.abs(finmag["H"] - H_ref)
+    diff = np.abs(H - H_ref)
     rel_diff = diff / np.sqrt(np.max(H_ref[0]**2 + H_ref[1]**2 + H_ref[2]**2))
 
     finmag["table"] += table_entries.format(
@@ -59,14 +69,12 @@ def test_using_analytical_solution(finmag):
     print stats(rel_diff)
     assert np.max(rel_diff) < REL_TOLERANCE
 
-#GB This test fails, possibly because of dependance on the LLG object which uses the deprecated Demag class.
-import pytest
-@pytest.mark.xfail
 def test_using_nmag(finmag):
     REL_TOLERANCE = 4e-5
 
+    H = finmag["H"].reshape((3, -1))
     H_nmag = np.array(zip(* np.genfromtxt(MODULE_DIR + "H_demag_nmag.txt")))
-    diff = np.abs(finmag["H"] - H_nmag)
+    diff = np.abs(H - H_nmag)
     rel_diff = diff / np.sqrt(np.max(H_nmag[0]**2 + H_nmag[1]**2 + H_nmag[2]**2))
 
     finmag["table"] += table_entries.format(
@@ -92,10 +100,10 @@ def test_using_nmag(finmag):
 def test_using_magpar(finmag):
     REL_TOLERANCE = 3e-1
 
-    llg = finmag["llg"]
-    magpar_nodes, magpar_H = compute_demag_magpar(llg.V, llg._m, llg.Ms)
+    demag = finmag["demag"]
+    magpar_nodes, magpar_H = compute_demag_magpar(demag.S3, demag.m, demag.Ms)
     _, _, diff, rel_diff = compare_field_directly(
-            llg.mesh.coordinates(), finmag["H"].flatten(),
+            demag.mesh.coordinates(), finmag["H"],
             magpar_nodes, magpar_H)
 
     finmag["table"] += table_entries.format(
@@ -122,7 +130,7 @@ def test_using_magpar(finmag):
 if __name__ == "__main__":
     f = setup_finmag()
 
-    Hx, Hy, Hz = f["H"] 
+    Hx, Hy, Hz = f["H"].reshape((3, -1))
     print "Expecting (Hx, Hy, Hz) = (-1/3, 0, 0)."
     print "demag field x-component:\n", stats(Hx)
     print "demag field y-component:\n", stats(Hy)

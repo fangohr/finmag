@@ -50,9 +50,10 @@ class Demag(EnergyBase):
     def compute_energy(self):
         return self.demag.compute_energy()
 
-
-#GB make a test of this solver later
-##        elif solver == "SimpleFK":
-##            #Use a basic CG1 space for now.
-##            Vv = VectorFunctionSpace(S3.mesh,"CG",1)
-##            self.demag =  SimpleFKSolver(Vv, m, Ms)
+"""
+GB make a test of this solver later
+        elif solver == "SimpleFK":
+            #Use a basic CG1 space for now.
+            Vv = VectorFunctionSpace(S3.mesh,"CG",1)
+            self.demag =  SimpleFKSolver(Vv, m, Ms)
+"""
