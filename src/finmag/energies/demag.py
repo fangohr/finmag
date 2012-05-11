@@ -38,7 +38,7 @@ class Demag(EnergyBase):
         """
         timings.start("create-demag-problem")
         problem = FemBemDeMagProblem(S3.mesh(), m,Ms)
-        if solver == "FK":
+        if self.solver == "FK":
             self.demag = FemBemFKSolver(problem, unit_length=unit_length)
         else:
             raise Exception("CGR not implemented yet")
