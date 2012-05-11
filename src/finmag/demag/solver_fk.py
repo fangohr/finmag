@@ -151,14 +151,16 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
     The demag field is defined as the negative gradient of :math:`\\phi`,
     and is returned by the 'compute_field' function.
 
+    *For an interface more inline with the rest of FinMag Code please use
+    the wrapper class Demag in finmag/energies/demag.
 
-    *Arguments (should be this way, isn't yet)*
-        V
-            a Dolfin VectorFunctionSpace object.
-        m
-            the Dolfin object representing the (unit) magnetisation
-        Ms
-            the saturation magnetisation
+    *Arguments*
+        problem
+            An object of type DemagProblem
+        degree
+            polynomial degree of the function space
+        element
+            finite element type, default is "CG" or Lagrange polynomial.
         unit_length
             the scale of the mesh, defaults to 1.
         project_method
@@ -178,134 +180,40 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
     """
     def __init__(self, problem, degree=1, element="CG", project_method='magpar', unit_length=1):
         timings.start("FKSolver init")
-        super(FemBemFKSolver, self).__init__(problem, degree, element=element)
+        super(FemBemFKSolver, self).__init__(problem, degree, element=element,
+                                             project_method = project_method,
+                                             unit_length = unit_length)
 
-        # Solver parameters
-        #df.parameters["linear_algebra_backend"] = "PETSc"
-        #self.solver = "cg"
-        #self.preconditioner = "ilu"
+        #Linear Solver parameters
         self.phi1_solver = df.KrylovSolver(self.poisson_matrix)
-        self.phi1_solver.parameters["preconditioner"]["same_nonzero_pattern"] = True
 
-        # Data
-        self.m = self.M
+        #Data
         self.Ms = problem.Ms
-        self.mesh = problem.mesh
-        self.unit_length = unit_length
         self.n = df.FacetNormal(self.mesh)
         self.mu0 = np.pi*4e-7 # Vs/(Am)
 
-        # Functions and functionspace (can get a lot of this from base
-        # after the interface changes).
-        self.W = df.VectorFunctionSpace(self.mesh, element, degree, dim=3)
-        self.w = df.TrialFunction(self.W)
-        self.vv = df.TestFunction(self.W)
+        #Key Data used that is present in the base class
+
+        #self.unit_length
+        #self.problem = problem
+        self.mesh = problem.mesh
+        #self.m = problem.M
+        #self.phi
+        #self.bem
+
         self.phi1 = df.Function(self.V)
         self.phi2 = df.Function(self.V)
-        self.H_demag = df.Function(self.W)
-        self.method = project_method
 
         # Eq (1) and code-block 2 - two first lines.
         b = self.Ms*df.inner(self.w, df.grad(self.v))*df.dx
         self.D = df.assemble(b)
-
-        # Needed for energy density computation
-        self.nodal_vol = df.assemble(self.v*df.dx, mesh=self.mesh).array()
-        self.ED = df.Function(self.V)
-
-        if self.method == 'magpar':
-            timings.startnext("Setup field magpar method")
-            self.__setup_field_magpar()
-            self.__compute_field = self.__compute_field_magpar
-        elif self.method == 'project':
-            self.__compute_field = self.__compute_field_project
-        else:
-            raise NotImplementedError("""Only methods currently implemented are
-                                    * 'magpar',
-                                    * 'project'""")
 
         # Compute boundary element matrix and global-to-boundary mapping
         timings.startnext("Build boundary element matrix")
         self.bem, self.b2g_map = compute_bem_fk(OrientedBoundaryMesh(self.mesh))
         timings.stop("Build boundary element matrix")
 
-
-    def compute_energy(self):
-        """
-        Compute the demag energy defined by
-
-        .. math::
-
-            E_\\mathrm{demag} = -\\frac12 \\mu_0 \\int_\\Omega
-            H_\\mathrm{demag} \\cdot \\vec M \\mathrm{d}x
-
-        *Returns*
-            Float
-                The demag energy.
-
-        """
-        self.H_demag.vector()[:] = self.compute_field()
-        E = -0.5*self.mu0*df.dot(self.H_demag, self.m*self.Ms)*df.dx
-        return df.assemble(E, mesh=self.mesh)*\
-                self.unit_length**self.mesh.topology().dim()
-
-    def energy_density(self):
-        """
-        Compute the demag energy density,
-
-        .. math::
-
-            \\frac{E_\\mathrm{demag}}{V},
-
-        where V is the volume of each node.
-
-        *Returns*
-            numpy.ndarray
-                The demag energy density.
-
-        """
-        self.H_demag.vector()[:] = self.compute_field()
-        E = df.dot(-0.5*self.mu0*df.dot(self.H_demag, self.m*self.Ms), self.v)*df.dx
-        nodal_E = df.assemble(E).array()
-        return nodal_E/self.nodal_vol
-
-    def energy_density_function(self):
-        """
-        Compute the demag energy density the same way as the
-        function above, but return a Function to allow probing.
-
-        *Returns*
-            dolfin.Function
-                The demag energy density.
-
-        """
-        self.ED.vector()[:] = self.energy_density()
-        return self.ED
-
-    def compute_field(self):
-        """
-        Compute the demag field.
-
-        .. note::
-
-            Using this instead of compute_demagfield from base for now.
-            The interface has to be changed to this later anyway, so
-            we can just keep it this way so we don't need to change the
-            examples later.
-
-        *Returns*
-            numpy.ndarray
-                The demag field.
-
-        """
-        self.__solve()
-        return self.__compute_field()
-
-    def scalar_potential(self):
-        """Return the scalar potential."""
-        return self.phi
-
-    def __solve(self):
+    def solve(self):
 
         # Compute phi1 on the whole domain (code-block 1, last line)
 
@@ -345,33 +253,6 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         self.phi.vector()[:] = self.phi1.vector() \
                              + self.phi2.vector()
         timings.stop("Add phi1 and phi2")
-
-    def __setup_field_magpar(self):
-        """Needed by the magpar method we may use instead of project."""
-        #FIXME: Someone with a bit more insight in this method should
-        # write something about it in the documentation.
-        a = df.inner(df.grad(self.u), self.vv)*df.dx
-        b = df.dot(self.vv, df.Constant([-1, -1, -1]))*df.dx
-        self.G = df.assemble(a)
-        self.L = df.assemble(b).array()
-
-    def __compute_field_magpar(self):
-        """Magpar method used by Weiwei."""
-        timings.start("Compute field")
-        Hd = self.G*self.phi.vector()
-        Hd = Hd.array()/self.L
-        timings.stop("Compute field")
-        return Hd
-
-    def __compute_field_project(self):
-        """
-        Dolfin method of projecting the scalar potential
-        onto a dolfin.VectorFunctionSpace.
-
-        """
-        Hdemag = df.project(-df.grad(self.phi), self.W)
-        return Hdemag.vector().array()
-
 
 if __name__ == "__main__":
     class Problem():
