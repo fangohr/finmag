@@ -3,7 +3,7 @@ import numpy as np
 import dolfin as df
 
 from finmag import Simulation
-from finmag.energies import UniaxialAnisotropy, Exchange
+from finmag.energies import UniaxialAnisotropy, Exchange, Demag
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
 """
@@ -49,8 +49,9 @@ for m_init in [flower_init, vortex_init]:
         divisions = lfactor * 2
         mesh = df.Box(0, 0, 0, L, L, L, divisions, divisions, divisions)
 
-        sim = Simulation(mesh, Ms) # Demag included by default.
+        sim = Simulation(mesh, Ms)
         sim.add(UniaxialAnisotropy(K1, [0, 0, 1]))
+        sim.add(Demag())
         sim.add(Exchange(A))
 
         sim.set_m(m_init)

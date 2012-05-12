@@ -5,13 +5,12 @@ import numpy as np
 import finmag.sim.helpers as h
 from finmag.sim.llg2 import LLG
 from finmag.util.timings import timings
-from finmag.energies.demag import Demag
 from finmag.sim.integrator import LLGIntegrator
 
 log = logging.getLogger(name="finmag")
 
 class Simulation(object):
-    def __init__(self, mesh, Ms, unit_length=1, demag=None):
+    def __init__(self, mesh, Ms, unit_length=1):
         timings.reset()
         timings.start("Sim-init")
 
@@ -29,11 +28,6 @@ class Simulation(object):
         self.Volume = df.assemble(df.Constant(1) * df.dx, mesh=mesh)
         self.t = 0
 
-        if demag:
-            self.add(demag)
-        elif demag==None:
-            self.add(Demag())
-          
         timings.stop("Sim-init")
    
     def __get_m(self):
