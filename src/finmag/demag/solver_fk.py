@@ -183,8 +183,10 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         super(FemBemFKSolver, self).__init__(problem, degree, element=element,
                                              project_method = project_method,
                                              unit_length = unit_length)
-
+        
         #Linear Solver parameters
+        method = "gmres"
+        pc = "ilu"
         self.phi1_solver = df.KrylovSolver(self.poisson_matrix, method, pc)
 
         #Data
