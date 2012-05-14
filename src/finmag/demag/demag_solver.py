@@ -11,8 +11,7 @@ class Demag(object):
         mesh = V.mesh()
         self.Ms = Ms
         timings.startnext("Demag-init-PBProblem")
-        self.problem = FBProblem(mesh, m)
-        self.problem.Ms = Ms
+        self.problem = FBProblem(mesh, m,Ms)
         timings.startnext("Demag-init-FemBemConstructorCall")
         if method == "FK":
             self.solver = FemBemFKSolver(self.problem)
