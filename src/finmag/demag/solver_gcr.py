@@ -97,7 +97,7 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
 
     """
 
-    def __init__(self, problem, degree=1, element="CG", project_method='project', unit_length=1):
+    def __init__(self, problem, degree=1, element="CG", project_method='magpar', unit_length=1):
         #Initialize the base class
         sb.FemBemDeMagSolver.__init__(self,problem,degree, element=element,
                                              project_method = project_method,
@@ -152,7 +152,7 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
         
         #Add together the two potentials
         timings.startnext("Add phi1 and phi2")
-        self.phi = self.calc_phitot(self.phia,self.phib)
+        self.phi.vector()[:] = self.phia.vector() + self.phib.vector()
         timings.stop("Add phi1 and phi2")
         
         return self.phi

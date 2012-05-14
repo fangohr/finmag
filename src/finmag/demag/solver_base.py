@@ -158,11 +158,6 @@ class FemBemDeMagSolver(object):
         self.ED.vector()[:] = self.energy_density()
         return self.ED
 
-    def calc_phitot(self,func1,func2):
-        """Add two functions to get phitotal"""
-        self.phi.vector()[:] = func1.vector()[:] + func2.vector()[:]
-        return self.phi
-
     def build_poisson_matrix(self):
         """assemble a poisson equation 'stiffness' matrix"""
         a = df.dot(df.grad(self.u),df.grad(self.v))*df.dx

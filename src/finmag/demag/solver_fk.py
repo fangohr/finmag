@@ -190,16 +190,7 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         self.phi1_solver = df.KrylovSolver(self.poisson_matrix, method, preconditioner)
 
         #Data
-        self.Ms = problem.Ms
         self.mu0 = np.pi*4e-7 # Vs/(Am)
-        self.mesh = problem.mesh
-
-        #Key Data used that is present in the base class
-        #self.unit_length
-        #self.problem = problem
-        #self.m = problem.M
-        #self.phi
-        #self.bem
 
         self.phi1 = df.Function(self.V)
         self.phi2 = df.Function(self.V)
@@ -253,6 +244,7 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         self.phi.vector()[:] = self.phi1.vector() \
                              + self.phi2.vector()
         timings.stop("Add phi1 and phi2")
+        return self.phi
 
 if __name__ == "__main__":
     class Problem():
