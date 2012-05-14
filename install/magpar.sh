@@ -1,5 +1,8 @@
 #!/bin/bash
 
+#needs gfortran installed
+sudo apt-get install gfortran
+
 PREFIX="$HOME" # EDIT HERE.
 
 source=magpar-0.9
