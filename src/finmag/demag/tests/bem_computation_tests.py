@@ -214,11 +214,7 @@ class BemComputationTests(unittest.TestCase):
         print message
         self.assertAlmostEqual(error, 0, delta=tol, msg="Error is above threshold %g, %s" % (tol, message))
 
-    import pytest
-    @pytest.mark.xfail
-        
-    #GB After refactoring the FK method into the base class this test fails. My best guess is that the LLG used here imports
-    #the deprecated Demag class which is no longer compatible.
+    @unittest.skip("GB: After refactoring this test fails. My best guess is that the LLG used here imports the deprecated Demag class which is no longer compatible.")
     def test_compute_scalar_potential_fk(self):
         m1 = df.Constant([1, 0, 0])
         m2 = df.Expression(["x[0]*x[1]+3", "x[2]+5", "x[1]+7"])
