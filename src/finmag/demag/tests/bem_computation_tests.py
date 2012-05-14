@@ -10,6 +10,7 @@ from finmag.demag import belement_magpar
 from finmag.sim.llg import LLG
 from finmag.tests.solid_angle_invariance_tests import random_3d_rotation_matrix
 from finmag.demag.problems.prob_fembem_testcases import MagSphere
+from finmag.energies.demag import Demag
 
 compute_belement = belement_magpar.return_bele_magpar()
 
@@ -83,48 +84,14 @@ def compute_scalar_potential_native_fk(mesh, m_expr=df.Constant([1, 0, 0]), Ms=1
     normalise_phi(phi1, mesh)
     return phi1
 
-# Solves the demag problem for phi using the GCR method and the native BEM matrix
-def compute_scalar_potential_native_gcr(mesh, m_expr=df.Constant([1, 0, 0]), Ms=1.):
-    # Set up the FE problems
-    V_m = df.VectorFunctionSpace(mesh, 'Lagrange', 1, dim=3)
-    V_phi = df.FunctionSpace(mesh, 'Lagrange', 1)
-    u = df.TrialFunction(V_phi)
-    v = df.TestFunction(V_phi)
-    n = df.FacetNormal(mesh)
-    fa = df.FacetArea(mesh)
-    m = df.interpolate(m_expr, V_m)
-    m.vector()[:] = helpers.fnormalise(m.vector().array())
-
-    phi1 = df.Function(V_phi)
-    phi2_bc = df.Function(V_phi)
-    phi2 = df.Function(V_phi)
-
-    # Solve the variational problem for phi1
-    a = df.dot(df.grad(u), df.grad(v)) * df.dx
-    L = -Ms * df.div(m) * v * df.dx
-    phi1_bc = df.DirichletBC(V_phi, df.Constant(0), lambda x, on_boundary: on_boundary)
-    df.solve(a == L, phi1, phi1_bc)
-    # Compute the BEM
-    boundary_mesh = OrientedBoundaryMesh(mesh)
-    bem, b2g = compute_bem_gcr(boundary_mesh)
-    # Compute the surface monopole density with the box method on the mesh boundary
-    # This is might be somewhat inaccurate for geometries with corners,
-    # but what else can we do apart from making BEM depend both on M
-    # and phi thus using 4x as much RAM
-    q_dot_v = df.assemble(Ms*df.dot(n, -m + df.grad(phi1))*v*df.ds, mesh=mesh).array()
-    surface_node_areas = df.assemble(v*df.ds, mesh=mesh).array()+1e-300
-    q = q_dot_v/surface_node_areas
-    # Compute phi2 on boundary using the BEM matrix
-    phi2_boundary = np.dot(bem, q[b2g])
-    # Map phi2 back to global space
-    phi2_bc.vector()[b2g] = phi2_boundary
-    # Solve the laplace equation for phi2
-    a = df.dot(df.grad(u), df.grad(v)) * df.dx
-    bc = df.DirichletBC(V_phi, phi2_bc, lambda x, on_boundary: on_boundary)
-    L = df.Constant(0) * v * df.dx
-    df.solve(a == L, phi2, bc)
-    # Add phi2 back to phi1
-    phi1.vector()[:] += phi2.vector().array()
+## Solves the demag problem for phi using the GCR method and the native BEM matrix
+def compute_scalar_potential_native_gcr(mesh, m_expr=df.Constant([1, 0, 0]), Ms=1.0):
+    gcrdemag = Demag("GCR")
+    V = df.VectorFunctionSpace(mesh,"CG",1)
+    m = df.interpolate(m_expr, V)
+    
+    gcrdemag.setup(V,m,Ms,unit_length = 1)
+    phi1 = gcrdemag.compute_potential()
     normalise_phi(phi1, mesh)
     return phi1
 

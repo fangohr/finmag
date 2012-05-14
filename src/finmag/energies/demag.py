@@ -5,7 +5,7 @@ from finmag.util.timings import timings
 from energy_base import EnergyBase
 from finmag.demag.problems.prob_base import FemBemDeMagProblem
 from finmag.demag.solver_fk import FemBemFKSolver
-from finmag.demag.solver_fk_test import SimpleFKSolver
+from finmag.demag.solver_gcr import FemBemGCRSolver
 
 log = logging.getLogger("finmag")
 
@@ -40,9 +40,11 @@ class Demag(EnergyBase):
         problem = FemBemDeMagProblem(S3.mesh(), m, Ms)
         if self.solver == "FK":
             self.demag = FemBemFKSolver(problem, unit_length=unit_length)
-        else:
-            raise Exception("CGR not implemented yet")
-        timings.stop("create-demag-problem")
+        elif self.solver == "GCR":
+            self.demag = FemBemGCRSolver(problem, unit_length=unit_length)
+            
+        timings.startnext("Solve-demag-problem")
+        self.demag.solve()
 
     def compute_field(self):
         return self.demag.compute_field()
@@ -50,10 +52,22 @@ class Demag(EnergyBase):
     def compute_energy(self):
         return self.demag.compute_energy()
 
-"""
-GB make a test of this solver later
-        elif solver == "SimpleFK":
-            #Use a basic CG1 space for now.
-            Vv = VectorFunctionSpace(S3.mesh,"CG",1)
-            self.demag =  SimpleFKSolver(Vv, m, Ms)
-"""
+    def compute_potential(self):
+        return self.demag.phi
+
+if __name__ == "__main__":
+    test == "GCR"
+    if test == "GCR":
+        mesh = df.UnitSphere(4)
+        Ms = 1
+        V = df.VectorFunctionSpace(mesh, 'Lagrange', 1)
+        m = df.project(df.Constant((1, 0, 0)), V)
+        gcrdemag = Demag("GCR")
+        gcrdemag.setup(V,m,Ms,unit_length = 1)
+        df.plot(gcrdemag.compute_potential())
+        df.interactive()
+        print timings
+        
+    elif test == "FK":
+        #TODO Add a test here.
+        pass
