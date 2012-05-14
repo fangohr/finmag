@@ -56,18 +56,22 @@ class Demag(EnergyBase):
         return self.demag.phi
 
 if __name__ == "__main__":
-    test == "GCR"
+    #Generate a plot for a simple Demag problem
+    test = "FK"
+    
+    mesh = df.UnitSphere(5)
+    Ms = 1
+    V = df.VectorFunctionSpace(mesh, 'Lagrange', 1)
+    m = df.project(df.Constant((1, 0, 0)), V)
+
     if test == "GCR":
-        mesh = df.UnitSphere(4)
-        Ms = 1
-        V = df.VectorFunctionSpace(mesh, 'Lagrange', 1)
-        m = df.project(df.Constant((1, 0, 0)), V)
-        gcrdemag = Demag("GCR")
-        gcrdemag.setup(V,m,Ms,unit_length = 1)
-        df.plot(gcrdemag.compute_potential())
-        df.interactive()
-        print timings
+        demag = Demag("GCR")
+        demag.setup(V,m,Ms,unit_length = 1)
         
     elif test == "FK":
-        #TODO Add a test here.
-        pass
+        demag = Demag("FK")
+        demag.setup(V,m,Ms,unit_length = 1)
+
+    print timings
+    df.plot(demag.compute_potential())
+    df.interactive()
