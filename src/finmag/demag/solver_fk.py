@@ -185,7 +185,7 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
                                              unit_length = unit_length)
 
         #Linear Solver parameters
-        self.phi1_solver = df.KrylovSolver(self.poisson_matrix, method, pc)
+        self.phi1_solver = df.KrylovSolver(self.poisson_matrix)
 
         #Data
         self.Ms = problem.Ms
