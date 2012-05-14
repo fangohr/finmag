@@ -13,7 +13,7 @@ class FemBemDeMagSolver(object):
     """Base Class for FEM/BEM Demag Solvers containing shared methods
         for a top level demag solver interface see
         class Demag in finmag/energies/demag
-        
+
         *Arguments*
         problem
             An object of type DemagProblem
@@ -29,7 +29,7 @@ class FemBemDeMagSolver(object):
                 * 'magpar'
                 * 'project'
     """
-                
+
     def __init__(self, problem, degree=1, element="CG",project_method = 'magpar',
                  unit_length = 1):
 
@@ -37,14 +37,14 @@ class FemBemDeMagSolver(object):
         self.problem = problem
         self.mesh = problem.mesh
         self.unit_length = unit_length
-        
+
         #Mesh Facet Normal
         self.n = df.FacetNormal(self.mesh)
-        
+
         #Unit Magentisation field
         self.m = problem.M
         self.Ms = problem.Ms
-        
+
         #Spaces and functions for the Demag Potential
         self.V = df.FunctionSpace(self.problem.mesh,element,degree)
         self.v = df.TestFunction(self.V)
@@ -157,7 +157,7 @@ class FemBemDeMagSolver(object):
         """
         self.ED.vector()[:] = self.energy_density()
         return self.ED
-    
+
     def calc_phitot(self,func1,func2):
         """Add two functions to get phitotal"""
         self.phi.vector()[:] = func1.vector()[:] + func2.vector()[:]
@@ -175,7 +175,8 @@ class FemBemDeMagSolver(object):
         A = self.poisson_matrix.copy()
         b = self.laplace_zeros.copy()
         bc.apply(A, b)
-        df.solve(A,function.vector(),b)
+        #df.solve(A,function.vector(),b)
+        self.laplace_solver.solve(A, function.vector(), b)
         return function
 
     def __compute_field_project(self):
@@ -225,7 +226,7 @@ class FemBemDeMagSolver(object):
                 Hspace = df.VectorFunctionSpace(phi.function_space().mesh(),"DG",0)
             Hdemag = df.project(Hdemag,Hspace)
         return Hdemag
-    
+
 
 class TruncDeMagSolver(object):
     """Base Class for truncated domain type Demag Solvers"""
