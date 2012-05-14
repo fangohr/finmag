@@ -23,11 +23,8 @@ cases = []
 for problem in problems:
     for solver in solvers:
         if solver.__name__ == "SimpleFKSolver":
-            case = solver(problem.V, problem.m, problem.Ms)
+            case = solver(problem.V, problem.M, problem.Ms)
         else:
-            # Temporary change because GB uses DG and not CG
-            # in solver base
-            problem.M = problem.m
             case = solver(problem)
         grad = case.compute_field()
         cases.append(case)
