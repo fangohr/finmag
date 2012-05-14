@@ -43,7 +43,7 @@ help:
 clean:
 	-rm -rf $(BUILDDIR)/* modules/*
 
-html: generate-doc
+html: generate-doc timing
 	$(SPHINXBUILD) -W -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
@@ -158,6 +158,15 @@ doctest:
 generate-doc: examples-for-doc
 	python generate_doc.py
 
+# The absolute path for the doc directory
+DOC_DIR = $(abspath .)
+# Paths that have to be added to PYTHONPATH prior to running the tests from here (for jenkins)
+PYTHON_ROOTS = $(DOC_DIR)/../src
+
+# Run the timing vs nmag every time
+timing:
+	cd ../examples/exchange_demag/timings/ && PYTHONPATH=$(PYTHON_ROOTS) python run_finmag.py
+
 #this target can be run to execute py.test ../examples to get figure
 #files ready. This will happen automatically when Jenkins runs, as
 #all tests in finmag/src and finmag/examples are run before the 
@@ -176,10 +185,7 @@ examples-for-doc: ../examples/macrospin/alpha-1-00.png ../examples/macrospin/alp
 	../src/finmag/tests/comparison/demag/table.rst ../examples/exchange_demag/simple1D.png \
 	../examples/exchange_demag/finmag_exch_density.npy ../examples/exchange_demag/finmag_demag_density.npy
 
-# The absolute path for the doc directory
-DOC_DIR = $(abspath .)
-# Paths that have to be added to PYTHONPATH prior to running the tests from here (for jenkins)
-PYTHON_ROOTS = $(DOC_DIR)/../src
+
 ../examples/macrospin/alpha-1-00.png: ../examples/macrospin/test_macrospin.py
 	cd ../examples/macrospin/ && PYTHONPATH=$(PYTHON_ROOTS) python test_macrospin.py
 
@@ -201,8 +207,8 @@ PYTHON_ROOTS = $(DOC_DIR)/../src
 ../examples/demag/stddev_loglog.png ../examples/demag/xvalues.png ../examples/demag/errnorm_loglog.png: ../examples/demag/short_nmag_comp_tests2.py
 	cd ../examples/demag/ && PYTHONPATH=$(PYTHON_ROOTS) python short_nmag_comp_tests2.py
 
-../examples/exchange_demag/timings/results.rst: ../examples/exchange_demag/timings/run_finmag.py
-	cd ../examples/exchange_demag/timings/ && PYTHONPATH=$(PYTHON_ROOTS) python run_finmag.py
+#../examples/exchange_demag/timings/results.rst: ../examples/exchange_demag/timings/run_finmag.py
+#	cd ../examples/exchange_demag/timings/ && PYTHONPATH=$(PYTHON_ROOTS) python run_finmag.py
 
 ../examples/demag/results_field.txt: ../examples/demag/test_field.py
 	cd ../examples/demag/ && PYTHONPATH=$(PYTHON_ROOTS) python test_field.py > results_field.txt
