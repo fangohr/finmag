@@ -152,7 +152,7 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
     and is returned by the 'compute_field' function.
 
     *For an interface more inline with the rest of FinMag Code please use
-    the wrapper class Demag in finmag/energies/demag.
+    the wrapper class Demag in finmag/energies/demag.*
 
     *Arguments*
         problem
@@ -185,7 +185,7 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
                                              unit_length = unit_length)
 
         #Linear Solver parameters
-        self.phi1_solver = df.KrylovSolver(self.poisson_matrix)
+        self.phi1_solver = df.KrylovSolver(self.poisson_matrix, method, pc)
 
         #Data
         self.Ms = problem.Ms
