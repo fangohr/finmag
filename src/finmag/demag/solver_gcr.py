@@ -130,24 +130,31 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
 
         #Solve for phia using FEM
         logger.info("GCR: Solving for phi_a")
+        timings.startnext("Solve phia")
         self.phia = self.solve_phia(self.phia)
         
         #Assemble the vector q.
         logger.info("GCR: Solving for phi_b on the boundary")
+        timings.startnext("Build q vector")
         q = self.build_vector_q(self.m,self.Ms,self.phia)
 
         # Compute phi2 on boundary using the BEM matrix
+        timings.startnext("Compute phiab on the boundary")
         phib_boundary = np.dot(self.bem, q[self.b2g])
 
-        # Insert the boundary data into the function phib.
+        #Insert the boundary data into the function phib.
         self.phib.vector()[self.b2g] = phib_boundary
         
         #Solve for phib on the inside of the mesh with Fem, eq. (3)
         logger.info("GCR: Solve for phi_b (laplace on the inside)")
+        timings.startnext("COmpute phi_b on the inside")
         self.phib = self.solve_laplace_inside(self.phib)
         
         #Add together the two potentials
+        timings.startnext("Add phi1 and phi2")
         self.phi = self.calc_phitot(self.phia,self.phib)
+        timings.stop("Add phi1 and phi2")
+        
         return self.phi
 
     def solve_phia(self,phia):
@@ -182,10 +189,8 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
 if __name__ == "__main__":
     from finmag.demag.problems import prob_fembem_testcases as pft
     problem = pft.MagSphere20()
-    print 3
     solver = FemBemGCRSolver(problem)
-    print 4
     sol = solver.solve()
-    print sol
+    print timings
     df.plot(sol)
     df.interactive()
