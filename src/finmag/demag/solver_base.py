@@ -9,7 +9,6 @@ import numpy as np
 import abc
 from finmag.util.timings import timings
 
-
 class FemBemDeMagSolver(object):
     """Base Class for FEM/BEM Demag Solvers containing shared methods
         for a top level demag solver interface see
@@ -38,13 +37,18 @@ class FemBemDeMagSolver(object):
         self.problem = problem
         self.mesh = problem.mesh
         self.unit_length = unit_length
+        
+        #Mesh Facet Normal
+        self.n = df.FacetNormal(self.mesh)
+        
         #Unit Magentisation field
         self.m = problem.M
+        self.Ms = problem.Ms
         
         #Spaces and functions for the Demag Potential
         self.V = df.FunctionSpace(self.problem.mesh,element,degree)
         self.v = df.TestFunction(self.V)
-        self.u= df.TrialFunction(self.V)
+        self.u = df.TrialFunction(self.V)
         self.phi = df.Function(self.V)
 
         #Space and functions for the Demag Field
@@ -58,18 +62,18 @@ class FemBemDeMagSolver(object):
 
         #Objects that are needed frequently for linear solves.
         self.poisson_matrix = self.build_poisson_matrix()
+        #2nd FEM.
         self.laplace_zeros = df.Function(self.V).vector()
         self.laplace_solver = df.KrylovSolver()
         self.laplace_solver.parameters["preconditioner"]["same_nonzero_pattern"] = True
 
-        # Objects needed for energy density computation
+        #Objects needed for energy density computation
         self.nodal_vol = df.assemble(self.v*df.dx, mesh=self.mesh).array()
         self.ED = df.Function(self.V)
 
         #Method to calculate the Demag field from the potential
         self.project_method = project_method
         if self.project_method == 'magpar':
-            timings.startnext("Setup field magpar method")
             self.__setup_field_magpar()
             self.__compute_field = self.__compute_field_magpar
         elif self.project_method == 'project':
@@ -199,10 +203,32 @@ class FemBemDeMagSolver(object):
         timings.stop("Compute field")
         return Hd
 
+    def get_demagfield(self,phi,use_default_function_space = True):
+        """
+        Returns the projection of the negative gradient of
+        phi onto a DG0 space defined on the same mesh
+        Note: Do not trust the viper solver to plot the DeMag field,
+        it can give some wierd results, paraview is recommended instead
+
+        use_default_function_space - If true project into self.Hdemagspace,
+                                     if false project into a Vector DG0 space
+                                     over the mesh of phi.
+        """
+
+        Hdemag = -df.grad(phi)
+        if use_default_function_space == True:
+            Hdemag = df.project(Hdemag,self.Hdemagspace)
+        else:
+            if self.D == 1:
+                Hspace = df.FunctionSpace(phi.function_space().mesh(),"DG",0)
+            else:
+                Hspace = df.VectorFunctionSpace(phi.function_space().mesh(),"DG",0)
+            Hdemag = df.project(Hdemag,Hspace)
+        return Hdemag
     
+
 class TruncDeMagSolver(object):
     """Base Class for truncated domain type Demag Solvers"""
-
     def __init__(self,problem,degree = 1):
         """problem - Object from class derived from FEMBEMDemagProblem"""
         self.problem = problem
@@ -300,78 +326,3 @@ class TruncDeMagSolver(object):
         """
         file = File("results/"+ name + ".pvd")
         file << function
-
-##Deprecated code.        
-## import instant
-
-##class DeMagSolver(object):
-##    """Base class for Demag Solvers"""
-##    def __init__(self,problem,degree =1):
-##        """problem - Object from class derived from FEMBEMDemagProblem"""
-##        self.problem = problem
-##        self.degree = degree
-##        #Create the space for the potential function
-##        self.V = df.FunctionSpace(self.problem.mesh,"CG",degree)
-##        #Get the dimension of the mesh
-##        self.D = problem.mesh.topology().dim()
-##        #Create the space for the Demag Field
-##        if self.D == 1:
-##            self.Hdemagspace = df.FunctionSpace(problem.mesh,"DG",0)
-##        else:
-##            self.Hdemagspace = df.VectorFunctionSpace(problem.mesh,"DG",0)
-##
-##        #Convert M into a function
-##        #HF: I think this should always be
-##        #Mspace = VectorFunctionSpace(self.problem.mesh,"DG",self.degree,3)
-##        #GB: ToDo fix the magnetisation of the problems so Mspace is always 3d
-##        #Some work on taking a lower dim Unit Normal and making it 3D is needed
-##        if self.D == 1:
-##            self.Mspace = df.FunctionSpace(self.problem.mesh,"DG",self.degree)
-##        else:
-##            self.Mspace = df.VectorFunctionSpace(self.problem.mesh,"DG",self.degree)
-##        
-##        #Define the magnetisation
-##        # At the moment this just accepts strings, tuple of strings
-##        # or a dolfin.Function
-##        # TODO: When the magnetisation no longer are allowed to be 
-##        # one-dimensional, remove " or isinstance(self.problem.M, str)"
-##        if isinstance(self.problem.M, tuple) or isinstance(self.problem.M, str):
-##            self.M = df.interpolate(Expression(self.problem.M),self.Mspace)
-##        elif 'dolfin.functions.function.Function' in str(type(self.problem.M)):
-##            self.M = self.problem.M
-##        else:
-##            raise NotImplementedError("%s is not implemented." \
-##                    % type(self.problem.M))
-##
-##        
-##    def get_demagfield(self,phi,use_default_function_space = True):
-##        """
-##        Returns the projection of the negative gradient of
-##        phi onto a DG0 space defined on the same mesh
-##        Note: Do not trust the viper solver to plot the DeMag field,
-##        it can give some wierd results, paraview is recommended instead
-##
-##        use_default_function_space - If true project into self.Hdemagspace,
-##                                     if false project into a Vector DG0 space
-##                                     over the mesh of phi.
-##        """
-##
-##
-##        Hdemag = -grad(phi)
-##        if use_default_function_space == True:
-##            Hdemag = df.project(Hdemag,self.Hdemagspace)
-##        else:
-##            if self.D == 1:
-##                Hspace = df.FunctionSpace(phi.function_space().mesh(),"DG",0)
-##            else:
-##                Hspace = df.VectorFunctionSpace(phi.function_space().mesh(),"DG",0)
-##            Hdemag = df.project(Hdemag,Hspace)
-##        return Hdemag
-##        
-##    def save_function(self,function,name):
-##        """
-##        The function is saved as a file name.pvd under the folder ~/results.
-##        It can be viewed with paraviewer or mayavi
-##        """
-##        file = File("results/"+ name + ".pvd")
-##        file << function

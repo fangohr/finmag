@@ -88,7 +88,7 @@ class MagSphereBase(pb.FemBemDeMagProblem,cm.MeshGenerator):
         self.Ms = 1.0
         self.M = (str(self.Ms), "0.0", "0.0")
         self.V = VectorFunctionSpace(self.mesh, "CG", 1)
-        self.m = interpolate(Expression(self.M), self.V)
+        self.M = interpolate(Expression(self.M), self.V)
         self.r = radius        
         self.maxh = maxh
 
@@ -104,7 +104,7 @@ class MagSphere(MagSphereBase):
     """Demag Sphere problem Using the geo sphere with radius r and maxh=maxh"""
     def __init__(self,r,hmax):
         MagSphereBase.__init__(self,hmax,r)
-
+        
 class MagSphere50(MagSphereBase):
     """Demag Sphere problem Using the geo sphere mesh maxh  = 5.0"""
     def __init__(self):

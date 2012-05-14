@@ -1,3 +1,5 @@
+#GB what does llg mean?
+
 import numpy as np
 import logging 
 import dolfin as df
@@ -336,8 +338,7 @@ class LLG(object):
                 timings.start("Create demag problem")
                 from finmag.demag.problems.prob_base import FemBemDeMagProblem
                 from finmag.demag.solver_fk import FemBemFKSolver
-                problem = FemBemDeMagProblem(self.mesh, self._m)
-                problem.Ms = self.Ms
+                problem = FemBemDeMagProblem(self.mesh, self._m,self.Ms)
                 timings.stop("Create demag problem")
                 self.demag = FemBemFKSolver(problem, unit_length=self.unit_length)
             else:

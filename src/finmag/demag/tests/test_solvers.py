@@ -6,7 +6,7 @@ __project__ = "Finmag"
 __organisation__ = "University of Southampton"
 
 from dolfin import *
-import pytest
+import unittest
 import numpy as np
 import finmag.demag.problems.prob_trunc_testcases as pttc
 import finmag.demag.problems.prob_fembem_testcases as pftc
@@ -274,10 +274,6 @@ class ZTest_FemBemGCRSolver(DemagTester):
 
     def desc(self):
         return "GCR Fembem Solver Tester"
-
-    def easyspace(self):
-        mesh = UnitSquare(1,1)
-        return FunctionSpace(mesh,"CG",1)
     
     def test_compare_3danalytical(self):
         """
@@ -298,45 +294,6 @@ class ZTest_FemBemGCRSolver(DemagTester):
         phi = self.solver3d.solve()
         Hdemag = self.solver3d.get_demagfield(phi)
         self.compare_to_analytical(Hdemag,self.analytical3d.Hdemag,testname)
-
-    def test_get_boundary_dof_coordinate_dict(self):
-        """Test the method build_boundary_data- doftionary"""
-        #Insert the special function space
-        self.solver.V = FunctionSpace(self.solver.problem.mesh,"CG",1)
-        #Call the methid
-        self.solver.build_boundary_data()
-        #test the result
-        numdofcalc = len(self.solver.doftionary)
-        numdofactual = BoundaryMesh(self.solver.V.mesh()).num_vertices()
-        assert numdofcalc == numdofactual,"Error in Boundary Dof Dictionary creation, number of DOFS " +str(numdofcalc)+ \
-                                          " does not match that of the Boundary Mesh " + str(numdofactual)
-    def test_get_dof_normal_dict(self):
-        """Test the method get_dof_normal_dict"""
-        V = self.easyspace()
-        #insert V into the solver
-        self.solver.V = V
-        self.solver.build_boundary_data()
-        facetdic = self.solver.doftonormal
-        coord = self.solver.doftionary
-        
-        #Tests
-        assert len(facetdic[0]) == 2,"Error in normal dictionary creation, 1,1 UnitSquare with CG1 has two normals per boundary dof"
-        assert facetdic.keys() == coord.keys(),"error in normal dictionary creation, boundary dofs do not agree with those obtained from \
-                                            get_boundary_dof_coordinate_dict"
-
-    def test_get_dof_normal_dict_avg(self):
-        """
-        Test the method get_dof_normal_dict_avg, see if average normals
-        have length one
-        """
-        V = self.easyspace()
-        #insert V into the solver
-        self.solver.V = V
-        self.solver.build_boundary_data()
-        normtionary = self.solver.normtionary
-        for k in normtionary:
-            assert near(sqrt(np.dot(normtionary[k],normtionary[k].conj())),1),"Failure in average normal calulation, length of\
-                                                                                     normal not equal to 1"
 
 
 if __name__ == "__main__":

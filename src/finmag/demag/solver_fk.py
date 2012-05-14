@@ -189,14 +189,12 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
 
         #Data
         self.Ms = problem.Ms
-        self.n = df.FacetNormal(self.mesh)
         self.mu0 = np.pi*4e-7 # Vs/(Am)
-
+        self.mesh = problem.mesh
+                
         #Key Data used that is present in the base class
-
         #self.unit_length
         #self.problem = problem
-        self.mesh = problem.mesh
         #self.m = problem.M
         #self.phi
         #self.bem

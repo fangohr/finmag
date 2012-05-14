@@ -41,11 +41,6 @@ def compute_scalar_potential_llg(mesh, m_expr=df.Constant([1, 0, 0]), Ms=1.):
 def differentiate_fd(f, x, eps=1e-4, offsets=(-2,-1,1,2), weights=(1./12.,-2./3.,2./3.,-1./12.)):
     return sum(f(x+eps*dx)*weights[i] for i, dx in enumerate(offsets))/eps
 
-PHI1_SOLVER_PARAMS = PHI2_SOLVER_PARAMS = {
-    "linear_solver": "gmres",
-    "preconditioner": "ilu",
-}
-
 # Solves the demag problem for phi using the FK method and the native BEM matrix
 def compute_scalar_potential_native_fk(mesh, m_expr=df.Constant([1, 0, 0]), Ms=1.):
     # Set up the FE problems
@@ -68,7 +63,7 @@ def compute_scalar_potential_native_fk(mesh, m_expr=df.Constant([1, 0, 0]), Ms=1
     # However, the Krylov subspace methods are supposed to be regularising, therefore
     # as long as we use a fixed initial guess, or renormalise the initial guess
     # periodically during time integration, we should be fine
-    df.solve(a == L, phi1, solver_parameters=PHI1_SOLVER_PARAMS)
+    df.solve(a == L, phi1)
     # Compute the BEM
     boundary_mesh = OrientedBoundaryMesh(mesh)
     bem, b2g = compute_bem_fk(boundary_mesh)
@@ -82,7 +77,7 @@ def compute_scalar_potential_native_fk(mesh, m_expr=df.Constant([1, 0, 0]), Ms=1
     a = df.dot(df.grad(u), df.grad(v)) * df.dx
     bc = df.DirichletBC(V_phi, phi2_bc, lambda x, on_boundary: on_boundary)
     L = df.Constant(0) * v * df.dx
-    df.solve(a == L, phi2, bc, solver_parameters=PHI2_SOLVER_PARAMS)
+    df.solve(a == L, phi2, bc)
     # Add phi2 back to phi1
     phi1.vector()[:] += phi2.vector().array()
     normalise_phi(phi1, mesh)
@@ -108,7 +103,7 @@ def compute_scalar_potential_native_gcr(mesh, m_expr=df.Constant([1, 0, 0]), Ms=
     a = df.dot(df.grad(u), df.grad(v)) * df.dx
     L = -Ms * df.div(m) * v * df.dx
     phi1_bc = df.DirichletBC(V_phi, df.Constant(0), lambda x, on_boundary: on_boundary)
-    df.solve(a == L, phi1, phi1_bc, solver_parameters=PHI1_SOLVER_PARAMS)
+    df.solve(a == L, phi1, phi1_bc)
     # Compute the BEM
     boundary_mesh = OrientedBoundaryMesh(mesh)
     bem, b2g = compute_bem_gcr(boundary_mesh)
@@ -127,7 +122,7 @@ def compute_scalar_potential_native_gcr(mesh, m_expr=df.Constant([1, 0, 0]), Ms=
     a = df.dot(df.grad(u), df.grad(v)) * df.dx
     bc = df.DirichletBC(V_phi, phi2_bc, lambda x, on_boundary: on_boundary)
     L = df.Constant(0) * v * df.dx
-    df.solve(a == L, phi2, bc, solver_parameters=PHI2_SOLVER_PARAMS)
+    df.solve(a == L, phi2, bc)
     # Add phi2 back to phi1
     phi1.vector()[:] += phi2.vector().array()
     normalise_phi(phi1, mesh)
@@ -222,7 +217,7 @@ class BemComputationTests(unittest.TestCase):
     import pytest
     @pytest.mark.xfail
         
-    #GB After refactoring this test fails. My best guess is that the LLG used here imports
+    #GB After refactoring the FK method into the base class this test fails. My best guess is that the LLG used here imports
     #the deprecated Demag class which is no longer compatible.
     def test_compute_scalar_potential_fk(self):
         m1 = df.Constant([1, 0, 0])
@@ -297,3 +292,5 @@ class BemComputationTests(unittest.TestCase):
         # Divergence of R is 3, the volume of the unit cube is 1 so we divide by 3
         print "Normal: +1=outward, -1=inward:", df.assemble(df.dot(field, n) * df.ds, mesh=mesh) / 3.
 
+if __name__ == "__main__":
+    unittest.main()    
