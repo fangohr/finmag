@@ -185,10 +185,10 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
                                              unit_length = unit_length)
 
         #Linear Solver parameters
-        method = "cg"
-        preconditioner = "ilu"
+        method = "default"
+        preconditioner = "default"
         self.phi1_solver = df.KrylovSolver(self.poisson_matrix, method, preconditioner)
-        self.phi1_solver.parameters["preconditioner"]["same_nonzero_pattern"] = True
+
         #Data
         self.mu0 = np.pi*4e-7 # Vs/(Am)
 
