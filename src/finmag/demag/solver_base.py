@@ -64,7 +64,7 @@ class FemBemDeMagSolver(object):
         self.poisson_matrix = self.build_poisson_matrix()
         #2nd FEM.
         self.laplace_zeros = df.Function(self.V).vector()
-        self.laplace_solver = df.KrylovSolver()
+        self.laplace_solver = df.KrylovSolver("default", "ilu")
         self.laplace_solver.parameters["preconditioner"]["same_nonzero_pattern"] = True
 
         #Objects needed for energy density computation
