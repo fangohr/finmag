@@ -1171,3 +1171,31 @@ fangohr: Still testing ...
 2012-05-15 17:26:54 mb8g11: (clean install)
 2012-05-15 17:27:06 fangohr_laptop: Nice.
 2012-05-15 17:27:23 mb8g11: Counting on you to bring fresh ideas back ;)
+2012-05-16 10:16:30 gabrielbalaban: Hei Anders!
+2012-05-16 10:16:36 andersej: Hei!
+2012-05-16 10:16:55 gabrielbalaban: Går det bra?
+2012-05-16 10:17:16 andersej: Ja, ganske. Enn du?
+2012-05-16 10:18:16 gabrielbalaban: ja også ganske, jeg glede meg til i morn (17 mai!) og jobbe litt med finmag. Jeg har ut  df.KrylovSolver slik som du bruker i FK
+2012-05-16 10:18:28 gabrielbalaban: og lurer på om du vet hvordan man kan sette toleransen?
+2012-05-16 10:20:19 gabrielbalaban: I en Unit Test til Dimitri får jeg en L2 feil av størrelse 0.0107519, selv om krylov toleransen er antaglivis omternt 10x -7!
+2012-05-16 10:24:50 gabrielbalaban: se her http://fenicsproject.org/pub/femcenter/pub/software/dolfin/doc/KrylovSolver_8h-source.html
+2012-05-16 10:25:05 gabrielbalaban: Jeg tror TOL er privat owwwww!
+2012-05-16 10:26:46 andersej: Jeg ville tippet at dette kunne endres ved solver.parameters["absolute_tolerance"] = ... eller noe i den stilen.
+2012-05-16 10:30:27 gabrielbalaban: hmm god ide!
+2012-05-16 10:31:40 andersej: >>> from dolfin import *
+2012-05-16 10:31:41 andersej: >>> s = KrylovSolver()
+2012-05-16 10:31:41 andersej: >>> print s.parameters["absolute_tolerance"]
+2012-05-16 10:31:41 andersej: 1e-15
+2012-05-16 10:41:03 gabrielbalaban: takk!
+2012-05-16 10:43:20 gabrielbalaban: hmm selv om toleransen er 1e-15 så for jeg en feil av orden -11
+2012-05-16 10:45:40 gabrielbalaban: FYI dette hjelper self.phia_solver.parameters["relative_tolerance"] = df.e-12
+2012-05-16 10:46:07 andersej: Fint!
+2012-05-16 13:13:32 andersej: http://sn0v.wordpress.com/2012/05/11/installing-cuda-on-ubuntu-12-04/
+2012-05-16 13:19:12 mb8g11: thanks
+2012-05-16 15:16:39 mb8g11: soon it will have compiled, Anders
+2012-05-16 15:18:34 andersej: That's when the debugging starts..
+2012-05-16 15:21:08 mb8g11: Just remind me, why am I doing this?
+2012-05-16 15:21:42 andersej: To use the gpu-solver.
+2012-05-16 15:27:26 mb8g11: ... and? :D
+2012-05-16 15:31:06 andersej: That's a funny thing to do.
+2012-05-16 16:06:35 mb8g11: Yeah, as funny as new ubuntu versions.
