@@ -12,9 +12,6 @@ import finmag.demag.solver_base as sb
 import numpy as np
 from finmag.util.timings import timings
 from finmag.native.llg import compute_bem_gcr, OrientedBoundaryMesh
-
-#Set allow extrapolation to true#
-##df.parameters["allow_extrapolation"] = True
 logger = logging.getLogger(name='finmag')
 
 class FemBemGCRSolver(sb.FemBemDeMagSolver):
@@ -95,27 +92,48 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
     potentials, is also done in the exact same way as for the Fredkin-Koehler
     approach.
 
+    *Arguments*
+        problem
+            An object of type DemagProblem
+        degree
+            polynomial degree of the function space
+        element
+            finite element type, default is "CG" or Lagrange polynomial.
+        unit_length
+            the scale of the mesh, defaults to 1.
+        project_method
+            possible methods are
+                * 'magpar'
+                * 'project'
+        phiaTOL = df.e-12,
+            relative tolerance of the first krylov linear solver
+        phibTOL = df.e-12
+            relative tolerance of the second krylov linear solver
     """
 
-    def __init__(self, problem, degree=1, element="CG", project_method='magpar', unit_length=1):
+    def __init__(self, problem, degree=1, element="CG", project_method='magpar', unit_length=1,
+                 phiaTOL = df.e-12,phibTOL = df.e-12):
+        
         #Initialize the base class
         sb.FemBemDeMagSolver.__init__(self,problem,degree, element=element,
                                              project_method = project_method,
-                                             unit_length = unit_length)
+                                             unit_length = unit_length,phi2TOL = phibTOL)
+        self.phiaTOL = phiaTOL
 
         #Define the potentials
         self.phia = df.Function(self.V)
         self.phib = df.Function(self.V)
 
         #Buffer a homogeneous Dirichlet Poisson Matrix as well as BC
-        self.phia_bc = df.DirichletBC(self.V,0,"on_boundary")
+        self.phia_bc = df.DirichletBC(self.V,0,lambda x, on_boundary: on_boundary)
         self.poisson_matrix_dirichlet = self.poisson_matrix.copy() 
         self.phia_bc.apply(self.poisson_matrix_dirichlet)
 
         #Linear Solver parameters for the 1st solve
         #Let dolfin decide what's best
         self.phia_solver = df.KrylovSolver(self.poisson_matrix_dirichlet)
-
+        self.phia_solver.parameters["relative_tolerance"] = self.phiaTOL
+        
         #Buffer the BEM
         timings.startnext("Build boundary element matrix")
         self.boundary_mesh = OrientedBoundaryMesh(self.mesh)
@@ -147,14 +165,14 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
         
         #Solve for phib on the inside of the mesh with Fem, eq. (3)
         logger.info("GCR: Solve for phi_b (laplace on the inside)")
-        timings.startnext("COmpute phi_b on the inside")
+        timings.startnext("Compute phi_b on the inside")
         self.phib = self.solve_laplace_inside(self.phib)
         
         #Add together the two potentials
         timings.startnext("Add phi1 and phi2")
         self.phi.vector()[:] = self.phia.vector() + self.phib.vector()
         timings.stop("Add phi1 and phi2")
-        
+
         return self.phi
 
     def solve_phia(self,phia):
@@ -171,8 +189,11 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
 
         #Solve for phia
         self.phia_solver.solve(phia.vector(),F)
+        #Replace with LU solve
+        #df.solve(self.poisson_matrix_dirichlet,phia.vector(),F)
+        
         return phia
-
+    
     def build_vector_q(self,m,Ms,phi1):
         """Get the left hand side q in the BEM equation phib = bem*qf
            using the box method. Assembly is done over the entire mesh,
@@ -185,6 +206,9 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
         surface_node_areas = df.assemble(self.v*df.ds, mesh=self.mesh).array()+1e-300
         q = q_dot_v/surface_node_areas
         return q
+
+##    def build_vector_q2(self,m,Ms,phi1):
+##        
     
 if __name__ == "__main__":
     from finmag.demag.problems import prob_fembem_testcases as pft

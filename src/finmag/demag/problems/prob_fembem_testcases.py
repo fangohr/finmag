@@ -86,14 +86,14 @@ class MagSphereBase(pb.FemBemDeMagProblem,cm.MeshGenerator):
         #Upload the dolfin mesh
         self.mesh = Mesh(meshpath)
         self.Ms = 1.0
-        self.M = (str(self.Ms), "0.0", "0.0")
+        self.m = (str(self.Ms), "0.0", "0.0")
         self.V = VectorFunctionSpace(self.mesh, "CG", 1)
-        self.M = interpolate(Expression(self.M), self.V)
+        self.m = interpolate(Expression(self.m), self.V)
         self.r = radius        
         self.maxh = maxh
 
         #Initialize Base pb.FemBemDeMagProblem
-        pb.FemBemDeMagProblem.__init__(self,self.mesh,self.M)
+        pb.FemBemDeMagProblem.__init__(self,self.mesh,self.m)
         
     def desc(self):
         return "Sphere demag test problem, Ms=%g, radius=%g, maxh=%g" %(self.Ms, self.r, self.maxh)

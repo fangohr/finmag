@@ -41,7 +41,8 @@ class Demag(EnergyBase):
         if self.solver == "FK":
             self.demag = FemBemFKSolver(problem, unit_length=unit_length)
         elif self.solver == "GCR":
-            self.demag = FemBemGCRSolver(problem, unit_length=unit_length)
+            self.demag = FemBemGCRSolver(problem, unit_length=unit_length,
+                                         phiaTOL = df.e-12,phibTOL = df.e-12)
             
         timings.startnext("Solve-demag-problem")
         self.demag.solve()
@@ -57,12 +58,13 @@ class Demag(EnergyBase):
 
 if __name__ == "__main__":
     #Generate a plot for a simple Demag problem
-    test = "FK"
-    
-    mesh = df.UnitSphere(5)
-    Ms = 1
-    V = df.VectorFunctionSpace(mesh, 'Lagrange', 1)
-    m = df.project(df.Constant((1, 0, 0)), V)
+    test = "GCR"
+    from finmag.demag.problems import prob_fembem_testcases as pft
+    problem = pft.MagSphere20()
+    mesh = problem.mesh
+    Ms = problem.Ms
+    m = problem.m
+    V = problem.V
 
     if test == "GCR":
         demag = Demag("GCR")
@@ -74,4 +76,4 @@ if __name__ == "__main__":
 
     print timings
     df.plot(demag.compute_potential())
-    df.interactive()
+    df.interactive()    
