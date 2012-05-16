@@ -167,6 +167,10 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
             possible methods are
                 * 'magpar'
                 * 'project'
+        phi1TOL 
+            relative tolerance of the first krylov linear solver
+        phi2TOL 
+            relative tolerance of the second krylov linear solver
 
     At the moment, we think both methods work for first degree basis
     functions. The 'magpar' method may not work with higher degree
@@ -178,17 +182,20 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         See the exchange_demag example.
 
     """
-    def __init__(self, problem, degree=1, element="CG", project_method='magpar', unit_length=1):
+    def __init__(self, problem, degree=1, element="CG", project_method='magpar', unit_length=1,
+                 phi1TOL = df.e-12,phi2TOL = df.e-12):
         timings.start("FKSolver init")
-        super(FemBemFKSolver, self).__init__(problem, degree, element=element,
+        sb.FemBemDeMagSolver.__init__(self,problem, degree, element=element,
                                              project_method = project_method,
-                                             unit_length = unit_length)
+                                             unit_length = unit_length,phi2TOL = phi2TOL)
 
+        self.phi1TOL = phi1TOL
+        
         #Linear Solver parameters
         method = "default"
         preconditioner = "default"
         self.phi1_solver = df.KrylovSolver(self.poisson_matrix, method, preconditioner)
-
+        self.phi1_solver.parameters["relative_tolerance"] = self.phi1TOL
         #Data
         self.mu0 = np.pi*4e-7 # Vs/(Am)
 

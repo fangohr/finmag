@@ -16,14 +16,20 @@ class Demag(EnergyBase):
 
     solver
         type of demag solver GCR or FK
+    phi1TOL
+        Relative tolerance for the first linear solve
+    phi2TOL
+        Relative tolerance for the second linear solve    
     """
-    def __init__(self,solver = "FK"):
+    def __init__(self,solver = "FK", phi1TOL = df.e-12, phi2TOL = df.e-12):
         self.in_jacobian = False
         log.info("Creating Demag object with " + solver + " solver.")
         if solver in ["FK","GCR"]:
             self.solver = solver
         else:
             raise Exception("Only 'FK', and 'GCR' are possible solver values") 
+        self.phi1TOL = phi1TOL
+        self.phi2TOL = phi2TOL
 
     def setup(self, S3, m, Ms, unit_length):
         """S3
@@ -36,15 +42,18 @@ class Demag(EnergyBase):
             unit_length
                 The scale of the mesh, default is 1.
         """
-        timings.start("create-demag-problem")
+       # timings.startnext("create-demag-problem")
         problem = FemBemDeMagProblem(S3.mesh(), m, Ms)
         if self.solver == "FK":
-            self.demag = FemBemFKSolver(problem, unit_length=unit_length)
+            self.demag = FemBemFKSolver(problem, unit_length=unit_length,
+                                         phi1TOL = self.phi1TOL,
+                                         phi2TOL = self.phi2TOL)
         elif self.solver == "GCR":
             self.demag = FemBemGCRSolver(problem, unit_length=unit_length,
-                                         phiaTOL = df.e-12,phibTOL = df.e-12)
+                                         phiaTOL = self.phi1TOL,
+                                         phibTOL = self.phi2TOL)
             
-        timings.startnext("Solve-demag-problem")
+        #timings.startnext("Solve-demag-problem")
         self.demag.solve()
 
     def compute_field(self):

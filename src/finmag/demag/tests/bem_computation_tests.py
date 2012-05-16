@@ -84,6 +84,16 @@ def compute_scalar_potential_native_fk(mesh, m_expr=df.Constant([1, 0, 0]), Ms=1
     normalise_phi(phi1, mesh)
     return phi1
 
+def compute_scalar_potential_native_fk(mesh, m_expr=df.Constant([1, 0, 0]), Ms=1.):
+    fkdemag = Demag("GCR")
+    V = df.VectorFunctionSpace(mesh,"Lagrange",1)
+    m = df.interpolate(m_expr, V)
+    m.vector()[:] = helpers.fnormalise(m.vector().array())
+    fkdemag.setup(V,m,Ms,unit_length = 1)
+    phi1 = fkdemag.compute_potential()
+    normalise_phi(phi1, mesh)
+    return phi1
+
 ## Solves the demag problem for phi using the GCR method and the native BEM matrix
 def compute_scalar_potential_native_gcr(mesh, m_expr=df.Constant([1, 0, 0]), Ms=1.0):
     gcrdemag = Demag("GCR")
@@ -184,7 +194,6 @@ class BemComputationTests(unittest.TestCase):
         print "m_expr = ",m_expr
         self.assertAlmostEqual(error, 0, delta=tol, msg="Error is above threshold %g, %s" % (tol, message))
 
-    @unittest.skip("GB: After refactoring this test fails. My best guess is that the LLG used here imports the deprecated Demag class which is no longer compatible.")
     def test_compute_scalar_potential_fk(self):
         m1 = df.Constant([1, 0, 0])
         m2 = df.Expression(["x[0]*x[1]+3", "x[2]+5", "x[1]+7"])
