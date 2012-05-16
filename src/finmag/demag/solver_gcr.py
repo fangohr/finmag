@@ -16,7 +16,7 @@ logger = logging.getLogger(name='finmag')
 
 class FemBemGCRSolver(sb.FemBemDeMagSolver):
     """
-    This approach is similar to the :py:class:`FKSolver <finmag.demag.solver_fk.FemBemFKSolver>`
+    This approach is similar to the :py:class:FKSolver <finmag.demag.solver_fk.FemBemFKSolver>`
     approach, so we will just comment on the differences between the
     approaches. As before, the magnetic scalar potential is diveded into
     two parts, :math:`\\phi = \\phi_a + \\phi_b`, but the definition of these
@@ -207,9 +207,6 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
         q = q_dot_v/surface_node_areas
         return q
 
-##    def build_vector_q2(self,m,Ms,phi1):
-##        
-    
 if __name__ == "__main__":
     from finmag.demag.problems import prob_fembem_testcases as pft
     problem = pft.MagSphere20()
