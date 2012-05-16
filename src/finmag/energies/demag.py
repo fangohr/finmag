@@ -21,7 +21,7 @@ class Demag(EnergyBase):
     phi2TOL
         Relative tolerance for the second linear solve    
     """
-    def __init__(self,solver = "FK", phi1TOL = df.e-12, phi2TOL = df.e-12):
+    def __init__(self,solver = "FK", phi1TOL = 1e-7, phi2TOL = 1e-7):
         self.in_jacobian = False
         log.info("Creating Demag object with " + solver + " solver.")
         if solver in ["FK","GCR"]:

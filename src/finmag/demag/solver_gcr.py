@@ -112,7 +112,7 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
     """
 
     def __init__(self, problem, degree=1, element="CG", project_method='magpar', unit_length=1,
-                 phiaTOL = df.e-12,phibTOL = df.e-12):
+                 phiaTOL = 1e-7,phibTOL = 1e-7):
         
         #Initialize the base class
         sb.FemBemDeMagSolver.__init__(self,problem,degree, element=element,

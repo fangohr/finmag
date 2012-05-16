@@ -156,7 +156,8 @@ def test_demag_energy_density():
     llg = LLG(mesh)
     llg.Ms = np.sqrt(6.0/mu0)
     llg.set_m((1,0,0))
-    llg.setup(use_demag=True)
+    llg.setup(use_demag=True,demag_method="FK",
+              demaglinsolTOL1 = 1e-6, demaglinsolTOL2 = 1e-6)
 
     density = llg.demag.energy_density()
     deviation = np.abs(density - 1.0)

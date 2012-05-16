@@ -182,12 +182,13 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         See the exchange_demag example.
 
     """
-    def __init__(self, problem, degree=1, element="CG", project_method='magpar', unit_length=1,
-                 phi1TOL = df.e-12,phi2TOL = df.e-12):
+    def __init__(self, problem, degree=1, element="CG", project_method='magpar',
+                 unit_length=1,phi1TOL = 1e-6,phi2TOL = 1e-6):
         timings.start("FKSolver init")
         sb.FemBemDeMagSolver.__init__(self,problem, degree, element=element,
-                                             project_method = project_method,
-                                             unit_length = unit_length,phi2TOL = phi2TOL)
+                                      project_method = project_method,
+                                      unit_length = unit_length,
+                                      phi2TOL = phi2TOL)
 
         self.phi1TOL = phi1TOL
         
@@ -195,9 +196,7 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         method = "default"
         preconditioner = "default"
         self.phi1_solver = df.KrylovSolver(self.poisson_matrix, method, preconditioner)
-        self.phi1_solver.parameters["relative_tolerance"] = self.phi1TOL
-        #Data
-        self.mu0 = np.pi*4e-7 # Vs/(Am)
+        #self.phi1_solver.parameters["relative_tolerance"] = self.phi1TOL
 
         self.phi1 = df.Function(self.V)
         self.phi2 = df.Function(self.V)
