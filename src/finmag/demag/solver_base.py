@@ -8,6 +8,7 @@ import dolfin as df
 import numpy as np
 import abc
 from finmag.util.timings import timings
+from finmag.sim import helpers
 
 class FemBemDeMagSolver(object):
     """Base Class for FEM/BEM Demag Solvers containing shared methods
@@ -31,19 +32,16 @@ class FemBemDeMagSolver(object):
     """
 
     def __init__(self, problem, degree=1, element="CG",project_method = 'magpar',
-                 unit_length = 1):
+                 unit_length = 1,phi2TOL = df.e-12):
 
-        #Problem objects and parameters
+        #Problem objects and parameter
         self.problem = problem
         self.mesh = problem.mesh
         self.unit_length = unit_length
+        self.phi2TOL = phi2TOL
 
         #Mesh Facet Normal
         self.n = df.FacetNormal(self.mesh)
-
-        #Unit Magentisation field
-        self.m = problem.M
-        self.Ms = problem.Ms
 
         #Spaces and functions for the Demag Potential
         self.V = df.FunctionSpace(self.problem.mesh,element,degree)
@@ -57,6 +55,25 @@ class FemBemDeMagSolver(object):
         self.vv = df.TestFunction(self.W)
         self.H_demag = df.Function(self.W)
 
+        #Interpolate the Unit Magentisation field if necessary
+        #A try block was not used since it might lead to an unneccessary (and potentially bad)
+        #interpolation
+        if isinstance(problem.M, df.Expression) or isinstance(problem.M, df.Constant):
+            self.m = df.interpolate(problem.M,self.W)
+            
+        elif isinstance(problem.M,tuple):
+            self.m = df.interpolate(df.Expression(problem.M),self.W)
+            
+        elif isinstance(problem.M,list):
+            self.m = df.interpolate(df.Expression(tuple(problem.M)),self.W)
+            
+        else:
+            self.m = problem.M
+        #Normalize m (should be normalized anyway).
+        self.m.vector()[:] = helpers.fnormalise(self.m.vector().array())
+        
+        self.Ms = problem.Ms
+
         # Initilize the boundary element matrix variable
         self.bem = None
 
@@ -66,7 +83,8 @@ class FemBemDeMagSolver(object):
         self.laplace_zeros = df.Function(self.V).vector()
         self.laplace_solver = df.KrylovSolver()
         self.laplace_solver.parameters["preconditioner"]["same_nonzero_pattern"] = True
-
+        self.laplace_solver.parameters["relative_tolerance"] = self.phi2TOL
+        
         #Objects needed for energy density computation
         self.nodal_vol = df.assemble(self.v*df.dx, mesh=self.mesh).array()
         self.ED = df.Function(self.V)
@@ -170,7 +188,6 @@ class FemBemDeMagSolver(object):
         A = self.poisson_matrix.copy()
         b = self.laplace_zeros.copy()
         bc.apply(A, b)
-        #df.solve(A,function.vector(),b)
         self.laplace_solver.solve(A, function.vector(), b)
         return function
 
@@ -199,21 +216,23 @@ class FemBemDeMagSolver(object):
         timings.stop("Compute field")
         return Hd
 
-    def get_demagfield(self,phi,use_default_function_space = True):
+    def get_demagfield(self,phi = None,use_default_function_space = True):
         """
         Returns the projection of the negative gradient of
         phi onto a DG0 space defined on the same mesh
         Note: Do not trust the viper solver to plot the DeMag field,
         it can give some wierd results, paraview is recommended instead
 
-        use_default_function_space - If true project into self.Hdemagspace,
+        use_default_function_space - If true project into self.W,
                                      if false project into a Vector DG0 space
                                      over the mesh of phi.
         """
-
+        if phi is None:
+            phi = self.phi
+        
         Hdemag = -df.grad(phi)
         if use_default_function_space == True:
-            Hdemag = df.project(Hdemag,self.Hdemagspace)
+            Hdemag = df.project(Hdemag,self.W)
         else:
             if self.D == 1:
                 Hspace = df.FunctionSpace(phi.function_space().mesh(),"DG",0)
@@ -221,7 +240,6 @@ class FemBemDeMagSolver(object):
                 Hspace = df.VectorFunctionSpace(phi.function_space().mesh(),"DG",0)
             Hdemag = df.project(Hdemag,Hspace)
         return Hdemag
-
 
 class TruncDeMagSolver(object):
     """Base Class for truncated domain type Demag Solvers"""
@@ -292,7 +310,7 @@ class TruncDeMagSolver(object):
             restrictedfunction.vector()[index] = function.vector()[map_to_mesh[vm[index]]]
         return restrictedfunction
 
-    def get_demagfield(self,phi,use_default_function_space = True):
+    def get_demagfield(self,phi = None,use_default_function_space = True):
         """
         Returns the projection of the negative gradient of
         phi onto a DG0 space defined on the same mesh
@@ -303,7 +321,9 @@ class TruncDeMagSolver(object):
                                      if false project into a Vector DG0 space
                                      over the mesh of phi.
         """
-
+        if phi is None:
+            phi = self.phi
+        
         Hdemag = -df.grad(phi)
         if use_default_function_space == True:
             Hdemag = df.project(Hdemag,self.Hdemagspace)

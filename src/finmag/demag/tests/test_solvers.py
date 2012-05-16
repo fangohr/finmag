@@ -23,7 +23,9 @@ class DemagTester(object):
 
     def compare_to_analytical(self,compsol,analyticalsol,testname):
         """Test a computed solution against a analytical solution"""
-        L2error = self.error_norm(compsol ,analyticalsol) 
+        L2error = errornorm(compsol, analyticalsol)
+        print compsol,analyticalsol
+        #L2error = self.error_norm(compsol, analyticalsol) 
         print testname, "Comparison L2error = ", L2error
         assert L2error < self.TOL,"Error in" +testname+ "L2 error %g is not less than the Tolerance %g"%(L2error,self.TOL)   
         
@@ -254,26 +256,20 @@ class TestFemBemDeMagSolver(object):
         print "solve_laplace_inside testpassed"
 
 #Tests have been turned off as the class does not work at the moment.
-class ZTest_FemBemGCRSolver(DemagTester):
+class Test_FemBemGCRSolver(DemagTester):
     """Tests for the Class FemBemGCRSolver"""
     def setup_class(self):
 
         #Class Tolerance 
-        self.TOL = 10
+        self.TOL = 2.0
 
         #Problems,solvers, solutions
-        self.problem3d = pftc.MagUnitSphere(4)
-        #Turn the Magnetisation into a function.
-        Mspace = VectorFunctionSpace(self.problem3d.mesh,"CG",1)
-        self.problem3d.M = interpolate(Expression(self.problem3d.M),Mspace)
+        self.problem3d = pftc.MagSphere(1,0.8)
         self.solver3d = sgcr.FemBemGCRSolver(self.problem3d)
         self.solution3d = self.solver3d.solve()
 
         #Generate a 3d analytical solution
         self.analytical3d = UnitSphere_Analytical(self.problem3d.mesh)
-
-    def desc(self):
-        return "GCR Fembem Solver Tester"
     
     def test_compare_3danalytical(self):
         """
@@ -292,7 +288,7 @@ class ZTest_FemBemGCRSolver(DemagTester):
         """
         testname = self.test_compare_3danalytical_gradient.__doc__
         phi = self.solver3d.solve()
-        Hdemag = self.solver3d.get_demagfield(phi)
+        Hdemag = self.solver3d.get_demagfield()
         self.compare_to_analytical(Hdemag,self.analytical3d.Hdemag,testname)
 
 
@@ -318,9 +314,7 @@ if __name__ == "__main__":
     tests = [t.test_solve_laplace_inside]
     run_tests(tests)
     
-
-##    t = ZTest_FemBemGCRSolver()
-##    t.setup_class()
-##    tests = [t.test_compare_3danalytical_gradient, t.test_compare_3danalytical,t.test_get_boundary_dof_coordinate_dict, \
-##             t.test_get_dof_normal_dict,t.test_get_dof_normal_dict_avg]
-##    run_tests(tests)
+    t = Test_FemBemGCRSolver()
+    t.setup_class()
+    tests = [t.test_compare_3danalytical_gradient, t.test_compare_3danalytical]
+    run_tests(tests)
