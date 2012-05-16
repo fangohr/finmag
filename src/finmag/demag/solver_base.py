@@ -32,7 +32,7 @@ class FemBemDeMagSolver(object):
     """
 
     def __init__(self, problem, degree=1, element="CG",project_method = 'magpar',
-                 unit_length = 1,phi2TOL = df.e-12):
+                 unit_length = 1,phi2TOL = 1e-7):
 
         #Problem objects and parameter
         self.problem = problem
@@ -40,6 +40,9 @@ class FemBemDeMagSolver(object):
         self.unit_length = unit_length
         self.phi2TOL = phi2TOL
 
+        #This is used in energy density calculations
+        self.mu0 = np.pi*4e-7 # Vs/(Am)
+        
         #Mesh Facet Normal
         self.n = df.FacetNormal(self.mesh)
 
