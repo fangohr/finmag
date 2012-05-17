@@ -310,7 +310,7 @@ class LLG(object):
     def setup(self, use_exchange=True, use_dmi=False, use_demag=False,
               exchange_method="box-matrix-petsc",
               dmi_method="box-matrix-petsc",
-              demag_method="FK"): 
+              demag_method="FK", demaglinsolTOL1 = 1e-7, demaglinsolTOL2 = 1e-7): 
 
         #add setup time to LLG-init
         timings.start('LLG-init')
@@ -328,7 +328,7 @@ class LLG(object):
         timings.stop('LLG-init')
         self.use_demag = use_demag
         # Using Weiwei's code as default
-        if use_demag:
+        if use_demag:   
             if demag_method == "weiwei":
                 self.demag = SimpleFKSolver(self.V, self._m, self.Ms)
             # TODO: The elif block will be removed after debugging current
@@ -340,7 +340,20 @@ class LLG(object):
                 from finmag.demag.solver_fk import FemBemFKSolver
                 problem = FemBemDeMagProblem(self.mesh, self._m,self.Ms)
                 timings.stop("Create demag problem")
-                self.demag = FemBemFKSolver(problem, unit_length=self.unit_length)
+                self.demag = FemBemFKSolver(problem, unit_length=self.unit_length,
+                                            phi1TOL = demaglinsolTOL1,
+                                            phi2TOL = demaglinsolTOL2)
+            elif demag_method == "GCR":
+                timings.start("Create demag problem")
+                from finmag.demag.problems.prob_base import FemBemDeMagProblem
+                from finmag.demag.solver_gcr import FemBemGCRSolver
+                problem = FemBemDeMagProblem(self.mesh, self._m,self.Ms)
+                timings.stop("Create demag problem")
+                self.demag = FemBemGCRSolver(problem, unit_length=self.unit_length,
+                                            phiaTOL = demaglinsolTOL1,
+                                            phibTOL = demaglinsolTOL2)
+
+                
             else:
                 self.demag = Demag(self.V, self._m, self.Ms, method=demag_method)
         

@@ -16,14 +16,20 @@ class Demag(EnergyBase):
 
     solver
         type of demag solver GCR or FK
+    phi1TOL
+        Relative tolerance for the first linear solve
+    phi2TOL
+        Relative tolerance for the second linear solve    
     """
-    def __init__(self,solver = "FK"):
+    def __init__(self,solver = "FK", phi1TOL = 1e-7, phi2TOL = 1e-7):
         self.in_jacobian = False
         log.info("Creating Demag object with " + solver + " solver.")
         if solver in ["FK","GCR"]:
             self.solver = solver
         else:
             raise Exception("Only 'FK', and 'GCR' are possible solver values") 
+        self.phi1TOL = phi1TOL
+        self.phi2TOL = phi2TOL
 
     def setup(self, S3, m, Ms, unit_length):
         """S3
@@ -36,14 +42,18 @@ class Demag(EnergyBase):
             unit_length
                 The scale of the mesh, default is 1.
         """
-        timings.start("create-demag-problem")
+       # timings.startnext("create-demag-problem")
         problem = FemBemDeMagProblem(S3.mesh(), m, Ms)
         if self.solver == "FK":
-            self.demag = FemBemFKSolver(problem, unit_length=unit_length)
+            self.demag = FemBemFKSolver(problem, unit_length=unit_length,
+                                         phi1TOL = self.phi1TOL,
+                                         phi2TOL = self.phi2TOL)
         elif self.solver == "GCR":
-            self.demag = FemBemGCRSolver(problem, unit_length=unit_length)
+            self.demag = FemBemGCRSolver(problem, unit_length=unit_length,
+                                         phiaTOL = self.phi1TOL,
+                                         phibTOL = self.phi2TOL)
             
-        timings.startnext("Solve-demag-problem")
+        #timings.startnext("Solve-demag-problem")
         self.demag.solve()
 
     def compute_field(self):
@@ -57,12 +67,13 @@ class Demag(EnergyBase):
 
 if __name__ == "__main__":
     #Generate a plot for a simple Demag problem
-    test = "FK"
-    
-    mesh = df.UnitSphere(5)
-    Ms = 1
-    V = df.VectorFunctionSpace(mesh, 'Lagrange', 1)
-    m = df.project(df.Constant((1, 0, 0)), V)
+    test = "GCR"
+    from finmag.demag.problems import prob_fembem_testcases as pft
+    problem = pft.MagSphere20()
+    mesh = problem.mesh
+    Ms = problem.Ms
+    m = problem.m
+    V = problem.V
 
     if test == "GCR":
         demag = Demag("GCR")
@@ -74,4 +85,4 @@ if __name__ == "__main__":
 
     print timings
     df.plot(demag.compute_potential())
-    df.interactive()
+    df.interactive()    
