@@ -75,11 +75,6 @@ def test_nmag(finmag):
     m_cross_H_ref = np.cross(m_ref, H_ref)
     m_cross_H_computed = np.cross(m_computed, H_computed)
 
-    print "finmag m x H:"
-    print m_cross_H_computed
-    print "nmag m x H:"
-    print m_cross_H_ref
-
     mxH = m_cross_H_computed.flatten()
     mxH_ref = m_cross_H_ref.flatten()
     diff = np.abs(mxH - mxH_ref)
@@ -122,7 +117,7 @@ def test_magpar(finmag):
     REL_TOLERANCE = 5e-7
 
     magpar_nodes, magpar_anis = compute_anis_magpar(finmag["S3"], finmag["m"], K1, a, Ms)
-    _, _, diff, rel_diff = compare_field_directly(
+    diff, rel_diff = compare_field(
             finmag["S3"].mesh().coordinates(), finmag["H"].vector().array(),
             magpar_nodes, magpar_anis)
 

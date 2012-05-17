@@ -3,8 +3,7 @@ import dolfin as df
 import numpy as np
 import magpar
 from finmag.sim.exchange import Exchange
-
-from finmag.sim.helpers import quiver, boxplot, stats
+from finmag.sim.helpers import normed_func
 
 
 #df.parameters["allow_extrapolation"] = True
@@ -35,13 +34,13 @@ def three_dimensional_problem():
     m0_x = "pow(sin(0.2*x[0]*1e9), 2)"
     m0_y = "0"
     m0_z = "pow(cos(0.2*x[0]*1e9), 2)"
-    m=magpar.set_inital_m0(V,(m0_x,m0_y, m0_z))
+    m=normed_func((m0_x,m0_y, m0_z), V)
 
     C=1.3e-11
 
     u_exch = Exchange(V, m, C, Ms)
     finmag_exch = u_exch.compute_field()
-    nodes, magpar_exch = magpar.compute_exch_magpar(V, m, C, Ms)
+    nodes, magpar_exch = magpar.compute_exch_magpar(m, A=C, Ms=Ms)
     print magpar_exch
     
     #Because magpar have changed the order of the nodes!!!

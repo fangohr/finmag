@@ -1,4 +1,5 @@
 import numpy as np
+import dolfin as df
 import math
 
 def components(vs):
@@ -192,3 +193,19 @@ def sphinx_sci(x, p=2):
 
     """
     return ":math:`{}`".format(tex_sci(x, p))
+
+def normed_func(value, Space, **kwargs):
+    if not isinstance(value, tuple):
+        raise NotImplementedError, "We only support tuples."
+
+    if isinstance(value[0], str):
+        mgen = df.Expression(value, **kwargs)
+    else:
+        mgen = df.Constant(value)
+
+    m0 = df.interpolate(mgen, Space)
+    m0_vec = m0.vector().array().reshape((3, -1))
+    m0_vec /= np.sqrt(m0_vec[0]**2 + m0_vec[1]**2 + m0_vec[2]**2)
+    m0.vector()[:] = m0_vec.reshape(-1)
+
+    return m0
