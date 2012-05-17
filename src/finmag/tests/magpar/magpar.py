@@ -1,6 +1,5 @@
 import numpy as np
 import dolfin as df
-from dolfin import *
 import os
 import logging
 import subprocess
@@ -63,7 +62,7 @@ def gen_magpar_conf(base_name,init_m,Ms=8.6e5,A=13e-12,K1=0,a=[0,0,1],
     save_inp_of_inital_m(init_m,file_name, unit_length=unit_length)
 
 def run_magpar(base_name):
-    magpar_cmd=(os.path.join(os.getenv("HOME")+"/magpar-0.9/src/magpar.exe"))
+    magpar_cmd=(os.path.join("magpar.exe"))
    
     save_path=os.getcwd()
     new_path=os.path.join(MODULE_DIR, base_name)
@@ -139,7 +138,7 @@ def save_inp_of_inital_m(m,file_name, unit_length):
                   xyz[i][1]/unit_length,
                   xyz[i][2]/unit_length))
     
-    for c in cells(mesh):
+    for c in df.cells(mesh):
         id=c.index()
         ce=c.entities(0)
         f.write("%d 1 tet %d %d %d %d\n"
@@ -298,14 +297,54 @@ def compute_demag_magpar(V, m, Ms, unit_length=1):
 
     return nodes,field
 
+def compare_field(aNodes, aField, bNodes, bField, unit_length):
+    """
+    Compares two vector fields aField and bField defined over the meshes
+    aNodes and bNodes respectively.
+
+    When n is the number of nodes, we expect aField and bField to be
+    ndarrays of shape 3n, and aNodes and bNodes to be ndarrays of shape (n, 3).
+
+    """
+    if not (unit_length == 1 or unit_length == 1e-9):
+        raise NotImplementedError("Behaviour not defined for unit_length={}. Supports nm and m only.".format(unit_length))
+
+    assert aField.shape == bField.shape
+    aField.shape = bField.shape = (3, -1);
+
+    assert aNodes.shape == bNodes.shape
+    aNodes = aNodes * unit_length/1e-9
+    bNodes = bNodes * unit_length/1e-9
+
+    # The coordinates we get from magpar are floats of a different precision
+    # than finmag's. This makes identifying corresponding nodes extra
+    # difficult. While I have looked into the Decimal module, this is still
+    # our best bet and should work for our use cases, i.e. meshes which are
+    # not much finer than 1nm.
+    aMapping = dict()
+    aMappingKeyFormat = "{:.0f} {:.0f} {:.0f}"
+    for aIndex, aNode in enumerate(aNodes):
+        aCoords = aMappingKeyFormat.format(* aNode)
+        aMapping[aCoords] = aIndex
+    bFieldOrdered = np.zeros((bField.shape))
+    for bIndex, bNode in enumerate(bNodes):
+        bCoords = aMappingKeyFormat.format(* bNode)
+        bNewIndex = aMapping[bCoords]
+        for dim in [0, 1, 2]:
+            bFieldOrdered[dim][bNewIndex] = bField[dim][bIndex]
+
+    diff = np.abs(bFieldOrdered - aField)
+    rel_diff = diff / np.sqrt(np.max(bFieldOrdered[0]**2 + bFieldOrdered[1]**2 + bFieldOrdered[2]**2))
+  
+    return diff, rel_diff
 
 def compare_field_directly(node1,field1,node2,field2):
     """
     acceptable fields should like this:
     [fx0, ..., fxn, fy0, ..., fyn, fz0, ..., fzn]
     """
-    assert(node1.shape==node2.shape)
-    assert(field1.shape==field2.shape)
+    assert node1.shape == node2.shape
+    assert field1.shape == field2.shape
 
     field1=field1.reshape(3,-1)
     field2=field2.reshape(3,-1)
