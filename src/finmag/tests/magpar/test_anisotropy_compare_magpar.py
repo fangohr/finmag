@@ -1,7 +1,7 @@
 import os
 import dolfin as df
 import numpy as np
-import magpar
+from finmag.util import magpar
 from finmag.sim.anisotropy import UniaxialAnisotropy
 
 from finmag.sim.helpers import normed_func
