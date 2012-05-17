@@ -7,24 +7,8 @@ import subprocess
 logger = logging.getLogger(name='finmag')
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-def set_inital_m0(V,m0):
-    if isinstance(m0, tuple):
-            if isinstance(m0[0], str):
-                val = df.Expression(m0)
-            else:
-                val = df.Constant(m0)
-
-            m = df.interpolate(val, V)
-            p = m.vector().array().reshape(3,-1)
-            p = p/np.sqrt(p[0]**2+p[1]**2+p[2]**2)
-            m.vector()[:] = p.reshape(1,-1)[0]
-
-            return m
-    else:
-        raise NotImplementedError,"only a tuple is acceptable for set_inital_m0"
-
-def gen_magpar_conf(base_name,init_m,Ms=8.6e5,A=13e-12,K1=0,a=[0,0,1],
-        alpha=0.1,demag=0):
+def gen_magpar_conf(base_name, init_m,
+        Ms=8.6e5, A=13e-12, K1=0, a=[0,0,1], alpha=0.1, demag=0):
 
     conf_path = os.path.join(MODULE_DIR, base_name)
     if not os.path.exists(conf_path):
@@ -82,7 +66,8 @@ def read_femsh(file_name):
 
     node_coord=[]
     for i in range(n_node):
-        tmp=f.readline().split()
+        line = f.readline()
+        tmp=line.split()
         t2=[float(tmp[1]),float(tmp[2]),float(tmp[3])]
         node_coord.append(t2)
     
@@ -190,42 +175,6 @@ def get_field(base_name,field="anis"):
 
     return nodes,field
 
-
-def compute_anis_magpar(V, m, K, a, Ms):
-    """
-    Usage:
-
-    mesh = Box(0, 10e-9, 0, 1e-9, 0, 1e-9, 5, 1, 1)
-
-    V = VectorFunctionSpace(mesh, 'Lagrange', 1)
-    K = 520e3 # For Co (J/m3)
-
-    a = [0,0,1] # Easy axis in z-direction
-    
-    m0_x = "pow(sin(x[0]*1e9), 2)"
-    m0_y = "0"
-    m0_z = "pow(cos(x[0]*1e9), 2)"
-    m=set_inital_m0(V,(m0_x,m0_y, m0_z))
-    Ms=14e5 
-
-    anisotropy = compute_anis_magpar(V, m, K, a, Ms)
-    """
-    base_name="test_anis"
-
-    gen_magpar_conf(base_name,m,Ms=Ms,a=a,K1=K)
-
-    run_magpar(base_name)
-
-    nodes,field=get_field(base_name,field="anis")
-      
-    new_path=os.path.join(MODULE_DIR, base_name)
-    logger.debug("will delete {}.".format(new_path))
-    rm_cmd=("rm","-rf",new_path)
-    subprocess.check_call(rm_cmd)
-    
-    return nodes,field
-
-
 def get_m0(file_name):
     fields=read_inp_gz(file_name)
     fx=fields["M_x"]
@@ -234,71 +183,29 @@ def get_m0(file_name):
     
     field=np.array([fx,fy,fz]).reshape(1,-1)[0]
     return field
-    
-def compute_exch_magpar(V, m, C, Ms):
-    """
-    Usage:
-
-    mesh = Box(0, 10e-9, 0, 1e-9, 0, 1e-9, 5, 1, 1)
-
-    V = VectorFunctionSpace(mesh, 'Lagrange', 1)
+ 
+def compute_anis_magpar(m, **kwargs):
+    return compute("anis", m, **kwargs)
    
-    m0_x = "pow(sin(x[0]*1e9), 2)"
-    m0_y = "0"
-    m0_z = "pow(cos(x[0]*1e9), 2)"
-    m=set_inital_m0(V,(m0_x,m0_y, m0_z))pow(cos(x[0]*1e9), 2)
-    Ms=8.6e5
+def compute_exch_magpar(m, **kwargs):
+    return compute("exch", m, **kwargs)
 
-    anisotropy = compute_exch_magpar(V, m, C, Ms)
-    """
-    base_name="test_exch"
+def compute_demag_magpar(m, **kwargs):
+    return compute("demag", m, demag=1, **kwargs)
 
+def compute(field_name, m, **kwargs):
+    base_name = "test_" + field_name
 
-    gen_magpar_conf(base_name,m,Ms=Ms,A=C)
-    
+    gen_magpar_conf(base_name, m, **kwargs)
     run_magpar(base_name)
 
-    nodes,field=get_field(base_name,field="exch")
-      
-    new_path=os.path.join(MODULE_DIR, base_name)
+    nodes, field = get_field(base_name, field_name)
 
-    #remove files from temporary directory
-    rm_cmd=("rm","-rf",new_path)
-    subprocess.check_call(rm_cmd)
+    delete = ("rm", "-rf", os.path.join(MODULE_DIR, base_name))
+    subprocess.check_call(delete)
 
-    return nodes,field
-
-def compute_demag_magpar(V, m, Ms):
-    """
-    Usage:
-
-    mesh = Box(0, 10e-9, 0, 1e-9, 0, 1e-9, 5, 1, 1)
-
-    V = VectorFunctionSpace(mesh, 'Lagrange', 1)
-    
-    m0_x = "pow(sin(x[0]*1e9), 2)"
-    m0_y = "0"
-    m0_z = "1"
-    m=set_inital_m0(V,(m0_x,m0_y, m0_z))
-    Ms=8.6e5
-   
-    anisotropy = compute_demag_magpar(V, m, Ms)
-    """
-    base_name="test_demag"
-
-    gen_magpar_conf(base_name,m,Ms=Ms,demag=1)
-    
-    run_magpar(base_name)
-
-    nodes,field=get_field(base_name,field="demag")
-      
-    new_path=os.path.join(MODULE_DIR, base_name)
-
-    rm_cmd=("rm","-rf",new_path)
-    subprocess.check_call(rm_cmd)
-
-    return nodes,field
-
+    return nodes, field
+ 
 def compare_field(aNodes, aField, bNodes, bField):
     """
     Compares two vector fields aField and bField defined over the meshes
@@ -308,18 +215,16 @@ def compare_field(aNodes, aField, bNodes, bField):
     ndarrays of shape 3n, and aNodes and bNodes to be ndarrays of shape (n, 3).
 
     """
-    unit_length = 1
-    if not (unit_length == 1 or unit_length == 1e-9):
-        raise NotImplementedError("Behaviour not defined for unit_length={}. Supports nm and m only.".format(unit_length))
-
+    assert aNodes.shape == bNodes.shape
     assert aField.shape == bField.shape
     aField.shape = bField.shape = (3, -1);
 
-    assert aNodes.shape == bNodes.shape
-    aNodes = aNodes# * unit_length/1e-9
-    print aNodes
-    bNodes = bNodes# * unit_length/1e-9
-    print bNodes
+    def aMappingKeyFormat(x, y, z):
+        def truncate(nb, places=1):
+            nb = round(nb, places)
+            slen = len("{:.{places}f}".format(nb, places=places))
+            return str(nb)[:slen]
+        return truncate(x) + " " + truncate(y) + " " + truncate(z)
 
     # The coordinates we get from magpar are floats of a different precision
     # than finmag's. This makes identifying corresponding nodes extra
@@ -327,14 +232,29 @@ def compare_field(aNodes, aField, bNodes, bField):
     # our best bet and should work for our use cases, i.e. meshes which are
     # not much finer than 1nm.
     aMapping = dict()
-    aMappingKeyFormat = "{:.0f} {:.0f} {:.0f}"
+    import re; pattern = re.compile(r"0\.0 3\.. 10\..")
     for aIndex, aNode in enumerate(aNodes):
-        aCoords = aMappingKeyFormat.format(* aNode)
+        aCoords = aMappingKeyFormat(* aNode)
+        if pattern.match(aCoords):
+            print aNode
+            print aCoords
+        if aCoords in aMapping:
+            print "<<< OVERWRITE >>>"
+            print aCoords
+            print aNodes[aMapping[aCoords]]
+            print aNode
         aMapping[aCoords] = aIndex
+
     bFieldOrdered = np.zeros((bField.shape))
     for bIndex, bNode in enumerate(bNodes):
-        bCoords = aMappingKeyFormat.format(* bNode)
-        bNewIndex = aMapping[bCoords]
+        bCoords = aMappingKeyFormat(* bNode)
+        try:
+            bNewIndex = aMapping[bCoords]
+        except KeyError:
+            print "Can't find:"
+            print bNode
+            print bCoords
+            import sys; sys.exit()
         for dim in [0, 1, 2]:
             bFieldOrdered[dim][bNewIndex] = bField[dim][bIndex]
 
@@ -375,30 +295,3 @@ def compare_field_directly(node1,field1,node2,field2):
         field2_ordered[0]**2 + field2_ordered[1]**2 + field2_ordered[2]**2))
 
     return field1,field2_ordered,difference,relative_difference
-    
-        
-        
-
-
-if __name__=="__main__":
-        
-    mesh = Box(0, 10e-9, 0, 1e-9, 0, 1e-9, 5, 1, 1)
-
-    V = VectorFunctionSpace(mesh, 'Lagrange', 1)
-
-    K = 520e3 # For Co (J/m3)
-    a = [2,0,1] # Easy axis in z-direction
-    Ms = 14e5 
-
-    m=set_inital_m0(V,(0,0.6,0.8))
-    nodes,anis = compute_anis_magpar(V, m, K, a, Ms)
-    print nodes,anis
-    
-    C=13e-12
-    nodes,exch = compute_exch_magpar(V, m, C, Ms)
-    print exch
-
-    nodes,demag = compute_demag_magpar(V, m, Ms)
-    print demag
-    
-

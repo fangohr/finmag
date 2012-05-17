@@ -4,8 +4,7 @@ import numpy as np
 import magpar
 from finmag.sim.anisotropy import UniaxialAnisotropy
 
-from finmag.sim.helpers import quiver, boxplot, stats
-
+from finmag.sim.helpers import normed_func
 
 #df.parameters["allow_extrapolation"] = True
 
@@ -32,11 +31,11 @@ def three_dimensional_problem():
 
     a = (0,0,1) # Easy axis in z-direction
 
-    m=magpar.set_inital_m0(V,(1,1,1))
+    m=normed_func((1, 1, 1), V)
 
     u_anis = UniaxialAnisotropy(V, m, K, df.Constant(a), Ms)
     finmag_anis = u_anis.compute_field()
-    nodes, magpar_anis = magpar.compute_anis_magpar(V, m, K, a, Ms)
+    nodes, magpar_anis = magpar.compute_anis_magpar(m, K1=K, a=a, Ms=Ms)
     
     finmag_anis,magpar_anis, \
         diff,rel_diff=magpar.compare_field_directly( \
