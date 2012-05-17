@@ -36,7 +36,7 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
     .. math::
 
         \\int_\\Omega \\nabla \\phi_1 \\cdot \\nabla v =
-        \\int_{\\partial \\Omega} (\\vec n \\cdot vec M) v \\mathrm{ds} -
+        \\int_{\\partial \\Omega} (\\vec n \\cdot \\vec M) v \\mathrm{ds} -
         \\int_\\Omega (\\nabla \\cdot \\vec
         M)v \\mathrm{d}x \\qquad \\qquad (1)
 
