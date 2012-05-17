@@ -36,7 +36,7 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
     .. math::
 
         \\int_\\Omega \\nabla \\phi_1 \\cdot \\nabla v =
-        \\int_{\\partial \\Omega} (\\vec n \\cdot vec M) v \\mathrm{ds} -
+        \\int_{\\partial \\Omega} (\\vec n \\cdot \\vec M) v \\mathrm{ds} -
         \\int_\\Omega (\\nabla \\cdot \\vec
         M)v \\mathrm{d}x \\qquad \\qquad (1)
 
@@ -167,6 +167,10 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
             possible methods are
                 * 'magpar'
                 * 'project'
+        phi1TOL 
+            relative tolerance of the first krylov linear solver
+        phi2TOL 
+            relative tolerance of the second krylov linear solver
 
     At the moment, we think both methods work for first degree basis
     functions. The 'magpar' method may not work with higher degree
@@ -178,19 +182,21 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         See the exchange_demag example.
 
     """
-    def __init__(self, problem, degree=1, element="CG", project_method='magpar', unit_length=1):
+    def __init__(self, problem, degree=1, element="CG", project_method='magpar',
+                 unit_length=1,phi1TOL = 1e-6,phi2TOL = 1e-6):
         timings.start("FKSolver init")
-        super(FemBemFKSolver, self).__init__(problem, degree, element=element,
-                                             project_method = project_method,
-                                             unit_length = unit_length)
+        sb.FemBemDeMagSolver.__init__(self,problem, degree, element=element,
+                                      project_method = project_method,
+                                      unit_length = unit_length,
+                                      phi2TOL = phi2TOL)
 
+        self.phi1TOL = phi1TOL
+        
         #Linear Solver parameters
         method = "default"
         preconditioner = "default"
         self.phi1_solver = df.KrylovSolver(self.poisson_matrix, method, preconditioner)
-
-        #Data
-        self.mu0 = np.pi*4e-7 # Vs/(Am)
+        #self.phi1_solver.parameters["relative_tolerance"] = self.phi1TOL
 
         self.phi1 = df.Function(self.V)
         self.phi2 = df.Function(self.V)
