@@ -44,6 +44,13 @@ def differentiate_fd(f, x, eps=1e-4, offsets=(-2,-1,1,2), weights=(1./12.,-2./3.
 
 # Solves the demag problem for phi using the FK method and the native BEM matrix
 def compute_scalar_potential_native_fk(mesh, m_expr=df.Constant([1, 0, 0]), Ms=1.):
+    """Solves the demag problem for phi 
+    using the FK method and the native 
+    BEM matrix.
+
+    (Dmitri's code to understand and compare the method with 
+    the LLG class. Useful to keep.)
+    """
     # Set up the FE problems
     V_m = df.VectorFunctionSpace(mesh, 'Lagrange', 1, dim=3)
     V_phi = df.FunctionSpace(mesh, 'Lagrange', 1)
