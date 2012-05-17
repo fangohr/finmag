@@ -24,7 +24,7 @@ def set_inital_m0(V,m0):
         raise NotImplementedError,"only a tuple is acceptable for set_inital_m0"
 
 def gen_magpar_conf(base_name,init_m,Ms=8.6e5,A=13e-12,K1=0,a=[0,0,1],
-        alpha=0.1,demag=0,unit_length=1e-9):
+        alpha=0.1,demag=0):
 
     conf_path = os.path.join(MODULE_DIR, base_name)
     if not os.path.exists(conf_path):
@@ -56,10 +56,10 @@ def gen_magpar_conf(base_name,init_m,Ms=8.6e5,A=13e-12,K1=0,a=[0,0,1],
         allopt_file.write("".join(allopt))
    
     file_name=os.path.join(conf_path, base_name+".inp")
-    save_inp_of_inital_m(init_m,file_name, unit_length=unit_length)
+    save_inp_of_inital_m(init_m,file_name)
 
     file_name=os.path.join(conf_path, base_name+".0000.inp")
-    save_inp_of_inital_m(init_m,file_name, unit_length=unit_length)
+    save_inp_of_inital_m(init_m,file_name)
 
 def run_magpar(base_name):
     magpar_cmd=(os.path.join("magpar.exe"))
@@ -120,8 +120,7 @@ def read_inp_gz(file_name):
     return fields
     
 
-def save_inp_of_inital_m(m,file_name, unit_length):
-    print "Calling save_inp_of_initial_m with unit_length={}.".format(unit_length)
+def save_inp_of_inital_m(m,file_name):
     mesh=m.function_space().mesh()
     data_type_number = 3
     f=open(file_name,"w")
@@ -131,12 +130,15 @@ def save_inp_of_inital_m(m,file_name, unit_length):
         data_type_number)
     f.write(head)
     xyz=mesh.coordinates()
+    if np.max(xyz) < 0.5:
+       print "Converting unit_length from m to nm."
+       xyz = xyz * 1e9
     for i in range(len(xyz)):
         f.write("%d %0.15e %0.15e %0.15e\n"
                 %(i+1,
-                  xyz[i][0]/unit_length,
-                  xyz[i][1]/unit_length,
-                  xyz[i][2]/unit_length))
+                  xyz[i][0],
+                  xyz[i][1],
+                  xyz[i][2]))
     
     for c in df.cells(mesh):
         id=c.index()
@@ -189,7 +191,7 @@ def get_field(base_name,field="anis"):
     return nodes,field
 
 
-def compute_anis_magpar(V, m, K, a, Ms, unit_length=1e-9):
+def compute_anis_magpar(V, m, K, a, Ms):
     """
     Usage:
 
@@ -210,7 +212,7 @@ def compute_anis_magpar(V, m, K, a, Ms, unit_length=1e-9):
     """
     base_name="test_anis"
 
-    gen_magpar_conf(base_name,m,Ms=Ms,a=a,K1=K, unit_length=unit_length)
+    gen_magpar_conf(base_name,m,Ms=Ms,a=a,K1=K)
 
     run_magpar(base_name)
 
@@ -266,7 +268,7 @@ def compute_exch_magpar(V, m, C, Ms):
 
     return nodes,field
 
-def compute_demag_magpar(V, m, Ms, unit_length=1):
+def compute_demag_magpar(V, m, Ms):
     """
     Usage:
 
@@ -284,7 +286,7 @@ def compute_demag_magpar(V, m, Ms, unit_length=1):
     """
     base_name="test_demag"
 
-    gen_magpar_conf(base_name,m,Ms=Ms,demag=1, unit_length=unit_length)
+    gen_magpar_conf(base_name,m,Ms=Ms,demag=1)
     
     run_magpar(base_name)
 
@@ -297,7 +299,7 @@ def compute_demag_magpar(V, m, Ms, unit_length=1):
 
     return nodes,field
 
-def compare_field(aNodes, aField, bNodes, bField, unit_length):
+def compare_field(aNodes, aField, bNodes, bField):
     """
     Compares two vector fields aField and bField defined over the meshes
     aNodes and bNodes respectively.
@@ -306,6 +308,7 @@ def compare_field(aNodes, aField, bNodes, bField, unit_length):
     ndarrays of shape 3n, and aNodes and bNodes to be ndarrays of shape (n, 3).
 
     """
+    unit_length = 1
     if not (unit_length == 1 or unit_length == 1e-9):
         raise NotImplementedError("Behaviour not defined for unit_length={}. Supports nm and m only.".format(unit_length))
 
@@ -313,8 +316,10 @@ def compare_field(aNodes, aField, bNodes, bField, unit_length):
     aField.shape = bField.shape = (3, -1);
 
     assert aNodes.shape == bNodes.shape
-    aNodes = aNodes * unit_length/1e-9
-    bNodes = bNodes * unit_length/1e-9
+    aNodes = aNodes# * unit_length/1e-9
+    print aNodes
+    bNodes = bNodes# * unit_length/1e-9
+    print bNodes
 
     # The coordinates we get from magpar are floats of a different precision
     # than finmag's. This makes identifying corresponding nodes extra
@@ -366,8 +371,8 @@ def compare_field_directly(node1,field1,node2,field2):
     field2_ordered= field2_ordered.reshape(3,-1,order='F')
    
     difference = np.abs(field2_ordered - field1)
-    relative_difference = difference / np.sqrt(
-        field2_ordered[0]**2 + field2_ordered[1]**2 + field2_ordered[2]**2)
+    relative_difference = difference / np.max(np.sqrt(
+        field2_ordered[0]**2 + field2_ordered[1]**2 + field2_ordered[2]**2))
 
     return field1,field2_ordered,difference,relative_difference
     

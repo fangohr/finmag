@@ -23,7 +23,7 @@ def test_three_dimensional_problem():
 
 
 def three_dimensional_problem():
-    x_max = 10e-9; y_max = 1e-9; z_max = 1e-9;
+    x_max = 10; y_max = 1; z_max = 1;
     mesh = df.Box(0, 0, 0, x_max, y_max, z_max, 40, 2, 2)
 
     V = df.VectorFunctionSpace(mesh, 'Lagrange', 1)
@@ -32,21 +32,11 @@ def three_dimensional_problem():
 
     a = (0,0,1) # Easy axis in z-direction
 
-    m0_x = "pow(sin(0.2*x[0]*1e9), 2)"
-    m0_y = "0"
-    m0_z = "pow(cos(0.2*x[0]*1e9), 2)"
-
     m=magpar.set_inital_m0(V,(1,1,1))
 
     u_anis = UniaxialAnisotropy(V, m, K, df.Constant(a), Ms)
     finmag_anis = u_anis.compute_field()
     nodes, magpar_anis = magpar.compute_anis_magpar(V, m, K, a, Ms)
-    
-    #Because magpar have changed the order of the nodes!!!
-    
-    tmp=df.Function(V)
-    tmp_c = mesh.coordinates()
-    mesh.coordinates()[:]=tmp_c*1e9
     
     finmag_anis,magpar_anis, \
         diff,rel_diff=magpar.compare_field_directly( \
