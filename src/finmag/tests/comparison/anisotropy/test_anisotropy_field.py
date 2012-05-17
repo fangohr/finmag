@@ -117,11 +117,11 @@ def test_oommf(finmag):
     assert np.max(rel_diff) < REL_TOLERANCE
 
 def test_magpar(finmag):
-    from finmag.tests.magpar.magpar import compute_anis_magpar, compare_field_directly
+    from finmag.tests.magpar.magpar import compute_anis_magpar, compare_field_directly, compare_field
 
-    REL_TOLERANCE = 8e-3
+    REL_TOLERANCE = 5e-7
 
-    magpar_nodes, magpar_anis = compute_anis_magpar(finmag["S3"], finmag["m"], K1, a, Ms, unit_length=1)
+    magpar_nodes, magpar_anis = compute_anis_magpar(finmag["S3"], finmag["m"], K1, a, Ms)
     _, _, diff, rel_diff = compare_field_directly(
             finmag["S3"].mesh().coordinates(), finmag["H"].vector().array(),
             magpar_nodes, magpar_anis)
