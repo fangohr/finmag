@@ -111,14 +111,13 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
             relative tolerance of the second krylov linear solver
     """
 
-    def __init__(self, problem, degree=1, element="CG", project_method='magpar', unit_length=1,
-                 phiaTOL = 1e-7,phibTOL = 1e-7):
+    def __init__(self, problem, parameters=None, degree=1, element="CG",
+                 project_method='magpar', unit_length=1):
         
         #Initialize the base class
-        sb.FemBemDeMagSolver.__init__(self,problem,degree, element=element,
+        sb.FemBemDeMagSolver.__init__(self,problem,parameters,degree, element=element,
                                              project_method = project_method,
-                                             unit_length = unit_length,phi2TOL = phibTOL)
-        self.phiaTOL = phiaTOL
+                                             unit_length = unit_length)
 
         #Define the potentials
         self.phia = df.Function(self.V)
@@ -130,9 +129,13 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
         self.phia_bc.apply(self.poisson_matrix_dirichlet)
 
         #Linear Solver parameters for the 1st solve
-        #Let dolfin decide what's best
-        self.phia_solver = df.KrylovSolver(self.poisson_matrix_dirichlet)
-        self.phia_solver.parameters["relative_tolerance"] = self.phiaTOL
+        if parameters:
+            method = parameters["poisson_solver"]["method"]
+            pc = parameters["poisson_solver"]["preconditioner"]
+        else:
+            method = "default"
+            pc = "default"
+        self.poisson_solver = df.KrylovSolver(self.poisson_matrix_dirichlet, method, pc)
         
         #Buffer the BEM
         timings.startnext("Build boundary element matrix")
@@ -188,7 +191,7 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
         self.phia_bc.apply(F)
 
         #Solve for phia
-        self.phia_solver.solve(phia.vector(),F)
+        self.poisson_solver.solve(phia.vector(),F)
         #Replace with LU solve
         #df.solve(self.poisson_matrix_dirichlet,phia.vector(),F)
         

@@ -198,21 +198,22 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         See the exchange_demag example.
 
     """
-    def __init__(self, problem, degree=1, element="CG", project_method='magpar',
-                 unit_length=1,phi1TOL = 1e-6,phi2TOL = 1e-6):
-        timings.start("FKSolver init")
-        sb.FemBemDeMagSolver.__init__(self,problem, degree, element=element,
-                                      project_method = project_method,
-                                      unit_length = unit_length,
-                                      phi2TOL = phi2TOL)
+    def __init__(self, problem, parameters=None, degree=1, element="CG",
+                 project_method='magpar', unit_length=1):
 
-        self.phi1TOL = phi1TOL
-        
+        timings.start("FKSolver init")
+        sb.FemBemDeMagSolver.__init__(self,problem, parameters, degree, element=element,
+                                      project_method = project_method,
+                                      unit_length = unit_length)
+
         #Linear Solver parameters
-        method = "default"
-        preconditioner = "default"
-        self.phi1_solver = df.KrylovSolver(self.poisson_matrix, method, preconditioner)
-        #self.phi1_solver.parameters["relative_tolerance"] = self.phi1TOL
+        if parameters:
+            method = parameters["poisson_solver"]["method"]
+            pc = parameters["poisson_solver"]["preconditioner"]
+        else:
+            method, pc = "default", "default"
+
+        self.poisson_solver = df.KrylovSolver(self.poisson_matrix, method, pc)
 
         self.phi1 = df.Function(self.V)
         self.phi2 = df.Function(self.V)
@@ -245,7 +246,7 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         timings.startnext("phi1 - solve")
         #df.solve(self.poisson_matrix, self.phi1.vector(), g1, \
         #         self.solver, self.preconditioner)
-        self.phi1_solver.solve(self.phi1.vector(), g1)
+        self.poisson_solver.solve(self.phi1.vector(), g1)
 
         # Restrict phi1 to the boundary
         timings.startnext("Restrict phi1 to boundary")

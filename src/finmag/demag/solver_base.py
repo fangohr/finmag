@@ -31,14 +31,13 @@ class FemBemDeMagSolver(object):
                 * 'project'
     """
 
-    def __init__(self, problem, degree=1, element="CG",project_method = 'magpar',
-                 unit_length = 1,phi2TOL = 1e-7):
+    def __init__(self, problem, parameters=None, degree=1, element="CG",project_method = 'magpar',
+                 unit_length = 1):
 
         #Problem objects and parameter
         self.problem = problem
         self.mesh = problem.mesh
         self.unit_length = unit_length
-        self.phi2TOL = phi2TOL
 
         #This is used in energy density calculations
         self.mu0 = np.pi*4e-7 # Vs/(Am)
@@ -82,12 +81,18 @@ class FemBemDeMagSolver(object):
 
         #Objects that are needed frequently for linear solves.
         self.poisson_matrix = self.build_poisson_matrix()
-        #2nd FEM.
         self.laplace_zeros = df.Function(self.V).vector()
-        self.laplace_solver = df.KrylovSolver()
+
+        #2nd FEM.
+        if parameters:
+            method = parameters["laplace_solver"]["method"]
+            pc = parameters["laplace_solver"]["preconditioner"]
+        else:
+            method, pc = "default", "default"
+
+        self.laplace_solver = df.KrylovSolver(method, pc)
         self.laplace_solver.parameters["preconditioner"]["same_nonzero_pattern"] = True
-        self.laplace_solver.parameters["relative_tolerance"] = self.phi2TOL
-        
+
         #Objects needed for energy density computation
         self.nodal_vol = df.assemble(self.v*df.dx, mesh=self.mesh).array()
         self.ED = df.Function(self.V)

@@ -104,7 +104,7 @@ def compute_scalar_potential_native_fk(mesh, m_expr=df.Constant([1, 0, 0]), Ms=1
 ## Solves the demag problem for phi using the GCR method and the native BEM matrix
 def compute_scalar_potential_native_gcr(mesh, m_expr=df.Constant([1, 0, 0]), Ms=1.0):
     #Set a high tolerance for better precision needed to pass the comparison tests.
-    gcrdemag = Demag("GCR",phi1TOL = 1e-11, phi2TOL = 1e-11 )
+    gcrdemag = Demag("GCR")
     V = df.VectorFunctionSpace(mesh,"Lagrange",1)
     m = df.interpolate(m_expr, V)
     m.vector()[:] = helpers.fnormalise(m.vector().array())
