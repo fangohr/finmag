@@ -36,23 +36,19 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
     .. math::
 
         \\int_\\Omega \\nabla \\phi_1 \\cdot \\nabla v =
-        \\int_{\\partial \\Omega} (\\vec n \\cdot \\vec M) v \\mathrm{ds} -
+        \\int_{\\partial \\Omega} (\\vec n \\cdot \\vec M) v \\mathrm{d}s -
         \\int_\\Omega (\\nabla \\cdot \\vec
         M)v \\mathrm{d}x \\qquad \\qquad (1)
-
-    .. note::
-
-        Might be a -1 error here, but I think not.
 
     This could be solved straight forward by (code-block 1)
 
     .. code-block:: python
 
         a = df.inner(df.grad(u), df.grad(v))*df.dx
-        L = self.Ms*df.div(m)*self.v*df.dx
+        L = self.Ms*df.inner(self.n, self.m)*self.v*df.ds - Ms*df.div(m)*self.v*df.dx
         df.solve(a==L, self.phi1)
 
-    but we are instead using the fact that L can be written as (code-block 2)
+    but we are instead using that L can be written as (code-block 2)
 
     .. code-block:: python
 
@@ -60,8 +56,28 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         D = df.assemble(b)
         L = D*m.vector()
 
-    In this way, we can assemble D at setup, and do not have to
-    recompute it each time. This speeds up the solver significantly.
+    What we have used here, is the fact that by integration by parts on the
+    divergence term, we get the this body integral and the
+    same boundary integral as before, just with different signs,
+    so the boundary terms vanish. Proof:
+
+    .. math::
+        \\int_\\Omega \\nabla \\phi_1 \\cdot \\nabla v
+        &= \\int_{\\partial \\Omega} (\\vec n \\cdot \\vec M) v \\mathrm{d}s
+        - \\int_\\Omega (\\nabla \\cdot \\vec M)v \\mathrm{d}x
+
+        &= \\int_{\\partial \\Omega} (\\vec n \\cdot \\vec M) v \\mathrm{d}s
+        - \\int_{\\partial \\Omega} (\\vec n \\cdot \\vec M) v \\mathrm{d}s
+        + \\int_\\Omega \\vec M \\cdot \\nabla v \\mathrm{d}x
+
+        &= \\int_\\Omega \\vec M \\cdot \\nabla v \\mathrm{d}x
+
+    Now, we can substitute :math:`\\vec M` by a trial function (w in
+    code-block 2) defined on the same function space,
+    assemble the form, and then multiply with :math:`\\vec M`.
+    This way, we can assemble D (from code-block 2) at setup,
+    and do not have to recompute it each time.
+    This speeds up the solver significantly.
 
     :math:`\\phi_2` is the solution of Laplace's equation inside the domain,
 
