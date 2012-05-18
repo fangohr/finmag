@@ -180,7 +180,7 @@ examples-for-doc: ../examples/macrospin/alpha-1-00.png ../examples/macrospin/alp
 	../examples/exchange_demag/exchange_demag.png ../examples/exchange_demag/exchange_energy.png \
 	../examples/exchange_demag/exchange_density.png ../examples/exchange_demag/demag_density.png \
 	../examples/exchange_demag/demag_energy.png ../examples/demag/stddev_loglog.png ../examples/demag/xvalues.png \
-	../examples/demag/errnorm_loglog.png ../examples/exchange_demag/timings/results.rst ../examples/demag/results_field.txt \
+	../examples/demag/errnorm_loglog.png ../examples/demag/results_field.txt \
 	../src/finmag/tests/comparison/exchange/table.rst ../src/finmag/tests/comparison/anisotropy/table.rst \
 	../src/finmag/tests/comparison/demag/table.rst ../examples/exchange_demag/simple1D.png \
 	../examples/exchange_demag/finmag_exch_density.npy ../examples/exchange_demag/finmag_demag_density.npy
