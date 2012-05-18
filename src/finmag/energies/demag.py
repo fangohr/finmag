@@ -19,7 +19,7 @@ class Demag(EnergyBase):
     phi1TOL
         Relative tolerance for the first linear solve
     phi2TOL
-        Relative tolerance for the second linear solve    
+        Relative tolerance for the second linear solve
     """
     def __init__(self,solver = "FK", phi1TOL = 1e-7, phi2TOL = 1e-7):
         self.in_jacobian = False
@@ -27,7 +27,18 @@ class Demag(EnergyBase):
         if solver in ["FK","GCR"]:
             self.solver = solver
         else:
-            raise Exception("Only 'FK', and 'GCR' are possible solver values") 
+            raise Exception("Only 'FK', and 'GCR' are possible solver values")
+
+        self.parameters = df.Parameters("demag_options")
+        poisson = df.Parameters("poisson_solver")
+        poisson.add("method", "default")
+        poisson.add("preconditioner", "default")
+        laplace = df.Parameters("laplace_solver")
+        laplace.add("method", "default")
+        laplace.add("preconditioner", "default")
+        self.parameters.add(poisson)
+        self.parameters.add(laplace)
+
         self.phi1TOL = phi1TOL
         self.phi2TOL = phi2TOL
 
@@ -38,23 +49,23 @@ class Demag(EnergyBase):
                 the Dolfin object representing the (unit) magnetisation
             Ms
                 the saturation magnetisation
-            
+
             unit_length
                 The scale of the mesh, default is 1.
         """
        # timings.startnext("create-demag-problem")
         problem = FemBemDeMagProblem(S3.mesh(), m, Ms)
         if self.solver == "FK":
-            self.demag = FemBemFKSolver(problem, unit_length=unit_length,
-                                         phi1TOL = self.phi1TOL,
-                                         phi2TOL = self.phi2TOL)
+            self.demag = FemBemFKSolver(problem,
+                                        self.parameters,
+                                        unit_length=unit_length)
         elif self.solver == "GCR":
-            self.demag = FemBemGCRSolver(problem, unit_length=unit_length,
-                                         phiaTOL = self.phi1TOL,
-                                         phibTOL = self.phi2TOL)
-            
+            self.demag = FemBemGCRSolver(problem,
+                                         self.parameters,
+                                         unit_length=unit_length)
+
         #timings.startnext("Solve-demag-problem")
-        self.demag.solve()
+        #self.demag.solve()
 
     def compute_field(self):
         return self.demag.compute_field()
