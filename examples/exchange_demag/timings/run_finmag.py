@@ -2,12 +2,17 @@ import commands
 import os, time
 import numpy as np
 import dolfin as df
-from finmag.sim.llg import LLG
 from finmag.util.timings import timings
-from finmag.sim.integrator import LLGIntegrator
 from finmag.util.convert_mesh import convert_mesh
 
+from finmag import Simulation
+from finmag.energies import Exchange, Demag
+
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+####
+# Run the nmag2 example on nmag and finmag and compare timings
+####
 
 # Create meshes
 neutralmesh = 'netgen -geofile=bar.geo -meshfiletype="Neutral Format" -meshfile=bar.neutral -batchmode'
@@ -22,27 +27,33 @@ if not os.path.isfile(MODULE_DIR + "/bar.xml.gz"):
 commands.getstatusoutput("nsim run_nmag.py --clean")
 
 # Run finmag
-setupstart = time.time()
-
+# setupstart = time.time()
 # Set up LLG
+#mesh = df.Mesh(MODULE_DIR + "/bar.xml.gz")
+#llg = LLG(mesh, unit_length=1e-9)
+#llg.Ms = 0.86e6
+#llg.A = 13.0e-12
+#llg.alpha = 0.5
+#llg.set_m((1,0,1))
+#llg.setup(use_exchange=True, use_dmi=False, use_demag=True, demag_method="FK")
+
+# Setup
+setupstart = time.time()
 mesh = df.Mesh(MODULE_DIR + "/bar.xml.gz")
-llg = LLG(mesh, unit_length=1e-9)
-llg.Ms = 0.86e6
-llg.A = 13.0e-12
-llg.alpha = 0.5
-llg.set_m((1,0,1))
-llg.setup(use_exchange=True, use_dmi=False, use_demag=True, demag_method="FK")
+sim = Simulation(mesh, Ms=0.86e6, unit_length=1e-9)
+sim.set_m((1, 0, 1))
+demag = Demag()
+demag.parameters["poisson_solver"]["method"] = "cg"
+demag.parameters["poisson_solver"]["preconditioner"] = "ilu"
+sim.add(demag)
+sim.add(Exchange(13.0e-12))
 
-# Set up time integrator
-integrator = LLGIntegrator(llg, llg.m)
-times = np.linspace(0, 3.0e-10, 61)
-
+# Dynamics
 dynamicsstart = time.time()
-for t in times:
-    # Integrate
-    integrator.run_until(t)
+sim.run_until(3.0e-10)
 endtime = time.time()
 
+# Write output to results.rst
 output = open(MODULE_DIR + "/results.rst", "a")
 output.write("\nFinmag results:\n")
 output.write("---------------\n")
