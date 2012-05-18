@@ -4,7 +4,7 @@ import dolfin as df
 from finmag.energies import Demag
 from finmag.util.convert_mesh import convert_mesh
 from finmag.sim.helpers import stats, sphinx_sci as s
-from finmag.tests.magpar.magpar import compare_field_directly, compute_demag_magpar
+from finmag.util.magpar import compare_field_directly, compute_demag_magpar
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
 
@@ -13,7 +13,6 @@ table_entries = "    {:<10} {:<30} {:<30} {:<30} {:<30}\n"
 
 def setup_finmag():
     mesh = df.Mesh(convert_mesh(MODULE_DIR + "sphere.geo"))
-    coords = np.array(zip(* mesh.coordinates()))
 
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
     m = df.Function(S3)
@@ -98,7 +97,7 @@ def test_using_nmag(finmag):
 def test_using_magpar(finmag):
     REL_TOLERANCE = 3e-1
 
-    magpar_nodes, magpar_H = compute_demag_magpar(finmag["S3"], finmag["m"], finmag["Ms"])
+    magpar_nodes, magpar_H = compute_demag_magpar(finmag["m"], Ms=finmag["Ms"])
     _, _, diff, rel_diff = compare_field_directly(
             finmag["S3"].mesh().coordinates(), finmag["H"],
             magpar_nodes, magpar_H)
