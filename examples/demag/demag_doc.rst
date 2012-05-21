@@ -44,6 +44,61 @@ We have currently implemented two different approaches for solving the demagneti
 :doc:`Fredkin-Koehler method <modules/FKSolver>` and the :doc:`Garcia-Cervera-Roma method
 <modules/GCRSolver>`.
 
+
+Usage
+-----
+
+Usually, it's sufficient to create a Demag object and give it as an argument to the Simulaton object, e.g.
+
+.. code-block:: python
+
+    sim = Simulation(mesh)
+    sim.add(Demag())
+
+The Fredkin-Koehler method ("FK") is the default algorithm. If we instead want to use the Garcia-Cervera-Roma approach ("GCR"), we simply need to give this as argument.
+
+.. code-block:: python
+
+    sim = Simulation(mesh)
+    sim.add(Demag("GCR"))
+
+For both methods, we have two linear solvers. One for the poisson problem and one for the laplace problem, and we use Krylov solvers to solve bofh of them. There are a great amount of different methods and preconditioners available, dependent on installation. To list all of them, use
+
+.. code-block:: python
+
+    >>> list_krylov_solver_methods()
+    >>> list_krylov_solver_preconditioners()
+
+We use "default" as default method and preconditioner. This can be changed after the demag object is created.
+
+.. code-block:: python
+
+    demag = Demag()
+    demag.parameters["poisson_solver"]["method"] = "cg"
+    demag.parameters["poisson_solver"]["preconditioner"] = "ilu"
+
+    demag.parameters["laplace_solver"]["method"] = "cg"
+    demag.parameters["laplace_solver"]["preconditioner"] = "ilu"
+
+Here, we enable the solver to use the conjugate gradient method with incomplete LU factorization for both the poisson problem and the laplace problem.
+
+As the Krylov solvers are created in the constructor, we have the opporunity to change all default parameters, e.g. tolerances or maximum number of iterations, before the solving starts. The default values can be found e.g.
+
+.. code-block:: python
+
+    >>> s = KrylovSolver()
+    >>> p = s.parameters
+    >>> p.to_dict()
+
+To set e.g. the relative tolerance for the poisson solver to 1e-10, the syntax reads
+
+.. code-block:: python
+
+    demag = Demag()
+    demag.poisson_solver.parameters["relative_tolerance"] = 1e-10
+    sim.add(demag)
+
+
 Examples
 --------
 

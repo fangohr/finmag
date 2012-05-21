@@ -10,36 +10,52 @@ logger = logging.getLogger(name='finmag')
 
 __all__ = ["FemBemFKSolver"]
 class FemBemFKSolver(sb.FemBemDeMagSolver):
-    """
+    r"""
     The idea of the Fredkin-Koehler approach is to split the magnetic
-    potential into two parts, :math:`\\phi = \\phi_1 + \\phi_2`.
+    potential into two parts, :math:`\phi = \phi_1 + \phi_2`.
 
-    :math:`\\phi_1` solves the inhomogeneous Neumann problem
+    :math:`\phi_1` solves the inhomogeneous Neumann problem
 
     .. math::
 
-        \\Delta \\phi_1 = \\nabla \\cdot \\vec M(\\vec r), \\quad \\vec r \\in \\Omega, \\qquad
-        \\qquad
+        \Delta \phi_1 = \nabla \cdot \vec M(\vec r), \quad \vec r \in \Omega, \qquad
+        \qquad
 
     with
 
     .. math::
 
-        \\frac{\partial \\phi_1}{\\partial \\vec n} = \\vec n \\cdot \\vec M \\qquad \\qquad
+        \frac{\partial \phi_1}{\partial \vec n} = \vec n \cdot \vec M \qquad \qquad
 
-    on :math:`\\Gamma`. In addition, :math:`\\phi_1(\\vec r) = 0` for
-    :math:`\\vec r \\not \\in \\Omega`.
+    on :math:`\Gamma`. In addition, :math:`\phi_1(\vec r) = 0` for
+    :math:`\vec r \not \in \Omega`.
 
     Multiplying with a test function, :math:`v`, and integrate over the domain,
-    the corresponding variational problem reads
+    we obtain
 
     .. math::
 
-        \\int_\\Omega \\nabla \\phi_1 \\cdot \\nabla v =
-        \\int_{\\partial \\Omega} (\\vec n \\cdot \\vec M) v \\mathrm{d}s -
-        \\int_\\Omega (\\nabla \\cdot \\vec
-        M)v \\mathrm{d}x \\qquad \\qquad (1)
+        \int_\Omega \Delta \phi_1 v \mathrm{d}x = \int_\Omega (\nabla \cdot \vec
+        M)v \mathrm{d}x.
 
+    Integration by parts on the laplace term gives
+
+    .. math::
+
+        \int_\Omega \Delta \phi_1 v \mathrm{d}x = \int_{\partial \Omega}
+        \frac{\partial \phi_1}{\partial \vec n} v \mathrm{d}s -
+        \int_\Omega \nabla \phi_1 \cdot \nabla v \mathrm{d}x.
+
+    Hence our variational problem reads
+
+    .. math::
+
+        \int_\Omega \nabla \phi_1 \cdot \nabla v \mathrm{d}x =
+        \int_{\partial \Omega} (\vec n \cdot \vec M) v \mathrm{d}s -
+        \int_\Omega (\nabla \cdot \vec
+        M)v \mathrm{d}x, \qquad \qquad (1)
+
+    because :math:`\frac{\partial \phi_1}{\partial \vec n} = \vec n \cdot \vec M`.
     This could be solved straight forward by (code-block 1)
 
     .. code-block:: python
@@ -57,59 +73,61 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         L = D*m.vector()
 
     What we have used here, is the fact that by integration by parts on the
-    divergence term, we get the this body integral and the
+    divergence term in (1), we get the
     same boundary integral as before, just with different signs,
     so the boundary terms vanish. Proof:
 
     .. math::
-        \\int_\\Omega \\nabla \\phi_1 \\cdot \\nabla v
-        &= \\int_{\\partial \\Omega} (\\vec n \\cdot \\vec M) v \\mathrm{d}s
-        - \\int_\\Omega (\\nabla \\cdot \\vec M)v \\mathrm{d}x
 
-        &= \\int_{\\partial \\Omega} (\\vec n \\cdot \\vec M) v \\mathrm{d}s
-        - \\int_{\\partial \\Omega} (\\vec n \\cdot \\vec M) v \\mathrm{d}s
-        + \\int_\\Omega \\vec M \\cdot \\nabla v \\mathrm{d}x
+        \int_\Omega \nabla \phi_1 \cdot \nabla v
+        &= \int_{\partial \Omega} (\vec n \cdot \vec M) v \mathrm{d}s
+        - \int_\Omega (\nabla \cdot \vec M)v \mathrm{d}x \\
+        &= \int_{\partial \Omega} (\vec n \cdot \vec M) v \mathrm{d}s
+        - \int_{\partial \Omega} (\vec n \cdot \vec M) v \mathrm{d}s
+        + \int_\Omega \vec M \cdot \nabla v \mathrm{d}x \\
+        &= \int_\Omega \vec M \cdot \nabla v \mathrm{d}x
 
-        &= \\int_\\Omega \\vec M \\cdot \\nabla v \\mathrm{d}x
+    The first equality is from (1), and the second in integration by parts
+    on the divergence term, using Gauss' divergence theorem.
 
-    Now, we can substitute :math:`\\vec M` by a trial function (w in
+    Now, we can substitute :math:`\vec M` by a trial function (w in
     code-block 2) defined on the same function space,
-    assemble the form, and then multiply with :math:`\\vec M`.
+    assemble the form, and then multiply with :math:`\vec M`.
     This way, we can assemble D (from code-block 2) at setup,
     and do not have to recompute it each time.
     This speeds up the solver significantly.
 
-    :math:`\\phi_2` is the solution of Laplace's equation inside the domain,
+    :math:`\phi_2` is the solution of Laplace's equation inside the domain,
 
     .. math::
 
-        \\Delta \\phi_2(\\vec r) = 0
-        \\quad \\hbox{for } \\vec r \\in \\Omega. \\qquad \\qquad (2)
+        \Delta \phi_2(\vec r) = 0
+        \quad \hbox{for } \vec r \in \Omega. \qquad \qquad (2)
 
-    At the boundary, :math:`\\phi_2` has a discontinuity of
+    At the boundary, :math:`\phi_2` has a discontinuity of
 
     .. math::
 
-        \\bigtriangleup \\phi_2(\\vec r) = \\phi_1(\\vec r), \\qquad \\qquad
+        \bigtriangleup \phi_2(\vec r) = \phi_1(\vec r), \qquad \qquad
 
     and it disappears at infinity, i.e.
 
     .. math::
 
-        \\phi_2(\\vec r) \\rightarrow 0 \\quad \\mathrm{for}
-        \\quad \\lvert \\vec r \\rvert \\rightarrow \\infty. \\qquad \\qquad
+        \phi_2(\vec r) \rightarrow 0 \quad \mathrm{for}
+        \quad \lvert \vec r \rvert \rightarrow \infty. \qquad \qquad
 
-    In contrast to the Poisson equation for :math:`\\phi_1`,
+    In contrast to the Poisson equation for :math:`\phi_1`,
     which is solved straight forward in a finite domain, we now need to
-    apply a BEM technique to solve the equations for :math:`\\phi_2`.
+    apply a BEM technique to solve the equations for :math:`\phi_2`.
     First, we solve the equation on the boundary. By eq. (2.51) in Knittel's
     thesis, this yieds
 
     .. math::
 
-        \\Phi_2 = \\mathbf{B} \\cdot \\Phi_1, \\qquad \\qquad (3)
+        \Phi_2 = \mathbf{B} \cdot \Phi_1, \qquad \qquad (3)
 
-    with :math:`\\Phi_1` as the vector of elements from :math:`\\phi_1` which
+    with :math:`\Phi_1` as the vector of elements from :math:`\phi_1` which
     is on the boundary. These are found by the the global-to-boundary mapping
 
     .. code-block:: python
@@ -117,26 +135,26 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         Phi1 = self.phi1.vector().array()[g2b_map]
 
     The elements of the boundary element matrix
-    :math:`\\mathbf{B}` are given by
+    :math:`\mathbf{B}` are given by
 
     .. math::
 
-        B_{ij} = \\frac{1}{4\\pi}\\int_{\\Gamma_j} \\psi_j(\\vec r)
-        \\frac{(\\vec R_i - \\vec r) \\cdot n(\\vec r)}
-        {\\lvert \\vec R_i - \\vec r \\rvert^3} \\mathrm{d}s +
-        \\left(\\frac{\\Omega(\\vec R_i)}{4\\pi} - 1 \\right) \\delta_{ij}. \\qquad \\qquad (4)
+        B_{ij} = \frac{1}{4\pi}\int_{\Gamma_j} \psi_j(\vec r)
+        \frac{(\vec R_i - \vec r) \cdot n(\vec r)}
+        {\lvert \vec R_i - \vec r \rvert^3} \mathrm{d}s +
+        \left(\frac{\Omega(\vec R_i)}{4\pi} - 1 \right) \delta_{ij}. \qquad \qquad (4)
 
-    Here, :math:`\\psi` is a set of basis functions and
-    :math:`\\Omega(\\vec R)` denotes the solid angle.
+    Here, :math:`\psi` is a set of basis functions and
+    :math:`\Omega(\vec R)` denotes the solid angle.
 
-    Having both :math:`\\Phi_1` and :math:`\\mathbf{B}`,
+    Having both :math:`\Phi_1` and :math:`\mathbf{B}`,
     we use numpy.dot to compute the dot product.
 
     .. code-block:: python
 
         self.Phi2 = np.dot(self.bem, Phi1)
 
-    Now that we have obtained the values of :math:`\\phi_2` on the boundary,
+    Now that we have obtained the values of :math:`\phi_2` on the boundary,
     we need to solve the Laplace equation inside the domain, with
     these boundary values as boundary condition. This is done
     straight forward in Dolfin, as we can use the DirichletBC class.
@@ -157,14 +175,14 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         bc.apply(A, b)
         solve(A, self.phi2.vector(), b)
 
-    :math:`\\phi` is now obtained by just adding :math:`\\phi_1` and
-    :math:`\\phi_2`,
+    :math:`\phi` is now obtained by just adding :math:`\phi_1` and
+    :math:`\phi_2`,
 
     .. math::
 
-        \\phi = \\phi_1 + \\phi_2 \\qquad \\qquad (5)
+        \phi = \phi_1 + \phi_2 \qquad \qquad (5)
 
-    The demag field is defined as the negative gradient of :math:`\\phi`,
+    The demag field is defined as the negative gradient of :math:`\phi`,
     and is returned by the 'compute_field' function.
 
     *For an interface more inline with the rest of FinMag Code please use
@@ -173,6 +191,8 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
     *Arguments*
         problem
             An object of type DemagProblem
+        parameters
+            dolfin.Parameters of method and preconditioner to linear solvers.
         degree
             polynomial degree of the function space
         element
@@ -183,10 +203,6 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
             possible methods are
                 * 'magpar'
                 * 'project'
-        phi1TOL 
-            relative tolerance of the first krylov linear solver
-        phi2TOL 
-            relative tolerance of the second krylov linear solver
 
     At the moment, we think both methods work for first degree basis
     functions. The 'magpar' method may not work with higher degree
@@ -230,8 +246,6 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
     def solve(self):
 
         # Compute phi1 on the whole domain (code-block 1, last line)
-
-        # Now I'm not sure about the boundary term here..
         timings.start("phi1 - matrix product")
         g1 = self.D*self.m.vector()
 
@@ -244,8 +258,6 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         # and matrix multiplication is faster than assemble.
 
         timings.startnext("phi1 - solve")
-        #df.solve(self.poisson_matrix, self.phi1.vector(), g1, \
-        #         self.solver, self.preconditioner)
         self.poisson_solver.solve(self.phi1.vector(), g1)
 
         # Restrict phi1 to the boundary
@@ -253,8 +265,11 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         Phi1 = self.phi1.vector()[self.b2g_map]
 
         # Compute phi2 on the boundary, eq. (3)
-        timings.startnext("Compute phi2 on boundary")
+        timings.startnext("Compute Phi2")
         Phi2 = np.dot(self.bem, Phi1.array())
+
+        # Fill Phi2 into boundary positions of phi2
+        timings.startnext("phi2 <- Phi2")
         self.phi2.vector()[self.b2g_map[:]] = Phi2
 
         # Compute Laplace's equation inside the domain,
