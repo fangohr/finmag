@@ -29,6 +29,7 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
 
     on :math:`\Gamma`. In addition, :math:`\phi_1(\vec r) = 0` for
     :math:`\vec r \not \in \Omega`.
+    This is given by Knittel's thesis, eq. (2.27) - (2.29).
 
     Multiplying with a test function, :math:`v`, and integrate over the domain,
     we obtain
@@ -117,6 +118,9 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         \phi_2(\vec r) \rightarrow 0 \quad \mathrm{for}
         \quad \lvert \vec r \rvert \rightarrow \infty. \qquad \qquad
 
+    These three equations were taken from Knittel's thesis, equations
+    (2.30) - (2.32)
+
     In contrast to the Poisson equation for :math:`\phi_1`,
     which is solved straight forward in a finite domain, we now need to
     apply a BEM technique to solve the equations for :math:`\phi_2`.
@@ -135,7 +139,7 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         Phi1 = self.phi1.vector().array()[g2b_map]
 
     The elements of the boundary element matrix
-    :math:`\mathbf{B}` are given by
+    :math:`\mathbf{B}` are given by Knittel (2.52):
 
     .. math::
 
