@@ -31,8 +31,8 @@ class FemBemDeMagSolver(object):
                 * 'project'
     """
 
-    def __init__(self, problem, parameters=None, degree=1, element="CG",project_method = 'magpar',
-                 unit_length = 1):
+    def __init__(self, problem, parameters=None, degree=1, element="CG", project_method='magpar',
+                 unit_length=1):
 
         #Problem objects and parameter
         self.problem = problem

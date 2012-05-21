@@ -6,6 +6,7 @@ from energy_base import EnergyBase
 from finmag.demag.problems.prob_base import FemBemDeMagProblem
 from finmag.demag.solver_fk import FemBemFKSolver
 from finmag.demag.solver_gcr import FemBemGCRSolver
+from finmag.demag.solver_fk_test import SimpleFKSolver
 
 log = logging.getLogger("finmag")
 
@@ -14,20 +15,19 @@ class Demag(EnergyBase):
     A wrapper for the demag solvers that also implements the functionality of
     an energy class.
 
-    solver
-        type of demag solver GCR or FK
-    phi1TOL
-        Relative tolerance for the first linear solve
-    phi2TOL
-        Relative tolerance for the second linear solve
+    *Arguments*
+        solver
+            demag solver method: "FK", "GCR" or "weiwei"
+
     """
-    def __init__(self,solver = "FK", phi1TOL = 1e-7, phi2TOL = 1e-7):
+    def __init__(self, solver="FK", degree=1, element="CG", project_method="magpar"):
         self.in_jacobian = False
         log.info("Creating Demag object with " + solver + " solver.")
-        if solver in ["FK","GCR"]:
+
+        if solver in ["FK", "GCR", "weiwei"]:
             self.solver = solver
         else:
-            raise Exception("Only 'FK', and 'GCR' are possible solver values")
+            raise NotImplementedError("Only 'FK', 'GCR' and 'weiwei' are implemented")
 
         self.parameters = df.Parameters("demag_options")
         poisson = df.Parameters("poisson_solver")
@@ -39,8 +39,9 @@ class Demag(EnergyBase):
         self.parameters.add(poisson)
         self.parameters.add(laplace)
 
-        self.phi1TOL = phi1TOL
-        self.phi2TOL = phi2TOL
+        self.degree = degree
+        self.element = element
+        self.method = project_method
 
     def setup(self, S3, m, Ms, unit_length):
         """S3
@@ -52,17 +53,21 @@ class Demag(EnergyBase):
 
             unit_length
                 The scale of the mesh, default is 1.
+
         """
+        args = [self.parameters, self.degree, \
+                self.element, self.method, unit_length]
+
+
        # timings.startnext("create-demag-problem")
         problem = FemBemDeMagProblem(S3.mesh(), m, Ms)
+
         if self.solver == "FK":
-            self.demag = FemBemFKSolver(problem,
-                                        self.parameters,
-                                        unit_length=unit_length)
+            self.demag = FemBemFKSolver(problem, *args)
         elif self.solver == "GCR":
-            self.demag = FemBemGCRSolver(problem,
-                                         self.parameters,
-                                         unit_length=unit_length)
+            self.demag = FemBemGCRSolver(problem, *args)
+        elif self.solver == "weiwei":
+            self.demag = SimpleFKSolver(S3, m, Ms)
 
         #timings.startnext("Solve-demag-problem")
         #self.demag.solve()
@@ -89,11 +94,11 @@ if __name__ == "__main__":
     if test == "GCR":
         demag = Demag("GCR")
         demag.setup(V,m,Ms,unit_length = 1)
-        
+
     elif test == "FK":
         demag = Demag("FK")
         demag.setup(V,m,Ms,unit_length = 1)
 
     print timings
     df.plot(demag.compute_potential())
-    df.interactive()    
+    df.interactive()
