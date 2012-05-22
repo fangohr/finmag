@@ -232,7 +232,7 @@ class TestFemBemDeMagSolver(object):
         
     def setup_class(self):      
         self.problem = pftc.MagUnitSphere()
-        self.solver = sb.FemBemDeMagSolver(self.problem)
+        self.solver = sb.FemBemDeMagSolver(**self.problem.kwargs())
 
     def test_solve_laplace_inside(self):
         """Solve a known laplace equation to check the method solve_laplace_inside"""
@@ -265,7 +265,7 @@ class Test_FemBemGCRSolver(DemagTester):
 
         #Problems,solvers, solutions
         self.problem3d = pftc.MagSphere(1,0.8)
-        self.solver3d = sgcr.FemBemGCRSolver(self.problem3d)
+        self.solver3d = sgcr.FemBemGCRSolver(**self.problem3d.kwargs())
         self.solution3d = self.solver3d.solve()
 
         #Generate a 3d analytical solution

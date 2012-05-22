@@ -56,24 +56,37 @@ class Demag(EnergyBase):
                 The scale of the mesh, default is 1.
 
         """
-        args = [self.parameters, self.degree, \
-                self.element, self.method, unit_length]
 
+##        mesh,m, parameters=None, degree=1, element="CG", project_method='magpar',
+##                 unit_length=1,Ms = 1.0
+                 
+        kwargs = {"mesh":S3.mesh(),
+                  "m":m,
+                  "Ms":Ms,
+                  "unit_length":unit_length,
+                  "parameters":None,
+                  "degree":1,
+                  "element":"CG",
+                  "project_method":'magpar'}
+                  
+                
 
-       # timings.startnext("create-demag-problem")
-        problem = FemBemDeMagProblem(S3.mesh(), m, Ms)
+##
+##       # timings.startnext("create-demag-problem")
+##        problem = FemBemDeMagProblem(S3.mesh(), m, Ms)
 
         if self.solver == "FK":
-            self.demag = FemBemFKSolver(problem, *args)
+            self.demag = FemBemFKSolver(**kwargs)
         elif self.solver == "FK_magpar":
-            self.demag = MagparFKSolver(problem, *args)
+            self.demag = MagparFKSolver(**kwargs)
         elif self.solver == "GCR":
-            self.demag = FemBemGCRSolver(problem, *args)
+            self.demag = FemBemGCRSolver(**kwargs)
         elif self.solver == "weiwei":
             self.demag = SimpleFKSolver(S3, m, Ms)
 
         #timings.startnext("Solve-demag-problem")
-        #self.demag.solve()
+        if self.solver != "weiei":
+            self.demag.solve()
 
     def compute_field(self):
         return self.demag.compute_field()
@@ -101,6 +114,10 @@ if __name__ == "__main__":
     elif test == "FK":
         demag = Demag("FK")
         demag.setup(V,m,Ms,unit_length = 1)
+##
+##    elif test == "weiewei":
+##        demag = Demag("weiwei")
+##        demag.setup(V,m,Ms,unit_length = 1)
 
     print timings
     df.plot(demag.compute_potential())

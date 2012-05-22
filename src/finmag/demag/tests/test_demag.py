@@ -25,7 +25,7 @@ for problem in problems:
         if solver.__name__ == "SimpleFKSolver":
             case = solver(problem.V, problem.M, problem.Ms)
         else:
-            case = solver(problem)
+            case = solver(**problem.kwargs())
         grad = case.compute_field()
         cases.append(case)
         fields.append(grad)

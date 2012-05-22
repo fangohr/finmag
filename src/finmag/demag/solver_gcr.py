@@ -111,13 +111,14 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
             relative tolerance of the second krylov linear solver
     """
 
-    def __init__(self, problem, parameters=None, degree=1, element="CG",
-                 project_method='magpar', unit_length=1):
+    def __init__(self, mesh,m, parameters=None, degree=1, element="CG",
+                 project_method='magpar', unit_length=1, Ms = 1.0):
         
         #Initialize the base class
-        sb.FemBemDeMagSolver.__init__(self,problem,parameters,degree, element=element,
+        #New interface have mesh,m,Ms
+        sb.FemBemDeMagSolver.__init__(self,mesh,m,degree = degree, element=element,
                                              project_method = project_method,
-                                             unit_length = unit_length)
+                                             unit_length = unit_length,Ms = Ms)
 
         #Define the potentials
         self.phia = df.Function(self.V)
@@ -213,7 +214,7 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
 if __name__ == "__main__":
     from finmag.demag.problems import prob_fembem_testcases as pft
     problem = pft.MagSphere20()
-    solver = FemBemGCRSolver(problem)
+    solver = FemBemGCRSolver(**problem.kwargs())
     sol = solver.solve()
     print timings
     df.plot(sol)
