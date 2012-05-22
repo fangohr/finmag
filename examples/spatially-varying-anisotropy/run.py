@@ -93,13 +93,15 @@ def run_simulation():
 
     v.elevate(-90) 
     v.update(sim.llg._m)    # bring settings above into action
-    v.write_png('exchangespring.png')
-    v.write_ps('exchangespring.eps')
+    #v.write_png(os.path.join(MODULE_DIR,'exchangespring.png')) #this is broken in my dolfin, HF
+                                                                #the bitmap looks random  
+    v.write_ps(os.path.join(MODULE_DIR,'exchangespring'))       #will write exchangespring.eps
+    os.system("ps2png exchangespring.eps exchangespring.png")   #create the png file for documentation
 
-    f=df.File('exchangespring.pvd')
+    f=df.File(os.path.join(MODULE_DIR,'exchangespring.pvd'))    #same more data for paraview
     f << sim.llg._m
 
-    print("Written plots and data to exchangespring.*")
+    print("Written plots and data to %s" % (os.path.join(MODULE_DIR,'exchangespring.*')))
         
 if __name__ == "__main__":
     run_simulation()
