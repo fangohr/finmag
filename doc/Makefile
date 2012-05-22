@@ -231,5 +231,5 @@ examples-for-doc: ../examples/macrospin/alpha-1-00.png ../examples/macrospin/alp
 	cd ../examples/exchange_demag/ && make nmag
 
 ../examples/spatially-varying-anisotropy/exchangespring.png ../examples/spatially-varying-anisotropy/profile.png:
-	cd ../examples/spatially-varying-anisotropy && python run.py
+	cd ../examples/spatially-varying-anisotropy && PYTHONPATH=$(PYTHON_ROOTS) python run.py
 
