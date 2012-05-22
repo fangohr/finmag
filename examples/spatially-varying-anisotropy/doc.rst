@@ -15,7 +15,7 @@ and
    \vec{a}_1 = [1,0,0] \quad \mathrm{for} \quad z>L_z/2
 
 
-The resulting magnetisation pattern reflects the anisotropy, and how -- due to the exchange -- the magnetisation changes slowly from perpendicular to in plane as we go from :math:`z=0` to :math`z=L_z`.
+The resulting magnetisation pattern reflects the anisotropy, and how -- due to the exchange -- the magnetisation changes slowly from perpendicular to in plane as we go from :math:`z=0` to :math:`z=L_z`.
 
 .. comment:
 
