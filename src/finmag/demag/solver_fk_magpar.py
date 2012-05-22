@@ -222,13 +222,13 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         See the exchange_demag example.
 
     """
-    def __init__(self, problem, parameters=None, degree=1, element="CG",
-                 project_method='magpar', unit_length=1):
+    def __init__(self, mesh,m, parameters=None, degree=1, element="CG",
+                 project_method='magpar', unit_length=1,Ms = 1.0):
 
         timings.start("FKSolver init")
-        sb.FemBemDeMagSolver.__init__(self,problem, parameters, degree, element=element,
+        sb.FemBemDeMagSolver.__init__(self,mesh,m, parameters, degree, element=element,
                                       project_method = project_method,
-                                      unit_length = unit_length)
+                                      unit_length = unit_length,Ms = Ms)
 
         #Linear Solver parameters
         if parameters:
@@ -400,20 +400,14 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
 
 
 if __name__ == "__main__":
-    class Problem():
-        pass
-
-    problem = Problem()
-    mesh = df.UnitSphere(4)
-    Ms = 1
-    V = df.VectorFunctionSpace(mesh, 'Lagrange', 1)
-
-    problem.mesh = mesh
-    problem.M = df.project(df.Constant((1, 0, 0)), V)
-    problem.Ms = Ms
-
-    demag = FemBemFKSolver(problem)
+    from finmag.demag.problems import prob_fembem_testcases as pft
+    problem = pft.MagSphere20()
+    Ms = problem.Ms
+    
+    demag = FemBemFKSolver(**problem.kwargs())
     Hd = demag.compute_field()
     Hd.shape = (3, -1)
     print np.average(Hd[0])/Ms, np.average(Hd[1])/Ms, np.average(Hd[2])/Ms
     print timings
+    df.plot(demag.phi)
+    df.interactive()

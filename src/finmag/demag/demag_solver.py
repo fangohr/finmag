@@ -14,9 +14,9 @@ class Demag(object):
         self.problem = FBProblem(mesh, m,Ms)
         timings.startnext("Demag-init-FemBemConstructorCall")
         if method == "FK":
-            self.solver = FemBemFKSolver(self.problem)
+            self.solver = FemBemFKSolver(**self.problem.kwargs())
         elif method == "GCR":
-            self.solver = FemBemGCRSolver(self.problem)
+            self.solver = FemBemGCRSolver(**self.problem.kwargs())
         else:
             raise NotImplementedError("""Only methods currently implemented are
                                     * 'FK'

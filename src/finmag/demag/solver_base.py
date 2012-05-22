@@ -31,12 +31,11 @@ class FemBemDeMagSolver(object):
                 * 'project'
     """
 
-    def __init__(self, problem, parameters=None, degree=1, element="CG", project_method='magpar',
-                 unit_length=1):
+    def __init__(self, mesh,m, parameters=None, degree=1, element="CG", project_method='magpar',
+                 unit_length=1,Ms = 1.0):
 
         #Problem objects and parameter
-        self.problem = problem
-        self.mesh = problem.mesh
+        self.mesh = mesh
         self.unit_length = unit_length
 
         #This is used in energy density calculations
@@ -46,7 +45,7 @@ class FemBemDeMagSolver(object):
         self.n = df.FacetNormal(self.mesh)
 
         #Spaces and functions for the Demag Potential
-        self.V = df.FunctionSpace(self.problem.mesh,element,degree)
+        self.V = df.FunctionSpace(self.mesh,element,degree)
         self.v = df.TestFunction(self.V)
         self.u = df.TrialFunction(self.V)
         self.phi = df.Function(self.V)
@@ -60,21 +59,21 @@ class FemBemDeMagSolver(object):
         #Interpolate the Unit Magentisation field if necessary
         #A try block was not used since it might lead to an unneccessary (and potentially bad)
         #interpolation
-        if isinstance(problem.M, df.Expression) or isinstance(problem.M, df.Constant):
-            self.m = df.interpolate(problem.M,self.W)
+        if isinstance(m, df.Expression) or isinstance(m, df.Constant):
+            self.m = df.interpolate(m,self.W)
             
-        elif isinstance(problem.M,tuple):
-            self.m = df.interpolate(df.Expression(problem.M),self.W)
+        elif isinstance(m,tuple):
+            self.m = df.interpolate(df.Expression(m),self.W)
             
-        elif isinstance(problem.M,list):
-            self.m = df.interpolate(df.Expression(tuple(problem.M)),self.W)
+        elif isinstance(m,list):
+            self.m = df.interpolate(df.Expression(tuple(m)),self.W)
             
         else:
-            self.m = problem.M
+            self.m = m
         #Normalize m (should be normalized anyway).
         self.m.vector()[:] = helpers.fnormalise(self.m.vector().array())
         
-        self.Ms = problem.Ms
+        self.Ms = Ms
 
         # Initilize the boundary element matrix variable
         self.bem = None

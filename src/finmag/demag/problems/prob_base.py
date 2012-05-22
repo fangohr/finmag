@@ -15,13 +15,17 @@ from finmag.util.convert_mesh import convert_mesh
 class DeMagProblem(object):
     """
     Base class for all demag problems
-    M - the Dolfin object representing the (unit) magnetisation
+    M - the Dolfin object re presenting the (unit) magnetisation
     Ms - the saturation magnetisation
     """
     def __init__(self,mesh,M, Ms = 1):
         self.mesh = mesh
         self.M = M
         self.Ms = Ms
+        
+    def kwargs(self):
+        "Used for compatiblity with the FEMBEMdemag solver interface"
+        return {"mesh":self.mesh,"m":self.M,"Ms":self.Ms}
 
 class TruncDeMagProblem(DeMagProblem):
     """Base class for demag problems with truncated domains"""
