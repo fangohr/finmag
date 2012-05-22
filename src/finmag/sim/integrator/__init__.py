@@ -41,6 +41,8 @@ class BaseIntegrator(object):
             log.debug("max_dmdt_norm = {} * stopping_dmdt.".format(max_dmdt_norm/stopping_dmdt))
 
             if max_dmdt_norm < stopping_dmdt:
+                log.debug("{}: at t={:.2}, max_dmdt_norm={}<{}=stopping_dmdt\n\t->break".format(
+                        self.__class__.__name__, self.llg.t, max_dmdt_norm,stopping_dmdt))
                 break
 
             dt = dt * 1.5
