@@ -42,7 +42,7 @@ setupstart = time.time()
 mesh = df.Mesh(MODULE_DIR + "/bar.xml.gz")
 sim = Simulation(mesh, Ms=0.86e6, unit_length=1e-9)
 sim.set_m((1, 0, 1))
-demag = Demag("FK_magpar")
+demag = Demag()
 demag.parameters["poisson_solver"]["method"] = "minres"
 demag.parameters["laplace_solver"]["method"] = "gmres"
 demag.parameters["laplace_solver"]["preconditioner"] = "sor"
