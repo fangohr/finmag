@@ -3,6 +3,7 @@ import dolfin as df
 import logging
 from finmag.util.timings import timings
 from finmag.sim.helpers import fnormalise
+from finmag import ipython
 logger=logging.getLogger('finmag')
 
 class UniaxialAnisotropy(object):
@@ -69,12 +70,24 @@ class UniaxialAnisotropy(object):
     def __init__(self, K, a, method="box-matrix-petsc"):
         logger.info("Creating Anisotropy with method {}.".format(method))
         self.in_jacobian = True
-        # Make sure that K is dolfin.Constant
-        if not 'dolfin' in str(type(K)):
-            K = df.Constant(K)
-        self.K = K
 
-        self.a = df.Constant(a)
+        # if K and a are dolfin-functions, then accept them as they are. We need this for 
+        # spatially varying anisotropy.
+        if isinstance(K,df.Function):
+            self.K = K
+        else:
+            # Make sure that K is dolfin.Constant
+            if not 'dolfin' in str(type(K)):
+                K = df.Constant(K)
+            self.K = K
+
+        if isinstance(a,df.Function):
+            logger.debug("Found Anisotropy direction a of type df.Function")
+            self.a = a
+        else:
+            logger.debug("Found Anisotropy direction '{}' -> df.Constant".format(a))
+            self.a = df.Constant(a)
+
         self.method = method
 
     def setup(self, S3, m, Ms, unit_length=1):
