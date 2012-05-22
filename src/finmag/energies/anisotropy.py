@@ -3,7 +3,6 @@ import dolfin as df
 import logging
 from finmag.util.timings import timings
 from finmag.sim.helpers import fnormalise
-from finmag import ipython
 logger=logging.getLogger('finmag')
 
 class UniaxialAnisotropy(object):
