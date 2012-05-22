@@ -87,16 +87,17 @@ def run_simulation():
     pylab.savefig(os.path.join(MODULE_DIR,'profile.png'))
     #pylab.show()
 
-    v = df.plot(sim.llg._m, 
-                title='exchange spring across layers with different anisotropy directions',
-                axes=True)
-
-    v.elevate(-90) 
-    v.update(sim.llg._m)    # bring settings above into action
-    #v.write_png(os.path.join(MODULE_DIR,'exchangespring.png')) #this is broken in my dolfin, HF
-                                                                #the bitmap looks random  
-    v.write_ps(os.path.join(MODULE_DIR,'exchangespring'))       #will write exchangespring.eps
-    os.system("ps2png exchangespring.eps exchangespring.png")   #create the png file for documentation
+    ##this only works with an X-display, so comment out for jenkins
+    #v = df.plot(sim.llg._m, 
+    #            title='exchange spring across layers with different anisotropy directions',
+    #            axes=True)
+    #
+    #v.elevate(-90) 
+    #v.update(sim.llg._m)    # bring settings above into action
+    ##v.write_png(os.path.join(MODULE_DIR,'exchangespring.png')) #this is broken in my dolfin, HF
+    #                                                            #the bitmap looks random  
+    #v.write_ps(os.path.join(MODULE_DIR,'exchangespring'))       #will write exchangespring.eps
+    #os.system("ps2png exchangespring.eps exchangespring.png")   #create the png file for documentation
 
     f=df.File(os.path.join(MODULE_DIR,'exchangespring.pvd'))    #same more data for paraview
     f << sim.llg._m
