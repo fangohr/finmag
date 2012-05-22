@@ -184,7 +184,6 @@ examples-for-doc: ../examples/macrospin/alpha-1-00.png ../examples/macrospin/alp
 	../src/finmag/tests/comparison/exchange/table.rst ../src/finmag/tests/comparison/anisotropy/table.rst \
 	../src/finmag/tests/comparison/demag/table.rst ../examples/exchange_demag/simple1D.png \
 	../examples/exchange_demag/finmag_exch_density.npy ../examples/exchange_demag/finmag_demag_density.npy \
-	../examples/spatially-varying-anisotropy/exchangespring.png \
 	../examples/spatially-varying-anisotropy/profile.png
 
 
@@ -230,6 +229,6 @@ examples-for-doc: ../examples/macrospin/alpha-1-00.png ../examples/macrospin/alp
 ../examples/exchange_demag/finmag_exch_density.npy ../examples/exchange_demag/finmag_demag_density.npy:
 	cd ../examples/exchange_demag/ && make nmag
 
-../examples/spatially-varying-anisotropy/exchangespring.png ../examples/spatially-varying-anisotropy/profile.png:
+../examples/spatially-varying-anisotropy/profile.png:
 	cd ../examples/spatially-varying-anisotropy && PYTHONPATH=$(PYTHON_ROOTS) python run.py
 
