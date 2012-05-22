@@ -7,6 +7,8 @@ from finmag.sim.llg2 import LLG
 from finmag.util.timings import timings
 from finmag.sim.integrator import LLGIntegrator
 
+ONE_DEGREE_PER_NS = 17453292.5 # in rad/s
+
 log = logging.getLogger(name="finmag")
 
 class Simulation(object):
@@ -60,10 +62,10 @@ class Simulation(object):
             self.integrator = LLGIntegrator(self.llg, self.llg.m)
         self.integrator.run_until(t)
 
-    def relax(self):
+    def relax(self,stopping_dmdt=ONE_DEGREE_PER_NS):
         if not hasattr(self, "integrator"):
             self.integrator = LLGIntegrator(self.llg, self.llg.m)
-        self.integrator.run_until_relaxation()
+        self.integrator.run_until_relaxation(stopping_dmdt=stopping_dmdt)
 
     def __get_pins(self):
         return self.llg.pins
