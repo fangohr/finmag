@@ -1207,3 +1207,20 @@ fangohr: Still testing ...
 2012-05-17 16:33:47 nsob104:  /?
 2012-05-18 15:17:09 mb8g11: /usr/local/cuda/bin
 2012-05-21 00:14:13 fangohr_laptop: Hello DokosBot.
+2012-05-23 13:02:21 MaximS: Hi Anders.
+2012-05-23 13:23:31 andersej: Hi! Sorry late answer, just been out buying food.
+2012-05-23 13:25:05 MaximS: I could pick you up in 15 Minutes and we'll go to my office.
+2012-05-23 13:25:23 andersej: Sounds good! See you then!
+2012-05-23 13:25:29 MaximS: See you
+2012-05-23 17:41:54 fangohr: Good afternoon, Anders and DokosBot.
+2012-05-23 17:42:14 andersej: Hello, Hans!
+2012-05-23 17:42:19 fangohr: :)
+2012-05-23 17:42:54 fangohr: I have been told it is hot in Southampton?
+2012-05-23 17:43:35 andersej: I can confirm this. Not many people in the building..
+2012-05-23 17:43:53 fangohr: :) — have you got the aircon activated?
+2012-05-23 17:44:39 andersej: No, I just use it in extreme situations. Afraid they'll give me a cold.
+2012-05-23 17:46:30 fangohr: That's the right attitude.
+2012-05-23 17:48:52 fangohr: I see from the commit that you are using PetscCusp — I think I start to understand now how this works together.
+2012-05-23 17:52:09 fangohr_laptop: Hello Anders, Fangohr, DokosBot. (Just struggling with IRC clients here…)
+2012-05-23 18:34:06 andersej: Hehe, fangohr_laptop was new.. Yes, I've started to test out the gpu solver. Just got remote access to Maxim's computer. The problem now is that small sets of equations take longer time to copy to the gpu than we gain by solving them there. Larger sets take forever to build the boundary element matrix as we have to use the python-magpar code. So I haven't seen any speedup in our code yet.
+2012-05-23 18:40:57 andersej: How is the conference?
