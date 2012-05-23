@@ -20,6 +20,7 @@ class LLG(object):
         self.set_default_values()
         self.do_precession = do_precession
         timings.stop('LLG-init')
+        self.Volume=None #will be computed on demand, and carries volume of the mesh
 
     def set_default_values(self):
         self._alpha_mult = df.Function(self.S1)
@@ -94,6 +95,9 @@ class LLG(object):
         :math:`\\langle m \\rangle = \\frac{1}{V} \int m \: \mathrm{d}V`
         
         """
+        #Compute volume if not done before
+        if self.Volume == None:
+            self.Volume = df.assemble(df.Constant(1)*df.dx, mesh=self._m.function_space().mesh())
         mx = df.assemble(df.dot(self._m, df.Constant([1,0,0])) * df.dx)
         my = df.assemble(df.dot(self._m, df.Constant([0,1,0])) * df.dx)
         mz = df.assemble(df.dot(self._m, df.Constant([0,0,1])) * df.dx)
