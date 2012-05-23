@@ -1,0 +1,37 @@
+from dolfin import *
+from time import time
+import math
+from finmag.util.convert_mesh import convert_mesh
+
+def run_test():
+    solver = KrylovSolver()
+
+    #mesh = Box(0,0,0,30,30,100,3,3,10)
+    #mesh = Mesh(convert_mesh("bar.geo"))
+    mesh = UnitCube(40,40,40)
+    V = FunctionSpace(mesh, "CG", 1)
+    W = VectorFunctionSpace(mesh, "CG", 1)
+
+    u = TrialFunction(V)
+    v = TestFunction(V)
+    w = TrialFunction(W)
+
+    A = assemble(inner(grad(u), grad(v))*dx)
+
+    D = assemble(0.86e6*inner(w, grad(v))*dx)
+    m = Function(W)
+    m.vector()[:] = 1/math.sqrt(2)
+    b = D*m.vector()
+    x = Vector()
+    start = time()
+    solver.solve(A, x, b)
+    return time() - start
+
+parameters["linear_algebra_backend"] = "PETSc"
+time1 = run_test()
+parameters["linear_algebra_backend"] = "PETScCusp"
+time2 = run_test()
+print "Backend: PETSc, time: %g" % time1
+print "Backend: PETScCusp, time: %g" % time2
+
+print "Speedup: %g" % (time1/time2)
