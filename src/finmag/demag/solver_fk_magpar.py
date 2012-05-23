@@ -1,3 +1,4 @@
+import os
 import logging
 import numpy as np
 import dolfin as df
@@ -13,7 +14,193 @@ compute_solid_angle=solid_angle_solver.return_csa_magpar()
 logger = logging.getLogger(name='finmag')
 
 __all__ = ["FemBemFKSolver"]
-class FemBemFKSolver(sb.FemBemDeMagSolver):
+
+class FemBemFKSolver(object):
+    def __init__(self, mesh, m, parameters=None, degree=1, element="CG",
+                 project_method='magpar', unit_length=1, Ms=1.0):
+
+        self.V = df.FunctionSpace(mesh, element, degree)
+        self.W = df.VectorFunctionSpace(mesh, element, degree, dim=3)
+        self.u = df.TrialFunction(self.V)
+        self.v = df.TestFunction(self.V)
+        self.w = df.TrialFunction(self.W)
+        self.vv = df.TestFunction(self.W)
+        self.phi = df.Function(self.V)
+        self.phi1 = df.Function(self.V)
+        self.phi2 = df.Function(self.V)
+        self.laplace_zeros = df.Function(self.V).vector()
+
+
+        #Linear Solver parameters
+        if parameters:
+            p_method = parameters["poisson_solver"]["method"]
+            p_pc = parameters["poisson_solver"]["preconditioner"]
+            l_method = parameters["laplace_solver"]["method"]
+            l_pc = parameters["laplace_solver"]["preconditioner"]
+        else:
+            p_method, p_pc, l_method, l_pc = "default", "default", "default", "default"
+
+        self.poisson_matrix = df.assemble(df.inner(df.grad(self.u), df.grad(self.v))*df.dx, mesh=mesh)
+        self.poisson_solver = df.KrylovSolver(self.poisson_matrix, p_method, p_pc)
+        self.laplace_solver = df.KrylovSolver(l_method, l_pc)
+
+        # Eq (1) and code-block 2 - two first lines.
+        b = Ms*df.inner(self.w, df.grad(self.v))*df.dx
+        self.D = df.assemble(b)
+
+        self.m = m
+        self.Ms = Ms
+        self.mesh = mesh
+        self.build_all()
+        #self.solve()
+
+    def solve(self):
+        timings.start("phi1 - matrix product")
+        b = self.D*self.m.vector()
+        #b = df.assemble(self.Ms*df.dot(self.n,self.m)*self.v*df.ds \
+        #        - self.Ms*df.div(self.m)*self.v*df.dx)
+        timings.startnext("phi1 - solve")
+        self.poisson_solver.solve(self.phi1.vector(), b)
+
+        timings.startnext("Restrict phi1 to boundary")
+        Phi1 = self.U1*self.phi1.vector().array()
+
+        timings.startnext("Compute Phi2")
+        Phi2 = np.dot(self.bem, Phi1)
+
+        timings.startnext("phi2 <- Phi2")
+        self.phi2.vector()[:] = self.U2*Phi2
+
+        timings.startnext("Compute phi2 inside")
+        bc = df.DirichletBC(self.V, self.phi2, df.DomainBoundary())
+        A = self.poisson_matrix.copy()
+        b = self.laplace_zeros.copy()
+        bc.apply(A, b)
+        self.laplace_solver.solve(A, self.phi2.vector(), b)
+
+        timings.startnext("Add phi1 and phi2")
+        self.phi.vector()[:] = self.phi1.vector() \
+                             + self.phi2.vector()
+        timings.stop("Add phi1 and phi2")
+
+    def compute_field(self):
+        self.solve()
+        Hd = self.G*self.phi.vector()
+        Hd = Hd.array()/self.L
+        return Hd
+
+    def build_all(self):
+        # Mapping
+        self.bnd_face_nodes,\
+        self.gnodes_to_bnodes,\
+        self.bnd_faces_number,\
+        self.bnd_nodes_number= \
+                belement.compute_bnd_mapping(self.mesh)
+        self.nodes_number=self.mesh.num_vertices()
+
+        # Project
+        a = df.inner(df.grad(self.u), self.vv)*df.dx
+        b = df.dot(self.vv, df.Constant([-1, -1, -1]))*df.dx
+        self.G = df.assemble(a)
+        self.L = df.assemble(b).array()
+
+        # U1
+        self.U1 = sp.lil_matrix((self.bnd_nodes_number,
+                                 self.nodes_number),
+                                 dtype='float32')
+        g2b=self.gnodes_to_bnodes
+        for i in range(self.nodes_number):
+            if g2b[i]>=0:
+                self.U1[g2b[i],i]=1
+
+        # U2
+        self.U2 = sp.lil_matrix((self.nodes_number,
+                                 self.bnd_nodes_number),
+                                 dtype='float32')
+        self.K1 = self.poisson_matrix
+        g2b=self.gnodes_to_bnodes
+        tmp_mat=sp.lil_matrix(self.K1.array())
+        rows,cols = tmp_mat.nonzero()
+        for row,col in zip(rows,cols):
+            if g2b[row]<0 and g2b[col]>=0:
+                self.U2[row,g2b[col]]=-tmp_mat[row,col]
+        for i in range(self.nodes_number):
+            if g2b[i]>=0:
+                self.U2[i,g2b[i]]=1
+
+        # BEM
+        self.compute_BEM_matrix()
+
+
+    def compute_BEM_matrix(self):
+        mesh=self.mesh
+        xyz=mesh.coordinates()
+        bfn=self.bnd_face_nodes
+        g2b=self.gnodes_to_bnodes
+
+        nodes_number=mesh.num_vertices()
+        n=self.bnd_nodes_number
+        B=np.zeros((n,n))
+
+        tmp_bele=np.array([0.,0.,0.])
+        loops = (nodes_number - sum(g2b<0))*self.bnd_faces_number + mesh.num_cells()*4
+        loop_ctr = 0
+        bar = ProgressBar(loops)
+        logger.info("Building Boundary Element Matrix")
+
+        for i in range(nodes_number):
+            #skip the node not at the boundary
+            if g2b[i]<0:
+                continue
+            for j in range(self.bnd_faces_number):
+
+                loop_ctr += 1
+                bar.update(loop_ctr)
+
+                #skip the node in the face
+                if i in set(bfn[j]):
+                    continue
+
+                compute_belement(
+                    xyz[i],
+                    xyz[bfn[j][0]],
+                    xyz[bfn[j][1]],
+                    xyz[bfn[j][2]],
+                    tmp_bele)
+
+                for k in range(3):
+                    ti=g2b[i]
+                    tj=g2b[bfn[j][k]]
+                    B[ti][tj]+=tmp_bele[k]
+
+        #the solid angle term ...
+        vert_bsa=np.zeros(nodes_number)
+
+        mc=mesh.cells()
+        for i in range(mesh.num_cells()):
+            for j in range(4):
+                tmp_omega=compute_solid_angle(
+                    xyz[mc[i][j]],
+                    xyz[mc[i][(j+1)%4]],
+                    xyz[mc[i][(j+2)%4]],
+                    xyz[mc[i][(j+3)%4]])
+                vert_bsa[mc[i][j]]+=tmp_omega
+
+                loop_ctr += 1
+                bar.update(loop_ctr)
+
+        for i in range(nodes_number):
+            j=g2b[i]
+            if j<0:
+                continue
+            B[j][j]+=vert_bsa[i]/(4*np.pi)-1
+
+
+        self.bem=B
+
+
+
+class FemBemFKSolverORG(sb.FemBemDeMagSolver):
     r"""
     The idea of the Fredkin-Koehler approach is to split the magnetic
     potential into two parts, :math:`\phi = \phi_1 + \phi_2`.
