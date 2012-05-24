@@ -1,3 +1,5 @@
+##This file is deprecated###
+
 """
 This script contains timings for the FEM parts of the FEMBEM demag solvers.
 Different linear algebra solution methods are tested along with preconditioners.

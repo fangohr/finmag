@@ -14,6 +14,8 @@ from finmag.util.timings import timings
 from finmag.native.llg import compute_bem_gcr, OrientedBoundaryMesh
 logger = logging.getLogger(name='finmag')
 
+import finmag.util.solver_benchmark as bench
+
 class FemBemGCRSolver(sb.FemBemDeMagSolver):
     """
     This approach is similar to the :py:class:FKSolver <finmag.demag.solver_fk.FemBemFKSolver>`
@@ -93,8 +95,12 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
     approach.
 
     *Arguments*
-        problem
-            An object of type DemagProblem
+        mesh
+            dolfin Mesh object
+        m
+            the Dolfin object representing the (unit) magnetisation
+        Ms
+            the saturation magnetisation 
         degree
             polynomial degree of the function space
         element
@@ -105,20 +111,18 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
             possible methods are
                 * 'magpar'
                 * 'project'
-        phiaTOL = df.e-12,
-            relative tolerance of the first krylov linear solver
-        phibTOL = df.e-12
-            relative tolerance of the second krylov linear solver
+        bench
+            set to True to run a benchmark of linear solvers
     """
 
     def __init__(self, mesh,m, parameters=None, degree=1, element="CG",
-                 project_method='magpar', unit_length=1, Ms = 1.0):
+                 project_method='magpar', unit_length=1, Ms = 1.0,bench = False):
         
         #Initialize the base class
         #New interface have mesh,m,Ms
         sb.FemBemDeMagSolver.__init__(self,mesh,m,degree = degree, element=element,
                                              project_method = project_method,
-                                             unit_length = unit_length,Ms = Ms)
+                                             unit_length = unit_length,Ms = Ms,bench = bench)
 
         #Define the potentials
         self.phia = df.Function(self.V)
@@ -192,10 +196,14 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
         self.phia_bc.apply(F)
 
         #Solve for phia
-        self.poisson_solver.solve(phia.vector(),F)
+        if self.bench:
+            bench.solve(self.poisson_matrix_dirichlet,phia.vector(),F, benchmark = True)
+           # df.solve(self.poisson_matrix_dirichlet,phia.vector(),F,"gmres","ilu")
+        else:
+            self.poisson_solver.solve(phia.vector(),F)
+        
         #Replace with LU solve
         #df.solve(self.poisson_matrix_dirichlet,phia.vector(),F)
-        
         return phia
     
     def build_vector_q(self,m,Ms,phi1):
@@ -213,9 +221,21 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
 
 if __name__ == "__main__":
     from finmag.demag.problems import prob_fembem_testcases as pft
+    from finmag.sim import helpers
+    
     problem = pft.MagSphere20()
-    solver = FemBemGCRSolver(**problem.kwargs())
+    kwargs = problem.kwargs()
+    kwargs["bench"] = True
+
+    #Make a more interesting m
+    m = df.interpolate(df.Expression(["x[0]*x[1]+3", "x[2]+5", "x[1]+7"]),
+                       df.VectorFunctionSpace(problem.mesh,"CG",1))
+    
+    m.vector()[:] = helpers.fnormalise(m.vector().array())
+    kwargs["m"] = m
+    solver = FemBemGCRSolver(**kwargs)
     sol = solver.solve()
     print timings
     df.plot(sol)
+    df.plot(solver.phia, title = "phia")
     df.interactive()

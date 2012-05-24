@@ -98,7 +98,9 @@ def solve(*args, **kwargs):
         for parameters in solver_parameters_set:
             solver_failed = False
             # Replace the existing solver setting with the benchmark one's.
-            new_args, new_kwargs = replace_solver_settings(args, kwargs, parameters) 
+            new_args, new_kwargs = replace_solver_settings(args, kwargs, parameters)
+##            print "args,", new_args
+##            print "kwargs;", new_kwargs
 
             # Solve the problem
             timer = dolfin.Timer("Solver benchmark")
@@ -106,7 +108,6 @@ def solve(*args, **kwargs):
             try:
                 ret = solve(*new_args)
             except RuntimeError as e:
-                solver_failed = True
                 if 'diverged' in e.message.lower():
                     failure_reason = 'diverged'
                 else:
@@ -115,7 +116,7 @@ def solve(*args, **kwargs):
             timer.stop()
 
             #Check to see if the solver returned a zero solution
-            if np.any(args[1].array().all() == 0.0):
+            if np.all(args[1].array() == 0.0):
                 solver_failed = True
                 failure_reason = 'Zero Solution'
 
@@ -126,6 +127,7 @@ def solve(*args, **kwargs):
                     dolfin.info_red(parameters_str + ": solver failed.")
                 failed_solvers[parameters_str] = failure_reason 
             else:
+               # print parameters_str
                 if not kwargs.has_key("return_best"):
                     dolfin.info(parameters_str + ": " + str(timer.value()) + "s.")
                 solver_timings[parameters_str] = timer.value() 

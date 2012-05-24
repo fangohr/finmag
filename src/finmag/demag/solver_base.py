@@ -9,6 +9,7 @@ import numpy as np
 import abc
 from finmag.util.timings import timings
 from finmag.sim import helpers
+import finmag.util.solver_benchmark as bench
 
 class FemBemDeMagSolver(object):
     """Base Class for FEM/BEM Demag Solvers containing shared methods
@@ -16,8 +17,12 @@ class FemBemDeMagSolver(object):
         class Demag in finmag/energies/demag
 
         *Arguments*
-        problem
-            An object of type DemagProblem
+        mesh
+            dolfin Mesh object
+        m
+            the Dolfin object representing the (unit) magnetisation
+        Ms
+            the saturation magnetisation     
         degree
             polynomial degree of the function space
         element
@@ -29,14 +34,20 @@ class FemBemDeMagSolver(object):
             possible methods are
                 * 'magpar'
                 * 'project'
+        bench
+            set to True to run a benchmark of linear solvers
+            
     """
 
     def __init__(self, mesh,m, parameters=None, degree=1, element="CG", project_method='magpar',
-                 unit_length=1,Ms = 1.0):
+                 unit_length=1,Ms = 1.0,bench = False):
 
-        #Problem objects and parameter
+        #Problem objects and parameters
         self.mesh = mesh
         self.unit_length = unit_length
+        self.degree = degree
+        self.bench = bench
+        
 
         #This is used in energy density calculations
         self.mu0 = np.pi*4e-7 # Vs/(Am)
@@ -195,7 +206,11 @@ class FemBemDeMagSolver(object):
         A = self.poisson_matrix.copy()
         b = self.laplace_zeros.copy()
         bc.apply(A, b)
-        self.laplace_solver.solve(A, function.vector(), b)
+
+        if self.bench:
+            bench.solve(A,function.vector(),b,benchmark = True)
+        else:
+            self.laplace_solver.solve(A, function.vector(), b)
         return function
 
     def __compute_field_project(self):
