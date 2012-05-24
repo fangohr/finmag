@@ -42,57 +42,8 @@ def compute_scalar_potential_llg(mesh, m_expr=df.Constant([1, 0, 0]), Ms=1.):
 def differentiate_fd(f, x, eps=1e-4, offsets=(-2,-1,1,2), weights=(1./12.,-2./3.,2./3.,-1./12.)):
     return sum(f(x+eps*dx)*weights[i] for i, dx in enumerate(offsets))/eps
 
-# Solves the demag problem for phi using the FK method and the native BEM matrix
 def compute_scalar_potential_native_fk(mesh, m_expr=df.Constant([1, 0, 0]), Ms=1.):
-    """Solves the demag problem for phi 
-    using the FK method and the native 
-    BEM matrix.
-
-    (Dmitri's code to understand and compare the method with 
-    the LLG class. Useful to keep.)
-    """
-    # Set up the FE problems
-    V_m = df.VectorFunctionSpace(mesh, 'Lagrange', 1, dim=3)
-    V_phi = df.FunctionSpace(mesh, 'Lagrange', 1)
-    u = df.TrialFunction(V_phi)
-    v = df.TestFunction(V_phi)
-    n = df.FacetNormal(mesh)
-    m = df.interpolate(m_expr, V_m)
-    m.vector()[:] = helpers.fnormalise(m.vector().array())
-
-    phi1 = df.Function(V_phi)
-    phi2_bc = df.Function(V_phi)
-    phi2 = df.Function(V_phi)
-
-    # Solve the variational problem for phi1
-    a = df.dot(df.grad(u), df.grad(v)) * df.dx
-    L = -Ms * df.div(m) * v * df.dx + Ms * df.dot(n, m) * v * df.ds
-    # The problem for phi1 is underconstrained since the solution is defined up to a constant.
-    # However, the Krylov subspace methods are supposed to be regularising, therefore
-    # as long as we use a fixed initial guess, or renormalise the initial guess
-    # periodically during time integration, we should be fine
-    df.solve(a == L, phi1)
-    # Compute the BEM
-    boundary_mesh = OrientedBoundaryMesh(mesh)
-    bem, b2g = compute_bem_fk(boundary_mesh)
-    # Restrict phi1 to boundary
-    phi1_boundary = phi1.vector().array()[b2g]
-    # Compute phi2 on boundary using the BEM matrix
-    phi2_boundary = np.dot(bem, phi1_boundary)
-    # Map phi2 back to global space
-    phi2_bc.vector()[b2g] = phi2_boundary
-    # Solve the laplace equation for phi2
-    a = df.dot(df.grad(u), df.grad(v)) * df.dx
-    bc = df.DirichletBC(V_phi, phi2_bc, lambda x, on_boundary: on_boundary)
-    L = df.Constant(0) * v * df.dx
-    df.solve(a == L, phi2, bc)
-    # Add phi2 back to phi1
-    phi1.vector()[:] += phi2.vector().array()
-    normalise_phi(phi1, mesh)
-    return phi1
-
-def compute_scalar_potential_native_fk(mesh, m_expr=df.Constant([1, 0, 0]), Ms=1.):
-    fkdemag = Demag("GCR")
+    fkdemag = Demag("FK")
     V = df.VectorFunctionSpace(mesh,"Lagrange",1)
     m = df.interpolate(m_expr, V)
     m.vector()[:] = helpers.fnormalise(m.vector().array())
@@ -103,7 +54,6 @@ def compute_scalar_potential_native_fk(mesh, m_expr=df.Constant([1, 0, 0]), Ms=1
 
 ## Solves the demag problem for phi using the GCR method and the native BEM matrix
 def compute_scalar_potential_native_gcr(mesh, m_expr=df.Constant([1, 0, 0]), Ms=1.0):
-    #Set a high tolerance for better precision needed to pass the comparison tests.
     gcrdemag = Demag("GCR")
     V = df.VectorFunctionSpace(mesh,"Lagrange",1)
     m = df.interpolate(m_expr, V)
@@ -202,27 +152,46 @@ class BemComputationTests(unittest.TestCase):
         print "m_expr = ",m_expr
         self.assertAlmostEqual(error, 0, delta=tol, msg="Error is above threshold %g, %s" % (tol, message))
         
-    @unittest.skip("GB: Something is being done differently in the FK from finmag.demag.solver_fk")
     def test_compute_scalar_potential_fk(self):
         m1 = df.Constant([1, 0, 0])
         m2 = df.Expression(["x[0]*x[1]+3", "x[2]+5", "x[1]+7"])
-        for k in xrange(1,5+1):
-            self.run_demag_computation_test(df.UnitSphere(k), m1, compute_scalar_potential_native_fk, "native, FK")
-            self.run_demag_computation_test(df.UnitSphere(k), m2, compute_scalar_potential_native_fk, "native, FK")
-        self.run_demag_computation_test(MagSphere(1, 0.25).mesh, m1, compute_scalar_potential_native_fk, "native, FK")
-        self.run_demag_computation_test(MagSphere(1, 0.25).mesh, m2, compute_scalar_potential_native_fk, "native, FK")
+        expressions = [m1,m2]
+        for exp in expressions: 
+            for k in xrange(1,5+1):
+                self.run_demag_computation_test(df.UnitCube(k,k,k), exp,
+                                                compute_scalar_potential_native_fk,
+                                                "native, FK")
+                
+                self.run_demag_computation_test(df.UnitSphere(k), exp,
+                                                compute_scalar_potential_native_fk,
+                                                "native, FK")
+                
+            self.run_demag_computation_test(MagSphere(1, 0.25).mesh, exp,
+                                            compute_scalar_potential_native_fk,
+                                            "native, FK")
+
 
     def test_compute_scalar_potential_gcr(self):
         m1 = df.Constant([1, 0, 0])
         m2 = df.Expression(["x[0]*x[1]+3", "x[2]+5", "x[1]+7"])
         tol = 1e-2
-        self.run_demag_computation_test(MagSphere(1, 0.1).mesh, m1, compute_scalar_potential_native_gcr, "native, GCR", ref=compute_scalar_potential_native_fk, tol=tol)
-        for k in xrange(3,10+1,2):
-            self.run_demag_computation_test(df.UnitCube(k,k,k), m1, compute_scalar_potential_native_gcr, "native, GCR, cube", tol=tol, ref=compute_scalar_potential_native_fk)
-            self.run_demag_computation_test(df.UnitCube(k,k,k), m2, compute_scalar_potential_native_gcr, "native, GCR, cube", tol=tol, ref=compute_scalar_potential_native_fk)
-            self.run_demag_computation_test(MagSphere(1, 1./k).mesh, m1, compute_scalar_potential_native_gcr, "native, GCR, sphere", tol=tol, ref=compute_scalar_potential_native_fk,k=k)
-            self.run_demag_computation_test(MagSphere(1, 1./k).mesh, m2, compute_scalar_potential_native_gcr, "native, GCR, sphere", tol=tol, ref=compute_scalar_potential_native_fk,k=k)
-
+        expressions = [m1,m2]
+        self.run_demag_computation_test(MagSphere(1, 0.1).mesh, m1,
+                                        compute_scalar_potential_native_gcr,
+                                        "native, GCR",
+                                        ref=compute_scalar_potential_native_fk, tol=tol)
+        for exp in expressions: 
+            for k in xrange(3,10+1,2):
+                self.run_demag_computation_test(df.UnitCube(k,k,k), exp,
+                                                compute_scalar_potential_native_gcr,
+                                                "native, GCR, cube", tol=tol,
+                                                ref=compute_scalar_potential_native_fk)
+                
+                self.run_demag_computation_test(MagSphere(1, 1./k).mesh, exp,
+                                                compute_scalar_potential_native_gcr,
+                                                "native, GCR, sphere", tol=tol,
+                                                ref=compute_scalar_potential_native_fk,k=k)
+        
     def run_symmetry_test(self, formula):
         func = globals()[formula]
         np.random.seed(1)
