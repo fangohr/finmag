@@ -255,7 +255,6 @@ class TestFemBemDeMagSolver(object):
             Laplace solution does not equal original solution"
         print "solve_laplace_inside testpassed"
 
-#Tests have been turned off as the class does not work at the moment.
 class Test_FemBemGCRSolver(DemagTester):
     """Tests for the Class FemBemGCRSolver"""
     def setup_class(self):

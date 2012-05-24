@@ -412,5 +412,4 @@ if __name__ == "__main__":
     m = project(Constant((1, 0, 0)), V)
     demag=SimpleFKSolver(V,m,Ms)
     print demag.compute_field()
-    
-    
+
