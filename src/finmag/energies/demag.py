@@ -114,10 +114,6 @@ if __name__ == "__main__":
     elif test == "FK":
         demag = Demag("FK")
         demag.setup(V,m,Ms,unit_length = 1)
-##
-##    elif test == "weiewei":
-##        demag = Demag("weiwei")
-##        demag.setup(V,m,Ms,unit_length = 1)
 
     print timings
     df.plot(demag.compute_potential())

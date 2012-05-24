@@ -14,22 +14,36 @@ from dolfin import *
 #Importing this module activates the benchmark tests
 from solver_benchmark import *
 
+
+#Methods involving a linear solve have been duplicated here so that they 
 class GCRSolverBenchmark(FemBemGCRSolver):
-    def __init__(self,problem,degree = 1):
-        FemBemGCRSolver.__init__(self,problem,degree = 1)
-        self.countdown = False
-    
-    def linsolve_phia(self,A,F):
-        """Linear solve for phia"""
-        print "\n GCR Solver First linear solve Benchmark \n"
-        solve(A,self.phia.vector(),F,solver_parameters = self.phiasolverparams,\
-              benchmark = True)
+    def solve_phia(self,phia):
+        """
+        Solve for potential phia in the Magentic region using FEM.
+        """
+        V = phia.function_space()
+
+        #Source term depends on m (code-block 1 - second line)
+        #So it should be recalculated at every time step.
+        f = -self.Ms*(df.div(self.m)*self.v)*df.dx  #Source term
+        F = df.assemble(f)
+        self.phia_bc.apply(F)
+
+        #Solve for phia
+        self.poisson_solver.solve(phia.vector(),F)
+        #Replace with LU solve
+        #df.solve(self.poisson_matrix_dirichlet,phia.vector(),F)
         
-    def linsolve_laplace_inside(self,function,laplace_A,solverparams = None):
-        """Linear solve for laplace_inside"""
-        print "\n GCR Solver Second linear solve Benchmark \n"
-        solve(laplace_A,function.vector(),self.laplace_f,\
-                  solver_parameters = solverparams, benchmark = True)
+        return phia
+    
+    def solve_laplace_inside(self, function, solverparams=None):
+        """Take a functions boundary data as a dirichlet BC and solve
+            a laplace equation"""
+        bc = df.DirichletBC(self.V, function, df.DomainBoundary())
+        A = self.poisson_matrix.copy()
+        b = self.laplace_zeros.copy()
+        bc.apply(A, b)
+        self.laplace_solver.solve(A, function.vector(), b)
         return function
     
 def test_linalgtimes(mesh,M,solver):

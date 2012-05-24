@@ -5,6 +5,7 @@ from finmag.demag import solver_base as sb
 from finmag.util.timings import timings
 from finmag.util.progress_bar import ProgressBar
 from finmag.native.llg import OrientedBoundaryMesh, compute_bem_fk
+import finmag.util.solver_benchmark as bench
 
 logger = logging.getLogger(name='finmag')
 
@@ -193,8 +194,12 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
     the wrapper class Demag in finmag/energies/demag.*
 
     *Arguments*
-        problem
-            An object of type DemagProblem
+        mesh
+            dolfin Mesh object
+        m
+            the Dolfin object representing the (unit) magnetisation
+        Ms
+            the saturation magnetisation 
         parameters
             dolfin.Parameters of method and preconditioner to linear solvers.
         degree
@@ -207,6 +212,8 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
             possible methods are
                 * 'magpar'
                 * 'project'
+        bench
+            set to True to run a benchmark of linear solvers
 
     At the moment, we think both methods work for first degree basis
     functions. The 'magpar' method may not work with higher degree
@@ -219,12 +226,12 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
 
     """
     def __init__(self,mesh,m, parameters=None, degree=1, element="CG",
-                 project_method='magpar', unit_length=1,Ms = 1.0):
+                 project_method='magpar', unit_length=1,Ms = 1.0,bench = False):
 
         timings.start("FKSolver init")
         sb.FemBemDeMagSolver.__init__(self,mesh,m, parameters, degree, element=element,
                                       project_method = project_method,
-                                      unit_length = unit_length,Ms = Ms)
+                                      unit_length = unit_length,Ms = Ms,bench = bench)
 
         #Linear Solver parameters
         if parameters:
@@ -262,8 +269,10 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         # and matrix multiplication is faster than assemble.
 
         timings.startnext("phi1 - solve")
-        self.poisson_solver.solve(self.phi1.vector(), g1)
-
+        if self.bench:
+            bench.solve(self.poisson_matrix,self.phi1.vector(),g1, benchmark = True)
+        else:
+            self.poisson_solver.solve(self.phi1.vector(), g1)
         # Restrict phi1 to the boundary
         timings.startnext("Restrict phi1 to boundary")
         Phi1 = self.phi1.vector()[self.b2g_map]
@@ -290,10 +299,20 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
 
 if __name__ == "__main__":
     from finmag.demag.problems import prob_fembem_testcases as pft
+    from finmag.sim import helpers
     problem = pft.MagSphere20()
     Ms = problem.Ms
+    kwargs = problem.kwargs()
+    kwargs["bench"] = True
+
+    #Make a more interesting m
+    m = df.interpolate(df.Expression(["x[0]*x[1]+3", "x[2]+5", "x[1]+7"]),
+                       df.VectorFunctionSpace(problem.mesh,"CG",1))
     
-    demag = FemBemFKSolver(**problem.kwargs())
+    m.vector()[:] = helpers.fnormalise(m.vector().array())
+    kwargs["m"] = m
+    
+    demag = FemBemFKSolver(**kwargs)
     Hd = demag.compute_field()
     Hd.shape = (3, -1)
     print np.average(Hd[0])/Ms, np.average(Hd[1])/Ms, np.average(Hd[2])/Ms
