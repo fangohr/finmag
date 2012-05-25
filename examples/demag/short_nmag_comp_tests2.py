@@ -4,17 +4,10 @@ from finmag.util.convert_mesh import convert_mesh
 #from finmag.demag.solver_gcr import FemBemGCRSolver
 #from finmag.demag.solver_fk_test import SimpleFKSolver
 from finmag.demag.solver_fk import FemBemFKSolver
-#from finmag.demag.problems import FemBemDeMagProblem
 import pylab as p
 import sys, os, commands, subprocess
 from finmag.sim.llg import LLG
 
-class FemBemDeMagProblem(object):
-    """Have no idea why I can't import this now.."""
-    def __init__(self, mesh, m):
-        self.mesh = mesh
-        self.M = m
-        self.Ms = 1
 
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -64,8 +57,7 @@ tlo main;""" % str(maxh)
     # Old code
     """
     M = ("1.0", "0.0", "0.0")
-    problem = FemBemDeMagProblem(mesh, M)
-    solver = FemBemGCRSolver(problem)
+    solver = FemBemGCRSolver(mesh,M)
     phi = solver.solve()
     H_demag = df.project(-df.grad(phi), V)
     """
@@ -84,8 +76,7 @@ tlo main;""" % str(maxh)
     """
 
     m = df.interpolate(df.Constant((1,0,0)), V)
-    problem = FemBemDeMagProblem(mesh, m)
-    solver = FemBemFKSolver(problem)
+    solver = FemBemFKSolver(mesh,m)
     H_demag = df.Function(V)
     demag = solver.compute_field()
     H_demag.vector()[:] = demag
