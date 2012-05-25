@@ -218,7 +218,7 @@ examples-for-doc: ../examples/macrospin/alpha-1-00.png ../examples/macrospin/alp
 	cd ../src/finmag/tests/comparison/exchange/ && PYTHONPATH=$(PYTHON_ROOTS) python test_exchange_field.py
 
 ../src/finmag/tests/comparison/anisotropy/table.rst:
-	cd ../src/finmag/tests/comparison/anisotropy/ && PYTHONPATH=$(PYTHON_ROOTS) python test_anisotropy_field.py
+	cd ../src/finmag/tests/comparison/anisotropy/ && PYTHONPATH=$(PYTHON_ROOTS) python conftest.py
 
 ../src/finmag/tests/comparison/demag/table.rst:
 	cd ../src/finmag/tests/comparison/demag/ && PYTHONPATH=$(PYTHON_ROOTS) python test_demag_field.py
