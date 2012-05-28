@@ -85,8 +85,10 @@ class Demag(EnergyBase):
             self.demag = SimpleFKSolver(S3, m, Ms)
 
         #timings.startnext("Solve-demag-problem")
-        if self.solver != "weiei":
+        """
+        if self.solver != "weiwei":
             self.demag.solve()
+        """
 
     def compute_field(self):
         return self.demag.compute_field()
