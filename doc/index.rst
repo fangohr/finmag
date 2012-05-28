@@ -15,12 +15,7 @@ logo and link to
    thisdocumentation.rst
    aboutfinmag.rst
    examples.rst
-   modules/LLG.rst
-   modules/Exchange.rst
-   modules/Anisotropy.rst
-   modules/DMI.rst
-   modules/FKSolver.rst
-   modules/GCRSolver.rst
+   modules.rst
 
 .. comment:
    background.txt
