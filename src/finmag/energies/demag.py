@@ -97,6 +97,7 @@ class Demag(EnergyBase):
         return self.demag.compute_energy()
 
     def compute_potential(self):
+        self.demag.solve()
         return self.demag.phi
 
 if __name__ == "__main__":
