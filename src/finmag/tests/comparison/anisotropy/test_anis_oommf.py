@@ -4,9 +4,10 @@ from finmag.util.oommf.comparison import oommf_m0, finmag_to_oommf
 from finmag.util.oommf import mesh, oommf_uniaxial_anisotropy
 from finmag.sim.helpers import stats
 
-REL_TOLERANCE = 7e-2
-
 def test_against_oommf(finmag):
+
+    REL_TOLERANCE = 7e-2
+
     oommf_mesh = mesh.Mesh((20, 20, 20), size=(test.x1, test.y1, test.z1))
     oommf_anis  = oommf_uniaxial_anisotropy(oommf_m0(test.m_gen, oommf_mesh),
             test.Ms, test.K1, test.a).flat
