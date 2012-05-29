@@ -2,6 +2,7 @@ import os
 import dolfin as df
 from scipy.integrate import ode
 from finmag.sim.llg import LLG
+from finmag.energies import Exchange
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -16,13 +17,18 @@ def run_simulation():
     y0 = -4.5e-9; y1 = 4.5e-9; ny = 18;
     z0 = -0.1e-9; z1 = 0.1e-9; nz = 1;
     mesh = df.Box(x0, y0, z0, x1, y1, z1, nx, ny, nz) 
+    S1 = df.FunctionSpace(mesh, "Lagrange", 1)
+    S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
+    
     nb_nodes = len(mesh.coordinates())
 
-    llg = LLG(mesh)
+    llg = LLG(S1, S3)
     llg.Ms = 1e6
-    llg.A = 1.3e-11
-    #llg.c = 1e11
     llg.alpha = 0.02
+
+    exchange = Exchange(1.3e-11)
+    exchange.setup(S3, llg._m, llg.Ms)
+    llg.interactions.append(exchange)
 
     llg.set_m(("1",
         "5 * pow(cos(pi * (x[0] * pow(10, 9) - 11) / 6), 3) \
@@ -38,7 +44,6 @@ def run_simulation():
         else:
             m[i] = mx; m[i+nb_nodes] = my; m[i+2*nb_nodes] = mz;
     llg.m = m
-    llg.setup(use_exchange=True)
 
     llg_wrap = lambda t, y: llg.solve_for(y, t)
     t0 = 0; dt = 0.05e-12; t1 = 10e-12
