@@ -242,6 +242,7 @@ class DMI(EnergyBase):
 
         self.D = D
         self.method = method
+        self.in_jacobian = True
         timings.stop("DMI-init")
 
     def setup(self, S3, m, Ms, unit_length=1):
