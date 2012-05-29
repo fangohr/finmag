@@ -63,7 +63,7 @@ def setup_module(module=None):
     tn_f.close()
 
 def test_angles():
-    TOLERANCE = 1e-9
+    TOLERANCE = 1e-8
 
     m = h.vectors(sim.m)
     angles = np.array([h.angle(m[i], m[i+1]) for i in xrange(len(m)-1)])
