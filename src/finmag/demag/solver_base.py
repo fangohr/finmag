@@ -204,7 +204,7 @@ class FemBemDeMagSolver(object):
             a laplace equation"""
         bc = df.DirichletBC(self.V, function, df.DomainBoundary())
         A = self.poisson_matrix.copy()
-        b = self.laplace_zeros.copy()
+        b = self.laplace_zeros#.copy()
         bc.apply(A, b)
 
         if self.bench:

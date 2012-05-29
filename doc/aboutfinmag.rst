@@ -35,6 +35,12 @@ Installation
 .. include:: install.txt
 
 
+Finmag and GPU
+--------------
+
+.. include:: ../devtests/gpu/finmag_gpu.txt
+
+
 Team
 ----
 

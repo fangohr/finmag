@@ -53,6 +53,7 @@ for m_init in [flower_init, vortex_init]:
         sim.set_m(m_init)
 
         sim.add(UniaxialAnisotropy(K1, [0, 0, 1]))
+        sim.set_m(m_init)
         sim.add(Demag())
         sim.add(Exchange(A))
 

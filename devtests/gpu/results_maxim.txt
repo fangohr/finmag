@@ -1,0 +1,48 @@
+
+Backend PETSc:
+
+Setup: 10.330 sec.
+Dynamics: 226.181 sec.
+
+Timings summary, longest items first:
+             phi1 - solve:  1056 calls took    98.4289s (0.093209s per call)
+      Compute phi2 inside:  1056 calls took    51.3475s (0.048625s per call)
+      LLG-sundials-jtimes:  4126 calls took    29.4752s (0.007144s per call)
+    Exchange-computefield:  5181 calls took    29.2299s (0.005642s per call)
+             Compute Phi2:  1056 calls took    24.0326s (0.022758s per call)
+Build boundary element ma:     1 calls took     7.7241s (7.724065s per call)
+            Compute field:  1055 calls took     2.9031s (0.002752s per call)
+    phi1 - matrix product:  1056 calls took     2.4388s (0.002309s per call)
+         LLG-compute-dmdt:   992 calls took     1.6139s (0.001627s per call)
+           Exchange-setup:     1 calls took     0.9560s (0.956023s per call)
+            FKSolver init:     1 calls took     0.7282s (0.728249s per call)
+                 Sim-init:     1 calls took     0.7135s (0.713525s per call)
+                 LLG-init:     1 calls took     0.6258s (0.625819s per call)
+Restrict phi1 to boundary:  1056 calls took     0.2481s (0.000235s per call)
+        Add phi1 and phi2:  1056 calls took     0.2349s (0.000222s per call)
+             phi2 <- Phi2:  1056 calls took     0.1948s (0.000184s per call)
+Wall time: 236.5s (sum of time recorded: 250.895s=106.1%)
+
+Backend PETScCusp:
+
+Setup: 9.715 sec.
+Dynamics: 190.629 sec.
+
+Timings summary, longest items first:
+             phi1 - solve:  1055 calls took    62.7419s (0.059471s per call)
+      Compute phi2 inside:  1055 calls took    53.5622s (0.050770s per call)
+      LLG-sundials-jtimes:  4285 calls took    30.5259s (0.007124s per call)
+    Exchange-computefield:  5339 calls took    30.0800s (0.005634s per call)
+             Compute Phi2:  1055 calls took    23.8251s (0.022583s per call)
+Build boundary element ma:     1 calls took     7.7272s (7.727189s per call)
+         LLG-compute-dmdt:  1018 calls took     1.6563s (0.001627s per call)
+            Compute field:  1054 calls took     1.6089s (0.001527s per call)
+           Exchange-setup:     1 calls took     0.9572s (0.957203s per call)
+            FKSolver init:     1 calls took     0.7105s (0.710486s per call)
+Restrict phi1 to boundary:  1055 calls took     0.4010s (0.000380s per call)
+             phi2 <- Phi2:  1055 calls took     0.3624s (0.000343s per call)
+    phi1 - matrix product:  1055 calls took     0.3055s (0.000290s per call)
+        Add phi1 and phi2:  1055 calls took     0.2899s (0.000275s per call)
+                 Sim-init:     1 calls took     0.0735s (0.073465s per call)
+                 LLG-init:     1 calls took     0.0191s (0.019134s per call)
+Wall time: 200.3s (sum of time recorded: 214.847s=107.2%)
