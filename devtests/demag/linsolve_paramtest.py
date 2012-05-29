@@ -14,7 +14,6 @@ __organisation__ = "University of Southampton"
 
 import numpy
 from dolfin import *
-import finmag.demag.problems.prob_base as pb
 from finmag.util.timings import Timings
 from finmag.demag.solver_gcr import FemBemGCRSolver
 from finmag.demag.solver_fk import FemBemFKSolver
@@ -44,11 +43,12 @@ class LinAlgDemagTester(object):
 
         """
         self.testparams = testparams
-        self.problem = pb.DemagProblem(mesh,M)
+        self.mesh = mesh
+        self.M = M
         if solver == "FK":
-            self.solver = FemBemFKSolverLinalgTime(self.problem)
+            self.solver = FemBemFKSolverLinalgTime(mesh=mesh, M=M)
         elif solver == "GCR":
-            self.solver = FemBemGCRSolverLinalgTime(self.problem)
+            self.solver = FemBemGCRSolverLinalgTime(mesh=mesh, M=M)
         else:
             raise Exception("Only 'FK, and 'GCR' solver values possible")
                     
@@ -92,7 +92,7 @@ class LinAlgTimer(DemagSolver):
     
     def report(self,n = 10):
         print "".join(["Linear solve timings of the ",self.name])
-        print "mesh size in verticies = ",self.problem.mesh.num_vertices()
+        print "mesh size in verticies = ",self.mesh.num_vertices()
         print "First solve parameters"
         print self.phi1solverparams
         print "Second solve parameters"

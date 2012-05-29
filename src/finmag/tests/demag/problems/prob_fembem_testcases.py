@@ -13,31 +13,26 @@ import finmag.mesh.marker as mark
 
 #TODO need a more exciting M, GCR solver has phiA = 0 due to
 #divM = 0 if M constant
-class MagUnitCircle(pb.DemagProblem):
-    def __init__(self,n= 20):
-        mesh = UnitCircle(n)
-        #TODO Make M three dimensional
-        M = ("1","0")
-        #Initialize Base Class
-        super(MagUnitCircle,self).__init__(mesh,M)
+class MagUnitCircle(object):
+    def __init__(self, n= 20):
+        self.mesh = UnitCircle(n)
+        self.M = ("1","0") #TODO Make M three dimensional
+        self.Ms = 1
     def desc(self):
         return "unit circle demagnetisation test problem fembem"
     
-class MagUnitSphere(pb.DemagProblem):
+class MagUnitSphere(object):
     """Uniformly magnetized sphere problem for fembem solvers"""
     def __init__(self, n=10):
-        mesh = UnitSphere(n)
+        self.mesh = UnitSphere(n)
         #M = ("1","0","0")
         self.Ms = 1
         self.n = n
-        M = (str(self.Ms), "0", "0")
-        #Initialize Base Class
-        super(MagUnitSphere,self).__init__(mesh,M)
-        
+        self.M = (str(self.Ms), "0", "0")
     def desc(self):
         return "Unit sphere demagnetisation test problem fembem, n=%d, Ms=%g" % (self.n, self.Ms)
 
-class MagUnitInterval(pb.DemagProblem):
+class MagUnitInterval(object):
     """Create 1d test problem where define a mesh,
     and a part of the mesh has been marked to be vacuum (with 0) and
     a part has been marked to be the ferromagnetic body (with 1).
@@ -49,20 +44,18 @@ class MagUnitInterval(pb.DemagProblem):
     have marked facets.
     """
     def __init__(self, n=10):
-        mesh = UnitInterval(n)
+        self.mesh = UnitInterval(n)
 
         #TODO: Make M into a 3d vector here
-        M = "1"
-
-        #Initialize Base Class
-        super(MagUnitInterval,self).__init__(mesh,M)
+        self.M = "1"
+        self.Ms = 1
 
 ###########################################################
 #This Section contains better quality unit sphere meshes
 #and problems that use them.    
 ###########################################################
 
-class MagSphereBase(pb.DemagProblem):
+class MagSphereBase(object):
     def generate_mesh(self,pathmesh,geofile):
         """
         Checkes the path pathmesh to see if the file exists,
@@ -119,12 +112,12 @@ class MagSphereBase(pb.DemagProblem):
         self.mesh = Mesh(meshpath)
         self.Ms = 1.0
         self.m = (str(self.Ms), "0.0", "0.0")
+        self.M = self.m # do we need this?
         self.V = VectorFunctionSpace(self.mesh, "CG", 1)
         self.m = interpolate(Expression(self.m), self.V)
         self.r = radius        
         self.maxh = maxh
 
-        pb.DemagProblem.__init__(self,self.mesh,self.m)
         
     def desc(self):
         return "Sphere demag test problem, Ms=%g, radius=%g, maxh=%g" %(self.Ms, self.r, self.maxh)

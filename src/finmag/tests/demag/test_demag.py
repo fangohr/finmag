@@ -23,9 +23,9 @@ cases = []
 for problem in problems:
     for solver in solvers:
         if solver.__name__ == "SimpleFKSolver":
-            case = solver(problem.V, problem.M, problem.Ms)
+            case = solver(problem.V, problem.m, problem.Ms)
         else:
-            case = solver(**problem.kwargs())
+            case = solver(mesh=problem.mesh, m=problem.M, Ms=problem.Ms)
         grad = case.compute_field()
         cases.append(case)
         fields.append(grad)

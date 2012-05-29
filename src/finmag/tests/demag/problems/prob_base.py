@@ -7,23 +7,8 @@ __organisation__ = "University of Southampton"
         
 from dolfin import *
 from finmag.util.interiorboundary import InteriorBoundary
-
-class DemagProblem(object):
-    """
-    Base class for all demag problems
-    M - the Dolfin object re presenting the (unit) magnetisation
-    Ms - the saturation magnetisation
-    """
-    def __init__(self, mesh, M, Ms = 1):
-        self.mesh = mesh
-        self.M = M
-        self.Ms = Ms
-        
-    def kwargs(self):
-        "Used for compatiblity with the FEMBEMdemag solver interface"
-        return {"mesh":self.mesh,"m":self.M,"Ms":self.Ms}
-
-class TruncDemagProblem(DemagProblem):
+      
+class TruncDemagProblem(object):
     """Base class for demag problems with truncated domains"""
     def __init__(self,mesh,subdomain,M,Ms = 1):
         """
@@ -37,7 +22,9 @@ class TruncDemagProblem(DemagProblem):
         """
         
         #(Currently M is constant)
-        super(TruncDemagProblem,self).__init__(mesh,M)
+        self.mesh = mesh
+        self.M = M
+        self.Ms = Ms
         self.subdomain = subdomain
         self.calculate_subsandbounds()
 
@@ -76,7 +63,3 @@ class TruncDemagProblem(DemagProblem):
         self.mesh = refine(self.mesh, cell_markers)
         #Regenerate Subdomains and boundaries
         self.calculate_subsandbounds()
-        
-    def create_fembem_problem(self):
-        """Generate a FEMBEM problem over the magnetic core submesh"""
-        return DemagProblem(self.coremesh,self.M)
