@@ -7,6 +7,8 @@ from finmag.util.oommf import mesh
 from finmag.util.oommf.comparison import compare_exchange 
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
+Ms = 8.6e6
+A = 1.3e-11
 
 def test_one_dimensional_problem():
     REL_TOLERANCE = 1e-3
@@ -23,7 +25,7 @@ def one_dimensional_problem(vertices):
         xs = coords[0]
         return np.array([np.sqrt(xs/x_max), np.sqrt(1 - xs/x_max), np.zeros(len(xs))])
 
-    return compare_exchange(m_gen, dolfin_mesh, oommf_mesh, dims=1, name="1d")
+    return compare_exchange(m_gen, Ms, A, dolfin_mesh, oommf_mesh, dims=1, name="1d")
 
 if __name__ == '__main__':
 

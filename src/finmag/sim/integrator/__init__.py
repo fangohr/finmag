@@ -30,7 +30,7 @@ class BaseIntegrator(object):
         dt = 1e-15
         while True:
             # Why is self.cur_t alias CVodeGetCurrentTime not updated?
-            log.debug("{}: at t={:.2}, will integrate for dt={}.".format(self.__class__.__name__, self.llg.t, dt))
+            log.debug("{}: at t={:.2}, will integrate for dt={:.2}.".format(self.__class__.__name__, self.llg.t, dt))
             prev_m = self.llg.m.copy()
 
             self.run_until(self.llg.t + dt)
@@ -38,7 +38,7 @@ class BaseIntegrator(object):
             dm = np.abs(self.m - prev_m).reshape((3, -1))
             dm_norm = np.sqrt(dm[0]**2 + dm[1]**2 + dm[2]**2)
             max_dmdt_norm = float(np.max(dm_norm) / dt)
-            log.debug("max_dmdt_norm = {} * stopping_dmdt.".format(max_dmdt_norm/stopping_dmdt))
+            log.debug("{}: max_dmdt_norm = {:.2} * stopping_dmdt.".format(self.__class__.__name__, max_dmdt_norm/stopping_dmdt))
 
             if max_dmdt_norm < stopping_dmdt:
                 log.debug("{}: at t={:.2}, max_dmdt_norm={}<{}=stopping_dmdt\n\t->break".format(

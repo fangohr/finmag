@@ -1,75 +1,48 @@
 import numpy as np
 import dolfin as df
-from finmag.sim.llg import LLG
-from finmag.sim.helpers import components
+from finmag.sim.dmi import DMI
 
 nm=1e-9
 simplexes = 10
 length=20*nm
 mesh = df.Box(0,0,0,length,3*nm, 3*nm, simplexes, 1, 1)
+V = df.VectorFunctionSpace(mesh, "Lagrange", 1)
 
-
-def test_dmi_field_box_assemble_equal_box_matrix():
-    """Simulation 1 is computing H_dmi=dE_dM via assemble.
+def test_dmi_field():
+    """
+    Simulation 1 is computing H_dmi=dE_dM via assemble.
     Simulation 2 is computing H_dmi=g*M with a suitable pre-computed matrix g.
-    
-    Here we show that the two methods give equivalent results (this relies
+    Simulation 3 is computing g using a petsc matrix.
+
+    We show that the three methods give equivalent results (this relies
     on H_dmi being linear in M).
+
     """
-    m_initial = (
+    m_initial = df.Expression((
             '(2*x[0]-L)/L',
             'sqrt(1 - ((2*x[0]-L)/L)*((2*x[0]-L)/L))',
-            '0')
-    llg1 = LLG(mesh)
-    llg1.set_m(m_initial, L=length)
-    llg1.setup(use_dmi=True,dmi_method='box-matrix-numpy')
-    llg1.solve()
-    H_dmi1 = llg1.H_dmi
+            '0'), L=length)
+    m = df.interpolate(m_initial, V)
+    dmi1 = DMI(V, m, D=5e-3, Ms=8.6e5, method="box-assemble") 
+    dmi2 = DMI(V, m, D=5e-3, Ms=8.6e5, method="box-matrix-numpy") 
+    dmi3 = DMI(V, m, D=5e-3, Ms=8.6e5, method="box-matrix-petsc") 
 
-    llg2 = LLG(mesh)
-    llg2.set_m(m_initial, L=length)
-    llg2.setup(use_dmi=True,dmi_method='box-assemble')
-    llg2.solve()
-    H_dmi2 = llg2.H_dmi
+    H_dmi1 = dmi1.compute_field()
+    H_dmi2 = dmi2.compute_field()
+    H_dmi3 = dmi3.compute_field()
 
-    diff = max(abs(H_dmi1-H_dmi2))
-    print "Difference between H_dmi1 and H_dmi2: max(abs(H_dmi1-H_dmi2))=%g" % diff
-    print "Max value = %g, relative error = %g " % (max(H_dmi1), diff/max(H_dmi1))
-    assert diff < 1e-8
-    assert diff/max(H_dmi1)<1e-15
+    diff12 = np.max(np.abs(H_dmi1 - H_dmi2))
+    diff13 = np.max(np.abs(H_dmi1 - H_dmi3))
 
+    print "Difference between H_dmi1 and H_dmi2: max(abs(H_dmi1-H_dmi2))=%g" % diff12
+    print "Max value = %g, relative error = %g " % (max(H_dmi1), diff12/max(H_dmi1))
+    print "Difference between H_dmi1 and H_dmi3: max(abs(H_dmi1-H_dmi3))=%g" % diff13
+    print "Max value = %g, relative error = %g " % (max(H_dmi1), diff13/max(H_dmi1))
 
-
-def test_dmi_field_box_matrix_numpy_same_as_box_matrix_petsc():
-    """Simulation 1 is computing H_dmi=g*M  via box-matrix-numpy.
-    Simulation 2 is computing g using a petsc matrix.
-
-    Apart from memory and speed differences, this should do the same thing.
-    """
-    m_initial = (
-            '(2*x[0]-L)/L',
-            'sqrt(1 - ((2*x[0]-L)/L)*((2*x[0]-L)/L))',
-            '0')
-    llg1 = LLG(mesh)
-    llg1.set_m(m_initial, L=length)
-    llg1.setup(use_dmi=True,dmi_method='box-matrix-numpy')
-    llg1.solve()
-    H_dmi1 = llg1.H_dmi
-
-    llg2 = LLG(mesh)
-    llg2.set_m(m_initial, L=length)
-    llg2.setup(use_dmi=True,dmi_method='box-matrix-petsc')
-    llg2.solve()
-    H_dmi2 = llg2.H_dmi
-
-    diff = max(abs(H_dmi1-H_dmi2))
-    print "Difference between H_dmi1 and H_dmi2: max(abs(H_dmi1-H_dmi2))=%g" % diff
-    print "Max value = %g, relative error = %g " % (max(H_dmi1), diff/max(H_dmi1))
-    assert diff < 1e-8
-    assert diff/max(H_dmi1)<1e-15
-
-
+    assert diff12 < 1e-8
+    assert diff13 < 1e-8
+    assert diff12/max(H_dmi1)<1e-15
+    assert diff13/max(H_dmi1)<1e-15
 
 if __name__=="__main__":
-    test_dmi_field_box_assemble_equal_box_matrix()
-    test_dmi_field_box_matrix_numpy_same_as_box_matrix_petsc()
+    test_dmi_field()

@@ -1,9 +1,7 @@
 import time
 import logging
 import dolfin as df
-import numpy as np
-import finmag.sim.helpers as h
-from finmag.sim.llg2 import LLG
+from finmag.sim.llg import LLG
 from finmag.util.timings import timings
 from finmag.sim.integrator import LLGIntegrator
 

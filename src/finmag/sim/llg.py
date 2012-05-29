@@ -1,4 +1,3 @@
-import time
 import logging 
 import numpy as np
 import dolfin as df

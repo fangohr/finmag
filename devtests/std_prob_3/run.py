@@ -50,11 +50,12 @@ for m_init in [flower_init, vortex_init]:
         mesh = df.Box(0, 0, 0, L, L, L, divisions, divisions, divisions)
 
         sim = Simulation(mesh, Ms)
+        sim.set_m(m_init)
+
         sim.add(UniaxialAnisotropy(K1, [0, 0, 1]))
         sim.add(Demag())
         sim.add(Exchange(A))
 
-        sim.set_m(m_init)
         sim.relax()
 
         total_energy_density = sim.total_energy()/sim.Volume

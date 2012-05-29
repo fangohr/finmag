@@ -2,7 +2,7 @@ import os
 import dolfin as df
 import numpy as np
 from finmag.util import magpar
-from finmag.sim.exchange import Exchange
+from finmag.energies import Exchange
 from finmag.sim.helpers import normed_func
 
 
@@ -38,7 +38,8 @@ def three_dimensional_problem():
 
     C=1.3e-11
 
-    u_exch = Exchange(V, m, C, Ms)
+    u_exch = Exchange(C)
+    u_exch.setup(V, m, Ms)
     finmag_exch = u_exch.compute_field()
     nodes, magpar_exch = magpar.compute_exch_magpar(m, A=C, Ms=Ms)
     print magpar_exch

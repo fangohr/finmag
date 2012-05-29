@@ -1,16 +1,17 @@
-import numpy
-import dolfin
-from scipy.integrate import odeint
+import numpy as np
+import dolfin as df
+from finmag import Simulation as Sim
+from finmag.energies import Exchange
+from finmag.sim.helpers import vectors, angle
 
-from finmag.sim.llg import LLG
-from finmag.sim.helpers import vectors,angle
-
-TOLERANCE = 3e-9
+TOLERANCE = 1e-8
 
 # define the mesh
 length = 20e-9 #m
 simplexes = 10
-mesh = dolfin.Interval(simplexes, 0, length)
+mesh = df.Interval(simplexes, 0, length)
+Ms = 8.6e5
+A = 1.3e-11
 
 # initial configuration of the magnetisation
 left_right = '2*x[0]/L - 1'
@@ -18,33 +19,33 @@ up_down = 'sqrt(1 - (2*x[0]/L - 1)*(2*x[0]/L - 1))'
 
 possible_orientations = [
     (left_right, up_down, '0'), # (left_right, '0', up_down),
-    (up_down, '0', left_right), # (up_down, left_right, '0'),
-    ('0', left_right, up_down)] # , ('0', up_down, left_right)]
+    (up_down, '0', left_right)] #, (up_down, left_right, '0'),
+    #('0', left_right, up_down)] , ('0', up_down, left_right)]
 
 def angles_after_a_nanosecond(initial_M, pins=[]):
-    llg = LLG(mesh)
-    llg.set_m(initial_M, L=length)
-    llg.setup()
-    llg.pins = pins 
+    sim = Sim(mesh, Ms)
+    sim.set_m(initial_M, L=length)
+    sim.add(Exchange(A))
+    sim.pins = pins 
+    sim.run_until(1e-9)
 
-    ts = numpy.linspace(0, 1e-9, 2)
-    ys, infodict = odeint(llg.solve_for, llg.m, ts, rtol=1e-4, full_output=True)
-
-    m = vectors(ys[-1])
-    angles = numpy.array([angle(m[i], m[i+1]) for i in xrange(len(m)-1)])
+    m = vectors(sim.m)
+    angles = np.array([angle(m[i], m[i+1]) for i in xrange(len(m)-1)])
     return angles
 
 def test_all_orientations_without_pinning():
     for m0 in possible_orientations:
         angles = angles_after_a_nanosecond(m0)
+        print "no pinning, all angles: "
         print angles
-        assert angles.max() < TOLERANCE
+        assert np.nanmax(angles) < TOLERANCE
 
 def test_all_orientations_with_pinning():
     for m0 in possible_orientations:
         angles = angles_after_a_nanosecond(m0, [0, 10])
+        print "no pinning, all angles: "
         print angles
-        assert abs(angles.max() - angles.min()) < TOLERANCE
+        assert np.abs(np.max(angles) - np.min(angles)) < TOLERANCE
 
 if __name__== "__main__":
     print "without pinning"

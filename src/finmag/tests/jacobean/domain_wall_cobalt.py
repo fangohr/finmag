@@ -1,19 +1,9 @@
-# FinMag - a thin layer on top of FEniCS to enable micromagnetic multi-physics simulations
-# Copyright (C) 2012 University of Southampton
-# Do not distribute
-#
-# CONTACT: h.fangohr@soton.ac.uk
-#
-# AUTHOR(S) OF THIS FILE: Dmitri Chernyshenko (d.chernyshenko@soton.ac.uk)
-
 import numpy as np
-import scipy.integrate
 import dolfin as df
-import unittest
 import math
-from finmag.sim.integrator import LLGIntegrator
 from finmag.sim.llg import LLG
-import scipy.integrate
+from finmag.sim.integrator import LLGIntegrator
+from finmag.energies import Exchange, UniaxialAnisotropy
 
 # Material parameters
 Ms_Co = 1400e3 # A/m
@@ -35,12 +25,17 @@ def reference_mz(x):
 
 def setup_domain_wall_cobalt(node_count=NODE_COUNT, A=A_Co, Ms=Ms_Co, K1=K1_Co, length=LENGTH, do_precession=True):
     mesh = df.Interval(node_count - 1, 0, length)
-    llg = LLG(mesh, do_precession=do_precession)
-    llg.A = A
-    llg.Ms = Ms
-    llg.add_uniaxial_anisotropy(K1, df.Constant((0, 0, 1)))
+    S1 = df.FunctionSpace(mesh, "Lagrange", 1)
+    S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
+    llg = LLG(S1, S3)
     llg.set_m(np.array([initial_m(xi, node_count) for xi in xrange(node_count)]).T.reshape((-1,)))
-    llg.setup()
+
+    exchange = Exchange(A)
+    exchange.setup(S3, llg._m, Ms)
+    llg.interactions.append(exchange)
+    anis = UniaxialAnisotropy(K1, (0, 0, 1))
+    anis.setup(S3, llg._m, Ms)
+    llg.interactions.append(anis)
     llg.pins = [0, node_count - 1]
     return llg
 
@@ -53,7 +48,7 @@ def compute_domain_wall_cobalt(end_time=1e-9):
     llg = setup_domain_wall_cobalt()
     integrator = LLGIntegrator(llg, llg.m)
     integrator.run_until(end_time)
-    return np.linspace(0, LENGTH, NODE_COUNT), integrator.m.reshape((3, -1))
+    return np.linspace(0, LENGTH, NODE_COUNT), llg.m.reshape((3, -1))
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt

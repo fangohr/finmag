@@ -2,9 +2,8 @@ import os, sys
 import commands
 import numpy as np
 import dolfin as df
-from finmag.sim.llg import LLG
 from finmag.sim.dmi import DMI
-from finmag.sim.anisotropy import UniaxialAnisotropy
+from finmag.energies import UniaxialAnisotropy, Exchange, Demag
 
 TOL = 1e-14
 
@@ -33,12 +32,14 @@ def test_exchange_energy_density():
 
     # run finmag
     mesh = df.Interval(100, 0, 10e-9)
-    llg = LLG(mesh)
-    llg.Ms = 1
-    llg.set_m(("cos(x[0]*pi/10e-9)", "sin(x[0]*pi/10e-9)", "0"))
-    llg.setup(use_exchange=True, use_dmi=False, use_demag=False)
+    S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
+    Ms = 1
+    m = df.interpolate(df.Expression(("cos(x[0]*pi/10e-9)", "sin(x[0]*pi/10e-9)", "0")), S3)
 
-    finmag_data = llg.exchange.energy_density()
+    exch = Exchange(1.3e-11)
+    exch.setup(S3, m, Ms)
+
+    finmag_data = exch.energy_density()
     rel_err = np.abs(nmag_data - finmag_data)/np.linalg.norm(nmag_data)
 
     print "Relative error from nmag data (expect array of 0):"
@@ -78,7 +79,8 @@ def test_anisotropy_energy_density():
     K = 1
     Ms = 1
 
-    anis = UniaxialAnisotropy(V, m, K, a, Ms)
+    anis = UniaxialAnisotropy(K, a)
+    anis.setup(V, m, Ms)
     density = anis.energy_density()
     deviation = np.abs(density - 0.5)
 
@@ -152,14 +154,15 @@ def test_demag_energy_density():
     TOL = 5e-2
 
     mesh = df.UnitSphere(5)
+    S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
     mu0 = 4*np.pi*1e-7
-    llg = LLG(mesh)
-    llg.Ms = np.sqrt(6.0/mu0)
-    llg.set_m((1,0,0))
-    llg.setup(use_demag=True,demag_method="FK",
-              demaglinsolTOL1 = 1e-6, demaglinsolTOL2 = 1e-6)
 
-    density = llg.demag.energy_density()
+    demag = Demag()
+    m = df.interpolate(df.Constant((1, 0, 0)), S3)
+    Ms = np.sqrt(6.0/mu0)
+    demag.setup(S3, m, Ms, 1)
+
+    density = demag.demag.energy_density()
     deviation = np.abs(density - 1.0)
 
     print "Demag energy density (expect array of 1s):"

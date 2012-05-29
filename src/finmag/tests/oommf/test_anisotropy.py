@@ -5,6 +5,7 @@ from finmag.util.oommf.comparison import compare_anisotropy
 from finmag.sim.helpers import stats
 
 K1 = 45e4 # J/m^31
+Ms = 0.86e6
 
 def test_small_problem():
     results = small_problem()
@@ -21,7 +22,7 @@ def test_one_dimensional_problem():
 
 def test_three_dimensional_problem():
     results = three_dimensional_problem()
-    REL_TOLERANCE = 5e-6
+    REL_TOLERANCE = 9e-2
     print "3d: rel_diff_max:",np.nanmax(results["rel_diff"])
     assert np.nanmax(results["rel_diff"]) < REL_TOLERANCE
 
@@ -36,7 +37,7 @@ def small_problem():
       return np.array([np.ones(rn), np.zeros(rn), np.zeros(rn)])
   
     from finmag.util.oommf.comparison import compare_anisotropy
-    return compare_anisotropy(m_gen, K1, (1, 1, 1), dolfin_mesh, oommf_mesh, name="single")
+    return compare_anisotropy(m_gen, Ms, K1, (1, 1, 1), dolfin_mesh, oommf_mesh, name="single")
 
 def one_dimensional_problem():
     x_min = 0; x_max = 100e-9; x_n = 100000;
@@ -47,11 +48,11 @@ def one_dimensional_problem():
       xs = rs[0]
       return np.array([xs/x_max, np.sqrt(1 - (xs/x_max)**2), np.zeros(len(xs))])
 
-    return compare_anisotropy(m_gen, K1, (1, 1, 1), dolfin_mesh, oommf_mesh, dims=1, name="1D")
+    return compare_anisotropy(m_gen, Ms, K1, (1, 1, 1), dolfin_mesh, oommf_mesh, dims=1, name="1D")
 
 def three_dimensional_problem():
     x_max = 100e-9; y_max = z_max = 1e-9;
-    x_n=5000; y_n = z_n = 1;
+    x_n=20; y_n = z_n = 1;
 
     dolfin_mesh = df.Box(0, 0, 0, x_max, y_max, z_max, x_n, y_n, z_n)
     print dolfin_mesh.num_vertices()
@@ -62,7 +63,7 @@ def three_dimensional_problem():
       return np.array([xs/x_max, np.sqrt(1 - (0.9*xs/x_max)**2 - 0.01), 0.1*np.ones(len(xs))])
 
     from finmag.util.oommf.comparison import compare_anisotropy
-    return compare_anisotropy(m_gen, K1, (0, 0, 1), dolfin_mesh, oommf_mesh, dims=3, name="3D")
+    return compare_anisotropy(m_gen, Ms, K1, (0, 0, 1), dolfin_mesh, oommf_mesh, dims=3, name="3D")
 
 if __name__ == '__main__':
     res0 = small_problem()

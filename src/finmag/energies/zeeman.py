@@ -21,6 +21,7 @@ class Zeeman(EnergyBase):
         shape (3, n) and returns the magnetisation like that as well.
 
         """
+        self.in_jacobian = False
         self.value = value
         self.kwargs = kwargs
 

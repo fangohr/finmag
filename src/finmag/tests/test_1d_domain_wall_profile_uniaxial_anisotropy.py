@@ -1,7 +1,7 @@
-import dolfin as df
-from finmag.sim.llg import LLG
 import numpy as np
-from scipy.integrate import ode
+import dolfin as df
+from finmag import Simulation as Sim
+from finmag.energies import Exchange, UniaxialAnisotropy
 import pylab
 
 K1=520e3  #J/m^3
@@ -46,52 +46,38 @@ def test_domain_wall_profile(do_plot=False):
     assert n == len(coor)*dim
 
     # Setup LLG
-    llg = LLG(mesh)
+    sim = Sim(mesh, Ms)
+    exchange = Exchange(A)
+    sim.add(exchange)
+    anisotropy = UniaxialAnisotropy(K1, (0, 0, 1))
+    sim.add(anisotropy)
 
     # TODO: Find out how one are supposed to pin.
     # llg.pins = [0,1,-2,-1] # This is not so good
+    # MA: because you pin by index -2 and -1 won't work like you'd expect.
 
-    llg.Ms = Ms                 # saturation magnetization
-
-    #with the following correction we get a good match -- but why?
-    correction = 1.77 #emperical number to make match with analytical solution better
-    llg.A = A
-    llg.alpha=1.0
-    a = df.Constant((0, 0, 1)) # easy axis
-
+    sim.alpha=1.0
 
     # set initial magnetization
     x, y, z = M0(coor)
     m0.vector()[:] = np.array([x, y, z]).reshape(n)
-    llg.set_m(np.array([x, y, z]).reshape(n))
-
-    llg.setup(use_exchange=True)
-
-    llg.add_uniaxial_anisotropy(K1,a)
-    llg_wrap = lambda t, y: llg.solve_for(y, t)
+    sim.set_m(np.array([x, y, z]).reshape(n))
 
     # Time integration
-    t0 = 0; dt = 10e-12; t1 = 2e-10
-    r = ode(llg_wrap).set_integrator("vode", method="bdf")#,nsteps=50) #rtol=1e-5, 
-                                     #atol=1e-5,
-                                     #nsteps=50)
-    r.set_initial_value(llg.m, t0)
-    
-
     #f=open('data.txt','w')
-    while (True or r.successful()) and r.t < t1-dt:
-        Eani = llg._anisotropies[0].compute_energy()/L
-        Eex = llg.exchange.compute_energy()/L
-        print "Integrating time: %g" % r.t
+    for t in np.arange(0.0, 2e-10, 1e-11):
+        sim.run_until(t)
+        #Eani = anisotropy.compute_energy()/L
+        #Eex = exchange.compute_energy()/L
         #f.write('%g\t%g\t%g\n' % (r.t,Eani,Eex))
-        r.integrate(r.t + dt)
+        print "Integrating time: %g" % t
     #f.close()
-    llg.timings()
+    print sim.timings()
 
     mz = []
     x = np.linspace(0, L, simplices+1)
     for xpos in x:
-        mz.append(llg._m(xpos)[2])
+        mz.append(sim.llg._m(xpos)[2])
     mz = np.array(mz)*Ms
 
     if do_plot:
