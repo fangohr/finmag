@@ -1,17 +1,10 @@
 import numpy as np
 import dolfin as df
+from finmag.tests.demag.prob_base import DemagProblem
 from finmag.util.convert_mesh import convert_mesh
 from finmag.demag.solver_gcr import FemBemGCRSolver
-#from finmag.demag.problems import FemBemDeMagProblem
 import pylab as p
 import sys, os, commands
-
-class FemBemDeMagProblem(object):
-    """Have no idea why I can't import this now.."""
-    def __init__(self,mesh,M):
-        self.mesh = mesh
-        self.M = M
-
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 nmagoutput = os.path.join(MODULE_DIR, 'nmag_data.dat')
@@ -50,7 +43,7 @@ tlo main;""" % str(maxh)
     print "Using mesh with %g vertices" % mesh.num_vertices()
     V = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
     M = ("1.0", "0.0", "0.0")
-    problem = FemBemDeMagProblem(mesh, M)
+    problem = DemagProblem(mesh, M)
     solver = FemBemGCRSolver(problem)
     phi = solver.solve()
     H_demag = df.project(-df.grad(phi), V)

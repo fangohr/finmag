@@ -13,7 +13,7 @@ import finmag.mesh.marker as mark
 
 #TODO need a more exciting M, GCR solver has phiA = 0 due to
 #divM = 0 if M constant
-class MagUnitCircle(pb.FemBemDeMagProblem):
+class MagUnitCircle(pb.DemagProblem):
     def __init__(self,n= 20):
         mesh = UnitCircle(n)
         #TODO Make M three dimensional
@@ -23,7 +23,7 @@ class MagUnitCircle(pb.FemBemDeMagProblem):
     def desc(self):
         return "unit circle demagnetisation test problem fembem"
     
-class MagUnitSphere(pb.FemBemDeMagProblem):
+class MagUnitSphere(pb.DemagProblem):
     """Uniformly magnetized sphere problem for fembem solvers"""
     def __init__(self, n=10):
         mesh = UnitSphere(n)
@@ -37,7 +37,7 @@ class MagUnitSphere(pb.FemBemDeMagProblem):
     def desc(self):
         return "Unit sphere demagnetisation test problem fembem, n=%d, Ms=%g" % (self.n, self.Ms)
 
-class MagUnitInterval(pb.FemBemDeMagProblem):
+class MagUnitInterval(pb.DemagProblem):
     """Create 1d test problem where define a mesh,
     and a part of the mesh has been marked to be vacuum (with 0) and
     a part has been marked to be the ferromagnetic body (with 1).
@@ -62,7 +62,7 @@ class MagUnitInterval(pb.FemBemDeMagProblem):
 #and problems that use them.    
 ###########################################################
 
-class MagSphereBase(pb.FemBemDeMagProblem):
+class MagSphereBase(pb.DemagProblem):
     def generate_mesh(self,pathmesh,geofile):
         """
         Checkes the path pathmesh to see if the file exists,
@@ -124,8 +124,7 @@ class MagSphereBase(pb.FemBemDeMagProblem):
         self.r = radius        
         self.maxh = maxh
 
-        #Initialize Base pb.FemBemDeMagProblem
-        pb.FemBemDeMagProblem.__init__(self,self.mesh,self.m)
+        pb.DemagProblem.__init__(self,self.mesh,self.m)
         
     def desc(self):
         return "Sphere demag test problem, Ms=%g, radius=%g, maxh=%g" %(self.Ms, self.r, self.maxh)
