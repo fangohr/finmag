@@ -1,6 +1,5 @@
 import numpy as np
 import dolfin as df
-from finmag.tests.demag.prob_base import DemagProblem
 from finmag.util.convert_mesh import convert_mesh
 from finmag.demag.solver_gcr import FemBemGCRSolver
 import pylab as p
@@ -43,8 +42,7 @@ tlo main;""" % str(maxh)
     print "Using mesh with %g vertices" % mesh.num_vertices()
     V = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
     M = ("1.0", "0.0", "0.0")
-    problem = DemagProblem(mesh, M)
-    solver = FemBemGCRSolver(problem)
+    solver = FemBemGCRSolver(mesh=mesh, M=M, Ms=1)
     phi = solver.solve()
     H_demag = df.project(-df.grad(phi), V)
 

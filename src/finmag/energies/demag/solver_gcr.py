@@ -222,7 +222,7 @@ if __name__ == "__main__":
     from finmag.demag.problems import prob_fembem_testcases as pft
     from finmag.sim import helpers
     
-    problem = pft.MagSphere20()
+    problem = pft.MagSphereBase(2.0, 10)
     kwargs = problem.kwargs()
     kwargs["bench"] = True
 
