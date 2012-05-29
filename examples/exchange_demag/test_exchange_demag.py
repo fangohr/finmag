@@ -55,13 +55,13 @@ def run_finmag():
 
         # Energy densities
         if counter == 10:
-            exch = exchange.energy_density_function()
-            demag = demag.demag.energy_density_function()
+            exch_energy = exchange.energy_density_function()
+            demag_energy = demag.demag.energy_density_function()
             finmag_exch, finmag_demag = [], []
             R = range(100)
             for i in R:
-                finmag_exch.append(exch([15, 15, i]))
-                finmag_demag.append(demag([15, 15, i]))
+                finmag_exch.append(exch_energy([15, 15, i]))
+                finmag_demag.append(demag_energy([15, 15, i]))
             # Store data
             np.save(MODULE_DIR + "/finmag_exch_density.npy", np.array(finmag_exch))
             np.save(MODULE_DIR + "/finmag_demag_density.npy", np.array(finmag_demag))
