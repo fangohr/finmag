@@ -50,8 +50,9 @@ UniformDemagSphere = asol.UniformDemagSphere
 #Test parameters
 #########################################
 #High Quality geo meshes
-problems = [pft.MagSphere50(),pft.MagSphere25(),pft.MagSphere20(),\
-            pft.MagSphere15(),pft.MagSphere12(),pft.MagSphere10()]
+
+sphere = lambda hmax: MagSphereBase(hmax, r=10)
+problems = [sphere(5.0), sphere(2.5), sphere(2.0), sphere(1.5), sphere(1.2), sphere(1.0)]
 
 #Xaxis - Number of finite elements
 numvertex = [p.mesh.num_vertices() for p in problems]

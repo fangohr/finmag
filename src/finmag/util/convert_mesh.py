@@ -1,12 +1,12 @@
 import os, sys, commands, logging
-import finmag.mesh.marker as mark
 
 logger = logging.getLogger(name='finmag')
 
 def convert_mesh(inputfile, outputfile=None):
     """
     Convert a .geo file to a .xml.gz file compatible with Dolfin.
-    The resulting file is placed in ~/finmag/mesh
+    The resulting file is placed in the same directory as inputfile,
+    unless specified.
 
     *Arguments*
         inputfile (str)
@@ -44,7 +44,7 @@ def convert_mesh(inputfile, outputfile=None):
         even though it may not be the correct mesh corresponding
         to the .geo file.
 
-        25.04: This should now only happend if the dolfin mesh is
+        25.04: This should now only happen if the dolfin mesh is
         created after the last modification of the geofile.
 
     """
@@ -114,42 +114,3 @@ def convert_mesh(inputfile, outputfile=None):
 
     logger.debug('Success! Mesh is written to %s.' % outputfilename)
     return outputfilename
-
-
-
-class MeshGenerator(object):
-    """Class for problems using generated meshes"""
-    
-    def generate_mesh(self,pathmesh,geofile):
-        """
-        Checkes the path pathmesh to see if the file exists,
-        if not it is generated in the path pathmesh using
-        the information from the geofile.
-        """
-        #Check if the meshpath is of type .gz
-        name, type_ = os.path.splitext(pathmesh)
-        if type_ != '.gz':
-            print 'Only .gz files are supported as input by the class MeshGenerator.\
-                    Feel free to rewrite the class and make it more general'
-            sys.exit(1)
-            
-        #Generate the mesh if it does not exist    
-        if not os.path.isfile(pathmesh):
-            #Remove the .xml.gz ending
-            pathgeo = pathmesh.rstrip('.xml.gz')
-            #Add the ".geo"
-            pathgeo = "".join([pathgeo,".geo"])
-            #Create a geofile
-            f = open(pathgeo,"w")
-            f.write(geofile)                   
-            f.close()
-
-            #call the mesh generation function
-            convert_mesh(pathgeo)
-            #the file should now be in 
-            #pathmesh#
-
-            #Delete the geofile file
-            print "removing geo file"
-            os.remove(pathgeo)
-

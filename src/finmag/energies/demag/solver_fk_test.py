@@ -397,8 +397,8 @@ class SimpleFKSolver():
 
 if __name__ == "__main__":
 
-    from finmag.demag.problems.prob_fembem_testcases import MagSphere
-    mesh = MagSphere(5,1).mesh
+    from finmag.tests.demag.problems.prob_fembem_testcases import sphere
+    mesh = sphere(r=5, hmax=1)
     
     #changing the mesh coordinates 
     #to the nanoscale results in poor performance of the demag calculation

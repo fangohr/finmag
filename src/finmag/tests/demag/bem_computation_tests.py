@@ -7,7 +7,7 @@ from finmag.util import time_counter
 from finmag.sim import helpers
 from finmag.energies.demag import belement_magpar
 from finmag.tests.solid_angle_invariance_tests import random_3d_rotation_matrix
-from problems.prob_fembem_testcases import MagSphere
+from problems.prob_fembem_testcases import MagSphereBase
 from finmag.energies import Demag
 
 compute_belement = belement_magpar.return_bele_magpar()
@@ -169,7 +169,7 @@ class BemComputationTests(unittest.TestCase):
                                                 compute_scalar_potential_native_fk,
                                                 "native, FK")
                 
-            self.run_demag_computation_test(MagSphere(1, 0.25).mesh, exp,
+            self.run_demag_computation_test(MagSphereBase(0.25, 1).mesh, exp,
                                             compute_scalar_potential_native_fk,
                                             "native, FK")
 
@@ -179,7 +179,7 @@ class BemComputationTests(unittest.TestCase):
         m2 = df.Expression(["x[0]*x[1]+3", "x[2]+5", "x[1]+7"])
         tol = 1e-2
         expressions = [m1,m2]
-        self.run_demag_computation_test(MagSphere(1, 0.1).mesh, m1,
+        self.run_demag_computation_test(MagSphereBase(0.1, 1).mesh, m1,
                                         compute_scalar_potential_native_gcr,
                                         "native, GCR",
                                         ref=compute_scalar_potential_native_fk, tol=tol)
@@ -190,7 +190,7 @@ class BemComputationTests(unittest.TestCase):
                                                 "native, GCR, cube", tol=tol,
                                                 ref=compute_scalar_potential_native_fk)
                 
-                self.run_demag_computation_test(MagSphere(1, 1./k).mesh, exp,
+                self.run_demag_computation_test(MagSphereBase(1./k, 1.).mesh, exp,
                                                 compute_scalar_potential_native_gcr,
                                                 "native, GCR, sphere", tol=tol,
                                                 ref=compute_scalar_potential_native_fk,k=k)

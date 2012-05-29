@@ -261,7 +261,7 @@ class Test_FemBemGCRSolver(DemagTester):
         self.TOL = 2.0
 
         #Problems,solvers, solutions
-        self.problem3d = pftc.MagSphere(1,0.8)
+        self.problem3d = pftc.MagSphereBase(0.8, 1)
         self.solver3d = sgcr.FemBemGCRSolver(**self.problem3d.kwargs())
         self.solution3d = self.solver3d.solve()
 
