@@ -7,10 +7,9 @@ from finmag.native.llg import compute_lindholm_L, compute_lindholm_K, compute_be
 from finmag.util import time_counter
 from finmag.sim import helpers
 from finmag.demag import belement_magpar
-from finmag.sim.llg import LLG
 from finmag.tests.solid_angle_invariance_tests import random_3d_rotation_matrix
 from finmag.demag.problems.prob_fembem_testcases import MagSphere
-from finmag.energies.demag import Demag
+from finmag.energies import Demag
 
 compute_belement = belement_magpar.return_bele_magpar()
 
@@ -30,13 +29,15 @@ def normalise_phi(phi, mesh):
     phi.vector()[:] = phi.vector().array() - average / volume
 
 def compute_scalar_potential_llg(mesh, m_expr=df.Constant([1, 0, 0]), Ms=1.):
-    llg = LLG(mesh)
-    llg.set_m(m_expr)
-    llg.Ms = Ms
-    llg.setup(use_demag=True)
-    llg.compute_H_eff()
-    normalise_phi(llg.demag.phi, mesh)
-    return llg.demag.phi
+    S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
+    m = df.interpolate(m_expr, S3)
+
+    demag = Demag()
+    demag.setup(S3, m, Ms=Ms, unit_length=1)
+
+    phi = demag.compute_potential()
+    normalise_phi(phi, mesh)
+    return phi
 
 # Computes the derivative f'(x) using the finite difference approximation
 def differentiate_fd(f, x, eps=1e-4, offsets=(-2,-1,1,2), weights=(1./12.,-2./3.,2./3.,-1./12.)):
@@ -88,17 +89,20 @@ class BemComputationTests(unittest.TestCase):
             print "Boundary face %d, normal orientation %g" % (i, np.sign(np.dot(n, p1-centre)))
 
     def run_bem_computation_test(self, mesh):
-        llg = LLG(mesh)
-        llg.set_m((1, 0, 0))
-        llg.Ms = 1.
+        S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
+        m = df.interpolate(df.Constant((1, 0, 0)), S3)
+        Ms = 1.0
+
         # Using the weiwei solver to compare against,
         # because this still has the magpar bem,
         # while the main fk solver now uses the native bem.
-        llg.setup(use_demag=True, demag_method="weiwei")
-        bem_finmag = llg.demag.B
+        demag = Demag(solver="weiwei")
+        demag.setup(S3, m, Ms, unit_length=1)
+
+        bem_finmag = demag.demag.B
         bem_native = np.zeros(bem_finmag.shape)
         bem, b2g = compute_bem_fk(OrientedBoundaryMesh(mesh))
-        g2finmag = llg.demag.gnodes_to_bnodes
+        g2finmag = demag.demag.gnodes_to_bnodes
         for i_dolfin in xrange(bem.shape[0]):
             i_finmag = g2finmag[b2g[i_dolfin]]
 
