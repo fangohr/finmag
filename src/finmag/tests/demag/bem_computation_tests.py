@@ -1,14 +1,13 @@
 import unittest
 import numpy as np
-import math
 import dolfin as df
 import os
 from finmag.native.llg import compute_lindholm_L, compute_lindholm_K, compute_bem_fk, compute_bem_gcr, OrientedBoundaryMesh
 from finmag.util import time_counter
 from finmag.sim import helpers
-from finmag.demag import belement_magpar
+from finmag.energies.demag import belement_magpar
 from finmag.tests.solid_angle_invariance_tests import random_3d_rotation_matrix
-from finmag.demag.problems.prob_fembem_testcases import MagSphere
+from problems.prob_fembem_testcases import MagSphere
 from finmag.energies import Demag
 
 compute_belement = belement_magpar.return_bele_magpar()

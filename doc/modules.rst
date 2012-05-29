@@ -8,5 +8,6 @@ Main finmag modules
     modules/Exchange.rst
     modules/Anisotropy.rst
     modules/DMI.rst
+    modules/Demag.rst
     modules/FKSolver.rst
     modules/GCRSolver.rst

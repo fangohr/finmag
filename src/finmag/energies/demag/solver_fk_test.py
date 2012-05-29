@@ -1,4 +1,3 @@
-from dolfin import *
 import dolfin as df
 import numpy as np
 import scipy.sparse as sp
@@ -22,7 +21,7 @@ def compute_cell_volume(mesh):
 
 
 def compute_minus_node_volume_vector(mesh):
-    V=VectorFunctionSpace(mesh, 'Lagrange', 1)
+    V= df.VectorFunctionSpace(mesh, 'Lagrange', 1)
     v = df.TestFunction(V)
     node_vol= df.assemble(df.dot(v, 
             df.Constant([-1,-1,-1])) * df.dx)
@@ -120,9 +119,9 @@ class SimpleFKSolver():
         self.Vv=Vv
         self.Ms=Ms
         self.mesh=Vv.mesh()
-        self.V=FunctionSpace(self.mesh, 'Lagrange', 1)
-        self.phi1 = Function(self.V)
-        self.phi2 = Function(self.V)
+        self.V=df.FunctionSpace(self.mesh, 'Lagrange', 1)
+        self.phi1 = df.Function(self.V)
+        self.phi2 = df.Function(self.V)
 
         self.__bulid_Mapping()
         self.__bulid_Matrix(debug=False)
@@ -139,17 +138,17 @@ class SimpleFKSolver():
 
     def __bulid_Matrix(self,debug=False):
         
-        u = TrialFunction(self.V)
-        v = TestFunction(self.V)
-        w = TrialFunction(self.Vv)
-        n = FacetNormal(self.mesh)
+        u = df.TrialFunction(self.V)
+        v = df.TestFunction(self.V)
+        w = df.TrialFunction(self.Vv)
+        n = df.FacetNormal(self.mesh) # never used?
 
         #=============================================
         """
         D * m = g1
         """
         timings.start("phi1: compute D")
-        b = self.Ms * inner(w, grad(v)) * dx
+        b = self.Ms * df.inner(w, df.grad(v)) * df.dx
         self.D=df.assemble(b)
         timings.stop("phi1: compute D")
         if debug:
@@ -161,7 +160,7 @@ class SimpleFKSolver():
         Eq. (51) from Schrefl et al. 2007
         """
         timings.start("phi1: build poisson matrix")
-        a = inner(grad(u),grad(v))*dx
+        a = df.inner(df.grad(u),df.grad(v))*df.dx
         self.K1=df.assemble(a)
         timings.stop("phi1: build poisson matrix")
         if debug:
@@ -326,10 +325,10 @@ class SimpleFKSolver():
         
         """
 
-        u = TrialFunction(self.V)
-        v = TestFunction(self.Vv)
+        u = df.TrialFunction(self.V)
+        v = df.TestFunction(self.Vv)
         timings.start("Build G")
-        a= inner(grad(u), v)*dx
+        a= df.inner(df.grad(u), v)*df.dx
         self.G = df.assemble(a)
         timings.stop("Build G")
         timings.start("Compute L")
@@ -337,16 +336,16 @@ class SimpleFKSolver():
         timings.stop("Compute L")
 
     def compute_field(self,debug=False):
-        u = TrialFunction(self.V)
-        v = TestFunction(self.V)
-        n = FacetNormal(self.mesh)
+        u = df.TrialFunction(self.V)
+        v = df.TestFunction(self.V)
+        n = df.FacetNormal(self.mesh)
 
         self.g1=self.D*self.m.vector()
         if debug:
             print '='*100,'g1\n',self.g1.array()
 
         timings.start("Solve for phi1")
-        solve(self.K1,self.phi1.vector(),self.g1)
+        df.solve(self.K1,self.phi1.vector(),self.g1)
         timings.stop("Solve for phi1")
         if debug:
             print '='*100,'phi1\n',self.phi1.vector().array()
@@ -374,7 +373,7 @@ class SimpleFKSolver():
             print '='*100,'phi2\n',phi2
     
         
-        phi=Function(self.V)
+        phi=df.Function(self.V)
         timings.start("Add phi1 and phi2")
         phi.vector().set_local(self.phi1.vector().array()+phi2)
         timings.stop("Add phi1 and phi2")        
@@ -409,7 +408,7 @@ if __name__ == "__main__":
     V = df.VectorFunctionSpace(mesh, 'Lagrange', 1)
     Ms=1e6
 
-    m = project(Constant((1, 0, 0)), V)
+    m = df.project(df.Constant((1, 0, 0)), V)
     demag=SimpleFKSolver(V,m,Ms)
     print demag.compute_field()
 

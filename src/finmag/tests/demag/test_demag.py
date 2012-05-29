@@ -1,10 +1,9 @@
 import pytest
-import dolfin as df
 import numpy as np
-from finmag.demag.solver_fk_test import SimpleFKSolver
-from finmag.demag.solver_fk import FemBemFKSolver as FKSolver
-from finmag.demag.solver_gcr import FemBemGCRSolver as GCRSolver
-from finmag.demag.problems.prob_fembem_testcases import MagSphere
+from finmag.energies.demag.solver_fk_test import SimpleFKSolver
+from finmag.energies.demag.solver_fk import FemBemFKSolver as FKSolver
+from finmag.energies.demag.solver_gcr import FemBemGCRSolver as GCRSolver
+from problems.prob_fembem_testcases import MagSphere
 
 # Can get smaller tolerance if we use finer mesh, but that will
 # delay the jenkins build with minutes.

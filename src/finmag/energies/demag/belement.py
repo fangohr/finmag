@@ -1,6 +1,5 @@
 import dolfin as df
 import numpy as np
-import instant
 import belement_magpar
 import finmag.util.solid_angle_magpar as solid_angle_solver
 compute_belement=belement_magpar.return_bele_magpar()
