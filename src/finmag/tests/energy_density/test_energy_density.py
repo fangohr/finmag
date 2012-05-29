@@ -2,8 +2,7 @@ import os, sys
 import commands
 import numpy as np
 import dolfin as df
-from finmag.sim.dmi import DMI
-from finmag.energies import UniaxialAnisotropy, Exchange, Demag
+from finmag.energies import UniaxialAnisotropy, Exchange, Demag, DMI
 
 TOL = 1e-14
 
@@ -103,7 +102,8 @@ def test_DMI_energy_density_2D():
     M = df.interpolate(df.Expression(("-0.5*x[1]", "0.5*x[0]", "1")), V)
     Ms = 1
     D = 1
-    dmi = DMI(V, M, D, Ms)
+    dmi = DMI(D)
+    dmi.setup(V, M, Ms)
     density = dmi.energy_density()
     deviation = np.abs(density - 1.0)
 
@@ -122,7 +122,8 @@ def test_DMI_energy_density_3D():
     M = df.interpolate(df.Expression(("-0.5*x[1]", "0.5*x[0]", "1")), V)
     Ms = 1
     D = 1
-    dmi = DMI(V, M, D, Ms)
+    dmi = DMI(D)
+    dmi.setup(V, M, Ms)
     density = dmi.energy_density()
     deviation = np.abs(density - 1.0)
 

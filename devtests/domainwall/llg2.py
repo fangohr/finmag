@@ -5,7 +5,7 @@ import numpy as np
 import finmag.sim.helpers as h
 from finmag.sim.exchange import Exchange
 from finmag.sim.anisotropy import Anisotropy
-from finmag.sim.dmi import DMI
+from finmag.energies import DMI
 from finmag.sim.llg import LLG
 
 class LLG2(LLG):

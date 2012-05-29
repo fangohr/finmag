@@ -1,6 +1,6 @@
 import numpy as np
 import dolfin as df
-from finmag.sim.dmi import DMI
+from finmag.energies import DMI
 
 nm=1e-9
 simplexes = 10
@@ -23,9 +23,12 @@ def test_dmi_field():
             'sqrt(1 - ((2*x[0]-L)/L)*((2*x[0]-L)/L))',
             '0'), L=length)
     m = df.interpolate(m_initial, V)
-    dmi1 = DMI(V, m, D=5e-3, Ms=8.6e5, method="box-assemble") 
-    dmi2 = DMI(V, m, D=5e-3, Ms=8.6e5, method="box-matrix-numpy") 
-    dmi3 = DMI(V, m, D=5e-3, Ms=8.6e5, method="box-matrix-petsc") 
+    dmi1 = DMI(D=5e-3, method="box-assemble")
+    dmi1.setup(V, m, 8.6e5)
+    dmi2 = DMI(D=5e-3, method="box-matrix-numpy")
+    dmi2.setup(V, m, 8.6e5)
+    dmi3 = DMI(D=5e-3, method="box-matrix-petsc")
+    dmi3.setup(V, m, 8.6e5)
 
     H_dmi1 = dmi1.compute_field()
     H_dmi2 = dmi2.compute_field()

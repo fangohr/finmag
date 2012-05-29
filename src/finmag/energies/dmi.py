@@ -1,5 +1,6 @@
 import numpy as np
 import dolfin as df
+from energy_base import EnergyBase
 import logging
 logger=logging.getLogger('finmag')
 from finmag.util.timings import timings
@@ -166,7 +167,7 @@ def dmi_term2d(M,v,c,debug=False):
     return E, nodal_E
 
 
-class DMI(object):
+class DMI(EnergyBase):
     """
     Compute the DMI field.
 
@@ -175,7 +176,7 @@ class DMI(object):
         E_{\\text{DMI}} = \\int_\\Omega D \\vec{M} \\cdot (\\nabla \\times \\vec{M})  dx
         
     *Arguments*
-        V 
+        S3 
             a Dolfin VectorFunctionSpace object.
         M 
             the Dolfin object representing the magnetisation
@@ -217,11 +218,11 @@ class DMI(object):
             n    = 5
             mesh = Box(0, m, 0, m, 0, m, n, n, n)
             
-            V  = VectorFunctionSpace(mesh, "Lagrange", 1)
+            S3  = VectorFunctionSpace(mesh, "Lagrange", 1)
             D  = 5e-3 # J/m exchange constant
             M  = project(Constant((Ms, 0, 0)), V) # Initial magnetisation
            
-            dmi = DMI(V, M, D, Ms)
+            dmi = DMI(S3, M, D, Ms)
 
             # Print energy
             print dmi.compute_energy()
@@ -230,34 +231,38 @@ class DMI(object):
             H_dmi = dmi.compute_field()
 
             # Using 'box-matrix-numpy' method (fastest for small matrices)
-            dmi_np = Exchange(V, M, D, Ms, method='box-matrix-numpy')
+            dmi_np = Exchange(S3, M, D, Ms, method='box-matrix-numpy')
             H_dmi_np = dmi_np.compute_field()
             
     """
 
-    def __init__(self, V, M, D, Ms, method="box-matrix-petsc", unit_length=1):
+    def __init__(self, D, method="box-matrix-petsc"):
         timings.start("DMI-init")
-        
         logger.info("DMI(): method = %s" % method)
-        
-        self.V = V
-        self.M = M
-        self.DMIconstant = df.Constant(D / unit_length**2) #Dzyaloshinsky-Moriya Constant
-        self.method = method
 
-        self.v = df.TestFunction(V)        #Equation is chosen from the folowing papers
+        self.D = D
+        self.method = method
+        timings.stop("DMI-init")
+
+    def setup(self, S3, m, Ms, unit_length=1):
+        timings.start("DMI-setup")
+        self.S3 = S3
+        self.M = m
+        self.DMIconstant = df.Constant(self.D / unit_length**2) #Dzyaloshinsky-Moriya Constant
+
+        self.v = df.TestFunction(S3)        #Equation is chosen from the folowing papers
         #Yu-Onose2010, Li-Lin2011, Elhoja-Canals2002, Bode-Heide2007, Bak-Jensen1980
         #self.E = self.DMIconstant * df.inner(self.M, df.curl(self.M)) * df.dx
 
         #self.E = dmi_term3d_dolfin(self.M,self.DMIconstant)
 
         # Needed for energy density
-        FS = df.FunctionSpace(V.mesh(), "CG", 1)
+        FS = df.FunctionSpace(S3.mesh(), "CG", 1)
         w = df.TestFunction(FS)
 
-        #mesh_shape = V.mesh().coordinates().shape
+        #mesh_shape = S3.mesh().coordinates().shape
         #meshdim = mesh_shape[1]
-        meshdim = V.mesh().topology().dim()
+        meshdim = S3.mesh().topology().dim()
         logger.debug("Mesh dimension is " + str(meshdim))
         if meshdim == 1: #2d mesh
             NotImplementedError("Not implemented for 1d mesh yet -- should be easy though")
@@ -273,43 +278,43 @@ class DMI(object):
         #Rossler-Bogdanov2006
         #self.E = self.DMIconstant * df.cross(self.M, df.curl(self.M)) * df.dx
 
-        self.dE_dM = df.derivative(self.E, M, self.v)
+        self.dE_dM = df.derivative(self.E, self.M, self.v)
         self.vol = df.assemble(df.dot(self.v, df.Constant([1,1,1]))*df.dx).array()
-        self.nodal_vol = df.assemble(w*df.dx, mesh=V.mesh()).array()
+        self.nodal_vol = df.assemble(w*df.dx, mesh=S3.mesh()).array()
 
         # This is only needed if we want the energy density
         # as a df.Function, in order to e.g. probe.
         self.ED = df.Function(FS)
 
-
-        if method=='box-assemble':
+        if self.method=='box-assemble':
             self.__compute_field = self.__compute_field_assemble
-        elif method == 'box-matrix-numpy':
+        elif self.method == 'box-matrix-numpy':
             self.__setup_field_numpy()
             self.__compute_field = self.__compute_field_numpy
-        elif method == 'box-matrix-petsc':
+        elif self.method == 'box-matrix-petsc':
             self.__setup_field_petsc()
             self.__compute_field = self.__compute_field_petsc
-        elif method=='project':
+        elif self.method=='project':
             self.__setup_field_project()
             self.__compute_field = self.__compute_field_project
         else:
             raise NotImplementedError("""Only methods currently implemented are
-                                    * 'box-assemble', 
+                                    * 'box-assemble',
                                     * 'box-matrix-numpy',
-                                    * 'box-matrix-petsc'  
+                                    * 'box-matrix-petsc'
                                     * 'project'""")
 
-        timings.stop("DMI-init")
+        timings.stop("DMI-setup")
+
 
     def compute_field(self):
         """
         Compute the DMI field.
-        
+
          *Returns*
             numpy.ndarray
-                The DMI field.       
-        
+                The DMI field.
+
         """
         timings.start("DMI-computefield")
         H = self.__compute_field()
@@ -391,10 +396,10 @@ class DMI(object):
         #Note that we could make this 'project' method faster by computing the matrices
         #that represent a and L, and only to solve the matrix system in 'compute_field'().
         #IF this method is actually useful, we can do that. HF 16 Feb 2012
-        H_dmi_trial = df.TrialFunction(self.V)
+        H_dmi_trial = df.TrialFunction(self.S3)
         self.a = df.dot(H_dmi_trial, self.v) * df.dx
         self.L = self.dE_dM
-        self.H_dmi_project = df.Function(self.V)        
+        self.H_dmi_project = df.Function(self.S3)
 
     def __compute_field_assemble(self):
         return df.assemble(self.dE_dM).array() / self.vol
