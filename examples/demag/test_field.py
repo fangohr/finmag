@@ -1,19 +1,12 @@
 import os
-from dolfin import Mesh
+import dolfin as df
 from numpy import average
-from finmag.sim.llg import LLG
+from finmag.energies import Demag
 from finmag.util.convert_mesh import convert_mesh
 
 TOL = 1e-3
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-# Using mesh with radius 10 nm (nmag ex. 1)
-mesh = Mesh(convert_mesh(MODULE_DIR + "/sphere1.geo"))
-unit_length = 1e-9
-llg = LLG(mesh, unit_length=unit_length)
-llg.set_m((1, 0, 0))
-llg.Ms = 1e6
-llg.setup(use_demag=True)
+Ms = 1e6
 
 def test_field():
     """
@@ -23,8 +16,17 @@ def test_field():
     and Ms = 1,this should give H_demag = (-1/3, 0, 0).
 
     """
+
+    # Using mesh with radius 10 nm (nmag ex. 1)
+    mesh = df.Mesh(convert_mesh(MODULE_DIR + "/sphere1.geo"))
+    S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
+    m = df.interpolate(df.Constant((1, 0, 0)), S3)
+
+    demag = Demag()
+    demag.setup(S3, m, Ms, unit_length=1e-9)
+
     # Compute demag field
-    H_demag = llg.demag.compute_field()
+    H_demag = demag.compute_field()
     H_demag.shape = (3, -1)
     x, y, z = H_demag[0], H_demag[1], H_demag[2]
 
@@ -38,9 +40,9 @@ def test_field():
     print "x: %g,  y: %g,  z: %g" % (x, y, z)
 
     # Compute relative erros
-    x = abs((x + 1./3*llg.Ms)/llg.Ms)
-    y = abs(y/llg.Ms)
-    z = abs(z/llg.Ms)
+    x = abs((x + 1./3*Ms)/Ms)
+    y = abs(y/Ms)
+    z = abs(z/Ms)
 
     print "Relative error:"
     print "x: %g,  y: %g,  z: %g" % (x, y, z)
