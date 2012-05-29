@@ -80,8 +80,8 @@ class UniaxialAnisotropy(object):
                 K = df.Constant(K)
             self.K = K
 
-        if isinstance(a,df.Function):
-            logger.debug("Found Anisotropy direction a of type df.Function")
+        if isinstance(a, (df.Function, df.Constant)):
+            logger.debug("Found Anisotropy direction a of type {}".format(a.__class__))
             self.a = a
         else:
             logger.debug("Found Anisotropy direction '{}' -> df.Constant".format(a))

@@ -2,8 +2,8 @@ import os
 import numpy as np
 import finmag.sim.helpers as h
 from dolfin import Interval
-from finmag.sim.llg import LLG
-from scipy.integrate import ode
+from finmag import Simulation as Sim
+from finmag.energies import Exchange
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -19,28 +19,24 @@ def setup_module(module=None):
         my = np.sqrt(1.0 - mx**2)
         mz = np.zeros(len(xs))
         return np.array([mx, my, mz])
-    coords = np.array(zip(* mesh.coordinates()))
-    m0 = m_gen(coords).flatten()
 
-    global llg
-    llg = LLG(mesh)
-    llg.Ms = 0.86e6
-    llg.A = 1.3e-11
-    llg.alpha = 0.2
-    llg.set_m(m0)
-    llg.setup(use_exchange=True)
-    llg.pins = [0, 10]
+    Ms = 0.86e6
+    A = 1.3e-11
+
+    global sim
+    sim = Sim(mesh, Ms)
+    sim.alpha = 0.2
+    sim.set_m(m_gen)
+    sim.pins = [0, 10]
+    exchange = Exchange(A)
+    sim.add(exchange)
 
     # Save H_exc and m at t0 for comparison with nmag
     global H_exc_t0, m_t0
-    H_exc_t0 = llg.exchange.compute_field()
-    m_t0 = llg.m
+    H_exc_t0 = exchange.compute_field()
+    m_t0 = sim.m
 
-    t0 = 0; t1 = 5e-10; dt = 1e-11; # s
-    # ode takes the parameters in the order t, y whereas odeint and we use y, t.
-    llg_wrap = lambda t, y: llg.solve_for(y, t)
-    r = ode(llg_wrap).set_integrator("vode", method="bdf")
-    r.set_initial_value(llg.m, t0)
+    t = 0; t1 = 5e-10; dt = 1e-11; # s
 
     av_f = open(MODULE_DIR + "/averages.txt", "w")
     tn_f = open(MODULE_DIR + "/third_node.txt", "w")
@@ -50,17 +46,18 @@ def setup_module(module=None):
     global third_node
     third_node = []
 
-    while r.successful() and r.t <= t1:
-        mx, my, mz = llg.m_average
-        averages.append([r.t, mx, my, mz])
-        av_f.write(str(r.t) + " " + str(mx) + " " + str(my) + " " + str(mz) + "\n")
+    while t <= t1: 
+        mx, my, mz = sim.llg.m_average
+        averages.append([t, mx, my, mz])
+        av_f.write(str(t) + " " + str(mx) + " " + str(my) + " " + str(mz) + "\n")
 
-        mx, my, mz = h.components(llg.m)
+        mx, my, mz = h.components(sim.m)
         m2x, m2y, m2z = mx[2], my[2], mz[2]
-        third_node.append([r.t, m2x, m2y, m2z])
-        tn_f.write(str(r.t) + " " + str(m2x) + " " + str(m2y) + " " + str(m2z) + "\n")
+        third_node.append([t, m2x, m2y, m2z])
+        tn_f.write(str(t) + " " + str(m2x) + " " + str(m2y) + " " + str(m2z) + "\n")
 
-        r.integrate(r.t + dt)
+        t += dt
+        sim.run_until(t)
 
     av_f.close()
     tn_f.close()
@@ -68,7 +65,7 @@ def setup_module(module=None):
 def test_angles():
     TOLERANCE = 1e-9
 
-    m = h.vectors(llg.m)
+    m = h.vectors(sim.m)
     angles = np.array([h.angle(m[i], m[i+1]) for i in xrange(len(m)-1)])
 
     max_diff = abs(angles.max() - angles.min())

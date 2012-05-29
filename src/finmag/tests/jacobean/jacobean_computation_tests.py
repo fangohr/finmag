@@ -1,13 +1,9 @@
 import numpy as np
-import dolfin as df
 import unittest
-import math
-from finmag.sim.llg import LLG
-from domain_wall_cobalt import setup_domain_wall_cobalt, domain_wall_error
-from finmag.native import llg as native_llg
+from domain_wall_cobalt import setup_domain_wall_cobalt
 
 def norm(a):
-    return np.sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2])
+    return np.sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2])
 
 # Set up the LLG with all parameters close to 1
 def setup_llg_params_near_one(node_count=5, A=3.6 * 4e-7 * np.pi, Ms=6.7e5, K1=4.3, do_precession=True):

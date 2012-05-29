@@ -1,6 +1,6 @@
 from dolfin import *
 from finmag.sim.llg import LLG
-from finmag.sim.exchange import Exchange
+from finmag.energies import Exchange
 from math import log
 import random
 
@@ -11,8 +11,8 @@ class MyLLG(LLG):
     compute the variational forms, and thus makes it
     impossible to compute the jacobian.
     """
-    def __init__(self, mesh, order=1):
-        LLG.__init__(self, mesh, order)
+    def __init__(self, S1, S3):
+        LLG.__init__(self, S1, S3)
         self.p = Constant(self.gamma/(1 + self.alpha**2))
 
     def M(self):
@@ -20,11 +20,12 @@ class MyLLG(LLG):
 
     def H_eff(self):
         """Very temporary function to make things simple."""
-        H_app = project((Constant((0, 1e5, 0))), self.V)
-        H_ex  = Function(self.V)
+        H_app = project((Constant((0, 1e5, 0))), self.S3)
+        H_ex  = Function(self.S3)
 
         # Comment out these two lines if you don't want exchange.
-        exch  = Exchange(self.V, self._m, self.A, self.Ms)
+        exch = Exchange(1.3e-11)
+        exch.setup(self.S3, self._m, self.Ms)
         H_ex.vector().array()[:] = exch.compute_field()
 
         H_eff = H_ex + H_app
@@ -32,7 +33,7 @@ class MyLLG(LLG):
 
     def compute_variational_forms(self):
         M, H, Ms, p, c, alpha, V = self._m, self.H_eff(), \
-                self.Ms, self.p, self.c, self.alpha, self.V
+                self.Ms, self.p, self.c, self.alpha, self.S3
         
         u = TrialFunction(V)
         v = TestFunction(V)
@@ -102,11 +103,12 @@ def convergence_rates(hs, ys):
 
 m = 1e-5
 mesh = Box(0,0,0,m,m,m,5,5,5)
-llg = MyLLG(mesh)
+S1 = FunctionSpace(mesh, "Lagrange", 1)
+S3 = VectorFunctionSpace(mesh, "Lagrange", 1)
+llg = MyLLG(S1, S3)
 llg.set_m((1,0,0))
-llg.setup()
 
-M, V = llg._m, llg.V
+M, V = llg._m, llg.S3
 a, L = llg.variational_forms()
 
 x = Function(V)
