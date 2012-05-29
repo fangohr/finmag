@@ -65,12 +65,6 @@ class Demag(EnergyBase):
                   "degree":1,
                   "element":"CG",
                   "project_method":'magpar'}
-                  
-                
-
-##
-##       # timings.startnext("create-demag-problem")
-##        problem = FemBemDeMagProblem(S3.mesh(), m, Ms)
 
         if self.solver == "FK":
             self.demag = FemBemFKSolver(**kwargs)

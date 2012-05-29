@@ -9,7 +9,7 @@ from dolfin import *
 import numpy as np
 import prob_base as pb
 
-class MagUnitInterval(pb.TruncDeMagProblem):
+class MagUnitInterval(pb.TruncDemagProblem):
     """Create 1d test problem where define a mesh,
     and a part of the mesh has been marked to be vacuum (with 0) and
     a part has been marked to be the ferromagnetic body (with 1).
@@ -39,7 +39,7 @@ class MagUnitInterval(pb.TruncDeMagProblem):
     def desc(self):
         return "unit interval demagnetisation test problem"
 
-class MagUnitCircle(pb.TruncDeMagProblem):
+class MagUnitCircle(pb.TruncDemagProblem):
     def __init__(self,n=10):
         mesh = UnitCircle(n)
         self.r = 0.2 #Radius of magnetic Core
@@ -56,7 +56,7 @@ class MagUnitCircle(pb.TruncDeMagProblem):
     def desc(self):
         return "unit circle demagnetisation test problem"
 
-class MagUnitSphere(pb.TruncDeMagProblem):
+class MagUnitSphere(pb.TruncDemagProblem):
     def __init__(self,n=10):
         mesh = UnitSphere(10)
         self.r = 0.2 #Radius of magnetic Core

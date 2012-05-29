@@ -44,7 +44,7 @@ class LinAlgDemagTester(object):
 
         """
         self.testparams = testparams
-        self.problem = pb.FemBemDeMagProblem(mesh,M)
+        self.problem = pb.DemagProblem(mesh,M)
         if solver == "FK":
             self.solver = FemBemFKSolverLinalgTime(self.problem)
         elif solver == "GCR":
@@ -72,7 +72,7 @@ class LinAlgDemagTester(object):
         #After the testing is finished delete the BEM to free up memory.
         del self.solver.bem
 
-class LinAlgTimer(FemBemDeMagSolver):
+class LinAlgTimer(DemagSolver):
     """Class containing shared methods for the GCR and FK linalg timing classes"""
 
     def linsolve_laplace_inside(self,function,laplace_A,solverparams = None):
