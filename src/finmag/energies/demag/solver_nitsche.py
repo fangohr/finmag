@@ -7,10 +7,9 @@ __copyright__ = __author__
 __project__ = "Finmag"
 __organisation__ = "University of Southampton"
 
-from dolfin import *
-import math
+import dolfin as df
 import finmag.util.doffinder as dff
-import finmag.demag.solver_base as sb
+import solver_base as sb
 
 class NitscheSolver(sb.TruncDeMagSolver):
     def __init__(self,problem, degree = 1):
@@ -29,21 +28,21 @@ class NitscheSolver(sb.TruncDeMagSolver):
         #Get the solution Space
         V = self.V
 
-        W = MixedFunctionSpace((V,V)) # for phi0 and phi1
-        u0,u1 = TestFunctions(W)
-        v0,v1 = TrialFunctions(W)
-        sol = Function(W) 
-        phi0 = Function(V)
-        phi1 = Function(V)
-        phi = Function(V)
-        self.phitest = Function(V)
+        W = df.MixedFunctionSpace((V,V)) # for phi0 and phi1
+        u0,u1 = df.TestFunctions(W)
+        v0,v1 = df.TrialFunctions(W)
+        sol = df.Function(W) 
+        phi0 = df.Function(V)
+        phi1 = df.Function(V)
+        phi = df.Function(V)
+        self.phitest = df.Function(V)
         h = self.problem.mesh.hmin() #minimum edge length or smallest diametre of mesh
         gamma = self.problem.gamma
 
         #Define the magnetisation
         M = self.M
 
-        N = FacetNormal(self.problem.coremesh) #computes normals on the submesh self.problem.coremesh
+        N = df.FacetNormal(self.problem.coremesh) #computes normals on the submesh self.problem.coremesh
         dSC = self.problem.dSC #Boundary of Core
         dxV = self.problem.dxV #Vacuum
         dxC = self.problem.dxC #Core 
@@ -52,32 +51,32 @@ class NitscheSolver(sb.TruncDeMagSolver):
         jumpu = u1('-') - u0('+')                         #create a difference symbol
                                                           #- is the inward normal
                                                           #+ is the outward pointing normal or direction.
-        avggradu = (grad(u1('-')) + grad(u0('+')))*0.5
+        avggradu = (df.grad(u1('-')) + df.grad(u0('+')))*0.5
         jumpv = (v1('-') - v0('+'))
         avgv = (v1('-') + v0('+'))*0.5
-        avggradv = (grad(v1('-')) + grad(v0('+')))*0.5
+        avggradv = (df.grad(v1('-')) + df.grad(v0('+')))*0.5
 
         #Forms for Poisson problem with Nitsche Method
-        a0 = dot(grad(u0),grad(v0))*dxV #Vacuum 
-        a1 = dot(grad(u1),grad(v1))*dxC #Core
+        a0 = df.dot(df.grad(u0),df.grad(v0))*dxV #Vacuum 
+        a1 = df.dot(df.grad(u1),df.grad(v1))*dxC #Core
 
         #right hand side
-        f = (-div(M)*v1)*dxC   #Source term in core
-        f += (dot(M('-'),N('+'))*avgv )*dSC  #Prescribed outer normal derivative
+        f = (-df.div(M)*v1)*dxC   #Source term in core
+        f += (df.dot(M('-'),N('+'))*avgv )*dSC  #Prescribed outer normal derivative
         #Cross terms on the interior boundary
-        c = (-dot(avggradu,N('+'))*jumpv - dot(avggradv,N('+'))*jumpu + gamma*(1/h)*jumpu*jumpv)*dSC  
+        c = (-df.dot(avggradu,N('+'))*jumpv - df.dot(avggradv,N('+'))*jumpu + gamma*(1/h)*jumpu*jumpv)*dSC  
 
         a = a0 + a1 + c
 
         #Dirichlet BC for phi0
-        dbc = DirichletBC(W.sub(0),0.0,"on_boundary") #Need to use W as assemble thinks about W-space
+        dbc = df.DirichletBC(W.sub(0),0.0,"on_boundary") #Need to use W as assemble thinks about W-space
 
         #The following arguments
         #  cell_domains = self.problem.corefunc, interior_facet_domains = self.problem.coreboundfunc
         #tell the assembler about the marks 0 or 1 for the cells and markers 0, 1 and 2 for the facets.
         
-        A = assemble(a,cell_domains = self.problem.corefunc, interior_facet_domains = self.problem.coreboundfunc)
-        F = assemble(f,cell_domains = self.problem.corefunc, interior_facet_domains = self.problem.coreboundfunc)
+        A = df.assemble(a,cell_domains = self.problem.corefunc, interior_facet_domains = self.problem.coreboundfunc)
+        F = df.assemble(f,cell_domains = self.problem.corefunc, interior_facet_domains = self.problem.coreboundfunc)
 
         #Solve for the solution
         dbc.apply(A)
@@ -86,7 +85,7 @@ class NitscheSolver(sb.TruncDeMagSolver):
         #Got to here working through the code with Gabriel (HF, 23 Feb 2011)
 
         A.ident_zeros()
-        solve(A, sol.vector(),F)
+        df.solve(A, sol.vector(),F)
 
         #Seperate the mixed function and then add the parts
         solphi0,solphi1 = sol.split()

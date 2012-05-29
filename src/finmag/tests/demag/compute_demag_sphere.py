@@ -1,5 +1,5 @@
-from bem_computation_tests import compute_scalar_potential_native_fk, compute_scalar_potential_native_gcr
-from finmag.demag.problems.prob_fembem_testcases import MagSphere
+from bem_computation_tests import compute_scalar_potential_native_fk
+from problems.prob_fembem_testcases import MagSphere
 import numpy as np
 from mayavi import mlab
 

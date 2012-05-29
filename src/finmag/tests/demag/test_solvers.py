@@ -6,13 +6,11 @@ __project__ = "Finmag"
 __organisation__ = "University of Southampton"
 
 from dolfin import *
-import unittest
-import numpy as np
-import finmag.demag.problems.prob_trunc_testcases as pttc
-import finmag.demag.problems.prob_fembem_testcases as pftc
-import finmag.demag.solver_nitsche as sn
-import finmag.demag.solver_base as sb
-import finmag.demag.solver_gcr as sgcr
+import problems.prob_trunc_testcases as pttc
+import problems.prob_fembem_testcases as pftc
+import finmag.energies.demag.solver_nitsche as sn
+import finmag.energies.demag.solver_base as sb
+import finmag.energies.demag.solver_gcr as sgcr
 import finmag.util.error_norms as en
 
 class DemagTester(object):

@@ -1,9 +1,8 @@
 import logging
 import numpy as np
 import dolfin as df
-from finmag.demag import solver_base as sb
+import solver_base as sb
 from finmag.util.timings import timings
-from finmag.util.progress_bar import ProgressBar
 from finmag.native.llg import OrientedBoundaryMesh, compute_bem_fk
 import finmag.util.solver_benchmark as bench
 

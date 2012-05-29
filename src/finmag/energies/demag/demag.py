@@ -1,13 +1,10 @@
-import numpy as np
 import dolfin as df
 import logging
 from finmag.util.timings import timings
-from energy_base import EnergyBase
-from finmag.demag.problems.prob_base import FemBemDeMagProblem
-from finmag.demag.solver_fk import FemBemFKSolver
-from finmag.demag.solver_fk_magpar import FemBemFKSolver as MagparFKSolver
-from finmag.demag.solver_gcr import FemBemGCRSolver
-from finmag.demag.solver_fk_test import SimpleFKSolver
+from finmag.energies.energy_base import EnergyBase
+from solver_fk import FemBemFKSolver
+from solver_gcr import FemBemGCRSolver
+from solver_fk_test import SimpleFKSolver
 
 log = logging.getLogger("finmag")
 
@@ -25,10 +22,10 @@ class Demag(EnergyBase):
         self.in_jacobian = False
         log.info("Creating Demag object with " + solver + " solver.")
 
-        if solver in ["FK", "FK_magpar", "GCR", "weiwei"]:
+        if solver in ["FK", "GCR", "weiwei"]:
             self.solver = solver
         else:
-            raise NotImplementedError("Only 'FK', 'FK_magpar', 'GCR' and 'weiwei' are implemented")
+            raise NotImplementedError("Only 'FK', 'GCR' and 'weiwei' are implemented")
 
         self.parameters = df.Parameters("demag_options")
         poisson = df.Parameters("poisson_solver")
@@ -77,8 +74,6 @@ class Demag(EnergyBase):
 
         if self.solver == "FK":
             self.demag = FemBemFKSolver(**kwargs)
-        elif self.solver == "FK_magpar":
-            self.demag = MagparFKSolver(**kwargs)
         elif self.solver == "GCR":
             self.demag = FemBemGCRSolver(**kwargs)
         elif self.solver == "weiwei":

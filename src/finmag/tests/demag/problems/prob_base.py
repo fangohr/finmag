@@ -6,11 +6,7 @@ __project__ = "Finmag"
 __organisation__ = "University of Southampton"
         
 from dolfin import *
-import numpy as np
-import os
-import tempfile as tp 
 from finmag.util.interiorboundary import InteriorBoundary
-from finmag.util.convert_mesh import convert_mesh
 
 class DeMagProblem(object):
     """

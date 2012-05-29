@@ -7,7 +7,7 @@ __organisation__ = "University of Southampton"
         
 from dolfin import *
 import numpy as np
-import finmag.demag.problems.prob_base as pb
+import prob_base as pb
 
 class MagUnitInterval(pb.TruncDeMagProblem):
     """Create 1d test problem where define a mesh,

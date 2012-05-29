@@ -12,10 +12,9 @@ __project__ = "Finmag"
 __organisation__ = "University of Southampton"
 
 from dolfin import *
-from finmag.demag import solver_fk, solver_gcr
-from finmag.demag.problems import prob_fembem_testcases as pft
-import finmag.demag.tests.analytic_solutions as asol
-import finmag.demag.solver_base as sb
+from finmag.energies.demag import solver_fk, solver_gcr
+from finmag.tests.demag.problems import prob_fembem_testcases as pft
+import finmag.tests.demag.analytic_solutions as asol
 import finmag.util.error_norms as en
 import finmag.util.convergence_tester as ct
 

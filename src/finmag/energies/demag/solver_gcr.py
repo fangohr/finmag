@@ -5,10 +5,9 @@ __copyright__ = __author__
 __project__ = "Finmag"
 __organisation__ = "University of Southampton"
 
-import math
 import logging
 import dolfin as df
-import finmag.demag.solver_base as sb
+import solver_base as sb
 import numpy as np
 from finmag.util.timings import timings
 from finmag.native.llg import compute_bem_gcr, OrientedBoundaryMesh
