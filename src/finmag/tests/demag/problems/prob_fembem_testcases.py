@@ -6,8 +6,8 @@ __project__ = "Finmag"
 __organisation__ = "University of Southampton"
 
 from dolfin import *
+from finmag.util.convert_mesh import convert_mesh
 import prob_base as pb
-import finmag.util.convert_mesh as cm
 import os
 import finmag.mesh.marker as mark
 
@@ -62,7 +62,40 @@ class MagUnitInterval(pb.FemBemDeMagProblem):
 #and problems that use them.    
 ###########################################################
 
-class MagSphereBase(pb.FemBemDeMagProblem,cm.MeshGenerator):
+class MagSphereBase(pb.FemBemDeMagProblem):
+    def generate_mesh(self,pathmesh,geofile):
+        """
+        Checkes the path pathmesh to see if the file exists,
+        if not it is generated in the path pathmesh using
+        the information from the geofile.
+        """
+        #Check if the meshpath is of type .gz
+        name, type_ = os.path.splitext(pathmesh)
+        if type_ != '.gz':
+            print 'Only .gz files are supported as input by the class MeshGenerator.\
+                    Feel free to rewrite the class and make it more general'
+            sys.exit(1)
+            
+        #Generate the mesh if it does not exist    
+        if not os.path.isfile(pathmesh):
+            #Remove the .xml.gz ending
+            pathgeo = pathmesh.rstrip('.xml.gz')
+            #Add the ".geo"
+            pathgeo = "".join([pathgeo,".geo"])
+            #Create a geofile
+            f = open(pathgeo,"w")
+            f.write(geofile)                   
+            f.close()
+
+            #call the mesh generation function
+            convert_mesh(pathgeo)
+            #the file should now be in 
+            #pathmesh#
+
+            #Delete the geofile file
+            print "removing geo file"
+            os.remove(pathgeo)
+
     """Base class for MagSphere classes"""
     def __init__(self,maxh,radius=10):
         #Try to regenerate mesh files if need be
@@ -81,7 +114,7 @@ class MagSphereBase(pb.FemBemDeMagProblem,cm.MeshGenerator):
 
 
 
-        cm.MeshGenerator.generate_mesh(self,meshpath,geofile)
+        self.generate_mesh(meshpath,geofile)
         #Upload the dolfin mesh
         self.mesh = Mesh(meshpath)
         self.Ms = 1.0
@@ -96,45 +129,3 @@ class MagSphereBase(pb.FemBemDeMagProblem,cm.MeshGenerator):
         
     def desc(self):
         return "Sphere demag test problem, Ms=%g, radius=%g, maxh=%g" %(self.Ms, self.r, self.maxh)
-
-#Note python doesn't allow :." in class names so the Sphere1.0 is now Sphere10 etc...        
-
-class MagSphere(MagSphereBase):
-    """Demag Sphere problem Using the geo sphere with radius r and maxh=maxh"""
-    def __init__(self,r,hmax):
-        MagSphereBase.__init__(self,hmax,r)
-        
-class MagSphere50(MagSphereBase):
-    """Demag Sphere problem Using the geo sphere mesh maxh  = 5.0"""
-    def __init__(self):
-        MagSphereBase.__init__(self,5.0)
-
-class MagSphere30(MagSphereBase):
-    """Demag Sphere problem Using the geo sphere mesh maxh  = 3.0"""
-    def __init__(self):
-        MagSphereBase.__init__(self,3.0)
-
-class MagSphere25(MagSphereBase):
-    """Demag Sphere problem Using the geo sphere mesh maxh  = 2.5"""
-    def __init__(self):
-        MagSphereBase.__init__(self,2.5)
-
-class MagSphere20(MagSphereBase):
-    """Demag Sphere problem Using the geo sphere mesh maxh  = 2.0"""
-    def __init__(self):
-        MagSphereBase.__init__(self,2.0)
-
-class MagSphere15(MagSphereBase):
-    """Demag Sphere problem Using the geo sphere mesh maxh  = 1.5"""
-    def __init__(self):
-        MagSphereBase.__init__(self,1.5)
-
-class MagSphere12(MagSphereBase):
-    """Demag Sphere problem using the sphere mesh from nmag example. maxh = 1.2"""
-    def __init__(self):
-        MagSphereBase.__init__(self,1.2)
-       
-class MagSphere10(MagSphereBase):
-    """Demag Sphere problem using the sphere mesh from nmag example. maxh = 1.0"""
-    def __init__(self):
-        MagSphereBase.__init__(self,1.0)

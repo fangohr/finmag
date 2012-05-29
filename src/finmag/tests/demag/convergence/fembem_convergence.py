@@ -13,7 +13,7 @@ __organisation__ = "University of Southampton"
 
 from dolfin import *
 from finmag.energies.demag import solver_fk, solver_gcr
-from finmag.tests.demag.problems import prob_fembem_testcases as pft
+from finmag.tests.demag.problems.prob_fembem_testcases import MagSphereBase
 import finmag.tests.demag.analytic_solutions as asol
 import finmag.util.error_norms as en
 import finmag.util.convergence_tester as ct
@@ -44,15 +44,10 @@ class FemBemGCRSolverTest(solver_gcr.FemBemGCRSolver):
 #Test parameters
 #########################################
 
-#Dolfin Meshes
-#Mesh fineness, ie UnitSphere(n)
-#finenesslist = [2] #range(2,5)
-#Create a problem for each level of fineness
-#problems = [pft.MagUnitSphere(n) for n in finenesslist]
-
 #High Quality geo meshes
-problems = [pft.MagSphere50(),pft.MagSphere25(),pft.MagSphere20(), \
-            pft.MagSphere15(),pft.MagSphere12(),pft.MagSphere10()]
+
+sphere = lambda hmax: MagSphereBase(hmax, r=10)
+problems = [sphere(5.0), sphere(2.5), sphere(2.0), sphere(1.5), sphere(1.2), sphere(1.0)]
 
 #Xaxis - Number of verticies
 numvert = [p.mesh.num_vertices() for p in problems]

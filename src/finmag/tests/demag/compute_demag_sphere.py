@@ -1,10 +1,10 @@
 from bem_computation_tests import compute_scalar_potential_native_fk
-from problems.prob_fembem_testcases import MagSphere
+from problems.prob_fembem_testcases import sphere
 import numpy as np
 from mayavi import mlab
 
 # Create the mesh and compute the scalar potential
-mesh = MagSphere(1, 0.1).mesh
+mesh = sphere(0.1, 1).mesh
 phi = compute_scalar_potential_native_fk(mesh)
 
 x, y, z = mesh.coordinates().T

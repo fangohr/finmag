@@ -3,7 +3,7 @@ import numpy as np
 from finmag.energies.demag.solver_fk_test import SimpleFKSolver
 from finmag.energies.demag.solver_fk import FemBemFKSolver as FKSolver
 from finmag.energies.demag.solver_gcr import FemBemGCRSolver as GCRSolver
-from problems.prob_fembem_testcases import MagSphere
+from problems.prob_fembem_testcases import MagSphereBase
 
 # Can get smaller tolerance if we use finer mesh, but that will
 # delay the jenkins build with minutes.
@@ -13,7 +13,7 @@ TOL = 1e-2
 # NOTE: Should increase the number of vertices
 # when the lindholm formulation makes the build
 # of the boundary element matrix faster.
-problems = [MagSphere(5, 1), MagSphere(1, 0.25)]
+problems = [MagSphereBase(1, 5), MagSphereBase(0.25, 1)]
 
 # Please feel free to also add more (working) solvers...
 solvers = [SimpleFKSolver, FKSolver, GCRSolver]
