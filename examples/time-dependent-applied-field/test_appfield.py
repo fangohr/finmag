@@ -3,6 +3,7 @@ import numpy as np
 import pylab
 import dolfin as df
 from finmag.sim.llg import LLG
+from finmag.energies import TimeZeeman
 from finmag.sim.integrator import LLGIntegrator
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -12,22 +13,26 @@ def test_external_field_depends_on_t():
     simplices = 2
     L = 10e-9
     mesh = df.Interval(simplices, 0, L)
+    S1 = df.FunctionSpace(mesh, "Lagrange", 1)
+    S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
     GHz=1e9
     omega= 100*GHz
-    llg=LLG(mesh)
+    llg=LLG(S1, S3)
     llg.set_m(df.Constant((1, 0, 0)))
+
     #This is the time dependent field
-    H = df.Expression(("0.0", "0.0","H0*sin(omega*t)"), H0=1e5, omega=omega, t=0.0)
+    H_app_expr = df.Expression(("0.0", "0.0","H0*sin(omega*t)"), H0=1e5, omega=omega, t=0.0)
+    H_app = TimeZeeman(H_app_expr)
+    H_app.setup(S3, llg._m, Ms=8.6e5)
+    llg.interactions.append(H_app)
 
-    #Add time dependent expression to LLG object
-    llg._H_app_expression = H
+    # add to llg with a name as well, so we can call update on it
+    llg._H_app = H_app
 
-    #define function that updates that expression, and the field
-    #object
+    #define function that updates that expression, and the field object
     def update_H_ext(llg):
         print "update_H_ext being called for t=%g" % llg.t
-        llg._H_app_expression.t = llg.t
-        llg._H_app=df.interpolate(llg._H_app_expression,llg.V)
+        llg._H_app.update(llg.t)
 
     #register this function to be called before (pre) the right hand side
     #of the ODE is evaluated
@@ -38,7 +43,6 @@ def test_external_field_depends_on_t():
     tfinal = 0.3*1e-9
     dt = 0.001e-9
 
-    llg.setup()
     integrator = LLGIntegrator(llg, llg.m)
 
     #to gather data for later analysis
@@ -53,7 +57,7 @@ def test_external_field_depends_on_t():
         print "Integrating time: %g" % t
         mlist.append(llg.m_average)
         tlist.append(t)
-        hext.append(llg._H_app((0)))
+        hext.append(llg._H_app.H((0)))
 
     #only plotting and data analysis from here on
 

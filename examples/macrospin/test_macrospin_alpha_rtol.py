@@ -4,6 +4,7 @@ import numpy
 import matplotlib.pyplot as plt
 
 from finmag.sim.llg import LLG
+from finmag.energies import Zeeman
 from test_macrospin import make_analytic_solution
 from scipy.integrate import odeint
 
@@ -34,11 +35,15 @@ def test_deviations_over_alpha_and_tol(number_of_alphas=5, do_plot=False):
         for alpha in alphas:
             print "Solving for alpha={0}.".format(alpha)
 
-            llg = LLG(mesh)
+            S1 = dolfin.FunctionSpace(mesh, "Lagrange", 1)
+            S3 = dolfin.VectorFunctionSpace(mesh, "Lagrange", 1)
+            llg = LLG(S1, S3)
             llg.alpha = alpha
             llg.set_m((1, 0, 0))
-            llg.H_app = (0, 0, 1e5)
-            llg.setup(use_exchange=False)
+
+            H_app = Zeeman((0, 0, 1e5))
+            H_app.setup(S3, llg._m, Ms=1)
+            llg.interactions.append(H_app)
 
             M_analytical = make_analytic_solution(1e5, llg.alpha, llg.gamma) 
         

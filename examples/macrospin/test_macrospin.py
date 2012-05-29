@@ -4,6 +4,7 @@ import numpy
 
 from finmag.sim.integrator import LLGIntegrator
 from finmag.sim.llg import LLG
+from finmag.energies import Zeeman
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -61,16 +62,19 @@ def compare_with_analytic_solution(alpha=0.5, max_t=1e-9):
     x1 = y1 = z1 = 10e-9
     nx = ny = nz = 1
     mesh = dolfin.Box(x0, x1, y0, y1, z0, z1, nx, ny, nz)
+    S1 = dolfin.FunctionSpace(mesh, "Lagrange", 1)
+    S3 = dolfin.VectorFunctionSpace(mesh, "Lagrange", 1)
 
-    llg = LLG(mesh)
+    llg = LLG(S1, S3)
     llg.alpha = alpha
     llg.set_m((1, 0, 0))
-    llg.H_app = (0, 0, 1e6)
-    llg.setup(use_exchange=False)
+    H_app = Zeeman((0, 0, 1e6))
+    H_app.setup(S3, llg._m, Ms=1)
+    llg.interactions.append(H_app)
+
     integrator = LLGIntegrator(llg, llg.m, abstol=1e-12, reltol=1e-12)
     ts = numpy.linspace(0, max_t, num=100)
     tsfine = numpy.linspace(0, max_t, num=1000)
-    #ys = odeint(llg.solve_for, llg.m, ts)
     ys = numpy.array([(integrator.run_until(t), integrator.m.copy())[1] for t in ts])
     m_analytical = make_analytic_solution(1e6, alpha, llg.gamma)
     save_plot(ts, ys, tsfine, m_analytical, alpha)

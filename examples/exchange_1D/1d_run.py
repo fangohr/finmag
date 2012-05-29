@@ -2,6 +2,7 @@ import dolfin
 import numpy
 from scipy.integrate import odeint
 from finmag.sim.llg import LLG
+from finmag.energies import Exchange
 
 """
 Compute the behaviour of a one-dimensional strip of magnetic material,
@@ -9,17 +10,24 @@ with exchange interaction.
 
 """
 
+A = 1.3e-11
+Ms = 8.6e5
+
 length = 20e-9 # in meters
 simplexes = 10
 mesh = dolfin.Interval(simplexes, 0, length)
+S1 = dolfin.FunctionSpace(mesh, "Lagrange", 1)
+S3 = dolfin.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
 
-llg = LLG(mesh)
+llg = LLG(S1, S3)
 llg.set_m((
         '2*x[0]/L - 1',
         'sqrt(1 - (2*x[0]/L - 1)*(2*x[0]/L - 1))',
         '0'), L=length)
-llg.setup()
 llg.pins = [0, 10]
+exchange = Exchange(A)
+exchange.setup(S3, llg._m, Ms)
+llg.interactions.append(exchange)
 
 print "Solving problem..."
 
@@ -31,6 +39,6 @@ print "Saving data..."
 
 numpy.savetxt("1d_times.txt", ts)
 numpy.savetxt("1d_M.txt", ys)
-numpy.savetxt("1d_coord.txt", llg.mesh.coordinates().flatten())
+numpy.savetxt("1d_coord.txt", mesh.coordinates().flatten())
 
 print "Done."

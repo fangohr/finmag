@@ -1,39 +1,41 @@
 import os
 import dolfin as df
 from numpy import pi, sqrt
-from finmag.sim.llg import LLG
-from finmag.util.convert_mesh import convert_mesh
+from finmag.energies import Demag
 
 TOL = 1.5e-2
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-# The dolfin UnitSphere gives a coarse and low quality mesh.
-# Use this instead when the lindholm formulation is implemented.
-# Then we can also set TOL = 1.5e-3
-#mesh = df.Mesh(convert_mesh(MODULE_DIR + "/sphere_fine.geo"))
-
-# Using unit sphere mesh
-mesh = df.UnitSphere(10)
-unit_length = 1
-llg = LLG(mesh, unit_length=unit_length)
-llg.set_m((1, 0, 0))
-llg.Ms = 1e5
-llg.setup(use_demag=True)
+Ms = 1e5
 
 def test_energy():
+
     """
     Test the demag energy.
 
     Read the corresponding documentation for explanation.
 
     """
-    E_demag = llg.demag.compute_energy()
+
+    # The dolfin UnitSphere gives a coarse and low quality mesh.
+    # Use this instead when the lindholm formulation is implemented.
+    # Then we can also set TOL = 1.5e-3
+    #mesh = df.Mesh(convert_mesh(MODULE_DIR + "/sphere_fine.geo"))
+
+    # Using unit sphere mesh
+    mesh = df.UnitSphere(10)
+    S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
+    m = df.interpolate(df.Constant((1, 0, 0)), S3)
+
+    demag = Demag()
+    demag.setup(S3, m, Ms, unit_length=1)
+
+    E_demag = demag.demag.compute_energy()
     print "Demag energy:", E_demag
     print "Numerical solution on the netgen mesh: 8758.92651323"
 
     vol = 4*pi/3
     mu0 = 4*pi*10**-7
-    E_exact = 1./6*mu0*llg.Ms**2*vol
+    E_exact = 1./6*mu0*Ms**2*vol
     print "Exact solution:", E_exact
 
     diff = abs(E_demag - E_exact)

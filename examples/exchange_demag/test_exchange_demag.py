@@ -1,36 +1,33 @@
 import os
-import pytest
 import logging
 import pylab as p
 import numpy as np
 import dolfin as df
 import progressbar as pb
 import finmag.sim.helpers as h
-from finmag.sim.llg import LLG
-from finmag.sim.integrator import LLGIntegrator
+from finmag import Simulation as Sim
+from finmag.energies import Exchange, Demag
 from finmag.util.convert_mesh import convert_mesh
 
 logger = logging.getLogger(name='finmag')
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 REL_TOLERANCE = 1e-4
-
+Ms = 0.86e6
 unit_length = 1e-9
 mesh = df.Mesh(convert_mesh(MODULE_DIR + "/bar30_30_100.geo"))
 
 def run_finmag():
     """Run the finmag simulation and store data in averages.txt."""
 
-    # Set up LLG
-    llg = LLG(mesh, unit_length=unit_length)
-    llg.Ms = 0.86e6
-    llg.A = 13.0e-12
-    llg.alpha = 0.5
-    llg.set_m((1,0,1))
-    llg.setup(use_exchange=True, use_dmi=False, use_demag=True, demag_method="FK")
+    sim = Sim(mesh, Ms, unit_length=unit_length)
+    sim.alpha = 0.5
+    sim.set_m((1, 0, 1))
 
-    # Set up time integrator
-    integrator = LLGIntegrator(llg, llg.m)
+    exchange = Exchange(13.0e-12)
+    sim.add(exchange)
+    demag = Demag(solver="FK")
+    sim.add(demag)
 
     fh = open(MODULE_DIR + "/averages.txt", "w")
     fe = open(MODULE_DIR + "/energies.txt", "w")
@@ -45,21 +42,21 @@ def run_finmag():
         bar.update(counter)
 
         # Integrate
-        integrator.run_until(t)
+        sim.run_until(t)
 
         # Save averages to file
-        mx, my, mz = llg.m_average
+        mx, my, mz = sim.llg.m_average
         fh.write(str(t) + " " + str(mx) + " " + str(my) + " " + str(mz) + "\n")
 
         # Energies
-        E_e = llg.exchange.compute_energy()
-        E_d = llg.demag.compute_energy()
+        E_e = exchange.compute_energy()
+        E_d = demag.compute_energy()
         fe.write(str(E_e) + " " + str(E_d) + "\n")
 
         # Energy densities
         if counter == 10:
-            exch = llg.exchange.energy_density_function()
-            demag = llg.demag.energy_density_function()
+            exch = exchange.energy_density_function()
+            demag = demag.demag.energy_density_function()
             finmag_exch, finmag_demag = [], []
             R = range(100)
             for i in R:

@@ -1,17 +1,12 @@
 import os
 from finmag.sim.llg import LLG
 from finmag.sim.integrator import LLGIntegrator
-
+from finmag.energies import Exchange
 from scipy.optimize import curve_fit
-import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 
-import pytest
-import pylab as p
 import numpy as np
 import dolfin as df
-import progressbar as pb
-import finmag.sim.helpers as h
 
 import logging
 
@@ -45,11 +40,14 @@ def extract_parameters(x,data):
 def run_nmag():
     x_max = 1000; y_max = 2; z_max = 2;
     mesh = df.Box(0, 0, 0, x_max, y_max, z_max, 500, 1, 1)
-    llg = LLG(mesh, unit_length=1e-9)
-    llg.Ms = 0.86e6
-    llg.A = 13.0e-12
-    llg.alpha = 0.01
+    S1 = df.FunctionSpace(mesh, "Lagrange", 1)
+    S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
+    llg = LLG(S1, S3, unit_length=1e-9)
     llg.set_m((1,0,0))
+    llg.Ms = 0.86e6
+    exchange = Exchange(13.0e-12)
+    exchange.setup(S3, llg._m, llg.Ms)
+    llg.alpha = 0.01
 
     GHz=1e9
     omega= 50*2*np.pi*GHz
@@ -60,8 +58,6 @@ def run_nmag():
         llg._H_app=df.interpolate(H,llg.V)
     llg._pre_rhs_callables.append(update_H_ext)
     
-    llg.setup(use_exchange=True, use_dmi=False, use_demag=False, demag_method="FK")
-
     # Set up time integrator
     integrator = LLGIntegrator(llg, llg.m)
 

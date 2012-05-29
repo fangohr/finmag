@@ -1,5 +1,5 @@
-Anisotropy finmag.sim.anisotropy
-Exchange finmag.sim.exchange
+Anisotropy finmag.energies.anisotropy
+Exchange finmag.energies.exchange
 LLG finmag.sim.llg
 DMI finmag.sim.dmi
 FKSolver finmag.demag.solver_fk
