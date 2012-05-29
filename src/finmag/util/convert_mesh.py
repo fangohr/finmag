@@ -2,22 +2,22 @@ import os, sys, commands, logging
 
 logger = logging.getLogger(name='finmag')
 
-def convert_mesh(inputfile, outputfile=None):
+def convert_mesh(geofile, xmlfile=None):
     """
     Convert a .geo file to a .xml.gz file compatible with Dolfin.
     The resulting file is placed in the same directory as inputfile,
     unless specified.
 
     *Arguments*
-        inputfile (str)
-            Name of a .geo file which is compatible with Netgen
-        outputfile (str) [optional]
-            Name of generated .xml.gz file which is compatible with Dolfin.
+        geofile (str)
+            Filename of a .geo file which is compatible with netgen.
+        xmlfile (str) [optional]
+            Filename of generated .xml.gz file which is compatible with Dolfin.
             If no name is given, the generated mesh file will have the same
-            name as the original .geo file.
+            basename as the original .geo file.
 
     *Return*
-        ouputfile
+        xmlfile
             Complete filename of generated mesh. See Example.
 
     *Example*
@@ -40,77 +40,90 @@ def convert_mesh(inputfile, outputfile=None):
 
     .. Note::
 
-        If the outputfile.xml.gz already exists, this is returned,
-        even though it may not be the correct mesh corresponding
-        to the .geo file.
-
-        25.04: This should now only happen if the dolfin mesh is
-        created after the last modification of the geofile.
+        If an xmlfile happens to exist, it is returned unless the corresponding
+        geofile is newer than the xmlfile.
 
     """
-
-    name, type_ = os.path.splitext(inputfile)
-    if type_ != '.geo':
-        print 'Only .geo files are supported as input.'
-        sys.exit(1)
-
-    if outputfile is not None:
-        if '.xml.gz' in outputfile:
-            outputfile = outputfile.rstrip('.xml.gz')
+    if xmlfile is None:
+        xmlfile = os.path.splitext(geofile)[0] + ".xml.gz"
     else:
-        outputfile = name
+        if ".xml.gz" not in xmlfile:
+            xmlfile += ".xml.gz"
 
-    outputfilename = "".join([outputfile,".xml.gz"])
+    if os.path.isfile(xmlfile) and os.path.getctime(xmlfile) > os.path.getctime(geofile):
+        logger.debug("The mesh %s already exists, and is automatically returned." % xmlfile)
+        return xmlfile
 
-    if os.path.isfile(outputfilename):
-        if os.path.getctime(outputfilename) > os.path.getctime(inputfile):
-            logger.debug("The mesh %s already exists, and is automatically returned." % outputfilename)
-            return outputfilename
+    diffpackfile = run_netgen(geofile)
+    xmlfile = convert_diffpack_to_xml(diffpackfile)
+    gzipped_xmlfile = compress(xmlfile)
 
-    logger.debug('Using netgen to convert %s.geo to DIFFPACK format...' % name)
-    netgen_cmd = 'netgen -geofile=%s -meshfiletype="DIFFPACK Format" -meshfile=%s.grid -batchmode' % (inputfile, name)
+    return gzipped_xmlfile
+
+def run_netgen(geofile):
+    """
+    Runs netgen on the geofile and returns a file in DIFFPACK format.
+
+    """
+    if not os.path.isfile(geofile):
+        raise ValueError("Can't find file {}.".format(geofile))
+
+    basename, extension = os.path.splitext(geofile)
+    diffpackfile = basename + ".grid"
+
+    if not extension == ".geo":
+        raise ValueError("Input needs to be a .geo file.")
+
+    logger.debug("Using netgen to convert {} to DIFFPACK format.".format(geofile))
+    netgen_cmd = "netgen -geofile={} -meshfiletype='DIFFPACK Format' -meshfile={} -batchmode".format(
+            geofile, diffpackfile)
+
     status, output = commands.getstatusoutput(netgen_cmd)
     if status not in (0, 34304): # Trouble on my machine, should just be zero.
         print output
         print "netgen failed with exit code", status
         sys.exit(2)
     logger.debug('Done!')
+    return diffpackfile
 
-    # Convert to xml using dolfin-convert
-    logger.debug('Using dolfin-convert to convert the DIFFPACK file to Dolfin xml...')
-    dolfin_conv_cmd = 'dolfin-convert %s.grid %s.xml' % (name, outputfile)
+def convert_diffpack_to_xml(diffpackfile):
+    """
+    Converts the diffpackfile to xml using dolfin-convert.
+
+    """
+    if not os.path.isfile(diffpackfile):
+        raise ValueError("Can't find file {}.".format(diffpackfile))
+    logger.debug('Using dolfin-convert to convert {} to xml format.'.format(diffpackfile))
+
+    basename = os.path.splitext(diffpackfile)[0]
+    xmlfile = basename + ".xml"
+    dolfin_conv_cmd = 'dolfin-convert {0} {1}'.format(diffpackfile, xmlfile)
     status, output = commands.getstatusoutput(dolfin_conv_cmd)
     if status != 0:
         print output
         print "dolfin-convert failed with exit code", status
         sys.exit(3)
-    logger.debug('Done!')
+ 
+    files = ["%s.xml.bak" % basename,
+             "%s_mat.xml" % basename,
+             "%s_bi.xml" % basename,
+             diffpackfile]
+    for f in files:
+        if os.path.isfile(f):
+            os.remove(f)
 
-    # Compress xml file using gzip
-    logger.debug('Compressing mesh...')
-    compr_cmd = 'gzip -f %s.xml' % outputfile
+    return xmlfile
+
+def compress(filename):
+    """
+    Compress file using gzip.
+
+    """
+    logger.debug("Compressing {}.".format(filename))
+    compr_cmd = 'gzip -f %s' % filename
     status, output = commands.getstatusoutput(compr_cmd)
     if status != 0:
         print output
         print "gzip failed with exit code", status
         sys.exit(4)
-    logger.debug('Done!')
-
-    # Remove redundant files
-    logger.debug('Cleaning up...')
-    files = ["%s.xml.bak" % outputfile,
-             "%s_mat.xml" % outputfile,
-             "%s_bi.xml" % outputfile,
-             "%s.grid" % name]
-    for f in files:
-        if os.path.isfile(f):
-            os.remove(f)
-    logger.debug('Done!')
-
-    # Test final mesh
-    logger.debug('Testing...')
-    from dolfin import Mesh
-    Mesh(outputfilename)
-
-    logger.debug('Success! Mesh is written to %s.' % outputfilename)
-    return outputfilename
+    return filename + ".gz"
