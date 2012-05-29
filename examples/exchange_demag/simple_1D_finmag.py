@@ -1,5 +1,5 @@
-from dolfin import Interval
-from finmag.sim.llg import LLG
+import dolfin as df
+from finmag.energies import Exchange
 import numpy as np
 import matplotlib.pylab as plt
 import os, commands
@@ -11,12 +11,14 @@ commands.getstatusoutput("nsim %s/simple_1D_nmag.py --clean" % MODULE_DIR)
 nd = np.load("%s/nmag_hansconf.npy" % MODULE_DIR)
 
 # run finmag
-mesh = Interval(100, 0, 10e-9)
-llg = LLG(mesh)
-llg.Ms = 1
-llg.set_m(("cos(x[0]*pi/10e-9)", "sin(x[0]*pi/10e-9)", "0"))
-llg.setup(use_exchange=True, use_dmi=False, use_demag=False)
-fd = llg.exchange.energy_density()
+mesh = df.Interval(100, 0, 10e-9)
+S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
+m = df.interpolate(df.Expression(("cos(x[0]*pi/10e-9)", "sin(x[0]*pi/10e-9)", "0")), S3)
+
+exchange = Exchange(1.3e-11)
+exchange.setup(S3, m, Ms=1)
+
+fd = exchange.energy_density()
 
 # draw an ASCII table of the findings
 table_border    = "+" + "-" * 8 + "+" + "-" * 64 + "+"
