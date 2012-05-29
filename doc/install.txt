@@ -38,3 +38,39 @@ Expected output will include many lines of tests, each of which should have the 
 
  ================== 131 passed in 108.40 seconds ===================
 
+
+Installation of FEniCS from source
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If the binaries do not apply to you, you want to install directly from source or you want the newest development version, you should try Dorsal. Dorsal is a shell script that automates the process of fetching, compiling, and installing the various FEniCS sub-projects.
+
+In order to install FEniCS using Dorsal, simply follow these steps:
+
+1. Download Dorsal from launchpad using Bazaar:
+
+  .. code-block:: bash
+
+    bzr branch lp:dorsal
+
+2. Navigate into the downloaded dorsal directory and tweak dorsal.cfg to your liking. At the last line, stable_build=true indicates that you want to build the latest stable version of all packages. If you change this to false, you will get the most recent commits to the development versions of all FEniCS packages.
+
+3. If you have some special installation demands, tweak your platform file in FEniCS/platforms/supported/your.platform (where your is the name of your OS version) to your liking. Be aware that your platform file may be in FEniCS/platforms/deprecated/ or FEniCS/platforms/contributed/ if your are not on one of the most recent releases.
+
+4. Invoke Dorsal by running:
+
+  .. code-block:: bash
+
+    ./dorsal.sh
+
+5. At this point, Dorsal attempts to guess your operating system (platform) and provides a list of instructions to ensure that your system is ready for installing FEniCS. Go through these instructions carefully, and copy and paste appropriate commands into a separate terminal window to prepare your system.
+
+6. Once you have completed these steps, hit enter to begin the installation!
+
+7. Update your PATH and PYTHONPATH variables to include the FEniCS installation, and source the dolfin.conf file as instructed by Dorsal.
+
+8. Follow the instructions on installation of Finmag in the previous section, but exclude all FEniCS installation.
+
+9. Open /finmag/native/Makefile and edit the following:
+
+  a) Change the occurances of "-ldolfin" to <path/to/your/libdolfin.so>. This should normally be {FEniCS_DIR}/lib/libdolfin.so.
+  b) Add the compile flag -I{FEniCS_DIR}/include to CFLAGS_INCLUDE

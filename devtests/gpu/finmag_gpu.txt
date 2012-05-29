@@ -1,0 +1,33 @@
+The development version of FEniCS has introduced the possibility of solving linear systems on the GPU. At this time, all vector operations, including matrix-vector products have been GPU accelerated. As we use Krylov solvers to solve the two linear systems in our demag classes, and matrix-vector product is the main operation of a Krylov solver, this could be solved on the GPU. To be able to take advantage of this feature, you need a graphics card with at least 2.0 CUDA compute capability (http://developer.nvidia.com/cuda-gpus). You also need CUDA, at least version 4.1, installed on your system.
+
+To install the development version of FEniCS with GPU computing enabeled, you need to follow the instructions on FEniCS installation using dorsal in the Installation section, with the following additions:
+
+* In step 2, stable_build needs to be false.
+* The platform file (explained in step 3) has to be modified to include the following:
+
+    * Add the line "export CUDA_DIR=<path to CUDA>" to your platform file.
+    * Add "cusp" to the top of the list of packages.
+
+To use the GPU accelerated linear algebra backend, simply add
+
+.. code-block:: python
+
+    dolfin.parameters["linear_algebra_backend"] = "PETScCusp"
+
+to the top of your python program.
+
+At this point, only the preconditioners "jacobi", "bjacobi" and "additive_schwarz" are GPU accelerated, while "default" is the default preconditioner for the demag solvers. Hence, one must add e.g.
+
+.. code-block:: python
+
+    demag = Demag()
+    demag.parameters["poisson_solver"]["preconditioner"] = "jacobi"
+    demag.parameters["laplace_solver"]["preconditioner"] = "bjacobi"
+
+A time comparison of the standard PETSc linear algebra backend and the GPU accelerated PETScCusp linear algebra backend has been run on Maxim's computer, and it shows the following:
+
+.. literalinclude:: ../devtests/gpu/results_maxim.txt
+
+The complete program:
+
+.. literalinclude:: ../devtests/gpu/finmag_backends.py

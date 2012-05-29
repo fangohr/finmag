@@ -24,9 +24,8 @@ To build and view documentation
 -------------------------------
 
 1. Navigate to finmag/doc/
-2. ``$ python generate_doc.py``
-3. ``$ make html``
-4. Open ``_build/html/index.html`` in your favourite browser
+2. ``$ make html``
+3. Open ``_build/html/index.html`` in your favourite browser
 
 Other formats can be created, for example pdf using ``make latexpdf`` (the output is in ``_build/latexpdf/Finmag.pdf``).
 

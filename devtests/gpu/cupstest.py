@@ -1,14 +1,14 @@
 from dolfin import *
 from time import time
-import math
-from finmag.util.convert_mesh import convert_mesh
+import math, random
+#from finmag.util.convert_mesh import convert_mesh
 
 def run_test():
-    solver = KrylovSolver()
+    solver = KrylovSolver("cg", "jacobi")
 
-    #mesh = Box(0,0,0,30,30,100,3,3,10)
+    mesh = Box(0,0,0,30,30,100,10,10,30)
     #mesh = Mesh(convert_mesh("bar.geo"))
-    mesh = UnitCube(40,40,40)
+    #mesh = UnitCube(32,32,32)
     V = FunctionSpace(mesh, "CG", 1)
     W = VectorFunctionSpace(mesh, "CG", 1)
 
@@ -18,9 +18,9 @@ def run_test():
 
     A = assemble(inner(grad(u), grad(v))*dx)
 
-    D = assemble(0.86e6*inner(w, grad(v))*dx)
+    D = assemble(inner(w, grad(v))*dx)
     m = Function(W)
-    m.vector()[:] = 1/math.sqrt(2)
+    m.vector()[:] = random.random()
     b = D*m.vector()
     x = Vector()
     start = time()
