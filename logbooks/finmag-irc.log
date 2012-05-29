@@ -1234,3 +1234,21 @@ fangohr: Still testing ...
 2012-05-28 14:41:21 MaximS: I have to go now but I'd like to question you something about the demag field. I want to perform a test for my code ...
 2012-05-28 14:41:24 MaximS: see you
 2012-05-28 14:42:10 andersej: It's going well, you can ask what you want any time.
+2012-05-29 12:25:19 fangohr_laptop: Morning, Anders, DokosBot.
+2012-05-29 12:25:25 fangohr_laptop: Sorry, this should read Good afternoon.
+2012-05-29 12:25:31 andersej: Hello, Hans!
+2012-05-29 12:26:40 fangohr_laptop: Anything exciting happening?
+2012-05-29 12:31:22 andersej: No, not really. Just testing some things that might increase the speed of the gpu solver, but I really don't think it will give much speedup. I also got an idea on the Fenics on Iridis-project, so I'm testing that as well now. Are you in Hamburg as we speak?
+2012-05-29 12:36:11 fangohr_laptop: I am at the moment in Heathrow, waiting for boarding. (Marking some student work but thought it might be more fun to see what you are up to ;))
+2012-05-29 12:36:26 fangohr_laptop: Yes, okay [regarding GPU stuff].
+2012-05-29 12:36:46 fangohr_laptop: Have dealt with the 'copy()' issue? I suppose that would be good, and then maybe abandon the GPU study.
+2012-05-29 12:40:31 andersej: Hehe, sorry that I'm not up to anything more exciting.. I think I have dealt with the copy issue for the zero vector. That is, I just removed the .copy() and ran all the tests.
+2012-05-29 12:40:46 fangohr_laptop: Do the timings get any better?
+2012-05-29 12:41:12 andersej: No.
+2012-05-29 12:41:28 andersej: I'm trying with different methods and preconditioners now.
+2012-05-29 12:43:29 fangohr_laptop: Just to check: instead of copying, you keep two matrices in memomy, and assign values of the first to the second where previously we have copied the first to the second? That's the way it should be.
+2012-05-29 12:43:58 fangohr_laptop: When you are done with this, and you need another new task, there is a 'smallish' story that you might be able to do in an afternoon which would make Marijan very happy: https://www.pivotaltracker.com/story/show/27283415
+2012-05-29 12:45:49 andersej: The thing is that the vector is supposed to be a zero vector for the laplace equation. But when we apply bc to it, it's no longer zero for the next time step. But the bcs are always applied for the same nodes, so I don't think the copy is needed. I guess it's just as code to show our code to the developer when I get back home, and ask why de don't get more speedup on the phi2 solve. For the phi1 I really don't think we could expect more than ~40%
+2012-05-29 12:45:50 andersej: speedup, those 4x speedup tests were made on specific hardware and code just to advertise for their solver.
+2012-05-29 12:48:52 andersej: Ya, I'll take a look at the DMI story after lunch.
+2012-05-29 12:50:30 fangohr_laptop: Okay, great on all accounts. I better find my gate. Over and out.
