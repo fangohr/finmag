@@ -8,3 +8,4 @@ from anisotropy import UniaxialAnisotropy
 from demag import Demag
 from zeeman import Zeeman
 from time_zeeman import TimeZeeman
+from dmi import DMI

@@ -9,7 +9,7 @@ tf = df.TestFunction(Vs)
 
 
 
-from finmag.sim.dmi import dmi_term3d, dmi_term2d, dmi_term3d_dolfin
+from finmag.energies.dmi import dmi_term3d, dmi_term2d, dmi_term3d_dolfin
 
 def compare_dmi_term3d_with_dolfin(Mexp):
     """Expects string to feed into df.Expression for M"""
