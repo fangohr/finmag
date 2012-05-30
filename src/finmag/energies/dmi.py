@@ -83,7 +83,6 @@ def dmi_term3d(M,v,c,debug=False):
     E = c *( M[0]*curlx+M[1]*curly+M[2]*curlz) * df.dx
     nodal_E = df.dot(c *( M[0]*curlx+M[1]*curly+M[2]*curlz), v) * df.dx
 
-    logger.debug("dmi_term3d: leaving")
     return E, nodal_E
 
 
@@ -163,7 +162,6 @@ def dmi_term2d(M,v,c,debug=False):
     E = c *( M[0]*curlx+M[1]*curly+M[2]*curlz) * df.dx
     nodal_E = df.dot(c *( M[0]*curlx+M[1]*curly+M[2]*curlz), v) * df.dx
 
-    #logger.debug("dmi_term2d: leaving")
     return E, nodal_E
 
 
@@ -264,7 +262,6 @@ class DMI(EnergyBase):
         #mesh_shape = S3.mesh().coordinates().shape
         #meshdim = mesh_shape[1]
         meshdim = S3.mesh().topology().dim()
-        logger.debug("Mesh dimension is " + str(meshdim))
         if meshdim == 1: #2d mesh
             NotImplementedError("Not implemented for 1d mesh yet -- should be easy though")
         elif meshdim == 2: #2d mesh
