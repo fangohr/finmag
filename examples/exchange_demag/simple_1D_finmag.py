@@ -1,3 +1,4 @@
+import io
 from dolfin import Interval
 from finmag.sim.llg import LLG
 import numpy as np

@@ -227,12 +227,11 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
     """
     def __init__(self,mesh,m, parameters=None, degree=1, element="CG",
                  project_method='magpar', unit_length=1,Ms = 1.0,bench = False):
-
         timings.start("FKSolver init")
         sb.FemBemDeMagSolver.__init__(self,mesh,m, parameters, degree, element=element,
                                       project_method = project_method,
                                       unit_length = unit_length,Ms = Ms,bench = bench)
-
+        self.__name__ = "FK Demag Solver"
         #Linear Solver parameters
         if parameters:
             method = parameters["poisson_solver"]["method"]
@@ -272,7 +271,9 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         if self.bench:
             bench.solve(self.poisson_matrix,self.phi1.vector(),g1, benchmark = True)
         else:
+            timings.startnext("1st linear solve")
             self.poisson_solver.solve(self.phi1.vector(), g1)
+            timings.stop("1st linear solve")
         # Restrict phi1 to the boundary
         timings.startnext("Restrict phi1 to boundary")
         Phi1 = self.phi1.vector()[self.b2g_map]
