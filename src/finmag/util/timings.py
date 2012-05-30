@@ -24,7 +24,6 @@ class Timings(object):
         assert name in self.data.keys(),"name '%s' not known. Known values: %s" % self.data.keys()
         assert self.data[name][2] != 'finished',"No measurement started for name '%s'" % name
         timetaken = time.time()-self.data[name][2]
-        #print 'time taken for name "%s"=%g s' % (name,timetaken)
         self.data[name][0] += 1
         self.data[name][1] += timetaken
         self.data[name][2] = 'finished'
@@ -48,12 +47,12 @@ class Timings(object):
     def gettime(self,name):
         return self.data[name][1]
 
-    def report_str(self,n=10):
-        """Lists the n items that took the longest time to execute."""
+    def report_str(self, nb_items=10):
+        """Lists the nb_items items that took the longest time to execute."""
         msg = "Timings summary, longest items first:\n"
         #print in descending order of time taken
         sorted_keys = sorted(self.data.keys(),key=lambda x:self.data[x][1],reverse=True)
-        for name in sorted_keys:
+        for i, name in enumerate(sorted_keys):
             if self.data[name][0]>0:
                 msg += "%25s:%6d calls took %10.4fs (%8.6fs per call)\n" % (name[0:25],
                                                                            self.getncalls(name),
@@ -63,6 +62,9 @@ class Timings(object):
                                                                            )
             else:
                 msg = "Timings %s: none completed\n" % name
+            
+            if i >= nb_items - 1:
+                break
         recorded_sum= self.recorded_sum()
         walltime = time.time()-self.creationtime
         msg+="Wall time: %.4gs (sum of time recorded: %gs=%5.1f%%)\n" % \
