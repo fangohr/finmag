@@ -67,7 +67,7 @@ class UniaxialAnisotropy(object):
     """
 
     def __init__(self, K, a, method="box-matrix-petsc"):
-        logger.info("Creating Anisotropy with method {}.".format(method))
+        logger.debug("Creating Anisotropy with method {}.".format(method))
         self.in_jacobian = True
 
         # if K and a are dolfin-functions, then accept them as they are. We need this for 

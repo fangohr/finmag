@@ -1,5 +1,5 @@
 import logging
-from finmag.util import configuration
+from finmag.util import configuration, ansistrm
 import dolfin as df
 
 _DOLFIN_LOG_LEVELS = {
@@ -33,7 +33,7 @@ def parse_logging_level(s, values=logging._levelNames):
         return values[s]
 
 # create console handler; the logging level is read from the config file
-ch = logging.StreamHandler()
+ch = ansistrm.ColorizingStreamHandler()
 
 # Read the logging settings from the configuration file
 console_level = parse_logging_level(configuration.get_config_option("logging", "console_logging_level", logging.DEBUG))

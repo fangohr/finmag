@@ -236,7 +236,7 @@ class DMI(EnergyBase):
 
     def __init__(self, D, method="box-matrix-petsc"):
         timings.start("DMI-init")
-        logger.info("DMI(): method = %s" % method)
+        logger.debug("DMI(): method = %s" % method)
 
         self.D = D
         self.method = method

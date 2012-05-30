@@ -16,7 +16,7 @@ class Simulation(object):
 
         log.info("Creating Sim object (rank={}/{}) [{}].".format(
             df.MPI.process_number(), df.MPI.num_processes(), time.asctime()))
-        log.debug(mesh)
+        log.info(mesh)
 
         self.mesh = mesh
         self.Ms = Ms
@@ -56,11 +56,13 @@ class Simulation(object):
         return energy
 
     def run_until(self, t):
+        log.info("Will integrate until {}.".format(t))
         if not hasattr(self, "integrator"):
             self.integrator = LLGIntegrator(self.llg, self.llg.m)
         self.integrator.run_until(t)
 
     def relax(self,stopping_dmdt=ONE_DEGREE_PER_NS):
+        log.info("Will integrate until relaxation.")
         if not hasattr(self, "integrator"):
             self.integrator = LLGIntegrator(self.llg, self.llg.m)
         self.integrator.run_until_relaxation(stopping_dmdt=stopping_dmdt)

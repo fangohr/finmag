@@ -16,7 +16,7 @@ log = logging.getLogger(name="finmag")
 ONE_DEGREE_PER_NS = 17453292.5 # in rad/s
 
 def LLGIntegrator(llg, m0, backend="sundials", **kwargs):
-    log.info("Creating LLGIntegrator with backend {}.".format(backend))
+    log.debug("Creating LLGIntegrator with backend {}.".format(backend))
     if backend=="scipy":
         return ScipyIntegrator(llg, m0, **kwargs)
     elif backend=="sundials":
