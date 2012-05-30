@@ -44,15 +44,16 @@ class Demag(EnergyBase):
         self.bench = bench
 
     def setup(self, S3, m, Ms, unit_length):
-        """S3
-                dolfin VectorFunctionSpace
-            m
-                the Dolfin object representing the (unit) magnetisation
-            Ms
-                the saturation magnetisation
+        """
+        S3
+            dolfin VectorFunctionSpace
+        m
+            the Dolfin object representing the (unit) magnetisation
+        Ms
+            the saturation magnetisation
 
-            unit_length
-                The scale of the mesh, default is 1.
+        unit_length
+            The scale of the mesh, default is 1.
 
         """
 
@@ -68,8 +69,6 @@ class Demag(EnergyBase):
                   "element":"CG",
                   "project_method":'magpar',
                   "bench": self.bench}
-                  
-                
 
 ##
 ##       # timings.startnext("create-demag-problem")
