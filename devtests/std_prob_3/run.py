@@ -1,11 +1,13 @@
-import os
+import logging
 import numpy as np
 import dolfin as df
-
+from scipy.optimize import bisect
 from finmag import Simulation
 from finmag.energies import UniaxialAnisotropy, Exchange, Demag
 
-MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
+log = logging.getLogger(name="finmag")
+log.setLevel(logging.INFO)
+
 """
 Micromag Standard Problem #3
 
@@ -41,29 +43,28 @@ def vortex_init(rs):
     m_phi = np.sin(2 * np.arctan(rho/b))
     return np.array([np.sqrt(1.0 - m_phi**2), m_phi*np.cos(phi), -m_phi*np.sin(phi)])
 
-energies_per_state = []
-for m_init in [flower_init, vortex_init]:
-    energies_per_lfactor = [] 
-    for lfactor in [8, 9]:
-        L = lfactor * lexch # cube length in m
-        divisions = lfactor * 2
-        mesh = df.Box(0, 0, 0, L, L, L, divisions, divisions, divisions)
+def run_simulation(lfactor, m_init):
+    L = lfactor * lexch
+    divisions = int(round(lfactor * 1.5)) # that magic number influences L
+    mesh = df.Box(0, 0, 0, L, L, L, divisions, divisions, divisions)
 
-        sim = Simulation(mesh, Ms)
-        sim.set_m(m_init)
+    sim = Simulation(mesh, Ms)
+    sim.set_m(m_init)
+    sim.add(Exchange(A))
+    sim.add(UniaxialAnisotropy(K1, [0, 0, 1]))
+    sim.add(Demag())
+    sim.relax()
 
-        sim.add(UniaxialAnisotropy(K1, [0, 0, 1]))
-        sim.set_m(m_init)
-        sim.add(Demag())
-        sim.add(Exchange(A))
+    total_energy_density = sim.total_energy() / sim.Volume
+    relative_total_energy_density = total_energy_density / Km
+    return relative_total_energy_density
 
-        sim.relax()
+def energy_difference(lfactor):
+    print "Running the two simulations for lfactor={}.".format(lfactor)
+    e_vortex = run_simulation(lfactor, vortex_init)
+    e_flower = run_simulation(lfactor, flower_init)
+    diff = e_vortex - e_flower
+    return diff
 
-        total_energy_density = sim.total_energy()/sim.Volume
-        relative_total_energy_density = total_energy_density/Km
-        energies_per_lfactor.append(relative_total_energy_density)
-        print "relative E_tot density {} for L={}*lexch.".format(
-                relative_total_energy_density, lfactor)
-    energies_per_state.append(energies_per_lfactor)
-
-np.savetxt(MODULE_DIR + "rel_e_densities.txt", energies_per_state)
+single_domain_limit = bisect(energy_difference, 8, 8.5, xtol=0.1)
+print "L = " + single_domain_limit + "."
