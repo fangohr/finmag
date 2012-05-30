@@ -21,7 +21,7 @@ class Demag(EnergyBase):
     """
     def __init__(self, solver="FK", degree=1, element="CG", project_method="magpar",bench = False):
         self.in_jacobian = False
-        log.info("Creating Demag object with " + solver + " solver.")
+        log.debug("Creating Demag object with " + solver + " solver.")
 
         if solver in ["FK", "GCR", "weiwei"]:
             self.solver = solver

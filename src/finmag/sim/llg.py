@@ -12,7 +12,7 @@ logger = logging.getLogger(name='finmag')
 
 class LLG(object):
     def __init__(self, S1, S3, do_precession=True):
-        logger.info("Creating LLG2 object.")
+        logger.debug("Creating LLG object.")
         timings.start('LLG-init')
         self.S1 = S1
         self.S3 = S3
