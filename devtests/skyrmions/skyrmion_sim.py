@@ -18,5 +18,6 @@ t = np.linspace(0, 1e-9, 1000)
 for i in t:
     sim.run_until(i)
     p = df.plot(sim.llg._m)
+    p.write_png("m_{}".format(i))
     series.store(sim.llg._m.vector(), i)
 df.interactive()
