@@ -179,7 +179,8 @@ examples-for-doc: ../examples/macrospin/alpha-1-00.png ../examples/macrospin/alp
 	../src/finmag/tests/comparison/exchange/table.rst ../src/finmag/tests/comparison/anisotropy/table.rst \
 	../src/finmag/tests/comparison/demag/table.rst ../examples/exchange_demag/simple1D.png \
 	../examples/exchange_demag/finmag_exch_density.npy ../examples/exchange_demag/finmag_demag_density.npy \
-	../examples/spatially-varying-anisotropy/profile.png
+	../examples/spatially-varying-anisotropy/profile.png \
+	../examples/exchange_demag/timings/results.rst
 
 
 ../examples/macrospin/alpha-1-00.png: ../examples/macrospin/test_macrospin.py
