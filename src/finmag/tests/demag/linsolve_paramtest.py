@@ -1,5 +1,3 @@
-##This file is deprecated###
-
 """
 This script contains timings for the FEM parts of the FEMBEM demag solvers.
 Different linear algebra solution methods are tested along with preconditioners.
@@ -14,19 +12,16 @@ __organisation__ = "University of Southampton"
 
 import numpy
 import dolfin as df
-import finmag.demag.problems.prob_base as pb
 from finmag.util.timings import timings
-from finmag.demag.solver_gcr import FemBemGCRSolver
-from finmag.demag.solver_fk import FemBemFKSolver
-from finmag.demag.solver_base import FemBemDeMagSolver
-from finmag.util.timings import timings
+from finmag.energies.demag.solver_gcr import FemBemGCRSolver
+from finmag.energies.demag.solver_fk import FemBemFKSolver
 from copy import deepcopy
 
 #Generate all possible solver parameters
 def solver_parameters(solver_exclude, preconditioner_exclude):
     linear_solver_set = ["lu"] 
-    linear_solver_set += [e[0] for e in dolfin.krylov_solver_methods()]
-    preconditioner_set = [e[0] for e in dolfin.krylov_solver_preconditioners()]
+    linear_solver_set += [e[0] for e in df.krylov_solver_methods()]
+    preconditioner_set = [e[0] for e in df.krylov_solver_preconditioners()]
 
 ###################################################################
 #To the user:
@@ -165,14 +160,14 @@ if __name__ == "__main__":
 
     #As a default plot a sequence of solver values for FK with different meshes
     
-    import finmag.demag.problems.prob_fembem_testcases as pft
+    import finmag.tests.demag.problems.prob_fembem_testcases as pft
     import matplotlib.pyplot as plt
 
     #Create a range of mesh sizes
     sizelist = [4,3]
     #Important use floats here so the entry order stays consistent 
     sizelist = [0.7,0.6,0.5]
-    problems = [pft.MagSphere(10,hmax = i) for i in sizelist]
+    problems = [pft.MagSphereBase(radius=10, maxh=i) for i in sizelist]
 
     #Run the tests
     testers = [LinAlgDemagTester(fembemsolvertype,default_params,p.mesh,p.m) for p in problems]
