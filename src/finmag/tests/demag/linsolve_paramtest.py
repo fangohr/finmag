@@ -13,12 +13,14 @@ __project__ = "Finmag"
 __organisation__ = "University of Southampton"
 
 import numpy
-from dolfin import *
-from finmag.util.timings import Timings
+import dolfin as df
+import finmag.demag.problems.prob_base as pb
+from finmag.util.timings import timings
 from finmag.demag.solver_gcr import FemBemGCRSolver
 from finmag.demag.solver_fk import FemBemFKSolver
 from finmag.demag.solver_base import FemBemDeMagSolver
-
+from finmag.util.timings import timings
+from copy import deepcopy
 
 #Generate all possible solver parameters
 def solver_parameters(solver_exclude, preconditioner_exclude):
@@ -26,29 +28,65 @@ def solver_parameters(solver_exclude, preconditioner_exclude):
     linear_solver_set += [e[0] for e in dolfin.krylov_solver_methods()]
     preconditioner_set = [e[0] for e in dolfin.krylov_solver_preconditioners()]
 
+###################################################################
+#To the user:
+###################################################################
+
+#This command prints out possible linalg solver parameters
+##df.info(df.LinearVariationalSolver.default_parameters(), 1)
+
 class LinAlgDemagTester(object):
     """
     A class to test the speed of linalg solvers and preconditioners
     used in demag calculation. 
     """
-    def __init__(self,mesh,M,solver,testparams):
+    def __init__(self,solver,testparams,mesh,m, degree=1, element="CG",
+                 project_method='magpar', unit_length=1,Ms = 1.0):
         """
-        M          - Magnetisation field
-        solver     - "GCR" or "FK"
-        testparams - A list of dictionaries containing parameters for the linear solve.
-                     Can also give a tuple of two dictionaries if different parameters are
-                     wished for the two linear solves.
-                     
+        
+        *Arguments*
+            solver
+                Demag solver type, "GCR" or "FK".
+
+            testparams
+                A list of dictionaries containing parameters for the linear solve.
+                         Can also give a tuple of two dictionaries if different parameters are
+                         wished for the two linear solves.
+            mesh
+                dolfin Mesh object
+            m
+                the Dolfin object representing the (unit) magnetisation
+            Ms
+                the saturation magnetisation 
+            parameters
+                dolfin.Parameters of method and preconditioner to linear solvers.
+            degree
+                polynomial degree of the function space
+            element
+                finite element type, default is "CG" or Lagrange polynomial.
+            unit_length
+                the scale of the mesh, defaults to 1.
+            project_method
+                possible methods are
+                    * 'magpar'
+                    * 'project'
+            bench
+                set to True to run a benchmark of linear solvers
         Note: Running groups of testparams instead of individual params saves on BEM assembly.
 
         """
         self.testparams = testparams
-        self.mesh = mesh
-        self.M = M
+        print mesh
         if solver == "FK":
-            self.solver = FemBemFKSolverLinalgTime(mesh=mesh, M=M)
+            self.solver = FemBemFKSolver(mesh,m, degree = degree,
+                                         element=element,
+                                         project_method = project_method,
+                                         unit_length = unit_length,Ms = Ms)
         elif solver == "GCR":
-            self.solver = FemBemGCRSolverLinalgTime(mesh=mesh, M=M)
+            self.solver = FemBemGCRSolver(mesh,m, degree = degree,
+                                          element=element,
+                                          project_method = project_method,
+                                          unit_length = unit_length,Ms = Ms)
         else:
             raise Exception("Only 'FK, and 'GCR' solver values possible")
                     
@@ -64,83 +102,41 @@ class LinAlgDemagTester(object):
                 t1,t2 = test[0],test[1]
             except KeyError:
                 t1,t2 = test,test
-            timer = Timings()
-            self.solver.setparam(t1,t2,timer)
+
+            #Set the linear solver parameters
+            if self.solver.__name__ == "GCR Demag Solver":
+                matrix = self.solver.poisson_matrix_dirichlet
+            else:
+                matrix = self.solver.poisson_matrix
+            self.solver.poisson_solver = df.KrylovSolver(matrix,
+                                                         t1["linear_solver"],
+                                                         t1["preconditioner"])
+            self.solver.laplace_solver = df.KrylovSolver(self.solver.poisson_matrix,
+                                                         t2["linear_solver"],
+                                                         t2["preconditioner"]) 
+            #Get the timings
             self.solver.solve()
-            self.solver.report()
-            self.timelist.append(timer)
+            self.report(t1,t2)
+                          
+            #Copy the timer and reset the old one.
+            self.timelist.append(deepcopy(timings))
+            timings.reset()
+                          
         #After the testing is finished delete the BEM to free up memory.
         del self.solver.bem
 
-class LinAlgTimer(DemagSolver):
-    """Class containing shared methods for the GCR and FK linalg timing classes"""
-
-    def linsolve_laplace_inside(self,function,laplace_A,solverparams = None):
-        """
-        Linear solve for laplace_inside written for the
-        convenience of changing solver parameters in subclasses
-        """
-        self.timer.start("2nd linear solve")    
-        function = FemBemDeMagSolver.linsolve_laplace_inside(self,function,laplace_A,solverparams)
-        self.timer.stop("2nd linear solve")
-        return function
-
-    def setparam(self,p1,p2,timer):
-        self.phi1solverparams = p1
-        self.phi2solverparams = p2
-        self.timer = timer
-    
-    def report(self,n = 10):
-        print "".join(["Linear solve timings of the ",self.name])
-        print "mesh size in verticies = ",self.mesh.num_vertices()
+    def report(self,t1,t2,n = 10):
+        print "".join(["Linear solve timings of the ",self.solver.__name__])
+        print "mesh size in verticies = ",self.solver.mesh.num_vertices()
         print "First solve parameters"
-        print self.phi1solverparams
+        print t1
         print "Second solve parameters"
-        print self.phi2solverparams
-        print "\n",self.timer.report_str(n)
-
-class FemBemGCRSolverLinalgTime(FemBemGCRSolver,LinAlgTimer):
-    """GCR solver with timings for linear solve"""
-    
-    def __init__(self,problem):
-        FemBemGCRSolver.__init__(self,problem)
-        #Switch off the BEM countdown
-        self.countdown = False
-        self.name = "GCR Solver"
-
-    def linsolve_phia(self,A,F):
-        """Linear solve for phia"""
-        self.timer.start("1st linear solve")
-        FemBemGCRSolver.linsolve_phia(self,A,F)
-        self.timer.stop("1st linear solve")
-    
-class FemBemFKSolverLinalgTime(FemBemFKSolver,LinAlgTimer):
-    """FK solver with timings for linear solve"""
-    
-    def __init__(self,problem,timer):
-        FemBemFKSolver.__init__(self,problem)
-        #Switch off the BEM countdown
-        self.countdown = False
-        self.name = "FK Solver"
-        
-    def linsolve_phi1(self,a,f):
-        # Solve for the DOFs in phi1
-        """Linear solve for phia"""
-        self.timer.start("1st linear solve")
-        FemBemGCRSolver.linsolve_phi1(self,a,f)
-        self.timer.stop("1st linear solve")
-
-
-###################################################################
-#To the user:
-###################################################################
-
-#This command prints out possible linalg solver parameters
-##df.info(df.LinearVariationalSolver.default_parameters(), 1)
+        print t2
+        print "\n",timings.report_str(n)
 
 if __name__ == "__main__":
     #Solver type for use in the script, "FK" or "GCR".
-    fembemsolvertype = "GCR"
+    fembemsolvertype = "FK"
 
     ##Default linear solver parameters to test.
     ## Each entry can either be a single dictionary or a tuple/list of dictionaries.
@@ -167,7 +163,7 @@ if __name__ == "__main__":
     #print default_params
 
 
-    #As a default plot a sequence of solver values for GCR with different meshes
+    #As a default plot a sequence of solver values for FK with different meshes
     
     import finmag.demag.problems.prob_fembem_testcases as pft
     import matplotlib.pyplot as plt
@@ -175,11 +171,11 @@ if __name__ == "__main__":
     #Create a range of mesh sizes
     sizelist = [4,3]
     #Important use floats here so the entry order stays consistent 
-    sizelist = [4.0,2.0,1.5,1.2,1.0]
+    sizelist = [0.7,0.6,0.5]
     problems = [pft.MagSphere(10,hmax = i) for i in sizelist]
 
     #Run the tests
-    testers = [LinAlgDemagTester(p.mesh,p.M,fembemsolvertype,default_params) for p in problems]
+    testers = [LinAlgDemagTester(fembemsolvertype,default_params,p.mesh,p.m) for p in problems]
     for t in testers:
         t.test()
         

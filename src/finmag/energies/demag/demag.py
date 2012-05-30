@@ -1,3 +1,4 @@
+import numpy as np
 import dolfin as df
 import logging
 from finmag.util.timings import timings
@@ -18,7 +19,7 @@ class Demag(EnergyBase):
             demag solver method: "FK", "GCR" or "weiwei"
 
     """
-    def __init__(self, solver="FK", degree=1, element="CG", project_method="magpar"):
+    def __init__(self, solver="FK", degree=1, element="CG", project_method="magpar",bench = False):
         self.in_jacobian = False
         log.info("Creating Demag object with " + solver + " solver.")
 
@@ -40,6 +41,7 @@ class Demag(EnergyBase):
         self.degree = degree
         self.element = element
         self.method = project_method
+        self.bench = bench
 
     def setup(self, S3, m, Ms, unit_length):
         """S3
@@ -64,10 +66,19 @@ class Demag(EnergyBase):
                   "parameters":None,
                   "degree":1,
                   "element":"CG",
-                  "project_method":'magpar'}
+                  "project_method":'magpar',
+                  "bench": self.bench}
+                  
+                
+
+##
+##       # timings.startnext("create-demag-problem")
+##        problem = FemBemDeMagProblem(S3.mesh(), m, Ms)
 
         if self.solver == "FK":
             self.demag = FemBemFKSolver(**kwargs)
+        elif self.solver == "FK_magpar":
+            self.demag = MagparFKSolver(**kwargs)
         elif self.solver == "GCR":
             self.demag = FemBemGCRSolver(**kwargs)
         elif self.solver == "weiwei":

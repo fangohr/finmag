@@ -62,12 +62,22 @@ The Fredkin-Koehler method ("FK") is the default algorithm. If we instead want t
     sim = Simulation(mesh)
     sim.add(Demag("GCR"))
 
-For both methods, we have two linear solvers. One for the poisson problem and one for the laplace problem, and we use Krylov solvers to solve bofh of them. There are a great amount of different methods and preconditioners available, dependent on installation. To list all of them, use
+For both methods, we have two linear solvers. One for the poisson problem and one for the laplace problem, and we use Krylov solvers to solve both of them. There are a great amount of different methods and preconditioners available, dependent on installation. To list all of them, use
 
 .. code-block:: python
 
     >>> list_krylov_solver_methods()
     >>> list_krylov_solver_preconditioners()
+
+In order to run a benchmark test of all possible krylov methods and solvers 
+it is enough to create a Demag object with the kwarg "bench" = True.
+
+.. code-block:: python
+
+    >>> demag = Demag(bench = True)
+    >>> demag.setup(V, m, Ms, unit_length)
+    >>> demag.compute_field()
+
 
 We use "default" as default method and preconditioner. This can be changed after the demag object is created.
 
