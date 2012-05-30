@@ -41,7 +41,6 @@ class FemBemDeMagSolver(object):
 
     def __init__(self, mesh,m, parameters=None, degree=1, element="CG", project_method='magpar',
                  unit_length=1,Ms = 1.0,bench = False):
-
         #Problem objects and parameters
         self.mesh = mesh
         self.unit_length = unit_length
@@ -210,7 +209,9 @@ class FemBemDeMagSolver(object):
         if self.bench:
             bench.solve(A,function.vector(),b,benchmark = True)
         else:
+            timings.startnext("2nd linear solve")
             self.laplace_solver.solve(A, function.vector(), b)
+            timings.stop("2nd linear solve")
         return function
 
     def __compute_field_project(self):

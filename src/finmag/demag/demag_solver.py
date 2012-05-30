@@ -1,22 +1,19 @@
 import dolfin as df
-from finmag.demag.problems.prob_base import FemBemDeMagProblem as FBProblem
 from finmag.demag.solver_fk import FemBemFKSolver
 from finmag.demag.solver_gcr import FemBemGCRSolver
 from finmag.util.timings import timings
 
 class Demag(object):
-    def __init__(self, V, m, Ms, method="FK"):
+    def __init__(self, V, m, Ms, method="FK",bench = False):
         timings.start("Demag-init")
         self.V = V
         mesh = V.mesh()
         self.Ms = Ms
-        timings.startnext("Demag-init-PBProblem")
-        self.problem = FBProblem(mesh, m,Ms)
         timings.startnext("Demag-init-FemBemConstructorCall")
         if method == "FK":
-            self.solver = FemBemFKSolver(**self.problem.kwargs())
+            self.solver = FemBemFKSolver(mesh,m, Ms = Ms, bench = bench)
         elif method == "GCR":
-            self.solver = FemBemGCRSolver(**self.problem.kwargs())
+            self.solver = FemBemGCRSolver(mesh,m, Ms = Ms,bench = bench)
         else:
             raise NotImplementedError("""Only methods currently implemented are
                                     * 'FK'

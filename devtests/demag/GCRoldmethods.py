@@ -60,18 +60,6 @@ class ProxyGCR():
             of function space V"""
         dummyBC = df.DirichletBC(V,0,"on_boundary")
         return dummyBC.get_boundary_values()
-
-    def get_dof_normal_dict_avg(self,normtionary):
-        """
-        Provides a dictionary with all of the boundary DOF's as keys
-        and an average of facet normal components associated to the DOF as values
-        V = FunctionSpace
-        """
-        #Take an average of the normals in normtionary
-        avgnormtionary = {k:np.array([ float(sum(i))/float(len(i)) for i in zip(*normtionary[k])]) for k in normtionary}
-        #Renormalize the normals
-        avgnormtionary = {k: avgnormtionary[k]/df.sqrt(np.dot(avgnormtionary[k],avgnormtionary[k].conj())) for k in avgnormtionary}
-        return avgnormtionary
     
     def build_boundary_data(self):
         """
