@@ -1,4 +1,4 @@
-import os, sys, commands, logging
+import os, sys, textwrap, commands, logging
 
 logger = logging.getLogger(name='finmag')
 
@@ -127,3 +127,40 @@ def compress(filename):
         print "gzip failed with exit code", status
         sys.exit(4)
     return filename + ".gz"
+
+def spherical_mesh(radius, maxh, directory=""):
+    """
+    Returns a dolfin compatible meshfile describing
+    a sphere with radius radius and maximal mesh size maxh.
+
+    This function is not well behaved by default - it will place
+    the meshfile in whatever the current working directory is. Pass
+    a directory along to control where the files end up.
+
+    """
+    filename = "sphere-{:.1f}-{:.1f}".format(radius, maxh).replace(".", "_")
+
+    meshfile = os.path.join(directory, filename + ".xml.gz")
+    if os.path.isfile(meshfile):
+        return meshfile
+
+    geofile = os.path.join(directory, filename + ".geo")
+    with open(geofile, "w") as f:
+        f.write(csg_for_sphere(radius, maxh))
+    meshfile = convert_mesh(geofile)
+    os.remove(geofile)
+
+    return meshfile
+
+def csg_for_sphere(radius, maxh):
+    """
+    For a sphere with the maximal mesh size maxh (compare netgen manual 4.X page 10)
+    and the radius radius, this function will return a string describing the
+    sphere in the constructive solid geometry format.
+
+    """
+    csg = textwrap.dedent("""\
+        algebraic3d
+        solid main = sphere ( 0, 0, 0; {radius} ) -maxh = {maxh};
+        tlo main;""").format(radius=radius, maxh=maxh)
+    return csg
