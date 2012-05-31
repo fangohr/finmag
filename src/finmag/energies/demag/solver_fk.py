@@ -198,9 +198,11 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         m
             the Dolfin object representing the (unit) magnetisation
         Ms
-            the saturation magnetisation 
+            the saturation magnetisation      
         parameters
-            dolfin.Parameters of method and preconditioner to linear solvers.
+            dolfin.Parameters of method and preconditioner to linear solvers
+            If not specified the defualt parameters contained in solver_base.py
+            are used.
         degree
             polynomial degree of the function space
         element
@@ -224,20 +226,18 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         See the exchange_demag example.
 
     """
-    def __init__(self,mesh,m, parameters=None, degree=1, element="CG",
+    def __init__(self,mesh,m, parameters=sb.default_parameters , degree=1, element="CG",
                  project_method='magpar', unit_length=1,Ms = 1.0,bench = False):
         timings.start("FKSolver init")
         sb.FemBemDeMagSolver.__init__(self,mesh,m, parameters, degree, element=element,
                                       project_method = project_method,
                                       unit_length = unit_length,Ms = Ms,bench = bench)
         self.__name__ = "FK Demag Solver"
+        
         #Linear Solver parameters
-        if parameters:
-            method = parameters["poisson_solver"]["method"]
-            pc = parameters["poisson_solver"]["preconditioner"]
-        else:
-            method, pc = "default", "default"
-
+        method = parameters["poisson_solver"]["method"]
+        pc = parameters["poisson_solver"]["preconditioner"]
+        
         self.poisson_solver = df.KrylovSolver(self.poisson_matrix, method, pc)
 
         self.phi1 = df.Function(self.V)

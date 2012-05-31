@@ -122,15 +122,15 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
                 * 'magpar'
                 * 'project'
         bench
-            set to True to run a benchmark of linear solvers
+            set to True to run a benchmark of linear solvers.
     """
 
-    def __init__(self, mesh,m, parameters=None, degree=1, element="CG",
+    def __init__(self, mesh,m, parameters=sb.default_parameters, degree=1, element="CG",
                  project_method='magpar', unit_length=1, Ms = 1.0,bench = False):
         
         #Initialize the base class
         #New interface have mesh,m,Ms
-        sb.FemBemDeMagSolver.__init__(self,mesh,m,degree = degree, element=element,
+        sb.FemBemDeMagSolver.__init__(self,mesh,m,parameters = parameters,degree = degree, element=element,
                                              project_method = project_method,
                                              unit_length = unit_length,Ms = Ms,bench = bench)
         self.__name__ = "GCR Demag Solver"

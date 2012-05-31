@@ -61,7 +61,7 @@ nmag curve closer, and out relative error is approx. 0.006.
     :scale: 75
     :align: center
 
-Time comparisson between the nmag and finmag implementations shows the following:
+Time comparison between the nmag and finmag implementations shows the following:
 
 .. include:: ../examples/exchange_demag/timings/results.rst
     :literal:
