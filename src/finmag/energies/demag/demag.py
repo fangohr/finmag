@@ -6,6 +6,7 @@ from finmag.energies.energy_base import EnergyBase
 from solver_fk import FemBemFKSolver
 from solver_gcr import FemBemGCRSolver
 from solver_fk_test import SimpleFKSolver
+from solver_base import default_parameters
 
 log = logging.getLogger("finmag")
 
@@ -19,7 +20,8 @@ class Demag(EnergyBase):
             demag solver method: "FK", "GCR" or "weiwei"
 
     """
-    def __init__(self, solver="FK", degree=1, element="CG", project_method="magpar",bench = False):
+    def __init__(self, solver="FK", degree=1, element="CG", project_method="magpar",bench = False,
+                 parameters = default_parameters):
         self.in_jacobian = False
         log.debug("Creating Demag object with " + solver + " solver.")
 
@@ -32,6 +34,7 @@ class Demag(EnergyBase):
         self.element = element
         self.method = project_method
         self.bench = bench
+        self.parameters = parameters
 
     def setup(self, S3, m, Ms, unit_length):
         """
@@ -51,6 +54,7 @@ class Demag(EnergyBase):
                   "m":m,
                   "Ms":Ms,
                   "unit_length":unit_length,
+                  "parameters":self.parameters,
                   "degree":1,
                   "element":"CG",
                   "project_method":'magpar',
