@@ -237,9 +237,7 @@ p.grid()
 p.legend()
 p.savefig(os.path.join(MODULE_DIR, 'xvaluesgcr.png'))
 
-############################################
-#Useful Plot Standard deviation
-############################################
+#Standard deviation plot
 p.figure()
 p.plot(vertices, stddev["FK"], label='Finmag FK standard deviation')
 p.plot(vertices, stddev["GCR"], label='Finmag GCR standard deviation')
@@ -274,8 +272,12 @@ p.grid()
 p.legend()
 p.savefig(os.path.join(MODULE_DIR, 'maxerror.png'))
 
+############################################
+#Useful Plot Standard deviation
+############################################
 p.figure()
-p.loglog(vertices, stddev["FK"], label='Finmag standard deviation')
+p.loglog(vertices, stddev["FK"], label='Finmag FK standard deviation')
+p.loglog(vertices, stddev["GCR"], label='Finmag GCR standard deviation')
 
 if has_nmag:
     p.loglog(vertices, stddev["nmag"], label='Nmag standard deviation')
