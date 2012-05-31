@@ -98,7 +98,9 @@ As the Krylov solvers are created in the constructor, we have the opporunity to 
 
     >>> s = KrylovSolver()
     >>> p = s.parameters
-    >>> p.to_dict()
+    >>> print p.to_dict()["relative_tolerance"]
+	1e-06
+
 
 To set e.g. the relative tolerance for the poisson solver to 1e-10, the syntax reads
 
@@ -193,9 +195,15 @@ Comparing with nmag, the following log-log plot shows the development of the sta
 .. figure:: ../examples/demag/stddev_loglog.png
     :scale: 75
 
-The development of the x-values, which should converge against -1/3, can be seen here:
+The development of the x-values, which should converge against -1/3, can be seen here. As nmag uses
+the FK method for demag computation as well, the results are quite similar to the finmag FK method:
 
 .. figure:: ../examples/demag/xvalues.png
+    :scale: 75
+
+Comparing the GCR with nmag gives the following results
+
+.. figure:: ../examples/demag/xvaluesgcr.png
     :scale: 75
 
 The `errornorm <http://fenicsproject.org/documentation/dolfin/1.0.0/python/programmers-reference/fem/norms/errornorm.html#dolfin.fem.norms.errornorm>`_ is decreasing as the mesh gets finer.
@@ -203,9 +211,21 @@ The `errornorm <http://fenicsproject.org/documentation/dolfin/1.0.0/python/progr
 .. figure:: ../examples/demag/errnorm_loglog.png
     :scale: 75
 
+The solve times are plotted here. They increase as the number of vertices grow.
+
+.. figure:: ../examples/demag/timings.png
+    :scale: 75
+
+The linear solver parameters that were used are
+
+.. include:: ../examples/demag/linsolveparams.rst
+    :literal:
+
 .. note::
 
     * TODO: When the building of the boundary element matrix is faster, we can increase the number of vertices.
+    * GB it seems that nmag is the bottleneck in this case.
+
 
 For an example where we also include the exchange field, please see the exchange-demag example in the next section.
 

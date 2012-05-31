@@ -1,13 +1,11 @@
 import numpy as np
 import dolfin as df
 from finmag.util.convert_mesh import convert_mesh
-#from finmag.demag.solver_gcr import FemBemGCRSolver
-#from finmag.demag.solver_fk_test import SimpleFKSolver
-from finmag.demag.solver_fk import FemBemFKSolver
+from finmag.energies.demag.solver_fk import FemBemFKSolver
+from finmag.energies.demag.solver_gcr import FemBemGCRSolver
 import pylab as p
-import sys, os, commands, subprocess
+import sys, os, commands, subprocess,time
 from finmag.sim.llg import LLG
-
 
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -17,30 +15,45 @@ nmagoutput = os.path.join(MODULE_DIR, 'nmag_data.dat')
 if os.path.isfile(nmagoutput):
     os.remove(nmagoutput)
 
+finmagsolvers = {"FK":FemBemFKSolver,"GCR":FemBemGCRSolver}
+
+#Define data arrays to be with data for later plotting
 vertices = []
-xavg = []
-xmax = []
-xmin = []
-ymax = []
-zmax = []
-stddev = []
-errorH = []
-maxerror = []
-nxmax = []
-nxavg = []
-nstddev = []
-errnorm = []
+xavg = {"FK":[],"GCR":[],"nmag":[]}
+xmax = {"FK":[],"GCR":[],"nmag":[]}
+xmin = {"FK":[],"GCR":[]}
+ymax = {"FK":[],"GCR":[]}
+zmax = {"FK":[],"GCR":[]}
+stddev = {"FK":[],"GCR":[],"nmag":[]}
+errorH = {"FK":[],"GCR":[]}
+maxerror = {"FK":[],"GCR":[]}
+errnorm = {"FK":[],"GCR":[]}
+timings = {"FK":[],"GCR":[],"nmag":[]}
 
+def printsolverparams(mesh,m):    
+    for demagtype in finmagsolvers.keys():
+        
+        #create a solver to read out it's default linear solver data
+        solver = finmagsolvers[demagtype](mesh,m)
+
+        # Write output to linsolveparams.rst
+        output = open(MODULE_DIR + "/linsolveparams.rst", "a")
+        output.write("\nFinmag %s solver parameters:\n"%demagtype)
+        output.write("%s \n"%repr(solver.parameters.to_dict()))
+        output.write("\nFinmag %s solver tolerances:"%demagtype)
+        output.write("\nFirst linear solve :%s" %(solver.poisson_solver.parameters.to_dict()["relative_tolerance"]))
+        output.write("\nSecond linear solve: %s \n \n"% (solver.laplace_solver.parameters.to_dict()["relative_tolerance"]))
+    output.close()
+    
 #for maxh in (2, 1, 0.8, 0.7):
-for maxh in (5, 3, 2, 1.5):
-
+for i,maxh in enumerate((5, 3, 2, 1.5,1.0,0.8)):
     # Create geofile
     geo = """
-algebraic3d
+    algebraic3d
 
-solid main = sphere (0, 0, 0; 10)-maxh=%s ;
+    solid main = sphere (0, 0, 0; 10)-maxh=%s ;
 
-tlo main;""" % str(maxh)
+    tlo main;""" % str(maxh)
     absname = "sphere_maxh_%s" % str(maxh)
     geofilename = os.path.join(MODULE_DIR, absname)
     geofile = geofilename + '.geo'
@@ -50,6 +63,7 @@ tlo main;""" % str(maxh)
 
     # Finmag data
     mesh = df.Mesh(convert_mesh(geofile))
+    
     #mesh.coordinates()[:] = mesh.coordinates()[:]*1e-9 #this makes the results worse!!! HF
     print "Using mesh with %g vertices" % mesh.num_vertices()
     V = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
@@ -76,39 +90,57 @@ tlo main;""" % str(maxh)
     """
 
     m = df.interpolate(df.Constant((1,0,0)), V)
-    solver = FemBemFKSolver(mesh,m)
-    H_demag = df.Function(V)
-    demag = solver.compute_field()
-    H_demag.vector()[:] = demag
-    demag.shape = (3, -1)
-    x, y, z = demag[0], demag[1], demag[2]
 
-    # Find #vertices, x max and x avg
+    #print solver parameters to file on the first run
+    if i == 0:
+        printsolverparams(mesh,m)
+
+    #Get the number of mesh vertices for the x axis in the plots.
     vertices.append(mesh.num_vertices())
-    xavg.append(np.average(x))
-    xmax.append(max(x))
-    xmin.append(min(x))
-    ymax.append(max(abs(y)))
-    zmax.append(max(abs(z)))
 
-    # Find standard deviation
-    func = H_demag.vector().array()
-    N = len(func)
-    exct = np.zeros(N)
-    exct[:len(x)] = -1./3*np.ones(len(x))
-    sdev = np.sqrt(1./N*sum((func - exct)**2))
-    stddev.append(sdev)
+    #Get seperate data for gcr and fk solvers
+    for demagtype in finmagsolvers.keys():
+        #Solve for the demag field and get the time
+        starttime = time.time() 
+        solver = finmagsolvers[demagtype](mesh,m)
+        demag = solver.compute_field()
+        endtime = time.time()
+        timings[demagtype].append(endtime - starttime)        
+        H_demag = df.Function(V)
+        H_demag.vector()[:] = demag
+        demag.shape = (3, -1)
+        x, y, z = demag[0], demag[1], demag[2]
 
-    # Find errornorm
-    exact = df.interpolate(df.Constant((-1./3, 0, 0)), V)
-    sphere_volume=4/3.*np.pi*(10)**3
-    errnorm.append(df.errornorm(H_demag, exact, mesh=mesh)/sphere_volume)
+        # Find x max and x avg
+        xavg[demagtype].append(np.average(x))
+        xmax[demagtype].append(max(x))
+        xmin[demagtype].append(min(x))
+        ymax[demagtype].append(max(abs(y)))
+        zmax[demagtype].append(max(abs(z)))
 
-    #actual error:
-    tmperror = func-exct
-    tmpmaxerror = max(abs(tmperror))
-    errorH.append(tmperror)
-    maxerror.append(tmpmaxerror)
+        # Find standard deviation
+        func = H_demag.vector().array()
+        N = len(func)
+        exct = np.zeros(N)
+        exct[:len(x)] = -1./3*np.ones(len(x))
+        sdev = np.sqrt(1./N*sum((func - exct)**2))
+        stddev[demagtype].append(sdev)
+
+        # Find errornorm
+        exact = df.interpolate(df.Constant((-1./3, 0, 0)), V)
+        sphere_volume=4/3.*np.pi*(10)**3
+        errnorm[demagtype].append(df.errornorm(H_demag, exact, mesh=mesh)/sphere_volume)
+
+        #actual error:
+        tmperror = func-exct
+        tmpmaxerror = max(abs(tmperror))
+        errorH[demagtype].append(tmperror)
+        maxerror[demagtype].append(tmpmaxerror)
+        
+    ####################
+    #Generate Nmag Data
+    ####################
+
 
     """
     # Nmag data
@@ -138,14 +170,24 @@ tlo main;""" % str(maxh)
 
     # Run nmag
     cmd3 = 'nsim run_nmag.py --clean %s.nmesh.h5 nmag_data.dat' % geofilename
+    starttime = time.time()
     status, output = commands.getstatusoutput(cmd3)
+    endtime = time.time()
+    timings["nmag"].append(endtime - starttime)
+    
     if status != 0:
         print output
         print 'Running nsim failed. Aborted.'
         sys.exit(3)
     print "\nDone with nmag."
 
+
+############################################
+#Useful Plot xvalues
+############################################
+
 # Extract nmag data
+print xavg["nmag"]
 if has_nmag:
     f = open('nmag_data.dat', 'r')
     lines = f.readlines()
@@ -153,19 +195,19 @@ if has_nmag:
     for line in lines:
         line = line.split()
         if len(line) == 3:
-            nxavg.append(float(line[0]))
-            nxmax.append(float(line[1]))
-            nstddev.append(float(line[2]))
+            xavg["nmag"].append(float(line[0]))
+            xmax["nmag"].append(float(line[1]))
+            stddev["nmag"].append(float(line[2]))
 
-# Plot
-p.plot(vertices, xavg, 'x--',label='Finmag x-avg')
-p.plot(vertices, xmax, 'o-',label='Finmag x-max')
-p.plot(vertices, xmin, '^:',label='Finmag x-min')
+# Plot 
+p.plot(vertices, xavg["FK"], 'x--',label='Finmag FK x-avg')
+p.plot(vertices, xmax["FK"], 'o-',label='Finmag FK x-max')
+p.plot(vertices, xmin["FK"], '^:',label='Finmag FK x-min')
 
 if has_nmag:
-    p.plot(vertices, nxavg, label='Nmag x-avg')
-    p.plot(vertices, nxmax, label='Nmag x-max')
-    p.title('Nmag - Finmag comparisson')
+    p.plot(vertices, xavg["nmag"], label='Nmag x-avg')
+    p.plot(vertices, xmax["nmag"], label='Nmag x-max')
+    p.title('Nmag - Finmag FK comparison')
 else:
     p.title('Finmag x vs vertices')
 
@@ -174,11 +216,37 @@ p.grid()
 p.legend()
 p.savefig(os.path.join(MODULE_DIR, 'xvalues.png'))
 
+############################################
+#Useful Plot xvalues GCR
+############################################
 p.figure()
-p.plot(vertices, stddev, label='Finmag standard deviation')
+# Plot 
+p.plot(vertices, xavg["GCR"], 'x--',label='Finmag GCR x-avg')
+p.plot(vertices, xmax["GCR"], 'o-',label='Finmag GCR x-max')
+p.plot(vertices, xmin["GCR"], '^:',label='Finmag GCR x-min')
 
 if has_nmag:
-    p.plot(vertices, nstddev, label='Nmag standard deviation')
+    p.plot(vertices, xavg["nmag"], label='Nmag x-avg')
+    p.plot(vertices, xmax["nmag"], label='Nmag x-max')
+    p.title('Nmag - Finmag GCR comparison')
+else:
+    p.title('Finmag x vs vertices')
+
+p.xlabel('vertices')
+p.grid()
+p.legend()
+p.savefig(os.path.join(MODULE_DIR, 'xvaluesgcr.png'))
+
+############################################
+#Useful Plot Standard deviation
+############################################
+p.figure()
+p.plot(vertices, stddev["FK"], label='Finmag FK standard deviation')
+p.plot(vertices, stddev["GCR"], label='Finmag GCR standard deviation')
+
+
+if has_nmag:
+    p.plot(vertices, stddev["nmag"], label='Nmag standard deviation')
 
 p.xlabel('vertices')
 p.title('Standard deviation')
@@ -186,31 +254,31 @@ p.grid()
 p.legend()
 p.savefig(os.path.join(MODULE_DIR, 'stddev.png'))
 
+#Error Norm convergence plot
 p.figure()
-p.plot(vertices, errnorm, label='Finmag errornorm')
+p.plot(vertices, errnorm["FK"], label='Finmag errornorm')
 p.xlabel('vertices')
 p.title('Error norm')
 p.grid()
 p.legend()
 p.savefig(os.path.join(MODULE_DIR, 'errnorm.png'))
 
-
+#Max error plot
 p.figure()
-p.plot(vertices, maxerror, 'o-',label='Finmag maxerror H_demag-x')
-p.plot(vertices, ymax, 'x-',label='Finmag maxerror H_demag-y')
-p.plot(vertices, zmax, '^-',label='Finmag maxerror H_demag-z')
+p.plot(vertices, maxerror["FK"], 'o-',label='Finmag maxerror H_demag-x')
+p.plot(vertices, ymax["FK"], 'x-',label='Finmag maxerror H_demag-y')
+p.plot(vertices, zmax["FK"], '^-',label='Finmag maxerror H_demag-z')
 p.xlabel('vertices')
 p.title('Max Error per component')
 p.grid()
 p.legend()
 p.savefig(os.path.join(MODULE_DIR, 'maxerror.png'))
 
-
 p.figure()
-p.loglog(vertices, stddev, label='Finmag standard deviation')
+p.loglog(vertices, stddev["FK"], label='Finmag standard deviation')
 
 if has_nmag:
-    p.loglog(vertices, nstddev, label='Nmag standard deviation')
+    p.loglog(vertices, stddev["nmag"], label='Nmag standard deviation')
 
 p.xlabel('vertices')
 p.title('Standard deviation (log-log)')
@@ -218,13 +286,33 @@ p.grid()
 p.legend()
 p.savefig(os.path.join(MODULE_DIR, 'stddev_loglog.png'))
 
+
+############################################
+#Useful Plot Error Norm log-log
+############################################
 p.figure()
-p.loglog(vertices, errnorm, label='Finmag errornorm')
+p.loglog(vertices, errnorm["FK"], label='Finmag FK errornorm')
+p.loglog(vertices, errnorm["GCR"], label='Finmag GCR errornorm')
 p.xlabel('vertices')
 p.title('Error norm (log-log)')
 p.grid()
 p.legend()
 p.savefig(os.path.join(MODULE_DIR, 'errnorm_loglog.png'))
 
+############################################
+#Useful Plot timings
+############################################
+p.figure()
+p.plot(vertices, timings["FK"], label='Finmag FK timings')
+p.plot(vertices, timings["GCR"], label='Finmag GCR timings')
+p.plot(vertices, timings["nmag"], label='Nmag timings')
 
-print "Useful plots: maxerror.png, stddev.png, xvalues.png"
+p.xlabel('vertices')
+p.ylabel('seconds')
+p.title('Demag solve times')
+p.grid()
+p.legend()
+p.savefig(os.path.join(MODULE_DIR, 'timings.png'))
+
+
+print "Useful plots: errornorm_loglog.png, stddev.png, xvalues.png,xvaluesgcr.png,timings.png"

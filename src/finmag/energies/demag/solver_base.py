@@ -11,6 +11,17 @@ from finmag.util.timings import timings
 from finmag.sim import helpers
 import finmag.util.solver_benchmark as bench
 
+#Define default parameters for the fembem solvers
+default_parameters = df.Parameters("demag_options")
+poisson = df.Parameters("poisson_solver")
+poisson.add("method", "default")
+poisson.add("preconditioner", "default")
+laplace = df.Parameters("laplace_solver")
+laplace.add("method", "default")
+laplace.add("preconditioner", "default")
+default_parameters.add(poisson)
+default_parameters.add(laplace)
+
 class FemBemDeMagSolver(object):
     """Base Class for FEM/BEM Demag Solvers containing shared methods
         for a top level demag solver interface see
@@ -22,7 +33,11 @@ class FemBemDeMagSolver(object):
         m
             the Dolfin object representing the (unit) magnetisation
         Ms
-            the saturation magnetisation     
+            the saturation magnetisation
+        parameters
+            dolfin.Parameters of method and preconditioner to linear solvers
+            If not specified the defualt parameters contained in solver_base.py
+            are used.
         degree
             polynomial degree of the function space
         element
@@ -46,7 +61,7 @@ class FemBemDeMagSolver(object):
         self.unit_length = unit_length
         self.degree = degree
         self.bench = bench
-        
+        self.parameters = parameters
 
         #This is used in energy density calculations
         self.mu0 = np.pi*4e-7 # Vs/(Am)

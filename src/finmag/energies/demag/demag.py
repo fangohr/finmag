@@ -28,16 +28,6 @@ class Demag(EnergyBase):
         else:
             raise NotImplementedError("Only 'FK', 'GCR' and 'weiwei' are implemented")
 
-        self.parameters = df.Parameters("demag_options")
-        poisson = df.Parameters("poisson_solver")
-        poisson.add("method", "default")
-        poisson.add("preconditioner", "default")
-        laplace = df.Parameters("laplace_solver")
-        laplace.add("method", "default")
-        laplace.add("preconditioner", "default")
-        self.parameters.add(poisson)
-        self.parameters.add(laplace)
-
         self.degree = degree
         self.element = element
         self.method = project_method
@@ -56,24 +46,16 @@ class Demag(EnergyBase):
             The scale of the mesh, default is 1.
 
         """
-
-##        mesh,m, parameters=None, degree=1, element="CG", project_method='magpar',
-##                 unit_length=1,Ms = 1.0
-                 
+                         
         kwargs = {"mesh":S3.mesh(),
                   "m":m,
                   "Ms":Ms,
                   "unit_length":unit_length,
-                  "parameters":None,
                   "degree":1,
                   "element":"CG",
                   "project_method":'magpar',
                   "bench": self.bench}
-
-##
-##       # timings.startnext("create-demag-problem")
-##        problem = FemBemDeMagProblem(S3.mesh(), m, Ms)
-
+        
         if self.solver == "FK":
             self.demag = FemBemFKSolver(**kwargs)
         elif self.solver == "FK_magpar":
