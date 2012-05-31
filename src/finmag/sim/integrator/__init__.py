@@ -45,7 +45,8 @@ class BaseIntegrator(object):
                         self.__class__.__name__, self.llg.t, max_dmdt_norm,stopping_dmdt))
                 break
 
-            dt = dt * 1.5
+            if dt < 1e-10:
+                dt = dt * 1.5
 
 class ScipyIntegrator(BaseIntegrator):
     def __init__(self, llg, m0, reltol=1e-8, abstol=1e-8, nsteps=10000, method="bdf", **kwargs):
