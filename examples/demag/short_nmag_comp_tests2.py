@@ -37,7 +37,7 @@ def printsolverparams(mesh,m):
         solver = finmagsolvers[demagtype](mesh,m)
 
         # Write output to linsolveparams.rst
-        output = open(MODULE_DIR + "/linsolveparams.rst", "a")
+        output = open(MODULE_DIR + "/linsolveparams.rst", "w")
         output.write("\nFinmag %s solver parameters:\n"%demagtype)
         output.write("%s \n"%repr(solver.parameters.to_dict()))
         output.write("\nFinmag %s solver tolerances:"%demagtype)
