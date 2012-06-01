@@ -32,14 +32,13 @@ timings = {"FK":[],"GCR":[],"nmag":[]}
 krylov_iter = {"FK":{"poisson":[],"laplace":[]},
                "GCR":{"poisson":[],"laplace":[]}}
 
-def printsolverparams(mesh,m):    
+def printsolverparams(mesh,m):
+    # Write output to linsolveparams.rst
+    output = open(MODULE_DIR + "/linsolveparams.rst", "w")
     for demagtype in finmagsolvers.keys():
         
         #create a solver to read out it's default linear solver data
         solver = finmagsolvers[demagtype](mesh,m)
-
-        # Write output to linsolveparams.rst
-        output = open(MODULE_DIR + "/linsolveparams.rst", "w")
         output.write("\nFinmag %s solver parameters:\n"%demagtype)
         output.write("%s \n"%repr(solver.parameters.to_dict()))
         output.write("\nFinmag %s solver tolerances:"%demagtype)

@@ -155,13 +155,17 @@ doctest:
 	      "results in $(BUILDDIR)/doctest/output.txt."
 
 #next target added to get Jenkins to run generate_doc.py before building the documentation.
-generate-doc: examples-for-doc
+generate-doc: examples-for-doc timing
 	python generate_doc.py
 
 # The absolute path for the doc directory
 DOC_DIR = $(abspath .)
 # Paths that have to be added to PYTHONPATH prior to running the tests from here (for jenkins)
 PYTHON_ROOTS = $(DOC_DIR)/../src
+
+# Benchmark nmag example #2.
+timing:
+	cd ../examples/exchange_demag/timings/ && PYTHONPATH=$(PYTHON_ROOTS) python run_finmag.py
 
 #this target can be run to execute py.test ../examples to get figure
 #files ready. This will happen automatically when Jenkins runs, as
@@ -175,9 +179,8 @@ examples-for-doc: ../examples/macrospin/alpha-1-00.png ../examples/macrospin/alp
 	../examples/exchange_demag/exchange_demag.png ../examples/exchange_demag/exchange_energy.png \
 	../examples/exchange_demag/exchange_density.png ../examples/exchange_demag/demag_density.png \
 	../examples/exchange_demag/demag_energy.png ../examples/demag/stddev_loglog.png ../examples/demag/xvalues.png \
-        ../examples/demag/linsolveparams.rst ../examples/demag/demagenergies.txt ../examples/demag/xvaluesgcr.png \
-	../examples/demag/krylovitr.png \
-	../examples/demag/errnorm_loglog.png ../examples/demag/results_field.txt ../examples/demag/results_field.txt \
+        ../examples/demag/linsolveparams.rst ../examples/demag/xvaluesgcr.png \
+	../examples/demag/errnorm_loglog.png ../examples/demag/results_field.txt ../examples/demag/demagenergies.txt \
 	../src/finmag/tests/comparison/exchange/table.rst ../src/finmag/tests/comparison/anisotropy/table.rst \
 	../src/finmag/tests/comparison/demag/table.rst ../examples/exchange_demag/simple1D.png \
 	../examples/exchange_demag/finmag_exch_density.npy ../examples/exchange_demag/finmag_demag_density.npy \
@@ -212,7 +215,7 @@ examples-for-doc: ../examples/macrospin/alpha-1-00.png ../examples/macrospin/alp
 	cd ../examples/demag/ && PYTHONPATH=$(PYTHON_ROOTS) python test_field.py > results_field.txt
 
 ../examples/demag/demagenergies.txt: ../examples/demag/test_energy.py
-	cd ../examples/demag/ && PYTHONPATH=$(PYTHON_ROOTS) python test_energy.py > demagenergies.txt
+	cd ../examples/demag/ && PYTHONPATH=$(PYTHON_ROOTS) python test_energy.py
 
 ../src/finmag/tests/comparison/exchange/table.rst:
 	cd ../src/finmag/tests/comparison/exchange/ && PYTHONPATH=$(PYTHON_ROOTS) python test_exchange_field.py
