@@ -86,6 +86,14 @@ class Simulation(object):
     def spatial_alpha(self, alpha, multiplicator):
         self.llg.spatially_varying_alpha(self, alpha, multiplicator)
 
+    def __get_gamma(self):
+        return self.llg.gamma
+
+    def __set_gamma(self, value):
+        self.llg.gamma = value
+
+    gamma = property(__get_alpha, __set_alpha)
+
     def timings(self, n=20):
         """
         Prints an overview of wall time and number of calls for designated
