@@ -225,7 +225,7 @@ class FemBemDeMagSolver(object):
             bench.solve(A,function.vector(),b,benchmark = True)
         else:
             timings.startnext("2nd linear solve")
-            self.laplace_solver.solve(A, function.vector(), b)
+            self.laplace_iter = self.laplace_solver.solve(A, function.vector(), b)
             timings.stop("2nd linear solve")
         return function
 

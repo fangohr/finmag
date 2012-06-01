@@ -29,6 +29,8 @@ errorH = {"FK":[],"GCR":[]}
 maxerror = {"FK":[],"GCR":[]}
 errnorm = {"FK":[],"GCR":[]}
 timings = {"FK":[],"GCR":[],"nmag":[]}
+krylov_iter = {"FK":{"poisson":[],"laplace":[]},
+               "GCR":{"poisson":[],"laplace":[]}}
 
 def printsolverparams(mesh,m):    
     for demagtype in finmagsolvers.keys():
@@ -105,6 +107,11 @@ for i,maxh in enumerate((5, 3, 2, 1.5,1.0,0.8)):
         solver = finmagsolvers[demagtype](mesh,m)
         demag = solver.compute_field()
         endtime = time.time()
+
+        #store the number of krylov iterations
+        krylov_iter[demagtype]["poisson"].append(solver.poisson_iter)
+        krylov_iter[demagtype]["laplace"].append(solver.laplace_iter)
+        
         timings[demagtype].append(endtime - starttime)        
         H_demag = df.Function(V)
         H_demag.vector()[:] = demag
@@ -242,7 +249,6 @@ p.figure()
 p.plot(vertices, stddev["FK"], label='Finmag FK standard deviation')
 p.plot(vertices, stddev["GCR"], label='Finmag GCR standard deviation')
 
-
 if has_nmag:
     p.plot(vertices, stddev["nmag"], label='Nmag standard deviation')
 
@@ -316,5 +322,20 @@ p.grid()
 p.legend()
 p.savefig(os.path.join(MODULE_DIR, 'timings.png'))
 
+############################################
+#Useful Plot krylov iterations
+############################################
+p.figure()
+p.plot(vertices, krylov_iter["FK"]["laplace"],'o-', label='Finmag FK laplace')
+p.plot(vertices, krylov_iter["FK"]["poisson"],'x-', label='Finmag FK poisson')
+p.plot(vertices, krylov_iter["GCR"]["laplace"], label='Finmag GCR laplace')
+p.plot(vertices, krylov_iter["GCR"]["poisson"], label='Finmag GCR poisson')
 
-print "Useful plots: errornorm_loglog.png, stddev.png, xvalues.png,xvaluesgcr.png,timings.png"
+p.xlabel('vertices')
+p.ylabel('iterations')
+p.title('Krylov solver iterations')
+p.grid()
+p.legend(loc=0)
+p.savefig(os.path.join(MODULE_DIR, 'krylovitr.png'))
+
+print "Useful plots: errornorm_loglog.png, stddev.png, xvalues.png,xvaluesgcr.png,timings.png,krylovitr.png"

@@ -52,15 +52,15 @@ Usually, it's sufficient to create a Demag object and give it as an argument to 
 
 .. code-block:: python
 
-    sim = Simulation(mesh)
-    sim.add(Demag())
+    >>> sim = Simulation(mesh)
+    >>> sim.add(Demag())
 
 The Fredkin-Koehler method ("FK") is the default algorithm. If we instead want to use the Garcia-Cervera-Roma approach ("GCR"), we simply need to give this as argument.
 
 .. code-block:: python
 
-    sim = Simulation(mesh)
-    sim.add(Demag("GCR"))
+    >>> sim = Simulation(mesh)
+    >>> sim.add(Demag("GCR"))
 
 For both methods, we have two linear solvers. One for the poisson problem and one for the laplace problem, and we use Krylov solvers to solve both of them. There are a great amount of different methods and preconditioners available, dependent on installation. To list all of them, use
 
@@ -83,12 +83,11 @@ We use "default" as default method and preconditioner. This can be changed after
 
 .. code-block:: python
 
-    demag = Demag()
-    demag.parameters["poisson_solver"]["method"] = "cg"
-    demag.parameters["poisson_solver"]["preconditioner"] = "ilu"
-
-    demag.parameters["laplace_solver"]["method"] = "cg"
-    demag.parameters["laplace_solver"]["preconditioner"] = "ilu"
+    >>> demag = Demag()
+    >>> demag.parameters["poisson_solver"]["method"] = "cg"
+    >>> demag.parameters["poisson_solver"]["preconditioner"] = "ilu"
+    >>> demag.parameters["laplace_solver"]["method"] = "cg"
+    >>> demag.parameters["laplace_solver"]["preconditioner"] = "ilu"
 
 Here, we enable the solver to use the conjugate gradient method with incomplete LU factorization for both the poisson problem and the laplace problem.
 
@@ -106,14 +105,12 @@ To set e.g. the relative tolerance for the poisson solver to 1e-10, the syntax r
 
 .. code-block:: python
 
-    demag = Demag()
-    demag.poisson_solver.parameters["relative_tolerance"] = 1e-10
-    sim.add(demag)
-
+    >>> demag = Demag()
+    >>> demag.poisson_solver.parameters["relative_tolerance"] = 1e-10
+    >>> sim.add(demag)
 
 Examples
 --------
-
 Demag energy on the unit sphere
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -154,11 +151,11 @@ of our case is
 
     E_\mathrm{demag} = \frac16 \mu_0 M_s^2 V = \frac16 4 \pi 10^{-7} \frac{4\pi}{3} (10^5)^2 = 8772.98
 
+
 Our implementation on a coarse unit sphere mesh with 10 cells in each direction, gives the energy
 
-.. code-block:: none
+.. literalinclude:: ../examples/demag/demagenergies.txt 
 
-    Demag energy: 8610.63631312
 
 The reason for the difference from the analytical solution is mainly due to the coarseness of the
 mesh, and because Dolfin produces sphere meshes of very low quality. Our results convert towards the
@@ -167,12 +164,11 @@ with more than 35,000 vertices, gives
 
 .. code-block:: none
 
-    Demag energy: 8758.92651323
+    FK Demag energy: 8758.92651323
 
 Complete code:
 
 .. literalinclude:: ../examples/demag/test_energy.py
-
 
 Demag field in uniformly magnetised sphere
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -216,6 +212,12 @@ The solve times are plotted here. They increase as the number of vertices grow.
 .. figure:: ../examples/demag/timings.png
     :scale: 75
 
+The number of Krylov iterations are plotted here.
+
+.. figure:: ../examples/demag/krylovitr.png
+    :scale: 75
+
+
 The linear solver parameters that were used are
 
 .. include:: ../examples/demag/linsolveparams.rst
@@ -225,7 +227,6 @@ The linear solver parameters that were used are
 
     * TODO: When the building of the boundary element matrix is faster, we can increase the number of vertices.
     * GB it seems that nmag is the bottleneck in this case.
-
 
 For an example where we also include the exchange field, please see the exchange-demag example in the next section.
 
