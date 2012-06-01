@@ -7,7 +7,6 @@ from finmag.native.llg import OrientedBoundaryMesh, compute_bem_fk
 import finmag.util.solver_benchmark as bench
 
 logger = logging.getLogger(name='finmag')
-
 __all__ = ["FemBemFKSolver"]
 class FemBemFKSolver(sb.FemBemDeMagSolver):
     r"""
@@ -18,8 +17,7 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
 
     .. math::
 
-        \Delta \phi_1 = \nabla \cdot \vec M(\vec r), \quad \vec r \in \Omega, \qquad
-        \qquad
+        \Delta \phi_1 = \nabla \cdot \vec M(\vec r), \quad \vec r \in \Omega, \qquad \qquad
 
     with
 
@@ -189,6 +187,35 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
     The demag field is defined as the negative gradient of :math:`\phi`,
     and is returned by the 'compute_field' function.
 
+    Linear solver tolerances can be set by accessing the attributes
+    laplace_solver or poisson_solver.
+
+    .. code-block:: python
+
+        demag = FemBemFKSolver(mesh,m)
+        demag.poisson_solver["method"] = "cg"
+        demag.poisson_solver["preconditioner"] = "ilu"
+        demag.laplace_solver["method"] = "cg"
+        demag.laplace_solver["preconditioner"] = "ilu"
+
+    A benchmark of all possible Krylov solver and preconditioner combinations
+    can be run as follows.
+    
+    .. code-block:: python
+
+        demag = FemBemFKSolver(mesh,m,benchmark = True)
+        demag.solve()
+
+    after a solve the number of krylov iterations can be accessed via the attributes
+    laplace_iter, poisson_iter
+    
+    .. code-block:: python
+
+        demag = FemBemFKSolver(mesh,m)
+        demag.solve()
+        print demag.laplace_iter
+        print demag.poisson_iter
+
     *For an interface more inline with the rest of FinMag Code please use
     the wrapper class Demag in finmag/energies/demag.*
 
@@ -222,9 +249,7 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
     for the kind of problems we are working on now.
 
     *Example of usage*
-
         See the exchange_demag example.
-
     """
     def __init__(self,mesh,m, parameters=sb.default_parameters , degree=1, element="CG",
                  project_method='magpar', unit_length=1,Ms = 1.0,bench = False):
@@ -271,7 +296,7 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
             bench.solve(self.poisson_matrix,self.phi1.vector(),g1, benchmark = True)
         else:
             timings.startnext("1st linear solve")
-            self.poisson_solver.solve(self.phi1.vector(), g1)
+            self.poisson_iter = self.poisson_solver.solve(self.phi1.vector(), g1)
             timings.stop("1st linear solve")
         # Restrict phi1 to the boundary
         timings.startnext("Restrict phi1 to boundary")
@@ -298,21 +323,17 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         return self.phi
 
 if __name__ == "__main__":
-    from finmag.demag.problems import prob_fembem_testcases as pft
+    from finmag.tests.demag.problems import prob_fembem_testcases as pft
     from finmag.sim import helpers
-    problem = pft.MagSphere20()
+    problem = pft.MagSphereBase(2.0,10)
     Ms = problem.Ms
-    kwargs = problem.kwargs()
-    kwargs["bench"] = True
-
     #Make a more interesting m
     m = df.interpolate(df.Expression(["x[0]*x[1]+3", "x[2]+5", "x[1]+7"]),
                        df.VectorFunctionSpace(problem.mesh,"CG",1))
     
     m.vector()[:] = helpers.fnormalise(m.vector().array())
-    kwargs["m"] = m
     
-    demag = FemBemFKSolver(**kwargs)
+    demag = FemBemFKSolver(problem.mesh,m,bench = True)
     Hd = demag.compute_field()
     Hd.shape = (3, -1)
     print np.average(Hd[0])/Ms, np.average(Hd[1])/Ms, np.average(Hd[2])/Ms

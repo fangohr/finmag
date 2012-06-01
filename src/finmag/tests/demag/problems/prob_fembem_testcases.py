@@ -54,7 +54,6 @@ class MagUnitInterval(object):
 #This Section contains better quality unit sphere meshes
 #and problems that use them.    
 ###########################################################
-
 class MagSphereBase(object):
     """Base class for MagSphere classes"""
     def __init__(self,maxh,radius=10):

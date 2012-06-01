@@ -40,7 +40,7 @@ while for the demag energy, the relative error is below 1e-3.
     :align: center
 
 After ten time steps, we compute the energy density through the center of the bar. Comparing the exchange energy density to both nmag and oommf, shows that the finmag implementation
-actually is closer to oommf than nmag, because the nmag curve seems to have some noice.
+actually is closer to oommf than nmag, because the nmag curve seems to have some noise.
 
 .. image:: ../examples/exchange_demag/exchange_density.png
     :scale: 75

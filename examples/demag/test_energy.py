@@ -3,7 +3,7 @@ import dolfin as df
 from numpy import pi, sqrt
 from finmag.energies import Demag
 
-TOL = 1.5e-2
+TOL = 1.9e-2
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 Ms = 1e5
 
@@ -26,22 +26,28 @@ def test_energy():
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
     m = df.interpolate(df.Constant((1, 0, 0)), S3)
 
-    demag = Demag()
-    demag.setup(S3, m, Ms, unit_length=1)
-
-    E_demag = demag.demag.compute_energy()
-    print "Demag energy:", E_demag
-    print "Numerical solution on the netgen mesh: 8758.92651323"
-
     vol = 4*pi/3
     mu0 = 4*pi*10**-7
     E_exact = 1./6*mu0*Ms**2*vol
     print "Exact solution:", E_exact
+    print "Numerical solution on the netgen mesh: 8758.92651323\n"
 
-    diff = abs(E_demag - E_exact)
-    rel_error =  diff/sqrt(E_exact**2 + E_demag**2)
-    print "Relative error:", rel_error
-    assert rel_error < TOL, "Relative error is %g, should be zero" % rel_error
+    #Store the results in a file for documentation
+    output = open(MODULE_DIR + "/demagenergies.txt", "w")
+    for demagtype in ["FK","GCR"]:
+        demag = Demag(demagtype)
+        demag.setup(S3, m, Ms, unit_length=1)
 
+        E_demag = demag.demag.compute_energy()
+        print "\n%s Demag energy:"%demagtype, E_demag
+
+        diff = abs(E_demag - E_exact)
+        rel_error =  diff/sqrt(E_exact**2 + E_demag**2)
+        print "Relative error:", rel_error
+        assert rel_error < TOL, "Relative error is %g, should be zero" % rel_error
+        output.write("%s Demag energy %s\n"%(demagtype,str(E_demag)))
+        output.write("%s relative error %s\n"%(demagtype,str(rel_error)))
+                     
+    output.close()
 if __name__ == '__main__':
     test_energy()

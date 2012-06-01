@@ -26,7 +26,7 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
 
     .. math::
 
-        \\Delta \\phi_a(\\vec r) = \\nabla \\vec M(\\vec r) \\qquad \\qquad (1)
+        \\Delta \\phi_a(\\vec r) = \\nabla \\cdotp \\vec M(\\vec r) \\qquad \\qquad (1)
 
     inside the domain, and
 
@@ -90,8 +90,7 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
 
         
     Where :math:`\psi_i` is the basis function associated with :math:`i`.
-    Currently the assembly is done over the entire mesh, even though only the values
-    on the boundary are needed. Optimization is welcome here.
+    Currently the assembly is done over the entire mesh, even though only the values    on the boundary are needed. Optimization is welcome here.
     
     The values of the boundary element matrix :math:`\\mathbf{B}` is given by
 
@@ -103,6 +102,41 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
     Solving the Laplace equation inside the domain and adding the two
     potentials, is also done in the exact same way as for the Fredkin-Koehler
     approach.
+
+    Linear solver tolerances can be set by accessing the attributes
+    laplace_solver or poisson_solver.
+
+    .. code-block:: python
+
+        demag = FemBemGCRSolver(mesh,m)
+        demag.poisson_solver["method"] = "cg"
+        demag.poisson_solver["preconditioner"] = "ilu"
+        demag.laplace_solver["method"] = "cg"
+        demag.laplace_solver["preconditioner"] = "ilu"
+
+    A benchmark of all possible Krylov solver and preconditioner combinations
+    can be run as follows.
+    
+    .. code-block:: python
+
+        demag = FemBemGCRSolver(mesh,m,benchmark = True)
+        demag.solve()
+
+    after a solve the number of krylov iterations can be accessed via the attributes
+    laplace_iter, poisson_iter
+    
+    .. code-block:: python
+
+        demag = FemBemGCRSolver(mesh,m)
+        demag.solve()
+        print demag.laplace_iter
+        print demag.poisson_iter
+        
+
+
+    *For an interface more inline with the rest of FinMag Code please use
+    the wrapper class Demag in finmag/energies/demag.*
+
 
     *Arguments*
         mesh
@@ -124,7 +158,6 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
         bench
             set to True to run a benchmark of linear solvers.
     """
-
     def __init__(self, mesh,m, parameters=sb.default_parameters, degree=1, element="CG",
                  project_method='magpar', unit_length=1, Ms = 1.0,bench = False):
         
@@ -214,7 +247,7 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
            # df.solve(self.poisson_matrix_dirichlet,phia.vector(),F,"gmres","ilu")
         else:
             timings.startnext("1st linear solve")
-            self.poisson_solver.solve(phia.vector(),F)
+            self.poisson_iter = self.poisson_solver.solve(phia.vector(),F)
             timings.stop("1st linear solve")
         #Replace with LU solve
         #df.solve(self.poisson_matrix_dirichlet,phia.vector(),F)
@@ -326,20 +359,17 @@ class ExactQBuilder():
         self.bdofs = np.array(doftionary.keys())
 
 if __name__ == "__main__":
-    from finmag.demag.problems import prob_fembem_testcases as pft
+    from finmag.tests.demag.problems import prob_fembem_testcases as pft
     from finmag.sim import helpers
     
     problem = pft.MagSphereBase(2.0, 10)
-    kwargs = problem.kwargs()
-##    kwargs["bench"] = True
 
     #Make a more interesting m
     m = df.interpolate(df.Expression(["x[0]*x[1]+3", "x[2]+5", "x[1]+7"]),
                        df.VectorFunctionSpace(problem.mesh,"CG",1))
     
     m.vector()[:] = helpers.fnormalise(m.vector().array())
-    kwargs["m"] = m
-    solver = FemBemGCRSolver(**kwargs)
+    solver = FemBemGCRSolver(problem.mesh,m,bench = True)
     sol = solver.solve()
     print timings
     df.plot(sol)
