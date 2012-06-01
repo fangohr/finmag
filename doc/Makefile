@@ -155,7 +155,7 @@ doctest:
 	      "results in $(BUILDDIR)/doctest/output.txt."
 
 #next target added to get Jenkins to run generate_doc.py before building the documentation.
-generate-doc: examples-for-doc timing
+generate-doc: examples-for-doc 
 	python generate_doc.py
 
 # The absolute path for the doc directory

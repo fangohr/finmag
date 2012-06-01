@@ -11,6 +11,20 @@ from finmag.util.timings import timings
 logger = logging.getLogger(name='finmag')
 
 class LLG(object):
+    """
+    Solves the Landau-Lifshitz-Gilbert equation.
+
+    The equation reads
+
+    .. math::
+
+        \\frac{d\\vec{M}}{dt} = -\\gamma_{LL} (\\vec{M} \\times \\vec{H}) - \\alpha \\gamma_{LL} (\\vec{M} \\times [ \\vec{M} \\times \\vec{H}])
+
+    where :math:`\\gamma_{LL} = \\frac{\\gamma}{1+\\alpha^2}`. In our code
+    :math:`-\\gamma_{LL}` is referred to as *precession coefficient* and
+    :math:`-\\alpha\\gamma_{LL}` as *damping coefficient*.
+
+    """
     def __init__(self, S1, S3, do_precession=True):
         logger.debug("Creating LLG object.")
         timings.start('LLG-init')
