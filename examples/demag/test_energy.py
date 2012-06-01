@@ -32,8 +32,7 @@ def test_energy():
     print "Exact solution:", E_exact
     print "Numerical solution on the netgen mesh: 8758.92651323\n"
 
-    #Store the results in a file for documentation
-    output = open(MODULE_DIR + "/demagenergies.txt", "w")
+    res = {"FK":{},"GCR":{}}
     for demagtype in ["FK","GCR"]:
         demag = Demag(demagtype)
         demag.setup(S3, m, Ms, unit_length=1)
@@ -44,10 +43,15 @@ def test_energy():
         diff = abs(E_demag - E_exact)
         rel_error =  diff/sqrt(E_exact**2 + E_demag**2)
         print "Relative error:", rel_error
+        res[demagtype]["relE"] = rel_error
+        res[demagtype]["nrg"] = E_exact
         assert rel_error < TOL, "Relative error is %g, should be zero" % rel_error
-        output.write("%s Demag energy %s\n"%(demagtype,str(E_demag)))
-        output.write("%s relative error %s\n"%(demagtype,str(rel_error)))
-                     
+
+    output = open(MODULE_DIR + "/demagenergies.txt", "w")
+    for demagtype in ["FK","GCR"]:
+        output.write("%s Demag energy %s\n"%(demagtype,str(res[demagtype]["nrg"])))
+        output.write("%s Relative error %s\n"%(demagtype,str(res[demagtype]["relE"])))                  
     output.close()
+                  
 if __name__ == '__main__':
     test_energy()
