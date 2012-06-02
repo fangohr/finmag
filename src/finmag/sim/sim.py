@@ -38,9 +38,23 @@ class Simulation(object):
 
     m = property(__get_m, set_m)
 
-    def add(self, interaction):
+    def add(self, interaction, update_func=None):
+        """
+        Add an interaction to the simulation.
+
+        Ideally, *interaction* implements the *finmag.energies.EnergyBase* base class.
+        At the very least, it has to provide a *setup* and a *compute_field* method with
+        the same signature as the base class.
+
+        A function or method can be passed in *update_func*. It will get called
+        with the current time each time the effective field is computed.
+
+        """
         interaction.setup(self.S3, self.llg._m, self.Ms, self.unit_length)
         self.llg.interactions.append(interaction)
+
+        if update_func:
+            self.llg._pre_rhs_callables.append(update_func)
 
     def effective_field(self):
         self.llg.compute_effective_field()
