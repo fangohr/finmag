@@ -74,7 +74,6 @@ Hz = 0
 sim.add(Zeeman((Hx, Hy, Hz)))
 
 f = open(MODULE_DIR + "/m_averages.txt", "w")
-print "Hello."
 t = 0; t_max = 2e-9; dt = 1e-11;
 while t <= t_max:
     sim.run_until(t_max)

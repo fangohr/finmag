@@ -9,6 +9,8 @@ from finmag.sim.integrator import LLGIntegrator
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def test_external_field_depends_on_t():
+    tfinal = 0.3*1e-9
+    dt = 0.001e-9
 
     simplices = 2
     L = 10e-9
@@ -22,7 +24,7 @@ def test_external_field_depends_on_t():
 
     #This is the time dependent field
     H_app_expr = df.Expression(("0.0", "0.0","H0*sin(omega*t)"), H0=1e5, omega=omega, t=0.0)
-    H_app = TimeZeeman(H_app_expr)
+    H_app = TimeZeeman(H_app_expr, np.arange(0, 2*tfinal, tfinal/100))
     H_app.setup(S3, llg._m, Ms=8.6e5)
     llg.interactions.append(H_app)
 
@@ -39,10 +41,6 @@ def test_external_field_depends_on_t():
     llg._pre_rhs_callables.append(update_H_ext)
 
     #nothing special from here, just setting up time integration
-
-    tfinal = 0.3*1e-9
-    dt = 0.001e-9
-
     integrator = LLGIntegrator(llg, llg.m)
 
     #to gather data for later analysis
