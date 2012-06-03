@@ -7,5 +7,5 @@ from exchange import Exchange
 from anisotropy import UniaxialAnisotropy
 from demag.demag import Demag
 from zeeman import Zeeman
-from time_zeeman import TimeZeeman
+from time_zeeman import TimeZeeman, DiscreteTimeZeeman
 from dmi import DMI

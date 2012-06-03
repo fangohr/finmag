@@ -2,7 +2,7 @@ import os, sys
 import dolfin as df
 import numpy as np
 from finmag import Simulation
-from finmag.energies import Zeeman, TimeZeeman, Demag, Exchange
+from finmag.energies import Zeeman, DiscreteTimeZeeman, Demag, Exchange
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -33,12 +33,12 @@ def initialise_m():
     sim.alpha = 1
     sim.llg.do_precession = False
 
-    # time dependent field, which fades until one nanosecond
-    # and gets updated every 10 picoseconds.
-    t_init = 0; t_max = 1e-9; t_update = 1e-11;
-    fx = fy = fz = "(t_max - t) * H"
-    f_expr = df.Expression((fx, fy, fz), t=t_init, t_max=t_max, H=Ms)
-    saturating_field = TimeZeeman(f_expr, np.arange(t_init, t_max, t_update))
+    # Saturating field in the [1, 1, 1] direction, that gets reduced
+    # every 10 picoseconds until it vanishes after one nanosecond.
+    t_off = 1e-9; dt_update = 1e-11;
+    fx = fy = fz = "(1 - t/t_max) * H"
+    f_expr = df.Expression((fx, fy, fz), t=0.0, t_max=t_off, H=Ms)
+    saturating_field = DiscreteTimeZeeman(f_expr, t_off, dt_update)
     sim.add(saturating_field)
    
     def update_saturating_field(llg):
