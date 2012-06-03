@@ -33,13 +33,9 @@ class TimeZeeman(EnergyBase):
                 t, current_t, len(self.update_times)- (self.current_t_index + 1)))
             self.current_t_index += 1
             if t > self.update_times[-1] or len(self.update_times) == 0:
-                print "Haha."
-                print self.update_times[-1]
-                print len(self.update_times)
                 self.switch_off()
 
     def switch_off(self):
-        log.debug("Switching off field.")
         print "Switching off field."
         """
         Careful: Not reversible.
@@ -48,7 +44,7 @@ class TimeZeeman(EnergyBase):
         self.H = df.Function(self.S3)
 
         def new_update(self, t):
-            pass
+            pass # Just in case it does get called again.
         self.update = new_update
         self.switched_off = True
 

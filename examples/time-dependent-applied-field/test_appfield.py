@@ -28,9 +28,17 @@ def test_external_field_depends_on_t():
     H_app.setup(S3, llg._m, Ms=8.6e5)
     llg.interactions.append(H_app)
 
+    # add to llg with a name as well, so we can call update on it
+    llg._H_app = H_app
+
+    #define function that updates that expression, and the field object
+    def update_H_ext(llg):
+        print "update_H_ext being called for t=%g" % llg.t
+        llg._H_app.update(llg.t)
+
     #register this function to be called before (pre) the right hand side
     #of the ODE is evaluated
-    llg._pre_rhs_callables.append(H_app.update)
+    llg._pre_rhs_callables.append(update_H_ext)
 
     #nothing special from here, just setting up time integration
     integrator = LLGIntegrator(llg, llg.m)
