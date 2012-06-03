@@ -169,7 +169,7 @@ class LLG(object):
  
     def solve(self):
         for func in self._pre_rhs_callables:
-            func(self.t)
+            func(self)
 
         self.compute_effective_field()
 
