@@ -244,13 +244,10 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
         #Solve for phia
         if self.bench:
             bench.solve(self.poisson_matrix_dirichlet,phia.vector(),F, benchmark = True)
-           # df.solve(self.poisson_matrix_dirichlet,phia.vector(),F,"gmres","ilu")
         else:
             timings.startnext("1st linear solve")
             self.poisson_iter = self.poisson_solver.solve(phia.vector(),F)
             timings.stop("1st linear solve")
-        #Replace with LU solve
-        #df.solve(self.poisson_matrix_dirichlet,phia.vector(),F)
         return phia
     
     def build_vector_q(self,m,Ms,phi1):
