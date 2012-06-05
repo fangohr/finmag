@@ -15,7 +15,8 @@ logger = logging.getLogger(name='finmag')
 
 import finmag.util.solver_benchmark as bench
 
-class FemBemGCRSolver(sb.FemBemDeMagSolver):
+from solver_gcr_qvector import PEQBuilder
+class FemBemGCRSolver(sb.FemBemDeMagSolver,PEQBuilder):
     """
     This approach is similar to the :py:class:FKSolver <finmag.demag.solver_fk.FemBemFKSolver>`
     approach, so we will just comment on the differences between the
@@ -162,7 +163,6 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
                  project_method='magpar', unit_length=1, Ms = 1.0,bench = False):
         
         #Initialize the base class
-        #New interface have mesh,m,Ms
         sb.FemBemDeMagSolver.__init__(self,mesh,m,parameters = parameters,degree = degree, element=element,
                                              project_method = project_method,
                                              unit_length = unit_length,Ms = Ms,bench = bench)
@@ -194,6 +194,9 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
         #Buffer Surface Node Areas for the box method
         self.surface_node_areas = df.assemble(self.v*df.ds, mesh=self.mesh).array()+1e-300
 
+##        #Build boundary data for the exact q method
+##        self.build_boundary_data()
+
     def solve(self):
         """
         Solve for the Demag field using GCR and FemBem
@@ -208,8 +211,8 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
         #Assemble the vector q.
         logger.info("GCR: Solving for phi_b on the boundary")
         timings.startnext("Build q vector")
+        ##q = self.build_vector_q_peval(self.m,self.Ms,self.phia)
         q = self.build_vector_q(self.m,self.Ms,self.phia)
-
         # Compute phi2 on boundary using the BEM matrix
         timings.startnext("Compute phiab on the boundary")
         phib_boundary = np.dot(self.bem, q[self.b2g])
@@ -262,98 +265,6 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver):
         q = q_dot_v/self.surface_node_areas
         return q
 
-#Gabriel TODO add the exact q calculation back to the class.
-class ExactQBuilder():
-    def get_dof_normal_dict_avg(self,normtionary):
-        """
-        Provides a dictionary with all of the boundary DOF's as keys
-        and an average of facet normal components associated to the DOF as values
-        V = FunctionSpace
-        """
-        #Take an average of the normals in normtionary
-        avgnormtionary = {k:np.array([ float(sum(i))/float(len(i)) for i in zip(*normtionary[k])]) for k in normtionary}
-        #Renormalize the normals
-        avgnormtionary = {k: avgnormtionary[k]/df.sqrt(np.dot(avgnormtionary[k],avgnormtionary[k].conj())) for k in avgnormtionary}
-        return avgnormtionary
-
-    def build_boundary_data(self):
-        """
-        Builds two boundary data dictionaries
-        1.doftionary key- dofnumber, value - coordinates
-        2.normtionary key - dofnumber, value - average of all facet normal components associated to a DOF
-        """
-        mesh = self.V.mesh()
-        #Initialize the mesh data
-        mesh.init()
-        d = mesh.topology().dim()
-        dm = self.V.dofmap()
-        boundarydofs = self.get_boundary_dofs(self.V)
-
-        #It is very import that this vector has the right length
-        #It holds the local dof numbers associated to a facet
-        facetdofs = np.zeros(dm.num_facet_dofs(),dtype=np.uintc)
-
-        #Initialize dof-to-normal dictionary
-        doftonormal = {}
-        doftionary = {}
-        #Loop over boundary facets
-        for facet in df.facets(mesh):
-            cells = facet.entities(d)
-            #one cell means we are on the boundary
-            if len(cells) ==1:
-                #######################################
-                #Shared Data for Normal and coordinates
-                #######################################
-
-                #create one cell (since we have CG)
-                cell = df.Cell(mesh,cells[0])
-                #Local to global map
-                globaldofcell = dm.cell_dofs(cells[0])
-
-                #######################################
-                #Find  Dof Coordinates
-                #######################################
-
-                #Create the cell dofs and see if any
-                #of the global numbers turn up in BoundaryDofs
-                #If so update doftionary with the coordinates
-                celldofcord = dm.tabulate_coordinates(cell)
-
-                for locind,dof in enumerate(globaldofcell):
-                    if dof in boundarydofs:
-                        doftionary[dof] = celldofcord[locind]
-
-                #######################################
-                #Find Normals
-                #######################################
-                local_fi = cell.index(facet)
-                dm.tabulate_facet_dofs(facetdofs,local_fi)
-                #Global numbers of facet dofs
-                globaldoffacet = [globaldofcell[ld] for ld in facetdofs]
-                #add the facet's normal to every dof it contains
-                for gdof in globaldoffacet:
-                    n = facet.normal()
-                    ntup = tuple([n[i] for i in range(d)])
-                    #If gdof not in dictionary initialize a list
-                    if gdof not in doftonormal:
-                        doftonormal[gdof] = []
-                    #Prevent redundancy in Normals (for example 3d UnitCube CG1)
-                    if ntup not in doftonormal[gdof]:
-                        doftonormal[gdof].append(ntup)
-
-            elif len(cells) == 2:
-                #we are on the inside so continue
-                continue
-            else:
-                assert 1==2,"Expected only two cells per facet and not " + str(len(cells))
-
-        #Build the average normtionary and save data
-        self.doftonormal = doftonormal
-        self.normtionary = self.get_dof_normal_dict_avg(doftonormal)
-        self.doftionary = doftionary
-        #numpy array with type double for use by instant (c++)
-        self.doflist_double = np.array(doftionary.keys(),dtype = self.normtionary[self.normtionary.keys()[0]].dtype.name)
-        self.bdofs = np.array(doftionary.keys())
 
 if __name__ == "__main__":
     from finmag.tests.demag.problems import prob_fembem_testcases as pft
@@ -366,7 +277,7 @@ if __name__ == "__main__":
                        df.VectorFunctionSpace(problem.mesh,"CG",1))
     
     m.vector()[:] = helpers.fnormalise(m.vector().array())
-    solver = FemBemGCRSolver(problem.mesh,m,bench = True)
+    solver = FemBemGCRSolver(problem.mesh,m,bench = False)
     sol = solver.solve()
     print timings
     df.plot(sol)

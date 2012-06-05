@@ -54,12 +54,6 @@ class ProxyGCR():
         kwargs = {"R"+str(i):R[i] for i in range(dim)}
         E = Expression(w,**kwargs)
         return E
-
-    def get_boundary_dofs(self,V):
-        """Gets the dofs that live on the boundary of the mesh
-            of function space V"""
-        dummyBC = df.DirichletBC(V,0,"on_boundary")
-        return dummyBC.get_boundary_values()
     
     def build_boundary_data(self):
         """
