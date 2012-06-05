@@ -225,8 +225,8 @@ The linear solver parameters that were used are
 
 .. note::
 
-    * TODO: When the building of the boundary element matrix is faster, we can increase the number of vertices.
-    * GB it seems that nmag is the bottleneck in this case.
+    * Methods and preconditioners which are set to "default" are choosen by the current linear algebra backend of dolfin
+      (PetSC, uBLAS, etc...) 
 
 For an example where we also include the exchange field, please see the exchange-demag example in the next section.
 

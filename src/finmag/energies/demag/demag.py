@@ -69,11 +69,13 @@ class Demag(EnergyBase):
         elif self.solver == "weiwei":
             self.demag = SimpleFKSolver(S3, m, Ms)
 
-        #timings.startnext("Solve-demag-problem")
-        """
+        #Log the linear solver parameters
         if self.solver != "weiwei":
-            self.demag.solve()
-        """
+            log.info("Demag Poisson solver Parameters \n %s" \
+                     %self.demag.poisson_solver.parameters.to_dict())
+            log.info("Demag Laplace solver Parameters \n %s" \
+                     %self.demag.laplace_solver.parameters.to_dict())
+        
 
     def compute_field(self):
         return self.demag.compute_field()
@@ -88,8 +90,8 @@ class Demag(EnergyBase):
 if __name__ == "__main__":
     #Generate a plot for a simple Demag problem
     test = "GCR"
-    from finmag.demag.problems import prob_fembem_testcases as pft
-    problem = pft.MagSphere20()
+    from finmag.tests.demag.problems import prob_fembem_testcases as pft
+    problem = pft.MagSphereBase(10,0.8)
     mesh = problem.mesh
     Ms = problem.Ms
     m = problem.m

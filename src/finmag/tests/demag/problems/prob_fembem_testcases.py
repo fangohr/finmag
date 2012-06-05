@@ -11,8 +11,6 @@ import finmag.util.convert_mesh as cm
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-#TODO need a more exciting M, GCR solver has phiA = 0 due to
-#divM = 0 if M constant
 class MagUnitCircle(object):
     def __init__(self, n= 20):
         self.mesh = UnitCircle(n)

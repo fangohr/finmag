@@ -316,7 +316,7 @@ p.plot(vertices, timings["nmag"], label='Nmag timings')
 
 p.xlabel('vertices')
 p.ylabel('seconds')
-p.title('Demag solve times')
+p.title('Demag solve times (including BEM assembly)')
 p.grid()
 p.legend()
 p.savefig(os.path.join(MODULE_DIR, 'timings.png'))
