@@ -1,0 +1,1 @@
+This folder contains a demag field solver using the truncated domain approach. In this case there is no BEM, instead a vacuum about 5 times the size of the magnetic region is meshed outside of the magnetic body with the homogeneous dirichlet bc set at the vacuum outer boundary instead of "at infinity".
