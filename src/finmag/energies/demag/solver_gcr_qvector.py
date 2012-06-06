@@ -8,32 +8,13 @@ import numpy as np
 
 class PEQBuilder(object):
     """Methods for exact q vector assembly"""
-    def test_get_boundary_dof_coordinate_dict(self):
-        """Test the method build_boundary_data- doftionary"""
-        #Insert the special function space
-        self.solver.V = FunctionSpace(self.solver.problem.mesh,"CG",1)
-        #Call the methid
-        self.solver.build_boundary_data()
-        #test the result
-        numdofcalc = len(self.solver.doftionary)
-        numdofactual = BoundaryMesh(self.solver.V.mesh()).num_vertices()
-        assert numdofcalc == numdofactual,"Error in Boundary Dof Dictionary creation, number of DOFS " +str(numdofcalc)+ \
-                                          " does not match that of the Boundary Mesh " + str(numdofactual)
-        
-    def test_get_dof_normal_dict(self):
-        """Test the method get_dof_normal_dict"""
-        V = self.easyspace()
-        #insert V into the solver
-        self.solver.V = V
-        self.solver.build_boundary_data()
-        facetdic = self.solver.doftonormal
-        coord = self.solver.doftionary
-        
-        #Tests
-        assert len(facetdic[0]) == 2,"Error in normal dictionary creation, 1,1 UnitSquare with CG1 has two normals per boundary dof"
-        assert facetdic.keys() == coord.keys(),"error in normal dictionary creation, boundary dofs do not agree with those obtained from \
-                                            get_boundary_dof_coordinate_dict"
-        
+    
+    def get_boundary_dofs(self,V):
+     """Gets the dofs that live on the boundary of the mesh
+            of function space V"""
+        dummybc = df.DirichletBC(V,0,"on_boundary")
+        return dummybc.get_boundary_values("pointwise")
+
     def build_boundary_data(self):
         """
         Builds two boundary data dictionaries
@@ -60,7 +41,7 @@ class PEQBuilder(object):
             #one cell means we are on the boundary
             if len(cells) ==1:
                 #######################################
-                #Shared Data for Normal and coordinates
+                #Shared data for normal and coordinates
                 #######################################
 
                 #create one cell (since we have CG)
@@ -109,6 +90,7 @@ class PEQBuilder(object):
         self.doftonormal = doftonormal
         self.normtionary = self.get_dof_normal_dict_avg(doftonormal)
         self.doftionary = doftionary
+
         #numpy array with type double for use by instant (c++)
         self.doflist_double = np.array(doftionary.keys(),dtype = self.normtionary[self.normtionary.keys()[0]].dtype.name)
         self.bdofs = np.array(doftionary.keys())
