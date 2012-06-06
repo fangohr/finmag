@@ -66,6 +66,11 @@ Time comparison between the nmag and finmag implementations shows the following:
 .. include:: ../examples/exchange_demag/timings/results.rst
     :literal:
 
+.. note::
+
+    * Methods and preconditioners which are set to "default" are choosen by the current linear algebra backend of dolfin
+      (PetSC, uBLAS, etc...) 
+
 The complete code follows.
 
 .. literalinclude:: ../examples/exchange_demag/test_exchange_demag.py

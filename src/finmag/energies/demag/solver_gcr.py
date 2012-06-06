@@ -14,8 +14,8 @@ from finmag.native.llg import compute_bem_gcr, OrientedBoundaryMesh
 logger = logging.getLogger(name='finmag')
 
 import finmag.util.solver_benchmark as bench
-
 from solver_gcr_qvector import PEQBuilder
+
 class FemBemGCRSolver(sb.FemBemDeMagSolver,PEQBuilder):
     """
     This approach is similar to the :py:class:FKSolver <finmag.demag.solver_fk.FemBemFKSolver>`
