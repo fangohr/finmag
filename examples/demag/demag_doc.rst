@@ -207,9 +207,14 @@ The `errornorm <http://fenicsproject.org/documentation/dolfin/1.0.0/python/progr
 .. figure:: ../examples/demag/errnorm_loglog.png
     :scale: 75
 
-The solve times are plotted here. They increase as the number of vertices grow.
+The bem assembly time is plotted here, increasing with the number of vertices.
 
-.. figure:: ../examples/demag/timings.png
+.. figure:: ../examples/demag/bemtimings.png
+    :scale: 75
+
+The runtime minus bem assembly is plotted here.
+
+.. figure:: ../examples/demag/solvetimings.png
     :scale: 75
 
 The number of Krylov iterations are plotted here.
