@@ -83,7 +83,7 @@ def test_compare_averages():
             run_finmag(demagsolver)
 
         computed = np.array(h.read_float_data(MODULE_DIR + "/%saverages.txt"%demagsolver))
-        ref = np.array(h.read_float_data(MODULE_DIR + "/averages_ref.txt"))
+        ref = np.array(h.read_float_data(MODULE_DIR + "/%saverages_ref.txt"%demagsolver))
         dt = ref[:,0] - computed[:,0]
         assert np.max(dt) < 1e-15, "Compare timesteps."
 

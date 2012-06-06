@@ -6,6 +6,7 @@ from finmag.energies.demag.solver_gcr import FemBemGCRSolver
 import pylab as p
 import sys, os, commands, subprocess,time
 from finmag.sim.llg import LLG
+from finmag.util.timings import timings
 
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -28,7 +29,8 @@ stddev = {"FK":[],"GCR":[],"nmag":[]}
 errorH = {"FK":[],"GCR":[]}
 maxerror = {"FK":[],"GCR":[]}
 errnorm = {"FK":[],"GCR":[]}
-timings = {"FK":[],"GCR":[],"nmag":[]}
+runtimes = {"bem": {"FK":[],"GCR":[],"nmag":[]},
+           "solve": {"FK":[],"GCR":[],"nmag":[]}}
 krylov_iter = {"FK":{"poisson":[],"laplace":[]},
                "GCR":{"poisson":[],"laplace":[]}}
 
@@ -45,9 +47,28 @@ def printsolverparams(mesh,m):
         output.write("\nFirst linear solve :%s" %(solver.poisson_solver.parameters.to_dict()["relative_tolerance"]))
         output.write("\nSecond linear solve: %s \n \n"% (solver.laplace_solver.parameters.to_dict()["relative_tolerance"]))
     output.close()
+
+def get_nmag_bemtime():
+    """Read the nmag log to get the BEM assembly time"""
+    
+    inputfile = open("run_nmag_log.log", "r")
+    nmaglog = inputfile.read()
+
+    #The time should be between the two key words
+    keyword1 = "Populating BEM took"
+    keyword2 = "seconds"
+
+    begin = nmaglog.find(keyword1)
+    end = nmaglog.find(keyword2,begin)
+
+    time =  nmaglog[begin + len(keyword1):end]
+    return float(time)
+
     
 #for maxh in (2, 1, 0.8, 0.7):
-for i,maxh in enumerate((5, 3, 2, 1.5,1.0,0.8)):
+meshsizes = (5, 3, 2, 1.5,1.0,0.8)
+#meshsizes = (5,3,2)
+for i,maxh in enumerate(meshsizes):
     # Create geofile
     geo = """
     algebraic3d
@@ -101,17 +122,22 @@ for i,maxh in enumerate((5, 3, 2, 1.5,1.0,0.8)):
 
     #Get seperate data for gcr and fk solvers
     for demagtype in finmagsolvers.keys():
-        #Solve for the demag field and get the time
-        starttime = time.time() 
+        #Assemble the bem and get the time.
+        starttime = time.time()
         solver = finmagsolvers[demagtype](mesh,m)
         demag = solver.compute_field()
         endtime = time.time()
+
+        #Store the times
+        runtimes["bem"][demagtype].append(timings.gettime("Build boundary element matrix"))
+        runtimes["solve"][demagtype].append(endtime - starttime)
+        
 
         #store the number of krylov iterations
         krylov_iter[demagtype]["poisson"].append(solver.poisson_iter)
         krylov_iter[demagtype]["laplace"].append(solver.laplace_iter)
         
-        timings[demagtype].append(endtime - starttime)        
+                
         H_demag = df.Function(V)
         H_demag.vector()[:] = demag
         demag.shape = (3, -1)
@@ -179,7 +205,12 @@ for i,maxh in enumerate((5, 3, 2, 1.5,1.0,0.8)):
     starttime = time.time()
     status, output = commands.getstatusoutput(cmd3)
     endtime = time.time()
-    timings["nmag"].append(endtime - starttime)
+
+    runtime = endtime - starttime
+    bemtime = get_nmag_bemtime()
+    
+    runtimes["bem"]["nmag"].append(bemtime)
+    runtimes["solve"]["nmag"].append(runtime - bemtime)
     
     if status != 0:
         print output
@@ -240,7 +271,7 @@ else:
 
 p.xlabel('vertices')
 p.grid()
-p.legend()
+p.legend(loc = 0)
 p.savefig(os.path.join(MODULE_DIR, 'xvaluesgcr.png'))
 
 #Standard deviation plot
@@ -307,19 +338,22 @@ p.legend()
 p.savefig(os.path.join(MODULE_DIR, 'errnorm_loglog.png'))
 
 ############################################
-#Useful Plot timings
+#Useful Plot bem and solve timings
 ############################################
-p.figure()
-p.plot(vertices, timings["FK"], label='Finmag FK timings')
-p.plot(vertices, timings["GCR"], label='Finmag GCR timings')
-p.plot(vertices, timings["nmag"], label='Nmag timings')
+titles = ["Runtime without Bem assembly","Bem assembly times"]
 
-p.xlabel('vertices')
-p.ylabel('seconds')
-p.title('Demag solve times (including BEM assembly)')
-p.grid()
-p.legend()
-p.savefig(os.path.join(MODULE_DIR, 'timings.png'))
+for title,k in zip(titles,runtimes.keys()):
+    p.figure()
+    p.loglog(vertices, runtimes[k]["FK"],'o-', label='Finmag FK timings')
+    p.loglog(vertices, runtimes[k]["GCR"],'x-', label='Finmag GCR timings')
+    p.loglog(vertices, runtimes[k]["nmag"], label='Nmag timings')
+
+    p.xlabel('vertices')
+    p.ylabel('seconds')
+    p.title(title)
+    p.grid()
+    p.legend(loc = 0)
+    p.savefig(os.path.join(MODULE_DIR, '%stimings.png'%k))
 
 ############################################
 #Useful Plot krylov iterations
@@ -337,4 +371,4 @@ p.grid()
 p.legend(loc=0)
 p.savefig(os.path.join(MODULE_DIR, 'krylovitr.png'))
 
-print "Useful plots: errornorm_loglog.png, stddev.png, xvalues.png,xvaluesgcr.png,timings.png,krylovitr.png"
+print "Useful plots: errornorm_loglog.png, stddev.png, xvalues.png,xvaluesgcr.png,solvetimings.png,bemtimings,krylovitr.png"
