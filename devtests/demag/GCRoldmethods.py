@@ -134,6 +134,12 @@ class ProxyGCR():
         self.doflist_double = np.array(doftionary.keys(),dtype = self.normtionary[self.normtionary.keys()[0]].dtype.name)
         self.bdofs = np.array(doftionary.keys())
 
+   def get_boundary_dofs(self,V):
+     """Gets the dofs that live on the boundary of the mesh
+            of function space V"""
+        dummybc = df.DirichletBC(V,0,"on_boundary")
+        return dummybc.get_boundary_values("pointwise")
+
     def restrict_to(self,bigvector):
         """Restrict a vector to the dofs in dofs (usually boundary)"""
         vector = np.zeros(len(self.doflist_double))

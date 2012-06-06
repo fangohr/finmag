@@ -195,7 +195,7 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver,PEQBuilder):
         self.surface_node_areas = df.assemble(self.v*df.ds, mesh=self.mesh).array()+1e-300
 
 ##        #Build boundary data for the exact q method
-##        self.build_boundary_data()
+        self.build_boundary_data()
 
     def solve(self):
         """
