@@ -14,7 +14,7 @@ from finmag.native.llg import compute_bem_gcr, OrientedBoundaryMesh
 logger = logging.getLogger(name='finmag')
 
 import finmag.util.solver_benchmark as bench
-from solver_gcr_qvector import PEQBuilder
+from solver_gcr_qvector_pe import PEQBuilder
 
 class FemBemGCRSolver(sb.FemBemDeMagSolver,PEQBuilder):
     """
@@ -82,7 +82,24 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver,PEQBuilder):
         q(\\vec r) = -n \\cdot \\vec M(\\vec r) +
         \\frac{\\partial \\phi_a}{\\partial n} \\qquad \\qquad (5)
 
-    This vector is assembled in the method build_vector_q using the box method
+    This vector can be assembled in two ways, using the default point evaluation method,
+    or the box method.
+
+    The formula for the point evaluation method is almost the same as the definition, except that
+    :math 'n' has been replaced by :math: '\\tilde(n) = \\frac{\\ sum n_i}{\\| sum n_i \\|}',
+    the normalized average of the norms associated to all of the facets that meet at
+    a vertex on the boundary.
+    
+    .. math::
+        q(\\vec r) = -\\tilde(n) \\cdot \\vec M(\\vec r) +
+        \\frac{\\partial \\phi_a}{\\partial n} \\qquad \\qquad (5)
+
+    This method has the advantage of offering better precision (add a link to nmag 1 example),
+    but is slower at the moment since it is implemented in python.
+
+    Q vector assembly with the box method is done by calling dolfin assemble() using the formula
+    for the definition of q multiplied by a test function. This gives an estimate of q(i) that is averaged
+    by the integral of a basis function, whose volume is divided out afterwards. 
 
     .. math::
         q(\\vec r_i) \\approx  \\frac{ \\int_{supp(\\psi_i )} n \\cdotp
@@ -159,8 +176,8 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver,PEQBuilder):
         bench
             set to True to run a benchmark of linear solvers.
         qvector method
-            method to assemble the vector q. Choices are "box" for the box method
-            or "pe" for point evaluation.
+            method to assemble the vector q. Choices are "pe" for point evaluation
+            or "box" for the box method.
     """
     def __init__(self, mesh,m, parameters=sb.default_parameters, degree=1, element="CG",
                  project_method='magpar', unit_length=1, Ms = 1.0,bench = False,
@@ -201,7 +218,7 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver,PEQBuilder):
             #Buffer Surface Node Areas for the box method
             self.surface_node_areas = df.assemble(self.v*df.ds, mesh=self.mesh).array()+1e-300
         elif self.qvector_method == "pe":
-            #Build boundary data for the exact q method
+            #Build boundary data for the point evaluation q method
             self.build_boundary_data()
         else:
             raise Exception("Only 'box' and 'pe' are possible qvector_method values")
@@ -226,14 +243,13 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver,PEQBuilder):
             q = self.build_vector_q(self.m,self.Ms,self.phia)
         else:
             raise Exception("Only 'box' and 'pe' are possible qvector_method values")
-
         
         # Compute phi2 on boundary using the BEM matrix
         timings.startnext("Compute phiab on the boundary")
         phib_boundary = np.dot(self.bem, q[self.b2g])
-##        phib_boundary = np.dot(self.bem, q)
 
         #Insert the boundary data into the function phib.
+        timings.startnext("Inserting bem data into a dolfin function")
         self.phib.vector()[self.b2g] = phib_boundary
         
         #Solve for phib on the inside of the mesh with Fem, eq. (3)

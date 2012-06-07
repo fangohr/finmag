@@ -40,8 +40,8 @@ def run_finmag(demagsolver):
                     widgets=[pb.ETA(), pb.Bar('=', '[', ']'), ' ', pb.Percentage()])
 
     logger.info("Time integration")
-    #times = np.linspace(0, 3.0e-10, 61)
-    times = np.linspace(0, 3.0e-10, 100000)
+    times = np.linspace(0, 3.0e-10, 61)
+    #times = np.linspace(0, 3.0e-10, 100000)
     for counter, t in enumerate(times):
         bar.update(counter)
 
