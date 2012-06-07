@@ -10,10 +10,22 @@ class PEQBuilder(object):
     """Methods for exact q vector assembly"""
     
     def get_boundary_dofs(self,V):
-     """Gets the dofs that live on the boundary of the mesh
-            of function space V"""
+        """Gets the dofs that live on the boundary of the mesh
+        of function space V"""
         dummybc = df.DirichletBC(V,0,"on_boundary")
-        return dummybc.get_boundary_values("pointwise")
+        return dummybc.get_boundary_values()
+    
+    def get_dof_normal_dict_avg(self,normtionary):
+        """
+        Provides a dictionary with all of the boundary DOF's as keys
+        and an average of facet normal components associated to the DOF as values
+        V = FunctionSpace
+        """
+        #Take an average of the normals in normtionary
+        avgnormtionary = {k:np.array([ float(sum(i))/float(len(i)) for i in zip(*normtionary[k])]) for k in normtionary}
+        #Renormalize the normals
+        avgnormtionary = {k: avgnormtionary[k]/df.sqrt(np.dot(avgnormtionary[k],avgnormtionary[k].conj())) for k in avgnormtionary}
+        return avgnormtionary
 
     def build_boundary_data(self):
         """
@@ -95,18 +107,78 @@ class PEQBuilder(object):
         self.doflist_double = np.array(doftionary.keys(),dtype = self.normtionary[self.normtionary.keys()[0]].dtype.name)
         self.bdofs = np.array(doftionary.keys())
 
-    def assemble_qvector_exact(self):
+    def build_vector_q_pe(self,m,Ms,phia):
         """Builds the vector q using point evaluation, eq. (5)"""
         q = np.zeros(len(self.normtionary))
-        #Get gradphia as a vector function
-        gradphia = df.project(df.grad(self.phia), df.VectorFunctionSpace(self.V.mesh(),"DG",0))
+        #Get gradphia as a vector functionq
+        gradphia = df.project(df.grad(phia), df.VectorFunctionSpace(self.V.mesh(),"DG",0))
+
+        #build a list of mesh boundary verticies since the
+        #dof values seem to cause problems in 3d if they lie outside the mesh.
+        boundaryvertices = []
+        for i,v in enumerate(df.vertices(self.V.mesh())):
+            if i in self.doftionary:
+                boundaryvertices.append(v.point())
+                
         for i,dof in enumerate(self.doftionary):
-            ri = self.doftionary[dof]
+##            ri = self.doftionary[dof]
+            ri = boundaryvertices[i]
             n = self.normtionary[dof]
 
             #Take the dot product of n with M + gradphia(ri) (n dot (M+gradphia(ri))
-            rtup = tuple(ri)
-            M_array = np.array(self.m(rtup))
-            gphia_array = np.array(gradphia(rtup))
-            q[i] = np.dot(n,M_array+gphia_array)
+            rtup = (ri.x(),ri.y(),ri.z())
+
+            try: 
+                gphia_array = np.array(gradphia(*rtup))
+                M_array = np.array(m(*rtup))
+                q[i] = Ms*np.dot(n,M_array + gphia_array)
+            except:
+                q[i] = self.movepoint(rtup,n,m,Ms,gradphia)
         return q
+    
+    def movepoint(self,rtup,n,m,Ms,gradphia):
+        """
+        If point evaluation fails in q vector assembly point
+        it is assumbed that the point must be outside of the mesh.
+        In this case the point is moved until it is in the mesh again.
+        In 2-d one can set df.parameters["extrapolate"] = True, however this
+        did not work in 3-d at the time of coding.
+        """
+        contract = 1.0 - 1e-15
+        expand = 1.0 + 1e-15
+        try:
+            rtupnew = (rtup[0]*contract,rtup[1],rtup[2])
+            gphia_array = np.array(gradphia(*rtupnew))
+            M_array = np.array(m(*rtupnew))
+        except:
+            try:
+                rtupnew = (rtup[0]*expand,rtup[1],rtup[2])
+                gphia_array = np.array(gradphia(*rtupnew))
+                M_array = np.array(m(*rtupnew))
+            except:
+                try:
+                    rtupnew = (rtup[0],rtup[1]*contract,rtup[2])
+                    gphia_array = np.array(gradphia(*rtupnew))
+                    M_array = np.array(m(*rtupnew))
+                except:
+                    try:
+                        rtupnew = (rtup[0],rtup[1]*expand,rtup[2])
+                        gphia_array = np.array(gradphia(*rtupnew))
+                        M_array = np.array(m(*rtupnew))
+                    except:
+                        try:
+                            rtupnew = (rtup[0],rtup[1],rtup[2]*contract)
+                            gphia_array = np.array(gradphia(*rtupnew))
+                            M_array = np.array(m(*rtupnew))
+                        except:
+                            try:
+                                rtupnew = (rtup[0],rtup[1],rtup[2]*expand)
+                                gphia_array = np.array(gradphia(*rtupnew))
+                                M_array = np.array(m(*rtupnew))
+                            except:
+                                raise Exception("Failure in gcr q vector assembly, \
+                                                point could not be moved inside the mesh \
+                                                please use box method or reprogram \
+                                                solver_gcr_qvector.movepoint")
+        return Ms*np.dot(n,M_array + gphia_array)
+    
