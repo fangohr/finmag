@@ -158,15 +158,21 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver,PEQBuilder):
                 * 'project'
         bench
             set to True to run a benchmark of linear solvers.
+        qvector method
+            method to assemble the vector q. Choices are "box" for the box method
+            or "pe" for point evaluation.
     """
     def __init__(self, mesh,m, parameters=sb.default_parameters, degree=1, element="CG",
-                 project_method='magpar', unit_length=1, Ms = 1.0,bench = False):
+                 project_method='magpar', unit_length=1, Ms = 1.0,bench = False,
+                 qvector_method = 'pe'):
         
         #Initialize the base class
         sb.FemBemDeMagSolver.__init__(self,mesh,m,parameters = parameters,degree = degree, element=element,
                                              project_method = project_method,
                                              unit_length = unit_length,Ms = Ms,bench = bench)
         self.__name__ = "GCR Demag Solver"
+        self.qvector_method = qvector_method
+        
         #Define the potentials
         self.phia = df.Function(self.V)
         self.phib = df.Function(self.V)
@@ -191,12 +197,15 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver,PEQBuilder):
         self.bem, self.b2g = compute_bem_gcr(self.boundary_mesh)
         timings.stop("Build boundary element matrix")
 
-        #Buffer Surface Node Areas for the box method
-        self.surface_node_areas = df.assemble(self.v*df.ds, mesh=self.mesh).array()+1e-300
-
-##      #Build boundary data for the exact q method
-        self.build_boundary_data()
-
+        if self.qvector_method == "box":
+            #Buffer Surface Node Areas for the box method
+            self.surface_node_areas = df.assemble(self.v*df.ds, mesh=self.mesh).array()+1e-300
+        elif self.qvector_method == "pe":
+            #Build boundary data for the exact q method
+            self.build_boundary_data()
+        else:
+            raise Exception("Only 'box' and 'pe' are possible qvector_method values")
+        
     def solve(self):
         """
         Solve for the Demag field using GCR and FemBem
@@ -211,12 +220,18 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver,PEQBuilder):
         #Assemble the vector q.
         logger.info("GCR: Solving for phi_b on the boundary")
         timings.startnext("Build q vector")
-        q = self.build_vector_q_pe(self.m,self.Ms,self.phia)
-##        q = self.build_vector_q(self.m,self.Ms,self.phia)      
+        if self.qvector_method == "pe":
+            q = self.build_vector_q_pe(self.m,self.Ms,self.phia)
+        elif self.qvector_method == "box":
+            q = self.build_vector_q(self.m,self.Ms,self.phia)
+        else:
+            raise Exception("Only 'box' and 'pe' are possible qvector_method values")
+
+        
         # Compute phi2 on boundary using the BEM matrix
         timings.startnext("Compute phiab on the boundary")
-##        phib_boundary = np.dot(self.bem, q[self.b2g])
-        phib_boundary = np.dot(self.bem, q)
+        phib_boundary = np.dot(self.bem, q[self.b2g])
+##        phib_boundary = np.dot(self.bem, q)
 
         #Insert the boundary data into the function phib.
         self.phib.vector()[self.b2g] = phib_boundary
@@ -266,19 +281,19 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver,PEQBuilder):
         q = q_dot_v/self.surface_node_areas
         return q
 
-
 if __name__ == "__main__":
     from finmag.tests.demag.problems import prob_fembem_testcases as pft
     from finmag.sim import helpers
     
-    problem = pft.MagSphereBase(2.0, 10)
+    problem = pft.MagSphereBase(5.0, 10)
 
     #Make a more interesting m
     m = df.interpolate(df.Expression(["x[0]*x[1]+3", "x[2]+5", "x[1]+7"]),
                        df.VectorFunctionSpace(problem.mesh,"CG",1))
     
     m.vector()[:] = helpers.fnormalise(m.vector().array())
-    solver = FemBemGCRSolver(problem.mesh,m,bench = False)
+    m = df.Expression(("1.0","0.0","0.0"))
+    solver = FemBemGCRSolver(problem.mesh,m,bench = False,qvector_method = "pe")
     sol = solver.solve()
     print timings
     df.plot(sol)

@@ -109,31 +109,34 @@ class PEQBuilder(object):
 
     def build_vector_q_pe(self,m,Ms,phia):
         """Builds the vector q using point evaluation, eq. (5)"""
-        q = np.zeros(len(self.normtionary))
+##        q = np.zeros(len(self.normtionary))
+        q = np.zeros(self.V.dim())
+        
         #Get gradphia as a vector functionq
-        gradphia = df.project(df.grad(phia), df.VectorFunctionSpace(self.V.mesh(),"DG",0))
+        gradphia = df.project(df.grad(phia), df.VectorFunctionSpace(self.V.mesh(),"DG",self.degree -1))
 
-        #build a list of mesh boundary verticies since the
-        #dof values seem to cause problems in 3d if they lie outside the mesh.
-        boundaryvertices = []
-        for i,v in enumerate(df.vertices(self.V.mesh())):
-            if i in self.doftionary:
-                boundaryvertices.append(v.point())
+##        #build a list of mesh boundary verticies since the
+##        #dof values seem to cause problems in 3d if they lie outside the mesh.
+##        boundaryvertices = []
+##        for i,v in enumerate(df.vertices(self.V.mesh())):
+##            if i in self.doftionary:
+##                boundaryvertices.append(v.point())
                 
-        for i,dof in enumerate(self.doftionary):
+        for dof in self.doftionary:
 ##            ri = self.doftionary[dof]
-            ri = boundaryvertices[i]
+            #ri = boundaryvertices[i]
+            ri = self.doftionary[dof]
             n = self.normtionary[dof]
-
             #Take the dot product of n with M + gradphia(ri) (n dot (M+gradphia(ri))
-            rtup = (ri.x(),ri.y(),ri.z())
+##            rtup = (ri.x(),ri.y(),ri.z())
+            rtup =ri
 
             try: 
                 gphia_array = np.array(gradphia(*rtup))
                 M_array = np.array(m(*rtup))
-                q[i] = Ms*np.dot(n,M_array + gphia_array)
+                q[dof] = Ms*np.dot(n,M_array + gphia_array)
             except:
-                q[i] = self.movepoint(rtup,n,m,Ms,gradphia)
+                q[dof] = self.movepoint(rtup,n,m,Ms,gradphia)
         return q
     
     def movepoint(self,rtup,n,m,Ms,gradphia):
@@ -141,6 +144,7 @@ class PEQBuilder(object):
         If point evaluation fails in q vector assembly point
         it is assumbed that the point must be outside of the mesh.
         In this case the point is moved until it is in the mesh again.
+        
         In 2-d one can set df.parameters["extrapolate"] = True, however this
         did not work in 3-d at the time of coding.
         """
@@ -180,5 +184,5 @@ class PEQBuilder(object):
                                                 point could not be moved inside the mesh \
                                                 please use box method or reprogram \
                                                 solver_gcr_qvector.movepoint")
-        return Ms*np.dot(n,M_array + gphia_array)
+        return Ms*np.dot(n,-M_array + gphia_array)
     
