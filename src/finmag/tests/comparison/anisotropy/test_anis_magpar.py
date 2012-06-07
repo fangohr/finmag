@@ -3,6 +3,7 @@ import conftest as test
 import finmag.util.magpar as magpar
 from finmag.sim.helpers import stats
 
+@pytest
 def test_against_magpar(finmag):
 
     REL_TOLERANCE = 5e-7

@@ -202,7 +202,8 @@ Comparing the GCR with nmag gives the following results
 .. figure:: ../examples/demag/xvaluesgcr.png
     :scale: 75
 
-The `errornorm <http://fenicsproject.org/documentation/dolfin/1.0.0/python/programmers-reference/fem/norms/errornorm.html#dolfin.fem.norms.errornorm>`_ is decreasing as the mesh gets finer.
+The `errornorm <http://fenicsproject.org/documentation/dolfin/1.0.0/python/programmers-reference/fem/norms/errornorm.html#dolfin.fem.norms.errornorm>`_
+is decreasing as the mesh gets finer. The precision of the GCR method with point evaluation q assembly is better than the GCR method with the box method.  
 
 .. figure:: ../examples/demag/errnorm_loglog.png
     :scale: 75
@@ -212,7 +213,7 @@ The bem assembly time is plotted here, increasing with the number of vertices.
 .. figure:: ../examples/demag/bemtimings.png
     :scale: 75
 
-The runtime minus bem assembly is plotted here.
+The runtime minus bem assembly is plotted here. The FK method is the fastest, and the GCR method with point evaluation the slowest. 
 
 .. figure:: ../examples/demag/solvetimings.png
     :scale: 75

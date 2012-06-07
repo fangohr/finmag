@@ -177,7 +177,7 @@ class BemComputationTests(unittest.TestCase):
     def test_compute_scalar_potential_gcr(self):
         m1 = df.Constant([1, 0, 0])
         m2 = df.Expression(["x[0]*x[1]+3", "x[2]+5", "x[1]+7"])
-        tol = 1e-2
+        tol = 1e-1
         expressions = [m1,m2]
         self.run_demag_computation_test(MagSphereBase(0.1, 1).mesh, m1,
                                         compute_scalar_potential_native_gcr,
