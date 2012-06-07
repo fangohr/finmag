@@ -1,3 +1,6 @@
+"""This module contains methods for the assembly of the q vector in the gcr method
+   at some point this functionality should be implemented in c++ for greater speed."""
+
 __author__ = "Gabriel Balaban"
 __copyright__ = __author__
 __project__ = "Finmag"
@@ -14,7 +17,10 @@ class PEQBuilder(object):
         of function space V"""
         dummybc = df.DirichletBC(V,0,"on_boundary")
         return dummybc.get_boundary_values()
-    
+
+
+    #The finmag extention to the dolfin mesh class, OrientedBoundaryMesh
+    #could be modified to provide this data
     def get_dof_normal_dict_avg(self,normtionary):
         """
         Provides a dictionary with all of the boundary DOF's as keys
@@ -22,7 +28,7 @@ class PEQBuilder(object):
         V = FunctionSpace
         """
         #Take an average of the normals in normtionary
-        avgnormtionary = {k:np.array([ float(sum(i))/float(len(i)) for i in zip(*normtionary[k])]) for k in normtionary}
+        avgnormtionary = {k:np.array([ float(sum(i)) for i in zip(*normtionary[k])]) for k in normtionary}
         #Renormalize the normals
         avgnormtionary = {k: avgnormtionary[k]/df.sqrt(np.dot(avgnormtionary[k],avgnormtionary[k].conj())) for k in avgnormtionary}
         return avgnormtionary
@@ -112,29 +118,24 @@ class PEQBuilder(object):
 ##        q = np.zeros(len(self.normtionary))
         q = np.zeros(self.V.dim())
         
-        #Get gradphia as a vector functionq
-        gradphia = df.project(df.grad(phia), df.VectorFunctionSpace(self.V.mesh(),"DG",self.degree -1))
+        #Get gradphia as a vector function
+        gradphia = df.project(df.grad(phia), df.VectorFunctionSpace(self.V.mesh(),"DG",0))
 
-##        #build a list of mesh boundary verticies since the
-##        #dof values seem to cause problems in 3d if they lie outside the mesh.
+##        #build a list of mesh boundary verticies 
 ##        boundaryvertices = []
 ##        for i,v in enumerate(df.vertices(self.V.mesh())):
 ##            if i in self.doftionary:
 ##                boundaryvertices.append(v.point())
                 
         for dof in self.doftionary:
-##            ri = self.doftionary[dof]
-            #ri = boundaryvertices[i]
             ri = self.doftionary[dof]
             n = self.normtionary[dof]
-            #Take the dot product of n with M + gradphia(ri) (n dot (M+gradphia(ri))
-##            rtup = (ri.x(),ri.y(),ri.z())
             rtup =ri
 
             try: 
                 gphia_array = np.array(gradphia(*rtup))
                 M_array = np.array(m(*rtup))
-                q[dof] = Ms*np.dot(n,M_array + gphia_array)
+                q[dof] = Ms*np.dot(n,-M_array + gphia_array)
             except:
                 q[dof] = self.movepoint(rtup,n,m,Ms,gradphia)
         return q

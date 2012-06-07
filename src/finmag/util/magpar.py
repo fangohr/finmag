@@ -1,3 +1,4 @@
+##import io
 import numpy as np
 import dolfin as df
 import os
@@ -283,7 +284,7 @@ def compare_field_directly(node1,field1,node2,field2):
         key1.append(tmp1)
         key2.append(tmp2)
         data2[tmp2]=[field2[0][i],field2[1][i],field2[2][i]]
-        
+
     assert(set(key1)==set(key2))
 
     field2_ordered=np.array([data2[k] for k in key1])

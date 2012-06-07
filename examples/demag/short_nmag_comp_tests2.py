@@ -1,12 +1,24 @@
+##import io
 import numpy as np
 import dolfin as df
 from finmag.util.convert_mesh import convert_mesh
 from finmag.energies.demag.solver_fk import FemBemFKSolver
 from finmag.energies.demag.solver_gcr import FemBemGCRSolver
 import pylab as p
+import finmag.energies.demag.solver_base as sb
 import sys, os, commands, subprocess,time
 from finmag.sim.llg import LLG
 from finmag.util.timings import timings
+import copy
+
+class FemBemGCRboxSolver(FemBemGCRSolver):
+    "GCR Solver but with point evaluation of the q vector as the default"
+    def __init__(self, mesh,m, parameters=sb.default_parameters, degree=1, element="CG",
+         project_method='magpar', unit_length=1, Ms = 1.0,bench = False,
+         qvector_method = 'box'):
+        
+        FemBemGCRSolver.__init__(self,mesh,m, parameters, degree, element,
+         project_method, unit_length, Ms,bench,qvector_method )
 
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -16,23 +28,19 @@ nmagoutput = os.path.join(MODULE_DIR, 'nmag_data.dat')
 if os.path.isfile(nmagoutput):
     os.remove(nmagoutput)
 
-finmagsolvers = {"FK":FemBemFKSolver,"GCR":FemBemGCRSolver}
+finmagsolvers = {"FK":FemBemFKSolver,"GCR":FemBemGCRSolver,"GCRbox":FemBemGCRboxSolver}
 
 #Define data arrays to be with data for later plotting
 vertices = []
-xavg = {"FK":[],"GCR":[],"nmag":[]}
-xmax = {"FK":[],"GCR":[],"nmag":[]}
-xmin = {"FK":[],"GCR":[]}
-ymax = {"FK":[],"GCR":[]}
-zmax = {"FK":[],"GCR":[]}
-stddev = {"FK":[],"GCR":[],"nmag":[]}
-errorH = {"FK":[],"GCR":[]}
-maxerror = {"FK":[],"GCR":[]}
-errnorm = {"FK":[],"GCR":[]}
-runtimes = {"bem": {"FK":[],"GCR":[],"nmag":[]},
-           "solve": {"FK":[],"GCR":[],"nmag":[]}}
-krylov_iter = {"FK":{"poisson":[],"laplace":[]},
-               "GCR":{"poisson":[],"laplace":[]}}
+initialdata = {k:[] for k in finmagsolvers.keys() + ["nmag"]}
+
+[xavg,xmax,xmin,ymax,zmax,stddev,errorH,maxerror,errnorm] = [copy.deepcopy(initialdata) for i in range(9) ]
+
+runtimes = {"bem": copy.deepcopy(initialdata),
+           "solve": copy.deepcopy(initialdata)}
+
+iterdict = {"poisson":[],"laplace":[]}
+krylov_iter = {k:copy.deepcopy(iterdict) for k in finmagsolvers.keys()}
 
 def printsolverparams(mesh,m):
     # Write output to linsolveparams.rst
@@ -224,7 +232,6 @@ for i,maxh in enumerate(meshsizes):
 ############################################
 
 # Extract nmag data
-print xavg["nmag"]
 if has_nmag:
     f = open('nmag_data.dat', 'r')
     lines = f.readlines()
@@ -236,7 +243,6 @@ if has_nmag:
             xmax["nmag"].append(float(line[1]))
             stddev["nmag"].append(float(line[2]))
 
-# Plot 
 p.plot(vertices, xavg["FK"], 'x--',label='Finmag FK x-avg')
 p.plot(vertices, xmax["FK"], 'o-',label='Finmag FK x-max')
 p.plot(vertices, xmin["FK"], '^:',label='Finmag FK x-min')
@@ -250,7 +256,7 @@ else:
 
 p.xlabel('vertices')
 p.grid()
-p.legend()
+p.legend(loc = 0)
 p.savefig(os.path.join(MODULE_DIR, 'xvalues.png'))
 
 ############################################
@@ -285,7 +291,7 @@ if has_nmag:
 p.xlabel('vertices')
 p.title('Standard deviation')
 p.grid()
-p.legend()
+p.legend(loc = 0)
 p.savefig(os.path.join(MODULE_DIR, 'stddev.png'))
 
 #Error Norm convergence plot
@@ -294,7 +300,7 @@ p.plot(vertices, errnorm["FK"], label='Finmag errornorm')
 p.xlabel('vertices')
 p.title('Error norm')
 p.grid()
-p.legend()
+p.legend(loc = 0)
 p.savefig(os.path.join(MODULE_DIR, 'errnorm.png'))
 
 #Max error plot
@@ -305,7 +311,7 @@ p.plot(vertices, zmax["FK"], '^-',label='Finmag maxerror H_demag-z')
 p.xlabel('vertices')
 p.title('Max Error per component')
 p.grid()
-p.legend()
+p.legend(loc = 0)
 p.savefig(os.path.join(MODULE_DIR, 'maxerror.png'))
 
 ############################################
@@ -321,7 +327,7 @@ if has_nmag:
 p.xlabel('vertices')
 p.title('Standard deviation (log-log)')
 p.grid()
-p.legend()
+p.legend(loc = 0)
 p.savefig(os.path.join(MODULE_DIR, 'stddev_loglog.png'))
 
 
@@ -331,6 +337,8 @@ p.savefig(os.path.join(MODULE_DIR, 'stddev_loglog.png'))
 p.figure()
 p.loglog(vertices, errnorm["FK"], label='Finmag FK errornorm')
 p.loglog(vertices, errnorm["GCR"], label='Finmag GCR errornorm')
+p.loglog(vertices, errnorm["GCRbox"], label='Finmag GCR box method errornorm')
+
 p.xlabel('vertices')
 p.title('Error norm (log-log)')
 p.grid()
@@ -346,6 +354,7 @@ for title,k in zip(titles,runtimes.keys()):
     p.figure()
     p.loglog(vertices, runtimes[k]["FK"],'o-', label='Finmag FK timings')
     p.loglog(vertices, runtimes[k]["GCR"],'x-', label='Finmag GCR timings')
+    p.loglog(vertices, runtimes[k]["GCRbox"],'x-', label='Finmag GCR box method timings')
     p.loglog(vertices, runtimes[k]["nmag"], label='Nmag timings')
 
     p.xlabel('vertices')
