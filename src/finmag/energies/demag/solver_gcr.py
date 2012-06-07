@@ -194,7 +194,7 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver,PEQBuilder):
         #Buffer Surface Node Areas for the box method
         self.surface_node_areas = df.assemble(self.v*df.ds, mesh=self.mesh).array()+1e-300
 
-##        #Build boundary data for the exact q method
+##      #Build boundary data for the exact q method
         self.build_boundary_data()
 
     def solve(self):
@@ -211,11 +211,12 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver,PEQBuilder):
         #Assemble the vector q.
         logger.info("GCR: Solving for phi_b on the boundary")
         timings.startnext("Build q vector")
-        ##q = self.build_vector_q_peval(self.m,self.Ms,self.phia)
-        q = self.build_vector_q(self.m,self.Ms,self.phia)
+        q = self.build_vector_q_pe(self.m,self.Ms,self.phia)
+##        q = self.build_vector_q(self.m,self.Ms,self.phia)      
         # Compute phi2 on boundary using the BEM matrix
         timings.startnext("Compute phiab on the boundary")
-        phib_boundary = np.dot(self.bem, q[self.b2g])
+##        phib_boundary = np.dot(self.bem, q[self.b2g])
+        phib_boundary = np.dot(self.bem, q)
 
         #Insert the boundary data into the function phib.
         self.phib.vector()[self.b2g] = phib_boundary
@@ -261,7 +262,7 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver,PEQBuilder):
         
         q_dot_v = df.assemble(Ms*df.dot(self.n, -m + df.grad(phi1))*self.v*df.ds,
                               mesh=self.mesh).array()
-        
+    
         q = q_dot_v/self.surface_node_areas
         return q
 
