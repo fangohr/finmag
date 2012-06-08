@@ -51,7 +51,7 @@ def three_dimensional_problem():
     mesh.coordinates()[:]=tmp_c*1e9
     
     finmag_exch,magpar_exch, \
-        diff,rel_diff=magpar.compare_field_directly( \
+        diff,rel_diff=magpar.compare_field( \
             mesh.coordinates(),finmag_exch,\
             nodes, magpar_exch)
 

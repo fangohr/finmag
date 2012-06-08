@@ -9,7 +9,7 @@ def test_against_magpar(finmag):
 
     magpar_nodes, magpar_anis = magpar.compute_anis_magpar(finmag["m"],
             K1=test.K1, a=test.a, Ms=test.Ms)
-    _, _, diff, rel_diff = magpar.compare_field_directly(
+    _, _, diff, rel_diff = magpar.compare_field(
             finmag["S3"].mesh().coordinates(), finmag["H"].vector().array(),
             magpar_nodes, magpar_anis)
 
