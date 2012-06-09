@@ -218,51 +218,20 @@ def compare_field(aNodes, aField, bNodes, bField):
     """
     assert aNodes.shape == bNodes.shape
     assert aField.shape == bField.shape
-    aField.shape = bField.shape = (3, -1);
 
-    def aMappingKeyFormat(x, y, z):
-        def truncate(nb, places=1):
-            nb = round(nb, places)
-            slen = len("{:.{places}f}".format(nb, places=places))
-            return str(nb)[:slen]
-        return truncate(x) + " " + truncate(y) + " " + truncate(z)
+    aField = aField.reshape((3, -1))
+    bField = bField.reshape((3, -1))
 
-    # The coordinates we get from magpar are floats of a different precision
-    # than finmag's. This makes identifying corresponding nodes extra
-    # difficult. While I have looked into the Decimal module, this is still
-    # our best bet and should work for our use cases, i.e. meshes which are
-    # not much finer than 1nm.
-    aMapping = dict()
-    import re; pattern = re.compile(r"0\.0 3\.. 10\..")
-    for aIndex, aNode in enumerate(aNodes):
-        aCoords = aMappingKeyFormat(* aNode)
-        if pattern.match(aCoords):
-            print aNode
-            print aCoords
-        if aCoords in aMapping:
-            print "<<< OVERWRITE >>>"
-            print aCoords
-            print aNodes[aMapping[aCoords]]
-            print aNode
-        aMapping[aCoords] = aIndex
-
-    bFieldOrdered = np.zeros((bField.shape))
-    for bIndex, bNode in enumerate(bNodes):
-        bCoords = aMappingKeyFormat(* bNode)
-        try:
-            bNewIndex = aMapping[bCoords]
-        except KeyError:
-            print "Can't find:"
-            print bNode
-            print bCoords
-            import sys; sys.exit()
-        for dim in [0, 1, 2]:
-            bFieldOrdered[dim][bNewIndex] = bField[dim][bIndex]
+    bFieldOrdered = np.zeros(bField.shape)
+    for i, aNode in enumerate(aNodes):
+        closest_bNode_index = np.abs(bNodes - aNode).mean(axis=1).argmin()
+        for dim in range(3):
+            bFieldOrdered[dim][i] = bField[dim][closest_bNode_index]
 
     diff = np.abs(bFieldOrdered - aField)
     rel_diff = diff / np.sqrt(np.max(bFieldOrdered[0]**2 + bFieldOrdered[1]**2 + bFieldOrdered[2]**2))
   
-    return diff, rel_diff
+    return aField, bFieldOrdered, diff, rel_diff
 
 def compare_field_directly(node1,field1,node2,field2):
     """
