@@ -38,6 +38,10 @@ class Simulation(object):
 
     m = property(__get_m, set_m)
 
+    @property
+    def m_average(self):
+        return self.llg.m_average
+
     def add(self, interaction):
         interaction.setup(self.S3, self.llg._m, self.Ms, self.unit_length)
         self.llg.interactions.append(interaction)
