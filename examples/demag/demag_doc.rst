@@ -183,10 +183,15 @@ The complete code follows
 
 .. literalinclude:: ../examples/demag/test_field.py
 
-Comparing with nmag
+Comparing nmag, Finmag FK and Finmag GCR
 ^^^^^^^^^^^^^^^^^^^
 
-Comparing with nmag, the following log-log plot shows the development of the standard deviation for increasingly finer meshes.
+In this section the results from the nmag demag solver are compared to those of the Finmag FK
+:doc:`Fredkin-Koehler method <modules/FKSolver>` and Finmag GCR :doc:`Garcia-Cervera-Roma method
+<modules/GCRSolver>`. Additionally the GCR method is tested with two different methods of q vector assembly, the default
+point evaluation method, and the box method.
+
+The following log-log plot shows the development of the standard deviation for increasingly finer meshes.
 
 .. figure:: ../examples/demag/stddev_loglog.png
     :scale: 75
@@ -213,7 +218,9 @@ The bem assembly time is plotted here, increasing with the number of vertices.
 .. figure:: ../examples/demag/bemtimings.png
     :scale: 75
 
-The runtime minus bem assembly is plotted here. The FK method is the fastest, and the GCR method with point evaluation the slowest. 
+The runtime minus bem assembly is plotted here. The FK method is the fastest. The GCR method with point evaluation is slower
+than GCR with box method. The point evaluation method,  being implemented in python could be greatly sped up
+with a C++ implementation.
 
 .. figure:: ../examples/demag/solvetimings.png
     :scale: 75
