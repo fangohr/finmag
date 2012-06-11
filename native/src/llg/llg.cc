@@ -229,6 +229,13 @@ namespace finmag { namespace llg {
 
             return a_arr;
         }
+
+        std::string demo_hello(std::string name) {
+            std::stringstream ss;
+            ss << "Hello" << name;
+            return ss.str();
+        }
+
     }
 
     void register_llg() {
@@ -262,5 +269,9 @@ namespace finmag { namespace llg {
             arg("T"),
             arg("a")=object()
         ));
+        //Towards some simple examples on using Boost.Python:
+        def("demo_hello", &demo_hello, (
+                arg("name")
+                    ));
     }
 }}
