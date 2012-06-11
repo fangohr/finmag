@@ -342,7 +342,7 @@ p.loglog(vertices, errnorm["GCRbox"], label='Finmag GCR box method errornorm')
 p.xlabel('vertices')
 p.title('Error norm (log-log)')
 p.grid()
-p.legend()
+p.legend(loc = 0)
 p.savefig(os.path.join(MODULE_DIR, 'errnorm_loglog.png'))
 
 ############################################
@@ -354,7 +354,10 @@ for title,k in zip(titles,runtimes.keys()):
     p.figure()
     p.loglog(vertices, runtimes[k]["FK"],'o-', label='Finmag FK timings')
     p.loglog(vertices, runtimes[k]["GCR"],'x-', label='Finmag GCR timings')
-    p.loglog(vertices, runtimes[k]["GCRbox"],'x-', label='Finmag GCR box method timings')
+
+    if title == "Runtime without Bem assembly":
+        p.loglog(vertices, runtimes[k]["GCRbox"],'x-', label='Finmag GCR box method timings')
+
     p.loglog(vertices, runtimes[k]["nmag"], label='Nmag timings')
 
     p.xlabel('vertices')
