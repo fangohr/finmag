@@ -184,7 +184,7 @@ The complete code follows
 .. literalinclude:: ../examples/demag/test_field.py
 
 Comparing nmag, Finmag FK and Finmag GCR
-^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In this section the results from the nmag demag solver are compared to those of the Finmag FK
 :doc:`Fredkin-Koehler method <modules/FKSolver>` and Finmag GCR :doc:`Garcia-Cervera-Roma method
