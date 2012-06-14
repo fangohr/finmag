@@ -6,27 +6,27 @@ Could always sweep all network adapter names we can think of, and if there is an
 
 */
 
-
-
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <linux/if.h>
 #include <netdb.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
-int main()
+int main(void)
 {
   struct ifreq s;
   int fd = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
 
-  strcpy(s.ifr_name, "eth1");
+  strcpy(s.ifr_name, "eth0");
   if (0 == ioctl(fd, SIOCGIFHWADDR, &s)) {
     int i;
     for (i = 0; i < 6; ++i)
       printf(" %02x", (unsigned char) s.ifr_addr.sa_data[i]);
     puts("\n");
-    return 0;
+    return EXIT_SUCCESS;
   }
-  return 1;
+  return EXIT_FAILURE;
 }
+
