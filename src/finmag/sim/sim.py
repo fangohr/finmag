@@ -9,6 +9,7 @@ ONE_DEGREE_PER_NS = 17453292.5 # in rad/s
 
 log = logging.getLogger(name="finmag")
 
+
 class Simulation(object):
     def __init__(self, mesh, Ms, unit_length=1):
         timings.reset()
