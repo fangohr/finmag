@@ -29,12 +29,12 @@ class Simulation(object):
         self.t = 0
 
         timings.stop("Sim-init")
-   
+
     def __get_m(self):
-        return self.llg.m
+            return self.llg.m
 
     def set_m(self, value, **kwargs):
-        self.llg.set_m(value, **kwargs) 
+        self.llg.set_m(value, **kwargs)
 
     m = property(__get_m, set_m)
 
@@ -65,7 +65,7 @@ class Simulation(object):
             self.integrator = LLGIntegrator(self.llg, self.llg.m)
         self.integrator.run_until(t)
 
-    def relax(self,stopping_dmdt=ONE_DEGREE_PER_NS):
+    def relax(self, stopping_dmdt=ONE_DEGREE_PER_NS):
         log.info("Will integrate until relaxation.")
         if not hasattr(self, "integrator"):
             self.integrator = LLGIntegrator(self.llg, self.llg.m)
