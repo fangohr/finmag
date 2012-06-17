@@ -20,7 +20,10 @@ except:
 
 # scan the 'dvedit' directory for extension files, converting
 # them to extension names in dotted notation
-files_to_ignore = ['llg.py','bem_computation_tests.py','test_hello.py']
+files_to_ignore = ['llg.py',
+                'bem_computation_tests.py',
+                'test_hello.py',
+                'native_compiler.py']
 
 
 def scandir(dir, files=[]):
