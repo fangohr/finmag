@@ -1,6 +1,8 @@
 #files_to_ignore = ['llg.py']
 directories_to_ignore = ['build']
+directories_for_straight_copy_only = ['native']
 targetdir = "/tmp/finmag"
+
 
 import os
 import shutil
@@ -16,7 +18,8 @@ def cp_file(sourcedir, filename, targetdir):
         os.makedirs(targetdir)
 
     path = os.path.join(sourcedir, filename)
-    if filename.endswith('.py'):
+    _, dirname = os.path.split(sourcedir)
+    if filename.endswith('.py') and dirname not in directories_for_straight_copy_only:
         if os.path.exists(path[:-3] + ".so"):
             if filename == "__init__.py":
                 # create empty init.py file
