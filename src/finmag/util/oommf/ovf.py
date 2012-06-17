@@ -208,7 +208,7 @@ class OVFSectionNode(OVFNode):
                     return
                 else:
                     raise OVFReadError("Expected section end, but got '%s'."
-                                       % name)
+                                       % node_name)
 
     def _end_section(self, name):
         expected = self.name
