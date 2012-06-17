@@ -62,8 +62,9 @@ class Demag(EnergyBase):
         
         if self.solver == "FK":
             self.demag = FemBemFKSolver(**kwargs)
-        elif self.solver == "FK_magpar":
-            self.demag = MagparFKSolver(**kwargs)
+        #MagparFKSolver does not exist? (HF 17 June 2012)
+        #elif self.solver == "FK_magpar":
+        #    self.demag = MagparFKSolver(**kwargs)
         elif self.solver == "GCR":
             self.demag = FemBemGCRSolver(**kwargs)
         elif self.solver == "weiwei":
