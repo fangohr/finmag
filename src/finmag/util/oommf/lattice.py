@@ -60,7 +60,7 @@ def parse_lattice_spec(s):
                 x_min, x_max, num_steps = nums
         except:
             raise ValueError('Error in lattice specification: '
-                                + parse_lattice_specs.__doc__)
+                                + parse_lattice_spec.__doc__)
         return [float(x_min), float(x_max), int(num_steps)]
     return [parse_dim_spec(spec) for spec in s.split('/')]
 
