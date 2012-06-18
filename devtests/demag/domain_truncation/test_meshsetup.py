@@ -1,5 +1,5 @@
-#A set of tests to insure that the submesh and boundary generation of
-#Interiorboundary and  TruncDemagProblem
+"""A set of tests to insure that the quality of the submesh and boundary generation of
+Interiorboundary and TruncDemagProblem"""
 
 __author__ = "Gabriel Balaban"
 __copyright__ = __author__
