@@ -6,7 +6,6 @@ __project__ = "Finmag"
 __organisation__ = "University of Southampton"
 
 from dolfin import *
-import problems.prob_trunc_testcases as pttc
 import problems.prob_fembem_testcases as pftc
 import finmag.energies.demag.solver_base as sb
 import finmag.energies.demag.solver_gcr as sgcr
