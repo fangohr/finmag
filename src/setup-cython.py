@@ -23,7 +23,8 @@ except:
 files_to_ignore = ['llg.py',
                 'bem_computation_tests.py',
                 'test_hello.py',
-                'native_compiler.py']
+                'native_compiler.py',
+                'energy_base.py']
 
 
 def scandir(dir, files=[]):
@@ -60,7 +61,7 @@ print "extensions are\n", extensions
 # finally, we can pass all this to distutils
 setup(
   name="dvedit",
-  packages=["finmag", "finmag.energies","finmag.sim"],
+  packages=["finmag", "finmag.energies", "finmag.sim"],
   ext_modules=extensions,
   cmdclass={'build_ext': build_ext},
 )
