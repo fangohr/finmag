@@ -23,7 +23,8 @@ except:
 files_to_ignore = ['llg.py',
                 'bem_computation_tests.py',
                 'test_hello.py',
-                'native_compiler.py']
+                'native_compiler.py',
+                'energy_base.py']
 
 
 def scandir(dir, files=[]):
