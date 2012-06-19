@@ -17,6 +17,6 @@ BOOST_PYTHON_MODULE(demo2_module)
     using namespace bp;
 
     class_<console>("console", "console class docstring", init<>())
-        .def("print_line", &console::print_line, args("message"), "prints a message via the standard output stream")
+        .def("print_line", &console::print_line, arg("message")="Hello World", "prints a message via the standard output stream")
     ;
 }
