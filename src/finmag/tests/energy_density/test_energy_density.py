@@ -1,10 +1,12 @@
-import os, sys
+import os
+import sys
 import commands
 import numpy as np
 import dolfin as df
 from finmag.energies import UniaxialAnisotropy, Exchange, Demag, DMI
 
 TOL = 1e-14
+
 
 def test_exchange_energy_density():
     """
@@ -18,7 +20,7 @@ def test_exchange_energy_density():
                  ~  v
 
     """
-    TOL = 1e-7 # Should be lower when comparing with analytical solution
+    TOL = 1e-7  # Should be lower when comparing with analytical solution
     MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
     # run nmag
@@ -39,7 +41,7 @@ def test_exchange_energy_density():
     exch.setup(S3, m, Ms)
 
     finmag_data = exch.energy_density()
-    rel_err = np.abs(nmag_data - finmag_data)/np.linalg.norm(nmag_data)
+    rel_err = np.abs(nmag_data - finmag_data) / np.linalg.norm(nmag_data)
 
     print "Relative error from nmag data (expect array of 0):"
     print rel_err
@@ -68,7 +70,7 @@ def test_anisotropy_energy_density():
     V = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
 
     # Initial magnetisation 45 degress between x- and z-axis.
-    m_vec = df.Constant((1/np.sqrt(2), 0, 1/np.sqrt(2)))
+    m_vec = df.Constant((1 / np.sqrt(2), 0, 1 / np.sqrt(2)))
     m = df.interpolate(m_vec, V)
 
     # Easy axis in z-direction.
@@ -156,11 +158,11 @@ def test_demag_energy_density():
 
     mesh = df.UnitSphere(5)
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
-    mu0 = 4*np.pi*1e-7
+    mu0 = 4 * np.pi * 1e-7
 
     demag = Demag()
     m = df.interpolate(df.Constant((1, 0, 0)), S3)
-    Ms = np.sqrt(6.0/mu0)
+    Ms = np.sqrt(6.0 / mu0)
     demag.setup(S3, m, Ms, 1)
 
     density = demag.demag.energy_density()
