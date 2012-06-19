@@ -8,12 +8,15 @@ __organisation__ = "University of Southampton"
 from dolfin import * 
 import numpy as np
 
-def bounddofs(fspace, facetfunc,num):
+def bounddofs(fspace, facetfunc, num):
     """BOUNDary DOFS
 
-    fspace - function space
-    facetfunc - function that marks the boundary
-    num - is the number that has been used to mark the boundary
+    fspace
+        - function space
+    facetfunc
+        - mesh facet function that marks the boundary
+    num
+        - the number that has been used to mark the boundary
 
     returns the set of global indices for all degrees of freedoms on the boundary
     that has been marked with 'num'.
@@ -44,11 +47,4 @@ def bounddofs(fspace, facetfunc,num):
             #Add the dofs to the global dof set.
             bounddofs = bounddofs.union(set(cell_dofs[facet_dofs]))
     return bounddofs
-    
-if __name__ == "__main__":
-    import prob_trunc_testcases as pttc
-    import solver_base as sb
-    
-    problem =  pttc.MagUnitCircle()
-    solver = sb.DeMagSolver(problem,2)
-    bounddofs(solver.V,2,problem.coreboundfunc,problem.COREBOUNDNUM)
+

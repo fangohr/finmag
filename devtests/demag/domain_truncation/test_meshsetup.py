@@ -7,7 +7,7 @@ __project__ = "Finmag"
 __organisation__ = "University of Southampton"
 
 from dolfin import *
-import problems.prob_trunc_testcases as pttc
+import prob_trunc_testcases as pttc
 
 #Global Tolerance for inexact comparisons in percent
 TOL = 0.01
