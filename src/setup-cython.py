@@ -28,7 +28,6 @@ files_to_ignore = ['llg.py',
                 'energy_base.py',    # abstract method
                 'oommf_calculator']  # oommf/test_mesh.py fails
 
-
 directories_to_ignore = ['tests']
 
 
@@ -38,8 +37,12 @@ def scandir(dir, files=[]):
         if os.path.isfile(path) and path.endswith(".py") and \
             file not in files_to_ignore:
                 files.append(path.replace(os.path.sep, ".")[:-3])
-        elif os.path.isdir(path) and dir not    in directories_to_ignore:
-            scandir(path, files)
+        elif os.path.isdir(path):
+            thisdirectoryname = os.path.split(path)[1]
+            if thisdirectoryname not in directories_to_ignore:
+                scandir(path, files)
+            else:
+                print("skipping directory dir =%20s, path=%s" % (dir, path))
     return files
 
 
@@ -63,7 +66,7 @@ extNames = scandir("finmag")
 extensions = [makeExtension(name) for name in extNames]
 
 print "extNames are\n", extNames
-print "extensions are\n", extensions
+#print "extensions are\n", extensions
 
 # finally, we can pass all this to distutils
 setup(
