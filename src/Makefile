@@ -11,7 +11,7 @@ cp:
 	cp -av finmag/tests /tmp/finmag/finmag/tests
 	cd /tmp/finmag/finmag/tests && find . -name "*.so" | xargs rm -f
 	cd /tmp/finmag/finmag/tests && find . -name "*.pyc" | xargs rm -f
-	cd /tmp/finmag/finmag/tests && find finmag -name __pychache__ | xargs rm -fr	
+	cd /tmp/finmag/finmag/tests && find . -name __pychache__ | xargs rm -fr	
 	
 test:
 	cd /tmp/finmag/finmag/tests && PYTHONPATH=/tmp/finmag py.test -vx
@@ -19,3 +19,6 @@ test:
 clean:
 	find finmag -name *.so | xargs rm -f		
 	find finmag -name __pychache__ | xargs rm -fr	
+
+removetmp:
+	rm -rf /tmp/finmag

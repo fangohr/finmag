@@ -27,13 +27,16 @@ files_to_ignore = ['llg.py',
                 'solver_base.py',
                 'energy_base.py']
 
+directories_to_ignore = ['tests']
+
 
 def scandir(dir, files=[]):
     for file in os.listdir(dir):
         path = os.path.join(dir, file)
-        if os.path.isfile(path) and path.endswith(".py") and file not in files_to_ignore:
-            files.append(path.replace(os.path.sep, ".")[:-3])
-        elif os.path.isdir(path):
+        if os.path.isfile(path) and path.endswith(".py") and \
+            file not in files_to_ignore:
+                files.append(path.replace(os.path.sep, ".")[:-3])
+        elif os.path.isdir(path) and dir not in directories_to_ignore:
             scandir(path, files)
     return files
 
@@ -44,7 +47,8 @@ def makeExtension(extName):
     return Extension(
         extName,
         [extPath],
-        include_dirs=[libincludedir, "."],   # adding the '.' to include_dirs is CRUCIAL!!
+        include_dirs=[libincludedir, "."],   # adding the '.' to include_dirs
+                                             # is CRUCIAL!!
         #extra_compile_args = ["-O3", "-Wall"],
         #extra_link_args = ['-g'],
         #libraries = ["dv",],
