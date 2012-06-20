@@ -24,3 +24,8 @@ cleanbin:
 
 removebin:
 	rm -rf /tmp/finmag
+
+cleanall:
+	make removebin
+	make cleansrc
+	
