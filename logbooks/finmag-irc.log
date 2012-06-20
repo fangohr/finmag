@@ -1263,3 +1263,30 @@ fangohr: Still testing ...
 2012-06-19 15:54:47 fangohr-adium: Hi Justin, welcome.
 2012-06-19 15:55:59 JustinD: Hi Hans, thanks :)
 2012-06-19 17:09:32 fangohr-adium: Over and out for today.
+2012-06-20 09:08:02 fangohr-adium: Morning Neil, DokosBot.
+2012-06-20 09:41:06 fangohr-adium: Morning Justin, Maxim. Are you both in Building 25?
+2012-06-20 09:42:14 fangohr-adium: If so, maybe introduce yourself to each other: Justin, Maxim is doing the GPU work with PyOpenCL I mentioned before. Maxim, Justin should be at Sebastian's desk (if he is at uni).
+2012-06-20 09:55:51 fangohr-adium: Good morning Marc-Antonio. Your IRC channel proves to be popular.
+2012-06-20 10:08:43 mb8g11: Good morning!
+2012-06-20 10:09:40 mb8g11: Hi Weiwei ;)
+2012-06-20 10:09:53 fangohr-adium: Hi Weiwei, indeed ;-)
+2012-06-20 10:10:10 ww1g11: Hi all
+2012-06-20 10:10:13 mb8g11: @fangohr-adium: Great! I didn't expect to find that much people.
+2012-06-20 10:10:33 fangohr: I know -- it's crazy. But nice.
+2012-06-20 10:10:42 fangohr: I won't go for lunch today, by the way (Volleyball).
+2012-06-20 10:13:50 JustinD: Morning everyone
+2012-06-20 10:14:41 JustinD: @fangohr-adium Yes, I'm in building 25 at the moment
+2012-06-20 10:16:31 MaximS: Hi Justin! Will you be at the office tomorrow?
+2012-06-20 10:17:48 JustinD: Hi Maxim, no, but I'll be back in the office on Tuesday morning
+2012-06-20 10:23:05 MaximS: Ok, then I suggest you email me whenever you'll have questions about OpenCL. When you start working with OpenCL we can have a look at my work as an example.
+2012-06-20 10:25:56 MaximS: Good morning Hans, Thank you for your email. I plan to visit you around 10am tomorrow.
+2012-06-20 10:26:03 JustinD: Thanks, that would be great. I probably won't look at it for a week or so, but I'll come over and introduce myself anyway if I see you in the office before I begin looking at OpenCL.
+2012-06-20 10:27:04 MaximS: What's your native language?
+2012-06-20 10:32:41 mb8g11: l337
+2012-06-20 10:32:50 JustinD: @MaximS English and Russian both work for me
+2012-06-20 10:33:23 MaximS: @mb8g11:  ;)
+2012-06-20 10:34:16 mb8g11: ^^
+2012-06-20 10:35:15 MaximS: I speak Russian as well but I doubt it will be easy for me to speak about OpenCL in Russian. Well, see you soon!
+2012-06-20 10:36:24 JustinD: Cool, yeah I don't know how good my technical language is in Russian to be honest. Would probably beat 1337 though
+2012-06-20 14:01:36 fangohr-adium: Weiwei, Marijan, MA, shall we get started with the Dolfin-Boost session?
+2012-06-20 14:01:58 marijan: we are coming
