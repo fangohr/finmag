@@ -24,8 +24,10 @@ files_to_ignore = ['llg.py',
                 'bem_computation_tests.py',
                 'test_hello.py',
                 'native_compiler.py',
-                'solver_base.py',
-                'energy_base.py']
+                'solver_base.py',    # abstrtact method
+                'energy_base.py',    # abstract method
+                'oommf_calculator']  # oommf/test_mesh.py fails
+
 
 directories_to_ignore = ['tests']
 
@@ -36,7 +38,7 @@ def scandir(dir, files=[]):
         if os.path.isfile(path) and path.endswith(".py") and \
             file not in files_to_ignore:
                 files.append(path.replace(os.path.sep, ".")[:-3])
-        elif os.path.isdir(path) and dir not in directories_to_ignore:
+        elif os.path.isdir(path) and dir not    in directories_to_ignore:
             scandir(path, files)
     return files
 
