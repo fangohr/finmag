@@ -168,15 +168,13 @@ class ExchangeTmp(EnergyBase):
 
 
     def __compute_field_numpy(self):
-        m,moduli = compute_moduli(self.Mu.vector().array())      
+        m,moduli = compute_moduli(self.Mu.vector().array())
         H_ex = np.dot(self.g, m)
+        
         return H_ex/moduli
 
    
 
-
-
-    
     def  __compute_field_petsc(self):
       
         self.g_petsc.mult(m, self.H_ex_petsc)
@@ -197,6 +195,7 @@ if __name__=="__main__":
     Ms = df.Function(df.FunctionSpace(mesh,'DG',0))
     Ms.vector()[0]=Msc
     Ms.vector()[1]=Msc
+   
     Mu =df.Function(S3)
     tmp = df.assemble(Ms*df.dot(df.TestFunction(S3), df.Constant([1, 1, 1])) * df.dx)
     Mu.vector()[:]=tmp*m.vector()
@@ -206,9 +205,12 @@ if __name__=="__main__":
 
     exch_tmp = ExchangeTmp(C)
     exch_tmp.setup(S3, Mu,1e-9)
-
-    print 'tmp', exch_tmp.compute_field()
+    
+    tmp_field=exch_tmp.compute_field()
+    print 'tmp',tmp_field
 
     exch=Exchange(C)
     exch.setup(S3,m,Msc,1e-9)
-    print 'std',exch.compute_field()
+    field=exch.compute_field()
+    print 'diff',tmp_field-field
+    
