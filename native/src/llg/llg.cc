@@ -87,6 +87,76 @@ namespace finmag { namespace llg {
             }
         }
 
+	//compute Baryakhtar term for the case that cubic crystal aniostropy
+	// dM/dt=-gamma MxH + gamma abs(M) (alpha H - beta Delta H)
+        void calc_baryakhtar_dmdt(
+                const np_array<double> &M,
+                const np_array<double> &H,
+		const np_array<double> &delta_H,
+                double t,
+                const np_array<double> &dmdt,
+                const np_array<long> &pins,
+                double gamma,
+                const np_array<double> &alpha,
+		const np_array<double> &beta,
+                double char_time,
+                bool do_precession) {
+            M.check_ndim(2, "calc_baryakhtar_dmdt: m");
+            int n = M.dim()[1];
+
+            M.check_shape(3, n, "calc_baryakhtar_dmdt: M");
+            H.check_shape(3, n, "calc_baryakhtar_dmdt: H");
+	    delta_H.check_shape(3, n, "calc_baryakhtar_dmdt: delta_H");
+            dmdt.check_shape(3, n, "calc_baryakhtar_dmdt: dmdt");
+
+            alpha.check_ndim(1, "calc_baryakhtar_dmdt: alpha");
+            alpha.check_shape(n, "calc_baryakhtar_dmdt: alpha");
+	    beta.check_ndim(1, "calc_baryakhtar_dmdt: alpha");
+            beta.check_shape(n, "calc_baryakhtar_dmdt: alpha");
+
+            double *m0 = M(0), *m1 = M(1), *m2 = M(2);
+            double *h0 = H(0), *h1 = H(1), *h2 = H(2);
+	    double *dh0 = delta_H(0), *dh1 = delta_H(1), *dh2 = delta_H(2);
+            double *dm0 = dmdt(0), *dm1 = dmdt(1), *dm2 = dmdt(2);
+            double tmp_alpha,tmp_beta;
+            //double relax_coeff = 0.1/char_time;
+
+            finmag::util::scoped_gil_release release_gil;
+
+            // calculate dmdt
+            #pragma omp parallel for schedule(guided)
+            for (int i=0; i < n; i++) {
+
+                
+                tmp_alpha = - (*alpha[i]);
+                tmp_beta = - (*beta[i]);
+
+                
+                double tmp_coeff = gamma*sqrt(m0[i] * m0[i] + m1[i] * m1[i] + m2[i] * m2[i]);
+                dm0[i] = tmp_coeff*(tmp_alpha*h0[i] - tmp_beta*dh0[i]);
+                dm1[i] = tmp_coeff*(tmp_alpha*h1[i] - tmp_beta*dh1[i]);
+                dm2[i] = tmp_coeff*(tmp_alpha*h2[i] - tmp_beta*dh2[i]);
+
+                
+                if (do_precession) {
+                    // add precession: - gamma m x H
+                    dm0[i] -= gamma*cross0(m0[i], m1[i], m2[i], h0[i], h1[i], h2[i]);
+                    dm1[i] -= gamma*cross1(m0[i], m1[i], m2[i], h0[i], h1[i], h2[i]);
+                    dm2[i] -= gamma*cross2(m0[i], m1[i], m2[i], h0[i], h1[i], h2[i]);
+                }
+            }
+
+            pins.check_ndim(1, "calc_baryakhtar_dmdt: pins");
+            const int nb_pins = pins.dim()[0];
+            for (int i = 0; i < nb_pins; i++) {
+                dm0[*pins[i]] = 0;
+                dm1[*pins[i]] = 0;
+                dm2[*pins[i]] = 0;
+            }
+        }
+
+
+
         void calc_llg_jtimes(
                 const np_array<double> &m,
                 const np_array<double> &H,
@@ -273,5 +343,19 @@ namespace finmag { namespace llg {
         def("demo_hello", &demo_hello, (
                 arg("name")
                     ));
+
+	def("calc_baryakhtar_dmdt", &calc_baryakhtar_dmdt, (
+            arg("M"),
+            arg("H"),
+	    arg("delta_H"),
+            arg("t"),
+            arg("dmdt"),
+            arg("pins"),
+            arg("gamma_LL"),
+            arg("alpha"),
+	    arg("beta"),
+            arg("char_time"),
+            arg("do_precession")
+        ));
     }
 }}
