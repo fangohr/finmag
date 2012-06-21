@@ -24,16 +24,25 @@ files_to_ignore = ['llg.py',
                 'bem_computation_tests.py',
                 'test_hello.py',
                 'native_compiler.py',
-                'energy_base.py']
+                'solver_base.py',    # abstrtact method
+                'energy_base.py',    # abstract method
+                'oommf_calculator']  # oommf/test_mesh.py fails
+
+directories_to_ignore = ['tests']
 
 
 def scandir(dir, files=[]):
     for file in os.listdir(dir):
         path = os.path.join(dir, file)
-        if os.path.isfile(path) and path.endswith(".py") and file not in files_to_ignore:
-            files.append(path.replace(os.path.sep, ".")[:-3])
+        if os.path.isfile(path) and path.endswith(".py") and \
+            file not in files_to_ignore:
+                files.append(path.replace(os.path.sep, ".")[:-3])
         elif os.path.isdir(path):
-            scandir(path, files)
+            thisdirectoryname = os.path.split(path)[1]
+            if thisdirectoryname not in directories_to_ignore:
+                scandir(path, files)
+            else:
+                print("skipping directory dir =%20s, path=%s" % (dir, path))
     return files
 
 
@@ -43,7 +52,8 @@ def makeExtension(extName):
     return Extension(
         extName,
         [extPath],
-        include_dirs=[libincludedir, "."],   # adding the '.' to include_dirs is CRUCIAL!!
+        include_dirs=[libincludedir, "."],   # adding the '.' to include_dirs
+                                             # is CRUCIAL!!
         #extra_compile_args = ["-O3", "-Wall"],
         #extra_link_args = ['-g'],
         #libraries = ["dv",],
@@ -56,12 +66,12 @@ extNames = scandir("finmag")
 extensions = [makeExtension(name) for name in extNames]
 
 print "extNames are\n", extNames
-print "extensions are\n", extensions
+#print "extensions are\n", extensions
 
 # finally, we can pass all this to distutils
 setup(
   name="dvedit",
-  packages=["finmag", "finmag.energies", "finmag.sim"],
+  packages=["finmag", "finmag.energies", "finmag.sim", 'finmag.util'],
   ext_modules=extensions,
   cmdclass={'build_ext': build_ext},
 )
