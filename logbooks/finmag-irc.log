@@ -1290,3 +1290,22 @@ fangohr: Still testing ...
 2012-06-20 10:36:24 JustinD: Cool, yeah I don't know how good my technical language is in Russian to be honest. Would probably beat 1337 though
 2012-06-20 14:01:36 fangohr-adium: Weiwei, Marijan, MA, shall we get started with the Dolfin-Boost session?
 2012-06-20 14:01:58 marijan: we are coming
+2012-06-21 11:54:27 fangohr: Hi Marc-Antonio, Weiwei.
+2012-06-21 12:02:11 mb8g11: Hi Hans.
+2012-06-21 12:02:28 fangohr: Hello. Anybody feeling a bit hungry?
+2012-06-21 12:03:38 fangohr: I'll probably wait another 30 minutes, but then some food will be required.
+2012-06-21 12:25:11 ww1g11: Hi Hans, just notice the chat, I am not hungry, it seems in the morning I ate too much
+2012-06-21 12:25:25 fangohr: No worries ;-)
+2012-06-21 12:25:40 fangohr: I probably just grab a sandwhich.
+2012-06-21 12:26:15 mb8g11: I am hungry!
+2012-06-21 12:26:49 fangohr: okay, maybe I can be persuaded to eat proper food. Are you around?
+2012-06-21 12:30:08 mb8g11: Yes, want to go now?
+2012-06-21 12:30:24 fangohr: 5 minutes or so?
+2012-06-21 12:30:59 fangohr: Staff club?
+2012-06-21 12:32:33 mb8g11: Yes.
+2012-06-21 12:32:47 fangohr: Okay. I'll pick you up in 5mins.
+2012-06-21 16:12:18 mb8g11: fangohr: remember the bug we talked about during lunch? About the order in which parameters are set?
+2012-06-21 16:12:34 mb8g11: Simple typo. https://bitbucket.org/fangohr/finmag/changeset/b398200a0932
+2012-06-21 16:19:33 mb8g11: weiwei: df.inner(df.grad(M), df.grad(M))
+2012-06-21 16:34:12 fangohr: Nice.
+2012-06-21 16:55:08 fangohr: Over and out.
