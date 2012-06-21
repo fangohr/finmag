@@ -49,7 +49,7 @@ class Zeeman(EnergyBase):
             H.vector()[:] = self.value(coords).flatten()
         else:
             raise AttributeError
-
+        
         self.H = H
         self.E = - mu0 * self.Ms * df.dot(self.m, self.H) * df.dx 
 
