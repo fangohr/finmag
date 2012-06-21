@@ -49,7 +49,7 @@ def vortex_init(rs):
 
 def run_simulation(lfactor, m_init, m_init_name=""):
     L = lfactor * lexch
-    divisions = int(round(lfactor * 1.5)) # that magic number influences L
+    divisions = int(round(lfactor * 3)) # that magic number influences L
     mesh = df.Box(0, 0, 0, L, L, L, divisions, divisions, divisions)
 
     exchange = Exchange(A)

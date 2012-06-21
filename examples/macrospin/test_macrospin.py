@@ -81,14 +81,21 @@ def compare_with_analytic_solution(alpha=0.5, max_t=1e-9):
 
     TOLERANCE = 1e-6 # tolerance on Ubuntu 11.10, VM Hans, 25/02/2012
 
+    rel_diff_maxs = list()
     for i in range(len(ts)):
         m = numpy.mean(ys[i].reshape((3, -1)), 1)
         m_ref = m_analytical(ts[i])
-        diff_max = numpy.max(numpy.abs(m - m_ref))
+        diff = numpy.abs(m - m_ref)
+        diff_max = numpy.max(diff)
+        rel_diff_max = numpy.max(diff/numpy.max(m_ref))
+        rel_diff_maxs.append(rel_diff_max)
+        
         print "t= {0:.3g}, diff_max= {1:.3g}.".format(ts[i], diff_max)
 
         msg = "Diff at t= {0:.3g} too large.\nAllowed {1:.3g}. Got {2:.3g}."
         assert diff_max < TOLERANCE, msg.format(ts[i], TOLERANCE, diff_max)
+    print "Maximal relative difference: "
+    print numpy.max(numpy.array(rel_diff_maxs))
 
 def save_plot(ts, ys, ts_ref, m_ref, alpha):
     ys3d = ys.reshape((len(ys),3,8)).mean(-1)
@@ -114,13 +121,12 @@ def save_plot(ts, ys, ts_ref, m_ref, alpha):
     plt.plot(ts_ref,mz_exact,'-',label='mz (exact)')
     plt.xlabel('t [s]')
     plt.ylabel('m=M/Ms')
-    plt.title('Macro spin behaviour, alpha=%g' % alpha)
     plt.grid()
     plt.legend()
     filename = ('alpha-%04.2f' % alpha)
     #latex does not like multiple '.' in image filenames
     filename = filename.replace('.','-')
-    plt.savefig(os.path.join(MODULE_DIR,filename+'.png'))
+    plt.savefig(os.path.join(MODULE_DIR,filename+'.pdf'))
     plt.close()
     #pylab.show()
 
