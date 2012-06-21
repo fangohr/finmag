@@ -1,4 +1,3 @@
-import io
 import os
 import logging
 import pylab as p
@@ -107,18 +106,17 @@ def test_compare_averages():
     x = computed[:, 1]
     y = computed[:, 2]
     z = computed[:, 3]
-    p.plot(t, x, 'k', label='$\mathsf{m_x}$')
-    p.plot(t, y, 'r', label='$\mathsf{m_y}$')
-    p.plot(t, z, 'b', label='$\mathsf{m_z}$')
+    p.plot(t, x, 'k', label='$m_\mathrm{x}$ finmag')
+    p.plot(t, y, 'b-.', label='$m_\mathrm{y}$')
+    p.plot(t, z, 'r', label='$m_\mathrm{z}$')
     p.axis([0, max(t), -0.2, 1.1])
-    p.xlabel("Time")
-    p.ylabel("m")
-    p.title("Finmag vs Nmag")
+    p.xlabel("time (s)")
+    p.ylabel("$m$")
     p.legend(loc='center right')
-    p.savefig(MODULE_DIR + "/exchange_demag.png")
+    p.savefig(MODULE_DIR + "/exchange_demag.pdf")
     #p.show
     p.close()
-    print "Comparison of development written to exchange_demag.png"
+    print "Comparison of development written to exchange_demag.pdf"
 
 def test_compare_energies():
     ref = np.array(h.read_float_data(MODULE_DIR + "/energies_ref.txt"))
@@ -134,8 +132,8 @@ def test_compare_energies():
     vol = df.assemble(df.Constant(1)*df.dx, mesh=mesh)*unit_length**mesh.topology().dim()
     #30x30x100nm^3 = 30x30x100=9000
 
-    # Compare exchange energy
-    exch = computed[:, 0]/vol
+    # Compare exchange energy...
+    exch = computed[:, 0]/vol # <-- ... density!
     exch_nmag = ref[:, 0]
 
     diff = abs(exch - exch_nmag)
@@ -156,22 +154,23 @@ def test_compare_energies():
             "Max relative error in demag energy is %g" % max(rel_diff)
 
     # Plot
-    p.plot(exch_nmag, 'o', mfc='w', label='Nmag')
-    p.plot(exch, label='Finmag')
-    p.xlabel("Time step")
-    p.ylabel("$\mathsf{E_{exch}}$")
+    p.plot(exch_nmag, 'o', mfc='w', label='nmag')
+    p.plot(exch, label='finmag')
+    p.xlabel("time step")
+    p.ylabel("$e_\mathrm{exch}\, (\mathrm{Jm^{-3}})$")
     p.legend()
-    p.savefig(MODULE_DIR + "/exchange_energy.png")
+    p.savefig(MODULE_DIR + "/exchange_energy.pdf")
     p.close()
-    p.plot(demag_nmag, 'o', mfc='w', label='Nmag')
-    p.plot(demag, label='Finmag')
-    p.xlabel("Time step")
-    p.ylabel("$\mathsf{E_{demag}}$")
+
+    p.plot(demag_nmag, 'o', mfc='w', label='nmag')
+    p.plot(demag, label='finmag')
+    p.xlabel("time step")
+    p.ylabel("$e_\mathrm{demag}\, (\mathrm{Jm^{-3}})$")
     p.legend()
-    p.savefig(MODULE_DIR + "/demag_energy.png")
+    p.savefig(MODULE_DIR + "/demag_energy.pdf")
     #p.show()
     p.close()
-    print "Energy plots written to exchange_energy.png and demag_energy.png"
+    print "Energy plots written to exchange_energy.pdf and demag_energy.pdf"
 
 def test_compare_energy_density():
     """
@@ -227,22 +226,26 @@ def test_compare_energy_density():
     #print "Rel error demag, oommf:", max(rel_error_demag_oommf)
 
     # Plot exchange energy density
-    p.plot(R, finmag_exch, 'o-', R, nmag_exch, 'x-', oommf_coords, oommf_exch, "+-")
-    p.xlabel("nm")
-    p.title("Exchange energy density")
-    p.legend(["Finmag", "Nmag", "oommf"], loc="upper center")
-    p.savefig(MODULE_DIR + "/exchange_density.png")
+    p.plot(R, finmag_exch, 'k-')
+    p.plot(R, nmag_exch, 'r^:', alpha=0.5)
+    p.plot(oommf_coords, oommf_exch, "bv:", alpha=0.5)
+    p.xlabel("$x\, (\mathrm{nm})$")
+    p.ylabel("$e_\mathrm{exch}\, (\mathrm{Jm^{-3}})$")
+    p.legend(["finmag", "nmag", "oommf"], loc="upper center")
+    p.savefig(MODULE_DIR + "/exchange_density.pdf")
     p.close()
 
     # Plot demag energy density
-    p.plot(R, finmag_demag, 'o-', R, nmag_demag, 'x-', oommf_coords, oommf_demag, "+-")
-    p.xlabel("nm")
-    p.title("Demag energy density")
-    p.legend(["Finmag", "Nmag", "oommf"], loc="upper center")
-    p.savefig(MODULE_DIR + "/demag_density.png")
+    p.plot(R, finmag_demag, 'k-')
+    p.plot(R, nmag_demag, 'r^:', alpha=0.5)
+    p.plot(oommf_coords, oommf_demag, "bv:", alpha=0.5)
+    p.xlabel("$x\, (\mathrm{nm})$")
+    p.ylabel("$e_\mathrm{demag}\, (\mathrm{Jm^{-3}})$")
+    p.legend(["finmag", "nmag", "oommf"], loc="upper center")
+    p.savefig(MODULE_DIR + "/demag_density.pdf")
     #p.show()
     p.close()
-    print "Energy density plots written to exchange_density.png and demag_density.png"
+    print "Energy density plots written to exchange_density.pdf and demag_density.pdf"
 
 if __name__ == '__main__':
     test_compare_averages()
