@@ -29,9 +29,9 @@ def test_external_field_depends_on_t():
     llg.interactions.append(H_app)
 
     #define function that updates that expression, and the field object
-    def update_H_ext(llg):
-        print "update_H_ext being called for t=%g" % llg.t
-        H_app.update(llg.t)
+    def update_H_ext(t):
+        print "update_H_ext being called for t=%g" % t
+        H_app.update(t)
 
     #register this function to be called before (pre) the right hand side
     #of the ODE is evaluated
