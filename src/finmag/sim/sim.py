@@ -43,9 +43,12 @@ class Simulation(object):
     def m_average(self):
         return self.llg.m_average
 
-    def add(self, interaction):
+    def add(self, interaction, with_time_update=None):
         interaction.setup(self.S3, self.llg._m, self.Ms, self.unit_length)
         self.llg.interactions.append(interaction)
+
+        if with_time_update:
+            self.llg._pre_rhs_callables.append(with_time_update)
 
     def effective_field(self):
         self.llg.compute_effective_field()
@@ -97,7 +100,7 @@ class Simulation(object):
     def __set_gamma(self, value):
         self.llg.gamma = value
 
-    gamma = property(__get_alpha, __set_alpha)
+    gamma = property(__get_gamma, __set_gamma)
 
     def timings(self, n=20):
         """
