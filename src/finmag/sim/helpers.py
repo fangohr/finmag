@@ -102,7 +102,7 @@ def read_float_data(filename):
             rows.append(columns)
     return rows
 
-def quiver(f, mesh, filename, title="", **kwargs):
+def quiver(f, mesh, filename=None, title="", **kwargs):
     """
     Takes a numpy array of the values of a vector-valued function, defined
     over a mesh (either a dolfin mesh, or one from finmag.util.oommf.mesh)
@@ -148,7 +148,11 @@ def quiver(f, mesh, filename, title="", **kwargs):
     q.scene.z_plus_view()
     mlab.title(title)
     mlab.axes(figure=figure)
-    mlab.savefig(filename)
+
+    if filename:
+        mlab.savefig(filename)
+    else:
+        mlab.show()
 
 def boxplot(arr, filename, **kwargs):
     import matplotlib.pyplot as plt
