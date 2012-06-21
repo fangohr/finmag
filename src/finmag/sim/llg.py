@@ -169,7 +169,7 @@ class LLG(object):
  
     def solve(self):
         for func in self._pre_rhs_callables:
-            func(self)
+            func(self.t)
 
         self.compute_effective_field()
 
@@ -192,7 +192,7 @@ class LLG(object):
 
         for func in self._post_rhs_callables:
             func(self)
-
+    
         return dMdt
 
     # Computes the dm/dt right hand side ODE term, as used by SUNDIALS CVODE
