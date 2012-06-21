@@ -64,7 +64,6 @@ class Simulation(object):
         return energy
 
     def run_until(self, t):
-        log.info("Will integrate until {}.".format(t))
         if not hasattr(self, "integrator"):
             self.integrator = LLGIntegrator(self.llg, self.llg.m)
         self.integrator.run_until(t)
