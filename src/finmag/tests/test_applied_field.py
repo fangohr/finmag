@@ -4,6 +4,7 @@ from finmag import Simulation as Sim
 from finmag.energies import Zeeman
 
 TOLERANCE = 1e-10
+epsilon = 1e-2
 Ms = 8.6e5
 
 def test_uniform_external_field():
@@ -17,6 +18,21 @@ def test_uniform_external_field():
     m = sim.m.reshape((3, -1)).mean(-1)
     expected_m = np.array([0, 1, 0])
     diff = np.abs(m - expected_m)
+    assert np.max(diff) < TOLERANCE
+
+def test_negative_uniform_external_field():
+    mesh = df.UnitCube(2, 2, 2)
+    sim = Sim(mesh, Ms)
+    sim.set_m((1, 0, 0))
+    sim.add(Zeeman((-1.0 * Ms, epsilon, 0)))
+    sim.alpha = 1.0
+    sim.run_until(1e-9) 
+
+    m = sim.m.reshape((3, -1)).mean(-1)
+    print "Average magnetisation ({:.2}, {:.2}, {:.2}).".format(*m)
+    expected_m = np.array([-1, 0, 0])
+    diff = np.abs(m - expected_m)
+    TOLERANCE = 1e-5
     assert np.max(diff) < TOLERANCE
 
 def test_non_uniform_external_field():
