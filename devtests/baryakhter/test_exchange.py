@@ -25,10 +25,11 @@ class ExchangeTmp(EnergyBase):
     the siuation that Ms varying with both space and time. 
     """
    
-    def __init__(self, C, method="box-matrix-numpy"):
+    def __init__(self, C, chi=1, method="box-matrix-numpy"):
         logger.debug("Creating Exchange object with method {}.".format(method))
         self.in_jacobian = True        
         self.C = C
+        self.chi=chi
         self.method = method
       
     def setup(self, S3, Mu, unit_length=1): 
@@ -36,6 +37,7 @@ class ExchangeTmp(EnergyBase):
 
         self.S3 = S3
         self.Mu = Mu
+        _,self.init_Ms=compute_moduli(Mu.vector().array())
         self.unit_length = unit_length
 
         self.mu0 = 4 * np.pi * 10**-7 # Vs/(Am)
@@ -45,6 +47,7 @@ class ExchangeTmp(EnergyBase):
         self.E = self.exchange_factor * df.inner(df.grad(Mu), df.grad(Mu)) * df.dx
         self.dE_dM = -1 * df.derivative(self.E, Mu, self.v)
         self.vol = df.assemble(df.dot(self.v, df.Constant([1, 1, 1])) * df.dx).array()
+        self.coeff=0.5/self.chi/self.init_Ms**2/self.vol
         self.dim = S3.mesh().topology().dim()
 
         # Needed for energy density
@@ -168,9 +171,11 @@ class ExchangeTmp(EnergyBase):
 
 
     def __compute_field_numpy(self):
-        m,moduli = compute_moduli(self.Mu.vector().array())
+        Mu=self.Mu.vector().array()
+        m,moduli = compute_moduli(Mu)
         H_ex = np.dot(self.g, m)
-        
+        relax = Mu*self.coeff*(self.init_Ms**2-moduli**2)
+        print relax,H_ex/moduli
         return H_ex/moduli
 
    

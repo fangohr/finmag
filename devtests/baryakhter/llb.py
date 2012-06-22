@@ -2,6 +2,7 @@ import logging
 import numpy as np
 import dolfin as df
 import finmag.sim.helpers as h
+from test_exchange import ExchangeTmp
 
 from finmag.native import llg as native_llg
 from finmag.util.timings import timings
@@ -30,6 +31,12 @@ class LLB(object):
         timings.start('LLG-init')
         self.S1 = S1
         self.S3 = S3
+        self.DG = df.FunctionSpace(S1.mesh(), "DG", 0)
+        self._m = df.Function(self.S3)
+        self._mu = df.Function(self.S3)
+        self._Ms = df.Function(self.DG)
+        self.count=1
+
         self.set_default_values()
         self.do_precession = do_precession
         timings.stop('LLG-init')
@@ -50,7 +57,6 @@ class LLB(object):
         self.pins = [] # nodes where the magnetisation gets pinned
         self._pre_rhs_callables=[]
         self._post_rhs_callables=[]
-        self._m = df.Function(self.S3)
         self.interactions = []
     
     def set_pins(self, nodes):
@@ -89,6 +95,27 @@ class LLB(object):
     def M_average(self):
         """ the average magnetisation, computed with m_average() """
         return self.Ms * self.m_average
+
+    @property
+    def Ms(self):
+        """ the magnetic moment """
+        return self._Ms
+
+    @Ms.setter
+    def Ms(self, value):
+        """
+        Set the Ms
+        """
+        try:
+            val = df.Constant(value)
+        except:
+            print 'Sorry, only a constant value is acceptable.'
+            raise AttributeError
+
+        tmp_Ms = df.interpolate(val, self.DG)
+
+        self._Ms.vector()[:]=tmp_Ms.vector()
+        print self.Ms
 
     @property
     def mu(self):
@@ -146,11 +173,16 @@ class LLB(object):
             raise AttributeError
         new_m.vector()[:] = h.fnormalise(new_m.vector().array())
         self._m.vector()[:] = new_m.vector()[:]
-        self._mu=self._m
+
+        tmp = df.assemble(self.Ms*df.dot(df.TestFunction(self.S3), df.Constant([1, 1, 1])) * df.dx)
+        self._mu.vector()[:]=tmp*self._m.vector()
+        new_m.vector()[:]*=10
+        self._mu.vector()[:]=new_m.vector()[:]
+
 
 
     def compute_effective_field(self):
-        H_eff = np.zeros(self.m.shape)
+        H_eff = np.zeros(self.mu.shape)
         for interaction in self.interactions:
             H_eff += interaction.compute_field()
         self.H_eff = H_eff
@@ -165,14 +197,22 @@ class LLB(object):
         # Use the same characteristic time as defined by c
         char_time = 0.1/self.c
         # Prepare the arrays in the correct shape
-        m = self.m
+        m = self.mu
         m.shape = (3, -1)
         H_eff = self.H_eff
         H_eff.shape = (3, -1)
+        H_eff_laplace = self.compute_laplace_effective_field()
+        H_eff_laplace.shape = (3, -1)
+
         dMdt = np.zeros(m.shape)
         # Calculate dm/dt
-        native_llg.calc_llg_dmdt(m, H_eff, self.t, dMdt, self.pins,
-                                 self.gamma, self.alpha_vec, 
+
+        print self.alpha_vec,self.count
+        self.do_precession=1
+        self.count+=1
+        native_llg.calc_baryakhtar_dmdt(m, H_eff,H_eff_laplace,
+                                 self.t, dMdt, self.pins,
+                                 self.gamma, self.alpha_vec, 0,
                                  char_time, self.do_precession)
         dMdt.shape = (-1,)
 
@@ -204,12 +244,12 @@ class LLB(object):
     def sundials_jtimes(self, mp, J_mp, t, m, fy, tmp):
         timings.start("LLG-sundials-jtimes")
 
-        assert m.shape == self.m.shape
+        assert m.shape == self.mu.shape
         assert mp.shape == m.shape
         assert tmp.shape == m.shape
 
         # First, compute the derivative H' = dH_eff/dt
-        self.m = mp
+        self.mu = mp
         Hp = tmp.view()
         Hp[:] = 0.
         
@@ -219,8 +259,8 @@ class LLB(object):
 
         if not hasattr(self, '_reuse_jacobean') or not self._reuse_jacobean:
         # If the field m has changed, recompute H_eff as well
-            if not np.array_equal(self.m, m):
-                self.m = m
+            if not np.array_equal(self.mu, mu):
+                self.mu = m
                 self.compute_effective_field()
 
         m.shape = (3, -1)
@@ -231,7 +271,7 @@ class LLB(object):
         J_mp.shape = (3, -1)
         # Use the same characteristic time as defined by c
         char_time = 0.1 / self.c
-        native_llg.calc_llg_jtimes(m, H, mp, Hp, t, J_mp, self.gamma/(1+self.alpha**2),
+        native_llg.calc_baryakhtar_jtimes(m, H, mp, Hp, t, J_mp, self.gamma/(1+self.alpha**2),
                                    self.alpha, char_time, self.do_precession)
         # TODO: Store pins in a np.ndarray(dtype=int) and assign 0's in C++ code
         J_mp[:, self.pins] = 0.
@@ -245,4 +285,13 @@ class LLB(object):
         # Nonnegative exit code indicates success
         return 0
 
- 
+    def solve_for(self, mu, t):
+        self.mu = mu
+        self.t = t
+        value = self.solve() 
+        return value 
+
+    def compute_laplace_effective_field(self):
+        grad_u = df.project(df.grad(self._mu))
+        tmp=df.project(df.div(grad_u))
+        return tmp.vector().array()
