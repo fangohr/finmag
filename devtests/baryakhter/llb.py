@@ -1,8 +1,8 @@
 import logging 
 import numpy as np
+import scipy
 import dolfin as df
 import finmag.sim.helpers as h
-from test_exchange import ExchangeTmp
 
 from finmag.native import llg as native_llg
 from finmag.util.timings import timings
@@ -33,19 +33,24 @@ class LLB(object):
         self.S3 = S3
         self.DG = df.FunctionSpace(S1.mesh(), "DG", 0)
         self._m = df.Function(self.S3)
-        self._mu = df.Function(self.S3)
-        self._Ms = df.Function(self.DG)
+        self._Ms_cell = df.Function(self.DG)
+        self._Ms=None
+        self.dM_dt=np.zeros(len(self._m.vector().array()))
+
         self.count=1
-
-        self.set_default_values()
+        self.count2=1
         self.do_precession = do_precession
-        timings.stop('LLG-init')
+        self.vol = df.assemble(df.dot(df.TestFunction(S3), df.Constant([1, 1, 1])) * df.dx).array()
+        print self.vol
         self.Volume=None #will be computed on demand, and carries volume of the mesh
-
+        self.set_default_values()
+        timings.stop('LLG-init')
+        
     def set_default_values(self):
         self._alpha_mult = df.Function(self.S1)
         self._alpha_mult.assign(df.Constant(1))
         self.alpha = 0.5 # alpha for solve: alpha * _alpha_mult
+        self.beta=0
 
         self.gamma =  2.210173e5 # m/(As)
         #source for gamma:  OOMMF manual, and in Werner Scholz thesis, 
@@ -89,7 +94,23 @@ class LLB(object):
     @property
     def M(self):
         """ the magnetisation, with length Ms """
-        return self.Ms * self.m
+        return self._Ms * self.m
+
+    @M.setter
+    def M(self, v):
+        assert(len(self.m)==len(v))
+        n=len(v)/3
+        for i1 in range(n):
+            i2=n+i1
+            i3=n+i2
+            tmp=np.sqrt(v[i1]*v[i1]+v[i2]*v[i2]+v[i3]*v[i3])
+            self._Ms[i1]=tmp
+            self._Ms[i2]=tmp
+            self._Ms[i3]=tmp
+            self._m.vector()[i1]=v[i1]/tmp
+            self._m.vector()[i2]=v[i2]/tmp
+            self._m.vector()[i3]=v[i3]/tmp
+
 
     @property
     def M_average(self):
@@ -98,7 +119,9 @@ class LLB(object):
 
     @property
     def Ms(self):
-        """ the magnetic moment """
+        """
+        Ms at nodes
+        """
         return self._Ms
 
     @Ms.setter
@@ -114,19 +137,20 @@ class LLB(object):
 
         tmp_Ms = df.interpolate(val, self.DG)
 
-        self._Ms.vector()[:]=tmp_Ms.vector()
-        print self.Ms
+        self._Ms_cell.vector()[:]=tmp_Ms.vector()
+        tmp = df.assemble(self._Ms_cell*df.dot(df.TestFunction(self.S3), df.Constant([1, 1, 1])) * df.dx)
+        self._Ms=tmp/self.vol
+
 
     @property
-    def mu(self):
-        """ the magnetic moment """
-        return self._mu.vector().array()
+    def m(self):
+        return self._m.vector().array()
 
-    @mu.setter
-    def mu(self, value):
+    @m.setter
+    def m(self, value):
         # Not enforcing unit length here, as that is better done
         # once at the initialisation of m.
-        self._mu.vector()[:] = value
+        self._m.vector()[:] = value
 
 
     
@@ -174,124 +198,75 @@ class LLB(object):
         new_m.vector()[:] = h.fnormalise(new_m.vector().array())
         self._m.vector()[:] = new_m.vector()[:]
 
-        tmp = df.assemble(self.Ms*df.dot(df.TestFunction(self.S3), df.Constant([1, 1, 1])) * df.dx)
-        self._mu.vector()[:]=tmp*self._m.vector()
-        new_m.vector()[:]*=10
-        self._mu.vector()[:]=new_m.vector()[:]
+        tmp = df.assemble(self._Ms_cell*df.dot(df.TestFunction(self.S3), df.Constant([1, 1, 1])) * df.dx)
+        self._Ms=tmp/self.vol
+
+        self.prepare_solver()
 
 
 
     def compute_effective_field(self):
-        H_eff = np.zeros(self.mu.shape)
+        H_eff = np.zeros(self.m.shape)
         for interaction in self.interactions:
             H_eff += interaction.compute_field()
         self.H_eff = H_eff
  
-    def solve(self):
+    def solve(self,t,M):
+        self.M=M
+
         for func in self._pre_rhs_callables:
             func(self)
 
         self.compute_effective_field()
 
         timings.start("LLG-compute-dmdt")
-        # Use the same characteristic time as defined by c
-        char_time = 0.1/self.c
-        # Prepare the arrays in the correct shape
-        m = self.mu
-        m.shape = (3, -1)
-        H_eff = self.H_eff
-        H_eff.shape = (3, -1)
-        H_eff_laplace = self.compute_laplace_effective_field()
-        H_eff_laplace.shape = (3, -1)
 
-        dMdt = np.zeros(m.shape)
-        # Calculate dm/dt
-
-        print self.alpha_vec,self.count
-        self.do_precession=1
         self.count+=1
-        native_llg.calc_baryakhtar_dmdt(m, H_eff,H_eff_laplace,
-                                 self.t, dMdt, self.pins,
-                                 self.gamma, self.alpha_vec, 0,
-                                 char_time, self.do_precession)
-        dMdt.shape = (-1,)
+
+        dM_dt=self.dM_dt
+        h=self.H_eff
+        m=self.M
+        Ms=self.Ms
+        alpha=self.alpha
+        beta=self.beta
+        n=len(m)/3
+        print Ms
+        for i1 in range(0,n):
+            i2=n+i1
+            i3=n+i2
+            dM_dt[i1]=self.gamma*Ms[i1]*(alpha*h[i1]-beta*h[i1])
+            dM_dt[i2]=self.gamma*Ms[i2]*(alpha*h[i2]-beta*h[i2])
+            dM_dt[i3]=self.gamma*Ms[i3]*(alpha*h[i3]-beta*h[i3])
+            
+            if self.do_precession:
+                dM_dt[i1] -= self.gamma*(m[i2]*h[i3]-m[i3]*h[i2])
+                dM_dt[i2] -= self.gamma*(m[i3]*h[i1]-m[i1]*h[i3])
+                dM_dt[i3] -= self.gamma*(m[i1]*h[i2]-m[i2]*h[i1])
+
 
         timings.stop("LLG-compute-dmdt")
 
         for func in self._post_rhs_callables:
             func(self)
 
-        return dMdt
+        return dM_dt
 
-    # Computes the dm/dt right hand side ODE term, as used by SUNDIALS CVODE
-    def sundials_rhs(self, t, y, ydot):
-        ydot[:] = self.solve_for(y, t)
-        return 0
-
-    def sundials_psetup(self, t, m, fy, jok, gamma, tmp1, tmp2, tmp3):
-        if not jok:
-            self.m = m
-            self.compute_effective_field()
-            self._reuse_jacobean = True
-
-        return 0, not jok
-
-    def sundials_psolve(self, t, y, fy, r, z, gamma, delta, lr, tmp):
-        z[:] = r
-        return 0
-
-    # Computes the Jacobian-times-vector product, as used by SUNDIALS CVODE
-    def sundials_jtimes(self, mp, J_mp, t, m, fy, tmp):
-        timings.start("LLG-sundials-jtimes")
-
-        assert m.shape == self.mu.shape
-        assert mp.shape == m.shape
-        assert tmp.shape == m.shape
-
-        # First, compute the derivative H' = dH_eff/dt
-        self.mu = mp
-        Hp = tmp.view()
-        Hp[:] = 0.
-        
-        for inter in self.interactions:
-            if inter.in_jacobian:
-                Hp[:] += inter.compute_field()
-
-        if not hasattr(self, '_reuse_jacobean') or not self._reuse_jacobean:
-        # If the field m has changed, recompute H_eff as well
-            if not np.array_equal(self.mu, mu):
-                self.mu = m
-                self.compute_effective_field()
-
-        m.shape = (3, -1)
-        mp.shape = (3, -1)
-        H = self.H_eff.view()
-        H.shape = (3, -1)
-        Hp.shape = (3, -1)
-        J_mp.shape = (3, -1)
-        # Use the same characteristic time as defined by c
-        char_time = 0.1 / self.c
-        native_llg.calc_baryakhtar_jtimes(m, H, mp, Hp, t, J_mp, self.gamma/(1+self.alpha**2),
-                                   self.alpha, char_time, self.do_precession)
-        # TODO: Store pins in a np.ndarray(dtype=int) and assign 0's in C++ code
-        J_mp[:, self.pins] = 0.
-        J_mp.shape = (-1, )
-        m.shape = (-1,)
-        mp.shape = (-1,)
-        tmp.shape = (-1,)
-
-        timings.stop("LLG-sundials-jtimes")
-
-        # Nonnegative exit code indicates success
-        return 0
-
-    def solve_for(self, mu, t):
-        self.mu = mu
-        self.t = t
-        value = self.solve() 
-        return value 
 
     def compute_laplace_effective_field(self):
-        grad_u = df.project(df.grad(self._mu))
+        grad_u = df.project(df.grad(self._Ms))
         tmp=df.project(df.div(grad_u))
         return tmp.vector().array()
+
+    def prepare_solver(self):
+       self.ode=scipy.integrate.ode(self.solve)
+       self.ode.set_integrator('vode', method='bdf')
+       self.ode.set_initial_value(self.M,0)
+       
+        
+    def run_until(self,time):
+        while self.ode.successful() and self.ode.t<time:
+            self.ode.integrate(time)
+        return self.ode.successful()
+        
+        
+       

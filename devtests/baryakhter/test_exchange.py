@@ -8,21 +8,10 @@ from finmag.energies.exchange import Exchange
 logger=logging.getLogger('finmag')
 
 
-def compute_moduli(x):
-    """
-    [x0, ..., xn, y0, ...,yn, z0, ...,zn]
-    """
-    n=len(x)/3
-    tmp=[np.sqrt(x[i]**2+x[i+n]**2+x[i+2*n]**2) for i in xrange(n)]
-    moduli=np.array(tmp+tmp+tmp)
-    return x/moduli,moduli
 
-
-
-class ExchangeTmp(EnergyBase):
+class BaryakhtarExchange(EnergyBase):
     """
-    Almost the same with Exchange class but trying to use magnetic moment to adapt 
-    the siuation that Ms varying with both space and time. 
+    
     """
    
     def __init__(self, C, chi=1, method="box-matrix-numpy"):
@@ -32,22 +21,23 @@ class ExchangeTmp(EnergyBase):
         self.chi=chi
         self.method = method
       
-    def setup(self, S3, Mu, unit_length=1): 
+    def setup(self, S3, m, Ms, unit_length=1): 
         timings.start('Exchange-setup')
 
         self.S3 = S3
-        self.Mu = Mu
-        _,self.init_Ms=compute_moduli(Mu.vector().array())
+        self.m = m
+        self.Ms=Ms
+        self.init_Ms=np.array(Ms)
         self.unit_length = unit_length
 
         self.mu0 = 4 * np.pi * 10**-7 # Vs/(Am)
         self.exchange_factor = df.Constant(1 * self.C / (self.mu0  * self.unit_length**2))
 
         self.v = df.TestFunction(S3)
-        self.E = self.exchange_factor * df.inner(df.grad(Mu), df.grad(Mu)) * df.dx
-        self.dE_dM = -1 * df.derivative(self.E, Mu, self.v)
+        self.E = self.exchange_factor * df.inner(df.grad(m), df.grad(m)) * df.dx
+        self.dE_dM = -1 * df.derivative(self.E, m, self.v)
         self.vol = df.assemble(df.dot(self.v, df.Constant([1, 1, 1])) * df.dx).array()
-        self.coeff=0.5/self.chi/self.init_Ms**2/self.vol
+        self.coeff=0.5/self.chi/self.Ms**2/self.vol
         self.dim = S3.mesh().topology().dim()
 
         # Needed for energy density
@@ -56,7 +46,7 @@ class ExchangeTmp(EnergyBase):
         self.nodal_vol = df.assemble(w * df.dx, mesh=S3.mesh()).array() \
                 * unit_length**self.dim
         self.nodal_E = df.dot(self.exchange_factor \
-                * df.inner(df.grad(Mu), df.grad(Mu)), w) * df.dx
+                * df.inner(df.grad(m), df.grad(m)), w) * df.dx
 
         # This is only needed if we want the energy density
         # as a df.Function, in order to e.g. probe.
@@ -166,24 +156,22 @@ class ExchangeTmp(EnergyBase):
         energy.
 
         """
-        g_form = df.derivative(self.dE_dM, self.Mu)
+        g_form = df.derivative(self.dE_dM, self.m)
         self.g = df.assemble(g_form).array() #store matrix as numpy array  
 
 
     def __compute_field_numpy(self):
-        Mu=self.Mu.vector().array()
-        m,moduli = compute_moduli(Mu)
+        m=self.m.vector().array()
         H_ex = np.dot(self.g, m)
-        relax = Mu*self.coeff*(self.init_Ms**2-moduli**2)
-        print relax,H_ex/moduli
-        return H_ex/moduli
+        relax = self.Ms*m*self.coeff*(self.init_Ms**2-self.Ms**2)
+        return H_ex/self.Ms/self.vol+relax
 
    
 
     def  __compute_field_petsc(self):
-      
+        
         self.g_petsc.mult(m, self.H_ex_petsc)
-        return self.H_ex_petsc.array()/moduli
+        return self.H_ex_petsc.array()/self.vol
 
 
 
