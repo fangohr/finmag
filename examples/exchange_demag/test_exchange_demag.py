@@ -17,6 +17,7 @@ Ms = 0.86e6
 unit_length = 1e-9
 mesh = df.Mesh(convert_mesh(MODULE_DIR + "/bar30_30_100.geo"))
 
+
 def run_finmag():
     """Run the finmag simulation and store data in averages.txt."""
 
@@ -243,6 +244,7 @@ def test_compare_energy_density():
     p.ylabel("$e_\mathrm{demag}\, (\mathrm{Jm^{-3}})$")
     p.legend(["finmag", "nmag", "oommf"], loc="upper center")
     p.savefig(MODULE_DIR + "/demag_density.pdf")
+    p.savefig(MODULE_DIR + "/demag_density.png")
     #p.show()
     p.close()
     print "Energy density plots written to exchange_density.pdf and demag_density.pdf"
