@@ -134,6 +134,7 @@ def save_plot(ts, ys, ts_ref, m_ref, alpha):
     #latex does not like multiple '.' in image filenames
     filename = filename.replace('.', '-')
     plt.savefig(os.path.join(MODULE_DIR, filename + '.pdf'))
+    plt.savefig(os.path.join(MODULE_DIR, filename + '.png'))
     plt.close()
     #pylab.show()
 
