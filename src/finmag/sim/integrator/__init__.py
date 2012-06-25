@@ -113,4 +113,13 @@ class SundialsIntegrator(BaseIntegrator):
         self.integrator.advance_time(t, self.m)
         self.llg.m = self.m
 
+    def reinit(self):
+        """reinit() calls CVodeReInit.
+
+        Useful if there is a drastic (non-continuous) change in the right hand side of the ODE. 
+        By calling this function, we inform the integrator that it should not assuming smoothness
+        of the RHS. Should be called when we change the applied field, abruptly, for example.
+        """
+        self.integrator.reinit(self.integrator.get_current_time(), self.m)
+
     n_rhs_evals = property(lambda self: self.integrator.get_num_rhs_evals(), "Number of function evaluations performed")
