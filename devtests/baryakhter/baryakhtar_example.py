@@ -2,6 +2,8 @@ import dolfin as df
 import numpy as np
 import finmag.sim.helpers as helpers
 import scipy.integrate.ode as scipy_ode
+import matplotlib.pyplot as plt
+
 
 import time
 
@@ -80,7 +82,49 @@ def ode45_solve_llg():
         ode45.integrate(ode45.t+dt)
         print ode45.t,ode45.y,len(count),len(count_jac)
 
+
+def save_plot(x,y,filename):
+    fig=plt.figure()
+    plt.plot(x,y,'.',markersize=3)
+    fig.savefig(filename)
+
 def example1():
+    x0 = y0 = z0 = 0
+    x1 = y1 = z1 = 10
+    nx = ny = nz = 1
+    mesh = df.Box(x0, x1, y0, y1, z0, z1, nx, ny, nz)
+    
+    S1 = df.FunctionSpace(mesh, "Lagrange", 1)
+    S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1,dim=3)
+    vis = df.Function(S3)
+
+    llb = LLB(S1,S3)
+    llb.alpha = 0.1
+    llb.set_m((1, 1, 1))
+    H_app = Zeeman((0, 0, 1e5))
+    H_app.setup(S3, llb._m,Ms=1)
+    llb.interactions.append(H_app)
+    exchange = BaryakhtarExchange(13.0e-12,1e-5)
+    exchange.setup(S3,llb._m,llb._Ms)
+    llb.interactions.append(exchange)
+
+    max_time=2*np.pi/(llb.gamma*1e5)*0.05
+    ts = np.linspace(0, max_time, num=100)
+
+    mlist=[]
+    Ms_average=[]
+    for t in ts:
+        llb.run_until(t)
+        mlist.append(llb.M)
+        vis.vector()[:]=mlist[-1]
+        Ms_average.append(llb.M_average)
+        df.plot(vis)
+        time.sleep(0.00)
+    print llb.count
+    save_plot(ts,Ms_average,'Ms-time.png')
+    df.interactive()
+
+def example1_sundials():
     x0 = y0 = z0 = 0
     x1 = y1 = z1 = 10
     nx = ny = nz = 1
@@ -93,6 +137,7 @@ def example1():
     llb = LLB(S1,S3)
     llb.alpha = 0.01
     llb.set_m((1, 1, 1))
+    llb.Ms=8e5
     H_app = Zeeman((0, 0, 1e5))
     H_app.setup(S3, llb._m,Ms=1)
     llb.interactions.append(H_app)
@@ -100,20 +145,22 @@ def example1():
     exchange.setup(S3,llb._m,llb._Ms)
     llb.interactions.append(exchange)
 
-    max_time=2*np.pi/(llb.gamma*1e5)*5
+    integrator = LLGIntegrator(llb, llb.M, abstol=1e-12, reltol=1e-10)
+
+    max_time=2*np.pi/(llb.gamma*1e5)
     ts = np.linspace(0, max_time, num=100)
 
     mlist=[]
     for t in ts:
-        llb.run_until(t)
-        mlist.append(llb.M)
+        integrator.run_until(t)
+        mlist.append(integrator.m.copy())
         vis.vector()[:]=mlist[-1]
         df.plot(vis)
         time.sleep(0.05)
-
+    print llb.count
     df.interactive()
-
 
 if __name__=="__main__":
     #ode45_solve_llg()
     example1()
+  #  example1_sundials()
