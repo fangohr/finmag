@@ -1,4 +1,19 @@
-import io
+""" What is this file? It appears that Gabrial has taken the test_exchange_demag.py and 
+tried to add the GCR solver for the nmag 2 example. The test fails as the system seems to 
+hang somewhere.
+
+He then copied that file from test_exchange_demag.py to ztest_exchange_demag_new.py. Note
+the z in the beginning which preventst the file from being run automatically as a 
+regression test.
+
+It would be good to understand at some point why the GCR solver hangs, but it also
+be good to many other things.
+
+Hans, 26 June 5:30am, somewhere over Malaysia.
+
+"""
+
+
 import os
 import logging
 import pylab as p
@@ -20,6 +35,7 @@ mesh = df.Mesh(convert_mesh(MODULE_DIR + "/bar30_30_100.geo"))
 
 demagsolvers = ["GCR"]
 
+
 def run_finmag(demagsolver):
     """Run the finmag simulation and store data in (demagsolvertype)averages.txt."""
 
@@ -32,8 +48,8 @@ def run_finmag(demagsolver):
     demag = Demag(solver=demagsolver)
     sim.add(demag)
 
-    fh = open(MODULE_DIR + "/%saverages.txt"%(demagsolver), "w")
-    fe = open(MODULE_DIR + "/%senergies.txt"%(demagsolver), "w")
+    fh = open(MODULE_DIR + "/%saverages.txt" % (demagsolver), "w")
+    fe = open(MODULE_DIR + "/%senergies.txt" % (demagsolver), "w")
 
     # Progressbar
     bar = pb.ProgressBar(maxval=60, \
@@ -48,8 +64,9 @@ def run_finmag(demagsolver):
         # Integrate
         sim.run_until(t)
         print counter
-        blah = raw_input()
-        
+        print ("press return to continue")
+        _ = raw_input()
+
         # Save averages to file
         mx, my, mz = sim.llg.m_average
         fh.write(str(t) + " " + str(mx) + " " + str(my) + " " + str(mz) + "\n")
