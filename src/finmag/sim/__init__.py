@@ -15,7 +15,7 @@ _DOLFIN_LOG_LEVELS = {
 # create logger
 logger = logging.getLogger(name='finmag')
 
-# Note: dolfin uses the default logger ('root'). Se we should 
+# Note: dolfin uses the default logger ('root'). Se we should
 # use a separate one to be able to
 # control levels of details separately for finmag and dolfin.
 # Here we setup this logger with name 'finmag'
@@ -23,6 +23,7 @@ logger = logging.getLogger(name='finmag')
 #change this to get more detailed output
 logger.setLevel(logging.INFO)
 logger.setLevel(logging.DEBUG)
+
 
 def parse_logging_level(s, values=logging._levelNames):
     if s is None:
@@ -61,5 +62,3 @@ logger.debug("Executing sim/__init__.py")
 #logger.debug("debug message")
 #logger.info("info message")
 #logger.warn("warning message")
-
-
