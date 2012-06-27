@@ -301,7 +301,7 @@ namespace finmag { namespace llg {
                     dm0[i] -= gamma*cross0(m0[i], m1[i], m2[i], h0[i], h1[i], h2[i]);
                     dm1[i] -= gamma*cross1(m0[i], m1[i], m2[i], h0[i], h1[i], h2[i]);
                     dm2[i] -= gamma*cross2(m0[i], m1[i], m2[i], h0[i], h1[i], h2[i]);
-		    printf("%g  %g  %g  %g  %g  %g\n",m0[i], m1[i], m2[i],dm0[i],dm1[i],dm2[i]);
+		    //printf("%g  %g  %g  %g  %g  %g\n",m0[i], m1[i], m2[i],dm0[i],dm1[i],dm2[i]);
                 }
             }
 

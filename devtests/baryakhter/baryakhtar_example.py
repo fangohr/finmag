@@ -85,10 +85,10 @@ def ode45_solve_llg():
 
 def save_plot(x,y,filename):
     fig=plt.figure()
-    plt.plot(x,y,'.',markersize=3)
+    plt.plot(x,y,'-.',markersize=3)
     fig.savefig(filename)
 
-def example1():
+def example1(Ms=8.6e5):
     x0 = y0 = z0 = 0
     x1 = y1 = z1 = 10
     nx = ny = nz = 1
@@ -98,17 +98,18 @@ def example1():
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1,dim=3)
     vis = df.Function(S3)
 
-    llb = LLB(S1,S3)
-    llb.alpha = 0.1
+    llb = LLB(S1,S3,rtol=1e-6,atol=1e-10)
+    llb.Ms=Ms
+    llb.alpha = 0.0
     llb.set_m((1, 1, 1))
     H_app = Zeeman((0, 0, 1e5))
-    H_app.setup(S3, llb._m,Ms=1)
+    H_app.setup(S3, llb._m,Ms=Ms)
     llb.interactions.append(H_app)
     exchange = BaryakhtarExchange(13.0e-12,1e-5)
     exchange.setup(S3,llb._m,llb._Ms)
     llb.interactions.append(exchange)
 
-    max_time=2*np.pi/(llb.gamma*1e5)*0.05
+    max_time=2*np.pi/(llb.gamma*1e5)
     ts = np.linspace(0, max_time, num=100)
 
     mlist=[]
@@ -121,10 +122,10 @@ def example1():
         df.plot(vis)
         time.sleep(0.00)
     print llb.count
-    save_plot(ts,Ms_average,'Ms-time.png')
+    save_plot(ts,Ms_average,'Ms_%g-time.png'%Ms)
     df.interactive()
 
-def example1_sundials():
+def example1_sundials(Ms):
     x0 = y0 = z0 = 0
     x1 = y1 = z1 = 10
     nx = ny = nz = 1
@@ -135,32 +136,38 @@ def example1_sundials():
     vis = df.Function(S3)
 
     llb = LLB(S1,S3)
-    llb.alpha = 0.01
+    llb.alpha = 0.00
     llb.set_m((1, 1, 1))
-    llb.Ms=8e5
+    llb.Ms=Ms
     H_app = Zeeman((0, 0, 1e5))
-    H_app.setup(S3, llb._m,Ms=1)
+    H_app.setup(S3, llb._m,Ms=Ms)
     llb.interactions.append(H_app)
-    exchange = BaryakhtarExchange(13.0e-12,1e-5)
+    exchange = BaryakhtarExchange(13.0e-12,1e-2)
     exchange.setup(S3,llb._m,llb._Ms)
     llb.interactions.append(exchange)
 
-    integrator = LLGIntegrator(llb, llb.M, abstol=1e-12, reltol=1e-10)
+    integrator = LLGIntegrator(llb, llb.M, abstol=1e-10, reltol=1e-6)
 
     max_time=2*np.pi/(llb.gamma*1e5)
-    ts = np.linspace(0, max_time, num=100)
+    ts = np.linspace(0, max_time, num=50)
 
     mlist=[]
+    Ms_average=[]
     for t in ts:
         integrator.run_until(t)
         mlist.append(integrator.m.copy())
+        llb.M=mlist[-1]
         vis.vector()[:]=mlist[-1]
+        Ms_average.append(llb.M_average)
         df.plot(vis)
-        time.sleep(0.05)
+        time.sleep(0.0)
     print llb.count
+    save_plot(ts,Ms_average,'Ms_%g-time-sundials.png'%Ms)
     df.interactive()
 
 if __name__=="__main__":
     #ode45_solve_llg()
-    example1()
-  #  example1_sundials()
+    example1(1)
+    example1(8.6e5)
+    example1_sundials(8.6e5)
+    example1_sundials(1)

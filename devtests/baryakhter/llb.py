@@ -35,6 +35,7 @@ class LLB(object):
         self._m = df.Function(self.S3)
         self._Ms_cell = df.Function(self.DG)
         self._Ms = df.Function(self.S3)
+        self._M = df.Function(self.S3)
         self.dM_dt=np.zeros(len(self._m.vector().array()))
 
         self.rtol=rtol
@@ -97,11 +98,11 @@ class LLB(object):
     @property
     def M(self):
         """ the magnetisation, with length Ms """
-        return self._Ms.vector().array() * self.m
+        return self._M.vector().array()
 
     @M.setter
     def M(self, v):
-        assert(len(self.m)==len(v))
+        assert(len(self.M)==len(v))
         n=len(v)/3
         for i1 in range(n):
             i2=n+i1
@@ -113,13 +114,18 @@ class LLB(object):
             self._m.vector()[i1]=v[i1]/tmp
             self._m.vector()[i2]=v[i2]/tmp
             self._m.vector()[i3]=v[i3]/tmp
+        self._M.vector().set_local(v)
 
 
     @property
     def M_average(self):
         """ the average magnetisation, computed with m_average() """
 
-        return np.average(self.Ms)
+        tmp=self.M
+        tmp.shape=(3,-1)
+        res=np.average(tmp,axis=1)
+        tmp.shape=(-1,)
+        return res 
 
     @property
     def Ms(self):
@@ -144,6 +150,7 @@ class LLB(object):
         self._Ms_cell.vector()[:]=tmp_Ms.vector()
         tmp = df.assemble(self._Ms_cell*df.dot(df.TestFunction(self.S3), df.Constant([1, 1, 1])) * df.dx)
         self._Ms.vector().set_local(tmp/self.vol)
+        self._M.vector().set_local(self.Ms*self.m)
 
 
     @property
@@ -155,6 +162,7 @@ class LLB(object):
         # Not enforcing unit length here, as that is better done
         # once at the initialisation of m.
         self._m.vector()[:] = value
+        self._M.vector().set_local(self.Ms*self.m)
 
 
     
@@ -204,6 +212,7 @@ class LLB(object):
 
         tmp = df.assemble(self._Ms_cell*df.dot(df.TestFunction(self.S3), df.Constant([1, 1, 1])) * df.dx)
         self._Ms.vector().set_local(tmp/self.vol)
+        self._M.vector().set_local(self.Ms*self.m)
         self.prepare_solver()
 
 
@@ -302,7 +311,7 @@ class LLB(object):
 
 
     def compute_laplace_effective_field(self):
-        grad_u = df.project(df.grad(self._Ms))
+        grad_u = df.project(df.grad(self._M))
         tmp=df.project(df.div(grad_u))
         return tmp.vector().array()
 
@@ -316,6 +325,7 @@ class LLB(object):
     def run_until(self,time):
         while self.ode.successful() and self.ode.t<time:
             self.ode.integrate(time)
+            self.M=self.ode.y
         return self.ode.successful()
         
 
@@ -330,8 +340,7 @@ class LLB(object):
         self.compute_effective_field()
 
         self.count+=1
-        print self.Ms
-
+ 
         timings.start("LLG-compute-dmdt")
         # Use the same characteristic time as defined by c
         char_time = 0.1/self.c
@@ -344,10 +353,13 @@ class LLB(object):
         delta_Heff.shape = (3, -1)
         dMdt = np.zeros(m.shape)
         # Calculate dm/dt
+    
         native_llg.calc_baryakhtar_dmdt(m, H_eff,delta_Heff, self.t, dMdt, self.pins,
                                  self.gamma, self.alpha_vec, 0,
                                  char_time, self.do_precession)
         dMdt.shape = (-1,)
+        m.shape = (-1,)
+        H_eff.shape = (-1,)
 
         timings.stop("LLG-compute-dmdt")
 
@@ -409,7 +421,7 @@ class LLB(object):
         J_mp.shape = (3, -1)
         # Use the same characteristic time as defined by c
         char_time = 0.1 / self.c
-        native_llg.calc_llg_jtimes(m, H, mp, Hp, t, J_mp, self.gamma/(1+self.alpha**2),
+        native_llg.calc_baryakhtar_jtimes(m, H, mp, Hp, t, J_mp, self.gamma/(1+self.alpha**2),
                                    self.alpha, char_time, self.do_precession)
         # TODO: Store pins in a np.ndarray(dtype=int) and assign 0's in C++ code
         J_mp[:, self.pins] = 0.
