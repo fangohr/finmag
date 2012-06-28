@@ -3,7 +3,7 @@ import dolfin as df
 import logging
 from finmag.util.timings import timings
 from energy_base import EnergyBaseExchange as EnergyBase
-
+from finmag.util.consts import mu0
 
 logger = logging.getLogger('finmag')
 
@@ -82,7 +82,6 @@ class Exchange(EnergyBase):
         timings.start('Exchange-setup')
 
         #expression for the energy
-        mu0 = 4 * np.pi * 10 ** -7  # Vs/(Am)
         exchange_factor = df.Constant(
             1 * self.C / (mu0 * Ms * unit_length ** 2))
 
