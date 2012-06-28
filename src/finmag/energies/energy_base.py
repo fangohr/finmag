@@ -2,6 +2,8 @@ import abc
 import logging
 from finmag.util.timings import timings
 import dolfin as df
+import numpy as np
+from finmag.util.consts import mu0
 
 logger = logging.getLogger('finmag')
 
@@ -175,7 +177,7 @@ class EnergyBaseExchange(EnergyBaseAbstract):
 
         """
         timings.start('Exchange-energy')
-        E = df.assemble(self.E) * self.unit_length ** self.dim * self.Ms * self.mu0
+        E = df.assemble(self.E) * self.unit_length ** self.dim * self.Ms * mu0
         timings.stop('Exchange-energy')
         return E
 
@@ -195,7 +197,7 @@ class EnergyBaseExchange(EnergyBaseAbstract):
 
         """
         nodal_E = df.assemble(self.nodal_E).array() \
-                * self.unit_length ** self.dim * self.Ms * self.mu0
+                * self.unit_length ** self.dim * self.Ms * mu0
         return nodal_E / self.nodal_vol
 
     def energy_density_function(self):
