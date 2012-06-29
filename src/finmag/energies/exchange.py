@@ -87,16 +87,16 @@ class Exchange(EnergyBase):
 
         self.exchange_factor = exchange_factor  # XXX
 
-        E = exchange_factor * \
-            df.inner( df.grad(M), df.grad(M)) * df.dx
+        E = exchange_factor * mu0 * Ms \
+            * df.inner( df.grad(M), df.grad(M)) * df.dx
  
         EnergyBase.setup(self, E, S3, M, Ms, unit_length)
 
 
-        self.v = df.TestFunction(S3)
-        self.dE_dM = -1 * df.derivative(self.E, M, self.v)
-        self.vol = df.assemble(df.dot(self.v, df.Constant([1, 1, 1])) * df.dx).array()
-        self.dim = S3.mesh().topology().dim()
+        #self.v = df.TestFunction(S3)
+        #self.dE_dM = -1 * df.derivative(self.E, M, self.v)
+        #self.vol = df.assemble(df.dot(self.v, df.Constant([1, 1, 1])) * df.dx).array()
+        #self.dim = S3.mesh().topology().dim()
 
         timings.stop('Exchange-setup')
 

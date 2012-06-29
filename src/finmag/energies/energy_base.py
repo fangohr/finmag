@@ -110,7 +110,9 @@ class EnergyBaseExchange(EnergyBaseAbstract):
 
         self.v = df.TestFunction(S3)
         self.E = E
-        self.dE_dM = -1 * df.derivative(self.E, M, self.v)
+        self.dE_dM = df.Constant(-1.0 / ( self.Ms * mu0)) \
+            * df.derivative(self.E, self.M)
+        #self.dE_dM = -1 * df.derivative(self.E, M, self.v)
         self.vol = df.assemble(df.dot(self.v, df.Constant([1, 1, 1])) * df.dx).array()
         self.dim = S3.mesh().topology().dim()
        
@@ -177,7 +179,7 @@ class EnergyBaseExchange(EnergyBaseAbstract):
 
         """
         timings.start('Exchange-energy')
-        E = df.assemble(self.E) * self.unit_length ** self.dim * self.Ms * mu0
+        E = df.assemble(self.E) * self.unit_length ** self.dim
         timings.stop('Exchange-energy')
         return E
 
