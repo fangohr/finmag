@@ -50,6 +50,11 @@ class EnergyBase(EnergyBaseAbstract):
                 * 'box-matrix-petsc' [Default]
                 * 'project'
 
+        in_jacobian
+            True or False -- decides whether the interaction is included in 
+            the Jacobian.
+
+
     At the moment, we think (all) 'box' methods work
     (and the method is used in Magpar and Nmag).
 

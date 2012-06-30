@@ -13,65 +13,46 @@ class UniaxialAnisotropy(EnergyBase):
     Compute the exchange field.
 
     .. math::
-        
+
         E_{\\text{exch}} = \\int_\\Omega A (\\nabla M)^2  dx
-        
+
     *Arguments*
-
-        C 
-            the exchange constant
+        K
+            The anisotropy constant
+        a
+            The easy axis (use dolfin.Constant for now).
+            Should be a unit vector.
+        Ms
+            The saturation magnetisation.
         method
-            possible methods are 
-                * 'box-assemble' 
-                * 'box-matrix-numpy' 
-                * 'box-matrix-petsc' [Default]
-                * 'project'
-
-    At the moment, we think (all) 'box' methods work 
-    (and the method is used in Magpar and Nmag).
-
-    - 'box-assemble' is a slower version that assembles the H_ex for a given M in every
-      iteration.
-
-    - 'box-matrix-numpy' precomputes a matrix g, so that H_ex = g*M
-
-    - 'box-matrix-petsc' is the same mathematical scheme as 'box-matrix-numpy',
-      but uses a PETSc linear algebra backend that supports sparse
-      matrices, to exploit the sparsity of g (default choice).
-
-    - 'project': does not use the box method but 'properly projects' the exchange field
-      into the function space. Should explore whether this works and/or makes any difference
-      (other than being slow.) Untested.
-
+            The method used to compute the anisotropy field.
+            For alternatives and explanation, see EnergyBase class.
 
     *Example of Usage*
-
         .. code-block:: python
-        
-            from dolfin import *
-            Ms   = 0.8e6
+
             m    = 1e-8
             n    = 5
             mesh = Box(0, m, 0, m, 0, m, n, n, n)
 
-            S3  = VectorFunctionSpace(mesh, "Lagrange", 1)
-            C  = 1.3e-11 # J/m exchange constant
-            M  = project(Constant((Ms, 0, 0)), S3) # Initial magnetisation
+            S3 = VectorFunctionSpace(mesh, 'Lagrange', 1)
+            K = 520e3 # For Co (J/m3)
 
-            exchange = Exchange(C, Ms)
-            exchange.setup(S3, M)
+            a = Constant((0, 0, 1)) # Easy axis in z-direction
+            m = project(Constant((1, 0, 0)), V)  # Initial magnetisation
+            Ms = 1e6
+
+            anisotropy = Anisotropy(K, a, Ms)
+            anisotropy.setup(S3, m)
 
             # Print energy
-            print exchange.compute_energy()
+            print anisotropy.compute_energy()
 
-            # Exchange field
-            H_exch = exchange.compute_field()
-
-            # Using 'box-matrix-numpy' method (fastest for small matrices)
-            exchange_np = Exchange(V, M, C, Ms, method='box-matrix-numpy')
-            H_exch_np = exchange_np.compute_field()
+            # Anisotropy field
+            H_ani = anisotropy.compute_field()
 
     """
+    
     def __init__(self, K, a, method="box-matrix-petsc"):
         """If K and a are dolfin-functions, then accept them as they are.
         Otherwise, assume they are dolfin constants.
