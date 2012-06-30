@@ -16,20 +16,26 @@ class Exchange(EnergyBase):
 
         E_{\\text{exch}} = \\int_\\Omega A (\\nabla M)^2  dx
 
+
     *Arguments*
+
         A
             the exchange constant
+
         method
             possible methods are 
                 * 'box-assemble' 
                 * 'box-matrix-numpy' 
                 * 'box-matrix-petsc' [Default]
                 * 'project'
+
             See documentation of EnergyBase class for details.
+
 
     *Example of Usage*
 
         .. code-block:: python
+
             from dolfin import *
             Ms   = 0.8e6
             m    = 1e-8
