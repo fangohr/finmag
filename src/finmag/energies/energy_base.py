@@ -23,10 +23,10 @@ class EnergyBaseAbstract(object):
     def compute_energy(self):
         return
 
-EnergyBase = EnergyBaseAbstract
+#EnergyBase = EnergyBaseAbstract
 
 
-class EnergyBaseExchange(EnergyBaseAbstract):
+class EnergyBase(EnergyBaseAbstract):
     """
     Computes a field.
 
@@ -90,7 +90,7 @@ class EnergyBaseExchange(EnergyBaseAbstract):
 
     def __init__(self, name, method="box-matrix-petsc", in_jacobian=False):
         self.name = name
-        logger.debug("Creating Exchange object with method {}.".format(method))
+        logger.debug("Creating Energy object with method {}.".format(method))
         logger.debug("In constructor Energy Base for name='%s'" % name)
         self.in_jacobian = in_jacobian
         self.method = method
