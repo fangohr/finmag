@@ -13,11 +13,11 @@ class Exchange(EnergyBase):
     Compute the exchange field.
 
     .. math::
-        
+
         E_{\\text{exch}} = \\int_\\Omega A (\\nabla M)^2  dx
-        
+
     *Arguments*
-        C 
+        A
             the exchange constant
         method
             possible methods are 
@@ -25,23 +25,7 @@ class Exchange(EnergyBase):
                 * 'box-matrix-numpy' 
                 * 'box-matrix-petsc' [Default]
                 * 'project'
-
-    At the moment, we think (all) 'box' methods work 
-    (and the method is used in Magpar and Nmag).
-
-    - 'box-assemble' is a slower version that assembles the H_ex for a given M in every
-      iteration.
-
-    - 'box-matrix-numpy' precomputes a matrix g, so that H_ex = g*M
-
-    - 'box-matrix-petsc' is the same mathematical scheme as 'box-matrix-numpy',
-      but uses a PETSc linear algebra backend that supports sparse
-      matrices, to exploit the sparsity of g (default choice).
-
-    - 'project': does not use the box method but 'properly projects' the exchange field
-      into the function space. Should explore whether this works and/or makes any difference
-      (other than being slow.) Untested.
-
+            See documentation of EnergyBase class for details.
 
     *Example of Usage*
 
@@ -53,7 +37,7 @@ class Exchange(EnergyBase):
             mesh = Box(0, m, 0, m, 0, m, n, n, n)
 
             S3  = VectorFunctionSpace(mesh, "Lagrange", 1)
-            C  = 1.3e-11 # J/m exchange constant
+            A  = 1.3e-11 # J/m exchange constant
             M  = project(Constant((Ms, 0, 0)), S3) # Initial magnetisation
 
             exchange = Exchange(C, Ms)
@@ -66,7 +50,7 @@ class Exchange(EnergyBase):
             H_exch = exchange.compute_field()
 
             # Using 'box-matrix-numpy' method (fastest for small matrices)
-            exchange_np = Exchange(V, M, C, Ms, method='box-matrix-numpy')
+            exchange_np = Exchange(A, M, C, Ms, method='box-matrix-numpy')
             H_exch_np = exchange_np.compute_field()
 
     """
