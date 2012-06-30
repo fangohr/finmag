@@ -23,11 +23,11 @@ class Exchange(EnergyBase):
             the exchange constant
 
         method
-            possible methods are 
-                * 'box-assemble' 
-                * 'box-matrix-numpy' 
+            possible methods are
+                * 'box-assemble'
+                * 'box-matrix-numpy'
                 * 'box-matrix-petsc' [Default]
-                * 'project'
+                * 'project'        
 
             See documentation of EnergyBase class for details.
 
