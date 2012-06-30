@@ -3,6 +3,7 @@ import sys
 import commands
 import numpy as np
 import dolfin as df
+#from finmag.energies import UniaxialAnisotropy, Exchange, Demag, DMI
 from finmag.energies import UniaxialAnisotropy, Exchange, Demag, DMI
 
 TOL = 1e-14
@@ -34,7 +35,7 @@ def test_exchange_energy_density():
     # run finmag
     mesh = df.Interval(100, 0, 10e-9)
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
-    Ms = 1
+    Ms = 42
     m = df.interpolate(df.Expression(("cos(x[0]*pi/10e-9)", "sin(x[0]*pi/10e-9)", "0")), S3)
 
     exch = Exchange(1.3e-11)
@@ -43,12 +44,33 @@ def test_exchange_energy_density():
     finmag_data = exch.energy_density()
     rel_err = np.abs(nmag_data - finmag_data) / np.linalg.norm(nmag_data)
 
+    print ("Nmag data   = %g" % nmag_data[0])
+    print ("Finmag data = %g" % finmag_data[0])
     print "Relative error from nmag data (expect array of 0):"
     print rel_err
     print "Max relative error:", np.max(rel_err)
     assert np.max(rel_err) < TOL, \
             "Max relative error is %g, should be zero." % np.max(rel_err)
 
+
+    print("Work out average energy density and energy")
+    S1 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=1)
+    #only approximative -- using assemble would be better
+    average_energy_density = np.average(finmag_data)
+    w = df.TestFunction(S1)
+    vol = sum(df.assemble(df.dot(df.Constant([1]), w) * df.dx))
+    #finmag 'manually' computed, based on node values of energy density:
+    energy1 = average_energy_density * vol   
+    #finmag computed by energy class
+    energy2 = exch.compute_energy()
+    #comparison with Nmag
+    energy3 = np.average(nmag_data) * vol
+    print energy1, energy2, energy3
+    
+    assert abs(energy1 - energy2) < 1e-12 # actual value is 0, but 
+                                          # that must be pure luck.
+    assert abs(energy1 - energy3) < 5e-8  # actual value
+                                          # is 1.05e-8, 30 June 2012
 
 def test_anisotropy_energy_density():
     """
@@ -175,6 +197,8 @@ def test_demag_energy_density():
             "Max deviation is %g, should be zero." % np.max(deviation)
 
 if __name__ == '__main__':
+    test_exchange_energy_density()
+    sys.exit(0)
     test_demag_energy_density()
     test_exchange_energy_density()
     test_anisotropy_energy_density()

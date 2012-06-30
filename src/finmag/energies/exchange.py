@@ -90,7 +90,21 @@ class Exchange(EnergyBase):
         E = exchange_factor * mu0 * Ms \
             * df.inner(df.grad(M), df.grad(M)) * df.dx
 
-        EnergyBase.setup(self, E, S3, M, Ms, unit_length)
+        # Needed for energy density
+        S1 = df.FunctionSpace(S3.mesh(), "CG", 1)
+
+        self.S3 = S3  # keep reference as migth need it again
+        w = df.TestFunction(S1)
+        nodal_E = Ms * mu0 * df.dot(self.exchange_factor \
+                * df.inner(df.grad(M), df.grad(M)), w) * df.dx
+
+        EnergyBase.setup(self,
+                E=E,
+                nodal_E=nodal_E,
+                S3=S3,
+                M=M,
+                Ms=Ms,
+                unit_length=unit_length)
 
         timings.stop('Exchange-setup')
 
@@ -108,5 +122,11 @@ if __name__ == "__main__":
     exchange = Exchange(1e-11)
 
     exchange.setup(S3, M, Ms)
+
+    _ = exchange.compute_field()
+    _ = exchange.compute_energy()
+    _ = exchange.energy_density()
+
     print exchange.name
     print timings.report_str()
+

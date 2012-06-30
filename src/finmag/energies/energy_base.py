@@ -25,6 +25,7 @@ class EnergyBaseAbstract(object):
 
 EnergyBase = EnergyBaseAbstract
 
+
 class EnergyBaseExchange(EnergyBaseAbstract):
     """
     Computes a field.
@@ -97,7 +98,7 @@ class EnergyBaseExchange(EnergyBaseAbstract):
         """Compose and return a string that is used for timing functions."""
         return 'EnergyBase-' + self.name + '-' + functiondescription
 
-    def setup(self, E, S3, M, Ms, unit_length=1):
+    def setup(self, E, nodal_E, S3, M, Ms, unit_length=1):
         #import IPython
         #print "Starting iPython shell"
         #IPython.embed()
@@ -122,8 +123,7 @@ class EnergyBaseExchange(EnergyBaseAbstract):
         w = df.TestFunction(S1)
         self.nodal_vol = df.assemble(w * df.dx, mesh=S3.mesh()).array() \
                 * unit_length ** self.dim
-        self.nodal_E = df.dot(self.exchange_factor \
-                * df.inner(df.grad(M), df.grad(M)), w) * df.dx
+        self.nodal_E = nodal_E
 
         # This is only needed if we want the energy density
         # as a df.Function, in order to e.g. probe.
@@ -276,3 +276,6 @@ class EnergyBaseExchange(EnergyBaseAbstract):
 
 if __name__ == "__main__":
     ExchangeOld()
+
+#TODO
+
