@@ -15,40 +15,46 @@ pages 127-128, equations B.16-B.18.
 
 """
 
+
 def make_analytic_solution(H, alpha, gamma):
-	"""
-	Returns a function with computes the magnetisation vector
-	as a function of time. Takes the following parameters:
-		- H the magnitude of the applied field
-		- alpha has no dimension
-		- gamma alias oommfs gamma_G in m/A*s
+    """
+    Returns a function with computes the magnetisation vector
+    as a function of time. Takes the following parameters:
+        - H the magnitude of the applied field
+        - alpha has no dimension
+        - gamma alias oommfs gamma_G in m/A*s
 
-	"""
-	p = float(gamma) / (1 + alpha**2)
-	theta0 = numpy.pi / 2
-	t0 = numpy.log(numpy.sin(theta0)/(1 + numpy.cos(theta0))) / (p * alpha * H)
+    """
+    p = float(gamma) / (1 + alpha ** 2)
+    theta0 = numpy.pi / 2
+    t0 = numpy.log(numpy.sin(theta0) / (1 + numpy.cos(theta0))) / (p * alpha * H)
 
-	# Matteo uses spherical coordinates,
-	# which have to be converted to cartesian coordinates.
+    # Matteo uses spherical coordinates,
+    # which have to be converted to cartesian coordinates.
 
-	def phi(t):
-	    return p * H * t
-	def cos_theta(t):
-	    return numpy.tanh(p * alpha * H * (t - t0))
-	def sin_theta(t):
-	    return 1 / (numpy.cosh(p * alpha * H * (t - t0)))
+    def phi(t):
+        return p * H * t
 
-	def x(t):
-	    return sin_theta(t) * numpy.cos(phi(t))
-	def y(t):
-	    return sin_theta(t) * numpy.sin(phi(t))
-	def z(t):
-	    return cos_theta(t)
+    def cos_theta(t):
+        return numpy.tanh(p * alpha * H * (t - t0))
 
-	def m(t):
-	    return numpy.array([x(t), y(t), z(t)])
+    def sin_theta(t):
+        return 1 / (numpy.cosh(p * alpha * H * (t - t0)))
 
-	return m
+    def x(t):
+        return sin_theta(t) * numpy.cos(phi(t))
+
+    def y(t):
+        return sin_theta(t) * numpy.sin(phi(t))
+
+    def z(t):
+        return cos_theta(t)
+
+    def m(t):
+        return numpy.array([x(t), y(t), z(t)])
+
+    return m
+
 
 def compare_with_analytic_solution(alpha=0.5, max_t=1e-9):
     """
@@ -79,7 +85,7 @@ def compare_with_analytic_solution(alpha=0.5, max_t=1e-9):
     m_analytical = make_analytic_solution(1e6, alpha, llg.gamma)
     save_plot(ts, ys, tsfine, m_analytical, alpha)
 
-    TOLERANCE = 1e-6 # tolerance on Ubuntu 11.10, VM Hans, 25/02/2012
+    TOLERANCE = 1e-6  # tolerance on Ubuntu 11.10, VM Hans, 25/02/2012
 
     rel_diff_maxs = list()
     for i in range(len(ts)):
@@ -87,9 +93,9 @@ def compare_with_analytic_solution(alpha=0.5, max_t=1e-9):
         m_ref = m_analytical(ts[i])
         diff = numpy.abs(m - m_ref)
         diff_max = numpy.max(diff)
-        rel_diff_max = numpy.max(diff/numpy.max(m_ref))
+        rel_diff_max = numpy.max(diff / numpy.max(m_ref))
         rel_diff_maxs.append(rel_diff_max)
-        
+
         print "t= {0:.3g}, diff_max= {1:.3g}.".format(ts[i], diff_max)
 
         msg = "Diff at t= {0:.3g} too large.\nAllowed {1:.3g}. Got {2:.3g}."
@@ -97,13 +103,14 @@ def compare_with_analytic_solution(alpha=0.5, max_t=1e-9):
     print "Maximal relative difference: "
     print numpy.max(numpy.array(rel_diff_maxs))
 
+
 def save_plot(ts, ys, ts_ref, m_ref, alpha):
-    ys3d = ys.reshape((len(ys),3,8)).mean(-1)
+    ys3d = ys.reshape((len(ys), 3, 8)).mean(-1)
     mx = ys3d[:,0]
     my = ys3d[:,1]
     mz = ys3d[:,2]
-    print "mx.shape",mx.shape
-    print "m_analytical.shape",m_ref(ts).shape
+    print "mx.shape", mx.shape
+    print "m_analytical.shape", m_ref(ts).shape
     m_exact = m_ref(ts_ref)
     mx_exact = m_exact[0,:]
     my_exact = m_exact[1,:]
@@ -113,36 +120,42 @@ def save_plot(ts, ys, ts_ref, m_ref, alpha):
     mpl.use("Agg")
     import matplotlib.pyplot as plt
 
-    plt.plot(ts,mx,'o',label='mx')
-    plt.plot(ts,my,'x',label='my')
-    plt.plot(ts,mz,'^',label='mz')
-    plt.plot(ts_ref,mx_exact,'-',label='mx (exact)')
-    plt.plot(ts_ref,my_exact,'-',label='my (exact)')
-    plt.plot(ts_ref,mz_exact,'-',label='mz (exact)')
+    plt.plot(ts, mx, 'o', label='mx')
+    plt.plot(ts, my, 'x', label='my')
+    plt.plot(ts, mz, '^', label='mz')
+    plt.plot(ts_ref, mx_exact, '-', label='mx (exact)')
+    plt.plot(ts_ref, my_exact, '-', label='my (exact)')
+    plt.plot(ts_ref, mz_exact, '-', label='mz (exact)')
     plt.xlabel('t [s]')
     plt.ylabel('m=M/Ms')
     plt.grid()
     plt.legend()
     filename = ('alpha-%04.2f' % alpha)
     #latex does not like multiple '.' in image filenames
-    filename = filename.replace('.','-')
-    plt.savefig(os.path.join(MODULE_DIR,filename+'.pdf'))
+    filename = filename.replace('.', '-')
+    plt.savefig(os.path.join(MODULE_DIR, filename + '.pdf'))
+    plt.savefig(os.path.join(MODULE_DIR, filename + '.png'))
     plt.close()
     #pylab.show()
+
 
 def test_macrospin_very_low_damping():
     compare_with_analytic_solution(alpha=0.02, max_t=2e-9)
 
+
 def test_macrospin_low_damping():
     compare_with_analytic_solution(alpha=0.1, max_t=4e-10)
+
 
 def test_macrospin_standard_damping():
     compare_with_analytic_solution(alpha=0.5, max_t=1e-10)
 
+
 def test_macrospin_higher_damping():
     compare_with_analytic_solution(alpha=1, max_t=1e-10)
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     test_macrospin_very_low_damping()
     test_macrospin_low_damping()
     test_macrospin_standard_damping()
