@@ -2,7 +2,7 @@ import numpy as np
 import dolfin as df
 import logging
 from finmag.util.timings import timings
-from energy_base import EnergyBaseExchange as EnergyBase
+from energy_base import EnergyBase
 from finmag.util.consts import mu0
 
 logger = logging.getLogger('finmag')
@@ -92,8 +92,6 @@ class Exchange(EnergyBase):
 
         # Needed for energy density
         S1 = df.FunctionSpace(S3.mesh(), "CG", 1)
-
-        self.S3 = S3  # keep reference as migth need it again
         w = df.TestFunction(S1)
         nodal_E = Ms * mu0 * df.dot(self.exchange_factor \
                 * df.inner(df.grad(M), df.grad(M)), w) * df.dx
@@ -118,7 +116,7 @@ if __name__ == "__main__":
 
     S3 = VectorFunctionSpace(mesh, "Lagrange", 1)
     C = 1.3e-11  # J/m exchange constant
-    M = project(Constant((Ms, 0, 0)), S3)  # Initial magnetisation
+    M = project(Constant((1, 0, 0)), S3)  # Initial magnetisation
     exchange = Exchange(1e-11)
 
     exchange.setup(S3, M, Ms)
