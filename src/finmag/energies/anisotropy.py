@@ -2,82 +2,88 @@ import numpy as np
 import dolfin as df
 import logging
 from finmag.util.timings import timings
+from finmag.util.consts import mu0
 from finmag.sim.helpers import fnormalise
-logger=logging.getLogger('finmag')
+from energy_base import EnergyBase
+logger = logging.getLogger('finmag')
 
-class UniaxialAnisotropy(object):
+
+class UniaxialAnisotropy(EnergyBase):
     """
-    Compute the anisotropy field.
-
-    The magnetocrystalline anisotropy energy for uniaxial
-    anisotropy is given by
+    Compute the exchange field.
 
     .. math::
-
-        E_{\\text{ani}} = - \\int K ( \\vec a \\cdot \\vec m)^2 \\mathrm{d}x,
-
-    .. note::
-
-        Haven't completely agreed on this yet.. Method used by Scholz and
-        Magpar:
-
-        .. math::
-
-            E_{\\text{ani}} = \\int_\\Omega K (1 - ( \\vec a \\cdot \\vec m)^2) \\mathrm{d}x
-
-    where :math:`K` is the anisotropy constant,
-    :math:`\\vec a` the easy axis and :math:`\\vec{m}=\\vec{M}/M_\mathrm{sat}`
-    the discrete approximation of the magnetic polarization.
-
+        
+        E_{\\text{exch}} = \\int_\\Omega A (\\nabla M)^2  dx
+        
     *Arguments*
-        K
-            The anisotropy constant
-        a
-            The easy axis (use dolfin.Constant for now).
-            Should be a unit vector.
-        Ms
-            The saturation magnetisation.
+        C 
+            the exchange constant
         method
-            The method used to compute the anisotropy field.
-            For alternatives and explanation, see Exchange.
+            possible methods are 
+                * 'box-assemble' 
+                * 'box-matrix-numpy' 
+                * 'box-matrix-petsc' [Default]
+                * 'project'
+
+    At the moment, we think (all) 'box' methods work 
+    (and the method is used in Magpar and Nmag).
+
+    - 'box-assemble' is a slower version that assembles the H_ex for a given M in every
+      iteration.
+
+    - 'box-matrix-numpy' precomputes a matrix g, so that H_ex = g*M
+
+    - 'box-matrix-petsc' is the same mathematical scheme as 'box-matrix-numpy',
+      but uses a PETSc linear algebra backend that supports sparse
+      matrices, to exploit the sparsity of g (default choice).
+
+    - 'project': does not use the box method but 'properly projects' the exchange field
+      into the function space. Should explore whether this works and/or makes any difference
+      (other than being slow.) Untested.
+
 
     *Example of Usage*
-        .. code-block:: python
 
+        .. code-block:: python
+            from dolfin import *
+            Ms   = 0.8e6
             m    = 1e-8
             n    = 5
             mesh = Box(0, m, 0, m, 0, m, n, n, n)
 
-            S3 = VectorFunctionSpace(mesh, 'Lagrange', 1)
-            K = 520e3 # For Co (J/m3)
+            S3  = VectorFunctionSpace(mesh, "Lagrange", 1)
+            C  = 1.3e-11 # J/m exchange constant
+            M  = project(Constant((Ms, 0, 0)), S3) # Initial magnetisation
 
-            a = Constant((0, 0, 1)) # Easy axis in z-direction
-            m = project(Constant((1, 0, 0)), V) # Initial magnetisation
-            Ms = 1e6
-
-            anisotropy = Anisotropy(K, a, Ms)
-            anisotropy.setup(S3, m)
+            exchange = Exchange(C, Ms)
+            exchange.setup(S3, M)
 
             # Print energy
-            print anisotropy.compute_energy()
+            print exchange.compute_energy()
 
-            # Anisotropy field
-            H_ani = anisotropy.compute_field()
+            # Exchange field
+            H_exch = exchange.compute_field()
+
+            # Using 'box-matrix-numpy' method (fastest for small matrices)
+            exchange_np = Exchange(V, M, C, Ms, method='box-matrix-numpy')
+            H_exch_np = exchange_np.compute_field()
 
     """
-
     def __init__(self, K, a, method="box-matrix-petsc"):
-        logger.debug("Creating Anisotropy with method {}.".format(method))
-        self.in_jacobian = True
+        """If K and a are dolfin-functions, then accept them as they are.
+        Otherwise, assume they are dolfin constants.
+        If they are not dolfin constants (but a float for K, or sequence
+            for a), try to convert them to dolfin constants.
 
-        # if K and a are dolfin-functions, then accept them as they are. We need this for 
-        # spatially varying anisotropy.
-        if isinstance(K,df.Function):
+        Dolfin-functions are required for spatially varying anisotropy
+        """
+        if isinstance(K, df.Function):
             self.K = K
         else:
             # Make sure that K is dolfin.Constant
             if not 'dolfin' in str(type(K)):
-                K = df.Constant(K)
+                K = df.Constant(K)  # or convert to df constant
             self.K = K
 
         if isinstance(a, (df.Function, df.Constant)):
@@ -88,19 +94,23 @@ class UniaxialAnisotropy(object):
             self.a = df.Constant(a)
 
         self.method = method
+        EnergyBase.__init__(self,
+            name='UniaxialAnisotropy',
+            method=method,
+            in_jacobian=True)
+        logger.debug("Creating UniaxialAnisotropy object with method {}.".format(method))
 
-    def setup(self, S3, m, Ms, unit_length=1):
-        timings.start('Anisotropy-setup')
+    def setup(self, S3, M, Ms, unit_length=1):
+        timings.start('UniaxialAnisotropy-setup')
 
-        self.Ms = Ms
-        self._m_normed = df.Function(S3)
-        self._m = m
+        #self._m_normed = df.Function(S3)
+        self.M = M
 
         # Testfunction
         self.v = df.TestFunction(S3)
 
         # Anisotropy energy
-        self.E = self.K * (df.Constant(1) - (df.dot(self.a, self.m))**2) * df.dx
+        E = self.K * (df.Constant(1) - (df.dot(self.a, self.M)) ** 2) * df.dx
 
         # HF's version inline with nmag, breaks comparison with analytical
         # solution in the energy density test for anisotropy, as this uses
@@ -109,8 +119,8 @@ class UniaxialAnisotropy(object):
         #self.E = -K*(df.dot(a, self.m))**2*df.dx
 
         # Gradient
-        mu0 = 4 * np.pi * 1e-7
-        self.dE_dM = df.Constant(-1.0 / ( self.Ms * mu0)) * df.derivative(self.E, self.m)
+        self.dE_dM = df.Constant(-1.0
+            / (Ms * mu0)) * df.derivative(E, self.M)
 
         # Volume
         self.vol = df.assemble(df.dot(self.v,
@@ -120,34 +130,22 @@ class UniaxialAnisotropy(object):
         S1 = df.FunctionSpace(S3.mesh(), "CG", 1)
         w = df.TestFunction(S1)
         self.nodal_vol = df.assemble(w * df.dx, mesh=S3.mesh()).array()
-        self.nodal_E = df.dot(self.K * (df.Constant(1) - (df.dot(self.a, self.m))**2), w) * df.dx
+        nodal_E = df.dot(self.K * (df.Constant(1)
+                        - (df.dot(self.a, self.m)) ** 2), w) * df.dx
 
         # This is only needed if we want the energy density
         # as a df.Function, in order to e.g. probe.
         self.ED = df.Function(S1)
 
-        # Store for later
-        self.S3 = S3
+        EnergyBase.setup(self,
+                E=E,
+                nodal_E=nodal_E,
+                S3=S3,
+                M=M,
+                Ms=Ms,
+                unit_length=unit_length)
 
-        if self.method=='box-assemble':
-            self.__compute_field = self.__compute_field_assemble
-        elif self.method == 'box-matrix-numpy':
-            self.__setup_field_numpy()
-            self.__compute_field = self.__compute_field_numpy
-        elif self.method == 'box-matrix-petsc':
-            self.__setup_field_petsc()
-            self.__compute_field = self.__compute_field_petsc
-        elif self.method=='project':
-            self.__setup_field_project()
-            self.__compute_field = self.__compute_field_project
-        else:
-            raise NotImplementedError("""Only methods currently implemented are
-                                    * 'box-assemble',
-                                    * 'box-matrix-numpy',
-                                    * 'box-matrix-petsc'
-                                    * 'project'""")
-
-        timings.stop('Anisotropy-setup')
+        timings.stop('UniaxialAnisotropy-setup')
 
     def normed_m(self):
         """
@@ -169,122 +167,31 @@ class UniaxialAnisotropy(object):
         of this function and comment the first return.
 
         """
-        return self._m # old behaviour
-        #self._m_normed.vector()[:] = fnormalise(self._m.vector().array())
-        #return self._m_normed
+        return self.M  # old behaviour
+
+        self._m_normed.vector()[:] = fnormalise(self._m.vector().array())
+        return self._m_normed
+
     m = property(normed_m)
 
-    def compute_field(self):
-        """
-        Compute the anisotropy field.
 
-         *Returns*
-            numpy.ndarray
-                The anisotropy field.
+if __name__ == "__main__":
+    from dolfin import *
+    m = 1e-8
+    Ms = 0.8e6
+    n = 5
+    mesh = Box(0, m, 0, m, 0, m, n, n, n)
 
-        """
-        timings.start('Anisotropy-computefield')
-        H = self.__compute_field()
-        timings.stop('Anisotropy-computefield')
-        return H
+    S3 = VectorFunctionSpace(mesh, "Lagrange", 1)
+    C = 1.3e-11  # J/m exchange constant
+    M = project(Constant((Ms, 0, 0)), S3)  # Initial magnetisation
+    uniax = UniaxialAnisotropy(K=1e11, a=[1, 0, 0])
 
-    def compute_energy(self):
-        """
-        Compute the anisotropy energy.
+    uniax.setup(S3, M, Ms)
 
-        *Returns*
-            Float
-                The anisotropy energy.
+    _ = uniax.compute_field()
+    _ = uniax.compute_energy()
+    _ = uniax.energy_density()
 
-        """
-        timings.start('Anisotropy-energy')
-        E = df.assemble(self.E)
-        timings.stop('Anisotropy-energy')
-        return E
-
-    def energy_density(self):
-        """
-        Compute the anisotropy energy density,
-
-        .. math::
-
-            \\frac{E_\\mathrm{ani}}{V},
-
-        where V is the volume of each node.
-
-        *Returns*
-            numpy.ndarray
-                The anisotropy energy density.
-
-        """
-        nodal_E = df.assemble(self.nodal_E).array()
-        return nodal_E/self.nodal_vol
-
-    def energy_density_function(self):
-        """
-        Compute the anisotropy energy density the same way as the
-        function above, but return a Function to allow probing.
-
-        *Returns*
-            dolfin.Function
-                The anisotropy energy density.
-
-        """
-        self.ED.vector()[:] = self.energy_density()
-        return self.ED
-
-    def __setup_field_numpy(self):
-        """
-        Linearise dE_dM with respect to M. As we know this is
-        linear ( should add reference to Werner Scholz paper and
-        relevant equation for g), this creates the right matrix
-        to compute dE_dM later as dE_dM=g*M.  We essentially
-        compute a Taylor series of the energy in M, and know that
-        the first two terms (dE_dM=Hex, and ddE_dMdM=g) are the
-        only finite ones as we know the expression for the
-        energy.
-
-        """
-        g_form = df.derivative(self.dE_dM, self.m)
-        self.g = df.assemble(g_form).array() #store matrix as numpy array
-
-    def __setup_field_petsc(self):
-        """
-        Same as __setup_field_numpy but with a petsc backend.
-
-        """
-        g_form = df.derivative(self.dE_dM, self.m)
-        self.g_petsc = df.PETScMatrix()
-
-        df.assemble(g_form,tensor=self.g_petsc)
-        self.H_ani_petsc = df.PETScVector()
-
-    def __setup_field_project(self):
-        #Note that we could make this 'project' method faster by computing
-        #the matrices that represent a and L, and only to solve the matrix
-        #system in 'compute_field'(). IF this method is actually useful,
-        #we can do that. HF 16 Feb 2012
-        H_ani_trial = df.TrialFunction(self.V)
-        self.a = df.dot(H_ani_trial, self.v) * df.dx
-        self.L = self.dE_dM
-        self.H_ani_project = df.Function(self.V)
-
-    def __compute_field_assemble(self):
-        H_ani=df.assemble(self.dE_dM).array() / self.vol
-        return H_ani
-
-    def __compute_field_numpy(self):
-        Mvec = self.m.vector().array()
-        H_ani = np.dot(self.g,Mvec)/self.vol
-        return H_ani
-
-    def __compute_field_petsc(self):
-        self.g_petsc.mult(self.m.vector(), self.H_ani_petsc)
-        H_ani = self.H_ani_petsc.array()/self.vol
-        return H_ani
-
-    def __compute_field_project(self):
-        df.solve(self.a == self.L, self.H_ani_project)
-        H_ani = self.H_ani_project.vector().array()
-        raise NotImplementedError("This has never been tested and is not meant to work.")
-        return H_ani
+    print uniax.name
+    print timings.report_str()
