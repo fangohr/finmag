@@ -98,3 +98,9 @@ def test_exchange_field_equivalent_methods():
     print "Max value = %g, relative error = %g " % (max(H_ex_1), diff13/max(H_ex_1))
     assert diff13 < 1e-8
     assert diff13/max(H_ex_1)<1e-15
+
+if __name__ == '__main__':
+    test_there_should_be_an_exchange_field_for_heterogeneous_M()
+    test_there_should_be_no_exchange_field_for_uniform_M()
+    test_exchange_field_should_change_when_M_changes()
+    test_exchange_field_equivalent_methods()
