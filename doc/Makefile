@@ -43,9 +43,10 @@ help:
 clean:
 	-rm -rf $(BUILDDIR)/* modules/*
 
-html: generate-doc
+htmlraw:
 	$(SPHINXBUILD) -W -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
-	@echo
+
+html: generate-doc htmlraw
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
 dirhtml:

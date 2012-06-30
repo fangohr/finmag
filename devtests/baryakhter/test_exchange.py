@@ -27,7 +27,7 @@ class BaryakhtarExchange(EnergyBase):
         self.S3 = S3
         self.m = m
         self.Ms=Ms
-        self.init_Ms=np.array(Ms)
+        self.init_Ms=np.array(Ms.vector().array())
         self.unit_length = unit_length
 
         self.mu0 = 4 * np.pi * 10**-7 # Vs/(Am)
@@ -37,7 +37,7 @@ class BaryakhtarExchange(EnergyBase):
         self.E = self.exchange_factor * df.inner(df.grad(m), df.grad(m)) * df.dx
         self.dE_dM = -1 * df.derivative(self.E, m, self.v)
         self.vol = df.assemble(df.dot(self.v, df.Constant([1, 1, 1])) * df.dx).array()
-        self.coeff=0.5/self.chi/self.Ms**2/self.vol
+        self.coeff=0.5/self.chi/self.Ms.vector().array()**2/self.vol
         self.dim = S3.mesh().topology().dim()
 
         # Needed for energy density
@@ -162,9 +162,10 @@ class BaryakhtarExchange(EnergyBase):
 
     def __compute_field_numpy(self):
         m=self.m.vector().array()
+        Ms=self.Ms.vector().array()
         H_ex = np.dot(self.g, m)
-        relax = self.Ms*m*self.coeff*(self.init_Ms**2-self.Ms**2)
-        return H_ex/self.Ms/self.vol+relax
+        relax = Ms*m*self.coeff*(self.init_Ms**2-Ms**2)
+        return H_ex/Ms/self.vol+relax
 
    
 

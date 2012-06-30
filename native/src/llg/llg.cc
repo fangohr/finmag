@@ -101,6 +101,12 @@ namespace finmag { namespace llg {
                 double char_time,
                 bool do_precession) {
 
+	   //* m - magnetisation
+	   //* H - effective field
+	   //* mp - the magnetisation vector to compute the product with (read it as m-prime, m')
+	   //* Hp - the derivative of the effective field in the direction of mp, i.e. d H_eff(m + a m')/da | a = 0
+	   //* jtimes - the output Jacobean product, i.e. d rhs(m + a m')/da | a = 0
+
             m.check_ndim(2, "calc_llg_dmdt: m");
             int n = m.dim()[1];
 
@@ -295,7 +301,7 @@ namespace finmag { namespace llg {
                     dm0[i] -= gamma*cross0(m0[i], m1[i], m2[i], h0[i], h1[i], h2[i]);
                     dm1[i] -= gamma*cross1(m0[i], m1[i], m2[i], h0[i], h1[i], h2[i]);
                     dm2[i] -= gamma*cross2(m0[i], m1[i], m2[i], h0[i], h1[i], h2[i]);
-		    printf("%g  %g  %g  %g  %g  %g\n",m0[i], m1[i], m2[i],dm0[i],dm1[i],dm2[i]);
+		    //printf("%g  %g  %g  %g  %g  %g\n",m0[i], m1[i], m2[i],dm0[i],dm1[i],dm2[i]);
                 }
             }
 
@@ -446,7 +452,7 @@ namespace finmag { namespace llg {
             arg("do_precession")
         ));
 
-        def("calc_baryakhtar_jtimes", &calc_llg_jtimes, (
+        def("calc_baryakhtar_jtimes", &calc_baryakhtar_jtimes, (
             arg("m"),
             arg("H"),
             arg("mp"),

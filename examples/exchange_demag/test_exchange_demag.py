@@ -17,6 +17,7 @@ Ms = 0.86e6
 unit_length = 1e-9
 mesh = df.Mesh(convert_mesh(MODULE_DIR + "/bar30_30_100.geo"))
 
+
 def run_finmag():
     """Run the finmag simulation and store data in averages.txt."""
 
@@ -114,6 +115,8 @@ def test_compare_averages():
     p.ylabel("$m$")
     p.legend(loc='center right')
     p.savefig(MODULE_DIR + "/exchange_demag.pdf")
+    p.savefig(MODULE_DIR + "/exchange_demag.png")
+
     #p.show
     p.close()
     print "Comparison of development written to exchange_demag.pdf"
@@ -160,6 +163,7 @@ def test_compare_energies():
     p.ylabel("$e_\mathrm{exch}\, (\mathrm{Jm^{-3}})$")
     p.legend()
     p.savefig(MODULE_DIR + "/exchange_energy.pdf")
+    p.savefig(MODULE_DIR + "/exchange_energy.png")
     p.close()
 
     p.plot(demag_nmag, 'o', mfc='w', label='nmag')
@@ -168,6 +172,7 @@ def test_compare_energies():
     p.ylabel("$e_\mathrm{demag}\, (\mathrm{Jm^{-3}})$")
     p.legend()
     p.savefig(MODULE_DIR + "/demag_energy.pdf")
+    p.savefig(MODULE_DIR + "/demag_energy.png")
     #p.show()
     p.close()
     print "Energy plots written to exchange_energy.pdf and demag_energy.pdf"
@@ -233,6 +238,7 @@ def test_compare_energy_density():
     p.ylabel("$e_\mathrm{exch}\, (\mathrm{Jm^{-3}})$")
     p.legend(["finmag", "nmag", "oommf"], loc="upper center")
     p.savefig(MODULE_DIR + "/exchange_density.pdf")
+    p.savefig(MODULE_DIR + "/exchange_density.png")
     p.close()
 
     # Plot demag energy density
@@ -243,6 +249,7 @@ def test_compare_energy_density():
     p.ylabel("$e_\mathrm{demag}\, (\mathrm{Jm^{-3}})$")
     p.legend(["finmag", "nmag", "oommf"], loc="upper center")
     p.savefig(MODULE_DIR + "/demag_density.pdf")
+    p.savefig(MODULE_DIR + "/demag_density.png")
     #p.show()
     p.close()
     print "Energy density plots written to exchange_density.pdf and demag_density.pdf"
