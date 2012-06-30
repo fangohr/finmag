@@ -1,14 +1,13 @@
 import numpy as np
 import dolfin as df
-from energy_base import EnergyBase
+from finmag.util.consts import mu0
+from energy_base import EnergyBaseAbstract
 
-mu0 = 4 * np.pi * 1e-7
-
-class Zeeman(EnergyBase):
+class Zeeman(EnergyBaseAbstract):
     def __init__(self, value, **kwargs):
         """
         Set the external field.
-       
+
         There are several ways to use this function. Either you provide
         a 3-tuple of numbers, which will get cast to a dolfin.Constant, or
         a dolfin.Constant directly.
@@ -49,7 +48,7 @@ class Zeeman(EnergyBase):
             H.vector()[:] = self.value(coords).flatten()
         else:
             raise AttributeError
-        
+
         self.H = H
         self.E = - mu0 * self.Ms * df.dot(self.m, self.H) * df.dx 
 
