@@ -51,7 +51,7 @@ class Exchange(EnergyBase):
             m    = 1e-8
             n    = 5
             mesh = Box(0, m, 0, m, 0, m, n, n, n)
-        
+
             S3  = VectorFunctionSpace(mesh, "Lagrange", 1)
             C  = 1.3e-11 # J/m exchange constant
             M  = project(Constant((Ms, 0, 0)), S3) # Initial magnetisation
@@ -62,13 +62,13 @@ class Exchange(EnergyBase):
             # Print energy
             print exchange.compute_energy()
 
-            # Exchange field 
+            # Exchange field
             H_exch = exchange.compute_field()
 
             # Using 'box-matrix-numpy' method (fastest for small matrices)
             exchange_np = Exchange(V, M, C, Ms, method='box-matrix-numpy')
             H_exch_np = exchange_np.compute_field()
-            
+
     """
     def __init__(self, C, method="box-matrix-petsc"):
         EnergyBase.__init__(self,
@@ -77,7 +77,7 @@ class Exchange(EnergyBase):
             in_jacobian=True)
         logger.debug("Creating Exchange object with method {}.".format(method))
         self.C = C
-      
+
     def setup(self, S3, M, Ms, unit_length=1):
         timings.start('Exchange-setup')
 
@@ -88,139 +88,23 @@ class Exchange(EnergyBase):
         self.exchange_factor = exchange_factor  # XXX
 
         E = exchange_factor * mu0 * Ms \
-            * df.inner( df.grad(M), df.grad(M)) * df.dx
- 
+            * df.inner(df.grad(M), df.grad(M)) * df.dx
+
         EnergyBase.setup(self, E, S3, M, Ms, unit_length)
-
-
-        #self.v = df.TestFunction(S3)
-        #self.dE_dM = -1 * df.derivative(self.E, M, self.v)
-        #self.vol = df.assemble(df.dot(self.v, df.Constant([1, 1, 1])) * df.dx).array()
-        #self.dim = S3.mesh().topology().dim()
 
         timings.stop('Exchange-setup')
 
-    # def compute_field(self):
-    #     """
-    #     Compute the exchange field.
-        
-    #      *Returns*
-    #         numpy.ndarray
-    #             The exchange field.
-        
-    #     """
-    #     timings.start('Exchange-computefield')
-    #     Hex = self.__compute_field()
-    #     timings.stop('Exchange-computefield')
-    #     return Hex
 
-    # def compute_energy(self):
-    #     """
-    #     Return the exchange energy.
-
-    #     *Returns*
-    #         Float
-    #             The exchange energy.
-
-    #     """
-    #     timings.start('Exchange-energy')
-    #     E = df.assemble(self.E) * self.unit_length ** self.dim * self.Ms * self.mu0
-    #     timings.stop('Exchange-energy')
-    #     return E
-
-    # def energy_density(self):
-    #     """
-    #     Compute the exchange energy density,
-
-    #     .. math::
-
-    #         \\frac{E_\\mathrm{exch}}{V},
-
-    #     where V is the volume of each node.
-
-    #     *Returns*
-    #         numpy.ndarray
-    #             The exchange energy density.
-
-    #     """
-    #     nodal_E = df.assemble(self.nodal_E).array() \
-    #             * self.unit_length ** self.dim * self.Ms * self.mu0
-    #     return nodal_E / self.nodal_vol
-
-    # def energy_density_function(self):
-    #     """
-    #     Compute the exchange energy density the same way as the
-    #     function above, but return a Function to allow probing.
-
-    #     *Returns*
-    #         dolfin.Function
-    #             The exchange energy density.
-
-    #     """
-    #     self.ED.vector()[:] = self.energy_density()
-    #     return self.ED
-
-    # def __setup_field_numpy(self):
-    #     """
-    #     Linearise dE_dM with respect to M. As we know this is
-    #     linear ( should add reference to Werner Scholz paper and
-    #     relevant equation for g), this creates the right matrix
-    #     to compute dE_dM later as dE_dM=g*M.  We essentially
-    #     compute a Taylor series of the energy in M, and know that
-    #     the first two terms (dE_dM=Hex, and ddE_dMdM=g) are the
-    #     only finite ones as we know the expression for the
-    #     energy.
-
-    #     """
-    #     g_form = df.derivative(self.dE_dM, self.M)
-    #     self.g = df.assemble(g_form).array()  # store matrix as numpy array
-
-    # def __setup_field_petsc(self):
-    #     """
-    #     Same as __setup_field_numpy but with a petsc backend.
-
-    #     """
-    #     g_form = df.derivative(self.dE_dM, self.M)
-    #     self.g_petsc = df.PETScMatrix()
-
-    #     df.assemble(g_form, tensor=self.g_petsc)
-    #     self.H_ex_petsc = df.PETScVector()
-
-    # def __setup_field_project(self):
-    #     #Note that we could make this 'project' method faster by computing the matrices
-    #     #that represent a and L, and only to solve the matrix system in 'compute_field'().
-    #     #IF this method is actually useful, we can do that. HF 16 Feb 2012
-    #     H_exch_trial = df.TrialFunction(self.V)
-    #     self.a = df.dot(H_exch_trial, self.v) * df.dx
-    #     self.L = self.dE_dM
-    #     self.H_exch_project = df.Function(self.V)
-
-    # def __compute_field_assemble(self):
-    #     return df.assemble(self.dE_dM).array() / self.vol
-
-    # def __compute_field_numpy(self):
-    #     Mvec = self.M.vector().array()
-    #     H_ex = np.dot(self.g, Mvec)
-    #     return H_ex / self.vol
-
-    # def __compute_field_petsc(self):
-    #     self.g_petsc.mult(self.M.vector(), self.H_ex_petsc)
-    #     return self.H_ex_petsc.array() / self.vol
-
-    # def __compute_field_project(self):
-    #     df.solve(self.a == self.L, self.H_exch_project)
-    #     return self.H_exch_project.vector().array()
-
-if __name__=="__main__":
+if __name__ == "__main__":
     from dolfin import *
-    m    = 1e-8
-    Ms   = 0.8e6
-    n    = 5
+    m = 1e-8
+    Ms = 0.8e6
+    n = 5
     mesh = Box(0, m, 0, m, 0, m, n, n, n)
 
-    S3  = VectorFunctionSpace(mesh, "Lagrange", 1)
-    C  = 1.3e-11 # J/m exchange constant
-    M  = project(Constant((Ms, 0, 0)), S3) # Initial magnetisation
+    S3 = VectorFunctionSpace(mesh, "Lagrange", 1)
+    C = 1.3e-11  # J/m exchange constant
+    M = project(Constant((Ms, 0, 0)), S3)  # Initial magnetisation
     exchange = Exchange(1e-11)
 
     exchange.setup(S3, M, Ms)
