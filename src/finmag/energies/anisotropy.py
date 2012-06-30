@@ -17,6 +17,7 @@ class UniaxialAnisotropy(EnergyBase):
         E_{\\text{exch}} = \\int_\\Omega A (\\nabla M)^2  dx
         
     *Arguments*
+
         C 
             the exchange constant
         method
@@ -46,6 +47,7 @@ class UniaxialAnisotropy(EnergyBase):
     *Example of Usage*
 
         .. code-block:: python
+        
             from dolfin import *
             Ms   = 0.8e6
             m    = 1e-8
