@@ -80,3 +80,17 @@ if __name__ == '__main__':
     print(outtext)
 
     print(distcp(sourcedir, os.path.join(targetdir, '')))
+
+    """The go to target directory
+
+    cd /tmp/finmag-build/finmag
+    export PYTHONPATH=`pwd`
+    and (i) try to import finmag
+    and if this works
+    (ii) run regression tests
+
+    cd finmag
+    py.test -v
+
+    It seems that py.test cannot find the tests if they are not called .pyc
+    """
