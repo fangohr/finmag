@@ -38,13 +38,13 @@ class EnergyBaseExchange(EnergyBaseAbstract):
     XXX    C
     the exchange constant
         method
-            possible methods are 
-                * 'box-assemble' 
-                * 'box-matrix-numpy' 
+            possible methods are
+                * 'box-assemble'
+                * 'box-matrix-numpy'
                 * 'box-matrix-petsc' [Default]
                 * 'project'
 
-    At the moment, we think (all) 'box' methods work 
+    At the moment, we think (all) 'box' methods work
     (and the method is used in Magpar and Nmag).
 
     - 'box-assemble' is a slower version that assembles the H_ex for a given M in every
@@ -79,21 +79,22 @@ class EnergyBaseExchange(EnergyBaseAbstract):
             # Print energy
             print exchange.compute_energy()
 
-            # Exchange field 
+            # Exchange field
             H_exch = exchange.compute_field()
 
             # Using 'box-matrix-numpy' method (fastest for small matrices)
             exchange_np = Exchange(V, M, C, Ms, method='box-matrix-numpy')
             H_exch_np = exchange_np.compute_field()
-            
+
     """
-    def __init__(self, name, method="box-matrix-petsc",in_jacobian=False):
+
+    def __init__(self, name, method="box-matrix-petsc", in_jacobian=False):
         self.name = name
         logger.debug("Creating Exchange object with method {}.".format(method))
         logger.debug("In constructor Energy Base for name='%s'" % name)
         self.in_jacobian = in_jacobian
         self.method = method
- 
+
     def _timingsname(self, functiondescription):
         """Compose and return a string that is used for timing functions."""
         return 'EnergyBase-' + self.name + '-' + functiondescription
@@ -201,8 +202,10 @@ class EnergyBaseExchange(EnergyBaseAbstract):
                 Coefficients of dolfin vector of energy density.
 
         """
+        timings.start(self._timingsname('energy_density'))
         nodal_E = df.assemble(self.nodal_E).array() \
                 * self.unit_length ** self.dim
+        timings.stop(self._timingsname('energy_density'))
         return nodal_E / self.nodal_vol
 
     def energy_density_function(self):
@@ -270,12 +273,6 @@ class EnergyBaseExchange(EnergyBaseAbstract):
         df.solve(self.a == self.L, self.H_project)
         return self.H_project.vector().array()
 
-# if __name__=="__main__":
-#     ex = Exchange(1e-11)
-#     print ex.name
 
 if __name__ == "__main__":
-    ExchangeOld()
-
-#TODO
-
+    pass
