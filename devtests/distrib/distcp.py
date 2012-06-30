@@ -1,14 +1,15 @@
 import os
 import shutil
 import logging
+import commands
 
 #logging.basicConfig(level=logging.DEBUG)
 logging.basicConfig(level=logging.INFO)
 log = logging
 
 #files_to_ignore = ['llg.py']
-directories_to_ignore = ['build']
-targetdir = "/tmp/finmag-build"
+directories_to_ignore = ['build', '__pycache__']
+targetdir = "/tmp/finmag-build/finmag"
 sourcedir = os.path.realpath("../../src")
 
 
@@ -26,21 +27,21 @@ def cp_file(sourcedir, filename, targetdir):
     if filename.endswith('.py'):
         if os.path.exists(path[:-3] + ".so"):  # best scenario: we have a .so file
             if filename == "__init__.py":
+                pass
                 # create empty init.py file
-                f = open(os.path.join(targetdir, "__init__.py"), "w")
-                f.close()
+                #f = open(os.path.join(targetdir, "__init__.py"), "w")
+                #f.close()
             return  # don't copy that Python file because we have a .so
         elif os.path.exists(path[:-3] + ".pyc"):  # second best: we have a pyc file
-            #shutil.copyfile(path, path[:-3] + ".pyc")  # should copy the file
-            #return  # don't copy that Python file because we have a .pyc
-            pass
+            shutil.copyfile(path[:-3] + ".pyc", os.path.join(targetdir, filename + "c"))
+            return  # don't copy that Python file because we have a .pyc
         else:
-            log.warning("Warning: copying %20s to %s" % targetdir)
+            log.warning("Warning: copying %20s to %s" % (path, targetdir))
     elif filename.endswith('pyc'):
-        log.debug("Skipping pyc file (%s)" % path)
-        log.info("Copying %s to %s" % (path, targetpath))
+        targetpath = os.path.join(targetdir, filename)
+        log.info("Copying .pyc %s to %s" % (path, targetpath))
         shutil.copyfile(path, targetpath)
-
+        return
     elif filename.endswith('.c'):
         log.debug("Skipping .c   file (%s)" % path)
         return
@@ -48,7 +49,7 @@ def cp_file(sourcedir, filename, targetdir):
         log.debug("Skipping .o   file (%s)" % path)
         return
     targetpath = os.path.join(targetdir, filename)
-    log.info("Copying %s to %s" % (path, targetpath))
+    log.debug("Copying %s to %s" % (path, targetpath))
     shutil.copyfile(path, targetpath)
 
 
@@ -58,8 +59,8 @@ def scandir(srcdir, targetdir, files=[]):
         log.debug("scandir: working %s / %s" % (srcdir, file_))
         if os.path.isfile(path):
             cp_file(srcdir, file_, targetdir)
-        elif os.path.isdir(path) and os.path.split(path) not in directories_to_ignore:
-            scandir(path, targetdir, files)
+        elif os.path.isdir(path) and os.path.split(path)[1] not in directories_to_ignore:
+            scandir(path, os.path.join(targetdir, file_), files)
     return files
 
 
@@ -70,4 +71,12 @@ def distcp(srcdirectory, targetdir):
 if __name__ == '__main__':
     if not os.path.exists(targetdir):
         os.makedirs(targetdir)
-    print(distcp(sourcedir, targetdir))
+
+    cmd = "cd " + sourcedir + " && python -m compileall src/finmag"
+    (exitstatus, outtext) = commands.getstatusoutput(cmd)
+    if exitstatus:
+        print("Error occured: output=%s" % outtext)
+        raise RuntimeError()
+    print(outtext)
+
+    print(distcp(sourcedir, os.path.join(targetdir, '')))
