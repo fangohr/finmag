@@ -4,6 +4,7 @@ from energy_base import EnergyBase
 import logging
 logger=logging.getLogger('finmag')
 from finmag.util.timings import timings
+from finmag.util.consts import mu0
 
 
 def dmi_term3d_dolfin(M,v,c):
@@ -13,7 +14,7 @@ def dmi_term3d_dolfin(M,v,c):
 
 def dmi_term3d(M,v,c,debug=False):
     """Input arguments:
-      
+
        M a dolfin 3d-vector function on a 3d space
        c the DMI constant.
 
@@ -34,37 +35,34 @@ def dmi_term3d(M,v,c,debug=False):
        and this is how we compute the rotation in this routine.
 
        The routine itself is not very useful, the dolfin command in (1)
-       is more effective. However, once this works, we can 
-
-
-
+       is more effective. However, once this works, we can
     """
 
 
 
     if debug:
         Mx, My, Mz = M.split()
-        print "Mx=",df.assemble(Mx*df.dx)
-        print "My=",df.assemble(My*df.dx)
-        print "Mz=",df.assemble(Mz*df.dx)
+        print "Mx=", df.assemble(Mx * df.dx)
+        print "My=", df.assemble(My * df.dx)
+        print "Mz=", df.assemble(Mz * df.dx)
 
     gradM=df.grad(M)
 
-    dMxdx=gradM[0,0]
-    dMxdy=gradM[0,1]
-    dMxdz=gradM[0,2]
-    dMydx=gradM[1,0]
-    dMydy=gradM[1,1]
-    dMydz=gradM[1,2]
-    dMzdx=gradM[2,0]
-    dMzdy=gradM[2,1]
-    dMzdz=gradM[2,2]
-    
+    dMxdx = gradM[0, 0]
+    dMxdy = gradM[0, 1]
+    dMxdz = gradM[0, 2]
+    dMydx = gradM[1, 0]
+    dMydy = gradM[1, 1]
+    dMydz = gradM[1, 2]
+    dMzdx = gradM[2, 0]
+    dMzdy = gradM[2, 1]
+    dMzdz = gradM[2, 2]
+
     if debug:
         for i in range(3):
             for j in range(3):
-                print "i=%d, j=%d" % (i,j),
-                print df.assemble(gradM[i,j]*df.dx)
+                print "i=%d, j=%d" % (i, j),
+                print df.assemble(gradM[i, j] * df.dx)
 
     curlx = dMzdy - dMydz
     curly = dMxdz - dMzdx
@@ -72,23 +70,23 @@ def dmi_term3d(M,v,c,debug=False):
 
     if debug:
 
-        print "curlx=",df.assemble(curlx*df.dx)
-        print "curly=",df.assemble(curly*df.dx)
-        print "curlz=",df.assemble(curlz*df.dx)
+        print "curlx=", df.assemble(curlx * df.dx)
+        print "curly=", df.assemble(curly * df.dx)
+        print "curlz=", df.assemble(curlz * df.dx)
 
     #original equation:
     #E = c * df.inner(M, df.curl(M)) * df.dx
 
     #our version:
-    E = c *( M[0]*curlx+M[1]*curly+M[2]*curlz) * df.dx
-    nodal_E = df.dot(c *( M[0]*curlx+M[1]*curly+M[2]*curlz), v) * df.dx
+    E = c * (M[0] * curlx + M[1] * curly + M[2] * curlz) * df.dx
+    nodal_E = df.dot(c * (M[0] * curlx + M[1] * curly + M[2] * curlz), v) * df.dx
 
     return E, nodal_E
 
 
-def dmi_term2d(M,v,c,debug=False):
+def dmi_term2d(M, v, c, debug=False):
     """Input arguments:
-      
+
        M a dolfin 3d-vector function on a 2d space,
        c the DMI constant.
 
@@ -108,59 +106,57 @@ def dmi_term2d(M,v,c,debug=False):
 
          E = c*(Mx*curlx + My*curly + Mz*curlz)*df.dx
 
-       We set dMx/dz = 0, dMy/dz=0, dMz/dz=0, assuming that the 2d mesh 
-       lives in the x-y plane, and thus the physics cannot change as a function 
+       We set dMx/dz = 0, dMy/dz=0, dMz/dz=0, assuming that the 2d mesh
+       lives in the x-y plane, and thus the physics cannot change as a function
        of z.
 
        (Fully analog to dmi_term3d(M,c), which in turn is equivalent to
         inner(M,curl(M))*dx).
 
-
-
     """
 
     if debug:
         Mx, My, Mz = M.split()
-        print "Mx=",df.assemble(Mx*df.dx)
-        print "My=",df.assemble(My*df.dx)
-        print "Mz=",df.assemble(Mz*df.dx)
+        print "Mx=", df.assemble(Mx * df.dx)
+        print "My=", df.assemble(My * df.dx)
+        print "Mz=", df.assemble(Mz * df.dx)
 
-    gradM=df.grad(M)
+    gradM = df.grad(M)
 
-    dMxdx=gradM[0,0]
-    dMxdy=gradM[0,1]
-    #dMxdz=gradM[0,2]
+    dMxdx = gradM[0, 0]
+    dMxdy = gradM[0, 1]
+    #dMxdz= gradM[0, 2]
     dMxdz = 0
-    dMydx=gradM[1,0]
-    dMydy=gradM[1,1]
-    #dMydz=gradM[1,2]
+    dMydx = gradM[1, 0]
+    dMydy = gradM[1, 1]
+    #dMydz= gradM[1, 2]
     dMydz = 0
-    dMzdx=gradM[2,0]
-    dMzdy=gradM[2,1]
-    #dMzdz=gradM[2,2]
+    dMzdx = gradM[2, 0]
+    dMzdy = gradM[2, 1]
+    #dMzdz= gradM[2, 2]
     dMzdz = 0
-    
+
     if debug:
         for i in range(3):
             for j in range(2):
-                print "i=%d, j=%d" % (i,j),
-                print df.assemble(gradM[i,j]*df.dx)
+                print "i=%d, j=%d" % (i, j),
+                print df.assemble(gradM[i, j] * df.dx)
 
     curlx = dMzdy - dMydz
     curly = dMxdz - dMzdx
     curlz = dMydx - dMxdy
 
     if debug:
-        print "curlx=",df.assemble(curlx*df.dx)
-        print "curly=",df.assemble(curly*df.dx)
-        print "curlz=",df.assemble(curlz*df.dx)
+        print "curlx=", df.assemble(curlx * df.dx)
+        print "curly=", df.assemble(curly * df.dx)
+        print "curlz=", df.assemble(curlz * df.dx)
 
     #original equation:
     #E = c * df.inner(M, df.curl(M)) * df.dx
 
     #our version:
-    E = c *( M[0]*curlx+M[1]*curly+M[2]*curlz) * df.dx
-    nodal_E = df.dot(c *( M[0]*curlx+M[1]*curly+M[2]*curlz), v) * df.dx
+    E = c * (M[0] * curlx + M[1] * curly + M[2] * curlz) * df.dx
+    nodal_E = df.dot(c * (M[0] * curlx + M[1] * curly + M[2] * curlz), v) * df.dx
 
     return E, nodal_E
 
@@ -168,6 +164,148 @@ def dmi_term2d(M,v,c,debug=False):
 class DMI(EnergyBase):
     """
     Compute the DMI field.
+
+    .. math::
+
+        E_{\\text{DMI}} = mu_0 M_s \\int_\\Omega D \\vec{M} \\cdot (\\nabla \\times \\vec{M})  dx
+
+    *Arguments*
+        S3
+            a Dolfin VectorFunctionSpace object.
+        M
+            the Dolfin object representing the magnetisation
+        D
+            the Dzyaloshinskii-Moriya constant
+        Ms
+            the saturation field
+        method
+            possible methods are
+                * 'box-assemble'
+                * 'box-matrix-numpy'
+                * 'box-matrix-petsc' [Default]
+                * 'project'
+
+            See EnergyBase for details on the method.
+
+    The equation is chosen as in the publications  Yu-Onose2010, Li-Lin2011, Elhoja-Canals2002, Bode-Heide2007, Bak-Jensen1980.
+
+    *Example of Usage*
+
+        .. code-block:: python
+
+            m    = 1e-8
+            n    = 5
+            mesh = Box(0, m, 0, m, 0, m, n, n, n)
+
+            S3  = VectorFunctionSpace(mesh, "Lagrange", 1)
+            D  = 5e-3 # J/m exchange constant
+            M  = project(Constant((Ms, 0, 0)), V) # Initial magnetisation
+
+            dmi = DMI(S3, M, D, Ms)
+
+            # Print energy
+            print dmi.compute_energy()
+
+            # DMI field
+            H_dmi = dmi.compute_field()
+
+            # Using 'box-matrix-numpy' method (fastest for small matrices)
+            dmi_np = Exchange(S3, M, D, Ms, method='box-matrix-numpy')
+            H_dmi_np = dmi_np.compute_field()
+    """
+
+    def __init__(self, D, method="box-matrix-petsc"):
+        timings.start("DMI-init")
+        logger.debug("DMI(): method = %s" % method)
+        self.D = D
+        logger.debug("Creating DMI energy object with method {}.".format(method))
+        EnergyBase.__init__(self,
+            name='DMI2',
+            method=method,
+            in_jacobian=True)
+        timings.stop("DMI-init")
+
+    def setup(self, S3, M, Ms, unit_length=1):
+        """Function to be called after the energy object has been constructed.
+
+        *Arguments*
+
+            S3
+                Dolfin 3d VectorFunctionSpace on which M is defined
+
+            M
+                Magnetisation field (normally normalised)
+
+            Ms
+                Saturation magnetitsation (scalar, or scalar Dolfin function)
+
+            unit_length
+                unit_length of distances in mesh.
+
+        """
+        timings.start("DMI-setup")
+        self.S3 = S3
+        self.M = M
+
+        # Marijan, I think we need to add mu0*Ms here for the energy.
+        # When we compute the field, we need to divide by mu0 and Ms.
+        # I put the mu0 * Ms in here for now. For Py, the product is approximately 1
+        # anyway.
+        # This might also solve the problem with the energy conservation we have
+        # seen.
+
+        # Dzyaloshinsky-Moriya Constant
+        self.DMIconstant = df.Constant(self.D / unit_length ** 2) * mu0 * Ms
+
+        self.v = df.TestFunction(S3)
+        #Equation is chosen from the folowing papers
+        #Yu-Onose2010, Li-Lin2011, Elhoja-Canals2002, Bode-Heide2007, Bak-Jensen1980
+        #self.E = self.DMIconstant * df.inner(self.M, df.curl(self.M)) * df.dx
+
+        #self.E = dmi_term3d_dolfin(self.M,self.DMIconstant)
+
+        # Needed for energy density
+        FS = df.FunctionSpace(S3.mesh(), "CG", 1)
+        w = df.TestFunction(FS)
+
+        meshdim = S3.mesh().topology().dim()
+        if meshdim == 1:  # 1d mesh
+            NotImplementedError("Not implemented for 1d mesh yet -- should be easy though")
+        elif meshdim == 2:  # 2d mesh
+            E, nodal_E = \
+                dmi_term2d(self.M, w, self.DMIconstant, debug=False)
+        elif meshdim == 3:  # 3d mesh
+            E, nodal_E = \
+                dmi_term3d(self.M, w, self.DMIconstant, debug=False)
+
+        #Muhbauer2011
+        #self.E = self.E = self.DMIconstant * df.inner(self.M, df.curl(self.M)) * df.dx
+        #Rossler-Bogdanov2006
+        #self.E = self.DMIconstant * df.cross(self.M, df.curl(self.M)) * df.dx
+
+        # This is only needed if we want the energy density
+        # as a df.Function, in order to e.g. probe.
+        EnergyBase.setup(self,
+                E=E,
+                nodal_E=nodal_E,
+                S3=S3,
+                M=M,
+                Ms=Ms,
+                unit_length=unit_length)
+
+        timings.stop("DMI-setup")
+
+
+
+
+class DMI_Old(EnergyBase):
+    """
+    Compute the DMI field.
+
+    This is the original class, which used to be called DMI. As of today (30 June 2012),
+    I have renamed the old DMI to DMI_Old, and created a new one that is called 
+    DMI and derived from EnergyBase. We should move to the new DMI class to avoid
+    code-duplication. Hans
 
     .. math::
         

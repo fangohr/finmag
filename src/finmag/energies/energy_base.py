@@ -9,6 +9,29 @@ logger = logging.getLogger('finmag')
 
 
 class EnergyBaseAbstract(object):
+    """
+    Abstract Base class from which the following classes inherit:
+
+      - Demag
+
+      - EnergyBase, from which the following inherit
+        - Exchange
+        - UniaxialAnisotropy
+        - DMI
+
+      - Zeemann
+
+
+    The Exchange, Uniaxial and DMI class are all conceptually similar, and thus share a lot
+    of common code in EnergyBase. In theory, we could also make the Zeemann class one of
+    these, but on the other hand the Zeemann class is very simple as it is and does not actually
+    need the automatic machinery to effectively compute the field (as it is already given as the
+    input).
+
+    The demag class is conceptually more complicated and fundamentally different, and cannot
+    meaningfully inherit from EnergyBase.
+
+    """
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
@@ -22,8 +45,6 @@ class EnergyBaseAbstract(object):
     @abc.abstractmethod
     def compute_energy(self):
         return
-
-#EnergyBase = EnergyBaseAbstract
 
 
 class EnergyBase(EnergyBaseAbstract):
@@ -51,7 +72,7 @@ class EnergyBase(EnergyBaseAbstract):
                 * 'project'
 
         in_jacobian
-            True or False -- decides whether the interaction is included in 
+            True or False -- decides whether the interaction is included in
             the Jacobian.
 
 
@@ -111,9 +132,29 @@ class EnergyBase(EnergyBaseAbstract):
         return 'EnergyBase-' + self.name + '-' + functiondescription
 
     def setup(self, E, nodal_E, S3, M, Ms, unit_length=1):
-        #import IPython
-        #print "Starting iPython shell"
-        #IPython.embed()
+        """Function to be called after the energy object has been constructed.
+
+        *Arguments*
+
+            E
+                Dolfin form that computes the total energy (a scalar) as a function
+                of M (and maybe Ms) if assembled.
+
+            nodal_E
+                Dolfin form that computes the energy density at each node.
+
+            S3
+                Dolfin 3d VectorFunctionSpace on which M is defined
+
+            M
+                Magnetisation field (normally normalised)
+
+            Ms
+                Saturation magnetitsation (scalar, or scalar Dolfin function)
+
+            unit_length
+                unit_length of distances in mesh.
+        """
         timings.start(self._timingsname('setup'))
 
         self.S3 = S3

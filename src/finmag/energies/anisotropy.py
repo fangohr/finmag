@@ -132,6 +132,14 @@ class UniaxialAnisotropy(EnergyBase):
 
     def normed_m(self):
         """
+        Note that this code is not used at the moment, i.e. we rely on M being 
+        normalised. As Weiwei is working on the Barhakhter model, we need to 
+        address this properly with him anyway, and can then decide whether to 
+        follow the model shown below in this function, or to do something else.
+
+        Hans, 30 June 2012.
+        
+
         There are three possibilities to get a magnetisation that is normalised
         for sure.
 
