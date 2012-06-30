@@ -28,15 +28,21 @@ class EnergyBaseAbstract(object):
 
 class EnergyBase(EnergyBaseAbstract):
     """
-    Computes a field.
+    Computes a field for a given energy functional.
 
-    .. math::
+    Is a class that shoud be derived from for particular energies.
 
-    XXX    E_{\\text{exch}} = \\int_\\Omega A (\\nabla M)^2  dx
+    See Exchange and UniaxialAnisotropy for examples.
+
+    These will pass the ``method`` parameter to the EnergyBase class:
 
     *Arguments*
-    XXX    C
-    the exchange constant
+
+        name
+            a string that is used in log messages and timings. If we
+            derive from this class a class ``Exchange``, then
+            ``name="Exchange"`` is a good choice.
+
         method
             possible methods are
                 * 'box-assemble'
