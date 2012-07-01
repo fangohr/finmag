@@ -44,6 +44,7 @@ make-modules:
 clean:
 	make -C $(NATIVE_DIR) clean
 	rm -rf test-reports
+	hg purge --all
 
 % : %.c
 
