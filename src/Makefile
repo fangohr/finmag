@@ -15,6 +15,7 @@ test:
 
 cleansrc:
 	find finmag -name *.so | xargs rm -f		
+	find finmag -name *.pyc | xargs rm -f		
 	find finmag -name __pychache__ | xargs rm -fr	
 
 cleanbin:

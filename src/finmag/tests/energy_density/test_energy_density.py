@@ -3,7 +3,9 @@ import sys
 import commands
 import numpy as np
 import dolfin as df
-from finmag.energies import UniaxialAnisotropy, Exchange, Demag, DMI
+#from finmag.energies import UniaxialAnisotropy, Exchange, Demag, DMI
+from finmag.energies import UniaxialAnisotropy, Exchange, Demag, DMI, DMI_Old
+from finmag.util.consts import mu0
 
 TOL = 1e-14
 
@@ -34,7 +36,7 @@ def test_exchange_energy_density():
     # run finmag
     mesh = df.Interval(100, 0, 10e-9)
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
-    Ms = 1
+    Ms = 42
     m = df.interpolate(df.Expression(("cos(x[0]*pi/10e-9)", "sin(x[0]*pi/10e-9)", "0")), S3)
 
     exch = Exchange(1.3e-11)
@@ -43,12 +45,33 @@ def test_exchange_energy_density():
     finmag_data = exch.energy_density()
     rel_err = np.abs(nmag_data - finmag_data) / np.linalg.norm(nmag_data)
 
+    print ("Nmag data   = %g" % nmag_data[0])
+    print ("Finmag data = %g" % finmag_data[0])
     print "Relative error from nmag data (expect array of 0):"
     print rel_err
     print "Max relative error:", np.max(rel_err)
     assert np.max(rel_err) < TOL, \
             "Max relative error is %g, should be zero." % np.max(rel_err)
 
+
+    print("Work out average energy density and energy")
+    S1 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=1)
+    #only approximative -- using assemble would be better
+    average_energy_density = np.average(finmag_data)
+    w = df.TestFunction(S1)
+    vol = sum(df.assemble(df.dot(df.Constant([1]), w) * df.dx))
+    #finmag 'manually' computed, based on node values of energy density:
+    energy1 = average_energy_density * vol   
+    #finmag computed by energy class
+    energy2 = exch.compute_energy()
+    #comparison with Nmag
+    energy3 = np.average(nmag_data) * vol
+    print energy1, energy2, energy3
+    
+    assert abs(energy1 - energy2) < 1e-12 # actual value is 0, but 
+                                          # that must be pure luck.
+    assert abs(energy1 - energy3) < 5e-8  # actual value
+                                          # is 1.05e-8, 30 June 2012
 
 def test_anisotropy_energy_density():
     """
@@ -93,7 +116,7 @@ def test_anisotropy_energy_density():
         "Max deviation %g, should be zero." % np.max(deviation)
 
 
-def test_DMI_energy_density_2D():
+def test_DMI_Old_energy_density_2D():
     """
     For a vector field (x, y, z) = 0.5 * (-y, x, c),
     the curl is exactly 1.0. (HF)
@@ -104,7 +127,7 @@ def test_DMI_energy_density_2D():
     M = df.interpolate(df.Expression(("-0.5*x[1]", "0.5*x[0]", "1")), V)
     Ms = 1
     D = 1
-    dmi = DMI(D)
+    dmi = DMI_Old(D)
     dmi.setup(V, M, Ms)
     density = dmi.energy_density()
     deviation = np.abs(density - 1.0)
@@ -122,8 +145,8 @@ def test_DMI_energy_density_3D():
     mesh = df.UnitCube(4, 4, 4)
     V = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
     M = df.interpolate(df.Expression(("-0.5*x[1]", "0.5*x[0]", "1")), V)
-    Ms = 1
-    D = 1
+    Ms = 10
+    D = 1 / (mu0 * Ms)
     dmi = DMI(D)
     dmi.setup(V, M, Ms)
     density = dmi.energy_density()
@@ -135,6 +158,27 @@ def test_DMI_energy_density_3D():
 
     assert np.all(deviation < TOL), \
         "Max deviation %g, should be zero." % np.max(deviation)
+
+def test_DMI_Old_energy_density_3D():
+    """Same as above, on a 3D mesh."""
+    mesh = df.UnitCube(4, 4, 4)
+    V = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
+    M = df.interpolate(df.Expression(("-0.5*x[1]", "0.5*x[0]", "1")), V)
+    Ms = 10
+    D = 1
+    dmi = DMI_Old(D)
+    dmi.setup(V, M, Ms)
+    density = dmi.energy_density()
+    deviation = np.abs(density - 1.0)
+
+    print "3D energy density (expect array of 1):"
+    print density
+    print "Max deviation: %g" % np.max(deviation)
+
+    assert np.all(deviation < TOL), \
+        "Max deviation %g, should be zero." % np.max(deviation)
+
+
 
 
 def test_demag_energy_density():
@@ -175,6 +219,8 @@ def test_demag_energy_density():
             "Max deviation is %g, should be zero." % np.max(deviation)
 
 if __name__ == '__main__':
+    test_exchange_energy_density()
+    sys.exit(0)
     test_demag_energy_density()
     test_exchange_energy_density()
     test_anisotropy_energy_density()

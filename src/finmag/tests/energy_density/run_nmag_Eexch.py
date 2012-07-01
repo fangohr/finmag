@@ -16,7 +16,7 @@ def m0(r):
     return [np.cos(r[0]*np.pi*xfactor), np.sin(r[0]*np.pi*xfactor), 0]
 
 mat_Py = nmag.MagMaterial(name="Py",
-                          Ms=SI(1,"A/m"))
+                          Ms=SI(42,"A/m"))
 
 sim = nmag.Simulation("Hans' configuration", do_demag=False)
 
