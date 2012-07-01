@@ -6,6 +6,7 @@ Main finmag modules
     modules/Simulation.rst
     modules/LLG.rst
     modules/Exchange.rst
+    modules/EnergyBase.rst
     modules/Anisotropy.rst
     modules/DMI.rst
     modules/Demag.rst

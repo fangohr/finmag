@@ -54,7 +54,7 @@ class Timings(object):
         sorted_keys = sorted(self.data.keys(),key=lambda x:self.data[x][1],reverse=True)
         for i, name in enumerate(sorted_keys):
             if self.data[name][0]>0:
-                msg += "%25s:%6d calls took %10.4fs (%8.6fs per call)\n" % (name[0:25],
+                msg += "%35s:%6d calls took %10.4fs (%8.6fs per call)\n" % (name[0:35],
                                                                            self.getncalls(name),
                                                                            self.gettime(name),
                                                                            self.gettime(name)\

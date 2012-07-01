@@ -2,7 +2,7 @@ import numpy as np
 import dolfin as df
 import logging
 from finmag.util.timings import timings
-from finmag.energies.energy_base import EnergyBase
+from finmag.energies.energy_base import EnergyBaseAbstract
 from solver_fk import FemBemFKSolver
 from solver_gcr import FemBemGCRSolver
 from solver_fk_test import SimpleFKSolver
@@ -10,7 +10,8 @@ from solver_base import default_parameters
 
 log = logging.getLogger("finmag")
 
-class Demag(EnergyBase):
+
+class Demag(EnergyBaseAbstract):
     """
     A wrapper for the demag solvers that also implements the functionality of
     an energy class.

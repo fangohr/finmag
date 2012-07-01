@@ -25,6 +25,7 @@ class MyLLG(LLG):
 
         # Comment out these two lines if you don't want exchange.
         exch = Exchange(1.3e-11)
+        print "About to cal setup"
         exch.setup(self.S3, self._m, self.Ms)
         H_ex.vector().array()[:] = exch.compute_field()
 
