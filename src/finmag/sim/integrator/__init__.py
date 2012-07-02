@@ -28,29 +28,56 @@ def LLGIntegrator(llg, m0, backend="sundials", **kwargs):
 
 class BaseIntegrator(object):
     def run_until_relaxation(self, stopping_dmdt=ONE_DEGREE_PER_NS):
-        # TODO: use the characteristic time here
-        dt = 1e-15
+        """
+        Run integration until the maximum |dm/dt| is smaller than the
+        threshold value stopping_dmdt (which is one degree per
+        nanosecond per default).
+
+        As a precaution against running an infinite amount of time when
+        |dm/dt| - stopping_dmdt doesn't convergence (because of badly
+        chosen tolerances?), the integration will stop if |dm/dt|
+        increases five times during the integration.
+
+        """
+        dt = 1e-14 # TODO: use the characteristic time here
+
+        dt_limit = 1e-10; dt_increment_multi = 1.5;
+        dmdt_increased_counter = 0; dmdt_increased_counter_limit = 5;
+
+        last_max_dmdt_norm = 1e99
         while True:
-            # Why is self.cur_t alias CVodeGetCurrentTime not updated?
-            log.debug("{}: at t={:.2}, will integrate for dt={:.2}.".format(self.__class__.__name__, self.llg.t, dt))
             prev_m = self.llg.m.copy()
 
+            # Why is self.cur_t alias CVodeGetCurrentTime not updated?
             self.run_until(self.llg.t + dt)
 
             dm = np.abs(self.m - prev_m).reshape((3, -1))
             dm_norm = np.sqrt(dm[0] ** 2 + dm[1] ** 2 + dm[2] ** 2)
             max_dmdt_norm = float(np.max(dm_norm) / dt)
-            log.debug("{}: max_dmdt_norm = {:.2} * stopping_dmdt.".format(
-                self.__class__.__name__, max_dmdt_norm / stopping_dmdt))
 
             if max_dmdt_norm < stopping_dmdt:
-                log.debug("{}: at t={:.2}, max_dmdt_norm={}<{}=stopping_dmdt\n\t->break".format(
-                        self.__class__.__name__, self.llg.t, max_dmdt_norm, stopping_dmdt))
+                log.debug("{}: Stopping at t={:.2}, with last_dmdt={:.2}, smaller than stopping_dmdt={:.2}.".format(
+                    self.__class__.__name__, self.llg.t, max_dmdt_norm, stopping_dmdt))
                 break
 
-            if dt < 1e-10:
-                dt = dt * 1.5
+            if dt < dt_limit / dt_increment_multi:
+                dt *= dt_increment_multi
+            else:
+                dt = dt_limit
+                
+            log.debug("{}: t={:.2}, last_dmdt={:.2} * stopping_dmdt, next dt={:.2}.".format(
+                self.__class__.__name__, self.llg.t, max_dmdt_norm/stopping_dmdt, dt))
 
+            if max_dmdt_norm > last_max_dmdt_norm:
+                dmdt_increased_counter += 1
+                log.debug("{}: dmdt {:.2} times larger than last time (counting {}/{}).".format(
+                    self.__class__.__name__, max_dmdt_norm/last_max_dmdt_norm,
+                    dmdt_increased_counter, dmdt_increased_counter_limit))
+            last_max_dmdt_norm = max_dmdt_norm
+            if dmdt_increased_counter >= dmdt_increased_counter_limit:
+                log.warning("{}: Stopping after it increased {} times.".format(
+                    self.__class__.__name__, dmdt_increased_counter_limit))
+                break
 
 class ScipyIntegrator(BaseIntegrator):
     def __init__(self, llg, m0, reltol=1e-8, abstol=1e-8, nsteps=10000, method="bdf", **kwargs):
