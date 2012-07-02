@@ -239,4 +239,4 @@ examples-for-doc: ../examples/macrospin/alpha-1-00.png ../examples/macrospin/alp
 	cd ../examples/spatially-varying-anisotropy && PYTHONPATH=$(PYTHON_ROOTS) python run.py
 
 ../examples/std_prob_3/table.rst:
-    cd ../examples/std_prob_3/ && PYTHONPATH=$(PYTHON_ROOTS) python run.py
+	cd ../examples/std_prob_3 && PYTHONPATH=$(PYTHON_ROOTS) python run.py
