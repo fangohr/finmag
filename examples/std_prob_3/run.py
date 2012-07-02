@@ -46,6 +46,7 @@ def vortex_init(rs):
     b = 2 * lexch
     m_phi = np.sin(2 * np.arctan(rho/b))
     return np.array([np.sqrt(1.0 - m_phi**2), m_phi*np.cos(phi), -m_phi*np.sin(phi)])
+energies = dict()
 
 def run_simulation(lfactor, m_init, m_init_name=""):
     L = lfactor * lexch
@@ -83,6 +84,15 @@ def run_simulation(lfactor, m_init, m_init_name=""):
 
     return e_total
 
+def table_for_doc():
+    from finmag.sim.helpers import read_float_data
+    e = read_float_data(MODULE_DIR + "data_energies.txt")
+    with open(MODULE_DIR + "table.rst", "w") as f:
+        table_template = open(MODULE_DIR + "table_template.txt").read()
+        f.write(table_template.format(
+            e[-2][5], e[-2][3], e[-2][4], e[-2][2],
+            e[-1][5], e[-1][3], e[-1][4], e[-1][2]))
+
 def energy_difference(lfactor):
     print "Running the two simulations for lfactor={}.".format(lfactor)
     e_vortex = run_simulation(lfactor, vortex_init, "vortex")
@@ -93,5 +103,7 @@ def energy_difference(lfactor):
         f.write("{} {} {} {} {}\n".format(lfactor, e_vortex, e_flower, diff, t))
     return diff
 
-single_domain_limit = bisect(energy_difference, 8, 8.5, xtol=0.1)
-print "L = " + str(single_domain_limit) + "."
+if __name__ == "__main__":
+    single_domain_limit = bisect(energy_difference, 8, 8.5, xtol=0.1)
+    print "L = " + str(single_domain_limit) + "."
+    table_for_doc()

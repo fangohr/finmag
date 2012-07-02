@@ -1,0 +1,26 @@
+.. std3_vortex_table:
+
+.. table:: Energy contributions in the vortex state. 
+
+    ===== ========== ========== ==========
+    \,    finmag     Rave       Hertel    
+    ===== ========== ========== ==========
+    Demag {:<10} 0.078      0.083
+    Exch. {:<10} 0.172      0.170
+    Anis. {:<10} 0.052      0.052
+    Total {:<10} 0.302      0.305     
+    ===== ========= =========== ==========
+
+
+.. std3_flower_table:
+
+.. table:: Energy contributions in the flower state. 
+
+    ===== ========== ========== ==========
+    \,    finmag     Rave       Hertel    
+    ===== ========== ========== ==========
+    Demag {:<10} 0.279      0.284
+    Exch. {:<10} 0.018      0.016
+    Anis. {:<10} 0.006      0.005
+    Total {:<10} 0.302      0.305     
+    ===== ========== ========== ==========
