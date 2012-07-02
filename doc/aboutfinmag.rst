@@ -1,7 +1,7 @@
 The Finmag project
 ==================
 
-Overview code layout
+Overview code layout 
 --------------------
 
 We combine Python code using Dolfin from the Fenics project, with some C++ code (called "native" here) for performance reasons where necessary. Furthermore, a Boost-Python wrapper for the CVODE algorithm from Sundials is used for time integration.
@@ -15,6 +15,39 @@ The Exchange, Anisotropy and DMI module are based on the :doc:`EnergyBase <modul
 The ``TimeStepper class`` [XXX exact name, and add link (this is not yet included in the documentation)] is used for time integration, and then carries the state of the independent degrees of freedom (such as the magnetisation) when sundials is used. (The LLG._m is not suitable for this, although it is used by the time integration class internally.)
 
 We plan to have a convenience class at the top level (the ``Simulation class``) which is meant to follow the Nmag simulation Class whereever we feel there is nothing to improve upon the Nmag model. (If there is no good reason to do something different, let's keep it easy and do it the same way.) The documentation for the Nmag Simulation class is `here <http://nmag.soton.ac.uk/nmag/current/manual/html/command_reference.html#simulation>`_ although the practical usage examples in the `tutorial <http://nmag.soton.ac.uk/nmag/current/manual/html/guided_tour.html>`_ are probably more useful to follow.
+
+
+Important data structures to store fields
+-----------------------------------------
+
+The central field for storing the magnetisation in dolfin is a ``dolfin.Function`` object. This has some references to a VectorSpaceFunction (and thus a mesh, and basis function types and order) and a vector that keeps the coefficients of the functions on the vertices. For a order 1 basis function, the vertices are the same as the mesh nodes. For higher order, there will be more vertices along the edges, surfaces or volumina.
+
+The vector format that stores the coefficients can be seen as the state vector for the magnetisation. In dolfin, the vector class is an abstract class, that can be used with a number of backends. By default, we use the Petsc backend, which goes well together with storing the operator matrices as (sparse) Petsc matrices. However, other backends can be chosen if desired (for example for GPU calculations).
+
+We thus have one ``Dolfin.Function object`` for the magnetisation.
+
+We can get access to the coefficients in numpy-array format using the ``.array()`` method of the ``Dolfin.Function`` object.
+
+For the time integration, we give a ``numpy.array`` to sundials, which carries out the time integration, and then updates that numpy.array with the magnetisation coefficients at the requested time.
+
+Once this is done, we need to copy the coefficients from the numpy array, back into the Dolfin-Function object (and also at intermediate times, whenever sundials requests an updated calculation of the effective field, i.e. when the right hand side of the ODE system needs to be evaluated).
+
+
+These are the two basic ways of storing the magnetisation vector in memory: the ``dolfin.Function`` object that we need to solve the PDEs (at a given time), and the numpy.array that we need for the sundials-driven time integration. There seems no way around having these two, and copying data from one to the other is undesirable, but not a huge burden in comparison to the actual calculations.
+
+In addition to these two fundamental data types, we may want to have different *views* (in numpy terminology) onto the same data: as the magnetisation vector has 3N entries for N magnetisation vectors, there is a question over how we arrange the data.
+
+By default, we follow the Dolfin orientation of storing first the N entries for the x-component of the magnetisation, then N entries for the y-component, and finally N entries for the z component. This is stored in a chunk of 3N elements in memory (typically one element is double floating point type that uses 8 bytes) in this order.
+
+At times, we would rather look at this as N 3d vectors. Numpy supports views in varies ways -- if used correctly, the data *looks* like having a different shape, whereas actually the same data is used, but numpy provides some clever interface (the ``view``) onto it.
+
+We should check at some point that where we create such views repeatedly, these are actually views and not copies of the data.
+
+Details on the interaction with cvode (Sundials)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For the interaction with sundials' cvode integrator, we have written an implementation of the nvector data type that provides the interface functions required by cvode and our implementation uses the numpy.array data structure internally to store the vector of degrees of freedom to integrate. This is good as the data does not need to be copied from the numpy.array that we use in the finmag code to a cvode-specific data structure when the carry out the time integration using cvode. This also means that the cvode integrator can do operations on that data vector -- of which there may be many per evaluation of the right hand side -- without requiring extra copies of the data from one data structure to another.
+
 
 
 
