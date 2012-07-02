@@ -104,6 +104,7 @@ def energy_difference(lfactor):
     return diff
 
 if __name__ == "__main__":
+    print "Running standard problem 3."
     single_domain_limit = bisect(energy_difference, 8, 8.5, xtol=0.1)
     print "L = " + str(single_domain_limit) + "."
     table_for_doc()
