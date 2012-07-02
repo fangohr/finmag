@@ -72,12 +72,12 @@ if __name__ == '__main__':
     if not os.path.exists(targetdir):
         os.makedirs(targetdir)
 
-    cmd = "cd " + sourcedir + " && python -m compileall src/finmag"
+    cmd = "cd " + sourcedir + " && python -m compileall finmag"
     (exitstatus, outtext) = commands.getstatusoutput(cmd)
+    print cmd
     if exitstatus:
         print("Error occured: output=%s" % outtext)
         raise RuntimeError()
-    print(outtext)
 
     print(distcp(sourcedir, os.path.join(targetdir, '')))
 
