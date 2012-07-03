@@ -57,7 +57,7 @@ class BaseIntegrator(object):
 
             if max_dmdt_norm < stopping_dmdt:
                 log.debug("{}: Stopping at t={:.2}, with last_dmdt={:.2}, smaller than stopping_dmdt={:.2}.".format(
-                    self.__class__.__name__, self.llg.t, max_dmdt_norm, stopping_dmdt))
+                    self.__class__.__name__, self.llg.t, max_dmdt_norm, float(stopping_dmdt)))
                 break
 
             if dt < dt_limit / dt_increment_multi:
