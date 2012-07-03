@@ -2,12 +2,48 @@ import os
 import dolfin as df
 import numpy as np
 from finmag.util.convert_mesh import convert_mesh
-from finmag.sim.helpers import quiver
+from finmag.sim.helpers import quiver, read_float_data
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
 mesh_file = MODULE_DIR + "bar.geo"
 initial_m_file = MODULE_DIR + "m_init.txt"
 zero_crossing_m_file = MODULE_DIR + "m_zero.txt"
+averages_m_file = MODULE_DIR + "m_averages.txt"
+averages_m_file_martinez = MODULE_DIR + "m_averages_martinez.txt"
+
+# plots of average magnetisation components
+
+averages = np.array(read_float_data(averages_m_file))
+averages_martinez = np.array(read_float_data(averages_m_file_martinez))
+
+print averages_martinez.shape
+
+import matplotlib.pyplot as plt
+
+times_martinez = averages_martinez[::5,0]
+mx_martinez = averages_martinez[::5,1]
+my_martinez = averages_martinez[::5,2]
+mz_martinez = averages_martinez[::5,3]
+plt.plot(times_martinez, mx_martinez, "-", color="0.6", label="$m_x\,\mathrm{Martinez\, et\, al.}$")
+plt.plot(times_martinez, my_martinez, "--", color="0.6", label="")
+plt.plot(times_martinez, mz_martinez, ":", color="0.6", label="")
+
+times = averages[:,0] * 1e9
+mx = averages[:,1]
+my = averages[:,2]
+mz = averages[:,3]
+plt.plot(times, mx, "b-", label="$m_x\,\mathrm{FinMag}$")
+plt.plot(times, my, "r--", label="$m_y$")
+plt.plot(times, mz, ":", color="0.1", label="$m_z$")
+
+plt.xlabel("$\mathrm{time}\, (\mathrm{ns})$")
+plt.ylabel("$<m_i> = <M_i>/M_\mathrm{S}$")
+plt.legend()
+plt.xlim([0,2])
+plt.savefig(MODULE_DIR+"m_averages.pdf")
+
+import sys; sys.exit()
+# 3D plots for magnetisation at t0 and at zero crossing
 
 mesh = df.Mesh(convert_mesh(mesh_file))
 m0_np = np.loadtxt(initial_m_file)
