@@ -7,9 +7,6 @@ from scipy.optimize import bisect
 from finmag import Simulation
 from finmag.energies import UniaxialAnisotropy, Exchange, Demag
 
-log = logging.getLogger(name="finmag")
-log.setLevel(logging.INFO)
-
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
 
 """
@@ -50,7 +47,7 @@ energies = dict()
 
 def run_simulation(lfactor, m_init, m_init_name=""):
     L = lfactor * lexch
-    divisions = int(round(lfactor * 3)) # that magic number influences L
+    divisions = int(round(lfactor * 2)) # that magic number influences L
     mesh = df.Box(0, 0, 0, L, L, L, divisions, divisions, divisions)
 
     exchange = Exchange(A)
@@ -84,15 +81,6 @@ def run_simulation(lfactor, m_init, m_init_name=""):
 
     return e_total
 
-def table_for_doc():
-    from finmag.sim.helpers import read_float_data
-    e = read_float_data(MODULE_DIR + "data_energies.txt")
-    with open(MODULE_DIR + "table.rst", "w") as f:
-        table_template = open(MODULE_DIR + "table_template.txt").read()
-        f.write(table_template.format(
-            e[-2][5], e[-2][3], e[-2][4], e[-2][2],
-            e[-1][5], e[-1][3], e[-1][4], e[-1][2]))
-
 def energy_difference(lfactor):
     print "Running the two simulations for lfactor={}.".format(lfactor)
     e_vortex = run_simulation(lfactor, vortex_init, "vortex")
@@ -107,4 +95,6 @@ if __name__ == "__main__":
     print "Running standard problem 3."
     single_domain_limit = bisect(energy_difference, 8, 8.5, xtol=0.1)
     print "L = " + str(single_domain_limit) + "."
-    table_for_doc()
+
+    from table_for_doc import write_table
+    write_table()

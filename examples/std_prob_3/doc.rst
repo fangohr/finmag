@@ -9,7 +9,7 @@ The problem now consists in finding the value of :math:`L` for which the two sta
 That value of :math:`L` is called the single domain limit.
 The individual energy contributions and the spatially averaged magnetisation need to be recorded as well.
 
-.. include:: ./table.rst
+.. include:: ./doc_table.rst
 
 The code used here is
 
