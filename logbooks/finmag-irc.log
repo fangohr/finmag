@@ -1321,3 +1321,10 @@ fangohr: Still testing ...
 2012-07-02 15:50:49 smashdot: It does!
 2012-07-02 17:24:19 smashdot: There's a problem with the build... there's an example that won't stop running.
 2012-07-02 17:26:38 smashdot: Ah, saw it's possible to abort the build.
+2012-07-03 10:47:13 fangohr-adium: Hi Marc-antonio, you should find on osiris.sesnet.soton.ac.uk in /tmp a file nmag-meta.tar.gz with the discussed tarball.
+2012-07-03 10:48:50 fangohr-adium: The relevant examples are in nmag-meta/test/devtests/nmag/slonczewski.
+2012-07-03 10:49:24 fangohr-adium: There is a 'validation' and a 'oscillation' example. One of them has been used in the report I have sent you before, and also has code to compare against oommf.
+2012-07-03 10:49:48 fangohr-adium: I don't know off-hand where the actual implementation is hiding, but I think you have enough to info to grep for it. If you are stuck, let me know.
+2012-07-03 10:52:36 mb8g11: Downloading as we speak, thank you.
+2012-07-03 10:54:00 mb8g11: I should be able to find it with the infos you gave me. The example files likely include the files I need in some way.
+2012-07-03 12:39:16 mb8g11: See you later.
