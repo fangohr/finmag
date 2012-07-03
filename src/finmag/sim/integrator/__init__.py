@@ -36,13 +36,13 @@ class BaseIntegrator(object):
         As a precaution against running an infinite amount of time when
         |dm/dt| - stopping_dmdt doesn't convergence (because of badly
         chosen tolerances?), the integration will stop if |dm/dt|
-        increases five times during the integration.
+        increases ten times during the integration.
 
         """
         dt = 1e-14 # TODO: use the characteristic time here
 
         dt_limit = 1e-10; dt_increment_multi = 1.5;
-        dmdt_increased_counter = 0; dmdt_increased_counter_limit = 5;
+        dmdt_increased_counter = 0; dmdt_increased_counter_limit = 10;
 
         last_max_dmdt_norm = 1e99
         while True:
