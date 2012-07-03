@@ -1,7 +1,6 @@
 import os
 import dolfin as df
 import numpy as np
-from progressbar import ProgressBar, Percentage, Bar, ETA
 from finmag.util.convert_mesh import convert_mesh
 from finmag import Simulation
 from finmag.energies import Zeeman, DiscreteTimeZeeman, Demag, Exchange
@@ -25,7 +24,7 @@ mesh = df.Mesh(convert_mesh(mesh_file))
 
 def create_initial_s_state():
     """
-    Create equilibrium s-state by slowly switching off a saturating field.
+    Creates equilibrium s-state by slowly switching off a saturating field.
 
     """
     sim = Simulation(mesh, Ms, unit_length=1e-9)
@@ -51,11 +50,19 @@ def create_initial_s_state():
     print "Saved magnetisation to {}.".format(initial_m_file)
     print "Average magnetisation is ({:.2}, {:.2}, {:.2}).".format(*sim.m_average)
 
-def run_simulation(m_file):
+def run_simulation():
+    """
+    Runs the simulation using field #1 from the problem description.
+
+    Stores the average magnetisation components regularly, as well as the
+    magnetisation when the x-component of the average magnetisation crosses
+    the value 0 for the first time.
+
+    """
     sim = Simulation(mesh, Ms, unit_length=1e-9)
     sim.alpha = alpha
     sim.gamma = gamma
-    sim.set_m(np.loadtxt(m_file))
+    sim.set_m(np.loadtxt(initial_m_file))
     sim.add(Demag())
     sim.add(Exchange(A))
 
@@ -66,32 +73,28 @@ def run_simulation(m_file):
     Hz = 0
     sim.add(Zeeman((Hx, Hy, Hz)))
 
-    t = 0; t_max = 1.1e-10; dt = 1e-14;
+    t = 0; t_counter = 0; t_max = 2e-9; dt = 1e-14;
     mx_crossed_zero = False
     with open(average_m_file, "w") as f:
-        widgets = [Percentage(), " ", Bar(), " ", ETA()]
-        pbar = ProgressBar(widgets=widgets, maxval=t_max+dt)
-        pbar.start()
         while t <= t_max:
             sim.run_until(t)
 
-            # Write average magnetisation to file.
             mx, my, mz = sim.m_average
-            f.write("{} {} {} {}\n".format(t, mx, my, mz))
-
-            # Store magnetisation at moment of m_x crossing zero as well.
+            # Store magnetisation when m_x crosses zero.
             if mx <= 0 and not mx_crossed_zero:
                 print "m_x crossed 0 at {}.".format(t)
                 np.savetxt(zero_crossing_m_file, sim.m)
                 mx_crossed_zero = True
 
-            t += dt
-            pbar.update(t)
-        pbar.finish()
+            if t_counter % 1000 == 0:
+                # Write average magnetisation to file every 1000 timesteps.
+                f.write("{} {} {} {}\n".format(t, mx, my, mz))
+
+            t += dt; t_counter += 1;
 
 if __name__ == "__main__":
     if not os.path.exists(initial_m_file):
         print "Couldn't find initial magnetisation, creating one."
         create_initial_s_state()
     print "Running simulation..."
-    run_simulation(initial_m_file)
+    run_simulation()
