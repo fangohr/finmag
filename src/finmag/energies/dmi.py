@@ -215,15 +215,8 @@ class DMI(EnergyBase):
     """
 
     def __init__(self, D, method="box-matrix-petsc"):
-        timings.start("DMI-init")
-        logger.debug("DMI(): method = %s" % method)
+        super(DMI, self).__init__(method, in_jacobian=True)
         self.D = D
-        logger.debug("Creating DMI energy object with method {}.".format(method))
-        EnergyBase.__init__(self,
-            name='DMI2',
-            method=method,
-            in_jacobian=True)
-        timings.stop("DMI-init")
 
     def setup(self, S3, M, Ms, unit_length=1):
         """Function to be called after the energy object has been constructed.
