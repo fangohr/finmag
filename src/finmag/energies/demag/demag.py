@@ -1,6 +1,7 @@
 import numpy as np
 import dolfin as df
 import logging
+import textwrap
 from finmag.util.timings import timings
 from finmag.energies import AbstractEnergy
 from solver_fk import FemBemFKSolver
@@ -73,11 +74,11 @@ class Demag(AbstractEnergy):
 
         #Log the linear solver parameters
         if self.solver != "weiwei":
-            log.info("Demag Poisson solver Parameters \n %s" \
-                     %self.demag.poisson_solver.parameters.to_dict())
-            log.info("Demag Laplace solver Parameters \n %s" \
-                     %self.demag.laplace_solver.parameters.to_dict())
-        
+            for (name, solver) in (("Poisson", self.demag.poisson_solver), ("Laplace", self.demag.laplace_solver)):
+                params = repr(solver.parameters.to_dict())
+                log.debug("{}: {} solver parameters.\n{}".format(
+                    self.__class__.__name__, name, textwrap.fill(params, width=100,
+                        initial_indent=4*" ", subsequent_indent=4*" ")))
 
     def compute_field(self):
         return self.demag.compute_field()
