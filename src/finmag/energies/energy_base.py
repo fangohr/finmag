@@ -120,16 +120,16 @@ class EnergyBase(EnergyBaseAbstract):
 
     """
 
-    def __init__(self, name, method="box-matrix-petsc", in_jacobian=False):
-        self.name = name
-        logger.debug("Creating Energy object with method {}.".format(method))
-        logger.debug("In constructor Energy Base for name='%s'" % name)
+    def __init__(self, method="box-matrix-petsc", in_jacobian=False):
         self.in_jacobian = in_jacobian
         self.method = method
+        in_jacobian_msg = "in Jacobian" if in_jacobian else "not in Jacobian"
+        logger.debug("Creating {} object with method {}, {}.".format(
+            self.__class__.__name__, method, in_jacobian_msg))
 
     def _timingsname(self, functiondescription):
         """Compose and return a string that is used for timing functions."""
-        return 'EnergyBase-' + self.name + '-' + functiondescription
+        return 'EnergyBase-' + self.__class__.__name__ + '-' + functiondescription
 
     def setup(self, E, nodal_E, S3, M, Ms, unit_length=1):
         """Function to be called after the energy object has been constructed.

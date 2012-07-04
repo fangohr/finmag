@@ -61,11 +61,7 @@ class Exchange(EnergyBase):
 
     """
     def __init__(self, C, method="box-matrix-petsc"):
-        EnergyBase.__init__(self,
-            name='exchange',
-            method=method,
-            in_jacobian=True)
-        logger.debug("Creating Exchange object with method {}.".format(method))
+        super(Exchange, self).__init__(method, in_jacobian=True)
         self.C = C
 
     def setup(self, S3, M, Ms, unit_length=1):
@@ -86,7 +82,7 @@ class Exchange(EnergyBase):
         nodal_E = Ms * mu0 * df.dot(self.exchange_factor \
                 * df.inner(df.grad(M), df.grad(M)), w) * df.dx
 
-        EnergyBase.setup(self,
+        super(Exchange, self).setup(
                 E=E,
                 nodal_E=nodal_E,
                 S3=S3,

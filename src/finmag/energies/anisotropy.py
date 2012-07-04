@@ -76,12 +76,7 @@ class UniaxialAnisotropy(EnergyBase):
             logger.debug("Found Anisotropy direction '{}' -> df.Constant".format(a))
             self.a = df.Constant(a)
 
-        self.method = method
-        EnergyBase.__init__(self,
-            name='UniaxialAnisotropy',
-            method=method,
-            in_jacobian=True)
-        logger.debug("Creating UniaxialAnisotropy object with method {}.".format(method))
+        super(UniaxialAnisotropy, self).__init__(method, in_jacobian=True)
 
     def setup(self, S3, M, Ms, unit_length=1):
         timings.start('UniaxialAnisotropy-setup')
