@@ -8,7 +8,7 @@ from finmag.util.consts import mu0
 logger = logging.getLogger('finmag')
 
 
-class EnergyBaseAbstract(object):
+class AbstractEnergy(object):
     """
     Abstract Base class from which the following classes inherit:
 
@@ -47,7 +47,7 @@ class EnergyBaseAbstract(object):
         return
 
 
-class EnergyBase(EnergyBaseAbstract):
+class EnergyBase(AbstractEnergy):
     """
     Computes a field for a given energy functional.
 

@@ -1,9 +1,9 @@
 import numpy as np
 import dolfin as df
 from finmag.util.consts import mu0
-from energy_base import EnergyBaseAbstract
+from energy_base import AbstractEnergy
 
-class Zeeman(EnergyBaseAbstract):
+class Zeeman(AbstractEnergy):
     def __init__(self, value, **kwargs):
         """
         Set the external field.
