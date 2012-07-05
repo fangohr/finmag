@@ -2,7 +2,7 @@ import dolfin as df
 import numpy as np
 from finmag.util.oommf import mesh
 from finmag.util.oommf.comparison import compare_anisotropy
-from finmag.sim.helpers import stats
+from finmag.util.helpers import stats
 
 K1 = 45e4 # J/m^31
 Ms = 0.86e6

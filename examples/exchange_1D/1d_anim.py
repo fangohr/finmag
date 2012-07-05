@@ -1,5 +1,5 @@
 import numpy
-import finmag.sim.helpers as helpers
+import finmag.util.helpers as helpers
 from mayavi import mlab
 
 """

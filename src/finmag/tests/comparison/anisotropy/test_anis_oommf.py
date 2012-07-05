@@ -2,7 +2,7 @@ import numpy as np
 import conftest as test
 from finmag.util.oommf.comparison import oommf_m0, finmag_to_oommf
 from finmag.util.oommf import mesh, oommf_uniaxial_anisotropy
-from finmag.sim.helpers import stats
+from finmag.util.helpers import stats
 
 def test_against_oommf(finmag):
 

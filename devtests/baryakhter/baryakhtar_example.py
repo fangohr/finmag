@@ -1,6 +1,6 @@
 import dolfin as df
 import numpy as np
-import finmag.sim.helpers as helpers
+import finmag.util.helpers as helpers
 import scipy.integrate.ode as scipy_ode
 import matplotlib.pyplot as plt
 

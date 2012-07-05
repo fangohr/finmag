@@ -1,7 +1,7 @@
 import logging 
 import numpy as np
 import dolfin as df
-import finmag.sim.helpers as h
+import finmag.util.helpers as h
 
 from finmag.native import llg as native_llg
 from finmag.util.timings import timings

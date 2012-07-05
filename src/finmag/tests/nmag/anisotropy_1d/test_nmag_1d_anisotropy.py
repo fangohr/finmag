@@ -1,7 +1,7 @@
 import os
 import dolfin
 import numpy as np
-import finmag.sim.helpers as h
+import finmag.util.helpers as h
 from finmag import Simulation as Sim
 from finmag.energies import UniaxialAnisotropy
 

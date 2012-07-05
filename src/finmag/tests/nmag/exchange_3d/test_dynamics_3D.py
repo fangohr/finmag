@@ -1,7 +1,7 @@
 import os
 import cProfile
 import pstats
-import finmag.sim.helpers as h
+import finmag.util.helpers as h
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 TOLERANCE = 8e-3

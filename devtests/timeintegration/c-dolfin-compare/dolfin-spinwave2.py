@@ -2,7 +2,7 @@ from dolfin import *
 import instant
 from finmag.sim.exchange import Exchange
 from scipy.integrate import ode
-import finmag.sim.helpers as h
+import finmag.util.helpers as h
 import os
 import numpy as np
 

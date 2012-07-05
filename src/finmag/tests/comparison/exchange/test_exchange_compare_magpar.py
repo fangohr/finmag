@@ -3,7 +3,7 @@ import dolfin as df
 import numpy as np
 from finmag.util import magpar
 from finmag.energies import Exchange
-from finmag.sim.helpers import normed_func
+from finmag.util.helpers import normed_func
 
 
 #df.parameters["allow_extrapolation"] = True

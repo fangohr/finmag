@@ -2,7 +2,7 @@ import dolfin as df
 import instant
 import os
 import numpy as np
-import finmag.sim.helpers as h
+import finmag.util.helpers as h
 from finmag.sim.exchange import Exchange
 from finmag.sim.anisotropy import Anisotropy
 from finmag.energies import DMI

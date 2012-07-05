@@ -20,7 +20,7 @@ import pylab as p
 import numpy as np
 import dolfin as df
 import progressbar as pb
-import finmag.sim.helpers as h
+import finmag.util.helpers as h
 from finmag import Simulation as Sim
 from finmag.energies import Exchange, Demag
 from finmag.util.convert_mesh import convert_mesh

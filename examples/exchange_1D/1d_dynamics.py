@@ -1,6 +1,6 @@
 import numpy
 import pylab
-from finmag.sim.helpers import norm, angle, components, \
+from finmag.util.helpers import norm, angle, components, \
         vectors, rows_to_columns 
 
 # Load the data which dolfin has created and odeint has integrated. 
