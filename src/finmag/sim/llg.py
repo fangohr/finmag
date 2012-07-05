@@ -32,6 +32,7 @@ class LLG(object):
         self.S3 = S3
         self.set_default_values()
         self.do_precession = do_precession
+        self.do_slonczewski = False
         timings.stop('LLG-init')
         self.Volume=None #will be computed on demand, and carries volume of the mesh
 
@@ -183,7 +184,14 @@ class LLG(object):
         H_eff.shape = (3, -1)
         dMdt = np.zeros(m.shape)
         # Calculate dm/dt
-        native_llg.calc_llg_dmdt(m, H_eff, self.t, dMdt, self.pins,
+        if self.do_slonczewski:
+            native_llg.calc_llg_slonczewski_dmdt(
+                m, H_eff, t, dMdt, self.pins,
+                self.gamma, self.alpha_vec,
+                char_time, self.do_precession,
+                self.J, self.P, self.d, self.Ms, self.p)
+        else:
+            native_llg.calc_llg_dmdt(m, H_eff, self.t, dMdt, self.pins,
                                  self.gamma, self.alpha_vec, 
                                  char_time, self.do_precession)
         dMdt.shape = (-1,)
@@ -260,3 +268,20 @@ class LLG(object):
         self.t = t
         value = self.solve() 
         return value
+
+    def use_slonczewski(J, P, d, p):
+        """
+        Activates the computation of the Slonczewski spin-torque term in the LLG.
+
+        J is the current density in A/m^2,
+        P is the polarisation (between 0 and 1),
+        d the thickness of the free layer in m,
+        p the direction (unit length) of the polarisation as a dolfin function.
+
+        """  
+        self.do_slonczewski = True
+        self.J = J
+        assert P >= 0.0 and P <= 1.0
+        self.P = P
+        self.d = d
+        self.p = p
