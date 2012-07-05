@@ -2,7 +2,7 @@ import os
 import numpy as np
 import dolfin as df
 import matplotlib.pyplot as plt
-from finmag.sim.helpers import stats 
+from finmag.util.helpers import stats 
 from finmag.util.oommf import mesh
 from finmag.util.oommf.comparison import compare_exchange 
 

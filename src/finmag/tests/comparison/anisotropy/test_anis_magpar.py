@@ -1,7 +1,7 @@
 import numpy as np
 import conftest as test
 import finmag.util.magpar as magpar
-from finmag.sim.helpers import stats
+from finmag.util.helpers import stats
 
 def test_against_magpar(finmag):
 

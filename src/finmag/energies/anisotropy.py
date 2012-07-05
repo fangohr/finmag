@@ -3,7 +3,7 @@ import dolfin as df
 import logging
 from finmag.util.timings import timings
 from finmag.util.consts import mu0
-from finmag.sim.helpers import fnormalise
+from finmag.util.helpers import fnormalise
 from energy_base import EnergyBase
 logger = logging.getLogger('finmag')
 

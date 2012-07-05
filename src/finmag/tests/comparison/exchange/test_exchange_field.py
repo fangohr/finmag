@@ -2,7 +2,7 @@ import os
 import dolfin as df
 import numpy as np
 from finmag.energies import Exchange
-from finmag.sim.helpers import vectors, norm, stats, sphinx_sci as s
+from finmag.util.helpers import vectors, norm, stats, sphinx_sci as s
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
 

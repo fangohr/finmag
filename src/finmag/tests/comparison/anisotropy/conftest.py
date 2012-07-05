@@ -3,7 +3,7 @@ import numpy as np
 import dolfin as df
 from finmag.util.convert_mesh import convert_mesh
 from finmag.energies import UniaxialAnisotropy
-from finmag.sim.helpers import sphinx_sci as s
+from finmag.util.helpers import sphinx_sci as s
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
 

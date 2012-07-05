@@ -2,7 +2,7 @@ import os
 import dolfin as df
 import numpy as np
 from finmag.util.convert_mesh import convert_mesh
-from finmag.sim.helpers import quiver, read_float_data
+from finmag.util.helpers import quiver, read_float_data
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
 mesh_file = MODULE_DIR + "bar.geo"

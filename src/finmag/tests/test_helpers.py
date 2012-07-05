@@ -1,5 +1,5 @@
 import numpy as np
-from finmag.sim.helpers import *
+from finmag.util.helpers import *
 import pytest
 
 TOLERANCE = 1e-15

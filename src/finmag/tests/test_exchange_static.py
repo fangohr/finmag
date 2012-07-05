@@ -2,7 +2,7 @@ import numpy as np
 import dolfin as df
 from finmag import Simulation as Sim
 from finmag.energies import Exchange
-from finmag.sim.helpers import vectors, angle
+from finmag.util.helpers import vectors, angle
 
 TOLERANCE = 1e-8
 

@@ -1,6 +1,6 @@
 import os
 import numpy as np
-import finmag.sim.helpers as h
+import finmag.util.helpers as h
 from dolfin import Interval
 from finmag import Simulation as Sim
 from finmag.energies import Exchange

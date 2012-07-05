@@ -1,6 +1,6 @@
 import numpy as np
 import conftest as test
-from finmag.sim.helpers import vectors, stats
+from finmag.util.helpers import vectors, stats
 
 def test_against_nmag(finmag):
 
