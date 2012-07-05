@@ -508,6 +508,22 @@ namespace finmag { namespace llg {
             arg("char_time"),
             arg("do_precession")
         ));
+        def("calc_llg_slonczewski_dmdt", &calc_llg_dmdt, (
+            arg("m"),
+            arg("H"),
+            arg("t"),
+            arg("dmdt"),
+            arg("pins"),
+            arg("gamma_LL"),
+            arg("alpha"),
+            arg("char_time"),
+            arg("do_precession"),
+            arg("J"),
+            arg("P"),
+            arg("d"),
+            arg("Ms"),
+            arg("p")
+        ));
         def("calc_llg_jtimes", &calc_llg_jtimes, (
             arg("m"),
             arg("H"),
