@@ -4,7 +4,7 @@ import dolfin as df
 import os
 from finmag.native.llg import compute_lindholm_L, compute_lindholm_K, compute_bem_fk, compute_bem_gcr, OrientedBoundaryMesh
 from finmag.util import time_counter
-from finmag.sim import helpers
+from finmag.util import helpers
 from finmag.energies.demag import belement_magpar
 from finmag.tests.solid_angle_invariance_tests import random_3d_rotation_matrix
 from problems.prob_fembem_testcases import MagSphereBase
