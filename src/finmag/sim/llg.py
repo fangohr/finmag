@@ -244,9 +244,7 @@ class LLG(object):
         # Use the same characteristic time as defined by c
         char_time = 0.1 / self.c
         native_llg.calc_llg_jtimes(m, H, mp, Hp, t, J_mp, self.gamma/(1+self.alpha**2),
-                                   self.alpha, char_time, self.do_precession)
-        # TODO: Store pins in a np.ndarray(dtype=int) and assign 0's in C++ code
-        J_mp[:, self.pins] = 0.
+                                   self.alpha, char_time, self.do_precession, self.pins)
         J_mp.shape = (-1, )
         m.shape = (-1,)
         mp.shape = (-1,)
