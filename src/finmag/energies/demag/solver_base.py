@@ -8,7 +8,7 @@ import dolfin as df
 import numpy as np
 import abc
 from finmag.util.timings import timings
-from finmag.sim import helpers
+from finmag.util import helpers
 import finmag.util.solver_benchmark as bench
 
 #Define default parameters for the fembem solvers
