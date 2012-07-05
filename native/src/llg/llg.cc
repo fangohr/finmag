@@ -191,7 +191,8 @@ namespace finmag { namespace llg {
                 double gamma_LL,
                 double alpha,
                 double char_time,
-                bool do_precession) {
+                bool do_precession,
+                const np_array<long> &pins) {
 
 	   //* m - magnetisation
 	   //* H - effective field
@@ -269,6 +270,13 @@ namespace finmag { namespace llg {
                     jtimes1[i] += relax_coeff*(m_mp*m1[i] + (1.+m_m)*mp1[i]);
                     jtimes2[i] += relax_coeff*(m_mp*m2[i] + (1.+m_m)*mp2[i]);
                 }
+            }
+            pins.check_ndim(1, "calc_llg_jtimes: pins");
+            const int nb_pins = pins.dim()[0];
+            for (int i = 0; i < nb_pins; i++) {
+                jtimes0[*pins[i]] = 0;
+                jtimes1[*pins[i]] = 0;
+                jtimes2[*pins[i]] = 0;
             }
         }
 
@@ -508,7 +516,7 @@ namespace finmag { namespace llg {
             arg("char_time"),
             arg("do_precession")
         ));
-        def("calc_llg_slonczewski_dmdt", &calc_llg_dmdt, (
+        def("calc_llg_slonczewski_dmdt", &calc_llg_slonczewski_dmdt, (
             arg("m"),
             arg("H"),
             arg("t"),
@@ -534,7 +542,8 @@ namespace finmag { namespace llg {
             arg("gamma_LL"),
             arg("alpha"),
             arg("char_time"),
-            arg("do_precession")
+            arg("do_precession"),
+            arg("pins")
         ));
         def("compute_solid_angle", &compute_solid_angle, (
             arg("r"),
