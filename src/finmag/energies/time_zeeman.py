@@ -7,6 +7,7 @@ log = logging.getLogger("finmag")
 
 mu0 = 4 * np.pi * 1e-7
 
+
 class TimeZeeman(EnergyBase):
     def __init__(self, field_expression, t_off=None):
         self.in_jacobian = False
@@ -41,6 +42,7 @@ class TimeZeeman(EnergyBase):
         E = df.assemble(self.E)
         return E
 
+
 class DiscreteTimeZeeman(TimeZeeman):
     def __init__(self, field_expression, t_off, dt_update):
         super(DiscreteTimeZeeman, self).__init__(field_expression)
@@ -52,7 +54,7 @@ class DiscreteTimeZeeman(TimeZeeman):
             if t >= self.t_off:
                 self.switch_off()
                 return
-                
+
             dt_since_last_update = t - self.t_last_update
             if dt_since_last_update >= self.dt_update:
                 self.H = df.interpolate(self.f_expr, self.S3)
