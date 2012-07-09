@@ -16,7 +16,12 @@
 
 namespace finmag { namespace llg {
     namespace {
-        // Components of a cross product
+        const double e = 1.602176565e-19; // elementary charge in As
+        const double h_bar = 1.054571726e-34; // reduced Plank constant in Js
+        const double pi = 4 * atan(1);
+        const double mu_0 = pi * 4e-7; // Vacuum permeability in Vs/(Am)
+
+        // Components of the cross product
         inline double cross0(double a0, double a1, double a2, double b0, double b1, double b2) { return a1*b2 - a2*b1; }
         inline double cross1(double a0, double a1, double a2, double b0, double b1, double b2) { return a2*b0 - a0*b2; }
         inline double cross2(double a0, double a1, double a2, double b0, double b1, double b2) { return a0*b1 - a1*b0; }
@@ -134,11 +139,6 @@ namespace finmag { namespace llg {
 
             return nodes;
         }
-
-        // TODO: Look up values.
-        const double e = 1; // Electric charge of the electron.
-        const double h_bar = 1; // Plank constant.
-        const double mu_0 = 1; // Permeability of free space.
 
         void calc_llg_dmdt(
                 const np_array<double> &m,
