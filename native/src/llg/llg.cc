@@ -5,7 +5,9 @@
  *
  * CONTACT: h.fangohr@soton.ac.uk
  *
- * AUTHOR(S) OF THIS FILE: Dmitri Chernyshenko (d.chernyshenko@soton.ac.uk)
+ * AUTHOR(S) OF THIS FILE:
+    Dmitri Chernyshenko (d.chernyshenko@soton.ac.uk)
+    Marc-Antonio Bisotti (mb8g11@soton.ac.uk)
  */
 
 #include "finmag_includes.h"
@@ -25,39 +27,6 @@ namespace finmag { namespace llg {
         inline double cross0(double a0, double a1, double a2, double b0, double b1, double b2) { return a1*b2 - a2*b1; }
         inline double cross1(double a0, double a1, double a2, double b0, double b1, double b2) { return a2*b0 - a0*b2; }
         inline double cross2(double a0, double a1, double a2, double b0, double b1, double b2) { return a0*b1 - a1*b0; }
-
-        /*
-        Compute the damping term on all nodes. WILL BE DELETED SOON. Benchmark.
-
-        The solution of the LLG could be split up like this, with one function for every term in it.
-        Every function (like damping, precession, etc.) loops over all nodes itself. This makes the
-        whole process noticeably slower. On MABs machine,  solve.py in devtests/llg_benchmark ran in
-        25% more time just by extracting the damping into its own function (reproducible).
-        Will be deleted with a later commit. This is for reference purposes.
-
-        Replaced by damping_i and its' friends.
-        */
-        void damping_all(
-                const np_array<double> alpha, double gamma,
-                const np_array<double> &m, const np_array<double> &H, const np_array<double> &dmdt) {
-
-            double *m0 = m(0), *m1 = m(1), *m2 = m(2);
-            double *h0 = H(0), *h1 = H(1), *h2 = H(2);
-            double *dm0 = dmdt(0), *dm1 = dmdt(1), *dm2 = dmdt(2);
-
-            const int nodes = m.dim()[1];
-
-            for ( int i=0; i<nodes; i++) {
-                double damping_coeff = - gamma * (*alpha[i]) / (1 + (pow(*alpha[i], 2)));
-
-                // m x (m x H) = (mH)m - (mm)H 
-                const double mh = m0[i] * h0[i] + m1[i] * h1[i] + m2[i] * h2[i];
-                const double mm = m0[i] * m0[i] + m1[i] * m1[i] + m2[i] * m2[i];
-                dm0[i] = damping_coeff*(m0[i] * mh - h0[i] * mm);
-                dm1[i] = damping_coeff*(m1[i] * mh - h1[i] * mm);
-                dm2[i] = damping_coeff*(m2[i] * mh - h2[i] * mm);
-            }
-        }     
 
         /*
         Compute the damping for one node.
@@ -101,6 +70,27 @@ namespace finmag { namespace llg {
             dm0 += relax_coeff * m0;
             dm1 += relax_coeff * m1;
             dm2 += relax_coeff * m2;
+        }
+
+        /*
+        Compute the Slonczewski spin-torque term for one node.
+        */
+        void slonczewski_i(
+                const double alpha, const double gamma,
+                const double J, const double P, const double d, const double Ms,
+                double const &m0, double const &m1, double const &m2,
+                double const &p0, double const &p1, double const &p2,
+                double &dm0, double &dm1, double &dm2) {
+            const double gamma_LL = gamma / (1 + pow(alpha, 2));
+            const double a_P = 4 * pow(sqrt(P) / (1 + P), 3);
+            const double stt_pre_coeff = J * h_bar / (mu_0 * Ms * e * d);
+
+            const double mp = m0 * p0 + m1 * p1 + m2 * p2;
+            const double mm = m0 * m0 + m1 * m1 + m2 * m2;
+            const double stt_coeff = - gamma_LL * stt_pre_coeff * a_P / (3 + mp - 4 * a_P); 
+            dm0 += alpha * stt_coeff * cross0(m0, m1, m2, p0, p1, p2) - stt_coeff * (mp * m0 + mm * p0);
+            dm1 += alpha * stt_coeff * cross1(m0, m1, m2, p0, p1, p2) - stt_coeff * (mp * m1 + mm * p1);
+            dm2 += alpha * stt_coeff * cross2(m0, m1, m2, p0, p1, p2) - stt_coeff * (mp * m2 + mm * p2);
         }
 
         /*
@@ -191,8 +181,6 @@ namespace finmag { namespace llg {
 
             p.check_shape(3, nodes, "calc_llg_dmdt: p");
             double *p0 = p(0), *p1 = p(1), *p2 = p(2); 
-            double stt_pre_coeff = J * h_bar / (mu_0 * Ms * e * d);
-            double a_P = 4 * pow(sqrt(P) / (1 + P), 3); 
 
             finmag::util::scoped_gil_release release_gil;
 
@@ -201,25 +189,10 @@ namespace finmag { namespace llg {
             for (int i=0; i < nodes; i++) {
                 damping_i(*alpha[i], gamma, m0[i], m1[i], m2[i], h0[i], h1[i], h2[i], dm0[i], dm1[i], dm2[i]);
                 relaxation_i(0.1/char_time, m0[i], m1[i], m2[i], dm0[i], dm1[i], dm2[i]);
+                slonczewski_i(*alpha[i], gamma, J, P, d, Ms, m0[i], m1[i], m2[i], p0[i], p1[i], p2[i], dm0[i], dm1[i], dm2[i]);
 
                 if (do_precession)
                     precession_i(*alpha[i], gamma, m0[i], m1[i], m2[i], h0[i], h1[i], h2[i], dm0[i], dm1[i], dm2[i]);
-
-                // TODO: Extract function. 
-                // scalar product m p
-                double mp = m0[i] * p0[i] + m1[i] * p1[i] + m2[i] * p2[i];
-                // cross product m x p
-                double mp0 = cross0(m0[i], m1[i], m2[i], p0[i], p1[i], p2[i]);
-                double mp1 = cross1(m0[i], m1[i], m2[i], p0[i], p1[i], p2[i]);
-                double mp2 = cross2(m0[i], m1[i], m2[i], p0[i], p1[i], p2[i]);
-
-                // add Slonczewski spin-torque term
-                double gamma_LL = gamma / (1 + pow(*alpha[i], 2));
-                double stt_coeff = - gamma_LL * stt_pre_coeff * a_P / (3 + mp - 4 * a_P);
-                dm0[i] += *alpha[i] * stt_coeff * mp0 - stt_coeff * cross0(m0[i], m1[i], m2[i], mp0, mp1, mp2);
-                dm1[i] += *alpha[i] * stt_coeff * mp1 - stt_coeff * cross1(m0[i], m1[i], m2[i], mp0, mp1, mp2);
-                dm2[i] += *alpha[i] * stt_coeff * mp2 - stt_coeff * cross2(m0[i], m1[i], m2[i], mp0, mp1, mp2);
-
             }
             pin(dmdt, pins);
         }
