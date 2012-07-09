@@ -188,7 +188,7 @@ class LLG(object):
             native_llg.calc_llg_slonczewski_dmdt(
                 m, H_eff, t, dMdt, self.pins,
                 self.gamma, self.alpha_vec,
-                char_time, self.do_precession,
+                char_time, 
                 self.J, self.P, self.d, self.Ms, self.p)
         else:
             native_llg.calc_llg_dmdt(m, H_eff, self.t, dMdt, self.pins,
