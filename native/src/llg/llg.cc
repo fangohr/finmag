@@ -168,11 +168,10 @@ namespace finmag { namespace llg {
                 double gamma,
                 const np_array<double> &alpha,
                 double char_time,
-                bool do_precession,
-                double J,
-                double P,
-                double d,
-                double Ms,
+                const double J,
+                const double P,
+                const double d,
+                const double Ms,
                 const np_array<double> &p) {
             const int nodes = check_dimensions(alpha, m, H, dmdt);
             double *m0 = m(0), *m1 = m(1), *m2 = m(2);
@@ -189,10 +188,8 @@ namespace finmag { namespace llg {
             for (int i=0; i < nodes; i++) {
                 damping_i(*alpha[i], gamma, m0[i], m1[i], m2[i], h0[i], h1[i], h2[i], dm0[i], dm1[i], dm2[i]);
                 relaxation_i(0.1/char_time, m0[i], m1[i], m2[i], dm0[i], dm1[i], dm2[i]);
+                precession_i(*alpha[i], gamma, m0[i], m1[i], m2[i], h0[i], h1[i], h2[i], dm0[i], dm1[i], dm2[i]);
                 slonczewski_i(*alpha[i], gamma, J, P, d, Ms, m0[i], m1[i], m2[i], p0[i], p1[i], p2[i], dm0[i], dm1[i], dm2[i]);
-
-                if (do_precession)
-                    precession_i(*alpha[i], gamma, m0[i], m1[i], m2[i], h0[i], h1[i], h2[i], dm0[i], dm1[i], dm2[i]);
             }
             pin(dmdt, pins);
         }
