@@ -21,6 +21,120 @@ namespace finmag { namespace llg {
         inline double cross1(double a0, double a1, double a2, double b0, double b1, double b2) { return a2*b0 - a0*b2; }
         inline double cross2(double a0, double a1, double a2, double b0, double b1, double b2) { return a0*b1 - a1*b0; }
 
+        /*
+        Compute the damping term on all nodes. WILL BE DELETED SOON. Benchmark.
+
+        The solution of the LLG could be split up like this, with one function for every term in it.
+        Every function (like damping, precession, etc.) loops over all nodes itself. This makes the
+        whole process noticeably slower. On MABs machine,  solve.py in devtests/llg_benchmark ran in
+        25% more time just by extracting the damping into its own function (reproducible).
+        Will be deleted with a later commit. This is for reference purposes.
+
+        Replaced by damping_i and its' friends.
+        */
+        void damping_all(
+                const np_array<double> alpha, double gamma,
+                const np_array<double> &m, const np_array<double> &H, const np_array<double> &dmdt) {
+
+            double *m0 = m(0), *m1 = m(1), *m2 = m(2);
+            double *h0 = H(0), *h1 = H(1), *h2 = H(2);
+            double *dm0 = dmdt(0), *dm1 = dmdt(1), *dm2 = dmdt(2);
+
+            const int nodes = m.dim()[1];
+
+            for ( int i=0; i<nodes; i++) {
+                double damping_coeff = - gamma * (*alpha[i]) / (1 + (pow(*alpha[i], 2)));
+
+                // m x (m x H) = (mH)m - (mm)H 
+                const double mh = m0[i] * h0[i] + m1[i] * h1[i] + m2[i] * h2[i];
+                const double mm = m0[i] * m0[i] + m1[i] * m1[i] + m2[i] * m2[i];
+                dm0[i] = damping_coeff*(m0[i] * mh - h0[i] * mm);
+                dm1[i] = damping_coeff*(m1[i] * mh - h1[i] * mm);
+                dm2[i] = damping_coeff*(m2[i] * mh - h2[i] * mm);
+            }
+        }     
+
+        /*
+        Compute the damping for one node.
+        */
+        void damping_i(
+                const double alpha, const double gamma,
+                double &m0, double &m1, double &m2,
+                double &h0, double &h1, double &h2,
+                double &dm0, double &dm1, double &dm2) {
+            const double damping_coeff = - gamma * alpha / (1 + pow(alpha, 2));
+            const double mh = m0 * h0 + m1 * h1 + m2 * h2;
+            const double mm = m0 * m0 + m1 * m1 + m2 * m2;
+            dm0 += damping_coeff * (m0 * mh - h0 * mm); 
+            dm1 += damping_coeff * (m1 * mh - h1 * mm); 
+            dm2 += damping_coeff * (m2 * mh - h2 * mm); 
+        }
+
+        /*
+        Compute the precession for one node.
+        */
+        void precession_i(
+                const double alpha, const double gamma,
+                double &m0, double &m1, double &m2,
+                double &h0, double &h1, double &h2,
+                double &dm0, double &dm1, double &dm2) {
+            const double precession_coeff = - gamma / (1 + (pow(alpha, 2)));
+            dm0 += precession_coeff * cross0(m0, m1, m2, h0, h1, h2);
+            dm1 += precession_coeff * cross1(m0, m1, m2, h0, h1, h2);
+            dm2 += precession_coeff * cross2(m0, m1, m2, h0, h1, h2);
+        }
+
+        /*
+        Compute the relaxation for one node.
+        */
+        void relaxation_i(
+                const double c,
+                double &m0, double &m1, double &m2,
+                double &dm0, double &dm1, double &dm2) {
+            const double mm = m0 * m0 + m1 * m1 + m2 * m2;
+            const double relax_coeff = c * (1.0 - mm); 
+            dm0 += relax_coeff * m0;
+            dm1 += relax_coeff * m1;
+            dm2 += relax_coeff * m2;
+        }
+
+        /*
+        Set the values of dm/dt to zero for all nodes in pins.
+        */
+        void pin(const np_array<double> &dmdt, const np_array<long> &pins) {
+            double *dm0 = dmdt(0), *dm1 = dmdt(1), *dm2 = dmdt(2);
+
+            pins.check_ndim(1, "pins");
+            const int nb_pins = pins.dim()[0];
+            for (int i = 0; i < nb_pins; i++) {
+                dm0[*pins[i]] = 0;
+                dm1[*pins[i]] = 0;
+                dm2[*pins[i]] = 0;
+            }
+        }
+
+        /*
+        Check if the dimensions of m, H, dmdt and alpha are mutually compatible.
+        Returns the number of nodes.
+        */
+        int check_dimensions(
+                const np_array<double> &alpha,
+                const np_array<double> &m,
+                const np_array<double> &H,
+                const np_array<double> &dmdt) {
+            m.check_ndim(2, "check_dimensions: m");
+            const int nodes = m.dim()[1];
+
+            m.check_shape(3, nodes, "check_dimensions: m");
+            H.check_shape(3, nodes, "check_dimensions: H");
+            dmdt.check_shape(3, nodes, "check_dimensions: dmdt");
+
+            alpha.check_ndim(1, "check_dimensions: alpha");
+            alpha.check_shape(nodes, "check_dimensions: alpha");
+
+            return nodes;
+        }
+
         // TODO: Look up values.
         const double e = 1; // Electric charge of the electron.
         const double h_bar = 1; // Plank constant.
@@ -36,60 +150,23 @@ namespace finmag { namespace llg {
                 const np_array<double> &alpha,
                 double char_time,
                 bool do_precession) {
-            m.check_ndim(2, "calc_llg_dmdt: m");
-            int n = m.dim()[1];
-
-            m.check_shape(3, n, "calc_llg_dmdt: m");
-            H.check_shape(3, n, "calc_llg_dmdt: H");
-            dmdt.check_shape(3, n, "calc_llg_dmdt: dmdt");
-
-            alpha.check_ndim(1, "calc_llg_dmdt: alpha");
-            alpha.check_shape(n, "calc_llg_dmdt: alpha");
-
+            const int nodes = check_dimensions(alpha, m, H, dmdt); 
             double *m0 = m(0), *m1 = m(1), *m2 = m(2);
             double *h0 = H(0), *h1 = H(1), *h2 = H(2);
             double *dm0 = dmdt(0), *dm1 = dmdt(1), *dm2 = dmdt(2);
-            double precession_coeff, damping_coeff, gamma_LL;
-            double relax_coeff = 0.1/char_time;
 
             finmag::util::scoped_gil_release release_gil;
 
             // calculate dmdt
             #pragma omp parallel for schedule(guided)
-            for (int i=0; i < n; i++) {
+            for (int i=0; i < nodes; i++) {
+                damping_i(*alpha[i], gamma, m0[i], m1[i], m2[i], h0[i], h1[i], h2[i], dm0[i], dm1[i], dm2[i]);
+                relaxation_i(0.1/char_time, m0[i], m1[i], m2[i], dm0[i], dm1[i], dm2[i]);
 
-                gamma_LL = gamma / (1 + (pow(*alpha[i], 2)));
-                precession_coeff = - gamma_LL;
-                damping_coeff = - gamma_LL * (*alpha[i]);
-
-                // add damping: m x (m x H) == (m.H)m - (m.m)H, multiplied by -gamma alpha
-                double mh = m0[i] * h0[i] + m1[i] * h1[i] + m2[i] * h2[i];
-                double mm = m0[i] * m0[i] + m1[i] * m1[i] + m2[i] * m2[i];
-                dm0[i] = damping_coeff*(m0[i] * mh - h0[i] * mm);
-                dm1[i] = damping_coeff*(m1[i] * mh - h1[i] * mm);
-                dm2[i] = damping_coeff*(m2[i] * mh - h2[i] * mm);
-
-                // add relaxation of |m|
-                double relax = relax_coeff*(1.-mm);
-                dm0[i] += relax*m0[i];
-                dm1[i] += relax*m1[i];
-                dm2[i] += relax*m2[i];
-
-                if (do_precession) {
-                    // add precession: - gamma m x H
-                    dm0[i] += precession_coeff*cross0(m0[i], m1[i], m2[i], h0[i], h1[i], h2[i]);
-                    dm1[i] += precession_coeff*cross1(m0[i], m1[i], m2[i], h0[i], h1[i], h2[i]);
-                    dm2[i] += precession_coeff*cross2(m0[i], m1[i], m2[i], h0[i], h1[i], h2[i]);
-                }
+                if (do_precession)
+                    precession_i(*alpha[i], gamma, m0[i], m1[i], m2[i], h0[i], h1[i], h2[i], dm0[i], dm1[i], dm2[i]);
             }
-
-            pins.check_ndim(1, "calc_llg_dmdt: pins");
-            const int nb_pins = pins.dim()[0];
-            for (int i = 0; i < nb_pins; i++) {
-                dm0[*pins[i]] = 0;
-                dm1[*pins[i]] = 0;
-                dm2[*pins[i]] = 0;
-            }
+            pin(dmdt, pins);
         }
     
         void calc_llg_slonczewski_dmdt(
@@ -107,23 +184,12 @@ namespace finmag { namespace llg {
                 double d,
                 double Ms,
                 const np_array<double> &p) {
-            m.check_ndim(2, "calc_llg_dmdt: m");
-            int n = m.dim()[1];
-
-            m.check_shape(3, n, "calc_llg_dmdt: m");
-            H.check_shape(3, n, "calc_llg_dmdt: H");
-            dmdt.check_shape(3, n, "calc_llg_dmdt: dmdt");
-
-            alpha.check_ndim(1, "calc_llg_dmdt: alpha");
-            alpha.check_shape(n, "calc_llg_dmdt: alpha");
-
+            const int nodes = check_dimensions(alpha, m, H, dmdt);
             double *m0 = m(0), *m1 = m(1), *m2 = m(2);
             double *h0 = H(0), *h1 = H(1), *h2 = H(2);
             double *dm0 = dmdt(0), *dm1 = dmdt(1), *dm2 = dmdt(2);
-            double precession_coeff, damping_coeff, gamma_LL;
-            double relax_coeff = 0.1/char_time;
 
-            p.check_shape(3, n, "calc_llg_dmdt: p");
+            p.check_shape(3, nodes, "calc_llg_dmdt: p");
             double *p0 = p(0), *p1 = p(1), *p2 = p(2); 
             double stt_pre_coeff = J * h_bar / (mu_0 * Ms * e * d);
             double a_P = 4 * pow(sqrt(P) / (1 + P), 3); 
@@ -132,32 +198,14 @@ namespace finmag { namespace llg {
 
             // calculate dmdt
             #pragma omp parallel for schedule(guided)
-            for (int i=0; i < n; i++) {
+            for (int i=0; i < nodes; i++) {
+                damping_i(*alpha[i], gamma, m0[i], m1[i], m2[i], h0[i], h1[i], h2[i], dm0[i], dm1[i], dm2[i]);
+                relaxation_i(0.1/char_time, m0[i], m1[i], m2[i], dm0[i], dm1[i], dm2[i]);
 
-                gamma_LL = gamma / (1 + (pow(*alpha[i], 2)));
-                precession_coeff = - gamma_LL;
-                damping_coeff = - gamma_LL * (*alpha[i]);
+                if (do_precession)
+                    precession_i(*alpha[i], gamma, m0[i], m1[i], m2[i], h0[i], h1[i], h2[i], dm0[i], dm1[i], dm2[i]);
 
-                // add damping: m x (m x H) == (m.H)m - (m.m)H, multiplied by -gamma alpha
-                double mh = m0[i] * h0[i] + m1[i] * h1[i] + m2[i] * h2[i];
-                double mm = m0[i] * m0[i] + m1[i] * m1[i] + m2[i] * m2[i];
-                dm0[i] = damping_coeff*(m0[i] * mh - h0[i] * mm);
-                dm1[i] = damping_coeff*(m1[i] * mh - h1[i] * mm);
-                dm2[i] = damping_coeff*(m2[i] * mh - h2[i] * mm);
-
-                // add relaxation of |m|
-                double relax = relax_coeff*(1.-mm);
-                dm0[i] += relax*m0[i];
-                dm1[i] += relax*m1[i];
-                dm2[i] += relax*m2[i];
-
-                if (do_precession) {
-                    // add precession: - gamma m x H
-                    dm0[i] += precession_coeff*cross0(m0[i], m1[i], m2[i], h0[i], h1[i], h2[i]);
-                    dm1[i] += precession_coeff*cross1(m0[i], m1[i], m2[i], h0[i], h1[i], h2[i]);
-                    dm2[i] += precession_coeff*cross2(m0[i], m1[i], m2[i], h0[i], h1[i], h2[i]);
-                }
-
+                // TODO: Extract function. 
                 // scalar product m p
                 double mp = m0[i] * p0[i] + m1[i] * p1[i] + m2[i] * p2[i];
                 // cross product m x p
@@ -166,21 +214,16 @@ namespace finmag { namespace llg {
                 double mp2 = cross2(m0[i], m1[i], m2[i], p0[i], p1[i], p2[i]);
 
                 // add Slonczewski spin-torque term
+                double gamma_LL = gamma / (1 + pow(*alpha[i], 2));
                 double stt_coeff = - gamma_LL * stt_pre_coeff * a_P / (3 + mp - 4 * a_P);
                 dm0[i] += *alpha[i] * stt_coeff * mp0 - stt_coeff * cross0(m0[i], m1[i], m2[i], mp0, mp1, mp2);
                 dm1[i] += *alpha[i] * stt_coeff * mp1 - stt_coeff * cross1(m0[i], m1[i], m2[i], mp0, mp1, mp2);
                 dm2[i] += *alpha[i] * stt_coeff * mp2 - stt_coeff * cross2(m0[i], m1[i], m2[i], mp0, mp1, mp2);
-            }
 
-            pins.check_ndim(1, "calc_llg_dmdt: pins");
-            const int nb_pins = pins.dim()[0];
-            for (int i = 0; i < nb_pins; i++) {
-                dm0[*pins[i]] = 0;
-                dm1[*pins[i]] = 0;
-                dm2[*pins[i]] = 0;
             }
+            pin(dmdt, pins);
         }
-    
+
         void calc_llg_jtimes(
                 const np_array<double> &m,
                 const np_array<double> &H,

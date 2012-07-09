@@ -1,13 +1,23 @@
+import os
 import cProfile
 import numpy as np
 from finmag.native import llg as native_llg
 from finmag.util.helpers import fnormalise
 
-dims = 3
-nodes = 1e6
+# Code can be checked for correctness with examples/test_macrospin.py
 
-m = fnormalise(np.random.random_sample(dims * nodes))
-H = fnormalise(np.random.random_sample(dims * nodes))
+dims = 3
+nodes = 1e5
+
+if not os.path.exists("m.txt"):
+    m = fnormalise(np.random.random_sample(dims * nodes))
+    H = fnormalise(np.random.random_sample(dims * nodes))
+
+    np.savetxt("m.txt", m)
+    np.savetxt("H.txt", H)
+else:
+    m = np.loadtxt("m.txt")
+    H = np.loadtxt("H.txt")
 
 t = 0.0
 pins = np.zeros(0, dtype="int") 
@@ -28,8 +38,6 @@ def solve():
 
         """
         native_llg.calc_llg_dmdt(_m, _H, t, dmdt, pins, gamma, alpha, char_time, do_precession)
-        #native_llg.new_llg_dmdt(_m, _H, t, dmdt, pins, gamma, alpha, char_time, do_damping, do_relaxation, do_precession)
-        #native_llg.new_llg_dmdt2(_m, _H, t, dmdt, pins, gamma, alpha, char_time, 0b11100) # bit mask
 
     for i in xrange(1000):
         # This is pretty close to sim/llg.py LLG.solve()
