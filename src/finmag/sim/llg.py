@@ -251,8 +251,8 @@ class LLG(object):
         J_mp.shape = (3, -1)
         # Use the same characteristic time as defined by c
         char_time = 0.1 / self.c
-        native_llg.calc_llg_jtimes(m, H, mp, Hp, t, J_mp, self.gamma/(1+self.alpha**2),
-                                   self.alpha, char_time, self.do_precession, self.pins)
+        native_llg.calc_llg_jtimes(m, H, mp, Hp, t, J_mp, self.gamma,
+                                   self.alpha_vec, char_time, self.do_precession, self.pins)
         J_mp.shape = (-1, )
         m.shape = (-1,)
         mp.shape = (-1,)

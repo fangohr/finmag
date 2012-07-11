@@ -257,8 +257,8 @@ namespace finmag { namespace llg {
                 const np_array<double> &Hp,
                 double t,
                 const np_array<double> &jtimes,
-                double gamma_LL,
-                double alpha,
+                double gamma,
+                const np_array<double> &alpha,
                 double char_time,
                 bool do_precession,
                 const np_array<long> &pins) {
@@ -278,8 +278,7 @@ namespace finmag { namespace llg {
             Hp.check_shape(3, n, "calc_llg_dmdt: Hp");
             jtimes.check_shape(3, n, "calc_llg_dmdt: jtimes");
 
-            double precession_coeff = -gamma_LL;
-            double damping_coeff = -gamma_LL*alpha;
+            double gamma_LL, precession_coeff, damping_coeff;
             double *m0 = m(0), *m1 = m(1), *m2 = m(2);
             double *mp0 = mp(0), *mp1 = mp(1), *mp2 = mp(2);
             double *h0 = H(0), *h1 = H(1), *h2 = H(2);
@@ -292,6 +291,9 @@ namespace finmag { namespace llg {
             if (do_precession) {
                 #pragma omp parallel for schedule(guided)
                 for (int i = 0; i < n; i++) {
+                    gamma_LL = gamma / (1 + pow(*alpha[i], 2));
+                    precession_coeff = - gamma_LL;
+                    damping_coeff = - gamma_LL * (*alpha[i]);
                     // add precession: mp x H + m x Hp
                     jtimes0[i] = precession_coeff*(cross0(mp0[i], mp1[i], mp2[i], h0[i], h1[i], h2[i])
                             + cross0(m0[i], m1[i], m2[i], hp0[i], hp1[i], hp2[i]));
