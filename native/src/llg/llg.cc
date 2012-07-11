@@ -538,7 +538,6 @@ namespace finmag { namespace llg {
             arg("gamma_LL"),
             arg("alpha"),
             arg("char_time"),
-            arg("do_precession"),
             arg("J"),
             arg("P"),
             arg("d"),
