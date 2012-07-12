@@ -2,6 +2,7 @@ import logging
 import numpy as np
 import scipy
 import dolfin as df
+
 import finmag.util.helpers as h
 
 from finmag.native import llg as native_llg
@@ -441,4 +442,4 @@ class LLB(object):
         value = self.solve_sundials() 
         return value
         
-       
+        
