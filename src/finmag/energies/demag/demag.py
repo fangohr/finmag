@@ -38,7 +38,7 @@ class Demag(AbstractEnergy):
         self.bench = bench
         self.parameters = parameters
 
-    def setup(self, S3, m, Ms, unit_length):
+    def setup(self, S3, m, Ms, unit_length = 1):
         """
         S3
             dolfin VectorFunctionSpace

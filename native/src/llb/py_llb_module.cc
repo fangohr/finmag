@@ -20,5 +20,7 @@ BOOST_PYTHON_MODULE(llb)
 
     bp::scope().attr("__doc__") = "C++ routines necessary for the LLB model";
 
+    finmag::llb::register_llb();
     finmag::llb::register_llb_material();
+
 }
