@@ -317,10 +317,10 @@ class LLB(object):
         return tmp.vector().array()
 
     def prepare_solver(self):
-       self.ode=scipy.integrate.ode(self.solve,self.jacobian)
-       self.jac=np.zeros((len(self.M),len(self.M)))
-       self.ode.set_integrator('vode', method='bdf',atol=self.atol,rtol=self.rtol)
-       self.ode.set_initial_value(self.M,0)
+        self.ode=scipy.integrate.ode(self.solve,self.jacobian)
+        self.jac=np.zeros((len(self.M),len(self.M)))
+        self.ode.set_integrator('vode', method='bdf',atol=self.atol,rtol=self.rtol)
+        self.ode.set_initial_value(self.M,0)
        
         
     def run_until(self,time):

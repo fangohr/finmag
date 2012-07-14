@@ -269,7 +269,7 @@ class LLG(object):
         value = self.solve() 
         return value
 
-    def use_slonczewski(J, P, d, p):
+    def use_slonczewski(self, J, P, d, p):
         """
         Activates the computation of the Slonczewski spin-torque term in the LLG.
 

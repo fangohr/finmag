@@ -146,4 +146,6 @@ namespace finmag { namespace llb {
             .def("compute_parameters", &LLBFePt::compute_parameters)
         ;
     }
+
+
 }}
