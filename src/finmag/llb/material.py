@@ -3,8 +3,8 @@ import numpy as np
 import dolfin as df
 
 import finmag.util.helpers as h
-
 from finmag.native.llb import LLBFePt
+
 
 
 logger = logging.getLogger(name='finmag')
@@ -38,20 +38,24 @@ class Material(object):
         self.V = df.FunctionSpace(mesh, "Lagrange", 1)
         self.S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
         self._m = df.Function(self.S3)
+        self._T = np.zeros(mesh.num_vertices())
+        self.h = self._m.vector().array()#just want to create a numpy array 
         
         if self.name == 'FePt':
             self.mat = LLBFePt()
             self.Ms0 = self.mat.M_s()
             self.Tc = self.mat.T_C()
             self.alpha = 0.5
-            self.gamma_LL=2.210173e5 # m/(As)
+            self.gamma_LL = 2.210173e5 # m/(As)
             
         else:
             raise AttributeError
         
         self.T = 0
         
-
+    def compute_field(self):
+        self.mat.compute_relaxation_field(self._T, self.m, self.h)
+        return self.h
 
     
     @property
@@ -60,7 +64,12 @@ class Material(object):
     
     @T.setter
     def T(self, value):
-        self._T = value
+        if isinstance(value, (df.Constant, np.ndarray)):
+            assert(value.shape==self._T.shape)
+            self._T[:]=value[:]
+        else:
+            self._T[:]=value
+        #TODO: Trying to use spatial parameters
         self.A = self.mat.A(value)
         self.m_e = self.mat.m_e(value)
         self.inv_chi_perp = self.mat.inv_chi_perp(value)
@@ -68,6 +77,10 @@ class Material(object):
             
     @property
     def m(self):
+        """
+        not too good since this will return a copy
+        try to solve this later
+        """
         return self._m.vector().array()
     
     

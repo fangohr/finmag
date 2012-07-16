@@ -62,14 +62,13 @@ class LLB(object):
  
         timings.start("LLG-compute-dmdt")
         # Use the same characteristic time as defined by c
-
                 
         native_llb.calc_llb_dmdt(self.m,
                                  self.H_eff,
                                  self.dm_dt,
+                                 self.material.T,
                                  self.gamma,
                                  self.alpha,
-                                 self.material.T,
                                  self.material.Tc,
                                  self.do_precession)
 
@@ -78,7 +77,7 @@ class LLB(object):
 
         for func in self._post_rhs_callables:
             func(self)
-            
+        
         ydot[:] = self.dm_dt[:]
         
         return 0

@@ -12,7 +12,7 @@
 
 #include "util/np_array.h"
 
-#include "llb_material.h"
+#include "llb.h"
 
 BOOST_PYTHON_MODULE(llb)
 {

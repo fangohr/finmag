@@ -2,7 +2,7 @@
 
 #include "util/np_array.h"
 
-#include "llb_material.h"
+#include "llb.h"
 
 
 namespace finmag { namespace llb {
@@ -36,26 +36,26 @@ namespace {
             const np_array<double> &M,
             const np_array<double> &H,
             const np_array<double> &dmdt,
+            const np_array<double> &T_arr,
             double gamma_LL,
             double lambda,
-            double T,
+
             double Tc,
             bool do_precession) {
 
     	//assert(M.size()==H.size());
     	//assert(M.size()%3==0);
 
-    	int length=M.size()/3;
+    	int length=T_arr.size();
     	double *m=M.data();
     	double *h=H.data();
     	double *dm_dt=dmdt.data();
+    	double *T = T_arr.data();
 
 
 
         double precession_coeff = -gamma_LL;
         double damping_coeff = -gamma_LL*lambda;
-        double a1 = alpha_perp(T, Tc);
-        double a2 = alpha_par(T, Tc);
 
 
         // calculate dm
@@ -81,6 +81,8 @@ namespace {
             double mh = m[i1] * h[i1] + m[i2] * h[i2] + m[i3] * h[i3];
             double mm = m[i1] * m[i1] + m[i2] * m[i2] + m[i3] * m[i3];
 
+            double a1 = alpha_perp(T[i1], Tc);
+            double a2 = alpha_par(T[i1], Tc);
             double damp1 = (a1 - a2) * damping_coeff / mm * mh;
             double damp2 = - a1 * damping_coeff;
             dm_dt[i1] += m[i1] * damp1 + h[i1] * damp2;
@@ -158,7 +160,7 @@ namespace {
 
             double h_tr_0 = h[i1]*dt + b_tr*dw0[i];
             double h_tr_1 = h[i2]*dt + b_tr*dw1[i];
-            double h_tr_2 = h[3]*dt + b_tr*dw2[i];
+            double h_tr_2 = h[i3]*dt + b_tr*dw2[i];
             double mh_tr = m[i1] * h_tr_0 + m[i2] * h_tr_1 + m[i3] * h_tr_2;
 
             // longitudinal damping noise
@@ -216,9 +218,9 @@ namespace {
     	            arg("M"),
     	            arg("H"),
     	            arg("dmdt"),
+    	            arg("T"),
     	            arg("gamma_LL"),
     	            arg("lambda"),
-    	            arg("T"),
     	            arg("Tc"),
     	            arg("do_precession")
     	        ));
