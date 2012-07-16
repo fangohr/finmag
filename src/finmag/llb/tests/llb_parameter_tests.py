@@ -2,6 +2,7 @@ import unittest
 import numpy as np
 from finmag.native.llb import LLBFePt
 
+
 class LLBParameterTests(unittest.TestCase):
     def test_simple(self):
         material = LLBFePt()
