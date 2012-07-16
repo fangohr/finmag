@@ -8,7 +8,7 @@
 namespace finmag { namespace llb {
 namespace {
 
-	static const double constant_MU0 = M_PI*4e-7; // T m/A
+    static const double constant_MU0 = M_PI*4e-7; // T m/A
     static const double constant_K_B = 1.3806488e-23; // J/K
 
     inline double cross0(double a0, double a1, double a2, double b0, double b1, double b2) { return a1*b2 - a2*b1; }
@@ -158,7 +158,7 @@ namespace {
 
             double h_tr_0 = h[i1]*dt + b_tr*dw0[i];
             double h_tr_1 = h[i2]*dt + b_tr*dw1[i];
-            double h_tr_2 = h[3]*dt + b_tr*dw2[i];
+            double h_tr_2 = h[i3]*dt + b_tr*dw2[i];
             double mh_tr = m[i1] * h_tr_0 + m[i2] * h_tr_1 + m[i3] * h_tr_2;
 
             // longitudinal damping noise
