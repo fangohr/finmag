@@ -47,7 +47,7 @@ class Material(object):
             self.gamma_LL=2.210173e5 # m/(As)
             
         else:
-            raise AttributeError
+            raise NotImplementedError("Only FePt available")
         
         self.T = 0
         

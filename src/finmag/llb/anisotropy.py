@@ -16,7 +16,7 @@ class LLBAnisotropy(EnergyBase):
     
     ==>
     
-    E = (m_x^2 + m_y^2)/(2*chi_perp) 
+    E = 0.5 * (m_x^2 + m_y^2)/(chi_perp) 
 
    
 
@@ -38,14 +38,14 @@ class LLBAnisotropy(EnergyBase):
         self.v = df.TestFunction(S3)
 
         # Anisotropy energy
-        E = ((df.dot(self.e_x, self.m)) ** 2 + df.dot(self.e_y, self.m) ** 2) * df.dx
+        E = 0.5 * ((df.dot(self.e_x, self.m)) ** 2 + df.dot(self.e_y, self.m) ** 2) * df.dx
 
 
         # Needed for energy density
         S1 = df.FunctionSpace(S3.mesh(), "CG", 1)
         w = df.TestFunction(S1)
        
-        nodal_E = df.dot(((df.dot(self.e_x, self.m)) ** 2 + df.dot(self.e_y, self.m) ** 2), w) * df.dx
+        nodal_E = 0.5 * df.dot(((df.dot(self.e_x, self.m)) ** 2 + df.dot(self.e_y, self.m) ** 2), w) * df.dx
 
         # This is only needed if we want the energy density
         # as a df.Function, in order to e.g. probe.
