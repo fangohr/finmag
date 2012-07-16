@@ -8,7 +8,7 @@
 namespace finmag { namespace llb {
 namespace {
 
-	static const double constant_MU0 = M_PI*4e-7; // T m/A
+    static const double constant_MU0 = M_PI*4e-7; // T m/A
     static const double constant_K_B = 1.3806488e-23; // J/K
 
     inline double cross0(double a0, double a1, double a2, double b0, double b1, double b2) { return a1*b2 - a2*b1; }
