@@ -88,6 +88,7 @@ if __name__ == "__main__":
     S3 = VectorFunctionSpace(mesh, "Lagrange", 1)
     C = 1.3e-11  # J/m exchange constant
     M = project(Constant((Ms, 0, 0)), S3)  # Initial magnetisation
+    #Need to update this example in the main program here:
     uniax = UniaxialAnisotropy(K=1e11, a=[1, 0, 0])
 
     uniax.setup(S3, M, Ms)
