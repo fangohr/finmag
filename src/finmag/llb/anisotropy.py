@@ -5,6 +5,7 @@ from finmag.util.timings import timings
 from finmag.util.consts import mu0
 from finmag.util.helpers import fnormalise
 from finmag.energies.energy_base import EnergyBase
+from material import Material
 logger = logging.getLogger('finmag')
 
 
@@ -85,17 +86,16 @@ if __name__ == "__main__":
     n = 5
     mesh = Box(0, m, 0, m, 0, m, n, n, n)
 
-    S3 = VectorFunctionSpace(mesh, "Lagrange", 1)
-    C = 1.3e-11  # J/m exchange constant
-    M = project(Constant((Ms, 0, 0)), S3)  # Initial magnetisation
-    #Need to update this example in the main program here:
-    uniax = UniaxialAnisotropy(K=1e11, a=[1, 0, 0])
+    mat = Material(mesh)
+    mat.set_m((1,2,3))
+    
+    anis = LLBAnisotropy(mat.inv_chi_perp)
+    
 
-    uniax.setup(S3, M, Ms)
+    anis.setup(mat.S3, mat._m, mat.Ms0)
 
-    _ = uniax.compute_field()
-    _ = uniax.compute_energy()
-    _ = uniax.energy_density()
+    print anis.compute_field()
+    print anis.compute_energy()
+    print anis.energy_density()
 
-    print uniax.name
-    print timings.report_str()
+
