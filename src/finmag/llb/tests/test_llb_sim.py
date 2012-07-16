@@ -14,7 +14,7 @@ class LLBSimTest(unittest.TestCase):
     def test_materials(self):
         mesh = df.UnitCube(1, 1, 1)
         mat = Material(mesh,name='FePt')
-        mat.T = 10
+        mat.T = 600
         
         print mat.T
         print mat.alpha

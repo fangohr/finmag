@@ -12,7 +12,7 @@
 
 #include "util/np_array.h"
 
-#include "llb_material.h"
+#include "llb.h"
 
 namespace finmag { namespace llb {
     namespace {
@@ -129,6 +129,59 @@ namespace finmag { namespace llb {
 
                 return res;
             }
+
+
+            void compute_relaxation_field(
+            			const np_array<double> & T_arr, //input
+            			const np_array<double> & M,
+            			const np_array<double> & H){ //output
+
+
+            		int length=T_arr.size();
+            		assert(length*3==M.size());
+
+            		double *T = T_arr.data();
+            		double *m=M.data();
+            		double *h=H.data();
+
+            		int i2,i3;
+            		for (int i1 = 0; i1 < length; i1++) {
+            			i2=length+i1;
+            			i3=length+i2;
+
+            			double temp = T[i1];
+            			// calculate the relaxation coefficient
+            			double m_e = this->m_e(temp);
+            			double m_e_sq = m_e * m_e;
+            			double r;
+            			double m_sq = m[i1]*m[i1] + m[i2]*m[i2] + m[i3]*m[i3];
+
+
+            			if (temp <= TC) {
+            				r = 0.5 * (1. - m_sq/m_e_sq);
+            			} else {
+            				r = -1. - 0.6 * TC / (temp - TC) * m_sq;
+            			}
+
+            			double coeff = r * inv_chi_par(temp);
+            			// accumulate the field value
+            			//??? or should be '='
+            			h[i1] = coeff * m[i1];
+            			h[i2] = coeff * m[i2];
+            			h[i3] = coeff * m[i3];
+            			// accumulate the energy
+            			/* false && something must be false???
+            		                if (false && E) {
+            		                    double E_coeff = magnetic_constants::MU0 * material.M_s() * inv_chi_par;
+            		                    if (temp <= T_C) {
+            		                        E[i] = E_coeff*(1./8.) * sq(m_sq - m_e_sq) / m_e_sq;
+            		                    } else {
+            		                        E[i] = E_coeff * (3./20.) * (T_C / (temp - T_C)) * sq(m_sq + (5./3.) * ((temp-T_C)/T_C));
+            		                    }
+            		              }
+            		           */
+            		}
+            }
         };
 
     }
@@ -144,6 +197,7 @@ namespace finmag { namespace llb {
             .def("inv_chi_par", &LLBFePt::inv_chi_par)
             .def("inv_chi_perp", &LLBFePt::inv_chi_perp)
             .def("compute_parameters", &LLBFePt::compute_parameters)
+            .def("compute_relaxation_field",&LLBFePt::compute_relaxation_field)
         ;
     }
 
