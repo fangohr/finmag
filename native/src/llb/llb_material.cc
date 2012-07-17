@@ -97,7 +97,8 @@ namespace finmag { namespace llb {
                         return sqrt(a)*1.3 - a*.12-a2*.51+a*a2*.37-a4*.01-a4*a4*.03;
                     }
                     else {
-                        return 0.0;
+                    	//check later ...
+                        return 0;
                     }
                 } else {
                     return 1.0;
@@ -157,13 +158,23 @@ namespace finmag { namespace llb {
             			double m_sq = m[i1]*m[i1] + m[i2]*m[i2] + m[i3]*m[i3];
 
 
-            			if (temp <= TC) {
+            			if (temp < TC) {
             				r = 0.5 * (1. - m_sq/m_e_sq);
             			} else {
             				r = -1. - 0.6 * TC / (temp - TC) * m_sq;
             			}
 
             			double coeff = r * inv_chi_par(temp);
+
+            			//It seems that here we need to do something, check later...
+            			if (temp==TC){
+            				double m_e1 = this->m_e(temp-1e-2);
+            				double coeff1 = 0.5 * (1. - m_sq/(m_e1*m_e1))*inv_chi_par(temp-1e-2);
+            				double coeff2 = (-1.-0.6*TC/1e-2 * m_sq)*inv_chi_par(temp+1e-2);
+
+            				coeff = (coeff1+coeff2)/2.0 ;
+            			}
+
             			// accumulate the field value
             			//??? or should be '='
             			h[i1] = coeff * m[i1];
