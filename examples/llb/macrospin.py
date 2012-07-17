@@ -23,10 +23,19 @@ def saveplot(ts,me,filename):
     plt.ylabel('me')
     fig.savefig(filename)
 
+def save_me(ts,me,me_input):
+    f=open('me.txt','w')
+    f.write('#Temperature    me    me_input\n')
+    for i in range(len(ts)):
+        tmp='%g  %e  %e\n'%(ts[i],
+                      me[i],me_input[i])
+        f.write(tmp)
+    f.close()
+
 def SpinTest(mesh,T):
     mat = Material(mesh, name='FePt')
     mat.set_m((1, 1, 1))
-    mat.T = 600
+    mat.T = T
     
     llb = LLB(mat)
     llb.alpha=0.1
@@ -35,8 +44,7 @@ def SpinTest(mesh,T):
     llb.interactions.append(mat)
     
     max_time = 20e-12
-    ts = np.linspace(0, max_time, num=101)
-
+    ts = np.linspace(0, max_time, num=11)
     
     me_average = []
     mx=[]
@@ -46,14 +54,39 @@ def SpinTest(mesh,T):
         me_average.append(average(llb.m))
         mx.append(llb.m[0])
         mz.append(llb.m[-1])
-        
+    
+    """
     saveplot(ts,me_average,'tt.png')
     saveplot(ts,mx,'mx.png')
     saveplot(ts,mz,'mz.png')
+    """
+    
+    return me_average[-1],mat.m_e
 
-    return me_average
 
-
+def SeriesTemperatureTest(mesh):
+    Ts1=[i for i in range(0,600,20)]
+    Ts2=[i for i in range(600,700,5)]
+    Ts3=[i for i in range(700,1000,20)]
+    Ts=Ts1+Ts2+Ts3
+    me=[]
+    me_input=[]
+    for t in Ts:
+        print 'temperature at %g'%t
+        me1,me2=SpinTest(mesh,t)
+        me.append(me1)
+        me_input.append(me2)
+    
+    fig=plt.figure()
+    p1,=plt.plot(Ts,me,'.')
+    p2,=plt.plot(Ts,me_input,'-')
+    plt.xlabel('Temperature (K)')
+    plt.ylabel('me')
+    plt.legend([p1,p2],['me','me-input'])
+    fig.savefig('me.png')
+    
+    save_me(Ts,me,me_input)
+     
 
 
 if __name__ == '__main__':
@@ -66,7 +99,8 @@ if __name__ == '__main__':
     nz = 1
     mesh = df.Box(x0, y0, z0, x1, y1, z1, nx, ny, nz)
    
-    print SpinTest(mesh,100)
+    print SpinTest(mesh,658)
+    SeriesTemperatureTest(mesh)
     
     
 

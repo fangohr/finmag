@@ -11,16 +11,22 @@ class LLBSimTest(unittest.TestCase):
     def test_materials(self):
         mesh = df.UnitCube(1, 1, 1)
         mat = Material(mesh, name='FePt')
-        mat.T = 600
+        mat.T = 659.9
 
         print mat.T
         print mat.alpha
         print mat.inv_chi_par
         print 'inv_chi_perp:', mat.inv_chi_perp
-        print mat.A
-        print mat.m_e
+        print 'A',mat.A
+        print 'm_e',mat.m_e
         print mat.Ms0
         print mat.gamma_LL
+        
+        
+        mat.T=601
+        print mat.inv_chi_par
+        mat.T=600
+        print mat.inv_chi_par
 
     def test_native_llb(self):
         m = np.array([1., 2., 3.])
