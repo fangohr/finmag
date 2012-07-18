@@ -122,7 +122,6 @@ namespace finmag { namespace llg {
                 double &jtimes0, double &jtimes1, double &jtimes2) {
             const double mm = m0 * m0 + m1 * m1 + m2 * m2;
             const double mmp = m0 * mp0 + m1 * mp1 + m2 * mp2;
-            //const double relax_coeff = c * (1.0 - mm); 
             jtimes0 += relax_coeff * (-2 * mmp * m0 + (1.0 - mm) * mp0);
             jtimes1 += relax_coeff * (-2 * mmp * m1 + (1.0 - mm) * mp1);
             jtimes2 += relax_coeff * (-2 * mmp * m2 + (1.0 - mm) * mp2);

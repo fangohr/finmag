@@ -186,7 +186,7 @@ class LLG(object):
         # Calculate dm/dt
         if self.do_slonczewski:
             native_llg.calc_llg_slonczewski_dmdt(
-                m, H_eff, t, dMdt, self.pins,
+                m, H_eff, self.t, dMdt, self.pins,
                 self.gamma, self.alpha_vec,
                 char_time, 
                 self.J, self.P, self.d, self.Ms, self.p)
@@ -276,7 +276,7 @@ class LLG(object):
         J is the current density in A/m^2,
         P is the polarisation (between 0 and 1),
         d the thickness of the free layer in m,
-        p the direction (unit length) of the polarisation as a dolfin function.
+        p the direction (unit length) of the polarisation as a triple.
 
         """  
         self.do_slonczewski = True
@@ -284,4 +284,6 @@ class LLG(object):
         assert P >= 0.0 and P <= 1.0
         self.P = P
         self.d = d
-        self.p = p
+        polarisation = df.Function(self.S3)
+        polarisation.assign(df.Constant((p)))
+        self.p = polarisation.vector().array().reshape((3, -1))
