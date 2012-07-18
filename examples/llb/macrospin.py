@@ -86,6 +86,40 @@ def SeriesTemperatureTest(mesh):
     fig.savefig('me.png')
     
     save_me(Ts,me,me_input)
+    
+
+def StochasticSpinTest(mesh,T):
+    mat = Material(mesh, name='FePt')
+    mat.set_m((1, 1, 1))
+    mat.T = T
+    
+    llb = LLB(mat)
+    llb.alpha=0.1
+    llb.set_up_stochastic_solver(dt=1e-13)
+        
+    llb.interactions.append(mat)
+    
+    max_time = 20e-12
+    ts = np.linspace(0, max_time, num=11)
+    
+    me_average = []
+    mx=[]
+    mz=[]
+    for t in ts:
+        llb.run_stochastic_until(t)
+        me_average.append(average(llb.m))
+        mx.append(llb.m[0])
+        mz.append(llb.m[-1])
+        print llb.m
+    
+    print me_average
+    
+    saveplot(ts,me_average,'tt.png')
+    saveplot(ts,mx,'mx.png')
+    saveplot(ts,mz,'mz.png')
+    
+    
+    return me_average[-1],mat.m_e
      
 
 
@@ -99,8 +133,9 @@ if __name__ == '__main__':
     nz = 1
     mesh = df.Box(x0, y0, z0, x1, y1, z1, nx, ny, nz)
    
-    print SpinTest(mesh,658)
-    SeriesTemperatureTest(mesh)
+    #print SpinTest(mesh,658)
+    #SeriesTemperatureTest(mesh)
+    StochasticSpinTest(mesh,200)
     
     
 

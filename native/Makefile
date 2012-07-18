@@ -36,7 +36,7 @@ sundials_LDFLAGS = -lsundials_cvode -llapack $(SUNDIALS_NVECTOR_SO) -lboost_thre
 $(MODULE_DIR)/llg.so : src/llg/py_llg_module.o src/util/np_array.o src/util/swig_dolfin.o src/llg/bem.o src/llg/llg.o src/llg/oriented_boundary_mesh.o
 llg_LDFLAGS = -ldolfin
 
-$(MODULE_DIR)/llb.so : src/llb/py_llb_module.o src/util/np_array.o src/llb/llb_material.o src/llb/llb.o 
+$(MODULE_DIR)/llb.so : src/llb/py_llb_module.o src/util/np_array.o src/llb/llb_material.o src/llb/llb.o src/llb/llb_random.o
 
 $(UNIT_TEST_BINARY) : tests/run_ci_tests.o src/util/np_array.o src/sundials/tests/sundials_tests.o src/sundials/numpy_malloc.o src/llg/tests/boundary_mesh_tests.o
 run_ci_tests_LDFLAGS=-lboost_prg_exec_monitor /usr/lib/libboost_unit_test_framework.a $(SUNDIALS_NVECTOR_SO) -ldolfin
