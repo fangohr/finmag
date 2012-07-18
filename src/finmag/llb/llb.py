@@ -30,6 +30,9 @@ class LLB(object):
         self.alpha = 0.01
         self.t = 0.0 # s
         self.do_precession = True
+        self.use_evans2012_noise = True
+        self.vol = df.assemble(df.dot(df.TestFunction(self.S3),
+                                      df.Constant([1, 1, 1])) * df.dx).array()
         
         self._pre_rhs_callables = []
         self._post_rhs_callables = []
@@ -44,6 +47,22 @@ class LLB(object):
         
         self.integrator = integrator
         
+    def set_up_stochastic_solver(self, dt=1e-13):
+        self.dt = dt
+        integrator = native_llb.HeunStochasticIntegrator(
+                                    self.m,
+                                    self.material.T,
+                                    self.vol,
+                                    self.dt,
+                                    self.gamma,
+                                    self.alpha,
+                                    self.material.Tc,
+                                    self.material.Ms0,
+                                    self.do_precession,
+                                    self.use_evans2012_noise)
+                                    
+        self.integrator = integrator
+        
 
     def compute_effective_field(self):
         H_eff = np.zeros(self.m.shape)
@@ -52,6 +71,7 @@ class LLB(object):
         self.H_eff = H_eff        
     
     def sundials_rhs(self, t, y, ydot):
+        self.t = t
         self._m.vector().set_local(y)
         
         for func in self._pre_rhs_callables:
@@ -89,8 +109,17 @@ class LLB(object):
         
         self.integrator.advance_time(t, self.m)
         self._m.vector().set_local(self.m)
-
-
+    
+    def run_stochastic_until(self, t):
+        if t <= self.t:
+            return
+        
+        while self.t < t:
+            self.compute_effective_field()
+            self.integrator.run_step(self.H_eff)
+            self._m.vector().set_local(self.m)
+            self.t += self.dt
+        
 
 
 if __name__ == '__main__':
