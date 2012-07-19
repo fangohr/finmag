@@ -36,7 +36,7 @@ class Material(object):
         self.mesh = mesh
         self.name = name
         self.V = df.FunctionSpace(mesh, "Lagrange", 1)
-        self.S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
+        self.S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1,dim=3)
         self._m = df.Function(self.S3)
         self._T = np.zeros(mesh.num_vertices())
         self.h = self._m.vector().array()#just want to create a numpy array 

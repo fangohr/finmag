@@ -331,9 +331,6 @@ class LLB(object):
         
 
 
-
-
-
     def solve_sundials(self):
         for func in self._pre_rhs_callables:
             func(self.t)

@@ -2,6 +2,8 @@
 
 #include "util/np_array.h"
 
+#include "llb_random.h"
+
 #include "llb.h"
 
 
@@ -120,13 +122,21 @@ namespace {
             do_precession(do_precession),
             use_evans2012_noise(use_evans2012_noise)
             {
+        	assert(M.size()==3*T.size());
         	length=M.size();
-        	dm_dt= new double[length];
+        	dm_c= new double[length];
         	m_pred= new double[length];
-        	dm_dt_pred= new double[length];
+        	dm_pred= new double[length];
         	dw_t= new double[length];
         	dw_l= new double[length];
 
+        	for (int i = 0; i < length; i++){
+        		dw_t[i]=0;
+        		dw_l[i]=0;
+        	}
+
+        	initial_random();
+        	//printf("%f\n",random());
          }
 
         ~HeunStochasticIntegrator(){
@@ -134,12 +144,12 @@ namespace {
         		delete[] m_pred;
         	}
 
-        	if (dm_dt_pred!=0){
-        		delete[] dm_dt_pred;
+        	if (dm_pred!=0){
+        		delete[] dm_pred;
         	}
 
-        	if (dm_dt!=0){
-        	    delete[] dm_dt;
+        	if (dm_c!=0){
+        	    delete[] dm_c;
         	}
 
         	if (dw_t!=0){
@@ -160,17 +170,25 @@ namespace {
     		double *h = H.data();
     		double *m = M.data();
 
-    		calc_llb_adt_plus_bdw(m,h,dm_dt_pred);
+    		gauss_random_vec(dw_t,length,sqrt(dt));
+    		gauss_random_vec(dw_l,length,sqrt(dt));
+
+        	for (int i = 0; i < length; i++){
+        		printf("%e  %e\n",dw_t[i],dw_l[i]);
+        	}
+
+    		calc_llb_adt_plus_bdw(m,h,dm_pred);
 
     		for (int i = 0; i < length; i++){
-    			m_pred[i] = m[i] + dm_dt_pred[i];
+    			m_pred[i] = m[i] + dm_pred[i];
     		}
 
-    		calc_llb_adt_plus_bdw(m_pred,h,dm_dt);
+    		calc_llb_adt_plus_bdw(m_pred,h,dm_c);
 
     		for (int i = 0; i < length; i++){
-    			m[i] += 0.5*(dm_dt[i] + dm_dt_pred[i]);
+    			m[i] += 0.5*(dm_c[i] + dm_pred[i]);
     		}
+
 
     	}
 
@@ -180,7 +198,7 @@ namespace {
         int length;
         np_array<double> M,T_arr,V_arr;
         double dt,gamma_LL,lambda,Tc,Ms;
-        double *m_pred, *dm_dt_pred, *dm_dt,*dw_t, *dw_l;
+        double *m_pred, *dm_pred, *dm_c,*dw_t, *dw_l;
         bool do_precession;
         bool use_evans2012_noise;
 
@@ -189,7 +207,7 @@ namespace {
         void calc_llb_adt_plus_bdw(
         					double *m,
         					double *h,
-        					double *dw_dt
+        					double *dm
         					) {
 
 
@@ -197,6 +215,7 @@ namespace {
                 double *T = T_arr.data();
                 double *V = V_arr.data();
                 int len=T_arr.size();
+                //printf("len=%d  length=%d\n",len,length);
 
                 // calculate dm
                 //#pragma omp parallel for schedule(guided)
@@ -208,14 +227,15 @@ namespace {
 
                     // add precession: m x H, multiplied by -gamma
                     if (do_precession) {
-                        dm_dt[i1] = precession_coeff*(m[i2]*h[i3]-m[i3]*h[i2]);
-                        dm_dt[i2] = precession_coeff*(m[i3]*h[i1]-m[i1]*h[i3]);
-                        dm_dt[i3] = precession_coeff*(m[i1]*h[i2]-m[i2]*h[i1]);
+                        dm[i1] = precession_coeff*dt*(m[i2]*h[i3]-m[i3]*h[i2]);
+                        dm[i2] = precession_coeff*dt*(m[i3]*h[i1]-m[i1]*h[i3]);
+                        dm[i3] = precession_coeff*dt*(m[i1]*h[i2]-m[i2]*h[i1]);
                     } else {
-                        dm_dt[i1] = 0.;
-                        dm_dt[i2] = 0.;
-                        dm_dt[i3] = 0.;
+                        dm[i1] = 0.;
+                        dm[i2] = 0.;
+                        dm[i3] = 0.;
                     }
+
 
                     // add transverse and longitudinal damping
                     double mm = m[i1] * m[i1] + m[i2] * m[i2] + m[i3] * m[i3];
@@ -237,6 +257,8 @@ namespace {
                     double h_tr_0 = h[i1]*dt + b_tr*dw_t[i1];
                     double h_tr_1 = h[i2]*dt + b_tr*dw_t[i2];
                     double h_tr_2 = h[i3]*dt + b_tr*dw_t[i3];
+
+
                     double mh_tr = m[i1] * h_tr_0 + m[i2] * h_tr_1 + m[i3] * h_tr_2;
 
                     // longitudinal damping noise
@@ -253,9 +275,9 @@ namespace {
 
                     // add transverse damping: m x (m x H) == (m.H)m - (m.m)H, multiplied by -gamma lambda alpha_perp/m^2
                     double tdamp = -gamma_LL * lambda * a_perp / mm;
-                    dm_dt[i1] += tdamp * (mh_tr * m[i1] - mm * h_tr_0);
-                    dm_dt[i2] += tdamp * (mh_tr * m[i2] - mm * h_tr_1);
-                    dm_dt[i3] += tdamp * (mh_tr * m[i3] - mm * h_tr_2);
+                    dm[i1] += tdamp * (mh_tr * m[i1] - mm * h_tr_0);
+                    dm[i2] += tdamp * (mh_tr * m[i2] - mm * h_tr_1);
+                    dm[i3] += tdamp * (mh_tr * m[i3] - mm * h_tr_2);
 
                     double mh_long;
                     if (use_evans2012_noise) {
@@ -265,9 +287,9 @@ namespace {
                         mh_long = m[i1] * h_long_0 + m[i2] * h_long_1 + m[i3] * h_long_2;
 
                         // add noise separately
-                        dm_dt[i1] += b_long * dw_l[i1];
-                        dm_dt[i2] += b_long * dw_l[i2];
-                        dm_dt[i3] += b_long * dw_l[i3];
+                        dm[i1] += b_long * dw_l[i1];
+                        dm[i2] += b_long * dw_l[i2];
+                        dm[i3] += b_long * dw_l[i3];
 
                     } else {
                         double h_long_0 = h[i1]*dt + b_long * dw_l[i1];
@@ -278,9 +300,9 @@ namespace {
 
                     // add longitudinal damping: (m.H)m, muliplied by gamma lambda alpha_par/m^2
                     double ldamp = gamma_LL * lambda * a_par / mm;
-                    dm_dt[i1] += ldamp * mh_long * m[i1];
-                    dm_dt[i2] += ldamp * mh_long * m[i2];
-                    dm_dt[i3] += ldamp * mh_long * m[i3];
+                    dm[i1] += ldamp * mh_long * m[i1];
+                    dm[i2] += ldamp * mh_long * m[i2];
+                    dm[i3] += ldamp * mh_long * m[i3];
 
                 }
             }
