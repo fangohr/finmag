@@ -13,7 +13,7 @@ def test_random():
     pass
 
 class LLBSimTest(unittest.TestCase):
-    """
+    
     def test_materials(self):
         mesh = df.UnitCube(1, 1, 1)
         mat = Material(mesh, name='FePt')
@@ -33,27 +33,17 @@ class LLBSimTest(unittest.TestCase):
         print mat.inv_chi_par
         mat.T=600
         print mat.inv_chi_par
-    """
+
     def test_native_llb(self):
         m = np.array([1., 2., 3.])
         native_llb.test_numpy(m)
         print m
     
-
-    def test_random(self):
-        #test_random()
-        native_llb.initial_random();
-        
-        x=[native_llb.gauss_random() for i in range(1000000)]
-        x=np.array(x)
-        print np.average(x),np.max(x),np.min(x)
-        
-        test_random()
     
     def testHeun(self):
         m = np.array([1., 2., 3.])
-        integrator=native_llb.HeunStochasticIntegrator(m,m,m,1,1,1,1,1,1,1)
-        integrator.Hello()
+        #integrator=native_llb.HeunStochasticIntegrator(m,m,m,1,1,1,1,1,1,1)
+        #integrator.Hello()
 
     
     
