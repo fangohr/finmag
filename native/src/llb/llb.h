@@ -12,9 +12,8 @@
 
 namespace finmag { namespace llb {
 
-
     void register_llb();
-    void register_llb_random();
+
     void register_llb_material();
 
 }}
