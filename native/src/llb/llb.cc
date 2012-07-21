@@ -102,6 +102,7 @@ namespace {
 
         HeunStochasticIntegrator(
             const np_array<double> &M,
+            const np_array<double> &M_pred,
             const np_array<double> &T,
             const np_array<double> &V,
             double dt,
@@ -110,8 +111,10 @@ namespace {
             double Tc,
             double Ms,
             bool do_precession,
-            bool use_evans2012_noise):
+            bool use_evans2012_noise,
+            bp::object _rhs_func):
             M(M),
+            M_pred(M_pred),
             T_arr(T),
             V_arr(V),
             dt(dt),
@@ -120,29 +123,29 @@ namespace {
             Tc(Tc),
             Ms(Ms),
             do_precession(do_precession),
-            use_evans2012_noise(use_evans2012_noise)
+            use_evans2012_noise(use_evans2012_noise),
+            rhs_func(_rhs_func)
             {
-        	assert(M.size()==3*T.size());
-        	length=M.size();
-        	dm_c= new double[length];
-        	m_pred= new double[length];
-        	dm_pred= new double[length];
-        	dw_t= new double[length];
-        	dw_l= new double[length];
+        		assert(M.size()==3*T.size());
+        		length=M.size();
+        		dm_c= new double[length];
+        		dm_pred= new double[length];
+        		dw_t= new double[length];
+        		dw_l= new double[length];
 
-        	for (int i = 0; i < length; i++){
-        		dw_t[i]=0;
-        		dw_l[i]=0;
-        	}
+        		for (int i = 0; i < length; i++){
+        			dw_t[i]=0;
+        			dw_l[i]=0;
+        		}
 
-        	initial_random();
-        	//printf("%f\n",random());
+        		initial_random();
+
+        		if (_rhs_func.is_none()) throw std::invalid_argument("HeunStochasticIntegrator::HeunStochasticIntegrator: _rhs_func is None");
+
          }
 
         ~HeunStochasticIntegrator(){
-        	if (m_pred!=0){
-        		delete[] m_pred;
-        	}
+
 
         	if (dm_pred!=0){
         		delete[] dm_pred;
@@ -169,13 +172,12 @@ namespace {
     	void run_step(const np_array<double> &H) {
     		double *h = H.data();
     		double *m = M.data();
+    		double *m_pred=M_pred.data();
 
     		gauss_random_vec(dw_t,length,sqrt(dt));
     		gauss_random_vec(dw_l,length,sqrt(dt));
 
-        	for (int i = 0; i < length; i++){
-        		printf("%e  %e\n",dw_t[i],dw_l[i]);
-        	}
+            bp::call<void>(rhs_func.ptr(),M);
 
     		calc_llb_adt_plus_bdw(m,h,dm_pred);
 
@@ -183,12 +185,13 @@ namespace {
     			m_pred[i] = m[i] + dm_pred[i];
     		}
 
+    		bp::call<void>(rhs_func.ptr(), M_pred);
+
     		calc_llb_adt_plus_bdw(m_pred,h,dm_c);
 
     		for (int i = 0; i < length; i++){
     			m[i] += 0.5*(dm_c[i] + dm_pred[i]);
     		}
-
 
     	}
 
@@ -196,11 +199,14 @@ namespace {
 
     private:
         int length;
-        np_array<double> M,T_arr,V_arr;
+        np_array<double> M,M_pred,T_arr,V_arr;
         double dt,gamma_LL,lambda,Tc,Ms;
-        double *m_pred, *dm_pred, *dm_c,*dw_t, *dw_l;
+        double *dm_pred, *dm_c,*dw_t, *dw_l;
         bool do_precession;
         bool use_evans2012_noise;
+
+        bp::object rhs_func;
+
 
         //double cur_t, default_dt;
 
@@ -224,6 +230,7 @@ namespace {
                 	i1=i;
                 	i2=len+i1;
                 	i3=len+i2;
+                	//printf("%e  %e  %e  %e  %e  %e  %e\n",V[i],dw_l[i1],dw_l[i2],dw_l[i3],dw_t[i1],dw_t[i2],dw_t[i3]);
 
                     // add precession: m x H, multiplied by -gamma
                     if (do_precession) {
@@ -257,7 +264,6 @@ namespace {
                     double h_tr_0 = h[i1]*dt + b_tr*dw_t[i1];
                     double h_tr_1 = h[i2]*dt + b_tr*dw_t[i2];
                     double h_tr_2 = h[i3]*dt + b_tr*dw_t[i3];
-
 
                     double mh_tr = m[i1] * h_tr_0 + m[i2] * h_tr_1 + m[i3] * h_tr_2;
 
@@ -298,11 +304,13 @@ namespace {
                         mh_long = m[i1] * h_long_0 + m[i2] * h_long_1 + m[i3] * h_long_2;
                     }
 
+
                     // add longitudinal damping: (m.H)m, muliplied by gamma lambda alpha_par/m^2
                     double ldamp = gamma_LL * lambda * a_par / mm;
                     dm[i1] += ldamp * mh_long * m[i1];
                     dm[i2] += ldamp * mh_long * m[i2];
                     dm[i3] += ldamp * mh_long * m[i3];
+                    //printf("dm0==%e  dm1==%e  dm2==%e  mh_long==%e\n",dm[i1],dm[i2],dm[i3],mh_long);
 
                 }
             }
@@ -335,6 +343,7 @@ namespace {
 
     	class_<HeunStochasticIntegrator>("HeunStochasticIntegrator", init<
     			 	np_array<double>,
+    			 	np_array<double>,
     			    np_array<double>,
     			    np_array<double>,
     			    double,
@@ -343,7 +352,8 @@ namespace {
     			    double,
     			    double,
     			    bool,
-    			    bool>())
+    			    bool,
+    			    bp::object>())
     	        	.def("Hello", &HeunStochasticIntegrator::Hello)
     	        	.def("run_step", &HeunStochasticIntegrator::run_step)
     	        ;

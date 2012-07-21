@@ -41,6 +41,7 @@ namespace finmag {
 	//temporary random generator
 	void initial_random() {
 		unsigned int seed = (unsigned int) time(NULL);
+		seed=100;
 		MT[0] = seed & 0xFFFFFFFFU;
 		for (int i = 1; i < MT19937_N; i++) {
 			MT[i] = (MT[i - 1]^ (MT[i - 1] >> 30)) + i;

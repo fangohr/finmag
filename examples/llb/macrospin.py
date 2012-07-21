@@ -12,9 +12,9 @@ from finmag.llb.llb import LLB
 
 def average(m):
     m.shape=(3,-1)
-    t=np.average(m, axis=1)
+    t=np.sqrt(np.sum(m*m,axis=0))
     m.shape=(-1)
-    return np.sqrt(t[0]**2+t[1]**2+t[2]**2)
+    return np.average(t)
 
 def saveplot(ts,me,filename):
     fig=plt.figure()
@@ -43,8 +43,8 @@ def SpinTest(mesh,T):
         
     llb.interactions.append(mat)
     
-    max_time = 20e-12
-    ts = np.linspace(0, max_time, num=11)
+    max_time = 10e-12
+    ts = np.linspace(0, max_time, num=101)
     
     me_average = []
     mx=[]
@@ -55,11 +55,11 @@ def SpinTest(mesh,T):
         mx.append(llb.m[0])
         mz.append(llb.m[-1])
     
-    """
+    
     saveplot(ts,me_average,'tt.png')
     saveplot(ts,mx,'mx.png')
     saveplot(ts,mz,'mz.png')
-    """
+    
     
     return me_average[-1],mat.m_e
 
@@ -90,17 +90,18 @@ def SeriesTemperatureTest(mesh):
 
 def StochasticSpinTest(mesh,T):
     mat = Material(mesh, name='FePt')
-    mat.set_m((1, 1, 1))
+    mat.set_m((1, 0, 0))
     mat.T = T
+    mat.alpha=0.1
     
     llb = LLB(mat)
-    llb.alpha=0.1
-    llb.set_up_stochastic_solver(dt=5e-14)
+    llb.set_up_stochastic_solver(dt=1e-14,use_evans2012_noise=True)
         
     llb.interactions.append(mat)
     
-    max_time = 50e-12
-    ts = np.linspace(0, max_time, num=501)
+    n=100
+    max_time = n*1e-14
+    ts = np.linspace(0, max_time, num=n+1)
     
     me_average = []
     mx=[]
@@ -110,14 +111,11 @@ def StochasticSpinTest(mesh,T):
         me_average.append(average(llb.m))
         mx.append(llb.m[0])
         mz.append(llb.m[-1])
-        #print llb.m
+        
     
-    print me_average
+    print np.array(me_average)
     
-    saveplot(ts,me_average,'tt.png')
-    saveplot(ts,mx,'mx.png')
-    saveplot(ts,mz,'mz.png')
-    
+    saveplot(ts,me_average,'st.png')    
     
     return me_average[-1],mat.m_e
      
@@ -125,18 +123,18 @@ def StochasticSpinTest(mesh,T):
 
 if __name__ == '__main__':
     x0 = y0 = z0 = 0
-    x1 = 5e-9
-    y1 = 5e-9
-    z1 = 5e-9
+    x1 = 2e-9
+    y1 = 2e-9
+    z1 = 2e-9
     nx = 1
     ny = 1
     nz = 1
     mesh = df.Box(x0, y0, z0, x1, y1, z1, nx, ny, nz)
     
-    #mesh =df.Interval(11,0,1)
+    mesh =df.Interval(1,0,1e-9)
     print mesh.coordinates()
    
-    #print SpinTest(mesh,658)
+    #print SpinTest(mesh,400)
     #SeriesTemperatureTest(mesh)
     StochasticSpinTest(mesh,400)
     
