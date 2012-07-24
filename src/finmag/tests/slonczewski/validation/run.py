@@ -8,7 +8,7 @@ from finmag.util.convert_mesh import convert_mesh
 from finmag.util.consts import mu0
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
-averages_file = MODULE_DIR + "m_averages_validate.txt"
+averages_file = MODULE_DIR + "m_averages.txt"
 
 def run_simulation():
     L = W = 12.5e-9; H = 5e-9;
