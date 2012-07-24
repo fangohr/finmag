@@ -6,8 +6,8 @@ from finmag.energies import Exchange, Demag
 from finmag.util.convert_mesh import convert_mesh
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
-initial_m_file = MODULE_DIR + "m_initial.txt"
-averages_file = MODULE_DIR + "m_averages.txt"
+initial_m_file = MODULE_DIR + "m0.txt"
+averages_file = MODULE_DIR + "averages.txt"
 mesh = df.Mesh(convert_mesh(MODULE_DIR + "mesh.geo"))
 mesh_centre = (5, 50, 50)
 Ms = 8.6e5
@@ -38,7 +38,7 @@ def run_simulation():
     sim.add(Demag())
     sim.llg.use_slonczewski(J=1e11, P=0.4, d=3e-9, p=(0, 1, 0))
     with open(averages_file, "w") as f:
-        dt = 5e-12; t_max = 5e-9; # integrator hiccups at 7e-9?
+        dt = 5e-12; t_max = 10e-9;
         for t in np.arange(0, t_max, dt):
             sim.run_until(t)
             f.write("{} {} {} {}\n".format(t, *sim.m_average))
