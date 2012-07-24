@@ -136,15 +136,17 @@ namespace finmag { namespace llg {
                 double const &m0, double const &m1, double const &m2,
                 double const &p0, double const &p1, double const &p2,
                 double &dm0, double &dm1, double &dm2) {
+
             const double gamma_LL = gamma / (1 + pow(alpha, 2));
-            const double stt_const_coeff = J * h_bar / (mu_0 * Ms * e * d);
+            const double a_P = 4 * pow(sqrt(P) / (1 + P), 3);
+            const double stt_const_coeff = - J * h_bar / (mu_0 * Ms * e * d);
 
             const double mp = m0 * p0 + m1 * p1 + m2 * p2;
             const double mm = m0 * m0 + m1 * m1 + m2 * m2;
-            const double stt_coeff = gamma_LL * stt_const_coeff * 4 * P / (5 + 3 * mp); 
-            dm0 += stt_coeff * (alpha * cross0(m0, m1, m2, p0, p1, p2) - (mp * m0 - mm * p0));
-            dm1 += stt_coeff * (alpha * cross1(m0, m1, m2, p0, p1, p2) - (mp * m1 - mm * p1));
-            dm2 += stt_coeff * (alpha * cross2(m0, m1, m2, p0, p1, p2) - (mp * m2 - mm * p2));
+            const double stt_coeff = gamma_LL * stt_const_coeff * a_P / (3 + mp - 4 * a_P); 
+            dm0 += - alpha * stt_coeff * cross0(m0, m1, m2, p0, p1, p2) + stt_coeff * (mp * m0 - mm * p0);
+            dm1 += - alpha * stt_coeff * cross1(m0, m1, m2, p0, p1, p2) + stt_coeff * (mp * m1 - mm * p1);
+            dm2 += - alpha * stt_coeff * cross2(m0, m1, m2, p0, p1, p2) + stt_coeff * (mp * m2 - mm * p2);
         }
 
         /*
