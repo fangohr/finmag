@@ -2,7 +2,7 @@
 #define	DEMAG_NFFT_H
 
 
-#include "config.h"
+//#include "config.h"
 
 
 #include <complex.h>
