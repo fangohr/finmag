@@ -36,7 +36,7 @@ def run_simulation():
     sim.alpha = 0.01
     sim.add(Exchange(1.3e-11))
     sim.add(Demag())
-    sim.llg.use_slonczewski(J=1e11, P=0.4, d=3e-9, p=(0, 1, 0))
+    sim.llg.use_slonczewski(J=0.1e12, P=0.4, d=10e-9, p=(0, 1, 0))
     with open(averages_file, "w") as f:
         dt = 5e-12; t_max = 10e-9;
         for t in np.arange(0, t_max, dt):
