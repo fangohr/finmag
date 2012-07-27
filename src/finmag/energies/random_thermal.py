@@ -5,8 +5,14 @@ from energy_base import AbstractEnergy
 
 class RandomThermal(AbstractEnergy):
     """
-    Thermal field.
-    From Simone, JAP 40, 942 (2007) and Phys. Rev. Lett. 90, 20 (2003)
+    Thermal field from Simone, 
+
+    E. Martínez, L. López-Díaz, L. Torres and C.J. García-Cervera.
+    Minimizing cell size dependence in micromagnetics simulations with thermal noise.
+    J. Phys. D: Appl. Phys., vol. 40, pages 942-948, 2007. 
+
+    and
+    Phys. Rev. Lett. 90, 20 (2003) ???
 
     """
     def __init__(self, alpha, gamma):
