@@ -12,13 +12,13 @@ averages_file = MODULE_DIR + "averages.txt"
 mesh = df.Mesh(convert_mesh(MODULE_DIR + "mesh.geo"))
 
 def run_simulation():
-    L = W = 12.5e-9; H = 5e-9;
+    L = W = 12.5e-9; H = 2.5e-9;
     sim = Sim(mesh, Ms=8.6e5, unit_length=1e-9)
     sim.set_m((1, 0.01, 0.01))
     sim.alpha = 0.014
     sim.gamma = 221017
 
-    H_app_mT = np.array([0.2, 0.2, 10.0])
+    H_app_mT = np.array([0.0, 0.0, 10.0])
     H_app_SI = H_app_mT / (1000 * mu0)
     sim.add(Zeeman(tuple(H_app_SI)))
 
@@ -28,7 +28,7 @@ def run_simulation():
     J = I / (L * W) # current density in A/m^2
     theta = 40.0 * pi/180; phi = pi/2 # polarisation direction
     p = (sin(theta)*cos(phi), sin(theta)*sin(phi), cos(theta))
-    sim.llg.use_slonczewski(J=J, P=0.4, d=5e-9, p=(0, 1, 0))
+    sim.llg.use_slonczewski(J=J, P=0.4, d=H, p=p)
 
     with open(averages_file, "w") as f:
         dt = 10e-12; t_max = 10e-9;
