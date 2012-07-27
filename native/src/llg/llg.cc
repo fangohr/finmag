@@ -128,28 +128,6 @@ namespace finmag { namespace llg {
         }
 
         /*
-        Compute the Slonczewski spin-torque term for one node.
-        */
-        void slonczewski_i(
-                const double alpha, const double gamma,
-                const double J, const double P, const double d, const double Ms,
-                double const &m0, double const &m1, double const &m2,
-                double const &p0, double const &p1, double const &p2,
-                double &dm0, double &dm1, double &dm2) {
-
-            const double gamma_LL = gamma / (1 + pow(alpha, 2));
-            const double a_P = 4 * pow(sqrt(P) / (1 + P), 3);
-            const double stt_const_coeff = - J * h_bar / (mu_0 * Ms * e * d);
-
-            const double mp = m0 * p0 + m1 * p1 + m2 * p2;
-            const double mm = m0 * m0 + m1 * m1 + m2 * m2;
-            const double stt_coeff = gamma_LL * stt_const_coeff * a_P / (3 + mp - 4 * a_P); 
-            dm0 += - alpha * stt_coeff * cross0(m0, m1, m2, p0, p1, p2) + stt_coeff * (mp * m0 - mm * p0);
-            dm1 += - alpha * stt_coeff * cross1(m0, m1, m2, p0, p1, p2) + stt_coeff * (mp * m1 - mm * p1);
-            dm2 += - alpha * stt_coeff * cross2(m0, m1, m2, p0, p1, p2) + stt_coeff * (mp * m2 - mm * p2);
-        }
-
-        /*
         Set the values of dm/dt to zero for all nodes in pins.
         */
         void pin(const np_array<double> &dmdt, const np_array<long> &pins) {
@@ -215,6 +193,51 @@ namespace finmag { namespace llg {
             pin(dmdt, pins);
         }
     
+        /*
+         * Compute the Slonczewski/Xiao spin-torque term.
+         */
+        void slonczewski_xiao_i(
+                const double alpha, const double gamma, const double lambda,
+                const double J, const double P, const double d, const double Ms,
+                double const &m0, double const &m1, double const &m2,
+                double const &p0, double const &p1, double const &p2,
+                double &dm0, double &dm1, double &dm2) {
+            const double gamma_LL = gamma / (1 + pow(alpha, 2));
+            const double epsilon = P * pow(lambda, 2) / (pow(lambda, 2) + 1 + (pow(lambda, 2) - 1) * (m0*p0 + m1*p1 + m2*p2));
+            const double stt_coeff = gamma_LL * J * h_bar / (mu_0 * Ms * e * d) * epsilon;
+
+            const double mm = m0 * m0 + m1 * m1 + m2 * m2; /* for the triple product expansion */
+            const double mp = m0 * p0 + m1 * p1 + m2 * p2;
+
+            /* stt_coeff * (alpha * m x p - m x (m x p)) */
+            dm0 += stt_coeff * (alpha * cross0(m0,m1,m2, p0,p1,p2) - (mp * m0 - mm * p0));
+            dm1 += stt_coeff * (alpha * cross1(m0,m1,m2, p0,p1,p2) - (mp * m1 - mm * p1));
+            dm2 += stt_coeff * (alpha * cross2(m0,m1,m2, p0,p1,p2) - (mp * m2 - mm * p2));
+        }
+
+        /*
+        Compute the Slonczewski spin-torque term for one node.
+        */
+        void slonczewski_i(
+                const double alpha, const double gamma,
+                const double J, const double P, const double d, const double Ms,
+                double const &m0, double const &m1, double const &m2,
+                double const &p0, double const &p1, double const &p2,
+                double &dm0, double &dm1, double &dm2) {
+
+            const double gamma_LL = gamma / (1 + pow(alpha, 2));
+            const double mm = m0 * m0 + m1 * m1 + m2 * m2;
+            const double mp = m0 * p0 + m1 * p1 + m2 * p2;
+
+            const double a_P = 4 * pow(sqrt(P) / (1 + P), 3);
+            const double stt_coeff = gamma_LL * J * h_bar / (mu_0 * Ms * e * d) * a_P / (3 + mp - 4 * a_P); 
+
+            dm0 += stt_coeff * (alpha * cross0(m0, m1, m2, p0, p1, p2) - (mp * m0 - mm * p0));
+            dm1 += stt_coeff * (alpha * cross1(m0, m1, m2, p0, p1, p2) - (mp * m1 - mm * p1));
+            dm2 += stt_coeff * (alpha * cross2(m0, m1, m2, p0, p1, p2) - (mp * m2 - mm * p2));
+        }
+
+
         void calc_llg_slonczewski_dmdt(
                 const np_array<double> &m,
                 const np_array<double> &H,
@@ -245,7 +268,8 @@ namespace finmag { namespace llg {
                 damping_i(*alpha[i], gamma, m0[i], m1[i], m2[i], h0[i], h1[i], h2[i], dm0[i], dm1[i], dm2[i]);
                 relaxation_i(0.1/char_time, m0[i], m1[i], m2[i], dm0[i], dm1[i], dm2[i]);
                 precession_i(*alpha[i], gamma, m0[i], m1[i], m2[i], h0[i], h1[i], h2[i], dm0[i], dm1[i], dm2[i]);
-                slonczewski_i(*alpha[i], gamma, J, P, d, Ms, m0[i], m1[i], m2[i], p0[i], p1[i], p2[i], dm0[i], dm1[i], dm2[i]);
+                //slonczewski_i(*alpha[i], gamma, J, P, d, Ms, m0[i], m1[i], m2[i], p0[i], p1[i], p2[i], dm0[i], dm1[i], dm2[i]);
+                slonczewski_xiao_i(*alpha[i], gamma, 2, J, P, d, Ms, m0[i], m1[i], m2[i], p0[i], p1[i], p2[i], dm0[i], dm1[i], dm2[i]);
             }
             pin(dmdt, pins);
         }
