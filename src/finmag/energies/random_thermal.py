@@ -1,0 +1,41 @@
+import numpy as np
+import dolfin as df
+from finmag.util.consts import mu0, k_B
+from energy_base import AbstractEnergy
+
+class RandomThermal(AbstractEnergy):
+    """
+    Thermal field.
+    From Simone, JAP 40, 942 (2007) and Phys. Rev. Lett. 90, 20 (2003)
+
+    """
+    def __init__(self, alpha, gamma):
+        """
+        alpha could be a numpy array or a number
+
+        """
+        self.in_jacobian = False
+        self.alpha = alpha
+        self.gamma = gamma
+        self.last_update_t = 0
+        self.dt = 0
+
+    def setup(self, S3, m, Ms, unit_length=1):
+        mesh = S3.mesh()
+        n_dim = mesh.topology().dim()
+        self.V = df.assemble(df.Constant(1) * df.dx, mesh=mesh) * unit_length ** n_dim
+        self.Ms = Ms
+        self.output_shape = df.Function(S3).vector().array().shape
+
+    def update(self, t, T):
+        self.dt = t - self.last_update_t
+        self.last_update_t = t
+        self.T = T
+
+    def compute_field(self):
+        rnd = np.random.normal(loc=0.0, scale=1.0, shape=self.output_shape)
+        amplitude = np.sqrt((10 * 2 * self.alpha * k_B * self.T) / (self.gamma * mu0 * self.Ms * self.V * self.dt))
+        return amplitude * rnd
+
+    def compute_energy(self):
+        return 0 
