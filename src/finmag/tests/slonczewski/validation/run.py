@@ -23,13 +23,13 @@ def run_simulation():
     sim.add(Zeeman(tuple(H_app_SI)))
 
     sim.add(Exchange(1.3e-11))
-    sim.add(UniaxialAnisotropy(1e5, (0, 0, 1)))
+    sim.add(UniaxialAnisotropy(-1e5, (0, 0, 1)))
 
     I = 5e-5 # current in A
     J = I / (L * W) # current density in A/m^2
     theta = 40.0 * pi/180; phi = pi/2 # polarisation direction
     p = (sin(theta)*cos(phi), sin(theta)*sin(phi), cos(theta))
-    sim.llg.use_slonczewski(J=J, P=0.4, d=5e-9, p=(0, 1, 0))
+    sim.llg.use_slonczewski(J=J, P=0.4, d=H, p=p)
 
     with open(averages_file, "w") as f:
         dt = 5e-12; t_max = 10e-9;
