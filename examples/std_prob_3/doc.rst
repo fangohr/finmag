@@ -14,3 +14,5 @@ The individual energy contributions and the spatially averaged magnetisation nee
 The code used here is
 
 .. literalinclude:: ../examples/std_prob_3/run.py
+
+Note, that the results are not generated each time the documentation is built, because that would roughly add half an hour of computation time to it.
