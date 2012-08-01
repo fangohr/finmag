@@ -135,10 +135,16 @@ namespace finmag { namespace llg {
 
             pins.check_ndim(1, "pins");
             const int nb_pins = pins.dim()[0];
+            const int nodes = dmdt.dim()[1];
+
+            int pin;
             for (int i = 0; i < nb_pins; i++) {
-                dm0[*pins[i]] = 0;
-                dm1[*pins[i]] = 0;
-                dm2[*pins[i]] = 0;
+                pin = * pins[i];
+                if ( pin >= 0 && pin < nodes ) {
+                    dm0[pin] = 0;
+                    dm1[pin] = 0;
+                    dm2[pin] = 0;
+                }
             }
         }
 
