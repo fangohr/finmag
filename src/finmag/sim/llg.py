@@ -70,6 +70,8 @@ class LLG(object):
                 self._pins = np.array(nodes, dtype="int")
             else:
                 logger.error("Indices of pinned nodes should be in [0, {}), were [{}, {}].".format(nb_nodes_mesh, min(nodes), max(nodes)))
+        else:
+            self._pins = np.array([], dtype="int")
     def pins(self):
         return self._pins
     pins = property(pins, set_pins)
