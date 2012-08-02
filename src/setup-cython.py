@@ -18,15 +18,29 @@ except:
     sys.exit(1)
 
 
-# scan the 'dvedit' directory for extension files, converting
+# scan the directory for extension files, converting
 # them to extension names in dotted notation
 files_to_ignore = ['llg.py',
-                'bem_computation_tests.py',
-                'test_hello.py',
-                'native_compiler.py',
-                'solver_base.py',    # abstrtact method
-                'energy_base.py',    # abstract method
-                'oommf_calculator']  # oommf/test_mesh.py fails
+                   'bem_computation_tests.py',
+                   'test_hello.py',
+                   'native_compiler.py',
+#                   'solver_base.py',        # abstract method
+#                   'energy_base.py',        # abstract method
+                   'oommf_calculator.py',   # oommf/test_mesh.py fails
+                   'magpar.py',             # +3 failures
+                   'consts.py',             # +37 failures when compiled.
+                   'solid_angle_magpar.py', # +1 failure
+                   'arraytools.py',         # +1 failure
+                   'material.py',           # +1 failure
+                   'solver_gcr.py',         # +2 failures
+                   'helpers.py',            # +1 failure
+                   '__init__.py',            # +2 failures (but only
+                                            # finmag.sim.integrator.__init__),
+                                            # not other __init__
+                                            # files.
+                   'test_mesh.py',          # py.test will not read a .so, no
+                   'solver_fk_test.py'      # point compiling these two test-files.
+                   ]
 
 directories_to_ignore = ['tests']
 
@@ -55,7 +69,6 @@ def makeExtension(extName):
         include_dirs=[libincludedir, "."],   # adding the '.' to include_dirs
                                              # is CRUCIAL!!
         #extra_compile_args = ["-O3", "-Wall"],
-        #extra_link_args = ['-g'],
         #libraries = ["dv",],
         )
 
@@ -68,9 +81,14 @@ extensions = [makeExtension(name) for name in extNames]
 print "extNames are\n", extNames
 #print "extensions are\n", extensions
 
+with open ('extension_names.txt','w') as ext_name_f:
+    for ext_name in extNames:
+        ext_name_f.write(ext_name + '\n')
+
+
 # finally, we can pass all this to distutils
 setup(
-  name="dvedit",
+  name="finmag",
   packages=["finmag", "finmag.energies", "finmag.sim", 'finmag.util'],
   ext_modules=extensions,
   cmdclass={'build_ext': build_ext},

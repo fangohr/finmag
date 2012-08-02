@@ -34,15 +34,15 @@ class AbstractEnergy(object):
     """
     __metaclass__ = abc.ABCMeta
 
-    @abc.abstractmethod
+    #@abc.abstractmethod
     def setup(S3, m, Ms, unit_length):
         return
 
-    @abc.abstractmethod
+    #@abc.abstractmethod
     def compute_field(self):
         return
 
-    @abc.abstractmethod
+    #@abc.abstractmethod
     def compute_energy(self):
         return
 
