@@ -23,9 +23,9 @@ parser = argparse.ArgumentParser(description='Parse the logging level.')
 parser.add_argument("-v", "--verbosity", default="debug",
         choices=("debug", "info", "warning", "error", "critical"),
         help="Set the logging level.")
-args = parser.parse_args()
+args = parser.parse_known_args()
 logging_level = {"debug": logging.DEBUG, "info": logging.INFO,
-    "warning": logging.WARNING, "error": logging.ERROR}[args.verbosity]
+    "warning": logging.WARNING, "error": logging.ERROR}[args[0].verbosity]
 logger.setLevel(logging_level)
 
 def parse_logging_level(s, values=logging._levelNames):
