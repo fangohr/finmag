@@ -524,7 +524,7 @@ void fastsum_trafo(fastsum_plan *plan) {
         ymax[t] = plan->y[3*j+t] + plan->eps_I;
       }
         plan->f[j] = plan->mv2.f[j]+SearchTree(0, plan->x, plan->alpha, ymin, ymax, plan->N_source, plan->Ad, plan->Add, plan->p);
-  ;
+
     }
 
 
