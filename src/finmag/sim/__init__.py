@@ -1,4 +1,5 @@
 import logging
+import argparse
 from finmag.util import configuration, ansistrm
 import dolfin as df
 
@@ -12,18 +13,20 @@ _DOLFIN_LOG_LEVELS = {
     "PROGRESS": df.PROGRESS,
 }
 
-# create logger
-logger = logging.getLogger(name='finmag')
-
 # Note: dolfin uses the default logger ('root'). Se we should
 # use a separate one to be able to
 # control levels of details separately for finmag and dolfin.
 # Here we setup this logger with name 'finmag'
+logger = logging.getLogger(name='finmag')
 
-#change this to get more detailed output
-logger.setLevel(logging.INFO)
-logger.setLevel(logging.DEBUG)
-
+parser = argparse.ArgumentParser(description='Parse the logging level.')
+parser.add_argument("-v", "--verbosity", default="debug",
+        choices=("debug", "info", "warning", "error", "critical"),
+        help="Set the logging level.")
+args = parser.parse_known_args()
+logging_level = {"debug": logging.DEBUG, "info": logging.INFO,
+    "warning": logging.WARNING, "error": logging.ERROR}[args[0].verbosity]
+logger.setLevel(logging_level)
 
 def parse_logging_level(s, values=logging._levelNames):
     if s is None:

@@ -48,14 +48,30 @@ class LLG(object):
         #               0.1e12 1/s is the value used by default in nmag 0.2
         self.Ms = 8.6e5 # A/m saturation magnetisation
         self.t = 0.0 # s
-        self.pins = [] # nodes where the magnetisation gets pinned
         self._pre_rhs_callables=[]
         self._post_rhs_callables=[]
         self._m = df.Function(self.S3)
+        self.pins = [] # nodes where the magnetisation gets pinned
         self.interactions = []
     
     def set_pins(self, nodes):
-        self._pins = np.array(nodes, dtype="int")
+        """
+        Hold the magnetisation constant for certain nodes in the mesh.
+
+        Pass the indices of the pinned sites as *nodes*. Any type of sequence
+        is fine, as long as the indices are between 0 (inclusive) and the highest index.
+        This means you CANNOT use python style indexing with negative offsets counting
+        backwards.
+
+        """
+        if len(nodes) > 0:
+            nb_nodes_mesh = len(self._m.vector().array())/3
+            if min(nodes) >= 0 and max(nodes) < nb_nodes_mesh:
+                self._pins = np.array(nodes, dtype="int")
+            else:
+                logger.error("Indices of pinned nodes should be in [0, {}), were [{}, {}].".format(nb_nodes_mesh, min(nodes), max(nodes)))
+        else:
+            self._pins = np.array([], dtype="int")
     def pins(self):
         return self._pins
     pins = property(pins, set_pins)
