@@ -132,7 +132,7 @@ class FemBemDeMagSolver(object):
             raise NotImplementedError("""Only methods currently implemented are
                                     * 'magpar',
                                     * 'project'""")
-    @abc.abstractmethod
+    #@abc.abstractmethod
     def solve():
         return
 

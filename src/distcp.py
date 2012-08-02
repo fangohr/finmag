@@ -1,9 +1,8 @@
-#files_to_ignore = ['llg.py']
-directories_to_ignore = ['build']
-targetdir = "/tmp/finmag"
+directories_to_ignore = ['build','__pycache__']
 
 import os
 import shutil
+import argparse
 
 
 def cp_file(sourcedir, filename, targetdir):
@@ -49,6 +48,12 @@ def distcp():
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Copy FinMag files to alternative location')
+    parser.add_argument('destination-dir', type=str, help='The directory to copy FinMag files to')
+    args = parser.parse_args()
+
+    targetdir = vars(args)['destination-dir']
+
     if not os.path.exists(targetdir):
         os.makedirs(targetdir)
     distcp()
