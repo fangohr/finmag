@@ -155,6 +155,9 @@ class EnergyBase(AbstractEnergy):
             unit_length
                 unit_length of distances in mesh.
         """
+
+        ###license_placeholder###
+
         timings.start(self._timingsname('setup'))
 
         self.S3 = S3
