@@ -40,7 +40,7 @@ _weights=(
  0.4786286704993665,
  0.2369268850561887))
     
-def compute_gauss_coeff(n):
+def compute_gauss_coeff_triangle(n):
     c=np.zeros(n*n)
     x=np.zeros(n*n)
     y=np.zeros(n*n)
@@ -49,11 +49,29 @@ def compute_gauss_coeff(n):
     ws=_weights[n-1]
     for i in range(n):
         for j in range(n):
-            c[k]=(1-xs[i])*ws[i]*ws[j]/8.0
             x[k]=(1+xs[i])/2.0
             y[k]=(1-xs[i])*(1+xs[j])/4.0
+            c[k]=(1-xs[i])*ws[i]*ws[j]/8.0
             k+=1
     return x,y,c
+
+def compute_gauss_coeff_tetrahedron(n):
+    c=np.zeros(n**3)
+    x=np.zeros(n**3)
+    y=np.zeros(n**3)
+    z=np.zeros(n**3)
+    index=0
+    xs=_nodes[n-1]
+    ws=_weights[n-1]
+    for i in range(n):
+        for j in range(n):
+            for k in range(n):
+                x[index]=(1+xs[i])/2.0
+                y[index]=(1-xs[i])*(1+xs[j])/4.0
+                z[index]=(1-xs[i])*(1-xs[j])*(1+xs[k])/8.0
+                c[index]=(1-xs[i])*(1-xs[i])*(1-xs[j])*ws[i]*ws[j]*ws[k]/64.0
+                index+=1
+    return x,y,z,c
 
 
 def length(p1,p2):
@@ -170,11 +188,12 @@ def plot_points(data1,data2):
 
 class DemagNFFT():
     
-    def __init__(self,Vv, m, Ms,t_n=3):
+    def __init__(self,Vv, m, Ms,s_n=3,v_n=2):
         self.m=m
         self.Vv=Vv
         self.Ms=Ms
-	self.t_n=t_n
+	self.s_n=s_n
+        self.v_n=v_n
         self.mesh=Vv.mesh()
         self.V=FunctionSpace(self.mesh, 'Lagrange', 1)
         self.phi = Function(self.V)
@@ -184,12 +203,15 @@ class DemagNFFT():
 	self.node_area=compute_node_area(self.mesh)
 	self.cell_vol=compute_cell_volume(self.mesh)
 	
-	self.t_x,self.t_y,self.t_w=compute_gauss_coeff(t_n)
-        """
-        print self.t_x
-        print self.t_y
-        print self.t_w
-        """
+	self.t_x,self.t_y,self.t_w=compute_gauss_coeff_triangle(s_n)
+        self.v_x,self.v_y,self.v_z,self.v_w=compute_gauss_coeff_tetrahedron(v_n)
+        
+        print self.v_x
+        print self.v_y
+        print self.v_z
+        print self.v_w
+        
+        
         u = TrialFunction(self.V)
         v = TestFunction(self.Vv)
         a = inner(grad(u), v)*dx
@@ -213,11 +235,11 @@ class DemagNFFT():
         self.face_nodes=[]
         self.face_norms=[]
 	for face in df.faces(self.mesh):
-		cells = face.entities(3)
-		if len(cells)==1:
-			face_nodes=face.entities(0)
-                        self.face_nodes.append(face_nodes)
-                        self.face_norms.append(face.normal())
+            cells = face.entities(3)
+            if len(cells)==1:
+                face_nodes=face.entities(0)
+                self.face_nodes.append(face_nodes)
+                self.face_norms.append(face.normal())
 			
 
         self.s_nodes=[]
@@ -268,7 +290,63 @@ class DemagNFFT():
 
         self.s_nodes=np.array(self.s_nodes)
         self.s_weight=np.array(self.s_weight)
-                
+
+    def compute_affine_transformation_volume(self):
+        v = TestFunction(self.V)
+        K = df.assemble(df.div(self.m) * v * df.dx)
+        L = df.assemble(v * df.dx)
+        rho = K.array()/L.array()
+        print 'rho=\n',rho
+        
+        cs=self.mesh.coordinates()
+        m=self.m.vector().array()
+        n=len(m)/3
+        print cs
+        def compute_divergence(cell):
+            i=cell.entities(0)
+            x1,y1,z1=cs[i[1]]-cs[i[0]]
+            x2,y2,z2=cs[i[2]]-cs[i[0]]
+            x3,y3,z3=cs[i[3]]-cs[i[0]]
+            m0 = np.array([m[i[0]],m[i[0]+n],m[i[0]+2*n]])
+            m1 = np.array([m[i[1]],m[i[1]+n],m[i[1]+2*n]]) - m0
+            m2 = np.array([m[i[2]],m[i[2]+n],m[i[2]+2*n]]) - m0
+            m3 = np.array([m[i[3]],m[i[3]+n],m[i[3]+2*n]]) - m0
+            a1 = [y3*z2 - y2*z3, -x3*z2 + x2*z3, x3*y2 - x2*y3]
+            a2 = [-y3*z1 + y1*z3, x3*z1 - x1*z3, -x3*y1 + x1*y3]
+            a3 = [y2*z1 - y1*z2, -x2*z1 + x1*z2, x2*y1 - x1*y2]
+            v = x3*y2*z1 - x2*y3*z1 - x3*y1*z2 + x1*y3*z2 + x2*y1*z3 - x1*y2*z3
+
+            tmp=0
+            for j in range(3):
+                tmp += a1[j]*m1[j]+a2[j]*m2[j]+a3[j]*m3[j]
+
+            tmp=tmp/v
+            return tmp,abs(v)
+        
+        self.v_nodes=[]
+	self.v_weight=[]
+        self.vol_density=[]
+	for cell in df.cells(self.mesh):
+            i=cell.entities(0)
+            rho,det=compute_divergence(cell)
+
+            x0,y0,z0=cs[i[0]]
+            c11,c12,c13=cs[i[1]]-cs[i[0]]
+            c21,c22,c23=cs[i[2]]-cs[i[0]]
+            c31,c32,c33=cs[i[3]]-cs[i[0]]
+            
+            for j in range(len(self.v_w)):
+                x=c11*self.v_x[j]+c21*self.v_y[j]+c31*self.v_z[j]+x0
+                y=c12*self.v_x[j]+c22*self.v_y[j]+c32*self.v_z[j]+y0
+                z=c13*self.v_x[j]+c23*self.v_y[j]+c33*self.v_z[j]+z0
+
+                self.vol_density.append(rho)
+                self.v_nodes.append([x,y,z])
+                self.v_weight.append(det*self.v_w[j])
+
+        self.v_nodes=np.array(self.v_nodes)
+        self.v_weight=np.array(self.v_weight)
+        self.vol_density=np.array(self.vol_density)
 
     def compute_charge_density(self):
 
@@ -281,7 +359,7 @@ class DemagNFFT():
     
             t=self.face_norms[i]
             for j in f_c:
-		cf[i]+=(m[j]*t.x()+m[n+j]*t.y()+m[n+2*j]*t.z())*self.Ms/3.0
+		cf[i]+=(m[j]*t.x()+m[n+j]*t.y()+m[n*2+j]*t.z())*self.Ms/3.0
 			
         self.sigma=cf
         
@@ -389,20 +467,27 @@ class DemagNFFT():
 	return demag_field.array()/self.L
 	    
 
+
     
 if __name__ == "__main__":
    
     mesh = UnitSphere(5)
-    mesh = UnitCube(4, 4, 4)
+    mesh = UnitCube(1, 1, 1)
     
     mesh.coordinates()[:]*=0.2
     
     Vv = df.VectorFunctionSpace(mesh, 'Lagrange', 1)
     
     Ms=8.6e5
+    expr = df.Expression(('1+x[0]', '1+2*x[1]','1+3*x[2]'))
     m = project(Constant((1, 0, 0)), Vv)
+    m = project(expr, Vv)
+
+    demag=DemagNFFT(Vv,m,Ms,s_n=2)
+    demag.compute_affine_transformation_volume()
     
-      
+    
+    """
     def compute_error(field):
         
         field.shape=((3,-1))
@@ -419,7 +504,7 @@ if __name__ == "__main__":
         
         demag.sum_using_nfft()
         print 'sum_nfft\n',demag.phi.vector().array()
-        """
+        
         field=demag.compute_field()
         print 't_n=',tn,compute_error(field),'after correction',
         
