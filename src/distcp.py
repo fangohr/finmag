@@ -15,19 +15,39 @@ def cp_file(sourcedir, filename, targetdir):
         os.makedirs(targetdir)
 
     path = os.path.join(sourcedir, filename)
+    
     if filename.endswith('.py'):
         if os.path.exists(path[:-3] + ".so"):
-            if filename == "__init__.py":
+            if filename != "__init__.py":
                 # create empty init.py file
-                f = open(os.path.join(targetdir, "__init__.py"), "w")
-                f.close()
-            return  # don't copy that Python file because we have a .so
+                #f = open(os.path.join(targetdir, "__init__.py"), "w")
+                #f.close()
+                print "skipping py-file %s as a so exists" % filename
+                return  # don't copy that Python file because we have a .so
+
+        if os.path.exists(path[:-3] + ".pyc"):
+            if (
+                ('test' not in filename) and 
+                (filename != "__init__.py") and 
+                (filename != "run_nmag_Eexch.py") # for a test that
+                                                  # passes this
+                                                  # filename to nsim
+                ):
+                print 'skipping py-file %s as suitable pyc exists' % filename
+                return # don't copy any .pyc test-files
+
     elif filename.endswith('pyc'):
-        print "Skipping pyc file (%s)" % filename
-        return
+        if (('test' in filename) 
+            or filename.startswith('__init__')
+            or (os.path.exists(path[:-4] + ".so"))):
+
+            print "Skipping pyc file (%s) as it is a test or init, or a .so exists" % filename
+            return
+    
     elif filename.endswith('c'):
         print "Skipping .c   file (%s)" % filename
         return
+    
     print("Copying %s" % path)
     shutil.copyfile(path, os.path.join(targetdir, filename))
 
