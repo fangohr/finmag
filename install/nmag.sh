@@ -8,9 +8,17 @@ echo "apt-get install g++ libblas-dev libreadline-dev make m4 gawk zlib1g-dev re
 sudo apt-get install g++ libblas-dev libreadline-dev make m4 gawk zlib1g-dev readline-common liblapack-dev 
 
 
-PREFIX="$HOME" # EDIT HERE.
-#or maybe
-#PREFIX=/usr/local/
+# The default installation location is $HOME. Set
+# the PREFIX environment variable to change this.
+PREFIX=${PREFIX:-$HOME}  # or maybe use PREFIX=/usr/local ?
+
+echo "Installing nmag in '$PREFIX'. Set the PREFIX environment variable to specify a different location."
+
+# create installation directory if it doesn't exist
+if ! [ -e ${PREFIX} ]; then
+   install -d ${PREFIX};
+   echo "Creating directory $PREFIX";
+fi
 
 source="nmag-0.2.1"
 TARBALLNAME="$source.tar.gz"
@@ -36,5 +44,3 @@ fi
 cd $source
 
 make
-
-

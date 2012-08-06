@@ -6,10 +6,21 @@
 # It will also install the needed ubuntu packages.
 #
 
-PREFIX="$HOME" # EDIT HERE.
+# The default installation location is $HOME. Set
+# the PREFIX environment variable to change this.
+PREFIX=${PREFIX:-$HOME}
+
+echo "Installing oommf in '$PREFIX'. Set the PREFIX environment variable to specify a different location."
+
 
 # install prerequisites
 sudo apt-get install tk-dev tcl-dev
+
+# create installation directory if it doesn't exist
+if ! [ -e ${PREFIX} ]; then
+   install -d ${PREFIX};
+   echo "Creating directory $PREFIX";
+fi
 
 # download and extract oommf
 cd $PREFIX
