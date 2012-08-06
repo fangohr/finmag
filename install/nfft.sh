@@ -33,7 +33,7 @@ fi
 
 
 cd $source
-./configure
+./configure --prefix=${PREFIX}
 make
 sudo make install
 
@@ -41,4 +41,4 @@ echo "export LD_LIBRARY_PATH=/usr/local/lib:\$LD_LIBRARY_PATH" >> ~/.bashrc
 
 cd $bak
 cd ../devtests/nfft/
-python setup.py build_ext --inplace
+NFFT_DIR=${PREFIX} python setup.py build_ext --inplace
