@@ -35,9 +35,16 @@ fi
 cd $source
 ./configure --prefix=${PREFIX}
 make
-sudo make install
+make install
 
-echo "export LD_LIBRARY_PATH=/usr/local/lib:\$LD_LIBRARY_PATH" >> ~/.bashrc
+echo "================================================================"
+echo "To have access to libnfft, please add the following line to your"
+echo "shell configuration file (for example .bashrc):"
+echo ""
+echo "   export LD_LIBRARY_PATH=\"${PREFIX}/lib:\$LD_LIBRARY_PATH\""
+echo "================================================================"
+
+#echo "export LD_LIBRARY_PATH=${PREFIX}/lib:\$LD_LIBRARY_PATH" >> ~/.bashrc
 
 cd $bak
 cd ../devtests/nfft/
