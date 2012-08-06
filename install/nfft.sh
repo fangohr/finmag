@@ -3,7 +3,17 @@
 #needs gfortran installed
 sudo apt-get install libfftw3-dev
 
-PREFIX="$HOME" # EDIT HERE.
+# The default installation location is $HOME. Set
+# the PREFIX environment variable to change this.
+PREFIX=${PREFIX:-$HOME}  # or maybe use PREFIX=/usr/local ?
+
+echo "Installing nfft in '$PREFIX'. Set the PREFIX environment variable to specify a different location."
+
+# create installation directory if it doesn't exist
+if ! [ -e ${PREFIX} ]; then
+   install -d ${PREFIX};
+   echo "Creating directory $PREFIX";
+fi
 
 source=nfft-3.2.0
 
