@@ -13,7 +13,7 @@ namespace finmag {
 	#define MT19973_SHIFT_T 15
 	#define MT19973_SHIFT_L 18
 
-	#define	MT19973_RAND_MAX 4294967295
+	#define	MT19973_RAND_MAX 4294967295u
 
 	static unsigned int MT[MT19937_N];
 	static unsigned int mt19937_matrix[2] = { 0, MT19937_MATRIX_A };
