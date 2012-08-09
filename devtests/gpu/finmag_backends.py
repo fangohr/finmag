@@ -28,7 +28,7 @@ def run_finmag():
 	endtime = time.time()
 
 	# Write output to results.txt
-	output = open(MODULE_DIR + "/results.txt", "a")
+	output = open(os.path.join(MODULE_DIR, "results.txt"), "a")
         output.write("\nBackend %s:\n" % df.parameters["linear_algebra_backend"])
 	output.write("\nSetup: %.3f sec.\n" % (dynamicsstart-setupstart))
 	output.write("Dynamics: %.3f sec.\n\n" % (endtime-dynamicsstart))
@@ -36,8 +36,8 @@ def run_finmag():
 	output.close()
 
 # Need a clean file
-if os.path.isfile(MODULE_DIR + "/results.txt"):
-    os.remove(MODULE_DIR + "/results.txt")
+if os.path.isfile(os.path.join(MODULE_DIR, "results.txt")):
+    os.remove(os.path.join(MODULE_DIR, "results.txt"))
 
 df.parameters["linear_algebra_backend"] = "PETSc"
 run_finmag()

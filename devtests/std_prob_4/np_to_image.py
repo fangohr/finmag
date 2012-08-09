@@ -4,12 +4,12 @@ import numpy as np
 from finmag.util.convert_mesh import convert_mesh
 from finmag.util.helpers import quiver, read_float_data
 
-MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
-mesh_file = MODULE_DIR + "bar.geo"
-initial_m_file = MODULE_DIR + "m_init.txt"
-zero_crossing_m_file = MODULE_DIR + "m_zero.txt"
-averages_m_file = MODULE_DIR + "m_averages.txt"
-averages_m_file_martinez = MODULE_DIR + "m_averages_martinez.txt"
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
+mesh_file = os.path.join(MODULE_DIR, "bar.geo")
+initial_m_file = os.path.join(MODULE_DIR, "m_init.txt")
+zero_crossing_m_file = os.path.join(MODULE_DIR, "m_zero.txt")
+averages_m_file = os.path.join(MODULE_DIR, "m_averages.txt")
+averages_m_file_martinez = os.path.join(MODULE_DIR, "m_averages_martinez.txt")
 
 # plots of average magnetisation components
 
@@ -40,7 +40,7 @@ plt.xlabel("$\mathrm{time}\, (\mathrm{ns})$")
 plt.ylabel("$<m_i> = <M_i>/M_\mathrm{S}$")
 plt.legend()
 plt.xlim([0,2])
-plt.savefig(MODULE_DIR+"m_averages.pdf")
+plt.savefig(os.path.join(MODULE_DIR, "m_averages.pdf"))
 
 import sys; sys.exit()
 # 3D plots for magnetisation at t0 and at zero crossing
