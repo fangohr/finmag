@@ -4,6 +4,7 @@ import math
 from finmag import Simulation
 from finmag.util.consts import mu0
 from finmag.energies import Zeeman, Exchange, ThinFilmDemag
+from point_contacts import point_contacts
 
 alpha = 0.012 # dimensionless
 gamma = 2.210173e5 # m/(As), our value
@@ -34,4 +35,12 @@ sim = Simulation(mesh, Ms)
 sim.add(Zeeman((0, 0, 1.1 * Ms))) # section 3 and end of section 5
 sim.add(Exchange(A))
 sim.add(ThinFilmDemag())
+
+# Spin-Torque
+J = point_contacts([(220e-9, 220e-9)], radius=10e-9, J=1e11)
+P = 0.4
+d = H
+p = (0, 0, 1)
+sim.llg.use_slonczewski(J, P, d, p)
+
 sim.run_until(1e-10)
