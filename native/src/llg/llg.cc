@@ -243,7 +243,6 @@ namespace finmag { namespace llg {
             dm2 += stt_coeff * (alpha * cross2(m0, m1, m2, p0, p1, p2) - (mp * m2 - mm * p2));
         }
 
-
         void calc_llg_slonczewski_dmdt(
                 const np_array<double> &m,
                 const np_array<double> &H,
@@ -253,7 +252,7 @@ namespace finmag { namespace llg {
                 double gamma,
                 const np_array<double> &alpha,
                 double char_time,
-                const double J,
+                const np_array<double> &J,
                 const double P,
                 const double d,
                 const double Ms,
@@ -266,6 +265,9 @@ namespace finmag { namespace llg {
             p.check_shape(3, nodes, "calc_llg_dmdt: p");
             double *p0 = p(0), *p1 = p(1), *p2 = p(2); 
 
+            J.check_ndim(1, "calc_llg_slonczewski_dmdt: J");
+            J.check_shape(nodes, "calc_llg_slonczewski_dmdt: J");
+
             finmag::util::scoped_gil_release release_gil;
 
             // calculate dmdt
@@ -274,8 +276,7 @@ namespace finmag { namespace llg {
                 damping_i(*alpha[i], gamma, m0[i], m1[i], m2[i], h0[i], h1[i], h2[i], dm0[i], dm1[i], dm2[i]);
                 relaxation_i(0.1/char_time, m0[i], m1[i], m2[i], dm0[i], dm1[i], dm2[i]);
                 precession_i(*alpha[i], gamma, m0[i], m1[i], m2[i], h0[i], h1[i], h2[i], dm0[i], dm1[i], dm2[i]);
-                //slonczewski_i(*alpha[i], gamma, J, P, d, Ms, m0[i], m1[i], m2[i], p0[i], p1[i], p2[i], dm0[i], dm1[i], dm2[i]);
-                slonczewski_xiao_i(*alpha[i], gamma, 2, J, P, d, Ms, m0[i], m1[i], m2[i], p0[i], p1[i], p2[i], dm0[i], dm1[i], dm2[i]);
+                slonczewski_xiao_i(*alpha[i], gamma, 2, *J[i], P, d, Ms, m0[i], m1[i], m2[i], p0[i], p1[i], p2[i], dm0[i], dm1[i], dm2[i]);
             }
             pin(dmdt, pins);
         }

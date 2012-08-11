@@ -296,7 +296,8 @@ class LLG(object):
 
         """  
         self.do_slonczewski = True
-        self.J = J
+        J = df.interpolate(J, self.S1)
+        self.J = J.vector().array()
         assert P >= 0.0 and P <= 1.0
         self.P = P
         self.d = d
