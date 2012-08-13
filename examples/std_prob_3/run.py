@@ -7,7 +7,7 @@ from scipy.optimize import bisect
 from finmag import Simulation
 from finmag.energies import UniaxialAnisotropy, Exchange, Demag
 
-MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 """
 Micromag Standard Problem #3
@@ -63,7 +63,7 @@ def run_simulation(lfactor, m_init, m_init_name=""):
 
     # Save average magnetisation.
     mx, my, mz = sim.llg.m_average
-    with open(MODULE_DIR + "data_m.txt", "a") as f:
+    with open(os.path.join(MODULE_DIR, "data_m.txt"), "a") as f:
         t = time.asctime()
         f.write("{} {} {} {} {} {}\n".format(m_init_name, lfactor, mx, my, mz, t))
 
@@ -74,7 +74,7 @@ def run_simulation(lfactor, m_init, m_init_name=""):
     e_demag = demag.compute_energy() / (sim.Volume * Km)
     e_total = e_exc + e_anis + e_demag # relative total energy density
 
-    with open(MODULE_DIR + "data_energies.txt", "a") as f:
+    with open(os.path.join(MODULE_DIR, "data_energies.txt"), "a") as f:
         t = time.asctime()
         f.write("{} {} {} {} {} {} {}\n".format(m_init_name,
             lfactor, e_total, e_exc, e_anis, e_demag, t))
@@ -86,7 +86,7 @@ def energy_difference(lfactor):
     e_vortex = run_simulation(lfactor, vortex_init, "vortex")
     e_flower = run_simulation(lfactor, flower_init, "flower")
     diff = e_vortex - e_flower
-    with open(MODULE_DIR + "data_diffs.txt", "a") as f:
+    with open(os.path.join(MODULE_DIR, "data_diffs.txt"), "a") as f:
         t = time.asctime()
         f.write("{} {} {} {} {}\n".format(lfactor, e_vortex, e_flower, diff, t))
     return diff

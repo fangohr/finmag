@@ -26,12 +26,12 @@ def test_exchange_energy_density():
     MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
     # run nmag
-    cmd = "nsim %s/run_nmag_Eexch.py --clean" % MODULE_DIR
+    cmd = "nsim %s --clean" % os.path.join(MODULE_DIR, "run_nmag_Eexch.py")
     status, output = commands.getstatusoutput(cmd)
     if status != 0:
         print output
         sys.exit("Error %d: Running %s failed." % (status, cmd))
-    nmag_data = np.load("%s/nmag_exchange_energy_density.npy" % MODULE_DIR)
+    nmag_data = np.load(os.path.join(MODULE_DIR, "nmag_exchange_energy_density.npy"))
 
     # run finmag
     mesh = df.Interval(100, 0, 10e-9)

@@ -6,9 +6,9 @@ from finmag import Simulation
 from finmag.energies import UniaxialAnisotropy, Exchange, Demag
 
 
-MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-mesh = df.Mesh(convert_mesh(MODULE_DIR + "two-cubes.geo"))
+mesh = df.Mesh(convert_mesh(os.path.join(MODULE_DIR, "two-cubes.geo")))
 
 
 

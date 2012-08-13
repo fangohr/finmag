@@ -6,7 +6,7 @@ from finmag.util.helpers import stats
 from finmag.util.oommf import mesh
 from finmag.util.oommf.comparison import compare_exchange 
 
-MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 Ms = 8.6e6
 A = 1.3e-11
 
@@ -44,4 +44,4 @@ if __name__ == '__main__':
     plt.loglog(vertices, mean_diffs, "--")
     plt.loglog(vertices, mean_diffs, "o", label="1d problem")
     plt.legend()
-    plt.savefig(MODULE_DIR + "exchange_convergence.png")
+    plt.savefig(os.path.join(MODULE_DIR, "exchange_convergence.png"))

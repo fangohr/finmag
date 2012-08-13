@@ -19,7 +19,7 @@ def test_energy():
     # The dolfin UnitSphere gives a coarse and low quality mesh.
     # Use this instead when the lindholm formulation is implemented.
     # Then we can also set TOL = 1.5e-3
-    #mesh = df.Mesh(convert_mesh(MODULE_DIR + "/sphere_fine.geo"))
+    #mesh = df.Mesh(convert_mesh(os.path.join(MODULE_DIR, "sphere_fine.geo")))
 
     # Using unit sphere mesh
     mesh = df.UnitSphere(10)
@@ -47,7 +47,7 @@ def test_energy():
         res[demagtype]["nrg"] = E_exact
         assert rel_error < TOL, "Relative error is %g, should be zero" % rel_error
 
-    output = open(MODULE_DIR + "/demagenergies.txt", "w")
+    output = open(os.path.join(MODULE_DIR, "demagenergies.txt"), "w")
     for demagtype in ["FK","GCR"]:
         output.write("%s Demag energy %s\n"%(demagtype,str(res[demagtype]["nrg"])))
         output.write("%s Relative error %s\n"%(demagtype,str(res[demagtype]["relE"])))                  

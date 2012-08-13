@@ -38,8 +38,8 @@ def setup_module(module=None):
 
     t = 0; t1 = 5e-10; dt = 1e-11; # s
 
-    av_f = open(MODULE_DIR + "/averages.txt", "w")
-    tn_f = open(MODULE_DIR + "/third_node.txt", "w")
+    av_f = open(os.path.join(MODULE_DIR, "averages.txt"), "w")
+    tn_f = open(os.path.join(MODULE_DIR, "third_node.txt"), "w")
 
     global averages
     averages = []
@@ -95,7 +95,7 @@ def test_averages():
     reflects the difference beetween non-zero components.
 
     """
-    ref = np.array(h.read_float_data(MODULE_DIR + "/averages_ref.txt"))
+    ref = np.array(h.read_float_data(os.path.join(MODULE_DIR, "averages_ref.txt")))
     computed = np.array(averages)
 
     dt = ref[:,0] - computed[:,0]
@@ -111,7 +111,7 @@ def test_averages():
 def test_third_node():
     REL_TOLERANCE = 6e-3
 
-    ref = np.array(h.read_float_data(MODULE_DIR + "/third_node_ref.txt"))
+    ref = np.array(h.read_float_data(os.path.join(MODULE_DIR, "third_node_ref.txt")))
     computed = np.array(third_node)
 
     dt = ref[:,0] - computed[:,0]
@@ -135,11 +135,11 @@ def test_m_cross_H():
     """ 
     REL_TOLERANCE = 8e-8
 
-    m_ref = np.genfromtxt(MODULE_DIR + "/m_t0_ref.txt")
+    m_ref = np.genfromtxt(os.path.join(MODULE_DIR, "m_t0_ref.txt"))
     m_computed = h.vectors(m_t0)
     assert m_ref.shape == m_computed.shape
 
-    H_ref = np.genfromtxt(MODULE_DIR + "/exc_t0_ref.txt")
+    H_ref = np.genfromtxt(os.path.join(MODULE_DIR, "exc_t0_ref.txt"))
     H_computed = h.vectors(H_exc_t0)
     assert H_ref.shape == H_computed.shape
 

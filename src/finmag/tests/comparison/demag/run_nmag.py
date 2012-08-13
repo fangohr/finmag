@@ -3,7 +3,7 @@ import numpy as np
 import nmag
 from nmag import SI
 
-MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 #create simulation object
 sim = nmag.Simulation()

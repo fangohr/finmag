@@ -44,7 +44,7 @@ krylov_iter = {k:copy.deepcopy(iterdict) for k in finmagsolvers.keys()}
 
 def printsolverparams(mesh,m):
     # Write output to linsolveparams.rst
-    output = open(MODULE_DIR + "/linsolveparams.rst", "w")
+    output = open(os.path.join(MODULE_DIR, "linsolveparams.rst"), "w")
     for demagtype in finmagsolvers.keys():
         
         #create a solver to read out it's default linear solver data

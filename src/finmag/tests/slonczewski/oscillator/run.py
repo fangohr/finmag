@@ -5,10 +5,10 @@ from finmag import Simulation as Sim
 from finmag.energies import Exchange, Demag
 from finmag.util.convert_mesh import convert_mesh
 
-MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
-initial_m_file = MODULE_DIR + "m0.txt"
-averages_file = MODULE_DIR + "averages.txt"
-mesh = df.Mesh(convert_mesh(MODULE_DIR + "mesh.geo"))
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
+initial_m_file = os.path.join(MODULE_DIR, "m0.txt")
+averages_file = os.path.join(MODULE_DIR, "averages.txt")
+mesh = df.Mesh(convert_mesh(os.path.join(MODULE_DIR, "mesh.geo")))
 mesh_centre = (5, 50, 50)
 Ms = 8.6e5
 

@@ -11,8 +11,8 @@ def setup_module(module):
     f.run_simulation()
 
 def test_compare_averages():
-    ref = h.read_float_data(MODULE_DIR + "/averages_ref.txt")
-    computed = h.read_float_data(MODULE_DIR + "/averages.txt")
+    ref = h.read_float_data(os.path.join(MODULE_DIR, "averages_ref.txt"))
+    computed = h.read_float_data(os.path.join(MODULE_DIR, "averages.txt"))
 
     highest_diff = 0
     for i in range(len(computed)):

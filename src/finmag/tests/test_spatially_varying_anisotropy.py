@@ -6,7 +6,7 @@ import dolfin as df
 from finmag import Simulation
 from finmag.energies import UniaxialAnisotropy, Exchange, Demag
 
-MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 """
 Trying to test spatially varying anisotropy.
 """

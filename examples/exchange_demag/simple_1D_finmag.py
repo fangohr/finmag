@@ -7,8 +7,8 @@ import os, commands
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # run nmag
-commands.getstatusoutput("nsim %s/simple_1D_nmag.py --clean" % MODULE_DIR)
-nd = np.load("%s/nmag_hansconf.npy" % MODULE_DIR)
+commands.getstatusoutput("nsim %s --clean" % os.path.join(MODULE_DIR, "simple_1D_nmag.py"))
+nd = np.load(os.path.join(MODULE_DIR, "nmag_hansconf.npy"))
 
 # run finmag
 mesh = df.Interval(100, 0, 10e-9)
@@ -53,5 +53,5 @@ upper_axis.tick_params(labeltop="off")
 lower_axis.xaxis.tick_bottom()
 
 #plt.show()
-plt.savefig(MODULE_DIR + "/simple1D.png")
+plt.savefig(os.path.join(MODULE_DIR, "simple1D.png"))
 plt.close()

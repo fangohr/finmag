@@ -77,7 +77,7 @@ def test_deviations_over_alpha_and_tol(number_of_alphas=5, do_plot=False):
         plt.ylabel("deviation")
         plt.xlabel(r"$\alpha$")
         plt.ylim((0, 1e-6))
-        plt.savefig(MODULE_DIR+"/deviation_over_alpha_rtols.pdf")
+        plt.savefig(os.path.join(MODULE_DIR, "deviation_over_alpha_rtols.pdf"))
 
 if __name__ == '__main__':
     test_deviations_over_alpha_and_tol(100, do_plot=True)

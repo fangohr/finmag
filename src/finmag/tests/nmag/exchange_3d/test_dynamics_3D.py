@@ -11,8 +11,8 @@ def setup_module(module):
     s.run_simulation()
 
 def test_compare_averages():
-    ref = h.read_float_data(MODULE_DIR + "/averages_ref.txt")
-    computed = h.read_float_data(MODULE_DIR + "/averages.txt")
+    ref = h.read_float_data(os.path.join(MODULE_DIR, "averages_ref.txt"))
+    computed = h.read_float_data(os.path.join(MODULE_DIR, "averages.txt"))
 
     for i in range(len(computed)):
         t_ref, mx_ref, my_ref, mz_ref = ref[i]

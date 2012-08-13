@@ -65,7 +65,7 @@ def test_external_field_depends_on_t():
     pylab.plot(tlist,mz,label='m_z')
     pylab.xlabel('time [s]')
     pylab.legend()
-    pylab.savefig(MODULE_DIR + '/results.png')
+    pylab.savefig(os.path.join(MODULE_DIR, 'results.png'))
     pylab.close()
 
     #if max_step is not provided, or chosen too large,
@@ -77,7 +77,7 @@ def test_external_field_depends_on_t():
     pylab.plot(tlist,hext,'-x')
     pylab.ylabel('external field [A/m]')
     pylab.xlabel('time [s]')
-    pylab.savefig(MODULE_DIR + '/hext.png')
+    pylab.savefig(os.path.join(MODULE_DIR, 'hext.png'))
     pylab.close()
 
     #Then try to fit sinusoidal curve through results
@@ -99,7 +99,7 @@ def test_external_field_depends_on_t():
         print "popt=",popt
 
         fittedomega,fittedphi,fittedA,fittedB=popt
-        f=open(MODULE_DIR + "/fittedresults.txt","w")
+        f=open(os.path.join(MODULE_DIR, "fittedresults.txt"),"w")
 
         print >>f, "Fitted omega           : %9g" % (fittedomega)
         print >>f, "Rel error in omega fit : %9g" % ((fittedomega-omega)/omega)
@@ -112,7 +112,7 @@ def test_external_field_depends_on_t():
                    '-x',label='m_y - fit')
         pylab.xlabel('time [s]')
         pylab.legend()
-        pylab.savefig(MODULE_DIR + '/fit.png')
+        pylab.savefig(os.path.join(MODULE_DIR, 'fit.png'))
         deviation = np.sqrt(sum((sinusoidalfit(np.array(tlist),*popt)-my)**2))/len(tlist)
         print >>f, "stddev=%g" % deviation
         f.close()
