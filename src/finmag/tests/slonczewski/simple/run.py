@@ -7,9 +7,9 @@ from finmag.energies import Exchange, Zeeman
 from finmag.util.convert_mesh import convert_mesh
 from finmag.util.consts import mu0
 
-MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
-averages_file = MODULE_DIR + "averages.txt"
-mesh = df.Mesh(convert_mesh(MODULE_DIR + "mesh.geo"))
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
+averages_file = os.path.join(MODULE_DIR, "averages.txt")
+mesh = df.Mesh(convert_mesh(os.path.join(MODULE_DIR, "mesh.geo")))
 
 def run_simulation():
     L = W = 12.5e-9; H = 2.5e-9;

@@ -5,7 +5,7 @@ from finmag.util import helpers
 
 epsilon = 1e-16
 tolerance = 1e-3
-nmag_file = sim.MODULE_DIR + "averages_nmag5.txt"
+nmag_file = os.path.join(sim.MODULE_DIR, "averages_nmag5.txt")
 
 def _test_oscillator():
     if not os.path.exists(sim.initial_m_file):

@@ -50,7 +50,7 @@ def run_simulation():
     r = ode(llg_wrap).set_integrator("vode", method="bdf", rtol=1e-5, atol=1e-5)
     r.set_initial_value(llg.m, t0)
 
-    fh = open(MODULE_DIR + "/averages.txt", "w")
+    fh = open(os.path.join(MODULE_DIR, "averages.txt"), "w")
     while r.successful() and r.t <= t1:
         print "Integrating time = %gs" % (r.t)
         mx, my, mz = llg.m_average

@@ -4,7 +4,7 @@ import numpy as np
 from finmag.energies import Exchange
 from finmag.util.helpers import vectors, norm, stats, sphinx_sci as s
 
-MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 x0 = 0; x1 = 20e-9; xn = 10;
 Ms = 0.86e6; A = 1.3e-11
@@ -49,7 +49,7 @@ def setup_finmag():
 
 def teardown_finmag(finmag):
     finmag["table"] += table_delim
-    with open(MODULE_DIR + "table.rst", "w") as f:
+    with open(os.path.join(MODULE_DIR, "table.rst"), "w") as f:
         f.write(finmag["table"])
 
 def pytest_funcarg__finmag(request):
@@ -60,11 +60,11 @@ def pytest_funcarg__finmag(request):
 def test_against_nmag(finmag):
     REL_TOLERANCE = 2e-14
 
-    m_ref = np.genfromtxt(MODULE_DIR + "m0_nmag.txt")
+    m_ref = np.genfromtxt(os.path.join(MODULE_DIR, "m0_nmag.txt"))
     m_computed = vectors(finmag["m"].vector().array())
     assert m_ref.shape == m_computed.shape
 
-    H_ref = np.genfromtxt(MODULE_DIR + "H_exc_nmag.txt")
+    H_ref = np.genfromtxt(os.path.join(MODULE_DIR, "H_exc_nmag.txt"))
     H_computed = vectors(finmag["H"].vector().array())
     assert H_ref.shape == H_computed.shape
 

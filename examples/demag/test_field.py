@@ -18,7 +18,7 @@ def test_field():
     """
 
     # Using mesh with radius 10 nm (nmag ex. 1)
-    mesh = df.Mesh(convert_mesh(MODULE_DIR + "/sphere1.geo"))
+    mesh = df.Mesh(convert_mesh(os.path.join(MODULE_DIR, "sphere1.geo")))
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
     m = df.interpolate(df.Constant((1, 0, 0)), S3)
 

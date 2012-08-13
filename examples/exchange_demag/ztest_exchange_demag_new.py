@@ -31,7 +31,7 @@ MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 REL_TOLERANCE = 1e-4
 Ms = 0.86e6
 unit_length = 1e-9
-mesh = df.Mesh(convert_mesh(MODULE_DIR + "/bar30_30_100.geo"))
+mesh = df.Mesh(convert_mesh(os.path.join(MODULE_DIR, "bar30_30_100.geo")))
 
 demagsolvers = ["GCR"]
 
@@ -48,8 +48,8 @@ def run_finmag(demagsolver):
     demag = Demag(solver=demagsolver)
     sim.add(demag)
 
-    fh = open(MODULE_DIR + "/%saverages.txt" % (demagsolver), "w")
-    fe = open(MODULE_DIR + "/%senergies.txt" % (demagsolver), "w")
+    fh = open(os.path.join(MODULE_DIR, demagsolver+"averages.txt"), "w")
+    fe = open(os.path.join(MODULE_DIR, demagsolver+"energies.txt"), "w")
 
     # Progressbar
     bar = pb.ProgressBar(maxval=60, \
@@ -86,21 +86,21 @@ def run_finmag(demagsolver):
                 finmag_exch.append(exch_energy([15, 15, i]))
                 finmag_demag.append(demag_energy([15, 15, i]))
             # Store data
-            np.save(MODULE_DIR + "/finmag%s_exch_density.npy"%demagsolver, np.array(finmag_exch))
-            np.save(MODULE_DIR + "/finmag%s_demag_density.npy"%demagsolver, np.array(finmag_demag))
+            np.save(os.path.join(MODULE_DIR, "finmag%s_exch_density.npy"%demagsolver), np.array(finmag_exch))
+            np.save(os.path.join(MODULE_DIR, "finmag%s_demag_density.npy"%demagsolver), np.array(finmag_demag))
     fh.close()
     fe.close()
 
 def test_compare_averages():
     for demagsolver in demagsolvers:     
-        if not os.path.isfile(MODULE_DIR + "/%saverages.txt"%demagsolver):
+        if not os.path.isfile(os.path.join(MODULE_DIR, demagsolver+"averages.txt")):
             run_finmag(demagsolver)
-        elif (os.path.getctime(MODULE_DIR + "/%saverages.txt"%demagsolver) <
+        elif (os.path.getctime(os.path.join(MODULE_DIR, demagsolver+"averages.txt")) <
               os.path.getctime(os.path.abspath(__file__))):
             run_finmag(demagsolver)
 
-        computed = np.array(h.read_float_data(MODULE_DIR + "/%saverages.txt"%demagsolver))
-        ref = np.array(h.read_float_data(MODULE_DIR + "/%saverages_ref.txt"%demagsolver))
+        computed = np.array(h.read_float_data(os.path.join(MODULE_DIR, demagsolver"averages.txt")))
+        ref = np.array(h.read_float_data(os.path.join(MODULE_DIR, demagsolver+"averages_ref.txt")))
         dt = ref[:,0] - computed[:,0]
         assert np.max(dt) < 1e-15, "Compare timesteps."
 
@@ -137,7 +137,7 @@ def test_compare_averages():
         p.ylabel("m")
         p.title("Finmag%s vs Nmag"%demagsolver)
         p.legend(loc='center right')
-        p.savefig(MODULE_DIR + "/%sexchange_demag.png"%demagsolver)
+        p.savefig(os.path.join(MODULE_DIR, demagsolver+"exchange_demag.png"))
         #p.show
         p.close()
         print "Comparison of development written to %sexchange_demag.png"%demagsolver
@@ -148,14 +148,14 @@ def test_compare_energies():
     #Dictionary for finmag demag results
     demag = {}
     for demagsolver in demagsolvers:
-        ref = np.array(h.read_float_data(MODULE_DIR + "/%senergies_ref.txt"%demagsolver))
-        if not (os.path.isfile(MODULE_DIR + "/%senergies.txt"%demagsolver)):
+        ref = np.array(h.read_float_data(os.path.join(MODULE_DIR, demagsolver+"energies_ref.txt")))
+        if not (os.path.isfile(os.path.join(MODULE_DIR, demagsolver+"energies.txt"))):
             run_finmag(demagsolver)
-        elif (os.path.getctime(MODULE_DIR + "/%senergies.txt"%demagsolver) <
+        elif (os.path.getctime(os.path.join(MODULE_DIR, demagsolver+"energies.txt")) <
               os.path.getctime(os.path.abspath(__file__))):
             run_finmag(demagsolver)
 
-        computed = np.array(h.read_float_data(MODULE_DIR + "/%senergies.txt"%demagsolver))
+        computed = np.array(h.read_float_data(os.path.join(MODULE_DIR, demagsolver+"energies.txt")))
         assert np.size(ref) == np.size(computed), "Compare number of energies."
 
         vol = df.assemble(df.Constant(1)*df.dx, mesh=mesh)*unit_length**mesh.topology().dim()
@@ -177,10 +177,10 @@ def test_compare_energies():
 
         diff = abs(demag[demagsolver] - demag_nmag)
         rel_diff = np.abs(diff / max(demag[demagsolver]))
-        print "Finmag %s Nmag Demag energy, max relative error:"%demagsolver, max(rel_diff)
+        print "Finmag %s Nmag Demag energy, max relative error: %g"%(demagsolver, max(rel_diff))
         # Don't really know why this is ten times higher than everyting else.
         assert max(rel_diff) < REL_TOLERANCE*10, \
-                "Max relative error in Finmag %s Nmag demag energy is" %(demagsolver,max(rel_diff))
+                "Max relative error in Finmag %s Nmag demag energy is %g" %(demagsolver,max(rel_diff))
 
     # Plot both FK and GCR demags on the same plot.
     p.title("Finmag vs Nmag Exchange energy")
@@ -190,7 +190,7 @@ def test_compare_energies():
     p.xlabel("Time step")
     p.ylabel("$\mathsf{E_{exch}}$")
     p.legend()
-    p.savefig(MODULE_DIR + "/exchange_energy.png")
+    p.savefig(os.path.join(MODULE_DIR, "exchange_energy.png"))
     p.close()
     
     p.plot(demag_nmag, 'o', mfc='w', label='Nmag')
@@ -198,7 +198,7 @@ def test_compare_energies():
     p.xlabel("Time step")
     p.ylabel("$\mathsf{E_{demag}}$")
     p.legend()
-    p.savefig(MODULE_DIR + "/demag_energy.png")
+    p.savefig(os.path.join(MODULE_DIR, "demag_energy.png"))
     #p.show()%
     p.close()
     print "Energy plots written to exchange_energy.png and demag_energy.png"
@@ -215,41 +215,41 @@ def test_compare_energy_density():
     nmag_demag = {}
     for demagsolver in demagsolvers:
         # Run simulation only if not run before or changed since last time.
-        if not (os.path.isfile(MODULE_DIR + "/%sfinmag_exch_density.npy"%demagsolver)):
+        if not (os.path.isfile(os.path.join(MODULE_DIR, demagsolver+"finmag_exch_density.npy"))):
             run_finmag(demagsolver)
-        elif (os.path.getctime(MODULE_DIR + "/%sfinmag_exch_density.npy"%demagsolver) <
+        elif (os.path.getctime(os.path.join(MODULE_DIR, demagsolver+"finmag_exch_density.npy")) <
               os.path.getctime(os.path.abspath(__file__))):
             run_finmag(demagsolver)
-        if not (os.path.isfile(MODULE_DIR + "/%sfinmag_demag_density.npy"%demagsolver)):
+        if not (os.path.isfile(os.path.join(MODULE_DIR, demagsolver+"finmag_demag_density.npy"))):
             run_finmag(demagsolver)
-        elif (os.path.getctime(MODULE_DIR + "/%sfinmag_demag_density.npy"%demagsolver) <
+        elif (os.path.getctime(os.path.join(MODULE_DIR, demagsolver+"finmag_demag_density.npy")) <
               os.path.getctime(os.path.abspath(__file__))):
             run_finmag(demagsolver)
 
         # Read finmag data
-        finmag_exch = np.load(MODULE_DIR + "/%sfinmag_exch_density.npy"%demagsolver)
-        finmag_demag = np.load(MODULE_DIR + "/%sfinmag_demag_density.npy"%demagsolver)
+        finmag_exch = np.load(os.path.join(MODULE_DIR, demagsolver+"finmag_exch_density.npy"))
+        finmag_demag = np.load(os.path.join(MODULE_DIR, demagsolve+"finmag_demag_density.npy"))
 
         # Read nmag data
-        nmag_exch = [float(i) for i in open(MODULE_DIR + "/nmag_exch_Edensity.txt", "r").read().split()]
-        nmag_demag = [float(i) for i in open(MODULE_DIR + "/nmag_demag_Edensity.txt", "r").read().split()]
+        nmag_exch = [float(i) for i in open(os.path.join(MODULE_DIR, "nmag_exch_Edensity.txt"), "r").read().split()]
+        nmag_demag = [float(i) for i in open(os.path.join(MODULE_DIR, "nmag_demag_Edensity.txt"), "r").read().split()]
 
         # Compare with nmag
         nmag_exch[demagsolver] = np.array(nmag_exch)
         nmag_demag[demagsolver] = np.array(nmag_demag)
         rel_error_exch_nmag = np.abs(finmag_exch[demagsolver] - nmag_exch)/np.linalg.norm(nmag_exch)
         rel_error_demag_nmag = np.abs(finmag_demag[demagsolver] - nmag_demag)/np.linalg.norm(nmag_demag)
-        print "Finmag %s Exchange energy density, max relative error from nmag:"%(demagsolver, max(rel_error_exch_nmag))
-        print "Finmag %s Demag energy density, max relative error from nmag:"%demagsolver, max(rel_error_demag_nmag)
+        print "Finmag %s Exchange energy density, max relative error from nmag: %g"%(demagsolver, max(rel_error_exch_nmag))
+        print "Finmag %s Demag energy density, max relative error from nmag: %g"%(demagsolver, max(rel_error_demag_nmag))
         assert max(rel_error_exch_nmag) < 3e-2, \
             "Finmag %s Exchange energy density, max relative error from nmag is %g" %(demagsolver,max(rel_error_exch_nmag))
         assert max(rel_error_demag_nmag) < 1e-2, \
             "Finmag %s Demag energy density, max relative error from nmag is %g" %(demagsolver,max(rel_error_demag_nmag))
     
     # Read oommf data
-    oommf_exch = np.genfromtxt(MODULE_DIR + "/oommf_exch_Edensity.txt")
-    oommf_demag = np.genfromtxt(MODULE_DIR + "/oommf_demag_Edensity.txt")
-    oommf_coords = np.genfromtxt(MODULE_DIR + "/oommf_coords_z_axis.txt") * 1e9
+    oommf_exch = np.genfromtxt(os.path.join(MODULE_DIR, "oommf_exch_Edensity.txt"))
+    oommf_demag = np.genfromtxt(os.path.join(MODULE_DIR, "oommf_demag_Edensity.txt"))
+    oommf_coords = np.genfromtxt(os.path.join(MODULE_DIR, "oommf_coords_z_axis.txt")) * 1e9
 
     # Compare with oomf - FIXME: doesn't work at the moment
     #rel_error_exch_oomf = np.abs(finmag_exch - oommf_exch)/np.linalg.norm(oommf_exch)
@@ -266,7 +266,7 @@ def test_compare_energy_density():
     p.xlabel("nm")
     p.title("Exchange energy density")
     p.legend(["Finmag FK","Finmag GCR", "Nmag", "oommf"], loc="upper center")
-    p.savefig(MODULE_DIR + "/exchange_density.png")
+    p.savefig(os.path.join(MODULE_DIR, "exchange_density.png"))
     p.close()
 
     # Plot demag energy density
@@ -279,7 +279,7 @@ def test_compare_energy_density():
     p.xlabel("nm")
     p.title("Demag energy density")
     p.legend(["Finmag FK","Finmag GCR", "Nmag", "oommf"], loc="upper center")
-    p.savefig(MODULE_DIR + "/demag_density.png")
+    p.savefig(os.path.join(MODULE_DIR, "demag_density.png"))
     #p.show()
     p.close()
     print "Energy density plots written to exchange_density.png and demag_density.png"

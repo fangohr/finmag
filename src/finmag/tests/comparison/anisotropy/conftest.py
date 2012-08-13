@@ -5,7 +5,7 @@ from finmag.util.convert_mesh import convert_mesh
 from finmag.energies import UniaxialAnisotropy
 from finmag.util.helpers import sphinx_sci as s
 
-MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def pytest_funcarg__finmag(request):
     finmag = request.cached_setup(setup=setup,
@@ -26,7 +26,7 @@ def m_gen(r):
 
 def setup():
     print "Running finmag..."
-    mesh = df.Mesh(convert_mesh(MODULE_DIR + "/bar.geo"))
+    mesh = df.Mesh(convert_mesh(os.path.join(MODULE_DIR, "bar.geo")))
     coords = np.array(zip(* mesh.coordinates()))
 
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
@@ -61,7 +61,7 @@ def start_table():
 
 def write_table(finmag):
     finmag["table"] += table_delim
-    with open(MODULE_DIR + "table.rst", "w") as f:
+    with open(os.path.join(MODULE_DIR, "table.rst"), "w") as f:
         f.write(finmag["table"])
 
 def table_entry(name, tol, rel_diff):

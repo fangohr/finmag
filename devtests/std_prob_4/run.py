@@ -5,11 +5,11 @@ from finmag.util.convert_mesh import convert_mesh
 from finmag import Simulation
 from finmag.energies import Zeeman, DiscreteTimeZeeman, Demag, Exchange
 
-MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
-mesh_file = MODULE_DIR + "bar.geo"
-initial_m_file = MODULE_DIR + "m_init.txt"
-average_m_file = MODULE_DIR + "m_averages.txt"
-zero_crossing_m_file = MODULE_DIR + "m_zero.txt"
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
+mesh_file = os.path.join(MODULE_DIR, "bar.geo")
+initial_m_file = os.path.join(MODULE_DIR, "m_init.txt")
+average_m_file = os.path.join(MODULE_DIR, "m_averages.txt")
+zero_crossing_m_file = os.path.join(MODULE_DIR, "m_zero.txt")
 
 """
 Micromag Standard Problem #4

@@ -30,4 +30,4 @@ sim.load_mesh(mesh_file_name,
               unit_length=mesh_unit)
 sim.set_m(m0)
 
-np.save(MODULE_DIR + "/nmag_hansconf.npy", sim.get_subfield("E_exch_Py"))
+np.save(os.path.join(MODULE_DIR, "nmag_hansconf.npy"), sim.get_subfield("E_exch_Py"))

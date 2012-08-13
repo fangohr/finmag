@@ -12,7 +12,7 @@ mat_Py = nmag.MagMaterial(name="Py",
 
 sim = nmag.Simulation("bar")
 
-sim.load_mesh(MODULE_DIR + "/bar.nmesh.h5",
+sim.load_mesh(os.path.join(MODULE_DIR, "bar.nmesh.h5"),
               [("Py", mat_Py)],
               unit_length=SI(1e-9,"m"))
 
@@ -28,7 +28,7 @@ for i in range(0, 61):
 
 endtime = time.time()
 
-output = open(MODULE_DIR + "/results.rst", "w")
+output = open(os.path.join(MODULE_DIR, "results.rst"), "w")
 output.write("Nmag results:\n")
 output.write("-------------\n")
 output.write("Setup: %.3f sec.\n" % (dynamicsstart-setupstart))

@@ -15,7 +15,7 @@ MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 REL_TOLERANCE = 1e-4
 Ms = 0.86e6
 unit_length = 1e-9
-mesh = df.Mesh(convert_mesh(MODULE_DIR + "/bar30_30_100.geo"))
+mesh = df.Mesh(convert_mesh(os.path.join(MODULE_DIR, "bar30_30_100.geo")))
 
 
 def run_finmag():
@@ -30,8 +30,8 @@ def run_finmag():
     demag = Demag(solver="FK")
     sim.add(demag)
 
-    fh = open(MODULE_DIR + "/averages.txt", "w")
-    fe = open(MODULE_DIR + "/energies.txt", "w")
+    fh = open(os.path.join(MODULE_DIR, "averages.txt"), "w")
+    fe = open(os.path.join(MODULE_DIR, "energies.txt"), "w")
 
     # Progressbar
     bar = pb.ProgressBar(maxval=60, \
@@ -64,21 +64,21 @@ def run_finmag():
                 finmag_exch.append(exch_energy([15, 15, i]))
                 finmag_demag.append(demag_energy([15, 15, i]))
             # Store data
-            np.save(MODULE_DIR + "/finmag_exch_density.npy", np.array(finmag_exch))
-            np.save(MODULE_DIR + "/finmag_demag_density.npy", np.array(finmag_demag))
+            np.save(os.path.join(MODULE_DIR, "finmag_exch_density.npy"), np.array(finmag_exch))
+            np.save(os.path.join(MODULE_DIR, "finmag_demag_density.npy"), np.array(finmag_demag))
 
     fh.close()
     fe.close()
 
 def test_compare_averages():
-    ref = np.array(h.read_float_data(MODULE_DIR + "/averages_ref.txt"))
-    if not os.path.isfile(MODULE_DIR + "/averages.txt"):
+    ref = np.array(h.read_float_data(os.path.join(MODULE_DIR, "averages_ref.txt")))
+    if not os.path.isfile(os.path.join(MODULE_DIR, "averages.txt")):
         run_finmag()
-    elif (os.path.getctime(MODULE_DIR + "/averages.txt") <
+    elif (os.path.getctime(os.path.join(MODULE_DIR, "averages.txt")) <
           os.path.getctime(os.path.abspath(__file__))):
         run_finmag()
 
-    computed = np.array(h.read_float_data(MODULE_DIR + "/averages.txt"))
+    computed = np.array(h.read_float_data(os.path.join(MODULE_DIR, "averages.txt")))
     dt = ref[:,0] - computed[:,0]
     assert np.max(dt) < 1e-15, "Compare timesteps."
 
@@ -114,22 +114,22 @@ def test_compare_averages():
     p.xlabel("time (s)")
     p.ylabel("$m$")
     p.legend(loc='center right')
-    p.savefig(MODULE_DIR + "/exchange_demag.pdf")
-    p.savefig(MODULE_DIR + "/exchange_demag.png")
+    p.savefig(os.path.join(MODULE_DIR, "exchange_demag.pdf"))
+    p.savefig(os.path.join(MODULE_DIR, "exchange_demag.png"))
 
     #p.show
     p.close()
     print "Comparison of development written to exchange_demag.pdf"
 
 def test_compare_energies():
-    ref = np.array(h.read_float_data(MODULE_DIR + "/energies_ref.txt"))
-    if not (os.path.isfile(MODULE_DIR + "/energies.txt")):
+    ref = np.array(h.read_float_data(os.path.join(MODULE_DIR, "energies_ref.txt")))
+    if not (os.path.isfile(os.path.join(MODULE_DIR, "energies.txt"))):
         run_finmag()
-    elif (os.path.getctime(MODULE_DIR + "/energies.txt") <
+    elif (os.path.getctime(os.path.join(MODULE_DIR, "energies.txt")) <
           os.path.getctime(os.path.abspath(__file__))):
         run_finmag()
 
-    computed = np.array(h.read_float_data(MODULE_DIR + "/energies.txt"))
+    computed = np.array(h.read_float_data(os.path.join(MODULE_DIR, "energies.txt")))
     assert np.size(ref) == np.size(computed), "Compare number of energies."
 
     vol = df.assemble(df.Constant(1)*df.dx, mesh=mesh)*unit_length**mesh.topology().dim()
@@ -162,8 +162,8 @@ def test_compare_energies():
     p.xlabel("time step")
     p.ylabel("$e_\mathrm{exch}\, (\mathrm{Jm^{-3}})$")
     p.legend()
-    p.savefig(MODULE_DIR + "/exchange_energy.pdf")
-    p.savefig(MODULE_DIR + "/exchange_energy.png")
+    p.savefig(os.path.join(MODULE_DIR, "exchange_energy.pdf"))
+    p.savefig(os.path.join(MODULE_DIR, "exchange_energy.png"))
     p.close()
 
     p.plot(demag_nmag, 'o', mfc='w', label='nmag')
@@ -171,8 +171,8 @@ def test_compare_energies():
     p.xlabel("time step")
     p.ylabel("$e_\mathrm{demag}\, (\mathrm{Jm^{-3}})$")
     p.legend()
-    p.savefig(MODULE_DIR + "/demag_energy.pdf")
-    p.savefig(MODULE_DIR + "/demag_energy.png")
+    p.savefig(os.path.join(MODULE_DIR, "demag_energy.pdf"))
+    p.savefig(os.path.join(MODULE_DIR, "demag_energy.png"))
     #p.show()
     p.close()
     print "Energy plots written to exchange_energy.pdf and demag_energy.pdf"
@@ -187,24 +187,24 @@ def test_compare_energy_density():
     R = range(100)
 
     # Run simulation only if not run before or changed since last time.
-    if not (os.path.isfile(MODULE_DIR + "/finmag_exch_density.npy")):
+    if not (os.path.isfile(os.path.join(MODULE_DIR, "finmag_exch_density.npy"))):
         run_finmag()
-    elif (os.path.getctime(MODULE_DIR + "/finmag_exch_density.npy") <
+    elif (os.path.getctime(os.path.join(MODULE_DIR, "finmag_exch_density.npy")) <
           os.path.getctime(os.path.abspath(__file__))):
         run_finmag()
-    if not (os.path.isfile(MODULE_DIR + "/finmag_demag_density.npy")):
+    if not (os.path.isfile(os.path.join(MODULE_DIR, "finmag_demag_density.npy"))):
         run_finmag()
-    elif (os.path.getctime(MODULE_DIR + "/finmag_demag_density.npy") <
+    elif (os.path.getctime(os.path.join(MODULE_DIR, "finmag_demag_density.npy")) <
           os.path.getctime(os.path.abspath(__file__))):
         run_finmag()
 
     # Read finmag data
-    finmag_exch = np.load(MODULE_DIR + "/finmag_exch_density.npy")
-    finmag_demag = np.load(MODULE_DIR + "/finmag_demag_density.npy")
+    finmag_exch = np.load(os.path.join(MODULE_DIR, "finmag_exch_density.npy"))
+    finmag_demag = np.load(os.path.join(MODULE_DIR, "finmag_demag_density.npy"))
 
     # Read nmag data
-    nmag_exch = [float(i) for i in open(MODULE_DIR + "/nmag_exch_Edensity.txt", "r").read().split()]
-    nmag_demag = [float(i) for i in open(MODULE_DIR + "/nmag_demag_Edensity.txt", "r").read().split()]
+    nmag_exch = [float(i) for i in open(os.path.join(MODULE_DIR, "nmag_exch_Edensity.txt"), "r").read().split()]
+    nmag_demag = [float(i) for i in open(os.path.join(MODULE_DIR, "nmag_demag_Edensity.txt"), "r").read().split()]
 
     # Compare with nmag
     nmag_exch = np.array(nmag_exch)
@@ -220,9 +220,9 @@ def test_compare_energy_density():
 
 
     # Read oommf data
-    oommf_exch = np.genfromtxt(MODULE_DIR + "/oommf_exch_Edensity.txt")
-    oommf_demag = np.genfromtxt(MODULE_DIR + "/oommf_demag_Edensity.txt")
-    oommf_coords = np.genfromtxt(MODULE_DIR + "/oommf_coords_z_axis.txt") * 1e9
+    oommf_exch = np.genfromtxt(os.path.join(MODULE_DIR, "oommf_exch_Edensity.txt"))
+    oommf_demag = np.genfromtxt(os.path.join(MODULE_DIR, "oommf_demag_Edensity.txt"))
+    oommf_coords = np.genfromtxt(os.path.join(MODULE_DIR, "oommf_coords_z_axis.txt")) * 1e9
 
     # Compare with oomf - FIXME: doesn't work at the moment
     #rel_error_exch_oomf = np.abs(finmag_exch - oommf_exch)/np.linalg.norm(oommf_exch)
@@ -237,8 +237,8 @@ def test_compare_energy_density():
     p.xlabel("$x\, (\mathrm{nm})$")
     p.ylabel("$e_\mathrm{exch}\, (\mathrm{Jm^{-3}})$")
     p.legend(["finmag", "nmag", "oommf"], loc="upper center")
-    p.savefig(MODULE_DIR + "/exchange_density.pdf")
-    p.savefig(MODULE_DIR + "/exchange_density.png")
+    p.savefig(os.path.join(MODULE_DIR, "exchange_density.pdf"))
+    p.savefig(os.path.join(MODULE_DIR, "exchange_density.png"))
     p.close()
 
     # Plot demag energy density
@@ -248,8 +248,8 @@ def test_compare_energy_density():
     p.xlabel("$x\, (\mathrm{nm})$")
     p.ylabel("$e_\mathrm{demag}\, (\mathrm{Jm^{-3}})$")
     p.legend(["finmag", "nmag", "oommf"], loc="upper center")
-    p.savefig(MODULE_DIR + "/demag_density.pdf")
-    p.savefig(MODULE_DIR + "/demag_density.png")
+    p.savefig(os.path.join(MODULE_DIR, "demag_density.pdf"))
+    p.savefig(os.path.join(MODULE_DIR, "demag_density.png"))
     #p.show()
     p.close()
     print "Energy density plots written to exchange_density.pdf and demag_density.pdf"

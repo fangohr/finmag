@@ -20,7 +20,7 @@ def run_simulation():
 
     t = 0; dt = 1e-11; tmax = 1e-9 # s
 
-    fh = open(MODULE_DIR + "/averages.txt", "w")
+    fh = open(os.path.join(MODULE_DIR, "averages.txt"), "w")
     while t <= tmax:
         mx, my, mz = sim.llg.m_average
         fh.write(str(t) + " " + str(mx) + " " + str(my) + " " + str(mz) + "\n")

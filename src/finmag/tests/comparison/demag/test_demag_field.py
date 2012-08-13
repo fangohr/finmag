@@ -6,13 +6,13 @@ from finmag.util.convert_mesh import convert_mesh
 from finmag.util.helpers import stats, sphinx_sci as s
 from finmag.util.magpar import compare_field_directly, compute_demag_magpar
 
-MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 table_delim   = "    " + "=" * 10 + (" " + "=" * 30) * 4 + "\n"
 table_entries = "    {:<10} {:<30} {:<30} {:<30} {:<30}\n"
 
 def setup_finmag():
-    mesh = df.Mesh(convert_mesh(MODULE_DIR + "sphere.geo"))
+    mesh = df.Mesh(convert_mesh(os.path.join(MODULE_DIR, "sphere.geo")))
 
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
     m = df.Function(S3)
@@ -27,7 +27,7 @@ def setup_finmag():
 
 def teardown_finmag(finmag):
     finmag["table"] += table_delim
-    with open(MODULE_DIR + "table.rst", "w") as f:
+    with open(os.path.join(MODULE_DIR, "table.rst"), "w") as f:
         f.write(finmag["table"])
 
 def start_table():
@@ -70,7 +70,7 @@ def test_using_nmag(finmag):
     REL_TOLERANCE = 5e-5
 
     H = finmag["H"].reshape((3, -1))
-    H_nmag = np.array(zip(* np.genfromtxt(MODULE_DIR + "H_demag_nmag.txt")))
+    H_nmag = np.array(zip(* np.genfromtxt(os.path.join(MODULE_DIR, "H_demag_nmag.txt"))))
     diff = np.abs(H - H_nmag)
     rel_diff = diff / np.sqrt(np.max(H_nmag[0]**2 + H_nmag[1]**2 + H_nmag[2]**2))
 

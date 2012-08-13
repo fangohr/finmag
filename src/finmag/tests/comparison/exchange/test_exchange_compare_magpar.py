@@ -14,7 +14,7 @@ REL_TOLERANCE = 9e-8 #needs higher accuracy patch
                      #for saved files to pass
                      #install magpar via finmag/install/magpar.sh to get this.
 
-MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def test_three_dimensional_problem():
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     print "max rel_diff",np.max(res["rel_diff"])
 
     """
-    prefix = MODULE_DIR + "_exch_"
+    prefix = os.path.join(MODULE_DIR, "_exch_")
     quiver(res["m0"], res["mesh"], prefix+"m0.png")
     quiver(res["exch"], res["mesh"], prefix+"exch.png")
     quiver(res["diff"], res["mesh"], prefix+"diff.png")

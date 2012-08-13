@@ -1,16 +1,17 @@
 import numpy as np
 import conftest as test
+import os
 from finmag.util.helpers import vectors, stats
 
 def test_against_nmag(finmag):
 
     REL_TOLERANCE = 7e-2
 
-    m_ref = np.genfromtxt(test.MODULE_DIR + "m0_nmag.txt")
+    m_ref = np.genfromtxt(os.path.join(test.MODULE_DIR, "m0_nmag.txt"))
     m_computed = vectors(finmag["m"].vector().array())
     assert m_ref.shape == m_computed.shape
 
-    H_ref = np.genfromtxt(test.MODULE_DIR + "H_anis_nmag.txt")
+    H_ref = np.genfromtxt(os.path.join(test.MODULE_DIR, "H_anis_nmag.txt"))
     H_computed = vectors(finmag["H"].vector().array())
     assert H_ref.shape == H_computed.shape
 

@@ -7,9 +7,9 @@ from finmag.energies import Exchange, UniaxialAnisotropy, Zeeman
 from finmag.util.convert_mesh import convert_mesh
 from finmag.util.consts import mu0
 
-MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
-averages_without = MODULE_DIR + "m_averages_without.txt"
-averages_with = MODULE_DIR + "m_averages_with.txt"
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
+averages_without = os.path.join(MODULE_DIR, "m_averages_without.txt")
+averages_with = os.path.join(MODULE_DIR, "m_averages_with.txt")
 
 L = W = 12.5e-9; H = 5e-9;
 mesh = df.Box(0, 0, 0, L, W, H, 5, 5, 2)

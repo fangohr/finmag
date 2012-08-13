@@ -9,7 +9,7 @@ from finmag.util.oommf import mesh
 
 K1 = 45e4 # J/m^3
 
-MODULE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/"
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 max_rdiffs = [[], []]
 mean_rdiffs = [[], []]
@@ -49,5 +49,5 @@ if __name__ == '__main__':
     plt.loglog(vertices[0], max_rdiffs[0], "b-.")
     plt.loglog(vertices[0], max_rdiffs[0], "bs", label="maximum")
     plt.legend()
-    plt.savefig(MODULE_DIR + "anis_convergence.png")
+    plt.savefig(os.path.join(MODULE_DIR, "anis_convergence.png"))
     plt.show()
