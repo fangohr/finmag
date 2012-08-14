@@ -16,6 +16,14 @@
 # The directory containing ng.tcl
 NETGENDIR ?= /usr/share/netgen/
 
+# The command to purge all untracked files in the repository.
+# If you use hg-git to inter-operate with the hg repository,
+# you may want to use:
+#
+#    PURGE_REPO_CMD = git clean -f -d
+#
+PURGE_REPO_CMD ?= hg purge --all
+
 # The absolute path for the project directory
 PROJECT_DIR = $(abspath .)
 
@@ -47,7 +55,7 @@ make-modules:
 clean:
 	make -C $(NATIVE_DIR) clean
 	rm -rf test-reports
-	hg purge --all
+	$(PURGE_REPO_CMD)
 
 % : %.c
 
