@@ -13,6 +13,9 @@
 #
 # 
 
+# The directory containing ng.tcl
+NETGENDIR ?= /usr/share/netgen/
+
 # The absolute path for the project directory
 PROJECT_DIR = $(abspath .)
 
@@ -58,7 +61,7 @@ run-unittest-tests : $(addsuffix /__runtests__,$(TEST_ROOTS))
 fasttest : make-modules $(addsuffix /__runtests__,$(TEST_ROOTS)) run-ci-tests
 
 %/__runtests__ : create-dirs
-	(cd $(dir $@) && PYTHONPATH=$(PYTHON_ROOTS):. python $(RUN_UNIT_TESTS))
+	(cd $(dir $@) && NETGENDIR=$(NETGENDIR) PYTHONPATH=$(PYTHON_ROOTS):. python $(RUN_UNIT_TESTS))
 
 run-pytest-tests : create-dirs
 	PYTHONPATH=$(PYTHON_ROOTS) py.test src examples --junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
