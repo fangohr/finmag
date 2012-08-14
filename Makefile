@@ -77,4 +77,9 @@ run-pytest-tests : create-dirs
 run-ci-tests :
 	make -C $(NATIVE_DIR) run-ci-tests
 
+# This target can be used to print Makefile variables (such as PROJECT_DIR)
+# from the command line, for example by saying 'make print-PROJECT_DIR'.
+print-%:
+	@echo $($*)
+
 .PHONY: ci default make-modules test run-ci-tests run-pytest-tests run-unittest-tests
