@@ -128,6 +128,7 @@ def save_plot(ts, ys, ts_ref, m_ref, alpha):
     plt.plot(ts_ref, mz_exact, '-', label='mz (exact)')
     plt.xlabel('t [s]')
     plt.ylabel('m=M/Ms')
+    plt.title(r'Macrospin dynamics: $\alpha$={}'.format(alpha))
     plt.grid()
     plt.legend()
     filename = ('alpha-%04.2f' % alpha)
