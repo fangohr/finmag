@@ -48,7 +48,7 @@ When we discuss a damping value :math:`\alpha` we normally refer to :math:`\alph
 Macrospin example
 -----------------
 
-In the absence of all effective fields (such as demagnetisation, anisotropy and exchange fields) the magnetisation behaves like a macrospin, i.e. the magnetisation field :math:`\vec{M}(\vec{r},t)` is uniform and thus does not depend on the position: :math:`\vec{M}(t)`. By applying an external field, we can study the motion of this macrospin a static field, and this can be compared with an analytical solution for the system ([#Franchin2009]_, Appendix B, should add equation number here XXX).
+In the absence of all effective fields (such as demagnetisation, anisotropy and exchange fields) the magnetisation behaves like a macrospin, i.e. the magnetisation field :math:`\vec{M}(\vec{r},t)` is uniform and thus does not depend on the position: :math:`\vec{M}(t)`. By applying an external field, we can study the motion of this macrospin a static field, and this can be compared with an analytical solution for the system ([#Franchin2009]_, Appendix B, equations B.16-B.18, p. 127-128).
 
 Starting with the magnetisation aligned with the x-direction, and an applied field acting in the z-direction, we obtain the following time developments for the magnetisation (for different values of :math:`\alpha`).
 
