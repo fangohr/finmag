@@ -18,7 +18,7 @@ pages 127-128, equations B.16-B.18.
 
 def make_analytic_solution(H, alpha, gamma):
     """
-    Returns a function with computes the magnetisation vector
+    Returns a function which computes the magnetisation vector
     as a function of time. Takes the following parameters:
         - H the magnitude of the applied field
         - alpha has no dimension
