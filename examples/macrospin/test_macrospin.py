@@ -89,7 +89,7 @@ def compare_with_analytic_solution(alpha=0.5, max_t=1e-9):
 
     rel_diff_maxs = list()
     for i in range(len(ts)):
-        m = numpy.mean(ys[i].reshape((3, -1)), 1)
+        m = numpy.mean(ys[i].reshape((3, -1)), axis=1)
         m_ref = m_analytical(ts[i])
         diff = numpy.abs(m - m_ref)
         diff_max = numpy.max(diff)
@@ -105,7 +105,7 @@ def compare_with_analytic_solution(alpha=0.5, max_t=1e-9):
 
 
 def save_plot(ts, ys, ts_ref, m_ref, alpha):
-    ys3d = ys.reshape((len(ys), 3, 8)).mean(-1)
+    ys3d = ys.reshape((len(ys), 3, 8)).mean(axis=-1)
     mx = ys3d[:,0]
     my = ys3d[:,1]
     mz = ys3d[:,2]
