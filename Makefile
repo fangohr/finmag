@@ -46,8 +46,15 @@ export DISABLE_PYTHON_MAKE = 1
 default:
 	@echo 'This makefile is used for CI only; do not use directly.' 
 	
-ci: test
-	make -C doc generate-doc html 
+ci: test doc
+
+doc: doc-html
+
+doc-html:
+	make -C doc generate-doc html
+
+doc-pdf:
+	make -C doc generate-doc latexpdf
 
 make-modules:
 	make -C $(NATIVE_DIR) all
