@@ -26,8 +26,8 @@ cdef class FastSum:
         self.n=n
         self.m=m
         self.p=p
-        self.eps_I=1.0 * p / n
-        self.eps_B = 1.0 / 16
+        self.eps_I = 1.0 * p / n
+        self.eps_B = 1/16.0
         self._c_plan=create_plan()
         if self._c_plan is NULL:
             raise MemoryError()

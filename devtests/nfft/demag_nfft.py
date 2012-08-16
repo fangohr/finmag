@@ -196,8 +196,7 @@ class DemagNFFT():
         self.v_n=v_n
         self.mesh=Vv.mesh()
         self.V=FunctionSpace(self.mesh, 'Lagrange', 1)
-        self.phi = Function(self.V)
-	
+        self.phi = Function(self.V)	
 
 	self.node_vol=compute_node_volume(self.mesh)
 	self.node_area=compute_node_area(self.mesh)
@@ -219,7 +218,6 @@ class DemagNFFT():
         
         self.L = compute_minus_node_volume_vector(self.mesh)
         
-    
     
     def compute_affine_transformation(self):
 	"""
@@ -402,9 +400,8 @@ class DemagNFFT():
         print 'm,n=',m,n
         
         self.interpolate_at_surface()
-        
 
-        fast_sum=FastSum()
+        fast_sum=FastSum(n=64)
         fast_sum.init_mesh(x_s,x_t)
         tmp_charge=self.s_weight*self.sigma_array/(4*np.pi)
         fast_sum.update_charge(tmp_charge)
@@ -472,22 +469,22 @@ class DemagNFFT():
 if __name__ == "__main__":
    
     mesh = UnitSphere(5)
-    mesh = UnitCube(1, 1, 1)
+    mesh = UnitCube(2, 2, 2)
     
-    mesh.coordinates()[:]*=0.2
+    mesh.coordinates()[:]*=0.25
+    mesh.coordinates()[:]-=0.125
     
     Vv = df.VectorFunctionSpace(mesh, 'Lagrange', 1)
     
-    Ms=8.6e5
+    Ms = 8.6e5
     expr = df.Expression(('1+x[0]', '1+2*x[1]','1+3*x[2]'))
-    m = project(Constant((1, 0, 0)), Vv)
     m = project(expr, Vv)
+    m = project(Constant((1, 0, 0)), Vv)
+    
 
-    demag=DemagNFFT(Vv,m,Ms,s_n=2)
+    demag=DemagNFFT(Vv,m,Ms,s_n=3)
     demag.compute_affine_transformation_volume()
     
-    
-    """
     def compute_error(field):
         
         field.shape=((3,-1))
@@ -497,8 +494,8 @@ if __name__ == "__main__":
         hx=np.average(field[0])
         return hx,(fem+hx)/fem
     
-    for tn in range(1,2):
-        demag=DemagNFFT(Vv,m,Ms,t_n=tn)
+    for tn in range(1):
+        demag=DemagNFFT(Vv,m,Ms,s_n=4)
         demag.compute_affine_transformation()
         demag.compute_charge_density()
         
@@ -506,13 +503,13 @@ if __name__ == "__main__":
         print 'sum_nfft\n',demag.phi.vector().array()
         
         field=demag.compute_field()
-        print 't_n=',tn,compute_error(field),'after correction',
+        print 't_n=',tn,compute_error(field),'after correction\n',
         
         demag.compute_correction()
         print demag.phi.vector().array()
         field=demag.compute_field()
         print compute_error(field)
-        """
+        
         #print field
     
     

@@ -308,30 +308,23 @@ void fastsum_finalize(fastsum_plan *plan) {
 }
 
 void init_mesh(fastsum_plan *plan, double *x_s, double *x_t) {
-    int k, k2, k3;
+   
+  int k;
 
-
-    for (k = 0; k < plan->N_source; k++) {
-
-        k2 = plan->N_source + k;
-        k3 = plan->N_source + k2;
+    for (k = 0; k < 3*plan->N_source; k++) {
 
         plan->x[k] = x_s[k];
-        plan->x[k2] = x_s[k2];
-        plan->x[k3] = x_s[k3];
-
+        
     }
 
-
-    for (k = 0; k < plan->N_target; k++) {
-
-        k2 = plan->N_target + k;
-        k3 = plan->N_target + k2;
-
+    for (k = 0; k < 3 * plan->N_target; k++) {
+        
         plan->y[k] = x_t[k];
-        plan->y[k2] = x_t[k2];
-        plan->y[k3] = x_t[k3];
+      
+    }
 
+    for (k = 0; k < 3* plan->N_target; k++) {
+      //printf("y[%d]=%f  x=%f \n",k, plan->y[k],x_t[k]);
     }
 
     //printf("init_mesh okay!\n");
@@ -391,8 +384,6 @@ void fastsum_init_guru(fastsum_plan *plan, int N_total, int M_total, int nn, int
 
     int sort_flags_trafo = NFFT_SORT_NODES;
     int sort_flags_adjoint = NFFT_SORT_NODES;
-
-
 
     plan->N_source = N_total;
     plan->N_target = M_total;
