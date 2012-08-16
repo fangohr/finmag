@@ -248,7 +248,7 @@ class EnergyBase(AbstractEnergy):
 
         .. math::
 
-            \\frac{E_}{V},
+            \\frac{E}{V},
 
         where V is the volume of each node.
 
