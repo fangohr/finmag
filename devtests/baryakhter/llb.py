@@ -87,6 +87,7 @@ class LLB(object):
 
     @property
     def alpha(self):
+        """The damping factor :math:`\\alpha`."""
         return self._alpha
 
     @alpha.setter
@@ -98,7 +99,7 @@ class LLB(object):
 
     @property
     def M(self):
-        """ the magnetisation, with length Ms """
+        """The magnetisation, with length Ms."""
         return self._M.vector().array()
 
     @M.setter
@@ -120,7 +121,7 @@ class LLB(object):
 
     @property
     def M_average(self):
-        """ the average magnetisation, computed with m_average() """
+        """The average magnetisation, computed with m_average()."""
 
         tmp=self.M
         tmp.shape=(3,-1)

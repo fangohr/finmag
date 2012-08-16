@@ -88,6 +88,7 @@ class LLG(object):
 
     @property
     def alpha(self):
+        """The damping factor :math:`\\alpha`."""
         return self._alpha
 
     @alpha.setter
@@ -99,17 +100,17 @@ class LLG(object):
 
     @property
     def M(self):
-        """ the magnetisation, with length Ms """
+        """The magnetisation, with length Ms."""
         return self.Ms * self.m
 
     @property
     def M_average(self):
-        """ the average magnetisation, computed with m_average() """
+        """The average magnetisation, computed with m_average()."""
         return self.Ms * self.m_average
 
     @property
     def m(self):
-        """ the unit magnetisation """
+        """The unit magnetisation."""
         return self._m.vector().array()
 
     @m.setter
