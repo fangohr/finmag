@@ -145,7 +145,7 @@ def quiver(f, mesh, filename=None, title="", **kwargs):
    
     figure = mlab.figure(bgcolor=(1, 1, 1), fgcolor=(0, 0, 0))
     q = mlab.quiver3d(*(tuple(r)+tuple(f)), figure=figure, **kwargs)
-    q.scene.z_plus_view()
+    q.scene.isometric_view()
     mlab.title(title)
     mlab.axes(figure=figure)
 
@@ -153,6 +153,7 @@ def quiver(f, mesh, filename=None, title="", **kwargs):
         mlab.savefig(filename)
     else:
         mlab.show()
+    mlab.close(all=True)
 
 def boxplot(arr, filename, **kwargs):
     import matplotlib.pyplot as plt

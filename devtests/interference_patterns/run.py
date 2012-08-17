@@ -49,5 +49,6 @@ while t <= t_max:
     if abs(t - 50e-12) < 1e-16:
         print "Switching spin current off at {}.".format(t)
         sim.toggle_stt(False)
+        sim.snapshot()
     t += dt
     sim.run_until(t)

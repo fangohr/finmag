@@ -3,6 +3,7 @@ import logging
 import dolfin as df
 from finmag.sim.llg import LLG
 from finmag.util.timings import timings
+from finmag.util.helpers import quiver
 from finmag.sim.integrator import LLGIntegrator
 
 ONE_DEGREE_PER_NS = 17453292.5 # in rad/s
@@ -132,3 +133,15 @@ class Simulation(object):
             self.llg.do_slonczewski = new_state
         else:
             self.llg.do_slonczewski = not self.llg.do_slonczewski
+
+    def snapshot(self):
+        if not hasattr(self, "snapshot_no"):
+            self.snapshot_no = 1
+        nb_icons = 1000
+        nb_nodes = len(self.llg.m)/3
+        one_in_x = int(float(nb_nodes)/nb_icons) if nb_nodes > nb_icons else 1
+        quiver(self.llg.m, self.mesh,
+               filename="snapshot_{}.pdf".format(self.snapshot_no),
+               mode="cone",
+               mask_points=one_in_x)
+        self.snapshot_no += 1
