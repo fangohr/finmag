@@ -290,7 +290,7 @@ class LLG(object):
         """
         Activates the computation of the Slonczewski spin-torque term in the LLG.
 
-        J is the current density in A/m^2,
+        J is the current density in A/m^2 as a dolfin expression,
         P is the polarisation (between 0 and 1),
         d the thickness of the free layer in m,
         p the direction (unit length) of the polarisation as a triple.
