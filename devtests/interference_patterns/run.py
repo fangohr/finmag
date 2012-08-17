@@ -32,6 +32,7 @@ nx, ny, nz = (L/discretisation, W/discretisation, H/discretisation)
 mesh = df.Box(-dL, -dW, -dH, dL, dW, dH, int(nx), int(ny), int(nz))
 
 sim = Simulation(mesh, Ms)
+sim.set_m((1, 1, 0))
 sim.add(Zeeman((0, 0, 1.1 * Ms))) # section 3 and end of section 5
 sim.add(Exchange(A))
 sim.add(ThinFilmDemag())
@@ -41,6 +42,12 @@ J = point_contacts([(220e-9, 220e-9)], radius=10e-9, J=1e11)
 P = 0.4
 d = H
 p = (0, 0, 1)
-sim.llg.use_slonczewski(J, P, d, p)
+sim.set_stt(J, P, d, p)
 
-sim.run_until(1e-10)
+t = 0; dt = 1e-12; t_max = 1e-9;
+while t <= t_max:
+    if abs(t - 50e-12) < 1e-16:
+        print "Switching spin current off at {}.".format(t)
+        sim.toggle_stt(False)
+    t += dt
+    sim.run_until(t)

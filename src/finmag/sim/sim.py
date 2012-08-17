@@ -109,3 +109,26 @@ class Simulation(object):
 
         """
         return timings.report_str(n)
+
+    def set_stt(self, current_density, polarisation, thickness, direction):
+        """
+        Activate the computation of the Slonczewski spin-torque term in the LLG.
+
+        Current density in A/m^2 is a dolfin expression,
+        Polarisation is between 0 and 1,
+        Thickness of the free layer in m,
+        Direction (unit length) of the polarisation as a triple.
+
+        """  
+        self.llg.use_slonczewski(current_density, polarisation, thickness, direction)
+
+    def toggle_stt(self, new_state=None):
+        """
+        Toggle the computation of the Slonczewski spin-torque term.
+
+        You can optionally pass in a new state.
+        """
+        if new_state:
+            self.llg.do_slonczewski = new_state
+        else:
+            self.llg.do_slonczewski = not self.llg.do_slonczewski
