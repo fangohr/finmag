@@ -7,11 +7,11 @@ Requirements
 
 You will probably need Sphinx version 1.1.2 (more recent than what ships with Ubuntu 11.10) which can be installed using::
 
-  $ easy_install -U Sphinx
+  $ pip install -U Sphinx
 
-To get syntax highlighting, you also need Pygments (the Ubuntu package 'python-pygments' does the job) or use::
+To get syntax highlighting, you also need Pygments. Te Ubuntu package 'python-pygments' does the job, or use::
 
-  $ easy_install Pygments
+  $ pip install Pygments
 
 While most automatic tests that compare finmag with the other micromagnetic
 packages have the results to compare with pre-computed and stored,
