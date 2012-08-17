@@ -120,5 +120,16 @@ The development in devtests often copies existing code (such an energy class, ll
 
 When a feature has been moved from ``devtests`` to ``src``, accompanying documentation should be added, typically best done through one or more usage examples to be added to the ``examples`` directory.
 
+A note on devtests
+------------------
+
+This is a somewhat messy place that serves different purposes, including:
+
+- developing new features
+- tutorial-like scripts for developers
+- other stuff for internal use that was never completed, or has not yet moved to the src directory (such as the GPU usage)
+
+The name is not ideal either. The good news is that we should be able to re-arrange and rename files and directories in here as nothing (neither the documentation, nor main finmag code under ``src`` should depend on it).
+
 
 
