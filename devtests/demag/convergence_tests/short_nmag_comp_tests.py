@@ -21,24 +21,28 @@ nxavg = []
 nstddev = []
 errnorm = []
 
-for maxh in (2.0, 1.5, 1.0, 0.8, 0.6, 0.4, 0.2):
-    
-    # Create geofile
+def create_mesh(maxh):
+    # Create a .geo file which contains the geometrical mesh
+    # information and convert this into a dolfin mesh.
+
     geo = """
 algebraic3d
 
 solid main = sphere (0, 0, 0; 10)-maxh=%s ;
 
 tlo main;""" % str(maxh)
+
     absname = "sphere_maxh_%s" % str(maxh)
-    geofilename = os.path.join(MODULE_DIR, absname)
-    geofile = geofilename + '.geo'
-    f = open(geofile, "w")
+    geofilename = os.path.join(MODULE_DIR, absname+'.geo')
+    f = open(geofilename, "w")
     f.write(geo)
     f.close()
+    mesh = df.Mesh(convert_mesh(geofilename))
+    return mesh
 
+for maxh in (2.0, 1.5, 1.0, 0.8, 0.6, 0.4, 0.2):
     # Finmag data
-    mesh = df.Mesh(convert_mesh(geofile))
+    mesh = create_mesh(maxh)
     print "Using mesh with %g vertices" % mesh.num_vertices()
     V = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
     M = ("1.0", "0.0", "0.0")
