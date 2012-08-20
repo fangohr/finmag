@@ -47,5 +47,5 @@ echo "================================================================"
 #echo "export LD_LIBRARY_PATH=${PREFIX}/lib:\$LD_LIBRARY_PATH" >> ~/.bashrc
 
 cd $bak
-cd ../devtests/nfft/
+cd ../sandbox/nfft/
 NFFT_DIR=${PREFIX} python setup.py build_ext --inplace

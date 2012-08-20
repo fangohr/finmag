@@ -73,7 +73,7 @@ Installation
 Finmag and GPU
 --------------
 
-.. include:: ../devtests/gpu/finmag_gpu.txt
+.. include:: ../sandbox/gpu/finmag_gpu.txt
 
 
 Team
@@ -104,8 +104,8 @@ Overview repository structure
 
 - ``background`` - background info that is crucial for the code, for example key publications. Add (binary) data (such as pdf) sparingly to keep repository size small.
 - ``bin``: - scripts we need; currently only used by Jenkins
-- ``devtests``: a directory used to develop new features, and to have a repository for code that is incomplete, and thus would fail regression tests. When a new feature is completed, it (and associated tests) should be move to the ``src`` directory (and thus execute automatically). One should also add an example of usage into the ``examples`` directory which will be included in the documentation. 
-- ``devtests/basics-*``: ``devtests`` is also sometimes used to test small things that may be worth storing in the repository (because we need to get back to it and/or it could be useful to other developers) but which is not really worth including in the finmag package): typically to improve our understanding of some software method.
+- ``sandbox``: a directory used to develop new features, and to have a repository for code that is incomplete, and thus would fail regression tests. When a new feature is completed, it (and associated tests) should be move to the ``src`` directory (and thus execute automatically). One should also add an example of usage into the ``examples`` directory which will be included in the documentation.
+- ``sandbox/basics-*``: ``sandbox`` is also sometimes used to test small things that may be worth storing in the repository (because we need to get back to it and/or it could be useful to other developers) but which is not really worth including in the finmag package): typically to improve our understanding of some software method.
 - ``doc``: the sphinx-based documentation. This is automatically built by jenkins after every push to the bitbucket server, and failures are reported as warnings. Makes use of code in ``examples``.
 - ``examples``: a gallery of example code that demonstrates particular features. Usually combined with a file documenting the example, which is included in the sphinx-based documentation. The documentation is built on jenkins after ``py.test`` has executed in the ``examples`` directory: this can be used to create bitmaps, data tables for the documentation that should be re-computed with every built.
 - ``install``: collection of scripts 
@@ -116,12 +116,12 @@ Overview repository structure
 A note on code duplication
 --------------------------
 
-The development in devtests often copies existing code (such an energy class, llg.py, etc) and modifies it until it works. At that point we have a lot of duplicated code in the system. It would then be desirable to add tests to the new code that test the functionality, and then to refactor the new code to avoid code duplication, and then to move this code from ``devtests`` into ``src``. Refactoring means to essentially write it again taking into account that we now know what it shoud do and how it can work. The art in particular is to merge it so with the main code (in ``src``) that we avoid code duplication. This may require to modify the existing code (but so that nothing else breaks that relies on it). The long list of tests we have (both for already existing code, and the new feature under question) should help with this.
+The development in ``sandbox`` often copies existing code (such an energy class, llg.py, etc) and modifies it until it works. At that point we have a lot of duplicated code in the system. It would then be desirable to add tests to the new code that test the functionality, and then to refactor the new code to avoid code duplication, and then to move this code from ``sandbox`` into ``src``. Refactoring means to essentially write it again taking into account that we now know what it shoud do and how it can work. The art in particular is to merge it so with the main code (in ``src``) that we avoid code duplication. This may require to modify the existing code (but so that nothing else breaks that relies on it). The long list of tests we have (both for already existing code, and the new feature under question) should help with this.
 
-When a feature has been moved from ``devtests`` to ``src``, accompanying documentation should be added, typically best done through one or more usage examples to be added to the ``examples`` directory.
+When a feature has been moved from ``sandbox`` to ``src``, accompanying documentation should be added, typically best done through one or more usage examples to be added to the ``examples`` directory.
 
-A note on devtests
-------------------
+A note on ``sandbox``
+---------------------
 
 This is a somewhat messy place that serves different purposes, including:
 
