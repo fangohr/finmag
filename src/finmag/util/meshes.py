@@ -5,6 +5,12 @@ fine meshes) because the mesh creation is done externally via Netgen.
 
 It might be nice to reimplement some of these using Dolfin-internal
 mesh functions so that they are faster.
+
+Caveat: Netgen only saves the first 5-6 digits (or so) of each
+coordinate during the mesh creation process. Thus it is not advisable
+to use these functions to create meshes on the nanoscale. Instead,
+create a "macroscopic" mesh and use something like unit_length=1e-9 to
+set the desired length scale when reading the mesh into Finmag!
 """
 
 import os, re, shutil, tempfile, logging, textwrap
