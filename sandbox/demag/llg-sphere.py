@@ -5,8 +5,6 @@ import sys, os, commands
 import GCRruntime as Grt
 from finmag.sim.llg import LLG
 from finmag.energies.demag.demag_solver import Demag
-from finmag.util.convert_mesh import convert_mesh
-from finmag.energies.demag.solver_gcr import FemBemGCRSolver
 from finmag.tests.demag.problems.prob_fembem_testcases import MagSphere
 from finmag.util.timings import timings
 
