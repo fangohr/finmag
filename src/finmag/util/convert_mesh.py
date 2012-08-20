@@ -79,7 +79,9 @@ def run_netgen(geofile):
             geofile, diffpackfile)
 
     status, output = commands.getstatusoutput(netgen_cmd)
-    if status not in (0, 34304): # Trouble on my machine, should just be zero.
+    if status == 34304:
+        print "Warning: Netgen output status was 34304, but this seems to be a spurious error that only occurred on Anders Johansen's machine. Ignoring for now..."
+    elif status != 0:
         print output
         print "netgen failed with exit code", status
         sys.exit(2)
