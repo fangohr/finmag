@@ -68,8 +68,8 @@ def cylindrical_mesh(radius, height, maxh):
     csg_string = textwrap.dedent("""\
         algebraic3d
         solid fincyl = cylinder (0, 0, 1; 0, 0, -1; {radius} )
-              and plane (0, 0, {height_min}; 0, 0, -1)
-              and plane (0, 0, {height_max}; 0, 0, 1) -maxh = {maxh};
-        tlo fincyl;""").format(radius=radius, height_min=-0.5*height, height_max=+0.5*height, maxh=maxh)
+              and plane (0, 0, 0; 0, 0, -1)
+              and plane (0, 0, {height}; 0, 0, 1) -maxh = {maxh};
+        tlo fincyl;""").format(radius=radius, height=height, maxh=maxh)
 
     return _mesh_from_csg_string(csg_string)
