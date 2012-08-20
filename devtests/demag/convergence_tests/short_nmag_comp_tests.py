@@ -1,7 +1,7 @@
 import numpy as np
 import dolfin as df
 from finmag.util.convert_mesh import convert_mesh
-from finmag.demag.solver_gcr import FemBemGCRSolver
+from finmag.energies.demag.solver_gcr import FemBemGCRSolver
 import pylab as p
 import sys, os, commands
 

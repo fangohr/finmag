@@ -1,6 +1,6 @@
 import dolfin as df
-from finmag.demag.solver_fk import FemBemFKSolver
-from finmag.demag.solver_gcr import FemBemGCRSolver
+from finmag.energies.demag.solver_fk import FemBemFKSolver
+from finmag.energies.demag.solver_gcr import FemBemGCRSolver
 from finmag.util.timings import timings
 
 class Demag(object):
