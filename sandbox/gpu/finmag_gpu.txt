@@ -26,8 +26,8 @@ At this point, only the preconditioners "jacobi", "bjacobi" and "additive_schwar
 
 A time comparison of the standard PETSc linear algebra backend and the GPU accelerated PETScCusp linear algebra backend has been run on Maxim's computer, and it shows the following:
 
-.. literalinclude:: ../devtests/gpu/results_maxim.txt
+.. literalinclude:: ../sandbox/gpu/results_maxim.txt
 
 The complete program:
 
-.. literalinclude:: ../devtests/gpu/finmag_backends.py
+.. literalinclude:: ../sandbox/gpu/finmag_backends.py
