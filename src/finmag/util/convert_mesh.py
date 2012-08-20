@@ -85,6 +85,13 @@ def run_netgen(geofile):
         print output
         print "netgen failed with exit code", status
         sys.exit(2)
+    elif output.lower().find("error") != -1:
+        print "Netgen's exit status was 0, but an error seems to have occurred anyway."
+        print "Error message:"
+        print "\n====>"
+        print output
+        print "<====\n"
+        sys.exit(2)
     logger.debug('Done!')
     return diffpackfile
 
