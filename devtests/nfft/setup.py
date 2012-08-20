@@ -6,6 +6,8 @@ import os
 
 #python setup.py build_ext --inplace
 #NFFT_DIR = os.path.expanduser('~/nfft-3.2.0')
+
+# Install into /usr/local by default, if the environment variable NFFT_DIR is not set
 NFFT_DIR = os.environ.get('NFFT_DIR', '/usr/local')
 
 ext_modules = [
