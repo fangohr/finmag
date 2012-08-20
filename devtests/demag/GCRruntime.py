@@ -5,8 +5,8 @@ import cProfile as cP
 import finmag.util.timings as ti
 import numpy as np
 import math
-from finmag.demag.solver_gcr import FemBemGCRSolver
-from finmag.demag.problems.prob_fembem_testcases import MagSphere20
+from finmag.energies.demag.solver_gcr import FemBemGCRSolver
+from finmag.tests.demag.problems.prob_fembem_testcases import MagSphere20
 
 ## This returns too much information
 ##problem = MagSphere20()
