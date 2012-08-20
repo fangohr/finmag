@@ -139,7 +139,7 @@ def compress(filename):
 
 def spherical_mesh(radius, maxh, directory=""):
     """
-    Returns a dolfin compatible meshfile describing
+    Returns the name of a dolfin compatible meshfile describing
     a sphere with radius radius and maximal mesh size maxh.
 
     This function is not well behaved by default - it will place
