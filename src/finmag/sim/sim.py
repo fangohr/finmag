@@ -134,10 +134,17 @@ class Simulation(object):
         else:
             self.llg.do_slonczewski = not self.llg.do_slonczewski
 
-    def snapshot(self):
+    def snapshot(self, filename=None):
+        """
+        Save a snapshot of the current magnetisation configuration to a file (using Mayavi).
+
+        If `filename` is None, a default filename will be generated based on a
+        sequentially increasing counter and the current timestep of the simulation.
+        """
         if not hasattr(self, "snapshot_no"):
             self.snapshot_no = 1
-        filename = "snapshot_{}_{:.3f}ns.pdf".format(self.snapshot_no, self.llg.t*1e9)
+        if filename is None:
+            filename = "snapshot_{}_{:.3f}ns.pdf".format(self.snapshot_no, self.llg.t*1e9)
         nb_icons = 1000
         nb_nodes = len(self.llg.m)/3
         one_in_x = int(float(nb_nodes)/nb_icons) if nb_nodes > nb_icons else 1
