@@ -4,7 +4,7 @@ import numpy as np
 from math import pi, sin, cos
 from finmag import Simulation as Sim
 from finmag.energies import Exchange, Zeeman
-from finmag.util.convert_mesh import convert_mesh
+from finmag.util.meshes import convert_mesh
 from finmag.util.consts import mu0
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))

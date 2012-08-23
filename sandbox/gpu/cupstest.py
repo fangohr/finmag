@@ -1,7 +1,7 @@
 from dolfin import *
 from time import time
 import math, random
-#from finmag.util.convert_mesh import convert_mesh
+#from finmag.util.meshes import convert_mesh
 
 def run_test():
     solver = KrylovSolver("cg", "jacobi")

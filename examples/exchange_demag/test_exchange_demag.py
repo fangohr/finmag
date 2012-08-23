@@ -7,7 +7,7 @@ import progressbar as pb
 import finmag.util.helpers as h
 from finmag import Simulation as Sim
 from finmag.energies import Exchange, Demag
-from finmag.util.convert_mesh import convert_mesh
+from finmag.util.meshes import convert_mesh
 
 logger = logging.getLogger(name='finmag')
 

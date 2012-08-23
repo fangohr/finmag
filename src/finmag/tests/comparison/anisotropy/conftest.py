@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import dolfin as df
-from finmag.util.convert_mesh import convert_mesh
+from finmag.util.meshes import convert_mesh
 from finmag.energies import UniaxialAnisotropy
 from finmag.util.helpers import sphinx_sci as s
 

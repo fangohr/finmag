@@ -2,7 +2,7 @@ import os
 import dolfin as df
 from numpy import average
 from finmag.energies import Demag
-from finmag.util.convert_mesh import convert_mesh
+from finmag.util.meshes import convert_mesh
 
 TOL = 1e-3
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))

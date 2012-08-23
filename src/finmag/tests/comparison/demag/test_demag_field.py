@@ -2,7 +2,7 @@ import os
 import numpy as np
 import dolfin as df
 from finmag.energies import Demag
-from finmag.util.convert_mesh import convert_mesh
+from finmag.util.meshes import convert_mesh
 from finmag.util.helpers import stats, sphinx_sci as s
 from finmag.util.magpar import compare_field_directly, compute_demag_magpar
 
