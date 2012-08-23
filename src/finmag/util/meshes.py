@@ -21,7 +21,7 @@ from dolfin import Mesh
 
 logger = logging.getLogger(name='finmag')
 
-def from_geofile(geofile, save_result=True, result_filename=None):
+def from_geofile(geofile, save_result=True):
     """
     Using netgen, returns a dolfin mesh object built from the given geofile.
 
@@ -33,10 +33,9 @@ def from_geofile(geofile, save_result=True, result_filename=None):
             so greatly speeds up later calls to the function with the 
             same geofile. If the geofile has been modified since the last run
             of the mesh generation, the saved version is disregarded.
-        result_filename (str) [optional]
-            Filename of the dolfin mesh when it is saved to disk.
-            If no name is given, the generated mesh file will have the same
-            basename as the original geofile.
+            The file will have the same basename as the geofile, just with the
+            extension .xml.gz instead of .geo, and will be placed in 
+            the same directory.
 
     *Return*
         mesh
@@ -54,42 +53,42 @@ def from_geofile(geofile, save_result=True, result_filename=None):
             dolfin.plot(mesh, interactive=True)
 
     """
-    if result_filename is None:
-        result_filename = os.path.splitext(geofile)[0] + ".xml.gz"
-    else:
-        if ".xml.gz" not in result_filename:
-            result_filename += ".xml.gz"
-
+    result_filename = os.path.splitext(geofile)[0] + ".xml.gz"
     if os.path.isfile(result_filename) and os.path.getctime(result_filename) > os.path.getctime(geofile):
         logger.debug("The mesh %s already exists, and is automatically returned." % result_filename)
     else:
-        result_filename= compress(convert_diffpack_to_xml(run_netgen(geofile)))
+        result_filename = compress(convert_diffpack_to_xml(run_netgen(geofile)))
 
     mesh = Mesh(result_filename)
     if not save_result:
         os.remove(result_filename)
     return mesh
 
-def from_csg(csg, save_result=True, result_filename=None):
+def from_csg(csg, save_result=True, directory="", name=""):
     """
     Using netgen, returns a dolfin mesh object built from the given CSG string.
 
-    Refer to the documentation for from_geofile. By default, the generated mesh
-    is saved to disk, with a filename which is the md5 hash of the csg string.
+    If save_result is True, both the generated geofile and the dolfin mesh
+    are saved to disk. By default, the filenames will use the md5 hash
+    of the csg string, but can be specified by passing a
+    name (without suffix).
 
     """
-    tmp = tempfile.NamedTemporaryFile(suffix='.geo', delete=False)
-    tmp.write(csg)
-    tmp.close()
-
-    if result_filename == None:
-        result_filename = hashlib.md5(csg).hexdigest()
-
-    mesh = from_geofile(tmp.name, result_filename=result_filename)
-
-    # Since we used delete=False in NamedTemporaryFile, we are
-    # responsible for the deletion of the file.
-    os.remove(tmp.name)
+    if save_result:
+        if name == "":
+            name = hashlib.md5(csg).hexdigest()
+        geofile = os.path.join(directory, name + ".geo")
+        with open(geofile, "w") as f:
+            f.write(csg)
+        mesh = from_geofile(geofile, save_result=True)
+    else:
+        tmp = tempfile.NamedTemporaryFile(suffix='.geo', delete=False)
+        tmp.write(csg)
+        tmp.close()
+        mesh = from_geofile(tmp.name, save_result=False)
+        # Since we used delete=False in NamedTemporaryFile, we are
+        # responsible for the deletion of the file.
+        os.remove(tmp.name)
     return mesh
 
 def run_netgen(geofile):
@@ -169,88 +168,31 @@ def compress(filename):
         sys.exit(4)
     return filename + ".gz"
 
-def spherical_mesh(radius, maxh, directory=""):
+def sphere(radius, maxh, directory=""):
     """
-    Returns the name of a dolfin compatible meshfile describing
-    a sphere with radius radius and maximal mesh size maxh.
+    Returns a dolfin mesh object describing a sphere with given radius and mesh coarseness.
 
-    This function is not well behaved by default - it will place
-    the meshfile in whatever the current working directory is. Pass
-    a directory along to control where the files end up.
-
-    """
-    filename = "sphere-{:.1f}-{:.1f}".format(radius, maxh).replace(".", "_")
-
-    meshfile = os.path.join(directory, filename + ".xml.gz")
-    if os.path.isfile(meshfile):
-        return meshfile
-
-    geofile = os.path.join(directory, filename + ".geo")
-    with open(geofile, "w") as f:
-        f.write(csg_for_sphere(radius, maxh))
-    meshfile = from_geofile(geofile)
-    os.remove(geofile)
-
-    return meshfile
-
-def csg_for_sphere(radius, maxh):
-    """
-    For a sphere with the maximal mesh size maxh (compare netgen manual 4.X page 10)
-    and the radius radius, this function will return a string describing the
-    sphere in the constructive solid geometry format.
+    It will save both the generated geofile and the dolfin mesh to disk.
+    Pass a directory into directory, if you want to control where the
+    saved files end up.
 
     """
     csg = textwrap.dedent("""\
         algebraic3d
         solid main = sphere ( 0, 0, 0; {radius} ) -maxh = {maxh};
         tlo main;""").format(radius=radius, maxh=maxh)
-    return csg
 
-def _mesh_from_csg_string(csg_string):
-    """
-    This function writes the 'csg_string' (which should contain a
-    geometrical description of the mesh in the constructive solid
-    geometry format as understood by Netgen) into a .geo file in a
-    temporary directory and converts this into a dolfin-readable
-    .xml.gz file, which is imported into Dolfin. The resulting Mesh is
-    returned.
+    name = "sphere-{:.1f}-{:.1f}".format(radius, maxh).replace(".", "_")
+    return from_csg(csg, directory=directory, name=name)
 
-    This function should only be used internally.
-    """
-    tmpdir = tempfile.mkdtemp()
-    f = tempfile.NamedTemporaryFile(suffix='.geo', delete=False, dir=tmpdir)
-    f.write(csg_string)
-    f.close()
-    mesh = from_geofile(f.name)
-    return mesh
-
-# TODO: This function duplicates functionality of the function
-#       'spherical_mesh' in from_geofile.py. It would be nice to unify
-#       them. The main difference is that the latter saves the mesh to
-#       a file, whereas this one returns the mesh directly. In
-#       general, it might be helpful to have two flavours for each
-#       mesh-creating function: one which creates a mesh directly and
-#       one which writes it to a file (where the former would probably
-#       call the latter, only with a temporary file as is done in the
-#       function _mesh_from_csg_string above).
-def sphere(radius, maxh):
-    """
-    Return a dolfin mesh representing a sphere of radius `radius`.
-    `maxh` controls the maximal element size in the mesh (see the
-    Netgen manual 4.x, Chapter 2).
-    """
-    csg_string = textwrap.dedent("""\
-        algebraic3d
-        solid main = sphere ( 0, 0, 0; {radius} ) -maxh = {maxh};
-        tlo main;""").format(radius=radius, maxh=maxh)
-
-    return _mesh_from_csg_string(csg_string)
-
-def cylindrical_mesh(radius, height, maxh):
+def cylinder(radius, height, maxh, directory=""):
     """
     Return a dolfin mesh representing a cylinder of radius `radius`
     and height `height`. `maxh` controls the maximal element size in
     the mesh (see the Netgen manual 4.x, Chapter 2).
+
+    It will save both the generated geofile and the dolfin mesh to disk.
+
     """
     csg_string = textwrap.dedent("""\
         algebraic3d
@@ -258,5 +200,5 @@ def cylindrical_mesh(radius, height, maxh):
               and plane (0, 0, 0; 0, 0, -1)
               and plane (0, 0, {height}; 0, 0, 1) -maxh = {maxh};
         tlo fincyl;""").format(radius=radius, height=height, maxh=maxh)
-
-    return _mesh_from_csg_string(csg_string)
+    name = "cyl-{:.1f}-{:.1f}-{:.1f}".format(radius, height, maxh).replace(".", "_")
+    return from_csg(csg_string, directory=directory, name=name)
