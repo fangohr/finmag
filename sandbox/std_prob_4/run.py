@@ -1,7 +1,7 @@
 import os
 import dolfin as df
 import numpy as np
-from finmag.util.convert_mesh import convert_mesh
+from finmag.util.meshes import convert_mesh
 from finmag import Simulation
 from finmag.energies import Zeeman, DiscreteTimeZeeman, Demag, Exchange
 

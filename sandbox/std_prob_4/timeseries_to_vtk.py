@@ -1,6 +1,6 @@
 import os
 import dolfin as df
-from finmag.util.convert_mesh import convert_mesh
+from finmag.util.meshes import convert_mesh
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 

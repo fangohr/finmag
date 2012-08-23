@@ -3,7 +3,7 @@ import os, time
 import numpy as np
 import dolfin as df
 from finmag.util.timings import timings
-from finmag.util.convert_mesh import convert_mesh
+from finmag.util.meshes import convert_mesh
 
 from finmag import Simulation
 from finmag.energies import Exchange, Demag

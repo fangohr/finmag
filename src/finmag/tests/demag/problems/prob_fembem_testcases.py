@@ -7,7 +7,7 @@ __organisation__ = "University of Southampton"
 
 import os
 from dolfin import *
-import finmag.util.convert_mesh as cm
+import finmag.util.meshes as cm
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
