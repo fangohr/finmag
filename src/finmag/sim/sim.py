@@ -137,11 +137,13 @@ class Simulation(object):
     def snapshot(self):
         if not hasattr(self, "snapshot_no"):
             self.snapshot_no = 1
+        filename = "snapshot_{}_{:.3f}ns.pdf".format(self.snapshot_no, self.llg.t*1e9)
         nb_icons = 1000
         nb_nodes = len(self.llg.m)/3
         one_in_x = int(float(nb_nodes)/nb_icons) if nb_nodes > nb_icons else 1
         quiver(self.llg.m, self.mesh,
-               filename="snapshot_{}.pdf".format(self.snapshot_no),
+               filename=filename,
                mode="cone",
                mask_points=one_in_x)
         self.snapshot_no += 1
+        log.info("Saved snapshot of magnetisation at t={} to {}.".format(self.llg.t, filename))
