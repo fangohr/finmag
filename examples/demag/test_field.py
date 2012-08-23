@@ -2,7 +2,7 @@ import os
 import dolfin as df
 from numpy import average
 from finmag.energies import Demag
-from finmag.util.meshes import convert_mesh
+from finmag.util.meshes import from_geofile
 
 TOL = 1e-3
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -18,7 +18,7 @@ def test_field():
     """
 
     # Using mesh with radius 10 nm (nmag ex. 1)
-    mesh = df.Mesh(convert_mesh(os.path.join(MODULE_DIR, "sphere1.geo")))
+    mesh = from_geofile(os.path.join(MODULE_DIR, "sphere1.geo"))
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
     m = df.interpolate(df.Constant((1, 0, 0)), S3)
 

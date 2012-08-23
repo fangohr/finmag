@@ -1,6 +1,6 @@
 import numpy as np
 import dolfin as df
-from finmag.util.meshes import convert_mesh
+from finmag.util.meshes import from_geofile
 from finmag.energies.demag.solver_gcr import FemBemGCRSolver
 import pylab as p
 import sys, os, commands
@@ -37,7 +37,7 @@ tlo main;""" % str(maxh)
     f = open(geofilename, "w")
     f.write(geo)
     f.close()
-    mesh = df.Mesh(convert_mesh(geofilename))
+    mesh = from_geofile(geofilename)
     return mesh
 
 for maxh in (2.0, 1.5, 1.0, 0.8, 0.6, 0.4, 0.2):

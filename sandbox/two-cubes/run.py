@@ -1,14 +1,14 @@
 import os
 import numpy as np
 import dolfin as df
-from finmag.util.meshes import convert_mesh
+from finmag.util.meshes import from_geofile
 from finmag import Simulation
 from finmag.energies import UniaxialAnisotropy, Exchange, Demag
 
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-mesh = df.Mesh(convert_mesh(os.path.join(MODULE_DIR, "two-cubes.geo")))
+mesh = from_geofile(os.path.join(MODULE_DIR, "two-cubes.geo"))
 
 
 

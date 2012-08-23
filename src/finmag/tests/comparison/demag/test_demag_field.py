@@ -2,7 +2,7 @@ import os
 import numpy as np
 import dolfin as df
 from finmag.energies import Demag
-from finmag.util.meshes import convert_mesh
+from finmag.util.meshes import from_geofile
 from finmag.util.helpers import stats, sphinx_sci as s
 from finmag.util.magpar import compare_field_directly, compute_demag_magpar
 
@@ -12,7 +12,7 @@ table_delim   = "    " + "=" * 10 + (" " + "=" * 30) * 4 + "\n"
 table_entries = "    {:<10} {:<30} {:<30} {:<30} {:<30}\n"
 
 def setup_finmag():
-    mesh = df.Mesh(convert_mesh(os.path.join(MODULE_DIR, "sphere.geo")))
+    mesh = from_geofile(os.path.join(MODULE_DIR, "sphere.geo"))
 
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
     m = df.Function(S3)

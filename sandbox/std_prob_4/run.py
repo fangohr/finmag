@@ -1,7 +1,7 @@
 import os
 import dolfin as df
 import numpy as np
-from finmag.util.meshes import convert_mesh
+from finmag.util.meshes import from_geofile
 from finmag import Simulation
 from finmag.energies import Zeeman, DiscreteTimeZeeman, Demag, Exchange
 
@@ -20,7 +20,7 @@ specification:
 """
 
 Ms = 8.0e5; A = 1.3e-11; alpha = 0.02; gamma = 2.211e5
-mesh = df.Mesh(convert_mesh(mesh_file))
+mesh = from_geofile(mesh_file)
 
 def create_initial_s_state():
     """

@@ -19,7 +19,7 @@ def test_energy():
     # The dolfin UnitSphere gives a coarse and low quality mesh.
     # Use this instead when the lindholm formulation is implemented.
     # Then we can also set TOL = 1.5e-3
-    #mesh = df.Mesh(convert_mesh(os.path.join(MODULE_DIR, "sphere_fine.geo")))
+    #mesh = from_geofile(os.path.join(MODULE_DIR, "sphere_fine.geo"))
 
     # Using unit sphere mesh
     mesh = df.UnitSphere(10)

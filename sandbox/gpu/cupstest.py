@@ -1,7 +1,7 @@
 from dolfin import *
 from time import time
 import math, random
-#from finmag.util.meshes import convert_mesh
+#from finmag.util.meshes import from_geofile
 
 def run_test():
     solver = KrylovSolver("cg", "jacobi")

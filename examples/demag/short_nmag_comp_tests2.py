@@ -1,7 +1,7 @@
 ##import io
 import numpy as np
 import dolfin as df
-from finmag.util.meshes import convert_mesh
+from finmag.util.meshes import from_geofile
 from finmag.energies.demag.solver_fk import FemBemFKSolver
 from finmag.energies.demag.solver_gcr import FemBemGCRSolver
 import pylab as p
@@ -92,7 +92,7 @@ for i,maxh in enumerate(meshsizes):
     f.close()
 
     # Finmag data
-    mesh = df.Mesh(convert_mesh(geofile))
+    mesh = from_geofile(geofile)
     
     #mesh.coordinates()[:] = mesh.coordinates()[:]*1e-9 #this makes the results worse!!! HF
     print "Using mesh with %g vertices" % mesh.num_vertices()

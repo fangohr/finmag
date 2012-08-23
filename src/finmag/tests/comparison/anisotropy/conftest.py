@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import dolfin as df
-from finmag.util.meshes import convert_mesh
+from finmag.util.meshes import from_geofile
 from finmag.energies import UniaxialAnisotropy
 from finmag.util.helpers import sphinx_sci as s
 
@@ -26,7 +26,7 @@ def m_gen(r):
 
 def setup():
     print "Running finmag..."
-    mesh = df.Mesh(convert_mesh(os.path.join(MODULE_DIR, "bar.geo")))
+    mesh = from_geofile(os.path.join(MODULE_DIR, "bar.geo"))
     coords = np.array(zip(* mesh.coordinates()))
 
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
