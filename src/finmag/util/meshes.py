@@ -3,9 +3,6 @@ This module contains convenience functions to create common types of
 meshes. The execution time may be relatively slow (in particular for
 fine meshes) because the mesh creation is done externally via Netgen.
 
-It might be nice to reimplement some of these using Dolfin-internal
-mesh functions so that they are faster.
-
 Caveat: Netgen only saves the first 5-6 digits (or so) of each
 coordinate during the mesh creation process. Thus it is not advisable
 to use these functions to create meshes on the nanoscale. Instead,
@@ -67,7 +64,6 @@ def from_geofile(geofile, save_result=True, result_filename=None):
         logger.debug("The mesh %s already exists, and is automatically returned." % result_filename)
     else:
         result_filename= compress(convert_diffpack_to_xml(run_netgen(geofile)))
-
 
     mesh = Mesh(result_filename)
     if not save_result:
