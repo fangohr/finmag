@@ -55,7 +55,7 @@ class MagUnitInterval(object):
 class MagSphereBase(object):
     """Base class for MagSphere classes"""
     def __init__(self,maxh,radius=10):
-        self.mesh = Mesh(cm.spherical_mesh(radius, maxh, MODULE_DIR))
+        self.mesh = cm.sphere(radius, maxh, directory=MODULE_DIR)
         self.Ms = 1.0
         self.m = (str(self.Ms), "0.0", "0.0")
         self.M = self.m # do we need this?
