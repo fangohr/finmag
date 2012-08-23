@@ -3,12 +3,12 @@ import dolfin as df
 import numpy as np
 from finmag import Simulation as Sim
 from finmag.energies import Exchange, Demag
-from finmag.util.meshes import convert_mesh
+from finmag.util.meshes import from_geofile
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 initial_m_file = os.path.join(MODULE_DIR, "m0.txt")
 averages_file = os.path.join(MODULE_DIR, "averages.txt")
-mesh = df.Mesh(convert_mesh(os.path.join(MODULE_DIR, "mesh.geo")))
+mesh = from_geofile(os.path.join(MODULE_DIR, "mesh.geo"))
 mesh_centre = (5, 50, 50)
 Ms = 8.6e5
 

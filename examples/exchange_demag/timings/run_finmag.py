@@ -3,7 +3,7 @@ import os, time
 import numpy as np
 import dolfin as df
 from finmag.util.timings import timings
-from finmag.util.meshes import convert_mesh
+from finmag.util.meshes import from_geofile
 
 from finmag import Simulation
 from finmag.energies import Exchange, Demag
@@ -21,7 +21,7 @@ if not os.path.isfile(os.path.join(MODULE_DIR, "bar.nmesh.h5")):
     commands.getstatusoutput(neutralmesh)
     commands.getstatusoutput(nmeshimport)
 if not os.path.isfile(os.path.join(MODULE_DIR, "bar.xml.gz")):
-    convert_mesh(os.path.join(MODULE_DIR, "bar.geo"))
+    from_geofile(os.path.join(MODULE_DIR, "bar.geo"))
 
 # Run nmag
 commands.getstatusoutput("nsim run_nmag.py --clean")

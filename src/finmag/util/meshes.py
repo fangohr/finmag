@@ -18,68 +18,83 @@ import sys
 import commands
 import logging
 import textwrap
+import hashlib
 import tempfile
 from dolfin import Mesh
 
 logger = logging.getLogger(name='finmag')
 
-def convert_mesh(geofile, xmlfile=None):
+def from_geofile(geofile, save_result=True, result_filename=None):
     """
-    Convert a .geo file to a .xml.gz file compatible with Dolfin.
-    The resulting file is placed in the same directory as inputfile,
-    unless specified.
+    Using netgen, returns a dolfin mesh object built from the given geofile.
 
     *Arguments*
         geofile (str)
             Filename of a .geo file which is compatible with netgen.
-        xmlfile (str) [optional]
-            Filename of generated .xml.gz file which is compatible with Dolfin.
+        save_result (bool) [optional]
+            Controls whether the resulting dolfin mesh is saved to disk. Doing
+            so greatly speeds up later calls to the function with the 
+            same geofile. If the geofile has been modified since the last run
+            of the mesh generation, the saved version is disregarded.
+        result_filename (str) [optional]
+            Filename of the dolfin mesh when it is saved to disk.
             If no name is given, the generated mesh file will have the same
-            basename as the original .geo file.
+            basename as the original geofile.
 
     *Return*
-        xmlfile
-            Complete filename of generated mesh. See Example.
+        mesh
+            dolfin mesh object, instance of the dolfin.cpp.Mesh class.
 
     *Example*
-        This example shows the simple case where one converts the file
-        "myfile.geo" to a dolfin compatible file "myfile.xml.gz".
+        The return value of this function can be used like a conventional
+        dolfin mesh.
 
         .. code-block:: python
 
-            from finmag.util.meshes import convert_mesh
-            convert_mesh("myfile.geo")
-
-        Another example shows that this function could be given directly
-        as input to Dolfin.Mesh. In this case, the resulting mesh
-        is stored in the same directory under the name "mymesh.xml.gz".
-
-        .. code-block:: python
-
-            mesh = Mesh(convert_mesh("myfile.geo", "mymesh.xml.gz"))
-            plot(mesh, interactive=True)
-
-    .. Note::
-
-        If an xmlfile happens to exist, it is returned unless the corresponding
-        geofile is newer than the xmlfile.
+            import dolfin 
+            from finmag.util.meshes import from_geofile
+            mesh = from_geofile(path_to_my_geofile)
+            dolfin.plot(mesh, interactive=True)
 
     """
-    if xmlfile is None:
-        xmlfile = os.path.splitext(geofile)[0] + ".xml.gz"
+    if result_filename is None:
+        result_filename = os.path.splitext(geofile)[0] + ".xml.gz"
     else:
-        if ".xml.gz" not in xmlfile:
-            xmlfile += ".xml.gz"
+        if ".xml.gz" not in result_filename:
+            result_filename += ".xml.gz"
 
-    if os.path.isfile(xmlfile) and os.path.getctime(xmlfile) > os.path.getctime(geofile):
-        logger.debug("The mesh %s already exists, and is automatically returned." % xmlfile)
-        return xmlfile
+    if os.path.isfile(result_filename) and os.path.getctime(result_filename) > os.path.getctime(geofile):
+        logger.debug("The mesh %s already exists, and is automatically returned." % result_filename)
+    else:
+        result_filename= compress(convert_diffpack_to_xml(run_netgen(geofile)))
 
-    diffpackfile = run_netgen(geofile)
-    xmlfile = convert_diffpack_to_xml(diffpackfile)
-    gzipped_xmlfile = compress(xmlfile)
 
-    return gzipped_xmlfile
+    mesh = Mesh(result_filename)
+    if not save_result:
+        os.remove(result_filename)
+    return mesh
+
+def from_csg(csg, save_result=True, result_filename=None):
+    """
+    Using netgen, returns a dolfin mesh object built from the given CSG string.
+
+    Refer to the documentation for from_geofile. By default, the generated mesh
+    is saved to disk, with a filename which is the md5 hash of the csg string.
+
+    """
+    tmp = tempfile.NamedTemporaryFile(suffix='.geo', delete=False)
+    tmp.write(csg)
+    tmp.close()
+
+    if result_filename == None:
+        result_filename = hashlib.md5(csg).hexdigest()
+
+    mesh = from_geofile(tmp.name, result_filename=result_filename)
+
+    # Since we used delete=False in NamedTemporaryFile, we are
+    # responsible for the deletion of the file.
+    os.remove(tmp.name)
+    return mesh
 
 def run_netgen(geofile):
     """
@@ -177,7 +192,7 @@ def spherical_mesh(radius, maxh, directory=""):
     geofile = os.path.join(directory, filename + ".geo")
     with open(geofile, "w") as f:
         f.write(csg_for_sphere(radius, maxh))
-    meshfile = convert_mesh(geofile)
+    meshfile = from_geofile(geofile)
     os.remove(geofile)
 
     return meshfile
@@ -194,6 +209,7 @@ def csg_for_sphere(radius, maxh):
         solid main = sphere ( 0, 0, 0; {radius} ) -maxh = {maxh};
         tlo main;""").format(radius=radius, maxh=maxh)
     return csg
+
 def _mesh_from_csg_string(csg_string):
     """
     This function writes the 'csg_string' (which should contain a
@@ -209,11 +225,11 @@ def _mesh_from_csg_string(csg_string):
     f = tempfile.NamedTemporaryFile(suffix='.geo', delete=False, dir=tmpdir)
     f.write(csg_string)
     f.close()
-    tmpmeshfile = convert_mesh(f.name)
-    return Mesh(tmpmeshfile)
+    mesh = from_geofile(f.name)
+    return mesh
 
 # TODO: This function duplicates functionality of the function
-#       'spherical_mesh' in convert_mesh.py. It would be nice to unify
+#       'spherical_mesh' in from_geofile.py. It would be nice to unify
 #       them. The main difference is that the latter saves the mesh to
 #       a file, whereas this one returns the mesh directly. In
 #       general, it might be helpful to have two flavours for each
@@ -221,7 +237,7 @@ def _mesh_from_csg_string(csg_string):
 #       one which writes it to a file (where the former would probably
 #       call the latter, only with a temporary file as is done in the
 #       function _mesh_from_csg_string above).
-def spherical_mesh(radius, maxh):
+def sphere(radius, maxh):
     """
     Return a dolfin mesh representing a sphere of radius `radius`.
     `maxh` controls the maximal element size in the mesh (see the

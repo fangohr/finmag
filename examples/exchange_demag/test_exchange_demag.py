@@ -7,7 +7,7 @@ import progressbar as pb
 import finmag.util.helpers as h
 from finmag import Simulation as Sim
 from finmag.energies import Exchange, Demag
-from finmag.util.meshes import convert_mesh
+from finmag.util.meshes import from_geofile
 
 logger = logging.getLogger(name='finmag')
 
@@ -15,7 +15,7 @@ MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 REL_TOLERANCE = 1e-4
 Ms = 0.86e6
 unit_length = 1e-9
-mesh = df.Mesh(convert_mesh(os.path.join(MODULE_DIR, "bar30_30_100.geo")))
+mesh = from_geofile(os.path.join(MODULE_DIR, "bar30_30_100.geo"))
 
 
 def run_finmag():

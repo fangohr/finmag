@@ -4,12 +4,12 @@ import numpy as np
 from math import pi, sin, cos
 from finmag import Simulation as Sim
 from finmag.energies import Exchange, Zeeman
-from finmag.util.meshes import convert_mesh
+from finmag.util.meshes import from_geofile
 from finmag.util.consts import mu0
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 averages_file = os.path.join(MODULE_DIR, "averages_no_stt.txt")
-mesh = df.Mesh(convert_mesh(os.path.join(MODULE_DIR, "mesh.geo")))
+mesh = from_geofile(os.path.join(MODULE_DIR, "mesh.geo"))
 
 def run_simulation():
     L = W = 12.5e-9; H = 5e-9;

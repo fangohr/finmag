@@ -1,7 +1,7 @@
 import os
 import dolfin as df
 import numpy as np
-from finmag.util.meshes import convert_mesh
+from finmag.util.meshes import from_geofile
 from finmag.util.helpers import quiver, read_float_data
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -45,7 +45,7 @@ plt.savefig(os.path.join(MODULE_DIR, "m_averages.pdf"))
 import sys; sys.exit()
 # 3D plots for magnetisation at t0 and at zero crossing
 
-mesh = df.Mesh(convert_mesh(mesh_file))
+mesh = from_geofile(mesh_file)
 m0_np = np.loadtxt(initial_m_file)
 m1_np = np.loadtxt(zero_crossing_m_file)
 
