@@ -3,7 +3,7 @@ import shutil
 import tempfile
 import textwrap
 from finmag.util.meshes import *
-from dolfin import Mesh, cells
+from dolfin import Mesh, cells, assemble, Constant, dx
 from math import pi
 
 TOLERANCE = 0.1
@@ -44,10 +44,8 @@ def test_from_geofile():
         # Check that the volume of the sphere is approximately correct
         vol_exact = 4.0/3*pi*radius**2
         for mesh in [mesh1, mesh2, mesh3]:
-            vol = 0.0
-            for c in cells(mesh):
-                vol += c.volume()
-            assert(abs(vol - vol_exact) < TOLERANCE)
+            vol_mesh = assemble(Constant(1)*dx, mesh=mesh)
+            assert(abs(vol_mesh - vol_exact) < TOLERANCE)
     finally:
         tmpfile.close()
         shutil.rmtree(tmpdir)
