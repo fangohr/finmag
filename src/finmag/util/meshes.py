@@ -76,20 +76,20 @@ def from_geofile(geofile, save_result=True):
         os.remove(result_filename)
     return mesh
 
-def from_csg(csg, save_result=True, directory="", name=""):
+def from_csg(csg, save_result=True, filename=None):
     """
     Using netgen, returns a dolfin mesh object built from the given CSG string.
 
-    If save_result is True (which is the default), both the generated
+    If `save_result` is True (which is the default), both the generated
     geofile and the dolfin mesh are saved to disk. By default, the
-    filenames will use the md5 hash of the csg string, but can be
-    specified by passing a name (without suffix).
+    filename will use the md5 hash of the csg string, but can be
+    specified by passing a name (without suffix) into `filename`.
 
     """
     if save_result:
-        if name == "":
-            name = hashlib.md5(csg).hexdigest()
-        geofile = os.path.join(directory, name + ".geo")
+        if filename is None:
+            filename = hashlib.md5(csg).hexdigest()
+        geofile = os.path.join(filename + ".geo")
         with open(geofile, "w") as f:
             f.write(csg)
         mesh = from_geofile(geofile, save_result=True)
@@ -180,13 +180,17 @@ def compress(filename):
         sys.exit(4)
     return filename + ".gz"
 
-def sphere(radius, maxh, directory=""):
+def sphere(radius, maxh, save_result=True, filename=None):
     """
     Returns a dolfin mesh object describing a sphere with given radius and mesh coarseness.
 
-    It will save both the generated geofile and the dolfin mesh to disk.
-    Pass a directory into directory, if you want to control where the
-    saved files end up.
+    If `save_result` is True (the default), both the generated geofile
+    and the dolfin mesh will be saved to disk. By default, the
+    filename will be automatically generated based on the values of
+    `radius` and `maxh` (for example, 'sphere-10_0-0_2.geo'), but a
+    different one can be specified by passing a name (without suffix)
+    into `filename`. If `save_result` is False, passing a filename has
+    no effect.
 
     """
     csg = textwrap.dedent("""\
@@ -194,16 +198,22 @@ def sphere(radius, maxh, directory=""):
         solid main = sphere ( 0, 0, 0; {radius} ) -maxh = {maxh};
         tlo main;""").format(radius=radius, maxh=maxh)
 
-    name = "sphere-{:.1f}-{:.1f}".format(radius, maxh).replace(".", "_")
-    return from_csg(csg, directory=directory, name=name)
+    if save_result == True and filename is None:
+        filename = "sphere-{:.1f}-{:.1f}".format(radius, maxh).replace(".", "_")
+    return from_csg(csg, save_result=save_result, filename=filename)
 
-def cylinder(radius, height, maxh, directory=""):
+def cylinder(radius, height, maxh, save_result=True, filename=None):
     """
     Return a dolfin mesh representing a cylinder of radius `radius`
     and height `height`. `maxh` controls the maximal element size in
     the mesh (see the Netgen manual 4.x, Chapter 2).
 
-    It will save both the generated geofile and the dolfin mesh to disk.
+    If `save_result` is True (the default), both the generated geofile and
+    the dolfin mesh will be saved to disk. By default, the filename will be
+    automatically generated based on the values of `radius`, `height`
+    and `maxh` (for example, 'cyl-50_0-10_0-0_2.geo'), but a different
+    one can be specified by passing a name (without suffix) into `filename`
+    If `save_result` is False, passing a filename has no effect.
 
     """
     csg_string = textwrap.dedent("""\
@@ -212,5 +222,6 @@ def cylinder(radius, height, maxh, directory=""):
               and plane (0, 0, 0; 0, 0, -1)
               and plane (0, 0, {height}; 0, 0, 1) -maxh = {maxh};
         tlo fincyl;""").format(radius=radius, height=height, maxh=maxh)
-    name = "cyl-{:.1f}-{:.1f}-{:.1f}".format(radius, height, maxh).replace(".", "_")
-    return from_csg(csg_string, directory=directory, name=name)
+    if save_result == True and filename is None:
+        filename = "cyl-{:.1f}-{:.1f}-{:.1f}".format(radius, height, maxh).replace(".", "_")
+    return from_csg(csg_string, save_result=save_result, filename=filename)
