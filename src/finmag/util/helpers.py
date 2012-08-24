@@ -43,7 +43,8 @@ def normalise(vs, length=1):
     Expects the vectors in a list of the form [[x0, y0, z0], ..., [xn, yn, zn]].
 
     """
-    return np.array([length*v/norm(v) for v in vs])
+    vs = np.array(vs)
+    return length*vs/norm(vs)
 
 def fnormalise(arr, length=1):
     """
