@@ -8,19 +8,22 @@ from math import pi
 
 TOLERANCE = 0.1
 
-def test_from_geofile():
+def test_from_geofile_and_from_csg():
     radius = 1.0
     maxh = 0.2
 
     tmpdir = tempfile.mkdtemp()
     tmpfile = tempfile.NamedTemporaryFile(suffix='.geo', dir=tmpdir, delete=False)
+
+    csg_string = textwrap.dedent("""\
+        algebraic3d
+        solid main = sphere (0, 0, 0; {radius}) -maxh = {maxh};
+        tlo main;""").format(radius=radius, maxh=maxh)
+
     try:
         # Create a temporay .geo file which contains the geometric
         # description of a sphere.
-        tmpfile.write(textwrap.dedent("""\
-            algebraic3d
-            solid main = sphere (0, 0, 0; {radius}) -maxh = {maxh};
-            tlo main;""").format(radius=radius, maxh=maxh))
+        tmpfile.write(csg_string)
         tmpfile.close()
 
         geofile = tmpfile.name
@@ -41,9 +44,12 @@ def test_from_geofile():
         assert(isinstance(mesh3, Mesh))
         assert(os.path.isfile(xmlfile))
 
+        # Create a mesh from a CSG string directly
+        mesh4 = from_csg(csg_string, save_result=False)
+
         # Check that the volume of the sphere is approximately correct
         vol_exact = 4.0/3*pi*radius**2
-        for mesh in [mesh1, mesh2, mesh3]:
+        for mesh in [mesh1, mesh2, mesh3, mesh4]:
             vol_mesh = assemble(Constant(1)*dx, mesh=mesh)
             assert(abs(vol_mesh - vol_exact) < TOLERANCE)
     finally:
