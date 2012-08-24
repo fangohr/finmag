@@ -29,12 +29,13 @@ def from_geofile(geofile, save_result=True):
         geofile (str)
             Filename of a .geo file which is compatible with netgen.
         save_result (bool) [optional]
-            Controls whether the resulting dolfin mesh is saved to disk. Doing
-            so greatly speeds up later calls to the function with the 
-            same geofile. If the geofile has been modified since the last run
-            of the mesh generation, the saved version is disregarded.
-            The file will have the same basename as the geofile, just with the
-            extension .xml.gz instead of .geo, and will be placed in 
+            Controls whether the resulting dolfin mesh is saved to
+            disk (default: True). Doing so greatly speeds up later
+            calls to the function with the same geofile. If the
+            geofile has been modified since the last run of the mesh
+            generation, the saved version is disregarded. The file
+            will have the same basename as the geofile, just with the
+            extension .xml.gz instead of .geo, and will be placed in
             the same directory.
 
     *Return*
@@ -68,10 +69,10 @@ def from_csg(csg, save_result=True, directory="", name=""):
     """
     Using netgen, returns a dolfin mesh object built from the given CSG string.
 
-    If save_result is True, both the generated geofile and the dolfin mesh
-    are saved to disk. By default, the filenames will use the md5 hash
-    of the csg string, but can be specified by passing a
-    name (without suffix).
+    If save_result is True (which is the default), both the generated
+    geofile and the dolfin mesh are saved to disk. By default, the
+    filenames will use the md5 hash of the csg string, but can be
+    specified by passing a name (without suffix).
 
     """
     if save_result:
