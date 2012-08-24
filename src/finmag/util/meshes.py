@@ -55,16 +55,24 @@ def from_geofile(geofile, save_result=True):
 
     """
     result_filename = os.path.splitext(geofile)[0] + ".xml.gz"
-    result_file_already_exists = False
-    if os.path.isfile(result_filename) and os.path.getctime(result_filename) > os.path.getctime(geofile):
-        result_file_already_exists = True
-        logger.debug("The mesh %s already exists, and is automatically returned." % result_filename)
-    else:
+    result_file_exists = False
+    skip_mesh_creation = False
+
+    if os.path.isfile(result_filename):
+        result_file_exists = True
+        if os.path.getctime(result_filename) < os.path.getctime(geofile) and save_result==False:
+            # TODO: If save_result is False but the .xml.gz file already exists, it will be updated (hence, saved) anyway. Is this desired?
+            logger.warn("The mesh file '{}' is outdated (since it is older than the .geo file '{}') and will be overwritten.".format(result_filename, geofile))
+        else:
+            logger.debug("The mesh %s already exists, and is automatically returned." % result_filename)
+            skip_mesh_creation = True
+
+    if not skip_mesh_creation:
         result_filename = compress(convert_diffpack_to_xml(run_netgen(geofile)))
 
     mesh = Mesh(result_filename)
-    if not save_result and not result_file_already_exists:
-        # We only delete the .xml.gz file if it didn't exist previously
+    if not save_result and not result_file_exists:
+        # We delete the .xml.gz file only if it didn't exist previously
         os.remove(result_filename)
     return mesh
 
