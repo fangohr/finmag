@@ -21,10 +21,10 @@ def test_vectors():
 def test_norm():
     assert norm([0, 0, 0]) == 0
     assert norm([1, 0, 0]) == 1
-    assert norm([1, 1, 0]) - np.sqrt(2) < TOLERANCE
-    assert norm([1, 1, 1]) - np.sqrt(3) < TOLERANCE
-    assert norm([-1, 0, 0]) - norm([1, 0, 0]) < TOLERANCE 
-    assert 3*norm([1, 1, 1]) - norm(3*np.array([1, 1, 1])) < TOLERANCE
+    assert abs(norm([1, 1, 0]) - np.sqrt(2)) < TOLERANCE
+    assert abs(norm([1, 1, 1]) - np.sqrt(3)) < TOLERANCE
+    assert abs(norm([-1, 0, 0]) - norm([1, 0, 0])) < TOLERANCE 
+    assert abs(3*norm([1, 1, 1]) - norm(3*np.array([1, 1, 1]))) < TOLERANCE
 
 def test_fnormalise():
     a = np.array([1., 1., 2., 2., 0., 0.])
@@ -87,9 +87,9 @@ def test_fnormalise():
 
 
 def test_angle():
-    assert angle([1,0,0],[1,0,0])           < TOLERANCE
-    assert angle([1,0,0],[0,1,0]) - np.pi/2 < TOLERANCE
-    assert angle([1,0,0],[1,1,0]) - np.pi/4 < TOLERANCE
+    assert abs(angle([1,0,0],[1,0,0]))           < TOLERANCE
+    assert abs(angle([1,0,0],[0,1,0]) - np.pi/2) < TOLERANCE
+    assert abs(angle([1,0,0],[1,1,0]) - np.pi/4) < TOLERANCE
 
 def test_rows_to_columns():
     x = np.array([[1, 2, 3], [1, 2, 3], [1, 2, 3]])
@@ -107,4 +107,4 @@ def test_perturbed_vectors():
 
     for v in vector_field:
         assert len(v) == 3
-        assert norm(v) - 5 < TOLERANCE
+        assert abs(norm(v) - 5) < TOLERANCE
