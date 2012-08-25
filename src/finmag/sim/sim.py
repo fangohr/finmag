@@ -70,11 +70,17 @@ class Simulation(object):
             self.integrator = LLGIntegrator(self.llg, self.llg.m)
         self.integrator.run_until(t)
 
-    def relax(self, stopping_dmdt=ONE_DEGREE_PER_NS, dmdt_increased_counter_limit=20):
+    def relax(self, save_snapshots=False, filename=None, stopping_dmdt=ONE_DEGREE_PER_NS, dmdt_increased_counter_limit=20):
         """
         Do time integration of the magnetisation M until it reaches a state
         where the change of M magnetisation at each node is smaller than the
         threshold `stopping_dm_dt` (which should be given in rad/s).
+
+        If save_snapshots is True (default: False) then a series of snapshots
+        is saved to `filename` (which must be specified in this case). If Xi
+        `filename` contains directory components then these are created if they
+        do not already exist.
+        TODO: It is currently not possible to control the timesteps at which the snapshots are saved!
 
         For details and the meaning of the other keywork arguments see the
         docstring of sim.integrator.BaseIntegrator.run_until_relaxation().
@@ -82,7 +88,10 @@ class Simulation(object):
         log.info("Will integrate until relaxation.")
         if not hasattr(self, "integrator"):
             self.integrator = LLGIntegrator(self.llg, self.llg.m)
-        self.integrator.run_until_relaxation(stopping_dmdt=stopping_dmdt dmdt_increased_counter_limit=dmdt_increased_counter_limit)
+        self.integrator.run_until_relaxation(stopping_dmdt=stopping_dmdt,
+                                             dmdt_increased_counter_limit=dmdt_increased_counter_limit,
+                                             save_snapshots=save_snapshots,
+                                             filename=filename)
 
     def __get_pins(self):
         return self.llg.pins

@@ -6,9 +6,11 @@
 #
 # AUTHOR(S) OF THIS FILE: Dmitri Chernyshenko (d.chernyshenko@soton.ac.uk)
 
+import os
 import logging
 import scipy.integrate
 import numpy as np
+import dolfin as df
 from finmag.native import sundials
 
 log = logging.getLogger(name="finmag")
@@ -27,7 +29,7 @@ def LLGIntegrator(llg, m0, backend="sundials", **kwargs):
 
 
 class BaseIntegrator(object):
-    def run_until_relaxation(self, stopping_dmdt=ONE_DEGREE_PER_NS, dmdt_increased_counter_limit=20):
+    def run_until_relaxation(self, stopping_dmdt=ONE_DEGREE_PER_NS, dmdt_increased_counter_limit=20, save_snapshots=False, filename=None):
         """
         Run integration until the maximum |dm/dt| is smaller than the
         threshold value stopping_dmdt (which is one degree per
@@ -39,7 +41,18 @@ class BaseIntegrator(object):
         increases `dmdt_increased_counter_limit` times during the integration
         (default value: 20).
 
+        If save_snapshots is True (default: False) then a series of snapshots
+        is saved to `filename` (which must be specified in this case). If Xi
+        `filename` contains directory components then these are created if they
+        do not already exist.
         """
+        if save_snapshots == True and filename in (None, ''):
+            raise ValueError("If save_snapshots is True, filename must be a non-empty string.")
+        ext = os.path.splitext(filename)[1]
+        if ext != '.pvd':
+            raise ValueError("File extension for vtk snapshot file must be '.pvd', but got: '{}'".format(ext))
+        f = df.File(filename, 'compressed')
+
         dt = 1e-14 # TODO: use the characteristic time here
 
         dt_limit = 1e-10; dt_increment_multi = 1.5;
@@ -47,6 +60,9 @@ class BaseIntegrator(object):
 
         last_max_dmdt_norm = 1e99
         while True:
+            log.debug("Saving snapshot of timestep t={:.2} to file '{}'".format(self.llg.t, filename))
+            f << self.llg._m
+
             prev_m = self.llg.m.copy()
 
             # Why is self.cur_t alias CVodeGetCurrentTime not updated?
