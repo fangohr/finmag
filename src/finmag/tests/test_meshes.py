@@ -2,11 +2,31 @@ import os
 import shutil
 import tempfile
 import textwrap
+from py.test import raises
 from finmag.util.meshes import *
+from finmag.util.meshes import _normalize_filepath
 from dolfin import Mesh, cells, assemble, Constant, dx
 from math import pi
 
 TOLERANCE = 0.1
+
+def test_normalize_filepath():
+    assert(_normalize_filepath(None, 'foo.txt') == (os.curdir, 'foo.txt'))
+    assert(_normalize_filepath('', 'foo.txt') == (os.curdir, 'foo.txt'))
+    assert(_normalize_filepath(None, 'bar/baz/foo.txt') == ('bar/baz', 'foo.txt'))
+    assert(_normalize_filepath(None, '/bar/baz/foo.txt') == ('/bar/baz', 'foo.txt'))
+    assert(_normalize_filepath('/bar/baz', 'foo.txt') == ('/bar/baz', 'foo.txt'))
+    assert(_normalize_filepath('/bar/baz/', 'foo.txt') == ('/bar/baz', 'foo.txt'))
+    with raises(TypeError):
+        _normalize_filepath(42, None)
+    with raises(TypeError):
+        _normalize_filepath(None, 23)
+    with raises(ValueError):
+        _normalize_filepath(None, '')
+    with raises(ValueError):
+        _normalize_filepath('bar', '')
+    with raises(ValueError):
+        _normalize_filepath('bar', 'baz/foo.txt')
 
 def test_from_geofile_and_from_csg():
     radius = 1.0
