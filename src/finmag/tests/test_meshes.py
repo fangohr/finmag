@@ -5,7 +5,7 @@ import textwrap
 from py.test import raises
 from finmag.util.meshes import *
 from finmag.util.meshes import _normalize_filepath
-from dolfin import Mesh, cells, assemble, Constant, dx
+from dolfin import Mesh
 from math import pi
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -76,7 +76,7 @@ def disabled_test_from_geofile_and_from_csg():
         # Check that the volume of the sphere is approximately correct
         vol_exact = 4.0/3*pi*radius**2
         for mesh in [mesh1, mesh2, mesh3, mesh4]:
-            vol_mesh = assemble(Constant(1)*dx, mesh=mesh)
+            vol_mesh = mesh_volume(mesh)
             assert(abs(vol_mesh - vol_exact)/vol_exact < TOLERANCE)
     finally:
         tmpfile.close()
@@ -95,7 +95,7 @@ def test_box():
     #       is loaded from a file for faster execution.
     mesh = box(x0, x1, x2, y0, y1, y2, maxh=maxh, save_result=False)
     vol_exact = abs((y0-x0)*(y1-x1)*(y2-x2))
-    vol_mesh = assemble(Constant(1)*dx, mesh=mesh)
+    vol_mesh = mesh_volume(mesh)
     assert(abs(vol_mesh - vol_exact)/vol_exact < BOX_TOLERANCE)
 
 def test_sphere():
@@ -104,7 +104,7 @@ def test_sphere():
 
     mesh = sphere(radius=radius, maxh=maxh, save_result=True, directory=MODULE_DIR)
     vol_exact = 4.0/3*pi*radius**2
-    vol_mesh = assemble(Constant(1)*dx, mesh=mesh)
+    vol_mesh = mesh_volume(mesh)
     assert(abs(vol_mesh - vol_exact)/vol_exact < TOLERANCE)
 
 def test_cylinder():
@@ -114,5 +114,5 @@ def test_cylinder():
 
     mesh = cylinder(radius=radius, height=height, maxh=maxh, save_result=True, directory=MODULE_DIR)
     vol_exact = pi*radius**2*height
-    vol_mesh = assemble(Constant(1)*dx, mesh=mesh)
+    vol_mesh = mesh_volume(mesh)
     assert(abs(vol_mesh - vol_exact)/vol_exact < TOLERANCE)
