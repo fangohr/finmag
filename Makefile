@@ -36,6 +36,8 @@ RUN_UNIT_TESTS = $(PROJECT_DIR)/src/finmag/util/run_ci_tests.py
 NATIVE_DIR = native
 # The list of directories that contain unittest unit tests
 TEST_ROOTS = src
+# Set TEST_OPTIONS to e.g. '-sxv' to disable capturing of standard output, exit instantly on the first error, and increase verbosity.
+TEST_OPTIONS ?=
 
 ######### Other variables
 # Directory where precompiled header files are placed during compilation
@@ -45,7 +47,7 @@ export DISABLE_PYTHON_MAKE = 1
 
 default:
 	@echo 'This makefile is used for CI only; do not use directly.' 
-	
+
 ci: test doc
 
 doc: doc-html
@@ -58,7 +60,7 @@ doc-pdf:
 
 make-modules:
 	make -C $(NATIVE_DIR) all
-	
+
 clean:
 	make -C $(NATIVE_DIR) clean
 	rm -rf test-reports
@@ -79,7 +81,7 @@ fasttest : make-modules $(addsuffix /__runtests__,$(TEST_ROOTS)) run-ci-tests
 	(cd $(dir $@) && NETGENDIR=$(NETGENDIR) PYTHONPATH=$(PYTHON_ROOTS):. python $(RUN_UNIT_TESTS))
 
 run-pytest-tests : create-dirs
-	PYTHONPATH=$(PYTHON_ROOTS) py.test src examples --junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
+	PYTHONPATH=$(PYTHON_ROOTS) py.test $(TEST_OPTIONS) src examples --junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
 
 run-ci-tests :
 	make -C $(NATIVE_DIR) run-ci-tests
