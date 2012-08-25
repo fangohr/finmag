@@ -220,14 +220,24 @@ def normed_func(value, Space, **kwargs):
 
 def normalize_filepath(dirname, filename):
     """
-    Construct a "normalized" pair (d,f) from the input arguments, where d is
-    the directory component (without the trailing slash) and f is a filename.
+    Return a pair (dirname_new, filename_new) which describes the same
+    path as (dirname, filename), but where `dirname_new` contains all
+    directory components (i.e., any directory components present in
+    `filename` are copied over). Both `dirname_new` and `filename_new`
+    are guaranteed to be strings (with `dirname_new` possibly being
+    empty).
 
-    If `dirname` is None, `filename` is allowed to contain path components
-    (which can be relative or absolute). If dirname is None (or empty) and
-    filename does *not* contain any path components, dirname is set to the
-    current directory (= os.curdir). If `directory` is not None, `filename`
-    must be a simple string without any path components.
+    Examples:
+
+        normalize_filepath(None, 'foo/bar.txt') = ('foo', 'bar.txt')
+        normalize_filepath('foo', 'bar/baz.txt') = ('foo/bar', 'baz.txt')
+
+    `dirname` may be None or any string (including the empty string).
+    `filename` must be a non-empty string.
+
+    `filename` is allowed to contain directory components, but if
+    `directory` is specified (i.e., neither None nor the empty string)
+    then `filename` must not describe an absolute path.
     """
     if not isinstance(dirname, (str, types.NoneType)):
         raise TypeError("'dirname' must be a string or None (got: '%s' of type '%s')".format(dirname, type(dirname)))
@@ -236,10 +246,10 @@ def normalize_filepath(dirname, filename):
     if filename == '':
         raise ValueError("'filename' must not be empty")
 
-    fdir = os.path.dirname(filename)
-    if dirname != None and fdir != "":
-        raise ValueError("'dirname' must be None if 'filename' contains a path component. Values given: dirname='{}', filename='{}'".format(dirname, filename))
+    if os.path.isabs(filename) and dirname not in (None, ''):
+        raise ValueError("If 'dirname' is specified the 'filename' must not contain an absolute path. Arguments given: dirname='{}', filename='{}'".format(dirname, filename))
 
-    d = os.path.normpath(dirname or fdir or os.curdir)
-    f = os.path.basename(filename)
-    return (d,f)
+    full_name = os.path.join(dirname or "", filename)
+    d = os.path.dirname(full_name)
+    f = os.path.basename(full_name)
+    return (d, f)
