@@ -2,33 +2,13 @@ import os
 import shutil
 import tempfile
 import textwrap
-from py.test import raises
 from finmag.util.meshes import *
-from finmag.util.meshes import _normalize_filepath
 from dolfin import Mesh
 from math import pi
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 TOLERANCE = 0.05
 BOX_TOLERANCE = 1e-10 # tolerance for the box() method, which should be much more precise
-
-def test_normalize_filepath():
-    assert(_normalize_filepath(None, 'foo.txt') == (os.curdir, 'foo.txt'))
-    assert(_normalize_filepath('', 'foo.txt') == (os.curdir, 'foo.txt'))
-    assert(_normalize_filepath(None, 'bar/baz/foo.txt') == ('bar/baz', 'foo.txt'))
-    assert(_normalize_filepath(None, '/bar/baz/foo.txt') == ('/bar/baz', 'foo.txt'))
-    assert(_normalize_filepath('/bar/baz', 'foo.txt') == ('/bar/baz', 'foo.txt'))
-    assert(_normalize_filepath('/bar/baz/', 'foo.txt') == ('/bar/baz', 'foo.txt'))
-    with raises(TypeError):
-        _normalize_filepath(42, None)
-    with raises(TypeError):
-        _normalize_filepath(None, 23)
-    with raises(ValueError):
-        _normalize_filepath(None, '')
-    with raises(ValueError):
-        _normalize_filepath('bar', '')
-    with raises(ValueError):
-        _normalize_filepath('bar', 'baz/foo.txt')
 
 # Note: the test below is disabled for the time being because it adds
 # some time to the execution of the test suite but doesn't provide
