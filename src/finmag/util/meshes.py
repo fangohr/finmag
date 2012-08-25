@@ -75,6 +75,7 @@ def from_geofile(geofile, save_result=True):
     if not save_result and not result_file_exists:
         # We delete the .xml.gz file only if it didn't exist previously
         os.remove(result_filename)
+        logger.debug("Removing file '%s' because mesh is created on the fly." % result_filename)
     return mesh
 
 def _normalize_filepath(dirname, filename):
@@ -130,6 +131,7 @@ def from_csg(csg, save_result=True, filename=None, directory=None):
         # Since we used delete=False in NamedTemporaryFile, we are
         # responsible for the deletion of the file.
         os.remove(tmp.name)
+        logger.debug("Removing file '%s' because mesh is created on the fly." % tmp.name)
     return mesh
 
 def run_netgen(geofile):
