@@ -1,3 +1,4 @@
+import os
 import time
 import logging
 import dolfin as df
@@ -141,9 +142,44 @@ class Simulation(object):
         else:
             self.llg.do_slonczewski = not self.llg.do_slonczewski
 
+    def vtk_snapshot(self, filename="", directory=""):
+        """
+        Save a snapshot of the current magnetisation configuration to a .pvd file
+        (in VTK format) which can later be inspected using Paraview, for example.
+
+        If `filename` is empty, a default filename will be generated based on a
+        sequentially increasing counter and the current timestep of the simulation.
+
+        If `directory` is non-empty then the file will be saved in the specified directory.
+
+        Note that `filename` is also allowed to contain directory components
+        (for example filename='snapshots/foo.pvd'), which are simply appended
+        to `directory`. However, if `filename` contains an absolute path then
+        the value of `directory` is ignored.
+
+        All directory components present in either `directory` or `filename`
+        are created if they do not already exist.
+
+        """
+        if not hasattr(self, "vtk_snapshot_no"):
+            self.vtk_snapshot_no = 1
+        if filename == "":
+            filename = "snapshot_{}_{:.3f}ns.pvd".format(self.vtk_snapshot_no, self.llg.t*1e9)
+
+        ext = os.path.splitext(filename)[1]
+        if ext != '.pvd':
+            raise ValueError("File extension for vtk snapshot file must be '.pvd', but got: '{}'".format(ext))
+        if os.path.isabs(filename) and directory != "":
+            log.warning("Ignoring 'directory' argument (value given: '{}') because 'filename' contains an absolute path: '{}'".format(directory, filename))
+
+        output_file = os.path.join(directory, filename)
+        f = df.File(output_file, "compressed")
+        f << self.llg._m
+        log.info("Saved snapshot of magnetisation at t={} to file '{}'.".format(self.llg.t, output_file))
+
     def snapshot(self, filename=None):
         """
-        Save a snapshot of the current magnetisation configuration to a file (using Mayavi).
+        Save a snapshot of the current magnetisation configuration to a pdf file (using Mayavi2).
 
         If `filename` is None, a default filename will be generated based on a
         sequentially increasing counter and the current timestep of the simulation.
@@ -160,4 +196,4 @@ class Simulation(object):
                mode="cone",
                mask_points=one_in_x)
         self.snapshot_no += 1
-        log.info("Saved snapshot of magnetisation at t={} to {}.".format(self.llg.t, filename))
+        log.info("Saved snapshot of magnetisation at t={} to file '{}'.".format(self.llg.t, filename))
