@@ -18,7 +18,7 @@ import logging
 import textwrap
 import hashlib
 import tempfile
-from dolfin import Mesh
+from dolfin import Mesh, cells, assemble, Constant, dx
 
 logger = logging.getLogger(name='finmag')
 
@@ -294,3 +294,9 @@ def cylinder(radius, height, maxh, save_result=True, filename=None, directory=No
     if save_result == True and filename is None:
         filename = "cyl-{:.1f}-{:.1f}-{:.1f}".format(radius, height, maxh).replace(".", "_")
     return from_csg(csg_string, save_result=save_result, filename=filename, directory=directory)
+
+def mesh_volume(mesh):
+    """
+    Computes the sum of the volumes of all tetrahedral cells in the mesh.
+    """
+    return assemble(Constant(1)*dx, mesh=mesh)
