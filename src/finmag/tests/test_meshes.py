@@ -94,11 +94,8 @@ def test_box():
     #       mesh creation. In the other tests, we use 'save_result=True' so that the mesh
     #       is loaded from a file for faster execution.
     mesh = box(x0, x1, x2, y0, y1, y2, maxh=maxh, save_result=False)
-    print "Num nodes: %s" % mesh.num_vertices()
-
     vol_exact = abs((y0-x0)*(y1-x1)*(y2-x2))
     vol_mesh = assemble(Constant(1)*dx, mesh=mesh)
-
     assert(abs(vol_mesh - vol_exact)/vol_exact < BOX_TOLERANCE)
 
 def test_sphere():
@@ -106,8 +103,6 @@ def test_sphere():
     maxh = 0.2
 
     mesh = sphere(radius=radius, maxh=maxh, save_result=True, directory=MODULE_DIR)
-    print "Num nodes: %s" % mesh.num_vertices()
-
     vol_exact = 4.0/3*pi*radius**2
     vol_mesh = assemble(Constant(1)*dx, mesh=mesh)
     assert(abs(vol_mesh - vol_exact)/vol_exact < TOLERANCE)
@@ -118,8 +113,6 @@ def test_cylinder():
     maxh = 0.2
 
     mesh = cylinder(radius=radius, height=height, maxh=maxh, save_result=True, directory=MODULE_DIR)
-    print "Num nodes: %s" % mesh.num_vertices()
-
     vol_exact = pi*radius**2*height
     vol_mesh = assemble(Constant(1)*dx, mesh=mesh)
     assert(abs(vol_mesh - vol_exact)/vol_exact < TOLERANCE)
