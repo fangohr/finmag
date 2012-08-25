@@ -103,7 +103,7 @@ def _normalize_filepath(dirname, filename):
     f = os.path.basename(filename)
     return (d,f)
 
-def from_csg(csg, save_result=True, filename=None):
+def from_csg(csg, save_result=True, filename=None, directory=None):
     """
     Using netgen, returns a dolfin mesh object built from the given CSG string.
 
@@ -113,10 +113,12 @@ def from_csg(csg, save_result=True, filename=None):
     specified by passing a name (without suffix) into `filename`.
 
     """
+    if filename is None:
+        filename = hashlib.md5(csg).hexdigest()
+    (directory, filename) = _normalize_filepath(directory, filename)
+
     if save_result:
-        if filename is None:
-            filename = hashlib.md5(csg).hexdigest()
-        geofile = os.path.join(filename + ".geo")
+        geofile = os.path.join(directory, os.path.join(filename + ".geo"))
         with open(geofile, "w") as f:
             f.write(csg)
         mesh = from_geofile(geofile, save_result=True)
@@ -198,7 +200,7 @@ def compress(filename):
     Compress file using gzip.
 
     """
-    logger.debug("Compressing {}.".format(filename))
+    logger.debug("Compressing {}".format(filename))
     compr_cmd = 'gzip -f %s' % filename
     status, output = commands.getstatusoutput(compr_cmd)
     if status != 0:
@@ -207,7 +209,7 @@ def compress(filename):
         sys.exit(4)
     return filename + ".gz"
 
-def sphere(radius, maxh, save_result=True, filename=None):
+def sphere(radius, maxh, save_result=True, filename=None, directory=None):
     """
     Returns a dolfin mesh object describing a sphere with given radius and mesh coarseness.
 
@@ -219,6 +221,9 @@ def sphere(radius, maxh, save_result=True, filename=None):
     into `filename`. If `save_result` is False, passing a filename has
     no effect.
 
+    The `directory` argument can be used to control where the files
+    should be saved in case no filename is given explicitly.
+
     """
     csg = textwrap.dedent("""\
         algebraic3d
@@ -227,9 +232,9 @@ def sphere(radius, maxh, save_result=True, filename=None):
 
     if save_result == True and filename is None:
         filename = "sphere-{:.1f}-{:.1f}".format(radius, maxh).replace(".", "_")
-    return from_csg(csg, save_result=save_result, filename=filename)
+    return from_csg(csg, save_result=save_result, filename=filename, directory=directory)
 
-def cylinder(radius, height, maxh, save_result=True, filename=None):
+def cylinder(radius, height, maxh, save_result=True, filename=None, directory=None):
     """
     Return a dolfin mesh representing a cylinder of radius `radius`
     and height `height`. `maxh` controls the maximal element size in
@@ -242,6 +247,9 @@ def cylinder(radius, height, maxh, save_result=True, filename=None):
     one can be specified by passing a name (without suffix) into `filename`
     If `save_result` is False, passing a filename has no effect.
 
+    The `directory` argument can be used to control where the files
+    should be saved in case no filename is given explicitly.
+
     """
     csg_string = textwrap.dedent("""\
         algebraic3d
@@ -251,4 +259,4 @@ def cylinder(radius, height, maxh, save_result=True, filename=None):
         tlo fincyl;""").format(radius=radius, height=height, maxh=maxh)
     if save_result == True and filename is None:
         filename = "cyl-{:.1f}-{:.1f}-{:.1f}".format(radius, height, maxh).replace(".", "_")
-    return from_csg(csg_string, save_result=save_result, filename=filename)
+    return from_csg(csg_string, save_result=save_result, filename=filename, directory=directory)
