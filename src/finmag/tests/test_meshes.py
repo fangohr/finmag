@@ -8,6 +8,7 @@ from finmag.util.meshes import _normalize_filepath
 from dolfin import Mesh, cells, assemble, Constant, dx
 from math import pi
 
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 TOLERANCE = 0.05
 BOX_TOLERANCE = 1e-10 # tolerance for the box() method, which should be much more precise
 
@@ -104,7 +105,7 @@ def test_sphere():
     radius = 1.0
     maxh = 0.2
 
-    mesh = sphere(radius=radius, maxh=maxh, save_result=True)
+    mesh = sphere(radius=radius, maxh=maxh, save_result=True, directory=MODULE_DIR)
     print "Num nodes: %s" % mesh.num_vertices()
 
     vol_exact = 4.0/3*pi*radius**2
@@ -116,7 +117,7 @@ def test_cylinder():
     height = 2.0
     maxh = 0.2
 
-    mesh = cylinder(radius=radius, height=height, maxh=maxh, save_result=True)
+    mesh = cylinder(radius=radius, height=height, maxh=maxh, save_result=True, directory=MODULE_DIR)
     print "Num nodes: %s" % mesh.num_vertices()
 
     vol_exact = pi*radius**2*height
