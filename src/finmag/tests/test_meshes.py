@@ -8,7 +8,11 @@ from finmag.util.meshes import _normalize_filepath
 from dolfin import Mesh, cells, assemble, Constant, dx
 from math import pi
 
-TOLERANCE = 0.1
+radius = 1.0
+height = 2.0
+maxh = 0.2
+
+TOLERANCE = 0.05
 
 def test_normalize_filepath():
     assert(_normalize_filepath(None, 'foo.txt') == (os.curdir, 'foo.txt'))
@@ -28,9 +32,13 @@ def test_normalize_filepath():
     with raises(ValueError):
         _normalize_filepath('bar', 'baz/foo.txt')
 
-def test_from_geofile_and_from_csg():
+# Note: the test below is disabled for the time being because it adds
+# some time to the execution of the test suite but doesn't provide
+# much benefit (apart from checking a few corner cases). So it can
+# probably be deleted.
+def disabled_test_from_geofile_and_from_csg():
     radius = 1.0
-    maxh = 0.2
+    maxh = 0.5
 
     tmpdir = tempfile.mkdtemp()
     tmpfile = tempfile.NamedTemporaryFile(suffix='.geo', dir=tmpdir, delete=False)
@@ -71,7 +79,26 @@ def test_from_geofile_and_from_csg():
         vol_exact = 4.0/3*pi*radius**2
         for mesh in [mesh1, mesh2, mesh3, mesh4]:
             vol_mesh = assemble(Constant(1)*dx, mesh=mesh)
-            assert(abs(vol_mesh - vol_exact) < TOLERANCE)
+            assert(abs(vol_mesh - vol_exact)/vol_exact < TOLERANCE)
     finally:
         tmpfile.close()
         shutil.rmtree(tmpdir)
+
+def test_sphere():
+    # Note: We use 'save_result=False' in this test so that we can also test 'anonymous'
+    #       mesh creation. In the other tests, we use 'save_result=True' so that the mesh
+    #       is loaded from a file for faster execution.
+    mesh = sphere(radius=radius, maxh=maxh, save_result=False)
+    print "Num nodes: %s" % mesh.num_vertices()
+
+    vol_exact = 4.0/3*pi*radius**2
+    vol_mesh = assemble(Constant(1)*dx, mesh=mesh)
+    assert(abs(vol_mesh - vol_exact)/vol_exact < TOLERANCE)
+
+def test_cylinder():
+    mesh = cylinder(radius=radius, height=height, maxh=maxh, save_result=True)
+    print "Num nodes: %s" % mesh.num_vertices()
+
+    vol_exact = pi*radius**2*height
+    vol_mesh = assemble(Constant(1)*dx, mesh=mesh)
+    assert(abs(vol_mesh - vol_exact)/vol_exact < TOLERANCE)
