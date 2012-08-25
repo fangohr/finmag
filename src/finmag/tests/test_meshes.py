@@ -8,11 +8,8 @@ from finmag.util.meshes import _normalize_filepath
 from dolfin import Mesh, cells, assemble, Constant, dx
 from math import pi
 
-radius = 1.0
-height = 2.0
-maxh = 0.2
-
 TOLERANCE = 0.05
+BOX_TOLERANCE = 1e-10 # tolerance for the box() method, which should be much more precise
 
 def test_normalize_filepath():
     assert(_normalize_filepath(None, 'foo.txt') == (os.curdir, 'foo.txt'))
@@ -84,11 +81,30 @@ def disabled_test_from_geofile_and_from_csg():
         tmpfile.close()
         shutil.rmtree(tmpdir)
 
-def test_sphere():
+def test_box():
+    # We deliberately choose the two corners so that x1 > y1, to see
+    # whether the box() function can cope with this.
+    (x0, x1, x2) = (-0.2, 1.4, 3.0)
+    (y0, y1, y2) = (1.1, 0.7, 2.2)
+
+    maxh = 10.0  # large value so that we get as few vertices as possible
+
     # Note: We use 'save_result=False' in this test so that we can also test 'anonymous'
     #       mesh creation. In the other tests, we use 'save_result=True' so that the mesh
     #       is loaded from a file for faster execution.
-    mesh = sphere(radius=radius, maxh=maxh, save_result=False)
+    mesh = box(x0, x1, x2, y0, y1, y2, maxh=maxh, save_result=False)
+    print "Num nodes: %s" % mesh.num_vertices()
+
+    vol_exact = abs((y0-x0)*(y1-x1)*(y2-x2))
+    vol_mesh = assemble(Constant(1)*dx, mesh=mesh)
+
+    assert(abs(vol_mesh - vol_exact)/vol_exact < BOX_TOLERANCE)
+
+def test_sphere():
+    radius = 1.0
+    maxh = 0.2
+
+    mesh = sphere(radius=radius, maxh=maxh, save_result=True)
     print "Num nodes: %s" % mesh.num_vertices()
 
     vol_exact = 4.0/3*pi*radius**2
@@ -96,6 +112,10 @@ def test_sphere():
     assert(abs(vol_mesh - vol_exact)/vol_exact < TOLERANCE)
 
 def test_cylinder():
+    radius = 1.0
+    height = 2.0
+    maxh = 0.2
+
     mesh = cylinder(radius=radius, height=height, maxh=maxh, save_result=True)
     print "Num nodes: %s" % mesh.num_vertices()
 
