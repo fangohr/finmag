@@ -209,6 +209,38 @@ def compress(filename):
         sys.exit(4)
     return filename + ".gz"
 
+def box(x0, x1, x2, y0, y1, y2, maxh, save_result=True, filename=None, directory=None):
+    """
+    Returns a dolfin mesh object describing an axis-parallel box.
+
+    The two points (x0, x1, x2) and (y0, y1, y2) are interpreted as
+    two diagonally opposite corners of the box.
+
+    If `save_result` is True (the default), both the generated geofile
+    and the dolfin mesh will be saved to disk. By default, the
+    filename will be automatically generated based on the values of
+    `radius` and `maxh` (for example,'box-0_0-0_0-0_0-1_0-2_0-3_0.geo'),
+    but a different one can be specified by passing a name (without
+    suffix) into `filename`. If `save_result` is False, passing a
+    filename has no effect.
+
+    The `directory` argument can be used to control where the files
+    should be saved in case no filename is given explicitly.
+
+    """
+    # Make sure that each x_i < y_i
+    [x0, y0] = sorted([x0, y0])
+    [x1, y1] = sorted([x1, y1])
+    [x2, y2] = sorted([x2, y2])
+
+    csg = textwrap.dedent("""\
+        algebraic3d
+        solid main = orthobrick ( {}, {}, {}; {}, {}, {} ) -maxh = {maxh};
+        tlo main;""").format(x0, x1, x2, y0, y1, y2, maxh=maxh)
+    if save_result == True and filename is None:
+        filename = "box-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}".format(x0, x1, x2, y0, y1, y2, maxh).replace(".", "_")
+    return from_csg(csg, save_result=save_result, filename=filename, directory=directory)
+
 def sphere(radius, maxh, save_result=True, filename=None, directory=None):
     """
     Returns a dolfin mesh object describing a sphere with given radius and mesh coarseness.
