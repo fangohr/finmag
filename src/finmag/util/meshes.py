@@ -78,7 +78,7 @@ def from_geofile(geofile, save_result=True):
         logger.debug("Removing file '%s' because mesh is created on the fly." % result_filename)
     return mesh
 
-def from_csg(csg, save_result=True, filename=None, directory=None):
+def from_csg(csg, save_result=True, filename="", directory=""):
     """
     Using netgen, returns a dolfin mesh object built from the given CSG string.
 
@@ -87,13 +87,21 @@ def from_csg(csg, save_result=True, filename=None, directory=None):
     filename will use the md5 hash of the csg string, but can be
     specified by passing a name (without suffix) into `filename`.
 
+    The `directory` argument can be used to control where the
+    generated files are saved. The `filename` argument may
+    contain path components, too (which are simply appended to
+    `directory`).
+
+    Caveat: if `filename` contains an absolute path then value of
+    `directory` is ignored.
     """
-    if filename is None:
+    if filename == "":
         filename = hashlib.md5(csg).hexdigest()
-    (directory, filename) = helpers.normalize_filepath(directory, filename)
+    if os.path.isabs(filename) and directory != "":
+        log.warning("Ignoring 'directory' argument (value given: '{}') because 'filename' contains an absolute path: '{}'".format(directory, filename))
 
     if save_result:
-        geofile = os.path.join(directory, os.path.join(filename + ".geo"))
+        geofile = os.path.join(directory, filename) + ".geo"
         with open(geofile, "w") as f:
             f.write(csg)
         mesh = from_geofile(geofile, save_result=True)
