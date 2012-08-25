@@ -110,10 +110,12 @@ def test_perturbed_vectors():
         assert abs(norm(v) - 5) < TOLERANCE
 
 def test_normalize_filepath():
-    assert(normalize_filepath(None, 'foo.txt') == (os.curdir, 'foo.txt'))
-    assert(normalize_filepath('', 'foo.txt') == (os.curdir, 'foo.txt'))
+    assert(normalize_filepath(None, 'foo.txt') == ('', 'foo.txt'))
+    assert(normalize_filepath('', 'foo.txt') == ('', 'foo.txt'))
     assert(normalize_filepath(None, 'bar/baz/foo.txt') == ('bar/baz', 'foo.txt'))
     assert(normalize_filepath(None, '/bar/baz/foo.txt') == ('/bar/baz', 'foo.txt'))
+    assert(normalize_filepath('bar', 'baz/foo.txt') == ('bar/baz', 'foo.txt'))
+    assert(normalize_filepath('bar/', 'baz/foo.txt') == ('bar/baz', 'foo.txt'))
     assert(normalize_filepath('/bar/baz', 'foo.txt') == ('/bar/baz', 'foo.txt'))
     assert(normalize_filepath('/bar/baz/', 'foo.txt') == ('/bar/baz', 'foo.txt'))
     with pytest.raises(TypeError):
@@ -125,4 +127,5 @@ def test_normalize_filepath():
     with pytest.raises(ValueError):
         normalize_filepath('bar', '')
     with pytest.raises(ValueError):
-        normalize_filepath('bar', 'baz/foo.txt')
+        # if directory is given, filename must not contain an absolute path component
+        normalize_filepath('bar', '/baz/foo.txt')
