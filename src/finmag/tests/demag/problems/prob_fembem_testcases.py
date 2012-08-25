@@ -7,7 +7,7 @@ __organisation__ = "University of Southampton"
 
 import os
 from dolfin import *
-import finmag.util.meshes as cm
+import finmag.util.meshes as meshes
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -55,7 +55,7 @@ class MagUnitInterval(object):
 class MagSphereBase(object):
     """Base class for MagSphere classes"""
     def __init__(self,maxh,radius=10):
-        self.mesh = cm.sphere(radius, maxh, directory=MODULE_DIR)
+        self.mesh = meshes.sphere(radius, maxh, directory=MODULE_DIR)
         self.Ms = 1.0
         self.m = (str(self.Ms), "0.0", "0.0")
         self.M = self.m # do we need this?
