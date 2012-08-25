@@ -37,23 +37,24 @@ def norm(v):
     """
     return np.sqrt(np.dot(v, v))
 
-def normalise(vs, length=1):
+def normalise_vectors(vs, length=1):
     """
-    Scale the vectors to the specified length.
-    Expects the vectors in a list of the form [[x0, y0, z0], ..., [xn, yn, zn]].
+    Scales each vector in the list `vs` to the specified length.
+    `vs` should be a list of vectors of the form [[x0, y0, z0], ..., [xn, yn, zn]].
 
     """
     return np.array([length*v/norm(v) for v in vs])
 
 def fnormalise(arr, length=1):
     """
-    Like normalise, except it expects the arguments as an numpy.ndarray like
-    dolfin provides, so [x0, ..., xn, y0, ..., yn, z0, ..., zn].
+    Like normalise_vectors, but expects the arguments as a numpy.ndarray in
+    the form that dolfin provides: [x0, ..., xn, y0, ..., yn, z0, ..., zn].
 
     """
+    # If arr happens to be of type int, the calculation below is
+    # carried out in integers, and behaves unexpectedly.
     assert arr.dtype not in [np.dtype('int32'),np.dtype('int64')]
-    #if arr happens to be of type int, the calculation below is carried
-    #out in integers, and behavious unexpectedly.
+
     arr = arr.reshape((3, -1))
     arr /= np.sqrt(arr[0]*arr[0] + arr[1]*arr[1] + arr[2]*arr[2] )
     arr = arr.ravel()
@@ -83,7 +84,7 @@ def perturbed_vectors(n, direction=[1,0,0], length=1):
     """
     displacements = np.random.rand(n, 3) - 0.5
     vectors = direction + displacements
-    return normalise(vectors, length)
+    return normalise_vectors(vectors, length)
 
 def read_float_data(filename):
     """
