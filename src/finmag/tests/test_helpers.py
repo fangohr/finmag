@@ -108,3 +108,21 @@ def test_perturbed_vectors():
     for v in vector_field:
         assert len(v) == 3
         assert abs(norm(v) - 5) < TOLERANCE
+
+def test_normalize_filepath():
+    assert(normalize_filepath(None, 'foo.txt') == (os.curdir, 'foo.txt'))
+    assert(normalize_filepath('', 'foo.txt') == (os.curdir, 'foo.txt'))
+    assert(normalize_filepath(None, 'bar/baz/foo.txt') == ('bar/baz', 'foo.txt'))
+    assert(normalize_filepath(None, '/bar/baz/foo.txt') == ('/bar/baz', 'foo.txt'))
+    assert(normalize_filepath('/bar/baz', 'foo.txt') == ('/bar/baz', 'foo.txt'))
+    assert(normalize_filepath('/bar/baz/', 'foo.txt') == ('/bar/baz', 'foo.txt'))
+    with pytest.raises(TypeError):
+        normalize_filepath(42, None)
+    with pytest.raises(TypeError):
+        normalize_filepath(None, 23)
+    with pytest.raises(ValueError):
+        normalize_filepath(None, '')
+    with pytest.raises(ValueError):
+        normalize_filepath('bar', '')
+    with pytest.raises(ValueError):
+        normalize_filepath('bar', 'baz/foo.txt')

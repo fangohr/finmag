@@ -1,6 +1,8 @@
 import numpy as np
 import dolfin as df
 import math
+import types
+import os
 
 def components(vs):
     """
@@ -215,3 +217,29 @@ def normed_func(value, Space, **kwargs):
     m0.vector()[:] = m0_vec.reshape(-1)
 
     return m0
+
+def normalize_filepath(dirname, filename):
+    """
+    Construct a "normalized" pair (d,f) from the input arguments, where d is
+    the directory component (without the trailing slash) and f is a filename.
+
+    If `dirname` is None, `filename` is allowed to contain path components
+    (which can be relative or absolute). If dirname is None (or empty) and
+    filename does *not* contain any path components, dirname is set to the
+    current directory (= os.curdir). If `directory` is not None, `filename`
+    must be a simple string without any path components.
+    """
+    if not isinstance(dirname, (str, types.NoneType)):
+        raise TypeError("'dirname' must be a string or None (got: '%s' of type '%s')".format(dirname, type(dirname)))
+    if not isinstance(filename, str):
+        raise TypeError("'filename' must be a string (got: '%s' of type '%s')".format(filename, type(filename)))
+    if filename == '':
+        raise ValueError("'filename' must not be empty")
+
+    fdir = os.path.dirname(filename)
+    if dirname != None and fdir != "":
+        raise ValueError("'dirname' must be None if 'filename' contains a path component. Values given: dirname='{}', filename='{}'".format(dirname, filename))
+
+    d = os.path.normpath(dirname or fdir or os.curdir)
+    f = os.path.basename(filename)
+    return (d,f)
