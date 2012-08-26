@@ -3,6 +3,7 @@ import instant
 from finmag.sim.exchange import Exchange
 from scipy.integrate import ode
 import finmag.util.helpers as h
+import finmag.util.consts as consts
 import os
 import numpy as np
 
@@ -44,9 +45,7 @@ Volume = assemble(Constant(1)*dx, mesh=mesh)
 
 # Defaults from LLG
 alpha = 0.5
-gamma =  2.210173e5 # m/(As)
-#source for gamma:  OOMMF manual, and in Werner Scholz thesis, 
-#after (3.7), llg_gamma_G = m/(As).
+gamma =  consts.gamma
 c = 1e11 # 1/s numerical scaling correction
               # 0.1e12 1/s is the value used by default in nmag 0.2
 C = 1.3e-11 # J/m exchange constant

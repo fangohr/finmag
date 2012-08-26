@@ -3,6 +3,7 @@ import numpy as np
 import dolfin as df
 
 import finmag.util.helpers as h
+import finmag.util.consts as consts
 from finmag.native.llb import LLBFePt
 
 
@@ -46,7 +47,7 @@ class Material(object):
             self.Ms0 = self.mat.M_s()
             self.Tc = self.mat.T_C()
             self.alpha = 0.5
-            self.gamma_LL = 2.210173e5 # m/(As)
+            self.gamma_LL = consts.gamma
             
         else:
             raise NotImplementedError("Only FePt available")

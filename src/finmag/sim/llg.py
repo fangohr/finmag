@@ -2,6 +2,7 @@ import logging
 import numpy as np
 import dolfin as df
 import finmag.util.helpers as h
+import finmag.util.consts as consts
 
 from finmag.native import llg as native_llg
 from finmag.util.timings import timings
@@ -41,9 +42,7 @@ class LLG(object):
         self._alpha_mult.assign(df.Constant(1))
         self.alpha = 0.5 # alpha for solve: alpha * _alpha_mult
 
-        self.gamma =  2.210173e5 # m/(As)
-        #source for gamma:  OOMMF manual, and in Werner Scholz thesis, 
-        #after (3.7), llg_gamma_G = m/(As).
+        self.gamma =  consts.gamma
         self.c = 1e11 # 1/s numerical scaling correction \
         #               0.1e12 1/s is the value used by default in nmag 0.2
         self.Ms = 8.6e5 # A/m saturation magnetisation

@@ -1,4 +1,5 @@
 from dolfin import *
+import finmag.util.consts as consts
 
 # Mesh and functionspace
 L = 10e-9 # 10 nm
@@ -7,7 +8,7 @@ V = VectorFunctionSpace(mesh, 'CG', 1)
 
 # Parameters
 alpha = 0.02
-gamma = 2.210173e5 # m/(As)
+gamma = consts.gamma
 
 # Initial magnetisation
 m0_tuple = (("1",

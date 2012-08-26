@@ -3,6 +3,7 @@ import instant
 import os
 import numpy as np
 import finmag.util.helpers as h
+import finmag.util.consts as consts
 from finmag.sim.exchange import Exchange
 from finmag.sim.anisotropy import Anisotropy
 from finmag.energies import DMI
@@ -43,7 +44,7 @@ class LLG2(LLG):
 
     def set_default_values(self):
         self.alpha = 0.5
-        self.gamma =  2.210173e5 # m/(As)
+        self.gamma =  consts.gamma
         #source for gamma:  OOMMF manual, and in Werner Scholz thesis, 
         #after (3.7), llg_gamma_G = m/(As).
         self.c = 1e11 # 1/s numerical scaling correction
