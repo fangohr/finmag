@@ -1,33 +1,33 @@
 
 import numpy as np
 cimport numpy as np
+import time
 
 
-cdef extern from "demag_nfft.h":
+cdef extern from "fast_sum.h":
     ctypedef struct fastsum_plan:
         pass
-    void fastsum_init_guru(fastsum_plan *plan, int N_total, int M_total, int nn, int m, int p, double eps_I, double eps_B)
-    void fastsum_trafo(fastsum_plan *plan)
-    void fastsum_precompute(fastsum_plan *plan)
+
     fastsum_plan* create_plan()
     void init_mesh(fastsum_plan *plan,double *x_s,double *x_t)
     void fastsum_finalize(fastsum_plan *plan)
-    void update_charge(fastsum_plan *plan, double *charge)
-    void get_phi(fastsum_plan *plan, double *phi)
-    void fastsum_exact(fastsum_plan *plan)
-    void fastsum_finalize(fastsum_plan *plan) 
-
+    void update_charge_density(fastsum_plan *plan, double *density)
+    void fastsum_exact(fastsum_plan *plan, double *phi)
+    void fastsum(fastsum_plan *plan, double *phi)
+    void init_fastsum(fastsum_plan *plan, int N_source, int N_target, int p,double mac,int num_limit) 
+    void build_tree(fastsum_plan *plan)
+	
 
 cdef class FastSum:
     cdef fastsum_plan *_c_plan
-    cdef int n,m,p
-    cdef eps_I,eps_B
-    def __cinit__(self,n=128,m=4,p=3):
-        self.n=n
-        self.m=m
+
+    cdef double mac
+    cdef int p
+    cdef int num_limit
+    def __cinit__(self,p=4,mac=0.5,num_limit=500):
+        self.num_limit=num_limit
         self.p=p
-        self.eps_I = 1.0 * p / n
-        self.eps_B = 1/16.0
+        self.mac=mac
         self._c_plan=create_plan()
         if self._c_plan is NULL:
             raise MemoryError()
@@ -38,29 +38,22 @@ cdef class FastSum:
 
     def init_mesh(self,np.ndarray[double, ndim=2, mode="c"] x_s,np.ndarray[double, ndim=2, mode="c"] x_t):
         cdef int N,M
-
+        print 'length=',N,M
+        
         N,M=x_s.shape[0],x_t.shape[0]
-        
-        fastsum_init_guru(self._c_plan,N,M,self.n,self.m,self.p,self.eps_I,self.eps_B)
-        #print 'init_guru okay from FastSum'
+        init_fastsum(self._c_plan,N,M,self.p,self.mac,self.num_limit)
+         
         init_mesh(self._c_plan,&x_s[0,0],&x_t[0,0])
-        #print 'init_mesh okay from FastSum'
-        
-
-  
-    def sum_exact(self,np.ndarray[double, ndim=1, mode="c"] phi):
-        fastsum_exact(self._c_plan)
-        get_phi(self._c_plan,&phi[0])
+        build_tree(self._c_plan)
         
 
     def update_charge(self,np.ndarray[double, ndim=1, mode="c"] cf):
-        update_charge(self._c_plan, &cf[0])
-        #print 'update charge okay from FastSum'
+        update_charge_density(self._c_plan, &cf[0])        
+
+    def exactsum(self,np.ndarray[double, ndim=1, mode="c"] phi):
+        fastsum_exact(self._c_plan,&phi[0])
         
+
+    def fastsum(self,np.ndarray[double, ndim=1, mode="c"] phi):
+        fastsum(self._c_plan,&phi[0])
         
-    def compute_phi(self,np.ndarray[double, ndim=1, mode="c"] phi):
-        fastsum_precompute(self._c_plan)
-        #print 'precompute okay from FastSum'
-        fastsum_trafo(self._c_plan)
-        #print 'fastsum_trafo okay from FastSum'
-        get_phi(self._c_plan,&phi[0])
