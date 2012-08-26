@@ -2,6 +2,7 @@
 Examples
 ========
 
+.. include:: ../examples/meshes/doc.rst
 .. include:: ../examples/macrospin/doc.rst
 .. include:: ../examples/time-dependent-applied-field/doc.rst
 .. include:: ../examples/demag/demag_doc.rst
