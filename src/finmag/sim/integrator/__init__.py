@@ -46,12 +46,17 @@ class BaseIntegrator(object):
         `filename` contains directory components then these are created if they
         do not already exist.
         """
-        if save_snapshots == True and filename in (None, ''):
-            raise ValueError("If save_snapshots is True, filename must be a non-empty string.")
-        ext = os.path.splitext(filename)[1]
-        if ext != '.pvd':
-            raise ValueError("File extension for vtk snapshot file must be '.pvd', but got: '{}'".format(ext))
-        f = df.File(filename, 'compressed')
+        if save_snapshots == True:
+            if filename == '':
+                raise ValueError("If save_snapshots is True, filename must be a non-empty string.")
+            else:
+                ext = os.path.splitext(filename)[1]
+                if ext != '.pvd':
+                    raise ValueError("File extension for vtk snapshot file must be '.pvd', but got: '{}'".format(ext))
+            f = df.File(filename, 'compressed')
+        else:
+            if filename != '':
+                log.warning("Value of save_snapshot is False, but filename is given anyway: '{}'. Ignoring...".format(filename))
 
         dt = 1e-14 # TODO: use the characteristic time here
 
@@ -60,8 +65,9 @@ class BaseIntegrator(object):
 
         last_max_dmdt_norm = 1e99
         while True:
-            log.debug("Saving snapshot of timestep t={:.2} to file '{}'".format(self.llg.t, filename))
-            f << self.llg._m
+            if save_snapshots:
+                log.debug("Saving snapshot of timestep t={:.2} to file '{}'".format(self.llg.t, filename))
+                f << self.llg._m
 
             prev_m = self.llg.m.copy()
 
