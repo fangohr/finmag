@@ -17,9 +17,9 @@ class UniaxialAnisotropy(EnergyBase):
         E_{\\text{exch}} = \\int_\\Omega A (\\nabla M)^2  dx
 
     *Arguments*
-        K
+        K1
             The anisotropy constant
-        a
+        axis
             The easy axis (use dolfin.Constant for now).
             Should be a unit vector.
         Ms
@@ -53,28 +53,32 @@ class UniaxialAnisotropy(EnergyBase):
 
     """
     
-    def __init__(self, K, a, method="box-matrix-petsc"):
-        """If K and a are dolfin-functions, then accept them as they are.
+    def __init__(self, K1, axis, method="box-matrix-petsc"):
+        """
+        Define a uniaxial anisotropy with (first) anisotropy constant `K1`
+        (in J/m^3) and easy axis `axis`.
+
+        If K1 and axis are dolfin-functions, then accept them as they are.
         Otherwise, assume they are dolfin constants.
-        If they are not dolfin constants (but a float for K, or sequence
-            for a), try to convert them to dolfin constants.
+        If they are not dolfin constants (but a float for K1, or sequence
+        for axis), try to convert them to dolfin constants.
 
         Dolfin-functions are required for spatially varying anisotropy
         """
-        if isinstance(K, df.Function):
-            self.K = K
+        if isinstance(K1, df.Function):
+            self.K1 = K1
         else:
-            # Make sure that K is dolfin.Constant
-            if not 'dolfin' in str(type(K)):
-                K = df.Constant(K)  # or convert to df constant
-            self.K = K
+            # Make sure that K1 is dolfin.Constant
+            if not 'dolfin' in str(type(K1)):
+                K1 = df.Constant(K1)  # or convert to df constant
+            self.K1 = K1
 
-        if isinstance(a, (df.Function, df.Constant)):
-            logger.debug("Found Anisotropy direction a of type {}".format(a.__class__))
-            self.a = a
+        if isinstance(axis, (df.Function, df.Constant)):
+            logger.debug("Found Anisotropy direction of type {}".format(axis.__class__))
+            self.axis = axis
         else:
-            logger.debug("Found Anisotropy direction '{}' -> df.Constant".format(a))
-            self.a = df.Constant(a)
+            logger.debug("Found Anisotropy direction '{}' -> df.Constant".format(axis))
+            self.axis = df.Constant(axis)
 
         super(UniaxialAnisotropy, self).__init__(method, in_jacobian=True)
 
@@ -88,7 +92,7 @@ class UniaxialAnisotropy(EnergyBase):
         self.v = df.TestFunction(S3)
 
         # Anisotropy energy
-        E = self.K * (df.Constant(1) - (df.dot(self.a, self.M)) ** 2) * df.dx
+        E = self.K1 * (df.Constant(1) - (df.dot(self.axis, self.M)) ** 2) * df.dx
 
         # HF's version inline with nmag, breaks comparison with analytical
         # solution in the energy density test for anisotropy, as this uses
@@ -108,8 +112,8 @@ class UniaxialAnisotropy(EnergyBase):
         S1 = df.FunctionSpace(S3.mesh(), "CG", 1)
         w = df.TestFunction(S1)
         self.nodal_vol = df.assemble(w * df.dx, mesh=S3.mesh()).array()
-        nodal_E = df.dot(self.K * (df.Constant(1)
-                        - (df.dot(self.a, self.m)) ** 2), w) * df.dx
+        nodal_E = df.dot(self.K1 * (df.Constant(1)
+                        - (df.dot(self.axis, self.m)) ** 2), w) * df.dx
 
         # This is only needed if we want the energy density
         # as a df.Function, in order to e.g. probe.
@@ -171,7 +175,7 @@ if __name__ == "__main__":
     S3 = VectorFunctionSpace(mesh, "Lagrange", 1)
     C = 1.3e-11  # J/m exchange constant
     M = project(Constant((Ms, 0, 0)), S3)  # Initial magnetisation
-    uniax = UniaxialAnisotropy(K=1e11, a=[1, 0, 0])
+    uniax = UniaxialAnisotropy(K1=1e11, axis=[1, 0, 0])
 
     uniax.setup(S3, M, Ms)
 
