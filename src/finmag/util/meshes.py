@@ -193,7 +193,7 @@ def compress(filename):
         sys.exit(4)
     return filename + ".gz"
 
-def box(x0, x1, x2, y0, y1, y2, maxh, save_result=True, filename=None, directory=None):
+def box(x0, x1, x2, y0, y1, y2, maxh, save_result=True, filename='', directory=''):
     """
     Returns a dolfin mesh object describing an axis-parallel box.
 
@@ -225,7 +225,7 @@ def box(x0, x1, x2, y0, y1, y2, maxh, save_result=True, filename=None, directory
         filename = "box-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}".format(x0, x1, x2, y0, y1, y2, maxh).replace(".", "_")
     return from_csg(csg, save_result=save_result, filename=filename, directory=directory)
 
-def sphere(radius, maxh, save_result=True, filename=None, directory=None):
+def sphere(radius, maxh, save_result=True, filename='', directory=''):
     """
     Returns a dolfin mesh object describing a sphere with given radius and mesh coarseness.
 
@@ -246,11 +246,11 @@ def sphere(radius, maxh, save_result=True, filename=None, directory=None):
         solid main = sphere ( 0, 0, 0; {radius} ) -maxh = {maxh};
         tlo main;""").format(radius=radius, maxh=maxh)
 
-    if save_result == True and filename is None:
+    if save_result == True and filename == '':
         filename = "sphere-{:.1f}-{:.1f}".format(radius, maxh).replace(".", "_")
     return from_csg(csg, save_result=save_result, filename=filename, directory=directory)
 
-def cylinder(radius, height, maxh, save_result=True, filename=None, directory=None):
+def cylinder(radius, height, maxh, save_result=True, filename='', directory=''):
     """
     Return a dolfin mesh representing a cylinder of radius `radius`
     and height `height`. `maxh` controls the maximal element size in
@@ -273,7 +273,7 @@ def cylinder(radius, height, maxh, save_result=True, filename=None, directory=No
               and plane (0, 0, 0; 0, 0, -1)
               and plane (0, 0, {height}; 0, 0, 1) -maxh = {maxh};
         tlo fincyl;""").format(radius=radius, height=height, maxh=maxh)
-    if save_result == True and filename is None:
+    if save_result == True and filename == '':
         filename = "cyl-{:.1f}-{:.1f}-{:.1f}".format(radius, height, maxh).replace(".", "_")
     return from_csg(csg_string, save_result=save_result, filename=filename, directory=directory)
 
