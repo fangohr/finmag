@@ -70,7 +70,7 @@ class Simulation(object):
             self.integrator = LLGIntegrator(self.llg, self.llg.m)
         self.integrator.run_until(t)
 
-    def relax(self, save_snapshots=False, filename=None, stopping_dmdt=ONE_DEGREE_PER_NS, dmdt_increased_counter_limit=20):
+    def relax(self, save_snapshots=False, filename=None, stopping_dmdt=ONE_DEGREE_PER_NS, dt_limit=1e-10, dmdt_increased_counter_limit=20):
         """
         Do time integration of the magnetisation M until it reaches a state
         where the change of M magnetisation at each node is smaller than the
@@ -82,7 +82,7 @@ class Simulation(object):
         do not already exist.
         TODO: It is currently not possible to control the timesteps at which the snapshots are saved!
 
-        For details and the meaning of the other keywork arguments see the
+        For details and the meaning of the other keyword arguments see the
         docstring of sim.integrator.BaseIntegrator.run_until_relaxation().
         """
         log.info("Will integrate until relaxation.")
@@ -90,6 +90,7 @@ class Simulation(object):
             self.integrator = LLGIntegrator(self.llg, self.llg.m)
         self.integrator.run_until_relaxation(stopping_dmdt=stopping_dmdt,
                                              dmdt_increased_counter_limit=dmdt_increased_counter_limit,
+                                             dt_limit=dt_limit,
                                              save_snapshots=save_snapshots,
                                              filename=filename)
 
