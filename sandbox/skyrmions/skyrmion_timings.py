@@ -8,7 +8,7 @@ def run_sim(exc_jac, dmi_jac):
     sim = Simulation(mesh, Ms=8.6e5)
     sim.set_m((1, 0, 0))
 
-    exchange = Exchange(C=1.3e-11)
+    exchange = Exchange(A=1.3e-11)
     exchange.in_jacobian = exc_jac
     sim.add(exchange)
 

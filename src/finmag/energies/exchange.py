@@ -46,7 +46,7 @@ class Exchange(EnergyBase):
             A  = 1.3e-11 # J/m exchange constant
             M  = project(Constant((Ms, 0, 0)), S3) # Initial magnetisation
 
-            exchange = Exchange(C, Ms)
+            exchange = Exchange(A, Ms)
             exchange.setup(S3, M)
 
             # Print energy
@@ -60,16 +60,16 @@ class Exchange(EnergyBase):
             H_exch_np = exchange_np.compute_field()
 
     """
-    def __init__(self, C, method="box-matrix-petsc"):
+    def __init__(self, A, method="box-matrix-petsc"):
         super(Exchange, self).__init__(method, in_jacobian=True)
-        self.C = C
+        self.A = A
 
     def setup(self, S3, M, Ms, unit_length=1):
         timings.start('Exchange-setup')
 
         #expression for the energy
         exchange_factor = df.Constant(
-            1 * self.C / (mu0 * Ms * unit_length ** 2))
+            1 * self.A / (mu0 * Ms * unit_length ** 2))
 
         self.exchange_factor = exchange_factor  # XXX
 
@@ -101,9 +101,9 @@ if __name__ == "__main__":
     mesh = Box(0, m, 0, m, 0, m, n, n, n)
 
     S3 = VectorFunctionSpace(mesh, "Lagrange", 1)
-    C = 1.3e-11  # J/m exchange constant
+    A = 1.0e-11  # J/m exchange constant
     M = project(Constant((1, 0, 0)), S3)  # Initial magnetisation
-    exchange = Exchange(1e-11)
+    exchange = Exchange(A)
 
     exchange.setup(S3, M, Ms)
 
