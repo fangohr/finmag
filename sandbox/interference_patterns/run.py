@@ -4,7 +4,7 @@ import math
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import axes3d
 from finmag import Simulation
-from finmag.util.consts import mu0
+from finmag.util.consts import mu0, gamma
 from finmag.energies import Zeeman, Exchange, ThinFilmDemag
 from point_contacts import point_contacts
 
@@ -26,7 +26,6 @@ def figure_5_6(mesh, m, p, t):
     print "Saved."
 
 alpha = 0.012 # dimensionless
-gamma = 2.210173e5 # m/(As), our value
 
 # Permalloy.
 Ms = 860e3 # A/m

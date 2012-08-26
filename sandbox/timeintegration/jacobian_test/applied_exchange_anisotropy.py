@@ -1,5 +1,6 @@
 from dolfin import *
 import numpy as np
+import finmag.util.consts as consts
 
 # Mesh and functionspace
 x0 = 0; x1 = 15e-9; nx = 30;
@@ -11,7 +12,7 @@ V = VectorFunctionSpace(mesh, 'Lagrange', 1, dim=3)
 # Parameters
 Ms = 1e6
 alpha = 0.02
-gamma =  2.210173e5 # m/(As)
+gamma =  consts.gamma
 c = 1e11 # 1/s numerical scaling correction
 C = 1.3e-11 # J/m exchange constant
 K = Constant(520e3) # Anisotropy constant

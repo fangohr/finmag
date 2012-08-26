@@ -4,6 +4,7 @@ import scipy
 import dolfin as df
 
 import finmag.util.helpers as h
+import finmag.util.consts as consts
 
 from finmag.native import llg as native_llg
 from finmag.util.timings import timings
@@ -57,7 +58,7 @@ class LLB(object):
         self.alpha = 0.5 # alpha for solve: alpha * _alpha_mult
         self.beta=0
 
-        self.gamma =  2.210173e5 # m/(As)
+        self.gamma =  consts.gamma
         #source for gamma:  OOMMF manual, and in Werner Scholz thesis, 
         #after (3.7), llg_gamma_G = m/(As).
         self.c = 1e11 # 1/s numerical scaling correction \

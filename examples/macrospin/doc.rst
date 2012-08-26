@@ -26,7 +26,7 @@ and
 
 and thus :math:`\alpha_L = \alpha_G\gamma_G` ([#Zimmermann2007]_ equation (2.21). 
 
-It is common to use it :math:`\gamma_G = 2.210173\cdot 10^5 \mathrm{m/(As)}` ([#Scholz2003]_ after equation (3.7), [#OOMMFManual]_) which is also known  as the gyromagnetic ratio.
+It is common to use :math:`\gamma_G = 2.210173\cdot 10^5 \mathrm{m/(As)}` ([#Scholz2003]_ after equation (3.7), [#OOMMFManual]_) which is also known  as the gyromagnetic ratio.
 
 The Gilbert damping term :math:`\alpha_G` comes from Gilbert's version of the equation of motion (equation (2.15 in [#Zimmermann2007]_) which includes the change of :math:`\vec{M}` with time :math:`t` in the damping term
 
