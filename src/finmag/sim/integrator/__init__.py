@@ -29,7 +29,7 @@ def LLGIntegrator(llg, m0, backend="sundials", **kwargs):
 
 
 class BaseIntegrator(object):
-    def run_until_relaxation(self, stopping_dmdt=ONE_DEGREE_PER_NS, dmdt_increased_counter_limit=20, save_snapshots=False, filename=None):
+    def run_until_relaxation(self, stopping_dmdt=ONE_DEGREE_PER_NS, dmdt_increased_counter_limit=20, dt_limit=1e-10, save_snapshots=False, filename=None):
         """
         Run integration until the maximum |dm/dt| is smaller than the
         threshold value stopping_dmdt (which is one degree per
@@ -39,7 +39,8 @@ class BaseIntegrator(object):
         |dm/dt| - stopping_dmdt doesn't convergence (because of badly
         chosen tolerances?), the integration will stop if |dm/dt|
         increases `dmdt_increased_counter_limit` times during the integration
-        (default value: 20).
+        (default value: 20). The maximum allowed timestep per integration step
+        can be controlled via `dt_limit`.
 
         If save_snapshots is True (default: False) then a series of snapshots
         is saved to `filename` (which must be specified in this case). If Xi
@@ -60,7 +61,7 @@ class BaseIntegrator(object):
 
         dt = 1e-14 # TODO: use the characteristic time here
 
-        dt_limit = 1e-10; dt_increment_multi = 1.5;
+        dt_increment_multi = 1.5;
         dmdt_increased_counter = 0;
 
         last_max_dmdt_norm = 1e99
