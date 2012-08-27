@@ -30,7 +30,7 @@ def LLGIntegrator(llg, m0, backend="sundials", **kwargs):
 
 
 class BaseIntegrator(object):
-    def run_until_relaxation(self, save_snapshots=False, filename=None, save_every=1e-10, stopping_dmdt=ONE_DEGREE_PER_NS, dmdt_increased_counter_limit=20, dt_limit=1e-10):
+    def run_until_relaxation(self, save_snapshots=False, filename=None, save_every=100e-12, stopping_dmdt=ONE_DEGREE_PER_NS, dmdt_increased_counter_limit=20, dt_limit=1e-10):
         """
         Run integration until the maximum |dm/dt| is smaller than the
         threshold value stopping_dmdt (which is one degree per
@@ -47,7 +47,9 @@ class BaseIntegrator(object):
         is saved to `filename` (which must be specified in this case). If
         `filename` contains directory components then these are created if they
         do not already exist. A snapshot is saved every `save_every` seconds
-        (default: 1e-10, i.e. every 100 picoseconds).
+        (default: 100e-12, i.e. every 100 picoseconds). It should be noted that
+	the true timestep at which the snapshot is saved may deviate from slightly
+ 	from the exact value due to the way the time integrators work.
         """
         if save_snapshots == True:
             if filename == '':
@@ -70,25 +72,16 @@ class BaseIntegrator(object):
         #cur_count = ct.next()
 	cur_count = 0
 
-#        def _do_save_snapshot():
-#            log.debug("Saving snapshot at timestep t={:.2g} to file '{}' (cur_count: {})".format(self.llg.t, filename, cur_count))
-#            # TODO: Can we somehow store information about the current timestep in either the file itself, or in the filenames?
-#            #       Unfortunately, it seems as if the filenames of the *.... files are generated automatically. :-S
-#            f << self.llg._m
-#            cur_count += 1
-
         last_max_dmdt_norm = 1e99
         while True:
             prev_m = self.llg.m.copy()
 	    next_stop = self.llg.t + dt
 
             # If in the next step we would cross a timestep where a snapshot should be saved, run until
-	    # that timestep, save the snapshot, and then continue.
+            # that timestep, save the snapshot, and then continue.
             while save_snapshots and (next_stop >= cur_count*save_every):
-                # TODO: what happens if the >= is actually an equality? Is it guaranteed that the run_until()
-                # command further down is a no-op in this case? If not, we need to do something more clever...
                 self.run_until(cur_count*save_every)
-                log.debug("Snapshot at timestep t={:.4g} saved to file '{}' (cur_count: {})".format(self.llg.t, filename, cur_count))
+                log.debug("Saving snapshot at timestep t={:.4g} to file '{}' (snapshot #{})".format(self.llg.t, filename, cur_count))
                 # TODO: Can we somehow store information about the current timestep in either the file itself, or in the filenames?
                 #       Unfortunately, it seems as if the filenames of the *.... files are generated automatically. :-S
                 f << self.llg._m
@@ -102,7 +95,7 @@ class BaseIntegrator(object):
             max_dmdt_norm = float(np.max(dm_norm) / dt)
 
             if max_dmdt_norm < stopping_dmdt:
-                log.debug("{}: Stopping at t={:.2g}, with last_dmdt={:.2g}, smaller than stopping_dmdt={:.2g}.".format(
+                log.debug("{}: Stopping at t={:.3g}, with last_dmdt={:.3g}, smaller than stopping_dmdt={:.3g}.".format(
                     self.__class__.__name__, self.llg.t, max_dmdt_norm, float(stopping_dmdt)))
                 break
 
@@ -111,7 +104,7 @@ class BaseIntegrator(object):
             else:
                 dt = dt_limit
 
-            log.debug("{}: t={:.2g}, last_dmdt={:.2g} * stopping_dmdt, next dt={:.2g}.".format(
+            log.debug("{}: t={:.3g}, last_dmdt={:.3g} * stopping_dmdt, next dt={:.3g}.".format(
                 self.__class__.__name__, self.llg.t, max_dmdt_norm/stopping_dmdt, dt))
 
             if max_dmdt_norm > last_max_dmdt_norm:
