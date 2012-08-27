@@ -2,10 +2,13 @@ import os
 import time
 import logging
 import dolfin as df
+from math import sqrt
 from finmag.sim.llg import LLG
 from finmag.util.timings import timings
 from finmag.util.helpers import quiver
 from finmag.sim.integrator import LLGIntegrator
+from finmag.energies.exchange import Exchange
+from finmag.energies.anisotropy import UniaxialAnisotropy
 
 ONE_DEGREE_PER_NS = 17453292.5 # in rad/s
 
@@ -46,6 +49,9 @@ class Simulation(object):
         return self.llg.m_average
 
     def add(self, interaction, with_time_update=None):
+        """
+        Add an interaction (such as Exchange, Anisotropy, Demag)
+        """
         interaction.setup(self.S3, self.llg._m, self.Ms, self.unit_length)
         self.llg.interactions.append(interaction)
 
@@ -64,6 +70,17 @@ class Simulation(object):
         for interaction in self.llg.interactions:
             energy += interaction.compute_energy()
         return energy
+
+    def exchange_length(self):
+        log.debug("Only uniaxial anisotropy interactions are being considered since this is the only type currently supported in Finmag and the common formula \sqrt(A/K1) only works for a uniaxial anisotropy. It might be worth investigating whether there is a more general expression once other types become available in Finmag, too.")
+        ans = [a for a in self.llg.interactions if isinstance(a, UniaxialAnisotropy)]
+        exs = [e for e in self.llg.interactions if isinstance(e, Exchange)]
+        if len(ans) != 1 or len(exs) != 1:
+            raise ValueError("Exactly one exchange interaction and exactly one (uniaxial) anisotropy interaction must be present in order to compute the exchange length. However, {} exchange term(s) and {} uniaxial anisotropy term(s) were found.".format(len(ans), len(exs)))
+        A = exs[0].A
+        K1 = float(ans[0].K1) # K1 can be a dolfin Constant, hence the conversion to float
+        # TODO: It might be nice to issue a warning here if the characteristic mesh length is much larger than the exchange length.
+        return sqrt(A/K1)
 
     def run_until(self, t):
         if not hasattr(self, "integrator"):
