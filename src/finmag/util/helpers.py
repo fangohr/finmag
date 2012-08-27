@@ -88,23 +88,6 @@ def perturbed_vectors(n, direction=[1,0,0], length=1):
     vectors = direction + displacements
     return normalise_vectors(vectors, length)
 
-def read_float_data(filename):
-    """
-    Reads floats stored in the file filename.
-
-    Needs at least one number which can be cast to float on each line.
-    Floats are to be separated by whitespace.
-    Returns a list where each entry corresponds to the numbers of a line, which
-    means that each entry can be itself a list.
-
-    """
-    rows = []
-    with open(filename, "r") as f:
-        for line in f:
-            columns = [float(column) for column in line.strip().split()]
-            rows.append(columns)
-    return rows
-
 def quiver(f, mesh, filename=None, title="", **kwargs):
     """
     Takes a numpy array of the values of a vector-valued function, defined

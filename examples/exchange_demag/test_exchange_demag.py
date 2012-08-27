@@ -4,7 +4,6 @@ import pylab as p
 import numpy as np
 import dolfin as df
 import progressbar as pb
-import finmag.util.helpers as h
 from finmag import Simulation as Sim
 from finmag.energies import Exchange, Demag
 from finmag.util.meshes import from_geofile
@@ -71,14 +70,13 @@ def run_finmag():
     fe.close()
 
 def test_compare_averages():
-    ref = np.array(h.read_float_data(os.path.join(MODULE_DIR, "averages_ref.txt")))
-    if not os.path.isfile(os.path.join(MODULE_DIR, "averages.txt")):
-        run_finmag()
-    elif (os.path.getctime(os.path.join(MODULE_DIR, "averages.txt")) <
-          os.path.getctime(os.path.abspath(__file__))):
+    ref = np.loadtxt(os.path.join(MODULE_DIR, "averages_ref.txt"))
+    if not os.path.isfile(os.path.join(MODULE_DIR, "averages.txt")) \
+       or (os.path.getctime(os.path.join(MODULE_DIR, "averages.txt")) <
+           os.path.getctime(os.path.abspath(__file__))):
         run_finmag()
 
-    computed = np.array(h.read_float_data(os.path.join(MODULE_DIR, "averages.txt")))
+    computed = np.loadtxt(os.path.join(MODULE_DIR, "averages.txt"))
     dt = ref[:,0] - computed[:,0]
     assert np.max(dt) < 1e-15, "Compare timesteps."
 
@@ -122,14 +120,13 @@ def test_compare_averages():
     print "Comparison of development written to exchange_demag.pdf"
 
 def test_compare_energies():
-    ref = np.array(h.read_float_data(os.path.join(MODULE_DIR, "energies_ref.txt")))
-    if not (os.path.isfile(os.path.join(MODULE_DIR, "energies.txt"))):
-        run_finmag()
-    elif (os.path.getctime(os.path.join(MODULE_DIR, "energies.txt")) <
-          os.path.getctime(os.path.abspath(__file__))):
+    ref = np.loadtxt(os.path.join(MODULE_DIR, "energies_ref.txt"))
+    if not os.path.isfile(os.path.join(MODULE_DIR, "energies.txt")) \
+       or (os.path.getctime(os.path.join(MODULE_DIR, "energies.txt")) <
+           os.path.getctime(os.path.abspath(__file__))):
         run_finmag()
 
-    computed = np.array(h.read_float_data(os.path.join(MODULE_DIR, "energies.txt")))
+    computed = np.loadtxt(os.path.join(MODULE_DIR, "energies.txt"))
     assert np.size(ref) == np.size(computed), "Compare number of energies."
 
     vol = df.assemble(df.Constant(1)*df.dx, mesh=mesh)*unit_length**mesh.topology().dim()

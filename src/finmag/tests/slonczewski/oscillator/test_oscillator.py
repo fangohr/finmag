@@ -1,7 +1,6 @@
 import os
 import run as sim
 import numpy as np
-from finmag.util import helpers
 
 epsilon = 1e-16
 tolerance = 1e-3
@@ -12,8 +11,8 @@ def _test_oscillator():
         sim.create_initial_state()
     sim.run_simulation()
 
-    averages = helpers.read_float_data(sim.averages_file)
-    nmag_avg = helpers.read_float_data(nmag_file)
+    averages = np.loadtxt(sim.averages_file)
+    nmag_avg = np.loadtxt(nmag_file)
    
     diff = np.abs(np.array(averages) - np.array(nmag_avg))
     assert np.max(diff[:,0]) < epsilon # compare times

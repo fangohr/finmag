@@ -2,7 +2,7 @@ import os
 import dolfin as df
 import numpy as np
 from finmag.util.meshes import from_geofile
-from finmag.util.helpers import quiver, read_float_data
+from finmag.util.helpers import quiver
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 mesh_file = os.path.join(MODULE_DIR, "bar.geo")
@@ -13,8 +13,8 @@ averages_m_file_martinez = os.path.join(MODULE_DIR, "m_averages_martinez.txt")
 
 # plots of average magnetisation components
 
-averages = np.array(read_float_data(averages_m_file))
-averages_martinez = np.array(read_float_data(averages_m_file_martinez))
+averages = np.loadtxt(averages_m_file)
+averages_martinez = np.loadtxt(averages_m_file_martinez)
 
 print averages_martinez.shape
 
