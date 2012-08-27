@@ -29,7 +29,7 @@ def test_negative_uniform_external_field():
     sim.run_until(1e-9) 
 
     m = sim.m.reshape((3, -1)).mean(-1)
-    print "Average magnetisation ({:.2}, {:.2}, {:.2}).".format(*m)
+    print "Average magnetisation ({:.2g}, {:.2g}, {:.2g}).".format(*m)
     expected_m = np.array([-1, 0, 0])
     diff = np.abs(m - expected_m)
     TOLERANCE = 1e-5

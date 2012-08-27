@@ -43,7 +43,7 @@ dL = L/2; dW = W/2; dH = H/2;
 
 # Use exchange length to figure out discretisation.
 l_ex = np.sqrt(2 * A / (mu0 * Ms**2))
-print "The exchange length is l_ex = {:.2} m.".format(l_ex) # >5 nm
+print "The exchange length is l_ex = {:.2g} m.".format(l_ex) # >5 nm
 
 discretisation = math.floor(l_ex*1e9)*1e-9 
 nx, ny, nz = (L/discretisation, W/discretisation, 1)
@@ -61,7 +61,7 @@ I = 10e-3 # A
 point_contact_radius = 10e-9
 point_contact_area = math.pi * point_contact_radius ** 2
 J = I / point_contact_area
-print "Current density is J = {:.2} A/m^2.".format(J)
+print "Current density is J = {:.2g} A/m^2.".format(J)
 J_expr = point_contacts([(L/3, W/2), (2*L/3, W/2)],
         radius=point_contact_radius, J=J)
 P = 0.4

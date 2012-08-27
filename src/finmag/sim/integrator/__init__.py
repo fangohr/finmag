@@ -71,7 +71,7 @@ class BaseIntegrator(object):
 	cur_count = 0
 
 #        def _do_save_snapshot():
-#            log.debug("Saving snapshot at timestep t={:.2} to file '{}' (cur_count: {})".format(self.llg.t, filename, cur_count))
+#            log.debug("Saving snapshot at timestep t={:.2g} to file '{}' (cur_count: {})".format(self.llg.t, filename, cur_count))
 #            # TODO: Can we somehow store information about the current timestep in either the file itself, or in the filenames?
 #            #       Unfortunately, it seems as if the filenames of the *.... files are generated automatically. :-S
 #            f << self.llg._m
@@ -88,7 +88,7 @@ class BaseIntegrator(object):
                 # TODO: what happens if the >= is actually an equality? Is it guaranteed that the run_until()
                 # command further down is a no-op in this case? If not, we need to do something more clever...
                 self.run_until(cur_count*save_every)
-                log.debug("Saving snapshot at timestep t={:.4} to file '{}' (cur_count: {})".format(self.llg.t, filename, cur_count))
+                log.debug("Snapshot at timestep t={:.4g} saved to file '{}' (cur_count: {})".format(self.llg.t, filename, cur_count))
                 # TODO: Can we somehow store information about the current timestep in either the file itself, or in the filenames?
                 #       Unfortunately, it seems as if the filenames of the *.... files are generated automatically. :-S
                 f << self.llg._m
@@ -102,7 +102,7 @@ class BaseIntegrator(object):
             max_dmdt_norm = float(np.max(dm_norm) / dt)
 
             if max_dmdt_norm < stopping_dmdt:
-                log.debug("{}: Stopping at t={:.2}, with last_dmdt={:.2}, smaller than stopping_dmdt={:.2}.".format(
+                log.debug("{}: Stopping at t={:.2g}, with last_dmdt={:.2g}, smaller than stopping_dmdt={:.2g}.".format(
                     self.__class__.__name__, self.llg.t, max_dmdt_norm, float(stopping_dmdt)))
                 break
 
@@ -111,12 +111,12 @@ class BaseIntegrator(object):
             else:
                 dt = dt_limit
 
-            log.debug("{}: t={:.2}, last_dmdt={:.2} * stopping_dmdt, next dt={:.2}.".format(
+            log.debug("{}: t={:.2g}, last_dmdt={:.2g} * stopping_dmdt, next dt={:.2g}.".format(
                 self.__class__.__name__, self.llg.t, max_dmdt_norm/stopping_dmdt, dt))
 
             if max_dmdt_norm > last_max_dmdt_norm:
                 dmdt_increased_counter += 1
-                log.debug("{}: dmdt {:.2} times larger than last time (counting {}/{}).".format(
+                log.debug("{}: dmdt {:.2f} times larger than last time (counting {}/{}).".format(
                     self.__class__.__name__, max_dmdt_norm/last_max_dmdt_norm,
                     dmdt_increased_counter, dmdt_increased_counter_limit))
             last_max_dmdt_norm = max_dmdt_norm
