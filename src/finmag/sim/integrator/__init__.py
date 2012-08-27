@@ -80,11 +80,11 @@ class BaseIntegrator(object):
         last_max_dmdt_norm = 1e99
         while True:
             prev_m = self.llg.m.copy()
+	    next_stop = self.llg.t + dt
 
-            # If in the next step we would cross a timestep where a snapshot
-            # should be saved, run until the that timestep, save the snapshot,
-            # and then continue.
-            if save_snapshots and (self.llg.t + dt >= cur_count*save_every):
+            # If in the next step we would cross a timestep where a snapshot should be saved, run until
+	    # that timestep, save the snapshot, and then continue.
+            while save_snapshots and (next_stop >= cur_count*save_every):
                 # TODO: what happens if the >= is actually an equality? Is it guaranteed that the run_until()
                 # command further down is a no-op in this case? If not, we need to do something more clever...
                 self.run_until(cur_count*save_every)
@@ -95,7 +95,7 @@ class BaseIntegrator(object):
                 cur_count += 1
 
             # Why is self.cur_t alias CVodeGetCurrentTime not updated?
-            self.run_until(self.llg.t + dt)
+            self.run_until(next_stop)
 
             dm = np.abs(self.m - prev_m).reshape((3, -1))
             dm_norm = np.sqrt(dm[0] ** 2 + dm[1] ** 2 + dm[2] ** 2)
