@@ -221,7 +221,7 @@ def box(x0, x1, x2, y0, y1, y2, maxh, save_result=True, filename='', directory='
         algebraic3d
         solid main = orthobrick ( {}, {}, {}; {}, {}, {} ) -maxh = {maxh};
         tlo main;""").format(x0, x1, x2, y0, y1, y2, maxh=maxh)
-    if save_result == True and filename is None:
+    if save_result == True and filename == '':
         filename = "box-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}".format(x0, x1, x2, y0, y1, y2, maxh).replace(".", "_")
     return from_csg(csg, save_result=save_result, filename=filename, directory=directory)
 
