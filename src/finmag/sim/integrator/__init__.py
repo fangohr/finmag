@@ -7,6 +7,7 @@
 # AUTHOR(S) OF THIS FILE: Dmitri Chernyshenko (d.chernyshenko@soton.ac.uk)
 
 import os
+import time
 import logging
 import itertools
 import scipy.integrate
@@ -81,10 +82,12 @@ class BaseIntegrator(object):
 	cur_count = 0
 
         def _do_save_snapshot():
-            log.debug("Saving snapshot at timestep t={:.4g} to file '{}' (snapshot #{})".format(self.llg.t, filename, cur_count))
             # TODO: Can we somehow store information about the current timestep in either the .pvd/.vtu file itself, or in the filenames?
             #       Unfortunately, it seems as if the filenames of the *.vtu files are generated automatically.
+            t0 = time.time()
             f << self.llg._m
+            t1 = time.time()
+            log.debug("Saving snapshot #{} at timestep t={:.4g} to file '{}' (saving took {:.3g} seconds).".format(cur_count, self.llg.t, filename, t1-t0))
 
         last_max_dmdt_norm = 1e99
         while True:
