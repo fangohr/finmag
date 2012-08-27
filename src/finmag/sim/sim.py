@@ -208,6 +208,8 @@ class Simulation(object):
             log.warning("Ignoring 'directory' argument (value given: '{}') because 'filename' contains an absolute path: '{}'".format(directory, filename))
 
         output_file = os.path.join(directory, filename)
+        if os.path.exists(output_file):
+            raise IOError("Aborting snapshot creation. File already exists and would overwritten: '{}'".format(output_file))
         f = df.File(output_file, "compressed")
         f << self.llg._m
         log.info("Saved snapshot of magnetisation at t={} to file '{}'.".format(self.llg.t, output_file))

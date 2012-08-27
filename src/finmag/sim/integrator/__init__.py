@@ -63,6 +63,9 @@ class BaseIntegrator(object):
                 ext = os.path.splitext(filename)[1]
                 if ext != '.pvd':
                     raise ValueError("File extension for vtk snapshot file must be '.pvd', but got: '{}'".format(ext))
+            if os.path.exists(filename):
+                raise IOError("Aborting snapshot creation. File already exists and would overwritten: '{}'".format(filename))
+
             f = df.File(filename, 'compressed')
         else:
             if filename != '':
