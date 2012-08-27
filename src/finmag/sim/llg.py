@@ -50,6 +50,7 @@ class LLG(object):
         self._pre_rhs_callables=[]
         self._post_rhs_callables=[]
         self._m = df.Function(self.S3)
+        self._m.rename("m", "magnetisation") # gets displayed e.g. in Paraview when loading an exported VTK file
         self.pins = [] # nodes where the magnetisation gets pinned
         self.interactions = []
     
@@ -176,7 +177,6 @@ class LLG(object):
             raise AttributeError
         new_m.vector()[:] = h.fnormalise(new_m.vector().array())
         self._m.vector()[:] = new_m.vector()[:]
-
 
     def compute_effective_field(self):
         H_eff = np.zeros(self.m.shape)
