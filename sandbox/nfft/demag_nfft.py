@@ -192,17 +192,17 @@ class DemagNFFT():
         self.m=m
         self.Vv=Vv
         self.Ms=Ms
-	self.s_n=s_n
+		self.s_n=s_n
         self.v_n=v_n
         self.mesh=Vv.mesh()
         self.V=FunctionSpace(self.mesh, 'Lagrange', 1)
         self.phi = Function(self.V)	
 
-	self.node_vol=compute_node_volume(self.mesh)
-	self.node_area=compute_node_area(self.mesh)
-	self.cell_vol=compute_cell_volume(self.mesh)
+		self.node_vol=compute_node_volume(self.mesh)
+		self.node_area=compute_node_area(self.mesh)
+		self.cell_vol=compute_cell_volume(self.mesh)
 	
-	self.t_x,self.t_y,self.t_w=compute_gauss_coeff_triangle(s_n)
+		self.t_x,self.t_y,self.t_w=compute_gauss_coeff_triangle(s_n)
         self.v_x,self.v_y,self.v_z,self.v_w=compute_gauss_coeff_tetrahedron(v_n)
         
         print self.v_x
@@ -229,10 +229,10 @@ class DemagNFFT():
 	"""
     
 
-	cs=self.mesh.coordinates()
+		cs=self.mesh.coordinates()
         self.face_nodes=[]
         self.face_norms=[]
-	for face in df.faces(self.mesh):
+		for face in df.faces(self.mesh):
             cells = face.entities(3)
             if len(cells)==1:
                 face_nodes=face.entities(0)
@@ -241,7 +241,7 @@ class DemagNFFT():
 			
 
         self.s_nodes=[]
-	self.s_weight=[]
+		self.s_weight=[]
 
         def compute_det_xy(x1,y1,z1,x2,y2,z2,x3,y3,z3):
            
@@ -322,9 +322,9 @@ class DemagNFFT():
             return tmp,abs(v)
         
         self.v_nodes=[]
-	self.v_weight=[]
+		self.v_weight=[]
         self.vol_density=[]
-	for cell in df.cells(self.mesh):
+		for cell in df.cells(self.mesh):
             i=cell.entities(0)
             rho,det=compute_divergence(cell)
 
@@ -357,7 +357,7 @@ class DemagNFFT():
     
             t=self.face_norms[i]
             for j in f_c:
-		cf[i]+=(m[j]*t.x()+m[n+j]*t.y()+m[n*2+j]*t.z())*self.Ms/3.0
+				cf[i]+=(m[j]*t.x()+m[n+j]*t.y()+m[n*2+j]*t.z())*self.Ms/3.0
 			
         self.sigma=cf
         
