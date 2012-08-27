@@ -26,7 +26,6 @@ def figure_5_6(mesh, m, p, t):
     print "Saved."
 
 alpha = 0.012 # dimensionless
-gamma = 2.210173e5 # m/(As), our value
 
 # Permalloy.
 Ms = 860e3 # A/m
@@ -55,6 +54,7 @@ mesh = df.Box(-dL, -dW, -dH, dL, dW, dH, int(nx), int(ny), int(nz))
 # it to rule out errors in setting up the other params
 for p in [(1, 0, 0), (0, 1, 0), (1, 1, 0), (0, 0, 1)]:
     sim = Simulation(mesh, Ms)
+    sim.alpha = alpha
     sim.set_m((0, 0, 1))
     sim.add(Zeeman((0, 0, 1.1 * Ms))) # section 3 and end of section 5
     sim.add(Exchange(A))
