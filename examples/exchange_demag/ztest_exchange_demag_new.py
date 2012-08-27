@@ -93,14 +93,13 @@ def run_finmag(demagsolver):
 
 def test_compare_averages():
     for demagsolver in demagsolvers:     
-        if not os.path.isfile(os.path.join(MODULE_DIR, demagsolver+"averages.txt")):
-            run_finmag(demagsolver)
-        elif (os.path.getctime(os.path.join(MODULE_DIR, demagsolver+"averages.txt")) <
-              os.path.getctime(os.path.abspath(__file__))):
+        if not os.path.isfile(os.path.join(MODULE_DIR, demagsolver+"averages.txt")) \
+           or (os.path.getctime(os.path.join(MODULE_DIR, demagsolver+"averages.txt")) <
+               os.path.getctime(os.path.abspath(__file__))):
             run_finmag(demagsolver)
 
-        computed = np.array(h.read_float_data(os.path.join(MODULE_DIR, demagsolver"averages.txt")))
-        ref = np.array(h.read_float_data(os.path.join(MODULE_DIR, demagsolver+"averages_ref.txt")))
+        computed = np.loadtxt(os.path.join(MODULE_DIR, demagsolver+"averages.txt"))
+        ref = np.loadtxt(os.path.join(MODULE_DIR, demagsolver+"averages_ref.txt"))
         dt = ref[:,0] - computed[:,0]
         assert np.max(dt) < 1e-15, "Compare timesteps."
 
@@ -148,14 +147,13 @@ def test_compare_energies():
     #Dictionary for finmag demag results
     demag = {}
     for demagsolver in demagsolvers:
-        ref = np.array(h.read_float_data(os.path.join(MODULE_DIR, demagsolver+"energies_ref.txt")))
-        if not (os.path.isfile(os.path.join(MODULE_DIR, demagsolver+"energies.txt"))):
-            run_finmag(demagsolver)
-        elif (os.path.getctime(os.path.join(MODULE_DIR, demagsolver+"energies.txt")) <
-              os.path.getctime(os.path.abspath(__file__))):
+        ref = np.loadtxt(os.path.join(MODULE_DIR, demagsolver+"energies_ref.txt"))
+        if not os.path.isfile(os.path.join(MODULE_DIR, demagsolver+"energies.txt")) \
+           or (os.path.getctime(os.path.join(MODULE_DIR, demagsolver+"energies.txt")) <
+               os.path.getctime(os.path.abspath(__file__))):
             run_finmag(demagsolver)
 
-        computed = np.array(h.read_float_data(os.path.join(MODULE_DIR, demagsolver+"energies.txt")))
+        computed = np.loadtxt(os.path.join(MODULE_DIR, demagsolver+"energies.txt"))
         assert np.size(ref) == np.size(computed), "Compare number of energies."
 
         vol = df.assemble(df.Constant(1)*df.dx, mesh=mesh)*unit_length**mesh.topology().dim()

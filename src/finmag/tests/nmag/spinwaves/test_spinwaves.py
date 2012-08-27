@@ -1,7 +1,7 @@
 import os
 import cProfile
 import pstats
-import finmag.util.helpers as h
+import numpy as np
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 TOLERANCE = 3e-4
@@ -11,8 +11,8 @@ def setup_module(module):
     f.run_simulation()
 
 def test_compare_averages():
-    ref = h.read_float_data(os.path.join(MODULE_DIR, "averages_ref.txt"))
-    computed = h.read_float_data(os.path.join(MODULE_DIR, "averages.txt"))
+    ref = np.loadtxt(os.path.join(MODULE_DIR, "averages_ref.txt"))
+    computed = np.loadtxt(os.path.join(MODULE_DIR, "averages.txt"))
 
     highest_diff = 0
     for i in range(len(computed)):

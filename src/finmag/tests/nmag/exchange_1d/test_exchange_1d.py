@@ -95,7 +95,7 @@ def test_averages():
     reflects the difference beetween non-zero components.
 
     """
-    ref = np.array(h.read_float_data(os.path.join(MODULE_DIR, "averages_ref.txt")))
+    ref = np.loadtxt(os.path.join(MODULE_DIR, "averages_ref.txt"))
     computed = np.array(averages)
 
     dt = ref[:,0] - computed[:,0]
@@ -111,7 +111,7 @@ def test_averages():
 def test_third_node():
     REL_TOLERANCE = 6e-3
 
-    ref = np.array(h.read_float_data(os.path.join(MODULE_DIR, "third_node_ref.txt")))
+    ref = np.loadtxt(os.path.join(MODULE_DIR, "third_node_ref.txt"))
     computed = np.array(third_node)
 
     dt = ref[:,0] - computed[:,0]
