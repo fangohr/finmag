@@ -48,7 +48,7 @@ def create_initial_s_state():
     sim.run_until(2e-9)
     np.savetxt(initial_m_file, sim.m)
     print "Saved magnetisation to {}.".format(initial_m_file)
-    print "Average magnetisation is ({:.2}, {:.2}, {:.2}).".format(*sim.m_average)
+    print "Average magnetisation is ({:.2g}, {:.2g}, {:.2g}).".format(*sim.m_average)
 
 def run_simulation():
     """
