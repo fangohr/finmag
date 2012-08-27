@@ -212,6 +212,8 @@ class Simulation(object):
         output_file = os.path.join(directory, filename)
         if os.path.exists(output_file):
             raise IOError("Aborting snapshot creation. File already exists and would overwritten: '{}'".format(output_file))
+        t0 = time.time()
         f = df.File(output_file, "compressed")
         f << self.llg._m
-        log.info("Saved snapshot of magnetisation at t={} to file '{}'.".format(self.llg.t, output_file))
+        t1 = time.time()
+        log.info("Saved snapshot of magnetisation at t={} to file '{}' (saving took {:.3g} seconds).".format(self.llg.t, output_file, t1-t0))
