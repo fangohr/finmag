@@ -87,7 +87,8 @@ class Simulation(object):
             self.integrator = LLGIntegrator(self.llg, self.llg.m)
         self.integrator.run_until(t)
 
-    def relax(self, save_snapshots=False, filename=None, save_every=100e-12, stopping_dmdt=ONE_DEGREE_PER_NS, dt_limit=1e-10, dmdt_increased_counter_limit=20):
+    def relax(self, save_snapshots=False, filename=None, save_every=100e-12, save_final_snapshot=True,
+              stopping_dmdt=ONE_DEGREE_PER_NS, dt_limit=1e-10, dmdt_increased_counter_limit=20):
         """
         Do time integration of the magnetisation M until it reaches a state
         where the change of M magnetisation at each node is smaller than the
@@ -98,9 +99,13 @@ class Simulation(object):
         `filename` contains directory components then these are created if they
         do not already exist  A snapshot is saved every `save_every` seconds
 	(default: 100e-12, i.e. every 100 picoseconds).
+        Usually, one last snapshot is saved after the relaxation is finished (or
+        was stopped). This can be disabled by setting save_final_snapshot to False
+        (default: True).
 
         For details and the meaning of the other keyword arguments see the
         docstring of sim.integrator.BaseIntegrator.run_until_relaxation().
+
         """
         log.info("Will integrate until relaxation.")
         if not hasattr(self, "integrator"):
@@ -108,6 +113,7 @@ class Simulation(object):
         self.integrator.run_until_relaxation(save_snapshots=save_snapshots,
                                              filename=filename,
                                              save_every=save_every,
+                                             save_final_snapshot=save_final_snapshot,
                                              stopping_dmdt=stopping_dmdt,
                                              dmdt_increased_counter_limit=dmdt_increased_counter_limit,
                                              dt_limit=dt_limit)

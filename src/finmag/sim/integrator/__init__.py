@@ -30,7 +30,8 @@ def LLGIntegrator(llg, m0, backend="sundials", **kwargs):
 
 
 class BaseIntegrator(object):
-    def run_until_relaxation(self, save_snapshots=False, filename=None, save_every=100e-12, stopping_dmdt=ONE_DEGREE_PER_NS, dmdt_increased_counter_limit=20, dt_limit=1e-10):
+    def run_until_relaxation(self, save_snapshots=False, filename=None, save_every=100e-12, save_final_snapshot=True,
+                             stopping_dmdt=ONE_DEGREE_PER_NS, dmdt_increased_counter_limit=20, dt_limit=1e-10):
         """
         Run integration until the maximum |dm/dt| is smaller than the
         threshold value stopping_dmdt (which is one degree per
@@ -50,6 +51,10 @@ class BaseIntegrator(object):
         (default: 100e-12, i.e. every 100 picoseconds). It should be noted that
 	the true timestep at which the snapshot is saved may deviate from slightly
  	from the exact value due to the way the time integrators work.
+        Usually, one last snapshot is saved after the relaxation is finished (or
+        was stopped). This can be disabled by setting save_final_snapshot to False
+        (default: True).
+
         """
         if save_snapshots == True:
             if filename == '':
@@ -72,6 +77,12 @@ class BaseIntegrator(object):
         #cur_count = ct.next()
 	cur_count = 0
 
+        def _do_save_snapshot():
+            log.debug("Saving snapshot at timestep t={:.4g} to file '{}' (snapshot #{})".format(self.llg.t, filename, cur_count))
+            # TODO: Can we somehow store information about the current timestep in either the .pvd/.vtu file itself, or in the filenames?
+            #       Unfortunately, it seems as if the filenames of the *.vtu files are generated automatically.
+            f << self.llg._m
+
         last_max_dmdt_norm = 1e99
         while True:
             prev_m = self.llg.m.copy()
@@ -81,10 +92,7 @@ class BaseIntegrator(object):
             # that timestep, save the snapshot, and then continue.
             while save_snapshots and (next_stop >= cur_count*save_every):
                 self.run_until(cur_count*save_every)
-                log.debug("Saving snapshot at timestep t={:.4g} to file '{}' (snapshot #{})".format(self.llg.t, filename, cur_count))
-                # TODO: Can we somehow store information about the current timestep in either the file itself, or in the filenames?
-                #       Unfortunately, it seems as if the filenames of the *.... files are generated automatically. :-S
-                f << self.llg._m
+                _do_save_snapshot()
                 cur_count += 1
 
             # Why is self.cur_t alias CVodeGetCurrentTime not updated?
@@ -117,6 +125,9 @@ class BaseIntegrator(object):
                 log.warning("{}: Stopping after it increased {} times.".format(
                     self.__class__.__name__, dmdt_increased_counter_limit))
                 break
+
+        if save_snapshots and save_final_snapshot:
+            _do_save_snapshot()
 
 class ScipyIntegrator(BaseIntegrator):
     def __init__(self, llg, m0, reltol=1e-8, abstol=1e-8, nsteps=10000, method="bdf", **kwargs):
