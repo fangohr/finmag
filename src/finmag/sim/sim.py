@@ -79,8 +79,10 @@ class Simulation(object):
             raise ValueError("Exactly one exchange interaction and exactly one (uniaxial) anisotropy interaction must be present in order to compute the exchange length. However, {} exchange term(s) and {} uniaxial anisotropy term(s) were found.".format(len(ans), len(exs)))
         A = exs[0].A
         K1 = float(ans[0].K1) # K1 can be a dolfin Constant, hence the conversion to float
+        l_ex = sqrt(A/K1)
         # TODO: It might be nice to issue a warning here if the characteristic mesh length is much larger than the exchange length.
-        return sqrt(A/K1)
+        log.debug("Exchange length: {:.2f} nm (exchange coupling: A={:.2g} J/m, anisotropy constant K1={:.2g} J/M^3).".format(l_ex*1e9, A, K1))
+        return l_ex
 
     def run_until(self, t):
         if not hasattr(self, "integrator"):
