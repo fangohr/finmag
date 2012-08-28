@@ -10,23 +10,6 @@ from point_contacts import point_contacts
 
 epsilon = 1e-16
 
-def figure_5_6(mesh, m, p, t):
-    print "Saving the plot..."
-    coords = mesh.coordinates()
-    upper_z_plane = coords[coords.shape[0]/2:,0:2]
-    m = m.view().reshape((3, -1))
-    upper_mx = m[0,m.shape[1]/2:]
-    #plt.contourf(upper_z_plane[:,0], upper_z_plane[:,1], upper_mx)
-
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    #X, Y, Z = axes3d.get_test_data(0.05)
-    #ax.plot_wireframe(X, Y, Z, rstride=10, cstride=10)
-    ax.plot_wireframe(upper_z_plane[:,0], upper_z_plane[:,1], upper_mx, rstride=10, cstride=10)
-
-    plt.savefig("mx_p{}_t{:.3f}ns.png".format(p, t*1e9))
-    print "Saved."
-
 alpha = 0.012 # dimensionless
 
 # Permalloy.
@@ -52,37 +35,37 @@ nx, ny, nz = (L/discretisation, W/discretisation, 1)
 #mesh = df.Rectangle(-dL, -dW, dL, dW, int(nx), int(ny)
 mesh = df.Box(-dL, -dW, -dH, dL, dW, dH, int(nx), int(ny), int(nz))
 
-for p in [(1, 0, 0), (1, 1, 0)]:
-    sim = Simulation(mesh, Ms)
-    sim.alpha = alpha
-    sim.set_m((0, 0, 1))
-    sim.add(Zeeman((0, 0, 1.1 * Ms))) # section 3 and end of section 5
-    sim.add(Exchange(A))
-    sim.add(ThinFilmDemag())
+sim = Simulation(mesh, Ms)
+sim.alpha = alpha
+sim.set_m((0, 0, 1))
+sim.add(Zeeman((0, 0, 1.1 * Ms))) # section 3 and end of section 5
+sim.add(Exchange(A))
+sim.add(ThinFilmDemag())
 
-    # Spin-Torque
-    I = 10e-3 # A
-    point_contact_radius = 10e-9
-    point_contact_area = math.pi * point_contact_radius ** 2
-    J = I / point_contact_area
-    print "Current density is J = {:.2} A/m^2.".format(J)
-    J_expr = point_contacts([(L/6, 0), (-L/6, 0)],
-            radius=point_contact_radius, J=J) 
-    #J_visu = df.interpolate(J_expr, sim.S1)
-    #df.plot(J_visu)
-    #df.interactive()
-    P = 0.4
-    d = H
-    sim.set_stt(J_expr, P, d, p)
-    pulse_time = 50e-12
-    snapshot_times = np.array([65e-12, 175e-12, 265e-12])
+# Spin-Torque
+I = 10e-3 # A
+point_contact_radius = 10e-9
+point_contact_area = math.pi * point_contact_radius ** 2
+J = I / point_contact_area
+print "Current density is J = {:.2} A/m^2.".format(J)
+J_expr = point_contacts([(L/6, 0), (-L/6, 0)],
+        radius=point_contact_radius, J=J) 
+#J_visu = df.interpolate(J_expr, sim.S1)
+#df.plot(J_visu)
+#df.interactive()
+P = 0.4
+p = (1, 1, 0)
+d = H
+sim.set_stt(J_expr, P, d, p)
+pulse_time = 50e-12
+snapshot_times = np.array([65e-12, 175e-12, 265e-12])
 
-    t = 0; dt = 1e-12; t_max = 1e-9;
-    while t <= t_max:
-        if abs(t - pulse_time) < epsilon:
-            print "Switching spin current off at {}.".format(t)
-            sim.toggle_stt(False)
-        if np.min(np.abs(t - snapshot_times)) < epsilon:
-            figure_5_6(mesh, sim.m, "".join(map(str, p)), t)
-        t += dt
-        sim.run_until(t)
+t = 0; dt = 1e-12; t_max = 1e-9;
+while t <= t_max:
+    if abs(t - pulse_time) < epsilon:
+        print "Switching spin current off at {}.".format(t)
+        sim.toggle_stt(False)
+    if np.min(np.abs(t - snapshot_times)) < epsilon:
+        sim.snapshot()
+    t += dt
+    sim.run_until(t)
