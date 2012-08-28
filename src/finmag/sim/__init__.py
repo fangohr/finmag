@@ -47,10 +47,10 @@ if dolfin_level is not None:
     df.set_log_level(dolfin_level)
 
 # create formatter #(some options to play with)
-#formatter = logging.Formatter('%(asctime)s-%(levelname)s: %(message)s')
+formatter = logging.Formatter('[%(asctime)s] %(levelname)s: %(message)s', datefmt='%H:%M:%S')
 #formatter = logging.Formatter('L%(asctime)s-%(levelname)s: %(message)s')
 #formatter = logging.Formatter('FL:%(relativeCreated)10.1f-%(levelname)s: %(message)s')
-formatter = logging.Formatter('%(levelname)s: %(message)s')
+#formatter = logging.Formatter('%(levelname)s: %(message)s')
 
 # add formatter to ch
 ch.setFormatter(formatter)
