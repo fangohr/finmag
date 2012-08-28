@@ -30,7 +30,7 @@ dL = L/2; dW = W/2; dH = H/2;
 l_ex = np.sqrt(2 * A / (mu0 * Ms**2))
 print "The exchange length is l_ex = {:.2} m.".format(l_ex) # >5 nm
 
-discretisation = math.floor(l_ex*1e9)*1e-9 
+discretisation = math.floor(l_ex*1e9)*1e-9 / 2
 nx, ny, nz = (L/discretisation, W/discretisation, 1)
 #mesh = df.Rectangle(-dL, -dW, dL, dW, int(nx), int(ny)
 mesh = df.Box(-dL, -dW, -dH, dL, dW, dH, int(nx), int(ny), int(nz))
@@ -46,17 +46,26 @@ sim.add(ThinFilmDemag())
 I = 10e-3 # A
 point_contact_radius = 10e-9
 point_contact_area = math.pi * point_contact_radius ** 2
+distance = 125e-9
 J = I / point_contact_area
 print "Current density is J = {:.2} A/m^2.".format(J)
-J_expr = point_contacts([(L/6, 0), (-L/6, 0)],
+J_expr_fig5_two_pc = point_contacts([(-distance/2, 0), (distance/2, 0)],
         radius=point_contact_radius, J=J) 
-#J_visu = df.interpolate(J_expr, sim.S1)
+
+distance_fig_6 = 65e-9
+phi0 = 0; phi1 = 2*math.pi/3; phi2 = 4*math.pi/3; r = distance_fig_6 * math.sqrt(3)/3
+x0, y0 = r * math.cos(phi0), r * math.sin(phi0)
+x1, y1 = r * math.cos(phi1), r * math.sin(phi1)
+x2, y2 = r * math.cos(phi2), r * math.sin(phi2)
+J_expr_fig6_three_pc = point_contacts([(x0, y0),(x1, y1),(x2, y2)], radius=point_contact_radius, J=J)
+
+#J_visu = df.interpolate(J_expr_fig6_three_pc, sim.S1)
 #df.plot(J_visu)
 #df.interactive()
 P = 0.4
 p = (1, 1, 0)
 d = H
-sim.set_stt(J_expr, P, d, p)
+sim.set_stt(J_expr_fig6_three_pc, P, d, p)
 pulse_time = 50e-12
 snapshot_times = np.array([65e-12, 175e-12, 265e-12])
 
