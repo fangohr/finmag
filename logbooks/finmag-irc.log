@@ -1343,3 +1343,42 @@ fangohr: Still testing ...
 2012-08-06 09:54:25 mb8g11: Hello Hans!
 2012-08-06 11:17:34 mb8g11: fangohr-adium?
 2012-08-07 08:37:32 mb8g11: Good morning.
+2012-08-28 11:39:18 fangohr-adium: Hello Dokosbot! Long time no see.
+2012-08-28 14:37:36 fangohr-adium: Greetings. I have written a few more emails :)
+2012-08-28 14:39:36 mb8g11: Great.
+2012-08-28 14:45:26 mb8g11: I remember looking into something called mesh functions in dolfin. They are functions that live on particular areas of the mesh. The question remains if we can map netgen's regions to dolfin meshes.
+2012-08-28 14:56:54 mb8g11: Max?
+2012-08-28 14:58:07 albert: Yes!
+2012-08-28 14:58:31 mb8g11: Cool.
+2012-08-28 14:58:37 albert: :-)
+2012-08-28 14:59:25 albert: How's things in Hamburg?
+2012-08-28 15:00:46 mb8g11: Fine :)
+2012-08-28 15:01:16 mb8g11: Oh, we didn't instruct you how to join us on IRC, did we?
+2012-08-28 15:02:43 albert: Well, I asked Hans a while ago and then did it successully once or twice, but since activity seemed rather low I forgot about it again.
+2012-08-28 15:02:46 fangohr-adium1: Greetings, Max. :)
+2012-08-28 15:03:08 fangohr-adium1: Adium (Mac OS X only) can autologin, it seems. Very useful. Xchat can do it sometimes.
+2012-08-28 15:03:51 albert: Will try to remain connected in the future, and it might be useful to advertise it again to the other team members, just to have another means of communicating quickly.
+2012-08-28 15:03:58 albert: Thanks Hans, I'll look into it.
+2012-08-28 15:04:18 mb8g11: I you're into command line clients, I can recommend irssi.
+2012-08-28 15:04:31 mb8g11: Could send you my config file, it does autologin.
+2012-08-28 15:04:39 fangohr-adium1: That sounds interesting. Which OSs are supported?
+2012-08-28 15:05:42 fangohr-adium1: More specifically: Mac OS X and Linux I am interested in.
+2012-08-28 15:05:51 mb8g11: OS X, Linux, and apparently even windows (haven't tried)
+2012-08-28 15:06:09 fangohr-adium1: Ta.
+2012-08-28 15:06:15 mb8g11: It's in the ubuntu repositories.
+2012-08-28 15:15:16 fangohr-adium1: Could you put the config file somewhere?
+2012-08-28 15:19:29 mb8g11: Of course, in a minute.
+2012-08-28 15:25:53 mb8g11: http://pastebin.com/DFFCKPZv
+2012-08-28 15:28:16 mb8g11: weird issue with the spellchecker, here is the correct one: http://pastebin.com/yVhnmAN5
+2012-08-28 15:32:42 albert: Thanks for the tip, Marc-Antonio. And also thanks for the config file. Do you know if irssi can do desktop notifications if you're working on a different workspace than the one where it's running?
+2012-08-28 15:33:30 mb8g11: Sorry, no idea.
+2012-08-28 15:34:17 albert: No prob. :)
+2012-08-28 16:00:06 fangohr-adium1: Ta.
+2012-08-28 16:00:30 fangohr-adium1: MA, Where does the irssi config file go (on linux)? In .irssi I presume, but what is the filename?
+2012-08-28 16:02:19 mb8g11: ~/.irssi/config      (http://irssi.org/documentation/manual)
+2012-08-28 16:05:22 fangohr-adium1: Thanks.
+2012-08-28 16:16:53 mb8g11: np
+2012-08-28 16:54:39 mb8g11: brb
+2012-08-28 16:55:05 mb8g11: re
+2012-08-28 16:59:19 albert: I'm off. See you guys tomorrow!
+2012-08-28 17:00:55 mb8g11: Bye!
