@@ -91,6 +91,8 @@ We use the following tools:
 
   This also provides a `Wiki <https://bitbucket.org/fangohr/finmag/wiki/Home>`_ with some useful information.
 
+  To get email notifications of various events on bitbucket (including people adding comments to your commits), please become a 'follower' of the project. (Probably clicking on the heart labelled 'follow' will do this.)
+
 * `Pivotal tracker <https://www.pivotaltracker.com/projects/475919>`__ to track tasks, bugs, etc.
 
 * `Jenkins <http://summer.kk.soton.ac.uk:8080/job/finmag>`__ to automatically build and test the code and documentation after every commit to the bitbucket repository.
