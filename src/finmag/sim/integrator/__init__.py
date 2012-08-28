@@ -57,21 +57,6 @@ class BaseIntegrator(object):
         (default: True).
 
         """
-        if save_snapshots == True:
-            if filename == '':
-                raise ValueError("If save_snapshots is True, filename must be a non-empty string.")
-            else:
-                ext = os.path.splitext(filename)[1]
-                if ext != '.pvd':
-                    raise ValueError("File extension for vtk snapshot file must be '.pvd', but got: '{}'".format(ext))
-            if os.path.exists(filename):
-                raise IOError("Aborting snapshot creation. File already exists and would overwritten: '{}'".format(filename))
-
-            f = df.File(filename, 'compressed')
-        else:
-            if filename != '':
-                log.warning("Value of save_snapshot is False, but filename is given anyway: '{}'. Ignoring...".format(filename))
-
         dt = 1e-14 # initial timestep (TODO: use the characteristic time here)
 
         dt_increment_multi = 1.5;
@@ -80,6 +65,9 @@ class BaseIntegrator(object):
         #ct = itertools.count()  # we need a possibly unlimited counter for saving snapshots
         #cur_count = ct.next()
 	cur_count = 0
+
+        if save_snapshots:
+            f = df.File(filename, 'compressed')
 
         def _do_save_snapshot():
             # TODO: Can we somehow store information about the current timestep in either the .pvd/.vtu file itself, or in the filenames?
