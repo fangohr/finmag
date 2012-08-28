@@ -1,5 +1,7 @@
 import os
+import re
 import time
+import glob
 import logging
 import dolfin as df
 from math import sqrt
@@ -89,29 +91,56 @@ class Simulation(object):
             self.integrator = LLGIntegrator(self.llg, self.llg.m)
         self.integrator.run_until(t)
 
-    def relax(self, save_snapshots=False, filename=None, save_every=100e-12, save_final_snapshot=True,
+    def relax(self, save_snapshots=False, filename=None, save_every=100e-12,
+              save_final_snapshot=True, force_overwrite=True,
               stopping_dmdt=ONE_DEGREE_PER_NS, dt_limit=1e-10, dmdt_increased_counter_limit=20):
         """
-        Do time integration of the magnetisation M until it reaches a state
-        where the change of M magnetisation at each node is smaller than the
-        threshold `stopping_dm_dt` (which should be given in rad/s).
+        Do time integration of the magnetisation M until it reaches a
+        state where the change of M magnetisation at each node is
+        smaller than the threshold `stopping_dm_dt` (which should be
+        given in rad/s).
 
-        If save_snapshots is True (default: False) then a series of snapshots
-        is saved to `filename` (which must be specified in this case). If Xi
-        `filename` contains directory components then these are created if they
-        do not already exist  A snapshot is saved every `save_every` seconds
-	(default: 100e-12, i.e. every 100 picoseconds).
-        Usually, one last snapshot is saved after the relaxation is finished (or
-        was stopped). This can be disabled by setting save_final_snapshot to False
-        (default: True).
+        If save_snapshots is True (default: False) then a series of
+        snapshots is saved to `filename` (which must be specified in
+        this case). If `filename` contains directory components then
+        these are created if they do not already exist. A snapshot is
+        saved every `save_every` seconds (default: 100e-12, i.e. every
+        100 picoseconds). Usually, one last snapshot is saved after
+        the relaxation finishes (or aborts prematurely). This can be
+        disabled by setting save_final_snapshot to False. If a file
+        with the same name as `filename` already exists, the method
+        will abort unless `force_overwrite` is True, in which case the
+        existing .pvd and all associated .vtu files are deleted before
+        saving the series of snapshots.
 
-        For details and the meaning of the other keyword arguments see the
-        docstring of sim.integrator.BaseIntegrator.run_until_relaxation().
+        For details and the meaning of the other keyword arguments see
+        the docstring of sim.integrator.BaseIntegrator.run_until_relaxation().
 
         """
         log.info("Will integrate until relaxation.")
         if not hasattr(self, "integrator"):
             self.integrator = LLGIntegrator(self.llg, self.llg.m)
+
+        if save_snapshots == True:
+            if filename == '':
+                raise ValueError("If save_snapshots is True, filename must be a non-empty string.")
+            else:
+                ext = os.path.splitext(filename)[1]
+                if ext != '.pvd':
+                    raise ValueError("File extension for vtk snapshot file must be '.pvd', but got: '{}'".format(ext))
+            if os.path.exists(filename):
+                if force_overwrite:
+                    log.warning("Removing file '{}' and all associated .vtu files (because force_overwrite=True).".format(filename))
+                    os.remove(filename)
+                    basename = re.sub('\.pvd$', '', filename)
+                    for f in glob.glob(basename+"*.vtu"):
+                        os.remove(f)
+                else:
+                    raise IOError("Aborting snapshot creation. File already exists and would overwritten: '{}'".format(filename))
+        else:
+            if filename != '':
+                log.warning("Value of save_snapshot is False, but filename is given anyway: '{}'. Ignoring...".format(filename))
+
         self.integrator.run_until_relaxation(save_snapshots=save_snapshots,
                                              filename=filename,
                                              save_every=save_every,
@@ -179,7 +208,7 @@ class Simulation(object):
         else:
             self.llg.do_slonczewski = not self.llg.do_slonczewski
 
-    def snapshot(self, filename="", directory=""):
+    def snapshot(self, filename="", directory="", force_overwrite=False):
         """
         Save a snapshot of the current magnetisation configuration to a .pvd file
         (in VTK format) which can later be inspected using Paraview, for example.
@@ -192,7 +221,10 @@ class Simulation(object):
         Note that `filename` is also allowed to contain directory components
         (for example filename='snapshots/foo.pvd'), which are simply appended
         to `directory`. However, if `filename` contains an absolute path then
-        the value of `directory` is ignored.
+        the value of `directory` is ignored. If a file with the same filename
+        already exists, the method will abort unless `force_overwrite` is True,
+        in which case the existing .pvd and all associated .vtu files are
+        deleted before saving the snapshot.
 
         All directory components present in either `directory` or `filename`
         are created if they do not already exist.
@@ -211,7 +243,14 @@ class Simulation(object):
 
         output_file = os.path.join(directory, filename)
         if os.path.exists(output_file):
-            raise IOError("Aborting snapshot creation. File already exists and would overwritten: '{}'".format(output_file))
+            if force_overwrite:
+                log.warning("Removing file '{}' and all associated .vtu files (because force_overwrite=True).".format(output_file))
+                os.remove(output_file)
+                basename = re.sub('\.pvd$', '', output_file)
+                for f in glob.glob(basename+"*.vtu"):
+                    os.remove(f)
+            else:
+                raise IOError("Aborting snapshot creation. File already exists and would overwritten: '{}'".format(output_file))
         t0 = time.time()
         f = df.File(output_file, "compressed")
         f << self.llg._m
