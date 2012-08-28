@@ -8,6 +8,8 @@ from finmag.util.consts import mu0
 from finmag.energies import Zeeman, Exchange, ThinFilmDemag
 from point_contacts import point_contacts
 
+epsilon = 1e-16
+
 def figure_5_6(mesh, m, p, t):
     print "Saving the plot..."
     coords = mesh.coordinates()
@@ -50,9 +52,7 @@ nx, ny, nz = (L/discretisation, W/discretisation, 1)
 #mesh = df.Rectangle(-dL, -dW, dL, dW, int(nx), int(ny)
 mesh = df.Box(-dL, -dW, -dH, dL, dW, dH, int(nx), int(ny), int(nz))
 
-# p = (0, 0, 1) doesn't make a lot of sense here, just adding 
-# it to rule out errors in setting up the other params
-for p in [(1, 0, 0), (0, 1, 0), (1, 1, 0), (0, 0, 1)]:
+for p in [(1, 0, 0), (1, 1, 0)]:
     sim = Simulation(mesh, Ms)
     sim.alpha = alpha
     sim.set_m((0, 0, 1))
@@ -75,14 +75,14 @@ for p in [(1, 0, 0), (0, 1, 0), (1, 1, 0), (0, 0, 1)]:
     d = H
     sim.set_stt(J_expr, P, d, p)
     pulse_time = 50e-12
-    snapshot_times = np.array([0, 50e-12, 175e-12, 265e-12])
+    snapshot_times = np.array([65e-12, 175e-12, 265e-12])
 
     t = 0; dt = 1e-12; t_max = 1e-9;
     while t <= t_max:
-        if abs(t - 50e-12) < 1e-16:
+        if abs(t - pulse_time) < epsilon:
             print "Switching spin current off at {}.".format(t)
             sim.toggle_stt(False)
-        if np.min(np.abs(t - snapshot_times)) < 1e-16:
+        if np.min(np.abs(t - snapshot_times)) < epsilon:
             figure_5_6(mesh, sim.m, "".join(map(str, p)), t)
         t += dt
         sim.run_until(t)
