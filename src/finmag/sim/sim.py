@@ -8,6 +8,7 @@ from math import sqrt
 from finmag.sim.llg import LLG
 from finmag.util.timings import timings
 from finmag.util.helpers import quiver
+from finmag.util.consts import mu0
 from finmag.sim.integrator import LLGIntegrator
 from finmag.energies.exchange import Exchange
 from finmag.energies.anisotropy import UniaxialAnisotropy
@@ -73,7 +74,27 @@ class Simulation(object):
             energy += interaction.compute_energy()
         return energy
 
-    def exchange_length(self):
+    def exchange_lengths(self):
+        """
+        Compute and return two expressions which are commonly referred
+        to as "exchange lengths":
+
+           l1 = sqrt((2*A)/(mu0*Ms**2)
+
+           l2 = sqrt(A/K_1)
+
+        In a finite element context, these are relevant to estimate
+        the quality of a mesh, since the mesh length should be smaller
+        than the mininum value of l1 and l2 in order to ensure that
+        there are no artefacts due to the mesh discretisation.
+
+        The meaning of the constants is as follows:
+
+           A    -  exchange coupling constant
+           K_1  -  (first) anisotropy constant
+           Ms   -  saturation magnetisation
+           mu0  -  vacuum permeability
+        """
         log.debug("Only uniaxial anisotropy interactions are being considered since this is the only type currently supported in Finmag and the common formula \sqrt(A/K1) only works for a uniaxial anisotropy. It might be worth investigating whether there is a more general expression once other types become available in Finmag, too.")
         ans = [a for a in self.llg.interactions if isinstance(a, UniaxialAnisotropy)]
         exs = [e for e in self.llg.interactions if isinstance(e, Exchange)]
@@ -81,10 +102,13 @@ class Simulation(object):
             raise ValueError("Exactly one exchange interaction and exactly one (uniaxial) anisotropy interaction must be present in order to compute the exchange length. However, {} exchange term(s) and {} uniaxial anisotropy term(s) were found.".format(len(ans), len(exs)))
         A = exs[0].A
         K1 = float(ans[0].K1) # K1 can be a dolfin Constant, hence the conversion to float
-        l_ex = sqrt(A/K1)
+
+        l1 = sqrt(2*A/(mu0*self.llg.Ms**2))
+        l2 = sqrt(A/K1)
+
         # TODO: It might be nice to issue a warning here if the characteristic mesh length is much larger than the exchange length.
-        log.debug("Exchange length: {:.2f} nm (exchange coupling: A={:.2g} J/m, anisotropy constant K1={:.2g} J/M^3).".format(l_ex*1e9, A, K1))
-        return l_ex
+        log.debug("Exchange lengths: l_1={:.2f} nm, l_2={:.2f} nm (exchange coupling: A={:.2g} J/m, anisotropy constant K1={:.2g} J/M^3).".format(l1*1e9, l2*1e9, A, K1))
+        return (l1, l2)
 
     def run_until(self, t):
         if not hasattr(self, "integrator"):
