@@ -1382,3 +1382,31 @@ fangohr: Still testing ...
 2012-08-28 16:55:05 mb8g11: re
 2012-08-28 16:59:19 albert: I'm off. See you guys tomorrow!
 2012-08-28 17:00:55 mb8g11: Bye!
+2012-08-29 09:14:35 fangohr-adium1: Morning all.
+2012-08-29 09:14:44 fangohr-adium1: Max, are you back already, still there, or not logged out? ;-)
+2012-08-29 14:08:45 fangohr-adium1: Hi MA :)
+2012-08-29 14:39:47 mb8g11: HI :)
+2012-08-29 15:30:31 mb8g11: Haha, running netgen in graphical mode. Managed to bring down my X-Server.
+2012-08-29 15:49:54 fangohr-adium1: How did you do that? Should 'just work' shouldn't it?
+2012-08-29 16:00:16 mb8g11: Didn't read the docu carefully enough. Thought cylinders were bounded, in fact they are infinitely long.
+2012-08-29 16:00:32 mb8g11: Forgot to cut them off with planes.
+2012-08-29 16:10:35 mb8g11: 16:59 < mb8g11> Didn't read the docu carefully enough. Thought cylinders were bounded, in fact they are infinitely long.
+2012-08-29 16:10:38 mb8g11: 16:59 < mb8g11> Forgot to cut them off with planes.
+2012-08-29 16:13:09 fangohr-adium: I see — have done that as well. And then your mesh gets quite big and you run out of memory, or it just crashes? The latter would be silghly disappointing, but then again we shouldn't complain too much about a free tool.
+2012-08-29 16:15:08 mb8g11: Crashed. Not really complaining, although it irks me that netgen seldomly exits correctly.
+2012-08-29 16:26:32 fangohr-adium: Ah, yes, I agree. I very much dislike the reliable segfault when batch execution 'completes'.
+2012-08-29 16:56:12 fangohr-adium: Hi MA,  have just run your 'point_contacts.py' script: the round mesh looks good. The current doesn't quite match the nice mesh in the visualisation. Made some suggestions and committed.
+2012-08-29 16:58:27 mb8g11: Thank you!
+2012-08-29 16:59:34 mb8g11: Alas, I have run into a bug with our integrator. When running run_until(t) in a loop, the value for t inside that loop may not be what we expect.
+2012-08-29 17:00:14 mb8g11: It can even be constant for several iterations of that loop, which will upset the saving of snapshots (duplicate filenames because of that problem).
+2012-08-29 17:00:36 mb8g11: That's how I noticed it in the first place. Looking into it.
+2012-08-29 17:01:32 fangohr-adium: Where do you interact with this? In the calling of the computation of the right hand side?
+2012-08-29 17:03:12 mb8g11: As a user? When we call sim.llg.t. That value is weird. In our integrator self.cur_t is 0 the entire time as well. Weirdness all around.
+2012-08-29 17:04:08 fangohr-adium: I recall that cur_t is not updated from C code although it should be. Never managed to look further into this, I think this is a bug.
+2012-08-29 17:05:18 fangohr-adium: The other thing that may happen is that sundials can decide which values of t it wants to use when calling the right hand side. It can go forward or backward in time, or use the same value of t repeatedly (part of the iterative process, and part of cvode's cleverness in 'probing' the ODEs to pick the right time step, etc. What you describe sounds a bit like it.
+2012-08-29 17:06:25 fangohr-adium: This also means that when sundials returns control to us (i.e. run_until(t) returns), we cannot trust that the values in H_demag is that of the time t. It could be for another t, which sundials decided to explore before deciding that it's current value for t is good enough to return to us.
+2012-08-29 17:06:27 fangohr-adium: Do I make any sense?
+2012-08-29 17:06:32 mb8g11: It does. Hmm. We'll have to save the "expected" simulation time as well. The one we expect after a call to run_until.
+2012-08-29 17:06:51 mb8g11: You do.
+2012-08-29 17:20:42 mb8g11: Good thing this channel is logged.
+2012-08-29 17:31:11 fangohr-adium: Leaving for today; bye Dokosbot.
