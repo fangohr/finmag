@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import axes3d
 from finmag import Simulation
 from finmag.util.consts import mu0
+from finmag.util.meshes import from_geofile
 from finmag.energies import Zeeman, Exchange, ThinFilmDemag
 from point_contacts import point_contacts
 
@@ -32,10 +33,11 @@ print "The exchange length is l_ex = {:.2} m.".format(l_ex) # >5 nm
 
 discretisation = math.floor(l_ex*1e9)*1e-9 / 2
 nx, ny, nz = (L/discretisation, W/discretisation, 1)
-#mesh = df.Rectangle(-dL, -dW, dL, dW, int(nx), int(ny)
-mesh = df.Box(-dL, -dW, -dH, dL, dW, dH, int(nx), int(ny), int(nz))
+mesh = from_geofile("film.geo")
+#mesh = df.Rectangle(-dL, -dW, dL, dW, int(nx), int(ny))
+#mesh = df.Box(-dL, -dW, -dH, dL, dW, dH, int(nx), int(ny), int(nz))
 
-sim = Simulation(mesh, Ms)
+sim = Simulation(mesh, Ms, unit_length=1e-9)
 sim.alpha = alpha
 sim.set_m((0, 0, 1))
 sim.add(Zeeman((0, 0, 1.1 * Ms))) # section 3 and end of section 5
@@ -44,15 +46,15 @@ sim.add(ThinFilmDemag())
 
 # Spin-Torque
 I = 10e-3 # A
-point_contact_radius = 10e-9
+point_contact_radius = 10
 point_contact_area = math.pi * point_contact_radius ** 2
-distance = 125e-9
+distance = 125
 J = I / point_contact_area
 print "Current density is J = {:.2} A/m^2.".format(J)
 J_expr_fig5_two_pc = point_contacts([(-distance/2, 0), (distance/2, 0)],
         radius=point_contact_radius, J=J) 
 
-distance_fig_6 = 65e-9
+distance_fig_6 = 65
 phi0 = 0; phi1 = 2*math.pi/3; phi2 = 4*math.pi/3; r = distance_fig_6 * math.sqrt(3)/3
 x0, y0 = r * math.cos(phi0), r * math.sin(phi0)
 x1, y1 = r * math.cos(phi1), r * math.sin(phi1)
@@ -65,7 +67,7 @@ J_expr_fig6_three_pc = point_contacts([(x0, y0),(x1, y1),(x2, y2)], radius=point
 P = 0.4
 p = (1, 1, 0)
 d = H
-sim.set_stt(J_expr_fig6_three_pc, P, d, p)
+sim.set_stt(J_expr_fig5_two_pc, P, d, p)
 pulse_time = 50e-12
 snapshot_times = np.array([65e-12, 175e-12, 265e-12])
 
@@ -74,7 +76,9 @@ while t <= t_max:
     if abs(t - pulse_time) < epsilon:
         print "Switching spin current off at {}.".format(t)
         sim.toggle_stt(False)
+    print "t={} vs. llg.t={}".format(t, sim.llg.t)
     if np.min(np.abs(t - snapshot_times)) < epsilon:
+        print "now saving at t={}.".format(sim.llg.t)
         sim.snapshot()
     t += dt
     sim.run_until(t)
