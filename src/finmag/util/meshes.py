@@ -231,14 +231,15 @@ def box(x0, x1, x2, y0, y1, y2, maxh, save_result=True, filename='', directory='
         filename = "box-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}".format(x0, x1, x2, y0, y1, y2, maxh).replace(".", "_")
     return from_csg(csg, save_result=save_result, filename=filename, directory=directory)
 
-def sphere(radius, maxh, save_result=True, filename='', directory=''):
+def sphere(r, maxh, save_result=True, filename='', directory=''):
     """
-    Returns a dolfin mesh object describing a sphere with given radius and mesh coarseness.
+    Returns a dolfin mesh object describing a sphere with radius `r`
+    and given mesh coarseness maxh.
 
     If `save_result` is True (the default), both the generated geofile
     and the dolfin mesh will be saved to disk. By default, the
     filename will be automatically generated based on the values of
-    `radius` and `maxh` (for example, 'sphere-10_0-0_2.geo'), but a
+    `r` and `maxh` (for example, 'sphere-10_0-0_2.geo'), but a
     different one can be specified by passing a name (without suffix)
     into `filename`. If `save_result` is False, passing a filename has
     no effect.
@@ -249,25 +250,26 @@ def sphere(radius, maxh, save_result=True, filename='', directory=''):
     """
     csg = textwrap.dedent("""\
         algebraic3d
-        solid main = sphere ( 0, 0, 0; {radius} ) -maxh = {maxh};
-        tlo main;""").format(radius=radius, maxh=maxh)
+        solid main = sphere ( 0, 0, 0; {r} ) -maxh = {maxh};
+        tlo main;""").format(r=r, maxh=maxh)
 
     if save_result == True and filename == '':
-        filename = "sphere-{:.1f}-{:.1f}".format(radius, maxh).replace(".", "_")
+        filename = "sphere-{:.1f}-{:.1f}".format(r, maxh).replace(".", "_")
     return from_csg(csg, save_result=save_result, filename=filename, directory=directory)
 
-def cylinder(radius, height, maxh, save_result=True, filename='', directory=''):
+def cylinder(r, h, maxh, save_result=True, filename='', directory=''):
     """
-    Return a dolfin mesh representing a cylinder of radius `radius`
-    and height `height`. `maxh` controls the maximal element size in
-    the mesh (see the Netgen manual 4.x, Chapter 2).
+    Return a dolfin mesh representing a cylinder of radius `r` and
+    height `h`. The argument `maxh` controls the maximal element size
+    in the mesh (see the Netgen manual 4.x, Chapter 2).
 
-    If `save_result` is True (the default), both the generated geofile and
-    the dolfin mesh will be saved to disk. By default, the filename will be
-    automatically generated based on the values of `radius`, `height`
-    and `maxh` (for example, 'cyl-50_0-10_0-0_2.geo'), but a different
-    one can be specified by passing a name (without suffix) into `filename`
-    If `save_result` is False, passing a filename has no effect.
+    If `save_result` is True (the default), both the generated geofile
+    and the dolfin mesh will be saved to disk. By default, the
+    filename will be automatically generated based on the values of
+    `r`, `h` and `maxh` (for example, 'cyl-50_0-10_0-0_2.geo'), but a
+    different one can be specified by passing a name (without suffix)
+    into `filename` If `save_result` is False, passing a filename has
+    no effect.
 
     The `directory` argument can be used to control where the files
     should be saved in case no filename is given explicitly.
@@ -275,12 +277,12 @@ def cylinder(radius, height, maxh, save_result=True, filename='', directory=''):
     """
     csg_string = textwrap.dedent("""\
         algebraic3d
-        solid fincyl = cylinder (0, 0, 1; 0, 0, -1; {radius} )
+        solid fincyl = cylinder (0, 0, 1; 0, 0, -1; {r} )
               and plane (0, 0, 0; 0, 0, -1)
-              and plane (0, 0, {height}; 0, 0, 1) -maxh = {maxh};
-        tlo fincyl;""").format(radius=radius, height=height, maxh=maxh)
+              and plane (0, 0, {h}; 0, 0, 1) -maxh = {maxh};
+        tlo fincyl;""").format(r=r, h=h, maxh=maxh)
     if save_result == True and filename == '':
-        filename = "cyl-{:.1f}-{:.1f}-{:.1f}".format(radius, height, maxh).replace(".", "_")
+        filename = "cyl-{:.1f}-{:.1f}-{:.1f}".format(r, h, maxh).replace(".", "_")
     return from_csg(csg_string, save_result=save_result, filename=filename, directory=directory)
 
 def mesh_volume(mesh):

@@ -79,20 +79,20 @@ def test_box():
     assert(abs(vol_mesh - vol_exact)/vol_exact < BOX_TOLERANCE)
 
 def test_sphere():
-    radius = 1.0
+    r = 1.0
     maxh = 0.2
 
-    mesh = sphere(radius=radius, maxh=maxh, save_result=True, directory=MODULE_DIR)
-    vol_exact = 4.0/3*pi*radius**2
+    mesh = sphere(r=r, maxh=maxh, save_result=True, directory=MODULE_DIR)
+    vol_exact = 4.0/3*pi*r**2
     vol_mesh = mesh_volume(mesh)
     assert(abs(vol_mesh - vol_exact)/vol_exact < TOLERANCE)
 
 def test_cylinder():
-    radius = 1.0
-    height = 2.0
+    r = 1.0
+    h = 2.0
     maxh = 0.2
 
-    mesh = cylinder(radius=radius, height=height, maxh=maxh, save_result=True, directory=MODULE_DIR)
-    vol_exact = pi*radius**2*height
+    mesh = cylinder(r=r, h=h, maxh=maxh, save_result=True, directory=MODULE_DIR)
+    vol_exact = pi*r*r*h
     vol_mesh = mesh_volume(mesh)
     assert(abs(vol_mesh - vol_exact)/vol_exact < TOLERANCE)
