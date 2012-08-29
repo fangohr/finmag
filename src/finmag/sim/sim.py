@@ -136,7 +136,7 @@ class Simulation(object):
                     for f in glob.glob(basename+"*.vtu"):
                         os.remove(f)
                 else:
-                    raise IOError("Aborting snapshot creation. File already exists and would overwritten: '{}'".format(filename))
+                    raise IOError("Aborting snapshot creation. File already exists and would overwritten: '{}' (use force_overwrite=True if this is what you want)".format(filename))
         else:
             if filename != '':
                 log.warning("Value of save_snapshot is False, but filename is given anyway: '{}'. Ignoring...".format(filename))
@@ -250,7 +250,7 @@ class Simulation(object):
                 for f in glob.glob(basename+"*.vtu"):
                     os.remove(f)
             else:
-                raise IOError("Aborting snapshot creation. File already exists and would overwritten: '{}'".format(output_file))
+                raise IOError("Aborting snapshot creation. File already exists and would overwritten: '{}' (use force_overwrite=True if this is what you want)".format(output_file))
         t0 = time.time()
         f = df.File(output_file, "compressed")
         f << self.llg._m
