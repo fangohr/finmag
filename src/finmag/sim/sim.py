@@ -79,13 +79,13 @@ class Simulation(object):
         Compute and return two expressions which are commonly referred
         to as "exchange lengths":
 
-           l1 = sqrt((2*A)/(mu0*Ms**2)
+           L1 = sqrt((2*A)/(mu0*Ms**2)
 
-           l2 = sqrt(A/K_1)
+           L2 = sqrt(A/K_1)
 
         In a finite element context, these are relevant to estimate
         the quality of a mesh, since the mesh length should be smaller
-        than the mininum value of l1 and l2 in order to ensure that
+        than the mininum value of L1 and L2 in order to ensure that
         there are no artefacts due to the mesh discretisation.
 
         The meaning of the constants is as follows:
@@ -103,12 +103,16 @@ class Simulation(object):
         A = exs[0].A
         K1 = float(ans[0].K1) # K1 can be a dolfin Constant, hence the conversion to float
 
-        l1 = sqrt(2*A/(mu0*self.llg.Ms**2))
-        l2 = sqrt(A/K1)
+        L1 = sqrt(2*A/(mu0*self.llg.Ms**2))
+        L2 = sqrt(A/K1)
 
         # TODO: It might be nice to issue a warning here if the characteristic mesh length is much larger than the exchange length.
-        log.debug("Exchange lengths: l_1={:.2f} nm, l_2={:.2f} nm (exchange coupling: A={:.2g} J/m, anisotropy constant K1={:.2g} J/M^3).".format(l1*1e9, l2*1e9, A, K1))
-        return (l1, l2)
+        log.debug("Exchange lengths: L1={:.2f} nm, L2={:.2f} nm (exchange coupling: A={:.2g} J/m, anisotropy constant K1={:.2g} J/M^3).".format(L1*1e9, L2*1e9, A, K1))
+        hmax = self.mesh.hmax()*self.unit_length
+        if hmax > min(L1,L2):
+            # TODO: this should perhaps be moved into a separate function 'mesh_quality()' or so (which might gather some more sophisticated data)
+            log.warning("Maximum cell diameter is {:.2f} nm, but should be smaller than the minimum of L1={:.2f} nm, L2={:.2f} nm to avoid discretisation artefacts!".format(hmax*1e9, L1*1e9, L2*1e9))
+        return (L1, L2)
 
     def run_until(self, t):
         if not hasattr(self, "integrator"):
