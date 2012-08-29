@@ -25,10 +25,11 @@ def point_contacts(origins, radius, J, debug=False):
 
 if __name__ == "__main__":
     mesh = from_geofile("film.geo")
-    S1 = df.FunctionSpace(mesh, "Lagrange", 1)
+    #S1 = df.FunctionSpace(mesh, "Lagrange", 1)
+    S1 = df.FunctionSpace(mesh, "DG", 0)
     pc_expr = point_contacts([(-62.5, 0), (62.5, 0)], radius=10, J=1e10, debug=True)
-    f = df.project(pc_expr, S1)
-
+    #f = df.project(pc_expr, S1)
+    f = df.interpolate(pc_expr, S1)
     df.plot(mesh)
     df.plot(f)
     df.interactive()
