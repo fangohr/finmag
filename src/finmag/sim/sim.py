@@ -233,6 +233,7 @@ class Simulation(object):
         if not hasattr(self, "vtk_snapshot_no"):
             self.vtk_snapshot_no = 1
         if filename == "":
+            print "Saving NOW! at t={}.".format(self.llg.t)
             filename = "snapshot_{}_{:.3f}ns.pvd".format(self.vtk_snapshot_no, self.llg.t*1e9)
 
         ext = os.path.splitext(filename)[1]

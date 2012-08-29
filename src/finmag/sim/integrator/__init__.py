@@ -3,13 +3,9 @@
 # Do not distribute
 #
 # CONTACT: h.fangohr@soton.ac.uk
-#
-# AUTHOR(S) OF THIS FILE: Dmitri Chernyshenko (d.chernyshenko@soton.ac.uk)
 
-import os
 import time
 import logging
-import itertools
 import scipy.integrate
 import numpy as np
 import dolfin as df
@@ -50,8 +46,8 @@ class BaseIntegrator(object):
         `filename` contains directory components then these are created if they
         do not already exist. A snapshot is saved every `save_every` seconds
         (default: 100e-12, i.e. every 100 picoseconds). It should be noted that
-	the true timestep at which the snapshot is saved may deviate from slightly
- 	from the exact value due to the way the time integrators work.
+        the true timestep at which the snapshot is saved may deviate from slightly
+        from the exact value due to the way the time integrators work.
         Usually, one last snapshot is saved after the relaxation is finished (or
         was stopped). This can be disabled by setting save_final_snapshot to False
         (default: True).
@@ -64,7 +60,7 @@ class BaseIntegrator(object):
 
         #ct = itertools.count()  # we need a possibly unlimited counter for saving snapshots
         #cur_count = ct.next()
-	cur_count = 0
+        cur_count = 0
 
         if save_snapshots:
             f = df.File(filename, 'compressed')
@@ -80,7 +76,7 @@ class BaseIntegrator(object):
         last_max_dmdt_norm = 1e99
         while True:
             prev_m = self.llg.m.copy()
-	    next_stop = self.llg.t + dt
+            next_stop = self.llg.t + dt
 
             # If in the next step we would cross a timestep where a snapshot should be saved, run until
             # that timestep, save the snapshot, and then continue.
@@ -184,6 +180,7 @@ class SundialsIntegrator(BaseIntegrator):
             return
 
         self.integrator.advance_time(t, self.m)
+        self.cur_t = self.integrator.get_current_time()
         self.llg.m = self.m
 
     def reinit(self):
