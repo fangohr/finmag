@@ -119,7 +119,7 @@ class Simulation(object):
             self.integrator = LLGIntegrator(self.llg, self.llg.m)
         self.integrator.run_until(t)
 
-    def relax(self, save_snapshots=False, filename=None, save_every=100e-12,
+    def relax(self, save_snapshots=False, filename='', save_every=100e-12,
               save_final_snapshot=True, force_overwrite=True,
               stopping_dmdt=ONE_DEGREE_PER_NS, dt_limit=1e-10, dmdt_increased_counter_limit=20):
         """
