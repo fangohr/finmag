@@ -1410,3 +1410,7 @@ fangohr: Still testing ...
 2012-08-29 17:06:51 mb8g11: You do.
 2012-08-29 17:20:42 mb8g11: Good thing this channel is logged.
 2012-08-29 17:31:11 fangohr-adium: Leaving for today; bye Dokosbot.
+2012-08-30 09:08:26 fangohr-adium: Good Morning.
+2012-08-30 11:12:05 fangohr-adium: Greetings.
+2012-08-30 12:01:22 mb8g11: Hello.
+2012-08-30 13:22:42 mb8g11: Thought about what you said yesterday, about the interactions not being in sync with the simulation or m, because of the integrator skipping ahead or resting. In theory, that sounds like a problem. But in practice we haven't caught it in our unit tests. Do you think this is something I should investigate?
