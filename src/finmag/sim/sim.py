@@ -119,6 +119,7 @@ class Simulation(object):
         if not hasattr(self, "integrator"):
             self.integrator = LLGIntegrator(self.llg, self.llg.m)
         self.integrator.run_until(t)
+        self.t = t
 
     def relax(self, save_snapshots=False, filename='', save_every=100e-12,
               save_final_snapshot=True, force_overwrite=False,
@@ -262,7 +263,7 @@ class Simulation(object):
         if not hasattr(self, "vtk_snapshot_no"):
             self.vtk_snapshot_no = 1
         if filename == "":
-            filename = "snapshot_{}_{:.3f}ns.pvd".format(self.vtk_snapshot_no, self.llg.t*1e9)
+            filename = "snapshot_{}_{:.3f}ns.pvd".format(self.vtk_snapshot_no, self.t*1e9)
 
         ext = os.path.splitext(filename)[1]
         if ext != '.pvd':
@@ -284,4 +285,4 @@ class Simulation(object):
         f = df.File(output_file, "compressed")
         f << self.llg._m
         t1 = time.time()
-        log.info("Saved snapshot of magnetisation at t={} to file '{}' (saving took {:.3g} seconds).".format(self.llg.t, output_file, t1-t0))
+        log.info("Saved snapshot of magnetisation at t={} to file '{}' (saving took {:.3g} seconds).".format(self.t, output_file, t1-t0))

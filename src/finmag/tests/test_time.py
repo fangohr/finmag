@@ -2,6 +2,8 @@ import dolfin as df
 from finmag import Simulation as Sim
 from finmag.energies import Exchange, Demag
 
+epsilon = 1e-16
+
 def test_current_time():
     size = 20e-9
     simplices = 4
@@ -20,4 +22,7 @@ def test_current_time():
     while t <= t_max:
         t += dt
         sim.run_until(t)
+        # cur_t is equal to whatever time the integrator decided to probe last
         assert not sim.integrator.cur_t == 0.0
+        # t is equal to our current simulation time
+        assert abs(sim.t - t) < epsilon

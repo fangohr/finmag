@@ -76,9 +76,9 @@ while t <= t_max:
     if abs(t - pulse_time) < epsilon:
         print "Switching spin current off at {}.".format(t)
         sim.toggle_stt(False)
-    print "t={} vs. llg.t={}".format(t, sim.llg.t)
     if np.min(np.abs(t - snapshot_times)) < epsilon:
         print "now saving at t={}.".format(sim.llg.t)
         sim.snapshot()
     t += dt
     sim.run_until(t)
+    print "t={} vs. llg.t={} vs. sim.t={}".format(t, sim.llg.t, sim.t)
