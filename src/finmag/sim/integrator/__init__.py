@@ -85,7 +85,6 @@ class BaseIntegrator(object):
                 _do_save_snapshot()
                 cur_count += 1
 
-            # Why is self.cur_t alias CVodeGetCurrentTime not updated?
             self.run_until(next_stop)
 
             dm = np.abs(self.m - prev_m).reshape((3, -1))
