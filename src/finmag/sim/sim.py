@@ -121,7 +121,7 @@ class Simulation(object):
         self.integrator.run_until(t)
 
     def relax(self, save_snapshots=False, filename='', save_every=100e-12,
-              save_final_snapshot=True, force_overwrite=True,
+              save_final_snapshot=True, force_overwrite=False,
               stopping_dmdt=ONE_DEGREE_PER_NS, dt_limit=1e-10, dmdt_increased_counter_limit=20):
         """
         Do time integration of the magnetisation M until it reaches a
