@@ -109,9 +109,10 @@ class Simulation(object):
         # TODO: It might be nice to issue a warning here if the characteristic mesh length is much larger than the exchange length.
         log.debug("Exchange lengths: L1={:.2f} nm, L2={:.2f} nm (exchange coupling: A={:.2g} J/m, anisotropy constant K1={:.2g} J/M^3).".format(L1*1e9, L2*1e9, A, K1))
         hmax = self.mesh.hmax()*self.unit_length
-        if hmax > min(L1,L2):
-            # TODO: this should perhaps be moved into a separate function 'mesh_quality()' or so (which might gather some more sophisticated data)
-            log.warning("Maximum cell diameter is {:.2f} nm, but should be smaller than the minimum of L1={:.2f} nm, L2={:.2f} nm to avoid discretisation artefacts!".format(hmax*1e9, L1*1e9, L2*1e9))
+        emax = max([e.length() for e in df.edges(self.mesh)])*self.unit_length
+        if emax > min(L1,L2):
+            # TODO: this check should perhaps be moved into a separate function 'mesh_quality()' or so (which might gather some more sophisticated data)
+            log.warning("Maximum edge length is {:.2f} nm (and maximum cell diameter is {:-.2f} nm), but should be smaller than the minimum of L1={:.2f} nm, L2={:.2f} nm to avoid discretisation artefacts!".format(emax*1e9, hmax*1e9, L1*1e9, L2*1e9))
         return (L1, L2)
 
     def run_until(self, t):
