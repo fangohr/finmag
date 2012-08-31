@@ -1414,3 +1414,32 @@ fangohr: Still testing ...
 2012-08-30 11:12:05 fangohr-adium: Greetings.
 2012-08-30 12:01:22 mb8g11: Hello.
 2012-08-30 13:22:42 mb8g11: Thought about what you said yesterday, about the interactions not being in sync with the simulation or m, because of the integrator skipping ahead or resting. In theory, that sounds like a problem. But in practice we haven't caught it in our unit tests. Do you think this is something I should investigate?
+2012-08-31 10:25:31 mb8g11: Hello
+2012-08-31 10:26:25 fangohr-adium: Hi MA, regarding the time step: in theory (and in the past) the time step issue should not be an issue AS LONG as the only information we use from sundials is the statevector y (i.e. the magnetisation at the moment) and the time t.
+2012-08-31 10:26:32 fangohr-adium: More discussion of this:
+2012-08-31 10:27:19 fangohr-adium: We ask sundials (take as synonym here for CVODE) to integrate our ODEs for a given starting m0 and t0 up to a new t and to determine m=m(t). It will do that in its own way (and we should not care about it), and when it completes, it returns to us the desired m(t).
+2012-08-31 10:28:37 fangohr-adium: What happens internally is that it may well use time steps that do not lead directly to our desired t; for example it may skip ahead to "t+some delta t" because that is the step size it considers appropriate, and then use interpolation from the previous t it has used to our desired t, using the information it has for "t+some delta t".
+2012-08-31 10:29:21 fangohr-adium: I think this is the situation we see in the current version of the sandbox/interference_patterns/run.py programm: sundials only computes a new dm/dt for a few times, and providse interpolated results in between.
+2012-08-31 10:30:45 fangohr-adium: The one thing we must not do, is to use the information that has been created when sundials has called our code to compute dm/dt, etc. for example we should not use the demag field values — while these will have been updated by sundials when calling the code to compute dm/dt —  we don't know for what time this was. )This problem arises because we share the same data with sundials.)
+2012-08-31 10:30:50 fangohr-adium: Does that clarify the situation?
+2012-08-31 10:33:36 mb8g11: Yes.
+2012-08-31 10:35:50 fangohr-adium: Nice.
+2012-08-31 10:36:08 mb8g11: When we ask for field energy values, we do this mostly at equilibrium. So it shouldn't matter much if the integrator (and thus the fields) is a little ahead of our sim.
+2012-08-31 10:36:10 fangohr-adium: I start to wander whether we should circulate all the IRC communication every night to everybody; to keep people up-to-date.
+2012-08-31 10:37:06 fangohr-adium: Regarding energy: I think when we request this, we do actually compute it at that moment, based on the current m. So that should be absolutely accurate.
+2012-08-31 10:37:36 mb8g11: And if we really, really need an accurate reading, we can feed the actual m to the computation.
+2012-08-31 10:38:16 mb8g11: Oh, that's right. Even better.
+2012-08-31 10:40:48 mb8g11: Same for the fields when we call compute_field()
+2012-08-31 10:41:05 mb8g11: So, keepin this in mind, it all becomes a non-issue.
+2012-08-31 10:43:49 mb8g11: About the logs: There's the commit message on bitbucket.
+2012-08-31 11:00:49 mb8g11: Wait. Actually, when sundials asks us to compute the right hand side for a value of m, we store that m as our magnetisation.
+2012-08-31 11:46:17 fangohr-adium: Hey, DokosBot: I just got an email from Anders — he asks me to send his regards to you.
+2012-08-31 13:29:10 fangohr-adium: Hi MA, welcome back.
+2012-08-31 13:29:30 sMAshdot: Hi Hans!
+2012-08-31 13:30:07 fangohr-adium: Regarding logs: most people do not get commits emailed, I think, they need to look them up. So I am not sure this is good enough. On the other hand, I don't want to annoy folks with too much input. Let's wait and see.
+2012-08-31 13:30:31 fangohr-adium: Regarding: "Wait. Actually, when sundials asks us to compute the right hand side for a value of m, we store that m as our magnetisation."
+2012-08-31 13:31:13 fangohr-adium: Yes, that's right. However, when sundials returns control to us, we take the last m it returns to us, and put this into the dolfin m-Function. That is the point where we put the right data into m. As long as we compute all other fields based on that m, we should be okay.
+2012-08-31 13:31:14 sMAshdot: Yes, that was premature.
+2012-08-31 13:31:22 sMAshdot: Yes.
+2012-08-31 13:45:46 sMAshdot: Thanks for the explanations :)
+2012-08-31 18:19:51 mb8g11: Bye!
