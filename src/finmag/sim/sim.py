@@ -82,12 +82,10 @@ class Simulation(object):
 
            L2 = sqrt(A/K_1)
 
-        In a finite element context, these are relevant to estimate
-        the quality of a mesh, since the mesh length should be smaller
-        than the mininum value of L1 and L2 in order to ensure that
-        there are no artefacts due to the mesh discretisation, as shown
-        in Rave W et al 1998 J. Magn. Magn. Mater. 183 329.
-        
+        At zero temperature, the numerical solution will converge if the cell size
+        is smaller than the minimum of L1 and L2 (Rave W et al 1998 J. Magn. Magn. Mater. 183 329).
+        This is why these two lengths are computed here and a warning is printed
+        when the discretisation may be too coarse.
 
         The meaning of the constants is as follows:
 
