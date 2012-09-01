@@ -15,6 +15,7 @@
 #include "llg.h"
 #include "bem.h"
 #include "oriented_boundary_mesh.h"
+#include "heun.h"
 
 #include "util/swig_dolfin.h"
 
@@ -28,4 +29,5 @@ BOOST_PYTHON_MODULE(llg)
     finmag::llg::register_llg();
     finmag::llg::register_bem();
     finmag::llg::register_oriented_boundary_mesh();
+    finmag::llg::register_heun();
 }

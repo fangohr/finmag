@@ -33,7 +33,7 @@ SUNDIALS_NVECTOR_SO=$(abspath src/sundials/nvec_serial/nvector_serial_custom_mal
 $(MODULE_DIR)/sundials.so : src/sundials/py_sundials_module.o src/util/np_array.o src/sundials/numpy_malloc.o
 sundials_LDFLAGS = -lsundials_cvode -llapack $(SUNDIALS_NVECTOR_SO) -lboost_thread
 
-$(MODULE_DIR)/llg.so : src/llg/py_llg_module.o src/util/np_array.o src/util/swig_dolfin.o src/llg/bem.o src/llg/llg.o src/llg/oriented_boundary_mesh.o
+$(MODULE_DIR)/llg.so : src/llg/py_llg_module.o src/util/np_array.o src/util/swig_dolfin.o src/llg/bem.o src/llg/llg.o src/llg/heun.o src/llg/oriented_boundary_mesh.o
 llg_LDFLAGS = -ldolfin
 
 $(MODULE_DIR)/llb.so : src/llb/py_llb_module.o src/util/np_array.o src/llb/llb_material.o src/llb/llb.o
