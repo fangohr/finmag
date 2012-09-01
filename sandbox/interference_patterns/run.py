@@ -33,8 +33,8 @@ print "The exchange length is l_ex = {:.2} m.".format(l_ex) # >5 nm
 
 discretisation = math.floor(l_ex*1e9)*1e-9 / 2
 nx, ny, nz = (L/discretisation, W/discretisation, 1)
-mesh = from_geofile("film.geo")
-#mesh = df.Rectangle(-dL, -dW, dL, dW, int(nx), int(ny))
+#mesh = from_geofile("film.geo")
+mesh = df.Rectangle(-dL, -dW, dL, dW, int(nx), int(ny))
 #mesh = df.Box(-dL, -dW, -dH, dL, dW, dH, int(nx), int(ny), int(nz))
 
 sim = Simulation(mesh, Ms, unit_length=1e-9)
@@ -76,6 +76,7 @@ while t <= t_max:
     if abs(t - pulse_time) < epsilon:
         print "Switching spin current off at {}.".format(t)
         sim.toggle_stt(False)
+        sim.integrator.reinit()
     if np.min(np.abs(t - snapshot_times)) < epsilon:
         print "now saving at t={}.".format(sim.llg.t)
         sim.snapshot()
