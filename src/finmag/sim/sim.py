@@ -76,8 +76,7 @@ class Simulation(object):
 
     def exchange_lengths(self):
         """
-        Compute and return two expressions which are commonly referred
-        to as "exchange lengths":
+        Compute the exchange length and the Bloch parameter.
 
            L1 = sqrt((2*A)/(mu0*Ms**2)
 
@@ -86,7 +85,9 @@ class Simulation(object):
         In a finite element context, these are relevant to estimate
         the quality of a mesh, since the mesh length should be smaller
         than the mininum value of L1 and L2 in order to ensure that
-        there are no artefacts due to the mesh discretisation.
+        there are no artefacts due to the mesh discretisation, as shown
+        in Rave W et al 1998 J. Magn. Magn. Mater. 183 329.
+        
 
         The meaning of the constants is as follows:
 
