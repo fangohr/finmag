@@ -10,6 +10,16 @@ namespace finmag { namespace llg {
 
         class StochasticHeunIntegrator {
         public:
+            StochasticHeunIntegrator() {}
+            ~StochasticHeunIntegrator() {}
+            
+            void step() {
+                // m_predicted = m + drift(m) * Dt + diffusion(m) * DW
+                // m_corrected = m
+                //      + 1/2 [drift(m_predicted) + drift(m)] * Dt 
+                //      + 1/2 [diffusion(m_predicted) + diffusion(m)] * DW
+            }
+
             void helloWorld() {
                 printf("This is the StochasticHeunIntegrator.\n");
             }

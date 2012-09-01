@@ -14,6 +14,12 @@ class RandomThermal(AbstractEnergy):
     and
     Phys. Rev. Lett. 90, 20 (2003) ???
 
+    This field is not derived from an energy functional, and thus not 
+    a real magnetic field. It's just a mathematical representation of
+    the thermal noise in the context of the theory of stochastic
+    processes and doesn't have any physical meaning, other than the
+    correct statistical properties of the noise.
+
     """
     def __init__(self, alpha, gamma):
         """
