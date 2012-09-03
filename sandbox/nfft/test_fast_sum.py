@@ -1,7 +1,8 @@
 import dolfin as df
 import numpy as np
-from demag_nfft_lib import FastSum
 import time
+
+from fastsum_lib import FastSum 
 
 
 def exact(xs,xt,charge):
@@ -24,12 +25,20 @@ if __name__ == '__main__':
 
         
 	mesh = df.Box(x0, y0, z0, x1, y1, z1, nx, ny, nz)
+        n = 20
+        mesh = df.UnitCube(n, n, n)
 	mesh.coordinates()[:]*=1e-1
 	number=mesh.num_vertices()
 	print 'vertices number:',number
 	
 	xs=mesh.coordinates()
-        xt=xs
+        
+        n=10
+        mesh = df.UnitCube(n, n, n)
+	mesh.coordinates()[:]*=1e-1
+        xt=mesh.coordinates()
+        number=mesh.num_vertices()
+	print 'target number:',number
         
         #density=np.array([1,2,3,4,5,6,7,8])*1.0
         fast_sum=FastSum(p=6,mac=0.5,num_limit=500)

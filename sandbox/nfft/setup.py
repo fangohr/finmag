@@ -9,8 +9,8 @@ import os
 
 
 ext_modules = [
-    Extension("demag_nfft_lib",
-              sources = ['fast_sum.c','demag_nfft_lib.pyx'],
+    Extension("fastsum_lib",
+              sources = ['fast_sum.c','fast_sum_lib.pyx'],
               include_dirs = [numpy.get_include()],
               libraries=['m'],
               #extra_compile_args=["-g"],

@@ -9,6 +9,15 @@ inline double pow2(double x) {
     return x*x;
 }
 
+
+inline double distance(double *x,double *y){
+    double r=0;
+    r=(x[0]-y[0])*(x[0]-y[0])
+            +(x[1]-y[1])*(x[1]-y[1])
+            +(x[2]-y[2])*(x[2]-y[2]);
+    return sqrt(r);
+}
+
 inline double tri_max(double x, double y, double z) {
 
     double tmp = x > y ? x : y;
@@ -50,6 +59,41 @@ double array_min(double *x, int N, int t) {
 
     return min;
 }
+
+//compute det(J1),det(J2),det(J3) (equations are given in the report)
+inline double det2(double *x1,double *x2,double *x3){
+    
+    double J1,J2,J3,res;
+    
+    J1=(x2[0]-x1[0])*(x3[1]-x1[1])-(x2[1]-x1[1])*(x3[0]-x1[0]);
+    
+    J2=(x2[0]-x1[0])*(x3[2]-x1[2])-(x2[2]-x1[2])*(x3[0]-x1[0]);
+    
+    J3=(x2[1]-x1[1])*(x3[2]-x1[2])-(x2[2]-x1[2])*(x3[1]-x1[1]);
+    
+    res=sqrt(J1*J1+J2*J2+J3*J3);
+    
+    return res;
+
+}
+
+
+double compute_correction_triangle(double *x1,double *x2,double *x3,double sa,double sb,double sc){
+    double r1,r2,r3;
+    double fa,fb,fc,fd;
+    r1=distance(x1,x2);
+    r2=distance(x1,x3);
+    r3=distance(x2,x3);
+    
+    fa=det2(x1,x2,x3);
+    
+    fb=(sb-sc)*(r1-r2)/(2*r3*r3);
+    fc=(sb+sc+2*sa)/(4.0*r3)+(r2*r2-r1*r1)*(sb-sc)/(4.0*r3*r3*r3);
+    fd=log(r1+r2+r3)-log(r1+r2-r3);
+
+    return fa*(fb+fc*fd);
+}
+
 
 double **alloc_2d_double(int ndim1, int ndim2) {
 
