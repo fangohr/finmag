@@ -288,27 +288,36 @@ class Simulation(object):
         log.info("Saved snapshot of magnetisation at t={} to file '{}' (saving took {:.3g} seconds).".format(self.t, output_file, t1-t0))
 
 
-class SimpleMag1(Simulation):
+def sim_with(mesh, Ms, m_init, unit_length=1, A=None, K1=None, K1_axis=None, demag_solver=None):
     """
-    Convenience class for quickly creating a Simulation class with
-    at most one exchange, anisotropy and demag interaction.
+    Create a Simulation instance based on the given parameters.
 
-    This class is somewhat preliminary. Do by all means use it to make
-    your simulations more convenient, but be aware that the name (and
-    perhaps interface) are likely to change in the future.
+    This is a convenience function which allows quick creation of a
+    common simulation type where at most one exchange/anisotropy/demag
+    interaction is present and the initial magnetisation is known.
+
+    If a value for any of the optional arguments A, K1 (and K1_axis),
+    or demag_solver are provided then the corresponding exchange /
+    anisotropy / demag interaction is created automatically and added
+    to the simulation. For example, providing the value A=13.0e-12 in
+    the function call is equivalent to:
+
+       exchange = Exchange(A)
+       sim.add(exchange)
     """
-    def __init__(self, mesh, Ms, unit_length=1, A=None, K1=None, K1_axis=None, demag_solver=None):
-        super(SimpleMag1,self).__init__(mesh, Ms, unit_length)
+    sim = Simulation(mesh, Ms, unit_length)
 
-        # If any of the optional arguments are provided, initialise
-        # the corresponding interactions here:
-        if A is not None:
-            self.add(Exchange(A))
+    sim.set_m(m_init)
 
-        if (K1 != None and K1_axis is None) or (K1 is None and K1_axis != None):
-            log.warning("Not initialising uniaxial anisotropy because only one of K1, K1_axis was specified (values given: K1={}, K1_axis={}).".format(K1, K1_axis))
-        if K1 != None and K1_axis != None:
-            self.add(UniaxialAnisotropy(K1, K1_axis))
+    # If any of the optional arguments are provided, initialise
+    # the corresponding interactions here:
+    if A is not None:
+        sim.add(Exchange(A))
+    if (K1 != None and K1_axis is None) or (K1 is None and K1_axis != None):
+        log.warning("Not initialising uniaxial anisotropy because only one of K1, K1_axis was specified (values given: K1={}, K1_axis={}).".format(K1, K1_axis))
+    if K1 != None and K1_axis != None:
+        sim.add(UniaxialAnisotropy(K1, K1_axis))
+    if demag_solver != None:
+        sim.add(Demag(solver=demag_solver))
 
-        if demag_solver != None:
-            self.add(Demag(solver=demag_solver))
+    return sim
