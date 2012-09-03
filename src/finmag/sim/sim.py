@@ -13,11 +13,11 @@ from finmag.util.consts import mu0
 from finmag.sim.integrator import LLGIntegrator
 from finmag.energies.exchange import Exchange
 from finmag.energies.anisotropy import UniaxialAnisotropy
+from finmag.energies import Demag
 
 ONE_DEGREE_PER_NS = 17453292.5 # in rad/s
 
 log = logging.getLogger(name="finmag")
-
 
 class Simulation(object):
     def __init__(self, mesh, Ms, unit_length=1):
@@ -286,3 +286,29 @@ class Simulation(object):
         f << self.llg._m
         t1 = time.time()
         log.info("Saved snapshot of magnetisation at t={} to file '{}' (saving took {:.3g} seconds).".format(self.t, output_file, t1-t0))
+
+
+class SimpleMag1(Simulation):
+    """
+    Convenience class for quickly creating a Simulation class with
+    at most one exchange, anisotropy and demag interaction.
+
+    This class is somewhat preliminary. Do by all means use it to make
+    your simulations more convenient, but be aware that the name (and
+    perhaps interface) are likely to change in the future.
+    """
+    def __init__(self, mesh, Ms, unit_length=1, A=None, K1=None, K1_axis=None, demag_solver=None):
+        super(SimpleMag1,self).__init__(mesh, Ms, unit_length)
+
+        # If any of the optional arguments are provided, initialise
+        # the corresponding interactions here:
+        if A is not None:
+            self.add(Exchange(A))
+
+        if (K1 != None and K1_axis is None) or (K1 is None and K1_axis != None):
+            log.warning("Not initialising uniaxial anisotropy because only one of K1, K1_axis was specified (values given: K1={}, K1_axis={}).".format(K1, K1_axis))
+        if K1 != None and K1_axis != None:
+            self.add(UniaxialAnisotropy(K1, K1_axis))
+
+        if demag_solver != None:
+            self.add(Demag(solver=demag_solver))
