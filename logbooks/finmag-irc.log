@@ -1443,3 +1443,153 @@ fangohr: Still testing ...
 2012-08-31 13:31:22 sMAshdot: Yes.
 2012-08-31 13:45:46 sMAshdot: Thanks for the explanations :)
 2012-08-31 18:19:51 mb8g11: Bye!
+2012-09-03 08:44:42 fangohr: Good Morning, DokosBot.
+2012-09-03 10:23:46 fangohr-adium: Good Morning, MA.
+2012-09-03 11:48:48 mb8g11: Hello!
+2012-09-03 15:44:24 fangohr-adium: Hello Weiwei, well done ;-)
+2012-09-03 15:45:10 ww1g11: Hi Hans, :)
+2012-09-03 15:52:28 fangohr-adium: Hi Weiwei. Does Marijan need help?
+2012-09-03 16:06:41 ww1g11: just want to test the alerts
+2012-09-03 16:08:25 mb8g11: Discussed the critical timestep problem on pivotal tracker.
+2012-09-03 16:08:35 fangohr-adium: Hi Marijan, well done.
+2012-09-03 16:08:44 fangohr-adium: Weiwei, I have your logbook ready on: https://bitbucket.org/fangohr/logbook-weiwei-wang
+2012-09-03 16:08:50 fangohr-adium: Marijan's is next.
+2012-09-03 16:09:02 ww1g11: got it, thanks
+2012-09-03 16:18:22 fangohr-adium: Marijan, your logbook should be at https://bitbucket.org/fangohr/logbook-marijan-beg
+2012-09-03 16:18:26 fangohr-adium: Any problems, let me know.
+2012-09-03 16:22:03 marijan: I've got it.
+2012-09-03 16:22:06 marijan: Thanks
+2012-09-03 16:23:06 fangohr-adium: Great. Try to run the 'make_html.sh' and 'make_pdf.sh' files — this will tell if you have all required tools installed (probably not). Do ask for help.
+2012-09-03 16:23:17 fangohr-adium: q
+2012-09-03 16:26:52 mb8g11: Are these makefiles for compiling the logbooks to something nice to look at?
+2012-09-03 16:27:51 marijan: I do not have this rst2html.py file....
+2012-09-03 16:35:44 fangohr-adium: MA: yes, I guess I should have given you the files as well. I'll email you a tarball of the set in a moment.
+2012-09-03 16:36:24 fangohr-adium: Marijan: this is part of python's 'docutils' package. You could try 'easy_install docutils' (or Max may suggest something like 'pip docutils'?)
+2012-09-03 16:36:52 fangohr-adium: Also check whether maybe you have the file 'rst2html', i.e. without the .py. Both do the same, and if you have the 'rst2html' you can change the command in the 'make_html.sh' file.
+2012-09-03 16:37:59 albert: fangohr-adium: I think the command should be "pip install docutils", although the default Ubuntu python-docutils packages should be just fine if you don't need any recent functionality.
+2012-09-03 16:38:54 fangohr-adium: I think Marijan is on his Mac. So I don't know which Python he uses (could be enthought).
+2012-09-03 16:39:05 fangohr-adium: Or he maybe working on his virtual machine; don't know.
+2012-09-03 16:40:01 marijan: I am on my Mac, and I cannot use easy_install command, because access to Python folder is denied. I will try to install it on Ubuntu.
+2012-09-03 16:40:33 albert: Ah, if it's on a Mac and you are using Macports (which Hans suggests you don't) then you might need to use pip-2.7 (or whatever your python version is) to install the correct package.
+2012-09-03 16:41:02 albert: marijan, have you uses sudo for installing the package?
+2012-09-03 16:44:18 marijan: Yes, sudo was the problem. I installed it and everything works fine.
+2012-09-03 16:44:20 marijan: Thank
+2012-09-03 16:44:31 albert: Cool :)
+2012-09-03 16:44:36 fangohr-adium: Great, thanks Max.
+2012-09-03 16:44:45 albert: Apologies for a totally unrelated question:
+2012-09-03 16:44:55 albert:  I was thinking that it would be handy to pass an exchange coupling constant and anisotropy constant to the  Simulation class (when it's initialised) so that it adds an exchange and anisotropy interaction automatically.
+2012-09-03 16:45:08 albert: I.e., without the need to do it manually, e.g. via "sim.add(exchange)" or something similar.
+2012-09-03 16:45:42 albert: In nmag this is solved by defining a MagMaterial first, and passing this on to the simulation class.
+2012-09-03 16:45:49 fangohr-adium: Sounds good to me. You may also need to pass Ms?
+2012-09-03 16:45:52 albert: Is there a reason we don't do this in Finmag?
+2012-09-03 16:46:12 fangohr-adium: No, there is no particular reason. I think we just haven't made it to the high-level convenience functions yet.
+2012-09-03 16:46:35 albert: And if we want to have this shortcut, would it be better to introduce a Material class (which might be just a simple wrapper for the time being), or would it be better to pass the constants to the Simulation class directly?
+2012-09-03 16:46:46 fangohr-adium: It is an opportunity to review design choices though, so I quite like to not blindly copy from Nmag (at least initially).
+2012-09-03 16:47:00 fangohr-adium: I don't know what is better. ;-)
+2012-09-03 16:48:10 fangohr-adium: It is also not clear that the materials class will survive: we can use material parameters where properties change as a function space. So maybe there is no need to have different materials (at least as long as we want exchange coupling between the different materials).
+2012-09-03 16:49:10 albert: Well, I quite like the flexibility in Finmag at the moment, for example that you can add multiple anisotropy terms etc. This should definitely be retained.
+2012-09-03 16:49:31 fangohr-adium: Yes.
+2012-09-03 16:49:41 albert: So I was thinking to maybe add three optional parameters to the Simulation.__init__() function:
+2012-09-03 16:49:51 albert: A -- the exchange coupling constant
+2012-09-03 16:50:03 albert: K1 -- the (uniaxial) anisotropy constant
+2012-09-03 16:50:27 albert: and a 'demag_solver' argument, which would just be a string
+2012-09-03 16:50:54 albert: by default, they are None or something equivalent, which signifies that they shouldn't be initialised
+2012-09-03 16:51:32 albert: but if the user provides them then internally an exchange/anisotropy/demag interaction is automatically added
+2012-09-03 16:52:21 albert: for example, providing A=13.0e-12 in the sim.__init__() function would be equivalent to saying:
+2012-09-03 16:52:33 albert: exchange = Exchange(A)
+2012-09-03 16:52:40 albert: sim.add(exchange)
+2012-09-03 16:53:30 albert: So it would just be a shortcut, with slightly limited functionality (namely, that you can only initialise a single exchange/anisotropy/demag interaction via the __init__() function).
+2012-09-03 16:53:37 albert: But you could of course add more of them later on.
+2012-09-03 16:53:49 albert: Does this make sense? Or does anyone have a better suggestion?
+2012-09-03 17:05:47 fangohr-adium: Max, sounds certainly appealing, and will be useful for many applications. There is a very small concern about modifying the class as it is now as it will be difficult to change later. Alternatives would be to derive a convenience class for one-material default values from the current class, which then provides the functionality you describe. We could then use other (derived) classes if we wanted to change the userinterface. On the other hand, I d
+2012-09-03 17:08:06 albert: I have just given it a bit more thought and I agree that it's probably not a good idea to cram it all into the interface of the Simulation class.
+2012-09-03 17:08:34 albert: But having a derived convenience class sounds like a very good idea.
+2012-09-03 17:09:20 albert: If I get too fed up with adding interactions manually I might write one soon, thanks for the suggestion.
+2012-09-03 17:09:41 albert: (Ideas for names are welcome, I'm quite bad at coming up with good names.)
+2012-09-03 17:09:58 fangohr-adium: That would be fine by me: if it is derived, you can do withit what you like (and likely everybody will be using it soon) but cannot ccause any damage. Please proceed if you like :)
+2012-09-03 17:10:57 fangohr-adium: Names: don't know: 'SimulationOneMaterial', — too long. May not even be true (as material parameters can vary).
+2012-09-03 17:11:14 fangohr-adium: Or maybe just 'sim'? Very convenient, but maybe overconfident.
+2012-09-03 17:11:36 albert: Perhaps "SimpleSimulation" or "SimpleSim"?
+2012-09-03 17:11:39 fangohr-adium: How about 'sim1' — reading this as the first version of convenience class that we call 'sim' because that is to conveniently short?
+2012-09-03 17:12:02 albert: That doesn't sound bad.
+2012-09-03 17:12:05 fangohr-adium: SimpleSim is also fine with me.
+2012-09-03 17:12:18 fangohr-adium: (or maybe SimpleSim1?)
+2012-09-03 17:12:36 fangohr-adium: Could also bring in micromagnetics: SimpleMag1 ?
+2012-09-03 17:13:11 fangohr-adium: I need to leave for the day; good catching up with people today - bye for now.
+2012-09-03 17:13:29 albert: Thanks, and see you later!
+2012-09-03 19:41:55 fangohr: Hi MA, Max, do you get email notifications when commits are pushed to bitbucket? (I do, and I think we should just sent those to everybody — this will deliver the IRC logs, and also keep everybody up to date as to what is happening). Any views?
+2012-09-03 19:43:09 albert: Yes, I do get email notifications (but I had to turn them on explicitly last week).
+2012-09-03 19:43:10 albert: I personally think it would be useful to email commits to everybody. It's not very high traffic, but it's useful to see what has been going on.
+2012-09-03 19:43:42 mb8g11: test
+2012-09-03 19:43:59 fangohr: That's my view as well.
+2012-09-03 19:44:09 fangohr: Hello MA, testing, one, two. One, two.
+2012-09-03 19:44:10 fangohr: ;-)
+2012-09-03 19:44:11 mb8g11: I wouldn't mind getting e-mails for commits.
+2012-09-03 19:44:39 albert: Have any of the other guys expressed an opinion?
+2012-09-03 19:44:47 fangohr: Fine, let's do that. I can switch this on centrally by adding email addresses for diffs.
+2012-09-03 19:45:34 fangohr: No, I don't know from Marijan and Weiwei but I expect htey have never had the chance to work with diff notifications, so I am quite happy to let them test it and later ask wether it is useful to them.
+2012-09-03 19:45:47 fangohr: We can toggle this on/off individually, so no problem.
+2012-09-03 19:45:53 albert: Sounds good.
+2012-09-03 19:46:04 fangohr: Shall I add you two as well? (and if so, which email addresses are preferred?)
+2012-09-03 19:46:31 albert: Yes please. You can use maximilian.albert@gmail.com for me.
+2012-09-03 19:47:52 fangohr: OKay, have added all soton addresses otherwise. Let's see how it goes.
+2012-09-03 19:48:16 mb8g11: Thank you.
+2012-09-03 19:55:21 mb8g11: @SimpleSim: This doesn't save anything Sim wouldn't, meaning, it has no additional state, does it? So why not simply have a helper function, maybe called add_to_sim(sim, A, (K1, a)) or so.
+2012-09-03 19:55:43 mb8g11: or sim = sim_with(A, (K1, a))
+2012-09-03 19:55:54 mb8g11: like some kind of factory
+2012-09-03 19:57:04 mb8g11: I'm sure we could come up with better ideas, but subclassing is not the way to go IMHO.
+2012-09-03 20:00:40 fangohr: Yes, that's the other option that seems sensible: to have a function that generates the simulation object. I find it hard to see what's better; so either is fine with me.
+2012-09-03 20:01:35 mb8g11: In fact, I'd like to have Simulation as the convenience class, and will try to move some code from there to lower levels or helpers (but keep the interface in Simulation).
+2012-09-03 20:03:48 albert: mb8g11,  you are probably right about using a helper function rather than a subclass. I like the "sim_with(...)" syntax.
+2012-09-03 20:05:13 mb8g11: Subclassing was not "wrong", a SimpleSimulation sounds like it has a "is a" relationship to Simulation. But why not make the first class more convenient, instead of inventing a second one.
+2012-09-03 20:05:51 mb8g11: To keep it manageable, we will have to take care to push the low-level code to where it belongs, or can be grouped into
+2012-09-03 20:06:05 mb8g11: (it being our original Simulation clasS)
+2012-09-03 20:07:54 albert: So how are you imagining to make the Simulation class more convenient ? Other than with additional helper functions, that is? (Or was this the route you were suggesting?)
+2012-09-03 20:10:29 mb8g11: For this particular problem, with helper functions. Other than that... I may lack the experience/foresight to see what we need. I may be utterly wrong considering new examples you can come up with :)
+2012-09-03 20:11:52 mb8g11: I'd like to be able to build a dolfin mesh from a maximum simplex size, instead of telling it the number of simplices I want. That would be nice, but has nothing to do with the Simulation class.
+2012-09-03 20:12:45 albert: Ok, I guess we'll see along the way what we need. But yes, I like the idea of making the Simulation class as convenient as possible and move helper stuff somewhere else.
+2012-09-03 20:13:13 albert: Oh, how do you specify the number of simplices in a mesh? Is this with Netgen or using the Dolfin built-in functions?
+2012-09-03 20:15:25 mb8g11: Dolfin built-in. dolfin.Rectangle(x0, y0, x1, y1, xn, yn), x0,x1 being the coordinates and xn and yn the number of divisions.
+2012-09-03 20:16:08 mb8g11: the order of the first four arguments may be wrong.
+2012-09-03 20:16:41 albert: Ah, of course, that's obvious. Sorry for the silly question, I was too much thinking in terms of Netgen.
+2012-09-03 20:16:49 mb8g11: We all do.
+2012-09-03 20:17:40 mb8g11: Who cares about the number of divisions in a particular direction, as long as there is a way to say how fine the mesh has to be (maxh in netgen).
+2012-09-03 20:19:32 albert: Well, for this particular kind of mesh it would be easy to compute (and to provide a simple helper function). But for other mesh types provided by Dolfin it may not so obvious.
+2012-09-03 20:21:20 mb8g11: Could be.
+2012-09-03 20:23:31 albert: Totally different question: have you ever seen an error like this when running Finmag?
+2012-09-03 20:23:35 albert: RuntimeError:
+2012-09-03 20:23:35 albert: *** -------------------------------------------------------------------------
+2012-09-03 20:23:35 albert: *** DOLFIN encountered an error. If you are not able to resolve this issue
+2012-09-03 20:23:35 albert: *** using the information listed below, you can ask for help at
+2012-09-03 20:23:35 albert: ***
+2012-09-03 20:23:35 albert: ***     https://answers.launchpad.net/dolfin
+2012-09-03 20:23:37 albert: ***
+2012-09-03 20:23:39 albert: *** Remember to include the error message listed below and, if possible,
+2012-09-03 20:23:41 albert: *** include a *minimal* running example to reproduce the error.
+2012-09-03 20:23:43 albert: ***
+2012-09-03 20:23:45 albert: *** -------------------------------------------------------------------------
+2012-09-03 20:23:47 albert: *** Error:  Unable to solve linear system using PETSc Krylov solver.
+2012-09-03 20:23:49 albert: *** Reason: Solution failed to converge in 0 iterations (PETSc reason DIVERGED_NAN, norm nan).
+2012-09-03 20:23:51 albert: *** Where:  This error was encountered inside PETScKrylovSolver.cpp.
+2012-09-03 20:23:55 albert: *** -------------------------------------------------------------------------
+2012-09-03 20:24:16 albert: I've stumbled upon it a few times recently, but it doesn't seem to be 100% reproducible (sometimes it works with the exact same parameters).
+2012-09-03 20:24:28 mb8g11: Yes, when I play with the tolerances of the demag solver too much, or mix up the unit lengths with netgen meshes.
+2012-09-03 20:24:57 mb8g11: With the exact same parameters? Weird.
+2012-09-03 20:26:02 albert: Yes, I found that weird too.
+2012-09-03 20:26:46 albert: Do you have any suggestions what may most likely be causing it (i.e., what to change so that it goes away)?
+2012-09-03 20:27:27 albert: Also, is it worth investigating this further, or is it simply a result of badly chosen parameters? (However, the ones I have at the moment don't seem particularly unreasonable...)
+2012-09-03 20:29:42 mb8g11: Have you set m?
+2012-09-03 20:29:52 mb8g11: if m is still zero, that could cause the norm nan.
+2012-09-03 20:30:44 albert: Argh, I think you are right. I guess I haven't...
+2012-09-03 20:33:01 mb8g11: Cool.
+2012-09-03 20:33:26 albert: Will double-check, but that's most likely the mistake.
+2012-09-03 20:33:54 albert: I ran the simulation with the new convenience class SimpleMag1 (which I'll soon change to the sim_with(...) syntax you suggested above), and I think I forgot to add an m_init argument.
+2012-09-03 20:35:30 albert: I guess it's time to go home if this is the sort of silly mistake I'm making... ;-)
+2012-09-03 20:40:45 mb8g11: Definitively, haha.
+2012-09-03 20:40:56 mb8g11: Here's the incentive, I'll stop now too.
+2012-09-03 20:41:08 mb8g11: "See" you tomorrow!
+2012-09-03 20:41:40 albert: Have a nice evening, and thanks again!
+2012-09-03 20:41:49 mb8g11: for what? ;)
+2012-09-03 20:41:53 mb8g11: You too.
+2012-09-03 20:42:04 albert: For pointing out silly mistakes. ;-)
+2012-09-03 20:42:07 albert: See you!
