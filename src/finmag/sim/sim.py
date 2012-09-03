@@ -4,6 +4,7 @@ import time
 import glob
 import logging
 import dolfin as df
+import numpy as np
 from math import sqrt
 from finmag.sim.llg import LLG
 from finmag.util.timings import timings

@@ -1,7 +1,5 @@
 import dolfin as df
 import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import axes3d
 from math import pi, sin, cos, sqrt, floor
 from finmag import Simulation
 from finmag.util.consts import mu0
@@ -41,7 +39,7 @@ def point_contacts(fig=5, debug=False):
 epsilon = 1e-16
 alpha = 0.012 # dimensionless
 # Permalloy.
-Ms = 860e3 # A/m
+Ms = 860e3 # or 640e3 # A/m
 A = 13.0e-12 # J/m, our value, paper uses D/(gamma*h_bar) without giving the number
 
 # Mesh
@@ -68,6 +66,9 @@ sim.add(Zeeman((0, 0, 1.1 * Ms))) # section 3 and end of section 5
 sim.add(Exchange(A))
 sim.add(ThinFilmDemag())
 
+larmor_frequency = 2 * pi * sim.gamma * mu0 * Ms
+print "Larmor frequency is {:.2g}.".format(larmor_frequency)
+
 # Spin-Torque
 point_contact_radius = 10e-9
 point_contact_area = pi * point_contact_radius ** 2
@@ -78,10 +79,10 @@ P = 0.4
 p = (1, 1, 0)
 d = H
 sim.set_stt(point_contacts(fig=5), P, d, p)
+sim.snapshot(force_overwrite=True)
 
 pulse_time = 50e-12
-snapshot_times = [65e-12, 175e-12, 265e-12]
-time_markers = [pulse_time] + snapshot_times
+time_markers = [pulse_time, 65e-12, 225e-12, 315e-12]
 for t in time_markers: 
     print "Running until {}s.".format(t)
     sim.run_until(t)
@@ -89,8 +90,6 @@ for t in time_markers:
     if t == pulse_time:
         print "Switching spin current off at {}s.".format(sim.t)
         sim.toggle_stt(False)
-    elif t in snapshot_times:
-        print "Saving snapshot of magnetisation at {}s.".format(sim.t)
-        sim.snapshot()
-    else:
-        print "Bug in time checking code, t={}.".format(sim.t)
+
+    print "Saving snapshot of magnetisation at {}s.".format(sim.t)
+    sim.snapshot(force_overwrite=True)
