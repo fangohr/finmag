@@ -4,7 +4,7 @@ import numpy as np
 
 import time
 from fastsum_lib import FastSum 
-import profile
+import cProfile
 
 
 _nodes  =(
@@ -161,9 +161,9 @@ class FastDemag():
         self.weights=np.array(self.s_weight+self.v_weight)
         self.charges=np.array(self.s_charge+self.v_charge)
         
-        fast_sum=FastSum(p=6,mac=0.5,num_limit=700)
+        fast_sum=FastSum(p=6,mac=0.5,num_limit=700,surface_n=surface_n,volume_n=volume_n)
         xt=self.mesh.coordinates()
-        fast_sum.init_mesh(self.nodes,xt)
+        fast_sum.init_mesh(self.nodes,xt,self.t_normals,self.face_nodes_array)
         self.fast_sum=fast_sum
         
         
@@ -220,6 +220,7 @@ class FastDemag():
 	
         self.face_nodes=[]
         self.face_norms=[]
+        self.t_normals=[]
         
 	for face in df.faces(self.mesh):
             t=face.normal()  #one must call normal() before entities(3),...
@@ -228,8 +229,11 @@ class FastDemag():
                 face_nodes=face.entities(0)
                 self.face_nodes.append(face_nodes)
                 self.face_norms.append(t)
-            
+                self.t_normals.append([t.x(),t.y(),t.z()])
     
+        self.t_normals=np.array(self.t_normals)
+        self.face_nodes_array=np.array(self.face_nodes,dtype=np.int32)
+        
         self.s_nodes=[]
 	self.s_weight=[]
         self.s_charge=[]
@@ -271,9 +275,9 @@ class FastDemag():
             else:
                 det=compute_det_xy(y1,z1,x1,y2,z2,x2,y3,z3,x3)
                               
-            sa=(m[f_c[0]][0]*t.x()+m[f_c[0]][1]*t.y()+m[f_c[0]][2]*t.z())*self.Ms
-            sb=(m[f_c[1]][0]*t.x()+m[f_c[1]][1]*t.y()+m[f_c[1]][2]*t.z())*self.Ms
-            sc=(m[f_c[2]][0]*t.x()+m[f_c[2]][1]*t.y()+m[f_c[2]][2]*t.z())*self.Ms
+            sa=(m[f_c[0]][0]*t.x()+m[f_c[0]][1]*t.y()+m[f_c[0]][2]*t.z())
+            sb=(m[f_c[1]][0]*t.x()+m[f_c[1]][1]*t.y()+m[f_c[1]][2]*t.z())
+            sc=(m[f_c[2]][0]*t.x()+m[f_c[2]][1]*t.y()+m[f_c[2]][2]*t.z())
             
             
             for j in range(len(self.s_w)):
@@ -354,61 +358,19 @@ class FastDemag():
         self.phi.vector().set_local(res)
         
         
-    def compute_correction(self):
-        cs=self.mesh.coordinates()
-    
-    
-        def correct_over_triangle(self,base_index,p1,p2,p3,sa,sb,sc):
-            
-        
-            guass_sum=0
-            for i in range(len(self.s_w)):
-                j=base_index+i
-                guass_sum+=G(p1,self.nodes[j])*self.charges[j]*self.s_weight[j]
-                
-            exact=compute_correction_simplified(sa,sb,sc,p1,p2,p3)
-                        
-            return exact-guass_sum
-            
-        
-        base_index=0
-        index=0
-        m=self.m.vector().array()
-        m=m.reshape((-1,3),order='F')
-        
-        self.correction_phi=np.zeros(len(cs))
-        
-        for f_c in self.face_nodes:
-            p1=cs[f_c[0]]
-            p2=cs[f_c[1]]
-            p3=cs[f_c[2]]
-            t=self.face_norms[index]
-            sa=(m[f_c[0]][0]*t.x()+m[f_c[0]][1]*t.y()+m[f_c[0]][2]*t.z())*self.Ms
-            sb=(m[f_c[1]][0]*t.x()+m[f_c[1]][1]*t.y()+m[f_c[1]][2]*t.z())*self.Ms
-            sc=(m[f_c[2]][0]*t.x()+m[f_c[2]][1]*t.y()+m[f_c[2]][2]*t.z())*self.Ms
-
-            self.correction_phi[f_c[0]]+=correct_over_triangle(self,base_index,p1,p2,p3,sa,sb,sc)
-            self.correction_phi[f_c[1]]+=correct_over_triangle(self,base_index,p2,p3,p1,sb,sc,sa)
-            self.correction_phi[f_c[2]]+=correct_over_triangle(self,base_index,p3,p1,p2,sc,sa,sb)
-           
-            index+=1
-            base_index+=len(self.s_w)
-
-        self.phi.vector()[:]+=self.correction_phi
-            
 
     def compute_field(self):
         x_t=self.mesh.coordinates()
         res=np.zeros(len(x_t))
-                
-        tmp=self.weights*self.charges
-
-        self.fast_sum.update_charge(tmp)
+        m=self.m.vector().array()        
+        self.fast_sum.update_charge(m,self.weights)
         self.fast_sum.fastsum(res)
-        #self.fast_sum.exactsum(res)
+        self.fast_sum.exactsum(res)
+        
+	#self.compute_correction()
+        self.fast_sum.compute_correction(m,res)
         self.phi.vector().set_local(res)
-	self.compute_correction()
-        self.phi.vector()[:]*=(1.0/(4*np.pi))
+        self.phi.vector()[:]*=(self.Ms/(4*np.pi))
         
 	demag_field = self.G * self.phi.vector()
         
@@ -417,10 +379,9 @@ class FastDemag():
 
 if __name__ == "__main__":
    
-    mesh = UnitSphere(3)
-    
     n=10
     mesh = UnitCube(n, n, n)
+    mesh = UnitSphere(10)
     
     Vv = df.VectorFunctionSpace(mesh, 'Lagrange', 1)
     
@@ -432,10 +393,12 @@ if __name__ == "__main__":
 
     demag=FastDemag(Vv,m,Ms,surface_n=1,volume_n=1)
     
-    profile.run('demag.compute_field();')
-    
+    cProfile.run('demag.compute_field();')
     
     print len(mesh.coordinates())
+    
+    print np.array(demag.compute_field())
+    
     
     
     
