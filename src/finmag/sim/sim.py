@@ -13,6 +13,7 @@ from finmag.util.consts import mu0
 from finmag.sim.integrator import LLGIntegrator
 from finmag.energies.exchange import Exchange
 from finmag.energies.anisotropy import UniaxialAnisotropy
+from finmag.energies.zeeman import Zeeman
 from finmag.energies import Demag
 
 ONE_DEGREE_PER_NS = 17453292.5 # in rad/s
@@ -288,7 +289,7 @@ class Simulation(object):
         log.info("Saved snapshot of magnetisation at t={} to file '{}' (saving took {:.3g} seconds).".format(self.t, output_file, t1-t0))
 
 
-def sim_with(mesh, Ms, m_init, unit_length=1, A=None, K1=None, K1_axis=None, demag_solver='FK'):
+def sim_with(mesh, Ms, m_init, unit_length=1, A=None, K1=None, K1_axis=None, H_ext=None, demag_solver='FK'):
     """
     Create a Simulation instance based on the given parameters.
 
@@ -317,6 +318,8 @@ def sim_with(mesh, Ms, m_init, unit_length=1, A=None, K1=None, K1_axis=None, dem
         log.warning("Not initialising uniaxial anisotropy because only one of K1, K1_axis was specified (values given: K1={}, K1_axis={}).".format(K1, K1_axis))
     if K1 != None and K1_axis != None:
         sim.add(UniaxialAnisotropy(K1, K1_axis))
+    if H_ext != None:
+        sim.add(Zeeman(H_ext))
     if demag_solver != None:
         sim.add(Demag(solver=demag_solver))
 
