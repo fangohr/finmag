@@ -5,17 +5,62 @@
 #include <stdio.h>
 #include <math.h>
 
+static const double gauss_nodes[5][5] = {
+    {0, 0, 0, 0, 0},
+    {-0.5773502691896257,
+        0.5773502691896257, 0, 0, 0},
+    {-0.7745966692414834,
+        0, 0.7745966692414834, 0, 0},
+    {-0.861136311594053,
+        -0.3399810435848562,
+        0.3399810435848562,
+        0.861136311594053, 0},
+    {-0.906179845938664,
+        -0.5384693101056829,
+        0, 0.5384693101056829,
+        0.906179845938664}
+};
+
+static const double gauss_weights[5][5] = {
+    {2, 0, 0, 0, 0},
+    {1, 1, 0, 0, 0},
+    {0.5555555555555553,
+        0.888888888888889,
+        0.5555555555555553, 0, 0},
+    {0.3478548451374539,
+        0.6521451548625462,
+        0.6521451548625462,
+        0.3478548451374539, 0},
+    {0.2369268850561887,
+        0.4786286704993665,
+        0.5688888888888889,
+        0.4786286704993665,
+        0.2369268850561887}
+};
+
 inline double pow2(double x) {
     return x*x;
 }
 
-
-inline double distance(double *x,double *y){
-    double r=0;
-    r=(x[0]-y[0])*(x[0]-y[0])
-            +(x[1]-y[1])*(x[1]-y[1])
-            +(x[2]-y[2])*(x[2]-y[2]);
+inline double distance(double *x, double *y) {
+    double r = 0;
+    r = (x[0] - y[0])*(x[0] - y[0])
+            +(x[1] - y[1])*(x[1] - y[1])
+            +(x[2] - y[2])*(x[2] - y[2]);
     return sqrt(r);
+}
+
+inline double G(double *x, double *y) {
+    double r = 0;
+    r = (x[0] - y[0])*(x[0] - y[0])
+            +(x[1] - y[1])*(x[1] - y[1])
+            +(x[2] - y[2])*(x[2] - y[2]);
+
+    if (r <= 0) {
+        return 0;
+    }
+
+    return 1 / sqrt(r);
 }
 
 inline double tri_max(double x, double y, double z) {
@@ -61,39 +106,38 @@ double array_min(double *x, int N, int t) {
 }
 
 //compute det(J1),det(J2),det(J3) (equations are given in the report)
-inline double det2(double *x1,double *x2,double *x3){
-    
-    double J1,J2,J3,res;
-    
-    J1=(x2[0]-x1[0])*(x3[1]-x1[1])-(x2[1]-x1[1])*(x3[0]-x1[0]);
-    
-    J2=(x2[0]-x1[0])*(x3[2]-x1[2])-(x2[2]-x1[2])*(x3[0]-x1[0]);
-    
-    J3=(x2[1]-x1[1])*(x3[2]-x1[2])-(x2[2]-x1[2])*(x3[1]-x1[1]);
-    
-    res=sqrt(J1*J1+J2*J2+J3*J3);
-    
+
+inline double det2(double *x1, double *x2, double *x3) {
+
+    double J1, J2, J3, res;
+
+    J1 = (x2[0] - x1[0])*(x3[1] - x1[1])-(x2[1] - x1[1])*(x3[0] - x1[0]);
+
+    J2 = (x2[0] - x1[0])*(x3[2] - x1[2])-(x2[2] - x1[2])*(x3[0] - x1[0]);
+
+    J3 = (x2[1] - x1[1])*(x3[2] - x1[2])-(x2[2] - x1[2])*(x3[1] - x1[1]);
+
+    res = sqrt(J1 * J1 + J2 * J2 + J3 * J3);
+
     return res;
 
 }
 
+inline double compute_correction_triangle(double *x1, double *x2, double *x3, double sa, double sb, double sc) {
+    double r1, r2, r3;
+    double fa, fb, fc, fd;
+    r1 = distance(x1, x2);
+    r2 = distance(x1, x3);
+    r3 = distance(x2, x3);
 
-double compute_correction_triangle(double *x1,double *x2,double *x3,double sa,double sb,double sc){
-    double r1,r2,r3;
-    double fa,fb,fc,fd;
-    r1=distance(x1,x2);
-    r2=distance(x1,x3);
-    r3=distance(x2,x3);
-    
-    fa=det2(x1,x2,x3);
-    
-    fb=(sb-sc)*(r1-r2)/(2*r3*r3);
-    fc=(sb+sc+2*sa)/(4.0*r3)+(r2*r2-r1*r1)*(sb-sc)/(4.0*r3*r3*r3);
-    fd=log(r1+r2+r3)-log(r1+r2-r3);
+    fa = det2(x1, x2, x3);
 
-    return fa*(fb+fc*fd);
+    fb = (sb - sc)*(r1 - r2) / (2 * r3 * r3);
+    fc = (sb + sc + 2 * sa) / (4.0 * r3)+(r2 * r2 - r1 * r1)*(sb - sc) / (4.0 * r3 * r3 * r3);
+    fd = log(r1 + r2 + r3) - log(r1 + r2 - r3);
+
+    return fa * (fb + fc * fd);
 }
-
 
 double **alloc_2d_double(int ndim1, int ndim2) {
 
@@ -246,7 +290,7 @@ int divide_box(fastsum_plan *plan, struct octree_node *tree, double *bnd, double
         bend[1][1] = tree->end;
 
         children_box_num *= 2;
-        printf("x-direction\n");
+        //printf("x-direction\n");
     }
 
 
@@ -264,7 +308,7 @@ int divide_box(fastsum_plan *plan, struct octree_node *tree, double *bnd, double
             bnds[children_box_num + i][2] = (bnd[2] + bnd[3]) / 2.0;
             bnds[children_box_num + i][3] = bnd[3];
 
-            printf("bend[%d][0]=%d  %d\n", i, bend[i][0], bend[i][1]);
+            //printf("bend[%d][0]=%d  %d\n", i, bend[i][0], bend[i][1]);
 
             quicksort(1, plan->x_s + 3 * bend[i][0], plan->index + bend[i][0], bend[i][1] - bend[i][0]);
 
@@ -278,7 +322,7 @@ int divide_box(fastsum_plan *plan, struct octree_node *tree, double *bnd, double
             bend[children_box_num + i][1] = bend[i][1];
             bend[i][1] = k;
 
-            printf("y-direction %d  %d  %d \n", bend[i][1], bend[children_box_num + i][0], bend[children_box_num + i][1]);
+            //printf("y-direction %d  %d  %d \n", bend[i][1], bend[children_box_num + i][0], bend[children_box_num + i][1]);
 
         }
 
@@ -315,7 +359,7 @@ int divide_box(fastsum_plan *plan, struct octree_node *tree, double *bnd, double
         }
 
         children_box_num *= 2;
-        printf("z-direction\n");
+        //printf("z-direction\n");
     }
 
 
@@ -422,12 +466,12 @@ void build_tree(fastsum_plan *plan) {
     bnd[4] = array_min(plan->x_s, plan->N_source, 2);
     bnd[5] = array_max(plan->x_s, plan->N_source, 2);
 
-    
+
     create_tree(plan, plan->tree, 0, plan->N_source, bnd);
 
-    printree(plan->tree);
+    //printree(plan->tree);
 
-    printf("tree bulited..finished\n");
+    //printf("tree bulited..finished\n");
 
 
 }
@@ -655,7 +699,8 @@ fastsum_plan *create_plan() {
     return str;
 }
 
-void init_fastsum(fastsum_plan *plan, int N_source, int N_target, int p, double mac, int num_limit) {
+void init_fastsum(fastsum_plan *plan, int N_source, int N_target, int surface_n,
+        int volume_n, int num_faces, int p, double mac, int num_limit) {
 
     int i;
 
@@ -663,10 +708,25 @@ void init_fastsum(fastsum_plan *plan, int N_source, int N_target, int p, double 
     plan->N_target = N_target;
 
     plan->x_s = (double *) malloc(3 * N_source * (sizeof (double)));
+    plan->x_s_bak = (double *) malloc(3 * N_source * (sizeof (double)));
     plan->charge_density = (double *) malloc(N_source * (sizeof (double)));
 
 
     plan->x_t = (double *) malloc(3 * N_target * (sizeof (double)));
+
+    plan->surface_n = surface_n;
+    plan->volume_n = volume_n;
+
+    plan->s_x = (double *) malloc(surface_n * surface_n * (sizeof (double)));
+    plan->s_y = (double *) malloc(surface_n * surface_n * (sizeof (double)));
+    plan->s_w = (double *) malloc(surface_n * surface_n * (sizeof (double)));
+    compute_gauss_coeff_triangle(plan);
+
+
+    plan->num_faces = num_faces;
+
+    plan->face_nodes = (int *) malloc(3 * num_faces * (sizeof (int)));
+    plan->t_normal = (double *) malloc(3 * num_faces * (sizeof (double)));
 
     plan->p = p;
     plan->mac_square = mac*mac;
@@ -681,27 +741,196 @@ void init_fastsum(fastsum_plan *plan, int N_source, int N_target, int p, double 
 
 }
 
-void init_mesh(fastsum_plan *plan, double *x_s, double *x_t) {
+void compute_gauss_coeff_triangle(fastsum_plan *plan) {
+
+    int i, j;
+
+    int k = 0;
+
+    int n = plan->surface_n;
+
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < n; j++) {
+            plan->s_x[k] = (1 + gauss_nodes[n - 1][i]) / 2.0;
+            plan->s_y[k] = (1 - gauss_nodes[n - 1][i])
+                    *(1 + gauss_nodes[n - 1][j]) / 4.0;
+            plan->s_w[k] = (1 - gauss_weights[n - 1][i])
+                    * gauss_weights[n - 1][i] * gauss_weights[n - 1][j] / 8.0;
+            k += 1;
+        }
+    }
+}
+
+/*
+void compute_gauss_coeff_tetrahedron(fastsum_plan *plan) {
+
+    int i, j, k;
+
+    int index = 0;
+
+    int n = plan->volume_n;
+
+    double *xs = &gauss_nodes[n - 1];
+    double *ws = &gauss_weights[n - 1];
+
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < n; j++) {
+            for (k = 0; k < n; k++) {
+
+            plan->v_x[index] = (1 + xs[i]) / 2.0;
+            plan->v_y[index] = (1 - xs[i])*(1 + xs[j]) / 4.0;
+            plan->v_z[index]=(1-xs[i])*(1-xs[j])*(1+xs[k])/8.0
+            plan->v_w[index]=(1-xs[i])*(1-xs[i])*(1-xs[j])*ws[i]*ws[j]*ws[k]/64.0
+            
+            index += 1;
+        }
+    }
+}
+ */
+
+void init_mesh(fastsum_plan *plan, double *x_s, double *x_t, double *t_normal, int *face_nodes) {
 
     int k;
 
     for (k = 0; k < 3 * plan->N_source; k++) {
         plan->x_s[k] = x_s[k];
+        plan->x_s_bak[k]=x_s[k];
     }
 
     for (k = 0; k < 3 * plan->N_target; k++) {
         plan->x_t[k] = x_t[k];
     }
 
+    for (k = 0; k < 3 * plan->num_faces; k++) {
+        plan->t_normal[k] = t_normal[k];
+    }
+
+    for (k = 0; k < 3 * plan->num_faces; k++) {
+        plan->face_nodes[k] = face_nodes[k];
+    }
+
 }
 
-void update_charge_density(fastsum_plan *plan, double *density) {
+void update_charge_density(fastsum_plan *plan, double *m, double *weight) {
 
-    int k;
+    int face, f, k;
+    int i1, i2, i3;
+    double sa, sb, sc;
+    int n = plan->surface_n * plan->surface_n;
+
+    printf("n=%d  num_faces=%d\n", n, plan->num_faces);
 
     for (k = 0; k < plan->N_source; k++) {
-        plan->charge_density[k] = density[k];
+        plan->charge_density[k] = 0;
     }
+
+
+    for (face = 0; face < plan->num_faces; face++) {
+
+        f = 3 * face;
+
+        i1 = plan->face_nodes[f];
+        i2 = plan->N_target + i1;
+        i3 = plan->N_target + i2;
+        sa = (m[i1] * plan->t_normal[f] + m[i2] * plan->t_normal[f + 1] + m[i3] * plan->t_normal[f + 2]);
+
+
+        i1 = plan->face_nodes[f + 1];
+        i2 = plan->N_target + i1;
+        i3 = plan->N_target + i2;
+        sb = (m[i1] * plan->t_normal[f] + m[i2] * plan->t_normal[f + 1] + m[i3] * plan->t_normal[f + 2]);
+
+
+        i1 = plan->face_nodes[f + 2];
+        i2 = plan->N_target + i1;
+        i3 = plan->N_target + i2;
+        sc = (m[i1] * plan->t_normal[f] + m[i2] * plan->t_normal[f + 1] + m[i3] * plan->t_normal[f + 2]);
+
+
+        for (k = 0; k < n; k++) {
+            plan->charge_density[n * face + k] = sa + (sb - sa) * plan->s_x[k]+(sc - sa) * plan->s_y[k];
+        }
+
+    }
+
+
+    for (k = 0; k < plan->N_source; k++) {
+        // printf("%g  ",plan->charge_density[k]);
+        plan->charge_density[k] *= weight[k];
+    }
+
+
+}
+
+inline double correction_over_triangle(fastsum_plan *plan, int base_index,
+        double *x1, double *x2, double *x3, double sa, double sb, double sc) {
+
+    double res = 0, exact;
+
+    int i, j, k;
+    int n = plan->surface_n * plan->surface_n;
+
+    for (i = 0; i < n; i++) {
+        j = base_index + i;
+        res += G(x1, &plan->x_s_bak[3*j]) * plan->charge_density[j];
+    }
+
+
+    exact = compute_correction_triangle(x1, x2, x3, sa, sb, sc);
+
+    /*
+    printf("res=%g  exact=%g  sabc=%g %g %g\n",res,exact,sa,sb,sc);
+    printf("x1=%g %g %g\n",x1[0],x1[1],x1[2]);
+    printf("x2=%g %g %g\n",x2[0],x2[1],x2[2]);
+    printf("x3=%g %g %g\n",x3[0],x3[1],x3[2]);
+     */
+
+    return exact - res;
+}
+
+void compute_correction(fastsum_plan *plan, double *m, double *phi) {
+
+    int face, f;
+    int i, j, k, i1, i2, i3;
+    int base_index = 0;
+    double sa, sb, sc;
+    double *x, *y, *z;
+    int n = plan->surface_n * plan->surface_n;
+
+
+    for (face = 0; face < plan->num_faces; face++) {
+
+        f = 3 * face;
+
+        i = plan->face_nodes[f];
+        i2 = plan->N_target + i;
+        i3 = plan->N_target + i2;
+        x = &plan->x_t[3 * i];
+        sa = (m[i] * plan->t_normal[f] + m[i2] * plan->t_normal[f + 1] + m[i3] * plan->t_normal[f + 2]);
+
+
+        j = plan->face_nodes[f + 1];
+        i2 = plan->N_target + j;
+        i3 = plan->N_target + i2;
+        y = &plan->x_t[3 * j];
+        sb = (m[j] * plan->t_normal[f] + m[i2] * plan->t_normal[f + 1] + m[i3] * plan->t_normal[f + 2]);
+
+
+        k = plan->face_nodes[f + 2];
+        i2 = plan->N_target + k;
+        i3 = plan->N_target + i2;
+        z = &plan->x_t[3 * k];
+        sc = (m[k] * plan->t_normal[f] + m[i2] * plan->t_normal[f + 1] + m[i3] * plan->t_normal[f + 2]);
+
+
+        phi[i] += correction_over_triangle(plan, base_index, x, y, z, sa, sb, sc);
+        phi[j] += correction_over_triangle(plan, base_index, y, z, x, sb, sc, sa);
+        phi[k] += correction_over_triangle(plan, base_index, z, x, y, sc, sa, sb);
+        base_index += n;
+
+    }
+
+
 }
 
 void fastsum_exact(fastsum_plan *plan, double *phi) {
@@ -719,7 +948,6 @@ void fastsum_exact(fastsum_plan *plan, double *phi) {
                 phi[j] += plan->charge_density[i] / sqrt(r);
             }
         }
-        // printf("j=%d   res=%0.15f\n",j,phi[j]);
     }
 }
 
@@ -728,7 +956,6 @@ void fastsum(fastsum_plan *plan, double *phi) {
 
     double ***a = alloc_3d_double(plan->p + 1, plan->p + 1, plan->p + 1);
 
-    //phi[j] = compute_potential_single_target(plan, plan->tree, j);
     for (j = 0; j < plan->N_target; j++) {
         phi[j] = compute_potential_single_target(plan, plan->tree, j, a);
     }
@@ -745,7 +972,6 @@ void fastsum_finalize(fastsum_plan *plan) {
     free(plan);
 
 }
-
 
 int main() {
     int p = 4;
@@ -778,32 +1004,7 @@ int main() {
     double xt[3] = {0, 0, 0};
     double density[8] = {1, 2, 3, 4, 5, 6, 7, 8};
 
-    double phi[N_target], phi2[N_target];
 
-    fastsum_plan *plan = (fastsum_plan *) malloc(sizeof (fastsum_plan));
-
-    for (i = 0; i < 8; i++) {
-        printf("xyz %d ==%g  %g  %g\n", i, xs[3 * i],
-                xs[3 * i + 1], xs[3 * i + 2]);
-        r = pow2(xs[3 * i]) + pow2(xs[3 * i + 1]) + pow2(xs[3 * i + 2]);
-        r = sqrt(r);
-        res += density[i] / r;
-    }
-    printf("direct for (0,0,0)=%g\n", res);
-
-    init_fastsum(plan, N_source, N_target, p, mac, num_limit);
-    init_mesh(plan, xs, xt);
-    build_tree(plan);
-
-
-
-    update_charge_density(plan, density);
-    fastsum(plan, phi);
-    fastsum_exact(plan, phi2);
-    for (i = 0; i < N_target; i++) {
-        printf("exact=%g    fast=%g  reldif=%g\n",
-                phi2[i], phi[i], fabs(phi2[i] - phi[i]) / phi2[i]);
-    }
 
 
     return 0;
