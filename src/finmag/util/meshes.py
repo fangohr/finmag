@@ -17,6 +17,8 @@ import logging
 import textwrap
 import hashlib
 import tempfile
+import dolfin as df
+import numpy as np
 from dolfin import Mesh, cells, assemble, Constant, dx
 from finmag.util import helpers
 
@@ -347,3 +349,48 @@ def mesh_volume(mesh):
     Computes the sum of the volumes of all tetrahedral cells in the mesh.
     """
     return assemble(Constant(1)*dx, mesh=mesh)
+
+def print_mesh_info(mesh):
+    # Note: we can compute the number of surface triangles as follows:
+    #
+    #     F_s = 4*C - F_i,
+    #
+    # where we use the following abbreviation:
+    #
+    #    C = number of cells/tetrahedra
+    #    F_i = number of interior facets
+    #    F_s = number of surface facets
+    #
+    # Proof: Suppose that each tetrahedron was separated from its neighbours
+    #        by a small distance. Then the number of surface facets F_s would
+    #        be exactly 4*C (since each tetrahedron has four surface triangles).
+    #        To get the number of surface facets in the "true" mesh (without
+    #        space between neighbouring cells), all the facets at which two
+    #        tetrahedra are "glued together" (i.e., precisely the interior
+    #        facets) need to be subtracted from this because otherwise they
+    #        would be counted twice.
+
+    edges = [e for e in df.edges(mesh)]
+    facets = [f for f in df.facets(mesh)]
+    C = mesh.num_cells()
+    F = len(facets)
+    F_i = 4*C-F
+    F_s = F-F_i
+    E = len(edges)
+    V = mesh.num_vertices()
+
+    lens = [e.length() for e in df.edges(mesh)]
+    vals, bins = np.histogram(lens, bins=20)
+    vals = np.insert(vals, 0, 0)  # to ensure that 'vals' and 'bins' have the same number of elements
+    vals_normalised = 70.0/max(vals)*vals
+
+    print "===== Mesh info: =============================="
+    print "{:6d} cells (= volume elements)".format(C)
+    print "{:6d} facets".format(F)
+    print "{:6d} surface facets".format(F_s)
+    print "{:6d} interior facets".format(F_i)
+    print "{:6d} edges".format(E)
+    print "{:6d} vertices".format(V)
+    print "\n===== Distribution of edge lengths: ==========="
+    for (b, v) in zip(bins, vals_normalised):
+        print "{:.3f} {}".format(b, int(round(v))*'*')
