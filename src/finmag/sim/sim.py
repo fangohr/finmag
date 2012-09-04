@@ -1,3 +1,4 @@
+from __future__ import division
 import os
 import re
 import time
@@ -10,6 +11,7 @@ from finmag.sim.llg import LLG
 from finmag.util.timings import timings
 from finmag.util.helpers import quiver
 from finmag.util.consts import mu0
+from finmag.util.meshes import print_mesh_info
 from finmag.sim.integrator import LLGIntegrator
 from finmag.energies.exchange import Exchange
 from finmag.energies.anisotropy import UniaxialAnisotropy
@@ -76,7 +78,7 @@ class Simulation(object):
             energy += interaction.compute_energy()
         return energy
 
-    def exchange_lengths(self):
+    def exchange_length_and_bloch_parameter(self):
         """
         Compute the exchange length and the Bloch parameter.
 
@@ -84,10 +86,13 @@ class Simulation(object):
 
            L2 = sqrt(A/K_1)
 
-        At zero temperature, the numerical solution will converge if the cell size
-        is smaller than the minimum of L1 and L2 (Rave W et al 1998 J. Magn. Magn. Mater. 183 329).
-        This is why these two lengths are computed here and a warning is printed
-        when the discretisation may be too coarse.
+        Returns the pair (L1, L2). If either of the values cannot be
+        computed, NaN is returned in its place.
+
+        These are relevant to estimate whether the mesh discretisation
+        is too coarse and might result in numerical artefacts (see W. Rave,
+        K. Fabian, A. Hubert, "Magnetic states ofsmall cubic particles with
+        uniaxial anisotropy", J. Magn. Magn. Mater. 190 (1998), 332-348).
 
         The meaning of the constants is as follows:
 
@@ -96,24 +101,28 @@ class Simulation(object):
            Ms   -  saturation magnetisation
            mu0  -  vacuum permeability
         """
-        log.debug("Only uniaxial anisotropy interactions are being considered since this is the only type currently supported in Finmag and the common formula \sqrt(A/K1) only works for a uniaxial anisotropy. It might be worth investigating whether there is a more general expression once other types become available in Finmag, too.")
-        ans = [a for a in self.llg.interactions if isinstance(a, UniaxialAnisotropy)]
         exs = [e for e in self.llg.interactions if isinstance(e, Exchange)]
-        if len(ans) != 1 or len(exs) != 1:
-            raise ValueError("Exactly one exchange interaction and exactly one (uniaxial) anisotropy interaction must be present in order to compute the exchange length. However, {} exchange term(s) and {} uniaxial anisotropy term(s) were found.".format(len(ans), len(exs)))
-        A = exs[0].A
-        K1 = float(ans[0].K1) # K1 can be a dolfin Constant, hence the conversion to float
+        if len(exs) == 1:
+            A = exs[0].A
+            L1 = sqrt(2*A/(mu0*self.llg.Ms**2))
+            log.info("Exchange length: {:.2f} nm (exchange coupling constant: A={:.2g} J/m)".format(L1*1e9, A))
+        else:
+            L1 = np.NaN
+            log.warning("Cannot calculate exchange length or Bloch parameter ssince exactly one exchange interaction must be present in the simulation (found: {})".format(len(exs)))
 
-        L1 = sqrt(2*A/(mu0*self.llg.Ms**2))
-        L2 = sqrt(A/K1)
+        # Note that only uniaxial anisotropy interactions are being considered to compute the Bloch parameter
+        # since this is the only type currently supported in Finmag and the common formula \sqrt(A/K1) only
+        # works for a uniaxial anisotropy. It might be worth investigating whether there is a more general
+        # expression once other types become available in Finmag, too.
+        ans = [a for a in self.llg.interactions if isinstance(a, UniaxialAnisotropy)]
+        if len(ans) == 1 and len(exs) == 1:
+            K1 = float(ans[0].K1) # K1 can be a dolfin Constant, hence the conversion to float
+            L2 = sqrt(A/K1)
+            log.info("Bloch parameter: {:.2f} nm (uniaxial anisotropy constant: K1={:.2g} J/m)".format(L2*1e9, K1))
+        else:
+            L2 = np.NaN
+            log.warning("Cannot calculate Bloch parameter since exactly one uniaxial anisotropy interaction (and one exchange interaction) must be present in the simulation (found: {})".format(len(ans)))
 
-        # TODO: It might be nice to issue a warning here if the characteristic mesh length is much larger than the exchange length.
-        log.debug("Exchange lengths: L1={:.2f} nm, L2={:.2f} nm (exchange coupling: A={:.2g} J/m, anisotropy constant K1={:.2g} J/M^3).".format(L1*1e9, L2*1e9, A, K1))
-        hmax = self.mesh.hmax()*self.unit_length
-        emax = max([e.length() for e in df.edges(self.mesh)])*self.unit_length
-        if emax > min(L1,L2):
-            # TODO: this check should perhaps be moved into a separate function 'mesh_quality()' or so (which might gather some more sophisticated data)
-            log.warning("Maximum edge length is {:.2f} nm (and maximum cell diameter is {:-.2f} nm), but should be smaller than the minimum of L1={:.2f} nm, L2={:.2f} nm to avoid discretisation artefacts!".format(emax*1e9, hmax*1e9, L1*1e9, L2*1e9))
         return (L1, L2)
 
     def run_until(self, t):
@@ -288,6 +297,37 @@ class Simulation(object):
         t1 = time.time()
         log.info("Saved snapshot of magnetisation at t={} to file '{}' (saving took {:.3g} seconds).".format(self.t, output_file, t1-t0))
 
+    def mesh_info(self):
+        """
+        Print some basic information about the mesh (such as the number of cells,
+        interior/surface triangles, vertices, etc.).
+
+        Also print a distribution of edge lengths present in the mesh and how they
+        compare to the exchange length and the Bloch parameter (if these can be
+        computed). This information is relevant to estimate whether the mesh
+        discretisation is too coarse and might result in numerical artefacts (also
+        see the docstring of the function `exchange_length_and_bloch_parameter`).
+        """
+        print_mesh_info(self.mesh)
+        print ""
+
+        edgelengths = [e.length()*self.unit_length for e in df.edges(self.mesh)]
+        emax = max(edgelengths)
+        L1, L2 = self.exchange_length_and_bloch_parameter()
+
+        def print_info(L, name, abbrev):
+            if not np.isnan(L):
+                (a,b), _ = np.histogram(edgelengths, bins=[0, L, np.infty])
+                if b == 0.0:
+                    msg = "All edges are shorter"
+                    msg2 = ""
+                else:
+                    msg = "Warning: {:.2f}% of edges are longer".format(100.0*b/(a+b))
+                    msg2 = " (this may lead to discretisation artefacts)"
+                print "{} than the {} {} = {:.2f} nm{}.".format(msg, name, abbrev, L*1e9, msg2)
+
+        print_info(L1, 'exchange length', 'L1')
+        print_info(L2, 'Bloch parameter', 'L2')
 
 def sim_with(mesh, Ms, m_init, unit_length=1, A=None, K1=None, K1_axis=None, H_ext=None, demag_solver='FK'):
     """
