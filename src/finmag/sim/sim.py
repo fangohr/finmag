@@ -288,7 +288,7 @@ class Simulation(object):
         log.info("Saved snapshot of magnetisation at t={} to file '{}' (saving took {:.3g} seconds).".format(self.t, output_file, t1-t0))
 
 
-def sim_with(mesh, Ms, m_init, unit_length=1, A=None, K1=None, K1_axis=None, demag_solver=None):
+def sim_with(mesh, Ms, m_init, unit_length=1, A=None, K1=None, K1_axis=None, demag_solver='FK'):
     """
     Create a Simulation instance based on the given parameters.
 
