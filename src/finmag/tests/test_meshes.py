@@ -96,3 +96,25 @@ def test_cylinder():
     vol_exact = pi*r*r*h
     vol_mesh = mesh_volume(mesh)
     assert(abs(vol_mesh - vol_exact)/vol_exact < TOLERANCE)
+
+def test_elliptic_cylinder():
+    r1 = 2.0
+    r2 = 1.0
+    h = 2.5
+    maxh = 0.2
+
+    mesh = elliptic_cylinder(r1=r1, r2=r2, h=h, maxh=maxh, save_result=True, directory=MODULE_DIR)
+    vol_exact = pi*r1*r2*h
+    vol_mesh = mesh_volume(mesh)
+    assert(abs(vol_mesh - vol_exact)/vol_exact < TOLERANCE)
+
+def test_ellipsoid():
+    r1 = 2.0
+    r2 = 1.0
+    r3 = 0.5
+    maxh = 0.2
+
+    mesh = ellipsoid(r1=r1, r2=r2, r3=r3, maxh=maxh, save_result=True, directory=MODULE_DIR)
+    vol_exact = 4.0/3*pi*r1*r2*r3
+    vol_mesh = mesh_volume(mesh)
+    assert(abs(vol_mesh - vol_exact)/vol_exact < TOLERANCE)

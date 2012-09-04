@@ -225,7 +225,8 @@ def box(x0, x1, x2, y0, y1, y2, maxh, save_result=True, filename='', directory='
     csg = textwrap.dedent("""\
         algebraic3d
         solid main = orthobrick ( {}, {}, {}; {}, {}, {} ) -maxh = {maxh};
-        tlo main;""").format(x0, x1, x2, y0, y1, y2, maxh=maxh)
+        tlo main;
+        """).format(x0, x1, x2, y0, y1, y2, maxh=maxh)
     if save_result == True and filename == '':
         filename = "box-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}".format(x0, x1, x2, y0, y1, y2, maxh).replace(".", "_")
     return from_csg(csg, save_result=save_result, filename=filename, directory=directory)
@@ -250,7 +251,8 @@ def sphere(r, maxh, save_result=True, filename='', directory=''):
     csg = textwrap.dedent("""\
         algebraic3d
         solid main = sphere ( 0, 0, 0; {r} ) -maxh = {maxh};
-        tlo main;""").format(r=r, maxh=maxh)
+        tlo main;
+        """).format(r=r, maxh=maxh)
 
     if save_result == True and filename == '':
         filename = "sphere-{:.1f}-{:.1f}".format(r, maxh).replace(".", "_")
@@ -279,9 +281,65 @@ def cylinder(r, h, maxh, save_result=True, filename='', directory=''):
         solid fincyl = cylinder (0, 0, 1; 0, 0, -1; {r} )
               and plane (0, 0, 0; 0, 0, -1)
               and plane (0, 0, {h}; 0, 0, 1) -maxh = {maxh};
-        tlo fincyl;""").format(r=r, h=h, maxh=maxh)
+        tlo fincyl;
+        """).format(r=r, h=h, maxh=maxh)
     if save_result == True and filename == '':
         filename = "cyl-{:.1f}-{:.1f}-{:.1f}".format(r, h, maxh).replace(".", "_")
+    return from_csg(csg_string, save_result=save_result, filename=filename, directory=directory)
+
+def elliptic_cylinder(r1, r2, h, maxh, save_result=True, filename='', directory=''):
+    """
+    Return a dolfin mesh representing an ellipcit cylinder with semi-major
+    axis r1, semi-minor axis r2 and height `h`. The argument `maxh` controls
+    the maximal element size in the mesh (see the Netgen manual 4.x, Chapter 2).
+
+    If `save_result` is True (the default), both the generated geofile
+    and the dolfin mesh will be saved to disk. By default, the
+    filename will be automatically generated based on the values of
+    `r1`, `r2, `h` and `maxh` (for example, 'cyl-50_0-25_0-10_0-0_2.geo'), but a
+    different one can be specified by passing a name (without suffix)
+    into `filename` If `save_result` is False, passing a filename has
+    no effect.
+
+    The `directory` argument can be used to control where the files
+    should be saved in case no filename is given explicitly.
+
+    """
+    csg_string = textwrap.dedent("""\
+        algebraic3d
+        solid fincyl = ellipticcylinder (0, 0, 0; {r1}, 0, 0; 0, {r2}, 0 )
+              and plane (0, 0, 0; 0, 0, -1)
+              and plane (0, 0, {h}; 0, 0, 1) -maxh = {maxh};
+        tlo fincyl;
+        """).format(r1=r1, r2=r2, h=h, maxh=maxh)
+    if save_result == True and filename == '':
+        filename = "ellcyl-{:.1f}-{:.1f}-{:.1f}-{:.1f}".format(r1, r2, h, maxh).replace(".", "_")
+    return from_csg(csg_string, save_result=save_result, filename=filename, directory=directory)
+
+def ellipsoid(r1, r2, r3, maxh, save_result=True, filename='', directory=''):
+    """
+    Return a dolfin mesh representing an ellipsoid with main axes lengths
+    r1, r2, r3. The argument `maxh` controls the maximal element size in
+    the mesh (see the Netgen manual 4.x, Chapter 2).
+
+    If `save_result` is True (the default), both the generated geofile and
+    the dolfin mesh will be saved to disk. By default, the filename will be
+    automatically generated based on the values of `r1`, `r2, `h` and `maxh`
+    (for example, 'cyl-50_0-25_0-10_0-0_2.geo'), but a different one can be
+    specified by passing a name (without suffix) into `filename` If `save_result`
+    is False, passing a filename has no effect.
+
+    The `directory` argument can be used to control where the files should be
+    saved in case no filename is given explicitly.
+
+    """
+    csg_string = textwrap.dedent("""\
+        algebraic3d
+        solid ell = ellipsoid (0, 0, 0; {r1}, 0, 0; 0, {r2}, 0; 0, 0, {r3}) -maxh = {maxh};
+        tlo ell;
+        """).format(r1=r1, r2=r2, r3=r3, maxh=maxh)
+    if save_result == True and filename == '':
+        filename = "ellipsoid-{:.1f}-{:.1f}-{:.1f}-{:.1f}".format(r1, r2, r3, maxh).replace(".", "_")
     return from_csg(csg_string, save_result=save_result, filename=filename, directory=directory)
 
 def mesh_volume(mesh):
