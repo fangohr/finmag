@@ -350,12 +350,23 @@ def mesh_volume(mesh):
     """
     return assemble(Constant(1)*dx, mesh=mesh)
 
-def print_mesh_info(mesh):
-    # Note: we can compute the number of surface triangles as follows:
+def mesh_info(mesh):
+    """
+    Return a string containing some basic information about the mesh
+    (such as the number of cells/vertices/interior and surface triangles)
+    as well as the distribution of edge lengths.
+    """
+    # Note: It might be useful for this function to return the 'raw' data
+    #       (number of cells, vertices, triangles, edge length distribution,
+    #       etc.) instead of a string; this could then be used by another
+    #       function generate such an info string (or to print the data
+    #       directly). However, until such a need arises we leave it as it is.
+
+    # Remark: the number of surface triangles is computed below as follows:
     #
     #     F_s = 4*C - F_i,
     #
-    # where we use the following abbreviation:
+    # where we use the abbreviation:
     #
     #    C = number of cells/tetrahedra
     #    F_i = number of interior facets
@@ -384,13 +395,22 @@ def print_mesh_info(mesh):
     vals = np.insert(vals, 0, 0)  # to ensure that 'vals' and 'bins' have the same number of elements
     vals_normalised = 70.0/max(vals)*vals
 
-    print "===== Mesh info: =============================="
-    print "{:6d} cells (= volume elements)".format(C)
-    print "{:6d} facets".format(F)
-    print "{:6d} surface facets".format(F_s)
-    print "{:6d} interior facets".format(F_i)
-    print "{:6d} edges".format(E)
-    print "{:6d} vertices".format(V)
-    print "\n===== Distribution of edge lengths: ==========="
+    info_string = textwrap.dedent("""\
+        ===== Mesh info: ==============================
+        {:6d} cells (= volume elements)
+        {:6d} facets
+        {:6d} surface facets
+        {:6d} interior facets
+        {:6d} edges
+        {:6d} vertices
+
+        ===== Distribution of edge lengths: ===========
+        """.format(C, F, F_s, F_i, E, V))
+
     for (b, v) in zip(bins, vals_normalised):
-        print "{:.3f} {}".format(b, int(round(v))*'*')
+        info_string += "{:.3f} {}\n".format(b, int(round(v))*'*')
+
+    return info_string
+
+def print_mesh_info(mesh):
+    print mesh_info(mesh)
