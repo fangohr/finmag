@@ -33,25 +33,33 @@ class Zeeman(AbstractEnergy):
     def setup(self, S3, m, Ms, unit_length=1):
         self.m = m
         self.Ms = Ms
+        self.S3 = S3
+        self.set_value(self.value)
 
-        if isinstance(self.value, tuple):
-            if isinstance(self.value[0], str):
+    def set_value(self, value):
+        """
+        Set the value of the field. The argument `value` can have any
+        of the forms accepted by the Zeeman.__init__() function (see
+        its docstring for details).
+        """
+        if isinstance(value, tuple):
+            if isinstance(value[0], str):
                 # a tuple of strings is considered to be the ingredient
                 # for a dolfin expression, whereas a tuple of numbers
                 # would signify a constant
-                val = df.Expression(self.value, **self.kwargs)
+                val = df.Expression(value, **self.kwargs)
             else:
-                val = df.Constant(self.value)
-            H = df.interpolate(val, S3)
-        elif isinstance(self.value, (df.Constant, df.Expression)):
-            H = df.interpolate(self.value, S3)
-        elif isinstance(self.value, (list, np.ndarray)):
+                val = df.Constant(value)
+            H = df.interpolate(val, self.S3)
+        elif isinstance(value, (df.Constant, df.Expression)):
+            H = df.interpolate(value, self.S3)
+        elif isinstance(value, (list, np.ndarray)):
             H = df.Function(self.S3)
-            H.vector()[:] = self.value
-        elif hasattr(self.value, '__call__'):
-            coords = np.array(zip(* S3.mesh().coordinates()))
-            H = df.Function(S3)
-            H.vector()[:] = self.value(coords).flatten()
+            H.vector()[:] = value
+        elif hasattr(value, '__call__'):
+            coords = np.array(zip(* self.S3.mesh().coordinates()))
+            H = df.Function(self.S3)
+            H.vector()[:] = value(coords).flatten()
         else:
             raise AttributeError
 
