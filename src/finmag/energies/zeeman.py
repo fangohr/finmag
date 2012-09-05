@@ -4,24 +4,30 @@ from finmag.util.consts import mu0
 from energy_base import AbstractEnergy
 
 class Zeeman(AbstractEnergy):
-    def __init__(self, value, **kwargs):
+    def __init__(self, H, **kwargs):
         """
         Set the external field.
 
-        There are several ways to use this function. Either you provide
-        a 3-tuple of numbers, which will get cast to a dolfin.Constant, or
-        a dolfin.Constant directly.
-        Then a 3-tuple of strings (with keyword arguments if needed) that will
-        get cast to a dolfin.Expression, or directly a dolfin.Expression.
-        You can provide a numpy.ndarray of nodal values of shape (3*n,),
-        where n is the number of nodes.
-        Finally, you can pass a function (any callable object will do) which
-        accepts the coordinates of the mesh as a numpy.ndarray of
-        shape (3, n) and returns the magnetisation like that as well.
+        H can be any of the following:
+
+         - dolfin.Constant
+
+         - 3-tuple of numbers, which will get cast to a dolfin.Constant
+
+         - 3-tuple of strings (with keyword arguments if needed),
+           which will get cast to a dolfin.Expression where any variables in
+           the expression are substituted with the given keyword arguments
+
+         - numpy.ndarray of nodal values of the shape (3*n,), where n
+           is the number of nodes
+
+         - function (any callable object will do) which accepts the
+           coordinates of the mesh as a numpy.ndarray of shape (3, n)
+           and returns the field H in this form as well
 
         """
         self.in_jacobian = False
-        self.value = value
+        self.value = H
         self.kwargs = kwargs
 
     def setup(self, S3, m, Ms, unit_length=1):
