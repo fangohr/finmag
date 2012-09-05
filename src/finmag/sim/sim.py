@@ -57,7 +57,17 @@ class Simulation(object):
 
     def add(self, interaction, with_time_update=None):
         """
-        Add an interaction (such as Exchange, Anisotropy, Demag)
+        Add an interaction (such as Exchange, Anisotropy, Demag).
+
+        *Arguments*
+
+           interaction      -- the interaction to be added
+
+           with_time_update -- a function of the form f(t), which
+                               accepts a time step `t` as its only
+                               single parameter and updates the
+                               internal state of the interaction
+                               accordingly
         """
         interaction.setup(self.S3, self.llg._m, self.Ms, self.unit_length)
         self.llg.interactions.append(interaction)
@@ -66,6 +76,7 @@ class Simulation(object):
             self.llg._pre_rhs_callables.append(with_time_update)
 
     def effective_field(self):
+        """Compute and return the effective field H_eff."""
         self.llg.compute_effective_field()
         return self.llg.H_eff
 
@@ -73,6 +84,10 @@ class Simulation(object):
         return self.llg.solve()
 
     def total_energy(self):
+        """
+        Compute and return the total energy contribution of all
+        interactions present in the simulation.
+        """
         energy = 0.
         for interaction in self.llg.interactions:
             energy += interaction.compute_energy()
