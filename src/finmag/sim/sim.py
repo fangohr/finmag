@@ -11,7 +11,7 @@ from finmag.sim.llg import LLG
 from finmag.util.timings import timings
 from finmag.util.helpers import quiver
 from finmag.util.consts import mu0
-from finmag.util.meshes import print_mesh_info
+from finmag.util.meshes import mesh_info
 from finmag.sim.integrator import LLGIntegrator
 from finmag.energies.exchange import Exchange
 from finmag.energies.anisotropy import UniaxialAnisotropy
@@ -299,24 +299,27 @@ class Simulation(object):
 
     def mesh_info(self):
         """
-        Print some basic information about the mesh (such as the number of cells,
-        interior/surface triangles, vertices, etc.).
+        Return a string containing some basic information about the
+        mesh (such as the number of cells, interior/surface triangles,
+        vertices, etc.).
 
-        Also print a distribution of edge lengths present in the mesh and how they
-        compare to the exchange length and the Bloch parameter (if these can be
-        computed). This information is relevant to estimate whether the mesh
-        discretisation is too coarse and might result in numerical artefacts (also
-        see the docstring of the function `exchange_length_and_bloch_parameter`).
+        Also print a distribution of edge lengths present in the mesh
+        and how they compare to the exchange length and the Bloch
+        parameter (if these can be computed). This information is
+        relevant to estimate whether the mesh discretisation is too
+        coarse and might result in numerical artefacts (also see the
+        docstring of the function `exchange_length_and_bloch_parameter`).
         """
-        print_mesh_info(self.mesh)
-        print ""
+        info_string = "{}\n".format(mesh_info(self.mesh))
 
         edgelengths = [e.length()*self.unit_length for e in df.edges(self.mesh)]
         emax = max(edgelengths)
         L1, L2 = self.exchange_length_and_bloch_parameter()
 
-        def print_info(L, name, abbrev):
-            if not np.isnan(L):
+        def added_info(L, name, abbrev):
+            if np.isnan(L):
+                info = ""
+            else:
                 (a,b), _ = np.histogram(edgelengths, bins=[0, L, np.infty])
                 if b == 0.0:
                     msg = "All edges are shorter"
@@ -324,10 +327,15 @@ class Simulation(object):
                 else:
                     msg = "Warning: {:.2f}% of edges are longer".format(100.0*b/(a+b))
                     msg2 = " (this may lead to discretisation artefacts)"
-                print "{} than the {} {} = {:.2f} nm{}.".format(msg, name, abbrev, L*1e9, msg2)
+                info = "{} than the {} {} = {:.2f} nm{}.\n".format(msg, name, abbrev, L*1e9, msg2)
+            return info
 
-        print_info(L1, 'exchange length', 'L1')
-        print_info(L2, 'Bloch parameter', 'L2')
+        info_string += added_info(L1, 'exchange length', 'L1')
+        info_string += added_info(L2, 'Bloch parameter', 'L2')
+        return info_string
+
+    def print_mesh_info(self):
+        print self.mesh_info()
 
 def sim_with(mesh, Ms, m_init, unit_length=1, A=None, K1=None, K1_axis=None, H_ext=None, demag_solver='FK'):
     """
