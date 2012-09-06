@@ -10,13 +10,13 @@ class Zeeman(AbstractEnergy):
 
         H can be any of the following:
 
-         - dolfin.Constant
+         - dolfin.Constant representing a 3-vector
 
          - 3-tuple of numbers, which will get cast to a dolfin.Constant
 
          - 3-tuple of strings (with keyword arguments if needed),
            which will get cast to a dolfin.Expression where any variables in
-           the expression are substituted with the given keyword arguments
+           the expression are substituted with the values taken from 'kwargs'
 
          - numpy.ndarray of nodal values of the shape (3*n,), where n
            is the number of nodes
