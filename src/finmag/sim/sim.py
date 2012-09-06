@@ -23,7 +23,7 @@ ONE_DEGREE_PER_NS = 17453292.5 # in rad/s
 log = logging.getLogger(name="finmag")
 
 class Simulation(object):
-    def __init__(self, mesh, Ms, unit_length=1):
+    def __init__(self, mesh, Ms, unit_length=1, integrator_backend="sundials"):
         timings.reset()
         timings.start("Sim-init")
 
@@ -34,6 +34,7 @@ class Simulation(object):
         self.mesh = mesh
         self.Ms = Ms
         self.unit_length = unit_length
+        self.integrator_backend = integrator_backend
         self.S1 = df.FunctionSpace(mesh, "Lagrange", 1)
         self.S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
         self.llg = LLG(self.S1, self.S3)
@@ -142,7 +143,7 @@ class Simulation(object):
 
     def run_until(self, t):
         if not hasattr(self, "integrator"):
-            self.integrator = LLGIntegrator(self.llg, self.llg.m)
+            self.integrator = LLGIntegrator(self.llg, self.llg.m, backend=self.integrator_backend)
         self.integrator.run_until(t)
         self.t = t
 
@@ -174,7 +175,7 @@ class Simulation(object):
         """
         log.info("Will integrate until relaxation.")
         if not hasattr(self, "integrator"):
-            self.integrator = LLGIntegrator(self.llg, self.llg.m)
+            self.integrator = LLGIntegrator(self.llg, self.llg.m, backend=self.integrator_backend)
 
         if save_snapshots == True:
             if filename == '':
@@ -435,7 +436,7 @@ class Simulation(object):
     def print_mesh_info(self):
         print self.mesh_info()
 
-def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1,
+def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sundials",
              A=None, K1=None, K1_axis=None, H_ext=None, demag_solver='FK'):
     """
     Create a Simulation instance based on the given parameters.
@@ -453,7 +454,7 @@ def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1,
        exchange = Exchange(A)
        sim.add(exchange)
     """
-    sim = Simulation(mesh, Ms, unit_length)
+    sim = Simulation(mesh, Ms, unit_length=unit_length, integrator_backend=integrator_backend)
 
     sim.set_m(m_init)
     sim.alpha = alpha
