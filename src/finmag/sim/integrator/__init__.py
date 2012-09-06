@@ -118,6 +118,9 @@ class BaseIntegrator(object):
         if save_snapshots and save_final_snapshot:
             _do_save_snapshot()
 
+    def reinit(self):
+        raise NotImplementedError("No reinit() method is implemented for this integrator: {}".format(self.__class__.__name__))
+
 class ScipyIntegrator(BaseIntegrator):
     def __init__(self, llg, m0, reltol=1e-8, abstol=1e-8, nsteps=10000, method="bdf", **kwargs):
         self.llg = llg
