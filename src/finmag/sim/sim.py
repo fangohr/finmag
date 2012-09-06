@@ -365,7 +365,8 @@ class Simulation(object):
     def print_mesh_info(self):
         print self.mesh_info()
 
-def sim_with(mesh, Ms, m_init, unit_length=1, A=None, K1=None, K1_axis=None, H_ext=None, demag_solver='FK'):
+def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1,
+             A=None, K1=None, K1_axis=None, H_ext=None, demag_solver='FK'):
     """
     Create a Simulation instance based on the given parameters.
 
@@ -385,6 +386,7 @@ def sim_with(mesh, Ms, m_init, unit_length=1, A=None, K1=None, K1_axis=None, H_e
     sim = Simulation(mesh, Ms, unit_length)
 
     sim.set_m(m_init)
+    sim.alpha = alpha
 
     # If any of the optional arguments are provided, initialise
     # the corresponding interactions here:
