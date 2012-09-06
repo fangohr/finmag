@@ -37,17 +37,20 @@ class Exchange(EnergyBase):
         .. code-block:: python
 
             from dolfin import *
-            Ms   = 0.8e6
-            m    = 1e-8
+            from finmag.energies.exchange import Exchange
+
+            # Define a mesh representing a cube with edge length L
+            L    = 1e-8
             n    = 5
-            mesh = Box(0, m, 0, m, 0, m, n, n, n)
+            mesh = Box(0, L, 0, L, 0, L, n, n, n)
 
             S3  = VectorFunctionSpace(mesh, "Lagrange", 1)
             A  = 1.3e-11 # J/m exchange constant
+            Ms   = 0.8e6
             M  = project(Constant((Ms, 0, 0)), S3) # Initial magnetisation
 
-            exchange = Exchange(A, Ms)
-            exchange.setup(S3, M)
+            exchange = Exchange(A)
+            exchange.setup(S3, M, Ms)
 
             # Print energy
             print exchange.compute_energy()
@@ -56,7 +59,8 @@ class Exchange(EnergyBase):
             H_exch = exchange.compute_field()
 
             # Using 'box-matrix-numpy' method (fastest for small matrices)
-            exchange_np = Exchange(A, M, C, Ms, method='box-matrix-numpy')
+            exchange_np = Exchange(A, method='box-matrix-numpy')
+            exchange_np.setup(S3, M, Ms)
             H_exch_np = exchange_np.compute_field()
 
     """
@@ -95,10 +99,10 @@ class Exchange(EnergyBase):
 
 if __name__ == "__main__":
     from dolfin import *
-    m = 1e-8
+    L = 1e-8
     Ms = 0.8e6
     n = 5
-    mesh = Box(0, m, 0, m, 0, m, n, n, n)
+    mesh = Box(0, L, 0, L, 0, L, n, n, n)
 
     S3 = VectorFunctionSpace(mesh, "Lagrange", 1)
     A = 1.0e-11  # J/m exchange constant
@@ -111,6 +115,5 @@ if __name__ == "__main__":
     _ = exchange.compute_energy()
     _ = exchange.energy_density()
 
-    print exchange.name
     print timings.report_str()
 
