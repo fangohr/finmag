@@ -1607,3 +1607,27 @@ fangohr: Still testing ...
 2012-09-05 17:18:20 fangohr-adium: Over and out for today.
 2012-09-05 17:22:18 albert: Hi Hans, just out of interest: is there a way to access the Finmag IRC logs somewhere online, e.g. to catch up on what has been happening during the day (without having to wait for the Bitbucket commit message at midnight)?
 2012-09-05 18:45:56 albert: Oh, and another question: is there a "single-html" version of the Finmag manual available? This would be handy if one wants to quickly search for something.
+2012-09-06 09:02:46 fangohr-adium: Hi Max, access the IRC logs: no, that is available, and I agree that this is also missing. Either we should have the availability to check the current logs somewhere, or consider switching to a different group chat forum, where you can log in and get the past discussions, etc. I'll look into it.
+2012-09-06 09:03:16 fangohr-adium: Regarding the single-html finmag manual: no, we don't have this, but it would be useful. I think we can create another target in the documentation make file for this.
+2012-09-06 10:10:01 fangohr-adium: Good Morning all.
+2012-09-06 10:10:17 mb8g11: Good morning!
+2012-09-06 10:11:00 marijan: Good morning.
+2012-09-06 10:12:43 marijan: Weiwei and I are discussing something about the conference and we haven't got any answer from them although the decision date was yesterday. Should they inform us even if we are rejected?
+2012-09-06 10:14:11 fangohr-adium: Yes, they will inform you either way. I suspect they are running behind schedule. I would not worry and wait a week or so.
+2012-09-06 10:14:39 marijan: ok
+2012-09-06 10:18:37 fangohr-adium: Hi all, Max did ask yesterday whether the finmag irc logs can be seen anywhere DURING the day. I understand why he is asking as it is a common problem. You log out, or your chat client dies, and when you come back, you don't know what has been discussed before. By midnight, it will be committed, and you can check the whole record at https://bitbucket.org/fangohr/finmag/src (in logbooks/finmag-irc.log)
+2012-09-06 10:18:44 fangohr-adium: However, before midnight, that information is not available.
+2012-09-06 10:19:50 fangohr-adium: As a quick fix, I have written a (pycherry) script that serves the latest changes at http://summer.kk.soton.ac.uk:8008 . It's not pretty but does the job for now. I will commit the code in a moment, it currently runs under my username on summer.kk.soton.ac.uk.
+2012-09-06 10:28:36 fangohr-adium: Max, to answer your question from yesterday: 'make singlehtml' in finmag/doc produces the single html file you asked for ;) Was just going to add it, and it was there already.
+2012-09-06 16:16:11 fangohr-adium: Max, interesting: your warning message about the 'spurious error on Anders Johansen's' machine shows up on jenkins. See http://summer.kk.soton.ac.uk:8080/job/finmag/850/console
+2012-09-06 16:48:47 albert: Hi Hans! Yes, I've seen it a few times on my own machine as well. No idea what it means, though.
+2012-09-06 16:52:54 mb8g11_: Is this the predictable failing of netgen, or something else?
+2012-09-06 16:54:04 fangohr-adium: Yes, netgen. You can see the error at http://summer.kk.soton.ac.uk:8080/job/finmag/851/console
+2012-09-06 16:54:32 fangohr-adium: Max, the compilation went fine. This means that when you go to http://summer.kk.soton.ac.uk:8080/job/finmag/, you can see on the side
+2012-09-06 16:54:38 fangohr-adium: 1. html documentation as before
+2012-09-06 16:54:43 fangohr-adium: 2. html documentation in single file
+2012-09-06 16:54:50 fangohr-adium: 3. pdf documentation
+2012-09-06 16:55:14 fangohr-adium: Very good. It also means we are testing that the pdf file can be built; which I always wanted to add. Thank you for reminding me ;-), and your time earlier today.
+2012-09-06 16:55:44 albert: Cool, I just saw it. Glad it works!
+2012-09-06 17:08:26 fangohr-adium: Over and out.
+2012-09-06 17:08:35 albert: See you!
