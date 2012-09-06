@@ -248,13 +248,15 @@ class Simulation(object):
         else:
             self.llg.do_slonczewski = not self.llg.do_slonczewski
 
-    def snapshot(self, filename="", directory="", force_overwrite=False):
+    def snapshot(self, filename="", directory="", force_overwrite=False, infix=""):
         """
         Save a snapshot of the current magnetisation configuration to a .pvd file
         (in VTK format) which can later be inspected using Paraview, for example.
 
         If `filename` is empty, a default filename will be generated based on a
         sequentially increasing counter and the current timestep of the simulation.
+        A user-defined string can be inserted into the generated filename
+        by passing `infix`.
 
         If `directory` is non-empty then the file will be saved in the specified directory.
 
@@ -273,7 +275,8 @@ class Simulation(object):
         if not hasattr(self, "vtk_snapshot_no"):
             self.vtk_snapshot_no = 1
         if filename == "":
-            filename = "snapshot_{}_{:.3f}ns.pvd".format(self.vtk_snapshot_no, self.t*1e9)
+            infix_insert = "" if infix == "" else "_" + infix
+            filename = "snapshot{}_{}_{:.3f}ns.pvd".format(infix_insert, self.vtk_snapshot_no, self.t*1e9)
 
         ext = os.path.splitext(filename)[1]
         if ext != '.pvd':
