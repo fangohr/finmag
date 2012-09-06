@@ -10,6 +10,15 @@ mu0 = 4 * np.pi * 1e-7
 
 class TimeZeeman(EnergyBase):
     def __init__(self, field_expression, t_off=None):
+        """
+        Specify a time dependent external field, which gets updated as continuously as possible.
+        
+        Pass in a dolfin expression that depends on time. Make sure the time
+        variable is called t. It will get refreshed by calls to update. 
+        The argument t_off can specify a time at which the field will
+        get switched off.
+
+        """
         self.in_jacobian = False
         self.f_expr = field_expression
         self.t_off = t_off
@@ -45,6 +54,16 @@ class TimeZeeman(EnergyBase):
 
 class DiscreteTimeZeeman(TimeZeeman):
     def __init__(self, field_expression, t_off, dt_update):
+        """
+        Specify a time dependent external field, which gets updated in discrete time intervals.
+        
+        Pass in a dolfin expression that depends on time. Make sure the time
+        variable is called t. It will get refreshed by calls to update, if
+        more than dt_update time has passed since the last refresh.
+        The argument t_off can specify a time at which the field will
+        get switched off.
+
+        """
         super(DiscreteTimeZeeman, self).__init__(field_expression)
         self.dt_update = dt_update
         self.t_last_update = 0.0
