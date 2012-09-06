@@ -9,6 +9,8 @@ import os
 import time
 import cherrypy
 
+REFRESHCODE = """<META HTTP-EQUIV="REFRESH" CONTENT="60"> """
+
 class HelloWorld:
     def index(self):
         # CherryPy will call this method for the root URI ("/") and send
@@ -16,15 +18,20 @@ class HelloWorld:
         # lesson number 01, we'll just send something really simple.
         # How about...
         return """Go to 
-        <ul><li> <a href="finmagirc">finmagirc</a> to see the 
-            discussion today so far (updated every minute but you may have to refresh the browser).<br> </li>
-        <li><a href="finmagircupdate">finmagircupdate</a> to create the diff first, then display it.</li>"""
+        <ul>
+          <li> <a href="finmagirc">finmagirc</a> to see the 
+               discussion today so far (updated every minute).<br>
+          </li>
+          <li><a href="finmagircupdate">finmagircupdate</a> to
+               see the discussions today so far (updated when the page is loaded)
+          </li>
+        </ul>"""
     index.exposed=True
 
     def finmagirc(self):
         with open("/home/fangohr/www/ircdiff.txt","r") as f:
             text = f.read()
-        return text.replace('\n','<br>')
+        return REFRESHCODE + text.replace('\n','<br>')
     finmagirc.exposed = True
 
     def finmagircupdate(self):
