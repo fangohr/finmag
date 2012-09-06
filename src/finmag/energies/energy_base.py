@@ -119,8 +119,13 @@ class EnergyBase(AbstractEnergy):
             H_exch_np = exchange_np.compute_field()
 
     """
+    _supported_methods = ['box-assemble', 'box-matrix-numpy', 'box-matrix-petsc', 'project']
 
     def __init__(self, method="box-matrix-petsc", in_jacobian=False):
+
+        if not method in self._supported_methods:
+            raise ValueError("'method' argument must be one of: {}, but received: '{}'".format(self._supported_methods, method))
+
         self.in_jacobian = in_jacobian
         self.method = method
         in_jacobian_msg = "in Jacobian" if in_jacobian else "not in Jacobian"
