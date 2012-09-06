@@ -50,10 +50,13 @@ default:
 
 ci: test doc
 
-doc: doc-html
+doc: doc-html doc-pdf doc-singlehtml
 
 doc-html:
 	make -C doc generate-doc html
+
+doc-singlehtml:
+	make -C doc generate-doc singlehtml
 
 doc-pdf:
 	make -C doc generate-doc latexpdf
