@@ -204,6 +204,76 @@ class Simulation(object):
                                              dmdt_increased_counter_limit=dmdt_increased_counter_limit,
                                              dt_limit=dt_limit)
 
+    def hysteresis(self, H_ext_list, keep_last_field=False, **kwargs):
+        """
+        Set the applied field to the first value in `H_ext_list` (which should
+        be a list of external field vectors) and then call the relax() method.
+        When convergence is reached, the field is changed to the next one in
+        H_ext_list, and so on until all values in H_ext_list are exhausted.
+
+        Note: The fields in H_ext_list are applied *in addition to* any Zeeman
+              interactions that are already present in the simulation.
+              In particular, if only one external field should be present then
+              do not add any Zeeman interactions before calling this method.
+              If keep_last_field is False (the default) then the external field
+              is switched off again after all relaxations are finished.
+
+        *Arguments*
+
+            H_ext_list -- list of external fields, where each field can have
+                          any of the forms accepted by Zeeman.__init__()
+                          (see its docstring for more details)
+
+        For a list of keyword arguments accepted by this method see the
+        documentation of the relax() method, to which all given keyword
+        arguments are passed on. Note that if a `filename` argument is
+        provided, the string 'stage_xxx' is appended to it, where xxx is
+        a running counter which indicates for which field in H_ext_list
+        the relax() method is being executed.
+        """
+        if H_ext_list == []:
+            return
+
+        # Add a new Zeeman interaction, initialised to zero.
+        H = Zeeman((0,0,0))
+        self.add(H)
+
+        # We keep track of the current stage of the hysteresis loop.
+        # Each stage is saved to a different .pvd file, whose name
+        # includes the current stage number.
+        cur_stage = 0
+        num_stages = len(H_ext_list)
+        filename = re.sub('\.pvd$', '', kwargs.pop('filename', ''))
+        cur_filename = ''
+
+        try:
+            while True:
+                H_cur = H_ext_list.pop(0)
+                log.info("Entering hysteresis stage #{} (out of {}).".format(cur_stage, num_stages))
+                H.set_value(H_cur)
+
+                # Changing the external field is a drastic change, so
+                # we need to re-init the integrator.
+                #
+                # FIXME: Currently this doesn't seem to have any
+                #        effect! For example, in a 2-stage hysteresis,
+                #        nothing happens in the first few snapshots
+                #        after setting the second field. Only after a
+                #        short while does the magnetisation actually
+                #        change!
+                self.reinit_integrator()
+
+                if filename != '':
+                   cur_filename = filename + "__stage_{:03d}__.pvd".format(cur_stage)
+                self.relax(filename=cur_filename, **kwargs)
+                cur_stage += 1
+        except IndexError:
+            log.info("Hysteresis is finished.")
+
+        if not keep_last_field:
+            log.info("Switching off the applied field which was used for hysteresis.")
+            self.llg.interactions.remove(H)
+
     def __get_pins(self):
         return self.llg.pins
 
