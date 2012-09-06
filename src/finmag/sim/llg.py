@@ -198,26 +198,26 @@ class LLG(object):
         m.shape = (3, -1)
         H_eff = self.H_eff
         H_eff.shape = (3, -1)
-        dMdt = np.zeros(m.shape)
+        dmdt = np.zeros(m.shape)
         # Calculate dm/dt
         if self.do_slonczewski:
             native_llg.calc_llg_slonczewski_dmdt(
-                m, H_eff, self.t, dMdt, self.pins,
+                m, H_eff, self.t, dmdt, self.pins,
                 self.gamma, self.alpha_vec,
                 char_time, 
                 self.J, self.P, self.d, self.Ms, self.p)
         else:
-            native_llg.calc_llg_dmdt(m, H_eff, self.t, dMdt, self.pins,
+            native_llg.calc_llg_dmdt(m, H_eff, self.t, dmdt, self.pins,
                                  self.gamma, self.alpha_vec, 
                                  char_time, self.do_precession)
-        dMdt.shape = (-1,)
+        dmdt.shape = (-1,)
 
         timings.stop("LLG-compute-dmdt")
 
         for func in self._post_rhs_callables:
             func(self)
     
-        return dMdt
+        return dmdt
 
     # Computes the dm/dt right hand side ODE term, as used by SUNDIALS CVODE
     def sundials_rhs(self, t, y, ydot):
