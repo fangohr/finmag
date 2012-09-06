@@ -231,6 +231,16 @@ class Simulation(object):
 
     gamma = property(__get_gamma, __set_gamma)
 
+    def reinit_integrator(self):
+        """
+        If an integrator is already present in the simulation, call
+        its reinit() method. Otherwise do nothing.
+        """
+        if hasattr(self, "integrator"):
+            self.integrator.reinit()
+        else:
+            log.warning("Integrator reinit was requested, but no integrator is present in the simulation!")
+
     def timings(self, n=20):
         """
         Prints an overview of wall time and number of calls for designated
