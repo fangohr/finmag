@@ -27,7 +27,7 @@ To build and view documentation
 2. ``$ make html``
 3. Open ``_build/html/index.html`` in your favourite browser
 
-Other formats can be created, for example pdf using ``make latexpdf`` (the output is in ``_build/latexpdf/Finmag.pdf``).
+Other formats can be created, for example pdf using ``make latexpdf`` (the output is in ``_build/latex/Finmag.pdf``).
 
 
 Writing documentation
