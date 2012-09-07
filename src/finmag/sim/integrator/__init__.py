@@ -58,23 +58,12 @@ class BaseIntegrator(object):
         dt_increment_multi = 1.5;
         dmdt_increased_counter = 0;
 
-        #ct = itertools.count()  # we need a possibly unlimited counter for saving snapshots
-        #cur_count = ct.next()
-        cur_count = 0
-
         if save_snapshots:
             f = df.File(filename, 'compressed')
 
-        def _do_save_snapshot():
-            # TODO: Can we somehow store information about the current timestep in either the .pvd/.vtu file itself, or in the filenames?
-            #       Unfortunately, it seems as if the filenames of the *.vtu files are generated automatically.
-            t0 = time.time()
-            f << self.llg._m
-            t1 = time.time()
-            log.debug("Saving snapshot #{} at timestep t={:.4g} to file '{}' (saving took {:.3g} seconds).".format(cur_count, self.llg.t, filename, t1-t0))
-
+        cur_count = 0  # current snapshot count
+        start_time = self.llg.t  # start time of the integration; needed for snapshot saving
         last_max_dmdt_norm = 1e99
-        start_time = self.llg.t
         while True:
             prev_m = self.llg.m.copy()
             next_stop = self.llg.t + dt
@@ -83,7 +72,7 @@ class BaseIntegrator(object):
             # that timestep, save the snapshot, and then continue.
             while save_snapshots and (next_stop >= start_time+cur_count*save_every):
                 self.run_until(cur_count*save_every)
-                _do_save_snapshot()
+                self._do_save_snapshot(f, cur_count, filename)
                 cur_count += 1
 
             self.run_until(next_stop)
@@ -117,10 +106,18 @@ class BaseIntegrator(object):
                 break
 
         if save_snapshots and save_final_snapshot:
-            _do_save_snapshot()
+            self._do_save_snapshot(f, cur_count, filename)
 
     def reinit(self):
         raise NotImplementedError("No reinit() method is implemented for this integrator: {}".format(self.__class__.__name__))
+
+    def _do_save_snapshot(self, f, cur_count, filename):
+        # TODO: Can we somehow store information about the current timestep in either the .pvd/.vtu file itself, or in the filenames?
+        #       Unfortunately, it seems as if the filenames of the *.vtu files are generated automatically.
+        t0 = time.time()
+        f << self.llg._m
+        t1 = time.time()
+        log.debug("Saving snapshot #{} at timestep t={:.4g} to file '{}' (saving took {:.3g} seconds).".format(cur_count, self.llg.t, filename, t1-t0))
 
 class ScipyIntegrator(BaseIntegrator):
     def __init__(self, llg, m0, reltol=1e-8, abstol=1e-8, nsteps=10000, method="bdf", **kwargs):
