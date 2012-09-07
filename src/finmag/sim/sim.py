@@ -4,6 +4,8 @@ import re
 import time
 import glob
 import logging
+import textwrap
+import fileinput
 import dolfin as df
 import numpy as np
 from math import sqrt
@@ -267,6 +269,36 @@ class Simulation(object):
         if not keep_last_field:
             log.info("Switching off the applied field which was used for hysteresis.")
             self.llg.interactions.remove(H)
+
+        # We now remove trailing underscores from output filenames (for cosmetic
+        # resons only ... ;-) and create a 'global' output file which combines
+        # all stages of the simulation.
+
+        f_global = open(filename+'.pvd', 'w')
+        f_global.write(textwrap.dedent("""\
+            <?xml version="1.0"?>
+            <VTKFile type="Collection" version="0.1">
+              <Collection>
+            """))
+
+        cur_stage = 0
+        cur_timestep = 0
+
+        for f in glob.glob(filename+"__stage_[0-9][0-9][0-9]__.pvd"):
+            f_global.write("    <!-- Hysteresis stage #{:03d} -->\n".format(cur_stage))
+            for line in fileinput.input([f]):
+                if re.match('^\s*<DataSet .*/>$', line):
+                    # We require sequentially increasing timesteps, so
+                    # we have to manually substitue them (TODO: unless
+                    # we can already do this when saving the snapshot?!?)
+                    line = re.sub('timestep="[0-9]+"', 'timestep="{}"'.format(cur_timestep), line)
+                    f_global.write(line)
+                    cur_timestep += 1
+            f_global.write("\n")
+            os.rename(f, re.sub('__\.pvd', '.pvd', f))
+            cur_stage += 1
+        f_global.write("  </Collection>\n</VTKFile>\n")
+        f_global.close()
 
     def __get_pins(self):
         return self.llg.pins
