@@ -255,13 +255,6 @@ class Simulation(object):
 
                 # Changing the external field is a drastic change, so
                 # we need to re-init the integrator.
-                #
-                # FIXME: Currently this doesn't seem to have any
-                #        effect! For example, in a 2-stage hysteresis,
-                #        nothing happens in the first few snapshots
-                #        after setting the second field. Only after a
-                #        short while does the magnetisation actually
-                #        change!
                 self.reinit_integrator()
 
                 if filename != '':
