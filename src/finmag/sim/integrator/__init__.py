@@ -145,6 +145,7 @@ class ScipyIntegrator(BaseIntegrator):
         new_m = self.ode.integrate(t)
         assert self.ode.successful()
         self.m = new_m
+        self.cur_t = t
 
 class SundialsIntegrator(BaseIntegrator):
     def __init__(self, llg, m0, reltol=1e-8, abstol=1e-8,
