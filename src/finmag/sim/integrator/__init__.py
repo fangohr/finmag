@@ -74,13 +74,14 @@ class BaseIntegrator(object):
             log.debug("Saving snapshot #{} at timestep t={:.4g} to file '{}' (saving took {:.3g} seconds).".format(cur_count, self.llg.t, filename, t1-t0))
 
         last_max_dmdt_norm = 1e99
+        start_time = self.llg.t
         while True:
             prev_m = self.llg.m.copy()
             next_stop = self.llg.t + dt
 
             # If in the next step we would cross a timestep where a snapshot should be saved, run until
             # that timestep, save the snapshot, and then continue.
-            while save_snapshots and (next_stop >= cur_count*save_every):
+            while save_snapshots and (next_stop >= start_time+cur_count*save_every):
                 self.run_until(cur_count*save_every)
                 _do_save_snapshot()
                 cur_count += 1
