@@ -207,7 +207,7 @@ class Simulation(object):
                                              dmdt_increased_counter_limit=dmdt_increased_counter_limit,
                                              dt_limit=dt_limit)
 
-    def hysteresis(self, H_ext_list, keep_last_field=False, **kwargs):
+    def hysteresis(self, H_ext_list, leave_last_field_on=False, **kwargs):
         """
         Set the applied field to the first value in `H_ext_list` (which should
         be a list of external field vectors) and then call the relax() method.
@@ -218,8 +218,8 @@ class Simulation(object):
               interactions that are already present in the simulation.
               In particular, if only one external field should be present then
               do not add any Zeeman interactions before calling this method.
-              If keep_last_field is False (the default) then the external field
-              is switched off again after all relaxations are finished.
+              If leave_last_field_on is False (the default) then the external
+              field is switched off again after all relaxations are finished.
 
         *Arguments*
 
@@ -266,7 +266,7 @@ class Simulation(object):
         except IndexError:
             log.info("Hysteresis is finished.")
 
-        if not keep_last_field:
+        if not leave_last_field_on:
             log.info("Switching off the applied field which was used for hysteresis.")
             self.llg.interactions.remove(H)
 
