@@ -47,7 +47,8 @@ class Simulation(object):
         timings.stop("Sim-init")
 
     def __get_m(self):
-            return self.llg.m
+        """The unit magnetisation"""
+        return self.llg.m
 
     def set_m(self, value, **kwargs):
         self.llg.set_m(value, **kwargs)
@@ -56,6 +57,10 @@ class Simulation(object):
 
     @property
     def m_average(self):
+        """
+        Compute and return the average magnetisation over the entire mesh, according to
+        the formula :math:`\\langle m \\rangle = \\frac{1}{V} \int m \: \mathrm{d}V`
+        """
         return self.llg.m_average
 
     def add(self, interaction, with_time_update=None):
