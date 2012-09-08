@@ -11,7 +11,7 @@ import numpy as np
 from math import sqrt
 from finmag.sim.llg import LLG
 from finmag.util.timings import timings
-from finmag.util.helpers import quiver
+from finmag.util.helpers import quiver, norm
 from finmag.util.consts import mu0
 from finmag.util.meshes import mesh_info
 from finmag.sim.integrator import LLGIntegrator
@@ -337,6 +337,38 @@ class Simulation(object):
         f_global.close()
 
         return res or None
+
+    def hysteresis_loop(self, H_max, direction, N, **kwargs):
+        """
+        Compute a hysteresis loop. This is a specialised convenience version of the
+        more general `hysteresis` method. It computes a hysteresis loop where the
+        external field is applied along a single axis and changes magnitude from
+        +H_max to -H_max and back (using N steps in each direction).
+
+        The return value is  a pair (H_vals, m_vals), where H_vals is the list of
+        field strengths at which a relaxation is performed and m_vals is a list of
+        scalar values containing, for each field value, the averaged value of the
+        magnetisation along the axis `direction` (after relaxation has been reached).
+        Thus the command plot(H_vals, m_vals) could be used to plot the hysteresis loop.
+
+           direction -- a vector indicating the direction of the external field
+                        (will be normalised automatically)
+
+           H_max -- maximum field strength
+
+           N -- number of data points to compute in each direction (thus the
+                total number of data points for the entire loop will be 2*N-1)
+
+           kwargs -- any keyword argument accepted by the hysteresis() method
+        """
+        d = np.array(direction)
+        H_dir = d/norm(d)
+        H_norms = list(reversed(np.linspace(-H_max, H_max, N))) + list(np.linspace(-H_max, H_max, N))
+        # TODO: conversion to tuple in the next line is necessary because of the way Zeeman.set_value() works at the moment. This should be fixed!
+        H_vals = map(tuple, [h*H_dir for h in H_norms])
+        m_avg = self.hysteresis(H_vals, fun=lambda sim: sim.m_average, **kwargs)
+        m_vals = [np.dot(m, H_dir) for m in m_avg] # projected lengths of the averaged magnetisation values along the axis `H_dir`
+        return (H_norms, m_vals)
 
     def __get_pins(self):
         return self.llg.pins
