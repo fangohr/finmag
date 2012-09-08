@@ -266,7 +266,6 @@ class Simulation(object):
                 pvdfiles = glob.glob(re.sub('\.pvd$', '', filename)+'*.pvd')
                 vtufiles = glob.glob(re.sub('\.pvd$', '', filename)+'*.vtu')
                 for f in pvdfiles+vtufiles:
-                    log.debug("Removing file '{}'".format(f))
                     os.remove(f)
 
         # Add a new Zeeman interaction, initialised to zero.
