@@ -212,7 +212,7 @@ class Simulation(object):
                                              dmdt_increased_counter_limit=dmdt_increased_counter_limit,
                                              dt_limit=dt_limit)
 
-    def hysteresis(self, H_ext_list, leave_last_field_on=False, **kwargs):
+    def hysteresis(self, H_ext_list, leave_last_field_on=False, fun=None, **kwargs):
         """
         Set the applied field to the first value in `H_ext_list` (which should
         be a list of external field vectors) and then call the relax() method.
@@ -223,14 +223,25 @@ class Simulation(object):
               interactions that are already present in the simulation.
               In particular, if only one external field should be present then
               do not add any Zeeman interactions before calling this method.
-              If leave_last_field_on is False (the default) then the external
-              field is switched off again after all relaxations are finished.
 
         *Arguments*
 
             H_ext_list -- list of external fields, where each field can have
                           any of the forms accepted by Zeeman.__init__()
                           (see its docstring for more details)
+
+           leave_last_field_on -- if False (the default) then the external
+                                  field is switched off again after all
+                                  relaxations are finished.
+
+           fun -- the user can pass a function here (which should accept the
+                  Simulation object as its only argument); this function is
+                  called after each relaxation and can be used for example to
+                  save the value of the averaged magnetisation.
+
+        If `fun` is not None then this function returns a list containing
+        an accumulation of all the return values of `fun` after each stage.
+        Otherwise this function returns None
 
         For a list of keyword arguments accepted by this method see the
         documentation of the relax() method, to which all given keyword
@@ -270,6 +281,8 @@ class Simulation(object):
         filename = re.sub('\.pvd$', '', kwargs.pop('filename', ''))
         cur_filename = ''
 
+        res = []
+
         try:
             while True:
                 H_cur = H_ext_list[cur_stage]
@@ -284,6 +297,10 @@ class Simulation(object):
                    cur_filename = filename + "__stage_{:03d}__.pvd".format(cur_stage)
                 self.relax(filename=cur_filename, **kwargs)
                 cur_stage += 1
+                if fun is not None:
+                    retval = fun(self)
+                    res.append(retval)
+                    log.debug("hysteresis callback function '{}' returned value: {}".format(fun.__name__, retval))
         except IndexError:
             log.info("Hysteresis is finished.")
 
@@ -319,6 +336,8 @@ class Simulation(object):
             cur_stage += 1
         f_global.write("  </Collection>\n</VTKFile>\n")
         f_global.close()
+
+        return res or None
 
     def __get_pins(self):
         return self.llg.pins
