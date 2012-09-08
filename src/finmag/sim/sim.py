@@ -288,8 +288,7 @@ class Simulation(object):
 
         cur_stage = 0
         cur_timestep = 0
-
-        for f in glob.glob(filename+"__stage_[0-9][0-9][0-9]__.pvd"):
+        for f in sorted(glob.glob(filename+"__stage_[0-9][0-9][0-9]__.pvd")):
             f_global.write("    <!-- Hysteresis stage #{:03d} -->\n".format(cur_stage))
             for line in fileinput.input([f]):
                 if re.match('^\s*<DataSet .*/>$', line):
