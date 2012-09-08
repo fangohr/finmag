@@ -22,4 +22,4 @@ H_ext_list = [(cos(t)*H, sin(t)*H, 0.01*H) for t in linspace(0, pi, 5)]
 mesh = ellipsoid(r1, r2, r3, maxh)
 sim = sim_with(mesh, Ms, m_init, alpha=alpha, unit_length=1e-9, A=A, demag_solver='FK')
 
-sim.hysteresis(H_ext_list[1:3], filename="snapshots/hysteresis_ellipsoid.pvd", save_snapshots=True, save_every=10e-12, force_overwrite=True)
+sim.hysteresis(H_ext_list[1:3], filename="snapshots/hysteresis_example/hysteresis_ellipsoid.pvd", save_snapshots=True, save_every=10e-12, force_overwrite=True)
