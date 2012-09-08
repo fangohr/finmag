@@ -256,7 +256,7 @@ class Simulation(object):
 
         try:
             while True:
-                H_cur = H_ext_list.pop(0)
+                H_cur = H_ext_list[cur_stage]
                 log.info("Entering hysteresis stage #{} ({} out of {}).".format(cur_stage, cur_stage+1, num_stages))
                 H.set_value(H_cur)
 
