@@ -242,6 +242,22 @@ class Simulation(object):
         if H_ext_list == []:
             return
 
+        filename = kwargs.get('filename', None)
+        force_overwrite = kwargs.get('force_overwrite', False)
+        if filename != None and force_overwrite == True:
+            if os.path.exists(filename):
+                # Delete the global .pvd file as well as all existing .pvd
+                # and .vtu file from any previously run hysteresis stages.
+                # Although the relax() command also checks for existing files,
+                # it would miss any stages that were previously run but are
+                # not reached during this run.
+                log.debug("Removing the file '{}' as well as all associated .pvd and .vtu files of previously run hysteresis stages.".format(filename))
+                pvdfiles = glob.glob(re.sub('\.pvd$', '', filename)+'*.pvd')
+                vtufiles = glob.glob(re.sub('\.pvd$', '', filename)+'*.vtu')
+                for f in pvdfiles+vtufiles:
+                    log.debug("Removing file '{}'".format(f))
+                    os.remove(f)
+
         # Add a new Zeeman interaction, initialised to zero.
         H = Zeeman((0,0,0))
         self.add(H)
