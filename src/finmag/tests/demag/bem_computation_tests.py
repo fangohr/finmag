@@ -5,6 +5,7 @@ import os
 from finmag.native.llg import compute_lindholm_L, compute_lindholm_K, compute_bem_fk, compute_bem_gcr, OrientedBoundaryMesh
 from finmag.util import time_counter
 from finmag.util import helpers
+from finmag.util.meshes import mesh_volume
 from finmag.energies.demag import belement_magpar
 from finmag.tests.solid_angle_invariance_tests import random_3d_rotation_matrix
 from problems.prob_fembem_testcases import MagSphereBase
@@ -23,7 +24,7 @@ def compute_demag_solver():
     self.phi1_solver.solve(self.phi1.vector(), g1)
 
 def normalise_phi(phi, mesh):
-    volume = df.assemble(df.Constant(1) * df.dx, mesh=mesh)
+    volume = mesh_volume(mesh)
     average = df.assemble(phi * df.dx, mesh=mesh)
     phi.vector()[:] = phi.vector().array() - average / volume
 
