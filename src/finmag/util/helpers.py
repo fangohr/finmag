@@ -188,8 +188,8 @@ def sphinx_sci(x, p=2):
 
 def vector_valued_function(value, S3, normalise=False, **kwargs):
     """
-    Create a constant function on the VectorFunctionSpace `S3` whose
-    value is the 3-vector `value`.
+    Create a constant function on the VectorFunctionSpace `S3` whose value
+    is the 3-vector `value`. Returns an object of type 'df.Function'.
 
     `value` can be any of the following:
 
@@ -240,20 +240,20 @@ def vector_valued_function(value, S3, normalise=False, **kwargs):
             # for a dolfin expression, whereas a tuple of numbers
             # would signify a constant
             val = df.Expression(value, **kwargs)
-            fun =  df.interpolate(val, S3)
+            fun = df.interpolate(val, S3)
         else:
-            fun =  _const_function(value, S3)
+            fun = _const_function(value, S3)
     elif isinstance(value, (df.Constant, df.Expression)):
         fun =  df.interpolate(value, S3)
     elif isinstance(value, np.ndarray):
         if len(value) == 3:
-            fun =  _const_function(value, S3)
+            fun = _const_function(value, S3)
         else:
-            fun =  df.Function(S3)
+            fun = df.Function(S3)
             fun.vector()[:] = value
     elif hasattr(value, '__call__'):
         coords = np.array(zip(* S3.mesh().coordinates()))
-        fun =  df.Function(S3)
+        fun = df.Function(S3)
         fun.vector()[:] = value(coords).flatten()
     else:
         raise AttributeError
