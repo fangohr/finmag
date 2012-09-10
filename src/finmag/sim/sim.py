@@ -13,7 +13,7 @@ from finmag.sim.llg import LLG
 from finmag.util.timings import timings
 from finmag.util.helpers import quiver, norm
 from finmag.util.consts import mu0
-from finmag.util.meshes import mesh_info
+from finmag.util.meshes import mesh_info, mesh_volume
 from finmag.sim.integrator import LLGIntegrator
 from finmag.energies.exchange import Exchange
 from finmag.energies.anisotropy import UniaxialAnisotropy
@@ -41,7 +41,7 @@ class Simulation(object):
         self.S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
         self.llg = LLG(self.S1, self.S3)
         self.llg.Ms = Ms
-        self.Volume = df.assemble(df.Constant(1) * df.dx, mesh=mesh)
+        self.Volume = mesh_volume(mesh)
         self.t = 0
 
         timings.stop("Sim-init")
