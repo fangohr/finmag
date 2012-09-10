@@ -200,3 +200,74 @@ def normed_func(value, Space, **kwargs):
     m0.vector()[:] = m0_vec.reshape(-1)
 
     return m0
+
+def vector_valued_function(value, S3, **kwargs):
+    """
+    Create a constant function on the VectorFunctionSpace `S3` whose
+    value is `value`.
+
+    `value` can be any of the following:
+
+        - tuple, list or numpy.ndarray of length 3
+
+        - dolfin.Constant representing a 3-vector
+
+        - 3-tuple of strings (with keyword arguments if needed),
+          which will get cast to a dolfin.Expression where any variables in
+          the expression are substituted with the values taken from 'kwargs'
+
+        - numpy.ndarray of nodal values of the shape (3*n,), where n
+          is the number of nodes
+
+        - function (any callable object will do) which accepts the
+          coordinates of the mesh as a numpy.ndarray of shape (3, n)
+          and returns the field H in this form as well
+
+
+    *Arguments*
+
+       value  -- the value of the function
+
+       S3     -- dolfin.VectorFunctionSpace of dimension 3
+
+       kwargs -- if `value` is a 3-tuple of strings (which will be
+                 cast to a dolfin.Expression), then any variables
+                 occurring in them will be substituted with the values
+                 in kwargs; otherwise kwargs is ignored
+
+    """
+    def _const_function(value, S3):
+        # Filling the dolfin.Function.vector() directly is about two
+        # orders of magnitudes faster than using df.interpolate()!
+        #
+        val = np.empty((S3.mesh().num_vertices(), 3))
+        val[:] = value  # fill the array with copies of 'value' (we're using broadcasting here!)
+        fun = df.Function(S3)
+        fun.vector()[:] = val.transpose().reshape((-1,)) # transpose is necessary because of the way dolfin aligns the function values internally
+        return fun
+
+    if isinstance(value, (tuple, list)):
+        if isinstance(value[0], str):
+            # a tuple of strings is considered to be the ingredient
+            # for a dolfin expression, whereas a tuple of numbers
+            # would signify a constant
+            val = df.Expression(value, **self.kwargs)
+            fun =  df.interpolate(val, S3)
+        else:
+            fun =  _const_function(value, S3)
+    elif isinstance(value, (df.Constant, df.Expression)):
+        fun =  df.interpolate(value, S3)
+    elif isinstance(value, np.ndarray):
+        if len(value) == 3:
+            fun =  _const_function(value, S3)
+        else:
+            fun =  df.Function(S3)
+            H.vector()[:] = value
+    elif hasattr(value, '__call__'):
+        coords = np.array(zip(* S3.mesh().coordinates()))
+        fun =  df.Function(S3)
+        H.vector()[:] = value(coords).flatten()
+    else:
+        raise AttributeError
+
+    return fun
