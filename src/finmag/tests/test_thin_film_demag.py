@@ -45,3 +45,13 @@ def test_thin_film_demag_against_real_demag():
     print "Difference relative to Ms:\n", diff
     assert np.max(diff) < 5e-2 # 5%
 
+    sim.set_m((1, 0, 0))
+    H_tfdemag = tfdemag.compute_field().view().reshape((3, -1)).mean(1)
+    H_demag = demag.compute_field().view().reshape((3, -1)).mean(1)
+
+    print "Running again, changed m in the meantime."
+    diff = np.abs(H_tfdemag - H_demag)/Ms
+    print "Standard Demag:\n", H_demag
+    print "ThinFilmDemag:\n", H_tfdemag
+    print "Difference relative to Ms:\n", diff
+    assert np.max(diff) < 5e-2 # 5%
