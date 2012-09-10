@@ -220,7 +220,7 @@ def vector_valued_function(value, S3, **kwargs):
           is the number of nodes
 
         - function (any callable object will do) which accepts the
-          coordinates of the mesh as a numpy.ndarray of shape (3, n)
+          coordinates of all mesh nodes as a numpy.ndarray of shape (3, n)
           and returns the field H in this form as well
 
 
@@ -251,7 +251,7 @@ def vector_valued_function(value, S3, **kwargs):
             # a tuple of strings is considered to be the ingredient
             # for a dolfin expression, whereas a tuple of numbers
             # would signify a constant
-            val = df.Expression(value, **self.kwargs)
+            val = df.Expression(value, **kwargs)
             fun =  df.interpolate(val, S3)
         else:
             fun =  _const_function(value, S3)
@@ -262,11 +262,11 @@ def vector_valued_function(value, S3, **kwargs):
             fun =  _const_function(value, S3)
         else:
             fun =  df.Function(S3)
-            H.vector()[:] = value
+            fun.vector()[:] = value
     elif hasattr(value, '__call__'):
         coords = np.array(zip(* S3.mesh().coordinates()))
         fun =  df.Function(S3)
-        H.vector()[:] = value(coords).flatten()
+        fun.vector()[:] = value(coords).flatten()
     else:
         raise AttributeError
 
