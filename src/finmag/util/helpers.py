@@ -47,7 +47,7 @@ def normalise_vectors(vs, length=1):
     """
     return np.array([length*v/norm(v) for v in vs])
 
-def fnormalise(arr, length=1):
+def fnormalise(arr):
     """
     Like normalise_vectors, but expects the arguments as a numpy.ndarray in
     the form that dolfin provides: [x0, ..., xn, y0, ..., yn, z0, ..., zn].
