@@ -58,7 +58,7 @@ def fnormalise(arr):
     # carried out in integers, and behaves unexpectedly.
     assert arr.dtype not in [np.dtype('int32'),np.dtype('int64')]
 
-    arr = arr.reshape((3, -1))
+    arr = arr.reshape((3, -1)).copy()
     arr /= np.sqrt(arr[0]*arr[0] + arr[1]*arr[1] + arr[2]*arr[2] )
     arr = arr.ravel()
     return arr
