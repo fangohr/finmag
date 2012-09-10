@@ -6,6 +6,7 @@ import finmag.util.consts as consts
 
 from finmag.native import llg as native_llg
 from finmag.util.timings import timings
+from finmag.util.meshes import mesh_volume
 
 #default settings for logger 'finmag' set in __init__.py
 #getting access to logger here
@@ -128,7 +129,7 @@ class LLG(object):
         """
         #Compute volume if not done before
         if self.Volume == None:
-            self.Volume = df.assemble(df.Constant(1)*df.dx, mesh=self._m.function_space().mesh())
+            self.Volume = mesh_volume(self._m.function_space().mesh())
         mx = df.assemble(df.dot(self._m, df.Constant([1,0,0])) * df.dx)
         my = df.assemble(df.dot(self._m, df.Constant([0,1,0])) * df.dx)
         mz = df.assemble(df.dot(self._m, df.Constant([0,0,1])) * df.dx)

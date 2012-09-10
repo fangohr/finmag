@@ -2,6 +2,7 @@ import numpy as np
 import dolfin as df
 import logging
 from finmag.util.timings import timings
+from finmag.util.meshes import mesh_volume
 from finmag.energies.energy_base import EnergyBase
 from finmag.energies.exchange import Exchange
 
@@ -53,8 +54,7 @@ class BaryakhtarExchange(EnergyBase):
         self.ED = df.Function(S1)
 
         # Don't know if this is needed
-        self.total_vol = df.assemble(df.Constant(1) * df.dx, mesh=S3.mesh()) \
-                * unit_length**self.dim
+        self.total_vol = mesh_volume(S3.mesh()) * unit_length**self.dim
 
         if self.method=='box-assemble':
             self.__compute_field = self.__compute_field_assemble

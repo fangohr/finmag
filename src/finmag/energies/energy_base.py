@@ -4,6 +4,7 @@ from finmag.util.timings import timings
 import dolfin as df
 import numpy as np
 from finmag.util.consts import mu0
+from finmag.util.meshes import mesh_volume
 
 logger = logging.getLogger('finmag')
 
@@ -193,8 +194,7 @@ class EnergyBase(AbstractEnergy):
         # Total volume of mesh (if we need to compute
         # average magnetisation we can integrate over M and
         # divide by this number)
-        self.total_vol = df.assemble(df.Constant(1) * df.dx, mesh=S3.mesh()) \
-                * unit_length ** self.dim
+        self.total_vol = mesh_volume(S3.mesh()) * unit_length**self.dim
 
         if self.method == 'box-assemble':
             self.__compute_field = self.__compute_field_assemble

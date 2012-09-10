@@ -23,7 +23,7 @@ import progressbar as pb
 import finmag.util.helpers as h
 from finmag import Simulation as Sim
 from finmag.energies import Exchange, Demag
-from finmag.util.meshes import from_geofile
+from finmag.util.meshes import from_geofile, mesh_volume
 
 logger = logging.getLogger(name='finmag')
 
@@ -156,7 +156,7 @@ def test_compare_energies():
         computed = np.loadtxt(os.path.join(MODULE_DIR, demagsolver+"energies.txt"))
         assert np.size(ref) == np.size(computed), "Compare number of energies."
 
-        vol = df.assemble(df.Constant(1)*df.dx, mesh=mesh)*unit_length**mesh.topology().dim()
+        vol = mesh_volume(mesh)*unit_length**mesh.topology().dim()
         #30x30x100nm^3 = 30x30x100=9000
 
         # Compare exchange energy

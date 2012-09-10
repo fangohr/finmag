@@ -1,6 +1,7 @@
 import numpy as np
 import dolfin as df
 from finmag.util.consts import mu0, k_B
+from finmag.util.meshes import mesh_volume
 from energy_base import AbstractEnergy
 
 class RandomThermal(AbstractEnergy):
@@ -35,7 +36,7 @@ class RandomThermal(AbstractEnergy):
     def setup(self, S3, m, Ms, unit_length=1):
         mesh = S3.mesh()
         n_dim = mesh.topology().dim()
-        self.V = df.assemble(df.Constant(1) * df.dx, mesh=mesh) * unit_length ** n_dim
+        self.V = mesh_volume(mesh=mesh) * unit_length**n_dim
         self.Ms = Ms
         self.output_shape = df.Function(S3).vector().array().shape
 
