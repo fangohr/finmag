@@ -186,26 +186,10 @@ def sphinx_sci(x, p=2):
     """
     return ":math:`{}`".format(tex_sci(x, p))
 
-def normed_func(value, Space, **kwargs):
-    if not isinstance(value, tuple):
-        raise NotImplementedError, "We only support tuples."
-
-    if isinstance(value[0], str):
-        mgen = df.Expression(value, **kwargs)
-    else:
-        mgen = df.Constant(value)
-
-    m0 = df.interpolate(mgen, Space)
-    m0_vec = m0.vector().array().reshape((3, -1))
-    m0_vec /= np.sqrt(m0_vec[0]**2 + m0_vec[1]**2 + m0_vec[2]**2)
-    m0.vector()[:] = m0_vec.reshape(-1)
-
-    return m0
-
-def vector_valued_function(value, S3, **kwargs):
+def vector_valued_function(value, S3, normalise=False, **kwargs):
     """
     Create a constant function on the VectorFunctionSpace `S3` whose
-    value is `value`.
+    value is the 3-vector `value`.
 
     `value` can be any of the following:
 
@@ -227,14 +211,17 @@ def vector_valued_function(value, S3, **kwargs):
 
     *Arguments*
 
-       value  -- the value of the function
+       value     -- the value of the function
 
-       S3     -- dolfin.VectorFunctionSpace of dimension 3
+       S3        -- dolfin.VectorFunctionSpace of dimension 3
 
-       kwargs -- if `value` is a 3-tuple of strings (which will be
-                 cast to a dolfin.Expression), then any variables
-                 occurring in them will be substituted with the values
-                 in kwargs; otherwise kwargs is ignored
+       normalize -- if True then the function values are normalised to
+                    unit length (default: False)
+
+       kwargs    -- if `value` is a 3-tuple of strings (which will be
+                    cast to a dolfin.Expression), then any variables
+                    occurring in them will be substituted with the
+                    values in kwargs; otherwise kwargs is ignored
 
     """
     def _const_function(value, S3):
@@ -244,7 +231,7 @@ def vector_valued_function(value, S3, **kwargs):
         val = np.empty((S3.mesh().num_vertices(), 3))
         val[:] = value  # fill the array with copies of 'value' (we're using broadcasting here!)
         fun = df.Function(S3)
-        fun.vector()[:] = val.transpose().reshape((-1,)) # transpose is necessary because of the way dolfin aligns the function values internally
+        fun.vector()[:] = val.transpose().reshape(-1) # transpose is necessary because of the way dolfin aligns the function values internally
         return fun
 
     if isinstance(value, (tuple, list)):
@@ -270,5 +257,10 @@ def vector_valued_function(value, S3, **kwargs):
         fun.vector()[:] = value(coords).flatten()
     else:
         raise AttributeError
+
+    if normalise:
+        v = fun.vector().array().reshape((3, -1))
+        v /= np.sqrt(v[0]**2 + v[1]**2 + v[2]**2)
+        fun.vector()[:] = v.reshape(-1)
 
     return fun

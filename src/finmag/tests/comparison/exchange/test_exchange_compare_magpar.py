@@ -3,7 +3,7 @@ import dolfin as df
 import numpy as np
 from finmag.util import magpar
 from finmag.energies import Exchange
-from finmag.util.helpers import normed_func
+from finmag.util.helpers import vector_valued_function
 
 
 #df.parameters["allow_extrapolation"] = True
@@ -34,7 +34,7 @@ def three_dimensional_problem():
     m0_x = "pow(sin(0.2*x[0]*1e9), 2)"
     m0_y = "0"
     m0_z = "pow(cos(0.2*x[0]*1e9), 2)"
-    m=normed_func((m0_x,m0_y, m0_z), V)
+    m=vector_valued_function((m0_x,m0_y, m0_z), V, normalise=True)
 
     C=1.3e-11
 

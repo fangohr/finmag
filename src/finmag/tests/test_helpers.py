@@ -94,10 +94,12 @@ def test_vector_valued_function():
 
     """
     mesh = df.UnitCube(2, 2, 2)
+    mesh.coordinates()[:] += 1.0  # shift mesh coords to avoid dividing by zero when normalising below
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
     num_vertices = mesh.num_vertices()
 
-    vec = [3, 1, 4]  # an arbitrary vector
+    vec = np.array([3, 1, 4])  # an arbitrary vector
+    vec_normalised = vec/norm(vec)
     a = 42
     b = 5
     c = 23
@@ -105,10 +107,12 @@ def test_vector_valued_function():
     # Reference vector for the constant-valued functions
     x = np.empty((num_vertices, 3))
     x[:] = vec
-    v_ref = x.transpose().reshape((-1,))
+    v_ref = x.transpose().reshape(-1)
+    v_ref_normalised = fnormalise(v_ref[:])
 
     # Reference vector for f_expr and f_callable
     v_ref_expr = (mesh.coordinates()*[a, b, c]).transpose().reshape((-1,))
+    v_ref_expr_normalised = fnormalise(v_ref_expr)
 
     # Create functions using the various methods
     f_tuple = vector_valued_function(tuple(vec), S3) # 3-tuple
@@ -119,6 +123,11 @@ def test_vector_valued_function():
     f_arrayN = vector_valued_function(v_ref, S3) # numpy array of nodal values
     f_callable = vector_valued_function(lambda coords: v_ref_expr, S3) # callable accepting mesh node coordinates and yielding the function values
 
+    # A few normalised versions, too
+    f_tuple_normalised = vector_valued_function(tuple(vec), S3, normalise=True)
+    f_expr_normalised = vector_valued_function(('a*x[0]', 'b*x[1]', 'c*x[2]'), S3, a=a, b=b, c=c, normalise=True)
+    f_callable_normalised = vector_valued_function(lambda coords: v_ref_expr, S3, normalise=True)
+
     # Check that the function vectors are as expected
     assert(all(f_tuple.vector() == v_ref))
     assert(all(f_list.vector() == v_ref))
@@ -127,6 +136,13 @@ def test_vector_valued_function():
     assert(all(f_expr.vector() == v_ref_expr))
     assert(all(f_arrayN.vector() == v_ref))
     assert(all(f_callable.vector() == v_ref_expr))
+
+    assert(all(f_tuple_normalised.vector() == v_ref_normalised))
+    print "[DDD] #1: {}".format(f_expr_normalised.vector().array())
+    print "[DDD] #2: {}".format(v_ref_expr_normalised)
+
+    assert(all(f_expr_normalised.vector() == v_ref_expr_normalised))
+    assert(all(f_callable_normalised.vector() == v_ref_expr_normalised))
 
 def test_angle():
     assert abs(angle([1,0,0],[1,0,0]))           < TOLERANCE
