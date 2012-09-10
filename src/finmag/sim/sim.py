@@ -364,8 +364,7 @@ class Simulation(object):
         d = np.array(direction)
         H_dir = d/norm(d)
         H_norms = list(reversed(np.linspace(-H_max, H_max, N))) + list(np.linspace(-H_max, H_max, N))
-        # TODO: conversion to tuple in the next line is necessary because of the way Zeeman.set_value() works at the moment. This should be fixed!
-        H_vals = map(tuple, [h*H_dir for h in H_norms])
+        H_vals = [h*H_dir for h in H_norms]
         m_avg = self.hysteresis(H_vals, fun=lambda sim: sim.m_average, **kwargs)
         m_vals = [np.dot(m, H_dir) for m in m_avg] # projected lengths of the averaged magnetisation values along the axis `H_dir`
         return (H_norms, m_vals)
