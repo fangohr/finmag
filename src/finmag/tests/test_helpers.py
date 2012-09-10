@@ -86,6 +86,48 @@ def test_fnormalise():
         fnormalise(a5)
 
 
+def test_vector_valued_function():
+    """
+    Test that the different ways of initialising a vector-valued
+    function on a 3d mesh work and that they produce the expected
+    results.
+
+    """
+    mesh = df.UnitCube(2, 2, 2)
+    S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
+    num_vertices = mesh.num_vertices()
+
+    vec = [3, 1, 4]  # an arbitrary vector
+    a = 42
+    b = 5
+    c = 23
+
+    # Reference vector for the constant-valued functions
+    x = np.empty((num_vertices, 3))
+    x[:] = vec
+    v_ref = x.transpose().reshape((-1,))
+
+    # Reference vector for f_expr and f_callable
+    v_ref_expr = (mesh.coordinates()*[a, b, c]).transpose().reshape((-1,))
+
+    # Create functions using the various methods
+    f_tuple = vector_valued_function(tuple(vec), S3) # 3-tuple
+    f_list = vector_valued_function(list(vec), S3) # 3-list
+    f_array3 = vector_valued_function(np.array(vec), S3) # numpy array representing a 3-vector
+    f_dfconstant = vector_valued_function(df.Constant(vec), S3) # df. Constant representing a 3-vector
+    f_expr = vector_valued_function(('a*x[0]', 'b*x[1]', 'c*x[2]'), S3, a=a, b=b, c=c) # tuple of strings (will be cast to df.Expression)
+    f_arrayN = vector_valued_function(v_ref, S3) # numpy array of nodal values
+    f_callable = vector_valued_function(lambda coords: v_ref_expr, S3) # callable accepting mesh node coordinates and yielding the function values
+
+    # Check that the function vectors are as expected
+    assert(all(f_tuple.vector() == v_ref))
+    assert(all(f_list.vector() == v_ref))
+    assert(all(f_array3.vector() == v_ref))
+    assert(all(f_dfconstant.vector() == v_ref))
+    assert(all(f_expr.vector() == v_ref_expr))
+    assert(all(f_arrayN.vector() == v_ref))
+    assert(all(f_callable.vector() == v_ref_expr))
+
 def test_angle():
     assert abs(angle([1,0,0],[1,0,0]))           < TOLERANCE
     assert abs(angle([1,0,0],[0,1,0]) - np.pi/2) < TOLERANCE
