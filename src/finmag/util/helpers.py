@@ -244,7 +244,7 @@ def vector_valued_function(value, S3, normalise=False, **kwargs):
         else:
             fun = _const_function(value, S3)
     elif isinstance(value, (df.Constant, df.Expression)):
-        fun =  df.interpolate(value, S3)
+        fun = df.interpolate(value, S3)
     elif isinstance(value, np.ndarray):
         if len(value) == 3:
             fun = _const_function(value, S3)
@@ -259,8 +259,6 @@ def vector_valued_function(value, S3, normalise=False, **kwargs):
         raise AttributeError
 
     if normalise:
-        v = fun.vector().array().reshape((3, -1))
-        v /= np.sqrt(v[0]**2 + v[1]**2 + v[2]**2)
-        fun.vector()[:] = v.reshape(-1)
+        fun.vector()[:] = fnormalise(fun.vector().array())
 
     return fun
