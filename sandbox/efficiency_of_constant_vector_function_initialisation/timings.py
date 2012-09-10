@@ -33,22 +33,21 @@ def constant_function_v2(v, S3):
     return fun
 
 
-# Now create the 'same' function using each of these methods and time
-# how long it takes:
+# Now create the 'same' function using each of these methods and time how long it takes:
 
 v = [2,4,3]  # some arbitrary vector
 
 f1 = constant_function_v1(v, S3)
 f2 = constant_function_v2(v, S3)
 
-print "Performing timing measurements (this may take a while for larger meshes) ..."
+print "Performing timing measurements (this may take a while for larger meshes) ...\n"
 t1 = min(timeit.Timer('constant_function_v1(v, S3)', 'from __main__ import constant_function_v1, v, S3').repeat(3, number=10))
 t2 = min(timeit.Timer('constant_function_v2(v, S3)', 'from __main__ import constant_function_v2, v, S3').repeat(3, number=10))
 
-print "Method 1 took {:g} seconds  (using a numpy array to set the function vector directly)".format(t1)
-print "Method 2 took {:g} seconds  (using df.interpolate)".format(t2)
+print "Method 1 took {:g} seconds  (using a numpy array to set the function vector directly) (best of 3 runs)".format(t1)
+print "Method 2 took {:g} seconds  (using df.interpolate) (best of 3 runs)".format(t2)
 
-# # Just for safety, check that the two functions have the same values on the nodes
-# print "Performing safety check that the two functions are actually the same on all nodes ..."
-# assert(all([np.allclose(f1(node), f2(node)) for node in mesh.coordinates()]))
-# print "Saftey check passed!"
+# Just for safety, check that the two functions have the same values on the nodes
+print "\nPerforming safety check that the two functions are actually the same on all nodes ...",
+assert(all(f1.vector() == f2.vector()))
+print "passed!"
