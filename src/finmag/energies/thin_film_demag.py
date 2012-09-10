@@ -17,12 +17,13 @@ class ThinFilmDemag(AbstractEnergy):
             self.__class__.__name__, in_jacobian_msg))
 
     def setup(self, S3, m, Ms, unit_length):
-        self.m = m.vector().array().view().reshape((3, -1))
+        self.m = m
         self.Ms = Ms
-        self.H = np.zeros(self.m.shape)
+        self.H = np.zeros((3, S3.mesh().num_vertices()))
 
     def compute_field(self):
-        self.H[2][:] = self.m[2]
+        m = self.m.vector().array().view().reshape((3, -1))
+        self.H[2][:] = m[2]
         return - self.Ms * self.H.ravel()
 
     def compute_energy(self):
