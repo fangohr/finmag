@@ -54,6 +54,10 @@ class Zeeman(AbstractEnergy):
         elif isinstance(value, (df.Constant, df.Expression)):
             H = df.interpolate(value, self.S3)
         elif isinstance(value, (list, np.ndarray)):
+            if len(value) == 3:
+                tmp_value = np.empty((self.S3.mesh().num_vertices(), 3))
+                tmp_value[:] = value
+                value = tmp_value.reshape((-1,))
             H = df.Function(self.S3)
             H.vector()[:] = value
         elif hasattr(value, '__call__'):
