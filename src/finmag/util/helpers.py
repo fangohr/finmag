@@ -41,7 +41,8 @@ def norm(v):
 
 def normalise_vectors(vs, length=1):
     """
-    Scales each vector in the list `vs` to the specified length.
+    Returns a new list containing the vectors in `vs`, scaled to the specified length.
+
     `vs` should be a list of vectors of the form [[x0, y0, z0], ..., [xn, yn, zn]].
 
     """
