@@ -107,7 +107,7 @@ def test_domain_wall_profile(do_plot=False):
         print "difference A : %9g" % (fittedA-A)
         print "rel difference A : %9g" % ((fittedA-A)/A)
         print "quotient A/fittedA and fittedA/A : %9g %g" % (A/fittedA,fittedA/A)
-        assert abs(fittedA-A)/A < 0.004,"Fitted A to inaccurate"
+        assert abs(fittedA-A)/A < 0.004,"Fitted A too inaccurate"
 
 
     #Maximum deviation:
