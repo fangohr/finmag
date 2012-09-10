@@ -2,11 +2,9 @@ import logging
 import numpy as np
 import dolfin as df
 
-import finmag.util.helpers as h
 import finmag.util.consts as consts
 from finmag.native.llb import LLBFePt
-
-
+from finmag.util import helpers
 
 logger = logging.getLogger(name='finmag')
 
@@ -106,30 +104,7 @@ class Material(object):
         reasons and because the attribute m doesn't normalise the vector.
 
         """
-        if isinstance(value, tuple):
-            if isinstance(value[0], str):
-                # a tuple of strings is considered to be the ingredient
-                # for a dolfin expression, whereas a tuple of numbers
-                # would signify a constant
-                val = df.Expression(value, **kwargs)
-            else:
-                val = df.Constant(value)
-            new_m = df.interpolate(val, self.S3)
-        elif isinstance(value, (df.Constant, df.Expression)):
-            new_m = df.interpolate(value, self.S3)
-        elif isinstance(value, (list, np.ndarray)):
-            new_m = df.Function(self.S3)
-            new_m.vector()[:] = value
-        elif hasattr(value, '__call__'):
-            coords = np.array(zip(* self.mesh().coordinates()))
-            new_m = df.Function(self.S3)
-            new_m.vector()[:] = value(coords).flatten()
-        else:
-            raise AttributeError
-        new_m.vector()[:] = h.fnormalise(new_m.vector().array())
-        self._m.vector().set_local(new_m.vector().array())
-
-   
+        self._m = helpers.vector_valued_function(value, self.S3, normalise=True)
         
 
 if __name__ == "__main__":

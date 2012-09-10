@@ -1,12 +1,12 @@
 import logging 
 import numpy as np
 import dolfin as df
-import finmag.util.helpers as h
 import finmag.util.consts as consts
 
 from finmag.native import llg as native_llg
 from finmag.util.timings import timings
 from finmag.util.meshes import mesh_volume
+from finmag.util import helpers
 
 #default settings for logger 'finmag' set in __init__.py
 #getting access to logger here
@@ -156,28 +156,7 @@ class LLG(object):
         reasons and because the attribute m doesn't normalise the vector.
 
         """
-        if isinstance(value, tuple):
-            if isinstance(value[0], str):
-                # a tuple of strings is considered to be the ingredient
-                # for a dolfin expression, whereas a tuple of numbers
-                # would signify a constant
-                val = df.Expression(value, **kwargs)
-            else:
-                val = df.Constant(value)
-            new_m = df.interpolate(val, self.S3)
-        elif isinstance(value, (df.Constant, df.Expression)):
-            new_m = df.interpolate(value, self.S3)
-        elif isinstance(value, (list, np.ndarray)):
-            new_m = df.Function(self.S3)
-            new_m.vector()[:] = value
-        elif hasattr(value, '__call__'):
-            coords = np.array(zip(* self.S3.mesh().coordinates()))
-            new_m = df.Function(self.S3)
-            new_m.vector()[:] = value(coords).flatten()
-        else:
-            raise AttributeError
-        new_m.vector()[:] = h.fnormalise(new_m.vector().array())
-        self._m.vector()[:] = new_m.vector()[:]
+        self._m = helpers.vector_valued_function(value, self.S3, normalise=True)
 
     def compute_effective_field(self):
         H_eff = np.zeros(self.m.shape)
