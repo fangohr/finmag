@@ -1,7 +1,7 @@
 import dolfin as df
 import time
-from finmag.sim.anisotropy import UniaxialAnisotropy as ani
-from finmag.sim.exchange import Exchange as exch
+from finmag.energies.anisotropy import UniaxialAnisotropy as ani
+from finmag.energies.exchange import Exchange as exch
 import numpy as np
 
 def efficiency_test(method, n, field='exchange'):
@@ -27,12 +27,14 @@ def efficiency_test(method, n, field='exchange'):
 
     if field == 'exchange':
         C = 1.3e-11 # J/m exchange constant
-        energy = exch(V, m, C, Ms, method=method)
+        energy = exch(C, method=method)
+        energy.setup(V, m, Ms)
 
     elif field == 'anisotropy':
         a = df.Constant((0, 0, 1)) # Easy axis
         K = 520e3 # J/m^3, Co
-        energy = ani(V, m, K, a, Ms, method=method)
+        energy = ani(V, K, a, method=method)
+        energy.setup(V, m, Ms)
 
     else:
         raise NotImplementedError("%s is not implemented." % field)
