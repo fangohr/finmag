@@ -137,18 +137,11 @@ class LLG(object):
     
     def set_m(self, value, **kwargs):
         """
-        Set the magnetisation (scaled automatically).
-       
-        There are several ways to use this function. Either you provide
-        a 3-tuple of numbers, which will get cast to a dolfin.Constant, or
-        a dolfin.Constant directly.
-        Then a 3-tuple of strings (with keyword arguments if needed) that will
-        get cast to a dolfin.Expression, or directly a dolfin.Expression.
-        You can provide a numpy.ndarray of nodal values of shape (3*n,),
-        where n is the number of nodes.
-        Finally, you can pass a function (any callable object will do) which
-        accepts the coordinates of the mesh as a numpy.ndarray of
-        shape (3, n) and returns the magnetisation like that as well.
+        Set the magnetisation (it is automatically normalised to unit length).
+
+        `value` can have any of the forms accepted by the function
+        'finmag.util.helpers.vector_valued_function' (see its
+        docstring for details).
 
         You can call this method anytime during the simulation. However, when
         providing a numpy array during time integration, the use of
