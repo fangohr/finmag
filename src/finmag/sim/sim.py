@@ -466,7 +466,7 @@ class Simulation(object):
             self.vtk_snapshot_no = 1
         if filename == "":
             infix_insert = "" if infix == "" else "_" + infix
-            filename = "snapshot{}_{}_{:.3f}ns.pvd".format(infix_insert, self.vtk_snapshot_no, self.t*1e9)
+            filename = "m{}_{}_{:.3f}ns.pvd".format(infix_insert, self.vtk_snapshot_no, self.t*1e9)
 
         ext = os.path.splitext(filename)[1]
         if ext != '.pvd':
@@ -489,6 +489,7 @@ class Simulation(object):
         f << self.llg._m
         t1 = time.time()
         log.info("Saved snapshot of magnetisation at t={} to file '{}' (saving took {:.3g} seconds).".format(self.t, output_file, t1-t0))
+        self.vtk_snapshot_no += 1
 
     def mesh_info(self):
         """
