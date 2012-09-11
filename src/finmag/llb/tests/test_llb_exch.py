@@ -23,4 +23,4 @@ class LLBTestExch(unittest.TestCase):
         llb_exch.setup(S3, M, Ms, 1)
         H2 = llb_exch.compute_field()
         print("max(H1-H2)=%g" % np.max(H2 - H1))
-        assert(np.max(H2 - H1) == 0)
+        assert(np.max(H2 - H1) <  2e-8)
