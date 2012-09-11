@@ -1,6 +1,7 @@
 The Finmag project
 ==================
 
+Most of the information in this chapter is only relevant to developers of the code. 
 
 Overview code layout 
 --------------------
@@ -133,5 +134,26 @@ This is a somewhat messy place that serves different purposes, including:
 
 The name is not ideal either. The good news is that we should be able to re-arrange and rename files and directories in here as nothing (neither the documentation, nor main finmag code under ``src`` should depend on it).
 
+
+A note on parallel execution
+----------------------------
+
+**FEniCS** supports parallel execution in different ways:
+
+* backends such as PETSC allow to use MPI to deal with linear algebra tasks in parallel (either across multiple machines, or 'abusing' MPI across multiple cores on the same host)
+
+* OpenMP (to exploit multiple cores on the same CPU, or at least the same node [there may be more than one CPU per node]) is partially used, for example for the 'assemble' commands. For studies where the assemble command is called ones, this may be of moderate value, but can be significant if matrices/vectors need to be recomputed.
+
+* FEniCS Python code can be written so that it runs in parallel. Often this seems to be automatic, but at times one needs to be careful. We have so far (Sept 2012) not paid any attention to this in the Finmag project.
+
+This information is based on Hans' vague memory of reading the FEniCS documentation late in 2011. 
+
+**Sundials/CVODE** is conceptually the point that is ''most serial'' in Finmag: while in principle one can use CVODE in parallel fashion, this needs a parallel implementation of the nvector data class. For now, we use such a class which connects to numpy's array object, so that the data vector that cvode operators on is the same as that of a numpy array. This is not the same vector (in memory) as the dolfin field, so we need to copy this backwards and forwards when required (i.e. every time the right-hand-side of our ODE needs to be evaluated). While the dolfin vector depends on the backend (and in the case of the PETSC backend could in principle be distributed across multiple nodes), the numpy array object is not parallised in that way. 
+
+**OpenMP** in our own (BOOST.Python)-linked code is used where possbile, i.e. multiple cores are used where available, for example in the computation of the BEM for the Fredkin Koehler method.
+
+**GPUs**: there are recent efforts to provide a GPU based backend. Anders Johanson has tried to use that with Finmag, but could only achieve very modest speed ups (30%, where we were hopeing for numbers around 1000%, i.e. 10 time faster). The current thinking is that the linear algebra operations are based on iterative methods which involve mostly reading of data (and then a little numerical operation) and thus can not fully exploit the power of the many cores on GPUs, but instead are limited by the memory bandwidth).
+
+**Summary**: We run finmag at the moment as a serial program; and multiple cores are exploited automatically. This can certainly be improved. However, going beyond use of one node (which means: use of MPI) requires revising the Python code, and will then not be ideal as the sundials interface is serial (so all the data for the state vector would have to be gathered to the master node, then given to CVODE, and for the computation of the effective fields which contribute to the right-hand-side, scattered across all MPI nodes). The first point (revising FEniCS Python code for parrallel execution) may not be too bad, and the second point ('serial' interface to cvode through numpy array) may not slow things down that much: once the right-hand side is computed, we can use FEniCS' PETSC backend (which exploits MPI).  [On the other hand, with increasing core numbers, it may be sufficient to focus on speed up through multicore (i.e. OpenMP) techniques.]
 
 
