@@ -100,7 +100,7 @@ def from_csg(csg, save_result=True, filename="", directory=""):
     if filename == "":
         filename = hashlib.md5(csg).hexdigest()
     if os.path.isabs(filename) and directory != "":
-        log.warning("Ignoring 'directory' argument (value given: '{}') because 'filename' contains an absolute path: '{}'".format(directory, filename))
+        logger.warning("Ignoring 'directory' argument (value given: '{}') because 'filename' contains an absolute path: '{}'".format(directory, filename))
 
     if save_result:
         geofile = os.path.join(directory, filename) + ".geo"
