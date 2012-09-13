@@ -4,36 +4,43 @@
 namespace finmag { namespace llg {
 
     namespace {
-        void helloWorld() {
-            printf("This is the StochasticHeunIntegrator.\n");
-        }
-
         class StochasticHeunIntegrator {
         public:
-            StochasticHeunIntegrator() {}
+            StochasticHeunIntegrator(
+                const np_array<double> &y,
+                bp::object A_callback,
+                bp::object B_callback,
+                double dt
+            ): y(y), A(A_callback), B(B_callback), dt(dt) {
+            }
             ~StochasticHeunIntegrator() {}
+
+            void run_until() {
+
+            }
             
             void step() {
-                // m_predicted = m + drift(m) * Dt + diffusion(m) * DW
-                // m_corrected = m
-                //      + 1/2 [drift(m_predicted) + drift(m)] * Dt 
-                //      + 1/2 [diffusion(m_predicted) + diffusion(m)] * DW
             }
 
             void helloWorld() {
                 printf("This is the StochasticHeunIntegrator.\n");
             }
+        private:
+            const np_array<double> y;
+            bp::object A, B;
+            double const dt;
         };
 
     }
 
     void register_heun() {
-        using namespace boost::python;
+        using namespace bp;
 
-        def("helloWorld", &helloWorld);
-
-        class_<StochasticHeunIntegrator>("StochasticHeunIntegrator", init<>())
-            .def("helloWorld", &StochasticHeunIntegrator::helloWorld);
+        class_<StochasticHeunIntegrator>("StochasticHeunIntegrator",
+            init<np_array<double>, object, object, double>())
+            .def("helloWorld", &StochasticHeunIntegrator::helloWorld)
+            .def("step", &StochasticHeunIntegrator::step)
+            .def("run_until", &StochasticHeunIntegrator::run_until);
     }
 
 }}
