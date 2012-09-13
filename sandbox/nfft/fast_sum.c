@@ -672,6 +672,7 @@ double compute_potential_single_target(fastsum_plan *plan, struct octree_node *t
 
         } else {
 
+            
             for (i = tree->begin; i < tree->end; i++) {
 
                 j = plan->index[i];
@@ -684,6 +685,7 @@ double compute_potential_single_target(fastsum_plan *plan, struct octree_node *t
                     res += plan->charge_density[j] / sqrt(R);
                 }
             }
+             
 
             return res;
         }
