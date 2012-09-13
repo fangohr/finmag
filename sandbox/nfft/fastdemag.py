@@ -161,7 +161,7 @@ class FastDemag():
         self.weights=np.array(self.s_weight+self.v_weight)
         self.charges=np.array(self.s_charge+self.v_charge)
         
-        fast_sum=FastSum(p=6,mac=0.5,num_limit=700,surface_n=surface_n,volume_n=volume_n)
+        fast_sum=FastSum(p=6,mac=0.5,num_limit=300,surface_n=surface_n,volume_n=volume_n)
         xt=self.mesh.coordinates()
         fast_sum.init_mesh(self.nodes,xt,self.t_normals,self.face_nodes_array)
         self.fast_sum=fast_sum
@@ -365,7 +365,7 @@ class FastDemag():
         m=self.m.vector().array()        
         self.fast_sum.update_charge(m,self.weights)
         self.fast_sum.fastsum(res)
-        self.fast_sum.exactsum(res)
+        #self.fast_sum.exactsum(res)
         
 	#self.compute_correction()
         self.fast_sum.compute_correction(m,res)
@@ -381,7 +381,7 @@ if __name__ == "__main__":
    
     n=10
     mesh = UnitCube(n, n, n)
-    mesh = UnitSphere(10)
+    mesh = UnitSphere(15)
     
     Vv = df.VectorFunctionSpace(mesh, 'Lagrange', 1)
     

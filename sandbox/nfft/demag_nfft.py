@@ -89,42 +89,9 @@ def G(r1,r2):
 		
 	return 1/(4*np.pi*r)
 
-def mapping_3d_triangle_2d(p1,p2,p3):
-    """
-    mapping a 3d triangle to xy plane with the same shape and size
-    p1-->(0,0)
-    p2-->(w,0)
-    p3-->(u,v)
-    """
-    w=length(p1,p2)
-    a=length2(p1,p3)
-    b=length2(p2,p3)
-    u=(a-b)/(2*w)+w/2.0
-    v=np.sqrt(2*w**2*(a+b)-(a-b)**2-w**4)/(2*w)
-    return w,u,v
 
-def compute_correction_coeff(w,u,v):
-    """
-    We knew the charge density at three nodes of a triangle, say sigma1,sigma2,sigma3
-    then the exact solution for 1/r integration over the triangle with assumption that
-    the charge density changing linearly is:
-    
-       (sigma2-simga1)*a+(sigma3-simga1)*b+sigma1*c
 
-    where
-        a,b,c are computed by this function.
-        
-    """
-    det=w*v
-    q=np.sqrt(u*u + v*v)
-    p=np.sqrt(u*u + v*v - 2*u*w + w*w)
-    tmp=np.log((p+u-w)*w)-np.log(p*q + q*q - u*w)
 
-    a=(p*(w-q) + (u*w-q*q)*tmp)/(2*p**3)*det
-    b=(p*(q-w) + (u-w)*w*tmp)/(2*p**3)*det
-    c=-tmp/p*det
-    
-    return a,b,c
 
 
 def compute_area(p1,p2,p3):
@@ -188,7 +155,7 @@ def plot_points(data1,data2):
 
 class DemagNFFT():
     
-    def __init__(self,Vv, m, Ms,s_n=3,v_n=2):
+    def __init__(self,Vv, m, Ms,s_n=2,v_n=1):
         self.m=m
         self.Vv=Vv
         self.Ms=Ms
@@ -204,19 +171,42 @@ class DemagNFFT():
 	
 	self.t_x,self.t_y,self.t_w=compute_gauss_coeff_triangle(s_n)
         self.v_x,self.v_y,self.v_z,self.v_w=compute_gauss_coeff_tetrahedron(v_n)
-        
-        print self.v_x
-        print self.v_y
-        print self.v_z
-        print self.v_w
-        
-        
+                
         u = TrialFunction(self.V)
         v = TestFunction(self.Vv)
         a = inner(grad(u), v)*dx
         self.G = df.assemble(a)
         
         self.L = compute_minus_node_volume_vector(self.mesh)
+        
+        self.compute_affine_transformation()
+        self.compute_affine_transformation_volume()
+        
+        self.compute_charge_density()
+        self.interpolate_at_surface()
+        
+        
+        self.nodes=np.array(self.s_nodes+self.v_nodes)
+        self.weights=np.array(self.s_weight+self.v_weight)
+        
+        self.charges=np.zeros(len(self.nodes))
+        sn=len(self.s_weight)
+        self.charges[:sn]=self.sigma_array[:]
+        
+        x_t=self.mesh.coordinates()
+        x_s=self.nodes
+        n=len(x_s)
+        m=len(x_t)
+        
+        order=2*(int(n**(1.0/3)*0.64)+1)
+        if order<64:
+            order=64
+        
+        print 'n=%d  order=%d'%(n,order)
+        
+        fast_sum=FastSum(n=order)
+        fast_sum.init_mesh(x_s,x_t)
+        self.fast_sum=fast_sum
         
     
     def compute_affine_transformation(self):
@@ -286,8 +276,8 @@ class DemagNFFT():
                 self.s_nodes.append([x,y,z])
                 self.s_weight.append(det*self.t_w[j])
 
-        self.s_nodes=np.array(self.s_nodes)
-        self.s_weight=np.array(self.s_weight)
+        #self.s_nodes=np.array(self.s_nodes)
+        #self.s_weight=np.array(self.s_weight)
 
     def compute_affine_transformation_volume(self):
         v = TestFunction(self.V)
@@ -342,8 +332,8 @@ class DemagNFFT():
                 self.v_nodes.append([x,y,z])
                 self.v_weight.append(det*self.v_w[j])
 
-        self.v_nodes=np.array(self.v_nodes)
-        self.v_weight=np.array(self.v_weight)
+        #self.v_nodes=np.array(self.v_nodes)
+        #self.v_weight=np.array(self.v_weight)
         self.vol_density=np.array(self.vol_density)
 
     def compute_charge_density(self):
@@ -363,7 +353,6 @@ class DemagNFFT():
         
 
     def interpolate_at_surface(self):
-        #plot_points(self.s_nodes,self.mesh.coordinates())
         
         self.sigma_array=np.zeros(len(self.s_nodes))
 
@@ -375,88 +364,18 @@ class DemagNFFT():
                     
                 index+=1
         
-    
-    def sum_directly(self):
-        cs=self.mesh.coordinates()
-        m=len(cs)
-        n=len(self.s_nodes)
-        print 'n=',n
-        
-        self.interpolate_at_surface()
-        
-        res=np.zeros(m)
-        for i in range(m):
-            for j in range(n):
-                res[i]+=G(cs[i],self.s_nodes[j])*self.s_weight[j]*self.sigma_array[j]
-
-        self.phi.vector().set_local(res)
-        #print res
 
     def sum_using_nfft(self):
-        x_t=self.mesh.coordinates()
-        x_s=self.s_nodes
-        n=len(x_s)
-        m=len(x_t)
-        print 'm,n=',m,n
-        
-        self.interpolate_at_surface()
 
-        fast_sum=FastSum(n=64)
-        fast_sum.init_mesh(x_s,x_t)
-        tmp_charge=self.s_weight*self.sigma_array/(4*np.pi)
-        fast_sum.update_charge(tmp_charge)
+        m=len(self.mesh.coordinates())
+        tmp_charge=self.weights*self.charges/(4*np.pi)
+        self.fast_sum.update_charge(tmp_charge)
         res=np.zeros(m)
-        
-        fast_sum.sum_exact(res)
-        print 'sum directly:\n',res
-        
-        fast_sum.compute_phi(res)
-    
+         
+        self.fast_sum.compute_phi(res)    
         self.phi.vector().set_local(res)
 
-    def compute_correction(self):
-        cs=self.mesh.coordinates()
-        m=len(cs)
-        self.correction_phi=np.zeros(m)
-        
-        
-        def correct_over_triangle(self,base_index,i1,i2,i3,sigma,cs=cs):
-            
-            p1=cs[i1]
-            p2=cs[i2]
-            p3=cs[i3]
-            
-            guass_sum=0
-            for i in range(len(self.t_w)):
-                j=base_index+i
-                guass_sum+=G(p1,self.s_nodes[j])*self.sigma_array[j]*self.s_weight[j]
-                
-
-            w,u,v=mapping_3d_triangle_2d(p1,p2,p3)
-            a,b,c=compute_correction_coeff(w,u,v)
-            exact=c*sigma/(4*np.pi)
-            
-            """
-            print a,b,c,u1,u2,u3
-            print i1,i2,i3
-            """
-            #print exact,guass_sum,abs((guass_sum-exact)/exact)
-            
-            self.correction_phi[i1]+=exact-guass_sum
-            
-        
-        base_index=0
-        index=0
-        for f_n in self.face_nodes:
-            correct_over_triangle(self,base_index,f_n[0],f_n[1],f_n[2],self.sigma[index])
-            correct_over_triangle(self,base_index,f_n[1],f_n[2],f_n[0],self.sigma[index])
-            correct_over_triangle(self,base_index,f_n[2],f_n[0],f_n[1],self.sigma[index])
-            index+=1
-            base_index+=len(self.t_w)
-
-        self.phi.vector()[:]+=self.correction_phi
-            
-
+    
     def compute_field(self):
 	
 	demag_field = self.G * self.phi.vector()
@@ -482,37 +401,7 @@ if __name__ == "__main__":
     m = project(Constant((1, 0, 0)), Vv)
     
 
-    demag=DemagNFFT(Vv,m,Ms,s_n=3)
-    demag.compute_affine_transformation_volume()
+    demag=DemagNFFT(Vv,m,Ms,s_n=2)
     
-    def compute_error(field):
-        
-        field.shape=((3,-1))
-    
-        fem=271330.842297
-        
-        hx=np.average(field[0])
-        return hx,(fem+hx)/fem
-    
-    for tn in range(1):
-        demag=DemagNFFT(Vv,m,Ms,s_n=4)
-        demag.compute_affine_transformation()
-        demag.compute_charge_density()
-        
-        demag.sum_using_nfft()
-        print 'sum_nfft\n',demag.phi.vector().array()
-        
-        field=demag.compute_field()
-        print 't_n=',tn,compute_error(field),'after correction\n',
-        
-        demag.compute_correction()
-        print demag.phi.vector().array()
-        field=demag.compute_field()
-        print compute_error(field)
-        
-        #print field
-    
-    
-
-    
-
+    demag.sum_using_nfft()
+    field=demag.compute_field()
