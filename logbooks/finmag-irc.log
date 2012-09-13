@@ -1649,3 +1649,44 @@ fangohr: Still testing ...
 2012-09-12 11:24:14 JustinD: Sure, that works for me
 2012-09-12 15:38:34 fangohr-adium: Hi folks, sorry, missed the message (and didn't do food either today).
 2012-09-12 17:22:16 fangohr-adium: Over and out for today.
+2012-09-13 09:27:20 fangohr-adium: Good morning all.
+2012-09-13 09:27:42 JustinD: Good morning
+2012-09-13 14:48:50 mb8g11: Just had a really nice chat with Richard Boardman.
+2012-09-13 14:50:44 fangohr-adium: Good — he his done lots of stuff in OOMMF and Magpar in the days before Nmag; approximately 2002-2005. He is also the visualisation guru, and would routinely take VTK-vector scenes and export them to povray or other raytracers.
+2012-09-13 14:50:55 mb8g11: Besides some nostalgia about micromagnetics on his part, he seems to be really knowledgeable about parallel computing.
+2012-09-13 14:52:19 mb8g11: And he is intrigued by fenics. Definitily some potential to trade a few hints :)
+2012-09-13 14:53:09 fangohr-adium: Yes — I had a chat with him about fenics last week and tried to sell it to him (or rather to one of the post-docs in his group).
+2012-09-13 14:53:40 fangohr-adium: All good. He also has graphs on OOMMF and Magpar memory consumption in his PhD thesis. We should show these to Weiwei.
+2012-09-13 14:54:18 mb8g11: @povray: I'm impressed. @fenics: Told me you had a talk about this.
+2012-09-13 14:54:40 mb8g11: Oh, okay, I'll tell Weiwei right now.
+2012-09-13 14:55:21 fangohr-adium: Have a look at the nice logo on http://code.enthought.com/projects/mayavi/ . This was part of Richard's PhD on micromagnetics. I think we did this with OOMMF, and the ovf2vtk tool.
+2012-09-13 14:56:05 fangohr-adium: Interestingly, the same logo made it to the Enthought Python Distribution Free  (albeit smaller): http://www.enthought.com/products/epd_free.php
+2012-09-13 14:56:21 fangohr-adium: Finally, he was part of the Raspberry Pi team ;-)
+2012-09-13 14:56:31 fangohr-adium: Anyway, I'll shut up and do some more teaching preparation now.
+2012-09-13 14:56:44 fangohr-adium: @talking-to-Weiwei: thanks.
+2012-09-13 14:58:12 mb8g11: How very cool!
+2012-09-13 14:58:29 mb8g11: We downloaded the thesis, Weiwei is having a look at it now.
+2012-09-13 14:58:39 mb8g11: Okay, ttyl.
+2012-09-13 15:17:05 fangohr-adium: While we are showing off nice images: Richard also helped me a little in finetuning the povray parameters for the image used as a logo in http://www.cmmp.org.uk/64380
+2012-09-13 15:17:52 fangohr-adium: It is a long time ago, but some (then state-of-the-art) visualisations are still available at http://www.southampton.ac.uk/~fangohr/research/vortex1/mbg/mbg2.html
+2012-09-13 15:18:25 fangohr-adium: We used a linux cluster (with 8 500MHz alpha machines) to render the frames for this. A bit like Pixar, only less successful.
+2012-09-13 15:18:46 fangohr-adium: I should say for completeness that there is also some interesting science in the motion of these objects; but that's a different story.
+2012-09-13 15:19:05 mb8g11: I have no idea what I'm looking at, but the DOOM perspective is awesome.
+2012-09-13 15:19:39 fangohr-adium: Ah, yes — you mean the camera attached to one of the spheres?
+2012-09-13 15:20:00 mb8g11: Yes. Okay, just figured out the marbles are vortices.
+2012-09-13 15:20:58 fangohr-adium: So here is your challenge should you wish to accept it: Can you locate a camera on top of a travelling spin wave (maybe moving with the group velocity??) and visualise the motion accordingly? Surely we can something comparable for a magnetic system if we think long enough ...
+2012-09-13 15:21:54 mb8g11: Certainly, but what would the camera be looking at?
+2012-09-13 15:22:33 mb8g11: Wait. Another spin-wave coming at it. That should be a rough ride.
+2012-09-13 15:23:02 fangohr-adium: We could choose the direction perpendicular to the wave front (and within the  film plane) as the direction for the camera to look at. Then look at the magnetisation, and — as you just suggest — other spin waves, or reflections etc.
+2012-09-13 15:24:31 mb8g11: Sounds nice, even if I have no idea how I would even start building an animation like that.
+2012-09-13 15:24:58 mb8g11: Nevermind, let's do a feature-length movie out of it.
+2012-09-13 15:25:12 fangohr-adium: I have some ideas although it is all a bit whacky at this stage. Let's try to push the science a bit further first; then I am quite happy to discuss.
+2012-09-13 15:25:38 fangohr-adium: Agree — this will be financially more lucrative than any engineering we can come up. Should get Spielberg involved.
+2012-09-13 15:30:49 mb8g11: Spielberg Schmielberg. I want no lesser man that Uwe Boll, hero of the low-budget and direct-to-video productions and the only director alive brave enough to challenge his many critics to a boxing match and indeed beat one of them to a bloody pulp!
+2012-09-13 15:31:11 mb8g11: That's the stuff dreams are made of.
+2012-09-13 15:31:43 fangohr-adium: Uwe Boll: fine. No boxing for me, please.
+2012-09-13 15:31:54 mb8g11: But I agree insofar that some more science can't hurt. I hear it's all the rage.
+2012-09-13 15:32:04 fangohr-adium: Bring it on then ;-)
+2012-09-13 15:32:20 mb8g11: Working on it!
+2012-09-13 17:07:39 fangohr-adium: Over and out for today.
+2012-09-13 17:29:59 mb8g11: Bye Hans!
