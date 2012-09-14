@@ -198,11 +198,11 @@ class DemagNFFT():
         n=len(x_s)
         m=len(x_t)
         
-        order=2*(int(n**(1.0/3)*0.64)+1)
+        order=2*(int(n**(1.0/3)*0.7)+1)
         if order<64:
             order=64
         
-        print 'n=%d  order=%d'%(n,order)
+        print 'm=%d  n=%d  order=%d'%(m,n,order)
         
         fast_sum=FastSum(n=order)
         fast_sum.init_mesh(x_s,x_t)
