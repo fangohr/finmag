@@ -76,7 +76,7 @@ def compare_with_analytic_solution(alpha=0.5, max_t=1e-9):
     llg.set_m((1, 0, 0))
     H_app = Zeeman((0, 0, 1e6))
     H_app.setup(S3, llg._m, Ms=1)
-    llg.interactions.append(H_app)
+    llg.effective_field.add(H_app)
 
     integrator = LLGIntegrator(llg, llg.m, abstol=1e-12, reltol=1e-12)
     ts = numpy.linspace(0, max_t, num=100)

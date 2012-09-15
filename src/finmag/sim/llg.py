@@ -2,7 +2,7 @@ import logging
 import numpy as np
 import dolfin as df
 import finmag.util.consts as consts
-
+from finmag.energies.effective_field import EffectiveField
 from finmag.native import llg as native_llg
 from finmag.util.timings import timings
 from finmag.util.meshes import mesh_volume
@@ -28,15 +28,16 @@ class LLG(object):
 
     """
     def __init__(self, S1, S3, do_precession=True):
-        logger.debug("Creating LLG object.")
         timings.start('LLG-init')
+        logger.debug("Creating LLG object.")
         self.S1 = S1
         self.S3 = S3
         self.set_default_values()
         self.do_precession = do_precession
         self.do_slonczewski = False
-        timings.stop('LLG-init')
+        self.effective_field = EffectiveField(S3.mesh())
         self.Volume=None #will be computed on demand, and carries volume of the mesh
+        timings.stop('LLG-init')
 
     def set_default_values(self):
         self._alpha_mult = df.Function(self.S1)
@@ -48,12 +49,9 @@ class LLG(object):
         #               0.1e12 1/s is the value used by default in nmag 0.2
         self.Ms = 8.6e5 # A/m saturation magnetisation
         self.t = 0.0 # s
-        self._pre_rhs_callables=[]
-        self._post_rhs_callables=[]
         self._m = df.Function(self.S3)
         self._m.rename("m", "magnetisation") # gets displayed e.g. in Paraview when loading an exported VTK file
         self.pins = [] # nodes where the magnetisation gets pinned
-        self.interactions = []
     
     def set_pins(self, nodes):
         """
@@ -167,17 +165,15 @@ class LLG(object):
         ### fails.
         #self._m = ddd_m
 
-    def compute_effective_field(self):
-        H_eff = np.zeros(self.m.shape)
-        for interaction in self.interactions:
-            H_eff += interaction.compute_field()
-        self.H_eff = H_eff
- 
-    def solve(self):
-        for func in self._pre_rhs_callables:
-            func(self.t)
+    def solve_for(self, m, t):
+        self.m = m
+        self.t = t
+        value = self.solve() 
+        return value
 
-        self.compute_effective_field()
+    def solve(self):
+        H_eff = self.effective_field.compute(self.t)
+        H_eff.shape = (3, -1)
 
         timings.start("LLG-compute-dmdt")
         # Use the same characteristic time as defined by c
@@ -185,8 +181,6 @@ class LLG(object):
         # Prepare the arrays in the correct shape
         m = self.m
         m.shape = (3, -1)
-        H_eff = self.H_eff
-        H_eff.shape = (3, -1)
         dmdt = np.zeros(m.shape)
         # Calculate dm/dt
         if self.do_slonczewski:
@@ -203,9 +197,6 @@ class LLG(object):
 
         timings.stop("LLG-compute-dmdt")
 
-        for func in self._post_rhs_callables:
-            func(self)
-    
         return dmdt
 
     # Computes the dm/dt right hand side ODE term, as used by SUNDIALS CVODE
@@ -219,7 +210,6 @@ class LLG(object):
         # when it is passed to set_spils_preconditioner() in the cvode class.
         if not jok:
             self.m = m
-            self.compute_effective_field()
             self._reuse_jacobean = True
 
         return 0, not jok
@@ -242,27 +232,25 @@ class LLG(object):
         # First, compute the derivative H' = dH_eff/dt
         self.m = mp
         Hp = tmp.view()
-        Hp[:] = 0.
-        
-        for inter in self.interactions:
-            if inter.in_jacobian:
-                Hp[:] += inter.compute_field()
+        Hp[:] = self.effective_field.compute_jacobian_only(t)
 
         if not hasattr(self, '_reuse_jacobean') or not self._reuse_jacobean:
         # If the field m has changed, recompute H_eff as well
             if not np.array_equal(self.m, m):
                 self.m = m
-                self.compute_effective_field()
+                self.effective_field.compute(t)
+            else:
+                pass
+                #print "This actually happened."
+                #import sys; sys.exit()
 
         m.shape = (3, -1)
         mp.shape = (3, -1)
-        H = self.H_eff.view()
-        H.shape = (3, -1)
         Hp.shape = (3, -1)
         J_mp.shape = (3, -1)
         # Use the same characteristic time as defined by c
         char_time = 0.1 / self.c
-        native_llg.calc_llg_jtimes(m, H, mp, Hp, t, J_mp, self.gamma,
+        native_llg.calc_llg_jtimes(m, self.effective_field.H_eff.reshape((3, -1)), mp, Hp, t, J_mp, self.gamma,
                                    self.alpha_vec, char_time, self.do_precession, self.pins)
         J_mp.shape = (-1, )
         m.shape = (-1,)
@@ -273,12 +261,6 @@ class LLG(object):
 
         # Nonnegative exit code indicates success
         return 0
-
-    def solve_for(self, m, t):
-        self.m = m
-        self.t = t
-        value = self.solve() 
-        return value
 
     def use_slonczewski(self, J, P, d, p):
         """

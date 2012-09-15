@@ -43,7 +43,7 @@ def test_deviations_over_alpha_and_tol(number_of_alphas=5, do_plot=False):
 
             H_app = Zeeman((0, 0, 1e5))
             H_app.setup(S3, llg._m, Ms=1)
-            llg.interactions.append(H_app)
+            llg.effective_field.add(H_app)
 
             M_analytical = make_analytic_solution(1e5, llg.alpha, llg.gamma) 
         

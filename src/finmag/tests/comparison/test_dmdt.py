@@ -26,7 +26,7 @@ def test_dmdt_computation_with_oommf():
     H_app = (h/np.sqrt(3), h/np.sqrt(3), h/np.sqrt(3))
     zeeman = Zeeman(H_app)
     zeeman.setup(S3, llg._m, llg.Ms, 1)  
-    llg.interactions.append(zeeman)
+    llg.effective_field.add(zeeman)
 
     dmdt_finmag = df.Function(llg.S3)
     dmdt_finmag.vector()[:] = llg.solve()
