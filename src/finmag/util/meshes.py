@@ -19,8 +19,7 @@ import hashlib
 import tempfile
 import dolfin as df
 import numpy as np
-from dolfin import Mesh, cells, assemble, Constant, dx
-from finmag.util import helpers
+from dolfin import Mesh, assemble, Constant, dx
 
 logger = logging.getLogger(name='finmag')
 
