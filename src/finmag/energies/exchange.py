@@ -3,7 +3,7 @@ import dolfin as df
 import logging
 from finmag.util.timings import timings
 from energy_base import EnergyBase
-from finmag.util.consts import mu0
+from finmag.util.consts import mu0, exchange_length
 
 logger = logging.getLogger('finmag')
 
@@ -67,6 +67,9 @@ class Exchange(EnergyBase):
     def __init__(self, A, method="box-matrix-petsc"):
         super(Exchange, self).__init__(method, in_jacobian=True)
         self.A = A
+
+    def exchange_length(self):
+        return exchange_length(self.A, self.Ms)
 
     def setup(self, S3, M, Ms, unit_length=1):
         timings.start('Exchange-setup')

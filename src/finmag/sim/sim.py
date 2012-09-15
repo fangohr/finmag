@@ -12,7 +12,7 @@ from math import sqrt
 from finmag.sim.llg import LLG
 from finmag.util.timings import timings
 from finmag.util.helpers import quiver, norm
-from finmag.util.consts import mu0
+from finmag.util.consts import mu0, exchange_length, bloch_parameter
 from finmag.util.meshes import mesh_info, mesh_volume
 from finmag.sim.integrator import LLGIntegrator
 from finmag.energies.exchange import Exchange
@@ -86,46 +86,6 @@ class Simulation(object):
 
         """
         return self.llg.effective_field.total_energy()
-
-    def exchange_length_and_bloch_parameter(self):
-        """
-        Compute the exchange length and the Bloch parameter.
-
-           L1 = sqrt((2*A)/(mu0*Ms**2)
-
-           L2 = sqrt(A/K_1)
-
-        Returns the pair (L1, L2). If either of the values cannot be
-        computed, NaN is returned in its place.
-
-        These are relevant to estimate whether the mesh discretisation
-        is too coarse and might result in numerical artefacts (see W. Rave,
-        K. Fabian, A. Hubert, "Magnetic states ofsmall cubic particles with
-        uniaxial anisotropy", J. Magn. Magn. Mater. 190 (1998), 332-348).
-
-        The meaning of the constants is as follows:
-
-           A    -  exchange coupling constant
-           K_1  -  (first) anisotropy constant
-           Ms   -  saturation magnetisation
-           mu0  -  vacuum permeability
-        """
-        L1, L2 = np.NaN, np.NaN
-        if hasattr(self.llg.effective_field, "exchange"):
-            A = self.llg.effective_field.exchange.A
-            L1 = sqrt(2*A/(mu0*self.llg.Ms**2))
-            log.info("Exchange length: {:.2f} nm (exchange coupling constant: A={:.2g} J/m)".format(L1*1e9, A))
-
-            if hasattr(self.llg.effective_field, "anisotropy"):
-                K1 = float(self.llg.effective_field.anisotropy.K1) # cast to float because K1 is a dolfin constant
-                L2 = sqrt(A/K1)
-                log.info("Bloch parameter: {:.2f} nm (uniaxial anisotropy constant: K1={:.2g} J/m)".format(L2*1e9, K1))
-            else:
-                log.warning("No uniaxial anisotropy found for computation of Bloch parameter.")
-        else:
-            log.warning("No exchange field found for computation of exchange length and Bloch parameter.")
-
-        return (L1, L2)
 
     def run_until(self, t):
         if not hasattr(self, "integrator"):
@@ -479,36 +439,37 @@ class Simulation(object):
         Also print a distribution of edge lengths present in the mesh
         and how they compare to the exchange length and the Bloch
         parameter (if these can be computed). This information is
-        relevant to estimate whether the mesh discretisation is too
-        coarse and might result in numerical artefacts (also see the
-        docstring of the function `exchange_length_and_bloch_parameter`).
+        relevant to estimate whether the mesh discretisation
+        is too coarse and might result in numerical artefacts (see W. Rave,
+        K. Fabian, A. Hubert, "Magnetic states ofsmall cubic particles with
+        uniaxial anisotropy", J. Magn. Magn. Mater. 190 (1998), 332-348).
+
         """
         info_string = "{}\n".format(mesh_info(self.mesh))
 
         edgelengths = [e.length()*self.unit_length for e in df.edges(self.mesh)]
-        emax = max(edgelengths)
-        L1, L2 = self.exchange_length_and_bloch_parameter()
 
         def added_info(L, name, abbrev):
-            if np.isnan(L):
-                info = ""
+            (a,b), _ = np.histogram(edgelengths, bins=[0, L, np.infty])
+            if b == 0.0:
+                msg = "All edges are shorter"
+                msg2 = ""
             else:
-                (a,b), _ = np.histogram(edgelengths, bins=[0, L, np.infty])
-                if b == 0.0:
-                    msg = "All edges are shorter"
-                    msg2 = ""
-                else:
-                    msg = "Warning: {:.2f}% of edges are longer".format(100.0*b/(a+b))
-                    msg2 = " (this may lead to discretisation artefacts)"
-                info = "{} than the {} {} = {:.2f} nm{}.\n".format(msg, name, abbrev, L*1e9, msg2)
+                msg = "Warning: {:.2f}% of edges are longer".format(100.0*b/(a+b))
+                msg2 = " (this may lead to discretisation artefacts)"
+            info = "{} than the {} {} = {:.2f} nm{}.\n".format(msg, name, abbrev, L*1e9, msg2)
             return info
 
-        info_string += added_info(L1, 'exchange length', 'L1')
-        info_string += added_info(L2, 'Bloch parameter', 'L2')
-        return info_string
+        if hasattr(self.llg.effective_field, "exchange"):
+            A = self.llg.effective_field.exchange.A
+            l_ex = exchange_length(A, self.llg.Ms)
+            info_string += added_info(l_ex, 'exchange length', 'l_ex')
+            if hasattr(self.llg.effective_field, "anisotropy"):
+                K1 = float(self.llg.effective_field.anisotropy.K1)
+                l_bloch = bloch_parameter(A, K1)
+                info_string += added_info(l_bloch, 'Bloch parameter', 'l_bloch')
 
-    def print_mesh_info(self):
-        print self.mesh_info()
+        return info_string
 
 def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sundials",
              A=None, K1=None, K1_axis=None, H_ext=None, demag_solver='FK'):

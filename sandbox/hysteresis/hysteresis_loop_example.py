@@ -1,8 +1,7 @@
 import matplotlib
 matplotlib.use('Agg')
 
-import dolfin as df
-from numpy import linspace, array
+from numpy import array
 from finmag import sim_with
 from finmag.util.meshes import ellipsoid
 import matplotlib.pyplot as plt
@@ -30,15 +29,15 @@ N = 20
 
 if len(sys.argv) > 1:
     N = int(sys.argv[1])
-logger.info("Using N={}".format(N))
+print "Using N={}".format(N)
 
 if len(sys.argv) > 2:
     maxh = float(sys.argv[2])
-logger.info("Using maxh={}".format(maxh))
+print "Using maxh={}".format(maxh)
 
 mesh = ellipsoid(r1, r2, r3, maxh)
 sim = sim_with(mesh, Ms, m_init, alpha=alpha, unit_length=1e-9, A=A, demag_solver='FK')
-logger.info(sim.mesh_info())
+print sim.mesh_info()
 
 #(hvals, mvals) = sim.hysteresis_loop(H_max, direction, N, filename="snapshots/hysteresis_loop_example/hysteresis_ellipsoid.pvd", save_snapshots=True, save_every=10e-12, force_overwrite=True)
 (hvals, mvals) = sim.hysteresis_loop(H_max, direction, N)
