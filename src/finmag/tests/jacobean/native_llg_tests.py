@@ -13,7 +13,7 @@ class NativeLlgTests(unittest.TestCase):
         llg.solve_for(m, 0)
         # Profile the LLG computation using pyinstant
         c = counter()
-        H_eff = llg.H_eff.reshape((3, -1))
+        H_eff = llg.effective_field.H_eff.reshape((3, -1))
         m.shape = (3, -1)
         dmdt = np.zeros(m.shape)
         while c.next():

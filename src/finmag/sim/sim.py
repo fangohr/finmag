@@ -78,28 +78,14 @@ class Simulation(object):
                                accordingly
         """
         interaction.setup(self.S3, self.llg._m, self.Ms, self.unit_length)
-        self.llg.interactions.append(interaction)
-
-        if with_time_update:
-            self.llg._pre_rhs_callables.append(with_time_update)
-
-    def effective_field(self):
-        """Compute and return the effective field H_eff."""
-        self.llg.compute_effective_field()
-        return self.llg.H_eff
-
-    def dmdt(self):
-        return self.llg.solve()
+        self.llg.effective_field.add(interaction, with_time_update)
 
     def total_energy(self):
         """
-        Compute and return the total energy contribution of all
-        interactions present in the simulation.
+        Compute and return the total energy of all fields present in the simulation.
+
         """
-        energy = 0.
-        for interaction in self.llg.interactions:
-            energy += interaction.compute_energy()
-        return energy
+        return self.llg.effective_field.total_energy()
 
     def exchange_length_and_bloch_parameter(self):
         """
@@ -124,27 +110,20 @@ class Simulation(object):
            Ms   -  saturation magnetisation
            mu0  -  vacuum permeability
         """
-        exs = [e for e in self.llg.interactions if isinstance(e, Exchange)]
-        if len(exs) == 1:
-            A = exs[0].A
+        L1, L2 = np.NaN, np.NaN
+        if hasattr(self.llg.effective_field, "exchange"):
+            A = self.llg.effective_field.exchange.A
             L1 = sqrt(2*A/(mu0*self.llg.Ms**2))
             log.info("Exchange length: {:.2f} nm (exchange coupling constant: A={:.2g} J/m)".format(L1*1e9, A))
-        else:
-            L1 = np.NaN
-            log.warning("Cannot calculate exchange length or Bloch parameter ssince exactly one exchange interaction must be present in the simulation (found: {})".format(len(exs)))
 
-        # Note that only uniaxial anisotropy interactions are being considered to compute the Bloch parameter
-        # since this is the only type currently supported in Finmag and the common formula \sqrt(A/K1) only
-        # works for a uniaxial anisotropy. It might be worth investigating whether there is a more general
-        # expression once other types become available in Finmag, too.
-        ans = [a for a in self.llg.interactions if isinstance(a, UniaxialAnisotropy)]
-        if len(ans) == 1 and len(exs) == 1:
-            K1 = float(ans[0].K1) # K1 can be a dolfin Constant, hence the conversion to float
-            L2 = sqrt(A/K1)
-            log.info("Bloch parameter: {:.2f} nm (uniaxial anisotropy constant: K1={:.2g} J/m)".format(L2*1e9, K1))
+            if hasattr(self.llg.effective_field, "anisotropy"):
+                K1 = float(self.llg.effective_field.anisotropy.K1) # cast to float because K1 is a dolfin constant
+                L2 = sqrt(A/K1)
+                log.info("Bloch parameter: {:.2f} nm (uniaxial anisotropy constant: K1={:.2g} J/m)".format(L2*1e9, K1))
+            else:
+                log.warning("No uniaxial anisotropy found for computation of Bloch parameter.")
         else:
-            L2 = np.NaN
-            log.warning("Cannot calculate Bloch parameter since exactly one uniaxial anisotropy interaction (and one exchange interaction) must be present in the simulation (found: {})".format(len(ans)))
+            log.warning("No exchange field found for computation of exchange length and Bloch parameter.")
 
         return (L1, L2)
 

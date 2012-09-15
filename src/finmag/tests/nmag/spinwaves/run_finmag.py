@@ -28,7 +28,7 @@ def run_simulation():
 
     exchange = Exchange(1.3e-11)
     exchange.setup(S3, llg._m, llg.Ms)
-    llg.interactions.append(exchange)
+    llg.effective_field.add(exchange)
 
     llg.set_m(("1",
         "5 * pow(cos(pi * (x[0] * pow(10, 9) - 11) / 6), 3) \

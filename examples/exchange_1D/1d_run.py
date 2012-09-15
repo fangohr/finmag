@@ -27,7 +27,7 @@ llg.set_m((
 llg.pins = [0, 10]
 exchange = Exchange(A)
 exchange.setup(S3, llg._m, Ms)
-llg.interactions.append(exchange)
+llg.effective_field.add(exchange)
 
 print "Solving problem..."
 
