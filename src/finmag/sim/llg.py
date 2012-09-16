@@ -147,23 +147,7 @@ class LLG(object):
         reasons and because the attribute m doesn't normalise the vector.
 
         """
-        self._m.vector()[:] = helpers.vector_valued_function(value, self.S3, normalise=True, **kwargs).vector().array()
-
-        # FIXME: The above works, but the following doesn't! Why?!?! I
-        #        think I'm missing something fundamental here, hence
-        #        this warning to myself (Max, 10.9.2012)
-        #
-        #self._m = helpers.vector_valued_function(value, self.S3, normalise=False, **kwargs)
-        #
-        ### The strange thing is that there doesn't seem to be a difference:
-        #
-        #ddd_m = helpers.vector_valued_function(value, self.S3, normalise=True)
-        #logger.debug("[DDD] ddd_m and self._m have the same values: {}".format(all(ddd_m.vector() == self._m.vector())))
-        #
-        ### However, if we do the following assignment then the test
-        ###   src/finmag/tests/test_1d_domain_wall_profile_uniaxial_anisotropy.py
-        ### fails.
-        #self._m = ddd_m
+        self._m.vector()[:] = helpers.vector_valued_function(value, self.S3, normalise=False, **kwargs).vector().array()
 
     def solve_for(self, m, t):
         self.m = m
