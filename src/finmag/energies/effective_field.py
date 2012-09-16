@@ -1,5 +1,8 @@
+import logging
 import numpy as np
 from finmag.energies import Exchange, UniaxialAnisotropy
+
+logger = logging.getLogger(name="finmag")
 
 class EffectiveField(object):
     def __init__(self, mesh):
@@ -13,6 +16,8 @@ class EffectiveField(object):
         if isinstance(field, Exchange):
             self.exchange = field
         if isinstance(field, UniaxialAnisotropy):
+            if hasattr(self, "anisotropy"):
+                logger.warning("Overwriting the effective_field.anisotropy attribute.")
             self.anisotropy = field
 
         if with_time_update:
