@@ -147,7 +147,7 @@ class LLG(object):
         reasons and because the attribute m doesn't normalise the vector.
 
         """
-        self._m.vector()[:] = helpers.vector_valued_function(value, self.S3, normalise=False, **kwargs).vector().array()
+        self._m.vector()[:] = helpers.vector_valued_function(value, self.S3, normalise=True, **kwargs).vector().array()
 
     def solve_for(self, m, t):
         self.m = m
