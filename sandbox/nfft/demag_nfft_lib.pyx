@@ -61,4 +61,4 @@ cdef class FastSum:
         
     def compute_phi(self,np.ndarray[double, ndim=1, mode="c"] phi):
         fastsum_trafo(self._c_plan)
-    get_phi(self._c_plan,&phi[0])
+        get_phi(self._c_plan,&phi[0])

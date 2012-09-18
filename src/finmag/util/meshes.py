@@ -363,13 +363,16 @@ def ring(r1,r2, h, maxh, save_result=True, filename='', directory=''):
     """
     csg_string = textwrap.dedent("""\
         algebraic3d
-        solid fincyl = cylinder (0, 0, 1; 0, 0, -1; {r1} )
+        solid fincyl = cylinder (0, 0, -{h}; 0, 0, {h}; {r1} )
               and plane (0, 0, -{h}; 0, 0, -1)
               and plane (0, 0, {h}; 0, 0, 1);
-        solid fincyl2 = cylinder (0, 0, 1; 0, 0, -1; {r2} )
+        solid fincyl2 = cylinder (0, 0, -{h}; 0, 0, 0; {r2} )
               and plane (0, 0, -{h}; 0, 0, -1)
-              and plane (0, 0, {h}; 0, 0, 1);
-	solid ring = fincyl2 and not fincyl -maxh = {maxh};
+              and plane (0, 0, 0; 0, 0, 1);
+        solid fincyl3 = cylinder (0, 0, 0; 0, 0, {h}; {r2} )
+              and plane (0, 0, 0; 0, 0, -1)
+              and plane (0, 0, {h}; 0, 0, 1);   
+	solid ring = (fincyl2 or fincyl3) and not fincyl -maxh = {maxh};
         tlo ring;
         """).format(r1=r1,r2=r2, h=h/2.0, maxh=maxh)
     if save_result == True and filename == '':
