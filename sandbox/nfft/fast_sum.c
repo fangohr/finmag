@@ -38,6 +38,30 @@ static const double gauss_weights[5][5] = {
         0.2369268850561887}
 };
 
+
+ static const double dunavant_x[4][6]={
+     {0.333333333333333,0,0,0,0,0},
+     {0.666666666666667,0.166666666666667,0.166666666666667,0,0,0},
+     {0.333333333333333,0.600000000000000,0.200000000000000,0.200000000000000,0,0},
+     {0.108103018168070,0.445948490915965,0.445948490915965,0.816847572980459,0.091576213509771,0.091576213509771}
+      };
+ 
+ static const double dunavant_y[4][6]={
+     {0.333333333333333,0,0,0,0,0},
+     {0.166666666666667,0.166666666666667,0.666666666666667,0,0,0},
+     {0.333333333333333,0.200000000000000,0.200000000000000,0.600000000000000,0,0},
+     {0.445948490915965,0.445948490915965,0.108103018168070,0.091576213509771,0.091576213509771,0.816847572980459}
+     };
+        
+static const double dunavant_w[4][6]={
+    {1,0,0,0,0,0},
+    {0.333333333333333,0.333333333333333,0.333333333333333,0,0,0},
+    {-0.562500000000000,0.520833333333333,0.520833333333333,0.520833333333333,0,0},
+    {0.223381589678011,0.223381589678011,0.223381589678011,0.109951743655322,0.109951743655322,0.109951743655322}
+    };
+
+static const int dunavant_n[4]={1,3,4,6};
+    
 inline double pow2(double x) {
     return x*x;
 }
@@ -719,10 +743,10 @@ void init_fastsum(fastsum_plan *plan, int N_source, int N_target, int surface_n,
     plan->surface_n = surface_n;
     plan->volume_n = volume_n;
 
-    plan->s_x = (double *) malloc(surface_n * surface_n * (sizeof (double)));
-    plan->s_y = (double *) malloc(surface_n * surface_n * (sizeof (double)));
-    plan->s_w = (double *) malloc(surface_n * surface_n * (sizeof (double)));
-    compute_gauss_coeff_triangle(plan);
+   // plan->s_x = (double *) malloc(surface_n  * (sizeof (double)));
+   // plan->s_y = (double *) malloc(surface_n  * (sizeof (double)));
+   // plan->s_w = (double *) malloc(surface_n  * (sizeof (double)));
+    //compute_gauss_coeff_triangle(plan);
 
 
     plan->num_faces = num_faces;
@@ -743,6 +767,7 @@ void init_fastsum(fastsum_plan *plan, int N_source, int N_target, int surface_n,
 
 }
 
+/*
 void compute_gauss_coeff_triangle(fastsum_plan *plan) {
 
     int i, j;
@@ -763,7 +788,7 @@ void compute_gauss_coeff_triangle(fastsum_plan *plan) {
     }
 }
 
-/*
+
 void compute_gauss_coeff_tetrahedron(fastsum_plan *plan) {
 
     int i, j, k;
@@ -818,7 +843,8 @@ void update_charge_density(fastsum_plan *plan, double *m, double *weight) {
     int face, f, k;
     int i1, i2, i3;
     double sa, sb, sc;
-    int n = plan->surface_n * plan->surface_n;
+    int sn=plan->surface_n;
+    int n = dunavant_n[sn];
 
     printf("n=%d  num_faces=%d\n", n, plan->num_faces);
 
@@ -850,14 +876,14 @@ void update_charge_density(fastsum_plan *plan, double *m, double *weight) {
 
 
         for (k = 0; k < n; k++) {
-            plan->charge_density[n * face + k] = sa + (sb - sa) * plan->s_x[k]+(sc - sa) * plan->s_y[k];
+            plan->charge_density[n * face + k] = sa + (sb - sa) * dunavant_x[sn][k]
+                    +(sc - sa) * dunavant_x[sn][k];
         }
 
     }
 
 
     for (k = 0; k < plan->N_source; k++) {
-        // printf("%g  ",plan->charge_density[k]);
         plan->charge_density[k] *= weight[k];
     }
 

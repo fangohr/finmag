@@ -42,6 +42,29 @@ _weights=(
  0.2369268850561887))
     
 
+dunavant_x=(
+     (0.333333333333333),
+     (0.666666666666667,0.166666666666667,0.166666666666667),
+     (0.333333333333333,0.600000000000000,0.200000000000000,0.200000000000000),
+     (0.108103018168070,0.445948490915965,0.445948490915965,0.816847572980459,0.091576213509771,0.091576213509771)
+     )
+ 
+dunavant_y=(
+     (0.333333333333333),
+     (0.166666666666667,0.166666666666667,0.666666666666667),
+     (0.333333333333333,0.200000000000000,0.200000000000000,0.600000000000000),
+     (0.445948490915965,0.445948490915965,0.108103018168070,0.091576213509771,0.091576213509771,0.816847572980459)
+     )
+        
+dunavant_w=(
+    (1),
+    (0.333333333333333,0.333333333333333,0.333333333333333),
+    (-0.562500000000000,0.520833333333333,0.520833333333333,0.520833333333333),
+    (0.223381589678011,0.223381589678011,0.223381589678011,0.109951743655322,0.109951743655322,0.109951743655322)
+    )
+
+dunavant_n=[1,2,3,6]
+
 
 def length(p1,p2):
 	return np.sqrt((p1[0]-p2[0])**2+(p1[1]-p2[1])**2+(p1[2]-p2[2])**2)
@@ -135,7 +158,7 @@ def compute_correction_simplified(sa,sb,sc,p1,p2,p3):
 
 class FastDemag():
     
-    def __init__(self,Vv, m, Ms,surface_n=3,volume_n=2):
+    def __init__(self,Vv, m, Ms,surface_n=1,volume_n=1):
         self.m=m
         self.Vv=Vv
         self.Ms=Ms
@@ -176,20 +199,11 @@ class FastDemag():
     
     def compute_gauss_coeff_triangle(self):
         n=self.surface_n
-        self.s_w=np.zeros(n*n)
-        self.s_x=np.zeros(n*n)
-        self.s_y=np.zeros(n*n)
-    
-        k=0
-        xs=_nodes[n-1]
-        ws=_weights[n-1]
-        for i in range(n):
-            for j in range(n):
-                self.s_x[k]=(1+xs[i])/2.0
-                self.s_y[k]=(1-xs[i])*(1+xs[j])/4.0
-                self.s_w[k]=(1-xs[i])*ws[i]*ws[j]/8.0
-                k+=1
         
+        self.s_x=dunavant_x[n]
+        self.s_y=dunavant_y[n]
+        self.s_w=dunavant_w[n]
+    
     def compute_gauss_coeff_tetrahedron(self):
         n=self.volume_n
         self.v_w=np.zeros(n**3)
@@ -381,7 +395,7 @@ if __name__ == "__main__":
    
     n=10
     mesh = UnitCube(n, n, n)
-    mesh = UnitSphere(15)
+    mesh = UnitSphere(10)
     
     Vv = df.VectorFunctionSpace(mesh, 'Lagrange', 1)
     
