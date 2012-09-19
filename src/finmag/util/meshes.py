@@ -229,7 +229,7 @@ def box(x0, x1, x2, y0, y1, y2, maxh, save_result=True, filename='', directory='
         tlo main;
         """).format(x0, x1, x2, y0, y1, y2, maxh=maxh)
     if save_result == True and filename == '':
-        filename = "box-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.6e}".format(x0, x1, x2, y0, y1, y2, maxh).replace(".", "_")
+        filename = "box-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.6e}".format(x0, x1, x2, y0, y1, y2, maxh).replace(".", "_")
     return from_csg(csg, save_result=save_result, filename=filename, directory=directory)
 
 def sphere(r, maxh, save_result=True, filename='', directory=''):
@@ -368,11 +368,9 @@ def ring(r1,r2, h, maxh, save_result=True, filename='', directory=''):
               and plane (0, 0, {h}; 0, 0, 1);
         solid fincyl2 = cylinder (0, 0, -{h}; 0, 0, 0; {r2} )
               and plane (0, 0, -{h}; 0, 0, -1)
-              and plane (0, 0, 0; 0, 0, 1);
-        solid fincyl3 = cylinder (0, 0, 0; 0, 0, {h}; {r2} )
-              and plane (0, 0, 0; 0, 0, -1)
-              and plane (0, 0, {h}; 0, 0, 1);   
-	solid ring = (fincyl2 or fincyl3) and not fincyl -maxh = {maxh};
+              and plane (0, 0, {h}; 0, 0, 1);
+          
+	solid ring = fincyl2 and not fincyl -maxh = {maxh};
         tlo ring;
         """).format(r1=r1,r2=r2, h=h/2.0, maxh=maxh)
     if save_result == True and filename == '':

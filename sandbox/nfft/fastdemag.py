@@ -43,21 +43,21 @@ _weights=(
     
 
 dunavant_x=(
-     (0.333333333333333),
+     (0.333333333333333,),
      (0.666666666666667,0.166666666666667,0.166666666666667),
      (0.333333333333333,0.600000000000000,0.200000000000000,0.200000000000000),
      (0.108103018168070,0.445948490915965,0.445948490915965,0.816847572980459,0.091576213509771,0.091576213509771)
      )
  
 dunavant_y=(
-     (0.333333333333333),
+     (0.333333333333333,),
      (0.166666666666667,0.166666666666667,0.666666666666667),
      (0.333333333333333,0.200000000000000,0.200000000000000,0.600000000000000),
      (0.445948490915965,0.445948490915965,0.108103018168070,0.091576213509771,0.091576213509771,0.816847572980459)
      )
         
 dunavant_w=(
-    (1),
+    (1.0,),
     (0.333333333333333,0.333333333333333,0.333333333333333),
     (-0.562500000000000,0.520833333333333,0.520833333333333,0.520833333333333),
     (0.223381589678011,0.223381589678011,0.223381589678011,0.109951743655322,0.109951743655322,0.109951743655322)
@@ -65,6 +65,26 @@ dunavant_w=(
 
 dunavant_n=[1,2,3,6]
 
+
+tet_x=(
+(0.25,),
+(0.1381966011250110,0.5854101966249680,0.1381966011250110,0.1381966011250110)
+)
+
+tet_y=(
+(0.25,),
+(0.1381966011250110,0.1381966011250110,0.5854101966249680,0.1381966011250110)
+)
+
+tet_z=(
+(0.25,),
+(0.1381966011250110,0.1381966011250110,0.1381966011250110,0.5854101966249680)
+)
+
+tet_w=(
+(1.0,),
+(0.25,0.25,0.25,0.25)
+)
 
 def length(p1,p2):
 	return np.sqrt((p1[0]-p2[0])**2+(p1[1]-p2[1])**2+(p1[2]-p2[2])**2)
@@ -158,7 +178,7 @@ def compute_correction_simplified(sa,sb,sc,p1,p2,p3):
 
 class FastDemag():
     
-    def __init__(self,Vv, m, Ms,surface_n=1,volume_n=1):
+    def __init__(self,Vv, m, Ms,surface_n=1,volume_n=1,p=6,mac=0.5):
         self.m=m
         self.Vv=Vv
         self.Ms=Ms
@@ -167,6 +187,7 @@ class FastDemag():
         self.mesh=Vv.mesh()
         self.V=FunctionSpace(self.mesh, 'Lagrange', 1)
         self.phi = Function(self.V)
+        self.phi_charge = Function(self.V)
         self.field = Function(self.Vv)
 
         u = TrialFunction(self.V)
@@ -184,7 +205,7 @@ class FastDemag():
         self.weights=np.array(self.s_weight+self.v_weight)
         self.charges=np.array(self.s_charge+self.v_charge)
         
-        fast_sum=FastSum(p=6,mac=0.5,num_limit=300,surface_n=surface_n,volume_n=volume_n)
+        fast_sum=FastSum(p=p,mac=mac,num_limit=500,surface_n=surface_n,volume_n=volume_n)
         xt=self.mesh.coordinates()
         fast_sum.init_mesh(self.nodes,xt,self.t_normals,self.face_nodes_array)
         self.fast_sum=fast_sum
@@ -202,27 +223,18 @@ class FastDemag():
         
         self.s_x=dunavant_x[n]
         self.s_y=dunavant_y[n]
-        self.s_w=dunavant_w[n]
+        self.s_w=np.array(dunavant_w[n])/2.0
+        
+        print self.s_x,self.s_y
     
     def compute_gauss_coeff_tetrahedron(self):
         n=self.volume_n
-        self.v_w=np.zeros(n**3)
-        self.v_x=np.zeros(n**3)
-        self.v_y=np.zeros(n**3)
-        self.v_z=np.zeros(n**3)
-    
-        index=0
-        xs=_nodes[n-1]
-        ws=_weights[n-1]
-        for i in range(n):
-            for j in range(n):
-                for k in range(n):
-                    self.v_x[index]=(1+xs[i])/2.0
-                    self.v_y[index]=(1-xs[i])*(1+xs[j])/4.0
-                    self.v_z[index]=(1-xs[i])*(1-xs[j])*(1+xs[k])/8.0
-                    self.v_w[index]=(1-xs[i])*(1-xs[i])*(1-xs[j])*ws[i]*ws[j]*ws[k]/64.0
-                    index+=1
-    
+        
+        self.v_x=tet_x[n]
+        self.v_y=tet_y[n]
+        self.v_z=tet_z[n]
+        self.v_w=np.array(tet_w[n])/6.0
+
     
     def compute_affine_transformation_surface(self):
 	
@@ -294,7 +306,7 @@ class FastDemag():
             sc=(m[f_c[2]][0]*t.x()+m[f_c[2]][1]*t.y()+m[f_c[2]][2]*t.z())
             
             
-            for j in range(len(self.s_w)):
+            for j in range(len(self.s_x)):
                 x=c11*self.s_x[j]+c12*self.s_y[j]+x1
                 y=c21*self.s_x[j]+c22*self.s_y[j]+y1
                 z=c31*self.s_x[j]+c32*self.s_y[j]+z1
@@ -333,8 +345,8 @@ class FastDemag():
             for j in range(3):
                 tmp += a1[j]*m1[j]+a2[j]*m2[j]+a3[j]*m3[j]
 
-            tmp=tmp/v
-            return tmp,abs(v)
+            tmp=1.0*tmp/abs(v)
+            return tmp,abs(v)/6.0
         
         self.v_nodes=[]
 	self.v_weight=[]
@@ -378,12 +390,14 @@ class FastDemag():
         res=np.zeros(len(x_t))
         m=self.m.vector().array()        
         self.fast_sum.update_charge(m,self.weights)
+        #self.fast_sum.update_charge_directly(self.weights*self.charges)
         self.fast_sum.fastsum(res)
         #self.fast_sum.exactsum(res)
         
 	#self.compute_correction()
         self.fast_sum.compute_correction(m,res)
         self.phi.vector().set_local(res)
+        
         self.phi.vector()[:]*=(self.Ms/(4*np.pi))
         
 	demag_field = self.G * self.phi.vector()
@@ -395,7 +409,7 @@ if __name__ == "__main__":
    
     n=10
     mesh = UnitCube(n, n, n)
-    mesh = UnitSphere(10)
+    mesh = UnitSphere(6)
     
     Vv = df.VectorFunctionSpace(mesh, 'Lagrange', 1)
     
@@ -407,7 +421,7 @@ if __name__ == "__main__":
 
     demag=FastDemag(Vv,m,Ms,surface_n=1,volume_n=1)
     
-    cProfile.run('demag.compute_field();')
+    #cProfile.run('demag.compute_field();')
     
     print len(mesh.coordinates())
     

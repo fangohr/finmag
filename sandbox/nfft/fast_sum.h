@@ -68,6 +68,7 @@ void init_fastsum(fastsum_plan *plan, int N_source, int N_target, int surface_n,
         int volume_n, int num_faces, int p, double mac, int num_limit);
 
 void compute_correction(fastsum_plan *plan, double *m, double *phi);
+void update_charge_directly(fastsum_plan *plan, double *weight);
 
 
 

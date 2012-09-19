@@ -673,8 +673,8 @@ double compute_potential_single_target(fastsum_plan *plan, struct octree_node *t
         compute_Taylor(a, dx, dy, dz, plan->p);
 
         for (i = 0; i < plan->p + 1; i++) {
-            for (j = 0; j < plan->p + 1; j++) {
-                for (k = 0; k < plan->p + 1; k++) {
+            for (j = 0; j < plan->p -i + 1; j++) {
+                for (k = 0; k < plan->p -i -j + 1; k++) {
                     // printf("%d %d  %d  =      %g   %g\n", i, j, k, a[i][j][k], tree->moment[i][j][k]);
                     res += a[i][j][k] * tree->moment[i][j][k];
                 }
@@ -890,13 +890,26 @@ void update_charge_density(fastsum_plan *plan, double *m, double *weight) {
 
 }
 
+
+void update_charge_directly(fastsum_plan *plan, double *weight) {
+
+    int k;
+
+    for (k = 0; k < plan->N_source; k++) {
+        plan->charge_density[k] = weight[k];
+    }
+
+
+}
+
 inline double correction_over_triangle(fastsum_plan *plan, int base_index,
         double *x1, double *x2, double *x3, double sa, double sb, double sc) {
 
-    double res = 0, exact;
+    double res = 0, exact=0;
 
     int i, j, k;
-    int n = plan->surface_n * plan->surface_n;
+    int n = dunavant_n[plan->surface_n];
+    //printf("n=%d   %d\n",plan->surface_n,n);
 
     for (i = 0; i < n; i++) {
         j = base_index + i;
@@ -923,7 +936,8 @@ void compute_correction(fastsum_plan *plan, double *m, double *phi) {
     int base_index = 0;
     double sa, sb, sc;
     double *x, *y, *z;
-    int n = plan->surface_n * plan->surface_n;
+    int sn=plan->surface_n;
+    int n = dunavant_n[sn];
 
 
     for (face = 0; face < plan->num_faces; face++) {
@@ -1031,9 +1045,6 @@ int main() {
         0.7, 0.2, 0};
     double xt[3] = {0, 0, 0};
     double density[8] = {1, 2, 3, 4, 5, 6, 7, 8};
-
-
-
 
     return 0;
 
