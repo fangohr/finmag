@@ -18,6 +18,7 @@ cdef extern from "fast_sum.h":
                 int surface_n, int volume_n, int num_faces, int p, double mac, int num_limit) 
     void build_tree(fastsum_plan *plan)
     void compute_correction(fastsum_plan *plan, double *m, double *phi)
+    void update_charge_directly(fastsum_plan *plan, double *weight)
 
 	
 
@@ -35,6 +36,7 @@ cdef class FastSum:
         self.surface_n=surface_n
         self.volume_n=volume_n
         self._c_plan=create_plan()
+        print 'from cython p=',p,'mac=',mac,'surface_n=',surface_n,'num_limit=',num_limit
         if self._c_plan is NULL:
             raise MemoryError()
     
@@ -57,7 +59,10 @@ cdef class FastSum:
         
 
     def update_charge(self,np.ndarray[double, ndim=1, mode="c"] m,np.ndarray[double, ndim=1, mode="c"] weight):
-        update_charge_density(self._c_plan, &m[0],&weight[0])        
+        update_charge_density(self._c_plan, &m[0],&weight[0])
+
+    def update_charge_directly(self,np.ndarray[double, ndim=1, mode="c"] weight):
+        update_charge_directly(self._c_plan, &weight[0])         
 
     def exactsum(self,np.ndarray[double, ndim=1, mode="c"] phi):
         fastsum_exact(self._c_plan,&phi[0])
