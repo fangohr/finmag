@@ -39,29 +39,30 @@ static const double gauss_weights[5][5] = {
 };
 
 
- static const double dunavant_x[4][6]={
-     {0.333333333333333,0,0,0,0,0},
-     {0.666666666666667,0.166666666666667,0.166666666666667,0,0,0},
-     {0.333333333333333,0.600000000000000,0.200000000000000,0.200000000000000,0,0},
-     {0.108103018168070,0.445948490915965,0.445948490915965,0.816847572980459,0.091576213509771,0.091576213509771}
-      };
- 
- static const double dunavant_y[4][6]={
-     {0.333333333333333,0,0,0,0,0},
-     {0.166666666666667,0.166666666666667,0.666666666666667,0,0,0},
-     {0.333333333333333,0.200000000000000,0.200000000000000,0.600000000000000,0,0},
-     {0.445948490915965,0.445948490915965,0.108103018168070,0.091576213509771,0.091576213509771,0.816847572980459}
-     };
-        
-static const double dunavant_w[4][6]={
-    {1,0,0,0,0,0},
-    {0.333333333333333,0.333333333333333,0.333333333333333,0,0,0},
-    {-0.562500000000000,0.520833333333333,0.520833333333333,0.520833333333333,0,0},
-    {0.223381589678011,0.223381589678011,0.223381589678011,0.109951743655322,0.109951743655322,0.109951743655322}
-    };
+static const double dunavant_x[4][6] = {
+    {0.333333333333333, 0, 0, 0, 0, 0},
+    {0.666666666666667, 0.166666666666667, 0.166666666666667, 0, 0, 0},
+    {0.333333333333333, 0.600000000000000, 0.200000000000000, 0.200000000000000, 0, 0},
+    {0.108103018168070, 0.445948490915965, 0.445948490915965, 0.816847572980459, 0.091576213509771, 0.091576213509771}
+};
 
-static const int dunavant_n[4]={1,3,4,6};
-    
+static const double dunavant_y[4][6] = {
+    {0.333333333333333, 0, 0, 0, 0, 0},
+    {0.166666666666667, 0.166666666666667, 0.666666666666667, 0, 0, 0},
+    {0.333333333333333, 0.200000000000000, 0.200000000000000, 0.600000000000000, 0, 0},
+    {0.445948490915965, 0.445948490915965, 0.108103018168070, 0.091576213509771, 0.091576213509771, 0.816847572980459}
+};
+
+static const double dunavant_w[4][6] = {
+    {1, 0, 0, 0, 0, 0},
+    {0.333333333333333, 0.333333333333333, 0.333333333333333, 0, 0, 0},
+    {-0.562500000000000, 0.520833333333333, 0.520833333333333, 0.520833333333333, 0, 0},
+    {0.223381589678011, 0.223381589678011, 0.223381589678011, 0.109951743655322, 0.109951743655322, 0.109951743655322}
+};
+
+static const int dunavant_n[4] = {1, 3, 4, 6};
+static const int tet_quad_n[3] = {1, 4, 9};
+
 inline double pow2(double x) {
     return x*x;
 }
@@ -131,15 +132,15 @@ double array_min(double *x, int N, int t) {
 
 //compute det(J1),det(J2),det(J3) (equations are given in the report)
 
-inline double det2(double *x1, double *x2, double *x3) {
+inline double det2(double *dx, double *dy, double *dz) {
 
     double J1, J2, J3, res;
 
-    J1 = (x2[0] - x1[0])*(x3[1] - x1[1])-(x2[1] - x1[1])*(x3[0] - x1[0]);
+    J1 = (dy[0] - dx[0])*(dz[1] - dx[1])-(dy[1] - dx[1])*(dz[0] - dx[0]);
 
-    J2 = (x2[0] - x1[0])*(x3[2] - x1[2])-(x2[2] - x1[2])*(x3[0] - x1[0]);
+    J2 = (dy[0] - dx[0])*(dz[2] - dx[2])-(dy[2] - dx[2])*(dz[0] - dx[0]);
 
-    J3 = (x2[1] - x1[1])*(x3[2] - x1[2])-(x2[2] - x1[2])*(x3[1] - x1[1]);
+    J3 = (dy[1] - dx[1])*(dz[2] - dx[2])-(dy[2] - dx[2])*(dz[1] - dx[1]);
 
     res = sqrt(J1 * J1 + J2 * J2 + J3 * J3);
 
@@ -147,14 +148,14 @@ inline double det2(double *x1, double *x2, double *x3) {
 
 }
 
-inline double compute_correction_triangle(double *x1, double *x2, double *x3, double sa, double sb, double sc) {
+inline double compute_correction_triangle(double *dx, double *dy, double *dz, double sa, double sb, double sc) {
     double r1, r2, r3;
     double fa, fb, fc, fd;
-    r1 = distance(x1, x2);
-    r2 = distance(x1, x3);
-    r3 = distance(x2, x3);
+    r1 = distance(dx, dy);
+    r2 = distance(dx, dz);
+    r3 = distance(dy, dz);
 
-    fa = det2(x1, x2, x3);
+    fa = det2(dx, dy, dz);
 
     fb = (sb - sc)*(r1 - r2) / (2 * r3 * r3);
     fc = (sb + sc + 2 * sa) / (4.0 * r3)+(r2 * r2 - r1 * r1)*(sb - sc) / (4.0 * r3 * r3 * r3);
@@ -633,8 +634,6 @@ void compute_moment(fastsum_plan *plan, struct octree_node *tree, double ***mome
             tmp_x *= dx;
         }
 
-        // compute_moment_single(moment, dx, dy, dz, plan->charge_density[j], plan->p);
-
     }
 }
 
@@ -673,8 +672,8 @@ double compute_potential_single_target(fastsum_plan *plan, struct octree_node *t
         compute_Taylor(a, dx, dy, dz, plan->p);
 
         for (i = 0; i < plan->p + 1; i++) {
-            for (j = 0; j < plan->p -i + 1; j++) {
-                for (k = 0; k < plan->p -i -j + 1; k++) {
+            for (j = 0; j < plan->p - i + 1; j++) {
+                for (k = 0; k < plan->p - i - j + 1; k++) {
                     // printf("%d %d  %d  =      %g   %g\n", i, j, k, a[i][j][k], tree->moment[i][j][k]);
                     res += a[i][j][k] * tree->moment[i][j][k];
                 }
@@ -696,7 +695,7 @@ double compute_potential_single_target(fastsum_plan *plan, struct octree_node *t
 
         } else {
 
-            
+
             for (i = tree->begin; i < tree->end; i++) {
 
                 j = plan->index[i];
@@ -709,7 +708,7 @@ double compute_potential_single_target(fastsum_plan *plan, struct octree_node *t
                     res += plan->charge_density[j] / sqrt(R);
                 }
             }
-             
+
 
             return res;
         }
@@ -726,7 +725,7 @@ fastsum_plan *create_plan() {
 }
 
 void init_fastsum(fastsum_plan *plan, int N_source, int N_target, int surface_n,
-        int volume_n, int num_faces, int p, double mac, int num_limit) {
+        int volume_n, int num_faces, int num_tetrahedron, int p, double mac, int num_limit) {
 
     int i;
 
@@ -743,16 +742,13 @@ void init_fastsum(fastsum_plan *plan, int N_source, int N_target, int surface_n,
     plan->surface_n = surface_n;
     plan->volume_n = volume_n;
 
-   // plan->s_x = (double *) malloc(surface_n  * (sizeof (double)));
-   // plan->s_y = (double *) malloc(surface_n  * (sizeof (double)));
-   // plan->s_w = (double *) malloc(surface_n  * (sizeof (double)));
-    //compute_gauss_coeff_triangle(plan);
-
-
     plan->num_faces = num_faces;
+    plan->num_tetrahedron = num_tetrahedron;
 
     plan->face_nodes = (int *) malloc(3 * num_faces * (sizeof (int)));
     plan->t_normal = (double *) malloc(3 * num_faces * (sizeof (double)));
+
+    plan->tetrahedron_nodes = (int *) malloc(4 * num_tetrahedron * (sizeof (int)));
 
     plan->p = p;
     plan->mac_square = mac*mac;
@@ -765,63 +761,17 @@ void init_fastsum(fastsum_plan *plan, int N_source, int N_target, int surface_n,
 
     plan->num_limit = num_limit;
 
+
 }
 
-/*
-void compute_gauss_coeff_triangle(fastsum_plan *plan) {
-
-    int i, j;
-
-    int k = 0;
-
-    int n = plan->surface_n;
-
-    for (i = 0; i < n; i++) {
-        for (j = 0; j < n; j++) {
-            plan->s_x[k] = (1 + gauss_nodes[n - 1][i]) / 2.0;
-            plan->s_y[k] = (1 - gauss_nodes[n - 1][i])
-                    *(1 + gauss_nodes[n - 1][j]) / 4.0;
-            plan->s_w[k] = (1 - gauss_weights[n - 1][i])
-                    * gauss_weights[n - 1][i] * gauss_weights[n - 1][j] / 8.0;
-            k += 1;
-        }
-    }
-}
-
-
-void compute_gauss_coeff_tetrahedron(fastsum_plan *plan) {
-
-    int i, j, k;
-
-    int index = 0;
-
-    int n = plan->volume_n;
-
-    double *xs = &gauss_nodes[n - 1];
-    double *ws = &gauss_weights[n - 1];
-
-    for (i = 0; i < n; i++) {
-        for (j = 0; j < n; j++) {
-            for (k = 0; k < n; k++) {
-
-            plan->v_x[index] = (1 + xs[i]) / 2.0;
-            plan->v_y[index] = (1 - xs[i])*(1 + xs[j]) / 4.0;
-            plan->v_z[index]=(1-xs[i])*(1-xs[j])*(1+xs[k])/8.0
-            plan->v_w[index]=(1-xs[i])*(1-xs[i])*(1-xs[j])*ws[i]*ws[j]*ws[k]/64.0
-            
-            index += 1;
-        }
-    }
-}
- */
-
-void init_mesh(fastsum_plan *plan, double *x_s, double *x_t, double *t_normal, int *face_nodes) {
+void init_mesh(fastsum_plan *plan, double *x_s, double *x_t, double *t_normal,
+        int *face_nodes, int *tetrahedron_nodes) {
 
     int k;
 
     for (k = 0; k < 3 * plan->N_source; k++) {
         plan->x_s[k] = x_s[k];
-        plan->x_s_bak[k]=x_s[k];
+        plan->x_s_bak[k] = x_s[k];
     }
 
     for (k = 0; k < 3 * plan->N_target; k++) {
@@ -836,17 +786,35 @@ void init_mesh(fastsum_plan *plan, double *x_s, double *x_t, double *t_normal, i
         plan->face_nodes[k] = face_nodes[k];
     }
 
+    for (k = 0; k < 4 * plan->num_tetrahedron; k++) {
+        plan->tetrahedron_nodes[k] = tetrahedron_nodes[k];
+    }
+
+
 }
 
 void update_charge_density(fastsum_plan *plan, double *m, double *weight) {
 
-    int face, f, k;
-    int i1, i2, i3;
+    int face, f, k, tet, j;
+    int i1, i2, i3, i4;
     double sa, sb, sc;
-    int sn=plan->surface_n;
-    int n = dunavant_n[sn];
+    double m0[3], m1[3], m2[3], m3[3];
+    double x0, y0, z0;
+    double x1, y1, z1;
+    double x2, y2, z2;
+    double x3, y3, z3;
+    double dx[3], dy[3], dz[3];
+    double a1[3], a2[3], a3[3];
+    double v, *p;
+    double tmp = 0;
 
-    printf("n=%d  num_faces=%d\n", n, plan->num_faces);
+
+    int sn = plan->surface_n;
+    int n = dunavant_n[sn];
+    int tet_n = tet_quad_n[plan->volume_n];
+
+    int nt = plan->N_target;
+    int index = 0;
 
     for (k = 0; k < plan->N_source; k++) {
         plan->charge_density[k] = 0;
@@ -876,8 +844,75 @@ void update_charge_density(fastsum_plan *plan, double *m, double *weight) {
 
 
         for (k = 0; k < n; k++) {
-            plan->charge_density[n * face + k] = sa + (sb - sa) * dunavant_x[sn][k]
-                    +(sc - sa) * dunavant_x[sn][k];
+            plan->charge_density[index++] = sa + (sb - sa) * dunavant_x[sn][k]
+                    +(sc - sa) * dunavant_y[sn][k];
+        }
+
+    }
+
+
+    for (tet = 0; tet < plan->num_tetrahedron; tet++) {
+
+        f = 4 * tet;
+
+        k = plan->tetrahedron_nodes[f];
+        p = &plan->x_t[3 * k];
+        x0 = p[0];
+        y0 = p[1];
+        z0 = p[2];
+        m0[0] = m[k];
+        m0[1] = m[nt + k];
+        m0[2] = m[nt + nt + k];
+
+        k = plan->tetrahedron_nodes[f + 1];
+        p = &plan->x_t[3 * k];
+        x1 = p[0] - x0;
+        y1 = p[1] - y0;
+        z1 = p[2] - z0;
+        m1[0] = m[k] - m0[0];
+        m1[1] = m[nt + k] - m0[1];
+        m1[2] = m[nt + nt + k] - m0[2];
+
+        k = plan->tetrahedron_nodes[f + 2];
+        p = &plan->x_t[3 * k];
+        x2 = p[0] - x0;
+        y2 = p[1] - y0;
+        z2 = p[2] - z0;
+        m2[0] = m[k] - m0[0];
+        m2[1] = m[nt + k] - m0[1];
+        m2[2] = m[nt + nt + k] - m0[2];
+
+        k = plan->tetrahedron_nodes[f + 3];
+        p = &plan->x_t[3 * k];
+        x3 = p[0] - x0;
+        y3 = p[1] - y0;
+        z3 = p[2] - z0;
+        m3[0] = m[k] - m0[0];
+        m3[1] = m[nt + k] - m0[1];
+        m3[2] = m[nt + nt + k] - m0[2];
+
+        a1[0] = y3 * z2 - y2*z3;
+        a1[1] = -x3 * z2 + x2*z3;
+        a1[2] = x3 * y2 - x2*y3;
+        a2[0] = -y3 * z1 + y1*z3;
+        a2[1] = x3 * z1 - x1*z3;
+        a2[2] = -x3 * y1 + x1*y3;
+        a3[0] = y2 * z1 - y1*z2;
+        a3[1] = -x2 * z1 + x1*z2;
+        a3[2] = x2 * y1 - x1*y2;
+
+        v = x3 * y2 * z1 - x2 * y3 * z1 - x3 * y1 * z2
+                + x1 * y3 * z2 + x2 * y1 * z3 - x1 * y2*z3;
+
+        tmp = 0;
+        for (j = 0; j < 3; j++) {
+            tmp += a1[j] * m1[j] + a2[j] * m2[j] + a3[j] * m3[j];
+        }
+
+        tmp = -1.0 * tmp / v;
+
+        for (j = 0; j < tet_n; j++) {
+            plan->charge_density[index++] = tmp;
         }
 
     }
@@ -885,11 +920,10 @@ void update_charge_density(fastsum_plan *plan, double *m, double *weight) {
 
     for (k = 0; k < plan->N_source; k++) {
         plan->charge_density[k] *= weight[k];
+
     }
 
-
 }
-
 
 void update_charge_directly(fastsum_plan *plan, double *weight) {
 
@@ -899,32 +933,24 @@ void update_charge_directly(fastsum_plan *plan, double *weight) {
         plan->charge_density[k] = weight[k];
     }
 
-
 }
 
 inline double correction_over_triangle(fastsum_plan *plan, int base_index,
-        double *x1, double *x2, double *x3, double sa, double sb, double sc) {
+        double *dx, double *dy, double *dz, double sa, double sb, double sc) {
 
-    double res = 0, exact=0;
+    double res = 0, exact = 0;
 
     int i, j, k;
     int n = dunavant_n[plan->surface_n];
-    //printf("n=%d   %d\n",plan->surface_n,n);
+    //    printf("n=%d   %d  %d\n",plan->surface_n,n,base_index);
 
     for (i = 0; i < n; i++) {
         j = base_index + i;
-        res += G(x1, &plan->x_s_bak[3*j]) * plan->charge_density[j];
+        res += G(dx, &plan->x_s_bak[3 * j]) * plan->charge_density[j];
     }
 
 
-    exact = compute_correction_triangle(x1, x2, x3, sa, sb, sc);
-
-    /*
-    printf("res=%g  exact=%g  sabc=%g %g %g\n",res,exact,sa,sb,sc);
-    printf("x1=%g %g %g\n",x1[0],x1[1],x1[2]);
-    printf("x2=%g %g %g\n",x2[0],x2[1],x2[2]);
-    printf("x3=%g %g %g\n",x3[0],x3[1],x3[2]);
-     */
+    exact = compute_correction_triangle(dx, dy, dz, sa, sb, sc);
 
     return exact - res;
 }
@@ -936,7 +962,7 @@ void compute_correction(fastsum_plan *plan, double *m, double *phi) {
     int base_index = 0;
     double sa, sb, sc;
     double *x, *y, *z;
-    int sn=plan->surface_n;
+    int sn = plan->surface_n;
     int n = dunavant_n[sn];
 
 

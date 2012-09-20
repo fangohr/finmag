@@ -41,13 +41,13 @@ typedef struct {
     
     int surface_n;
     int volume_n;
-    double *s_x;
-    double *s_y;
-    double *s_w;
         
     double *t_normal;//store the normal of the triangles in the boundary
     int *face_nodes;//store the mapping between face and nodes
     int num_faces;
+    int num_tetrahedron;
+    
+    int *tetrahedron_nodes;//store the mapping between tetrahedron and nodes
 
     double critical_sigma;
     struct octree_node *tree;
@@ -58,14 +58,15 @@ typedef struct {
 } fastsum_plan;
 
 fastsum_plan *create_plan();
-void init_mesh(fastsum_plan *plan, double *x_s, double *x_t, double *t_normal, int *face_nodes);
-void update_charge_density(fastsum_plan *plan, double *m,double *weight);
+void init_mesh(fastsum_plan *plan, double *x_s, double *x_t, double *t_normal,
+        int *face_nodes, int *tetrahedron_nodes);
+void update_charge_density(fastsum_plan *plan,double *m,double *weight);
 void fastsum_finalize(fastsum_plan *plan);
 void fastsum_exact(fastsum_plan *plan, double *phi);
 void fastsum(fastsum_plan *plan, double *phi);
 void build_tree(fastsum_plan *plan);
 void init_fastsum(fastsum_plan *plan, int N_source, int N_target, int surface_n,
-        int volume_n, int num_faces, int p, double mac, int num_limit);
+        int volume_n, int num_faces, int num_tetrahedron, int p, double mac, int num_limit);
 
 void compute_correction(fastsum_plan *plan, double *m, double *phi);
 void update_charge_directly(fastsum_plan *plan, double *weight);

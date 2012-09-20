@@ -207,7 +207,8 @@ class FastDemag():
         
         fast_sum=FastSum(p=p,mac=mac,num_limit=500,surface_n=surface_n,volume_n=volume_n)
         xt=self.mesh.coordinates()
-        fast_sum.init_mesh(self.nodes,xt,self.t_normals,self.face_nodes_array)
+        tet_nodes=np.array(self.mesh.cells(),dtype=np.int32)
+        fast_sum.init_mesh(self.nodes,xt,self.t_normals,self.face_nodes_array,tet_nodes)
         self.fast_sum=fast_sum
         
         
@@ -345,8 +346,8 @@ class FastDemag():
             for j in range(3):
                 tmp += a1[j]*m1[j]+a2[j]*m2[j]+a3[j]*m3[j]
 
-            tmp=1.0*tmp/abs(v)
-            return tmp,abs(v)/6.0
+            tmp=-1.0*tmp/v
+            return tmp,abs(v)
         
         self.v_nodes=[]
 	self.v_weight=[]
@@ -388,14 +389,17 @@ class FastDemag():
     def compute_field(self):
         x_t=self.mesh.coordinates()
         res=np.zeros(len(x_t))
-        m=self.m.vector().array()        
+        m=self.m.vector().array()  
+        
         self.fast_sum.update_charge(m,self.weights)
+        
         #self.fast_sum.update_charge_directly(self.weights*self.charges)
         self.fast_sum.fastsum(res)
         #self.fast_sum.exactsum(res)
         
-	#self.compute_correction()
+	
         self.fast_sum.compute_correction(m,res)
+        
         self.phi.vector().set_local(res)
         
         self.phi.vector()[:]*=(self.Ms/(4*np.pi))
@@ -408,24 +412,26 @@ class FastDemag():
 if __name__ == "__main__":
    
     n=10
-    mesh = UnitCube(n, n, n)
-    mesh = UnitSphere(6)
+    #mesh = UnitCube(n, n, n)
+    #mesh = Box(-1, 0, 0, 1, 1, 1, 10, 2, 2)
+    mesh = UnitSphere(10)
     
     Vv = df.VectorFunctionSpace(mesh, 'Lagrange', 1)
     
     Ms = 8.6e5
-    expr = df.Expression(('1+x[0]', '1+2*x[1]','1+3*x[2]'))
-    m = project(expr, Vv)
-    m = project(Constant((1, 0, 0)), Vv)
+    expr = df.Expression(('cos(x[0])', 'sin(x[0])','0'))
+    m = interpolate(expr, Vv)
+    m = interpolate(Constant((1, 0, 0)), Vv)
     
-
+    
     demag=FastDemag(Vv,m,Ms,surface_n=1,volume_n=1)
+    print demag.compute_field()
     
     #cProfile.run('demag.compute_field();')
     
-    print len(mesh.coordinates())
+    #print len(mesh.coordinates())
     
-    print np.array(demag.compute_field())
+    #print np.array(demag.compute_field())
     
     
     
