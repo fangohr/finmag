@@ -1724,3 +1724,26 @@ fangohr: Still testing ...
 2012-09-20 17:01:48 JustinD: Oh, I wasn't planning on being that late, still need to get some food and exercise today :)
 2012-09-20 18:06:08 JustinD: I'm actually going to head off now, the code is almost finished, so I'll send it to you in the morning
 2012-09-20 18:06:10 JustinD: Bye
+2012-09-21 14:24:50 JustinD: @Hans: I've just emailed you the benchmarks
+2012-09-21 16:44:16 fangohr-adium: Ta.
+2012-09-21 16:44:21 fangohr-adium: Will have a look at them.
+2012-09-21 17:05:22 JustinD: No problem, i imagine you'll get similar results on your machine, thought with a bit less of a difference due to the gpu
+2012-09-21 17:05:42 fangohr-adium: Very nice.
+2012-09-21 17:05:49 fangohr-adium: I am sending some feedback by email.
+2012-09-21 17:05:58 JustinD: Thanks
+2012-09-21 17:06:04 fangohr-adium: On my machine there is some OpenCL library missing. Let me check the error message ...
+2012-09-21 17:07:25 fangohr-adium: Maybe I am just lakcing the right hardware: when trying to run 'python benchmark.py' I get ptxas application ptx input, line …. Instructions * requiers SM1.3 or higher, or map_f64_to_f32. So I guess this fails because my card cannot do any 64 bit operations?
+2012-09-21 17:11:57 JustinD: Yes, that's what it sounds like
+2012-09-21 17:12:12 JustinD: i did everything in double since that is what python was probably doing
+2012-09-21 17:12:31 JustinD: anyway, I unfortunately have an appointment in a few minutes and need to leave
+2012-09-21 17:12:48 JustinD: would you like me to just drop by your office if you want me to quickly look?
+2012-09-21 17:13:14 fangohr-adium: No, don't worry. I accept we can't run it on osiris; that's fine.
+2012-09-21 17:13:18 fangohr-adium: I can use the timings you got.
+2012-09-21 17:13:20 JustinD: I've just replied to your email
+2012-09-21 17:13:26 JustinD: Ok, great
+2012-09-21 17:13:49 JustinD: i can make a 32 bit float version over the weekend if it's useful
+2012-09-21 17:14:32 JustinD: Anyway, I have to run off now
+2012-09-21 17:14:35 JustinD: have a good weekend
+2012-09-21 17:14:43 fangohr-adium: And you ...
+2012-09-21 17:14:45 fangohr-adium: Thanks again.
+2012-09-21 17:14:48 fangohr-adium: over and out.
