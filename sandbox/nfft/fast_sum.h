@@ -30,7 +30,8 @@ typedef struct {
     int N_source; //Number of the nodes with known charge density
     int N_target; //Number of the nodes to be evaluated 
 
-    double *charge_density; // the coefficients of the source           
+    double *charge_density; // the coefficients of the source 
+    double *weights;
 
     double *x_s; //the coordinates of source nodes
     double *x_t; //the coordinates of target nodes
@@ -39,14 +40,14 @@ typedef struct {
     
     int *index;
     
-    int surface_n;
-    int volume_n;
+    int triangle_p;
+    int tetrahedron_p;
         
+    int triangle_num;
     double *t_normal;//store the normal of the triangles in the boundary
-    int *face_nodes;//store the mapping between face and nodes
-    int num_faces;
-    int num_tetrahedron;
+    int *triangle_nodes;//store the mapping between face and nodes
     
+    int tetrahedron_num;
     int *tetrahedron_nodes;//store the mapping between tetrahedron and nodes
 
     double critical_sigma;
@@ -58,18 +59,18 @@ typedef struct {
 } fastsum_plan;
 
 fastsum_plan *create_plan();
-void init_mesh(fastsum_plan *plan, double *x_s, double *x_t, double *t_normal,
-        int *face_nodes, int *tetrahedron_nodes);
-void update_charge_density(fastsum_plan *plan,double *m,double *weight);
+void init_mesh(fastsum_plan *plan, double *x_t, double *t_normal,
+        int *triangle_nodes, int *tetrahedron_nodes);
+void update_charge_density(fastsum_plan *plan,double *m);
 void fastsum_finalize(fastsum_plan *plan);
 void fastsum_exact(fastsum_plan *plan, double *phi);
 void fastsum(fastsum_plan *plan, double *phi);
 void build_tree(fastsum_plan *plan);
-void init_fastsum(fastsum_plan *plan, int N_source, int N_target, int surface_n,
-        int volume_n, int num_faces, int num_tetrahedron, int p, double mac, int num_limit);
+void init_fastsum(fastsum_plan *plan, int N_target, int triangle_p,
+        int tetrahedron_p, int triangle_num, int tetrahedron_num, int p, double mac, int num_limit);
 
 void compute_correction(fastsum_plan *plan, double *m, double *phi);
-void update_charge_directly(fastsum_plan *plan, double *weight);
+void update_charge_directly(fastsum_plan *plan, double *weight,double *nodes);
 
 
 

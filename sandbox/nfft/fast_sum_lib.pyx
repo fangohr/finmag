@@ -9,17 +9,19 @@ cdef extern from "fast_sum.h":
         pass
 
     fastsum_plan* create_plan()
-    void init_mesh(fastsum_plan *plan, double *x_s, double *x_t, double *t_normal,\
-        int *face_nodes, int *tetrahedron_nodes)
+    void init_mesh(fastsum_plan *plan, double *x_t, double *t_normal,\
+        int *triangle_nodes, int *tetrahedron_nodes)
     void fastsum_finalize(fastsum_plan *plan)
-    void update_charge_density(fastsum_plan *plan,double *m,double *weight)
+    void update_charge_density(fastsum_plan *plan,double *m)
     void fastsum_exact(fastsum_plan *plan, double *phi)
     void fastsum(fastsum_plan *plan, double *phi)
-    void init_fastsum(fastsum_plan *plan, int N_source, int N_target, int surface_n, \
-        int volume_n, int num_faces, int num_tetrahedron, int p, double mac, int num_limit)
+    void init_fastsum(fastsum_plan *plan, int N_target, int triangle_p,\
+        int tetrahedron_p, int triangle_num, int tetrahedron_num, int p, double mac, int num_limit)
+
     void build_tree(fastsum_plan *plan)
     void compute_correction(fastsum_plan *plan, double *m, double *phi)
-    void update_charge_directly(fastsum_plan *plan, double *weight)
+    void update_charge_directly(fastsum_plan *plan, double *weight,double *nodes)
+    void compute_source_nodes_weights(fastsum_plan *plan) 
 
 	
 
@@ -29,15 +31,15 @@ cdef class FastSum:
     cdef double mac
     cdef int p
     cdef int num_limit
-    cdef surface_n,volume_n
-    def __cinit__(self,p=4,mac=0.5,num_limit=500,surface_n=1,volume_n=0):
+    cdef triangle_p,tetrahedron_p
+    def __cinit__(self,p=4,mac=0.5,num_limit=500,triangle_p=1,tetrahedron_p=0):
         self.num_limit=num_limit
         self.p=p
         self.mac=mac
-        self.surface_n=surface_n
-        self.volume_n=volume_n
+        self.triangle_p=triangle_p
+        self.tetrahedron_p=tetrahedron_p
         self._c_plan=create_plan()
-        print 'from cython p=',p,'mac=',mac,'surface_n=',surface_n,'num_limit=',num_limit
+        print 'from cython p=',p,'mac=',mac,'triangle_p=',triangle_p,'vn=',tetrahedron_p,'num_limit=',num_limit
         if self._c_plan is NULL:
             raise MemoryError()
     
@@ -45,34 +47,31 @@ cdef class FastSum:
         if self._c_plan is NULL:
             fastsum_finalize(self._c_plan)
 
-    def init_mesh(self,np.ndarray[double, ndim=2, mode="c"] x_s,
-                         np.ndarray[double, ndim=2, mode="c"] x_t,
+    def init_mesh(self,np.ndarray[double, ndim=2, mode="c"] x_t,
                           np.ndarray[double, ndim=2, mode="c"] t_normal,
                           np.ndarray[int, ndim=2, mode="c"] face_nodes,
                           np.ndarray[int, ndim=2, mode="c"] tet_nodes  ):
         cdef int N,M,num_faces
         
-        N,M=x_s.shape[0],x_t.shape[0]
+        M=x_t.shape[0]
         num_faces=face_nodes.shape[0]
         num_tet=tet_nodes.shape[0]
-        init_fastsum(self._c_plan,N,M,self.surface_n,self.volume_n,num_faces,num_tet,self.p,self.mac,self.num_limit)
+        init_fastsum(self._c_plan,M,self.triangle_p,self.tetrahedron_p,num_faces,num_tet,self.p,self.mac,self.num_limit)
          
-        init_mesh(self._c_plan,&x_s[0,0],&x_t[0,0],&t_normal[0,0],&face_nodes[0,0],&tet_nodes[0,0])
+        init_mesh(self._c_plan,&x_t[0,0],&t_normal[0,0],&face_nodes[0,0],&tet_nodes[0,0])
+        compute_source_nodes_weights(self._c_plan)
         build_tree(self._c_plan)
-        
 
-    def update_charge(self,np.ndarray[double, ndim=1, mode="c"] m,np.ndarray[double, ndim=1, mode="c"] weight):
-        update_charge_density(self._c_plan, &m[0],&weight[0])
-        
-        
+    def update_charge(self,np.ndarray[double, ndim=1, mode="c"] m):
+        update_charge_density(self._c_plan, &m[0])
+        print 'update charge ok'
 
-    def update_charge_directly(self,np.ndarray[double, ndim=1, mode="c"] weight):
-        update_charge_directly(self._c_plan, &weight[0])         
+    def update_charge_directly(self,np.ndarray[double, ndim=1, mode="c"] weight,np.ndarray[double, ndim=2, mode="c"] nodes):
+        update_charge_directly(self._c_plan, &weight[0],&nodes[0,0])         
 
     def exactsum(self,np.ndarray[double, ndim=1, mode="c"] phi):
         fastsum_exact(self._c_plan,&phi[0])
         
-
     def fastsum(self,np.ndarray[double, ndim=1, mode="c"] phi):
         fastsum(self._c_plan,&phi[0])
 

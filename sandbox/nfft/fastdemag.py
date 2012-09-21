@@ -178,12 +178,13 @@ def compute_correction_simplified(sa,sb,sc,p1,p2,p3):
 
 class FastDemag():
     
-    def __init__(self,Vv, m, Ms,surface_n=1,volume_n=1,p=6,mac=0.5):
+    def __init__(self,Vv, m, Ms,triangle_p=1,tetrahedron_p=0,p=6,mac=0.5):
+        print 'haha come from fastdemag',triangle_p,tetrahedron_p
         self.m=m
         self.Vv=Vv
         self.Ms=Ms
-	self.surface_n=surface_n
-        self.volume_n=volume_n
+	self.triangle_p=triangle_p
+        self.tetrahedron_p=tetrahedron_p
         self.mesh=Vv.mesh()
         self.V=FunctionSpace(self.mesh, 'Lagrange', 1)
         self.phi = Function(self.V)
@@ -197,6 +198,7 @@ class FastDemag():
         
         self.L = compute_minus_node_volume_vector(self.mesh)
         
+        self.compute_triangle_normal()
         self.compute_gauss_coeff_triangle()
         self.compute_gauss_coeff_tetrahedron()
         self.compute_affine_transformation_surface()
@@ -205,22 +207,15 @@ class FastDemag():
         self.weights=np.array(self.s_weight+self.v_weight)
         self.charges=np.array(self.s_charge+self.v_charge)
         
-        fast_sum=FastSum(p=p,mac=mac,num_limit=500,surface_n=surface_n,volume_n=volume_n)
+        fast_sum=FastSum(p=p,mac=mac,num_limit=500,triangle_p=triangle_p,tetrahedron_p=tetrahedron_p)
         xt=self.mesh.coordinates()
         tet_nodes=np.array(self.mesh.cells(),dtype=np.int32)
-        fast_sum.init_mesh(self.nodes,xt,self.t_normals,self.face_nodes_array,tet_nodes)
+        fast_sum.init_mesh(xt,self.t_normals,self.face_nodes_array,tet_nodes)
         self.fast_sum=fast_sum
         
         
-        """
-        n=len(self.s_nodes)
-        print self.nodes[:n],self.nodes[n:]
-        print self.weights[:n],self.weights[n:]
-        print self.charges[:n],self.charges[n:]
-        """
-    
     def compute_gauss_coeff_triangle(self):
-        n=self.surface_n
+        n=self.triangle_p
         
         self.s_x=dunavant_x[n]
         self.s_y=dunavant_y[n]
@@ -229,12 +224,31 @@ class FastDemag():
         print self.s_x,self.s_y
     
     def compute_gauss_coeff_tetrahedron(self):
-        n=self.volume_n
+        n=self.tetrahedron_p
         
         self.v_x=tet_x[n]
         self.v_y=tet_y[n]
         self.v_z=tet_z[n]
         self.v_w=np.array(tet_w[n])/6.0
+
+
+    def compute_triangle_normal(self):
+	
+        self.face_nodes=[]
+        self.face_norms=[]
+        self.t_normals=[]
+        
+	for face in df.faces(self.mesh):
+            t=face.normal()  #one must call normal() before entities(3),...
+            cells = face.entities(3)
+            if len(cells)==1:
+                face_nodes=face.entities(0)
+                self.face_nodes.append(face_nodes)
+                self.face_norms.append(t)
+                self.t_normals.append([t.x(),t.y(),t.z()])
+    
+        self.t_normals=np.array(self.t_normals)
+        self.face_nodes_array=np.array(self.face_nodes,dtype=np.int32)
 
     
     def compute_affine_transformation_surface(self):
@@ -391,9 +405,9 @@ class FastDemag():
         res=np.zeros(len(x_t))
         m=self.m.vector().array()  
         
-        self.fast_sum.update_charge(m,self.weights)
+        self.fast_sum.update_charge(m)
         
-        #self.fast_sum.update_charge_directly(self.weights*self.charges)
+        #self.fast_sum.update_charge_directly(self.weights,self.nodes)
         self.fast_sum.fastsum(res)
         #self.fast_sum.exactsum(res)
         
@@ -424,7 +438,7 @@ if __name__ == "__main__":
     m = interpolate(Constant((1, 0, 0)), Vv)
     
     
-    demag=FastDemag(Vv,m,Ms,surface_n=1,volume_n=1)
+    demag=FastDemag(Vv,m,Ms,triangle_p=1,tetrahedron_p=1)
     print demag.compute_field()
     
     #cProfile.run('demag.compute_field();')
