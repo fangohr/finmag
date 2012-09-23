@@ -37,6 +37,7 @@ typedef struct {
     double *x_t; //the coordinates of target nodes
     
     double *x_s_bak; //the coordinates of source nodes in the original order
+    double *x_s_tet;//the coordinates of source nodes used for tetrahedron correction 
     
     int *index;
     
@@ -49,6 +50,8 @@ typedef struct {
     
     int tetrahedron_num;
     int *tetrahedron_nodes;//store the mapping between tetrahedron and nodes
+    double *tetrahedron_correction;//store the correction coefficients 
+    double *tet_charge_density;//used for  correction too
 
     double critical_sigma;
     struct octree_node *tree;
@@ -70,9 +73,6 @@ void init_fastsum(fastsum_plan *plan, int N_target, int triangle_p,
         int tetrahedron_p, int triangle_num, int tetrahedron_num, int p, double mac, int num_limit);
 
 void compute_correction(fastsum_plan *plan, double *m, double *phi);
-void update_charge_directly(fastsum_plan *plan, double *weight,double *nodes);
-
-
 
 #endif	/* FAST_SUM_H */
 

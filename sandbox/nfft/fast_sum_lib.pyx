@@ -20,7 +20,6 @@ cdef extern from "fast_sum.h":
 
     void build_tree(fastsum_plan *plan)
     void compute_correction(fastsum_plan *plan, double *m, double *phi)
-    void update_charge_directly(fastsum_plan *plan, double *weight,double *nodes)
     void compute_source_nodes_weights(fastsum_plan *plan) 
 
 	
@@ -64,10 +63,7 @@ cdef class FastSum:
 
     def update_charge(self,np.ndarray[double, ndim=1, mode="c"] m):
         update_charge_density(self._c_plan, &m[0])
-        print 'update charge ok'
-
-    def update_charge_directly(self,np.ndarray[double, ndim=1, mode="c"] weight,np.ndarray[double, ndim=2, mode="c"] nodes):
-        update_charge_directly(self._c_plan, &weight[0],&nodes[0,0])         
+        #print 'update charge ok'
 
     def exactsum(self,np.ndarray[double, ndim=1, mode="c"] phi):
         fastsum_exact(self._c_plan,&phi[0])

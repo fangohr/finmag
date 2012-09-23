@@ -343,7 +343,7 @@ def ellipsoid(r1, r2, r3, maxh, save_result=True, filename='', directory=''):
         filename = "ellipsoid-{:.1f}-{:.1f}-{:.1f}-{:.6e}".format(r1, r2, r3, maxh).replace(".", "_")
     return from_csg(csg_string, save_result=save_result, filename=filename, directory=directory)
 
-def ring(r1,r2, h, maxh, save_result=True, filename='', directory=''):
+def ring(r1,r2, h, maxh, save_result=True, filename='', directory='',with_middle_plane=False):
     """
     Return a dolfin mesh representing a ring with inner radius `r1`, outer 
     radius `r2` and height `h`. The argument `maxh` controls the maximal element size
@@ -373,6 +373,27 @@ def ring(r1,r2, h, maxh, save_result=True, filename='', directory=''):
 	solid ring = fincyl2 and not fincyl -maxh = {maxh};
         tlo ring;
         """).format(r1=r1,r2=r2, h=h/2.0, maxh=maxh)
+
+    if with_middle_plane:
+        csg_string = textwrap.dedent("""\
+        algebraic3d
+        solid fincyl = cylinder (0, 0, -{h}; 0, 0, {h}; {r1} )
+              and plane (0, 0, -{h}; 0, 0, -1)
+              and plane (0, 0, {h}; 0, 0, 1);
+        solid fincyl2 = cylinder (0, 0, -{h}; 0, 0, 0; {r2} )
+              and plane (0, 0, -{h}; 0, 0, -1)
+              and plane (0, 0, 0; 0, 0, 1);
+        
+        solid fincyl3 = cylinder (0, 0, 0; 0, 0, {h}; {r2} )
+              and plane (0, 0, 0; 0, 0, -1)
+              and plane (0, 0, {h}; 0, 0, 1);
+  
+	solid ring = (fincyl2 or fincyl3) and not fincyl -maxh = {maxh};
+        tlo ring;
+        """).format(r1=r1,r2=r2, h=h/2.0, maxh=maxh)
+        
+
+
     if save_result == True and filename == '':
         filename = "ring-{:.6e}-{:.6e}-{:.6e}-{:.6e}".format(r1,r2, h, maxh).replace(".", "_")
     return from_csg(csg_string, save_result=save_result, filename=filename, directory=directory)
