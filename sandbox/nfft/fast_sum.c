@@ -46,8 +46,58 @@ static const double tet_weights[2][4] = {
     {0.25, 0.25, 0.25, 0.25}
 };
 
+static const double tet_x_node3[35] = {
+    0.0267367755543735, 0.9197896733368800, 0.0267367755543735, 0.0267367755543735,
+    0.7477598884818090, 0.1740356302468940, 0.0391022406356488, 0.0391022406356488,
+    0.0391022406356488, 0.0391022406356488, 0.1740356302468940, 0.7477598884818090,
+    0.1740356302468940, 0.7477598884818090, 0.0391022406356488, 0.0391022406356488,
+    0.4547545999844830, 0.0452454000155172, 0.0452454000155172, 0.4547545999844830,
+    0.4547545999844830, 0.0452454000155172, 0.2232010379623150, 0.5031186450145980,
+    0.2232010379623150, 0.2232010379623150, 0.5031186450145980, 0.2232010379623150,
+    0.0504792790607720, 0.0504792790607720, 0.0504792790607720, 0.5031186450145980,
+    0.2232010379623150, 0.2232010379623150, 0.2500000000000000
+};
+
+
+static const double tet_y_node3[35] = {
+    0.0267367755543735, 0.0267367755543735, 0.9197896733368800, 0.0267367755543735,
+    0.0391022406356488, 0.0391022406356488, 0.7477598884818090, 0.1740356302468940,
+    0.0391022406356488, 0.0391022406356488, 0.7477598884818090, 0.1740356302468940,
+    0.0391022406356488, 0.0391022406356488, 0.1740356302468940, 0.7477598884818090,
+    0.0452454000155172, 0.4547545999844830, 0.0452454000155172, 0.4547545999844830,
+    0.0452454000155172, 0.4547545999844830, 0.2232010379623150, 0.2232010379623150,
+    0.5031186450145980, 0.0504792790607720, 0.0504792790607720, 0.0504792790607720,
+    0.2232010379623150, 0.5031186450145980, 0.2232010379623150, 0.2232010379623150,
+    0.5031186450145980, 0.2232010379623150, 0.2500000000000000
+};
+
+
+static const double tet_z_node3[35] = {
+    0.0267367755543735, 0.0267367755543735, 0.0267367755543735, 0.9197896733368800,
+    0.0391022406356488, 0.0391022406356488, 0.0391022406356488, 0.0391022406356488,
+    0.7477598884818090, 0.1740356302468940, 0.0391022406356488, 0.0391022406356488,
+    0.7477598884818090, 0.1740356302468940, 0.7477598884818090, 0.1740356302468940,
+    0.0452454000155172, 0.0452454000155172, 0.4547545999844830, 0.0452454000155172,
+    0.4547545999844830, 0.4547545999844830, 0.0504792790607720, 0.0504792790607720,
+    0.0504792790607720, 0.2232010379623150, 0.2232010379623150, 0.5031186450145980,
+    0.2232010379623150, 0.2232010379623150, 0.5031186450145980, 0.2232010379623150,
+    0.2232010379623150, 0.5031186450145980, 0.2500000000000000
+};
+
+static const double tet_weight3[35] = {
+    0.0021900463965388, 0.0021900463965388, 0.0021900463965388, 0.0021900463965388,
+    0.0143395670177665, 0.0143395670177665, 0.0143395670177665, 0.0143395670177665,
+    0.0143395670177665, 0.0143395670177665, 0.0143395670177665, 0.0143395670177665,
+    0.0143395670177665, 0.0143395670177665, 0.0143395670177665, 0.0143395670177665,
+    0.0250305395686746, 0.0250305395686746, 0.0250305395686746, 0.0250305395686746,
+    0.0250305395686746, 0.0250305395686746, 0.0479839333057554, 0.0479839333057554,
+    0.0479839333057554, 0.0479839333057554, 0.0479839333057554, 0.0479839333057554,
+    0.0479839333057554, 0.0479839333057554, 0.0479839333057554, 0.0479839333057554,
+    0.0479839333057554, 0.0479839333057554, 0.0931745731195340
+};
+
 static const int dunavant_n[4] = {1, 3, 4, 6};
-static const int tet_quad_n[3] = {1, 4, 9};
+static const int tet_quad_n[3] = {1, 4, 10};
 
 inline double pow2(double x) {
     return x*x;
@@ -71,7 +121,7 @@ inline double G(double *x, double *y) {
         return 0;
     }
 
-    return 1 / sqrt(r);
+    return 1.0 / sqrt(r);
 }
 
 inline double tri_max(double x, double y, double z) {
@@ -135,19 +185,21 @@ inline double det2(double *dx, double *dy, double *dz) {
 }
 
 void compute_source_nodes_weights(fastsum_plan *plan) {
-    int face, f, k, tet, j; 
+    int face, f, k, tet, i, j;
     double x0, y0, z0;
     double x1, y1, z1;
     double x2, y2, z2;
     double x3, y3, z3;
     double v, *p, *p1, *p2, *p3;
-    
+
     int sn = plan->triangle_p;
     int tri_n = dunavant_n[sn];
     int pn = plan->tetrahedron_p;
     int tet_n = tet_quad_n[pn];
+    double x_s_tmp[3*35], tmp;
 
     int index = 0;
+    int index_t = 0;
 
     for (face = 0; face < plan->triangle_num; face++) {
 
@@ -184,8 +236,8 @@ void compute_source_nodes_weights(fastsum_plan *plan) {
         }
 
     }
-    
- 
+
+
     for (tet = 0; tet < plan->tetrahedron_num; tet++) {
 
         f = 4 * tet;
@@ -219,24 +271,46 @@ void compute_source_nodes_weights(fastsum_plan *plan) {
 
         v = x3 * y2 * z1 - x2 * y3 * z1 - x3 * y1 * z2
                 + x1 * y3 * z2 + x2 * y1 * z3 - x1 * y2*z3;
-        
+
         for (k = 0; k < tet_n; k++) {
             plan->x_s[3 * index] = x1 * tet_x_nodes[pn][k] + x2 * tet_y_nodes[pn][k] + x3 * tet_z_nodes[pn][k] + x0;
             plan->x_s[3 * index + 1] = y1 * tet_x_nodes[pn][k] + y2 * tet_y_nodes[pn][k] + y3 * tet_z_nodes[pn][k] + y0;
             plan->x_s[3 * index + 2] = z1 * tet_x_nodes[pn][k] + z2 * tet_y_nodes[pn][k] + z3 * tet_z_nodes[pn][k] + z0;
 
             plan->weights[index] = fabs(v) * dunavant_w[pn][k] / 6.0;
-            
+
             index++;
         }
 
+        index_t = 0;
+        for (k = 0; k < 35; k++) {
+            x_s_tmp[3 * index_t] = x1 * tet_x_node3[k] + x2 * tet_y_node3[k] + x3 * tet_z_node3[k] + x0;
+            x_s_tmp[3 * index_t + 1] = y1 * tet_x_node3[k] + y2 * tet_y_node3[k] + y3 * tet_z_node3[k] + y0;
+            x_s_tmp[3 * index_t + 2] = z1 * tet_x_node3[k] + z2 * tet_y_node3[k] + z3 * tet_z_node3[k] + z0;
+
+            index_t++;
+        }
+
+        for (i = 0; i < 4; i++) {
+            k = plan->tetrahedron_nodes[f + i];
+            p = &plan->x_t[3 * k];
+
+            tmp = 0;
+            for (j = 0; j < 35; j++) {
+                p2 = &x_s_tmp[3 * j];
+                tmp += G(p, p2) * fabs(v) * tet_weight3[j] / 6.0;
+            }
+
+            plan->tetrahedron_correction[f + i] = tmp;
+        }
+
     }
-    
+
 
     for (k = 0; k < 3 * plan->N_source; k++) {
         plan->x_s_bak[k] = plan->x_s[k];
     }
-    
+
 }
 
 inline double compute_correction_triangle(double *dx, double *dy, double *dz, double sa, double sb, double sc) {
@@ -583,10 +657,10 @@ void build_tree(fastsum_plan *plan) {
     bnd[5] = array_max(plan->x_s, plan->N_source, 2);
 
 
-    printf("start to build tree  %d\n",plan->N_source);
+    //printf("start to build tree  %d\n", plan->N_source);
     create_tree(plan, plan->tree, 0, plan->N_source, bnd);
-    
-    printf("build tree okay\n");
+
+    //printf("build tree okay\n");
 
 }
 
@@ -840,6 +914,8 @@ void init_fastsum(fastsum_plan *plan, int N_target, int triangle_p,
     plan->t_normal = (double *) malloc(3 * triangle_num * (sizeof (double)));
 
     plan->tetrahedron_nodes = (int *) malloc(4 * tetrahedron_num * (sizeof (int)));
+    plan->tetrahedron_correction = (double *) malloc(4 * tetrahedron_num * (sizeof (double)));
+    plan->tet_charge_density = (double *) malloc(tetrahedron_num * (sizeof (double)));
 
     plan->p = p;
     plan->mac_square = mac*mac;
@@ -888,7 +964,6 @@ void update_charge_density(fastsum_plan *plan, double *m) {
     double x1, y1, z1;
     double x2, y2, z2;
     double x3, y3, z3;
-    double dx[3], dy[3], dz[3];
     double a1[3], a2[3], a3[3];
     double v, *p;
     double tmp = 0;
@@ -1000,6 +1075,8 @@ void update_charge_density(fastsum_plan *plan, double *m) {
             plan->charge_density[index++] = tmp;
         }
 
+        plan->tet_charge_density[tet] = tmp;
+
     }
 
 
@@ -1010,53 +1087,55 @@ void update_charge_density(fastsum_plan *plan, double *m) {
 
 }
 
-void update_charge_directly(fastsum_plan *plan, double *weight,double *nodes) {
-
-    int k;
-
-    for (k = 0; k < plan->N_source; k++) {
-        //plan->charge_density[k] = weight[k];
-        printf("weight %d  %d %f  %f\n",k,plan->triangle_num*3,weight[k],plan->weights[k]);
-    }
-
-    for (k = 0; k < 3*plan->N_source; k++) {
-        
-        printf("nodes %d %f  %f\n",k,nodes[k],plan->x_s_bak[k]);
-    }
-}
-
 inline double correction_over_triangle(fastsum_plan *plan, int base_index,
         double *dx, double *dy, double *dz, double sa, double sb, double sc) {
 
     double res = 0, exact = 0;
 
-    int i, j, k;
+    int i, j;
     int n = dunavant_n[plan->triangle_p];
-    //    printf("n=%d   %d  %d\n",plan->triangle_p,n,base_index);
 
     for (i = 0; i < n; i++) {
         j = base_index + i;
         res += G(dx, &plan->x_s_bak[3 * j]) * plan->charge_density[j];
     }
 
-
     exact = compute_correction_triangle(dx, dy, dz, sa, sb, sc);
 
     return exact - res;
 }
 
+inline double correction_over_tetrahedron(fastsum_plan *plan, int base_index,
+        int tet_index, int index_p, double *p) {
 
+    double res = 0, exact = 0;
+
+    int i, j, k;
+    int n = tet_quad_n[plan->tetrahedron_p];
+
+
+    for (i = 0; i < n; i++) {
+        j = base_index + i;
+        res += G(p, &plan->x_s_bak[3 * j]) * plan->charge_density[j];
+    }
+
+    exact = plan->tet_charge_density[tet_index] * plan->tetrahedron_correction[index_p];
+
+    return exact - res;
+}
 
 void compute_correction(fastsum_plan *plan, double *m, double *phi) {
 
     int face, f;
-    int i, j, k, i1, i2, i3;
+    int i, j, k, i2, i3;
     int base_index = 0;
+    int tet;
     double sa, sb, sc;
-    double *x, *y, *z;
+    double *x, *y, *z, *p;
     int sn = plan->triangle_p;
     int n = dunavant_n[sn];
-
+    int tet_n = tet_quad_n[plan->tetrahedron_p];
+    double tmp;
 
     for (face = 0; face < plan->triangle_num; face++) {
 
@@ -1090,6 +1169,21 @@ void compute_correction(fastsum_plan *plan, double *m, double *phi) {
 
     }
 
+
+    for (tet = 0; tet < plan->tetrahedron_num; tet++) {
+
+        f = 4 * tet;
+
+        for (i = 0; i < 4; i++) {
+            k = plan->tetrahedron_nodes[f + i];
+            p = &plan->x_t[3 * k];
+            tmp = correction_over_tetrahedron(plan, base_index, tet, f + i, p);
+            phi[k] += tmp;
+            //printf("tmp=%f  phi[k]=%f\n",tmp,phi[k]);
+        }
+
+        base_index += tet_n;
+    }
 
 }
 
@@ -1126,21 +1220,28 @@ void fastsum_finalize(fastsum_plan *plan) {
     int i = 0;
     free_tree(plan->tree);
     free(plan->x_s);
+    free(plan->x_s_bak);
+    free(plan->x_s_tet);
     free(plan->x_t);
     free(plan->charge_density);
+    free(plan->weights);
+    free(plan->triangle_nodes);
+    free(plan->index);
+    free(plan->t_normal);
 
     free(plan);
 
 }
 
 int main() {
+    /**
     int p = 4;
     double mac = 0.5;
     int num_limit = 2;
     int i, j, k;
     int N_source = 8, N_target = 1;
     double res = 0, r;
-    /**
+    
     double ***a = alloc_3d_double(p + 1, p + 1, p + 1);
 
     compute_Taylor(a, 1, 2, 3, p);
@@ -1149,7 +1250,7 @@ int main() {
         for (j = 0; j < p + 1; j++)
             for (k = 0; k < p + 1; k++)
                 printf("%d  %d  %d = %0.15f\n", i, j, k, a[i][j][k]);
-     */
+     
 
 
     double xs[24]
@@ -1163,6 +1264,7 @@ int main() {
         0.7, 0.2, 0};
     double xt[3] = {0, 0, 0};
     double density[8] = {1, 2, 3, 4, 5, 6, 7, 8};
+     */
 
     return 0;
 

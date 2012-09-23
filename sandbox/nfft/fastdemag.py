@@ -198,15 +198,16 @@ class FastDemag():
         
         self.L = compute_minus_node_volume_vector(self.mesh)
         
-        self.compute_triangle_normal()
-        self.compute_gauss_coeff_triangle()
-        self.compute_gauss_coeff_tetrahedron()
-        self.compute_affine_transformation_surface()
-        self.compute_affine_transformation_volume()
-        self.nodes=np.array(self.s_nodes+self.v_nodes)
-        self.weights=np.array(self.s_weight+self.v_weight)
-        self.charges=np.array(self.s_charge+self.v_charge)
         
+        #self.compute_gauss_coeff_triangle()
+        #self.compute_gauss_coeff_tetrahedron()
+        #self.compute_affine_transformation_surface()
+        #self.compute_affine_transformation_volume()
+        #self.nodes=np.array(self.s_nodes+self.v_nodes)
+        #self.weights=np.array(self.s_weight+self.v_weight)
+        #self.charges=np.array(self.s_charge+self.v_charge)
+        
+        self.compute_triangle_normal()
         fast_sum=FastSum(p=p,mac=mac,num_limit=500,triangle_p=triangle_p,tetrahedron_p=tetrahedron_p)
         xt=self.mesh.coordinates()
         tet_nodes=np.array(self.mesh.cells(),dtype=np.int32)
@@ -407,10 +408,8 @@ class FastDemag():
         
         self.fast_sum.update_charge(m)
         
-        #self.fast_sum.update_charge_directly(self.weights,self.nodes)
         self.fast_sum.fastsum(res)
         #self.fast_sum.exactsum(res)
-        
 	
         self.fast_sum.compute_correction(m,res)
         
