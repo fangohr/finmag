@@ -37,7 +37,7 @@ typedef struct {
     double *x_t; //the coordinates of target nodes
     
     double *x_s_bak; //the coordinates of source nodes in the original order
-    double *x_s_tet;//the coordinates of source nodes used for tetrahedron correction 
+    //double *x_s_tet;//the coordinates of source nodes used for tetrahedron correction 
     
     int *index;
     

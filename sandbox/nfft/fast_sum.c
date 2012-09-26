@@ -627,14 +627,14 @@ void printree(struct octree_node *tree) {
 
 }
 
-void free_tree(struct octree_node *tree) {
+void free_tree(fastsum_plan *plan,struct octree_node *tree) {
     int i;
     if (tree->num_children > 0) {
         for (i = 0; i < tree->num_children; i++) {
-            free_tree(tree->children[i]);
+            free_tree(plan,tree->children[i]);
         }
     } else {
-        //free_3d_double(tree->moment,tree->p+1);
+        free_3d_double(tree->moment,plan->p+1);
         free(tree);
     }
 
@@ -1217,17 +1217,21 @@ void fastsum(fastsum_plan *plan, double *phi) {
 }
 
 void fastsum_finalize(fastsum_plan *plan) {
-    int i = 0;
-    free_tree(plan->tree);
-    free(plan->x_s);
-    free(plan->x_s_bak);
-    free(plan->x_s_tet);
-    free(plan->x_t);
+    
+   
+    free_tree(plan,plan->tree);
+    
     free(plan->charge_density);
-    free(plan->weights);
-    free(plan->triangle_nodes);
     free(plan->index);
     free(plan->t_normal);
+    free(plan->tet_charge_density);
+    free(plan->tetrahedron_correction);
+    free(plan->tetrahedron_nodes);
+    free(plan->triangle_nodes);
+    free(plan->weights);
+    free(plan->x_s);
+    free(plan->x_s_bak);
+    free(plan->x_t);
 
     free(plan);
 
