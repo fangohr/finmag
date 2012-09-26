@@ -43,8 +43,10 @@ cdef class FastSum:
             raise MemoryError()
     
     def __dealloc__(self):
-        if self._c_plan is NULL:
+        if self._c_plan is not NULL:
             fastsum_finalize(self._c_plan)
+            self._c_plan=NULL
+            
 
     def init_mesh(self,np.ndarray[double, ndim=2, mode="c"] x_t,
                           np.ndarray[double, ndim=2, mode="c"] t_normal,
@@ -73,4 +75,9 @@ cdef class FastSum:
 
     def compute_correction(self,np.ndarray[double, ndim=1, mode="c"] m,np.ndarray[double, ndim=1, mode="c"] phi):
         compute_correction(self._c_plan,&m[0],&phi[0])
+    
+    def free_memory(self):
+        if self._c_plan is not NULL:
+            fastsum_finalize(self._c_plan)
+            self._c_plan=NULL
         

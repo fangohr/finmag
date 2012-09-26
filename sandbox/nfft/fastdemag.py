@@ -179,7 +179,6 @@ def compute_correction_simplified(sa,sb,sc,p1,p2,p3):
 class FastDemag():
     
     def __init__(self,Vv, m, Ms,triangle_p=1,tetrahedron_p=0,p=6,mac=0.5):
-        print 'haha come from fastdemag',triangle_p,tetrahedron_p
         self.m=m
         self.Vv=Vv
         self.Ms=Ms
@@ -439,6 +438,7 @@ if __name__ == "__main__":
     
     demag=FastDemag(Vv,m,Ms,triangle_p=1,tetrahedron_p=1)
     print demag.compute_field()
+    demag.fast_sum.free_memory()
     
     #cProfile.run('demag.compute_field();')
     
