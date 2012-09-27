@@ -10,9 +10,10 @@ class ThinFilmDemag(AbstractEnergy):
     Hj = Hk = 0 and Hi = - Mi.
 
     """
-    def __init__(self, direction="z", in_jacobian=False):
+    def __init__(self, direction="z", field_strength=1, in_jacobian=False):
         assert direction in ["x", "y", "z"]
         self.direction = ord(direction) - 120 # converts x,y,z to 0,1,2
+        self.strength = field_strength
         self.in_jacobian = in_jacobian
         in_jacobian_msg = "in Jacobian" if in_jacobian else "not in Jacobian"
         logger.debug("Creating {} object, {}.".format(
@@ -26,7 +27,7 @@ class ThinFilmDemag(AbstractEnergy):
     def compute_field(self):
         m = self.m.vector().array().view().reshape((3, -1))
         self.H[self.direction][:] = m[self.direction]
-        return - self.Ms * self.H.ravel()
+        return - self.strength * self.Ms * self.H.ravel()
 
     def compute_energy(self):
         return 0
