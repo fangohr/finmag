@@ -6,11 +6,13 @@ logger = logging.getLogger('finmag')
 
 class ThinFilmDemag(AbstractEnergy):
     """
-    Demagnetising field for thin films in the z-direction.
-    Hx = Hy = 0 and Hz = - Mz.
+    Demagnetising field for thin films in the i-direction.
+    Hj = Hk = 0 and Hi = - Mi.
 
     """
-    def __init__(self, in_jacobian=False):
+    def __init__(self, direction="z", in_jacobian=False):
+        assert direction in ["x", "y", "z"]
+        self.direction = ord(direction) - 120 # converts x,y,z to 0,1,2
         self.in_jacobian = in_jacobian
         in_jacobian_msg = "in Jacobian" if in_jacobian else "not in Jacobian"
         logger.debug("Creating {} object, {}.".format(
@@ -23,7 +25,7 @@ class ThinFilmDemag(AbstractEnergy):
 
     def compute_field(self):
         m = self.m.vector().array().view().reshape((3, -1))
-        self.H[2][:] = m[2]
+        self.H[self.direction][:] = m[self.direction]
         return - self.Ms * self.H.ravel()
 
     def compute_energy(self):
