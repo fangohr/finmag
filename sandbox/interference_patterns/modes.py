@@ -1,11 +1,12 @@
 import numpy as np
 import dolfin as df
+import matplotlib as mpl
+from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 from math import pi
 from finmag import Simulation
 from finmag.energies import Zeeman, UniaxialAnisotropy, ThinFilmDemag
 
-# todo: show trajectories in 3D space
 # todo: what is the fundamental frequency?
 
 mesh = df.Interval(1, 0, 1e-9)
@@ -13,10 +14,13 @@ mesh = df.Interval(1, 0, 1e-9)
 
 Ms_Oersted = 17.8e3; Ms = Ms_Oersted / (pi * 4e-3);
 H_anis_Oersted = 986; H_anis = H_anis_Oersted / (pi * 4e-3);
-for H_ext_Oersted in [1e3, 1.5e3, 2e3]:
-    J_rel = []; inv_t0_over_J_rel = [];
-    for J_mult in np.linspace(1.0, 1.5, 20):
-        H_ext = H_ext_Oersted / (pi * 4e-3)
+H_ext_Oersted = [1e3, 1.5e3, 2e3]
+J_mult = np.linspace(0.1, 1.0, 4)
+
+inv_t0_over_J = []
+for H_i in H_ext_Oersted:
+    for J_i in J_mult:
+        H_ext = H_i / (pi * 4e-3)
 
         sim = Simulation(mesh, Ms)
         sim.set_m((0.1, 0.1, 1.0)) # "nearly parallel to fixed layer magnetisation"
@@ -26,17 +30,44 @@ for H_ext_Oersted in [1e3, 1.5e3, 2e3]:
         sim.add(ThinFilmDemag("x", 0.65))
 
         J0 = -1e12 # A/m^2 or 10^8 A/cm^2
-        sim.set_stt(df.Constant(J_mult*J0), polarisation=1.0, thickness=4e-9, direction=(0, 0, 1))
+        sim.set_stt(df.Constant(J_i*J0), polarisation=1.0, thickness=4e-9, direction=(0, 0, 1))
 
-        t = 0.0; dt = 1e-12; t_max = 1e-9;
-        while t <= t_max:
-            mz = sim.m.reshape((3, -1)).mean(1)[2]
-            if mz <= 0:
-                J_rel.append(J_mult - 1)
-                inv_t0_over_J_rel.append(1/t)
-                break
-            t += dt
+        ts = np.linspace(0, 2e-9, 1000)
+        traj = []
+        crossed_z_axis = False
+        for t in ts:
+            mx, my, mz = sim.m[::2]
+            traj.append([mx, my, mz])
+            if mz <= 0 and crossed_z_axis == False:
+                inv_t0_over_J.append(1/t)
+                crossed_z_axis = True
             sim.run_until(t)
-        plt.plot(J_rel, inv_t0_over_J_rel) 
-plt.show()
+        trajectory = np.array(traj)
+        trajectory = trajectory.reshape(trajectory.size, order="F").reshape((3, -1))
+ 
+        plt.plot(ts, trajectory[0])
+        plt.savefig("x-H{}-J{}.png".format(H_i, J_i))
+        plt.clf()
+        plt.close()
+
+        fig = plt.figure()
+        ax = fig.gca(projection='3d')
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+        ax.set_zlabel("z")
+        ax.plot(trajectory[0], trajectory[1], trajectory[2], label="H={} Oe, J_0 * {}".format(H_i, J_i))
+        ax.legend()
+        plt.savefig("traj-H{}-J{}.png".format(H_i, J_i))
+        plt.close()
+        plt.clf()
+
+inv_t0_over_J = np.array(inv_t0_over_J).reshape((len(H_ext_Oersted), -1))
+fig = plt.figure()
+ax = fig.add_subplot(111)
+ax.set_xlabel("J [A/m^2]")
+ax.set_ylabel("1/t0 [1/s]")
+for i, H in enumerate(H_ext_Oersted):
+    ax.plot(J_mult*J0, inv_t0_over_J[i], label="H={} Oe".format(H))
+plt.legend()
+plt.savefig("inv_t0_over_J.png")
 
