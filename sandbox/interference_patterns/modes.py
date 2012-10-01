@@ -3,7 +3,7 @@ import dolfin as df
 import matplotlib as mpl
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
-from math import pi
+from math import pi, ceil
 from finmag import Simulation
 from finmag.energies import Zeeman, UniaxialAnisotropy, ThinFilmDemag
 
@@ -15,16 +15,18 @@ mesh = df.Interval(1, 0, 1e-9)
 Ms_Oersted = 17.8e3; Ms = Ms_Oersted / (pi * 4e-3);
 H_anis_Oersted = 986; H_anis = H_anis_Oersted / (pi * 4e-3);
 H_ext_Oersted = [1e3, 1.5e3, 2e3]
-J_mult = np.linspace(0.1, 1.4, 4)
+J_mult = np.linspace(0.1, 1.0, 10)
 
 w0_over_J = []
 inv_t0_over_J = []
 for H_i in H_ext_Oersted:
-    for J_i in J_mult:
+    fig_traj, axes_traj = plt.subplots(nrows=int(ceil(1.0*len(J_mult)/2)), ncols=2, subplot_kw={"projection":"3d"}, figsize=(8, 11))
+    fig_mx, axes_mx = plt.subplots(nrows=int(ceil(1.0*len(J_mult)/2)), ncols=2, figsize=(8, 11))
+    for i, J_i in enumerate(J_mult):
         H_ext = H_i / (pi * 4e-3)
 
         sim = Simulation(mesh, Ms)
-        sim.set_m((0.1, 0.1, 1.0)) # "nearly parallel to fixed layer magnetisation"
+        sim.set_m((0.01, 0.01, 1.0)) # "nearly parallel to fixed layer magnetisation"
         sim.alpha = 0.003
         sim.add(Zeeman((0, 0, - H_ext)))
         sim.add(UniaxialAnisotropy(K1=H_anis, axis=(0, 0, 1)))
@@ -45,26 +47,22 @@ for H_i in H_ext_Oersted:
             sim.run_until(t)
         trajectory = np.array(traj)
         trajectory = trajectory.reshape(trajectory.size, order="F").reshape((3, -1))
- 
-        plt.plot(1e9*ts, trajectory[0], label="H={} Oe, J/J0={}".format(H_i, J_i))
-        plt.xlabel("t [ns]")
-        plt.ylabel("m_x")
-        plt.ylim([-1,1])
-        plt.legend()
-        plt.savefig("mx-H{}-J{}.png".format(H_i, J_i))
-        plt.clf()
-        plt.close()
 
-        fig = plt.figure()
-        ax = fig.gca(projection='3d')
-        ax.set_xlabel("x")
-        ax.set_ylabel("y")
-        ax.set_zlabel("z")
-        ax.plot(trajectory[0], trajectory[1], trajectory[2], label="H={} Oe, J/J0={}".format(H_i, J_i))
-        ax.legend()
-        plt.savefig("traj-H{}-J{}.png".format(H_i, J_i))
-        plt.close()
-        plt.clf()
+        axes_mx[i/2,i%2].plot(1e9*ts, trajectory[0])
+        axes_mx[i/2,i%2].set_title("H={} Oe, J/J0={}".format(H_i, J_i))
+        axes_mx[i/2,i%2].set_xlabel("t [ns]")
+        axes_mx[i/2,i%2].set_ylabel("m_x")
+        axes_mx[i/2,i%2].set_ylim([-1, 1])
+        
+        axes_traj[i/2,i%2].plot(trajectory[0], trajectory[1], trajectory[2])
+        axes_traj[i/2,i%2].set_xlabel("x")
+        axes_traj[i/2,i%2].set_ylabel("y")
+        axes_traj[i/2,i%2].set_zlabel("z")
+        axes_traj[i/2,i%2].set_title("H={} Oe, J/J0={}".format(H_i, J_i))
+    fig_traj.tight_layout()
+    fig_traj.savefig("trajectory_{}kOe.png".format(H_i/1000))
+    fig_mx.tight_layout()
+    fig_mx.savefig("mx_{}kOe.png".format(H_i/1000))
 
 inv_t0_over_J = np.array(inv_t0_over_J).reshape((len(H_ext_Oersted), -1))
 fig = plt.figure()
