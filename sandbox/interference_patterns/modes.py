@@ -15,8 +15,9 @@ mesh = df.Interval(1, 0, 1e-9)
 Ms_Oersted = 17.8e3; Ms = Ms_Oersted / (pi * 4e-3);
 H_anis_Oersted = 986; H_anis = H_anis_Oersted / (pi * 4e-3);
 H_ext_Oersted = [1e3, 1.5e3, 2e3]
-J_mult = np.linspace(0.1, 1.0, 4)
+J_mult = np.linspace(0.1, 1.4, 4)
 
+w0_over_J = []
 inv_t0_over_J = []
 for H_i in H_ext_Oersted:
     for J_i in J_mult:
@@ -45,8 +46,12 @@ for H_i in H_ext_Oersted:
         trajectory = np.array(traj)
         trajectory = trajectory.reshape(trajectory.size, order="F").reshape((3, -1))
  
-        plt.plot(ts, trajectory[0])
-        plt.savefig("x-H{}-J{}.png".format(H_i, J_i))
+        plt.plot(1e9*ts, trajectory[0], label="H={} Oe, J/J0={}".format(H_i, J_i))
+        plt.xlabel("t [ns]")
+        plt.ylabel("m_x")
+        plt.ylim([-1,1])
+        plt.legend()
+        plt.savefig("mx-H{}-J{}.png".format(H_i, J_i))
         plt.clf()
         plt.close()
 
@@ -55,7 +60,7 @@ for H_i in H_ext_Oersted:
         ax.set_xlabel("x")
         ax.set_ylabel("y")
         ax.set_zlabel("z")
-        ax.plot(trajectory[0], trajectory[1], trajectory[2], label="H={} Oe, J_0 * {}".format(H_i, J_i))
+        ax.plot(trajectory[0], trajectory[1], trajectory[2], label="H={} Oe, J/J0={}".format(H_i, J_i))
         ax.legend()
         plt.savefig("traj-H{}-J{}.png".format(H_i, J_i))
         plt.close()
@@ -64,10 +69,10 @@ for H_i in H_ext_Oersted:
 inv_t0_over_J = np.array(inv_t0_over_J).reshape((len(H_ext_Oersted), -1))
 fig = plt.figure()
 ax = fig.add_subplot(111)
-ax.set_xlabel("J [A/m^2]")
-ax.set_ylabel("1/t0 [1/s]")
+ax.set_xlabel("J/J0")
+ax.set_ylabel("1/t0 [1/ns]")
 for i, H in enumerate(H_ext_Oersted):
-    ax.plot(J_mult*J0, inv_t0_over_J[i], label="H={} Oe".format(H))
+    ax.plot(J_mult, 1e-9*inv_t0_over_J[i], label="H={} Oe".format(H))
 plt.legend()
 plt.savefig("inv_t0_over_J.png")
 
