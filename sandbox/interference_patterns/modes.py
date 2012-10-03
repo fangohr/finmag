@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from math import pi, ceil
 from finmag import Simulation
 from finmag.energies import Zeeman, UniaxialAnisotropy, ThinFilmDemag
+#from proto_anisotropy import ProtoAnisotropy
 
 # todo: what is the fundamental frequency?
 
@@ -15,7 +16,7 @@ mesh = df.Interval(1, 0, 1e-9)
 Ms_Oersted = 17.8e3; Ms = Ms_Oersted / (pi * 4e-3);
 H_anis_Oersted = 986; H_anis = H_anis_Oersted / (pi * 4e-3);
 H_ext_Oersted = [1e3, 1.5e3, 2e3]
-J_mult = np.linspace(0.1, 1.0, 10)
+J_mult = np.linspace(0.1, 1.5, 10)
 
 w0_over_J = []
 inv_t0_over_J = []
@@ -26,16 +27,18 @@ for H_i in H_ext_Oersted:
         H_ext = H_i / (pi * 4e-3)
 
         sim = Simulation(mesh, Ms)
-        sim.set_m((0.01, 0.01, 1.0)) # "nearly parallel to fixed layer magnetisation"
+        # "nearly parallel to fixed layer magnetisation", 1 degree bias
+        sim.set_m((0.01234, 0.01234, 0.99985))
         sim.alpha = 0.003
         sim.add(Zeeman((0, 0, - H_ext)))
+        #sim.add(ProtoAnisotropy(H_anis))
         sim.add(UniaxialAnisotropy(K1=H_anis, axis=(0, 0, 1)))
-        sim.add(ThinFilmDemag("x", 0.65))
+        sim.add(ThinFilmDemag("x", -0.65))
 
         J0 = -1e12 # A/m^2 or 10^8 A/cm^2
         sim.set_stt(df.Constant(J_i*J0), polarisation=1.0, thickness=4e-9, direction=(0, 0, 1))
 
-        ts = np.linspace(0, 2e-9, 1000)
+        ts = np.linspace(0, 5e-9, 1000)
         traj = []
         crossed_z_axis = False
         for t in ts:
