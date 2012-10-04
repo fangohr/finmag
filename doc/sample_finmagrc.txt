@@ -1,0 +1,2 @@
+[logging]
+color_scheme = dark_bg
