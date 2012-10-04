@@ -9,7 +9,6 @@ from finmag import Simulation
 from finmag.energies import Zeeman, UniaxialAnisotropy, ThinFilmDemag
 import finmag.util.helpers as h
 from finmag.util.consts import mu0
-from proto_anisotropy import ProtoAnisotropy
 
 # todo: what is the fundamental frequency?
 
