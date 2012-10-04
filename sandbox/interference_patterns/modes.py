@@ -8,6 +8,7 @@ from math import pi, ceil
 from finmag import Simulation
 from finmag.energies import Zeeman, UniaxialAnisotropy, ThinFilmDemag
 import finmag.util.helpers as h
+from finmag.util.consts import mu0
 from proto_anisotropy import ProtoAnisotropy
 
 # todo: what is the fundamental frequency?
@@ -19,7 +20,7 @@ Ms_Oersted = 17.8e3; Ms = Ms_Oersted / (pi * 4e-3);
 H_anis_Oersted = 986; H_anis = H_anis_Oersted / (pi * 4e-3);
 H_ext_Oersted = [1e3, 1.5e3, 2e3]
 J_mult = np.linspace(0.1, 1.5, 10)
-shown_once = False
+shown_once = True
 w0_over_J = []
 inv_t0_over_J = []
 for H_i in H_ext_Oersted:
@@ -34,8 +35,7 @@ for H_i in H_ext_Oersted:
         sim.alpha = 0.003
         zeeman = Zeeman((0, 0, - H_ext))
         sim.add(zeeman)
-        ua = ProtoAnisotropy(H_anis)
-        #ua = UniaxialAnisotropy(K1=-H_anis, axis=(0, 0, 1))
+        ua = UniaxialAnisotropy(K1=-H_anis*Ms*mu0/2, axis=(0, 0, 1))
         sim.add(ua)
         tfd = ThinFilmDemag("x", -0.65)
         sim.add(tfd)
@@ -47,7 +47,6 @@ for H_i in H_ext_Oersted:
             Hd = tfd.compute_field()[::2]
             Heff = sim.llg.effective_field.compute(0)[::2]
             Heff /= h.norm(Heff)
-            print Heff
             mxHeff = np.cross(m, Heff)
             figure = ml.figure(bgcolor=(1, 1, 1), fgcolor=(0, 0, 0))
             ml.quiver3d([0], [0], [0], [m[0]], [m[1]], [m[2]], color=(1, 0, 0))
