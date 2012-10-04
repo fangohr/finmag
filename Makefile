@@ -80,7 +80,12 @@ clean:
 create-dirs:
 	mkdir -p test-reports/junit
 
-test: clean make-modules run-unittest-tests run-pytest-tests run-ci-tests
+test: clean test-dirty
+
+# The following is useful for running tests locally when there are uncommitted
+# files in the repository that should not be erased by 'make clean' (which is
+# implicitly called by 'make test').
+test-dirty: make-modules run-unittest-tests run-pytest-tests run-ci-tests
 
 run-unittest-tests : $(addsuffix /__runtests__,$(TEST_ROOTS))
 
