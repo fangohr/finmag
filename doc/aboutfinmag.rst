@@ -70,6 +70,22 @@ Installation
 
 .. include:: install.txt
 
+Customisation via ``.finmagrc``
+-------------------------------
+
+There is (currently rather rudimentary) support for customisation of Finmag's behaviour via a configuration file. Either of the files ``~/.finmagrc`` and ``~/.finmag/finmagrc`` will be taken into account (if they exist). This is an example of a minimalistic sample configuration file:
+
+.. literalinclude:: sample_finmagrc.txt
+
+Configuration options are collected in sections (such as 'logging' in the example above), and each section contains assignments for the variables to be configured. Currently (as of 4.10.2012) the configurable options are as follows:
+
+* Section ``logging``:
+
+  - ``console_logging_level``: ???
+
+  - ``dolfin_logging_level``: ???
+
+  - ``color_scheme``: Selects a color scheme for the logger. Allowed values are 'dark_bg' and 'light_bg' (for terminals with dark and light background, respectively).
 
 Finmag and GPU
 --------------
