@@ -6,6 +6,7 @@ SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 PAPER         =
 BUILDDIR      = _build
+SPHINXWARNINGOPTS ?= -W
 
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4
@@ -44,7 +45,7 @@ clean:
 	-rm -rf $(BUILDDIR)/* modules/*
 
 htmlraw:
-	$(SPHINXBUILD) -W -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	$(SPHINXBUILD) $(SPHINXWARNINGOPTS) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 
 html: generate-doc htmlraw
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
