@@ -61,6 +61,12 @@ doc-singlehtml:
 doc-pdf:
 	make -C doc generate-doc latexpdf
 
+# The following is useful for quick debugging as it doesn't rebuild the examples.
+# However, currently it will only work if a complete run of 'make doc-html' was
+# successfully performed beforehand.
+doc-html-nobuildexamples:
+	SPHINXWARNINGOPTS= make -C doc htmlraw
+
 make-modules:
 	make -C $(NATIVE_DIR) all
 
