@@ -9,6 +9,25 @@ import ctypes
 import logging
 import os
 
+level_maps = {
+    'dark_bg':
+        {
+            logging.DEBUG: (None, 'blue', True),
+            logging.INFO: (None, 'white', False),
+            logging.WARNING: (None, 'yellow', True),
+            logging.ERROR: (None, 'red', True),
+            logging.CRITICAL: ('red', 'white', True),
+         },
+    'light_bg':
+        {
+            logging.DEBUG: (None, 'black', False),
+            logging.INFO: (None, 'blue', False),
+            logging.WARNING: (None, 'yellow', False),
+            logging.ERROR: (None, 'red', False),
+            logging.CRITICAL: ('red', 'white', True),
+        }
+    }
+
 class ColorizingStreamHandler(logging.StreamHandler):
     # color names to indices
     color_map = {
@@ -24,21 +43,9 @@ class ColorizingStreamHandler(logging.StreamHandler):
 
     #levels to (background, foreground, bold/intense)
     if os.name == 'nt':
-        level_map = {
-            logging.DEBUG: (None, 'blue', True),
-            logging.INFO: (None, 'white', False),
-            logging.WARNING: (None, 'yellow', True),
-            logging.ERROR: (None, 'red', True),
-            logging.CRITICAL: ('red', 'white', True),
-        }
+        level_map = level_maps['dark_bg']
     else:
-        level_map = {
-            logging.DEBUG: (None, 'black', False),
-            logging.INFO: (None, 'blue', False),
-            logging.WARNING: (None, 'yellow', False),
-            logging.ERROR: (None, 'red', False),
-            logging.CRITICAL: ('red', 'white', True),
-        }
+        level_map = level_maps['light_bg']
     csi = '\x1b['
     reset = '\x1b[0m'
 

@@ -41,7 +41,12 @@ ch = ansistrm.ColorizingStreamHandler()
 
 # Read the logging settings from the configuration file
 console_level = parse_logging_level(configuration.get_config_option("logging", "console_logging_level", logging.DEBUG))
+color_scheme = configuration.get_config_option("logging", "color_scheme", None)
 ch.setLevel(console_level)
+try:
+    ch.level_map = ansistrm.level_maps[color_scheme]
+except KeyError:
+    raise ValueError("Unkown color scheme: '{}' (allowed values: {})".format(color_scheme, ansistrm.level_maps.keys()))
 dolfin_level = parse_logging_level(configuration.get_config_option("logging", "dolfin_logging_level"), _DOLFIN_LOG_LEVELS)
 if dolfin_level is not None:
     df.set_log_level(dolfin_level)
