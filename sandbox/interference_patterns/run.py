@@ -23,7 +23,7 @@ def point_contacts(fig=5, debug=False):
     return expr
 
 unit_length = 1e-9;
-Ms = 860e3
+Ms = 640e3
 A = 17e-12 # J/m, computed from the exchange length, is meant to be Permalloy
 
 # Point contacts
@@ -41,6 +41,7 @@ for figure in [5, 6]:
 
     sim = Simulation(mesh, Ms, unit_length)
     sim.alpha = 0.012 # Section 5 page 8
+    #sim.gamma = 2 * pi * 28.024944e9 # Hz/T
     sim.set_m((0, 0, 1))
     sim.add(Zeeman((0, 0, 1.1 * Ms))) # Section 3, end of Section 5
     sim.add(Exchange(A))
@@ -50,7 +51,7 @@ for figure in [5, 6]:
     m = df.Function(sim.S3)
     m_archive = df.File("figure_{}/m.pvd".format(figure))
 
-    t = 0; dt = 5e-12; pulse_time = 10e-12; t_max = 100e-12;
+    t = 0; dt = 5e-12; pulse_time = 50e-12; t_max = 315e-12;
     while t <= t_max:
         print "Running until {}s.".format(t)
         sim.run_until(t)
