@@ -121,7 +121,6 @@ We use the following tools:
 Overview repository structure
 -----------------------------
 
-- ``background`` - background info that is crucial for the code, for example key publications. Add (binary) data (such as pdf) sparingly to keep repository size small.
 - ``bin``: - scripts we need; currently only used by Jenkins
 - ``sandbox``: a directory used to develop new features, and to have a repository for code that is incomplete, and thus would fail regression tests. When a new feature is completed, it (and associated tests) should be move to the ``src`` directory (and thus execute automatically). One should also add an example of usage into the ``examples`` directory which will be included in the documentation.
 - ``sandbox/basics-*``: ``sandbox`` is also sometimes used to test small things that may be worth storing in the repository (because we need to get back to it and/or it could be useful to other developers) but which is not really worth including in the finmag package): typically to improve our understanding of some software method.
