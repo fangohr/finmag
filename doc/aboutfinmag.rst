@@ -81,9 +81,9 @@ Configuration options are collected in sections (such as 'logging' in the exampl
 
 * Section ``logging``:
 
-  - ``console_logging_level``: ???
+  - ``console_logging_level``: Sets the threshold logging level for logging messages that are sent to console using the Python `logging <http://docs.python.org/library/logging.html>`__ library. Default value is DEBUG; set it to WARN or higher to reduce the amount of messages sent to the console. Possible values are DEBUG, INFO, WARN, ERROR, CRITICAL.
 
-  - ``dolfin_logging_level``: ???
+  - ``dolfin_logging_level``: Sets the threshold logging level for messages from FEniCS/Dolfin. Dolfin has its own logging facility for C++ code that is separate from Python's `logging <http://docs.python.org/library/logging.html>`__. Possible values are DEBUG, INFO, WARN, ERROR, CRITICAL, PROGRESS.
 
   - ``color_scheme``: Selects a color scheme for the logger. Allowed values are 'dark_bg' and 'light_bg' (for terminals with dark and light background, respectively).
 
