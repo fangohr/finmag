@@ -59,11 +59,11 @@ with a starting magnetisation as described by
 
 where :math:`x \in [0; 1]`.
 
+.. include:: ../src/finmag/tests/comparison/exchange/table.rst
+
 The values for the relative difference are listed in :ref:`exchange_table`.
 Note that the data in the table is re-created on the fly when compiling
 the documentation.
-
-.. include:: ../src/finmag/tests/comparison/exchange/table.rst
 
 Because this problem is defined on a one-dimensional mesh, no comparison with
 magpar is possible. However ``src/finmag/tests/magpar/test_exchange_compare_magpar.py``
@@ -85,9 +85,9 @@ is defined by
 
 where :math:`x, y, z \in [0; 1]`.
 
-The values for the relative difference are listed in :ref:`anis_table`.
-
 .. include:: ../src/finmag/tests/comparison/anisotropy/table.rst
+
+The values for the relative difference are listed in :ref:`anis_table`.
 
 The Demagnetising field
 -----------------------
@@ -96,11 +96,11 @@ A sphere was magnetised in the :math:`(1, 0, 0)` direction and the demagnetising
 field computed with finmag, nmag and magpar. Those three fields were
 additionally compared to the analytical solution :math:`(-\frac{1}{3}, 0, 0)`.
 
+.. include:: ../src/finmag/tests/comparison/demag/table.rst
+
 The values for the relative difference are listed in :ref:`demag_table`. It is
 worth noting that the nmag and finmag solution are close to each other, with
 magpar further away both from them and the analytical solution.
-
-.. include:: ../src/finmag/tests/comparison/demag/table.rst
 
 Solution of the LLG equation
 ----------------------------
