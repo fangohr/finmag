@@ -1,5 +1,4 @@
 import dolfin as df
-from finmag.util.meshes import from_geofile
 
 def point_contacts(origins, radius, J, debug=False):
     """
