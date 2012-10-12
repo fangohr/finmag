@@ -1835,3 +1835,27 @@ fangohr: Still testing ...
 2012-10-11 15:40:17 mb8g11: :)
 2012-10-11 15:42:20 mb8g11: Is the console window into summer running by any chance?
 2012-10-11 15:43:19 fangohr-adium1: Windows is just waking up from sleeping. How can I help?
+2012-10-12 09:19:19 fangohr-adium1: Good Morning.
+2012-10-12 09:19:35 cilix: Good morning!
+2012-10-12 09:20:00 fangohr-adium1: Hey, didn't really expect any replies yet ;).
+2012-10-12 09:20:10 cilix: I guessed so. ;-)
+2012-10-12 09:21:11 fangohr-adium1: Shall we chat about your hysteresis loop in the group meeting? I thought this may well be interesting to all.
+2012-10-12 09:21:31 cilix: Sure, why not.
+2012-10-12 09:22:08 cilix: Don't know if I have many interesting observations yet (other than that it takes long), but we can certainly discuss it.
+2012-10-12 09:23:27 fangohr-adium1: It is typical that the first relaxation (for some applied field) takes a long time. Changing the field a little, and waiting for the magnetisation to relax in that new field, would typically take much less time. Once the reversal starts (and we have to move far in phase space — if that makes any sense), it might take a lot of time again. Could it be this pattern?
+2012-10-12 09:23:56 cilix: Yes, that seems to be the case indeed.
+2012-10-12 09:24:22 fangohr-adium1: You can speed up the initial step by choosing an initial magnetic configuration that is similar to the relaxed state at the first applied field.
+2012-10-12 09:25:05 cilix: That's what I did, actually. So I was surprised to see that it still takes very long.
+2012-10-12 09:25:25 fangohr-adium1: Okay, that is surprising then.
+2012-10-12 09:25:56 cilix: Also, I'm not sure what this means for the 3rd year project linked to the hysteresis loops, as it might be quite a frustrating experience having to wait so long for just a single simulation to finish.
+2012-10-12 09:26:19 cilix: (I personally don't mind too much as I can keep myself busy in other ways :-P)
+2012-10-12 09:26:36 fangohr-adium1: Another likely problem is how we decide when the system is relaxed: if we are too picky here, it could take a very long time. (We can even be over accurate: if the required dm/dt is soo small that it requires the fields to be more accurate than, say, the demag calculation is, then it may never converge).
+2012-10-12 09:26:55 cilix: True.
+2012-10-12 09:27:28 cilix: I should start fiddling with the parameters. So far I have only played with toy systems and haven't really bothered with the tolerances, but these may be quite relevant here.
+2012-10-12 09:27:42 cilix: I'll have to see how I can develop a feeling for what's reasonable in that respect.
+2012-10-12 09:28:11 fangohr-adium1: Having simulations to run for a long time is not necessarily a problem for the UG project: many simulations take a long time. And one can always start from a smaller system initially to figure out the right parameters, way to run the script etc. We may have to think about provision of some computing plat form (osiris, your machine?, lyceum) so that the runs can be done there.
+2012-10-12 09:28:53 fangohr-adium1: By the way: Weiwei knows a lot about parameters for demag, and also for time integration. And the Nmag manual also knows a little (there is a section of tolerances for the time integration).
+2012-10-12 13:50:52 fangohr-adium1: Max, following on from the discussions over lunch: the tool I refer to is TimeMachine. (http://www.apple.com/support/timemachine/). On 10.8, there is an application in /Applications/TimeMachine. Or try the preferences.
+2012-10-12 14:50:17 D_Chernyshenko: Hans, can you try to push the changes again? I've enabled group write access for the repository.
+2012-10-12 14:50:32 fangohr-adium1: Done, worked. Thanks.
+2012-10-12 14:50:38 D_Chernyshenko: Thanks!
