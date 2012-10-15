@@ -151,7 +151,7 @@ class Simulation(object):
                                              dmdt_increased_counter_limit=dmdt_increased_counter_limit,
                                              dt_limit=dt_limit)
 
-    def hysteresis(self, H_ext_list, leave_last_field_on=False, fun=None, **kwargs):
+    def hysteresis(self, H_ext_list, leave_last_field_on=False, fun=None, save_snapshots=False, **kwargs):
         """
         Set the applied field to the first value in `H_ext_list` (which should
         be a list of external field vectors) and then call the relax() method.
@@ -233,7 +233,7 @@ class Simulation(object):
 
                 if filename != '':
                    cur_filename = filename + "__stage_{:03d}__.pvd".format(cur_stage)
-                self.relax(filename=cur_filename, **kwargs)
+                self.relax(filename=cur_filename, save_snapshots=save_snapshots, **kwargs)
                 cur_stage += 1
                 if fun is not None:
                     retval = fun(self)
@@ -246,34 +246,35 @@ class Simulation(object):
             log.info("Switching off the applied field which was used for hysteresis.")
             self.llg.effective_field.interactions.remove(H)
 
-        # We now remove trailing underscores from output filenames (for cosmetic
-        # resons only ... ;-) and create a 'global' output file which combines
-        # all stages of the simulation.
+        if save_snapshots:
+            # We now remove trailing underscores from output filenames (for cosmetic
+            # resons only ... ;-) and create a 'global' output file which combines
+            # all stages of the simulation.
+            #
+            f_global = open(filename+'.pvd', 'w')
+            f_global.write(textwrap.dedent("""\
+                <?xml version="1.0"?>
+                <VTKFile type="Collection" version="0.1">
+                  <Collection>
+                """))
 
-        f_global = open(filename+'.pvd', 'w')
-        f_global.write(textwrap.dedent("""\
-            <?xml version="1.0"?>
-            <VTKFile type="Collection" version="0.1">
-              <Collection>
-            """))
-
-        cur_stage = 0
-        cur_timestep = 0
-        for f in sorted(glob.glob(filename+"__stage_[0-9][0-9][0-9]__.pvd")):
-            f_global.write("    <!-- Hysteresis stage #{:03d} -->\n".format(cur_stage))
-            for line in fileinput.input([f]):
-                if re.match('^\s*<DataSet .*/>$', line):
-                    # We require sequentially increasing timesteps, so
-                    # we have to manually substitue them (TODO: unless
-                    # we can already do this when saving the snapshot?!?)
-                    line = re.sub('timestep="[0-9]+"', 'timestep="{}"'.format(cur_timestep), line)
-                    f_global.write(line)
-                    cur_timestep += 1
-            f_global.write("\n")
-            os.rename(f, re.sub('__\.pvd', '.pvd', f))
-            cur_stage += 1
-        f_global.write("  </Collection>\n</VTKFile>\n")
-        f_global.close()
+            cur_stage = 0
+            cur_timestep = 0
+            for f in sorted(glob.glob(filename+"__stage_[0-9][0-9][0-9]__.pvd")):
+                f_global.write("    <!-- Hysteresis stage #{:03d} -->\n".format(cur_stage))
+                for line in fileinput.input([f]):
+                    if re.match('^\s*<DataSet .*/>$', line):
+                        # We require sequentially increasing timesteps, so
+                        # we have to manually substitue them (TODO: unless
+                        # we can already do this when saving the snapshot?!?)
+                        line = re.sub('timestep="[0-9]+"', 'timestep="{}"'.format(cur_timestep), line)
+                        f_global.write(line)
+                        cur_timestep += 1
+                f_global.write("\n")
+                os.rename(f, re.sub('__\.pvd', '.pvd', f))
+                cur_stage += 1
+            f_global.write("  </Collection>\n</VTKFile>\n")
+            f_global.close()
 
         return res or None
 
