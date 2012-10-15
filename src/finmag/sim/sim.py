@@ -244,7 +244,7 @@ class Simulation(object):
 
         if not leave_last_field_on:
             log.info("Switching off the applied field which was used for hysteresis.")
-            self.llg.interactions.remove(H)
+            self.llg.effective_field.interactions.remove(H)
 
         # We now remove trailing underscores from output filenames (for cosmetic
         # resons only ... ;-) and create a 'global' output file which combines
