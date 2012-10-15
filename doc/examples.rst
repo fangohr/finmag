@@ -10,4 +10,5 @@ Examples
 .. include:: ../examples/spatially-varying-anisotropy/doc.rst
 .. include:: ./comparison-tables.rst.txt
 .. include:: ../examples/std_prob_3/doc.rst
+.. include:: ../examples/dispersion_curves/doc.rst
 
