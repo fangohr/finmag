@@ -102,6 +102,9 @@ def from_csg(csg, save_result=True, filename="", directory=""):
         logger.warning("Ignoring 'directory' argument (value given: '{}') because 'filename' contains an absolute path: '{}'".format(directory, filename))
 
     if save_result:
+        if not os.path.exists(directory):
+            logger.debug("Creating directory '{}' as it does not exist.".format(directory))
+            os.mkdir(directory)
         geofile = os.path.join(directory, filename) + ".geo"
         with open(geofile, "w") as f:
             f.write(csg)
