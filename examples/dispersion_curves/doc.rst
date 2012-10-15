@@ -3,7 +3,7 @@ Dispersion relation
 
 This example illustrated how to calculate dispersion curves for a given sample. 
 The simulated system is a so-called "width-modulated nanostrip waveguide" [Lee2009]_, 
-as shown, 
+as shown in the following figure, 
 
 .. image:: ../examples/dispersion_curves/bar.png
     :scale: 100
