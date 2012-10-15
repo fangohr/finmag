@@ -325,7 +325,7 @@ class Simulation(object):
     alpha = property(__get_alpha, __set_alpha)
 
     def spatial_alpha(self, alpha, multiplicator):
-        self.llg.spatially_varying_alpha(self, alpha, multiplicator)
+        self.llg.spatially_varying_alpha(alpha, multiplicator)
 
     def __get_gamma(self):
         return self.llg.gamma
