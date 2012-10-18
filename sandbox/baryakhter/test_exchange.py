@@ -166,7 +166,6 @@ class BaryakhtarExchange(EnergyBase):
         H_ex = np.dot(self.g, m)
         relax = Ms*m*self.coeff*(self.init_Ms**2-Ms**2)
         return H_ex/Ms/self.vol+relax
-
    
 
     def  __compute_field_petsc(self):
