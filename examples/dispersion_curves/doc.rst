@@ -6,7 +6,7 @@ The simulated system is a so-called "width-modulated nanostrip waveguide" [Lee20
 as shown in the following figure, 
 
 .. image:: ../examples/dispersion_curves/bar.png
-    :scale: 100
+    :scale: 75
     :align: center 
     
 The dimensions of the nanostrip is :math:`1080\times 30 \times 2 \mathrm{nm}^3` 
