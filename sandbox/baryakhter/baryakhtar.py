@@ -27,6 +27,7 @@ class LLB(object):
         
         self.dm_dt = np.zeros(self.M.shape)
         self.H_eff = np.zeros(self.M.shape)
+        self.call_field_times=0
         
          
         self.set_default_values()
@@ -66,7 +67,6 @@ class LLB(object):
     def alpha(self, value):
         self._alpha = value
         self.alpha_vec = self._alpha * self._alpha_mult.vector().array()
-        print 'alpha=',self.alpha_vec
         
     @property
     def beta(self):
@@ -76,7 +76,6 @@ class LLB(object):
     def beta(self, value):
         self._beta = value
         self.beta_vec = self._beta * self._beta_mult.vector().array()
-        print 'beta=',self.beta_vec
     
     
     
@@ -138,8 +137,9 @@ class LLB(object):
         for interaction in self.interactions:
             H_eff += interaction.compute_field()
         
-        print 'M_',self._M.vector().array()
-        print 'heff=',H_eff
+        #print 'M_',self._M.vector().array()
+        #print 'heff=',H_eff
+        self.call_field_times+=1
         self.H_eff = H_eff
  
     def compute_laplace_effective_field(self):
@@ -166,7 +166,7 @@ class LLB(object):
 
         self.compute_effective_field()
         delta_Heff = self.compute_laplace_effective_field()
-        print 'delta_Heff',delta_Heff
+        #print 'delta_Heff',delta_Heff
  
         timings.start("LLG-compute-dmdt")
         # Use the same characteristic time as defined by c
@@ -187,7 +187,6 @@ class LLB(object):
         for func in self._post_rhs_callables:
             func(self)
         
-        print 'dm_dt',self.dm_dt
         ydot[:] = self.dm_dt[:]
             
         return 0
