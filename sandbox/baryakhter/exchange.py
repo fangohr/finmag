@@ -7,66 +7,69 @@ from finmag.util.timings import timings
 
 logger=logging.getLogger('finmag')
 
-
-class Exchange(EnergyBase):
-    def __init__(self, C, chi=1,method="box-matrix-petsc"):
-        super(Exchange, self).__init__(method, in_jacobian=True)     
+    
+class Exchange(object):
+    def __init__(self, C, chi=1):
         self.C = C
         self.chi=chi
-        
-
-    def setup(self, S3, M, Mo, unit_length=1):
+    
+    def setup(self, S3, M, Mo, unit_length=1.0): 
         timings.start('Exchange-setup')
-        
-        #Mo=df.interpolate(M,S3)
 
+        self.S3 = S3
+        self.M = M
         self.Mo=Mo
-        #expression for the energy
-        exchange_factor = df.Constant(1.0 / (Mo*unit_length) ** 2)
+        self.unit_length = unit_length
 
-        self.exchange_factor = exchange_factor  
+        self.mu0 = mu0
+        self.exchange_factor = 1.0 * self.C / (self.mu0  * self.unit_length**2)
 
-        E = exchange_factor * \
-            (self.C) * df.inner(df.grad(M), df.grad(M))* df.dx  + \
-               (df.inner(M,M)-Mo*Mo)**2/(8.0*self.chi*Mo*Mo)*df.dx
-            
-        S1 = df.FunctionSpace(S3.mesh(), "CG", 1)
-        w = df.TestFunction(S1)
-        #nodal_E is not correct
-        nodal_E = df.dot(self.exchange_factor \
-                * df.inner(df.grad(M), df.grad(M)), w) * df.dx
-                
-        super(Exchange, self).setup(
-                E=E,
-                nodal_E=nodal_E,
-                S3=S3,
-                M=M,
-                Ms=Mo,
-                unit_length=unit_length)
-
+        u3 = df.TrialFunction(S3)
+        v3 = df.TestFunction(S3)
+        self.K = df.PETScMatrix()
+        df.assemble(df.inner(df.grad(u3),df.grad(v3))*df.dx, tensor=self.K)
+        self.H = df.PETScVector()
+        
+        self.vol = df.assemble(df.dot(v3, df.Constant([1, 1, 1])) * df.dx).array()
+        
+        self.coeff1=-self.exchange_factor/(self.vol)
+        self.coeff2=-0.5/(self.chi*Mo*Mo)
+         
         timings.stop('Exchange-setup')
+    
+    def compute_field(self):
+        self.K.mult(self.M.vector(), self.H)
+        v=self.M.vector().array()
+        v2=np.zeros(v.shape)
+        n=len(v)/3
+        for i1 in range(n):
+            i2=n+i1
+            i3=n+i2
+            tmp=v[i1]*v[i1]+v[i2]*v[i2]+v[i3]*v[i3]
+            v2[i1]=tmp
+            v2[i2]=tmp
+            v2[i3]=tmp
+        
+        relax = self.coeff2*(v2-self.Mo**2)*v
+        return  self.coeff1*self.H.array()/v2+relax
     
   
 if __name__ == "__main__":
-    mesh = df.Interval(2, 0, 1)
-    S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=2)
+    mesh = df.Interval(3, 0, 1)
+    S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
     C = 1
-    expr = df.Expression(('sin(x[0])', 'cos(x[0])'))
-    Ms = 1
-    M = df.project(expr, S3)
+    expr = df.Expression(('4.0*sin(x[0])', '4*cos(x[0])','0'))
+    Ms = 2
+    M = df.interpolate(expr, S3)
+        
+    exch2 = Exchange(C)
+    exch2.setup(S3, M, Ms)
     
-    exch = Exchange(C)
-
-    exch.setup(S3, M, Ms)
-
-    print exch.compute_field()
-    print exchange(mesh,M.vector().array(),2,C,Ms)
+    print 'ex2',exch2.compute_field()
     
-    
+    from finmag.energies.exchange import Exchange
+    exch3 = Exchange(C)
+    exch3.setup(S3, M, Ms)
 
-    
-    
-
-
-
+    print 'ex3',exch3.compute_field()
     

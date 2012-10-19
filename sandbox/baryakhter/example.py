@@ -33,7 +33,7 @@ def example1(Ms=8.6e5):
     llb = LLB(S1,S3)
     
     llb.alpha = 0.01
-    llb.beta = 0.01
+    llb.beta = 0.0
     llb.M0=Ms
     llb.set_M((Ms, 0, 0))
     llb.set_up_solver()
@@ -44,13 +44,13 @@ def example1(Ms=8.6e5):
     
     
     exchange = Exchange(13.0e-12,1e-2)
-    exchange.chi=1e-2
+    exchange.chi=1e-4
     exchange.setup(S3,llb._M, Ms, unit_length=1e-9)
     
     llb.interactions.append(exchange)
     
     max_time=2*np.pi/(llb.gamma*1e5)
-    ts = np.linspace(0, max_time, num=10)
+    ts = np.linspace(0, max_time, num=100)
 
     mlist=[]
     Ms_average=[]
@@ -61,6 +61,7 @@ def example1(Ms=8.6e5):
         Ms_average.append(llb.M_average)
         df.plot(vis)
         time.sleep(0.00)
+    print 'llb times',llb.call_field_times
     save_plot(ts,Ms_average,'Ms_%g-time.png'%Ms)
     df.interactive()
 
