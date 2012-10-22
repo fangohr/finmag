@@ -28,7 +28,7 @@ UNIT_TEST_BINARY=tests/run_ci_tests.bin
 # Directory for CI unit test results
 UNIT_TEST_RESULTS_DIR=../test-reports/boost
 # Explicit dependencies to tell how the module files are linked
-SUNDIALS_NVECTOR_SO=$(abspath src/sundials/nvec_serial/nvector_serial_custom_malloc.so)
+SUNDIALS_NVECTOR_SO=$(abspath ../src/finmag/native/nvector_serial_custom_malloc.so)
 
 $(MODULE_DIR)/sundials.so : src/sundials/py_sundials_module.o src/util/np_array.o src/sundials/numpy_malloc.o
 sundials_LDFLAGS = -lsundials_cvode -llapack $(SUNDIALS_NVECTOR_SO) -lboost_thread
