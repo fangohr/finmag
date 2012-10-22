@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import dolfin as df
 import math
@@ -262,3 +263,84 @@ def vector_valued_function(value, S3, normalise=False, **kwargs):
         fun.vector()[:] = fnormalise(fun.vector().array())
 
     return fun
+
+def plot_hysteresis_loop(H_vals, m_vals, style='o-', add_point_labels=False, infobox=[], infobox_loc='bottom right',
+                         filename=None, title="Hysteresis loop", xlabel="H_ext (A/m)", ylabel="m", figsize=(10, 7)):
+    """
+    Produce a hysteresis plot
+
+    Arguments:
+
+       H_vals -- list of scalar values; the values of the applied field used for the relaxation
+                 stages of the hysteresis loop
+
+       m_vals -- list of scalar values; the magnetisation obtained at the end of each relaxation
+                 stage in the hysteresis loop
+
+    Keyword arguments:
+
+       style -- the plot style (default: 'o-')
+
+       add_point_labels -- if True (default: False), every point is labeled with a number which
+                           indicates the relaxation stage of the hysteresis loop it represents
+
+       infobox -- list; each entry can be either a string or a pair of the form (name, value).
+                  If not empty, an info box will added to the plot with the list elements appearing
+                  on separate lines. Strings are printed verbatim, whereas name/value pairs are
+                  converted to a string of the form "name = value".
+
+       filename -- if given, save the resulting plot to a file with the specified name
+    """
+    if not all([isinstance(x, (types.IntType, types.FloatType)) for x in m_vals]):
+        raise ValueError("m_vals must be a list of scalar values, got: {}".format(m_vals))
+
+    fig = plt.figure(figsize=figsize)
+    ax = fig.gca()
+
+    N = len(H_vals) // 2
+    N_vals = range(N,0,-1) + range(1,N+1)
+    H_max = max(H_vals)
+
+    ax.plot(H_vals, m_vals, style)
+
+    ax.set_xlim(-1.1*H_max, 1.1*H_max)
+    ax.set_ylim((-1.2, 1.2))
+
+    if add_point_labels:
+        for i in xrange(len(H_vals)):
+            x = H_vals[i]
+            y = m_vals[i]
+            ax.annotate(str(i), xy=(x, y), xytext=(-10, 5) if i<N else (0, -15), textcoords='offset points')
+
+    # draw the info box
+    if infobox != []:
+        box_text = ""
+        for elt in infobox:
+            if isinstance(elt, types.StringType):
+                box_text += elt+'\n'
+            else:
+                try:
+                    name, value = elt
+                    box_text += "{} = {}\n".format(name, value)
+                except ValueError:
+                    raise ValueError, "All list elements in 'infobox' must be either strings or pairs of the form (name, value). Got: '{}'".format(elt)
+        box_text = box_text.rstrip()
+
+        if infobox_loc not in ["top left", "top right", "bottom left", "bottom right"]:
+            raise ValueError("'infobox_loc' must be one of 'top left', 'top right', 'bottom left', 'bottom right'.")
+
+        vpos, hpos = infobox_loc.split()
+        x = H_max if hpos == "right" else -H_max
+        y = 1.0 if vpos == "top" else -1.0
+
+        ax.text(x, y, box_text, size=12,
+                horizontalalignment=hpos, verticalalignment=vpos, multialignment="left", #transform = ax.transAxes,
+                bbox=dict(boxstyle="round, pad=0.3", facecolor="white", edgecolor="green", linewidth=1))
+
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.set_title(title)
+    plt.tight_layout()
+
+    if filename:
+        fig.savefig(filename)
