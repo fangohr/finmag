@@ -270,7 +270,7 @@ def vector_valued_function(value, S3, normalise=False, **kwargs):
 
     return fun
 
-def plot_hysteresis_loop(H_vals, m_vals, style='o-', add_point_labels=False, infobox=[], infobox_loc='bottom right',
+def plot_hysteresis_loop(H_vals, m_vals, style='x-', add_point_labels=False, infobox=[], infobox_loc='bottom right',
                          filename=None, title="Hysteresis loop", xlabel="H_ext (A/m)", ylabel="m", figsize=(10, 7)):
     """
     Produce a hysteresis plot
@@ -285,7 +285,7 @@ def plot_hysteresis_loop(H_vals, m_vals, style='o-', add_point_labels=False, inf
 
     Keyword arguments:
 
-       style -- the plot style (default: 'o-')
+       style -- the plot style (default: 'x-')
 
        add_point_labels -- if True (default: False), every point is labeled with a number which
                            indicates the relaxation stage of the hysteresis loop it represents
