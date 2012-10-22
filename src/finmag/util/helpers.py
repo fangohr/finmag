@@ -1,9 +1,15 @@
+from datetime import datetime
 import matplotlib.pyplot as plt
+import subprocess
+import logging
 import numpy as np
 import dolfin as df
 import math
 import types
+import sys
 import os
+
+logger = logging.getLogger("finmag")
 
 def components(vs):
     """
@@ -344,3 +350,26 @@ def plot_hysteresis_loop(H_vals, m_vals, style='o-', add_point_labels=False, inf
 
     if filename:
         fig.savefig(filename)
+
+def duplicate_output_to_file(filename, add_timestamp=False, timestamp_fmt='__%Y-%m-%d_%H.%M.%S'):
+    """
+    Redirect all (future) output to a file with the given filename.
+    This redirects both to stdout and stderr.
+
+    If `add_timestamp` is True then a timestamp will be added to the
+    filename indicating the time when the call to this function
+    occurred (for example, the filename 'output.txt' might be changed
+    into 'output_2012-01-01_14.33.52.txt'). The timestamp format can
+    be controlled via `timestamp_fmt`, which should be a formatting
+    string as accepted by `datetime.strftime`.
+    """
+    if add_timestamp:
+        name, ext = os.path.splitext(filename)
+        filename = '{}{}{}'.format(name, datetime.strftime(datetime.now(), timestamp_fmt), ext)
+
+    logger.debug("Duplicating output to file '{}'".format(filename))
+    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+
+    tee = subprocess.Popen(["tee", filename], stdin=subprocess.PIPE)
+    os.dup2(tee.stdin.fileno(), sys.stdout.fileno())
+    os.dup2(tee.stdin.fileno(), sys.stderr.fileno())
