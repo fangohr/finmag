@@ -270,7 +270,7 @@ def vector_valued_function(value, S3, normalise=False, **kwargs):
 
     return fun
 
-def plot_hysteresis_loop(H_vals, m_vals, style='x-', add_point_labels=False, infobox=[], infobox_loc='bottom right',
+def plot_hysteresis_loop(H_vals, m_vals, style='x-', add_point_labels=False, point_labels=None, infobox=[], infobox_loc='bottom right',
                          filename=None, title="Hysteresis loop", xlabel="H_ext (A/m)", ylabel="m", figsize=(10, 7)):
     """
     Produce a hysteresis plot
@@ -289,6 +289,13 @@ def plot_hysteresis_loop(H_vals, m_vals, style='x-', add_point_labels=False, inf
 
        add_point_labels -- if True (default: False), every point is labeled with a number which
                            indicates the relaxation stage of the hysteresis loop it represents
+
+       point_labels -- list or None; each list element can either be an integer or a pair of the
+                       form (index, label), where index is an integer and label is a string. If
+                       not None, only the points whose index appears in this list are labelled
+                       (either with their index, or with the given label string if provided).
+                       For example, if only every 10th point should be labeled, one might say
+                       'point_labels=xrange(0, NUM_POINTS, 10)'.
 
        infobox -- list; each entry can be either a string or a pair of the form (name, value).
                   If not empty, an info box will added to the plot with the list elements appearing
@@ -312,11 +319,17 @@ def plot_hysteresis_loop(H_vals, m_vals, style='x-', add_point_labels=False, inf
     ax.set_xlim(-1.1*H_max, 1.1*H_max)
     ax.set_ylim((-1.2, 1.2))
 
+    if point_labels is None:
+        point_labels = xrange(len(H_vals))
+    # Convert point_labels into a dictionary where the keys are the point indices
+    # and the values are the respective labels to be used.
+    point_labels = dict(map(lambda i: i if isinstance(i, tuple) else (i, str(i)), point_labels))
     if add_point_labels:
         for i in xrange(len(H_vals)):
-            x = H_vals[i]
-            y = m_vals[i]
-            ax.annotate(str(i), xy=(x, y), xytext=(-10, 5) if i<N else (0, -15), textcoords='offset points')
+            if point_labels.has_key(i):
+                x = H_vals[i]
+                y = m_vals[i]
+                ax.annotate(point_labels[i], xy=(x, y), xytext=(-10, 5) if i<N else (0, -15), textcoords='offset points')
 
     # draw the info box
     if infobox != []:
