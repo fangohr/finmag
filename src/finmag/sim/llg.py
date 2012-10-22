@@ -207,6 +207,76 @@ class LLG(object):
 
     # Computes the Jacobian-times-vector product, as used by SUNDIALS CVODE
     def sundials_jtimes(self, mp, J_mp, t, m, fy, tmp):
+        """
+        The time integration problem we need to solve is of type
+
+        .. math::
+               
+                 \\frac{d y}{d t} = f(y,t)
+
+        where y is the state vector (such as the magnetisation components for
+        all sites), t is the time, and f(y,t) is the LLG equation.
+
+        For the implicite integration schemes, sundials' cvode solver
+        needs to know the Jacobian J, which is the derivative of the 
+        (vector-valued) function f(y,t) with respect to the (components 
+        of the vector) y. The Jacobian is a matrix. 
+
+        For a magnetic system N sites, the state vector y has 3N entries
+        (because every site has 3 components). The Jacobian matrix J would
+        thus have a size of 3N*3N. In general, this is too big to store.
+
+        Fortunately, cvode only needs the result of the multiplication of some
+        vector y' (provided by cvode) with the Jacobian. We can thus store
+        the Jacobian in our own way (in particular as a sparse matrix
+        if we leave out the demag field), and carry out the multiplication of
+        J with y' when required, and that is what this function does.
+
+        In more detail: We use the variable name mp to represent m' (i.e. mprime) which
+        is just a notation to distinguish m' from m (and not any derivative).
+
+        Our equation is:
+
+        .. math::
+
+             \\frac{dm}{dt} = LLG(m, H)
+
+        And we're interested in computing the Jacobian (J) times vector (m') product 
+
+        .. math:: 
+
+             J m' = [\\frac{dLLG(m, H)}{dm}] m'. 
+
+        However, the H field itself depends on m, so the total derivative J m' 
+        will have two terms 
+
+        .. math:: 
+
+             \\frac{d LLG(m, H)}{dm} = \\frac{\\partial LLG(m, H)}{\\partial m} + [\\frac{\\partial LLG(m, H)}{\\partial H}] [\\frac{\\partial H(m)}{\\partial m}]. 
+
+
+        This is a matrix identity, so to make the derivations easier (and since we don't need the full Jacobian matrix) we can write the Jacobian-times-vector product as a directional derivative:
+
+        .. math::
+ 
+             J m' = \\frac{d LLG(m + a m',H(m + a m'))}{d a}|_{a=0}
+
+
+        The code to compute this derivative is in ``llg.cc`` but you can see that the derivative will depend 
+        on m, m', H(m), and dH(m+a m')/da [which is labelled H' in the code].
+
+        Most of the components of the effective field are linear in m; if that's the case, 
+        the directional derivative H' is just H(m')
+
+        .. math::
+
+             H' = \\frac{d H(m+a m')}{da} = H(m')
+
+
+        The actual implementation of the jacobian-times-vector product is in src/llg/llg.cc, 
+        function calc_llg_jtimes(...), which in turn makes use of CVSpilsJacTimesVecFn in CVODE.
+        """
+
         timings.start("LLG-sundials-jtimes")
 
         assert m.shape == self.m.shape
