@@ -2,8 +2,10 @@ import numpy
 
 def make_analytic_solution(H, alpha, gamma):
     """
-    Returns a function `m` which computes the magnetisation vector as
-    a function of time, with the "initial condition" m(0) = (1,0,0).
+    Returns a function `m(t)` which computes the magnetisation vector
+    of a macrospin as a function of time, i.e. the typical precession
+    under the influence of an applied field `H`. Assumes the initial
+    condition m(0) = (1,0,0).
 
     Arguments:
 
