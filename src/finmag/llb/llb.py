@@ -93,7 +93,6 @@ class LLB(object):
         for func in self._post_rhs_callables:
             func(self)
             
-               
     
     def sundials_rhs(self, t, y, ydot):
         self.t = t

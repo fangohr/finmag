@@ -393,65 +393,55 @@ namespace finmag { namespace llg {
 
         /*
         Compute the Baryakhtar term for cubic crystal anisotropy.
-        dM/dt = - gamma M x H  +  gamma abs(M) (alpha H - beta Delta H)
+        dM/dt = - gamma M x H  +  gamma M0 (alpha H - beta Delta H)
         */
         void calc_baryakhtar_dmdt(
                 const np_array<double> &M,
                 const np_array<double> &H,
                 const np_array<double> &delta_H,
-                double t,
                 const np_array<double> &dmdt,
-                const np_array<long> &pins,
-                double gamma,
                 const np_array<double> &alpha,
-                double beta,
-                double char_time,
+                const np_array<double> &beta,
+                double M0,
+                double gamma,
                 bool do_precession) {
-            M.check_ndim(2, "calc_baryakhtar_dmdt: m");
-            int n = M.dim()[1];
-
-            M.check_shape(3, n, "calc_baryakhtar_dmdt: M");
-            H.check_shape(3, n, "calc_baryakhtar_dmdt: H");
-            delta_H.check_shape(3, n, "calc_baryakhtar_dmdt: delta_H");
-            dmdt.check_shape(3, n, "calc_baryakhtar_dmdt: dmdt");
-
-            alpha.check_ndim(1, "calc_baryakhtar_dmdt: alpha");
-            alpha.check_shape(n, "calc_baryakhtar_dmdt: alpha");
-
-            double *m0 = M(0), *m1 = M(1), *m2 = M(2);
-            double *h0 = H(0), *h1 = H(1), *h2 = H(2);
-            double *dh0 = delta_H(0), *dh1 = delta_H(1), *dh2 = delta_H(2);
-            double *dm0 = dmdt(0), *dm1 = dmdt(1), *dm2 = dmdt(2);
-            double tmp_alpha,tmp_beta;
-            //double relax_coeff = 0.1/char_time;
-
+            
+           
             finmag::util::scoped_gil_release release_gil;
-
-            // calculate dmdt
+            
+            double *m=M.data();
+            double *h=H.data();
+            double *delta_h=delta_H.data();
+    	    double *dm_dt=dmdt.data();
+            double *a=alpha.data();
+            double *b=beta.data();
+            
+            double precession_coeff = -gamma;
+            double damping_coeff = gamma*M0;
+            
+            assert(M.size()%3==0);
+            
+            int length=M.size()/3;         
+            int i1,i2,i3;
+   
             #pragma omp parallel for schedule(guided)
-            for (int i=0; i < n; i++) {
-
+            for (int i = 0; i < length; i++) {
+                i1=i;
+        	i2=length+i1;
+        	i3=length+i2;
                 
-                tmp_alpha = (*alpha[i]);
-                tmp_beta = beta;
-
+                dm_dt[i1]=damping_coeff*(a[i]*h[i1] - b[i]*delta_h[i1]);
+                dm_dt[i2]=damping_coeff*(a[i]*h[i2] - b[i]*delta_h[i2]);
+                dm_dt[i3]=damping_coeff*(a[i]*h[i3] - b[i]*delta_h[i3]);
                 
-                double tmp_coeff = gamma*sqrt(m0[i] * m0[i] + m1[i] * m1[i] + m2[i] * m2[i]);
-                dm0[i] = tmp_coeff*(tmp_alpha*h0[i] - tmp_beta*dh0[i]);
-                dm1[i] = tmp_coeff*(tmp_alpha*h1[i] - tmp_beta*dh1[i]);
-                dm2[i] = tmp_coeff*(tmp_alpha*h2[i] - tmp_beta*dh2[i]);
-
-                
+                // add precession: m x H, multiplied by -gamma
                 if (do_precession) {
-                    // add precession: - gamma m x H
-		    
-                    dm0[i] -= gamma*cross0(m0[i], m1[i], m2[i], h0[i], h1[i], h2[i]);
-                    dm1[i] -= gamma*cross1(m0[i], m1[i], m2[i], h0[i], h1[i], h2[i]);
-                    dm2[i] -= gamma*cross2(m0[i], m1[i], m2[i], h0[i], h1[i], h2[i]);
-		    //printf("%g  %g  %g  %g  %g  %g\n",m0[i], m1[i], m2[i],dm0[i],dm1[i],dm2[i]);
-                }
+                    dm_dt[i1] += precession_coeff*(m[i2]*h[i3]-m[i3]*h[i2]);
+                    dm_dt[i2] += precession_coeff*(m[i3]*h[i1]-m[i1]*h[i3]);
+                    dm_dt[i3] += precession_coeff*(m[i1]*h[i2]-m[i2]*h[i1]);
+                } 
+                                
             }
-            pin(dmdt, pins);
         }
 
 	void calc_baryakhtar_jtimes(
@@ -459,11 +449,8 @@ namespace finmag { namespace llg {
                 const np_array<double> &H,
                 const np_array<double> &mp,
                 const np_array<double> &Hp,
-                double t,
                 const np_array<double> &jtimes,
                 double gamma_LL,
-                double alpha,
-                double char_time,
                 bool do_precession) {
 
             m.check_ndim(2, "calc_llg_dmdt: m");
@@ -476,14 +463,12 @@ namespace finmag { namespace llg {
             jtimes.check_shape(3, n, "calc_llg_dmdt: jtimes");
 
             double precession_coeff = -gamma_LL;
-            double damping_coeff = -gamma_LL*alpha;
             double *m0 = m(0), *m1 = m(1), *m2 = m(2);
             double *mp0 = mp(0), *mp1 = mp(1), *mp2 = mp(2);
             double *h0 = H(0), *h1 = H(1), *h2 = H(2);
             double *hp0 = Hp(0), *hp1 = Hp(1), *hp2 = Hp(2);
             double *jtimes0 = jtimes(0), *jtimes1 = jtimes(1), *jtimes2 = jtimes(2);
-            double relax_coeff = 0.1/char_time;
-
+            
             finmag::util::scoped_gil_release release_gil;
 
             if (do_precession) {
@@ -496,49 +481,18 @@ namespace finmag { namespace llg {
                             + cross1(m0[i], m1[i], m2[i], hp0[i], hp1[i], hp2[i]));
                     jtimes2[i] = precession_coeff*(cross2(mp0[i], mp1[i], mp2[i], h0[i], h1[i], h2[i])
                             + cross2(m0[i], m1[i], m2[i], hp0[i], hp1[i], hp2[i]));
-
-                    // add damping: m x (m x H) == (m.H)m - (m.m)H, multiplied by -gamma alpha
-                    // derivative is [(mp.H) + (m.Hp)]m + (m.H)mp - 2(m.mp)H - (m.m)Hp
-                    double mp_h_m_hp = mp0[i]*h0[i] + mp1[i]*h1[i] + mp2[i]*h2[i]
-                            + m0[i]*hp0[i] + m1[i]*hp1[i] + m2[i]*hp2[i];
-                    double m_h = m0[i] * h0[i] + m1[i] * h1[i] + m2[i] * h2[i];
-                    double m_mp = -2.*(m0[i]*mp0[i] + m1[i]*mp1[i] + m2[i]*mp2[i]);
-                    double m_m = -(m0[i] * m0[i] + m1[i] * m1[i] + m2[i] * m2[i]);
-
-                    jtimes0[i] += damping_coeff*(mp_h_m_hp*m0[i] + m_h*mp0[i] + m_mp*h0[i] + m_m*hp0[i]);
-                    jtimes1[i] += damping_coeff*(mp_h_m_hp*m1[i] + m_h*mp1[i] + m_mp*h1[i] + m_m*hp1[i]);
-                    jtimes2[i] += damping_coeff*(mp_h_m_hp*m2[i] + m_h*mp2[i] + m_mp*h2[i] + m_m*hp2[i]);
-
-                    // add relaxation of |m|: (1 - (m.m))m
-                    // derivative is -2(m.mp)m + (1-(m.m))mp
-                   // jtimes0[i] += relax_coeff*(m_mp*m0[i] + (1.+m_m)*mp0[i]);
-                   // jtimes1[i] += relax_coeff*(m_mp*m1[i] + (1.+m_m)*mp1[i]);
-                   // jtimes2[i] += relax_coeff*(m_mp*m2[i] + (1.+m_m)*mp2[i]);
                 }
             } else {
                 #pragma omp parallel for schedule(guided)
                 for (int i = 0; i < n; i++) {
-                    // add damping: m x (m x H) == (m.H)m - (m.m)H, multiplied by -gamma alpha
-                    // derivative is [(mp.H) + (m.Hp)]m + (m.H)mp - 2(m.mp)H - (m.m)Hp
-                    double mp_h_m_hp = mp0[i]*h0[i] + mp1[i]*h1[i] + mp2[i]*h2[i]
-                            + m0[i]*hp0[i] + m1[i]*hp1[i] + m2[i]*hp2[i];
-                    double m_h = m0[i] * h0[i] + m1[i] * h1[i] + m2[i] * h2[i];
-                    double m_mp = -2.*(m0[i]*mp0[i] + m1[i]*mp1[i] + m2[i]*mp2[i]);
-                    double m_m = -(m0[i] * m0[i] + m1[i] * m1[i] + m2[i] * m2[i]);
-
-                    jtimes0[i] = damping_coeff*(mp_h_m_hp*m0[i] + m_h*mp0[i] + m_mp*h0[i] + m_m*hp0[i]);
-                    jtimes1[i] = damping_coeff*(mp_h_m_hp*m1[i] + m_h*mp1[i] + m_mp*h1[i] + m_m*hp1[i]);
-                    jtimes2[i] = damping_coeff*(mp_h_m_hp*m2[i] + m_h*mp2[i] + m_mp*h2[i] + m_m*hp2[i]);
-
-                    // add relaxation of |m|: (1 - (m.m))m
-                    // derivative is -2(m.mp)m + (1-(m.m))mp
-                    jtimes0[i] += relax_coeff*(m_mp*m0[i] + (1.+m_m)*mp0[i]);
-                    //jtimes1[i] += relax_coeff*(m_mp*m1[i] + (1.+m_m)*mp1[i]);
-                    //jtimes2[i] += relax_coeff*(m_mp*m2[i] + (1.+m_m)*mp2[i]);
+                    
+                    jtimes0[i] = 0;
+                    jtimes1[i] = 0;
+                    jtimes2[i] = 0;
+                    
                 }
             }
         }
-
 
     }
 
@@ -598,13 +552,11 @@ namespace finmag { namespace llg {
             arg("M"),
             arg("H"),
 	    arg("delta_H"),
-            arg("t"),
             arg("dmdt"),
-            arg("pins"),
-            arg("gamma_LL"),
             arg("alpha"),
 	    arg("beta"),
-            arg("char_time"),
+            arg("M0"), 
+            arg("gamma"),
             arg("do_precession")
         ));
 
@@ -613,11 +565,8 @@ namespace finmag { namespace llg {
             arg("H"),
             arg("mp"),
             arg("Hp"),
-            arg("t"),
             arg("jtimes"),
             arg("gamma_LL"),
-            arg("alpha"),
-            arg("char_time"),
             arg("do_precession")
         ));
     }

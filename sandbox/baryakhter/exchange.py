@@ -1,46 +1,75 @@
 import dolfin as df
 import numpy as np
-from finmag.energies.exchange import Exchange 
+import logging
+from finmag.energies.energy_base import EnergyBase 
 from finmag.util.consts import mu0
+from finmag.util.timings import timings
 
+logger=logging.getLogger('finmag')
 
-def exchange(mesh,m,dim=2,C=1.3e-11,Ms=8.6e5):
-    V = df.FunctionSpace(mesh, "Lagrange", 1)
-    u1 = df.TrialFunction(V)
-    v1 = df.TestFunction(V)
-    K = df.assemble(df.inner(df.grad(u1), df.grad(v1)) * df.dx).array()
-    L = df.assemble(v1 * df.dx).array()
-   
-    m.shape=(dim,-1)
-    h=np.zeros(m.shape)
     
-    for i in range(dim):
-        h[i][:]=-np.dot(K,m[i])/L*(2*C)/(mu0*Ms)
-    m.shape=(-1)
-    h.shape=(-1)
-    return h
+class Exchange(object):
+    def __init__(self, C, chi=1):
+        self.C = C
+        self.chi=chi
     
+    def setup(self, S3, M, Mo, unit_length=1.0): 
+        timings.start('Exchange-setup')
 
+        self.S3 = S3
+        self.M = M
+        self.Mo=Mo
+        self.unit_length = unit_length
+
+        self.mu0 = mu0
+        self.exchange_factor = 1.0 * self.C / (self.mu0  * self.unit_length**2)
+
+        u3 = df.TrialFunction(S3)
+        v3 = df.TestFunction(S3)
+        self.K = df.PETScMatrix()
+        df.assemble(df.inner(df.grad(u3),df.grad(v3))*df.dx, tensor=self.K)
+        self.H = df.PETScVector()
+        
+        self.vol = df.assemble(df.dot(v3, df.Constant([1, 1, 1])) * df.dx).array()
+        
+        self.coeff1=-self.exchange_factor/(self.vol)
+        self.coeff2=-0.5/(self.chi*Mo*Mo)
+         
+        timings.stop('Exchange-setup')
+    
+    def compute_field(self):
+        self.K.mult(self.M.vector(), self.H)
+        v=self.M.vector().array()
+        v2=np.zeros(v.shape)
+        n=len(v)/3
+        for i1 in range(n):
+            i2=n+i1
+            i3=n+i2
+            tmp=v[i1]*v[i1]+v[i2]*v[i2]+v[i3]*v[i3]
+            v2[i1]=tmp
+            v2[i2]=tmp
+            v2[i3]=tmp
+        
+        relax = self.coeff2*(v2-self.Mo**2)*v
+        return  self.coeff1*self.H.array()/v2+relax
+    
+  
 if __name__ == "__main__":
-    mesh = df.Interval(2, 0, 1)
-    S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=2)
+    mesh = df.Interval(3, 0, 1)
+    S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
     C = 1
-    expr = df.Expression(('sin(x[0])', 'cos(x[0])'))
-    Ms = 1
-    M = df.project(expr, S3)
+    expr = df.Expression(('4.0*sin(x[0])', '4*cos(x[0])','0'))
+    Ms = 2
+    M = df.interpolate(expr, S3)
+        
+    exch2 = Exchange(C)
+    exch2.setup(S3, M, Ms)
     
-    exch = Exchange(C)
-
-    exch.setup(S3, M, Ms)
-
-    print exch.compute_field()
-    print exchange(mesh,M.vector().array(),2,C,Ms)
+    print 'ex2',exch2.compute_field()
     
-    
+    from finmag.energies.exchange import Exchange
+    exch3 = Exchange(C)
+    exch3.setup(S3, M, Ms)
 
-    
-    
-
-
-
+    print 'ex3',exch3.compute_field()
     

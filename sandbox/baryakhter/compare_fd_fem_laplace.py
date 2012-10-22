@@ -51,7 +51,6 @@ def Laplace_FEM(mesh,u_e):
     return tmp
 
 
-
 if __name__=='__main__':
     gridm,gridn=100,1
     mesh = Rectangle(0, 0, 10*np.pi, 10, gridm, gridn, 'left')
@@ -61,9 +60,6 @@ if __name__=='__main__':
 
     v0 = Expression(('-cos(x[0])','sin(x[0])'))
     v0_e=Expression(('cos(x[0])','-sin(x[0])'))
-
-   
-   
  
     v = interpolate(v0, V3)
     v_e = interpolate(v0_e, V3)
