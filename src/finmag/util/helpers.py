@@ -271,7 +271,7 @@ def vector_valued_function(value, S3, normalise=False, **kwargs):
     return fun
 
 def plot_hysteresis_loop(H_vals, m_vals, style='x-', add_point_labels=False, point_labels=None, infobox=[], infobox_loc='bottom right',
-                         filename=None, title="Hysteresis loop", xlabel="H_ext (A/m)", ylabel="m", figsize=(10, 7)):
+                         filename=None, title="Hysteresis loop", xlabel="H_ext (A/m)", ylabel="m_avg", figsize=(10, 7)):
     """
     Produce a hysteresis plot
 
