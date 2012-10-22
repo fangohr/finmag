@@ -28,10 +28,10 @@ UNIT_TEST_BINARY=tests/run_ci_tests.bin
 # Directory for CI unit test results
 UNIT_TEST_RESULTS_DIR=../test-reports/boost
 # Explicit dependencies to tell how the module files are linked
-SUNDIALS_NVECTOR_SO=$(abspath ../src/finmag/native/nvector_serial_custom_malloc.so)
+SUNDIALS_NVECTOR_SO=$(abspath ../src/finmag/native/)
 
 $(MODULE_DIR)/sundials.so : src/sundials/py_sundials_module.o src/util/np_array.o src/sundials/numpy_malloc.o
-sundials_LDFLAGS = -lsundials_cvode -llapack $(SUNDIALS_NVECTOR_SO) -lboost_thread
+sundials_LDFLAGS = -lsundials_cvode -llapack -L$(SUNDIALS_NVECTOR_SO) -lnvector_serial_custom_malloc -lboost_thread
 
 $(MODULE_DIR)/llg.so : src/llg/py_llg_module.o src/util/np_array.o src/util/swig_dolfin.o src/llg/bem.o src/llg/llg.o src/llg/heun.o src/llg/oriented_boundary_mesh.o
 llg_LDFLAGS = -ldolfin
@@ -39,7 +39,7 @@ llg_LDFLAGS = -ldolfin
 $(MODULE_DIR)/llb.so : src/llb/py_llb_module.o src/util/np_array.o src/llb/llb_material.o src/llb/llb.o
 
 $(UNIT_TEST_BINARY) : tests/run_ci_tests.o src/util/np_array.o src/sundials/tests/sundials_tests.o src/sundials/numpy_malloc.o src/llg/tests/boundary_mesh_tests.o
-run_ci_tests_LDFLAGS=-lboost_prg_exec_monitor /usr/lib/libboost_unit_test_framework.a $(SUNDIALS_NVECTOR_SO) -ldolfin
+run_ci_tests_LDFLAGS=-lboost_prg_exec_monitor /usr/lib/libboost_unit_test_framework.a -L$(SUNDIALS_NVECTOR_SO) -lnvector_serial_custom_malloc -ldolfin
 
 #######################################
 # Other variables

@@ -16,4 +16,4 @@ DEPS = Makefile nvector_custom_malloc_impl.h ../nvector_custom_malloc.h
 SOURCES = nvector_serial_custom_malloc.c sundials_math.c
 
 nvector_serial_custom_malloc.so : $(SOURCES) $(DEPS)
-	gcc $(SOURCES) $(CFLAGS) -shared -o ../../../../src/finmag/native/$@
+	gcc $(SOURCES) $(CFLAGS) -shared -o ../../../../src/finmag/native/lib$@
