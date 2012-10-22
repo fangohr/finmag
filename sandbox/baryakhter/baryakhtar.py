@@ -44,6 +44,12 @@ class LLB(object):
         self.t = 0.0 # s
         self.do_precession = True
         
+        u3 = df.TrialFunction(self.S3)
+        v3 = df.TestFunction(self.S3)
+        self.K = df.PETScMatrix()
+        df.assemble(df.inner(df.grad(u3),df.grad(v3))*df.dx, tensor=self.K)
+        self.H_laplace = df.PETScVector()
+        
         self.vol = df.assemble(df.dot(df.TestFunction(self.S3), df.Constant([1, 1, 1])) * df.dx).array()
        
         self.gamma =  consts.gamma
@@ -143,9 +149,10 @@ class LLB(object):
         self.H_eff = H_eff
  
     def compute_laplace_effective_field(self):
-        grad_u = df.project(df.grad(self._M))
-        tmp=df.project(df.div(grad_u))
-        return tmp.vector().array()
+        #grad_u = df.project(df.grad(self._M))
+        #tmp=df.project(df.div(grad_u))
+        self.K.mult(self._M.vector(), self.H_laplace)
+        return self.H_laplace.array()
        
             
     def run_until(self, t):
