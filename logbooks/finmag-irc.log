@@ -1859,3 +1859,54 @@ fangohr: Still testing ...
 2012-10-12 14:50:17 D_Chernyshenko: Hans, can you try to push the changes again? I've enabled group write access for the repository.
 2012-10-12 14:50:32 fangohr-adium1: Done, worked. Thanks.
 2012-10-12 14:50:38 D_Chernyshenko: Thanks!
+2012-10-15 08:44:00 mb8g11: Hiya
+2012-10-15 09:30:27 fangohr-adium1: Hey, good morning!
+2012-10-15 09:31:28 fangohr-adium1: Hi all, I have a meeting at 13:00, but would go for lunch at 12:00 if anybody is interested (will be off to teach now and may not check here until just before 12:00).
+2012-10-15 11:55:28 cilix: Hi Hans, thanks for the offer. I think I'll eat in the office today, though, as I brought some stuff from home.
+2012-10-15 11:57:03 fangohr-adium1: Sure, thanks for letting me know. Might fetch some noodles then.
+2012-10-17 11:17:15 mb8g11_: brb
+2012-10-18 07:38:01 mb8g11: Hi all.
+2012-10-18 11:58:12 fangohr-adium: Hi MA, early start today for you ;-) [just made it to the office after morning teaching]
+2012-10-18 12:20:47 mb8g11: Indeed!
+2012-10-18 12:20:54 fangohr-adium: :)
+2012-10-18 12:21:02 fangohr-adium: Anybody in Southampton keen to have lunch?
+2012-10-18 12:21:43 cilix: Yes, I wouldn't mind going for lunch actually.
+2012-10-18 12:22:03 fangohr-adium: Nice. Shall I pick you up in 10 minutes?
+2012-10-18 12:22:31 cilix: Sounds good. I'll ask Weiwei and Marijan if they would like to join, too.
+2012-10-18 12:23:52 fangohr-adium: MA, are you in the German timezone, or did you get up extraordinarily early? Or both??
+2012-10-18 12:25:51 mb8g11: Haha, considering the german timezone, it was early, but not extraordinarily so. I can start working right after breakfast, not like I have to go anywhere.
+2012-10-18 12:26:50 fangohr-adium: ;-)
+2012-10-18 12:26:54 fangohr-adium: Max, will be over in 3.
+2012-10-18 12:27:24 mb8g11: (and I want to get distribution working before our meeting tomorrow)
+2012-10-18 13:13:22 fangohr-adium: … [back from lunch] … that would be great; thanks.
+2012-10-18 13:29:49 cilix: Hi Hans, thanks for the chat during lunch!  I just checked my script and indeed I used a wrong (= much too large) value for stopping_dmdt in my recent simulations with large damping.
+2012-10-18 13:29:57 cilix: (Stupid copy & paste oversight.)
+2012-10-18 13:30:13 fangohr-adium: That makes me quite happy.
+2012-10-18 13:30:30 fangohr-adium: Not that you made a mistake, but that we have identified what caused the symptons ;-)
+2012-10-18 13:31:05 fangohr-adium: on the downside, making that value smaller will increase the runtime of your simulations a little, but there is no way around it, and it should not make a big difference.
+2012-10-18 13:31:55 cilix: I just ran another simulation with alpha=1.0 and with stopping_dmdt=1*ONE_DEGREE_PER_NS (the default), and the hysteresis loop looks very simular to the one I got previously with low damping (although not exactly the same, but this might be due to a too coarse discretisation of the field values).
+2012-10-18 13:34:43 mb8g11: If you use high damping... did you disable the computation of the precession? That will save some time.
+2012-10-18 13:35:02 cilix: The running time is indeed longer, but since it was quite short anyway for high damping and this particular system size it's not too bad (it's now around 15 minutes, but that's still with a rather coarse mesh).
+2012-10-18 13:35:18 cilix: MA: No, I didn't. How do I do that in Finmag?
+2012-10-18 13:38:51 mb8g11: with a Simulation instance called sim: sim.llg.do_precession = False
+2012-10-18 13:39:50 cilix: Excellent, will try that (didn't even know this was possible). Thanks!
+2012-10-18 13:40:16 fangohr-adium: … which raises the question: have we documented this somewhere? Ideally in an example.
+2012-10-18 13:42:25 cilix: A quick search in the Finmag manual shows that it's mentioned in the documentation LLG class, but only as an argument in the class constructor, and the meaning of the argument isn't explained (even though it's quite obvious what it does).
+2012-10-18 13:42:27 mb8g11: Just checked. No. Will add a pivotal tracker story. Will have to document the constructor of LLG and write a small example that runs a simulation once with, and once without precession and plots the two curves.
+2012-10-18 13:43:33 mb8g11: Might rework the constructor of LLG as well - it takes a FunctionSpace and a VectorFunctionSpace... might as well just take the mesh.
+2012-10-18 13:44:47 fangohr-adium: Regarding example: great plan. Check out section 2.25 of N
+2012-10-18 13:45:09 fangohr-adium: [pressed return to early. In fact, pressed return instead of backspace]
+2012-10-18 13:45:23 fangohr-adium: Regarding example: Check out section 2.2.5 in the Nmag manual (http://nmag.soton.ac.uk/nmag/current/manual/html/example2/doc.html#relaxing-the-system)
+2012-10-18 13:46:08 fangohr-adium: which uses the precession term, and then 2.2.6 which switches it of. Feel free to steel freely from here (if you need access to the source) whoever is implementing the ticket.
+2012-10-18 13:46:40 mb8g11: Perfect, I will in fact steal freely - a nice todo item for my flight on monday morning.
+2012-10-18 13:47:23 fangohr-adium: Regarding the constructor: we could support both: if a mesh is given, then create the spaces. If the spaces are given, then use those. The reason I like it if the constructor accepts function spaces is that this gives finer control over what we are doing. In particular if we do multiphysics simulations, we may only want magnetisation in certain parts of the mesh (but may have the right function space available at that point).
+2012-10-18 13:47:59 mb8g11: True.
+2012-10-18 15:55:09 mb8g11: Hans, can you give me access to the bitbucket repo with the distribution scripts in it?
+2012-10-19 07:48:10 mb8g11: Hi all.
+2012-10-19 09:41:18 fangohr-adium: Hi MA, early riser.
+2012-10-19 09:43:48 mb8g11: :)
+2012-10-19 09:49:48 D_Chernyshenko__:  Hi everyone, I'm at home waiting for a delivery and might not make it for the 11:00 am meeting. The university email server keeps timing out, so I'm not sure if my email to Hans has made it through...
+2012-10-19 10:32:36 fangohr-adium: Hi Dmitri, thanks for letting us know.
+2012-10-19 10:32:48 fangohr-adium: Max, are you out there?
+2012-10-19 14:52:12 mb8g11: Hans, taking care of the e-mails for submissions
+2012-10-19 17:00:32 fangohr-adium: Over and out for the weekend - have a good one, everybody.

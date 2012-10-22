@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from finmag.energies.demag.solver_fk_test import SimpleFKSolver
+from finmag.energies.demag.solver_fk_alt import SimpleFKSolver
 from finmag.energies.demag.solver_fk import FemBemFKSolver as FKSolver
 from finmag.energies.demag.solver_gcr import FemBemGCRSolver as GCRSolver
 from problems.prob_fembem_testcases import MagSphereBase
