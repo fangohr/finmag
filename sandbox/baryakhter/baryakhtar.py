@@ -27,6 +27,7 @@ class LLB(object):
         
         self.dm_dt = np.zeros(self.M.shape)
         self.H_eff = np.zeros(self.M.shape)
+        self.Ms = np.zeros(len(self.M)/3)
         self.call_field_times=0
         
          
@@ -127,6 +128,15 @@ class LLB(object):
         """
         self._M = helpers.vector_valued_function(value, self.S3, normalise=False)
         self.M[:]=self._M.vector().array()[:]
+        
+        
+        n=len(self.M)/3
+        v=self.M
+        for i1 in range(n):
+            i2=n+i1
+            i3=n+i2
+            tmp=v[i1]*v[i1]+v[i2]*v[i2]+v[i3]*v[i3]
+            self.Ms[i1]=tmp**0.5
 
     def set_up_solver(self, reltol=1e-8, abstol=1e-8, nsteps=10000):
         integrator = sundials.cvode(sundials.CV_BDF, sundials.CV_NEWTON)
@@ -177,14 +187,14 @@ class LLB(object):
  
         timings.start("LLG-compute-dmdt")
         # Use the same characteristic time as defined by c
-                                                 
+        print self.Ms
         native_llg.calc_baryakhtar_dmdt(self._M.vector().array(), 
                                  self.H_eff,
                                  delta_Heff, 
                                  self.dm_dt,
                                  self.alpha_vec, 
                                  self.beta_vec,
-                                 self.M0,
+                                 self.Ms,
                                  self.gamma, 
                                  self.do_precession)
 
