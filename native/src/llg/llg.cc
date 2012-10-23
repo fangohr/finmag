@@ -393,7 +393,7 @@ namespace finmag { namespace llg {
 
         /*
         Compute the Baryakhtar term for cubic crystal anisotropy.
-        dM/dt = - gamma M x H  +  gamma M0 (alpha H - beta Delta H)
+        dM/dt = - gamma M x H  +  gamma M (alpha H - beta Delta H)
         */
         void calc_baryakhtar_dmdt(
                 const np_array<double> &M,
@@ -402,7 +402,7 @@ namespace finmag { namespace llg {
                 const np_array<double> &dmdt,
                 const np_array<double> &alpha,
                 const np_array<double> &beta,
-                double M0,
+                const np_array<double> &Ms, //output Ms array, computed by M
                 double gamma,
                 bool do_precession) {
             
@@ -415,13 +415,14 @@ namespace finmag { namespace llg {
     	    double *dm_dt=dmdt.data();
             double *a=alpha.data();
             double *b=beta.data();
+            double *ms=Ms.data();
             
             double precession_coeff = -gamma;
-            double damping_coeff = gamma*M0;
+            double damping_coeff = 0;
             
-            assert(M.size()%3==0);
+            assert(M.size()==3*Ms.size());
             
-            int length=M.size()/3;         
+            int length=Ms.size();         
             int i1,i2,i3;
    
             #pragma omp parallel for schedule(guided)
@@ -430,6 +431,9 @@ namespace finmag { namespace llg {
         	i2=length+i1;
         	i3=length+i2;
                 
+                ms[i]=sqrt(m[i1]*m[i1]+m[i2]*m[i2]+m[i3]*m[i3]);
+                
+                damping_coeff=gamma * ms[i];
                 dm_dt[i1]=damping_coeff*(a[i]*h[i1] - b[i]*delta_h[i1]);
                 dm_dt[i2]=damping_coeff*(a[i]*h[i2] - b[i]*delta_h[i2]);
                 dm_dt[i3]=damping_coeff*(a[i]*h[i3] - b[i]*delta_h[i3]);
@@ -442,6 +446,33 @@ namespace finmag { namespace llg {
                 } 
                                 
             }
+        }
+        
+        void baryakhtar_helper_M2(
+                const np_array<double> &M,
+                const np_array<double> &Ms){
+        
+            double *m=M.data();
+            double *ms=Ms.data();
+            
+            assert(M.size()==Ms.size());
+            assert(M.size()%3==0);
+            
+            int length=M.size()/3;         
+            int i1,i2,i3;
+   
+            double tmp;
+            for (int i = 0; i < length; i++) {
+                i1=i;
+        	i2=length+i1;
+        	i3=length+i2;
+                
+                tmp=m[i1]*m[i1]+m[i2]*m[i2]+m[i3]*m[i3];
+                ms[i1]=tmp;
+                ms[i2]=tmp;
+                ms[i3]=tmp;
+            }
+        
         }
 
 	void calc_baryakhtar_jtimes(
@@ -555,9 +586,14 @@ namespace finmag { namespace llg {
             arg("dmdt"),
             arg("alpha"),
 	    arg("beta"),
-            arg("M0"), 
+            arg("Ms"), 
             arg("gamma"),
             arg("do_precession")
+        ));
+        
+        def("baryakhtar_helper_M2", &baryakhtar_helper_M2, (
+            arg("M"),
+            arg("Ms")
         ));
 
         def("calc_baryakhtar_jtimes", &calc_baryakhtar_jtimes, (

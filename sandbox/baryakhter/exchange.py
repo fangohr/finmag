@@ -1,9 +1,9 @@
 import dolfin as df
 import numpy as np
 import logging
-from finmag.energies.energy_base import EnergyBase 
 from finmag.util.consts import mu0
 from finmag.util.timings import timings
+from finmag.native import llg as native_llg
 
 logger=logging.getLogger('finmag')
 
@@ -20,6 +20,7 @@ class Exchange(object):
         self.M = M
         self.Mo=Mo
         self.unit_length = unit_length
+        self.Ms2=np.array(self.M)
 
         self.mu0 = mu0
         self.exchange_factor = 1.0 * self.C / (self.mu0  * self.unit_length**2)
@@ -40,18 +41,12 @@ class Exchange(object):
     def compute_field(self):
         self.K.mult(self.M.vector(), self.H)
         v=self.M.vector().array()
-        v2=np.zeros(v.shape)
-        n=len(v)/3
-        for i1 in range(n):
-            i2=n+i1
-            i3=n+i2
-            tmp=v[i1]*v[i1]+v[i2]*v[i2]+v[i3]*v[i3]
-            v2[i1]=tmp
-            v2[i2]=tmp
-            v2[i3]=tmp
         
-        relax = self.coeff2*(v2-self.Mo**2)*v
-        return  self.coeff1*self.H.array()/v2+relax
+        native_llg.baryakhtar_helper_M2(v,self.Ms2)
+        
+        relax = self.coeff2*(self.Ms2-self.Mo**2)*v
+        
+        return  self.coeff1*self.H.array()/self.Ms2+relax
     
   
 if __name__ == "__main__":
