@@ -402,7 +402,7 @@ namespace finmag { namespace llg {
                 const np_array<double> &dmdt,
                 const np_array<double> &alpha,
                 const np_array<double> &beta,
-                const np_array<double> &Ms, //output Ms array, computed by M
+                double M0, 
                 double gamma,
                 bool do_precession) {
             
@@ -415,14 +415,14 @@ namespace finmag { namespace llg {
     	    double *dm_dt=dmdt.data();
             double *a=alpha.data();
             double *b=beta.data();
-            double *ms=Ms.data();
             
             double precession_coeff = -gamma;
             double damping_coeff = 0;
+            damping_coeff = gamma * M0;
             
-            assert(M.size()==3*Ms.size());
+            assert(M.size()%3==0);
             
-            int length=Ms.size();         
+            int length=M.size()/3;         
             int i1,i2,i3;
    
             #pragma omp parallel for schedule(guided)
@@ -431,9 +431,7 @@ namespace finmag { namespace llg {
         	i2=length+i1;
         	i3=length+i2;
                 
-                ms[i]=sqrt(m[i1]*m[i1]+m[i2]*m[i2]+m[i3]*m[i3]);
-                
-                damping_coeff=gamma * ms[i];
+               
                 dm_dt[i1]=damping_coeff*(a[i]*h[i1] - b[i]*delta_h[i1]);
                 dm_dt[i2]=damping_coeff*(a[i]*h[i2] - b[i]*delta_h[i2]);
                 dm_dt[i3]=damping_coeff*(a[i]*h[i3] - b[i]*delta_h[i3]);
@@ -586,7 +584,7 @@ namespace finmag { namespace llg {
             arg("dmdt"),
             arg("alpha"),
 	    arg("beta"),
-            arg("Ms"), 
+            arg("M0"), 
             arg("gamma"),
             arg("do_precession")
         ));
