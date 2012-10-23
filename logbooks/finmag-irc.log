@@ -1927,3 +1927,16 @@ fangohr: Still testing ...
 2012-10-22 16:07:59 fangohr-adium: You get higher accuracy by making the mesh in the airbox finer.
 2012-10-22 16:09:24 fangohr-adium: The other method that is available in Nmag is working out the magnetic scalar potential numerically for an point your are interested in, and then gets the demag by numerically differentiating (I think). In any case, I am sure that this is fairly in accurate as it involves subtraction of large numbers of similar size. The airbox method will be more accurate.
 2012-10-22 16:09:47 cilix: That's probably true.
+2012-10-23 12:43:57 mb8g11: Lunch?
+2012-10-23 12:44:10 mb8g11: nevermind
+2012-10-23 12:44:19 fangohr-adium: ;-)
+2012-10-23 12:44:34 fangohr-adium: MA, were we meant to get together at 13:00 today?
+2012-10-23 12:44:46 fangohr-adium: If so, feel free to bring some lunch to eat. Or did I mix up dates?
+2012-10-23 12:45:26 mb8g11: You didn't, that's what the "nevermind" is due to. Good idea, will bring something to eat with me.
+2012-10-23 14:18:02 mb8g11: Hans, could you install python-gdb on osiris for me please? These are debugging symbols for python to use with the debugger.
+2012-10-23 14:44:09 cilix: MA: http://pastebin.com/nV7diaiG
+2012-10-23 14:44:27 mb8g11: thanks
+2012-10-23 14:51:53 mb8g11: looks like some kind of boost/python compability issue
+2012-10-23 14:52:32 mb8g11: Hi Dmitri
+2012-10-23 14:52:50 D_Chernyshenko_: Hey
+2012-10-23 14:53:06 D_Chernyshenko_: ls
