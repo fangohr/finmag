@@ -24,14 +24,14 @@ MODULES = sundials.so llg.so llb.so
 # The directory to store the precompiled header file.
 PRECOMPILED_HEADER_DIR ?= /tmp/$(USER)/finmag-pch
 # Name of the binary that runs all unit tests
-UNIT_TEST_BINARY=tests/run_ci_tests.bin
+UNIT_TEST_BINARY=$(MODULE_DIR)/run_ci_tests.bin
 # Directory for CI unit test results
 UNIT_TEST_RESULTS_DIR=../test-reports/boost
 # Explicit dependencies to tell how the module files are linked
-SUNDIALS_NVECTOR_SO=$(abspath src/sundials/nvec_serial/nvector_serial_custom_malloc.so)
+SUNDIALS_NVECTOR_SO=-Wl,-rpath,\$$ORIGIN -L$(abspath ../src/finmag/native/) -lnvector_serial_custom_malloc
 
 $(MODULE_DIR)/sundials.so : src/sundials/py_sundials_module.o src/util/np_array.o src/sundials/numpy_malloc.o
-sundials_LDFLAGS = -lsundials_cvode -llapack $(SUNDIALS_NVECTOR_SO) -lboost_thread
+sundials_LDFLAGS =-lsundials_cvode -llapack $(SUNDIALS_NVECTOR_SO) -lboost_thread
 
 $(MODULE_DIR)/llg.so : src/llg/py_llg_module.o src/util/np_array.o src/util/swig_dolfin.o src/llg/bem.o src/llg/llg.o src/llg/heun.o src/llg/oriented_boundary_mesh.o
 llg_LDFLAGS = -ldolfin

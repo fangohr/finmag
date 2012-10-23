@@ -38,8 +38,7 @@ files_to_ignore = ['llg.py',
                                             # finmag.sim.integrator.__init__),
                                             # not other __init__
                                             # files.
-                   'test_mesh.py',          # py.test will not read a .so, no
-                   'solver_fk_test.py'      # point compiling these two test-files.
+                   'test_mesh.py',          # py.test will not read a .so, no point compiling this test-file.
                    ]
 
 directories_to_ignore = ['tests']

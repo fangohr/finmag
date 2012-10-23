@@ -1910,3 +1910,20 @@ fangohr: Still testing ...
 2012-10-19 10:32:48 fangohr-adium: Max, are you out there?
 2012-10-19 14:52:12 mb8g11: Hans, taking care of the e-mails for submissions
 2012-10-19 17:00:32 fangohr-adium: Over and out for the weekend - have a good one, everybody.
+2012-10-22 12:52:34 D_Chernyshenko_: Any plans for lunch?
+2012-10-22 13:16:12 fangohr-adium: Hi, sorry, just been.
+2012-10-22 13:16:44 D_Chernyshenko_: Ah, that's fine then
+2012-10-22 15:40:38 cilix: Hi Hans, I was just wondering if there is a way in Finmag to probe the stray field of e.g. a magnetic particle in the surrounding space. AFAICS, this doesn't currently exist. However, nmag does provide such a method, right? Do you know what the best way of doing this is, and/or how it is implemented in nmag?
+2012-10-22 15:59:17 fangohr-adium: Hm, good question. The best way may be to implement a fake magnetic material (with Ms=0, or Ms=eps if 0 causes divisions by zero) in the area where you want to probe. Note that the field outside the magnetic body can be fairly coarse (depending a little on the resolution you desire). There is in fact the 'air-box-method' of computing demag fields, where you enclose a magnetic object with 'air' (where the main property of the air is that it is non-
+2012-10-22 15:59:33 fangohr-adium: Sorry — wanted to edit the text a little, but pressed return to early.
+2012-10-22 16:00:12 fangohr-adium: The main point being that the airbox method is used to reduce the size of the BEM. For the problem you are looking at (i.e. determine demag field outside the magnetic parts), you could probe in the airbox.
+2012-10-22 16:01:03 mb8g11: Does nmag implement the airbox method?
+2012-10-22 16:01:14 fangohr-adium: No.
+2012-10-22 16:01:22 fangohr-adium: We also have a ticket for this: https://www.pivotaltracker.com/story/show/27827923
+2012-10-22 16:01:29 fangohr-adium: (which contains a little more detail)
+2012-10-22 16:01:38 mb8g11: I know about the airbox method, was just wondering.
+2012-10-22 16:02:57 cilix: Thanks for the link to the ticket, that's helpful.
+2012-10-22 16:07:20 cilix: Do you know of any other good methods offhand, and what the advantages/disadvantages are compared to the airbox method? I guess for a crude visualisation the airbox method may be good enough, but if I'm a little worried that it might not suffice for more advanced visualisations because the discretisation errors are too big.
+2012-10-22 16:07:59 fangohr-adium: You get higher accuracy by making the mesh in the airbox finer.
+2012-10-22 16:09:24 fangohr-adium: The other method that is available in Nmag is working out the magnetic scalar potential numerically for an point your are interested in, and then gets the demag by numerically differentiating (I think). In any case, I am sure that this is fairly in accurate as it involves subtraction of large numbers of similar size. The airbox method will be more accurate.
+2012-10-22 16:09:47 cilix: That's probably true.
