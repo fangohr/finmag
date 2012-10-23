@@ -5,6 +5,7 @@ import numpy
 from finmag.sim.integrator import LLGIntegrator
 from finmag.sim.llg import LLG
 from finmag.energies import Zeeman
+from finmag.util.macrospin import make_analytic_solution
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -15,50 +16,9 @@ pages 127-128, equations B.16-B.18.
 
 """
 
-
-def make_analytic_solution(H, alpha, gamma):
-    """
-    Returns a function which computes the magnetisation vector
-    as a function of time. Takes the following parameters:
-        - H the magnitude of the applied field
-        - alpha has no dimension
-        - gamma alias oommfs gamma_G in m/A*s
-
-    """
-    p = float(gamma) / (1 + alpha ** 2)
-    theta0 = numpy.pi / 2
-    t0 = numpy.log(numpy.sin(theta0) / (1 + numpy.cos(theta0))) / (p * alpha * H)
-
-    # Matteo uses spherical coordinates,
-    # which have to be converted to cartesian coordinates.
-
-    def phi(t):
-        return p * H * t
-
-    def cos_theta(t):
-        return numpy.tanh(p * alpha * H * (t - t0))
-
-    def sin_theta(t):
-        return 1 / (numpy.cosh(p * alpha * H * (t - t0)))
-
-    def x(t):
-        return sin_theta(t) * numpy.cos(phi(t))
-
-    def y(t):
-        return sin_theta(t) * numpy.sin(phi(t))
-
-    def z(t):
-        return cos_theta(t)
-
-    def m(t):
-        return numpy.array([x(t), y(t), z(t)])
-
-    return m
-
-
 def compare_with_analytic_solution(alpha=0.5, max_t=1e-9):
     """
-    Compares the C/dolfin/odeint solution to the analytical one defined above.
+    Compares the C/dolfin/odeint solution to the analytical one.
 
     """
     print "Running comparison with alpha={0}.".format(alpha)

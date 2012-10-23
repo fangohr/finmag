@@ -6,7 +6,7 @@ from finmag.util.timings import timings
 from finmag.energies import AbstractEnergy
 from solver_fk import FemBemFKSolver
 from solver_gcr import FemBemGCRSolver
-from solver_fk_test import SimpleFKSolver
+from solver_fk_alt import SimpleFKSolver
 from solver_base import default_parameters
 
 log = logging.getLogger("finmag")

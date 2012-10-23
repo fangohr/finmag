@@ -1,8 +1,15 @@
+from datetime import datetime
+import matplotlib.pyplot as plt
+import subprocess
+import logging
 import numpy as np
 import dolfin as df
 import math
 import types
+import sys
 import os
+
+logger = logging.getLogger("finmag")
 
 def components(vs):
     """
@@ -262,3 +269,120 @@ def vector_valued_function(value, S3, normalise=False, **kwargs):
         fun.vector()[:] = fnormalise(fun.vector().array())
 
     return fun
+
+def plot_hysteresis_loop(H_vals, m_vals, style='x-', add_point_labels=False, point_labels=None, infobox=[], infobox_loc='bottom right',
+                         filename=None, title="Hysteresis loop", xlabel="H_ext (A/m)", ylabel="m_avg", figsize=(10, 7)):
+    """
+    Produce a hysteresis plot
+
+    Arguments:
+
+       H_vals -- list of scalar values; the values of the applied field used for the relaxation
+                 stages of the hysteresis loop
+
+       m_vals -- list of scalar values; the magnetisation obtained at the end of each relaxation
+                 stage in the hysteresis loop
+
+    Keyword arguments:
+
+       style -- the plot style (default: 'x-')
+
+       add_point_labels -- if True (default: False), every point is labeled with a number which
+                           indicates the relaxation stage of the hysteresis loop it represents
+
+       point_labels -- list or None; each list element can either be an integer or a pair of the
+                       form (index, label), where index is an integer and label is a string. If
+                       not None, only the points whose index appears in this list are labelled
+                       (either with their index, or with the given label string if provided).
+                       For example, if only every 10th point should be labeled, one might say
+                       'point_labels=xrange(0, NUM_POINTS, 10)'.
+
+       infobox -- list; each entry can be either a string or a pair of the form (name, value).
+                  If not empty, an info box will added to the plot with the list elements appearing
+                  on separate lines. Strings are printed verbatim, whereas name/value pairs are
+                  converted to a string of the form "name = value".
+
+       filename -- if given, save the resulting plot to a file with the specified name
+    """
+    if not all([isinstance(x, (types.IntType, types.FloatType)) for x in m_vals]):
+        raise ValueError("m_vals must be a list of scalar values, got: {}".format(m_vals))
+
+    fig = plt.figure(figsize=figsize)
+    ax = fig.gca()
+
+    N = len(H_vals) // 2
+    N_vals = range(N,0,-1) + range(1,N+1)
+    H_max = max(H_vals)
+
+    ax.plot(H_vals, m_vals, style)
+
+    ax.set_xlim(-1.1*H_max, 1.1*H_max)
+    ax.set_ylim((-1.2, 1.2))
+
+    if point_labels is None:
+        point_labels = xrange(len(H_vals))
+    # Convert point_labels into a dictionary where the keys are the point indices
+    # and the values are the respective labels to be used.
+    point_labels = dict(map(lambda i: i if isinstance(i, tuple) else (i, str(i)), point_labels))
+    if add_point_labels:
+        for i in xrange(len(H_vals)):
+            if point_labels.has_key(i):
+                x = H_vals[i]
+                y = m_vals[i]
+                ax.annotate(point_labels[i], xy=(x, y), xytext=(-10, 5) if i<N else (0, -15), textcoords='offset points')
+
+    # draw the info box
+    if infobox != []:
+        box_text = ""
+        for elt in infobox:
+            if isinstance(elt, types.StringType):
+                box_text += elt+'\n'
+            else:
+                try:
+                    name, value = elt
+                    box_text += "{} = {}\n".format(name, value)
+                except ValueError:
+                    raise ValueError, "All list elements in 'infobox' must be either strings or pairs of the form (name, value). Got: '{}'".format(elt)
+        box_text = box_text.rstrip()
+
+        if infobox_loc not in ["top left", "top right", "bottom left", "bottom right"]:
+            raise ValueError("'infobox_loc' must be one of 'top left', 'top right', 'bottom left', 'bottom right'.")
+
+        vpos, hpos = infobox_loc.split()
+        x = H_max if hpos == "right" else -H_max
+        y = 1.0 if vpos == "top" else -1.0
+
+        ax.text(x, y, box_text, size=12,
+                horizontalalignment=hpos, verticalalignment=vpos, multialignment="left", #transform = ax.transAxes,
+                bbox=dict(boxstyle="round, pad=0.3", facecolor="white", edgecolor="green", linewidth=1))
+
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.set_title(title)
+    plt.tight_layout()
+
+    if filename:
+        fig.savefig(filename)
+
+def duplicate_output_to_file(filename, add_timestamp=False, timestamp_fmt='__%Y-%m-%d_%H.%M.%S'):
+    """
+    Redirect all (future) output to a file with the given filename.
+    This redirects both to stdout and stderr.
+
+    If `add_timestamp` is True then a timestamp will be added to the
+    filename indicating the time when the call to this function
+    occurred (for example, the filename 'output.txt' might be changed
+    into 'output_2012-01-01_14.33.52.txt'). The timestamp format can
+    be controlled via `timestamp_fmt`, which should be a formatting
+    string as accepted by `datetime.strftime`.
+    """
+    if add_timestamp:
+        name, ext = os.path.splitext(filename)
+        filename = '{}{}{}'.format(name, datetime.strftime(datetime.now(), timestamp_fmt), ext)
+
+    logger.debug("Duplicating output to file '{}'".format(filename))
+    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+
+    tee = subprocess.Popen(["tee", filename], stdin=subprocess.PIPE)
+    os.dup2(tee.stdin.fileno(), sys.stdout.fileno())
+    os.dup2(tee.stdin.fileno(), sys.stderr.fileno())
