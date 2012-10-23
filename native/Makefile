@@ -24,7 +24,7 @@ MODULES = sundials.so llg.so llb.so
 # The directory to store the precompiled header file.
 PRECOMPILED_HEADER_DIR ?= /tmp/$(USER)/finmag-pch
 # Name of the binary that runs all unit tests
-UNIT_TEST_BINARY=tests/run_ci_tests.bin
+UNIT_TEST_BINARY=$(MODULE_DIR)/run_ci_tests.bin
 # Directory for CI unit test results
 UNIT_TEST_RESULTS_DIR=../test-reports/boost
 # Explicit dependencies to tell how the module files are linked
