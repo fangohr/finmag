@@ -1940,3 +1940,46 @@ fangohr: Still testing ...
 2012-10-23 14:52:32 mb8g11: Hi Dmitri
 2012-10-23 14:52:50 D_Chernyshenko_: Hey
 2012-10-23 14:53:06 D_Chernyshenko_: ls
+2012-10-24 09:17:45 fangohr-adium: Good morning, all.
+2012-10-24 09:17:55 cilix: Good morning!
+2012-10-24 09:17:59 fangohr-adium: Hi MA, the python-dbg package is installed now.
+2012-10-24 09:19:07 cilix: Speaking of packages, I wanted to try out the Ubuntu PPA for the FEniCS nightly development snapshots yesterday.
+2012-10-24 09:19:33 cilix: Unfortunately, Finmag doesn't compile with that version because they removed the "ParallelData" data structure.
+2012-10-24 09:19:53 cilix: So I had to downgrade again (which was a bit of a hassle, but has worked now).
+2012-10-24 09:20:42 cilix: But I'd really like to try it out because it provides the new XDMF format to save fields.
+2012-10-24 09:20:54 cilix: However, I don't want to break the build for everyone else either.
+2012-10-24 09:21:35 cilix: So I was wondering whether there is a way I can have a setup to try both and make sure that both versions work with Finmag.
+2012-10-24 09:22:21 cilix: Do you know if there is a computer somewhere that can run Finmag but that nobody uses for development or simulations, so that I could install the fenics development snapshots there?
+2012-10-24 09:22:31 cilix: Or do I have to resort to a virtual machine on my own computer?
+2012-10-24 09:24:24 fangohr-adium: Hi Max, I haven't got a spare machine online, although I do have an old PC in my drawers (1GB RAM, fairly slow). All in all, I think a virtual machine may be easier (and would be my choice). MA has recent disk images for Ubuntu 12.04 virtual machines (virtual box format) which you can start from if you prefer over installing your own. It is a fairly straight forward process.
+2012-10-24 09:24:38 fangohr-adium: I like the idea of upgrading our code to be compatible with the most recent version of Fenics.
+2012-10-24 09:25:10 fangohr-adium: We should also soon get new computers for Weiwei and Marijan, at which point at least one machine should be come available for such experimental work. If you prefer, we can wait for that.
+2012-10-24 09:25:57 cilix: Ok, I guess I'll try VirtualBox then. Might be a good idea to keep my development experiments local to my machine anyway.
+2012-10-24 09:28:25 fangohr-adium: Okay. I'll dissappear for teaching and all sort of meetings now. I see Max and MA later with Jeff and Suzanne, I believe (14:00).
+2012-10-24 09:28:37 fangohr-adium: Dmitri, can we move our meeting from 15:30 to 16:00?
+2012-10-24 09:28:58 cilix: Yep, see you then!
+2012-10-24 11:10:28 mb8g11: try http://www.smuxi.org/main/
+2012-10-24 14:51:59 mb8g11: just copying some docs to the virtual machine before I zip it up and uplaod it
+2012-10-24 14:52:09 fangohr-adium: Cool. No rush.
+2012-10-24 15:18:17 mb8g11: The good news: I've issued a license, copied it to the virtual machine and finmag works.
+2012-10-24 15:18:27 mb8g11: The bad news: It works without a license as well.
+2012-10-24 16:06:16 fangohr-adium: You need to inject the testing code into the source code before building the binary version. This will repcale the ##license place holder string in some files with the testing code that will check for presence of the license file.
+2012-10-24 16:06:43 fangohr-adium: Dmitri, the visitors have gone; please drop by when it is convenient.
+2012-10-24 16:10:58 mb8g11: It should. Will double check it actually does it.
+2012-10-24 16:35:34 mb8g11: Using an energy term which derives from energy_base without a license indeed stops the program. Good call.
+2012-10-24 16:35:42 fangohr-adium: Nice. :)
+2012-10-24 16:43:24 fangohr-adium: In case we haven't done this yet, we should have things like Paraview, Mayavi, py.test, maybe xmgrace and gnuplot, latex, emacs, on the virtual machine. There are probably other things. Ideally, we just add these packages to a script that installs these 'convenience' tools so that we can re-run it if we create further virtual( (or real!) machines.
+2012-10-24 16:56:25 mb8g11: Most of this is covered by our install script. The virtual machine also has sublime text.
+2012-10-24 16:56:33 fangohr-adium: Nice touch.
+2012-10-24 16:57:23 mb8g11: https://bitbucket.org/fangohr/finmag/src/be527fee23a6f77ba73da43ed45384cd8bb52c40/install/on_ubuntu_12.04.sh?at=default
+2012-10-24 16:57:30 mb8g11: will added paraview and mayavi2
+2012-10-24 16:58:51 mb8g11: Currently trying to find some common ground beetween our processors. The core2 build runs on Osiris, but not on my virtual machine. Who knows what Jeff's and Luzanne's machine look like.
+2012-10-24 16:59:28 fangohr-adium: Hm. Maybe tone down the extended features for the virtual machine then; i.e. accept portability over speed.
+2012-10-24 16:59:35 mb8g11: Which is weird, because core2 should be a subset of corei7.
+2012-10-24 17:00:37 mb8g11: 1. let gather_info.py also save the CPU info and custom build our binary.
+2012-10-24 17:01:01 mb8g11: 2. If we don't lose too much performance, have a version of finmag which is portable enough.
+2012-10-24 17:01:31 mb8g11: It's 2 for the virtual machine I'm building, but 1 might be better for future users.
+2012-10-24 17:02:10 fangohr-adium: Excellent plan; I like that (1.).
+2012-10-24 17:03:34 mb8g11: Swell.
+2012-10-24 17:11:07 fangohr-adium: Over and out from me for today. Thanks for help from various people with the binary distribution and the students today.
+2012-10-24 17:11:34 mb8g11: :) Bye bye
