@@ -56,7 +56,7 @@ PRECOMPILED_HEADER_FILE=$(PRECOMPILED_HEADER_DIR)/finmag_includes.h.gch
 CFLAGS_USE_PCH = -include $(PRECOMPILED_HEADER_DIR)/finmag_includes.h
 
 # Compilation flags
-CFLAGS_OPT=-O3 -funroll-loops -mfpmath=sse -march=native
+CFLAGS_OPT=-O3 -funroll-loops -mfpmath=sse -march=core2
 CFLAGS_PYTHON=-I/usr/include/python2.7 -fPIC -lboost_python -lpython2.7
 # -rdynamic keeps private symbols in .so files, providing more detailed stack traces
 # -MMD -MP generates .d dependency files
