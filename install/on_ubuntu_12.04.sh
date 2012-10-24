@@ -13,7 +13,7 @@ fi
 
 required="fenics libboost-python-dev libboost-thread-dev libsundials-serial-dev
     libboost-test-dev python-matplotlib python-visual python-scipy python-pip
-    python-distutils python-progressbar"
+    python-setuptools python-progressbar"
 
 building_doc="texlive-latex-extra texlive-latex-recommended python-pygments
     texlive-fonts-recommended"
@@ -21,7 +21,7 @@ building_doc="texlive-latex-extra texlive-latex-recommended python-pygments
 suggested="mercurial ipython grace gnuplot netgen netgen-doc gmsh"
 
 packages="$required"
-if [ "$1" = "--all" ]
+if [ "$1" == "--all" ]
 then
     packages="$packages $building_doc $suggested"
 fi
