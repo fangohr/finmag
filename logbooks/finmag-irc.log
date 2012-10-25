@@ -1983,3 +1983,10 @@ fangohr: Still testing ...
 2012-10-24 17:03:34 mb8g11: Swell.
 2012-10-24 17:11:07 fangohr-adium: Over and out from me for today. Thanks for help from various people with the binary distribution and the students today.
 2012-10-24 17:11:34 mb8g11: :) Bye bye
+2012-10-25 11:02:30 max_albert: Hi Hans, we'll be right there. Just testing one thing with the VM.
+2012-10-25 11:02:42 fangohr-adium: Cool, no worries. Coffee is brewing.
+2012-10-25 11:02:49 fangohr-adium: Only arrived myself just now :)
+2012-10-25 14:23:39 mb8g11: Eureka! It works!
+2012-10-25 14:40:04 mb8g11: 2 good news: 1) The finmag binary on the virtual machine works on different machines now. 2) Dolfin trunk fixed the mesh regions getting lost a few days ago (according to Anders, he just ignored it in his master thesis because he had already written about the problem).
+2012-10-25 15:11:56 fangohr-adium: Aha! Excellent news allround. Thanks for the update.
+2012-10-25 17:14:27 fangohr-adium: Over and out from here.
