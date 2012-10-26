@@ -28,6 +28,12 @@ class LLG(object):
 
     """
     def __init__(self, S1, S3, do_precession=True):
+        """
+        S1 and S3 are df.FunctionSpace and df.VectorFunctionSpace objects,
+        and the boolean do_precession controls whether the precession of the
+        magnetisation around the effective field is computed or not.
+
+        """
         timings.start('LLG-init')
         logger.debug("Creating LLG object.")
         self.S1 = S1
