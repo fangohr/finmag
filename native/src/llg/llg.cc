@@ -393,7 +393,7 @@ namespace finmag { namespace llg {
 
         /*
         Compute the Baryakhtar term for cubic crystal anisotropy.
-        dM/dt = - gamma M x H  +  gamma M (alpha H - beta Delta H)
+        dM/dt = - gamma M x H  +  gamma M0 (alpha H - beta Delta H)
         */
         void calc_baryakhtar_dmdt(
                 const np_array<double> &M,
@@ -404,7 +404,8 @@ namespace finmag { namespace llg {
                 const np_array<double> &beta,
                 double M0, 
                 double gamma,
-                bool do_precession) {
+                bool do_precession,
+                const np_array<long> &pins) {
             
            
             finmag::util::scoped_gil_release release_gil;
@@ -415,6 +416,7 @@ namespace finmag { namespace llg {
     	    double *dm_dt=dmdt.data();
             double *a=alpha.data();
             double *b=beta.data();
+            long int *pin=pins.data();
             
             double precession_coeff = -gamma;
             double damping_coeff = 0;
@@ -427,11 +429,16 @@ namespace finmag { namespace llg {
    
             #pragma omp parallel for schedule(guided)
             for (int i = 0; i < length; i++) {
-                i1=i;
-        	i2=length+i1;
-        	i3=length+i2;
-                
+              i1=i;
+        	  i2=length+i1;
+        	  i3=length+i2;
                
+        	  if(pin[i]>0){
+        		  dm_dt[i1]=0;
+        		  dm_dt[i2]=0;
+        		  dm_dt[i3]=0;
+        	  }{
+
                 dm_dt[i1]=damping_coeff*(a[i]*h[i1] - b[i]*delta_h[i1]);
                 dm_dt[i2]=damping_coeff*(a[i]*h[i2] - b[i]*delta_h[i2]);
                 dm_dt[i3]=damping_coeff*(a[i]*h[i3] - b[i]*delta_h[i3]);
@@ -442,8 +449,10 @@ namespace finmag { namespace llg {
                     dm_dt[i2] += precession_coeff*(m[i3]*h[i1]-m[i1]*h[i3]);
                     dm_dt[i3] += precession_coeff*(m[i1]*h[i2]-m[i2]*h[i1]);
                 } 
-                                
+
+        	  }
             }
+
         }
         
         void baryakhtar_helper_M2(
@@ -478,31 +487,36 @@ namespace finmag { namespace llg {
                 const np_array<double> &H,
                 const np_array<double> &mp,
                 const np_array<double> &Hp,
+                const np_array<double> &alpha_ptr,
                 const np_array<double> &jtimes,
+                double M0,
                 double gamma_LL,
-                bool do_precession) {
+                bool do_precession,
+                const np_array<long> &pins) {
 
             m.check_ndim(2, "calc_llg_dmdt: m");
-            int n = m.dim()[1];
 
-            m.check_shape(3, n, "calc_llg_dmdt: m");
-            mp.check_shape(3, n, "calc_llg_dmdt: mp");
-            H.check_shape(3, n, "calc_llg_dmdt: H");
-            Hp.check_shape(3, n, "calc_llg_dmdt: Hp");
-            jtimes.check_shape(3, n, "calc_llg_dmdt: jtimes");
+            int nodes = check_dimensions(alpha_ptr, m, H, jtimes);
+
+
+            mp.check_shape(3, nodes, "calc_baryakhtar_dmdt: mp");
+            Hp.check_shape(3, nodes, "calc_baryakhtar_dmdt: Hp");
+
 
             double precession_coeff = -gamma_LL;
+            double coeff2= gamma_LL*M0;
             double *m0 = m(0), *m1 = m(1), *m2 = m(2);
             double *mp0 = mp(0), *mp1 = mp(1), *mp2 = mp(2);
             double *h0 = H(0), *h1 = H(1), *h2 = H(2);
             double *hp0 = Hp(0), *hp1 = Hp(1), *hp2 = Hp(2);
             double *jtimes0 = jtimes(0), *jtimes1 = jtimes(1), *jtimes2 = jtimes(2);
+            double *alpha=alpha_ptr.data();
             
             finmag::util::scoped_gil_release release_gil;
 
             if (do_precession) {
                 #pragma omp parallel for schedule(guided)
-                for (int i = 0; i < n; i++) {
+                for (int i = 0; i < nodes; i++) {
                     // add precession: mp x H + m x Hp
                     jtimes0[i] = precession_coeff*(cross0(mp0[i], mp1[i], mp2[i], h0[i], h1[i], h2[i])
                             + cross0(m0[i], m1[i], m2[i], hp0[i], hp1[i], hp2[i]));
@@ -510,17 +524,23 @@ namespace finmag { namespace llg {
                             + cross1(m0[i], m1[i], m2[i], hp0[i], hp1[i], hp2[i]));
                     jtimes2[i] = precession_coeff*(cross2(mp0[i], mp1[i], mp2[i], h0[i], h1[i], h2[i])
                             + cross2(m0[i], m1[i], m2[i], hp0[i], hp1[i], hp2[i]));
+
+                    jtimes0[i] += alpha[i]*coeff2*hp0[i];
+                    jtimes1[i] += alpha[i]*coeff2*hp1[i];
+                    jtimes2[i] += alpha[i]*coeff2*hp2[i];
+
                 }
             } else {
                 #pragma omp parallel for schedule(guided)
-                for (int i = 0; i < n; i++) {
+                for (int i = 0; i < nodes; i++) {
                     
-                    jtimes0[i] = 0;
-                    jtimes1[i] = 0;
-                    jtimes2[i] = 0;
+                    jtimes0[i] = alpha[i]*coeff2*hp0[i];
+                    jtimes1[i] = alpha[i]*coeff2*hp1[i];
+                    jtimes2[i] = alpha[i]*coeff2*hp2[i];
                     
                 }
             }
+            pin(jtimes, pins);
         }
 
     }
@@ -586,7 +606,8 @@ namespace finmag { namespace llg {
 	    arg("beta"),
             arg("M0"), 
             arg("gamma"),
-            arg("do_precession")
+            arg("do_precession"),
+            arg("pins")
         ));
         
         def("baryakhtar_helper_M2", &baryakhtar_helper_M2, (
@@ -599,9 +620,12 @@ namespace finmag { namespace llg {
             arg("H"),
             arg("mp"),
             arg("Hp"),
+            arg("alpha_ptr"),
             arg("jtimes"),
+            arg("M0"),
             arg("gamma_LL"),
-            arg("do_precession")
+            arg("do_precession"),
+            arg("pins")
         ));
     }
 }}
