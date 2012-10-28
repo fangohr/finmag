@@ -27,7 +27,9 @@ class LLB(object):
         
         self.dm_dt = np.zeros(self.M.shape)
         self.H_eff = np.zeros(self.M.shape)
+        
         self.call_field_times=0
+        self.call_field_jtimes=0
         
          
         self.set_default_values()
@@ -91,7 +93,10 @@ class LLB(object):
     
     @pins.setter
     def pins(self, nodes):
-        self._pins = np.array(nodes, dtype="int")
+        if len(nodes)>0:
+            self._pins = np.array(nodes, dtype="int")
+        else:
+            self._pins=np.zeros(self.S1.mesh().num_vertices(),dtype="int")
     
     def spatially_varying_alpha(self, baseline_alpha, multiplicator):
         """
@@ -129,10 +134,15 @@ class LLB(object):
         self.M[:]=self._M.vector().array()[:]
         
 
-    def set_up_solver(self, reltol=1e-8, abstol=1e-8, nsteps=10000):
+    def set_up_solver(self, reltol=1e-6, abstol=1e-6, nsteps=100000,jacobian=False):
         integrator = sundials.cvode(sundials.CV_BDF, sundials.CV_NEWTON)
         integrator.init(self.sundials_rhs, 0, self.M)
-        integrator.set_linear_solver_sp_gmr(sundials.PREC_NONE)
+        if jacobian:
+            integrator.set_linear_solver_sp_gmr(sundials.PREC_LEFT)
+            integrator.set_spils_jac_times_vec_fn(self.sundials_jtimes)
+            integrator.set_spils_preconditioner(self.sundials_psetup, self.sundials_psolve)
+        else:
+            integrator.set_linear_solver_sp_gmr(sundials.PREC_NONE)
         integrator.set_scalar_tolerances(reltol, abstol)
         integrator.set_max_num_steps(nsteps)
         
@@ -148,6 +158,15 @@ class LLB(object):
         #print 'heff=',H_eff
         self.call_field_times+=1
         self.H_eff = H_eff
+        
+    def compute_effective_field_jacobian(self):
+        H_eff = np.zeros(self.M.shape)
+        
+        for interaction in self.interactions:
+            if interaction.in_jacobian:
+                H_eff += interaction.compute_field()
+                
+        return H_eff
  
     def compute_laplace_effective_field(self):
         #grad_u = df.project(df.grad(self._M))
@@ -187,7 +206,8 @@ class LLB(object):
                                  self.beta_vec,
                                  self.M0,
                                  self.gamma, 
-                                 self.do_precession)
+                                 self.do_precession,
+                                 self.pins)
 
 
         timings.stop("LLG-compute-dmdt")
@@ -197,6 +217,53 @@ class LLB(object):
         
         ydot[:] = self.dm_dt[:]
             
+        return 0
+    
+    def sundials_jtimes(self, mp, J_mp, t, m, fy, tmp):
+        """
+       
+        """
+
+        timings.start("LLG-sundials-jtimes")
+        self.call_field_jtimes+=1
+    
+        # First, compute the derivative H' = dH_eff/dt
+        self.m = mp
+        Hp = tmp.view()
+        Hp[:] = self.compute_effective_field_jacobian()
+        self.compute_effective_field()
+       
+        m.shape = (3, -1)
+        mp.shape = (3, -1)
+        Hp.shape = (3, -1)
+        J_mp.shape = (3, -1)
+        self.H_eff.shape=(3,-1)
+        print self.call_field_times,self.call_field_jtimes
+        native_llg.calc_baryakhtar_jtimes(m, 
+                                   self.H_eff,
+                                   mp, 
+                                   Hp, 
+                                   self.alpha_vec, 
+                                   J_mp, 
+                                   self.M0,
+                                   self.gamma,
+                                   self.do_precession,
+                                   self.pins)
+        J_mp.shape = (-1, )
+        m.shape = (-1,)
+        mp.shape = (-1,)
+        tmp.shape = (-1,)
+        self.H_eff.shape=(-1,)
+
+        timings.stop("LLG-sundials-jtimes")
+
+        # Nonnegative exit code indicates success
+        return 0
+    def sundials_psetup(self, t, m, fy, jok, gamma, tmp1, tmp2, tmp3):
+        return 0, not jok
+
+    def sundials_psolve(self, t, y, fy, r, z, gamma, delta, lr, tmp):
+        z[:] = r
         return 0
     
     @property

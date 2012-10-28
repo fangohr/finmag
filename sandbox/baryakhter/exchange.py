@@ -9,9 +9,10 @@ logger=logging.getLogger('finmag')
 
     
 class Exchange(object):
-    def __init__(self, C, chi=1):
+    def __init__(self, C, chi=1,in_jacobian=True):
         self.C = C
         self.chi=chi
+        self.in_jacobian=in_jacobian
     
     def setup(self, S3, M, Mo, unit_length=1.0): 
         timings.start('Exchange-setup')
@@ -20,7 +21,7 @@ class Exchange(object):
         self.M = M
         self.Mo=Mo
         self.unit_length = unit_length
-        self.Ms2=np.array(self.M)
+        self.Ms2=np.array(self.M.vector().array())
 
         self.mu0 = mu0
         self.exchange_factor = 1.0 * self.C / (self.mu0  * self.unit_length**2)
