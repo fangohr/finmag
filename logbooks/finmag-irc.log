@@ -1990,3 +1990,65 @@ fangohr: Still testing ...
 2012-10-25 14:40:04 mb8g11: 2 good news: 1) The finmag binary on the virtual machine works on different machines now. 2) Dolfin trunk fixed the mesh regions getting lost a few days ago (according to Anders, he just ignored it in his master thesis because he had already written about the problem).
 2012-10-25 15:11:56 fangohr-adium: Aha! Excellent news allround. Thanks for the update.
 2012-10-25 17:14:27 fangohr-adium: Over and out from here.
+2012-10-29 20:03:22 D_Chernyshenko: Hi Max, I'm writing a reply to your email - there are several options, can you explain the problem you're trying to solve, is it the compiler error?
+2012-10-29 20:03:48 max_albert: Hi Dmitri, thanks for getting back to me so quickly. :)
+2012-10-29 20:03:58 D_Chernyshenko: Basically
+2012-10-29 20:04:42 D_Chernyshenko: 1) Class members (base or own) are not automatically exposed by Boost::Python which is why the OrientedBoundaryMesh does not have the attributes of dolfin's BoundaryMesh
+2012-10-29 20:05:20 max_albert: Well, the compiler error was basically just a symptom that triggered me to look into the code, and I realised that it could be "solved" by removing the portion of the code which calls the ParallelData class (which can be done by integrating OrientedBoundaryMesh more tightly with BoundaryMesh).
+2012-10-29 20:05:29 D_Chernyshenko: 2) Making compute_bem accept dolfin BoundaryMesh makes no sense since BoundaryMesh has the ordering bug that prevents compute_bem from working (which is why I made OrientedBondaryMesh)
+2012-10-29 20:05:43 max_albert: Ah, ok. 1) is what I suspected.
+2012-10-29 20:06:01 D_Chernyshenko: It's certainly possible to use BoundaryMesh in C++ code but compute_bem wouldn't work, unless it's an OrientedBoundaryMesh
+2012-10-29 20:06:22 max_albert: Well, that's the thing. Regarding 2), yYou are right that it doesn't work with the current version of FEniCS, but I tried to look into using the nightly development snapshots where this issue is fixed.
+2012-10-29 20:06:29 D_Chernyshenko: Aha
+2012-10-29 20:06:50 D_Chernyshenko: Yeah, I see
+2012-10-29 20:07:18 D_Chernyshenko: I think, a good option would be to make a second method that accepts a dolfin BoundaryMesh and checks that the mesh is ordered
+2012-10-29 20:07:35 D_Chernyshenko: That way we'll have an exception if someone tries to call that with the wrong version of Fenics
+2012-10-29 20:08:34 max_albert: Yes, that would be good indeed. Although I don't know if they provide a way of checking whether a given mesh is actually ordered (they might just provide a way to construct an ordered mesh).
+2012-10-29 20:08:58 D_Chernyshenko: Yeah, I'm trying to look it up
+2012-10-29 20:09:54 max_albert: But I was going to add a test to Finmag which checks whether the OrientedBoundaryMesh class does what it's expected to do (it's basically your example code in the bug report https://bugs.launchpad.net/dolfin/+bug/992808)
+2012-10-29 20:09:57 D_Chernyshenko: In any case, if you want to make a version of compute_bem that accepts a Dolfin mesh, you need to do the following
+2012-10-29 20:10:26 max_albert: So at least then we would catch any inconsistencies in the Finmag test suite (if not in the runtime code itself).
+2012-10-29 20:10:31 D_Chernyshenko: Yeah
+2012-10-29 20:10:39 D_Chernyshenko: The arguments needs to be of type boost::shared_ptr<dolfin::Mesh>
+2012-10-29 20:10:51 D_Chernyshenko: or dolfin::BoundaryMesh
+2012-10-29 20:11:53 D_Chernyshenko: Also there needs to be a Boost::python converter from the SWIG Mesh/Boundary mesh type to the corresponding shared pointer type
+2012-10-29 20:12:34 D_Chernyshenko: The converters are defined in src/util/swig_dolfin.cc; looks like there alread is a converter for BoundaryMesh
+2012-10-29 20:12:37 D_Chernyshenko: and Mesh as well
+2012-10-29 20:13:30 max_albert: Oh, I see... I guess that's the point that I was missing. I had forgotten that they use SWIG.
+2012-10-29 20:13:37 D_Chernyshenko: Looks like your issue was that you were trying to extract a BoundaryMesh directly
+2012-10-29 20:13:43 D_Chernyshenko: Instead of extracting a shared_ptr
+2012-10-29 20:13:52 D_Chernyshenko: Or rather
+2012-10-29 20:14:04 D_Chernyshenko: Just straight define the argument as shared_ptr<BoundaryMesh>
+2012-10-29 20:14:18 D_Chernyshenko: It's the same as using extract, but more explicit
+2012-10-29 20:14:30 max_albert: Ok.
+2012-10-29 20:15:07 D_Chernyshenko: Dolfin uses shared_ptr for most of its internal objects to avoid reallocating memory all the time
+2012-10-29 20:15:11 max_albert: But how do I write a SWIG converter for the OrientedBoundaryMesh?
+2012-10-29 20:15:33 D_Chernyshenko: OrientedBoundaryMesh is not a SWIG object, it's a Boost::Python object
+2012-10-29 20:15:38 D_Chernyshenko: No need for a converter
+2012-10-29 20:16:23 D_Chernyshenko: Boost::Python converters are used when you want to convert some Python datatype to an existing C++ type; usually one that you didn't define
+2012-10-29 20:17:04 D_Chernyshenko: Does this make sense?
+2012-10-29 20:17:07 max_albert: Hmmm....
+2012-10-29 20:17:12 max_albert: Kind of :)
+2012-10-29 20:17:20 max_albert: I think I need to get my head around all the levels that exist here.
+2012-10-29 20:17:42 D_Chernyshenko: Yeah, I think it's best if I explain in person
+2012-10-29 20:18:12 max_albert: So the approach you described would work if the OrientedBoundaryMesh class is defined at the C++ level as it is now, right?
+2012-10-29 20:18:19 D_Chernyshenko: Yeah
+2012-10-29 20:18:24 max_albert: I'll play around with it again.
+2012-10-29 20:18:29 D_Chernyshenko: Once the bug is fixed, there would be no need for this class
+2012-10-29 20:18:39 max_albert: That's true.
+2012-10-29 20:18:42 D_Chernyshenko: Essentially, this is a temporary patch until we can rely on the dolfin BoundaryMesh working
+2012-10-29 20:19:04 max_albert: Although I like the fact that it explicitly mentions that the mesh is oriented.
+2012-10-29 20:19:12 D_Chernyshenko: When the BEM is created, we would create the dolfin BoundaryMesh with the ordered parameter set
+2012-10-29 20:19:32 max_albert: Constructing an oriented boundary mesh by saying "obm = BoundaryMesh(mesh, False)" is a bit obscure imho.
+2012-10-29 20:19:58 D_Chernyshenko: Well, to be honest a BoundaryMesh should always be ordered by definition; that's what distinguishes it from a Mesh
+2012-10-29 20:20:02 D_Chernyshenko: That's what I assumed :_)
+2012-10-29 20:20:14 max_albert: Yes :)
+2012-10-29 20:20:21 D_Chernyshenko: A BoundaryMesh is a Mesh with a defined facet ordering
+2012-10-29 20:22:08 max_albert: Cool, thanks for the explanations. I'll play around with it a bit more and will get back to you if I still can't solve it.
+2012-10-29 20:22:14 max_albert: Many thanks for taking the time!
+2012-10-29 20:22:16 D_Chernyshenko: Sure
+2012-10-29 20:22:34 max_albert: And now enjoy the evening without work, please. ;-)
+2012-10-29 20:22:46 max_albert: Otherwise I'll feel bad.
+2012-10-29 20:28:44 D_Chernyshenko: It's fine!
+2012-10-29 20:45:39 max_albert: Cool, I'll have to double check but I think your hint about using boost::shared_ptr did the trick.
+2012-10-29 20:45:42 max_albert: Thanks a million!
