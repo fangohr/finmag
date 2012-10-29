@@ -118,6 +118,12 @@ namespace finmag { namespace llg {
         }
     }
 
+    template<bool ComputeDoubleLayerPotential>
+    bp::object compute_bem_maxxx(const dolfin::BoundaryMesh &bm) {
+        printf("[DDD] Method 'compute_bem_maxxx' called successfully!");
+    }
+
+
     // Returns a tuple (BEM matrix, boundary-mesh-to-global-mesh vertex index mapping)
     // If ComputeDoubleLayerPotential == true, computes the FK BEM
      // If ComputeDoubleLayerPotential == false, computes the GCR BEM
