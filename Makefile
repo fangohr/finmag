@@ -48,7 +48,7 @@ export DISABLE_PYTHON_MAKE = 1
 default:
 	@echo 'This makefile is used for CI only; do not use directly.' 
 
-ci: test doc
+ci: purge test doc
 
 doc: doc-html doc-pdf doc-singlehtml
 
@@ -73,6 +73,9 @@ make-modules:
 clean:
 	make -C $(NATIVE_DIR) clean
 	rm -rf test-reports
+
+purge: clean
+	@echo "Removing all untracked files from repository."
 	$(PURGE_REPO_CMD)
 
 % : %.c
@@ -80,12 +83,7 @@ clean:
 create-dirs:
 	mkdir -p test-reports/junit
 
-test: clean test-dirty
-
-# The following is useful for running tests locally when there are uncommitted
-# files in the repository that should not be erased by 'make clean' (which is
-# implicitly called by 'make test').
-test-dirty: make-modules run-unittest-tests run-pytest-tests run-ci-tests
+test: clean make-modules run-unittest-tests run-pytest-tests run-ci-tests
 
 run-unittest-tests : $(addsuffix /__runtests__,$(TEST_ROOTS))
 
