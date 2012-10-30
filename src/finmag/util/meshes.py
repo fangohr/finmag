@@ -320,7 +320,7 @@ def elliptic_cylinder(r1, r2, h, maxh, save_result=True, filename='', directory=
         filename = "ellcyl-{:.1f}-{:.1f}-{:.1f}-{:.6e}".format(r1, r2, h, maxh).replace(".", "_")
     return from_csg(csg_string, save_result=save_result, filename=filename, directory=directory)
 
-def ellipsoid(r1, r2, r3, maxh, save_result=True, filename='', directory=''):
+def ellipsoid(r1, r2, r3, maxh, save_result=True, filename='', directory='.'):
     """
     Return a dolfin mesh representing an ellipsoid with main axes lengths
     r1, r2, r3. The argument `maxh` controls the maximal element size in
@@ -329,7 +329,7 @@ def ellipsoid(r1, r2, r3, maxh, save_result=True, filename='', directory=''):
     If `save_result` is True (the default), both the generated geofile and
     the dolfin mesh will be saved to disk. By default, the filename will be
     automatically generated based on the values of `r1`, `r2, `h` and `maxh`
-    (for example, 'cyl-50_0-25_0-10_0-0_2.geo'), but a different one can be
+    (for example, 'ellipsoid-50_0-25_0-10_0-0_2.geo'), but a different one can be
     specified by passing a name (without suffix) into `filename` If `save_result`
     is False, passing a filename has no effect.
 
