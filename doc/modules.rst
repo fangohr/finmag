@@ -12,3 +12,4 @@ Main finmag modules
     modules/Demag.rst
     modules/FKSolver.rst
     modules/GCRSolver.rst
+    modules/helpers.rst
