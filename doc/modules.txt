@@ -7,3 +7,4 @@ Demag finmag.energies.demag.demag
 FKSolver finmag.energies.demag.solver_fk
 GCRSolver finmag.energies.demag.solver_gcr
 Simulation finmag.sim.sim
+helpers finmag.util.helpers
