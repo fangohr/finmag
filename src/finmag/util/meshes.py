@@ -102,6 +102,14 @@ def from_csg(csg, save_result=True, filename="", directory=""):
         logger.warning("Ignoring 'directory' argument (value given: '{}') because 'filename' contains an absolute path: '{}'".format(directory, filename))
 
     if save_result:
+        if directory == "":
+            # TODO: Is there a reason why we can't use os.curdir
+            # directly as the default in the function definition
+            # above? I seem to remember that there was an issue
+            # related to the test suite (where files need to be
+            # created in MODULE_DIR), but it would be good to
+            # double-check that.
+            directory = os.curdir
         if not os.path.exists(directory):
             logger.debug("Creating directory '{}' as it does not exist.".format(directory))
             os.mkdir(directory)
@@ -320,7 +328,7 @@ def elliptic_cylinder(r1, r2, h, maxh, save_result=True, filename='', directory=
         filename = "ellcyl-{:.1f}-{:.1f}-{:.1f}-{:.6e}".format(r1, r2, h, maxh).replace(".", "_")
     return from_csg(csg_string, save_result=save_result, filename=filename, directory=directory)
 
-def ellipsoid(r1, r2, r3, maxh, save_result=True, filename='', directory='.'):
+def ellipsoid(r1, r2, r3, maxh, save_result=True, filename='', directory=''):
     """
     Return a dolfin mesh representing an ellipsoid with main axes lengths
     r1, r2, r3. The argument `maxh` controls the maximal element size in
