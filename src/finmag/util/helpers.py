@@ -270,6 +270,18 @@ def vector_valued_function(value, S3, normalise=False, **kwargs):
 
     return fun
 
+def _create_nonexistent_directory_components(filename):
+    """
+    Creates any directory components in 'filename' which don't exist yet.
+    For example, if filename='/foo/bar/baz.txt' then the directory /foo/bar
+    will be created.
+    """
+    # Create directory part if it does not exist
+    dirname = os.path.dirname(filename)
+    if dirname != '':
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
+
 def plot_hysteresis_loop(H_vals, m_vals, style='x-', add_point_labels=False, point_labels=None, infobox=[], infobox_loc='bottom right',
                          filename=None, title="Hysteresis loop", xlabel="H_ext (A/m)", ylabel="m_avg", figsize=(10, 7)):
     """
@@ -362,6 +374,7 @@ def plot_hysteresis_loop(H_vals, m_vals, style='x-', add_point_labels=False, poi
     plt.tight_layout()
 
     if filename:
+        _create_nonexistent_directory_components(filename)
         fig.savefig(filename)
 
 def duplicate_output_to_file(filename, add_timestamp=False, timestamp_fmt='__%Y-%m-%d_%H.%M.%S'):
@@ -376,6 +389,7 @@ def duplicate_output_to_file(filename, add_timestamp=False, timestamp_fmt='__%Y-
     be controlled via `timestamp_fmt`, which should be a formatting
     string as accepted by `datetime.strftime`.
     """
+    _create_nonexistent_directory_components(filename)
     if add_timestamp:
         name, ext = os.path.splitext(filename)
         filename = '{}{}{}'.format(name, datetime.strftime(datetime.now(), timestamp_fmt), ext)
