@@ -19,7 +19,7 @@ class LLB(object):
     """
     Implementation of the Baryakhtar equation
     """
-    def __init__(self, S1, S3):
+    def __init__(self, S1, S3,chi=0.001):
         self.S1 = S1
         self.S3 = S3
         self._M = df.Function(self.S3)
@@ -31,6 +31,7 @@ class LLB(object):
         self.call_field_times=0
         self.call_field_jtimes=0
         
+        self.chi=chi
          
         self.set_default_values()
                 
@@ -65,7 +66,8 @@ class LLB(object):
         self._pre_rhs_callables=[]
         self._post_rhs_callables=[]
         self.interactions = []
-        
+ 
+
     @property
     def alpha(self):
         """The damping factor :math:`\\alpha`."""
@@ -137,12 +139,14 @@ class LLB(object):
     def set_up_solver(self, reltol=1e-6, abstol=1e-6, nsteps=100000,jacobian=False):
         integrator = sundials.cvode(sundials.CV_BDF, sundials.CV_NEWTON)
         integrator.init(self.sundials_rhs, 0, self.M)
+       
         if jacobian:
             integrator.set_linear_solver_sp_gmr(sundials.PREC_LEFT)
             integrator.set_spils_jac_times_vec_fn(self.sundials_jtimes)
             integrator.set_spils_preconditioner(self.sundials_psetup, self.sundials_psolve)
         else:
-            integrator.set_linear_solver_sp_gmr(sundials.PREC_NONE)
+             integrator.set_linear_solver_sp_gmr(sundials.PREC_NONE)
+            
         integrator.set_scalar_tolerances(reltol, abstol)
         integrator.set_max_num_steps(nsteps)
         
@@ -156,17 +160,9 @@ class LLB(object):
         
         #print 'M_',self._M.vector().array()
         #print 'heff=',H_eff
-        self.call_field_times+=1
         self.H_eff = H_eff
         
-    def compute_effective_field_jacobian(self):
-        H_eff = np.zeros(self.M.shape)
-        
-        for interaction in self.interactions:
-            if interaction.in_jacobian:
-                H_eff += interaction.compute_field()
-                
-        return H_eff
+
  
     def compute_laplace_effective_field(self):
         #grad_u = df.project(df.grad(self._M))
@@ -190,7 +186,8 @@ class LLB(object):
         
         for func in self._pre_rhs_callables:
             func(self.t)
-
+        
+        self.call_field_times+=1
         self.compute_effective_field()
         delta_Heff = self.compute_laplace_effective_field()
         #print 'delta_Heff',delta_Heff
@@ -227,45 +224,40 @@ class LLB(object):
         timings.start("LLG-sundials-jtimes")
         self.call_field_jtimes+=1
     
-        # First, compute the derivative H' = dH_eff/dt
-        self.m = mp
-        Hp = tmp.view()
-        Hp[:] = self.compute_effective_field_jacobian()
+        self._M.vector().set_local(m)
         self.compute_effective_field()
-       
-        m.shape = (3, -1)
-        mp.shape = (3, -1)
-        Hp.shape = (3, -1)
-        J_mp.shape = (3, -1)
-        self.H_eff.shape=(3,-1)
+               
         print self.call_field_times,self.call_field_jtimes
-        native_llg.calc_baryakhtar_jtimes(m, 
+        native_llg.calc_baryakhtar_jtimes(self._M.vector().array(),
                                    self.H_eff,
                                    mp, 
-                                   Hp, 
-                                   self.alpha_vec, 
                                    J_mp, 
-                                   self.M0,
                                    self.gamma,
+                                   self.chi,
+                                   self.M0,
                                    self.do_precession,
                                    self.pins)
-        J_mp.shape = (-1, )
-        m.shape = (-1,)
-        mp.shape = (-1,)
-        tmp.shape = (-1,)
-        self.H_eff.shape=(-1,)
-
+        
+                            
         timings.stop("LLG-sundials-jtimes")
+        
+        self.sundials_rhs(t, m, fy)
 
         # Nonnegative exit code indicates success
         return 0
+
     def sundials_psetup(self, t, m, fy, jok, gamma, tmp1, tmp2, tmp3):
+        # Note that some of the arguments are deliberately ignored, but they
+        # need to be present because the function must have the correct signature
+        # when it is passed to set_spils_preconditioner() in the cvode class.
         return 0, not jok
 
     def sundials_psolve(self, t, y, fy, r, z, gamma, delta, lr, tmp):
+        # Note that some of the arguments are deliberately ignored, but they
+        # need to be present because the function must have the correct signature
+        # when it is passed to set_spils_preconditioner() in the cvode class.
         z[:] = r
         return 0
-    
     @property
     def M_average(self):
         """The average magnetisation, computed with m_average()."""
