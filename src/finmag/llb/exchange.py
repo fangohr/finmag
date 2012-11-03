@@ -7,6 +7,7 @@ from finmag.util.consts import mu0
 logger = logging.getLogger('finmag')
 
 
+
 class Exchange(EnergyBase):
     """
     Compute the exchange field for LLB case.

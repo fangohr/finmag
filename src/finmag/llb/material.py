@@ -3,10 +3,84 @@ import numpy as np
 import dolfin as df
 
 import finmag.util.consts as consts
+import finmag.native.llb as native_llb
 from finmag.native.llb import LLBFePt
 from finmag.util import helpers
 
+from scipy.optimize import fsolve
+
 logger = logging.getLogger(name='finmag')
+
+
+class Nickel(object):
+    def __init__(self):
+        self.S=1.0/2
+        self.Tc=630
+        self.T=0
+        self.M0=4.8e5
+        self.M=self.M0
+        self.A0=9e-12
+        self.A_coeff=3.90625e-23 
+        self.xi_par_coeff=0.0006017068615252775  # M/(k_B T_c)*(S+1)/(3S)* a^3/ c 
+        self.coth=lambda x:np.cosh(x)/np.sinh(x)
+        
+    def Bs(self,x):
+        t1=(2*self.S+1)/(2*self.S)
+        t2=1/(2*self.S)
+        return t1*self.coth(t1*x)-t2*self.coth(t2*x)
+    
+    def Bsp(self,x):
+        t=(2*self.S+1)/(2*self.S)
+        t1=np.sinh(t*x)
+        t2=np.cosh(2*t*x)
+        return -4*t*t*t1*t1/(1-t2)**2
+    
+    def xi_par(self,T):
+        beta = self.Tc/T
+        t1=beta*self.m_e(T)
+        t2=beta*self.Bsp(t1)
+        return self.xi_par_coeff*t2/(1.0-t2)
+        
+
+    def Bsm(self,m,T,Tc):
+        
+        x=3.0*self.S/(self.S+1)*m*Tc/T
+        
+        return m-self.Bs(x)
+
+        
+    def m_e(self,T):
+        if self.T==T:
+            return self.M/self.M0
+        
+        self.T=T
+        if T>=self.Tc:
+            self.M=0
+        else:
+            m=fsolve(self.Bsm,1,args=(T,self.Tc))
+            self.M=m[0]*self.M0
+        
+        return self.M/self.M0
+            
+    def A(self,T):
+        if self.T==T:
+            pass
+        else:
+            self.m_e(T)
+        return self.A_coeff*self.M**2
+            
+        
+    
+    def inv_chi_perp(self,T):
+        return 0
+    
+    def inv_chi_par(self,T):
+        if T<0.001:
+            return 0
+        else:
+            return self.xi_par(T)
+    
+    
 
 class Material(object):
     """
@@ -46,14 +120,22 @@ class Material(object):
             self.Tc = self.mat.T_C()
             self.alpha = 0.5
             self.gamma_LL = consts.gamma
+        elif self.name == 'Nickel':
+            self.mat = Nickel()
+            self.Ms0 = self.mat.M0
+            self.Tc = self.mat.Tc
+            self.alpha = 0.5
             
         else:
-            raise NotImplementedError("Only FePt available")
+            raise NotImplementedError("Only FePt and Nickel available")
         
         self.T = 0
         
     def compute_field(self):
-        self.mat.compute_relaxation_field(self._T, self.m, self.h)
+        #self.mat.compute_relaxation_field(self._T, self.m, self.h)
+        native_llb.compute_relaxation_field(self._T, self.m, self.h,
+                                            self.Tc,self.m_e,
+                                            self.inv_chi_par)
         return self.h
 
     
@@ -109,7 +191,9 @@ class Material(object):
 
 if __name__ == "__main__":
     mesh = df.UnitCube(1, 1, 1)
-    mat = Material(mesh)
-    mat.m = (1, 2, 4)
-    print mat.M
+    mat = Material(mesh,'Nickel')
+    mat.set_m((1,0,0))
+    mat.T=10
+    print mat.T
+    print mat.compute_field()
     

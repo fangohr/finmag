@@ -429,9 +429,9 @@ namespace finmag { namespace llg {
    
             #pragma omp parallel for schedule(guided)
             for (int i = 0; i < length; i++) {
-              i1=i;
-        	  i2=length+i1;
-        	  i3=length+i2;
+                i1=i;
+                i2=length+i1;
+        	i3=length+i2;
                
         	  if(pin[i]>0){
         		  dm_dt[i1]=0;
@@ -483,65 +483,94 @@ namespace finmag { namespace llg {
         }
 
 	void calc_baryakhtar_jtimes(
-                const np_array<double> &m,
+		const np_array<double> &M,
                 const np_array<double> &H,
-                const np_array<double> &mp,
-                const np_array<double> &Hp,
-                const np_array<double> &alpha_ptr,
+                const np_array<double> &Mp,
                 const np_array<double> &jtimes,
-                double M0,
-                double gamma_LL,
+                double gamma,
+		double chi,
+		double M0,
                 bool do_precession,
                 const np_array<long> &pins) {
 
-            m.check_ndim(2, "calc_llg_dmdt: m");
+	    double *m=M.data();
+            double *h=H.data();
+            double *mp=Mp.data();
+            double *jt=jtimes.data();
+            long int *pin=pins.data();
 
-            int nodes = check_dimensions(alpha_ptr, m, H, jtimes);
+	    double p[3][3],q[3][3];
+	    double tmp,m2;
 
+	    double coeff1=-gamma;
+	    double coeff2=-1.0/(chi*M0*M0);            
 
-            mp.check_shape(3, nodes, "calc_baryakhtar_dmdt: mp");
-            Hp.check_shape(3, nodes, "calc_baryakhtar_dmdt: Hp");
+            assert(H.size()%3==0);
+            
+            int length=H.size()/3;
+            int i1,i2,i3;
 
-
-            double precession_coeff = -gamma_LL;
-            double coeff2= gamma_LL*M0;
-            double *m0 = m(0), *m1 = m(1), *m2 = m(2);
-            double *mp0 = mp(0), *mp1 = mp(1), *mp2 = mp(2);
-            double *h0 = H(0), *h1 = H(1), *h2 = H(2);
-            double *hp0 = Hp(0), *hp1 = Hp(1), *hp2 = Hp(2);
-            double *jtimes0 = jtimes(0), *jtimes1 = jtimes(1), *jtimes2 = jtimes(2);
-            double *alpha=alpha_ptr.data();
             
             finmag::util::scoped_gil_release release_gil;
 
-            if (do_precession) {
-                #pragma omp parallel for schedule(guided)
-                for (int i = 0; i < nodes; i++) {
-                    // add precession: mp x H + m x Hp
-                    jtimes0[i] = precession_coeff*(cross0(mp0[i], mp1[i], mp2[i], h0[i], h1[i], h2[i])
-                            + cross0(m0[i], m1[i], m2[i], hp0[i], hp1[i], hp2[i]));
-                    jtimes1[i] = precession_coeff*(cross1(mp0[i], mp1[i], mp2[i], h0[i], h1[i], h2[i])
-                            + cross1(m0[i], m1[i], m2[i], hp0[i], hp1[i], hp2[i]));
-                    jtimes2[i] = precession_coeff*(cross2(mp0[i], mp1[i], mp2[i], h0[i], h1[i], h2[i])
-                            + cross2(m0[i], m1[i], m2[i], hp0[i], hp1[i], hp2[i]));
 
-                    jtimes0[i] += alpha[i]*coeff2*hp0[i];
-                    jtimes1[i] += alpha[i]*coeff2*hp1[i];
-                    jtimes2[i] += alpha[i]*coeff2*hp2[i];
+           if (!do_precession) {
+		for (int i = 0; i < 3*length; i++) {
+                   jt[i]=0;
+                }
+	      return;
+           }
 
-                }
-            } else {
-                #pragma omp parallel for schedule(guided)
-                for (int i = 0; i < nodes; i++) {
-                    
-                    jtimes0[i] = alpha[i]*coeff2*hp0[i];
-                    jtimes1[i] = alpha[i]*coeff2*hp1[i];
-                    jtimes2[i] = alpha[i]*coeff2*hp2[i];
-                    
-                }
+
+            for (int i = 0; i < length; i++) {
+                i1=i;
+                i2=length+i1;
+        	i3=length+i2;
+ 		
+		m2=m[i1]*m[i1]+m[i2]*m[i2]+m[i3]*m[i3];
+               
+ 		tmp=(m2-M0*M0)/2.0;
+		q[0][0]=coeff2*(m[i1]*m[i1]+tmp);
+		q[0][1]=coeff2*m[i2]*m[i1];
+		q[0][2]=coeff2*m[i3]*m[i1];
+
+		q[1][0]=coeff2*m[i1]*m[i2];
+		q[1][1]=coeff2*(m[i2]*m[i2]+tmp);
+		q[1][2]=coeff2*m[i3]*m[i2];
+
+		q[2][0]=coeff2*m[i1]*m[i3];
+		q[2][1]=coeff2*m[i2]*m[i3];
+		q[2][2]=coeff2*(m[i3]*m[i3]+tmp);
+
+
+
+		p[0][0]=m[i2]*q[2][0]-m[i3]*q[1][0];
+		p[0][1]=m[i2]*q[2][1]-m[i3]*q[1][1]+h[i3];
+		p[0][2]=m[i2]*q[2][2]-m[i3]*q[1][2]-h[i2];
+
+		p[1][0]=-m[i1]*q[2][0]+m[i3]*q[0][0]-h[i3];
+		p[1][1]=-m[i1]*q[2][1]+m[i3]*q[0][1];
+		p[1][2]=-m[i1]*q[2][2]+m[i3]*q[0][2]+h[i1];
+
+		p[2][0]=m[i1]*q[1][0]-m[i2]*q[0][0]+h[i2];
+		p[2][1]=m[i1]*q[1][1]-m[i2]*q[0][1]-h[i1];
+		p[2][2]=m[i1]*q[1][2]-m[i2]*q[0][2];
+
+	
+                jt[i1]= coeff1*(p[0][0]*mp[i1]+p[0][1]*mp[i2]+p[0][2]*mp[i3]);
+                jt[i2]= coeff1*(p[1][0]*mp[i1]+p[1][1]*mp[i2]+p[1][2]*mp[i3]);
+                jt[i3]= coeff1*(p[2][0]*mp[i1]+p[2][1]*mp[i2]+p[2][2]*mp[i3]);
+
+		//printf("%g  %g  %g\n",jt[i1],jt[i2],jt[i3]);
+
+		if(pin[i]>0){
+        	    jt[i1]=0;
+                    jt[i2]=0;
+                    jt[i3]=0;
+        	}
+
             }
-            pin(jtimes, pins);
-        }
+       }
 
     }
 
@@ -616,14 +645,13 @@ namespace finmag { namespace llg {
         ));
 
         def("calc_baryakhtar_jtimes", &calc_baryakhtar_jtimes, (
-            arg("m"),
+	    arg("M"),
             arg("H"),
-            arg("mp"),
-            arg("Hp"),
-            arg("alpha_ptr"),
+            arg("Mp"),
             arg("jtimes"),
-            arg("M0"),
-            arg("gamma_LL"),
+            arg("gamma"),
+	    arg("chi"),
+	    arg("M0"),
             arg("do_precession"),
             arg("pins")
         ));

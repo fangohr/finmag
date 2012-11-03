@@ -111,7 +111,7 @@ class LLB(object):
                                  self.H_eff,
                                  self.dm_dt,
                                  self.material.T,
-                                 self.gamma,
+                                 self.gamma_LL,
                                  self.alpha,
                                  self.material.Tc,
                                  self.do_precession)
@@ -157,25 +157,21 @@ if __name__ == '__main__':
     nz = 1
     mesh = df.Box(x0, y0, z0, x1, y1, z1, nx, ny, nz)
    
-    mat = Material(mesh, name='FePt')
+    mat = Material(mesh, name='Nickel')
     mat.set_m((1, 0.2, 0))
-    mat.T = 0
+    mat.T = 10
+    mat.alpha=0.01
     
     llb = LLB(mat)
     llb.set_up_solver()
     
-    #llb.interactions.append(mat)
+    llb.interactions.append(mat)
     
     
-    app = Zeeman((1e3, 0, 0))
+    app = Zeeman((0, 0, 1e5))
     app.setup(mat.S3, mat._m, Ms=mat.Ms0)
     llb.interactions.append(app)
-    
-    
-    anis = LLBAnisotropy(mat.inv_chi_perp)
-    anis.setup(mat.S3, mat._m, mat.Ms0)
-    llb.interactions.append(anis)
-    
+        
     exch = Exchange(mat.A)
     exch.setup(mat.S3, mat._m, mat.Ms0, mat.m_e)
     llb.interactions.append(exch)
@@ -185,7 +181,7 @@ if __name__ == '__main__':
     llb.interactions.append(demag)
     
     
-    max_time = 1 * np.pi / (llb.gamma * 1e5)
+    max_time = 10 * np.pi / (llb.gamma_LL * 1e5)
     ts = np.linspace(0, max_time, num=200)
 
     mlist = []

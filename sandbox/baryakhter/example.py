@@ -36,7 +36,8 @@ def example1(Ms=8.6e5):
     llb.beta = 0.0
     llb.M0=Ms
     llb.set_M((Ms, 0, 0))
-    llb.set_up_solver()
+    llb.set_up_solver(jacobian=False)
+    llb.chi=1e-4
     
     H_app = Zeeman((0, 0, 1e5))
     H_app.setup(S3, llb._M,Ms=1)
