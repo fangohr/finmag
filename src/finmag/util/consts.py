@@ -31,7 +31,7 @@ def flux_density_to_field_strength(B):
     Converts the magnetic flux density to the magnetic field strength.
 
     Magnetic flux density B is expressed in Tesla, and the returned field
-    strength H is expressed in 1/4PI A/m.
+    strength H is expressed in A/m.
 
     """
     H = B / mu0
@@ -39,9 +39,7 @@ def flux_density_to_field_strength(B):
 
 def Oersted_to_SI(H):
     """
-    Converts the magnetic field strength H from Oersted to SI units.
-
-    The units being 1/4PI A/m.
+    Converts the magnetic field strength H from Oersted to A/m.
 
     """
     return H * 1e3 / (4 * pi)
