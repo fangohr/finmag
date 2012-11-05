@@ -166,3 +166,14 @@ def test_perturbed_vectors():
     for v in vector_field:
         assert len(v) == 3
         assert abs(norm(v) - 5) < TOLERANCE
+
+def _test_cartesian_to_spherical():
+
+    half_pi = np.pi / 2
+    test_vectors = np.array(((1, 0, 0), (0, 1, 0), (0, 0, 1), (-1, 0, 0), (0, -1, 0), (0, 0, -1)))
+    expected = np.array(((1, half_pi, 0), (1, half_pi, half_pi)))
+
+    for i, v in enumerate(test_vectors):
+        v_spherical = cartesian_to_spherical(v)
+        print "Testing vector {}. Got {}. Expected {}.".format(v, v_spherical, expected[i])
+        assert np.max(np.abs(v_spherical - expected[i])) < TOLERANCE
