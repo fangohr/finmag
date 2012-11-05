@@ -400,3 +400,53 @@ def duplicate_output_to_file(filename, add_timestamp=False, timestamp_fmt='__%Y-
     tee = subprocess.Popen(["tee", filename], stdin=subprocess.PIPE)
     os.dup2(tee.stdin.fileno(), sys.stdout.fileno())
     os.dup2(tee.stdin.fileno(), sys.stderr.fileno())
+
+def cartesian_to_spherical(v):
+    """
+    Converts cartesian coordinates to spherical coordinates.
+
+    Returns a tuple (r, theta, phi) where r is the radial distance, theta
+    is the inclination (or elevation) and phi is the azimuth (ISO standard 31-11).
+
+    """
+    x, y, z = v
+    r = np.sqrt(x**2 + y**2 + z**2)
+    theta = np.arccos(z/r)
+    S = np.sqrt(x**2 + y**2)
+    print y, S
+    phi = np.arcsin(y/S)
+    #if x > 0:
+    #    phi = np.pi - phi
+    return np.array((r, theta, phi))
+
+def spherical_to_cartesian(v):
+    """
+    Converts spherical coordinates to cartesian.
+
+    Expects the arguments r for radial distance, inclination theta
+    and azimuth phi.
+
+    """
+    r, theta, phi = v
+    x = r * np.sin(theta) * np.cos(phi)
+    y = r * np.sin(theta) * np.sin(phi)
+    z = r * np.cos(theta)
+    return np.array((x, y, z))
+
+def pointing_upwards((x, y, z)):
+    """
+    Returns a boolean that is true when the vector is pointing upwards.
+    Upwards is defined as having a polar angle smaller than 45 degrees.
+
+    """
+    _, theta, _ = cartesian_to_spherical(x, y, z)
+    return theta <= (np.pi / 4)
+
+def pointing_downwards((x, y, z)):
+    """
+    Returns a boolean that is true when the vector is pointing downwards.
+    Downwards is defined as having a polar angle between 135 and 225 degrees.
+
+    """
+    _, theta, _ = cartesian_to_spherical(x, y, z)
+    return theta <= (5 * np.pi / 4) or theta <= (6 * np.pi / 4)
