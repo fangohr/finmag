@@ -44,16 +44,17 @@ def norm(v):
     Returns the euclidian norm of a vector in three dimensions.
 
     """
-    return np.sqrt(np.dot(v, v))
+    logger.warning("finmag.util.helpers.norm is deprecated. Use numpy.linalg.norm instead.")
+    return np.linalg.norm(v)
 
-def normalise_vectors(vs, length=1):
+def normalise_vectors(vs):
     """
     Returns a new list containing the vectors in `vs`, scaled to the specified length.
 
-    `vs` should be a list of vectors of the form [[x0, y0, z0], ..., [xn, yn, zn]].
+    `vs` should be a numpy array of vectors of the form [[x0, y0, z0], ..., [xn, yn, zn]].
 
     """
-    return np.array([length*v/norm(v) for v in vs])
+    return np.sqrt(np.add.reduce(vs*vs, axis=1))
 
 def fnormalise(arr):
     """
@@ -84,17 +85,6 @@ def rows_to_columns(arr):
 
     """
     return arr.reshape(arr.size, order="F").reshape((3, -1))
-
-def perturbed_vectors(n, direction=[1,0,0], length=1):
-    """
-    Returns n vectors pointing approximatively in the given direction,
-    but with a random displacement. The vectors are normalised to the given
-    length. The returned array looks like [[x0, y0, z0], ..., [xn, yn, zn]].
-
-    """
-    displacements = np.random.rand(n, 3) - 0.5
-    vectors = direction + displacements
-    return normalise_vectors(vectors, length)
 
 def quiver(f, mesh, filename=None, title="", **kwargs):
     """
@@ -150,7 +140,6 @@ def quiver(f, mesh, filename=None, title="", **kwargs):
     mlab.close(all=True)
 
 def boxplot(arr, filename, **kwargs):
-    import matplotlib.pyplot as plt
     plt.boxplot(list(arr), **kwargs)
     plt.savefig(filename)
 
@@ -323,7 +312,6 @@ def plot_hysteresis_loop(H_vals, m_vals, style='x-', add_point_labels=False, poi
     ax = fig.gca()
 
     N = len(H_vals) // 2
-    N_vals = range(N,0,-1) + range(1,N+1)
     H_max = max(H_vals)
 
     ax.plot(H_vals, m_vals, style)
