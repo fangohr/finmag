@@ -420,7 +420,7 @@ def pointing_upwards((x, y, z)):
     Upwards is defined as having a polar angle smaller than 45 degrees.
 
     """
-    _, theta, _ = cartesian_to_spherical(x, y, z)
+    _, theta, _ = cartesian_to_spherical((x, y, z))
     return theta <= (np.pi / 4)
 
 def pointing_downwards((x, y, z)):
@@ -429,5 +429,5 @@ def pointing_downwards((x, y, z)):
     Downwards is defined as having a polar angle between 135 and 225 degrees.
 
     """
-    _, theta, _ = cartesian_to_spherical(x, y, z)
+    _, theta, _ = cartesian_to_spherical((x, y, z))
     return theta <= (5 * np.pi / 4) or theta <= (6 * np.pi / 4)
