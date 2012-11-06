@@ -18,6 +18,13 @@ def test_vectors():
     y2 = np.array([[0, 2, 4], [1, 3, 5], [1, 3, 5], [0, 2, 4]])
     assert np.array_equal(y2, vectors(x2))
 
+def test_norms():
+    v = [1, 1, 0]
+    assert abs(norm(v) - np.sqrt(2)) < TOLERANCE
+
+    v = np.array([[1, 1, 0], [1, -2, 3]])
+    assert np.allclose(norm(v), np.array([np.sqrt(2), np.sqrt(14)]), rtol=TOLERANCE)
+
 def test_fnormalise():
     a = np.array([1., 1., 2., 2., 0., 0.])
     norm = np.sqrt(1+2**2+0**2)
@@ -67,16 +74,8 @@ def test_fnormalise():
 
     #the same test with ints (i.e.
     a5 = np.array([0, 1, 1])
-    #) will give the wrong numerical result. To avoid this, we raise 
-    #an error in fnormalise.
-    #
-    #Maybe there are better ways of doing this, but for now we just need to
-    #identify if a call with integer data takes place.
-    #
-    #Check that the assertion error is raised:
-    with pytest.raises(AssertionError):
-        fnormalise(a5)
-
+    expected = a5 / np.sqrt(2)
+    assert np.allclose(fnormalise(a5), expected, rtol=TOLERANCE)
 
 def test_vector_valued_function():
     """

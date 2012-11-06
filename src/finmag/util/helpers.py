@@ -39,37 +39,34 @@ def for_dolfin(vs):
     """
     return rows_to_columns(vs).flatten() 
 
-def norm(v):
+def norm(vs):
     """
-    Returns the euclidian norm of a vector in three dimensions.
+    Returns the euclidian norm of one or several vectors in three dimensions.
+
+    When passing an array of vectors, the shape is expected to be in the form
+    [[x0, y0, z0], ..., [xn, yn, zn]].
 
     """
-    logger.warning("finmag.util.helpers.norm is deprecated. Use numpy.linalg.norm instead.")
-    return np.linalg.norm(v)
-
-def normalise_vectors(vs):
-    """
-    Returns a new list containing the vectors in `vs`, scaled to the specified length.
-
-    `vs` should be a numpy array of vectors of the form [[x0, y0, z0], ..., [xn, yn, zn]].
-
-    """
+    if not type(vs) == np.ndarray:
+        vs = np.array(vs)
+    if vs.shape == (3, ):
+        return np.linalg.norm(vs)
     return np.sqrt(np.add.reduce(vs*vs, axis=1))
 
 def fnormalise(arr):
     """
-    Like normalise_vectors, but expects the arguments as a numpy.ndarray in
-    the form that dolfin provides: [x0, ..., xn, y0, ..., yn, z0, ..., zn].
+    Returns a normalised copy of the vectors in arr.
+    
+    Expects arr to be a numpy.ndarray in the form that dolfin
+    provides: [x0, ..., xn, y0, ..., yn, z0, ..., zn].
 
     """
-    # If arr happens to be of type int, the calculation below is
-    # carried out in integers, and behaves unexpectedly.
-    assert arr.dtype not in [np.dtype('int32'),np.dtype('int64')]
+    a = arr.astype(np.float64) # this copies
 
-    arr = arr.reshape((3, -1)).copy()
-    arr /= np.sqrt(arr[0]*arr[0] + arr[1]*arr[1] + arr[2]*arr[2] )
-    arr = arr.ravel()
-    return arr
+    a = a.reshape((3, -1))
+    a /= np.sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2])
+    a = a.ravel()
+    return a
 
 def angle(v1, v2):
     """
