@@ -401,7 +401,7 @@ def duplicate_output_to_file(filename, add_timestamp=False, timestamp_fmt='__%Y-
     os.dup2(tee.stdin.fileno(), sys.stdout.fileno())
     os.dup2(tee.stdin.fileno(), sys.stderr.fileno())
 
-def cartesian_to_spherical(v):
+def cartesian_to_spherical(vector):
     """
     Converts cartesian coordinates to spherical coordinates.
 
@@ -409,14 +409,10 @@ def cartesian_to_spherical(v):
     is the inclination (or elevation) and phi is the azimuth (ISO standard 31-11).
 
     """
-    x, y, z = v
-    r = np.sqrt(x**2 + y**2 + z**2)
-    theta = np.arccos(z/r)
-    S = np.sqrt(x**2 + y**2)
-    print y, S
-    phi = np.arcsin(y/S)
-    #if x > 0:
-    #    phi = np.pi - phi
+    r = np.linalg.norm(vector)
+    unit_vector = np.array(vector) / r
+    theta = np.arccos(unit_vector[2])
+    phi = np.arctan2(unit_vector[1], unit_vector[0])
     return np.array((r, theta, phi))
 
 def spherical_to_cartesian(v):
