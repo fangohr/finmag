@@ -2052,3 +2052,30 @@ fangohr: Still testing ...
 2012-10-29 20:28:44 D_Chernyshenko: It's fine!
 2012-10-29 20:45:39 max_albert: Cool, I'll have to double check but I think your hint about using boost::shared_ptr did the trick.
 2012-10-29 20:45:42 max_albert: Thanks a million!
+2012-11-05 09:12:49 fangohr-adium: Good morning, all.
+2012-11-05 10:23:28 max_albert: Good morning, Hans! Welcome back! :-)
+2012-11-05 11:03:08 fangohr-adium: Hi Max, thanks. Anybody up for food today?
+2012-11-05 11:03:54 max_albert: I think I would be up for it. Depends a bit on the time, when were you thinking? I don't know about Marijan and Weiwei but I can ask them.
+2012-11-05 11:04:35 fangohr-adium: I am easy — have a meeting with Jon and Seth now which probably finishes at 12:00. I could go anytime after that — any preference?
+2012-11-05 11:05:44 max_albert: I'm not feeling too hungry at the moment, but guess around 1pm or 12.30pm would be ok. Also depends on when you're getting hungry of course. :) Do you want to check again when the meeting is over?
+2012-11-05 11:11:09 fangohr-adium: Sounds good to me; let's chat later.
+2012-11-05 12:26:03 fangohr-adium: Hi Max, what's the calorie situation like? I am ready to go, but easy (have biscuits...)
+2012-11-05 12:27:14 max_albert: Yep, I wouldn't mind going now. I'll ask around if other people are up for it.
+2012-11-05 12:27:30 max_albert: MA said in 5 minutes?
+2012-11-05 12:27:43 fangohr-adium: Okay, sounds great. Will you pick me up from my office?
+2012-11-05 12:29:48 max_albert: Yes, will do.
+2012-11-05 13:56:51 max_albert: Hi Hans, would it be possible to get access to the finmag-dist repository? I had a problem with the VM for Luzanne last week, and it would be nice to be able to fix these things without having to bother Marc-Antonio about it. :)
+2012-11-05 13:57:41 fangohr-adium: Sure.
+2012-11-05 13:58:19 max_albert: Also, MA: if I'd like to update the Finmag version in a virtual machine (e.g. to fix a bug or something), do I understand correctly that the correct way to do this is to simply roll out a new tarball which can be extracted within the VM (and overwrites the old directory)?
+2012-11-05 13:59:03 max_albert: Might be nice to be able to script this too somehow, so that the user only needs to say "upgrade-finmag" or something.
+2012-11-05 13:59:12 max_albert: This should of course be coupled to the license somehow.
+2012-11-05 13:59:34 max_albert: Just brainstorming here, btw, I'm not asking for this to be implemented any time soon. :)
+2012-11-05 13:59:37 fangohr-adium: Max, you should have access now.
+2012-11-05 13:59:43 max_albert: Cool, thanks!
+2012-11-05 14:01:05 fangohr-adium: I suggest we automise building of the tar-ball, and place it somewhere where we can get to it (a directory on summer, say) with little effort (but not completely freely available on the web). Updating should indeed be untarring of that file.
+2012-11-05 14:02:01 fangohr-adium: For now, I don't think we distinguish licenses for different version (we only have one version for starters) but in principle we could add this to the license file. Ignoring this complication, it should be the case that the license file can remain, and the upgraded code should work with the old license file (as long as the license file is still valid).
+2012-11-05 14:03:36 mb8g11: If we store the license outside of the finmag binary directory, then installing would be as easy as untarring the tarball.
+2012-11-05 14:04:06 mb8g11: Let's say ~/Documents/finmag_license or something similar and I can implement it tomorrow in a few minutes.
+2012-11-05 14:05:40 mb8g11: See you later, demonstrating,
+2012-11-05 14:46:51 fangohr-adium: Sounds good.
+2012-11-05 14:47:33 fangohr-adium: Max and MA, the 'units' program that I mentioned over lunch, is very briefly described at http://www.southampton.ac.uk/~fangohr/computing/units.html
