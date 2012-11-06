@@ -157,3 +157,19 @@ def test_cartesian_to_spherical():
         v_spherical = cartesian_to_spherical(v)
         print "Testing vector {}. Got {}. Expected {}.".format(v, v_spherical, expected[i])
         assert np.max(np.abs(v_spherical - expected[i])) < TOLERANCE
+
+def test_pointing_upwards():
+    assert pointing_upwards((0, 0, 1))
+    assert pointing_upwards((0.5, 0.5, 0.8))
+    assert pointing_upwards((-0.5, 0.5, 0.8))
+    assert not pointing_upwards((0, 0, -1))
+    assert not pointing_upwards((-0.5, 0.5, -0.8))
+    assert not pointing_upwards((-0.5, 0.5, 0.4))
+
+def test_pointing_downwards():
+    assert pointing_downwards((0, 0, -1))
+    assert pointing_downwards((-0.5, -0.5, -0.8))
+    assert pointing_downwards((-0.5, 0.5, -0.8))
+    assert not pointing_downwards((0, 0, 1))
+    assert not pointing_downwards((-0.5, -0.5, 0.8))
+    assert not pointing_downwards((-0.5, 0.5, -0.4))

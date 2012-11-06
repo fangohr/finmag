@@ -430,4 +430,4 @@ def pointing_downwards((x, y, z)):
 
     """
     _, theta, _ = cartesian_to_spherical((x, y, z))
-    return theta <= (5 * np.pi / 4) or theta <= (6 * np.pi / 4)
+    return abs(theta - np.pi) < (np.pi / 4) 
