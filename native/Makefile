@@ -55,8 +55,18 @@ OBJECT_FILES = $(patsubst %.cc,%.o,$(SOURCES))
 PRECOMPILED_HEADER_FILE=$(PRECOMPILED_HEADER_DIR)/finmag_includes.h.gch
 CFLAGS_USE_PCH = -include $(PRECOMPILED_HEADER_DIR)/finmag_includes.h
 
+######################
 # Compilation flags
-CFLAGS_OPT=-O3 -funroll-loops -mfpmath=sse -march=native
+#
+# N.B.: For building the Finmag binary distribution: replace
+#       '-march=native' with '-march=x86_64 -mtune=generic' in
+#       CFLAGS_OPT in order to have the most portable compiler flags
+#       (which is important if the machine where the Finmag binary is
+#       built is different from the one where it is going to be used
+#       the machine where it is going to be used). We have this
+#       setting in the finmag-dist repository, so this comment is just
+#       to document these flags.
+CFLAGS_OPT ?= -O3 -funroll-loops -mfpmath=sse -march=native
 CFLAGS_PYTHON=-I/usr/include/python2.7 -fPIC -lboost_python -lpython2.7
 # -rdynamic keeps private symbols in .so files, providing more detailed stack traces
 # -MMD -MP generates .d dependency files
