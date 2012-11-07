@@ -59,7 +59,7 @@ CFLAGS_USE_PCH = -include $(PRECOMPILED_HEADER_DIR)/finmag_includes.h
 # Compilation flags
 #
 # N.B.: For building the Finmag binary distribution: replace
-#       '-march=native' with '-march=x86_64 -mtune=generic' in
+#       '-march=native' with '-march=x86-64 -mtune=generic' in
 #       CFLAGS_OPT in order to have the most portable compiler flags
 #       (which is important if the machine where the Finmag binary is
 #       built is different from the one where it is going to be used
