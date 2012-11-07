@@ -1,12 +1,11 @@
 #files_to_ignore = ['llg.py']
 directories_to_ignore = ['build']
 directories_for_straight_copy_only = ['native']
-targetdir = "/tmp/finmag"
 
 
 import os
 import shutil
-
+import argparse
 
 def cp_file(sourcedir, filename, targetdir):
     #only relevant case is if we have a .so file for a given .py, then don't copy .py
@@ -52,6 +51,12 @@ def distcp():
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Copy FinMag files to alternative location')
+    parser.add_argument('destination-dir', type=str, help='The directory to copy FinMag files to')
+    args = parser.parse_args()
+
+    targetdir = vars(args)['destination-dir']
+
     if not os.path.exists(targetdir):
         os.makedirs(targetdir)
     distcp()
