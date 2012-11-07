@@ -45,7 +45,7 @@ bundle:
 cleanbin:
 	cd ${FINMAGDIST_BUILD_DIR}/finmag && find . -name "*.so" | xargs rm -f
 	cd ${FINMAGDIST_BUILD_DIR}/finmag && find . -name "*.pyc" | xargs rm -f
-	cd ${FINMAGDIST_BUILD_DIR}/finmag && find . -name __pychache__ | xargs rm -fr
+	cd ${FINMAGDIST_BUILD_DIR}/finmag && find . -name __pycache__ | xargs rm -fr
 
 removebin:
 	rm -rf ${FINMAGDIST_BUILD_DIR}
