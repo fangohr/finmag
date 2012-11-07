@@ -147,3 +147,8 @@ test:
 %.bin :
 	@echo Building binary: $@
 	$(CXX) $^ $(CFLAGS) $(MODULE_FLAGS) $($(patsubst %.bin,%,$(notdir $@))_LDFLAGS) -o $@
+
+# This target can be used to print Makefile variables (such as CFLAGS_OPT)
+# from the command line, for example by saying 'make print-CFLAGS_OPT'.
+print-%:
+	@echo $($*)
