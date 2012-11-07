@@ -4,7 +4,7 @@
 
 # (Temporary) directory where the binary distribution will be built
 # and the tarball be placed. This can be configured by the user
-FINMAGDIST_TMPDIR ?= /tmp/
+FINMAGDIST_TMPDIR ?= /tmp
 
 FINMAGDIST_BUILD_DIR = ${FINMAGDIST_TMPDIR}/finmag
 FINMAGDIST_DEST_TARBALL = ${FINMAGDIST_TMPDIR}/FinMag-dist.tar.bz2
