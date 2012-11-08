@@ -2,9 +2,11 @@
 # Makefile to help putting a compiled version of finmag together
 #
 
-# (Temporary) directory where the binary distribution will be built
-# and the tarball be placed. This can be configured by the user
+# (Temporary) directory where the binary distribution will be built.
 FINMAGDIST_TMPDIR ?= /tmp
+
+# Directory where the binary distribution will be built.
+FINMAGDIST_DESTDIR ?= /tmp
 
 FINMAGDIST_BUILD_DIR = ${FINMAGDIST_TMPDIR}/finmag
 FINMAGDIST_REVISION ?= tip
@@ -12,7 +14,7 @@ FINMAGDIST_REVISION ?= tip
 REVISION_NR = $(shell hg id -n -r ${FINMAGDIST_REVISION})
 REVISION_ID = $(shell hg id -i -r ${FINMAGDIST_REVISION})
 REVISION_DATE = $(shell hg log -r ${FINMAGDIST_REVISION} | grep "^date:" | awk '{print $$3 " " $$4 " " $$6}')
-FINMAGDIST_DEST_TARBALL = ${FINMAGDIST_TMPDIR}/FinMag-dist__$(shell date -d "${REVISION_DATE}" +%Y-%m-%d)__rev${REVISION_NR}_${REVISION_ID}.tar.bz2
+FINMAGDIST_DEST_TARBALL = ${FINMAGDIST_DESTDIR}/FinMag-dist__$(shell date -d "${REVISION_DATE}" +%Y-%m-%d)__rev${REVISION_NR}_${REVISION_ID}.tar.bz2
 
 info:
 	echo "Makefile to help putting a compiled version of finmag together"
@@ -60,7 +62,7 @@ cleanall:
 	make removebin
 	make cleansrc
 
-# This target can be used to print Makefile variables (such as FINMAGDIST_TMPDIR)
-# from the command line, for example by saying 'make print-FINMAGDIST_TMPDIR'.
+# This target can be used to print Makefile variables (such as FINMAGDIST_DESTDIR)
+# from the command line, for example by saying 'make print-FINMAGDIST_DESTDIR'.
 print-%:
 	@echo $($*)
