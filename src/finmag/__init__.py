@@ -7,3 +7,4 @@
 # AUTHOR(S) OF THIS FILE: Dmitri Chernyshenko (d.chernyshenko@soton.ac.uk)
 
 from finmag.sim.sim import Simulation, sim_with
+from __version__ import __version__

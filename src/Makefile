@@ -30,13 +30,7 @@ cp:
 test:
 	cd ${FINMAGDIST_BUILD_DIR} && PYTHONPATH=${FINMAGDIST_BUILD_DIR} py.test --verbose -x
 
-add_version:
-	$(eval FINMAG_VERSION := $(shell hg --debug tags | awk '{print $$2}'))
-	@echo "FINMAG_VERSION: ${FINMAG_VERSION}"
-	echo ${FINMAG_VERSION} > ${FINMAGDIST_BUILD_DIR}/finmag/VERSION
-	echo '__version__ = "${FINMAG_VERSION}"' >> ${FINMAGDIST_BUILD_DIR}/finmag/__init__.py
-
-bundle: add_version
+bundle:
 	cd ${FINMAGDIST_BUILD_DIR} && tar cvjf ${FINMAGDIST_DEST_TARBALL} \
 		--exclude='*test*' \
 		--exclude=1d.nmesh \
