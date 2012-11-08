@@ -54,3 +54,8 @@ removebin:
 cleanall:
 	make removebin
 	make cleansrc
+
+# This target can be used to print Makefile variables (such as FINMAGDIST_TMPDIR)
+# from the command line, for example by saying 'make print-FINMAGDIST_TMPDIR'.
+print-%:
+	@echo $($*)
