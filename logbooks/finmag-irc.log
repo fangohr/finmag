@@ -2079,3 +2079,28 @@ fangohr: Still testing ...
 2012-11-05 14:05:40 mb8g11: See you later, demonstrating,
 2012-11-05 14:46:51 fangohr-adium: Sounds good.
 2012-11-05 14:47:33 fangohr-adium: Max and MA, the 'units' program that I mentioned over lunch, is very briefly described at http://www.southampton.ac.uk/~fangohr/computing/units.html
+2012-11-07 09:10:15 max_albert: Good morning, Hans!
+2012-11-07 09:19:22 fangohr-adium: Good morning, Max ;)
+2012-11-07 09:20:15 max_albert: Do you mind if I drop by for a minute? Just a quick question again regarding an account for Luzanne on one of the two computers.
+2012-11-07 09:20:23 fangohr-adium: That's fine.
+2012-11-07 09:20:35 max_albert: Great, thanks. Will be there in two minutes. :)
+2012-11-07 09:37:10 fangohr-adium: Anybody up for lunch today? (Will be back around 12:00)
+2012-11-07 09:37:36 max_albert: You mean, anybody amongst me and DokosBot? :-P
+2012-11-07 09:37:43 fangohr-adium: Errr, yes. ;-)
+2012-11-07 09:37:52 max_albert: But yes, I guess I should be... ;-)
+2012-11-07 09:38:19 fangohr-adium: Let's wait for DokosBot's answer...
+2012-11-07 12:05:39 mb8g11: portable configuration of the compilation of the finmag binary: in line 59 in finmag/native/Makefile change "-march=native" to "-march=x86_64 -mtune=generic"
+2012-11-07 12:06:14 max_albert: Cool, thanks! Should I commit that to the repository?
+2012-11-07 12:07:43 max_albert: Or shall we have it as a comment in the Makefile (so that it can be used by anyone who wants to build the binary distribution) but leave it as it is?
+2012-11-07 12:10:03 fangohr-adium: Hm, good question. I'd probably go with 'generic'. The only performance relevant part of our code is the BEM calculation; everything else comes from libraries anyway.
+2012-11-07 12:10:05 mb8g11: the finmag-dist checks out a new copy of the repository, so including it as a comment doesn't help. Comitting it would hurt performance on most of our machines. Hmm... can we make that an option in the Makefile, depending on how we call it?
+2012-11-07 12:10:25 fangohr-adium: MA, does it really hurt performance?
+2012-11-07 12:11:29 mb8g11: That's not an easy question to answer without numbers. My guess is it does matter for the BEM and the LLG code.
+2012-11-07 12:11:53 max_albert: MA: sure, CFLAGS_OPT is a Makefile variable anyway. If we set it via 'CFLAGS_OPT ?= ...' instead of 'CFLAGS_OPT = ...' then we can simply override it from the script that builds the binary distribution.
+2012-11-07 12:12:14 mb8g11: Brilliant.
+2012-11-07 12:13:42 fangohr-adium: Hm, okay, I see why computing the Jacobian and the LLG may suffer a little. Having a flag seems the right way forward, and then we can have to different scripts for generic and native.
+2012-11-07 12:17:30 mb8g11: IIRC benchmarks are on our plates for the medium term ;)
+2012-11-07 12:39:09 fangohr-adium: Hi all, how do we feel about lunch? I need to bring a microphone back that I have nicked from the lecture theatre this morning, but could meet you at the staff club at 13:00, say?
+2012-11-07 12:39:58 max_albert: Sounds good to me, count me in. I presume that at least MA would also be going (but he is outside at the moment because he received a phone call, so I can't ask him).
+2012-11-07 12:47:52 fangohr-adium: Okay, I'll be off now and see you at 13:00 in the staff club. Do ask around whether anybody else wants to join. I haven't heard back from DokosBot.
+2012-11-07 12:48:04 mb8g11: He's not very talkative, might have to patch that.
