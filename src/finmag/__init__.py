@@ -6,5 +6,9 @@
 #
 # AUTHOR(S) OF THIS FILE: Dmitri Chernyshenko (d.chernyshenko@soton.ac.uk)
 
+import logging
 from finmag.sim.sim import Simulation, sim_with
 from __version__ import __version__
+
+logger = logging.getLogger("finmag")
+logger.debug("This is Finmag version {}".format(__version__))
