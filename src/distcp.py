@@ -52,19 +52,19 @@ def cp_file(sourcedir, filename, targetdir):
     shutil.copyfile(path, os.path.join(targetdir, filename))
 
 
-def scandir(dir, files=[]):
-    for file_ in os.listdir(dir):
-        path = os.path.join(dir, file_)
-        #print "working %s / %s" % (dir, file_)
+def scandir(srcdir, files=[]):
+    for file_ in os.listdir(srcdir):
+        path = os.path.join(srcdir, file_)
+        #print "working %s / %s" % (srcdir, file_)
         if os.path.isfile(path):
-            cp_file(dir, file_, os.path.join(targetdir, dir))
+            cp_file(srcdir, file_, os.path.join(targetdir, srcdir))
         elif os.path.isdir(path) and os.path.split(path) not in directories_to_ignore:
             scandir(path, files)
     return files
 
 
-def distcp():
-    print scandir('finmag')
+def distcp(targetdir):
+    print scandir('finmag', targetdir)
 
 
 if __name__ == '__main__':
@@ -76,4 +76,4 @@ if __name__ == '__main__':
 
     if not os.path.exists(targetdir):
         os.makedirs(targetdir)
-    distcp()
+    distcp(targetdir)
