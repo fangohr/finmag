@@ -7,7 +7,12 @@
 FINMAGDIST_TMPDIR ?= /tmp
 
 FINMAGDIST_BUILD_DIR = ${FINMAGDIST_TMPDIR}/finmag
-FINMAGDIST_DEST_TARBALL = ${FINMAGDIST_TMPDIR}/FinMag-dist.tar.bz2
+FINMAGDIST_REVISION ?= tip
+
+REVISION_NR = $(shell hg id -n -r ${FINMAGDIST_REVISION})
+REVISION_ID = $(shell hg id -i -r ${FINMAGDIST_REVISION})
+REVISION_DATE = $(shell hg log -r ${FINMAGDIST_REVISION} | grep "^date:" | awk '{print $$3 " " $$4 " " $$6}')
+FINMAGDIST_DEST_TARBALL = ${FINMAGDIST_TMPDIR}/FinMag-dist__$(shell date -d "${REVISION_DATE}" +%Y-%m-%d)__rev${REVISION_NR}_${REVISION_ID}.tar.bz2
 
 info:
 	echo "Makefile to help putting a compiled version of finmag together"
