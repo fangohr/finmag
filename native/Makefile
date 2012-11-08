@@ -45,7 +45,7 @@ run_ci_tests_LDFLAGS=-lboost_prg_exec_monitor /usr/lib/libboost_unit_test_framew
 # Other variables
 #
 # The list of output binary files to link
-BUILD_TARGETS = $(addprefix $(MODULE_DIR)/,$(MODULES)) $(UNIT_TEST_BINARY)
+BUILD_TARGETS = $(addprefix $(MODULE_DIR)/,$(MODULES)) $(UNIT_TEST_BINARY) add_version
 # The list of source files to be compiled
 SOURCES = $(shell find src tests -name \*.cc)
 # The list of object files to be compiled
@@ -80,6 +80,12 @@ CFLAGS=$(CFLAGS_NOPCH) $(CFLAGS_USE_PCH)
 
 # The number of make jobs to run in parallel
 N_SIMULTANEOUS_JOBS:=$(shell grep -ci processor /proc/cpuinfo)
+
+add_version:
+	$(eval FINMAG_VERSION := $(shell hg --debug tags | awk '{print $$2}'))
+	@echo "FINMAG_VERSION: ${FINMAG_VERSION}"
+	#echo ${FINMAG_VERSION} > ${FINMAGDIST_BUILD_DIR}/finmag/VERSION
+	echo '__version__ = "${FINMAG_VERSION}"' > ../src/finmag/__version__.py
 
 # Builds the whole project
 parallel:
