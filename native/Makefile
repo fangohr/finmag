@@ -81,10 +81,12 @@ CFLAGS=$(CFLAGS_NOPCH) $(CFLAGS_USE_PCH)
 # The number of make jobs to run in parallel
 N_SIMULTANEOUS_JOBS:=$(shell grep -ci processor /proc/cpuinfo)
 
+# TODO: This is probably not the best place for this target, but at
+#       least it ensures that the version is re-generated whenever the
+#       native code is compiled, so we are always up to date.
 add_version:
 	$(eval FINMAG_VERSION := $(shell hg --debug tags | awk '{print $$2}'))
 	@echo "FINMAG_VERSION: ${FINMAG_VERSION}"
-	#echo ${FINMAG_VERSION} > ${FINMAGDIST_BUILD_DIR}/finmag/VERSION
 	echo '__version__ = "${FINMAG_VERSION}"' > ../src/finmag/__version__.py
 
 # Builds the whole project
