@@ -12,5 +12,3 @@ from __version__ import __version__
 
 logger = logging.getLogger("finmag")
 logger.debug("This is Finmag version {}".format(__version__))
-
-logger.debug("This is changeset 2075")
