@@ -15,6 +15,7 @@
 
 # The directory containing ng.tcl
 NETGENDIR ?= /usr/share/netgen/
+PYTHON ?= python
 
 # The command to purge all untracked files in the repository.
 # If you use hg-git to inter-operate with the hg repository,
@@ -44,11 +45,15 @@ TEST_OPTIONS ?=
 export PRECOMPILED_HEADER_DIR = $(PROJECT_DIR)/tmp/$(notdir $(abspath .))-$(BUILD_TAG)-$(BUILD_ID)
 # Make sure we do not try to compile native modules when they're imported in python
 export DISABLE_PYTHON_MAKE = 1
+# Where the tarball containing the binary version of the latest succesful build should be placed and extracted
+FINMAG_BINARY_DEST = $(HOME)/finmag_binary_version_of_last_successful_build
+# The repo to clone when building the binary tarball
+FINMAG_REPO = ssh://hg@bitbucket.org/fangohr/finmag
 
 default:
 	@echo 'This makefile is used for CI only; do not use directly.' 
 
-ci: purge test doc
+ci: purge test doc update-jenkins-binary-version
 
 doc: doc-html doc-pdf doc-singlehtml
 
@@ -69,6 +74,20 @@ doc-html-nobuildexamples:
 
 make-modules:
 	make -C $(NATIVE_DIR) all
+
+update-jenkins-binary-version:
+ifeq "${HOSTNAME}" "summer"
+	@echo "Removing existing binary installation and tarball(s) in directory ${FINMAG_BINARY_DEST}"
+	rm -f ${FINMAG_BINARY_DEST}/FinMag*.tar.bz2
+	rm -rf ${FINMAG_BINARY_DEST}/finmag
+	@echo "Installing latest binary version in directory ${FINMAG_BINARY_DEST}"
+	$(PYTHON) $(HOME)/finmag-dist/dist-wrapper.py --finmag-repo=${FINMAG_REPO} --skip-tests --destdir=${FINMAG_BINARY_DEST}
+	install $(HOME)/License-LicenseRequest_FinmagJenkins ${FINMAG_BINARY_DEST}/finmag
+else
+	@echo "The Makefile target $@ only makes sense"
+	@echo "to execute on summer.kk.soton.ac.uk as part of the CI process."
+	@echo "Quitting since we appear to be on a different machine."
+endif
 
 clean:
 	make -C $(NATIVE_DIR) clean
