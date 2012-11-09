@@ -2137,3 +2137,50 @@ fangohr: Still testing ...
 2012-11-08 13:01:24 max_albert: And since MA isn't here I don't know if anyone else from the office is going.
 2012-11-08 13:01:37 fangohr-adium: Not for me today, thank you.
 2012-11-08 13:01:45 max_albert: Ok.
+2012-11-09 09:24:29 fangohr-adium: Good Morning Max, DokosBot.
+2012-11-09 12:16:58 max_albert: Hi Hans, shall we come over to your office? Just checking in case you are waiting for us.
+2012-11-09 12:17:20 fangohr-adium: Hi Max, yeah - come over when you are ready.
+2012-11-09 12:19:15 max_albert: Coming... :)
+2012-11-09 16:01:20 D_Chernyshenko: Hi Max, if you're at work, could you check if my machine is running? I cannot connect to it...
+2012-11-09 16:07:48 max_albert: Hi Dmitri! Nope, it's not running, but I just switched it on. The display now shows a locked screen, so I suspect the computer had just gone to sleep. Can you try again to see if it works?
+2012-11-09 16:08:04 D_Chernyshenko: It's up, thanks!
+2012-11-09 16:08:06 D_Chernyshenko: ssh cmg
+2012-11-09 16:08:09 D_Chernyshenko: oops!
+2012-11-09 16:08:24 max_albert: :)
+2012-11-09 16:35:28 max_albert: Hi Hans, when a commit happens and Jenkins has run the test suite, is there a directory which contains the complete build afterwards (assuming it was successful)?
+2012-11-09 16:35:36 max_albert: I'm asking because for the IPython notebook server it would be nice to have access to the latest build automatically.
+2012-11-09 16:38:52 D_Chernyshenko: Hi Max, I can answer that. The builds are stored in var/lib/jenkins/jobs/finmag; there are a few symlinks there as well as the actual builds
+2012-11-09 16:39:29 D_Chernyshenko: The last successful build is at /var/lib/jenkins/jobs/finmag/lastSuccessful
+2012-11-09 16:39:58 D_Chernyshenko: However, depending on what data you need, you might add an artifact to the job config in Jenkins to collect the files
+2012-11-09 16:40:57 D_Chernyshenko: I believe Jenkins only stores the files that are explicitly requested in the config for the job, the rest are discarded (kept in the workspace directory). Let me know if you need help with this
+2012-11-09 16:42:14 max_albert: Thanks for the info, Dmitri! However, I was looking for a "ready-to-use" Finmag checkout containing the latest version.
+2012-11-09 16:42:52 max_albert: So that when I say "import finmag" (with PYTHONPATH pointing to that directory) it would import the latest Finmag version that was just built.
+2012-11-09 16:43:04 D_Chernyshenko: Aha, we don't have one yet I believe; actually it would be nontrivial to create this
+2012-11-09 16:43:33 max_albert: Ah, ok.
+2012-11-09 16:43:50 max_albert: Pity... Why do you think it would be non-trivial?
+2012-11-09 16:44:03 D_Chernyshenko: We would have to modify the build file to copy the necessary files to a build directory, for example to build/output or build/dist, and then add that directory (or a .tar.gz file that we create) to the artifacts in Jenkins
+2012-11-09 16:44:52 D_Chernyshenko: Well it's fairly straightforward. What I meant is I think we have to add some extra steps to the Makefile, I don't think we can get this just via editing the config in Jenkins
+2012-11-09 16:45:26 max_albert: Ok, I understand. Thanks for the info!
+2012-11-09 16:45:40 max_albert: Btw, what are "artifacts" in the Jenkins terminology?
+2012-11-09 16:47:20 D_Chernyshenko: An artifact is something that is collected/published by Jenkins when a job is successful
+2012-11-09 16:47:45 D_Chernyshenko: For example, a .tar.gz with the python files, the HTML documentation files, test results and so on
+2012-11-09 16:48:17 D_Chernyshenko: I.e. something that's created by the build process that we want to keep and use
+2012-11-09 16:49:14 max_albert: Oh, excellent. Since we now have a well-functioning script to create the binary tarball, do you think it would be easy to tell Jenkins that it should run that script and extract the resulting tarball somewhere after each successful build??
+2012-11-09 16:50:25 max_albert: That way we would be able to "test" the creation of the binary distribution, too. (Well, not really, because we're not catching if anything goes wrong, but anyway...)
+2012-11-09 16:52:33 max_albert: Hmm, I just saw that in the Jenkins configuration panel there is a text box called "Execute shell" (under the "Build" section). Could I just put the name of a shell script there which does that job for me?
+2012-11-09 16:52:48 D_Chernyshenko: Yeah; I guess the proper place to do this would be in the top level Makefile
+2012-11-09 16:53:01 D_Chernyshenko: Jenkins invokes the "ci" target there
+2012-11-09 16:53:04 max_albert: Ah, good point.
+2012-11-09 16:53:23 D_Chernyshenko: Currently, we do not store Jenkins job config in Mercurial so my idea was to put as little as possible in Jenkins
+2012-11-09 16:53:43 max_albert: Good idea. The toplevel Makefile looks like the best place.
+2012-11-09 16:54:10 max_albert: Cheers! I guess that shouldn't be too hard. :) I'll give it a shot later.
+2012-11-09 16:54:23 D_Chernyshenko: And as much config as possible, into the Makefile. Just in case we have to re-create the Jenkins config which is quite an ugly .xml file that we edit via the GUI
+2012-11-09 16:54:53 max_albert: Btw, do you know which user executes the build when Jenkins is run? Is it 'root'?
+2012-11-09 16:54:58 D_Chernyshenko: I should be around on Monday so I can help with that if needed.
+2012-11-09 16:55:08 D_Chernyshenko: The user is 'jenkins' with the home directory /var/lib/jenkins
+2012-11-09 16:55:33 max_albert: Great, thanks!
+2012-11-09 17:03:49 max_albert: Wow, Dmitri, you have been cloned! :)
+2012-11-09 17:04:18 D_Chernyshenko__: Yes indeed. Every time I disconnect or reconnect the VPN, I have to do this :)
+2012-11-09 17:05:00 max_albert: But it keeps the old connections active somehow? I can see 3 versions of you here. :)
+2012-11-09 17:05:58 D_Chernyshenko__: Yeah, if I don't disconnect my XChat manually before changing the VPN, the server does not realise that I've disconnected until some sort of timeout happens
+2012-11-09 17:06:13 max_albert: Oh, I see. That makes sense...
