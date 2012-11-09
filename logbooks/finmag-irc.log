@@ -2104,3 +2104,36 @@ fangohr: Still testing ...
 2012-11-07 12:39:58 max_albert: Sounds good to me, count me in. I presume that at least MA would also be going (but he is outside at the moment because he received a phone call, so I can't ask him).
 2012-11-07 12:47:52 fangohr-adium: Okay, I'll be off now and see you at 13:00 in the staff club. Do ask around whether anybody else wants to join. I haven't heard back from DokosBot.
 2012-11-07 12:48:04 mb8g11: He's not very talkative, might have to patch that.
+2012-11-08 09:12:44 max_albert: Good morning Hans!
+2012-11-08 09:12:48 max_albert:  I need a quick opinion: is there any harm in including the Finmag version (= hg revision number and hash) in the filename of the tarball that is generated for the binary distribution?
+2012-11-08 09:12:59 fangohr-adium: Good morning — are you up again???
+2012-11-08 09:13:12 max_albert: Yes... :-S
+2012-11-08 09:13:31 fangohr-adium: Impressive ;)
+2012-11-08 09:14:00 fangohr-adium: Including the tag is fine with me. WHat is the difference between revision number and hash?
+2012-11-08 09:14:15 fangohr-adium: (Do you mean the integer as the revision number?)
+2012-11-08 09:16:43 max_albert: Yes, I mean the integer. I think the difference is that the hash is unique, whereas the integer is just a convenience thing to make it easier for humans to identify revisions, but they are not guaranteed to be the same across different checkouts of the repository and there might be clashes.
+2012-11-08 09:17:33 max_albert: Ok, I'll go ahead and include the version in the tarball filename then. Much less confusing that way in case one has several tarballs lying around. :)
+2012-11-08 09:18:37 fangohr-adium: You are right that  the integer is convenient, but can change if you merge with another copy of the repository. So it might be best to actually inclrude the hash at the end of the tar ball name? We can include the integer as well, which will mostly work and be very convenient, but shouldn't rely on it.
+2012-11-08 09:18:57 max_albert: Exactly. :)
+2012-11-08 09:19:54 fangohr-adium: Another option would be to include the date in the tar ball. We could do this whenever we bulid a binary distriution from 'trunk'. So maybe have finmag-id-hash-dateIfFromTrunk.tar.gz ?
+2012-11-08 09:19:58 fangohr-adium: Just a suggestion.
+2012-11-08 09:20:23 max_albert: That's a good idea, too.
+2012-11-08 09:20:48 fangohr-adium: Users prefer to talk about dates than hashs and integers, and this will save us one indirection of looking up the date from the id.
+2012-11-08 09:21:57 max_albert: Although since last night ;-) it is possible to check out a specific version of the source and roll that out in a tarball. Thus a tarball built at a later date can actually reflect an earlier version of the source. But it can't really lead to confusion if we're including the hash, too (which is the only truly reliable identifier).
+2012-11-08 09:22:18 fangohr-adium: Yes, I noticed ;)
+2012-11-08 09:22:33 fangohr-adium: How about not including the date in the tarball name if we build for a later version?
+2012-11-08 09:22:51 max_albert: later?
+2012-11-08 09:22:53 fangohr-adium: Or use the date from the commit for that we create the distribution.
+2012-11-08 09:22:56 fangohr-adium: [later->earlier]
+2012-11-08 09:24:11 max_albert: Yes, we could do that (use the date of the commit). It would keep things consistent I guess. Do you think the date of the commit or the date of the actual build of the tarball is of more interest?
+2012-11-08 09:25:04 fangohr-adium: Date of commit, I would think. If for some reason the date of the build matters, this would be the modification time of the tar ball. But if the aim is to re-create the software as it was at an earlier point in time, we might as well use that time in the name.
+2012-11-08 09:25:10 fangohr-adium: I think that is best.
+2012-11-08 09:29:37 max_albert: Great. I'll look into it.
+2012-11-08 12:58:59 fangohr-adium: Test, one, two.
+2012-11-08 12:59:06 fangohr-adium: (Okay, seems to work.)
+2012-11-08 12:59:09 max_albert: Three, four.
+2012-11-08 12:59:18 fangohr-adium: Thanks ;-)
+2012-11-08 13:01:04 max_albert: Anybody up for lunch? I guess I won't hope for an answer from DokosBot...
+2012-11-08 13:01:24 max_albert: And since MA isn't here I don't know if anyone else from the office is going.
+2012-11-08 13:01:37 fangohr-adium: Not for me today, thank you.
+2012-11-08 13:01:45 max_albert: Ok.
