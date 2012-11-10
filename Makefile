@@ -81,7 +81,7 @@ ifeq "${HOSTNAME}" "summer"
 	rm -f ${FINMAG_BINARY_DEST}/FinMag*.tar.bz2
 	rm -rf ${FINMAG_BINARY_DEST}/finmag
 	@echo "Installing latest binary version in directory ${FINMAG_BINARY_DEST}"
-	$(PYTHON) $(HOME)/finmag-dist/dist-wrapper.py --finmag-repo=${FINMAG_REPO} --skip-tests --destdir=${FINMAG_BINARY_DEST}
+	cd $(HOME)/finmag-dist && $(PYTHON) dist-wrapper.py --finmag-repo=${FINMAG_REPO} --skip-tests --destdir=${FINMAG_BINARY_DEST}
 	install $(HOME)/License-LicenseRequest_FinmagJenkins ${FINMAG_BINARY_DEST}/finmag
 else
 	@echo "The Makefile target $@ only makes sense"
