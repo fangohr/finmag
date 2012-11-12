@@ -76,7 +76,7 @@ make-modules:
 	make -C $(NATIVE_DIR) all
 
 update-jenkins-binary-version:
-ifeq "${HOSTNAME}" "summer"
+ifeq "$(shell hostname)" "summer"
 	@echo "Removing existing binary installation and tarball(s) in directory ${FINMAG_BINARY_DEST}"
 	rm -f ${FINMAG_BINARY_DEST}/FinMag*.tar.bz2
 	rm -rf ${FINMAG_BINARY_DEST}/finmag
