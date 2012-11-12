@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -o errexit
+
 #needs gfortran installed
 sudo apt-get install gfortran
 

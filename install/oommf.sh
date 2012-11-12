@@ -6,6 +6,8 @@
 # It will also install the needed ubuntu packages.
 #
 
+set -o errexit
+
 # The default installation location is $HOME. Set
 # the PREFIX environment variable to change this.
 PREFIX=${PREFIX:-$HOME}
