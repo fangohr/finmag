@@ -212,6 +212,8 @@ class FastDemag():
         tet_nodes=np.array(self.mesh.cells(),dtype=np.int32)
         fast_sum.init_mesh(xt,self.t_normals,self.face_nodes_array,tet_nodes)
         self.fast_sum=fast_sum
+	self.res=np.zeros(len(self.mesh.coordinates()))
+
         
         
     def compute_gauss_coeff_triangle(self):
@@ -401,18 +403,17 @@ class FastDemag():
         
 
     def compute_field(self):
-        x_t=self.mesh.coordinates()
-        res=np.zeros(len(x_t))
+        
         m=self.m.vector().array()  
         
         self.fast_sum.update_charge(m)
         
-        self.fast_sum.fastsum(res)
+        self.fast_sum.fastsum(self.res)
         #self.fast_sum.exactsum(res)
 	
-        self.fast_sum.compute_correction(m,res)
+        self.fast_sum.compute_correction(m,self.res)
         
-        self.phi.vector().set_local(res)
+        self.phi.vector().set_local(self.res)
         
         self.phi.vector()[:]*=(self.Ms/(4*np.pi))
         
@@ -437,8 +438,8 @@ if __name__ == "__main__":
     
     
     demag=FastDemag(Vv,m,Ms,triangle_p=1,tetrahedron_p=1)
-    print demag.compute_field()
-    demag.fast_sum.free_memory()
+    demag.compute_field()
+    #demag.fast_sum.free_memory()
     
     #cProfile.run('demag.compute_field();')
     

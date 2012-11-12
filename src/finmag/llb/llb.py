@@ -149,9 +149,9 @@ class LLB(object):
 
 if __name__ == '__main__':
     x0 = y0 = z0 = 0
-    x1 = 500e-9
-    y1 = 10e-9
-    z1 = 2e-9
+    x1 = 500
+    y1 = 10
+    z1 = 100
     nx = 50
     ny = 1
     nz = 1
@@ -159,7 +159,7 @@ if __name__ == '__main__':
    
     mat = Material(mesh, name='Nickel')
     mat.set_m((1, 0.2, 0))
-    mat.T = 10
+    mat.T = 100
     mat.alpha=0.01
     
     llb = LLB(mat)
@@ -168,12 +168,12 @@ if __name__ == '__main__':
     llb.interactions.append(mat)
     
     
-    app = Zeeman((0, 0, 1e5))
+    app = Zeeman((0, 0, 5e5))
     app.setup(mat.S3, mat._m, Ms=mat.Ms0)
     llb.interactions.append(app)
         
     exch = Exchange(mat.A)
-    exch.setup(mat.S3, mat._m, mat.Ms0, mat.m_e)
+    exch.setup(mat.S3, mat._m, mat.Ms0, mat.m_e,unit_length=1e-9)
     llb.interactions.append(exch)
     
     demag = Demag("FK")
@@ -181,8 +181,8 @@ if __name__ == '__main__':
     llb.interactions.append(demag)
     
     
-    max_time = 10 * np.pi / (llb.gamma_LL * 1e5)
-    ts = np.linspace(0, max_time, num=200)
+    max_time = 1 * np.pi / (llb.gamma_LL * 1e5)
+    ts = np.linspace(0, max_time, num=100)
 
     mlist = []
     Ms_average = []
