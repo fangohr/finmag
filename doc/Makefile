@@ -15,6 +15,12 @@ ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 # the i18n builder cannot share the environment and doctrees with the others
 I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 
+# Variables used for converting .ipynb files (= IPython notebooks) to .rst files
+NBCONVERT ?= /usr/local/src/nbconvert/nbconvert.py
+IPYTHON_NOTEBOOK_SRC_DIR=ipython_notebooks_src
+IPYTHON_NOTEBOOK_DEST_DIR=ipython_notebooks_dest
+IPYTHON_NOTEBOOK_SRC_FILES=$(foreach file,$(wildcard ${IPYTHON_NOTEBOOK_SRC_DIR}/*.ipynb),$(shell basename $(file)))
+
 export PYTHONPATH    := ../src:$(PYTHONPATH)
 
 .PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest gettext
@@ -42,7 +48,8 @@ help:
 	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
 
 clean:
-	-rm -rf $(BUILDDIR)/* modules/*
+	-rm -rf $(BUILDDIR)/* modules/* ${IPYTHON_NOTEBOOK_DEST_DIR}/*
+
 
 htmlraw:
 	$(SPHINXBUILD) $(SPHINXWARNINGOPTS) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
@@ -157,7 +164,7 @@ doctest:
 	      "results in $(BUILDDIR)/doctest/output.txt."
 
 #next target added to get Jenkins to run generate_doc.py before building the documentation.
-generate-doc: examples-for-doc timing
+generate-doc: examples-for-doc collect-ipython-notebooks timing
 	python generate_doc.py
 
 # The absolute path for the doc directory
@@ -168,6 +175,24 @@ PYTHON_ROOTS = $(DOC_DIR)/../src
 # Benchmark nmag example #2.
 timing:
 	cd ../examples/exchange_demag/timings/ && PYTHONPATH=$(PYTHON_ROOTS) python run_finmag.py
+
+# Collect all .ipynb files in IPYTHON_NOTEBOOK_SRC_DIR and convert
+# them to .rst files in IPYTHON_NOTEBOOK_DEST_DIR, which are then
+# included in the documentation
+collect-ipython-notebooks:
+	@command -v ${NBCONVERT} >/dev/null 2>&1 || { echo >&2 "Not collecting ipython notebooks because the variable NBCONVERT does not point to a valid nbconvert.py script (value: ${NBCONVERT})"; exit 1; }
+	-rm -rf ${IPYTHON_NOTEBOOK_DEST_DIR}/*
+	@echo "Converting IPython notebooks to .rst format..."
+	@for FILE in ${IPYTHON_NOTEBOOK_SRC_FILES} ; do \
+	    echo "    Converting file: $$FILE"; \
+	    ${NBCONVERT} --format=rst ${IPYTHON_NOTEBOOK_SRC_DIR}/$$FILE ${IPYTHON_NOTEBOOK_DEST_DIR}/$$FILE.rst; \
+	done
+
+# This target can be used to print Makefile variables (such as PROJECT_DIR)
+# from the command line, for example by saying 'make print-PROJECT_DIR'.
+print-%:
+	@echo $($*)
+
 
 #this target can be run to execute py.test ../examples to get figure
 #files ready. This will happen automatically when Jenkins runs, as
