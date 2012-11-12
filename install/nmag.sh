@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -o errexit
+
 #Required libraries
 #
 echo "If required, install required libraries using"
