@@ -6,6 +6,7 @@ import finmag.util.consts as consts
 import finmag.native.llb as native_llb
 from finmag.native.llb import LLBFePt
 from finmag.util import helpers
+from finmag.util.consts import mu0
 
 from scipy.optimize import fsolve
 
@@ -27,22 +28,46 @@ class Nickel(object):
     def Bs(self,x):
         t1=(2*self.S+1)/(2*self.S)
         t2=1/(2*self.S)
+        if x<1e-3:
+            return 0
+        
         return t1*self.coth(t1*x)-t2*self.coth(t2*x)
     
     def Bsp(self,x):
+        if x<1e-3:
+            x=1e-3
+        elif x>1e3:
+            return 0
+        
         t=(2*self.S+1)/(2*self.S)
         t1=np.sinh(t*x)
         t2=np.cosh(2*t*x)
         return -4*t*t*t1*t1/(1-t2)**2
     
     def xi_par(self,T):
+        T_bak=T
+        if T<10:
+            T=10
+        elif T>=self.Tc:
+            return self.xi_par_coeff
+        
         beta = self.Tc/T
         t1=beta*self.m_e(T)
+        self.T=T_bak
+        
         t2=beta*self.Bsp(t1)
-        return self.xi_par_coeff*t2/(1.0-t2)
+        #need to check here
+        res=-self.xi_par_coeff*t2/(1.0-t2)
+        
+        if res<1e-12:
+            return 1e-12
+        return res
         
 
     def Bsm(self,m,T,Tc):
+        
+        if T<1e-3:
+            T=1e-3
         
         x=3.0*self.S/(self.S+1)*m*Tc/T
         
@@ -54,6 +79,10 @@ class Nickel(object):
             return self.M/self.M0
         
         self.T=T
+        
+        if T<1:
+            return 1.0
+        
         if T>=self.Tc:
             self.M=0
         else:
@@ -75,10 +104,7 @@ class Nickel(object):
         return 0
     
     def inv_chi_par(self,T):
-        if T<0.001:
-            return 0
-        else:
-            return self.xi_par(T)
+        return 1.0/self.xi_par(T)/mu0
     
     
 
@@ -136,6 +162,7 @@ class Material(object):
         native_llb.compute_relaxation_field(self._T, self.m, self.h,
                                             self.Tc,self.m_e,
                                             self.inv_chi_par)
+        print 'fields',self.inv_chi_par,self.h
         return self.h
 
     
@@ -191,9 +218,10 @@ class Material(object):
 
 if __name__ == "__main__":
     mesh = df.UnitCube(1, 1, 1)
-    mat = Material(mesh,'Nickel')
+    mat = Material(mesh)
     mat.set_m((1,0,0))
-    mat.T=10
+    mat.T=3
     print mat.T
+    print mat.inv_chi_par
     print mat.compute_field()
     

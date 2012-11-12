@@ -759,6 +759,9 @@ void compute_Taylor(double ***a, double dx, double dy, double dz, int p) {
         }
     }
 
+    free(cf);
+    free(cf2);
+
     return;
 }
 
