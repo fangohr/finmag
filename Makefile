@@ -46,9 +46,12 @@ export PRECOMPILED_HEADER_DIR = $(PROJECT_DIR)/tmp/$(notdir $(abspath .))-$(BUIL
 # Make sure we do not try to compile native modules when they're imported in python
 export DISABLE_PYTHON_MAKE = 1
 # Where the tarball containing the binary version of the latest succesful build should be placed and extracted
-FINMAG_BINARY_DEST = $(HOME)/finmag_binary_version_of_last_successful_build
+FINMAG_BINARY_DEST ?= $(HOME)/finmag_binary_version_of_last_successful_build
 # The repo to clone when building the binary tarball
-FINMAG_REPO = ssh://hg@bitbucket.org/fangohr/finmag
+FINMAG_REPO ?= ssh://hg@bitbucket.org/fangohr/finmag
+# The directory where the script dist-wrapper.py lives
+DIST_WRAPPER_DIR ?= $(HOME)/finmag-dist
+FINMAG_BINARY_LICENSE_FILE ?= $(HOME)/License-LicenseRequest_FinmagJenkins
 
 default:
 	@echo 'This makefile is used for CI only; do not use directly.' 
@@ -78,12 +81,12 @@ make-modules:
 update-jenkins-binary-version:
 ifeq "$(shell hostname)" "summer"
 	@echo "Removing existing binary installation and tarball(s) in directory ${FINMAG_BINARY_DEST}"
-	rm -f ${FINMAG_BINARY_DEST}/FinMag*.tar.bz2
-	rm -rf ${FINMAG_BINARY_DEST}/finmag
+	-rm -f ${FINMAG_BINARY_DEST}/FinMag*.tar.bz2
+	-rm -rf ${FINMAG_BINARY_DEST}/finmag
 	@echo "Installing latest binary version in directory ${FINMAG_BINARY_DEST}"
-	cd $(HOME)/finmag-dist && $(PYTHON) dist-wrapper.py --finmag-repo=${FINMAG_REPO} --skip-tests --destdir=${FINMAG_BINARY_DEST}
+	cd $(DIST_WRAPPER_DIR) && $(PYTHON) dist-wrapper.py --finmag-repo=$(FINMAG_REPO) --skip-tests --destdir=$(FINMAG_BINARY_DEST)
 	tar -C ${FINMAG_BINARY_DEST} -xjf ${FINMAG_BINARY_DEST}/FinMag*.tar.bz2
-	install $(HOME)/License-LicenseRequest_FinmagJenkins ${FINMAG_BINARY_DEST}/finmag
+	install ${FINMAG_BINARY_LICENSE_FILE} ${FINMAG_BINARY_DEST}/finmag
 else
 	@echo "The Makefile target $@ only makes sense"
 	@echo "to execute on summer.kk.soton.ac.uk as part of the CI process."
