@@ -84,7 +84,7 @@ ifeq "$(shell hostname)" "summer"
 	-rm -f ${FINMAG_BINARY_DEST}/FinMag*.tar.bz2
 	-rm -rf ${FINMAG_BINARY_DEST}/finmag
 	@echo "Installing latest binary version in directory ${FINMAG_BINARY_DEST}"
-	cd $(DIST_WRAPPER_DIR) && $(PYTHON) dist-wrapper.py --finmag-repo=$(FINMAG_REPO) --skip-tests --destdir=$(FINMAG_BINARY_DEST)
+	cd $(DIST_WRAPPER_DIR) && $(PYTHON) dist-wrapper.py --finmag-repo=$(FINMAG_REPO) --destdir=$(FINMAG_BINARY_DEST)
 	tar -C ${FINMAG_BINARY_DEST} -xjf ${FINMAG_BINARY_DEST}/FinMag*.tar.bz2
 	install ${FINMAG_BINARY_LICENSE_FILE} ${FINMAG_BINARY_DEST}/finmag
 else
