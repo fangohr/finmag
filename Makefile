@@ -81,7 +81,7 @@ make-modules:
 update-jenkins-binary-version:
 ifeq "$(shell hostname)" "summer"
 	@echo "Removing existing binary installation and tarball(s) in directory ${FINMAG_BINARY_DEST}"
-	-rm -f ${FINMAG_BINARY_DEST}/FinMag*.tar.bz2
+#	-rm -f ${FINMAG_BINARY_DEST}/FinMag*.tar.bz2
 	-rm -rf ${FINMAG_BINARY_DEST}/finmag
 	@echo "Installing latest binary version in directory ${FINMAG_BINARY_DEST}"
 	cd $(DIST_WRAPPER_DIR) && $(PYTHON) dist-wrapper.py --finmag-repo=$(FINMAG_REPO) --destdir=$(FINMAG_BINARY_DEST)
