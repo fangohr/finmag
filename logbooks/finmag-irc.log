@@ -2196,3 +2196,22 @@ fangohr: Still testing ...
 2012-11-13 15:59:14 max_albert: I changed the value of the environment variable NETGENDIR in /etc/profile.d/netgen.sh (because I installed an updated version which doesn't constantly crash), but the Jenkins build keeps breaking and I suppose this is because it hasn't got the updated value yet.
 2012-11-13 16:06:37 D_Chernyshenko: Yeah, that should be safe...
 2012-11-13 16:07:10 max_albert: Great, thanks! I have a build running at the moment but will try it out when that's done.
+2012-11-14 08:40:30 mb8g11: Hey
+2012-11-14 08:40:58 D_Chernyshenko: Morning
+2012-11-14 09:02:54 mb8g11: Hi Hans
+2012-11-14 09:44:43 fangohr-adium: Morning all. Off to teach now; hope to see you for our meeting at 13:00.
+2012-11-14 13:07:20 mb8g11: You are offline now?
+2012-11-14 14:16:08 max_albert: Hi Marc-Antonio!
+2012-11-14 14:16:15 max_albert:  Quick question: is there a particular reason why we are using the "marvinhg" account as the default in the dist-wrapper.py script?
+2012-11-14 14:16:26 max_albert: Currently it is set to "https://marvinhg@bitbucket.org/fangohr/finmag"
+2012-11-14 14:16:41 max_albert: Do you mind if I change it to "ssh://hg@bitbucket.org/fangohr/finmag" instead?
+2012-11-14 14:17:02 max_albert: This way I could avoid typing the password for marvinhg every time I want to build a tarball.
+2012-11-14 14:17:26 max_albert: But I don't mind too much, so I'm happy to keep it the way it is if you'd prefer that.
+2012-11-14 14:31:50 fangohr-adium: That's a good point. I think Max' proposal would work for everybody who has an ssh key registered with bitbucket. I agree that for routine production this may be more convenient.
+2012-11-14 14:32:30 mb8g11: Absolutely.
+2012-11-14 14:32:35 max_albert: @Hans: yes, that was the idea
+2012-11-14 14:32:46 max_albert: Ok, great, I'll change it.
+2012-11-14 14:32:56 mb8g11: It was set to Neil's account, changed it to something we could share without thinking about better options.
+2012-11-14 15:21:46 fangohr-adium: Sure. And of course the benefit of the https connection is that one can enter a password if no ssh keys have been exchanged. However, I would say that we can go with the ssh:// solution as the default. The people using this code are computer-literate enough to look into the script and to see what to change if they need a https login for whatever reason.
+2012-11-14 15:22:15 fangohr-adium: I have the ipython notebook conversion going great on osiris now. Am keen to write an example ;-) but will need to do some teaching staff first.
+2012-11-14 15:22:39 max_albert: Great! Glad to hear it works. :)
