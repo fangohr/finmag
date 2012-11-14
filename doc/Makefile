@@ -17,7 +17,7 @@ I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 
 # Variables used for converting .ipynb files (= IPython notebooks) to .rst files
 NBCONVERT ?= /usr/local/src/nbconvert/nbconvert.py
-IPYTHON_NOTEBOOK_SRC_DIR ?= /home/ipython_nbserver/finmag/doc/ipython_notebooks_src
+IPYTHON_NOTEBOOK_SRC_DIR ?= ipython_notebooks_src
 IPYTHON_NOTEBOOK_DEST_DIR = ipython_notebooks_dest
 IPYTHON_NOTEBOOK_SRC_FILES = $(foreach file,$(wildcard ${IPYTHON_NOTEBOOK_SRC_DIR}/*.ipynb),$(notdir $(basename $(file))))
 
