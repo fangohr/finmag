@@ -56,7 +56,7 @@ FINMAG_BINARY_LICENSE_FILE ?= $(HOME)/License-LicenseRequest_FinmagJenkins
 default:
 	@echo 'This makefile is used for CI only; do not use directly.' 
 
-ci: purge test doc update-jenkins-binary-version
+ci: purge test doc
 
 doc: doc-html doc-pdf doc-singlehtml
 
