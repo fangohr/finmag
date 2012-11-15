@@ -420,7 +420,98 @@ class FastDemag():
 	demag_field = self.G * self.phi.vector()
         
 	return demag_field.array()/self.L
-	    
+	
+
+class Demag():
+    
+    def __init__(self,triangle_p=1,tetrahedron_p=1,p=6,mac=0.5,num_limit=400):
+        
+	self.triangle_p=triangle_p
+        self.tetrahedron_p=tetrahedron_p
+	self.p=p
+	self.mac=mac
+	self.num_limit=num_limit
+	self.in_jacobian=False
+        
+        
+    def setup(self,Vv,m,Ms,unit_length=1):
+	self.m=m
+        self.Vv=Vv
+        self.Ms=Ms
+	self.mesh=Vv.mesh()
+        self.V=FunctionSpace(self.mesh, 'Lagrange', 1)
+        self.phi = Function(self.V)
+        self.phi_charge = Function(self.V)
+        self.field = Function(self.Vv)
+
+	self.find_max_d()
+	self.mesh.coordinates()[:]/=self.max_d
+
+        u = TrialFunction(self.V)
+        v = TestFunction(self.Vv)
+        a = inner(grad(u), v)*dx
+        self.G = df.assemble(a)
+        
+        self.L = compute_minus_node_volume_vector(self.mesh)
+
+	self.compute_triangle_normal()
+        fast_sum=FastSum(p=self.p,mac=self.mac,num_limit=self.num_limit,\
+				 triangle_p=self.triangle_p,tetrahedron_p=self.tetrahedron_p)
+
+        xt=self.mesh.coordinates()
+        tet_nodes=np.array(self.mesh.cells(),dtype=np.int32)
+        fast_sum.init_mesh(xt,self.t_normals,self.face_nodes_array,tet_nodes)
+        self.fast_sum=fast_sum
+	self.res=np.zeros(len(self.mesh.coordinates()))
+
+	self.mesh.coordinates()[:]*=self.max_d
+	
+
+
+    def compute_triangle_normal(self):
+	
+        self.face_nodes=[]
+        self.face_norms=[]
+        self.t_normals=[]
+        
+	for face in df.faces(self.mesh):
+            t=face.normal()  #one must call normal() before entities(3),...
+            cells = face.entities(3)
+            if len(cells)==1:
+                face_nodes=face.entities(0)
+                self.face_nodes.append(face_nodes)
+                self.face_norms.append(t)
+                self.t_normals.append([t.x(),t.y(),t.z()])
+    
+        self.t_normals=np.array(self.t_normals)
+        self.face_nodes_array=np.array(self.face_nodes,dtype=np.int32)
+
+
+    def find_max_d(self):
+	xt=self.mesh.coordinates()
+	max_v=xt.max(axis=0)
+	min_v=xt.min(axis=0)
+        max_d=max(max_v-min_v)
+	self.max_d=max_d
+
+
+    def compute_field(self):
+        
+        m=self.m.vector().array()  
+        
+        self.fast_sum.update_charge(m)
+        
+        self.fast_sum.fastsum(self.res)
+	
+        self.fast_sum.compute_correction(m,self.res)
+        
+        self.phi.vector().set_local(self.res)
+        
+        self.phi.vector()[:]*=(self.Ms/(4*np.pi))
+        
+	demag_field = self.G * self.phi.vector()
+        
+	return demag_field.array()/self.L
 
 if __name__ == "__main__":
    
@@ -437,7 +528,8 @@ if __name__ == "__main__":
     m = interpolate(Constant((1, 0, 0)), Vv)
     
     
-    demag=FastDemag(Vv,m,Ms,triangle_p=1,tetrahedron_p=1)
+    demag=Demag(triangle_p=1,tetrahedron_p=1)
+    demag.setup(Vv,m,Ms)
     demag.compute_field()
     #demag.fast_sum.free_memory()
     
