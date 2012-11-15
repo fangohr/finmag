@@ -2215,3 +2215,50 @@ fangohr: Still testing ...
 2012-11-14 15:21:46 fangohr-adium: Sure. And of course the benefit of the https connection is that one can enter a password if no ssh keys have been exchanged. However, I would say that we can go with the ssh:// solution as the default. The people using this code are computer-literate enough to look into the script and to see what to change if they need a https login for whatever reason.
 2012-11-14 15:22:15 fangohr-adium: I have the ipython notebook conversion going great on osiris now. Am keen to write an example ;-) but will need to do some teaching staff first.
 2012-11-14 15:22:39 max_albert: Great! Glad to hear it works. :)
+2012-11-15 09:24:08 fangohr-adium: Good morning all.
+2012-11-15 10:32:47 fangohr-adium: Max, are you there? Given a dolfin mesh object, are you aware of a matplotlib function we can use to plot this? Or given a dolfin function, have we got a matplotlib function to plot that (both vector and scalar would be useful)? I guess the answer is no. [This would be handy  for the ipython notebook documentation.]
+2012-11-15 10:33:36 fangohr-adium: We could write some finmag functions that do the job for us — if necessary we could slice the 3d meshes and only show a 2d cut with matplotlib; that should work in any case.
+2012-11-15 12:44:32 max_albert: Hi Hans! Sorry, I was working at home this morning and our internet wasn't working.
+2012-11-15 12:45:01 max_albert: I don't know if matplotlib can do this (but will have a look). I'd rather think it can't at the moment.
+2012-11-15 12:46:04 max_albert: However, mayavi may have some functions of for this. It looks like the "mayavi.mlab.triangular_mesh" function can do this.
+2012-11-15 12:46:10 max_albert: See http://docs.enthought.com/mayavi/mayavi/auto/mlab_helper_functions.html#enthought.mayavi.mlab.triangular_mesh
+2012-11-15 12:48:20 max_albert: Also, the "dolfin.plot()" function can of course do this, but it looks like it doesn't inline plots in the ipython notebook and rather opens a new plotting window.
+2012-11-15 13:56:17 fangohr-adium: Hi Max, thank you.
+2012-11-15 13:56:44 max_albert: No problem.
+2012-11-15 13:57:09 max_albert: Haven't had time to look up matplotlib functionality yet, but in any case I presume you are right that it would be nice to have our own tweaked convenience functions in Finmag.
+2012-11-15 13:57:23 max_albert: I'll add a reminder to PivotalTracker.
+2012-11-15 14:00:18 fangohr-adium: Great, thank you.
+2012-11-15 14:00:32 fangohr-adium: Did you say the '%paste' magic is the rigth way to paste stuff?
+2012-11-15 14:00:40 max_albert: Yes.
+2012-11-15 14:01:57 fangohr-adium: I am getting the odd error "Line magic function `%paste` not found". However, using Ctrl+v seems to work, so that's fine. Was just wandering whether I remembered wrongly.
+2012-11-15 14:03:00 max_albert: Well, it might work in some cases. But often ipython gets confused when using Ctrl+v if there are different levels of indentation.
+2012-11-15 14:03:25 max_albert: In this case %paste is the recommended way of pasting blocks of code.
+2012-11-15 14:03:41 max_albert: I seem to remember that you also said there was a menu item somewhere with the same functionality?
+2012-11-15 14:03:52 fangohr-adium: I remember you saying this ;-). I'll see how it goes — the %paste things certainly does not work. Maybe I need to change something with my default settings? Anyway, I am sure we will find out over time what is happening.
+2012-11-15 14:04:01 fangohr-adium: regarding the menu item: that has disappeared in 0.13 ;-)
+2012-11-15 14:10:45 max_albert: Oh, one question: are you using %paste magic command in the qtconsole or in a "pure" ipython prompt?
+2012-11-15 14:11:02 fangohr-adium: In the notebook — is that the issue?
+2012-11-15 14:12:19 max_albert: Hmm, it might be. But in the notebook pasting stuff using Ctrl-v should never be a problem. It's only an issue when pasting directly into the ipython prompt in a terminal.
+2012-11-15 14:12:51 fangohr-adium: Oh, I see. I have also tried this in the qtconsole (in lectures), and there seemed not to be the %paste command.
+2012-11-15 14:13:20 fangohr-adium: Regarding plots: the mayavi works, but doesn't give output that we could readily use in notebooks. I am still looking into matplotlib at the moment.
+2012-11-15 14:14:03 max_albert: That's possible. I just found an email thread where they say that Tkinter needs to be installed for the paste to work and that the error message isn't very informative. (This is in Linux, but I guess things under windows are even more tricky.)
+2012-11-15 14:16:20 fangohr-adium: Okay, thanks.
+2012-11-15 14:16:50 fangohr-adium: Matplot lib has a promising function called Axes3D.plot_trisurf in version 1.2. I think I just need to upgrade my matplotlib ;-)
+2012-11-15 14:17:55 max_albert: Oh yes, that looks nice. :)
+2012-11-15 14:18:35 max_albert: Nice coincidence that matplotlib 1.2.0 was released just a few days ago. ;-)
+2012-11-15 14:19:02 max_albert: Perhaps plot_wireframe() is also useful.
+2012-11-15 14:19:58 max_albert: Although actually it looks like it doesn't readily plot triangulated surfaces.
+2012-11-15 14:28:42 max_albert: But yes, plot_trisurf looks like it is the right tool for the job.
+2012-11-15 16:49:52 max_albert: Hi Hans! Just out of curiousity, have you had any luck with the mesh plotting?
+2012-11-15 16:58:51 fangohr-adium: No, was in a meeting the last two hours ;-). We can discuss this a little nevertheless: The plot_trisurf is nice to show the shape of some geometries. We should be able to take a mesh, extract the boundary mesh, and pass this to plot_trisurf — this should be a few lines.
+2012-11-15 16:59:12 fangohr-adium: What will not be so easy is to display the data on the mesh as the function expects the data values for the triangles if I understand this correctly.
+2012-11-15 16:59:41 fangohr-adium: Could all be done; but maybe having a quick way of showing a mesh (by looking at the surface) is quite nice already.
+2012-11-15 17:00:22 max_albert: Regarding your first comment, I was also thinking that it should be quite quick. I had a very brief look but I'm having trouble finding out how to extract the boundary mesh. Do you know how to do this?
+2012-11-15 17:00:46 max_albert: I don't understand your other comments, to be honest. :-P What do you mean by "data on the mesh"?
+2012-11-15 17:01:34 fangohr-adium: Not exactly … ;-) I think there is a (dolfin) BoundaryMesh class or function that can be given a mesh and returns the Boundary mesh.
+2012-11-15 17:03:36 fangohr-adium: Regarding the data: I was thinking of visualising a scalar field, such as anisotropy energy. We would normally evaluate and store that on the nodes. If we had that data available for each surafec triangle, we could pass it to the plotting function so that the colour of the triangles reflects the value of that scalar field. Does that make it clearer? (It was very brief before, I have to agree….)
+2012-11-15 17:04:06 max_albert: Ah, yes, that makes more sense. :)
+2012-11-15 17:04:39 max_albert: So you are still envisioning plotting a "closed" surface (as opposed to a wireframe), and the surface triangles are coloured according to the scalar values?
+2012-11-15 17:06:07 fangohr-adium: That is what plot_trisurf does if I read it correctly. A wire frame would be good to — haven't found that function yet (but haven't searched for long either).
+2012-11-15 17:13:09 fangohr-adium: Over and out for today.
+2012-11-15 17:13:14 max_albert: See you!
