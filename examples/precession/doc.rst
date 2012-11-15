@@ -11,7 +11,7 @@ following code listing shows.
 
 .. literalinclude:: ../examples/precession/run.py
     :language: python
-    :emphasize-lines: 14
+    :emphasize-lines: 7
     :pyobject: run_simulation
 
 While the time-development of the system without precession happens at the
