@@ -58,7 +58,7 @@ DIST_WRAPPER_OPTIONS ?= --skip-tests --finmag-repo=$(FINMAG_REPO) --destdir=$(FI
 default:
 	@echo 'This makefile is used for CI only; do not use directly.' 
 
-ci: purge test doc
+ci: purge test doc update-jenkins-binary-version
 
 doc: doc-html doc-pdf doc-singlehtml
 
