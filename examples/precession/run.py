@@ -1,8 +1,12 @@
+import os
 import numpy as np
 import dolfin as df
 import matplotlib.pyplot as plt
 from finmag import Simulation
 from finmag.energies import Demag, Exchange
+
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
+IMAGE = os.path.join(MODULE_DIR, 'precession.png')
 
 ts = np.linspace(0, 3e-10)
 
@@ -11,10 +15,10 @@ def run_simulation(do_precession):
 
     mesh = df.Box(0, 0, 0, 30e-9, 30e-9, 100e-9, 6, 6, 20)
     sim = Simulation(mesh, Ms)
+    sim.set_m((1, 0, 1))
     sim.llg.do_precession = do_precession
     sim.add(Demag())
     sim.add(Exchange(13.0e-12))
-    sim.set_m((1, 0, 1))
 
     averages = []
     for t in ts:
@@ -33,8 +37,4 @@ for i, subfigure_name in enumerate(subfigures):
     axes[i].set_xlabel("time (s)")
     axes[i].set_ylabel("unit magnetisation")
     axes[i].set_ylim([-0.1, 1.0])
-figure.savefig('precession.png')
-figure.show()
-
-
-
+figure.savefig(IMAGE)
