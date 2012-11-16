@@ -51,7 +51,7 @@ clean:
 	-rm -rf $(BUILDDIR)/* modules/* ${IPYTHON_NOTEBOOK_DEST_DIR}/*
 
 
-htmlraw: collect-ipython-notebooks
+htmlraw:
 	$(SPHINXBUILD) $(SPHINXWARNINGOPTS) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 
 html: generate-doc htmlraw
