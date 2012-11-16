@@ -71,6 +71,9 @@ doc-singlehtml:
 doc-pdf:
 	make -C doc generate-doc latexpdf
 
+doc-clean:
+	make -C doc clean
+
 # The following is useful for quick debugging as it doesn't rebuild the examples.
 # However, currently it will only work if a complete run of 'make doc-html' was
 # successfully performed beforehand.
