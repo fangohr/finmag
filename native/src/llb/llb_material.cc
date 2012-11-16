@@ -158,7 +158,7 @@ namespace finmag { namespace llb {
             			double m_sq = m[i1]*m[i1] + m[i2]*m[i2] + m[i3]*m[i3];
 
 
-            			if (temp < TC) {
+            			if (temp <= TC) {
             				r = 0.5 * (1. - m_sq/m_e_sq);
             			} else {
             				r = -1. - 0.6 * TC / (temp - TC) * m_sq;
@@ -166,15 +166,7 @@ namespace finmag { namespace llb {
 
             			double coeff = r * inv_chi_par(temp);
 
-            			//It seems that here we need to do something, check later...
-            			if (temp==TC){
-            				double m_e1 = this->m_e(temp-1e-2);
-            				double coeff1 = 0.5 * (1. - m_sq/(m_e1*m_e1))*inv_chi_par(temp-1e-2);
-            				double coeff2 = (-1.-0.6*TC/1e-2 * m_sq)*inv_chi_par(temp+1e-2);
-
-            				coeff = (coeff1+coeff2)/2.0 ;
-            			}
-
+            		
             			// accumulate the field value
             			//??? or should be '='
             			h[i1] = coeff * m[i1];
@@ -224,15 +216,16 @@ namespace finmag { namespace llb {
             	    double temp = T[i];
             	    double m_sq = m[i1]*m[i1] + m[i2]*m[i2] + m[i3]*m[i3];
 
-            	    if (temp < TC) {
+            	    if (Tc-temp>1) {
             	    	coeff = 0.5 * (1. - m_sq/m_e_sq);
-            	    } else if (temp-Tc<0.001){
-            	    	coeff = -1. - 0.6 * TC / 0.001 * m_sq;
+            	    } else if (temp-Tc<1){
+            	    	coeff = -1. - 0.6 * Tc / 1 * m_sq;
             	    }else {
-            	    	coeff = -1. - 0.6 * TC / (temp - TC) * m_sq;
+            	    	coeff = -1. - 0.6 * Tc / (temp - Tc) * m_sq;
             	    }
 
             	    coeff *= inv_chi_par;
+	           //printf("coeff=%f    %f  %f \n",coeff,inv_chi_par,Tc);
 
             	    h[i1] = coeff * m[i1];
             	    h[i2] = coeff * m[i2];
