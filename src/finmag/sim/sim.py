@@ -8,7 +8,6 @@ import textwrap
 import fileinput
 import dolfin as df
 import numpy as np
-from math import sqrt
 from finmag.sim.llg import LLG
 from finmag.util.timings import timings
 from finmag.util.helpers import quiver, norm
@@ -20,9 +19,10 @@ from finmag.energies.anisotropy import UniaxialAnisotropy
 from finmag.energies.zeeman import Zeeman
 from finmag.energies import Demag
 
-ONE_DEGREE_PER_NS = 17453292.5 # in rad/s
+ONE_DEGREE_PER_NS = 17453292.5  # in rad/s
 
 log = logging.getLogger(name="finmag")
+
 
 class Simulation(object):
     def __init__(self, mesh, Ms, unit_length=1, integrator_backend="sundials"):
@@ -262,7 +262,7 @@ class Simulation(object):
             # resons only ... ;-) and create a 'global' output file which combines
             # all stages of the simulation.
             #
-            f_global = open(filename+'.pvd', 'w')
+            f_global = open(filename + '.pvd', 'w')
             f_global.write(textwrap.dedent("""\
                 <?xml version="1.0"?>
                 <VTKFile type="Collection" version="0.1">
@@ -271,7 +271,7 @@ class Simulation(object):
 
             cur_stage = 0
             cur_timestep = 0
-            for f in sorted(glob.glob(filename+"__stage_[0-9][0-9][0-9]__.pvd")):
+            for f in sorted(glob.glob(filename + "__stage_[0-9][0-9][0-9]__.pvd")):
                 f_global.write("    <!-- Hysteresis stage #{:03d} -->\n".format(cur_stage))
                 for line in fileinput.input([f]):
                     if re.match('^\s*<DataSet .*/>$', line):
@@ -313,11 +313,12 @@ class Simulation(object):
            kwargs -- any keyword argument accepted by the hysteresis() method
         """
         d = np.array(direction)
-        H_dir = d/norm(d)
+        H_dir = d / norm(d)
         H_norms = list(reversed(np.linspace(-H_max, H_max, N))) + list(np.linspace(-H_max, H_max, N))
-        H_vals = [h*H_dir for h in H_norms]
+        H_vals = [h * H_dir for h in H_norms]
         m_avg = self.hysteresis(H_vals, fun=lambda sim: sim.m_average, **kwargs)
-        m_vals = [np.dot(m, H_dir) for m in m_avg] # projected lengths of the averaged magnetisation values along the axis `H_dir`
+        # projected lengths of the averaged magnetisation values along the axis `H_dir`
+        m_vals = [np.dot(m, H_dir) for m in m_avg]
         return (H_norms, m_vals)
 
     def __get_pins(self):
