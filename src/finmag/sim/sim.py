@@ -26,6 +26,17 @@ log = logging.getLogger(name="finmag")
 
 class Simulation(object):
     def __init__(self, mesh, Ms, unit_length=1, integrator_backend="sundials"):
+        """Simulation object.
+
+        *Arguments*
+
+          mesh : a dolfin mesh
+
+          Ms   : Magnetisation saturation (in A/m) of the material.
+
+          unit_length: the distance (in metres) associated with the distance 1.0 in the mesh object.
+        """
+
         timings.reset()
         timings.start("Sim-init")
 
