@@ -49,9 +49,11 @@ export DISABLE_PYTHON_MAKE = 1
 FINMAG_BINARY_DEST ?= $(HOME)/finmag_binary_version_of_last_successful_build
 # The repo to clone when building the binary tarball
 FINMAG_REPO ?= ssh://hg@bitbucket.org/fangohr/finmag
+FINMAG_BINARY_LICENSE_FILE ?= $(HOME)/License-LicenseRequest_FinmagJenkins
 # The directory where the script dist-wrapper.py lives
 DIST_WRAPPER_DIR ?= $(HOME)/finmag-dist
-FINMAG_BINARY_LICENSE_FILE ?= $(HOME)/License-LicenseRequest_FinmagJenkins
+# Command line options passed to dist-wrapper.py
+DIST_WRAPPER_OPTIONS ?= --skip-tests --finmag-repo=$(FINMAG_REPO) --destdir=$(FINMAG_BINARY_DEST)
 
 default:
 	@echo 'This makefile is used for CI only; do not use directly.' 
@@ -84,7 +86,7 @@ ifeq "$(shell hostname)" "summer"
 #	-rm -f ${FINMAG_BINARY_DEST}/FinMag*.tar.bz2
 	-rm -rf ${FINMAG_BINARY_DEST}/finmag
 	@echo "Installing latest binary version in directory ${FINMAG_BINARY_DEST}"
-	cd $(DIST_WRAPPER_DIR) && $(PYTHON) dist-wrapper.py --finmag-repo=$(FINMAG_REPO) --destdir=$(FINMAG_BINARY_DEST)
+	cd $(DIST_WRAPPER_DIR) && $(PYTHON) dist-wrapper.py $(DIST_WRAPPER_OPTIONS)
 	tar -C ${FINMAG_BINARY_DEST} -xjf ${FINMAG_BINARY_DEST}/FinMag*.tar.bz2
 	install ${FINMAG_BINARY_LICENSE_FILE} ${FINMAG_BINARY_DEST}/finmag
 else

@@ -643,7 +643,6 @@ void free_tree(fastsum_plan *plan,struct octree_node *tree) {
 void build_tree(fastsum_plan *plan) {
 
     double bnd[6];
-    int i;
 
     plan->tree = (struct octree_node *) malloc(sizeof (struct octree_node));
 
@@ -1211,11 +1210,18 @@ void fastsum_exact(fastsum_plan *plan, double *phi) {
 void fastsum(fastsum_plan *plan, double *phi) {
     int j = 0;
 
-    double ***a = alloc_3d_double(plan->p + 1, plan->p + 1, plan->p + 1);
-
-    for (j = 0; j < plan->N_target; j++) {
-        phi[j] = compute_potential_single_target(plan, plan->tree, j, a);
+    #pragma omp parallel
+    {
+       double ***a = alloc_3d_double(plan->p + 1, plan->p + 1, plan->p + 1);
+   
+       #pragma omp for
+       for (j = 0; j < plan->N_target; j++) {
+         phi[j] = compute_potential_single_target(plan, plan->tree, j, a);
+       }
+       free_3d_double(a,plan->p+1);
     }
+
+    
 
 }
 
