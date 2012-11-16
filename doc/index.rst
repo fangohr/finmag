@@ -16,6 +16,7 @@ logo and link to
    aboutfinmag.rst
    examples.rst
    modules.rst
+   sample_ipython_notebooks.rst
 
 .. comment:
    background.txt
