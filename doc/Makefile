@@ -189,7 +189,7 @@ collect-ipython-notebooks: ${IPYTHON_NOTEBOOK_DEST_DIR}
 	@echo "Converting IPython notebooks in directory '${IPYTHON_NOTEBOOK_SRC_DIR}' to .rst format..."
 	@for FILE in ${IPYTHON_NOTEBOOK_SRC_FILES} ; do \
 	    echo "    Converting file: $$FILE"; \
-	    ${NBCONVERT} --format=rst ${IPYTHON_NOTEBOOK_SRC_DIR}/$$FILE.ipynb ${IPYTHON_NOTEBOOK_DEST_DIR}/$$FILE.rst; \
+	    ${NBCONVERT} --format=rst ${IPYTHON_NOTEBOOK_SRC_DIR}/$$FILE.ipynb ${IPYTHON_NOTEBOOK_DEST_DIR}/$$FILE.rst && \
 	    python add_heading_if_needed.py ${IPYTHON_NOTEBOOK_DEST_DIR}/$$FILE.rst ${IPYTHON_NOTEBOOK_HEADER_LEVEL_THRESHOLD}; \
 	done
 
