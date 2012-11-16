@@ -42,23 +42,23 @@ class LLG(object):
         self.do_precession = do_precession
         self.do_slonczewski = False
         self.effective_field = EffectiveField(S3.mesh())
-        self.Volume=None #will be computed on demand, and carries volume of the mesh
+        self.Volume = None  # will be computed on demand, and carries volume of the mesh
         timings.stop('LLG-init')
 
     def set_default_values(self):
         self._alpha_mult = df.Function(self.S1)
         self._alpha_mult.assign(df.Constant(1))
-        self.alpha = 0.5 # alpha for solve: alpha * _alpha_mult
-
-        self.gamma =  consts.gamma
-        self.c = 1e11 # 1/s numerical scaling correction \
+        self.alpha = 0.5  # alpha for solve: alpha * _alpha_mult
+        self.gamma = consts.gamma
+        self.c = 1e11  # 1/s numerical scaling correction \
         #               0.1e12 1/s is the value used by default in nmag 0.2
-        self.Ms = 8.6e5 # A/m saturation magnetisation
-        self.t = 0.0 # s
+        self.Ms = 8.6e5  # A/m saturation magnetisation
+        self.t = 0.0  # s
         self._m = df.Function(self.S3)
-        self._m.rename("m", "magnetisation") # gets displayed e.g. in Paraview when loading an exported VTK file
-        self.pins = [] # nodes where the magnetisation gets pinned
-    
+        self._m.rename("m", "magnetisation")  # gets displayed e.g. in Paraview
+                                              # when loading an exported VTK file
+        self.pins = []  # nodes where the magnetisation gets pinned
+
     def set_pins(self, nodes):
         """
         Hold the magnetisation constant for certain nodes in the mesh.
@@ -70,13 +70,14 @@ class LLG(object):
 
         """
         if len(nodes) > 0:
-            nb_nodes_mesh = len(self._m.vector().array())/3
+            nb_nodes_mesh = len(self._m.vector().array()) / 3
             if min(nodes) >= 0 and max(nodes) < nb_nodes_mesh:
                 self._pins = np.array(nodes, dtype="int")
             else:
                 logger.error("Indices of pinned nodes should be in [0, {}), were [{}, {}].".format(nb_nodes_mesh, min(nodes), max(nodes)))
         else:
             self._pins = np.array([], dtype="int")
+
     def pins(self):
         return self._pins
     pins = property(pins, set_pins)
@@ -129,16 +130,16 @@ class LLG(object):
         """
         Compute and return the average polarisation according to the formula
         :math:`\\langle m \\rangle = \\frac{1}{V} \int m \: \mathrm{d}V`
-        
+
         """
         #Compute volume if not done before
         if self.Volume == None:
             self.Volume = mesh_volume(self._m.function_space().mesh())
-        mx = df.assemble(df.dot(self._m, df.Constant([1,0,0])) * df.dx)
-        my = df.assemble(df.dot(self._m, df.Constant([0,1,0])) * df.dx)
-        mz = df.assemble(df.dot(self._m, df.Constant([0,0,1])) * df.dx)
+        mx = df.assemble(df.dot(self._m, df.Constant([1, 0, 0])) * df.dx)
+        my = df.assemble(df.dot(self._m, df.Constant([0, 1, 0])) * df.dx)
+        mz = df.assemble(df.dot(self._m, df.Constant([0, 0, 1])) * df.dx)
         return np.array([mx, my, mz]) / self.Volume
-    
+
     def set_m(self, value, **kwargs):
         """
         Set the magnetisation (it is automatically normalised to unit length).
@@ -158,7 +159,7 @@ class LLG(object):
     def solve_for(self, m, t):
         self.m = m
         self.t = t
-        value = self.solve() 
+        value = self.solve()
         return value
 
     def solve(self):
@@ -167,7 +168,7 @@ class LLG(object):
 
         timings.start("LLG-compute-dmdt")
         # Use the same characteristic time as defined by c
-        char_time = 0.1/self.c
+        char_time = 0.1 / self.c
         # Prepare the arrays in the correct shape
         m = self.m
         m.shape = (3, -1)
@@ -177,11 +178,11 @@ class LLG(object):
             native_llg.calc_llg_slonczewski_dmdt(
                 m, H_eff, self.t, dmdt, self.pins,
                 self.gamma, self.alpha_vec,
-                char_time, 
+                char_time,
                 self.J, self.P, self.d, self.Ms, self.p)
         else:
             native_llg.calc_llg_dmdt(m, H_eff, self.t, dmdt, self.pins,
-                                 self.gamma, self.alpha_vec, 
+                                 self.gamma, self.alpha_vec,
                                  char_time, self.do_precession)
         dmdt.shape = (-1,)
 
@@ -217,16 +218,16 @@ class LLG(object):
         The time integration problem we need to solve is of type
 
         .. math::
-               
+
                  \\frac{d y}{d t} = f(y,t)
 
         where y is the state vector (such as the magnetisation components for
         all sites), t is the time, and f(y,t) is the LLG equation.
 
         For the implicite integration schemes, sundials' cvode solver
-        needs to know the Jacobian J, which is the derivative of the 
-        (vector-valued) function f(y,t) with respect to the (components 
-        of the vector) y. The Jacobian is a matrix. 
+        needs to know the Jacobian J, which is the derivative of the
+        (vector-valued) function f(y,t) with respect to the (components
+        of the vector) y. The Jacobian is a matrix.
 
         For a magnetic system N sites, the state vector y has 3N entries
         (because every site has 3 components). The Jacobian matrix J would
@@ -247,18 +248,18 @@ class LLG(object):
 
              \\frac{dm}{dt} = LLG(m, H)
 
-        And we're interested in computing the Jacobian (J) times vector (m') product 
+        And we're interested in computing the Jacobian (J) times vector (m') product
 
-        .. math:: 
+        .. math::
 
-             J m' = [\\frac{dLLG(m, H)}{dm}] m'. 
+             J m' = [\\frac{dLLG(m, H)}{dm}] m'.
 
-        However, the H field itself depends on m, so the total derivative J m' 
-        will have two terms 
+        However, the H field itself depends on m, so the total derivative J m'
+        will have two terms
 
-        .. math:: 
+        .. math::
 
-             \\frac{d LLG(m, H)}{dm} = \\frac{\\partial LLG(m, H)}{\\partial m} + [\\frac{\\partial LLG(m, H)}{\\partial H}] [\\frac{\\partial H(m)}{\\partial m}]. 
+             \\frac{d LLG(m, H)}{dm} = \\frac{\\partial LLG(m, H)}{\\partial m} + [\\frac{\\partial LLG(m, H)}{\\partial H}] [\\frac{\\partial H(m)}{\\partial m}].
 
 
         This is a matrix identity, so to make the derivations easier (and since we don't need the full Jacobian matrix) we can write the Jacobian-times-vector product as a directional derivative:
@@ -268,10 +269,10 @@ class LLG(object):
              J m' = \\frac{d LLG(m + a m',H(m + a m'))}{d a}|_{a=0}
 
 
-        The code to compute this derivative is in ``llg.cc`` but you can see that the derivative will depend 
+        The code to compute this derivative is in ``llg.cc`` but you can see that the derivative will depend
         on m, m', H(m), and dH(m+a m')/da [which is labelled H' in the code].
 
-        Most of the components of the effective field are linear in m; if that's the case, 
+        Most of the components of the effective field are linear in m; if that's the case,
         the directional derivative H' is just H(m')
 
         .. math::
