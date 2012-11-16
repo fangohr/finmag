@@ -20,6 +20,9 @@ NBCONVERT ?= /usr/local/src/nbconvert/nbconvert.py
 IPYTHON_NOTEBOOK_SRC_DIR ?= ipython_notebooks_src
 IPYTHON_NOTEBOOK_DEST_DIR = ipython_notebooks_dest
 IPYTHON_NOTEBOOK_SRC_FILES = $(foreach file,$(wildcard ${IPYTHON_NOTEBOOK_SRC_DIR}/*.ipynb),$(notdir $(basename $(file))))
+# If no headers up to this level exist in the .rst file, we add a header
+# manually which contains the corresponding .ipynb filename.
+IPYTHON_NOTEBOOK_HEADER_LEVEL_THRESHOLD ?= 6
 
 export PYTHONPATH    := ../src:$(PYTHONPATH)
 
@@ -187,8 +190,7 @@ collect-ipython-notebooks: ${IPYTHON_NOTEBOOK_DEST_DIR}
 	@for FILE in ${IPYTHON_NOTEBOOK_SRC_FILES} ; do \
 	    echo "    Converting file: $$FILE"; \
 	    ${NBCONVERT} --format=rst ${IPYTHON_NOTEBOOK_SRC_DIR}/$$FILE.ipynb ${IPYTHON_NOTEBOOK_DEST_DIR}/$$FILE.rst; \
-	    sed -i "1s|^|$$FILE\n$$FILE\n\n|" ${IPYTHON_NOTEBOOK_DEST_DIR}/$$FILE.rst; \
-	    sed -i "2s|.|=|g" ${IPYTHON_NOTEBOOK_DEST_DIR}/$$FILE.rst; \
+	    python add_heading_if_needed.py ${IPYTHON_NOTEBOOK_DEST_DIR}/$$FILE.rst ${IPYTHON_NOTEBOOK_HEADER_LEVEL_THRESHOLD}; \
 	done
 
 ${IPYTHON_NOTEBOOK_DEST_DIR}:
