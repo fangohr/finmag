@@ -32,8 +32,8 @@ def save_me(ts,me,me_input):
         f.write(tmp)
     f.close()
 
-def SpinTest(mesh,T):
-    mat = Material(mesh, name='FePt')
+def SpinTest(mesh,T,name):
+    mat = Material(mesh, name=name)
     mat.set_m((1, 1, 1))
     mat.T = T
     
@@ -44,7 +44,7 @@ def SpinTest(mesh,T):
     llb.interactions.append(mat)
     
     max_time = 10e-12
-    ts = np.linspace(0, max_time, num=101)
+    ts = np.linspace(0, max_time, num=11)
     
     me_average = []
     mx=[]
@@ -56,9 +56,9 @@ def SpinTest(mesh,T):
         mz.append(llb.m[-1])
     
     
-    saveplot(ts,me_average,'tt.png')
-    saveplot(ts,mx,'mx.png')
-    saveplot(ts,mz,'mz.png')
+    #saveplot(ts,me_average,'tt.png')
+    #saveplot(ts,mx,'mx.png')
+    #saveplot(ts,mz,'mz.png')
     
     
     return me_average[-1],mat.m_e
@@ -73,7 +73,7 @@ def SeriesTemperatureTest(mesh):
     me_input=[]
     for t in Ts:
         print 'temperature at %g'%t
-        me1,me2=SpinTest(mesh,t)
+        me1,me2=SpinTest(mesh,t,'FePt')
         me.append(me1)
         me_input.append(me2)
     
@@ -83,13 +83,13 @@ def SeriesTemperatureTest(mesh):
     plt.xlabel('Temperature (K)')
     plt.ylabel('me')
     plt.legend([p1,p2],['me','me-input'])
-    fig.savefig('me.png')
+    fig.savefig('FePt-me.png')
     
     save_me(Ts,me,me_input)
     
 
 def StochasticSpinTest(mesh,T):
-    mat = Material(mesh, name='Nickel')
+    mat = Material(mesh, name='FePt')
     #mat = Material(mesh)
     mat.set_m((1, 0, 0))
     mat.T = T
@@ -108,7 +108,7 @@ def StochasticSpinTest(mesh,T):
     mx=[]
     mz=[]
     for t in ts:
-        print llb.m
+        #print llb.m
         llb.run_stochastic_until(t)
         me_average.append(average(llb.m))
         mx.append(llb.m[0])
@@ -135,10 +135,14 @@ if __name__ == '__main__':
     
     mesh =df.Interval(1,0,50e-9)
     print mesh.coordinates()
+    mat = Material(mesh, name='Nickel')
+    mat.set_m((1, 1, 1))
+    mat.T = 630
+    print mat.T
    
-    #print SpinTest(mesh,400)
-    #SeriesTemperatureTest(mesh)
-    StochasticSpinTest(mesh,400)
+    #print SpinTest(mesh,640,'Nickel')
+    SeriesTemperatureTest(mesh)
+    #StochasticSpinTest(mesh,400)
     
     
 

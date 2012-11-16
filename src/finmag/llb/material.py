@@ -12,66 +12,51 @@ from scipy.optimize import fsolve
 
 logger = logging.getLogger(name='finmag')
 
-
 class Nickel(object):
     def __init__(self):
-        self.S=1.0/2
         self.Tc=630
         self.T=0
         self.M0=4.8e5
         self.M=self.M0
         self.A0=9e-12
         self.A_coeff=3.90625e-23 
-        self.xi_par_coeff=0.0006017068615252775  # M/(k_B T_c)*(S+1)/(3S)* a^3/ c 
+        self.xi_par_coeff=0.380548363687*mu0  # M/k_B a^3/ c 
         self.coth=lambda x:np.cosh(x)/np.sinh(x)
         
-    def Bs(self,x):
-        t1=(2*self.S+1)/(2*self.S)
-        t2=1/(2*self.S)
-        if x<1e-3:
+    def L(self,x):
+        if x==0:
             return 0
-        
-        return t1*self.coth(t1*x)-t2*self.coth(t2*x)
-    
-    def Bsp(self,x):
-        if x<1e-3:
-            x=1e-3
-        elif x>1e3:
-            return 0
-        
-        t=(2*self.S+1)/(2*self.S)
-        t1=np.sinh(t*x)
-        t2=np.cosh(2*t*x)
-        return -4*t*t*t1*t1/(1-t2)**2
+        return self.coth(x)-1.0/x
+
+    def Lp(self,x):
+        if x==0:
+            return 1.0/3
+        if x>100:
+            return 1/(x*x)
+        return 1.0/(x*x)-1.0/np.sinh(x)**2
     
     def xi_par(self,T):
         T_bak=T
-        if T<10:
-            T=10
-        elif T>=self.Tc:
-            return self.xi_par_coeff
+        if T<5:
+            T=5
+	elif abs(T-self.Tc)<0.1:
+            T=self.Tc-0.1
         
-        beta = self.Tc/T
+        beta = 3*self.Tc/T
         t1=beta*self.m_e(T)
         self.T=T_bak
         
-        t2=beta*self.Bsp(t1)
-        #need to check here
-        res=-self.xi_par_coeff*t2/(1.0-t2)
+        t2=self.Lp(t1)
+        res=self.xi_par_coeff*t2/(1.0-t2*beta)/T
         
-        if res<1e-12:
-            return 1e-12
+        if res<1e-17:
+            return 1e-17
         return res
         
 
-    def Bsm(self,m,T,Tc):
+    def Bsm(self,m,T):
         
-        if T<1e-3:
-            T=1e-3
-        
-        x=3.0*self.S/(self.S+1)*m*Tc/T
-        
-        return m-self.Bs(x)
+        return m-self.L(3*m*self.Tc/T)
 
         
     def m_e(self,T):
@@ -81,12 +66,13 @@ class Nickel(object):
         self.T=T
         
         if T<1:
+            self.M=self.M0
             return 1.0
         
         if T>=self.Tc:
             self.M=0
         else:
-            m=fsolve(self.Bsm,1,args=(T,self.Tc))
+            m=fsolve(self.Bsm,1,args=(T))
             self.M=m[0]*self.M0
         
         return self.M/self.M0
@@ -104,9 +90,92 @@ class Nickel(object):
         return 0
     
     def inv_chi_par(self,T):
-        return 1.0/self.xi_par(T)/mu0
+        return 1.0/self.xi_par(T)
+
+
+
+class FePtMFA(object):
+    def __init__(self):
+        self.Tc=660
+        self.T=0
+        self.M0=1047785.46561
+        self.M=self.M0
+        self.A0=2.15337920818e-11
+        self.A_coeff=1.9614433786606643e-23
+        self.xi_par_coeff=2.17065713406*mu0  # M/k_B a^3/ c 
+        self.coth=lambda x:np.cosh(x)/np.sinh(x)
+        
+    def L(self,x):
+        if x==0:
+            return 0
+        return self.coth(x)-1.0/x
+
+    def Lp(self,x):
+        if x==0:
+            return 1.0/3
+        if x>100:
+            return 1/(x*x)
+        return 1.0/(x*x)-1.0/np.sinh(x)**2
     
+    def xi_par(self,T):
+        T_bak=T
+        if T<5:
+            T=5
+	elif abs(T-self.Tc)<0.1:
+            T=self.Tc-0.1
+        
+        beta = 3*self.Tc/T
+        t1=beta*self.m_e(T)
+        self.T=T_bak
+        
+        t2=self.Lp(t1)
+        res=self.xi_par_coeff*t2/(1.0-t2*beta)/T
+        
+        if res<1e-15:
+            return 1e-15
+        return res
+        
+
+    def Bsm(self,m,T):
+        
+        return m-self.L(3*m*self.Tc/T)
+
+        
+    def m_e(self,T):
+        if self.T==T:
+            return self.M/self.M0
+
+        self.T=T
+        
+        if T<1:
+            self.M=self.M0
+            return 1.0
+        
+        if T>=self.Tc:
+            self.M=0
+        else:
+            m=fsolve(self.Bsm,1,args=(T))
+            self.M=m[0]*self.M0
+        
+        return self.M/self.M0
+            
+    def A(self,T):
+        if self.T==T:
+            pass
+        else:
+            self.m_e(T)
+        return self.A_coeff*self.M**2
+            
+        
     
+    def inv_chi_perp(self,T):
+        return 0
+    
+    def inv_chi_par(self,T):
+        return 1.0/self.xi_par(T)
+
+
+
 
 class Material(object):
     """
@@ -218,7 +287,7 @@ class Material(object):
 
 if __name__ == "__main__":
     mesh = df.UnitCube(1, 1, 1)
-    mat = Material(mesh)
+    mat = Material(mesh,name='Nickel')
     mat.set_m((1,0,0))
     mat.T=3
     print mat.T

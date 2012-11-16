@@ -37,7 +37,7 @@ class LLB(object):
         self.vol = df.assemble(df.dot(df.TestFunction(self.S3),
                                       df.Constant([1, 1, 1])) * df.dx).array()
         self.vol[:]=1e-27
-        print self.vol
+        #print self.vol
         
         self._pre_rhs_callables = []
         self._post_rhs_callables = []
@@ -157,7 +157,7 @@ if __name__ == '__main__':
     nz = 1
     mesh = df.Box(x0, y0, z0, x1, y1, z1, nx, ny, nz)
    
-    mat = Material(mesh, name='Nickel')
+    mat = Material(mesh, name='FePt')
     mat.set_m((1, 0.2, 0))
     mat.T = 100
     mat.alpha=0.01
