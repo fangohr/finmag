@@ -1,5 +1,6 @@
 from datetime import datetime
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 import subprocess
 import logging
 import numpy as np
@@ -267,6 +268,37 @@ def _create_nonexistent_directory_components(filename):
     if dirname != '':
         if not os.path.exists(dirname):
             os.makedirs(dirname)
+
+
+def plot_mesh(mesh, ax=None, color="blue", shade=False, **kwargs):
+    """
+    Plot the given mesh.
+
+    If provided, `ax` must be an object of type matplotlib.axes.Axes3DSubplot.
+    They can be created as follows:
+
+       import matplotlib.pyplot as plt
+       ax = plt.gca(projection='3d')
+
+    If `ax` is not given, an Axes object is created automatically.
+
+    The 'color' and 'shade' arguments as well as all keyword arguments are
+    passed on to matplotlib's plot_trisurf() routine.
+
+    Returns the Axes object (either the one provided by the user or the one
+    which was automatically created) in which the mesh was plotted.
+    """
+    if ax is None:
+        ax = plt.gca(projection='3d')
+    bm = df.BoundaryMesh(mesh)
+    coords = bm.coordinates()
+    x = coords[:,0]
+    y = coords[:,1]
+    z = coords[:,2]
+    triangles = [[v.index() for v in df.vertices(s)] for s in df.faces(bm)]
+    ax.plot_trisurf(x, y, z, triangles=triangles, color=color, shade=shade, **kwargs)
+    return ax
+
 
 def plot_hysteresis_loop(H_vals, m_vals, style='x-', add_point_labels=False, point_labels=None, infobox=[], infobox_loc='bottom right',
                          filename=None, title="Hysteresis loop", xlabel="H_ext (A/m)", ylabel="m_avg", figsize=(10, 7)):
