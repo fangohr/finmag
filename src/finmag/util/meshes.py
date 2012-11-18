@@ -181,7 +181,6 @@ def convert_diffpack_to_xml(diffpackfile):
         sys.exit(3)
  
     files = ["%s.xml.bak" % basename,
-             "%s_mat.xml" % basename,
              "%s_bi.xml" % basename,
              diffpackfile]
     for f in files:
