@@ -2262,3 +2262,84 @@ fangohr: Still testing ...
 2012-11-15 17:06:07 fangohr-adium: That is what plot_trisurf does if I read it correctly. A wire frame would be good to — haven't found that function yet (but haven't searched for long either).
 2012-11-15 17:13:09 fangohr-adium: Over and out for today.
 2012-11-15 17:13:14 max_albert: See you!
+2012-11-16 11:09:56 max_albert: Good morning!
+2012-11-16 11:10:29 max_albert: Hi Hans, in case you log in later - I just saw your attempt to write mesh visualisation code using plot_trisurf in a sandbox notebook.
+2012-11-16 11:12:07 max_albert: I also had a go at it yesterday and ran into exactly the same problem, but managed to resolve it. Will commit it at some point later.
+2012-11-16 11:13:39 max_albert: Also, I'm not sure I understand what you mean by your comment about how to get the figure inline. But have you set the following in your ipython_notebook_config.py file?
+2012-11-16 11:13:40 max_albert: c.IPKernelApp.pylab = 'inline'
+2012-11-16 11:14:05 max_albert: See: http://ipython.org/ipython-doc/dev/interactive/htmlnotebook.html#running-a-public-notebook-server
+2012-11-16 12:53:33 fangohr-adium: Greetings. Some technical difficulties this morning; online now :)
+2012-11-16 12:56:26 max_albert: Hi Hans, I just pushed a change with the way .ipynb files are included in our docs. Now if there are any cells in the notebook formatted in heading style (any level from 1-6 should do) these should show up in the table of contents (or at least the hightest-level ones should).
+2012-11-16 12:56:49 fangohr-adium: Nice.
+2012-11-16 12:56:51 max_albert: So we don't have to avoid level-1 headings any more, and can even use these to generate nice TOC entries.
+2012-11-16 12:57:13 fangohr-adium: Does the filename decide the order in which these notebooks are incrluded? This would be quite nice.
+2012-11-16 12:57:41 max_albert: I think it probably does at the moment. Or at least it would be a trivial change.
+2012-11-16 12:57:52 mb8g11: Just saw the plotting questions on the IRC logs. I once wrote a function that helps plotting a vector field. It's in the finmag.util.helpers module.
+2012-11-16 12:58:02 mb8g11: Doesn't do meshes though.
+2012-11-16 12:58:10 mb8g11: Hi all.
+2012-11-16 12:58:20 max_albert: Hi Marc-Antonio!
+2012-11-16 12:59:07 fangohr-adium: (just going into meeting — expect some silence from me now …sorry)
+2012-11-16 13:00:05 max_albert: MA, is this the quiver function you are talking about?
+2012-11-16 13:01:39 mb8g11: Yes. I remember writing it to abstract away the difference between plotting 2D functions and 3D functions on 3D space.
+2012-11-16 13:02:12 max_albert: Cool.
+2012-11-16 13:02:24 mb8g11: Oh, apparently it plots functions on 1D and 2D meshes as well :)
+2012-11-16 13:02:36 max_albert: Nice. :)
+2012-11-16 13:03:55 mb8g11: Ok sorry, that was the use case: 3D valued functions on meshes of varying dimensions. Sorry for the confusion.
+2012-11-16 13:23:08 mb8g11: How is it going besides?
+2012-11-16 13:24:53 max_albert: Yeah, ok-ish I guess. Not really gotten much done in terms of my own work recently as the past couple of weeks have been filled with admin stuff (the virtual machine/binary distribution stuff; Finmag doc works; etc.). But hopefully at least part of that has layed the foundation for successful and productive work starting next week. ;-)
+2012-11-16 13:24:56 max_albert: How about you?
+2012-11-16 13:30:08 mb8g11: You were definitely thorough in your work and have the commits to show it.
+2012-11-16 13:33:24 max_albert: Sure. I just tend to get lost in work like that and then at the end of the week when I think about what has actually come out of it, it feels a bit unsatisfying because none of it has really pushed me anything further towards proceeding with my project. ;-) Which is actually not quite true, but it's less tangible than a nice simulation result, say. ;)
+2012-11-16 13:40:40 mb8g11: You recognised the problem, and honestly, I suffer from the same thing. For instance I want to compute some dispersion relation. So I start reading up on stuff, and next thing I know, I implemented a fourier transform for simple audio files but still not a damn line for my simulation :(
+2012-11-16 13:41:44 max_albert: :-D
+2012-11-16 13:41:44 mb8g11: Definitely have to dive right in next time.
+2012-11-16 13:42:15 mb8g11: In a way, we are both procrastinating ;)
+2012-11-16 13:42:40 max_albert: Yes, I tend to "waste" a lot of time reading up on things, too, and experimenting with toy problems that are interesting in their own right, but it usually would have been much quicker to tackle the real problem directly.
+2012-11-16 13:42:45 max_albert: Yes, indeed. :)
+2012-11-16 13:43:53 max_albert: Brb, need to reboot my computer.
+2012-11-16 13:55:11 max_albert: MA, have you made any attempts with the Airbox method yet?
+2012-11-16 13:57:15 mb8g11: Nope, will do Tueday morning.
+2012-11-16 13:59:00 max_albert: Ok. I am planning to look into it a bit this afternoon because I need it myself, too.
+2012-11-16 13:59:02 max_albert: I'll have to figure out how to assign different magnetisations to different regions, though. Do you know it that is that straightforward?
+2012-11-16 14:00:03 mb8g11: If we could the import the regions from netgen it wouldn't be very difficult.
+2012-11-16 14:00:52 mb8g11: What do I need to install for this python-convert stuff to work? Building the documentation tries to even when making the htmlraw version.
+2012-11-16 14:01:09 mb8g11: Found a nbconvert.py on github, is this what I need to install?
+2012-11-16 14:01:15 max_albert: sorry, git a call, will be back bb
+2012-11-16 14:02:05 max_albert: P.S.: You will need this version: https://github.com/maxalbert/nbconvert
+2012-11-16 14:02:28 max_albert: And a specific branch in this repo.
+2012-11-16 14:02:43 max_albert: Hans has added instructions in the file finmag/install/requirements-for-ipython-notebook-builds-raw.txt
+2012-11-16 14:05:06 mb8g11: Ah, thanks. Will rather just deactive it on my machine ;)
+2012-11-16 14:05:15 mb8g11: *deactivate
+2012-11-16 14:09:39 max_albert: Quick interlude, will probably be gone again for a bit soon: assuming we can import the regions, is it easy to do on the Finmag side?
+2012-11-16 14:12:33 mb8g11: Is Ms the same everywhere?
+2012-11-16 14:13:14 mb8g11: I mean, is it a traditional simulation just the a special starting magnetisation? If so, then yes. If not... oh hell no.
+2012-11-16 16:00:47 max_albert: Hi MA, sorry for the long absence. Was on the phone and then went straight into a meeting with Hans.
+2012-11-16 16:01:15 max_albert: Good news is, we managed to briefly explore something related to the airbox method.
+2012-11-16 16:01:55 max_albert: To answer your question: no, we would need a spatially varying saturation magnetisation Ms.
+2012-11-16 16:02:27 max_albert: I wasn't sure how to do this, but Hans suggested to use a Discontinuous Galerkin function space in dolfin for Ms.
+2012-11-16 16:02:59 max_albert: It turns out that Dolfin can deal nicely with functions that live on the same mesh but in different function spaces.
+2012-11-16 16:03:51 max_albert: So Hans suggested to let the unit magnetisation be an element in a Continuous Galerkin space (so that the dofs are at the nodes) - this is as it works at the moment.
+2012-11-16 16:04:20 max_albert: However, Ms could then be an element of a DG FunctionSpace, so that the dofs would be inside the cells.
+2012-11-16 16:04:54 max_albert: Then we can have the true magnetisation M = Ms*m, and Dolfin manages to integrate such a product nicely over the mesh.
+2012-11-16 16:05:31 max_albert: So it seems like this *might* "just work", depending on whether our code somewhere assumes that the magnetisation is a CG function or not.
+2012-11-16 16:05:53 max_albert: But maybe I/we are overlooking some problems with implementation details.
+2012-11-16 16:06:02 max_albert: I hope this makes sense so far...
+2012-11-16 16:07:14 D_Chernyshenko: Erm, this might not be an issue but what about the exchange part?
+2012-11-16 16:07:25 D_Chernyshenko: When computing the exchange, I think we need to divide by Ms
+2012-11-16 16:07:42 max_albert: To be honest, I haven't thought that far yet. :-)
+2012-11-16 16:07:52 max_albert: But it's a good point. Will have to look into that.
+2012-11-16 16:08:58 D_Chernyshenko: Should still be possible to work around that somehow, since if Ms=0 we don't need to compute the dynamics at all for those degrees of freedom
+2012-11-16 16:09:20 D_Chernyshenko: Or are you only interested in the demag?
+2012-11-16 16:09:23 max_albert: That's true. And it would save us a lot of computational effort.
+2012-11-16 16:09:47 max_albert: Essentially, yes, at the moment I'm mainly interested in the demag (outside a magnetic material).
+2012-11-16 16:10:15 max_albert: But to begin with we can simply choose Ms to be very small and see if that already gives us a good approximation.
+2012-11-16 16:10:21 D_Chernyshenko: Yeah, well I was thinking along the linest of dividing by (M_s + 1e-300) or something along those lines. Doesn't save any computation but does the job
+2012-11-16 16:10:23 D_Chernyshenko: Yeah
+2012-11-16 16:41:12 mb8g11: Interesting.
+2012-11-16 17:10:07 fangohr-adium: HI folks: Dmitri is right that there are places (at least one) where we need to divide by Ms. That is the reason why we may want to use a small (but finite) value for Ms in vacuum, say 1 A/m or so.
+2012-11-16 17:10:18 fangohr-adium: This should *maybe* *just work*.
+2012-11-16 17:11:40 fangohr-adium: It would be harder to get rid of the magnetisation degrees of freedom in the air-area, but more elegant, faster, and with a smaller memory footprint. (The only function we need in the air-area is phi and the demag field.) But this would update the code to be able to deal with regions where we have a phi but not M etc. There is no conceptuar barrier (I think), but it needs some work.
+2012-11-16 17:12:04 fangohr-adium: Sticking to the Ms=nearly zero model avoids all that (if we accept slower execution for now).
+2012-11-16 17:12:08 fangohr-adium: Over and out from me.
+2012-11-16 17:12:35 max_albert: Have a good weekend!
+2012-11-16 18:38:20 mb8g11: Bye bye
