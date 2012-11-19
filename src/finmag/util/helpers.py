@@ -270,13 +270,13 @@ def _create_nonexistent_directory_components(filename):
             os.makedirs(dirname)
 
 
-def plot_mesh(mesh, ax=None, color="blue", shade=False, **kwargs):
+def plot_mesh(mesh, ax=None, color="blue", **kwargs):
     """
     Plot the given mesh.
 
     Note that for fine meshes it may be necessary to adjust the
-    "linewidth" argument because if the lines are too thick compared
-    to the entire mesh the figure will appear all black.
+    "linewidth" argument because if the mesh edges are drawn too thick
+    compared to the entire mesh then the figure will appear all black.
 
     TODO: It might be nice to automatically adjust the linewidth, e.g.
           based on the ratio mesh.num_cells()/mesh_volume(mesh).
@@ -294,8 +294,8 @@ def plot_mesh(mesh, ax=None, color="blue", shade=False, **kwargs):
            import matplotlib.pyplot as plt
            ax = plt.gca(projection='3d')
 
-    The 'color' and 'shade' arguments as well as all keyword arguments
-    are passed on to matplotlib's `plot_trisurf` (for 3D meshes) or to
+    The 'color' argument as well as all other keyword arguments are
+    passed on to matplotlib's `plot_trisurf` (for 3D meshes) or to
     `triplot` (for 2D meshes).
 
     Returns
@@ -331,7 +331,12 @@ def plot_mesh(mesh, ax=None, color="blue", shade=False, **kwargs):
         z = coords[:,2]
 
         triangs = [[v.index() for v in df.vertices(s)] for s in df.faces(bm)]
-        ax.plot_trisurf(x, y, z, triangles=triangs, color=color, shade=shade, **kwargs)
+
+        # Set shade = False by default because it looks nicer
+        if not kwargs.has_key('shade'):
+            kwargs['shade'] = False
+
+        ax.plot_trisurf(x, y, z, triangles=triangs, color=color, **kwargs)
     else:
         raise ValueError("Plotting is only supported for 2- and 3-dimensional meshes.")
 
