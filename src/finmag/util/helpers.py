@@ -9,6 +9,8 @@ import math
 import types
 import sys
 import os
+from finmag.util.meshes import mesh_volume
+from math import sqrt
 
 logger = logging.getLogger("finmag")
 
@@ -318,6 +320,16 @@ def plot_mesh(mesh, ax=None, color="blue", **kwargs):
         x = coords[:,0]
         y = coords[:,1]
         triangs = [[v.index() for v in df.vertices(s)]for s in df.faces(mesh)]
+
+        if not kwargs.has_key('linewidth'):
+            # If the user doesn't explicitly specify a linewidth, we
+            # heuristically adapt it so that the plot doesn't appear
+            # all black because the lines are drawn too thick.
+            a = mesh.num_cells()/mesh_volume(mesh)
+            if a > 500.0:
+                kwargs['linewidth'] = sqrt(500.0 / a)
+                logger.debug("Automatically adapting linewidth to improve plot quality "
+                             "(new value: linewidth = {})".format(kwargs['linewidth']))
 
         ## XXX TODO: It would be nice to have the triangles coloured.
         ## This should be possible using 'tripcolor', but I haven't
