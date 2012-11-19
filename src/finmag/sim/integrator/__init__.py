@@ -145,6 +145,14 @@ class ScipyIntegrator(BaseIntegrator):
         self.cur_t = t
 
 class SundialsIntegrator(BaseIntegrator):
+    """
+    Sundials time integrator.
+
+    Attributes:
+        cur_t       The current internal time reached by the solver.
+                    It's not meant to represent the actual simulation time.
+
+    """
     def __init__(self, llg, m0, reltol=1e-8, abstol=1e-8,
                  nsteps=10000, method="bdf_gmres_prec_id"):
         assert method in ("adams", "bdf_diag",
