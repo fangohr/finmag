@@ -289,8 +289,7 @@ def plot_mesh(mesh, ax=None, color="blue", **kwargs):
     TODO: It might be nice to automatically adjust the linewidth, e.g.
           based on the ratio mesh.num_cells()/mesh_volume(mesh).
 
-    Parameters
-    ----------
+    *Arguments*
 
     ax : None or matplotlib.axes.AxesSubplot (for 2D meshes)
               or matplotlib.axes.Axes3DSubplot (for 3D meshes)
@@ -306,8 +305,7 @@ def plot_mesh(mesh, ax=None, color="blue", **kwargs):
     passed on to matplotlib's `plot_trisurf` (for 3D meshes) or to
     `triplot` (for 2D meshes).
 
-    Returns
-    -------
+    *Returns*
 
     The Axes object in which the mesh was plotted (either the one
     provided by the user or the one which was automatically created).
