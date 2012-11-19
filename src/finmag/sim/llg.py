@@ -1,4 +1,4 @@
-import logging 
+import logging
 import numpy as np
 import dolfin as df
 import finmag.util.consts as consts
@@ -11,6 +11,7 @@ from finmag.util import helpers
 #default settings for logger 'finmag' set in __init__.py
 #getting access to logger here
 logger = logging.getLogger(name='finmag')
+
 
 class LLG(object):
     """
@@ -265,7 +266,7 @@ class LLG(object):
         This is a matrix identity, so to make the derivations easier (and since we don't need the full Jacobian matrix) we can write the Jacobian-times-vector product as a directional derivative:
 
         .. math::
- 
+
              J m' = \\frac{d LLG(m + a m',H(m + a m'))}{d a}|_{a=0}
 
 
@@ -280,7 +281,7 @@ class LLG(object):
              H' = \\frac{d H(m+a m')}{da} = H(m')
 
 
-        The actual implementation of the jacobian-times-vector product is in src/llg/llg.cc, 
+        The actual implementation of the jacobian-times-vector product is in src/llg/llg.cc,
         function calc_llg_jtimes(...), which in turn makes use of CVSpilsJacTimesVecFn in CVODE.
         """
 
@@ -332,7 +333,7 @@ class LLG(object):
         d the thickness of the free layer in m,
         p the direction (unit length) of the polarisation as a triple.
 
-        """  
+        """
         self.do_slonczewski = True
         J = df.interpolate(J, self.S1)
         self.J = J.vector().array()
