@@ -275,8 +275,14 @@ def plot_mesh(mesh, ax=None, color="blue", **kwargs):
     Plot the given mesh.
 
     Note that for fine meshes it may be necessary to adjust the
-    "linewidth" argument because if the mesh edges are drawn too thick
+    `linewidth` argument because if the mesh edges are drawn too thick
     compared to the entire mesh then the figure will appear all black.
+
+    FIXME: For 2D meshes we currently draw a wireframe mesh by default
+    because I haven't figured out yet how to use `tripcolor` properly.
+    This should be changed so that 2D and 3D plotting are consistent.
+    Also, once this is done it might be nice to provide a `wireframe`
+    keyword which enables/disables wireframe-style plotting.
 
     TODO: It might be nice to automatically adjust the linewidth, e.g.
           based on the ratio mesh.num_cells()/mesh_volume(mesh).
