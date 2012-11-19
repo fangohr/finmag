@@ -274,29 +274,67 @@ def plot_mesh(mesh, ax=None, color="blue", shade=False, **kwargs):
     """
     Plot the given mesh.
 
-    If provided, `ax` must be an object of type matplotlib.axes.Axes3DSubplot.
-    They can be created as follows:
+    Note that for fine meshes it may be necessary to adjust the
+    "linewidth" argument because if the lines are too thick compared
+    to the entire mesh the figure will appear all black.
 
-       import matplotlib.pyplot as plt
-       ax = plt.gca(projection='3d')
+    TODO: It might be nice to automatically adjust the linewidth, e.g.
+          based on the ratio mesh.num_cells()/mesh_volume(mesh).
 
-    If `ax` is not given, an Axes object is created automatically.
+    Parameters
+    ----------
 
-    The 'color' and 'shade' arguments as well as all keyword arguments are
-    passed on to matplotlib's plot_trisurf() routine.
+    ax : None or matplotlib.axes.AxesSubplot (for 2D meshes)
+              or matplotlib.axes.Axes3DSubplot (for 3D meshes)
 
-    Returns the Axes object (either the one provided by the user or the one
-    which was automatically created) in which the mesh was plotted.
+        If `ax` is not given, an appropriate Axes object is created
+        automatically. Note that a 3D Axes object can be created as
+        follows:
+
+           import matplotlib.pyplot as plt
+           ax = plt.gca(projection='3d')
+
+    The 'color' and 'shade' arguments as well as all keyword arguments
+    are passed on to matplotlib's `plot_trisurf` (for 3D meshes) or to
+    `triplot` (for 2D meshes).
+
+    Returns
+    -------
+
+    The Axes object in which the mesh was plotted (either the one
+    provided by the user or the one which was automatically created).
     """
-    if ax is None:
+    dim = mesh.topology().dim()
+
+    if dim == 2:
+        ax = plt.gca()
+        coords = mesh.coordinates()
+        x = coords[:,0]
+        y = coords[:,1]
+        triangs = [[v.index() for v in df.vertices(s)]for s in df.faces(mesh)]
+
+        ## XXX TODO: It would be nice to have the triangles coloured.
+        ## This should be possible using 'tripcolor', but I haven't
+        ## figured out yet how to pass it the color information (e.g.,
+        ## uniformly coloured if we just want to plot the mesh, or
+        ## passing an array of color values if we want to plot a
+        ## scalar function on a mesh).
+        #ax.tripcolor(x, y, triangles=triangs)
+        ax.triplot(x, y, triangles=triangs, color="blue", **kwargs)
+    elif dim == 3:
         ax = plt.gca(projection='3d')
-    bm = df.BoundaryMesh(mesh)
-    coords = bm.coordinates()
-    x = coords[:,0]
-    y = coords[:,1]
-    z = coords[:,2]
-    triangles = [[v.index() for v in df.vertices(s)] for s in df.faces(bm)]
-    ax.plot_trisurf(x, y, z, triangles=triangles, color=color, shade=shade, **kwargs)
+        bm = df.BoundaryMesh(mesh)
+        coords = bm.coordinates()
+
+        x = coords[:,0]
+        y = coords[:,1]
+        z = coords[:,2]
+
+        triangs = [[v.index() for v in df.vertices(s)] for s in df.faces(bm)]
+        ax.plot_trisurf(x, y, z, triangles=triangs, color=color, shade=shade, **kwargs)
+    else:
+        raise ValueError("Plotting is only supported for 2- and 3-dimensional meshes.")
+
     return ax
 
 
