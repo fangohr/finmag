@@ -2343,3 +2343,124 @@ fangohr: Still testing ...
 2012-11-16 17:12:08 fangohr-adium: Over and out from me.
 2012-11-16 17:12:35 max_albert: Have a good weekend!
 2012-11-16 18:38:20 mb8g11: Bye bye
+2012-11-19 11:59:04 fangohr-adium: Good Morning folks.
+2012-11-19 11:59:10 max_albert: Good morning!
+2012-11-19 11:59:44 D_Chernyshenko: Good morning
+2012-11-19 12:00:14 fangohr-adium: How do we feel about lunch today?
+2012-11-19 12:02:08 max_albert: I guess I'd be up for it but probably a little later (say around 1pm) as I'm not feeling very hungry yet. Do you feel like going now, though? Or is there a time restriction?
+2012-11-19 12:02:23 D_Chernyshenko: I'll pass sorry...
+2012-11-19 12:04:09 fangohr-adium: No, around 1pm sound great.
+2012-11-19 12:04:24 max_albert: Excellent. :)
+2012-11-19 12:04:45 fangohr-adium: Can message just before if you like; I should be flexible.
+2012-11-19 12:05:11 max_albert: Sure. Same here.
+2012-11-19 12:33:56 max_albert: Hi Dmitri, may I tap your brain regarding a (probably quite trivial) Dolfin question?
+2012-11-19 12:34:13 D_Chernyshenko: Sure
+2012-11-19 12:34:18 max_albert: Suppose I have a domain given by a mesh and two functions defined on that domain. I'd like to compare these two functions, but only on a subdomain (for example, outside a sphere of given radius).
+2012-11-19 12:34:30 max_albert: I can imagine that there is a nifty way to do this using Dolfin's clever way of dealing with entire functions, but I'm also happy to only do the comparison on the vertices (via the numpy arrays corresponding to the function values on the vertices).
+2012-11-19 12:34:44 max_albert: Do you have any ideas about a good way to do this? I have only spent a bit of time thinking about the 'per-vertex comparison' approach. My idea was do define a VertexFunction which returns True if the vertex is inside the subdomain and False otherwise. However, I'm already a bit lost as to how to iterate over all vertices and get the coordinates for each vertex.
+2012-11-19 12:34:57 max_albert: I know I can say something like "for v in df.vertices(mesh): ..." but then there doesn't seem to be a way of extracting the coordinates from 'v'. I'm probably missing something really obvious here.
+2012-11-19 12:35:04 max_albert: Any clues, or any better ideas how to proceed? Thanks!
+2012-11-19 12:35:21 D_Chernyshenko: Erm, when you say compare, do you want to see if the functions are "close"? And does this have to be fast?
+2012-11-19 12:36:17 max_albert: Yes, exactly. I'm essentially looking for something like numpy.allclose() for the function values. And I'm happy to accept a slow solution, too. :)
+2012-11-19 12:37:10 max_albert: I guess one could also subtract them from each other and then integrate over the subdomain, dividing by the volume.
+2012-11-19 12:37:16 D_Chernyshenko: Ok, I think I know to iterate vertices/coordinates in Python; I'll link the section of the manual where I saw it in a second
+2012-11-19 12:37:27 max_albert: But again, I don't know how to do that for a subdomain only.
+2012-11-19 12:37:33 max_albert: Great, thanks!
+2012-11-19 12:37:42 D_Chernyshenko: Can you define a function that is 1 on a subdomain and 0 elsewhere
+2012-11-19 12:37:51 D_Chernyshenko: Since then you will be able to do the comparison
+2012-11-19 12:38:10 max_albert: Ah, you mean by multiplying that "indicator function" with the given functions?
+2012-11-19 12:38:11 D_Chernyshenko: By multiplying with that function before integrating...
+2012-11-19 12:38:13 D_Chernyshenko: Yeah
+2012-11-19 12:38:23 max_albert: Nice. Good idea!
+2012-11-19 12:38:40 D_Chernyshenko: Yeah, it seems nicer, should be faster (and easier to code) than the vertex approach
+2012-11-19 12:38:54 D_Chernyshenko: But it's useful to know how to iterate elements of the mesh, so I'll still show it
+2012-11-19 12:39:02 max_albert: :)
+2012-11-19 12:39:11 max_albert: Was just going to say the same thing and ask you for a link anyway. ;-)
+2012-11-19 12:39:38 D_Chernyshenko: Yeah, it'll be a couple of minutes, since it was a while since I saw that webpage
+2012-11-19 12:39:50 max_albert: No problem. Thanks for looking
+2012-11-19 12:39:51 max_albert: !
+2012-11-19 12:41:15 max_albert: I wonder if I need to access the mesh.geometry() and/or mesh.topology() objects with the vertex indices somehow. I haven't looked into their storage mechanisms in detail, but it seems they separate the geometric (= coordinate) information from the actual topology.
+2012-11-19 12:41:40 D_Chernyshenko: Yeah, exactly. The topology has the information about the dimensionality of the mesh and the underlying space,
+2012-11-19 12:41:43 max_albert: Which makes it a bit awkward and "un-pythonic" to obtain coordinate information from a vertex, say (or any MeshEntity for that matter)
+2012-11-19 12:41:47 D_Chernyshenko: while the geometry object ahs the actual coordinates
+2012-11-19 12:41:51 D_Chernyshenko: Yep exactly
+2012-11-19 12:42:24 max_albert: I keep expecting that a "Vertex" object in Python should have an attribute "coordinates", but that doesn't seem to be the case. Which is why I keep stumbling about this.
+2012-11-19 12:42:25 D_Chernyshenko: It makes slighlty more sense in an object-oriented sense when you look at the underlying C++ objects
+2012-11-19 12:42:35 max_albert: Yeah, I guess so.
+2012-11-19 12:42:52 max_albert: It's just something I have to constantly remind myself of. ;-)
+2012-11-19 12:43:47 D_Chernyshenko: Since in this case the Python interface just exposes the underlying C++ classes.
+2012-11-19 12:43:58 max_albert: Yep.
+2012-11-19 12:45:07 D_Chernyshenko: Yeah, it's quite un-Pythonic but I guess it's a low priority area since iterating over vertices/elements in Python is so slow anyway
+2012-11-19 12:45:33 max_albert: Sure.
+2012-11-19 12:45:55 max_albert: Mmh, regarding your suggestion with the indicator function above: I would still need to extract the function vector at the end, right? Say, if f1 and f2 are the functions I want to compare and g is the indicator function for the subdomain, can I just say something like "abs(f1*g-f2*g).vector().array()" and check that the maximum of that array is below a threshold?
+2012-11-19 12:46:17 max_albert: In particular, are "symbolic" function operations like that supported?
+2012-11-19 12:47:04 D_Chernyshenko: have a look at http://fenicsproject.org/documentation/dolfin/dev/python/programmers-reference/fem/norms/errornorm.html
+2012-11-19 12:47:31 D_Chernyshenko: I think that's the recommended function in this case, if you only need 1 number
+2012-11-19 12:47:31 max_albert: Oh, nice.
+2012-11-19 12:47:36 max_albert: Thank you!
+2012-11-19 12:47:56 D_Chernyshenko: It has some clever trick in it to increase accuracy when you calculate the L2 norm, that avoids subtracting numbers that are close to 0
+2012-11-19 12:48:39 D_Chernyshenko: I guess you might be equally interested in the L1 norm though
+2012-11-19 12:48:51 D_Chernyshenko: Anyway, I'm still looking for the coordinate iteration code
+2012-11-19 12:49:00 max_albert: Yes, L1 is probably what I need.
+2012-11-19 12:49:13 max_albert: Thanks again! And sorry that this is taking up so much of your time!
+2012-11-19 12:50:29 D_Chernyshenko: Do you have a PDF copy of the Fenics book?
+2012-11-19 12:50:34 max_albert: Yes, I do.
+2012-11-19 12:51:16 D_Chernyshenko: It seems there are some helpers in the Python classes that make iteration easier in C++
+2012-11-19 12:51:35 D_Chernyshenko: *than in C++
+2012-11-19 12:51:56 D_Chernyshenko: Search for "coordinates" or "iteration" in the book, there are quite a few snippets
+2012-11-19 12:52:22 D_Chernyshenko: First there's mesh.coordinates() that has the coordinates, plus I suspect the vortex object itself might have coordinates in Python
+2012-11-19 12:53:14 max_albert: Yes, I saw mesh.coordinate(), but unfortunately the vertex object itself doesn't hold them. (That was one of my stumbling blocks.)
+2012-11-19 12:53:52 D_Chernyshenko: Section 10.3.2 in particular
+2012-11-19 12:54:02 max_albert: And I didn't know how to get the "global index" of a vertex (which I could then hopefully use to extract the coordinates from mesh.coordinates() -- in case the order is consistent).
+2012-11-19 12:54:24 D_Chernyshenko: What I normally do in C++, is iterate over the index itself
+2012-11-19 12:54:35 D_Chernyshenko: for i in xrange(mesh.num_vertices())
+2012-11-19 12:54:50 D_Chernyshenko: Then you grab the vortex object by index, as well as the coordinate by index
+2012-11-19 12:54:55 D_Chernyshenko: Seems that's the recommended way in C++
+2012-11-19 12:55:10 max_albert: Ah! How do I grab the vertex by index?
+2012-11-19 12:55:15 D_Chernyshenko: Apart from the mesh iterators
+2012-11-19 12:55:40 D_Chernyshenko: df.entities(mesh, 0) or so I think
+2012-11-19 12:55:56 D_Chernyshenko: D = mesh.topology().dim()
+2012-11-19 12:55:56 D_Chernyshenko: for c in entities(mesh, D):
+2012-11-19 12:55:56 D_Chernyshenko: for v0 in entities(c, 0):
+2012-11-19 12:55:56 D_Chernyshenko: for v1 in entities(v0, 0):
+2012-11-19 12:55:56 D_Chernyshenko: print v1
+2012-11-19 12:56:14 D_Chernyshenko: Sorry, df.entities(mesh, o)[i] shoould do it
+2012-11-19 12:56:28 D_Chernyshenko: This is from taht section 10.3.2
+2012-11-19 12:56:52 D_Chernyshenko: Chapter 10. DOLFIN: A C++/Python finite element library => 10.3.2 Meshes
+2012-11-19 12:57:09 max_albert: Great, I'll experiment with that. I have tried lots of things along similar lines but often there are subtle issues with them.
+2012-11-19 12:57:11 D_Chernyshenko: I am pretty sure that there is more than one (more than two, even) ways to access this
+2012-11-19 12:57:42 D_Chernyshenko: But this should work, let me know if there are issues as I've successfully used this approach from C++
+2012-11-19 12:57:43 max_albert: For example,  "df.entities(mesh, o)[i]" doesn't work because the " df.entities(mesh, o)" doesn't support indexing (it's very similar to a Python iterator or a list, but not quite the same).
+2012-11-19 12:57:50 D_Chernyshenko: Gosh
+2012-11-19 12:58:00 max_albert: But you can say something like:
+2012-11-19 12:58:05 D_Chernyshenko: Anyway, that section of the book is where I learned about this
+2012-11-19 12:58:21 max_albert: ee = [e for e in df.entities(mesh, 0)]
+2012-11-19 12:58:22 D_Chernyshenko: I will try to now find the reference pages in the manual for this
+2012-11-19 12:58:23 max_albert: ee[i]
+2012-11-19 12:58:49 max_albert: Don't worry about it, I've taken up enough of your time. I'll try it out and get back to you if I still encounter problems.
+2012-11-19 12:58:52 D_Chernyshenko: Well, if you only need the vertex coordinates, I guess you don't need the vertex object itself
+2012-11-19 12:59:03 D_Chernyshenko: I would just iterate over the index and look up in mesh.coordinates()?
+2012-11-19 12:59:26 max_albert: Hmm, I still need to define a function on the mesh. But if I supply the function values in the same order as the coordinates, hopefully that'll be sufficient?
+2012-11-19 13:00:21 D_Chernyshenko: Yeah, that's one way - where does the function come from?
+2012-11-19 13:00:43 max_albert: In their example where they define a function on a SubDomain (p. 189 of the FEniCS book) they iterate over all entities of a given dimension (e.g. cell or facets).
+2012-11-19 13:01:15 max_albert: I initially wanted to try the same approach with vertices, where I just set the function values to 1 or 0 depending on whether the vertex is inside my desired subdomain or not.
+2012-11-19 13:01:41 max_albert: That's why I thought I needed to iterate over the vertices and extract their coordinates along the way.
+2012-11-19 13:02:17 max_albert: But I guess with your pointers above I can do this much more elegantly. The "errornorm" function should be particularly helpful, thanks for that!
+2012-11-19 13:02:20 D_Chernyshenko: Well for your case this might be the easiest way
+2012-11-19 13:02:42 D_Chernyshenko: To iterate over the index and do a test for the coordinates and then put 1 or 0 in the corresponding array
+2012-11-19 13:02:53 D_Chernyshenko: You might be even able to do this with a numpy expression without actually iterating :0
+2012-11-19 13:03:00 max_albert: Yes. :)
+2012-11-19 13:03:27 max_albert: I was also thinking of using dolfin.Expression(), but I don't know if it can deal with conditional expressions.
+2012-11-19 13:05:13 D_Chernyshenko: I think UFL can do that, but I've never used it
+2012-11-19 13:05:18 max_albert: Hmm, looks like there is some support for conditionals in UFL. I'll take a look.
+2012-11-19 13:05:45 D_Chernyshenko: Page 308/ section 17.4.5
+2012-11-19 13:06:04 max_albert: Thanks! :-)
+2012-11-19 13:06:59 max_albert: And again, thanks very much for all your help and suggestions. Much appreciated!
+2012-11-19 13:07:41 D_Chernyshenko: Speaking of the Fenics book, I've found some of the research studies there useful since they often use more advanced features than what's explained in the tutorial
+2012-11-19 13:08:07 D_Chernyshenko: I didn't really go deep into the actualy studies but just scanned the Python listings
+2012-11-19 13:08:35 max_albert: Yes, I've been meaning to take a closer look at the book for a while. Should maybe bump the priority. :) Good point about the research studies, too.
+2012-11-19 13:09:17 fangohr-adium: Hi Max, is now a god time for lunch?
+2012-11-19 13:09:31 max_albert: Yes, sure. Do you want me to pick you up?
+2012-11-19 13:09:44 fangohr-adium: OKay, will be right there.
+2012-11-19 13:09:55 max_albert: Great.
+2012-11-19 15:40:47 fangohr-adium: Hi Marc-Antonio, please come over when it is convenient — am back in the office now.
