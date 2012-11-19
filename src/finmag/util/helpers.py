@@ -10,7 +10,7 @@ import types
 import sys
 import os
 from finmag.util.meshes import mesh_volume
-from math import sqrt
+from math import sqrt, pow
 
 logger = logging.getLogger("finmag")
 
@@ -314,22 +314,28 @@ def plot_mesh(mesh, ax=None, color="blue", **kwargs):
     """
     dim = mesh.topology().dim()
 
+    # If the user doesn't explicitly specify a linewidth, we
+    # heuristically adapt it so that the plot doesn't appear all black
+    # because the lines are drawn too thick.
+    #
+    # There are certainly better ways to do this, but this seems to
+    # work reasonably well for most cases. (However, for very oblong
+    # structures it may make more sense to check the extent in each
+    # dimension individually rather than the mesh volume as a whole.)
+    if not kwargs.has_key('linewidth'):
+        lw_threshold = 500.0 if dim == 2 else 5000.0
+        a = mesh.num_cells()/mesh_volume(mesh)
+        if a > lw_threshold:
+            kwargs['linewidth'] = pow(lw_threshold / a, 1.0/dim)
+            logger.debug("Automatically adapting linewidth to improve plot quality "
+                         "(new value: linewidth = {})".format(kwargs['linewidth']))
+
     if dim == 2:
         ax = plt.gca()
         coords = mesh.coordinates()
         x = coords[:,0]
         y = coords[:,1]
         triangs = [[v.index() for v in df.vertices(s)]for s in df.faces(mesh)]
-
-        if not kwargs.has_key('linewidth'):
-            # If the user doesn't explicitly specify a linewidth, we
-            # heuristically adapt it so that the plot doesn't appear
-            # all black because the lines are drawn too thick.
-            a = mesh.num_cells()/mesh_volume(mesh)
-            if a > 500.0:
-                kwargs['linewidth'] = sqrt(500.0 / a)
-                logger.debug("Automatically adapting linewidth to improve plot quality "
-                             "(new value: linewidth = {})".format(kwargs['linewidth']))
 
         ## XXX TODO: It would be nice to have the triangles coloured.
         ## This should be possible using 'tripcolor', but I haven't
