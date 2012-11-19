@@ -177,7 +177,7 @@ PYTHON_ROOTS = $(DOC_DIR)/../src
 
 # Benchmark nmag example #2.
 timing:
-	cd ../examples/exchange_demag/timings/ && PYTHONPATH=$(PYTHON_ROOTS) python run_finmag.py
+	make -C ../examples/exchange_demag/timings/
 
 # Collect all .ipynb files in IPYTHON_NOTEBOOK_SRC_DIR and convert
 # them to .rst files in IPYTHON_NOTEBOOK_DEST_DIR, which are then
