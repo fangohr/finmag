@@ -25,6 +25,13 @@ log = logging.getLogger(name="finmag")
 
 
 class Simulation(object):
+    """
+    Unified interface to finmag's micromagnetic simulations capabilities.
+
+    Attributes:
+        t           the current simulation time
+
+    """
     def __init__(self, mesh, Ms, unit_length=1, integrator_backend="sundials"):
         """Simulation object.
 
