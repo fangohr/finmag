@@ -16,7 +16,7 @@ def test_airbox_method():
     value of the external field in the 'air' region coincides with the
     field of a dipole.
     """
-    mesh = from_geofile("cube.geo")
+    mesh = from_geofile("mesh.geo")
     # This holds the region number for each cell.
     mesh_function = df.MeshFunction("uint", mesh, "cube_mat.xml")
     print "TODO: Change the .geo file so that we define a sphere instead of a cube."
