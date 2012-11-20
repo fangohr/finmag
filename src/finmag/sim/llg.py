@@ -108,11 +108,15 @@ class LLG(object):
     @property
     def M(self):
         """The magnetisation, with length Ms."""
-        return self.Ms * self.m
+        m = self.m.view().reshape((3, -1))
+        Ms = self.Ms.vector().array() if isinstance(self.Ms, df.Function) else self.Ms
+        M = Ms * m
+        return M.ravel()
 
     @property
     def M_average(self):
         """The average magnetisation, computed with m_average()."""
+        #FIXME: Doesn't make sense as it stands now if we have non-constant Ms
         return self.Ms * self.m_average
 
     @property
