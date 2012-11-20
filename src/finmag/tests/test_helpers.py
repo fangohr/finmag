@@ -1,4 +1,5 @@
 import numpy as np
+import dolfin as df
 from finmag.util.helpers import *
 from finmag.util.meshes import box
 import pytest
@@ -205,3 +206,17 @@ def test_mesh_functions_allclose():
     f2 = df.interpolate(e2, CG1)
     assert mesh_functions_allclose(f1, f2, atol=1.0) == False
     assert mesh_functions_allclose(f1, f2, fun_mask=is_inside_unit_sphere, atol=1.0) == True
+
+def test_piecewise_on_subdomains():
+    """
+    Define a simple cubic mesh with three subdomains, create a function
+    which takes different values on these subdomains and check that the
+    resulting function really has the right values.
+    """
+    mesh = df.UnitCube(1, 1, 1)
+    fun_vals = {1: 42, 2: 23, 3: -3.14}
+    g = df.MeshFunction('uint', mesh, 3)
+    g.array()[:] = [1, 1, 2, 3, 1, 3]
+    p = piecewise_on_subdomains(mesh, g, fun_vals)
+    assert(isinstance(p, df.Function))  # check that p is a proper Function, not a MeshFunction
+    assert(np.allclose(p.vector().array(), np.array([42, 42, 23, -3.14, 42, -3.14])))
