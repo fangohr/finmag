@@ -2464,3 +2464,20 @@ fangohr: Still testing ...
 2012-11-19 13:09:44 fangohr-adium: OKay, will be right there.
 2012-11-19 13:09:55 max_albert: Great.
 2012-11-19 15:40:47 fangohr-adium: Hi Marc-Antonio, please come over when it is convenient — am back in the office now.
+2012-11-20 11:05:44 fangohr-adium: Good Morning.
+2012-11-20 11:27:10 max_albert: Good morning.
+2012-11-20 11:43:32 max_albert: Hi MA, here is the link which describes the IPython notebook in more detail: http://ipython.org/ipython-doc/dev/interactive/htmlnotebook.html
+2012-11-20 11:43:54 max_albert: Especially handy is the section "Running a public notebook server".
+2012-11-20 11:44:14 mb8g11: Thanks.
+2012-11-20 11:44:40 max_albert: They describe how to create a separate profile for running the notebook server, which is useful if you'd like to keep the configuration settings separate from the normal ones.
+2012-11-20 11:49:22 max_albert: Just for the record (and because it may be of interest to others), I use this all the time to log into my uni computer from home, for example.
+2012-11-20 11:50:32 max_albert: If you have an ipython notebook server running on your machine (I keep mine in a 'screen' session) then you can just steer your web browser to your machine (using the port number and password that you set in the configuration) and then work as if you were working at your computer.
+2012-11-20 11:50:44 max_albert: Works like a charm and is really useful. :)
+2012-11-20 11:51:44 mb8g11: Interesting!
+2012-11-20 11:59:24 max_albert: MA: https://mail.google.com/mail/u/0/#inbox/13b1bd0ab209de3c
+2012-11-20 11:59:54 mb8g11: No ;)
+2012-11-20 12:00:15 max_albert: Sorry!
+2012-11-20 12:00:17 max_albert: https://answers.launchpad.net/dolfin/+question/214692
+2012-11-20 12:00:36 max_albert: Only saw it last night and haven't looked at it in detail yet, but it may help with the subdomain-function problem.
+2012-11-20 12:05:02 mb8g11: Thanks for the link. I think it solves a different problem - how to get the MeshFunction. We already have it though.
+2012-11-20 12:05:18 max_albert: Ah, ok.
