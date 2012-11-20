@@ -19,11 +19,11 @@ def test_airbox_method():
     """
     mesh = from_geofile("mesh.geo")
     mesh_region = df.MeshFunction("uint", mesh, "mesh_mat.xml")
-    midpoints = [[c.midpoint() for c in df.cells(mesh) if mesh_region[c.index()] == region]
-            for region in (1, 2)]
 
-    #plot_mesh_regions(mesh_region, regions=[1, 2], colors=["green", "red"], alphas=[1.0, 0.25])
-    plot_mesh_regions(mesh_region, regions=1)
+    # Visualise mesh regions to check they look right (this will be
+    # removed in the final test).
+    plot_mesh_regions(mesh_region, regions=[1, 2], colors=["green", "red"],
+                      alphas=[1.0, 0.25])
 
     # Define different values for the saturation magnetisation on each subdomain
     Ms_vals = (8.6e5, 0)
