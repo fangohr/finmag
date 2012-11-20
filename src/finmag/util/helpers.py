@@ -574,3 +574,36 @@ def mesh_functions_allclose(f1, f2, fun_mask=None, rtol=1e-05, atol=1e-08):
     v1 = f1.vector()
     v2 = f2.vector()
     return np.allclose(np.fabs(v1*mask - v2*mask), 0.0, rtol=rtol, atol=atol)
+
+
+def piecewise_on_subdomains(mesh, mesh_function, fun_vals):
+    """
+    Constructs and returns a dolfin Function which is piecewise constant on
+    certain subdomains of a mesh.
+
+    *Arguments*
+
+    mesh : dolfin Mesh
+        The mesh on which the new function will be defined.
+
+    mesh_function : dolfin MeshFunction
+        A function assigning to each cell the subdomain index (an integer) to
+        which this cell belongs.
+
+    fun_vals : dictionary
+        A dictionary associating each subdomain index with the corresponding
+        function value.
+
+    *Returns*
+
+    A dolfin Function which is piecewise constant on subdomains and on the
+    subdomain with index `idx` assumes the value given by `fun_vals[idx]`.
+    """
+    if not isinstance(fun_vals, types.DictType):
+        raise TypeError("'fun_vals' must be a dictionary which associates each subdomain index with the corresponding function value")
+    dim = mesh.topology().dim()
+    subdomain_indices = mesh_function.array()
+    V = df.FunctionSpace(mesh, 'DG', 0)
+    f = df.Function(V)
+    f.vector()[:]= np.array(map(lambda i: fun_vals[i], subdomain_indices))
+    return f
