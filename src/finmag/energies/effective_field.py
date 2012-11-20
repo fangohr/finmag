@@ -11,6 +11,21 @@ class EffectiveField(object):
         self._callables = []
 
     def add(self, field, with_time_update=None):
+        """
+        Add an interaction (such as Exchange, Anisotropy, Demag).
+
+        *Arguments:*
+
+        interaction
+
+             The interaction to be added.
+
+         with_time_update (optional)
+
+             A function of the form f(t), which accepts a time step
+             `t` as its only single parameter and updates the internal
+             state of the interaction accordingly.
+        """
         self.interactions.append(field)
 
         if isinstance(field, Exchange):

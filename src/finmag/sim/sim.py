@@ -85,15 +85,17 @@ class Simulation(object):
         """
         Add an interaction (such as Exchange, Anisotropy, Demag).
 
-        *Arguments*
+        *Arguments:*
 
-           interaction      -- the interaction to be added
+        interaction
 
-           with_time_update -- a function of the form f(t), which
-                               accepts a time step `t` as its only
-                               single parameter and updates the
-                               internal state of the interaction
-                               accordingly
+             The interaction to be added.
+
+         with_time_update (optional)
+
+             A function of the form f(t), which accepts a time step
+             `t` as its only single parameter and updates the internal
+             state of the interaction accordingly.
         """
         interaction.setup(self.S3, self.llg._m, self.Ms, self.unit_length)
         self.llg.effective_field.add(interaction, with_time_update)
