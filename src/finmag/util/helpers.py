@@ -493,23 +493,22 @@ def piecewise_on_subdomains(mesh, mesh_function, fun_vals):
         The mesh on which the new function will be defined.
 
     mesh_function : dolfin MeshFunction
-        A function assigning to each cell the subdomain index (an integer) to
+        A function assigning to each cell the subdomain number to
         which this cell belongs.
 
-    fun_vals : dictionary
-        A dictionary associating each subdomain index with the corresponding
-        function value.
+    fun_vals : sequence
+        The function values for the returned function, where the first
+        value provided corresponds to the first region defined in the mesh
+        and so on.
 
     *Returns*
 
-    A dolfin Function which is piecewise constant on subdomains and on the
+    A dolfin function which is piecewise constant on subdomains and on the
     subdomain with index `idx` assumes the value given by `fun_vals[idx]`.
     """
-    if not isinstance(fun_vals, types.DictType):
-        raise TypeError("'fun_vals' must be a dictionary which associates each subdomain index with the corresponding function value")
-    dim = mesh.topology().dim()
-    subdomain_indices = mesh_function.array()
     V = df.FunctionSpace(mesh, 'DG', 0)
     f = df.Function(V)
-    f.vector()[:]= np.array(map(lambda i: fun_vals[i], subdomain_indices))
+
+    help = np.asarray(mesh_function.array() - 1, dtype=np.int32)
+    f.vector()[:] = np.choose(help, fun_vals)
     return f
