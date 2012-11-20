@@ -19,7 +19,10 @@ import hashlib
 import tempfile
 import dolfin as df
 import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 from dolfin import Mesh, assemble, Constant, dx
+from types import ListType, TupleType
 
 logger = logging.getLogger(name='finmag')
 
@@ -572,3 +575,115 @@ def plot_mesh(mesh, ax=None, color="blue", **kwargs):
         raise ValueError("Plotting is only supported for 2- and 3-dimensional meshes.")
 
     return ax
+
+
+def plot_mesh_regions(fun_mesh_regions, regions, colors=None, alphas=None,
+                      adjust_axis_limits=True, ax=None, **kwargs):
+    """
+    Visualise particular regions/subdomains of a mesh by plotting
+    markers at the midpoints of all cells belonging to the specified
+    region(s). If multiple regions are to be plotted, different
+    colours are used to distinguish them.
+
+    *Arguments*
+
+    fun_mesh_regions : dolfin.CellFunction
+
+        A dolfin.MeshFunction defined on the cells of the mesh. It
+        should take integer values which indicate for each cell which
+        mesh region it belongs to.
+
+    regions : int or list of ints
+
+        The region(s) to plot.
+
+    colors : single color or list of colors
+
+        Colors to be used for the markers of the individual regions.
+        If the number of supplied colors is shorter than the number of
+        regions, colors from the beginning of the list will be reused.
+
+    alphas : float or list of floats
+
+        Alpha (= transparency) values to be used for the markers of
+        the individual regions. If the number of supplied alpha values
+        is shorter than the number of regions to be plotted, values
+        from the beginning of the list will be reused.
+
+    adjust_axis_limits : boolean
+
+        If this is True then the x-, y- and z-axis limits are
+        automatically adjusted to the minimum/maximum x-coordinate of
+        the mesh. This means that parts of the plot will appear to be
+        empty if the region to be plotted only covers part of the
+        mesh.
+
+        The reason for this behaviour is that it can be quite
+        confusing if a region appears to fill the entire screen (due
+        to matplotlib automatically adjusting the axis limits) when it
+        is only supposed to cover a small part of the mesh. If this is
+        behaviour is undesired, set `adjust_axis_limits` to False. If
+        necessary, you can also explicitly call 'ax.set_xlim3d()' (and
+        similarly for y and z limits) on the Axis object which is
+        returned from this function.
+
+    ax : None or matplotlib.axes.Axes3DSubplot
+
+        If `ax` is not given, an appropriate Axes object is created
+        automatically.
+
+    **kwargs
+
+        All keyword arguments are passed on to the matplotlib's
+        `scatter3d` function.
+
+    *Returns*
+
+    The Axes object in which the mesh was plotted (either the one
+    provided by the user or the one which was automatically created).
+    """
+    def _ensure_is_list(arg):
+        return arg if isinstance(arg, (ListType, TupleType)) else [arg]
+
+    # Default values for color and alpha
+    colors = colors or "blue"
+    alphas = alphas or 1.0
+
+    regions = _ensure_is_list(regions)
+    colors = _ensure_is_list(colors)
+    alphas = _ensure_is_list(alphas)
+
+    if not isinstance(regions, (ListType, TupleType)):
+        raise TypeError("Argument 'region' must be a single integer "
+                        "or a list of integers. "
+                        "Got: '{}' ({})".format(region, type(region)))
+
+    if ax is None:
+        ax = plt.gca(projection='3d')
+
+    mesh = fun_mesh_regions.mesh()
+    midpoints = [[c.midpoint() for c in df.cells(mesh)
+                  if fun_mesh_regions[c.index()] == r] for r in regions]
+
+    pts = [[(pt.x(), pt.y(), pt.z()) for pt in m] for m in midpoints]
+
+    num_regions = len(regions)
+    num_colors = len(colors)
+    num_alphas = len(alphas)
+
+    for i in xrange(num_regions):
+        pts_region = pts[i]
+        ax.scatter3D(*zip(*pts_region), color=colors[i % num_colors],
+                      alpha = alphas[i % num_alphas], **kwargs)
+
+    if adjust_axis_limits:
+        print "Adjusting axis limits"
+        coords = mesh.coordinates()
+        xs = coords[:, 0]
+        ys = coords[:, 1]
+        zs = coords[:, 2]
+        ax.set_xlim3d(min(xs), max(xs))
+        ax.set_ylim3d(min(ys), max(ys))
+        ax.set_zlim3d(min(zs), max(zs))
+
+    plt.show()
