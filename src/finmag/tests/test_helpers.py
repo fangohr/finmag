@@ -1,5 +1,6 @@
 import numpy as np
 from finmag.util.helpers import *
+from finmag.util.meshes import box
 import pytest
 
 TOLERANCE = 1e-15
@@ -173,3 +174,34 @@ def test_pointing_downwards():
     assert not pointing_downwards((0, 0, 1))
     assert not pointing_downwards((-0.5, -0.5, 0.8))
     assert not pointing_downwards((-0.5, 0.5, -0.4))
+
+
+def test_mesh_functions_allclose():
+    """
+    First we define a cuboid mesh stretching from -2.0 to 2.0 in all
+    three dimensions. Then wedefine two functions on this mesh:
+
+        f1(r) = 1/r   where r is the distance to the origin
+        f2(r) = 1.0   constant over the mesh
+
+    Finally, we compare these two functios with absolute tolerance 1.0,
+    first on the whole mesh and then only outside the unit sphere.
+
+    The first comparison should return False because f1 takes on very
+    large values close to the origin. However, the second comparison
+    should return True since f1 only takes values between 0 and 1
+    outside the unit sphere.
+    """
+    mesh = box(-2.0, -2.0, -2.0, 2.0, 2.0, 2.0, maxh=0.5)
+    CG1 = df.FunctionSpace(mesh, 'CG', 1)
+    e1 = df.Expression('1.0/sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2])')
+    f1 = df.interpolate(e1, CG1)
+    e2 = df.Expression('1.0')
+
+    def is_inside_unit_sphere(pt):
+        (x, y, z) = pt
+        return (x*x + y*y + z*z) < 1.0
+
+    f2 = df.interpolate(e2, CG1)
+    assert mesh_functions_allclose(f1, f2, atol=1.0) == False
+    assert mesh_functions_allclose(f1, f2, fun_mask=is_inside_unit_sphere, atol=1.0) == True
