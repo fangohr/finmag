@@ -1,10 +1,11 @@
 import os
 import dolfin as df
 import matplotlib.pyplot as plt
-from finmag.util.meshes import from_geofile
+from finmag.util.meshes import from_geofile, plot_mesh_regions
 from finmag.util.helpers import piecewise_on_subdomains
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 
 def test_airbox_method():
     """
@@ -21,13 +22,8 @@ def test_airbox_method():
     midpoints = [[c.midpoint() for c in df.cells(mesh) if mesh_region[c.index()] == region]
             for region in (1, 2)]
 
-    pts1 = [(m.x(), m.y(), m.z()) for m in midpoints[0]]
-    pts2 = [(m.x(), m.y(), m.z()) for m in midpoints[1]]
-
-    ax = plt.gca(projection='3d')
-    ax.scatter3D(*zip(*pts1), color="green")
-    ax.scatter3D(*zip(*pts2), color="red", alpha=0.3)
-    plt.show()
+    #plot_mesh_regions(mesh_region, regions=[1, 2], colors=["green", "red"], alphas=[1.0, 0.25])
+    plot_mesh_regions(mesh_region, regions=1)
 
     # Define different values for the saturation magnetisation on each subdomain
     Ms_vals = {
@@ -36,3 +32,5 @@ def test_airbox_method():
         }
     Ms = piecewise_on_subdomains(mesh, mesh_region, Ms_vals)
 
+if __name__ == '__main__':
+    test_airbox_method()
