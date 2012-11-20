@@ -528,3 +528,49 @@ def pointing_downwards((x, y, z)):
     """
     _, theta, _ = cartesian_to_spherical((x, y, z))
     return abs(theta - np.pi) < (np.pi / 4) 
+
+
+def mesh_functions_allclose(f1, f2, fun_mask=None, rtol=1e-05, atol=1e-08):
+    """
+    Return True if the values and `f1` and `f2` are nearly identical at all
+    mesh nodes outside a given region.
+
+    The region to be ignored is defined by `fun_mask`. This should be a
+    function which accept a mesh node (= a tuple or list of coordinates) as its
+    single argument and returns True or False, depending on whether the node
+    lies within the region to be masked out. The values of `f1` and `f2` are
+    then ignored at nodes where `fun_mask` evaluates to True (if `fun_mask` is
+    None, all node values are taken into account).
+
+    Note that the current implementation assumes that the degrees of freedom
+    of both functions are at the mesh nodes (in particular, f1 and f2 should
+    not be elements of a Discontinuous Galerkin function space, for example).
+
+    *Arguments*
+
+    f1, f2 : dolfin Functions
+        The functions to be compared.
+
+    fun_mask : None or dolfin Function
+        Indicator function of the region which should be ignored.
+
+    rtol, atol : float
+        The relative/absolute tolerances used for comparison. These have the same
+        meaning as for numpy.allclose().
+    """
+    # XXX FIXME: This is a very crude implementation for now. It should be refined
+    #            once I understand how to properly deal with dolfin Functions, in
+    #            particular how to use the product of funtions.
+    if f1.function_space() != f2.function_space():
+        raise ValueError("Both functions must be defined on the same FunctionSpace")
+    V = f1.function_space()
+    pts = V.mesh().coordinates()
+
+    if fun_mask is None:
+        mask = np.ones(len(pts))
+    else:
+        mask = np.array(map(lambda pt: 0.0 if fun_mask(pt) else 1.0, pts))
+
+    v1 = f1.vector()
+    v2 = f2.vector()
+    return np.allclose(np.fabs(v1*mask - v2*mask), 0.0, rtol=rtol, atol=atol)
