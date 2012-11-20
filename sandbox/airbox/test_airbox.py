@@ -24,6 +24,7 @@ def test_airbox_method():
     # removed in the final test).
     plot_mesh_regions(mesh_region, regions=[1, 2], colors=["green", "red"],
                       alphas=[1.0, 0.25])
+    plt.show()
 
     # Define different values for the saturation magnetisation on each subdomain
     Ms_vals = (8.6e5, 0)
