@@ -30,9 +30,6 @@ def test_airbox_method():
     plt.show()
 
     # Define different values for the saturation magnetisation on each subdomain
-    Ms_vals = {
-        1: 1e6,  # region 1 = Permalloy
-        2: 0,    # region 2 = "air"
-        }
+    Ms_vals = (8.6e5, 0)
     Ms = piecewise_on_subdomains(mesh, mesh_region, Ms_vals)
 
