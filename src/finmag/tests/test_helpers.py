@@ -214,7 +214,7 @@ def test_piecewise_on_subdomains():
     resulting function really has the right values.
     """
     mesh = df.UnitCube(1, 1, 1)
-    fun_vals = {1: 42, 2: 23, 3: -3.14}
+    fun_vals = (42, 23, -3.14)
     g = df.MeshFunction('uint', mesh, 3)
     g.array()[:] = [1, 1, 2, 3, 1, 3]
     p = piecewise_on_subdomains(mesh, g, fun_vals)
