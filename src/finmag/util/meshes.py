@@ -686,4 +686,4 @@ def plot_mesh_regions(fun_mesh_regions, regions, colors=None, alphas=None,
         ax.set_ylim3d(min(ys), max(ys))
         ax.set_zlim3d(min(zs), max(zs))
 
-    plt.show()
+    return ax
