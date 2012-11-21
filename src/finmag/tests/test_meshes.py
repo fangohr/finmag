@@ -118,3 +118,22 @@ def test_ellipsoid():
     vol_exact = 4.0/3*pi*r1*r2*r3
     vol_mesh = mesh_volume(mesh)
     assert(abs(vol_mesh - vol_exact)/vol_exact < TOLERANCE)
+
+def test_plot_mesh_regions():
+    """
+    This test simply calls the function
+    `finmag.util.meshes.plot_mesh_regions` to see if it can be called
+    with different arguments without error. No checking of the output
+    figure is done whatsoever.
+    """
+
+    # Write csg string to a temporary file
+    mesh = from_geofile(os.path.join(MODULE_DIR, "sphere_in_cube.geo"))
+    mesh_regions = df.MeshFunction("uint", mesh, os.path.join(MODULE_DIR, "sphere_in_cube_mat.xml"))
+
+    # Call plot_mesh_regions with a variety of different arguments
+    ax = plot_mesh_regions(mesh_regions, regions=1)
+    plot_mesh_regions(mesh_regions, regions=1, colors="green", ax=ax)
+    plot_mesh_regions(mesh_regions, regions=[1, 2])
+    plot_mesh_regions(mesh_regions, regions=[1, 2], colors=["green", "red"],
+                      alphas=[1.0, 0.25])
