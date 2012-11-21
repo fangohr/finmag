@@ -165,10 +165,6 @@ namespace {
 
         }
 
-    	void Hello(){
-    		printf("length haha=%d\n",length);
-    	}
-
     	void run_step(const np_array<double> &H) {
     		double *h = H.data();
     		double *m = M.data();
@@ -318,7 +314,199 @@ namespace {
     };
 
 
-}
+
+    class RungeKuttaStochasticIntegrator {
+    public:
+
+    	RungeKuttaStochasticIntegrator(
+            const np_array<double> &M,
+            const np_array<double> &M_pred,
+            const np_array<double> &T,
+            const np_array<double> &V,
+            double dt,
+            double gamma_LL,
+            double lambda,
+            double Tc,
+            double Ms,
+            bool do_precession,
+            bp::object _rhs_func):
+            M(M),
+            M_pred(M_pred),
+            T_arr(T),
+            V_arr(V),
+            dt(dt),
+            gamma_LL(gamma_LL),
+            lambda(lambda),
+            Tc(Tc),
+            Ms(Ms),
+            do_precession(do_precession),
+            rhs_func(_rhs_func)
+            {
+        		assert(M.size()==3*T.size());
+        		length=M.size();
+        		dm_c= new double[length];
+        		dm_pred= new double[length];
+        		eta_perp= new double[length];
+        		eta_par= new double[length];
+
+        		for (int i = 0; i < length; i++){
+        			eta_perp[i]=0;
+        			eta_par[i]=0;
+        		}
+
+        		initial_random();
+
+        		if (_rhs_func.is_none()) throw std::invalid_argument("RungeKuttaStochasticIntegrator::RungeKuttaStochasticIntegrator: _rhs_func is None");
+
+         }
+
+        ~RungeKuttaStochasticIntegrator(){
+
+
+        	if (dm_pred!=0){
+        		delete[] dm_pred;
+        	}
+
+        	if (dm_c!=0){
+        	    delete[] dm_c;
+        	}
+
+        	if (eta_perp!=0){
+        	    delete[] eta_perp;
+        	}
+
+        	if (eta_par!=0){
+        	    delete[] eta_par;
+        	}
+
+        }
+
+    	void run_step(const np_array<double> &H) {
+    		double *h = H.data();
+    		double *m = M.data();
+    		double *m_pred=M_pred.data();
+
+    		gauss_random_vec(eta_perp,length,sqrt(2*dt));
+    		gauss_random_vec(eta_par,length,sqrt(2*dt));
+
+            bp::call<void>(rhs_func.ptr(),M);
+
+    		calc_llb_adt_plus_bdw(m,h,dm_pred);
+
+    		for (int i = 0; i < length; i++){
+    			m_pred[i] = m[i] + dm_pred[i];
+    		}
+
+    		gauss_random_vec(eta_perp,length,sqrt(2*dt));
+    		gauss_random_vec(eta_par,length,sqrt(2*dt));
+
+    		bp::call<void>(rhs_func.ptr(), M_pred);
+
+    		calc_llb_adt_plus_bdw(m_pred,h,dm_c);
+
+    		for (int i = 0; i < length; i++){
+    			m[i] += 0.5*(dm_c[i] + dm_pred[i]);
+    		}
+
+    	}
+
+
+
+    private:
+        int length;
+        np_array<double> M,M_pred,T_arr,V_arr;
+        double dt,gamma_LL,lambda,Tc,Ms;
+        double *dm_pred, *dm_c,*eta_perp, *eta_par;
+        bool do_precession;
+
+        bp::object rhs_func;
+
+
+        //double cur_t, default_dt;
+
+        void calc_llb_adt_plus_bdw(
+        					double *m,
+        					double *h,
+        					double *dm
+        					) {
+
+
+                double *T = T_arr.data();
+                double *V = V_arr.data();
+                int len=T_arr.size();
+
+                double precession_coeff = -gamma_LL;
+                double damping_coeff = gamma_LL*lambda;
+
+                // calculate dm
+                int i1,i2,i3;
+                for (int i = 0; i < len; i++) {
+                	i1=i;
+                	i2=len+i1;
+                	i3=len+i2;
+
+                    // add precession: m x H, multiplied by -gamma
+                    if (do_precession) {
+                        dm[i1] = precession_coeff*dt*(m[i2]*h[i3]-m[i3]*h[i2]);
+                        dm[i2] = precession_coeff*dt*(m[i3]*h[i1]-m[i1]*h[i3]);
+                        dm[i3] = precession_coeff*dt*(m[i1]*h[i2]-m[i2]*h[i1]);
+                    } else {
+                        dm[i1] = 0.;
+                        dm[i2] = 0.;
+                        dm[i3] = 0.;
+                    }
+
+
+                    double mh = m[i1] * h[i1] + m[i2] * h[i2] + m[i3] * h[i3];
+                    double mm = m[i1] * m[i1] + m[i2] * m[i2] + m[i3] * m[i3];
+
+                    if(mm<10000){
+
+                    	printf("%e\n",sqrt(mm));
+                    }
+
+                    //m x (m x H) == (m.H)m - (m.m)H,
+                    double a_perp = alpha_perp(T[i1], Tc);
+                    double a_par = alpha_par(T[i1], Tc);
+                    double damp1 = (a_par-a_perp) * damping_coeff / mm * mh;
+                    double damp2 = a_perp * damping_coeff;
+                    dm[i1] += (m[i1] * damp1 + h[i1] * damp2)*dt;
+                    dm[i2] += (m[i2] * damp1 + h[i2] * damp2)*dt;
+                    dm[i3] += (m[i3] * damp1 + h[i3] * damp2)*dt;
+
+
+
+                    double Q_perp =  sqrt(
+                            (2.*constant_K_B)*T[i]*(a_perp - a_par) /
+                            (gamma_LL * Ms * V[i] * a_perp * a_perp * lambda)
+                        );
+
+                    double Q_par =sqrt(
+                            (2.*gamma_LL*constant_K_B/lambda)*T[i]*a_par /
+                            (Ms * V[i])
+                        );
+
+                    double meta = m[i1] * eta_perp[i1] + m[i2] * eta_perp[i2] + m[i3] * eta_perp[i3];
+
+                    double damp3 = -a_perp * damping_coeff / mm * meta;
+                    dm[i1] += (m[i1] * damp3 + eta_perp[i1] * damp2)*Q_perp;
+                    dm[i2] += (m[i2] * damp3 + eta_perp[i2] * damp2)*Q_perp;
+                    dm[i3] += (m[i3] * damp3 + eta_perp[i3] * damp2)*Q_perp;
+
+                    dm[i1] += Q_par*eta_par[i1];
+                    dm[i2] += Q_par*eta_par[i2];
+                    dm[i3] += Q_par*eta_par[i3];
+                }
+            }
+
+    };
+
+ }
+
+
+
+
+
 
     void register_llb() {
     	using namespace bp;
@@ -354,10 +542,21 @@ namespace {
     			    bool,
     			    bool,
     			    bp::object>())
-    	        	.def("Hello", &HeunStochasticIntegrator::Hello)
-    	        	.def("run_step", &HeunStochasticIntegrator::run_step)
-    	        ;
+    	        	.def("run_step", &HeunStochasticIntegrator::run_step);
 
+    	class_<RungeKuttaStochasticIntegrator>("RungeKuttaStochasticIntegrator", init<
+    			 	np_array<double>,
+    			 	np_array<double>,
+    			    np_array<double>,
+    			    np_array<double>,
+    			    double,
+    			    double,
+    			    double,
+    			    double,
+    			    double,
+    			    bool,
+    			    bp::object>())
+    	        	.def("run_step", &RungeKuttaStochasticIntegrator::run_step);
     }
 
 

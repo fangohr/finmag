@@ -424,7 +424,7 @@ class FastDemag():
 
 class Demag():
     
-    def __init__(self,triangle_p=1,tetrahedron_p=1,p=6,mac=0.5,num_limit=400):
+    def __init__(self,triangle_p=1,tetrahedron_p=1,p=3,mac=0.3,num_limit=100):
         
 	self.triangle_p=triangle_p
         self.tetrahedron_p=tetrahedron_p
@@ -439,13 +439,13 @@ class Demag():
         self.Vv=Vv
         self.Ms=Ms
 	self.mesh=Vv.mesh()
+        self.find_max_d()
+        self.mesh.coordinates()[:]/=self.max_d
+        
         self.V=FunctionSpace(self.mesh, 'Lagrange', 1)
         self.phi = Function(self.V)
         self.phi_charge = Function(self.V)
         self.field = Function(self.Vv)
-
-	self.find_max_d()
-	self.mesh.coordinates()[:]/=self.max_d
 
         u = TrialFunction(self.V)
         v = TestFunction(self.Vv)
@@ -518,27 +518,25 @@ if __name__ == "__main__":
     n=10
     #mesh = UnitCube(n, n, n)
     #mesh = Box(-1, 0, 0, 1, 1, 1, 10, 2, 2)
-    mesh = UnitSphere(10)
+    mesh = UnitSphere(5)
+    mesh.coordinates()[:]*=1
     
     Vv = df.VectorFunctionSpace(mesh, 'Lagrange', 1)
     
     Ms = 8.6e5
-    expr = df.Expression(('cos(x[0])', 'sin(x[0])','0'))
-    m = interpolate(expr, Vv)
+    #expr = df.Expression(('cos(x[0])', 'sin(x[0])','0'))
+    
     m = interpolate(Constant((1, 0, 0)), Vv)
     
     
-    demag=Demag(triangle_p=1,tetrahedron_p=1)
+    demag=Demag(triangle_p=1,tetrahedron_p=1,mac=0)
     demag.setup(Vv,m,Ms)
     demag.compute_field()
-    #demag.fast_sum.free_memory()
+    print '='*100,'exact\n',demag.res
+    exact=demag.res
     
-    #cProfile.run('demag.compute_field();')
-    
-    #print len(mesh.coordinates())
-    
-    #print np.array(demag.compute_field())
-    
-    
-    
-    
+    for p in [2,3,4,5,6,7]:
+        demag=Demag(triangle_p=1,tetrahedron_p=1,mac=0.4,p=p)
+        demag.setup(Vv,m,Ms)
+        demag.compute_field()
+        print '='*100,'mac=0.4 p=%d\n'%p,np.average(np.abs((demag.res-exact)/exact))
