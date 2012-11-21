@@ -8,7 +8,7 @@ class EffectiveField(object):
     def __init__(self, mesh):
         self._output_shape = 3 * mesh.num_vertices()
         self.interactions = []
-        self._callables = []
+        self._callables = []  # functions for time update of interactions
 
     def add(self, field, with_time_update=None):
         """
@@ -38,9 +38,13 @@ class EffectiveField(object):
         if with_time_update:
             self._callables.append(with_time_update)
 
-    def compute(self, t):
-        for func in self._callables:
-            func(t)
+    def compute(self, t=None):
+        if t is not None:
+            for func in self._callables:
+                func(t)
+        else:
+            if self._callables != []:
+                raise ValueError("Some interactions require a time update, but no time step was given.")
 
         H_eff = np.zeros(self._output_shape)
         for interaction in self.interactions:
