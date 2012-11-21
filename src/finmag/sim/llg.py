@@ -184,7 +184,7 @@ class LLG(object):
                 m, H_eff, self.t, dmdt, self.pins,
                 self.gamma, self.alpha_vec,
                 char_time,
-                self.J, self.P, self.d, self.Ms, self.p)
+                self.J, self.P, self.d, self.Ms.vector().array(), self.p)
         else:
             native_llg.calc_llg_dmdt(m, H_eff, self.t, dmdt, self.pins,
                                  self.gamma, self.alpha_vec,
@@ -332,14 +332,20 @@ class LLG(object):
         """
         Activates the computation of the Slonczewski spin-torque term in the LLG.
 
-        J is the current density in A/m^2 as a dolfin expression,
+        J is the current density in A/m^2 as a number, dolfin function or expression,
         P is the polarisation (between 0 and 1),
         d the thickness of the free layer in m,
         p the direction (unit length) of the polarisation as a triple.
 
         """
         self.do_slonczewski = True
-        J = df.interpolate(J, self.S1)
+
+        if isinstance(J, df.Expression):
+            J = df.interpolate(J, self.S1)
+        if not isinstance(J, df.Function):
+            func = df.Function(self.S1)
+            func.assign(df.Constant(J))
+            J = func
         self.J = J.vector().array()
         assert P >= 0.0 and P <= 1.0
         self.P = P
@@ -347,3 +353,8 @@ class LLG(object):
         polarisation = df.Function(self.S3)
         polarisation.assign(df.Constant((p)))
         self.p = polarisation.vector().array().reshape((3, -1))
+
+        if not isinstance(self.Ms, df.Function):
+            Ms = df.Function(self.S1)
+            Ms.assign(df.Constant(self.Ms))
+            self.Ms = Ms

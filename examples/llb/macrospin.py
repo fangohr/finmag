@@ -89,7 +89,7 @@ def SeriesTemperatureTest(mesh):
     
 
 def StochasticSpinTest(mesh,T):
-    mat = Material(mesh, name='FePt')
+    mat = Material(mesh, name='Nickel')
     #mat = Material(mesh)
     mat.set_m((1, 0, 0))
     mat.T = T
@@ -133,7 +133,7 @@ if __name__ == '__main__':
     nz = 1
     mesh = df.Box(x0, y0, z0, x1, y1, z1, nx, ny, nz)
     
-    mesh =df.Interval(1,0,50e-9)
+    #mesh =df.Interval(1,0,50e-9)
     print mesh.coordinates()
     mat = Material(mesh, name='Nickel')
     mat.set_m((1, 1, 1))
@@ -141,8 +141,8 @@ if __name__ == '__main__':
     print mat.T
    
     #print SpinTest(mesh,640,'Nickel')
-    SeriesTemperatureTest(mesh)
-    #StochasticSpinTest(mesh,400)
+    #SeriesTemperatureTest(mesh)
+    print StochasticSpinTest(mesh,660)
     
     
 
