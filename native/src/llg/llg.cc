@@ -18,10 +18,10 @@
 
 namespace finmag { namespace llg {
     namespace {
-        const double e = 1.602176565e-19; // elementary charge in As
-        const double h_bar = 1.054571726e-34; // reduced Plank constant in Js
-        const double pi = 4 * atan(1);
-        const double mu_0 = pi * 4e-7; // Vacuum permeability in Vs/(Am)
+        double const e = 1.602176565e-19; // elementary charge in As
+        double const h_bar = 1.054571726e-34; // reduced Plank constant in Js
+        double const pi = 4 * atan(1);
+        double const mu_0 = pi * 4e-7; // Vacuum permeability in Vs/(Am)
 
         // Components of the cross product
         inline double cross0(double a0, double a1, double a2, double b0, double b1, double b2) { return a1*b2 - a2*b1; }
@@ -32,13 +32,13 @@ namespace finmag { namespace llg {
         Compute the damping for one node.
         */
         void damping_i(
-                const double alpha, const double gamma,
+                double const alpha, double const gamma,
                 double &m0, double &m1, double &m2,
                 double &h0, double &h1, double &h2,
                 double &dm0, double &dm1, double &dm2) {
-            const double damping_coeff = - gamma * alpha / (1 + pow(alpha, 2));
-            const double mh = m0 * h0 + m1 * h1 + m2 * h2;
-            const double mm = m0 * m0 + m1 * m1 + m2 * m2;
+            double const damping_coeff = - gamma * alpha / (1 + pow(alpha, 2));
+            double const mh = m0 * h0 + m1 * h1 + m2 * h2;
+            double const mm = m0 * m0 + m1 * m1 + m2 * m2;
             dm0 += damping_coeff * (m0 * mh - h0 * mm); 
             dm1 += damping_coeff * (m1 * mh - h1 * mm); 
             dm2 += damping_coeff * (m2 * mh - h2 * mm); 
@@ -50,17 +50,17 @@ namespace finmag { namespace llg {
             (mp*H + m*Hp)*m + (m*H)mp - 2(m*mp)H - (m*m)*Hp
         */
         void dm_damping_i(
-                const double alpha, const double gamma,
+                double const alpha, double const gamma,
                 double const &m0, double const &m1, double const &m2,
                 double const &mp0, double const &mp1, double const &mp2,
                 double const &h0, double const &h1, double const &h2,
                 double const &hp0, double const &hp1, double const &hp2,
                 double &jtimes0, double &jtimes1, double &jtimes2) {
-            const double damping_coeff = - gamma * alpha / (1 + pow(alpha, 2));
-            const double mph_mhp = mp0 * h0 + mp1 * h1 + mp2 * h2 + m0 * hp0 + m1 * hp1 + m2 * hp2;
-            const double mh = m0 * h0 + m1 * h1 + m2 * h2;
-            const double mm = m0 * m0 + m1 * m1 + m2 * m2;
-            const double mmp = m0 * mp0 + m1 * mp1 + m2 * mp2;
+            double const damping_coeff = - gamma * alpha / (1 + pow(alpha, 2));
+            double const mph_mhp = mp0 * h0 + mp1 * h1 + mp2 * h2 + m0 * hp0 + m1 * hp1 + m2 * hp2;
+            double const mh = m0 * h0 + m1 * h1 + m2 * h2;
+            double const mm = m0 * m0 + m1 * m1 + m2 * m2;
+            double const mmp = m0 * mp0 + m1 * mp1 + m2 * mp2;
             jtimes0 += damping_coeff * (mph_mhp * m0 + mh * mp0 - 2 * mmp * h0 - mm * hp0);
             jtimes1 += damping_coeff * (mph_mhp * m1 + mh * mp1 - 2 * mmp * h1 - mm * hp1);
             jtimes2 += damping_coeff * (mph_mhp * m2 + mh * mp2 - 2 * mmp * h2 - mm * hp2);
@@ -70,11 +70,11 @@ namespace finmag { namespace llg {
         Compute the precession for one node.
         */
         void precession_i(
-                const double alpha, const double gamma,
+                double const alpha, double const gamma,
                 double &m0, double &m1, double &m2,
                 double &h0, double &h1, double &h2,
                 double &dm0, double &dm1, double &dm2) {
-            const double precession_coeff = - gamma / (1 + (pow(alpha, 2)));
+            double const precession_coeff = - gamma / (1 + (pow(alpha, 2)));
             dm0 += precession_coeff * cross0(m0, m1, m2, h0, h1, h2);
             dm1 += precession_coeff * cross1(m0, m1, m2, h0, h1, h2);
             dm2 += precession_coeff * cross2(m0, m1, m2, h0, h1, h2);
@@ -85,13 +85,13 @@ namespace finmag { namespace llg {
         m x H --> m' x H + m x H'
         */
         void dm_precession_i(
-                const double alpha, const double gamma,
+                double const alpha, double const gamma,
                 double const &m0, double const &m1, double const &m2,
                 double const &mp0, double const &mp1, double const &mp2,
                 double const &h0, double const &h1, double const &h2,
                 double const &hp0, double const &hp1, double const &hp2,
                 double &jtimes0, double &jtimes1, double &jtimes2) {
-            const double precession_coeff = - gamma / (1 + (pow(alpha, 2)));
+            double const precession_coeff = - gamma / (1 + (pow(alpha, 2)));
             jtimes0 += precession_coeff * (cross0(mp0, mp1, mp2, h0, h1, h2) + cross0(m0, m1, m2, hp0, hp1, hp2));
             jtimes1 += precession_coeff * (cross1(mp0, mp1, mp2, h0, h1, h2) + cross1(m0, m1, m2, hp0, hp1, hp2));
             jtimes2 += precession_coeff * (cross2(mp0, mp1, mp2, h0, h1, h2) + cross2(m0, m1, m2, hp0, hp1, hp2));
@@ -101,11 +101,11 @@ namespace finmag { namespace llg {
         Compute the relaxation for one node.
         */
         void relaxation_i(
-                const double c,
+                double const c,
                 double &m0, double &m1, double &m2,
                 double &dm0, double &dm1, double &dm2) {
-            const double mm = m0 * m0 + m1 * m1 + m2 * m2;
-            const double relax_coeff = c * (1.0 - mm); 
+            double const mm = m0 * m0 + m1 * m1 + m2 * m2;
+            double const relax_coeff = c * (1.0 - mm); 
             dm0 += relax_coeff * m0;
             dm1 += relax_coeff * m1;
             dm2 += relax_coeff * m2;
@@ -116,12 +116,12 @@ namespace finmag { namespace llg {
         (1 - m*m) * m --> - 2 * m*mp * m + (1 - m*m) * mp
         */
         void dm_relaxation_i(
-                const double relax_coeff,
+                double const relax_coeff,
                 double const &m0, double const &m1, double const &m2,
                 double const &mp0, double const &mp1, double const &mp2,
                 double &jtimes0, double &jtimes1, double &jtimes2) {
-            const double mm = m0 * m0 + m1 * m1 + m2 * m2;
-            const double mmp = m0 * mp0 + m1 * mp1 + m2 * mp2;
+            double const mm = m0 * m0 + m1 * m1 + m2 * m2;
+            double const mmp = m0 * mp0 + m1 * mp1 + m2 * mp2;
             jtimes0 += relax_coeff * (-2 * mmp * m0 + (1.0 - mm) * mp0);
             jtimes1 += relax_coeff * (-2 * mmp * m1 + (1.0 - mm) * mp1);
             jtimes2 += relax_coeff * (-2 * mmp * m2 + (1.0 - mm) * mp2);
@@ -203,17 +203,17 @@ namespace finmag { namespace llg {
          * Compute the Slonczewski/Xiao spin-torque term.
          */
         void slonczewski_xiao_i(
-                const double alpha, const double gamma, const double lambda,
-                const double J, const double P, const double d, const double Ms,
+                double const alpha, double const gamma, double const lambda,
+                double const J, double const P, double const d, double const Ms,
                 double const &m0, double const &m1, double const &m2,
                 double const &p0, double const &p1, double const &p2,
                 double &dm0, double &dm1, double &dm2) {
-            const double gamma_LL = gamma / (1 + pow(alpha, 2));
-            const double epsilon = P * pow(lambda, 2) / (pow(lambda, 2) + 1 + (pow(lambda, 2) - 1) * (m0*p0 + m1*p1 + m2*p2));
-            const double stt_coeff = gamma_LL * J * h_bar / (mu_0 * Ms * e * d) * epsilon;
+            double const gamma_LL = gamma / (1 + pow(alpha, 2));
+            double const epsilon = P * pow(lambda, 2) / (pow(lambda, 2) + 1 + (pow(lambda, 2) - 1) * (m0*p0 + m1*p1 + m2*p2));
+            double const stt_coeff = gamma_LL * J * h_bar / (mu_0 * Ms * e * d) * epsilon;
 
-            const double mm = m0 * m0 + m1 * m1 + m2 * m2; /* for the triple product expansion */
-            const double mp = m0 * p0 + m1 * p1 + m2 * p2;
+            double const mm = m0 * m0 + m1 * m1 + m2 * m2; /* for the triple product expansion */
+            double const mp = m0 * p0 + m1 * p1 + m2 * p2;
 
             /* stt_coeff * (alpha * m x p - m x (m x p)) */
             dm0 += stt_coeff * (alpha * cross0(m0,m1,m2, p0,p1,p2) - (mp * m0 - mm * p0));
@@ -225,18 +225,18 @@ namespace finmag { namespace llg {
         Compute the Slonczewski spin-torque term for one node.
         */
         void slonczewski_i(
-                const double alpha, const double gamma,
-                const double J, const double P, const double d, const double Ms,
+                double const alpha, double const gamma,
+                double const J, double const P, double const d, double const Ms,
                 double const &m0, double const &m1, double const &m2,
                 double const &p0, double const &p1, double const &p2,
                 double &dm0, double &dm1, double &dm2) {
 
-            const double gamma_LL = gamma / (1 + pow(alpha, 2));
-            const double mm = m0 * m0 + m1 * m1 + m2 * m2;
-            const double mp = m0 * p0 + m1 * p1 + m2 * p2;
+            double const gamma_LL = gamma / (1 + pow(alpha, 2));
+            double const mm = m0 * m0 + m1 * m1 + m2 * m2;
+            double const mp = m0 * p0 + m1 * p1 + m2 * p2;
 
-            const double a_P = 4 * pow(sqrt(P) / (1 + P), 3);
-            const double stt_coeff = gamma_LL * J * h_bar / (mu_0 * Ms * e * d) * a_P / (3 + mp - 4 * a_P); 
+            double const a_P = 4 * pow(sqrt(P) / (1 + P), 3);
+            double const stt_coeff = gamma_LL * J * h_bar / (mu_0 * Ms * e * d) * a_P / (3 + mp - 4 * a_P); 
 
             dm0 += stt_coeff * (alpha * cross0(m0, m1, m2, p0, p1, p2) - (mp * m0 - mm * p0));
             dm1 += stt_coeff * (alpha * cross1(m0, m1, m2, p0, p1, p2) - (mp * m1 - mm * p1));
@@ -253,9 +253,9 @@ namespace finmag { namespace llg {
                 const np_array<double> &alpha,
                 double char_time,
                 const np_array<double> &J,
-                const double P,
-                const double d,
-                const double Ms,
+                double const P,
+                double const d,
+                double const Ms,
                 const np_array<double> &p) {
             const int nodes = check_dimensions(alpha, m, H, dmdt);
             double *m0 = m(0), *m1 = m(1), *m2 = m(2);
