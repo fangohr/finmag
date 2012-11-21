@@ -3,10 +3,10 @@ import run as sim
 import numpy as np
 
 epsilon = 1e-16
-tolerance = 1e-3
+tolerance = 1e-4
 nmag_file = os.path.join(sim.MODULE_DIR, "averages_nmag5.txt")
 
-def _test_oscillator():
+def test_oscillator():
     sim.run_simulation()
 
     averages = np.loadtxt(sim.averages_file)
