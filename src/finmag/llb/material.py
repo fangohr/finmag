@@ -231,7 +231,7 @@ class Material(object):
         native_llb.compute_relaxation_field(self._T, self.m, self.h,
                                             self.Tc,self.m_e,
                                             self.inv_chi_par)
-        print 'fields',self.inv_chi_par,self.h
+        #print 'fields',self.inv_chi_par,self.h
         return self.h
 
     
