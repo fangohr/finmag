@@ -184,7 +184,7 @@ class LLG(object):
                 m, H_eff, self.t, dmdt, self.pins,
                 self.gamma, self.alpha_vec,
                 char_time,
-                self.J, self.P, self.d, self.Ms, self.p)
+                self.J, self.P, self.d, self.Ms.vector().array(), self.p)
         else:
             native_llg.calc_llg_dmdt(m, H_eff, self.t, dmdt, self.pins,
                                  self.gamma, self.alpha_vec,
@@ -347,3 +347,8 @@ class LLG(object):
         polarisation = df.Function(self.S3)
         polarisation.assign(df.Constant((p)))
         self.p = polarisation.vector().array().reshape((3, -1))
+
+        if not isinstance(self.Ms, df.Function):
+            Ms = df.Function(self.S1)
+            Ms.assign(df.Constant(self.Ms))
+            self.Ms = Ms
