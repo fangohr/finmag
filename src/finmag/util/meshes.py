@@ -65,11 +65,16 @@ def from_geofile(geofile, save_result=True):
 
     if os.path.isfile(result_filename):
         result_file_exists = True
-        if os.path.getctime(result_filename) < os.path.getctime(geofile) and save_result==False:
-            # TODO: If save_result is False but the .xml.gz file already exists, it will be updated (hence, saved) anyway. Is this desired?
-            logger.warn("The mesh file '{}' is outdated (since it is older than the .geo file '{}') and will be overwritten.".format(result_filename, geofile))
+        if os.path.getmtime(result_filename) < os.path.getmtime(geofile):
+            # TODO: If save_result is False but the .xml.gz file
+            # already exists, it will be updated (hence, saved)
+            # anyway. Is this desired?
+            logger.warn("The mesh file '{}' is outdated (since it is "
+                        "older than the .geo file '{}') and will be "
+                        "overwritten.".format(result_filename, geofile))
         else:
-            logger.debug("The mesh %s already exists, and is automatically returned." % result_filename)
+            logger.debug("The mesh '{}' already exists and is "
+                         "automatically returned.".format(result_filename))
             skip_mesh_creation = True
 
     if not skip_mesh_creation:

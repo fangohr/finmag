@@ -1,22 +1,23 @@
 import os
+import re
 import shutil
 import tempfile
 import textwrap
 from finmag.util.meshes import *
 from dolfin import Mesh
 from math import pi
+from StringIO import StringIO
+
+import logging
+logger = logging.getLogger("finmag")
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 TOLERANCE = 0.05
 BOX_TOLERANCE = 1e-10 # tolerance for the box() method, which should be much more precise
 
-# Note: the test below is disabled for the time being because it adds
-# some time to the execution of the test suite but doesn't provide
-# much benefit (apart from checking a few corner cases). So it can
-# probably be deleted.
-def disabled_test_from_geofile_and_from_csg():
+def test_from_geofile_and_from_csg():
     radius = 1.0
-    maxh = 0.5
+    maxh = 0.3
 
     tmpdir = tempfile.mkdtemp()
     tmpfile = tempfile.NamedTemporaryFile(suffix='.geo', dir=tmpdir, delete=False)
@@ -45,22 +46,45 @@ def disabled_test_from_geofile_and_from_csg():
         assert(isinstance(mesh2, Mesh))
         assert(os.path.isfile(xmlfile))
 
-        # Again, read the mesh form the .geo file, but this time it should be read instantaneously (TODO: how do we check this in the test?)
+        # Capture logging output in a string-stream
+        stream = StringIO()
+        handler = logging.StreamHandler(stream)
+        logger.addHandler(handler)
+
+        # Read the mesh form the .geo file again, but this time it
+        # should be read instantaneously.
         mesh3 = from_geofile(geofile, save_result=True)
         assert(isinstance(mesh3, Mesh))
         assert(os.path.isfile(xmlfile))
+        handler.flush()
+        assert(stream.getvalue() == "The mesh '{}' already exists and is "
+               "automatically returned.\n".format(xmlfile))
+
+        # 'Touch' the .geo file so that it is newer than the .xml.gz
+        # file. Then check that upon reading the mesh the .xml.gz file
+        # is recreated.
+        stream.truncate(0)  # clear stream
+        os.utime(geofile, None)  # update the 'last modified' timestamp
+        mesh4 = from_geofile(geofile, save_result=True)
+        assert(isinstance(mesh4, Mesh))
+        assert(os.path.isfile(xmlfile))
+        handler.flush()
+        assert(stream.getvalue().startswith("The mesh file '{}' is outdated "
+               "(since it is older than the .geo file '{}') and will "
+               "be overwritten.\n".format(xmlfile, geofile)))
 
         # Create a mesh from a CSG string directly
-        mesh4 = from_csg(csg_string, save_result=False)
+        mesh5 = from_csg(csg_string, save_result=False)
 
         # Check that the volume of the sphere is approximately correct
         vol_exact = 4.0/3*pi*radius**2
-        for mesh in [mesh1, mesh2, mesh3, mesh4]:
+        for mesh in [mesh1, mesh2, mesh3, mesh4, mesh5]:
             vol_mesh = mesh_volume(mesh)
             assert(abs(vol_mesh - vol_exact)/vol_exact < TOLERANCE)
     finally:
         tmpfile.close()
         shutil.rmtree(tmpdir)
+
 
 def test_box():
     # We deliberately choose the two corners so that x1 > y1, to see
