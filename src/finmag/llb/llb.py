@@ -57,7 +57,7 @@ class LLB(object):
         self.use_evans2012_noise = use_evans2012_noise
         
         M_pred=np.zeros(self.m.shape)
-        
+        """
         integrator = native_llb.HeunStochasticIntegrator(
                                     self.m,
                                     M_pred,
@@ -70,6 +70,20 @@ class LLB(object):
                                     self.material.Ms0,
                                     self.do_precession,
                                     self.use_evans2012_noise,
+                                    self.stochastic_rhs)
+        """
+        
+        integrator = native_llb.RungeKuttaStochasticIntegrator(
+                                    self.m,
+                                    M_pred,
+                                    self.material.T,
+                                    self.vol,
+                                    self.dt,
+                                    self.gamma_LL,
+                                    self.alpha,
+                                    self.material.Tc,
+                                    self.material.Ms0,
+                                    self.do_precession,
                                     self.stochastic_rhs)
                                     
         self.integrator = integrator
