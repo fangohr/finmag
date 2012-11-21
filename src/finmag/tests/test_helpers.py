@@ -207,6 +207,7 @@ def test_mesh_functions_allclose():
     assert mesh_functions_allclose(f1, f2, atol=1.0) == False
     assert mesh_functions_allclose(f1, f2, fun_mask=is_inside_unit_sphere, atol=1.0) == True
 
+
 def test_piecewise_on_subdomains():
     """
     Define a simple cubic mesh with three subdomains, create a function
@@ -220,3 +221,49 @@ def test_piecewise_on_subdomains():
     p = piecewise_on_subdomains(mesh, g, fun_vals)
     assert(isinstance(p, df.Function))  # check that p is a proper Function, not a MeshFunction
     assert(np.allclose(p.vector().array(), np.array([42, 42, 23, -3.14, 42, -3.14])))
+
+
+def test_vector_field_from_dolfin_function():
+    """
+    Create a dolfin.Function representing a vector field on a mesh and
+    convert it to a vector field on a regular grid using
+    `vector_field_from_dolfin_function()`. Then compare the resulting
+    values with the ones obtained by directly computing the field
+    values from the grid coordinates and check that they coincide.
+    """
+
+    (xmin, xmax) = (-2, 3)
+    (ymin, ymax) = (-1, 2.5)
+    (zmin, zmax) = (0.3, 5)
+    (nx, ny, nz) = (10, 10, 10)
+
+    # Create dolfin.Function representing the vector field. Note that
+    # we use linear expressions so that they can be accurately
+    # represented by the linear interpolation on the mesh.
+    mesh = box(xmin, ymin, zmin, xmax, ymax, zmax, maxh=1.0)
+    V = df.VectorFunctionSpace(mesh, 'CG', 1, dim=3)
+    e = df.Expression(('-1.0 - 3*x[0] + x[1]',
+                       '+1.0 + 4*x[1] - x[2]',
+                       '0.3 - 0.8*x[0] - 5*x[1] + 0.2*x[2]'))
+    f = df.interpolate(e, V)
+
+    X, Y, Z = np.mgrid[xmin:xmax:nx*1j, ymin:ymax:ny*1j, zmin:zmax:nz*1j]
+
+    # Evaluate the vector field on the grid to create the reference arrays.
+    U = -1.0 - 3*X + Y
+    V = +1.0 + 4*Y - Z
+    W = 0.3 - 0.8*X - 5*Y + 0.2*Z
+
+    # Now convert the dolfin.Function to a vector field and compare to
+    # the reference arrays.
+    X2, Y2, Z2, U2, V2, W2 = \
+        vector_field_from_dolfin_function(f, (xmin, xmax), (ymin, ymax),
+                                          (zmin, zmax), nx=nx, ny=ny, nz=nz)
+
+    assert(np.allclose(X, X2))
+    assert(np.allclose(Y, Y2))
+    assert(np.allclose(Z, Z2))
+
+    assert(np.allclose(U, U2))
+    assert(np.allclose(V, V2))
+    assert(np.allclose(W, W2))

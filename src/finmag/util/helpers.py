@@ -512,3 +512,77 @@ def piecewise_on_subdomains(mesh, mesh_function, fun_vals):
     help = np.asarray(mesh_function.array() - 1, dtype=np.int32)
     f.vector()[:] = np.choose(help, fun_vals)
     return f
+
+
+def vector_field_from_dolfin_function(f, xlims=None, ylims=None, zlims=None,
+                                      nx=None, ny=None, nz=None):
+    """
+    Probes a (vector-valued) dolfin.Function `f`: R^3 -> R^3 on a
+    rectangular grid.
+
+    It returns six arrays `x`, `y`, `z`, `u`, `v`, `w` representing
+    the grid coordinates and vector field components, respectively,
+    which can be used for plotting, etc.
+
+    The arguments `xlims`, `ylims`, `zlims`, `nx`, `ny`, `nz` can be
+    used to control the extent and coarseness of the grid.
+
+
+    *Arguments*
+
+    xlims, ylims, zlims : pair of floats
+
+        The extent of the grid along the x-/y-/z-axis. If no value is
+        provided, the minimum/maximum mesh coordinates are used along
+        each axis.
+
+    nx, ny, nz : int
+
+        The grid spacings along the x-/y-/z/axis. If no value is
+        provided, a sensible default is derived from the average cell
+        size of the mesh.
+
+
+    *Returns*
+
+    The arrays `x`, `y`, `z`, `u`, `v`, `w`. Each of these has shape
+    (nx, ny, nz). The first three are the same as would be returned by
+    the command:
+
+       numpy.mgrid[xmin:xmax:nx*1j, ymin:ymax:ny*1j, zmin:zmax:nz*1j]
+
+    """
+    mesh = f.function_space().mesh()
+    coords = mesh.coordinates()
+
+    def _find_limits(limits, i):
+        return limits if (limits != None) else (min(coords[:, i]), max(coords[:, i]))
+
+    (xmin, xmax) = _find_limits(xlims, 0)
+    (ymin, ymax) = _find_limits(ylims, 1)
+    (zmin, zmax) = _find_limits(zlims, 2)
+
+    print "Limits:"
+    print "xmin, xmax: {}, {}".format(xmin, xmax)
+    print "ymin, ymax: {}, {}".format(ymin, ymax)
+    print "zmin, zmax: {}, {}".format(zmin, zmax)
+
+    if nx == None or ny == None or nz == None:
+        raise NotImplementedError("Please provide specific values "
+                                  "for nx, ny, nz for now.")
+
+    X, Y, Z = np.mgrid[xmin:xmax:nx*1j, ymin:ymax:ny*1j, zmin:zmax:nz*1j]
+
+    U = np.empty((nx, ny, nz))
+    V = np.empty((nx, ny, nz))
+    W = np.empty((nx, ny, nz))
+
+    for i in xrange(nx):
+        for j in xrange(ny):
+            for k in xrange(nz):
+                val = f(X[i,j,k], Y[i, j, k], Z[i, j, k])
+                U[i, j, k] = val[0]
+                V[i, j, k] = val[1]
+                W[i, j, k] = val[2]
+
+    return X, Y, Z, U, V, W
