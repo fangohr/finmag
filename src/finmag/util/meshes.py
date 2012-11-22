@@ -584,7 +584,7 @@ def plot_mesh(mesh, ax=None, color="blue", **kwargs):
 
 
 def plot_mesh_regions(fun_mesh_regions, regions, colors=None, alphas=None,
-                      markers=None, marker_sizes=None, zoom_to_mesh_size=True,
+                      markers='.', marker_sizes=None, zoom_to_mesh_size=True,
                       ax=None, **kwargs):
     """
     Visualise particular regions/subdomains of a mesh by plotting
