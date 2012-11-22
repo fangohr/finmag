@@ -680,7 +680,7 @@ def plot_mesh_regions(fun_mesh_regions, regions, colors=None, alphas=None,
     if not isinstance(regions, (ListType, TupleType)):
         raise TypeError("Argument 'region' must be a single integer "
                         "or a list of integers. "
-                        "Got: '{}' ({})".format(region, type(region)))
+                        "Got: '{}' ({})".format(regions, type(regions)))
 
     if ax is None:
         ax = plt.gca(projection='3d')
