@@ -12,6 +12,7 @@ set the desired length scale when reading the mesh into Finmag!
 
 import os
 import sys
+import copy
 import commands
 import logging
 import textwrap
@@ -583,7 +584,8 @@ def plot_mesh(mesh, ax=None, color="blue", **kwargs):
 
 
 def plot_mesh_regions(fun_mesh_regions, regions, colors=None, alphas=None,
-                      adjust_axis_limits=True, ax=None, **kwargs):
+                      markers=None, marker_sizes=None, zoom_to_mesh_size=True,
+                      ax=None, **kwargs):
     """
     Visualise particular regions/subdomains of a mesh by plotting
     markers at the midpoints of all cells belonging to the specified
@@ -615,19 +617,33 @@ def plot_mesh_regions(fun_mesh_regions, regions, colors=None, alphas=None,
         is shorter than the number of regions to be plotted, values
         from the beginning of the list will be reused.
 
-    adjust_axis_limits : boolean
+    markers : single marker or list of markers
+
+        Markers to be used for the markers of the individual regions.
+        If the number of supplied markers is shorter than the number
+        of regions to be plotted, values from the beginning of the
+        list will be reused.
+
+    marker_sizes : float or list of float
+
+        Sizes for the markers of the individual regions.
+        If the number of supplied markers is shorter than the number
+        of regions to be plotted, values from the beginning of the
+        list will be reused.
+
+    zoom_to_mesh_size : boolean
 
         If this is True then the x-, y- and z-axis limits are
         automatically adjusted to the minimum/maximum x-coordinate of
-        the mesh. This means that parts of the plot will appear to be
-        empty if the region to be plotted only covers part of the
-        mesh.
+        the mesh so that the visible region covers the extent of the
+        mesh. Note that if not all mesh regions are plotted, this
+        means that parts of the plot will appear to be empty.
 
         The reason for this behaviour is that it can be quite
         confusing if a region appears to fill the entire screen (due
         to matplotlib automatically adjusting the axis limits) when it
         is only supposed to cover a small part of the mesh. If this is
-        behaviour is undesired, set `adjust_axis_limits` to False. If
+        behaviour is undesired, set `zoom_to_mesh_size` to False. If
         necessary, you can also explicitly call 'ax.set_xlim3d()' (and
         similarly for y and z limits) on the Axis object which is
         returned from this function.
@@ -648,15 +664,18 @@ def plot_mesh_regions(fun_mesh_regions, regions, colors=None, alphas=None,
     provided by the user or the one which was automatically created).
     """
     def _ensure_is_list(arg):
-        return arg if isinstance(arg, (ListType, TupleType)) else [arg]
-
-    # Default values for color and alpha
-    colors = colors or "blue"
-    alphas = alphas or 1.0
+        res = arg
+        if res == None:
+            res = []
+        elif not isinstance (arg, (ListType, TupleType)):
+            res = [res]
+        return res
 
     regions = _ensure_is_list(regions)
     colors = _ensure_is_list(colors)
     alphas = _ensure_is_list(alphas)
+    markers = _ensure_is_list(markers)
+    sizes = _ensure_is_list(marker_sizes)
 
     if not isinstance(regions, (ListType, TupleType)):
         raise TypeError("Argument 'region' must be a single integer "
@@ -673,16 +692,28 @@ def plot_mesh_regions(fun_mesh_regions, regions, colors=None, alphas=None,
     pts = [[(pt.x(), pt.y(), pt.z()) for pt in m] for m in midpoints]
 
     num_regions = len(regions)
-    num_colors = len(colors)
-    num_alphas = len(alphas)
+
+    # TODO: More generic would be to create a dictionary here to which
+    # we add a color/alpha/... argument iff colors/alphas/... is not
+    # None. This allows us to leave the default to matplotlib if no
+    # value was explicitly set by the user (instead of creating an
+    # artificial default value).
+
+    def _suppy_args(arg_dict, name, lst, i):
+        if lst != []:
+            arg_dict[name] = lst[i % len(lst)]
 
     for i in xrange(num_regions):
+        arg_dict = copy.copy(kwargs)
+        _suppy_args(arg_dict, 'color', colors, i)
+        _suppy_args(arg_dict, 'alpha', alphas, i)
+        _suppy_args(arg_dict, 'marker', markers, i)
+        _suppy_args(arg_dict, 's', sizes, i)
         pts_region = pts[i]
-        ax.scatter3D(*zip(*pts_region), color=colors[i % num_colors],
-                      alpha = alphas[i % num_alphas], **kwargs)
+        ax.scatter3D(*zip(*pts_region), **arg_dict)
 
-    if adjust_axis_limits:
-        print "Adjusting axis limits"
+    if zoom_to_mesh_size:
+        logger.debug("Adjusting axis limits in order to zoom to mesh size")
         coords = mesh.coordinates()
         xs = coords[:, 0]
         ys = coords[:, 1]
