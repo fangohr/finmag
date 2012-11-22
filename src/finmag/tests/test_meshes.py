@@ -158,6 +158,9 @@ def test_plot_mesh_regions():
     # Call plot_mesh_regions with a variety of different arguments
     ax = plot_mesh_regions(mesh_regions, regions=1)
     plot_mesh_regions(mesh_regions, regions=1, colors="green", ax=ax)
-    plot_mesh_regions(mesh_regions, regions=[1, 2])
+    plot_mesh_regions(mesh_regions, regions=[1, 2], zoom_to_mesh_size=False)
     plot_mesh_regions(mesh_regions, regions=[1, 2], colors=["green", "red"],
                       alphas=[1.0, 0.25])
+    plot_mesh_regions(mesh_regions, regions=[1, 2], colors=["green", "red"],
+                      alphas=[1.0, 0.25], markers=['<', 'H'], marker_sizes=[20, 50])
+    plot_mesh_regions(mesh_regions, regions=[])  # sanity check (empty regions)
