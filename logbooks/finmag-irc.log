@@ -2481,3 +2481,59 @@ fangohr: Still testing ...
 2012-11-20 12:00:36 max_albert: Only saw it last night and haven't looked at it in detail yet, but it may help with the subdomain-function problem.
 2012-11-20 12:05:02 mb8g11: Thanks for the link. I think it solves a different problem - how to get the MeshFunction. We already have it though.
 2012-11-20 12:05:18 max_albert: Ah, ok.
+2012-11-22 11:58:36 D_Chernyshenko: Hi Max, is Hans in at the office?
+2012-11-22 13:39:48 max_albert: Hi Dmitri! Sorry, I only just now read your message as I went to the DTC coffee morning earlier.
+2012-11-22 13:39:56 max_albert: I haven't checked if Hans is there yet, but can quickly walk over if you want me to. Shall I do that?
+2012-11-22 13:40:09 D_Chernyshenko: It's fine thanks, we got in touch via email
+2012-11-22 13:41:08 max_albert: Ok, great! And sorry again for the delay.
+2012-11-22 14:17:52 fangohr-adium: Hi all.
+2012-11-22 14:17:52 fangohr-adium: Dmitri, to answer your earlier question: I am now in the office, but I guess we have sorted that by email already?
+2012-11-22 14:41:40 D_Chernyshenko: Yep!
+2012-11-22 15:10:44 ww1g11: Hi I got a problem in compiling finmag in the new machine, src/sundials/numpy_malloc.cc: In function ‘void* finmag::sundials::numpy_malloc(size_t, size_t)’:
+2012-11-22 15:10:44 ww1g11: File "/home/ww1g11/Softwares/finmag/native/src/sundials/numpy_malloc.cc", line 93 (33): error: narrowing conversion of ‘len’ from ‘size_t {aka long unsigned int}’ to ‘npy_intp {aka long int}’ inside { } [-Werror=narrowing]
+2012-11-22 15:11:54 ww1g11: any suggestion?
+2012-11-22 15:17:01 D_Chernyshenko: Hi Weiwei, what's the OS version and GCC version? And is this 64 bit? I'm checking the code meanwhile
+2012-11-22 15:17:44 ww1g11: gcc version 4.7.2 x86_64
+2012-11-22 15:17:55 D_Chernyshenko: Aha, what's the OS?
+2012-11-22 15:17:57 ww1g11:  (Ubuntu/Linaro 4.7.2-2ubuntu1)
+2012-11-22 15:18:14 D_Chernyshenko: I guess it's a new type of warning that gcc 4.7 picks up
+2012-11-22 15:18:19 D_Chernyshenko: Interesting
+2012-11-22 15:18:48 ww1g11: maybe I can try gcc 4.6 or 4.5
+2012-11-22 15:19:10 D_Chernyshenko: We should just fix the warning, a cast to npy_intp should do it
+2012-11-22 15:19:17 D_Chernyshenko: Trying to think what's the "proper" way to cast
+2012-11-22 15:19:25 D_Chernyshenko:         npy_intp dims[] = { len };
+2012-11-22 15:19:48 D_Chernyshenko: Ah well just cast it directly I guess
+2012-11-22 15:20:36 max_albert: Is a cast really the correct solution in all cases? Is it possible that the data gets truncated in some ways if the integer is too large? Sorry if this doesn't make any sense, I haven't really looked at the code, just trying to make sense of the warning message.
+2012-11-22 15:21:15 D_Chernyshenko: Exactly that's the idea of the warning message, since we're casting from unsigned to signed, in princple this can lead to loss of data if the number is negative
+2012-11-22 15:21:37 D_Chernyshenko: However since it's a 64-bit size_t, having an array that large is quite unlikely
+2012-11-22 15:22:27 max_albert: Could we make the 'len' variable an unsigned int? Wouldn't that fix it, too?
+2012-11-22 15:22:33 D_Chernyshenko: Just do npy_intp dims[] = { npy_intp(len) };
+2012-11-22 15:22:39 D_Chernyshenko: len is unsigned since it's size_t
+2012-11-22 15:22:46 D_Chernyshenko: npy_intp is signed according to that message
+2012-11-22 15:22:59 max_albert: Oh, of course. Sorry.
+2012-11-22 15:23:01 D_Chernyshenko: And npy_inpt is defined by numpy so we cannot change its definition
+2012-11-22 15:23:46 max_albert: True.
+2012-11-22 15:23:56 ww1g11: yeah, it solved the problem
+2012-11-22 15:24:04 D_Chernyshenko: What the code is doing it mallocs 'len' bytes then creates a numpy array of length 'len' with the malloc'ed data as the underlying buffer
+2012-11-22 15:24:19 D_Chernyshenko: I think a plain cast is fine, we're probably overthinking this
+2012-11-22 15:24:45 D_Chernyshenko: Feel free to check it in as well - is it compiling fine on 4.7 otherwise?
+2012-11-22 15:25:09 max_albert: Might be worth adding an error check before calling PyArray_SimpleNewFromData in the unlikely case that the data indeed gets too big, but you are probably right that it's hardly worth the hassle.
+2012-11-22 15:25:40 D_Chernyshenko: Yeah, this might only come into play if we try to get this working on a 32-bit machine
+2012-11-22 15:26:37 max_albert: However, I have encountered cases in the past where I thought this is never gonna be a problem, and six months down the line it hit me hard (and it took me hours to debug it). ;-)
+2012-11-22 15:26:45 ww1g11: it works for 4.7, by the way, is any significant difference between sundials 2.4 and 2.5? finmag doesn't work with 2.5
+2012-11-22 15:27:07 max_albert: Speaking of that, it would be awesome to get Finmag to work for 32-bit systems, too. Because then I could run it on my old Laptop. :-)
+2012-11-22 15:27:37 D_Chernyshenko: Hmm, not sure what changed in 2.5, but some changes might be required in nvector_serial_custom_malloc.c
+2012-11-22 15:27:59 D_Chernyshenko: Since it's a copy of the corresponding file from sundials
+2012-11-22 15:28:38 ww1g11: thanks, anyway it works for 2.4
+2012-11-22 15:29:13 D_Chernyshenko: There were a lot of changes between 2.3 and 2.4 guess we can talk about 2.5 at a group meeting?
+2012-11-22 15:30:54 ww1g11: I mentioned 2.5 is because the default version in ubuntu 12.10 is 2.5, but it's not a big problem
+2012-11-22 15:31:44 D_Chernyshenko: SUNDIALS 2.5 comes with CVODE 2.7 I think, which fixes quite a few bugs I ran into
+2012-11-22 15:31:55 D_Chernyshenko: But I don't think we can rely on 2.5 being present yet...
+2012-11-22 16:16:56 fangohr-adium: I didn't realise 12.10 is out. I am clearly out of touch. We should try to upgrade code as necessary to compile on 12.10 with it's default packages (such as sundials 2.5).
+2012-11-22 16:17:46 max_albert: Does that mean supporting both sundials 2.4 and 2.5 in parallel for a while? Or is sundials 2.5 available for 12.04, too?
+2012-11-22 22:14:32 fangohr: Hi, anybody still out there?
+2012-11-22 22:16:48 fangohr: Re: Does that mean supporting both sundials 2.4 and 2.5 in parallel for a while? I haven't thought about this, but yes, that would be the 'best' solution in the sense of portability between different Ubuntu releases. It would also allow us to use the latest sundials that fixes a few bugs that Dmitri discovered if we want to, but not force us to upgrade to 12.10 in a rush.
+2012-11-22 22:17:29 fangohr: We could of course install the sundials we need from source etc, but that complicates installation somewhat.
+2012-11-22 22:24:44 D_Chernyshenko: Yeah, I think using 2.4 and 2.5 in parallel is possible, but will need some looking into
+2012-11-22 22:25:11 D_Chernyshenko: It might just be easier using sundials from source, or at least having that as an option
+2012-11-22 22:25:37 D_Chernyshenko: I.e., rather than support 2.4 and 2.5, it might be easier to support 2.5 either from Ubuntu or from source as needed
