@@ -701,7 +701,9 @@ def plot_mesh_regions(fun_mesh_regions, regions, colors=None, alphas=None,
 
     def _suppy_args(arg_dict, name, lst, i):
         if lst != []:
-            arg_dict[name] = lst[i % len(lst)]
+            val = lst[i % len(lst)]
+            if val != None:
+                arg_dict[name] = val
 
     for i in xrange(num_regions):
         arg_dict = copy.copy(kwargs)
