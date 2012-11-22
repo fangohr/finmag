@@ -100,10 +100,6 @@ class UniaxialAnisotropy(EnergyBase):
         # decide on method.
         #self.E = -K*(df.dot(a, self.m))**2*df.dx
 
-        # Gradient
-        self.dE_dM = df.Constant(-1.0
-            / (Ms * mu0)) * df.derivative(E, self.M)
-
         # Volume
         self.vol = df.assemble(df.dot(self.v,
             df.Constant([1, 1, 1])) * df.dx).array()
