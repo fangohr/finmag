@@ -1,5 +1,6 @@
 import os
 import re
+import time
 import shutil
 import tempfile
 import textwrap
@@ -62,8 +63,13 @@ def test_from_geofile_and_from_csg():
 
         # 'Touch' the .geo file so that it is newer than the .xml.gz
         # file. Then check that upon reading the mesh the .xml.gz file
-        # is recreated.
+        # is recreated. Note that most machines have sub-millisecond
+        # precision in their timestamps, but on some systems (such as
+        # osiris) only full seconds seem to be stored. So we wait for
+        # one second to make sure that the .geo file is picked up as
+        # being newer.
         stream.truncate(0)  # clear stream
+        time.sleep(1)
         os.utime(geofile, None)  # update the 'last modified' timestamp
         mesh4 = from_geofile(geofile, save_result=True)
         assert(isinstance(mesh4, Mesh))
