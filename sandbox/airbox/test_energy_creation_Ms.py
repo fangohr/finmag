@@ -1,15 +1,33 @@
+import pytest
 import dolfin as df
 from finmag.util.helpers import fnormalise
 from finmag.energies import Exchange, UniaxialAnisotropy, Zeeman, Demag
 
 Ms = 8.6e5
-A = 1.3e-11
+
 
 def pytest_funcarg__fixt(request):
     fixt = request.cached_setup(setup=setup, scope="module")
     return fixt
 
+
 def setup():
+    """
+    Create a cuboid mesh representing a magnetic material and two
+    dolfin.Functions defined defined on this mesh:
+
+        m  -- unit magnetisation (linearly varying across the sample)
+
+        Ms_func -- constant function representing the saturation
+                   magnetisation Ms
+
+
+    *Returns*
+
+    A triple (m_space, m, Ms_func), where m_space is the
+    VectorFunctionSpace (of type "continuous Lagrange") on which the
+    magnetisation m is defined and m, Ms_funct are as above.
+    """
     mesh = df.Box(0, 0, 0, 10e-9, 10e-9, 10e-9, 5, 5, 5)
 
     m_space = df.VectorFunctionSpace(mesh, "CG", 1)
@@ -19,36 +37,24 @@ def setup():
     Ms_space = df.FunctionSpace(mesh, "DG", 0)
     Ms_func = df.interpolate(df.Constant(Ms), Ms_space)
 
-    return m, m_space, Ms_func
-
-def test_can_create_Exchange_object(fixt):
-    with_Ms_number = Exchange(A)
-    with_Ms_number.setup(fixt[1], fixt[0], Ms)
-
-    with_Ms_func = Exchange(A)
-    with_Ms_func.setup(fixt[1], fixt[0], fixt[2])
-
-def test_can_create_UniaxialAnisotropy_object(fixt):
-    with_Ms_number = UniaxialAnisotropy(1e5, (0, 0, 1))
-    with_Ms_number.setup(fixt[1], fixt[0], Ms)
-
-    with_Ms_func = UniaxialAnisotropy(1e5, (0, 0, 1))
-    with_Ms_func.setup(fixt[1], fixt[0], fixt[2])
-
-def test_can_create_Zeeman_object(fixt):
-    with_Ms_number = Zeeman((0, 0, Ms))
-    with_Ms_number.setup(fixt[1], fixt[0], Ms)
-
-    with_Ms_func = Zeeman((0, 0, Ms))
-    with_Ms_func.setup(fixt[1], fixt[0], fixt[2])
-
-def test_can_create_Demag_object(fixt):
-    with_Ms_number = Demag()
-    with_Ms_number.setup(fixt[1], fixt[0], Ms)
-
-    with_Ms_func = Demag()
-    with_Ms_func.setup(fixt[1], fixt[0], fixt[2])
+    return m_space, m, Ms_func
 
 
+@pytest.mark.parametrize(("EnergyClass", "init_args"), [
+        (Exchange, [1.3e-11]),
+        (UniaxialAnisotropy, [1e5, (0, 0, 1)]),
+        (Zeeman, [(0, 0, Ms)]),
+        (Demag, []),
+        ])
+def test_can_create_energy_object(fixt, EnergyClass, init_args):
+    """
+    Create two instances of the same energy class, once with a
+    constant number as Ms and once with a constant function.
+    """
+    S3, m, Ms_func = fixt
 
+    E1 = EnergyClass(*init_args)
+    E1.setup(S3, m, Ms)
 
+    E2 = EnergyClass(*init_args)
+    E2.setup(S3, m, Ms_func)
