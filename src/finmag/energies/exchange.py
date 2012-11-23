@@ -71,24 +71,24 @@ class Exchange(EnergyBase):
     def exchange_length(self):
         return exchange_length(self.A, self.Ms)
 
-    def setup(self, S3, M, Ms, unit_length=1):
+    def setup(self, S3, m, Ms, unit_length=1):
         timings.start('Exchange-setup')
 
         #expression for the energy
         self.exchange_factor = df.Constant(self.A / unit_length ** 2)
-        E = self.exchange_factor * df.inner(df.grad(M), df.grad(M)) * df.dx
+        E_integrand = self.exchange_factor * df.inner(df.grad(m), df.grad(m))
 
         # Needed for energy density
         S1 = df.FunctionSpace(S3.mesh(), "CG", 1)
         w = df.TestFunction(S1)
         nodal_E = df.dot(self.exchange_factor \
-                * df.inner(df.grad(M), df.grad(M)), w) * df.dx
+                * df.inner(df.grad(m), df.grad(m)), w) * df.dx
 
         super(Exchange, self).setup(
-                E=E,
+                E_integrand=E_integrand,
                 nodal_E=nodal_E,
                 S3=S3,
-                M=M,
+                m=m,
                 Ms=Ms,
                 unit_length=unit_length)
 
