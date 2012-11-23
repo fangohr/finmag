@@ -21,6 +21,7 @@ This module should not be used directly. Use
 when a native function or class is required.
 """
 import subprocess
+import logging
 import sys
 import os
 import re
@@ -30,6 +31,8 @@ __all__ = ["make_modules"]
 NATIVE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../../native")
 MODULES_OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../finmag/native")
 MAKEFILE = os.path.join(NATIVE_DIR, "Makefile")
+
+logger = logging.getLogger("finmag")
 
 def replace_c_errors_with_python_errors(s):
     repl = lambda m: r'File "%s", line %s (%s): ' % (os.path.abspath(os.path.join(NATIVE_DIR, m.group(1))), m.group(2), m.group(3))
@@ -51,6 +54,7 @@ def make_modules():
     global modules_compiled
     if not modules_compiled:
         if not os.environ.has_key('DISABLE_PYTHON_MAKE') and os.path.exists(MAKEFILE):
+            logger.debug("Building modules in 'native'...")
             run_make(["make"], cwd=NATIVE_DIR)
         modules_compiled = True
 
