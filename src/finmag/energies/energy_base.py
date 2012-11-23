@@ -137,7 +137,7 @@ class EnergyBase(AbstractEnergy):
         """Compose and return a string that is used for timing functions."""
         return 'EnergyBase-' + self.__class__.__name__ + '-' + functiondescription
 
-    def setup(self, E, nodal_E, S3, M, Ms, unit_length=1):
+    def setup(self, E_integrand, nodal_E, S3, m, Ms, unit_length=1):
         """Function to be called after the energy object has been constructed.
 
         *Arguments*
@@ -167,14 +167,15 @@ class EnergyBase(AbstractEnergy):
         timings.start(self._timingsname('setup'))
 
         self.S3 = S3
-        self.M = M  # keep reference to M
+
+        self.m = m  # keep reference to M
         self.Ms = Ms
         self.unit_length = unit_length
 
         self.v = df.TestFunction(S3)
-        self.E = E
-        self.dE_dM = df.Constant(-1.0 / (self.Ms * mu0)) \
-                    * df.derivative(self.E, self.M)
+        self.E = E_integrand
+        self.dE_dM = df.Constant(-1.0 / mu0) \
+                    * df.derivative(self.E / self.Ms * df.dx, self.m)
         #self.dE_dM = -1 * df.derivative(self.E, M, self.v)
         self.vol = df.assemble(df.dot(self.v, df.Constant([1, 1, 1]))
                                * df.dx).array()
@@ -295,7 +296,7 @@ class EnergyBase(AbstractEnergy):
         energy.
 
         """
-        g_form = df.derivative(self.dE_dM, self.M)
+        g_form = df.derivative(self.dE_dM, self.m)
         self.g = df.assemble(g_form).array()  # store matrix as numpy array
 
     def __setup_field_petsc(self):
@@ -303,7 +304,7 @@ class EnergyBase(AbstractEnergy):
         Same as __setup_field_numpy but with a petsc backend.
 
         """
-        g_form = df.derivative(self.dE_dM, self.M)
+        g_form = df.derivative(self.dE_dM, self.m)
         self.g_petsc = df.PETScMatrix()
         df.assemble(g_form, tensor=self.g_petsc)
         self.H_petsc = df.PETScVector()
@@ -321,12 +322,12 @@ class EnergyBase(AbstractEnergy):
         return df.assemble(self.dE_dM).array() / self.vol
 
     def __compute_field_numpy(self):
-        Mvec = self.M.vector().array()
+        Mvec = self.m.vector().array()
         H_ex = np.dot(self.g, Mvec)
         return H_ex / self.vol
 
     def __compute_field_petsc(self):
-        self.g_petsc.mult(self.M.vector(), self.H_petsc)
+        self.g_petsc.mult(self.m.vector(), self.H_petsc)
         return self.H_petsc.array() / self.vol
 
     def __compute_field_project(self):

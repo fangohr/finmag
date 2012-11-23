@@ -82,17 +82,14 @@ class UniaxialAnisotropy(EnergyBase):
 
         super(UniaxialAnisotropy, self).__init__(method, in_jacobian=True)
 
-    def setup(self, S3, M, Ms, unit_length=1):
+    def setup(self, S3, m, Ms, unit_length=1):
         timings.start('UniaxialAnisotropy-setup')
-
-        #self._m_normed = df.Function(S3)
-        self.M = M
 
         # Testfunction
         self.v = df.TestFunction(S3)
 
         # Anisotropy energy
-        E = self.K1 * (df.Constant(1) - (df.dot(self.axis, self.M)) ** 2) * df.dx
+        E_integrand = self.K1 * (df.Constant(1) - (df.dot(self.axis, m)) ** 2)
 
         # HF's version inline with nmag, breaks comparison with analytical
         # solution in the energy density test for anisotropy, as this uses
@@ -109,17 +106,17 @@ class UniaxialAnisotropy(EnergyBase):
         w = df.TestFunction(S1)
         self.nodal_vol = df.assemble(w * df.dx, mesh=S3.mesh()).array()
         nodal_E = df.dot(self.K1 * (df.Constant(1)
-                        - (df.dot(self.axis, self.m)) ** 2), w) * df.dx
+                        - (df.dot(self.axis, m)) ** 2), w) * df.dx
 
         # This is only needed if we want the energy density
         # as a df.Function, in order to e.g. probe.
         self.ED = df.Function(S1)
 
-        EnergyBase.setup(self,
-                E=E,
+        super(UniaxialAnisotropy, self).setup(
+                E_integrand=E_integrand,
                 nodal_E=nodal_E,
                 S3=S3,
-                M=M,
+                m=m,
                 Ms=Ms,
                 unit_length=unit_length)
 
@@ -153,13 +150,10 @@ class UniaxialAnisotropy(EnergyBase):
         of this function and comment the first return.
 
         """
-        return self.M  # old behaviour
+        return self.m  # old behaviour
 
         self._m_normed.vector()[:] = fnormalise(self._m.vector().array())
         return self._m_normed
-
-    m = property(normed_m)
-
 
 if __name__ == "__main__":
     from dolfin import *
