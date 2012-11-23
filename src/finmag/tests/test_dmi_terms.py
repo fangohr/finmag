@@ -16,9 +16,9 @@ def compare_dmi_term3d_with_dolfin(Mexp):
     print "Working on Mexp=",Mexp
     Mexp=df.Expression(Mexp)
     M = df.interpolate(Mexp,V1)
-    E = dmi_term3d(M,tf,1)[0]
+    E = dmi_term3d(M,tf,1)[0] * df.dx
     E1=df.assemble(E)
-    E_dolfin=dmi_term3d_dolfin(M,tf,1)[0]
+    E_dolfin=dmi_term3d_dolfin(M,tf,1)[0] * df.dx
     dolfin_curl = df.project(df.curl(M),V1)
     curlx,curly,curlz = dolfin_curl.split()
     print "dolfin-curlx=",df.assemble(curlx*df.dx)
@@ -39,9 +39,9 @@ def compare_dmi_term2d_with_dolfin(Mexp):
     V2d = df.VectorFunctionSpace(mesh,"CG",1)
     M2d = df.interpolate(Mexp,V2d)
     M = df.interpolate(Mexp,V1)
-    E = dmi_term2d(M2d,tf,1)[0]
+    E = dmi_term2d(M2d,tf,1)[0] * df.dx
     E1=df.assemble(E)
-    E_dolfin=dmi_term3d_dolfin(M,tf,1)[0]
+    E_dolfin=dmi_term3d_dolfin(M,tf,1)[0] * df.dx
     dolfin_curl = df.project(df.curl(M),V1)
     curlx,curly,curlz = dolfin_curl.split()
     print "dolfin-curlx=",df.assemble(curlx*df.dx)
@@ -86,7 +86,7 @@ def test_dmi_with_analytical_solution():
     eps=1e-13
     M = df.interpolate(df.Expression(("-0.5*x[1]","0.5*x[0]","1")),V1)
     c=1.0
-    E1 = df.assemble(dmi_term3d(M,tf,c)[0])
+    E1 = df.assemble(dmi_term3d(M,tf,c)[0] * df.dx)
     Eexp = 1.0
     print "Expect E=%e, computed E=%e" % (Eexp,E1)
     diff = abs(E1-Eexp)
@@ -98,7 +98,7 @@ def test_dmi_with_analytical_solution():
     eps=1e-12
     M = df.interpolate(df.Expression(("-0.5*x[1]*2","0.5*x[0]*2","1")),V1)
     c=3.0
-    E1 = df.assemble(dmi_term3d(M,tf,c)[0])
+    E1 = df.assemble(dmi_term3d(M,tf,c)[0] * df.dx)
     Eexp = 6.0
     print "Expect E=%e, computed E=%e" % (Eexp,E1)
     diff = abs(E1-Eexp)
@@ -132,7 +132,7 @@ def test_dmi_term3d():
 def test_can_post_process_form():
     M = df.interpolate(df.Expression(("-0.5*x[1]","0.5*x[0]","1")),V1)
     c=1.0
-    E = dmi_term3d(M,tf,c)[0]
+    E = dmi_term3d(M,tf,c)[0] * df.dx
 
     v = df.TestFunction(V1)
     dE_dM = df.derivative(E, M, v)

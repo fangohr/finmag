@@ -8,7 +8,7 @@ from finmag.util.consts import mu0
 
 
 def dmi_term3d_dolfin(M,v,c):
-    E = c * df.inner(M, df.curl(M)) * df.dx
+    E = c * df.inner(M, df.curl(M))
     nodal_E = df.dot(c * df.inner(M, df.curl(M)), v) * df.dx
     return E, nodal_E
 
@@ -78,7 +78,7 @@ def dmi_term3d(M,v,c,debug=False):
     #E = c * df.inner(M, df.curl(M)) * df.dx
 
     #our version:
-    E = c * (M[0] * curlx + M[1] * curly + M[2] * curlz) * df.dx
+    E = c * (M[0] * curlx + M[1] * curly + M[2] * curlz)
     nodal_E = df.dot(c * (M[0] * curlx + M[1] * curly + M[2] * curlz), v) * df.dx
 
     return E, nodal_E
@@ -155,7 +155,7 @@ def dmi_term2d(M, v, c, debug=False):
     #E = c * df.inner(M, df.curl(M)) * df.dx
 
     #our version:
-    E = c * (M[0] * curlx + M[1] * curly + M[2] * curlz) * df.dx
+    E = c * (M[0] * curlx + M[1] * curly + M[2] * curlz)
     nodal_E = df.dot(c * (M[0] * curlx + M[1] * curly + M[2] * curlz), v) * df.dx
 
     return E, nodal_E
@@ -237,6 +237,10 @@ class DMI(EnergyBase):
 
         """
         timings.start("DMI-setup")
+
+        if not isinstance(Ms, (df.Function, df.Constant)):
+            Ms = df.Constant(Ms)
+
         self.S3 = S3
         self.M = M
 
@@ -248,7 +252,7 @@ class DMI(EnergyBase):
         # seen.
 
         # Dzyaloshinsky-Moriya Constant
-        self.DMIconstant = df.Constant(self.D / unit_length ** 2) * mu0 * Ms
+        self.DMIconstant = df.Constant(mu0 * self.D / unit_length ** 2) * Ms
 
         self.v = df.TestFunction(S3)
         #Equation is chosen from the folowing papers
@@ -278,11 +282,11 @@ class DMI(EnergyBase):
 
         # This is only needed if we want the energy density
         # as a df.Function, in order to e.g. probe.
-        EnergyBase.setup(self,
-                E=E,
+        super(DMI, self).setup(
+                E_integrand=E,
                 nodal_E=nodal_E,
                 S3=S3,
-                M=M,
+                m=M,
                 Ms=Ms,
                 unit_length=unit_length)
 
@@ -407,7 +411,7 @@ class DMI_Old(EnergyBase):
         #Rossler-Bogdanov2006
         #self.E = self.DMIconstant * df.cross(self.M, df.curl(self.M)) * df.dx
 
-        self.dE_dM = df.derivative(self.E, self.M, self.v)
+        self.dE_dM = df.derivative(self.E * df.dx, self.M, self.v)
         self.vol = df.assemble(df.dot(self.v, df.Constant([1,1,1]))*df.dx).array()
         self.nodal_vol = df.assemble(w*df.dx, mesh=S3.mesh()).array()
 
@@ -460,7 +464,7 @@ class DMI_Old(EnergyBase):
 
         """
         timings.start("DMI-computenergy")
-        E = df.assemble(self.E)
+        E = df.assemble(self.E * df.dx)
         timings.stop("DMI-computenergy")
         return E
 
