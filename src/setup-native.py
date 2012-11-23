@@ -17,4 +17,3 @@ if cmd_subfolder not in sys.path:
 import native_compiler
 
 native_compiler.make_modules()
-
