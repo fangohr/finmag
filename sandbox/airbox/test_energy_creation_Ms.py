@@ -58,3 +58,5 @@ def test_can_create_energy_object(fixt, EnergyClass, init_args):
 
     E2 = EnergyClass(*init_args)
     E2.setup(S3, m, Ms_func)
+
+    assert(abs(E1.compute_energy() - E2.compute_energy()) < 1e-12)
