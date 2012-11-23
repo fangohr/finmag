@@ -386,26 +386,26 @@ namespace {
     		double *m = M.data();
     		double *m_pred=M_pred.data();
 
-    		gauss_random_vec(eta_perp,length,sqrt(2*dt));
-    		gauss_random_vec(eta_par,length,sqrt(2*dt));
+    		gauss_random_vec(eta_perp,length,sqrt(dt));
+    		gauss_random_vec(eta_par,length,sqrt(dt));
 
-            bp::call<void>(rhs_func.ptr(),M);
+		bp::call<void>(rhs_func.ptr(),M);
 
     		calc_llb_adt_plus_bdw(m,h,dm_pred);
 
     		for (int i = 0; i < length; i++){
-    			m_pred[i] = m[i] + dm_pred[i];
+    			m_pred[i] = m[i] + 0.666666666666*dm_pred[i];
     		}
 
-    		gauss_random_vec(eta_perp,length,sqrt(2*dt));
-    		gauss_random_vec(eta_par,length,sqrt(2*dt));
+    		gauss_random_vec(eta_perp,length,sqrt(dt));
+    		gauss_random_vec(eta_par,length,sqrt(dt));
 
     		bp::call<void>(rhs_func.ptr(), M_pred);
 
     		calc_llb_adt_plus_bdw(m_pred,h,dm_c);
 
     		for (int i = 0; i < length; i++){
-    			m[i] += 0.5*(dm_c[i] + dm_pred[i]);
+    			m[i] += 0.25*dm_c[i] + 0.75*dm_pred[i];
     		}
 
     	}
@@ -460,11 +460,6 @@ namespace {
                     double mh = m[i1] * h[i1] + m[i2] * h[i2] + m[i3] * h[i3];
                     double mm = m[i1] * m[i1] + m[i2] * m[i2] + m[i3] * m[i3];
 
-                    if(mm<10000){
-
-                    	printf("%e\n",sqrt(mm));
-                    }
-
                     //m x (m x H) == (m.H)m - (m.m)H,
                     double a_perp = alpha_perp(T[i1], Tc);
                     double a_par = alpha_par(T[i1], Tc);
@@ -478,16 +473,17 @@ namespace {
 
                     double Q_perp =  sqrt(
                             (2.*constant_K_B)*T[i]*(a_perp - a_par) /
-                            (gamma_LL * Ms * V[i] * a_perp * a_perp * lambda)
+                            (gamma_LL * Ms* constant_MU0* V[i]* a_perp * a_perp * lambda)
                         );
 
                     double Q_par =sqrt(
                             (2.*gamma_LL*constant_K_B/lambda)*T[i]*a_par /
-                            (Ms * V[i])
+                            (Ms * V[i]*constant_MU0)
                         );
+                    Q_par*=0.1;
 
                     double meta = m[i1] * eta_perp[i1] + m[i2] * eta_perp[i2] + m[i3] * eta_perp[i3];
-
+                    //m x (m x H) == (m.H)m - (m.m)H,
                     double damp3 = -a_perp * damping_coeff / mm * meta;
                     dm[i1] += (m[i1] * damp3 + eta_perp[i1] * damp2)*Q_perp;
                     dm[i2] += (m[i2] * damp3 + eta_perp[i2] * damp2)*Q_perp;
