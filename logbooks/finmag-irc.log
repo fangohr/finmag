@@ -2537,3 +2537,56 @@ fangohr: Still testing ...
 2012-11-22 22:24:44 D_Chernyshenko: Yeah, I think using 2.4 and 2.5 in parallel is possible, but will need some looking into
 2012-11-22 22:25:11 D_Chernyshenko: It might just be easier using sundials from source, or at least having that as an option
 2012-11-22 22:25:37 D_Chernyshenko: I.e., rather than support 2.4 and 2.5, it might be easier to support 2.5 either from Ubuntu or from source as needed
+2012-11-23 09:34:42 mb8g11: Hi Hans
+2012-11-23 09:43:37 fangohr: Hi MA.
+2012-11-23 09:44:01 fangohr: I can see your changes on the exchange: some of those are inline with what I did, and what I thought we should do next — good.
+2012-11-23 09:45:32 fangohr: The changes fail a few tests (16), so not quite perfect but going in the right direction. Are you in the office?
+2012-11-23 09:48:55 mb8g11: Yes
+2012-11-23 09:49:39 mb8g11: Forgot the DMI, that's for sure
+2012-11-23 09:52:46 fangohr: DMI: yes.
+2012-11-23 09:54:39 mb8g11: That's what happens when you only run the tests for the things you think has changed :-/
+2012-11-23 09:54:47 mb8g11: *have
+2012-11-23 09:54:53 fangohr: I think the first step should be to make clear in the source what m and M is. And my understanding is that the 'M' we pass to the exchange class constructor is actually a normalised m (i.e. of magnitude 1.0), even though it was called M until today. You renamed this to m (i.e. lowercase) to address this issue, I think?
+2012-11-23 09:55:01 fangohr: The relevant function call in your new revision is https://bitbucket.org/fangohr/finmag/src/2fdfb487c87a7c77a7dccad1a904d0ad30f7310f/src/finmag/energies/exchange.py?at=default#cl-74
+2012-11-23 09:55:04 mb8g11: Yes.
+2012-11-23 09:55:24 fangohr: Good, that would have been my suggestions as well. Just to clear this up a little.
+2012-11-23 10:21:10 mb8g11: Who wrote the DMI code and its tests?
+2012-11-23 10:21:20 mb8g11: (nearly done fixing)
+2012-11-23 10:36:53 fangohr-adium: Marijan and I, I think. Try 'hg blame -u' ;-)
+2012-11-23 10:37:13 fangohr-adium: Going on and offline — technical issues here, sorry.
+2012-11-23 10:58:40 D_Chernyshenko: Erm, going to be 10 mins late to the meeting it seems, I'm leaving now...
+2012-11-23 11:06:24 fangohr1: No worries. Coffee is on the table. Looking for biscuits now.
+2012-11-23 11:06:57 max_albert: Hi Hans, shall we come over in 5 minutes so that we arrive at the same time as Dmitri?
+2012-11-23 11:07:08 fangohr1: Good plan.
+2012-11-23 14:18:26 fangohr_: Greetings. Max, I get a failure with the test_from_geofile_and_from_csg test:
+2012-11-23 14:18:43 fangohr_:  # 'Touch' the .geo file so that it is newer than the .xml.gz
+2012-11-23 14:18:43 fangohr_:             # file. Then check that upon reading the mesh the .xml.gz file
+2012-11-23 14:18:43 fangohr_:             # is recreated.
+2012-11-23 14:18:43 fangohr_:             stream.truncate(0)  # clear stream
+2012-11-23 14:18:43 fangohr_:             os.utime(geofile, None)  # update the 'last modified' timestamp
+2012-11-23 14:18:46 fangohr_:             mesh4 = from_geofile(geofile, save_result=True)
+2012-11-23 14:18:48 fangohr_:             assert(isinstance(mesh4, Mesh))
+2012-11-23 14:18:50 fangohr_:             assert(os.path.isfile(xmlfile))
+2012-11-23 14:18:52 fangohr_:             handler.flush()
+2012-11-23 14:18:54 fangohr_: >           assert(stream.getvalue().startswith("The mesh file '{}' is outdated "
+2012-11-23 14:18:56 fangohr_:                    "(since it is older than the .geo file '{}') and will "
+2012-11-23 14:18:58 fangohr_:                    "be overwritten.\n".format(xmlfile, geofile)))
+2012-11-23 14:19:41 fangohr_: And the detail is
+2012-11-23 14:19:44 fangohr_: E           assert <built-in method startswith of str object at 0x790f030>("The mesh file '/tmp/tmpDTNv_M/tmp4rIR8q.xml.gz' is outdated (since it is older than the .geo file '/tmp/tmpDTNv_M/tmp4rIR8q.geo') and will be overwritten.\n")
+2012-11-23 14:19:44 fangohr_: E            +  where <built-in method startswith of str object at 0x790f030> = "The mesh '/tmp/tmpDTNv_M/tmp4rIR8q.xml.gz' already exists and is automatically returned.\n".
+2012-11-23 14:20:18 fangohr_: I assume you have been involved in writing this? If so, any ideas what is happening (this is on osiris). If not, I'll look into it myself.
+2012-11-23 16:14:09 max_albert: Hi Hans, sorry for the late reply!
+2012-11-23 16:14:56 max_albert: Hmm, it's weird that the test is failing because it works alright on summer (and the test suite has passed the past few builds).
+2012-11-23 16:16:18 max_albert: Indeed, I wrote this yesterday or the day before. The idea is to check that the .xml.gz file of a mesh is recreated even if the associated .geo file already exists but the latter is newer.
+2012-11-23 16:17:26 max_albert: Is this at a location on osiris where I can play around with it? I may even run the test on osiris myself to see if it works or not.
+2012-11-23 16:19:39 fangohr-adium1: I did run this in my home directory (in hg/finmag). But as it failed, I deleted that directory and started from a clean clone. So I would expect that you should be getting the same error from your user account. Could it have to do with any remaining files in /tmp/? Probably not.
+2012-11-23 16:20:34 max_albert: No, I don't think that could be  the reason. I'll have a quick look and see if I can get it to fail, too. Will report back in a few minutes.
+2012-11-23 16:20:58 fangohr-adium1: That would be great. There is no rush, of course. I just wanted to pass all the tests before I do anything adventurous ;-)
+2012-11-23 16:21:29 max_albert: Sure. But again, it's strange that it's failing on osiris because it passes on my machine and on summer.
+2012-11-23 16:21:40 max_albert: You said this is also with a fresh clone?
+2012-11-23 16:22:09 max_albert: By the way, if you work on something that's not related to mesh creation, feel free to ignore this test for now and hack away anyway. ;-)
+2012-11-23 16:27:16 max_albert: Ok, I managed to reproduce it the error. Will look into it.
+2012-11-23 16:45:45 fangohr-adium1: Nice, thank you.
+2012-11-23 18:18:08 max_albert: Hi Hans, I just pushed a change which should fix this. The error was due to the fact that osiris seems to use low-precision timestamps for file modification times. So since the test execution is very fast, the .geo file got the same timestamp as the .xml.gz file that was created less than a second before and it wasn't picked up as being newer.
+2012-11-23 18:18:30 max_albert: Let me know if you still experience problems.
+2012-11-23 20:41:20 fangohr2: Hi Max, all well now — tests pass perfectly. Many thanks!
