@@ -15,6 +15,11 @@ namespace {
     static const double constant_MU0 = M_PI*4e-7; // T m/A
     static const double constant_K_B = 1.3806488e-23; // J/K
 
+    //used for RK2 solver
+    static const double theta=0.66666666666;
+    static const double theta1=1.0-0.5/theta;
+    static const double theta2=0.5/theta;
+
     inline double alpha_perp(double T, double T_C) { return T <= T_C ? 1. - (1./3.)*(T/T_C) : (2./3.) * (T/T_C); }
     inline double alpha_par(double T, double T_C) { return (2./3.) * (T/T_C); }
 
@@ -416,9 +421,6 @@ namespace {
         double dt,gamma_LL,lambda,Tc,Ms;
         double *dm1, *dm2, *dm3, *eta;
         bool do_precession;
-        double theta=0.66666666666;
-        double theta1=1.0-0.5/theta;
-        double theta2=0.5/theta;
 
         bp::object rhs_func;
 
