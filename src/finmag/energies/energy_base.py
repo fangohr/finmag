@@ -244,7 +244,7 @@ class EnergyBase(AbstractEnergy):
 
         """
         timings.start(self._timingsname('compute_energy'))
-        E = df.assemble(self.E) * self.unit_length ** self.dim
+        E = df.assemble(self.E * df.dx) * self.unit_length ** self.dim
         timings.stop(self._timingsname('compute_energy'))
         return E
 
