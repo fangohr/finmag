@@ -1,5 +1,6 @@
 import os.path
 import logging
+import numpy
 logger = logging.getLogger(name='finmag')
 
 
