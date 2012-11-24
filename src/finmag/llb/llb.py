@@ -36,7 +36,7 @@ class LLB(object):
         
         self.vol = df.assemble(df.dot(df.TestFunction(self.S3),
                                       df.Constant([1, 1, 1])) * df.dx).array()
-        self.vol[:]*=self.material.unit_length**3
+        self.vol *= self.material.unit_length**3
         print 'vol=',self.vol
         
         self._pre_rhs_callables = []
