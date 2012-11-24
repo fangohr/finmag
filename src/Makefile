@@ -5,8 +5,8 @@
 # (Temporary) directory where the binary distribution will be built.
 FINMAGDIST_TMPDIR ?= /tmp
 
-# Directory where the binary distribution will be built.
-FINMAGDIST_DESTDIR ?= /tmp
+# Directory where the final binary tarball will be placed.
+FINMAGDIST_DESTDIR ?= $(FINMAGDIST_TMPDIR)
 
 FINMAGDIST_BUILD_DIR = ${FINMAGDIST_TMPDIR}/finmag
 FINMAGDIST_REVISION ?= tip

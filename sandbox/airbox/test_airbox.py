@@ -34,5 +34,7 @@ def test_airbox_method():
     sim = sim_with(mesh, Ms=Ms, m_init=(1.0, 0.0, 0), alpha=1.0,
                    unit_length=1e-9, A=13.0e-12, demag_solver='FK')
 
+    sim.relax()
+
 if __name__ == '__main__':
     test_airbox_method()
