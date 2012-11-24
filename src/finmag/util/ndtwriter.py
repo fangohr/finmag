@@ -6,8 +6,8 @@ logger = logging.getLogger(name='finmag')
 class ndtWriter(object):
 
     datatoinclude = {
-        'time': ('<s>', lambda sim: self.sim.time),
-        'm': ('<A/m>', lambda sim: self.sim.m_average)
+        'time': ('<s>', lambda sim: sim.time),
+        'm': ('<A/m>', lambda sim: sim.m_average)
     }
 
     #def headers():
