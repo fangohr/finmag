@@ -28,5 +28,5 @@ class ndtWriter(object):
             if isinstance(value, numpy.ndarray):
                 if len(value) == 3:  # 3d vector
                     for i in range(3):
-                        f.write("%g\t" % value[i]) 
-            f.write('\n')
+                        self.f.write("%g\t" % value[i])
+            self.f.write('\n')
