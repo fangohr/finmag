@@ -33,7 +33,7 @@ cleansrc:
 #copy to alternative location
 cp:
 	python distcp.py ${FINMAGDIST_BUILD_DIR}
-	cp pytest.ini ${FINMAGDIST_BUILD_DIR}
+	cp ../pytest.ini ${FINMAGDIST_BUILD_DIR}
 
 test:
 	cd ${FINMAGDIST_BUILD_DIR} && PYTHONPATH=${FINMAGDIST_BUILD_DIR} py.test --verbose -x
