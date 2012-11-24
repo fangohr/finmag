@@ -10,8 +10,8 @@ import dolfin as df
 import numpy as np
 from finmag.sim.llg import LLG
 from finmag.util.timings import timings
-from finmag.util.helpers import quiver, norm
-from finmag.util.consts import mu0, exchange_length, bloch_parameter
+from finmag.util.helpers import norm
+from finmag.util.consts import exchange_length, bloch_parameter
 from finmag.util.meshes import mesh_info, mesh_volume
 from finmag.sim.integrator import LLGIntegrator
 from finmag.energies.exchange import Exchange
@@ -155,7 +155,7 @@ class Simulation(object):
                     log.warning("Removing file '{}' and all associated .vtu files (because force_overwrite=True).".format(filename))
                     os.remove(filename)
                     basename = re.sub('\.pvd$', '', filename)
-                    for f in glob.glob(basename+"*.vtu"):
+                    for f in glob.glob(basename + "*.vtu"):
                         os.remove(f)
                 else:
                     raise IOError("Aborting snapshot creation. File already exists and would overwritten: '{}' (use force_overwrite=True if this is what you want)".format(filename))
@@ -222,13 +222,13 @@ class Simulation(object):
                 # it would miss any stages that were previously run but are
                 # not reached during this run.
                 log.debug("Removing the file '{}' as well as all associated .pvd and .vtu files of previously run hysteresis stages.".format(filename))
-                pvdfiles = glob.glob(re.sub('\.pvd$', '', filename)+'*.pvd')
-                vtufiles = glob.glob(re.sub('\.pvd$', '', filename)+'*.vtu')
-                for f in pvdfiles+vtufiles:
+                pvdfiles = glob.glob(re.sub('\.pvd$', '', filename) + '*.pvd')
+                vtufiles = glob.glob(re.sub('\.pvd$', '', filename) + '*.vtu')
+                for f in pvdfiles + vtufiles:
                     os.remove(f)
 
         # Add a new Zeeman interaction, initialised to zero.
-        H = Zeeman((0,0,0))
+        H = Zeeman((0, 0, 0))
         self.add(H)
 
         # We keep track of the current stage of the hysteresis loop.
@@ -244,7 +244,8 @@ class Simulation(object):
         try:
             while True:
                 H_cur = H_ext_list[cur_stage]
-                log.info("Entering hysteresis stage #{} ({} out of {}).".format(cur_stage, cur_stage+1, num_stages))
+                log.info("Entering hysteresis stage #{} ({} out of {}).".format(cur_stage,
+                     cur_stage + 1, num_stages))
                 H.set_value(H_cur)
 
                 # Changing the external field is a drastic change, so
@@ -252,7 +253,7 @@ class Simulation(object):
                 self.reinit_integrator()
 
                 if filename != '':
-                   cur_filename = filename + "__stage_{:03d}__.pvd".format(cur_stage)
+                    cur_filename = filename + "__stage_{:03d}__.pvd".format(cur_stage)
                 self.relax(filename=cur_filename, save_snapshots=save_snapshots, **kwargs)
                 cur_stage += 1
                 if fun is not None:
@@ -385,7 +386,7 @@ class Simulation(object):
         Thickness of the free layer in m,
         Direction (unit length) of the polarisation as a triple.
 
-        """  
+        """
         self.llg.use_slonczewski(current_density, polarisation, thickness, direction)
 
     def toggle_stt(self, new_state=None):
@@ -427,7 +428,8 @@ class Simulation(object):
             self.vtk_snapshot_no = 1
         if filename == "":
             infix_insert = "" if infix == "" else "_" + infix
-            filename = "m{}_{}_{:.3f}ns.pvd".format(infix_insert, self.vtk_snapshot_no, self.t*1e9)
+            filename = "m{}_{}_{:.3f}ns.pvd".format(infix_insert,
+                self.vtk_snapshot_no, self.t * 1e9)
 
         ext = os.path.splitext(filename)[1]
         if ext != '.pvd':
@@ -441,7 +443,7 @@ class Simulation(object):
                 log.warning("Removing file '{}' and all associated .vtu files (because force_overwrite=True).".format(output_file))
                 os.remove(output_file)
                 basename = re.sub('\.pvd$', '', output_file)
-                for f in glob.glob(basename+"*.vtu"):
+                for f in glob.glob(basename + "*.vtu"):
                     os.remove(f)
             else:
                 raise IOError("Aborting snapshot creation. File already exists and would overwritten: '{}' (use force_overwrite=True if this is what you want)".format(output_file))
@@ -449,7 +451,8 @@ class Simulation(object):
         f = df.File(output_file, "compressed")
         f << self.llg._m
         t1 = time.time()
-        log.info("Saved snapshot of magnetisation at t={} to file '{}' (saving took {:.3g} seconds).".format(self.t, output_file, t1-t0))
+        log.info("Saved snapshot of magnetisation at t={} to file '{}' (saving took {:.3g} seconds).".format(
+                self.t, output_file, t1 - t0))
         self.vtk_snapshot_no += 1
 
     def mesh_info(self):
@@ -469,17 +472,17 @@ class Simulation(object):
         """
         info_string = "{}\n".format(mesh_info(self.mesh))
 
-        edgelengths = [e.length()*self.unit_length for e in df.edges(self.mesh)]
+        edgelengths = [e.length() * self.unit_length for e in df.edges(self.mesh)]
 
         def added_info(L, name, abbrev):
-            (a,b), _ = np.histogram(edgelengths, bins=[0, L, np.infty])
+            (a, b), _ = np.histogram(edgelengths, bins=[0, L, np.infty])
             if b == 0.0:
                 msg = "All edges are shorter"
                 msg2 = ""
             else:
-                msg = "Warning: {:.2f}% of edges are longer".format(100.0*b/(a+b))
+                msg = "Warning: {:.2f}% of edges are longer".format(100.0 * b / (a + b))
                 msg2 = " (this may lead to discretisation artefacts)"
-            info = "{} than the {} {} = {:.2f} nm{}.\n".format(msg, name, abbrev, L*1e9, msg2)
+            info = "{} than the {} {} = {:.2f} nm{}.\n".format(msg, name, abbrev, L * 1e9, msg2)
             return info
 
         if hasattr(self.llg.effective_field, "exchange"):
@@ -492,6 +495,7 @@ class Simulation(object):
                 info_string += added_info(l_bloch, 'Bloch parameter', 'l_bloch')
 
         return info_string
+
 
 def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sundials",
              A=None, K1=None, K1_axis=None, H_ext=None, demag_solver='FK'):
