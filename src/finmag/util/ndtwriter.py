@@ -23,8 +23,8 @@ class ndtWriter(object):
         self.f = open(self.filename, 'w')
 
     def append(self):
-        for entity in sorted(datatoinclude.keys()):
-            value = datatoinclude[entity][1]()
+        for entity in sorted(self.datatoinclude.keys()):
+            value = self.datatoinclude[entity][1]()
             if isinstance(value, numpy.ndarray):
                 if len(value) == 3:  # 3d vector
                     for i in range(3):
