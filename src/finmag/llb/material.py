@@ -39,7 +39,7 @@ class Nickel(object):
         T_bak=T
         if T<5:
             T=5
-	elif abs(T-self.Tc)<0.1:
+        elif abs(T-self.Tc)<0.1:
             T=self.Tc-0.1
         
         beta = 3*self.Tc/T
@@ -121,7 +121,7 @@ class FePtMFA(object):
         T_bak=T
         if T<5:
             T=5
-	elif abs(T-self.Tc)<0.1:
+        elif abs(T-self.Tc)<0.1:
             T=self.Tc-0.1
         
         beta = 3*self.Tc/T
@@ -200,14 +200,15 @@ class Material(object):
     
     """
     
-    def __init__(self, mesh, name='FePt'):
+    def __init__(self, mesh, name='FePt',unit_length=1):
         self.mesh = mesh
         self.name = name
         self.V = df.FunctionSpace(mesh, "Lagrange", 1)
         self.S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1,dim=3)
         self._m = df.Function(self.S3)
         self._T = np.zeros(mesh.num_vertices())
-        self.h = self._m.vector().array()#just want to create a numpy array 
+        self.h = self._m.vector().array()#just want to create a numpy array
+        self.unit_length=1 
         
         if self.name == 'FePt':
             self.mat = LLBFePt()
@@ -282,7 +283,7 @@ class Material(object):
         reasons and because the attribute m doesn't normalise the vector.
 
         """
-        self._m = helpers.vector_valued_function(value, self.S3, normalise=True)
+        self._m = helpers.vector_valued_function(value, self.S3, normalise=False)
         
 
 if __name__ == "__main__":

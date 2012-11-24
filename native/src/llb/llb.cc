@@ -15,6 +15,11 @@ namespace {
     static const double constant_MU0 = M_PI*4e-7; // T m/A
     static const double constant_K_B = 1.3806488e-23; // J/K
 
+    //used for RK2 solver
+    static const double theta=0.66666666666;
+    static const double theta1=1.0-0.5/theta;
+    static const double theta2=0.5/theta;
+
     inline double alpha_perp(double T, double T_C) { return T <= T_C ? 1. - (1./3.)*(T/T_C) : (2./3.) * (T/T_C); }
     inline double alpha_par(double T, double T_C) { return (2./3.) * (T/T_C); }
 
@@ -344,15 +349,10 @@ namespace {
             {
         		assert(M.size()==3*T.size());
         		length=M.size();
-        		dm_c= new double[length];
-        		dm_pred= new double[length];
-        		eta_perp= new double[length];
-        		eta_par= new double[length];
-
-        		for (int i = 0; i < length; i++){
-        			eta_perp[i]=0;
-        			eta_par[i]=0;
-        		}
+        		dm1= new double[length];
+        		dm2= new double[length];
+        		dm3= new double[length];
+        		eta= new double[length];
 
         		initial_random();
 
@@ -363,20 +363,20 @@ namespace {
         ~RungeKuttaStochasticIntegrator(){
 
 
-        	if (dm_pred!=0){
-        		delete[] dm_pred;
+        	if (dm1!=0){
+        		delete[] dm1;
         	}
 
-        	if (dm_c!=0){
-        	    delete[] dm_c;
+        	if (dm2!=0){
+        		delete[] dm2;
         	}
 
-        	if (eta_perp!=0){
-        	    delete[] eta_perp;
+        	if (dm3!=0){
+        	    delete[] dm3;
         	}
 
-        	if (eta_par!=0){
-        	    delete[] eta_par;
+        	if (eta!=0){
+        	    delete[] eta;
         	}
 
         }
@@ -386,26 +386,29 @@ namespace {
     		double *m = M.data();
     		double *m_pred=M_pred.data();
 
-    		gauss_random_vec(eta_perp,length,sqrt(2*dt));
-    		gauss_random_vec(eta_par,length,sqrt(2*dt));
-
-            bp::call<void>(rhs_func.ptr(),M);
-
-    		calc_llb_adt_plus_bdw(m,h,dm_pred);
+    		bp::call<void>(rhs_func.ptr(),M);
+    		gauss_random_vec(eta,length,sqrt(dt));
+    		calc_llb_adt_plus_bdw(m,h,dm1);
 
     		for (int i = 0; i < length; i++){
-    			m_pred[i] = m[i] + dm_pred[i];
+    			m_pred[i] = m[i] + theta*dm1[i];
     		}
+    		bp::call<void>(rhs_func.ptr(),M_pred);
+    		gauss_random_vec(eta,length,sqrt(dt));
+    		calc_llb_adt_plus_bdw(m,h,dm2);
 
-    		gauss_random_vec(eta_perp,length,sqrt(2*dt));
-    		gauss_random_vec(eta_par,length,sqrt(2*dt));
-
-    		bp::call<void>(rhs_func.ptr(), M_pred);
-
-    		calc_llb_adt_plus_bdw(m_pred,h,dm_c);
-
+    		/*
     		for (int i = 0; i < length; i++){
-    			m[i] += 0.5*(dm_c[i] + dm_pred[i]);
+    			m_pred[i] = m[i] - dm1[i] + dm2[i];
+    		}
+    		bp::call<void>(rhs_func.ptr(),M_pred);
+    		gauss_random_vec(eta,length,sqrt(dt));
+    		calc_llb_adt_plus_bdw(m,h,dm3);
+			*/
+    		for (int i = 0; i < length; i++){
+    			//m[i] += 0.75*dm2[i] + 0.25*dm3[i];
+    			m[i] += theta1*dm1[i] + theta2*dm2[i];
+
     		}
 
     	}
@@ -416,7 +419,7 @@ namespace {
         int length;
         np_array<double> M,M_pred,T_arr,V_arr;
         double dt,gamma_LL,lambda,Tc,Ms;
-        double *dm_pred, *dm_c,*eta_perp, *eta_par;
+        double *dm1, *dm2, *dm3, *eta;
         bool do_precession;
 
         bp::object rhs_func;
@@ -429,7 +432,6 @@ namespace {
         					double *h,
         					double *dm
         					) {
-
 
                 double *T = T_arr.data();
                 double *V = V_arr.data();
@@ -460,11 +462,6 @@ namespace {
                     double mh = m[i1] * h[i1] + m[i2] * h[i2] + m[i3] * h[i3];
                     double mm = m[i1] * m[i1] + m[i2] * m[i2] + m[i3] * m[i3];
 
-                    if(mm<10000){
-
-                    	printf("%e\n",sqrt(mm));
-                    }
-
                     //m x (m x H) == (m.H)m - (m.m)H,
                     double a_perp = alpha_perp(T[i1], Tc);
                     double a_par = alpha_par(T[i1], Tc);
@@ -478,24 +475,24 @@ namespace {
 
                     double Q_perp =  sqrt(
                             (2.*constant_K_B)*T[i]*(a_perp - a_par) /
-                            (gamma_LL * Ms * V[i] * a_perp * a_perp * lambda)
+                            (gamma_LL * Ms* constant_MU0* V[i]* a_perp * a_perp * lambda)
                         );
 
                     double Q_par =sqrt(
                             (2.*gamma_LL*constant_K_B/lambda)*T[i]*a_par /
-                            (Ms * V[i])
+                            (Ms * V[i]*constant_MU0)
                         );
 
-                    double meta = m[i1] * eta_perp[i1] + m[i2] * eta_perp[i2] + m[i3] * eta_perp[i3];
-
+                    double meta = m[i1] * eta[i1] + m[i2] * eta[i2] + m[i3] * eta[i3];
+                    //m x (m x H) == (m.H)m - (m.m)H,
                     double damp3 = -a_perp * damping_coeff / mm * meta;
-                    dm[i1] += (m[i1] * damp3 + eta_perp[i1] * damp2)*Q_perp;
-                    dm[i2] += (m[i2] * damp3 + eta_perp[i2] * damp2)*Q_perp;
-                    dm[i3] += (m[i3] * damp3 + eta_perp[i3] * damp2)*Q_perp;
+                    dm[i1] += (m[i1] * damp3 + eta[i1] * damp2)*Q_perp;
+                    dm[i2] += (m[i2] * damp3 + eta[i2] * damp2)*Q_perp;
+                    dm[i3] += (m[i3] * damp3 + eta[i3] * damp2)*Q_perp;
 
-                    dm[i1] += Q_par*eta_par[i1];
-                    dm[i2] += Q_par*eta_par[i2];
-                    dm[i3] += Q_par*eta_par[i3];
+                    dm[i1] += Q_par*eta[i1];
+                    dm[i2] += Q_par*eta[i2];
+                    dm[i3] += Q_par*eta[i3];
                 }
             }
 

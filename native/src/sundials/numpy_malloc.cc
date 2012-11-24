@@ -90,7 +90,7 @@ namespace finmag { namespace sundials {
         // Create a numpy array using array_data for storage and mem_release as base
         // See http://blog.enthought.com/python/numpy-arrays-with-pre-allocated-memory/
         // for rationale and explanation
-        npy_intp dims[] = { len };
+        npy_intp dims[] = { npy_intp(len) };
         PyObject * arr = PyArray_SimpleNewFromData(1, dims, NPY_DOUBLE, array_data);
         // Note that return 0 will release the memory pointed to by mem
         if (!arr) return 0;
