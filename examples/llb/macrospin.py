@@ -94,14 +94,18 @@ def StochasticSpinTest(mesh,T):
     mat.set_m((1, 0, 0))
     mat.T = T
     mat.alpha=0.1
+    print mat.T
+    print mat.compute_field()
+    
+    dt=1e-15
     
     llb = LLB(mat)
-    llb.set_up_stochastic_solver(dt=1e-14,use_evans2012_noise=True)
+    llb.set_up_stochastic_solver(dt=dt,use_evans2012_noise=True)
         
     llb.interactions.append(mat)
     
     n=1000
-    max_time = n*1e-14
+    max_time = n*dt
     ts = np.linspace(0, max_time, num=n+1)
     
     me_average = []
@@ -125,9 +129,9 @@ def StochasticSpinTest(mesh,T):
 
 if __name__ == '__main__':
     x0 = y0 = z0 = 0
-    x1 = 500e-9
-    y1 = 500e-9
-    z1 = 500e-9
+    x1 = 10e-9
+    y1 = 10e-9
+    z1 = 10e-9
     nx = 1
     ny = 1
     nz = 1
@@ -136,13 +140,11 @@ if __name__ == '__main__':
     #mesh =df.Interval(1,0,50e-9)
     print mesh.coordinates()
     mat = Material(mesh, name='Nickel')
-    mat.set_m((1, 1, 1))
-    mat.T = 630
-    print mat.T
+    
    
     #print SpinTest(mesh,640,'Nickel')
     #SeriesTemperatureTest(mesh)
-    print StochasticSpinTest(mesh,660)
+    print StochasticSpinTest(mesh,640)
     
     
 
