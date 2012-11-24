@@ -25,7 +25,7 @@ class ndtWriter(object):
     def append(self):
         for entity in sorted(datatoinclude.keys()):
             value = datatoinclude[entity][1]()
-            if type(value) == numpy.ndarray:
+            if isinstance(value, numpy.ndarray):
                 if len(value) == 3:  # 3d vector
                     for i in range(3):
                         f.write("%g\t" % value[i]) 
