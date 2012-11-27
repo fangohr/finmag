@@ -2,9 +2,8 @@ import numpy as np
 import dolfin as df
 from finmag.util.consts import mu0, k_B
 from finmag.util.meshes import mesh_volume
-from energy_base import AbstractEnergy
 
-class RandomThermal(AbstractEnergy):
+class RandomThermal(object):
     """
     Thermal field from Simone, 
 

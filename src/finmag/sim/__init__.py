@@ -63,9 +63,6 @@ ch.setFormatter(formatter)
 # add ch to logger
 logger.addHandler(ch)
 
-#A first message
-logger.debug("Executing sim/__init__.py")
-
 #and examples to use in code later
 #logger.debug("debug message")
 #logger.info("info message")

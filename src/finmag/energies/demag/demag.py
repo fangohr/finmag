@@ -1,18 +1,17 @@
-import numpy as np
-import dolfin as df
 import logging
 import textwrap
+import dolfin as df
 from finmag.util.timings import timings
-from finmag.energies import AbstractEnergy
 from solver_fk import FemBemFKSolver
 from solver_gcr import FemBemGCRSolver
 from solver_fk_alt import SimpleFKSolver
 from solver_base import default_parameters
+from finmag.tests.demag.problems import prob_fembem_testcases as pft
 
 log = logging.getLogger("finmag")
 
 
-class Demag(AbstractEnergy):
+class Demag(object):
     """
     A wrapper for the demag solvers that also implements the functionality of
     an energy class.
@@ -91,23 +90,12 @@ class Demag(AbstractEnergy):
         return self.demag.phi
 
 if __name__ == "__main__":
-    #Generate a plot for a simple Demag problem
-    test = "GCR"
-    from finmag.tests.demag.problems import prob_fembem_testcases as pft
-    problem = pft.MagSphereBase(10,0.8)
-    mesh = problem.mesh
-    Ms = problem.Ms
-    m = problem.m
-    V = problem.V
+    prob = pft.MagSphereBase(10, 0.8)
 
-    if test == "GCR":
-        demag = Demag("GCR")
-        demag.setup(V,m,Ms,unit_length = 1)
-
-    elif test == "FK":
-        demag = Demag("FK")
-        demag.setup(V,m,Ms,unit_length = 1)
+    demag = Demag("GCR")
+    demag.setup(prob.V, prob.m, prob.Ms, unit_length = 1)
 
     print timings
+
     df.plot(demag.compute_potential())
     df.interactive()

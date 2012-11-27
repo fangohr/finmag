@@ -2590,3 +2590,58 @@ fangohr: Still testing ...
 2012-11-23 18:18:08 max_albert: Hi Hans, I just pushed a change which should fix this. The error was due to the fact that osiris seems to use low-precision timestamps for file modification times. So since the test execution is very fast, the .geo file got the same timestamp as the .xml.gz file that was created less than a second before and it wasn't picked up as being newer.
 2012-11-23 18:18:30 max_albert: Let me know if you still experience problems.
 2012-11-23 20:41:20 fangohr2: Hi Max, all well now — tests pass perfectly. Many thanks!
+2012-11-26 08:10:45 mb8g11: Hello
+2012-11-26 09:19:56 fangohr-adium: Hello MA (think I just missed you).
+2012-11-26 13:30:56 mb8g11: I have sundials 2.5 working with finmag on my fresh Ubuntu 12.10. Will commit the needed changes as soon as I find out how to do an anonymous branch in Mercurial.
+2012-11-26 13:31:22 max_albert: Hi MA, that sounds awesome!
+2012-11-26 13:32:12 max_albert: Is it a big change? You could consider using #ifdef statements so that we have a closer integration and the code and don't run the risk of leaving one branch unmaintained.
+2012-11-26 13:32:26 max_albert: But for a bigger change a separate branch might be more appropriate.
+2012-11-26 13:34:30 mb8g11: To be honest, I just had to change a handful of types
+2012-11-26 13:34:36 mb8g11: but it runs the tests
+2012-11-26 13:34:48 max_albert: That's good news.
+2012-11-26 13:35:06 D_Chernyshenko_: Just curious, what were the changes in 2.5 that you had to accomodate for?
+2012-11-26 13:35:37 mb8g11: some ints became longs
+2012-11-26 13:35:46 D_Chernyshenko_: Uhh.
+2012-11-26 13:36:07 D_Chernyshenko_: Nothign beyond that right? The official changelog is short
+2012-11-26 13:36:29 mb8g11: Nothing beyond that as far as I see.
+2012-11-26 13:36:42 max_albert: Dmitri, you said that sundials 2.5 fixes quite a few bugs you encountered. Is there an easy way of installing version 2.5 on Ubuntu 12.04? Then we might even consider making it a requirement and use it exclusively.
+2012-11-26 13:36:50 mb8g11: But I don't know how to commit the changes without breaking the build or introducing a named branch.
+2012-11-26 13:37:05 D_Chernyshenko_: If some ints have become longs, then binary compatibility with both 2.4 and 2.5 is out of question
+2012-11-26 13:38:21 max_albert: MA, you could do something like in this example from the magpar code base:
+2012-11-26 13:38:21 max_albert: http://www.magpar.net/static/magpar-0.9rc2/doc/html/initinfo_8c_source.html
+2012-11-26 13:38:23 D_Chernyshenko__: Erm, this is the second time I'm disconnected
+2012-11-26 13:39:08 D_Chernyshenko__: Anyway, you can either install it from source, or possibly install the .deb file from 12.10
+2012-11-26 13:40:44 max_albert: Yes, I have no problem installing it from source (I use Klaus Aehlig's ports system for that for quite a few other pieces of software, and it work's nicely). I'm just thinking about people who just want to use it without the hassle of having to compile something from source (also think about ppl using the binary distribution).
+2012-11-26 13:41:31 D_Chernyshenko__: I think that the best solution is to use the system 2.5 if it's present, or provide our own 2.5 if it's not
+2012-11-26 13:41:55 D_Chernyshenko__: I.e. we compile our own 2.5 if we don't detect 2.5 in the system
+2012-11-26 13:42:01 D_Chernyshenko__: Does this make sense?
+2012-11-26 13:42:09 max_albert: Sure.
+2012-11-26 13:42:32 max_albert: This would need a bit more setup/installation code, but it's certainly doable.
+2012-11-26 13:42:56 D_Chernyshenko__: Yeah, since we don't distribute any other libraries, this will need some thinking
+2012-11-26 13:43:08 max_albert: However, we might end up in a situation similar to nmag, which has to ship the exact versions of the libraries it needs, which is a bit of a nuisance.
+2012-11-26 13:43:32 max_albert: That's why I thought it might be nice to have a solution that nicely integrates with Ubuntu's package system.
+2012-11-26 13:43:43 D_Chernyshenko__: Oh
+2012-11-26 13:43:59 D_Chernyshenko__: Why don't we make a 2.5 sundials DEB for 12.04
+2012-11-26 13:44:16 max_albert: However, if we really want to do it using a (probably only very slightly) modified version of Klaus' ports system should be very little work.
+2012-11-26 13:44:22 max_albert: Oh, that's a nice idea too.
+2012-11-26 13:44:43 mb8g11: @D_Chernyshenko: How much work is this?
+2012-11-26 13:44:44 D_Chernyshenko__: I think that can work, in the long run we can keep a ppa repository for such situations
+2012-11-26 13:45:01 D_Chernyshenko__: I think it's fairly simple, there's some learning but the process itself is simple
+2012-11-26 13:45:24 D_Chernyshenko__: And we can reuse the solution for other libraries and maybe also put finmag into a repository
+2012-11-26 13:45:34 D_Chernyshenko__: This will certainly solve our own internal issues since we all use Ubuntu
+2012-11-26 13:45:49 mb8g11: Indeed!
+2012-11-26 13:46:29 D_Chernyshenko__: Might still need to include our own 2.5 in the binary distribution (or have an option to) for those who use other Linux flavours
+2012-11-26 13:48:12 max_albert: Dmitri, how do you estimate the chances that the sundials-2.5 package for Ubuntu 12.10 will work on 12.04?
+2012-11-26 13:48:46 D_Chernyshenko__: 99%, but you would have to install it from a .deb file, or temporary switch to 12.10 repositories while installing it
+2012-11-26 13:49:04 D_Chernyshenko__: I don't think there are any major dependencies
+2012-11-26 13:49:39 D_Chernyshenko__: Just try to install it from a .deb file I guess
+2012-11-26 13:49:41 max_albert: Maybe that's worth a shot then. Downloading the .deb file and installing it can be easily added to our installation scripts and should be the easiest solution if it works.
+2012-11-26 13:49:50 D_Chernyshenko__: Yep
+2012-11-26 13:55:19 max_albert: I'm off to lunch.BB later!
+2012-11-26 15:00:21 max_albert: Hi MA, just saw your sundials fixes. That's great news if that's everything needed for v2.5. Just to confirm, Finmag should still work with v2.4 even after these changes, right?
+2012-11-26 15:00:46 max_albert: Oh, just saw that you're not online any more. Never mind.
+2012-11-26 17:10:11 mb8g11: max_albert?
+2012-11-26 17:18:40 mb8g11: The changes I've made Just wanted to say that the changes I've made this afternoon will NOT work with Sundials 2.4. Indeed the whole problem is they've changed some types, so fixes I make for working with one version of Sundials will break compability with the other.
+2012-11-26 17:19:11 mb8g11: That's why they are confined to a named branch in our repo until we declare Sundials 2.5 our default.
+2012-11-26 17:22:49 fangohr-adium: Hi all, sorry for silence from me today; busy, busy, busy. Good to see everybody is online and communicating busily. Over and out for today.
+2012-11-26 17:23:05 mb8g11: Bye Hans
