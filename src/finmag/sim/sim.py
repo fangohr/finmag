@@ -175,6 +175,45 @@ class Simulation(object):
         a = field.compute_field()
         return vector_valued_function(a, S3)
 
+    def probe_field(self, field_type, pts):
+        """
+        Probe the field of type `field_type` at point `pt`.
+
+        *Arguments*
+
+        field_type: string or classname
+
+            asdfasdf
+
+        pts: single point or list of points
+
+            The point(s) where the field should be probed. Can a
+            single point (= list of 3 floats) or a list of points.
+
+        *Returns*
+
+            If `pts` is a single point, returns a numpy 3-array
+            containing the field values at that point. If `pts` is
+            a list of points, returns a Nx3 array of field values.
+
+        *Limitations*
+
+        Currently the points where the field is probed must lie
+        inside the mesh.
+        """
+        pts = np.array(pts)
+        probe_at_single_point = False
+        if pts.ndim == 1 and len(pts) == 3:
+            probe_at_single_point = True
+            pts = np.array([pts])
+        assert(pts.ndim == 2 and pts.shape[1] == 3)
+
+        fun_field = self.get_field_as_dolfin_function(field_type)
+        res = map(fun_field, pts)
+        if probe_at_single_point:
+            res = res[0]
+        return np.array(res)
+
     def run_until(self, t):
         if not hasattr(self, "integrator"):
             self.integrator = LLGIntegrator(self.llg, self.llg.m, backend=self.integrator_backend)
