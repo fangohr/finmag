@@ -2,7 +2,7 @@ import logging
 
 log = logging.getLogger("finmag")
 
-from energy_base import AbstractEnergy, EnergyBase
+from energy_base import EnergyBase
 from exchange import Exchange
 from anisotropy import UniaxialAnisotropy
 from demag.demag import Demag
