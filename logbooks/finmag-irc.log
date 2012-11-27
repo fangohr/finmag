@@ -2645,3 +2645,91 @@ fangohr: Still testing ...
 2012-11-26 17:19:11 mb8g11: That's why they are confined to a named branch in our repo until we declare Sundials 2.5 our default.
 2012-11-26 17:22:49 fangohr-adium: Hi all, sorry for silence from me today; busy, busy, busy. Good to see everybody is online and communicating busily. Over and out for today.
 2012-11-26 17:23:05 mb8g11: Bye Hans
+2012-11-27 11:56:21 fangohr-adium1: Hi Max et al. Anybody up for lunch later?
+2012-11-27 11:56:42 max_albert: Yes, I might be. What time are you thinking?
+2012-11-27 11:56:56 fangohr-adium1: Am easy — can wait a little if you like.
+2012-11-27 11:57:21 max_albert: I don't mind. Happy to go whenever it suits you best.
+2012-11-27 11:57:51 fangohr-adium1: How about 12:30 approx?
+2012-11-27 11:58:06 max_albert: Sounds good to me. I'll pass the information on to Marijan and Weiwei.
+2012-11-27 11:58:26 fangohr-adium1: Thanks.
+2012-11-27 12:19:51 max_albert: Hi Hans, quick question: is it ok to give the pdf (or html version) of the Finmag documentation to Luzanne, even though it contains some source snippets?
+2012-11-27 12:20:11 max_albert: I just wanted to tell her about the sim.relax() method and noticed she doesn't have the documentation yet.
+2012-11-27 12:21:10 fangohr-adium1: I think so. What we really need is a user guide — a lot of the documentation is not relevant for her. I am hoping we can add a few ipython notebooks that show exactly these things in due course. But do give her the pdf (or the relevant pages — it may not help her to have all the information).
+2012-11-27 12:21:34 max_albert: Ok, will do. Thanks!
+2012-11-27 12:21:46 max_albert: And yes, I totally agree about the usage examples.
+2012-11-27 12:31:08 max_albert: Hi Hans, just finishing a couple of emails but will be ready to go in a few minutes I guess.
+2012-11-27 12:32:40 fangohr-adium1: Okay, same here.
+2012-11-27 12:35:53 fangohr-adium1: Do you want to pick me up when you are ready?
+2012-11-27 12:36:00 max_albert: Yes, will do.
+2012-11-27 15:51:32 mb8g11: Do we have any mercurial experts online?
+2012-11-27 15:51:56 max_albert: I'm online, but I wouldn't count myself as a mercurial expert by any means.
+2012-11-27 15:53:08 mb8g11: Let's try: I have commited to the wrong named branch. I would like to go to our default branch and merge some commits from the named branch. Is this possible?
+2012-11-27 15:54:16 max_albert: I presume those commits are on top of the sundials fix that you committed recently?
+2012-11-27 15:54:29 max_albert: And I presume that you would like to only "merge" those commits, but not the sundials change?
+2012-11-27 15:55:08 max_albert: If that's true then as far as I can see a merge won't be possible because it will inevitably also merge the sundials change.
+2012-11-27 15:55:31 mb8g11: Okay, thank you :) will merge and revert the sundials stuff by hand.
+2012-11-27 15:55:34 mb8g11: Need to go, sorry.
+2012-11-27 15:55:41 max_albert: I presume the best you can do is revert the changes in the branch (as one or several commits which undo those changes)
+2012-11-27 15:55:56 max_albert: And then cherry-pick the changes in the default branch, but keep the branches separate.
+2012-11-27 15:55:59 max_albert: No problem, see you!
+2012-11-27 16:29:37 max_albert: Hi MA, just to quickly follow up on your previous question. In case you haven't resolved it by other means yet, I guess what you want to do is cherry-pick the commits (so that the branches are kept separate).
+2012-11-27 16:29:57 max_albert: I know that git can do this quite easily, but I don't know what mercurial's way of doing this is.
+2012-11-27 16:30:26 max_albert: I found something called the "transplant" extension which some posts on StackOverflow indicate does the job, but it doesn't look as intuitive as the git "cherry-pick" command.
+2012-11-27 16:31:07 max_albert: Alternatively, I'm sure there is a way to export a bunch of commits as a series of patches which you can then apply to the default branch to re-create your commits.
+2012-11-27 16:31:22 max_albert: But again, I don't know what the right hg command is for that.
+2012-11-27 16:31:44 max_albert: But as you said, it should also be easy to just resolve the changes by hand because it's only a few lines that were changed.
+2012-11-27 16:33:22 D_Chernyshenko_: Yep, compared to git Mercurial isn't really built around changing or rewriting commit history, you have to use extensions which don't work that well
+2012-11-27 16:34:29 max_albert: Well, it isn't really changing the history, is it? All he needs to do is get the same changes he applied to the sundials branch into the "default" branch and then revert the commits in the sundials branch.
+2012-11-27 16:34:37 D_Chernyshenko_: By the way, I now have 12.10 at home, should I look into compiling for sundials 2.4 and 2.5 via some preprocessor macros?
+2012-11-27 16:34:45 max_albert: But yes, mercurial seems to make those things a lot harder than they need to be.
+2012-11-27 16:34:59 fangohr-adium: Dmitri, you mean using IFDEFs?
+2012-11-27 16:35:24 max_albert: Sounds great, if you want to do that. I would have otherwise looked into it in the next few days.
+2012-11-27 16:35:39 D_Chernyshenko_: Well, the manual method of reverting the changes indeed does not rewrite the history, but guess MA was looking for a better way
+2012-11-27 16:35:54 fangohr-adium: I would quite like that: we could then use the same code and compile with whatever (well, 2.4 or 2.5) sundials we find. While overtime no doubt we will move to 2.5, it would give us less pressure to do this now (with everybody).
+2012-11-27 16:37:03 max_albert: On a totally different note, here is a question for the Python experts which has bugged me for the past hour or so:
+2012-11-27 16:37:36 max_albert: I added a new method to the Simulation class, but for some reason it doesn't show up when I try to use it form within ipython.
+2012-11-27 16:38:19 max_albert: Neither is it available via tab completion, nor does it show up in the list when I say "dir(Simulation)".
+2012-11-27 16:38:28 mb8g11: delete the .pyc
+2012-11-27 16:38:38 D_Chernyshenko_: Also, can you actually invoke the method
+2012-11-27 16:38:43 max_albert: I also said "make clean" just in case it tried to read it from a .pyc file.
+2012-11-27 16:38:54 max_albert: Nope, I can't. It's totally not there.
+2012-11-27 16:39:02 max_albert: Or does "make clean" actually delete the .pyc files?
+2012-11-27 16:39:16 fangohr-adium: I take it you have done something with ipython (such as 'run' or relead(module)) to get the new code into the interpreter?
+2012-11-27 16:40:00 D_Chernyshenko_: Looks like make clean does not remove .pyc files, in fact it does almost nothing outside of the native directory
+2012-11-27 16:40:11 mb8g11: max
+2012-11-27 16:40:14 max_albert: Hans: By default it uses the finmag installation from my hg repository, so just changing code in the repo and saying "from finmag import Simulation" should do the trick.
+2012-11-27 16:40:19 mb8g11: max, thank you for the hints :)
+2012-11-27 16:40:36 max_albert: Dmitri: oh dear, I should have checked that... Will try again.
+2012-11-27 16:40:42 D_Chernyshenko_: make clean removes test-reports and then calls make clean in the native dir
+2012-11-27 16:41:26 D_Chernyshenko_: At this point I should say, initially I made the top level Makefile only to run the Jenkins build
+2012-11-27 16:42:01 D_Chernyshenko_: Later we added some testing targets to it but it never was a proper Makefile
+2012-11-27 16:42:17 D_Chernyshenko_: Which explains the lack of make clean etc
+2012-11-27 16:43:04 max_albert: Ok, I deleted all .pyc files manually but it still can't find it. This is really weird...
+2012-11-27 16:43:20 max_albert: When I add it outside the simulation class (e.g. in helpers.py) it can be imported, however.
+2012-11-27 16:43:46 D_Chernyshenko_: Hmm, could it be that you have two locations from which the file could be imported somehow? Maybe something in PYTHONPATH?
+2012-11-27 16:44:16 D_Chernyshenko_: Maybe you have two copies of the repository and you're not editing the file that's being loaded?
+2012-11-27 16:44:27 max_albert: I did check that, but the only Finmag installation in my PYTHONPATH is my usual hg repo.
+2012-11-27 16:44:38 D_Chernyshenko_: I guess you can try to print module_name.___file___ to see where it's from
+2012-11-27 16:44:47 max_albert: Yes, that's what I did.
+2012-11-27 16:45:13 D_Chernyshenko_: Two declarations inside the same file? :) Last resort option
+2012-11-27 16:45:18 D_Chernyshenko_: I.e. class declared twice
+2012-11-27 16:45:30 mb8g11: restarting python notebook?
+2012-11-27 16:46:01 max_albert: Dmitri: good idea, but it's only there once.
+2012-11-27 16:46:30 max_albert: MA: It's not in a notebook. It's in a regular ipython prompt, and I have retried it about a gazillion times by now.
+2012-11-27 16:46:36 max_albert: I think I'm going mad... ;-)
+2012-11-27 16:47:39 mb8g11: typo in the function name?
+2012-11-27 16:48:25 max_albert: Well, it doesn't show anything even remotely resembling that name when I say "dir(Simulation)", so I don't think a typo can be the reason. :(
+2012-11-27 16:48:32 mb8g11: like, a really bad one, where every letter is wrong
+2012-11-27 16:48:42 mb8g11: :D
+2012-11-27 16:48:43 max_albert: :-D :-D
+2012-11-27 16:49:05 mb8g11: add yet another method to it and look if it shows up
+2012-11-27 16:49:13 max_albert: Good idea, will try that.
+2012-11-27 16:51:05 mb8g11: touched a lot of files today, hope this doesn't make merging too difficult for you
+2012-11-27 16:54:38 mb8g11: bye bye!
+2012-11-27 16:55:22 max_albert: Solved it! For the record, the reason was that apart from the sim.pyc file there was also a sim.so file which I hadn't noticed, and which took preference.
+2012-11-27 16:55:29 max_albert: Thanks for helping in debugging, folkd!
+2012-11-27 16:55:36 max_albert: s/folkd/folks/
+2012-11-27 16:55:49 D_Chernyshenko_: Ahh, was that from Cython?
+2012-11-27 16:56:04 fangohr-adium: Yes, cython is guilty.
+2012-11-27 16:56:17 max_albert: Probably, but I can't remember having compiled anything in my source tree.
+2012-11-27 16:56:28 max_albert: Although I probably did while testing the binary distribution stuff.
