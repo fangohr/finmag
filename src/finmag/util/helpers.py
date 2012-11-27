@@ -197,7 +197,10 @@ def vector_valued_function(value, S3, normalise=False, **kwargs):
           the expression are substituted with the values taken from 'kwargs'
 
         - numpy.ndarray of nodal values of the shape (3*n,), where n
-          is the number of nodes
+          is the number of nodes. Note that the elements in this array
+          should follow dolfin's convention (i.e., the x-coordinates
+          of all function values should be listed first, then the y-
+          and z-values).
 
         - function (any callable object will do) which accepts the
           coordinates of all mesh nodes as a numpy.ndarray of shape (3, n)
