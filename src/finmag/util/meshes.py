@@ -248,7 +248,7 @@ def box(x0, x1, x2, y0, y1, y2, maxh, save_result=True, filename='', directory='
         tlo main;
         """).format(x0, x1, x2, y0, y1, y2, maxh=maxh)
     if save_result == True and filename == '':
-        filename = "box-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.6e}".format(x0, x1, x2, y0, y1, y2, maxh).replace(".", "_")
+        filename = "box-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}".format(x0, x1, x2, y0, y1, y2, maxh).replace(".", "_")
     return from_csg(csg, save_result=save_result, filename=filename, directory=directory)
 
 def sphere(r, maxh, save_result=True, filename='', directory=''):
@@ -275,7 +275,7 @@ def sphere(r, maxh, save_result=True, filename='', directory=''):
         """).format(r=r, maxh=maxh)
 
     if save_result == True and filename == '':
-        filename = "sphere-{:.1f}-{:.6e}".format(r, maxh).replace(".", "_")
+        filename = "sphere-{:.1f}-{:.1f}".format(r, maxh).replace(".", "_")
     return from_csg(csg, save_result=save_result, filename=filename, directory=directory)
 
 def cylinder(r, h, maxh, save_result=True, filename='', directory=''):
@@ -304,7 +304,7 @@ def cylinder(r, h, maxh, save_result=True, filename='', directory=''):
         tlo fincyl;
         """).format(r=r, h=h, maxh=maxh)
     if save_result == True and filename == '':
-        filename = "cyl-{:.1f}-{:.1f}-{:.6e}".format(r, h, maxh).replace(".", "_")
+        filename = "cyl-{:.1f}-{:.1f}-{:.1f}".format(r, h, maxh).replace(".", "_")
     return from_csg(csg_string, save_result=save_result, filename=filename, directory=directory)
 
 def elliptic_cylinder(r1, r2, h, maxh, save_result=True, filename='', directory=''):
@@ -333,7 +333,7 @@ def elliptic_cylinder(r1, r2, h, maxh, save_result=True, filename='', directory=
         tlo fincyl;
         """).format(r1=r1, r2=r2, h=h, maxh=maxh)
     if save_result == True and filename == '':
-        filename = "ellcyl-{:.1f}-{:.1f}-{:.1f}-{:.6e}".format(r1, r2, h, maxh).replace(".", "_")
+        filename = "ellcyl-{:.1f}-{:.1f}-{:.1f}-{:.1f}".format(r1, r2, h, maxh).replace(".", "_")
     return from_csg(csg_string, save_result=save_result, filename=filename, directory=directory)
 
 def ellipsoid(r1, r2, r3, maxh, save_result=True, filename='', directory=''):
@@ -359,7 +359,7 @@ def ellipsoid(r1, r2, r3, maxh, save_result=True, filename='', directory=''):
         tlo ell;
         """).format(r1=r1, r2=r2, r3=r3, maxh=maxh)
     if save_result == True and filename == '':
-        filename = "ellipsoid-{:.1f}-{:.1f}-{:.1f}-{:.6e}".format(r1, r2, r3, maxh).replace(".", "_")
+        filename = "ellipsoid-{:.1f}-{:.1f}-{:.1f}-{:.1f}".format(r1, r2, r3, maxh).replace(".", "_")
     return from_csg(csg_string, save_result=save_result, filename=filename, directory=directory)
 
 def ring(r1,r2, h, maxh, save_result=True, filename='', directory='',with_middle_plane=False):
@@ -414,7 +414,7 @@ def ring(r1,r2, h, maxh, save_result=True, filename='', directory='',with_middle
 
 
     if save_result == True and filename == '':
-        filename = "ring-{:.6e}-{:.6e}-{:.6e}-{:.6e}".format(r1,r2, h, maxh).replace(".", "_")
+        filename = "ring-{:.1f}-{:.1f}-{:.1f}-{:.1f}".format(r1,r2, h, maxh).replace(".", "_")
     return from_csg(csg_string, save_result=save_result, filename=filename, directory=directory)
 
 def mesh_volume(mesh):
