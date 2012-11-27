@@ -304,6 +304,15 @@ class DMI_Old(EnergyBase):
     DMI and derived from EnergyBase. We should move to the new DMI class to avoid
     code-duplication. Hans
 
+    Update 26 December: The regression tests have not been ported systematically from
+    the old code to new code. The idea was to have some tests simulating the same system
+    with the DMI_Old and DMI class, and to check whether the answers are the same.
+
+    The comment above still holds: we should get rid of the OLD DMI class, but I
+    suggest to keep it until Marijan starts to work on this. Updating the tests
+    and getting rid of this code will be a good starting point for him to work
+    with finmag. (HF)
+
     .. math::
         
         E_{\\text{DMI}} = \\int_\\Omega D \\vec{M} \\cdot (\\nabla \\times \\vec{M})  dx

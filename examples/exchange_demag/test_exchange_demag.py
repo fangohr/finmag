@@ -93,7 +93,8 @@ def test_compare_averages():
     if err > 1e-2:
         print "nmag:\n", ref1
         print "finmag:\n", computed1
-    assert err < REL_TOLERANCE, "Relative error = %g" % err
+    assert err < REL_TOLERANCE, "Relative error = {} is larger " \
+        "than tolerance (= {})".format(err, REL_TOLERANCE)
 
     # Plot nmag data
     nmagt = list(ref[:,0])*3
@@ -140,7 +141,8 @@ def test_compare_energies():
     rel_diff = np.abs(diff / max(exch))
     print "Exchange energy, max relative error:", max(rel_diff)
     assert max(rel_diff) < REL_TOLERANCE, \
-            "Max relative error in exchange energy is %g" % max(rel_diff)
+        "Max relative error in exchange energy = {} is larger than " \
+        "tolerance (= {})".format(max(rel_diff), REL_TOLERANCE)
 
     # Compare demag energy
     demag = computed[:, 1]/vol
@@ -151,7 +153,8 @@ def test_compare_energies():
     print "Demag energy, max relative error:", max(rel_diff)
     # Don't really know why this is ten times higher than everyting else.
     assert max(rel_diff) < REL_TOLERANCE*10, \
-            "Max relative error in demag energy is %g" % max(rel_diff)
+        "Max relative error in demag energy = {} is larger than " \
+        "tolerance (= {})".format(max(rel_diff), REL_TOLERANCE)
 
     # Plot
     p.plot(exch_nmag, 'o', mfc='w', label='nmag')
@@ -210,10 +213,14 @@ def test_compare_energy_density():
     rel_error_demag_nmag = np.abs(finmag_demag - nmag_demag)/np.linalg.norm(nmag_demag)
     print "Exchange energy density, max relative error from nmag:", max(rel_error_exch_nmag)
     print "Demag energy density, max relative error from nmag:", max(rel_error_demag_nmag)
-    assert max(rel_error_exch_nmag) < 3e-2, \
-        "Exchange energy density, max relative error from nmag is %g" % max(rel_error_exch_nmag)
-    assert max(rel_error_demag_nmag) < 1e-2, \
-        "Demag energy density, max relative error from nmag is %g" % max(rel_error_demag_nmag)
+    TOL_EXCH = 3e-2
+    TOL_DEMAG = 1e-2
+    assert max(rel_error_exch_nmag) < TOL_EXCH, \
+        "Exchange energy density, max relative error from nmag = {} is " \
+        "larger than tolerance (= {})".format(max(rel_error_exch_nmag), TOL_EXCH)
+    assert max(rel_error_demag_nmag) < TOL_DEMAG, \
+        "Demag energy density, max relative error from nmag = {} is larger " \
+        "than tolarance (= {})".format(max(rel_error_demag_nmag), TOL_DEMAG)
 
 
     # Read oommf data

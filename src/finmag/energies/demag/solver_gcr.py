@@ -230,12 +230,12 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver,PEQBuilder):
         """
 
         #Solve for phia using FEM
-        logger.info("GCR: Solving for phi_a")
+        logger.debug("GCR: Solving for phi_a")
         timings.startnext("Solve phia")
         self.phia = self.solve_phia(self.phia)
         
         #Assemble the vector q.
-        logger.info("GCR: Solving for phi_b on the boundary")
+        logger.debug("GCR: Solving for phi_b on the boundary")
         timings.startnext("Build q vector")
         if self.qvector_method == "pe":
             q = self.build_vector_q_pe(self.m,self.Ms,self.phia)
@@ -253,7 +253,7 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver,PEQBuilder):
         self.phib.vector()[self.b2g] = phib_boundary
         
         #Solve for phib on the inside of the mesh with Fem, eq. (3)
-        logger.info("GCR: Solve for phi_b (laplace on the inside)")
+        logger.debug("GCR: Solve for phi_b (laplace on the inside)")
         timings.startnext("Compute phi_b on the inside")
         self.phib = self.solve_laplace_inside(self.phib)
         
