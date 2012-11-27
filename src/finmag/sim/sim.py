@@ -10,7 +10,7 @@ import dolfin as df
 import numpy as np
 from finmag.sim.llg import LLG
 from finmag.util.timings import timings
-from finmag.util.helpers import norm
+from finmag.util.helpers import norm, vector_valued_function
 from finmag.util.consts import exchange_length, bloch_parameter
 from finmag.util.meshes import mesh_info, mesh_volume
 from finmag.sim.integrator import LLGIntegrator
@@ -32,6 +32,14 @@ class Simulation(object):
         t           the current simulation time
 
     """
+
+    field_classes = {
+        "exchange": Exchange,
+        "demag": Demag,
+        "anisotropy": UniaxialAnisotropy,
+        "zeeman": Zeeman
+        }
+
     def __init__(self, mesh, Ms, unit_length=1, integrator_backend="sundials"):
         """Simulation object.
 
@@ -106,6 +114,66 @@ class Simulation(object):
 
         """
         return self.llg.effective_field.total_energy()
+
+    def get_interaction(self, interaction_type):
+        """
+        Returns the interaction of the given type.
+
+        Allowed types: "exchange", "demag, "anisotropy", "zeeman".
+
+        Returns None if no interaction of the given type is present in
+        the simulation. Raises an exception if more than one
+        interaction is found.
+        """
+        try:
+            FieldClass = self.field_classes[interaction_type]
+        except KeyError:
+            raise ValueError(
+                "'interaction_type' must be a string representing one of the "
+                "known field types: {}".format(field_classes.keys()))
+
+        field_lst = [e for e in self.llg.effective_field.interactions
+                     if isinstance(e, FieldClass)]
+
+        if len(field_lst) > 1:
+            raise ValueError(
+                "Expected at most one interaction of type '{}' in simulation. "
+                "Found: {}".format(interaction_type, len(field_lst)))
+
+        try:
+            res = field_lst[0]
+        except IndexError:
+            res = None
+
+        return res
+
+    def get_field_as_dolfin_function(self, field_type):
+        """
+        Return the given field as a dolfin.Function.
+
+        *Arguments*
+
+        field_type: string
+
+            The field to be converted to a dolfin.Function.
+            Must be one of: "exchange", "demag", "anisotropy",
+            "zeeman".
+
+        *Returns*
+
+        A dolfin.Function representing the given field.
+        """
+        field = self.get_interaction(field_type)
+        if field is None:
+            raise ValueError("No interaction of type '{}' present "
+                             "in simulation.".format(field_type))
+
+        S3 = df.VectorFunctionSpace(self.mesh, 'CG', 1)
+        # XXX TODO: The following line probably copies the data in a
+        # while creating the function (should check whether this is
+        # really the case!). If so, can we avoid this somehow? -- Max
+        a = field.compute_field()
+        return vector_valued_function(a, S3)
 
     def run_until(self, t):
         if not hasattr(self, "integrator"):
