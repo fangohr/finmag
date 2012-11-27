@@ -91,7 +91,7 @@ We use "default" as default method and preconditioner. This can be changed after
 
 Here, we enable the solver to use the conjugate gradient method with incomplete LU factorization for both the poisson problem and the laplace problem.
 
-As the Krylov solvers are created in the constructor, we have the opporunity to change all default parameters, e.g. tolerances or maximum number of iterations, before the solving starts. The default values can be found e.g.
+As the Krylov solvers are created in the constructor, we have the opportunity to change all default parameters, e.g. tolerances or maximum number of iterations, before the solving starts. The default values can be found e.g.
 
 .. code-block:: python
 
