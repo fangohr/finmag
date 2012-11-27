@@ -16,7 +16,7 @@ namespace {
     static const double constant_K_B = 1.3806488e-23; // J/K
 
     //used for RK2 solver
-    static const double theta=0.66666666666;
+    static const double theta=2.0/3.0;
     static const double theta1=1.0-0.5/theta;
     static const double theta2=0.5/theta;
 
@@ -279,7 +279,7 @@ namespace {
                             (2.*constant_K_B/constant_MU0)*T[i] /
                             (gamma_LL * Ms * lambda * V[i] * a_par)
                         );
-
+                    //printf("b_long==%e  b_tr==%e \n",b_long,b_tr);
                     // add transverse damping: m x (m x H) == (m.H)m - (m.m)H, multiplied by -gamma lambda alpha_perp/m^2
                     double tdamp = -gamma_LL * lambda * a_perp / mm;
                     dm[i1] += tdamp * (mh_tr * m[i1] - mm * h_tr_0);
@@ -287,6 +287,7 @@ namespace {
                     dm[i3] += tdamp * (mh_tr * m[i3] - mm * h_tr_2);
 
                     double mh_long;
+
                     if (use_evans2012_noise) {
                         double h_long_0 = h[i1]*dt;
                         double h_long_1 = h[i2]*dt;
@@ -311,7 +312,7 @@ namespace {
                     dm[i1] += ldamp * mh_long * m[i1];
                     dm[i2] += ldamp * mh_long * m[i2];
                     dm[i3] += ldamp * mh_long * m[i3];
-                    //printf("dm0==%e  dm1==%e  dm2==%e  mh_long==%e\n",dm[i1],dm[i2],dm[i3],mh_long);
+                    //printf("dm0==%e  dm1==%e  dm2==%e dw=%e  %e  %e\n",dm[i1],dm[i2],dm[i3],dw_l[i1],dw_l[i2],dw_l[i3]);
 
                 }
             }
@@ -351,8 +352,8 @@ namespace {
         		length=M.size();
         		dm1= new double[length];
         		dm2= new double[length];
-        		dm3= new double[length];
         		eta= new double[length];
+
 
         		initial_random();
 
@@ -369,10 +370,6 @@ namespace {
 
         	if (dm2!=0){
         		delete[] dm2;
-        	}
-
-        	if (dm3!=0){
-        	    delete[] dm3;
         	}
 
         	if (eta!=0){
@@ -393,20 +390,13 @@ namespace {
     		for (int i = 0; i < length; i++){
     			m_pred[i] = m[i] + theta*dm1[i];
     		}
-    		bp::call<void>(rhs_func.ptr(),M_pred);
-    		gauss_random_vec(eta,length,sqrt(dt));
-    		calc_llb_adt_plus_bdw(m,h,dm2);
 
-    		/*
-    		for (int i = 0; i < length; i++){
-    			m_pred[i] = m[i] - dm1[i] + dm2[i];
-    		}
     		bp::call<void>(rhs_func.ptr(),M_pred);
+
     		gauss_random_vec(eta,length,sqrt(dt));
-    		calc_llb_adt_plus_bdw(m,h,dm3);
-			*/
+    		calc_llb_adt_plus_bdw(m_pred,h,dm2);
+
     		for (int i = 0; i < length; i++){
-    			//m[i] += 0.75*dm2[i] + 0.25*dm3[i];
     			m[i] += theta1*dm1[i] + theta2*dm2[i];
 
     		}
@@ -472,17 +462,17 @@ namespace {
                     dm[i3] += (m[i3] * damp1 + h[i3] * damp2)*dt;
 
 
-
                     double Q_perp =  sqrt(
                             (2.*constant_K_B)*T[i]*(a_perp - a_par) /
                             (gamma_LL * Ms* constant_MU0* V[i]* a_perp * a_perp * lambda)
                         );
 
                     double Q_par =sqrt(
-                            (2.*gamma_LL*constant_K_B/lambda)*T[i]*a_par /
+                            (2.*gamma_LL*constant_K_B*lambda)*T[i]*a_par /
                             (Ms * V[i]*constant_MU0)
                         );
 
+                    //printf("Q_par==%e  Q_perp==%e \n",Q_par,Q_perp);
                     double meta = m[i1] * eta[i1] + m[i2] * eta[i2] + m[i3] * eta[i3];
                     //m x (m x H) == (m.H)m - (m.m)H,
                     double damp3 = -a_perp * damping_coeff / mm * meta;
@@ -493,6 +483,7 @@ namespace {
                     dm[i1] += Q_par*eta[i1];
                     dm[i2] += Q_par*eta[i2];
                     dm[i3] += Q_par*eta[i3];
+                    //printf("dm0==%e  dm1==%e  dm2==%e  dw2=%e  %e  %e\n",dm[i1],dm[i2],dm[i3],eta_par[i1],eta_par[i2],eta_par[i3]);
                 }
             }
 

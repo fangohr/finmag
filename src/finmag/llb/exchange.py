@@ -1,14 +1,15 @@
-import dolfin as df
 import logging
+import numpy as np
+import dolfin as df
 from finmag.util.timings import timings
 from finmag.energies.energy_base import EnergyBase
 from finmag.util.consts import mu0
 
+
 logger = logging.getLogger('finmag')
 
 
-
-class Exchange(EnergyBase):
+class ExchangeStd(EnergyBase):
     """
     Compute the exchange field for LLB case.
     
@@ -65,7 +66,7 @@ class Exchange(EnergyBase):
 
     """
     def __init__(self, C, method="box-matrix-petsc"):
-        super(Exchange, self).__init__(method, in_jacobian=True)
+        super(ExchangeStd, self).__init__(method, in_jacobian=True)
         self.C = C
 
     def setup(self, S3, m, Ms, Me, unit_length=1):
@@ -86,7 +87,7 @@ class Exchange(EnergyBase):
         nodal_E = Ms * mu0 * df.dot(self.exchange_factor \
                 * df.inner(df.grad(m), df.grad(m)), w) * df.dx
 
-        super(Exchange, self).setup(
+        super(ExchangeStd, self).setup(
                 E_integrand=E,
                 nodal_E=nodal_E,
                 S3=S3,
@@ -107,29 +108,74 @@ class Exchange(EnergyBase):
         """
 
         
-        Hex = super(Exchange, self).compute_field()
+        Hex = super(ExchangeStd, self).compute_field()
         
         return Hex / self.Me ** 2
 
 
+class Exchange(object):
+    def __init__(self, C, in_jacobian=True):
+        self.C = C
+        self.in_jacobian=in_jacobian
+    
+    def setup(self, S3, m, Ms0, me=1, unit_length=1.0): 
+        timings.start('Exchange-setup')
+
+        self.S3 = S3
+        self.m = m
+        self.Ms0=Ms0
+        self.me=me
+        self.unit_length = unit_length
+
+        self.mu0 = mu0
+        self.exchange_factor = 2.0 * self.C / (self.mu0 * me**2 * Ms0 * self.unit_length**2)
+
+        u3 = df.TrialFunction(S3)
+        v3 = df.TestFunction(S3)
+        self.K = df.PETScMatrix()
+        df.assemble(df.inner(df.grad(u3),df.grad(v3))*df.dx, tensor=self.K)
+        self.H = df.PETScVector()
+        
+        self.vol = df.assemble(df.dot(v3, df.Constant([1, 1, 1])) * df.dx).array()
+        
+        self.coeff=-self.exchange_factor/(self.vol)
+         
+        timings.stop('Exchange-setup')
+    
+    def compute_field(self):
+        
+        self.K.mult(self.m.vector(), self.H)
+         
+        return  self.coeff*self.H.array()
+
+
 if __name__ == "__main__":
     from dolfin import *
-    m = 1e-8
-    Ms = 0.8e6
-    n = 5
-    mesh = Box(0, m, 0, m, 0, m, n, n, n)
+    
+    mesh = Box(0, 0, 0, 10, 1, 1, 10, 1, 1)
+    Ms = 8.6e5
+
 
     S3 = VectorFunctionSpace(mesh, "Lagrange", 1)
     C = 1.3e-11  # J/m exchange constant
-    M = project(Constant((1, 0, 0)), S3)  # Initial magnetisation
-    exchange = Exchange(1e-11)
-
-    exchange.setup(S3, M, Ms, 1)
-
-    _ = exchange.compute_field()
-    _ = exchange.compute_energy()
-    _ = exchange.energy_density()
+    expr = df.Expression(('4.0*sin(x[0])', '4*cos(x[0])','0'))
+    m0 = df.interpolate(expr, S3)
+    
+    from finmag.llb.material import Material
+    mat = Material(mesh, name='FePt')
+    mat.set_m(expr)
+    mat.T = 100
+    mat.alpha=0.01
+    
+    exch = Exchange(C)
+    exch.setup(mat.S3, mat._m, mat.Ms0, mat.m_e,unit_length=1e-9)
+    
+    exch2 = ExchangeStd(C)
+    exch2.setup(mat.S3, mat._m, mat.Ms0, mat.m_e,unit_length=1e-9)
+    
+    print max(exch2.compute_field()-exch.compute_field())
+    
 
     
-    print timings.report_str()
+    #print timings.report_str()
 
