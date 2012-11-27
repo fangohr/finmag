@@ -2,7 +2,6 @@ import logging
 import textwrap
 import dolfin as df
 from finmag.util.timings import timings
-from finmag.energies import AbstractEnergy
 from solver_fk import FemBemFKSolver
 from solver_gcr import FemBemGCRSolver
 from solver_fk_alt import SimpleFKSolver
@@ -12,7 +11,7 @@ from finmag.tests.demag.problems import prob_fembem_testcases as pft
 log = logging.getLogger("finmag")
 
 
-class Demag(AbstractEnergy):
+class Demag(object):
     """
     A wrapper for the demag solvers that also implements the functionality of
     an energy class.

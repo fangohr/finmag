@@ -1,10 +1,10 @@
 import logging
 import numpy as np
-from energy_base import AbstractEnergy
 
 logger = logging.getLogger('finmag')
 
-class ThinFilmDemag(AbstractEnergy):
+
+class ThinFilmDemag(object):
     """
     Demagnetising field for thin films in the i-direction.
     Hj = Hk = 0 and Hi = - Mi.

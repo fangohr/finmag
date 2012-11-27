@@ -9,46 +9,7 @@ from finmag.util.meshes import mesh_volume
 logger = logging.getLogger('finmag')
 
 
-class AbstractEnergy(object):
-    """
-    Abstract Base class from which the following classes inherit:
-
-      - Demag
-
-      - EnergyBase, from which the following inherit
-        - Exchange
-        - UniaxialAnisotropy
-        - DMI
-
-      - Zeemann
-
-
-    The Exchange, Uniaxial and DMI class are all conceptually similar, and thus share a lot
-    of common code in EnergyBase. In theory, we could also make the Zeemann class one of
-    these, but on the other hand the Zeemann class is very simple as it is and does not actually
-    need the automatic machinery to effectively compute the field (as it is already given as the
-    input).
-
-    The demag class is conceptually more complicated and fundamentally different, and cannot
-    meaningfully inherit from EnergyBase.
-
-    """
-    __metaclass__ = abc.ABCMeta
-
-    #@abc.abstractmethod
-    def setup(S3, m, Ms, unit_length):
-        return
-
-    #@abc.abstractmethod
-    def compute_field(self):
-        return
-
-    #@abc.abstractmethod
-    def compute_energy(self):
-        return
-
-
-class EnergyBase(AbstractEnergy):
+class EnergyBase(object):
     """
     Computes a field for a given energy functional.
 
