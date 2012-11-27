@@ -1,8 +1,8 @@
 import abc
 import logging
-from finmag.util.timings import timings
 import dolfin as df
 import numpy as np
+from finmag.util.timings import timings
 from finmag.util.consts import mu0
 from finmag.util.meshes import mesh_volume
 
@@ -98,7 +98,7 @@ class EnergyBase(object):
         """Compose and return a string that is used for timing functions."""
         return 'EnergyBase-' + self.__class__.__name__ + '-' + functiondescription
 
-    def setup(self, E_integrand, nodal_E, S3, m, Ms, unit_length=1):
+    def setup(self, E_integrand, S3, m, Ms, unit_length=1):
         """Function to be called after the energy object has been constructed.
 
         *Arguments*
@@ -147,7 +147,7 @@ class EnergyBase(object):
         w = df.TestFunction(S1)
         self.nodal_vol = df.assemble(w * df.dx, mesh=S3.mesh()).array() \
                 * unit_length ** self.dim
-        self.nodal_E = nodal_E
+        self.nodal_E = df.dot(E_integrand, w) * df.dx
 
         # This is only needed if we want the energy density
         # as a df.Function, in order to e.g. probe.
