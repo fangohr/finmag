@@ -102,6 +102,10 @@ def from_csg(csg, save_result=True, filename="", directory=""):
     contain path components, too (which are simply appended to
     `directory`).
 
+    A word of caution: It will not overwrite an existing geofile with the same
+    name, so remember this when calling the function with save_result=True and
+    a custom filename.
+
     Caveat: if `filename` contains an absolute path then value of
     `directory` is ignored.
     """
@@ -123,8 +127,9 @@ def from_csg(csg, save_result=True, filename="", directory=""):
             logger.debug("Creating directory '{}' as it does not exist.".format(directory))
             os.mkdir(directory)
         geofile = os.path.join(directory, filename) + ".geo"
-        with open(geofile, "w") as f:
-            f.write(csg)
+        if not os.path.exists(geofile):
+            with open(geofile, "w") as f:
+                f.write(csg)
         mesh = from_geofile(geofile, save_result=True)
     else:
         tmp = tempfile.NamedTemporaryFile(suffix='.geo', delete=False)
