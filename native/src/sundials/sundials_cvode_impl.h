@@ -32,6 +32,36 @@
         _eh.check_error(_retcode, #fn); \
     } while (0)
 
+/*
+    Currently, we support SUNDIALS versions 2.4 (Ubuntu 12.04) and 2.5 (Ubuntu 12.10)
+    To make our life fun, SUNDIALS does not provide a get_version function, and its library files are not numbered, which makes checking
+    the version at runtime quite difficult. If the wrong version is loaded at runtime, we might get seg faults or silent corruption.
+
+    TODO: check that the correct sundials version is loaded at runtime
+
+    Function callback signatures in 2.5 are different from 2.4: in 2.5, some int parameters have become long parameters.
+    To get around this, we need to define a type that will be either int, or long, depending on the SUNDIALS version we're building
+    against (in the SUNDIALS headers, the signature just changed from int to long without a common typedef that we could use).
+
+    Unfortunately, to make our life more fun, SUNDIALS header do not define an integer version number that we could use
+    in an #if condition.
+*/
+// First, convert the string SUNDIALS_PACKAGE_VERSION to a number
+// The string has to have the form of "2.4.0" or "2.5.0"
+// Using C++11 constexpr here is the easiest option, but there are (longer) workarounds if we are not allowed to use the new standard
+constexpr bool const_str_equal(const char (&a)[6], const char (&b)[6]) {
+    return a[0] == b[0] && a[1] == b[1] && a[2] == b[2] && a[3] == b[3] && a[4] == b[4] && a[5] == b[5];
+}
+constexpr int get_sundials_version_number(const char (&v)[6]) {
+    return const_str_equal(v, "2.5.0") ? 250 : const_str_equal(v, "2.4.0") ? 240 : -1;
+}
+
+// Next, define the parameter type 'sundials_long_param_t' based on the version number
+template<int Version> struct sundials_traits;
+template<> struct sundials_traits<240> { typedef int param_t; };
+template<> struct sundials_traits<250> { typedef long param_t; };
+typedef typename sundials_traits<get_sundials_version_number(SUNDIALS_PACKAGE_VERSION)>::param_t sundials_long_param_t;
+
 namespace finmag { namespace sundials {
 
     class error_handler {
@@ -359,7 +389,7 @@ namespace finmag { namespace sundials {
         }
 
         int get_dls_last_flag() {
-            long retval = 0;
+            sundials_long_param_t retval = 0;
             CHECK_SUNDIALS_RET(CVDlsGetLastFlag, (cvode_mem, &retval));
             return retval;
         }
@@ -381,7 +411,7 @@ namespace finmag { namespace sundials {
         }
 
         int get_diag_last_flag() {
-            long retval = 0;
+            sundials_long_param_t retval = 0;
             CHECK_SUNDIALS_RET(CVDiagGetLastFlag, (cvode_mem, &retval));
             return retval;
         }
@@ -433,7 +463,7 @@ namespace finmag { namespace sundials {
         }
 
         int get_spils_last_flag() {
-            long retval = 0;
+            sundials_long_param_t retval = 0;
             CHECK_SUNDIALS_RET(CVSpilsGetLastFlag, (cvode_mem, &retval));
             return retval;
         }
@@ -494,7 +524,7 @@ namespace finmag { namespace sundials {
         }
 
         // Jacobian information (direct method with dense Jacobian)
-        static int dls_dense_jac_callback(long n, realtype t, N_Vector y, N_Vector fy, DlsMat Jac,
+        static int dls_dense_jac_callback(sundials_long_param_t n, realtype t, N_Vector y, N_Vector fy, DlsMat Jac,
                     void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
 //            cvode *cv = (cvode*) user_data;
 
@@ -507,7 +537,7 @@ namespace finmag { namespace sundials {
         }
 
         // Jacobian information (direct method with banded Jacobian)
-        static int dls_band_jac_callback(long n, long mupper, long mlower, realtype t, N_Vector y, N_Vector fy,
+        static int dls_band_jac_callback(sundials_long_param_t n, sundials_long_param_t mupper, sundials_long_param_t mlower, realtype t, N_Vector y, N_Vector fy,
                     DlsMat Jac, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
             ASSERT(false && "dls_band_jac_callback not implemented");
             abort();
