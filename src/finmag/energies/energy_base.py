@@ -271,10 +271,10 @@ class EnergyBase(object):
         #Note that we could make this 'project' method faster by computing the matrices
         #that represent a and L, and only to solve the matrix system in 'compute_field'().
         #IF this method is actually useful, we can do that. HF 16 Feb 2012
-        H_trial = df.TrialFunction(self.V)
-        self.a = df.dot(H_trial, self.v) * df.dx
+        w = df.TrialFunction(self.S3)
+        self.a = df.dot(w, self.v) * df.dx
         self.L = self.dE_dM
-        self.H_exch_project = df.Function(self.V)
+        self.H_project = df.Function(self.S3)
 
     def __compute_field_assemble(self):
         return df.assemble(self.dE_dM).array() / self.vol
@@ -291,7 +291,3 @@ class EnergyBase(object):
     def __compute_field_project(self):
         df.solve(self.a == self.L, self.H_project)
         return self.H_project.vector().array()
-
-
-if __name__ == "__main__":
-    pass
