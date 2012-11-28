@@ -26,6 +26,7 @@ class UniaxialAnisotropy(EnergyBase):
 
     *Example of Usage*
         .. code-block:: python
+
             import dolfin as df
             from finmag import UniaxialAnisotropy
 
