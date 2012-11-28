@@ -103,12 +103,9 @@ class EnergyBase(object):
 
         *Arguments*
 
-            E
-                Dolfin form that computes the total energy (a scalar) as a function
-                of M (and maybe Ms) if assembled.
-
-            nodal_E
-                Dolfin form that computes the energy density at each node.
+            E_integrand
+                dolfin form that represents the term inside the energy
+                integral, as a function of m (and maybe Ms) if assembled
 
             S3
                 Dolfin 3d VectorFunctionSpace on which M is defined
