@@ -47,6 +47,30 @@ def test_all_orientations_with_pinning():
         print angles
         assert np.abs(np.max(angles) - np.min(angles)) < TOLERANCE
 
+def test_exchange_field_should_change_when_M_changes():
+    sim = Sim(mesh, Ms)
+    sim.set_m(df.Expression(
+        ('(2*x[0]-L)/L',
+         'sqrt(1 - ((2*x[0]-L)/L)*((2*x[0]-L)/L))',
+         '0'), L=length))
+
+    exchange = Exchange(A)
+    sim.add(exchange)
+
+    # save the beginning value of M and the exchange field for comparison purposes
+    old_m = sim.m
+    old_H_ex = exchange.compute_field()
+
+    sim.run_until(1e-11)
+
+    # Capture the current value of the exchange field and m.
+    m = sim.m
+    H_ex = exchange.compute_field() 
+
+    # We assert that the magnetisation has indeed changed since the beginning.
+    assert not np.array_equal(old_m, m)
+    assert not np.array_equal(old_H_ex, H_ex), "H_ex hasn't changed."
+
 if __name__== "__main__":
     print "without pinning"
     test_all_orientations_without_pinning()
