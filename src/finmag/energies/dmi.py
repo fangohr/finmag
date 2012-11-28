@@ -284,7 +284,6 @@ class DMI(EnergyBase):
         # as a df.Function, in order to e.g. probe.
         super(DMI, self).setup(
                 E_integrand=E,
-                nodal_E=nodal_E,
                 S3=S3,
                 m=M,
                 Ms=Ms,
