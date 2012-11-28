@@ -11,7 +11,7 @@ class UniaxialAnisotropy(EnergyBase):
 
     .. math::
 
-        E_{\\text{anis}} = \\int_\\Omega A (K_1 - (1 - a \\cdot m))  dx
+        E_{\\text{anis}} = \\int_\\Omega K_1 - (1 - a \\cdot m)^2  dx
 
     *Arguments*
         K1
