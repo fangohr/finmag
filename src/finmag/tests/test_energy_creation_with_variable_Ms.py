@@ -43,7 +43,7 @@ def setup():
 @pytest.mark.parametrize(("EnergyClass", "init_args"), [
         (Exchange, [1.3e-11]),
         (UniaxialAnisotropy, [1e5, (0, 0, 1)]),
-        (Zeeman, [(0, 0, Ms)]),
+        (Zeeman, [(0, 0, 1e6)]),
         (Demag, []),
         ])
 def test_can_create_energy_object(fixt, EnergyClass, init_args):

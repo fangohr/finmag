@@ -37,7 +37,7 @@ class LLB(object):
         self.vol = df.assemble(df.dot(df.TestFunction(self.S3),
                                       df.Constant([1, 1, 1])) * df.dx).array()
         self.vol *= self.material.unit_length**3
-        print 'vol=',self.vol
+        #print 'vol=',self.vol
         
         self._pre_rhs_callables = []
         self._post_rhs_callables = []
@@ -52,13 +52,13 @@ class LLB(object):
         
         self.integrator = integrator
         
-    def set_up_stochastic_solver(self, dt=1e-13,use_evans2012_noise=True):
+    def set_up_stochastic_solver(self, dt=1e-13,use_evans2012_noise=True,rk=False):
         self.dt = dt
         self.use_evans2012_noise = use_evans2012_noise
         
         M_pred=np.zeros(self.m.shape)
-        """
-        integrator = native_llb.HeunStochasticIntegrator(
+        if rk:
+            integrator = native_llb.HeunStochasticIntegrator(
                                     self.m,
                                     M_pred,
                                     self.material.T,
@@ -71,9 +71,9 @@ class LLB(object):
                                     self.do_precession,
                                     self.use_evans2012_noise,
                                     self.stochastic_rhs)
-        """
         
-        integrator = native_llb.RungeKuttaStochasticIntegrator(
+        else:
+            integrator = native_llb.RungeKuttaStochasticIntegrator(
                                     self.m,
                                     M_pred,
                                     self.material.T,
@@ -85,7 +85,7 @@ class LLB(object):
                                     self.material.Ms0,
                                     self.do_precession,
                                     self.stochastic_rhs)
-                                    
+                                  
         self.integrator = integrator
         
 
