@@ -359,7 +359,7 @@ namespace finmag { namespace sundials {
         }
 
         int get_dls_last_flag() {
-            long retval = 0;
+            int retval = 0;
             CHECK_SUNDIALS_RET(CVDlsGetLastFlag, (cvode_mem, &retval));
             return retval;
         }
@@ -381,7 +381,7 @@ namespace finmag { namespace sundials {
         }
 
         int get_diag_last_flag() {
-            long retval = 0;
+            int retval = 0;
             CHECK_SUNDIALS_RET(CVDiagGetLastFlag, (cvode_mem, &retval));
             return retval;
         }
@@ -433,7 +433,7 @@ namespace finmag { namespace sundials {
         }
 
         int get_spils_last_flag() {
-            long retval = 0;
+            int retval = 0;
             CHECK_SUNDIALS_RET(CVSpilsGetLastFlag, (cvode_mem, &retval));
             return retval;
         }
@@ -494,7 +494,7 @@ namespace finmag { namespace sundials {
         }
 
         // Jacobian information (direct method with dense Jacobian)
-        static int dls_dense_jac_callback(long n, realtype t, N_Vector y, N_Vector fy, DlsMat Jac,
+        static int dls_dense_jac_callback(int n, realtype t, N_Vector y, N_Vector fy, DlsMat Jac,
                     void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
 //            cvode *cv = (cvode*) user_data;
 
@@ -507,7 +507,7 @@ namespace finmag { namespace sundials {
         }
 
         // Jacobian information (direct method with banded Jacobian)
-        static int dls_band_jac_callback(long n, long mupper, long mlower, realtype t, N_Vector y, N_Vector fy,
+        static int dls_band_jac_callback(int n, int mupper, int mlower, realtype t, N_Vector y, N_Vector fy,
                     DlsMat Jac, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
             ASSERT(false && "dls_band_jac_callback not implemented");
             abort();
