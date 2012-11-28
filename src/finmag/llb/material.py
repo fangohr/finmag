@@ -208,7 +208,7 @@ class Material(object):
         self._m = df.Function(self.S3)
         self._T = np.zeros(mesh.num_vertices())
         self.h = self._m.vector().array()#just want to create a numpy array
-        self.unit_length=1 
+        self.unit_length=unit_length 
         
         if self.name == 'FePt':
             self.mat = LLBFePt()
