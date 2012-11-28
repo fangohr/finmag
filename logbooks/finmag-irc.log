@@ -2733,3 +2733,19 @@ fangohr: Still testing ...
 2012-11-27 16:56:04 fangohr-adium: Yes, cython is guilty.
 2012-11-27 16:56:17 max_albert: Probably, but I can't remember having compiled anything in my source tree.
 2012-11-27 16:56:28 max_albert: Although I probably did while testing the binary distribution stuff.
+2012-11-28 10:16:22 mb8g11: Hi all
+2012-11-28 10:49:47 mb8g11: Any objections to me installing a new pytest on summer? Our version doesn't know the "fixture" decorator.
+2012-11-28 10:53:15 mb8g11: (I'm reading messages I miss on the IRC chat log btw.)
+2012-11-28 12:32:50 fangohr-adium: Hi MA, no objections from me.
+2012-11-28 13:17:38 D_Chernyshenko_: Hans, my meeting today is at 16:00 and Marijan's is at 14:00, is that correct?
+2012-11-28 13:33:21 fangohr-adium: Hi Dmitri, yes 14 Marijan, 15 Weiwei and 16;00 you on my list.
+2012-11-28 14:27:25 D_Chernyshenko_: Sigh, sundials library files are not versioned at all, and there's no get_version function in sundials.
+2012-11-28 14:27:42 D_Chernyshenko_: So, no way to check if we've actually loaded the version of sundials we compiled against...
+2012-11-28 14:28:44 D_Chernyshenko_: libsundials_cvode.so.1.0.0
+2012-11-28 15:50:31 mb8g11: How irritating.
+2012-11-28 15:53:57 D_Chernyshenko_: Hey guys, I've updated the sundials interface files in the main branch to work with 2.4 and 2.5. I've tested the library on 2.5, and it compiles on both. Let me know if you find any issues
+2012-11-28 15:54:50 D_Chernyshenko_: There's still the minor issue that if we compile against say 2.4, and link against 2.5, *bad* things will happen
+2012-11-28 15:55:12 D_Chernyshenko_: Link at run time that is (for example, when using a binary distribution)
+2012-11-28 17:02:04 fangohr-adium: Hi Dmitri, am only now catching up with IRC — thanks for all that; great stuff.
+2012-11-28 17:02:38 fangohr-adium: MA, it was the empty line in the doc string in the end? Quite a mean missing '\n' to find.
+2012-11-28 17:14:24 fangohr-adium: Yes, compiles again on osiris.
