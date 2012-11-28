@@ -83,7 +83,7 @@ def test_anisotropy_field_supported_methods(fixt):
     fixt["m"].assign(df.Constant((1/np.sqrt(2), 0, 1/np.sqrt(2))))
     H_default = fixt["anis"].compute_field()
 
-    supported_methods = UniaxialAnisotropy._supported_methods
+    supported_methods = list(UniaxialAnisotropy._supported_methods)
     # No need to compare default method with itself.
     supported_methods.remove(fixt["anis"].method)
 

@@ -60,7 +60,7 @@ def test_exchange_field_supported_methods(fixt):
     fixt["m"].vector().set_local(f.vector().array())
     H_default = fixt["exch"].compute_field()
 
-    supported_methods = Exchange._supported_methods
+    supported_methods = list(Exchange._supported_methods)
     supported_methods.remove(fixt["exch"].method) # no need to compare default method with itself
     supported_methods.remove("project") # the project method for the exchange is too bad
 
