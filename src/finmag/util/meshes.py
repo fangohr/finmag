@@ -428,6 +428,21 @@ def mesh_volume(mesh):
     """
     return sum([c.volume() for c in df.cells(mesh)])
 
+def nodal_volume(space):
+    """
+    Computes the volume of each node of the mesh of the provided (Vector)FunctionSpace.
+
+    The returned numpy.array will be compatible to functions of that FunctionSpace,
+    so will be one-dimensional for a FunctionSpace, and three-dimensional
+    for a VectorFunctionSpace.
+
+    """
+    v = df.TestFunction(space)
+    if isinstance(space, df.VectorFunctionSpace):
+        return df.assemble(df.dot(v, df.Constant((1, 1, 1))) * df.dx).array()
+    return df.assemble(v * df.dx).array()
+    
+
 def mesh_info(mesh):
     """
     Return a string containing some basic information about the mesh
