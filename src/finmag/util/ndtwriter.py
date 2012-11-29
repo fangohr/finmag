@@ -6,27 +6,116 @@ logger = logging.getLogger(name='finmag')
 
 class ndtWriter(object):
 
-    datatoinclude = {
-        'time': ('<s>', lambda sim: sim.time),
-        'm': ('<A/m>', lambda sim: sim.m_average)
-    }
+    def default_entity_order(self):
+        keys = self.entities.keys()
+        # time needs to go first
+        keys.remove('time')
+        return ['time'] + sorted(keys)
 
-    #def headers():
+    def headers(self):
+        """return line one and two of ndt data file as string"""
+        line1 = []
+        line2 = []
+        for entityname in self.entity_order:
+            colheaders = self.entities[entityname]['header']
+            # colheaders can be a 3-tuple ('mx','my','mz'), say
+            # or a string ('time'). Avoid iterating over string:
+            if isinstance(colheaders, str):
+                colheaders = [colheaders]
+            for colhead in colheaders:
+                line1.append(self.string_format % colhead)
+                line2.append(self.string_format % \
+                    self.entities[entityname]['unit'])
+        return "".join(line1) + "\n" + "".join(line2) + "\n"
 
-    def __init__(self, filename, simulation):
+    def __init__(self, filename, simulation, entity_order=None):
+        # formatting for columns (could in principle be customized
+        # through extra arguments here)
+        charwidth = 15
+        self.float_format = "%" + str(charwidth) + "g "
+        self.string_format = "%" + str(charwidth) + "s "
+
+        # entities:
+        # Idea is to have a dictionary of keys where the keys
+        # are the column headers in the data file.
+        # the value is a tuple (a, b) where a shows the units
+        # of the data and b(sim) is a function that can be called
+        # with the simulation object and will retrieve the required
+        # data from the simulation object.
+        #
+        # No doubt this can be done neater, more general, etc.
+        # For example, it would be desirable if we could get ALL
+        # the fields from the simulation object, i.e. demag, exchange,
+        # anisotropy and also the corresponding energies.
+        #
+        # Ideally this would have the flexiblity to realise when we have
+        # two different anisotropies in the simulation, and provide both of
+        # these. It may be that we need create a 'fieldname' that the user
+        # can provide when creating interactions which summarises what the
+        # field is about, and which can be used as a useful column header
+        # here for the ndt file.
+        self.entities = {
+            'time': {'unit': 's',
+                        'get': lambda sim: sim.t,
+                        'header': 'time'},
+            'm': {'unit': 'A/m',
+                  'get': lambda sim: sim.m_average,
+                  'header': ('m_x', 'm_y', 'm_z')}
+            }
+
         self.filename = filename
         self.sim = simulation
+        # in what order to write data
+        if entity_order:
+            self.entity_order = entity_order
+        else:
+            self.entity_order = self.default_entity_order()
+
         # if file exists, cowardly stop
         if os.path.exists(filename):
             msg = "File %s exists already; cowardly stopping" % filename
             raise RuntimeError(msg)
-        self.f = open(self.filename, 'w')
+        f = open(self.filename, 'w')
+        # Write header
+        f.write(self.headers())
+        f.close()
+        self.sim = simulation
 
-    def append(self):
-        for entity in sorted(self.datatoinclude.keys()):
-            value = self.datatoinclude[entity][1]()
-            if isinstance(value, numpy.ndarray):
-                if len(value) == 3:  # 3d vector
-                    for i in range(3):
-                        self.f.write("%g\t" % value[i])
-            self.f.write('\n')
+    def save(self):
+        """Append data (spatial averages of fields) for current configuration"""
+        # open file
+        with open(self.filename, 'a') as f:
+            for entityname in self.entity_order:
+                value = self.entities[entityname]['get'](self.sim)
+                if isinstance(value, numpy.ndarray):
+                    if len(value) == 3:  # 3d vector
+                        for i in range(3):
+                            f.write(self.float_format % value[i])
+                    else:
+                        msg = "Can only deal with 3d-numpy arrays so far, but shape is %s" % value.shape
+                        raise NotImplementedError(msg)
+                elif isinstance(value, float) or isinstance(value, int):
+                    f.write(self.float_format % value)
+                else:
+                    msg = "Can only deal with numpy arrays, float and int so far, but type is %s" % type(value)
+                    raise NotImplementedError(msg)
+
+            f.write('\n')
+
+if __name__ == "__main__":
+    #create example simulation
+    import numpy as np
+    import finmag
+    import dolfin as df
+    xmin, ymin, zmin = 0, 0, 0    # one corner of cuboid
+    xmax, ymax, zmax = 6, 6, 11   # other corner of cuboid
+    nx, ny, nz = 3, 3, 6         # number of subdivisions (use ~2nm edgelength)
+    mesh = df.Box(xmin, ymin, zmin, xmax, ymax, zmax, nx, ny, nz)
+    # standard Py parameters
+    sim = finmag.sim_with(mesh, Ms=0.86e6, alpha=0.5, unit_length=1e-9, A=13e-12, m_init=(1, 0, 1))
+    ndt = ndtWriter('data.ndt', sim)
+    times = np.linspace(0, 3.0e-11, 6 + 1)
+    for i, time in enumerate(times):
+        print("In iteration {}, computing up to time {}".format(i, time))
+        sim.run_until(time)
+        ndt.save()
