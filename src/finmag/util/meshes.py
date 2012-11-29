@@ -552,7 +552,7 @@ def plot_mesh(mesh, ax=None, color="blue", **kwargs):
                          "(new value: linewidth = {})".format(kwargs['linewidth']))
 
     if dim == 2:
-        ax = plt.gca()
+        ax = ax or plt.gca()
         coords = mesh.coordinates()
         x = coords[:,0]
         y = coords[:,1]
@@ -567,7 +567,7 @@ def plot_mesh(mesh, ax=None, color="blue", **kwargs):
         #ax.tripcolor(x, y, triangles=triangs)
         ax.triplot(x, y, triangles=triangs, color="blue", **kwargs)
     elif dim == 3:
-        ax = plt.gca(projection='3d')
+        ax = ax or plt.gca(projection='3d')
         bm = df.BoundaryMesh(mesh)
         coords = bm.coordinates()
 
