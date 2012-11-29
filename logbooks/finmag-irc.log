@@ -2749,3 +2749,12 @@ fangohr: Still testing ...
 2012-11-28 17:02:04 fangohr-adium: Hi Dmitri, am only now catching up with IRC — thanks for all that; great stuff.
 2012-11-28 17:02:38 fangohr-adium: MA, it was the empty line in the doc string in the end? Quite a mean missing '\n' to find.
 2012-11-28 17:14:24 fangohr-adium: Yes, compiles again on osiris.
+2012-11-29 09:06:00 mb8g11: Indeed! (the missing newline)
+2012-11-29 15:54:58 fangohr-adium: Max, thanks for the disk image.
+2012-11-29 16:20:08 max_albert: You are welcome, Hans.
+2012-11-29 16:36:06 fangohr-adium: I have downloaded this, but will not have time to start it now. Do I need to know any passwords (need sudo access at some point, I am sure).
+2012-11-29 16:36:39 max_albert: If you need it, the user and password are both "finmag".
+2012-11-29 16:39:45 fangohr-adium: Excellent, Ta.
+2012-11-29 16:40:16 max_albert: I'm passing the thanks on to Marc-Antonio because he set it up. :)
+2012-11-29 17:59:41 mb8g11: This was one of those "How could this ever work?" moments. Introduced a bug in our base class for the energies by accidentally deleting the code that multiplied by the unit length in one calculation. And then I noticed we were not doing this consistently...
+2012-11-29 18:09:57 mb8g11: We still aren't.
