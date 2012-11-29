@@ -4,7 +4,7 @@ import numpy
 logger = logging.getLogger(name='finmag')
 
 
-class ndtWriter(object):
+class Writer(object):
 
     def default_entity_order(self):
         keys = self.entities.keys()
@@ -102,6 +102,59 @@ class ndtWriter(object):
 
             f.write('\n')
 
+
+class Reader(object):
+
+    # open ndt file
+    def __init__(self, filename):
+        self.filename = filename
+        # if file exists, cowardly stop
+        if not os.path.exists(filename):
+            raise RuntimeError("Cannot see file '%s'" % self.filename)
+        # immediatey read file
+        self.read()
+
+    def read(self):
+        """Read ndt data file"""
+
+        try:
+            self.f = open(self.filename, 'r')
+        except IOError:
+            raise RuntimeError("Cannot see file '%s'" % self.filename)
+
+        line1 = self.f.readline()
+        line2 = self.f.readline()
+        headers = line1.split()
+        units = line2.split()
+
+        assert len(units) == len(headers)
+
+        # use numpy to read remaining data
+        self.data = numpy.loadtxt(self.f)
+        self.f.close()
+
+        # some consistency checks: must have as many columns as headers
+        assert self.data.shape[1] == len(headers)
+
+        datadic = {}
+        # now wrap up data conveniently
+        for i, entity in enumerate(headers):
+            datadic[entity] = self.data[:, i]
+
+        self.datadic = datadic
+
+    def entities(self):
+        """Returns list of available entities"""
+        return self.datadic.keys()
+
+    def time(self):
+        """Returns list of available time steps"""
+        return self.datadic['time']
+
+    def __getitem__(self, entity):
+        """Given the entity name, return the data as numpy array"""
+        return self.datadic[entity]
+
 if __name__ == "__main__":
     #create example simulation
     import numpy as np
@@ -113,9 +166,15 @@ if __name__ == "__main__":
     mesh = df.Box(xmin, ymin, zmin, xmax, ymax, zmax, nx, ny, nz)
     # standard Py parameters
     sim = finmag.sim_with(mesh, Ms=0.86e6, alpha=0.5, unit_length=1e-9, A=13e-12, m_init=(1, 0, 1))
-    ndt = ndtWriter('data.ndt', sim)
+    filename = 'data.txt'
+    ndt = Writer(filename, sim)
     times = np.linspace(0, 3.0e-11, 6 + 1)
     for i, time in enumerate(times):
         print("In iteration {}, computing up to time {}".format(i, time))
         sim.run_until(time)
         ndt.save()
+
+    # now open file for reading
+    f = Reader(filename)
+    print f.time()
+    print f['m_x']
