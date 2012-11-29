@@ -428,7 +428,7 @@ def mesh_volume(mesh):
     """
     return sum([c.volume() for c in df.cells(mesh)])
 
-def nodal_volume(space):
+def nodal_volume(space, unit_length=1):
     """
     Computes the volume of each node of the mesh of the provided (Vector)FunctionSpace.
 
@@ -438,10 +438,10 @@ def nodal_volume(space):
 
     """
     v = df.TestFunction(space)
+    dim = space.mesh().topology().dim()
     if isinstance(space, df.VectorFunctionSpace):
-        return df.assemble(df.dot(v, df.Constant((1, 1, 1))) * df.dx).array()
-    return df.assemble(v * df.dx).array()
-    
+        return df.assemble(df.dot(v, df.Constant((1, 1, 1))) * df.dx).array() * unit_length ** dim
+    return df.assemble(v * df.dx).array() * unit_length ** dim
 
 def mesh_info(mesh):
     """
