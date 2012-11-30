@@ -49,7 +49,8 @@ class Simulation(object):
 
           Ms   : Magnetisation saturation (in A/m) of the material.
 
-          unit_length: the distance (in metres) associated with the distance 1.0 in the mesh object.
+          unit_length: the distance (in metres) associated with the
+                       distance 1.0 in the mesh object.
         """
 
         timings.reset()
@@ -84,8 +85,9 @@ class Simulation(object):
     @property
     def m_average(self):
         """
-        Compute and return the average magnetisation over the entire mesh, according to
-        the formula :math:`\\langle m \\rangle = \\frac{1}{V} \int m \: \mathrm{d}V`
+        Compute and return the average magnetisation over the entire
+        mesh, according to the formula :math:`\\langle m \\rangle =
+        \\frac{1}{V} \int m \: \mathrm{d}V`
         """
         return self.llg.m_average
 
@@ -110,7 +112,8 @@ class Simulation(object):
 
     def total_energy(self):
         """
-        Compute and return the total energy of all fields present in the simulation.
+        Compute and return the total energy of all fields present in
+        the simulation.
 
         """
         return self.llg.effective_field.total_energy()
@@ -216,13 +219,15 @@ class Simulation(object):
 
     def run_until(self, t):
         if not hasattr(self, "integrator"):
-            self.integrator = LLGIntegrator(self.llg, self.llg.m, backend=self.integrator_backend)
+            self.integrator = LLGIntegrator(self.llg, self.llg.m,
+                                            backend=self.integrator_backend)
         self.integrator.run_until(t)
         self.t = t
 
     def relax(self, save_snapshots=False, filename='', save_every=100e-12,
               save_final_snapshot=True, force_overwrite=False,
-              stopping_dmdt=ONE_DEGREE_PER_NS, dt_limit=1e-10, dmdt_increased_counter_limit=20):
+              stopping_dmdt=ONE_DEGREE_PER_NS, dt_limit=1e-10,
+              dmdt_increased_counter_limit=20):
         """
         Do time integration of the magnetisation M until it reaches a
         state where the change of M magnetisation at each node is
@@ -248,37 +253,47 @@ class Simulation(object):
         """
         log.info("Will integrate until relaxation.")
         if not hasattr(self, "integrator"):
-            self.integrator = LLGIntegrator(self.llg, self.llg.m, backend=self.integrator_backend)
+            self.integrator = LLGIntegrator(self.llg, self.llg.m,
+                                            backend=self.integrator_backend)
 
         if save_snapshots == True:
             if filename == '':
-                raise ValueError("If save_snapshots is True, filename must be a non-empty string.")
+                raise ValueError("If save_snapshots is True, filename must "
+                                 "be a non-empty string.")
             else:
                 ext = os.path.splitext(filename)[1]
                 if ext != '.pvd':
-                    raise ValueError("File extension for vtk snapshot file must be '.pvd', but got: '{}'".format(ext))
+                    raise ValueError(
+                        "File extension for vtk snapshot file must be '.pvd', "
+                        "but got: '{}'".format(ext))
             if os.path.exists(filename):
                 if force_overwrite:
-                    log.warning("Removing file '{}' and all associated .vtu files (because force_overwrite=True).".format(filename))
+                    log.warning(
+                        "Removing file '{}' and all associated .vtu files "
+                        "(because force_overwrite=True).".format(filename))
                     os.remove(filename)
                     basename = re.sub('\.pvd$', '', filename)
                     for f in glob.glob(basename + "*.vtu"):
                         os.remove(f)
                 else:
-                    raise IOError("Aborting snapshot creation. File already exists and would overwritten: '{}' (use force_overwrite=True if this is what you want)".format(filename))
+                    raise IOError(
+                        "Aborting snapshot creation. File already exists and "
+                        "would overwritten: '{}' (use force_overwrite=True if "
+                        "this is what you want)".format(filename))
         else:
             if filename != '':
-                log.warning("Value of save_snapshot is False, but filename is given anyway: '{}'. Ignoring...".format(filename))
+                log.warning("Value of save_snapshot is False, but filename is "
+                            "given anyway: '{}'. Ignoring...".format(filename))
 
-        self.integrator.run_until_relaxation(save_snapshots=save_snapshots,
-                                             filename=filename,
-                                             save_every=save_every,
-                                             save_final_snapshot=save_final_snapshot,
-                                             stopping_dmdt=stopping_dmdt,
-                                             dmdt_increased_counter_limit=dmdt_increased_counter_limit,
-                                             dt_limit=dt_limit)
+        self.integrator.run_until_relaxation(
+            save_snapshots=save_snapshots, filename=filename,
+            save_every=save_every, save_final_snapshot=save_final_snapshot,
+            stopping_dmdt=stopping_dmdt,
+            dmdt_increased_counter_limit=dmdt_increased_counter_limit,
+            dt_limit=dt_limit)
 
-    def hysteresis(self, H_ext_list, leave_last_field_on=False, fun=None, save_snapshots=False, **kwargs):
+    def hysteresis(self, H_ext_list, leave_last_field_on=False, fun=None,
+                   save_snapshots=False, **kwargs):
         """
         Set the applied field to the first value in `H_ext_list` (which should
         be a list of external field vectors) and then call the relax() method.
@@ -328,7 +343,9 @@ class Simulation(object):
                 # Although the relax() command also checks for existing files,
                 # it would miss any stages that were previously run but are
                 # not reached during this run.
-                log.debug("Removing the file '{}' as well as all associated .pvd and .vtu files of previously run hysteresis stages.".format(filename))
+                log.debug("Removing the file '{}' as well as all associated "
+                          ".pvd and .vtu files of previously run hysteresis "
+                          "stages.".format(filename))
                 pvdfiles = glob.glob(re.sub('\.pvd$', '', filename) + '*.pvd')
                 vtufiles = glob.glob(re.sub('\.pvd$', '', filename) + '*.vtu')
                 for f in pvdfiles + vtufiles:
@@ -351,8 +368,9 @@ class Simulation(object):
         try:
             while True:
                 H_cur = H_ext_list[cur_stage]
-                log.info("Entering hysteresis stage #{} ({} out of {}).".format(cur_stage,
-                     cur_stage + 1, num_stages))
+                log.info("Entering hysteresis stage #{} "
+                         "({} out of {}).".format(cur_stage,
+                                                  cur_stage + 1, num_stages))
                 H.set_value(H_cur)
 
                 # Changing the external field is a drastic change, so
@@ -366,18 +384,19 @@ class Simulation(object):
                 if fun is not None:
                     retval = fun(self)
                     res.append(retval)
-                    log.debug("hysteresis callback function '{}' returned value: {}".format(fun.__name__, retval))
+                    log.debug("hysteresis callback function '{}' returned "
+                              "value: {}".format(fun.__name__, retval))
         except IndexError:
             log.info("Hysteresis is finished.")
 
         if not leave_last_field_on:
-            log.info("Switching off the applied field which was used for hysteresis.")
+            log.info("Switching off the applied field used for hysteresis.")
             self.llg.effective_field.interactions.remove(H)
 
         if save_snapshots:
-            # We now remove trailing underscores from output filenames (for cosmetic
-            # resons only ... ;-) and create a 'global' output file which combines
-            # all stages of the simulation.
+            # We now remove trailing underscores from output filenames
+            # (for cosmetic resons only ... ;-) and create a 'global'
+            # output file which combines all stages of the simulation.
             #
             f_global = open(filename + '.pvd', 'w')
             f_global.write(textwrap.dedent("""\
@@ -408,30 +427,36 @@ class Simulation(object):
 
     def hysteresis_loop(self, H_max, direction, N, **kwargs):
         """
-        Compute a hysteresis loop. This is a specialised convenience version of the
-        more general `hysteresis` method. It computes a hysteresis loop where the
-        external field is applied along a single axis and changes magnitude from
-        +H_max to -H_max and back (using N steps in each direction).
+        Compute a hysteresis loop. This is a specialised convenience
+        version of the more general `hysteresis` method. It computes a
+        hysteresis loop where the external field is applied along a
+        single axis and changes magnitude from +H_max to -H_max and
+        back (using N steps in each direction).
 
-        The return value is  a pair (H_vals, m_vals), where H_vals is the list of
-        field strengths at which a relaxation is performed and m_vals is a list of
-        scalar values containing, for each field value, the averaged value of the
-        magnetisation along the axis `direction` (after relaxation has been reached).
-        Thus the command plot(H_vals, m_vals) could be used to plot the hysteresis loop.
+        The return value is a pair (H_vals, m_vals), where H_vals is
+        the list of field strengths at which a relaxation is performed
+        and m_vals is a list of scalar values containing, for each
+        field value, the averaged value of the magnetisation along the
+        axis `direction` (after relaxation has been reached). Thus the
+        command plot(H_vals, m_vals) could be used to plot the
+        hysteresis loop.
 
-           direction -- a vector indicating the direction of the external field
-                        (will be normalised automatically)
+           direction -- a vector indicating the direction of the
+                        external field (will be normalised
+                        automatically)
 
            H_max -- maximum field strength
 
-           N -- number of data points to compute in each direction (thus the
-                total number of data points for the entire loop will be 2*N-1)
+           N -- number of data points to compute in each direction
+                (thus the total number of data points for the entire
+                loop will be 2*N-1)
 
            kwargs -- any keyword argument accepted by the hysteresis() method
         """
         d = np.array(direction)
         H_dir = d / norm(d)
-        H_norms = list(reversed(np.linspace(-H_max, H_max, N))) + list(np.linspace(-H_max, H_max, N))
+        H_norms = list(reversed(np.linspace(-H_max, H_max, N))) + \
+            list(np.linspace(-H_max, H_max, N))
         H_vals = [h * H_dir for h in H_norms]
         m_avg = self.hysteresis(H_vals, fun=lambda sim: sim.m_average, **kwargs)
         # projected lengths of the averaged magnetisation values along the axis `H_dir`
@@ -473,7 +498,8 @@ class Simulation(object):
         if hasattr(self, "integrator"):
             self.integrator.reinit()
         else:
-            log.warning("Integrator reinit was requested, but no integrator is present in the simulation!")
+            log.warning("Integrator reinit was requested, but no integrator "
+                        "is present in the simulation!")
 
     def timings(self, n=20):
         """
@@ -490,7 +516,8 @@ class Simulation(object):
 
     def set_stt(self, current_density, polarisation, thickness, direction):
         """
-        Activate the computation of the Slonczewski spin-torque term in the LLG.
+        Activate the computation of the Slonczewski spin-torque term
+        in the LLG.
 
         Current density in A/m^2 is a dolfin expression,
         Polarisation is between 0 and 1,
@@ -513,26 +540,29 @@ class Simulation(object):
 
     def snapshot(self, filename="", directory="", force_overwrite=False, infix=""):
         """
-        Save a snapshot of the current magnetisation configuration to a .pvd file
-        (in VTK format) which can later be inspected using Paraview, for example.
+        Save a snapshot of the current magnetisation configuration to
+        a .pvd file (in VTK format) which can later be inspected using
+        Paraview, for example.
 
-        If `filename` is empty, a default filename will be generated based on a
-        sequentially increasing counter and the current timestep of the simulation.
-        A user-defined string can be inserted into the generated filename
-        by passing `infix`.
+        If `filename` is empty, a default filename will be generated
+        based on a sequentially increasing counter and the current
+        timestep of the simulation. A user-defined string can be
+        inserted into the generated filename by passing `infix`.
 
-        If `directory` is non-empty then the file will be saved in the specified directory.
+        If `directory` is non-empty then the file will be saved in the
+        specified directory.
 
-        Note that `filename` is also allowed to contain directory components
-        (for example filename='snapshots/foo.pvd'), which are simply appended
-        to `directory`. However, if `filename` contains an absolute path then
-        the value of `directory` is ignored. If a file with the same filename
-        already exists, the method will abort unless `force_overwrite` is True,
-        in which case the existing .pvd and all associated .vtu files are
+        Note that `filename` is also allowed to contain directory
+        components (for example filename='snapshots/foo.pvd'), which
+        are simply appended to `directory`. However, if `filename`
+        contains an absolute path then the value of `directory` is
+        ignored. If a file with the same filename already exists, the
+        method will abort unless `force_overwrite` is True, in which
+        case the existing .pvd and all associated .vtu files are
         deleted before saving the snapshot.
 
-        All directory components present in either `directory` or `filename`
-        are created if they do not already exist.
+        All directory components present in either `directory` or
+        `filename` are created if they do not already exist.
 
         """
         if not hasattr(self, "vtk_snapshot_no"):
@@ -544,26 +574,35 @@ class Simulation(object):
 
         ext = os.path.splitext(filename)[1]
         if ext != '.pvd':
-            raise ValueError("File extension for vtk snapshot file must be '.pvd', but got: '{}'".format(ext))
+            raise ValueError("File extension for vtk snapshot file must be "
+                             "'.pvd', but got: '{}'".format(ext))
         if os.path.isabs(filename) and directory != "":
-            log.warning("Ignoring 'directory' argument (value given: '{}') because 'filename' contains an absolute path: '{}'".format(directory, filename))
+            log.warning("Ignoring 'directory' argument (value given: '{}') "
+                        "because 'filename' contains an absolute path: "
+                        "'{}'".format(directory, filename))
 
         output_file = os.path.join(directory, filename)
         if os.path.exists(output_file):
             if force_overwrite:
-                log.warning("Removing file '{}' and all associated .vtu files (because force_overwrite=True).".format(output_file))
+                log.warning(
+                    "Removing file '{}' and all associated .vtu files "
+                    "(because force_overwrite=True).".format(output_file))
                 os.remove(output_file)
                 basename = re.sub('\.pvd$', '', output_file)
                 for f in glob.glob(basename + "*.vtu"):
                     os.remove(f)
             else:
-                raise IOError("Aborting snapshot creation. File already exists and would overwritten: '{}' (use force_overwrite=True if this is what you want)".format(output_file))
+                raise IOError(
+                    "Aborting snapshot creation. File already exists and "
+                    "would overwritten: '{}' (use force_overwrite=True if "
+                    "this is what you want)".format(output_file))
         t0 = time.time()
         f = df.File(output_file, "compressed")
         f << self.llg._m
         t1 = time.time()
-        log.info("Saved snapshot of magnetisation at t={} to file '{}' (saving took {:.3g} seconds).".format(
-                self.t, output_file, t1 - t0))
+        log.info(
+            "Saved snapshot of magnetisation at t={} to file '{}' (saving "
+            "took {:.3g} seconds).".format(self.t, output_file, t1 - t0))
         self.vtk_snapshot_no += 1
 
     def mesh_info(self):
@@ -636,7 +675,10 @@ def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sun
     if A is not None:
         sim.add(Exchange(A))
     if (K1 != None and K1_axis is None) or (K1 is None and K1_axis != None):
-        log.warning("Not initialising uniaxial anisotropy because only one of K1, K1_axis was specified (values given: K1={}, K1_axis={}).".format(K1, K1_axis))
+        log.warning(
+            "Not initialising uniaxial anisotropy because only one of K1, "
+            "K1_axis was specified (values given: K1={}, K1_axis={}).".format(
+                K1, K1_axis))
     if K1 != None and K1_axis != None:
         sim.add(UniaxialAnisotropy(K1, K1_axis))
     if H_ext != None:
