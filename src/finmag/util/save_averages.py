@@ -28,7 +28,7 @@ class Writer(object):
                     self.entities[entityname]['unit'])
         return "".join(line1) + "\n" + "".join(line2) + "\n"
 
-    def __init__(self, filename, simulation, entity_order=None):
+    def __init__(self, filename, simulation, override=False, entity_order=None):
         # formatting for columns (could in principle be customized
         # through extra arguments here)
         charwidth = 15
@@ -72,7 +72,7 @@ class Writer(object):
             self.entity_order = self.default_entity_order()
 
         # if file exists, cowardly stop
-        if os.path.exists(filename):
+        if os.path.exists(filename) and not override:
             msg = "File %s exists already; cowardly stopping" % filename
             raise RuntimeError(msg)
         f = open(self.filename, 'w')
