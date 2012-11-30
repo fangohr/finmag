@@ -4,7 +4,7 @@ import numpy
 logger = logging.getLogger(name='finmag')
 
 
-class Writer(object):
+class Tablewriter(object):
 
     def default_entity_order(self):
         keys = self.entities.keys()
@@ -29,6 +29,8 @@ class Writer(object):
         return "".join(line1) + "\n" + "".join(line2) + "\n"
 
     def __init__(self, filename, simulation, override=False, entity_order=None):
+        logger.debug("Creating DataWriter for file '%s'" % (filename))
+
         # formatting for columns (could in principle be customized
         # through extra arguments here)
         charwidth = 15
@@ -103,7 +105,7 @@ class Writer(object):
             f.write('\n')
 
 
-class Reader(object):
+class Tablereader(object):
 
     # open ndt file
     def __init__(self, filename):
@@ -167,7 +169,7 @@ if __name__ == "__main__":
     # standard Py parameters
     sim = finmag.sim_with(mesh, Ms=0.86e6, alpha=0.5, unit_length=1e-9, A=13e-12, m_init=(1, 0, 1))
     filename = 'data.txt'
-    ndt = Writer(filename, sim)
+    ndt = Tablewriter(filename, sim)
     times = np.linspace(0, 3.0e-11, 6 + 1)
     for i, time in enumerate(times):
         print("In iteration {}, computing up to time {}".format(i, time))
@@ -175,6 +177,6 @@ if __name__ == "__main__":
         ndt.save()
 
     # now open file for reading
-    f = Reader(filename)
+    f = Tablereader(filename)
     print f.time()
     print f['m_x']

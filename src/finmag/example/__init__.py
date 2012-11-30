@@ -5,4 +5,4 @@
 # CONTACT: h.fangohr@soton.ac.uk
 #
 # AUTHOR(S) OF THIS FILE: Hans Fangohr
-from bar import bar
+from bar import bar, barmini
