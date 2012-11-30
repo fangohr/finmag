@@ -114,10 +114,10 @@ class Tablereader(object):
         if not os.path.exists(filename):
             raise RuntimeError("Cannot see file '%s'" % self.filename)
         # immediatey read file
-        self.read()
+        self.reload()
 
-    def read(self):
-        """Read ndt data file"""
+    def reload(self):
+        """Read Table data file"""
 
         try:
             self.f = open(self.filename, 'r')
