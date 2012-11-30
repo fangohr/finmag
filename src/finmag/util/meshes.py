@@ -582,20 +582,28 @@ def plot_mesh(mesh, ax=None, color="blue", **kwargs):
         #ax.tripcolor(x, y, triangles=triangs)
         ax.triplot(x, y, triangles=triangs, color="blue", **kwargs)
     elif dim == 3:
+        # TODO: Remove this error message once matplotlib 1.3 has been released!
+        import matplotlib
+        if matplotlib.__version__[:3] < '1.3':
+            raise NotImplementedError(
+                "Plotting 3D meshes is only supported with versions of "
+                "matplotlib >= 1.3.x. Unfortunately, the latest stable "
+                "release is 1.2.0, so you have to install the development "
+                "version manually. Apologies for the inconvenience!")
+
         ax = ax or plt.gca(projection='3d')
         bm = df.BoundaryMesh(mesh)
         coords = bm.coordinates()
 
-        x = coords[:,0]
-        y = coords[:,1]
-        z = coords[:,2]
-
-        triangs = [[v.index() for v in df.vertices(s)] for s in df.faces(bm)]
+        x = coords[:, 0]
+        y = coords[:, 1]
+        z = coords[:, 2]
 
         # Set shade = False by default because it looks nicer
         if not kwargs.has_key('shade'):
             kwargs['shade'] = False
 
+        triangs = [[v.index() for v in df.vertices(s)] for s in df.faces(bm)]
         ax.plot_trisurf(x, y, z, triangles=triangs, color=color, **kwargs)
     else:
         raise ValueError("Plotting is only supported for 2- and 3-dimensional meshes.")
