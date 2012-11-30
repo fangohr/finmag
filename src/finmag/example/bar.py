@@ -8,7 +8,7 @@ import dolfin as df
 import finmag
 
 
-def bar():
+def bar(name='bar'):
     """Py bar with dimensions 30x30x100nm, initial field
     pointing in (1,0,1) direction.
 
@@ -30,12 +30,12 @@ def bar():
     mesh = df.Box(xmin, ymin, zmin, xmax, ymax, zmax, nx, ny, nz)
 
     sim = finmag.sim_with(mesh, Ms=0.86e6, alpha=0.5, unit_length=1e-9,
-                A=13e-12, m_init=(1, 0, 1))
+                A=13e-12, m_init=(1, 0, 1), name=name)
 
     return sim
 
 
-def barmini():
+def barmini(name='barmini'):
     """Py bar with dimensions 3x3x10nm, initial field
     pointing in (1,0,1) direction.
 
@@ -57,6 +57,6 @@ def barmini():
     mesh = df.Box(xmin, ymin, zmin, xmax, ymax, zmax, nx, ny, nz)
 
     sim = finmag.sim_with(mesh, Ms=0.86e6, alpha=0.5, unit_length=1e-9,
-                A=13e-12, m_init=(1, 0, 1))
+                A=13e-12, m_init=(1, 0, 1), name=name)
 
     return sim
