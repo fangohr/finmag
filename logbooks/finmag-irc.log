@@ -2758,3 +2758,20 @@ fangohr: Still testing ...
 2012-11-29 16:40:16 max_albert: I'm passing the thanks on to Marc-Antonio because he set it up. :)
 2012-11-29 17:59:41 mb8g11: This was one of those "How could this ever work?" moments. Introduced a bug in our base class for the energies by accidentally deleting the code that multiplied by the unit length in one calculation. And then I noticed we were not doing this consistently...
 2012-11-29 18:09:57 mb8g11: We still aren't.
+2012-11-30 08:43:31 max_albert: MA (regarding your comment yesterday): Oh dear, that sounds kinda worrying... Looks like we really need to make sure we have a solid uni test suite that covers *all* the important functionality.
+2012-11-30 08:45:48 max_albert: I saw that you added quite a few new tests in your recent refactoring/cleanup efforts. Great stuff! And much needed apparently...
+2012-11-30 09:23:42 fangohr-adium: Well done, MA>
+2012-11-30 09:27:18 max_albert: Hi Hans, I had a quick test of the timings() method in the simulation class.
+2012-11-30 09:28:26 max_albert: It seems to work very well for a single simulation. However, when I have multiple Simulation objects simultaneously it always reports the same timing information.
+2012-11-30 09:28:57 max_albert: Looking at the code, this is to be expected because it is not tied to the particular simulation instance but only calls timings.report_str().
+2012-11-30 09:30:01 max_albert: Is there a way to bind the timing info to the particular simulation? Otherwise it probably makes sense to remove the Simulation.timings() method because it is confusing otherwise.
+2012-11-30 09:30:35 max_albert: Also, say I have two simulations sim1 and sim2 and I call first sim1.relax() and then sim2.relax(). Which timing information will get printed?
+2012-11-30 09:30:50 max_albert: Or is it the accumulated information of both?
+2012-11-30 09:47:00 fangohr_: Hi Max, I expect it will be the accumulated information. If we want multiple simulations supported, we need to refactor (but I can't remember how much work this will be -- probably not too hard, we just need to have an object that stores the data and bind this to the simulation, rather than use a global variable). As always 'just' is easily said.
+2012-11-30 09:48:24 fangohr_: There is another problem in interactive use: at the end of the timings report, it shows the total wall time from the start of the simulation to the printing of those timings, and what fraction of this time has been accounted for by the timining of subparts of the code. In interactive runs, this is pretty meaningless (as the total wall time includes the time that the user has been thinking before entering the next command).
+2012-11-30 09:49:26 max_albert: Thanks for the explanations. I might add a tracker item for this and will have a casual look/think about it.
+2012-11-30 13:43:35 fangohr-adium: Hi Max. Got an error on the rst output from nbconvert. Have you got a minute to look at this? (I could copy and paste but seems more complicated than showing you in person.)
+2012-11-30 13:43:54 max_albert: Yes, sure. Will come over in a minute.
+2012-11-30 13:44:12 fangohr-adium: Great, no particular rush.
+2012-11-30 13:55:18 fangohr-adium: Max, I have found a way to 'fix' it. Still a bit odd; I should show you at some point.
+2012-11-30 14:00:45 max_albert: Sorry, was talking to Luzanne because she asked me a question. Coming over now.
