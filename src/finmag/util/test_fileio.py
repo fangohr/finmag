@@ -1,9 +1,9 @@
 import os
 import numpy
-from save_averages import Writer, Reader
+from fileio import Tablewriter, Tablereader
 
 
-def test_writer():
+def test_Table_writer_and_reader():
     import numpy as np
     import finmag
     import dolfin as df
@@ -18,7 +18,7 @@ def test_writer():
     filename = 'tmp-test-save_averages-data.ndt'
     if os.path.exists(filename):
         os.unlink(filename)
-    ndt = Writer(filename, sim)
+    ndt = Tablewriter(filename, sim)
     times = np.linspace(0, 3.0e-11, 6 + 1)
     for i, time in enumerate(times):
         print("In iteration {}, computing up to time {}".format(i, time))
@@ -26,7 +26,7 @@ def test_writer():
         ndt.save()
 
     # now open file for reading
-    data = Reader(filename)
+    data = Tablereader(filename)
     print data.time() - times
     print("III")
     assert numpy.all(numpy.abs(data.time() - times)) < 1e-25
@@ -36,5 +36,6 @@ def test_writer():
     assert abs(data['m_z'][-1] - mz) < 5e-7
 
     os.unlink(filename)
-    
-test_writer()
+
+if __name__ == "__main__":
+    test_Table_writer_and_reader()

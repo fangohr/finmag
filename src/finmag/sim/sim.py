@@ -40,7 +40,7 @@ class Simulation(object):
         "zeeman": Zeeman
         }
 
-    def __init__(self, mesh, Ms, unit_length=1, integrator_backend="sundials"):
+    def __init__(self, mesh, Ms, unit_length=1, name='unnamed', integrator_backend="sundials"):
         """Simulation object.
 
         *Arguments*
@@ -51,13 +51,19 @@ class Simulation(object):
 
           unit_length: the distance (in metres) associated with the
                        distance 1.0 in the mesh object.
+
+          name : the Simulation name (used for writing data files, for examples)
         """
 
         timings.reset()
         timings.start("Sim-init")
 
-        log.info("Creating Sim object (rank={}/{}) [{}].".format(
-            df.MPI.process_number(), df.MPI.num_processes(), time.asctime()))
+        self.name = name
+        # TODO: Start logging to file 'name.log' at this point.
+
+        log.info("Creating Sim object '{}'' (rank={}/{}) [{}].".format(
+            self.name, df.MPI.process_number(),
+            df.MPI.num_processes(), time.asctime()))
         log.info(mesh)
 
         self.mesh = mesh
@@ -72,6 +78,10 @@ class Simulation(object):
         self.t = 0
 
         timings.stop("Sim-init")
+
+    def __str__(self):
+        """String briefly describing simulation object"""
+        return "finmag.Simulation(name='%s') with %s" % (self.name, self.mesh)
 
     def __get_m(self):
         """The unit magnetisation"""
@@ -508,9 +518,9 @@ class Simulation(object):
         which took the longest.
 
         """
-        logger.warning("Note that this method is currently broken because it "
-                       "reports global timings, not just the times taken by "
-                       "this specific simulation only.")
+        log.warning("Note that this method is currently broken because it "
+                    "reports global timings, not just the times taken by "
+                    "this specific simulation only.")
 
         return timings.report_str(n)
 
@@ -648,7 +658,7 @@ class Simulation(object):
 
 
 def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sundials",
-             A=None, K1=None, K1_axis=None, H_ext=None, demag_solver='FK'):
+             A=None, K1=None, K1_axis=None, H_ext=None, demag_solver='FK', name="unnamed"):
     """
     Create a Simulation instance based on the given parameters.
 
@@ -665,7 +675,9 @@ def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sun
        exchange = Exchange(A)
        sim.add(exchange)
     """
-    sim = Simulation(mesh, Ms, unit_length=unit_length, integrator_backend=integrator_backend)
+    sim = Simulation(mesh, Ms, unit_length=unit_length, 
+                     integrator_backend=integrator_backend,
+                     name=name)
 
     sim.set_m(m_init)
     sim.alpha = alpha
