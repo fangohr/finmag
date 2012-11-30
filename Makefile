@@ -99,6 +99,7 @@ else
 endif
 
 clean:
+	make -C src/ cleansrc
 	make -C $(NATIVE_DIR) clean
 	rm -rf test-reports
 
