@@ -87,4 +87,3 @@ if __name__=="__main__":
         t.start("test-one")
         t.stop("test-one")
     print t
-
