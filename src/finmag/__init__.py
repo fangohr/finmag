@@ -9,6 +9,7 @@
 import logging
 from finmag.sim.sim import Simulation, sim_with
 from __version__ import __version__
+import example
 
 logger = logging.getLogger("finmag")
 logger.debug("This is Finmag version {}".format(__version__))
