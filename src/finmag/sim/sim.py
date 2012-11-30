@@ -482,6 +482,10 @@ class Simulation(object):
         which took the longest.
 
         """
+        logger.warning("Note that this method is currently broken because it "
+                       "reports global timings, not just the times taken by "
+                       "this specific simulation only.")
+
         return timings.report_str(n)
 
     def set_stt(self, current_density, polarisation, thickness, direction):
