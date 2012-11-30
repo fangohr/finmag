@@ -4,31 +4,11 @@ import numpy
 logger = logging.getLogger(name='finmag')
 
 
-class Writer(object):
+class Tablewriter(object):
 
-    def default_entity_order(self):
-        keys = self.entities.keys()
-        # time needs to go first
-        keys.remove('time')
-        return ['time'] + sorted(keys)
+    def __init__(self, filename, simulation, override=False, entity_order=None):
+        logger.debug("Creating DataWriter for file '%s'" % (filename))
 
-    def headers(self):
-        """return line one and two of ndt data file as string"""
-        line1 = []
-        line2 = []
-        for entityname in self.entity_order:
-            colheaders = self.entities[entityname]['header']
-            # colheaders can be a 3-tuple ('mx','my','mz'), say
-            # or a string ('time'). Avoid iterating over string:
-            if isinstance(colheaders, str):
-                colheaders = [colheaders]
-            for colhead in colheaders:
-                line1.append(self.string_format % colhead)
-                line2.append(self.string_format % \
-                    self.entities[entityname]['unit'])
-        return "".join(line1) + "\n" + "".join(line2) + "\n"
-
-    def __init__(self, filename, simulation, entity_order=None):
         # formatting for columns (could in principle be customized
         # through extra arguments here)
         charwidth = 15
@@ -72,7 +52,7 @@ class Writer(object):
             self.entity_order = self.default_entity_order()
 
         # if file exists, cowardly stop
-        if os.path.exists(filename):
+        if os.path.exists(filename) and not override:
             msg = "File %s exists already; cowardly stopping" % filename
             raise RuntimeError(msg)
         f = open(self.filename, 'w')
@@ -80,6 +60,28 @@ class Writer(object):
         f.write(self.headers())
         f.close()
         self.sim = simulation
+
+    def default_entity_order(self):
+        keys = self.entities.keys()
+        # time needs to go first
+        keys.remove('time')
+        return ['time'] + sorted(keys)
+
+    def headers(self):
+        """return line one and two of ndt data file as string"""
+        line1 = []
+        line2 = []
+        for entityname in self.entity_order:
+            colheaders = self.entities[entityname]['header']
+            # colheaders can be a 3-tuple ('mx','my','mz'), say
+            # or a string ('time'). Avoid iterating over string:
+            if isinstance(colheaders, str):
+                colheaders = [colheaders]
+            for colhead in colheaders:
+                line1.append(self.string_format % colhead)
+                line2.append(self.string_format % \
+                    self.entities[entityname]['unit'])
+        return "".join(line1) + "\n" + "".join(line2) + "\n"
 
     def save(self):
         """Append data (spatial averages of fields) for current configuration"""
@@ -103,7 +105,7 @@ class Writer(object):
             f.write('\n')
 
 
-class Reader(object):
+class Tablereader(object):
 
     # open ndt file
     def __init__(self, filename):
@@ -112,10 +114,10 @@ class Reader(object):
         if not os.path.exists(filename):
             raise RuntimeError("Cannot see file '%s'" % self.filename)
         # immediatey read file
-        self.read()
+        self.reload()
 
-    def read(self):
-        """Read ndt data file"""
+    def reload(self):
+        """Read Table data file"""
 
         try:
             self.f = open(self.filename, 'r')
@@ -167,7 +169,7 @@ if __name__ == "__main__":
     # standard Py parameters
     sim = finmag.sim_with(mesh, Ms=0.86e6, alpha=0.5, unit_length=1e-9, A=13e-12, m_init=(1, 0, 1))
     filename = 'data.txt'
-    ndt = Writer(filename, sim)
+    ndt = Tablewriter(filename, sim)
     times = np.linspace(0, 3.0e-11, 6 + 1)
     for i, time in enumerate(times):
         print("In iteration {}, computing up to time {}".format(i, time))
@@ -175,6 +177,6 @@ if __name__ == "__main__":
         ndt.save()
 
     # now open file for reading
-    f = Reader(filename)
+    f = Tablereader(filename)
     print f.time()
     print f['m_x']
