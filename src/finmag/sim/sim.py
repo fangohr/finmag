@@ -58,6 +58,7 @@ class Simulation(object):
         timings.start("Sim-init")
 
         self.name = name
+        # TODO: Start logging to file 'name.log' at this point.
 
         log.info("Creating Sim object '{}'' (rank={}/{}) [{}].".format(
             self.name,
