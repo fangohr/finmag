@@ -1,8 +1,11 @@
 import time
+import dolfin as df
 from finmag.util.timings import Timings
-def test_timings():
+from finmag import sim_with
 
-    t=Timings()
+
+def test_timings():
+    t = Timings()
     print t
     t.start('one')
     time.sleep(0.2)
@@ -22,11 +25,9 @@ def test_timings():
     time.sleep(0.1)
     t.stop('five')
 
-
-
     assert t.getncalls('one') == 2
     print t
 
-    
-if __name__=="__main__":
+
+if __name__ == "__main__":
     test_timings()
