@@ -192,6 +192,8 @@ if __name__ == '__main__':
     
     demag = Demag("FK")
     demag.setup(mat.S3, mat._m, mat.Ms0)
+    demag.demag.poisson_solver.parameters["relative_tolerance"] = 1e-10
+    demag.demag.laplace_solver.parameters["relative_tolerance"] = 1e-10
     llb.interactions.append(demag)
     
     
