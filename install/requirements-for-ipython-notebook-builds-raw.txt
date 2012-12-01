@@ -1,12 +1,12 @@
 
 As of 14 Nov 2012, the following actions had to be taken on osiris to allow the  Ubuntu 12.04 system to convert the ipython notebooks into sphinx documentation:
 
+install python-markdown, git, pandoc, tornado (aptitude install python-markdown git pandoc python-tornado)
 install latest ipython (pip install -U ipython)
-install python-markdown (aptitude install python-markdown)
 pip install -U docutils
-install pandoc (ubuntu version sufficient, i.e. aptitude install pandoc)
 
-The last point was hard to understand an nbconvert would fail to execute conversion correctly (complaining about a file access error) but not mention that this relates to a missing 'pandoc' installation on the system.
+
+The last point was hard to understand as nbconvert would fail to execute conversion correctly (complaining about a file access error) but not mention that this relates to a missing 'pandoc' installation on the system.
 
 We also need to install (Max' improved version of) nbconvert with these steps:
 
