@@ -10,3 +10,4 @@ from zeeman import Zeeman
 from time_zeeman import TimeZeeman, DiscreteTimeZeeman
 from dmi import DMI, DMI_Old
 from thin_film_demag import ThinFilmDemag
+from dw_fixed_energy import FixedEnergyDW
