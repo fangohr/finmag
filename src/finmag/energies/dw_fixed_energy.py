@@ -3,6 +3,7 @@ import dolfin as df
 import numpy as np
 from finmag.util import helpers
 from sandbox.treecode.fastdemag import Demag
+from finmag.energies import Demag
 
 
 class FixedEnergyDW(object):
@@ -10,7 +11,7 @@ class FixedEnergyDW(object):
 		self.left=left
 		self.right=right
 		self.repeat_time=repeat_time
-		pass
+		self.in_jacobian=False
 	
 	def write_xml(self,filename,coordinates,cells):
 
@@ -20,18 +21,18 @@ class FixedEnergyDW(object):
 		f.write("""   <mesh celltype="tetrahedron" dim="3">\n""")
 		f.write("""     <vertices size="%d">\n"""%len(coordinates))
 		for i in range(len(coordinates)):
-			f.write("""       <vertex index="%d" x="%f" y="%f" z="%f"/>\n"""%(i,
-																		coordinates[i][0],
-																		coordinates[i][1],
-																		coordinates[i][2]))
+			f.write("""       <vertex index="%d" x="%0.12f" y="%0.12f" z="%0.12f"/>\n"""%(i,
+											  coordinates[i][0],
+											  coordinates[i][1],
+											  coordinates[i][2]))
 		f.write("""     </vertices>\n""")
 		f.write("""     <cells size="%d">\n"""%len(cells))
 		for i in range(len(cells)):
 			f.write("""       <tetrahedron index="%d" v0="%d" v1="%d" v2="%d" v3="%d"/>\n"""%(i,
-																						cells[i][0],
-																						cells[i][1],
-																						cells[i][2],
-																						cells[i][3]))
+													  cells[i][0],
+													  cells[i][1],
+													  cells[i][2],
+													  cells[i][3]))
 		f.write("""     </cells>\n""")
 		f.write("""  </mesh>\n</dolfin>""")
 	
@@ -42,7 +43,7 @@ class FixedEnergyDW(object):
 		cells+=len(cds)
 		cells=np.concatenate((self.mesh.cells(),cells))
 
-		cds[:,0]+=self.xlength*step
+		cds[:,0]+=self.xlength*step		
 		cds=np.concatenate((self.mesh.coordinates(), cds))
 		
 		return cells,cds
@@ -70,9 +71,11 @@ class FixedEnergyDW(object):
 	
 	def __compute_field(self):
 		n=self.mesh.num_vertices()
+		self.init_m[:n,0]=1
 		self.init_m[n:,:]=self.left
+		
 		for i in range(-self.repeat_time,0):
-			cells,cds=self.bias_mesh(i)
+			cells,cds=self.bias_mesh(i-1e-10)
 			filename="mesh_%d.xml"%i
 			self.write_xml(filename,cds,cells)
 			
@@ -87,10 +90,11 @@ class FixedEnergyDW(object):
 			
 			os.remove(filename)
 
-		
+		self.init_m[:n,0]=-1
 		self.init_m[n:,:]=self.right
+		
 		for i in range(1,self.repeat_time+1):
-			cells,cds=self.bias_mesh(i)
+			cells,cds=self.bias_mesh(i+1e-10)
 			filename="mesh_%d.xml"%i
 			self.write_xml(filename,cds,cells)
 			
@@ -104,7 +108,7 @@ class FixedEnergyDW(object):
 			self.tmp_field+=demag.compute_field()
 			
 			os.remove(filename)
-			
+		
 	def compute_field(self):
 		return self.field
 	
@@ -112,12 +116,16 @@ class FixedEnergyDW(object):
 	
 if __name__=='__main__':
 
-	mesh = df.Box(0, 0, 0, 200.00, 20, 5, 40, 4, 1)
-	dw=FixedEnergyDW()
+	mesh = df.Box(0, 0, 0, 500, 20, 5, 100, 4, 1)
+	
+	dw=FixedEnergyDW(repeat_time=5)
 	S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
 	m=df.Function(S3)
 	dw.setup(S3, 1, 8.6e5, unit_length=1)
 	m.vector().set_local(dw.compute_field())
-	df.plot(m)
-	df.interactive()
+	print dw.compute_field().reshape((3,-1))
+	for x in range(100):
+		print x*5+2.5,m(x*5+2.5,17.5,2.5)
+
+	
 	
