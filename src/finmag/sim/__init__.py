@@ -23,6 +23,10 @@ parser = argparse.ArgumentParser(description='Parse the logging level.')
 parser.add_argument("-v", "--verbosity", default="debug",
         choices=("debug", "info", "warning", "error", "critical"),
         help="Set the logging level.")
+parser.add_argument("--logcol",
+        choices=("dark_bg", "light_bg", "none"),
+        help="Set the LOGging COLour scheme.")
+
 args = parser.parse_known_args()
 logging_level = {"debug": logging.DEBUG, "info": logging.INFO,
     "warning": logging.WARNING, "error": logging.ERROR}[args[0].verbosity]
@@ -46,6 +50,11 @@ if dolfin_level is not None:
     df.set_log_level(dolfin_level)
 color_scheme = configuration.get_config_option("logging", "color_scheme", "light_bg")
 ch.setLevel(console_level)
+
+# Command line option may override settings from configfile
+if args[0].logcol:
+    color_scheme = args[0].logcol
+
 try:
     ch.level_map = ansistrm.level_maps[color_scheme]
 except KeyError:
