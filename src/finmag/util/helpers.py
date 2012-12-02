@@ -373,12 +373,12 @@ def duplicate_output_to_file(filename, add_timestamp=False, timestamp_fmt='__%Y-
     Redirect all (future) output to a file with the given filename.
     This redirects both to stdout and stderr.
 
-    If `add_timestamp` is True then a timestamp will be added to the
-    filename indicating the time when the call to this function
-    occurred (for example, the filename 'output.txt' might be changed
-    into 'output_2012-01-01_14.33.52.txt'). The timestamp format can
-    be controlled via `timestamp_fmt`, which should be a formatting
-    string as accepted by `datetime.strftime`.
+    If `add_timestamp` is True (default: False) then a timestamp will
+    be added to the filename indicating the time when the call to this
+    function occurred (for example, the filename 'output.txt' might be
+    changed into 'output_2012-01-01_14.33.52.txt'). The timestamp
+    format can be controlled via `timestamp_fmt`, which should be a
+    formatting string as accepted by `datetime.strftime`.
     """
     _create_nonexistent_directory_components(filename)
     if add_timestamp:
