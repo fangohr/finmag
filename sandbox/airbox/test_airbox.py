@@ -39,14 +39,19 @@ def test_airbox_method():
     #                  alphas=[1.0, 0.25])
     #plt.show()
 
-    # Define different values for the saturation magnetisation on each subdomain
+    # Define different values for Ms on each subdomain
     Ms_vals = (8.6e5, 0)
     Ms = piecewise_on_subdomains(mesh, mesh_region, Ms_vals)
 
     sim = sim_with(mesh, Ms=Ms, m_init=(1.0, 0.0, 0), alpha=1.0,
                    unit_length=1e-9, A=13.0e-12, demag_solver='FK')
 
-    sim.relax()
+    print "Computing effective field..."
+    H_eff = sim.llg.effective_field.compute()
+    print "Computed field: {}".format(H_eff)
+
+    sim.relax(save_snapshots=True, save_every=1e-11,
+              filename="snapshots/snapshot.pvd")
 
 if __name__ == '__main__':
     test_airbox_method()
