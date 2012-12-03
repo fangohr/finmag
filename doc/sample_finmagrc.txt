@@ -1,3 +1,6 @@
 [logging]
+logfile =
+    ~/global_logfile.txt
+    simulation_specific_logfile.txt
 console_logging_level = DEBUG
 color_scheme = dark_bg
