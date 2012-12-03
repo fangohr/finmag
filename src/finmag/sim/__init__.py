@@ -13,7 +13,7 @@ _DOLFIN_LOG_LEVELS = {
     "PROGRESS": df.PROGRESS,
 }
 
-# Note: dolfin uses the default logger ('root'). Se we should
+# Note: dolfin uses the default logger ('root'). So we should
 # use a separate one to be able to
 # control levels of details separately for finmag and dolfin.
 # Here we setup this logger with name 'finmag'
