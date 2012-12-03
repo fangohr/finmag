@@ -2775,3 +2775,59 @@ fangohr: Still testing ...
 2012-11-30 13:44:12 fangohr-adium: Great, no particular rush.
 2012-11-30 13:55:18 fangohr-adium: Max, I have found a way to 'fix' it. Still a bit odd; I should show you at some point.
 2012-11-30 14:00:45 max_albert: Sorry, was talking to Luzanne because she asked me a question. Coming over now.
+2012-12-03 08:04:19 mb8g11: Hi all.
+2012-12-03 09:42:11 mb8g11: For the record, I am now using an ipython notebook.
+2012-12-03 11:03:56 max_albert: Good morning Marc-Antonio!
+2012-12-03 11:04:16 max_albert: You mean, you are accessing IRC via an ipython notebook? That's impressive... :)
+2012-12-03 11:13:21 mb8g11: Haha, no, just using it for my development.
+2012-12-03 11:13:25 max_albert: :-)
+2012-12-03 11:14:44 mb8g11: Although I have used IRC over telnet before. You don't need to know much other than the IRC protocol (parts of it) and remembering to respond to the server pinging you.
+2012-12-03 11:15:17 max_albert: Cool. I sometimes wish I knew more about these things...
+2012-12-03 11:16:07 mb8g11: https://github.com/sMAshdot/snail an IRC client I started working on, written in the Ruby programming language.
+2012-12-03 11:16:44 mb8g11: Last commit 3 years ago, haha.
+2012-12-03 11:16:52 max_albert: Nice!
+2012-12-03 11:16:54 max_albert: :-)
+2012-12-03 11:17:08 max_albert: I like the hidden "MA" in the name. ;-)
+2012-12-03 11:17:33 mb8g11: I was reading a lot of slashdot back then.
+2012-12-03 11:20:34 mb8g11: Anywas, using the hysteresis_code you have written. It is straightforward and well documented. A joy to use!
+2012-12-03 11:20:56 max_albert: Thank you. :)
+2012-12-03 11:21:09 max_albert: I can say the same about your code in general though.
+2012-12-03 11:21:21 max_albert: I didn't know you were running hysteresis simulations!?
+2012-12-03 11:26:25 mb8g11: That's too sweet.
+2012-12-03 11:26:47 mb8g11: Just reproducing a paper, they have two.
+2012-12-03 11:27:20 mb8g11: I think it's a good way to check if I have done something wrong before I embark on the longer running simulations.
+2012-12-03 12:39:13 fangohr-adium: Hi all.
+2012-12-03 12:39:19 max_albert: Hi Hans!
+2012-12-03 12:50:59 mb8g11: Hi Hans, Dmitri.
+2012-12-03 15:12:26 max_albert: Yes, he is.
+2012-12-03 15:45:19 max_albert: Hi Dmitri, are you there by any chance?
+2012-12-03 16:07:29 D_Chernyshenko: Yeah, I'm here
+2012-12-03 16:08:02 max_albert: Awesome!
+2012-12-03 16:08:02 max_albert: I have a very quick question regarding building the "native" modules.
+2012-12-03 16:08:33 max_albert: As far as I understand they are compiled in the native/src/... directories and then somehow copied to src/finmag/native. Is this correct?
+2012-12-03 16:08:57 max_albert: If so, where does the copying happen? I couldn't find any command in native/Makefile which would accomplish this.
+2012-12-03 16:09:14 D_Chernyshenko: There is no copying, the output files for the linker are in src/finmag/native directly
+2012-12-03 16:09:37 D_Chernyshenko: C++ files are compiled into object files in the source tree (same directory as C++ files)
+2012-12-03 16:09:48 D_Chernyshenko: Then the object files are linked with the .so file in src/finmag/native as the target
+2012-12-03 16:09:53 D_Chernyshenko: Does this make sense?
+2012-12-03 16:09:55 max_albert: *dang*
+2012-12-03 16:10:02 max_albert: That was the sound of my head hitting the desk.
+2012-12-03 16:10:07 max_albert: Yes, it does. I was confused, sorry.
+2012-12-03 16:10:40 D_Chernyshenko: It might be a bit confusing but I guess it was the easiest way of not recompiling or copying anything if the source files are unchanged
+2012-12-03 16:10:57 D_Chernyshenko: Since importing finmag.native calls make...
+2012-12-03 16:12:01 max_albert: I just added Weiwei's fastdemag files to the main codebase, and some of the files are compiled using cython. At the moment I'm copying the output, but perhaps I should also just specify the target directory in the setup.py file directly (if that's possible).
+2012-12-03 16:13:41 D_Chernyshenko: Copying is fine, not copying is marginally faster but as long as the files aren't rebuilt every time make is called, it should be OK :)
+2012-12-03 16:14:29 max_albert: Ok, I guess I'll leave it as it is for now.
+2012-12-03 16:15:14 D_Chernyshenko: Yeah, my way was the most straightforward way of doing it when I was writing the Makefile (easier to call the linker, than to call the linker then cp), it doesn't really make a difference otherwise...
+2012-12-03 16:15:41 max_albert: That's true.
+2012-12-03 16:34:10 max_albert: Hi Hans, I just saw your commits about the logging options. Nice! :)
+2012-12-03 16:34:30 fangohr-adium: Ta. Done with the Ipython notebook — so much fun!
+2012-12-03 16:34:40 max_albert: I know... ;-)
+2012-12-03 16:34:58 max_albert: About the colour scheme "none": you mentioned problems with nbconvert in your commit message. Can you elaborate? Are colours a problem when converting notebooks?
+2012-12-03 16:36:19 fangohr-adium: Yes, correct. When you run a job via "!python sim.py" rather than "%run sim.py", then escape codes in the output are shown correctly inside the output box of the notebook, but nbconvert chokes when it has to convert them.
+2012-12-03 16:37:10 max_albert: Interesting. I'll keep this in mind and maybe submit a pull request for nbconvert if I find the time to fix this.
+2012-12-03 16:37:23 fangohr-adium: Running the simulation using '%run sim.py' is fine — coloured output from within Python is respected (or at least does not cause a halt of the conversion). However, using the magic 'run' seems not to be compatible with our input argument parsing: Options such as '-v info' seem to be ignored. That's why I used '!' instead.
+2012-12-03 16:38:58 max_albert: It's also interesting that the options are ignored, because the documentation for %run seems to suggest otherwise.
+2012-12-03 16:39:14 max_albert: I seem to remember that I had a similar issue once. It should be in the Pivotal tracker.
+2012-12-03 16:40:10 max_albert: Oh yes, I found it. The title of the tracker issue is "Using argparse in simulation scripts does not work (arguments get overwritten by Finmag)"
+2012-12-03 16:40:19 max_albert: Can I somehow copy a link to that issue directly?
