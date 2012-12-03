@@ -20,7 +20,7 @@ all : parallel
 # The directory where to place the extension modules
 MODULE_DIR = ../src/finmag/native
 # The list of extension modules to build
-MODULES = sundials.so llg.so llb.so
+MODULES = sundials.so llg.so llb.so fast_sum_lib.so
 # The directory to store the precompiled header file.
 PRECOMPILED_HEADER_DIR ?= /tmp/$(USER)/finmag-pch
 # Name of the binary that runs all unit tests
@@ -37,6 +37,10 @@ $(MODULE_DIR)/llg.so : src/llg/py_llg_module.o src/util/np_array.o src/util/swig
 llg_LDFLAGS = -ldolfin
 
 $(MODULE_DIR)/llb.so : src/llb/py_llb_module.o src/util/np_array.o src/llb/llb_material.o src/llb/llb.o
+
+$(MODULE_DIR)/fast_sum_lib.so:
+	cd src/fast_sum_lib && python setup.py build_ext --inplace
+	install src/fast_sum_lib/fast_sum_lib.so ../src/finmag/native
 
 $(UNIT_TEST_BINARY) : tests/run_ci_tests.o src/util/np_array.o src/sundials/tests/sundials_tests.o src/sundials/numpy_malloc.o src/llg/tests/boundary_mesh_tests.o
 run_ci_tests_LDFLAGS=-lboost_prg_exec_monitor /usr/lib/libboost_unit_test_framework.a $(SUNDIALS_NVECTOR_SO) -ldolfin
