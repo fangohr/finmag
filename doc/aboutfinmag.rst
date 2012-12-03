@@ -85,7 +85,7 @@ Configuration options are collected in sections (such as 'logging' in the exampl
 
   - ``dolfin_logging_level``: Sets the threshold logging level for messages from FEniCS/Dolfin. Dolfin has its own logging facility for C++ code that is separate from Python's `logging <http://docs.python.org/library/logging.html>`__. Possible values are DEBUG, INFO, WARN, ERROR, CRITICAL, PROGRESS.
 
-  - ``color_scheme``: Selects a color scheme for the logger. Allowed values are 'dark_bg' and 'light_bg' (for terminals with dark and light background, respectively).
+  - ``color_scheme``: Selects a color scheme for the logger. Allowed values are 'dark_bg' and 'light_bg' (for terminals with dark and light background, respectively), on 'none' to supress colouring.
 
 Finmag and GPU
 --------------

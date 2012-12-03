@@ -25,7 +25,18 @@ level_maps = {
             logging.WARNING: (None, 'yellow', False),
             logging.ERROR: (None, 'red', False),
             logging.CRITICAL: ('red', 'white', True),
+        },
+
+    'none': # Don't do any colouring -- sometimes colours can't be processed 
+            # by specific tools (such as nbconvert, at the moment, Dec 2012, HF
+        {
+            logging.DEBUG: (None, None, False),   # do not add any colours
+            logging.INFO: (None, None, False),
+            logging.WARNING: (None, None, False),
+            logging.ERROR: (None, None, False),
+            logging.CRITICAL: (None, None, False),
         }
+
     }
 
 class ColorizingStreamHandler(logging.StreamHandler):
