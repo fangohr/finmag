@@ -2,7 +2,7 @@ import os
 import dolfin as df
 import numpy as np
 from finmag.util import helpers
-from sandbox.treecode.fastdemag import Demag
+#from finmag.energies.fastdemag import Demag
 from finmag.energies import Demag
 
 
