@@ -81,6 +81,12 @@ Configuration options are collected in sections (such as 'logging' in the exampl
 
 * Section ``logging``:
 
+  - ``logfile``: Specifies one or multiple logfiles to which the Finmag output will be copied. Any non-existing files will be created. If a file already exists then new output will be appended at the end.
+
+    Filenames specified by relative paths are interpreted as being relative to the directory in which the simulation was started. This is useful if one wants to keep logging output separate for each simulation. If, on the other hand, a global logfile is desired (in which all output from all simulations is kept together) then an absolute filename should be given.
+
+    It is possible to specify multiple logfiles, as in the example above. In this case they should appear one per line, and each such line must begin with at least one space.
+
   - ``console_logging_level``: Sets the threshold logging level for logging messages that are sent to console using the Python `logging <http://docs.python.org/library/logging.html>`__ library. Default value is DEBUG; set it to WARN or higher to reduce the amount of messages sent to the console. Possible values are DEBUG, INFO, WARN, ERROR, CRITICAL.
 
   - ``dolfin_logging_level``: Sets the threshold logging level for messages from FEniCS/Dolfin. Dolfin has its own logging facility for C++ code that is separate from Python's `logging <http://docs.python.org/library/logging.html>`__. Possible values are DEBUG, INFO, WARN, ERROR, CRITICAL, PROGRESS.
