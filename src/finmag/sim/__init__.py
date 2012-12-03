@@ -1,7 +1,8 @@
 import logging
 import argparse
-from finmag.util import configuration, ansistrm
+import os
 import dolfin as df
+from finmag.util import configuration, ansistrm
 
 _DOLFIN_LOG_LEVELS = {
     "DEBUG": df.DEBUG,
@@ -18,6 +19,14 @@ _DOLFIN_LOG_LEVELS = {
 # control levels of details separately for finmag and dolfin.
 # Here we setup this logger with name 'finmag'
 logger = logging.getLogger(name='finmag')
+
+
+# Create formatter (some options to play with)
+formatter = logging.Formatter('[%(asctime)s] %(levelname)s: %(message)s', datefmt='%H:%M:%S')
+#formatter = logging.Formatter('L%(asctime)s-%(levelname)s: %(message)s')
+#formatter = logging.Formatter('FL:%(relativeCreated)10.1f-%(levelname)s: %(message)s')
+#formatter = logging.Formatter('%(levelname)s: %(message)s')
+
 
 parser = argparse.ArgumentParser(description='Parse the logging level.')
 parser.add_argument("-v", "--verbosity", default="debug",
@@ -40,7 +49,7 @@ def parse_logging_level(s, values=logging._levelNames):
     except ValueError:
         return values[s]
 
-# create console handler; the logging level is read from the config file
+# Create console handler; the logging level is read from the config file
 ch = ansistrm.ColorizingStreamHandler()
 
 # Read the logging settings from the configuration file
@@ -60,19 +69,25 @@ try:
 except KeyError:
     raise ValueError("Unkown color scheme: '{}' (allowed values: {})".format(color_scheme, ansistrm.level_maps.keys()))
 
-# create formatter #(some options to play with)
-formatter = logging.Formatter('[%(asctime)s] %(levelname)s: %(message)s', datefmt='%H:%M:%S')
-#formatter = logging.Formatter('L%(asctime)s-%(levelname)s: %(message)s')
-#formatter = logging.Formatter('FL:%(relativeCreated)10.1f-%(levelname)s: %(message)s')
-#formatter = logging.Formatter('%(levelname)s: %(message)s')
-
-# add formatter to ch
+# Activate console handler so that we can start logging already
 ch.setFormatter(formatter)
-
-# add ch to logger
 logger.addHandler(ch)
 
-#and examples to use in code later
-#logger.debug("debug message")
-#logger.info("info message")
-#logger.warn("warning message")
+
+#
+# Now add file handlers for all logfiles listed in .finmagrc
+#
+
+filehandlers = []
+
+logfiles = configuration.get_config_option("logging", "logfile", "").split()
+for f in logfiles:
+    filename = os.path.expanduser(f)
+    h = logging.FileHandler(filename)
+    filehandlers.append(h)
+    logger.info("Finmag output will be appended to file: '{}'".format(filename))
+
+# Add formatters to handlers and add handlers to logger
+for h in filehandlers:
+    h.setFormatter(formatter)
+    logger.addHandler(h)
