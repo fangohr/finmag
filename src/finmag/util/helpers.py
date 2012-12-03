@@ -13,6 +13,22 @@ from math import sqrt, pow
 
 logger = logging.getLogger("finmag")
 
+def set_logging_level(level):
+    """
+    Set the level for finmag log messages.
+
+    *Arguments*
+
+    level: string
+
+       One of the levels supported by Python's `logging` module.
+       Supported values: 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'.
+    """
+    if level not in ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']:
+        raise ValueError("Logging level must be one of: 'DEBUG', 'INFO', "
+                         "'WARNING', 'ERROR', 'CRITICAL'")
+    logger.setLevel(level)
+
 def components(vs):
     """
     For a list of vectors of the form [x0, ..., xn, y0, ..., yn, z0, ..., zn]
