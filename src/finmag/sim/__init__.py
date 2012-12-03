@@ -82,7 +82,10 @@ filehandlers = []
 
 logfiles = configuration.get_config_option("logging", "logfile", "").split()
 for f in logfiles:
-    filename = os.path.expanduser(f)
+    filename = os.path.abspath(os.path.expanduser(f))
+    dirname = os.path.dirname(filename)
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)
     h = logging.FileHandler(filename)
     filehandlers.append(h)
     logger.info("Finmag output will be appended to file: '{}'".format(filename))
