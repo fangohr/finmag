@@ -437,7 +437,16 @@ class Demag():
         self.Ms=Ms
         self.mesh=Vv.mesh()
         self.find_max_d()
-        self.mesh.coordinates()[:]/=self.max_d
+        # Note that the following change to the mesh coordinates will
+        # be reflected in the vector returned by self.mesh.coordinates().
+        # Unfortunately, we cannot say:
+        #
+        #   self.mesh.coordinates()[:] /= self.max_d
+        #
+        # because Cython complains about this when compiling the
+        # binary distribution.
+        coords = self.mesh.coordinates()
+        coords /= self.max_d
         
         self.V=FunctionSpace(self.mesh, 'Lagrange', 1)
         self.phi = Function(self.V)
