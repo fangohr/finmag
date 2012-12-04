@@ -149,7 +149,7 @@ class Simulation(object):
         except KeyError:
             raise ValueError(
                 "'interaction_type' must be a string representing one of the "
-                "known field types: {}".format(field_classes.keys()))
+                "known field types: {}".format(self.field_classes.keys()))
 
         field_lst = [e for e in self.llg.effective_field.interactions
                      if isinstance(e, FieldClass)]
