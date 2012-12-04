@@ -8,6 +8,7 @@ import math
 import types
 import sys
 import os
+import re
 from finmag.util.meshes import mesh_volume
 from math import sqrt, pow
 
@@ -50,6 +51,25 @@ def start_logging_to_file(filename, formatter=None):
     h.setFormatter(formatter)
     logger.info("Finmag logging output will be appended to file: '{}'".format(filename))
     logger.addHandler(h)
+
+
+def clean_filename(filename):
+    """
+    Remove non-alphanumeric characters from filenames.
+
+    *Parameters*
+
+    filename : str
+        The filename to be sanitized.
+
+    *Returns*
+
+    clean : str
+        A sanitized filename that contains only alphanumeric
+        characters and underscores.
+    """
+    filename = re.sub(r'[^a-zA-Z0-9_]', '_', filename)
+    return filename
 
 
 def components(vs):
