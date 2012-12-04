@@ -13,6 +13,7 @@ from math import sqrt, pow
 
 logger = logging.getLogger("finmag")
 
+
 def set_logging_level(level):
     """
     Set the level for finmag log messages.
@@ -28,6 +29,28 @@ def set_logging_level(level):
         raise ValueError("Logging level must be one of: 'DEBUG', 'INFO', "
                          "'WARNING', 'ERROR', 'CRITICAL'")
     logger.setLevel(level)
+
+
+def start_logging_to_file(filename, formatter=None):
+    """
+    Add a logging handler to the "finmag" logger which writes all
+    (future) logging output to the given file. It is possible to call
+    this multiple times with different filenames. If the file already
+    exists, new output will be appended at the end.
+    """
+    if formatter is None:
+        formatter = logging.Formatter(
+            '[%(asctime)s] %(levelname)s: %(message)s', datefmt='%H:%M:%S')
+
+    filename = os.path.abspath(os.path.expanduser(filename))
+    dirname = os.path.dirname(filename)
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)
+    h = logging.FileHandler(filename)
+    h.setFormatter(formatter)
+    logger.info("Finmag logging output will be appended to file: '{}'".format(filename))
+    logger.addHandler(h)
+
 
 def components(vs):
     """

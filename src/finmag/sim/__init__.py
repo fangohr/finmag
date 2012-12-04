@@ -3,6 +3,7 @@ import argparse
 import os
 import dolfin as df
 from finmag.util import configuration, ansistrm
+from finmag.util.helpers import start_logging_to_file
 
 _DOLFIN_LOG_LEVELS = {
     "DEBUG": df.DEBUG,
@@ -84,17 +85,6 @@ except KeyError:
 
 filehandlers = []
 
-logfiles = configuration.get_config_option("logging", "logfile", "").split()
+logfiles = configuration.get_config_option("logging", "logfiles", "").split()
 for f in logfiles:
-    filename = os.path.abspath(os.path.expanduser(f))
-    dirname = os.path.dirname(filename)
-    if not os.path.exists(dirname):
-        os.makedirs(dirname)
-    h = logging.FileHandler(filename)
-    filehandlers.append(h)
-    logger.info("Finmag output will be appended to file: '{}'".format(filename))
-
-# Add formatters to handlers and add handlers to logger
-for h in filehandlers:
-    h.setFormatter(formatter)
-    logger.addHandler(h)
+    start_logging_to_file(f, formatter=formatter)
