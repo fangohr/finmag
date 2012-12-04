@@ -13,6 +13,7 @@ from finmag.util.timings import timings
 from finmag.util.helpers import norm, vector_valued_function
 from finmag.util.consts import exchange_length, bloch_parameter
 from finmag.util.meshes import mesh_info, mesh_volume
+from finmag.util import helpers
 from finmag.sim.integrator import LLGIntegrator
 from finmag.energies.exchange import Exchange
 from finmag.energies.anisotropy import UniaxialAnisotropy
@@ -59,9 +60,14 @@ class Simulation(object):
         timings.start("Sim-init")
 
         self.name = name
-        # TODO: Start logging to file 'name.log' at this point.
 
-        log.info("Creating Sim object '{}'' (rank={}/{}) [{}].".format(
+        # Start logging to file 'name.log', but sanitize the name
+        # first so that it contains only alphanumeric characters and
+        # underscores.
+        logfilename = helpers.clean_filename(self.name) + '.log'
+        helpers.start_logging_to_file(logfilename)
+
+        log.info("Creating Sim object '{}' (rank={}/{}) [{}].".format(
             self.name, df.MPI.process_number(),
             df.MPI.num_processes(), time.asctime()))
         log.info(mesh)
