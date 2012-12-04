@@ -412,9 +412,7 @@ class FastDemag():
 
         self.fast_sum.compute_correction(m,self.res)
         
-        self.phi.vector().set_local(self.res)
-        
-        self.phi.vector()[:]*=(self.Ms/(4*np.pi))
+        self.phi.vector().set_local(self.res * self.Ms / (4 * np.pi))
         
         demag_field = self.G * self.phi.vector()
         
