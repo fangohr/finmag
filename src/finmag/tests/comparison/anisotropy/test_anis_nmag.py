@@ -1,5 +1,5 @@
 import numpy as np
-import conftest as test
+import conftest
 import os
 from finmag.util.helpers import vectors, stats
 
@@ -7,11 +7,11 @@ def test_against_nmag(finmag):
 
     REL_TOLERANCE = 7e-2
 
-    m_ref = np.genfromtxt(os.path.join(test.MODULE_DIR, "m0_nmag.txt"))
+    m_ref = np.genfromtxt(os.path.join(conftest.MODULE_DIR, "m0_nmag.txt"))
     m_computed = vectors(finmag["m"].vector().array())
     assert m_ref.shape == m_computed.shape
 
-    H_ref = np.genfromtxt(os.path.join(test.MODULE_DIR, "H_anis_nmag.txt"))
+    H_ref = np.genfromtxt(os.path.join(conftest.MODULE_DIR, "H_anis_nmag.txt"))
     H_computed = vectors(finmag["H"].vector().array())
     assert H_ref.shape == H_computed.shape
 
@@ -27,10 +27,10 @@ def test_against_nmag(finmag):
     print "comparison with nmag, m x H, relative difference:"
     print stats(rel_diff)
 
-    finmag["table"] += test.table_entry("nmag", REL_TOLERANCE, rel_diff)
+    finmag["table"] += conftest.table_entry("nmag", REL_TOLERANCE, rel_diff)
     assert np.max(rel_diff) < REL_TOLERANCE
 
 if __name__ == "__main__":
-    finmag = test.setup()
+    finmag = conftest.setup()
     test_against_nmag(finmag)
-    test.teardown(finmag)
+    conftest.teardown(finmag)
