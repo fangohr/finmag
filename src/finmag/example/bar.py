@@ -43,7 +43,7 @@ def barmini(name='barmini'):
 
     This function returns a simulation object that is 'ready to go'.
 
-    Useful commands to run this for a minute::
+    Useful commands to run this for a couple of seconds:
 
         times = numpy.linspace(0, 3.0e-11, 6 + 1)
         for t in times:
