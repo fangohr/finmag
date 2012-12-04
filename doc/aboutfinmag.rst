@@ -75,7 +75,7 @@ Customisation via ``.finmagrc``
 
 There is (currently rather rudimentary) support for customisation of Finmag's behaviour via a configuration file. Either of the files ``~/.finmagrc`` and ``~/.finmag/finmagrc`` will be taken into account (if they exist). This is an example of a minimalistic sample configuration file:
 
-.. literalinclude:: sample_finmagrc.txt
+.. literalinclude:: finmagrc_template.txt
 
 Configuration options are collected in sections (such as 'logging' in the example above), and each section contains assignments for the variables to be configured. Currently (as of 4.10.2012) the configurable options are as follows:
 

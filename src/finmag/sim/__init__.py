@@ -51,6 +51,14 @@ def parse_logging_level(s, values=logging._levelNames):
 
 # Create console handler; the logging level is read from the config file
 ch = ansistrm.ColorizingStreamHandler()
+#ch.level_map = ansistrm.level_maps['light_bg']  # default; this may be overwritten below
+
+# Activate console handler so that we can start logging already
+ch.setFormatter(formatter)
+logger.addHandler(ch)
+
+# If no .finmagrc file exists yet, create a default one.
+configuration.create_default_finmagrc_file()
 
 # Read the logging settings from the configuration file
 console_level = parse_logging_level(configuration.get_config_option("logging", "console_logging_level", logging.DEBUG))
@@ -68,10 +76,6 @@ try:
     ch.level_map = ansistrm.level_maps[color_scheme]
 except KeyError:
     raise ValueError("Unkown color scheme: '{}' (allowed values: {})".format(color_scheme, ansistrm.level_maps.keys()))
-
-# Activate console handler so that we can start logging already
-ch.setFormatter(formatter)
-logger.addHandler(ch)
 
 
 #

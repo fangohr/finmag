@@ -51,7 +51,7 @@ help:
 	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
 
 clean:
-	-rm -rf $(BUILDDIR)/* modules/* ${IPYTHON_NOTEBOOK_DEST_DIR}/*
+	-rm -rf $(BUILDDIR)/* modules/* ${IPYTHON_NOTEBOOK_DEST_DIR}/* finmagrc_template.txt
 
 
 htmlraw: collect-ipython-notebooks
@@ -167,8 +167,11 @@ doctest:
 	      "results in $(BUILDDIR)/doctest/output.txt."
 
 #next target added to get Jenkins to run generate_doc.py before building the documentation.
-generate-doc: examples-for-doc timing
+generate-doc: finmagrc_template.txt examples-for-doc timing
 	python generate_doc.py
+
+finmagrc_template.txt:
+	python -c "import finmag.util.configuration as c; c.write_finmagrc_template_to_file('finmagrc_template.txt')"
 
 # The absolute path for the doc directory
 DOC_DIR = $(abspath .)
