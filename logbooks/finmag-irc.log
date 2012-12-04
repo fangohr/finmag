@@ -2831,3 +2831,30 @@ fangohr: Still testing ...
 2012-12-03 16:39:14 max_albert: I seem to remember that I had a similar issue once. It should be in the Pivotal tracker.
 2012-12-03 16:40:10 max_albert: Oh yes, I found it. The title of the tracker issue is "Using argparse in simulation scripts does not work (arguments get overwritten by Finmag)"
 2012-12-03 16:40:19 max_albert: Can I somehow copy a link to that issue directly?
+2012-12-04 00:16:09 fangohr: Hi Max, in response to your question regarding direct access to issue URL: within the tracker, there is a paperclick icon. If you click on that, it is meant to copy the URL of the issue, so that you can paste that where you need it.
+2012-12-04 00:16:33 fangohr: If you want to chat about logging stuff, come and find me tomorro after 11:00; great progress with the global log file.
+2012-12-04 10:59:44 fangohr-adium1: Good Morning (back from teaching…)
+2012-12-04 10:59:57 max_albert: Good morning Hans.
+2012-12-04 11:03:05 D_Chernyshenko: Morning
+2012-12-04 14:12:08 max_albert: Hi Hans, as of the latest commit we now have per-simulation logging enabled. Feel free to test and report any issues.
+2012-12-04 14:18:56 fangohr-adium1: Hi Max, just done that — great.
+2012-12-04 14:19:27 fangohr-adium1: One suggestion for improvement: certainly for the global log file, and maybe for the others as well: should be replace the time tag at the beginning of each line with a date-time tag?
+2012-12-04 14:19:45 max_albert: Yes, I had considered that as well.
+2012-12-04 14:20:02 max_albert: I disabled it a while ago because it takes up a lot of space at the beginning of each line.
+2012-12-04 14:20:20 max_albert: But I guess it could be useful to have it per default.
+2012-12-04 14:20:36 fangohr-adium1: Yes, a common problem. We could chose a denser date format, even something like 20121204-14:10 would be better than 14:10.
+2012-12-04 14:20:56 fangohr-adium1: Also, when simulations run multiple days, this is quite convenient.
+2012-12-04 14:21:03 max_albert: That would only save two characters, though. :)
+2012-12-04 14:21:11 fangohr-adium1: I except the space usage is annoying.
+2012-12-04 14:21:26 fangohr-adium1: (Maybe you just need to get a bigger screen …?)
+2012-12-04 14:21:40 max_albert: Well, we could have the timestamp template string as a configuration option in .finmagrc.
+2012-12-04 14:21:51 max_albert: Oh, yes! A bigger screen would be very useful. ;-)
+2012-12-04 14:22:26 max_albert: By default the timestamp could include the date, but then a user could remove it if it takes up too much space.
+2012-12-04 14:22:30 fangohr-adium1: I'd keep it simple and just put it in the default formatter for all the logs. If it is unbearable, we could use only the time in the Simulation log, and add an extra line at the beginning that states the date.
+2012-12-04 14:22:59 fangohr-adium1: Yes, we are thinking along the same lines. I would not introduce a config option here — too much work, and not worth it I think. If we really need it, we will find out soon.
+2012-12-04 14:23:45 max_albert: Ok.
+2012-12-04 14:24:19 fangohr-adium1: I have happily accept the completed stories on pivotal — very nice to see some green items :)
+2012-12-04 14:25:49 max_albert: :)
+2012-12-04 14:26:05 max_albert: I just pushed the change for the timestamp so that it now includes the date.
+2012-12-04 14:26:56 fangohr-adium1: Ta.
+2012-12-04 14:27:34 max_albert: You are right, it looks much more useful that way.
