@@ -87,20 +87,19 @@ tet_w=(
 )
 
 def length(p1,p2):
-	return np.sqrt((p1[0]-p2[0])**2+(p1[1]-p2[1])**2+(p1[2]-p2[2])**2)
+    return np.sqrt((p1[0]-p2[0])**2+(p1[1]-p2[1])**2+(p1[2]-p2[2])**2)
 
 def length2(p1,p2):
-	return (p1[0]-p2[0])**2+(p1[1]-p2[1])**2+(p1[2]-p2[2])**2
+    return (p1[0]-p2[0])**2+(p1[1]-p2[1])**2+(p1[2]-p2[2])**2
 
 def G(r1,r2):
-	r=length(r1,r2)
-	
-	if r<1e-12:
-            print 'hahahahahahahhahahahah'
-            
-            return 0
-		
-	return 1.0/(r)
+    r=length(r1,r2)
+    
+    if r<1e-12:
+        print 'hahahahahahahhahahahah'
+        return 0
+        
+    return 1.0/(r)
     
 
 
@@ -140,9 +139,9 @@ def compute_node_area(mesh):
     tmp=node_area.array()
     print 'area is: ',sum(tmp)
     for i in range(len(tmp)):
-	    if tmp[i]==0:
-		    tmp[i]=1
-		    
+        if tmp[i]==0:
+            tmp[i]=1
+
     return tmp
 
 
@@ -182,7 +181,7 @@ class FastDemag():
         self.m=m
         self.Vv=Vv
         self.Ms=Ms
-	self.triangle_p=triangle_p
+        self.triangle_p=triangle_p
         self.tetrahedron_p=tetrahedron_p
         self.mesh=Vv.mesh()
         self.V=FunctionSpace(self.mesh, 'Lagrange', 1)
@@ -212,7 +211,7 @@ class FastDemag():
         tet_nodes=np.array(self.mesh.cells(),dtype=np.int32)
         fast_sum.init_mesh(xt,self.t_normals,self.face_nodes_array,tet_nodes)
         self.fast_sum=fast_sum
-	self.res=np.zeros(len(self.mesh.coordinates()))
+        self.res=np.zeros(len(self.mesh.coordinates()))
 
         
         
@@ -235,12 +234,12 @@ class FastDemag():
 
 
     def compute_triangle_normal(self):
-	
+
         self.face_nodes=[]
         self.face_norms=[]
         self.t_normals=[]
         
-	for face in df.faces(self.mesh):
+        for face in df.faces(self.mesh):
             t=face.normal()  #one must call normal() before entities(3),...
             cells = face.entities(3)
             if len(cells)==1:
@@ -254,18 +253,18 @@ class FastDemag():
 
     
     def compute_affine_transformation_surface(self):
-	
+
         m=self.m.vector().array()
         
         m=m.reshape((-1,3),order='F')
         
         cs=self.mesh.coordinates()
-	
+
         self.face_nodes=[]
         self.face_norms=[]
         self.t_normals=[]
         
-	for face in df.faces(self.mesh):
+        for face in df.faces(self.mesh):
             t=face.normal()  #one must call normal() before entities(3),...
             cells = face.entities(3)
             if len(cells)==1:
@@ -278,7 +277,7 @@ class FastDemag():
         self.face_nodes_array=np.array(self.face_nodes,dtype=np.int32)
         
         self.s_nodes=[]
-	self.s_weight=[]
+        self.s_weight=[]
         self.s_charge=[]
         
 
@@ -293,7 +292,7 @@ class FastDemag():
             det*=np.sqrt((a*a+b*b)/(c*c)+1)
 
             return det
-	
+
         
         for i in range(len(self.face_nodes)):
             f_c=self.face_nodes[i]
@@ -366,9 +365,9 @@ class FastDemag():
             return tmp,abs(v)
         
         self.v_nodes=[]
-	self.v_weight=[]
+        self.v_weight=[]
         self.v_charge=[]
-	for cell in df.cells(self.mesh):
+        for cell in df.cells(self.mesh):
             i=cell.entities(0)
             rho,det=compute_divergence(cell)
 
@@ -410,35 +409,35 @@ class FastDemag():
         
         self.fast_sum.fastsum(self.res)
         #self.fast_sum.exactsum(res)
-	
+
         self.fast_sum.compute_correction(m,self.res)
         
         self.phi.vector().set_local(self.res)
         
         self.phi.vector()[:]*=(self.Ms/(4*np.pi))
         
-	demag_field = self.G * self.phi.vector()
+        demag_field = self.G * self.phi.vector()
         
-	return demag_field.array()/self.L
-	
+        return demag_field.array()/self.L
+
 
 class Demag():
     
     def __init__(self,triangle_p=1,tetrahedron_p=1,p=3,mac=0.3,num_limit=100):
         
-	self.triangle_p=triangle_p
+        self.triangle_p=triangle_p
         self.tetrahedron_p=tetrahedron_p
-	self.p=p
-	self.mac=mac
-	self.num_limit=num_limit
-	self.in_jacobian=False
+        self.p=p
+        self.mac=mac
+        self.num_limit=num_limit
+        self.in_jacobian=False
         
         
     def setup(self,Vv,m,Ms,unit_length=1):
-	self.m=m
+        self.m=m
         self.Vv=Vv
         self.Ms=Ms
-	self.mesh=Vv.mesh()
+        self.mesh=Vv.mesh()
         self.find_max_d()
         self.mesh.coordinates()[:]/=self.max_d
         
@@ -454,27 +453,27 @@ class Demag():
         
         self.L = compute_minus_node_volume_vector(self.mesh)
 
-	self.compute_triangle_normal()
+        self.compute_triangle_normal()
         fast_sum=FastSum(p=self.p,mac=self.mac,num_limit=self.num_limit,\
-				 triangle_p=self.triangle_p,tetrahedron_p=self.tetrahedron_p)
+                                 triangle_p=self.triangle_p,tetrahedron_p=self.tetrahedron_p)
 
         xt=self.mesh.coordinates()
         tet_nodes=np.array(self.mesh.cells(),dtype=np.int32)
         fast_sum.init_mesh(xt,self.t_normals,self.face_nodes_array,tet_nodes)
         self.fast_sum=fast_sum
-	self.res=np.zeros(len(self.mesh.coordinates()))
+        self.res=np.zeros(len(self.mesh.coordinates()))
 
-	self.mesh.coordinates()[:]*=self.max_d
-	
+        self.mesh.coordinates()[:]*=self.max_d
+        
 
 
     def compute_triangle_normal(self):
-	
+        
         self.face_nodes=[]
         self.face_norms=[]
         self.t_normals=[]
         
-	for face in df.faces(self.mesh):
+        for face in df.faces(self.mesh):
             t=face.normal()  #one must call normal() before entities(3),...
             cells = face.entities(3)
             if len(cells)==1:
@@ -488,11 +487,11 @@ class Demag():
 
 
     def find_max_d(self):
-	xt=self.mesh.coordinates()
-	max_v=xt.max(axis=0)
-	min_v=xt.min(axis=0)
+        xt=self.mesh.coordinates()
+        max_v=xt.max(axis=0)
+        min_v=xt.min(axis=0)
         max_d=max(max_v-min_v)
-	self.max_d=max_d
+        self.max_d=max_d
 
 
     def compute_field(self):
@@ -502,16 +501,16 @@ class Demag():
         self.fast_sum.update_charge(m)
         
         self.fast_sum.fastsum(self.res)
-	
+        
         self.fast_sum.compute_correction(m,self.res)
         
         self.phi.vector().set_local(self.res)
         
         self.phi.vector()[:]*=(self.Ms/(4*np.pi))
         
-	demag_field = self.G * self.phi.vector()
+        demag_field = self.G * self.phi.vector()
         
-	return demag_field.array()/self.L
+        return demag_field.array()/self.L
 
 if __name__ == "__main__":
    
