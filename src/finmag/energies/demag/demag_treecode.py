@@ -461,9 +461,9 @@ class Demag():
         tet_nodes=np.array(self.mesh.cells(),dtype=np.int32)
         fast_sum.init_mesh(xt,self.t_normals,self.face_nodes_array,tet_nodes)
         self.fast_sum=fast_sum
-        self.res=np.zeros(len(self.mesh.coordinates()))
+        self.res=np.zeros_like(xt)
 
-        self.mesh.coordinates()[:]*=self.max_d
+        xt *= self.max_d  # this changes self.mesh.coordinates() in-place!
         
 
 
