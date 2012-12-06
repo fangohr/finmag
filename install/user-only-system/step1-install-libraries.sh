@@ -14,7 +14,9 @@ required="fenics libboost-python-dev libboost-thread-dev libsundials-serial-dev
     libboost-test-dev python-matplotlib python-visual python-scipy python-pip
     python-setuptools python-progressbar"
 
-required="fenics python-matplotlib python-visual python-scipy python-pip python-setuptools libsundials-serial ipython ipython-notebook ipython-qtconsole python-pygments grace gnuplot netgen netgen-doc gmsh mercurial" 
+
+
+required="fenics python-matplotlib python-visual python-scipy python-pip python-setuptools libsundials-serial ipython ipython-notebook ipython-qtconsole python-pygments python-py grace gnuplot netgen netgen-doc gmsh mercurial" 
 
 #libboost-python-dev libboost-thread-dev l
 #    python-setuptools python-progressbar"
