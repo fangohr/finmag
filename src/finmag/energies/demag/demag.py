@@ -6,7 +6,7 @@ from solver_fk import FemBemFKSolver
 from solver_gcr import FemBemGCRSolver
 from solver_fk_alt import SimpleFKSolver
 from solver_base import default_parameters
-from finmag.tests.demag.problems import prob_fembem_testcases as pft
+
 
 log = logging.getLogger("finmag")
 
@@ -90,6 +90,7 @@ class Demag(object):
         return self.demag.phi
 
 if __name__ == "__main__":
+    from finmag.tests.demag.problems import prob_fembem_testcases as pft
     prob = pft.MagSphereBase(10, 0.8)
 
     demag = Demag("GCR")
