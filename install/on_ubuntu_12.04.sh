@@ -3,7 +3,7 @@ set -o errexit
 if [ "$1" == "--help" -o "$1" == "-h" ]
 then
     echo "
-This script will installed required libraries to run finmag.
+This script will install required libraries to run finmag.
 
 Packages to build the documentation and additional suggested
 packages can be installed by appending an --all argument when
