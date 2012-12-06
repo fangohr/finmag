@@ -1,0 +1,162 @@
+Installation of finmag (user distribution)
+==========================================
+
+.. contents::
+
+
+Assumptions and requirements
+----------------------------
+
+This documents assumes you are using the Ubuntu 12.04 64 bit Linux distribution.
+
+
+
+Step 1: Install prerequisits
+----------------------------
+
+To install the required prerequisits, run::
+
+  sudo step1-install-libraries.sh
+
+You will need to press return in the process.
+
+*Check this has worked* by running::
+
+  python test_libraries.py
+
+All the modules listed should have a version number displayed, for example::
+
+   python test_libraries.py          
+         Python -> 2.7.3
+        IPython -> 0.13.1
+          numpy -> 1.6.1
+     matplotlib -> 1.2.0
+          scipy -> 0.9.0
+         dolfin -> 1.0.0
+
+
+Step 2: Untar binary finmag distribution
+----------------------------------------
+
+We assume that you want to install the finmag software into the folder 
+``~/finmag``. Assuming you have received a tar ball with a name such as 
+``FinMag-dist__2012-12-05__rev2334_0ad2b72a74b7.tar.bz2`` and that this is 
+located in your home directory (i.e. ``~``), you can untar this with::
+
+  tar xfvj FinMag-dist__2012-12-05__rev2334_0ad2b72a74b7.tar.bz2 
+
+This command will create a subdirectory ``finmag`` and put the distribution files into that directory.
+
+
+Step 3: Setting up the Pythonpath
+---------------------------------
+
+We need to tell Python where the finmag package is installed, This is
+done by setting the PYTHONPATH. We recommend to append the following
+line at the end of the file ``~/.bashrc``::
+
+  export PYTHONPATH=$HOME:$PYTHONPATH
+
+The PYTHONPATH has to be the one in which the ``finmag`` directory is
+located. For our example, this would be ``~``, i.e. the home
+directory.
+
+We have to start our bash session again to activate this. This can be done, for example, by typing::
+
+  bash
+
+Step 4: Trying to import Finmag
+-------------------------------
+
+To make sure we are testing the PYTHONPATH, we suggest to change directory
+away from the directory that contains the ``finmag`` files, for example
+to the Desktop::
+
+  cd Desktop
+
+We can now start ipython::
+
+  ipython
+
+and then enter the Python command ``import finmag``, i.e. press return
+after having typed ``import finmag`` as in this example::
+
+
+  fangohr@fangohr-VirtualBox:~$ ipython
+  Python 2.7.3 (default, Aug  1 2012, 05:14:39) 
+  Type "copyright", "credits" or "license" for more information.
+  
+  IPython 0.12.1 -- An enhanced Interactive Python.
+  ?         -> Introduction and overview of IPython's features.
+  %quickref -> Quick reference.
+  help      -> Python's own help system.
+  object?   -> Details about 'object', use 'object??' for extra details.
+  
+  In [1]: import finmag
+
+The expected response is something like::
+
+  [2012-12-06 16:34:52] INFO: Finmag logging output will be appended to file: '/home/fangohr/.finmag/global.log'
+  [2012-12-06 16:34:52] DEBUG: This is Finmag version 2338:e38ce0390371f22befb6b79fd0505a212e6a42c4
+  
+  In [2]:
+
+
+Step 5: Run a first simulation
+------------------------------
+
+We can now run a first simulation to test the system is working. The
+following commands can be gathered in a file which can be executed as
+a python program, or entered interactively at the python prompt. The
+commands are::
+
+  import finmag
+  sim = finmag.example.barmini()
+
+If the output to these two commands reads something like the following, then all is well::
+
+  [2012-12-06 16:52:47] INFO: Finmag logging output will be appended to file: '/home/fangohr/somedirectory/barmini.log'
+  [2012-12-06 16:52:47] INFO: Creating Sim object 'barmini' (rank=0/1) [Thu Dec  6 16:52:47 2012].
+  [2012-12-06 16:52:47] INFO: <Mesh of topological dimension 3 (tetrahedra) with 45 vertices and 96 cells, ordered>
+  [2012-12-06 16:52:47] DEBUG: Creating LLG object.
+  [2012-12-06 16:52:47] DEBUG: Creating Exchange object with method box-matrix-petsc, in Jacobian.
+  The license file signature was verified,
+  this machine has MAC and IP addresses that match the license file,
+  and the license is valid for 59 more days.
+  
+  Calling FFC just-in-time (JIT) compiler, this may take some time.
+  Calling FFC just-in-time (JIT) compiler, this may take some time.
+  [2012-12-06 16:52:53] DEBUG: Creating Demag object with FK solver.
+  Calling FFC just-in-time (JIT) compiler, this may take some time.
+  Calling FFC just-in-time (JIT) compiler, this may take some time.
+  Calling FFC just-in-time (JIT) compiler, this may take some time.
+  Calling FFC just-in-time (JIT) compiler, this may take some time.
+  [2012-12-06 16:53:04] DEBUG: Demag: Poisson solver parameters.
+      {'maximum_iterations': 10000, 'divergence_limit': 10000.0, 'relative_tolerance': 1e-06, 'gmres':
+      {'restart': 30}, 'preconditioner': {'shift_nonzero': 0.0, 'reuse': False,
+      'same_nonzero_pattern': False, 'ilu': {'fill_level': 0}, 'schwarz': {'overlap': 1}, 'report':
+      False}, 'error_on_nonconvergence': True, 'monitor_convergence': False, 'nonzero_initial_guess':
+      False, 'report': True, 'absolute_tolerance': 1e-15}
+  [2012-12-06 16:53:04] DEBUG: Demag: Laplace solver parameters.
+      {'maximum_iterations': 10000, 'divergence_limit': 10000.0, 'relative_tolerance': 1e-06, 'gmres':
+      {'restart': 30}, 'preconditioner': {'shift_nonzero': 0.0, 'reuse': False,
+      'same_nonzero_pattern': True, 'ilu': {'fill_level': 0}, 'schwarz': {'overlap': 1}, 'report':
+      False}, 'error_on_nonconvergence': True, 'monitor_convergence': False, 'nonzero_initial_guess':
+      False, 'report': True, 'absolute_tolerance': 1e-15}
+  
+
+We now have a simlation object. To carry out time integration for 10 pico seconds, we can call the ``sim.run_until()`` method with an argument of 1e-11::
+
+  sim.run_until(1e-11)
+
+-----
+
+If creating the simulation object using ``sim = finmag.example.barmini()`` produces the following output, then the license file could not be found::
+
+  SystemExit: Sorry unable to verify license
+  
+You either need to obtain a license file, or move it to the right location. The software will look for the license file in the folders ``~/.finmag`` and ``~/finmag`` although inline with UNIX conventions, the hidden folder ``~/.finmag`` is preferred.
+
+
+
+
