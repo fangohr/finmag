@@ -2859,3 +2859,44 @@ fangohr: Still testing ...
 2012-12-04 14:26:56 fangohr-adium1: Ta.
 2012-12-04 14:27:34 max_albert: You are right, it looks much more useful that way.
 2012-12-05 15:11:31 mb8g11: I'll be on skype for the meeting with the ip students in time.
+2012-12-06 09:27:22 fangohr-adium1: Good Morning, Max and DokosBot.
+2012-12-06 16:14:50 fangohr: Max, I have run the dist-wrapper script earlier. Fantastic; great job. (Also many thanks to MA and Neil who have helped in the earlier stages of this, of course.)
+2012-12-06 16:15:29 max_albert: Great! Has it worked for you? Did you manage to create a functional tarball?
+2012-12-06 16:16:07 fangohr: Not quite functional; am just looking at this. Some ImportError "No module named tests.demag.probems".
+2012-12-06 16:16:45 max_albert: I have run into a strange bug where one of the tests wouldn't pass even though it passes in our regular distribution.
+2012-12-06 16:16:46 fangohr: But this is only after unpacking the tar-ball on a new machine — so I got pretty far.
+2012-12-06 16:18:11 fangohr: Your strange bug should show up before the tarball is created, correct?
+2012-12-06 16:18:37 max_albert: I tried to debug this and bisect the history. At first it seems like hardly any of the revisions compiled at all with the dist-wrapper script (or it compiled and then the tests failed), but I am currently not sure if there is a problem with wrong environment variables. Am just investigating this.
+2012-12-06 16:18:58 max_albert: Yes, it would show up when just running dist-wrapper.py (*including* the test suite, so without --skip-tests).
+2012-12-06 16:19:46 fangohr: My error may also be a PYTHONPATH issue. I'll look into this and beep again.
+2012-12-06 16:20:00 max_albert: Ok.
+2012-12-06 16:20:27 fangohr: Just to add that I had seen a long time ago that some of the Cython-compiled code did fail tests. I could never track this down exacty, and ended up excluding certain files from the compilation to work around tat. (You will have seen the list of excluded files somewhere.)
+2012-12-06 16:22:22 max_albert: Oh yes I have... It caused me a lot of headache a while ago when I tried to debug something and attempted to write a test for which files were copied into the tarball. I gave up with that test in the end... ;-)
+2012-12-06 16:22:51 max_albert: Just to add that this is not your fault of course. :)
+2012-12-06 16:26:56 fangohr: No worries ;-)
+2012-12-06 16:27:17 fangohr: Have found a possible problem, am trying the next iteration of the distributed code.
+2012-12-06 16:28:26 max_albert: What is the problem?
+2012-12-06 16:29:12 fangohr: See the diff in https://bitbucket.org/fangohr/finmag/commits/522275d716eeec58778035c9456b85d6 — I hope that solves the problem.
+2012-12-06 16:29:44 fangohr: Looks like a remainder from what Gabriel did. Not sure why this has not caused any problems before. So maybe it is just a symptom of something else going wrong (for me here).
+2012-12-06 16:37:25 fangohr: The fact that the date in the tarball is taken from the date of the last commit is very cool.
+2012-12-06 16:38:47 max_albert: Yes, it was a good suggestion to make the date in the tarball reflect the date of the revision that it is built from.
+2012-12-06 16:39:15 fangohr: But to see in actually working is nice!
+2012-12-06 16:47:05 fangohr: Seems to work for me now. Am updating documentation for user installation. Haven't come to the licence check bit yet.
+2012-12-06 16:47:47 max_albert: Ok, that's great to hear. I'm still having some troubles over her (seemingly related to environment variables) but am investigating.
+2012-12-06 16:48:00 max_albert: And it has worked before, so I'm not too worried.
+2012-12-06 16:50:02 max_albert: Ok, looks like a non-issue. I think the problems stemmed from the fact that I was trying to check out older revisions for building the tarball, but the dist-wrapper script assumed a certain setup which was only introduced relatively recently.
+2012-12-06 16:51:28 max_albert: Which is a pity, because this means the ability to check out older revisions is not as useful as I thought it would be.
+2012-12-06 16:51:41 max_albert: It may become more useful over time, though.
+2012-12-06 17:07:22 fangohr: I am sure it will.
+2012-12-06 17:10:24 fangohr: Max, there are a few spurious files in the tar ball (at the top level, i.e. even above the finmag directory). Files such as unnamed.log, box-2_0-1…
+2012-12-06 17:10:33 fangohr: I was just looking where these are included, but I can't find the Makefile.
+2012-12-06 17:10:41 fangohr: Should this be in finmag-dist?
+2012-12-06 17:10:50 fangohr: I guess I am just blind, really...
+2012-12-06 17:11:21 max_albert: Yes, I saw this recently as well and wanted to change it but didn't have time.
+2012-12-06 17:11:25 max_albert: The problem is that finmag-dist works by blacklisting files, not whitelisting them.
+2012-12-06 17:12:18 max_albert: So in a fresh checkout, only the right files are included. But if some additional files were added and these are not excluded by the rules, they are copied as well.
+2012-12-06 17:12:22 fangohr: Okay, I see. No worries. Found the Makefile now: in finmag/src
+2012-12-06 17:13:23 max_albert: The rules should be in the file distcp.py (IIRC).
+2012-12-06 17:13:49 max_albert: In the regular Finmag repository, that is (not in finmag-dist).
+2012-12-06 17:14:03 fangohr: Okay, ta.
+2012-12-06 17:14:39 fangohr: Over and out for now, probably back later.
