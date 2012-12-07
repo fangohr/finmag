@@ -13,6 +13,7 @@ from finmag.util.timings import timings
 from finmag.util.helpers import norm, vector_valued_function
 from finmag.util.consts import exchange_length, bloch_parameter
 from finmag.util.meshes import mesh_info, mesh_volume
+from finmag.util.fileio import Tablewriter
 from finmag.util import helpers
 from finmag.sim.integrator import LLGIntegrator
 from finmag.energies.exchange import Exchange
@@ -63,11 +64,17 @@ class Simulation(object):
         # contains only alphanumeric characters and underscores. The latter
         # will be used as a prefix for .log/.ndt files etc.
         self.name = name
-        self.sanitized_name = helpers.clean_filename(self.name)
+        self.sanitized_name = helpers.clean_filename(name)
 
-        # Start logging to file 'sanitized_name.log'
-        logfilename = self.sanitized_name + '.log'
-        helpers.start_logging_to_file(logfilename)
+        self.logfilename = self.sanitized_name + '.log'
+        self.ndtfilename = self.sanitized_name + '.ndt'
+
+        helpers.start_logging_to_file(self.logfilename)
+
+        # Create a Tablewriter object for ourselves which will be used
+        # by various methods to save the average magnetisation at given
+        # timesteps.
+        self.tablewriter = Tablewriter(self.ndtfilename, self, override=True)
 
         log.info("Creating Sim object '{}' (rank={}/{}) [{}].".format(
             self.name, df.MPI.process_number(),
@@ -241,6 +248,15 @@ class Simulation(object):
                                             backend=self.integrator_backend)
         self.integrator.run_until(t)
         self.t = t
+
+    def save_averages(self):
+        """
+        Save average field values (such as the magnetisation) to a file.
+
+        The filename is derived from the simulation name (as given when the
+        simulation was initialised) and has the extension .ndt'.
+        """
+        self.tablewriter.save()
 
     def relax(self, save_snapshots=False, filename='', save_every=100e-12,
               save_final_snapshot=True, force_overwrite=False,
