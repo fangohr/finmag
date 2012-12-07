@@ -59,12 +59,14 @@ class Simulation(object):
         timings.reset()
         timings.start("Sim-init")
 
+        # Store the simulation name and a 'sanitized' version of it which
+        # contains only alphanumeric characters and underscores. The latter
+        # will be used as a prefix for .log/.ndt files etc.
         self.name = name
+        self.sanitized_name = helpers.clean_filename(self.name)
 
-        # Start logging to file 'name.log', but sanitize the name
-        # first so that it contains only alphanumeric characters and
-        # underscores.
-        logfilename = helpers.clean_filename(self.name) + '.log'
+        # Start logging to file 'sanitized_name.log'
+        logfilename = self.sanitized_name + '.log'
         helpers.start_logging_to_file(logfilename)
 
         log.info("Creating Sim object '{}' (rank={}/{}) [{}].".format(
