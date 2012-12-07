@@ -242,12 +242,30 @@ class Simulation(object):
             res = res[0]
         return np.array(res)
 
-    def run_until(self, t):
+    def run_until(self, t, save_averages=True):
+        """
+        Run the simulation until the given time step is reached.
+
+        *Arguments*
+
+        t: float
+
+            The time up to which the simulation is to be run.
+
+        save_averages: bool
+
+            If True (the default) then the method `save_averages` is
+            called automatically when the given time step is reached
+            (this adds a line to the .ndt file in which the average
+            fields for this simulation object are recorded).
+        """
         if not hasattr(self, "integrator"):
             self.integrator = LLGIntegrator(self.llg, self.llg.m,
                                             backend=self.integrator_backend)
         self.integrator.run_until(t)
         self.t = t
+        if save_averages:
+            self.save_averages()
 
     def save_averages(self):
         """
