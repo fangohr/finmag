@@ -35,10 +35,10 @@ class Tablewriter(object):
         # field is about, and which can be used as a useful column header
         # here for the ndt file.
         self.entities = {
-            'time': {'unit': 's',
+            'time': {'unit': '<s>',
                         'get': lambda sim: sim.t,
                         'header': 'time'},
-            'm': {'unit': 's',
+            'm': {'unit': '<>',
                   'get': lambda sim: sim.m_average,
                   'header': ('m_x', 'm_y', 'm_z')}
             }
