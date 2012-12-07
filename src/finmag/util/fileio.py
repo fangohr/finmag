@@ -38,7 +38,7 @@ class Tablewriter(object):
             'time': {'unit': 's',
                         'get': lambda sim: sim.t,
                         'header': 'time'},
-            'm': {'unit': 'A/m',
+            'm': {'unit': 's',
                   'get': lambda sim: sim.m_average,
                   'header': ('m_x', 'm_y', 'm_z')}
             }
