@@ -5,11 +5,13 @@ from math import pi, sin, cos
 from finmag import Simulation as Sim
 from finmag.energies import Exchange, UniaxialAnisotropy, Zeeman
 from finmag.util.consts import mu0
+import logging
+logger=logging.getLogger('finmag')
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 averages_file = os.path.join(MODULE_DIR, "averages.txt")
 
-def run_simulation():
+def run_simulation(t_max = 10e-9):
     L = W = 12.5e-9; H = 5e-9;
     mesh = df.Box(0, 0, 0, L, W, H, 5, 5, 2)
     sim = Sim(mesh, Ms=8.6e5)
@@ -31,10 +33,13 @@ def run_simulation():
     sim.llg.use_slonczewski(J=J, P=0.4, d=H, p=p)
 
     with open(averages_file, "w") as f:
-        dt = 5e-12; t_max = 10e-9;
+        dt = 5e-12; 
         for t in np.arange(0, t_max, dt):
             sim.run_until(t)
+            logger.info("integrated to time = %gs / %gs" % (t, t_max))
             f.write("{} {} {} {}\n".format(t, *sim.m_average))
+    return len(np.arange(0, t_max, dt))
+
 
 if __name__ == "__main__":
-    run_simulation()
+    run_simulation(short=True)
