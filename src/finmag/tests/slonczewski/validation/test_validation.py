@@ -7,11 +7,22 @@ tolerance = 1e-4
 nmag_file = os.path.join(sim.MODULE_DIR, "averages_nmag5.txt")
 
 def test_validation():
-    sim.run_simulation()
+    #short run:
+    tmax = 0.05e-9; tolerance = 3e-7
+
+    #long run
+    #tmax = 10e-9; tolerance = 1e-4
+
+    n = sim.run_simulation(t_max=tmax) 
 
     averages = np.loadtxt(sim.averages_file)
-    nmag_avg = np.loadtxt(nmag_file)
+    nmag_avg = np.loadtxt(nmag_file)[:n,:]
    
     diff = np.abs(np.array(averages) - np.array(nmag_avg))
+    print("Deviation is %s" % (np.max(diff)))
     assert np.max(diff[:,0]) < epsilon # compare times
     assert np.max(diff[:,1:]) < tolerance
+
+
+# Note: On osiris, the time integration in this example seems to get
+# progressively slower. Is that right? HF, 7 Dec 2012
