@@ -11,23 +11,24 @@ def test_write_ndt_file():
     # TODO: This might not be the best solution, should revise this at some point.
     os.chdir(MODULE_DIR)
 
+    output_file = "barmini_test.ndt"
+    reference_file = "barmini_test.ndt.ref"
+
     sim = finmag.example.barmini(name="barmini_test")
     for time in linspace(0, 1e-10, 20):
         print("Integrating towards t = %gs" % time)
         sim.run_until(time, save_averages=True)  # True is the default for save_averages
                                                  # but we provide it for clarity.
     print("Done")
-    result = filecmp.cmp("barmini_test.ndt", "barmini_test.ndt.ref", shallow=False)
+    result = filecmp.cmp(output_file, reference_file, shallow=False)
+
     if result == False:
-        print("files differ:")
-        print("File 1: barmini_test.ndt:\n")
-        for line in open("barmini_test.ndt"):
-            print (line),
-        print("\nFile 1: barmini_test.ndt.ref:\n")
-        for line in open("barmini_test.ndt.ref"):
-            print(line),
-        print('----') 
-        print("Probably a diff would be useful as well.")
+        import difflib
+
+        lines1 = open(output_file).readlines()
+        lines2 = open(reference_file).readlines()
+
+        print("Output differs from reference file:")
+        print "".join(difflib.unified_diff(lines1, lines2))
+
     assert(result)
-
-
