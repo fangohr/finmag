@@ -17,4 +17,17 @@ def test_write_ndt_file():
         sim.run_until(time, save_averages=True)  # True is the default for save_averages
                                                  # but we provide it for clarity.
     print("Done")
-    assert(filecmp.cmp("barmini_test.ndt", "barmini_test.ndt.ref", shallow=False))
+    result = filecmp.cmp("barmini_test.ndt", "barmini_test.ndt.ref", shallow=False)
+    if result == False:
+        print("files differ:")
+        print("File 1: barmini_test.ndt:\n")
+        for line in open("barmini_test.ndt"):
+            print (line),
+        print("\nFile 1: barmini_test.ndt.ref:\n")
+        for line in open("barmini_test.ndt.ref"):
+            print(line),
+        print('----') 
+        print("Probably a diff would be useful as well.")
+    assert(result)
+
+
