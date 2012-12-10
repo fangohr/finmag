@@ -276,12 +276,14 @@ class Simulation(object):
         The filename is derived from the simulation name (as given when the
         simulation was initialised) and has the extension .ndt'.
         """
+        log.debug("Saving average field values for simulation "
+                  "'{}'".format(self.name))
         self.tablewriter.save()
 
     def relax(self, save_snapshots=False, filename='', save_every=100e-12,
               save_final_snapshot=True, force_overwrite=False,
               stopping_dmdt=ONE_DEGREE_PER_NS, dt_limit=1e-10,
-              dmdt_increased_counter_limit=20):
+              dmdt_increased_counter_limit=50):
         """
         Do time integration of the magnetisation M until it reaches a
         state where the change of M magnetisation at each node is
