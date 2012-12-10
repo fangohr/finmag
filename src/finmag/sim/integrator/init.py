@@ -22,7 +22,7 @@ def LLGIntegrator(llg, m0, backend="sundials", **kwargs):
 
 class BaseIntegrator(object):
     def run_until_relaxation(self, save_snapshots=False, filename=None, save_every=100e-12, save_final_snapshot=True,
-                             stopping_dmdt=ONE_DEGREE_PER_NS, dmdt_increased_counter_limit=20, dt_limit=1e-10):
+                             stopping_dmdt=ONE_DEGREE_PER_NS, dmdt_increased_counter_limit=50, dt_limit=1e-10):
         """
         Run integration until the maximum |dm/dt| is smaller than the
         threshold value stopping_dmdt (which is one degree per
@@ -32,7 +32,7 @@ class BaseIntegrator(object):
         |dm/dt| - stopping_dmdt doesn't convergence (because of badly
         chosen tolerances?), the integration will stop if |dm/dt|
         increases `dmdt_increased_counter_limit` times during the integration
-        (default value: 20). The maximum allowed timestep per integration step
+        (default value: 50). The maximum allowed timestep per integration step
         can be controlled via `dt_limit`.
 
         If save_snapshots is True (default: False) then a series of snapshots
