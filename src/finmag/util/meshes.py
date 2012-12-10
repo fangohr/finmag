@@ -510,7 +510,7 @@ def print_mesh_info(mesh):
     print mesh_info(mesh)
 
 
-def plot_mesh(mesh, ax=None, color="blue", **kwargs):
+def plot_mesh(mesh, ax=None, color="blue", figsize=None, **kwargs):
     """
     Plot the given mesh.
 
@@ -539,6 +539,11 @@ def plot_mesh(mesh, ax=None, color="blue", **kwargs):
            import matplotlib.pyplot as plt
            ax = plt.gca(projection='3d')
 
+    figsize : pair of floats
+
+        Size of the figure in which the mesh is to be plotted. If the
+        `ax` argument is provided, this is ignored.
+
     The 'color' argument as well as all other keyword arguments are
     passed on to matplotlib's `plot_trisurf` (for 3D meshes) or to
     `triplot` (for 2D meshes).
@@ -566,8 +571,17 @@ def plot_mesh(mesh, ax=None, color="blue", **kwargs):
             logger.debug("Automatically adapting linewidth to improve plot quality "
                          "(new value: linewidth = {})".format(kwargs['linewidth']))
 
+    # Create Axis if none was provided
+    if ax == None:
+        logger.debug("Creating new figure with figsize '{}'".format(figsize))
+        fig = plt.figure(figsize=figsize)
+        ax = fig.gca(projection=(None if (dim == 2) else '3d'))
+    else:
+        if figsize != None:
+            logger.warning("Ignoring argument `figsize` because `ax` was "
+                           "provided explicitly.")
+
     if dim == 2:
-        ax = ax or plt.gca()
         coords = mesh.coordinates()
         x = coords[:,0]
         y = coords[:,1]
@@ -591,7 +605,6 @@ def plot_mesh(mesh, ax=None, color="blue", **kwargs):
                 "release is 1.2.0, so you have to install the development "
                 "version manually. Apologies for the inconvenience!")
 
-        ax = ax or plt.gca(projection='3d')
         bm = df.BoundaryMesh(mesh)
         coords = bm.coordinates()
 
