@@ -62,7 +62,12 @@ def start_logging_to_file(filename, formatter=None, mode='a'):
         os.makedirs(dirname)
     h = logging.FileHandler(filename, mode=mode)
     h.setFormatter(formatter)
-    logger.info("Finmag logging output will be appended to file: '{}'".format(filename))
+    if mode == 'a':
+        logger.info("Finmag logging output will be appended to file: "
+                    "'{}'".format(filename))
+    else:
+        logger.info("Finmag logging output will be written to file: '{}' "
+                    "(any old content will be overwritten).".format(filename))
     logger.addHandler(h)
 
 
