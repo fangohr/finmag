@@ -21,6 +21,7 @@ from finmag.energies.anisotropy import UniaxialAnisotropy
 from finmag.energies.zeeman import Zeeman
 from finmag.energies import Demag
 
+
 ONE_DEGREE_PER_NS = 17453292.5  # in rad/s
 
 log = logging.getLogger(name="finmag")
@@ -132,6 +133,7 @@ class Simulation(object):
              `t` as its only single parameter and updates the internal
              state of the interaction accordingly.
         """
+        log.debug("Adding interaction %s to simulation '%s'" % (str(interaction),self.name))
         interaction.setup(self.S3, self.llg._m, self.Ms, self.unit_length)
         self.llg.effective_field.add(interaction, with_time_update)
 
@@ -700,7 +702,8 @@ class Simulation(object):
 
 
 def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sundials",
-             A=None, K1=None, K1_axis=None, H_ext=None, demag_solver='FK', name="unnamed"):
+             A=None, K1=None, K1_axis=None, H_ext=None, demag_solver='FK', 
+             D=None, name="unnamed"):
     """
     Create a Simulation instance based on the given parameters.
 
@@ -737,6 +740,9 @@ def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sun
         sim.add(UniaxialAnisotropy(K1, K1_axis))
     if H_ext != None:
         sim.add(Zeeman(H_ext))
+    if D != None:
+        from finmag.energies import DMI
+        sim.add(DMI(D))
     if demag_solver != None:
         sim.add(Demag(solver=demag_solver))
 
