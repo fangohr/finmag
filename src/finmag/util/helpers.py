@@ -32,12 +32,25 @@ def set_logging_level(level):
     logger.setLevel(level)
 
 
-def start_logging_to_file(filename, formatter=None):
+def start_logging_to_file(filename, formatter=None, mode='a'):
     """
     Add a logging handler to the "finmag" logger which writes all
     (future) logging output to the given file. It is possible to call
-    this multiple times with different filenames. If the file already
-    exists, new output will be appended at the end.
+    this multiple times with different filenames. By default, if the
+    file already exists then new output will be appended at the end
+    (use the 'mode' argument to change this).
+
+    *Arguments*
+
+    formatter: instance of logging.Formatter
+
+        For details, see the section 'Formatter Objectsion' in the
+        documentation of the logging module.
+
+    mode: ['a' | 'w']
+
+        Determines whether new content is appended at the end ('a') or
+        whether logfile contents are overwritten ('w'). Default: 'a'.
     """
     if formatter is None:
         formatter = logging.Formatter(
@@ -47,7 +60,7 @@ def start_logging_to_file(filename, formatter=None):
     dirname = os.path.dirname(filename)
     if not os.path.exists(dirname):
         os.makedirs(dirname)
-    h = logging.FileHandler(filename)
+    h = logging.FileHandler(filename, mode=mode)
     h.setFormatter(formatter)
     logger.info("Finmag logging output will be appended to file: '{}'".format(filename))
     logger.addHandler(h)
