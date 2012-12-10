@@ -16,7 +16,7 @@ Step 1: Install prerequisits
 
 To install the required prerequisits, run::
 
-  sudo step1-install-libraries.sh
+  sudo install-libraries.sh
 
 You will need to press return in the process.
 
