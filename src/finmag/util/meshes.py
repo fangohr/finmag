@@ -575,7 +575,7 @@ def plot_mesh(mesh, ax=None, color="blue", figsize=None, **kwargs):
     if ax == None:
         logger.debug("Creating new figure with figsize '{}'".format(figsize))
         fig = plt.figure(figsize=figsize)
-        ax = fig.gca(projection=(None if (dim == 2) else '3d'))
+        ax = fig.gca(aspect='equal', projection=(None if (dim == 2) else '3d'))
     else:
         if figsize != None:
             logger.warning("Ignoring argument `figsize` because `ax` was "
