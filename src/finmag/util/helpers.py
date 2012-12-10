@@ -66,6 +66,26 @@ def start_logging_to_file(filename, formatter=None, mode='a'):
         logger.info("Finmag logging output will be appended to file: "
                     "'{}'".format(filename))
     else:
+        # XXX FIXME: There is still a small bug here: if we create
+        # multiple simulations with the same name from the same
+        # ipython session, the logging output of the first will not be
+        # deleted. For example:
+        #
+        #    from finmag import sim_with
+        #    import dolfin as df
+        #    import logging
+        #
+        #    logger = logging.getLogger("finmag")
+        #    mesh = df.Box(0, 0, 0, 1, 1, 1, 5, 5, 5)
+        #
+        #    logger.debug("Creating first simulation")
+        #    sim = sim_with(mesh, 1e6, m_init=(1,0,0), name="sim1")
+        #
+        #    logger.debug("Creating second simulation")
+        #    sim = sim_with(mesh, 1e6, m_init=(1,0,0), name="sim1")
+        #
+        # At the end the output of the first simulation is still
+        # present in the logfile "sim1.log".
         logger.info("Finmag logging output will be written to file: '{}' "
                     "(any old content will be overwritten).".format(filename))
     logger.addHandler(h)
