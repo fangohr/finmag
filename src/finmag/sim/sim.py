@@ -427,10 +427,6 @@ class Simulation(object):
                                                   cur_stage + 1, num_stages))
                 H.set_value(H_cur)
 
-                # Changing the external field is a drastic change, so
-                # we need to re-init the integrator.
-                #self.reinit_integrator()
-
                 if filename != '':
                     cur_filename = filename + "__stage_{:03d}__.pvd".format(cur_stage)
                 self.relax(filename=cur_filename, save_snapshots=save_snapshots, **kwargs)
