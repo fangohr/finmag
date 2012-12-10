@@ -592,7 +592,8 @@ class Simulation(object):
         else:
             self.llg.do_slonczewski = not self.llg.do_slonczewski
 
-    def snapshot(self, filename="", directory="", force_overwrite=False, infix=""):
+    def snapshot(self, filename="", directory="", force_overwrite=False,
+                 infix="", save_averages=True):
         """
         Save a snapshot of the current magnetisation configuration to
         a .pvd file (in VTK format) which can later be inspected using
@@ -618,6 +619,8 @@ class Simulation(object):
         All directory components present in either `directory` or
         `filename` are created if they do not already exist.
 
+        If save_averages is True (the default) then the averaged fields
+        will also be saved to an .ndt file.
         """
         if not hasattr(self, "vtk_snapshot_no"):
             self.vtk_snapshot_no = 1
@@ -658,6 +661,9 @@ class Simulation(object):
             "Saved snapshot of magnetisation at t={} to file '{}' (saving "
             "took {:.3g} seconds).".format(self.t, output_file, t1 - t0))
         self.vtk_snapshot_no += 1
+
+        if save_averages:
+            self.save_averages()
 
     def mesh_info(self):
         """
