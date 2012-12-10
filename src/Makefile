@@ -48,6 +48,12 @@ bundle:
 		--exclude=run_nmag_Eexch.py \
 		--exclude=setup2.so \
 		--exclude=__init__.pyc \
+		--exclude=*.xml.gz \
+		--exclude=*.geo \
+		--exclude=unnamed.ndt \
+		--exclude=_mat.xml \
+		--exclude=_bi.xml \
+		--exclude=unnamed.log\
 		--exclude=__pycache__ .
 
 cleanbin:
