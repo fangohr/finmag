@@ -427,7 +427,7 @@ class Simulation(object):
 
                 # Changing the external field is a drastic change, so
                 # we need to re-init the integrator.
-                self.reinit_integrator()
+                #self.reinit_integrator()
 
                 if filename != '':
                     cur_filename = filename + "__stage_{:03d}__.pvd".format(cur_stage)
@@ -507,7 +507,7 @@ class Simulation(object):
         """
         d = np.array(direction)
         H_dir = d / norm(d)
-        H_norms = list(reversed(np.linspace(-H_max, H_max, N))) + \
+        H_norms = list(np.linspace(H_max, -H_max, N)) + \
             list(np.linspace(-H_max, H_max, N))
         H_vals = [h * H_dir for h in H_norms]
         m_avg = self.hysteresis(H_vals, fun=lambda sim: sim.m_average, **kwargs)
