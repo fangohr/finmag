@@ -20,14 +20,14 @@ specification:
 """
 
 Ms = 8.0e5; A = 1.3e-11; alpha = 0.02; gamma = 2.211e5
-mesh = from_geofile(mesh_file)
+mesh = df.Box(0, 0, 0, 500, 125, 3, 100, 25, 1)
 
 def create_initial_s_state():
     """
     Creates equilibrium s-state by slowly switching off a saturating field.
 
     """
-    sim = Simulation(mesh, Ms, unit_length=1e-9)
+    sim = Simulation(mesh, Ms, unit_length=1)
     sim.gamma = gamma
     sim.set_m((1, 1, 1))
     sim.add(Demag())
@@ -59,7 +59,7 @@ def run_simulation():
     the value 0 for the first time.
 
     """
-    sim = Simulation(mesh, Ms, unit_length=1e-9)
+    sim = Simulation(mesh, Ms, unit_length=1)
     sim.alpha = alpha
     sim.gamma = gamma
     sim.set_m(np.loadtxt(initial_m_file))
