@@ -5,7 +5,7 @@ logger = logging.getLogger(name='finmag')
 
 
 class Tablewriter(object):
-    self.comment_symbol = '#'
+    comment_symbol = '#'
 
     def __init__(self, filename, simulation, override=False, entity_order=None):
         logger.debug("Creating DataWriter for file '%s'" % (filename))
