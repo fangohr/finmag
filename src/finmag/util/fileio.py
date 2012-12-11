@@ -5,7 +5,11 @@ logger = logging.getLogger(name='finmag')
 
 
 class Tablewriter(object):
-    comment_symbol = '#'
+    # It is recommended that the comment symbol should end with a
+    # space so that there is no danger that it gets mangled up with
+    # the 'time' field because some of the code below relies on them
+    # being separated by some whitespace.
+    comment_symbol = '# '
 
     def __init__(self, filename, simulation, override=False, entity_order=None):
         logger.debug("Creating DataWriter for file '%s'" % (filename))
@@ -131,18 +135,19 @@ class Tablereader(object):
         headers = line1.split()
         units = line2.split()
 
-        assert len(units) == len(headers)
+        assert len(headers) == len(units)
 
         # use numpy to read remaining data
         self.data = numpy.loadtxt(self.f)
         self.f.close()
 
-        # some consistency checks: must have as many columns as headers
-        assert self.data.shape[1] == len(headers)
+        # some consistency checks: must have as many columns as
+        # headers (disregarding the comment symbol)
+        assert self.data.shape[1] == len(headers) - 1
 
         datadic = {}
         # now wrap up data conveniently
-        for i, entity in enumerate(headers):
+        for i, entity in enumerate(headers[1:]):
             datadic[entity] = self.data[:, i]
 
         self.datadic = datadic
