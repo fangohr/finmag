@@ -2909,3 +2909,24 @@ fangohr: Still testing ...
 2012-12-10 09:11:58 fangohr: Morning Mart-Antonio, Max and DokosBot.
 2012-12-10 09:58:24 mb8g11: Good morning Hans!
 2012-12-10 10:25:14 mb8g11: exit
+2012-12-11 07:51:06 mb8g11: Hi all
+2012-12-11 09:07:31 max_albert: Good morning!
+2012-12-11 14:18:19 fangohr: Good morning — late response ;-)
+2012-12-11 14:19:16 max_albert: I just saw your latest bunch of commits, Hans. Looks awesome!
+2012-12-11 14:22:44 fangohr: Ta; you have also been doing stuff :)
+2012-12-11 14:23:05 fangohr: Need to disappear for a while and will be back later.
+2012-12-11 14:23:12 max_albert: See you!
+2012-12-11 14:29:04 fangohr: [Still here…]: have you changed the ndt file format? You need to update the barmini_test.ndt.ref file as well I think.
+2012-12-11 14:29:21 max_albert: Whoops, yes. Thank you.
+2012-12-11 14:29:57 max_albert: I added '#' symbols as comment indicators for the two header lines so that we can use numpy.loadtxt() on the file directly.
+2012-12-11 14:29:59 fangohr: I would just do it, but the interesting thing is that when I diff the new barmini.ndt and the ref file, the first number for the time has actually changed.
+2012-12-11 14:30:03 fangohr: Are you running this on 12.10?
+2012-12-11 14:30:37 max_albert: Oh, and good point about the time. That might be related to the buglet I mentioned to you this morning.
+2012-12-11 14:30:51 max_albert: But I'll look into it.
+2012-12-11 14:31:12 fangohr: Great; thank you. Keep me posted [really going now.]
+2012-12-11 14:31:30 max_albert: As an aside, I really like how the versions of dependencies are now reported. If we need to extend this, it might be possible to use the Sumatra API for this (but I haven't looked into it, and it may be overkill; just thought I'd mention it).
+2012-12-11 14:32:00 fangohr: Thanks for the feedback. :)
+2012-12-11 15:12:08 mb8g11: Max, is Weiwei in the office?
+2012-12-11 15:12:26 max_albert: Yes, he is.
+2012-12-11 15:44:25 max_albert: Hi Hans, I found out what the reason for the discrepancy from the referenc .ndt file is. The change was introduced in commit 2391:236277b3589e. This might need some disussing (but I need to leave for the time being). Feel free to revert it for now if you'd prefer the old behaviour (not sure if any tests depend on it).
+2012-12-11 15:44:31 max_albert: Over and out for now.
