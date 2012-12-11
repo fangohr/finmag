@@ -5,6 +5,7 @@ logger = logging.getLogger(name='finmag')
 
 
 class Tablewriter(object):
+    self.comment_symbol = '#'
 
     def __init__(self, filename, simulation, override=False, entity_order=None):
         logger.debug("Creating DataWriter for file '%s'" % (filename))
@@ -69,8 +70,8 @@ class Tablewriter(object):
 
     def headers(self):
         """return line one and two of ndt data file as string"""
-        line1 = []
-        line2 = []
+        line1 = [self.comment_symbol]
+        line2 = [self.comment_symbol]
         for entityname in self.entity_order:
             colheaders = self.entities[entityname]['header']
             # colheaders can be a 3-tuple ('mx','my','mz'), say
