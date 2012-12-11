@@ -70,6 +70,43 @@ def distcp(targetdir):
     print scandir('finmag', targetdir)
 
 
+
+def get_linux_issue():
+    """Same code as in finmag.util.version - 
+    it is difficult (at the moment) to re-use the existing code as we need 
+    to use this function to create the finmag/util/binary.py file. If 
+    we import finmag to access this function, it will try to check for the binary.py
+    file which are just trying to create.
+
+    This should be possible to detangle once we have a working setup..."""
+
+    try:
+        f = open("/etc/issue")
+    except IOError:
+        logger.error("Can't read /etc/issue -- this is odd?")
+        raise RuntimeError("Cannot establish linux version")
+    issue = f.readline()  # only return first line
+    issue = issue.replace('\\l','')
+    issue = issue.replace('\\n','')
+    #logger.debug("Linux OS = '%s'" % issue)
+    return issue.strip() # get rid of white space left and right
+
+
+
+def storeversions(targetfile):
+    """Target file should be something like 'finmag/util/binary.py'
+    The data in the file is used to store which version of software we 
+    had when the binary distribution was created."""
+    if os.path.exists(targetfile):
+        print("This is odd: the file '%s' exists already, but is only" % targefile)
+        print("meant to be created now (in function storeversions() in distcp.py)")
+        raise RuntimeError("odd error when running %s" % __file__)
+
+    f = open(targetfile,'w')
+    f.write("buildlinux = '%s'\n" % get_linux_issue())
+    f.close()
+
+
 if __name__ == '__main__':
     descr = 'Copy FinMag files to alternative location'
     parser = argparse.ArgumentParser(description=descr)
@@ -82,3 +119,6 @@ if __name__ == '__main__':
     if not os.path.exists(targetdir):
         os.makedirs(targetdir)
     distcp(targetdir)
+
+    storeversions(os.path.join(targetdir,"finmag/util/binary.py"))
+

@@ -23,7 +23,7 @@ def exchange(mesh, cube_length, unit_length):
 
     return H, E
 
-def test_compare_with_dolfin_mesh():
+def _test_compare_with_dolfin_mesh():
     """
     Check that a netgen mesh expressed in nanometers gives the same results
     as a dolfin mesh expressed in meters for the exchange interaction.
