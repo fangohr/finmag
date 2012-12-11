@@ -88,6 +88,7 @@ class Tablewriter(object):
         """Append data (spatial averages of fields) for current configuration"""
         # open file
         with open(self.filename, 'a') as f:
+            f.write(' ' * len(self.comment_symbol))  # account for comment symbol width
             for entityname in self.entity_order:
                 value = self.entities[entityname]['get'](self.sim)
                 if isinstance(value, numpy.ndarray):
