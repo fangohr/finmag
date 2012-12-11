@@ -576,6 +576,10 @@ def plot_mesh(mesh, ax=None, color="blue", figsize=None, **kwargs):
         logger.debug("Creating new figure with figsize '{}'".format(figsize))
         fig = plt.figure(figsize=figsize)
         ax = fig.gca(aspect='equal', projection=(None if (dim == 2) else '3d'))
+        # XXX                  ^--- Note that equal aspect ratios don't seem
+        #     to work for 3d plots yet. See [1], [2].
+        # [1] http://stackoverflow.com/questions/8130823/set-matplotlib-3d-plot-aspect-ratio
+        # [2] http://comments.gmane.org/gmane.comp.python.matplotlib.general/27415
     else:
         if figsize != None:
             logger.warning("Ignoring argument `figsize` because `ax` was "
