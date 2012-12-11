@@ -263,7 +263,8 @@ class Simulation(object):
         """
         if not hasattr(self, "integrator"):
             self.integrator = LLGIntegrator(self.llg, self.llg.m,
-                                            backend=self.integrator_backend)
+                                            backend=self.integrator_backend,
+                                            tablewriter=self.tablewriter)
         self.integrator.run_until(t)
         self.t = t
         if save_averages:
@@ -310,7 +311,8 @@ class Simulation(object):
         log.info("Will integrate until relaxation.")
         if not hasattr(self, "integrator"):
             self.integrator = LLGIntegrator(self.llg, self.llg.m,
-                                            backend=self.integrator_backend)
+                                            backend=self.integrator_backend,
+                                            tablewriter=self.tablewriter)
 
         if save_snapshots == True:
             if filename == '':

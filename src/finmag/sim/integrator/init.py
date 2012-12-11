@@ -10,12 +10,19 @@ log = logging.getLogger(name="finmag")
 ONE_DEGREE_PER_NS = 17453292.5  # in rad/s
 
 
-def LLGIntegrator(llg, m0, backend="sundials", **kwargs):
+def LLGIntegrator(llg, m0, backend="sundials", tablewriter=None, **kwargs):
+    # XXX TODO: Passing the tablewriter argument on like this is a
+    #           complete hack and this should be refactored. The same
+    #           is true with saving snapshots. Neither saving average
+    #           fields nor VTK snapshots should probably happen in
+    #           this class but rather in the Simulation class (?).
+    #             -- Max, 11.12.2012
+    #
     log.debug("Creating LLGIntegrator with backend {}.".format(backend))
     if backend == "scipy":
-        return ScipyIntegrator(llg, m0, **kwargs)
+        return ScipyIntegrator(llg, m0, tablewriter=tablewriter, **kwargs)
     elif backend == "sundials":
-        return SundialsIntegrator(llg, m0, **kwargs)
+        return SundialsIntegrator(llg, m0, tablewriter=tablewriter, **kwargs)
     else:
         raise ValueError("backend must be either scipy or sundials")
 
@@ -66,7 +73,7 @@ class BaseIntegrator(object):
             # that timestep, save the snapshot, and then continue.
             while save_snapshots and (next_stop >= start_time+cur_count*save_every):
                 self.run_until(cur_count*save_every)
-                self._do_save_snapshot(f, cur_count, filename)
+                self._do_save_snapshot(f, cur_count, filename, save_averages=True)
                 cur_count += 1
 
             self.run_until(next_stop)
@@ -100,21 +107,28 @@ class BaseIntegrator(object):
                 break
 
         if save_snapshots and save_final_snapshot:
-            self._do_save_snapshot(f, cur_count, filename)
+            self._do_save_snapshot(f, cur_count, filename, save_averages=True)
 
     def reinit(self):
         raise NotImplementedError("No reinit() method is implemented for this integrator: {}".format(self.__class__.__name__))
 
-    def _do_save_snapshot(self, f, cur_count, filename):
+    def _do_save_snapshot(self, f, cur_count, filename, save_averages=True):
         # TODO: Can we somehow store information about the current timestep in either the .pvd/.vtu file itself, or in the filenames?
         #       Unfortunately, it seems as if the filenames of the *.vtu files are generated automatically.
         t0 = time.time()
         f << self.llg._m
         t1 = time.time()
         log.debug("Saving snapshot #{} at timestep t={:.4g} to file '{}' (saving took {:.3g} seconds).".format(cur_count, self.llg.t, filename, t1-t0))
+        if save_averages:
+            if self.tablewriter:
+                log.debug("Saving average field values (in integrator).")
+                self.tablewriter.save()
+            else:
+                log.warning("Cannot save average fields because no Tablewriter is present in integrator.")
+
 
 class ScipyIntegrator(BaseIntegrator):
-    def __init__(self, llg, m0, reltol=1e-8, abstol=1e-8, nsteps=10000, method="bdf", **kwargs):
+    def __init__(self, llg, m0, reltol=1e-8, abstol=1e-8, nsteps=10000, method="bdf", tablewriter=None, **kwargs):
         self.llg = llg
         self.cur_t = 0.0
         self.ode = scipy.integrate.ode(self.rhs, jac=None)
@@ -122,6 +136,7 @@ class ScipyIntegrator(BaseIntegrator):
         self.ode.set_integrator("vode", method=method, rtol=reltol, atol=abstol, nsteps=nsteps, **kwargs)
         self.ode.set_initial_value(m0, 0)
         self._n_rhs_evals = 0
+        self.tablewriter = tablewriter
 
     n_rhs_evals = property(lambda self: self._n_rhs_evals, "Number of function evaluations performed")
 
@@ -148,12 +163,13 @@ class SundialsIntegrator(BaseIntegrator):
 
     """
     def __init__(self, llg, m0, reltol=1e-8, abstol=1e-8,
-                 nsteps=10000, method="bdf_gmres_prec_id"):
+                 nsteps=10000, method="bdf_gmres_prec_id", tablewriter=None):
         assert method in ("adams", "bdf_diag",
                           "bdf_gmres_no_prec", "bdf_gmres_prec_id")
         self.llg = llg
         self.cur_t = 0.0
         self.m = m0.copy()
+        self.tablewriter = tablewriter
 
         if method == "adams":
             integrator = sundials.cvode(sundials.CV_ADAMS, sundials.CV_FUNCTIONAL)
