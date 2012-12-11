@@ -28,8 +28,8 @@ if util.versions.running_binary_distribution():
     #
     # We thus assume that we use the system's sundials, and thus we 
     # should be able to check by comparing the linux distribution.
-    import util.versions.binary
-    assert util.versions.binary.buildlinux == util.versions.get_linux_issue()
+    import util.binary
+    assert util.binary.buildlinux == util.versions.get_linux_issue()
     logger.debug("Current linux seems same as linux on which this binary was built - good.")
 
 
