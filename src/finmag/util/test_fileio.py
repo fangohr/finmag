@@ -35,7 +35,7 @@ def test_Table_writer_and_reader():
     assert abs(data['m_y'][-1] - my) < 5e-7
     assert abs(data['m_z'][-1] - mz) < 5e-7
 
-    os.unlink(filename)
+    #os.unlink(filename)
 
 if __name__ == "__main__":
     test_Table_writer_and_reader()
