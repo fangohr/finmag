@@ -177,7 +177,7 @@ if __name__ == "__main__":
     sim = finmag.sim_with(mesh, Ms=0.86e6, alpha=0.5, unit_length=1e-9, A=13e-12, m_init=(1, 0, 1))
     filename = 'data.txt'
     ndt = Tablewriter(filename, sim)
-    times = np.linspace(0, 3.0e-11, 6 + 1)
+    times = numpy.linspace(0, 3.0e-11, 6 + 1)
     for i, time in enumerate(times):
         print("In iteration {}, computing up to time {}".format(i, time))
         sim.run_until(time)
