@@ -30,7 +30,7 @@ if util.versions.running_binary_distribution():
     # should be able to check by comparing the linux distribution.
     import util.versions.binary
     assert util.versions.binary.buildlinux == util.versions.get_linux_issue()
-    log.debug("Current linux seems same as linux on which this binary was built - good.")
+    logger.debug("Current linux seems same as linux on which this binary was built - good.")
 
 
 
