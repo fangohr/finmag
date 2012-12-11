@@ -41,6 +41,14 @@ def get_version_matplotlib():
     except ImportError:
         return None
 
+def get_version_scipy():
+    try:
+        import scipy
+        return scipy.__version__
+    except ImportError:
+        return None
+
+
 def running_binary_distribution():
     """Return True if this is the cython-based binary 
     distribution or False if it is source distribtion
