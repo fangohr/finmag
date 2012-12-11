@@ -5,13 +5,13 @@ from numpy import linspace
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-def test_write_ndt_file():
+def test_write_ndt_file(tmpdir):
     # Change into the directory of the test so that the .ndt file is saved there
     # and the reference file is found.
     # TODO: This might not be the best solution, should revise this at some point.
     os.chdir(MODULE_DIR)
 
-    output_file = "barmini_test.ndt"
+    output_file = os.path.join(tmpdir.dirname, "barmini_test.ndt")
     reference_file = "barmini_test.ndt.ref"
 
     sim = finmag.example.barmini(name="barmini_test")
