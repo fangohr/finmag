@@ -22,7 +22,7 @@ MODULE_DIR = ../src/finmag/native
 # The list of extension modules to build
 MODULES = sundials.so llg.so llb.so fast_sum_lib.so
 # The directory to store the precompiled header file.
-PRECOMPILED_HEADER_DIR ?= /tmp/$(USER)/finmag-pch
+PRECOMPILED_HEADER_DIR ?= /tmp/$(USER)/finmag-pch/$(abspath .)
 # Name of the binary that runs all unit tests
 UNIT_TEST_BINARY=$(MODULE_DIR)/run_ci_tests.bin
 # Directory for CI unit test results
