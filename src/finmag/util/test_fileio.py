@@ -17,7 +17,7 @@ def test_Table_writer_and_reader(tmpdir):
 
     filename = os.path.join(tmpdir.dirname, 'test-save_averages-data.ndt')
     ndt = Tablewriter(filename, sim)
-    times = np.linspace(0, 3.0e-11, 6 + 1)
+    times = numpy.linspace(0, 3.0e-11, 6 + 1)
     for i, time in enumerate(times):
         print("In iteration {}, computing up to time {}".format(i, time))
         sim.run_until(time)
