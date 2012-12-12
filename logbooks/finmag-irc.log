@@ -2930,3 +2930,4 @@ fangohr: Still testing ...
 2012-12-11 15:12:26 max_albert: Yes, he is.
 2012-12-11 15:44:25 max_albert: Hi Hans, I found out what the reason for the discrepancy from the referenc .ndt file is. The change was introduced in commit 2391:236277b3589e. This might need some disussing (but I need to leave for the time being). Feel free to revert it for now if you'd prefer the old behaviour (not sure if any tests depend on it).
 2012-12-11 15:44:31 max_albert: Over and out for now.
+2012-12-12 09:04:07 fangohr_: Good Morning all.
