@@ -310,6 +310,14 @@ namespace finmag { namespace sundials {
             return retval;
         }
 
+	/* Should be aware that get_current_time returns the INTERNAL time of the 
+	   integrator, not the time up to which the user requested integration.
+	   Any credit/blame for this choice of name should go to the sundials team -- what
+	   we do here is simply exposing the C-functions to Python.
+
+	   Dmitr, Hans, 12/12/12
+	*/
+
         double get_current_time() { 
             double retval = 0;
             CHECK_SUNDIALS_RET(CVodeGetCurrentTime, (cvode_mem, &retval));
