@@ -1,7 +1,7 @@
 import finmag
 import filecmp
 import os
-from numpy import linspace
+import numpy as np
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -11,23 +11,31 @@ def test_write_ndt_file():
     # TODO: This might not be the best solution, should revise this at some point.
     os.chdir(MODULE_DIR)
 
+    RTOL = 1e-5
+
     output_file = "barmini_test.ndt"
     reference_file = "barmini_test.ndt.ref"
 
     sim = finmag.example.barmini(name="barmini_test")
-    for time in linspace(0, 1e-10, 20):
+    for time in np.linspace(0, 1e-10, 20):
         print("Integrating towards t = %gs" % time)
         sim.run_until(time, save_averages=True)  # True is the default for save_averages
                                                  # but we provide it for clarity.
     print("Done")
-    result = filecmp.cmp(output_file, reference_file, shallow=False)
+
+    # We used to do a file comparison here, but we had to fall back on
+    # a numerical comparison since the integration times returned from
+    # Sundials are slightly different for each run (which might be
+    # worth investigating, since it means that our simulations runs
+    # are not 100% reproducible)
+    a_out = np.loadtxt(output_file)
+    a_ref = np.loadtxt(reference_file)
+    result = np.allclose(a_out, a_ref, atol=0, rtol=RTOL)
 
     if result == False:
         import difflib
-
         lines1 = open(output_file).readlines()
         lines2 = open(reference_file).readlines()
-
         print("Output differs from reference file:")
         print "".join(difflib.unified_diff(lines1, lines2))
 
