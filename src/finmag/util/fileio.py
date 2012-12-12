@@ -166,7 +166,6 @@ class Tablereader(object):
 
 if __name__ == "__main__":
     #create example simulation
-    import numpy as np
     import finmag
     import dolfin as df
     xmin, ymin, zmin = 0, 0, 0    # one corner of cuboid
