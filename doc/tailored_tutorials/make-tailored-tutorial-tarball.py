@@ -59,7 +59,7 @@ def assemble_rst(conf):
     # Create index file
     fout = open(os.path.join(targetdirname,'index.rst'),'w')
     
-    title = "Finmag Manual for %s" % (",".join(conf['names']))
+    title = "Finmag Manual for %s" % (", ".join(conf['names']))
     fout.write("%s\n" % title)
     fout.write("=" * len(title) + '\n\n')
 
@@ -94,7 +94,7 @@ def assemble_tarballs(conf):
     import subprocess
     targetdirname = targetdirectoryname(conf) 
     cmd = "cd %s; tar cfvz finmag-tutorial-%s.tgz finmag-tutorial-%s" % \
-       (os.path.join(targetdirname,'..'), conf['nameshort'], conf['nameshort'])
+       (os.path.join(targetdirname, '..'), conf['nameshort'], conf['nameshort'])
     logging.debug("Running cmd '%s'" % cmd)
     output = subprocess.check_output(cmd, shell=True)
     logging.debug("Output was %s" % output)
@@ -144,4 +144,3 @@ if __name__ == '__main__':
             pass
         else:
             remove_builddir(conf)
-
