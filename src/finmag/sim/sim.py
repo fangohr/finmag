@@ -185,25 +185,33 @@ class Simulation(object):
 
         field_type: string
 
-            The field to be converted to a dolfin.Function.
-            Must be one of: "exchange", "demag", "anisotropy",
-            "zeeman".
+            The field to be converted to a dolfin.Function. Must be
+            one of: "exchange", "demag", "anisotropy", "zeeman", "m"
+            (where the last one is the normalised magnetisation).
 
         *Returns*
 
         A dolfin.Function representing the given field.
         """
-        field = self.get_interaction(field_type)
-        if field is None:
-            raise ValueError("No interaction of type '{}' present "
-                             "in simulation.".format(field_type))
+        if field_type == 'm':
+            field_fun = self.llg._m
+        else:
+            # Mmh, upon re-reading this implementation it feels that
+            # this is somehow redunant. Don't we already keep the
+            # interactions as dolfin.Functions somewhere?
+            #    -- Max, 13.12.2012
+            field = self.get_interaction(field_type)
+            if field is None:
+                raise ValueError("No interaction of type '{}' present "
+                                 "in simulation.".format(field_type))
 
-        S3 = df.VectorFunctionSpace(self.mesh, 'CG', 1)
-        # XXX TODO: The following line probably copies the data in a
-        # while creating the function (should check whether this is
-        # really the case!). If so, can we avoid this somehow? -- Max
-        a = field.compute_field()
-        return vector_valued_function(a, S3)
+            S3 = df.VectorFunctionSpace(self.mesh, 'CG', 1)
+            # XXX TODO: The following line probably copies the data in a
+            # while creating the function (should check whether this is
+            # really the case!). If so, can we avoid this somehow? -- Max
+            a = field.compute_field()
+            field_fun = vector_valued_function(a, S3)
+        return field_fun
 
     def probe_field(self, field_type, pts):
         """
