@@ -100,7 +100,11 @@ def assemble_tarballs(conf):
     logging.debug("Output was %s" % output)
     logging.info("Tarball %s.tgz is located in _build" % conf['nameshort'])
 
-
+def remove_builddir(conf):
+    import subprocess
+    targetdirname = targetdirectoryname(conf) 
+    cmd = shutil.rmtree(targetdirname)
+    logging.debug("Removing %s" % targetdirname)
 
 
 if __name__ == '__main__':
@@ -109,6 +113,9 @@ if __name__ == '__main__':
     parser=ArgumentParser(description="""Create tailored tutorial bundles""")
     parser.add_argument('partner', type=str, nargs='+', \
                          help='partner[s] to process (names of subdirectories)')
+    parser.add_argument('--keepbuild', action='store_true', default=False, \
+                         help='Keep directory in which tar ball is built (for debugging).')
+
     args = vars(parser.parse_args())
     
     if isinstance(args['partner'],list):
@@ -133,4 +140,8 @@ if __name__ == '__main__':
         compile_rst2html(conf)
         logging.info("Creating tar ball for  %s" % partner)
         assemble_tarballs(conf)
+        if args['keepbuild']:
+            pass
+        else:
+            remove_builddir(conf)
 
