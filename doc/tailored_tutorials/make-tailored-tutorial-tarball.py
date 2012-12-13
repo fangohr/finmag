@@ -15,6 +15,7 @@ import tempfile
 import shutil
 import os.path
 import time
+import subprocess
 from argparse import ArgumentParser
 
 def targetdirectoryname(conf):
@@ -83,7 +84,6 @@ def assemble_rst(conf):
 # <codecell>
 
 def compile_rst2html(conf):
-    import subprocess
     targetdirname = targetdirectoryname(conf) 
     cmd = "cd %s; rst2html.py --stylesheet-path=../../../css/voidspace.css index.rst index.html" % targetdirname
     logging.debug("Running cmd '%s'" % cmd)
@@ -91,7 +91,6 @@ def compile_rst2html(conf):
     logging.debug("Output was %s" % output)
 
 def assemble_tarballs(conf):
-    import subprocess
     targetdirname = targetdirectoryname(conf) 
     cmd = "cd %s; tar cfvz finmag-tutorial-%s.tgz finmag-tutorial-%s" % \
        (os.path.join(targetdirname, '..'), conf['nameshort'], conf['nameshort'])
@@ -101,7 +100,6 @@ def assemble_tarballs(conf):
     logging.info("Tarball %s.tgz is located in _build" % conf['nameshort'])
 
 def remove_builddir(conf):
-    import subprocess
     targetdirname = targetdirectoryname(conf) 
     cmd = shutil.rmtree(targetdirname)
     logging.debug("Removing %s" % targetdirname)
