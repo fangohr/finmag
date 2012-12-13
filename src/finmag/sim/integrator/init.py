@@ -88,7 +88,8 @@ class BaseIntegrator(object):
                 break
 
             if dt < dt_limit / dt_increment_multi:
-                dt *= dt_increment_multi
+                if not max_dmdt_norm > last_max_dmdt_norm:
+                    dt *= dt_increment_multi
             else:
                 dt = dt_limit
 
@@ -100,7 +101,9 @@ class BaseIntegrator(object):
                 log.debug("{}: dmdt {:.2f} times larger than last time (counting {}/{}).".format(
                     self.__class__.__name__, max_dmdt_norm/last_max_dmdt_norm,
                     dmdt_increased_counter, dmdt_increased_counter_limit))
+
             last_max_dmdt_norm = max_dmdt_norm
+
             if dmdt_increased_counter >= dmdt_increased_counter_limit:
                 log.warning("{}: Stopping after it increased {} times.".format(
                     self.__class__.__name__, dmdt_increased_counter_limit))
