@@ -81,8 +81,6 @@ def assemble_rst(conf):
     fout.close()
     
 
-# <codecell>
-
 def compile_rst2html(conf):
     targetdirname = targetdirectoryname(conf) 
     cmd = "cd %s; rst2html.py --stylesheet-path=../../../css/voidspace.css index.rst index.html" % targetdirname
