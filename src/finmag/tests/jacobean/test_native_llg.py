@@ -1,7 +1,7 @@
 import numpy as np
 import unittest
 from finmag.native import llg as native_llg
-from jacobean_computation_tests import setup_llg_params_near_one
+from test_jacobean_computation import setup_llg_params_near_one
 from finmag.util.time_counter import counter
 
 class NativeLlgTests(unittest.TestCase):

@@ -7,7 +7,7 @@ from finmag.util import time_counter
 from finmag.util import helpers
 from finmag.util.meshes import mesh_volume
 from finmag.energies.demag import belement_magpar
-from finmag.tests.solid_angle_invariance_tests import random_3d_rotation_matrix
+from finmag.tests.test_solid_angle_invariance import random_3d_rotation_matrix
 from problems.prob_fembem_testcases import MagSphereBase
 from finmag.energies import Demag
 
