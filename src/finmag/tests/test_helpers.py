@@ -92,7 +92,6 @@ def test_vector_valued_function():
     num_vertices = mesh.num_vertices()
 
     vec = np.array([3, 1, 4])  # an arbitrary vector
-    vec_normalised = vec/norm(vec)
     a = 42
     b = 5
     c = 23
@@ -113,7 +112,8 @@ def test_vector_valued_function():
     f_array3 = vector_valued_function(np.array(vec), S3) # numpy array representing a 3-vector
     f_dfconstant = vector_valued_function(df.Constant(vec), S3) # df. Constant representing a 3-vector
     f_expr = vector_valued_function(('a*x[0]', 'b*x[1]', 'c*x[2]'), S3, a=a, b=b, c=c) # tuple of strings (will be cast to df.Expression)
-    f_arrayN = vector_valued_function(v_ref, S3) # numpy array of nodal values
+    f_array3xN = vector_valued_function(v_ref, S3) # numpy array of nodal values shape (3*n,)
+    f_arrayN3 = vector_valued_function(np.array([vec for r in mesh.coordinates()]), S3) # numpy array of shape (n, 3)
     f_callable = vector_valued_function(lambda coords: v_ref_expr, S3) # callable accepting mesh node coordinates and yielding the function values
 
     # A few normalised versions, too
@@ -127,7 +127,8 @@ def test_vector_valued_function():
     assert(all(f_array3.vector() == v_ref))
     assert(all(f_dfconstant.vector() == v_ref))
     assert(all(f_expr.vector() == v_ref_expr))
-    assert(all(f_arrayN.vector() == v_ref))
+    assert(all(f_array3xN.vector() == v_ref))
+    assert(all(f_arrayN3.vector() == v_ref))
     assert(all(f_callable.vector() == v_ref_expr))
 
     assert(all(f_tuple_normalised.vector() == v_ref_normalised))
