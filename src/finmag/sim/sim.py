@@ -8,6 +8,7 @@ import textwrap
 import fileinput
 import dolfin as df
 import numpy as np
+from numpy import NaN
 from finmag.sim.llg import LLG
 from finmag.util.timings import timings
 from finmag.util.helpers import norm, vector_valued_function
@@ -237,8 +238,9 @@ class Simulation(object):
 
         *Limitations*
 
-        Currently the points where the field is probed must lie
-        inside the mesh.
+        Currently the points where the field is probed must lie inside
+        the mesh. For points which lie outside the mesh the returned
+        field values will be NaN.
         """
         pts = np.array(pts)
         probe_at_single_point = False
@@ -248,7 +250,12 @@ class Simulation(object):
         assert(pts.ndim == 2 and pts.shape[1] == 3)
 
         fun_field = self.get_field_as_dolfin_function(field_type)
-        res = map(fun_field, pts)
+        def _fun_field_impl(pt):
+            try:
+                return fun_field(pt)
+            except RuntimeError:
+                return np.array([NaN, NaN, NaN])
+        res = map(_fun_field_impl, pts)
         if probe_at_single_point:
             res = res[0]
         return np.array(res)
