@@ -247,7 +247,9 @@ class Simulation(object):
         if pts.ndim == 1 and len(pts) == 3:
             probe_at_single_point = True
             pts = np.array([pts])
-        assert(pts.ndim == 2 and pts.shape[1] == 3)
+        if not (pts.ndim == 2 and pts.shape[1] == 3):
+            raise ValueError("Arguments 'pts' must be a list of 3D points. "
+                             "Got: '{}'".format(pts))
 
         fun_field = self.get_field_as_dolfin_function(field_type)
         def _fun_field_impl(pt):
