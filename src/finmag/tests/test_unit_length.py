@@ -8,6 +8,7 @@ MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 n = 20
 Ms = 8.6e5
 A = 1
+REL_TOL = 1e-4
 
 def exchange(mesh, unit_length):
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
@@ -33,13 +34,13 @@ def test_compare_exchange_for_two_dolfin_meshes():
 
     rel_diff_m = np.max(np.abs(m_nm - m)) # norm m = 1
     print "Difference of magnetisation is {:.2f}%.".format(100 * rel_diff_m)
-    assert rel_diff_m < 3.0/100
+    assert rel_diff_m < REL_TOL
 
     rel_diff_E = abs((E_nm - E) / E)
     print "Relative difference between E_nm = {:.5g} and E_m = {:.5g} is d = {:.2f}%.".format(E_nm, E, 100*rel_diff_E)
-    assert rel_diff_E < 1e-3
+    assert rel_diff_E < REL_TOL
 
     max_diff_H = np.max(np.abs(H_nm - H)/np.max(H))
     print "Maximum of relative difference between the two fields is d = {:.2f}%.".format(100*max_diff_H)
     assert np.max(np.abs(H)) > 0
-    assert max_diff_H < 1e-3
+    assert max_diff_H < REL_TOL
