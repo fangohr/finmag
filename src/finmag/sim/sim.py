@@ -265,6 +265,7 @@ class Simulation(object):
             self.integrator = LLGIntegrator(self.llg, self.llg.m,
                                             backend=self.integrator_backend,
                                             tablewriter=self.tablewriter)
+        log.debug("Integrating dynamics up to t = %g" % t)
         self.integrator.run_until(t)
         self.t = t
         if save_averages:
