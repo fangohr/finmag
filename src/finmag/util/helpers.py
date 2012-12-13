@@ -278,7 +278,21 @@ def sphinx_sci(x, p=2):
     """
     return ":math:`{}`".format(tex_sci(x, p))
 
-def vector_valued_function(value, S3, normalise=False, **kwargs):
+def mesh_and_space(mesh_or_space):
+    """
+    Return a (df.Mesh, df.VectorFuntionspace) tuple where one of the two items
+    was passed in as argument and the other one built/extracted from it.
+
+    """
+    if isinstance(mesh_or_space, df.VectorFunctionSpace):
+        S3 = mesh_or_space
+        mesh = S3.mesh()
+    else:
+        mesh = mesh_or_space
+        S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
+    return mesh, S3
+
+def vector_valued_function(value, mesh_or_space, normalise=False, **kwargs):
     """
     Create a constant function on the VectorFunctionSpace `S3` whose value
     is the 3-vector `value`. Returns an object of type 'df.Function'.
@@ -297,7 +311,8 @@ def vector_valued_function(value, S3, normalise=False, **kwargs):
           is the number of nodes. Note that the elements in this array
           should follow dolfin's convention (i.e., the x-coordinates
           of all function values should be listed first, then the y-
-          and z-values).
+          and z-values). The shape can also be (n, 3) with one vector
+          per node.
 
         - function (any callable object will do) which accepts the
           coordinates of all mesh nodes as a numpy.ndarray of shape (3, n)
@@ -306,12 +321,13 @@ def vector_valued_function(value, S3, normalise=False, **kwargs):
 
     *Arguments*
 
-       value     -- the value of the function
+       value            -- the value of the function as described above
 
-       S3        -- dolfin.VectorFunctionSpace of dimension 3
+       mesh_or_space    -- either a dolfin.VectorFunctionSpace of dimension 3
+                           or a dolfin.Mesh
 
-       normalize -- if True then the function values are normalised to
-                    unit length (default: False)
+       normalise        -- if True then the function values are normalised to
+                           unit length (default: False)
 
        kwargs    -- if `value` is a 3-tuple of strings (which will be
                     cast to a dolfin.Expression), then any variables
@@ -319,11 +335,13 @@ def vector_valued_function(value, S3, normalise=False, **kwargs):
                     values in kwargs; otherwise kwargs is ignored
 
     """
+    mesh, S3 = mesh_and_space(mesh_or_space)
+
     def _const_function(value, S3):
         # Filling the dolfin.Function.vector() directly is about two
         # orders of magnitudes faster than using df.interpolate()!
         #
-        val = np.empty((S3.mesh().num_vertices(), 3))
+        val = np.empty((mesh.num_vertices(), 3))
         val[:] = value  # fill the array with copies of 'value' (we're using broadcasting here!)
         fun = df.Function(S3)
         fun.vector()[:] = val.transpose().reshape(-1) # transpose is necessary because of the way dolfin aligns the function values internally
@@ -344,10 +362,16 @@ def vector_valued_function(value, S3, normalise=False, **kwargs):
         if len(value) == 3:
             fun = _const_function(value, S3)
         else:
-            fun = df.Function(S3)
-            fun.vector()[:] = value
+            if value.ndim == 1:
+                fun = df.Function(S3)
+                fun.vector()[:] = value
+            else:
+                assert value.ndim == 2
+                assert value.shape[1] == 3
+                fun = df.Function(S3)
+                fun.vector()[:] = value.reshape(value.size, order="F")
     elif hasattr(value, '__call__'):
-        coords = np.array(zip(* S3.mesh().coordinates()))
+        coords = np.array(zip(* mesh.coordinates()))
         fun = df.Function(S3)
         fun.vector()[:] = value(coords).flatten()
     else:
