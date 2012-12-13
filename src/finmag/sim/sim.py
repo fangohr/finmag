@@ -6,6 +6,7 @@ import glob
 import logging
 import textwrap
 import fileinput
+import itertools
 import dolfin as df
 import numpy as np
 from numpy import NaN
@@ -225,16 +226,19 @@ class Simulation(object):
             The field to probe. Must be one of: "exchange", "demag",
             "anisotropy", "zeeman".
 
-        pts: single point or list of points
+        pts: numpy.array
 
-            The point(s) where the field should be probed. Can a
-            single point (= list of 3 floats) or a list of points.
+            An array of points where the field should be probed. Can
+            have arbitrary shape, except that the last axis must have
+            dimension 3. For example, if pts.shape == (10,20,5,3) then
+            the field is probed at all points on a regular grid of
+            size 10 x 20 x 5.
 
         *Returns*
 
-            If `pts` is a single point, returns a numpy 3-array
-            containing the field values at that point. If `pts` is
-            a list of points, returns a Nx3 array of field values.
+            A numpy.array of the same shape as `pts`, where the last
+            axis contains the field values instead of the point
+            locations.
 
         *Limitations*
 
@@ -243,13 +247,11 @@ class Simulation(object):
         field values will be NaN.
         """
         pts = np.array(pts)
-        probe_at_single_point = False
-        if pts.ndim == 1 and len(pts) == 3:
-            probe_at_single_point = True
-            pts = np.array([pts])
-        if not (pts.ndim == 2 and pts.shape[1] == 3):
-            raise ValueError("Arguments 'pts' must be a list of 3D points. "
-                             "Got: '{}'".format(pts))
+        if not pts.shape[-1] == 3:
+            raise ValueError(
+                "Arguments 'pts' must be a numpy array of 3D points, "
+                "i.e. the last axis must have dimension 3. Shape of "
+                "'pts' is: {}".format(pts.shape))
 
         fun_field = self.get_field_as_dolfin_function(field_type)
         def _fun_field_impl(pt):
@@ -257,10 +259,15 @@ class Simulation(object):
                 return fun_field(pt)
             except RuntimeError:
                 return np.array([NaN, NaN, NaN])
-        res = map(_fun_field_impl, pts)
-        if probe_at_single_point:
-            res = res[0]
-        return np.array(res)
+        res = np.empty_like(pts)
+
+        # Apply the given function to each point and fill 'res' with
+        # the results:
+        loop_indices = itertools.product(*map(xrange, pts.shape[:-1]))
+        for idx in loop_indices:
+            res[idx] = _fun_field_impl(pts[idx])
+
+        return res
 
     def run_until(self, t, save_averages=True):
         """

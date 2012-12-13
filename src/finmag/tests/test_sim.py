@@ -3,6 +3,8 @@ import numpy as np
 import logging
 from finmag import sim_with
 from finmag.energies import Demag
+from finmag.example import barmini
+from math import sqrt
 
 logger = logging.getLogger("finmag")
 
@@ -63,5 +65,33 @@ class TestSimulation(object):
         v0_ref = v_ref[[0, N, 2*N]]
 
         # Check that the results coincide
+        print "v0_probed: {}".format(v0_probed)
+        print "v0_ref: {}".format(v0_ref)
         assert(np.allclose(v0_probed, v0_ref))
         assert(np.allclose(v_probed_1d, v_ref))
+
+    def test_probe_field2(self):
+        """
+        Another sanity check using the barmini example; probe the
+        field on a regular 2D grid inside a plane parallel to the
+        x/y-plane (with different numbers of probing points in x- and
+        y-direction).
+        """
+
+        # Set up the simulation
+        sim = barmini()
+        nx = 5
+        ny = 10
+        z = 5.0  # use cutting plane in the middle of the cuboid
+        X, Y = np.mgrid[0:3:nx*1j, 0:3:ny*1j]
+        pts = np.array([[(X[i, j], Y[i,j], z) for j in xrange(ny)] for i in xrange(nx)])
+
+        # Probe the field
+        res = sim.probe_field('m', pts)
+
+        # Check that 'res' has the right shape and values (the field vectors
+        # should be constant and equal to [1/sqrt(2), 0, 1/sqrt(2)].
+        assert(res.shape == (nx, ny, 3))
+        assert(np.allclose(res[..., 0], 1.0/sqrt(2)))
+        assert(np.allclose(res[..., 1], 0.0))
+        assert(np.allclose(res[..., 2], 1.0/sqrt(2)))
