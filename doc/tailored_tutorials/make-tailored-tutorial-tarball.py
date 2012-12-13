@@ -49,7 +49,7 @@ def assemble_rst(conf):
             if os.path.exists(targetdirnamefiles):
                 shutil.rmtree(targetdirnamefiles)
             shutil.copytree("../ipython_notebooks_dest/%s_files" % fileroot, targetdirnamefiles)
-            
+
         # also copy the raw ipynb files into the right directory
         ipynbdir = os.path.join(targetdirname, 'ipynb')
         if not os.path.exists(ipynbdir):
@@ -99,6 +99,7 @@ def assemble_tarballs(conf):
     logging.debug("Output was %s" % output)
     logging.info("Tarball %s.tgz is located in _build" % conf['nameshort'])
 
+
 def remove_builddir(conf):
     targetdirname = targetdirectoryname(conf) 
     cmd = shutil.rmtree(targetdirname)
@@ -137,8 +138,7 @@ if __name__ == '__main__':
         logging.info("Compiling rst file for %s" % partner)
         compile_rst2html(conf)
         logging.info("Creating tar ball for  %s" % partner)
+
         assemble_tarballs(conf)
-        if args['keepbuild']:
-            pass
-        else:
+        if not args['keepbuild']:
             remove_builddir(conf)
