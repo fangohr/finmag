@@ -41,7 +41,7 @@ class Tablewriter(object):
         # here for the ndt file.
         self.entities = {
             'time': {'unit': '<s>',
-                        'get': lambda sim: sim.llg.t,
+                        'get': lambda sim: sim.t,
                         'header': 'time'},
             'm': {'unit': '<>',
                   'get': lambda sim: sim.m_average,
