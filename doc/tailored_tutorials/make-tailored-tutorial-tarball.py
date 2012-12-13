@@ -85,7 +85,7 @@ def assemble_rst(conf):
 def compile_rst2html(conf):
     import subprocess
     targetdirname = targetdirectoryname(conf) 
-    cmd = "cd %s; rst2html.py index.rst index.html" % targetdirname
+    cmd = "cd %s; rst2html.py --stylesheet-path=../../../css/voidspace.css index.rst index.html" % targetdirname
     logging.debug("Running cmd '%s'" % cmd)
     output = subprocess.check_output(cmd, shell=True)
     logging.debug("Output was %s" % output)
