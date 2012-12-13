@@ -207,13 +207,14 @@ class Simulation(object):
 
     def probe_field(self, field_type, pts):
         """
-        Probe the field of type `field_type` at point `pt`.
+        Probe the field of type `field_type` at point(s) `pts`.
 
         *Arguments*
 
         field_type: string or classname
 
-            asdfasdf
+            The field to probe. Must be one of: "exchange", "demag",
+            "anisotropy", "zeeman".
 
         pts: single point or list of points
 
