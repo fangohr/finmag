@@ -337,39 +337,24 @@ def vector_valued_function(value, mesh_or_space, normalise=False, **kwargs):
     """
     mesh, S3 = mesh_and_space(mesh_or_space)
 
-    def _const_function(value, S3):
-        # Filling the dolfin.Function.vector() directly is about two
-        # orders of magnitudes faster than using df.interpolate()!
-        #
-        val = np.empty((mesh.num_vertices(), 3))
-        val[:] = value  # fill the array with copies of 'value' (we're using broadcasting here!)
-        fun = df.Function(S3)
-        fun.vector()[:] = val.transpose().reshape(-1) # transpose is necessary because of the way dolfin aligns the function values internally
-        return fun
-
-    if isinstance(value, (tuple, list)):
-        if isinstance(value[0], str):
-            # a tuple of strings is considered to be the ingredient
-            # for a dolfin expression, whereas a tuple of numbers
-            # would signify a constant
-            val = df.Expression(value, **kwargs)
-            fun = df.interpolate(val, S3)
-        else:
-            fun = _const_function(value, S3)
-    elif isinstance(value, (df.Constant, df.Expression)):
+    if isinstance(value, (df.Constant, df.Expression)):
         fun = df.interpolate(value, S3)
-    elif isinstance(value, np.ndarray):
-        if len(value) == 3:
-            fun = _const_function(value, S3)
+    elif isinstance(value, (tuple, list, np.ndarray)) and len(value) == 3:
+        # We recognise a sequence of strings as ingredient for a df.Expression.
+        if all(isinstance(item, basestring) for item in value):
+            expr = df.Expression(value, **kwargs)
+            fun = df.interpolate(expr, S3)
         else:
-            if value.ndim == 1:
-                fun = df.Function(S3)
-                fun.vector()[:] = value
-            else:
-                assert value.ndim == 2
-                assert value.shape[1] == 3
-                fun = df.Function(S3)
-                fun.vector()[:] = value.reshape(value.size, order="F")
+            vec = np.empty((mesh.num_vertices(), 3))
+            vec[:] = value # using broadcasting
+            fun = df.Function(S3)
+            fun.vector().set_local(vec.transpose().reshape(-1))
+    elif isinstance(value, np.ndarray):
+        fun = df.Function(S3)
+        if value.ndim == 2:
+            assert value.shape[1] == 3
+            value = value.reshape(value.size, order="F")
+        fun.vector()[:] = value
     elif hasattr(value, '__call__'):
         coords = np.array(zip(* mesh.coordinates()))
         fun = df.Function(S3)
