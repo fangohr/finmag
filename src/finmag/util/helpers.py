@@ -303,6 +303,8 @@ def vector_valued_function(value, mesh_or_space, normalise=False, **kwargs):
 
         - dolfin.Constant representing a 3-vector
 
+        - dolfin.Expression
+
         - 3-tuple of strings (with keyword arguments if needed),
           which will get cast to a dolfin.Expression where any variables in
           the expression are substituted with the values taken from 'kwargs'
