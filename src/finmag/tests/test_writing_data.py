@@ -11,13 +11,13 @@ def test_write_ndt_file():
     # TODO: This might not be the best solution, should revise this at some point.
     os.chdir(MODULE_DIR)
 
-    RTOL = 1e-5
+    RTOL = 1e-12
 
     output_file = "barmini_test.ndt"
     reference_file = "barmini_test.ndt.ref"
 
     sim = finmag.example.barmini(name="barmini_test")
-    for time in np.linspace(0, 1e-10, 20):
+    for time in np.linspace(0, 1e-10, 21):
         print("Integrating towards t = %gs" % time)
         sim.run_until(time, save_averages=True)  # True is the default for save_averages
                                                  # but we provide it for clarity.
