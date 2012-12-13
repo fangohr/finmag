@@ -22,7 +22,18 @@ class Zeeman(object):
         self.S3 = S3
         self.m = m
         self.Ms = Ms
-        self.H = helpers.vector_valued_function(self.value, self.S3, **self.kwargs)
+        self.set_value(self.value, **self.kwargs)
+
+    def set_value(self, value, **kwargs):
+        """
+        Set the value of the field.
+
+        `value` can have any of the forms accepted by the function
+        'finmag.util.helpers.vector_valued_function' (see its
+        docstring for details).
+
+        """
+        self.H = helpers.vector_valued_function(value, self.S3, **self.kwargs)
         self.E = - mu0 * self.Ms * df.dot(self.m, self.H) * df.dx 
 
     def compute_field(self):
