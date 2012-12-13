@@ -691,6 +691,8 @@ class Simulation(object):
         if save_averages:
             self.save_averages()
 
+    save_vtk = snapshot  # alias with a more telling name
+
     def mesh_info(self):
         """
         Return a string containing some basic information about the
