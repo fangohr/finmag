@@ -57,7 +57,7 @@ clean:
 htmlraw:
 	$(SPHINXBUILD) $(SPHINXWARNINGOPTS) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 
-html: generate-doc collect-ipython-notebooks shtmlraw prettify-ipython-notebooks
+html: generate-doc collect-ipython-notebooks htmlraw prettify-ipython-notebooks
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
 dirhtml:
