@@ -15,7 +15,7 @@ from finmag.util.consts import exchange_length, bloch_parameter
 from finmag.util.meshes import mesh_info, mesh_volume
 from finmag.util.fileio import Tablewriter
 from finmag.util import helpers
-from finmag.util.hysteresis import hysteresis, hysteresis_loop
+from finmag.sim.hysteresis import hysteresis, hysteresis_loop
 from finmag.sim.integrator import LLGIntegrator
 from finmag.energies.exchange import Exchange
 from finmag.energies.anisotropy import UniaxialAnisotropy
