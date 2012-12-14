@@ -48,6 +48,40 @@ def get_version_scipy():
     except ImportError:
         return None
 
+def get_version_sundials():
+    """
+    Determine and return the sundials version.
+
+    This only works on Debian-derived systems (such as Debian
+    or Ubuntu) as it internally calls 'dpkg -s' to determine
+    the version number.
+
+    If sundials is installed, returns a string with the version
+    number, otherwise returns None. Raises NotImplementedError if
+    the version cannot be determined due to an unsupported system.
+    """
+    import subprocess
+    import re
+
+    supported_distros = ['Ubuntu', 'Debian']
+    linux_issue = get_linux_issue()
+    version = None
+
+    if any([d in linux_issue for d in supported_distros]):
+        try:
+            output = subprocess.check_output(['dpkg', '-s', 'libsundials-serial'])
+            lines = output.split('\n')
+            version_str = filter(lambda s: s.startswith('Version'), lines)[0]
+            version = re.sub('Version: ', '', version_str)
+        except subprocess.CalledProcessError:
+            pass
+    else:
+        raise NotImplementedError(
+            "This does not seem to be a supported (i.e. Debian-derived) Linux "
+            "distribution. Cannot determine sundials version.")
+
+    return version
+
 
 def running_binary_distribution():
     """Return True if this is the cython-based binary 
@@ -68,9 +102,9 @@ def running_binary_distribution():
 
 
 if __name__ == "__main__":
+    linux_issue = get_linux_issue()
 
     print("__file__ = %s" % __file__)
-    print("Linux issue:" + get_linux_issue())
+    print("Linux issue: %s" % linux_issue)
     print("Binary distribution: %s" % running_binary_distribution())
-
-
+    print("Sundials version: %s" % get_version_sundials())

@@ -18,6 +18,11 @@ logger.debug("%20s: %s" % ("Matplotlib", util.versions.get_version_matplotlib())
 logger.debug("%20s: %s" % ("Numpy", util.versions.get_version_numpy()))
 logger.debug("%20s: %s" % ("Scipy", util.versions.get_version_scipy()))
 logger.debug("%20s: %s" % ("IPython", util.versions.get_version_ipython()))
+try:
+    sundials_version = util.versions.get_version_sundials()
+except NotImplementedError:
+    sundials_version = '<cannot determine version>'
+logger.debug("%20s: %s" % ("Sundials", sundials_version))
 logger.debug("%20s: %s" % ("Linux", util.versions.get_linux_issue()))
 
 
