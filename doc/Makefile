@@ -57,7 +57,7 @@ clean:
 htmlraw: collect-ipython-notebooks
 	$(SPHINXBUILD) $(SPHINXWARNINGOPTS) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 
-html: generate-doc htmlraw
+html: generate-doc htmlraw prettify-ipython-notebooks
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
 dirhtml:
@@ -198,6 +198,20 @@ collect-ipython-notebooks: ${IPYTHON_NOTEBOOK_DEST_DIR}
 
 ${IPYTHON_NOTEBOOK_DEST_DIR}:
 	install -d ${IPYTHON_NOTEBOOK_DEST_DIR}
+
+# The following target overwrites the existing .html files in ipython_notebooks_dest/
+# (which were produced via the chain .ipynb -> .rst -> .html) with ones that are
+# directly generated from .ipynb using nbconvert. These look much nicer and closer to
+# the original, and are thus desirable. Note that this is a bad hack because sphinx
+# we rely on a lot of implicit assumptions and sphinx doesn't know that the files were
+# changed, but this should not cause any problems for now. We can revisit it in a bit
+# and clean it up.  -- Max, 14.12.2012
+prettify-ipython-notebooks:
+	@echo "Replacing notebook html files with nicer ones"
+	@for FILE in ${IPYTHON_NOTEBOOK_SRC_FILES} ; do \
+	    echo "Replacing file: $$FILE"; \
+	    ${NBCONVERT} --format=html ${IPYTHON_NOTEBOOK_SRC_DIR}/$$FILE.ipynb _build/html/${IPYTHON_NOTEBOOK_DEST_DIR}/$$FILE.html; \
+	done
 
 #this target can be run to execute py.test ../examples to get figure
 #files ready. This will happen automatically when Jenkins runs, as
