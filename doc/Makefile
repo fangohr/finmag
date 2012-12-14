@@ -54,10 +54,10 @@ clean:
 	-rm -rf $(BUILDDIR)/* modules/* ${IPYTHON_NOTEBOOK_DEST_DIR}/* finmagrc_template.txt
 
 
-htmlraw: collect-ipython-notebooks
+htmlraw:
 	$(SPHINXBUILD) $(SPHINXWARNINGOPTS) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 
-html: generate-doc htmlraw prettify-ipython-notebooks
+html: generate-doc collect-ipython-notebooks shtmlraw prettify-ipython-notebooks
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
 dirhtml:
