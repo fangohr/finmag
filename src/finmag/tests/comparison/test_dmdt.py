@@ -29,7 +29,7 @@ def test_dmdt_computation_with_oommf():
     llg.effective_field.add(zeeman)
 
     dmdt_finmag = df.Function(llg.S3)
-    dmdt_finmag.vector()[:] = llg.solve()
+    dmdt_finmag.vector()[:] = llg.solve(0)
 
     # set up oommf
     msh = mesh.Mesh((nL, nW, nH), size=(L, W, H))

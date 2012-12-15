@@ -63,11 +63,11 @@ class BaseIntegrator(object):
             f = df.File(filename, 'compressed')
 
         cur_count = 0  # current snapshot count
-        start_time = self.llg.t  # start time of the integration; needed for snapshot saving
+        start_time = self.cur_t  # start time of the integration; needed for snapshot saving
         last_max_dmdt_norm = 1e99
         while True:
             prev_m = self.llg.m.copy()
-            next_stop = self.llg.t + dt
+            next_stop = self.cur_t + dt
 
             # If in the next step we would cross a timestep where a snapshot should be saved, run until
             # that timestep, save the snapshot, and then continue.
@@ -84,7 +84,7 @@ class BaseIntegrator(object):
 
             if max_dmdt_norm < stopping_dmdt:
                 log.debug("{}: Stopping at t={:.3g}, with last_dmdt={:.3g}, smaller than stopping_dmdt={:.3g}.".format(
-                    self.__class__.__name__, self.llg.t, max_dmdt_norm, float(stopping_dmdt)))
+                    self.__class__.__name__, self.cur_t, max_dmdt_norm, float(stopping_dmdt)))
                 break
 
             if dt < dt_limit / dt_increment_multi:
@@ -94,7 +94,7 @@ class BaseIntegrator(object):
                 dt = dt_limit
 
             log.debug("{}: t={:.3g}, last_dmdt={:.3g} * stopping_dmdt, next dt={:.3g}.".format(
-                self.__class__.__name__, self.llg.t, max_dmdt_norm/stopping_dmdt, dt))
+                self.__class__.__name__, self.cur_t, max_dmdt_norm/stopping_dmdt, dt))
 
             if max_dmdt_norm > last_max_dmdt_norm:
                 dmdt_increased_counter += 1
@@ -121,7 +121,7 @@ class BaseIntegrator(object):
         t0 = time.time()
         f << self.llg._m
         t1 = time.time()
-        log.debug("Saving snapshot #{} at timestep t={:.4g} to file '{}' (saving took {:.3g} seconds).".format(cur_count, self.llg.t, filename, t1-t0))
+        log.debug("Saving snapshot #{} at timestep t={:.4g} to file '{}' (saving took {:.3g} seconds).".format(cur_count, self.cur_t, filename, t1-t0))
         if save_averages:
             if self.tablewriter:
                 log.debug("Saving average field values (in integrator).")
@@ -200,13 +200,12 @@ class SundialsIntegrator(BaseIntegrator):
             return
 
         self.integrator.advance_time(t, self.m)
-        #self.cur_t = self.integrator.get_current_time()
-        #here the integration time should be user provided t rather than sundials' inner time, evidence see test_sim_ode.py
-        self.cur_t = t
+        self.cur_t = self.integrator.get_current_time()
         self.llg.m = self.m
 
     def reinit(self):
-        """reinit() calls CVodeReInit.
+        """
+        Reinitialise memory for CVODE.
 
         Useful if there is a drastic (non-continuous) change in the right hand side of the ODE.
         By calling this function, we inform the integrator that it should not assuming smoothness
