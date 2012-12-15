@@ -3,16 +3,26 @@ import numpy as np
 import dolfin as df
 import matplotlib.pyplot as plt
 
+"""
+function depends on time and space
+
+"""
+
 L = 2 * np.pi
 f_0 = 10
 eps = 1e-6
 ts = np.linspace(0, 2 * np.pi, 100)
 
-def numpy_loop(t):
-    """
-    function depends on time and space, done in a for-loop
+expr = df.Expression((
+    "f_0"
+    " * (fabs(x[0]) < eps ? 1 : sin(x[0])/x[0])"
+    " * (fabs(t) < eps ? 1 : sin(t)/t)"), f_0 = f_0, t = 0.0, eps=eps)
+def dolfin_expression(t):
+    expr.t = t
+    f = df.interpolate(expr, S)
+    return f.vector().array()
 
-    """
+def numpy_loop(t):
     f = np.empty(mesh.num_vertices())
     for i, (x, y, z) in enumerate(mesh.coordinates()):
         f[i] = f_0
@@ -22,40 +32,31 @@ def numpy_loop(t):
             f[i] *= np.sin(t)/t
     return f
 
-sinc_expr = df.Expression((
-    "f_0"
-    " * (fabs(x[0]) < eps ? 1 : sin(x[0])/x[0])"
-    " * (fabs(t) < eps ? 1 : sin(t)/t)"), f_0 = f_0, t = 0.0, eps=eps)
-
-#def dolfin_against_numpy_loop(t):
-def dolfin_expression(t):
-    sinc_expr.t = t
-    f = df.interpolate(sinc_expr, S)
-    return f.vector().array()
-
-def numpy_vectorised_no_x_dependence(t):
-    """
-    function depends only on time
-
-    """
+def numpy_vectorised_spatial(mesh):
     f = np.empty(mesh.num_vertices())
-    sint = np.sin(t)
-    f.fill(sint)
+    for i, (x, y, z) in enumerate(mesh.coordinates()):
+        f[i] = f_0
+        if abs(x) > eps:
+            f[i] *= np.sin(t)/x
     return f
 
-simple_expr = df.Expression("sin(t)", t=0)
-def dolfin_expression_no_x_dependence(t):
-    simple_expr.t = t
-    f = df.interpolate(simple_expr, S)
-    return f.vector().array()
+def update_numpy_vectorised(t, f_t0):
+    sint = np.sin(t)
+    return f_t0 * sint
 
-lines = ["b", "r", "b--", "r--"]
-for i, method in enumerate([numpy_loop, dolfin_expression, numpy_vectorised_no_x_dependence, dolfin_expression_no_x_dependence]):
+lines = ["b", "r", "r--"]
+for i, method in enumerate([dolfin_expression, numpy_loop, update_numpy_vectorised]):
     vertices = []
     times = []
     for dL in [1, 2, 5, 7, 10, 12, 15, 17, 20]:
         mesh = df.Box(0, 0, 0, L, L, L, dL, dL, dL)
         S = df.FunctionSpace(mesh, "CG", 1)
+
+        if method == update_numpy_vectorised:
+            f_t0 = numpy_vectorised_spatial(mesh)
+            method = lambda t: update_numpy_vectorised(t, f_t0)
+            method.__name__ = "numpy_vectorised"
+
         vertices.append(mesh.num_vertices())
         start = time.time()
         for t in ts:
