@@ -54,7 +54,6 @@ class LLG(object):
         self.c = 1e11  # 1/s numerical scaling correction \
         #               0.1e12 1/s is the value used by default in nmag 0.2
         self.Ms = 8.6e5  # A/m saturation magnetisation
-        self.t = 0.0  # s
         self._m = df.Function(self.S3)
         self._m.rename("m", "magnetisation")  # gets displayed e.g. in Paraview
                                               # when loading an exported VTK file
@@ -163,12 +162,11 @@ class LLG(object):
 
     def solve_for(self, m, t):
         self.m = m
-        self.t = t
-        value = self.solve()
+        value = self.solve(t)
         return value
 
-    def solve(self):
-        H_eff = self.effective_field.compute(self.t)
+    def solve(self, t):
+        H_eff = self.effective_field.compute(t)
         H_eff.shape = (3, -1)
 
         timings.start("LLG-compute-dmdt")
@@ -181,12 +179,12 @@ class LLG(object):
         # Calculate dm/dt
         if self.do_slonczewski:
             native_llg.calc_llg_slonczewski_dmdt(
-                m, H_eff, self.t, dmdt, self.pins,
+                m, H_eff, t, dmdt, self.pins,
                 self.gamma, self.alpha_vec,
                 char_time,
                 self.J, self.P, self.d, self.Ms.vector().array(), self.p)
         else:
-            native_llg.calc_llg_dmdt(m, H_eff, self.t, dmdt, self.pins,
+            native_llg.calc_llg_dmdt(m, H_eff, t, dmdt, self.pins,
                                  self.gamma, self.alpha_vec,
                                  char_time, self.do_precession)
         dmdt.shape = (-1,)
