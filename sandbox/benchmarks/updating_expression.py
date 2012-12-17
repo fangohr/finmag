@@ -41,6 +41,20 @@ def time_numpy_loop(mesh, ts):
                 f[i] = np.sin(x) * np.sin(t)
     return benchmark.elapsed, f
 
+def time_numpy_no_loop(mesh, ts):
+    """
+    Instead of looping over the coordinates like in time_numpy_loop, this has
+    saved the coordinates away so it can use vectorised numpy code.
+
+    """
+    f = np.empty(mesh.num_vertices())
+    xs = mesh.coordinates()[:,0]
+
+    with benchmark:
+        for t in ts:
+            f[:] = np.sin(xs) * np.sin(t)
+    return benchmark.elapsed, f
+
 def time_numpy_smart(mesh, ts):
     """
     This way of computing the function values is somewhat smarter than
@@ -49,6 +63,9 @@ def time_numpy_smart(mesh, ts):
     time, the space-dependent part of the function only needs to be computed
     once. Multiplied by the time-dependent part at each time step, the full
     function is reconstructed.
+
+    In a way, this method is not fair to the others, because it uses prior
+    knowledge about the function which the computer can't derive on its' own.
 
     """
     f = np.empty(mesh.num_vertices())
@@ -71,18 +88,21 @@ for i, dL in enumerate(dLs):
 
     t_dolfin, f_dolfin = time_dolfin(mesh, ts)
     t_numpy, f_numpy = time_numpy_loop(mesh, ts)
+    t_Hans, f_Hans = time_numpy_no_loop(mesh, ts)
     t_smart, f_smart = time_numpy_smart(mesh, ts)
 
     vertices.append(mesh.num_vertices())
-    runtimes.append((t_dolfin, t_numpy, t_smart))
+    runtimes.append((t_dolfin, t_numpy, t_Hans, t_smart))
 
     assert np.max(np.abs(f_dolfin - f_numpy)) < 1e-14
+    assert np.max(np.abs(f_dolfin - f_Hans)) < 1e-14
     assert np.max(np.abs(f_dolfin - f_smart)) < 1e-14
 
 runtimes = zip(* runtimes)
 plt.plot(vertices, runtimes[0], "b", label="dolfin")
 plt.plot(vertices, runtimes[1], "r", label="numpy loop")
-plt.plot(vertices, runtimes[2], "r--", label="numpy smart")
+plt.plot(vertices, runtimes[2], "g", label="numpy vectorised")
+plt.plot(vertices, runtimes[3], "r--", label="numpy optimised")
 plt.xlabel("vertices")
 plt.ylabel("time (s)")
 plt.yscale("log")
