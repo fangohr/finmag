@@ -1,72 +1,91 @@
-import time
 import numpy as np
 import dolfin as df
 import matplotlib.pyplot as plt
+from simple_timer import SimpleTimer
+
+benchmark = SimpleTimer()
 
 """
-function depends on time and space
+The goal is to compute the values of f(r, t) = sin(x) * sin(t) on a mesh for
+different points in time. The cost of updating f a couple of times is measured.
 
 """
 
-L = 2 * np.pi
-f_0 = 10
-eps = 1e-6
-ts = np.linspace(0, 2 * np.pi, 100)
+def time_dolfin(mesh, ts):
+    """
+    Uses a dolfin expression to compute the values of f on the mesh and the times in ts.
 
-expr = df.Expression((
-    "f_0"
-    " * (fabs(x[0]) < eps ? 1 : sin(x[0])/x[0])"
-    " * (fabs(t) < eps ? 1 : sin(t)/t)"), f_0 = f_0, t = 0.0, eps=eps)
-def dolfin_expression(t):
-    expr.t = t
-    f = df.interpolate(expr, S)
-    return f.vector().array()
+    """
+    S = df.FunctionSpace(mesh, "CG", 1)
+    expr = df.Expression("sin(x[0]) * sin(t)", t = 0.0)
 
-def numpy_loop(t):
-    f = np.empty(mesh.num_vertices())
-    for i, (x, y, z) in enumerate(mesh.coordinates()):
-        f[i] = f_0
-        if abs(x) > eps:
-            f[i] *= np.sin(x)/x
-        if abs(t) > eps:
-            f[i] *= np.sin(t)/t
-    return f
-
-def numpy_vectorised_spatial(mesh):
-    f = np.empty(mesh.num_vertices())
-    for i, (x, y, z) in enumerate(mesh.coordinates()):
-        f[i] = f_0
-        if abs(x) > eps:
-            f[i] *= np.sin(t)/x
-    return f
-
-def update_numpy_vectorised(t, f_t0):
-    sint = np.sin(t)
-    return f_t0 * sint
-
-lines = ["b", "r", "r--"]
-for i, method in enumerate([dolfin_expression, numpy_loop, update_numpy_vectorised]):
-    vertices = []
-    times = []
-    for dL in [1, 2, 5, 7, 10, 12, 15, 17, 20]:
-        mesh = df.Box(0, 0, 0, L, L, L, dL, dL, dL)
-        S = df.FunctionSpace(mesh, "CG", 1)
-
-        if method == update_numpy_vectorised:
-            f_t0 = numpy_vectorised_spatial(mesh)
-            method = lambda t: update_numpy_vectorised(t, f_t0)
-            method.__name__ = "numpy_vectorised"
-
-        vertices.append(mesh.num_vertices())
-        start = time.time()
+    with benchmark:
         for t in ts:
-            method(t)
-        runtime = time.time() - start
-        times.append(runtime)
-        print "{} ran for {:.2g} s.".format(method.__name__, runtime)
-    plt.plot(vertices, times, lines[i], label=method.__name__)
+            expr.t = t
+            f = df.interpolate(expr, S)
+    return benchmark.elapsed, f.vector().array()
+
+def time_numpy_loop(mesh, ts):
+    """
+    Uses numpy and a loop over the mesh coordinates to compute the values of f
+    on the mesh and the times in ts. This is what we think dolfin is doing
+    in C++ internally when we call time_dolfin. As expected, doing this in
+    python is slower.
+
+    """
+    f = np.empty(mesh.num_vertices())
+
+    with benchmark:
+        for t in ts:
+            for i, (x, y, z) in enumerate(mesh.coordinates()):
+                f[i] = np.sin(x) * np.sin(t)
+    return benchmark.elapsed, f
+
+def time_numpy_smart(mesh, ts):
+    """
+    This way of computing the function values is somewhat smarter than
+    time_numpy_loop. The function is the product of a space-dependent and a
+    time-dependent part. Since the spatial discretisation doesn't change over
+    time, the space-dependent part of the function only needs to be computed
+    once. Multiplied by the time-dependent part at each time step, the full
+    function is reconstructed.
+
+    """
+    f = np.empty(mesh.num_vertices())
+    f_spatial_only = np.sin(mesh.coordinates()[:,0])
+
+    with benchmark:
+        for t in ts:
+            f[:] = f_spatial_only * np.sin(t)
+    return benchmark.elapsed, f
+
+L = np.pi / 2
+dLs = [1, 2, 5, 7, 10, 12, 17, 20]
+ts = np.linspace(0, np.pi / 2, 100)
+vertices = []
+runtimes = []
+for i, dL in enumerate(dLs):
+    mesh = df.Box(0, 0, 0, L, L, L, dL, dL, dL)
+    print "Running for a mesh with {} vertices [{}/{}].".format(
+            mesh.num_vertices(), i+1, len(dLs))
+
+    t_dolfin, f_dolfin = time_dolfin(mesh, ts)
+    t_numpy, f_numpy = time_numpy_loop(mesh, ts)
+    t_smart, f_smart = time_numpy_smart(mesh, ts)
+
+    vertices.append(mesh.num_vertices())
+    runtimes.append((t_dolfin, t_numpy, t_smart))
+
+    assert np.max(np.abs(f_dolfin - f_numpy)) < 1e-14
+    assert np.max(np.abs(f_dolfin - f_smart)) < 1e-14
+
+runtimes = zip(* runtimes)
+plt.plot(vertices, runtimes[0], "b", label="dolfin")
+plt.plot(vertices, runtimes[1], "r", label="numpy loop")
+plt.plot(vertices, runtimes[2], "r--", label="numpy smart")
 plt.xlabel("vertices")
 plt.ylabel("time (s)")
 plt.yscale("log")
 plt.legend(loc="upper center", bbox_to_anchor=(0.5, 1.10), prop={'size':10})
 plt.savefig("updating_expression.png")
+print "Saved plot to 'updating_expression.png'."
