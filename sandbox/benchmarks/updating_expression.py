@@ -1,6 +1,7 @@
 import numpy as np
 import dolfin as df
 import matplotlib.pyplot as plt
+from math import sin
 from simple_timer import SimpleTimer
 
 benchmark = SimpleTimer()
@@ -38,7 +39,7 @@ def time_numpy_loop(mesh, ts):
     with benchmark:
         for t in ts:
             for i, (x, y, z) in enumerate(mesh.coordinates()):
-                f[i] = np.sin(x) * np.sin(t)
+                f[i] = sin(x) * sin(t)
     return benchmark.elapsed, f
 
 def time_numpy_no_loop(mesh, ts):
@@ -52,7 +53,7 @@ def time_numpy_no_loop(mesh, ts):
 
     with benchmark:
         for t in ts:
-            f[:] = np.sin(xs) * np.sin(t)
+            f[:] = np.sin(xs) * sin(t)
     return benchmark.elapsed, f
 
 def time_numpy_smart(mesh, ts):
@@ -73,7 +74,7 @@ def time_numpy_smart(mesh, ts):
 
     with benchmark:
         for t in ts:
-            f[:] = f_spatial_only * np.sin(t)
+            f[:] = f_spatial_only * sin(t)
     return benchmark.elapsed, f
 
 L = np.pi / 2
