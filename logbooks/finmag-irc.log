@@ -2931,3 +2931,739 @@ fangohr: Still testing ...
 2012-12-11 15:44:25 max_albert: Hi Hans, I found out what the reason for the discrepancy from the referenc .ndt file is. The change was introduced in commit 2391:236277b3589e. This might need some disussing (but I need to leave for the time being). Feel free to revert it for now if you'd prefer the old behaviour (not sure if any tests depend on it).
 2012-12-11 15:44:31 max_albert: Over and out for now.
 2012-12-12 09:04:07 fangohr_: Good Morning all.
+------- [ DokosBot crashed at this point, and we didn't notice until 17 Dec ] -------
+Wednesday, 12 December 2012
+09:03
+FANGOHR_
+Good Morning all.
+09:03
+You have connected
+13:31
+D_Chernyshenko [~chern@host-78-147-189-92.as13285.net] entered the room.
+13:45
+MAX_ALBERT
+Hi Hans, I saw that the Jenkins build is still broken. AFAICS there are two reasons for this. One is trivial (used np instead of numpy to refer to the module), but one might be more serious or at least requires thinking/discussion.
+13:58
+FANGOHR-ADIUM
+Yes, is the other one about the time? I am already looking at our integrator object to try to better understand the roles of the different times.
+13:59
+D_Chernyshenko left the room (quit: Ping timeout: 240 seconds).
+13:59
+MAX_ALBERT
+Exactly. If you look at the Jenkins output (for example: http://summer.kk.soton.ac.uk:8080/job/finmag/1118/console) then near the bottom you'll see that one of the errors is due to a difference of the barmini_test.ndt output to the reference file.
+14:01
+The only differences occur in the 'time' field, and they are very small.
+14:01
+But it looks like we cannot rely on Sundials to always integrate up to exactly the same time.
+14:01
+Also, I was wondering which of the times that we store (sim.t and sim.llg.t) is actually the correct one to use in this context.
+14:02
+I seem to remember a discussion about this, and IIRC then someone said that Sundials integrates a bit further, but the returned vector actually corresponds to the precise timestep that we asked for, which is stored in sim.t (I think?).
+14:03
+FANGOHR-ADIUM
+I am somewhat relaxed about not getting the the same numbers from sundials down to the last digit. This might be okay, and change from sundials version to sundials version (are running on Ubuntu 12.10?).
+14:04
+for the tests, we could compare the numerical values for a tolerance rather than compare the file byte by byte.
+14:04
+However, I am concerned that we need to understand 'which time' is the right one to use, and to make sure we update this in the right places.
+14:05
+MAX_ALBERT
+Yes, I agree.
+14:05
+FANGOHR-ADIUM
+Yes, you remember right regarding cvode using it's own time steps which are somewhat independent of the times for which the user requests the solution.
+14:05
+I am trying to put an example together that shows this, but need to see whether we have access to all the relevant bits of information already (at the Python level).
+14:05
+MAX_ALBERT
+Sounds like a good idea.
+14:06
+I'm wondering what to do with our test in test_writing_data.py, though. Looks like we can't just use a reference file because of the small differences in the times.
+14:07
+FANGOHR-ADIUM
+Yes — may have to rewrite to compare values numerically.
+14:11
+MAX_ALBERT
+A quick fix could be to simply have one digit less of precision for the times. However, that feels like a bit of cheating (and it should definitely be documented somewhere).
+14:11
+Ah, comparing numerically is a good idea, too. I may try that.
+14:12
+FANGOHR-ADIUM
+MA, are you out there?
+14:14
+MAX_ALBERT
+For the record, I just pushed a change with the numerical comparison of the output. In doing this I also saw that one needs to be a bit careful when using numpy.allclose() to compare very small float values (such as the integration times, which are on the order of 1e-12). I added a tracker issue for this because there is a small chance that one or two of our tests suffer from a problem in this regard (they might not, but just to be on the safe s
+15:45
+ide).
+15:45
+MAX_ALBERT
+Also, I wonder why it is that Sundials returns slightly different integration times for each run. I'm not sure if this is only due to different Sundials versions (but will have to investigate a bit further).
+15:54
+As an aside, Weiwei just pointed out that we may have another (unrelated) small bug in the code, which is apparently due to the fact that the data returned from Sundials might not be copied into our python-level array straight away.
+15:55
+He has a nice example in a short ipython notebook illustrating this, and I think he is going to submit it as a test soon (hopefully along with the proper fix ).
+15:58
+FANGOHR-ADIUM
+Hi — back now; was in meeting with Dmitri and something else. I have made some progress with the cvode object, and will hopefully commit that soon (even if prelimenary). This will be a good basis to sort out any cvode time confusion.
+16:38
+Thanks for the allclose study; very useful to know.
+16:39
+(Need to pick some reports now.)
+16:39
+FANGOHR-ADIUM
+pick -> pick up
+16:50
+FANGOHR-ADIUM
+Over and out.
+17:19
+fangohr left the room (quit: Quit: Leaving.).
+17:21
+fangohr [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+21:15
+FANGOHR
+Greetings.
+21:15
+Thursday, 13 December 2012
+01:07
+fangohr left the room (quit: Quit: Leaving.).
+01:07
+fangohr [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+01:38
+fangohr left the room (quit: Ping timeout: 244 seconds).
+01:47
+fangohr [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+02:14
+fangohr left the room (quit: Ping timeout: 244 seconds).
+02:18
+fangohr [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+02:44
+fangohr left the room (quit: Quit: Leaving.).
+08:25
+fangohr [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+08:55
+fangohr left the room (quit: Ping timeout: 245 seconds).
+09:04
+mb8g11_ [~smashdot@e176022084.adsl.alicedsl.de] entered the room.
+09:21
+mb8g11_ left the room (quit: Client Quit).
+09:21
+mb8g11 left the room (quit: Quit: leaving).
+09:23
+mb8g11 [~smashdot@ip-038-169.vpn.soton.ac.uk] entered the room.
+09:40
+fangohr [~fangohr@ip-096-214.net-096.dhcp.soton.ac.uk] entered the room.
+11:35
+FANGOHR-ADIUM
+Good morning all.
+11:39
+MAX_ALBERT
+Good morning Hans.
+11:39
+FANGOHR-ADIUM
+MA, thanks for moving the helpers tests around. I am not sure the name helpers_test.py will be autotested (it may be). Maybe test_helpers.py would be more inline with most (!) of the other tests?
+11:40
+MAX_ALBERT
+It does seem to be picked up (you can run "py.test --collectonly" to find out which tests are being collected). However, I agree that it would be good to stick to a convention so that we know just from the filenames which files are test files and which aren't. (Perhaps it's even worth giving the test files a more distinguished prefix, such as finmagtest_... or something else?)
+11:52
+fangohr1 [~Adium@ip-205-013.eduroam.soton.ac.uk] entered the room.
+11:52
+MAX_ALBERT
+Btw, Hans, do you have the Paraview guide lying around by any chance?
+11:52
+FANGOHR-ADIUM
+I think test_ should be fine. The reason it picks up the *_test is that I added this to pytest.ini (https://bitbucket.org/fangohr/finmag/src/tip/pytest.ini?at=default) when I noticed that Dmitri's older Unittest-framework tests were named like that. Still, moving towards one convention would be good.
+11:55
+Max, yes, the guide is here. Feel free to pick it up.
+11:56
+SCHTOPP
+11:56
+I have the VTK book, not the paraview one.
+11:56
+fangohr1 left the room (quit: Ping timeout: 256 seconds).
+11:56
+ww1g11 [~Thunderbi@ip-097-039.net-097.dhcp.soton.ac.uk] entered the room.
+12:07
+fangohr1 [~Adium@ip-205-013.eduroam.soton.ac.uk] entered the room.
+12:16
+FANGOHR-ADIUM
+Hei Weiwei 
+12:23
+Thanks for the timing work yesterday.
+12:23
+MAX_ALBERT
+Hans, for your information I couldn't find the Paraview book in our office space either. Not a problem at all, would just be good to know where it has ended up.
+12:33
+WW1G11
+, I am configuring the Thunderbird -- still fail to send email, but succeed in receiving emails
+12:34
+FANGOHR-ADIUM
+Weiwei, best to use the imap.exchange.soton.ac.uk interface if you don't do so already.
+12:35
+WW1G11
+yes, that's what I am using to receive emails
+12:37
+MB8G11
+Standard test discovery rules include test_*.py and *_test.py files. I prefer the latter for unit tests which belong to exactly one implementation file, because that shows them next to each other in directory listings.
+12:44
+However, I named a few files *_tests.py with an additional s, that's wrong and I will fix it soon.
+12:44
+Thank you for including them in the pytest.ini.
+12:44
+MAX_ALBERT
+MA, that's a good point about the files being listed together.
+12:44
+FANGOHR-ADIUM
+Hi MA, okay - good point about being next to each other in directory listing.
+12:44
+I think Dmitri's tests may be called *_tests.py (with the plural 's') and that's why I have the extra s in the pytest.ini. Maybe we should rename dmitri's test files, and then stick to test_* for regression/system tests and *_test for unit tests?
+12:46
+MB8G11
+I like that.
+12:46
+Will rename now.
+12:47
+FANGOHR-ADIUM
+Thanks. Can you also update pytest.ini while you are at this?
+12:48
+MB8G11
+Of course.
+12:49
+fangohr left the room (quit: Quit: Leaving.).
+13:42
+MAX_ALBERT
+Hi Hans, I just had a quick look at your latest tailored-tutorial work. Looks nice!
+13:57
+FANGOHR-ADIUM
+Ta 
+13:57
+MAX_ALBERT
+The style file is cool. 
+13:58
+FANGOHR-ADIUM
+Next, I'll have to do some work on the content .
+13:58
+Before that, I'll go into a couple of meetings though ...
+13:58
+MAX_ALBERT
+I saw that you had to make some adaptations, though, due to the way the rst2html conversion works
+13:58
+I still think this might not be necessary if we use nbconvert directly to convert from .ipynb to html.
+13:59
+Should be easy to add (although not sure if I can look into it today).
+13:59
+FANGOHR1
+Hi Max, adaptions are minimal (other than adding newlines between separate rst files that I concatenate I can't think of any?), but if putting together a straight conversion to html is easy, please do. Not urgent though.
+14:32
+MAX_ALBERT
+Ok, might look into it if I have time (but no promise).
+14:32
+FANGOHR1
+Max, getting the 2d plotting of the magnetisation to work (as a library function using matplotlib as discussed earlier today) is probably more useful (in my view) as we get new functionality out of that.
+14:39
+MAX_ALBERT
+I agree. That's what I'm working on at the moment. 
+14:39
+D_Chernyshenko [~chern@host-78-147-183-109.as13285.net] entered the room.
+15:01
+FANGOHR_
+Max, regarding the Paraview book: have you checked the drawers and the book shelf? I had another look around here and can't find it. (Which doesn't mean it is not actually here, of course, ...)
+15:04
+MAX_ALBERT
+Yes, I have checked them (although not the drawers in other people's desks, only the 'public' ones).
+15:05
+Which also doesn't mean that it isn't here, of course... 
+15:05
+FANGOHR1
+Okay, thanks. It will surface again when we expect it the least ….
+15:05
+MAX_ALBERT
+Yes, I guess so...
+15:06
+D_CHERNYSHENKO
+Sigh.
+15:32
+FANGOHR1
+Dmitri, do you want to join me for a coffee?
+15:33
+D_CHERNYSHENKO
+Hans, doesn't seem like I have enough material to show you yet.. However I've finally started to make some progress, would you mind looking at the PDF draft a bit later today?
+15:33
+Erm
+15:33
+FANGOHR1
+Okay, can do.
+15:33
+If you get something to me by 18:00, I can have a look at it. If you are around 18:00 to 18:15 or so (when I shoud be back in the office)  we could have a short chat about it.
+15:34
+D_CHERNYSHENKO
+Ok!
+15:35
+FANGOHR1
+Deal.
+15:35
+MB8G11
+Of course.n.H print solution.H.reshape((3, -1)).mean(1) assert False
+15:53
+sorry
+15:54
+FANGOHR1
+Impressive series of commits going on everywhere! I like it.
+15:54
+mb8g11 left the room (quit: Quit: leaving).
+15:58
+mb8g11 [~smashdot@e176022084.adsl.alicedsl.de] entered the room.
+15:59
+mb8g11_ [~smashdot@e176018229.adsl.alicedsl.de] entered the room.
+16:12
+mb8g11 left the room (quit: Ping timeout: 260 seconds).
+16:15
+fangohr1 left the room (quit: Quit: Leaving.).
+16:40
+fangohr [~Adium@ip-162-244.eduroam.soton.ac.uk] entered the room.
+17:09
+fangohr left the room (quit: Quit: Leaving.).
+17:38
+D_Chernyshenko left the room (quit: Quit: Ex-Chat).
+17:45
+D_Chernyshenko [~D_Chernys@host-78-147-183-109.as13285.net] entered the room.
+17:49
+D_Chernyshenko left the room (quit: Ping timeout: 255 seconds).
+17:54
+D_Chernyshenko [~chern@mu.kk.soton.ac.uk] entered the room.
+18:13
+mb8g11_ left the room (quit: Quit: leaving).
+18:25
+D_Chernyshenko_ [~D_Chernys@host-92-24-213-150.ppp.as43234.net] entered the room.
+18:40
+FANGOHR-ADIUM
+Over and out.
+18:40
+D_Chernyshenko__ [~D_Chernys@host-92-24-213-150.ppp.as43234.net] entered the room.
+20:25
+D_Chernyshenko_ left the room (quit: *.net *.split).
+20:34
+D_Chernyshenko left the room (quit: *.net *.split).
+20:34
+D_Chernyshenko [~chern@mu.kk.soton.ac.uk] entered the room.
+20:42
+ww1g11 left the room (quit: Quit: ww1g11).
+20:54
+fangohr [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+21:14
+FANGOHR
+Nice work, Max.
+21:47
+MAX_ALBERT
+? 
+21:47
+FANGOHR
+(Seeing commits and comments in my inbox.)
+21:49
+MAX_ALBERT
+Ah... I thought you were referring to my last commit, which wasn't *that* spectacular. 
+21:50
+Btw, I just had another quick look at your tailored tutorials and there seems to be some interference between the regular documentation and the build of the tailored ones.
+21:52
+More precisely, if I try to build the normal docs after a tutorial then sphinx picks up the file /doc/tailored_tutorials/_build/finmag-tutorial-Hesjedahl/index.rst and complains that it isn't contained in any toctree.
+21:54
+I presume we need to exclude /doc/tailored_tutorials/ from being searched. How can we do that with sphinx?
+21:54
+FANGOHR
+You are right, I had noticed that as well. An easy solution is to delete the directory _build/finmag-tutorial/hesjedahl. This should be done automatically by the make-tailored-tutorial-tarball.py script now. Are you using the latest code (or did I forget to push this)?
+21:56
+MAX_ALBERT
+No, you did push it, but I had an error because the notebook files weren't present in ipython_notebooks_dest/ yet (because I hadn't built the regular documentation), so I guess the script exited prematurely and didn't delete the _build directory.
+21:56
+FANGOHR
+Ah, yes. This dependency is not checked yet, and no useful error message is produced when there is nothing in the ipython_notebooks_dest folder - sorry.
+22:30
+MAX_ALBERT
+No problem.  It's obvious where the error comes from and thus easy to fix. But I guess it can't hurt to exclude /doc/tailored_tutorials/ from the sphinx build anyway.
+22:31
+FANGOHR
+Yes, and it 'should' be relatively easy to exclude these from the sphinx build. If not, we could move the tailored tutorial scripts somewhere else.
+22:32
+Over and out for today — have a good night.
+22:32
+MAX_ALBERT
+Good night!
+22:32
+(P.S.: Do you know how to exclude them?)
+22:32
+FANGOHR
+No, don't know 
+22:34
+MAX_ALBERT
+Ok. Have a good night!
+22:34
+(P.P.S.: Never mind, found it. )
+22:37
+fangohr left the room (quit: Quit: Leaving.).
+22:39
+fangohr [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+23:10
+fangohr left the room (quit: Ping timeout: 252 seconds).
+23:58
+Friday, 14 December 2012
+03:41
+D_Chernyshenko__ left the room (quit: Quit: Leaving).
+03:41
+fangohr [~Adium@ip-207-088.eduroam.soton.ac.uk] entered the room.
+09:24
+fangohr left the room (quit: Read error: Connection reset by peer).
+09:24
+fangohr [~Adium@ip-207-088.eduroam.soton.ac.uk] entered the room.
+09:24
+FANGOHR-ADIUM
+Morning DokosBot and Max.
+09:24
+mb8g11 [~smashdot@e176018229.adsl.alicedsl.de] entered the room.
+09:32
+FANGOHR-ADIUM
+Good Morning, Marc-Antonio.
+09:32
+MB8G11
+Good morning, Hans!
+09:44
+FANGOHR-ADIUM
+Not that I know about, MA.
+09:48
+
+09:48
+I thought being awake and online on a (at least here) grey and rainy (and somewhat dark) Friday morning, deserves some credit . 
+09:48
+MB8G11
+Haha. The sky is grey here as well, but everything below is white, and has been for a week 
+09:53
+I'm starting with benchmarking stuff. Weiwei's dispersion relation ran for 3 days on my Southampton machine, integrating for 2 ns. I can't even imagine what the proposed standard problem would take (integrating for 5 ns).
+09:54
+Has Anil ever mentioned how long the simulations ran with nmag?
+09:55
+FANGOHR-ADIUM
+No. But it is not unusual for micromagnetic simulations to run weeks, so they would probably not mention that something takes 10 days or so to run.
+09:55
+The art is to make sure everything works okay on a small system, then to run the big one.
+09:55
+And ideally never having to repeat running the big one 
+09:56
+That's why data saving as the simulation runs is important, so that all the post-processing can be done later. Looking into systematic data saving is on my list, although for your problem just probing the field at particular points regularly in time and space should be fine.
+09:56
+MB8G11
+I see.
+09:59
+Thanks for the info, that'll change my todo for today slightly.
+10:00
+mb8g11 left the room (quit: Quit: leaving).
+10:41
+mb8g11 [~smashdot@e176018229.adsl.alicedsl.de] entered the room.
+11:17
+mb8g11 left the room (quit: Quit: Lost terminal).
+11:26
+mb8g11 [~smashdot@e176018229.adsl.alicedsl.de] entered the room.
+11:48
+fangohr left the room (quit: Quit: Leaving.).
+12:01
+fangohr [~Adium@ip-205-225.eduroam.soton.ac.uk] entered the room.
+13:54
+MB8G11
+Is the meeting soon?
+14:57
+FANGOHR
+Should be. Will you join online?
+14:57
+MB8G11
+Yes.
+14:58
+fangohr1 [~fangohr@ip-097-169.net-097.dhcp.soton.ac.uk] entered the room.
+14:58
+FANGOHR
+Okay, I am booting up a skype-enabled computer...
+14:58
+MB8G11
+Great.
+15:01
+mb8g11 left the room (quit: Ping timeout: 264 seconds).
+16:15
+MAX_ALBERT
+Hi Hans, I have just pushed a change which adds a simple sphinx extension that allows us to reference .ipynb files directly from .rst.
+17:26
+The syntax is like this:
+17:26
+   :ipynb:`path/to/notebook.ipynb`
+17:26
+This copies the .ipynb file into the subdirectory _build/html/ipynb/, converts it to .html (using nbconvert) and stores the result in _build/html/ipynb_html/
+17:27
+It also creates a link in the documentation to the .html file (and we could optionally add a link to the original .ipynb file, too).
+17:27
+It still needs some polishing, but it will eventually give us a much cleaner way of including notebooks in the documentation, and also to build targeted documentation for collaborators.
+17:28
+At the moment, it only works for the 'html' builder (not 'singlehtml' or others), and it doesn't create TOC entries, so it's a bit limited.
+17:28
+Also, the :ipynb: syntax only accepts a single file as argument.
+17:29
+However, it should be easy to make it work with a directory, so that that directory is searched for .ipynb files and they are all included in the documentation.
+17:29
+Anyway, feel free to play with it if you want, otherwise I'll get back to it when I find the time.
+17:29
+Need to go home packing now, and will be off early tomorrow. My internet access is likely to be limited, just so you know.
+17:30
+Have a good Christmas, everybody!
+17:30
+Over and out from me for now.
+17:30
+fangohr1 left the room (quit: Quit: Leaving.).
+17:30
+fangohr left the room (quit: Quit: Leaving.).
+17:31
+FANGOHR-ADIUM
+Nice, many thanks. Have good Christmas, too! Over and out here, too.
+17:33
+fangohr [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+17:59
+fangohr left the room (quit: Client Quit).
+17:59
+fangohr [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+18:00
+mb8g11 [~smashdot@e176020163.adsl.alicedsl.de] entered the room.
+18:09
+MB8G11
+This settles it: https://bitbucket.org/fangohr/finmag/src/6789a79d38149373b61583adfd9a24cf65700ba3/sandbox/benchmarks/updating_expression.png
+18:09
+no need to write to the dolfin mailing list then. Dashed line - function depends only on one variable (time), solid line - function depends on space too
+18:10
+mb8g11 left the room (quit: Client Quit).
+18:12
+fangohr left the room (quit: Quit: Leaving.).
+18:40
+fangohr [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+19:11
+fangohr left the room (quit: Ping timeout: 265 seconds).
+19:16
+fangohr [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+19:42
+fangohr1 [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+21:24
+fangohr left the room (quit: Read error: Connection reset by peer).
+21:24
+fangohr1 left the room (quit: Quit: Leaving.).
+23:11
+fangohr [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+23:41
+Saturday, 15 December 2012
+00:09
+fangohr left the room (quit: Ping timeout: 248 seconds).
+00:09
+fangohr_ left the room (quit: *.net *.split).
+01:38
+max_albert left the room (quit: *.net *.split).
+01:38
+fangohr_ [~fangohr@152.78.96.2] entered the room.
+01:59
+max_albert [~albert@hathor.kk.soton.ac.uk] entered the room.
+02:03
+fangohr [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+08:22
+fangohr left the room (quit: Quit: Leaving.).
+08:36
+fangohr [~Adium@ip-036-149.vpn.soton.ac.uk] entered the room.
+08:36
+fangohr left the room (quit: Quit: Leaving.).
+08:44
+fangohr [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+09:06
+fangohr left the room (quit: Quit: Leaving.).
+09:20
+fangohr [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+09:50
+fangohr left the room (quit: Ping timeout: 265 seconds).
+09:55
+fangohr [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+10:21
+fangohr left the room (quit: Ping timeout: 250 seconds).
+10:26
+fangohr [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+10:42
+fangohr left the room (quit: Client Quit).
+10:46
+fangohr [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+21:11
+fangohr left the room (quit: Quit: Leaving.).
+22:52
+fangohr [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+23:23
+fangohr left the room (quit: Ping timeout: 252 seconds).
+23:27
+fangohr [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+23:53
+fangohr left the room (quit: Read error: Connection reset by peer).
+23:56
+fangohr1 [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+23:56
+Sunday, 16 December 2012
+00:01
+fangohr1 left the room (quit: Quit: Leaving.).
+00:01
+You have disconnected
+06:25
+You have connected
+06:25
+fangohr-adium left the room (quit: Read error: Connection reset by peer).
+06:25
+fangohr [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+09:25
+fangohr left the room (quit: Client Quit).
+09:28
+fangohr [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+09:58
+fangohr left the room (quit: Ping timeout: 260 seconds).
+10:07
+fangohr [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+10:15
+fangohr left the room (quit: Quit: Leaving.).
+10:22
+fangohr [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+10:22
+fangohr left the room (quit: Quit: Leaving.).
+10:52
+fangohr [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+10:54
+fangohr left the room (quit: Quit: Leaving.).
+11:02
+fangohr [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+11:17
+fangohr left the room (quit: Quit: Leaving.).
+11:32
+fangohr [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+11:51
+fangohr left the room (quit: Quit: Leaving.).
+11:56
+fangohr [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+12:57
+fangohr left the room (quit: Ping timeout: 256 seconds).
+13:01
+fangohr [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+13:28
+fangohr left the room (quit: Ping timeout: 245 seconds).
+13:32
+fangohr [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+13:59
+fangohr left the room (quit: Ping timeout: 244 seconds).
+14:03
+fangohr [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+14:29
+You have disconnected
+14:36
+You have connected
+14:37
+fangohr-adium1 left the room (quit: Ping timeout: 245 seconds).
+14:37
+max_albert left the room (quit: Ping timeout: 276 seconds).
+14:38
+max_albert [~albert@hathor.kk.soton.ac.uk] entered the room.
+14:38
+fangohr [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+15:00
+fangohr left the room (quit: Quit: Leaving.).
+18:55
+fangohr [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+19:54
+fangohr left the room (quit: Ping timeout: 264 seconds).
+19:59
+fangohr [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+20:27
+fangohr left the room (quit: Quit: Leaving.).
+21:51
+fangohr [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+21:51
+fangohr left the room (quit: Quit: Leaving.).
+22:12
+fangohr [~Adium@93-97-71-176.zone5.bethere.co.uk] entered the room.
+22:12
+fangohr left the room (quit: Quit: Leaving.).
+23:05
+Monday, 17 December 2012
+08:56
+mb8g11 [~smashdot@e176001120.adsl.alicedsl.de] entered the room.
+08:56
+MB8G11
+Good morning.
+08:57
+fangohr [~fangohr@ip-097-169.net-097.dhcp.soton.ac.uk] entered the room.
+09:15
+FANGOHR-ADIUM
+Good Morning 
+09:15
+MA, I need to do some admin/teaching stuff before I can embark on the more interesting debugging/coding today.
+09:16
+MB8G11
+I'll have a go at it.
+09:17
+FANGOHR-ADIUM
+I didn't mean to suggest you should — just wanted to explain why I can't get to this immediately. 
+09:20
+fangohr left the room (quit: Quit: Leaving.).
+09:29
+MB8G11
+Be back later.
+13:53
+mb8g11 left the room (quit: Quit: leaving).
+13:53
+FANGOHR-ADIUM
+Righteho.
+13:53
+fangohr_ left the room (quit: Quit: Leaving).
+15:03
+fangohr [~fangohr@152.78.96.2] entered the room.
+15:46
+FANGOHR-ADIUM
+Hi MA, I think the key change was line 203 in https://bitbucket.org/fangohr/finmag/changeset/359efbeccdb2/ - well done. I also see, inspecting the code for the integrators, that we need the cur_t: (i) sundials is unhappy if we initialise it for integration from t=0 with a given y0, and then ask for the solution at t=0. So we catch this in the run_until method. I have added an extra safety exception there (https://bitbucket.org/fangohr/finmag/commits/05111d2435c77c0b294ea8f7e86b12baa67fa41b#Lsrc/finmag/sim/integrator/init.pyF198T201)
+16:12
+(ii) the other use of cur_t is for the snapshot methods.
+16:12
+I have set the state for this story to 'finish'. MA, do you want to accept this?
+16:13
+mb8g11 [~smashdot@e176000019.adsl.alicedsl.de] entered the room.
+16:15
+MB8G11
+Hi
+16:18
+FANGOHR-ADIUM
+Hi . You have just about missed my comments on your nice commits. Can you see them on the jenkins:8008 port?
+16:19
+MB8G11
+Will do. Saw your commits on bitbucket though.
+16:28
+DokosBot needs a "last 5 messages" feature.
+16:28
+mb8g11 left the room (quit: Quit: leaving).
+16:28
+mb8g11 [~smashdot@ip-036-209.vpn.soton.ac.uk] entered the room.
+16:29
+MB8G11
+Oooh... DokosBot isn't even online!?
+16:30
+FANGOHR
+Oops!
+16:30
+MB8G11
+Looking into it.
+16:30
+FANGOHR-ADIUM
+DokosBot crashes sometimes — don't know why.
+16:31
+I have an open session here — from when is the last message DokosBot recorded? Maybe I can save some history from here.
+16:31
+MB8G11
+12 Dec
+16:31
+FANGOHR-ADIUM
+Oops indeed.
+16:32
+Need a regression test for DokosBot being present ...
+16:32
+MB8G11
+DokosBot logs are empty. Hard to say why it crashes.
+16:32
+DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
+16:34
+----- [ end of inserted log, stolen from Adium window that happened to be online ] -----
