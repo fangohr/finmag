@@ -277,7 +277,7 @@ void compute_source_nodes_weights(fastsum_plan *plan) {
             plan->x_s[3 * index + 1] = y1 * tet_x_nodes[pn][k] + y2 * tet_y_nodes[pn][k] + y3 * tet_z_nodes[pn][k] + y0;
             plan->x_s[3 * index + 2] = z1 * tet_x_nodes[pn][k] + z2 * tet_y_nodes[pn][k] + z3 * tet_z_nodes[pn][k] + z0;
 
-            plan->weights[index] = fabs(v) * dunavant_w[pn][k] / 6.0;
+            plan->weights[index] = fabs(v) * tet_weights[pn][k] / 6.0;
 
             index++;
         }
