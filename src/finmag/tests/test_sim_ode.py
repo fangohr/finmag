@@ -36,5 +36,7 @@ def test_sim_ode(do_plot=False):
         plt.legend()
         plt.savefig(os.path.join(MODULE_DIR, "test_sim_ode.png"))
 
+    assert np.max(np.abs(mz - mz_ref)) < 1e-8
+
 if __name__ == "__main__":
     test_sim_ode(do_plot=True)
