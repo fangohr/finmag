@@ -16,7 +16,7 @@ def test_sim_ode(do_plot=False):
     H0 = 1e5
     sim.add(Zeeman((0, 0, H0)))
 
-    ts = np.linspace(0, 1e-11, 100)
+    dt = 1e-12; ts = np.linspace(0, 100 * dt, 100)
 
     precession_coeff = sim.gamma / (1 + sim.alpha ** 2)
     mz_ref = np.tanh(precession_coeff * sim.alpha * H0 * ts)
@@ -36,7 +36,7 @@ def test_sim_ode(do_plot=False):
         plt.legend()
         plt.savefig(os.path.join(MODULE_DIR, "test_sim_ode.png"))
 
-    assert np.max(np.abs(mz - mz_ref)) < 1e-8
+    assert np.max(np.abs(mz - mz_ref)) < 1.5e-8
 
 if __name__ == "__main__":
     test_sim_ode(do_plot=True)

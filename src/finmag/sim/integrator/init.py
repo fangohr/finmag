@@ -200,7 +200,7 @@ class SundialsIntegrator(BaseIntegrator):
             return
 
         self.integrator.advance_time(t, self.m)
-        self.cur_t = self.integrator.get_current_time()
+        self.cur_t = t
         self.llg.m = self.m
 
     def reinit(self):
