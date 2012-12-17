@@ -17,6 +17,10 @@ def LLGIntegrator(llg, m0, backend="sundials", tablewriter=None, **kwargs):
     #           fields nor VTK snapshots should probably happen in
     #           this class but rather in the Simulation class (?).
     #             -- Max, 11.12.2012
+    #           Yes, I think that's right. We could give callback functions 
+    #           to the run_until and relax function to give control back to the
+    #           simulation class. 
+    #             -- Hans, 17/12/2012
     #
     log.debug("Creating LLGIntegrator with backend {}.".format(backend))
     if backend == "scipy":
@@ -148,8 +152,9 @@ class ScipyIntegrator(BaseIntegrator):
         return self.llg.solve_for(y, t)
 
     def run_until(self, t):
-        if t <= self.cur_t:
-            return
+        #HF, 17/12/2012: seems we don't need these lines for Scipy's ode (only Sundial's cvode can be upset, see below.)
+        #if t <= self.cur_t:
+        #    return
 
         new_m = self.ode.integrate(t)
         assert self.ode.successful()
@@ -158,12 +163,10 @@ class ScipyIntegrator(BaseIntegrator):
 
 class SundialsIntegrator(BaseIntegrator):
     """
-    Sundials time integrator.
+    Sundials time integrator. We always start integration from t = 0.
 
     Attributes:
-        cur_t       The current internal time reached by the solver.
-                    It's not meant to represent the actual simulation time.
-
+        cur_t       The time up to which integration has been carried out.
     """
     def __init__(self, llg, m0, reltol=1e-8, abstol=1e-8,
                  nsteps=10000, method="bdf_gmres_prec_id", tablewriter=None):
@@ -196,8 +199,13 @@ class SundialsIntegrator(BaseIntegrator):
         integrator.set_max_num_steps(nsteps)
 
     def run_until(self, t):
-        if t <= self.cur_t:
+        # The following check is required because sundials does not like to integrate up to t=0, if the
+        # cvode solver was initialised for t=0. 
+        if t <= self.cur_t and t == 0:
             return
+        # if t <= self.cur_t and this is not the value with which we started, we should complain:
+        elif t <= self.cur_t:
+            raise RunTimeError("t=%g, self.cur_t=%g -- why are we integrating into the past?")
 
         self.integrator.advance_time(t, self.m)
         self.cur_t = t
