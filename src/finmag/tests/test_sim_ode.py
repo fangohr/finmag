@@ -36,6 +36,9 @@ def test_sim_ode(do_plot=False):
         plt.legend()
         plt.savefig(os.path.join(MODULE_DIR, "test_sim_ode.png"))
 
+    print("Deviation = {}, total value={}".format(
+            np.max(np.abs(mz - mz_ref)),
+            mz_ref))
     assert np.max(np.abs(mz - mz_ref)) < 1.5e-8
 
 if __name__ == "__main__":
