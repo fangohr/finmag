@@ -3667,3 +3667,32 @@ DokosBot logs are empty. Hard to say why it crashes.
 DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 16:34
 ----- [ end of inserted log, stolen from Adium window that happened to be online ] -----
+2012-12-17 16:48:20 mb8g11: Ok.
+2012-12-17 16:51:17 mb8g11: Yes, line 203 was the crucial one, but luckily it was obvious was the error was from the plots.
+2012-12-17 16:51:23 mb8g11: *what the error was
+2012-12-17 16:52:27 mb8g11: I don't understand the purpose of the additional checks of t <= cur_t. Are they meant to give an error message that wasn't there before?
+2012-12-17 16:52:30 fangohr-adium: By the way, am just testing xfce4 as a window manager. Turns out that xchat shows nice buble notifications in that environment for IRC messages. Even on top of a running xscreensaver. (Actually, I have only seen this on the screen saver so far, but am assuming that it does the same otherwise.)
+2012-12-17 16:52:54 fangohr-adium: Yes, they do:
+2012-12-17 16:53:26 mb8g11: That's neat. It's a nice environment, which is why it fuels our virtual machine as well.
+2012-12-17 16:53:57 fangohr-adium: if you are asking for integration up-to a value long in the past, and this request has no action resulting from it, and no updating of the current m, then that is a probably a mistake on the user side (or at least unintentional). So we should let them know.
+2012-12-17 16:54:12 fangohr-adium: [Yes, also works in the normal xfce environment without screen saver.]
+2012-12-17 16:54:42 mb8g11: True.
+2012-12-17 16:57:32 fangohr-adium: THis if-statement in the run_until method is (as far as I can see) only there because cvode does not like to have to integrate up to t=0, when it was initialised with t=0.
+2012-12-17 17:00:28 mb8g11: Yes. Also, because sundials might have integrated to further then we ask it to already on the last call, if our time steps are very small.
+2012-12-17 17:01:11 fangohr-adium: Sorry, that sentence seems broken. Can you rephrase (or add the missing words ;-))?
+2012-12-17 17:04:51 mb8g11: Hehe.
+2012-12-17 17:05:53 fangohr-adium: Maybe I can guess the question though: Example: we request integration up to t=10. Sundials work up to t_internal=15, because it has a large step size. We then ask for the solution at t=11. In that case, sundials will work out the right answer (using interpolation between 10 and 15) and all works well.
+2012-12-17 17:06:33 mb8g11: Usually, sundials will integrate to a value of t that is larger than the one we asked for. That is because it choses its' time steps internally by mathematical considerations and stops integrating as soon as its' internal t is larger than we asked for.
+2012-12-17 17:07:19 mb8g11: If we now ask it to integrate up to a value of t which is smaller than the value of t it ended up with, it will complain with CVODE_TOO_CLOSE or something similar. That's why the error check is there.
+2012-12-17 17:08:22 mb8g11: As usual, you explain it more succinctly.
+2012-12-17 17:09:57 fangohr-adium: Hm, interesting. Not sure this is true. Can you find an example where this happens? At least non of our tests fail, although they should based on what you say? In any case, I would suggest to have the run_until if statement as conservative as possible (as it is now) until we have evidence that this is too cautious.
+2012-12-17 17:11:49 mb8g11: Why would our tests fail? The if-test has been there since the beginning.
+2012-12-17 17:13:47 fangohr-adium: My concern was that the if-test should not have been there, or may be hiding user problems of passing in the wrong t (one that is way to small). [Need to go know, so can't expand to much.] Are you happy with the current version? (I am.)
+2012-12-17 17:14:18 mb8g11: Simply remove the if test completely and try running test_sim_ode.py, then you'll see what I mean.
+2012-12-17 17:14:31 mb8g11: I am too!
+2012-12-17 17:15:13 mb8g11: Everything is fine, just a misunderstand I guess.
+2012-12-17 17:15:54 fangohr-adium: Done the removal, and found the error message. Okay, we mean the same thing then. Although I believe this is only so for the the value of t with which cvode has been initialised.
+2012-12-17 17:16:14 fangohr-adium: I have played a little with your performance test (next push just now). Interesting — Idon't know what's going on.
+2012-12-17 17:16:16 fangohr-adium: Over and out.
+2012-12-17 17:17:25 mb8g11: Bye!
+2012-12-17 17:23:51 mb8g11:  /quit
