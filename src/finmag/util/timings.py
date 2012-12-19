@@ -15,7 +15,7 @@ measurements and prints out a summary of the findings when printed:
     print timer
 
 The module provides a default instance of the Timings class, which can be used
-by imported the variable *timings* from this module.
+by importing the variable *timings* from this module.
 
     from finmag.util.timings import timings
     # ...

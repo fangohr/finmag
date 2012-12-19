@@ -1,41 +1,42 @@
 import time
-from finmag.util.timings import timed, mtimed, ftimed, Timings, timings
+import finmag.util.timings as t
 
-t = Timings()
+default_timer = t.timings
+test_timer = t.Timings()
 
 def test_by_hand():
-    t.start('one')
+    test_timer.start('one')
     time.sleep(0.1)
-    t.stop('one')
+    test_timer.stop('one')
 
-    assert t.getncalls('one') == 1
+    assert test_timer.getncalls('one') == 1
 
 def test_decorated_function():
 
-    @ftimed(t)
+    @t.ftimed(test_timer)
     def two():
         time.sleep(0.1)
 
     two()
     two()
 
-    assert t.getncalls('two') == 2
+    assert test_timer.getncalls('two') == 2
 
 def test_decorated_function_default_timer():
 
-    @ftimed()
+    @t.ftimed()
     def twob():
         time.sleep(0.1)
 
     twob()
     twob()
 
-    assert timings.getncalls('twob') == 2
+    assert default_timer.getncalls('twob') == 2
 
 def test_decorated_method():
 
     class Foo(object):
-        @mtimed(t)
+        @t.mtimed(test_timer)
         def three(self):
             time.sleep(0.1)
 
@@ -44,23 +45,37 @@ def test_decorated_method():
     foo.three()
     foo.three()
 
-    assert t.getncalls('three') == 3
+    assert test_timer.getncalls('three') == 3
+
+def test_decorated_method_default_timer():
+
+    class Foo(object):
+        @t.mtimed()
+        def three(self):
+            time.sleep(0.1)
+
+    foo = Foo()
+    foo.three()
+    foo.three()
+    foo.three()
+
+    assert default_timer.getncalls('three') == 3
 
 def test_timed_code():
 
     for i in range(4):
-        with timed('four', timer=t):
+        with t.timed('four', timer=test_timer):
             time.sleep(0.1)
 
-    assert t.getncalls('four') == 4
+    assert test_timer.getncalls('four') == 4
 
 def test_timed_code_default_timer():
 
     for i in range(4):
-        with timed('fourb'):
+        with t.timed('fourb'):
             time.sleep(0.1)
 
-    assert timings.getncalls('fourb') == 4
+    assert default_timer.getncalls('fourb') == 4
 
 if __name__ == "__main__":
     test_decorated_function()
