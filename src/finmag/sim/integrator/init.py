@@ -161,6 +161,7 @@ class ScipyIntegrator(BaseIntegrator):
         self.m = new_m
         self.cur_t = t
 
+
 class SundialsIntegrator(BaseIntegrator):
     """
     Sundials time integrator. We always start integration from t = 0.
@@ -196,7 +197,17 @@ class SundialsIntegrator(BaseIntegrator):
             integrator.set_spils_preconditioner(llg.sundials_psetup, llg.sundials_psolve)
 
         integrator.set_scalar_tolerances(reltol, abstol)
-        integrator.set_max_num_steps(nsteps)
+
+        self.set_max_steps(nsteps)
+
+    def set_max_steps(self, nsteps):
+        """Sets the maximum number of steps that will be done for time integration."""
+        self.nsteps = nsteps
+        self.integrator.set_max_num_steps(self.nsteps)
+
+    def get_max_steps(self):
+        """Sets the maximum number of steps that will be done for time integration."""
+        return self.nsteps
 
     def run_until(self, t, max_steps=None):
         """
@@ -229,14 +240,19 @@ class SundialsIntegrator(BaseIntegrator):
         # if t <= self.cur_t and this is not the value with which we started,
         # we should complain:
         elif t <= self.cur_t:
-            raise RunTimeError("t=%g, self.cur_t=%g -- why are we integrating into the past?")
+            raise RuntimeError("t=%g, self.cur_t=%g -- why are we integrating into the past?")
 
         # if max_steps given, set this with the integrator, otherwise use
         # value we have currently (Not sure this is good. Maybe should use
         # default otherwise. actually, would be better to keep attribute in
         # integrator class that keeps track of current max_steps. XXX)
+
+        # save current max steps
+        previous_max_steps = self.get_max_steps()
+
+        # if given, set new value of max_steps
         if max_steps != None:
-            self.integrator.set_max_num_steps(max_steps)
+            self.set_max_steps(max_steps)
 
         try:
             self.integrator.advance_time(t, self.m)
@@ -249,7 +265,7 @@ class SundialsIntegrator(BaseIntegrator):
                 reached_tout = False
                 # in this case, we have integrated up to cvode's inernal time.
                 # So we need to get this value:
-                actual_t_reached = self.integrator.get_current_time()
+                self.cur_t = self.integrator.get_current_time()
             else:  # Any other exception is unexpected, so raise error again
                 raise
         else:  # if we succeeded with time integration to t
@@ -260,8 +276,10 @@ class SundialsIntegrator(BaseIntegrator):
         # back into llg object
         self.llg.m = self.m
 
-        return reached_tout
+        # set previous value of max_steps again
+        self.set_max_steps(previous_max_steps)
 
+        return reached_tout
 
     def reinit(self):
         """
