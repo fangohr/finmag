@@ -1,6 +1,6 @@
 import dolfin as df
 import logging
-from finmag.util.timings import timings
+from finmag.util.timings import mtimed
 from energy_base import EnergyBase
 from finmag.util.consts import exchange_length
 
@@ -64,11 +64,9 @@ class Exchange(EnergyBase):
     def exchange_length(self):
         return exchange_length(self.A, self.Ms)
 
+    @mtimed
     def setup(self, S3, m, Ms, unit_length=1):
-        timings.start('Exchange-setup')
-
         self.exchange_factor = df.Constant(self.A / unit_length ** 2)
         E_integrand = self.exchange_factor * df.inner(df.grad(m), df.grad(m))
 
         super(Exchange, self).setup(E_integrand, S3, m, Ms, unit_length)
-        timings.stop('Exchange-setup')

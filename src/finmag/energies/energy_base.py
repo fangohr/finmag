@@ -1,7 +1,7 @@
 import logging
 import dolfin as df
 import numpy as np
-from finmag.util.timings import timings
+from finmag.util.timings import mtimed
 from finmag.util.consts import mu0
 from finmag.util.meshes import nodal_volume
 
@@ -62,13 +62,6 @@ class EnergyBase(object):
         self.in_jacobian = in_jacobian
         self.method = method
 
-    def _timingsname(self, functiondescription):
-        """
-        Compose and return a string that is used for timing functions.
-        
-        """
-        return 'EnergyBase-' + self.__class__.__name__ + '-' + functiondescription
-
     def setup(self, E_integrand, S3, m, Ms, unit_length=1):
         """
         Function to be called after the energy object has been constructed.
@@ -93,8 +86,6 @@ class EnergyBase(object):
 
         """
         ###license_placeholder###
-
-        timings.start(self._timingsname('setup'))
 
         self.E_integrand = E_integrand
         self.S1 = df.FunctionSpace(S3.mesh(), "Lagrange", 1)
@@ -131,8 +122,7 @@ class EnergyBase(object):
             raise ValueError("Unsupported method '{}' should be one of {}.".format(
                 self.method, self._supported_methods))
 
-        timings.stop(self._timingsname('setup'))
-
+    @mtimed
     def compute_energy(self):
         """
         Return the total energy, i.e. energy density intergrated
@@ -143,11 +133,10 @@ class EnergyBase(object):
                 The energy.
 
         """
-        timings.start(self._timingsname('compute_energy'))
         E = df.assemble(self.E) * self.unit_length ** self.dim
-        timings.stop(self._timingsname('compute_energy'))
         return E
 
+    @mtimed
     def energy_density(self):
         """
         Compute the energy density,
@@ -163,9 +152,7 @@ class EnergyBase(object):
                 Coefficients of dolfin vector of energy density.
 
         """
-        timings.start(self._timingsname('energy_density'))
         nodal_E = df.assemble(self.nodal_E).array() * self.unit_length ** self.dim
-        timings.stop(self._timingsname('energy_density'))
         return nodal_E / self.nodal_volume_S1
 
     def energy_density_function(self):
@@ -184,6 +171,7 @@ class EnergyBase(object):
         self.E_density_function.vector()[:] = self.energy_density()
         return self.E_density_function
 
+    @mtimed
     def compute_field(self):
         """
         Compute the field associated with the energy.
@@ -194,9 +182,7 @@ class EnergyBase(object):
 
         """
 
-        timings.start(self._timingsname('compute_field'))
         Hex = self.__compute_field()
-        timings.stop(self._timingsname('compute_field'))
         return Hex
 
     def __compute_field_assemble(self):

@@ -1,7 +1,7 @@
 import logging
 import dolfin as df
 from energy_base import EnergyBase
-from finmag.util.timings import timings
+from finmag.util.timings import mtimed
 
 logger = logging.getLogger('finmag')
 
@@ -76,15 +76,12 @@ class UniaxialAnisotropy(EnergyBase):
 
         super(UniaxialAnisotropy, self).__init__(method, in_jacobian=True)
 
+    @mtimed
     def setup(self, S3, m, Ms, unit_length=1):
-        timings.start('UniaxialAnisotropy-setup')
-
         # Anisotropy energy
         # HF's version inline with nmag, breaks comparison with analytical
         # solution in the energy density test for anisotropy, as this uses
         # the Scholz-Magpar method. Should anyway be a an easy fix when we
         # decide on method.
         E_integrand = self.K1 * (df.Constant(1) - (df.dot(self.axis, m)) ** 2)
-
         super(UniaxialAnisotropy, self).setup(E_integrand, S3, m, Ms, unit_length)
-        timings.stop('UniaxialAnisotropy-setup')
