@@ -36,10 +36,10 @@ logger.debug("%20s: %s" % ("Linux", util.versions.get_linux_issue()))
 if util.versions.running_binary_distribution():
     # check that this is the same as the binary distribution has been compiled for
     # This matters for sundials: on 12.04 there is one version of sundials
-    # on 12.10 there is a different one. They are not compatible, but we 
+    # on 12.10 there is a different one. They are not compatible, but we
     # have no way to tell which one we are using.
     #
-    # We thus assume that we use the system's sundials, and thus we 
+    # We thus assume that we use the system's sundials, and thus we
     # should be able to check by comparing the linux distribution.
     import util.binary
     logger.debug("%20s: %s" % ("Build Linux", util.binary.buildlinux))
@@ -50,10 +50,7 @@ if util.versions.running_binary_distribution():
         logger.error("Host Linux = %s" % util.versions.get_linux_issue())
         raise RuntimeError("Build and Host linux must be identical, otherwise sundials may produce wrong results / crash")
 
-
-
-
-
-
-
-
+# create extreme debugging logging level, which has numerical value 5
+EXTREME_DEBUG = 5
+# and register a function function for this for our logger
+logger.extreme_debug = lambda msg: logger.log(EXTREME_DEBUG, msg)
