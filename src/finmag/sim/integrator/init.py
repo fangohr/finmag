@@ -198,18 +198,70 @@ class SundialsIntegrator(BaseIntegrator):
         integrator.set_scalar_tolerances(reltol, abstol)
         integrator.set_max_num_steps(nsteps)
 
-    def run_until(self, t):
-        # The following check is required because sundials does not like to integrate up to t=0, if the
-        # cvode solver was initialised for t=0. 
+    def run_until(self, t, max_steps=None):
+        """
+        *Arguments*
+
+        t : float
+
+            Target time to integrate to
+
+        max_steps : integer
+
+            maximum number of steps for time integration
+
+        Returns ``True`` or ``False`` depending on whether target time ``t``
+        has been reached.
+
+        Given a target time t, this function integrates towards ``t``. If
+        ``max_steps`` is given and the number of ``max_steps`` steps
+        for the integration are reached, we interrupt the calculation and
+        return False.
+
+        If tout is reached within the number of allowed steps, it will return
+        True.
+        """
+
+        # The following check is required because sundials does not like to
+        # integrate up to t=0, if the cvode solver was initialised for t=0.
         if t <= self.cur_t and t == 0:
             return
-        # if t <= self.cur_t and this is not the value with which we started, we should complain:
+        # if t <= self.cur_t and this is not the value with which we started,
+        # we should complain:
         elif t <= self.cur_t:
             raise RunTimeError("t=%g, self.cur_t=%g -- why are we integrating into the past?")
 
-        self.integrator.advance_time(t, self.m)
-        self.cur_t = t
+        # if max_steps given, set this with the integrator, otherwise use
+        # value we have currently (Not sure this is good. Maybe should use
+        # default otherwise. actually, would be better to keep attribute in
+        # integrator class that keeps track of current max_steps. XXX)
+        if max_steps != None:
+            self.integrator.set_max_num_steps(max_steps)
+
+        try:
+            self.integrator.advance_time(t, self.m)
+        except RuntimeError, msg:
+            # if we have reached max_num_steps, the error message will read
+            # something like expected_error = "Error in CVODE:CVode
+            # (CV_TOO_MUCH_WORK): At t = 0.258733, mxstep steps taken before
+            # reaching tout.'"
+            if "CV_TOO_MUCH_WORK" in msg.message:
+                reached_tout = False
+                # in this case, we have integrated up to cvode's inernal time.
+                # So we need to get this value:
+                actual_t_reached = self.integrator.get_current_time()
+            else:  # Any other exception is unexpected, so raise error again
+                raise
+        else:  # if we succeeded with time integration to t
+            self.cur_t = t
+            reached_tout = True
+
+        # in any case: put integrated degrees of freedom from cvode object
+        # back into llg object
         self.llg.m = self.m
+
+        return reached_tout
+
 
     def reinit(self):
         """
