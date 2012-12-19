@@ -31,16 +31,17 @@ formatter = logging.Formatter('[%(asctime)s] %(levelname)s: %(message)s', datefm
 
 parser = argparse.ArgumentParser(description='Parse the logging level.')
 parser.add_argument("-v", "--verbosity", default="debug",
-        choices=("debug", "info", "warning", "error", "critical"),
+        choices=("extremedebug", "debug", "info", "warning", "error", "critical"),
         help="Set the logging level.")
 parser.add_argument("--logcol",
         choices=("dark_bg", "light_bg", "none"),
         help="Set the LOGging COLour scheme.")
 
 args, _ = parser.parse_known_args()
-logging_level = {"debug": logging.DEBUG, "info": logging.INFO,
+logging_level = {"extremedebug": 5, "debug": logging.DEBUG, "info": logging.INFO,
     "warning": logging.WARNING, "error": logging.ERROR}[args.verbosity]
 logger.setLevel(logging_level)
+
 
 def parse_logging_level(s, values=logging._levelNames):
     if s is None:
@@ -67,7 +68,6 @@ dolfin_level = parse_logging_level(configuration.get_config_option("logging", "d
 if dolfin_level is not None:
     df.set_log_level(dolfin_level)
 color_scheme = configuration.get_config_option("logging", "color_scheme", "light_bg")
-ch.setLevel(console_level)
 
 # Command line option may override settings from configfile
 if args.logcol:
