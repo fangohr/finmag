@@ -98,12 +98,12 @@ class BaseIntegrator(object):
                 dt = dt_limit
 
             log.debug("{}: t={:.3g}, last_dmdt={:.3g} * stopping_dmdt, next dt={:.3g}.".format(
-                self.__class__.__name__, self.cur_t, max_dmdt_norm/stopping_dmdt, dt))
+                self.__class__.__name__, self.cur_t, max_dmdt_norm / stopping_dmdt, dt))
 
             if max_dmdt_norm > last_max_dmdt_norm:
                 dmdt_increased_counter += 1
                 log.debug("{}: dmdt {:.2f} times larger than last time (counting {}/{}).".format(
-                    self.__class__.__name__, max_dmdt_norm/last_max_dmdt_norm,
+                    self.__class__.__name__, max_dmdt_norm / last_max_dmdt_norm,
                     dmdt_increased_counter, dmdt_increased_counter_limit))
 
             last_max_dmdt_norm = max_dmdt_norm
@@ -125,7 +125,8 @@ class BaseIntegrator(object):
         t0 = time.time()
         f << self.llg._m
         t1 = time.time()
-        log.debug("Saving snapshot #{} at timestep t={:.4g} to file '{}' (saving took {:.3g} seconds).".format(cur_count, self.cur_t, filename, t1-t0))
+        log.debug("Saving snapshot #{} at timestep t={:.4g} to file '{}' (saving took {:.3g} seconds).".format(
+            cur_count, self.cur_t, filename, t1 - t0))
         if save_averages:
             if self.tablewriter:
                 log.debug("Saving average field values (in integrator).")
@@ -231,6 +232,10 @@ class SundialsIntegrator(BaseIntegrator):
 
         If tout is reached within the number of allowed steps, it will return
         True.
+
+        If max_steps was not provided, and the maximum number of steps is
+        reached, we raise a RuntimeError (as this is almost certainly not
+        what the user intended).
         """
 
         # The following check is required because sundials does not like to
@@ -262,10 +267,28 @@ class SundialsIntegrator(BaseIntegrator):
             # (CV_TOO_MUCH_WORK): At t = 0.258733, mxstep steps taken before
             # reaching tout.'"
             if "CV_TOO_MUCH_WORK" in msg.message:
-                reached_tout = False
-                # in this case, we have integrated up to cvode's inernal time.
-                # So we need to get this value:
-                self.cur_t = self.integrator.get_current_time()
+                if max_steps != None:
+                    # max_steps has been given by the user
+                    reached_tout = False
+                    # in this case, we have integrated up to cvode's inernal time.
+                    # So we need to get this value:
+                    self.cur_t = self.integrator.get_current_time()
+                else:  # max_steps not given
+                    #  If we get into this branch, it means cvode has returned
+                    #  after nsteps, but the user has not given a particular
+                    #  value of nsteps. This isgenerally not desired, and
+                    #  we warn quite strongly about it:
+                    msg = "The integrator has reached nsteps=%d " % \
+                        self.get_max_steps()
+                    msg += "and the corresponding time is %g whereas " %\
+                        self.integrator.get_current_time()
+                    msg += "the requested time is %g. " % t
+                    msg += "You can increase the number of maximum steps " +\
+                        "if that is really what you need using " +\
+                        "integrator.set_max_steps()."
+                    self.cur_t = self.integrator.get_current_time()
+                    reached_tout = False  # not used, but this would be the rigth value
+                    raise RuntimeError(msg)
             else:  # Any other exception is unexpected, so raise error again
                 raise
         else:  # if we succeeded with time integration to t
@@ -289,6 +312,42 @@ class SundialsIntegrator(BaseIntegrator):
         By calling this function, we inform the integrator that it should not assuming smoothness
         of the RHS. Should be called when we change the applied field, abruptly, for example.
         """
+        log.debug("Re-initialising CVODE integrator")
         self.integrator.reinit(self.integrator.get_current_time(), self.m)
 
     n_rhs_evals = property(lambda self: self.integrator.get_num_rhs_evals(), "Number of function evaluations performed")
+
+    def stats(self):
+        """ Return integrator stats as dictionary. Keys are
+        nsteps, nfevals, nlinsetups, netfails, qlast, qcur, hinused, hlast, hcur,
+        tcur
+
+        and the meanings are (from CVODE 2.7 documentation, section 4.5, page 46)
+
+        nsteps                   (long int) number of steps taken by cvode.
+        nfevals                  (long int) number of calls to the user's f function.
+        nlinsetups               (long int) number of calls made to the linear solver setup function.
+        netfails                 (long int) number of error test failures.
+        qlast                    (int) method order used on the last internal step.
+        qcur                     (int) method order to be used on the next internal step.
+        hinused                  (realtype) actual value of initial step size.
+        hlast                    (realtype) step size taken on the last internal step.
+        hcur                     (realtype) step size to be attempted on the next internal step.
+        tcur                     (realtype) current internal time reached.
+
+        """
+
+        stats = self.integrator.get_integrator_stats()
+        nsteps, nfevals, nlinsetups, netfails, qlast, qcur, hinused, hlast, hcur, tcur = stats
+        d = {'nsteps': nsteps,
+             'nfevals': nfevals,
+             'nlinsetups': nlinsetups,
+             'netfails': netfails,
+             'qlast': qlast,
+             'qcur': qcur,
+             'hinused': hinused,
+             'hlast': hlast,
+             'hcur': hcur,
+             'tcur': tcur
+             }
+        return d
