@@ -211,9 +211,11 @@ def mtimed(method_or_timer=timings):
         @functools.wraps(method)
         def decorated_method(that, *args, **kwargs):
             cls = that.__class__.__name__
-            timer.start(name)
+            # temporary way of replicating existing behaviour until categories
+            # are implemented
+            timer.start(cls+'-'+name)
             method(that, *args, **kwargs)
-            timer.stop(name)
+            timer.stop(cls+'-'+name)
 
         return decorated_method
 
