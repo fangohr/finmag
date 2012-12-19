@@ -51,6 +51,8 @@ if util.versions.running_binary_distribution():
         raise RuntimeError("Build and Host linux must be identical, otherwise sundials may produce wrong results / crash")
 
 # create extreme debugging logging level, which has numerical value 5
-EXTREME_DEBUG = 5
+logging.EXTREMEDEBUG = 5
+logging.addLevelName(logging.EXTREMEDEBUG, 'EXTREMEDEBUG')
+
 # and register a function function for this for our logger
-logger.extreme_debug = lambda msg: logger.log(EXTREME_DEBUG, msg)
+logger.extremedebug = lambda msg: logger.log(logging.EXTREMEDEBUG, msg)
