@@ -14,6 +14,34 @@ from math import sqrt, pow
 
 logger = logging.getLogger("finmag")
 
+def logging_status_str():
+    """Return a string that shows all known loggers and their current levels
+
+    This is useful for debugging of the logging module.
+    """
+    rootlog = logging.getLogger('')
+    msg = ("Current logging status: "
+           "rootLogger level=%2d\n" % rootlog.level)
+
+    # This keeeps the loggers (with the exception of root)
+    loggers = logging.Logger.manager.loggerDict
+    for loggername, logger in [('root', rootlog)] + loggers.items():
+        for i in range(len(logger.handlers)):
+            handler = logger.handlers[i]
+            #add output depending on handler class
+            if handler.__class__ == logging.StreamHandler:
+                handlerstr = str(handler.stream)
+            elif handler.__class__ == logging.FileHandler:
+                handlerstr = str(handler.baseFilename)
+            else:
+                handlerstr = str(handler)
+
+            msg += (" %15s (lev=%2d, eff.lev=%2d) -> handler %d: lev=%2d %s\n"
+                    % (loggername, logger.level, logger.getEffectiveLevel(),
+                       i, handler.level, handlerstr))
+    return msg
+
+
 
 def set_logging_level(level):
     """
@@ -24,9 +52,10 @@ def set_logging_level(level):
     level: string
 
        One of the levels supported by Python's `logging` module.
-       Supported values: 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'.
+       Supported values: 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL' and
+       the finmag specific level 'EXTREMEDEBUG'.
     """
-    if level not in ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']:
+    if level not in ['EXTREMEDEBUG', 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']:
         raise ValueError("Logging level must be one of: 'DEBUG', 'INFO', "
                          "'WARNING', 'ERROR', 'CRITICAL'")
     logger.setLevel(level)
