@@ -1,71 +1,168 @@
+import os
+import sys
 import time
+import functools
+from contextlib import contextmanager
+
+"""
+Measure the time functions, methods, or pieces of code need to run.
+
+This module provides the Timings class. An instance of Timings manages the
+measurements and prints out a summary of the findings when printed:
+
+    timer = Timings()
+    # ...
+    print timer
+
+The module provides a default instance of the Timings class, which can be used
+by imported the variable *timings* from this module.
+
+    from finmag.util.timings import timings
+    # ...
+    print timings
+
+There are four different ways to do a measurement.
+
+1. Conduct a measurement by hand:
+
+    timer = Timings()
+    timer.start('my_measurement')
+    sleep(1)
+    timer.stop('my_measurement')
+
+2. Time a piece of code using the context manager *timed*:
+
+    timer = Timings()
+    with timed('my_measurement', timer=timer):
+        sleep(1)
+
+    # or with the default timer *timings* (which is defined in this module)
+    with timed('my_measurement'):
+        sleep(1)
+
+3. Time a function with the decorator *ftimed*:
+
+    timer = Timings()
+
+    @ftimed(timer)
+    def do_things():
+        sleep(1)
+
+    # or with the default timer *timings* (which is defined in this module)
+
+    @ftimed() # needs the parentheses
+    def do_things()
+        sleep(1)
+
+4. Time a method with the decorator *mtimed*:
+
+    timer = Timings()
+
+    class Example(object):
+        @mtimed(timer)
+        def do_things(self):
+            sleep(1)
+
+    # or with the default timer *timings* (which is defined in this module)
+
+    class Example(object):
+        @mtimed() # needs the parentheses
+        def do_things(self):
+            sleep(1)
+
+"""
 
 
 class Timings(object):
     """
-    Key of the self.data dictionary is the name for timings, values
-    are a tuple which is (n, t, st) where n is the number of calls,
-    and t the cumulative time it took, and st the status
-    ('finished',STARTTIME).
-    """
+    Manage a series of time measurements.
 
+    """
     def __init__(self):
         self.reset()
-
-        self._last = None  # remember which activity we started to measure last
+        self._last_started_measurement = None
 
     def reset(self):
-        self.data = {}
-        self.creationtime = time.time()
+        """
+        Reset the internal data.
+
+        The self._measurements dictioniary has the measurement names as keys
+        and lists [n, t, st] as values, where n is the number of calls, t the
+        cumulative time it took and st the status ('finished', STARTTIME).
+
+        """
+        self._measurements = {}
+        self._creation_time = time.time()
 
     def start(self, name):
-        if name in self.data.keys():
-            assert self.data[name][2] == 'finished', \
-                "Seems a measurement for '%s' has started already?" % name
-            self.data[name][2] = time.time()
+        """
+        Start a measurement with the name *name*.
+
+        """
+        if name in self._measurements.keys():
+            assert self._measurements[name][2] == 'finished', \
+                "Still running measurement for '{}', can't start another one.".format(name)
+            self._measurements[name][2] = time.time()
         else:
-            self.data[name] = [0, 0., time.time()]
-        self._last = name
+            self._measurements[name] = [0, 0., time.time()]
+        self._last_started_measurement = name
 
     def stop(self, name):
-        assert name in self.data.keys(), \
-            "name '%s' not known. Known values: %s" % self.data.keys()
-        assert self.data[name][2] != 'finished', \
-            "No measurement started for name '%s'" % name
-        timetaken = time.time() - self.data[name][2]
-        self.data[name][0] += 1
-        self.data[name][1] += timetaken
-        self.data[name][2] = 'finished'
-        self._last = None
+        """
+        Stop the measurement with the name *name*.
+
+        """
+        assert name in self._measurements.keys(), \
+            "No known measurement with name '{}'. Known: {}.".format(
+                    name, self._measurements.keys())
+
+        assert self._measurements[name][2] != 'finished', \
+                "Measurement for '{}' not running, can't stop it.".format(name)
+
+        timetaken = time.time() - self._measurements[name][2]
+        self._measurements[name][0] += 1
+        self._measurements[name][1] += timetaken
+        self._measurements[name][2] = 'finished'
+        self._last_started_measurement = None
 
     def stoplast(self):
-        """Stop the last measurement at this point."""
-        assert self._last != None
-        self.stop(self._last)
+        """
+        Stop the last started measurement.
+
+        """
+        assert self._last_started_measurement != None, "No measurement running, can't stop anything."
+        self.stop(self._last_started_measurement)
 
     def startnext(self, name):
         """
-        Will stop whatever measurement has been started most recently,
-        and start the next one with name 'name'.
+        Stop the last started measurement to start a new one with name *name*.
+
         """
-        if self._last:
-            self.stop(self._last)
+        if self._last_started_measurement:
+            self.stop(self._last_started_measurement)
         self.start(name)
 
     def getncalls(self, name):
-        return self.data[name][0]
+        return self._measurements[name][0]
 
     def gettime(self, name):
-        return self.data[name][1]
+        return self._measurements[name][1]
 
     def report_str(self, nb_items=10):
-        """Lists the nb_items items that took the longest time to execute."""
+        """
+        Returns a listing of the *nb_items* measurements that ran the longest.
+        
+        """
         msg = "Timings summary, longest items first:\n"
-        #print in descending order of time taken
-        sorted_keys = sorted(self.data.keys(), key=lambda x: self.data[x][1],
-                             reverse=True)
+
+        sorted_keys = sorted(
+                self._measurements.keys(),
+                key = lambda x: self._measurements[x][1],
+                reverse=True)
+
         for i, name in enumerate(sorted_keys):
-            if self.data[name][0] > 0:
+            nb_calls, total_time, _ = self._measurements[name]
+            if nb_calls > 0:
                 msg += "%35s:%6d calls took %10.4fs " \
                     "(%8.6fs per call)\n" % (name[0:35],
                                              self.getncalls(name),
@@ -79,7 +176,7 @@ class Timings(object):
             if i >= nb_items - 1:
                 break
         recorded_sum = self.recorded_sum()
-        walltime = time.time() - self.creationtime
+        walltime = time.time() - self._creation_time
         msg += "Wall time: %.4gs (sum of time recorded: %gs=%5.1f%%)\n" % \
             (walltime, recorded_sum, recorded_sum / walltime * 100.0)
 
@@ -89,14 +186,45 @@ class Timings(object):
         return self.report_str()
 
     def recorded_sum(self):
-        return sum([self.data[name][1] for name in self.data.keys()])
+        return sum([self._measurements[name][1] for name in self._measurements.keys()])
 
 timings = Timings()
 
-if __name__ == "__main__":
-    # Create global object that can be shared
-    t = Timings()
-    for x in xrange(20000):
-        t.start("test-one")
-        t.stop("test-one")
-    print t
+@contextmanager
+def timed(name, timer=timings):
+    timer.start(name)
+    yield
+    timer.stop(name)
+
+def mtimed(timer=timings):
+    def decorator(method):
+        """
+        Wrap an instance method of a class.
+
+        """
+        name = method.__name__
+
+        @functools.wraps(method)
+        def wrapped_method(that, *args, **kwargs):
+            timer.start(name)
+            cls = that.__class__.__name__
+            method(that, *args, **kwargs)
+            timer.stop(name)
+
+        return wrapped_method
+    return decorator
+
+def ftimed(timer=timings):
+    def decorator(fn):
+        name = fn.__name__
+        filename = sys.modules[fn.__module__].__file__
+        module = os.path.splitext(os.path.basename(filename))[0]
+
+        @functools.wraps(fn)
+        def wrapped_function(*args, **kwargs):
+            timer.start(name)
+            fn(*args, **kwargs)
+            timer.stop(name)
+
+        return wrapped_function
+    return decorator
