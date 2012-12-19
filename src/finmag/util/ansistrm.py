@@ -162,6 +162,8 @@ def main():
     logging.warning('WARNING')
     logging.error('ERROR')
     logging.critical('CRITICAL')
+    root.setLevel(5)
+    logging.log(5, "EXTREMEDEBUG")
 
 if __name__ == '__main__':
     main()
