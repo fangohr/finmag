@@ -270,7 +270,7 @@ class Simulation(object):
 
     def run_until(self, t, save_averages=True):
         """
-        Run the simulation until the given time step is reached.
+        Run the simulation until the given time t is reached.
 
         *Arguments*
 
