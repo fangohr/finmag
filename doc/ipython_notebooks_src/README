@@ -10,3 +10,5 @@ New .ipynb files can be added in two ways:
       creating a new notebook there interactively. Notebooks created
       in this way will be automatically commited by a cronjob once per
       day.
+
+Option (ii) is not operational yet.
