@@ -1,0 +1,94 @@
+def test_integrator_get_set_max_steps():
+    """Tests setting and getting of nsteps"""
+    import finmag
+    sim = finmag.example.barmini()
+    sim.run_until(0, save_averages=False)  # create integrator object
+    steps = sim.integrator.get_max_steps()
+    assert steps != 42  # would be an odd default value
+    sim.integrator.set_max_steps(42)
+    steps2 = sim.integrator.get_max_steps()
+    assert steps2 == 42
+    sim.integrator.set_max_steps(steps)
+    assert steps == sim.integrator.get_max_steps()
+
+
+def test_integrator_stats():
+    """Tests the stats"""
+    import finmag
+    sim = finmag.example.barmini()
+    sim.run_until(0, save_averages=False)  # create integrator object
+    stats = sim.integrator.stats()
+    # All stats should be zero before we do any work
+    for key in stats:
+        assert stats[key] == 0.0
+
+
+def test_integrator_n_steps_only():
+    """Test integration for a few steps only"""
+    import finmag
+    sim = finmag.example.barmini()
+    sim.run_until(0, save_averages=False)  # create integrator object
+    assert sim.integrator.stats()['nsteps'] == 0
+    ret_val = sim.integrator.run_until(1e-12, max_steps=1)
+    assert ret_val == False
+    assert sim.integrator.stats()['nsteps'] == 1
+    # check also value of cur_t is up-to-date
+    assert sim.integrator.cur_t == sim.integrator.stats()['tcur']
+
+    # expect also last time step size to be the same as current time
+    # because we have only done one step
+    assert sim.integrator.stats()['tcur'] == sim.integrator.stats()['hlast']
+
+    ret_val = sim.integrator.run_until(1e-12, max_steps=1)
+    assert sim.integrator.stats()['nsteps'] == 2
+    assert ret_val == False
+    ret_val = sim.integrator.run_until(1e-12, max_steps=2)
+    assert sim.integrator.stats()['nsteps'] == 4
+    assert ret_val == False
+    # check also value of cur_t is up-to-date
+    assert sim.integrator.cur_t == sim.integrator.stats()['tcur']
+
+
+
+def test_integrator_run_until_return_value():
+    import finmag
+    sim = finmag.example.barmini()
+    sim.run_until(0, save_averages=False)  # create integrator object
+    assert sim.integrator.stats()['nsteps'] == 0
+    ret_val = sim.integrator.run_until(1e-15, max_steps=1)
+    assert sim.integrator.stats()['nsteps'] == 1
+    assert ret_val == False
+    # check also value of cur_t is up-to-date
+    assert sim.integrator.cur_t == sim.integrator.stats()['tcur']
+
+    # but if we don't prescribe nsteps and integration succeeds, we should
+    # get True back
+    ret_val = sim.integrator.run_until(1e-15)
+    print("For information: nsteps = {nsteps}".format(**sim.integrator.stats()))  # about 6 steps
+    assert ret_val == True
+
+    # check also value of cur_t is up-to-date (which here means
+    # carries the desired value of 1e-15 as the integration
+    # succeeded)
+    assert sim.integrator.cur_t == 1e-15
+
+
+def test_integrator_run_until_raises_exception():
+    import pytest
+    """Integrate for more than the set maximum steps, without specifying max_steps when
+    calling run_until. Should raise exception."""
+    import finmag
+    sim = finmag.example.barmini()
+    sim.run_until(0, save_averages=False)  # create integrator object
+    sim.integrator.set_max_steps(2)
+    assert sim.integrator.stats()['nsteps'] == 0
+    with pytest.raises(RuntimeError) as exc:
+        ret_val = sim.integrator.run_until(1e-12)
+    # check that current time is in integrator message
+    assert "%g" % sim.integrator.stats()['tcur'] in exc.value.message
+    # check that number of steps in is message
+    assert "%d" % sim.integrator.stats()['nsteps'] in exc.value.message
+
+    # check also value of cur_t is up-to-date
+    assert sim.integrator.cur_t == sim.integrator.stats()['tcur']
+  
