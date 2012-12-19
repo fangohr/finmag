@@ -192,39 +192,69 @@ timings = Timings()
 
 @contextmanager
 def timed(name, timer=timings):
+    """
+    Use this context to time a piece of code. Needs a *name* argument for the measurement.
+
+    """
     timer.start(name)
     yield
     timer.stop(name)
 
-def mtimed(timer=timings):
-    def decorator(method):
-        """
-        Wrap an instance method of a class.
+def mtimed(method_or_timer=timings):
+    """
+    Use to decorate a method to report timings. Accepts an optional Timings instance.
 
-        """
+    """
+    def decorator(method):
         name = method.__name__
 
         @functools.wraps(method)
-        def wrapped_method(that, *args, **kwargs):
-            timer.start(name)
+        def decorated_method(that, *args, **kwargs):
             cls = that.__class__.__name__
+            timer.start(name)
             method(that, *args, **kwargs)
             timer.stop(name)
 
-        return wrapped_method
+        return decorated_method
+
+    if callable(method_or_timer):
+        # the user called mtimed without arguments, python thus calls it with
+        # the method to decorate (which is callable). Use the default Timings
+        # object and return the decorated method. 
+        timer = timings
+        return decorator(method_or_timer)
+    # the user called mtimed with a timing object. Bind it to the timer name
+    # and return the decorator itself. That's how python handles decorators which
+    # take arguments.
+    timer = method_or_timer
     return decorator
 
-def ftimed(timer=timings):
+def ftimed(fn_or_timer=timings):
+    """
+    Use to decorate a function to report timings. Accepts an optional Timings instance.
+
+    """
     def decorator(fn):
         name = fn.__name__
         filename = sys.modules[fn.__module__].__file__
         module = os.path.splitext(os.path.basename(filename))[0]
 
         @functools.wraps(fn)
-        def wrapped_function(*args, **kwargs):
+        def decorated_function(*args, **kwargs):
             timer.start(name)
             fn(*args, **kwargs)
             timer.stop(name)
 
-        return wrapped_function
+        return decorated_function
+    
+    if callable(fn_or_timer):
+        # the user called ftimed without arguments, python thus calls it with
+        # the method to decorate (which is callable). Use the default Timings
+        # object and return the decorated function.
+        timer = timings
+        return decorator(fn_or_timer)
+    # the user called ftimed with a timing object. Bind it to the timer name
+    # and return the decorator itself. That's how python handles decorators which
+    # take arguments.
+    timer = fn_or_timer
     return decorator
