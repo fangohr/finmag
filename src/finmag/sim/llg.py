@@ -199,7 +199,7 @@ class LLG(object):
         return 0
 
     def sundials_psetup(self, t, m, fy, jok, gamma, tmp1, tmp2, tmp3):
-        # Note that ome of the arguments are deliberately ignored, but they
+        # Note that some of the arguments are deliberately ignored, but they
         # need to be present because the function must have the correct signature
         # when it is passed to set_spils_preconditioner() in the cvode class.
         if not jok:
@@ -209,7 +209,7 @@ class LLG(object):
         return 0, not jok
 
     def sundials_psolve(self, t, y, fy, r, z, gamma, delta, lr, tmp):
-        # Note that ome of the arguments are deliberately ignored, but they
+        # Note that some of the arguments are deliberately ignored, but they
         # need to be present because the function must have the correct signature
         # when it is passed to set_spils_preconditioner() in the cvode class.
         z[:] = r
