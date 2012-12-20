@@ -53,7 +53,7 @@ def test_decorated_method():
     foo.three()
     foo.three()
 
-    assert test_timer.getncalls('three') == 3
+    assert test_timer.getncalls('Foo-three') == 3
 
 def test_decorated_method_default_timer():
 
@@ -74,8 +74,8 @@ def test_decorated_method_default_timer():
     foo.threeb()
     foo.threeb()
 
-    assert default_timer.getncalls('three') == 3
-    assert default_timer.getncalls('threeb') == 3
+    assert default_timer.getncalls('Foo-three') == 3
+    assert default_timer.getncalls('Foo-threeb') == 3
 
 def test_timed_code():
 
@@ -92,6 +92,22 @@ def test_timed_code_default_timer():
             pass
 
     assert default_timer.getncalls('fourb') == 4
+
+def test_regression_return_values_not_affected():
+
+    @t.ftimed
+    def my_func():
+        return 1
+
+    assert my_func() == 1
+
+    class MyClass(object):
+        @t.mtimed
+        def my_method(self):
+            return 1
+
+    mo = MyClass()
+    assert mo.my_method() == 1
 
 if __name__ == "__main__":
     test_decorated_function()

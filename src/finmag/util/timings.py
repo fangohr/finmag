@@ -214,8 +214,9 @@ def mtimed(method_or_timer=timings):
             # temporary way of replicating existing behaviour until categories
             # are implemented
             timer.start(cls+'-'+name)
-            method(that, *args, **kwargs)
+            ret = method(that, *args, **kwargs)
             timer.stop(cls+'-'+name)
+            return ret
 
         return decorated_method
 
@@ -244,8 +245,9 @@ def ftimed(fn_or_timer=timings):
         @functools.wraps(fn)
         def decorated_function(*args, **kwargs):
             timer.start(name)
-            fn(*args, **kwargs)
+            ret = fn(*args, **kwargs)
             timer.stop(name)
+            return ret
 
         return decorated_function
     
