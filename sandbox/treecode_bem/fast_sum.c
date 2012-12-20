@@ -299,7 +299,6 @@ void compute_triangle_source_nodes(fastsum_plan *plan) {
 
         v = det2(p1, p2, p3);
 
-
         plan->x_s_tri[f] = x2 / 3.0 + x3 / 3.0 + x1;
         plan->x_s_tri[f + 1] = y2 / 3.0 + y3 / 3.0 + y1;
         plan->x_s_tri[f + 2] = z2 / 3.0 + z3 / 3.0 + z1;
@@ -350,9 +349,16 @@ void compute_source_nodes_weights(fastsum_plan *plan) {
 
             plan->weights[index] = v * dunavant_w[sn][k] / 2.0 / (4 * M_PI);
 
-            index++;
+            index++;	    
         }
     }
+
+    /*
+    for (face = 0; face < plan->triangle_num; face++) {
+      f=3*face;
+      printf ("x_s[%d]=%g, tri=%g\n",face,plan->x_s[f],plan->x_s_tri[f]);
+    }
+    */
 
 }
 
@@ -559,6 +565,7 @@ void bulid_indices(fastsum_plan *plan) {
 
     }
 
+    plan->total_length_n=total_length_n;
     //printf("total_length=%d   \n", total_length_n);
 
     plan->id_n = malloc(total_length_n * sizeof ( int));
@@ -602,6 +609,11 @@ void bulid_indices(fastsum_plan *plan) {
     free(values);
 
 }
+
+int get_total_length(fastsum_plan *plan){
+  return plan->total_length_n;
+}
+
 
 int divide_box(fastsum_plan *plan, struct octree_node *tree, double *bnd, double **bnds, int bend[8][2]) {
 
@@ -1091,6 +1103,8 @@ void init_fastsum(fastsum_plan *plan, int N_target, int triangle_p, int triangle
     plan->N_target = N_target;
     plan->N_source = triangle_num * dunavant_n[triangle_p];
     plan->triangle_p = triangle_p;
+    printf ("triangle_p=%d   source_length=%d\n",triangle_p,plan->N_source);
+    
 
     plan->x_s = (double *) malloc(3 * plan->N_source * (sizeof (double)));
 
@@ -1195,10 +1209,6 @@ void fastsum(fastsum_plan *plan, double *phi, double *u1) {
         }
         free_3d_double(a, plan->p + 1);
 
-    }
-
-    for (i = 0; i < plan->N_target; i++) {
-        // printf("phi[%d]=%g\n",i,phi[i]);
     }
 
 

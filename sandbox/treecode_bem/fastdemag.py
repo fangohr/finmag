@@ -101,12 +101,12 @@ def compute_bnd_mapping(mesh):
 
 class Demag():
 
-    def __init__(self,p=6,mac=0.5,triangle_p=1,num_limit=1):
-	self.p=p
-	self.mac=mac
+    def __init__(self,p=6,mac=0.5,triangle_p=1,num_limit=100):
+        self.p=p
+        self.mac=mac
         self.triangle_p=triangle_p
-	self.num_limit=num_limit
-	self.in_jacobian=False
+        self.num_limit=num_limit
+        self.in_jacobian=False
 
 
     def setup(self,Vv,m,Ms,unit_length=1):
@@ -166,8 +166,8 @@ class Demag():
 
         g2b=self.gnodes_to_bnodes
         mc=self.mesh.cells()
-        xyz=mesh.coordinates()
-        for i in range(mesh.num_cells()):
+        xyz=self.mesh.coordinates()
+        for i in range(self.mesh.num_cells()):
             for j in range(4):
 
                 tmp_omega=compute_solid_angle_single(
@@ -238,6 +238,10 @@ class Demag():
         max_d=max(max_v-min_v)
         self.max_d=max_d
 
+    #used for debug
+    def get_B_length(self):
+        return self.fast_sum.get_B_length(),self.bnd_nodes_number**2
+
 
     def compute_field(self):
 
@@ -279,7 +283,7 @@ if __name__ == "__main__":
     m = interpolate(Constant((1, 0, 0)), Vv)
 
 
-    demag=Demag(mac=0.5,p=6,triangle_p=1)
+    demag=Demag(mac=0.4,p=6,triangle_p=1,num_limit=2)
     demag.setup(Vv,m,Ms)
     print demag.compute_field()
 

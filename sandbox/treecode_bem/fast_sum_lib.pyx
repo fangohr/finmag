@@ -20,11 +20,11 @@ cdef extern from "fast_sum.h":
     void bulid_indices(fastsum_plan *plan)
     #void compute_correction(fastsum_plan *plan, double *m, double *phi)
     void compute_source_nodes_weights(fastsum_plan *plan)
-    void compute_triangle_source_nodes(fastsum_plan *plan) 
+    void compute_triangle_source_nodes(fastsum_plan *plan)
     double solid_angle_single(double *p, double *x1, double *x2, double *x3)
     void boundary_element(double *xp, double *x1, double *x2, double *x3, double *res)
     void copy_B(fastsum_plan *plan, double *B, int n)
-
+    int get_total_length(fastsum_plan *plan)
 
 cdef class FastSum:
     cdef fastsum_plan *_c_plan
@@ -78,12 +78,14 @@ cdef class FastSum:
         #print 'build okay from cython'
         compute_source_nodes_weights(self._c_plan)
         #print 'init mesh okay from cython'
-        
+
 
     def fastsum(self,np.ndarray[double, ndim=1, mode="c"] phi,np.ndarray[double, ndim=1, mode="c"] u1):
         update_potential_u1(self._c_plan, &u1[0])
         fastsum(self._c_plan,&phi[0],&u1[0])
 
+    def get_B_length(self):
+        return get_total_length(self._c_plan)
 
     def compute_B(self,np.ndarray[double, ndim=1, mode="c"] B):
         n=len(B)

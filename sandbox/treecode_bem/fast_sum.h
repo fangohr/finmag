@@ -63,6 +63,7 @@ typedef struct {
     double *b_m;//boundary matrix
     //int *id_tn;
     int *id_nn;
+  int total_length_n;
 } fastsum_plan;
 
 fastsum_plan *create_plan();
@@ -81,6 +82,6 @@ void compute_source_nodes_weights(fastsum_plan *plan);
 double solid_angle_single(double *p, double *x1, double *x2, double *x3);
 void copy_B(fastsum_plan *plan, double *B, int n);//used for test
 void boundary_element(double *xp, double *x1, double *x2, double *x3, double *res);
-
+int get_total_length(fastsum_plan *plan);
 #endif	/* FAST_SUM_H */
 
