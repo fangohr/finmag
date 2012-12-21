@@ -1,7 +1,6 @@
 import logging
-import numpy as np
 import dolfin as df
-from finmag.util.timings import timings
+from finmag.util.timings import mtimed
 from finmag.energies.energy_base import EnergyBase
 from finmag.util.consts import mu0
 
@@ -69,8 +68,8 @@ class ExchangeStd(EnergyBase):
         super(ExchangeStd, self).__init__(method, in_jacobian=True)
         self.C = C
 
+    @mtimed
     def setup(self, S3, m, Ms, Me, unit_length=1):
-        timings.start('Exchange-setup')
         self.Me = Me
 
         #expression for the energy
@@ -94,8 +93,6 @@ class ExchangeStd(EnergyBase):
                 m=m,
                 Ms=Ms,
                 unit_length=unit_length)
-
-        timings.stop('Exchange-setup')
     
     def compute_field(self):
         """
@@ -117,10 +114,9 @@ class Exchange(object):
     def __init__(self, C, in_jacobian=True):
         self.C = C
         self.in_jacobian=in_jacobian
-    
+   
+    @mtimed
     def setup(self, S3, m, Ms0, me=1, unit_length=1.0): 
-        timings.start('Exchange-setup')
-
         self.S3 = S3
         self.m = m
         self.Ms0=Ms0
@@ -139,8 +135,6 @@ class Exchange(object):
         self.vol = df.assemble(df.dot(v3, df.Constant([1, 1, 1])) * df.dx).array()
         
         self.coeff=-self.exchange_factor/(self.vol)
-         
-        timings.stop('Exchange-setup')
     
     def compute_field(self):
         
@@ -177,5 +171,5 @@ if __name__ == "__main__":
     
 
     
-    #print timings.report_str()
+    #print timings.report()
 

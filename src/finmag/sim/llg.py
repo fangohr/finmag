@@ -4,7 +4,7 @@ import dolfin as df
 import finmag.util.consts as consts
 from finmag.energies.effective_field import EffectiveField
 from finmag.native import llg as native_llg
-from finmag.util.timings import timings
+from finmag.util.timings import timings, mtimed
 from finmag.util.meshes import mesh_volume
 from finmag.util import helpers
 
@@ -28,6 +28,7 @@ class LLG(object):
     :math:`-\\alpha\\gamma_{LL}` as *damping coefficient*.
 
     """
+    @mtimed
     def __init__(self, S1, S3, do_precession=True):
         """
         S1 and S3 are df.FunctionSpace and df.VectorFunctionSpace objects,
@@ -35,7 +36,6 @@ class LLG(object):
         magnetisation around the effective field is computed or not.
 
         """
-        timings.start('LLG-init')
         logger.debug("Creating LLG object.")
         self.S1 = S1
         self.S3 = S3
@@ -44,7 +44,6 @@ class LLG(object):
         self.do_slonczewski = False
         self.effective_field = EffectiveField(S3.mesh())
         self.Volume = None  # will be computed on demand, and carries volume of the mesh
-        timings.stop('LLG-init')
 
     def set_default_values(self):
         self._alpha_mult = df.Function(self.S1)
@@ -169,7 +168,7 @@ class LLG(object):
         H_eff = self.effective_field.compute(t)
         H_eff.shape = (3, -1)
 
-        timings.start("LLG-compute-dmdt")
+        timings.start(self.__class__.__name__, "solve")
         # Use the same characteristic time as defined by c
         char_time = 0.1 / self.c
         # Prepare the arrays in the correct shape
@@ -189,7 +188,7 @@ class LLG(object):
                                  char_time, self.do_precession)
         dmdt.shape = (-1,)
 
-        timings.stop("LLG-compute-dmdt")
+        timings.stop(self.__class__.__name__, "solve")
 
         return dmdt
 
@@ -216,6 +215,7 @@ class LLG(object):
         return 0
 
     # Computes the Jacobian-times-vector product, as used by SUNDIALS CVODE
+    @mtimed
     def sundials_jtimes(self, mp, J_mp, t, m, fy, tmp):
         """
         The time integration problem we need to solve is of type
@@ -286,9 +286,6 @@ class LLG(object):
         The actual implementation of the jacobian-times-vector product is in src/llg/llg.cc,
         function calc_llg_jtimes(...), which in turn makes use of CVSpilsJacTimesVecFn in CVODE.
         """
-
-        timings.start("LLG-sundials-jtimes")
-
         assert m.shape == self.m.shape
         assert mp.shape == m.shape
         assert tmp.shape == m.shape
@@ -320,8 +317,6 @@ class LLG(object):
         m.shape = (-1,)
         mp.shape = (-1,)
         tmp.shape = (-1,)
-
-        timings.stop("LLG-sundials-jtimes")
 
         # Nonnegative exit code indicates success
         return 0

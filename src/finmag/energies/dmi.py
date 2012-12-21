@@ -3,7 +3,7 @@ import dolfin as df
 from energy_base import EnergyBase
 import logging
 logger=logging.getLogger('finmag')
-from finmag.util.timings import timings
+from finmag.util.timings import mtimed
 from finmag.util.consts import mu0
 
 
@@ -218,6 +218,7 @@ class DMI(EnergyBase):
         super(DMI, self).__init__(method, in_jacobian=True)
         self.D = D
 
+    @mtimed
     def setup(self, S3, M, Ms, unit_length=1):
         """Function to be called after the energy object has been constructed.
 
@@ -236,8 +237,6 @@ class DMI(EnergyBase):
                 unit_length of distances in mesh.
 
         """
-        timings.start("DMI-setup")
-
         if not isinstance(Ms, (df.Function, df.Constant)):
             Ms = df.Constant(Ms)
 
@@ -288,10 +287,6 @@ class DMI(EnergyBase):
                 m=M,
                 Ms=Ms,
                 unit_length=unit_length)
-
-        timings.stop("DMI-setup")
-
-
 
 
 class DMI_Old(EnergyBase):
@@ -376,18 +371,16 @@ class DMI_Old(EnergyBase):
             H_dmi_np = dmi_np.compute_field()
             
     """
-
+    @mtimed
     def __init__(self, D, method="box-matrix-petsc"):
-        timings.start("DMI-init")
         logger.debug("DMI(): method = %s" % method)
 
         self.D = D
         self.method = method
         self.in_jacobian = True
-        timings.stop("DMI-init")
 
+    @mtimed
     def setup(self, S3, m, Ms, unit_length=1):
-        timings.start("DMI-setup")
         self.S3 = S3
         self.M = m
         self.DMIconstant = df.Constant(self.D / unit_length**2) #Dzyaloshinsky-Moriya Constant
@@ -445,9 +438,7 @@ class DMI_Old(EnergyBase):
                                     * 'box-matrix-petsc'
                                     * 'project'""")
 
-        timings.stop("DMI-setup")
-
-
+    @mtimed
     def compute_field(self):
         """
         Compute the DMI field.
@@ -457,11 +448,10 @@ class DMI_Old(EnergyBase):
                 The DMI field.
 
         """
-        timings.start("DMI-computefield")
         H = self.__compute_field()
-        timings.stop("DMI-computefield")
         return H
 
+    @mtimed
     def compute_energy(self):
         """
         Return the DMI energy.
@@ -471,9 +461,7 @@ class DMI_Old(EnergyBase):
                 The DMI energy.
 
         """
-        timings.start("DMI-computenergy")
         E = df.assemble(self.E * df.dx)
-        timings.stop("DMI-computenergy")
         return E
 
     def energy_density(self):

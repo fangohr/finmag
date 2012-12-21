@@ -7,7 +7,7 @@ import finmag.util.helpers as h
 import finmag.util.consts as consts
 
 from finmag.native import llg as native_llg
-from finmag.util.timings import timings
+from finmag.util.timings import mtimed, timings
 
 #default settings for logger 'finmag' set in __init__.py
 #getting access to logger here
@@ -28,9 +28,9 @@ class LLB(object):
     :math:`-\\alpha\\gamma_{LL}` as *damping coefficient*.
 
     """
+    @mtimed
     def __init__(self, S1, S3, do_precession=True,rtol=1e-6,atol=1e-6):
         logger.debug("Creating LLG object.")
-        timings.start('LLG-init')
         self.S1 = S1
         self.S3 = S3
         self.DG = df.FunctionSpace(S1.mesh(), "DG", 0)
@@ -50,7 +50,6 @@ class LLB(object):
        
         self.Volume=None #will be computed on demand, and carries volume of the mesh
         self.set_default_values()
-        timings.stop('LLG-init')
         
     def set_default_values(self):
         self._alpha_mult = df.Function(self.S1)
@@ -234,7 +233,7 @@ class LLB(object):
 
         self.compute_effective_field()
 
-        timings.start("LLG-compute-dmdt")
+        timings.start(self.__class__.__name__, "solve")
 
         self.count+=1
 
@@ -260,7 +259,7 @@ class LLB(object):
                 dM_dt[i3] -= self.gamma*(m[i1]*h[i2]-m[i2]*h[i1])
 
 
-        timings.stop("LLG-compute-dmdt")
+        timings.stop(self.__class__.__name__, "solve")
 
         for func in self._post_rhs_callables:
             func(self)
@@ -341,7 +340,7 @@ class LLB(object):
 
         self.count+=1
  
-        timings.start("LLG-compute-dmdt")
+        timings.start(self.__class__.__name__, "solve_sundials")
         # Use the same characteristic time as defined by c
         char_time = 0.1/self.c
         # Prepare the arrays in the correct shape
@@ -361,7 +360,7 @@ class LLB(object):
         m.shape = (-1,)
         H_eff.shape = (-1,)
 
-        timings.stop("LLG-compute-dmdt")
+        timings.stop(self.__class__.__name__, "solve_sundials")
 
         for func in self._post_rhs_callables:
             func(self)
@@ -392,7 +391,7 @@ class LLB(object):
 
     # Computes the Jacobian-times-vector product, as used by SUNDIALS CVODE
     def sundials_jtimes(self, mp, J_mp, t, m, fy, tmp):
-        timings.start("LLG-sundials-jtimes")
+        timings.start(self.__class__.__name__, "sundials_jtimes")
 
         assert m.shape == self.m.shape
         assert mp.shape == m.shape
@@ -430,7 +429,7 @@ class LLB(object):
         mp.shape = (-1,)
         tmp.shape = (-1,)
 
-        timings.stop("LLG-sundials-jtimes")
+        timings.stop(self.__class__.__name__, "sundials_jtimes")
 
         # Nonnegative exit code indicates success
         return 0

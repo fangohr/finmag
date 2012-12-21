@@ -127,7 +127,7 @@ class LinAlgDemagTester(object):
         print t1
         print "Second solve parameters"
         print t2
-        print "\n",timings.report_str(n)
+        print "\n",timings.report(n)
 
 if __name__ == "__main__":
     #Solver type for use in the script, "FK" or "GCR".

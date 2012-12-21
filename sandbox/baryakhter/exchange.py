@@ -2,7 +2,7 @@ import dolfin as df
 import numpy as np
 import logging
 from finmag.util.consts import mu0
-from finmag.util.timings import timings
+from finmag.util.timings import mtimed
 from finmag.native import llg as native_llg
 
 logger=logging.getLogger('finmag')
@@ -13,10 +13,9 @@ class Exchange(object):
         self.C = C
         self.chi=chi
         self.in_jacobian=in_jacobian
-    
+   
+    @mtimed
     def setup(self, S3, M, Mo, unit_length=1.0): 
-        timings.start('Exchange-setup')
-
         self.S3 = S3
         self.M = M
         self.Mo=Mo
@@ -36,8 +35,6 @@ class Exchange(object):
         
         self.coeff1=-self.exchange_factor/(self.vol)
         self.coeff2=-0.5/(self.chi*Mo*Mo)
-         
-        timings.stop('Exchange-setup')
     
     def compute_field(self):
         self.K.mult(self.M.vector(), self.H)
