@@ -1,7 +1,6 @@
-import numpy as np
 import dolfin as df
 import logging
-from finmag.util.timings import timings
+from finmag.util.timings import mtimed
 from finmag.util.consts import mu0
 
 logger = logging.getLogger('finmag')
@@ -12,9 +11,8 @@ class UniaxialAnisotropy(object):
     	self.K1=K1
 	self.axis = df.Constant(axis)
 
+    @mtimed
     def setup(self, S3, M, Ms0, unit_length=1):
-        timings.start('UniaxialAnisotropy-setup')
-
         self.S3 = S3
         self.M = M
         v3 = df.TestFunction(S3)
@@ -25,13 +23,11 @@ class UniaxialAnisotropy(object):
         self.dE_dM = df.Constant(-1.0/mu0) * df.derivative(E, self.M)
         self.vol = df.assemble(df.dot(v3, df.Constant([1, 1, 1])) * df.dx).array()
 
-	self.K = df.PETScMatrix()
-	self.H = df.PETScVector()
-	g_form = df.derivative(self.dE_dM, self.M)
+        self.K = df.PETScMatrix()
+        self.H = df.PETScVector()
+        g_form = df.derivative(self.dE_dM, self.M)
         
         df.assemble(g_form, tensor=self.K)
-        
-        timings.stop('UniaxialAnisotropy-setup')
 
     def compute_field(self):
         self.K.mult(self.M.vector(), self.H)

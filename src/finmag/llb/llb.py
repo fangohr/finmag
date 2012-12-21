@@ -8,7 +8,6 @@ from finmag.util.timings import timings
 from finmag.energies import Zeeman
 from finmag.energies import Demag
 from finmag.llb.exchange import Exchange
-from finmag.llb.anisotropy import LLBAnisotropy
 from finmag.llb.material import Material
 
 
@@ -118,7 +117,7 @@ class LLB(object):
         self.compute_effective_field()
 
  
-        timings.start("LLG-compute-dmdt")
+        timings.start(self.__class__.__name__, "sundials_rhs")
         # Use the same characteristic time as defined by c
                 
         native_llb.calc_llb_dmdt(self.m,
@@ -131,7 +130,7 @@ class LLB(object):
                                  self.do_precession)
 
 
-        timings.stop("LLG-compute-dmdt")
+        timings.stop(self.__class__.__name__, "sundials_rhs")
 
         for func in self._post_rhs_callables:
             func(self)

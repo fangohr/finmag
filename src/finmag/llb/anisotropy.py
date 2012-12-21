@@ -1,7 +1,7 @@
 import numpy as np
 import dolfin as df
 import logging
-from finmag.util.timings import timings
+from finmag.util.timings import mtimed
 from finmag.util.consts import mu0
 from finmag.util.helpers import fnormalise
 from finmag.energies.energy_base import EnergyBase
@@ -29,9 +29,8 @@ class LLBAnisotropy(EnergyBase):
         self.inv_chi_perp = inv_chi_perp
         super(LLBAnisotropy, self).__init__(method, in_jacobian=True)
 
+    @mtimed
     def setup(self, S3, m, Ms0, unit_length=1):
-        timings.start('LLBAnisotropy-setup')
-
         #self._m_normed = df.Function(S3)
         self.m = m
 
@@ -59,8 +58,6 @@ class LLBAnisotropy(EnergyBase):
                 M=self.m,
                 Ms=Ms0,
                 unit_length=unit_length)
-
-        timings.stop('LLBAnisotropy-setup')
 
     def compute_field(self):
         """

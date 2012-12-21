@@ -10,7 +10,7 @@ import dolfin as df
 import numpy as np
 from numpy import NaN
 from finmag.sim.llg import LLG
-from finmag.util.timings import timings
+from finmag.util.timings import timings, mtimed
 from finmag.util.helpers import vector_valued_function
 from finmag.util.consts import exchange_length, bloch_parameter
 from finmag.util.meshes import mesh_info, mesh_volume
@@ -45,6 +45,7 @@ class Simulation(object):
         "zeeman": Zeeman
         }
 
+    @mtimed
     def __init__(self, mesh, Ms, unit_length=1, name='unnamed', integrator_backend="sundials"):
         """Simulation object.
 
@@ -59,10 +60,6 @@ class Simulation(object):
 
           name : the Simulation name (used for writing data files, for examples)
         """
-
-        timings.reset()
-        timings.start("Sim-init")
-
         # Store the simulation name and a 'sanitized' version of it which
         # contains only alphanumeric characters and underscores. The latter
         # will be used as a prefix for .log/.ndt files etc.
@@ -94,8 +91,6 @@ class Simulation(object):
         self.llg.Ms = Ms
         self.Volume = mesh_volume(mesh)
         self.t = 0
-
-        timings.stop("Sim-init")
 
     def __str__(self):
         """String briefly describing simulation object"""
@@ -472,7 +467,7 @@ class Simulation(object):
                     "reports global timings, not just the times taken by "
                     "this specific simulation only.")
 
-        return timings.report_str(n)
+        return timings.report(n)
 
     def set_stt(self, current_density, polarisation, thickness, direction):
         """

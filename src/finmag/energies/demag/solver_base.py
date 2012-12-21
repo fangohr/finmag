@@ -7,7 +7,7 @@ __organisation__ = "University of Southampton"
 import dolfin as df
 import numpy as np
 import abc
-from finmag.util.timings import timings
+from finmag.util.timings import timings, mtimed
 from finmag.util import helpers
 import finmag.util.solver_benchmark as bench
 
@@ -225,9 +225,9 @@ class FemBemDeMagSolver(object):
         if self.bench:
             bench.solve(A,function.vector(),b,benchmark = True)
         else:
-            timings.startnext("2nd linear solve")
+            timings.start_next(self.__class__.__name__, "2nd linear solve")
             self.laplace_iter = self.laplace_solver.solve(A, function.vector(), b)
-            timings.stop("2nd linear solve")
+            timings.stop(self.__class__.__name__, "2nd linear solve")
         return function
 
     def __compute_field_project(self):
@@ -247,12 +247,11 @@ class FemBemDeMagSolver(object):
         self.G = df.assemble(a)
         self.L = df.assemble(b).array()
 
+    @mtimed
     def __compute_field_magpar(self):
         """Magpar method used by Weiwei."""
-        timings.start("Compute field")
         Hd = self.G*self.phi.vector()
         Hd = Hd.array()/self.L
-        timings.stop("Compute field")
         return Hd
 
     def get_demagfield(self,phi = None,use_default_function_space = True):

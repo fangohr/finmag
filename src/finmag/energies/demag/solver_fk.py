@@ -2,7 +2,7 @@ import logging
 import numpy as np
 import dolfin as df
 import solver_base as sb
-from finmag.util.timings import timings
+from finmag.util.timings import timings, mtimed
 from finmag.native.llg import OrientedBoundaryMesh, compute_bem_fk
 import finmag.util.solver_benchmark as bench
 
@@ -253,7 +253,7 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
     """
     def __init__(self,mesh,m, parameters=sb.default_parameters , degree=1, element="CG",
                  project_method='magpar', unit_length=1,Ms = 1.0,bench = False):
-        timings.start("FKSolver init")
+        timings.start(self.__class__.__name__, "FKSolver init")
         sb.FemBemDeMagSolver.__init__(self,mesh,m, parameters, degree, element=element,
                                       project_method = project_method,
                                       unit_length = unit_length,Ms = Ms,bench = bench)
@@ -273,53 +273,52 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         self.D = df.assemble(b)
 
         # Compute boundary element matrix and global-to-boundary mapping
-        timings.startnext("Build boundary element matrix")
+        timings.start_next(self.__class__.__name__, "build BEM")
         self.bem, self.b2g_map = compute_bem_fk(OrientedBoundaryMesh(self.mesh))
-        timings.stop("Build boundary element matrix")
+        timings.stop(self.__class__.__name__, "build BEM")
 
     def solve(self):
 
         # Compute phi1 on the whole domain (code-block 1, last line)
-        timings.start("phi1 - matrix product")
+        timings.start(self.__class__.__name__, "phi1 - matrix product")
         g1 = self.D*self.m.vector()
 
         # NOTE: The (above) computation of phi1 is equivalent to
-        #timings.start("phi1 - assemble")
         #g1 = df.assemble(self.Ms*df.dot(self.n,self.m)*self.v*df.ds \
         #        - self.Ms*df.div(self.m)*self.v*df.dx)
         # but the way we have implemented it is faster,
         # because we don't have to assemble L each time,
         # and matrix multiplication is faster than assemble.
 
-        timings.startnext("phi1 - solve")
+        timings.start_next(self.__class__.__name__, "phi1 - solve")
         if self.bench:
             bench.solve(self.poisson_matrix,self.phi1.vector(),g1, benchmark = True)
         else:
-            timings.startnext("1st linear solve")
+            timings.start_next(self.__class__.__name__, "1st linear solve")
             self.poisson_iter = self.poisson_solver.solve(self.phi1.vector(), g1)
-            timings.stop("1st linear solve")
+            timings.stop(self.__class__.__name__, "1st linear solve")
         # Restrict phi1 to the boundary
-        timings.startnext("Restrict phi1 to boundary")
+        timings.start_next(self.__class__.__name__, "Restrict phi1 to boundary")
         Phi1 = self.phi1.vector()[self.b2g_map]
 
         # Compute phi2 on the boundary, eq. (3)
-        timings.startnext("Compute Phi2")
+        timings.start_next(self.__class__.__name__, "Compute Phi2")
         Phi2 = np.dot(self.bem, Phi1.array())
 
         # Fill Phi2 into boundary positions of phi2
-        timings.startnext("phi2 <- Phi2")
+        timings.start_next(self.__class__.__name__, "phi2 <- Phi2")
         self.phi2.vector()[self.b2g_map[:]] = Phi2
 
         # Compute Laplace's equation inside the domain,
         # eq. (2) and last code-block
-        timings.startnext("Compute phi2 inside")
+        timings.start_next(self.__class__.__name__, "Compute phi2 inside")
         self.phi2 = self.solve_laplace_inside(self.phi2)
 
         # phi = phi1 + phi2, eq. (5)
-        timings.startnext("Add phi1 and phi2")
+        timings.start_next(self.__class__.__name__, "Add phi1 and phi2")
         self.phi.vector()[:] = self.phi1.vector() \
                              + self.phi2.vector()
-        timings.stop("Add phi1 and phi2")
+        timings.stop(self.__class__.__name__, "Add phi1 and phi2")
         return self.phi
 
 if __name__ == "__main__":

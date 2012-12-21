@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import operator
 import functools
 from contextlib import contextmanager
 
@@ -73,132 +74,156 @@ There are four different ways to do a measurement.
 """
 
 
+class SingleTiming(object):
+    """
+    Saves number of calls and total running time of a method.
+
+    """
+    def __init__(self, group, name):
+        self.group = group
+        self.name = name
+        self.calls = 0
+        self.tot_time = 0.0
+        self.running = False
+        self._start = 0.0
+
+    def start(self):
+        assert not self.running, \
+            "Can't start running measurement '{}' of group '{}' again.".format(self.name, self.group)
+        self.running = True
+        self._start = time.time()
+
+    def stop(self):
+        assert self.running, \
+            "Measurement '{}' of group '{}' not running, can't stop it.".format(self.name, self.group)
+        self.running = False
+        self.calls += 1
+        self.tot_time += time.time() - self._start
+
+
 class Timings(object):
     """
-    Manage a series of time measurements.
+    Manage a series of measurements.
+    
+    They are stored by the measurements' group and name, which is module/class
+    and function/method name.
 
     """
     def __init__(self):
         self.reset()
-        self._last_started_measurement = None
+        self._last = None
 
     def reset(self):
         """
         Reset the internal data.
 
-        The self._measurements dictioniary has the measurement names as keys
-        and lists [n, t, st] as values, where n is the number of calls, t the
-        cumulative time it took and st the status ('finished', STARTTIME).
+        """
+        self._timings = {}
+        self._created = time.time()
+
+    def start(self, group, name):
+        """
+        Start a measurement with the group *group* and name *name*.
 
         """
-        self._measurements = {}
-        self._creation_time = time.time()
-
-    def start(self, name):
-        """
-        Start a measurement with the name *name*.
-
-        """
-        if name in self._measurements.keys():
-            assert self._measurements[name][2] == 'finished', \
-                "Still running measurement for '{}', can't start another one.".format(name)
-            self._measurements[name][2] = time.time()
+        if self.key(group, name) in self._timings:
+            self._timings[self.key(group, name)].start()
         else:
-            self._measurements[name] = [0, 0., time.time()]
-        self._last_started_measurement = name
+            timing = SingleTiming(group, name)
+            timing.start()
+            self._timings[self.key(group, name)] = timing
+        self._last = self._timings[self.key(group, name)]
 
-    def stop(self, name):
+    def stop(self, group, name):
         """
-        Stop the measurement with the name *name*.
+        Stop the measurement with the group *group* and name *name*.
 
         """
-        assert name in self._measurements.keys(), \
-            "No known measurement with name '{}'. Known: {}.".format(
-                    name, self._measurements.keys())
+        assert self.key(group, name) in self._timings, \
+                "No known measurement '{}' of '{}' to stop.".format(name, group)
+        self._timings[self.key(group, name)].stop()
+        self._last = None
 
-        assert self._measurements[name][2] != 'finished', \
-                "Measurement for '{}' not running, can't stop it.".format(name)
-
-        timetaken = time.time() - self._measurements[name][2]
-        self._measurements[name][0] += 1
-        self._measurements[name][1] += timetaken
-        self._measurements[name][2] = 'finished'
-        self._last_started_measurement = None
-
-    def stoplast(self):
+    def stop_last(self):
         """
         Stop the last started measurement.
 
         """
-        assert self._last_started_measurement != None, "No measurement running, can't stop anything."
-        self.stop(self._last_started_measurement)
+        assert self._last, "No measurement running, can't stop anything."
+        self._last.stop()
 
-    def startnext(self, name):
+    def start_next(self, group, name):
         """
-        Stop the last started measurement to start a new one with name *name*.
+        Stop the last started measurement to start a new one with *group* and *name*.
 
         """
-        if self._last_started_measurement:
-            self.stop(self._last_started_measurement)
-        self.start(name)
+        if self._last:
+            self.stop_last()
+        self.start(group, name)
 
-    def getncalls(self, name):
-        return self._measurements[name][0]
-
-    def gettime(self, name):
-        return self._measurements[name][1]
-
-    def report_str(self, nb_items=10):
+    def calls(self, group, name):
         """
-        Returns a listing of the *nb_items* measurements that ran the longest.
+        Returns the number of calls to the method of *group* with *name*.
+
+        """
+        return self._timings[self.key(group, name)].calls
+
+    def time(self, group, name):
+        """
+        Returns the total running time of the method of *group* with *name*.
+
+        """
+        return self._timings[self.key(group, name)].tot_time
+
+    def report(self, max_items=10):
+        """
+        Returns a listing of the *max_items* measurements that ran the longest.
         
         """
-        msg = "Timings summary, longest items first:\n"
+        msg = "Timings: Showing the up to {} slowest items.\n\n".format(max_items)
+        separator = "+--------------------+--------------------+--------+------------+--------------+\n"
+        msg += separator
+        msg += "| {:18} | {:18} | {:>6} | {:>10} | {:>12} |\n".format("group", "name", "calls", "total (s)", "per call (s)")
+        msg += separator
 
-        sorted_keys = sorted(
-                self._measurements.keys(),
-                key = lambda x: self._measurements[x][1],
-                reverse=True)
+        msg_row = "| {:18} | {:18} | {:>6} | {:>10.4g} | {:>12.4g} |\n"
+        
+        for t in sorted(
+                self._timings.values(),
+                key=operator.attrgetter('tot_time'),
+                reverse=True):
 
-        for i, name in enumerate(sorted_keys):
-            nb_calls, total_time, _ = self._measurements[name]
-            if nb_calls > 0:
-                msg += "%35s:%6d calls took %10.4fs " \
-                    "(%8.6fs per call)\n" % (name[0:35],
-                                             self.getncalls(name),
-                                             self.gettime(name),
-                                             self.gettime(name)\
-                                                 / float(self.getncalls(name))
-                                             )
-            else:
-                msg = "Timings %s: none completed\n" % name
+            msg += msg_row.format(t.group, t.name, t.calls, t.tot_time, t.tot_time/t.calls)
 
-            if i >= nb_items - 1:
-                break
-        recorded_sum = self.recorded_sum()
-        walltime = time.time() - self._creation_time
-        msg += "Wall time: %.4gs (sum of time recorded: %gs=%5.1f%%)\n" % \
-            (walltime, recorded_sum, recorded_sum / walltime * 100.0)
+        msg += separator
+
+        recorded_time = self.total_time()
+        wall_time = time.time() - self._created
+        msg += "\nWall time {:.4} s (sum of time recorded: {:.4} s or {:.4} %).\n".format(
+                wall_time, recorded_time, 100 * recorded_time / wall_time)
 
         return msg
 
     def __str__(self):
-        return self.report_str()
+        return self.report()
 
-    def recorded_sum(self):
-        return sum([self._measurements[name][1] for name in self._measurements.keys()])
+    def total_time(self):
+        return sum([tim.tot_time for tim in self._timings.itervalues()])
+
+    def key(self, group, name):
+        return group + "::" + name
 
 timings = Timings()
 
 @contextmanager
-def timed(name, timer=timings):
+def timed(group, name, timer=timings):
     """
     Use this context to time a piece of code. Needs a *name* argument for the measurement.
 
     """
-    timer.start(name)
+    timer.start(group, name)
     yield
-    timer.stop(name)
+    timer.stop(group, name)
 
 def mtimed(method_or_timer=timings):
     """
@@ -213,9 +238,9 @@ def mtimed(method_or_timer=timings):
             cls = that.__class__.__name__
             # temporary way of replicating existing behaviour until categories
             # are implemented
-            timer.start(cls+'-'+name)
+            timer.start(cls, name)
             ret = method(that, *args, **kwargs)
-            timer.stop(cls+'-'+name)
+            timer.stop(cls, name)
             return ret
 
         return decorated_method
@@ -244,9 +269,9 @@ def ftimed(fn_or_timer=timings):
 
         @functools.wraps(fn)
         def decorated_function(*args, **kwargs):
-            timer.start(name)
+            timer.start(module, name)
             ret = fn(*args, **kwargs)
-            timer.stop(name)
+            timer.stop(module, name)
             return ret
 
         return decorated_function
