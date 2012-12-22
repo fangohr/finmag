@@ -3,6 +3,7 @@ import sys
 import time
 import operator
 import functools
+from collections import defaultdict
 from contextlib import contextmanager
 
 """
@@ -181,28 +182,61 @@ class Timings(object):
         
         """
         msg = "Timings: Showing the up to {} slowest items.\n\n".format(max_items)
-        separator = "+--------------------+--------------------+--------+------------+--------------+\n"
+        separator = "+--------------------+------------------------------+--------+------------+--------------+\n"
         msg += separator
-        msg += "| {:18} | {:18} | {:>6} | {:>10} | {:>12} |\n".format("group", "name", "calls", "total (s)", "per call (s)")
+        msg += "| {:18} | {:28} | {:>6} | {:>10} | {:>12} |\n".format("class/module", "name", "calls", "total (s)", "per call (s)")
         msg += separator
-
-        msg_row = "| {:18} | {:18} | {:>6} | {:>10.4g} | {:>12.4g} |\n"
-        
+        msg_row = "| {:18} | {:28} | {:>6} | {:>10.3g} | {:>12.3g} |\n"
+        shown = 0
         for t in sorted(
                 self._timings.values(),
                 key=operator.attrgetter('tot_time'),
                 reverse=True):
-
             msg += msg_row.format(t.group, t.name, t.calls, t.tot_time, t.tot_time/t.calls)
+            shown += 1
+            if shown >= max_items:
+                break
+        msg += separator + "\n"
 
+        msg += "Timings grouped by class or module.\n\n"
+        separator = "+--------------------+----------+------+\n"
         msg += separator
+        msg += "| {:18} | {:>8} | {:>4} |\n".format('class/module', 'time (s)', '%')
+        msg += separator
+        for group, tot_t, share in self.grouped_timings():
+            msg += "| {:18} | {:>8.3g} | {:>4.2g} |\n".format(group, tot_t, share)
+        msg += separator + "\n"
+
+        msg += "Total wall time {:.4} s.\n".format(time.time() - self._created)
+        return msg
+
+    def grouped_timings(self):
+        """
+        Returns a list of tuples (group_name, total_time, share), sorted by decreasing total_time.
+        It also describes either how much time went unaccounted for, or if there are multiple
+        measurements at the same time at some point.
+
+        """
+        grouped_timings = defaultdict(float)
+        for timing in self._timings.values():
+            grouped_timings[timing.group] += timing.tot_time
 
         recorded_time = self.total_time()
         wall_time = time.time() - self._created
-        msg += "\nWall time {:.4} s (sum of time recorded: {:.4} s or {:.4} %).\n".format(
-                wall_time, recorded_time, 100 * recorded_time / wall_time)
 
-        return msg
+        grouped_timings = [(group, tot_t, 100*tot_t/wall_time) for group, tot_t in grouped_timings.iteritems()]
+
+        diff = abs(recorded_time - wall_time)
+        rel_diff = 100 * (1 - recorded_time/wall_time)
+        rel_diff_desc = "redundant" if recorded_time > wall_time else "untimed"
+        grouped_timings.append((rel_diff_desc, diff, rel_diff))
+
+        grouped_timings = sorted(
+                grouped_timings,
+                key=lambda gt : gt[1],
+                reverse=True)
+
+        return grouped_timings
 
     def __str__(self):
         return self.report()
