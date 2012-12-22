@@ -4,11 +4,11 @@ default_timer = t.timings
 test_timer = t.Timings()
 
 def test_by_hand():
-    test_timer.start('one')
+    test_timer.start('timings_test', 'one')
     pass
-    test_timer.stop('one')
+    test_timer.stop('timings_test', 'one')
 
-    assert test_timer.getncalls('one') == 1
+    assert test_timer.calls('timings_test', 'one') == 1
 
 def test_decorated_function():
 
@@ -19,7 +19,7 @@ def test_decorated_function():
     two()
     two()
 
-    assert test_timer.getncalls('two') == 2
+    assert test_timer.calls('timings_test', 'two') == 2
 
 def test_decorated_function_default_timer():
 
@@ -30,7 +30,7 @@ def test_decorated_function_default_timer():
     twob()
     twob()
 
-    assert default_timer.getncalls('twob') == 2
+    assert default_timer.calls('timings_test', 'twob') == 2
 
     @t.ftimed() # with parentheses
     def twoc():
@@ -39,7 +39,7 @@ def test_decorated_function_default_timer():
     twoc()
     twoc()
 
-    assert default_timer.getncalls('twoc') == 2
+    assert default_timer.calls('timings_test', 'twoc') == 2
 
 def test_decorated_method():
 
@@ -53,7 +53,7 @@ def test_decorated_method():
     foo.three()
     foo.three()
 
-    assert test_timer.getncalls('Foo-three') == 3
+    assert test_timer.calls('Foo', 'three') == 3
 
 def test_decorated_method_default_timer():
 
@@ -74,16 +74,16 @@ def test_decorated_method_default_timer():
     foo.threeb()
     foo.threeb()
 
-    assert default_timer.getncalls('Foo-three') == 3
-    assert default_timer.getncalls('Foo-threeb') == 3
+    assert default_timer.calls('Foo', 'three') == 3
+    assert default_timer.calls('Foo', 'threeb') == 3
 
 def test_timed_code():
 
     for i in range(4):
-        with t.timed('four', timer=test_timer):
+        with t.timed('timings_test', 'four', timer=test_timer):
             pass
 
-    assert test_timer.getncalls('four') == 4
+    assert test_timer.calls('timings_test', 'four') == 4
 
 def test_timed_code_default_timer():
 
@@ -91,7 +91,7 @@ def test_timed_code_default_timer():
         with t.timed('fourb'):
             pass
 
-    assert default_timer.getncalls('fourb') == 4
+    assert default_timer.calls('test_timings', 'fourb') == 4
 
 def test_regression_return_values_not_affected():
 
@@ -110,4 +110,8 @@ def test_regression_return_values_not_affected():
     assert mo.my_method() == 1
 
 if __name__ == "__main__":
+    test_by_hand()
+    test_decorated_method()
     test_decorated_function()
+    test_timed_code()
+    print test_timer
