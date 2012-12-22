@@ -10,7 +10,7 @@ import dolfin as df
 import numpy as np
 from numpy import NaN
 from finmag.sim.llg import LLG
-from finmag.util.timings import timings, mtimed
+from finmag.util.timings import mtimed
 from finmag.util.helpers import vector_valued_function
 from finmag.util.consts import exchange_length, bloch_parameter
 from finmag.util.meshes import mesh_info, mesh_volume
@@ -455,19 +455,6 @@ class Simulation(object):
         else:
             log.warning("Integrator reinit was requested, but no integrator "
                         "is present in the simulation!")
-
-    def timings(self, n=20):
-        """
-        Prints an overview of wall time and number of calls for designated
-        subparts of the code, listing up to n items, starting with those
-        which took the longest.
-
-        """
-        log.warning("Note that this method is currently broken because it "
-                    "reports global timings, not just the times taken by "
-                    "this specific simulation only.")
-
-        return timings.report(n)
 
     def set_stt(self, current_density, polarisation, thickness, direction):
         """

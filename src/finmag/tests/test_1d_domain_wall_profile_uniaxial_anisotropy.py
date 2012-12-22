@@ -2,6 +2,7 @@ import numpy as np
 import dolfin as df
 from finmag import Simulation as Sim
 from finmag.energies import Exchange, UniaxialAnisotropy
+from finmag.util.timings import timings
 import pylab
 
 K1=520e3  #J/m^3
@@ -72,7 +73,7 @@ def test_domain_wall_profile(do_plot=False):
         #f.write('%g\t%g\t%g\n' % (r.t,Eani,Eex))
         print "Integrating time: %g" % t
     #f.close()
-    print sim.timings()
+    print timings
 
     mz = []
     x = np.linspace(0, L, simplices+1)

@@ -1,11 +1,12 @@
 import finmag.util.timings as t
+import time
 
 default_timer = t.timings
 test_timer = t.Timings()
 
 def test_by_hand():
     test_timer.start('timings_test', 'one')
-    pass
+    time.sleep(0.01)
     test_timer.stop('timings_test', 'one')
 
     assert test_timer.calls('timings_test', 'one') == 1
@@ -14,7 +15,7 @@ def test_decorated_function():
 
     @t.ftimed(test_timer)
     def two():
-        pass
+        time.sleep(0.01)
 
     two()
     two()
@@ -25,7 +26,7 @@ def test_decorated_function_default_timer():
 
     @t.ftimed # without parantheses
     def twob():
-        pass
+        time.sleep(0.01)
 
     twob()
     twob()
@@ -34,7 +35,7 @@ def test_decorated_function_default_timer():
 
     @t.ftimed() # with parentheses
     def twoc():
-        pass
+        time.sleep(0.01)
 
     twoc()
     twoc()
@@ -46,7 +47,7 @@ def test_decorated_method():
     class Foo(object):
         @t.mtimed(test_timer)
         def three(self):
-            pass
+            time.sleep(0.01)
 
     foo = Foo()
     foo.three()
@@ -60,11 +61,11 @@ def test_decorated_method_default_timer():
     class Foo(object):
         @t.mtimed() # with parentheses
         def three(self):
-            pass
+            time.sleep(0.01)
 
         @t.mtimed # without parentheses
         def threeb(self):
-            pass
+            time.sleep(0.01)
 
     foo = Foo()
     foo.three()
@@ -81,15 +82,15 @@ def test_timed_code():
 
     for i in range(4):
         with t.timed('timings_test', 'four', timer=test_timer):
-            pass
+            time.sleep(0.01)
 
     assert test_timer.calls('timings_test', 'four') == 4
 
 def test_timed_code_default_timer():
 
     for i in range(4):
-        with t.timed('fourb'):
-            pass
+        with t.timed('timings_test', 'fourb'):
+            time.sleep(0.01)
 
     assert default_timer.calls('test_timings', 'fourb') == 4
 
@@ -97,6 +98,7 @@ def test_regression_return_values_not_affected():
 
     @t.ftimed
     def my_func():
+        time.sleep(0.01)
         return 1
 
     assert my_func() == 1
@@ -104,6 +106,7 @@ def test_regression_return_values_not_affected():
     class MyClass(object):
         @t.mtimed
         def my_method(self):
+            time.sleep(0.01)
             return 1
 
     mo = MyClass()
