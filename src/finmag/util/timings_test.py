@@ -92,7 +92,7 @@ def test_timed_code_default_timer():
         with t.timed('timings_test', 'fourb'):
             time.sleep(0.01)
 
-    assert default_timer.calls('test_timings', 'fourb') == 4
+    assert default_timer.calls('timings_test', 'fourb') == 4
 
 def test_regression_return_values_not_affected():
 
