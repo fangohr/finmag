@@ -2,7 +2,7 @@ import numpy as np
 import dolfin as df
 import math
 from finmag.sim.llg import LLG
-from finmag.sim.integrator import LLGIntegrator
+from finmag.integrators.llg_integrator import llg_integrator
 from finmag.energies import Exchange, UniaxialAnisotropy
 
 # Material parameters
@@ -46,7 +46,7 @@ def domain_wall_error(ys, node_count):
 
 def compute_domain_wall_cobalt(end_time=1e-9):
     llg = setup_domain_wall_cobalt()
-    integrator = LLGIntegrator(llg, llg.m)
+    integrator = llg_integrator(llg, llg.m)
     integrator.run_until(end_time)
     return np.linspace(0, LENGTH, NODE_COUNT), llg.m.reshape((3, -1))
 

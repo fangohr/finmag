@@ -1,6 +1,6 @@
 import os
 from finmag.sim.llg import LLG
-from finmag.sim.integrator import LLGIntegrator
+from finmag.integrators.llg_integrator import llg_integrator
 from finmag.energies import Exchange
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
@@ -59,7 +59,7 @@ def run_nmag():
     llg._pre_rhs_callables.append(update_H_ext)
     
     # Set up time integrator
-    integrator = LLGIntegrator(llg, llg.m)
+    integrator = llg_integrator(llg, llg.m)
 
     dx = 1
     xs=[i*dx for i in xrange(0,x_max/dx)]

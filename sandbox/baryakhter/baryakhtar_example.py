@@ -1,14 +1,12 @@
 import dolfin as df
 import numpy as np
-import finmag.util.helpers as helpers
 import scipy.integrate.ode as scipy_ode
 import matplotlib.pyplot as plt
 
 
 import time
 
-from finmag.sim.integrator import LLGIntegrator
-from finmag.sim.llg import LLG
+from finmag.integrators.llg_integrator import llg_integrator
 from llb import LLB
 from finmag.energies import Zeeman
 from test_exchange import BaryakhtarExchange
@@ -146,7 +144,7 @@ def example1_sundials(Ms):
     exchange.setup(S3,llb._m,llb._Ms)
     llb.interactions.append(exchange)
 
-    integrator = LLGIntegrator(llb, llb.M, abstol=1e-10, reltol=1e-6)
+    integrator = llg_integrator(llb, llb.M, abstol=1e-10, reltol=1e-6)
 
     max_time=2*np.pi/(llb.gamma*1e5)
     ts = np.linspace(0, max_time, num=50)

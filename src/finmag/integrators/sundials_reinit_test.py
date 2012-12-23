@@ -35,7 +35,7 @@ Hans, 30 June 2012
 
 from finmag.tests.jacobean.domain_wall_cobalt import setup_domain_wall_cobalt, \
                                                      domain_wall_error
-from finmag.sim.integrator import LLGIntegrator
+from finmag.integrators.llg_integrator import llg_integrator
 from datetime import datetime
 
 NODE_COUNT = 100
@@ -46,7 +46,7 @@ END_TIME2 = END_TIME1 + 0.1e-10
 
 def run_test(backend, method, mode='onego', nsteps=40000):
     llg = setup_domain_wall_cobalt(node_count=NODE_COUNT)
-    integrator = LLGIntegrator(llg, llg.m, backend, method=method, nsteps=nsteps)
+    integrator = llg_integrator(llg, llg.m, backend, method=method, nsteps=nsteps)
     t = datetime.now()
 
     if mode == 'onego':

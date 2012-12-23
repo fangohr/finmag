@@ -2,7 +2,7 @@ import numpy as np
 import pylab as p
 from dolfin import Mesh
 from finmag.sim.llg import LLG
-from finmag.sim.integrator import LLGIntegrator
+from finmag.integrators.llg_integrator import llg_integrator
 
 # Create mesh
 mu = 1e-9
@@ -18,7 +18,7 @@ llg.set_m((1,0,1))
 llg.setup(use_exchange=True, use_dmi=False, use_demag=True, demag_method="FK")
 
 # Set up time integrator
-integrator = LLGIntegrator(llg, llg.m)
+integrator = llg_integrator(llg, llg.m)
 dt = 5e-12
 
 ######
