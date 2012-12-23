@@ -1,12 +1,15 @@
 import os
 import dolfin
 import numpy
+import logging
 import matplotlib.pyplot as plt
-
-from finmag.sim.llg import LLG
+from finmag import Simulation
 from finmag.energies import Zeeman
 from test_macrospin import make_analytic_solution
 from scipy.integrate import odeint
+
+log = logging.getLogger(name='finmag')
+log.setLevel(logging.WARNING)
 
 """
 We gather the deviation between the analytical solution of the macrospin problem
@@ -22,7 +25,7 @@ rtols_powers_of_ten = [-7, -8, -9, -10, -11] # easier LaTeX formatting
 mesh = dolfin.Box(0,1, 0,1, 0,1, 1,1,1)
 
 def test_deviations_over_alpha_and_tol(number_of_alphas=5, do_plot=False):
-    alphas = numpy.linspace(0.01, 0.99, number_of_alphas)
+    alphas = numpy.linspace(0.01, 1.00, number_of_alphas)
 
     max_deviationss = []
     for rtol_power_of_ten in rtols_powers_of_ten:
@@ -35,24 +38,18 @@ def test_deviations_over_alpha_and_tol(number_of_alphas=5, do_plot=False):
         for alpha in alphas:
             print "Solving for alpha={0}.".format(alpha)
 
-            S1 = dolfin.FunctionSpace(mesh, "Lagrange", 1)
-            S3 = dolfin.VectorFunctionSpace(mesh, "Lagrange", 1)
-            llg = LLG(S1, S3)
-            llg.alpha = alpha
-            llg.set_m((1, 0, 0))
-
-            H_app = Zeeman((0, 0, 1e5))
-            H_app.setup(S3, llg._m, Ms=1)
-            llg.effective_field.add(H_app)
-
-            M_analytical = make_analytic_solution(1e5, llg.alpha, llg.gamma) 
+            sim = Simulation(mesh, 1)
+            sim.alpha = alpha
+            sim.set_m((1, 0, 0))
+            sim.add(Zeeman((0, 0, 1e5)))
         
             ts = numpy.linspace(0, 1e-9, num=50)
-            ys = odeint(llg.solve_for, llg.m, ts, rtol=rtol, atol=rtol)
+            ys = odeint(sim.llg.solve_for, sim.llg.m, ts, rtol=rtol, atol=rtol)
 
             # One entry in this array corresponds to the deviation between the two
             # solutions for one particular moment during the simulation.
             deviations = []
+            M_analytical = make_analytic_solution(1e5, alpha, sim.gamma) 
             for i in range(len(ts)):
                 M_computed = numpy.mean(ys[i].reshape((3, -1)), 1)
                 M_ref = M_analytical(ts[i])
@@ -80,4 +77,4 @@ def test_deviations_over_alpha_and_tol(number_of_alphas=5, do_plot=False):
         plt.savefig(os.path.join(MODULE_DIR, "deviation_over_alpha_rtols.pdf"))
 
 if __name__ == '__main__':
-    test_deviations_over_alpha_and_tol(100, do_plot=True)
+    test_deviations_over_alpha_and_tol(50, do_plot=True)
