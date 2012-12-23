@@ -209,10 +209,10 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver,PEQBuilder):
         self.poisson_solver = df.KrylovSolver(self.poisson_matrix_dirichlet, method, pc)
         
         #Buffer the BEM
-        timings.start_next(self.__class__.__name__, "Build boundary element matrix")
+        timings.start_next(self.__class__.__name__, "build BEM")
         self.boundary_mesh = OrientedBoundaryMesh(self.mesh)
         self.bem, self.b2g = compute_bem_gcr(self.boundary_mesh)
-        timings.stop(self.__class__.__name__, "Build boundary element matrix")
+        timings.stop(self.__class__.__name__, "build BEM")
 
         if self.qvector_method == "box":
             #Buffer Surface Node Areas for the box method

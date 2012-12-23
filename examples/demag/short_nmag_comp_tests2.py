@@ -137,7 +137,7 @@ for i,maxh in enumerate(meshsizes):
         endtime = time.time()
 
         #Store the times
-        runtimes["bem"][demagtype].append(timings.gettime("Build boundary element matrix"))
+        runtimes["bem"][demagtype].append(timings.time(finmagsolvers[demagtype].__name__, "build BEM"))
         runtimes["solve"][demagtype].append(endtime - starttime)
         
 
