@@ -6,16 +6,9 @@
 #
 # AUTHOR(S) OF THIS FILE: Dmitri Chernyshenko (d.chernyshenko@soton.ac.uk)
 
-import numpy as np
-import scipy.integrate
-import dolfin as df
 import unittest
-import math
-from finmag.sim.llg import LLG
 from finmag.tests.jacobean.domain_wall_cobalt import setup_domain_wall_cobalt, domain_wall_error
-from finmag.native import sundials
-from finmag.util.ode import scipy_to_cvode_rhs
-from finmag.sim.integrator import LLGIntegrator
+from finmag.integrators.llg_integrator import llg_integrator
 from datetime import datetime
 
 NODE_COUNT = 100
@@ -24,7 +17,7 @@ END_TIME = 1e-10
 class IntegratorTests(unittest.TestCase):
     def run_test(self, backend, method, nsteps=40000):
         llg = setup_domain_wall_cobalt(node_count=NODE_COUNT)
-        integrator = LLGIntegrator(llg, llg.m, backend, method=method, nsteps=nsteps)
+        integrator = llg_integrator(llg, llg.m, backend, method=method, nsteps=nsteps)
         t = datetime.now()
         integrator.run_until(END_TIME)
         dt = datetime.now() - t

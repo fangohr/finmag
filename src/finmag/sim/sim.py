@@ -17,7 +17,7 @@ from finmag.util.meshes import mesh_info, mesh_volume
 from finmag.util.fileio import Tablewriter
 from finmag.util import helpers
 from finmag.sim.hysteresis import hysteresis, hysteresis_loop
-from finmag.sim.integrator import LLGIntegrator
+from finmag.integrators.llg_integrator import llg_integrator
 from finmag.energies.exchange import Exchange
 from finmag.energies.anisotropy import UniaxialAnisotropy
 from finmag.energies.zeeman import Zeeman
@@ -326,7 +326,7 @@ class Simulation(object):
             fields for this simulation object are recorded).
         """
         if not hasattr(self, "integrator"):
-            self.integrator = LLGIntegrator(self.llg, self.llg.m,
+            self.integrator = llg_integrator(self.llg, self.llg.m,
                                             backend=self.integrator_backend,
                                             tablewriter=self.tablewriter)
         log.debug("Integrating dynamics up to t = %g" % t)
@@ -375,7 +375,7 @@ class Simulation(object):
         """
         log.info("Will integrate until relaxation.")
         if not hasattr(self, "integrator"):
-            self.integrator = LLGIntegrator(self.llg, self.llg.m,
+            self.integrator = llg_integrator(self.llg, self.llg.m,
                                             backend=self.integrator_backend,
                                             tablewriter=self.tablewriter)
 

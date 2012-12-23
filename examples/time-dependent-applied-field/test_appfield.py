@@ -4,7 +4,7 @@ import pylab
 import dolfin as df
 from finmag.sim.llg import LLG
 from finmag.energies import TimeZeeman
-from finmag.sim.integrator import LLGIntegrator
+from finmag.integrators.llg_integrator import llg_integrator
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -33,7 +33,7 @@ def test_external_field_depends_on_t():
     llg.effective_field.add(H_app, with_time_update=update_H_ext)
 
     #nothing special from here, just setting up time integration
-    integrator = LLGIntegrator(llg, llg.m)
+    integrator = llg_integrator(llg, llg.m)
 
     #to gather data for later analysis
     mlist = []

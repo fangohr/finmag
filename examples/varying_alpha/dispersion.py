@@ -1,7 +1,7 @@
 import os
 from finmag.sim.llg import LLG
 from finmag.energies import Exchange
-from finmag.sim.integrator import LLGIntegrator
+from finmag.integrators.llg_integrator import llg_integrator
 import numpy as np
 import dolfin as df
 import logging
@@ -68,7 +68,7 @@ def run_finmag():
     
 
     # Set up time integrator
-    integrator = LLGIntegrator(llg, llg.m)
+    integrator = llg_integrator(llg, llg.m)
 
     dx = 2
     xs=[i*dx for i in xrange(0,x_max/dx)]

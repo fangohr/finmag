@@ -2,7 +2,7 @@ import dolfin
 import os
 import numpy
 
-from finmag.sim.integrator import LLGIntegrator
+from finmag.integrators.llg_integrator import llg_integrator
 from finmag.sim.llg import LLG
 from finmag.energies import Zeeman
 from finmag.util.macrospin import make_analytic_solution
@@ -38,7 +38,7 @@ def compare_with_analytic_solution(alpha=0.5, max_t=1e-9):
     H_app.setup(S3, llg._m, Ms=1)
     llg.effective_field.add(H_app)
 
-    integrator = LLGIntegrator(llg, llg.m, abstol=1e-12, reltol=1e-12)
+    integrator = llg_integrator(llg, llg.m, abstol=1e-12, reltol=1e-12)
     ts = numpy.linspace(0, max_t, num=100)
     tsfine = numpy.linspace(0, max_t, num=1000)
     ys = numpy.array([(integrator.run_until(t), integrator.m.copy())[1] for t in ts])
