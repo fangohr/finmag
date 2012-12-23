@@ -197,9 +197,9 @@ class SimpleFKSolver():
         B * u1bnd = u2bnd
         """
         
-        timings.start(self.__class__.__name__, "Build boundary element matrix")
+        timings.start(self.__class__.__name__, "build BEM")
         compute_BEM_matrix(self)
-        timings.stop(self.__class__.__name__, "Build boundary element matrix")
+        timings.stop(self.__class__.__name__, "build BEM")
 
         if debug:
             print '='*100,'B\n',self.B
