@@ -19,10 +19,6 @@ class ScipyIntegrator(object):
         return self.llg.solve_for(y, t)
 
     def run_until(self, t):
-        #HF, 17/12/2012: seems we don't need these lines for Scipy's ode (only Sundial's cvode can be upset, see below.)
-        #if t <= self.cur_t:
-        #    return
-
         new_m = self.ode.integrate(t)
         assert self.ode.successful()
         self.m = new_m
