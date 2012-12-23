@@ -179,6 +179,10 @@ class Timings(object):
     def report(self, max_items=10):
         """
         Returns a listing of the *max_items* measurements that ran the longest.
+
+        Warning: Due to the way this code works, letting time go by between
+        running a simulation and calling this method will fudge the relative
+        timings. This will likely be the case in interactive mode.
         
         """
         msg = "Timings: Showing the up to {} slowest items.\n\n".format(max_items)
@@ -205,8 +209,9 @@ class Timings(object):
         msg += separator
         for group, tot_t, share in self.grouped_timings():
             msg += "| {:18} | {:>8.3g} | {:>4.2g} |\n".format(group, tot_t, share)
-        msg += separator
+        msg += separator + "\n"
 
+        msg += "Total wall time {:.4} s.\n".format(time.time() - self._created)
         return msg
 
     def grouped_timings(self):
@@ -221,7 +226,13 @@ class Timings(object):
             grouped_timings[timing.group] += timing.tot_time
 
         recorded_time = self.total_time()
-        grouped_timings = [(group, tot_t, 100*tot_t/recorded_time) for group, tot_t in grouped_timings.iteritems()]
+        wall_time = time.time() - self._created
+        grouped_timings = [(group, tot_t, 100*tot_t/wall_time) for group, tot_t in grouped_timings.iteritems()]
+
+        diff = abs(recorded_time - wall_time)
+        rel_diff = 100 * (1 - recorded_time/wall_time)
+        rel_diff_desc = "redundant" if recorded_time > wall_time else "untimed"
+        grouped_timings.append((rel_diff_desc, diff, rel_diff))
 
         grouped_timings = sorted(
                 grouped_timings,
