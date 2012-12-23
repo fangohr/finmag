@@ -1,9 +1,8 @@
 import dolfin
 import os
 import numpy
-
+from finmag import Simulation
 from finmag.integrators.llg_integrator import llg_integrator
-from finmag.sim.llg import LLG
 from finmag.energies import Zeeman
 from finmag.util.macrospin import make_analytic_solution
 
@@ -28,21 +27,19 @@ def compare_with_analytic_solution(alpha=0.5, max_t=1e-9):
     x1 = y1 = z1 = 10e-9
     nx = ny = nz = 1
     mesh = dolfin.Box(x0, x1, y0, y1, z0, z1, nx, ny, nz)
-    S1 = dolfin.FunctionSpace(mesh, "Lagrange", 1)
-    S3 = dolfin.VectorFunctionSpace(mesh, "Lagrange", 1)
 
-    llg = LLG(S1, S3)
-    llg.alpha = alpha
-    llg.set_m((1, 0, 0))
-    H_app = Zeeman((0, 0, 1e6))
-    H_app.setup(S3, llg._m, Ms=1)
-    llg.effective_field.add(H_app)
+    sim = Simulation(mesh, 1)
+    sim.alpha = alpha
+    sim.set_m((1, 0, 0))
+    sim.add(Zeeman((0, 0, 1e6)))
 
-    integrator = llg_integrator(llg, llg.m, abstol=1e-12, reltol=1e-12)
+    # plug in an integrator with lower tolerances
+    sim.integrator = llg_integrator(sim.llg, sim.llg.m, abstol=1e-12, reltol=1e-12)
+
     ts = numpy.linspace(0, max_t, num=100)
+    ys = numpy.array([(sim.run_until(t), sim.m.copy())[1] for t in ts])
     tsfine = numpy.linspace(0, max_t, num=1000)
-    ys = numpy.array([(integrator.run_until(t), integrator.m.copy())[1] for t in ts])
-    m_analytical = make_analytic_solution(1e6, alpha, llg.gamma)
+    m_analytical = make_analytic_solution(1e6, alpha, sim.gamma)
     save_plot(ts, ys, tsfine, m_analytical, alpha)
 
     TOLERANCE = 1e-6  # tolerance on Ubuntu 11.10, VM Hans, 25/02/2012
@@ -97,7 +94,6 @@ def save_plot(ts, ys, ts_ref, m_ref, alpha):
     plt.savefig(os.path.join(MODULE_DIR, filename + '.pdf'))
     plt.savefig(os.path.join(MODULE_DIR, filename + '.png'))
     plt.close()
-    #pylab.show()
 
 
 def test_macrospin_very_low_damping():
