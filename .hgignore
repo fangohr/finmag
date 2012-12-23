@@ -15,6 +15,9 @@ src/**.so
 *.swp
 *.gz
 *.png
+*.xml
+*.inp
+*.krn
 
 test-reports
 native/**.bin
