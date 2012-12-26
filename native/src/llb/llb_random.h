@@ -1,4 +1,10 @@
-namespace finmag {
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
+	#include <time.h>
+	#include <stdlib.h>
 
 	#define MT19937_N		624
 	#define MT19937_M		397
@@ -17,52 +23,53 @@ namespace finmag {
 
 	static unsigned int MT[MT19937_N];
 	static unsigned int mt19937_matrix[2] = { 0, MT19937_MATRIX_A };
-	static int index = 0;
+	static int finmag_random_index = 0;
 
-	inline unsigned int int_rand() {
+	inline unsigned int int_rand(void) {
 
 		unsigned int x;
 
-		x = (MT[index] & 0x1U) + (MT[(index + 1) % MT19937_N] & 0xFFFFFFFEU);
-		MT[index] = (MT[(index + MT19937_M) % MT19937_N] ^ (x >> 1))
+		x = (MT[finmag_random_index] & 0x1U) + (MT[(finmag_random_index + 1) % MT19937_N] & 0xFFFFFFFEU);
+		MT[finmag_random_index] = (MT[(finmag_random_index + MT19937_M) % MT19937_N] ^ (x >> 1))
 				^ mt19937_matrix[x & 1];
 
-		x = MT[index];
+		x = MT[finmag_random_index];
 		x ^= (x >> MT19973_SHIFT_U);
 		x ^= (x << MT19973_SHIFT_S) & MT19937_MASK_B;
 		x ^= (x << MT19973_SHIFT_T) & MT19937_MASK_C;
 		x ^= (x >> MT19973_SHIFT_L);
 
-		index = (index + 1) % MT19937_N;
+		finmag_random_index = (finmag_random_index + 1) % MT19937_N;
 
 		return x;
 	}
 
 	//temporary random generator
-	void initial_random() {
+	void initial_random(void) {
+		int i;
 		unsigned int seed = (unsigned int) time(NULL);
 
 		MT[0] = seed & 0xFFFFFFFFU;
-		for (int i = 1; i < MT19937_N; i++) {
+		for (i = 1; i < MT19937_N; i++) {
 			MT[i] = (MT[i - 1]^ (MT[i - 1] >> 30)) + i;
 			MT[i] *= MT19937_INIT_MULT;
 			MT[i] &= 0xFFFFFFFFU;
 		}
 	}
 
-	inline double random() {
+	inline double mt19937_random(void) {
 		return ((double) int_rand()) / (double) MT19973_RAND_MAX;
 	}
 
-	inline double gauss_random() {
+	inline double gauss_random(void) {
 		static int flag = 1;
 		static double rnd;
 		if (flag) {
 			double x, y, r;
 
 			do {
-				x = 2 * random() - 1;
-				y = 2 * random() - 1;
+				x = 2 * mt19937_random() - 1;
+				y = 2 * mt19937_random() - 1;
 				r = x * x + y * y;
 			} while (r >= 1.0);
 
@@ -120,9 +127,9 @@ namespace finmag {
 	#define P_HIGH 0.97575
 
 	//norm random numbers, see http://home.online.no/~pjacklam/notes/invnorm/
-	double ltqnorm() {
+	double ltqnorm(void) {
         double q, r;
-        double p=random();
+        double p=mt19937_random();
 
         if (p <= 0) {
               return -MT19973_RAND_MAX;
@@ -150,10 +157,19 @@ namespace finmag {
 
 
 	void gauss_random_vec(double *x, int n, double dev) {
-		for (int i = 0; i < n; i++) {
+		int i;
+		for (i = 0; i < n; i++) {
 			//x[i] = dev * gauss_random();
 			x[i] = dev * ltqnorm();
 		}
 
 	}
+
+
+
+
+
+
+#ifdef __cplusplus
 }
+#endif

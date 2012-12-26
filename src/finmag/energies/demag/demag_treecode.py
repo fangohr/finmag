@@ -2,9 +2,8 @@ from dolfin import *
 import dolfin as df
 import numpy as np
 
-import time
 from finmag.native.fast_sum_lib import FastSum
-import cProfile
+
 
 
 _nodes  =(
