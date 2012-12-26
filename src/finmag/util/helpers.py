@@ -398,6 +398,43 @@ def vector_valued_function(value, mesh_or_space, normalise=False, **kwargs):
 
     return fun
 
+def scale_valued_function(value, mesh_or_space):
+    """
+    A scale function corresponds to the above vector_valued_function.
+    
+    `value` can be any of the following:
+
+        - a number
+        
+        - numpy.ndarray or a common list
+
+        - dolfin.Constant or dolfin.Expression
+
+        - function (or any callable object)
+        
+    """
+    if isinstance(mesh_or_space, df.FunctionSpace):
+        S1 = mesh_or_space
+        mesh = S1.mesh()
+    else:
+        mesh = mesh_or_space
+        S1 = df.FunctionSpace(mesh, "Lagrange", 1)
+    
+    if isinstance(value, (df.Constant, df.Expression)):
+        fun = df.interpolate(value, S1)
+    elif isinstance(value, (np.ndarray,list)):
+        assert(len(value)==S1.vector().size())
+        fun = df.Function(S1)
+        fun.vector().set_local(value)
+    elif isinstance(value,(int,float,long)):
+        fun = df.Function(S1)
+        fun.vector()[:]=value
+    else:
+        raise AttributeError
+
+    return fun
+    
+
 def _create_nonexistent_directory_components(filename):
     """
     Creates any directory components in 'filename' which don't exist yet.
