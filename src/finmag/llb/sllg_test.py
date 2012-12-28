@@ -57,7 +57,7 @@ def test_sllg_100(do_plot=False):
     sim = SLLG(mesh, 8.6e5, unit_length=1e-9)
     alpha=0.1
     sim.alpha = alpha
-    sim.dt=1e-15
+    sim.dt=5e-15
     sim.set_m((1, 0, 0))
     sim.T=100
     #sim.dt=1e-15
@@ -105,14 +105,20 @@ def test_sllg_time():
     H0 = 1e5
     sim.add(Zeeman((0, 0, H0)))
     
+    real_ts=[]
     for t in ts:
         sim.run_until(t)
-        assert sim.t==t
+        real_ts.append(sim.t)
+    
+    print("Max Deviation = {}".format(
+            np.max(np.abs(ts - real_ts))))
+    
+    assert np.max(np.abs(ts - real_ts)) < 1e-24
     
 
 if __name__ == "__main__":
-    #test_sllg_zero_temperature(do_plot=True)
-    #test_sllg_100(do_plot=True)
+    test_sllg_zero_temperature(do_plot=True)
+    test_sllg_100(do_plot=True)
     test_sllg_time()
     
 

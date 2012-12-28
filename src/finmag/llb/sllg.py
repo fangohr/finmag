@@ -80,10 +80,12 @@ class SLLG(object):
         if tp <= self._t:
             return
         
-        while abs(self._t-tp)>1e-6:
+        while tp-self._t>1e-12:
             self.integrator.run_step(self.field)
             self._t+=self._dt
-            
+        
+        if abs(tp-self._t)<1e-12:
+            self._t=tp
 
     def stochastic_update_field(self,y):
                 
