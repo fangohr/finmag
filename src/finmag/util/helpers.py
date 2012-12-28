@@ -429,6 +429,11 @@ def scale_valued_function(value, mesh_or_space):
     elif isinstance(value,(int,float,long)):
         fun = df.Function(S1)
         fun.vector()[:]=value
+    elif hasattr(value, '__call__'):
+        coords=mesh.coordinates()
+        fun = df.Function(S1)
+        for i in xrange(len(coords)):   
+            fun.vector()[i] = value(coords[i])
     else:
         raise AttributeError
 
