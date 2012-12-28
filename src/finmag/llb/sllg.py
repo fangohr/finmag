@@ -9,7 +9,8 @@ from finmag.util.meshes import mesh_volume
 
 class SLLG(object):
     def __init__(self,mesh,Ms=8.6e5,unit_length=1.0):
-        self.t=0
+        self._t=0
+        self.time_scale=1e-9
         self.mesh=mesh
         self.S1 = df.FunctionSpace(mesh, "Lagrange", 1)
         self.S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1,dim=3)
@@ -51,15 +52,18 @@ class SLLG(object):
         self.c = 1e11  # 1/s numerical scaling correction 
         self.dt=1e-14
         self.T=0
-        
+  
+    @property
+    def t(self):
+        return self._t*self.time_scale       
     @property
     def dt(self):
-        return self._dt
+        return self._dt*self.time_scale 
     
     @dt.setter
     def dt(self, value):
-        self._dt=value
-        self.integrator.setup_parameters(self.gamma,self.Ms,self._dt,self.c)
+        self._dt=value/self.time_scale 
+        self.integrator.setup_parameters(self.gamma,self.Ms,self.dt,self.c)
                 
     def set_m(self,value):
         self._m = helpers.vector_valued_function(value, self.S3, normalise=False)
@@ -71,12 +75,15 @@ class SLLG(object):
 
 
     def run_until(self,t):
-        if t <= self.t:
+        tp=t/self.time_scale
+        
+        if tp <= self._t:
             return
-        while self.t<t:
+        
+        while abs(self._t-tp)>1e-6:
             self.integrator.run_step(self.field)
-            self.t+=self.dt
-    
+            self._t+=self._dt
+            
 
     def stochastic_update_field(self,y):
                 
@@ -114,5 +121,5 @@ class SLLG(object):
         mx = df.assemble(df.dot(self._m, df.Constant([1, 0, 0])) * df.dx)
         my = df.assemble(df.dot(self._m, df.Constant([0, 1, 0])) * df.dx)
         mz = df.assemble(df.dot(self._m, df.Constant([0, 0, 1])) * df.dx)
-        return np.array([mx, my, mz]) / self.volumes
+        return np.array([mx, my, mz]) / self.Volume
 

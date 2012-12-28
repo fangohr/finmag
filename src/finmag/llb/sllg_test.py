@@ -57,9 +57,10 @@ def test_sllg_100(do_plot=False):
     sim = SLLG(mesh, 8.6e5, unit_length=1e-9)
     alpha=0.1
     sim.alpha = alpha
+    sim.dt=1e-15
     sim.set_m((1, 0, 0))
     sim.T=100
-
+    #sim.dt=1e-15
     H0 = 1e5
     sim.add(Zeeman((0, 0, H0)))
     
@@ -93,10 +94,26 @@ def test_sllg_100(do_plot=False):
             mz_ref))
     
     assert np.max(np.abs(mz - mz_ref)) < 0.16
+    
+
+def test_sllg_time():
+    mesh = df.Box(0, 0, 0, 5, 5, 5, 1, 1, 1)
+    sim = SLLG(mesh, 8.6e5, unit_length=1e-9)
+    sim.alpha = 0.1
+    ts = np.linspace(0, 1e-9, 1001)
+    
+    H0 = 1e5
+    sim.add(Zeeman((0, 0, H0)))
+    
+    for t in ts:
+        sim.run_until(t)
+        assert sim.t==t
+    
 
 if __name__ == "__main__":
-    test_sllg_zero_temperature(do_plot=True)
-    test_sllg_100(do_plot=True)
+    #test_sllg_zero_temperature(do_plot=True)
+    #test_sllg_100(do_plot=True)
+    test_sllg_time()
     
 
 
