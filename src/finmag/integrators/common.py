@@ -7,6 +7,29 @@ log = logging.getLogger(name="finmag")
 
 ONE_DEGREE_PER_NS = 17453292.5  # in rad/s
 
+def run_until(integrator, time, schedule=None):
+    """
+    Run the integrator until *time* has been reached.
+
+    When a scheduler has been passed as an argument, the integrator will stop
+    at the defined time-steps and notify the scheduler so it can trigger the
+    appropriate actions.
+
+    TODO:
+    1. Run until time when no scheduler is present.
+    2. If there is a scheduler, run through the time steps and let the
+       callbacks be triggered until time has been reached.
+    3. rename the run_until methods in the integrators to advance_time, so that
+       this method can be the new default.
+    4. let time also be 'relaxation' or something similar to unify both methods
+       if possible (if we run until relaxation, we will need to observe
+       convergence and have a default schedule if none is provided.
+    5. rip out all snapshot, saving averages code and add it as options to
+       the simulations object
+
+    """
+    pass
+
 def run_until_relaxation(integrator,
         save_snapshots=False, filename=None, save_every=100e-12, save_final_snapshot=True,
         stopping_dmdt=ONE_DEGREE_PER_NS, dmdt_increased_counter_limit=50, dt_limit=1e-10):
