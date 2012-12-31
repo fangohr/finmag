@@ -42,7 +42,7 @@ $(MODULE_DIR)/fast_sum_lib.so:
 	cd src/fast_sum_lib && python setup.py build_ext --inplace
 	install src/fast_sum_lib/fast_sum_lib.so ../src/finmag/native
 	
-$(MODULE_DIR)/sllgc.so:
+$(MODULE_DIR)/sllgc.so: src/llb/sllg.c src/llb/clib.pyx
 	cd src/llb && python setup.py build_ext --inplace
 	install src/llb/sllgc.so ../src/finmag/native
 

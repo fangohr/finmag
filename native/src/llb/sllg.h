@@ -5,7 +5,7 @@ typedef struct {
 	int nxyz;
 
 	double dt;
-	double Ms;
+
 	double c;
     double Q;
     double gamma;
@@ -22,13 +22,14 @@ typedef struct {
 	double *T;
 	double *alpha;
 	double *V;
+	double *Ms;
 
 } ode_solver;
 
 
 ode_solver *create_ode_plan();
-void init_solver(ode_solver *s,double *alpha, double *T, double *V,int nxyz);
-void init_solver_parameters(ode_solver *s, double gamma, double Ms, double dt, double c);
+void init_solver(ode_solver *s,double *alpha, double *T, double *V, double *Ms, int nxyz);
+void init_solver_parameters(ode_solver *s, double gamma,double dt, double c);
 void finalize_ode_plan(ode_solver *plan);
 void run_step1(ode_solver *s, double *m, double *h, double *m_pred);
 void run_step2(ode_solver *s, double *m_pred, double *h, double *m);
