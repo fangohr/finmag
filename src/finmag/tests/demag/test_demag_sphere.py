@@ -2,11 +2,10 @@ import pytest
 import numpy as np
 import dolfin as df
 from finmag.util.meshes import sphere
-from finmag.energies.demag.solver_fk_alt import SimpleFKSolver
 from finmag.energies.demag.solver_fk import FemBemFKSolver as FKSolver
 from finmag.energies.demag.solver_gcr import FemBemGCRSolver as GCRSolver
 
-solvers = [SimpleFKSolver, FKSolver, GCRSolver]
+solvers = [FKSolver, GCRSolver]
 TOL = 1e-2
 
 @pytest.fixture(scope="module")
@@ -19,10 +18,7 @@ def uniformly_magnetised_sphere():
 
     solutions = []
     for solver in solvers:
-        if solver.__name__ == "SimpleFKSolver":
-            solution = solver(S3, m, Ms)
-        else:
-            solution = solver(mesh, m, Ms=Ms)
+        solution = solver(mesh, m, Ms=Ms)
         solution.H = solution.compute_field()
         solutions.append(solution)
     return solutions

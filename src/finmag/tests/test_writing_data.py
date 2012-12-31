@@ -11,7 +11,7 @@ def test_write_ndt_file():
     # TODO: This might not be the best solution, should revise this at some point.
     os.chdir(MODULE_DIR)
 
-    RTOL = 1e-12
+    RTOL = 1e-11
 
     output_file = "barmini_test.ndt"
     reference_file = "barmini_test.ndt.ref"

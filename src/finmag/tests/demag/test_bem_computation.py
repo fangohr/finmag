@@ -7,6 +7,7 @@ from finmag.util import time_counter
 from finmag.util import helpers
 from finmag.util.meshes import mesh_volume
 from finmag.energies.demag import belement_magpar
+from finmag.energies.demag import belement
 from finmag.tests.test_solid_angle_invariance import random_3d_rotation_matrix
 from problems.prob_fembem_testcases import MagSphereBase
 from finmag.energies import Demag
@@ -93,27 +94,20 @@ class BemComputationTests(unittest.TestCase):
         m = df.interpolate(df.Constant((1, 0, 0)), S3)
         Ms = 1.0
 
-        # Using the weiwei solver to compare against,
-        # because this still has the magpar bem,
-        # while the main fk solver now uses the native bem.
-        demag = Demag(solver="weiwei")
-        demag.setup(S3, m, Ms, unit_length=1)
-
-        bem_finmag = demag.demag.B
-        bem_native = np.zeros(bem_finmag.shape)
+        bem_magpar,g2finmag = belement.BEM_matrix(mesh)
+        bem_finmag = np.zeros(bem_magpar.shape)
         bem, b2g = compute_bem_fk(OrientedBoundaryMesh(mesh))
-        g2finmag = demag.demag.gnodes_to_bnodes
         for i_dolfin in xrange(bem.shape[0]):
             i_finmag = g2finmag[b2g[i_dolfin]]
 
             for j_dolfin in xrange(bem.shape[0]):
                 j_finmag = g2finmag[b2g[j_dolfin]]
-                bem_native[i_finmag, j_finmag] = bem[i_dolfin, j_dolfin]
-        if np.max(np.abs(bem_finmag - bem_native)) > 1e-12:
+                bem_finmag[i_finmag, j_finmag] = bem[i_dolfin, j_dolfin]
+        if np.max(np.abs(bem_finmag - bem_magpar)) > 1e-12:
             print "Finmag:", np.round(bem_finmag, 4)
-            print "Native:", np.round(bem_native, 4)
+            print "Magpar:", np.round(bem_magpar, 4)
             print "Difference:", np.round(bem_native - bem_finmag, 4)
-            self.fail("Finmag and native computation of BEM differ, mesh: " + str(mesh))
+            self.fail("Finmag and magpar computation of BEM differ, mesh: " + str(mesh))
 
     def test_bem_computation(self):
         self.run_bem_computation_test(df.UnitSphere(1))
