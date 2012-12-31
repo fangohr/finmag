@@ -321,6 +321,12 @@ def mesh_and_space(mesh_or_space):
         S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
     return mesh, S3
 
+def mesh_equal(mesh1,mesh2):
+    cds1=mesh1.coordinates()
+    cds2=mesh2.coordinates()
+    return np.array_equal(cds1,cds2)
+
+
 def vector_valued_function(value, mesh_or_space, normalise=False, **kwargs):
     """
     Create a constant function on the VectorFunctionSpace `S3` whose value
@@ -423,8 +429,8 @@ def scale_valued_function(value, mesh_or_space):
     if isinstance(value, (df.Constant, df.Expression)):
         fun = df.interpolate(value, S1)
     elif isinstance(value, (np.ndarray,list)):
-        assert(len(value)==S1.vector().size())
         fun = df.Function(S1)
+        assert(len(value)==fun.vector().size())
         fun.vector().set_local(value)
     elif isinstance(value,(int,float,long)):
         fun = df.Function(S1)
@@ -434,6 +440,60 @@ def scale_valued_function(value, mesh_or_space):
         fun = df.Function(S1)
         for i in xrange(len(coords)):   
             fun.vector()[i] = value(coords[i])
+    else:
+        raise AttributeError
+
+    return fun
+
+
+def scale_valued_dg_function(value, mesh_or_space):
+    """
+    A scale function corresponds to the above vector_valued_function.
+    
+    `value` can be any of the following:
+
+        - a number
+        
+        - numpy.ndarray or a common list
+
+        - dolfin.Constant or dolfin.Expression
+
+        - function (or any callable object)
+        
+    """
+    if isinstance(mesh_or_space, df.FunctionSpace):
+        dg = mesh_or_space
+        mesh = dg.mesh()
+    else:
+        mesh = mesh_or_space
+        dg = df.FunctionSpace(mesh, "DG", 0)
+    
+    if isinstance(value, (df.Constant, df.Expression)):
+        fun = df.interpolate(value, dg)
+    elif isinstance(value, (np.ndarray,list)):
+        fun = df.Function(dg)
+        assert(len(value)==fun.vector().size())
+        fun.vector().set_local(value)
+    elif isinstance(value,(int,float,long)):
+        fun = df.Function(dg)
+        fun.vector()[:]=value
+    elif isinstance(value, df.Function):
+        mesh1=value.function_space().mesh()
+        if mesh_equal(mesh,mesh1):
+            fun=value
+        else:
+            raise RuntimeError("Meshes are not compatible for given function.")
+    elif hasattr(value, '__call__'):
+        fun = df.Function(dg)
+        cds=mesh.coordinates()
+    
+        index=0
+        for cell in df.cells(mesh):
+            p1,p2,p3,p4=cell.entities(0)
+            coord=(cds[p1]+cds[p2]+cds[p3]+cds[p4])/4.0
+            fun.vector()[index] = value(coord)
+            index+=1
+            
     else:
         raise AttributeError
 

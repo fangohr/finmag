@@ -1,4 +1,5 @@
 from math import pi, sqrt
+import numpy as np
 
 #a collection of constants we use frequently.
 #(in SI units)
@@ -16,7 +17,7 @@ def exchange_length(A, Ms):
     and the saturation magnetisation Ms.
 
     """
-    return sqrt(2 * A / (mu0 * Ms ** 2))
+    return np.sqrt(2 * A / (mu0 * Ms ** 2))
 
 def bloch_parameter(A, K1):
     """

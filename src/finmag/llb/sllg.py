@@ -123,7 +123,7 @@ class SLLG(object):
         
     @property
     def Ms(self):
-        return self._T
+        return self._Ms
     
     @Ms.setter
     def Ms(self, value):

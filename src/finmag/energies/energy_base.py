@@ -4,6 +4,7 @@ import numpy as np
 from finmag.util.timings import mtimed
 from finmag.util.consts import mu0
 from finmag.util.meshes import nodal_volume
+from finmag.util import helpers
 
 logger = logging.getLogger('finmag')
 
@@ -232,3 +233,11 @@ class EnergyBase(object):
     def __compute_field_project(self):
         df.solve(self.a == self.L, self.H_project)
         return self.H_project.vector().array()
+    
+    @property
+    def Ms(self):
+        return self._Ms
+    
+    @Ms.setter
+    def Ms(self, value):
+        self._Ms=helpers.scale_valued_dg_function(value,self.S3.mesh())
