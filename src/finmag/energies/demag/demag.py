@@ -4,7 +4,6 @@ import dolfin as df
 from finmag.util.timings import timings
 from solver_fk import FemBemFKSolver
 from solver_gcr import FemBemGCRSolver
-from solver_fk_alt import SimpleFKSolver
 from solver_base import default_parameters
 
 
@@ -68,15 +67,13 @@ class Demag(object):
         #    self.demag = MagparFKSolver(**kwargs)
         elif self.solver == "GCR":
             self.demag = FemBemGCRSolver(**kwargs)
-        elif self.solver == "weiwei":
-            self.demag = SimpleFKSolver(S3, m, Ms)
-
+        
         #Log the linear solver parameters
-        if self.solver != "weiwei":
-            for (name, solver) in (("Poisson", self.demag.poisson_solver), ("Laplace", self.demag.laplace_solver)):
-                params = repr(solver.parameters.to_dict())
-                log.debug("{}: {} solver parameters.\n{}".format(
-                    self.__class__.__name__, name, textwrap.fill(params, width=100,
+        
+        for (name, solver) in (("Poisson", self.demag.poisson_solver), ("Laplace", self.demag.laplace_solver)):
+            params = repr(solver.parameters.to_dict())
+            log.debug("{}: {} solver parameters.\n{}".format(
+                        self.__class__.__name__, name, textwrap.fill(params, width=100,
                         initial_indent=4*" ", subsequent_indent=4*" ")))
 
     def compute_field(self):

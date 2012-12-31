@@ -479,7 +479,8 @@ def scale_valued_dg_function(value, mesh_or_space):
         fun.vector()[:]=value
     elif isinstance(value, df.Function):
         mesh1=value.function_space().mesh()
-        if mesh_equal(mesh,mesh1):
+        fun = df.Function(dg)
+        if mesh_equal(mesh,mesh1) and value.vector().size()==fun.vector().size():
             fun=value
         else:
             raise RuntimeError("Meshes are not compatible for given function.")
