@@ -137,6 +137,36 @@ def test_vector_valued_function():
 
     assert(all(f_expr_normalised.vector() == v_ref_expr_normalised))
     assert(all(f_callable_normalised.vector() == v_ref_expr_normalised))
+    
+    
+def test_scale_valued_dg_function():
+    mesh = df.UnitCube(2, 2, 2)
+    
+    def init_f(coord):
+        x,y,z=coord
+        if z<=0.5:
+            return 1
+        else:
+            return 10
+    
+    f=scale_valued_dg_function(init_f,mesh)
+    
+    assert f(0,0,0.51)==10.0
+    assert f(0.5,0.7,0.51)==10.0
+    assert f(0.4,0.3,0.96)==10.0
+    assert f(0,0,0.49)==1.0
+    fa=f.vector().array().reshape(2,-1)
+    
+    assert np.min(fa[0])==np.max(fa[0])==1
+    assert np.min(fa[1])==np.max(fa[1])==10
+    
+    
+    dg = df.FunctionSpace(mesh, "DG", 0)
+    dgf=df.Function(dg)
+    dgf.vector()[0]=9.9
+    f=scale_valued_dg_function(dgf,mesh)
+    assert f.vector().array()[0]==9.9
+    
 
 def test_angle():
     assert abs(angle([1,0,0],[1,0,0]))           < TOLERANCE
@@ -268,3 +298,6 @@ def test_vector_field_from_dolfin_function():
     assert(np.allclose(U, U2))
     assert(np.allclose(V, V2))
     assert(np.allclose(W, W2))
+    
+if __name__ == '__main__':
+    test_scale_valued_dg_function()
