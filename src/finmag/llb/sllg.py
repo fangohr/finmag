@@ -26,15 +26,18 @@ class SLLG(object):
         self.m=np.zeros(3*self.nxyz)
         self.field=np.zeros(3*self.nxyz)
         self.dm_dt=np.zeros(3*self.nxyz)
-        self._Ms = np.zeros(self.nxyz)
+        self._Ms = np.zeros(3*self.nxyz) #Note: nxyz for Ms length is more suitable? 
         self.effective_field = EffectiveField(mesh)
-        self.Ms=Ms
+        
 
         self.pin_fun=None
 
         self.set_default_values()
         self.auto_save_data=auto_save_data
         self.name = name
+        
+        self.Ms=Ms
+        
         if self.auto_save_data:
             self.ndtfilename = self.name + '.ndt'
             self.tablewriter = Tablewriter(self.ndtfilename, self, override=True)
@@ -45,13 +48,13 @@ class SLLG(object):
         self._pins = np.array([], dtype="int")
         self.volumes = df.assemble(df.dot(df.TestFunction(self.S3), df.Constant([1, 1, 1])) * df.dx).array()
         self.Volume = mesh_volume(self.mesh)
-        self.volumes*=self.unit_length**3
+        self.real_volumes=self.volumes*self.unit_length**3
         
         self.integrator=RK2S(self.nxyz,
                                 self.m,
                                 self._alpha,
                                 self._T,
-                                self.volumes,
+                                self.real_volumes,
                                 self._Ms,
                                 self.stochastic_update_field)
         
@@ -78,7 +81,7 @@ class SLLG(object):
         self.m[:]=self._m.vector().array()[:]
 
     def add(self,interaction,with_time_update=None):
-        interaction.setup(self.S3, self._m, self.Ms, self.unit_length)
+        interaction.setup(self.S3, self._m, self._Ms_dg, self.unit_length)
         self.effective_field.add(interaction, with_time_update)
 
 
@@ -127,7 +130,12 @@ class SLLG(object):
     
     @Ms.setter
     def Ms(self, value):
-        self._Ms[:]=helpers.scale_valued_function(value,self.S1).vector().array()[:]
+        self._Ms_dg=helpers.scale_valued_dg_function(value,self.mesh)
+
+        tmp = df.assemble(self._Ms_dg*df.dot(df.TestFunction(self.S3), df.Constant([1, 1, 1])) * df.dx)
+        tmp=tmp/self.volumes
+        self._Ms[:]=tmp[:]
+        
             
     
     @property
@@ -152,7 +160,8 @@ if __name__ == "__main__":
     sim = SLLG(mesh, 8.6e5, unit_length=1e-9)
     sim.alpha = 0.1
     sim.set_m((1, 0, 0))
-    ts = np.linspace(0, 1e-9, 1001)
+    ts = np.linspace(0, 10e-9, 101)
+    print sim.Ms
     
     H0 = 1e5
     sim.add(Zeeman((0, 0, H0)))
