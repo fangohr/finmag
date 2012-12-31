@@ -6,8 +6,8 @@ cdef extern from "sllg.h":
 		pass
 	
 	ode_solver *create_ode_plan()
-	void init_solver(ode_solver *s,double *alpha, double *T, double *V,int nxyz)
-	void init_solver_parameters(ode_solver *s, double gamma, double Ms, double dt, double c)
+	void init_solver(ode_solver *s,double *alpha, double *T, double *V, double *Ms, int nxyz)
+	void init_solver_parameters(ode_solver *s, double gamma, double dt, double c)
 	void finalize_ode_plan(ode_solver *plan)
 	void run_step1(ode_solver *s, double *m, double *h, double *m_pred)
 	void run_step2(ode_solver *s, double *m_pred, double *h, double *m)
@@ -26,6 +26,7 @@ cdef class RK2S(object):
 				np.ndarray[double, ndim=1, mode="c"] alpha,
 				np.ndarray[double, ndim=1, mode="c"] T,
 				np.ndarray[double, ndim=1, mode="c"] V,
+				np.ndarray[double, ndim=1, mode="c"] Ms,
 				update_fun):
 		self.spin=spin
 		self.update_fun=update_fun
@@ -35,15 +36,15 @@ cdef class RK2S(object):
 		if self._c_plan is NULL:
 			raise MemoryError()
 		
-		init_solver(self._c_plan,&alpha[0],&T[0],&V[0],nxyz)
+		init_solver(self._c_plan,&alpha[0],&T[0],&V[0],&Ms[0],nxyz)
 		
 	def __dealloc__(self):
 		if self._c_plan is not NULL:
 			finalize_ode_plan(self._c_plan)
 			self._c_plan = NULL
 		
-	def setup_parameters(self,gamma,Ms,dt,c):
-		init_solver_parameters(self._c_plan, gamma, Ms,dt,c)
+	def setup_parameters(self,gamma,dt,c):
+		init_solver_parameters(self._c_plan, gamma,dt,c)
 				
 	def run_step(self, np.ndarray[double, ndim=1, mode="c"] field):
 		cdef np.ndarray[double, ndim=1, mode="c"] spin=self.spin
