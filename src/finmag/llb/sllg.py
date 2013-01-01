@@ -2,12 +2,16 @@ import numpy as np
 import dolfin as df
 import finmag.util.consts as consts
 
-from finmag.energies import Zeeman
+
 from finmag.native.sllgc import RK2S
 from finmag.util import helpers
 from finmag.energies.effective_field import EffectiveField
 from finmag.util.meshes import mesh_volume
 from finmag.util.fileio import Tablewriter
+
+from finmag.energies import Zeeman
+from finmag.energies import Exchange
+from finmag.energies import Demag
 
 class SLLG(object):
     def __init__(self,mesh,Ms=8.6e5,unit_length=1.0,name='unnamed',auto_save_data=True):
@@ -160,11 +164,20 @@ if __name__ == "__main__":
     sim = SLLG(mesh, 8.6e5, unit_length=1e-9)
     sim.alpha = 0.1
     sim.set_m((1, 0, 0))
-    ts = np.linspace(0, 10e-9, 101)
+    ts = np.linspace(0, 1e-10, 101)
     print sim.Ms
     
     H0 = 1e5
     sim.add(Zeeman((0, 0, H0)))
+    
+    A=helpers.scale_valued_dg_function(13.0e-12,mesh)
+    exchange = Exchange(A)
+    sim.add(exchange)
+    
+    demag=Demag(solver='FK')
+    sim.add(demag)
+    
+    print exchange.Ms.vector().array()
     
     for t in ts:
         sim.run_until(t)
