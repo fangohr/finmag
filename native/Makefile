@@ -20,7 +20,7 @@ all : parallel
 # The directory where to place the extension modules
 MODULE_DIR = ../src/finmag/native
 # The list of extension modules to build
-MODULES = sundials.so llg.so llb.so fast_sum_lib.so sllgc.so
+MODULES = sundials.so llg.so llb.so fast_sum_lib.so sllgc.so treecode_bem.so
 # The directory to store the precompiled header file.
 PRECOMPILED_HEADER_DIR ?= /tmp/$(USER)/finmag-pch/$(abspath .)
 # Name of the binary that runs all unit tests
@@ -47,8 +47,8 @@ $(MODULE_DIR)/sllgc.so: src/llb/sllg.c src/llb/clib.pyx
 	install src/llb/sllgc.so ../src/finmag/native
 	
 $(MODULE_DIR)/treecode_bem.so: src/tree_code_bem/treecode_bem.c src/tree_code_bem/treecode_bem_lib.pyx
-	cd src/llb && python setup.py build_ext --inplace
-	install src/llb/treecode_bem.so ../src/finmag/native
+	cd src/tree_code_bem && python setup.py build_ext --inplace
+	install src/tree_code_bem/treecode_bem.so ../src/finmag/native
 
 $(UNIT_TEST_BINARY) : tests/run_ci_tests.o src/util/np_array.o src/sundials/tests/sundials_tests.o src/sundials/numpy_malloc.o src/llg/tests/boundary_mesh_tests.o
 run_ci_tests_LDFLAGS=-lboost_prg_exec_monitor /usr/lib/libboost_unit_test_framework.a $(SUNDIALS_NVECTOR_SO) -ldolfin

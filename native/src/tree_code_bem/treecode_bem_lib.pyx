@@ -43,7 +43,7 @@ cdef class FastSum:
         assert num_limit>=1
         assert r_eps>=0
         self._c_plan=create_plan()
-        print 'from cython p=',p,'mac=',mac,'r_eps=',r_eps,'num_limit=',num_limit
+        print 'from cython p=',p,'mac=',mac,'r_eps_factor=',r_eps,'num_limit=',num_limit
         if self._c_plan is NULL:
             raise MemoryError()
 
