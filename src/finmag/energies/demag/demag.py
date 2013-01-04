@@ -17,7 +17,7 @@ class Demag(object):
 
     *Arguments*
         solver
-            demag solver method: "FK", "GCR" or "weiwei"
+            demag solver method: "FK" or "GCR"
 
     """
     def __init__(self, solver="FK", degree=1, element="CG", project_method="magpar",bench = False,
@@ -25,10 +25,10 @@ class Demag(object):
         self.in_jacobian = False
         log.debug("Creating Demag object with " + solver + " solver.")
 
-        if solver in ["FK", "GCR", "weiwei"]:
+        if solver in ["FK", "GCR"]:
             self.solver = solver
         else:
-            raise NotImplementedError("Only 'FK', 'GCR' and 'weiwei' are implemented")
+            raise NotImplementedError("Only 'FK' and 'GCR' are implemented")
 
         self.degree = degree
         self.element = element
