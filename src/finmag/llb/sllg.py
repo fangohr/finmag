@@ -97,6 +97,7 @@ class SLLG(object):
         
         while tp-self._t>1e-12:
             self.integrator.run_step(self.field)
+            self._m.vector().set_local(self.m)
             self._t+=self._dt
         
         if abs(tp-self._t)<1e-12:
@@ -148,12 +149,11 @@ class SLLG(object):
         Compute and return the average polarisation according to the formula
         :math:`\\langle m \\rangle = \\frac{1}{V} \int m \: \mathrm{d}V`
 
-        """
-        #Compute volume if not done before
-            
+        """ 
         mx = df.assemble(df.dot(self._m, df.Constant([1, 0, 0])) * df.dx)
         my = df.assemble(df.dot(self._m, df.Constant([0, 1, 0])) * df.dx)
         mz = df.assemble(df.dot(self._m, df.Constant([0, 0, 1])) * df.dx)
+                
         return np.array([mx, my, mz]) / self.Volume
     
     def save_data(self):

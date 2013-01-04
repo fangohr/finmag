@@ -280,7 +280,7 @@ def sphere(r, maxh, save_result=True, filename='', directory=''):
         """).format(r=r, maxh=maxh)
 
     if save_result == True and filename == '':
-        filename = "sphere-{:.1f}-{:.1f}".format(r, maxh).replace(".", "_")
+        filename = "sphere-{:g}-{:g}".format(r, maxh).replace(".", "_")
     return from_csg(csg, save_result=save_result, filename=filename, directory=directory)
 
 def cylinder(r, h, maxh, save_result=True, filename='', directory=''):
