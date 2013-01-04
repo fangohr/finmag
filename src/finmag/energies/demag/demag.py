@@ -4,6 +4,7 @@ import dolfin as df
 from finmag.util.timings import timings
 from solver_fk import FemBemFKSolver
 from solver_gcr import FemBemGCRSolver
+from treecode_bem import TreecodeBEM
 from solver_base import default_parameters
 
 
@@ -25,10 +26,10 @@ class Demag(object):
         self.in_jacobian = False
         log.debug("Creating Demag object with " + solver + " solver.")
 
-        if solver in ["FK", "GCR"]:
+        if solver in ["FK", "GCR","Treecode"]:
             self.solver = solver
         else:
-            raise NotImplementedError("Only 'FK' and 'GCR' are implemented")
+            raise NotImplementedError("Only 'FK', 'GCR' and 'Treecode' are implemented")
 
         self.degree = degree
         self.element = element
@@ -36,7 +37,8 @@ class Demag(object):
         self.bench = bench
         self.parameters = parameters
 
-    def setup(self, S3, m, Ms, unit_length = 1):
+    def setup(self, S3, m, Ms, unit_length = 1,
+              p=3,mac=0.3,number_limit=100,correct_factor=5):
         """
         S3
             dolfin VectorFunctionSpace
@@ -67,6 +69,14 @@ class Demag(object):
         #    self.demag = MagparFKSolver(**kwargs)
         elif self.solver == "GCR":
             self.demag = FemBemGCRSolver(**kwargs)
+            
+        elif self.solver == "Treecode":
+            kwargs["p"]=p
+            kwargs["mac"]=mac
+            kwargs["num_limit"]=number_limit,
+            kwargs["correct_factor"]=correct_factor
+            
+            self.demag = TreecodeBEM(**kwargs)
         
         #Log the linear solver parameters
         
