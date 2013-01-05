@@ -18,6 +18,12 @@ class SLLG(object):
         self._t=0
         self.time_scale=1e-9
         self.mesh=mesh
+        self.domains =  df.CellFunction("uint", mesh)
+        self.domains.set_all(0)
+        self.dx = df.Measure("dx")[self.domains]
+        self.region_id=0
+        print self.domains.array()
+        
         self.S1 = df.FunctionSpace(mesh, "Lagrange", 1)
         self.S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1,dim=3)
         self._m = df.Function(self.S3)
@@ -143,18 +149,39 @@ class SLLG(object):
         
             
     
-    @property
-    def m_average(self):
+    
+    def m_average_fun(self,dx=df.dx):
         """
         Compute and return the average polarisation according to the formula
         :math:`\\langle m \\rangle = \\frac{1}{V} \int m \: \mathrm{d}V`
 
         """ 
-        mx = df.assemble(df.dot(self._m, df.Constant([1, 0, 0])) * df.dx)
-        my = df.assemble(df.dot(self._m, df.Constant([0, 1, 0])) * df.dx)
-        mz = df.assemble(df.dot(self._m, df.Constant([0, 0, 1])) * df.dx)
-                
-        return np.array([mx, my, mz]) / self.Volume
+        
+        mx = df.assemble(self._Ms_dg*df.dot(self._m, df.Constant([1, 0, 0])) * dx)
+        my = df.assemble(self._Ms_dg*df.dot(self._m, df.Constant([0, 1, 0])) * dx)
+        mz = df.assemble(self._Ms_dg*df.dot(self._m, df.Constant([0, 0, 1])) * dx)
+        volume = df.assemble(self._Ms_dg*dx,mesh=self.mesh)
+                        
+        return np.array([mx, my, mz]) / volume
+    m_average=property(m_average_fun)
+    
+        
+    def save_m_in_region(self,region,name='unnamed'):
+        
+        self.region_id+=1
+        helpers.mark_subdomain_by_function(region, self.mesh, self.region_id,self.domains)
+        self.dx = df.Measure("dx")[self.domains]
+        
+        if name=='unnamed':
+            name='region_'+str(self.region_id)
+        
+        region_id=self.region_id
+        self.tablewriter.entities[name]={
+                        'unit': '<>',
+                        'get': lambda sim: sim.m_average_fun(dx=self.dx(region_id)),
+                        'header': (name+'_m_x', name+'_m_y', name+'_m_z')}
+        
+        self.tablewriter.update_entity_order()
     
     def save_data(self):
         self.tablewriter.save()
