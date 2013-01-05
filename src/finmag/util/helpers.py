@@ -499,7 +499,37 @@ def scale_valued_dg_function(value, mesh_or_space):
         raise AttributeError
 
     return fun
+
+def mark_subdomain_by_function(fun,mesh_or_space,domain_index,subdomains):
+    """
+    Mark the subdomains with given index if user provide a region by function, such as
     
+    def region1(coords):
+        if coords[2]<0.5:
+            return 1
+        else:
+            return 0
+        
+    """
+    if isinstance(mesh_or_space, df.FunctionSpace):
+        dg = mesh_or_space
+        mesh = dg.mesh()
+    else:
+        mesh = mesh_or_space
+    
+    if hasattr(fun, '__call__'):
+        cds=mesh.coordinates()
+    
+        index=0
+        for cell in df.cells(mesh):
+            p1,p2,p3,p4=cell.entities(0)
+            coord=(cds[p1]+cds[p2]+cds[p3]+cds[p4])/4.0
+            if fun(coord)>0:
+                subdomains.array()[index] = domain_index
+            index+=1
+            
+    else:
+        raise AttributeError    
 
 def _create_nonexistent_directory_components(filename):
     """

@@ -425,6 +425,7 @@ def ring(r1,r2, h, maxh, save_result=True, filename='', directory='',with_middle
 def mesh_volume(mesh):
     """
     Computes the total volume of all tetrahedral cells in the mesh.
+    alternatively,  volume = assemble(Constant(1)*dx, mesh=mesh)
     """
     return sum([c.volume() for c in df.cells(mesh)])
 

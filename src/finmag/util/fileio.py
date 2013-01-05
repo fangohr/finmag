@@ -61,10 +61,9 @@ class Tablewriter(object):
         if os.path.exists(filename) and not override:
             msg = "File %s exists already; cowardly stopping" % filename
             raise RuntimeError(msg)
-        f = open(self.filename, 'w')
-        # Write header
-        f.write(self.headers())
-        f.close()
+        
+        self.save_head=False
+
         self.sim = simulation
 
     def default_entity_order(self):
@@ -72,6 +71,9 @@ class Tablewriter(object):
         # time needs to go first
         keys.remove('time')
         return ['time'] + sorted(keys)
+    
+    def update_entity_order(self):
+        self.entity_order = self.default_entity_order()
 
     def headers(self):
         """return line one and two of ndt data file as string"""
@@ -91,6 +93,14 @@ class Tablewriter(object):
 
     def save(self):
         """Append data (spatial averages of fields) for current configuration"""
+        
+        if not self.save_head:
+            f = open(self.filename, 'w')
+            # Write header
+            f.write(self.headers())
+            f.close()
+            self.save_head=True
+        
         # open file
         with open(self.filename, 'a') as f:
             f.write(' ' * len(self.comment_symbol))  # account for comment symbol width
