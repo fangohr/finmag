@@ -21,6 +21,7 @@ import tempfile
 import dolfin as df
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
 from dolfin import Mesh, assemble, Constant, dx
 from types import ListType, TupleType
@@ -511,7 +512,7 @@ def print_mesh_info(mesh):
     print mesh_info(mesh)
 
 
-def plot_mesh(mesh, ax=None, color="blue", figsize=None, **kwargs):
+def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, **kwargs):
     """
     Plot the given mesh.
 
@@ -530,6 +531,15 @@ def plot_mesh(mesh, ax=None, color="blue", figsize=None, **kwargs):
 
     *Arguments*
 
+    scalar_field: None or array (of scalar vertex values) or function
+
+        If given, the triangle colors will be derived from the field
+        values (using the specified cmap). In this case the `color`
+        argument is ignored. If scalar_field is a function, it is
+        first applied to all vertices and should expect an array of
+        (x, y) (for 2D meshes) or (x, y, z) (for 3d meshes)
+        coordinates as its argument.
+
     ax : None or matplotlib.axes.AxesSubplot (for 2D meshes)
               or matplotlib.axes.Axes3DSubplot (for 3D meshes)
 
@@ -545,9 +555,12 @@ def plot_mesh(mesh, ax=None, color="blue", figsize=None, **kwargs):
         Size of the figure in which the mesh is to be plotted. If the
         `ax` argument is provided, this is ignored.
 
-    The 'color' argument as well as all other keyword arguments are
-    passed on to matplotlib's `plot_trisurf` (for 3D meshes) or to
-    `triplot` (for 2D meshes).
+    All other keyword arguments are passed on to matplotlib's `plot_trisurf`
+    (for 3D meshes) or to `triplot` (for 2D meshes). The following defaults
+    are used:
+
+       color = 'blue'
+       cmap = matplotlib.cm.jet
 
     *Returns*
 
@@ -572,6 +585,13 @@ def plot_mesh(mesh, ax=None, color="blue", figsize=None, **kwargs):
             logger.debug("Automatically adapting linewidth to improve plot quality "
                          "(new value: linewidth = {})".format(kwargs['linewidth']))
 
+    # Set default values for some keyword arguments
+    if not kwargs.has_key('color'):
+        kwargs['color'] = 'blue'
+    if scalar_field != None and not kwargs.has_key('cmap'):
+        # cmap should only be set when we're visualising a scalar field
+        kwargs['cmap'] = cm.jet
+
     # Create Axis if none was provided
     if ax == None:
         logger.debug("Creating new figure with figsize '{}'".format(figsize))
@@ -591,6 +611,9 @@ def plot_mesh(mesh, ax=None, color="blue", figsize=None, **kwargs):
         x = coords[:,0]
         y = coords[:,1]
         triangs = [[v.index() for v in df.vertices(s)]for s in df.faces(mesh)]
+
+        if scalar_field != None:
+            logger.warning("Ignoring the 'scalar_field' argument as this is not implemented for 2D meshes yet.")
 
         ## XXX TODO: It would be nice to have the triangles coloured.
         ## This should be possible using 'tripcolor', but I haven't
@@ -617,12 +640,17 @@ def plot_mesh(mesh, ax=None, color="blue", figsize=None, **kwargs):
         y = coords[:, 1]
         z = coords[:, 2]
 
+        try:
+            scalar_field = np.array(map(scalar_field, coords))
+        except TypeError:
+            scalar_field = np.array(scalar_field)
+
         # Set shade = False by default because it looks nicer
         if not kwargs.has_key('shade'):
             kwargs['shade'] = False
 
         triangs = [[v.index() for v in df.vertices(s)] for s in df.faces(bm)]
-        ax.plot_trisurf(x, y, z, triangles=triangs, color=color, **kwargs)
+        ax.plot_trisurf(x, y, z, triangles=triangs, vertex_vals=scalar_field, **kwargs)
     else:
         raise ValueError("Plotting is only supported for 2- and 3-dimensional meshes.")
 
