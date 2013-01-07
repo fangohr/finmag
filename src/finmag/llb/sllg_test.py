@@ -127,15 +127,12 @@ def test_sllg_save_data():
     
     def region1(coords):
         if coords[2]<0.5:
-            return 1
+            return True
         else:
-            return 0
+            return False
     
     def region2(coords):
-        if coords[2]>0.5:
-            return 1
-        else:
-            return 0
+        return not region1(coords)
         
     def init_Ms(coords):
         if region1(coords)>0:
