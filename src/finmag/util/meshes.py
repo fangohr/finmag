@@ -588,9 +588,15 @@ def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, **kwargs):
     # Set default values for some keyword arguments
     if not kwargs.has_key('color'):
         kwargs['color'] = 'blue'
-    if scalar_field != None and not kwargs.has_key('cmap'):
-        # cmap should only be set when we're visualising a scalar field
-        kwargs['cmap'] = cm.jet
+    if kwargs.has_key('cmap'):
+        if scalar_field is None:
+            kwargs.pop('cmap')
+            logger.warning("Ignoring 'cmap' argument since no 'scalar_field' "
+                           "argument was given")
+    else:
+        if scalar_field != None:
+            # cmap should only be set when a field was given
+            kwargs['cmap'] = cm.jet
 
     # Create Axis if none was provided
     if ax == None:
