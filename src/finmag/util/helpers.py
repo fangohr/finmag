@@ -524,7 +524,7 @@ def mark_subdomain_by_function(fun,mesh_or_space,domain_index,subdomains):
         for cell in df.cells(mesh):
             p1,p2,p3,p4=cell.entities(0)
             coord=(cds[p1]+cds[p2]+cds[p3]+cds[p4])/4.0
-            if fun(coord)>0:
+            if fun(coord):
                 subdomains.array()[index] = domain_index
             index+=1
             

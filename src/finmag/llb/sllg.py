@@ -22,7 +22,6 @@ class SLLG(object):
         self.domains.set_all(0)
         self.dx = df.Measure("dx")[self.domains]
         self.region_id=0
-        print self.domains.array()
         
         self.S1 = df.FunctionSpace(mesh, "Lagrange", 1)
         self.S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1,dim=3)
