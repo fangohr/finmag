@@ -42,7 +42,10 @@ class Scheduler(object):
         self.items.append(at_or_every)
 
     def next_step(self):
-        return min(i.next_step for i in self.items if i.next_step is not None)
+        next_steps = [i.next_step for i in self.items if i.next_step is not None]
+        if len(next_steps) == 0:
+            return None
+        return min(next_steps)
 
     def reached(self, time):
         for item in self.items:
