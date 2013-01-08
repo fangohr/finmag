@@ -73,21 +73,3 @@ def test_integrator_run_until_return_value():
     # carries the desired value of 1e-15 as the integration
     # succeeded)
     assert sim.integrator.cur_t == 1e-15
-
-
-def test_integrator_run_until_raises_exception():
-    """Integrate for more than the set maximum steps, without specifying max_steps when
-    calling run_until. Should raise exception."""
-    sim = finmag.example.barmini()
-    sim.run_until(0, save_averages=False)  # create integrator object
-    sim.integrator.set_max_steps(2)
-    assert sim.integrator.stats()['nsteps'] == 0
-    with pytest.raises(RuntimeError) as exc:
-        ret_val = sim.integrator.run_until(1e-12)
-    # check that current time is in integrator message
-    assert "%g" % sim.integrator.stats()['tcur'] in exc.value.message
-    # check that number of steps in is message
-    assert "%d" % sim.integrator.stats()['nsteps'] in exc.value.message
-
-    # check also value of cur_t is up-to-date
-    assert sim.integrator.cur_t == sim.integrator.stats()['tcur']
