@@ -16,19 +16,29 @@ def run_until(integrator, time, schedule=None):
     appropriate actions.
 
     TODO:
-    1. Run until time when no scheduler is present.
-    2. If there is a scheduler, run through the time steps and let the
-       callbacks be triggered until time has been reached.
-    3. rename the run_until methods in the integrators to advance_time, so that
-       this method can be the new default.
-    4. let time also be 'relaxation' or something similar to unify both methods
+    1. let time also be 'relaxation' or something similar to unify both methods
        if possible (if we run until relaxation, we will need to observe
        convergence and have a default schedule if none is provided.
-    5. rip out all snapshot, saving averages code and add it as options to
+    2. rip out all snapshot, saving averages code and add it as options to
        the simulations object
 
     """
-    pass
+    if not schedule:
+        # If no schedule is passed the integrator can run until the final
+        # time and stop. This replicates the initial behaviour of run_until.
+        return integrator.advance_time(time)
+
+    while True:
+        next_step = schedule.next_step()
+        if not next_step or next_step > time:
+            break
+
+        integrator.advance_time(next_step)
+        schedule.reached(next_step)
+
+    if integrator.cur_t < time:
+        integrator.advance_time(time)
+
 
 def run_until_relaxation(integrator,
         save_snapshots=False, filename=None, save_every=100e-12, save_final_snapshot=True,

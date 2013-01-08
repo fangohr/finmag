@@ -1,5 +1,5 @@
 from scipy.integrate import ode
-from finmag.integrators.common import run_until_relaxation
+from finmag.integrators.common import run_until, run_until_relaxation
 
 class ScipyIntegrator(object):
     def __init__(self, llg, m0, reltol=1e-8, abstol=1e-8, nsteps=10000, method="bdf", tablewriter=None, **kwargs):
@@ -18,7 +18,7 @@ class ScipyIntegrator(object):
         self._n_rhs_evals += 1
         return self.llg.solve_for(y, t)
 
-    def run_until(self, t):
+    def advance_time(self, t):
         new_m = self.ode.integrate(t)
         assert self.ode.successful()
         self.m = new_m
@@ -27,4 +27,5 @@ class ScipyIntegrator(object):
     def reinit(self):
         raise NotImplementedError("{}: This integrator doesn't support the reinit method.".format(self.__class__.__name__))
 
+    run_until = run_until
     run_until_relaxation = run_until_relaxation
