@@ -85,11 +85,11 @@ def run_until_relaxation(integrator,
         # If in the next step we would cross a timestep where a snapshot should be saved, run until
         # that timestep, save the snapshot, and then continue.
         while save_snapshots and (next_stop >= start_time+cur_count*save_every):
-            integrator.run_until(cur_count*save_every)
+            integrator.advance_time(cur_count*save_every)
             integrator._do_save_snapshot(f, cur_count, filename, save_averages=True)
             cur_count += 1
 
-        integrator.run_until(next_stop)
+        integrator.advance_time(next_stop)
 
         dm = np.abs(integrator.m - prev_m).reshape((3, -1))
         dm_norm = np.sqrt(dm[0] ** 2 + dm[1] ** 2 + dm[2] ** 2)
