@@ -1,19 +1,12 @@
 import logging
 import numpy as np
 from finmag.util.helpers import vector_valued_function
-from finmag.energies import Exchange, UniaxialAnisotropy, Demag, Zeeman
+from finmag.energies import Exchange, UniaxialAnisotropy
 
 logger = logging.getLogger(name="finmag")
 
 
 class EffectiveField(object):
-    field_classes = {
-        "exchange": Exchange,
-        "demag": Demag,
-        "anisotropy": UniaxialAnisotropy,
-        "zeeman": Zeeman
-        }
-
     def __init__(self, mesh):
         self._output_shape = 3 * mesh.num_vertices()
         self.interactions = []
@@ -88,20 +81,23 @@ class EffectiveField(object):
         if no, or more than one matching interaction is found.
 
         """
-        if not interaction_type in self.field_classes:
+        added_interaction_types = set() # for debugging output to user
+        matching_interaction = None
+
+        for inter in self.interactions:
+            added_interaction_types.add(inter.__class__.__name__)
+            if inter.__class__.__name__ == interaction_type.capitalize():
+                if matching_interaction != None:
+                    raise ValueError(
+                        "Found more than one interaction of type '{}'.".format(interaction_type))
+                matching_interaction = inter
+
+        if not matching_interaction:
             raise ValueError(
-                "'interaction_type' must be a string representing one of the "
-                "known field types: {}".format(self.field_classes.keys()))
+                "Couldn't find interaction of type '{}'. Did you mean one of {}?".format(
+                    interaction_type, list(added_interaction_types)))
 
-        interactions_of_type = [e for e in self.interactions
-                     if isinstance(e, self.field_classes[interaction_type])]
-
-        if not len(interactions_of_type) == 1:
-            raise ValueError(
-                "Expected one interaction of type '{}' in simulation. "
-                "Found: {}".format(interaction_type, len(interactions_of_type)))
-
-        return interactions_of_type[0]
+        return matching_interaction
 
     def get_dolfin_function(self, interaction_type):
         interaction = self.get_interaction(interaction_type)
