@@ -200,9 +200,7 @@ class Simulation(object):
             fields for this simulation object are recorded).
         """
         if not hasattr(self, "integrator"):
-            self.integrator = llg_integrator(self.llg, self.llg.m,
-                                            backend=self.integrator_backend,
-                                            tablewriter=self.tablewriter)
+            self.integrator = llg_integrator(self.llg, self.llg.m, backend=self.integrator_backend)
         log.debug("Integrating dynamics up to t = %g" % t)
         self.integrator.run_until(t, schedule=self.scheduler)
         self.t = t
@@ -246,47 +244,23 @@ class Simulation(object):
         the docstring of sim.integrator.BaseIntegrator.run_until_relaxation().
 
         """
-        log.info("Will integrate until relaxation.")
         if not hasattr(self, "integrator"):
-            self.integrator = llg_integrator(self.llg, self.llg.m,
-                                            backend=self.integrator_backend,
-                                            tablewriter=self.tablewriter)
+            self.integrator = llg_integrator(self.llg, self.llg.m, backend=self.integrator_backend)
+        log.info("Will integrate until relaxation.")
 
         if save_snapshots == True:
-            if filename == '':
-                raise ValueError("If save_snapshots is True, filename must "
-                                 "be a non-empty string.")
-            else:
-                ext = os.path.splitext(filename)[1]
-                if ext != '.pvd':
-                    raise ValueError(
-                        "File extension for vtk snapshot file must be '.pvd', "
-                        "but got: '{}'".format(ext))
-            if os.path.exists(filename):
-                if force_overwrite:
-                    log.warning(
-                        "Removing file '{}' and all associated .vtu files "
-                        "(because force_overwrite=True).".format(filename))
-                    os.remove(filename)
-                    basename = re.sub('\.pvd$', '', filename)
-                    for f in glob.glob(basename + "*.vtu"):
-                        os.remove(f)
-                else:
-                    raise IOError(
-                        "Aborting snapshot creation. File already exists and "
-                        "would overwritten: '{}' (use force_overwrite=True if "
-                        "this is what you want)".format(filename))
-        else:
-            if filename != '':
-                log.warning("Value of save_snapshot is False, but filename is "
-                            "given anyway: '{}'. Ignoring...".format(filename))
+            if not hasattr(self, "vtk"):
+                self.vtk = VTK(filename, "", force_overwrite, "m_")
 
-        self.integrator.run_until_relaxation(
-            save_snapshots=save_snapshots, filename=filename,
-            save_every=save_every, save_final_snapshot=save_final_snapshot,
-            stopping_dmdt=stopping_dmdt,
-            dmdt_increased_counter_limit=dmdt_increased_counter_limit,
-            dt_limit=dt_limit)
+            def save():
+                # workaround since methods on schedule should be called without arguments
+                self.save_vtk(self.llg._m, self.t)
+                self.save_averages()
+
+            self.schedule(save, every=save_every, when_stopping=save_final_snapshot)
+
+        self.integrator.run_until_relaxation(stopping_dmdt, dmdt_increased_counter_limit, dt_limit,
+                schedule=self.schedule)
 
     hysteresis = hysteresis
     hysteresis_loop = hysteresis_loop

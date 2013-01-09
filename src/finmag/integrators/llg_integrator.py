@@ -4,7 +4,7 @@ from finmag.integrators.scipy_integrator import ScipyIntegrator
 
 log = logging.getLogger(name='finmag')
 
-def llg_integrator(llg, m0, backend="sundials", tablewriter=None, **kwargs):
+def llg_integrator(llg, m0, backend="sundials", **kwargs):
     # XXX TODO: Passing the tablewriter argument on like this is a
     #           complete hack and this should be refactored. The same
     #           is true with saving snapshots. Neither saving average
@@ -18,8 +18,8 @@ def llg_integrator(llg, m0, backend="sundials", tablewriter=None, **kwargs):
     #
     log.debug("Creating integrator with backend {}.".format(backend))
     if backend == "scipy":
-        return ScipyIntegrator(llg, m0, tablewriter=tablewriter, **kwargs)
+        return ScipyIntegrator(llg, m0, **kwargs)
     elif backend == "sundials":
-        return SundialsIntegrator(llg, m0, tablewriter=tablewriter, **kwargs)
+        return SundialsIntegrator(llg, m0, **kwargs)
     else:
         raise ValueError("backend must be either scipy or sundials")
