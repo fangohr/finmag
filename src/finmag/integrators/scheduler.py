@@ -35,14 +35,17 @@ class At(object):
             self.callback()
    
 class Every(At):
-    def __init__(self, interval, start=0.0):
+    def __init__(self, interval, start=0.0, when_stopping=False):
         """
         Initialise with the interval between correct times and optionally, a starting time.
+        If `when_stopping` is True, the event will be triggered a last time when
+        time integration stops, even if less than `interval` time has passed.
 
         """
         self.next_step = start
         self.interval = interval
         self.callback = None
+        self.when_stopping = when_stopping
 
     def fire(self):
         """
@@ -105,4 +108,13 @@ class Scheduler(object):
         """
         for item in self.items:
             if item.next_step == time:
+                item.fire()
+
+    def finalise(self):
+        """
+        Trigger all events that need to happen at the end of time integration.
+
+        """
+        for item in self.items:
+            if isinstance(item, Every) and item.when_stopping:
                 item.fire()

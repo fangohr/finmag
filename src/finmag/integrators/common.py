@@ -39,6 +39,8 @@ def run_until(integrator, time, schedule=None):
     if integrator.cur_t < time:
         integrator.advance_time(time)
 
+    schedule.finalise()
+
 
 def run_until_relaxation(integrator,
         save_snapshots=False, filename=None, save_every=100e-12, save_final_snapshot=True,
