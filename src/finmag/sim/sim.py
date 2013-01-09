@@ -12,6 +12,7 @@ from finmag.util.consts import exchange_length, bloch_parameter
 from finmag.util.meshes import mesh_info, mesh_volume
 from finmag.util.fileio import Tablewriter
 from finmag.util import helpers
+from finmag.util.vtk import VTK
 from finmag.sim.hysteresis import hysteresis, hysteresis_loop
 from finmag.integrators.llg_integrator import llg_integrator
 from finmag.integrators.scheduler import Scheduler
@@ -215,8 +216,7 @@ class Simulation(object):
         The filename is derived from the simulation name (as given when the
         simulation was initialised) and has the extension .ndt'.
         """
-        log.debug("Saving average field values for simulation "
-                  "'{}'".format(self.name))
+        log.debug("Saving average field values for simulation '{}'.".format(self.name))
         self.tablewriter.save()
 
     def relax(self, save_snapshots=False, filename='', save_every=100e-12,
@@ -363,80 +363,26 @@ class Simulation(object):
         """
         self.scheduler.add(func_to_be_called, at=at, every=every)
 
-    def snapshot(self, filename="", directory="", force_overwrite=False,
-                 infix="", save_averages=True):
+    def snapshot(self, filename="", directory="", force_overwrite=False):
         """
-        Save a snapshot of the current magnetisation configuration to
-        a .pvd file (in VTK format) which can later be inspected using
-        Paraview, for example.
+        Deprecated.
 
-        If `filename` is empty, a default filename will be generated
-        based on a sequentially increasing counter and the current
-        timestep of the simulation. A user-defined string can be
-        inserted into the generated filename by passing `infix`.
-
-        If `directory` is non-empty then the file will be saved in the
-        specified directory.
-
-        Note that `filename` is also allowed to contain directory
-        components (for example filename='snapshots/foo.pvd'), which
-        are simply appended to `directory`. However, if `filename`
-        contains an absolute path then the value of `directory` is
-        ignored. If a file with the same filename already exists, the
-        method will abort unless `force_overwrite` is True, in which
-        case the existing .pvd and all associated .vtu files are
-        deleted before saving the snapshot.
-
-        All directory components present in either `directory` or
-        `filename` are created if they do not already exist.
-
-        If save_averages is True (the default) then the averaged fields
-        will also be saved to an .ndt file.
         """
-        if not hasattr(self, "vtk_snapshot_no"):
-            self.vtk_snapshot_no = 1
-        if filename == "":
-            infix_insert = "" if infix == "" else "_" + infix
-            filename = "m{}_{}_{:.3f}ns.pvd".format(infix_insert,
-                self.vtk_snapshot_no, self.t * 1e9)
+        log.warning("Method 'snapshot' is deprecated. Use 'save_vtk' instead.")
+        self.vtk(self, filename, directory, force_overwrite)
 
-        ext = os.path.splitext(filename)[1]
-        if ext != '.pvd':
-            raise ValueError("File extension for vtk snapshot file must be "
-                             "'.pvd', but got: '{}'".format(ext))
-        if os.path.isabs(filename) and directory != "":
-            log.warning("Ignoring 'directory' argument (value given: '{}') "
-                        "because 'filename' contains an absolute path: "
-                        "'{}'".format(directory, filename))
+    def save_vtk(self, filename="", directory="", force_overwrite=False):
+        """
+        Save the magnetisation to a VTK file.
 
-        output_file = os.path.join(directory, filename)
-        if os.path.exists(output_file):
-            if force_overwrite:
-                log.warning(
-                    "Removing file '{}' and all associated .vtu files "
-                    "(because force_overwrite=True).".format(output_file))
-                os.remove(output_file)
-                basename = re.sub('\.pvd$', '', output_file)
-                for f in glob.glob(basename + "*.vtu"):
-                    os.remove(f)
-            else:
-                raise IOError(
-                    "Aborting snapshot creation. File already exists and "
-                    "would overwritten: '{}' (use force_overwrite=True if "
-                    "this is what you want)".format(output_file))
-        t0 = time.time()
-        f = df.File(output_file, "compressed")
-        f << self.llg._m
-        t1 = time.time()
-        log.info(
-            "Saved snapshot of magnetisation at t={} to file '{}' (saving "
-            "took {:.3g} seconds).".format(self.t, output_file, t1 - t0))
-        self.vtk_snapshot_no += 1
+        Leave filename empty for sequential snapshots of the magnetisation -
+        filenames will be automatically generated.
 
-        if save_averages:
-            self.save_averages()
-
-    save_vtk = snapshot  # alias with a more telling name
+        """
+        if not hasattr(self, "vtk"):
+            prefix = "m_" if filename == "" else ""
+            self.vtk = VTK(filename, directory, force_overwrite, prefix)
+        self.vtk.save(self.llg._m, self.t)
 
     def mesh_info(self):
         """
