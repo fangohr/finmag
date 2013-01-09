@@ -8,7 +8,6 @@ ode_solver *create_ode_plan() {
 	return plan;
 }
 
-
 void llg_rhs_dw(ode_solver *s, double *m, double *h, double *dm) {
 
 	int i, j, k;
@@ -20,13 +19,13 @@ void llg_rhs_dw(ode_solver *s, double *m, double *h, double *dm) {
 	int nxyz = s->nxyz;
 	double *eta = s->eta;
 	double dt = s->dt;
-	double gamma=s->gamma;
+	double gamma = s->gamma;
 	double coeff;
 	double *alpha = s->alpha;
-	double *T=s->T;
-	double *V=s->V;
-	double *Ms=s->Ms;
-	double Q=s->Q;
+	double *T = s->T;
+	double *V = s->V;
+	double *Ms = s->Ms;
+	double Q = s->Q;
 	double q;
 
 	gauss_random_vec(eta, 3 * s->nxyz, sqrt(dt));
@@ -35,8 +34,10 @@ void llg_rhs_dw(ode_solver *s, double *m, double *h, double *dm) {
 		j = i + nxyz;
 		k = j + nxyz;
 
-		coeff= -gamma / (1.0 + alpha[i] * alpha[i]);
-		q= sqrt(2*Q* alpha[i]/(1.0 + alpha[i] * alpha[i])*T[i]/(Ms[i]*V[i]));
+		coeff = -gamma / (1.0 + alpha[i] * alpha[i]);
+		q = sqrt(
+				2 * Q * alpha[i] / (1.0 + alpha[i] * alpha[i]) * T[i] / (Ms[i]
+						* V[i]));
 
 		//printf("%g  %g   ",eta[i],dt);
 
@@ -58,23 +59,25 @@ void llg_rhs_dw(ode_solver *s, double *m, double *h, double *dm) {
 		 dm[i] += relax * m[i] * dt;
 		 dm[j] += relax * m[j] * dt;
 		 dm[k] += relax * m[k] * dt;
-		 */
+	    */
+
 	}
 	//printf("q\n\n");
 }
 
-void init_solver(ode_solver *s,double *alpha, double *T, double *V, double *Ms, int nxyz) {
+void init_solver(ode_solver *s, double *alpha, double *T, double *V,
+		double *Ms, int nxyz) {
 
 	s->theta = 2.0 / 3.0;
 	s->theta1 = 1.0 - 0.5 / s->theta;
 	s->theta2 = 0.5 / s->theta;
 
-	s->alpha=alpha;
-	s->T=T;
-	s->V=V;
-	s->Ms=Ms;
+	s->alpha = alpha;
+	s->T = T;
+	s->V = V;
+	s->Ms = Ms;
 
-	s->nxyz=nxyz;
+	s->nxyz = nxyz;
 
 	s->dm1 = (double*) malloc(3 * nxyz * sizeof(double));
 	s->dm2 = (double*) malloc(3 * nxyz * sizeof(double));
@@ -90,16 +93,16 @@ void init_solver(ode_solver *s,double *alpha, double *T, double *V, double *Ms, 
 	initial_random();
 }
 
-void init_solver_parameters(ode_solver *s, double gamma, double dt, double c){
+void init_solver_parameters(ode_solver *s, double gamma, double dt, double c) {
 
 	double k_B = 1.3806505e-23;
-	double mu_0 = 4*M_PI*1e-7;
+	double mu_0 = 4 * M_PI * 1e-7;
 
-	s->gamma=gamma;
-	s->dt=dt;
-	s->c=c;
+	s->gamma = gamma;
+	s->dt = dt;
+	s->c = c;
 
-	s->Q=k_B/(gamma*mu_0);
+	s->Q = k_B / (gamma * mu_0);
 }
 
 void run_step1(ode_solver *s, double *m, double *h, double *m_pred) {
@@ -115,7 +118,7 @@ void run_step1(ode_solver *s, double *m, double *h, double *m_pred) {
 
 }
 
-void run_step2(ode_solver *s, double *m_pred, double *h, double *m) {
+double run_step2(ode_solver *s, double *m_pred, double *h, double *m) {
 	int i, j, k;
 	int nxyz = s->nxyz;
 	double *dm1 = s->dm1;
@@ -129,16 +132,43 @@ void run_step2(ode_solver *s, double *m_pred, double *h, double *m) {
 		m[i] += (theta1 * dm1[i] + theta2 * dm2[i]);
 	}
 
+	double max_m=0;
+
+
 	double mm;
 	for (i = 0; i < s->nxyz; i++) {
 		j = i + nxyz;
 		k = j + nxyz;
-		mm = 1.0 / sqrt(m[i] * m[i] + m[j] * m[j] + m[k] * m[k]);
+		mm = sqrt(m[i] * m[i] + m[j] * m[j] + m[k] * m[k]);
+		if (mm>max_m){
+			max_m=mm;
+		}
+		mm=1.0/mm;
 		m[i] *= mm;
 		m[j] *= mm;
 		m[k] *= mm;
 	}
 
+	return max_m;
+
+}
+
+double check_m(ode_solver *s, double *m) {
+	double mm;
+	int i,j,k;
+	int nxyz = s->nxyz;
+	double max_m=0;
+
+	for (i = 0; i < nxyz; i++) {
+		j = i + nxyz;
+		k = j + nxyz;
+		mm = sqrt(m[i] * m[i] + m[j] * m[j] + m[k] * m[k]);
+		if (mm>max_m){
+			max_m=mm;
+		}
+	}
+
+	return max_m;
 }
 
 void finalize_ode_plan(ode_solver *plan) {
