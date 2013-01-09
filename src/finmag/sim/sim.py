@@ -260,7 +260,7 @@ class Simulation(object):
             self.schedule(save, every=save_every, when_stopping=save_final_snapshot)
 
         self.integrator.run_until_relaxation(stopping_dmdt, dmdt_increased_counter_limit, dt_limit,
-                schedule=self.schedule)
+                schedule=self.scheduler)
 
     hysteresis = hysteresis
     hysteresis_loop = hysteresis_loop
