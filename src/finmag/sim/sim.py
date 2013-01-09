@@ -4,14 +4,10 @@ import re
 import time
 import glob
 import logging
-import itertools
-import types
 import dolfin as df
 import numpy as np
-from numpy import NaN
 from finmag.sim.llg import LLG
 from finmag.util.timings import mtimed
-from finmag.util.helpers import vector_valued_function
 from finmag.util.consts import exchange_length, bloch_parameter
 from finmag.util.meshes import mesh_info, mesh_volume
 from finmag.util.fileio import Tablewriter
@@ -19,10 +15,6 @@ from finmag.util import helpers
 from finmag.sim.hysteresis import hysteresis, hysteresis_loop
 from finmag.integrators.llg_integrator import llg_integrator
 from finmag.integrators.scheduler import Scheduler
-from finmag.energies.exchange import Exchange
-from finmag.energies.anisotropy import UniaxialAnisotropy
-from finmag.energies.zeeman import Zeeman
-from finmag.energies import Demag
 
 
 ONE_DEGREE_PER_NS = 17453292.5  # in rad/s
@@ -38,14 +30,6 @@ class Simulation(object):
         t           the current simulation time
 
     """
-
-    field_classes = {
-        "exchange": Exchange,
-        "demag": Demag,
-        "anisotropy": UniaxialAnisotropy,
-        "zeeman": Zeeman
-        }
-
     @mtimed
     def __init__(self, mesh, Ms, unit_length=1, name='unnamed', integrator_backend="sundials"):
         """Simulation object.
@@ -148,124 +132,55 @@ class Simulation(object):
         """
         Returns the interaction of the given type.
 
-        Allowed types: "exchange", "demag, "anisotropy", "zeeman".
+        *Arguments*
 
-        Returns None if no interaction of the given type is present in
-        the simulation. Raises an exception if more than one
-        interaction is found.
+        interaction_type: string
+
+            The allowed types are those finmag knows about by classname, for
+            example: 'Demag', 'Exchange', 'UniaxialAnisotropy', 'Zeeman'.
+
+        *Returns*
+
+        The matching interaction object. If no or more than one matching
+        interaction is found, a ValueError is raised.
+
         """
-        try:
-            FieldClass = self.field_classes[interaction_type]
-        except KeyError:
-            raise ValueError(
-                "'interaction_type' must be a string representing one of the "
-                "known field types: {}".format(self.field_classes.keys()))
-
-        field_lst = [e for e in self.llg.effective_field.interactions
-                     if isinstance(e, FieldClass)]
-
-        if len(field_lst) > 1:
-            raise ValueError(
-                "Expected at most one interaction of type '{}' in simulation. "
-                "Found: {}".format(interaction_type, len(field_lst)))
-
-        try:
-            res = field_lst[0]
-        except IndexError:
-            res = None
-
-        return res
+        return self.llg.effective_field.get_interaction(interaction_type)
 
     def get_field_as_dolfin_function(self, field_type):
         """
-        Return the given field as a dolfin.Function.
+        Returns the field of the interaction of the given type or of the
+        magnetisation as a dolfin function.
 
         *Arguments*
 
         field_type: string
 
-            The field to be converted to a dolfin.Function. Must be
-            one of: "exchange", "demag", "anisotropy", "zeeman", "m"
-            (where the last one is the normalised magnetisation).
+            The allowed types are those finmag knows about by classname, for
+            example: 'Demag', 'Exchange', 'UniaxialAnisotropy', 'Zeeman',
+            as well as 'm' which stands for the normalised magnetisation.
 
         *Returns*
 
-        A dolfin.Function representing the given field.
+        A dolfin.Function representing the given field. If no or more than one
+        matching field is found, a ValueError is raised.
+
         """
         if field_type == 'm':
-            field_fun = self.llg._m
-        else:
-            # Mmh, upon re-reading this implementation it feels that
-            # this is somehow redunant. Don't we already keep the
-            # interactions as dolfin.Functions somewhere?
-            #    -- Max, 13.12.2012
-            field = self.get_interaction(field_type)
-            if field is None:
-                raise ValueError("No interaction of type '{}' present "
-                                 "in simulation.".format(field_type))
-
-            S3 = df.VectorFunctionSpace(self.mesh, 'CG', 1)
-            # XXX TODO: The following line probably copies the data in a
-            # while creating the function (should check whether this is
-            # really the case!). If so, can we avoid this somehow? -- Max
-            a = field.compute_field()
-            field_fun = vector_valued_function(a, S3)
-        return field_fun
+            return self.llg._m
+        return self.llg.effective_field.get_dolfin_function(field_type)
 
     def probe_field(self, field_type, pts):
         """
         Probe the field of type `field_type` at point(s) `pts`.
 
-        *Arguments*
+        See the documentation of the method get_field_as_dolfin_function
+        to know which ``field_type`` is allowed, and helpers.probe for the
+        shape of ``pts``.
 
-        field_type: string or classname
-
-            The field to probe. Must be one of: "exchange", "demag",
-            "anisotropy", "zeeman".
-
-        pts: numpy.array
-
-            An array of points where the field should be probed. Can
-            have arbitrary shape, except that the last axis must have
-            dimension 3. For example, if pts.shape == (10,20,5,3) then
-            the field is probed at all points on a regular grid of
-            size 10 x 20 x 5.
-
-        *Returns*
-
-            A numpy.array of the same shape as `pts`, where the last
-            axis contains the field values instead of the point
-            locations.
-
-        *Limitations*
-
-        Currently the points where the field is probed must lie inside
-        the mesh. For points which lie outside the mesh the returned
-        field values will be NaN.
         """
-        pts = np.array(pts)
-        if not pts.shape[-1] == 3:
-            raise ValueError(
-                "Arguments 'pts' must be a numpy array of 3D points, "
-                "i.e. the last axis must have dimension 3. Shape of "
-                "'pts' is: {}".format(pts.shape))
-
-        fun_field = self.get_field_as_dolfin_function(field_type)
-        def _fun_field_impl(pt):
-            try:
-                return fun_field(pt)
-            except RuntimeError:
-                return np.array([NaN, NaN, NaN])
-        res = np.empty_like(pts)
-
-        # Apply the given function to each point and fill 'res' with
-        # the results:
-        loop_indices = itertools.product(*map(xrange, pts.shape[:-1]))
-        for idx in loop_indices:
-            res[idx] = _fun_field_impl(pts[idx])
-
-        return res
-
+        return helpers.probe(self.get_field_as_dolfin_function(field_type), pts)
+ 
     def run_until(self, t, save_averages=True):
         """
         Run the simulation until the given time t is reached.
@@ -563,51 +478,3 @@ class Simulation(object):
                 info_string += added_info(l_bloch, 'Bloch parameter', 'l_bloch')
 
         return info_string
-
-
-def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sundials",
-             A=None, K1=None, K1_axis=None, H_ext=None, demag_solver='FK', 
-             D=None, name="unnamed"):
-    """
-    Create a Simulation instance based on the given parameters.
-
-    This is a convenience function which allows quick creation of a
-    common simulation type where at most one exchange/anisotropy/demag
-    interaction is present and the initial magnetisation is known.
-
-    If a value for any of the optional arguments A, K1 (and K1_axis),
-    or demag_solver are provided then the corresponding exchange /
-    anisotropy / demag interaction is created automatically and added
-    to the simulation. For example, providing the value A=13.0e-12 in
-    the function call is equivalent to:
-
-       exchange = Exchange(A)
-       sim.add(exchange)
-    """
-    sim = Simulation(mesh, Ms, unit_length=unit_length, 
-                     integrator_backend=integrator_backend,
-                     name=name)
-
-    sim.set_m(m_init)
-    sim.alpha = alpha
-
-    # If any of the optional arguments are provided, initialise
-    # the corresponding interactions here:
-    if A is not None:
-        sim.add(Exchange(A))
-    if (K1 != None and K1_axis is None) or (K1 is None and K1_axis != None):
-        log.warning(
-            "Not initialising uniaxial anisotropy because only one of K1, "
-            "K1_axis was specified (values given: K1={}, K1_axis={}).".format(
-                K1, K1_axis))
-    if K1 != None and K1_axis != None:
-        sim.add(UniaxialAnisotropy(K1, K1_axis))
-    if H_ext != None:
-        sim.add(Zeeman(H_ext))
-    if D != None:
-        from finmag.energies import DMI
-        sim.add(DMI(D))
-    if demag_solver != None:
-        sim.add(Demag(solver=demag_solver))
-
-    return sim

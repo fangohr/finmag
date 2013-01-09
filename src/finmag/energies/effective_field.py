@@ -1,10 +1,19 @@
 import logging
 import numpy as np
-from finmag.energies import Exchange, UniaxialAnisotropy
+from finmag.util.helpers import vector_valued_function
+from finmag.energies import Exchange, UniaxialAnisotropy, Demag, Zeeman
 
 logger = logging.getLogger(name="finmag")
 
+
 class EffectiveField(object):
+    field_classes = {
+        "exchange": Exchange,
+        "demag": Demag,
+        "anisotropy": UniaxialAnisotropy,
+        "zeeman": Zeeman
+        }
+
     def __init__(self, mesh):
         self._output_shape = 3 * mesh.num_vertices()
         self.interactions = []
@@ -72,3 +81,29 @@ class EffectiveField(object):
         for interaction in self.interactions:
             energy += interaction.compute_energy()
         return energy
+
+    def get_interaction(self, interaction_type):
+        """
+        Returns the interaction object of the given type, or raises a ValueError
+        if no, or more than one matching interaction is found.
+
+        """
+        if not interaction_type in self.field_classes:
+            raise ValueError(
+                "'interaction_type' must be a string representing one of the "
+                "known field types: {}".format(self.field_classes.keys()))
+
+        interactions_of_type = [e for e in self.interactions
+                     if isinstance(e, self.field_classes[interaction_type])]
+
+        if not len(interactions_of_type) == 1:
+            raise ValueError(
+                "Expected one interaction of type '{}' in simulation. "
+                "Found: {}".format(interaction_type, len(interactions_of_type)))
+
+        return interactions_of_type[0]
+
+    def get_dolfin_function(self, interaction_type):
+        interaction = self.get_interaction(interaction_type)
+        # TODO: Do we keep the field as a dolfin function somewhere?
+        return vector_valued_function(interaction.compute_field(), interaction.S3)
