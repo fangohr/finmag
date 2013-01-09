@@ -18,6 +18,7 @@ from finmag.util.fileio import Tablewriter
 from finmag.util import helpers
 from finmag.sim.hysteresis import hysteresis, hysteresis_loop
 from finmag.integrators.llg_integrator import llg_integrator
+from finmag.integrators.scheduler import Scheduler
 from finmag.energies.exchange import Exchange
 from finmag.energies.anisotropy import UniaxialAnisotropy
 from finmag.energies.zeeman import Zeeman
@@ -91,6 +92,7 @@ class Simulation(object):
         self.llg.Ms = Ms
         self.Volume = mesh_volume(mesh)
         self.t = 0
+        self.scheduler = Scheduler()
 
     def __str__(self):
         """String briefly describing simulation object"""
@@ -330,7 +332,7 @@ class Simulation(object):
                                             backend=self.integrator_backend,
                                             tablewriter=self.tablewriter)
         log.debug("Integrating dynamics up to t = %g" % t)
-        self.integrator.run_until(t)
+        self.integrator.run_until(t, schedule=self.scheduler)
         self.t = t
         if save_averages:
             self.save_averages()
@@ -352,7 +354,7 @@ class Simulation(object):
               dmdt_increased_counter_limit=50):
         """
         Do time integration of the magnetisation M until it reaches a
-        state where the change of M magnetisation at each node is
+        state where the change of the magnetisation at each node is
         smaller than the threshold `stopping_dm_dt` (which should be
         given in rad/s).
 
@@ -479,6 +481,16 @@ class Simulation(object):
             self.llg.do_slonczewski = new_state
         else:
             self.llg.do_slonczewski = not self.llg.do_slonczewski
+
+    def schedule(self, func_to_be_called, at=None, every=None):
+        """
+        Add a function that should be called during the simulation.
+
+        The function should be callable without arguments and either get called
+        ``at`` a specific time, or in the time interval specified in ``every``.
+
+        """
+        self.scheduler.add(func_to_be_called, at=at, every=every)
 
     def snapshot(self, filename="", directory="", force_overwrite=False,
                  infix="", save_averages=True):
