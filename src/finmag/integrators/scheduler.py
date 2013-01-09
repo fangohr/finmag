@@ -65,7 +65,7 @@ class Scheduler(object):
         """
         self.items = []
 
-    def call(self, func, at=None, every=None):
+    def add(self, func, at=None, every=None):
         """
         Add a function ``func`` that should get called either at the time passed
         in ``at`` or every ``every`` seconds.
