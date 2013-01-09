@@ -266,50 +266,6 @@ class Simulation(object):
 
         return res
 
-    def notfullyimplementedyet_some_ideas_for_advance_time(self, t, callbackinterval=5, callbackfunc=None):
-        raise NotImplementedError("Not implemented yet")
-        """First attempt to provide a high-level convenience interface for time integration.
-
-        *Arguments*
-
-        t : float
-
-             The time up to which the simulation is to be run
-
-        callbackintervall: float
-
-            Desired number of minutes (!) after which the callback function or functions are called.
-
-        callbackfun: function or list of functions
-
-            The function f will be called with the simulation object as the first argument.
-
-        The function advance_time will carry out the time integration up to time ``t``. It will
-        attempt to call the function(s) in ``callbackfunc`` every ``callbackinterval`` minutes. It can
-        only do this approximately.
-
-        Note: this is a cheap copy of the when-what-at-every terminology in Nmag. Before we use this on a large scale,
-        we should revisit what has been done in Nmag, and probably take over here.
-
-        Treat this as a development function at the moment; I thought I'll do the exercise for a smaller
-        subproblem to understand the practical difficulties.
-
-        Hans 19 Dec 2012
-
-        """
-
-        if callbackfunc == None:
-            self.run_until(t)
-            return None
-        if isinstance(callbackfunc, types.FunctionType):  # one function passed
-            callbackfunc = [callbackfunc]
-
-        # At this point, we have a list of callback functions that we try to
-        # call every callbackintervall minutes.
-        best_n_steps = 1  # start with only one step
-        while self.t < t:
-            raise NotImplementedError
-
     def run_until(self, t, save_averages=True):
         """
         Run the simulation until the given time t is reached.
