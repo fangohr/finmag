@@ -107,7 +107,7 @@ class SLLG(object):
         
         if abs(tp-self._t)<1e-12:
             self._t=tp
-        
+            
         if self.auto_save_data:
             self.save_data()
 
@@ -146,9 +146,6 @@ class SLLG(object):
         tmp=tmp/self.volumes
         self._Ms[:]=tmp[:]
         
-            
-    
-    
     def m_average_fun(self,dx=df.dx):
         """
         Compute and return the average polarisation according to the formula
@@ -190,10 +187,12 @@ if __name__ == "__main__":
     sim = SLLG(mesh, 8.6e5, unit_length=1e-9)
     sim.alpha = 0.1
     sim.set_m((1, 0, 0))
-    ts = np.linspace(0, 1e-10, 101)
+    ts = np.linspace(0, 1e-9, 11)
     print sim.Ms
+    sim.T=2000
+    sim.dt=1e-14
     
-    H0 = 1e5
+    H0 = 1e6
     sim.add(Zeeman((0, 0, H0)))
     
     A=helpers.scale_valued_dg_function(13.0e-12,mesh)
