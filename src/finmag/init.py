@@ -6,7 +6,8 @@
 
 
 import logging
-from finmag.sim.sim import Simulation, sim_with
+from finmag.sim.sim import Simulation
+from finmag.sim.sim_helpers import sim_with
 from __version__ import __version__
 import example
 
