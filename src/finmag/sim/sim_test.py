@@ -2,7 +2,6 @@ import dolfin as df
 import numpy as np
 import logging
 from finmag import sim_with
-from finmag.energies import Demag
 from finmag.example import barmini
 from math import sqrt
 

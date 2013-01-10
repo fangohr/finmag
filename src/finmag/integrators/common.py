@@ -1,7 +1,5 @@
-import time
 import logging
 import numpy as np
-import dolfin as df
 
 log = logging.getLogger(name="finmag")
 
@@ -15,24 +13,34 @@ def run_until(integrator, time, schedule=None):
     at the defined time-steps and notify the scheduler so it can trigger the
     appropriate actions.
 
-    TODO:
-    1. Run until time when no scheduler is present.
-    2. If there is a scheduler, run through the time steps and let the
-       callbacks be triggered until time has been reached.
-    3. rename the run_until methods in the integrators to advance_time, so that
-       this method can be the new default.
-    4. let time also be 'relaxation' or something similar to unify both methods
+    IDEA:
+       let time also be 'relaxation' or something similar to unify both methods
        if possible (if we run until relaxation, we will need to observe
        convergence and have a default schedule if none is provided.
-    5. rip out all snapshot, saving averages code and add it as options to
-       the simulations object
 
     """
-    pass
+    if not schedule:
+        # If no schedule is passed the integrator can run until the final
+        # time and stop. This replicates the initial behaviour of run_until.
+        return integrator.advance_time(time)
+
+    while True:
+        next_step = schedule.next_step()
+        if not next_step or next_step > time:
+            break
+
+        integrator.advance_time(next_step)
+        schedule.reached(next_step)
+
+    if integrator.cur_t < time:
+        integrator.advance_time(time)
+
+    schedule.finalise()
+
 
 def run_until_relaxation(integrator,
-        save_snapshots=False, filename=None, save_every=100e-12, save_final_snapshot=True,
-        stopping_dmdt=ONE_DEGREE_PER_NS, dmdt_increased_counter_limit=50, dt_limit=1e-10):
+        stopping_dmdt=ONE_DEGREE_PER_NS, dmdt_increased_counter_limit=50, dt_limit=1e-10,
+        schedule=None):
     """
     Run integration until the maximum |dm/dt| is smaller than the
     threshold value stopping_dmdt (which is one degree per
@@ -45,41 +53,27 @@ def run_until_relaxation(integrator,
     (default value: 50). The maximum allowed timestep per integration step
     can be controlled via `dt_limit`.
 
-    If save_snapshots is True (default: False) then a series of snapshots
-    is saved to `filename` (which must be specified in this case). If
-    `filename` contains directory components then these are created if they
-    do not already exist. A snapshot is saved every `save_every` seconds
-    (default: 100e-12, i.e. every 100 picoseconds). It should be noted that
-    the true timestep at which the snapshot is saved may deviate from slightly
-    from the exact value due to the way the time integrators work.
-    Usually, one last snapshot is saved after the relaxation is finished (or
-    was stopped). This can be disabled by setting save_final_snapshot to False
-    (default: True).
-
     """
     dt = 1e-14 # initial timestep (TODO: use the characteristic time here)
 
     dt_increment_multi = 1.5;
     dmdt_increased_counter = 0;
 
-    if save_snapshots:
-        f = df.File(filename, 'compressed')
-
-    cur_count = 0  # current snapshot count
-    start_time = integrator.cur_t  # start time of the integration; needed for snapshot saving
     last_max_dmdt_norm = 1e99
     while True:
         prev_m = integrator.llg.m.copy()
         next_stop = integrator.cur_t + dt
 
-        # If in the next step we would cross a timestep where a snapshot should be saved, run until
-        # that timestep, save the snapshot, and then continue.
-        while save_snapshots and (next_stop >= start_time+cur_count*save_every):
-            integrator.run_until(cur_count*save_every)
-            integrator._do_save_snapshot(f, cur_count, filename, save_averages=True)
-            cur_count += 1
+        if schedule:
+            next_stop_on_schedule = schedule.next_step()
+            while next_stop_on_schedule and next_stop_on_schedule < next_stop:
+                integrator.advance_time(next_stop_on_schedule)
+                schedule.reached(next_stop_on_schedule)
+                next_stop_on_schedule = schedule.next_step()
 
-        integrator.run_until(next_stop)
+        integrator.advance_time(next_stop)
+        if schedule:
+            schedule.reached(next_stop)
 
         dm = np.abs(integrator.m - prev_m).reshape((3, -1))
         dm_norm = np.sqrt(dm[0] ** 2 + dm[1] ** 2 + dm[2] ** 2)
@@ -112,20 +106,5 @@ def run_until_relaxation(integrator,
                 integrator.__class__.__name__, dmdt_increased_counter_limit))
             break
 
-    if save_snapshots and save_final_snapshot:
-        _do_save_snapshot(integrator, f, cur_count, filename, save_averages=True)
-
-def _do_save_snapshot(integrator, f, cur_count, filename, save_averages=True):
-    # TODO: Can we somehow store information about the current timestep in either the .pvd/.vtu file itself, or in the filenames?
-    #       Unfortunately, it seems as if the filenames of the *.vtu files are generated automatically.
-    t0 = time.time()
-    f << integrator.llg._m
-    t1 = time.time()
-    log.debug("Saving snapshot #{} at timestep t={:.4g} to file '{}' (saving took {:.3g} seconds).".format(
-        cur_count, integrator.cur_t, filename, t1 - t0))
-    if save_averages:
-        if integrator.tablewriter:
-            log.debug("Saving average field values (in integrator).")
-            integrator.tablewriter.save()
-        else:
-            log.warning("Cannot save average fields because no Tablewriter is present in integrator.")
+    if schedule:
+        schedule.finalise()

@@ -1,6 +1,6 @@
 import logging
 from finmag.native import sundials
-from finmag.integrators.common import run_until_relaxation
+from finmag.integrators.common import run_until, run_until_relaxation
 
 log = logging.getLogger(name='finmag')
 
@@ -18,6 +18,8 @@ class SundialsIntegrator(object):
                           "bdf_gmres_no_prec", "bdf_gmres_prec_id")
         self.llg = llg
         self.cur_t = 0.0
+        self.user_set_nsteps = False
+        self.nsteps = 500 # cvode default value
         self.m = m0.copy()
         self.tablewriter = tablewriter
 
@@ -47,12 +49,13 @@ class SundialsIntegrator(object):
         """Sets the maximum number of steps that will be done for time integration."""
         self.nsteps = nsteps
         self.integrator.set_max_num_steps(self.nsteps)
+        self.user_set_nsteps = True
 
     def get_max_steps(self):
         """Sets the maximum number of steps that will be done for time integration."""
         return self.nsteps
 
-    def run_until(self, t, max_steps=None):
+    def advance_time(self, t):
         """
         *Arguments*
 
@@ -60,89 +63,58 @@ class SundialsIntegrator(object):
 
             Target time to integrate to
 
-        max_steps : integer
-
-            maximum number of steps for time integration
-
         Returns ``True`` or ``False`` depending on whether target time ``t``
         has been reached.
 
-        Given a target time t, this function integrates towards ``t``. If
-        ``max_steps`` is given and the number of ``max_steps`` steps
-        for the integration are reached, we interrupt the calculation and
-        return False.
+        Given a target time ``t``, this function integrates towards ``t``. If
+        ``max_steps`` was set and the number of steps for the integration are
+        reached, we interrupt the calculation and return False.
 
-        If tout is reached within the number of allowed steps, it will return
+        If ``t`` is reached within the number of allowed steps, it will return
         True.
 
-        If max_steps was not provided, and the maximum number of steps is
-        reached, we raise a RuntimeError (as this is almost certainly not
-        what the user intended).
         """
-
         # The following check is required because sundials does not like to
         # integrate up to t=0, if the cvode solver was initialised for t=0.
         if t <= self.cur_t and t == 0:
-            return
+            return True
         # if t <= self.cur_t and this is not the value with which we started,
         # we should complain:
         elif t <= self.cur_t:
             raise RuntimeError("t=%g, self.cur_t=%g -- why are we integrating into the past?")
 
-        # if max_steps given, set this with the integrator, otherwise use
-        # value we have currently (Not sure this is good. Maybe should use
-        # default otherwise. actually, would be better to keep attribute in
-        # integrator class that keeps track of current max_steps. XXX)
-
-        # save current max steps
-        previous_max_steps = self.get_max_steps()
-
-        # if given, set new value of max_steps
-        if max_steps != None:
-            self.set_max_steps(max_steps)
-
         try:
             self.integrator.advance_time(t, self.m)
         except RuntimeError, msg:
             # if we have reached max_num_steps, the error message will read
-            # something like expected_error = "Error in CVODE:CVode
-            # (CV_TOO_MUCH_WORK): At t = 0.258733, mxstep steps taken before
-            # reaching tout.'"
+            # something like "Error in CVODE:CVode (CV_TOO_MUCH_WORK):
+            # At t = 0.258733, mxstep steps taken before reaching tout."
             if "CV_TOO_MUCH_WORK" in msg.message:
-                if max_steps != None:
-                    # max_steps has been given by the user
-                    reached_tout = False
-                    # in this case, we have integrated up to cvode's inernal time.
-                    # So we need to get this value:
-                    self.cur_t = self.integrator.get_current_time()
-                else:  # max_steps not given
-                    #  If we get into this branch, it means cvode has returned
-                    #  after nsteps, but the user has not given a particular
-                    #  value of nsteps. This isgenerally not desired, and
-                    #  we warn quite strongly about it:
-                    msg = "The integrator has reached nsteps=%d " % \
-                        self.get_max_steps()
-                    msg += "and the corresponding time is %g whereas " %\
-                        self.integrator.get_current_time()
-                    msg += "the requested time is %g. " % t
-                    msg += "You can increase the number of maximum steps " +\
-                        "if that is really what you need using " +\
-                        "integrator.set_max_steps()."
-                    self.cur_t = self.integrator.get_current_time()
+                # we have integrated up to cvode's internal time.
+                self.cur_t = self.integrator.get_current_time()
+
+                if not self.user_set_nsteps:
+                    # cvode has returned after its maximum number of steps, but
+                    # the user has not specified this value. This is generally
+                    # not desired and we fail here.
+                    msg = ("The integrator has reached its maximum of {} steps.\n"
+                           "The time is t = {} whereas you requested t = {}.\n"
+                           "You can increase the maximum number of steps if "
+                           "you really need to with integrator.set_max_steps(n).").format(
+                                self.get_max_steps(), self.integrator.get_current_time(), t)
                     reached_tout = False  # not used, but this would be the rigth value
                     raise RuntimeError(msg)
-            else:  # Any other exception is unexpected, so raise error again
+                else:
+                    reached_tout = False
+            else: # any other exception is unexpected, so raise error again
                 raise
-        else:  # if we succeeded with time integration to t
+        else: # if we succeeded with time integration to t
             self.cur_t = t
             reached_tout = True
 
         # in any case: put integrated degrees of freedom from cvode object
         # back into llg object
         self.llg.m = self.m
-
-        # set previous value of max_steps again
-        self.set_max_steps(previous_max_steps)
 
         return reached_tout
 
@@ -194,4 +166,5 @@ class SundialsIntegrator(object):
              }
         return d
 
+    run_until = run_until
     run_until_relaxation = run_until_relaxation

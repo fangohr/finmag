@@ -1,6 +1,7 @@
 import os.path
 import logging
 import numpy
+from finmag.util.timings import mtimed
 logger = logging.getLogger(name='finmag')
 
 
@@ -91,6 +92,7 @@ class Tablewriter(object):
                     self.entities[entityname]['unit'])
         return "".join(line1) + "\n" + "".join(line2) + "\n"
 
+    @mtimed
     def save(self):
         """Append data (spatial averages of fields) for current configuration"""
         

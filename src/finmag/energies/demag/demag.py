@@ -51,7 +51,8 @@ class Demag(object):
             The scale of the mesh, default is 1.
 
         """
-                         
+
+        self.S3 = S3
         kwargs = {"mesh":S3.mesh(),
                   "m":m,
                   "Ms":Ms,
