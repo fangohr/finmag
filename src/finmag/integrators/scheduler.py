@@ -14,13 +14,14 @@ class At(object):
     Calls that function when notified that the time is right.
 
     """
-    def __init__(self, time):
+    def __init__(self, time, at_end=False):
         """
         Initialise with the correct time.
 
         """
         self.next_step = time
         self.callback = None
+        self.at_end = at_end
 
     def call(self, callback):
         """
@@ -45,7 +46,7 @@ class At(object):
             self.callback()
    
 class Every(At):
-    def __init__(self, interval, start=None, when_stopping=False):
+    def __init__(self, interval, start=None, at_end=False):
         """
         Initialise with the interval between correct times and optionally, a starting time.
         If `when_stopping` is True, the event will be triggered a last time when
@@ -55,7 +56,7 @@ class Every(At):
         self.next_step = start or 0.0
         self.interval = interval
         self.callback = None
-        self.when_stopping = when_stopping
+        self.at_end = at_end
 
     def fire(self):
         """
@@ -78,7 +79,7 @@ class Scheduler(object):
         """
         self.items = []
 
-    def add(self, func, at=None, every=None, after=None, realtime=False):
+    def add(self, func, at=None, at_end=False, every=None, after=None, realtime=False):
         """
         Register a function with the scheduler.
 
@@ -89,14 +90,18 @@ class Scheduler(object):
 
         if realtime:
             self._add_realtime(func, at, every, after)
+            if at_end:
+                at_end_item = At(None, True).call(func)
+                self._add(at_end_item)
             return
 
-        if at:
-            at_item = At(at).call(func)
+        if at or (at_end and not every):
+            at_item = At(at, at_end).call(func)
             self._add(at_item)
+            return
 
         if every:
-            every_item = Every(every, after).call(func)
+            every_item = Every(every, after, at_end).call(func)
             self._add(every_item)
 
     def _add(self, at_or_every):
@@ -159,5 +164,5 @@ class Scheduler(object):
 
         """
         for item in self.items:
-            if isinstance(item, Every) and item.when_stopping:
+            if item.at_end:
                 item.fire()
