@@ -1,8 +1,5 @@
 from __future__ import division
-import os
-import re
 import time
-import glob
 import logging
 import dolfin as df
 import numpy as np
