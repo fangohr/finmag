@@ -1,8 +1,6 @@
 import os
 import dolfin as df
 import numpy as np
-from finmag.util import helpers
-#from finmag.energies.demag.demag_treecode import Demag
 from finmag.energies import Demag
 
 

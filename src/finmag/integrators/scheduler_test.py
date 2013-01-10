@@ -50,6 +50,15 @@ def test_at():
     a.fire()
     assert x[0] == 1
 
+def test_returns_None_if_no_actions_or_done():
+    s = Scheduler()
+    assert s.next_step() == None
+
+    s.add(None, at=1)
+    assert s.next_step() == 1
+    s.reached(1)
+    assert s.next_step() == None
+
 def test_scheduler():
     x = [0, 0]
     def my_fun():
@@ -58,10 +67,10 @@ def test_scheduler():
         x[1] += 1
 
     s = Scheduler()
-    s.add(Every(200).call(my_fun))
+    s.add(my_fun, every=200)
     assert x[0] == 0
     assert s.next_step() == 0.0
-    s.add(At(100).call(my_funb))
+    s.add(my_funb, at=100)
     s.reached(0.0)
     assert x[0] == 1
     assert x[1] == 0

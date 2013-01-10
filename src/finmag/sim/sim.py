@@ -1,27 +1,18 @@
 from __future__ import division
-import os
-import re
 import time
-import glob
 import logging
-import itertools
-import types
 import dolfin as df
 import numpy as np
-from numpy import NaN
 from finmag.sim.llg import LLG
 from finmag.util.timings import mtimed
-from finmag.util.helpers import vector_valued_function
 from finmag.util.consts import exchange_length, bloch_parameter
 from finmag.util.meshes import mesh_info, mesh_volume
 from finmag.util.fileio import Tablewriter
 from finmag.util import helpers
+from finmag.util.vtk import VTK
 from finmag.sim.hysteresis import hysteresis, hysteresis_loop
 from finmag.integrators.llg_integrator import llg_integrator
-from finmag.energies.exchange import Exchange
-from finmag.energies.anisotropy import UniaxialAnisotropy
-from finmag.energies.zeeman import Zeeman
-from finmag.energies import Demag
+from finmag.integrators.scheduler import Scheduler
 
 
 ONE_DEGREE_PER_NS = 17453292.5  # in rad/s
@@ -37,14 +28,6 @@ class Simulation(object):
         t           the current simulation time
 
     """
-
-    field_classes = {
-        "exchange": Exchange,
-        "demag": Demag,
-        "anisotropy": UniaxialAnisotropy,
-        "zeeman": Zeeman
-        }
-
     @mtimed
     def __init__(self, mesh, Ms, unit_length=1, name='unnamed', integrator_backend="sundials"):
         """Simulation object.
@@ -91,6 +74,7 @@ class Simulation(object):
         self.llg.Ms = Ms
         self.Volume = mesh_volume(mesh)
         self.t = 0
+        self.scheduler = Scheduler()
 
     def __str__(self):
         """String briefly describing simulation object"""
@@ -146,168 +130,55 @@ class Simulation(object):
         """
         Returns the interaction of the given type.
 
-        Allowed types: "exchange", "demag, "anisotropy", "zeeman".
+        *Arguments*
 
-        Returns None if no interaction of the given type is present in
-        the simulation. Raises an exception if more than one
-        interaction is found.
+        interaction_type: string
+
+            The allowed types are those finmag knows about by classname, for
+            example: 'Demag', 'Exchange', 'UniaxialAnisotropy', 'Zeeman'.
+
+        *Returns*
+
+        The matching interaction object. If no or more than one matching
+        interaction is found, a ValueError is raised.
+
         """
-        try:
-            FieldClass = self.field_classes[interaction_type]
-        except KeyError:
-            raise ValueError(
-                "'interaction_type' must be a string representing one of the "
-                "known field types: {}".format(self.field_classes.keys()))
-
-        field_lst = [e for e in self.llg.effective_field.interactions
-                     if isinstance(e, FieldClass)]
-
-        if len(field_lst) > 1:
-            raise ValueError(
-                "Expected at most one interaction of type '{}' in simulation. "
-                "Found: {}".format(interaction_type, len(field_lst)))
-
-        try:
-            res = field_lst[0]
-        except IndexError:
-            res = None
-
-        return res
+        return self.llg.effective_field.get_interaction(interaction_type)
 
     def get_field_as_dolfin_function(self, field_type):
         """
-        Return the given field as a dolfin.Function.
+        Returns the field of the interaction of the given type or of the
+        magnetisation as a dolfin function.
 
         *Arguments*
 
         field_type: string
 
-            The field to be converted to a dolfin.Function. Must be
-            one of: "exchange", "demag", "anisotropy", "zeeman", "m"
-            (where the last one is the normalised magnetisation).
+            The allowed types are those finmag knows about by classname, for
+            example: 'Demag', 'Exchange', 'UniaxialAnisotropy', 'Zeeman',
+            as well as 'm' which stands for the normalised magnetisation.
 
         *Returns*
 
-        A dolfin.Function representing the given field.
+        A dolfin.Function representing the given field. If no or more than one
+        matching field is found, a ValueError is raised.
+
         """
         if field_type == 'm':
-            field_fun = self.llg._m
-        else:
-            # Mmh, upon re-reading this implementation it feels that
-            # this is somehow redunant. Don't we already keep the
-            # interactions as dolfin.Functions somewhere?
-            #    -- Max, 13.12.2012
-            field = self.get_interaction(field_type)
-            if field is None:
-                raise ValueError("No interaction of type '{}' present "
-                                 "in simulation.".format(field_type))
-
-            S3 = df.VectorFunctionSpace(self.mesh, 'CG', 1)
-            # XXX TODO: The following line probably copies the data in a
-            # while creating the function (should check whether this is
-            # really the case!). If so, can we avoid this somehow? -- Max
-            a = field.compute_field()
-            field_fun = vector_valued_function(a, S3)
-        return field_fun
+            return self.llg._m
+        return self.llg.effective_field.get_dolfin_function(field_type)
 
     def probe_field(self, field_type, pts):
         """
         Probe the field of type `field_type` at point(s) `pts`.
 
-        *Arguments*
-
-        field_type: string or classname
-
-            The field to probe. Must be one of: "exchange", "demag",
-            "anisotropy", "zeeman".
-
-        pts: numpy.array
-
-            An array of points where the field should be probed. Can
-            have arbitrary shape, except that the last axis must have
-            dimension 3. For example, if pts.shape == (10,20,5,3) then
-            the field is probed at all points on a regular grid of
-            size 10 x 20 x 5.
-
-        *Returns*
-
-            A numpy.array of the same shape as `pts`, where the last
-            axis contains the field values instead of the point
-            locations.
-
-        *Limitations*
-
-        Currently the points where the field is probed must lie inside
-        the mesh. For points which lie outside the mesh the returned
-        field values will be NaN.
-        """
-        pts = np.array(pts)
-        if not pts.shape[-1] == 3:
-            raise ValueError(
-                "Arguments 'pts' must be a numpy array of 3D points, "
-                "i.e. the last axis must have dimension 3. Shape of "
-                "'pts' is: {}".format(pts.shape))
-
-        fun_field = self.get_field_as_dolfin_function(field_type)
-        def _fun_field_impl(pt):
-            try:
-                return fun_field(pt)
-            except RuntimeError:
-                return np.array([NaN, NaN, NaN])
-        res = np.empty_like(pts)
-
-        # Apply the given function to each point and fill 'res' with
-        # the results:
-        loop_indices = itertools.product(*map(xrange, pts.shape[:-1]))
-        for idx in loop_indices:
-            res[idx] = _fun_field_impl(pts[idx])
-
-        return res
-
-    def notfullyimplementedyet_some_ideas_for_advance_time(self, t, callbackinterval=5, callbackfunc=None):
-        raise NotImplementedError("Not implemented yet")
-        """First attempt to provide a high-level convenience interface for time integration.
-
-        *Arguments*
-
-        t : float
-
-             The time up to which the simulation is to be run
-
-        callbackintervall: float
-
-            Desired number of minutes (!) after which the callback function or functions are called.
-
-        callbackfun: function or list of functions
-
-            The function f will be called with the simulation object as the first argument.
-
-        The function advance_time will carry out the time integration up to time ``t``. It will
-        attempt to call the function(s) in ``callbackfunc`` every ``callbackinterval`` minutes. It can
-        only do this approximately.
-
-        Note: this is a cheap copy of the when-what-at-every terminology in Nmag. Before we use this on a large scale,
-        we should revisit what has been done in Nmag, and probably take over here.
-
-        Treat this as a development function at the moment; I thought I'll do the exercise for a smaller
-        subproblem to understand the practical difficulties.
-
-        Hans 19 Dec 2012
+        See the documentation of the method get_field_as_dolfin_function
+        to know which ``field_type`` is allowed, and helpers.probe for the
+        shape of ``pts``.
 
         """
-
-        if callbackfunc == None:
-            self.run_until(t)
-            return None
-        if isinstance(callbackfunc, types.FunctionType):  # one function passed
-            callbackfunc = [callbackfunc]
-
-        # At this point, we have a list of callback functions that we try to
-        # call every callbackintervall minutes.
-        best_n_steps = 1  # start with only one step
-        while self.t < t:
-            raise NotImplementedError
-
+        return helpers.probe(self.get_field_as_dolfin_function(field_type), pts)
+ 
     def run_until(self, t, save_averages=True):
         """
         Run the simulation until the given time t is reached.
@@ -326,11 +197,9 @@ class Simulation(object):
             fields for this simulation object are recorded).
         """
         if not hasattr(self, "integrator"):
-            self.integrator = llg_integrator(self.llg, self.llg.m,
-                                            backend=self.integrator_backend,
-                                            tablewriter=self.tablewriter)
+            self.integrator = llg_integrator(self.llg, self.llg.m, backend=self.integrator_backend)
         log.debug("Integrating dynamics up to t = %g" % t)
-        self.integrator.run_until(t)
+        self.integrator.run_until(t, schedule=self.scheduler)
         self.t = t
         if save_averages:
             self.save_averages()
@@ -342,8 +211,7 @@ class Simulation(object):
         The filename is derived from the simulation name (as given when the
         simulation was initialised) and has the extension .ndt'.
         """
-        log.debug("Saving average field values for simulation "
-                  "'{}'".format(self.name))
+        log.debug("Saving average field values for simulation '{}'.".format(self.name))
         self.tablewriter.save()
 
     def relax(self, save_snapshots=False, filename='', save_every=100e-12,
@@ -352,7 +220,7 @@ class Simulation(object):
               dmdt_increased_counter_limit=50):
         """
         Do time integration of the magnetisation M until it reaches a
-        state where the change of M magnetisation at each node is
+        state where the change of the magnetisation at each node is
         smaller than the threshold `stopping_dm_dt` (which should be
         given in rad/s).
 
@@ -373,47 +241,23 @@ class Simulation(object):
         the docstring of sim.integrator.BaseIntegrator.run_until_relaxation().
 
         """
-        log.info("Will integrate until relaxation.")
         if not hasattr(self, "integrator"):
-            self.integrator = llg_integrator(self.llg, self.llg.m,
-                                            backend=self.integrator_backend,
-                                            tablewriter=self.tablewriter)
+            self.integrator = llg_integrator(self.llg, self.llg.m, backend=self.integrator_backend)
+        log.info("Will integrate until relaxation.")
 
         if save_snapshots == True:
-            if filename == '':
-                raise ValueError("If save_snapshots is True, filename must "
-                                 "be a non-empty string.")
-            else:
-                ext = os.path.splitext(filename)[1]
-                if ext != '.pvd':
-                    raise ValueError(
-                        "File extension for vtk snapshot file must be '.pvd', "
-                        "but got: '{}'".format(ext))
-            if os.path.exists(filename):
-                if force_overwrite:
-                    log.warning(
-                        "Removing file '{}' and all associated .vtu files "
-                        "(because force_overwrite=True).".format(filename))
-                    os.remove(filename)
-                    basename = re.sub('\.pvd$', '', filename)
-                    for f in glob.glob(basename + "*.vtu"):
-                        os.remove(f)
-                else:
-                    raise IOError(
-                        "Aborting snapshot creation. File already exists and "
-                        "would overwritten: '{}' (use force_overwrite=True if "
-                        "this is what you want)".format(filename))
-        else:
-            if filename != '':
-                log.warning("Value of save_snapshot is False, but filename is "
-                            "given anyway: '{}'. Ignoring...".format(filename))
+            if not hasattr(self, "vtk"):
+                self.vtk = VTK(filename, "", force_overwrite, "m_")
 
-        self.integrator.run_until_relaxation(
-            save_snapshots=save_snapshots, filename=filename,
-            save_every=save_every, save_final_snapshot=save_final_snapshot,
-            stopping_dmdt=stopping_dmdt,
-            dmdt_increased_counter_limit=dmdt_increased_counter_limit,
-            dt_limit=dt_limit)
+            def save():
+                # workaround since methods on schedule should be called without arguments
+                self.save_vtk(self.llg._m, self.t)
+                self.save_averages()
+
+            self.schedule(save, every=save_every, at_end=save_final_snapshot)
+
+        self.integrator.run_until_relaxation(stopping_dmdt, dmdt_increased_counter_limit, dt_limit,
+                schedule=self.scheduler)
 
     hysteresis = hysteresis
     hysteresis_loop = hysteresis_loop
@@ -480,80 +324,48 @@ class Simulation(object):
         else:
             self.llg.do_slonczewski = not self.llg.do_slonczewski
 
-    def snapshot(self, filename="", directory="", force_overwrite=False,
-                 infix="", save_averages=True):
+    def schedule(self, func_to_be_called, at=None, every=None, at_end=False, after=None, realtime=False):
         """
-        Save a snapshot of the current magnetisation configuration to
-        a .pvd file (in VTK format) which can later be inspected using
-        Paraview, for example.
+        Register a function that should be called during the simulation.
 
-        If `filename` is empty, a default filename will be generated
-        based on a sequentially increasing counter and the current
-        timestep of the simulation. A user-defined string can be
-        inserted into the generated filename by passing `infix`.
+        By default the schedule operates on simulation time expressed in
+        seconds. Use either the `at` keyword argument to define a single point
+        in time at which your function is called, or use the `every` keyword to
+        specify an interval between subsequent calls to your function. When
+        specifying the interval, you can optionally use the `after` keyword to
+        delay the first execution of your function. Additionally, you can set
+        the `at_end` option to `True` to have your function called at the end
+        of the simulation. This can be combined with `at` and `every`.
+        
+        You can also schedule actions using real time instead of simulation
+        time by setting the `realtime` option to True. In this case you can
+        use the `after` keyword on its own.
+        
+        The function you provide shouldn't expect any arguments.
 
-        If `directory` is non-empty then the file will be saved in the
-        specified directory.
-
-        Note that `filename` is also allowed to contain directory
-        components (for example filename='snapshots/foo.pvd'), which
-        are simply appended to `directory`. However, if `filename`
-        contains an absolute path then the value of `directory` is
-        ignored. If a file with the same filename already exists, the
-        method will abort unless `force_overwrite` is True, in which
-        case the existing .pvd and all associated .vtu files are
-        deleted before saving the snapshot.
-
-        All directory components present in either `directory` or
-        `filename` are created if they do not already exist.
-
-        If save_averages is True (the default) then the averaged fields
-        will also be saved to an .ndt file.
         """
-        if not hasattr(self, "vtk_snapshot_no"):
-            self.vtk_snapshot_no = 1
-        if filename == "":
-            infix_insert = "" if infix == "" else "_" + infix
-            filename = "m{}_{}_{:.3f}ns.pvd".format(infix_insert,
-                self.vtk_snapshot_no, self.t * 1e9)
+        self.scheduler.add(func_to_be_called, at=at, at_end=at_end, every=every, after=after, realtime=realtime)
 
-        ext = os.path.splitext(filename)[1]
-        if ext != '.pvd':
-            raise ValueError("File extension for vtk snapshot file must be "
-                             "'.pvd', but got: '{}'".format(ext))
-        if os.path.isabs(filename) and directory != "":
-            log.warning("Ignoring 'directory' argument (value given: '{}') "
-                        "because 'filename' contains an absolute path: "
-                        "'{}'".format(directory, filename))
+    def snapshot(self, filename="", directory="", force_overwrite=False):
+        """
+        Deprecated.
 
-        output_file = os.path.join(directory, filename)
-        if os.path.exists(output_file):
-            if force_overwrite:
-                log.warning(
-                    "Removing file '{}' and all associated .vtu files "
-                    "(because force_overwrite=True).".format(output_file))
-                os.remove(output_file)
-                basename = re.sub('\.pvd$', '', output_file)
-                for f in glob.glob(basename + "*.vtu"):
-                    os.remove(f)
-            else:
-                raise IOError(
-                    "Aborting snapshot creation. File already exists and "
-                    "would overwritten: '{}' (use force_overwrite=True if "
-                    "this is what you want)".format(output_file))
-        t0 = time.time()
-        f = df.File(output_file, "compressed")
-        f << self.llg._m
-        t1 = time.time()
-        log.info(
-            "Saved snapshot of magnetisation at t={} to file '{}' (saving "
-            "took {:.3g} seconds).".format(self.t, output_file, t1 - t0))
-        self.vtk_snapshot_no += 1
+        """
+        log.warning("Method 'snapshot' is deprecated. Use 'save_vtk' instead.")
+        self.vtk(self, filename, directory, force_overwrite)
 
-        if save_averages:
-            self.save_averages()
+    def save_vtk(self, filename="", directory="", force_overwrite=False):
+        """
+        Save the magnetisation to a VTK file.
 
-    save_vtk = snapshot  # alias with a more telling name
+        Leave filename empty for sequential snapshots of the magnetisation -
+        filenames will be automatically generated.
+
+        """
+        if not hasattr(self, "vtk"):
+            prefix = "m_" if filename == "" else ""
+            self.vtk = VTK(filename, directory, force_overwrite, prefix)
+        self.vtk.save(self.llg._m, self.t)
 
     def mesh_info(self):
         """
@@ -595,51 +407,3 @@ class Simulation(object):
                 info_string += added_info(l_bloch, 'Bloch parameter', 'l_bloch')
 
         return info_string
-
-
-def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sundials",
-             A=None, K1=None, K1_axis=None, H_ext=None, demag_solver='FK', 
-             D=None, name="unnamed"):
-    """
-    Create a Simulation instance based on the given parameters.
-
-    This is a convenience function which allows quick creation of a
-    common simulation type where at most one exchange/anisotropy/demag
-    interaction is present and the initial magnetisation is known.
-
-    If a value for any of the optional arguments A, K1 (and K1_axis),
-    or demag_solver are provided then the corresponding exchange /
-    anisotropy / demag interaction is created automatically and added
-    to the simulation. For example, providing the value A=13.0e-12 in
-    the function call is equivalent to:
-
-       exchange = Exchange(A)
-       sim.add(exchange)
-    """
-    sim = Simulation(mesh, Ms, unit_length=unit_length, 
-                     integrator_backend=integrator_backend,
-                     name=name)
-
-    sim.set_m(m_init)
-    sim.alpha = alpha
-
-    # If any of the optional arguments are provided, initialise
-    # the corresponding interactions here:
-    if A is not None:
-        sim.add(Exchange(A))
-    if (K1 != None and K1_axis is None) or (K1 is None and K1_axis != None):
-        log.warning(
-            "Not initialising uniaxial anisotropy because only one of K1, "
-            "K1_axis was specified (values given: K1={}, K1_axis={}).".format(
-                K1, K1_axis))
-    if K1 != None and K1_axis != None:
-        sim.add(UniaxialAnisotropy(K1, K1_axis))
-    if H_ext != None:
-        sim.add(Zeeman(H_ext))
-    if D != None:
-        from finmag.energies import DMI
-        sim.add(DMI(D))
-    if demag_solver != None:
-        sim.add(Demag(solver=demag_solver))
-
-    return sim

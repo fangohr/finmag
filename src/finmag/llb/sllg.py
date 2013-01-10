@@ -1,7 +1,7 @@
+import time
 import numpy as np
 import dolfin as df
 import finmag.util.consts as consts
-
 
 from finmag.native.sllgc import RK2S
 from finmag.util import helpers
@@ -13,6 +13,9 @@ from finmag.energies import Zeeman
 from finmag.energies import Exchange
 from finmag.energies import Demag
 
+import logging
+log = logging.getLogger(name="finmag")
+
 class SLLG(object):
     def __init__(self,mesh,Ms=8.6e5,unit_length=1.0,name='unnamed',auto_save_data=True):
         self._t=0
@@ -22,7 +25,6 @@ class SLLG(object):
         self.domains.set_all(0)
         self.dx = df.Measure("dx")[self.domains]
         self.region_id=0
-        print self.domains.array()
         
         self.S1 = df.FunctionSpace(mesh, "Lagrange", 1)
         self.S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1,dim=3)
@@ -45,11 +47,19 @@ class SLLG(object):
         self.set_default_values()
         self.auto_save_data=auto_save_data
         self.name = name
+        self.sanitized_name = helpers.clean_filename(name)
+        self.logfilename = self.sanitized_name + '.log'
+        helpers.start_logging_to_file(self.logfilename, mode='w')
+        log.info("Creating Sim object '{}' (rank={}/{}) [{}].".format(
+            self.name, df.MPI.process_number(),
+            df.MPI.num_processes(), time.asctime()))
+        log.info(mesh)
+        
         
         self.Ms=Ms
         
         if self.auto_save_data:
-            self.ndtfilename = self.name + '.ndt'
+            self.ndtfilename = self.sanitized_name + '.ndt'
             self.tablewriter = Tablewriter(self.ndtfilename, self, override=True)
 
     def set_default_values(self):
@@ -69,9 +79,9 @@ class SLLG(object):
                                 self.stochastic_update_field)
         
         self.alpha = 0.5  
-        self.gamma = consts.gamma
-        self.c = 1e11  # 1/s numerical scaling correction 
-        self.dt=1e-14
+        self._gamma = consts.gamma
+        self._seed=np.random.random_integers(4294967295)
+        self.dt=1e-13
         self.T=0
   
     @property
@@ -79,18 +89,43 @@ class SLLG(object):
         return self._t*self.time_scale       
     @property
     def dt(self):
-        return self._dt*self.time_scale 
+        return self._dt*self.time_scale
+     
+    @property
+    def gamma(self):
+        return self._gamma
+    
+    @property
+    def seed(self):
+        return self._seed
+    
+    @seed.setter
+    def seed(self, value):
+        self._seed=value
+        self.setup_parameters()
+    
+    @gamma.setter
+    def gamma(self, value):
+        self._gamma=value
+        self.setup_parameters()
     
     @dt.setter
     def dt(self, value):
         self._dt=value/self.time_scale 
-        self.integrator.setup_parameters(self.gamma,self.dt,self.c)
+        self.setup_parameters()
+    
+    def setup_parameters(self):
+        self.integrator.setup_parameters(self.gamma,self.dt,self.seed)
+        log.debug("seed=%d."%self.seed)
+        log.debug("dt=%g."%self.dt)
+        log.debug("gamma=%g."%self.gamma)
                 
     def set_m(self,value):
         self._m = helpers.vector_valued_function(value, self.S3, normalise=False)
         self.m[:]=self._m.vector().array()[:]
 
     def add(self,interaction,with_time_update=None):
+        log.debug("Adding interaction %s to simulation '%s'" % (str(interaction),self.name))
         interaction.setup(self.S3, self._m, self._Ms_dg, self.unit_length)
         self.effective_field.add(interaction, with_time_update)
 
@@ -108,7 +143,8 @@ class SLLG(object):
         
         if abs(tp-self._t)<1e-12:
             self._t=tp
-        
+        log.debug("Integrating dynamics up to t = %g" % t)
+            
         if self.auto_save_data:
             self.save_data()
 
@@ -147,9 +183,6 @@ class SLLG(object):
         tmp=tmp/self.volumes
         self._Ms[:]=tmp[:]
         
-            
-    
-    
     def m_average_fun(self,dx=df.dx):
         """
         Compute and return the average polarisation according to the formula
@@ -184,6 +217,7 @@ class SLLG(object):
         self.tablewriter.update_entity_order()
     
     def save_data(self):
+        log.debug("Saving average field values for simulation '{}'.".format(self.name))
         self.tablewriter.save()
         
 if __name__ == "__main__":
@@ -191,10 +225,12 @@ if __name__ == "__main__":
     sim = SLLG(mesh, 8.6e5, unit_length=1e-9)
     sim.alpha = 0.1
     sim.set_m((1, 0, 0))
-    ts = np.linspace(0, 1e-10, 101)
+    ts = np.linspace(0, 1e-9, 11)
     print sim.Ms
+    sim.T=2000
+    sim.dt=1e-14
     
-    H0 = 1e5
+    H0 = 1e6
     sim.add(Zeeman((0, 0, H0)))
     
     A=helpers.scale_valued_dg_function(13.0e-12,mesh)

@@ -1,6 +1,7 @@
 from datetime import datetime
 import matplotlib.pyplot as plt
 import subprocess
+import itertools
 import logging
 import numpy as np
 import dolfin as df
@@ -9,8 +10,6 @@ import types
 import sys
 import os
 import re
-from finmag.util.meshes import mesh_volume
-from math import sqrt, pow
 
 logger = logging.getLogger("finmag")
 
@@ -524,7 +523,7 @@ def mark_subdomain_by_function(fun,mesh_or_space,domain_index,subdomains):
         for cell in df.cells(mesh):
             p1,p2,p3,p4=cell.entities(0)
             coord=(cds[p1]+cds[p2]+cds[p3]+cds[p4])/4.0
-            if fun(coord)>0:
+            if fun(coord):
                 subdomains.array()[index] = domain_index
             index+=1
             
@@ -859,3 +858,54 @@ def vector_field_from_dolfin_function(f, xlims=None, ylims=None, zlims=None,
                 W[i, j, k] = val[2]
 
     return X, Y, Z, U, V, W
+
+def probe(dolfin_function, points):
+    """
+    Probe the dolfin function at the given points.
+
+    *Arguments*
+
+    dolfin_function: dolfin.Function
+
+        A dolfin function.
+
+    points: numpy.array
+
+        An array of points where the field should be probed. Can
+        have arbitrary shape, except that the last axis must have
+        dimension 3. For example, if pts.shape == (10,20,5,3) then
+        the field is probed at all points on a regular grid of
+        size 10 x 20 x 5.
+
+    *Returns*
+
+    A numpy.array of the same shape as `pts`, where the last
+    axis contains the field values instead of the point
+    locations.
+
+    *Limitations*
+
+    Currently the points where the field is probed must lie inside
+    the mesh. For points which lie outside the mesh the returned
+    field values will be NaN.
+
+    """
+    points = np.array(points)
+    if not points.shape[-1] == 3:
+        raise ValueError(
+            "Arguments 'points' must be a numpy array of 3D points, "
+            "i.e. the last axis must have dimension 3. Shape of "
+            "'pts' is: {}".format(points.shape))
+
+    def _safe_single_probe(point):
+        try:
+            return dolfin_function(point)
+        except RuntimeError:
+            return np.array([np.NaN, np.NaN, np.NaN])
+
+    res = np.empty_like(points)
+    loop_indices = itertools.product(*map(xrange, points.shape[:-1]))
+    for idx in loop_indices:
+        res[idx] = _safe_single_probe(points[idx])
+    return res
+

@@ -1,8 +1,10 @@
 import logging
 import numpy as np
+from finmag.util.helpers import vector_valued_function
 from finmag.energies import Exchange, UniaxialAnisotropy
 
 logger = logging.getLogger(name="finmag")
+
 
 class EffectiveField(object):
     def __init__(self, mesh):
@@ -72,3 +74,32 @@ class EffectiveField(object):
         for interaction in self.interactions:
             energy += interaction.compute_energy()
         return energy
+
+    def get_interaction(self, interaction_type):
+        """
+        Returns the interaction object of the given type, or raises a ValueError
+        if no, or more than one matching interaction is found.
+
+        """
+        added_interaction_types = set() # for debugging output to user
+        matching_interaction = None
+
+        for inter in self.interactions:
+            added_interaction_types.add(inter.__class__.__name__)
+            if inter.__class__.__name__ == interaction_type.capitalize():
+                if matching_interaction != None:
+                    raise ValueError(
+                        "Found more than one interaction of type '{}'.".format(interaction_type))
+                matching_interaction = inter
+
+        if not matching_interaction:
+            raise ValueError(
+                "Couldn't find interaction of type '{}'. Did you mean one of {}?".format(
+                    interaction_type, list(added_interaction_types)))
+
+        return matching_interaction
+
+    def get_dolfin_function(self, interaction_type):
+        interaction = self.get_interaction(interaction_type)
+        # TODO: Do we keep the field as a dolfin function somewhere?
+        return vector_valued_function(interaction.compute_field(), interaction.S3)
