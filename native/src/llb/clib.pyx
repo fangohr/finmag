@@ -7,7 +7,7 @@ cdef extern from "sllg.h":
 	
 	ode_solver *create_ode_plan()
 	void init_solver(ode_solver *s,double *alpha, double *T, double *V, double *Ms, int nxyz)
-	void init_solver_parameters(ode_solver *s, double gamma, double dt, double c)
+	void init_solver_parameters(ode_solver *s, double gamma, double dt, unsigned int seed)
 	void finalize_ode_plan(ode_solver *plan)
 	void run_step1(ode_solver *s, double *m, double *h, double *m_pred)
 	double run_step2(ode_solver *s, double *m_pred, double *h, double *m)
@@ -44,9 +44,10 @@ cdef class RK2S(object):
 			finalize_ode_plan(self._c_plan)
 			self._c_plan = NULL
 		
-	def setup_parameters(self,gamma,dt,c):
+	def setup_parameters(self,gamma,dt,seed_p):
 		self.dt=dt
-		init_solver_parameters(self._c_plan, gamma,dt,c)
+		cdef unsigned int seed=seed_p
+		init_solver_parameters(self._c_plan, gamma,dt,seed)
 				
 	
 	def run_step(self, np.ndarray[double, ndim=1, mode="c"] field):
