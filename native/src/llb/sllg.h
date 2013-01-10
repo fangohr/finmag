@@ -29,7 +29,7 @@ typedef struct {
 
 ode_solver *create_ode_plan();
 void init_solver(ode_solver *s,double *alpha, double *T, double *V, double *Ms, int nxyz);
-void init_solver_parameters(ode_solver *s, double gamma,double dt, double c);
+void init_solver_parameters(ode_solver *s, double gamma,double dt, unsigned int seed);
 void finalize_ode_plan(ode_solver *plan);
 void run_step1(ode_solver *s, double *m, double *h, double *m_pred);
 double run_step2(ode_solver *s, double *m_pred, double *h, double *m);

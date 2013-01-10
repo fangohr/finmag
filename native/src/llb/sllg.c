@@ -90,19 +90,20 @@ void init_solver(ode_solver *s, double *alpha, double *T, double *V,
 		s->eta[i] = 0;
 	}
 
-	initial_random();
+	//initial_random();
 }
 
-void init_solver_parameters(ode_solver *s, double gamma, double dt, double c) {
+void init_solver_parameters(ode_solver *s, double gamma, double dt, unsigned int seed) {
 
 	double k_B = 1.3806505e-23;
 	double mu_0 = 4 * M_PI * 1e-7;
 
 	s->gamma = gamma;
 	s->dt = dt;
-	s->c = c;
+	s->c=1e11;//delete later...
 
 	s->Q = k_B / (gamma * mu_0);
+	initial_random_with_seed(seed);
 }
 
 void run_step1(ode_solver *s, double *m, double *h, double *m_pred) {
