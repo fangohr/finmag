@@ -324,15 +324,25 @@ class Simulation(object):
         else:
             self.llg.do_slonczewski = not self.llg.do_slonczewski
 
-    def schedule(self, func_to_be_called, at=None, every=None):
+    def schedule(self, func_to_be_called, at=None, every=None, after=None, realtime=False):
         """
-        Add a function that should be called during the simulation.
+        Register a function that should be called during the simulation.
 
-        The function should be callable without arguments and either get called
-        ``at`` a specific time, or in the time interval specified in ``every``.
+        By default the schedule operates on simulation time expressed in
+        seconds. Use either the `at` keyword argument to define a single point
+        in time at which your function is called, or the `every` keyword to
+        specify an interval between subsequent calls to your function. When
+        specifying the interval, you can optionally use the `after` keyword to
+        delay the first execution of your function.
+
+        You can also schedule actions using real time instead of simulation
+        time by setting the `realtime` option to True. In this case you can
+        use the `after` keyword on its own.
+
+        The function you provide shouldn't expect any arguments.
 
         """
-        self.scheduler.add(func_to_be_called, at=at, every=every)
+        self.scheduler.add(func_to_be_called, at=at, every=every, after=after, realtime=realtime)
 
     def snapshot(self, filename="", directory="", force_overwrite=False):
         """
