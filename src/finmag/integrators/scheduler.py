@@ -1,5 +1,6 @@
 import atexit
 import logging
+from numbers import Number
 from datetime import datetime, timedelta
 # This module will try to import the package apscheduler when a realtime event
 # is added. Install with "pip install apscheduler".
@@ -44,14 +45,14 @@ class At(object):
             self.callback()
    
 class Every(At):
-    def __init__(self, interval, start=0.0, when_stopping=False):
+    def __init__(self, interval, start=None, when_stopping=False):
         """
         Initialise with the interval between correct times and optionally, a starting time.
         If `when_stopping` is True, the event will be triggered a last time when
         time integration stops, even if less than `interval` time has passed.
 
         """
-        self.next_step = start
+        self.next_step = start or 0.0
         self.interval = interval
         self.callback = None
         self.when_stopping = when_stopping
@@ -77,23 +78,17 @@ class Scheduler(object):
         """
         self.items = []
 
-    def add(self, func, at=None, every=None, delay=None, realtime=False):
+    def add(self, func, at=None, every=None, after=None, realtime=False):
         """
-        Add a function ``func`` that should get called either at the simulation
-        time passed in ``at`` or every ``every`` seconds.
+        Register a function with the scheduler.
 
-        Passing ``realtime``=True will have the arguments interpreted in real time
-        and not simulation time. In that case, ``at`` should be a datetime. To
-        call the function in a certain time from now, use the ``delay`` parameter.
-
-        The passed function will be called without arguments.
         """
-        assert not (at!=None and every!=None)
-        if (delay != None):
-            assert realtime == True
+        assert at or every or (after and realtime), "Use either `at` or `every` if not in real time mode."
+        assert not (at!=None and every!=None), "It's either `at` or `every`."
+        assert not (at!=None and after!=None), "Delays don't mix with `at`."
 
         if realtime:
-            self._add_realtime(func, at, every, delay)
+            self._add_realtime(func, at, every, after)
             return
 
         if at:
@@ -101,33 +96,41 @@ class Scheduler(object):
             self._add(at_item)
 
         if every:
-            every_item = Every(every).call(func)
+            every_item = Every(every, after).call(func)
             self._add(every_item)
-
 
     def _add(self, at_or_every):
         self.items.append(at_or_every)
 
-    def _add_realtime(self, func, at=None, every=None, delay=None):
-        try:
-            from apscheduler.scheduler import Scheduler as APScheduler
-        except ImportError:
-            log.error("Need APScheduler package to schedule realtime events.\n"
-                "Please install from http://pypi.python.org/pypi/APScheduler.")
-            raise
-
+    def _add_realtime(self, func, at=None, every=None, after=None):
         if not hasattr(self, "apscheduler"):
+            try:
+                from apscheduler.scheduler import Scheduler as APScheduler
+            except ImportError:
+                log.error("Need APScheduler package to schedule realtime events.\n"
+                    "Please install from http://pypi.python.org/pypi/APScheduler.")
+                raise
+
             self.apscheduler = APScheduler()
             atexit.register(lambda: self.apscheduler.shutdown(wait=False))
             self.apscheduler.start()
 
+        if after and isinstance(after, Number):
+            # `after` can be either a delay in seconds, or a date/datetime.
+            # Since the APScheduler API expects a date/datetime convert it. 
+            after = datetime.now() + timedelta(seconds=after)
+
         if at:
             self.apscheduler.add_date_job(func, at)
-        if every:
-            self.apscheduler.add_interval_job(func, seconds=every)
-        if delay: # sadly, it's not possible to call a parameter 'in'
-            target_time = datetime.now() + timedelta(seconds=delay)
-            self.apscheduler.add_date_job(func, target_time)
+        elif every:
+            if after:
+                self.apscheduler.add_interval_job(func, seconds=every, start_date=after)
+            else:
+                self.apscheduler.add_interval_job(func, seconds=every)
+        elif after:
+            self.apscheduler.add_date_job(func, after)
+        else:
+            raise ValueError("Assertion violated. Use either `at`, `every` of `after`.")
 
     def next_step(self):
         """
