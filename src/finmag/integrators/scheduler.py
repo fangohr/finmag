@@ -1,3 +1,4 @@
+import atexit
 import logging
 from datetime import datetime, timedelta
 # This module will try to import the package apscheduler when a realtime event
@@ -87,7 +88,7 @@ class Scheduler(object):
 
         The passed function will be called without arguments.
         """
-        assert (at==None and every!=None) or (at!=None and every==None)
+        assert not (at!=None and every!=None)
         if (delay != None):
             assert realtime == True
 
@@ -117,6 +118,8 @@ class Scheduler(object):
 
         if not hasattr(self, "apscheduler"):
             self.apscheduler = APScheduler()
+            atexit.register(lambda: self.apscheduler.shutdown(wait=False))
+            self.apscheduler.start()
 
         if at:
             self.apscheduler.add_date_job(func, at)
