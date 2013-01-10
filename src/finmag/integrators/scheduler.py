@@ -1,3 +1,11 @@
+import logging
+from datetime import datetime, timedelta
+# This module will try to import the package apscheduler when a realtime event
+# is added. Install with "pip install apscheduler".
+# See http://pypi.python.org/pypi/APScheduler for documentation.
+
+log = logging.getLogger(name="finmag")
+
 class At(object):
     """
     Store a function and a time when that function should be run.
@@ -68,15 +76,24 @@ class Scheduler(object):
         """
         self.items = []
 
-    def add(self, func, at=None, every=None):
+    def add(self, func, at=None, every=None, delay=None, realtime=False):
         """
-        Add a function ``func`` that should get called either at the time passed
-        in ``at`` or every ``every`` seconds.
+        Add a function ``func`` that should get called either at the simulation
+        time passed in ``at`` or every ``every`` seconds.
 
-        The function will be called without arguments.
+        Passing ``realtime``=True will have the arguments interpreted in real time
+        and not simulation time. In that case, ``at`` should be a datetime. To
+        call the function in a certain time from now, use the ``delay`` parameter.
 
+        The passed function will be called without arguments.
         """
         assert (at==None and every!=None) or (at!=None and every==None)
+        if (delay != None):
+            assert realtime == True
+
+        if realtime:
+            self._add_realtime(func, at, every, delay)
+            return
 
         if at:
             at_item = At(at).call(func)
@@ -86,8 +103,28 @@ class Scheduler(object):
             every_item = Every(every).call(func)
             self._add(every_item)
 
+
     def _add(self, at_or_every):
         self.items.append(at_or_every)
+
+    def _add_realtime(self, func, at=None, every=None, delay=None):
+        try:
+            from apscheduler.scheduler import Scheduler as APScheduler
+        except ImportError:
+            log.error("Need APScheduler package to schedule realtime events.\n"
+                "Please install from http://pypi.python.org/pypi/APScheduler.")
+            raise
+
+        if not hasattr(self, "apscheduler"):
+            self.apscheduler = APScheduler()
+
+        if at:
+            self.apscheduler.add_date_job(func, at)
+        if every:
+            self.apscheduler.add_interval_job(func, seconds=every)
+        if delay: # sadly, it's not possible to call a parameter 'in'
+            target_time = datetime.now() + timedelta(seconds=delay)
+            self.apscheduler.add_date_job(func, target_time)
 
     def next_step(self):
         """
