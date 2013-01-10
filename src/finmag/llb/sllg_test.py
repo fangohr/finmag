@@ -50,7 +50,7 @@ def test_sllg_zero_temperature(do_plot=False):
             np.max(np.abs(mz - mz_ref)),
             mz_ref))
     
-    assert np.max(np.abs(mz - mz_ref)) < 1e-8
+    assert np.max(np.abs(mz - mz_ref)) < 8e-7
     
 def test_sllg_100(do_plot=False):
     mesh = df.Box(0, 0, 0, 10, 10, 10, 1, 1, 1)
