@@ -254,7 +254,7 @@ class Simulation(object):
                 self.save_vtk(self.llg._m, self.t)
                 self.save_averages()
 
-            self.schedule(save, every=save_every, when_stopping=save_final_snapshot)
+            self.schedule(save, every=save_every, at_end=save_final_snapshot)
 
         self.integrator.run_until_relaxation(stopping_dmdt, dmdt_increased_counter_limit, dt_limit,
                 schedule=self.scheduler)
@@ -324,25 +324,27 @@ class Simulation(object):
         else:
             self.llg.do_slonczewski = not self.llg.do_slonczewski
 
-    def schedule(self, func_to_be_called, at=None, every=None, after=None, realtime=False):
+    def schedule(self, func_to_be_called, at=None, every=None, at_end=False, after=None, realtime=False):
         """
         Register a function that should be called during the simulation.
 
         By default the schedule operates on simulation time expressed in
         seconds. Use either the `at` keyword argument to define a single point
-        in time at which your function is called, or the `every` keyword to
+        in time at which your function is called, or use the `every` keyword to
         specify an interval between subsequent calls to your function. When
         specifying the interval, you can optionally use the `after` keyword to
-        delay the first execution of your function.
-
+        delay the first execution of your function. Additionally, you can set
+        the `at_end` option to `True` to have your function called at the end
+        of the simulation. This can be combined with `at` and `every`.
+        
         You can also schedule actions using real time instead of simulation
         time by setting the `realtime` option to True. In this case you can
         use the `after` keyword on its own.
-
+        
         The function you provide shouldn't expect any arguments.
 
         """
-        self.scheduler.add(func_to_be_called, at=at, every=every, after=after, realtime=realtime)
+        self.scheduler.add(func_to_be_called, at=at, at_end=at_end, every=every, after=after, realtime=realtime)
 
     def snapshot(self, filename="", directory="", force_overwrite=False):
         """

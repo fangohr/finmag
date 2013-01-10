@@ -29,6 +29,17 @@ delay the first execution of your function::
     # Delay the start with the 'after' keyword.
     sim.schedule(my_fun, every=50e=12, after=100e-12)
 
+Additionally, you can define events using the `at_end=True` option to have
+your function be executed at the end of the simulation::
+
+    # every 100 picoseconds including at the end of simulation
+    sim.schedule(my_fun, every=100e-12, at_end=True)
+
+    # at the end of simulation, but not before
+    sim.schedule(my_fun, at_end=True)
+
+As you can see, this works in combination with `at` and `every` or on its own.
+
 Events Defined in Real Time
 ---------------------------
 
