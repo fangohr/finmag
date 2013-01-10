@@ -84,7 +84,7 @@ class Scheduler(object):
         Register a function with the scheduler.
 
         """
-        assert at or every or (after and realtime), "Use either `at` or `every` if not in real time mode."
+        assert at or every or at_end or (after and realtime), "Use either `at`, `every` or `at_end` if not in real time mode."
         assert not (at!=None and every!=None), "It's either `at` or `every`."
         assert not (at!=None and after!=None), "Delays don't mix with `at`."
 
