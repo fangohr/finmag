@@ -42,7 +42,7 @@ There are four different ways to do a measurement.
     with timed('my_measurement'):
         sleep(1)
 
-3. Time a function with the decorator *ftimed*:
+3. Time a function with the decorator *ftimed* (for standalone functions):
 
     timer = Timings()
 
@@ -56,7 +56,7 @@ There are four different ways to do a measurement.
     def do_things()
         sleep(1)
 
-4. Time a method with the decorator *mtimed*:
+4. Time a method with the decorator *mtimed* (for methods inside a class):
 
     timer = Timings()
 
