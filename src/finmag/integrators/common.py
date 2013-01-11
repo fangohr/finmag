@@ -26,7 +26,7 @@ def run_until(integrator, time, schedule=None):
 
     while True:
         next_step = schedule.next_step()
-        if not next_step or next_step > time:
+        if next_step == None or next_step > time:
             break
 
         integrator.advance_time(next_step)
