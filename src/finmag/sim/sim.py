@@ -52,7 +52,7 @@ class Simulation(object):
         self.logfilename = self.sanitized_name + '.log'
         self.ndtfilename = self.sanitized_name + '.ndt'
 
-        helpers.start_logging_to_file(self.logfilename, mode='w')
+        helpers.start_logging_to_file(self.logfilename, mode='w', level=logging.DEBUG)
 
         # Create a Tablewriter object for ourselves which will be used
         # by various methods to save the average magnetisation at given
