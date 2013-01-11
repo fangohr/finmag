@@ -47,4 +47,4 @@ if __name__ == "__main__":
 
     # Now integrate. The functions will get called according to the schedule.
 
-    sim.run_until(1.05e-9)
+    sim.run_until(t_final)
