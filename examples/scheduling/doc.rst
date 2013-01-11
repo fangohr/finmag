@@ -4,7 +4,8 @@ Using the Scheduling System
 The Simulation class exposes a flexible scheduling system so that you can
 provide custom functions to get executed during the simulation. This system
 is exposed through the :py:meth:`.Simulation.schedule` method which takes your
-function as the first argument. The scheduler will call it without arguments.
+function as the first argument. The scheduler will call it with the simulation
+object as first argument.
 
 Events Defined in Simulation Time
 ---------------------------------
@@ -76,3 +77,7 @@ with either::
 
 If you use a string to pass in a datetime (and not simply a date) as shown in
 the last example, don't forget to include the seconds.
+
+The realtime scheduling system uses a separate thread but is not thread-safe.
+Undefined behaviour may result because of this, so be careful when accessing
+the simulation object.
