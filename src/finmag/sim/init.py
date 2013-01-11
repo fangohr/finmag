@@ -5,86 +5,68 @@ from finmag.sim.sim_helpers import sim_with
 from finmag.util import configuration, ansistrm
 from finmag.util.helpers import start_logging_to_file
 
-_DOLFIN_LOG_LEVELS = {
-    "DEBUG": df.DEBUG,
-    "INFO": df.INFO,
-    "WARN": df.WARNING,
-    "WARNING": df.WARNING,
-    "ERROR": df.ERROR,
-    "CRITICAL": df.CRITICAL,
-    "PROGRESS": df.PROGRESS,
+_FINMAG_LOG_LEVELS = {
+        "EXTREMEDEBUG" : 5,
+        "DEBUG" : logging.DEBUG,
+        "INFO" : logging.INFO,
+        "WARNING" : logging.WARNING,
+        "ERROR" : logging.ERROR,
+        "CRITICAL" : logging.CRITICAL
 }
 
-# Note: dolfin uses the default logger ('root'). So we should
-# use a separate one to be able to
-# control levels of details separately for finmag and dolfin.
-# Here we setup this logger with name 'finmag'
-logger = logging.getLogger(name='finmag')
+_DOLFIN_LOG_LEVELS = {
+        "DEBUG" : df.DEBUG,
+        "INFO" : df.INFO,
+        "WARN" : df.WARNING,
+        "WARNING" : df.WARNING,
+        "ERROR" : df.ERROR,
+        "CRITICAL" : df.CRITICAL,
+        "PROGRESS" : df.PROGRESS,
+}
 
-
-# Create formatter (some options to play with)
-formatter = logging.Formatter('[%(asctime)s] %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-#formatter = logging.Formatter('L%(asctime)s-%(levelname)s: %(message)s')
-#formatter = logging.Formatter('FL:%(relativeCreated)10.1f-%(levelname)s: %(message)s')
-#formatter = logging.Formatter('%(levelname)s: %(message)s')
-
-
-parser = argparse.ArgumentParser(description='Parse the logging level.')
-parser.add_argument("-v", "--verbosity", default="debug",
-        choices=("extremedebug", "debug", "info", "warning", "error", "critical"),
-        help="Set the logging level.")
-parser.add_argument("--logcol",
-        choices=("dark_bg", "light_bg", "none"),
-        help="Set the LOGging COLour scheme.")
-
-args, _ = parser.parse_known_args()
-logging_level = {"extremedebug": 5, "debug": logging.DEBUG, "info": logging.INFO,
-    "warning": logging.WARNING, "error": logging.ERROR}[args.verbosity]
-logger.setLevel(logging_level)
-
-
-def parse_logging_level(s, values=logging._levelNames):
-    if s is None:
-        return s
-    try:
-        return int(s)
-    except ValueError:
-        return values[s]
-
-# Create console handler; the logging level is read from the config file
-ch = ansistrm.ColorizingStreamHandler()
-#ch.level_map = ansistrm.level_maps['light_bg']  # default; this may be overwritten below
-
-# Activate console handler so that we can start logging already
-ch.setFormatter(formatter)
-logger.addHandler(ch)
-
-# If no .finmagrc file exists yet, create a default one.
+# If no finmag configuration file exists, create a default one in ~/.finmagrc.
 configuration.create_default_finmagrc_file()
 
-# Read the logging settings from the configuration file
-console_level = parse_logging_level(configuration.get_config_option("logging", "console_logging_level", logging.DEBUG))
-dolfin_level = parse_logging_level(configuration.get_config_option("logging", "dolfin_logging_level"), _DOLFIN_LOG_LEVELS)
-if dolfin_level is not None:
-    df.set_log_level(dolfin_level)
+# Read the settings from the configuration file first.
+logfiles = configuration.get_config_option("logging", "logfiles", "").split()
+finmag_level = _FINMAG_LOG_LEVELS[configuration.get_config_option("logging", "console_logging_level", "DEBUG")]
+dolfin_level = _DOLFIN_LOG_LEVELS[configuration.get_config_option("logging", "dolfin_logging_level", "WARNING")]
 color_scheme = configuration.get_config_option("logging", "color_scheme", "light_bg")
 
-# Command line option may override settings from configfile
-if args.logcol:
-    color_scheme = args.logcol
+# Parse command line options.
+parser = argparse.ArgumentParser(description='Parse the logging level and colour scheme.')
+parser.add_argument("--verbosity", default=None,
+        choices=("extremedebug", "debug", "info", "warning", "error", "critical"),
+        help="Set the finmag logging level.")
+parser.add_argument("--colour", default=None,
+        choices=("dark_bg", "light_bg", "none"),
+        help="Set the logging colour scheme.")
+args, _ = parser.parse_known_args() # Parse only known args so py.test can parse the remaining ones.
+
+# The parsed command line options can override the configuration file settings.
+if args.verbosity:
+    finmag_level = _FINMAG_LOG_LEVELS[args.verbosity.upper()]
+if args.colour:
+    color_scheme = args.colour
+
+# Apply the settings.
+df.set_log_level(dolfin_level) # use root logger
+logger = logging.getLogger(name='finmag') # to control level separately from dolfin
+logger.setLevel(logging.DEBUG)
+
+ch = ansistrm.ColorizingStreamHandler()
+ch.setLevel(finmag_level)
+
+formatter = logging.Formatter('[%(asctime)s] %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+ch.setFormatter(formatter)
 
 try:
     ch.level_map = ansistrm.level_maps[color_scheme]
 except KeyError:
     raise ValueError("Unkown color scheme: '{}' (allowed values: {})".format(color_scheme, ansistrm.level_maps.keys()))
 
+logger.addHandler(ch)
 
-#
-# Now add file handlers for all logfiles listed in .finmagrc
-#
-
-filehandlers = []
-
-logfiles = configuration.get_config_option("logging", "logfiles", "").split()
+# Now add file handlers for all logfiles listed in the finmag configuration file.
 for f in logfiles:
-    start_logging_to_file(f, formatter=formatter)
+    start_logging_to_file(f, formatter=formatter, mode="a", level=finmag_level)
