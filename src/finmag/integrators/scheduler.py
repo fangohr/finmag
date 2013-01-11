@@ -8,6 +8,8 @@ from datetime import datetime, timedelta
 
 log = logging.getLogger(name="finmag")
 
+EPSILON = 1e-15 # femtosecond precision for scheduling.
+
 class At(object):
     """
     Store a function and a time when that function should be run.
@@ -19,6 +21,7 @@ class At(object):
         Initialise with the correct time.
 
         """
+        self.last_step = None
         self.next_step = time
         self.callback = None
         self.at_end = at_end
@@ -36,13 +39,20 @@ class At(object):
 
     attach = call
 
-    def fire(self, payload=None):
+    def fire(self, time, payload=None):
         """
         Call registered function with an optional `payload` as argument.
 
         """
+        if (self.last_step != None) and abs(self.last_step - time) < EPSILON:
+            # Don't fire more than once per time. This would be possible if the
+            # scheduled time also happens to be the end of the simulation and
+            # at_end was set to True.
+            return
+
         if self.callback:
             self.callback(payload) if payload else self.callback()
+        self.last_step = time
         self.update()
 
     def update(self):
@@ -64,6 +74,7 @@ class Every(At):
         Initialise with the interval between correct times and optionally, a starting time.
 
         """
+        self.last_step = None
         self.next_step = start or 0.0
         self.interval = interval
         self.callback = None
@@ -167,14 +178,14 @@ class Scheduler(object):
 
         """
         for item in self.items:
-            if item.next_step == time:
-                item.fire(self.payload)
+            if (item.next_step != None) and abs(item.next_step - time) < EPSILON:
+                item.fire(time, self.payload)
 
-    def finalise(self):
+    def finalise(self, time):
         """
         Trigger all events that need to happen at the end of time integration.
 
         """
         for item in self.items:
             if item.at_end:
-                item.fire(self.payload)
+                item.fire(time, self.payload)
