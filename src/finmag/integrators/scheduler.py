@@ -149,14 +149,14 @@ class Scheduler(object):
             after = datetime.now() + timedelta(seconds=after)
 
         if at:
-            self.apscheduler.add_date_job(func, at)
+            self.apscheduler.add_date_job(func, at, args=[self.payload])
         elif every:
             if after:
-                self.apscheduler.add_interval_job(func, seconds=every, start_date=after)
+                self.apscheduler.add_interval_job(func, args=[self.payload], seconds=every, start_date=after)
             else:
-                self.apscheduler.add_interval_job(func, seconds=every)
+                self.apscheduler.add_interval_job(func, seconds=every, args=[self.payload])
         elif after:
-            self.apscheduler.add_date_job(func, after)
+            self.apscheduler.add_date_job(func, after, args=[self.payload])
         else:
             raise ValueError("Assertion violated. Use either `at`, `every` of `after`.")
 
