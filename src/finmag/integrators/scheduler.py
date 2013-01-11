@@ -11,7 +11,7 @@ log = logging.getLogger(name="finmag")
 class At(object):
     """
     Store a function and a time when that function should be run.
-    Calls that function when notified that the time is right.
+    Call that function if notified that the timing is right.
 
     """
     def __init__(self, time, at_end=False):
@@ -36,21 +36,32 @@ class At(object):
 
     attach = call
 
-    def fire(self):
+    def fire(self, payload=None):
         """
-        Call the saved function.
+        Call registered function with an optional `payload` as argument.
 
         """
-        self.next_step = None
         if self.callback:
-            self.callback()
-   
+            self.callback(payload) if payload else self.callback()
+        self.update()
+
+    def update(self):
+        """
+        Compute next target time.
+
+        """
+        self.next_step = None # Since one-time event, there is no next step.
+
+
 class Every(At):
+    """
+    Store a function that should be run and a time interval between function calls.
+    Call that function if notified that the timing is right.
+
+    """
     def __init__(self, interval, start=None, at_end=False):
         """
         Initialise with the interval between correct times and optionally, a starting time.
-        If `when_stopping` is True, the event will be triggered a last time when
-        time integration stops, even if less than `interval` time has passed.
 
         """
         self.next_step = start or 0.0
@@ -58,26 +69,27 @@ class Every(At):
         self.callback = None
         self.at_end = at_end
 
-    def fire(self):
+    def update(self):
         """
-        Call the saved function.
+        Compute next target time.
 
         """
         self.next_step += self.interval
-        if self.callback:
-            self.callback()
+
 
 class Scheduler(object):
     """
     Manages a list of actions that should be performed at specific times.
 
     """
-    def __init__(self):
+    def __init__(self, payload=None):
         """
-        Creates a Scheduler.
+        Creates a Scheduler with an optional payload. 
+        If there is a payload, registered functions will be called with it as an argument.
 
         """
         self.items = []
+        self.payload = payload
 
     def add(self, func, at=None, at_end=False, every=None, after=None, realtime=False):
         """
@@ -156,7 +168,7 @@ class Scheduler(object):
         """
         for item in self.items:
             if item.next_step == time:
-                item.fire()
+                item.fire(self.payload)
 
     def finalise(self):
         """
@@ -165,4 +177,4 @@ class Scheduler(object):
         """
         for item in self.items:
             if item.at_end:
-                item.fire()
+                item.fire(self.payload)
