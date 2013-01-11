@@ -9,10 +9,10 @@ def test_first_every_at_start():
 
 def test_update_next_stop_according_to_interval():
     e = Every(100)
-    e.fire()
+    e.update()
 
     t0 = e.next_step
-    e.fire()
+    e.update()
     t1 = e.next_step
 
     assert abs(t1 - t0) == 100
