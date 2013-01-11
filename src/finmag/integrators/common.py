@@ -107,4 +107,4 @@ def run_until_relaxation(integrator,
             break
 
     if schedule:
-        schedule.finalise()
+        schedule.finalise(integrator.cur_t)
