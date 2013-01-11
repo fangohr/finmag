@@ -73,8 +73,7 @@ class Simulation(object):
         self.llg = LLG(self.S1, self.S3)
         self.llg.Ms = Ms
         self.Volume = mesh_volume(mesh)
-        self.t = 0
-        self.scheduler = Scheduler()
+        self.scheduler = Scheduler(payload=self)
 
     def __str__(self):
         """String briefly describing simulation object"""
@@ -97,6 +96,16 @@ class Simulation(object):
         \\frac{1}{V} \int m \: \mathrm{d}V`
         """
         return self.llg.m_average
+
+    @property
+    def t(self):
+        """
+        Returns the current simulation time.
+
+        """
+        if hasattr(self, "integrator"):
+            return self.integrator.cur_t # the real thing
+        return 0.0
 
     def add(self, interaction, with_time_update=None):
         """
@@ -200,7 +209,6 @@ class Simulation(object):
             self.integrator = llg_integrator(self.llg, self.llg.m, backend=self.integrator_backend)
         log.debug("Integrating dynamics up to t = %g" % t)
         self.integrator.run_until(t, schedule=self.scheduler)
-        self.t = t
         if save_averages:
             self.save_averages()
 
