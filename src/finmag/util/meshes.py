@@ -656,7 +656,12 @@ def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, **kwargs):
             kwargs['shade'] = False
 
         triangs = [[v.index() for v in df.vertices(s)] for s in df.faces(bm)]
-        ax.plot_trisurf(x, y, z, triangles=triangs, vertex_vals=scalar_field, **kwargs)
+        try:
+            ax.plot_trisurf(x, y, z, triangles=triangs, vertex_vals=scalar_field, **kwargs)
+        except AttributeError:
+            logger.debug("Ignoring 'scalar_field' argument because this "
+                         "version of matplotlib doesn't support plotting it.")
+            ax.plot_trisurf(x, y, z, triangles=triangs, **kwargs)
     else:
         raise ValueError("Plotting is only supported for 2- and 3-dimensional meshes.")
 
