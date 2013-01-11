@@ -54,8 +54,10 @@ class LLG(object):
         #               0.1e12 1/s is the value used by default in nmag 0.2
         self.Ms = 8.6e5  # A/m saturation magnetisation
         self._m = df.Function(self.S3)
-        self._m.rename("m", "magnetisation")  # gets displayed e.g. in Paraview
-                                              # when loading an exported VTK file
+        # Arguments to _m.rename() below: (new_short_name, new_long_name).
+        # These get displayed e.g. in Paraview when loading an
+        # exported VTK file.
+        self._m.rename("m", "magnetisation")
         self.pins = []  # nodes where the magnetisation gets pinned
 
     def set_pins(self, nodes):
