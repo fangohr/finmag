@@ -112,7 +112,7 @@ class LLG(object):
     
     @property
     def Ms(self):
-        return self._Ms
+        return self._Ms_dg
     
     @Ms.setter
     def Ms(self, value):
@@ -124,6 +124,7 @@ class LLG(object):
     @property
     def M(self):
         """The magnetisation, with length Ms."""
+        #FIXME:error here
         m = self.m.view().reshape((3, -1))
         Ms = self.Ms.vector().array() if isinstance(self.Ms, df.Function) else self.Ms
         M = Ms * m
@@ -202,7 +203,7 @@ class LLG(object):
                 m, H_eff, t, dmdt, self.pins,
                 self.gamma, self.alpha_vec,
                 char_time,
-                self.J, self.P, self.d, self.Ms.vector().array(), self.p)
+                self.J, self.P, self.d, self._Ms, self.p)
         else:
             native_llg.calc_llg_dmdt(m, H_eff, t, dmdt, self.pins,
                                  self.gamma, self.alpha_vec,
@@ -367,8 +368,3 @@ class LLG(object):
         polarisation = df.Function(self.S3)
         polarisation.assign(df.Constant((p)))
         self.p = polarisation.vector().array().reshape((3, -1))
-
-        if not isinstance(self.Ms, df.Function):
-            Ms = df.Function(self.S1)
-            Ms.assign(df.Constant(self.Ms))
-            self.Ms = Ms
