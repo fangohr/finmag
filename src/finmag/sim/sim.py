@@ -73,7 +73,13 @@ class Simulation(object):
         self.llg = LLG(self.S1, self.S3)
         self.llg.Ms = Ms
         self.Volume = mesh_volume(mesh)
+
         self.scheduler = Scheduler()
+        
+        self.domains =  df.CellFunction("uint", self.mesh)
+        self.domains.set_all(0)
+        self.region_id=0
+
 
     def __str__(self):
         """String briefly describing simulation object"""
@@ -96,6 +102,23 @@ class Simulation(object):
         \\frac{1}{V} \int m \: \mathrm{d}V`
         """
         return self.llg.m_average
+        
+    def save_m_in_region(self,region,name='unnamed'):
+        
+        self.region_id+=1
+        helpers.mark_subdomain_by_function(region, self.mesh, self.region_id,self.domains)
+        self.dx = df.Measure("dx")[self.domains]
+        
+        if name=='unnamed':
+            name='region_'+str(self.region_id)
+        
+        region_id=self.region_id
+        self.tablewriter.entities[name]={
+                        'unit': '<>',
+                        'get': lambda sim: sim.llg.m_average_fun(dx=self.dx(region_id)),
+                        'header': (name+'_m_x', name+'_m_y', name+'_m_z')}
+        
+        self.tablewriter.update_entity_order()
 
     @property
     def t(self):
@@ -124,7 +147,7 @@ class Simulation(object):
              state of the interaction accordingly.
         """
         log.debug("Adding interaction %s to simulation '%s'" % (str(interaction),self.name))
-        interaction.setup(self.S3, self.llg._m, self.Ms, self.unit_length)
+        interaction.setup(self.S3, self.llg._m, self.llg._Ms_dg, self.unit_length)
         self.llg.effective_field.add(interaction, with_time_update)
 
     def total_energy(self):
