@@ -46,14 +46,7 @@ class LLG(object):
         self.do_precession = do_precession
         self.do_slonczewski = False
         self.effective_field = EffectiveField(S3.mesh())
-        self.Volume = None  # will be computed on demand, and carries volume of the mesh
-        
-        self.domains =  df.CellFunction("uint", self.mesh)
-        self.domains.set_all(0)
-        self.region_id=0
-        
-        
-        
+        self.Volume = None  # will be computed on demand, and carries volume of the mesh        
         
 
     def set_default_values(self):
