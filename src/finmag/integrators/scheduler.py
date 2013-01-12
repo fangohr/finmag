@@ -1,5 +1,6 @@
 import atexit
 import logging
+import functools
 from numbers import Number
 from datetime import datetime, timedelta
 # This module will try to import the package apscheduler when a realtime event
@@ -39,9 +40,9 @@ class At(object):
 
     attach = call
 
-    def fire(self, time, payload=None):
+    def fire(self, time):
         """
-        Call registered function with an optional `payload` as argument.
+        Call registered function.
 
         """
         if (self.last_step != None) and abs(self.last_step - time) < EPSILON:
@@ -51,7 +52,7 @@ class At(object):
             return
 
         if self.callback:
-            self.callback(payload) if payload else self.callback()
+            self.callback()
         self.last_step = time
         self.update()
 
@@ -93,38 +94,42 @@ class Scheduler(object):
     Manages a list of actions that should be performed at specific times.
 
     """
-    def __init__(self, payload=None):
+    def __init__(self):
         """
-        Creates a Scheduler with an optional payload. 
-        If there is a payload, registered functions will be called with it as an argument.
+        Create a Scheduler.
 
         """
         self.items = []
-        self.payload = payload
 
-    def add(self, func, at=None, at_end=False, every=None, after=None, realtime=False):
+    def add(self, func, args=None, kwargs=None, at=None, at_end=False, every=None, after=None, realtime=False):
         """
         Register a function with the scheduler.
 
         """
+        if not hasattr(func, "__call__"):
+            raise TypeError("The function must be callable.")
         assert at or every or at_end or (after and realtime), "Use either `at`, `every` or `at_end` if not in real time mode."
         assert not (at!=None and every!=None), "It's either `at` or `every`."
         assert not (at!=None and after!=None), "Delays don't mix with `at`."
 
+        args = args or []
+        kwargs = kwargs or {}
+        callback = functools.partial(func, *args, **kwargs)
+
         if realtime:
             self._add_realtime(func, at, every, after)
             if at_end:
-                at_end_item = At(None, True).call(func)
+                at_end_item = At(None, True).call(callback)
                 self._add(at_end_item)
             return
 
         if at or (at_end and not every):
-            at_item = At(at, at_end).call(func)
+            at_item = At(at, at_end).call(callback)
             self._add(at_item)
             return
 
         if every:
-            every_item = Every(every, after, at_end).call(func)
+            every_item = Every(every, after, at_end).call(callback)
             self._add(every_item)
 
     def _add(self, at_or_every):
@@ -179,7 +184,7 @@ class Scheduler(object):
         """
         for item in self.items:
             if (item.next_step != None) and abs(item.next_step - time) < EPSILON:
-                item.fire(time, self.payload)
+                item.fire(time)
 
     def finalise(self, time):
         """
@@ -188,4 +193,4 @@ class Scheduler(object):
         """
         for item in self.items:
             if item.at_end:
-                item.fire(time, self.payload)
+                item.fire(time)

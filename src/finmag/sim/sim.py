@@ -73,7 +73,7 @@ class Simulation(object):
         self.llg = LLG(self.S1, self.S3)
         self.llg.Ms = Ms
         self.Volume = mesh_volume(mesh)
-        self.scheduler = Scheduler(payload=self)
+        self.scheduler = Scheduler()
 
     def __str__(self):
         """String briefly describing simulation object"""
@@ -332,7 +332,8 @@ class Simulation(object):
         else:
             self.llg.do_slonczewski = not self.llg.do_slonczewski
 
-    def schedule(self, func_to_be_called, at=None, every=None, at_end=False, after=None, realtime=False):
+    def schedule(self, func, args=None, kwargs=None,
+            at=None, at_end=False, every=None, after=None, realtime=False):
         """
         Register a function that should be called during the simulation.
 
@@ -349,10 +350,14 @@ class Simulation(object):
         time by setting the `realtime` option to True. In this case you can
         use the `after` keyword on its own.
         
-        The function you provide shouldn't expect any arguments.
+        The function you provide should expect the simulation object as its
+        first argument. Other positional arguments can be added by passing
+        a list-like object to `args` while keyword arguments the function should
+        be called with can be added by passing a dict-like object to `kwargs`.
 
         """
-        self.scheduler.add(func_to_be_called, at=at, at_end=at_end, every=every, after=after, realtime=realtime)
+        self.scheduler.add(func, [self] + (args or []), kwargs,
+                at=at, at_end=at_end, every=every, after=after, realtime=realtime)
 
     def snapshot(self, filename="", directory="", force_overwrite=False):
         """
