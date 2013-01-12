@@ -54,7 +54,10 @@ def test_returns_None_if_no_actions_or_done():
     s = Scheduler()
     assert s.next_step() == None
 
-    s.add(None, at=1)
+    def bogus():
+        pass
+
+    s.add(bogus, at=1)
     assert s.next_step() == 1
     s.reached(1)
     assert s.next_step() == None
