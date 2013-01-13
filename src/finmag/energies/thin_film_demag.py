@@ -30,8 +30,7 @@ class ThinFilmDemag(object):
 
     def compute_field(self):
         m = self.m.vector().array().view().reshape((3, -1))
-        self.H[self.direction][:] = m[self.direction]
-        self.H[:]*=self.Ms
+        self.H[self.direction][:] = self.Ms * m[self.direction]
         return - self.strength * self.H.ravel()
 
     def compute_energy(self):
