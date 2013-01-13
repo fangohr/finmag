@@ -10,7 +10,7 @@ from finmag.util.meshes import mesh_info, mesh_volume
 from finmag.util.fileio import Tablewriter
 from finmag.util import helpers
 from finmag.util.vtk import VTK
-from finmag.sim.hysteresis import hysteresis, hysteresis_loop
+from finmag.sim.hysteresis import hysteresis as hyst, hysteresis_loop as hyst_loop
 from finmag.integrators.llg_integrator import llg_integrator
 from finmag.integrators.scheduler import Scheduler
 
@@ -290,8 +290,8 @@ class Simulation(object):
         self.integrator.run_until_relaxation(stopping_dmdt, dmdt_increased_counter_limit, dt_limit,
                 schedule=self.scheduler)
 
-    hysteresis = hysteresis
-    hysteresis_loop = hysteresis_loop
+    hysteresis = hyst
+    hysteresis_loop = hyst_loop
 
     def __get_pins(self):
         return self.llg.pins
