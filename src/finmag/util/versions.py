@@ -17,7 +17,7 @@ def get_linux_issue():
 
 def get_version_python():
     version = sys.version.split(' ')[0]
-    assert version.count('.') == 2, "Unknown version format: %s" %s
+    assert version.count('.') == 2, "Unknown version format: %s" % version
     return version
 
 def get_version_ipython():
