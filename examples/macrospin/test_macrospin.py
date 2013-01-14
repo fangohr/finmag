@@ -96,8 +96,16 @@ def save_plot(ts, ys, ts_ref, m_ref, alpha):
     plt.close()
 
 
+def test_macrospin_alpha_0_00001():
+    compare_with_analytic_solution(alpha=0.00001, max_t=1e-11)
+
+
+def test_macrospin_alpha_0_001():
+    compare_with_analytic_solution(alpha=0.001, max_t=1e-11)
+
+
 def test_macrospin_very_low_damping():
-    compare_with_analytic_solution(alpha=0.02, max_t=2e-9)
+    compare_with_analytic_solution(alpha=0.02, max_t=0.5e-9)
 
 
 def test_macrospin_low_damping():
