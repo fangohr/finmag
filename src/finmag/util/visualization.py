@@ -16,14 +16,18 @@ _color_maps = {
 _axes = {'x': 0, 'y': 1, 'z': 2, 'magnitude': -1}
 _axes_names = {0: 'x', 1: 'y', 2: 'z', -1: 'magnitude'}
 
-def render_paraview_scene(vtu_file, outfile, color_by_axis=0,
-                          rescale_to_data_range=False,
-                          colormap='blue_to_red', show_colorbar=False,
-                          colorbar_label_format="%-#5.2g",
-                          show_orientation_axes=False,
-                          show_center_axes=False,
-                          field_name='m',
-                          palette='screen'):
+def render_paraview_scene(
+    vtu_file, outfile,
+    field_name='m',
+    camera_position=[-150, -150, 0],
+    camera_focal_point=[0, 0, 0],
+    camera_view_up=[0, 0, 1],
+    color_by_axis=0,
+    fit_view_to_scene=True,
+    rescale_to_data_range=False, colormap='blue_to_red', show_colorbar=False,
+    colorbar_label_format="%-#5.2g", show_orientation_axes=False,
+    show_center_axes=False, representation="Surface With Edges",
+    palette='screen'):
     """
     Load a *.vtu file, render the scene in it and save the result to a
     file.
@@ -74,8 +78,16 @@ def render_paraview_scene(vtu_file, outfile, color_by_axis=0,
     reader.UpdatePipeline()
     view = servermanager.CreateRenderView()
     repr = servermanager.CreateRepresentation(reader, view)
-    repr.Representation = "Surface With Edges"
-    view.ResetCamera()
+    repr.Representation = representation
+
+    view.CameraPosition = camera_position
+    view.CameraFocalPoint = camera_focal_point
+    view.CameraViewUp = camera_view_up
+    view.CameraClippingRange = [111.82803847855743, 244.8030589195661]  # Paraview's default values; don't know what exactly they mean
+
+    if fit_view_to_scene:
+        view.ResetCamera()
+
     view.OrientationAxesVisibility = (1 if show_orientation_axes else 0)
     view.CenterAxesVisibility = (1 if show_center_axes else 0)
 
@@ -118,7 +130,7 @@ def render_paraview_scene(vtu_file, outfile, color_by_axis=0,
         raise ValueError("Unsupported color map: {}. Allowed values: "
                          "{}".format(colormap, _color_maps.keys()))
     if rescale_to_data_range:
-        print("Rescaling colormap to data range.")
+        logger.debug("Rescaling colormap to data range.")
         rgb_points[0] = data_range[0]
         rgb_points[4] = data_range[1]
     lut.RGBPoints = rgb_points
