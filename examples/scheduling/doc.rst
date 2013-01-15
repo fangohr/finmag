@@ -4,7 +4,23 @@ Using the Scheduling System
 The Simulation class exposes a flexible scheduling system so that you can
 provide custom functions to get executed during the simulation. This system
 is exposed through the :py:meth:`.Simulation.schedule` method which takes your
-function as the first argument. The scheduler will call it without arguments.
+function as its first argument.
+
+The scheduler will call your function with the simulation object as first
+argument. More positional arguments as well as keyword arguments can be added
+by passing a list to `args` and a dictionary to `kwargs`, respectively::
+
+    # simplest case, function takes the simulation object as only parameter
+    def simple_progress(sim):
+        print "Current simulation time is t = {}.".format(sim.t)
+
+    # adding this function to the schedule
+    sim.schedule(simple_progress, every=100e-12)
+
+    # using a function that takes additional parameters
+    sim.schedule(complicated_function, args=[1, 2, 3], kwargs={'cromulent':True}, at=0.5e-9)
+
+The following sections describe how to define when your function should be called.
 
 Events Defined in Simulation Time
 ---------------------------------
@@ -76,3 +92,7 @@ with either::
 
 If you use a string to pass in a datetime (and not simply a date) as shown in
 the last example, don't forget to include the seconds.
+
+The realtime scheduling system uses a separate thread but is not thread-safe.
+Undefined behaviour may result because of this, so be careful when accessing
+the simulation object.

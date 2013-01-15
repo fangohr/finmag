@@ -87,7 +87,7 @@ def test_vector_valued_function():
 
     """
     mesh = df.UnitCube(2, 2, 2)
-    mesh.coordinates()[:] += 1.0  # shift mesh coords to avoid dividing by zero when normalising below
+    mesh.coordinates()[:] = mesh.coordinates() + 1.0  # shift mesh coords to avoid dividing by zero when normalising below
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
     num_vertices = mesh.num_vertices()
 

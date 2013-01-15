@@ -5,7 +5,7 @@ log = logging.getLogger(name="finmag")
 
 ONE_DEGREE_PER_NS = 17453292.5  # in rad/s
 
-def run_until(integrator, time, schedule=None):
+def run_with_schedule(integrator, time, schedule=None):
     """
     Run the integrator until *time* has been reached.
 
@@ -26,7 +26,7 @@ def run_until(integrator, time, schedule=None):
 
     while True:
         next_step = schedule.next_step()
-        if not next_step or next_step > time:
+        if next_step == None or next_step > time:
             break
 
         integrator.advance_time(next_step)
@@ -35,10 +35,10 @@ def run_until(integrator, time, schedule=None):
     if integrator.cur_t < time:
         integrator.advance_time(time)
 
-    schedule.finalise()
+    schedule.finalise(time)
 
 
-def run_until_relaxation(integrator,
+def relax_with_schedule(integrator,
         stopping_dmdt=ONE_DEGREE_PER_NS, dmdt_increased_counter_limit=50, dt_limit=1e-10,
         schedule=None):
     """
@@ -107,4 +107,4 @@ def run_until_relaxation(integrator,
             break
 
     if schedule:
-        schedule.finalise()
+        schedule.finalise(integrator.cur_t)

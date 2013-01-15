@@ -10,7 +10,7 @@ from finmag.util.meshes import mesh_info, mesh_volume
 from finmag.util.fileio import Tablewriter
 from finmag.util import helpers
 from finmag.util.vtk import VTK
-from finmag.sim.hysteresis import hysteresis, hysteresis_loop
+from finmag.sim.hysteresis import hysteresis as hyst, hysteresis_loop as hyst_loop
 from finmag.integrators.llg_integrator import llg_integrator
 from finmag.integrators.scheduler import Scheduler
 
@@ -52,7 +52,7 @@ class Simulation(object):
         self.logfilename = self.sanitized_name + '.log'
         self.ndtfilename = self.sanitized_name + '.ndt'
 
-        helpers.start_logging_to_file(self.logfilename, mode='w')
+        helpers.start_logging_to_file(self.logfilename, mode='w', level=logging.DEBUG)
 
         # Create a Tablewriter object for ourselves which will be used
         # by various methods to save the average magnetisation at given
@@ -73,8 +73,13 @@ class Simulation(object):
         self.llg = LLG(self.S1, self.S3)
         self.llg.Ms = Ms
         self.Volume = mesh_volume(mesh)
-        self.t = 0
+
         self.scheduler = Scheduler()
+        
+        self.domains =  df.CellFunction("uint", self.mesh)
+        self.domains.set_all(0)
+        self.region_id=0
+
 
     def __str__(self):
         """String briefly describing simulation object"""
@@ -97,6 +102,33 @@ class Simulation(object):
         \\frac{1}{V} \int m \: \mathrm{d}V`
         """
         return self.llg.m_average
+        
+    def save_m_in_region(self,region,name='unnamed'):
+        
+        self.region_id+=1
+        helpers.mark_subdomain_by_function(region, self.mesh, self.region_id,self.domains)
+        self.dx = df.Measure("dx")[self.domains]
+        
+        if name=='unnamed':
+            name='region_'+str(self.region_id)
+        
+        region_id=self.region_id
+        self.tablewriter.entities[name]={
+                        'unit': '<>',
+                        'get': lambda sim: sim.llg.m_average_fun(dx=self.dx(region_id)),
+                        'header': (name+'_m_x', name+'_m_y', name+'_m_z')}
+        
+        self.tablewriter.update_entity_order()
+
+    @property
+    def t(self):
+        """
+        Returns the current simulation time.
+
+        """
+        if hasattr(self, "integrator"):
+            return self.integrator.cur_t # the real thing
+        return 0.0
 
     def add(self, interaction, with_time_update=None):
         """
@@ -115,7 +147,7 @@ class Simulation(object):
              state of the interaction accordingly.
         """
         log.debug("Adding interaction %s to simulation '%s'" % (str(interaction),self.name))
-        interaction.setup(self.S3, self.llg._m, self.Ms, self.unit_length)
+        interaction.setup(self.S3, self.llg._m, self.llg._Ms_dg, self.unit_length)
         self.llg.effective_field.add(interaction, with_time_update)
 
     def total_energy(self):
@@ -200,7 +232,6 @@ class Simulation(object):
             self.integrator = llg_integrator(self.llg, self.llg.m, backend=self.integrator_backend)
         log.debug("Integrating dynamics up to t = %g" % t)
         self.integrator.run_until(t, schedule=self.scheduler)
-        self.t = t
         if save_averages:
             self.save_averages()
 
@@ -259,8 +290,8 @@ class Simulation(object):
         self.integrator.run_until_relaxation(stopping_dmdt, dmdt_increased_counter_limit, dt_limit,
                 schedule=self.scheduler)
 
-    hysteresis = hysteresis
-    hysteresis_loop = hysteresis_loop
+    hysteresis = hyst
+    hysteresis_loop = hyst_loop
 
     def __get_pins(self):
         return self.llg.pins
@@ -324,7 +355,8 @@ class Simulation(object):
         else:
             self.llg.do_slonczewski = not self.llg.do_slonczewski
 
-    def schedule(self, func_to_be_called, at=None, every=None, at_end=False, after=None, realtime=False):
+    def schedule(self, func, args=None, kwargs=None,
+            at=None, at_end=False, every=None, after=None, realtime=False):
         """
         Register a function that should be called during the simulation.
 
@@ -341,10 +373,14 @@ class Simulation(object):
         time by setting the `realtime` option to True. In this case you can
         use the `after` keyword on its own.
         
-        The function you provide shouldn't expect any arguments.
+        The function you provide should expect the simulation object as its
+        first argument. Other positional arguments can be added by passing
+        a list-like object to `args` while keyword arguments the function should
+        be called with can be added by passing a dict-like object to `kwargs`.
 
         """
-        self.scheduler.add(func_to_be_called, at=at, at_end=at_end, every=every, after=after, realtime=realtime)
+        self.scheduler.add(func, [self] + (args or []), kwargs,
+                at=at, at_end=at_end, every=every, after=after, realtime=realtime)
 
     def snapshot(self, filename="", directory="", force_overwrite=False):
         """
