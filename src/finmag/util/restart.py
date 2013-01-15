@@ -13,17 +13,18 @@ def save_restart_data(sim, filename=None):
     integrator_stats = sim.integrator.stats()
     datetimetuple = datetime.datetime.now()
     drivertype = 'cvode'  # we should deduce this from sim object XXX
-
+    simtime = sim.t
     # fix filename
     if filename == None:
     	filename = canonical_restart_filename(sim)
 
     np.savez_compressed(filename, 
-        m = sim.integrator.llg.m, 
-        stats=integrator_stats,          
-        datetime = datetimetuple,
-        simname = sim.name,
-        driver = drivertype)
+        m=sim.integrator.llg.m, 
+        stats=integrator_stats,       
+        simtime=simtime,   
+        datetime=datetimetuple,
+        simname=sim.name,
+        driver=drivertype)
 
 def load_restart_data(filename_or_simulation):
     """Given a file name, load the restart data saved in that file
@@ -43,7 +44,7 @@ def load_restart_data(filename_or_simulation):
     for key in data.keys():
         # the 'tolist()' command returns dictionary and datetime objects
         # when wrapped up in numpy array
-        if key in ['stats', 'datetime', 'simname', 'driver']:
+        if key in ['stats', 'datetime', 'simtime', 'simname', 'driver']:
             data2[key] = data[key].tolist()
         else:
             data2[key] = data[key]   
