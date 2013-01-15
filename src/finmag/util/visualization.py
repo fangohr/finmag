@@ -5,7 +5,7 @@ logger.warning("This module will probably crash when imported from within Finmag
                "weird incompability which needs to be fixed (although I have no "
                "idea what's causing it).")
 import os
-import IPython
+import IPython.core.display
 from paraview import servermanager
 
 _color_maps = {
@@ -22,7 +22,8 @@ def render_paraview_scene(vtu_file, outfile, color_by_axis=0,
                           colorbar_label_format="%-#5.2g",
                           show_orientation_axes=False,
                           show_center_axes=False,
-                          field_name='m'):
+                          field_name='m',
+                          palette='screen'):
     """
     Load a *.vtu file, render the scene in it and save the result to a
     file.
@@ -49,7 +50,7 @@ def render_paraview_scene(vtu_file, outfile, color_by_axis=0,
         color the plot. If '-1' is given, the vector *magnitudes* are
         used.
 
-    rescale_to_data_range: [False | True]
+    rescale_to_data_range:  False | True
 
         If False (the default), the colormap corresponds to the data
         range [-1.0, +1.0]. If set to True, the colormap is rescaled
@@ -58,6 +59,10 @@ def render_paraview_scene(vtu_file, outfile, color_by_axis=0,
     colormap:
 
         The colormap to use. Supported values: {}.
+
+    palette:  'print' | 'screen'
+
+        The color scheme used.
     """
 
 
@@ -73,6 +78,20 @@ def render_paraview_scene(vtu_file, outfile, color_by_axis=0,
     view.ResetCamera()
     view.OrientationAxesVisibility = (1 if show_orientation_axes else 0)
     view.CenterAxesVisibility = (1 if show_center_axes else 0)
+
+    if palette == 'print':
+        view.Background = [1.0, 1.0, 1.0]
+        view.OrientationAxesLabelColor = [0.0, 0.0, 0.0]
+        repr.CubeAxesColor = [0.0, 0.0, 0.0]
+        repr.AmbientColor = [0.0, 0.0, 0.0]
+    elif palette == 'screen':
+        view.Background = [0.32, 0.34, 0.43]
+        view.OrientationAxesLabelColor = [1.0, 1.0, 1.0]
+        repr.CubeAxesColor = [1.0, 1.0, 1.0]
+        repr.AmbientColor = [1.0, 1.0, 1.0]
+    else:
+        raise ValueError("Palette argument must be either 'print' "
+                         "or 'screen'. Got: {}".format(palette))
 
 
     # Convert color_by_axis to integer and store the name separately
@@ -118,9 +137,13 @@ def render_paraview_scene(vtu_file, outfile, color_by_axis=0,
         # XXX TODO: Remove the import of paraview.simple once I know why
         from paraview.simple import CreateScalarBar
         scalarbar = CreateScalarBar(
-            ComponentTitle=color_by_axis_name.capitalize(),
-            Title=field_name, Enabled=1, LabelFontSize=12, TitleFontSize=12)
+            Title=field_name, ComponentTitle=color_by_axis_name.capitalize(),
+            Enabled=1, LabelFontSize=12, TitleFontSize=12)
         scalarbar.LabelFormat = colorbar_label_format,
+        if palette == 'print':
+            scalarbar.LabelColor = [0.0, 0.0, 0.0]  # black labels for print
+        else:
+            scalarbar.LabelColor = [1.0, 1.0, 1.0]  # white labels for screen
         view.Representations.append(scalarbar)
         scalarbar.LookupTable = lut
 
