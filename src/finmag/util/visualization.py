@@ -18,10 +18,10 @@ _axes_names = {0: 'x', 1: 'y', 2: 'z', -1: 'magnitude'}
 
 def render_paraview_scene(vtu_file, outfile, color_by_axis=0,
                           rescale_to_data_range=False,
-                          colormap='blue_to_red',
-                          show_colorbar=False,
+                          colormap='blue_to_red', show_colorbar=False,
                           colorbar_label_format="%-#5.2g",
                           show_orientation_axes=False,
+                          show_center_axes=False,
                           field_name='m'):
     """
     Load a *.vtu file, render the scene in it and save the result to a
@@ -72,6 +72,8 @@ def render_paraview_scene(vtu_file, outfile, color_by_axis=0,
     repr.Representation = "Surface With Edges"
     view.ResetCamera()
     view.OrientationAxesVisibility = (1 if show_orientation_axes else 0)
+    view.CenterAxesVisibility = (1 if show_center_axes else 0)
+
 
     # Convert color_by_axis to integer and store the name separately
     try:
