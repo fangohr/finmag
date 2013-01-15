@@ -16,17 +16,24 @@ _color_maps = {
 _axes = {'x': 0, 'y': 1, 'z': 2, 'magnitude': -1}
 _axes_names = {0: 'x', 1: 'y', 2: 'z', -1: 'magnitude'}
 
+_representations = ['3D Glyphs', 'Outline', 'Points', 'Surface',
+                    'Surface With Edges', 'Volume', 'Wireframe']
+
 def render_paraview_scene(
     vtu_file, outfile,
     field_name='m',
-    camera_position=[-150, -150, 0],
+    camera_position=[0, -200, +200],
     camera_focal_point=[0, 0, 0],
     camera_view_up=[0, 0, 1],
     color_by_axis=0,
     fit_view_to_scene=True,
-    rescale_to_data_range=False, colormap='blue_to_red', show_colorbar=False,
-    colorbar_label_format="%-#5.2g", show_orientation_axes=False,
-    show_center_axes=False, representation="Surface With Edges",
+    rescale_to_data_range=False,
+    colormap='blue_to_red',
+    show_colorbar=False,
+    colorbar_label_format="%-#5.2g",
+    show_orientation_axes=False,
+    show_center_axes=False,
+    representation="Surface With Edges",
     palette='screen'):
     """
     Load a *.vtu file, render the scene in it and save the result to a
@@ -68,6 +75,9 @@ def render_paraview_scene(
 
         The color scheme used.
     """
+    if not representation in _representations:
+        raise ValueError("Unsupported representation: '{}'. Allowed values: "
+                         "{}".format(representation, _representations))
 
 
     if not os.path.exists(vtu_file):
