@@ -29,7 +29,7 @@ class SundialsIntegrator(object):
             integrator = sundials.cvode(sundials.CV_BDF, sundials.CV_NEWTON)
         self.integrator = integrator
 
-        integrator.init(llg.sundials_rhs, 0, self.m)
+        integrator.init(llg.sundials_rhs, self.cur_t, self.m)
 
         if method == "bdf_diag":
             integrator.set_linear_solver_diag()
