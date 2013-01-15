@@ -1,8 +1,16 @@
 import datetime
+import shutil
 import logging
 log = logging.getLogger('finmag')
 import numpy as np
 import finmag
+import os.path
+
+def create_backup_file_if_file_exists(filename, backupextension='.backup'):
+    if os.path.exists(filename):
+        backup_file_name = filename + backupextension
+        shutil.copy(filename, backup_file_name)
+        log.extremedebug("Creating backup %s of %s" % (backup_file_name, filename))
 
 def canonical_restart_filename(sim):
 	return sim.name + "-restart.npz"
@@ -19,6 +27,8 @@ def save_restart_data(sim, filename=None):
     # fix filename
     if filename == None:
     	filename = canonical_restart_filename(sim)
+
+    create_backup_file_if_file_exists(filename)
 
     np.savez_compressed(filename, 
         m=sim.integrator.llg.m, 

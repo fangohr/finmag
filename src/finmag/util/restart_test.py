@@ -1,4 +1,7 @@
 import datetime
+import os
+import os.path
+import shutil
 import numpy as np
 import finmag
 import restart
@@ -55,6 +58,33 @@ def test_try_to_restart_a_simulation():
 
     # for the second 10e-12 seconds, we needed much fewer steps. Check:
     assert sim2.integrator.stats()['nsteps'] * 4 < sim1.integrator.stats()['nsteps']
+
+def test_create_backup_if_file_exists():
+    # remove file
+    testfilename = 'tmp-testfile.txt'
+    if os.path.exists(testfilename):
+        os.remove(testfilename)
+
+    backupfilename = 'tmp-testfile.txt.backup'
+    if os.path.exists(backupfilename):
+        os.remove(backupfilename)
+
+    assert os.path.exists(testfilename) == False
+    assert os.path.exists(backupfilename) == False
+
+    # create file
+    os.system('echo "Hello World" > ' + testfilename)
+
+    assert os.path.exists(testfilename) == True
+    assert open(testfilename).readline()[:-1] == "Hello World"
+    assert os.path.exists(backupfilename) == False
+
+    restart.create_backup_file_if_file_exists(testfilename)
+    assert os.path.exists(backupfilename) == True
+
+    assert open(backupfilename).readline()[:-1] == "Hello World"
+
+    assert open(backupfilename).read() == open(testfilename).read()
 
 
 
