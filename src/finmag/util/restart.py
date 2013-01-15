@@ -1,4 +1,6 @@
 import datetime
+import logging
+log = logging.getLogger('finmag')
 import numpy as np
 import finmag
 
@@ -25,6 +27,7 @@ def save_restart_data(sim, filename=None):
         datetime=datetimetuple,
         simname=sim.name,
         driver=drivertype)
+    log.debug("Have saved restart data at t=%g to %s (sim.name=%s)" % (sim.t, filename, sim.name))
 
 def load_restart_data(filename_or_simulation):
     """Given a file name, load the restart data saved in that file
