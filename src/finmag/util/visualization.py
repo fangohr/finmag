@@ -21,6 +21,7 @@ def render_paraview_scene(vtu_file, outfile, color_by_axis=0,
                           colormap='blue_to_red',
                           show_colorbar=False,
                           colorbar_label_format="%-#5.2g",
+                          show_orientation_axes=False,
                           field_name='m'):
     """
     Load a *.vtu file, render the scene in it and save the result to a
@@ -70,6 +71,7 @@ def render_paraview_scene(vtu_file, outfile, color_by_axis=0,
     repr = servermanager.CreateRepresentation(reader, view)
     repr.Representation = "Surface With Edges"
     view.ResetCamera()
+    view.OrientationAxesVisibility = (1 if show_orientation_axes else 0)
 
     # Convert color_by_axis to integer and store the name separately
     try:
