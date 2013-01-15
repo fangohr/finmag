@@ -1,9 +1,9 @@
 import logging
 logger = logging.getLogger("finmag")
-logger.warning("This module will probably crash when imported from within Finmag, "
-               "but the code does work on its own. There seems to be some kind of "
-               "weird incompability which needs to be fixed (although I have no "
-               "idea what's causing it).")
+logger.warning("This module will probably crash when imported from within "
+               "Finmag, but the code does work on its own. There seems to be "
+               "some kind of weird incompability which needs to be fixed "
+               "(although I have no idea what could be causing it).")
 import os
 import IPython.core.display
 from paraview import servermanager
@@ -20,24 +20,26 @@ _representations = ['3D Glyphs', 'Outline', 'Points', 'Surface',
                     'Surface With Edges', 'Volume', 'Wireframe']
 
 def render_paraview_scene(
-    vtu_file, outfile,
+    vtu_file,
+    outfile,
     field_name='m',
     camera_position=[0, -200, +200],
     camera_focal_point=[0, 0, 0],
     camera_view_up=[0, 0, 1],
-    color_by_axis=0,
     fit_view_to_scene=True,
-    rescale_to_data_range=False,
+    color_by_axis=0,
     colormap='blue_to_red',
+    rescale_colormap_to_data_range=False,
     show_colorbar=False,
-    colorbar_label_format="%-#5.2g",
+    colorbar_label_format='%-#5.2g',
     show_orientation_axes=False,
     show_center_axes=False,
     representation="Surface With Edges",
     palette='screen'):
     """
-    Load a *.vtu file, render the scene in it and save the result to a
-    file.
+    Load a *.vtu file, render the scene in it and save the result to
+    an image file.
+
 
     *Returns*
 
@@ -52,16 +54,37 @@ def render_paraview_scene(
 
     outfile:
 
-        Name of the output image file. The type (e.g. png) is derived
-        from the file extension.
+        Name of the output image file. The image type (e.g. PNG) is
+        derived from the file extension.
 
-    color_by_axis: integer (allowed values: 0, 1, 2 and -1)
+    field_name:
 
-        Use the vector components in the direction of this axis to
-        color the plot. If '-1' is given, the vector *magnitudes* are
-        used.
+        The field to plot. Default: 'm' (= the normalised magnetisation).
+        Note that this field must of course have been saved in the .vtu
+        file.
 
-    rescale_to_data_range:  False | True
+    camera_position:  3-vector
+    camera_focal_point:  3-vector
+    camera_view_up:  3-vector
+
+        These variables control the position and orientation of the
+        camera.
+
+    fit_view_to_scene: True | False
+
+        If True (the default), the view is automatically adjusted so
+        that the entire scene is visible. In this case the exact
+        location of the camera is ignored and only its relative
+        position w.r.t. the focal point is taken into account.
+
+    color_by_axis: integer or string (allowed values: 0, 1, 2, -1,
+                                      or 'x', 'y', 'z', 'magnitude')
+
+        The vector components in the direction of this axis are used
+        to color the plot. If '-1' is given, the vector magnitudes
+        are used instead of any vector components.
+
+    rescale_colormap_to_data_range:  False | True
 
         If False (the default), the colormap corresponds to the data
         range [-1.0, +1.0]. If set to True, the colormap is rescaled
@@ -69,11 +92,41 @@ def render_paraview_scene(
 
     colormap:
 
-        The colormap to use. Supported values: {}.
+        The colormap to use. Supported values:
+        {}.
+
+    show_colorbar: False | True
+
+        If True (default: False), a colorbar is added to the plot.
+
+    colorbar_label_format: string
+
+        Controls how colorbar labels are formatted (e.g., how many
+        digits are displayed, etc.). This can be any formatting string
+        for floating point numbers as understood by Python's 'print'
+        statement. Default: '%-#5.2g'.
+
+    show_orientation_axes: False | True
+
+        If True (default: False), a set of three small axes is added
+        to the scene to indicate the directions of the coordinate axes.
+
+    show_center_axes: False | True
+
+        If True (default: False), a set of three axes is plotted at
+        the center of rotation.
+
+    representation: string
+
+        Controls the way in which the visual representation of bodies
+        in the scene. Allowed values:
+        {}
 
     palette:  'print' | 'screen'
 
-        The color scheme used.
+        The color scheme to be used. The main difference is that
+        'print' uses white as the background color whereas 'screen'
+        uses dark grey.
     """
     if not representation in _representations:
         raise ValueError("Unsupported representation: '{}'. Allowed values: "
@@ -139,7 +192,7 @@ def render_paraview_scene(
     except KeyError:
         raise ValueError("Unsupported color map: {}. Allowed values: "
                          "{}".format(colormap, _color_maps.keys()))
-    if rescale_to_data_range:
+    if rescale_colormap_to_data_range:
         logger.debug("Rescaling colormap to data range.")
         rgb_points[0] = data_range[0]
         rgb_points[4] = data_range[1]
@@ -184,5 +237,6 @@ def render_paraview_scene(
     return image
 
 
-# Automatically add all supported colormaps to the docstring:
-render_paraview_scene.__doc__ = render_paraview_scene.__doc__.format(_color_maps.keys())
+# Automatically add supported colormaps and representations to the docstring:
+render_paraview_scene.__doc__ = \
+    render_paraview_scene.__doc__.format(_color_maps.keys(), _representations)
