@@ -8,14 +8,20 @@ import os
 import IPython
 from paraview import servermanager
 
-color_maps = {
+_color_maps = {
     "coolwarm": [-1.0, 0.23, 0.299, 0.754,
                   1.0, 0.706, 0.016, 0.15],
     }
 
+_axes = {'x': 0, 'y': 1, 'z': 2, 'magnitude': -1}
+_axes_names = {0: 'x', 1: 'y', 2: 'z', -1: 'magnitude'}
+
 def render_paraview_scene(vtu_file, outfile, color_by_axis=0,
                           rescale_to_data_range=False,
-                          colormap="blue_to_red"):
+                          colormap='blue_to_red',
+                          show_colorbar=False,
+                          colorbar_label_format="%-#5.2g",
+                          field_name='m'):
     """
     Load a *.vtu file, render the scene in it and save the result to a
     file.
@@ -65,26 +71,35 @@ def render_paraview_scene(vtu_file, outfile, color_by_axis=0,
     repr.Representation = "Surface With Edges"
     view.ResetCamera()
 
-   
+    # Convert color_by_axis to integer and store the name separately
+    try:
+        color_by_axis = _axes[color_by_axis.lower()]
+    except AttributeError:
+        if not color_by_axis in [0, 1, 2, -1]:
+            raise ValueError("color_by_axis must have one of the values "
+                             "[0, 1, 2, -1] or ['x', 'y', 'z', 'magnitude']. "
+                             "Got: {}".format(color_by_axis))
+    color_by_axis_name = _axes_names[color_by_axis]
+
     dataInfo = reader.GetDataInformation()
     pointDataInfo = dataInfo.GetPointDataInformation()
-    arrayInfo = pointDataInfo.GetArrayInformation("m")
+    arrayInfo = pointDataInfo.GetArrayInformation(field_name)
     data_range = arrayInfo.GetComponentRange(color_by_axis)
+    logger.debug("Data range: {}".format(data_range))
 
+    # Set the correct colormap and rescale it if necessary.
+    lut = servermanager.rendering.PVLookupTable()
     try:
-        rgb_points = color_maps[colormap]
+        rgb_points = _color_maps[colormap]
     except KeyError:
         raise ValueError("Unsupported color map: {}. Allowed values: "
-                         "{}".format(colormap, color_maps.keys()))
-
-    logger.debug("Data range: {}".format(data_range))
+                         "{}".format(colormap, _color_maps.keys()))
     if rescale_to_data_range:
         print("Rescaling colormap to data range.")
         rgb_points[0] = data_range[0]
         rgb_points[4] = data_range[1]
-
-    lut = servermanager.rendering.PVLookupTable()
     lut.RGBPoints = rgb_points
+
     if color_by_axis in [0, 1, 2]:
         lut.VectorMode = "Component"
         lut.VectorComponent = color_by_axis
@@ -92,8 +107,19 @@ def render_paraview_scene(vtu_file, outfile, color_by_axis=0,
         lut.VectorMode = "Magnitude"
         lut.VectorComponent = color_by_axis
     repr.LookupTable = lut
-    repr.ColorArrayName = "m"
+    repr.ColorArrayName = field_name
     repr.ColorAttributeType = "POINT_DATA"
+
+    if show_colorbar:
+        # XXX TODO: Remove the import of paraview.simple once I know why
+        from paraview.simple import CreateScalarBar
+        scalarbar = CreateScalarBar(
+            ComponentTitle=color_by_axis_name.capitalize(),
+            Title=field_name, Enabled=1, LabelFontSize=12, TitleFontSize=12)
+        scalarbar.LabelFormat = colorbar_label_format,
+        view.Representations.append(scalarbar)
+        scalarbar.LookupTable = lut
+
     reader.UpdatePipelineInformation()
     
     # XXX TODO: we put this import here because at toplevel it seems
@@ -110,4 +136,4 @@ def render_paraview_scene(vtu_file, outfile, color_by_axis=0,
 
 
 # Automatically add all supported colormaps to the docstring:
-render_paraview_scene.__doc__ = render_paraview_scene.__doc__.format(color_maps.keys())
+render_paraview_scene.__doc__ = render_paraview_scene.__doc__.format(_color_maps.keys())
