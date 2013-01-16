@@ -53,20 +53,20 @@ def render_paraview_scene(
     camera_position=[0, -200, +200],
     camera_focal_point=[0, 0, 0],
     camera_view_up=[0, 0, 1],
-    view_size=(400, 400),
+    view_size=(800, 600),
     magnification=1,
     fit_view_to_scene=True,
     color_by_axis=0,
     colormap='coolwarm',
-    rescale_colormap_to_data_range=False,
-    show_colorbar=False,
+    rescale_colormap_to_data_range=True,
+    show_colorbar=True,
     colorbar_label_format='%-#5.2g',
     add_glyphs=True,
     glyph_type='cones',
     glyph_scale_factor=2.0,
     glyph_random_mode=True,
     glyph_mask_points=True,
-    glyph_max_number_of_points=5000,
+    glyph_max_number_of_points=10000,
     show_orientation_axes=False,
     show_center_axes=False,
     representation="Surface With Edges",
@@ -129,20 +129,20 @@ def render_paraview_scene(
         to color the plot. If '-1' is given, the vector magnitudes
         are used instead of any vector components.
 
-    rescale_colormap_to_data_range:  False | True
-
-        If False (the default), the colormap corresponds to the data
-        range [-1.0, +1.0]. If set to True, the colormap is rescaled
-        so that it corresponds to the minimum/maximum data values.
-
     colormap:
 
         The colormap to use. Supported values:
         {}.
 
-    show_colorbar: False | True
+    rescale_colormap_to_data_range:  True | False
 
-        If True (default: False), a colorbar is added to the plot.
+        If False (default: True), the colormap corresponds to the data
+        range [-1.0, +1.0]. If set to True, the colormap is rescaled
+        so that it corresponds to the minimum/maximum data values.
+
+    show_colorbar: True | False
+
+        If True (the default), a colorbar is added to the plot.
 
     colorbar_label_format: string
 
