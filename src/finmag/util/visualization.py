@@ -57,7 +57,7 @@ def render_paraview_scene(
     magnification=1,
     fit_view_to_scene=True,
     color_by_axis=0,
-    colormap='blue_to_red',
+    colormap='coolwarm',
     rescale_colormap_to_data_range=False,
     show_colorbar=False,
     colorbar_label_format='%-#5.2g',
