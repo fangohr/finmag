@@ -1,11 +1,12 @@
 from __future__ import division
+import os
+import textwrap
 import logging
 logger = logging.getLogger("finmag")
 logger.warning("This module will probably crash when imported from within "
                "Finmag, but the code does work on its own. There seems to be "
                "some kind of weird incompability which needs to be fixed "
                "(although I have no idea what could be causing it).")
-import os
 import IPython.core.display
 from paraview import servermanager
 
@@ -216,6 +217,16 @@ def render_paraview_scene(
     # Set the correct colormap and rescale it if necessary.
     try:
         cmap = _color_maps[colormap]
+        if colormap == 'blue_to_red_rainbow':
+            print(textwrap.dedent("""
+                Use of the 'rainbow' color map is discouraged as it has a number of distinct
+                disadvantages. Use at your own risk! For details see, e.g., [1], [2].
+
+                [1] K. Moreland, "Diverging Color Maps for Scientific Visualization"
+                    http://www.sandia.gov/~kmorel/documents/ColorMaps/ColorMapsExpanded.pdf
+
+                [2] http://www.paraview.org/ParaView3/index.php/Default_Color_Map
+                """))
     except KeyError:
         raise ValueError("Unsupported colormap: '{}'. Allowed values: "
                          "{}".format(colormap, _color_maps.keys()))
