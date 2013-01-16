@@ -13,7 +13,7 @@ from finmag.util.vtk import VTK
 from finmag.sim.hysteresis import hysteresis as hyst, hysteresis_loop as hyst_loop
 from finmag.integrators.llg_integrator import llg_integrator
 from finmag.integrators.scheduler import Scheduler
-
+from finmag.util import restart
 
 ONE_DEGREE_PER_NS = 17453292.5  # in rad/s
 
@@ -127,7 +127,7 @@ class Simulation(object):
 
         """
         if hasattr(self, "integrator"):
-            return self.integrator.cur_t # the real thing
+            return self.integrator.cur_t  # the real thing
         return 0.0
 
     def add(self, interaction, with_time_update=None):
@@ -234,6 +234,44 @@ class Simulation(object):
         self.integrator.run_until(t, schedule=self.scheduler)
         if save_averages:
             self.save_averages()
+
+    def restart(self, filename=None, t0=None):
+        """If called, we look for a filename of type sim.name + '-restart.npz',
+        and load it. The magnetisation in the restart file will be assigned to
+        sim.llg._m. If this is from a cvode time integration run, it will also
+        initialise (create) the integrator with that m, and the time at which the 
+        restart data was saved.
+
+        The time can be overriden with the optional parameter t0 here.
+
+        The method will fail if no restart file exists.
+        """
+
+        if filename == None:
+            filename = restart.canonical_restart_filename(self)
+        log.debug("About to load restart data from %s " % filename)
+
+        data = restart.load_restart_data(filename)
+    
+        #log.extremedebug("Have reloaded data: %s" % data)
+        if data['driver'] in ['cvode']:
+            pass  # we know how to deal with these types
+        else:
+            raise NotImplementedError("Can not deal with driver=%s yet for restarting." % 
+                data['driver'])
+        
+        self.llg._m.vector()[:] = data['m']
+        
+        if t0 == None:
+            t0 = data['simtime']   # Continue from time as saved
+        
+        self.integrator = llg_integrator(self.llg, self.llg.m, 
+            backend=self.integrator_backend, t0=t0)
+
+        log.info("Reloaded and set m (<m>=%s) and time=%s from %s" % \
+            (self.llg.m_average, self.t, filename))
+
+        assert self.t == t0  # self.t is read from integrator
 
     def save_averages(self):
         """
