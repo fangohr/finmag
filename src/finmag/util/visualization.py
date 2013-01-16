@@ -2,13 +2,10 @@ from __future__ import division
 import os
 import textwrap
 import logging
-logger = logging.getLogger("finmag")
-logger.warning("This module will probably crash when imported from within "
-               "Finmag, but the code does work on its own. There seems to be "
-               "some kind of weird incompability which needs to be fixed "
-               "(although I have no idea what could be causing it).")
 import IPython.core.display
 from paraview import servermanager
+
+logger = logging.getLogger("finmag")
 
 
 class ColorMap(object):
