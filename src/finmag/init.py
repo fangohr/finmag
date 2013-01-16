@@ -5,6 +5,17 @@
 # CONTACT: h.fangohr@soton.ac.uk
 
 
+# XXX TODO: The next import must happen before all the core finmag
+# imports because there seems to be a strange incompatibility with the
+# finmag.native modules. This should be investigated at some point,
+# but for now the workaround is to import paraview.servermanager
+# before everything else.
+try:
+    from paraview import servermanager
+except ImportError:
+    # Paraview is not installed. This is fine.
+    pass
+
 import logging
 from finmag.sim.sim import Simulation
 from finmag.sim.sim_helpers import sim_with
