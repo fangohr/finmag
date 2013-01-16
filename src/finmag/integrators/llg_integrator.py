@@ -17,7 +17,8 @@ def llg_integrator(llg, m0, backend="sundials", **kwargs):
     #             -- Hans, 17/12/2012
     #
     log.debug("Creating integrator with backend {}.".format(backend))
-    log.info("llg_integrator: kwds = %s" % kwargs)
+    if kwargs != {}:
+        log.debug("llg_integrator: kwds = %s" % kwargs)
     if backend == "scipy":
         return ScipyIntegrator(llg, m0, **kwargs)
     elif backend == "sundials":
