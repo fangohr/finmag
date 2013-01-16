@@ -55,6 +55,8 @@ def render_paraview_scene(
     camera_position=[0, -200, +200],
     camera_focal_point=[0, 0, 0],
     camera_view_up=[0, 0, 1],
+    view_size=(400, 400),
+    magnification=1,
     fit_view_to_scene=True,
     color_by_axis=0,
     colormap='blue_to_red',
@@ -64,8 +66,7 @@ def render_paraview_scene(
     show_orientation_axes=False,
     show_center_axes=False,
     representation="Surface With Edges",
-    palette='screen',
-    magnification=1):
+    palette='screen'):
     """
     Load a *.vtu file, render the scene in it and save the result to
     an image file.
@@ -99,6 +100,17 @@ def render_paraview_scene(
 
         These variables control the position and orientation of the
         camera.
+
+    view_size: pair of int
+
+        Controls the size of the view. This can be used to adjust the
+        size and aspect ratio of the visible scene (useful for example
+        if a colorbar is present). Default: (400, 400).
+
+    magnification: int
+
+        Magnification factor which controls the size of the saved image.
+        Note that due to limitations in Paraview this must be an integer.
 
     fit_view_to_scene: True | False
 
@@ -157,11 +169,6 @@ def render_paraview_scene(
         The color scheme to be used. The main difference is that
         'print' uses white as the background color whereas 'screen'
         uses dark grey.
-
-    magnification: int
-
-        Magnification factor which controls the size of the saved image.
-        Note that due to limitations in Paraview this must be an integer.
     """
     if not representation in _representations:
         raise ValueError("Unsupported representation: '{}'. Allowed values: "
@@ -288,6 +295,7 @@ def render_paraview_scene(
     # that's only a minor annoyance).
     #import paraview.simple as pv
     #pv.WriteImage(outfile, view=view)
+    view.ViewSize = view_size
     view.WriteImage(outfile, "vtkPNGWriter", magnification)
     servermanager.Disconnect()
     image = IPython.core.display.Image(filename=outfile)
