@@ -1,5 +1,6 @@
 import atexit
 import logging
+import functools
 from numbers import Number
 from datetime import datetime, timedelta
 # This module will try to import the package apscheduler when a realtime event
@@ -8,10 +9,12 @@ from datetime import datetime, timedelta
 
 log = logging.getLogger(name="finmag")
 
+EPSILON = 1e-15 # femtosecond precision for scheduling.
+
 class At(object):
     """
     Store a function and a time when that function should be run.
-    Calls that function when notified that the time is right.
+    Call that function if notified that the timing is right.
 
     """
     def __init__(self, time, at_end=False):
@@ -19,6 +22,7 @@ class At(object):
         Initialise with the correct time.
 
         """
+        self.last_step = None
         self.next_step = time
         self.callback = None
         self.at_end = at_end
@@ -36,36 +40,54 @@ class At(object):
 
     attach = call
 
-    def fire(self):
+    def fire(self, time):
         """
-        Call the saved function.
+        Call registered function.
 
         """
-        self.next_step = None
+        if (self.last_step != None) and abs(self.last_step - time) < EPSILON:
+            # Don't fire more than once per time. This would be possible if the
+            # scheduled time also happens to be the end of the simulation and
+            # at_end was set to True.
+            return
+
         if self.callback:
             self.callback()
-   
+        self.last_step = time
+        self.update()
+
+    def update(self):
+        """
+        Compute next target time.
+
+        """
+        self.next_step = None # Since one-time event, there is no next step.
+
+
 class Every(At):
+    """
+    Store a function that should be run and a time interval between function calls.
+    Call that function if notified that the timing is right.
+
+    """
     def __init__(self, interval, start=None, at_end=False):
         """
         Initialise with the interval between correct times and optionally, a starting time.
-        If `when_stopping` is True, the event will be triggered a last time when
-        time integration stops, even if less than `interval` time has passed.
 
         """
+        self.last_step = None
         self.next_step = start or 0.0
         self.interval = interval
         self.callback = None
         self.at_end = at_end
 
-    def fire(self):
+    def update(self):
         """
-        Call the saved function.
+        Compute next target time.
 
         """
         self.next_step += self.interval
-        if self.callback:
-            self.callback()
+
 
 class Scheduler(object):
     """
@@ -74,34 +96,40 @@ class Scheduler(object):
     """
     def __init__(self):
         """
-        Creates a Scheduler.
+        Create a Scheduler.
 
         """
         self.items = []
 
-    def add(self, func, at=None, at_end=False, every=None, after=None, realtime=False):
+    def add(self, func, args=None, kwargs=None, at=None, at_end=False, every=None, after=None, realtime=False):
         """
         Register a function with the scheduler.
 
         """
+        if not hasattr(func, "__call__"):
+            raise TypeError("The function must be callable.")
         assert at or every or at_end or (after and realtime), "Use either `at`, `every` or `at_end` if not in real time mode."
         assert not (at!=None and every!=None), "It's either `at` or `every`."
         assert not (at!=None and after!=None), "Delays don't mix with `at`."
 
+        args = args or []
+        kwargs = kwargs or {}
+        callback = functools.partial(func, *args, **kwargs)
+
         if realtime:
             self._add_realtime(func, at, every, after)
             if at_end:
-                at_end_item = At(None, True).call(func)
+                at_end_item = At(None, True).call(callback)
                 self._add(at_end_item)
             return
 
         if at or (at_end and not every):
-            at_item = At(at, at_end).call(func)
+            at_item = At(at, at_end).call(callback)
             self._add(at_item)
             return
 
         if every:
-            every_item = Every(every, after, at_end).call(func)
+            every_item = Every(every, after, at_end).call(callback)
             self._add(every_item)
 
     def _add(self, at_or_every):
@@ -126,14 +154,14 @@ class Scheduler(object):
             after = datetime.now() + timedelta(seconds=after)
 
         if at:
-            self.apscheduler.add_date_job(func, at)
+            self.apscheduler.add_date_job(func, at, args=[self.payload])
         elif every:
             if after:
-                self.apscheduler.add_interval_job(func, seconds=every, start_date=after)
+                self.apscheduler.add_interval_job(func, args=[self.payload], seconds=every, start_date=after)
             else:
-                self.apscheduler.add_interval_job(func, seconds=every)
+                self.apscheduler.add_interval_job(func, seconds=every, args=[self.payload])
         elif after:
-            self.apscheduler.add_date_job(func, after)
+            self.apscheduler.add_date_job(func, after, args=[self.payload])
         else:
             raise ValueError("Assertion violated. Use either `at`, `every` of `after`.")
 
@@ -155,14 +183,14 @@ class Scheduler(object):
 
         """
         for item in self.items:
-            if item.next_step == time:
-                item.fire()
+            if (item.next_step != None) and abs(item.next_step - time) < EPSILON:
+                item.fire(time)
 
-    def finalise(self):
+    def finalise(self, time):
         """
         Trigger all events that need to happen at the end of time integration.
 
         """
         for item in self.items:
             if item.at_end:
-                item.fire()
+                item.fire(time)

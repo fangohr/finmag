@@ -60,7 +60,7 @@ def set_logging_level(level):
     logger.setLevel(level)
 
 
-def start_logging_to_file(filename, formatter=None, mode='a'):
+def start_logging_to_file(filename, formatter=None, mode='a', level=logging.DEBUG):
     """
     Add a logging handler to the "finmag" logger which writes all
     (future) logging output to the given file. It is possible to call
@@ -89,6 +89,7 @@ def start_logging_to_file(filename, formatter=None, mode='a'):
     if not os.path.exists(dirname):
         os.makedirs(dirname)
     h = logging.FileHandler(filename, mode=mode)
+    h.setLevel(level)
     h.setFormatter(formatter)
     if mode == 'a':
         logger.info("Finmag logging output will be appended to file: "

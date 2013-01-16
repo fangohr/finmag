@@ -1,6 +1,6 @@
 import logging
 from finmag.native import sundials
-from finmag.integrators.common import run_until, run_until_relaxation
+from finmag.integrators.common import run_with_schedule, relax_with_schedule
 
 log = logging.getLogger(name='finmag')
 
@@ -12,12 +12,12 @@ class SundialsIntegrator(object):
     Attributes:
         cur_t       The time up to which integration has been carried out.
     """
-    def __init__(self, llg, m0, reltol=1e-8, abstol=1e-8,
+    def __init__(self, llg, m0, t0=0.0, reltol=1e-8, abstol=1e-8,
                  nsteps=10000, method="bdf_gmres_prec_id", tablewriter=None):
         assert method in ("adams", "bdf_diag",
                           "bdf_gmres_no_prec", "bdf_gmres_prec_id")
         self.llg = llg
-        self.cur_t = 0.0
+        self.cur_t = t0
         self.user_set_nsteps = False
         self.nsteps = 500 # cvode default value
         self.m = m0.copy()
@@ -29,7 +29,7 @@ class SundialsIntegrator(object):
             integrator = sundials.cvode(sundials.CV_BDF, sundials.CV_NEWTON)
         self.integrator = integrator
 
-        integrator.init(llg.sundials_rhs, 0, self.m)
+        integrator.init(llg.sundials_rhs, self.cur_t, self.m)
 
         if method == "bdf_diag":
             integrator.set_linear_solver_diag()
@@ -166,5 +166,5 @@ class SundialsIntegrator(object):
              }
         return d
 
-    run_until = run_until
-    run_until_relaxation = run_until_relaxation
+    run_until = run_with_schedule
+    run_until_relaxation = relax_with_schedule

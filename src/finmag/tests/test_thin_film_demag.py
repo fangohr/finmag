@@ -3,7 +3,7 @@ import dolfin as df
 from finmag import Simulation as Sim
 from finmag.energies import ThinFilmDemag, Demag
 
-TOLERANCE = 1e-15
+TOLERANCE = 1e-9
 Ms = 8.6e5
 
 def compare_with_demag_from_initial_m(H_gen, m_init):

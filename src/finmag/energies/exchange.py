@@ -59,9 +59,8 @@ class Exchange(EnergyBase):
 
     """
     def __init__(self, A, method="box-matrix-petsc"):
-        self.A_copy = A
+        self.A_waiting_for_mesh = A
         super(Exchange, self).__init__(method, in_jacobian=True)
-        
 
     def exchange_length(self):
         return exchange_length(self.A.vector().array(), self.Ms.vector().array())
@@ -70,16 +69,8 @@ class Exchange(EnergyBase):
     def setup(self, S3, m, Ms, unit_length=1):
         self.exchange_factor = df.Constant(1.0 / unit_length ** 2)
         self.S3=S3
-        self.A=self.A_copy
+        self.A = helpers.scale_valued_dg_function(self.A_waiting_for_mesh, self.S3.mesh())
+        del(self.A_waiting_for_mesh)
         E_integrand = self.exchange_factor * self.A * df.inner(df.grad(m), df.grad(m))
 
         super(Exchange, self).setup(E_integrand, S3, m, Ms, unit_length)
-        
-        
-    @property
-    def A(self):
-        return self._A
-    
-    @A.setter
-    def A(self, value):
-        self._A=helpers.scale_valued_dg_function(value,self.S3.mesh())

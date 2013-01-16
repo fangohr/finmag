@@ -22,7 +22,9 @@ def test_dmdt_computation_with_oommf():
     llg = LLG(S1, S3)
     llg.set_m((-3, -2, 1))
 
-    h = llg.Ms/2
+    Ms=llg.Ms.vector().array()[0]
+    Ms=float(Ms)
+    h = Ms/2
     H_app = (h/np.sqrt(3), h/np.sqrt(3), h/np.sqrt(3))
     zeeman = Zeeman(H_app)
     zeeman.setup(S3, llg._m, llg.Ms, 1)  
@@ -39,7 +41,7 @@ def test_dmdt_computation_with_oommf():
     m0.flat[2] += 1
     m0.flat /= np.sqrt(m0.flat[0]*m0.flat[0] + m0.flat[1]*m0.flat[1] + m0.flat[2]*m0.flat[2])
 
-    dmdt_oommf = oommf_dmdt(m0, llg.Ms, A=0, H=H_app, alpha=llg.alpha, gamma_G=llg.gamma).flat
+    dmdt_oommf = oommf_dmdt(m0, Ms, A=0, H=H_app, alpha=llg.alpha, gamma_G=llg.gamma).flat
 
     # extract finmag data for comparison with oommf
     dmdt_finmag_like_oommf = msh.new_field(3)
