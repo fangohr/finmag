@@ -65,8 +65,7 @@ def render_paraview_scene(
     representation="Surface With Edges",
     palette='screen'):
     """
-    Load a *.vtu file, render the scene in it and save the result to
-    an image file.
+    Load a *.vtu file, render the scene in it and save the result to an image file.
 
 
     *Returns*
@@ -191,9 +190,13 @@ def render_paraview_scene(
     view.CameraPosition = camera_position
     view.CameraFocalPoint = camera_focal_point
     view.CameraViewUp = camera_view_up
-    view.CameraClippingRange = [111.82803847855743, 244.8030589195661]  # Paraview's default values; don't know what exactly they mean
 
     if fit_view_to_scene:
+        # N.B.: this email describes a more sophisticated (= proper?)
+        # way of doing this, but it's probably overkill for now:
+        #
+        # http://www.paraview.org/pipermail/paraview/2012-March/024352.html
+        #
         view.ResetCamera()
 
     view.OrientationAxesVisibility = (1 if show_orientation_axes else 0)
@@ -228,7 +231,6 @@ def render_paraview_scene(
     pointDataInfo = dataInfo.GetPointDataInformation()
     arrayInfo = pointDataInfo.GetArrayInformation(field_name)
     data_range = arrayInfo.GetComponentRange(color_by_axis)
-    logger.debug("Data range: {}".format(data_range))
 
     # Set the correct colormap and rescale it if necessary.
     try:
@@ -284,7 +286,7 @@ def render_paraview_scene(
         scalarbar.LookupTable = lut
 
     reader.UpdatePipelineInformation()
-    
+
     # XXX TODO: we put this import here because at toplevel it seems
     # to connect to a servermanager, which causes problems. Would be
     # good to figure out how to avoid using paraview.simple (and also
