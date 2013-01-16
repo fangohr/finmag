@@ -1,3 +1,4 @@
+from __future__ import division
 import logging
 logger = logging.getLogger("finmag")
 logger.warning("This module will probably crash when imported from within "
@@ -8,16 +9,43 @@ import os
 import IPython.core.display
 from paraview import servermanager
 
+
+class ColorMap(object):
+    def __init__(self, color_space, rgb_points, nan_color):
+        self.color_space = color_space
+        self.rgb_points = rgb_points
+        self.nan_color = nan_color
+
+
 _color_maps = {
-    "coolwarm": [-1.0, 0.23, 0.299, 0.754,
-                  1.0, 0.706, 0.016, 0.15],
+    "coolwarm":
+        ColorMap('Diverging',
+                 [0.0, 0.231373, 0.298039, 0.752941,
+                  1.0, 0.705882, 0.0156863, 0.14902],
+                 [0.247059, 0, 0]),
+
+    "heated_body":
+        ColorMap('RGB',
+                 [0.0, 0, 0, 0,
+                  0.4, 0.901961, 0, 0,
+                  0.8, 0.901961, 0.901961, 0,
+                  1.0, 1, 1, 1],
+                 [0, 0.498039, 1]),
+
+    "blue_to_red_rainbow":
+        ColorMap('HSV',
+                 [0.0, 0, 0, 1,
+                  1.0, 1, 0, 0],
+                 [0.498039, 0.498039, 0.498039]),
     }
+
 
 _axes = {'x': 0, 'y': 1, 'z': 2, 'magnitude': -1}
 _axes_names = {0: 'x', 1: 'y', 2: 'z', -1: 'magnitude'}
 
 _representations = ['3D Glyphs', 'Outline', 'Points', 'Surface',
                     'Surface With Edges', 'Volume', 'Wireframe']
+
 
 def render_paraview_scene(
     vtu_file,
@@ -186,17 +214,23 @@ def render_paraview_scene(
     logger.debug("Data range: {}".format(data_range))
 
     # Set the correct colormap and rescale it if necessary.
-    lut = servermanager.rendering.PVLookupTable()
     try:
-        rgb_points = _color_maps[colormap]
+        cmap = _color_maps[colormap]
     except KeyError:
         raise ValueError("Unsupported colormap: '{}'. Allowed values: "
                          "{}".format(colormap, _color_maps.keys()))
+    lut = servermanager.rendering.PVLookupTable()
+    lut.ColorSpace = cmap.color_space
+    rgb_points = cmap.rgb_points
     if rescale_colormap_to_data_range:
-        logger.debug("Rescaling colormap to data range.")
-        rgb_points[0] = data_range[0]
-        rgb_points[4] = data_range[1]
+        logger.debug("Rescaling colormap to data range: {}".format(data_range))
+        dmin, dmax = data_range
+        cmin = rgb_points[0]
+        cmax = rgb_points[-4]
+        for i in xrange(0, len(rgb_points), 4):
+            rgb_points[i] = (rgb_points[i] - cmin) / (cmax - cmin) * (dmax - dmin) + dmin
     lut.RGBPoints = rgb_points
+    lut.NanColor = cmap.nan_color
 
     if color_by_axis in [0, 1, 2]:
         lut.VectorMode = "Component"
