@@ -4,6 +4,7 @@ import textwrap
 import logging
 import IPython.core.display
 from paraview import servermanager
+import paraview.simple as pv
 
 logger = logging.getLogger("finmag")
 
@@ -60,6 +61,9 @@ def render_paraview_scene(
     rescale_colormap_to_data_range=False,
     show_colorbar=False,
     colorbar_label_format='%-#5.2g',
+    add_glyphs=True,
+    glyph_type='cones',
+    glyphs_scale_factor=2.0,
     show_orientation_axes=False,
     show_center_axes=False,
     representation="Surface With Edges",
@@ -143,6 +147,20 @@ def render_paraview_scene(
         digits are displayed, etc.). This can be any formatting string
         for floating point numbers as understood by Python's 'print'
         statement. Default: '%-#5.2g'.
+
+    add_glyphs: True | False
+
+        If True (the default), little glyphs are added at the mesh
+        vertices to indicate the direction of the field vectors.
+
+    glyph_type: string
+
+        Type of glyphs to use. The only currently supported glyph type
+        is 'cones'.
+
+    glyph_scale_factor: float
+
+        Controls the glyph size. Default: 2.0.
 
     show_orientation_axes: False | True
 
@@ -270,6 +288,32 @@ def render_paraview_scene(
     repr.LookupTable = lut
     repr.ColorArrayName = field_name
     repr.ColorAttributeType = "POINT_DATA"
+
+    if add_glyphs:
+        logger.debug("Adding cone glyphs.")
+        glyph = pv.servermanager.filters.Glyph(Input=reader)
+        glyph.SetScaleFactor = glyph_scale_factor
+        glyph.ScaleMode = 'vector'
+        glyph.Vectors = ['POINTS', 'm']
+
+        if glyph_type != 'cones':
+            glyph_type = 'cones'
+            debug.warning("Unsupported glyph type: '{}'. "
+                          "Falling back to 'cones'.".format(glyph_type))
+
+        if glyph_type == 'cones':
+            cone = servermanager.sources.Cone()
+            cone.Resolution = 20
+            cone.Radius = 0.2
+        else:
+            # This should not happen as we're catching it above.
+            raise NotImplementedError()
+
+        glyph.SetPropertyWithName('Source', cone)
+        glyph_repr = servermanager.CreateRepresentation(glyph, view)
+        glyph_repr.LookupTable = lut
+        glyph_repr.ColorArrayName = 'GlyphVector'
+        glyph_repr.ColorAttributeType = "POINT_DATA"
 
     if show_colorbar:
         # XXX TODO: Remove the import of paraview.simple once I know why
