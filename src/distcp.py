@@ -83,7 +83,7 @@ def get_linux_issue():
     try:
         f = open("/etc/issue")
     except IOError:
-        logger.error("Can't read /etc/issue -- this is odd?")
+        print "Can't read /etc/issue -- this is odd?"
         raise RuntimeError("Cannot establish linux version")
     issue = f.readline()  # only return first line
     issue = issue.replace('\\l','')

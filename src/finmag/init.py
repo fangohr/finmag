@@ -42,7 +42,7 @@ if util.versions.running_binary_distribution():
     #
     # We thus assume that we use the system's sundials, and thus we
     # should be able to check by comparing the linux distribution.
-    import util.binary
+    import util.binary # Where is this module?
     logger.debug("%20s: %s" % ("Build Linux", util.binary.buildlinux))
     if util.binary.buildlinux == util.versions.get_linux_issue():
         logger.debug("Build Linux and host linux versions agree.")
