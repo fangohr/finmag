@@ -15,45 +15,39 @@ def get_linux_issue():
     #logger.debug("Linux OS = '%s'" % issue)
     return issue.strip() # get rid of white space left and right
 
+
 def get_version_python():
     version = sys.version.split(' ')[0]
     assert version.count('.') == 2, "Unknown version format: %s" % version
     return version
 
-def get_version_ipython():
+
+def get_module_version(name):
     try:
-        import IPython
-        return IPython.__version__
+        m = __import__(name)
+        return m.__version__
     except ImportError:
         return None
+
+
+def get_version_ipython():
+    return get_module_version('IPython')
+
 
 def get_version_dolfin():
-    try:
-        import dolfin
-        return dolfin.__version__
-    except ImportError:
-        return None
+    return get_module_version('dolfin')
+
 
 def get_version_numpy():
-    try:
-        import numpy
-        return numpy.__version__
-    except ImportError:
-        return None
+    return get_module_version('numpy')
+
 
 def get_version_matplotlib():
-    try:
-        import matplotlib
-        return matplotlib.__version__
-    except ImportError:
-        return None
+    return get_module_version('matplotlib')
+
 
 def get_version_scipy():
-    try:
-        import scipy
-        return scipy.__version__
-    except ImportError:
-        return None
+    return get_module_version('scipy')
 
 
 def get_version_boostpython():
@@ -85,6 +79,7 @@ def get_version_boostpython():
     version = filename.split(".so.")[1]
     
     return version
+
 
 def get_version_sundials():
     """
