@@ -190,7 +190,7 @@ def render_paraview_scene(
     try:
         rgb_points = _color_maps[colormap]
     except KeyError:
-        raise ValueError("Unsupported color map: {}. Allowed values: "
+        raise ValueError("Unsupported colormap: '{}'. Allowed values: "
                          "{}".format(colormap, _color_maps.keys()))
     if rescale_colormap_to_data_range:
         logger.debug("Rescaling colormap to data range.")
