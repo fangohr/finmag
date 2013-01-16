@@ -287,13 +287,6 @@ def render_paraview_scene(
 
     reader.UpdatePipelineInformation()
 
-    # XXX TODO: we put this import here because at toplevel it seems
-    # to connect to a servermanager, which causes problems. Would be
-    # good to figure out how to avoid using paraview.simple (and also
-    # how to avoid that a separate window opens during WriteImage, but
-    # that's only a minor annoyance).
-    #import paraview.simple as pv
-    #pv.WriteImage(outfile, view=view)
     view.ViewSize = view_size
     view.WriteImage(outfile, "vtkPNGWriter", magnification)
     servermanager.Disconnect()
