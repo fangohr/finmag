@@ -63,7 +63,10 @@ def render_paraview_scene(
     colorbar_label_format='%-#5.2g',
     add_glyphs=True,
     glyph_type='cones',
-    glyphs_scale_factor=2.0,
+    glyph_scale_factor=2.0,
+    glyph_random_mode=True,
+    glyph_mask_points=True,
+    glyph_max_number_of_points=5000,
     show_orientation_axes=False,
     show_center_axes=False,
     representation="Surface With Edges",
@@ -161,6 +164,23 @@ def render_paraview_scene(
     glyph_scale_factor: float
 
         Controls the glyph size. Default: 2.0.
+
+    glyph_mask_points: True | False
+
+        If True (the default), limit the maximum number of glyphs to
+        the value indicated by glyph_max_number_of_points.
+
+    glyph_max_number_of_points: int
+
+        Specifies the maximum number of glyphs that should appear in
+        the output dataset if glyph_mask_points is True.
+
+    glyph_random_mode: True | False
+
+        If True (the default), the glyph positions are chosen
+        randomly. Otherwise the point IDs to which glyphs are attached
+        are evenly spaced. This setting only has an effect if
+        glyph_mask_points is True.
 
     show_orientation_axes: False | True
 
@@ -295,6 +315,10 @@ def render_paraview_scene(
         glyph.SetScaleFactor = glyph_scale_factor
         glyph.ScaleMode = 'vector'
         glyph.Vectors = ['POINTS', 'm']
+        glyph.KeepRandomPoints = 1  # only relevant for animation IIUC, but can't hurt setting it
+        glyph.RandomMode = glyph_random_mode
+        glyph.MaskPoints = glyph_mask_points
+        glyph.MaximumNumberofPoints = glyph_max_number_of_points
 
         if glyph_type != 'cones':
             glyph_type = 'cones'
