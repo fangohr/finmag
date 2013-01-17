@@ -59,14 +59,6 @@ class VTK(object):
         self.prefix = prefix
         self.counter = 1
 
-    @mtimed
-    def save(self, dolfin_function, t):
-        """
-        Save the ``dolfin_function`` to a .pvd file (in VTK format) which can
-        later be inspected using Paraview, for example.
-
-        """
-        filename = self.filename
         if filename == "":
             prefix_insert = "" if self.prefix == "" else self.prefix + "_"
             filename = "{}{}_{:.3f}ns.pvd".format(prefix_insert,
@@ -74,34 +66,46 @@ class VTK(object):
 
         ext = os.path.splitext(filename)[1]
         if ext != '.pvd':
-            raise ValueError("File extension for vtk snapshot file must be "
-                             "'.pvd', but got: '{}'".format(ext))
+            raise ValueError(
+                "File extension for vtk snapshot file must be '.pvd', "
+                "but got: '{}'".format(ext))
         if os.path.isabs(filename) and self.directory != "":
-            log.warning("Ignoring 'directory' argument (value given: '{}') "
-                        "because 'filename' contains an absolute path: "
-                        "'{}'".format(self.directory, filename))
+            log.warning(
+                "Ignoring 'directory' argument (value given: '{}') because "
+                "'filename' contains an absolute path: '{}'".format(
+                    self.directory, filename))
 
-        output_file = os.path.join(self.directory, filename)
-        if os.path.exists(output_file):
+        self.output_file = os.path.join(self.directory, filename)
+        if os.path.exists(self.output_file):
             if self.force_overwrite:
                 log.warning(
                     "Removing file '{}' and all associated .vtu files "
-                    "(because force_overwrite=True).".format(output_file))
-                os.remove(output_file)
-                basename = re.sub('\.pvd$', '', output_file)
+                    "(because force_overwrite=True).".format(self.output_file))
+                os.remove(self.output_file)
+                basename = re.sub('\.pvd$', '', self.output_file)
                 for f in glob.glob(basename + "*.vtu"):
                     os.remove(f)
             else:
                 raise IOError(
                     "Aborting snapshot creation. File already exists and "
                     "would overwritten: '{}' (use force_overwrite=True if "
-                    "this is what you want)".format(output_file))
+                    "this is what you want)".format(self.output_file))
+
+        # We need to open the file here so that it stays open during
+        # all calls to save(), otherwise consecutive calls will
+        # overwrite previously written data.
+        self.f = df.File(self.output_file, "compressed")
+
+    @mtimed
+    def save(self, dolfin_function, t):
+        """
+        Save the ``dolfin_function`` to a .pvd file (in VTK format) which can
+        later be inspected using Paraview, for example.
+        """
 
         t0 = time.time()
-        f = df.File(output_file, "compressed")
-        f << dolfin_function
+        self.f << dolfin_function
         t1 = time.time()
-        log.info(
-            "Saved snapshot at t={} to file '{}' (saving took {:.3g} seconds).".format(
-                t, output_file, t1 - t0))
+        log.info("Saved snapshot at t={} to file '{}' (saving took "
+                 "{:.3g} seconds).".format(t, self.output_file, t1 - t0))
         self.counter += 1
