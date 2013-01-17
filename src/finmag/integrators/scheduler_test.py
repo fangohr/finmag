@@ -1,11 +1,22 @@
 from scheduler import Every, At, Scheduler
 
+
+class Counter(object):
+    cnt_every = 0
+    cnt_at = 0
+
+    def reset(self):
+        self.cnt_every = 0
+        self.cnt_at = 0
+
+
 def test_first_every_at_start():
     e = Every(100)
     assert e.next_step == 0.0
 
     e = Every(100, 5)
     assert e.next_step == 5
+
 
 def test_update_next_stop_according_to_interval():
     e = Every(100)
@@ -17,38 +28,42 @@ def test_update_next_stop_according_to_interval():
 
     assert abs(t1 - t0) == 100
 
-def test_can_attach_callback():
-    a = [0]
-    def my_fun():
-        a[0] += 1
 
-    assert a[0] == 0
+def test_can_attach_callback():
+    c = Counter()
+    def my_fun():
+        c.cnt_every += 1
+
+    assert c.cnt_every == 0
     e = Every(100)
     e.attach(my_fun)
     e.fire(0)
-    assert a[0] == 1
+    assert c.cnt_every == 1
 
     # alternative syntax
 
-    b = [0]
+    c.reset()
     def my_funb():
-        b[0] += 1
+        c.cnt_every += 1
 
     e = Every(100).call(my_funb)
-    assert b[0] == 0
+    assert c.cnt_every == 0
     e.fire(0)
-    assert b[0] == 1
+    assert c.cnt_every == 1
+
 
 def test_at():
-    x = [0]
+    c = Counter()
     def my_fun():
-        x[0] += 1
+        c.cnt_at += 1
 
+    assert c.cnt_at == 0
     a = At(100)
     assert a.next_step == 100
     a.attach(my_fun)
     a.fire(0)
-    assert x[0] == 1
+    assert c.cnt_at == 1
+
 
 def test_returns_None_if_no_actions_or_done():
     s = Scheduler()
@@ -62,29 +77,32 @@ def test_returns_None_if_no_actions_or_done():
     s.reached(1)
     assert s.next_step() == None
 
+
 def test_scheduler():
-    x = [0, 0]
-    def my_fun():
-        x[0] += 1
-    def my_funb():
-        x[1] += 1
+    c = Counter()
+
+    def my_fun_every():
+        c.cnt_every += 1
+
+    def my_fun_at():
+        c.cnt_at += 1
 
     s = Scheduler()
-    s.add(my_fun, every=200)
-    assert x[0] == 0
+    s.add(my_fun_every, every=200)
+    assert c.cnt_every == 0
     assert s.next_step() == 0.0
-    s.add(my_funb, at=100)
+    s.add(my_fun_at, at=100)
     s.reached(0.0)
-    assert x[0] == 1
-    assert x[1] == 0
+    assert c.cnt_every == 1
+    assert c.cnt_at == 0
     assert s.next_step() == 100
     s.reached(100)
-    assert x[0] == 1
-    assert x[1] == 1
+    assert c.cnt_every == 1
+    assert c.cnt_at == 1
     assert s.next_step() == 200
     s.reached(200)
-    assert x[0] == 2
-    assert x[1] == 1
+    assert c.cnt_every == 2
+    assert c.cnt_at == 1
 
 def test_regression_not_more_than_once_per_time():
     x = [0, 0, 0, 0]
