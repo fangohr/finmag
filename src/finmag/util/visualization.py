@@ -315,7 +315,11 @@ def render_paraview_scene(
         glyph.SetScaleFactor = glyph_scale_factor
         glyph.ScaleMode = 'vector'
         glyph.Vectors = ['POINTS', 'm']
-        glyph.KeepRandomPoints = 1  # only relevant for animation IIUC, but can't hurt setting it
+        try:
+            glyph.KeepRandomPoints = 1  # only relevant for animation IIUC, but can't hurt setting it
+	except AttributeError:
+	    # Older version of Paraview which doesn't support this setting. Ignoring for now.
+	    pass
         glyph.RandomMode = glyph_random_mode
         glyph.MaskPoints = glyph_mask_points
         glyph.MaximumNumberofPoints = glyph_max_number_of_points
