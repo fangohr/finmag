@@ -8,7 +8,6 @@ import pylab as p
 import finmag.energies.demag.solver_base as sb
 import sys, os, commands, subprocess,time
 from finmag.sim.llg import LLG
-from finmag.util.timings import timings
 import copy
 
 class FemBemGCRboxSolver(FemBemGCRSolver):
@@ -137,7 +136,7 @@ for i,maxh in enumerate(meshsizes):
         endtime = time.time()
 
         #Store the times
-        runtimes["bem"][demagtype].append(timings.time(finmagsolvers[demagtype].__name__, "build BEM"))
+        runtimes["bem"][demagtype].append(sb.demag_timings.time(finmagsolvers[demagtype].__name__, "build BEM"))
         runtimes["solve"][demagtype].append(endtime - starttime)
         
 
