@@ -81,15 +81,15 @@ def get_version_boostpython():
     return version
 
 
-def get_version_sundials():
+def get_debian_package_version(pkg_name):
     """
-    Determine and return the sundials version.
+    Determine and return the version of the given Debian package.
 
     This only works on Debian-derived systems (such as Debian
     or Ubuntu) as it internally calls 'dpkg -s' to determine
     the version number.
 
-    If sundials is installed, returns a string with the version
+    If the package is installed, returns a string with the version
     number, otherwise returns None. Raises NotImplementedError if
     the version cannot be determined due to an unsupported system.
     """
@@ -102,7 +102,7 @@ def get_version_sundials():
 
     if any([d in linux_issue for d in supported_distros]):
         try:
-            output = subprocess.check_output(['dpkg', '-s', 'libsundials-serial'])
+            output = subprocess.check_output(['dpkg', '-s', pkg_name])
             lines = output.split('\n')
             version_str = filter(lambda s: s.startswith('Version'), lines)[0]
             version = re.sub('Version: ', '', version_str)
@@ -110,10 +110,27 @@ def get_version_sundials():
             pass
     else:
         raise NotImplementedError(
-            "This does not seem to be a supported (i.e. Debian-derived) Linux "
-            "distribution. Cannot determine sundials version.")
+            "This does not seem to be a supported (i.e. Debian-derived) "
+            "Linux distribution. Cannot determine version of package "
+            "'{}'".format(pkg_name))
 
     return version
+
+
+def get_version_sundials():
+    return get_debian_package_version('libsundials-serial')
+
+
+def get_version_paraview():
+    # XXX TODO: There should be a more cross-platform way of
+    # determining the Paraview version, but the only method I could
+    # find is in the thread [1], and it doesn't work any more for
+    # recent versions of Paraview. It's quite annoying that something
+    # as simple as "import paraview; paraview.__version__" doesn't
+    # work...
+    #
+    # [1] http://blog.gmane.org/gmane.comp.science.paraview.user/month=20090801/page=34
+    return get_debian_package_version('paraview')
 
 
 def running_binary_distribution():
