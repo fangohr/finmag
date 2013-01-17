@@ -66,7 +66,7 @@ def relax_with_schedule(integrator,
 
         if schedule:
             next_stop_on_schedule = schedule.next_step()
-            while next_stop_on_schedule and next_stop_on_schedule < next_stop:
+            while next_stop_on_schedule != None and next_stop_on_schedule < next_stop:
                 integrator.advance_time(next_stop_on_schedule)
                 schedule.reached(next_stop_on_schedule)
                 next_stop_on_schedule = schedule.next_step()
