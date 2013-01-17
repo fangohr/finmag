@@ -3,6 +3,7 @@ import numpy as np
 import logging
 import os
 import glob
+import shutil
 from tempfile import mkdtemp
 from finmag import sim_with
 from finmag.example import barmini
@@ -114,3 +115,5 @@ def test_relax_with_saving_snapshots():
     # 'save_every=5e-14' and 1 due to 'save_final_snapshots=True'.
     vtu_files = glob.glob(os.path.join(tmpdir, "*.vtu"))
     assert(len(vtu_files) == 5 + 1)
+
+    shutil.rmtree(tmpdir)
