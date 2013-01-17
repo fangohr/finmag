@@ -31,6 +31,7 @@ logger.debug("%20s: %s" % ("Numpy", util.versions.get_version_numpy()))
 logger.debug("%20s: %s" % ("Scipy", util.versions.get_version_scipy()))
 logger.debug("%20s: %s" % ("IPython", util.versions.get_version_ipython()))
 logger.debug("%20s: %s" % ("Python", util.versions.get_version_python()))
+logger.debug("%20s: %s" % ("Paraview", util.versions.get_version_paraview()))
 try:
     sundials_version = util.versions.get_version_sundials()
 except NotImplementedError:
