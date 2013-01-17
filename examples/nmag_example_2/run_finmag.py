@@ -1,6 +1,7 @@
 import dolfin as df
 from finmag import Simulation
 from finmag.energies import Exchange, Demag
+from finmag.util.timings import timings
 
 mesh = df.Mesh("bar.xml.gz")
 
@@ -13,3 +14,8 @@ sim.add(Demag())
 
 sim.schedule(Simulation.save_averages, every=5e-12)
 sim.run_until(3e-10)
+
+print timings
+print "The RHS was evaluated {} times, while the Jacobian was computed {} times.".format(
+        sim.integrator.stats()['nfevals'],
+        timings._timings['LLG::sundials_jtimes'].calls)
