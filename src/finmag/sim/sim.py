@@ -9,7 +9,7 @@ from finmag.util.consts import exchange_length, bloch_parameter
 from finmag.util.meshes import mesh_info, mesh_volume
 from finmag.util.fileio import Tablewriter
 from finmag.util import helpers
-from finmag.util.vtk import VTK
+from finmag.util.vtk_export import VTK
 from finmag.sim.hysteresis import hysteresis as hyst, hysteresis_loop as hyst_loop
 from finmag.integrators.llg_integrator import llg_integrator
 from finmag.integrators.scheduler import Scheduler

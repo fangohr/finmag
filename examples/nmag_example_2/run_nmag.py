@@ -17,10 +17,5 @@ sim.set_m([1,0,1])
 dt = SI(5e-12, "s") 
 
 for i in range(0, 61):
-    sim.advance_time(dt*i)                  #compute time development
-
-    if i % 10 == 0:                         #every 10 loop iterations, 
-        sim.save_data(fields="all")         #save averages and all
-                                            #fields spatially resolved
-    else:
-        sim.save_data()                     #otherwise just save averages
+    sim.advance_time(dt*i)              #compute time development
+    sim.save_data()                     #save averages
