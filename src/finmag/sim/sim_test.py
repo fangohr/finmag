@@ -1,6 +1,9 @@
 import dolfin as df
 import numpy as np
 import logging
+import os
+import glob
+from tempfile import mkdtemp
 from finmag import sim_with
 from finmag.example import barmini
 from math import sqrt
@@ -94,3 +97,20 @@ class TestSimulation(object):
         assert(np.allclose(res[..., 0], 1.0/sqrt(2)))
         assert(np.allclose(res[..., 1], 0.0))
         assert(np.allclose(res[..., 2], 1.0/sqrt(2)))
+
+
+def test_relax_with_saving_snapshots():
+    mesh = df.Box(0, 0, 0, 1, 1, 1, 5, 5, 5)
+    tmpdir = mkdtemp()
+    sim = sim_with(mesh, Ms=8.6e5, m_init=(1, 0, 0), alpha=1.0,
+                   unit_length=1e-9, A=13.0e-12, demag_solver='FK')
+    sim.relax(save_snapshots=True, filename=os.path.join(tmpdir, 'sim.pvd'),
+              save_every=5e-14, save_final_snapshot=True, force_overwrite=True)
+
+    # Check that the relaxation took as long as expected
+    assert(np.allclose(sim.t, 2.078125e-13, atol=0))
+
+    # Checkt that the correct number of snapshots was saved: 5 due to
+    # 'save_every=5e-14' and 1 due to 'save_final_snapshots=True'.
+    vtu_files = glob.glob(os.path.join(tmpdir, "*.vtu"))
+    assert(len(vtu_files) == 5 + 1)
