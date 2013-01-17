@@ -4,6 +4,7 @@ import glob
 import time
 import logging
 import dolfin as df
+from finmag.util.timings import mtimed
 
 log = logging.getLogger(name="finmag")
 
@@ -58,6 +59,7 @@ class VTK(object):
         self.prefix = prefix
         self.counter = 1
 
+    @mtimed
     def save(self, dolfin_function, t):
         """
         Save the ``dolfin_function`` to a .pvd file (in VTK format) which can
