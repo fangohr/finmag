@@ -318,10 +318,9 @@ class Simulation(object):
             if not hasattr(self, "vtk"):
                 self.vtk = VTK(filename, "", force_overwrite, "m_")
 
-            def save():
-                # workaround since methods on schedule should be called without arguments
-                self.save_vtk(self.llg._m, self.t)
-                self.save_averages()
+            def save(sim):
+                sim.save_vtk()
+                sim.save_averages()
 
             self.schedule(save, every=save_every, at_end=save_final_snapshot)
 
