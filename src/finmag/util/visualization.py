@@ -5,6 +5,7 @@ import logging
 import IPython.core.display
 from paraview import servermanager
 import paraview.simple as pv
+import numpy as np
 
 logger = logging.getLogger("finmag")
 
@@ -63,7 +64,7 @@ def render_paraview_scene(
     colorbar_label_format='%-#5.2g',
     add_glyphs=True,
     glyph_type='cones',
-    glyph_scale_factor=2.0,
+    glyph_scale_factor=None,
     glyph_random_mode=True,
     glyph_mask_points=True,
     glyph_max_number_of_points=10000,
@@ -161,9 +162,12 @@ def render_paraview_scene(
         Type of glyphs to use. The only currently supported glyph type
         is 'cones'.
 
-    glyph_scale_factor: float
+    glyph_scale_factor: float | None
 
-        Controls the glyph size. Default: 2.0.
+        Controls the glyph size. If None is given (the default), the function
+        tries to determine an appropriate scale factor automatically (based
+        on the maximum field values and the mesh spacing. This may not be
+        perfect, however, and may need manual adjusting.
 
     glyph_mask_points: True | False
 
@@ -312,9 +316,32 @@ def render_paraview_scene(
     if add_glyphs:
         logger.debug("Adding cone glyphs.")
         glyph = pv.servermanager.filters.Glyph(Input=reader)
+        if glyph_scale_factor == None:
+            # Try to determine an appropriate scale_factor automatically
+            import vtk.util.numpy_support as VN
+            grid = servermanager.Fetch(reader)
+
+            # Determine approximate mesh spacing
+            cell = grid.GetCell(0)  # let's hope that the first cell is a good
+                                    # representative of all mesh cells
+            cell_bounds = np.array(cell.GetBounds()).reshape((3,2))
+            mesh_spacing = min(cell_bounds[:, 1] - cell_bounds[:, 0])
+
+            # Determine maximum field magnitude
+            m = VN.vtk_to_numpy(grid.GetPointData().GetArray(field_name))
+            max_field_magnitude = max(map(np.linalg.norm, m))
+
+            glyph_scale_factor = mesh_spacing / max_field_magnitude
+            logger.debug(
+                "Using automatically determined glyph_scale_factor = {:.2g} "
+                "(determined from approximate mesh spacing {:.2g} and maximum "
+                "field magnitude {:.2g}). This may need manual tweaking in case "
+                "glyphs appear very large or very small.".format(
+                        glyph_scale_factor, mesh_spacing, max_field_magnitude))
+
         glyph.SetScaleFactor = glyph_scale_factor
         glyph.ScaleMode = 'vector'
-        glyph.Vectors = ['POINTS', 'm']
+        glyph.Vectors = ['POINTS', field_name]
         try:
             glyph.KeepRandomPoints = 1  # only relevant for animation IIUC, but can't hurt setting it
 	except AttributeError:
