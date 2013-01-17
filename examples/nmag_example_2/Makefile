@@ -1,3 +1,8 @@
+all:
+	make averages.txt
+	make averages_ref.txt
+	echo "Results plotted in comparison.png"
+
 bar.nmesh.h5:
 	- netgen -geofile=bar.geo -meshfiletype="Neutral Format" -meshfile=bar.neutral -batchmode
 	nmeshimport --netgen bar.neutral bar.nmesh.h5
@@ -8,7 +13,7 @@ bar.xml.gz:
 	dolfin-convert bar.grid bar.xml
 	gzip -f bar.xml
 	rm bar.grid bar_bi.xml bar_mat.xml bar.xml.bak
-	
+
 averages_ref.txt: bar.nmesh.h5
 	nsim run_nmag.py --clean
 	ncol nmag_bar time m_Py_0 m_Py_1 m_Py_2 > averages_ref.txt
