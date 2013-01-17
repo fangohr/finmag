@@ -1,7 +1,7 @@
 import logging
 import textwrap
 import dolfin as df
-from finmag.util.timings import timings
+from finmag.util.timings import timings, mtimed
 from solver_fk import FemBemFKSolver
 from solver_gcr import FemBemGCRSolver
 from treecode_bem import TreecodeBEM
@@ -87,9 +87,11 @@ class Demag(object):
                         self.__class__.__name__, name, textwrap.fill(params, width=100,
                         initial_indent=4*" ", subsequent_indent=4*" ")))
 
+    @mtimed
     def compute_field(self):
         return self.demag.compute_field()
 
+    @mtimed
     def compute_energy(self):
         return self.demag.compute_energy()
 

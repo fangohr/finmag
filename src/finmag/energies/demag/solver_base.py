@@ -1,13 +1,6 @@
-"""Base Classes for Demagnetization solvers"""
-__author__ = "Gabriel Balaban"
-__copyright__ = __author__
-__project__ = "Finmag"
-__organisation__ = "University of Southampton"
-
 import dolfin as df
 import numpy as np
-import abc
-from finmag.util.timings import timings, mtimed
+from finmag.util.timings import Timings
 from finmag.util import helpers
 import finmag.util.solver_benchmark as bench
 
@@ -21,6 +14,8 @@ laplace.add("method", "default")
 laplace.add("preconditioner", "default")
 default_parameters.add(poisson)
 default_parameters.add(laplace)
+
+demag_timings = Timings()
 
 class FemBemDeMagSolver(object):
     """Base Class for FEM/BEM Demag Solvers containing shared methods
@@ -133,7 +128,6 @@ class FemBemDeMagSolver(object):
             raise NotImplementedError("""Only methods currently implemented are
                                     * 'magpar',
                                     * 'project'""")
-    #@abc.abstractmethod
     def solve():
         return
 
@@ -225,9 +219,9 @@ class FemBemDeMagSolver(object):
         if self.bench:
             bench.solve(A,function.vector(),b,benchmark = True)
         else:
-            timings.start_next(self.__class__.__name__, "2nd linear solve")
+            demag_timings.start_next(self.__class__.__name__, "2nd linear solve")
             self.laplace_iter = self.laplace_solver.solve(A, function.vector(), b)
-            timings.stop(self.__class__.__name__, "2nd linear solve")
+            demag_timings.stop(self.__class__.__name__, "2nd linear solve")
         return function
 
     def __compute_field_project(self):
@@ -247,7 +241,6 @@ class FemBemDeMagSolver(object):
         self.G = df.assemble(a)
         self.L = df.assemble(b).array()
 
-    @mtimed
     def __compute_field_magpar(self):
         """Magpar method used by Weiwei."""
         Hd = self.G*self.phi.vector()

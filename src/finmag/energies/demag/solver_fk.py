@@ -2,11 +2,13 @@ import logging
 import numpy as np
 import dolfin as df
 import solver_base as sb
-from finmag.util.timings import timings, mtimed
 from finmag.native.llg import OrientedBoundaryMesh, compute_bem_fk
 import finmag.util.solver_benchmark as bench
 
+fk_timings = sb.demag_timings
 logger = logging.getLogger(name='finmag')
+
+
 __all__ = ["FemBemFKSolver"]
 class FemBemFKSolver(sb.FemBemDeMagSolver):
     r"""
@@ -253,7 +255,7 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
     """
     def __init__(self,mesh,m, parameters=sb.default_parameters , degree=1, element="CG",
                  project_method='magpar', unit_length=1,Ms = 1.0,bench = False):
-        timings.start(self.__class__.__name__, "FKSolver init")
+        fk_timings.start(self.__class__.__name__, "FKSolver init")
         sb.FemBemDeMagSolver.__init__(self,mesh,m, parameters, degree, element=element,
                                       project_method = project_method,
                                       unit_length = unit_length,Ms = Ms,bench = bench)
@@ -273,14 +275,14 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         self.D = df.assemble(b)
 
         # Compute boundary element matrix and global-to-boundary mapping
-        timings.start_next(self.__class__.__name__, "build BEM")
+        fk_timings.start_next(self.__class__.__name__, "build BEM")
         self.bem, self.b2g_map = compute_bem_fk(OrientedBoundaryMesh(self.mesh))
-        timings.stop(self.__class__.__name__, "build BEM")
+        fk_timings.stop(self.__class__.__name__, "build BEM")
 
     def solve(self):
 
         # Compute phi1 on the whole domain (code-block 1, last line)
-        timings.start(self.__class__.__name__, "phi1 - matrix product")
+        fk_timings.start(self.__class__.__name__, "phi1 - matrix product")
         g1 = self.D*self.m.vector()
 
         # NOTE: The (above) computation of phi1 is equivalent to
@@ -290,35 +292,35 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         # because we don't have to assemble L each time,
         # and matrix multiplication is faster than assemble.
 
-        timings.start_next(self.__class__.__name__, "phi1 - solve")
+        fk_timings.start_next(self.__class__.__name__, "phi1 - solve")
         if self.bench:
             bench.solve(self.poisson_matrix,self.phi1.vector(),g1, benchmark = True)
         else:
-            timings.start_next(self.__class__.__name__, "1st linear solve")
+            fk_timings.start_next(self.__class__.__name__, "1st linear solve")
             self.poisson_iter = self.poisson_solver.solve(self.phi1.vector(), g1)
-            timings.stop(self.__class__.__name__, "1st linear solve")
+            fk_timings.stop(self.__class__.__name__, "1st linear solve")
         # Restrict phi1 to the boundary
-        timings.start_next(self.__class__.__name__, "Restrict phi1 to boundary")
+        fk_timings.start_next(self.__class__.__name__, "Restrict phi1 to boundary")
         Phi1 = self.phi1.vector()[self.b2g_map]
 
         # Compute phi2 on the boundary, eq. (3)
-        timings.start_next(self.__class__.__name__, "Compute Phi2")
+        fk_timings.start_next(self.__class__.__name__, "Compute Phi2")
         Phi2 = np.dot(self.bem, Phi1.array())
 
         # Fill Phi2 into boundary positions of phi2
-        timings.start_next(self.__class__.__name__, "phi2 <- Phi2")
+        fk_timings.start_next(self.__class__.__name__, "phi2 <- Phi2")
         self.phi2.vector()[self.b2g_map[:]] = Phi2
 
         # Compute Laplace's equation inside the domain,
         # eq. (2) and last code-block
-        timings.start_next(self.__class__.__name__, "Compute phi2 inside")
+        fk_timings.start_next(self.__class__.__name__, "Compute phi2 inside")
         self.phi2 = self.solve_laplace_inside(self.phi2)
 
         # phi = phi1 + phi2, eq. (5)
-        timings.start_next(self.__class__.__name__, "Add phi1 and phi2")
+        fk_timings.start_next(self.__class__.__name__, "Add phi1 and phi2")
         self.phi.vector()[:] = self.phi1.vector() \
                              + self.phi2.vector()
-        timings.stop(self.__class__.__name__, "Add phi1 and phi2")
+        fk_timings.stop(self.__class__.__name__, "Add phi1 and phi2")
         return self.phi
 
 if __name__ == "__main__":
@@ -336,6 +338,6 @@ if __name__ == "__main__":
     Hd = demag.compute_field()
     Hd.shape = (3, -1)
     print np.average(Hd[0])/Ms, np.average(Hd[1])/Ms, np.average(Hd[2])/Ms
-    print timings
+    print fk_timings
     df.plot(demag.phi)
     df.interactive()
