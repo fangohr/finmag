@@ -118,7 +118,7 @@ class LLG(object):
     
     @Ms.setter
     def Ms(self, value):
-        self._Ms_dg=helpers.scale_valued_dg_function(value,self.mesh)
+        self._Ms_dg=helpers.scalar_valued_dg_function(value, self.mesh)
         self.volumes = df.assemble(df.TestFunction(self.S1) * df.dx)
         Ms=df.assemble(self._Ms_dg*df.TestFunction(self.S1)* df.dx).array()/self.volumes
         self._Ms[:]=Ms[:]
