@@ -161,7 +161,7 @@ class SLLG(object):
     
     @T.setter
     def T(self, value):
-        self._T[:]=helpers.scale_valued_function(value,self.S1).vector().array()[:]
+        self._T[:]=helpers.scalar_valued_function(value,self.S1).vector().array()[:]
         
     @property
     def alpha(self):
@@ -169,7 +169,7 @@ class SLLG(object):
     
     @alpha.setter
     def alpha(self, value):
-        self._alpha[:]=helpers.scale_valued_function(value,self.S1).vector().array()[:]
+        self._alpha[:]=helpers.scalar_valued_function(value,self.S1).vector().array()[:]
         
     @property
     def Ms(self):
@@ -177,7 +177,7 @@ class SLLG(object):
     
     @Ms.setter
     def Ms(self, value):
-        self._Ms_dg=helpers.scale_valued_dg_function(value,self.mesh)
+        self._Ms_dg=helpers.scalar_valued_dg_function(value,self.mesh)
 
         tmp = df.assemble(self._Ms_dg*df.dot(df.TestFunction(self.S3), df.Constant([1, 1, 1])) * df.dx)
         tmp=tmp/self.volumes
@@ -233,7 +233,7 @@ if __name__ == "__main__":
     H0 = 1e6
     sim.add(Zeeman((0, 0, H0)))
     
-    A=helpers.scale_valued_dg_function(13.0e-12,mesh)
+    A=helpers.scalar_valued_dg_function(13.0e-12,mesh)
     exchange = Exchange(A)
     sim.add(exchange)
     
