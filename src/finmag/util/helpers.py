@@ -351,9 +351,9 @@ def vector_valued_function(value, mesh_or_space, normalise=False, **kwargs):
           and z-values). The shape can also be (n, 3) with one vector
           per node.
 
-        - function (any callable object will do) which accepts the
-          coordinates of all mesh nodes as a numpy.ndarray of shape (3, n)
-          and returns the field H in this form as well
+        - function (any callable object will do) which accepts a 3-tuple
+          (x, y, z) of point coordinates and returns a 3-vector as its value
+          at that point.
 
 
     *Arguments*
