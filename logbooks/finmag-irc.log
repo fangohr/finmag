@@ -3732,3 +3732,32 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-01-16 11:29:42 fangohr-adium: Best to go around the building on the outside — exams taking place in the workstation area under the gallery.
 2013-01-16 11:29:57 max_albert: Yes, I noticed that earlier. ;-)
 2013-01-16 12:51:53 fangohr-adium: MA, out there and interested in lunch?
+2013-01-17 09:19:16 mb8g11: Hi.
+2013-01-17 10:31:56 fangohr-adium: Hi :)
+2013-01-17 11:15:49 fangohr-adium: No lunch for me — have a work meeting from 11:30 to 14:00 or so.
+2013-01-17 18:03:37 mb8g11: dolfin 1.1.0 release notes https://lists.launchpad.net/dolfin/msg26258.html
+2013-01-17 18:07:10 mb8g11: A few nice things in there. HDF5, bugfix in expression so one can use min, max; major speed-up or assembly of functions and expressions
+2013-01-17 18:07:27 mb8g11: meshes based on NETGEN csg format
+2013-01-17 18:07:50 max_albert: Yep, would be nice to give it a try. :)
+2013-01-17 18:08:56 max_albert: Not sure how much work it would be, though. A couple of months ago I tried to use Finmag with the development version (on which this release is based I guess) but it wasn't straightforward to get it to work at the time.
+2013-01-17 18:09:17 max_albert: But this may be different in case some of the commits in the meantime cleaned the interface up.
+2013-01-17 18:09:37 mb8g11: As soon as they update their PPA, we should get the new version by normal system update, shouldn't we?
+2013-01-17 18:09:46 max_albert: Yes.
+2013-01-17 18:10:43 max_albert: Actually, that happened to me earlier today but I downgraded again because I got some weird segfaults (which may have been unrelated, though, or maybe were caused because I didn't recompile finmag, but I was in the middle of trying something out so didn't want to interrup the workflow).
+2013-01-17 18:12:26 mb8g11: Of course.
+2013-01-17 18:12:44 mb8g11: By the way, they use NETGEN in the background now. It's hilarious, because they ran into the same issues we do.
+2013-01-17 18:12:48 mb8g11: http://fossies.org/dox/dolfin-1.1.0/netgen_8py_source.html
+2013-01-17 18:13:01 mb8g11: line 155 and following.
+2013-01-17 18:13:39 max_albert: :-)
+2013-01-17 18:13:46 mb8g11:   cpp.info("Note that NETGEN may crash after the mesh generation has "
+2013-01-17 18:13:48 mb8g11: 158  "completed but may still succeed in generating the mesh.")
+2013-01-17 18:14:17 max_albert: It's strange that Ubuntu hasn't upgraded its Netgen package yet, since that crash is gone in the latest version.
+2013-01-17 18:17:12 mb8g11: True. http://packages.ubuntu.com/quantal/netgen
+2013-01-17 18:18:47 mb8g11: Netgen 5.0.0 is out, hopefully get included in Ubuntu 13.04
+2013-01-17 18:19:39 mb8g11: It was released 13 Nov 2012, so after Ubuntu 12.10 came out.
+2013-01-17 18:19:56 mb8g11: The one before is from May 2010, which is the one we have in Ubuntu. That explains it.
+2013-01-17 18:20:04 max_albert: Ah, ok. Yes, hopefully they will upgrade it.
+2013-01-17 18:23:49 mb8g11: Apparently not http://packages.ubuntu.com/raring/netgen
+2013-01-17 18:24:15 max_albert: :(
+2013-01-17 18:33:56 mb8g11: Well, we wanted to create a PPA soon anyways, might as well package netgen ourselves.
+2013-01-17 18:34:50 mb8g11: Our contact the original (debian) package maintainers.

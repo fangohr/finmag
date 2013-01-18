@@ -325,11 +325,11 @@ def render_paraview_scene(
             cell = grid.GetCell(0)  # let's hope that the first cell is a good
                                     # representative of all mesh cells
             cell_bounds = np.array(cell.GetBounds()).reshape((3,2))
-            mesh_spacing = min(cell_bounds[:, 1] - cell_bounds[:, 0])
+            mesh_spacing = float(min(cell_bounds[:, 1] - cell_bounds[:, 0]))
 
             # Determine maximum field magnitude
             m = VN.vtk_to_numpy(grid.GetPointData().GetArray(field_name))
-            max_field_magnitude = max(map(np.linalg.norm, m))
+            max_field_magnitude = float(max(map(np.linalg.norm, m)))
 
             glyph_scale_factor = mesh_spacing / max_field_magnitude
             logger.debug(
