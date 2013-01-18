@@ -351,9 +351,12 @@ def vector_valued_function(value, mesh_or_space, normalise=False, **kwargs):
           and z-values). The shape can also be (n, 3) with one vector
           per node.
 
-        - function (any callable object will do) which accepts a 3-tuple
-          (x, y, z) of point coordinates and returns a 3-vector as its value
-          at that point.
+        - function (any callable object will do) of the form:
+
+             f: (x, y, z) -> v
+
+          where v is the 3-vector that is the function value at the
+          point (x, y, z).
 
 
     *Arguments*
@@ -393,9 +396,10 @@ def vector_valued_function(value, mesh_or_space, normalise=False, **kwargs):
             value = value.reshape(value.size, order="F")
         fun.vector()[:] = value
     elif hasattr(value, '__call__'):
-        coords = np.array(zip(* mesh.coordinates()))
+        coords = mesh.coordinates()
+        vals = np.array(map(value, coords))
         fun = df.Function(S3)
-        fun.vector()[:] = value(coords).flatten()
+        fun.vector()[:] = np.concatenate([vals[:, 0], vals[:, 1], vals[:, 2]])
     else:
         raise AttributeError
 
