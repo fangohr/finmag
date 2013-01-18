@@ -3761,3 +3761,39 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-01-17 18:24:15 max_albert: :(
 2013-01-17 18:33:56 mb8g11: Well, we wanted to create a PPA soon anyways, might as well package netgen ourselves.
 2013-01-17 18:34:50 mb8g11: Our contact the original (debian) package maintainers.
+2013-01-18 09:17:04 fangohr-adium: Good morning folks.
+2013-01-18 10:08:57 fangohr-adium: Hi Marc-Antonio, will you join us for the group meeting? I think we'll make a start now.
+2013-01-18 10:09:21 fangohr-adium: I'll stay online on Skype just in case that is better.
+2013-01-18 11:30:52 fangohr-adium: Hi Weiwei.
+2013-01-18 11:31:01 ww1g11: Hi Hans
+2013-01-18 11:42:35 fangohr-adium: Weiwei, is the cable enough to connect the machine, or do we need the switch?
+2013-01-18 11:50:12 max_albert: Hi Hans, what time would you be going for lunch (roughly)?
+2013-01-18 11:50:25 fangohr-adium: Am fairly easy. Haven't even made the coffee yet ;-)
+2013-01-18 11:50:28 fangohr-adium: What would suit you?
+2013-01-18 11:50:41 fangohr-adium: But I can also grab a sandwich, so don't worry if you have other plans.
+2013-01-18 11:57:51 ww1g11: just noticed your message, yes, a cable is enough, the ip is :152.78.96.51
+2013-01-18 11:58:01 fangohr-adium: Great, thank you.
+2013-01-18 11:58:17 max_albert: Well, I'll need something to eat anyway and plans are flexible. So would lunch some time between 12.30 and 13.00 suit you?
+2013-01-18 11:58:49 max_albert: Yay! I can log in. :) Thanks for setting it up, Weiwei.
+2013-01-18 11:59:20 max_albert: For the reconrd, looks like the machine is registered as "aleph0.kk.soton.ac.uk".
+2013-01-18 12:00:13 max_albert: Since it's registered, I presume the IP is also static.
+2013-01-18 12:00:40 max_albert: (Although that needn't be the case, but if it used to belong to Matteo I guess he will have requested a static IP).
+2013-01-18 12:00:52 ww1g11: yeah, I tried aleph0 and it does work
+2013-01-18 12:01:23 fangohr-adium: Yes, I remember that this was the name that Matteo used. As the DNS server knows it, it will be static.
+2013-01-18 12:01:39 fangohr-adium: Weiwei, can you create an account for me on there as well, please? Preferred username is 'fangohr'.
+2013-01-18 12:02:10 ww1g11: Hans, you already have an account
+2013-01-18 12:02:27 fangohr-adium: I thought I might.
+2013-01-18 12:02:51 fangohr-adium: Okay, works ;)
+2013-01-18 12:03:15 fangohr-adium: and I can see dolfin 1.1 is installed. Fab.
+2013-01-18 12:13:45 fangohr-adium: Max, let's go with 12:30 if that is okay.
+2013-01-18 12:14:35 max_albert: Sure. (But only if it fits in your schedule and you don't have important other things to do.)
+2013-01-18 12:18:39 fangohr-adium: I heard rumours the university may close at 13:00. Best to get lunch in by then ;-).
+2013-01-18 12:29:18 fangohr-adium: Max, ready to go?
+2013-01-18 12:29:29 max_albert: Yes, sure.
+2013-01-18 12:29:51 max_albert: Shall I pick you up?
+2013-01-18 12:30:07 fangohr-adium: Yes, please.
+2013-01-18 13:03:20 fangohr-adium: Weiwei, can you see whether Dmitri has an account on aleph0?
+2013-01-18 13:08:27 ww1g11: Dmitri don't have an account, I am going to create one for him
+2013-01-18 13:11:14 fangohr-adium: Yes, please.
+2013-01-18 13:31:31 fangohr-adium: Over and out. Have a good weekend. [University closure]
+2013-01-18 13:31:49 max_albert: See you!
