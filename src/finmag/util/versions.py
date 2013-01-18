@@ -96,7 +96,7 @@ def get_debian_package_version(pkg_name):
     import subprocess
     import re
 
-    supported_distros = ['Ubuntu', 'Debian']
+    supported_distros = ['Ubuntu', 'Debian', 'Linux Mint']
     linux_issue = get_linux_issue()
     version = None
 
