@@ -332,12 +332,15 @@ def render_paraview_scene(
             max_field_magnitude = max(map(np.linalg.norm, m))
 
             glyph_scale_factor = mesh_spacing / max_field_magnitude
-            logger.debug(
-                "Using automatically determined glyph_scale_factor = {:.2g} "
-                "(determined from approximate mesh spacing {:.2g} and maximum "
-                "field magnitude {:.2g}). This may need manual tweaking in case "
-                "glyphs appear very large or very small.".format(
-                        glyph_scale_factor, mesh_spacing, max_field_magnitude))
+            try:
+                logger.debug(
+                    "Using automatically determined glyph_scale_factor = {:.2g} "
+                    "(determined from approximate mesh spacing {:.2g} and maximum "
+                    "field magnitude {:.2g}). This may need manual tweaking in case "
+                    "glyphs appear very large or very small.".format(
+                            glyph_scale_factor, mesh_spacing, max_field_magnitude))
+            except:
+                print "[DDD] glyph_scale_factor: {} ({})".format(glyph_scale_factor, type(glyph_scale_factor))
 
         glyph.SetScaleFactor = glyph_scale_factor
         glyph.ScaleMode = 'vector'
