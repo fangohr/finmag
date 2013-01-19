@@ -20,7 +20,7 @@ all : parallel
 # The directory where to place the extension modules
 MODULE_DIR = ../src/finmag/native
 # The list of extension modules to build
-MODULES = sundials.so llg.so llb.so fast_sum_lib.so sllgc.so treecode_bem.so
+MODULES = sundials.so llg.so llb.so fast_sum_lib.so treecode_bem.so
 # The directory to store the precompiled header file.
 PRECOMPILED_HEADER_DIR ?= /tmp/$(USER)/finmag-pch/$(abspath .)
 # Name of the binary that runs all unit tests
@@ -36,15 +36,11 @@ sundials_LDFLAGS =-lsundials_cvode -llapack $(SUNDIALS_NVECTOR_SO) -lboost_threa
 $(MODULE_DIR)/llg.so : src/llg/py_llg_module.o src/util/np_array.o src/util/swig_dolfin.o src/llg/bem.o src/llg/llg.o src/llg/heun.o src/llg/oriented_boundary_mesh.o
 llg_LDFLAGS = -ldolfin
 
-$(MODULE_DIR)/llb.so : src/llb/py_llb_module.o src/util/np_array.o src/llb/llb_material.o src/llb/llb.o
+$(MODULE_DIR)/llb.so : src/llb/py_llb_module.o src/util/np_array.o src/llb/llb_material.o src/llb/llb.o src/llb/sllg.o
 
 $(MODULE_DIR)/fast_sum_lib.so:
 	cd src/fast_sum_lib && python setup.py build_ext --inplace
 	install src/fast_sum_lib/fast_sum_lib.so ../src/finmag/native
-
-$(MODULE_DIR)/sllgc.so: src/llb/sllg.c src/llb/clib.pyx
-	cd src/llb && python setup.py build_ext --inplace
-	install src/llb/sllgc.so ../src/finmag/native
 
 $(MODULE_DIR)/treecode_bem.so: src/tree_code_bem/treecode_bem.c src/tree_code_bem/treecode_bem_lib.pyx
 	cd src/tree_code_bem && python setup.py build_ext --inplace
