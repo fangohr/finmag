@@ -3,7 +3,7 @@ import numpy as np
 import dolfin as df
 import finmag.util.consts as consts
 
-from finmag.native.sllgc import RK2S
+import finmag.native.llb as native_llb
 from finmag.util import helpers
 from finmag.energies.effective_field import EffectiveField
 from finmag.util.meshes import mesh_volume
@@ -69,14 +69,18 @@ class SLLG(object):
         self.volumes = df.assemble(df.dot(df.TestFunction(self.S3), df.Constant([1, 1, 1])) * df.dx).array()
         self.Volume = mesh_volume(self.mesh)
         self.real_volumes=self.volumes*self.unit_length**3
+                
+        M_pred=np.zeros(self.m.shape)
         
-        self.integrator=RK2S(self.nxyz,
-                                self.m,
-                                self._alpha,
-                                self._T,
-                                self.real_volumes,
-                                self._Ms,
-                                self.stochastic_update_field)
+        self.integrator = native_llb.StochasticSLLGIntegrator(
+                                    self.m,
+                                    M_pred,
+                                    self._Ms,
+                                    self._T,
+                                    self.real_volumes,
+                                    self._alpha,
+                                    self.stochastic_update_field,
+                                    'RK2b')
         
         self.alpha = 0.5  
         self._gamma = consts.gamma
@@ -115,7 +119,8 @@ class SLLG(object):
         self.setup_parameters()
     
     def setup_parameters(self):
-        self.integrator.setup_parameters(self.gamma,self.dt,self.seed)
+        print 'seed:', self.seed
+        self.integrator.set_parameters(self.gamma,self.dt,self.seed)
         log.debug("seed=%d."%self.seed)
         log.debug("dt=%g."%self.dt)
         log.debug("gamma=%g."%self.gamma)
