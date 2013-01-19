@@ -326,7 +326,7 @@ class Simulation(object):
 
         self.integrator.run_until_relaxation(stopping_dmdt, dmdt_increased_counter_limit, dt_limit,
                 schedule=self.scheduler)
-        log.info("Relaxation finished.")
+        log.info("Relaxation finished at time t = {:.2g}.".format(self.t))
 
     hysteresis = hyst
     hysteresis_loop = hyst_loop
