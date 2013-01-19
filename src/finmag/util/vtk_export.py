@@ -106,6 +106,6 @@ class VTK(object):
         t0 = time.time()
         self.f << dolfin_function
         t1 = time.time()
-        log.info("Saved snapshot at t={} to file '{}' (saving took "
-                 "{:.3g} seconds).".format(t, self.output_file, t1 - t0))
+        log.debug("Saved snapshot at t={} to file '{}' (saving took "
+                  "{:.3g} seconds).".format(t, self.output_file, t1 - t0))
         self.counter += 1
