@@ -61,13 +61,14 @@ namespace finmag {
 
 	class RandomMT19937 {
 
-		int random_index = 0;
+		int random_index;
 		unsigned int MT[MT19937_N];
 
 		private:
 			double ltqnorm(void);
 
 		public:
+			RandomMT19937():random_index(0){};
 			double random(void);
 			void initial_random(unsigned int seed);
 			void gaussian_random_vec(double *x, int n, double dev);

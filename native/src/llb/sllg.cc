@@ -11,9 +11,9 @@ namespace finmag { namespace llb {
 
     class StochasticSLLGIntegrator {
 
-        double theta=2.0/3.0;
-        double theta1=1.0-0.5/theta;
-        double theta2=0.5/theta;
+        double theta;
+        double theta1;
+        double theta2;
 
     	private:
         	int length;
