@@ -2,6 +2,7 @@ from __future__ import division
 import os
 import textwrap
 import logging
+import subprocess
 import IPython.core.display
 from paraview import servermanager
 import paraview.simple as pv
@@ -71,7 +72,8 @@ def render_paraview_scene(
     show_orientation_axes=False,
     show_center_axes=False,
     representation="Surface With Edges",
-    palette='screen'):
+    palette='screen',
+    trim_border=True):
     """
     Load a *.vtu file, render the scene in it and save the result to an image file.
 
@@ -207,6 +209,13 @@ def render_paraview_scene(
         The color scheme to be used. The main difference is that
         'print' uses white as the background color whereas 'screen'
         uses dark grey.
+
+    trim_border: True | False
+
+        If True (the default), any superfluous space around the scene
+        will be trimmed from the saved image. This requires imagemagick
+        to be installed.
+
     """
     if not representation in _representations:
         raise ValueError("Unsupported representation: '{}'. Allowed values: "
@@ -344,9 +353,9 @@ def render_paraview_scene(
         glyph.Vectors = ['POINTS', field_name]
         try:
             glyph.KeepRandomPoints = 1  # only relevant for animation IIUC, but can't hurt setting it
-	except AttributeError:
-	    # Older version of Paraview which doesn't support this setting. Ignoring for now.
-	    pass
+        except AttributeError:
+            # Older version of Paraview which doesn't support this setting. Ignoring for now.
+            pass
         glyph.RandomMode = glyph_random_mode
         glyph.MaskPoints = glyph_mask_points
         glyph.MaximumNumberofPoints = glyph_max_number_of_points
@@ -389,6 +398,21 @@ def render_paraview_scene(
     view.ViewSize = view_size
     view.WriteImage(outfile, "vtkPNGWriter", magnification)
     servermanager.Disconnect()
+    if trim_border:
+        if palette == 'print':
+            bordercolor = '"rgb(255,255,255)"'
+        else:
+            bordercolor = '"rgb(82,87,110)"'
+        cmd = 'mogrify -bordercolor {} -border 1x1 -trim {}'.format(bordercolor, outfile)
+        try:
+            subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
+            logger.debug("Trimming border from rendered scene.")
+        except OSError:
+            logger.warning("Using the 'trim' argument requires ImageMagick to be installed.")
+        except subprocess.CalledProcessError as ex:
+            logger.warning("Could not trim border from image. "
+                           "The error message was: {}".format(ex.output))
+
     image = IPython.core.display.Image(filename=outfile)
     return image
 
