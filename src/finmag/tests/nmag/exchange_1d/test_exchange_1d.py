@@ -14,10 +14,10 @@ def setup_module(module=None):
     mesh = Interval(simplexes, 0, x_max)
 
     def m_gen(coords):
-        xs = coords[0]
-        mx = np.minimum(np.ones(len(xs)), 2.0 * xs/x_max - 1.0)
+        x = coords[0]
+        mx = min(1.0, 2.0 * x/x_max - 1.0)
         my = np.sqrt(1.0 - mx**2)
-        mz = np.zeros(len(xs))
+        mz = 0.0
         return np.array([mx, my, mz])
 
     Ms = 0.86e6
