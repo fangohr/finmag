@@ -1,8 +1,8 @@
-import dolfin as df
 from finmag import Simulation
 from finmag.integrators.llg_integrator import llg_integrator
 from finmag.energies import Exchange, Demag
 from finmag.util.timings import timings
+import dolfin as df
 
 def run_simulation():
     mesh = df.Mesh("bar.xml.gz")
