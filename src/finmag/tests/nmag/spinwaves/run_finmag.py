@@ -1,8 +1,8 @@
 import os
-import dolfin as df
 from scipy.integrate import ode
 from finmag.sim.llg import LLG
 from finmag.energies import Exchange
+import dolfin as df
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
