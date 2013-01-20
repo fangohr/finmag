@@ -13,6 +13,7 @@ from finmag.util.vtk_export import VTK
 from finmag.sim.hysteresis import hysteresis as hyst, hysteresis_loop as hyst_loop
 from finmag.integrators.llg_integrator import llg_integrator
 from finmag.integrators.scheduler import Scheduler
+from finmag.integrators import scheduler
 from finmag.util import restart
 
 ONE_DEGREE_PER_NS = 17453292.5  # in rad/s
@@ -79,6 +80,15 @@ class Simulation(object):
         self.domains =  df.CellFunction("uint", self.mesh)
         self.domains.set_all(0)
         self.region_id=0
+
+        self.scheduler_shortcuts = {
+            'restart' : restart.save_restart_data,
+            'save_ndt' : scheduler.save_ndt}
+
+        # At the moment, we can only have cvode as the driver, and thus do
+        # time development of a system. We may have energy minimisation at some 
+        # point (the driver would be an optimiser), or something else.
+        self.driver = 'cvode'
 
 
     def __str__(self):
@@ -411,12 +421,24 @@ class Simulation(object):
         time by setting the `realtime` option to True. In this case you can
         use the `after` keyword on its own.
         
-        The function you provide should expect the simulation object as its
+        The function func(sim) you provide should expect the simulation object as its
         first argument. Other positional arguments can be added by passing
         a list-like object to `args` while keyword arguments the function should
         be called with can be added by passing a dict-like object to `kwargs`.
 
+        Alternatively, if func is a string, it will be looked up in 
+        self.scheduler_shortcuts, which includes 'restart' and 'save_ndt'.
+
         """
+        if isinstance(func, str):
+            if func in self.scheduler_shortcuts:
+                func = self.scheduler_shortcuts[func]
+            else:
+                msg = "Scheduling keyword '%s' unknown. Known values are %s" \
+                    % (func, self.scheduler_shortcuts.keys())
+                log.error(msg)
+                raise KeyError(msg)
+
         self.scheduler.add(func, [self] + (args or []), kwargs,
                 at=at, at_end=at_end, every=every, after=after, realtime=realtime)
 

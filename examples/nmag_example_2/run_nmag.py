@@ -1,5 +1,8 @@
+import time
 import nmag
 from nmag import SI
+
+start = time.time()
 
 mat_Py = nmag.MagMaterial(name="Py",
                           Ms=SI(0.86e6,"A/m"),
@@ -19,3 +22,5 @@ dt = SI(5e-12, "s")
 for i in range(0, 61):
     sim.advance_time(dt*i)              #compute time development
     sim.save_data()                     #save averages
+
+print "Simulation took {:.3} s.".format(time.time() - start)
