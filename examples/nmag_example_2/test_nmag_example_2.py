@@ -1,5 +1,5 @@
 import numpy as np
-from run_finmag import run_simulation
+from .run_finmag import run_simulation
 
 def test_against_nmag():
     TOLERANCE = 2e-5

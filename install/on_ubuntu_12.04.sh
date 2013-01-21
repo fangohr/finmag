@@ -11,7 +11,7 @@ calling this script."
     exit
 fi
 
-required="fenics libboost-python-dev libboost-thread-dev libsundials-serial-dev
+required="fenics=1:1.0.0-1 libboost-python-dev libboost-thread-dev libsundials-serial-dev
     libboost-test-dev python-matplotlib python-visual python-scipy python-pip
     python-setuptools python-progressbar paraview-python"
 
