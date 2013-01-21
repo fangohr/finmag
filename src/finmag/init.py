@@ -23,8 +23,7 @@ logger = logging.getLogger("finmag")
 #     import_paraview = True
 #
 from util.configuration import get_config_option
-print "Config option: {}".format(type(get_config_option('misc', 'import_paraview')))
-if get_config_option('misc', 'import_paraview').lower() == 'true':
+if get_config_option('misc', 'import_paraview') == 'True':
     try:
         from paraview import servermanager
     except ImportError:
