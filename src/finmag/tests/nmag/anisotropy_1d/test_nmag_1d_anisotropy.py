@@ -1,9 +1,9 @@
 import os
-import dolfin
 import numpy as np
 import finmag.util.helpers as h
 from finmag import Simulation as Sim
 from finmag.energies import UniaxialAnisotropy
+import dolfin
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -17,10 +17,10 @@ def setup_module(module=None):
     mesh = dolfin.Interval(simplexes, 0, x_max)
 
     def m_gen(coords):
-        xs = coords[0]
-        mx = np.minimum(np.ones(len(xs)), xs/x_max)
-        mz = 0.1 * np.ones(len(xs))
-        my = np.sqrt(1.0 - (0.99*mx**2 + mz*mz))
+        x = coords[0]
+        mx = min(1.0, x/x_max)
+        mz = 0.1
+        my = np.sqrt(1.0 - (0.99*mx**2 + mz**2))
         return np.array([mx, my, mz]) 
 
 

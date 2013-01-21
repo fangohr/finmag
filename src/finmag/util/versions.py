@@ -96,13 +96,14 @@ def get_debian_package_version(pkg_name):
     import subprocess
     import re
 
-    supported_distros = ['Ubuntu', 'Debian']
+    supported_distros = ['Ubuntu', 'Debian', 'Linux Mint']
     linux_issue = get_linux_issue()
     version = None
 
     if any([d in linux_issue for d in supported_distros]):
         try:
-            output = subprocess.check_output(['dpkg', '-s', pkg_name])
+            with open(os.devnull, 'w') as devnull:
+                output = subprocess.check_output(['dpkg', '-s', pkg_name], stderr=devnull)
             lines = output.split('\n')
             version_str = filter(lambda s: s.startswith('Version'), lines)[0]
             version = re.sub('Version: ', '', version_str)

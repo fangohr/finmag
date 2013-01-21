@@ -22,6 +22,6 @@ BOOST_PYTHON_MODULE(llb)
 
     finmag::llb::register_llb();
     finmag::llb::register_llb_material();
-    //finmag::llb::register_llb_random();
+    finmag::llb::register_sllg();
 
 }

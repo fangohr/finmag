@@ -107,7 +107,8 @@ class Scheduler(object):
 
         """
         if not hasattr(func, "__call__"):
-            raise TypeError("The function must be callable.")
+            raise TypeError("The function must be callable but object '%s' is of type '%s'" % \
+                (str(func), type(func)))
         assert at or every or at_end or (after and realtime), "Use either `at`, `every` or `at_end` if not in real time mode."
         assert not (at!=None and every!=None), "It's either `at` or `every`."
         assert not (at!=None and after!=None), "Delays don't mix with `at`."
@@ -154,14 +155,14 @@ class Scheduler(object):
             after = datetime.now() + timedelta(seconds=after)
 
         if at:
-            self.apscheduler.add_date_job(func, at, args=[self.payload])
+            self.apscheduler.add_date_job(func, at)
         elif every:
             if after:
-                self.apscheduler.add_interval_job(func, args=[self.payload], seconds=every, start_date=after)
+                self.apscheduler.add_interval_job(func, seconds=every, start_date=after)
             else:
-                self.apscheduler.add_interval_job(func, seconds=every, args=[self.payload])
+                self.apscheduler.add_interval_job(func, seconds=every)
         elif after:
-            self.apscheduler.add_date_job(func, after, args=[self.payload])
+            self.apscheduler.add_date_job(func, after)
         else:
             raise ValueError("Assertion violated. Use either `at`, `every` of `after`.")
 
@@ -194,3 +195,13 @@ class Scheduler(object):
         for item in self.items:
             if item.at_end:
                 item.fire(time)
+
+def save_ndt(sim):
+    """Given the simulation object, saves one line to the ndt finalise
+    (through the TableWriter object)."""
+    if sim.driver == 'cvode':
+        log.debug("Saving data to ndt file at t={} (sim.name={}).".format(sim.t, sim.name))
+    else:
+        raise NotImplementedError("Only cvode driver known.")
+    sim.tablewriter.save()
+
