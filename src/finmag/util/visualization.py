@@ -4,11 +4,29 @@ import textwrap
 import logging
 import subprocess
 import IPython.core.display
-from paraview import servermanager
-import paraview.simple as pv
 import numpy as np
 
 logger = logging.getLogger("finmag")
+
+try:
+    servermanager
+except:
+    logger.warning(textwrap.dedent("""
+        This module will probably crash due to a strange bug related to
+        Python modules 'paraview' and 'vtk'. The workaround for now is
+        to execute the line
+
+            from paraview import servermanager
+
+        before importing anything Finmag-related, or alternatively to
+        add the following lines to your ~/.finmagrc file:
+
+            [misc]
+            import_paraview = True
+        """))
+
+from paraview import servermanager
+import paraview.simple as pv
 
 
 class ColorMap(object):
