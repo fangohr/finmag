@@ -1,14 +1,24 @@
+import os
+import subprocess
 import numpy as np
-from .run_finmag import run_simulation
+
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def test_against_nmag():
-    TOLERANCE = 2e-5
+    cwd_backup = os.getcwd()
+    os.chdir(MODULE_DIR)
 
-    # this file should be in version control
-    m_nmag = np.genfromtxt("averages_ref.txt")
+    try:
+        # the nmag file should be in version control. However, it is convenient
+        # that the test recomputes it if needed.
+        subprocess.call("make averages_ref.txt", shell=True)
+        m_nmag = np.genfromtxt(os.path.join(MODULE_DIR, "averages_ref.txt"))
 
-    run_simulation()
-    m_finmag = np.genfromtxt("averages.txt")
+        subprocess.call("make averages.txt", shell=True)
+        m_finmag = np.genfromtxt(os.path.join(MODULE_DIR, "averages.txt"))
 
-    diff = np.abs(m_nmag - m_finmag)
-    assert np.max(diff) < TOLERANCE
+    finally:
+        os.chdir(cwd_backup)
+
+    np.testing.assert_allclose(m_nmag, m_finmag, rtol=1e-2)
+    # atol is 0 by default when using assert_allclose
