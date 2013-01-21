@@ -114,12 +114,13 @@ def test_vector_valued_function():
     f_expr = vector_valued_function(('a*x[0]', 'b*x[1]', 'c*x[2]'), S3, a=a, b=b, c=c) # tuple of strings (will be cast to df.Expression)
     f_array3xN = vector_valued_function(v_ref, S3) # numpy array of nodal values shape (3*n,)
     f_arrayN3 = vector_valued_function(np.array([vec for r in mesh.coordinates()]), S3) # numpy array of shape (n, 3)
-    f_callable = vector_valued_function(lambda coords: v_ref_expr, S3) # callable accepting mesh node coordinates and yielding the function values
+    #f_callable = vector_valued_function(lambda coords: v_ref_expr, S3) # callable accepting mesh node coordinates and yielding the function values
+    f_callable = vector_valued_function(lambda (x,y,z): (a*x, b*y, c*z), S3) # callable accepting mesh node coordinates and yielding the function values
 
     # A few normalised versions, too
     f_tuple_normalised = vector_valued_function(tuple(vec), S3, normalise=True)
     f_expr_normalised = vector_valued_function(('a*x[0]', 'b*x[1]', 'c*x[2]'), S3, a=a, b=b, c=c, normalise=True)
-    f_callable_normalised = vector_valued_function(lambda coords: v_ref_expr, S3, normalise=True)
+    f_callable_normalised = vector_valued_function(lambda (x,y,z): (a*x, b*y, c*z), S3, normalise=True)
 
     # Check that the function vectors are as expected
     assert(all(f_tuple.vector() == v_ref))
@@ -139,7 +140,7 @@ def test_vector_valued_function():
     assert(all(f_callable_normalised.vector() == v_ref_expr_normalised))
     
     
-def test_scale_valued_dg_function():
+def test_scalar_valued_dg_function():
     mesh = df.UnitCube(2, 2, 2)
     
     def init_f(coord):
@@ -149,7 +150,7 @@ def test_scale_valued_dg_function():
         else:
             return 10
     
-    f=scale_valued_dg_function(init_f,mesh)
+    f=scalar_valued_dg_function(init_f, mesh)
     
     assert f(0,0,0.51)==10.0
     assert f(0.5,0.7,0.51)==10.0
@@ -164,14 +165,14 @@ def test_scale_valued_dg_function():
     dg = df.FunctionSpace(mesh, "DG", 0)
     dgf=df.Function(dg)
     dgf.vector()[0]=9.9
-    f=scale_valued_dg_function(dgf,mesh)
+    f=scalar_valued_dg_function(dgf, mesh)
     assert f.vector().array()[0]==9.9
     
 
 def test_angle():
-    assert abs(angle([1,0,0],[1,0,0]))           < TOLERANCE
-    assert abs(angle([1,0,0],[0,1,0]) - np.pi/2) < TOLERANCE
-    assert abs(angle([1,0,0],[1,1,0]) - np.pi/4) < TOLERANCE
+    assert abs(angle([1,0,0], [1,0,0]))           < TOLERANCE
+    assert abs(angle([1,0,0], [0,1,0]) - np.pi/2) < TOLERANCE
+    assert abs(angle([1,0,0], [1,1,0]) - np.pi/4) < TOLERANCE
 
 def test_rows_to_columns():
     x = np.array([[1, 2, 3], [1, 2, 3], [1, 2, 3]])
@@ -300,4 +301,4 @@ def test_vector_field_from_dolfin_function():
     assert(np.allclose(W, W2))
     
 if __name__ == '__main__':
-    test_scale_valued_dg_function()
+    test_scalar_valued_dg_function()

@@ -329,8 +329,8 @@ def mesh_equal(mesh1,mesh2):
 
 def vector_valued_function(value, mesh_or_space, normalise=False, **kwargs):
     """
-    Create a constant function on the VectorFunctionSpace `S3` whose value
-    is the 3-vector `value`. Returns an object of type 'df.Function'.
+    Create a vector-valued function on the given mesh or VectorFunctionSpace.
+    Returns an object of type 'df.Function'.
 
     `value` can be any of the following:
 
@@ -351,9 +351,12 @@ def vector_valued_function(value, mesh_or_space, normalise=False, **kwargs):
           and z-values). The shape can also be (n, 3) with one vector
           per node.
 
-        - function (any callable object will do) which accepts the
-          coordinates of all mesh nodes as a numpy.ndarray of shape (3, n)
-          and returns the field H in this form as well
+        - function (any callable object will do) of the form:
+
+             f: (x, y, z) -> v
+
+          where v is the 3-vector that is the function value at the
+          point (x, y, z).
 
 
     *Arguments*
@@ -393,9 +396,10 @@ def vector_valued_function(value, mesh_or_space, normalise=False, **kwargs):
             value = value.reshape(value.size, order="F")
         fun.vector()[:] = value
     elif hasattr(value, '__call__'):
-        coords = np.array(zip(* mesh.coordinates()))
+        coords = mesh.coordinates()
+        vals = np.array(map(value, coords))
         fun = df.Function(S3)
-        fun.vector()[:] = value(coords).flatten()
+        fun.vector()[:] = np.concatenate([vals[:, 0], vals[:, 1], vals[:, 2]])
     else:
         raise AttributeError
 
@@ -404,11 +408,20 @@ def vector_valued_function(value, mesh_or_space, normalise=False, **kwargs):
 
     return fun
 
-def scale_valued_function(value, mesh_or_space):
+# XXX TODO: This should perhaps be merged with scalar_valued_dg_function
+# to avoid code duplication (but only if it doesn't obfuscate the
+# interface and it is clear how to distinguish whether a Lagrange or
+# DG function space should be used).
+def scalar_valued_function(value, mesh_or_space):
     """
-    A scale function corresponds to the above vector_valued_function.
+    Create a scalar function on the given mesh or VectorFunctionSpace.
+
+    If mesh_or_space is a FunctionSpace, it should be of type "Lagrange"
+    (for "DG" spaces use the function `scalar_valued_dg_function`
+    instead). Returns an object of type 'df.Function'.
     
-    `value` can be any of the following:
+    `value` can be any of the following (see `vector_valued_function`
+    for more details):
 
         - a number
         
@@ -417,7 +430,6 @@ def scale_valued_function(value, mesh_or_space):
         - dolfin.Constant or dolfin.Expression
 
         - function (or any callable object)
-        
     """
     if isinstance(mesh_or_space, df.FunctionSpace):
         S1 = mesh_or_space
@@ -446,11 +458,16 @@ def scale_valued_function(value, mesh_or_space):
     return fun
 
 
-def scale_valued_dg_function(value, mesh_or_space):
+def scalar_valued_dg_function(value, mesh_or_space):
     """
-    A scale function corresponds to the above vector_valued_function.
+    Create a scalar function on the given mesh or VectorFunctionSpace.
+
+    If mesh_or_space is a FunctionSpace, it should be of type "DG"
+    (for "Lagrange" spaces use the function `scalar_valued_function`
+    instead). Returns an object of type 'df.Function'.
     
-    `value` can be any of the following:
+    `value` can be any of the following (see `vector_valued_function`
+    for more details):
 
         - a number
         
@@ -459,7 +476,6 @@ def scale_valued_dg_function(value, mesh_or_space):
         - dolfin.Constant or dolfin.Expression
 
         - function (or any callable object)
-        
     """
     if isinstance(mesh_or_space, df.FunctionSpace):
         dg = mesh_or_space
@@ -499,6 +515,7 @@ def scale_valued_dg_function(value, mesh_or_space):
         raise AttributeError
 
     return fun
+
 
 def mark_subdomain_by_function(fun,mesh_or_space,domain_index,subdomains):
     """
