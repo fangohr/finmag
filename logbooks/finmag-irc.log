@@ -3797,3 +3797,97 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-01-18 13:11:14 fangohr-adium: Yes, please.
 2013-01-18 13:31:31 fangohr-adium: Over and out. Have a good weekend. [University closure]
 2013-01-18 13:31:49 max_albert: See you!
+2013-01-21 11:25:28 mb8g11: Hej.
+2013-01-21 11:30:55 max_albert: Hiya!
+2013-01-21 12:16:44 mb8g11: Lunch?
+2013-01-21 13:01:46 fangohr-adium: Hi all, sorry no lunch for me. Busy with exams...
+2013-01-21 13:01:52 fangohr-adium: Max, I have installed the package you asked for.
+2013-01-21 13:01:54 mb8g11: Oki.
+2013-01-21 13:02:36 max_albert: Hi all, I'm just investigating the failing tests.
+2013-01-21 13:03:00 max_albert: (Btw, apologies for breaking the test suite last week and not fixing it in the meantime - I didn't have much time over the weekend and also couldn't run py.test locally on my machine for some reason).
+2013-01-21 13:03:30 fangohr-adium: I couldn't run py.test because the segfault (from paraview import) also crashes py.test.
+2013-01-21 13:03:37 mb8g11: I fixed one just a few minutes ago, the remaining one is a path issue I think.
+2013-01-21 13:03:55 max_albert: One question: I get a failing test in src/finmag/energies/anisotropy_test.py (with test_anisotropy_field_supported_methods).
+2013-01-21 13:04:33 max_albert: Hans: yes, I just commited a change which removes the paraview import by default (but it can be switched on in .finmagrc).
+2013-01-21 13:05:09 max_albert: The anisotropy test fails because the following assertion for the tolerance is False:
+2013-01-21 13:05:10 max_albert: assert 1.0943040251731873e-08 < 5e-09
+2013-01-21 13:05:59 max_albert: Two things are strange about this. First, it obviously used to work before.
+2013-01-21 13:06:36 max_albert: Second, we are comparing values on the order of 10^6, so this seems like such a small difference should not be regarded as a test failure, right?
+2013-01-21 13:07:06 max_albert: Is there a reason we are not checking the relative error with numpy.allclose?
+2013-01-21 13:07:25 mb8g11: No.
+2013-01-21 13:07:50 fangohr-adium: (i) yes it is strange. However, could be because we changed the relaxation procedure so that the final state is slightly different (I am guessing here).
+2013-01-21 13:07:53 max_albert: I also wonder which recent commit broke this, or whether it passes on summer but fails on my machine, or something like that. I'll try to investigate that.
+2013-01-21 13:08:27 max_albert: Hans: interesting. When did the relaxation change happen?
+2013-01-21 13:08:58 fangohr-adium: (ii) Yes, the new difference is probably fine as well. If I add pass tolerances, I usually choose them very close to the actual error to make us aware of changes. Often that will be more accurate then could reasonably be expected. So yes, we could just make that value larger by a factor 2 and the test will pass (although still interesting as to what triggered that)>
+2013-01-21 13:09:16 fangohr-adium: (iii) numpy.allclose: mostly we were not aware of it I think.
+2013-01-21 13:10:10 max_albert: Ok, thanks for the feedback guys. I'll change the test to use numpy.allclose with a suitable tolerance then (to make the test pass for now) and will see if I can find out what triggered the change.
+2013-01-21 13:10:12 fangohr-adium: relaxation change: I don't actually know, I just noticed that one of my examples produced 'wrong' results because the relaxation had changed. I was just trying to point out what indirect effects some changes may have. (If you try to understand why the tolerance change is necessary).
+2013-01-21 13:31:46 mb8g11: There is no single point in simulation time where you can say "The magnetisation has relaxed NOW". So depending on which steps we chose (and this code has changed with the scheduling) we will end up with a slightly changed magnetisation.
+2013-01-21 13:49:18 fangohr-adium: That's right.
+2013-01-21 13:52:38 max_albert: Ah, that makes sense. Although I wonder why the test only started to fail recently, long after the scheduler changes were finished. Nothing to worry about I presume, just curious.
+2013-01-21 13:54:18 mb8g11: Are you speaking of the anisotropy test? That just seems to fail on your machine and shouldn't be related to the relax mechanis,
+2013-01-21 13:54:41 max_albert: Hmm, so it works for you? That's strange...
+2013-01-21 13:58:04 fangohr-adium: Different versions of Nmag?? (Assuming we compare anisotropy to Nmag.)
+2013-01-21 14:03:15 mb8g11: It compares the alternative methods with the default one.
+2013-01-21 14:04:34 mb8g11: ~~
+2013-01-21 14:05:54 fangohr-adium: While this should not be so significant, it could also relate to upgrades in third party libraries (sundials, Petsc, lapack, blas, …).
+2013-01-21 14:14:47 mb8g11: True.
+2013-01-21 15:01:20 fangohr-adium: An orthogonal query: If I wanted something like a file explorer or Finder (Mac) on Linux, what applications might I try? I am thinking of 'standard' gnome or kde tools here, but don't know the application name to start.
+2013-01-21 15:01:47 mb8g11: Nautilus is for Ubuntu, thunar for Xubuntu
+2013-01-21 15:02:33 mb8g11: Was the KDE file explorer Konqueror or something like that? Can't remember.
+2013-01-21 15:02:57 fangohr-adium: Ta.
+2013-01-21 15:03:00 mb8g11: Why are you asking? Trying to start it from the commandline?
+2013-01-21 15:03:29 fangohr-adium: Yes.
+2013-01-21 15:03:34 fangohr-adium: Nautilus looks right; thank you.
+2013-01-21 15:03:35 max_albert: There is also a tool called 'gnome-open', which automatically tries to detect the file type and opens the corresponding application. If you say 'gnome-open .', it will open the file manager for you with the current directory.
+2013-01-21 15:03:43 max_albert: Not sure if there is something similar for KDE.
+2013-01-21 15:03:56 fangohr-adium: Thanks.
+2013-01-21 15:19:44 max_albert: Side question: to restart jenkins, is the following command the correct one: 'sudo service jenkins restart' ? And is it safe to do that?
+2013-01-21 15:20:13 max_albert: The reason I'm asking is because I just found a bug report on the web in which it was mentioned that the problem with wrong email addresses went away for someone after doing that.
+2013-01-21 16:37:34 fangohr-adium: I'd say it is safe to try that. Or at least it should be. We could also reboot the whole  machine for fun. ;-)
+2013-01-21 16:37:56 fangohr-adium: (I suppose we could also upgrade software, including Jenkins if necessary, but that should be a separate activity.)
+2013-01-21 16:38:24 max_albert: Ok, I may just restart Jenkins then with the command above and see how that goes. Thanks for the feedback.
+2013-01-21 16:42:15 max_albert: Hmm, that command failed with an error:
+2013-01-21 16:42:25 max_albert: stop: Unknown instance:
+2013-01-21 16:42:27 max_albert: start: Job failed to start
+2013-01-21 16:43:02 max_albert: I also found a StackOverflow comment which said that it should be possible to restart jenkins by simply pointing the browser to the following URL:
+2013-01-21 16:43:05 max_albert: http://summer.kk.soton.ac.uk:8080/safeRestart
+2013-01-21 16:43:33 max_albert: This does indeed ask me if I want to restart jenkins, but I get a "Status Code: 500" error, too.
+2013-01-21 16:44:01 fangohr-adium: Let me try — to see whether it could be permissions.
+2013-01-21 16:44:10 max_albert: Ok, thanks.
+2013-01-21 16:44:43 fangohr-adium: Same here.
+2013-01-21 16:45:15 max_albert: I seem to remember that we had some documentation which said how to restart Jenkins (or at least there was an email about it), but I can't find it right now.
+2013-01-21 16:45:27 fangohr-adium: I have clicked on 'Prepare for shutdown' in Manage Jenkins.
+2013-01-21 16:45:43 fangohr-adium: It has responded with 'Jenkins is going to shut down'. I would have expected another question to confirm ...
+2013-01-21 16:46:00 max_albert: Whoops... :-)
+2013-01-21 16:46:23 fangohr-adium: It says "Jenkins is going to shut down. No further builds will be performed"
+2013-01-21 16:46:31 fangohr-adium: I guess I'll wait for a moment to see what happens...
+2013-01-21 16:48:00 max_albert: Yes, I'm seeing the same message. I wonder how long it takes to shut down...
+2013-01-21 16:48:15 fangohr-adium: Not sure we have to do anything else now ...
+2013-01-21 16:48:59 fangohr-adium: top says that jenkins is using 6% CPU time. Or so. Probably normal for a big java beast?
+2013-01-21 16:49:48 fangohr-adium: Some stuff here: http://stackoverflow.com/questions/10238604/how-to-shutdown-my-jenkins-safely
+2013-01-21 16:49:53 fangohr-adium: Seems safe to kill the process if required.
+2013-01-21 16:51:01 fangohr-adium: I'll go the http://summer.kk.soton.ac.uk:8080/restart way now. Let's see.
+2013-01-21 16:51:11 fangohr-adium: ah, still Error 500
+2013-01-21 16:53:23 fangohr-adium: Right. Have now tried http://summer.kk.soton.ac.uk:8080/exit and it says 'Shutting Down'.
+2013-01-21 16:54:03 max_albert: Hmm, 'ps aux | grep jenkins' reported the following command (which was probably the one used to start jenkins):
+2013-01-21 16:54:05 max_albert: /usr/bin/java -jar /usr/share/jenkins/jenkins.war --webroot=/var/cache/jenkins/war --httpPort=8080 --ajp13Port=-1
+2013-01-21 16:54:26 max_albert: (This doesn't appear now any more because jenkins presumably shut down.)
+2013-01-21 16:54:35 fangohr-adium: Well, one step forward.
+2013-01-21 16:54:39 fangohr-adium: We just need to start it again :)
+2013-01-21 16:55:02 max_albert: Is it worth trying the command I just pasted?
+2013-01-21 16:55:25 fangohr-adium: I'd rather try something like "sudo /etc/init.d/jenkins start" first.
+2013-01-21 16:55:31 max_albert: True.
+2013-01-21 16:55:36 fangohr-adium: Any objections?
+2013-01-21 16:55:46 max_albert: Nope.
+2013-01-21 16:56:00 fangohr-adium: Done. Looks good. Is it running?
+2013-01-21 16:56:18 fangohr-adium: Yes, … booting.
+2013-01-21 16:56:30 fangohr-adium: Ttry: http://summer.kk.soton.ac.uk:8080
+2013-01-21 16:56:32 max_albert: Yes, I think so.
+2013-01-21 16:57:03 max_albert: Cool, so I probably could have restarted it using  "sudo /etc/init.d/jenkins restart" instead of the "sudo service jenkins restart" that the website recommended.
+2013-01-21 17:00:32 fangohr-adium: Maybe our jenkins is a bit older.
+2013-01-21 17:01:22 max_albert: Yes, or the website is outdated...
+2013-01-21 17:02:01 fangohr-adium: Yes — although I think the 'service' way is seen as slightly more modern. I think MA knows more (as he set up a service for DokosBot).
+2013-01-21 17:03:05 max_albert: Perhaps it would have worked if we had started jenkins via "sudo service jenkins restart" instead of going via /etc/init.d/jenkins (but that's a guess, and it's not wise to try that now that Jenkins is running again).
+2013-01-21 17:15:27 fangohr-adium: Over and out for today (at least from the office).
+2013-01-21 17:15:41 max_albert: Bye!
