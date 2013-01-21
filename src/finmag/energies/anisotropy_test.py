@@ -1,10 +1,12 @@
 import pytest
+import textwrap
 import dolfin as df
 import numpy as np
 from finmag.energies import UniaxialAnisotropy
 from finmag.util.consts import mu0
 
 TOLERANCE = 1e-12
+
 
 @pytest.fixture(scope = "module")
 def fixt():
@@ -22,6 +24,7 @@ def fixt():
     anis.setup(S3, m, Ms)
     return {"anis": anis, "m": m, "a": a, "S3": S3, "Ms": Ms, "K1": K1}
 
+
 @pytest.mark.parametrize(("m", "expected_E"), [
     ((0, 0, 1), 0), ((0, 0, -1), 0), ((0, 1, 0), 1), ((-1, 0, 0), 1)])
 def test_anisotropy_energy_simple_configurations(fixt, m, expected_E):
@@ -34,6 +37,7 @@ def test_anisotropy_energy_simple_configurations(fixt, m, expected_E):
 
     print "With m = {}, expecting E = {}. Got E = {}.".format(m, expected_E, E)
     assert abs(E - expected_E) < TOLERANCE
+
 
 def test_anisotropy_energy_analytical(fixt):
     """
@@ -53,6 +57,7 @@ def test_anisotropy_energy_analytical(fixt):
     print "With m = (0, sqrt(1-x^2), x), expecting E = {}. Got E = {}.".format(expected_E, E)
     assert abs(E - expected_E) < TOLERANCE
 
+
 def test_anisotropy_field(fixt):
     """
     Compute one anisotropy field by hand and compare with the UniaxialAnisotropy result.
@@ -69,9 +74,14 @@ def test_anisotropy_field(fixt):
     volume = df.assemble(df.dot(v, df.Constant((1, 1, 1))) * df.dx).array()
     dE_dm = df.assemble(g_ani).array() / volume
 
-    print "With m = (1, 0, 1)/sqrt(2),\n\texpecting H = {},\n\tgot H = {}.".format(
-            H.reshape((3, -1)).mean(1), dE_dm.reshape((3, -1)).mean(1))
+    print(textwrap.dedent("""
+              With m = (1, 0, 1)/sqrt(2),
+                  expecting: H = {},
+                  got:       H = {}.
+              """.format(H.reshape((3, -1)).mean(axis=1),
+                         dE_dm.reshape((3, -1)).mean(axis=1))))
     assert np.max(np.abs(H - dE_dm)) < TOLERANCE
+
 
 def test_anisotropy_field_supported_methods(fixt):
     """
@@ -91,6 +101,11 @@ def test_anisotropy_field_supported_methods(fixt):
         anis = UniaxialAnisotropy(fixt["K1"], fixt["a"], method=method)
         anis.setup(fixt["S3"], fixt["m"], fixt["Ms"])
         H = anis.compute_field()
-        print "With method '{}',\n\texpecting H = {},\n\tgot H = {}.".format(
-            method, H_default.reshape((3, -1)).mean(1), H.reshape((3, -1)).mean(1))
+        print(textwrap.dedent("""
+                  With method '{}',
+                      expecting: H = {},
+                      got:       H = {}.
+                  """.format(method,
+                             H_default.reshape((3, -1)).mean(axis=1),
+                             H.reshape((3, -1)).mean(axis=1))))
         assert np.max(np.abs(H - H_default)) < TOLERANCE
