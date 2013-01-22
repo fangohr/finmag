@@ -245,6 +245,7 @@ class Simulation(object):
         self.integrator.run_until(t, schedule=self.scheduler)
         if save_averages:
             self.save_averages()
+        log.info("Simulation has reached time t = {:.2g}.".format(self.t))
 
     def restart(self, filename=None, t0=None):
         """If called, we look for a filename of type sim.name + '-restart.npz',
