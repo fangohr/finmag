@@ -310,7 +310,13 @@ def render_paraview_scene(
     dataInfo = reader.GetDataInformation()
     pointDataInfo = dataInfo.GetPointDataInformation()
     arrayInfo = pointDataInfo.GetArrayInformation(field_name)
-    data_range = arrayInfo.GetComponentRange(color_by_axis)
+
+    if rescale_colormap_to_data_range:
+        logger.debug("Rescaling colormap to data range: {}".format(data_range))
+        data_range = arrayInfo.GetComponentRange(color_by_axis)
+    else:
+        data_range = (-1.0, 1.0)
+
 
     # Set the correct colormap and rescale it if necessary.
     try:
@@ -331,13 +337,15 @@ def render_paraview_scene(
     lut = servermanager.rendering.PVLookupTable()
     lut.ColorSpace = cmap.color_space
     rgb_points = cmap.rgb_points
-    if rescale_colormap_to_data_range:
-        logger.debug("Rescaling colormap to data range: {}".format(data_range))
-        dmin, dmax = data_range
-        cmin = rgb_points[0]
-        cmax = rgb_points[-4]
-        for i in xrange(0, len(rgb_points), 4):
-            rgb_points[i] = (rgb_points[i] - cmin) / (cmax - cmin) * (dmax - dmin) + dmin
+    dmin, dmax = data_range
+    cmin = rgb_points[0]
+    cmax = rgb_points[-4]
+    if cmin == cmax:
+        # workaround for the case that the data range only
+        # contains a single value
+        cmax += 1e-8
+    for i in xrange(0, len(rgb_points), 4):
+        rgb_points[i] = (rgb_points[i] - cmin) / (cmax - cmin) * (dmax - dmin) + dmin
     lut.RGBPoints = rgb_points
     lut.NanColor = cmap.nan_color
 
