@@ -33,6 +33,7 @@ if get_config_option('misc', 'import_paraview') == 'True':
 
 from finmag.sim.sim import Simulation
 from finmag.sim.sim_helpers import sim_with
+from finmag.util.helpers import set_logging_level
 from __version__ import __version__
 import example
 
