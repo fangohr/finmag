@@ -118,10 +118,16 @@ class Scheduler(object):
         callback = functools.partial(func, *args, **kwargs)
 
         if realtime:
-            self._add_realtime(func, at, every, after)
+            job = self._add_realtime(callback, at, every, after)
             if at_end:
                 at_end_item = At(None, True).call(callback)
                 self._add(at_end_item)
+
+            # Make sure we unschedule the job at the end
+            def _unschedule_job_at_end():
+                self.apscheduler.unschedule_job(job)
+            self._add(At(None, True).call(_unschedule_job_at_end))
+
             return
 
         if at or (at_end and not every):
@@ -137,6 +143,12 @@ class Scheduler(object):
         self.items.append(at_or_every)
 
     def _add_realtime(self, func, at=None, every=None, after=None):
+        """
+        Add a realtime job.
+
+        Returns the Job object as obtained from APScheduler.add_job() etc.
+
+        """
         if not hasattr(self, "apscheduler"):
             try:
                 from apscheduler.scheduler import Scheduler as APScheduler
@@ -155,16 +167,18 @@ class Scheduler(object):
             after = datetime.now() + timedelta(seconds=after)
 
         if at:
-            self.apscheduler.add_date_job(func, at)
+            job = self.apscheduler.add_date_job(func, at)
         elif every:
             if after:
-                self.apscheduler.add_interval_job(func, seconds=every, start_date=after)
+                job = self.apscheduler.add_interval_job(func, seconds=every, start_date=after)
             else:
-                self.apscheduler.add_interval_job(func, seconds=every)
+                job = self.apscheduler.add_interval_job(func, seconds=every)
         elif after:
-            self.apscheduler.add_date_job(func, after)
+            job = self.apscheduler.add_date_job(func, after)
         else:
             raise ValueError("Assertion violated. Use either `at`, `every` of `after`.")
+
+        return job
 
     def next_step(self):
         """
