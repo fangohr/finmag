@@ -82,8 +82,9 @@ class Simulation(object):
         self.region_id=0
 
         self.scheduler_shortcuts = {
-            'restart' : restart.save_restart_data,
-            'save_ndt' : scheduler.save_ndt}
+            'save_restart_data' : restart.save_restart_data,
+            'save_ndt' : scheduler.save_ndt,
+            }
 
         # At the moment, we can only have cvode as the driver, and thus do
         # time development of a system. We may have energy minimisation at some 
