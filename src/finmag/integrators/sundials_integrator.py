@@ -81,7 +81,9 @@ class SundialsIntegrator(object):
         # if t <= self.cur_t and this is not the value with which we started,
         # we should complain:
         elif t <= self.cur_t:
-            raise RuntimeError("t=%g, self.cur_t=%g -- why are we integrating into the past?")
+            raise RuntimeError(
+                "t={:.3g}, self.cur_t={:.3g} -- why are we integrating "
+                "into the past?".format(t, self.cur_t))
 
         try:
             self.integrator.advance_time(t, self.m)
