@@ -101,7 +101,8 @@ def relax_with_schedule(integrator,
 
         if max_dmdt_norm > last_max_dmdt_norm:
             dmdt_increased_counter += 1
-            log.debug("{}: dmdt {:.2f} times larger than last time (counting {}/{}).".format(
+            #log.debug("{}: dmdt {:.2f} times larger than last time (counting {}/{}).".format(
+            log.debug("{}: dmdt {} times larger than last time (counting {}/{}).".format(
                 integrator.__class__.__name__, max_dmdt_norm / last_max_dmdt_norm,
                 dmdt_increased_counter, dmdt_increased_counter_limit))
 
