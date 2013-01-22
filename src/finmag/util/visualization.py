@@ -237,6 +237,15 @@ def render_paraview_scene(
         to be installed.
 
     """
+    # Paraview crashes if there is no X server running, so we check
+    # whether this is the case.
+    if not os.environ.has_key('DISPLAY'):
+        logger.warning(
+            "Could not detect a running X server (this may happen, for "
+            "example, if you are on a ssh connection without X forwarding; "
+            "use 'ssh -X' in this case). Aborting because Paraview is "
+            "likely to crash.")
+
     if not representation in _representations:
         raise ValueError("Unsupported representation: '{}'. Allowed values: "
                          "{}".format(representation, _representations))
