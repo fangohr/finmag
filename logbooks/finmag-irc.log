@@ -3891,3 +3891,61 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-01-21 17:03:05 max_albert: Perhaps it would have worked if we had started jenkins via "sudo service jenkins restart" instead of going via /etc/init.d/jenkins (but that's a guess, and it's not wise to try that now that Jenkins is running again).
 2013-01-21 17:15:27 fangohr-adium: Over and out for today (at least from the office).
 2013-01-21 17:15:41 max_albert: Bye!
+2013-01-22 10:16:37 fangohr-adium: Morning folks, anybody out there?
+2013-01-22 10:16:46 fangohr-adium: Plans for lunch? I am available today.
+2013-01-22 10:49:30 max_albert: Good morning, Hans!
+2013-01-22 10:49:31 max_albert: Apologies for the late reply (was working from home this morning).
+2013-01-22 10:49:31 max_albert: I think I'd be up for lunch. What time were you thinking?
+2013-01-22 12:09:37 fangohr-adium: Hm, have accidentally upgraded dolfin to 1.1 on osiris. Does anybody need finmag on osiris??
+2013-01-22 12:09:44 mb8g11: Haha.
+2013-01-22 12:09:58 max_albert: Yes, I use it occasionally.
+2013-01-22 12:10:14 fangohr-adium: Arr, I guess I can run your magic command in the install script to fix this.
+2013-01-22 12:10:31 max_albert: Can you run the on_ubuntu_12.04.sh script to see if that downgrades it?
+2013-01-22 12:10:45 max_albert: I added a change to this effect yesterday, would be good to see if it works. :)
+2013-01-22 12:11:34 max_albert: Btw, I don't think I have root access on osiris so wouldn't be able to run the command myself.
+2013-01-22 12:13:54 fangohr-adium: No, looks like I need to remove the dolfin installation first, then try to install again.
+2013-01-22 12:15:40 max_albert: Hmm, can you try this:
+2013-01-22 12:16:16 max_albert: sudo apt-get install dolfin-bin=1.0.0-1
+2013-01-22 12:16:30 max_albert: That may (or may not) work.
+2013-01-22 12:17:02 fangohr-adium: That looks very promising!
+2013-01-22 12:19:48 fangohr-adium: Hm, I think this installed theright version of dolfin-bin, but all the other packages seem 1.1.
+2013-01-22 12:20:07 max_albert: Which other ones, for example?
+2013-01-22 12:20:55 fangohr-adium: python-fiat, python-ffc, python-dolfin, python-instant, libdolfin. I think that's all.
+2013-01-22 12:21:06 fangohr-adium: So I could install those with the 1.0.0-1 tag explicitly.
+2013-01-22 12:21:10 max_albert: Hmm, you are right. The dolfin python package is still version 1.1.0 (just tried it from inside ipython).
+2013-01-22 12:22:00 max_albert: Yes, you could. It's a bit strange that they don't conflict the dolfin-bin package and so get downgraded automatically.
+2013-01-22 12:25:24 fangohr-adium: downgrading python-dolfin has more of an effect, but still issues compiling. I think I have to park tihs here for now. Max, if you need osiris, you are welcome to sit in my office and fiddle with it (or I can give you su right). Say if you need to.
+2013-01-22 12:27:02 max_albert: Ok, no problem for now. I may get back to you when/if I need it (or may have a quick look later).
+2013-01-22 12:27:38 max_albert: Actually, "import finmag" works for me on osiris at the moment (after 'make clean' in the finmag directory). Maybe you saw the remnants of old failed compiles?
+2013-01-22 12:28:28 max_albert: Also, the barmini example relaxes successfully. So I guess all is fine.
+2013-01-22 12:28:44 fangohr-adium: interesting. Thought I had cleaned all old files. Will try again.
+2013-01-22 12:29:04 max_albert: Don't worry if you are busy with marking etc., though.
+2013-01-22 12:33:15 fangohr-adium: Looks like you were right. Am just running tests.
+2013-01-22 12:51:33 fangohr-adium: How do we feel about lunch?
+2013-01-22 12:52:44 max_albert: Happy to go whenever.
+2013-01-22 12:53:23 mb8g11: in 5?
+2013-01-22 12:53:43 fangohr-adium: Yeah. Will you come along here?
+2013-01-22 12:53:49 fangohr-adium: (No exam at the moment I think.)
+2013-01-22 12:53:56 max_albert: Yup, will do.
+2013-01-22 12:54:13 fangohr-adium: Okay, see you in a mo.
+2013-01-22 14:06:07 mb8g11: (!) the ordering of mesh.coordinates() does not relate to the order of values in dolfin functions anymore.
+2013-01-22 14:06:40 fangohr-adium: Oops. But there must be a way of finding out which one goes with which one?!?
+2013-01-22 14:07:07 mb8g11: dopmaps
+2013-01-22 14:07:14 max_albert: There are some related Launchpad Answers
+2013-01-22 14:07:17 mb8g11: *dofmaps, an attribute of the Functionspace
+2013-01-22 14:07:23 max_albert: Here are a couple of relevant ones:
+2013-01-22 14:07:25 max_albert: https://answers.launchpad.net/dolfin/+question/219220
+2013-01-22 14:07:31 mb8g11: Nice Max, thanks.
+2013-01-22 14:07:49 max_albert: And this contains an example of using a dofmap: https://answers.launchpad.net/dolfin/+question/210000
+2013-01-22 14:08:10 max_albert: Generally, searching for "dofmap" in the Launchpad Questions site will give an overview of people having encountered similar problems.
+2013-01-22 14:09:10 max_albert: In the first link I posted (https://answers.launchpad.net/dolfin/+question/219220) Johan Hake says that there is a flag which can be set to avoid the automatic re-ordering of dofs.
+2013-01-22 14:09:29 max_albert: from dolfin import *
+2013-01-22 14:09:29 max_albert: parameters.reorder_dofs_serial = False
+2013-01-22 14:09:46 max_albert: This might be a stopgap solution just to get it to work, until we have the time to fix it properly.
+2013-01-22 14:10:15 max_albert: Although using the recommended syntax would of course be very nice because it brings us one step closer to running Finmag in parallel.
+2013-01-22 14:41:46 mb8g11: https://answers.launchpad.net/dolfin/+question/211368
+2013-01-22 14:51:39 mb8g11: xyz = interpolate(Expression(("x[0]", "x[1]", "x[2]"), value_shape=3), MixedFunctionSpace([V, V, V]))
+2013-01-22 15:04:03 mb8g11: Just this: interpolating dolfin expressions is now half as slow, and is now within 10% of a brute numpy loop.
+2013-01-22 15:05:31 max_albert: But as you just said, if we know something about the function and can optimise setting its values then it is still 2-3 orders of magnitude slower than setting the values directly using a numpy.array, right?
+2013-01-22 15:06:49 mb8g11: If you can use vectorised numpy operations, or have knowledge about the function the computer can't have (separation of space-dependent of time-dependent parts) then yes indeed, you can beat dolfin by 2-3 orders of magnitude.
+2013-01-22 15:08:35 mb8g11: I will update sandbox/benchmarks/updating_expression.py in a few minutes.
