@@ -108,7 +108,7 @@ def relax_with_schedule(integrator,
         last_max_dmdt_norm = max_dmdt_norm
 
         if dmdt_increased_counter >= dmdt_increased_counter_limit:
-            log.warning("{}: Stopping after it increased {} times.".format(
+            log.warning("{}: Stopping after dmdt increased {} times.".format(
                 integrator.__class__.__name__, dmdt_increased_counter_limit))
             break
 
