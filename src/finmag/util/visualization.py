@@ -9,8 +9,10 @@ import numpy as np
 logger = logging.getLogger("finmag")
 
 try:
-    servermanager
-except:
+    import sys
+    p = sys.modules['paraview']
+    p.servermanager
+except (KeyError, AttributeError):
     logger.warning(textwrap.dedent("""
         This module will probably crash due to a strange bug related to
         Python modules 'paraview' and 'vtk'. The workaround for now is
