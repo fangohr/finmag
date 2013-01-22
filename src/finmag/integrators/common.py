@@ -24,6 +24,8 @@ def run_with_schedule(integrator, time, schedule=None):
         # time and stop. This replicates the initial behaviour of run_until.
         return integrator.advance_time(time)
 
+    schedule.start_realtime_jobs()
+
     while True:
         next_step = schedule.next_step()
         if next_step == None or next_step > time:
@@ -36,6 +38,7 @@ def run_with_schedule(integrator, time, schedule=None):
         integrator.advance_time(time)
 
     schedule.finalise(time)
+    schedule.stop_realtime_jobs()
 
 
 def relax_with_schedule(integrator,
@@ -54,6 +57,9 @@ def relax_with_schedule(integrator,
     can be controlled via `dt_limit`.
 
     """
+    if schedule:
+        schedule.start_realtime_jobs()
+
     dt = 1e-14 # initial timestep (TODO: use the characteristic time here)
 
     dt_increment_multi = 1.5;
@@ -108,3 +114,4 @@ def relax_with_schedule(integrator,
 
     if schedule:
         schedule.finalise(integrator.cur_t)
+        schedule.stop_realtime_jobs()
