@@ -298,7 +298,7 @@ class Simulation(object):
     def relax(self, save_snapshots=False, filename='', save_every=100e-12,
               save_final_snapshot=True, force_overwrite=False,
               stopping_dmdt=ONE_DEGREE_PER_NS, dt_limit=1e-10,
-              dmdt_increased_counter_limit=50):
+              dmdt_increased_counter_limit=500):
         """
         Do time integration of the magnetisation M until it reaches a
         state where the change of the magnetisation at each node is

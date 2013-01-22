@@ -42,7 +42,7 @@ def run_with_schedule(integrator, time, schedule=None):
 
 
 def relax_with_schedule(integrator,
-        stopping_dmdt=ONE_DEGREE_PER_NS, dmdt_increased_counter_limit=50, dt_limit=1e-10,
+        stopping_dmdt=ONE_DEGREE_PER_NS, dmdt_increased_counter_limit=500, dt_limit=1e-10,
         schedule=None):
     """
     Run integration until the maximum |dm/dt| is smaller than the
