@@ -100,6 +100,8 @@ class Scheduler(object):
 
         """
         self.items = []
+        self.realtime_items = {}
+        self.realtime_jobs = []
 
     def add(self, func, args=None, kwargs=None, at=None, at_end=False, every=None, after=None, realtime=False):
         """
@@ -122,12 +124,6 @@ class Scheduler(object):
             if at_end:
                 at_end_item = At(None, True).call(callback)
                 self._add(at_end_item)
-
-            # Make sure we unschedule the job at the end
-            def _unschedule_job_at_end():
-                self.apscheduler.unschedule_job(job)
-            self._add(At(None, True).call(_unschedule_job_at_end))
-
             return
 
         if at or (at_end and not every):
@@ -166,19 +162,29 @@ class Scheduler(object):
             # Since the APScheduler API expects a date/datetime convert it. 
             after = datetime.now() + timedelta(seconds=after)
 
-        if at:
-            job = self.apscheduler.add_date_job(func, at)
-        elif every:
-            if after:
-                job = self.apscheduler.add_interval_job(func, seconds=every, start_date=after)
-            else:
-                job = self.apscheduler.add_interval_job(func, seconds=every)
-        elif after:
-            job = self.apscheduler.add_date_job(func, after)
-        else:
-            raise ValueError("Assertion violated. Use either `at`, `every` of `after`.")
+        # Register the job so that it can be started/stopped as needed.
+        self.realtime_items[func] = (at, every, after)
 
-        return job
+    def start_realtime_jobs(self):
+        for (func, (at, every, after)) in self.realtime_items.items():
+            if at:
+                job = self.apscheduler.add_date_job(func, at)
+            elif every:
+                if after:
+                    job = self.apscheduler.add_interval_job(func, seconds=every, start_date=after)
+                else:
+                    job = self.apscheduler.add_interval_job(func, seconds=every)
+            elif after:
+                job = self.apscheduler.add_date_job(func, after)
+            else:
+                raise ValueError("Assertion violated. Use either `at`, `every` of `after`.")
+
+            self.realtime_jobs.append(job)
+
+    def stop_realtime_jobs(self):
+        for job in self.realtime_jobs:
+            self.apscheduler.unschedule_job(job)
+        self.realtime_jobs = []
 
     def next_step(self):
         """
@@ -218,4 +224,3 @@ def save_ndt(sim):
     else:
         raise NotImplementedError("Only cvode driver known.")
     sim.tablewriter.save()
-
