@@ -33,7 +33,7 @@ def start_table():
     return table
 
 def setup_finmag():
-    mesh = df.Interval(xn, x0, x1)
+    mesh = df.IntervalMesh(xn, x0, x1)
     coords = np.array(zip(* mesh.coordinates()))
  
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)

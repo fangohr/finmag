@@ -226,7 +226,7 @@ class SLLG(object):
         self.tablewriter.save()
         
 if __name__ == "__main__":
-    mesh = df.Box(0, 0, 0, 5, 5, 5, 1, 1, 1)
+    mesh = df.BoxMesh(0, 0, 0, 5, 5, 5, 1, 1, 1)
     sim = SLLG(mesh, 8.6e5, unit_length=1e-9)
     sim.alpha = 0.1
     sim.set_m((1, 0, 0))

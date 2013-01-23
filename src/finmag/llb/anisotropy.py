@@ -81,7 +81,7 @@ if __name__ == "__main__":
     m = 1e-8
     Ms = 0.8e6
     n = 5
-    mesh = Box(0, m, 0, m, 0, m, n, n, n)
+    mesh = BoxMesh(0, m, 0, m, 0, m, n, n, n)
 
     mat = Material(mesh)
     mat.set_m((1,2,3))

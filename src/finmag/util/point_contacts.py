@@ -23,7 +23,7 @@ def point_contacts(origins, radius, J, debug=False):
     return df.Expression(expr_str, r=radius, J=J)
 
 if __name__ == "__main__":
-    mesh = df.Rectangle(0, 0, 100, 100, 500, 500) 
+    mesh = df.RectangleMesh(0, 0, 100, 100, 500, 500) 
     S1 = df.FunctionSpace(mesh, "DG", 0)
     pc_expr = point_contacts([(25, 50), (75, 50)], radius=10, J=1e10, debug=True)
     f = df.interpolate(pc_expr, S1)

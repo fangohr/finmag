@@ -10,7 +10,7 @@ from finmag.energies import Zeeman
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def test_sim_ode(do_plot=False):
-    mesh = df.Box(0, 0, 0, 2, 2, 2, 1, 1, 1)
+    mesh = df.BoxMesh(0, 0, 0, 2, 2, 2, 1, 1, 1)
     sim = Sim(mesh, 8.6e5, unit_length=1e-9)
     sim.alpha = 0.1
     sim.set_m((1, 0, 0))

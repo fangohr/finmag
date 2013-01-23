@@ -26,7 +26,7 @@ def compare_with_analytic_solution(alpha=0.5, max_t=1e-9):
     x0 = y0 = z0 = 0
     x1 = y1 = z1 = 10e-9
     nx = ny = nz = 1
-    mesh = dolfin.Box(x0, x1, y0, y1, z0, z1, nx, ny, nz)
+    mesh = dolfin.BoxMesh(x0, x1, y0, y1, z0, z1, nx, ny, nz)
 
     sim = Simulation(mesh, 1)
     sim.alpha = alpha

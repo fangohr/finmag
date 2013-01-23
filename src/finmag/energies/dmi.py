@@ -195,7 +195,7 @@ class DMI(EnergyBase):
 
             m    = 1e-8
             n    = 5
-            mesh = Box(0, m, 0, m, 0, m, n, n, n)
+            mesh = BoxMesh(0, m, 0, m, 0, m, n, n, n)
 
             S3  = VectorFunctionSpace(mesh, "Lagrange", 1)
             D  = 5e-3 # J/m exchange constant
@@ -352,7 +352,7 @@ class DMI_Old(EnergyBase):
 
             m    = 1e-8
             n    = 5
-            mesh = Box(0, m, 0, m, 0, m, n, n, n)
+            mesh = BoxMesh(0, m, 0, m, 0, m, n, n, n)
             
             S3  = VectorFunctionSpace(mesh, "Lagrange", 1)
             D  = 5e-3 # J/m exchange constant

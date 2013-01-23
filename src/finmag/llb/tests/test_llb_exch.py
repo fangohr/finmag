@@ -23,7 +23,7 @@ class LLBTestExch(unittest.TestCase):
         coincidence that the test passed with deviation 0.0 so
         far.
         """
-        mesh = df.Interval(10, 0, 5)
+        mesh = df.IntervalMesh(10, 0, 5)
         S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=2)
         C = 1
         expr = df.Expression(('sin(x[0])', 'cos(x[0])'))

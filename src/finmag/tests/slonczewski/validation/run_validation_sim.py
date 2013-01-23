@@ -13,7 +13,7 @@ averages_file = os.path.join(MODULE_DIR, "averages.txt")
 
 def run_simulation(t_max = 10e-9):
     L = W = 12.5e-9; H = 5e-9;
-    mesh = df.Box(0, 0, 0, L, W, H, 5, 5, 2)
+    mesh = df.BoxMesh(0, 0, 0, L, W, H, 5, 5, 2)
     sim = Sim(mesh, Ms=8.6e5)
     sim.set_m((1, 0.01, 0.01))
     sim.alpha = 0.014

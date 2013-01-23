@@ -11,7 +11,7 @@ averages_without = os.path.join(MODULE_DIR, "m_averages_without.txt")
 averages_with = os.path.join(MODULE_DIR, "m_averages_with.txt")
 
 L = W = 12.5e-9; H = 5e-9;
-mesh = df.Box(0, 0, 0, L, W, H, 5, 5, 2)
+mesh = df.BoxMesh(0, 0, 0, L, W, H, 5, 5, 2)
 
 def run_sim_without_stt():
     sim = Sim(mesh, Ms=8.6e5)
