@@ -8,8 +8,6 @@
  * AUTHOR(S) OF THIS FILE: Dmitri Chernyshenko (d.chernyshenko@soton.ac.uk)
  */
 
- #include "oriented_boundary_mesh.h"
-
 namespace finmag { namespace llg  {
     void register_bem();
 }}
