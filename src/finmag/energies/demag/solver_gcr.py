@@ -2,7 +2,7 @@ import logging
 import dolfin as df
 import solver_base as sb
 import numpy as np
-from finmag.native.llg import compute_bem_gcr, OrientedBoundaryMesh
+from finmag.native.llg import compute_bem_gcr
 logger = logging.getLogger(name='finmag')
 
 import finmag.util.solver_benchmark as bench
@@ -204,7 +204,7 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver,PEQBuilder):
         
         #Buffer the BEM
         gcr_timings.start_next(self.__class__.__name__, "build BEM")
-        self.boundary_mesh = OrientedBoundaryMesh(self.mesh)
+        self.boundary_mesh = df.BoundaryMesh(self.mesh, False)
         self.bem, self.b2g = compute_bem_gcr(self.boundary_mesh)
         gcr_timings.stop(self.__class__.__name__, "build BEM")
 
