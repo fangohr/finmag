@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 import dolfin as df
 import os
-from finmag.native.llg import compute_lindholm_L, compute_lindholm_K, compute_bem_fk, compute_bem_gcr, OrientedBoundaryMesh
+from finmag.native.llg import compute_lindholm_L, compute_lindholm_K, compute_bem_fk, compute_bem_gcr
 from finmag.util import time_counter
 from finmag.util import helpers
 from finmag.util.meshes import mesh_volume

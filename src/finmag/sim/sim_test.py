@@ -19,7 +19,7 @@ class TestSimulation(object):
         # efficiency. Thus they should be regarded as read-only and
         # not be changed in any test method, otherwise there may be
         # unpredicted bugs or errors in unrelated test methods!
-        cls.mesh = df.Box(0, 0, 0, 1, 1, 1, 5, 5, 5)
+        cls.mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 5, 5, 5)
         cls.sim = sim_with(cls.mesh, Ms=8.6e5, m_init=(1, 0, 0), alpha=1.0,
                            unit_length=1e-9, A=13.0e-12, demag_solver='FK')
         cls.sim.relax()
@@ -101,7 +101,7 @@ class TestSimulation(object):
 
 
 def test_relax_with_saving_snapshots():
-    mesh = df.Box(0, 0, 0, 1, 1, 1, 5, 5, 5)
+    mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 5, 5, 5)
     tmpdir = mkdtemp()
     sim = sim_with(mesh, Ms=8.6e5, m_init=(1, 0, 0), alpha=1.0,
                    unit_length=1e-9, A=13.0e-12, demag_solver='FK')

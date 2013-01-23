@@ -10,7 +10,7 @@ def test_Table_writer_and_reader(tmpdir=os.getcwd()):
     xmin, ymin, zmin = 0, 0, 0    # one corner of cuboid
     xmax, ymax, zmax = 6, 6, 11   # other corner of cuboid
     nx, ny, nz = 3, 3, 6         # number of subdivisions (use ~2nm edgelength)
-    mesh = df.Box(xmin, ymin, zmin, xmax, ymax, zmax, nx, ny, nz)
+    mesh = df.BoxMesh(xmin, ymin, zmin, xmax, ymax, zmax, nx, ny, nz)
     # standard Py parameters
     sim = finmag.sim_with(mesh, Ms=0.86e6, alpha=0.5, unit_length=1e-9,
                           A=13e-12, m_init=(1, 0, 1))

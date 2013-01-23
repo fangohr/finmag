@@ -42,7 +42,7 @@ def run_simulation():
     Ly = ny*L
     nz = 30
     Lz = nz*L
-    mesh = df.Box(0, 0, 0, Lx, Ly, Lz, nx, ny, nz)
+    mesh = df.BoxMesh(0, 0, 0, Lx, Ly, Lz, nx, ny, nz)
 
 
     #anisotropy direction starts is [0,0,1] in lower half of the film

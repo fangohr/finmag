@@ -228,7 +228,7 @@ if __name__ == "__main__":
 
     n=4
     #mesh = UnitCube(n, n, n)
-    #mesh = Box(-1, 0, 0, 1, 1, 1, 10, 2, 2)
+    #mesh = BoxMesh(-1, 0, 0, 1, 1, 1, 10, 2, 2)
     mesh = df.UnitSphere(n)
     #mesh=df.Mesh('tet.xml')
 

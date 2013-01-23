@@ -13,7 +13,7 @@ ts = np.linspace(0, 3e-10)
 def run_simulation(do_precession):
     Ms = 0.86e6
 
-    mesh = df.Box(0, 0, 0, 30e-9, 30e-9, 100e-9, 6, 6, 20)
+    mesh = df.BoxMesh(0, 0, 0, 30e-9, 30e-9, 100e-9, 6, 6, 20)
     sim = Simulation(mesh, Ms)
     sim.set_m((1, 0, 1))
     sim.llg.do_precession = do_precession

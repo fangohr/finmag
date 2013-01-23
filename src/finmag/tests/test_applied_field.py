@@ -37,7 +37,7 @@ def test_negative_uniform_external_field():
 
 def test_non_uniform_external_field():
     length = 10e-9; vertices = 5;
-    mesh = df.Interval(vertices, 0, length)
+    mesh = df.IntervalMesh(vertices, 0, length)
     sim = Sim(mesh, Ms)
     sim.set_m((1, 0, 0))
     # applied field

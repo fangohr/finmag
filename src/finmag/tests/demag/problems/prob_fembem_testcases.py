@@ -30,7 +30,7 @@ class MagUnitSphere(object):
     def desc(self):
         return "Unit sphere demagnetisation test problem fembem, n=%d, Ms=%g" % (self.n, self.Ms)
 
-class MagUnitInterval(object):
+class MagUnitIntervalMesh(object):
     """Create 1d test problem where define a mesh,
     and a part of the mesh has been marked to be vacuum (with 0) and
     a part has been marked to be the ferromagnetic body (with 1).
@@ -42,7 +42,7 @@ class MagUnitInterval(object):
     have marked facets.
     """
     def __init__(self, n=10):
-        self.mesh = UnitInterval(n)
+        self.mesh = UnitIntervalMesh(n)
 
         #TODO: Make M into a 3d vector here
         self.M = "1"

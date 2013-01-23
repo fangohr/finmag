@@ -9,7 +9,7 @@ TOLERANCE = 1e-8
 # define the mesh
 length = 20e-9 #m
 simplexes = 10
-mesh = df.Interval(simplexes, 0, length)
+mesh = df.IntervalMesh(simplexes, 0, length)
 Ms = 8.6e5
 A = 1.3e-11
 

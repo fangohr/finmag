@@ -237,7 +237,7 @@ def box(x0, x1, x2, y0, y1, y2, maxh, save_result=True, filename='', directory='
     should be saved in case no filename is given explicitly.
 
     Note that this function uses Netgen to produce the mesh. There is
-    also the 'native' Dolfin method dolfin.cpp.Box() which creates a
+    also the 'native' Dolfin method dolfin.cpp.BoxMesh() which creates a
     regularly-spaced mesh (whereas the mesh produced by Netgen is more
     irregularly spaced). Depending on the context, either can be
     useful.

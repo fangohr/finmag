@@ -28,7 +28,7 @@ def setup():
     VectorFunctionSpace (of type "continuous Lagrange") on which the
     magnetisation m is defined and m, Ms_funct are as above.
     """
-    mesh = df.Box(0, 0, 0, 10e-9, 10e-9, 10e-9, 5, 5, 5)
+    mesh = df.BoxMesh(0, 0, 0, 10e-9, 10e-9, 10e-9, 5, 5, 5)
 
     m_space = df.VectorFunctionSpace(mesh, "CG", 1)
     m = df.interpolate(df.Expression(("1e-9", "x[0]/10", "0")), m_space)

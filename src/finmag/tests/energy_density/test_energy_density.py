@@ -34,7 +34,7 @@ def test_exchange_energy_density():
     nmag_data = np.load(os.path.join(MODULE_DIR, "nmag_exchange_energy_density.npy"))
 
     # run finmag
-    mesh = df.Interval(100, 0, 10e-9)
+    mesh = df.IntervalMesh(100, 0, 10e-9)
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
     Ms = 42
     m = df.interpolate(df.Expression(("cos(x[0]*pi/10e-9)", "sin(x[0]*pi/10e-9)", "0")), S3)
@@ -89,7 +89,7 @@ def test_anisotropy_energy_density():
 
     """
     # 5 simplices between 0 and 1 nm.
-    mesh = df.Interval(5, 0, 1e-9)
+    mesh = df.IntervalMesh(5, 0, 1e-9)
     V = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
 
     # Initial magnetisation 45 degress between x- and z-axis.

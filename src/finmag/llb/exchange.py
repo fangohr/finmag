@@ -44,7 +44,7 @@ class ExchangeStd(EnergyBase):
             Ms   = 0.8e6
             m    = 1e-8
             n    = 5
-            mesh = Box(0, m, 0, m, 0, m, n, n, n)
+            mesh = BoxMesh(0, m, 0, m, 0, m, n, n, n)
 
             S3  = VectorFunctionSpace(mesh, "Lagrange", 1)
             A  = 1.3e-11 # J/m exchange constant
@@ -146,7 +146,7 @@ class Exchange(object):
 if __name__ == "__main__":
     from dolfin import *
     
-    mesh = Box(0, 0, 0, 10, 1, 1, 10, 1, 1)
+    mesh = BoxMesh(0, 0, 0, 10, 1, 1, 10, 1, 1)
     Ms = 8.6e5
 
 

@@ -276,7 +276,7 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
 
         # Compute boundary element matrix and global-to-boundary mapping
         fk_timings.start_next(self.__class__.__name__, "build BEM")
-        self.bem, self.b2g_map = compute_bem_fk(BoundaryMesh(self.mesh, False))
+        self.bem, self.b2g_map = compute_bem_fk(df.BoundaryMesh(self.mesh, False))
         fk_timings.stop(self.__class__.__name__, "build BEM")
 
     def solve(self):

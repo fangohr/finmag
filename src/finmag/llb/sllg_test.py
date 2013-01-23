@@ -11,7 +11,7 @@ from finmag.energies import Demag
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def test_sllg_zero_temperature(do_plot=False):
-    mesh = df.Box(0, 0, 0, 2, 2, 2, 1, 1, 1)
+    mesh = df.BoxMesh(0, 0, 0, 2, 2, 2, 1, 1, 1)
     sim = SLLG(mesh, 8.6e5, unit_length=1e-9)
     alpha=0.1
     sim.alpha = alpha
@@ -53,7 +53,7 @@ def test_sllg_zero_temperature(do_plot=False):
     assert np.max(np.abs(mz - mz_ref)) < 8e-7
     
 def test_sllg_100(do_plot=False):
-    mesh = df.Box(0, 0, 0, 10, 10, 10, 1, 1, 1)
+    mesh = df.BoxMesh(0, 0, 0, 10, 10, 10, 1, 1, 1)
     sim = SLLG(mesh, 8.6e5, unit_length=1e-9)
     alpha=0.01
     sim.alpha = alpha
@@ -102,7 +102,7 @@ def test_sllg_100(do_plot=False):
     
 
 def test_sllg_time():
-    mesh = df.Box(0, 0, 0, 5, 5, 5, 1, 1, 1)
+    mesh = df.BoxMesh(0, 0, 0, 5, 5, 5, 1, 1, 1)
     sim = SLLG(mesh, 8.6e5, unit_length=1e-9)
     sim.alpha = 0.1
     sim.set_m((1, 0, 0))
@@ -123,7 +123,7 @@ def test_sllg_time():
     
 
 def test_sllg_save_data():
-    mesh = df.Box(0, 0, 0, 1, 1, 1, 2, 2, 2)
+    mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 2, 2, 2)
     
     def region1(coords):
         if coords[2]<0.5:

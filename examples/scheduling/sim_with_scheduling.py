@@ -21,7 +21,7 @@ def done(s):
 
 def example_simulation():
     Ms = 8.6e5
-    mesh = df.Box(0, 0, 0, 40, 20, 20, 10, 5, 5)
+    mesh = df.BoxMesh(0, 0, 0, 40, 20, 20, 10, 5, 5)
 
     example = Simulation(mesh, Ms, name="sim_with_scheduling")
     example.set_m((0.1, 1, 0))

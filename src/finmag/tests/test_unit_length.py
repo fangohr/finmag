@@ -26,10 +26,10 @@ def test_compare_exchange_for_two_dolfin_meshes():
     as a mesh expressed in meters for the exchange interaction.
 
     """
-    mesh_nm = df.Box(0, 0, 0, 1, 1, 1, n, n, n) # in nm
+    mesh_nm = df.BoxMesh(0, 0, 0, 1, 1, 1, n, n, n) # in nm
     m_nm, H_nm, E_nm = exchange(mesh_nm, unit_length=1e-9)
 
-    mesh = df.Box(0, 0, 0, 1e-9, 1e-9, 1e-9, n, n, n)
+    mesh = df.BoxMesh(0, 0, 0, 1e-9, 1e-9, 1e-9, n, n, n)
     m, H, E = exchange(mesh, unit_length=1)
 
     rel_diff_m = np.max(np.abs(m_nm - m)) # norm m = 1

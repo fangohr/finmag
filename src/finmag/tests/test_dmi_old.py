@@ -5,7 +5,7 @@ from finmag.energies import DMI_Old
 nm=1e-9
 simplexes = 10
 length=20*nm
-mesh = df.Box(0,0,0,length,3*nm, 3*nm, simplexes, 1, 1)
+mesh = df.BoxMesh(0,0,0,length,3*nm, 3*nm, simplexes, 1, 1)
 V = df.VectorFunctionSpace(mesh, "Lagrange", 1)
 
 def test_DMI_Old_field():

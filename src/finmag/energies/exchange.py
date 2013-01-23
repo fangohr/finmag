@@ -36,7 +36,7 @@ class Exchange(EnergyBase):
             # Define a mesh representing a cube with edge length L
             L = 1e-8
             n = 5
-            mesh = df.Box(0, L, 0, L, 0, L, n, n, n)
+            mesh = df.BoxMesh(0, L, 0, L, 0, L, n, n, n)
 
             S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
             A = 1.3e-11 # J/m exchange constant

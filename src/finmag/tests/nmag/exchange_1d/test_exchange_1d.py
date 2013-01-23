@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import finmag.util.helpers as h
-from dolfin import Interval
+from dolfin import IntervalMesh
 from finmag import Simulation as Sim
 from finmag.energies import Exchange
 
@@ -11,7 +11,7 @@ def setup_module(module=None):
     # define the mesh
     x_max = 20e-9 # m
     simplexes = 10
-    mesh = Interval(simplexes, 0, x_max)
+    mesh = IntervalMesh(simplexes, 0, x_max)
 
     def m_gen(coords):
         x = coords[0]
