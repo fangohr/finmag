@@ -3949,3 +3949,33 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-01-22 15:05:31 max_albert: But as you just said, if we know something about the function and can optimise setting its values then it is still 2-3 orders of magnitude slower than setting the values directly using a numpy.array, right?
 2013-01-22 15:06:49 mb8g11: If you can use vectorised numpy operations, or have knowledge about the function the computer can't have (separation of space-dependent of time-dependent parts) then yes indeed, you can beat dolfin by 2-3 orders of magnitude.
 2013-01-22 15:08:35 mb8g11: I will update sandbox/benchmarks/updating_expression.py in a few minutes.
+2013-01-23 11:39:26 mb8g11: Using mercurial bookmarks for dolfin 1.1.0. Let's see how it goes.
+2013-01-23 11:47:30 fangohr-adium: Interesting. Good luck. :) [never heard of bookmarks]
+2013-01-23 11:48:27 max_albert: They seem to be a bit more like git's branches, i.e. more lightweight than named branches (which are persistent in history and never go away again).
+2013-01-23 11:48:47 max_albert: Haven't tried them yet though, will be interesting to see how MAB gets on with them.
+2013-01-23 11:49:52 fangohr-adium: Thanks for update. I never liked the branches in mercurial — maybe bookmarks are the answer.
+2013-01-23 13:44:28 mb8g11: Back from the PGR meeting. Let's see if I can get finmag to compile on aleph.
+2013-01-23 13:44:46 mb8g11: OrientedBoundaryMesh is gone, but they changed a few signatures as well.
+2013-01-23 14:41:35 fangohr-adium: Nice.
+2013-01-23 15:46:37 mb8g11: Have run into an issue with the C++ code I don't understand. Will push my progress.
+2013-01-23 15:47:16 fangohr-adium: Hi MA, thanks for getting that far. I spoke with Dmitri earlier, he said he might come to the office around 17:00, or certainly tomorrow.
+2013-01-23 15:48:43 mb8g11: Great. I have a df.BoundaryMesh on the Python side, and expect the same class on the C++ side, but I don't know how to register the conversion beetween the Python type and the C++ one.
+2013-01-23 15:48:55 mb8g11: At least, I think that that's the issue.
+2013-01-23 15:49:01 mb8g11: Dmitri will probably know.
+2013-01-23 16:00:42 mb8g11: There are now to bookmarks on the repository: main and dolfin_1_1_0. You may have to "hg update main" after the pull.
+2013-01-23 16:06:56 max_albert: A word of caution:
+2013-01-23 16:08:20 max_albert: "hg update main" works indeed, but a plain "hg update" afterwards will fast-forward the 'main' bookmark to the dolfin one.
+2013-01-23 16:08:55 max_albert: I guess this is because bookmarks are lightweight branches and simply follow the commits.
+2013-01-23 16:09:28 max_albert: As MAB just said, this might be different once we have another commit on the 'main' branch so that it has diverged from the dolfin one.
+2013-01-23 16:09:59 max_albert: But to be on the safe side, I guess we should not use the simple "hg update" for a while.
+2013-01-23 16:10:31 max_albert: Also, make sure you use "hgview" or a similar GUI to check which branch/commit you are on before committing anything (and especially before pushing).
+2013-01-23 16:31:02 max_albert: Actually, it turns out that hgview doesn't display the bookmark names. The mercurial built-in viewer which can be called via "hg view" (note the space) does display them, but it seems to be a hassle to get it to work sometimes.
+2013-01-23 16:32:00 fangohr-adium: If we don't like the bookmarks, we could always fork from the main repository (bitbucket has a button for this ….) and merge back into the usual repository when we are done?
+2013-01-23 16:32:25 mb8g11: That's actually a sensible way to branch.
+2013-01-23 16:32:38 fangohr-adium: Dmitri and i
+2013-01-23 16:33:05 fangohr-adium: discussed that it is probably not worth the effort to maintain a 1.0 compatible version. So we could move to 1.1 completely, once this is working.
+2013-01-23 16:33:30 mb8g11: TBH that's what I assumed, but good to get this confirmed.
+2013-01-23 16:42:34 max_albert: I like the fork-merge approach. Seems cleaner than working with these pseudo-branches in Mercurial.
+2013-01-23 16:43:04 max_albert: I know why I like git... ;-)
+2013-01-23 16:43:09 mb8g11: +1
+2013-01-23 16:43:26 max_albert: Anyway, MAb seems to be making good progress so that we may be able to get rid of the dolfin bookmark soon anyway.
