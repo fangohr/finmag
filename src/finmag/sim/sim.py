@@ -221,7 +221,17 @@ class Simulation(object):
 
         """
         return helpers.probe(self.get_field_as_dolfin_function(field_type), pts)
- 
+
+    def advance_time(self, t):
+        """
+        The lower-level counterpart to run_until, this runs without a schedule.
+
+        """
+        if not hasattr(self, "integrator"):
+            self.integrator = llg_integrator(self.llg, self.llg.m, backend=self.integrator_backend)
+        log.debug("Advancing time to t = {} s.".format(t))
+        self.integrator.advance_time(t)
+
     def run_until(self, t, save_averages=True):
         """
         Run the simulation until the given time t is reached.
