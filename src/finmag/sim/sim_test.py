@@ -7,7 +7,7 @@ import shutil
 from tempfile import mkdtemp
 from finmag import sim_with
 from finmag.example import barmini
-from math import sqrt
+from math import sqrt, cos, sin, pi
 
 logger = logging.getLogger("finmag")
 
@@ -77,7 +77,7 @@ class TestSimulation(object):
         mesh = df.Box(-2, -2, -2, 2, 2, 2, 5, 5, 5)
         m_init = np.array([0.2, 0.7, -0.4])
         m_init /= np.linalg.norm(m_init)  # normalize the vector for later comparison
-        sim = sim_with(mesh, Ms=8.6e5, m_init=m_init, unit_length=1e-9)
+        sim = sim_with(mesh, Ms=8.6e5, m_init=m_init, unit_length=1e-9, demag_solver=None)
 
         # Points inside the mesh where to probe the magnetisation.
         probing_pts = [
@@ -98,6 +98,41 @@ class TestSimulation(object):
         # Probe at point outside the mesh
         m_probed_outside = sim.probe_field("m", [5e-9, -6e-9,  1e-9])
         assert(all(np.isnan(m_probed_outside)))
+
+    def test_probe_nonconstant_m_at_individual_points(self):
+        TOL=1e-5
+
+        unit_length = 1e-9
+        mesh = df.Box(0, 0, 0, 1, 1, 1, 1000, 2, 2)
+        m_init = df.Expression(("cos(x[0]*pi)",
+                                "sin(x[0]*pi)",
+                                "0.0"),
+                               unit_length=unit_length)
+        sim = sim_with(mesh, Ms=8.6e5, m_init=m_init, unit_length=unit_length, demag_solver=None)
+
+        # Probe the magnetisation along two lines parallel to the x-axis.
+        # We choose the limits just inside the mesh boundaries to prevent
+        # problems with rounding issues.
+        xmin = 0.01 * unit_length
+        xmax = 0.99 * unit_length
+        y0 = 0.2 * unit_length
+        z0 = 0.4 * unit_length
+        pts1 = [[x, 0, 0] for x in np.linspace(xmin, xmax, 20)]
+        pts2 = [[x, y0, z0] for x in np.linspace(xmin, xmax, 20)]
+        probing_pts = np.concatenate([pts1, pts2])
+
+        # Probe the magnetisation at the given points
+        m_probed_vals = [sim.probe_field("m", pt) for pt in probing_pts]
+
+        # Check that we get m_init everywhere.
+        for i in xrange(len(probing_pts)):
+            m = m_probed_vals[i]
+            pt = probing_pts[i]
+            x = pt[0]
+            m_expected = np.array([cos((x / unit_length)*pi),
+                                   sin((x / unit_length)*pi),
+                                   0.0])
+            assert(np.linalg.norm(m - m_expected) < TOL)
 
     def test_probe_m_on_regular_grid(self):
         """
