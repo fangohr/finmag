@@ -921,9 +921,8 @@ def probe(dolfin_function, points):
         except RuntimeError:
             return np.array([np.NaN, np.NaN, np.NaN])
 
-    res = np.empty_like(points)
+    res = np.empty(points.shape)
     loop_indices = itertools.product(*map(xrange, points.shape[:-1]))
     for idx in loop_indices:
         res[idx] = _safe_single_probe(points[idx])
     return res
-
