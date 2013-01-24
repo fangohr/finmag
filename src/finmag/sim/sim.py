@@ -219,6 +219,7 @@ class Simulation(object):
         shape of ``pts``.
 
         """
+        pts = np.array(pts) / self.unit_length
         return helpers.probe(self.get_field_as_dolfin_function(field_type), pts)
  
     def run_until(self, t, save_averages=True):
