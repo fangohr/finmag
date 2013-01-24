@@ -212,7 +212,9 @@ class Simulation(object):
 
     def probe_field(self, field_type, pts):
         """
-        Probe the field of type `field_type` at point(s) `pts`.
+        Probe the field of type `field_type` at point(s) `pts`, where
+        the point coordinates must be specified in metres (not in
+        multiples of unit_length!).
 
         See the documentation of the method get_field_as_dolfin_function
         to know which ``field_type`` is allowed, and helpers.probe for the
