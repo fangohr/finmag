@@ -73,7 +73,7 @@ class TestSimulation(object):
         assert(np.allclose(v0_probed, v0_ref))
         assert(np.allclose(v_probed_1d, v_ref))
 
-    def test_probe_m_at_individual_points(self):
+    def test_probe_constant_m_at_individual_points(self):
         mesh = df.Box(-2, -2, -2, 2, 2, 2, 5, 5, 5)
         m_init = np.array([0.2, 0.7, -0.4])
         m_init /= np.linalg.norm(m_init)  # normalize the vector for later comparison
@@ -94,6 +94,10 @@ class TestSimulation(object):
         # Check that we get m_init everywhere.
         for v in m_probed_vals:
             assert(np.allclose(v, m_init))
+
+        # Probe at point outside the mesh
+        m_probed_outside = sim.probe_field("m", [5e-9, -6e-9,  1e-9])
+        assert(all(np.isnan(m_probed_outside)))
 
     def test_probe_m_on_regular_grid(self):
         """
