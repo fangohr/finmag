@@ -4,6 +4,7 @@
 #
 # CONTACT: h.fangohr@soton.ac.uk
 
+from __future__ import division
 import logging
 logger = logging.getLogger("finmag")
 
