@@ -57,7 +57,7 @@ class TestSimulation(object):
         # Probe field at all mesh vertices and at the first vertex;
         # also convert a 1d version of the probed vector following
         # dolfin's coordinate convention.
-        v_probed = self.sim.probe_field("demag", coords)
+        v_probed = self.sim.probe_field("demag", coords * self.sim.unit_length)
         v_probed_1d = np.concatenate([v_probed[:, 0],
                                       v_probed[:, 1],
                                       v_probed[:, 2]])
@@ -151,7 +151,7 @@ class TestSimulation(object):
         pts = np.array([[(X[i, j], Y[i,j], z) for j in xrange(ny)] for i in xrange(nx)])
 
         # Probe the field
-        res = sim.probe_field('m', pts)
+        res = sim.probe_field('m', pts * sim.unit_length)
 
         # Check that 'res' has the right shape and values (the field vectors
         # should be constant and equal to [1/sqrt(2), 0, 1/sqrt(2)].
