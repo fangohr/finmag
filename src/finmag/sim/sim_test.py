@@ -50,7 +50,7 @@ class TestSimulation(object):
         logger.debug("Are the vectors identical? "
                      "{}".format((v_demag == v_eval_1d).all()))
 
-    def test_probe_field(self):
+    def test_probe_demag_field(self):
         N = self.mesh.num_vertices()
         coords = self.mesh.coordinates()
 
@@ -73,10 +73,32 @@ class TestSimulation(object):
         assert(np.allclose(v0_probed, v0_ref))
         assert(np.allclose(v_probed_1d, v_ref))
 
-    def test_probe_field2(self):
+    def test_probe_m_at_individual_points(self):
+        mesh = df.Box(-2, -2, -2, 2, 2, 2, 5, 5, 5)
+        m_init = np.array([0.2, 0.7, -0.4])
+        m_init /= np.linalg.norm(m_init)  # normalize the vector for later comparison
+        sim = sim_with(mesh, Ms=8.6e5, m_init=m_init, unit_length=1e-9)
+
+        # Points inside the mesh where to probe the magnetisation.
+        probing_pts = [
+            # We are explicitly using integer coordinates for the first
+            # point because this used to lead to a very subtle bug.
+            [0, 0, 0],
+            [0.0, 0.0, 0.0],  # same point again but with float coordinates
+            [1e-9, 1e-9, -0.5e-9],
+            [-1.3e-9, 0.02e-9, 0.3e-9]]
+
+        # Probe the magnetisation at the given points
+        m_probed_vals = [sim.probe_field("m", pt) for pt in probing_pts]
+
+        # Check that we get m_init everywhere.
+        for v in m_probed_vals:
+            assert(np.allclose(v, m_init))
+
+    def test_probe_m_on_regular_grid(self):
         """
         Another sanity check using the barmini example; probe the
-        field on a regular 2D grid inside a plane parallel to the
+        magnetisation on a regular 2D grid inside a plane parallel to the
         x/y-plane (with different numbers of probing points in x- and
         y-direction).
         """
