@@ -3979,3 +3979,16 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-01-23 16:43:04 max_albert: I know why I like git... ;-)
 2013-01-23 16:43:09 mb8g11: +1
 2013-01-23 16:43:26 max_albert: Anyway, MAb seems to be making good progress so that we may be able to get rid of the dolfin bookmark soon anyway.
+2013-01-24 10:28:48 max_albert: Good morning!
+2013-01-24 10:29:49 max_albert: Just a quick heads-up (as a follow-up to the bookmarks yesterday): it seems that  Marvin ran into the same issue as I did yesterday, and committed the Finmag IRC log on top of the dolfin branch, not the main branch.
+2013-01-24 10:30:17 max_albert: I don't know how he works internally, but we maybe need to replace a "hg update" with "hg update main" in his code somewhere.
+2013-01-24 10:44:13 max_albert: I think I found the right file (it's in /home/marvin/bin/push-irc-log.sh on summer). I changed it there. I'm also going to re-commit the IRC logs so that the two branches diverge. This should hopefully solve the issue.
+2013-01-24 16:14:57 fangohr-adium: Hi all. [Stuck in marking here.] Are you having any fun?
+2013-01-24 16:16:33 max_albert: Grmpf.
+2013-01-24 16:16:36 max_albert: ;-)
+2013-01-24 16:16:47 max_albert: Spending the entire day hunting stupid bugs.
+2013-01-24 16:16:53 max_albert: Hope marking is more fun...
+2013-01-24 16:17:27 fangohr-adium: ;-)
+2013-01-24 16:45:57 max_albert: Hi folks, I just noticed that Jenkins keeps building Finmag continuously, even though there haven't been any commits today. Does anybody have an idea why?
+2013-01-24 16:46:17 mb8g11: It's bored.
+2013-01-24 16:46:31 max_albert: :)
