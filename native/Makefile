@@ -140,7 +140,6 @@ $(PRECOMPILED_HEADER_FILE) : src/finmag_includes.h Makefile
 
 # Runs Boost.Test unit tests in native code
 run-ci-tests:
-	rm -f $(UNIT_TEST_RESULTS_FILE)
 	$(MAKE) -j $(NUM_PROCS) $(UNIT_TEST_BINARY)
 	mkdir -p $(UNIT_TEST_RESULTS_DIR)
 	./$(UNIT_TEST_BINARY) --output_format=XML --report_level=no --log_level=test_suite > $(UNIT_TEST_RESULTS_FILE)
