@@ -17,7 +17,7 @@ import logging
 log = logging.getLogger(name="finmag")
 
 class SLLG(object):
-    def __init__(self,mesh,Ms=8.6e5,unit_length=1.0,name='unnamed',auto_save_data=True):
+    def __init__(self,mesh,Ms=8.6e5,unit_length=1.0,name='unnamed',auto_save_data=True,method='RK2b'):
         self._t=0
         self.time_scale=1e-9
         self.mesh=mesh
@@ -43,6 +43,7 @@ class SLLG(object):
         
 
         self.pin_fun=None
+        self.method=method
 
         self.set_default_values()
         self.auto_save_data=auto_save_data
@@ -54,6 +55,7 @@ class SLLG(object):
             self.name, df.MPI.process_number(),
             df.MPI.num_processes(), time.asctime()))
         log.info(mesh)
+        
         
         
         self.Ms=Ms
@@ -80,7 +82,7 @@ class SLLG(object):
                                     self.real_volumes,
                                     self._alpha,
                                     self.stochastic_update_field,
-                                    'RK2b')
+                                    self.method)
         
         self.alpha = 0.5  
         self._gamma = consts.gamma
@@ -90,7 +92,12 @@ class SLLG(object):
   
     @property
     def t(self):
-        return self._t*self.time_scale       
+        return self._t*self.time_scale
+    
+    @t.setter
+    def t(self,value):
+        self._t=value/self.time_scale 
+           
     @property
     def dt(self):
         return self._dt*self.time_scale
@@ -119,14 +126,14 @@ class SLLG(object):
         self.setup_parameters()
     
     def setup_parameters(self):
-        print 'seed:', self.seed
-        self.integrator.set_parameters(self.gamma,self.dt,self.seed)
+        #print 'seed:', self.seed
+        self.integrator.set_parameters(self.dt,self.gamma,self.seed)
         log.debug("seed=%d."%self.seed)
         log.debug("dt=%g."%self.dt)
         log.debug("gamma=%g."%self.gamma)
                 
     def set_m(self,value):
-        self._m = helpers.vector_valued_function(value, self.S3, normalise=False)
+        self._m.vector().set_local(helpers.vector_valued_function(value, self.S3, normalise=False).vector().array())
         self.m[:]=self._m.vector().array()[:]
 
     def add(self,interaction,with_time_update=None):
