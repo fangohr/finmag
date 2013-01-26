@@ -1,7 +1,11 @@
 #!/bin/bash
 
-#needs gfortran installed
-sudo apt-get install libfftw3-dev
+# Check for required package
+PKG=libfftw3-dev
+if ! dpkg -s $PKG > /dev/null 2>&1; then
+    echo "Need the package $PKG. Trying to install it..."
+    sudo apt-get install $PKG
+fi
 
 # The default installation location is $HOME. Set
 # the PREFIX environment variable to change this.

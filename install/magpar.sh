@@ -2,8 +2,11 @@
 
 set -o errexit
 
-#needs gfortran installed
-sudo apt-get install gfortran
+# Check for required package 'gfortran'
+if ! dpkg -s gfortran > /dev/null 2>&1; then
+    echo "Magpar needs the package gfortran. Trying to install it..."
+    sudo apt-get install gfortran
+fi
 
 # The default installation location is $HOME. Set
 # the PREFIX environment variable to change this.

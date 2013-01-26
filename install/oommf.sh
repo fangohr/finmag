@@ -8,15 +8,21 @@
 
 set -o errexit
 
+# Install prerequisites if needed
+PKGS="tk-dev tcl-dev"
+for pkg in $PKGS; do
+    if ! dpkg -s $pkg > /dev/null 2>&1; then
+	echo "OOMMF needs the package $pkg. Trying to install it..."
+	sudo apt-get install $pkg
+    fi
+done
+exit
+
 # The default installation location is $HOME. Set
 # the PREFIX environment variable to change this.
 PREFIX=${PREFIX:-$HOME}
 
 echo "Installing oommf in '$PREFIX'. Set the PREFIX environment variable to specify a different location."
-
-
-# install prerequisites
-sudo apt-get install tk-dev tcl-dev
 
 # create installation directory if it doesn't exist
 if ! [ -e ${PREFIX} ]; then
