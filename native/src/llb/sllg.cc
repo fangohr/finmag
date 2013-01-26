@@ -30,6 +30,7 @@ namespace finmag { namespace llb {
         	void calc_llg_adt_bdw(double *m,double *h,double *dm);
         	void run_step_rk2(const np_array<double> &H);
         	void run_step_rk3(const np_array<double> &H);
+        	void check_normalise();
 
     	public:
         	StochasticSLLGIntegrator(
@@ -131,6 +132,40 @@ namespace finmag { namespace llb {
 
     }
 
+    void StochasticSLLGIntegrator::check_normalise(){
+    	double *m = M.data();
+    	int len=length/3;
+
+    	int i,j,k;
+
+    	double max_m=0;
+    	double mm;
+
+    	for (i = 0; i < len; i++) {
+    		j = i + len;
+    		k = j + len;
+    		mm = sqrt(m[i] * m[i] + m[j] * m[j] + m[k] * m[k]);
+    		if (mm>max_m){
+    			max_m=mm;
+    		}
+    		mm=1.0/mm;
+    		m[i] *= mm;
+    		m[j] *= mm;
+    		m[k] *= mm;
+    	}
+
+    	/*
+    	if (max_m>1.05 || max_m<0.95){
+    		std::ostringstream ostr;
+    		ostr << "maxm=" << max_m <<", so dt="<< dt << " is probably too large!";
+    		throw std::invalid_argument(ostr.str());
+    	}
+    	*/
+
+
+
+    }
+
     void StochasticSLLGIntegrator::run_step_rk2(const np_array<double> &H) {
 
     		double *h = H.data();
@@ -153,6 +188,8 @@ namespace finmag { namespace llb {
     		for (int i = 0; i < length; i++){
     			m[i] += theta1*dm1[i] + theta2*dm2[i];
     		}
+
+    		check_normalise();
 
     }
 
@@ -181,6 +218,8 @@ namespace finmag { namespace llb {
     		for (int i = 0; i < length; i++){
     			m[i] += 0.75*dm2[i] + 0.25*dm3[i];
     		}
+
+    		check_normalise();
 
     }
 
