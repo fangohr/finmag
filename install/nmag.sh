@@ -2,13 +2,14 @@
 
 set -o errexit
 
-#Required libraries
-#
-echo "If required, install required libraries using"
-echo "apt-get install g++ libblas-dev libreadline-dev make m4 gawk zlib1g-dev readline-common liblapack-dev"
-
-sudo apt-get install g++ libblas-dev libreadline-dev make m4 gawk zlib1g-dev readline-common liblapack-dev 
-
+# Check for required packages
+PKGS="g++ libblas-dev libreadline-dev make m4 gawk zlib1g-dev readline-common liblapack-dev"
+for pkg in $PKGS; do
+    if ! dpkg -s $pkg > /dev/null 2>&1; then
+	echo "Nmag needs the package $pkg. Trying to install it..."
+	sudo apt-get install $pkg
+    fi
+done
 
 # The default installation location is $HOME. Set
 # the PREFIX environment variable to change this.
