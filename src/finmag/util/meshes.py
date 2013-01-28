@@ -80,7 +80,9 @@ def from_geofile(geofile, save_result=True):
             skip_mesh_creation = True
 
     if not skip_mesh_creation:
-        result_filename = compress(convert_diffpack_to_xml(run_netgen(geofile)))
+        xml=convert_diffpack_to_xml(run_netgen(geofile))
+        change_xml_marker_starts_with_zero(xml)
+        result_filename = compress(xml)
 
     mesh = Mesh(result_filename)
     if not save_result and not result_file_exists:
@@ -203,6 +205,63 @@ def convert_diffpack_to_xml(diffpackfile):
             os.remove(f)
 
     return xmlfile
+
+def change_xml_marker_starts_with_zero(xmlfile):
+    """
+    the xml file also contains mesh_value_collection in dolfin 1.1 (not in dolfin 1.0) and
+    the marker index starts with 1 but the default df.dx refers to dx(0), so this function is 
+    going to fix this problem (could we report this as a very small bug? seems that dolfin 
+    community will abandon netegn later?) 
+    """
+    
+    f=open(xmlfile,'r')
+    data=f.read()
+    f.close()
+
+    data_begin=False
+    values=[]
+    
+    for line in data.splitlines():
+
+        if 'mesh_value_collection' in line:
+            if 'dim="3"' in line:
+                data_begin=True
+            else:
+                data_begin=False
+                
+        if data_begin and 'value="' in line:
+            v=line.split('value="')[1]
+            v=v.split('"')[0]
+            values.append(int(v))
+
+    
+    if min(values)==0:
+        return
+    elif min(values)<0:
+        raise ValueError("Mesh markers are wrong?!")
+    
+    min_index=min(values)
+    
+    f=open(xmlfile,'w')
+    data_begin=False
+    for line in data.splitlines():
+       
+        if 'mesh_value_collection' in line:
+            if 'dim="3"' in line:
+                data_begin=True
+            else:
+                data_begin=False
+        
+        if data_begin and 'value="' in line:
+            v=line.split('value="')
+            v_bak=v[0]
+            v=v[1].split('"')[0]
+            v=int(v)-min_index
+            f.write(v_bak+ 'value="%d"/>\n'%v)
+        else:
+            f.write(line+'\n')
+            
+    f.close()
 
 def compress(filename):
     """
