@@ -154,14 +154,12 @@ namespace finmag { namespace llb {
     		m[k] *= mm;
     	}
 
-    	/*
+
     	if (max_m>1.05 || max_m<0.95){
     		std::ostringstream ostr;
     		ostr << "maxm=" << max_m <<", so dt="<< dt << " is probably too large!";
     		throw std::invalid_argument(ostr.str());
     	}
-    	*/
-
 
 
     }

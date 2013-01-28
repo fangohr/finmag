@@ -69,6 +69,7 @@ class SLLG(object):
         
         self._pins = np.array([], dtype="int")
         self.volumes = df.assemble(df.dot(df.TestFunction(self.S3), df.Constant([1, 1, 1])) * df.dx).array()
+        print self.volumes
         self.Volume = mesh_volume(self.mesh)
         self.real_volumes=self.volumes*self.unit_length**3
                 
