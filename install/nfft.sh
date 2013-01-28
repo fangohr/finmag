@@ -11,7 +11,13 @@ fi
 # the NFFT_PREFIX environment variable to change this.
 NFFT_PREFIX=${NFFT_PREFIX:-$HOME}  # or maybe use NFFT_PREFIX=/usr/local ?
 
-echo "Installing nfft in '$NFFT_PREFIX'. Set the NFFT_PREFIX environment variable to specify a different location."
+read -p "NFFT will be installed in '$NFFT_PREFIX' (this can be changed by setting the environment variable NFFT_PREFIX). Is this correct? (y/n)" -r
+echo
+
+if ! [[ $REPLY =~ ^[Yy]$ ]]; then
+    echo "Aborting. Please set NFFT_PREFIX to the desired installation directory and try again."
+    exit 0
+fi
 
 # create installation directory if it doesn't exist
 if ! [ -e ${NFFT_PREFIX} ]; then

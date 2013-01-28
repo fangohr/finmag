@@ -12,7 +12,13 @@ fi
 # the MAGPAR_PREFIX environment variable to change this.
 MAGPAR_PREFIX=${MAGPAR_PREFIX:-$HOME}
 
-echo "Installing magpar in '$MAGPAR_PREFIX'. Set the MAGPAR_PREFIX environment variable to specify a different location."
+read -p "Magpar will be installed in '$MAGPAR_PREFIX' (this can be changed by setting the environment variable MAGPAR_PREFIX). Is this correct? (y/n)" -r
+echo
+
+if ! [[ $REPLY =~ ^[Yy]$ ]]; then
+    echo "Aborting. Please set MAGPAR_PREFIX to the desired installation directory and try again."
+    exit 0
+fi
 
 source=magpar-0.9
 
