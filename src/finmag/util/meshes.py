@@ -234,6 +234,8 @@ def change_xml_marker_starts_with_zero(xmlfile):
             v=v.split('"')[0]
             values.append(int(v))
 
+    if len(values)==0:
+        return
     
     if min(values)==0:
         return
