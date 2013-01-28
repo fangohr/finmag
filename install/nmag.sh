@@ -15,7 +15,13 @@ done
 # the NMAG_PREFIX environment variable to change this.
 NMAG_PREFIX=${NMAG_PREFIX:-$HOME}  # or maybe use NMAG_PREFIX=/usr/local ?
 
-echo "Installing nmag in '$NMAG_PREFIX'. Set the NMAG_PREFIX environment variable to specify a different location."
+read -p "Nmag will be installed in '$NMAG_PREFIX' (this can be changed by setting the environment variable NMAG_PREFIX). Is this correct? (y/n)" -r
+echo
+
+if ! [[ $REPLY =~ ^[Yy]$ ]]; then
+    echo "Aborting. Please set NMAG_PREFIX to the desired installation directory and try again."
+    exit 0
+fi
 
 # create installation directory if it doesn't exist
 if ! [ -e ${NMAG_PREFIX} ]; then
