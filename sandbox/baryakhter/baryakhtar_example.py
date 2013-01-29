@@ -152,7 +152,7 @@ def example1_sundials(Ms):
     mlist=[]
     Ms_average=[]
     for t in ts:
-        integrator.run_until(t)
+        integrator.advance_time(t)
         mlist.append(integrator.m.copy())
         llb.M=mlist[-1]
         vis.vector()[:]=mlist[-1]
