@@ -43,7 +43,7 @@ def test_external_field_depends_on_t():
     #time loop
     times = np.linspace(0, tfinal, tfinal/dt + 1)
     for t in times:
-        integrator.run_until(t)
+        integrator.advance_time(t)
         print "Integrating time: %g" % t
         mlist.append(llg.m_average)
         tlist.append(t)
