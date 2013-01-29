@@ -26,6 +26,7 @@ class At(object):
         self.next_step = time
         self.callback = None
         self.at_end = at_end
+        self.stop_simulation = False
 
     def call(self, callback):
         """
@@ -80,6 +81,7 @@ class Every(At):
         self.interval = interval
         self.callback = None
         self.at_end = at_end
+        self.stop_simulation = False
 
     def update(self):
         """
@@ -87,6 +89,22 @@ class Every(At):
 
         """
         self.next_step += self.interval
+
+
+class ExitAt(object):
+    """
+    Store the information that the simulation should be stopped at a defined time.
+
+    """
+    def __init__(self, time):
+        self.next_step = time
+        self.at_end = False
+        self.stop_simulation = False
+
+    def fire(self, time):
+        assert abs(time - self.next_step) < EPSILON
+        self.next_step = None
+        self.stop_simulation = True
 
 
 class Scheduler(object):
@@ -102,6 +120,9 @@ class Scheduler(object):
         self.items = []
         self.realtime_items = {}
         self.realtime_jobs = []
+
+    def __iter__(self):
+        return self
 
     def add(self, func, args=None, kwargs=None, at=None, at_end=False, every=None, after=None, realtime=False):
         """
@@ -120,7 +141,6 @@ class Scheduler(object):
         callback = functools.partial(func, *args, **kwargs)
 
         if realtime:
-            job = self._add_realtime(callback, at, every, after)
             if at_end:
                 at_end_item = At(None, True).call(callback)
                 self._add(at_end_item)
@@ -135,8 +155,11 @@ class Scheduler(object):
             every_item = Every(every, after, at_end).call(callback)
             self._add(every_item)
 
-    def _add(self, at_or_every):
-        self.items.append(at_or_every)
+    def _add(self, item):
+        self.items.append(item)
+
+    def _remove(self, item):
+        self.items.remove(item)
 
     def _add_realtime(self, func, at=None, every=None, after=None):
         """
@@ -186,15 +209,23 @@ class Scheduler(object):
             self.apscheduler.unschedule_job(job)
         self.realtime_jobs = []
 
-    def next_step(self):
+    def next(self):
         """
         Returns the time for the next action to be performed.
 
         """
-        next_steps = [i.next_step for i in self.items if i.next_step is not None]
-        if len(next_steps) == 0:
-            return None
-        return min(next_steps)
+        next_step = None
+
+        for item in self.items:
+            if item.stop_simulation == True:
+                raise StopIteration
+            if item.next_step != None and (next_step == None or next_step > item.next_step):
+                next_step = item.next_step
+
+        if next_step == None:
+            raise StopIteration
+
+        return next_step
 
     def reached(self, time):
         """

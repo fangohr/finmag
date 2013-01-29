@@ -4,7 +4,7 @@ import dolfin as df
 import matplotlib.pyplot as plt
 from finmag import Simulation
 from finmag.energies import Zeeman, Exchange, Demag
-from finmag.integrators.common import ONE_DEGREE_PER_NS
+from finmag.integrators.relaxation import ONE_DEGREE_PER_NS
 
 MODULE_DIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -47,7 +47,7 @@ def plot_averages(sim):
     ax1.legend()
 
     ax2 = ax1.twinx()
-    t, max_dmdt_norms = np.array(zip(* sim.integrator.all_max_dmdt_norms))
+    t, max_dmdt_norms = np.array(zip(* sim.relaxation.dmdts))
     ax2.semilogy(t*1e9, max_dmdt_norms/ONE_DEGREE_PER_NS, "ro")
     ax2.set_ylabel("maximum dm/dt (1/ns)", color="r")
     ax2.axhline(y=1, xmin=0.5, color="red", linestyle="--")

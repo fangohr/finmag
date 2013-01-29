@@ -11,8 +11,7 @@ from finmag.util import helpers
 from finmag.util.vtk_export import VTK
 from finmag.sim.hysteresis import hysteresis as hyst, hysteresis_loop as hyst_loop
 from finmag.integrators.llg_integrator import llg_integrator
-from finmag.integrators.scheduler import Scheduler
-from finmag.integrators import scheduler
+from finmag.integrators import scheduler, relaxation
 from finmag.util import restart
 
 ONE_DEGREE_PER_NS = 17453292.5  # in rad/s
@@ -74,7 +73,7 @@ class Simulation(object):
         self.llg.Ms = Ms
         self.Volume = mesh_volume(mesh)
 
-        self.scheduler = Scheduler()
+        self.scheduler = scheduler.Scheduler()
         
         self.domains =  df.CellFunction("uint", self.mesh)
         self.domains.set_all(0)
@@ -231,33 +230,50 @@ class Simulation(object):
         """
         if not hasattr(self, "integrator"):
             self.integrator = llg_integrator(self.llg, self.llg.m, backend=self.integrator_backend)
+
         log.debug("Advancing time to t = {} s.".format(t))
         self.integrator.advance_time(t)
 
-    def run_until(self, t, save_averages=True):
+    def run_until(self, t):
         """
-        Run the simulation until the given time t is reached.
+        Run the simulation until the given time `t` is reached.
 
-        *Arguments*
-
-        t: float
-
-            The time up to which the simulation is to be run.
-
-        save_averages: bool
-
-            If True (the default) then the method `save_averages` is
-            called automatically when the given time step is reached
-            (this adds a line to the .ndt file in which the average
-            fields for this simulation object are recorded).
         """
         if not hasattr(self, "integrator"):
             self.integrator = llg_integrator(self.llg, self.llg.m, backend=self.integrator_backend)
-        log.debug("Integrating dynamics up to t = %g" % t)
-        self.integrator.run_until(t, schedule=self.scheduler)
-        if save_averages:
-            self.save_averages()
+
+        log.debug("Simulation will run until t = {:.2g}.".format(self.t))
+        exit_at = scheduler.ExitAt(t)
+        self.scheduler._add(exit_at)
+
+        self.integrator.run_with_schedule(self.scheduler)
         log.info("Simulation has reached time t = {:.2g}.".format(self.t))
+
+        self.schedule._remove(exit_at)
+
+    def relax(self, stopping_dmdt=ONE_DEGREE_PER_NS, dt_limit=1e-10,
+              dmdt_increased_counter_limit=500):
+        """
+        Run the simulation until the magnetisation has relaxed.
+
+        This means the magnetisation reaches a state where its change over time
+        at each node is smaller than the threshold `stopping_dm_dt` (which
+        should be given in rad/s).
+
+        """
+        if not hasattr(self, "integrator"):
+            self.integrator = llg_integrator(self.llg, self.llg.m, backend=self.integrator_backend)
+
+        log.debug("Simulation will run until relaxation of the magnetisation.")
+        self.relaxation = relaxation.Relaxation(stopping_dmdt, dmdt_increased_counter_limit, dt_limit)
+        self.relaxation.sim = self
+        self.scheduler._add(self.relaxation)
+
+        self.integrator.run_with_schedule(self.scheduler)
+        log.info("Relaxation finished at time t = {:.2g}.".format(self.t))
+
+        self.scheduler._remove(self.relaxation) 
+        del(self.relaxation.sim)
 
     def restart(self, filename=None, t0=None):
         """If called, we look for a filename of type sim.name + '-restart.npz',
@@ -306,51 +322,6 @@ class Simulation(object):
         """
         log.debug("Saving average field values for simulation '{}'.".format(self.name))
         self.tablewriter.save()
-
-    def relax(self, save_snapshots=False, filename='', save_every=100e-12,
-              save_final_snapshot=True, force_overwrite=False,
-              stopping_dmdt=ONE_DEGREE_PER_NS, dt_limit=1e-10,
-              dmdt_increased_counter_limit=500):
-        """
-        Do time integration of the magnetisation M until it reaches a
-        state where the change of the magnetisation at each node is
-        smaller than the threshold `stopping_dm_dt` (which should be
-        given in rad/s).
-
-        If save_snapshots is True (default: False) then a series of
-        snapshots is saved to `filename` (which must be specified in
-        this case). If `filename` contains directory components then
-        these are created if they do not already exist. A snapshot is
-        saved every `save_every` seconds (default: 100e-12, i.e. every
-        100 picoseconds). Usually, one last snapshot is saved after
-        the relaxation finishes (or aborts prematurely). This can be
-        disabled by setting save_final_snapshot to False. If a file
-        with the same name as `filename` already exists, the method
-        will abort unless `force_overwrite` is True, in which case the
-        existing .pvd and all associated .vtu files are deleted before
-        saving the series of snapshots.
-
-        For details and the meaning of the other keyword arguments see
-        the docstring of sim.integrator.BaseIntegrator.run_until_relaxation().
-
-        """
-        if not hasattr(self, "integrator"):
-            self.integrator = llg_integrator(self.llg, self.llg.m, backend=self.integrator_backend)
-        log.info("Will integrate until relaxation.")
-
-        if save_snapshots == True:
-            if not hasattr(self, "vtk"):
-                self.vtk = VTK(filename, "", force_overwrite, "m_")
-
-            def save(sim):
-                sim.save_vtk()
-                sim.save_averages()
-
-            self.schedule(save, every=save_every, at_end=save_final_snapshot)
-
-        self.integrator.run_until_relaxation(stopping_dmdt, dmdt_increased_counter_limit, dt_limit,
-                schedule=self.scheduler)
-        log.info("Relaxation finished at time t = {:.2g}.".format(self.t))
 
     hysteresis = hyst
     hysteresis_loop = hyst_loop

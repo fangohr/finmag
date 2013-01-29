@@ -1,6 +1,6 @@
 import logging
 from finmag.native import sundials
-from finmag.integrators.common import run_with_schedule, relax_with_schedule
+from finmag.integrators.common import run_with_schedule
 
 log = logging.getLogger(name='finmag')
 
@@ -168,5 +168,4 @@ class SundialsIntegrator(object):
              }
         return d
 
-    run_until = run_with_schedule
-    run_until_relaxation = relax_with_schedule
+    run_with_schedule = run_with_schedule
