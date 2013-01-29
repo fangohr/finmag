@@ -249,7 +249,7 @@ class Simulation(object):
         self.integrator.run_with_schedule(self.scheduler)
         log.info("Simulation has reached time t = {:.2g}.".format(self.t))
 
-        self.schedule._remove(exit_at)
+        self.scheduler._remove(exit_at)
 
     def relax(self, stopping_dmdt=ONE_DEGREE_PER_NS, dt_limit=1e-10,
               dmdt_increased_counter_limit=500):
