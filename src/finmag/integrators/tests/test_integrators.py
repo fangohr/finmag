@@ -19,7 +19,7 @@ class IntegratorTests(unittest.TestCase):
         llg = setup_domain_wall_cobalt(node_count=NODE_COUNT)
         integrator = llg_integrator(llg, llg.m, backend, method=method, nsteps=nsteps)
         t = datetime.now()
-        integrator.run_until(END_TIME)
+        integrator.advance_time(END_TIME)
         dt = datetime.now() - t
         print "backend=%s, method=%s: elapsed time=%s, n_rhs_evals=%s, error=%g" % (
                 backend,
