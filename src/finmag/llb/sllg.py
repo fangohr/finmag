@@ -128,9 +128,9 @@ class SLLG(object):
     def setup_parameters(self):
         #print 'seed:', self.seed
         self.integrator.set_parameters(self.dt,self.gamma,self.seed)
-        log.debug("seed=%d."%self.seed)
-        log.debug("dt=%g."%self.dt)
-        log.debug("gamma=%g."%self.gamma)
+        log.info("seed=%d."%self.seed)
+        log.info("dt=%g."%self.dt)
+        log.info("gamma=%g."%self.gamma)
                 
     def set_m(self,value):
         self._m.vector().set_local(helpers.vector_valued_function(value, self.S3, normalise=False).vector().array())
@@ -147,12 +147,16 @@ class SLLG(object):
         
         if tp <= self._t:
             return
-        
-        while tp-self._t>1e-12:
-            self.integrator.run_step(self.field)
-            self._m.vector().set_local(self.m)
-            self._t+=self._dt
-        
+        try:
+            while tp-self._t>1e-12:
+                self.integrator.run_step(self.field)
+                self._m.vector().set_local(self.m)
+                self._t+=self._dt
+        except Exception,error:
+            log.info(error)
+            raise Exception(error)
+            
+            
         if abs(tp-self._t)<1e-12:
             self._t=tp
         log.debug("Integrating dynamics up to t = %g" % t)
@@ -174,6 +178,7 @@ class SLLG(object):
     @T.setter
     def T(self, value):
         self._T[:]=helpers.scalar_valued_function(value,self.S1).vector().array()[:]
+        log.info('Temperature  : %g',self._T[0])
         
     @property
     def alpha(self):

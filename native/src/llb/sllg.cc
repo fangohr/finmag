@@ -154,6 +154,16 @@ namespace finmag { namespace llb {
     		m[k] *= mm;
     	}
 
+    	//sometimes it seems that max_m is very huge, such as 1e22, in principle, it should not happen.
+    	/*
+    	if (max_m>1000){
+    		for (i = 0; i < len; i++) {
+    			printf("%g    \n",m[i]);
+    		}
+
+    	}
+    	*/
+
 
     	if (max_m>1.05 || max_m<0.95){
     		std::ostringstream ostr;
