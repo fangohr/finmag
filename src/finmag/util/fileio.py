@@ -156,7 +156,12 @@ class Tablereader(object):
 
         # some consistency checks: must have as many columns as
         # headers (disregarding the comment symbol)
-        assert self.data.shape[1] == len(headers) - 1
+        # for the case that only one line data 
+        if len(self.data)==self.data.size:
+            assert self.data.size == len(headers) - 1
+            self.data.shape=(1,self.data.size)
+        else:
+            assert self.data.shape[1] == len(headers) - 1
 
         datadic = {}
         # now wrap up data conveniently

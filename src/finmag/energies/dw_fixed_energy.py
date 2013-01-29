@@ -80,10 +80,17 @@ class FixedEnergyDW(object):
 			demag=Demag()
 			mesh=df.Mesh(filename)
 			Vv = df.VectorFunctionSpace(mesh, 'Lagrange', 1)
+			
+			dg = df.FunctionSpace(mesh, "DG", 0)
+			Ms_tmp=df.Function(dg)
+			Ms_list=list(self.Ms.vector().array())
+			Ms_tmp.vector().set_local(np.array(Ms_list+Ms_list))
+
+			
 			m=df.Function(Vv)
 			tmp_init_m=self.init_m.reshape((1,-1),order='F')[0]
 			m.vector().set_local(tmp_init_m)
-			demag.setup(Vv,m,self.Ms)
+			demag.setup(Vv,m,Ms_tmp)
 			self.tmp_field+=demag.compute_field()
 			
 			os.remove(filename)
@@ -99,10 +106,16 @@ class FixedEnergyDW(object):
 			demag=Demag()
 			mesh=df.Mesh(filename)
 			Vv = df.VectorFunctionSpace(mesh, 'Lagrange', 1)
+			
+			dg = df.FunctionSpace(mesh, "DG", 0)
+			Ms_tmp=df.Function(dg)
+			Ms_list=list(self.Ms.vector().array())
+			Ms_tmp.vector().set_local(np.array(Ms_list+Ms_list))
+			
 			m=df.Function(Vv)
 			tmp_init_m=self.init_m.reshape((1,-1),order='F')[0]
 			m.vector().set_local(tmp_init_m)
-			demag.setup(Vv,m,self.Ms)
+			demag.setup(Vv,m,Ms_tmp)
 			self.tmp_field+=demag.compute_field()
 			
 			os.remove(filename)
