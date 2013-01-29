@@ -64,6 +64,7 @@ def relax_with_schedule(integrator,
 
     dt_increment_multi = 1.5;
     dmdt_increased_counter = 0;
+    integrator.all_max_dmdt_norms = []
 
     last_max_dmdt_norm = 1e99
     while True:
@@ -84,6 +85,7 @@ def relax_with_schedule(integrator,
         dm = np.abs(integrator.m - prev_m).reshape((3, -1))
         dm_norm = np.sqrt(dm[0] ** 2 + dm[1] ** 2 + dm[2] ** 2)
         max_dmdt_norm = float(np.max(dm_norm) / dt)
+        integrator.all_max_dmdt_norms.append((integrator.cur_t, max_dmdt_norm))
 
         if max_dmdt_norm < stopping_dmdt:
             log.debug("{}: Stopping at t={:.3g}, with last_dmdt={:.3g}, smaller than stopping_dmdt={:.3g}.".format(
