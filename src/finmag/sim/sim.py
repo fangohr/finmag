@@ -242,7 +242,7 @@ class Simulation(object):
         if not hasattr(self, "integrator"):
             self.integrator = llg_integrator(self.llg, self.llg.m, backend=self.integrator_backend)
 
-        log.debug("Simulation will run until t = {:.2g}.".format(self.t))
+        log.info("Simulation will run until t = {:.2g}.".format(self.t))
         exit_at = scheduler.ExitAt(t)
         self.scheduler._add(exit_at)
 
@@ -263,17 +263,17 @@ class Simulation(object):
         """
         if not hasattr(self, "integrator"):
             self.integrator = llg_integrator(self.llg, self.llg.m, backend=self.integrator_backend)
+        log.info("Simulation will run until relaxation of the magnetisation.")
 
-        log.debug("Simulation will run until relaxation of the magnetisation.")
-        self.relaxation = relaxation.Relaxation(stopping_dmdt, dmdt_increased_counter_limit, dt_limit)
-        self.relaxation.sim = self
-        self.scheduler._add(self.relaxation)
+        relax = relaxation.Relaxation(self, stopping_dmdt, dmdt_increased_counter_limit, dt_limit)
+        self.scheduler._add(relax)
 
         self.integrator.run_with_schedule(self.scheduler)
+        self.integrator.reinit()
         log.info("Relaxation finished at time t = {:.2g}.".format(self.t))
 
-        self.scheduler._remove(self.relaxation) 
-        del(self.relaxation.sim)
+        self.scheduler._remove(relax) 
+        del(relax.sim, relax) # help the garbage collection by avoiding circular reference
 
     def restart(self, filename=None, t0=None):
         """If called, we look for a filename of type sim.name + '-restart.npz',
