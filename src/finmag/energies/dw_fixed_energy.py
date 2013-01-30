@@ -77,7 +77,7 @@ class FixedEnergyDW(object):
 			filename="mesh_%d.xml"%i
 			self.write_xml(filename,cds,cells)
 			
-			demag=Demag()
+			demag=Demag(solver='Treecode')
 			mesh=df.Mesh(filename)
 			Vv = df.VectorFunctionSpace(mesh, 'Lagrange', 1)
 			
@@ -103,7 +103,7 @@ class FixedEnergyDW(object):
 			filename="mesh_%d.xml"%i
 			self.write_xml(filename,cds,cells)
 			
-			demag=Demag()
+			demag=Demag(solver='Treecode')
 			mesh=df.Mesh(filename)
 			Vv = df.VectorFunctionSpace(mesh, 'Lagrange', 1)
 			
