@@ -120,6 +120,7 @@ class Scheduler(object):
         self.items = []
         self.realtime_items = {}
         self.realtime_jobs = []
+        self.last = None
 
     def __iter__(self):
         return self
@@ -225,6 +226,9 @@ class Scheduler(object):
         if next_step == None:
             raise StopIteration
 
+        if next_step <= self.last:
+            log.error("Scheduler computed the next time step should be t = {:.2g} s, but the last one was already t = {:.2g} s.".format(next_step, self.last))
+            raise ValueError("Scheduler is corrupted. Requested a time step in the past: dt = {:.2g}.".format(next_step-self.last))
         return next_step
 
     def reached(self, time):
@@ -237,6 +241,7 @@ class Scheduler(object):
         for item in self.items:
             if (item.next_step != None) and abs(item.next_step - time) < EPSILON:
                 item.fire(time)
+        self.last = time
 
     def finalise(self, time):
         """
