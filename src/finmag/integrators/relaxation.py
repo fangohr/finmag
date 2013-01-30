@@ -12,7 +12,7 @@ class Relaxation(object):
     Monitors the relaxation of the magnetisation over time.
 
     """
-    def __init__(self, stopping_dmdt=ONE_DEGREE_PER_NS, dmdt_increased_counter_limit=500, dt_limit=1e-10):
+    def __init__(self, sim, stopping_dmdt=ONE_DEGREE_PER_NS, dmdt_increased_counter_limit=500, dt_limit=1e-10):
         self.dt = 1e-14
         self.dt_increment_multi = 1.5
         self.dt_limit = dt_limit
@@ -22,11 +22,12 @@ class Relaxation(object):
         self.dmdt_increased_counter_limit = dmdt_increased_counter_limit
         self.dmdts = [] # list of (t, max_dmdt) tuples
 
-        self.last_m = None
-        self.last_t = None
+        self.sim = sim
+        self.last_t = sim.t
+        self.last_m = sim.m.copy()
 
         # to communicate with scheduler
-        self.next_step = 0.0
+        self.next_step = self.last_t + self.dt
         self.stop_simulation = False
         self.at_end = False
 
