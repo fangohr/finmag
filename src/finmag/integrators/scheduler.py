@@ -295,10 +295,16 @@ class Scheduler(object):
     def _print_item(self, item, func_print=log.info):
         func_print("'{}': {}".format(item.callback.func.__name__, item))
 
+    def _print_realtime_item(self, item, func_print=log.info):
+        (f, (at, every, after)) = item
+        func_print("'{}': <at={}, every={}, after={}>".format(
+                item.callback.f.__name__, at, every, after))
+
     def print_scheduled_items(self, func_print=log.info):
         for item in self.items:
             self._print_item(item, func_print)
-        func_print("XXX TODO: Print realtime items, too")
+        for item in self.realtime_items:
+            self._print_realtime_item(item, func_print)
 
     def clear(self):
         log.debug("Removing scheduled items:")
