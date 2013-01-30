@@ -29,6 +29,9 @@ class At(object):
         self.at_end = at_end
         self.stop_simulation = False
 
+    def __str__(self):
+        return "<At t={}>".format(self.target, ", at_end=True" if self.at_end else "")
+
     def call(self, callback):
         """
         Attach a callback.
@@ -90,6 +93,12 @@ class Every(At):
         self.at_end = at_end
         self.stop_simulation = False
 
+    def __str__(self):
+        return "<Every {} seconds>".format(
+            self.interval,
+            ", start={}".format(self.first_step) if self.first_step != 0.0 else "",
+            ", at_end=True" if self.at_end else "")
+
     def update(self):
         self.next_step += self.interval
 
@@ -109,6 +118,9 @@ class ExitAt(object):
         self.next_step = self.target
         self.at_end = False
         self.stop_simulation = False
+
+    def __str__(self):
+        return "<ExitAt t={}>".format(self.target)
 
     def fire(self, time):
         assert abs(time - self.next_step) < EPSILON
@@ -136,7 +148,9 @@ class Scheduler(object):
         """
         self.items = []
         self.realtime_items = {}
-        self.realtime_jobs = []
+        self.realtime_jobs = []  # while the scheduler is running, the job
+                                 # associated with each realtime_item will be
+                                 # stored in this list (otherwise it is empty)
         self.last = None
 
     def __iter__(self):
@@ -277,6 +291,21 @@ class Scheduler(object):
         self.last = None
         for item in self.items:
             item.reset(time)
+
+    def _print_item(self, item, func_print=log.info):
+        func_print("'{}': {}".format(item.callback.func.__name__, item))
+
+    def print_scheduled_items(self, func_print=log.info):
+        for item in self.items:
+            self._print_item(item, func_print)
+        func_print("XXX TODO: Print realtime items, too")
+
+    def clear(self):
+        log.debug("Removing scheduled items:")
+        self.print_scheduled_items(func_print=log.debug)
+        self.items = []
+        self.stop_realtime_jobs()
+        self.realtime_items = []
 
 def save_ndt(sim):
     """Given the simulation object, saves one line to the ndt finalise
