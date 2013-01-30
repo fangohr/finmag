@@ -242,12 +242,12 @@ class Simulation(object):
         if not hasattr(self, "integrator"):
             self.integrator = llg_integrator(self.llg, self.llg.m, backend=self.integrator_backend)
 
-        log.info("Simulation will run until t = {:.2g}.".format(self.t))
+        log.info("Simulation will run until t = {:.2g} s.".format(t))
         exit_at = scheduler.ExitAt(t)
         self.scheduler._add(exit_at)
 
         self.integrator.run_with_schedule(self.scheduler)
-        log.info("Simulation has reached time t = {:.2g}.".format(self.t))
+        log.info("Simulation has reached time t = {:.2g} s.".format(self.t))
 
         self.scheduler._remove(exit_at)
 
@@ -289,29 +289,26 @@ class Simulation(object):
 
         if filename == None:
             filename = restart.canonical_restart_filename(self)
-        log.debug("About to load restart data from %s " % filename)
+        log.debug("Loading restart data from {}. ".format(filename))
 
         data = restart.load_restart_data(filename)
     
-        #log.extremedebug("Have reloaded data: %s" % data)
-        if data['driver'] in ['cvode']:
-            pass  # we know how to deal with these types
-        else:
-            raise NotImplementedError("Can not deal with driver=%s yet for restarting." % 
-                data['driver'])
+        if not data['driver'] in ['cvode']:
+            log.error("Requested unknown driver `{}` for restarting. Known: {}.".format(data["driver"], "cvode"))
+            raise NotImplementedError("Unknown driver `{}` for restarting.".format(data["driver"]))
         
         self.llg._m.vector()[:] = data['m']
-        
-        if t0 == None:
-            t0 = data['simtime']   # Continue from time as saved
+       
+        t = t0 or data["simtime"]
         
         self.integrator = llg_integrator(self.llg, self.llg.m, 
-            backend=self.integrator_backend, t0=t0)
+            backend=self.integrator_backend, t0=t)
 
-        log.info("Reloaded and set m (<m>=%s) and time=%s from %s" % \
+        log.info("Reloaded and set m (<m>=%s) and time=%s from %s." % \
             (self.llg.m_average, self.t, filename))
 
-        assert self.t == t0  # self.t is read from integrator
+        assert self.t == t  # self.t is read from integrator
+        self.scheduler.reset(t)
 
     def save_averages(self):
         """
