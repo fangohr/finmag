@@ -22,8 +22,9 @@ class At(object):
         Initialise with the correct time.
 
         """
+        self.target = time
         self.last_step = None
-        self.next_step = time
+        self.next_step = self.target
         self.callback = None
         self.at_end = at_end
         self.stop_simulation = False
@@ -64,6 +65,15 @@ class At(object):
         """
         self.next_step = None # Since one-time event, there is no next step.
 
+    def reset(self, current_time):
+        self.stop_simulation = False
+        if current_time >= self.target:
+            self.last_step = self.target
+            self.next_step = None
+        else:
+            self.last_step = None
+            self.next_step = self.target
+
 
 class Every(At):
     """
@@ -72,23 +82,21 @@ class Every(At):
 
     """
     def __init__(self, interval, start=None, at_end=False):
-        """
-        Initialise with the interval between correct times and optionally, a starting time.
-
-        """
         self.last_step = None
-        self.next_step = start or 0.0
+        self.first_step = start or 0.0
+        self.next_step = self.first_step
         self.interval = interval
         self.callback = None
         self.at_end = at_end
         self.stop_simulation = False
 
     def update(self):
-        """
-        Compute next target time.
-
-        """
         self.next_step += self.interval
+
+    def reset(self, current_time):
+        self.next_step = self.first_step
+        while self.next_step <= current_time:
+            self.update()
 
 
 class ExitAt(object):
@@ -97,7 +105,8 @@ class ExitAt(object):
 
     """
     def __init__(self, time):
-        self.next_step = time
+        self.target = time
+        self.next_step = self.target
         self.at_end = False
         self.stop_simulation = False
 
@@ -105,6 +114,14 @@ class ExitAt(object):
         assert abs(time - self.next_step) < EPSILON
         self.next_step = None
         self.stop_simulation = True
+
+    def reset(self, current_time):
+        if current_time > self.next_step:
+            self.stop_simulation = True
+            self.next_step = None
+        else:
+            self.stop_simulation = False
+            self.next_step = self.target
 
 
 class Scheduler(object):
@@ -251,6 +268,15 @@ class Scheduler(object):
         for item in self.items:
             if item.at_end:
                 item.fire(time)
+
+    def reset(self, time):
+        """
+        Override schedule so that internal time is now `time` and modify scheduled items accordingly.
+
+        """
+        self.last = None
+        for item in self.items:
+            item.reset(time)
 
 def save_ndt(sim):
     """Given the simulation object, saves one line to the ndt finalise
