@@ -1,8 +1,7 @@
 import os
 import time
 import numpy as np
-import multiprocessing
-from multiprocessing import Process
+import multiprocessing as mp
 
 class TaskState(object):
     def __init__(self,taskname):
@@ -27,12 +26,15 @@ class TaskState(object):
             f.write('%s : %s\n'%(k,self.state[k]))
         f.close()
         
-    def update_state(self,k,v):
+    def update_state(self,k,v,save=True):
         key=self.dict2str(k)
         if v:
             self.state[key]='Done!'
         else:
             self.state[key]='Waiting!'
+            
+        if save:
+            self.save_state()
         
     def dict2str(self,d):
         res=[]
@@ -48,23 +50,41 @@ class TaskState(object):
             if 'Done' in self.state[key]:
                 return True
         else:
-            self.update_state(k,False)
+            self.update_state(k,False,False)
         return False
-
+    
+    
+def wrapper_function(fun,task,parameters,cwd):
+    """
+    something related to pickle (solution: copy_reg ?) 
+    """
+    
+    dirname=str(cwd)
+    for name in parameters:
+        dirname=os.path.join(dirname,name+'_'+str(task[name]))
+    
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)
+    os.chdir(dirname)
+    
+    fun(**task)
+            
+    os.chdir(cwd)
+    
 
 class BatchTasks(object):
-    def __init__(self,fun,processes=None,taskname='task',checking_time=10):
+    def __init__(self,fun,processes=None,taskname='task',waiting_time=0):
         self.fun=fun
         self.tasks=[{}]
         self.parameters=[]
         self.current_directory=os.getcwd()
         if processes:
-            self.processes=processes
+            self.pool=mp.Pool(processes)
         else:
-            self.processes=multiprocessing.cpu_count()
+            self.pool=mp.Pool()
             
         self.ts=TaskState(taskname+'.txt')
-        self.checking_time=checking_time
+        self.waiting_time=waiting_time
         self.dims=[]
         
         self.process_res=[]
@@ -90,43 +110,27 @@ class BatchTasks(object):
         return base
     
     def run_single(self,task):
-        dirname=self.generate_directory(task)
-        if not os.path.exists(dirname):
-            os.makedirs(dirname)
-        os.chdir(dirname)
-        p=Process(target=self.fun,kwargs=task)
-        #p.daemon = True
-        p.start()
-        os.chdir(self.current_directory)
-        return p
+            
+        def call_back(res):
+            self.ts.update_state(task, True)
+            
+        self.pool.apply_async(wrapper_function,args=(self.fun,task,self.parameters,self.current_directory),callback=call_back)
+        
             
     def start(self):
-        jobs=[]
-        job_id=0
-        active_task_ids=[]
-        for _ in range(self.processes):
-            jobs.append(None)
-            active_task_ids.append(-1)
         
         self.utasks=[]
         for task in self.tasks:
             if not self.ts.done(task):
                 self.utasks.append(task)
+        self.ts.save_state()
         
-        while job_id<len(self.utasks):
-            for n, p in enumerate(jobs):
-                if not p or not p.is_alive():
-                    a_id=active_task_ids[n]
-                    if a_id>=0:
-                        self.ts.update_state(self.utasks[a_id], True)
-                        self.ts.save_state()
-                    jobs[n]=self.run_single(self.utasks[job_id])
-                    active_task_ids[n]=job_id
-                    job_id+=1
-                    if job_id>=len(self.utasks):
-                        break
-            
-            time.sleep(self.checking_time)
+        for task in self.utasks:
+            self.run_single(task)
+            time.sleep(self.waiting_time)
+        
+        self.pool.close()
+        self.pool.join()
     
     def post_process(self,fun):
         for task in self.tasks:
@@ -135,30 +139,39 @@ class BatchTasks(object):
             self.process_res.append(fun(**task))
             os.chdir(self.current_directory)
     
-    def get_res(self,key,value):
+    def get_res(self,key=None,value=None):
         res=[]
         par=[]
-        for i,task in enumerate(self.tasks):
-            if key in task and task[key]==value:
+        
+        if len(self.parameters)==1:
+            for i,task in enumerate(self.tasks):
+                par.append(task.values()[0])
                 res.append(self.process_res[i])
-                tmp_task=dict(task)
-                del tmp_task[key]
-                par.append(tmp_task.values()[0])
-                if len(tmp_task.values())>1:
-                    raise RuntimeError('Only support two variables here!')
+        elif len(self.parameters)==2:
+            for i,task in enumerate(self.tasks):
+                if key in task and task[key]==value:
+                    res.append(self.process_res[i])
+                    tmp_task=dict(task)
+                    del tmp_task[key]
+                    par.append(tmp_task.values()[0])
+        else:
+            raise NotImplementedError('Only support one- and two- parameter case!')
         
         return np.array(par),np.array(res)
+    
 
     
 def task(p1,p2):
+    print 'current directory:',os.getcwd()
     res='p1='+str(p1)+'  p2='+str(p2)
     with open('res.txt','w') as f:
         f.write(res)
+    time.sleep(3)
 
 
 if __name__=="__main__":
     tasks=BatchTasks(task,4)
     tasks.add_parameters('p1',['a','b','c'])
     tasks.add_parameters('p2',range(1,5))
-    #tasks.start()
+    tasks.start()
     

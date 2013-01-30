@@ -87,16 +87,16 @@ def compute_bnd_mapping(mesh):
 logger = logging.getLogger(name='finmag')
 __all__ = ["TreecodeBEM"]
 class TreecodeBEM(sb.FemBemDeMagSolver):
-
+    @mtimed
     def __init__(self,mesh,m, parameters=sb.default_parameters , degree=1, element="CG",
                  project_method='magpar', unit_length=1,Ms = 1.0,bench = False,
                  mac=0.3,p=3,num_limit=100,correct_factor=5):
         
-        timings.start(self.__class__.__name__, "Treecode Solver init")
         sb.FemBemDeMagSolver.__init__(self,mesh,m, parameters, degree, element=element,
                                       project_method = project_method,
                                       unit_length = unit_length,Ms = Ms,bench = bench)
         self.__name__ = "Treecode Demag Solver"
+        
         
         #Linear Solver parameters
         method = parameters["poisson_solver"]["method"]

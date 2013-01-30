@@ -74,7 +74,7 @@ class Demag(object):
         elif self.solver == "Treecode":
             kwargs["p"]=p
             kwargs["mac"]=mac
-            kwargs["num_limit"]=number_limit,
+            kwargs["num_limit"]=number_limit
             kwargs["correct_factor"]=correct_factor
             
             self.demag = TreecodeBEM(**kwargs)
