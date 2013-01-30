@@ -2,6 +2,8 @@ import logging
 from finmag.native import sundials
 from finmag.integrators.common import run_with_schedule
 
+EPSILON = 1e-15
+
 log = logging.getLogger(name='finmag')
 
 
@@ -76,7 +78,7 @@ class SundialsIntegrator(object):
         """
         # The following check is required because sundials does not like to
         # integrate up to t=0, if the cvode solver was initialised for t=0.
-        if t <= self.cur_t and t == 0:
+        if t == 0 and abs(t - self.cur_t) < EPSILON:
             return True
         # if t <= self.cur_t and this is not the value with which we started,
         # we should complain:
