@@ -130,8 +130,8 @@ class SundialsIntegrator(object):
         By calling this function, we inform the integrator that it should not assuming smoothness
         of the RHS. Should be called when we change the applied field, abruptly, for example.
         """
-        log.debug("Re-initialising CVODE integrator")
-        self.integrator.reinit(self.integrator.get_current_time(), self.m)
+        log.debug("Re-initialising CVODE integrator.")
+        self.integrator.reinit(self.cur_t, self.m)
 
     n_rhs_evals = property(lambda self: self.integrator.get_num_rhs_evals(), "Number of function evaluations performed")
 
