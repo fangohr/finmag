@@ -94,7 +94,12 @@ def hysteresis(sim, H_ext_list, leave_last_field_on=False, fun=None,
 
             if filename != '':
                 cur_filename = filename + "__stage_{:03d}__.pvd".format(cur_stage)
-            sim.relax(filename=cur_filename, save_snapshots=save_snapshots, **kwargs)
+            # XXX TODO: After the recent run_until refactoring the
+            # relax() method doesn't accept a filename any more. We
+            # need to schedule the snapshot saving ourselves here, or
+            # ask the user to do it! (Need to think which alternative
+            # is better.) -- Max, 30.1.2013
+            sim.relax(**kwargs)
             cur_stage += 1
             if fun is not None:
                 retval = fun(sim)
