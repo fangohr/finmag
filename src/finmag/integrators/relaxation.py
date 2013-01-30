@@ -48,7 +48,6 @@ class Relaxation(object):
         if self.dmdt_increased_counter >= self.dmdt_increased_counter_limit:
             log.warning("Stopping time integration after dmdt increased {} times.".format(
                 self.dmdt_increased_counter_limit))
-            self.next_step = None
             self.stop_simulation = True
 
     def fire(self, t):
