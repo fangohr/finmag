@@ -115,12 +115,16 @@ def test_vector_valued_function():
     f_array3xN = vector_valued_function(v_ref, S3) # numpy array of nodal values shape (3*n,)
     f_arrayN3 = vector_valued_function(np.array([vec for r in mesh.coordinates()]), S3) # numpy array of shape (n, 3)
     #f_callable = vector_valued_function(lambda coords: v_ref_expr, S3) # callable accepting mesh node coordinates and yielding the function values
-    f_callable = vector_valued_function(lambda (x,y,z): (a*x, b*y, c*z), S3) # callable accepting mesh node coordinates and yielding the function values
 
     # A few normalised versions, too
     f_tuple_normalised = vector_valued_function(tuple(vec), S3, normalise=True)
     f_expr_normalised = vector_valued_function(('a*x[0]', 'b*x[1]', 'c*x[2]'), S3, a=a, b=b, c=c, normalise=True)
-    f_callable_normalised = vector_valued_function(lambda (x,y,z): (a*x, b*y, c*z), S3, normalise=True)
+    
+    # Cython 0.17.1 does not like this
+    #f_callable_normalised = vector_valued_function(lambda (x,y,z): (a*x, b*y, c*z), S3, normalise=True)
+    # but accepts this rephrased version:
+    f_callable_normalised = vector_valued_function(lambda t: (a*t[0], b*t[1], c*t[2]), S3, normalise=True)
+
 
     # Check that the function vectors are as expected
     assert(all(f_tuple.vector() == v_ref))
