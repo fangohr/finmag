@@ -6,6 +6,7 @@ HF 1 Feb 2013
 """
 
 import subprocess
+import os
 
 
 #Cython complains about this:
@@ -38,7 +39,8 @@ def cython_test_code():
 
 
 def test_cython_compiles_this_file():
-    cmd = "cython {}.py".format('test_cython')
+    
+    cmd = "cython {}".format(os.path.abspath(__file__))
     print("about to execute {}".format(cmd))
     subprocess.check_call(cmd, shell=True)
 
