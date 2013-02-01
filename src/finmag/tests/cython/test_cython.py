@@ -39,7 +39,7 @@ def cython_test_code():
 
 
 def test_cython_compiles_this_file():
-    
+
     cmd = "cython {}".format(os.path.abspath(__file__))
     print("about to execute {}".format(cmd))
     subprocess.check_call(cmd, shell=True)
