@@ -4,4 +4,6 @@ conf = {'nameshort': 'Hesjedahl',
                        'tutorial-example2',
                        'tutorial-saving-averages-demo',
                        'tutorial-use-of-logging',
-                       'tutorial-running-simulations-with-dmi']}
+                       'tutorial-running-simulations-with-dmi',
+                       'tutorial-sampling-m-at-arbitrary-positions',
+                       ]}
