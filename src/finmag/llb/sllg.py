@@ -17,7 +17,7 @@ import logging
 log = logging.getLogger(name="finmag")
 
 class SLLG(object):
-    def __init__(self,mesh,Ms=8.6e5,unit_length=1.0,name='unnamed',auto_save_data=True,method='RK2b'):
+    def __init__(self,mesh,Ms=8.6e5,unit_length=1.0,name='unnamed',auto_save_data=True,method='RK2b',checking_length=True):
         self._t=0
         self.time_scale=1e-9
         self.mesh=mesh
@@ -44,6 +44,7 @@ class SLLG(object):
 
         self.pin_fun=None
         self.method=method
+        self.checking_length=checking_length
 
         self.set_default_values()
         self.auto_save_data=auto_save_data
@@ -89,6 +90,7 @@ class SLLG(object):
         self._seed=np.random.random_integers(4294967295)
         self.dt=1e-13
         self.T=0
+        
   
     @property
     def t(self):
@@ -127,10 +129,11 @@ class SLLG(object):
     
     def setup_parameters(self):
         #print 'seed:', self.seed
-        self.integrator.set_parameters(self.dt,self.gamma,self.seed)
+        self.integrator.set_parameters(self.dt,self.gamma,self.seed,self.checking_length)
         log.info("seed=%d."%self.seed)
         log.info("dt=%g."%self.dt)
         log.info("gamma=%g."%self.gamma)
+        log.info("checking_length: "+str(self.checking_length))
                 
     def set_m(self,value):
         self._m.vector().set_local(helpers.vector_valued_function(value, self.S3, normalise=False).vector().array())

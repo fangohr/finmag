@@ -22,6 +22,7 @@ class Nickel(object):
         self.A_coeff=3.90625e-23 
         self.xi_par_coeff=0.380548363687*mu0  # M/k_B a^3/ c 
         self.coth=lambda x:np.cosh(x)/np.sinh(x)
+        self.a=3.524*1e-10
         
     def L(self,x):
         if x==0:

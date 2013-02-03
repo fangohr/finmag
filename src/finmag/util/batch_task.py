@@ -66,14 +66,18 @@ def wrapper_function(fun,task,parameters,cwd):
     if not os.path.exists(dirname):
         os.makedirs(dirname)
     os.chdir(dirname)
-    
-    fun(**task)
+    try:
+        fun(**task)
+    except e:
+        print e.errno,e.strerror
+        pass
             
     os.chdir(cwd)
+    return
     
 
 class BatchTasks(object):
-    def __init__(self,fun,processes=None,taskname='task',waiting_time=0):
+    def __init__(self,fun,processes=None,taskname='task',waiting_time=1):
         self.fun=fun
         self.tasks=[{}]
         self.parameters=[]

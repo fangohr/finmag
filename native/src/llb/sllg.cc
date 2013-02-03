@@ -23,7 +23,7 @@ namespace finmag { namespace llb {
         	bp::object rhs_func;
         	unsigned int seed;
         	RandomMT19937 mt_random;
-
+        	bool check_magnetisation_length;
 
         	void (StochasticSLLGIntegrator::*run_step_fun)(const np_array<double> &H);
 
@@ -45,7 +45,7 @@ namespace finmag { namespace llb {
 
         	~StochasticSLLGIntegrator();
 
-        	void set_parameters(double dt,double gamma,unsigned int seed);
+        	void set_parameters(double dt,double gamma,unsigned int seed, bool checking);
         	void run_step(const np_array<double> &H);
     };
 
@@ -123,6 +123,7 @@ namespace finmag { namespace llb {
         								throw std::invalid_argument("StochasticSLLGIntegrator:Only RK2a, RK2b, RK2c and RK3 are implemented!");
         							}
 
+
         }
 
 
@@ -148,27 +149,20 @@ namespace finmag { namespace llb {
     		if (mm>max_m){
     			max_m=mm;
     		}
+
     		mm=1.0/mm;
     		m[i] *= mm;
     		m[j] *= mm;
     		m[k] *= mm;
     	}
 
-    	//sometimes it seems that max_m is very huge, such as 1e22, in principle, it should not happen.
-    	/*
-    	if (max_m>1000){
-    		for (i = 0; i < len; i++) {
-    			printf("%g    \n",m[i]);
+    	if (check_magnetisation_length){
+
+    		if (max_m>1.05 || max_m<0.95){
+    			std::ostringstream ostr;
+    			ostr << "maxm=" << max_m <<", so dt="<< dt << " is probably too large!";
+    			throw std::invalid_argument(ostr.str());
     		}
-
-    	}
-    	*/
-
-
-    	if (max_m>1.05 || max_m<0.95){
-    		std::ostringstream ostr;
-    		ostr << "maxm=" << max_m <<", so dt="<< dt << " is probably too large!";
-    		throw std::invalid_argument(ostr.str());
     	}
 
 
@@ -231,14 +225,15 @@ namespace finmag { namespace llb {
 
     }
 
-    void StochasticSLLGIntegrator::set_parameters(double dt,double gamma,unsigned int seed){
+    void StochasticSLLGIntegrator::set_parameters(double dt,double gamma,unsigned int seed,bool checking){
     	double k_B = 1.3806505e-23;
     	double mu_0 = 4 * M_PI * 1e-7;
     	this->dt=dt;
     	this->gamma=gamma;
     	this->Q = k_B / (gamma * mu_0);
     	this->seed=seed;
-    	mt_random.initial_random(seed);
+    	this->check_magnetisation_length=checking;
+    	mt_random.seed(seed);
     }
 
 
