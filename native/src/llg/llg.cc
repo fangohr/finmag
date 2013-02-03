@@ -434,23 +434,23 @@ namespace finmag { namespace llg {
             for (int i = 0; i < length; i++) {
                 i1=i;
                 i2=length+i1;
-        	i3=length+i2;
+                i3=length+i2;
                
-        	  if(pin[i]>0){
+                if(pin[i]>0){
         		  dm_dt[i1]=0;
         		  dm_dt[i2]=0;
         		  dm_dt[i3]=0;
-        	  }{
+                }{
 
-                dm_dt[i1]=damping_coeff*(a[i]*h[i1] - b[i]*delta_h[i1]);
-                dm_dt[i2]=damping_coeff*(a[i]*h[i2] - b[i]*delta_h[i2]);
-                dm_dt[i3]=damping_coeff*(a[i]*h[i3] - b[i]*delta_h[i3]);
+                	dm_dt[i1]=damping_coeff*(a[i]*h[i1] - b[i]*delta_h[i1]);
+                	dm_dt[i2]=damping_coeff*(a[i]*h[i2] - b[i]*delta_h[i2]);
+                	dm_dt[i3]=damping_coeff*(a[i]*h[i3] - b[i]*delta_h[i3]);
                 
-                // add precession: m x H, multiplied by -gamma
-                if (do_precession) {
-                    dm_dt[i1] += precession_coeff*(m[i2]*h[i3]-m[i3]*h[i2]);
-                    dm_dt[i2] += precession_coeff*(m[i3]*h[i1]-m[i1]*h[i3]);
-                    dm_dt[i3] += precession_coeff*(m[i1]*h[i2]-m[i2]*h[i1]);
+                	// add precession: m x H, multiplied by -gamma
+                	if (do_precession) {
+                		dm_dt[i1] += precession_coeff*(m[i2]*h[i3]-m[i3]*h[i2]);
+                		dm_dt[i2] += precession_coeff*(m[i3]*h[i1]-m[i1]*h[i3]);
+                		dm_dt[i3] += precession_coeff*(m[i1]*h[i2]-m[i2]*h[i1]);
                 } 
 
         	  }
@@ -474,8 +474,8 @@ namespace finmag { namespace llg {
             double tmp;
             for (int i = 0; i < length; i++) {
                 i1=i;
-        	i2=length+i1;
-        	i3=length+i2;
+                i2=length+i1;
+                i3=length+i2;
                 
                 tmp=m[i1]*m[i1]+m[i2]*m[i2]+m[i3]*m[i3];
                 ms[i1]=tmp;
@@ -491,22 +491,22 @@ namespace finmag { namespace llg {
                 const np_array<double> &Mp,
                 const np_array<double> &jtimes,
                 double gamma,
-		double chi,
-		double M0,
+                double chi,
+                double M0,
                 bool do_precession,
                 const np_array<long> &pins) {
 
-	    double *m=M.data();
+	    	double *m=M.data();
             double *h=H.data();
             double *mp=Mp.data();
             double *jt=jtimes.data();
             long int *pin=pins.data();
 
-	    double p[3][3],q[3][3];
-	    double tmp,m2;
+            double p[3][3],q[3][3];
+            double tmp,m2;
 
-	    double coeff1=-gamma;
-	    double coeff2=-1.0/(chi*M0*M0);            
+            double coeff1=-gamma;
+            double coeff2=-1.0/(chi*M0*M0);
 
             assert(H.size()%3==0);
             
@@ -518,59 +518,59 @@ namespace finmag { namespace llg {
 
 
            if (!do_precession) {
-		for (int i = 0; i < 3*length; i++) {
+        	   for (int i = 0; i < 3*length; i++) {
                    jt[i]=0;
                 }
-	      return;
+        	   return;
            }
 
 
             for (int i = 0; i < length; i++) {
                 i1=i;
                 i2=length+i1;
-        	i3=length+i2;
+                i3=length+i2;
  		
-		m2=m[i1]*m[i1]+m[i2]*m[i2]+m[i3]*m[i3];
+                m2=m[i1]*m[i1]+m[i2]*m[i2]+m[i3]*m[i3];
                
- 		tmp=(m2-M0*M0)/2.0;
-		q[0][0]=coeff2*(m[i1]*m[i1]+tmp);
-		q[0][1]=coeff2*m[i2]*m[i1];
-		q[0][2]=coeff2*m[i3]*m[i1];
+                tmp=(m2-M0*M0)/2.0;
+                q[0][0]=coeff2*(m[i1]*m[i1]+tmp);
+                q[0][1]=coeff2*m[i2]*m[i1];
+                q[0][2]=coeff2*m[i3]*m[i1];
 
-		q[1][0]=coeff2*m[i1]*m[i2];
-		q[1][1]=coeff2*(m[i2]*m[i2]+tmp);
-		q[1][2]=coeff2*m[i3]*m[i2];
+                q[1][0]=coeff2*m[i1]*m[i2];
+                q[1][1]=coeff2*(m[i2]*m[i2]+tmp);
+                q[1][2]=coeff2*m[i3]*m[i2];
 
-		q[2][0]=coeff2*m[i1]*m[i3];
-		q[2][1]=coeff2*m[i2]*m[i3];
-		q[2][2]=coeff2*(m[i3]*m[i3]+tmp);
+                q[2][0]=coeff2*m[i1]*m[i3];
+                q[2][1]=coeff2*m[i2]*m[i3];
+                q[2][2]=coeff2*(m[i3]*m[i3]+tmp);
 
 
 
-		p[0][0]=m[i2]*q[2][0]-m[i3]*q[1][0];
-		p[0][1]=m[i2]*q[2][1]-m[i3]*q[1][1]+h[i3];
-		p[0][2]=m[i2]*q[2][2]-m[i3]*q[1][2]-h[i2];
+                p[0][0]=m[i2]*q[2][0]-m[i3]*q[1][0];
+                p[0][1]=m[i2]*q[2][1]-m[i3]*q[1][1]+h[i3];
+                p[0][2]=m[i2]*q[2][2]-m[i3]*q[1][2]-h[i2];
 
-		p[1][0]=-m[i1]*q[2][0]+m[i3]*q[0][0]-h[i3];
-		p[1][1]=-m[i1]*q[2][1]+m[i3]*q[0][1];
-		p[1][2]=-m[i1]*q[2][2]+m[i3]*q[0][2]+h[i1];
+                p[1][0]=-m[i1]*q[2][0]+m[i3]*q[0][0]-h[i3];
+                p[1][1]=-m[i1]*q[2][1]+m[i3]*q[0][1];
+                p[1][2]=-m[i1]*q[2][2]+m[i3]*q[0][2]+h[i1];
 
-		p[2][0]=m[i1]*q[1][0]-m[i2]*q[0][0]+h[i2];
-		p[2][1]=m[i1]*q[1][1]-m[i2]*q[0][1]-h[i1];
-		p[2][2]=m[i1]*q[1][2]-m[i2]*q[0][2];
+                p[2][0]=m[i1]*q[1][0]-m[i2]*q[0][0]+h[i2];
+                p[2][1]=m[i1]*q[1][1]-m[i2]*q[0][1]-h[i1];
+                p[2][2]=m[i1]*q[1][2]-m[i2]*q[0][2];
 
 	
                 jt[i1]= coeff1*(p[0][0]*mp[i1]+p[0][1]*mp[i2]+p[0][2]*mp[i3]);
                 jt[i2]= coeff1*(p[1][0]*mp[i1]+p[1][1]*mp[i2]+p[1][2]*mp[i3]);
                 jt[i3]= coeff1*(p[2][0]*mp[i1]+p[2][1]*mp[i2]+p[2][2]*mp[i3]);
 
-		//printf("%g  %g  %g\n",jt[i1],jt[i2],jt[i3]);
+                //printf("%g  %g  %g\n",jt[i1],jt[i2],jt[i3]);
 
-		if(pin[i]>0){
-        	    jt[i1]=0;
+                if(pin[i]>0){
+                	jt[i1]=0;
                     jt[i2]=0;
                     jt[i3]=0;
-        	}
+                }
 
             }
        }
@@ -648,13 +648,13 @@ namespace finmag { namespace llg {
         ));
 
         def("calc_baryakhtar_jtimes", &calc_baryakhtar_jtimes, (
-	    arg("M"),
+        	arg("M"),
             arg("H"),
             arg("Mp"),
             arg("jtimes"),
             arg("gamma"),
-	    arg("chi"),
-	    arg("M0"),
+            arg("chi"),
+            arg("M0"),
             arg("do_precession"),
             arg("pins")
         ));

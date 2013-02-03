@@ -62,7 +62,7 @@ class LLB(object):
         #               0.1e12 1/s is the value used by default in nmag 0.2
         self.M0 = 8.6e5 # A/m saturation magnetisation
         self.t = 0.0 # s
-        self.pins = [] # nodes where the magnetisation gets pinned
+        self._pins=np.zeros(self.S1.mesh().num_vertices(),dtype="int")
         self._pre_rhs_callables=[]
         self._post_rhs_callables=[]
         self.interactions = []
@@ -94,11 +94,8 @@ class LLB(object):
         return self._pins
     
     @pins.setter
-    def pins(self, nodes):
-        if len(nodes)>0:
-            self._pins = np.array(nodes, dtype="int")
-        else:
-            self._pins=np.zeros(self.S1.mesh().num_vertices(),dtype="int")
+    def pins(self, value):
+        self._pins[:]=helpers.scalar_valued_function(value,self.S1).vector().array()[:]
     
     def spatially_varying_alpha(self, baseline_alpha, multiplicator):
         """
@@ -145,7 +142,7 @@ class LLB(object):
             integrator.set_spils_jac_times_vec_fn(self.sundials_jtimes)
             integrator.set_spils_preconditioner(self.sundials_psetup, self.sundials_psolve)
         else:
-             integrator.set_linear_solver_sp_gmr(sundials.PREC_NONE)
+            integrator.set_linear_solver_sp_gmr(sundials.PREC_NONE)
             
         integrator.set_scalar_tolerances(reltol, abstol)
         integrator.set_max_num_steps(nsteps)
