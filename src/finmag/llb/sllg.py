@@ -17,7 +17,7 @@ import logging
 log = logging.getLogger(name="finmag")
 
 class SLLG(object):
-    def __init__(self,mesh,Ms=8.6e5,unit_length=1.0,name='unnamed',auto_save_data=True,method='RK2b',checking_length=True):
+    def __init__(self,mesh,Ms=8.6e5,unit_length=1.0,name='unnamed',auto_save_data=True,method='RK2b',checking_length=False):
         self._t=0
         self.time_scale=1e-9
         self.mesh=mesh
