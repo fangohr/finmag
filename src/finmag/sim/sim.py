@@ -8,7 +8,7 @@ from finmag.util.consts import exchange_length, bloch_parameter
 from finmag.util.meshes import mesh_info, mesh_volume
 from finmag.util.fileio import Tablewriter
 from finmag.util import helpers
-from finmag.util.vtk_export import VTK
+from finmag.util.vtk_saver import VTKSaver
 from finmag.sim.hysteresis import hysteresis as hyst, hysteresis_loop as hyst_loop
 from finmag.integrators.llg_integrator import llg_integrator
 from finmag.integrators import scheduler, relaxation
@@ -79,9 +79,14 @@ class Simulation(object):
         self.domains.set_all(0)
         self.region_id=0
 
+        self.overwrite_pvd_files = False
+        self.vtk_export_filename = self.sanitized_name + '.pvd'
+        self.vtk_saver = VTKSaver(self.vtk_export_filename)
+
         self.scheduler_shortcuts = {
             'save_restart_data' : restart.save_restart_data,
             'save_ndt' : scheduler.save_ndt,
+            'save_vtk' : Simulation.save_vtk,
             }
 
         # At the moment, we can only have cvode as the driver, and thus do
@@ -428,24 +433,31 @@ class Simulation(object):
 
     def snapshot(self, filename="", directory="", force_overwrite=False):
         """
-        Deprecated.
+        Deprecated. Use 'save_vtk' instead.
 
         """
         log.warning("Method 'snapshot' is deprecated. Use 'save_vtk' instead.")
         self.vtk(self, filename, directory, force_overwrite)
 
-    def save_vtk(self, filename="", directory="", force_overwrite=False):
+    def set_vtk_export_filename(self, filename=""):
+        """
+        Set the filename which is used for saving VTK snapshots.
+        """
+        self.vtk_export_filename = filename
+
+    def save_vtk(self, filename=None):
         """
         Save the magnetisation to a VTK file.
-
-        Leave filename empty for sequential snapshots of the magnetisation -
-        filenames will be automatically generated.
-
         """
-        if not hasattr(self, "vtk"):
-            prefix = "m_" if filename == "" else ""
-            self.vtk = VTK(filename, directory, force_overwrite, prefix)
-        self.vtk.save(self.llg._m, self.t)
+        if filename != None:
+            # Explicitly provided filename overwrites the previously used one.
+            self.vtk_export_filename = filename
+
+        # Check whether we're still writing to the same file.
+        if self.vtk_saver.filename != self.vtk_export_filename:
+            self.vtk_saver.open(self.vtk_export_filename, self.overwrite_pvd_files)
+
+        self.vtk_saver.save_field(self.llg._m, self.t)
 
     def mesh_info(self):
         """

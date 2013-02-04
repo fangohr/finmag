@@ -9,6 +9,8 @@ log = logging.getLogger("finmag")
 
 class VTKSaver(object):
     def __init__(self, filename=None, overwrite=False):
+        self.filename = filename
+        self.f = None
         if filename != None:
             self.open(filename, overwrite)
 
