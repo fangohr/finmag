@@ -55,6 +55,21 @@ def sanitize(s):
     # normalize UUIDs:
     s = re.sub(r'[a-f0-9]{8}(\-[a-f0-9]{4}){3}\-[a-f0-9]{12}', 'U-U-I-D', s)
 
+    # remove timestamps in Finmag logging output
+    s = re.sub(r'\[201\d-\d\d-\d\d \d\d:\d\d:\d\d\]', 'LOGGING_TIMESTAMP', s)
+
+    # ignore version information of external dependencies
+    s = re.sub('^paraview version .*$', 'PARAVIEW_VERSION', s)
+    for dep in ['Finmag', 'Dolfin', 'Matplotlib', 'Numpy', 'Scipy', 'IPython',
+                'Python', 'Paraview', 'Sundials', 'Boost-Python', 'Linux']:
+        s = re.sub('DEBUG: %20s: .*' % dep, 'VERSION_%s' % dep, s)
+
+    # ignore specific location of logging output file
+    s = re.sub("Finmag logging output will be.*", "FINMAG_LOGGING_OUTPUT", s)
+
+    # ignore datetime objects
+    s = re.sub(r'datetime.datetime\([0-9, ]*\)', 'DATETIME_OBJECT', s)
+
     return s
 
 
