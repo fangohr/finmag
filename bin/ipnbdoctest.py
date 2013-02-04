@@ -21,6 +21,10 @@ from IPython.zmq.blockingkernelmanager import BlockingKernelManager
 from IPython.nbformat.current import reads, NotebookNode
 
 
+class IPythonNotebookDoctestError(Exception):
+    pass
+
+
 def compare_png(a64, b64):
     """compare two b64 PNGs (incomplete)"""
     try:
@@ -186,6 +190,11 @@ def test_notebook(nb):
         print "    %3i cells failed to complete" % errors
     km.shutdown_kernel()
     del km
+    if failures or errors:
+        raise IPythonNotebookDoctestError(
+            "The notebook {} failed to replicate successfully.".format(
+                nb.metadata['name']))
+
 
 if __name__ == '__main__':
     for ipynb in sys.argv[1:]:
