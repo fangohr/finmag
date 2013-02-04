@@ -58,9 +58,8 @@ class Simulation(object):
         # timesteps.
         self.tablewriter = Tablewriter(self.ndtfilename, self, override=True)
 
-        log.info("Creating Sim object '{}' (rank={}/{}) [{}].".format(
-            self.name, df.MPI.process_number(),
-            df.MPI.num_processes(), time.asctime()))
+        log.info("Creating Sim object '{}' (rank={}/{}).".format(
+            self.name, df.MPI.process_number(), df.MPI.num_processes()))
         log.info(mesh)
 
         self.mesh = mesh
