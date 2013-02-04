@@ -403,13 +403,15 @@ class Simulation(object):
         time by setting the `realtime` option to True. In this case you can
         use the `after` keyword on its own.
         
-        The function func(sim) you provide should expect the simulation object as its
-        first argument. Other positional arguments can be added by passing
-        a list-like object to `args` while keyword arguments the function should
-        be called with can be added by passing a dict-like object to `kwargs`.
+        The function func(sim) you provide should expect the simulation
+        object as its first argument. Other positional arguments can be added
+        by passing a list-like object to `args` while keyword arguments the
+        function should be called with can be added by passing a dict-like
+        object to `kwargs`.
 
-        Alternatively, if func is a string, it will be looked up in 
-        self.scheduler_shortcuts, which includes 'restart' and 'save_ndt'.
+        Alternatively, if func is a string, it will be looked up in
+        self.scheduler_shortcuts, which includes 'save_restart_data'
+        and 'save_ndt'.
 
         """
         if isinstance(func, str):
