@@ -8,6 +8,7 @@ from tempfile import mkdtemp
 from finmag import sim_with
 from finmag.example import barmini
 from math import sqrt, cos, sin, pi
+from finmag.util.helpers import assert_number_of_files
 
 logger = logging.getLogger("finmag")
 
@@ -159,3 +160,57 @@ class TestSimulation(object):
         assert(np.allclose(res[..., 0], 1.0/sqrt(2)))
         assert(np.allclose(res[..., 1], 0.0))
         assert(np.allclose(res[..., 2], 1.0/sqrt(2)))
+
+    def test_save_vtk(self, tmpdir):
+        tmpdir = str(tmpdir)
+        sim1_dir = os.path.join(tmpdir, 'sim1')
+        sim2_dir = os.path.join(tmpdir, 'sim2')
+        sim3_dir = os.path.join(tmpdir, 'sim3')
+        sim4_dir = os.path.join(tmpdir, 'sim4')
+        os.mkdir(sim1_dir)
+        os.mkdir(sim2_dir)
+        os.mkdir(sim3_dir)
+        os.mkdir(sim4_dir)
+
+        # Run simulation for a few picoseconds and check that the
+        # expected vtk files were saved.
+        os.chdir(sim1_dir)
+        sim = barmini()
+        sim.schedule('save_vtk', every=4e-12, at_end=True)
+        sim.schedule('save_vtk', at=5e-12)
+        sim.run_until(1e-11)
+        assert_number_of_files('barmini.pvd', 1)
+        assert_number_of_files('barmini*.vtu', 5)
+
+        # Same again, but with a different filename (and a slightly
+        # different schedule, just for variety).
+        os.chdir(sim2_dir)
+        sim = barmini()
+        sim.set_vtk_export_filename('m.pvd')
+        sim.schedule('save_vtk', every=2e-12)
+        sim.schedule('save_vtk', at=3e-12)
+        sim.run_until(5e-12)
+        assert_number_of_files('m.pvd', 1)
+        assert_number_of_files('m*.vtu', 4)
+        # Check that no vtk files are present apart from the ones we expect
+        assert(len(glob.glob('*.vtu')) + len(glob.glob('*.pvd')) == 4 + 1)
+
+        # Run for a bit, then change the filename and continue
+        # running. At the end check that both .pvd files were written
+        # correctly.
+        os.chdir(sim3_dir)
+        sim = barmini()
+        sim.set_vtk_export_filename('a.pvd')
+        sim.schedule('save_vtk', every=2e-12)
+        sim.schedule('save_vtk', at=3e-12)
+        sim.run_until(5e-12)
+        assert_number_of_files('a.pvd', 1)
+        assert_number_of_files('a*.vtu', 4)
+        sim.set_vtk_export_filename('b.pvd')
+        sim.run_until(10e-12)
+        assert_number_of_files('b.pvd', 1)
+        assert_number_of_files('b*.vtu', 3)
+
+        sim.save_vtk('c.pvd')
+        assert_number_of_files('c.pvd', 1)
+        assert_number_of_files('c*.vtu', 1)
