@@ -7,15 +7,6 @@ from glob import glob
 from vtk_saver import VTKSaver
 from finmag.util.helpers import assert_number_of_files
 
-def assert_correct_number_of_files(tmpdir, filename, n):
-    """
-    Check that there is a single .pvd file and n .vtu files
-    present in the temporary directory.
-    """
-    basename, _ = os.path.splitext(filename)
-    assert_number_of_files(os.path.join(tmpdir, basename + "*.pvd"), 1)
-    assert_number_of_files(os.path.join(tmpdir, basename + "*.vtu"), n)
-
 
 class TestVTKSaver(object):
     def setup_class(self):
@@ -47,45 +38,47 @@ class TestVTKSaver(object):
         """
         
         """
-        tmpdir = str(tmpdir)
+        os.chdir(str(tmpdir))
 
         # Create a few dummy .pvd and .vtu files
-        with open(os.path.join(tmpdir, "myfile.pvd"), 'w'): pass
-        with open(os.path.join(tmpdir, "myfile000001.vtu"), 'w'): pass
-        with open(os.path.join(tmpdir, "myfile000002.vtu"), 'w'): pass
-        with open(os.path.join(tmpdir, "myfile000003.vtu"), 'w'): pass
-        with open(os.path.join(tmpdir, "myfile000004.vtu"), 'w'): pass
+        with open("myfile.pvd", 'w'): pass
+        with open("myfile000001.vtu", 'w'): pass
+        with open("myfile000002.vtu", 'w'): pass
+        with open("myfile000003.vtu", 'w'): pass
+        with open("myfile000004.vtu", 'w'): pass
 
         # Trying to re-open an existing .pvd file should raise an error:
         with pytest.raises(IOError):
-            VTKSaver(os.path.join(tmpdir, "myfile.pvd"))
+            VTKSaver("myfile.pvd")
 
         # Unless 'overwrite' is set to True, in which case the .vtu
         # files should be deleted:
-        v = VTKSaver(os.path.join(tmpdir, "myfile.pvd"), overwrite=True)
+        v = VTKSaver("myfile.pvd", overwrite=True)
         v.save_field(self.field_data, t=0)  # just to create a single .pvd and .vtu file
-        assert_correct_number_of_files(tmpdir, "myfile.pvd", 1)
-        print "Files: {}".format(glob(os.path.join(tmpdir, "*")))
+        assert_number_of_files("myfile.pvd", 1)
+        assert_number_of_files("myfile*.vtu", 1)
 
     def test_save_field(self, tmpdir):
         """
         Check that calling save_field with the field data given in
         various format works and creates the expected .vtu files.
         """
-        tmpdir = str(tmpdir)
+        os.chdir(str(tmpdir))
 
-        filename = os.path.join(tmpdir, "myfile.pvd")
-        v = VTKSaver(filename)
+        v = VTKSaver("myfile.pvd")
 
         v.save_field(self.field_data, t=0.0)
-        assert_correct_number_of_files(tmpdir, filename, 1)
+        assert_number_of_files("myfile.pvd", 1)
+        assert_number_of_files("myfile*.vtu", 1)
 
         v.save_field(self.field_data, t=1e-12)
-        assert_correct_number_of_files(tmpdir, filename, 2)
+        assert_number_of_files("myfile.pvd", 1)
+        assert_number_of_files("myfile*.vtu", 2)
 
         v.save_field(self.field_data, t=3e-12)
         v.save_field(self.field_data, t=8e-12)
-        assert_correct_number_of_files(tmpdir, filename, 4)
+        assert_number_of_files("myfile.pvd", 1)
+        assert_number_of_files("myfile*.vtu", 4)
 
     def test_saving_to_file_with_different_name(self, tmpdir):
         os.chdir(str(tmpdir))
