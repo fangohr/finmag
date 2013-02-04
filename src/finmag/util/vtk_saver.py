@@ -8,8 +8,9 @@ import dolfin as df
 log = logging.getLogger("finmag")
 
 class VTKSaver(object):
-    def __init__(self, filename, overwrite=False):
-        self.open(filename, overwrite)
+    def __init__(self, filename=None, overwrite=False):
+        if filename != None:
+            self.open(filename, overwrite)
 
     def open(self, filename, overwrite=False):
         ext = os.path.splitext(filename)[1]

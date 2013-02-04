@@ -21,18 +21,26 @@ class TestVTKSaver(object):
         # The next line is a hack and not recommended for real work
         self.field_data.vector().array()[:] = np.zeros(3 * N)
 
+    def test_constructor(self, tmpdir):
+        """
+        Check various methods of creating a VTKSaver object.
+        """
+        os.chdir(str(tmpdir))
+        v1 = VTKSaver()
+        v2 = VTKSaver('myfile.pvd')
+
     def test_file_extension_is_correct(self, tmpdir):
         """
         Check that only filenames with extension '.pvd' are
         """
-        tmpdir = str(tmpdir)
-        VTKSaver(os.path.join(tmpdir, "myfile.pvd"))  # this should pass
+        os.chdir(str(tmpdir))
+        VTKSaver("myfile.pvd")  # this should pass
         with pytest.raises(ValueError):
-            VTKSaver(os.path.join(tmpdir, "myfile.vtk"))
+            VTKSaver("myfile.vtk")
         with pytest.raises(ValueError):
-            VTKSaver(os.path.join(tmpdir, "myfile.vtu"))
+            VTKSaver("myfile.vtu")
         with pytest.raises(ValueError):
-            VTKSaver(os.path.join(tmpdir, "myfile.txt"))
+            VTKSaver("myfile.txt")
 
     def test_existing_files_are_deleted_if_requested(self, tmpdir):
         """
