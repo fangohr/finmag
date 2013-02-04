@@ -165,7 +165,7 @@ class Scheduler(object):
             raise TypeError("The function must be callable but object '%s' is of type '%s'" % \
                 (str(func), type(func)))
         assert at or every or at_end or (after and realtime), "Use either `at`, `every` or `at_end` if not in real time mode."
-        assert not (at!=None and every!=None), "It's either `at` or `every`."
+        assert not (at!=None and every!=None), "Cannot mix `at` with `every`. Please schedule separately."
         assert not (at!=None and after!=None), "Delays don't mix with `at`."
 
         args = args or []
