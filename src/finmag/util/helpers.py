@@ -1,4 +1,5 @@
 from datetime import datetime
+from glob import glob
 import matplotlib.pyplot as plt
 import subprocess
 import itertools
@@ -12,6 +13,7 @@ import os
 import re
 
 logger = logging.getLogger("finmag")
+
 
 def logging_status_str():
     """Return a string that shows all known loggers and their current levels
@@ -39,7 +41,6 @@ def logging_status_str():
                     % (loggername, logger.level, logger.getEffectiveLevel(),
                        i, handler.level, handlerstr))
     return msg
-
 
 
 def set_logging_level(level):
@@ -138,6 +139,14 @@ def clean_filename(filename):
     filename = re.sub(r'[^a-zA-Z0-9_]', '_', filename)
     return filename
 
+
+def assert_number_of_files(files, n):
+    """
+    Check that there are exactly `n` files matching the pattern in
+    `files` (which may contain wildcards, such as 'foo/bar*.txt') and
+    raise an AssertionError otherwise.
+    """
+    assert(len(glob(files)) == n)
 
 def components(vs):
     """
