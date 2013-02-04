@@ -5,7 +5,7 @@ import dolfin as df
 import numpy as np
 from glob import glob
 from vtk_saver import VTKSaver
-
+from finmag.util.helpers import assert_number_of_files
 
 def assert_correct_number_of_files(tmpdir, filename, n):
     """
@@ -13,8 +13,8 @@ def assert_correct_number_of_files(tmpdir, filename, n):
     present in the temporary directory.
     """
     basename, _ = os.path.splitext(filename)
-    assert(len(glob(os.path.join(tmpdir, basename + "*.pvd"))) == 1)
-    assert(len(glob(os.path.join(tmpdir, basename + "*.vtu"))) == n)
+    assert_number_of_files(os.path.join(tmpdir, basename + "*.pvd"), 1)
+    assert_number_of_files(os.path.join(tmpdir, basename + "*.vtu"), n)
 
 
 class TestVTKSaver(object):
