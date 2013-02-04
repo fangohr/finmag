@@ -86,3 +86,20 @@ class TestVTKSaver(object):
         v.save_field(self.field_data, t=3e-12)
         v.save_field(self.field_data, t=8e-12)
         assert_correct_number_of_files(tmpdir, filename, 4)
+
+    def test_saving_to_file_with_different_name(self, tmpdir):
+        os.chdir(str(tmpdir))
+
+        v = VTKSaver("myfile1.pvd")
+        v.save_field(self.field_data, t=0.0)
+        v.save_field(self.field_data, t=0.1)
+        v.open("myfile2.pvd")
+        v.save_field(self.field_data, t=0.0)
+        v.save_field(self.field_data, t=0.1)
+        v.save_field(self.field_data, t=0.2)
+
+        assert_number_of_files("myfile1.pvd", 1)
+        assert_number_of_files("myfile1*.vtu", 2)
+
+        assert_number_of_files("myfile2.pvd", 1)
+        assert_number_of_files("myfile2*.vtu", 3)

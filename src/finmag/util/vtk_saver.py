@@ -9,9 +9,9 @@ log = logging.getLogger("finmag")
 
 class VTKSaver(object):
     def __init__(self, filename, overwrite=False):
-        """
-        Create a
-        """
+        self.open(filename, overwrite)
+
+    def open(self, filename, overwrite=False):
         ext = os.path.splitext(filename)[1]
         if ext != '.pvd':
             raise ValueError(
