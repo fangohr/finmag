@@ -14,7 +14,6 @@ from finmag.sim import sim_helpers
 from finmag.energies import Exchange, Zeeman, Demag, UniaxialAnisotropy, DMI
 from finmag.integrators.llg_integrator import llg_integrator
 from finmag.integrators import scheduler, relaxation
-from finmag.util import restart
 
 ONE_DEGREE_PER_NS = 17453292.5  # in rad/s
 
@@ -296,10 +295,10 @@ class Simulation(object):
         """
 
         if filename == None:
-            filename = restart.canonical_restart_filename(self)
+            filename = sim_helpers.canonical_restart_filename(self)
         log.debug("Loading restart data from {}. ".format(filename))
 
-        data = restart.load_restart_data(filename)
+        data = sim_helpers.load_restart_data(filename)
     
         if not data['driver'] in ['cvode']:
             log.error("Requested unknown driver `{}` for restarting. Known: {}.".format(data["driver"], "cvode"))
