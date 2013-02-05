@@ -10,6 +10,7 @@ from finmag.util.fileio import Tablewriter
 from finmag.util import helpers
 from finmag.util.vtk_saver import VTKSaver
 from finmag.sim.hysteresis import hysteresis as hyst, hysteresis_loop as hyst_loop
+from finmag.sim import sim_helpers
 from finmag.energies import Exchange, Zeeman, Demag, UniaxialAnisotropy, DMI
 from finmag.integrators.llg_integrator import llg_integrator
 from finmag.integrators import scheduler, relaxation
@@ -85,7 +86,7 @@ class Simulation(object):
 
         self.scheduler_shortcuts = {
             'save_restart_data' : restart.save_restart_data,
-            'save_ndt' : scheduler.save_ndt,
+            'save_ndt' : sim_helpers.save_ndt,
             'save_vtk' : Simulation.save_vtk,
             }
 
