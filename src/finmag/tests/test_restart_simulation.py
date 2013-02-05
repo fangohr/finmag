@@ -11,7 +11,7 @@ def test_restart_same_simulation():
 
     # <codecell>
 
-    finmag.util.restart.save_restart_data(sim)
+    sim.save_restart_data()
 
     # <markdowncell>
 
@@ -41,7 +41,7 @@ def test_restart_same_simulation():
 
     # <codecell>
 
-    finmag.util.restart.save_restart_data(sim, filename="my-special-state.npz")
+    sim.save_restart_data(filename="my-special-state.npz")
 
     # <markdowncell>
 
