@@ -85,7 +85,7 @@ class Simulation(object):
         self.vtk_saver = VTKSaver(self.vtk_export_filename)
 
         self.scheduler_shortcuts = {
-            'save_restart_data' : restart.save_restart_data,
+            'save_restart_data' : sim_helpers.save_restart_data,
             'save_ndt' : sim_helpers.save_ndt,
             'save_vtk' : Simulation.save_vtk,
             }
