@@ -161,6 +161,14 @@ class TestSimulation(object):
         assert(np.allclose(res[..., 1], 0.0))
         assert(np.allclose(res[..., 2], 1.0/sqrt(2)))
 
+    def test_save_ndt(self, tmpdir):
+        os.chdir(str(tmpdir))
+        sim = barmini()
+        sim.schedule('save_ndt', every=2e-13)
+        sim.run_until(1.1e-12)
+        a = np.loadtxt('barmini.ndt')
+        assert(len(a) == 6)  # we should have saved 6 time steps
+
     def test_save_vtk(self, tmpdir):
         tmpdir = str(tmpdir)
         sim1_dir = os.path.join(tmpdir, 'sim1')
