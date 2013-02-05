@@ -9,6 +9,7 @@ from finmag import sim_with
 from finmag.example import barmini
 from math import sqrt, cos, sin, pi
 from finmag.util.helpers import assert_number_of_files
+from finmag.sim import sim_helpers
 
 logger = logging.getLogger("finmag")
 
@@ -168,6 +169,29 @@ class TestSimulation(object):
         sim.run_until(1.1e-12)
         a = np.loadtxt('barmini.ndt')
         assert(len(a) == 6)  # we should have saved 6 time steps
+
+    def test_save_restart_data(self, tmpdir):
+        """
+        Simple test to check that we can save restart data via the
+        Simulation class. Note that this basically just checks that we
+        can call save_restart_data(). The actual stress-test of the
+        functionality is in sim_helpers_test.py.
+
+        """
+        os.chdir(str(tmpdir))
+        sim = barmini()
+
+        # Test scheduled saving of restart data
+        sim.schedule('save_restart_data', at_end=True)
+        sim.run_until(1e-13)
+        d = sim_helpers.load_restart_data('barmini-restart.npz')
+        assert(d['simtime']) == 1e-13
+
+        # Testsaving of restart data using the simulation's own method
+        sim.run_until(2e-13)
+        sim.save_restart_data()
+        d = sim_helpers.load_restart_data('barmini-restart.npz')
+        assert(d['simtime']) == 2e-13
 
     def test_save_vtk(self, tmpdir):
         tmpdir = str(tmpdir)

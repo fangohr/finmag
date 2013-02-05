@@ -85,7 +85,7 @@ class Simulation(object):
         self.vtk_saver = VTKSaver(self.vtk_export_filename)
 
         self.scheduler_shortcuts = {
-            'save_restart_data' : sim_helpers.save_restart_data,
+            'save_restart_data' : Simulation.save_restart_data,
             'save_ndt' : sim_helpers.save_ndt,
             'save_vtk' : Simulation.save_vtk,
             }
@@ -280,6 +280,8 @@ class Simulation(object):
 
         self.scheduler._remove(relax) 
         del(relax.sim, relax) # help the garbage collection by avoiding circular reference
+
+    save_restart_data = sim_helpers.save_restart_data
 
     def restart(self, filename=None, t0=None):
         """If called, we look for a filename of type sim.name + '-restart.npz',
