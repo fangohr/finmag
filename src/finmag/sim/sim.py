@@ -414,8 +414,8 @@ class Simulation(object):
         object to `kwargs`.
 
         Alternatively, if func is a string, it will be looked up in
-        self.scheduler_shortcuts, which includes 'save_restart_data'
-        and 'save_ndt'.
+        self.scheduler_shortcuts, which includes 'save_restart_data',
+        'save_ndt' and 'save_vtk'.
 
         """
         if isinstance(func, str):
