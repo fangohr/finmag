@@ -6,13 +6,11 @@ from finmag.energies.zeeman import Zeeman
 def macrospin(Ms=0.86e6, m_init=(1, 0, 0), H_ext=(0, 0, 1e6), alpha=0.1,
               name='macrospin'):
     """
-    Cubic mesh of length 1 nm along each edge, with eight vertices
-    located in the corners of the cube.
-
-    No anisotropy, exchange coupling or demag is present so that
-    magnetic moments at the vertices behave identical under the
-    influence of the external field.
-
+    Minimal mesh with two vertices (1 nm apart). No anisotropy,
+    exchange coupling or demag is present so that magnetic moments at
+    the two vertices behave identical under the influence of the
+    external field. (Ideally, we would only have a single vertex but
+    Dolfin doesn't support this.)
 
     Default values for the arguments:
 
@@ -25,14 +23,9 @@ def macrospin(Ms=0.86e6, m_init=(1, 0, 0), H_ext=(0, 0, 1e6), alpha=0.1,
         alpha = 0.1  (Gilbert damping coefficient)
 
     """
-    # Define the cubic mesh
-    x0 = y0 = z0 = 0
-    x1 = y1 = z1 = 1e-9
-    nx = ny = nz = 1
-    mesh = df.Box(x0, x1, y0, y1, z0, z1, nx, ny, nz)
+    mesh = df.UnitInterval()
 
-    # Set minimal simulation parameters
-    sim = Simulation(mesh, Ms=Ms, name=name)
+    sim = Simulation(mesh, Ms=Ms, unit_length=1e-9, name=name)
     sim.alpha = alpha
     sim.set_m(m_init)
     sim.add(Zeeman(H_ext))
