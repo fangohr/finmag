@@ -69,6 +69,10 @@ class TimeZeeman(Zeeman):
             self.H = df.interpolate(self.value, self.S3)
 
     def switch_off(self):
+        # It might be nice to remove the Zeeman interaction from the
+        # simulation altogether (or at least provide an option to do
+        # so) in order to avoid computing the Zeeman energy at all
+        # once the field is switched off.
         log.debug("Switching external field off.")
         self.H.assign(df.Constant((0, 0, 0)))
         self.value = None
@@ -76,17 +80,23 @@ class TimeZeeman(Zeeman):
 
 
 class DiscreteTimeZeeman(TimeZeeman):
-    def __init__(self, field_expression, dt_update, t_off=None):
+    def __init__(self, field_expression, dt_update=None, t_off=None):
         """
-        Specify a time dependent external field, which gets updated in discrete time intervals.
+        Specify a time dependent external field which gets updated in
+        discrete time intervals.
         
-        Pass in a dolfin expression that depends on time. Make sure the time
-        variable is called t. It will get refreshed by calls to update, if
-        more than dt_update time has passed since the last refresh.
-        The argument t_off can specify a time at which the field will
-        get switched off.
+        Pass in a dolfin expression that depends on time. Make sure
+        the time variable is called t. It will get refreshed by calls
+        to update, if more than dt_update time has passed since the
+        last refresh. The argument t_off can specify a time at which
+        the field will get switched off. If t_off is provided,
+        dt_update can be `None` so that the field remains constant
+        until it is switched off.
 
         """
+        if dt_update is None and t_off is None:
+            raise ValueError("At least one of the arguments 'dt_update' and "
+                             "'t_off' must be given.")
         super(DiscreteTimeZeeman, self).__init__(field_expression, t_off)
         self.dt_update = dt_update
         self.t_last_update = 0.0
@@ -97,9 +107,10 @@ class DiscreteTimeZeeman(TimeZeeman):
                 self.switch_off()
                 return
 
-            dt_since_last_update = t - self.t_last_update
-            if dt_since_last_update >= self.dt_update:
-                self.value.t = t
-                self.H = df.interpolate(self.value, self.S3)
-                log.debug("At t={}, after dt={}, update external field again.".format(
-                    t, dt_since_last_update))
+            if self.dt_update is not None:
+                dt_since_last_update = t - self.t_last_update
+                if dt_since_last_update >= self.dt_update:
+                    self.value.t = t
+                    self.H = df.interpolate(self.value, self.S3)
+                    log.debug("At t={}, after dt={}, update external field again.".format(
+                        t, dt_since_last_update))
