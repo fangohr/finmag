@@ -1,5 +1,6 @@
-"""This module provides a few 'standard' simulations that
-are used repeatedly in the documentation/manual.
+"""
+This module provides a few 'standard' simulations that are used
+repeatedly in the documentation/manual.
 
 They generally return a simulation object.
 """
