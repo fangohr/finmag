@@ -100,10 +100,11 @@ def compare_outputs(test, ref, skip_compare=('png', 'traceback',
             return False
         elif (key not in skip_compare) and \
                 (sanitize(test[key]) != sanitize(ref[key])):
-            print "mismatch %s:" % key
+            print "----- Mismatch {}: --------------------------------------------------------".format(key)
             print test[key]
-            print '  !=  '
+            print "----------   !=   ----------"
             print ref[key]
+            print "--------------------------------------------------------------------------------"
             return False
     return True
 
