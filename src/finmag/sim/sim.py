@@ -87,6 +87,7 @@ class Simulation(object):
             'save_restart_data' : Simulation.save_restart_data,
             'save_ndt' : sim_helpers.save_ndt,
             'save_vtk' : Simulation.save_vtk,
+            'switch_off_H_ext' : Simulation.switch_off_H_ext,
             }
 
         # At the moment, we can only have cvode as the driver, and thus do
@@ -205,6 +206,25 @@ class Simulation(object):
         log.debug("Removing interaction '{}' from simulation '{}'".format(
                 interaction_type, self.name))
         return self.llg.effective_field.remove_interaction(interaction_type)
+
+    def switch_off_H_ext(self, remove_interaction=True):
+        """
+        Convenience function to switch off the external field.
+
+        If `remove_interaction` is True (the default), the Zeeman
+        interaction will be completely removed from the Simulation
+        class, which should make the time integration run faster.
+        Otherwise its value is just set to zero.
+        """
+        if remove_interaction:
+            dbg_str = "(removing Zeeman interaction)"
+            self.remove_interaction("Zeeman")
+        else:
+            dbg_str = "(setting value to zero)"
+            H = self.get_interaction("Zeeman")
+            H.set_value([0, 0, 0])
+
+        log.debug("Switching off external field {}".format(dbg_str))
 
     def get_field_as_dolfin_function(self, field_type):
         """

@@ -16,6 +16,13 @@ from finmag.energies.exchange import Exchange
 
 logger = logging.getLogger("finmag")
 
+def num_interactions(sim):
+    """
+    Helper function to determine the number of interactions present in
+    the Simulation.
+    """
+    return len(sim.llg.effective_field.interactions)
+
 class TestSimulation(object):
     @classmethod
     def setup_class(cls):
@@ -251,8 +258,6 @@ class TestSimulation(object):
         assert_number_of_files('c*.vtu', 1)
 
     def test_remove_interaction(self):
-        def num_interactions(sim):
-            return len(sim.llg.effective_field.interactions)
 
         mesh = df.Box(0, 0, 0, 1, 1, 1, 1, 1, 1)
         sim = Simulation(mesh, Ms=1, unit_length=1e-9)
@@ -275,3 +280,18 @@ class TestSimulation(object):
         sim.add(Zeeman((0, 0, 2)))
         with pytest.raises(ValueError):
             sim.remove_interaction("Zeeman")
+
+    def test_switch_off_H_ext(self):
+        """
+        Simply test that we can call sim.switch_off_H_ext()
+        """
+        mesh = df.Box(0, 0, 0, 1, 1, 1, 1, 1, 1)
+        sim = Simulation(mesh, Ms=1, unit_length=1e-9)
+        sim.add(Zeeman((1, 2, 3)))
+
+        sim.switch_off_H_ext(remove_interaction=False)
+        H = sim.get_interaction("Zeeman").compute_field()
+        assert(np.allclose(H, np.zeros_like(H)))
+
+        sim.switch_off_H_ext(remove_interaction=True)
+        assert(num_interactions(sim) == 0)
