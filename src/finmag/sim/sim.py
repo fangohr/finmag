@@ -191,6 +191,21 @@ class Simulation(object):
         """
         return self.llg.effective_field.get_interaction(interaction_type)
 
+    def remove_interaction(self, interaction_type):
+        """
+        Remove the interaction of the given type.
+
+        *Arguments*
+
+        interaction_type: string
+
+            The allowed types are those finmag knows about by classname, for
+            example: 'Demag', 'Exchange', 'UniaxialAnisotropy', 'Zeeman'.
+        """
+        log.debug("Removing interaction '{}' from simulation '{}'".format(
+                interaction_type, self.name))
+        return self.llg.effective_field.remove_interaction(interaction_type)
+
     def get_field_as_dolfin_function(self, field_type):
         """
         Returns the field of the interaction of the given type or of the

@@ -1,15 +1,18 @@
 import dolfin as df
 import numpy as np
 import logging
+import pytest
 import os
 import glob
 import shutil
 from tempfile import mkdtemp
-from finmag import sim_with
+from finmag import sim_with, Simulation
 from finmag.example import barmini
 from math import sqrt, cos, sin, pi
 from finmag.util.helpers import assert_number_of_files
 from finmag.sim import sim_helpers
+from finmag.energies.zeeman import Zeeman
+from finmag.energies.exchange import Exchange
 
 logger = logging.getLogger("finmag")
 
@@ -246,3 +249,29 @@ class TestSimulation(object):
         sim.save_vtk('c.pvd')
         assert_number_of_files('c.pvd', 1)
         assert_number_of_files('c*.vtu', 1)
+
+    def test_remove_interaction(self):
+        def num_interactions(sim):
+            return len(sim.llg.effective_field.interactions)
+
+        mesh = df.Box(0, 0, 0, 1, 1, 1, 1, 1, 1)
+        sim = Simulation(mesh, Ms=1, unit_length=1e-9)
+        sim.add(Zeeman((0, 0, 1)))
+        sim.add(Exchange(13e-12))
+        assert(num_interactions(sim) == 2)
+
+        sim.remove_interaction("Exchange")
+        assert(num_interactions(sim) == 1)
+
+        sim.remove_interaction("Zeeman")
+        assert(num_interactions(sim) == 0)
+
+        # No Zeeman interaction present any more
+        with pytest.raises(ValueError):
+            sim.remove_interaction("Zeeman")
+
+        # Two different Zeeman interaction present
+        sim.add(Zeeman((0, 0, 1)))
+        sim.add(Zeeman((0, 0, 2)))
+        with pytest.raises(ValueError):
+            sim.remove_interaction("Zeeman")
