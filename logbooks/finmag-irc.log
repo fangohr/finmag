@@ -4263,3 +4263,47 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-02-06 13:28:37 mb8g11: Test.
 2013-02-06 13:29:58 mb8g11: Marvin and MarvinBot were already taken, sadly.
 2013-02-06 16:16:03 ww1g11: Hans: I already put it into dropbox, the thesis is downloaded from http://www3.icmm.csic.es/magsim/?page_id=220
+2013-02-07 07:47:25 mb8g11_: Hiya
+2013-02-07 10:42:29 mb8g11_: Hi Hans
+2013-02-07 10:42:42 fangohr_: Hi ;)
+2013-02-07 10:43:16 mb8g11_: Got around to writing the report for January in preparation for our meeting later.
+2013-02-07 10:43:27 fangohr_: Yes, just saw it. Looks good.
+2013-02-07 10:48:30 fangohr_: Thanks also for fixing the Marvin commits -- it is re-assuring to get the chat logs at midnight.
+2013-02-07 12:09:55 fangohr-adium: Max, or anybody, interested in food in 5 minutes? (No worries if not.)
+2013-02-07 12:10:19 max_albert: Sure, why not.
+2013-02-07 12:10:25 mb4e10: Not hungry. Thanks.
+2013-02-07 12:10:36 max_albert: Hi Marc-Antonio!
+2013-02-07 12:11:11 max_albert: I just had a quick look at the scheduler logic again. (Because I wanted to see if it makes sense to allow passing a list of time steps to At().)
+2013-02-07 12:12:17 max_albert: I was wondering, in the At.fire() method, does the 'time' argument have any relation to the target time at which the At object is supposed to fire?
+2013-02-07 12:12:42 fangohr-adium: Okay, Max. I'll come and pick you up.
+2013-02-07 12:12:56 mb8g11__: Yes. It's supposed to be equal with EPSILON precision.
+2013-02-07 12:13:14 mb8g11__: This is just done to ensure there is no corruption in the system.
+2013-02-07 12:13:43 mb8g11__: Additionally, it allows us to check if we haven't fired at this time already.
+2013-02-07 12:14:04 max_albert: Hmm, but this isn't actually checked in the code, is it?
+2013-02-07 12:14:21 mb8g11__: Should be, let me check quickly.
+2013-02-07 12:14:40 max_albert: Also, in the test in scheduler_test.py, an At object is created with target 100, but it is called with a.fire(0).
+2013-02-07 12:15:01 max_albert: Let me just quickly push a change I did a minute ago.
+2013-02-07 12:15:09 mb8g11__: l. 273             if (item.next_step != None) and abs(item.next_step - time) < EPSILON:
+2013-02-07 12:16:19 max_albert: Ah, it happens in the Scheduler class, not the At class?! I'll have to check that again.
+2013-02-07 12:17:27 max_albert: Ok, so the scheduler logic should work, but the test for At is still wrong, isn't it?
+2013-02-07 12:17:28 mb8g11__: The At class checks it differently, to avoid double firing at the same time (possible when simulation stops exactly at the next appointment of At, and at_End==True)
+2013-02-07 12:17:49 mb8g11__: The scheduler is the one who checks for internal consitency
+2013-02-07 12:18:05 mb8g11__: Sounds like it, which line?
+2013-02-07 12:18:21 max_albert: Line 58 ff. (after my latest commit).
+2013-02-07 12:19:07 max_albert: I haven't checked the logic yet, but it sounds like it might make sense to do the consistency check inside the item classes (At, Every, ExitAt) instead of the scheduler itself?
+2013-02-07 12:19:28 mb8g11__: If the test you showed me passes, then this is a bug.
+2013-02-07 12:19:42 max_albert: Yes, it does pass.
+2013-02-07 12:20:02 mb8g11__: Ah wait, you call fire on At directly.
+2013-02-07 12:20:11 mb8g11__: Instead of telling the Scheduler it reached 100.
+2013-02-07 12:20:39 max_albert: I don't. Whoever wrote the test did. ;-)
+2013-02-07 12:20:41 max_albert: Feel free to have a look at this if you have time or fancy it. I'll do it too after lunch (Hans just came over).
+2013-02-07 12:20:44 mb8g11__: Will add the test to the events themselves as well and maybe refactor a little.
+2013-02-07 12:20:51 max_albert: Great, thanks!
+2013-02-07 12:20:53 mb8g11__: Can you ask Hans when our Skype is?
+2013-02-07 12:21:25 max_albert: He is "still aiming for 1pm" (maybe a little after), if that suits you.
+2013-02-07 12:21:32 mb8g11__: Just checking, perfect.
+2013-02-07 12:21:39 mb8g11__: Have a nice meal.
+2013-02-07 12:21:45 max_albert: Cool, see you later!
+2013-02-07 15:09:43 mb8g11_: Just checked why we have GCR at all. Seems slightly slower, but gives better results for coarser meshes.
+2013-02-07 15:10:01 mb8g11_: plots in last commit
+2013-02-07 15:10:34 mb8g11_: I doubt this is new information, but maybe a good reminder.
