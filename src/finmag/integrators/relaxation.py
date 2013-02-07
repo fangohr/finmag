@@ -50,7 +50,7 @@ class Relaxation(object):
                 self.dmdt_increased_counter_limit))
             self.stop_simulation = True
 
-    def fire(self, t):
+    def fire(self, t, finalising=False):
         assert abs(t - self.sim.t) < EPSILON
         if (self.last_t != None) and abs(self.last_t - t) < EPSILON:
             return
