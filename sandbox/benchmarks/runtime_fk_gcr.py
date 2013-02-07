@@ -23,8 +23,9 @@ for maxh in maxhs:
             for j in range(10):
                 demag.compute_field()
         field = demag.compute_field().reshape((3, -1)).mean(axis=1)
-        error = abs(field[0] + 1/3)
-        print i
+        print field
+        error = abs(field[0] + 1.0/3)
+        print error
         timings[i].append(benchmark.elapsed)
         errors[i].append(error)
 
