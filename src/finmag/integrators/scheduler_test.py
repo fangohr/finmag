@@ -6,6 +6,12 @@ class Counter(object):
     cnt_every = 0
     cnt_at = 0
 
+    def inc_every(self):
+        self.cnt_every += 1
+
+    def inc_at(self):
+        self.cnt_at += 1
+
     def reset(self):
         self.cnt_every = 0
         self.cnt_at = 0
@@ -32,36 +38,30 @@ def test_update_next_stop_according_to_interval():
 
 def test_can_attach_callback():
     c = Counter()
-    def my_fun():
-        c.cnt_every += 1
 
     assert c.cnt_every == 0
     e = Every(100)
-    e.attach(my_fun)
+    e.attach(c.inc_every)
     e.fire(0)
     assert c.cnt_every == 1
 
     # alternative syntax
 
     c.reset()
-    def my_funb():
-        c.cnt_every += 1
 
-    e = Every(100).call(my_funb)
+    e = Every(100).call(c.inc_every)
     assert c.cnt_every == 0
     e.fire(0)
     assert c.cnt_every == 1
 
 
-def test_at():
+def test_at_with_single_value():
     c = Counter()
-    def my_fun():
-        c.cnt_at += 1
 
     assert c.cnt_at == 0
     a = At(100)
     assert a.next_step == 100
-    a.attach(my_fun)
+    a.attach(c.inc_at)
     a.fire(0)
     assert c.cnt_at == 1
 
@@ -85,17 +85,11 @@ def test_returns_None_if_no_actions_or_done():
 def test_scheduler():
     c = Counter()
 
-    def my_fun_every():
-        c.cnt_every += 1
-
-    def my_fun_at():
-        c.cnt_at += 1
-
     s = Scheduler()
-    s.add(my_fun_every, every=200)
+    s.add(c.inc_every, every=200)
     assert c.cnt_every == 0
     assert s.next() == 0.0
-    s.add(my_fun_at, at=100)
+    s.add(c.inc_at, at=100)
     s.reached(0.0)
     assert c.cnt_every == 1
     assert c.cnt_at == 0
