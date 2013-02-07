@@ -45,7 +45,7 @@ class At(object):
 
     attach = call
 
-    def fire(self, time):
+    def fire(self, time, finalising=False):
         """
         Call registered function.
 
@@ -54,6 +54,10 @@ class At(object):
             # Don't fire more than once per time. This would be possible if the
             # scheduled time also happens to be the end of the simulation and
             # at_end was set to True.
+            return
+
+        if (not finalising) and abs(time - self.next_step) > EPSILON:
+            # just make the sure the time is indeed one we want to trigger for
             return
 
         if self.callback:
@@ -122,7 +126,7 @@ class ExitAt(object):
     def __str__(self):
         return "<ExitAt t={}>".format(self.target)
 
-    def fire(self, time):
+    def fire(self, time, finalising=False):
         assert abs(time - self.next_step) < EPSILON
         self.next_step = None
         self.stop_simulation = True
@@ -281,7 +285,7 @@ class Scheduler(object):
         """
         for item in self.items:
             if item.at_end:
-                item.fire(time)
+                item.fire(time, finalising=True)
 
     def reset(self, time):
         """

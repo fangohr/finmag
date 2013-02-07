@@ -63,6 +63,8 @@ def test_at_with_single_value():
     assert a.next_step == 100
     a.attach(c.inc_at)
     a.fire(0)
+    assert c.cnt_at == 0
+    a.fire(100)
     assert c.cnt_at == 1
 
 
