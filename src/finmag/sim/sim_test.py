@@ -86,7 +86,7 @@ class TestSimulation(object):
         assert(np.allclose(v_probed_1d, v_ref))
 
     def test_probe_constant_m_at_individual_points(self):
-        mesh = df.Box(-2, -2, -2, 2, 2, 2, 5, 5, 5)
+        mesh = df.BoxMesh(-2, -2, -2, 2, 2, 2, 5, 5, 5)
         m_init = np.array([0.2, 0.7, -0.4])
         m_init /= np.linalg.norm(m_init)  # normalize the vector for later comparison
         sim = sim_with(mesh, Ms=8.6e5, m_init=m_init, unit_length=1e-9, demag_solver=None)
@@ -115,7 +115,7 @@ class TestSimulation(object):
         TOL=1e-5
 
         unit_length = 1e-9
-        mesh = df.Box(0, 0, 0, 1, 1, 1, 1000, 2, 2)
+        mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 1000, 2, 2)
         m_init = df.Expression(("cos(x[0]*pi)",
                                 "sin(x[0]*pi)",
                                 "0.0"),
@@ -259,7 +259,7 @@ class TestSimulation(object):
 
     def test_remove_interaction(self):
 
-        mesh = df.Box(0, 0, 0, 1, 1, 1, 1, 1, 1)
+        mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 1, 1, 1)
         sim = Simulation(mesh, Ms=1, unit_length=1e-9)
         sim.add(Zeeman((0, 0, 1)))
         sim.add(Exchange(13e-12))
@@ -285,7 +285,7 @@ class TestSimulation(object):
         """
         Simply test that we can call sim.switch_off_H_ext()
         """
-        mesh = df.Box(0, 0, 0, 1, 1, 1, 1, 1, 1)
+        mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 1, 1, 1)
         sim = Simulation(mesh, Ms=1, unit_length=1e-9)
         sim.add(Zeeman((1, 2, 3)))
 

@@ -14,7 +14,7 @@ class TestVTKSaver(object):
         Create a dummy field in various formats (numpy arrays and
         dolfin function).
         """
-        mesh = df.Box(0, 0, 0, 1, 1, 1, 5, 5, 5)
+        mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 5, 5, 5)
         S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
         N = mesh.num_vertices()
         self.field_data = df.Function(S3)
