@@ -1,3 +1,5 @@
+#!/bin/bash
+
 #
 # This script will download and install oommf into a directory
 # called oommf under $OOMMF_PREFIX, which is your user's home per default. It will
