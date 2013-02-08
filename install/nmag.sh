@@ -53,3 +53,10 @@ fi
 cd $source
 
 make
+
+# Hack-ish fix because some executables in nmag are not installed with
+# the correct permissions when installed into a non-standard location
+# (probably only occurs when using sudo).  -- Max, 8.2.2013
+cd $NMAG_PREFIX/nmag-0.2.1/nsim/bin  && \
+    chmod 755 ncol nmagpp nmagpp_pre0_1_5000 nmagprobe nmeshimport nmeshmirror \
+              nmeshpp nmeshsort nsim nsimexec nsim_i nsim-raw nsimversion
