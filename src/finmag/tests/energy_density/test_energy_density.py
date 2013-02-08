@@ -6,6 +6,7 @@ import dolfin as df
 #from finmag.energies import UniaxialAnisotropy, Exchange, Demag, DMI
 from finmag.energies import UniaxialAnisotropy, Exchange, Demag, DMI, DMI_Old
 from finmag.util.consts import mu0
+from finmag.util.meshes import sphere
 
 TOL = 1e-14
 
@@ -200,7 +201,7 @@ def test_demag_energy_density():
     """
     TOL = 5e-2
 
-    mesh = df.UnitSphere(5)
+    mesh = sphere(r = 1.0, maxh = 0.2)
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
     mu0 = 4 * np.pi * 1e-7
 

@@ -14,7 +14,7 @@ def test_external_field_depends_on_t():
 
     simplices = 2
     L = 10e-9
-    mesh = df.Interval(simplices, 0, L)
+    mesh = df.IntervalMesh(simplices, 0, L)
     S1 = df.FunctionSpace(mesh, "Lagrange", 1)
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
     GHz=1e9
