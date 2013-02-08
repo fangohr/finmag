@@ -4,11 +4,18 @@ from numpy import pi, sqrt
 from finmag.energies import Demag
 from finmag.util.meshes import from_geofile
 
+
 TOL = 1.9e-2
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 Ms = 1e5
 
-solvers = ["FK"] # FIXME: disabled GCR for dolfin 1.1.0
+import finmag
+if finmag.util.versions.get_version_dolfin() == "1.1.0":
+    solvers = ["FK"] # FIXME: disabled GCR for dolfin 1.1.0
+else:
+    solvers = ["FK", "GCR"]
+
+print("Testing for solvers: %s" % solvers)
 
 def test_energy():
 
