@@ -38,3 +38,6 @@ def test_H_demag_deviation(uniformly_magnetised_sphere):
         delta = np.max(np.abs(H.max(axis=1) - H.min(axis=1)))
         assert delta < TOL
 
+
+if __name__ == "__main__":
+    uniformly_magnetised_sphere()
