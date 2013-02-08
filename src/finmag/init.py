@@ -4,6 +4,7 @@
 #
 # CONTACT: h.fangohr@soton.ac.uk
 
+from __future__ import division
 import logging
 logger = logging.getLogger("finmag")
 
@@ -31,8 +32,7 @@ if get_config_option('misc', 'import_paraview') == 'True':
                         "'import_paraview = True', but paraview is not "
                         "installed on this system.")
 
-from finmag.sim.sim import Simulation
-from finmag.sim.sim_helpers import sim_with
+from finmag.sim.sim import Simulation, sim_with
 from finmag.util.helpers import set_logging_level
 from __version__ import __version__
 import example
