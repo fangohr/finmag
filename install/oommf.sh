@@ -63,3 +63,6 @@ EOF
 )
 sudo sh -c "echo '$oommf_command' > '/usr/local/bin/oommf'"
 sudo chmod a+x /usr/local/bin/oommf
+
+# Fix permissions (some read permissions seem to be missing by default)
+chmod -R a+r $OOMMF_PREFIX/oommf
