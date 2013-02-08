@@ -12,7 +12,7 @@ bar.xml.gz:
 	- netgen -geofile=bar.geo -meshfiletype="DIFFPACK Format" -meshfile=bar.grid -batchmode
 	dolfin-convert bar.grid bar.xml
 	gzip -f bar.xml
-	rm bar.grid bar_bi.xml bar_mat.xml bar.xml.bak
+	rm bar.grid bar_marker_*.xml
 
 averages_ref.txt: bar.nmesh.h5
 	nsim run_nmag.py --clean
