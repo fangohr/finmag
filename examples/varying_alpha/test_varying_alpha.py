@@ -70,7 +70,7 @@ def run_nmag():
     
     times = np.linspace(0, tfinal, tfinal/dt + 1)
     for t in times:
-        integrator.run_until(t)
+        integrator.advance_time(t)
         print "Integrating time: %g" % t
         my=[llg._m(x,1,1)[1] for x in xs]
         

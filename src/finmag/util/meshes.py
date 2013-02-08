@@ -573,7 +573,7 @@ def print_mesh_info(mesh):
     print mesh_info(mesh)
 
 
-def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, **kwargs):
+def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, dg_fun=None,**kwargs):
     """
     Plot the given mesh.
 
@@ -672,12 +672,21 @@ def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, **kwargs):
         if figsize != None:
             logger.warning("Ignoring argument `figsize` because `ax` was "
                            "provided explicitly.")
-
+            
+    if dg_fun==None:
+        dg_fun=df.Function(df.FunctionSpace(mesh, 'DG', 0))
+        dg_fun.vector()[:]=1
+    
     if dim == 2:
         coords = mesh.coordinates()
         x = coords[:,0]
         y = coords[:,1]
-        triangs = [[v.index() for v in df.vertices(s)]for s in df.faces(mesh)]
+        triangs = np.array([[v.index() for v in df.vertices(s)] for s in df.faces(mesh)])
+        
+        xmid = x[triangs].mean(axis=1)
+        ymid = y[triangs].mean(axis=1)
+        
+        zfaces=np.array([dg_fun(xmid[i],ymid[i]) for i in range(len(xmid))])
 
         if scalar_field != None:
             logger.warning("Ignoring the 'scalar_field' argument as this is not implemented for 2D meshes yet.")
@@ -689,7 +698,8 @@ def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, **kwargs):
         ## passing an array of color values if we want to plot a
         ## scalar function on a mesh).
         #ax.tripcolor(x, y, triangles=triangs)
-        ax.triplot(x, y, triangles=triangs, color="blue", **kwargs)
+        ax.tripcolor(x, y, triangles=triangs, facecolors=zfaces, edgecolors='k', **kwargs)
+        
     elif dim == 3:
         # TODO: Remove this error message once matplotlib 1.3 has been released!
         import matplotlib

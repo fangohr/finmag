@@ -1,51 +1,81 @@
+import finmag
 import logging
-from sim import Simulation
-from finmag.energies import Exchange, Zeeman, Demag, UniaxialAnisotropy, DMI
+import shutil
+import os
+import numpy as np
+from datetime import datetime
 
-log = logging.getLogger(name='finmag')
+log = logging.getLogger("finmag")
 
-def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sundials",
-             A=None, K1=None, K1_axis=None, H_ext=None, demag_solver='FK', 
-             D=None, name="unnamed"):
-    """
-    Create a Simulation instance based on the given parameters.
 
-    This is a convenience function which allows quick creation of a
-    common simulation type where at most one exchange/anisotropy/demag
-    interaction is present and the initial magnetisation is known.
+def save_ndt(sim):
+    """Given the simulation object, saves one line to the ndt finalise
+    (through the TableWriter object)."""
+    if sim.driver == 'cvode':
+        log.debug("Saving data to ndt file at t={} "
+                  "(sim.name={}).".format(sim.t, sim.name))
+    else:
+        raise NotImplementedError("Only cvode driver known.")
+    sim.tablewriter.save()
 
-    If a value for any of the optional arguments A, K1 (and K1_axis),
-    or demag_solver are provided then the corresponding exchange /
-    anisotropy / demag interaction is created automatically and added
-    to the simulation. For example, providing the value A=13.0e-12 in
-    the function call is equivalent to:
 
-       exchange = Exchange(A)
-       sim.add(exchange)
-    """
-    sim = Simulation(mesh, Ms, unit_length=unit_length, 
-                     integrator_backend=integrator_backend,
-                     name=name)
+def create_backup_file_if_file_exists(filename, backupextension='.backup'):
+    if os.path.exists(filename):
+        backup_file_name = filename + backupextension
+        shutil.copy(filename, backup_file_name)
+        log.extremedebug("Creating backup %s of %s" % (backup_file_name, filename))
 
-    sim.set_m(m_init)
-    sim.alpha = alpha
 
-    # If any of the optional arguments are provided, initialise
-    # the corresponding interactions here:
-    if A is not None:
-        sim.add(Exchange(A))
-    if (K1 != None and K1_axis is None) or (K1 is None and K1_axis != None):
-        log.warning(
-            "Not initialising uniaxial anisotropy because only one of K1, "
-            "K1_axis was specified (values given: K1={}, K1_axis={}).".format(
-                K1, K1_axis))
-    if K1 != None and K1_axis != None:
-        sim.add(UniaxialAnisotropy(K1, K1_axis))
-    if H_ext != None:
-        sim.add(Zeeman(H_ext))
-    if D != None:
-        sim.add(DMI(D))
-    if demag_solver != None:
-        sim.add(Demag(solver=demag_solver))
+def canonical_restart_filename(sim):
+    return sim.name + "-restart.npz"
 
-    return sim
+
+def save_restart_data(sim, filename=None):
+    """Given a simulation object, this function saves the current
+    magnetisation, and some integrator metadata into a file. """
+
+    #create metadata
+    integrator_stats = sim.integrator.stats()
+    datetimetuple = datetime.now()
+    drivertype = 'cvode'  # we should deduce this from sim object XXX
+    simtime = sim.t
+    # fix filename
+    if filename == None:
+        filename = canonical_restart_filename(sim)
+
+    create_backup_file_if_file_exists(filename)
+
+    np.savez_compressed(filename,
+        m=sim.integrator.llg.m,
+        stats=integrator_stats,
+        simtime=simtime,
+        datetime=datetimetuple,
+        simname=sim.name,
+        driver=drivertype)
+    log.debug("Have saved restart data at t=%g to %s "
+              "(sim.name=%s)" % (sim.t, filename, sim.name))
+
+
+def load_restart_data(filename_or_simulation):
+    """Given a file name, load the restart data saved in that file
+    name and return as dictionary. If object is simulation instance,
+    use canonical name."""
+    if isinstance(filename_or_simulation, finmag.Simulation):
+        filename = canonical_restart_filename(filename_or_simulation)
+    elif isinstance(filename_or_simulation, str):
+        filename = filename_or_simulation
+    else:
+        ValueError("Can only deal with simulations or filenames, "
+                   "but not '%s'" % type(filename_or_simulation))
+    data = np.load(filename)
+
+    # strip of arrays where we do not want them:
+    data2 = {}
+    for key in data.keys():
+        # the 'tolist()' command returns dictionary and datetime objects
+        # when wrapped up in numpy array
+        if key in ['stats', 'datetime', 'simtime', 'simname', 'driver']:
+            data2[key] = data[key].tolist()
+        else:
+            data2[key] = data[key]
+    return data2

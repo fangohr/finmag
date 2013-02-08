@@ -1,7 +1,6 @@
 import logging
 import argparse
 import dolfin as df
-from finmag.sim.sim_helpers import sim_with
 from finmag.util import configuration, ansistrm
 from finmag.util.helpers import start_logging_to_file
 

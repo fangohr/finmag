@@ -27,6 +27,7 @@ PRECOMPILED_HEADER_DIR ?= /tmp/$(USER)/finmag-pch/$(abspath .)
 UNIT_TEST_BINARY=$(MODULE_DIR)/run_ci_tests.bin
 # Directory for CI unit test results
 UNIT_TEST_RESULTS_DIR=../test-reports/boost
+UNIT_TEST_RESULTS_FILE=$(UNIT_TEST_RESULTS_DIR)/run_ci_tests_output.xml
 # Explicit dependencies to tell how the module files are linked
 SUNDIALS_NVECTOR_SO=-Wl,-rpath,\$$ORIGIN -L$(abspath ../src/finmag/native/) -lnvector_serial_custom_malloc
 
@@ -141,7 +142,7 @@ $(PRECOMPILED_HEADER_FILE) : src/finmag_includes.h Makefile
 run-ci-tests:
 	$(MAKE) -j $(NUM_PROCS) $(UNIT_TEST_BINARY)
 	mkdir -p $(UNIT_TEST_RESULTS_DIR)
-	./$(UNIT_TEST_BINARY) --output_format=XML --report_level=no --log_level=test_suite > $(UNIT_TEST_RESULTS_DIR)/run_ci_tests_output.xml
+	./$(UNIT_TEST_BINARY) --output_format=XML --report_level=no --log_level=test_suite > $(UNIT_TEST_RESULTS_FILE)
 
 # Removes all temporary files
 clean:

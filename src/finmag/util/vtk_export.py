@@ -61,6 +61,7 @@ class VTK(object):
 
         if filename == "":
             prefix_insert = "" if self.prefix == "" else self.prefix + "_"
+            raise NotImplementedError("Here is a bug: the next line wants to use t but we don't know what it is yet. The author of this code needs to review it. MA?")
             filename = "{}{}_{:.3f}ns.pvd".format(prefix_insert,
                 self.vtk_snapshot_no, t * 1e9)
 

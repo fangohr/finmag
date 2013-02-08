@@ -312,8 +312,8 @@ def render_paraview_scene(
     arrayInfo = pointDataInfo.GetArrayInformation(field_name)
 
     if rescale_colormap_to_data_range:
-        logger.debug("Rescaling colormap to data range: {}".format(data_range))
         data_range = arrayInfo.GetComponentRange(color_by_axis)
+        logger.debug("Rescaling colormap to data range: {}".format(data_range))
     else:
         data_range = (-1.0, 1.0)
 
@@ -399,7 +399,7 @@ def render_paraview_scene(
 
         if glyph_type != 'cones':
             glyph_type = 'cones'
-            debug.warning("Unsupported glyph type: '{}'. "
+            logger.warning("Unsupported glyph type: '{}'. "
                           "Falling back to 'cones'.".format(glyph_type))
 
         if glyph_type == 'cones':
