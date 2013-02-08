@@ -77,11 +77,12 @@ class EffectiveField(object):
 
     def get_interaction(self, interaction_type):
         """
-        Returns the interaction object of the given type, or raises a ValueError
-        if no, or more than one matching interaction is found.
+        Returns the interaction object of the given type. Raises a
+        ValueError if no (or more than one) matching interaction is
+        found.
 
         """
-        added_interaction_types = set() # for debugging output to user
+        added_interaction_types = set([]) # for debugging output to user
         matching_interaction = None
 
         for inter in self.interactions:
@@ -98,6 +99,17 @@ class EffectiveField(object):
                     interaction_type, list(added_interaction_types)))
 
         return matching_interaction
+
+    def remove_interaction(self, interaction_type):
+        """
+        Removes the interaction object of the given type. Raises a
+        ValueError if no (or more than one) matching interaction is
+        found.
+
+        """
+        interaction = self.get_interaction(interaction_type)
+        if interaction is not None:
+            self.interactions.remove(interaction)
 
     def get_dolfin_function(self, interaction_type):
         interaction = self.get_interaction(interaction_type)

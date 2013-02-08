@@ -22,8 +22,8 @@ def test_write_ndt_file():
     sim = finmag.example.barmini(name="barmini_test")
     for time in np.linspace(0, 1e-10, 21):
         print("Integrating towards t = %gs" % time)
-        sim.run_until(time, save_averages=True)  # True is the default for save_averages
-                                                 # but we provide it for clarity.
+        sim.advance_time(time)
+        sim.save_averages()
     print("Done")
 
     # We used to do a file comparison here, but we had to fall back on

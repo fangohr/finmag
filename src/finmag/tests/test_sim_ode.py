@@ -25,7 +25,7 @@ def test_sim_ode(do_plot=False):
 
     mz = []
     for t in ts:
-        sim.run_until(t, save_averages=False)
+        sim.run_until(t)
         mz.append(sim.m[-1]) # same as m_average for this macrospin problem
 
     if do_plot:

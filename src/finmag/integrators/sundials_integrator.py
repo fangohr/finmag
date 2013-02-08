@@ -1,6 +1,8 @@
 import logging
 from finmag.native import sundials
-from finmag.integrators.common import run_with_schedule, relax_with_schedule
+from finmag.integrators.common import run_with_schedule
+
+EPSILON = 1e-15
 
 log = logging.getLogger(name='finmag')
 
@@ -76,7 +78,7 @@ class SundialsIntegrator(object):
         """
         # The following check is required because sundials does not like to
         # integrate up to t=0, if the cvode solver was initialised for t=0.
-        if t <= self.cur_t and t == 0:
+        if t == 0 and abs(t - self.cur_t) < EPSILON:
             return True
         # if t <= self.cur_t and this is not the value with which we started,
         # we should complain:
@@ -128,8 +130,8 @@ class SundialsIntegrator(object):
         By calling this function, we inform the integrator that it should not assuming smoothness
         of the RHS. Should be called when we change the applied field, abruptly, for example.
         """
-        log.debug("Re-initialising CVODE integrator")
-        self.integrator.reinit(self.integrator.get_current_time(), self.m)
+        log.debug("Re-initialising CVODE integrator.")
+        self.integrator.reinit(self.cur_t, self.m)
 
     n_rhs_evals = property(lambda self: self.integrator.get_num_rhs_evals(), "Number of function evaluations performed")
 
@@ -168,5 +170,4 @@ class SundialsIntegrator(object):
              }
         return d
 
-    run_until = run_with_schedule
-    run_until_relaxation = relax_with_schedule
+    run_with_schedule = run_with_schedule

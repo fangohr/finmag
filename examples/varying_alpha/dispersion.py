@@ -81,7 +81,7 @@ def run_finmag():
     
     times = np.linspace(0, tfinal, tfinal/dt + 1)
     for t in times:
-        integrator.run_until(t)
+        integrator.advance_time(t)
         #update _m with values from integrator.m
         llg._m.vector()[:]=integrator.m[:] #or integrator.m
         print "Integrating time: %g" % t

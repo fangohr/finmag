@@ -56,7 +56,7 @@ def run_test(backend, method, mode='onego', nsteps=40000):
     else:
         raise ValueError("Can only understand 'onego', 'twogoes', twogoesreinit'.")
 
-    integrator.run_until(END_TIME)
+    integrator.advance_time(END_TIME)
     dt = datetime.now() - t
     print "backend=%s, method=%s: elapsed time=%s, n_rhs_evals=%s, error=%g" % (
             backend,
@@ -75,7 +75,7 @@ def run_test(backend, method, mode='onego', nsteps=40000):
     else:
         print "Not re-initialising"
 
-    integrator.run_until(END_TIME2)
+    integrator.advance_time(END_TIME2)
     print "backend=%s, method=%s: elapsed time=%s, n_rhs_evals=%s, error=%g" % (
             backend,
             method,

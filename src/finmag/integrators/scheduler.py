@@ -22,10 +22,15 @@ class At(object):
         Initialise with the correct time.
 
         """
+        self.target = time
         self.last_step = None
-        self.next_step = time
+        self.next_step = self.target
         self.callback = None
         self.at_end = at_end
+        self.stop_simulation = False
+
+    def __str__(self):
+        return "<At t={}>".format(self.target, ", at_end=True" if self.at_end else "")
 
     def call(self, callback):
         """
@@ -40,7 +45,7 @@ class At(object):
 
     attach = call
 
-    def fire(self, time):
+    def fire(self, time, finalising=False):
         """
         Call registered function.
 
@@ -49,6 +54,10 @@ class At(object):
             # Don't fire more than once per time. This would be possible if the
             # scheduled time also happens to be the end of the simulation and
             # at_end was set to True.
+            return
+
+        if (not finalising) and abs(time - self.next_step) > EPSILON:
+            # just make the sure the time is indeed one we want to trigger for
             return
 
         if self.callback:
@@ -63,6 +72,15 @@ class At(object):
         """
         self.next_step = None # Since one-time event, there is no next step.
 
+    def reset(self, current_time):
+        self.stop_simulation = False
+        if current_time >= self.target:
+            self.last_step = self.target
+            self.next_step = None
+        else:
+            self.last_step = None
+            self.next_step = self.target
+
 
 class Every(At):
     """
@@ -71,22 +89,55 @@ class Every(At):
 
     """
     def __init__(self, interval, start=None, at_end=False):
-        """
-        Initialise with the interval between correct times and optionally, a starting time.
-
-        """
         self.last_step = None
-        self.next_step = start or 0.0
+        self.first_step = start or 0.0
+        self.next_step = self.first_step
         self.interval = interval
         self.callback = None
         self.at_end = at_end
+        self.stop_simulation = False
+
+    def __str__(self):
+        return "<Every {} seconds>".format(
+            self.interval,
+            ", start={}".format(self.first_step) if self.first_step != 0.0 else "",
+            ", at_end=True" if self.at_end else "")
 
     def update(self):
-        """
-        Compute next target time.
-
-        """
         self.next_step += self.interval
+
+    def reset(self, current_time):
+        self.next_step = self.first_step
+        while self.next_step <= current_time:
+            self.update()
+
+
+class ExitAt(object):
+    """
+    Store the information that the simulation should be stopped at a defined time.
+
+    """
+    def __init__(self, time):
+        self.target = time
+        self.next_step = self.target
+        self.at_end = False
+        self.stop_simulation = False
+
+    def __str__(self):
+        return "<ExitAt t={}>".format(self.target)
+
+    def fire(self, time, finalising=False):
+        assert abs(time - self.next_step) < EPSILON
+        self.next_step = None
+        self.stop_simulation = True
+
+    def reset(self, current_time):
+        if current_time > self.next_step:
+            self.stop_simulation = True
+            self.next_step = None
+        else:
+            self.stop_simulation = False
+            self.next_step = self.target
 
 
 class Scheduler(object):
@@ -101,7 +152,13 @@ class Scheduler(object):
         """
         self.items = []
         self.realtime_items = {}
-        self.realtime_jobs = []
+        self.realtime_jobs = []  # while the scheduler is running, the job
+                                 # associated with each realtime_item will be
+                                 # stored in this list (otherwise it is empty)
+        self.last = None
+
+    def __iter__(self):
+        return self
 
     def add(self, func, args=None, kwargs=None, at=None, at_end=False, every=None, after=None, realtime=False):
         """
@@ -112,7 +169,7 @@ class Scheduler(object):
             raise TypeError("The function must be callable but object '%s' is of type '%s'" % \
                 (str(func), type(func)))
         assert at or every or at_end or (after and realtime), "Use either `at`, `every` or `at_end` if not in real time mode."
-        assert not (at!=None and every!=None), "It's either `at` or `every`."
+        assert not (at!=None and every!=None), "Cannot mix `at` with `every`. Please schedule separately."
         assert not (at!=None and after!=None), "Delays don't mix with `at`."
 
         args = args or []
@@ -120,7 +177,6 @@ class Scheduler(object):
         callback = functools.partial(func, *args, **kwargs)
 
         if realtime:
-            job = self._add_realtime(callback, at, every, after)
             if at_end:
                 at_end_item = At(None, True).call(callback)
                 self._add(at_end_item)
@@ -135,8 +191,11 @@ class Scheduler(object):
             every_item = Every(every, after, at_end).call(callback)
             self._add(every_item)
 
-    def _add(self, at_or_every):
-        self.items.append(at_or_every)
+    def _add(self, item):
+        self.items.append(item)
+
+    def _remove(self, item):
+        self.items.remove(item)
 
     def _add_realtime(self, func, at=None, every=None, after=None):
         """
@@ -186,15 +245,26 @@ class Scheduler(object):
             self.apscheduler.unschedule_job(job)
         self.realtime_jobs = []
 
-    def next_step(self):
+    def next(self):
         """
         Returns the time for the next action to be performed.
 
         """
-        next_steps = [i.next_step for i in self.items if i.next_step is not None]
-        if len(next_steps) == 0:
-            return None
-        return min(next_steps)
+        next_step = None
+
+        for item in self.items:
+            if item.stop_simulation == True:
+                raise StopIteration
+            if item.next_step != None and (next_step == None or next_step > item.next_step):
+                next_step = item.next_step
+
+        if next_step == None:
+            raise StopIteration
+
+        if next_step <= self.last:
+            log.error("Scheduler computed the next time step should be t = {:.2g} s, but the last one was already t = {:.2g} s.".format(next_step, self.last))
+            raise ValueError("Scheduler is corrupted. Requested a time step in the past: dt = {:.2g}.".format(next_step-self.last))
+        return next_step
 
     def reached(self, time):
         """
@@ -206,6 +276,7 @@ class Scheduler(object):
         for item in self.items:
             if (item.next_step != None) and abs(item.next_step - time) < EPSILON:
                 item.fire(time)
+        self.last = time
 
     def finalise(self, time):
         """
@@ -214,13 +285,34 @@ class Scheduler(object):
         """
         for item in self.items:
             if item.at_end:
-                item.fire(time)
+                item.fire(time, finalising=True)
 
-def save_ndt(sim):
-    """Given the simulation object, saves one line to the ndt finalise
-    (through the TableWriter object)."""
-    if sim.driver == 'cvode':
-        log.debug("Saving data to ndt file at t={} (sim.name={}).".format(sim.t, sim.name))
-    else:
-        raise NotImplementedError("Only cvode driver known.")
-    sim.tablewriter.save()
+    def reset(self, time):
+        """
+        Override schedule so that internal time is now `time` and modify scheduled items accordingly.
+
+        """
+        self.last = None
+        for item in self.items:
+            item.reset(time)
+
+    def _print_item(self, item, func_print=log.info):
+        func_print("'{}': {}".format(item.callback.func.__name__, item))
+
+    def _print_realtime_item(self, item, func_print=log.info):
+        (f, (at, every, after)) = item
+        func_print("'{}': <at={}, every={}, after={}>".format(
+                item.callback.f.__name__, at, every, after))
+
+    def print_scheduled_items(self, func_print=log.info):
+        for item in self.items:
+            self._print_item(item, func_print)
+        for item in self.realtime_items:
+            self._print_realtime_item(item, func_print)
+
+    def clear(self):
+        log.debug("Removing scheduled items:")
+        self.print_scheduled_items(func_print=log.debug)
+        self.items = []
+        self.stop_realtime_jobs()
+        self.realtime_items = []
