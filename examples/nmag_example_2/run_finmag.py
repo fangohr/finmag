@@ -16,7 +16,7 @@ def run_simulation():
     sim.add(Demag())
 
     sim.schedule(Simulation.save_averages, every=5e-12)
-    sim.run_until(3e-10, save_averages=False)
+    sim.run_until(3e-10)
 
     print timings
     print "The RHS was evaluated {} times, while the Jacobian was computed {} times.".format(

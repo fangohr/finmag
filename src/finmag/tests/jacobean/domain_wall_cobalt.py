@@ -47,7 +47,7 @@ def domain_wall_error(ys, node_count):
 def compute_domain_wall_cobalt(end_time=1e-9):
     llg = setup_domain_wall_cobalt()
     integrator = llg_integrator(llg, llg.m)
-    integrator.run_until(end_time)
+    integrator.advance_time(end_time)
     return np.linspace(0, LENGTH, NODE_COUNT), llg.m.reshape((3, -1))
 
 if __name__ == '__main__':

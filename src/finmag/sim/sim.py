@@ -1,4 +1,3 @@
-from __future__ import division
 import time
 import logging
 import dolfin as df
@@ -9,12 +8,12 @@ from finmag.util.consts import exchange_length, bloch_parameter
 from finmag.util.meshes import mesh_info, mesh_volume
 from finmag.util.fileio import Tablewriter
 from finmag.util import helpers
-from finmag.util.vtk_export import VTK
+from finmag.util.vtk_saver import VTKSaver
 from finmag.sim.hysteresis import hysteresis as hyst, hysteresis_loop as hyst_loop
+from finmag.sim import sim_helpers
+from finmag.energies import Exchange, Zeeman, Demag, UniaxialAnisotropy, DMI
 from finmag.integrators.llg_integrator import llg_integrator
-from finmag.integrators.scheduler import Scheduler
-from finmag.integrators import scheduler
-from finmag.util import restart
+from finmag.integrators import scheduler, relaxation
 
 ONE_DEGREE_PER_NS = 17453292.5  # in rad/s
 
@@ -60,9 +59,8 @@ class Simulation(object):
         # timesteps.
         self.tablewriter = Tablewriter(self.ndtfilename, self, override=True)
 
-        log.info("Creating Sim object '{}' (rank={}/{}) [{}].".format(
-            self.name, df.MPI.process_number(),
-            df.MPI.num_processes(), time.asctime()))
+        log.info("Creating Sim object '{}' (rank={}/{}).".format(
+            self.name, df.MPI.process_number(), df.MPI.num_processes()))
         log.info(mesh)
 
         self.mesh = mesh
@@ -75,15 +73,21 @@ class Simulation(object):
         self.llg.Ms = Ms
         self.Volume = mesh_volume(mesh)
 
-        self.scheduler = Scheduler()
+        self.scheduler = scheduler.Scheduler()
         
         self.domains =  df.CellFunction("uint", self.mesh)
         self.domains.set_all(0)
         self.region_id=0
 
+        self.overwrite_pvd_files = False
+        self.vtk_export_filename = self.sanitized_name + '.pvd'
+        self.vtk_saver = VTKSaver(self.vtk_export_filename)
+
         self.scheduler_shortcuts = {
-            'save_restart_data' : restart.save_restart_data,
-            'save_ndt' : scheduler.save_ndt,
+            'save_restart_data' : Simulation.save_restart_data,
+            'save_ndt' : sim_helpers.save_ndt,
+            'save_vtk' : Simulation.save_vtk,
+            'switch_off_H_ext' : Simulation.switch_off_H_ext,
             }
 
         # At the moment, we can only have cvode as the driver, and thus do
@@ -188,6 +192,40 @@ class Simulation(object):
         """
         return self.llg.effective_field.get_interaction(interaction_type)
 
+    def remove_interaction(self, interaction_type):
+        """
+        Remove the interaction of the given type.
+
+        *Arguments*
+
+        interaction_type: string
+
+            The allowed types are those finmag knows about by classname, for
+            example: 'Demag', 'Exchange', 'UniaxialAnisotropy', 'Zeeman'.
+        """
+        log.debug("Removing interaction '{}' from simulation '{}'".format(
+                interaction_type, self.name))
+        return self.llg.effective_field.remove_interaction(interaction_type)
+
+    def switch_off_H_ext(self, remove_interaction=True):
+        """
+        Convenience function to switch off the external field.
+
+        If `remove_interaction` is True (the default), the Zeeman
+        interaction will be completely removed from the Simulation
+        class, which should make the time integration run faster.
+        Otherwise its value is just set to zero.
+        """
+        if remove_interaction:
+            dbg_str = "(removing Zeeman interaction)"
+            self.remove_interaction("Zeeman")
+        else:
+            dbg_str = "(setting value to zero)"
+            H = self.get_interaction("Zeeman")
+            H.set_value([0, 0, 0])
+
+        log.debug("Switching off external field {}".format(dbg_str))
+
     def get_field_as_dolfin_function(self, field_type):
         """
         Returns the field of the interaction of the given type or of the
@@ -213,39 +251,71 @@ class Simulation(object):
 
     def probe_field(self, field_type, pts):
         """
-        Probe the field of type `field_type` at point(s) `pts`.
+        Probe the field of type `field_type` at point(s) `pts`, where
+        the point coordinates must be specified in metres (not in
+        multiples of unit_length!).
 
         See the documentation of the method get_field_as_dolfin_function
         to know which ``field_type`` is allowed, and helpers.probe for the
         shape of ``pts``.
 
         """
+        pts = np.array(pts) / self.unit_length
         return helpers.probe(self.get_field_as_dolfin_function(field_type), pts)
- 
-    def run_until(self, t, save_averages=True):
+
+    def advance_time(self, t):
         """
-        Run the simulation until the given time t is reached.
+        The lower-level counterpart to run_until, this runs without a schedule.
 
-        *Arguments*
-
-        t: float
-
-            The time up to which the simulation is to be run.
-
-        save_averages: bool
-
-            If True (the default) then the method `save_averages` is
-            called automatically when the given time step is reached
-            (this adds a line to the .ndt file in which the average
-            fields for this simulation object are recorded).
         """
         if not hasattr(self, "integrator"):
             self.integrator = llg_integrator(self.llg, self.llg.m, backend=self.integrator_backend)
-        log.debug("Integrating dynamics up to t = %g" % t)
-        self.integrator.run_until(t, schedule=self.scheduler)
-        if save_averages:
-            self.save_averages()
-        log.info("Simulation has reached time t = {:.2g}.".format(self.t))
+
+        log.debug("Advancing time to t = {} s.".format(t))
+        self.integrator.advance_time(t)
+
+    def run_until(self, t):
+        """
+        Run the simulation until the given time `t` is reached.
+
+        """
+        if not hasattr(self, "integrator"):
+            self.integrator = llg_integrator(self.llg, self.llg.m, backend=self.integrator_backend)
+
+        log.info("Simulation will run until t = {:.2g} s.".format(t))
+        exit_at = scheduler.ExitAt(t)
+        self.scheduler._add(exit_at)
+
+        self.integrator.run_with_schedule(self.scheduler)
+        log.info("Simulation has reached time t = {:.2g} s.".format(self.t))
+
+        self.scheduler._remove(exit_at)
+
+    def relax(self, stopping_dmdt=ONE_DEGREE_PER_NS, dt_limit=1e-10,
+              dmdt_increased_counter_limit=500):
+        """
+        Run the simulation until the magnetisation has relaxed.
+
+        This means the magnetisation reaches a state where its change over time
+        at each node is smaller than the threshold `stopping_dm_dt` (which
+        should be given in rad/s).
+
+        """
+        if not hasattr(self, "integrator"):
+            self.integrator = llg_integrator(self.llg, self.llg.m, backend=self.integrator_backend)
+        log.info("Simulation will run until relaxation of the magnetisation.")
+
+        relax = relaxation.Relaxation(self, stopping_dmdt, dmdt_increased_counter_limit, dt_limit)
+        self.scheduler._add(relax)
+
+        self.integrator.run_with_schedule(self.scheduler)
+        self.integrator.reinit()
+        log.info("Relaxation finished at time t = {:.2g}.".format(self.t))
+
+        self.scheduler._remove(relax) 
+        del(relax.sim, relax) # help the garbage collection by avoiding circular reference
+
+    save_restart_data = sim_helpers.save_restart_data
 
     def restart(self, filename=None, t0=None):
         """If called, we look for a filename of type sim.name + '-restart.npz',
@@ -260,30 +330,27 @@ class Simulation(object):
         """
 
         if filename == None:
-            filename = restart.canonical_restart_filename(self)
-        log.debug("About to load restart data from %s " % filename)
+            filename = sim_helpers.canonical_restart_filename(self)
+        log.debug("Loading restart data from {}. ".format(filename))
 
-        data = restart.load_restart_data(filename)
+        data = sim_helpers.load_restart_data(filename)
     
-        #log.extremedebug("Have reloaded data: %s" % data)
-        if data['driver'] in ['cvode']:
-            pass  # we know how to deal with these types
-        else:
-            raise NotImplementedError("Can not deal with driver=%s yet for restarting." % 
-                data['driver'])
+        if not data['driver'] in ['cvode']:
+            log.error("Requested unknown driver `{}` for restarting. Known: {}.".format(data["driver"], "cvode"))
+            raise NotImplementedError("Unknown driver `{}` for restarting.".format(data["driver"]))
         
         self.llg._m.vector()[:] = data['m']
-        
-        if t0 == None:
-            t0 = data['simtime']   # Continue from time as saved
+       
+        t = t0 or data["simtime"]
         
         self.integrator = llg_integrator(self.llg, self.llg.m, 
-            backend=self.integrator_backend, t0=t0)
+            backend=self.integrator_backend, t0=t)
 
-        log.info("Reloaded and set m (<m>=%s) and time=%s from %s" % \
+        log.info("Reloaded and set m (<m>=%s) and time=%s from %s." % \
             (self.llg.m_average, self.t, filename))
 
-        assert self.t == t0  # self.t is read from integrator
+        assert self.t == t  # self.t is read from integrator
+        self.scheduler.reset(t)
 
     def save_averages(self):
         """
@@ -294,51 +361,6 @@ class Simulation(object):
         """
         log.debug("Saving average field values for simulation '{}'.".format(self.name))
         self.tablewriter.save()
-
-    def relax(self, save_snapshots=False, filename='', save_every=100e-12,
-              save_final_snapshot=True, force_overwrite=False,
-              stopping_dmdt=ONE_DEGREE_PER_NS, dt_limit=1e-10,
-              dmdt_increased_counter_limit=500):
-        """
-        Do time integration of the magnetisation M until it reaches a
-        state where the change of the magnetisation at each node is
-        smaller than the threshold `stopping_dm_dt` (which should be
-        given in rad/s).
-
-        If save_snapshots is True (default: False) then a series of
-        snapshots is saved to `filename` (which must be specified in
-        this case). If `filename` contains directory components then
-        these are created if they do not already exist. A snapshot is
-        saved every `save_every` seconds (default: 100e-12, i.e. every
-        100 picoseconds). Usually, one last snapshot is saved after
-        the relaxation finishes (or aborts prematurely). This can be
-        disabled by setting save_final_snapshot to False. If a file
-        with the same name as `filename` already exists, the method
-        will abort unless `force_overwrite` is True, in which case the
-        existing .pvd and all associated .vtu files are deleted before
-        saving the series of snapshots.
-
-        For details and the meaning of the other keyword arguments see
-        the docstring of sim.integrator.BaseIntegrator.run_until_relaxation().
-
-        """
-        if not hasattr(self, "integrator"):
-            self.integrator = llg_integrator(self.llg, self.llg.m, backend=self.integrator_backend)
-        log.info("Will integrate until relaxation.")
-
-        if save_snapshots == True:
-            if not hasattr(self, "vtk"):
-                self.vtk = VTK(filename, "", force_overwrite, "m_")
-
-            def save(sim):
-                sim.save_vtk()
-                sim.save_averages()
-
-            self.schedule(save, every=save_every, at_end=save_final_snapshot)
-
-        self.integrator.run_until_relaxation(stopping_dmdt, dmdt_increased_counter_limit, dt_limit,
-                schedule=self.scheduler)
-        log.info("Relaxation finished at time t = {:.2g}.".format(self.t))
 
     hysteresis = hyst
     hysteresis_loop = hyst_loop
@@ -423,13 +445,15 @@ class Simulation(object):
         time by setting the `realtime` option to True. In this case you can
         use the `after` keyword on its own.
         
-        The function func(sim) you provide should expect the simulation object as its
-        first argument. Other positional arguments can be added by passing
-        a list-like object to `args` while keyword arguments the function should
-        be called with can be added by passing a dict-like object to `kwargs`.
+        The function func(sim) you provide should expect the simulation
+        object as its first argument. Other positional arguments can be added
+        by passing a list-like object to `args` while keyword arguments the
+        function should be called with can be added by passing a dict-like
+        object to `kwargs`.
 
-        Alternatively, if func is a string, it will be looked up in 
-        self.scheduler_shortcuts, which includes 'restart' and 'save_ndt'.
+        Alternatively, if func is a string, it will be looked up in
+        self.scheduler_shortcuts, which includes 'save_restart_data',
+        'save_ndt' and 'save_vtk'.
 
         """
         if isinstance(func, str):
@@ -446,24 +470,31 @@ class Simulation(object):
 
     def snapshot(self, filename="", directory="", force_overwrite=False):
         """
-        Deprecated.
+        Deprecated. Use 'save_vtk' instead.
 
         """
         log.warning("Method 'snapshot' is deprecated. Use 'save_vtk' instead.")
         self.vtk(self, filename, directory, force_overwrite)
 
-    def save_vtk(self, filename="", directory="", force_overwrite=False):
+    def set_vtk_export_filename(self, filename=""):
+        """
+        Set the filename which is used for saving VTK snapshots.
+        """
+        self.vtk_export_filename = filename
+
+    def save_vtk(self, filename=None):
         """
         Save the magnetisation to a VTK file.
-
-        Leave filename empty for sequential snapshots of the magnetisation -
-        filenames will be automatically generated.
-
         """
-        if not hasattr(self, "vtk"):
-            prefix = "m_" if filename == "" else ""
-            self.vtk = VTK(filename, directory, force_overwrite, prefix)
-        self.vtk.save(self.llg._m, self.t)
+        if filename != None:
+            # Explicitly provided filename overwrites the previously used one.
+            self.vtk_export_filename = filename
+
+        # Check whether we're still writing to the same file.
+        if self.vtk_saver.filename != self.vtk_export_filename:
+            self.vtk_saver.open(self.vtk_export_filename, self.overwrite_pvd_files)
+
+        self.vtk_saver.save_field(self.llg._m, self.t)
 
     def mesh_info(self):
         """
@@ -505,3 +536,50 @@ class Simulation(object):
                 info_string += added_info(l_bloch, 'Bloch parameter', 'l_bloch')
 
         return info_string
+
+
+def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sundials",
+             A=None, K1=None, K1_axis=None, H_ext=None, demag_solver='FK',
+             D=None, name="unnamed"):
+    """
+    Create a Simulation instance based on the given parameters.
+
+    This is a convenience function which allows quick creation of a
+    common simulation type where at most one exchange/anisotropy/demag
+    interaction is present and the initial magnetisation is known.
+
+    If a value for any of the optional arguments A, K1 (and K1_axis),
+    or demag_solver are provided then the corresponding exchange /
+    anisotropy / demag interaction is created automatically and added
+    to the simulation. For example, providing the value A=13.0e-12 in
+    the function call is equivalent to:
+
+       exchange = Exchange(A)
+       sim.add(exchange)
+    """
+    sim = Simulation(mesh, Ms, unit_length=unit_length,
+                     integrator_backend=integrator_backend,
+                     name=name)
+
+    sim.set_m(m_init)
+    sim.alpha = alpha
+
+    # If any of the optional arguments are provided, initialise
+    # the corresponding interactions here:
+    if A is not None:
+        sim.add(Exchange(A))
+    if (K1 != None and K1_axis is None) or (K1 is None and K1_axis != None):
+        log.warning(
+            "Not initialising uniaxial anisotropy because only one of K1, "
+            "K1_axis was specified (values given: K1={}, K1_axis={}).".format(
+                K1, K1_axis))
+    if K1 != None and K1_axis != None:
+        sim.add(UniaxialAnisotropy(K1, K1_axis))
+    if H_ext != None:
+        sim.add(Zeeman(H_ext))
+    if D != None:
+        sim.add(DMI(D))
+    if demag_solver != None:
+        sim.add(Demag(solver=demag_solver))
+
+    return sim

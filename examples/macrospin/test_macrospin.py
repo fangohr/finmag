@@ -28,7 +28,7 @@ def compare_with_analytic_solution(alpha=0.5, max_t=1e-9):
     nx = ny = nz = 1
     mesh = dolfin.BoxMesh(x0, x1, y0, y1, z0, z1, nx, ny, nz)
 
-    sim = Simulation(mesh, 1)
+    sim = Simulation(mesh, Ms=1)
     sim.alpha = alpha
     sim.set_m((1, 0, 0))
     sim.add(Zeeman((0, 0, 1e6)))

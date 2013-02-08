@@ -3949,3 +3949,361 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-01-22 15:05:31 max_albert: But as you just said, if we know something about the function and can optimise setting its values then it is still 2-3 orders of magnitude slower than setting the values directly using a numpy.array, right?
 2013-01-22 15:06:49 mb8g11: If you can use vectorised numpy operations, or have knowledge about the function the computer can't have (separation of space-dependent of time-dependent parts) then yes indeed, you can beat dolfin by 2-3 orders of magnitude.
 2013-01-22 15:08:35 mb8g11: I will update sandbox/benchmarks/updating_expression.py in a few minutes.
+2013-01-23 11:39:26 mb8g11: Using mercurial bookmarks for dolfin 1.1.0. Let's see how it goes.
+2013-01-23 11:47:30 fangohr-adium: Interesting. Good luck. :) [never heard of bookmarks]
+2013-01-23 11:48:27 max_albert: They seem to be a bit more like git's branches, i.e. more lightweight than named branches (which are persistent in history and never go away again).
+2013-01-23 11:48:47 max_albert: Haven't tried them yet though, will be interesting to see how MAB gets on with them.
+2013-01-23 11:49:52 fangohr-adium: Thanks for update. I never liked the branches in mercurial — maybe bookmarks are the answer.
+2013-01-23 13:44:28 mb8g11: Back from the PGR meeting. Let's see if I can get finmag to compile on aleph.
+2013-01-23 13:44:46 mb8g11: OrientedBoundaryMesh is gone, but they changed a few signatures as well.
+2013-01-23 14:41:35 fangohr-adium: Nice.
+2013-01-23 15:46:37 mb8g11: Have run into an issue with the C++ code I don't understand. Will push my progress.
+2013-01-23 15:47:16 fangohr-adium: Hi MA, thanks for getting that far. I spoke with Dmitri earlier, he said he might come to the office around 17:00, or certainly tomorrow.
+2013-01-23 15:48:43 mb8g11: Great. I have a df.BoundaryMesh on the Python side, and expect the same class on the C++ side, but I don't know how to register the conversion beetween the Python type and the C++ one.
+2013-01-23 15:48:55 mb8g11: At least, I think that that's the issue.
+2013-01-23 15:49:01 mb8g11: Dmitri will probably know.
+2013-01-23 16:00:42 mb8g11: There are now to bookmarks on the repository: main and dolfin_1_1_0. You may have to "hg update main" after the pull.
+2013-01-23 16:06:56 max_albert: A word of caution:
+2013-01-23 16:08:20 max_albert: "hg update main" works indeed, but a plain "hg update" afterwards will fast-forward the 'main' bookmark to the dolfin one.
+2013-01-23 16:08:55 max_albert: I guess this is because bookmarks are lightweight branches and simply follow the commits.
+2013-01-23 16:09:28 max_albert: As MAB just said, this might be different once we have another commit on the 'main' branch so that it has diverged from the dolfin one.
+2013-01-23 16:09:59 max_albert: But to be on the safe side, I guess we should not use the simple "hg update" for a while.
+2013-01-23 16:10:31 max_albert: Also, make sure you use "hgview" or a similar GUI to check which branch/commit you are on before committing anything (and especially before pushing).
+2013-01-23 16:31:02 max_albert: Actually, it turns out that hgview doesn't display the bookmark names. The mercurial built-in viewer which can be called via "hg view" (note the space) does display them, but it seems to be a hassle to get it to work sometimes.
+2013-01-23 16:32:00 fangohr-adium: If we don't like the bookmarks, we could always fork from the main repository (bitbucket has a button for this ….) and merge back into the usual repository when we are done?
+2013-01-23 16:32:25 mb8g11: That's actually a sensible way to branch.
+2013-01-23 16:32:38 fangohr-adium: Dmitri and i
+2013-01-23 16:33:05 fangohr-adium: discussed that it is probably not worth the effort to maintain a 1.0 compatible version. So we could move to 1.1 completely, once this is working.
+2013-01-23 16:33:30 mb8g11: TBH that's what I assumed, but good to get this confirmed.
+2013-01-23 16:42:34 max_albert: I like the fork-merge approach. Seems cleaner than working with these pseudo-branches in Mercurial.
+2013-01-23 16:43:04 max_albert: I know why I like git... ;-)
+2013-01-23 16:43:09 mb8g11: +1
+2013-01-23 16:43:26 max_albert: Anyway, MAb seems to be making good progress so that we may be able to get rid of the dolfin bookmark soon anyway.
+2013-01-24 10:28:48 max_albert: Good morning!
+2013-01-24 10:29:49 max_albert: Just a quick heads-up (as a follow-up to the bookmarks yesterday): it seems that  Marvin ran into the same issue as I did yesterday, and committed the Finmag IRC log on top of the dolfin branch, not the main branch.
+2013-01-24 10:30:17 max_albert: I don't know how he works internally, but we maybe need to replace a "hg update" with "hg update main" in his code somewhere.
+2013-01-24 10:44:13 max_albert: I think I found the right file (it's in /home/marvin/bin/push-irc-log.sh on summer). I changed it there. I'm also going to re-commit the IRC logs so that the two branches diverge. This should hopefully solve the issue.
+2013-01-24 16:14:57 fangohr-adium: Hi all. [Stuck in marking here.] Are you having any fun?
+2013-01-24 16:16:33 max_albert: Grmpf.
+2013-01-24 16:16:36 max_albert: ;-)
+2013-01-24 16:16:47 max_albert: Spending the entire day hunting stupid bugs.
+2013-01-24 16:16:53 max_albert: Hope marking is more fun...
+2013-01-24 16:17:27 fangohr-adium: ;-)
+2013-01-24 16:45:57 max_albert: Hi folks, I just noticed that Jenkins keeps building Finmag continuously, even though there haven't been any commits today. Does anybody have an idea why?
+2013-01-24 16:46:17 mb8g11: It's bored.
+2013-01-24 16:46:31 max_albert: :)
+2013-01-25 12:52:41 max_albert: Hi folks! I just tried to debug the latest Jenkins failures, and it looks like it had to do with the fact that Hans and I changed the branch which it uses for building from 'default' to 'main', but that introduced some internal confusion.
+2013-01-25 12:53:09 max_albert: Just to let you know I have now deleted the 'main' bookmark in the repository so that the only existing bookmark is 'dolfin_1_1_0'.
+2013-01-25 12:54:18 max_albert: There is still the 'default' branch, however, so that's what should be used for regular development.
+2013-01-25 12:55:55 max_albert: Jenkins seems to be running the tests now, so that's good too.
+2013-01-25 13:20:27 max_albert: Yay! The Jenkins build succeeded, so that's good news.
+2013-01-25 13:20:48 max_albert: The only problem is that it has started to build continuously again...
+2013-01-25 13:21:13 max_albert: Which is good for our statistics in terms of successful builds, but it would be nice to get this sorted. ;-)
+2013-01-25 13:25:23 fangohr-adium: … could try restarting it ?
+2013-01-25 13:25:48 max_albert: Maybe worth a try. But didn't we attempt that before?
+2013-01-25 13:26:32 max_albert: And how did that work again?
+2013-01-25 13:26:34 fangohr-adium: But that was to sort your email problem. This issue is new and started after the reboot.
+2013-01-25 13:26:45 max_albert: Hmm, true.
+2013-01-25 13:28:10 max_albert: Can I try restarting it using "sudo /etc/init.d/jenkins restart"?
+2013-01-25 13:30:32 fangohr-adium: I think so.
+2013-01-25 13:30:45 max_albert: Ok, will try that.
+2013-01-25 13:32:01 max_albert: Looking good so far. It said: "* Restarting Jenkins Continuous Integration Server jenkins              [ OK ]"
+2013-01-25 13:32:17 max_albert: And Jenkins is restarting in the browser, too.
+2013-01-25 13:32:28 max_albert: Let's see if this solves the issue with non-stop builds.
+2013-01-25 13:38:39 D_Chernyshenko_: Yeah, using init.d jenkins is the right way to restart I think
+2013-01-25 13:38:54 D_Chernyshenko_: There is also an option in the admin GUI somewhere, but the commandline definitely works
+2013-01-25 13:40:14 max_albert: We tried it with "sudo service jenkins restart" the other day instead of the command mentioned above, but that failed.
+2013-01-25 13:40:18 max_albert: But this one seems to work.
+2013-01-25 13:41:48 D_Chernyshenko_: Guess the jenkins package maintainers aren't that keen to update their scripts to whatever init.d/service system Ubuntu is using
+2013-01-25 13:42:05 D_Chernyshenko_: I think in 12.10 there is an even newer way and service X restart is outdated, too
+2013-01-25 13:42:05 mb8g11: "upstart"
+2013-01-25 13:42:38 max_albert: Hmm, I have no idea what the difference is between those. But so long as we know which command to use for Jenkins then that's fine.
+2013-01-25 14:57:34 max_albert: For the record, restarting Jenkins worked but it still builds continuously.
+2013-01-25 14:58:14 max_albert: Not sure what exactly is causing this. If it's related to the dolfin_1_1_0 branch, it might go away once we merge it.
+2013-01-25 15:58:24 fangohr-adium: Okay. Thanks for trying.
+2013-01-25 17:04:37 fangohr-adium: Over and out from the office. Probably online later; still lots of marking to be done.
+2013-01-25 17:04:57 max_albert: Oh dear, that sounds painful. Good luck! And have a nice weekend anyway...
+2013-01-25 17:05:57 mb8g11: See you!
+2013-01-25 17:06:39 fangohr-adium: Thanks. It is actually a very nice task so far as I need to write lots of code to automise the curation of submissions, and make the marking as easy as possible. So I haven't even got to the marking itself — it is just the writing of scripts to get there. However, it would be good if the deadline for delivery of everything was much later than it is ;-)
+2013-01-25 17:06:43 fangohr-adium: Have good week end, too.
+2013-01-25 17:44:27 max_albert: Just for everyone's information, because of all this hassle with Mercurial bookmarks, Dmitri has now created a named branch called "dolfin-1.0.0" and I have just deleted the "dolfin_1_0_0" bookmark (it might still stick around in your local checkouts, but it's gone from the server).
+2013-01-25 17:44:59 max_albert: Hopefully that will stop the confusion for a while.
+2013-01-28 09:13:33 fangohr-adium: Morning all.
+2013-01-28 12:27:31 fangohr-adium: Anybody interested in lunch at some point?
+2013-01-28 12:27:46 ww1g11: Does anyone knows what indeed change in dolfin 1.1.0? why the assemble does not work any more for netgen meshes?
+2013-01-28 12:28:52 ww1g11: I bring a sandwich so I am not
+2013-01-28 12:29:03 fangohr-adium: Thanks, Weiwei ;-)
+2013-01-28 12:29:18 fangohr-adium: I don't know about the netgen meshes.
+2013-01-28 12:29:39 ww1g11: oh , I mean the meshes generated by netgen
+2013-01-28 12:29:57 ww1g11: such as box class
+2013-01-28 12:31:28 ww1g11: I found some codes give totally wrong results if I use netgen meshes, such as box
+2013-01-28 12:32:25 fangohr-adium: Could this relate to the order of degrees of freedom in a Dolfin Function not being the same as that of the nodes in the mesh? Marc-Antonio said that he had switched off the re-ordering, so this should not matter. Not sure.
+2013-01-28 12:33:54 ww1g11: I don't know, here is a simple piece of code to show my problem, volumes = df.assemble(df.TestFunction(S1) * df.dx)
+2013-01-28 12:34:55 ww1g11: if I use box rather than Unitcube to generate mesh, the volumes will gives all zeros
+2013-01-28 12:50:20 fangohr-adium: Hm, interesting. If you are stuck on this,  can you produce a minimalistic example that demonstrates this (Ipython notebook?) so we can all have a look at it, or use it as baseline to email the dolfin people?
+2013-01-28 12:55:37 ww1g11: I will write a simple notebook to demonstrate this problem
+2013-01-28 13:49:07 max_albert: Hi Weiwei! I had the same problem a while ago and asked about it on Launchpad. See here: https://answers.launchpad.net/dolfin/+question/212697
+2013-01-28 13:50:26 max_albert: That's why we also had to change the helper function which computes the volume of a mesh.
+2013-01-28 13:50:33 max_albert: See the fix in this commit: https://bitbucket.org/fangohr/finmag/commits/be665350b5aef95ff09c8d16a596e7379eca072f
+2013-01-28 13:51:45 max_albert: Basically, the root of the problem is that Netgen internally marks the mesh cells with maker '1', but df.dx by default only operates on the region marked with '0'.
+2013-01-28 14:17:41 max_albert: I just had a quick discussion with Weiwei about this and we came to the conclusion that the way Dolfin handles things with df.dx is simply wrong...
+2013-01-28 14:17:56 max_albert: By default, df.dx should apply to the *whole* mesh, not just to the region marked with 0.
+2013-01-28 14:19:08 max_albert: So anyone reading this is strongly encouraged to comment on the Launchpad thread (https://answers.launchpad.net/dolfin/+question/212697) and tell them that they either need to change the default behaviour of df.dx, or at the very least introduce a shortcut for "operate on the entire mesh".
+2013-01-28 14:19:15 max_albert: This keeps biting us hard. :-S
+2013-01-29 11:24:25 max_albert: Good morning everyone!
+2013-01-29 11:25:47 max_albert: As a little treat for the morning I thought I'd share this little gem (which some of you may know already?): http://numba.pydata.org/
+2013-01-29 11:40:44 fangohr-adium: Hi Max, nice one. I had seen this before, but never tried it.
+2013-01-29 11:41:15 max_albert: I just used it for a little toy computation this morning, and was totally blown away by the speedup given by only adding two lines. :)
+2013-01-29 11:51:55 max_albert: They main limitation a while ago was that they didn't have support for numpy arrays. But this seems to have changed now, so I'm really excited about this project.
+2013-01-29 11:52:27 max_albert: It's still somewhat in its infancy and many things are not supported yet, but I'm expecting big things of it in the near future. :)
+2013-01-29 12:40:10 fangohr-adium: Lunch, folks?
+2013-01-29 12:40:18 max_albert: Sounds good!
+2013-01-29 12:40:37 fangohr-adium: Can meet outside B25 (front door), or you can pick me up. As you like. Just say when you leave ;-)
+2013-01-29 12:40:50 max_albert: Coming over now, we'll pick you up.
+2013-01-29 20:11:41 mb8g11: quit
+2013-01-30 10:55:39 mb8g11_: I've made a cake.
+2013-01-30 10:57:29 ww1g11: ;-)
+2013-01-30 12:35:38 fangohr-adium: A cake?? Sounds intriguing.
+2013-01-30 12:50:22 mb8g11_: You're invited anytime to have some.
+2013-01-30 12:50:30 mb8g11_: We haven't started ;)
+2013-01-30 12:51:49 fangohr-adium: Nice ;-). Don't wait for me though. I'll be off to play some  volleyball at 13:00, and a little food afterwards. I could drop in around 15:00 for a piece maybe?
+2013-01-30 12:52:02 mb8g11_: Swell.
+2013-01-30 14:32:07 max_albert: Yes!!!!!!!!!
+2013-01-30 14:32:27 max_albert: I have found the magic commands to downgrade to Dolfin 1.0.0 :-)
+2013-01-30 14:34:52 fangohr-adium: What is it :)
+2013-01-30 14:34:53 fangohr-adium: ?
+2013-01-30 14:35:38 fangohr-adium: (no rush. It might be better to document thsi in a little script in the repository than to past them here.)
+2013-01-30 15:02:54 mb8g11_: Cake?
+2013-01-30 15:02:57 max_albert: Will post them in a second.
+2013-01-30 15:03:22 fangohr-adium: Yes, will be over with you in 3 minutes.
+2013-01-30 15:03:33 mb8g11_: Don't hurry, it's not very good ;)
+2013-01-30 15:09:01 max_albert: Basically, the answer is hidden in a question I asked on Launchpad this morning, and where I just added a summary: https://answers.launchpad.net/fenics/+question/220534
+2013-01-31 16:02:54 fangohr-adium1: Hi, got some urgent stuff out of the way, phew. Time for some dolfin fun.
+2013-01-31 16:02:57 fangohr-adium1: [just a little]
+2013-01-31 16:08:11 ww1g11_: ;-)  anything exciting?
+2013-01-31 16:08:50 fangohr: What I have done is marking of exams (and there will be a littlemore to come).
+2013-01-31 16:09:30 fangohr: Now I first need to downgrade my dolfin.
+2013-01-31 16:58:13 fangohr_: Wohoo -- back to a working finmag installation. Down grade to dolfin 1.0 worked. Will add script for this to repository in a moment.
+2013-02-02 15:24:03 fangohr: Greetings all.
+2013-02-04 08:36:47 max_albert: Good morning all!
+2013-02-04 09:21:55 fangohr: Hey, good morning!
+2013-02-04 11:50:28 fangohr-adium: Hi MA, good to see you.
+2013-02-04 11:50:40 max_albert: Hello!
+2013-02-04 11:50:42 fangohr-adium: Have started using the i3 window manager, and I love it. Very nice!
+2013-02-04 11:51:12 max_albert: Sounds great! I'll definitely give it a try some time very soon.
+2013-02-04 11:51:40 max_albert: Oh, I guess you meant Marc-Antonio when you said "MA"? ;-)
+2013-02-04 11:52:30 fangohr-adium: I did. But it is also good to see you :)
+2013-02-04 11:52:53 fangohr-adium: (I think MA was not online yet when we exchanged greetings earlier today…)
+2013-02-04 12:28:03 mb8g11: Hi guys!
+2013-02-04 12:29:35 ww1g11: Hi MA
+2013-02-04 13:20:34 max_albert: Hi Marijan!
+2013-02-04 13:20:47 max_albert: And another message (for testing)...
+2013-02-04 13:23:25 Marijan-Beg: Test message
+2013-02-04 13:24:15 Marijan-Beg: Another test.
+2013-02-04 13:32:42 fangohr-adium1: Hi Marijan, Weiwei and I just noticed that Matteo Franchin's PhD thesis in our shared Dropbox folder: Group/theses/Matteo_Franchin.pdf
+2013-02-04 13:34:24 mb4e10: Yes, I have it
+2013-02-04 13:36:32 mb4e10: I have checked the equation and it looks like there is a typo in Munchen slides (cross product is missing)
+2013-02-04 13:40:34 mb8g11: Hans, glad to hear you like i3.
+2013-02-04 14:06:29 fangohr: Hi all, am just having a meeting with Weiwei.
+2013-02-04 14:06:41 fangohr: He has been busily working on the dolfin-1.1.0 branch for the last week or so.
+2013-02-04 14:06:56 fangohr: And he says apart from the GCR tests, all seems to work for him with dolfin 1.1.
+2013-02-04 14:07:07 fangohr: Am I the only one not to realise this?
+2013-02-04 14:07:12 fangohr: Sounds like good news to me.
+2013-02-04 14:08:12 max_albert: I had seen his commits to the dolfin-1.1 branch, and was aware that he was using it. But I wasn't sure how many tests were actually failing and how significant the untested functionality is.
+2013-02-04 14:08:39 max_albert: Good to hear that it seems to be more or less stable.
+2013-02-04 14:47:32 mb8g11: Since we disabled the re-ordering of the nodes and renamed the mesh classes, the GCR problem was the last one.
+2013-02-04 14:47:49 mb8g11: Still good to hear the rest works in practice as well ;)
+2013-02-04 14:48:06 mb8g11: Has Dmitri posted to the mailing list?
+2013-02-04 14:48:33 max_albert: Are we using the GCR solvers anywhere at the moment, or are they just provided as a potential alternative?
+2013-02-04 14:48:50 mb8g11: Alternative to FK.
+2013-02-04 14:50:21 max_albert: So this is mainly an issue for the tests, but not for daily simulations in case we don't actively change the defaults?
+2013-02-04 14:54:59 ww1g11: I am still do the tests, examples/time-dependent-applied-field/test_appfield.py also fails
+2013-02-04 15:01:45 ww1g11: Hi MA, where have you changed in finmag about re-ordering stuff? I just wondering what it is ...
+2013-02-04 15:27:50 fangohr: I don't think Dmitri has reported anything.
+2013-02-04 15:28:21 fangohr: The GCR solver is not used anywhere. Of course it would be good to keep it running, but for now we might as well disabled the test if that is all that prevents us from moving to 1.1
+2013-02-04 16:22:54 fangohr: Hello fangohr1.
+2013-02-04 16:23:08 fangohr: [Sorry, still testing notifications and stuff on i3 window manager.]
+2013-02-04 16:23:55 fangohr: So for Thunderbird chat, the extension 'FireTray' does a good job with i3wm. If a chat message arrives, a green speech bubble in the status line starts to blink. That seems quite reasonable.
+2013-02-04 16:54:08 fangohr-adium: Max, I note you are working on the automatic testing of the ipython notebooks. That's great.
+2013-02-04 16:54:57 max_albert: Yes, I'd like to push this forward a bit.
+2013-02-04 16:55:33 fangohr-adium: It would be rather useful, I agree.
+2013-02-04 16:55:45 max_albert: We're still a bit away from automated testing/reproducing the notebooks, but it should not be too hard.
+2013-02-04 16:56:25 max_albert: I've noticed that some of the notebooks are already a little "outdated" in the sense that some of the logging messages have changed since they were first committed.
+2013-02-04 16:56:52 fangohr-adium: Hm, yes.
+2013-02-04 16:57:04 max_albert: So it's mainly a matter of going through the notebooks one by one, re-executing them and saving them in an up-to-date state.
+2013-02-04 16:57:49 max_albert: Then the script needs to be run and we need to catch cases where we simply forgot to "sanitize" the output (e.g. remove timestamps, etc.) and identify cases  where there really is a bug/difference in behaviour.
+2013-02-04 16:58:21 max_albert: But so far the script seems to work reasonably well (with a few tweaks that I added).
+2013-02-04 16:58:30 fangohr-adium: Whoohoo, very good.
+2013-02-04 16:59:20 max_albert: And while executing the scheduling tutorial it has reminded me that realtime scheduling is broken at the moment (which I already noticed last week, but which isn't caught by any tests because we don't have any at the moment).
+2013-02-04 17:01:09 max_albert: If people want to help with this, a relatively simple task would be to simply re-execute each notebook and see if the behaviour is as expected (i.e. as described in the notebook).
+2013-02-04 17:01:41 fangohr1: Yes, we didn't write any. We are also not sure what use they are. One I can think of is to periodically measure RAM that the process takes (if we can get that information in the multi-process environment). Or to tweet about the state of your simulation every hour. Not so practical, maybe.
+2013-02-04 17:02:47 max_albert: Well, I've used it successfully to just keep myself notified about the progress of the simulation - i.e., that it's still running (if it's taking long) - and found it quite useful for this purpose.
+2013-02-04 17:03:23 fangohr-adium: Okay, that's good then. Let's add a test if we can. Ideally one that is not soo time consuming. I can add this to pivotal tracker.
+2013-02-04 17:04:02 fangohr-adium: Which notebooks do still need doing? I guess you want them re-run, and if correct, saved and committed, right?
+2013-02-04 17:05:13 max_albert: I think a good way to test realtime scheduling is to "monkey-patch" one of the methods of the Simulation class.
+2013-02-04 17:05:24 max_albert: For example, inside the test we could replace the "run_until" method with a dummy method that simply sleeps for a second.
+2013-02-04 17:05:56 max_albert: When we schedule a realtime-function that prints something every 0.3 seconds or so then we should see three messages on the screen, and we can check for that.
+2013-02-04 17:06:01 max_albert: (Or something along those lines.)
+2013-02-04 17:06:10 fangohr-adium: Sure. Might still be interesting due to the multi-process nature ;-) I guess one just needs to try this and see how it goes.
+2013-02-04 17:06:52 max_albert: Regarding the notebooks, pretty much all of them still need doing.
+2013-02-04 17:07:03 max_albert: I've only touched two so far:
+2013-02-04 17:07:12 max_albert: 1) ref-restarting-simulations.ipynb
+2013-02-04 17:07:24 max_albert: 2) tutorial-scheduling-events.ipynb
+2013-02-04 17:07:28 fangohr-adium: Have added pivotal tracker item for testing real-time scheduling.
+2013-02-04 17:07:39 max_albert: Great, thanks.
+2013-02-04 17:11:11 max_albert: The best way to check a notebook is probably to re-execute it and see if the output makes sense, and also to run the script "bin/ipnbdoctest.py" on it (possibly on the re-executed version) to see where the output differs.
+2013-02-04 17:11:36 max_albert: If all is fine (i.e., no differences) then the updated notebook can simply be committed.
+2013-02-04 17:12:13 fangohr1: If not, it might need revising of the testing script?
+2013-02-04 17:12:47 max_albert: Otherwise we either need to add an additional sanitising rule to ipnbdoctest.py (if the difference is due to something outside our control, such as the time of execution) or there is something that needs further investigation.
+2013-02-04 17:14:25 fangohr-adium: I have created a story for this
+2013-02-04 17:14:26 fangohr-adium: https://www.pivotaltracker.com/story/show/43779257
+2013-02-04 17:14:34 max_albert: Excellent, thanks!
+2013-02-04 17:14:38 fangohr-adium: to which we can all contribute and tick notebooks off when done.
+2013-02-04 17:14:58 fangohr-adium: The testing check is maybe for the more adventurous, but running a notebook to see whether it still works can be done by most of us.
+2013-02-04 17:15:20 fangohr-adium: About to leave, and my finmag doesn't compile either, so no testing from here for today.
+2013-02-04 17:16:03 fangohr-adium: I will also try to teach Dokosbot to commit to the default branch (and not the 1.1 bookmark or whatever it is doing). MAybe tomorrow morning. In the process, I need to rescue the IRC log of the past week or so from there and put in the main branch.
+2013-02-04 17:16:34 max_albert: Yes, running a notebook is pretty simple (although one should double-check that the results still make sense and not just blindly execute it, which I nearly did earlier :)).
+2013-02-04 17:17:08 max_albert: Also, it may make sense to run ipnbdoctest.py on all of the notebooks just to see what the changes actually involve.
+2013-02-04 17:17:15 fangohr-adium: Actually a nice opportunity to learn what finmag can do at this stage ;-)
+2013-02-04 17:17:28 max_albert: But this doesn't have to be done by the same person who runs the notebook.
+2013-02-04 17:21:55 max_albert: I've just added all the notebooks to the Pivotal tracker task so that it's easier to see the progress and more of an incentive. :)
+2013-02-04 17:25:54 fangohr-adium: Thanks.
+2013-02-04 17:34:53 fangohr: @mb8g11, I very much like how fast py.test is now gathering tests; well done.
+2013-02-04 17:35:25 max_albert: What did he change?
+2013-02-04 17:35:51 fangohr: Removed code that was executed during import of libraries, I think.
+2013-02-05 08:53:45 mb8g11: Good morning!
+2013-02-05 09:14:51 fangohr: Good morning!
+2013-02-05 09:53:45 fangohr: Good Morning Marijan.
+2013-02-05 09:54:05 mb4e10: Good morning
+2013-02-05 10:38:02 mb8g11: Hi Marijan
+2013-02-05 10:42:03 mb4e10: Hi MA.
+2013-02-05 12:30:46 fangohr_:  Marijan, are you still there? Maybe we'll have a Skype chat with Bob in 5 minutes. Would you be available?
+2013-02-05 12:37:01 fangohr_: Maybe not, he seems gone now.
+2013-02-05 12:37:54 mb4e10: I am here
+2013-02-05 12:38:03 mb4e10: I have just seen the message
+2013-02-05 12:39:00 fangohr_: Okay -- Bob did email back straight after I emailed him to ask whether now was good, but I only saw it now. He seems to have disappeared. I'll ask him whether 13:30 would be convenient for him - maybe he is for lunch.
+2013-02-05 12:39:19 mb4e10: ok
+2013-02-05 13:28:59 fangohr_: Hi Marijan, we are on. Will you come over?
+2013-02-05 13:31:11 mb4e10: I am coming
+2013-02-05 14:44:02 fangohr_: Hi Weiwei, Max, Marc-Antonio. It turns out that Marijan needs to compute the normal modes of his Skyrmion system -- we talked about this before with most of your for other systems. Can somebody show him the paper by McMichael and Stiles for the normal modes in the ellipsoid?
+2013-02-05 14:44:20 fangohr_: If anybody has Greg's paper handy, or some code for fourier transforms, this would help him as well (Weiwei?)
+2013-02-05 14:44:25 fangohr_: Thanks all.
+2013-02-05 14:44:37 fangohr_: Over and out for a few hours, back online tonight I expect.
+2013-02-05 14:45:19 max_albert: I'll have a look. I should definitely have Greg's paper somewhere, and am about to look into this stuff anyway. So probably a good idea to join forces. :)
+2013-02-05 14:45:35 mb4e10: Yes, it would be helpful if you can send me these papers by email.
+2013-02-05 14:46:03 fangohr-adium: Thanks, Max.
+2013-02-05 14:48:47 max_albert: What's the title of the paper by McMichale and Stiles? Is it "Magnetic normal modes of nanoelements"?
+2013-02-05 14:51:52 max_albert: Ok, that seems to be the one.
+2013-02-05 21:21:34 fangohr__: Hello again.
+2013-02-06 08:36:09 max_albert: Good morning.
+2013-02-06 09:04:20 mb8g11: Good morning!
+2013-02-06 09:14:26 fangohr: Hey, good morning!
+2013-02-06 09:15:50 fangohr: Hi Marc-Antonio. I am still liking i3wm a lot. Have you tried this at the prompt:
+2013-02-06 09:15:50 fangohr: i3-msg border none
+2013-02-06 09:15:50 fangohr: ?
+2013-02-06 09:15:59 fangohr: To switch back, you can do
+2013-02-06 09:15:59 fangohr: i3-msg border normal
+2013-02-06 09:16:27 fangohr: Or I also like the minimalistic version of
+2013-02-06 09:16:27 fangohr: i3-msg border 1pixel
+2013-02-06 09:25:18 fangohr: Hi Max, have just tested a notebook (dev-cvode) -- and it worked out of the box (to pass the ipynb test).
+2013-02-06 09:25:32 fangohr: No surprise, you had reviewed this before ;-)
+2013-02-06 09:26:02 max_albert: Still, it's good to hear that it passes on two different machines. :)
+2013-02-06 09:26:53 fangohr: I think it is excellent you pushed this forward -- this should make a real difference in maintaining documentation/system tests working automatically. (I haven't even looked at the code yet, although I am looking forward to doing so.)
+2013-02-06 09:27:20 max_albert: I just realised that the script ignores images in the comparison, which is slightly unfortunate because comparing graphs would be quite valuable.
+2013-02-06 09:27:41 max_albert: It's no problem to turn image comparison on, but I don't know how well it would work.
+2013-02-06 09:28:11 max_albert: I would hope that matplotlib produces binary-identical images on different passes (although I'd need to double-check this).
+2013-02-06 09:28:31 max_albert: But there might be problems with images produced by other packages (such as Paraview).
+2013-02-06 09:28:47 max_albert: Still, the notebook comparison should be quite valuable even without image comparison.
+2013-02-06 09:29:04 max_albert: And there is also a tool called "Perceptual Image Diff" which might come in handy: http://pdiff.sourceforge.net/
+2013-02-06 09:29:20 max_albert: So all in all nothing to worry about, just something to keep in mind.
+2013-02-06 09:29:29 fangohr: Could also be that the images contain the creation date, matplotlib version etc. One may be able to switch that off. But I agree that even without image comparison, this is pretty good. If we get used to scatter assert statements every now and then, that should cover it.
+2013-02-06 09:29:41 fangohr: Nice idea (pdiff). I agree - just something to keep in mind for now.
+2013-02-06 09:38:49 mb8g11: Wow! thanks!
+2013-02-06 09:41:55 mb8g11: 1 pixel is nice, so you can still see the highlights for horizontal/vertical splitting
+2013-02-06 09:43:41 fangohr: That's right. Also useful when you move the window around (so you know which one you move). (If the window contains something special, it is easy to see as well, of course.)
+2013-02-06 09:44:28 mb8g11: Indeed.
+2013-02-06 10:32:35 max_albert: Hi Marc-Antonio!
+2013-02-06 10:32:39 max_albert: I just remembered that you were interested in the interactive slider demo in Matplotlib.
+2013-02-06 10:32:43 max_albert: Here it is: http://matplotlib.org/users/screenshots.html#slider-demo
+2013-02-06 11:00:21 mb8g11: How cool is that, thanks.
+2013-02-06 12:11:02 fangohr: Very nice indeed, thank you. (slider_demo.py).
+2013-02-06 12:11:29 max_albert: Hans, I'll show you an adapted example (based on Pete's notebook) tomorrow. ;-)
+2013-02-06 12:11:39 fangohr: Great :)
+2013-02-06 12:12:44 max_albert: Btw, do you which piece of code is responsible for parsing the "--logcol=none" option in the tutorial notebook?
+2013-02-06 12:13:07 max_albert: Unfortunately, it seems the LaTeX conversion of the docs is not capable of dealing with the colour escape sequences that it produces.
+2013-02-06 12:15:31 max_albert: Anyway, I need to rush home now to get ready for the DTC Open Day. See you later!
+2013-02-06 12:16:22 fangohr_: The --locol=none is dealt with in the ansiterminal file: src/finmag/util/ansistrm.py
+2013-02-06 12:16:42 max_albert: Thanks! Will have a look at it later.
+2013-02-06 12:16:50 fangohr_: It is something I hacked in there, because the notebook (at that point!) had trouble dealing with the colours.  Maybe we don't even need it anymore?
+2013-02-06 12:20:08 fangohr_: Hi Max, the logging notebook does not need the logcol=None switch anymore; so we can remove that.
+2013-02-06 12:20:27 fangohr_: ipnbtest still fails, though. I do not commit anything here to avoid a conflict wiht your changes, Max.
+2013-02-06 12:28:53 fangohr_: Hi Weiwei.
+2013-02-06 12:29:05 fangohr_: Marc-Antonio, have we abandoned the 'main' bookmark now?
+2013-02-06 12:29:34 ww1g11: Hi Hans, Max just left before you sent message
+2013-02-06 12:29:51 fangohr_: No worries, thanks.
+2013-02-06 12:33:31 ww1g11: by the way, our MFA expressions to compute the sussceptibility are correct, since I found the exact same expressions in  Unai's thesis
+2013-02-06 12:45:28 fangohr_: Back to the --logcol=None switch: maybe I have spoken to early: the failure comes when we run nbconvert on that ipynb which has output from a external process (run like "!python run_my_simulation.py" within the notebook. If that output contains colour, then nbconvert chokes at that point.) This maybe why Jenkins is stuck at the moment; although I fail to reproduce this locally.
+2013-02-06 12:45:53 fangohr_: Weiwei: that's good news. Who is Unai? Could you add that to the thesis folder in the dropbox, please?
+2013-02-06 12:47:16 mb8g11: We are working on main without noticing I think, the last commit on the 1.1.0 branch was b27d380 three days ago.
+2013-02-06 12:48:13 mb8g11: Confirmed.
+2013-02-06 12:48:46 fangohr_: The branch that we use most is 'default' correct?
+2013-02-06 12:48:53 fangohr_: Weiwei is busy on the 1.1 branch ....
+2013-02-06 12:49:08 fangohr_: And DokosBot sits (and is a little confused as to what that means) on the 'main' bookmark.
+2013-02-06 12:49:59 mb8g11: Weiwei is indeed the only one continuing his work on the 1.1.0 branch.
+2013-02-06 12:50:25 fangohr_: We should certainsly move Dokosbot back onto the default branch, so that additions to the logbook are done there, rather than in the 'main' bookmark. This needs a little care, as we need to move (or copy) the logging of the past few weeks or so  from the main branch into the default branch.
+2013-02-06 12:51:20 mb8g11: The bookmark 'main' tracks our default branch. Let me rename it to get rid of the confusion.
+2013-02-06 12:51:33 mb8g11: And then I'll sort out DokosBot.
+2013-02-06 12:51:59 fangohr_: My normal use of 'hg fetch' to automise pull, update and - if necessary - merge and commit, seems a little upset by too many branches / bookmarks. So if we don't use the bookmark, we should remove it. This can only help when we try to merge the 1.1 branch with default ...?
+2013-02-06 12:52:02 fangohr_: Thanks, MA.
+2013-02-06 12:52:08 fangohr_: MA=Marc-Antonio.
+2013-02-06 12:52:31 fangohr_: [I'll stop tweeting here now and move to the DTC open day.]
+2013-02-06 12:55:50 mb8g11: Oooooh.
+2013-02-06 13:07:29 mb8g11: I deleted the bookmarks from Dokosbot's machine and commited the log by hand. Should be fine now.
+2013-02-06 13:08:49 mb8g11: Overall, the bookmarks experiment was not very succesful.
+2013-02-06 13:28:37 mb8g11: Test.
+2013-02-06 13:29:58 mb8g11: Marvin and MarvinBot were already taken, sadly.
+2013-02-06 16:16:03 ww1g11: Hans: I already put it into dropbox, the thesis is downloaded from http://www3.icmm.csic.es/magsim/?page_id=220
+2013-02-07 07:47:25 mb8g11_: Hiya
+2013-02-07 10:42:29 mb8g11_: Hi Hans
+2013-02-07 10:42:42 fangohr_: Hi ;)
+2013-02-07 10:43:16 mb8g11_: Got around to writing the report for January in preparation for our meeting later.
+2013-02-07 10:43:27 fangohr_: Yes, just saw it. Looks good.
+2013-02-07 10:48:30 fangohr_: Thanks also for fixing the Marvin commits -- it is re-assuring to get the chat logs at midnight.
+2013-02-07 12:09:55 fangohr-adium: Max, or anybody, interested in food in 5 minutes? (No worries if not.)
+2013-02-07 12:10:19 max_albert: Sure, why not.
+2013-02-07 12:10:25 mb4e10: Not hungry. Thanks.
+2013-02-07 12:10:36 max_albert: Hi Marc-Antonio!
+2013-02-07 12:11:11 max_albert: I just had a quick look at the scheduler logic again. (Because I wanted to see if it makes sense to allow passing a list of time steps to At().)
+2013-02-07 12:12:17 max_albert: I was wondering, in the At.fire() method, does the 'time' argument have any relation to the target time at which the At object is supposed to fire?
+2013-02-07 12:12:42 fangohr-adium: Okay, Max. I'll come and pick you up.
+2013-02-07 12:12:56 mb8g11__: Yes. It's supposed to be equal with EPSILON precision.
+2013-02-07 12:13:14 mb8g11__: This is just done to ensure there is no corruption in the system.
+2013-02-07 12:13:43 mb8g11__: Additionally, it allows us to check if we haven't fired at this time already.
+2013-02-07 12:14:04 max_albert: Hmm, but this isn't actually checked in the code, is it?
+2013-02-07 12:14:21 mb8g11__: Should be, let me check quickly.
+2013-02-07 12:14:40 max_albert: Also, in the test in scheduler_test.py, an At object is created with target 100, but it is called with a.fire(0).
+2013-02-07 12:15:01 max_albert: Let me just quickly push a change I did a minute ago.
+2013-02-07 12:15:09 mb8g11__: l. 273             if (item.next_step != None) and abs(item.next_step - time) < EPSILON:
+2013-02-07 12:16:19 max_albert: Ah, it happens in the Scheduler class, not the At class?! I'll have to check that again.
+2013-02-07 12:17:27 max_albert: Ok, so the scheduler logic should work, but the test for At is still wrong, isn't it?
+2013-02-07 12:17:28 mb8g11__: The At class checks it differently, to avoid double firing at the same time (possible when simulation stops exactly at the next appointment of At, and at_End==True)
+2013-02-07 12:17:49 mb8g11__: The scheduler is the one who checks for internal consitency
+2013-02-07 12:18:05 mb8g11__: Sounds like it, which line?
+2013-02-07 12:18:21 max_albert: Line 58 ff. (after my latest commit).
+2013-02-07 12:19:07 max_albert: I haven't checked the logic yet, but it sounds like it might make sense to do the consistency check inside the item classes (At, Every, ExitAt) instead of the scheduler itself?
+2013-02-07 12:19:28 mb8g11__: If the test you showed me passes, then this is a bug.
+2013-02-07 12:19:42 max_albert: Yes, it does pass.
+2013-02-07 12:20:02 mb8g11__: Ah wait, you call fire on At directly.
+2013-02-07 12:20:11 mb8g11__: Instead of telling the Scheduler it reached 100.
+2013-02-07 12:20:39 max_albert: I don't. Whoever wrote the test did. ;-)
+2013-02-07 12:20:41 max_albert: Feel free to have a look at this if you have time or fancy it. I'll do it too after lunch (Hans just came over).
+2013-02-07 12:20:44 mb8g11__: Will add the test to the events themselves as well and maybe refactor a little.
+2013-02-07 12:20:51 max_albert: Great, thanks!
+2013-02-07 12:20:53 mb8g11__: Can you ask Hans when our Skype is?
+2013-02-07 12:21:25 max_albert: He is "still aiming for 1pm" (maybe a little after), if that suits you.
+2013-02-07 12:21:32 mb8g11__: Just checking, perfect.
+2013-02-07 12:21:39 mb8g11__: Have a nice meal.
+2013-02-07 12:21:45 max_albert: Cool, see you later!
+2013-02-07 15:09:43 mb8g11_: Just checked why we have GCR at all. Seems slightly slower, but gives better results for coarser meshes.
+2013-02-07 15:10:01 mb8g11_: plots in last commit
+2013-02-07 15:10:34 mb8g11_: I doubt this is new information, but maybe a good reminder.

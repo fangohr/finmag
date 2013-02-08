@@ -1,5 +1,5 @@
 import os
-import subprocess
+import subprocess as sp
 import numpy as np
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -11,11 +11,18 @@ def test_against_nmag():
     try:
         # the nmag file should be in version control. However, it is convenient
         # that the test recomputes it if needed.
-        subprocess.call("make averages_ref.txt", shell=True)
-        m_nmag = np.genfromtxt(os.path.join(MODULE_DIR, "averages_ref.txt"))
+        try:
+            filename = "averages_ref.txt"
+            sp.check_output(['make', filename], stderr=sp.STDOUT)
+            m_nmag = np.genfromtxt(os.path.join(MODULE_DIR, filename))
 
-        subprocess.call("make averages.txt", shell=True)
-        m_finmag = np.genfromtxt(os.path.join(MODULE_DIR, "averages.txt"))
+            filename = "averages.txt"
+            sp.check_output(['make', filename], stderr=sp.STDOUT)
+            m_finmag = np.genfromtxt(os.path.join(MODULE_DIR, filename))
+        except sp.CalledProcessError as ex:
+            print("Running 'make {}' was unsuccessful. The error "
+                  "message was: {}".format(filename, ex.output))
+            raise
 
     finally:
         os.chdir(cwd_backup)
