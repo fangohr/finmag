@@ -1,3 +1,6 @@
+import pytest
+from finmag.util.versions import get_version_dolfin
+
 import unittest
 import numpy as np
 import dolfin as df
@@ -168,6 +171,7 @@ class BemComputationTests(unittest.TestCase):
                                             "native, FK")
 
 
+    @pytest.mark.skipif("get_version_dolfin()[:3] != '1.0'")
     def test_compute_scalar_potential_gcr(self):
         m1 = df.Constant([1, 0, 0])
         m2 = df.Expression(["x[0]*x[1]+3", "x[2]+5", "x[1]+7"])
