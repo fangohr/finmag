@@ -150,6 +150,7 @@ def run_netgen(geofile):
     Runs netgen on the geofile and returns a file in DIFFPACK format.
 
     """
+    logger.debug("[DDD] NETGENDIR: {}".format(os.environ.get('NETGENDIR'))
     if not os.path.isfile(geofile):
         raise ValueError("Can't find file {}.".format(geofile))
 
