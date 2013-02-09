@@ -134,6 +134,17 @@ def get_version_paraview():
     return get_debian_package_version('paraview')
 
 
+def get_version_netgen():
+    import subprocess
+    try:
+        with open(os.devnull) as devnull:
+            output = subprocess.check_output(['netgen', '-v'], stderr=devnull)
+        version = output.split('\n')[0]
+    except subprocess.CalledProcessError:
+        version = None
+    return version
+
+
 def running_binary_distribution():
     """Return True if this is the cython-based binary 
     distribution or False if it is source distribtion
