@@ -7,11 +7,10 @@ __organisation__ = "University of Southampton"
 
 from finmag.util.versions import get_version_dolfin
 from dolfin import *
+import pytest
 import problems.prob_fembem_testcases as pftc
 import finmag.energies.demag.solver_base as sb
 import finmag.energies.demag.solver_gcr as sgcr
-import logging
-logger = logging.getLogger("finmag")
 
 
 def L2_error(f1,f2,cell_domains = None,interior_facet_domains = None, dx = dx):
@@ -78,44 +77,42 @@ class TestFemBemDeMagSolver(object):
         print "solve_laplace_inside testpassed"
 
 
-if get_version_dolfin()[:3] != '1.0':
-    logger.debug("The class 'Test_FemBemGCRSolver' requires dolfin-1.0")
-else:
-    class Test_FemBemGCRSolver(DemagTester):
-        """Tests for the Class FemBemGCRSolver"""
-        def setup_class(self):
+@pytest.mark.skipif("get_version_dolfin()[:3] != '1.0'")
+class Test_FemBemGCRSolver(DemagTester):
+    """Tests for the Class FemBemGCRSolver"""
+    def setup_class(self):
 
-            #Class Tolerance 
-            self.TOL = 2.0
+        #Class Tolerance 
+        self.TOL = 2.0
 
-            #Problems,solvers, solutions
-            self.problem3d = pftc.MagSphereBase(0.8, 1)
-            self.solver3d = sgcr.FemBemGCRSolver(mesh=self.problem3d.mesh,
-                    Ms=self.problem3d.Ms, m=self.problem3d.M)
-            self.solution3d = self.solver3d.solve()
+        #Problems,solvers, solutions
+        self.problem3d = pftc.MagSphereBase(0.8, 1)
+        self.solver3d = sgcr.FemBemGCRSolver(mesh=self.problem3d.mesh,
+                Ms=self.problem3d.Ms, m=self.problem3d.M)
+        self.solution3d = self.solver3d.solve()
 
-            #Generate a 3d analytical solution
-            self.analytical3d = UnitSphere_Analytical(self.problem3d.mesh)
+        #Generate a 3d analytical solution
+        self.analytical3d = UnitSphere_Analytical(self.problem3d.mesh)
+    
+    def test_compare_3danalytical(self):
+        """
+        Test the potential phi from the GCR FemBem Solver against
+        the known analytical solution in the core for a uniformly magentized
+        unit sphere
+        """
+        testname = self.test_compare_3danalytical_gradient.__doc__
+        self.compare_to_analytical(self.solver3d.phi,self.analytical3d.potential,testname)
         
-        def test_compare_3danalytical(self):
-            """
-            Test the potential phi from the GCR FemBem Solver against
-            the known analytical solution in the core for a uniformly magentized
-            unit sphere
-            """
-            testname = self.test_compare_3danalytical_gradient.__doc__
-            self.compare_to_analytical(self.solver3d.phi,self.analytical3d.potential,testname)
-            
-        def test_compare_3danalytical_gradient(self):
-            """
-            Test the demag field from the GCR FemBem Solver against
-            the known analytical solution in the core for a uniformly magentized
-            unit sphere
-            """
-            testname = self.test_compare_3danalytical_gradient.__doc__
-            phi = self.solver3d.solve()
-            Hdemag = self.solver3d.get_demagfield()
-            self.compare_to_analytical(Hdemag,self.analytical3d.Hdemag,testname)
+    def test_compare_3danalytical_gradient(self):
+        """
+        Test the demag field from the GCR FemBem Solver against
+        the known analytical solution in the core for a uniformly magentized
+        unit sphere
+        """
+        testname = self.test_compare_3danalytical_gradient.__doc__
+        phi = self.solver3d.solve()
+        Hdemag = self.solver3d.get_demagfield()
+        self.compare_to_analytical(Hdemag,self.analytical3d.Hdemag,testname)
 
 
 if __name__ == "__main__":
