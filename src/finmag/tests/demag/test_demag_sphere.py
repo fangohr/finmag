@@ -3,9 +3,9 @@ import numpy as np
 import dolfin as df
 from finmag.util.meshes import sphere
 from finmag.energies.demag.solver_fk import FemBemFKSolver as FKSolver
-from finmag.energies.demag.solver_gcr import FemBemGCRSolver as GCRSolver
+#from finmag.energies.demag.solver_gcr import FemBemGCRSolver as GCRSolver
 
-solvers = [FKSolver, GCRSolver]
+solvers = [FKSolver]  # XXX TODO: Temporarily disabled GCRSolver for dolfin-1.1.0
 TOL = 1e-2
 
 @pytest.fixture(scope="module")
