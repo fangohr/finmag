@@ -20,7 +20,7 @@ from finmag.util.oommf.mesh import MeshField, Mesh
 from subprocess import check_output, CalledProcessError
 
 CACHE_DIR = os.environ['HOME'] + "/.oommf_calculator"
-RUN_DIR = tempfile.mkdtemp(suffix-'_oommf_calculator')
+RUN_DIR = tempfile.mkdtemp(suffix='_oommf_calculator')
 
 if os.environ.has_key('OOMMF_COMMAND'):
     OOMMF_COMMAND=os.environ['OOMMF_COMMAND']
