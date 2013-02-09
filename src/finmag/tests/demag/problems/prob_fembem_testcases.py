@@ -19,16 +19,17 @@ class MagUnitCircle(object):
     def desc(self):
         return "unit circle demagnetisation test problem fembem"
     
+# XXX TODO: This should probably be merged with MagSphereBase below?!
 class MagUnitSphere(object):
     """Uniformly magnetized sphere problem for fembem solvers"""
-    def __init__(self, n=10):
-        self.mesh = UnitSphere(n)
+    def __init__(self, maxh=0.5):
+        self.mesh = meshes.sphere(1.0, maxh=maxh, directory=MODULE_DIR)
         #M = ("1","0","0")
         self.Ms = 1
-        self.n = n
+        self.maxh = maxh
         self.M = (str(self.Ms), "0", "0")
     def desc(self):
-        return "Unit sphere demagnetisation test problem fembem, n=%d, Ms=%g" % (self.n, self.Ms)
+        return "Unit sphere demagnetisation test problem fembem, maxh={}, Ms={}".format(self.maxh, self.Ms)
 
 class MagUnitIntervalMesh(object):
     """Create 1d test problem where define a mesh,
