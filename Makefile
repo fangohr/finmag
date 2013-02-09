@@ -112,7 +112,10 @@ purge: clean
 create-dirs:
 	mkdir -p test-reports/junit
 
-test: clean make-modules run-unittest-tests run-pytest-tests run-ci-tests
+test: clean print-debugging-info make-modules run-unittest-tests run-pytest-tests run-ci-tests
+
+print-debugging-info:
+	@echo "[DDD] Makefile NETGENDIR: ${NETGENDIR}"
 
 run-unittest-tests : $(addsuffix /__runtests__,$(TEST_ROOTS))
 
