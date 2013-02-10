@@ -3,143 +3,13 @@ import logging
 import functools
 from numbers import Number
 from datetime import datetime, timedelta
+from finmag.integrators.events import SingleEvent, RepeatingEvent, same
 # This module will try to import the package apscheduler when a realtime event
 # is added. Install with "pip install apscheduler".
 # See http://pypi.python.org/pypi/APScheduler for documentation.
 
 log = logging.getLogger(name="finmag")
-
-EPSILON = 1e-15 # femtosecond precision for scheduling.
-
-class At(object):
-    """
-    Store a function and a time when that function should be run.
-    Call that function if notified that the timing is right.
-
-    """
-    def __init__(self, time, at_end=False):
-        """
-        Initialise with the correct time.
-
-        """
-        self.target = time
-        self.last_step = None
-        self.next_step = self.target
-        self.callback = None
-        self.at_end = at_end
-        self.stop_simulation = False
-
-    def __str__(self):
-        return "<At t={}>".format(self.target, ", at_end=True" if self.at_end else "")
-
-    def call(self, callback):
-        """
-        Attach a callback.
-
-        """
-        self.callback = callback
-
-        # so that object can be initialised and a callback attached
-        # in one line:  at = At(5.0e-12).call(my_fun)
-        return self
-
-    attach = call
-
-    def fire(self, time, finalising=False):
-        """
-        Call registered function.
-
-        """
-        if (self.last_step != None) and abs(self.last_step - time) < EPSILON:
-            # Don't fire more than once per time. This would be possible if the
-            # scheduled time also happens to be the end of the simulation and
-            # at_end was set to True.
-            return
-
-        if (not finalising) and abs(time - self.next_step) > EPSILON:
-            # just make the sure the time is indeed one we want to trigger for
-            return
-
-        if self.callback:
-            self.callback()
-        self.last_step = time
-        self.update()
-
-    def update(self):
-        """
-        Compute next target time.
-
-        """
-        self.next_step = None # Since one-time event, there is no next step.
-
-    def reset(self, current_time):
-        self.stop_simulation = False
-        if current_time >= self.target:
-            self.last_step = self.target
-            self.next_step = None
-        else:
-            self.last_step = None
-            self.next_step = self.target
-
-
-class Every(At):
-    """
-    Store a function that should be run and a time interval between function calls.
-    Call that function if notified that the timing is right.
-
-    """
-    def __init__(self, interval, start=None, at_end=False):
-        self.last_step = None
-        self.first_step = start or 0.0
-        self.next_step = self.first_step
-        self.interval = interval
-        self.callback = None
-        self.at_end = at_end
-        self.stop_simulation = False
-
-    def __str__(self):
-        return "<Every {} seconds>".format(
-            self.interval,
-            ", start={}".format(self.first_step) if self.first_step != 0.0 else "",
-            ", at_end=True" if self.at_end else "")
-
-    def update(self):
-        self.next_step += self.interval
-
-    def reset(self, current_time):
-        self.next_step = self.first_step
-        while self.next_step <= current_time:
-            self.update()
-
-
-class ExitAt(object):
-    """
-    Store the information that the simulation should be stopped at a defined time.
-
-    """
-    def __init__(self, time):
-        self.target = time
-        self.next_step = self.target
-        self.at_end = False
-        self.stop_simulation = False
-
-    def __str__(self):
-        return "<ExitAt t={}>".format(self.target)
-
-    def fire(self, time, finalising=False):
-        assert abs(time - self.next_step) < EPSILON
-        self.next_step = None
-        self.stop_simulation = True
-
-    def reset(self, current_time):
-        if current_time > self.next_step:
-            self.stop_simulation = True
-            self.next_step = None
-        else:
-            self.stop_simulation = False
-            self.next_step = self.target
-
-
+   
 class Scheduler(object):
     """
     Manages a list of actions that should be performed at specific times.
@@ -178,17 +48,17 @@ class Scheduler(object):
 
         if realtime:
             if at_end:
-                at_end_item = At(None, True).call(callback)
+                at_end_item = SingleEvent(None, True).call(callback)
                 self._add(at_end_item)
             return
 
         if at or (at_end and not every):
-            at_item = At(at, at_end).call(callback)
+            at_item = SingleEvent(at, at_end).call(callback)
             self._add(at_item)
             return
 
         if every:
-            every_item = Every(every, after, at_end).call(callback)
+            every_item = RepeatingEvent(every, after, at_end).call(callback)
             self._add(every_item)
 
     def _add(self, item):
@@ -253,10 +123,10 @@ class Scheduler(object):
         next_step = None
 
         for item in self.items:
-            if item.stop_simulation == True:
+            if item.requests_stop_simulation == True:
                 raise StopIteration
-            if item.next_step != None and (next_step == None or next_step > item.next_step):
-                next_step = item.next_step
+            if item.next != None and (next_step == None or next_step > item.next):
+                next_step = item.next
 
         if next_step == None:
             raise StopIteration
@@ -274,8 +144,8 @@ class Scheduler(object):
 
         """
         for item in self.items:
-            if (item.next_step != None) and abs(item.next_step - time) < EPSILON:
-                item.fire(time)
+            if same(item.next, time):
+                item.trigger(time)
         self.last = time
 
     def finalise(self, time):
@@ -284,8 +154,8 @@ class Scheduler(object):
 
         """
         for item in self.items:
-            if item.at_end:
-                item.fire(time, finalising=True)
+            if item.trigger_on_stop:
+                item.trigger(time, is_stop=True)
 
     def reset(self, time):
         """
@@ -296,9 +166,6 @@ class Scheduler(object):
         for item in self.items:
             item.reset(time)
 
-    def _print_item(self, item, func_print=log.info):
-        func_print("'{}': {}".format(item.callback.func.__name__, item))
-
     def _print_realtime_item(self, item, func_print=log.info):
         (f, (at, every, after)) = item
         func_print("'{}': <at={}, every={}, after={}>".format(
@@ -306,7 +173,7 @@ class Scheduler(object):
 
     def print_scheduled_items(self, func_print=log.info):
         for item in self.items:
-            self._print_item(item, func_print)
+            print item # this will call __str__ on the item, which should be defned for all events
         for item in self.realtime_items:
             self._print_realtime_item(item, func_print)
 

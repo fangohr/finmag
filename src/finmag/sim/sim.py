@@ -13,7 +13,7 @@ from finmag.sim.hysteresis import hysteresis as hyst, hysteresis_loop as hyst_lo
 from finmag.sim import sim_helpers
 from finmag.energies import Exchange, Zeeman, Demag, UniaxialAnisotropy, DMI
 from finmag.integrators.llg_integrator import llg_integrator
-from finmag.integrators import scheduler, relaxation
+from finmag.integrators import scheduler, events
 
 ONE_DEGREE_PER_NS = 17453292.5  # in rad/s
 
@@ -283,7 +283,7 @@ class Simulation(object):
             self.integrator = llg_integrator(self.llg, self.llg.m, backend=self.integrator_backend)
 
         log.info("Simulation will run until t = {:.2g} s.".format(t))
-        exit_at = scheduler.ExitAt(t)
+        exit_at = events.StopSimulationEvent(t)
         self.scheduler._add(exit_at)
 
         self.integrator.run_with_schedule(self.scheduler)
@@ -305,7 +305,7 @@ class Simulation(object):
             self.integrator = llg_integrator(self.llg, self.llg.m, backend=self.integrator_backend)
         log.info("Simulation will run until relaxation of the magnetisation.")
 
-        relax = relaxation.Relaxation(self, stopping_dmdt, dmdt_increased_counter_limit, dt_limit)
+        relax = events.RelaxationEvent(self, stopping_dmdt, dmdt_increased_counter_limit, dt_limit)
         self.scheduler._add(relax)
 
         self.integrator.run_with_schedule(self.scheduler)
