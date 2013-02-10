@@ -4,7 +4,7 @@ import dolfin as df
 import matplotlib.pyplot as plt
 from finmag import Simulation
 from finmag.energies import Zeeman, Exchange, Demag
-from finmag.integrators.relaxation import ONE_DEGREE_PER_NS
+from finmag.util.consts import ONE_DEGREE_PER_NS
 
 MODULE_DIR = os.path.abspath(os.path.dirname(__file__))
 
