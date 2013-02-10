@@ -283,7 +283,7 @@ class Simulation(object):
             self.integrator = llg_integrator(self.llg, self.llg.m, backend=self.integrator_backend)
 
         log.info("Simulation will run until t = {:.2g} s.".format(t))
-        exit_at = events.StopSimulationEvent(t)
+        exit_at = events.StopIntegrationEvent(t)
         self.scheduler._add(exit_at)
 
         self.integrator.run_with_schedule(self.scheduler)

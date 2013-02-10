@@ -123,7 +123,7 @@ class Scheduler(object):
         next_step = None
 
         for item in self.items:
-            if item.requests_stop_simulation == True:
+            if item.requests_stop_integration == True:
                 raise StopIteration
             if item.next != None and (next_step == None or next_step > item.next):
                 next_step = item.next
