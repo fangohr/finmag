@@ -45,10 +45,8 @@ class PeriodicBoundary2D(object):
     """
     Periodic Boundary condition in xy-plane potentially can be applied to the energy_base class.
     """
-    def __init__(self,V,K,unit_length=1.0):
+    def __init__(self,V):
         self.V=V
-        self.K=K
-        self.unit_length=unit_length
         self.mesh=V.mesh()
         
         self.find_mesh_info()
@@ -59,11 +57,12 @@ class PeriodicBoundary2D(object):
         else: 
             self.L=df.assemble(v * df.dx)
             
-        self.apply_pbc()
+        self.apply_pbc_L()
         
         
     def find_mesh_info(self):
         xt=self.mesh.coordinates()
+        self.length=len(xt)
         max_v=xt.max(axis=0)
         min_v=xt.min(axis=0)
         
@@ -114,15 +113,23 @@ class PeriodicBoundary2D(object):
         print '='*100
         print indics,indics_pbc
         """
-        self.ids=indics
-        self.ids_pbc=indics_pbc
+        ids=np.array(indics,dtype=np.int32)
+        ids_pbc=np.array(indics_pbc,dtype=np.int32)
+
+        assert len(indics)==len(indics_pbc)
+
+        self.ids=np.array([ids[:],ids[:]+self.length,ids[:]+self.length*2],dtype=np.int32)
+        self.ids_pbc=np.array([ids_pbc[:],ids_pbc[:]+self.length,ids_pbc[:]+self.length*2],dtype=np.int32)
+                
+        self.ids.shape=(-1,)
+        self.ids_pbc.shape=(-1,)
         
     
-    def apply_pbc(self):
-        bcx=df.PeriodicBC(self.V,PeriodicBoundaryX(self.xmin,self.width,self.dim))
-        bcy=df.PeriodicBC(self.V,PeriodicBoundaryY(self.ymin,self.height,self.dim))
-        bcx.apply(self.K,self.L)
-        bcy.apply(self.K,self.L)
+    def apply_pbc_L(self):
+        self.bcx=df.PeriodicBC(self.V,PeriodicBoundaryX(self.xmin,self.width,self.dim))
+        self.bcy=df.PeriodicBC(self.V,PeriodicBoundaryY(self.ymin,self.height,self.dim))
+        self.bcx.apply(self.L)
+        self.bcy.apply(self.L)
         
         """
         must call the sequence in order
@@ -130,19 +137,37 @@ class PeriodicBoundary2D(object):
         """
         for i in range(len(self.ids_pbc)):
             self.L[self.ids_pbc[i]]=self.L[self.ids[i]]
-        
 
+    def apply_pbc_K(self,K):
+        self.bcx.apply(K)
+        self.bcy.apply(K)
+        
+    def modify_m(self,m):
+        for i in range(len(self.ids_pbc)):
+            j=self.ids_pbc[i]
+            k=self.ids[i]
+            m[j]=m[k]
+         
+    def modify_field(self,v):
+        """
+        modifiy the corresponding fields, magnetisation m or the volumes of nodes.
+        """
+        for i in range(len(self.ids_pbc)):
+            v[self.ids_pbc[i]]=v[self.ids[i]]
+        
+        
 
 if __name__=="__main__":
     mesh=df.BoxMesh(0,0,0,10,5,1,10,5,1)
     #mesh = df.UnitSquareMesh(2, 2)  
     V=df.FunctionSpace(mesh, "Lagrange", 1)
+    V3=df.VectorFunctionSpace(mesh, "Lagrange", 1)
     u1 = df.TrialFunction(V)
     v1 = df.TestFunction(V)
     K = df.assemble(df.inner(df.grad(u1), df.grad(v1)) * df.dx)
     L = df.assemble(v1 * df.dx)
     print 'before:',K.array()
-    pbc=PeriodicBoundary2D(V,K)
+    pbc=PeriodicBoundary2D(V3)
     print pbc.L.array()
     print 'after',K.array()
     
