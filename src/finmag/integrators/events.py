@@ -164,6 +164,7 @@ class StopSimulationEvent(object):
         self.last = None
         self.next = self.__time
         self.requests_stop_simulation = False
+        self.trigger_on_stop = False
 
     def trigger(self, time, is_stop=False):
         """
