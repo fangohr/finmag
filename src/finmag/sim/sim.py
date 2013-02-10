@@ -305,7 +305,7 @@ class Simulation(object):
             self.integrator = llg_integrator(self.llg, self.llg.m, backend=self.integrator_backend)
         log.info("Simulation will run until relaxation of the magnetisation.")
 
-        relax = events.Relaxation(self, stopping_dmdt, dmdt_increased_counter_limit, dt_limit)
+        relax = events.RelaxationEvent(self, stopping_dmdt, dmdt_increased_counter_limit, dt_limit)
         self.scheduler._add(relax)
 
         self.integrator.run_with_schedule(self.scheduler)
