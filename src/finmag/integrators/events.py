@@ -72,8 +72,8 @@ class SingleEvent(object):
         to stop time integration.
 
         """
-        if ((same(time, self.next) and not same(time, self.last))
-                or (is_stop and self.trigger_on_stop)):
+        if not same(time, self.last) and (
+                (same(time, self.next)) or (is_stop and self.trigger_on_stop)):
             self.last = time
             self.next = self._compute_next()
             if self.__callback != None:
@@ -107,8 +107,13 @@ class SingleEvent(object):
 
         """
         callback_msg = ""
+        callback_name = "unknown"
         if self.__callback != None:
-            callback_msg = " | callback: {}".format(self.__callback.__name__)
+            if hasattr(self.__callback, "__name__"):
+                    callback_name = self.__callback.__name__
+            if hasattr(self.__callback, "func"):
+                    callback_name = self.__callback.func.__name__
+            callback_msg = " | callback: {}".format(callback_name)
         msg = "<{} | last = {} | next = {} | triggering on stop: {}{}>".format(
             self.__class__.__name__, self.last, self.next, self.trigger_on_stop,
             callback_msg)
@@ -150,7 +155,7 @@ class RepeatingEvent(SingleEvent):
             self.next = self._compute_next()
 
 
-class StopSimulationEvent(object):
+class StopIntegrationEvent(object):
     """
     Store the information that the simulation should be stopped at a defined time.
 
@@ -163,7 +168,7 @@ class StopSimulationEvent(object):
         self.__time = time
         self.last = None
         self.next = self.__time
-        self.requests_stop_simulation = False
+        self.requests_stop_integration = False
         self.trigger_on_stop = False
 
     def trigger(self, time, is_stop=False):
@@ -174,7 +179,7 @@ class StopSimulationEvent(object):
         if same(time, self.next):
             self.last = time
             self.next = None
-            self.requests_stop_simulation = True
+            self.requests_stop_integration = True
 
     def reset(self, time):
         """
@@ -184,11 +189,11 @@ class StopSimulationEvent(object):
         if time < self.__time:
             self.last = None
             self.next = self.__time
-            self.requests_stop_simulation = False
+            self.requests_stop_integration = False
         else:
             self.last = self.__time
             self.next = None
-            self.requests_stop_simulation = True
+            self.requests_stop_integration = True
 
     def __str__(self):
         """
@@ -224,14 +229,14 @@ class RelaxationEvent(object):
 
         # to communicate with scheduler
         self.next = self.last_t + self.dt
-        self.requests_stop_simulation = False
+        self.requests_stop_integration = False
         self.trigger_on_stop = False
 
     def trigger(self, t, is_stop=False):
         assert same(t, self.sim.t)
         if same(self.last_t, t):
             return
-        if self.requests_stop_simulation:
+        if self.requests_stop_integration:
             log.error("Time integration continued even though relaxation has been reached.")
 
         t = self.sim.t
@@ -254,7 +259,7 @@ class RelaxationEvent(object):
             else:
                 log.debug("Stopping integration at t={:.3g}, with dmdt={:.3g}, smaller than threshold={:.3g}.".format(
                     t, dmdt, float(self.stopping_dmdt)))
-                self.requests_stop_simulation = True # hoping this gets noticed by the Scheduler
+                self.requests_stop_integration = True # hoping this gets noticed by the Scheduler
 
         self.last_t = t
         self.last_m = m
@@ -277,7 +282,7 @@ class RelaxationEvent(object):
         if self.dmdt_increased_counter >= self.dmdt_increased_counter_limit:
             log.warning("Stopping time integration after dmdt increased {} times.".format(
                 self.dmdt_increased_counter_limit))
-            self.requests_stop_simulation = True
+            self.requests_stop_integration = True
 
 
     def reset(self, time):

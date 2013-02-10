@@ -27,12 +27,12 @@ def test_first_every_at_start():
 
 def test_update_next_stop_according_to_interval():
     e = RepeatingEvent(100)
-    e.update()
-
+    assert e.next == 0
+    e.trigger(0)
+    assert e.next == 100
     t0 = e.next
-    e.update()
+    e.trigger(100)
     t1 = e.next
-
     assert abs(t1 - t0) == 100
 
 
