@@ -1,6 +1,6 @@
 import pytest
-from scheduler import Every, At, Scheduler
-
+from events import SingleEvent, RepeatingEvent
+from scheduler import Scheduler
 
 class Counter(object):
     cnt_every = 0
@@ -18,20 +18,20 @@ class Counter(object):
 
 
 def test_first_every_at_start():
-    e = Every(100)
-    assert e.next_step == 0.0
+    e = RepeatingEvent(100)
+    assert e.next == 0.0
 
-    e = Every(100, 5)
-    assert e.next_step == 5
+    e = RepeatingEvent(100, 5)
+    assert e.next == 5
 
 
 def test_update_next_stop_according_to_interval():
-    e = Every(100)
+    e = RepeatingEvent(100)
     e.update()
 
-    t0 = e.next_step
+    t0 = e.next
     e.update()
-    t1 = e.next_step
+    t1 = e.next
 
     assert abs(t1 - t0) == 100
 
@@ -40,18 +40,18 @@ def test_can_attach_callback():
     c = Counter()
 
     assert c.cnt_every == 0
-    e = Every(100)
+    e = RepeatingEvent(100)
     e.attach(c.inc_every)
-    e.fire(0)
+    e.trigger(0)
     assert c.cnt_every == 1
 
     # alternative syntax
 
     c.reset()
 
-    e = Every(100).call(c.inc_every)
+    e = RepeatingEvent(100).call(c.inc_every)
     assert c.cnt_every == 0
-    e.fire(0)
+    e.trigger(0)
     assert c.cnt_every == 1
 
 
@@ -59,12 +59,12 @@ def test_at_with_single_value():
     c = Counter()
 
     assert c.cnt_at == 0
-    a = At(100)
-    assert a.next_step == 100
+    a = SingleEvent(100)
+    assert a.next == 100
     a.attach(c.inc_at)
-    a.fire(0)
+    a.trigger(0)
     assert c.cnt_at == 0
-    a.fire(100)
+    a.trigger(100)
     assert c.cnt_at == 1
 
 
@@ -116,8 +116,8 @@ def test_regression_not_more_than_once_per_time():
         x[3] += 1
 
     s = Scheduler()
-    s.add(my_at_fun, at=1, at_end=True) # can fire twice
-    s.add(my_at_fun_accident, at=2, at_end=True) # 2 is also end, should fire only once
+    s.add(my_at_fun, at=1, at_end=True) # can trigger twice
+    s.add(my_at_fun_accident, at=2, at_end=True) # 2 is also end, should trigger only once
     s.add(my_every_fun, every=1, after=1, at_end=True) # twice
     s.add(my_standalone_at_end_fun, at_end=True) # once anyways
 
