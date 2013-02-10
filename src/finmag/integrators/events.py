@@ -41,7 +41,7 @@ class SingleEvent(object):
 
         """
         if time == None and trigger_on_stop == False:
-            raise ValueError("{}.init: Needs either a time, or fire_on_stop set to True.".format(self.__class__.__name__))
+            raise ValueError("{}.init: Needs either a time, or trigger_on_stop set to True.".format(self.__class__.__name__))
         self.__time = time
         self.last = None
         self.next = time
@@ -73,7 +73,7 @@ class SingleEvent(object):
 
         """
         if ((same(time, self.next) and not same(time, self.last))
-                or (is_stop and self.fire_on_stop)):
+                or (is_stop and self.trigger_on_stop)):
             self.last = time
             self.next = self._compute_next()
             if self.__callback != None:
