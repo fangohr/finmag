@@ -4307,3 +4307,253 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-02-07 15:09:43 mb8g11_: Just checked why we have GCR at all. Seems slightly slower, but gives better results for coarser meshes.
 2013-02-07 15:10:01 mb8g11_: plots in last commit
 2013-02-07 15:10:34 mb8g11_: I doubt this is new information, but maybe a good reminder.
+2013-02-08 09:34:26 fangohr-adium: Good morning all.
+2013-02-08 10:01:14 mb8g11: Good morning.
+2013-02-08 10:02:44 fangohr-adium: Hi MA, will take Skype online now.
+2013-02-08 11:28:47 mb8g11_: Off to hear the newest gossip from Guido's group ;)
+2013-02-08 12:41:49 fangohr: Good to see activity on aleph0!
+2013-02-08 13:06:14 max_albert: Hi Hans, do you know the password for the jenkins user on Bitbucket?
+2013-02-08 13:06:25 max_albert: We need to upload the ssh keys for jenkins on aleph0.
+2013-02-08 13:06:35 max_albert: Happy to come over if you don't want to paste it in IRC.
+2013-02-08 13:07:55 fangohr: Hm, hang on.
+2013-02-08 13:10:31 fangohr: Don't know it.
+2013-02-08 13:10:35 fangohr: Marc-Antonio?
+2013-02-08 13:10:53 fangohr: I can put the keys on aleph0 -- would that help?
+2013-02-08 13:12:42 mb8g11: Sorry, don't know.
+2013-02-08 13:18:11 max_albert: Actually, Weiwei just said that it should be enough to put the new key from aleph0 into any of our accounts.
+2013-02-08 13:18:24 max_albert: So not sure if a Jenkins account on Bitbucket even exists (or needs to exist).
+2013-02-08 13:18:38 max_albert: I'll test it with my account first and then maybe Hans can put it into his once things work?
+2013-02-08 13:18:39 fangohr: There is one with username 'marvinhg'.
+2013-02-08 13:19:18 fangohr: I think we could take the ssh key from marvinhg on summer and put it into aleph0 in the end. But do go aheadwith yours for now, Max, this may make it a bit easier.
+2013-02-08 13:37:47 max_albert: Hans, we need it the other way around: we need to take the key that already is on aleph0 (which I just created for the Jenkins user) and upload it to Bitbucket.
+2013-02-08 13:38:03 max_albert: But I managed to get that to work just now (following Weiwei's suggestion of just adding it to my own account).
+2013-02-08 13:38:13 fangohr: That would have been my suggestion as well.
+2013-02-08 13:38:23 max_albert: Different question though: what's the easiest way to set up SMTP on that machine so that we can send email notifications?
+2013-02-08 13:38:34 mb8g11: Which bitbucket user will be connecting on jenkins behalf in the end?
+2013-02-08 13:38:49 fangohr: Ah, good point. Let me test whether the machine is allowed to send email ...
+2013-02-08 13:39:01 max_albert: mb8g11: Well, I guess it'll be Hans in the end?
+2013-02-08 13:40:05 mb8g11: then why not make marvin the new user account, so there is one for all the automated tasks (jenkins, ircbot, serving irc logs)
+2013-02-08 13:40:15 fangohr: Yes, it should be marvinhg.
+2013-02-08 13:40:24 fangohr: Only we have lost marvinhg's password for bitbucket. ;)
+2013-02-08 13:40:28 mb8g11: his ssh keys are on summer
+2013-02-08 13:40:44 fangohr: But I guess because MA created an account for him, we may get an email if we request to get thelost password back?
+2013-02-08 13:40:47 mb8g11: same one than for the user IIRC
+2013-02-08 13:41:03 fangohr: That's what I thought and thought I had tried, but ran into an error.
+2013-02-08 13:41:09 fangohr: Maybe somebody else needs to try.
+2013-02-08 13:41:11 mb8g11: Oh, let me check.
+2013-02-08 13:41:19 fangohr: I think the username on bitbucket was 'marvinhg'. Was it?
+2013-02-08 13:41:29 max_albert: Hmm, marvinhg sounds like a good idea in principle. However, the entire configuration is set up under the user "jenkins" for now, so it may be a bit of hassle to change it.
+2013-02-08 13:41:44 max_albert: On second thought, it shouldn't be too hard.
+2013-02-08 13:41:55 mb8g11: on bitbucket.org: user marvinhg, you know the pw?
+2013-02-08 13:42:00 mb8g11: just tried and it works
+2013-02-08 13:42:02 max_albert: Let's just finish the configuration first and check that it works, and then I'll look into it.
+2013-02-08 13:42:03 fangohr: The username jenkins locally should be absolutely fine.
+2013-02-08 13:42:20 mb8g11: yes
+2013-02-08 13:42:34 max_albert: Ah, you mean we should just copy marvinhg's ssh keys from summer into jenkins' home directory on aleph0?
+2013-02-08 13:42:43 mb8g11: yes, and his .hgrc
+2013-02-08 13:42:50 max_albert: Ah, I see.
+2013-02-08 13:43:04 max_albert: Are his ssh keys on summer password-protected?
+2013-02-08 13:43:20 fangohr: of course not (I would guess).
+2013-02-08 13:43:29 fangohr: if I understadn the question correctly.
+2013-02-08 13:43:33 max_albert: And if so, how does the bitbucket authentication work? (Do we manually say ssh-add in the beginning?)
+2013-02-08 13:43:42 max_albert: Hans, I think you do. :)
+2013-02-08 13:43:50 max_albert: I would have guessed not either, just double-checking.
+2013-02-08 13:44:14 fangohr: You can upload allowed ssh keys to bitbucket -- I would have thought this is what we did for marvinhg?
+2013-02-08 13:44:49 max_albert: Yes, but usually you provide a password for the ssh keys, and you have to type this locally on the machine to unlock them.
+2013-02-08 13:45:18 max_albert: Unless you want an automated user. Then you can omit the password, or issue 'ssh-add' once to store the identity while that user is logged in.
+2013-02-08 13:45:42 fangohr: Hm, you know more than I do. (which is good). Can't comment.
+2013-02-08 13:46:03 max_albert: Never mind, my guess is that there is no password and all is fine.
+2013-02-08 13:46:11 max_albert: We'll find out anyway.
+2013-02-08 13:46:14 fangohr: I agree.
+2013-02-08 13:46:31 max_albert: Have you found out anything regarding the SMTP issue yet?
+2013-02-08 13:46:38 fangohr: Am on the case ...
+2013-02-08 13:47:06 max_albert: I presume that we need to install the right Ubuntu package and then it'll "just work" (TM).
+2013-02-08 13:47:14 max_albert: Don't know which one, though, and thought one of you might know.
+2013-02-08 13:48:08 fangohr: Partly right: we do need the right packages [and I think I have got those] but I don't know whether that machine is allowed to send email directly to the internet, or whether we need to request this from isolutions. So I am just trying to test this.
+2013-02-08 13:48:25 max_albert: Ok, thanks!
+2013-02-08 13:49:35 mb8g11: no password.
+2013-02-08 13:50:37 max_albert: Great :)
+2013-02-08 14:12:00 fangohr: Hm, still struggling with maildomain. Will keep you posted.
+2013-02-08 14:12:08 max_albert: Ok, no worries.
+2013-02-08 14:12:42 max_albert: The good news is: apart from the email notification we're pretty much up and running now. :)
+2013-02-08 14:13:12 max_albert: There are still some failing tests, but the Jenkins setup should be essentially complete.
+2013-02-08 14:13:24 max_albert: Thanks to Weiwei for helping with this!
+2013-02-08 14:13:31 fangohr: Wohoo! Very good. Did you copy the config files from summer?
+2013-02-08 14:13:41 max_albert: You can have a look yourself at http://aleph0.kk.soton.ac.uk:8080/
+2013-02-08 14:14:02 max_albert: No, we basically set up a new job and simply copied all the configuration options.
+2013-02-08 14:14:18 max_albert: This was quite easy. We simply had to install a few plugins.
+2013-02-08 14:14:34 max_albert: We have written down all the steps, which I will commit to the finmag-jenkins repository soon.
+2013-02-08 14:14:54 fangohr: Great.
+2013-02-08 14:15:23 max_albert: I'll see if I can figure out which configuration files are the important ones, and will commit those too (just for reference).
+2013-02-08 14:15:31 fangohr: We may want a little bit of password protection for this though, so we may have to create users on jenkins? This may also be required to map email notifications from commits to email addresses.
+2013-02-08 14:15:54 max_albert: Ah, good point. Weiwei mentioned this as well.
+2013-02-08 14:30:28 mb8g11: Did you remember the doc?
+2013-02-08 14:31:04 max_albert: Which doc?
+2013-02-08 14:34:48 mb8g11: linked from the jenkins workspace
+2013-02-08 14:37:37 mb8g11: sorry, not workspace, dashboard
+2013-02-08 14:43:01 fangohr: Email update: Still having problems to deliver email via smarthost smtp.soton.ac.uk.
+2013-02-08 14:43:11 fangohr: The error message is that the sender email address/domain is incorrect.
+2013-02-08 14:43:43 fangohr: That is true: it seems to be "<nobody@nowhere>"
+2013-02-08 14:44:12 fangohr: I am trying to track this down, but have requested from isolutions that we should be allowed to send email from the machine. It can't do any harm -- if we are allowed already, that will also be useful information.
+2013-02-08 14:54:05 max_albert: Thanks!
+2013-02-08 14:54:48 max_albert: Btw, I just copied marvin's ssh keys from summer when it occurred to me that this probably won't make any difference because it is only used to check out the repository for building and testing, but jenkins won't make any commits.
+2013-02-08 14:54:58 max_albert: Anyway, two ssh keys less to worry about. :)
+2013-02-08 14:58:41 mb8g11: Max, you forgot the cron-job which commits the IRC logs on marvin's behalf.
+2013-02-08 14:58:49 mb8g11: Well, that's not an issue for now.
+2013-02-08 14:59:05 mb8g11: But it would be nice if you still copied the keys.
+2013-02-08 14:59:18 mb8g11: Which you did.
+2013-02-08 15:03:38 mb8g11: Could you rig the new jenkins to check out the dolfin-1.1.0 branch?
+2013-02-08 15:04:23 mb8g11: Also, PETSC explodes in my face in examples/nmag_example_2/run_finmag.py, will have to investigate.
+2013-02-08 15:10:29 max_albert: Marc-Antonio, isn't this cron-job separate from Jenkins?
+2013-02-08 15:10:46 max_albert: The other things I did already (copied the keys, and Jenkins checks out the dolfin-1.1.0 branch).
+2013-02-08 15:11:11 max_albert: I'm going to install nmag, oommf and magpar soon, too (which is needed for the tests).
+2013-02-08 15:11:44 max_albert: I'll also install the latest netgen version if possible, to get rid of all the error messages (I hope this works - I tried it on summer once and it failed for some reason, but hopefully it works now).
+2013-02-08 15:12:08 max_albert: I'll put the commands for Netgen into an installation script so that you have them, too, Marc-Antonio.
+2013-02-08 15:12:33 mb8g11: The cronjob is separate from jenkins indeed, just didn't want you to delete the keys on aleph0 :(
+2013-02-08 15:12:40 mb8g11: :)
+2013-02-08 15:12:55 mb8g11: Good thinking with the branch.
+2013-02-08 15:13:14 mb8g11: And thank you for the script;
+2013-02-08 15:13:17 max_albert: Why would I delete the keys? (And which keys anyway - marvin's or the new ones I created?)
+2013-02-08 15:13:38 mb8g11: Wait, why did you create new keys?
+2013-02-08 15:13:59 max_albert: Because we needed a way for jenkins to check out the repository. And I hadn't thought of marvin's keys.
+2013-02-08 15:14:09 mb8g11: Ah.
+2013-02-08 15:17:56 fangohr: Hi folks, I got the email business so far that I do now get the following error message:
+2013-02-08 15:17:59 fangohr:  fangohr@soton.ac.uk
+2013-02-08 15:17:59 fangohr:     SMTP error from remote mail server after MAIL FROM:<fangohr@aleph0> SIZE=1407:
+2013-02-08 15:17:59 fangohr:     host smtp.soton.ac.uk [152.78.54.16]: 530 5.7.1 Client was not authenticated
+2013-02-08 15:18:28 fangohr: This does look to me like the delivery of our email to smtp.soton.ac.uk works okay, but the system refuses to accept.
+2013-02-08 15:18:48 fangohr: If correct, then we need to wait for isolutions to allow for smtp delivery from that machine without authentication.
+2013-02-08 15:19:08 fangohr: To check this is working or not, you can send an email using the 'mail' command, or using 'alpine'.
+2013-02-08 15:19:19 fangohr: The interesting log file to watch is /var/log/exim4/mainlog
+2013-02-08 15:19:31 fangohr: as we use exim4 for email delivery at the moment.
+2013-02-08 15:20:04 fangohr: I had to change the /etc/hostname to include the fully qualified domain name to make this work. I found this a little odd, but seems to agree with messages on the internet.
+2013-02-08 15:20:43 fangohr: It would be good to reboot at some point to check whethre this has broken anything else, and will still work after the reboot, although I am moderately confident.
+2013-02-08 15:21:30 fangohr: So, when there is a convenient moment, please reboot aleph0 and let me know so I can have another check.
+2013-02-08 15:21:45 fangohr: Other than that, we need to wait for isolutions I think (so not for Monday).
+2013-02-08 15:21:52 max_albert: Good idea. Will do that in a minute (just want to copy some files first.)
+2013-02-08 15:31:13 fangohr: Thanks Max. No change on the email delivery front, so that is okay. Will need to wait.
+2013-02-08 15:31:36 max_albert: Ok. There is no rush I guess.
+2013-02-08 15:32:02 fangohr: I need to leave early today and will be offline for a few hours -- hope all proceeds well and will read Dokosbot's commit of the irc chat later. Good luck :)
+2013-02-08 15:32:14 max_albert: We can always try something really sneaky and tell Jenkins to issue an ssh command which sends the email from a different machine. ;-)
+2013-02-08 15:32:35 fangohr: Yes, but not worth the effort I would say. Nice idea, though. :)
+2013-02-08 15:32:55 max_albert: Ok, see you later. And thanks for your help! I'm sure all this will soon result in a hugely improved testing experience. :)
+2013-02-08 15:33:08 fangohr: No doubt :)
+2013-02-08 16:17:04 max_albert: Ok, I have pushed the step-by-step instructions for setting up Jenkins to the finmag-jenkins repository and will now install Netgen (and then oommf, nmag, magpar).
+2013-02-08 16:17:18 max_albert: This should hopefully fix a bunch of tests that are failing at the moment.
+2013-02-08 16:24:15 max_albert: Btw, does anybody know what the script finmag/bin/invoke-ci-build does and whether it is used at all?
+2013-02-08 16:24:20 max_albert: Not important, just wondering...
+2013-02-08 17:05:14 mb8g11: Did you have a look at the script in question?
+2013-02-08 17:06:02 max_albert: You mean the invoke-ci-build script?
+2013-02-08 17:06:07 mb8g11: Yes, I couldn't figure it out.
+2013-02-08 17:06:27 max_albert: Yes. And it seems to me that it's not used.
+2013-02-08 17:06:31 max_albert: But I wasn't sure.
+2013-02-08 17:06:56 mb8g11: It seems to call an URL on mu.kk.soton.ac.uk. Which computer is that?
+2013-02-08 17:07:30 max_albert: Hmm... I do have an account on that machine, but I don't know which one it is.
+2013-02-08 17:08:07 max_albert: I think I got the account to do some administrative work related to Hans' teaching.
+2013-02-08 17:08:17 max_albert: So maybe he used the machine for testing, but the script is unused now?
+2013-02-08 17:08:45 max_albert: Oh, hg log says that it was actually Dmitri who created the script.
+2013-02-08 17:09:07 max_albert: But this was last February. Maybe some testing on his side?
+2013-02-08 17:28:55 mb8g11: Maybe. Does it get called from the jenkins server?
+2013-02-08 17:29:30 max_albert: I don't think so. But Hans and/or Dmitri will know more.
+2013-02-08 17:29:37 max_albert: I'll create a simple Tracker item for it. Not important, but easy to solve. :)
+2013-02-08 17:29:41 mb8g11: There is no reference to it inside the finmag repository.
+2013-02-08 17:29:47 mb8g11: Good idea.
+2013-02-08 17:30:19 max_albert: Am nearly done installing the software on aleph0, by the way (only Netgen is missing).
+2013-02-08 17:30:23 max_albert: How is the merging business going?
+2013-02-08 17:31:18 mb8g11: Wondering why the build on aleph0 fails due to matplotlib.
+2013-02-08 17:31:32 max_albert: Oh, that should be fixed.
+2013-02-08 17:31:36 mb8g11: Also, there's this PETSC error which I hadn't noticed before.
+2013-02-08 17:31:54 max_albert: It's due to the fact that matplotlib uses the TkAgg backend by default, which requires a running X server.
+2013-02-08 17:32:11 mb8g11: http://aleph0.kk.soton.ac.uk:8080/job/finmag/26/testReport/examples.macrospin/test_macrospin/test_macrospin_alpha_0_00001/
+2013-02-08 17:32:12 max_albert: On summer, this was changed to the 'Agg' backend in /etc/matplotlibrc.
+2013-02-08 17:32:36 max_albert: I also changed this on aleph0.
+2013-02-08 17:32:56 max_albert: Oh, that's a different error.
+2013-02-08 17:33:48 mb8g11: That's the thing, a lot of things are broken, which is why I am reticent of merging.
+2013-02-08 17:34:04 max_albert: Hmm, when I run that test locally it passes for me.
+2013-02-08 17:34:31 max_albert: (Locally on aleph0, that is.)
+2013-02-08 17:34:55 mb8g11: Same for me (my dolfin 1.1.0 machine)
+2013-02-08 17:35:25 mb8g11: Does the jenkins user have the newest matplotlib, py.test and friends?
+2013-02-08 17:35:34 max_albert: Just checking that...
+2013-02-08 17:35:35 mb8g11: From pip, not ubuntu.
+2013-02-08 17:37:45 max_albert: Well, matplotlib is version 1.1.1, whereas the latest released version is 1.2.0. But this is the system default, and the test works for me as user 'albert'.
+2013-02-08 17:37:52 max_albert: I'll try running it as user jenkins, too.
+2013-02-08 17:40:41 max_albert: Hmm, the test also passes when I run it as user jenkins.
+2013-02-08 17:40:43 max_albert: Strange.
+2013-02-08 17:41:03 mb8g11: (I will merge default into dolfin-1.1.0)
+2013-02-08 17:41:41 mb8g11: Strange indeed.
+2013-02-08 17:42:12 max_albert: I've just restarted Jenkins, and will update matplotlib to the latest version via pip. Maybe that'll help.
+2013-02-08 17:45:17 mb8g11: Bummer, Weiwei basing his work on the dolfin-1.1.0 branch results in merge conflicts I have to resolve by hand.
+2013-02-08 17:45:38 max_albert: Ugh...
+2013-02-08 17:46:22 max_albert: That was actually my worry when I first saw "regular" commits on the dolfin-1.1.0 branch, but I had forgotten about it by now.
+2013-02-08 17:46:30 max_albert: Hopefully there won't be too many conflicts!
+2013-02-08 17:46:42 mb8g11: No, only 3.
+2013-02-08 17:49:00 mb8g11: Weird that you can run it locally though. I wonder what jenkins does differently.
+2013-02-08 18:04:08 mb8g11: Merged the changes from default into dolfin-1.1.0, should make it easier to merge the branch into default later.
+2013-02-08 18:04:26 max_albert: Great! Good work.
+2013-02-08 18:06:19 max_albert: I upgraded matplotlib to version 1.2.0 via pip. I think the test error is gone now.
+2013-02-08 18:12:44 mb8g11: Good.
+2013-02-08 18:17:02 mb8g11: Does the new jenkins build the doc? There used to be a link to the doc in the sidebar.
+2013-02-08 18:17:30 max_albert: Yes it does, but only after a successful build (of which there has been none so far). ;-)
+2013-02-08 18:17:56 mb8g11: Haha.
+2013-02-08 18:18:45 max_albert: Ok, I also installed netgen. Fingers crossed that this will work with Jenkins (last time it didn't).
+2013-02-08 18:18:49 max_albert: Will commit the installation script soon.
+2013-02-08 18:19:15 mb8g11: An upgraded netgen would be a huge boon. Imagine how short the debugging output becomes ;)
+2013-02-08 18:31:38 max_albert: Ok, the installation script for netgen is committed. Feel free to test it (it may still have a few rough edges).
+2013-02-08 18:32:02 max_albert: I think I'll have to leave soon.
+2013-02-08 18:32:13 max_albert: Wishing you all a good weekend if I'm not online later!
+2013-02-08 18:32:19 max_albert: And thanks for the productive work today!
+2013-02-08 18:32:40 ww1g11: Have a good weekend,; -)
+2013-02-08 18:42:39 mb8g11: Bye Max!
+2013-02-08 18:42:59 max_albert: (Still here, but only for a few minutes.)
+2013-02-08 18:43:24 max_albert: Just had a quick look at the first few remaining failures. They seem to be due to the mesh changes again (e.g. Box vs. BoxMesh).
+2013-02-08 18:43:56 mb8g11: Yes, we introduced new meshes in the meantime, no biggie.
+2013-02-08 18:47:02 max_albert: Just fixing a few of them before disappearing.
+2013-02-08 18:48:41 mb8g11: Cool.
+2013-02-08 18:48:52 mb8g11: Thanks for the script, it seems to be building netgen okay.
+2013-02-08 18:59:44 max_albert: Hmm, it seems that the new netgen is causing some problems again for jenkins. Will have to investigate this.
+2013-02-08 18:59:57 max_albert: Need to leave now, though. I'll hopefully be able to take a look tomorrow.
+2013-02-08 19:00:06 max_albert: Have a good weekend everyone!
+2013-02-08 19:00:59 mb8g11: Have a good week-end yourself!
+2013-02-08 19:01:01 mb8g11: Bye all!
+2013-02-08 21:49:59 fangohr1: Hello — still people working out there?
+2013-02-08 22:10:25 fangohr1: Just tried to run py.test on aleph0 with the dolfin-1.1 branch: 6 fails, and 200 (or so) passes. That's not bad.
+2013-02-08 22:10:55 fangohr1: Fixed the first fail by installing python-progressbar :)
+2013-02-08 22:21:00 mb8g11: no more errors?
+2013-02-08 22:21:19 mb8g11: Max must have fixed those.
+2013-02-08 22:22:19 mb8g11: btw. typing this on my cell, over ssh on my office machine over vpn to the uni
+2013-02-08 22:26:40 fangohr1: Maybe many errors where due to missing packages such as Nmag, OOMMF, Magpar?
+2013-02-08 22:27:18 fangohr1: Cool; the ssh vpn business. Does that mean you start a text based IRC client on your machine via the path you describe? Anyway, not the right time to exploin I am sure ;-)
+2013-02-08 22:32:25 mb8g11: maybe.
+2013-02-08 22:33:48 mb8g11: mobile phone > vpn to uni > ssh to machine over ssh client > connect to screen session running IRC
+2013-02-08 22:37:54 fangohr1: Connect to screen — that sounds intriguing. Maybe you can show me when we meet next time.
+2013-02-08 22:44:21 mb8g11: of course. it's just a way to have independent terminal sessions you can connect to, and that don't die when you disconnect
+2013-02-08 22:45:03 mb8g11: not the fancy Mac OS X screen sharing stuff :) still, very useful
+2013-02-08 22:45:06 fangohr1: Oh right, something like 'vscreen' or so — have forgotten the name, but probably seen in the late 90s somewhere.
+2013-02-08 22:45:14 fangohr1: Much more useful if all you need is ssh!
+2013-02-08 22:45:20 mb8g11: 'screen'
+2013-02-08 22:45:35 fangohr1: Just screen — that sounds about rigth now.
+2013-02-08 22:45:44 mb8g11: haha yes.
+2013-02-08 22:46:36 fangohr1: Is it just me, or do others like this as well:
+2013-02-08 22:46:42 fangohr1: In [1]: import finmag
+2013-02-08 22:46:44 fangohr1: […]
+2013-02-08 22:46:52 fangohr1: [2013-02-08 22:45:35] DEBUG:                Linux: Linux Mint 14 Nadia
+2013-02-08 22:47:19 fangohr1: It just looks very 'mint'; to go with the flow.
+2013-02-08 22:48:48 mb8g11: no hacker cred though ;)
+2013-02-08 22:49:49 fangohr1: … well … some credit for daring to use an ever so slighty different distribution. I have made no effort at all so far to make finmag portable beyond Ubuntu.
+2013-02-08 22:50:06 mb8g11: thx to weiwei we can now say finmag (doesn't) run on TWO linux distributions
+2013-02-08 22:51:03 mb8g11: the 'doesn't' part will be fixed soon, then this is indeed cool
+2013-02-08 22:51:33 mb8g11: never managed to compile dolfin on archlinux
+2013-02-08 22:52:25 fangohr1: Did you try?
+2013-02-08 22:53:02 mb8g11: once every few months, not 1.1.0 yet
+2013-02-08 22:53:07 fangohr1: ;-)
+2013-02-08 22:53:35 mb8g11: usually fail to compile trilinos
+2013-02-08 22:54:24 mb8g11: why are you still working?
+2013-02-08 22:54:51 fangohr1: Yes — sound like the Nmag story: our own code is usually easy to compile. The hard bits and pieces are the sophisticated but not widely widely spread libraries such as petsc, and trilinos.
+2013-02-08 22:55:34 fangohr1: Lots to be done. Also, not working now, just chatting ;-). All this finmag stuff is only distraction to avoid the actual work I should be doing.
+2013-02-08 22:57:24 mb8g11: good to know even you procrastinate from time to time ;)
+2013-02-08 22:58:55 fangohr1: err … yes.
+2013-02-08 23:00:07 mb8g11: haha. anyways, have a good night!
+2013-02-08 23:01:37 fangohr1: Same to you.
+2013-02-09 00:55:13 fangohr1: Good night folks.
+2013-02-09 15:11:04 mb8g11: Hi all.
+2013-02-09 22:39:55 fangohr1: Good Evening.
