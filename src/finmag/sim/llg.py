@@ -7,6 +7,7 @@ from finmag.native import llg as native_llg
 from finmag.util.timings import timings, mtimed
 from finmag.util.meshes import mesh_volume
 from finmag.util import helpers
+from finmag.util.pbc2d import PeriodicBoundary2D
 
 #default settings for logger 'finmag' set in __init__.py
 #getting access to logger here
@@ -29,7 +30,7 @@ class LLG(object):
 
     """
     @mtimed
-    def __init__(self, S1, S3, do_precession=True):
+    def __init__(self, S1, S3, do_precession=True,pbc2d=None):
         """
         S1 and S3 are df.FunctionSpace and df.VectorFunctionSpace objects,
         and the boolean do_precession controls whether the precession of the
@@ -42,17 +43,21 @@ class LLG(object):
         self.mesh=S1.mesh()
         self.nxyz=self.mesh.num_vertices()
         self._Ms = np.zeros(self.nxyz)
+        self.pbc2d=pbc2d
         self.set_default_values()
         self.do_precession = do_precession
         self.do_slonczewski = False
         self.effective_field = EffectiveField(S3.mesh())
-        self.Volume = None  # will be computed on demand, and carries volume of the mesh        
-        
+        self.Volume = None  # will be computed on demand, and carries volume of the mesh 
+               
+
 
     def set_default_values(self):
         self._alpha_mult = df.Function(self.S1)
         self._alpha_mult.assign(df.Constant(1))
         
+        if self.pbc2d:
+            self.pbc2d=PeriodicBoundary2D(self.S3)
         
         self.alpha = 0.5  # alpha for solve: alpha * _alpha_mult
         self.gamma = consts.gamma
@@ -65,6 +70,8 @@ class LLG(object):
         # exported VTK file.
         self._m.rename("m", "magnetisation")
         self.pins = []  # nodes where the magnetisation gets pinned
+        
+        
 
     def set_pins(self, nodes):
         """
@@ -84,6 +91,10 @@ class LLG(object):
                 logger.error("Indices of pinned nodes should be in [0, {}), were [{}, {}].".format(nb_nodes_mesh, min(nodes), max(nodes)))
         else:
             self._pins = np.array([], dtype="int")
+        
+        if self.pbc2d:
+            self._pins=np.concatenate([self.pbc2d.ids_pbc,self._pins])
+            
 
     def pins(self):
         return self._pins
@@ -149,6 +160,9 @@ class LLG(object):
         # Not enforcing unit length here, as that is better done
         # once at the initialisation of m.
         self._m.vector()[:] = value
+        
+        if self.pbc2d:
+            self.pbc2d.modify_m(self._m.vector())
 
     
     def m_average_fun(self,dx=df.dx):
@@ -181,7 +195,8 @@ class LLG(object):
         reasons and because the attribute m doesn't normalise the vector.
 
         """
-        self._m.vector()[:] = helpers.vector_valued_function(value, self.S3, normalise=True, **kwargs).vector().array()
+        self.m = helpers.vector_valued_function(value, self.S3, normalise=True, **kwargs).vector().array()
+
 
     def solve_for(self, m, t):
         self.m = m

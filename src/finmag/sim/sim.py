@@ -29,7 +29,7 @@ class Simulation(object):
 
     """
     @mtimed
-    def __init__(self, mesh, Ms, unit_length=1, name='unnamed', integrator_backend="sundials"):
+    def __init__(self, mesh, Ms, unit_length=1, name='unnamed', integrator_backend="sundials",pbc2d=None):
         """Simulation object.
 
         *Arguments*
@@ -69,7 +69,7 @@ class Simulation(object):
         self.integrator_backend = integrator_backend
         self.S1 = df.FunctionSpace(mesh, "Lagrange", 1)
         self.S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
-        self.llg = LLG(self.S1, self.S3)
+        self.llg = LLG(self.S1, self.S3, pbc2d=pbc2d)
         self.llg.Ms = Ms
         self.Volume = mesh_volume(mesh)
 

@@ -9,7 +9,7 @@ from tempfile import mkdtemp
 from finmag import sim_with, Simulation
 from finmag.example import barmini
 from math import sqrt, cos, sin, pi
-from finmag.util.helpers import assert_number_of_files
+from finmag.util.helpers import assert_number_of_files,vector_valued_function
 from finmag.sim import sim_helpers
 from finmag.energies.zeeman import Zeeman
 from finmag.energies.exchange import Exchange
@@ -295,3 +295,21 @@ class TestSimulation(object):
 
         sim.switch_off_H_ext(remove_interaction=True)
         assert(num_interactions(sim) == 0)
+        
+    
+    def test_pbc2d_m_init(self):
+        
+        def m_init_fun(pos):
+            if pos[0]==0 or pos[1]==0:
+                return [0,0,1]
+            else:
+                return [0,0,-1]
+                
+        mesh = df.BoxMesh(0, 0, 0, 1, 2, 1, 1, 2, 1)
+        
+        m_init = vector_valued_function(m_init_fun, mesh)
+        sim = Simulation(mesh, Ms=1, pbc2d=True)
+        sim.set_m(m_init)
+        print sim._m(0,0,0),sim._m(0,0,0)
+        
+        

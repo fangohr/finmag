@@ -9,7 +9,7 @@ def fixt():
     Create an Exchange object that will be re-used during testing.
 
     """
-    mesh = df.UnitCube(10, 10, 10)
+    mesh = df.UnitCubeMesh(10, 10, 10)
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
     Ms = 1
     A = 1
@@ -73,3 +73,28 @@ def test_exchange_field_supported_methods(fixt):
 
         rel_diff = np.abs((H - H_default) / H_default)
         assert np.nanmax(rel_diff) < REL_TOLERANCE
+
+
+
+if __name__ == "__main__":
+   
+    
+    mesh = df.BoxMesh(0,0,0,2*np.pi,1,1,10, 1, 1)
+     
+    S = df.FunctionSpace(mesh, "Lagrange", 1)
+    S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
+
+    expr = df.Expression(("0", "cos(x[0])", "sin(x[0])"))
+    
+    m = df.interpolate(expr, S3)
+    
+    exch = Exchange(1,pbc2d=True)
+    exch.setup(S3, m, 1)
+    print exch.compute_field()
+    
+    field=df.Function(S3)
+    field.vector().set_local(exch.compute_field())
+    
+    df.plot(m)
+    df.plot(field)
+    df.interactive()
