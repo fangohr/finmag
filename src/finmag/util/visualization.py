@@ -545,7 +545,6 @@ def render_paraview_scene(
     # Create the temporary script
     #
     tmpdir = tempfile.mkdtemp()
-    logger.debug("[DDD] Paraview plotting: using tmpdir '{}'".format(tmpdir))
     scriptfile = os.path.join(tmpdir, 'render_scene.py')
     script_string = textwrap.dedent("""
               from visualization_impl import render_paraview_scene
