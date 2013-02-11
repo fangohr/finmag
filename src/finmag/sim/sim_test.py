@@ -305,11 +305,15 @@ class TestSimulation(object):
             else:
                 return [0,0,-1]
                 
-        mesh = df.BoxMesh(0, 0, 0, 1, 2, 1, 1, 2, 1)
+        mesh = df.UnitSquareMesh(3, 3)
         
         m_init = vector_valued_function(m_init_fun, mesh)
         sim = Simulation(mesh, Ms=1, pbc2d=True)
         sim.set_m(m_init)
-        print sim._m(0,0,0),sim._m(0,0,0)
+        expect_m=np.zeros((3,16))
+        expect_m[2,:]=np.array([1, 1, 1, 1, 1, -1, -1,  1,  1, -1, -1,  1,  1,  1,  1,  1])
+        expect_m.shape=(48,)
+        
+        assert np.array_equal(sim.m,expect_m)
         
         

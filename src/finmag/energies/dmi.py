@@ -250,6 +250,7 @@ class DMI(EnergyBase):
         # This might also solve the problem with the energy conservation we have
         # seen.
 
+        
         # Dzyaloshinsky-Moriya Constant
         self.DMIconstant = df.Constant(mu0 * self.D / unit_length ** 2) * Ms
 
