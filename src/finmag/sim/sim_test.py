@@ -172,6 +172,42 @@ class TestSimulation(object):
         assert(np.allclose(res[..., 1], 0.0))
         assert(np.allclose(res[..., 2], 1.0/sqrt(2)))
 
+    def test_schedule(self, tmpdir):
+        os.chdir(str(tmpdir))
+
+        # Define a function to be scheduled, with one positional and
+        # one keyword argument.
+        res = []
+        def f(sim, tag, optional=None):
+            res.append((tag, int(sim.t * 1e13), optional))
+
+        sim = barmini()
+        sim.schedule(f, 'tag1', every=2e-13)
+        sim.schedule(f, 'tag2', optional='foo', every=3e-13)
+        sim.schedule(f, 'tag3', every=4e-13, optional='bar')
+        sim.run_until(1.1e-12)
+
+        assert(sorted(res) ==
+               [('tag1', 0, None), ('tag1', 2, None), ('tag1', 4, None),
+                ('tag1', 6, None), ('tag1', 8, None), ('tag1', 10, None),
+                ('tag2', 0, 'foo'), ('tag2', 3, 'foo'),
+                ('tag2', 6, 'foo'), ('tag2', 9, 'foo'),
+                ('tag3', 0, 'bar'), ('tag3', 4, 'bar'), ('tag3', 8, 'bar')])
+
+        # The keyword arguments 'at', 'every', 'at_end' and 'realtime'
+        # are forbidden:
+        def f_illegal_1(sim, at=None): pass
+        def f_illegal_2(sim, after=None): pass
+        def f_illegal_3(sim, every=None): pass
+        def f_illegal_4(sim, at_end=None): pass
+        def f_illegal_5(sim, realtime=None): pass
+        with pytest.raises(ValueError): sim.schedule(f_illegal_1, at=0.0)
+        with pytest.raises(ValueError): sim.schedule(f_illegal_2, at=0.0)
+        with pytest.raises(ValueError): sim.schedule(f_illegal_3, at=0.0)
+        with pytest.raises(ValueError): sim.schedule(f_illegal_4, at=0.0)
+        with pytest.raises(ValueError): sim.schedule(f_illegal_5, at=0.0)
+
+
     def test_save_ndt(self, tmpdir):
         os.chdir(str(tmpdir))
         sim = barmini()
