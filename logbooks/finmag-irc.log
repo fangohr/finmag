@@ -4557,3 +4557,82 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-02-09 00:55:13 fangohr1: Good night folks.
 2013-02-09 15:11:04 mb8g11: Hi all.
 2013-02-09 22:39:55 fangohr1: Good Evening.
+2013-02-11 08:31:12 mb8g11: Good morning!
+2013-02-11 09:19:56 fangohr-adium: Good Morning!
+2013-02-11 09:20:02 max_albert: Good morning!
+2013-02-11 09:20:08 fangohr-adium: Great news the progress regarding 1.1. Well done all!
+2013-02-11 09:26:31 max_albert: You mean the immensely successful build history on aleph0, with 63 failed builds? ;-)
+2013-02-11 09:26:43 fangohr: No :)
+2013-02-11 09:26:56 fangohr: I haven't seen that yet, but now that you mention it ...
+2013-02-11 09:27:15 fangohr: I am just running the py.test on aleph0 after fetching the latest.
+2013-02-11 09:27:33 fangohr: Netgen keeps popping up windows. Have you seen that before?
+2013-02-11 09:27:49 max_albert: Oh, that should be gone again!?
+2013-02-11 09:27:57 fangohr: I think I need to click on 'quit' to continue, although nothing is displayed.
+2013-02-11 09:28:03 max_albert: Hmm...
+2013-02-11 09:28:03 fangohr: i.e. no geometry visible.
+2013-02-11 09:28:34 max_albert: I had added a helper function which reports the Netgen version, but removed that again after realising that calling netgen with the -v or --version options still opens a GUI.
+2013-02-11 09:28:44 max_albert: (I was sure I had tested that before though...)
+2013-02-11 09:28:59 max_albert: Maybe there is some remainder left somewhere, or I committed the fix to the wrong branch.
+2013-02-11 09:29:03 fangohr: Is it posible that you don't see that anymore because our meshes arecashed once generated? Or latest changes not pushed?
+2013-02-11 09:29:05 max_albert: Let me have a quick look.
+2013-02-11 09:29:07 fangohr: Yeah.
+2013-02-11 09:29:13 fangohr: No rush -- I should actually be doing something else ;-)
+2013-02-11 09:29:19 fangohr: but couldn't resist...
+2013-02-11 09:30:20 fangohr: Maybe 63 build failures in a row is not ideal, but looking at the plot of the number of tests that pass, this is pretty good!
+2013-02-11 09:30:36 max_albert: Yeah, we're pretty close to a clean build again.
+2013-02-11 09:31:01 max_albert: Although there are a few points worth investigating I think, because some of the tests seem(ed) to behave weirdly.
+2013-02-11 09:31:51 fangohr: Yes, can you take a note which ones these are?
+2013-02-11 09:32:35 max_albert: Essentially these ones I think: http://aleph0.kk.soton.ac.uk:8080/job/finmag/60/testReport/
+2013-02-11 09:32:48 max_albert: Although I haven't looked at *all* of them.
+2013-02-11 09:33:39 max_albert: Regarding the Netgen issue: indeed I can't see my latest fix in the history.
+2013-02-11 09:34:10 max_albert: This is really strange because this already happened yesterday, when I was sure I had committed (and pushed) it but had to do it a second time because I couldn't find it.
+2013-02-11 09:34:17 max_albert: Now I need to do it a third time?!?! Weird...
+2013-02-11 09:36:07 max_albert: Just pushed the change. Can you try again and see if it works now?
+2013-02-11 09:36:19 fangohr: Yes.
+2013-02-11 09:36:25 max_albert: Thanks.
+2013-02-11 09:37:29 fangohr: I think it is gone (only done one test that had the GUI showing before).
+2013-02-11 09:37:39 max_albert: Ok, good to hear.
+2013-02-11 09:37:40 fangohr: Will do them all now.
+2013-02-11 09:37:54 fangohr: I also had a problem starting Nmag (will post details here in a moment).
+2013-02-11 09:38:09 max_albert: Ok, that would be good to know about.
+2013-02-11 09:38:45 fangohr: Some of the nmag tests failed. I am not sure the following is the cause, but I might as well document what I know.
+2013-02-11 09:38:51 fangohr: When calling 'nsim', I get the following:
+2013-02-11 09:38:54 fangohr: ^[[Afangohr@aleph0 ~ $ nsim
+2013-02-11 09:38:54 fangohr:        nsim:2013-02-11 09:32:01,304   setup.py  471    INFO Nsim 0.2.1
+2013-02-11 09:38:54 fangohr:        nsim:2013-02-11 09:32:01,304   setup.py  472    INFO Runid is 'interactive-session'
+2013-02-11 09:38:54 fangohr:        nsim:2013-02-11 09:32:01,304   setup.py  473    INFO Using 1 CPUs
+2013-02-11 09:38:54 fangohr: WARNING: Configuration file ipythonrc not found. Ignoring request.
+2013-02-11 09:38:55 fangohr: ------------------------------------------------------------
+2013-02-11 09:38:57 fangohr: Traceback (most recent call last):
+2013-02-11 09:39:01 fangohr:   File "/usr/local/software/nmag-0.2.1/nmag-0.2.1/lib/python2.7/site-packages/IPython/ConfigLoader.py", line 66, in load
+2013-02-11 09:39:04 fangohr:     fname = filefind(fname,incpath)
+2013-02-11 09:39:06 fangohr:   File "/usr/local/software/nmag-0.2.1/nmag-0.2.1/lib/python2.7/site-packages/IPython/genutils.py", line 555, in filefind
+2013-02-11 09:39:09 fangohr:     ' not found in current or supplied directories:' + `alt_dirs`
+2013-02-11 09:39:11 fangohr: IOError: File'ipythonrc' not found in current or supplied directories:u'/home/fangohr/.ipython'
+2013-02-11 09:39:13 fangohr: WARNING: Problems loading configuration file 'ipythonrc'
+2013-02-11 09:39:15 fangohr: Starting with default -bare bones- configuration.
+2013-02-11 09:39:17 fangohr: In [1]:
+2013-02-11 09:39:37 fangohr: The key here seems to be that ipython cannot find its config file and is unhappy about that. I am guessing that the IPython we bundled with Nmag is old, and thus expets a different config file.
+2013-02-11 09:40:11 max_albert: But does nmag not work because of that?
+2013-02-11 09:40:17 max_albert: Or is it just a warning?
+2013-02-11 09:40:32 fangohr: A way to 'fix' that is that create that old ipython config file. This can be done by starting the old IPython. And here is the key information: it is located in /usr/local/software/nmag-0.2.1/nmag-0.2.1/bin as executable 'ipython'.
+2013-02-11 09:41:06 fangohr: This may not be the problem, but it is certainly irritating ;-). So I just wanted to share where the binary files are that are shipped with Nmag (because they are not in /usr/bin, etc).
+2013-02-11 09:41:27 max_albert: I just tried callin 'nsim' and I don't get that error message...
+2013-02-11 09:41:32 fangohr: I am just running the tests again, and this change does not seem to have fixed the failures (although code still going). Will keep you posted.
+2013-02-11 09:42:19 max_albert: Just as a note, I installed nmag system-wide on aleph0 (so that it would be available to all users). However, I noticed that on summer it was installed locally in Jenkins' home directory. And I did see issues with wrong permissions when nmag is installed via 'sudo'. So perhaps this is related (although it may not be).
+2013-02-11 09:42:51 max_albert: Also, if you start nsim a second time, do you still get the error?
+2013-02-11 10:02:13 fangohr: Yes, the error didn't go away. Not quite sure why: as you seem to be guessing, these init files should be created automatically. Never mind.
+2013-02-11 10:08:14 fangohr: Yes, the local installation could relate to that. I'll keep you posted with any news.
+2013-02-11 10:08:52 fangohr: Hi Dmitri :)
+2013-02-11 10:09:00 max_albert: Do you think I should remove the global nmag installation again? This may make the error go away, but would require everyone to install nmag themselves.
+2013-02-11 10:09:16 D_Chernyshenko_: Good morning
+2013-02-11 10:10:06 fangohr: Max: I am just installing nmag locally -- if that fixes it, I suggest to remove the global one. Not very elegant, but disk space is not an issue, and calling our nmag installations script is trivial. So we might as well install locally if that makes it better.
+2013-02-11 10:10:33 max_albert: Ok, I agree.
+2013-02-11 11:21:02 mb8g11: Does anyone know how to effectively control the maximum mesh size using gmsh?
+2013-02-11 11:22:23 mb8g11: It doesn't seem to care about Mesh.CharacteristicLengthMax in the geofile.
+2013-02-11 11:23:03 ww1g11: seems point size is the most import one
+2013-02-11 11:25:32 mb8g11: Thanks, will play with that. Seems that CharacteristicLengthMax specifies something other than maximum edge length.
+2013-02-11 11:27:43 fangohr: No idea, sorry.
+2013-02-11 11:28:14 ww1g11: looks like the mesh become coarse if you only CharacteristicLengthMax quite large and mesh sizes are not uniformly distributed
+2013-02-11 11:33:01 fangohr: Off topic: seems to be snowing.
+2013-02-11 11:35:31 ww1g11: yeah,  heavy snow
