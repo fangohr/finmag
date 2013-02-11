@@ -369,7 +369,16 @@ class Simulation(object):
         return self.llg.pins
 
     def __set_pins(self, nodes):
-        self.llg.pins = nodes
+        pinlist=[]
+        if hasattr(nodes, '__call__'):
+            coords = self.mesh.coordinates()
+            for i,c in enumerate(coords):
+                if nodes(c):
+                    pinlist.append(i)
+            pinlist=np.array(pinlist)
+            self.llg.pins=pinlist
+        else:
+            self.llg.pins = nodes
 
     pins = property(__get_pins, __set_pins)
 
