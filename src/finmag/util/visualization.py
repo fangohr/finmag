@@ -574,6 +574,7 @@ def render_paraview_scene(
         f.write(plotting_code)
 
     # Execute the script in a separate process
+    curdir_bak = os.getcwd()
     try:
         os.chdir(tmpdir)
         with open('/dev/null') as devnull:
@@ -584,6 +585,7 @@ def render_paraview_scene(
         raise
     finally:
         shutil.rmtree(tmpdir)
+        os.chdir(curdir_bak)  # change back into the original directory
 
     image = IPython.core.display.Image(filename=outfile)
     return image
