@@ -8,30 +8,6 @@ from __future__ import division
 import logging
 logger = logging.getLogger("finmag")
 
-# XXX TODO:
-#
-# There is a strange incompatibility between paraview and Python's vtk
-# module (which is imported by dolfin) which leads to a segfault if
-# the line 'from paraview import servermanager' is executed *after*
-# 'import vtk'. This is being investigated, but for now the workaround
-# is to import paraview.servermanager before everything else. However,
-# since this leads to problems with existing scripts if they contain
-# the imports in the wrong order, we only try to import Paraview if
-# this was explicitly requested by setting the following option in
-# .finmagrc:
-#
-#     [misc]
-#     import_paraview = True
-#
-from util.configuration import get_config_option
-if get_config_option('misc', 'import_paraview') == 'True':
-    try:
-        from paraview import servermanager
-    except ImportError:
-        logging.warning("The .finmagrc config file contains the option "
-                        "'import_paraview = True', but paraview is not "
-                        "installed on this system.")
-
 from finmag.sim.sim import Simulation, sim_with
 from finmag.util.helpers import set_logging_level
 from __version__ import __version__
