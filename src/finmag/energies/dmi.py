@@ -252,7 +252,8 @@ class DMI(EnergyBase):
 
         
         # Dzyaloshinsky-Moriya Constant
-        self.DMIconstant = df.Constant(mu0 * self.D / unit_length ** 2) * Ms
+        # change unit_length**2 to unit_length since scaling effect DMI by Delta
+        self.DMIconstant = df.Constant(mu0 * self.D / unit_length ) * Ms
 
         self.v = df.TestFunction(S3)
         #Equation is chosen from the folowing papers

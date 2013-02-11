@@ -248,8 +248,8 @@ def compare_field_directly(node1,field1,node2,field2):
     key2=[]
     data2={}
     for i in range(len(node1)):
-        tmp1="%f%f%f"%(node1[i][0],node1[i][1],node1[i][2])
-        tmp2="%f%f%f"%(node2[i][0],node2[i][1],node2[i][2])
+        tmp1="%g%g%g"%(node1[i][0],node1[i][1],node1[i][2])
+        tmp2="%g%g%g"%(node2[i][0],node2[i][1],node2[i][2])
         key1.append(tmp1)
         key2.append(tmp2)
         data2[tmp2]=[field2[0][i],field2[1][i],field2[2][i]]
