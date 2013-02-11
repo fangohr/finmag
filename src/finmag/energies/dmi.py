@@ -214,8 +214,8 @@ class DMI(EnergyBase):
             H_dmi_np = dmi_np.compute_field()
     """
 
-    def __init__(self, D, method="box-matrix-petsc"):
-        super(DMI, self).__init__(method, in_jacobian=True)
+    def __init__(self, D, method="box-matrix-petsc",pbc2d=None):
+        super(DMI, self).__init__(method, in_jacobian=True,pbc2d=pbc2d)
         self.D = D
 
     @mtimed
