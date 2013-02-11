@@ -18,7 +18,7 @@ required="fenics=1:1.0.0-1 libboost-python-dev libboost-thread-dev libsundials-s
 building_doc="texlive-latex-extra texlive-latex-recommended python-pygments
     texlive-fonts-recommended"
 
-suggested="mercurial ipython grace gnuplot netgen netgen-doc gmsh"
+suggested="mercurial ipython ipython-notebook grace gnuplot netgen netgen-doc gmsh"
 
 packages="$required"
 if [ "$1" == "--all" ]
