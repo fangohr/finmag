@@ -106,7 +106,7 @@ class EnergyBase(object):
         # same as nodal_volume_S1, just three times in an array to have the same
         # number of elements in the array as the field to be able to divide it.
         self.nodal_volume_S3 = nodal_volume(self.S3)
-        print self.nodal_volume_S3 
+        
 
         if self.method == 'box-assemble':
             self.__compute_field = self.__compute_field_assemble
