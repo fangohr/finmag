@@ -1,4 +1,5 @@
 import time
+import inspect
 import logging
 import dolfin as df
 import numpy as np
@@ -427,8 +428,7 @@ class Simulation(object):
         else:
             self.llg.do_slonczewski = not self.llg.do_slonczewski
 
-    def schedule(self, func, args=None, kwargs=None,
-            at=None, at_end=False, every=None, after=None, realtime=False):
+    def schedule(self, func, *args, **kwargs):
         """
         Register a function that should be called during the simulation.
 
@@ -445,16 +445,13 @@ class Simulation(object):
         time by setting the `realtime` option to True. In this case you can
         use the `after` keyword on its own.
         
-        The function func(sim) you provide should expect the simulation
-        object as its first argument. Other positional arguments can be added
-        by passing a list-like object to `args` while keyword arguments the
-        function should be called with can be added by passing a dict-like
-        object to `kwargs`.
+        The function func(sim) you provide should expect the simulation object
+        as its first argument. All arguments to the 'schedule' function (except
+        the special ones 'at', 'every', 'at_end' and 'realtime' mentioned
+        above) will be passed on to this function.
 
-        Alternatively, if func is a string, it will be looked up in
-        self.scheduler_shortcuts, which includes 'save_restart_data',
-        'save_ndt' and 'save_vtk'.
-
+        If func is a string, it will be looked up in self.scheduler_shortcuts,
+        which includes 'save_restart_data', 'save_ndt' and 'save_vtk'.
         """
         if isinstance(func, str):
             if func in self.scheduler_shortcuts:
@@ -465,7 +462,21 @@ class Simulation(object):
                 log.error(msg)
                 raise KeyError(msg)
 
-        self.scheduler.add(func, [self] + (args or []), kwargs,
+        func_args = inspect.getargspec(func).args
+        illegal_argnames = ['at', 'after', 'every', 'at_end', 'realtime']
+        for kw in illegal_argnames:
+            if kw in func_args:
+                raise ValueError(
+                    "The scheduled function must not use any of the following "
+                    "argument names: {}".format(illegal_argnames))
+
+        at = kwargs.pop('at', None)
+        after = kwargs.pop('after', None)
+        every = kwargs.pop('every', None)
+        at_end = kwargs.pop('at_end', False)
+        realtime = kwargs.pop('realtime', False)
+
+        self.scheduler.add(func, [self] + list(args), kwargs,
                 at=at, at_end=at_end, every=every, after=after, realtime=realtime)
 
     def snapshot(self, filename="", directory="", force_overwrite=False):
