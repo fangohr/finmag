@@ -2,390 +2,217 @@
 
 #include "util/np_array.h"
 
-#include "llb_random.h"
+#include "mt19937.h"
 
 #include "llb.h"
 
 
 namespace finmag { namespace llb {
 
-
-namespace {
-
-    static const double constant_MU0 = M_PI*4e-7; // T m/A
-    static const double constant_K_B = 1.3806488e-23; // J/K
-
-    //used for RK2 solver
-    static const double theta=2.0/3.0;
-    static const double theta1=1.0-0.5/theta;
-    static const double theta2=0.5/theta;
-
-    inline double alpha_perp(double T, double T_C) { return T <= T_C ? 1. - (1./3.)*(T/T_C) : (2./3.) * (T/T_C); }
-    inline double alpha_par(double T, double T_C) { return (2./3.) * (T/T_C); }
-
-    void test(double *x){
-    	x[0]=1000;
-    }
-
-    void test_numpy(const np_array<double> &m){
-    	printf("size of m:%d\n",m.size());
-    	int length=m.size();
-    	assert(length%3==0);
-    	double *M=m.data();
-    	for (int i=0;i<length;i++){
-    		printf("m[%d]=%f\n",i,M[i]);
-    		M[i]*=2;
-    	}
-    	test(M);
-    }
-
-
-    void calc_llb_dmdt(
-            const np_array<double> &M,
-            const np_array<double> &H,
-            const np_array<double> &dmdt,
-            const np_array<double> &T_arr,
-            double gamma_LL,
-            double lambda,
-
-            double Tc,
-            bool do_precession) {
-
-    	//assert(M.size()==H.size());
-    	//assert(M.size()%3==0);
-
-    	int length=T_arr.size();
-    	double *m=M.data();
-    	double *h=H.data();
-    	double *dm_dt=dmdt.data();
-    	double *T = T_arr.data();
-
-
-
-        double precession_coeff = -gamma_LL;
-        double damping_coeff = -gamma_LL*lambda;
-
-
-        // calculate dm
-        //#pragma omp parallel for schedule(guided)
-        int i2,i3;
-        for (int i1 = 0; i1 < length; i1++) {
-        	i2=length+i1;
-        	i3=length+i2;
-            // add precession: m x H, multiplied by -gamma
-            if (do_precession) {
-                dm_dt[i1] = precession_coeff*(m[i2]*h[i3]-m[i3]*h[i2]);
-                dm_dt[i2] = precession_coeff*(m[i3]*h[i1]-m[i1]*h[i3]);
-                dm_dt[i3] = precession_coeff*(m[i1]*h[i2]-m[i2]*h[i1]);
-            } else {
-                dm_dt[i1] = 0.;
-                dm_dt[i2] = 0.;
-                dm_dt[i3] = 0.;
-            }
-
-            // add transverse damping: m x (m x H) == (m.H)m - (m.m)H, multiplied by -gamma lambda alpha_perp/m^2
-            // add longitudinal damping: (m.H)m, muliplied by gamma lambdaa alpha_par/m^2
-            // total damping is -gamma lambda [ (alpha_perp - alpha_par)/m^2 (m.H) m - alpha_perp H ]
-            double mh = m[i1] * h[i1] + m[i2] * h[i2] + m[i3] * h[i3];
-            double mm = m[i1] * m[i1] + m[i2] * m[i2] + m[i3] * m[i3];
-
-            double a1 = alpha_perp(T[i1], Tc);
-            double a2 = alpha_par(T[i1], Tc);
-            double damp1 = (a1 - a2) * damping_coeff / mm * mh;
-            double damp2 = - a1 * damping_coeff;
-            dm_dt[i1] += m[i1] * damp1 + h[i1] * damp2;
-            dm_dt[i2] += m[i2] * damp1 + h[i2] * damp2;
-            dm_dt[i3] += m[i3] * damp1 + h[i3] * damp2;
-        }
-    }
-
-
-
-
-    class HeunStochasticIntegrator {
-    public:
-
-        HeunStochasticIntegrator(
-            const np_array<double> &M,
-            const np_array<double> &M_pred,
-            const np_array<double> &T,
-            const np_array<double> &V,
-            double dt,
-            double gamma_LL,
-            double lambda,
-            double Tc,
-            double Ms,
-            bool do_precession,
-            bool use_evans2012_noise,
-            bp::object _rhs_func):
-            M(M),
-            M_pred(M_pred),
-            T_arr(T),
-            V_arr(V),
-            dt(dt),
-            gamma_LL(gamma_LL),
-            lambda(lambda),
-            Tc(Tc),
-            Ms(Ms),
-            do_precession(do_precession),
-            use_evans2012_noise(use_evans2012_noise),
-            rhs_func(_rhs_func)
-            {
-        		assert(M.size()==3*T.size());
-        		length=M.size();
-        		dm_c= new double[length];
-        		dm_pred= new double[length];
-        		dw_t= new double[length];
-        		dw_l= new double[length];
-
-        		for (int i = 0; i < length; i++){
-        			dw_t[i]=0;
-        			dw_l[i]=0;
-        		}
-
-        		initial_random();
-
-        		if (_rhs_func.is_none()) throw std::invalid_argument("HeunStochasticIntegrator::HeunStochasticIntegrator: _rhs_func is None");
-
-         }
-
-        ~HeunStochasticIntegrator(){
-
-
-        	if (dm_pred!=0){
-        		delete[] dm_pred;
-        	}
-
-        	if (dm_c!=0){
-        	    delete[] dm_c;
-        	}
-
-        	if (dw_t!=0){
-        	    delete[] dw_t;
-        	}
-
-        	if (dw_l!=0){
-        	    delete[] dw_l;
-        	}
-
-        }
-
-    	void run_step(const np_array<double> &H) {
-    		double *h = H.data();
-    		double *m = M.data();
-    		double *m_pred=M_pred.data();
-
-    		gauss_random_vec(dw_t,length,sqrt(dt));
-    		gauss_random_vec(dw_l,length,sqrt(dt));
-
-            bp::call<void>(rhs_func.ptr(),M);
-
-    		calc_llb_adt_plus_bdw(m,h,dm_pred);
-
-    		for (int i = 0; i < length; i++){
-    			m_pred[i] = m[i] + dm_pred[i];
-    		}
-
-    		bp::call<void>(rhs_func.ptr(), M_pred);
-
-    		calc_llb_adt_plus_bdw(m_pred,h,dm_c);
-
-    		for (int i = 0; i < length; i++){
-    			m[i] += 0.5*(dm_c[i] + dm_pred[i]);
-    		}
-
-    	}
-
-
-
-    private:
-        int length;
-        np_array<double> M,M_pred,T_arr,V_arr;
-        double dt,gamma_LL,lambda,Tc,Ms;
-        double *dm_pred, *dm_c,*dw_t, *dw_l;
-        bool do_precession;
-        bool use_evans2012_noise;
-
-        bp::object rhs_func;
-
-
-        //double cur_t, default_dt;
-
-        void calc_llb_adt_plus_bdw(
-        					double *m,
-        					double *h,
-        					double *dm
-        					) {
-
-
-                double precession_coeff = -gamma_LL;
-                double *T = T_arr.data();
-                double *V = V_arr.data();
-                int len=T_arr.size();
-                //printf("len=%d  length=%d\n",len,length);
-
-                // calculate dm
-                //#pragma omp parallel for schedule(guided)
-                int i1,i2,i3;
-                for (int i = 0; i < len; i++) {
-                	i1=i;
-                	i2=len+i1;
-                	i3=len+i2;
-                	//printf("%e  %e  %e  %e  %e  %e  %e\n",V[i],dw_l[i1],dw_l[i2],dw_l[i3],dw_t[i1],dw_t[i2],dw_t[i3]);
-
-                    // add precession: m x H, multiplied by -gamma
-                    if (do_precession) {
-                        dm[i1] = precession_coeff*dt*(m[i2]*h[i3]-m[i3]*h[i2]);
-                        dm[i2] = precession_coeff*dt*(m[i3]*h[i1]-m[i1]*h[i3]);
-                        dm[i3] = precession_coeff*dt*(m[i1]*h[i2]-m[i2]*h[i1]);
-                    } else {
-                        dm[i1] = 0.;
-                        dm[i2] = 0.;
-                        dm[i3] = 0.;
-                    }
-
-
-                    // add transverse and longitudinal damping
-                    double mm = m[i1] * m[i1] + m[i2] * m[i2] + m[i3] * m[i3];
-                    double a_perp = alpha_perp(T[i], Tc);
-                    double a_par = alpha_par(T[i], Tc);
-
-                    // transverse damping noise
-                    double b_tr = use_evans2012_noise ?
-                        sqrt(
-                            (2.*constant_K_B/constant_MU0)*T[i]*(a_perp - a_par) /
-                            (gamma_LL * Ms * lambda * V[i] * a_perp*a_perp)
-                        )
-                    :
-                        sqrt(
-                            (2.*constant_K_B/constant_MU0)*T[i] /
-                            (gamma_LL * Ms * lambda * V[i] * a_perp)
-                        );
-
-                    double h_tr_0 = h[i1]*dt + b_tr*dw_t[i1];
-                    double h_tr_1 = h[i2]*dt + b_tr*dw_t[i2];
-                    double h_tr_2 = h[i3]*dt + b_tr*dw_t[i3];
-
-                    double mh_tr = m[i1] * h_tr_0 + m[i2] * h_tr_1 + m[i3] * h_tr_2;
-
-                    // longitudinal damping noise
-                    double b_long = use_evans2012_noise ?
-                        sqrt(
-                            (2.*gamma_LL*constant_K_B/constant_MU0*lambda)*T[i]*a_par /
-                            (Ms * V[i])
-                        )
-                    :
-                        sqrt(
-                            (2.*constant_K_B/constant_MU0)*T[i] /
-                            (gamma_LL * Ms * lambda * V[i] * a_par)
-                        );
-                    //printf("b_long==%e  b_tr==%e \n",b_long,b_tr);
-                    // add transverse damping: m x (m x H) == (m.H)m - (m.m)H, multiplied by -gamma lambda alpha_perp/m^2
-                    double tdamp = -gamma_LL * lambda * a_perp / mm;
-                    dm[i1] += tdamp * (mh_tr * m[i1] - mm * h_tr_0);
-                    dm[i2] += tdamp * (mh_tr * m[i2] - mm * h_tr_1);
-                    dm[i3] += tdamp * (mh_tr * m[i3] - mm * h_tr_2);
-
-                    double mh_long;
-
-                    if (use_evans2012_noise) {
-                        double h_long_0 = h[i1]*dt;
-                        double h_long_1 = h[i2]*dt;
-                        double h_long_2 = h[i3]*dt;
-                        mh_long = m[i1] * h_long_0 + m[i2] * h_long_1 + m[i3] * h_long_2;
-
-                        // add noise separately
-                        dm[i1] += b_long * dw_l[i1];
-                        dm[i2] += b_long * dw_l[i2];
-                        dm[i3] += b_long * dw_l[i3];
-
-                    } else {
-                        double h_long_0 = h[i1]*dt + b_long * dw_l[i1];
-                        double h_long_1 = h[i2]*dt + b_long * dw_l[i2];
-                        double h_long_2 = h[i3]*dt + b_long * dw_l[i3];
-                        mh_long = m[i1] * h_long_0 + m[i2] * h_long_1 + m[i3] * h_long_2;
-                    }
-
-
-                    // add longitudinal damping: (m.H)m, muliplied by gamma lambda alpha_par/m^2
-                    double ldamp = gamma_LL * lambda * a_par / mm;
-                    dm[i1] += ldamp * mh_long * m[i1];
-                    dm[i2] += ldamp * mh_long * m[i2];
-                    dm[i3] += ldamp * mh_long * m[i3];
-                    //printf("dm0==%e  dm1==%e  dm2==%e dw=%e  %e  %e\n",dm[i1],dm[i2],dm[i3],dw_l[i1],dw_l[i2],dw_l[i3]);
-
-                }
-            }
-
+	static const double constant_MU0 = M_PI*4e-7; // T m/A
+	static const double constant_K_B = 1.3806488e-23; // J/K
+
+	inline double alpha_perp(double T, double T_C) { return T <= T_C ? 1. - (1./3.)*(T/T_C) : (2./3.) * (T/T_C); }
+	inline double alpha_par(double T, double T_C) { return (2./3.) * (T/T_C); }
+
+	void calc_llb_dmdt(
+			const np_array<double> &M,
+			const np_array<double> &H,
+			const np_array<double> &dmdt,
+			const np_array<double> &T_arr,
+			double gamma_LL,
+			double lambda,
+			double Tc,
+			bool do_precession) {
+
+
+		int length=T_arr.size();
+		double *m=M.data();
+		double *h=H.data();
+		double *dm_dt=dmdt.data();
+		double *T = T_arr.data();
+
+		double precession_coeff = -gamma_LL;
+		double damping_coeff = -gamma_LL*lambda;
+
+		int i,j,k;
+		// calculate dm
+    	//#pragma omp parallel for schedule(guided)
+		for (i = 0; i < length; i++) {
+			j=length+i;
+			k=length+j;
+			// add precession: m x H, multiplied by -gamma
+			if (do_precession) {
+				dm_dt[i] = precession_coeff*(m[j]*h[k]-m[k]*h[j]);
+				dm_dt[j] = precession_coeff*(m[k]*h[i]-m[i]*h[k]);
+				dm_dt[k] = precession_coeff*(m[i]*h[j]-m[j]*h[i]);
+			} else {
+				dm_dt[i] = 0.;
+				dm_dt[j] = 0.;
+				dm_dt[k] = 0.;
+			}
+
+			// add transverse damping: m x (m x H) == (m.H)m - (m.m)H, multiplied by -gamma lambda alpha_perp/m^2
+			// add longitudinal damping: (m.H)m, muliplied by gamma lambdaa alpha_par/m^2
+			// total damping is -gamma lambda [ (alpha_perp - alpha_par)/m^2 (m.H) m - alpha_perp H ]
+			double mh = m[i] * h[i] + m[j] * h[j] + m[k] * h[k];
+			double mm = m[i] * m[i] + m[j] * m[j] + m[k] * m[k];
+
+			double a1 = alpha_perp(T[i], Tc);
+			double a2 = alpha_par(T[i], Tc);
+			double damp1 = (a1 - a2) * damping_coeff / mm * mh;
+			double damp2 = - a1 * damping_coeff;
+			dm_dt[i] += m[i] * damp1 + h[i] * damp2;
+			dm_dt[j] += m[j] * damp1 + h[j] * damp2;
+			dm_dt[k] += m[k] * damp1 + h[k] * damp2;
+		}
+	}
+
+
+
+    class StochasticLLBIntegrator {
+
+        double theta;
+        double theta1;
+        double theta2;
+
+    	private:
+        	int length;
+        	np_array<double> M,M_pred,Ms_arr,T_arr,V_arr;
+        	np_array<int>pins_arr;
+        	double dt,Tc,lambda,Ms, gamma_LL;
+        	double *dm1, *dm2, *dm3, *eta_perp, *eta_par;
+        	bp::object rhs_func;
+        	unsigned int seed;
+        	RandomMT19937 mt_random;
+        	bool do_precession;
+        	bool using_type_II;
+
+        	void (StochasticLLBIntegrator::*run_step_fun)(const np_array<double> &H);
+
+        	void calc_llb_adt_bdw(double *m,double *h,double *dm);
+        	void run_step_rk2(const np_array<double> &H);
+        	void run_step_rk3(const np_array<double> &H);
+
+    	public:
+        	StochasticLLBIntegrator(
+        			const np_array<double> &M,
+        			const np_array<double> &M_pred,
+        			const np_array<double> &Ms,
+        			const np_array<double> &T,
+        			const np_array<double> &V,
+					const np_array<int> &pins,
+					const bp::object _rhs_func,
+					const std::string method_name);
+
+        	~StochasticLLBIntegrator();
+
+        	void set_parameters(double dt,double gamma,double lambda, double Tc,
+        	    			unsigned int seed,bool do_precession, bool using_type_II);
+        	void run_step(const np_array<double> &H);
     };
 
 
+    StochasticLLBIntegrator::~StochasticLLBIntegrator(){
 
-    class RungeKuttaStochasticIntegrator {
-    public:
+    	if (dm1!=0){
+    		delete[] dm1;
+    	}
 
-    	RungeKuttaStochasticIntegrator(
-            const np_array<double> &M,
-            const np_array<double> &M_pred,
-            const np_array<double> &T,
-            const np_array<double> &V,
-            double dt,
-            double gamma_LL,
-            double lambda,
-            double Tc,
-            double Ms,
-            bool do_precession,
-            bp::object _rhs_func):
-            M(M),
-            M_pred(M_pred),
-            T_arr(T),
-            V_arr(V),
-            dt(dt),
-            gamma_LL(gamma_LL),
-            lambda(lambda),
-            Tc(Tc),
-            Ms(Ms),
-            do_precession(do_precession),
-            rhs_func(_rhs_func)
-            {
-        		assert(M.size()==3*T.size());
-        		length=M.size();
-        		dm1= new double[length];
-        		dm2= new double[length];
-        		eta= new double[length];
+    	if (dm2!=0){
+    		delete[] dm2;
+    	}
+
+    	if (dm3!=0){
+    		delete[] dm3;
+    	}
+
+    	if (eta_par!=0){
+    	    delete[] eta_par;
+    	}
+
+    	if (eta_perp!=0){
+    	    delete[] eta_perp;
+    	}
+
+    }
 
 
-        		initial_random();
 
-        		if (_rhs_func.is_none()) throw std::invalid_argument("RungeKuttaStochasticIntegrator::RungeKuttaStochasticIntegrator: _rhs_func is None");
+    StochasticLLBIntegrator::StochasticLLBIntegrator(
+    							const np_array<double> &M,
+    							const np_array<double> &M_pred,
+    							const np_array<double> &Ms,
+    							const np_array<double> &T,
+    							const np_array<double> &V,
+    							const np_array<int> &pins,
+    					        bp::object _rhs_func,
+    							std::string method_name):
+    							M(M),
+    							M_pred(M_pred),
+    							Ms_arr(Ms),
+    							T_arr(T),
+    							V_arr(V),
+    							pins_arr(pins),
+    							rhs_func(_rhs_func){
 
-         }
+        							assert(M.size()==3*T.size());
+        							assert(M_pred.size()==M.size());
 
-        ~RungeKuttaStochasticIntegrator(){
+        							length=M.size();
 
+        							dm1= new double[length];
+        							dm2= new double[length];
+        							eta_par= new double[length];
+        							eta_perp= new double[length];
 
-        	if (dm1!=0){
-        		delete[] dm1;
-        	}
+        							if (_rhs_func.is_none())
+        								throw std::invalid_argument("StochasticLLBIntegrator: _rhs_func is None");
 
-        	if (dm2!=0){
-        		delete[] dm2;
-        	}
+        							if (method_name=="RK2a"){
+        								run_step_fun=&StochasticLLBIntegrator::run_step_rk2;
+        								theta=1.0;
+        						        theta1=0.5;
+        						        theta2=0.5;
+        							}else if(method_name=="RK2b"){
+        								run_step_fun=&StochasticLLBIntegrator::run_step_rk2;
+        								theta=2.0/3.0;
+        								theta1=0.25;
+        								theta2=0.75;
+        							}else if(method_name=="RK2c"){
+        								run_step_fun=&StochasticLLBIntegrator::run_step_rk2;
+        								theta=0.5;
+        								theta1=0;
+        								theta2=1.0;
+        							}else if(method_name=="RK3"){
+        								run_step_fun=&StochasticLLBIntegrator::run_step_rk3;
+        								dm3= new double[length];
+        							}else{
+        								throw std::invalid_argument("StochasticLLBIntegrator:Only RK2a, RK2b, RK2c and RK3 are implemented!");
+        							}
 
-        	if (eta!=0){
-        	    delete[] eta;
-        	}
 
         }
 
-    	void run_step(const np_array<double> &H) {
+
+    void StochasticLLBIntegrator::run_step(const np_array<double> &H) {
+
+    	(this->*run_step_fun)(H);
+
+    }
+
+    void StochasticLLBIntegrator::run_step_rk2(const np_array<double> &H) {
+
     		double *h = H.data();
     		double *m = M.data();
     		double *m_pred=M_pred.data();
 
     		bp::call<void>(rhs_func.ptr(),M);
-    		gauss_random_vec(eta,length,sqrt(dt));
-    		calc_llb_adt_plus_bdw(m,h,dm1);
+
+    		mt_random.gaussian_random_vec(eta_par,length,sqrt(dt));
+    		mt_random.gaussian_random_vec(eta_perp,length,sqrt(dt));
+
+    		calc_llb_adt_bdw(m,h,dm1);
 
     		for (int i = 0; i < length; i++){
     			m_pred[i] = m[i] + theta*dm1[i];
@@ -393,112 +220,135 @@ namespace {
 
     		bp::call<void>(rhs_func.ptr(),M_pred);
 
-    		gauss_random_vec(eta,length,sqrt(dt));
-    		calc_llb_adt_plus_bdw(m_pred,h,dm2);
+    		calc_llb_adt_bdw(m_pred,h,dm2);
 
     		for (int i = 0; i < length; i++){
     			m[i] += theta1*dm1[i] + theta2*dm2[i];
-
     		}
 
-    	}
+    }
 
+    void StochasticLLBIntegrator::run_step_rk3(const np_array<double> &H) {
+    		double *h = H.data();
+    		double *m = M.data();
+    		double *m_pred=M_pred.data();
+    		double two_three=2.0/3.0;
 
+    		mt_random.gaussian_random_vec(eta_par,length,sqrt(dt));
+    		mt_random.gaussian_random_vec(eta_perp,length,sqrt(dt));
 
-    private:
-        int length;
-        np_array<double> M,M_pred,T_arr,V_arr;
-        double dt,gamma_LL,lambda,Tc,Ms;
-        double *dm1, *dm2, *dm3, *eta;
-        bool do_precession;
+    		bp::call<void>(rhs_func.ptr(),M);
+    		calc_llb_adt_bdw(m,h,dm1);
+    		for (int i = 0; i < length; i++){
+    			m_pred[i] = m[i] + two_three*dm1[i];
+    		}
 
-        bp::object rhs_func;
+    		bp::call<void>(rhs_func.ptr(),M_pred);
+    		calc_llb_adt_bdw(m_pred,h,dm2);
+    		for (int i = 0; i < length; i++){
+    			m_pred[i] = m[i] - dm1[i]+ dm2[i];
+    		}
 
+    		bp::call<void>(rhs_func.ptr(),M_pred);
+    		calc_llb_adt_bdw(m_pred,h,dm3);
+    		for (int i = 0; i < length; i++){
+    			m[i] += 0.75*dm2[i] + 0.25*dm3[i];
+    		}
 
-        //double cur_t, default_dt;
+    }
 
-        void calc_llb_adt_plus_bdw(
-        					double *m,
-        					double *h,
-        					double *dm
-        					) {
+    void StochasticLLBIntegrator::set_parameters(double dt,double gamma,double lambda, double Tc,
+    			unsigned int seed,bool do_precession, bool using_type_II){
+    	this->dt=dt;
+    	this->gamma_LL=gamma;
+    	this->lambda=lambda;
+    	this->Tc=Tc;
+    	this->seed=seed;
+    	this->do_precession=do_precession;
+    	this->using_type_II=using_type_II;
+    	mt_random.seed(seed);
+    }
 
-                double *T = T_arr.data();
-                double *V = V_arr.data();
-                int len=T_arr.size();
+    void StochasticLLBIntegrator::calc_llb_adt_bdw(double *m, double *h, double *dm) {
 
-                double precession_coeff = -gamma_LL;
-                double damping_coeff = gamma_LL*lambda;
+            double *T = T_arr.data();
+            double *V = V_arr.data();
+            double *Ms = Ms_arr.data();
+            int len=T_arr.size();
 
-                // calculate dm
-                int i1,i2,i3;
-                for (int i = 0; i < len; i++) {
-                	i1=i;
-                	i2=len+i1;
-                	i3=len+i2;
+            double precession_coeff = -gamma_LL;
+            double damping_coeff = gamma_LL*lambda;
 
-                    // add precession: m x H, multiplied by -gamma
-                    if (do_precession) {
-                        dm[i1] = precession_coeff*dt*(m[i2]*h[i3]-m[i3]*h[i2]);
-                        dm[i2] = precession_coeff*dt*(m[i3]*h[i1]-m[i1]*h[i3]);
-                        dm[i3] = precession_coeff*dt*(m[i1]*h[i2]-m[i2]*h[i1]);
-                    } else {
-                        dm[i1] = 0.;
-                        dm[i2] = 0.;
-                        dm[i3] = 0.;
-                    }
+            // calculate dm
+            int i,j,k;
+            for (i = 0; i < len; i++) {
+            	i=i;
+            	j=len+i;
+            	k=len+j;
 
-
-                    double mh = m[i1] * h[i1] + m[i2] * h[i2] + m[i3] * h[i3];
-                    double mm = m[i1] * m[i1] + m[i2] * m[i2] + m[i3] * m[i3];
-
-                    //m x (m x H) == (m.H)m - (m.m)H,
-                    double a_perp = alpha_perp(T[i1], Tc);
-                    double a_par = alpha_par(T[i1], Tc);
-                    double damp1 = (a_par-a_perp) * damping_coeff / mm * mh;
-                    double damp2 = a_perp * damping_coeff;
-                    dm[i1] += (m[i1] * damp1 + h[i1] * damp2)*dt;
-                    dm[i2] += (m[i2] * damp1 + h[i2] * damp2)*dt;
-                    dm[i3] += (m[i3] * damp1 + h[i3] * damp2)*dt;
-
-
-                    double Q_perp =  sqrt(
-                            (2.*constant_K_B)*T[i]*(a_perp - a_par) /
-                            (gamma_LL * Ms* constant_MU0* V[i]* a_perp * a_perp * lambda)
-                        );
-
-                    double Q_par =sqrt(
-                            (2.*gamma_LL*constant_K_B*lambda)*T[i]*a_par /
-                            (Ms * V[i]*constant_MU0)
-                        );
-
-                    //printf("Q_par==%e  Q_perp==%e \n",Q_par,Q_perp);
-                    double meta = m[i1] * eta[i1] + m[i2] * eta[i2] + m[i3] * eta[i3];
-                    //m x (m x H) == (m.H)m - (m.m)H,
-                    double damp3 = -a_perp * damping_coeff / mm * meta;
-                    dm[i1] += (m[i1] * damp3 + eta[i1] * damp2)*Q_perp;
-                    dm[i2] += (m[i2] * damp3 + eta[i2] * damp2)*Q_perp;
-                    dm[i3] += (m[i3] * damp3 + eta[i3] * damp2)*Q_perp;
-
-                    dm[i1] += Q_par*eta[i1];
-                    dm[i2] += Q_par*eta[i2];
-                    dm[i3] += Q_par*eta[i3];
-                    //printf("dm0==%e  dm1==%e  dm2==%e  dw2=%e  %e  %e\n",dm[i1],dm[i2],dm[i3],eta_par[i1],eta_par[i2],eta_par[i3]);
+                // add precession: m x H, multiplied by -gamma
+                if (do_precession) {
+                    dm[i] = precession_coeff*dt*(m[j]*h[k]-m[k]*h[j]);
+                    dm[j] = precession_coeff*dt*(m[k]*h[i]-m[i]*h[k]);
+                    dm[k] = precession_coeff*dt*(m[i]*h[j]-m[j]*h[i]);
+                } else {
+                    dm[i] = 0.;
+                    dm[j] = 0.;
+                    dm[k] = 0.;
                 }
+
+
+                double mh = m[i] * h[i] + m[j] * h[j] + m[k] * h[k];
+                double mm = m[i] * m[i] + m[j] * m[j] + m[k] * m[k];
+
+                //m x (m x H) == (m.H)m - (m.m)H,
+                double a_perp = alpha_perp(T[i], Tc);
+                double a_par = alpha_par(T[i], Tc);
+                double damp1 = (a_par-a_perp) * damping_coeff / mm * mh;
+                double damp2 = a_perp * damping_coeff;
+                dm[i] += (m[i] * damp1 + h[i] * damp2)*dt;
+                dm[j] += (m[j] * damp1 + h[j] * damp2)*dt;
+                dm[k] += (m[k] * damp1 + h[k] * damp2)*dt;
+
+
+                double Q_perp =  sqrt(
+                        (2.*constant_K_B)*T[i]*(a_perp - a_par) /
+                        (gamma_LL * Ms[i]* constant_MU0* V[i]* a_perp * a_perp * lambda)
+                    );
+
+                double Q_par =sqrt(
+                        (2.*gamma_LL*constant_K_B*lambda)*T[i]*a_par /
+                        (Ms[i] * V[i]*constant_MU0)
+                    );
+
+                //printf("Q_par==%e  Q_perp==%e \n",Q_par,Q_perp);
+                double meta_perp = m[i] * eta_perp[i] + m[j] * eta_perp[j] + m[k] * eta_perp[k];
+                //m x (m x H) == (m.H)m - (m.m)H,
+                double damp3 = -a_perp * damping_coeff / mm * meta_perp;
+                dm[i] += (m[i] * damp3 + eta_perp[i] * damp2)*Q_perp;
+                dm[j] += (m[j] * damp3 + eta_perp[j] * damp2)*Q_perp;
+                dm[k] += (m[k] * damp3 + eta_perp[k] * damp2)*Q_perp;
+
+                if (using_type_II){
+                	dm[i] += Q_par*eta_par[i];
+                	dm[j] += Q_par*eta_par[j];
+                	dm[k] += Q_par*eta_par[k];
+                }else{
+                	double meta_par = m[i] * eta_par[i] + m[j] * eta_par[j] + m[k] * eta_par[k];
+                	double damp4 = a_par * damping_coeff / mm * meta_par * Q_par;
+                	dm[i] += eta_par[i]* m[i] * damp4;
+                	dm[j] += eta_par[j]* m[j] * damp4;
+                	dm[k] += eta_par[k]* m[k] * damp4;;
+                }
+
             }
-
-    };
-
- }
-
-
+        }
 
 
 
 
     void register_llb() {
     	using namespace bp;
-
 
     	def("calc_llb_dmdt", &calc_llb_dmdt, (
     	            arg("M"),
@@ -511,40 +361,17 @@ namespace {
     	            arg("do_precession")
     	        ));
 
-
-
-    	def("test_numpy",&test_numpy,(
-    			arg("m")
-    			));
-
-    	class_<HeunStochasticIntegrator>("HeunStochasticIntegrator", init<
+    	class_<StochasticLLBIntegrator>("StochasticLLBIntegrator", init<
     			 	np_array<double>,
     			 	np_array<double>,
     			    np_array<double>,
     			    np_array<double>,
-    			    double,
-    			    double,
-    			    double,
-    			    double,
-    			    double,
-    			    bool,
-    			    bool,
-    			    bp::object>())
-    	        	.def("run_step", &HeunStochasticIntegrator::run_step);
-
-    	class_<RungeKuttaStochasticIntegrator>("RungeKuttaStochasticIntegrator", init<
-    			 	np_array<double>,
-    			 	np_array<double>,
     			    np_array<double>,
-    			    np_array<double>,
-    			    double,
-    			    double,
-    			    double,
-    			    double,
-    			    double,
-    			    bool,
-    			    bp::object>())
-    	        	.def("run_step", &RungeKuttaStochasticIntegrator::run_step);
+    			    np_array<int>,
+    			    bp::object,
+    			    std::string>())
+    	        	.def("run_step", &StochasticLLBIntegrator::run_step)
+    	        	.def("set_parameters", &StochasticLLBIntegrator::set_parameters);
     }
 
 

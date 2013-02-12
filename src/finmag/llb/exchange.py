@@ -111,20 +111,20 @@ class ExchangeStd(EnergyBase):
 
 
 class Exchange(object):
-    def __init__(self, C, in_jacobian=True):
-        self.C = C
+    def __init__(self, mat, in_jacobian=False):
+        self.C = mat.A
+        self.me= mat.me
         self.in_jacobian=in_jacobian
    
     @mtimed
-    def setup(self, S3, m, Ms0, me=1, unit_length=1.0): 
+    def setup(self, S3, m, Ms0, unit_length=1.0): 
         self.S3 = S3
         self.m = m
         self.Ms0=Ms0
-        self.me=me
         self.unit_length = unit_length
 
         self.mu0 = mu0
-        self.exchange_factor = 2.0 * self.C / (self.mu0 * me**2 * Ms0 * self.unit_length**2)
+        self.exchange_factor = 2.0 * self.C / (self.mu0 * self.me**2 * Ms0 * self.unit_length**2)
 
         u3 = df.TrialFunction(S3)
         v3 = df.TestFunction(S3)
@@ -164,8 +164,8 @@ if __name__ == "__main__":
     exch = Exchange(C)
     exch.setup(mat.S3, mat._m, mat.Ms0, mat.m_e,unit_length=1e-9)
     
-    exch2 = ExchangeStd(C)
-    exch2.setup(mat.S3, mat._m, mat.Ms0, mat.m_e,unit_length=1e-9)
+    exch2 = ExchangeStd(mat)
+    exch2.setup(mat.S3, mat._m, mat.Ms0, unit_length=1e-9)
     
     print max(exch2.compute_field()-exch.compute_field())
     
