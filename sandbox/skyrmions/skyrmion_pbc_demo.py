@@ -1,34 +1,34 @@
 import numpy as np
 import dolfin as df
 from finmag import Simulation
-from finmag.energies import Exchange, DMI_Old, DMI, Demag
+from finmag.energies import Exchange, DMI_Old, DMI, Demag,Zeeman
 from finmag.util.helpers import vector_valued_function
 
-R=30
-mesh = df.BoxMesh(0,0,0,R,R,3,10,10,1)
+
+R=100
+N=30
+#mesh = df.RectangleMesh(0,0,R,R,20,20)
+mesh = df.RectangleMesh(0,0,R,R,N,N)
 
 def m_init_fun(pos):
-    if pos[0]<R/2.0:
-        if pos[1]<R/2.0:
-            return [-1,1,1]
-        else:
-            return [1,1,1]
-    else:
-        if pos[1]<R/2.0:
-            return [1,-1,1]
-        else:
-            return [-1,-1,1]
+    return np.random.random(3)
 
 m_init = vector_valued_function(m_init_fun, mesh)
 
+pbc2d=False
+
 Ms = 8.6e5
-sim = Simulation(mesh, Ms, pbc2d=True,unit_length=1e-9)
-sim.set_m((1,2,3))
+sim = Simulation(mesh, Ms, pbc2d=pbc2d,unit_length=1e-9)
+sim.set_m(m_init_fun)
+
+#A = 3.57e-13
+#D = 2.78e-3
 
 A = 1.3e-11
 D = 4e-3
-sim.add(Exchange(A,pbc2d=True))
-sim.add(DMI(D,pbc2d=False))
+sim.add(Exchange(A,pbc2d=pbc2d))
+sim.add(DMI(D,pbc2d=pbc2d))
+#sim.add(Zeeman((0,0,0.2*Ms)))
 #sim.add(Demag())
 
 def loop(final_time, steps=100):
