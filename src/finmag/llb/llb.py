@@ -22,6 +22,7 @@ class LLB(object):
         self.dm_dt = np.zeros(self.m.shape)
         self.H_eff = np.zeros(self.m.shape)
         self.set_default_values()
+        #self.interactions.append(mat)
 
     
     def set_default_values(self):
@@ -87,6 +88,11 @@ class LLB(object):
                                   
         self.integrator = integrator
         
+    
+    def add(self,interaction):
+        interaction.setup(self.material.S3, self.material._m, self.material.Ms0, unit_length=self.material.unit_length)
+        self.interactions.append(interaction)
+        
 
     def compute_effective_field(self):
         self.H_eff[:]=0 
@@ -116,11 +122,10 @@ class LLB(object):
 
         self.compute_effective_field()
 
- 
         timings.start(self.__class__.__name__, "sundials_rhs")
         # Use the same characteristic time as defined by c
                 
-        native_llb.calc_llb_dmdt(self.m,
+        native_llb.calc_llb_dmdt(self._m.vector().array(),
                                  self.H_eff,
                                  self.dm_dt,
                                  self.material.T,
@@ -144,8 +149,9 @@ class LLB(object):
         if t <= self.t:
             return
         
-        self.integrator.advance_time(t, self.m)
+        self.integrator.advance_time(t,self.m)
         self._m.vector().set_local(self.m)
+        self.t=t
     
     def run_stochastic_until(self, t):
         if t <= self.t:
@@ -178,8 +184,6 @@ if __name__ == '__main__':
     llb = LLB(mat)
     llb.set_up_solver()
     
-    llb.interactions.append(mat)
-    
     
     app = Zeeman((0, 0, 5e5))
     app.setup(mat.S3, mat._m, Ms=mat.Ms0)
@@ -191,8 +195,8 @@ if __name__ == '__main__':
     
     demag = Demag("FK")
     demag.setup(mat.S3, mat._m, mat.Ms0)
-    demag.demag.poisson_solver.parameters["relative_tolerance"] = 1e-10
-    demag.demag.laplace_solver.parameters["relative_tolerance"] = 1e-10
+    demag.demag.poisson_solver.parameters["relative_tolerance"] = 1e-8
+    demag.demag.laplace_solver.parameters["relative_tolerance"] = 1e-8
     llb.interactions.append(demag)
     
     

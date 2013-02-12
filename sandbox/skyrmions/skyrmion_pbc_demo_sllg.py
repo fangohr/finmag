@@ -6,13 +6,13 @@ from finmag.util.helpers import vector_valued_function
 from finmag.llb.sllg import SLLG
 
 
-R=120
-N=40
+R=150
+N=50
 #mesh = df.RectangleMesh(0,0,R,R,20,20)
 mesh = df.RectangleMesh(0,0,R,R,N,N)
 
 def m_init_fun(pos):
-    return np.random.random(3)
+    return np.random.random(3)-0.5
 
 
 pbc=True
@@ -28,7 +28,7 @@ A = 1.3e-11
 D = 4e-3
 sim.add(Exchange(A,pbc2d=pbc))
 sim.add(DMI(D,pbc2d=pbc))
-#sim.add(Zeeman((0,0,0.1*Ms)))
+sim.add(Zeeman((0,0,0.35*Ms)))
 #sim.add(Demag())
 
 def loop(final_time, steps=200):
