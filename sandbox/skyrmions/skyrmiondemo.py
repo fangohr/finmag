@@ -16,7 +16,8 @@ A = 1.3e-11
 D = 4e-3
 sim.add(Exchange(A))
 sim.add(DMI(D))
-sim.add(Demag())
+
+#sim.add(Demag())
 
 def loop(final_time, steps=100):
     t = np.linspace(sim.t + 1e-12, final_time, steps)
