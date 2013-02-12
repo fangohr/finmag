@@ -4636,3 +4636,86 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-02-11 11:28:14 ww1g11: looks like the mesh become coarse if you only CharacteristicLengthMax quite large and mesh sizes are not uniformly distributed
 2013-02-11 11:33:01 fangohr: Off topic: seems to be snowing.
 2013-02-11 11:35:31 ww1g11: yeah,  heavy snow
+2013-02-12 09:21:26 mb8g11: Good morning!
+2013-02-12 09:33:34 D_Chernyshenko_: Morning
+2013-02-12 09:47:05 fangohr-adium: Morning folks.
+2013-02-12 09:47:10 max_albert: Good morning.
+2013-02-12 10:38:23 fangohr-adium: Max, did you start to put any information in the finmag-jenkins repository? I am asking as I would want to jot down a few notes on email setup, and don't know whether to start a new repository or not.
+2013-02-12 10:40:01 max_albert: Yes, I basically put a set of step-by-step instructions there on how to set up a working Jenkins environment from scratch. These are the (slightly brushed up) notes that Weiwei and I took when we set it up on aleph0.
+2013-02-12 10:40:23 fangohr-adium: Great stuff. Is this on bitbucket already?
+2013-02-12 10:40:32 max_albert: Yes.
+2013-02-12 10:40:52 max_albert: https://bitbucket.org/fangohr/finmag-jenkins
+2013-02-12 10:41:00 fangohr-adium: Thank you.
+2013-02-12 10:41:48 max_albert: I also wanted to commit the config.xml file to this repository, but would rather do that when the installation is completely working and all tests pass.
+2013-02-12 10:42:01 fangohr-adium: Sure.
+2013-02-12 10:51:27 max_albert: Interesting. I just checked the situation on aleph0 again and saw that one of Weiwei's latest commits (https://bitbucket.org/fangohr/finmag/commits/dc4ae5132569/) fixed one of the 3 failing tests on aleph0.
+2013-02-12 10:52:05 max_albert: The test in question is in src/finmag/tests/comparison/demag/test_demag_field.py
+2013-02-12 10:52:29 max_albert: And the output of the failed test is here: http://aleph0.kk.soton.ac.uk:8080/job/finmag/65/testReport/src.finmag.tests.comparison.demag/test_demag_field/test_using_magpar/
+2013-02-12 10:52:56 max_albert: However, the only change that Weiwei did (AFAICS) was a cosmetic change in the output (use %g as the formatting string instead of %f).
+2013-02-12 10:53:30 max_albert: And I can't see how that could be broken before since neither the test file nor src/finmag/util/magpar.py (where the change happened) have been touched in ages.
+2013-02-12 10:53:38 max_albert: Weird...
+2013-02-12 10:54:01 max_albert: But anyway, if it fixed a test... ;-)
+2013-02-12 10:54:24 max_albert: So we're only two failures away from a stable build (modulo the skipped/disabled tests of course).
+2013-02-12 12:46:24 max_albert: Anybody interested in lunch in a bit?
+2013-02-12 13:34:14 fangohr: No lunch for me, sorry.
+2013-02-12 13:55:00 fangohr-adium: Hi all, just to say that email delivery from aleph0.kk.soton.ac.uk works now.
+2013-02-12 13:59:35 fangohr-adium: Max, Weiwei, have just looked at your documentation for setting up jenkins: very well done. With this, we have quite some confidence that we can do it again, if necessary. Let's keep extending this as we make further changes (such as adding email notification, say).
+2013-02-12 14:19:41 max_albert: Thanks, Hans!
+2013-02-12 14:21:01 max_albert: I saw that you also updated the notes with info about setting up email notifications.
+2013-02-12 14:21:10 max_albert: (Haven't read them yet though.)
+2013-02-12 14:21:15 max_albert: Does this work now?
+2013-02-12 14:21:35 fangohr-adium: Yes, should all work now.
+2013-02-12 14:21:59 max_albert: Awesome! What was the problem? (Sorry, it's probably written in your explanations... Will read them first.)
+2013-02-12 14:22:55 max_albert: Ok, just read it.
+2013-02-12 14:23:19 max_albert: So iSolutions did have to allow sending email for that machine? That's interesting.
+2013-02-12 14:23:26 fangohr-adium: Yes.
+2013-02-12 14:23:46 fangohr-adium: In the old days, any unix machine could send email. But that opens the door to lots of spam if only one of them is broken into.
+2013-02-12 14:24:09 max_albert: Right. Makes sense that they want to be able to control it.
+2013-02-12 14:54:24 max_albert: Hi Hans! Just FYI email notifications indeed work now on aleph0. The emails are currently sent to my account (I set this up for testing, but will change it to you once everything works, or straight away if you prefer).
+2013-02-12 14:54:45 max_albert: One small thing: the sender is still being reported as "address not configured yet [nobody@nowhere]". Do you know where to change this?
+2013-02-12 16:44:30 mb8g11: max_albert: The change Weiwei did (replacing %f with %g in util/magpar.py) was not a cosmetic one. The function the change happened in compares finmag results with magpar results.
+2013-02-12 16:45:15 mb8g11: The degrees of freedom are ordered differently in magpar and finmag. The code compares the coordinates to find the corresponding degrees of freedom.
+2013-02-12 16:45:51 mb8g11: Due to the fact that the data is read from a file and weird rounding issues exist the comparison is made string-based.
+2013-02-12 16:46:46 mb8g11: (of the coordinates, mind you)
+2013-02-12 16:47:08 max_albert: Oh, I see. Thanks for the explanation!
+2013-02-12 16:47:20 max_albert: However, isn't string-based comparison even more dangerous/prone to changes?
+2013-02-12 16:47:31 max_albert: Would numpy.allclose() (with appropriate tolerances) be able to do the job?
+2013-02-12 16:48:00 max_albert: Also, when did this test actually break? It seemed to me that none of the relevant files have been touched in a long time.
+2013-02-12 16:48:09 mb8g11: It broke on the new machine.
+2013-02-12 16:48:15 mb8g11: Or something to that effect.
+2013-02-12 16:48:35 mb8g11: I had some breakage on my own machine last time I upgraded Ubuntu,
+2013-02-12 16:49:03 max_albert: Oh, so the comparison was actually so strict that small changes (e.g. due to running it on a different machine) could break it?
+2013-02-12 16:49:10 mb8g11: It's not the data that is compared by string, just the algorithm that tries to find which node belongs to which.
+2013-02-12 16:50:19 mb8g11: Imagine a very fine mesh, expressed in meters (so coordinates of 1e-9 and smaller)... and now magpar round the coordinates and stores them in a file with limited precision.
+2013-02-12 16:51:07 max_albert: Ok. And then what exactly is compared?
+2013-02-12 16:51:37 mb8g11: Coordinates of the mesh when read back from magpar against coordinates of the same mesh given to us by finmag.
+2013-02-12 16:51:48 mb8g11: To find out which degree of freedom corresponds to which vertex.
+2013-02-12 16:54:06 max_albert: Aha!
+2013-02-12 16:54:59 max_albert: Might be good to add some info to this effect to the docstring of "compare_field_directly()" in src/finmag/util/magpar.py.
+2013-02-12 16:55:42 max_albert: From the naming of the function I would not have guessed that it does what you described above.
+2013-02-12 16:56:31 mb8g11: It's only part of what it does.
+2013-02-12 16:57:26 mb8g11: It gets coordinates and values for magpar, coordinates and values for finmag and compares the two. So the naming is okay. It's just there is a lot of work involved to be able to compare that data.
+2013-02-12 16:58:33 mb8g11: Namely, sorting the data by coordinates.
+2013-02-12 16:59:10 max_albert: Ah, ok. Maybe still worth putting that down as comments in that function (otherwise people like me who don't take the time to understand the code in detail will likely get confused again ;-)).
+2013-02-12 16:59:29 max_albert: I'll try to do that based on your explanations (until you are very keen to do it yourself).
+2013-02-12 16:59:30 mb8g11: Will do right now.
+2013-02-12 16:59:36 max_albert: s/until/unless/
+2013-02-12 16:59:41 max_albert: Oh, thanks!
+2013-02-12 17:00:23 max_albert: I'd have to read the code in detail to be able to tell, but do you think string comparison is still the right way to go?
+2013-02-12 17:00:37 max_albert: Are all the strings produced by magpar (and thus can be expected to be the same)?
+2013-02-12 17:01:00 max_albert: Or is the comparison between strings produced by Magpar and Finmag, respectively?
+2013-02-12 17:05:41 mb8g11: (pushed)
+2013-02-12 17:05:49 max_albert: Thanks!
+2013-02-12 17:09:00 mb8g11: We get coordinates and values back from magpar, and coordinates and values from finmag. We want to compare the values - but we do not know which value in the results array of magpar corresponds to which entry in finmags results.
+2013-02-12 17:09:22 mb8g11: So we turn to the coordinates.
+2013-02-12 17:09:53 mb8g11: But sadly, magpar has somehow mangled the coordinates by rounding them and/or saving them to file with limited precision
+2013-02-12 17:11:00 mb8g11: The codes solution: Build a dictionary of coordinates to results. The keys of this dictionary is then simply "xyz" truncated by string operation.
+2013-02-12 17:11:16 max_albert: Ok, got it. Sorry if I'm a bit slow today... Might have been in the office for too long. ;-)
+2013-02-12 17:12:04 mb8g11: It's a solution prone to occasional breakage but it was much less effort to implement than something which looks for the "closest" point
+2013-02-12 17:13:10 mb8g11: I think Weiwei wrote it originally. Stumbled upon it, had the same reaction as you. Decided to re-do it the correct way. After a few hours I just decided to let it be the way it is and just refactor a little.
+2013-02-12 17:13:28 mb8g11: The whole file, that is ;)
+2013-02-12 17:13:50 max_albert: Yeah, I can believe that. It's not a bad solution at all. I even wonder why it would break if the precision of the printed strings is limited to the precision we need/want to accept.
+2013-02-12 17:14:30 mb8g11: Because the precision we need, the precision of the strings and the precision we get from magpar are very close to each other :-/
+2013-02-12 17:14:49 max_albert: :-)
+2013-02-12 17:15:37 max_albert: Ok, I need to go. Thanks again for the explanations and have a good evening everyone!
+2013-02-12 17:15:44 mb8g11: Bye Max!
