@@ -54,7 +54,7 @@ def test_llb_sundials(do_plot=False):
             np.max(np.abs(mz - mz_ref)),
             mz_ref))
    
-    assert np.max(np.abs(mz - mz_ref)) < 8e-8
+    assert np.max(np.abs(mz - mz_ref)) < 1e-7
     
 
 if __name__ == "__main__":
