@@ -25,7 +25,7 @@ def test_llb_sundials(do_plot=False):
     H0 = 1e5
     sim.add(Zeeman((0, 0, H0)))
 
-    dt = 1e-12; ts = np.linspace(0, 1000 * dt, 101)
+    dt = 1e-12; ts = np.linspace(0, 500 * dt, 101)
 
     precession_coeff = mat.gamma_LL
     mz_ref = []
