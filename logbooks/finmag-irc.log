@@ -4719,3 +4719,29 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-02-12 17:14:49 max_albert: :-)
 2013-02-12 17:15:37 max_albert: Ok, I need to go. Thanks again for the explanations and have a good evening everyone!
 2013-02-12 17:15:44 mb8g11: Bye Max!
+2013-02-13 08:33:23 mb8g11: Good morning!
+2013-02-13 08:33:28 max_albert: Good morning!
+2013-02-13 08:38:02 mb8g11: How is it going?
+2013-02-13 08:39:02 max_albert: Not bad, thanks! Trying to get into a routine of coming to the office a bit earlier. Which is nice because it's very quiet and you feel you can get a bit done before everybody else turns up. :)
+2013-02-13 08:39:19 max_albert: How are things in Hamburg?
+2013-02-13 08:42:50 mb8g11: Hehe.
+2013-02-13 08:43:06 mb8g11: Things are fine, it's starting to snow a little.
+2013-02-13 08:44:09 max_albert: No skiing possible in the streets, though, I guess... Ice-skating maybe? Or at least building snowmen?
+2013-02-13 08:59:58 max_albert: Tea time! :-)
+2013-02-13 09:39:32 mb8g11: Not yet.
+2013-02-13 13:45:55 mb8g11: What are you currently working on, Max?
+2013-02-13 13:48:18 max_albert: Looking into a simulation which Peter Metaxas (from Australia) sent us (it's a Mumax2 script, though, not Finmag).
+2013-02-13 13:49:06 max_albert: It attempts to compute the normal modes of a nanodisk via a Fourier transform of m_x(t).
+2013-02-13 13:49:26 max_albert: I'd like to run that with varying parameters to see how that changes things, and am using that as an excuse to get acquainted with Sumatra.
+2013-02-13 13:49:41 max_albert: Why are you interested?
+2013-02-13 13:57:59 mb8g11: for fun.
+2013-02-13 14:07:36 max_albert: :-)
+2013-02-13 14:07:46 max_albert: How about you?
+2013-02-13 14:20:20 mb8g11: nothing much, post-processing data to create dispersion curves corresponding to the nmag dispersion example
+2013-02-13 14:20:41 mb8g11: But decided to use an ipython notebook ^^
+2013-02-13 14:20:52 max_albert: ;-)
+2013-02-13 14:20:59 max_albert: How is that working for you?
+2013-02-13 14:23:01 mb8g11: It's ideal for that task, when the data exists already and you work on the steps to achieve the end-result iteratively.
+2013-02-13 14:26:38 mb8g11: And I prefer the UI to ipython (even though you can embed images with ipython as well)
+2013-02-13 14:26:53 mb8g11: Overall, it's cool, thanks for introducing it to us.
+2013-02-13 14:29:27 mb8g11: And the tab-to-doc is reaaaally nice.
