@@ -18,7 +18,7 @@ averages_ref.txt: bar.nmesh.h5
 	nsim run_nmag.py --clean
 	ncol nmag_bar time m_Py_0 m_Py_1 m_Py_2 > averages_ref.txt
 
-averages.txt: bar.xml.gz
+averages.txt:
 	python run_finmag.py
 	ncol finmag_bar.ndt time m_x m_y m_z > averages.txt
 
