@@ -25,7 +25,7 @@ def test_llb_sundials(do_plot=False):
     H0 = 1e5
     sim.add(Zeeman((0, 0, H0)))
 
-    dt = 1e-12; ts = np.linspace(0, 500 * dt, 101)
+    dt = 1e-12; ts = np.linspace(0, 200 * dt, 101)
 
     precession_coeff = sim.gamma_LL
     mz_ref = []
@@ -57,8 +57,58 @@ def test_llb_sundials(do_plot=False):
     assert np.max(np.abs(mz - mz_ref)) < 1e-7
     
 
+def sim_llb_100(do_plot=False):
+    mesh = df.BoxMesh(0, 0, 0, 10, 10, 10, 1, 1, 1)
+    
+    mat = Material(mesh, name='FePt',unit_length=1e-9)
+    mat.set_m((1, 0, 0))
+    mat.T =100
+    mat.alpha=0.1
+    
+    print mat.Ms0
+    print mat.volumes
+    
+    sim = LLB(mat)
+    sim.set_up_stochastic_solver(using_type_II=True)
+    
+    H0 = 1e5
+    sim.add(Zeeman((0, 0, H0)))
+
+    dt = 1e-12; ts = np.linspace(0, 100 * dt, 101)
+
+    precession_coeff = sim.gamma_LL
+    mz_ref = []
+    
+    mz = []
+    real_ts=[]
+    for t in ts:
+        sim.run_until(t)
+        real_ts.append(sim.t)
+        mz_ref.append(np.tanh(precession_coeff * mat.alpha * H0 * sim.t))
+        mz.append(sim.m_average) # same as m_average for this macrospin problem
+    
+    mz=np.array(mz)
+    print mz
+
+    if do_plot:
+        ts_ns = np.array(real_ts) * 1e9
+        plt.plot(ts_ns, mz, "b.", label="computed") 
+        plt.plot(ts_ns, mz_ref, "r-", label="analytical") 
+        plt.xlabel("time (ns)")
+        plt.ylabel("mz")
+        plt.title("integrating a macrospin")
+        plt.legend()
+        plt.savefig(os.path.join(MODULE_DIR, "test_llb_100K.png"))
+
+    print("Deviation = {}, total value={}".format(
+            np.max(np.abs(mz - mz_ref)),
+            mz))
+   
+    
+
 if __name__ == "__main__":
     test_llb_sundials(do_plot=True)
+    #sim_llb_100(do_plot=True)
     
 
 

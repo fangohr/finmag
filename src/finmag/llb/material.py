@@ -204,8 +204,8 @@ class Material(object):
     def __init__(self, mesh, name='FePt',unit_length=1):
         self.mesh = mesh
         self.name = name
-        self.V = df.FunctionSpace(mesh, "Lagrange", 1)
-        self.S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1,dim=3)
+        self.S1 = df.FunctionSpace(mesh, "Lagrange", 1)
+        self.S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
         self._m = df.Function(self.S3)
         self._T = np.zeros(mesh.num_vertices())
         self.h = self._m.vector().array()#just want to create a numpy array
@@ -226,7 +226,15 @@ class Material(object):
         else:
             raise NotImplementedError("Only FePt and Nickel available")
         
+        self.volumes = df.assemble(df.TestFunction(self.S1) * df.dx).array()
+        self.Ms0_array=df.assemble(self.Ms0*df.TestFunction(self.S1)* df.dx).array()/self.volumes
+        self.volumes[:]*=self.unit_length**3
+        
         self.T = 0
+      
+    @property  
+    def me(self):
+        return self.m_e
         
     def compute_field(self):
         #self.mat.compute_relaxation_field(self._T, self.m, self.h)
