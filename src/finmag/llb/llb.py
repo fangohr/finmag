@@ -22,7 +22,7 @@ class LLB(object):
         self.dm_dt = np.zeros(self.m.shape)
         self.H_eff = np.zeros(self.m.shape)
         self.set_default_values()
-        #self.interactions.append(mat)
+        self.interactions.append(mat)
 
     
     def set_default_values(self):

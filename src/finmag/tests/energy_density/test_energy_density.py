@@ -32,7 +32,7 @@ def test_exchange_energy_density():
     if status != 0:
         print output
         sys.exit("Error %d: Running %s failed." % (status, cmd))
-    nmag_data = np.load(os.path.join(MODULE_DIR, "nmag_exchange_energy_density.npy"))
+    nmag_data = np.loadtxt(os.path.join(MODULE_DIR, "nmag_exchange_energy_density.txt"))
 
     # run finmag
     mesh = df.IntervalMesh(100, 0, 10e-9)

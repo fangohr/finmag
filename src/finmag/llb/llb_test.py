@@ -27,7 +27,7 @@ def test_llb_sundials(do_plot=False):
 
     dt = 1e-12; ts = np.linspace(0, 500 * dt, 101)
 
-    precession_coeff = mat.gamma_LL
+    precession_coeff = sim.gamma_LL
     mz_ref = []
     
     mz = []
@@ -53,8 +53,8 @@ def test_llb_sundials(do_plot=False):
     print("Deviation = {}, total value={}".format(
             np.max(np.abs(mz - mz_ref)),
             mz_ref))
-    #TODO: debug why the deviation is so large
-    assert np.max(np.abs(mz - mz_ref)) < 4e-2
+   
+    assert np.max(np.abs(mz - mz_ref)) < 8e-8
     
 
 if __name__ == "__main__":
