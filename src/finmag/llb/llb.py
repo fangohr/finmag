@@ -10,19 +10,28 @@ from finmag.energies import Demag
 from finmag.llb.exchange import Exchange
 from finmag.llb.material import Material
 
+import logging
+log = logging.getLogger(name="finmag")
+
 
 class LLB(object):
-    def __init__(self, mat):
+    def __init__(self, mat, method='RK2b',pbc2d=None):
         self.material = mat
         self._m = mat._m
         self.m = self._m.vector().array()
-        self.S1 = mat.V
+        self.S1 = mat.S1
         self.S3 = mat.S3
         
         self.dm_dt = np.zeros(self.m.shape)
         self.H_eff = np.zeros(self.m.shape)
+        
+        self.time_scale=1e-9
+        self.method=method
+        self.pbc2d=pbc2d
+        
         self.set_default_values()
         self.interactions.append(mat)
+
 
     
     def set_default_values(self):
@@ -39,6 +48,7 @@ class LLB(object):
         self.vol *= self.material.unit_length**3
         #print 'vol=',self.vol
         
+        self.pins=[]
         self._pre_rhs_callables = []
         self._post_rhs_callables = []
         self.interactions = []
@@ -51,46 +61,99 @@ class LLB(object):
         integrator.set_max_num_steps(nsteps)
         
         self.integrator = integrator
+        self.run_until=self.run_until_sundial
         
-    def set_up_stochastic_solver(self, dt=1e-13,use_evans2012_noise=True,rk=False):
-        self.dt = dt
-        self.use_evans2012_noise = use_evans2012_noise
+    def set_up_stochastic_solver(self, dt=1e-13,using_type_II=True):
+        
+        self.using_type_II = using_type_II
         
         M_pred=np.zeros(self.m.shape)
-        if rk:
-            integrator = native_llb.HeunStochasticIntegrator(
-                                    self.m,
-                                    M_pred,
-                                    self.material.T,
-                                    self.vol,
-                                    self.dt,
-                                    self.gamma_LL,
-                                    self.alpha,
-                                    self.material.Tc,
-                                    self.material.Ms0,
-                                    self.do_precession,
-                                    self.use_evans2012_noise,
-                                    self.stochastic_rhs)
         
-        else:
-            integrator = native_llb.RungeKuttaStochasticIntegrator(
+        integrator = native_llb.StochasticLLBIntegrator(
                                     self.m,
                                     M_pred,
+                                    self.material.Ms0_array,
                                     self.material.T,
-                                    self.vol,
-                                    self.dt,
-                                    self.gamma_LL,
-                                    self.alpha,
-                                    self.material.Tc,
-                                    self.material.Ms0,
-                                    self.do_precession,
-                                    self.stochastic_rhs)
-                                  
+                                    self.material.volumes,
+                                    self.pins,
+                                    self.stochastic_rhs,
+                                    self.method)
+        
         self.integrator = integrator
+        self._seed=np.random.random_integers(4294967295)
+        self.dt=dt
+        self.run_until=self.run_until_stochastic
         
+
+    @property
+    def t(self):
+        return self._t*self.time_scale
+    
+    @t.setter
+    def t(self,value):
+        self._t=value/self.time_scale
+           
+    @property
+    def dt(self):
+        return self._dt*self.time_scale
+    
+    @dt.setter
+    def dt(self, value):
+        self._dt=value/self.time_scale
+        log.info("dt=%g."%self.dt)
+        self.setup_parameters() 
+    
+    
+    @property
+    def seed(self):
+        return self._seed
+    
+    @seed.setter
+    def seed(self, value):
+        self._seed=value
+        log.info("seed=%d."%self._seed)
+        self.setup_parameters()
+        
+    def set_pins(self, nodes):
+        pinlist=[]
+        if hasattr(nodes, '__call__'):
+            coords = self.mesh.coordinates()
+            for i,c in enumerate(coords):
+                if nodes(c):
+                    pinlist.append(i)
+        else:
+            pinlist=nodes
+        
+        self._pins = np.array(pinlist, dtype="int")
+        
+        if self.pbc2d:
+            self._pins=np.concatenate([self.pbc2d.ids_pbc,self._pins])
+        
+        if len(self._pins>0):
+            nxyz=self.S1.mesh().num_vertices()
+            assert(np.min(self._pins)>=0)
+            assert(np.max(self._pins)<self.nxyz)
+            
+
+    def pins(self):
+        return self._pins
+    pins = property(pins, set_pins)
+        
+        
+    def setup_parameters(self):
+        self.integrator.set_parameters(self.dt,
+                                       self.gamma_LL,
+                                       self.alpha,
+                                       self.material.Tc,
+                                       self.seed,
+                                       self.do_precession,
+                                       self.using_type_II)
     
     def add(self,interaction):
-        interaction.setup(self.material.S3, self.material._m, self.material.Ms0, unit_length=self.material.unit_length)
+        interaction.setup(self.material.S3, 
+                          self.material._m, 
+                          self.material.Ms0,
+                          unit_length=self.material.unit_length)
         self.interactions.append(interaction)
         
 
@@ -129,6 +192,7 @@ class LLB(object):
                                  self.H_eff,
                                  self.dm_dt,
                                  self.material.T,
+                                 self.pins,
                                  self.gamma_LL,
                                  self.alpha,
                                  self.material.Tc,
@@ -145,7 +209,7 @@ class LLB(object):
         return 0
     
     
-    def run_until(self, t):
+    def run_until_sundial(self, t):
         if t <= self.t:
             return
         
@@ -153,17 +217,38 @@ class LLB(object):
         self._m.vector().set_local(self.m)
         self.t=t
     
-    def run_stochastic_until(self, t):
-        if t <= self.t:
+    def run_until_stochastic(self, t):
+        
+        tp=t/self.time_scale
+        
+        if tp <= self._t:
             return
-        
-        while self.t < t:
-            #print self.t,self.m,self.H_eff
-            self.integrator.run_step(self.H_eff)
-            self._m.vector().set_local(self.m)
-            self.t += self.dt
+        try:
+            while tp-self._t>1e-12:
+                self.integrator.run_step(self.H_eff)
+                self._m.vector().set_local(self.m)
+                if self.pbc2d:
+                    self.pbc2d.modify_m(self._m.vector())
+                self._t+=self._dt
+        except Exception,error:
+            log.info(error)
+            raise Exception(error)
             
+            
+        if abs(tp-self._t)<1e-12:
+            self._t=tp
+        log.debug("Integrating dynamics up to t = %g" % t)
         
+    def m_average_fun(self,dx=df.dx):
+        
+
+        mx = df.assemble(df.dot(self._m, df.Constant([1, 0, 0])) * dx)
+        my = df.assemble(df.dot(self._m, df.Constant([0, 1, 0])) * dx)
+        mz = df.assemble(df.dot(self._m, df.Constant([0, 0, 1])) * dx)
+        volume = df.assemble(df.Constant(1)*df.dx,mesh=self.S1.mesh())
+                        
+        return np.array([mx, my, mz]) / volume
+    m_average=property(m_average_fun)
 
 
 if __name__ == '__main__':
@@ -181,35 +266,29 @@ if __name__ == '__main__':
     mat.T = 100
     mat.alpha=0.01
     
-    llb = LLB(mat)
-    llb.set_up_solver()
+    sim = LLB(mat)
+    #sim.set_up_solver()
+    sim.set_up_stochastic_solver()
     
-    
-    app = Zeeman((0, 0, 5e5))
-    app.setup(mat.S3, mat._m, Ms=mat.Ms0)
-    llb.interactions.append(app)
+    sim.add(Zeeman((0, 0, 5e5)))
+    sim.add(Exchange(mat))
         
-    exch = Exchange(mat.A)
-    exch.setup(mat.S3, mat._m, mat.Ms0, mat.m_e,unit_length=1e-9)
-    llb.interactions.append(exch)
+    sim.add(Demag())
     
-    demag = Demag("FK")
-    demag.setup(mat.S3, mat._m, mat.Ms0)
-    demag.demag.poisson_solver.parameters["relative_tolerance"] = 1e-8
-    demag.demag.laplace_solver.parameters["relative_tolerance"] = 1e-8
-    llb.interactions.append(demag)
+    #demag.demag.poisson_solver.parameters["relative_tolerance"] = 1e-8
+    #demag.demag.laplace_solver.parameters["relative_tolerance"] = 1e-8
+
     
-    
-    max_time = 1 * np.pi / (llb.gamma_LL * 1e5)
+    max_time = 1 * np.pi / (sim.gamma_LL * 1e5)
     ts = np.linspace(0, max_time, num=100)
 
     mlist = []
     Ms_average = []
     for t in ts:
         print t
-        llb.run_until(t)
-        mlist.append(llb.m)
-        df.plot(llb._m)
+        sim.run_until(t)
+        mlist.append(sim.m)
+        df.plot(sim._m)
         
  
     

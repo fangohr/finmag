@@ -12,14 +12,26 @@ namespace finmag { namespace llb {
 	static const double constant_MU0 = M_PI*4e-7; // T m/A
 	static const double constant_K_B = 1.3806488e-23; // J/K
 
-	inline double alpha_perp(double T, double T_C) { return T <= T_C ? 1. - (1./3.)*(T/T_C) : (2./3.) * (T/T_C); }
-	inline double alpha_par(double T, double T_C) { return (2./3.) * (T/T_C); }
+	static const double two_third = 2.0/3.0;
+
+	inline double alpha_par(double T, double Tc, double lambda) {
+		return two_third * (T/Tc)*lambda;
+	}
+
+	inline double alpha_perp(double T, double Tc, double lambda) {
+		if (T<=Tc){
+			return (1.0-T/(3.0*Tc))*lambda;
+		}else{
+			return two_third * (T/Tc)*lambda;
+		}
+	}
 
 	void calc_llb_dmdt(
 			const np_array<double> &M,
 			const np_array<double> &H,
 			const np_array<double> &dmdt,
 			const np_array<double> &T_arr,
+			const np_array<long> &pins_arr,
 			double gamma_LL,
 			double lambda,
 			double Tc,
@@ -32,8 +44,11 @@ namespace finmag { namespace llb {
 		double *dm_dt=dmdt.data();
 		double *T = T_arr.data();
 
+		long int *pins = pins_arr.data();
+		int len_pin=pins_arr.size();
+
 		double precession_coeff = -gamma_LL;
-		double damping_coeff = -gamma_LL*lambda;
+		double damping_coeff = gamma_LL;
 
 		int i,j,k;
 		// calculate dm
@@ -58,14 +73,25 @@ namespace finmag { namespace llb {
 			double mh = m[i] * h[i] + m[j] * h[j] + m[k] * h[k];
 			double mm = m[i] * m[i] + m[j] * m[j] + m[k] * m[k];
 
-			double a1 = alpha_perp(T[i], Tc);
-			double a2 = alpha_par(T[i], Tc);
-			double damp1 = (a1 - a2) * damping_coeff / mm * mh;
-			double damp2 = - a1 * damping_coeff;
+			double a1 = alpha_perp(T[i], Tc, lambda);
+			double a2 = alpha_par(T[i], Tc, lambda);
+			double damp1 = (a2 - a1) * damping_coeff / mm * mh;
+			double damp2 =  a1 * damping_coeff;
 			dm_dt[i] += m[i] * damp1 + h[i] * damp2;
 			dm_dt[j] += m[j] * damp1 + h[j] * damp2;
 			dm_dt[k] += m[k] * damp1 + h[k] * damp2;
 		}
+
+
+
+		  for (int p = 0; p < len_pin; p++) {
+		       i=pins[p];
+		       j=length+i;
+		       k=length+j;
+		       dm_dt[i]=0;
+		       dm_dt[j]=0;
+		       dm_dt[k]=0;
+		 }
 	}
 
 
@@ -79,7 +105,7 @@ namespace finmag { namespace llb {
     	private:
         	int length;
         	np_array<double> M,M_pred,Ms_arr,T_arr,V_arr;
-        	np_array<int>pins_arr;
+        	np_array<long>pins_arr;
         	double dt,Tc,lambda,Ms, gamma_LL;
         	double *dm1, *dm2, *dm3, *eta_perp, *eta_par;
         	bp::object rhs_func;
@@ -91,6 +117,8 @@ namespace finmag { namespace llb {
         	void (StochasticLLBIntegrator::*run_step_fun)(const np_array<double> &H);
 
         	void calc_llb_adt_bdw(double *m,double *h,double *dm);
+        	void calc_llb_adt_bdw_I(double *m,double *h,double *dm);
+        	void calc_llb_adt_bdw_II(double *m,double *h,double *dm);
         	void run_step_rk2(const np_array<double> &H);
         	void run_step_rk3(const np_array<double> &H);
 
@@ -101,7 +129,7 @@ namespace finmag { namespace llb {
         			const np_array<double> &Ms,
         			const np_array<double> &T,
         			const np_array<double> &V,
-					const np_array<int> &pins,
+					const np_array<long> &pins,
 					const bp::object _rhs_func,
 					const std::string method_name);
 
@@ -145,7 +173,7 @@ namespace finmag { namespace llb {
     							const np_array<double> &Ms,
     							const np_array<double> &T,
     							const np_array<double> &V,
-    							const np_array<int> &pins,
+    							const np_array<long> &pins,
     					        bp::object _rhs_func,
     							std::string method_name):
     							M(M),
@@ -269,20 +297,43 @@ namespace finmag { namespace llb {
     	mt_random.seed(seed);
     }
 
-    void StochasticLLBIntegrator::calc_llb_adt_bdw(double *m, double *h, double *dm) {
+    void StochasticLLBIntegrator::calc_llb_adt_bdw(double *m, double *h, double *dm){
+    	if (using_type_II){
+    		return calc_llb_adt_bdw_II(m,h,dm);
+    	}else{
+    		return calc_llb_adt_bdw_I(m,h,dm);
+    	}
+
+        int len=T_arr.size();
+        long int *pins = pins_arr.data();
+        int len_pin=pins_arr.size();
+        int i,j,k;
+        for (int p = 0; p < len_pin; p++) {
+        	i=pins[p];
+        	j=len+i;
+        	k=len+j;
+        	dm[i]=0;
+        	dm[j]=0;
+        	dm[k]=0;
+        }
+    }
+
+    void StochasticLLBIntegrator::calc_llb_adt_bdw_I(double *m, double *h, double *dm) {
 
             double *T = T_arr.data();
             double *V = V_arr.data();
             double *Ms = Ms_arr.data();
+
+
             int len=T_arr.size();
 
             double precession_coeff = -gamma_LL;
-            double damping_coeff = gamma_LL*lambda;
+            double damping_coeff = gamma_LL;
+            double K_B_MU0=constant_K_B/constant_MU0;
 
             // calculate dm
             int i,j,k;
             for (i = 0; i < len; i++) {
-            	i=i;
             	j=len+i;
             	k=len+j;
 
@@ -297,53 +348,111 @@ namespace finmag { namespace llb {
                     dm[k] = 0.;
                 }
 
+                double Ms_V_gamma = Ms[i] * V[i] * gamma_LL;
 
-                double mh = m[i] * h[i] + m[j] * h[j] + m[k] * h[k];
+                double a_par = alpha_par(T[i], Tc, lambda);
+                double Q_par = sqrt(2*K_B_MU0*T[i]/(Ms_V_gamma*a_par));
+                double hi=h[i]*dt + eta_par[i]*Q_par;
+                double hj=h[j]*dt + eta_par[j]*Q_par;
+                double hk=h[k]*dt + eta_par[k]*Q_par;
+
                 double mm = m[i] * m[i] + m[j] * m[j] + m[k] * m[k];
+                double mh = m[i] * hi + m[j] * hj + m[k] * hk;
 
                 //m x (m x H) == (m.H)m - (m.m)H,
-                double a_perp = alpha_perp(T[i], Tc);
-                double a_par = alpha_par(T[i], Tc);
-                double damp1 = (a_par-a_perp) * damping_coeff / mm * mh;
-                double damp2 = a_perp * damping_coeff;
-                dm[i] += (m[i] * damp1 + h[i] * damp2)*dt;
-                dm[j] += (m[j] * damp1 + h[j] * damp2)*dt;
-                dm[k] += (m[k] * damp1 + h[k] * damp2)*dt;
+                double damp1 = a_par * damping_coeff / mm * mh;
+
+                dm[i] += m[i] * damp1;
+                dm[j] += m[j] * damp1;
+                dm[k] += m[k] * damp1;
 
 
-                double Q_perp =  sqrt(
-                        (2.*constant_K_B)*T[i]*(a_perp - a_par) /
-                        (gamma_LL * Ms[i]* constant_MU0* V[i]* a_perp * a_perp * lambda)
-                    );
+                double a_perp = alpha_perp(T[i], Tc, lambda);
+                double Q_perp = sqrt(2*K_B_MU0*T[i]/(Ms_V_gamma*a_perp));
+                hi=h[i]*dt + eta_perp[i]*Q_perp;
+                hj=h[j]*dt + eta_perp[j]*Q_perp;
+                hk=h[k]*dt + eta_perp[k]*Q_perp;
 
-                double Q_par =sqrt(
-                        (2.*gamma_LL*constant_K_B*lambda)*T[i]*a_par /
-                        (Ms[i] * V[i]*constant_MU0)
-                    );
+                mh = m[i] * hi + m[j] * hj + m[k] * hk;
 
-                //printf("Q_par==%e  Q_perp==%e \n",Q_par,Q_perp);
-                double meta_perp = m[i] * eta_perp[i] + m[j] * eta_perp[j] + m[k] * eta_perp[k];
-                //m x (m x H) == (m.H)m - (m.m)H,
-                double damp3 = -a_perp * damping_coeff / mm * meta_perp;
-                dm[i] += (m[i] * damp3 + eta_perp[i] * damp2)*Q_perp;
-                dm[j] += (m[j] * damp3 + eta_perp[j] * damp2)*Q_perp;
-                dm[k] += (m[k] * damp3 + eta_perp[k] * damp2)*Q_perp;
-
-                if (using_type_II){
-                	dm[i] += Q_par*eta_par[i];
-                	dm[j] += Q_par*eta_par[j];
-                	dm[k] += Q_par*eta_par[k];
-                }else{
-                	double meta_par = m[i] * eta_par[i] + m[j] * eta_par[j] + m[k] * eta_par[k];
-                	double damp4 = a_par * damping_coeff / mm * meta_par * Q_par;
-                	dm[i] += eta_par[i]* m[i] * damp4;
-                	dm[j] += eta_par[j]* m[j] * damp4;
-                	dm[k] += eta_par[k]* m[k] * damp4;;
-                }
+                double damp3 = - a_perp * damping_coeff / mm * mh;
+                double damp4 = a_perp * damping_coeff;
+                dm[i] += (m[i] * damp3 + hi * damp4);
+                dm[j] += (m[j] * damp3 + hj * damp4);
+                dm[k] += (m[k] * damp3 + hk * damp4);
 
             }
+
+
+
         }
 
+
+    void StochasticLLBIntegrator::calc_llb_adt_bdw_II(double *m, double *h, double *dm) {
+
+            double *T = T_arr.data();
+            double *V = V_arr.data();
+            double *Ms = Ms_arr.data();
+
+            int len=T_arr.size();
+
+            double precession_coeff = -gamma_LL;
+            double damping_coeff = gamma_LL;
+            double K_B_MU0=constant_K_B/constant_MU0;
+
+            // calculate dm
+            int i,j,k;
+            for (i = 0; i < len; i++) {
+            	j=len+i;
+            	k=len+j;
+
+                // add precession: m x H, multiplied by -gamma
+                if (do_precession) {
+                    dm[i] = precession_coeff*dt*(m[j]*h[k]-m[k]*h[j]);
+                    dm[j] = precession_coeff*dt*(m[k]*h[i]-m[i]*h[k]);
+                    dm[k] = precession_coeff*dt*(m[i]*h[j]-m[j]*h[i]);
+                } else {
+                    dm[i] = 0.;
+                    dm[j] = 0.;
+                    dm[k] = 0.;
+                }
+
+                double Ms_V = Ms[i] * V[i];
+
+                double a_par = alpha_par(T[i], Tc, lambda);
+                double Q_par = sqrt(2*gamma_LL*K_B_MU0*T[i]*a_par/Ms_V);
+
+                double mm = m[i] * m[i] + m[j] * m[j] + m[k] * m[k];
+                double mh = m[i] * h[i] + m[j] * h[j] + m[k] * h[k];
+
+                double damp1 = a_par * damping_coeff / mm * mh;
+
+                dm[i] += m[i] * damp1 * dt;
+                dm[j] += m[j] * damp1 * dt;
+                dm[k] += m[k] * damp1 * dt;
+
+
+                //m x (m x H) == (m.H)m - (m.m)H,
+                double a_perp = alpha_perp(T[i], Tc, lambda);
+                double Q_perp = sqrt(2*K_B_MU0*T[i]*(a_perp-a_par)/(gamma_LL*Ms_V*a_perp*a_perp));
+                double hi=h[i]*dt + eta_perp[i]*Q_perp;
+                double hj=h[j]*dt + eta_perp[j]*Q_perp;
+                double hk=h[k]*dt + eta_perp[k]*Q_perp;
+
+                mh = m[i] * hi + m[j] * hj + m[k] * hk;
+
+                double damp2 = - a_perp * damping_coeff / mm * mh;
+                double damp3 = a_perp * damping_coeff;
+                dm[i] += m[i] * damp2 + hi * damp3;
+                dm[j] += m[j] * damp2 + hj * damp3;
+                dm[k] += m[k] * damp2 + hk * damp3;
+
+                dm[i] += Q_par*eta_par[i];
+                dm[j] += Q_par*eta_par[j];
+                dm[k] += Q_par*eta_par[k];
+            }
+
+        }
 
 
 
@@ -355,6 +464,7 @@ namespace finmag { namespace llb {
     	            arg("H"),
     	            arg("dmdt"),
     	            arg("T"),
+    	            arg("pins"),
     	            arg("gamma_LL"),
     	            arg("lambda"),
     	            arg("Tc"),
@@ -367,7 +477,7 @@ namespace finmag { namespace llb {
     			    np_array<double>,
     			    np_array<double>,
     			    np_array<double>,
-    			    np_array<int>,
+    			    np_array<long>,
     			    bp::object,
     			    std::string>())
     	        	.def("run_step", &StochasticLLBIntegrator::run_step)

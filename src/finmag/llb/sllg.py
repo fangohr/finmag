@@ -141,7 +141,7 @@ class SLLG(object):
         log.info("checking_length: "+str(self.checking_length))
                 
     def set_m(self,value):
-        self._m.vector().set_local(helpers.vector_valued_function(value, self.S3, normalise=False).vector().array())
+        self._m.vector().set_local(helpers.vector_valued_function(value, self.S3, normalise=True).vector().array())
         self.m[:]=self._m.vector().array()[:]
 
     def add(self,interaction,with_time_update=None):
