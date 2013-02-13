@@ -30,4 +30,4 @@ sim.load_mesh(mesh_file_name,
 sim.set_m(m0)
 
 mod_dir = os.path.dirname(os.path.abspath(__file__))
-np.save(mod_dir + "/nmag_exchange_energy_density.npy", sim.get_subfield("E_exch_Py"))
+np.save(os.path.join(mod_dir,"nmag_exchange_energy_density.npy"), sim.get_subfield("E_exch_Py"))
