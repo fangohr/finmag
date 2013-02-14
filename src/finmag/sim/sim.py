@@ -428,6 +428,10 @@ class Simulation(object):
         else:
             self.llg.do_slonczewski = not self.llg.do_slonczewski
 
+    def clear_schedule(self):
+        self.scheduler.clear()
+        self.scheduler.reset(self.t)
+
     def schedule(self, func, *args, **kwargs):
         """
         Register a function that should be called during the simulation.
@@ -440,11 +444,19 @@ class Simulation(object):
         delay the first execution of your function. Additionally, you can set
         the `at_end` option to `True` to have your function called at the end
         of the simulation. This can be combined with `at` and `every`.
-        
+
+        Note that if the internal simulation time is not zero (i.e.. if the
+        simulation has already run for some time) then using the 'every'
+        keyword will implicitly set 'after' to the current simulation time,
+        so that the event repeats in regular intervals from the current time
+        onwards). If this is undesired, you should explicitly provide 'after'
+        (which is interpreted as an 'absolute' time, i.e. not as an offset to
+        the current simulation time).
+
         You can also schedule actions using real time instead of simulation
         time by setting the `realtime` option to True. In this case you can
         use the `after` keyword on its own.
-        
+
         The function func(sim) you provide should expect the simulation object
         as its first argument. All arguments to the 'schedule' function (except
         the special ones 'at', 'every', 'at_end' and 'realtime' mentioned
@@ -471,8 +483,8 @@ class Simulation(object):
                     "argument names: {}".format(illegal_argnames))
 
         at = kwargs.pop('at', None)
-        after = kwargs.pop('after', None)
         every = kwargs.pop('every', None)
+        after = kwargs.pop('after', self.t if (every != None) else None)
         at_end = kwargs.pop('at_end', False)
         realtime = kwargs.pop('realtime', False)
 

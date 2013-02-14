@@ -293,6 +293,32 @@ class TestSimulation(object):
         assert_number_of_files('c.pvd', 1)
         assert_number_of_files('c*.vtu', 1)
 
+    def test_sim_schedule_clear(self, tmpdir):
+        os.chdir(str(tmpdir))
+
+        # Run simulation for a few picoseconds and check that the
+        # expected vtk files were saved.
+        sim = barmini()
+        sim.schedule('save_vtk', every=2e-12)
+        sim.schedule('save_vtk', at=3e-12)
+        sim.run_until(5e-12)
+        assert_number_of_files('barmini.pvd', 1)
+        assert_number_of_files('barmini*.vtu', 4)
+
+        # Clear schedule and continue running; assert that no
+        # additional files were saved
+        sim.clear_schedule()
+        sim.run_until(10e-12)
+        assert_number_of_files('barmini.pvd', 1)
+        assert_number_of_files('barmini*.vtu', 4)
+
+        # Schedule saving to a different filename and run further
+        sim.schedule('save_vtk', filename='a.pvd', every=3e-12)
+        sim.schedule('save_vtk', filename='a.pvd', at=14e-12)
+        sim.run_until(20e-12)
+        assert_number_of_files('a.pvd', 1)
+        assert_number_of_files('a*.vtu', 5)
+
     def test_remove_interaction(self):
 
         mesh = df.Box(0, 0, 0, 1, 1, 1, 1, 1, 1)
