@@ -110,6 +110,24 @@ def test_scheduler():
     assert c.cnt_every == 2  # still the same as before
     assert c.cnt_at == 1  # still the same as before
 
+
+def test_scheduler_every():
+    c = Counter()
+
+    s = Scheduler()
+    s.add(c.inc_every, every=100, after=5)
+    assert c.cnt_every == 0
+    assert s.next() == 5
+    s.reached(5)
+    assert c.cnt_every == 1
+    s.reached(100)           # shouldn't trigger any event
+    assert c.cnt_every == 1  # ... thus the counter shouldn't increase
+    s.reached(105)
+    assert c.cnt_every == 2
+    s.reached(205)
+    assert c.cnt_every == 3
+
+
 def test_scheduler_clear():
     c = Counter()
 
@@ -130,6 +148,7 @@ def test_scheduler_clear():
     assert c.cnt_every == 2  # still the same as before
     with pytest.raises(StopIteration):
         s.next()
+
 
 def test_regression_not_more_than_once_per_time():
     x = [0, 0, 0, 0]
