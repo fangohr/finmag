@@ -37,10 +37,14 @@ void translate_python_exception(bp::error_already_set e) {
     BOOST_ERROR(message.c_str());
 }
 
+struct py_initialize {
+    py_initialize() { Py_Initialize(); }
+    ~py_initialize() { Py_Finalize(); }
+};
+
 struct init_python
 {
     init_python() {
-        Py_Initialize();
         main_module = bp::import("__main__");
         main_namespace = main_module.attr("__dict__");
         numpy = bp::import("numpy");
@@ -48,12 +52,7 @@ struct init_python
         initialise_np_array();
     }
 
-    ~init_python() {
-        main_module = bp::object();
-        main_namespace = bp::object();
-        numpy = bp::object();
-        Py_Finalize();
-    }
+    py_initialize py_init;
 
     bp::object main_module, main_namespace, numpy;
 };
