@@ -104,6 +104,33 @@ def test_scheduler():
     assert c.cnt_every == 2
     assert c.cnt_at == 1
 
+    # If a later timestep is passed to 's.reached()' then actions in
+    # between *won't* be triggered.
+    s.reached(500)
+    assert c.cnt_every == 2  # still the same as before
+    assert c.cnt_at == 1  # still the same as before
+
+def test_scheduler_clear():
+    c = Counter()
+
+    s = Scheduler()
+    s.add(c.inc_every, every=5)
+    assert c.cnt_every == 0
+    assert s.next() == 0.0
+    s.reached(0)
+    assert c.cnt_every == 1
+    s.reached(5)
+    assert c.cnt_every == 2
+
+    # Clear the schedule and assert that nothing is supposed to happen any more
+    s.clear()
+    assert(s.items == [])
+    assert(s.realtime_items == {})
+    s.reached(10)
+    assert c.cnt_every == 2  # still the same as before
+    with pytest.raises(StopIteration):
+        s.next()
+
 def test_regression_not_more_than_once_per_time():
     x = [0, 0, 0, 0]
     def my_at_fun():
