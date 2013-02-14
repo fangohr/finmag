@@ -656,10 +656,11 @@ def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, dg_fun=None,**kwar
         y = coords[:, 1]
         z = coords[:, 2]
 
-        try:
-            scalar_field = np.array(map(scalar_field, coords))
-        except TypeError:
-            scalar_field = np.array(scalar_field)
+        if scalar_field != None:
+            try:
+                scalar_field = np.array(map(scalar_field, coords))
+            except TypeError:
+                scalar_field = np.array(scalar_field)
 
         # Set shade = False by default because it looks nicer
         if not kwargs.has_key('shade'):
@@ -669,8 +670,9 @@ def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, dg_fun=None,**kwar
         try:
             ax.plot_trisurf(x, y, z, triangles=triangs, vertex_vals=scalar_field, **kwargs)
         except AttributeError:
-            logger.debug("Ignoring 'scalar_field' argument because this "
-                         "version of matplotlib doesn't support plotting it.")
+            if scalar_field != None:
+                logger.debug("Ignoring 'scalar_field' argument because this "
+                             "version of matplotlib doesn't support it.")
             ax.plot_trisurf(x, y, z, triangles=triangs, **kwargs)
     else:
         raise ValueError("Plotting is only supported for 2- and 3-dimensional meshes.")
