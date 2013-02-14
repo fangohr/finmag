@@ -21,7 +21,7 @@ def test_first_every_at_start():
     e = RepeatingEvent(100)
     assert e.next == 0.0
 
-    e = RepeatingEvent(100, 5)
+    e = RepeatingEvent(100, delay=5)
     assert e.next == 5
 
 
