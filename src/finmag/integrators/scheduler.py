@@ -140,7 +140,7 @@ class Scheduler(object):
         """
         Notify the Scheduler that a certain point in time has been reached.
 
-        It will perform the action(s) that were defined before.
+        It will perform the action(s) that were defined to happen at that time.
 
         """
         for item in self.items:
