@@ -50,6 +50,9 @@ struct init_python
         numpy = bp::import("numpy");
         boost::unit_test::unit_test_monitor.register_exception_translator<bp::error_already_set>(&translate_python_exception);
         initialise_np_array();
+        // Note: the main_module/main_namespace/numpy objects must be deallocated before calling Py_Finalize.
+        // This now happens automatically since the the py_init definition is above the bp::object definition
+        // and therefore py_init is the last member variable to be destroyed
     }
 
     py_initialize py_init;
