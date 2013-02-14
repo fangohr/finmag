@@ -49,6 +49,9 @@ struct init_python
     }
 
     ~init_python() {
+        main_module = bp::object();
+        main_namespace = bp::object();
+        numpy = bp::object();
         Py_Finalize();
     }
 
