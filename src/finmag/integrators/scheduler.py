@@ -131,7 +131,7 @@ class Scheduler(object):
         if next_step == None:
             raise StopIteration
 
-        if next_step <= self.last:
+        if next_step < self.last:
             log.error("Scheduler computed the next time step should be t = {:.2g} s, but the last one was already t = {:.2g} s.".format(next_step, self.last))
             raise ValueError("Scheduler is corrupted. Requested a time step in the past: dt = {:.2g}.".format(next_step-self.last))
         return next_step
