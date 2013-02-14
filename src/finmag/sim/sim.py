@@ -208,6 +208,13 @@ class Simulation(object):
                 interaction_type, self.name))
         return self.llg.effective_field.remove_interaction(interaction_type)
 
+    def set_H_ext(self, H_ext):
+        """
+        Convenience function to set the external field.
+        """
+        H = self.get_interaction("Zeeman")
+        H.set_value(H_ext)
+
     def switch_off_H_ext(self, remove_interaction=True):
         """
         Convenience function to switch off the external field.
