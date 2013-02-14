@@ -2,180 +2,14 @@ import logging
 import numpy as np
 import dolfin as df
 
+import finmag
 import finmag.util.consts as consts
 import finmag.native.llb as native_llb
-from finmag.native.llb import LLBFePt
 from finmag.util import helpers
 from finmag.util.consts import mu0
 
-from scipy.optimize import fsolve
 
 logger = logging.getLogger(name='finmag')
-
-class Nickel(object):
-    def __init__(self):
-        self.Tc=630
-        self.T=0
-        self.M0=4.8e5
-        self.M=self.M0
-        self.A0=9e-12
-        self.A_coeff=3.90625e-23 
-        self.xi_par_coeff=0.380548363687*mu0  # M/k_B a^3/ c 
-        self.coth=lambda x:np.cosh(x)/np.sinh(x)
-        self.a=3.524*1e-10
-        
-    def L(self,x):
-        if x==0:
-            return 0
-        return self.coth(x)-1.0/x
-
-    def Lp(self,x):
-        if x==0:
-            return 1.0/3
-        if x>100:
-            return 1/(x*x)
-        return 1.0/(x*x)-1.0/np.sinh(x)**2
-    
-    def xi_par(self,T):
-        T_bak=T
-        if T<5:
-            T=5
-        elif abs(T-self.Tc)<0.1:
-            T=self.Tc-0.1
-        
-        beta = 3*self.Tc/T
-        t1=beta*self.m_e(T)
-        self.T=T_bak
-        
-        t2=self.Lp(t1)
-        res=self.xi_par_coeff*t2/(1.0-t2*beta)/T
-        
-        if res<1e-17:
-            return 1e-17
-        return res
-        
-
-    def Bsm(self,m,T):
-        
-        return m-self.L(3*m*self.Tc/T)
-
-        
-    def m_e(self,T):
-        if self.T==T:
-            return self.M/self.M0
-        
-        self.T=T
-        
-        if T<1:
-            self.M=self.M0
-            return 1.0
-        
-        if T>=self.Tc:
-            self.M=0
-        else:
-            m=fsolve(self.Bsm,1,args=(T))
-            self.M=m[0]*self.M0
-        
-        return self.M/self.M0
-            
-    def A(self,T):
-        if self.T==T:
-            pass
-        else:
-            self.m_e(T)
-        return self.A_coeff*self.M**2
-            
-        
-    
-    def inv_chi_perp(self,T):
-        return 0
-    
-    def inv_chi_par(self,T):
-        return 1.0/self.xi_par(T)
-
-
-
-class FePtMFA(object):
-    def __init__(self):
-        self.Tc=660
-        self.T=0
-        self.M0=1047785.46561
-        self.M=self.M0
-        self.A0=2.15337920818e-11
-        self.A_coeff=1.9614433786606643e-23
-        self.xi_par_coeff=2.17065713406*mu0  # M/k_B a^3/ c 
-        self.coth=lambda x:np.cosh(x)/np.sinh(x)
-        
-    def L(self,x):
-        if x==0:
-            return 0
-        return self.coth(x)-1.0/x
-
-    def Lp(self,x):
-        if x==0:
-            return 1.0/3
-        if x>100:
-            return 1/(x*x)
-        return 1.0/(x*x)-1.0/np.sinh(x)**2
-    
-    def xi_par(self,T):
-        T_bak=T
-        if T<5:
-            T=5
-        elif abs(T-self.Tc)<0.1:
-            T=self.Tc-0.1
-        
-        beta = 3*self.Tc/T
-        t1=beta*self.m_e(T)
-        self.T=T_bak
-        
-        t2=self.Lp(t1)
-        res=self.xi_par_coeff*t2/(1.0-t2*beta)/T
-        
-        if res<1e-15:
-            return 1e-15
-        return res
-        
-
-    def Bsm(self,m,T):
-        
-        return m-self.L(3*m*self.Tc/T)
-
-        
-    def m_e(self,T):
-        if self.T==T:
-            return self.M/self.M0
-
-        self.T=T
-        
-        if T<1:
-            self.M=self.M0
-            return 1.0
-        
-        if T>=self.Tc:
-            self.M=0
-        else:
-            m=fsolve(self.Bsm,1,args=(T))
-            self.M=m[0]*self.M0
-        
-        return self.M/self.M0
-            
-    def A(self,T):
-        if self.T==T:
-            pass
-        else:
-            self.m_e(T)
-        return self.A_coeff*self.M**2
-            
-        
-    
-    def inv_chi_perp(self,T):
-        return 0
-    
-    def inv_chi_par(self,T):
-        return 1.0/self.xi_par(T)
-
-
 
 
 class Material(object):
@@ -211,24 +45,36 @@ class Material(object):
         self.h = self._m.vector().array()#just want to create a numpy array
         self.unit_length=unit_length 
         
+        self.alpha = 0.5
+        self.gamma_LL = consts.gamma
+        
         if self.name == 'FePt':
-            self.mat = LLBFePt()
-            self.Ms0 = self.mat.M_s()
-            self.Tc = self.mat.T_C()
-            self.alpha = 0.5
-            self.gamma_LL = consts.gamma
+            self.Tc=660
+            self.Ms0=1047785.4656
+            self.A0=2.148042e-12
+            self.K0=8.201968e6
+            self.mu_a=2.99e-23
         elif self.name == 'Nickel':
-            self.mat = Nickel()
-            self.Ms0 = self.mat.M0
-            self.Tc = self.mat.Tc
-            self.alpha = 0.5
-            
+            self.Tc=630
+            self.Ms0=4.9e5
+            self.A0=9e-12
+            self.K0=0
+            self.mu_a=0.61e-23
+        elif self.name == 'Permalloy':
+            self.Tc=870
+            self.Ms0=8.6e5
+            self.A0=13e-12
+            self.K0=0
+            #TODO: find the correct mu_a for permalloy
+            self.mu_a=1e-23
         else:
             raise NotImplementedError("Only FePt and Nickel available")
         
         self.volumes = df.assemble(df.TestFunction(self.S1) * df.dx).array()
         self.Ms0_array=df.assemble(self.Ms0*df.TestFunction(self.S1)* df.dx).array()/self.volumes
         self.volumes[:]*=self.unit_length**3
+        
+        self.mat=native_llb.Materials(self.Ms0,self.Tc,self.A0,self.K0,self.mu_a)
         
         self.T = 0
       
@@ -237,11 +83,7 @@ class Material(object):
         return self.m_e
         
     def compute_field(self):
-        #self.mat.compute_relaxation_field(self._T, self.m, self.h)
-        native_llb.compute_relaxation_field(self._T, self.m, self.h,
-                                            self.Tc,self.m_e,
-                                            self.inv_chi_par)
-        #print 'fields',self.inv_chi_par,self.h
+        self.mat.compute_relaxation_field(self._T, self.m, self.h)
         return self.h
 
     
@@ -296,7 +138,7 @@ class Material(object):
         
 
 if __name__ == "__main__":
-    mesh = df.UnitCube(1, 1, 1)
+    mesh = df.UnitCubeMesh(1, 1, 1)
     mat = Material(mesh,name='Nickel')
     mat.set_m((1,0,0))
     mat.T=3

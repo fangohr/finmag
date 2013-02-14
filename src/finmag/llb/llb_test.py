@@ -100,15 +100,10 @@ def sim_llb_100(do_plot=False):
         plt.legend()
         plt.savefig(os.path.join(MODULE_DIR, "test_llb_100K.png"))
 
-    print("Deviation = {}, total value={}".format(
-            np.max(np.abs(mz - mz_ref)),
-            mz))
-   
-    
 
 if __name__ == "__main__":
-    test_llb_sundials(do_plot=True)
-    #sim_llb_100(do_plot=True)
+    #test_llb_sundials(do_plot=True)
+    sim_llb_100(do_plot=True)
     
 
 
