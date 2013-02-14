@@ -78,7 +78,9 @@ def plot_FFT_m(filename, t_step=1e-11, t_ini=0.0, components="xyz"):
     if 'z' in components: ax.plot(fft_freq_GHz, fft_mz, '.-', label=r'FFT of $m_z$')
     ax.set_xlabel('fGHz')
     ax.set_ylabel('Amplitude')
-    ax.set_xticks(np.arange(int(fft_freq[-1] / 1e9)))
+    fmin = int(min(fft_freq) / 1e9)
+    fmax = int(max(fft_freq) / 1e9)
+    ax.set_xticks(np.arange(fmin, fmax))
     plt.legend()
     ax.grid()
 
