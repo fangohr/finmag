@@ -182,4 +182,4 @@ class Scheduler(object):
         self.print_scheduled_items(func_print=log.debug)
         self.items = []
         self.stop_realtime_jobs()
-        self.realtime_items = []
+        self.realtime_items = {}
