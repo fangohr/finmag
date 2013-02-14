@@ -174,3 +174,14 @@ def test_regression_not_more_than_once_per_time():
     assert x == [1, 1, 2, 0]
     s.finalise(2) 
     assert x == [2, 1, 2, 1]
+
+
+def test_illegal_arguments():
+    def dummy_func():
+        pass
+
+    s = Scheduler()
+    with pytest.raises(AssertionError):
+        s.add(dummy_func, at=0, after=1)  # delays don't mix with 'at'
+    with pytest.raises(AssertionError):
+        s.add(dummy_func, at=1, every=2)  # can't mix 'at' with 'every'
