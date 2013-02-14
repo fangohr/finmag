@@ -357,3 +357,16 @@ class TestSimulation(object):
 
         sim.switch_off_H_ext(remove_interaction=True)
         assert(num_interactions(sim) == 0)
+
+    def test_set_H_ext(self):
+        mesh = df.Box(0, 0, 0, 1, 1, 1, 1, 1, 1)
+        sim = Simulation(mesh, Ms=1, unit_length=1e-9)
+        sim.add(Zeeman((1, 2, 3)))
+
+        H = sim.get_field_as_dolfin_function('Zeeman').vector().array()
+        H = sim.probe_field('Zeeman', [0.5e-9, 0.5e-9, 0.5e-9])
+        assert(np.allclose(H, [1, 2, 3]))
+
+        sim.set_H_ext([-4, -5, -6])
+        H = sim.probe_field('Zeeman', [0.5e-9, 0.5e-9, 0.5e-9])
+        assert(np.allclose(H, [-4, -5, -6]))
