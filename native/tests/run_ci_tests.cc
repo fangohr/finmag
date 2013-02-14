@@ -37,20 +37,25 @@ void translate_python_exception(bp::error_already_set e) {
     BOOST_ERROR(message.c_str());
 }
 
+struct py_initialize {
+    py_initialize() { Py_Initialize(); }
+    ~py_initialize() { Py_Finalize(); }
+};
+
 struct init_python
 {
     init_python() {
-        Py_Initialize();
         main_module = bp::import("__main__");
         main_namespace = main_module.attr("__dict__");
         numpy = bp::import("numpy");
         boost::unit_test::unit_test_monitor.register_exception_translator<bp::error_already_set>(&translate_python_exception);
         initialise_np_array();
+        // Note: the main_module/main_namespace/numpy objects must be deallocated before calling Py_Finalize.
+        // This now happens automatically since the the py_init definition is above the bp::object definition
+        // and therefore py_init is the last member variable to be destroyed
     }
 
-    ~init_python() {
-        Py_Finalize();
-    }
+    py_initialize py_init;
 
     bp::object main_module, main_namespace, numpy;
 };
