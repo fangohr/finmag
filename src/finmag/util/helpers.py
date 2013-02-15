@@ -886,7 +886,7 @@ def vector_field_from_dolfin_function(f, xlims=None, ylims=None, zlims=None,
 
     return X, Y, Z, U, V, W
 
-def probe(dolfin_function, points):
+def probe(dolfin_function, points, apply_func=None):
     """
     Probe the dolfin function at the given points.
 
@@ -904,11 +904,16 @@ def probe(dolfin_function, points):
         the field is probed at all points on a regular grid of
         size 10 x 20 x 5.
 
+    apply_func: any callable
+
+        Optional function to be applied to the returned values. If not
+        provided, the values are returned unchanged.
+
     *Returns*
 
-    A numpy.array of the same shape as `pts`, where the last
-    axis contains the field values instead of the point
-    locations.
+    A numpy.array of the same shape as `pts`, where the last axis
+    contains the field values instead of the point locations (or
+    `apply_func` applied to the field values in case it is provided.).
 
     *Limitations*
 
@@ -924,13 +929,19 @@ def probe(dolfin_function, points):
             "i.e. the last axis must have dimension 3. Shape of "
             "'pts' is: {}".format(points.shape))
 
+    if apply_func == None:
+        # use the identity operation by default
+        apply_func = lambda x: x
+
+    output_shape = np.array(apply_func([0, 0, 0])).shape
+
     def _safe_single_probe(point):
         try:
-            return dolfin_function(point)
+            return apply_func(dolfin_function(point))
         except RuntimeError:
-            return np.array([np.NaN, np.NaN, np.NaN])
+            return np.NaN * np.ones(output_shape)
 
-    res = np.empty(points.shape)
+    res = np.empty(points.shape[:-1] + output_shape)
     loop_indices = itertools.product(*map(xrange, points.shape[:-1]))
     for idx in loop_indices:
         res[idx] = _safe_single_probe(points[idx])
