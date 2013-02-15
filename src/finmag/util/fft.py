@@ -53,7 +53,7 @@ def FFT_m(filename, t_step=1e-11, t_ini=0):
     return fft_freq, fft_mx, fft_my, fft_mz
 
 
-def plot_FFT_m(filename, t_step=1e-11, t_ini=0.0, components="xyz"):
+def plot_FFT_m(filename, t_step=1e-11, t_ini=0.0, components="xyz", figsize=None):
     """
     Plot the frequency spectrum of the components of the magnetisation m.
 
@@ -71,7 +71,7 @@ def plot_FFT_m(filename, t_step=1e-11, t_ini=0.0, components="xyz"):
 
     fft_freq, fft_mx, fft_my, fft_mz = FFT_m(filename, t_step, t_ini)
     fft_freq_GHz = fft_freq / 1e9
-    fig = plt.figure()
+    fig = plt.figure(figsize=figsize)
     ax = fig.gca()
     if 'x' in components: ax.plot(fft_freq_GHz, fft_mx, '.-', label=r'FFT of $m_x$')
     if 'y' in components: ax.plot(fft_freq_GHz, fft_my, '.-', label=r'FFT of $m_y$')
