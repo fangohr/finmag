@@ -4745,3 +4745,10 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-02-13 14:26:38 mb8g11: And I prefer the UI to ipython (even though you can embed images with ipython as well)
 2013-02-13 14:26:53 mb8g11: Overall, it's cool, thanks for introducing it to us.
 2013-02-13 14:29:27 mb8g11: And the tab-to-doc is reaaaally nice.
+2013-02-14 08:09:15 mb8g11: Good morning!
+2013-02-14 12:41:53 fangohr: Greetings.
+2013-02-14 12:42:18 fangohr: What is 'tab-to-doc'?
+2013-02-14 12:48:19 mb8g11: I don't know how to call it: When you hit tab in an ipython notebook and the docstring for the function/method the cursor is on appears.
+2013-02-14 13:01:12 fangohr: I see -- I thought the help string would be displayed after you type '(' -- this is correct. And then you can use 'tab' to change how the help is displayed. Useful indeed. Thanks.
+2013-02-14 15:14:08 mb8g11: Wasn't precise enough: Indeed meant "inside the paranthesis".
+2013-02-14 15:14:57 mb8g11: Didn't know I could hit tab once more to see more of the doc. Nice, thanks.
