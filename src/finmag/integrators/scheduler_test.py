@@ -115,23 +115,34 @@ def test_reached():
     c = Counter()
     s = Scheduler()
     s.add(c.inc_every, every=10)
+    s.add(c.inc_at, at=20)
     assert c.cnt_every == 0
+    assert c.cnt_at == 0
     assert s.next() == 0.0
 
     # Trigger the first couple of events
-    s.reached(0); assert c.cnt_every == 1
-    s.reached(10); assert c.cnt_every == 2
+    s.reached(0); assert c.cnt_every == 1; assert c.cnt_at == 0
+    s.reached(10); assert c.cnt_every == 2; assert c.cnt_at == 0
 
     # Call reached() with a time step that skips the next scheduled
     # one; this should *not* trigger any events!
-    s.reached(30); assert c.cnt_every == 2
+    s.reached(30); assert c.cnt_every == 2; assert c.cnt_at == 0
 
     # Now call reached() with the next scheduled time step, assert
     # that it triggered the event. Then do a couple more steps for
     # sanity checks.
-    s.reached(20); assert c.cnt_every == 3
-    s.reached(25); assert c.cnt_every == 3
-    s.reached(30); assert c.cnt_every == 4
+    s.reached(20); assert c.cnt_every == 3; assert c.cnt_at == 1
+    s.reached(25); assert c.cnt_every == 3; assert c.cnt_at == 1
+    s.reached(30); assert c.cnt_every == 4; assert c.cnt_at == 1
+
+    # It is not an error to call reached() with a time step in the
+    # past. However, this won't trigger any events here because the
+    # RepeatingEvent knows about its next time step, and the
+    # SingleEvent was already triggered above (and no event is
+    # triggered twice for the same time step, unless a reset()
+    # happens).
+    s.reached(10); assert c.cnt_every == 4; assert c.cnt_at == 1
+    s.reached(20); assert c.cnt_every == 4; assert c.cnt_at == 1
 
 
 def test_scheduler_every():
