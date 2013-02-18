@@ -5,6 +5,7 @@ import matplotlib as mpl
 mpl.use("Agg")
 import matplotlib.pyplot as plt
 from finmag.llb.llb import LLB
+from finmag.llb.exchange import Exchange
 from finmag.energies import Zeeman
 from finmag.energies import Demag
 from finmag.llb.material import Material
@@ -120,13 +121,16 @@ def test_llb_save_data():
             return 4e5
         
     def init_T(pos):
-        return pos[2]
+        return 1*pos[2]
     
     mat = Material(mesh, name='FePt',unit_length=1e-9)
     mat.Ms=init_Ms
     mat.set_m((1, 0, 0))
     mat.T = init_T
     mat.alpha=0.1
+    
+    print mat.T
+    print mat._m_e
     
     assert(mat.T[0]==0)
     
@@ -137,6 +141,7 @@ def test_llb_save_data():
     
     H0 = 1e6
     sim.add(Zeeman((0, 0, H0)))
+    sim.add(Exchange(mat))
     
     demag=Demag(solver='FK')
     sim.add(demag)
@@ -144,10 +149,12 @@ def test_llb_save_data():
     sim.save_m_in_region(region1,name='bottom')
     sim.save_m_in_region(region2,name='top')
     sim.schedule('save_ndt',every=1e-12)
+   
     
     for t in ts:
         print 't=========',t
         sim.run_until(t)
+    
 
 if __name__ == "__main__":
     #test_llb_sundials(do_plot=True)

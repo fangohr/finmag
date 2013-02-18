@@ -229,16 +229,29 @@ if __name__ == "__main__":
     n=4
     #mesh = UnitCube(n, n, n)
     #mesh = BoxMesh(-1, 0, 0, 1, 1, 1, 10, 2, 2)
-    mesh = df.UnitSphere(n)
+    #mesh = df.UnitSphereMesh(n)
     #mesh=df.Mesh('tet.xml')
+    mesh = df.BoxMesh(0, 0, 0, 100, 1, 1, 100, 1, 1)
+    expr = df.Expression(('4.0*sin(x[0])', '4*cos(x[0])','0'))
+    
+    Vv=df.VectorFunctionSpace(mesh, "Lagrange", 1)
 
-    Vv = df.VectorFunctionSpace(mesh, 'Lagrange', 1)
+   
 
     Ms = 8.6e5
-    #expr = df.Expression(('cos(x[0])', 'sin(x[0])','0'))
-    #m = interpolate(expr, Vv)
-    m =df.interpolate(df.Constant((1, 0, 0)), Vv)
+    expr = df.Expression(('cos(x[0])', 'sin(x[0])','0'))
+    m = df.interpolate(expr, Vv)
+    #m = df.interpolate(df.Constant((1, 0, 0)), Vv)
+    
+    from finmag.energies.demag.solver_fk import FemBemFKSolver as FKSolver
+    
+    fk = FKSolver(mesh, m, Ms=Ms)
+    f1= fk.compute_field()
 
 
-    demag=TreecodeBEM(mesh,m,mac=0.3,p=3,num_limit=1,correct_factor=5)
-    print demag.compute_field()
+    demag=TreecodeBEM(mesh,m,mac=0.3,p=5,num_limit=100,correct_factor=5,Ms=Ms)
+    f2=demag.compute_field()
+    
+    f3=f1-f2
+    print f3/f1
+    

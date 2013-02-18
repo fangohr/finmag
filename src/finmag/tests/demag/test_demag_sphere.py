@@ -4,15 +4,17 @@ import dolfin as df
 from finmag.util.meshes import sphere
 from finmag.energies.demag.solver_fk import FemBemFKSolver as FKSolver
 from finmag.energies.demag.solver_gcr import FemBemGCRSolver as GCRSolver
+from finmag.energies.demag.treecode_bem import TreecodeBEM as Treecode
 
 import finmag
 if finmag.util.versions.get_version_dolfin() == "1.1.0":
-    solvers = [FKSolver] # FIXME: disabled GCRSolver for dolfin 1.1.0
+    solvers = [FKSolver,Treecode] # FIXME: disabled GCRSolver for dolfin 1.1.0
 else:
     solvers = [FKSolver, GCRSolver]
 print("Testing for solvers: %s" % solvers)
 
 TOL = 1e-2
+print solvers
 
 @pytest.fixture(scope="module")
 def uniformly_magnetised_sphere():

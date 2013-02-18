@@ -3,7 +3,7 @@ import dolfin as df
 from finmag.util.timings import mtimed
 from finmag.energies.energy_base import EnergyBase
 from finmag.util.consts import mu0
-
+from finmag.llb.material import Material
 
 logger = logging.getLogger('finmag')
 
@@ -129,10 +129,10 @@ class Exchange(object):
         u3 = df.TrialFunction(S3)
         v3 = df.TestFunction(S3)
         self.K = df.PETScMatrix()
-        df.assemble(df.inner(df.grad(u3),df.grad(v3))*df.dx, tensor=self.K)
+        df.assemble(self.C*df.inner(df.grad(u3),df.grad(v3))*df.dx, tensor=self.K)
         self.H = df.PETScVector()
         
-        self.vol = df.assemble(self.C*df.dot(v3, df.Constant([1, 1, 1])) * df.dx).array()
+        self.vol = df.assemble(df.dot(v3, df.Constant([1, 1, 1])) * df.dx).array()
         
         self.coeff=-self.exchange_factor/(self.vol*self.me**2)
     
@@ -144,13 +144,12 @@ class Exchange(object):
 
 
 if __name__ == "__main__":
-    from dolfin import *
-    
-    mesh = BoxMesh(0, 0, 0, 10, 1, 1, 10, 1, 1)
-    Ms = 8.6e5
+
+    mesh = df.BoxMesh(0, 0, 0, 10, 1, 1, 10, 1, 1)
 
 
-    S3 = VectorFunctionSpace(mesh, "Lagrange", 1)
+
+    S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
     C = 1.3e-11  # J/m exchange constant
     expr = df.Expression(('4.0*sin(x[0])', '4*cos(x[0])','0'))
     m0 = df.interpolate(expr, S3)
@@ -158,18 +157,18 @@ if __name__ == "__main__":
     from finmag.llb.material import Material
     mat = Material(mesh, name='FePt')
     mat.set_m(expr)
-    mat.T = 100
+    mat.T = 1
     mat.alpha=0.01
     
-    exch = Exchange(C)
-    exch.setup(mat.S3, mat._m, mat.Ms0, mat.m_e,unit_length=1e-9)
+    exch = Exchange(mat)
+    exch.setup(mat.S3, mat._m, mat.Ms0, unit_length=1e-9)
     
-    exch2 = ExchangeStd(mat)
-    exch2.setup(mat.S3, mat._m, mat.Ms0, unit_length=1e-9)
+    #exch2 = ExchangeStd(mat)
+    #exch2.setup(mat.S3, mat._m, mat.Ms0, unit_length=1e-9)
     
-    print max(exch2.compute_field()-exch.compute_field())
+    #print max(exch2.compute_field()-exch.compute_field())
     
-
+    print exch.compute_field()
     
     #print timings.report()
 

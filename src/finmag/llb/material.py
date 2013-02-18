@@ -118,9 +118,10 @@ class Material(object):
         self._A_dg.vector().set_local(As)
         self._m_e_dg.vector().set_local(mes)
         
+        self._m_e.shape=(3,-1)
         for i in range(len(self._T)):
-            self._m_e[i] = self.mat.m_e(self._T[i])
-            
+            self._m_e[:,i] = self.mat.m_e(self._T[i])
+        self._m_e.shape=(-1,)    
         
         #TODO: Trying to use spatial parameters
         self.inv_chi_perp = self.mat.inv_chi_perp(self._T[0])
