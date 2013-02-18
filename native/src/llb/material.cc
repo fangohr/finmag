@@ -45,10 +45,10 @@ namespace finmag { namespace llb {
 
     double Materials::m_e(double T){
 
-    	double a0=1.313707215324465;
-    	double a1=-0.159267621771943;
-    	double a2=-0.325981045855364;
-    	double a3=0.172988576034952;
+    	double a0=1.316787568985625;
+    	double a1=-0.170703768212514;
+    	double a2=-0.303750348990166;
+    	double a3=0.157666548217993;
 
     	double t=1.0-T/Tc;
     	if (t<=0){
@@ -67,11 +67,10 @@ namespace finmag { namespace llb {
     }
 
     double Materials::A(double T){
-    	double a0=0.021566904000209;
-    	double a1=2.428983868562720;
-    	double a2=-3.565579644828024;
-    	double a3=3.247355368671055;
-    	double a4=-1.140849683260966;
+    	double a0=0.327601417432234;
+    	double a1=1.446591232606010;
+    	double a2=-1.402497304201748;
+    	double a3=0.628304654164059;
 
     	double t=1.0-T/Tc;
 
@@ -81,7 +80,7 @@ namespace finmag { namespace llb {
     		return A0;
     	}
 
-    	double res=a0 + t * (a1 + t * (a2 + t * (a3 + t*a4)));
+    	double res=a0*sqrt(t)+t*(a1+t*a2+a3*t*t);
 
     	return res*A0;
     }
