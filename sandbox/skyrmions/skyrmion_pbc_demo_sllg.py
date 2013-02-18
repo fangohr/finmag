@@ -18,9 +18,9 @@ def m_init_fun(pos):
 pbc=True
 
 Ms = 8.6e5
-sim = SLLG(mesh, Ms,unit_length=1e-9,pbc2d=pbc)
+sim = (mesh, Ms,unit_length=1e-9,pbc2d=pbc)
 sim.set_m(m_init_fun)
-sim.T=20
+sim.T=temperature
 #A = 3.57e-13
 #D = 2.78e-3
 
