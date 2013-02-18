@@ -239,6 +239,43 @@ class TestSimulation(object):
         d = sim_helpers.load_restart_data('barmini-restart.npz')
         assert(d['simtime']) == 2e-13
 
+    def test_restart(self, tmpdir):
+        os.chdir(str(tmpdir))
+
+        # Run the simulation for 1 ps; save restart data; reload it
+        # while resetting the simulation time to 0.5 ps; then run
+        # again for 1 ps until we have reached 1.5 ps.
+        sim1 = barmini(name='barmini1')
+        sim1.schedule('save_ndt', every=1e-13)
+        sim1.run_until(1e-12)
+        sim1.save_restart_data('barmini.npz')
+        sim1.restart('barmini.npz', t0=0.5e-12)
+        sim1.run_until(1.5e-12)
+
+        # Check that the time steps for sim1 are as expected
+        a = np.loadtxt('barmini1.ndt')
+        ta = a[:, 0]
+        ta_expected = np.concatenate([np.linspace(0, 1e-12, 11),
+                                      np.linspace(0.5e-12, 1.5e-12, 11)])
+        assert(np.allclose(ta, ta_expected, atol=0))
+
+        # Run a second simulation for 2 ps continuously
+        sim2 = barmini(name='barmini2')
+        sim2.schedule('save_ndt', every=1e-13)
+        sim2.run_until(2e-12)
+
+        # Check that the time steps for sim1 are as expected
+        b = np.loadtxt('barmini2.ndt')
+        tb = b[:, 0]
+        tb_expected = np.linspace(0, 2e-12, 21)
+        assert(np.allclose(tb, tb_expected, atol=0))
+
+        # Check that the magnetisation dynamics of sim1 and sim2 are
+        # the same and we end up with the same magnetisation.
+        a = np.concatenate([a[:10, :], a[11:, :]])
+        assert(np.allclose(a[:, 1:], b[:, 1:]))
+        assert(np.allclose(sim1.m, sim2.m))
+
     def test_save_vtk(self, tmpdir):
         tmpdir = str(tmpdir)
         sim1_dir = os.path.join(tmpdir, 'sim1')
