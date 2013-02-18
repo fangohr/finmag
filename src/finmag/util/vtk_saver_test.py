@@ -31,16 +31,13 @@ class TestVTKSaver(object):
 
     def test_file_extension_is_correct(self, tmpdir):
         """
-        Check that only filenames with extension '.pvd' are
+        Check that only filenames with extension '.pvd' are accepted.
         """
         os.chdir(str(tmpdir))
-        VTKSaver("myfile.pvd")  # this should pass
-        with pytest.raises(ValueError):
-            VTKSaver("myfile.vtk")
-        with pytest.raises(ValueError):
-            VTKSaver("myfile.vtu")
-        with pytest.raises(ValueError):
-            VTKSaver("myfile.txt")
+        VTKSaver("myfile.pvd")
+        with pytest.raises(ValueError): VTKSaver("myfile.vtk")
+        with pytest.raises(ValueError): VTKSaver("myfile.vtu")
+        with pytest.raises(ValueError): VTKSaver("myfile.txt")
 
     def test_existing_files_are_deleted_if_requested(self, tmpdir):
         """
@@ -48,7 +45,7 @@ class TestVTKSaver(object):
         """
         os.chdir(str(tmpdir))
 
-        # Create a few dummy .pvd and .vtu files
+        # Create a few (empty) dummy .pvd and .vtu files
         with open("myfile.pvd", 'w'): pass
         with open("myfile000001.vtu", 'w'): pass
         with open("myfile000002.vtu", 'w'): pass
