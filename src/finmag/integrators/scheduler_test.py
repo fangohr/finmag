@@ -111,6 +111,28 @@ def test_scheduler():
     assert c.cnt_at == 1  # still the same as before
 
 
+def test_reached():
+    c = Counter()
+    s = Scheduler()
+    s.add(c.inc_every, every=10)
+    assert c.cnt_every == 0
+    assert s.next() == 0.0
+
+    # Trigger the first couple of events
+    s.reached(0); assert c.cnt_every == 1
+    s.reached(10); assert c.cnt_every == 2
+
+    # Call reached() with a time step that skips the next scheduled
+    # one; this should *not* trigger any events!
+    s.reached(30); assert c.cnt_every == 2
+
+    # Now call reached() with the next scheduled time step, assert
+    # that it triggered the event. Then do a couple more steps for
+    # sanity checks.
+    s.reached(20); assert c.cnt_every == 3
+    s.reached(25); assert c.cnt_every == 3
+    s.reached(30); assert c.cnt_every == 4
+
 def test_scheduler_every():
     c = Counter()
 
