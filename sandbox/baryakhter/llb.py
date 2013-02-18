@@ -233,7 +233,7 @@ class LLB(object):
 
         self.compute_effective_field()
 
-        default_timer.start(self.__class__.__name__, "solve")
+        default_timer.start("solve", self.__class__.__name__)
 
         self.count+=1
 
@@ -259,7 +259,7 @@ class LLB(object):
                 dM_dt[i3] -= self.gamma*(m[i1]*h[i2]-m[i2]*h[i1])
 
 
-        default_timer.stop(self.__class__.__name__, "solve")
+        default_timer.stop("solve", self.__class__.__name__)
 
         for func in self._post_rhs_callables:
             func(self)
@@ -340,7 +340,7 @@ class LLB(object):
 
         self.count+=1
  
-        default_timer.start(self.__class__.__name__, "solve_sundials")
+        default_timer.start("solve_sundials", self.__class__.__name__)
         # Use the same characteristic time as defined by c
         char_time = 0.1/self.c
         # Prepare the arrays in the correct shape
@@ -360,7 +360,7 @@ class LLB(object):
         m.shape = (-1,)
         H_eff.shape = (-1,)
 
-        default_timer.stop(self.__class__.__name__, "solve_sundials")
+        default_timer.stop("solve_sundials", self.__class__.__name__)
 
         for func in self._post_rhs_callables:
             func(self)
@@ -391,7 +391,7 @@ class LLB(object):
 
     # Computes the Jacobian-times-vector product, as used by SUNDIALS CVODE
     def sundials_jtimes(self, mp, J_mp, t, m, fy, tmp):
-        default_timer.start(self.__class__.__name__, "sundials_jtimes")
+        default_timer.start("sundials_jtimes", self.__class__.__name__)
 
         assert m.shape == self.m.shape
         assert mp.shape == m.shape
@@ -429,7 +429,7 @@ class LLB(object):
         mp.shape = (-1,)
         tmp.shape = (-1,)
 
-        default_timer.stop(self.__class__.__name__, "sundials_jtimes")
+        default_timer.stop("sundials_jtimes", self.__class__.__name__)
 
         # Nonnegative exit code indicates success
         return 0

@@ -192,7 +192,7 @@ class LLB(object):
         delta_Heff = self.compute_laplace_effective_field()
         #print 'delta_Heff',delta_Heff
  
-        default_timer.start(self.__class__.__name__, "sundials_rhs")
+        default_timer.start("sundials_rhs", self.__class__.__name__)
         # Use the same characteristic time as defined by c
         
         native_llg.calc_baryakhtar_dmdt(self._M.vector().array(), 
@@ -207,7 +207,7 @@ class LLB(object):
                                  self.pins)
 
 
-        default_timer.stop(self.__class__.__name__, "sundials_rhs")
+        default_timer.stop("sundials_rhs", self.__class__.__name__)
 
         for func in self._post_rhs_callables:
             func(self)
@@ -221,7 +221,7 @@ class LLB(object):
        
         """
 
-        default_timer.start(self.__class__.__name__, "sundials_jtimes")
+        default_timer.start("sundials_jtimes", self.__class__.__name__)
         self.call_field_jtimes+=1
     
         self._M.vector().set_local(m)
@@ -239,7 +239,7 @@ class LLB(object):
                                    self.pins)
         
                             
-        default_timer.stop(self.__class__.__name__, "sundials_jtimes")
+        default_timer.stop("sundials_jtimes", self.__class__.__name__)
         
         self.sundials_rhs(t, m, fy)
 
