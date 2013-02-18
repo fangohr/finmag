@@ -221,7 +221,7 @@ def test_illegal_arguments():
         s.add(dummy_func, at=1, every=2)  # can't mix 'at' with 'every'
 
 
-def test_reset():
+def test_reset_with_every():
     c = Counter()
     s = Scheduler()
     s.add(c.inc_every, every=10)
@@ -254,3 +254,28 @@ def test_reset():
     # Trigger a few more events
     s.reached(20); assert c.cnt_every == 7
     s.reached(30); assert c.cnt_every == 8
+
+
+def test_reset_with_at():
+    c = Counter()
+    s = Scheduler()
+    s.add(c.inc_at, at=10)
+    assert c.cnt_at == 0
+
+    s.reached(0); assert c.cnt_at == 0
+    s.reached(10); assert c.cnt_at == 1
+    s.reached(20); assert c.cnt_at == 1
+    s.reached(30); assert c.cnt_at == 1
+
+    # Events that already happened are not triggered again ...
+    s.reached(10); assert c.cnt_at == 1
+
+    # ... unless we reset the scheduler first
+    s.reset(2)
+    s.reached(10); assert c.cnt_at == 2
+
+    # Resetting to a time *after* the scheduled time will result in
+    # the event not being triggered again, even if we tell the
+    # scheduler that the time step was reached.
+    s.reset(30)
+    s.reached(10); assert c.cnt_at == 2
