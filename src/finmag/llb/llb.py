@@ -117,7 +117,7 @@ class LLB(object):
         self.compute_effective_field()
 
  
-        default_timer.start(self.__class__.__name__, "sundials_rhs")
+        default_timer.start("sundials_rhs", self.__class__.__name__)
         # Use the same characteristic time as defined by c
                 
         native_llb.calc_llb_dmdt(self.m,
@@ -130,7 +130,7 @@ class LLB(object):
                                  self.do_precession)
 
 
-        default_timer.stop(self.__class__.__name__, "sundials_rhs")
+        default_timer.stop("sundials_rhs", self.__class__.__name__)
 
         for func in self._post_rhs_callables:
             func(self)

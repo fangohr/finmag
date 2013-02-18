@@ -72,6 +72,18 @@ There are four different ways to do a measurement.
         def do_things(self):
             sleep(1)
 
+Timings of functions or methods will be grouped by module or class-name
+respectively. To group the measurements you do by hand or using the
+context-manager, you can pass a second string after the name of the measurement.
+
+    with timed('my_measurement', 'FooBarFeature'):
+        sleep(1)
+
+    # or
+
+    timer.start('my_measurement, 'FooBarFeature'):
+        sleep(1)
+
 """
 
 
@@ -110,6 +122,8 @@ class Timings(object):
     and function/method name.
 
     """
+    default_group = "None"
+
     def __init__(self):
         self.reset()
 
@@ -122,27 +136,27 @@ class Timings(object):
         self._timings = {}
         self._created = time.time()
 
-    def start(self, group, name):
+    def start(self, name, group=default_group):
         """
         Start a measurement with the group *group* and name *name*.
 
         """
-        if self.key(group, name) in self._timings:
-            self._timings[self.key(group, name)].start()
+        if self.key(name, group) in self._timings:
+            self._timings[self.key(name, group)].start()
         else:
-            timing = SingleTiming(group, name)
+            timing = SingleTiming(name, group)
             timing.start()
-            self._timings[self.key(group, name)] = timing
-        self._last = self._timings[self.key(group, name)]
+            self._timings[self.key(name, group)] = timing
+        self._last = self._timings[self.key(name, group)]
 
-    def stop(self, group, name):
+    def stop(self, name, group=default_group):
         """
         Stop the measurement with the group *group* and name *name*.
 
         """
-        assert self.key(group, name) in self._timings, \
+        assert self.key(name, group) in self._timings, \
                 "No known measurement '{}' of '{}' to stop.".format(name, group)
-        self._timings[self.key(group, name)].stop()
+        self._timings[self.key(name, group)].stop()
         self._last = None
 
     def stop_last(self):
@@ -153,28 +167,28 @@ class Timings(object):
         assert self._last, "No measurement running, can't stop anything."
         self._last.stop()
 
-    def start_next(self, group, name):
+    def start_next(self, name, group=default_group):
         """
         Stop the last started measurement to start a new one with *group* and *name*.
 
         """
         if self._last:
             self.stop_last()
-        self.start(group, name)
+        self.start(name, group)
 
-    def calls(self, group, name):
+    def calls(self, name, group=default_group):
         """
         Returns the number of calls to the method of *group* with *name*.
 
         """
-        return self._timings[self.key(group, name)].calls
+        return self._timings[self.key(name, group)].calls
 
-    def time(self, group, name):
+    def time(self, name, group=default_group):
         """
         Returns the total running time of the method of *group* with *name*.
 
         """
-        return self._timings[self.key(group, name)].tot_time
+        return self._timings[self.key(name, group)].tot_time
 
     def report(self, max_items=10):
         """
@@ -247,20 +261,20 @@ class Timings(object):
     def total_time(self):
         return sum([tim.tot_time for tim in self._timings.itervalues()])
 
-    def key(self, group, name):
+    def key(self, name, group):
         return group + "::" + name
 
 default_timer = Timings()
 
 @contextmanager
-def timed(group, name, timer=default_timer):
+def timed(name, group=Timings.default_group, timer=default_timer):
     """
     Use this context to time a piece of code. Needs a *name* argument for the measurement.
 
     """
-    timer.start(group, name)
+    timer.start(name, group)
     yield
-    timer.stop(group, name)
+    timer.stop(name, group)
 
 def mtimed(method_or_timer=default_timer):
     """
@@ -275,9 +289,9 @@ def mtimed(method_or_timer=default_timer):
             cls = self.__class__.__name__
             # temporary way of replicating existing behaviour until categories
             # are implemented
-            timer.start(cls, name)
+            timer.start(name, cls)
             ret = method(self, *args, **kwargs)
-            timer.stop(cls, name)
+            timer.stop(name, cls)
             return ret
 
         return decorated_method
@@ -306,9 +320,9 @@ def ftimed(fn_or_timer=default_timer):
 
         @functools.wraps(fn)
         def decorated_function(*args, **kwargs):
-            timer.start(module, name)
+            timer.start(name, module)
             ret = fn(*args, **kwargs)
-            timer.stop(module, name)
+            timer.stop(name, module)
             return ret
 
         return decorated_function

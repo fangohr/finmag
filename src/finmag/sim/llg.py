@@ -191,7 +191,7 @@ class LLG(object):
         H_eff = self.effective_field.compute(t)
         H_eff.shape = (3, -1)
 
-        default_timer.start(self.__class__.__name__, "solve")
+        default_timer.start("solve", self.__class__.__name__)
         # Use the same characteristic time as defined by c
         char_time = 0.1 / self.c
         # Prepare the arrays in the correct shape
@@ -211,7 +211,7 @@ class LLG(object):
                                  char_time, self.do_precession)
         dmdt.shape = (-1,)
 
-        default_timer.stop(self.__class__.__name__, "solve")
+        default_timer.stop("solve", self.__class__.__name__)
 
         return dmdt
 
