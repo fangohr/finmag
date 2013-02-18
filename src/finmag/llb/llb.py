@@ -325,7 +325,7 @@ class LLB(object):
         self.tablewriter.update_entity_order()
     
     def save_ndt(self):
-        log.debug("Saving average field values for simulation '{}'.".format(self.name))
+        #log.debug("Saving average field values for simulation '{}'.".format(self.name))
         self.tablewriter.save()
         
     def schedule(self, func, *args, **kwargs):

@@ -112,8 +112,8 @@ class ExchangeStd(EnergyBase):
 
 class Exchange(object):
     def __init__(self, mat, in_jacobian=False):
-        self.C = mat.A
-        self.me= mat.me
+        self.C = mat._A_dg
+        self.me= mat._m_e
         self.in_jacobian=in_jacobian
    
     @mtimed
@@ -124,7 +124,7 @@ class Exchange(object):
         self.unit_length = unit_length
 
         self.mu0 = mu0
-        self.exchange_factor = 2.0 * self.C / (self.mu0 * self.me**2 * Ms0 * self.unit_length**2)
+        self.exchange_factor = 2.0 / (self.mu0 * Ms0 * self.unit_length**2)
 
         u3 = df.TrialFunction(S3)
         v3 = df.TestFunction(S3)
@@ -132,9 +132,9 @@ class Exchange(object):
         df.assemble(df.inner(df.grad(u3),df.grad(v3))*df.dx, tensor=self.K)
         self.H = df.PETScVector()
         
-        self.vol = df.assemble(df.dot(v3, df.Constant([1, 1, 1])) * df.dx).array()
+        self.vol = df.assemble(self.C*df.dot(v3, df.Constant([1, 1, 1])) * df.dx).array()
         
-        self.coeff=-self.exchange_factor/(self.vol)
+        self.coeff=-self.exchange_factor/(self.vol*self.me**2)
     
     def compute_field(self):
         
