@@ -42,11 +42,11 @@ class SingleEvent(object):
         """
         if time == None and trigger_on_stop == False:
             raise ValueError("{}.init: Needs either a time, or trigger_on_stop set to True.".format(self.__class__.__name__))
-        self.__time = time
+        self._time = time
         self.last = None
         self.next = time
         self.trigger_on_stop = trigger_on_stop
-        self.__callback = None
+        self._callback = None
         self.requests_stop_integration = False
 
     def attach(self, callback):
@@ -56,7 +56,7 @@ class SingleEvent(object):
         """
         if not hasattr(callback, "__call__"):
             raise ValueError("{}.attach: Argument should be callable.".format(self.__class__.__name__))
-        self.__callback = callback
+        self._callback = callback
         return self # so that object can be initialised and a function attached in one line
     call = attach # nicer name if assignment and init is indeed done in one line
 
@@ -76,8 +76,8 @@ class SingleEvent(object):
                 (same(time, self.next)) or (is_stop and self.trigger_on_stop)):
             self.last = time
             self.next = self._compute_next()
-            if self.__callback != None:
-                ret = self.__callback()
+            if self._callback != None:
+                ret = self._callback()
                 if ret == False:
                     self.requests_stop_integration = True
 
@@ -94,11 +94,11 @@ class SingleEvent(object):
 
         """
         self.requests_stop_integration = False
-        if time < self.__time:
+        if time < self._time:
             self.last = None
-            self.next = self.__time
+            self.next = self._time
         else: # if we had to, assume we triggered for `time` already
-            self.last = self.__time
+            self.last = self._time
             self.next = None
 
     def __str__(self):
@@ -108,11 +108,11 @@ class SingleEvent(object):
         """
         callback_msg = ""
         callback_name = "unknown"
-        if self.__callback != None:
-            if hasattr(self.__callback, "__name__"):
-                    callback_name = self.__callback.__name__
-            if hasattr(self.__callback, "func"):
-                    callback_name = self.__callback.func.__name__
+        if self._callback != None:
+            if hasattr(self._callback, "__name__"):
+                    callback_name = self._callback.__name__
+            if hasattr(self._callback, "func"):
+                    callback_name = self._callback.func.__name__
             callback_msg = " | callback: {}".format(callback_name)
         msg = "<{} | last = {} | next = {} | triggering on stop: {}{}>".format(
             self.__class__.__name__, self.last, self.next, self.trigger_on_stop,
@@ -134,14 +134,14 @@ class RepeatingEvent(SingleEvent):
 
         """
         super(RepeatingEvent, self).__init__(delay or 0.0, trigger_on_stop)
-        self.__interval = interval
+        self._interval = interval
 
     def _compute_next(self):
         """
         Return the next target time. Will get called after the event is triggered.
 
         """
-        return self.last + self.__interval
+        return self.last + self._interval
 
     def reset(self, time):
         """
@@ -149,7 +149,7 @@ class RepeatingEvent(SingleEvent):
 
         """
         self.last = None
-        self.next = self.__time
+        self.next = self._time
         while self.next <= time: # if we had to, assume we triggered for `time`
             self.last = time
             self.next = self._compute_next()
@@ -165,9 +165,9 @@ class StopIntegrationEvent(object):
         Define the `time` at which the simulation should be stopped.
 
         """
-        self.__time = time
+        self._time = time
         self.last = None
-        self.next = self.__time
+        self.next = self._time
         self.requests_stop_integration = False
         self.trigger_on_stop = False
 
@@ -186,12 +186,12 @@ class StopIntegrationEvent(object):
         Modify the internal state to what we would expect at `time`.
 
         """
-        if time < self.__time:
+        if time < self._time:
             self.last = None
-            self.next = self.__time
+            self.next = self._time
             self.requests_stop_integration = False
         else:
-            self.last = self.__time
+            self.last = self._time
             self.next = None
             self.requests_stop_integration = True
 
@@ -201,7 +201,7 @@ class StopIntegrationEvent(object):
 
         """
         return "<{} will stop time integration at t = {}>".format(
-                self.__class__.__name__, self.__next)
+                self.__class__.__name__, self._next)
 
 
 class RelaxationEvent(object):
