@@ -1,4 +1,3 @@
-import time
 import inspect
 import logging
 import dolfin as df
@@ -15,6 +14,7 @@ from finmag.sim import sim_helpers
 from finmag.energies import Exchange, Zeeman, Demag, UniaxialAnisotropy, DMI
 from finmag.integrators.llg_integrator import llg_integrator
 from finmag.integrators import scheduler, events
+
 
 ONE_DEGREE_PER_NS = 17453292.5  # in rad/s
 
@@ -75,24 +75,24 @@ class Simulation(object):
         self.Volume = mesh_volume(mesh)
 
         self.scheduler = scheduler.Scheduler()
-        
-        self.domains =  df.CellFunction("uint", self.mesh)
+
+        self.domains = df.CellFunction("uint", self.mesh)
         self.domains.set_all(0)
-        self.region_id=0
+        self.region_id = 0
 
         self.overwrite_pvd_files = False
         self.vtk_export_filename = self.sanitized_name + '.pvd'
         self.vtk_saver = VTKSaver(self.vtk_export_filename)
 
         self.scheduler_shortcuts = {
-            'save_restart_data' : Simulation.save_restart_data,
-            'save_ndt' : sim_helpers.save_ndt,
-            'save_vtk' : Simulation.save_vtk,
-            'switch_off_H_ext' : Simulation.switch_off_H_ext,
-            }
+            'save_restart_data': Simulation.save_restart_data,
+            'save_ndt': sim_helpers.save_ndt,
+            'save_vtk': Simulation.save_vtk,
+            'switch_off_H_ext': Simulation.switch_off_H_ext,
+        }
 
         # At the moment, we can only have cvode as the driver, and thus do
-        # time development of a system. We may have energy minimisation at some 
+        # time development of a system. We may have energy minimisation at some
         # point (the driver would be an optimiser), or something else.
         self.driver = 'cvode'
 
@@ -118,22 +118,22 @@ class Simulation(object):
         \\frac{1}{V} \int m \: \mathrm{d}V`
         """
         return self.llg.m_average
-        
+
     def save_m_in_region(self,region,name='unnamed'):
-        
+
         self.region_id+=1
         helpers.mark_subdomain_by_function(region, self.mesh, self.region_id,self.domains)
         self.dx = df.Measure("dx")[self.domains]
-        
+
         if name=='unnamed':
             name='region_'+str(self.region_id)
-        
+
         region_id=self.region_id
         self.tablewriter.entities[name]={
                         'unit': '<>',
                         'get': lambda sim: sim.llg.m_average_fun(dx=self.dx(region_id)),
                         'header': (name+'_m_x', name+'_m_y', name+'_m_z')}
-        
+
         self.tablewriter.update_entity_order()
 
     @property
@@ -323,7 +323,7 @@ class Simulation(object):
         self.integrator.reinit()
         log.info("Relaxation finished at time t = {:.2g}.".format(self.t))
 
-        self.scheduler._remove(self.relaxation) 
+        self.scheduler._remove(self.relaxation)
         del(self.relaxation.sim) # help the garbage collection by avoiding circular reference
 
     save_restart_data = sim_helpers.save_restart_data
@@ -332,7 +332,7 @@ class Simulation(object):
         """If called, we look for a filename of type sim.name + '-restart.npz',
         and load it. The magnetisation in the restart file will be assigned to
         sim.llg._m. If this is from a cvode time integration run, it will also
-        initialise (create) the integrator with that m, and the time at which the 
+        initialise (create) the integrator with that m, and the time at which the
         restart data was saved.
 
         The time can be overriden with the optional parameter t0 here.
@@ -345,13 +345,13 @@ class Simulation(object):
         log.debug("Loading restart data from {}. ".format(filename))
 
         data = sim_helpers.load_restart_data(filename)
-    
+
         if not data['driver'] in ['cvode']:
             log.error("Requested unknown driver `{}` for restarting. Known: {}.".format(data["driver"], "cvode"))
             raise NotImplementedError("Unknown driver `{}` for restarting.".format(data["driver"]))
-        
+
         self.llg._m.vector()[:] = data['m']
-       
+
         self.reset_time(t0 or data["simtime"])
 
         log.info("Reloaded and set m (<m>=%s) and time=%s from %s." % \
