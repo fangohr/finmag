@@ -67,7 +67,7 @@ def sim_llb_100(do_plot=False):
     
     print mat.Ms0
     print mat.volumes
-    
+    print mat.mat.chi_par(100)
     sim = LLB(mat)
     sim.set_up_stochastic_solver(using_type_II=True)
     
@@ -101,9 +101,58 @@ def sim_llb_100(do_plot=False):
         plt.savefig(os.path.join(MODULE_DIR, "test_llb_100K.png"))
 
 
+def test_llb_save_data():
+    mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 2, 2, 2)
+    
+    def region1(coords):
+        if coords[2]<0.5:
+            return True
+        else:
+            return False
+    
+    def region2(coords):
+        return not region1(coords)
+        
+    def init_Ms(coords):
+        if region1(coords)>0:
+            return 8.6e5
+        else:
+            return 4e5
+        
+    def init_T(pos):
+        return pos[2]
+    
+    mat = Material(mesh, name='FePt',unit_length=1e-9)
+    mat.Ms=init_Ms
+    mat.set_m((1, 0, 0))
+    mat.T = init_T
+    mat.alpha=0.1
+    
+    assert(mat.T[0]==0)
+    
+    sim = LLB(mat,name='test_llb')
+    sim.set_up_solver()
+    
+    ts = np.linspace(0, 1e-10, 101)
+    
+    H0 = 1e6
+    sim.add(Zeeman((0, 0, H0)))
+    
+    demag=Demag(solver='FK')
+    sim.add(demag)
+    
+    sim.save_m_in_region(region1,name='bottom')
+    sim.save_m_in_region(region2,name='top')
+    sim.schedule('save_ndt',every=1e-12)
+    
+    for t in ts:
+        print 't=========',t
+        sim.run_until(t)
+
 if __name__ == "__main__":
     #test_llb_sundials(do_plot=True)
-    sim_llb_100(do_plot=True)
+    #sim_llb_100(do_plot=True)
+    test_llb_save_data()
     
 
 

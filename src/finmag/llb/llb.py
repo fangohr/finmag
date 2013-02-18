@@ -1,5 +1,6 @@
 import dolfin as df
 import numpy as np
+import inspect
 from finmag.native import sundials
 import finmag.native.llb as native_llb
 from finmag.util.timings import timings
@@ -10,17 +11,25 @@ from finmag.energies import Demag
 from finmag.llb.exchange import Exchange
 from finmag.llb.material import Material
 
+from finmag.util import helpers
+from finmag.util.vtk_saver import VTKSaver
+from finmag.util.fileio import Tablewriter
+from finmag.integrators import scheduler, events
+
+from finmag.util.pbc2d import PeriodicBoundary2D
+
 import logging
 log = logging.getLogger(name="finmag")
 
 
 class LLB(object):
-    def __init__(self, mat, method='RK2b',pbc2d=None):
+    def __init__(self, mat, method='RK2b',name='unnamed',pbc2d=None):
         self.material = mat
         self._m = mat._m
         self.m = self._m.vector().array()
         self.S1 = mat.S1
         self.S3 = mat.S3
+        self.mesh=self.S1.mesh()
         
         self.dm_dt = np.zeros(self.m.shape)
         self.H_eff = np.zeros(self.m.shape)
@@ -31,6 +40,34 @@ class LLB(object):
         
         self.set_default_values()
         self.interactions.append(mat)
+        
+        
+        if self.pbc2d:
+            self.pbc2d=PeriodicBoundary2D(self.S3)
+        
+        self.name = name
+        self.sanitized_name = helpers.clean_filename(name)
+
+        self.logfilename = self.sanitized_name + '.log'
+        self.ndtfilename = self.sanitized_name + '.ndt'
+
+        helpers.start_logging_to_file(self.logfilename, mode='w', level=logging.DEBUG)
+        self.scheduler = scheduler.Scheduler()
+        
+        self.domains =  df.CellFunction("uint", self.mesh)
+        self.domains.set_all(0)
+        self.region_id=0
+        
+        self.tablewriter = Tablewriter(self.ndtfilename, self, override=True)
+
+        self.overwrite_pvd_files = False
+        self.vtk_export_filename = self.sanitized_name + '.pvd'
+        self.vtk_saver = VTKSaver(self.vtk_export_filename)
+
+        self.scheduler_shortcuts = {
+            'save_ndt' : LLB.save_ndt,
+            'save_vtk' : LLB.save_vtk,
+            }
 
 
     
@@ -45,8 +82,8 @@ class LLB(object):
         
         self.vol = df.assemble(df.dot(df.TestFunction(self.S3),
                                       df.Constant([1, 1, 1])) * df.dx).array()
-        self.vol *= self.material.unit_length**3
-        #print 'vol=',self.vol
+        self.real_vol = self.vol*self.material.unit_length**3
+        
         
         self.pins=[]
         self._pre_rhs_callables = []
@@ -61,7 +98,7 @@ class LLB(object):
         integrator.set_max_num_steps(nsteps)
         
         self.integrator = integrator
-        self.run_until=self.run_until_sundial
+        self.method = 'cvode'
         
     def set_up_stochastic_solver(self, dt=1e-13,using_type_II=True):
         
@@ -72,9 +109,9 @@ class LLB(object):
         integrator = native_llb.StochasticLLBIntegrator(
                                     self.m,
                                     M_pred,
-                                    self.material.Ms0_array,
+                                    self.material.Ms,
                                     self.material.T,
-                                    self.material.volumes,
+                                    self.material.real_vol,
                                     self.pins,
                                     self.stochastic_rhs,
                                     self.method)
@@ -82,7 +119,6 @@ class LLB(object):
         self.integrator = integrator
         self._seed=np.random.random_integers(4294967295)
         self.dt=dt
-        self.run_until=self.run_until_stochastic
         
 
     @property
@@ -130,7 +166,7 @@ class LLB(object):
             self._pins=np.concatenate([self.pbc2d.ids_pbc,self._pins])
         
         if len(self._pins>0):
-            nxyz=self.S1.mesh().num_vertices()
+            self.nxyz=self.S1.mesh().num_vertices()
             assert(np.min(self._pins)>=0)
             assert(np.max(self._pins)<self.nxyz)
             
@@ -138,8 +174,8 @@ class LLB(object):
     def pins(self):
         return self._pins
     pins = property(pins, set_pins)
-        
-        
+    
+            
     def setup_parameters(self):
         self.integrator.set_parameters(self.dt,
                                        self.gamma_LL,
@@ -208,6 +244,22 @@ class LLB(object):
         
         return 0
     
+    def run_until(self,time):
+        if self.method=='cvode':
+            run_fun=self.run_until_sundial
+        else:
+            run_fun=self.run_until_stochastic
+        
+        exit_at = events.StopIntegrationEvent(time)
+        self.scheduler._add(exit_at)    
+        
+        for t in self.scheduler:
+            run_fun(t)
+            self.scheduler.reached(t)
+        self.scheduler.finalise(t)
+        
+        self.scheduler._remove(exit_at)
+        
     
     def run_until_sundial(self, t):
         if t <= self.t:
@@ -240,15 +292,82 @@ class LLB(object):
         log.debug("Integrating dynamics up to t = %g" % t)
         
     def m_average_fun(self,dx=df.dx):
-        
+        """
+        Compute and return the average polarisation according to the formula
+        :math:`\\langle m \\rangle = \\frac{1}{V} \int m \: \mathrm{d}V`
 
-        mx = df.assemble(df.dot(self._m, df.Constant([1, 0, 0])) * dx)
-        my = df.assemble(df.dot(self._m, df.Constant([0, 1, 0])) * dx)
-        mz = df.assemble(df.dot(self._m, df.Constant([0, 0, 1])) * dx)
-        volume = df.assemble(df.Constant(1)*df.dx,mesh=self.S1.mesh())
+        """ 
+        
+        mx = df.assemble(self.material._Ms_dg*df.dot(self._m, df.Constant([1, 0, 0])) * dx)
+        my = df.assemble(self.material._Ms_dg*df.dot(self._m, df.Constant([0, 1, 0])) * dx)
+        mz = df.assemble(self.material._Ms_dg*df.dot(self._m, df.Constant([0, 0, 1])) * dx)
+        volume = df.assemble(self.material._Ms_dg*dx,mesh=self.mesh)
                         
         return np.array([mx, my, mz]) / volume
     m_average=property(m_average_fun)
+    
+        
+    def save_m_in_region(self,region,name='unnamed'):
+        
+        self.region_id+=1
+        helpers.mark_subdomain_by_function(region, self.mesh, self.region_id,self.domains)
+        self.dx = df.Measure("dx")[self.domains]
+        
+        if name=='unnamed':
+            name='region_'+str(self.region_id)
+        
+        region_id=self.region_id
+        self.tablewriter.entities[name]={
+                        'unit': '<>',
+                        'get': lambda sim: sim.m_average_fun(dx=self.dx(region_id)),
+                        'header': (name+'_m_x', name+'_m_y', name+'_m_z')}
+        
+        self.tablewriter.update_entity_order()
+    
+    def save_ndt(self):
+        log.debug("Saving average field values for simulation '{}'.".format(self.name))
+        self.tablewriter.save()
+        
+    def schedule(self, func, *args, **kwargs):
+        if isinstance(func, str):
+            if func in self.scheduler_shortcuts:
+                func = self.scheduler_shortcuts[func]
+            else:
+                msg = "Scheduling keyword '%s' unknown. Known values are %s" \
+                    % (func, self.scheduler_shortcuts.keys())
+                log.error(msg)
+                raise KeyError(msg)
+
+        func_args = inspect.getargspec(func).args
+        illegal_argnames = ['at', 'after', 'every', 'at_end', 'realtime']
+        for kw in illegal_argnames:
+            if kw in func_args:
+                raise ValueError(
+                    "The scheduled function must not use any of the following "
+                    "argument names: {}".format(illegal_argnames))
+
+        at = kwargs.pop('at', None)
+        after = kwargs.pop('after', None)
+        every = kwargs.pop('every', None)
+        at_end = kwargs.pop('at_end', False)
+        realtime = kwargs.pop('realtime', False)
+
+        self.scheduler.add(func, [self] + list(args), kwargs,
+                at=at, at_end=at_end, every=every, after=after, realtime=realtime)
+        
+    def save_vtk(self, filename=None):
+        """
+        Save the magnetisation to a VTK file.
+        """
+        if filename != None:
+            # Explicitly provided filename overwrites the previously used one.
+            self.vtk_export_filename = filename
+
+        # Check whether we're still writing to the same file.
+        if self.vtk_saver.filename != self.vtk_export_filename:
+            self.vtk_saver.open(self.vtk_export_filename, self.overwrite_pvd_files)
+
+        self.vtk_saver.save_field(self.llg._m, self.t)
 
 
 if __name__ == '__main__':

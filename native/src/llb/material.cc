@@ -90,6 +90,7 @@ namespace finmag { namespace llb {
     double Materials::chi_par(double T){
 
     			double eps=1e-3;
+    			double eps2=1e-3;
     			double x=T/Tc;
     			double res=0;
 
@@ -111,37 +112,39 @@ namespace finmag { namespace llb {
     				res=a0/t+t*(a1+t*(a2+a3*t+a4*t*t));
 
     			}else{
-    				if (x<1+eps){
-    					x=1+eps;
+    				if (x<1+eps2){
+    					x=1+eps2;
     				}
     				res=0.333333333333333/(x-1.0);
     			}
 
-    			return res*(mu_a/(const_K_B*Tc));
+    			return res*(const_MU0*mu_a/(const_K_B*Tc));
 
             }
 
 
     double Materials::chi_perp(double T){
 
+    			double a0=0.002759963555555556;
+
     			double x=T/Tc;
 
-    			if (x<1){
-    				double a0=0.002759963555555556;
-
-    				if(x<0){
-    					x=0;
-    				}
-
-    				double res=1+a0*x;
-
-    				return Ms0/(2*K0)*res;
-
-    			}else{
-
-    				return chi_par(T);
+    			if(x<0){
+    				x=0;
     			}
 
+    			double res=(1+a0*x)*const_MU0*Ms0/(2*K0);
+
+    			if (x>1){
+
+    				double res2=chi_par(T);
+    				if (res2<res){
+    					res=res2;
+    				}
+
+    			}
+
+    			return res;
             }
 
     double Materials::inv_chi_par(double T){

@@ -40,8 +40,12 @@ class Material(object):
         self.name = name
         self.S1 = df.FunctionSpace(mesh, "Lagrange", 1)
         self.S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
+        
+        self.nxyz=mesh.num_vertices()
         self._m = df.Function(self.S3)
-        self._T = np.zeros(mesh.num_vertices())
+        
+        self._T = np.zeros(self.nxyz)
+        self._Ms = np.zeros(3*self.nxyz)
         self.h = self._m.vector().array()#just want to create a numpy array
         self.unit_length=unit_length 
         
@@ -51,7 +55,7 @@ class Material(object):
         if self.name == 'FePt':
             self.Tc=660
             self.Ms0=1047785.4656
-            self.A0=2.148042e-12
+            self.A0=2.148042e-11
             self.K0=8.201968e6
             self.mu_a=2.99e-23
         elif self.name == 'Nickel':
@@ -69,10 +73,11 @@ class Material(object):
             self.mu_a=1e-23
         else:
             raise NotImplementedError("Only FePt and Nickel available")
-        
-        self.volumes = df.assemble(df.TestFunction(self.S1) * df.dx).array()
-        self.Ms0_array=df.assemble(self.Ms0*df.TestFunction(self.S1)* df.dx).array()/self.volumes
-        self.volumes[:]*=self.unit_length**3
+                
+        self.volumes = df.assemble(df.dot(df.TestFunction(self.S3),
+                                      df.Constant([1, 1, 1])) * df.dx).array()
+                                      
+        self.real_vol = self.volumes*self.unit_length**3
         
         self.mat=native_llb.Materials(self.Ms0,self.Tc,self.A0,self.K0,self.mu_a)
         
@@ -85,24 +90,33 @@ class Material(object):
     def compute_field(self):
         self.mat.compute_relaxation_field(self._T, self.m, self.h)
         return self.h
-
-    
+        
     @property
     def T(self):
         return self._T
     
     @T.setter
     def T(self, value):
-        if isinstance(value, (df.Constant, np.ndarray)):
-            assert(value.shape==self._T.shape)
-            self._T[:]=value[:]
-        else:
-            self._T[:]=value
+        self._T[:]=helpers.scalar_valued_function(value,self.S1).vector().array()[:]
+        
         #TODO: Trying to use spatial parameters
-        self.A = self.mat.A(value)
-        self.m_e = self.mat.m_e(value)
-        self.inv_chi_perp = self.mat.inv_chi_perp(value)
-        self.inv_chi_par = self.mat.inv_chi_par(value)           
+        self.A = self.mat.A(self._T[0])
+        self.m_e = self.mat.m_e(self._T[0])
+        self.inv_chi_perp = self.mat.inv_chi_perp(self._T[0])
+        self.inv_chi_par = self.mat.inv_chi_par(self._T[0])   
+    
+        
+    @property
+    def Ms(self):
+        return self._Ms
+    
+    @Ms.setter
+    def Ms(self, value):
+        self._Ms_dg=helpers.scalar_valued_dg_function(value,self.mesh)
+
+        tmp_Ms = df.assemble(self._Ms_dg*df.dot(df.TestFunction(self.S3), df.Constant([1, 1, 1])) * df.dx)/self.volumes
+        
+        self._Ms[:]=tmp_Ms[:]       
             
     @property
     def m(self):

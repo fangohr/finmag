@@ -162,6 +162,8 @@ class SLLG(object):
                 if self.pbc2d:
                     self.pbc2d.modify_m(self._m.vector())
                 self._t+=self._dt
+            
+            
         except Exception,error:
             log.info(error)
             raise Exception(error)
@@ -179,6 +181,8 @@ class SLLG(object):
         self._m.vector().set_local(y)
         
         self.field[:] = self.effective_field.compute(self.t)[:]
+        
+        print self.field[:]
 
     
     @property
