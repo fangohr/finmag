@@ -182,7 +182,7 @@ class SLLG(object):
         
         self.field[:] = self.effective_field.compute(self.t)[:]
         
-        print self.field[:]
+        #print self.field[:]
 
     
     @property

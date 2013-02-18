@@ -46,6 +46,7 @@ class Material(object):
         
         self._T = np.zeros(self.nxyz)
         self._Ms = np.zeros(3*self.nxyz)
+        self._m_e = np.zeros(3*self.nxyz)
         self.h = self._m.vector().array()#just want to create a numpy array
         self.unit_length=unit_length 
         
@@ -81,7 +82,12 @@ class Material(object):
         
         self.mat=native_llb.Materials(self.Ms0,self.Tc,self.A0,self.K0,self.mu_a)
         
+        dg=df.FunctionSpace(mesh, "DG", 0)
+        self._A_dg = df.Function(dg)
+        self._m_e_dg=df.Function(dg)
+        
         self.T = 0
+        self.Ms=self.Ms0*self._m_e_dg.vector().array()
       
     @property  
     def me(self):
@@ -99,9 +105,24 @@ class Material(object):
     def T(self, value):
         self._T[:]=helpers.scalar_valued_function(value,self.S1).vector().array()[:]
         
+        self._T_dg=helpers.scalar_valued_dg_function(value,self.mesh)
+        
+        As = self._A_dg.vector().array()
+        Ts = self._T_dg.vector().array()
+        mes = self._m_e_dg.vector().array()
+        
+        for i in range(len(Ts)):
+            As[i] = self.mat.A(Ts[i])
+            mes[i] = self.mat.m_e(Ts[i])
+            
+        self._A_dg.vector().set_local(As)
+        self._m_e_dg.vector().set_local(mes)
+        
+        for i in range(len(self._T)):
+            self._m_e[i] = self.mat.m_e(self._T[i])
+            
+        
         #TODO: Trying to use spatial parameters
-        self.A = self.mat.A(self._T[0])
-        self.m_e = self.mat.m_e(self._T[0])
         self.inv_chi_perp = self.mat.inv_chi_perp(self._T[0])
         self.inv_chi_par = self.mat.inv_chi_par(self._T[0])   
     
