@@ -14,6 +14,23 @@ class Scheduler(object):
     """
     Manages a list of actions that should be performed at specific times.
 
+    Note that this class *intentionally* contains hardly any error
+    checking. The correct behaviour of the Scheduler depends on the
+    parent code doing "the right thing". In particular, it is crucial
+    that the reached() method be called with the next time step at
+    which an event is expected to happen, which can be obtained using
+    the next() method.
+
+    Thus a typical (correct) usage is as follows:
+
+        s = Scheduler()
+        s.add(...)       # schedule some item(s)
+        t = s.next()     # get next time step at which something should happen
+
+        # [do some stuff based on the time step just obtained]
+
+        s.reached(t)
+
     """
     def __init__(self):
         """
