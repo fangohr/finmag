@@ -17,11 +17,11 @@ measurements and prints out a summary of the findings when printed:
     print timer
 
 The module provides a default instance of the Timings class, which can be used
-by importing the variable *timings* from this module.
+by importing the variable *default_timer* from this module.
 
-    from finmag.util.timings import timings
+    from finmag.util.timings import default_timer
     # ...
-    print timings
+    print default_timer
 
 There are four different ways to do a measurement.
 
@@ -38,7 +38,7 @@ There are four different ways to do a measurement.
     with timed('my_measurement', timer=timer):
         sleep(1)
 
-    # or with the default timer *timings* (which is defined in this module)
+    # or with the default timer *default_timer* (which is defined in this module)
     with timed('my_measurement'):
         sleep(1)
 
@@ -50,9 +50,9 @@ There are four different ways to do a measurement.
     def do_things():
         sleep(1)
 
-    # or with the default timer *timings* (which is defined in this module)
+    # or with the default timer *default_timer* (which is defined in this module)
 
-    @ftimed() # needs the parentheses
+    @ftimed # works with or without parentheses
     def do_things()
         sleep(1)
 
@@ -65,10 +65,10 @@ There are four different ways to do a measurement.
         def do_things(self):
             sleep(1)
 
-    # or with the default timer *timings* (which is defined in this module)
+    # or with the default timer *default_timer* (which is defined in this module)
 
     class Example(object):
-        @mtimed() # needs the parentheses
+        @mtimed() # parentheses are optional
         def do_things(self):
             sleep(1)
 
@@ -90,7 +90,7 @@ class SingleTiming(object):
 
     def start(self):
         assert not self.running, \
-            "Can't start running measurement '{}' of group '{}' again.".format(self.name, self.group)
+            "Can't start running measurement '{}' of group '{}' again. You could call stop_last on the timings object.".format(self.name, self.group)
         self.running = True
         self._start = time.time()
 
@@ -250,10 +250,10 @@ class Timings(object):
     def key(self, group, name):
         return group + "::" + name
 
-timings = Timings()
+default_timer = Timings()
 
 @contextmanager
-def timed(group, name, timer=timings):
+def timed(group, name, timer=default_timer):
     """
     Use this context to time a piece of code. Needs a *name* argument for the measurement.
 
@@ -262,7 +262,7 @@ def timed(group, name, timer=timings):
     yield
     timer.stop(group, name)
 
-def mtimed(method_or_timer=timings):
+def mtimed(method_or_timer=default_timer):
     """
     Use to decorate a method to report timings. Accepts an optional Timings instance.
 
@@ -286,7 +286,7 @@ def mtimed(method_or_timer=timings):
         # the user called mtimed without arguments, python thus calls it with
         # the method to decorate (which is callable). Use the default Timings
         # object and return the decorated method. 
-        timer = timings
+        timer = default_timer
         return decorator(method_or_timer)
     # the user called mtimed with a timing object. Bind it to the timer name
     # and return the decorator itself. That's how python handles decorators which
@@ -294,7 +294,7 @@ def mtimed(method_or_timer=timings):
     timer = method_or_timer
     return decorator
 
-def ftimed(fn_or_timer=timings):
+def ftimed(fn_or_timer=default_timer):
     """
     Use to decorate a function to report timings. Accepts an optional Timings instance.
 
@@ -317,7 +317,7 @@ def ftimed(fn_or_timer=timings):
         # the user called ftimed without arguments, python thus calls it with
         # the method to decorate (which is callable). Use the default Timings
         # object and return the decorated function.
-        timer = timings
+        timer = default_timer
         return decorator(fn_or_timer)
     # the user called ftimed with a timing object. Bind it to the timer name
     # and return the decorator itself. That's how python handles decorators which

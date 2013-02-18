@@ -8,7 +8,7 @@ import finmag.util.consts as consts
 
 from finmag.native import sundials
 from finmag.native import llg as native_llg
-from finmag.util.timings import timings
+from finmag.util.timings import default_timer
 
 
 #default settings for logger 'finmag' set in __init__.py
@@ -192,7 +192,7 @@ class LLB(object):
         delta_Heff = self.compute_laplace_effective_field()
         #print 'delta_Heff',delta_Heff
  
-        timings.start(self.__class__.__name__, "sundials_rhs")
+        default_timer.start(self.__class__.__name__, "sundials_rhs")
         # Use the same characteristic time as defined by c
         
         native_llg.calc_baryakhtar_dmdt(self._M.vector().array(), 
@@ -207,7 +207,7 @@ class LLB(object):
                                  self.pins)
 
 
-        timings.stop(self.__class__.__name__, "sundials_rhs")
+        default_timer.stop(self.__class__.__name__, "sundials_rhs")
 
         for func in self._post_rhs_callables:
             func(self)
@@ -221,7 +221,7 @@ class LLB(object):
        
         """
 
-        timings.start(self.__class__.__name__, "sundials_jtimes")
+        default_timer.start(self.__class__.__name__, "sundials_jtimes")
         self.call_field_jtimes+=1
     
         self._M.vector().set_local(m)
@@ -239,7 +239,7 @@ class LLB(object):
                                    self.pins)
         
                             
-        timings.stop(self.__class__.__name__, "sundials_jtimes")
+        default_timer.stop(self.__class__.__name__, "sundials_jtimes")
         
         self.sundials_rhs(t, m, fy)
 

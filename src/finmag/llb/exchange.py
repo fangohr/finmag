@@ -168,8 +168,3 @@ if __name__ == "__main__":
     exch2.setup(mat.S3, mat._m, mat.Ms0, mat.m_e,unit_length=1e-9)
     
     print max(exch2.compute_field()-exch.compute_field())
-    
-
-    
-    #print timings.report()
-
