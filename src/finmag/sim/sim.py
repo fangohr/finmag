@@ -360,6 +360,17 @@ class Simulation(object):
         assert self.t == t  # self.t is read from integrator
         self.scheduler.reset(t)
 
+    def reset_time(self, t0):
+        """
+        Reset the internal clock time of the simulation to `t0`.
+
+        This also adjusts the internal time of the scheduler and time integrator.
+        """
+        self.integrator = llg_integrator(self.llg, self.llg.m,
+                                         backend=self.integrator_backend, t0=t0)
+        self.scheduler.reset(t0)
+        assert self.t == t0  # self.t is read from integrator
+
     def save_averages(self):
         """
         Save average field values (such as the magnetisation) to a file.

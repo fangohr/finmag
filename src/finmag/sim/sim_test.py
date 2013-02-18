@@ -271,10 +271,62 @@ class TestSimulation(object):
         assert(np.allclose(tb, tb_expected, atol=0))
 
         # Check that the magnetisation dynamics of sim1 and sim2 are
-        # the same and we end up with the same magnetisation.
-        a = np.concatenate([a[:10, :], a[11:, :]])
+        # the same and that we end up with the same magnetisation.
+        a = np.concatenate([a[:10, :], a[11:, :]])  # delete the duplicate line due to the restart
         assert(np.allclose(a[:, 1:], b[:, 1:]))
         assert(np.allclose(sim1.m, sim2.m))
+
+    def test_reset_time(self, tmpdir):
+        """
+        Integrate a simple macrospin simulation for a bit, then reset
+        the time to an earlier point in time and integrate again. We
+        expect the same magnetisation dynamics as if the simulation
+        had run for the same length continuously, but the internal
+        clock times should be different.
+
+        """
+        os.chdir(str(tmpdir))
+
+        # First simulation: run for 50 ps, reset the time to 30 ps and run
+        # again for 50 ps.
+        mesh = df.Box(0, 0, 0, 1, 1, 1, 1, 1, 1)
+        sim1 = Simulation(mesh, Ms=1, name='test_save_ndt')
+        sim1.alpha = 0.05
+        sim1.set_m((1, 0, 0))
+        sim1.add(Zeeman((0, 0, 1e6)))
+
+        sim1.schedule('save_ndt', every=1e-11)
+        sim1.run_until(5e-11)
+        sim1.reset_time(3e-11)
+        sim1.run_until(8e-11)
+
+        # Run a second simulation for 100 ps continuously, without
+        # resetting the time in between.
+        sim2 = Simulation(mesh, Ms=1, name='test_save_ndt2')
+        sim2.alpha = 0.05
+        sim2.set_m((1, 0, 0))
+        sim2.add(Zeeman((0, 0, 1e6)))
+
+        sim2.schedule('save_ndt', every=1e-11)
+        sim2.run_until(10e-11)
+
+        # Check that the time steps for sim1 are as expected.
+        a = np.loadtxt('test_save_ndt.ndt')
+        ta = a[:, 0]
+        ta_expected = 1e-11 * np.array([0, 1, 2, 3, 4, 5, 3, 4, 5, 6, 7, 8])
+        assert(np.allclose(ta, ta_expected, atol=0))
+
+        # Check that the time steps for sim2 are as expected.
+        b = np.loadtxt('test_save_ndt2.ndt')
+        tb = b[:, 0]
+        tb_expected = 1e-11 * np.arange(10+1)
+        assert(np.allclose(tb, tb_expected, atol=0))
+
+        # Delete the duplicate line due to resetting the time
+        a = np.concatenate([a[:5, :], a[6:, :]])
+
+        # Check that the magnetisation dynamics of sim1 and sim2 are the same.
+        assert(np.allclose(a[:, 1:], b[:, 1:]))
 
     def test_save_vtk(self, tmpdir):
         tmpdir = str(tmpdir)
