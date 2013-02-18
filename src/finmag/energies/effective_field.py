@@ -87,7 +87,7 @@ class EffectiveField(object):
 
         for inter in self.interactions:
             added_interaction_types.add(inter.__class__.__name__)
-            if inter.__class__.__name__ == interaction_type.capitalize():
+            if inter.__class__.__name__.capitalize() == interaction_type.capitalize():
                 if matching_interaction != None:
                     raise ValueError(
                         "Found more than one interaction of type '{}'.".format(interaction_type))
