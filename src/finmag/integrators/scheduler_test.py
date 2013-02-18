@@ -133,6 +133,7 @@ def test_reached():
     s.reached(25); assert c.cnt_every == 3
     s.reached(30); assert c.cnt_every == 4
 
+
 def test_scheduler_every():
     c = Counter()
 
@@ -207,3 +208,38 @@ def test_illegal_arguments():
         s.add(dummy_func, at=0, after=1)  # delays don't mix with 'at'
     with pytest.raises(AssertionError):
         s.add(dummy_func, at=1, every=2)  # can't mix 'at' with 'every'
+
+
+def test_reset():
+    c = Counter()
+    s = Scheduler()
+    s.add(c.inc_every, every=10)
+    assert c.cnt_every == 0
+
+    # Trigger a few events at their scheduled times
+    s.reached(0); assert c.cnt_every == 1
+    s.reached(10); assert c.cnt_every == 2
+    s.reached(20); assert c.cnt_every == 3
+    s.reached(30); assert c.cnt_every == 4
+
+    # Reset time from 30 to 15 (note: in between two scheduled time
+    # steps); check that no additional events were triggered and that
+    # the next time step is as expected
+    s.reset(15);
+    assert c.cnt_every == 4
+    assert s.next() == 20
+
+    # Trigger a few more events
+    s.reached(20); assert c.cnt_every == 5
+    s.reached(30); assert c.cnt_every == 6
+
+    # Reset time again, this time precisely to a scheduled time step
+    # (namely, 20); again, no additional events should have been
+    # triggered and the next scheduled time step should still be 20.
+    s.reset(20);
+    assert c.cnt_every == 6
+    assert s.next() == 20
+
+    # Trigger a few more events
+    s.reached(20); assert c.cnt_every == 7
+    s.reached(30); assert c.cnt_every == 8
