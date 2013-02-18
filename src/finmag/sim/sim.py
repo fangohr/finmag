@@ -349,16 +349,10 @@ class Simulation(object):
         
         self.llg._m.vector()[:] = data['m']
        
-        t = t0 or data["simtime"]
-        
-        self.integrator = llg_integrator(self.llg, self.llg.m, 
-            backend=self.integrator_backend, t0=t)
+        self.reset_time(t0 or data["simtime"])
 
         log.info("Reloaded and set m (<m>=%s) and time=%s from %s." % \
             (self.llg.m_average, self.t, filename))
-
-        assert self.t == t  # self.t is read from integrator
-        self.scheduler.reset(t)
 
     def reset_time(self, t0):
         """
