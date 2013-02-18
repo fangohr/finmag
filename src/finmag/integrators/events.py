@@ -151,7 +151,7 @@ class RepeatingEvent(SingleEvent):
         self.last = None
         self.next = self._time
         while self.next <= time: # if we had to, assume we triggered for `time`
-            self.last = time
+            self.last = self.next
             self.next = self._compute_next()
 
 
