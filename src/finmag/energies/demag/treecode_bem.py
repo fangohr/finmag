@@ -2,7 +2,7 @@ import logging
 import numpy as np
 import dolfin as df
 import solver_base as sb
-from finmag.util.timings import timings, mtimed
+from finmag.util.timings import default_timer
 import finmag.util.solver_benchmark as bench
 
 
@@ -92,7 +92,7 @@ class TreecodeBEM(sb.FemBemDeMagSolver):
                  project_method='magpar', unit_length=1,Ms = 1.0,bench = False,
                  mac=0.3,p=3,num_limit=100,correct_factor=5):
         
-        timings.start(self.__class__.__name__, "Treecode Solver init")
+        default_timer.start(self.__class__.__name__, "Treecode Solver init")
         sb.FemBemDeMagSolver.__init__(self,mesh,m, parameters, degree, element=element,
                                       project_method = project_method,
                                       unit_length = unit_length,Ms = Ms,bench = bench)
@@ -193,18 +193,18 @@ class TreecodeBEM(sb.FemBemDeMagSolver):
     def solve(self):
 
         # Compute phi1 on the whole domain (code-block 1, last line)
-        timings.start(self.__class__.__name__, "phi1 - matrix product")
+        default_timer.start(self.__class__.__name__, "phi1 - matrix product")
         g1 = self.D*self.m.vector()
 
-        timings.start_next(self.__class__.__name__, "phi1 - solve")
+        default_timer.start_next(self.__class__.__name__, "phi1 - solve")
         if self.bench:
             bench.solve(self.poisson_matrix,self.phi1.vector(),g1, benchmark = True)
         else:
-            timings.start_next(self.__class__.__name__, "1st linear solve")
+            default_timer.start_next(self.__class__.__name__, "1st linear solve")
             self.poisson_iter = self.poisson_solver.solve(self.phi1.vector(), g1)
-            timings.stop(self.__class__.__name__, "1st linear solve")
+            default_timer.stop(self.__class__.__name__, "1st linear solve")
         # Restrict phi1 to the boundary
-        timings.start_next(self.__class__.__name__, "Compute phi2 at boundary")
+        default_timer.start_next(self.__class__.__name__, "Compute phi2 at boundary")
         
         self.fast_sum.fastsum(self.res,self.phi1.vector().array())
         #self.fast_sum.directsum(self.res,self.phi1.vector().array())
@@ -214,14 +214,14 @@ class TreecodeBEM(sb.FemBemDeMagSolver):
         
         # Compute Laplace's equation inside the domain,
         # eq. (2) and last code-block
-        timings.start_next(self.__class__.__name__, "Compute phi2 inside")
+        default_timer.start_next(self.__class__.__name__, "Compute phi2 inside")
         self.phi2 = self.solve_laplace_inside(self.phi2)
 
         # phi = phi1 + phi2, eq. (5)
-        timings.start_next(self.__class__.__name__, "Add phi1 and phi2")
+        default_timer.start_next(self.__class__.__name__, "Add phi1 and phi2")
         self.phi.vector()[:] = self.phi1.vector() \
                              + self.phi2.vector()
-        timings.stop(self.__class__.__name__, "Add phi1 and phi2")
+        default_timer.stop(self.__class__.__name__, "Add phi1 and phi2")
         return self.phi
 
 if __name__ == "__main__":

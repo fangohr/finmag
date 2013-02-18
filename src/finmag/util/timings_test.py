@@ -1,7 +1,7 @@
 import finmag.util.timings as t
 import time
 
-default_timer = t.timings
+default_timer = t.default_timer
 test_timer = t.Timings()
 
 def test_by_hand():

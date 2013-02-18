@@ -1,7 +1,7 @@
 import dolfin as df
 import numpy as np
 from finmag.native import sundials
-from finmag.util.timings import timings
+from finmag.util.timings import default_timer
 from finmag.energies import Demag
 
 if __name__ == '__main__':
@@ -27,4 +27,4 @@ if __name__ == '__main__':
     demag = Demag("FK")
     demag.setup(Vv, m, Ms)
     demag.compute_field()
-    print timings
+    print default_timer
