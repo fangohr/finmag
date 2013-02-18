@@ -313,15 +313,18 @@ class Simulation(object):
             self.integrator = llg_integrator(self.llg, self.llg.m, backend=self.integrator_backend)
         log.info("Simulation will run until relaxation of the magnetisation.")
 
-        relax = events.RelaxationEvent(self, stopping_dmdt, dmdt_increased_counter_limit, dt_limit)
-        self.scheduler._add(relax)
+        if hasattr(self, "relaxation"):
+            del(self.relaxation)
+
+        self.relaxation = events.RelaxationEvent(self, stopping_dmdt, dmdt_increased_counter_limit, dt_limit)
+        self.scheduler._add(self.relaxation)
 
         self.integrator.run_with_schedule(self.scheduler)
         self.integrator.reinit()
         log.info("Relaxation finished at time t = {:.2g}.".format(self.t))
 
-        self.scheduler._remove(relax) 
-        del(relax.sim, relax) # help the garbage collection by avoiding circular reference
+        self.scheduler._remove(self.relaxation) 
+        del(self.relaxation.sim) # help the garbage collection by avoiding circular reference
 
     save_restart_data = sim_helpers.save_restart_data
 
