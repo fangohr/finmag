@@ -219,9 +219,9 @@ class FemBemDeMagSolver(object):
         if self.bench:
             bench.solve(A,function.vector(),b,benchmark = True)
         else:
-            demag_timings.start_next(self.__class__.__name__, "2nd linear solve")
+            demag_timings.start_next("2nd linear solve", self.__class__.__name__)
             self.laplace_iter = self.laplace_solver.solve(A, function.vector(), b)
-            demag_timings.stop(self.__class__.__name__, "2nd linear solve")
+            demag_timings.stop("2nd linear solve", self.__class__.__name__)
         return function
 
     def __compute_field_project(self):
