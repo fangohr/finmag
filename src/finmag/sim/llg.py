@@ -4,8 +4,7 @@ import dolfin as df
 import finmag.util.consts as consts
 from finmag.energies.effective_field import EffectiveField
 from finmag.native import llg as native_llg
-from finmag.util.timings import timings, mtimed
-from finmag.util.meshes import mesh_volume
+from finmag.util.timings import default_timer, mtimed
 from finmag.util import helpers
 
 #default settings for logger 'finmag' set in __init__.py
@@ -192,7 +191,7 @@ class LLG(object):
         H_eff = self.effective_field.compute(t)
         H_eff.shape = (3, -1)
 
-        timings.start(self.__class__.__name__, "solve")
+        default_timer.start("solve", self.__class__.__name__)
         # Use the same characteristic time as defined by c
         char_time = 0.1 / self.c
         # Prepare the arrays in the correct shape
@@ -212,7 +211,7 @@ class LLG(object):
                                  char_time, self.do_precession)
         dmdt.shape = (-1,)
 
-        timings.stop(self.__class__.__name__, "solve")
+        default_timer.stop("solve", self.__class__.__name__)
 
         return dmdt
 
