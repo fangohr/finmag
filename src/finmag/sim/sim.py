@@ -80,9 +80,7 @@ class Simulation(object):
         self.domains.set_all(0)
         self.region_id = 0
 
-        self.overwrite_pvd_files = False
-        self.vtk_export_filename = self.sanitized_name + '.pvd'
-        self.vtk_saver = VTKSaver(self.vtk_export_filename)
+        self.vtk_savers = {}
 
         self.scheduler_shortcuts = {
             'save_restart_data': Simulation.save_restart_data,
@@ -482,7 +480,27 @@ class Simulation(object):
         """
         if isinstance(func, str):
             if func in self.scheduler_shortcuts:
-                func = self.scheduler_shortcuts[func]
+                if func == 'save_vtk':
+                    # This is a special case which needs some pre-processing
+                    # as we need to open a .pvd file first.
+                    filename = kwargs.pop('filename', None)
+                    overwrite = kwargs.pop('overwrite', False)
+                    try:
+                        # Check whether a vtk_saver for this filename already exists; this is
+                        # necessary to if 'save_vtk' is scheduled multiple times with the same
+                        # filename.
+                        vtk_saver = self._get_vtk_saver(filename=filename, overwrite=False)
+                    except IOError:
+                        # If none exists, create a new one.
+                        vtk_saver = self._get_vtk_saver(filename=filename, overwrite=overwrite)
+
+                    def aux_save(sim):
+                        sim._save_m_to_vtk(vtk_saver)
+
+                    func = aux_save
+                    func = lambda sim: sim._save_m_to_vtk(vtk_saver)
+                else:
+                    func = self.scheduler_shortcuts[func]
             else:
                 msg = "Scheduling keyword '%s' unknown. Known values are %s" \
                     % (func, self.scheduler_shortcuts.keys())
@@ -514,25 +532,29 @@ class Simulation(object):
         log.warning("Method 'snapshot' is deprecated. Use 'save_vtk' instead.")
         self.vtk(self, filename, directory, force_overwrite)
 
-    def set_vtk_export_filename(self, filename=""):
-        """
-        Set the filename which is used for saving VTK snapshots.
-        """
-        self.vtk_export_filename = filename
+    def _get_vtk_saver(self, filename=None, overwrite=False):
+        if filename == None:
+            filename = self.sanitized_name + '.pvd'
 
-    def save_vtk(self, filename=None):
+        if self.vtk_savers.has_key(filename) and (overwrite == False):
+            # Retrieve an existing VTKSaver for appending data
+            s = self.vtk_savers[filename]
+        else:
+            # Create a  new VTKSaver and store it for later re-use
+            s = VTKSaver(filename, overwrite=overwrite)
+            self.vtk_savers[filename] = s
+
+        return s
+
+    def _save_m_to_vtk(self, vtk_saver):
+        vtk_saver.save_field(self.llg._m, self.t)
+
+    def save_vtk(self, filename=None, overwrite=False):
         """
         Save the magnetisation to a VTK file.
         """
-        if filename != None:
-            # Explicitly provided filename overwrites the previously used one.
-            self.vtk_export_filename = filename
-
-        # Check whether we're still writing to the same file.
-        if self.vtk_saver.filename != self.vtk_export_filename:
-            self.vtk_saver.open(self.vtk_export_filename, self.overwrite_pvd_files)
-
-        self.vtk_saver.save_field(self.llg._m, self.t)
+        vtk_saver = self._get_vtk_saver(filename, overwrite)
+        self._save_m_to_vtk(vtk_saver)
 
     def mesh_info(self):
         """
