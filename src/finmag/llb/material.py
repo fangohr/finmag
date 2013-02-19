@@ -47,7 +47,8 @@ class Material(object):
         self._T = np.zeros(self.nxyz)
         self._Ms = np.zeros(3*self.nxyz)
         self._m_e = np.zeros(3*self.nxyz)
-        self.h = self._m.vector().array()#just want to create a numpy array
+        self.inv_chi_par = np.zeros(self.nxyz)
+        self.h = np.zeros(3*self.nxyz)
         self.unit_length=unit_length 
         
         self.alpha = 0.5
@@ -94,7 +95,7 @@ class Material(object):
         return self._m_e[0]
         
     def compute_field(self):
-        self.mat.compute_relaxation_field(self._T, self.m, self.h)
+        native_llb.compute_relaxation_field(self._T, self.m, self.h, self._m_e, self.inv_chi_par,self.Tc)
         return self.h
         
     @property
@@ -121,11 +122,11 @@ class Material(object):
         self._m_e.shape=(3,-1)
         for i in range(len(self._T)):
             self._m_e[:,i] = self.mat.m_e(self._T[i])
+            self.inv_chi_par[i] = self.mat.inv_chi_par(self._T[i])
         self._m_e.shape=(-1,)    
         
         #TODO: Trying to use spatial parameters
         self.inv_chi_perp = self.mat.inv_chi_perp(self._T[0])
-        self.inv_chi_par = self.mat.inv_chi_par(self._T[0])   
     
         
     @property

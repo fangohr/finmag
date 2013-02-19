@@ -8,13 +8,14 @@ tstart = 0
 tstatic = 1e-9
 tpulse = 0.02e-9
 tend = 4e-9
+toffset = 1e-20
 
 xdim = 7e-9
 ydim = 7e-9
 zdim = 1e-9
 
-xv = 15
-yv = 15
+xv = 5
+yv = 5
 
 Ms = 1.567e5 #A/m
 H_pulse = [0.7*Ms, 0.7*Ms, 0.7*Ms]
@@ -45,7 +46,7 @@ for t in tsim:
     df.plot(m)
             
 #Excite the system
-tsim = np.linspace(tstatic,tstatic+tpulse,51)
+tsim = np.linspace(tstatic+toffset,tstatic+tpulse,51)
 sim.add(Zeeman(H_pulse))
 for t in tsim:
     sim.run_until(t)
@@ -53,7 +54,7 @@ for t in tsim:
     df.plot(m)
 
 #Record spin waves
-tsim = np.linspace(tstatic+tpulse,tend,5001)
+tsim = np.linspace(tstatic+tpulse+toffset,tend,51)
 sim.alpha = sw_alpha
 sim.add(Zeeman([0,0,0]))
 
@@ -61,9 +62,9 @@ xs = np.linspace(0,xdim-1e-22,xv+1)
 ys = np.linspace(0,ydim-1e-22,yv+1)
 z = 0
 
-mx = np.zeros([xv+1,yv+1,len(tsim)])
-my = np.zeros([xv+1,yv+1,len(tsim)])
-mz = np.zeros([xv+1,yv+1,len(tsim)])
+mx = np.zeros([xv+1,yv+1,len(tsim-1)])
+my = np.zeros([xv+1,yv+1,len(tsim-1)])
+mz = np.zeros([xv+1,yv+1,len(tsim-1)])
 for i in xrange(len(tsim)):
     sim.run_until(tsim[i])
     m = sim.llg._m
@@ -74,7 +75,7 @@ for i in xrange(len(tsim)):
             my[j,k,i] = m(xs[j], ys[k], 0)[1]
             mz[j,k,i] = m(xs[j], ys[k], 0)[2]
 
-tsim = tsim - (tstatic+tpulse)
+tsim = tsim - (tstatic+tpulse+toffset)
 
 #save the file into the output.npz
-np.savez('output', tsim=tsim, mx=mx, my=my, mz=mz)
+np.savez('output_sinc', tsim=tsim, mx=mx, my=my, mz=mz)

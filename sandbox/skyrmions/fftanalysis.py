@@ -1,7 +1,8 @@
 import numpy as np
 import pylab as plt
+import matplotlib.cm as cm
 
-npzfile = np.load('output.npz')
+npzfile = np.load('output_sinc.npz')
 mx = npzfile['mx']
 my = npzfile['my']
 mz = npzfile['mz']
@@ -47,19 +48,19 @@ fftz = np.absolute(ftz[0:len(ftz)/2+1])
 plt.figure(1)
 p1 = plt.subplot(311)
 p1.plot(f, fftx, label='mx')
-plt.xlim([0,1e10])
+plt.xlim([0,0.5e10])
 plt.legend()
 plt.xlabel('f')
 plt.ylabel('|S|^2')
 p2 = plt.subplot(312)
 p2.plot(f, ffty, label='my')
-plt.xlim([0,1e10])
+plt.xlim([0,0.5e10])
 plt.legend()
 plt.xlabel('f')
 plt.ylabel('|S|^2')
 p3 = plt.subplot(313)
 p3.plot(f, fftz, label='mz')
-plt.xlim([0,1e10])
+plt.xlim([0,0.5e10])
 plt.legend()
 plt.xlabel('f')
 plt.ylabel('|S|^2')
@@ -68,11 +69,11 @@ plt.show()
 def find_max(a):
     index = []
     for i in range(1,len(a)-1):
-        if a[i-1]<a[i]>a[i+1] and a[i]>2:
+        if a[i-1]<a[i]>a[i+1] and a[i]>100:
             index.append(i)
     return index
 
-mode_indices = find_max(fftz)
+mode_indices = find_max(fftx)
 
 print mode_indices
 
@@ -85,13 +86,13 @@ mode = np.zeros([mx.shape[0], mx.shape[1]])
 
 for i in range(mx.shape[0]):
     for j in range(mx.shape[1]):
-        ftrans = np.fft.fft(mz[i,j,:])
-        mode[i,j] = np.absolute(ftrans[146])#**2
+        ftrans = np.fft.fft(my[i,j,:])
+        mode[i,j] = np.absolute(ftrans[10])#**2
 
 plt.figure(fig)
 
 #X, Y = plt.meshgrid(x_c,y_c)
 #plt.pcolor(X, Y, mode, cmap=plt.cm.RdBu) 
-plt.imshow(mode)
+plt.imshow(mode, cmap = cm.Greys_r)
 plt.show()
 fig += 1
