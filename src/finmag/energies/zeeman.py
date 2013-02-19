@@ -1,5 +1,6 @@
 import logging
 import dolfin as df
+import numpy as np
 from finmag.util.consts import mu0
 from finmag.util import helpers
 
@@ -34,7 +35,17 @@ class Zeeman(object):
 
         """
         self.H = helpers.vector_valued_function(value, self.S3, **self.kwargs)
-        self.E = - mu0 * self.Ms * df.dot(self.m, self.H) * df.dx 
+        self.E = - mu0 * self.Ms * df.dot(self.m, self.H) * df.dx
+    
+    def average_field(self):
+        """
+        return the average applied filed might be used in save_ndt
+        """
+        field=self.compute_field()
+        field.shape=(3,-1)
+        av = np.average(field,axis=1)
+        field.shape=(-1,)
+        return av
 
     def compute_field(self):
         return self.H.vector().array()

@@ -19,14 +19,12 @@ class LLBAnisotropy(EnergyBase):
     
     E = 0.5 * (m_x^2 + m_y^2)/chi_perp 
 
-   
-
     """
     
-    def __init__(self, inv_chi_perp, method="box-matrix-petsc"):
+    def __init__(self, mat, method="box-matrix-petsc"):
         self.e_x = df.Constant([1, 0, 0]) 
         self.e_y = df.Constant([0, 1, 0]) 
-        self.inv_chi_perp = inv_chi_perp
+        self.inv_chi_perp = mat.inv_chi_perp
         super(LLBAnisotropy, self).__init__(method, in_jacobian=True)
 
     @mtimed
@@ -38,24 +36,20 @@ class LLBAnisotropy(EnergyBase):
         self.v = df.TestFunction(S3)
 
         # Anisotropy energy
-        E = 0.5 * ((df.dot(self.e_x, self.m)) ** 2 + df.dot(self.e_y, self.m) ** 2) * df.dx
+        E = 0.5 * ((df.dot(self.e_x, self.m)) ** 2 + df.dot(self.e_y, self.m) ** 2) 
 
 
         # Needed for energy density
         S1 = df.FunctionSpace(S3.mesh(), "CG", 1)
         w = df.TestFunction(S1)
-       
-        nodal_E = 0.5 * df.dot(((df.dot(self.e_x, self.m)) ** 2 + df.dot(self.e_y, self.m) ** 2), w) * df.dx
-
         # This is only needed if we want the energy density
         # as a df.Function, in order to e.g. probe.
         self.ED = df.Function(S1)
 
-        EnergyBase.setup(self,
-                E=E,
-                nodal_E=nodal_E,
+        super(LLBAnisotropy, self).setup(
+                E_integrand=E,
                 S3=S3,
-                M=self.m,
+                m=self.m,
                 Ms=Ms0,
                 unit_length=unit_length)
 
@@ -86,7 +80,7 @@ if __name__ == "__main__":
     mat = Material(mesh)
     mat.set_m((1,2,3))
     
-    anis = LLBAnisotropy(mat.inv_chi_perp)
+    anis = LLBAnisotropy(mat)
     
 
     anis.setup(mat.S3, mat._m, mat.Ms0)
