@@ -3,8 +3,8 @@ import numpy as np
 import logging
 import pytest
 import os
-import glob
 import shutil
+from glob import glob
 from tempfile import mkdtemp
 from finmag import sim_with, Simulation
 from finmag.example import barmini
@@ -329,58 +329,46 @@ class TestSimulation(object):
         assert(np.allclose(a[:, 1:], b[:, 1:]))
 
     def test_save_vtk(self, tmpdir):
-        tmpdir = str(tmpdir)
-        sim1_dir = os.path.join(tmpdir, 'sim1')
-        sim2_dir = os.path.join(tmpdir, 'sim2')
-        sim3_dir = os.path.join(tmpdir, 'sim3')
-        sim4_dir = os.path.join(tmpdir, 'sim4')
-        os.mkdir(sim1_dir)
-        os.mkdir(sim2_dir)
-        os.mkdir(sim3_dir)
-        os.mkdir(sim4_dir)
+        os.chdir(str(tmpdir))
 
-        # Run simulation for a few picoseconds and check that the
-        # expected vtk files were saved.
-        os.chdir(sim1_dir)
+        # Create an empty dummy .pvd file
+        with open('barmini.pvd', 'w'): pass
+
         sim = barmini()
-        sim.schedule('save_vtk', every=4e-12, at_end=True)
-        sim.schedule('save_vtk', at=5e-12)
-        sim.run_until(1e-11)
-        assert_number_of_files('barmini.pvd', 1)
-        assert_number_of_files('barmini*.vtu', 5)
+        with pytest.raises(IOError):
+            # existing file should not be overwritten
+            sim.schedule('save_vtk', every=1e-13, overwrite=False)
+            #sim.run_until(1e-12)
 
-        # Same again, but with a different filename (and a slightly
-        # different schedule, just for variety).
-        os.chdir(sim2_dir)
+        # This time we enforce overwriting
         sim = barmini()
-        sim.set_vtk_export_filename('m.pvd')
-        sim.schedule('save_vtk', every=2e-12)
-        sim.schedule('save_vtk', at=3e-12)
-        sim.run_until(5e-12)
-        assert_number_of_files('m.pvd', 1)
-        assert_number_of_files('m*.vtu', 4)
-        # Check that no vtk files are present apart from the ones we expect
-        assert(len(glob.glob('*.vtu')) + len(glob.glob('*.pvd')) == 4 + 1)
+        sim.schedule('save_vtk', every=1e-13, overwrite=True)
+        sim.run_until(5e-13)
+        assert(len(glob('barmini*.vtu')) == 6)
 
-        # Run for a bit, then change the filename and continue
-        # running. At the end check that both .pvd files were written
-        # correctly.
-        os.chdir(sim3_dir)
+        # Schedule saving to different filenames and at various time steps.
         sim = barmini()
-        sim.set_vtk_export_filename('a.pvd')
-        sim.schedule('save_vtk', every=2e-12)
-        sim.schedule('save_vtk', at=3e-12)
-        sim.run_until(5e-12)
-        assert_number_of_files('a.pvd', 1)
-        assert_number_of_files('a*.vtu', 4)
-        sim.set_vtk_export_filename('b.pvd')
-        sim.run_until(10e-12)
-        assert_number_of_files('b.pvd', 1)
-        assert_number_of_files('b*.vtu', 3)
+        sim.schedule('save_vtk', filename='bar2.pvd', every=1e-13, overwrite=True)
+        sim.schedule('save_vtk', filename='bar2.pvd', at=2.5e-13, overwrite=False)
+        sim.schedule('save_vtk', filename='bar2.pvd', at=4.3e-13, overwrite=False)
 
-        sim.save_vtk('c.pvd')
-        assert_number_of_files('c.pvd', 1)
-        assert_number_of_files('c*.vtu', 1)
+        sim.schedule('save_vtk', filename='bar3.pvd', at=3.5e-13, overwrite=True)
+        sim.schedule('save_vtk', filename='bar3.pvd', every=2e-13, overwrite=True)
+        sim.schedule('save_vtk', filename='bar3.pvd', at=3.8e-13, overwrite=True)
+
+        # ... then run the simulation
+        sim.run_until(5e-13)
+
+        # ... also save another vtk snapshot manually
+        sim.save_vtk(filename='bar3.pvd')
+
+        # ... and check that the correct number of files was created
+        assert(len(glob('bar2*.vtu')) == 8)
+        assert(len(glob('bar3*.vtu')) == 6)
+
+        # Saving another snapshot with overwrite=True should erase existing .vtu files
+        sim.save_vtk(filename='bar3.pvd', overwrite=True)
+        assert(len(glob('bar3*.vtu')) == 1)
 
     def test_sim_schedule_clear(self, tmpdir):
         os.chdir(str(tmpdir))
