@@ -21,6 +21,8 @@ from finmag.util.pbc2d import PeriodicBoundary2D
 import logging
 log = logging.getLogger(name="finmag")
 
+ONE_DEGREE_PER_NS = 17453292.5  # in rad/s
+
 
 class LLB(object):
     def __init__(self, mat, method='RK2b',name='unnamed',pbc2d=None):
@@ -244,19 +246,23 @@ class LLB(object):
         
         return 0
     
-    def run_until(self,time):
+    def run_with_scheduler(self):
         if self.method=='cvode':
             run_fun=self.run_until_sundial
         else:
             run_fun=self.run_until_stochastic
         
-        exit_at = events.StopIntegrationEvent(time)
-        self.scheduler._add(exit_at)    
-        
         for t in self.scheduler:
             run_fun(t)
             self.scheduler.reached(t)
         self.scheduler.finalise(t)
+    
+    def run_until(self,time):
+    
+        exit_at = events.StopIntegrationEvent(time)
+        self.scheduler._add(exit_at)    
+        
+        self.run_with_scheduler()
         
         self.scheduler._remove(exit_at)
         
@@ -367,7 +373,26 @@ class LLB(object):
         if self.vtk_saver.filename != self.vtk_export_filename:
             self.vtk_saver.open(self.vtk_export_filename, self.overwrite_pvd_files)
 
-        self.vtk_saver.save_field(self.llg._m, self.t)
+        self.vtk_saver.save_field(self._m, self.t)
+        
+    
+    def relax(self, stopping_dmdt=ONE_DEGREE_PER_NS, dt_limit=1e-10,
+              dmdt_increased_counter_limit=500):
+        """
+        Run the simulation until the magnetisation has relaxed.
+
+        This means the magnetisation reaches a state where its change over time
+        at each node is smaller than the threshold `stopping_dm_dt` (which
+        should be given in rad/s).
+
+        """
+        
+        relax = events.RelaxationEvent(self, stopping_dmdt, dmdt_increased_counter_limit, dt_limit)
+        self.scheduler._add(relax)
+
+        self.run_with_scheduler()
+
+        self.scheduler._remove(relax) 
 
 
 if __name__ == '__main__':

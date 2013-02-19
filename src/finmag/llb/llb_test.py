@@ -129,8 +129,6 @@ def test_llb_save_data():
     mat.T = init_T
     mat.alpha=0.1
     
-    print mat.T
-    print mat._m_e
     
     assert(mat.T[0]==0)
     
@@ -149,17 +147,44 @@ def test_llb_save_data():
     sim.save_m_in_region(region1,name='bottom')
     sim.save_m_in_region(region2,name='top')
     sim.schedule('save_ndt',every=1e-12)
-   
+    
     
     for t in ts:
         print 't=========',t
         sim.run_until(t)
+        
+
+def llb_relax():
+    mesh = df.BoxMesh(0, 0, 0, 10, 10, 5, 2, 2, 1)
+    
+    mat = Material(mesh, name='FePt',unit_length=1e-9)
+    mat.set_m((1, 0, 0))
+    mat.T = 0
+    mat.alpha=0.1
+    
+    
+    assert(mat.T[0]==0)
+    
+    sim = LLB(mat,name='llb_relax')
+    sim.set_up_solver()
+        
+    H0 = 1e6
+    sim.add(Zeeman((0, 0, H0)))
+    sim.add(Exchange(mat))
+    
+    demag=Demag(solver='FK')
+    sim.add(demag)
+    
+    sim.schedule('save_vtk',at_end=True,filename='p0.pvd')
+    sim.schedule('save_ndt',at_end=True)
+    
+    sim.relax()
     
 
 if __name__ == "__main__":
     #test_llb_sundials(do_plot=True)
     #sim_llb_100(do_plot=True)
-    test_llb_save_data()
-    
+    #test_llb_save_data()
+    llb_relax()
 
 

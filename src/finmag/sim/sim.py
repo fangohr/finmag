@@ -547,8 +547,8 @@ class Simulation(object):
             return info
 
         if hasattr(self.llg.effective_field, "exchange"):
-            A = self.llg.effective_field.exchange.A
-            l_ex = exchange_length(A, self.llg.Ms)
+            A = self.llg.effective_field.exchange.A_av
+            l_ex = exchange_length(A, self.llg.Ms_av)
             info_string += added_info(l_ex, 'exchange length', 'l_ex')
             if hasattr(self.llg.effective_field, "anisotropy"):
                 K1 = float(self.llg.effective_field.anisotropy.K1)
