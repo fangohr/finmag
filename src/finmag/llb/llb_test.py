@@ -103,7 +103,7 @@ def sim_llb_100(do_plot=False):
 
 
 def test_llb_save_data():
-    mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 2, 2, 2)
+    mesh = df.BoxMesh(0, 0, 0, 10, 10, 5, 2, 2, 1)
     
     def region1(coords):
         if coords[2]<0.5:
@@ -118,7 +118,7 @@ def test_llb_save_data():
         if region1(coords)>0:
             return 8.6e5
         else:
-            return 4e5
+            return 8.0e5
         
     def init_T(pos):
         return 1*pos[2]
@@ -135,7 +135,7 @@ def test_llb_save_data():
     sim = LLB(mat,name='test_llb')
     sim.set_up_solver()
     
-    ts = np.linspace(0, 1e-10, 101)
+    ts = np.linspace(0, 1e-11, 11)
     
     H0 = 1e6
     sim.add(Zeeman((0, 0, H0)))
@@ -150,7 +150,7 @@ def test_llb_save_data():
     
     
     for t in ts:
-        print 't=========',t
+        print 't===',t
         sim.run_until(t)
         
 
@@ -184,7 +184,7 @@ def llb_relax():
 if __name__ == "__main__":
     #test_llb_sundials(do_plot=True)
     #sim_llb_100(do_plot=True)
-    #test_llb_save_data()
-    llb_relax()
+    test_llb_save_data()
+    #llb_relax()
 
 

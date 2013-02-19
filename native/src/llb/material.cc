@@ -196,8 +196,65 @@ namespace finmag { namespace llb {
     	         }
 
 
+    void compute_relaxation_field(
+                    const np_array<double> & T_arr, //input
+                    const np_array<double> & M,
+                    const np_array<double> & H,
+                    const np_array<double> & me_arr,
+                    const np_array<double> & inv_chi_par_arr,
+                    double Tc) {
+
+            int length=T_arr.size();
+            assert(length*3==M.size());
+            double *m = M.data();
+            double *h = H.data();
+            double *T = T_arr.data();
+            double *me = me_arr.data();
+            double *inv_chi_par = inv_chi_par_arr.data();
+
+            double m_e_sq;
+
+            int i,j,k;
+            double coeff;
+            for (i = 0; i < length; i++) {
+                    j=length+i;
+                    k=length+j;
+
+                double temp = T[i];
+                double m_sq = m[i]*m[i] + m[j]*m[j] + m[k]*m[k];
+
+                m_e_sq=me[i]*me[i];
+                if (Tc-temp>1) {
+                    coeff = 0.5 * (1. - m_sq/m_e_sq);
+                } else if (temp-Tc<1){
+                    coeff = -1. - 0.6 * Tc / 1 * m_sq;
+                }else {
+                    coeff = -1. - 0.6 * Tc / (temp - Tc) * m_sq;
+                }
+
+                coeff *= inv_chi_par[i];
+
+                h[i] = coeff * m[i];
+                h[j] = coeff * m[j];
+                h[k] = coeff * m[k];
+
+         }
+
+    }
+
+
+
+
     void register_llb_material() {
         using namespace bp;
+        def("compute_relaxation_field", &compute_relaxation_field, (
+                    arg("T_arr"),
+                    arg("M"),
+                    arg("H"),
+                    arg("me"),
+                    arg("inv_chi_par"),
+                    arg("Tc")
+                ));
 
         class_<Materials>("Materials", init<
         		double,double,double,double,double>())
