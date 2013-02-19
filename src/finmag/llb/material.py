@@ -91,7 +91,7 @@ class Material(object):
       
     @property  
     def me(self):
-        return self.m_e
+        return self._m_e[0]
         
     def compute_field(self):
         self.mat.compute_relaxation_field(self._T, self.m, self.h)

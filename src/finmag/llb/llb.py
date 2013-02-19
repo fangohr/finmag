@@ -64,7 +64,7 @@ class LLB(object):
 
         self.overwrite_pvd_files = False
         self.vtk_export_filename = self.sanitized_name + '.pvd'
-        self.vtk_saver = VTKSaver(self.vtk_export_filename)
+        self.vtk_saver = VTKSaver(self.vtk_export_filename,overwrite=True)
 
         self.scheduler_shortcuts = {
             'save_ndt' : LLB.save_ndt,
@@ -193,6 +193,16 @@ class LLB(object):
                           self.material.Ms0,
                           unit_length=self.material.unit_length)
         self.interactions.append(interaction)
+        
+        if interaction.__class__.__name__=='Zeeman':
+            self.zeeman_interation=interaction
+            self.tablewriter.entities['zeeman']={
+                        'unit': '<A/m>',
+                        'get': lambda sim: sim.zeeman_interation.average_field(),
+                        'header': ('h_x', 'h_y', 'h_z')}
+        
+            self.tablewriter.update_entity_order()
+            
         
 
     def compute_effective_field(self):
@@ -377,7 +387,7 @@ class LLB(object):
         
     
     def relax(self, stopping_dmdt=ONE_DEGREE_PER_NS, dt_limit=1e-10,
-              dmdt_increased_counter_limit=500):
+              dmdt_increased_counter_limit=10000):
         """
         Run the simulation until the magnetisation has relaxed.
 
@@ -391,8 +401,9 @@ class LLB(object):
         self.scheduler._add(relax)
 
         self.run_with_scheduler()
+        self.integrator.reinit(self.t, self.m)
 
-        self.scheduler._remove(relax) 
+        self.scheduler._remove(relax)
 
 
 if __name__ == '__main__':
