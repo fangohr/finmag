@@ -1,4 +1,5 @@
 import dolfin as df
+import numpy as np
 import logging
 from finmag.util.timings import mtimed
 from energy_base import EnergyBase
@@ -70,6 +71,7 @@ class Exchange(EnergyBase):
         self.exchange_factor = df.Constant(1.0 / unit_length ** 2)
         self.S3 = S3
         self.A = helpers.scalar_valued_dg_function(self.A_waiting_for_mesh, self.S3.mesh())
+        self.A_av = np.average(self.A.vector().array())
         del(self.A_waiting_for_mesh)
         E_integrand = self.exchange_factor * self.A * df.inner(df.grad(m), df.grad(m))
 

@@ -132,7 +132,8 @@ class LLG(object):
         self._Ms_dg=helpers.scalar_valued_dg_function(value, self.mesh)
         self.volumes = df.assemble(df.TestFunction(self.S1) * df.dx)
         Ms=df.assemble(self._Ms_dg*df.TestFunction(self.S1)* df.dx).array()/self.volumes
-        self._Ms[:]=Ms[:]
+        self._Ms[:] = Ms[:]
+        self.Ms_av = np.average(self._Ms_dg.vector().array())
 
     @property
     def M(self):
