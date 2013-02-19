@@ -10,6 +10,9 @@ import sys, os, commands, subprocess,time
 from finmag.sim.llg import LLG
 import copy
 
+import finmag
+is_dolfin_1_1 = (finmag.util.versions.get_version_dolfin() == "1.1.0")
+
 class FemBemGCRboxSolver(FemBemGCRSolver):
     "GCR Solver but with point evaluation of the q vector as the default"
     def __init__(self, mesh,m, parameters=sb.default_parameters, degree=1, element="CG",
@@ -27,13 +30,16 @@ nmagoutput = os.path.join(MODULE_DIR, 'nmag_data.dat')
 if os.path.isfile(nmagoutput):
     os.remove(nmagoutput)
 
-finmagsolvers = {"FK":FemBemFKSolver,"GCR":FemBemGCRSolver,"GCRbox":FemBemGCRboxSolver}
+if is_dolfin_1_1:
+    finmagsolvers = {"FK": FemBemFKSolver, "GCRbox": FemBemGCRboxSolver}
+else:
+    finmagsolvers = {"FK": FemBemFKSolver, "GCR": FemBemGCRSolver, "GCRbox": FemBemGCRboxSolver}
 
 #Define data arrays to be with data for later plotting
 vertices = []
 initialdata = {k:[] for k in finmagsolvers.keys() + ["nmag"]}
 
-[xavg,xmax,xmin,ymax,zmax,stddev,errorH,maxerror,errnorm] = [copy.deepcopy(initialdata) for i in range(9) ]
+[xavg, xmax, xmin, ymax, zmax, stddev, errorH, maxerror, errnorm] = [copy.deepcopy(initialdata) for i in range(9) ]
 
 runtimes = {"bem": copy.deepcopy(initialdata),
            "solve": copy.deepcopy(initialdata)}
@@ -261,28 +267,30 @@ p.savefig(os.path.join(MODULE_DIR, 'xvalues.png'))
 ############################################
 #Useful Plot xvalues GCR
 ############################################
-p.figure()
-# Plot 
-p.plot(vertices, xavg["GCR"], 'x--',label='Finmag GCR x-avg')
-p.plot(vertices, xmax["GCR"], 'o-',label='Finmag GCR x-max')
-p.plot(vertices, xmin["GCR"], '^:',label='Finmag GCR x-min')
+if not is_dolfin_1_1:
+    p.figure()
+    # Plot
+    p.plot(vertices, xavg["GCR"], 'x--',label='Finmag GCR x-avg')
+    p.plot(vertices, xmax["GCR"], 'o-',label='Finmag GCR x-max')
+    p.plot(vertices, xmin["GCR"], '^:',label='Finmag GCR x-min')
 
-if has_nmag:
-    p.plot(vertices, xavg["nmag"], label='Nmag x-avg')
-    p.plot(vertices, xmax["nmag"], label='Nmag x-max')
-    p.title('Nmag - Finmag GCR comparison')
-else:
-    p.title('Finmag x vs vertices')
+    if has_nmag:
+        p.plot(vertices, xavg["nmag"], label='Nmag x-avg')
+        p.plot(vertices, xmax["nmag"], label='Nmag x-max')
+        p.title('Nmag - Finmag GCR comparison')
+    else:
+        p.title('Finmag x vs vertices')
 
-p.xlabel('vertices')
-p.grid()
-p.legend(loc = 0)
-p.savefig(os.path.join(MODULE_DIR, 'xvaluesgcr.png'))
+    p.xlabel('vertices')
+    p.grid()
+    p.legend(loc = 0)
+    p.savefig(os.path.join(MODULE_DIR, 'xvaluesgcr.png'))
 
 #Standard deviation plot
 p.figure()
 p.plot(vertices, stddev["FK"], label='Finmag FK standard deviation')
-p.plot(vertices, stddev["GCR"], label='Finmag GCR standard deviation')
+if not is_dolfin_1_1:
+    p.plot(vertices, stddev["GCR"], label='Finmag GCR standard deviation')
 
 if has_nmag:
     p.plot(vertices, stddev["nmag"], label='Nmag standard deviation')
@@ -318,7 +326,8 @@ p.savefig(os.path.join(MODULE_DIR, 'maxerror.png'))
 ############################################
 p.figure()
 p.loglog(vertices, stddev["FK"], label='Finmag FK standard deviation')
-p.loglog(vertices, stddev["GCR"], label='Finmag GCR standard deviation')
+if not is_dolfin_1_1:
+    p.loglog(vertices, stddev["GCR"], label='Finmag GCR standard deviation')
 
 if has_nmag:
     p.loglog(vertices, stddev["nmag"], label='Nmag standard deviation')
@@ -335,7 +344,8 @@ p.savefig(os.path.join(MODULE_DIR, 'stddev_loglog.png'))
 ############################################
 p.figure()
 p.loglog(vertices, errnorm["FK"], label='Finmag FK errornorm')
-p.loglog(vertices, errnorm["GCR"], label='Finmag GCR errornorm')
+if not is_dolfin_1_1:
+    p.loglog(vertices, errnorm["GCR"], label='Finmag GCR errornorm')
 p.loglog(vertices, errnorm["GCRbox"], label='Finmag GCR box method errornorm')
 
 p.xlabel('vertices')
@@ -352,7 +362,8 @@ titles = ["Runtime without Bem assembly","Bem assembly times"]
 for title,k in zip(titles,runtimes.keys()):
     p.figure()
     p.loglog(vertices, runtimes[k]["FK"],'o-', label='Finmag FK timings')
-    p.loglog(vertices, runtimes[k]["GCR"],'x-', label='Finmag GCR timings')
+    if not is_dolfin_1_1:
+        p.loglog(vertices, runtimes[k]["GCR"],'x-', label='Finmag GCR timings')
 
     if title == "Runtime without Bem assembly":
         p.loglog(vertices, runtimes[k]["GCRbox"],'x-', label='Finmag GCR box method timings')
@@ -372,8 +383,9 @@ for title,k in zip(titles,runtimes.keys()):
 p.figure()
 p.plot(vertices, krylov_iter["FK"]["laplace"],'o-', label='Finmag FK laplace')
 p.plot(vertices, krylov_iter["FK"]["poisson"],'x-', label='Finmag FK poisson')
-p.plot(vertices, krylov_iter["GCR"]["laplace"], label='Finmag GCR laplace')
-p.plot(vertices, krylov_iter["GCR"]["poisson"], label='Finmag GCR poisson')
+if not is_dolfin_1_1:
+    p.plot(vertices, krylov_iter["GCR"]["laplace"], label='Finmag GCR laplace')
+    p.plot(vertices, krylov_iter["GCR"]["poisson"], label='Finmag GCR poisson')
 
 p.xlabel('vertices')
 p.ylabel('iterations')
