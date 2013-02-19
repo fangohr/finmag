@@ -3,7 +3,7 @@ import pylab as plt
 import matplotlib.cm as cm
 
 file_name = 'output.npz'
-threshold = 1000
+threshold = 3000
 def find_max(a, threshold=0.5):
     index = []
     for i in range(1,len(a)-1):
@@ -88,7 +88,7 @@ plt.ylabel('|S|')
 #plt.show()
 
 #find peaks in fft
-mode_indices = find_max(fmz_av_plot, threshold = threshold)
+mode_indices = find_max(fmx_av_plot, threshold = threshold)
 print mode_indices
 
 fig = 2
