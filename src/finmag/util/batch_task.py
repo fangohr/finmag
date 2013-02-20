@@ -66,11 +66,8 @@ def wrapper_function(fun,task,parameters,cwd):
     if not os.path.exists(dirname):
         os.makedirs(dirname)
     os.chdir(dirname)
-    try:
-        fun(**task)
-    except e:
-        print e.errno,e.strerror
-        pass
+    
+    fun(**task)
             
     os.chdir(cwd)
     return
@@ -168,6 +165,7 @@ class BatchTasks(object):
 def task(p1,p2):
     print 'current directory:',os.getcwd()
     res='p1='+str(p1)+'  p2='+str(p2)
+    res= 1/0
     with open('res.txt','w') as f:
         f.write(res)
     time.sleep(3)
