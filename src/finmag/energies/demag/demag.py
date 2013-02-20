@@ -38,7 +38,7 @@ class Demag(object):
         self.parameters = parameters
 
     def setup(self, S3, m, Ms, unit_length = 1,
-              p=5,mac=0.3,number_limit=100,correct_factor=5):
+              p=3,mac=0.3,number_limit=100,correct_factor=10):
         """
         S3
             dolfin VectorFunctionSpace

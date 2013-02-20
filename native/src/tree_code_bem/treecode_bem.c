@@ -521,7 +521,7 @@ void bulid_indices(fastsum_plan *plan) {
 
     }
 
-    printf("total_length_t=%d   total_length_n=%d\n", total_length_t, total_length_n);
+    //printf("total_length_t=%d   total_length_n=%d\n", total_length_t, total_length_n);
 
 
     plan->id_t = malloc(total_length_t * sizeof ( int));
@@ -954,6 +954,7 @@ void compute_moment(fastsum_plan *plan, struct octree_node *tree, double ***mome
     int i, j, k, ti, tj, tk, tn;
     double tmp_x, tmp_y, tmp_z;
     double nx, ny, nz;
+    double tmp_charge;
     //double tmp_moment = 0;
 
 
@@ -978,13 +979,30 @@ void compute_moment(fastsum_plan *plan, struct octree_node *tree, double ***mome
         dy = plan->x_s_tri[3 * ti + 1] - y;
         dz = plan->x_s_tri[3 * ti + 2] - z;
 
+        if (dx==0){
+        	dx=1;
+        	nx=0;
+        }
+
+        if (dy==0){
+        	dy=1;
+        	ny=0;
+        }
+
+        if (dz==0){
+        	dz=1;
+        	nz=0;
+        }
+
+        tmp_charge = plan->charge_density[tj];
+
         tmp_x = 1.0;
         for (i = 0; i < plan->p + 1; i++) {
              tmp_y = 1.0;
              for (j = 0; j < plan->p - i + 1; j++) {
                     tmp_z = 1.0;
                     for (k = 0; k < plan->p - i - j + 1; k++) {
-                        moment[i][j][k] += plan->charge_density[tj] *(
+                        moment[i][j][k] += tmp_charge * (
                              i * tmp_x * tmp_y * tmp_z / dx * nx +
                              j * tmp_x * tmp_y * tmp_z / dy * ny +
                              k * tmp_x * tmp_y * tmp_z / dz * nz);
@@ -994,7 +1012,6 @@ void compute_moment(fastsum_plan *plan, struct octree_node *tree, double ***mome
                 }
                 tmp_x *= dx;
             }
-
     }
 
 

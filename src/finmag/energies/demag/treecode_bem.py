@@ -2,6 +2,7 @@ import logging
 import numpy as np
 import dolfin as df
 import solver_base as sb
+from finmag.util.meshes import sphere
 from finmag.util.timings import timings, mtimed
 import finmag.util.solver_benchmark as bench
 
@@ -90,7 +91,7 @@ class TreecodeBEM(sb.FemBemDeMagSolver):
     @mtimed
     def __init__(self,mesh,m, parameters=sb.default_parameters , degree=1, element="CG",
                  project_method='magpar', unit_length=1,Ms = 1.0,bench = False,
-                 mac=0.3,p=3,num_limit=100,correct_factor=5):
+                 mac=0.3,p=3,num_limit=100,correct_factor=10):
         
         sb.FemBemDeMagSolver.__init__(self,mesh,m, parameters, degree, element=element,
                                       project_method = project_method,
@@ -229,15 +230,13 @@ if __name__ == "__main__":
     n=4
     #mesh = UnitCube(n, n, n)
     #mesh = BoxMesh(-1, 0, 0, 1, 1, 1, 10, 2, 2)
-    #mesh = df.UnitSphereMesh(n)
+    #mesh=sphere(3.0,0.3)
     #mesh=df.Mesh('tet.xml')
     mesh = df.BoxMesh(0, 0, 0, 100, 1, 1, 100, 1, 1)
-    expr = df.Expression(('4.0*sin(x[0])', '4*cos(x[0])','0'))
+    #expr = df.Expression(('4.0*sin(x[0])', '4*cos(x[0])','0'))
     
     Vv=df.VectorFunctionSpace(mesh, "Lagrange", 1)
-
-   
-
+    
     Ms = 8.6e5
     expr = df.Expression(('cos(x[0])', 'sin(x[0])','0'))
     m = df.interpolate(expr, Vv)
@@ -249,9 +248,10 @@ if __name__ == "__main__":
     f1= fk.compute_field()
 
 
-    demag=TreecodeBEM(mesh,m,mac=0.3,p=5,num_limit=100,correct_factor=5,Ms=Ms)
+    demag=TreecodeBEM(mesh,m,mac=0.3,p=3,num_limit=100,correct_factor=10,Ms=Ms)
     f2=demag.compute_field()
     
     f3=f1-f2
-    print f3/f1
+    print f1[0:10],f2[0:10]
+    print np.average(np.abs(f3[0:200]/f1[0:200]))
     
