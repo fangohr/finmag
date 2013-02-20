@@ -5,6 +5,7 @@ Does not offer much flexibility, but can be helpful for quick visualisation
 of data in an ipython notebook for instance.
 
 """
+import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
 # don't let the pyflakes error "unused import" in the next line fool you
@@ -44,8 +45,6 @@ def surface_3d(x, y, u, labels=("", "", ""), title="", path=""):
 
 if __name__ == "__main__":
     # --------------------------- DEMO ----------------------------------------#
-    import numpy as np
-
     xs = np.linspace(-300, 300, 201)
     ts = np.linspace(0, 100, 101)
 
