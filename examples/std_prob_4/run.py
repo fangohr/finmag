@@ -67,7 +67,7 @@ def create_initial_s_state():
     print "Average magnetisation is ({:.2g}, {:.2g}, {:.2g}).".format(*sim.m_average)
 
 
-def run_simulation():
+def run_simulation(stop_when_mx_eq_zero=False):
     """
     Runs the simulation using field #1 from the problem description.
 
@@ -109,14 +109,28 @@ def run_simulation():
         if mx <= 0:
             print "The x-component of the spatially averaged magnetisation first crossed zero at t = {}.".format(sim.t)
             np.save(m_at_crossing_file, sim.m)
-            # return True to signal this item is done.
-            # False would stop the simulation and everything else does nothing.
-            return True
+            # When this function returns True, it means this event is done
+            # and doesn't need to be triggered anymore.
+            # When we return False, it means we want to stop the simulation.
+            return not stop_when_mx_eq_zero
 
     sim.schedule(check_if_crossed, every=1e-12)
     sim.schedule(Simulation.save_averages, every=10e-12, at_end=True)
     sim.schedule(Simulation.save_vtk, every=10e-12, at_end=True)
     sim.run_until(2.0e-9)
+    return sim.t
+
+
+def test_std_prob_4_field_1():
+    REL_TOL = 0.01
+
+    if not os.path.exists(m_0_file):
+        create_initial_s_state()
+    t_0 = run_simulation(stop_when_mx_eq_zero=True) * 1e9
+    t_ref_martinez = 0.13949  # http://www.ctcms.nist.gov/~rdm/std4/Torres.html
+
+    assert abs(t_0 - t_ref_martinez) / t_ref_martinez < REL_TOL
+
 
 if __name__ == "__main__":
     if not os.path.exists(m_0_file):
