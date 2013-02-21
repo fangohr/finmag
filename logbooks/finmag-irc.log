@@ -4772,3 +4772,14 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-02-20 12:14:27 mb8g11: I see.
 2013-02-20 14:39:36 mb8g11: Dmitri, are you connect via telnet? ;)
 2013-02-20 20:41:36 mb8g11: Good night.
+2013-02-21 09:19:55 max_albert: Good morning,
+2013-02-21 09:37:31 fangohr-adium: Hey, good morning :)
+2013-02-21 13:49:08 fangohr: Hi Max, Marijan, (Weiwei),
+2013-02-21 13:49:22 mb4e10: Hi
+2013-02-21 13:49:31 fangohr: for our meeting at 14:00 regarding normal modes, would it make sense if I came to your area? We could then look at the stuff that you have been working on more easily.
+2013-02-21 13:50:04 mb4e10: sure
+2013-02-21 13:50:52 fangohr: Okay, I'll come over for 14:00 then.
+2013-02-21 15:40:18 mb8g11: Just an addendum to the tutorial example with the fake magnetisation data: There are two vertical lines in the Fourier transform plot.
+2013-02-21 15:41:04 mb8g11: That's the same issue than in the example before: No way to distinguish the two, since the two input functions are not orthogonal.
+2013-02-21 15:41:33 mb8g11: But they correspond in fact to only one wavelength.
+2013-02-21 15:43:13 mb8g11: In the example before, I could eliminate one, but not here.
