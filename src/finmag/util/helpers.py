@@ -911,15 +911,11 @@ def probe(dolfin_function, points, apply_func=None):
 
     *Returns*
 
-    A numpy.array of the same shape as `pts`, where the last axis
-    contains the field values instead of the point locations (or
+    A numpy.ma.masked_array of the same shape as `pts`, where the last
+    axis contains the field values instead of the point locations (or
     `apply_func` applied to the field values in case it is provided.).
-
-    *Limitations*
-
-    Currently the points where the field is probed must lie inside
-    the mesh. For points which lie outside the mesh the returned
-    field values will be NaN.
+    Positions in the output array corresponding to probing point which
+    lie outside the mesh are masked out.
 
     """
     points = np.array(points)
@@ -935,16 +931,22 @@ def probe(dolfin_function, points, apply_func=None):
 
     output_shape = np.array(apply_func([0, 0, 0])).shape
 
-    def _safe_single_probe(point):
-        try:
-            return apply_func(dolfin_function(point))
-        except RuntimeError:
-            return np.NaN * np.ones(output_shape)
-
-    res = np.empty(points.shape[:-1] + output_shape)
+    res = np.ma.empty(points.shape[:-1] + output_shape)
+    # N.B.: it might be slightly memory-inefficient to set the mask to
+    # a full matrix in advance (as we do in the next line); if that
+    # becomes a problem we can always set it to 'np.ma.nomask' here,
+    # but then we need a check for res.mask == np.ma.nomask in the
+    # 'except' branch below and set it to a full mask if we actually
+    # need to mask out any values during the loop.
+    res.mask = np.zeros_like(res, dtype=bool)
     loop_indices = itertools.product(*map(xrange, points.shape[:-1]))
     for idx in loop_indices:
-        res[idx] = _safe_single_probe(points[idx])
+        try:
+            pt = points[idx]
+            res[idx] = apply_func(dolfin_function(pt))
+        except RuntimeError:
+            res.mask[idx] = True
+
     return res
 
 
