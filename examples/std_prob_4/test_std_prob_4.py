@@ -1,4 +1,5 @@
 import os
+import py
 import numpy as np
 import dolfin as df
 import matplotlib.pyplot as plt
@@ -25,7 +26,6 @@ Ms = 8.0e5
 A = 1.3e-11
 alpha = 0.02
 gamma = 2.211e5
-mesh = from_geofile(os.path.join(MODULE_DIR, "bar.geo"))
 
 
 def create_initial_s_state():
@@ -33,6 +33,8 @@ def create_initial_s_state():
     Creates equilibrium s-state by slowly switching off a saturating field.
 
     """
+    mesh = from_geofile(os.path.join(MODULE_DIR, "bar.geo"))
+
     sim = Simulation(mesh, Ms, name="relaxation", unit_length=1e-9)
     sim.alpha = 0.5  # good enough for relaxation
     sim.gamma = gamma
@@ -67,7 +69,7 @@ def create_initial_s_state():
     print "Average magnetisation is ({:.2g}, {:.2g}, {:.2g}).".format(*sim.m_average)
 
 
-def run_simulation(stop_when_mx_eq_zero=False):
+def run_simulation(stop_when_mx_eq_zero):
     """
     Runs the simulation using field #1 from the problem description.
 
@@ -76,6 +78,8 @@ def run_simulation(stop_when_mx_eq_zero=False):
     the value 0 for the first time.
 
     """
+    mesh = from_geofile(os.path.join(MODULE_DIR, "bar.geo"))
+
     sim = Simulation(mesh, Ms, name="dynamics", unit_length=1e-9)
     sim.alpha = alpha
     sim.gamma = gamma
@@ -121,23 +125,19 @@ def run_simulation(stop_when_mx_eq_zero=False):
     return sim.t
 
 
-def test_std_prob_4_field_1():
+@py.test.mark.slow
+def test_std_prob_4_field_1(stop_when_mx_eq_zero=True):
     REL_TOL = 0.01
 
-    if not os.path.exists(m_0_file):
-        create_initial_s_state()
-    t_0 = run_simulation(stop_when_mx_eq_zero=True) * 1e9
-    t_ref_martinez = 0.13949  # http://www.ctcms.nist.gov/~rdm/std4/Torres.html
-
-    assert abs(t_0 - t_ref_martinez) / t_ref_martinez < REL_TOL
-
-
-if __name__ == "__main__":
     if not os.path.exists(m_0_file):
         print "Couldn't find initial magnetisation, creating one."
         create_initial_s_state()
 
     print "Running simulation..."
-    run_simulation()
+    t_0 = run_simulation(stop_when_mx_eq_zero) * 1e9
+    t_ref_martinez = 0.13949  # http://www.ctcms.nist.gov/~rdm/std4/Torres.html
+    assert abs(t_0 - t_ref_martinez) / t_ref_martinez < REL_TOL
 
-    print default_timer
+
+if __name__ == "__main__":
+    test_std_prob_4_field_1(stop_when_mx_eq_zero=False)
