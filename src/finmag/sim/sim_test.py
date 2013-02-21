@@ -109,7 +109,7 @@ class TestSimulation(object):
 
         # Probe at point outside the mesh
         m_probed_outside = sim.probe_field("m", [5e-9, -6e-9,  1e-9])
-        assert(all(np.isnan(m_probed_outside)))
+        assert((np.ma.getmask(m_probed_outside) == True).all())
 
     def test_probe_nonconstant_m_at_individual_points(self):
         TOL=1e-5
