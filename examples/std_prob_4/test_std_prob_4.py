@@ -135,6 +135,8 @@ def test_std_prob_4_field_1(stop_when_mx_eq_zero=True):
 
     print "Running simulation..."
     t_0 = run_simulation(stop_when_mx_eq_zero) * 1e9
+    print default_timer
+
     t_ref_martinez = 0.13949  # http://www.ctcms.nist.gov/~rdm/std4/Torres.html
     assert abs(t_0 - t_ref_martinez) / t_ref_martinez < REL_TOL
 
