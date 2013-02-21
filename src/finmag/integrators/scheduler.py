@@ -3,13 +3,14 @@ import logging
 import functools
 from numbers import Number
 from datetime import datetime, timedelta
-from finmag.integrators.events import SingleEvent, RepeatingEvent, same
+from finmag.integrators.events import SingleEvent, RepeatingEvent, same, EV_DONE, EV_REQUESTS_STOP_INTEGRATION
 # This module will try to import the package apscheduler when a realtime event
 # is added. Install with "pip install apscheduler".
 # See http://pypi.python.org/pypi/APScheduler for documentation.
 
 log = logging.getLogger(name="finmag")
-   
+
+
 class Scheduler(object):
     """
     Manages a list of actions that should be performed at specific times.
@@ -53,11 +54,11 @@ class Scheduler(object):
 
         """
         if not hasattr(func, "__call__"):
-            raise TypeError("The function must be callable but object '%s' is of type '%s'" % \
-                (str(func), type(func)))
+            raise TypeError("The function must be callable but object '%s' is of type '%s'" %
+                            (str(func), type(func)))
         assert at or every or at_end or (after and realtime), "Use either `at`, `every` or `at_end` if not in real time mode."
-        assert not (at!=None and every!=None), "Cannot mix `at` with `every`. Please schedule separately."
-        assert not (at!=None and after!=None), "Delays don't mix with `at`."
+        assert not (at is not None and every is not None), "Cannot mix `at` with `every`. Please schedule separately."
+        assert not (at is not None and after is not None), "Delays don't mix with `at`."
 
         args = args or []
         kwargs = kwargs or {}
@@ -96,7 +97,7 @@ class Scheduler(object):
                 from apscheduler.scheduler import Scheduler as APScheduler
             except ImportError:
                 log.error("Need APScheduler package to schedule realtime events.\n"
-                    "Please install from http://pypi.python.org/pypi/APScheduler.")
+                          "Please install from http://pypi.python.org/pypi/APScheduler.")
                 raise
 
             self.apscheduler = APScheduler()
@@ -105,7 +106,7 @@ class Scheduler(object):
 
         if after and isinstance(after, Number):
             # `after` can be either a delay in seconds, or a date/datetime.
-            # Since the APScheduler API expects a date/datetime convert it. 
+            # Since the APScheduler API expects a date/datetime convert it.
             after = datetime.now() + timedelta(seconds=after)
 
         # Register the job so that it can be started/stopped as needed.
@@ -140,17 +141,17 @@ class Scheduler(object):
         next_step = None
 
         for item in self.items:
-            if item.requests_stop_integration == True:
+            if item.state == EV_REQUESTS_STOP_INTEGRATION:
                 raise StopIteration
-            if item.next != None and (next_step == None or next_step > item.next):
+            if item.next is not None and (next_step is None or next_step > item.next):
                 next_step = item.next
 
-        if next_step == None:
+        if next_step is None:
             raise StopIteration
 
         if next_step < self.last:
             log.error("Scheduler computed the next time step should be t = {:.2g} s, but the last one was already t = {:.2g} s.".format(next_step, self.last))
-            raise ValueError("Scheduler is corrupted. Requested a time step in the past: dt = {:.2g}.".format(next_step-self.last))
+            raise ValueError("Scheduler is corrupted. Requested a time step in the past: dt = {:.2g}.".format(next_step - self.last))
         return next_step
 
     def reached(self, time):
@@ -163,6 +164,8 @@ class Scheduler(object):
         for item in self.items:
             if same(item.next, time):
                 item.trigger(time)
+                if item.state == EV_DONE:
+                    self._remove(item)
         self.last = time
 
     def finalise(self, time):
@@ -186,11 +189,11 @@ class Scheduler(object):
     def _print_realtime_item(self, item, func_print=log.info):
         (f, (at, every, after)) = item
         func_print("'{}': <at={}, every={}, after={}>".format(
-                item.callback.f.__name__, at, every, after))
+            item.callback.f.__name__, at, every, after))
 
     def print_scheduled_items(self, func_print=log.info):
         for item in self.items:
-            print item # this will call __str__ on the item, which should be defned for all events
+            print item  # this will call __str__ on the item, which should be defned for all events
         for item in self.realtime_items:
             self._print_realtime_item(item, func_print)
 
