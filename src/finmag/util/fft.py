@@ -1,5 +1,6 @@
 from __future__ import division
 from scipy.interpolate import InterpolatedUnivariateSpline
+from finmag.util.helpers import probe
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -85,3 +86,43 @@ def plot_FFT_m(filename, t_step=1e-11, t_ini=0.0, components="xyz", figsize=None
     ax.grid()
 
     return ax
+
+
+def fft_at_probing_points(dolfin_funcs, pts):
+    """
+    Given a list of dolfin Functions (on the same mesh) representing
+    field values at different time steps, as well as the x-, y- and
+    z-coordinates of some probing points, compute and return the
+    discrete Fourier transforms (over time) of these functions at each
+    point.
+
+
+    *Arguments*
+
+    dolfin_funcs:  list of dolfin.Function
+
+        List of functions representing (say) the field values at
+        different time steps.
+
+    pts:     points: numpy.array
+
+        An array of points where the FFT should be computed. Can
+        have arbitrary shape, except that the last axis must have
+        dimension 3. For example, if pts.shape == (10,20,5,3) then
+        the FFT is computeed at all points on a regular grid of
+        size 10 x 20 x 5.
+
+
+    *Returns*
+
+    A numpy.array `res` of the same shape as X, Y and Z, but with an
+    additional first axis which contains the coefficients if the Fourier
+    transform. For example, res[:, ...] represents the Fourier transform
+    over time as probed at the point (X[...], Y[...], Z[...]).
+
+    """
+    vals_probed = np.ma.masked_array([probe(f, pts) for f in dolfin_funcs])
+    vals_fft = np.ma.masked_array(np.fft.fft(vals_probed, axis=0),
+                                  mask=np.ma.getmask(vals_probed))
+
+    return vals_fft

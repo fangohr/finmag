@@ -343,18 +343,23 @@ def test_probe():
     assert(np.allclose(res2, res2_expected))
 
     # Probe at points which lie partly outside the sample to see if we
-    # get NaN as an answer.
+    # get masked values in the result.
     pts = [[20, 20, 0], [5, 2, 1]]
     res1 = probe(f, pts)
     res2 = probe(f, pts, apply_func=square_x_coord)
-    res1_expected = [[np.NaN, np.NaN, np.NaN], [5, 0, 0]]
-    res2_expected = [np.NaN, 25]
-    # We need to be a bit careful since there are NaN's in the arrays,
-    # so we're using masked arrays.
-    def mask_where_nan(a):
-        return np.ma.array(a, mask=np.isnan(a))
-    assert(np.ma.allclose(mask_where_nan(res1), mask_where_nan(res1_expected)))
-    assert(np.ma.allclose(mask_where_nan(res2), mask_where_nan(res2_expected)))
+    res1_expected = np.ma.masked_array([[np.NaN, np.NaN, np.NaN],
+                                        [5, 0, 0]],
+                                       mask=[[True, True, True],
+                                             [False, False, False]])
+    res2_expected = np.ma.masked_array([np.NaN, 25], mask=[True, False])
+
+    # Check that the arrays are masked out at the same location
+    assert((np.ma.getmask(res1) == np.ma.getmask(res1_expected)).all())
+    assert((np.ma.getmask(res2) == np.ma.getmask(res2_expected)).all())
+
+    # Check that the non-masked values are the same
+    assert(np.ma.allclose(res1, res1_expected))
+    assert(np.ma.allclose(res2, res2_expected))
 
     
 if __name__ == '__main__':
