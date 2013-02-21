@@ -127,18 +127,18 @@ def run_simulation(stop_when_mx_eq_zero):
 
 @py.test.mark.slow
 def test_std_prob_4_field_1(stop_when_mx_eq_zero=True):
-    REL_TOL = 0.01
+    PRECISION = 4e-12
 
     if not os.path.exists(m_0_file):
         print "Couldn't find initial magnetisation, creating one."
         create_initial_s_state()
 
     print "Running simulation..."
-    t_0 = run_simulation(stop_when_mx_eq_zero) * 1e9
+    t_0 = run_simulation(stop_when_mx_eq_zero)
     print default_timer
 
-    t_ref_martinez = 0.13949  # http://www.ctcms.nist.gov/~rdm/std4/Torres.html
-    assert abs(t_0 - t_ref_martinez) / t_ref_martinez < REL_TOL
+    t_ref_martinez = 0.13949e-9  # http://www.ctcms.nist.gov/~rdm/std4/Torres.html
+    assert abs(t_0 - t_ref_martinez) < PRECISION
 
 
 if __name__ == "__main__":
