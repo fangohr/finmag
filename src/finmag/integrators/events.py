@@ -8,7 +8,9 @@ They are expected to share the following attributes
     trigger_on_stop: whether the event should be triggered again at the
     end, when time integration stops
 
-    requests_stop_integration: whether time integration should be stopped,
+    state: either EV_ACTIVE - default, nothing special should happen
+                  EV_DONE - this event can be removed, its task is accomplished
+                  EV_REQUESTS_STOP_INTEGRATION - notify scheduler that time integration should be stopped
 
 as well as the method
 
@@ -22,10 +24,12 @@ from finmag.util.consts import ONE_DEGREE_PER_NS
 from finmag.util.helpers import compute_dmdt
 
 log = logging.getLogger(name="finmag")
-EPSILON = 1e-15 # femtosecond precision for scheduling.
+EPSILON = 1e-15  # femtosecond precision for scheduling.
+EV_ACTIVE, EV_DONE, EV_REQUESTS_STOP_INTEGRATION = range(3)
+
 
 def same(t0, t1):
-    return (t0 != None) and (t1 != None) and abs(t0 - t1) < EPSILON
+    return (t0 is not None) and (t1 is not None) and abs(t0 - t1) < EPSILON
 
 
 class SingleEvent(object):
@@ -40,14 +44,14 @@ class SingleEvent(object):
         setting `trigger_on_stop` to True or False.
 
         """
-        if time == None and trigger_on_stop == False:
+        if time is None and trigger_on_stop is False:
             raise ValueError("{}.init: Needs either a time, or trigger_on_stop set to True.".format(self.__class__.__name__))
         self._time = time
         self.last = None
         self.next = time
         self.trigger_on_stop = trigger_on_stop
         self._callback = None
-        self.requests_stop_integration = False
+        self.state = EV_ACTIVE
 
     def attach(self, callback):
         """
@@ -57,8 +61,8 @@ class SingleEvent(object):
         if not hasattr(callback, "__call__"):
             raise ValueError("{}.attach: Argument should be callable.".format(self.__class__.__name__))
         self._callback = callback
-        return self # so that object can be initialised and a function attached in one line
-    call = attach # nicer name if assignment and init is indeed done in one line
+        return self  # so that object can be initialised and a function attached in one line
+    call = attach  # nicer name if assignment and init is indeed done in one line
 
     def trigger(self, time, is_stop=False):
         """
@@ -68,38 +72,45 @@ class SingleEvent(object):
         True and trigger_on_stop was set to True as well. Won't trigger more
         than once per `time`, no matter what.
 
+        If the callback returns True, this means the event's task is completed
+        and the event can be removed from the scheduler.
         If the callback returns False, the event will notify the scheduler
         to stop time integration.
+        If the callback returns anything else, nothing will happen and time
+        integration will just go on as usual.
 
         """
         if not same(time, self.last) and (
                 (same(time, self.next)) or (is_stop and self.trigger_on_stop)):
             self.last = time
             self.next = self._compute_next()
-            if self._callback != None:
+            if self._callback is not None:
                 ret = self._callback()
-                if ret == False:
-                    self.requests_stop_integration = True
+                if ret is True:
+                    self.state = EV_DONE  # This event can be deleted.
+                if ret is False:
+                    self.state = EV_REQUESTS_STOP_INTEGRATION
 
     def _compute_next(self):
         """
         Return the next target time. Will get called after the event is triggered.
 
         """
-        return None # since this is a single event, there is no next step
+        return None  # since this is a single event, there is no next step
 
     def reset(self, time):
         """
         Modify the internal state to what we would expect at `time`.
 
         """
-        self.requests_stop_integration = False
         if time < self._time:
             self.last = None
             self.next = self._time
-        else: # if we had to, assume we triggered for `time` already
+            self.state = EV_ACTIVE
+        else:  # if we had to, assume we triggered for `time` already
             self.last = self._time
             self.next = None
+            self.state = EV_DONE
 
     def __str__(self):
         """
@@ -108,7 +119,7 @@ class SingleEvent(object):
         """
         callback_msg = ""
         callback_name = "unknown"
-        if self._callback != None:
+        if self._callback is not None:
             if hasattr(self._callback, "__name__"):
                     callback_name = self._callback.__name__
             if hasattr(self._callback, "func"):
@@ -150,7 +161,7 @@ class RepeatingEvent(SingleEvent):
         """
         self.last = None
         self.next = self._time
-        while self.next < time: # if we had to, assume we triggered for `time`
+        while self.next < time:  # if we had to, assume we triggered for `time`
             self.last = self.next
             self.next = self._compute_next()
 
@@ -168,7 +179,7 @@ class StopIntegrationEvent(object):
         self._time = time
         self.last = None
         self.next = self._time
-        self.requests_stop_integration = False
+        self.state = EV_ACTIVE
         self.trigger_on_stop = False
 
     def trigger(self, time, is_stop=False):
@@ -179,7 +190,7 @@ class StopIntegrationEvent(object):
         if same(time, self.next):
             self.last = time
             self.next = None
-            self.requests_stop_integration = True
+            self.state = EV_REQUESTS_STOP_INTEGRATION
 
     def reset(self, time):
         """
@@ -189,11 +200,11 @@ class StopIntegrationEvent(object):
         if time < self._time:
             self.last = None
             self.next = self._time
-            self.requests_stop_integration = False
+            self.state = EV_ACTIVE
         else:
             self.last = self._time
             self.next = None
-            self.requests_stop_integration = True
+            self.state = EV_REQUESTS_STOP_INTEGRATION
 
     def __str__(self):
         """
@@ -201,7 +212,7 @@ class StopIntegrationEvent(object):
 
         """
         return "<{} will stop time integration at t = {}>".format(
-                self.__class__.__name__, self._next)
+            self.__class__.__name__, self._next)
 
 
 class RelaxationEvent(object):
@@ -221,7 +232,7 @@ class RelaxationEvent(object):
         self.stopping_dmdt = stopping_dmdt
         self.dmdt_increased_counter = 0
         self.dmdt_increased_counter_limit = dmdt_increased_counter_limit
-        self.dmdts = [] # list of (t, max_dmdt) tuples
+        self.dmdts = []  # list of (t, max_dmdt) tuples
 
         self.sim = sim
         self.last_t = sim.t
@@ -229,20 +240,20 @@ class RelaxationEvent(object):
 
         # to communicate with scheduler
         self.next = self.last_t + self.dt
-        self.requests_stop_integration = False
+        self.state = EV_ACTIVE
         self.trigger_on_stop = False
 
     def trigger(self, t, is_stop=False):
         assert same(t, self.sim.t)
         if same(self.last_t, t):
             return
-        if self.requests_stop_integration:
+        if self.state == EV_REQUESTS_STOP_INTEGRATION:
             log.error("Time integration continued even though relaxation has been reached.")
 
         t = self.sim.t
         m = self.sim.m.copy()
 
-        if self.last_m != None:
+        if self.last_m is not None:
             dmdt = compute_dmdt(self.last_t, self.last_m, t, m)
             self.dmdts.append((t, dmdt))
 
@@ -259,7 +270,7 @@ class RelaxationEvent(object):
             else:
                 log.debug("Stopping integration at t={:.3g}, with dmdt={:.3g}, smaller than threshold={:.3g}.".format(
                     t, dmdt, float(self.stopping_dmdt)))
-                self.requests_stop_integration = True # hoping this gets noticed by the Scheduler
+                self.state = EV_REQUESTS_STOP_INTEGRATION  # hoping this gets noticed by the Scheduler
 
         self.last_t = t
         self.last_m = m
@@ -282,11 +293,10 @@ class RelaxationEvent(object):
         if self.dmdt_increased_counter >= self.dmdt_increased_counter_limit:
             log.warning("Stopping time integration after dmdt increased {} times.".format(
                 self.dmdt_increased_counter_limit))
-            self.requests_stop_integration = True
-
+            self.state = EV_REQUESTS_STOP_INTEGRATION
 
     def reset(self, time):
-        pass # TODO: Will this "just work"?
+        pass  # TODO: Will this "just work"?
 
     def __str__(self):
         """
@@ -294,4 +304,4 @@ class RelaxationEvent(object):
 
         """
         return "<{} | last t = {} | last dmdt = {} * stopping_dmdt | next t = {}>".format(
-                self.__class__.__name__, self.last_t, self.dmdts[-1][1]/self.stopping_dmdt, self.next)
+            self.__class__.__name__, self.last_t, self.dmdts[-1][1] / self.stopping_dmdt, self.next)
