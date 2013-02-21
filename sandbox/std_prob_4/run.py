@@ -1,15 +1,17 @@
 import os
-import dolfin as df
 import numpy as np
+import dolfin as df
+import matplotlib.pyplot as plt
+from math import sqrt
 from finmag.util.meshes import from_geofile
+from finmag.util.consts import mu0
 from finmag import Simulation
-from finmag.energies import Zeeman, DiscreteTimeZeeman, Demag, Exchange
+from finmag.energies import Zeeman, Demag, Exchange
+from finmag.util.timings import default_timer
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
-mesh_file = os.path.join(MODULE_DIR, "bar.geo")
-initial_m_file = os.path.join(MODULE_DIR, "m_init.txt")
-average_m_file = os.path.join(MODULE_DIR, "m_averages.txt")
-zero_crossing_m_file = os.path.join(MODULE_DIR, "m_zero.txt")
+m_0_file = os.path.join(MODULE_DIR, "m_0.npy")
+m_at_crossing_file = os.path.join(MODULE_DIR, "m_at_crossing.npy")
 
 """
 Micromag Standard Problem #4
@@ -19,36 +21,51 @@ specification:
 
 """
 
-Ms = 8.0e5; A = 1.3e-11; alpha = 0.02; gamma = 2.211e5
-mesh = df.Box(0, 0, 0, 500, 125, 3, 100, 25, 1)
+Ms = 8.0e5
+A = 1.3e-11
+alpha = 0.02
+gamma = 2.211e5
+mesh = from_geofile(os.path.join(MODULE_DIR, "bar.geo"))
+
 
 def create_initial_s_state():
     """
     Creates equilibrium s-state by slowly switching off a saturating field.
 
     """
-    sim = Simulation(mesh, Ms, unit_length=1)
+    sim = Simulation(mesh, Ms, name="relaxation", unit_length=1e-9)
+    sim.alpha = 0.5  # good enough for relaxation
     sim.gamma = gamma
     sim.set_m((1, 1, 1))
     sim.add(Demag())
     sim.add(Exchange(A))
 
-    # We're not interested in the dynamics, this will speed up the simulation.
-    sim.alpha = 1
-    sim.llg.do_precession = False
-
-    # Saturating field in the [1, 1, 1] direction, that gets reduced
+    # Saturating field of Ms in the [1, 1, 1] direction, that gets reduced
     # every 10 picoseconds until it vanishes after one nanosecond.
-    t_off = 1e-9; dt_update = 1e-11;
-    fx = fy = fz = "(1 - t/t_off) * H"
-    f_expr = df.Expression((fx, fy, fz), t=0.0, t_off=t_off, H=Ms)
-    saturating_field = DiscreteTimeZeeman(f_expr, t_off, dt_update)
-    sim.add(saturating_field, with_time_update=saturating_field.update)
+    H_initial = Ms * np.array((1, 1, 1)) / sqrt(3)
+    H_multipliers = list(np.linspace(0, 1))
+    H = Zeeman(H_initial)
 
-    sim.run_until(2e-9)
-    np.savetxt(initial_m_file, sim.m)
-    print "Saved magnetisation to {}.".format(initial_m_file)
+    def lower_H(sim):
+        try:
+            H_mult = H_multipliers.pop()
+            print "At t = {} s, lower external field to {} times initial field.".format(
+                sim.t, H_mult)
+            H.set_value(H_mult * H_initial)
+        except IndexError:
+            sim.llg.effective_field.interactions.remove(H)
+            print "External field is off."
+            return True
+
+    sim.add(H)
+    sim.schedule(lower_H, every=10e-12)
+    sim.run_until(0.5e-9)
+    sim.relax()
+
+    np.save(m_0_file, sim.m)
+    print "Saved magnetisation to {}.".format(m_0_file)
     print "Average magnetisation is ({:.2g}, {:.2g}, {:.2g}).".format(*sim.m_average)
+
 
 def run_simulation():
     """
@@ -59,42 +76,54 @@ def run_simulation():
     the value 0 for the first time.
 
     """
-    sim = Simulation(mesh, Ms, unit_length=1)
+    sim = Simulation(mesh, Ms, name="dynamics", unit_length=1e-9)
     sim.alpha = alpha
     sim.gamma = gamma
-    sim.set_m(np.loadtxt(initial_m_file))
+    sim.set_m(np.load(m_0_file))
     sim.add(Demag())
     sim.add(Exchange(A))
 
-    # Field 1
-    # mu_0 * H_x = 24.6 mT, so in SI units: H_x = 24.6 * 10^4 / 4 PI A/m
-    Hx = -24.6e4 / (4 * np.pi)
-    Hy = 2 * 4.3e4 / (4 * np.pi)
+    """
+    Conversion between mu0 * H in mT and H in A/m.
+
+                   mu0 * H = 1               mT
+                           = 1 * 1e-3        T
+                           = 1 * 1e-3        Vs/m^2
+    divide by mu0 with mu0 = 4pi * 1e-7      Vs/Am
+    gives                H = 1 / 4pi * 1e4   A/m
+
+    with the unit A/m which is indeed what we want.
+    Consequence:
+        Just divide the value of mu0 * H in Tesla
+        by mu0 to get the value of H in A/m.
+
+    """
+    Hx = -24.6e-3 / mu0
+    Hy = 4.3e-3 / mu0
     Hz = 0
     sim.add(Zeeman((Hx, Hy, Hz)))
 
-    t = 0; t_counter = 0; t_max = 2e-9; dt = 1e-14;
-    mx_crossed_zero = False
-    with open(average_m_file, "w") as f:
-        while t <= t_max:
-            sim.run_until(t)
+    def check_if_crossed(sim):
+        mx, _, _ = sim.m_average
+        print "The x-component of the averaged magnetisation is mx = {}.".format(mx)
+        if mx <= 0:
+            print "The x-component of the spatially averaged magnetisation first crossed zero at t = {}.".format(sim.t)
+            np.save(m_at_crossing_file, sim.m)
+            # return True to signal this item is done.
+            # False would stop the simulation and everything else does nothing.
+            return True
 
-            mx, my, mz = sim.m_average
-            # Store magnetisation when m_x crosses zero.
-            if mx <= 0 and not mx_crossed_zero:
-                print "m_x crossed 0 at {}.".format(t)
-                np.savetxt(zero_crossing_m_file, sim.m)
-                mx_crossed_zero = True
-
-            if t_counter % 1000 == 0:
-                # Write average magnetisation to file every 1000 timesteps.
-                f.write("{} {} {} {}\n".format(t, mx, my, mz))
-
-            t += dt; t_counter += 1;
+    sim.schedule(check_if_crossed, every=1e-12)
+    sim.schedule(Simulation.save_averages, every=10e-12, at_end=True)
+    sim.schedule(Simulation.save_vtk, every=10e-12, at_end=True)
+    sim.run_until(2.0e-9)
 
 if __name__ == "__main__":
-    if not os.path.exists(initial_m_file):
+    if not os.path.exists(m_0_file):
         print "Couldn't find initial magnetisation, creating one."
         create_initial_s_state()
+
     print "Running simulation..."
     run_simulation()
+
+    print default_timer
