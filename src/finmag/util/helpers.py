@@ -932,12 +932,12 @@ def probe(dolfin_function, points, apply_func=None):
     output_shape = np.array(apply_func([0, 0, 0])).shape
 
     res = np.ma.empty(points.shape[:-1] + output_shape)
-    # N.B.: it might be slightly memory-inefficient to set the mask to
-    # a full matrix in advance (as we do in the next line); if that
-    # becomes a problem we can always set it to 'np.ma.nomask' here,
-    # but then we need a check for res.mask == np.ma.nomask in the
-    # 'except' branch below and set it to a full mask if we actually
-    # need to mask out any values during the loop.
+    # N.B.: setting the mask to a full matrix right from the start (as
+    # we do in the next line) might be slightly memory-inefficient; if
+    # that becomes a problem we can always set it to 'np.ma.nomask'
+    # here, but then we need a check for res.mask == np.ma.nomask in
+    # the 'except' branch below and set it to a full mask if we
+    # actually need to mask out any values during the loop.
     res.mask = np.zeros_like(res, dtype=bool)
     loop_indices = itertools.product(*map(xrange, points.shape[:-1]))
     for idx in loop_indices:
