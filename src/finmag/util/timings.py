@@ -117,7 +117,7 @@ class SingleTiming(object):
 class Timings(object):
     """
     Manage a series of measurements.
-    
+
     They are stored by the measurements' group and name, which is module/class
     and function/method name.
 
@@ -155,7 +155,7 @@ class Timings(object):
 
         """
         assert self.key(name, group) in self._timings, \
-                "No known measurement '{}' of '{}' to stop.".format(name, group)
+            "No known measurement '{}' of '{}' to stop.".format(name, group)
         self._timings[self.key(name, group)].stop()
         self._last = None
 
@@ -197,7 +197,7 @@ class Timings(object):
         Warning: Due to the way this code works, letting time go by between
         running a simulation and calling this method will fudge the relative
         timings. This will likely be the case in interactive mode.
-        
+
         """
         msg = "Timings: Showing the up to {} slowest items.\n\n".format(max_items)
         separator = "+--------------------+------------------------------+--------+------------+--------------+\n"
@@ -210,7 +210,7 @@ class Timings(object):
                 self._timings.values(),
                 key=operator.attrgetter('tot_time'),
                 reverse=True):
-            msg += msg_row.format(t.group, t.name, t.calls, t.tot_time, t.tot_time/t.calls)
+            msg += msg_row.format(t.group, t.name, t.calls, t.tot_time, t.tot_time / t.calls)
             shown += 1
             if shown >= max_items:
                 break
@@ -225,7 +225,11 @@ class Timings(object):
             msg += "| {:18} | {:>8.3g} | {:>4.2g} |\n".format(group, tot_t, share)
         msg += separator + "\n"
 
-        msg += "Total wall time {:.4} s.\n".format(time.time() - self._created)
+        seconds = time.time() - self._created
+        m, s = divmod(seconds, 60)
+        h, m = divmod(m, 60)
+        msg += "Total wall time %d:%02d:%02d." % (h, m, s)
+
         return msg
 
     def grouped_timings(self):
@@ -241,17 +245,17 @@ class Timings(object):
 
         recorded_time = self.total_time()
         wall_time = time.time() - self._created
-        grouped_timings = [(group, tot_t, 100*tot_t/wall_time) for group, tot_t in grouped_timings.iteritems()]
+        grouped_timings = [(group, tot_t, 100 * tot_t / wall_time) for group, tot_t in grouped_timings.iteritems()]
 
         diff = abs(recorded_time - wall_time)
-        rel_diff = 100 * (1 - recorded_time/wall_time)
+        rel_diff = 100 * (1 - recorded_time / wall_time)
         rel_diff_desc = "redundant" if recorded_time > wall_time else "untimed"
         grouped_timings.append((rel_diff_desc, diff, rel_diff))
 
         grouped_timings = sorted(
-                grouped_timings,
-                key=lambda gt : gt[1],
-                reverse=True)
+            grouped_timings,
+            key=lambda gt: gt[1],
+            reverse=True)
 
         return grouped_timings
 
@@ -266,6 +270,7 @@ class Timings(object):
 
 default_timer = Timings()
 
+
 @contextmanager
 def timed(name, group=Timings.default_group, timer=default_timer):
     """
@@ -275,6 +280,7 @@ def timed(name, group=Timings.default_group, timer=default_timer):
     timer.start(name, group)
     yield
     timer.stop(name, group)
+
 
 def mtimed(method_or_timer=default_timer):
     """
@@ -299,7 +305,7 @@ def mtimed(method_or_timer=default_timer):
     if callable(method_or_timer):
         # the user called mtimed without arguments, python thus calls it with
         # the method to decorate (which is callable). Use the default Timings
-        # object and return the decorated method. 
+        # object and return the decorated method.
         timer = default_timer
         return decorator(method_or_timer)
     # the user called mtimed with a timing object. Bind it to the timer name
@@ -307,6 +313,7 @@ def mtimed(method_or_timer=default_timer):
     # take arguments.
     timer = method_or_timer
     return decorator
+
 
 def ftimed(fn_or_timer=default_timer):
     """
@@ -326,7 +333,7 @@ def ftimed(fn_or_timer=default_timer):
             return ret
 
         return decorated_function
-    
+
     if callable(fn_or_timer):
         # the user called ftimed without arguments, python thus calls it with
         # the method to decorate (which is callable). Use the default Timings
