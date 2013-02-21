@@ -4,7 +4,7 @@ from finmag.util.helpers import probe
 import numpy as np
 import matplotlib.pyplot as plt
 
-def FFT_m(filename, t_step=1e-11, t_ini=0):
+def FFT_m(filename, t_step, t_ini=0):
     """
     Given a data file (e.g. in .ndt format), compute and return the Fourier
     transforms of the x, y and z components of the magnetisation m. The
@@ -54,7 +54,7 @@ def FFT_m(filename, t_step=1e-11, t_ini=0):
     return fft_freq, fft_mx, fft_my, fft_mz
 
 
-def plot_FFT_m(filename, t_step=1e-11, t_ini=0.0, components="xyz", figsize=None):
+def plot_FFT_m(filename, t_step, t_ini=0.0, components="xyz", figsize=None):
     """
     Plot the frequency spectrum of the components of the magnetisation m.
 
