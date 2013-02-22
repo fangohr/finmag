@@ -143,5 +143,11 @@ pytest-slow:
 	PYTHONPATH=$(PYTHON_ROOTS) py.test $(TEST_OPTIONS) -m "slow" \
 			   --junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
 
+native-tests: make-modules run-ci-tests
+
+# Will run the fast py.test tests as well as the native tests
+tests-fast: pytest native-tests
+
+
 .PHONY: ci default make-modules test run-ci-tests run-pytest-tests \
    	run-unittest-tests pytest pytest-slow
