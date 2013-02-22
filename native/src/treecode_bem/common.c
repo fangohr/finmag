@@ -1,4 +1,4 @@
-#include "treecode_bem_helper.h"
+#include "common.h"
 
 
 inline double pow2(double x) {

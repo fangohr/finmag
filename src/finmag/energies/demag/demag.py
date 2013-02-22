@@ -38,7 +38,7 @@ class Demag(object):
         self.parameters = parameters
 
     def setup(self, S3, m, Ms, unit_length = 1,
-              p=3,mac=0.3,number_limit=100,correct_factor=10):
+              p=3,mac=0.3,number_limit=100,correct_factor=10,type_I=True):
         """
         S3
             dolfin VectorFunctionSpace
@@ -76,6 +76,7 @@ class Demag(object):
             kwargs["mac"]=mac
             kwargs["num_limit"]=number_limit
             kwargs["correct_factor"]=correct_factor
+            kwargs["type_I"]=type_I
             
             self.demag = TreecodeBEM(**kwargs)
         
