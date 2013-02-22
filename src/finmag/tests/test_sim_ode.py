@@ -10,7 +10,7 @@ from finmag.energies import Zeeman
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def test_sim_ode(do_plot=False):
-    mesh = df.Box(0, 0, 0, 2, 2, 2, 1, 1, 1)
+    mesh = df.Box(0, 0, 0, 1, 1, 1, 1, 1, 1)
     sim = Sim(mesh, 8.6e5, unit_length=1e-9)
     sim.alpha = 0.1
     sim.set_m((1, 0, 0))
@@ -25,13 +25,13 @@ def test_sim_ode(do_plot=False):
 
     mz = []
     for t in ts:
-        sim.run_until(t)
+        sim.advance_time(t)
         mz.append(sim.m[-1]) # same as m_average for this macrospin problem
 
     if do_plot:
         ts_ns = ts * 1e9
-        plt.plot(ts_ns, mz, "b.", label="computed") 
-        plt.plot(ts_ns, mz_ref, "r-", label="analytical") 
+        plt.plot(ts_ns, mz, "b.", label="computed")
+        plt.plot(ts_ns, mz_ref, "r-", label="analytical")
         plt.xlabel("time (ns)")
         plt.ylabel("mz")
         plt.title("integrating a macrospin")
@@ -42,7 +42,8 @@ def test_sim_ode(do_plot=False):
             np.max(np.abs(mz - mz_ref)),
             mz_ref))
 
-    assert np.max(np.abs(mz - mz_ref)) < 8e-8
+    assert np.max(np.abs(mz - mz_ref)) < 3e-5
 
 if __name__ == "__main__":
     test_sim_ode(do_plot=True)
+    print "Saved plit in test_sim_ode.png."

@@ -54,7 +54,7 @@ def test_try_to_restart_a_simulation():
     print sim2.m_average, sim2.t
     print sim1.m_average, sim1.t
     print("Max deviation: = %g" % (max(sim2.m - sim1.m)))
-    assert max(sim2.m - sim1.m) < 3e-08
+    assert max(sim2.m - sim1.m) < 2e-06
     assert sim1.t == sim2.t
 
     # For the second 10e-12 seconds, we needed much fewer steps. Check:
