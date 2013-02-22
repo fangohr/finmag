@@ -124,6 +124,9 @@ fasttest : make-modules $(addsuffix /__runtests__,$(TEST_ROOTS)) run-ci-tests
 %/__runtests__ : create-dirs
 	(cd $(dir $@) && NETGENDIR=$(NETGENDIR) PYTHONPATH=$(PYTHON_ROOTS):. python $(RUN_UNIT_TESTS))
 
+run-pytest-reproduce-ipython-notebooks : create-dirs
+	NETGENDIR=$(NETGENDIR) PYTHONPATH=$(PYTHON_ROOTS) py.test $(TEST_OPTIONS) bin/reproduce_ipython_notebooks.py --junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
+
 run-pytest-tests : create-dirs
 	NETGENDIR=$(NETGENDIR) PYTHONPATH=$(PYTHON_ROOTS) py.test $(TEST_OPTIONS) src examples --junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
 
