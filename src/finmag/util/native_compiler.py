@@ -54,7 +54,10 @@ def make_modules():
     global modules_compiled
     if not modules_compiled:
         if not os.environ.has_key('DISABLE_PYTHON_MAKE') and os.path.exists(MAKEFILE):
-            #FIXME: This always prints on my machine, even if modules are built.
+            # FIXME: The next line always prints, even if modules are built.
+            # It may be possible to fix this by running 'make -q' first and
+            # checking its exit status, but this seems to require some
+            # restructuring of the build logic in 'native'.
             logger.debug("Building modules in 'native'...")
             run_make(["make"], cwd=NATIVE_DIR)
         modules_compiled = True

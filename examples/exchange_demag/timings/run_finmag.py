@@ -1,8 +1,7 @@
 import commands
 import os, time
-import numpy as np
 import dolfin as df
-from finmag.util.timings import timings
+from finmag.util.timings import default_timer
 from finmag.util.meshes import from_geofile
 
 from finmag import Simulation
@@ -67,7 +66,7 @@ output.write("%s \n"%repr(demag.parameters.to_dict()))
 output.write("\nFinmag solver tolerances:")
 output.write("\nFirst linear solve :%s" %(demag.demag.poisson_solver.parameters.to_dict()["relative_tolerance"]))
 output.write("\nSecond linear solve: %s \n \n"% (demag.demag.laplace_solver.parameters.to_dict()["relative_tolerance"]))
-output.write(str(timings))
+output.write(str(default_timer))
 output.close()
 
 # Cleanup

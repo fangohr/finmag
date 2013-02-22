@@ -12,7 +12,7 @@ __organisation__ = "University of Southampton"
 
 import numpy
 import dolfin as df
-from finmag.util.timings import timings
+from finmag.util.timings import default_timer
 from finmag.energies.demag.solver_gcr import FemBemGCRSolver
 from finmag.energies.demag.solver_fk import FemBemFKSolver
 from copy import deepcopy
@@ -21,7 +21,7 @@ from copy import deepcopy
 def solver_parameters(solver_exclude, preconditioner_exclude):
     linear_solver_set = ["lu"] 
     linear_solver_set += [e[0] for e in df.krylov_solver_methods()]
-    preconditioner_set = [e[0] for e in df.krylov_solver_preconditioners()]
+    preconditioner_set = [e[0] for e in df.krylov_solver_preconditioners()] #FIXME: not used
 
 ###################################################################
 #To the user:
@@ -114,8 +114,8 @@ class LinAlgDemagTester(object):
             self.report(t1,t2)
                           
             #Copy the timer and reset the old one.
-            self.timelist.append(deepcopy(timings))
-            timings.reset()
+            self.timelist.append(deepcopy(default_timer))
+            default_timer.reset()
                           
         #After the testing is finished delete the BEM to free up memory.
         del self.solver.bem
@@ -127,7 +127,7 @@ class LinAlgDemagTester(object):
         print t1
         print "Second solve parameters"
         print t2
-        print "\n",timings.report(n)
+        print "\n",default_timer.report(n)
 
 if __name__ == "__main__":
     #Solver type for use in the script, "FK" or "GCR".

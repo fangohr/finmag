@@ -55,7 +55,7 @@ def plot_averages(sim):
     #ax2.set_ylabel(r"$\max \left( \left | \frac{\mathrm{d}m}{\mathrm{d}t} \right | \right) \, \left( \mathrm{ns}^{-1} \right )$", color="r", fontsize=16)
     for tl in ax2.get_yticklabels():
         tl.set_color("r")
-    plt.savefig(os.path.join(MODULE_DIR, "m_and_dmdt.png"))
+    plt.savefig(os.path.join(MODULE_DIR, "test_relaxation.png"))
 
 if __name__ == "__main__":
    test_easy_relaxation(do_plot=True) 

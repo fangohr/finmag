@@ -2,7 +2,7 @@
 A method by method breakdown of the runtimes for the GCR solver.
 
 """
-from finmag.util.timings import mtimed, timings
+from finmag.util.timings import mtimed, default_timer
 from finmag.energies.demag.solver_gcr import FemBemGCRSolver
 from finmag.tests.demag.problems.prob_fembem_testcases import MagSphere20
 
@@ -86,5 +86,5 @@ if __name__ == "__main__":
     solver = GCRtimings(problem)
     solver.solve()
     #Print a review of the 15 most time consuming items
-    print timings.report(15)
+    print default_timer.report(15)
 

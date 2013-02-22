@@ -1,7 +1,7 @@
 from finmag import Simulation
 from finmag.integrators.llg_integrator import llg_integrator
 from finmag.energies import Exchange, Demag
-from finmag.util.timings import timings
+from finmag.util.timings import default_timer
 import dolfin as df
 from finmag.util.meshes import from_geofile
 
@@ -19,10 +19,10 @@ def run_simulation():
     sim.schedule(Simulation.save_averages, every=5e-12)
     sim.run_until(3e-10)
 
-    print timings
+    print default_timer
     print "The RHS was evaluated {} times, while the Jacobian was computed {} times.".format(
             sim.integrator.stats()['nfevals'],
-            timings._timings['LLG::sundials_jtimes'].calls)
+            default_timer._timings['LLG::sundials_jtimes'].calls)
 
 if __name__ == "__main__":
     run_simulation()

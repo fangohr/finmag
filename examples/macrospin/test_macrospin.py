@@ -1,5 +1,6 @@
 import dolfin
 import os
+import py
 import numpy
 from finmag import Simulation
 from finmag.integrators.llg_integrator import llg_integrator
@@ -37,7 +38,7 @@ def compare_with_analytic_solution(alpha=0.5, max_t=1e-9):
     sim.integrator = llg_integrator(sim.llg, sim.llg.m, abstol=1e-12, reltol=1e-12)
 
     ts = numpy.linspace(0, max_t, num=100)
-    ys = numpy.array([(sim.run_until(t), sim.m.copy())[1] for t in ts])
+    ys = numpy.array([(sim.advance_time(t), sim.m.copy())[1] for t in ts])
     tsfine = numpy.linspace(0, max_t, num=1000)
     m_analytical = make_analytic_solution(1e6, alpha, sim.gamma)
     save_plot(ts, ys, tsfine, m_analytical, alpha)
@@ -104,10 +105,12 @@ def test_macrospin_alpha_0_001():
     compare_with_analytic_solution(alpha=0.001, max_t=1e-11)
 
 
+@py.test.mark.slow
 def test_macrospin_very_low_damping():
     compare_with_analytic_solution(alpha=0.02, max_t=0.5e-9)
 
 
+@py.test.mark.slow
 def test_macrospin_low_damping():
     compare_with_analytic_solution(alpha=0.1, max_t=4e-10)
 
@@ -116,6 +119,7 @@ def test_macrospin_standard_damping():
     compare_with_analytic_solution(alpha=0.5, max_t=1e-10)
 
 
+@py.test.mark.slow
 def test_macrospin_higher_damping():
     compare_with_analytic_solution(alpha=1, max_t=1e-10)
 

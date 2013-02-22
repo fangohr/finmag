@@ -3,8 +3,8 @@ import numpy as np
 import logging
 import pytest
 import os
-import glob
 import shutil
+from glob import glob
 from tempfile import mkdtemp
 from finmag import sim_with, Simulation
 from finmag.example import barmini
@@ -109,7 +109,7 @@ class TestSimulation(object):
 
         # Probe at point outside the mesh
         m_probed_outside = sim.probe_field("m", [5e-9, -6e-9,  1e-9])
-        assert(all(np.isnan(m_probed_outside)))
+        assert((np.ma.getmask(m_probed_outside) == True).all())
 
     def test_probe_nonconstant_m_at_individual_points(self):
         TOL=1e-5
@@ -239,59 +239,162 @@ class TestSimulation(object):
         d = sim_helpers.load_restart_data('barmini-restart.npz')
         assert(d['simtime']) == 2e-13
 
+    def test_restart(self, tmpdir):
+        os.chdir(str(tmpdir))
+
+        # Run the simulation for 1 ps; save restart data; reload it
+        # while resetting the simulation time to 0.5 ps; then run
+        # again for 1 ps until we have reached 1.5 ps.
+        sim1 = barmini(name='barmini1')
+        sim1.schedule('save_ndt', every=1e-13)
+        sim1.run_until(1e-12)
+        sim1.save_restart_data('barmini.npz')
+        sim1.restart('barmini.npz', t0=0.5e-12)
+        sim1.run_until(1.5e-12)
+
+        # Check that the time steps for sim1 are as expected
+        a = np.loadtxt('barmini1.ndt')
+        ta = a[:, 0]
+        ta_expected = np.concatenate([np.linspace(0, 1e-12, 11),
+                                      np.linspace(0.5e-12, 1.5e-12, 11)])
+        assert(np.allclose(ta, ta_expected, atol=0))
+
+        # Run a second simulation for 2 ps continuously
+        sim2 = barmini(name='barmini2')
+        sim2.schedule('save_ndt', every=1e-13)
+        sim2.run_until(2e-12)
+
+        # Check that the time steps for sim1 are as expected
+        b = np.loadtxt('barmini2.ndt')
+        tb = b[:, 0]
+        tb_expected = np.linspace(0, 2e-12, 21)
+        assert(np.allclose(tb, tb_expected, atol=0))
+
+        # Check that the magnetisation dynamics of sim1 and sim2 are
+        # the same and that we end up with the same magnetisation.
+        a = np.concatenate([a[:10, :], a[11:, :]])  # delete the duplicate line due to the restart
+        assert(np.allclose(a[:, 1:], b[:, 1:]))
+        assert(np.allclose(sim1.m, sim2.m, atol=1e-6))
+
+    def test_reset_time(self, tmpdir):
+        """
+        Integrate a simple macrospin simulation for a bit, then reset
+        the time to an earlier point in time and integrate again. We
+        expect the same magnetisation dynamics as if the simulation
+        had run for the same length continuously, but the internal
+        clock times should be different.
+
+        """
+        os.chdir(str(tmpdir))
+
+        # First simulation: run for 50 ps, reset the time to 30 ps and run
+        # again for 50 ps.
+        mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 1, 1, 1)
+        sim1 = Simulation(mesh, Ms=1, name='test_save_ndt')
+        sim1.alpha = 0.05
+        sim1.set_m((1, 0, 0))
+        sim1.add(Zeeman((0, 0, 1e6)))
+
+        sim1.schedule('save_ndt', every=1e-11)
+        sim1.run_until(5e-11)
+        sim1.reset_time(3e-11)
+        sim1.run_until(8e-11)
+
+        # Run a second simulation for 100 ps continuously, without
+        # resetting the time in between.
+        sim2 = Simulation(mesh, Ms=1, name='test_save_ndt2')
+        sim2.alpha = 0.05
+        sim2.set_m((1, 0, 0))
+        sim2.add(Zeeman((0, 0, 1e6)))
+
+        sim2.schedule('save_ndt', every=1e-11)
+        sim2.run_until(10e-11)
+
+        # Check that the time steps for sim1 are as expected.
+        a = np.loadtxt('test_save_ndt.ndt')
+        ta = a[:, 0]
+        ta_expected = 1e-11 * np.array([0, 1, 2, 3, 4, 5, 3, 4, 5, 6, 7, 8])
+        assert(np.allclose(ta, ta_expected, atol=0))
+
+        # Check that the time steps for sim2 are as expected.
+        b = np.loadtxt('test_save_ndt2.ndt')
+        tb = b[:, 0]
+        tb_expected = 1e-11 * np.arange(10+1)
+        assert(np.allclose(tb, tb_expected, atol=0))
+
+        # Delete the duplicate line due to resetting the time
+        a = np.concatenate([a[:5, :], a[6:, :]])
+
+        # Check that the magnetisation dynamics of sim1 and sim2 are the same.
+        assert(np.allclose(a[:, 1:], b[:, 1:], atol=1e-4, rtol=1e-8))
+
     def test_save_vtk(self, tmpdir):
-        tmpdir = str(tmpdir)
-        sim1_dir = os.path.join(tmpdir, 'sim1')
-        sim2_dir = os.path.join(tmpdir, 'sim2')
-        sim3_dir = os.path.join(tmpdir, 'sim3')
-        sim4_dir = os.path.join(tmpdir, 'sim4')
-        os.mkdir(sim1_dir)
-        os.mkdir(sim2_dir)
-        os.mkdir(sim3_dir)
-        os.mkdir(sim4_dir)
+        os.chdir(str(tmpdir))
+
+        # Create an empty dummy .pvd file
+        with open('barmini.pvd', 'w'): pass
+
+        sim = barmini()
+        with pytest.raises(IOError):
+            # existing file should not be overwritten
+            sim.schedule('save_vtk', every=1e-13, overwrite=False)
+            #sim.run_until(1e-12)
+
+        # This time we enforce overwriting
+        sim = barmini()
+        sim.schedule('save_vtk', every=1e-13, overwrite=True)
+        sim.run_until(5e-13)
+        assert(len(glob('barmini*.vtu')) == 6)
+
+        # Schedule saving to different filenames and at various time steps.
+        sim = barmini()
+        sim.schedule('save_vtk', filename='bar2.pvd', every=1e-13, overwrite=True)
+        sim.schedule('save_vtk', filename='bar2.pvd', at=2.5e-13, overwrite=False)
+        sim.schedule('save_vtk', filename='bar2.pvd', at=4.3e-13, overwrite=False)
+
+        sim.schedule('save_vtk', filename='bar3.pvd', at=3.5e-13, overwrite=True)
+        sim.schedule('save_vtk', filename='bar3.pvd', every=2e-13, overwrite=True)
+        sim.schedule('save_vtk', filename='bar3.pvd', at=3.8e-13, overwrite=True)
+
+        # ... then run the simulation
+        sim.run_until(5e-13)
+
+        # ... also save another vtk snapshot manually
+        sim.save_vtk(filename='bar3.pvd')
+
+        # ... and check that the correct number of files was created
+        assert(len(glob('bar2*.vtu')) == 8)
+        assert(len(glob('bar3*.vtu')) == 6)
+
+        # Saving another snapshot with overwrite=True should erase existing .vtu files
+        sim.save_vtk(filename='bar3.pvd', overwrite=True)
+        assert(len(glob('bar3*.vtu')) == 1)
+
+    def test_sim_schedule_clear(self, tmpdir):
+        os.chdir(str(tmpdir))
 
         # Run simulation for a few picoseconds and check that the
         # expected vtk files were saved.
-        os.chdir(sim1_dir)
         sim = barmini()
-        sim.schedule('save_vtk', every=4e-12, at_end=True)
-        sim.schedule('save_vtk', at=5e-12)
-        sim.run_until(1e-11)
+        sim.schedule('save_vtk', every=2e-12)
+        sim.schedule('save_vtk', at=3e-12)
+        sim.run_until(5e-12)
         assert_number_of_files('barmini.pvd', 1)
-        assert_number_of_files('barmini*.vtu', 5)
+        assert_number_of_files('barmini*.vtu', 4)
 
-        # Same again, but with a different filename (and a slightly
-        # different schedule, just for variety).
-        os.chdir(sim2_dir)
-        sim = barmini()
-        sim.set_vtk_export_filename('m.pvd')
-        sim.schedule('save_vtk', every=2e-12)
-        sim.schedule('save_vtk', at=3e-12)
-        sim.run_until(5e-12)
-        assert_number_of_files('m.pvd', 1)
-        assert_number_of_files('m*.vtu', 4)
-        # Check that no vtk files are present apart from the ones we expect
-        assert(len(glob.glob('*.vtu')) + len(glob.glob('*.pvd')) == 4 + 1)
-
-        # Run for a bit, then change the filename and continue
-        # running. At the end check that both .pvd files were written
-        # correctly.
-        os.chdir(sim3_dir)
-        sim = barmini()
-        sim.set_vtk_export_filename('a.pvd')
-        sim.schedule('save_vtk', every=2e-12)
-        sim.schedule('save_vtk', at=3e-12)
-        sim.run_until(5e-12)
-        assert_number_of_files('a.pvd', 1)
-        assert_number_of_files('a*.vtu', 4)
-        sim.set_vtk_export_filename('b.pvd')
+        # Clear schedule and continue running; assert that no
+        # additional files were saved
+        sim.clear_schedule()
         sim.run_until(10e-12)
-        assert_number_of_files('b.pvd', 1)
-        assert_number_of_files('b*.vtu', 3)
+        assert_number_of_files('barmini.pvd', 1)
+        assert_number_of_files('barmini*.vtu', 4)
 
-        sim.save_vtk('c.pvd')
-        assert_number_of_files('c.pvd', 1)
-        assert_number_of_files('c*.vtu', 1)
+        # Schedule saving to a different filename and run further
+        sim.schedule('save_vtk', filename='a.pvd', every=3e-12)
+        sim.schedule('save_vtk', filename='a.pvd', at=14e-12)
+        sim.run_until(20e-12)
+        assert_number_of_files('a.pvd', 1)
+        assert_number_of_files('a*.vtu', 5)
 
     def test_remove_interaction(self):
 
@@ -331,10 +434,22 @@ class TestSimulation(object):
 
         sim.switch_off_H_ext(remove_interaction=True)
         assert(num_interactions(sim) == 0)
-        
-    
+
+    def test_set_H_ext(self):
+        mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 1, 1, 1)
+        sim = Simulation(mesh, Ms=1, unit_length=1e-9)
+        sim.add(Zeeman((1, 2, 3)))
+
+        H = sim.get_field_as_dolfin_function('Zeeman').vector().array()
+        H = sim.probe_field('Zeeman', [0.5e-9, 0.5e-9, 0.5e-9])
+        assert(np.allclose(H, [1, 2, 3]))
+
+        sim.set_H_ext([-4, -5, -6])
+        H = sim.probe_field('Zeeman', [0.5e-9, 0.5e-9, 0.5e-9])
+        assert(np.allclose(H, [-4, -5, -6]))
+
     def test_pbc2d_m_init(self):
-        
+
         def m_init_fun(pos):
             if pos[0]==0 or pos[1]==0:
                 return [0,0,1]
@@ -351,5 +466,3 @@ class TestSimulation(object):
         expect_m.shape=(48,)
         
         assert np.array_equal(sim.m,expect_m)
-        
-        
