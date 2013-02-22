@@ -218,14 +218,11 @@ for i,maxh in enumerate(meshsizes):
     starttime = time.time()
     status, output = commands.getstatusoutput(cmd3)
     print "Ran nmag, status was {}.".format(status)
+    print "[DDD] Nmag output: {}".format(output)
     endtime = time.time()
 
     runtime = endtime - starttime
-    try:
-        bemtime = get_nmag_bemtime()
-    except:
-        print output
-        raise
+    bemtime = get_nmag_bemtime()
 
     runtimes["bem"]["nmag"].append(bemtime)
     runtimes["solve"]["nmag"].append(runtime - bemtime)
