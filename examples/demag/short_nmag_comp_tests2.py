@@ -231,6 +231,8 @@ for i,maxh in enumerate(meshsizes):
     run_subprocess_command(cmd2)
 
     # Run nmag
+    run_subprocess_command(['which', 'nsim'], verbose=True)
+    sys.exit()
     cmd3 = ['nsim', 'run_nmag.py', '--clean', geofilename + '.nmesh.h5', 'nmag_data.dat']
     starttime = time.time()
     run_subprocess_command(cmd3, verbose=True)
