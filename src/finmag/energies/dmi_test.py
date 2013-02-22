@@ -46,7 +46,7 @@ def test_dmi_pbc2d_1D(plot=False):
         df.interactive()
 
     mx=[sim.llg._m(x+0.5,1)[0] for x in range(20)]
-    assert np.max(np.abs(mx))<6e-7
+    assert np.max(np.abs(mx)) < 1e-6
 
 
 if __name__ == "__main__":
