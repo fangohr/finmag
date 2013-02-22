@@ -42,14 +42,14 @@ def test_deviations_over_alpha_and_tol(number_of_alphas=5, do_plot=False):
             sim.alpha = alpha
             sim.set_m((1, 0, 0))
             sim.add(Zeeman((0, 0, 1e5)))
-        
+
             ts = numpy.linspace(0, 1e-9, num=50)
             ys = odeint(sim.llg.solve_for, sim.llg.m, ts, rtol=rtol, atol=rtol)
 
             # One entry in this array corresponds to the deviation between the two
             # solutions for one particular moment during the simulation.
             deviations = []
-            M_analytical = make_analytic_solution(1e5, alpha, sim.gamma) 
+            M_analytical = make_analytic_solution(1e5, alpha, sim.gamma)
             for i in range(len(ts)):
                 M_computed = numpy.mean(ys[i].reshape((3, -1)), 1)
                 M_ref = M_analytical(ts[i])

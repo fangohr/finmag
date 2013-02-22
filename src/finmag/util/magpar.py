@@ -235,6 +235,10 @@ def compare_field(aNodes, aField, bNodes, bField):
 
 def compare_field_directly(node1,field1,node2,field2):
     """
+    Compares field1 defined over the nodes on node1 to field2 over the nodes
+    node2. Note that the nodes should be the same, but are allowed to be
+    in different order.
+
     acceptable fields should like this:
     [fx0, ..., fxn, fy0, ..., fyn, fz0, ..., fzn]
     """
@@ -244,6 +248,8 @@ def compare_field_directly(node1,field1,node2,field2):
     field1=field1.reshape(3,-1)
     field2=field2.reshape(3,-1)
 
+    # build two dicts of coordinates -> values in order
+    # to sort the data of field2 by the ordering of the data in field1.
     key1=[]
     key2=[]
     data2={}

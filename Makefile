@@ -149,5 +149,4 @@ native-tests: make-modules run-ci-tests
 tests-fast: pytest native-tests
 
 
-.PHONY: ci default make-modules test run-ci-tests run-pytest-tests \
-   	run-unittest-tests pytest pytest-slow
+.PHONY: ci default make-modules test run-ci-tests run-pytest-tests run-unittest-tests pytest pytest-slow

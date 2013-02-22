@@ -33,14 +33,6 @@ def macrospin(Ms=0.86e6, m_init=(1, 0, 0), H_ext=(0, 0, 1e6), alpha=0.1,
     return sim
 
 
-### XXX The following implementations are only kept for reference.
-### They do not work (using sim.run_until() leaves the magnetisation
-### unchanged), which seems to indicate that something might be wrong
-### with the sim_with() function!? Should investigate this.
-###
-###    -- Max, 6.2.2013
-
-
 def macrospin_interval(Ms=0.86e6, m_init=(1, 0, 0), H_ext=(0, 0, 1e6), alpha=0.1, name='macrospin'):
     """
     1d mesh (= interval) with two vertices which are 1 nm apart.
@@ -62,10 +54,9 @@ def macrospin_interval(Ms=0.86e6, m_init=(1, 0, 0), H_ext=(0, 0, 1e6), alpha=0.1
         alpha = 0.1  (Gilbert damping coefficient)
 
     """
-    raise NotImplementedError("This implementation doesn't seem to work. Investigate!")
     mesh = df.UnitInterval()
     sim = sim_with(mesh, Ms=1e6, m_init=(1, 0, 0), alpha=alpha,
-                   unit_length=1e-9, A=None, demag_solver=None, name=name)
+                   unit_length=1e-9, H_ext=H_ext, A=None, demag_solver=None, name=name)
     return sim
 
 
@@ -90,8 +81,7 @@ def macrospin_box(Ms=0.86e6, m_init=(1, 0, 0), H_ext=(0, 0, 1e6), alpha=0.1, nam
         alpha = 0.1  (Gilbert damping coefficient)
 
     """
-    raise NotImplementedError("This implementation doesn't seem to work. Investigate!")
     mesh = df.Box(0, 0, 0, 1, 1, 1, 1, 1, 1)
     sim = sim_with(mesh, Ms=0.86e6, alpha=alpha, unit_length=1e-9,
-                   A=None, m_init=(1, 0, 0), name=name)
+                   A=None, H_ext=H_ext, m_init=(1, 0, 0), name=name)
     return sim

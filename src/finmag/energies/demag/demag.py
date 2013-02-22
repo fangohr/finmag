@@ -1,7 +1,7 @@
 import logging
 import textwrap
 import dolfin as df
-from finmag.util.timings import timings, mtimed
+from finmag.util.timings import default_timer, mtimed
 from solver_fk import FemBemFKSolver
 from solver_gcr import FemBemGCRSolver
 from treecode_bem import TreecodeBEM
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     demag = Demag("GCR")
     demag.setup(prob.V, prob.m, prob.Ms, unit_length = 1)
 
-    print timings
+    print default_timer
 
     df.plot(demag.compute_potential())
     df.interactive()

@@ -1,7 +1,7 @@
 import numpy as np
 import dolfin as df
 from finmag.util.helpers import *
-from finmag.util.meshes import box
+from finmag.util.meshes import box, cylinder
 import pytest
 
 TOLERANCE = 1e-15
@@ -307,6 +307,60 @@ def test_vector_field_from_dolfin_function():
     assert(np.allclose(U, U2))
     assert(np.allclose(V, V2))
     assert(np.allclose(W, W2))
+
+
+def test_probe():
+    """
+    Define a function on a cylindrical mesh which decays linearly in
+    x-direction. Then probe this function at a number of points along
+    the x-axis. This probing is done twice, once normally and once by
+    supplying a function which should be applied to the probed field
+    points. The results are compared with the expected values.
+    """
+    # Define a vector-valued function on the mesh
+    mesh = cylinder(10, 1, 3)
+    V = df.VectorFunctionSpace(mesh, 'Lagrange', 1, dim=3)
+    f = df.interpolate(df.Expression(['x[0]', '0', '0']), V)
+
+    # Define the probing points along the x-axis
+    xs = np.linspace(-9.9, 9.9, 20)
+    pts = [[x, 0, 0] for x in xs]
+
+    def square_x_coord(pt):
+        return pt[0]**2
+
+    # Probe the field (once normally and once with an additional
+    # function applied to the result). Note that the results have
+    # different shapes because apply_func returns a scalar, not a
+    # 3-vector.
+    res1 = probe(f, pts)
+    res2 = probe(f, pts, apply_func=square_x_coord)
+
+    # Check that we get the expected results.
+    res1_expected = [[x, 0, 0] for x in xs]
+    res2_expected = xs**2
+    assert(np.allclose(res1, res1_expected))
+    assert(np.allclose(res2, res2_expected))
+
+    # Probe at points which lie partly outside the sample to see if we
+    # get masked values in the result.
+    pts = [[20, 20, 0], [5, 2, 1]]
+    res1 = probe(f, pts)
+    res2 = probe(f, pts, apply_func=square_x_coord)
+    res1_expected = np.ma.masked_array([[np.NaN, np.NaN, np.NaN],
+                                        [5, 0, 0]],
+                                       mask=[[True, True, True],
+                                             [False, False, False]])
+    res2_expected = np.ma.masked_array([np.NaN, 25], mask=[True, False])
+
+    # Check that the arrays are masked out at the same location
+    assert((np.ma.getmask(res1) == np.ma.getmask(res1_expected)).all())
+    assert((np.ma.getmask(res2) == np.ma.getmask(res2_expected)).all())
+
+    # Check that the non-masked values are the same
+    assert(np.ma.allclose(res1, res1_expected))
+    assert(np.ma.allclose(res2, res2_expected))
+
     
 if __name__ == '__main__':
     test_scalar_valued_dg_function()

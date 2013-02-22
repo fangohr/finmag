@@ -37,7 +37,7 @@ def compare_with_analytic_solution(alpha=0.5, max_t=1e-9):
     sim.integrator = llg_integrator(sim.llg, sim.llg.m, abstol=1e-12, reltol=1e-12)
 
     ts = numpy.linspace(0, max_t, num=100)
-    ys = numpy.array([(sim.run_until(t), sim.m.copy())[1] for t in ts])
+    ys = numpy.array([(sim.advance_time(t), sim.m.copy())[1] for t in ts])
     tsfine = numpy.linspace(0, max_t, num=1000)
     m_analytical = make_analytic_solution(1e6, alpha, sim.gamma)
     save_plot(ts, ys, tsfine, m_analytical, alpha)
