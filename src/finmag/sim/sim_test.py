@@ -289,7 +289,7 @@ class TestSimulation(object):
 
         # First simulation: run for 50 ps, reset the time to 30 ps and run
         # again for 50 ps.
-        mesh = df.Box(0, 0, 0, 1, 1, 1, 1, 1, 1)
+        mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 1, 1, 1)
         sim1 = Simulation(mesh, Ms=1, name='test_save_ndt')
         sim1.alpha = 0.05
         sim1.set_m((1, 0, 0))
@@ -436,7 +436,7 @@ class TestSimulation(object):
         assert(num_interactions(sim) == 0)
 
     def test_set_H_ext(self):
-        mesh = df.Box(0, 0, 0, 1, 1, 1, 1, 1, 1)
+        mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 1, 1, 1)
         sim = Simulation(mesh, Ms=1, unit_length=1e-9)
         sim.add(Zeeman((1, 2, 3)))
 
