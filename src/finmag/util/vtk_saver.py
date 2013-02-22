@@ -51,10 +51,9 @@ class VTKSaver(object):
 
         *Arguments*
 
-        field_data:  dolfin.Function or numpy.array
+        field_data:  dolfin.Function
 
-            The data to be saved. If a numpy.array is given, it can be
-            a 2d array of shape (N, 3) or a 1d array of length 3*N.
+            The data to be saved.
 
         t:  float
 

@@ -76,7 +76,7 @@ def compute_dispersion(dx, dt):
 
     """
     my = np.load(m_for_fourier_analysis_file)
-    transformed = np.log10(np.power(fft.fftshift(fft.fft2(my)), 2))
+    transformed = np.log10(np.power(np.abs(fft.fftshift(fft.fft2(my))), 2))
     m, n = transformed.shape
     print m,n
     

@@ -1,4 +1,3 @@
-import time
 import inspect
 import logging
 import dolfin as df
@@ -15,6 +14,7 @@ from finmag.sim import sim_helpers
 from finmag.energies import Exchange, Zeeman, Demag, UniaxialAnisotropy, DMI
 from finmag.integrators.llg_integrator import llg_integrator
 from finmag.integrators import scheduler, events
+
 
 ONE_DEGREE_PER_NS = 17453292.5  # in rad/s
 
@@ -75,24 +75,22 @@ class Simulation(object):
         self.Volume = mesh_volume(mesh)
 
         self.scheduler = scheduler.Scheduler()
-        
-        self.domains =  df.CellFunction("uint", self.mesh)
-        self.domains.set_all(0)
-        self.region_id=0
 
-        self.overwrite_pvd_files = False
-        self.vtk_export_filename = self.sanitized_name + '.pvd'
-        self.vtk_saver = VTKSaver(self.vtk_export_filename)
+        self.domains = df.CellFunction("uint", self.mesh)
+        self.domains.set_all(0)
+        self.region_id = 0
+
+        self.vtk_savers = {}
 
         self.scheduler_shortcuts = {
-            'save_restart_data' : Simulation.save_restart_data,
-            'save_ndt' : sim_helpers.save_ndt,
-            'save_vtk' : Simulation.save_vtk,
-            'switch_off_H_ext' : Simulation.switch_off_H_ext,
-            }
+            'save_restart_data': Simulation.save_restart_data,
+            'save_ndt': sim_helpers.save_ndt,
+            'save_vtk': Simulation.save_vtk,
+            'switch_off_H_ext': Simulation.switch_off_H_ext,
+        }
 
         # At the moment, we can only have cvode as the driver, and thus do
-        # time development of a system. We may have energy minimisation at some 
+        # time development of a system. We may have energy minimisation at some
         # point (the driver would be an optimiser), or something else.
         self.driver = 'cvode'
 
@@ -118,22 +116,22 @@ class Simulation(object):
         \\frac{1}{V} \int m \: \mathrm{d}V`
         """
         return self.llg.m_average
-        
+
     def save_m_in_region(self,region,name='unnamed'):
-        
+
         self.region_id+=1
         helpers.mark_subdomain_by_function(region, self.mesh, self.region_id,self.domains)
         self.dx = df.Measure("dx")[self.domains]
-        
+
         if name=='unnamed':
             name='region_'+str(self.region_id)
-        
+
         region_id=self.region_id
         self.tablewriter.entities[name]={
                         'unit': '<>',
                         'get': lambda sim: sim.llg.m_average_fun(dx=self.dx(region_id)),
                         'header': (name+'_m_x', name+'_m_y', name+'_m_z')}
-        
+
         self.tablewriter.update_entity_order()
 
     @property
@@ -207,6 +205,13 @@ class Simulation(object):
         log.debug("Removing interaction '{}' from simulation '{}'".format(
                 interaction_type, self.name))
         return self.llg.effective_field.remove_interaction(interaction_type)
+
+    def set_H_ext(self, H_ext):
+        """
+        Convenience function to set the external field.
+        """
+        H = self.get_interaction("Zeeman")
+        H.set_value(H_ext)
 
     def switch_off_H_ext(self, remove_interaction=True):
         """
@@ -306,15 +311,18 @@ class Simulation(object):
             self.integrator = llg_integrator(self.llg, self.llg.m, backend=self.integrator_backend)
         log.info("Simulation will run until relaxation of the magnetisation.")
 
-        relax = events.RelaxationEvent(self, stopping_dmdt, dmdt_increased_counter_limit, dt_limit)
-        self.scheduler._add(relax)
+        if hasattr(self, "relaxation"):
+            del(self.relaxation)
+
+        self.relaxation = events.RelaxationEvent(self, stopping_dmdt, dmdt_increased_counter_limit, dt_limit)
+        self.scheduler._add(self.relaxation)
 
         self.integrator.run_with_schedule(self.scheduler)
         self.integrator.reinit()
         log.info("Relaxation finished at time t = {:.2g}.".format(self.t))
 
-        self.scheduler._remove(relax) 
-        del(relax.sim, relax) # help the garbage collection by avoiding circular reference
+        self.scheduler._remove(self.relaxation)
+        del(self.relaxation.sim) # help the garbage collection by avoiding circular reference
 
     save_restart_data = sim_helpers.save_restart_data
 
@@ -322,7 +330,7 @@ class Simulation(object):
         """If called, we look for a filename of type sim.name + '-restart.npz',
         and load it. The magnetisation in the restart file will be assigned to
         sim.llg._m. If this is from a cvode time integration run, it will also
-        initialise (create) the integrator with that m, and the time at which the 
+        initialise (create) the integrator with that m, and the time at which the
         restart data was saved.
 
         The time can be overriden with the optional parameter t0 here.
@@ -335,23 +343,28 @@ class Simulation(object):
         log.debug("Loading restart data from {}. ".format(filename))
 
         data = sim_helpers.load_restart_data(filename)
-    
+
         if not data['driver'] in ['cvode']:
             log.error("Requested unknown driver `{}` for restarting. Known: {}.".format(data["driver"], "cvode"))
             raise NotImplementedError("Unknown driver `{}` for restarting.".format(data["driver"]))
-        
+
         self.llg._m.vector()[:] = data['m']
-       
-        t = t0 or data["simtime"]
-        
-        self.integrator = llg_integrator(self.llg, self.llg.m, 
-            backend=self.integrator_backend, t0=t)
+
+        self.reset_time(t0 or data["simtime"])
 
         log.info("Reloaded and set m (<m>=%s) and time=%s from %s." % \
             (self.llg.m_average, self.t, filename))
 
-        assert self.t == t  # self.t is read from integrator
-        self.scheduler.reset(t)
+    def reset_time(self, t0):
+        """
+        Reset the internal clock time of the simulation to `t0`.
+
+        This also adjusts the internal time of the scheduler and time integrator.
+        """
+        self.integrator = llg_integrator(self.llg, self.llg.m,
+                                         backend=self.integrator_backend, t0=t0)
+        self.scheduler.reset(t0)
+        assert self.t == t0  # self.t is read from integrator
 
     def save_averages(self):
         """
@@ -437,6 +450,10 @@ class Simulation(object):
         else:
             self.llg.do_slonczewski = not self.llg.do_slonczewski
 
+    def clear_schedule(self):
+        self.scheduler.clear()
+        self.scheduler.reset(self.t)
+
     def schedule(self, func, *args, **kwargs):
         """
         Register a function that should be called during the simulation.
@@ -449,11 +466,19 @@ class Simulation(object):
         delay the first execution of your function. Additionally, you can set
         the `at_end` option to `True` to have your function called at the end
         of the simulation. This can be combined with `at` and `every`.
-        
+
+        Note that if the internal simulation time is not zero (i.e.. if the
+        simulation has already run for some time) then using the 'every'
+        keyword will implicitly set 'after' to the current simulation time,
+        so that the event repeats in regular intervals from the current time
+        onwards). If this is undesired, you should explicitly provide 'after'
+        (which is interpreted as an 'absolute' time, i.e. not as an offset to
+        the current simulation time).
+
         You can also schedule actions using real time instead of simulation
         time by setting the `realtime` option to True. In this case you can
         use the `after` keyword on its own.
-        
+
         The function func(sim) you provide should expect the simulation object
         as its first argument. All arguments to the 'schedule' function (except
         the special ones 'at', 'every', 'at_end' and 'realtime' mentioned
@@ -464,7 +489,27 @@ class Simulation(object):
         """
         if isinstance(func, str):
             if func in self.scheduler_shortcuts:
-                func = self.scheduler_shortcuts[func]
+                if func == 'save_vtk':
+                    # This is a special case which needs some pre-processing
+                    # as we need to open a .pvd file first.
+                    filename = kwargs.pop('filename', None)
+                    overwrite = kwargs.pop('overwrite', False)
+                    try:
+                        # Check whether a vtk_saver for this filename already exists; this is
+                        # necessary to if 'save_vtk' is scheduled multiple times with the same
+                        # filename.
+                        vtk_saver = self._get_vtk_saver(filename=filename, overwrite=False)
+                    except IOError:
+                        # If none exists, create a new one.
+                        vtk_saver = self._get_vtk_saver(filename=filename, overwrite=overwrite)
+
+                    def aux_save(sim):
+                        sim._save_m_to_vtk(vtk_saver)
+
+                    func = aux_save
+                    func = lambda sim: sim._save_m_to_vtk(vtk_saver)
+                else:
+                    func = self.scheduler_shortcuts[func]
             else:
                 msg = "Scheduling keyword '%s' unknown. Known values are %s" \
                     % (func, self.scheduler_shortcuts.keys())
@@ -480,8 +525,8 @@ class Simulation(object):
                     "argument names: {}".format(illegal_argnames))
 
         at = kwargs.pop('at', None)
-        after = kwargs.pop('after', None)
         every = kwargs.pop('every', None)
+        after = kwargs.pop('after', self.t if (every != None) else None)
         at_end = kwargs.pop('at_end', False)
         realtime = kwargs.pop('realtime', False)
 
@@ -496,25 +541,29 @@ class Simulation(object):
         log.warning("Method 'snapshot' is deprecated. Use 'save_vtk' instead.")
         self.vtk(self, filename, directory, force_overwrite)
 
-    def set_vtk_export_filename(self, filename=""):
-        """
-        Set the filename which is used for saving VTK snapshots.
-        """
-        self.vtk_export_filename = filename
+    def _get_vtk_saver(self, filename=None, overwrite=False):
+        if filename == None:
+            filename = self.sanitized_name + '.pvd'
 
-    def save_vtk(self, filename=None):
+        if self.vtk_savers.has_key(filename) and (overwrite == False):
+            # Retrieve an existing VTKSaver for appending data
+            s = self.vtk_savers[filename]
+        else:
+            # Create a  new VTKSaver and store it for later re-use
+            s = VTKSaver(filename, overwrite=overwrite)
+            self.vtk_savers[filename] = s
+
+        return s
+
+    def _save_m_to_vtk(self, vtk_saver):
+        vtk_saver.save_field(self.llg._m, self.t)
+
+    def save_vtk(self, filename=None, overwrite=False):
         """
         Save the magnetisation to a VTK file.
         """
-        if filename != None:
-            # Explicitly provided filename overwrites the previously used one.
-            self.vtk_export_filename = filename
-
-        # Check whether we're still writing to the same file.
-        if self.vtk_saver.filename != self.vtk_export_filename:
-            self.vtk_saver.open(self.vtk_export_filename, self.overwrite_pvd_files)
-
-        self.vtk_saver.save_field(self.llg._m, self.t)
+        vtk_saver = self._get_vtk_saver(filename, overwrite)
+        self._save_m_to_vtk(vtk_saver)
 
     def mesh_info(self):
         """

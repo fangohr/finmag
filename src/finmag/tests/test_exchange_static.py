@@ -4,7 +4,7 @@ from finmag import Simulation as Sim
 from finmag.energies import Exchange
 from finmag.util.helpers import vectors, angle
 
-TOLERANCE = 1e-8
+TOLERANCE = 8e-7
 
 # define the mesh
 length = 20e-9 #m
@@ -26,7 +26,7 @@ def angles_after_a_nanosecond(initial_M, pins=[]):
     sim = Sim(mesh, Ms)
     sim.set_m(initial_M, L=length)
     sim.add(Exchange(A))
-    sim.pins = pins 
+    sim.pins = pins
     sim.run_until(1e-9)
 
     m = vectors(sim.m)
@@ -65,7 +65,7 @@ def test_exchange_field_should_change_when_M_changes():
 
     # Capture the current value of the exchange field and m.
     m = sim.m
-    H_ex = exchange.compute_field() 
+    H_ex = exchange.compute_field()
 
     # We assert that the magnetisation has indeed changed since the beginning.
     assert not np.array_equal(old_m, m)

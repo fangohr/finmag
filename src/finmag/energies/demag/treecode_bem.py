@@ -2,8 +2,7 @@ import logging
 import numpy as np
 import dolfin as df
 import solver_base as sb
-from finmag.util.meshes import sphere
-from finmag.util.timings import timings, mtimed
+from finmag.util.timings import default_timer, mtimed
 import finmag.util.solver_benchmark as bench
 
 
@@ -194,18 +193,18 @@ class TreecodeBEM(sb.FemBemDeMagSolver):
     def solve(self):
 
         # Compute phi1 on the whole domain (code-block 1, last line)
-        timings.start(self.__class__.__name__, "phi1 - matrix product")
+        default_timer.start("phi1 - matrix product", self.__class__.__name__)
         g1 = self.D*self.m.vector()
 
-        timings.start_next(self.__class__.__name__, "phi1 - solve")
+        default_timer.start_next("phi1 - solve", self.__class__.__name__)
         if self.bench:
             bench.solve(self.poisson_matrix,self.phi1.vector(),g1, benchmark = True)
         else:
-            timings.start_next(self.__class__.__name__, "1st linear solve")
+            default_timer.start_next("1st linear solve", self.__class__.__name__)
             self.poisson_iter = self.poisson_solver.solve(self.phi1.vector(), g1)
-            timings.stop(self.__class__.__name__, "1st linear solve")
+            default_timer.stop("1st linear solve", self.__class__.__name__)
         # Restrict phi1 to the boundary
-        timings.start_next(self.__class__.__name__, "Compute phi2 at boundary")
+        default_timer.start_next("Compute phi2 at boundary", self.__class__.__name__)
         
         self.fast_sum.fastsum(self.res,self.phi1.vector().array())
         #self.fast_sum.directsum(self.res,self.phi1.vector().array())
@@ -215,14 +214,14 @@ class TreecodeBEM(sb.FemBemDeMagSolver):
         
         # Compute Laplace's equation inside the domain,
         # eq. (2) and last code-block
-        timings.start_next(self.__class__.__name__, "Compute phi2 inside")
+        default_timer.start_next("Compute phi2 inside", self.__class__.__name__)
         self.phi2 = self.solve_laplace_inside(self.phi2)
 
         # phi = phi1 + phi2, eq. (5)
-        timings.start_next(self.__class__.__name__, "Add phi1 and phi2")
+        default_timer.start_next("Add phi1 and phi2", self.__class__.__name__)
         self.phi.vector()[:] = self.phi1.vector() \
                              + self.phi2.vector()
-        timings.stop(self.__class__.__name__, "Add phi1 and phi2")
+        default_timer.stop("Add phi1 and phi2", self.__class__.__name__)
         return self.phi
 
 if __name__ == "__main__":

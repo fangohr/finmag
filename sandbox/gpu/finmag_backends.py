@@ -1,6 +1,6 @@
 import os, time
 import dolfin as df
-from finmag.util.timings import timings
+from finmag.util.timings import default_timer
 from finmag import Simulation
 from finmag.energies import Exchange, Demag
 
@@ -32,7 +32,7 @@ def run_finmag():
         output.write("\nBackend %s:\n" % df.parameters["linear_algebra_backend"])
 	output.write("\nSetup: %.3f sec.\n" % (dynamicsstart-setupstart))
 	output.write("Dynamics: %.3f sec.\n\n" % (endtime-dynamicsstart))
-	output.write(str(timings))
+	output.write(str(default_timer))
 	output.close()
 
 # Need a clean file

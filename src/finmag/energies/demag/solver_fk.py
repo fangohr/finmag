@@ -255,7 +255,7 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
     """
     def __init__(self,mesh,m, parameters=sb.default_parameters , degree=1, element="CG",
                  project_method='magpar', unit_length=1,Ms = 1.0,bench = False):
-        fk_timings.start(self.__class__.__name__, "FKSolver init")
+        fk_timings.start("FKSolver init", self.__class__.__name__)
         sb.FemBemDeMagSolver.__init__(self,mesh,m, parameters, degree, element=element,
                                       project_method = project_method,
                                       unit_length = unit_length,Ms = Ms,bench = bench)
@@ -275,14 +275,14 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         self.D = df.assemble(b)
 
         # Compute boundary element matrix and global-to-boundary mapping
-        fk_timings.start_next(self.__class__.__name__, "build BEM")
+        fk_timings.start_next("build BEM", self.__class__.__name__)
         self.bem, self.b2g_map = compute_bem_fk(df.BoundaryMesh(self.mesh, False))
-        fk_timings.stop(self.__class__.__name__, "build BEM")
+        fk_timings.stop("build BEM", self.__class__.__name__)
 
     def solve(self):
 
         # Compute phi1 on the whole domain (code-block 1, last line)
-        fk_timings.start(self.__class__.__name__, "phi1 - matrix product")
+        fk_timings.start("phi1 - matrix product", self.__class__.__name__)
         g1 = self.D*self.m.vector()
 
         # NOTE: The (above) computation of phi1 is equivalent to
@@ -292,35 +292,35 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         # because we don't have to assemble L each time,
         # and matrix multiplication is faster than assemble.
 
-        fk_timings.start_next(self.__class__.__name__, "phi1 - solve")
+        fk_timings.start_next("phi1 - solve", self.__class__.__name__)
         if self.bench:
             bench.solve(self.poisson_matrix,self.phi1.vector(),g1, benchmark = True)
         else:
-            fk_timings.start_next(self.__class__.__name__, "1st linear solve")
+            fk_timings.start_next("1st linear solve", self.__class__.__name__)
             self.poisson_iter = self.poisson_solver.solve(self.phi1.vector(), g1)
-            fk_timings.stop(self.__class__.__name__, "1st linear solve")
+            fk_timings.stop("1st linear solve", self.__class__.__name__)
         # Restrict phi1 to the boundary
-        fk_timings.start_next(self.__class__.__name__, "Restrict phi1 to boundary")
+        fk_timings.start_next("Restrict phi1 to boundary", self.__class__.__name__)
         Phi1 = self.phi1.vector()[self.b2g_map]
 
         # Compute phi2 on the boundary, eq. (3)
-        fk_timings.start_next(self.__class__.__name__, "Compute Phi2")
+        fk_timings.start_next("Compute Phi2", self.__class__.__name__)
         Phi2 = np.dot(self.bem, Phi1.array())
 
         # Fill Phi2 into boundary positions of phi2
-        fk_timings.start_next(self.__class__.__name__, "phi2 <- Phi2")
+        fk_timings.start_next("phi2 <- Phi2", self.__class__.__name__)
         self.phi2.vector()[self.b2g_map[:]] = Phi2
 
         # Compute Laplace's equation inside the domain,
         # eq. (2) and last code-block
-        fk_timings.start_next(self.__class__.__name__, "Compute phi2 inside")
+        fk_timings.start_next("Compute phi2 inside", self.__class__.__name__)
         self.phi2 = self.solve_laplace_inside(self.phi2)
 
         # phi = phi1 + phi2, eq. (5)
-        fk_timings.start_next(self.__class__.__name__, "Add phi1 and phi2")
+        fk_timings.start_next("Add phi1 and phi2", self.__class__.__name__)
         self.phi.vector()[:] = self.phi1.vector() \
                              + self.phi2.vector()
-        fk_timings.stop(self.__class__.__name__, "Add phi1 and phi2")
+        fk_timings.stop("Add phi1 and phi2", self.__class__.__name__)
         return self.phi
 
 if __name__ == "__main__":
