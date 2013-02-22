@@ -8,7 +8,10 @@ import os
 
 ext_modules = [
     Extension("treecode_bem",
-              sources = ['treecode_bem.c','treecode_bem_lib.pyx'],
+              sources = ['treecode_bem_I.c',
+                         'treecode_bem_II.c',
+                         'treecode_bem_helper.c',
+                         'treecode_bem_lib.pyx'],
               include_dirs = [numpy.get_include()],
 	      libraries=['m'],
               #libraries=['m','gomp'],

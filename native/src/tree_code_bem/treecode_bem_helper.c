@@ -1,9 +1,5 @@
-#include "fast_sum.h"
+#include "treecode_bem_helper.h"
 
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
 
 inline double pow2(double x) {
     return x*x;
@@ -59,6 +55,7 @@ double array_min(double *x, int N, int t) {
     return min;
 }
 
+
 //compute det(J1),det(J2),det(J3) (equations are given in the report)
 
 inline double det2(double *dx, double *dy, double *dz) {
@@ -103,7 +100,7 @@ void vector_unit(double *p, double *up) {
 
     double tmp = p[0] * p[0] + p[1] * p[1] + p[2] * p[2];
 
-    tmp = 1.0/sqrt(tmp);
+    tmp = 1.0 / sqrt(tmp);
 
     up[0] = p[0] * tmp;
     up[1] = p[1] * tmp;
@@ -243,52 +240,6 @@ void boundary_element(double *xp, double *x1, double *x2, double *x3, double *re
     return;
 }
 
-void compute_triangle_source_nodes(fastsum_plan *plan) {
-    int face, f, k;
-
-    double x1, y1, z1;
-    double x2, y2, z2;
-    double x3, y3, z3;
-    double v, *p1, *p2, *p3;
-   
-    for (face = 0; face < plan->triangle_num; face++) {
-
-        f = 3 * face;
-
-        k = plan->triangle_nodes[f];
-        p1 = &plan->x_t[3 * k];
-        x1 = p1[0];
-        y1 = p1[1];
-        z1 = p1[2];
-
-        k = plan->triangle_nodes[f + 1];
-        p2 = &plan->x_t[3 * k];
-        x2 = p2[0] - x1;
-        y2 = p2[1] - y1;
-        z2 = p2[2] - z1;
-
-        k = plan->triangle_nodes[f + 2];
-        p3 = &plan->x_t[3 * k];
-        x3 = p3[0] - x1;
-        y3 = p3[1] - y1;
-        z3 = p3[2] - z1;
-
-        v = det2(p1, p2, p3);
-
-        plan->x_s_tri[f] = x2 / 3.0 + x3 / 3.0 + x1;
-        plan->x_s_tri[f + 1] = y2 / 3.0 + y3 / 3.0 + y1;
-        plan->x_s_tri[f + 2] = z2 / 3.0 + z3 / 3.0 + z1;
-
-        plan->weights[face] = v / 2.0 / (4 * M_PI);
-
-    }
-
-    for (f = 0; f < 3*plan->triangle_num; f++) {
-    	plan->x_s[f]=plan->x_s_tri[f];
-    }
-
-}
-
 
 
 double **alloc_2d_double(int ndim1, int ndim2) {
@@ -400,137 +351,10 @@ void quicksort(int t, double *x, int *index, int N) {
         quicksort(t, x + 3 * lpos, index + lpos, N - lpos);
 }
 
-void bulid_indices_single(fastsum_plan *plan, struct octree_node *tree,
-        int index, int *in, double *value, int compute_bm) {
 
-    double R;
-    int i, j;
-    double *p0, *p1, *p2, *p3;
-    double omega[3];
-    int k1, k2, k3;
-
-    R = pow2(plan->x_t[3 * index] - tree->x)
-            + pow2(plan->x_t[3 * index + 1] - tree->y)
-            + pow2(plan->x_t[3 * index + 2] - tree->z);
-
-    if (plan->mac_square * R > tree->radius_square) {
-        return;
-    }
-
-
-    if (tree->num_children > 0) {
-
-        for (i = 0; i < tree->num_children; i++) {
-            bulid_indices_single(plan, tree->children[i], index, in, value, compute_bm);
-        }
-        return;
-
-    } else {
-
-        for (i = tree->begin; i < tree->end; i++) {
-
-            j = plan->x_s_ids[i];
-
-            p0 = &plan->x_t[3 * index];
-
-            k1 = plan->triangle_nodes[3 * j];
-            p1 = &plan->x_t[3 * k1];
-            in[k1] = 1;
-
-            k2 = plan->triangle_nodes[3 * j + 1];
-            p2 = &plan->x_t[3 * k2];
-            in[k2] = 1;
-
-            k3 = plan->triangle_nodes[3 * j + 2];
-            p3 = &plan->x_t[3 * k3];
-            in[k3] = 1;
-
-            if (compute_bm > 0) {
-                boundary_element(p0, p1, p2, p3, omega);
-                value[k1] += omega[0];
-                value[k2] += omega[1];
-                value[k3] += omega[2];
-            }
-
-        }
-        return;
-    }
-
-}
-
-void bulid_indices(fastsum_plan *plan) {
-
-    int i, j;
-
-    int *indices_n = malloc(plan->N_target * sizeof ( int));
-    double *values = malloc(plan->N_target * sizeof ( double));
-
-
-    int tmp_length_n = 0;
-    int total_length_n = 0;
-
-    for (i = 0; i < plan->N_target; i++) {
-        indices_n[i] = 0;
-        values[i] = 0;
-    }
-
-    
-    for (i = 0; i < plan->N_target; i++) {
-
-        bulid_indices_single(plan, plan->tree, i, indices_n, values, 0);
-
-        for (j = 0; j < plan->N_target; j++) {
-            if (indices_n[j] > 0) {
-                total_length_n++;
-                indices_n[j] = 0;
-            }
-        }
-
-    }
-
-    plan->total_length_n=total_length_n;
-    //printf("total_length=%d   \n", total_length_n);
-
-    plan->id_n = malloc(total_length_n * sizeof ( int));
-    plan->b_m = malloc(total_length_n * sizeof ( double));
-
-    for (i = 0; i < total_length_n; i++) {
-        plan->id_n[i] = 0;
-        plan->b_m[i] = 0;
-    }
-
-
-    total_length_n = 0;
-    for (i = 0; i < plan->N_target; i++) {
-
-        bulid_indices_single(plan, plan->tree, i, indices_n, values, 1);
-
-        tmp_length_n = 0;
-
-        for (j = 0; j < plan->N_target; j++) {
-            if (indices_n[j] > 0) {
-                plan->id_n[total_length_n] = j;
-                plan->b_m[total_length_n] = values[j];
-
-                total_length_n++;
-                tmp_length_n++;
-                indices_n[j] = 0;
-                values[j] = 0;
-            }
-        }
-        //printf ("\n");
-
-        plan->id_nn[i] = tmp_length_n;
-    }
-
-
-    free(indices_n);
-    free(values);
-
-}
 
 int get_total_length(fastsum_plan *plan){
-  return plan->total_length_n;
+    return plan->total_length_n;
 }
 
 
@@ -676,6 +500,8 @@ void create_tree(fastsum_plan *plan, struct octree_node *tree, int begin, int en
     tree->radius_square = pow2(tree->rx)
             + pow2(tree->ry) + pow2(tree->rz);
 
+    tree->radius=sqrt(tree->radius_square);
+
     tree->num_children = 0;
 
 
@@ -704,6 +530,7 @@ void create_tree(fastsum_plan *plan, struct octree_node *tree, int begin, int en
     }
 }
 
+
 void printree(struct octree_node *tree) {
     int i;
     if (tree->num_children > 0) {
@@ -716,10 +543,6 @@ void printree(struct octree_node *tree) {
                 tree->begin, tree->end, sqrt(tree->radius_square));
     }
 
-}
-
-void print_tree(fastsum_plan *plan){
-	printree(plan->tree);
 }
 
 void free_tree(fastsum_plan *plan, struct octree_node *tree) {
@@ -755,17 +578,16 @@ void build_tree(fastsum_plan *plan) {
     bnd[4] = array_min(plan->x_s, plan->triangle_num, 2);
     bnd[5] = array_max(plan->x_s, plan->triangle_num, 2);
 
-
     create_tree(plan, plan->tree, 0, plan->triangle_num, bnd);
 
 }
 
-void compute_Taylor(double ***a, double dx, double dy, double dz, int p) {
+void compute_coefficient(double ***a, double dx, double dy, double dz, int p) {
     int i, j, k;
     double R, r, r3, r5;
 
     double *cf = (double *) malloc((p + 1) * sizeof (double));
-    double *cf2 = (double *) malloc((p + 1) * sizeof (double));
+    double *cg = (double *) malloc((p + 1) * sizeof (double));
 
     double ddx = 2 * dx;
     double ddy = 2 * dy;
@@ -783,67 +605,70 @@ void compute_Taylor(double ***a, double dx, double dy, double dz, int p) {
     a[0][1][0] = dy*r3;
     a[0][0][1] = dz*r3;
 
-    a[1][1][0] = 3 * dx * dy*r5;
-    a[1][0][1] = 3 * dx * dz*r5;
-    a[0][1][1] = 3 * dy * dz*r5;
+    a[1][1][0] = 3 * dx * dy * r5;
+    a[1][0][1] = 3 * dx * dz * r5;
+    a[0][1][1] = 3 * dy * dz * r5;
 
 
     for (i = 1; i < p + 1; i++) {
         cf[i] = 1 - 1.0 / i;
-        cf2[i] = 1 - 0.5 / i;
+        cg[i] = 1 - 0.5 / i;
     }
 
 
     for (i = 2; i < p + 1; i++) {
-        a[i][0][0] = (2 * dx * cf2[i] * a[i - 1][0][0]
-                - cf[i] * a[i - 2][0][0]) * R;
+        a[i][0][0] = (ddx*cg[i]*a[i-1][0][0]- cf[i]*a[i-2][0][0])*R;
 
-        a[0][i][0] = (2 * dy * cf2[i] * a[0][i - 1][ 0]
-                - cf[i] * a[0][ i - 2][0]) * R;
+        a[0][i][0] = (ddy*cg[i]*a[0][i-1][0]- cf[i]*a[0][i-2][0])*R;
 
-        a[0][0][i] = (2 * dz * cf2[i] * a[0][0][i - 1]
-                - cf[i] * a[0][0][ i - 2]) * R;
+        a[0][0][i] = (ddz*cg[i]*a[0][0][i-1]- cf[i]*a[0][0][i-2])*R;
     }
 
 
-    for (i = 2; i < p + 1; i++) {
-        a[1][0][i] = (dx * a[0][0][i] + ddz * a[1][0][ i - 1] - a[1][0][i - 2]) * R;
-        a[0][1][i] = (dy * a[0][0][i] + ddz * a[0][1][ i - 1] - a[0][1][i - 2]) * R;
-        a[0][i][1] = (dz * a[0][i][0] + ddy * a[0][i - 1][1] - a[0][i - 2][1]) * R;
-        a[1][i][0] = (dx * a[0][i][0] + ddy * a[1][i - 1][0] - a[1][i - 2][0]) * R;
-        a[i][1][0] = (dy * a[i][0][0] + ddx * a[i - 1][1][0] - a[i - 2][1][0]) * R;
-        a[i][0][1] = (dz * a[i][0][0] + ddx * a[i - 1][0][1] - a[i - 2][0][1]) * R;
+    for (i = 2; i < p; i++) {
+        a[1][0][i] = (dx * a[0][0][i] + ddz * a[1][0][i-1] - a[1][0][i-2]) * R;
+        a[0][1][i] = (dy * a[0][0][i] + ddz * a[0][1][i-1] - a[0][1][i-2]) * R;
+        a[0][i][1] = (dz * a[0][i][0] + ddy * a[0][i-1][1] - a[0][i-2][1]) * R;
+        a[1][i][0] = (dx * a[0][i][0] + ddy * a[1][i-1][0] - a[1][i-2][0]) * R;
+        a[i][1][0] = (dy * a[i][0][0] + ddx * a[i-1][1][0] - a[i-2][1][0]) * R;
+        a[i][0][1] = (dz * a[i][0][0] + ddx * a[i-1][0][1] - a[i-2][0][1]) * R;
     }
 
 
     for (i = 2; i < p - 1; i++) {
         for (j = 2; j < p - i + 1; j++) {
 
-        	a[1][1][i] = (dx * a[0][1][i] + ddy * a[1][0][i] + ddz * a[1][1][i - 1] - a[1][1][i - 2]) * R;
-        	a[1][i][1] = (dx * a[0][i][1] + ddy * a[1][i - 1][1] + ddz * a[1][i][0] - a[1][i - 2][1]) * R;
-        	a[i][1][1] = (dy * a[i][0][i] + ddx * a[i - 1][1][1] + ddz * a[i][1][0] - a[i - 2][1][1]) * R;
+            a[i][j][0] = (ddx * cg[i] * a[i-1][j][0] + ddy * a[i][j-1][0]
+                          - cf[i] * a[i-2][j][0] - a[i][j-2][0]) * R;
 
-        	/*
-            a[i][j][0] = (ddx * cf2[i] * a[i - 1][j][0] + ddy * a[i][j - 1][0]
-                    - cf[i] * a[i - 2][j][0] - a[i][j - 2][0]) * R;
+            a[i][0][j] = (ddx * cg[i] * a[i-1][0][j] + ddz * a[i][0][j-1]
+                          - cf[i] * a[i-2][0][j] - a[i][0][j-2]) * R;
 
-            a[i][0][j] = (ddx * cf2[i] * a[i - 1][0][j] + ddz * a[i][0][j - 1]
-                    - cf[i] * a[i - 2][0][j] - a[i][0][j - 2]) * R;
+            a[0][i][j] = (ddy * cg[i] * a[0][i-1][j] + ddz * a[0][i][j-1]
+                         - cf[i] * a[0][i-2][j] - a[0][i][j-2]) * R;
 
-            a[0][i][j] = (ddy * cf2[i] * a[0][i - 1][j] + ddz * a[0][i][j - 1]
-                    - cf[i] * a[0][i - 2][j] - a[0][i][j - 2]) * R;
-			*/
         }
     }
 
+    a[1][1][1] = (dx*a[0][1][1]+ddy*a[1][0][1]+ddz*a[1][1][0]) * R;
+
+    for (i = 2; i < p - 1; i++) {
+
+        a[1][1][i] = (dx * a[0][1][i] + ddy * a[1][0][ i ] + ddz * a[1][1][i-1] - a[1][1][i-2]) * R;
+        a[1][i][1] = (dx * a[0][i][1] + ddy * a[1][i-1][1] + ddz * a[1][ i ][0] - a[1][i-2][1]) * R;
+        a[i][1][1] = (dy * a[i][0][i] + ddx * a[i-1][1][1] + ddz * a[ i ][1][0] - a[i-2][1][1]) * R;
+
+    }
+
+
     for (i = 2; i < p - 2; i++) {
         for (j = 2; j < p - i; j++) {
-            a[1][i][j] = (dx * a[0][i][j] + ddy * a[1][ i - 1][j] + ddz * a[1][i][j - 1]
-                    - a[1][ i - 2][j] - a[1][i][j - 2]) * R;
-            a[i][1][j] = (dy * a[i][0][j] + ddx * a[i - 1][1][j] + ddz * a[i][1][ j - 1]
-                    - a[i - 2][1][j] - a[i][1][j - 2]) * R;
-            a[i][j][1] = (dz * a[i][j][0] + ddy * a[i - 1][j][1] + ddy * a[i][j - 1][1]
-                    - a[i - 2][j][1] - a[i][j - 2][1]) * R;
+            a[1][i][j] = (dx * a[0][i][j] + ddy * a[1][i-1][j] + ddz * a[1][i][j-1]
+                          - a[1][i-2][j] - a[1][i][j-2]) * R;
+            a[i][1][j] = (dy * a[i][0][j] + ddx * a[i-1][1][j] + ddz * a[i][1][j-1]
+                          - a[i-2][1][j] - a[i][1][j-2]) * R;
+            a[i][j][1] = (dz * a[i][j][0] + ddy * a[i-1][j][1] + ddy * a[i][j-1][1]
+                          - a[i-2][j][1] - a[i][j-2][1]) * R;
         }
     }
 
@@ -852,28 +677,27 @@ void compute_Taylor(double ***a, double dx, double dy, double dz, int p) {
         for (j = 2; j < p - i - 1; j++) {
             for (k = 2; k < p - i - j + 1; k++) {
 
-                a[i][j][k] = (ddx * cf2[i] * a[i - 1][j][ k] + ddy * a[i][j - 1][0]
-                        + 2 * dz * a[i][j][k - 1] - cf[i] * a[i - 2][j][k]
-                        - a[i][j - 2][k] - a[i][ j][ k - 2]) * R;
+                a[i][j][k] = (ddx * cg[i] * a[i-1][j][ k] + ddy * a[i][j-1][k]
+                        + ddz * a[i][j][k - 1] - cf[i] * a[i-2][j][k]
+                        - a[i][j-2][k] - a[i][j][k-2]) * R;
 
             }
         }
     }
 
     free(cf);
-    free(cf2);
+    free(cg);
 
     return;
 }
 
 void compute_moment(fastsum_plan *plan, struct octree_node *tree, double ***moment, double x, double y, double z) {
     double dx, dy, dz;
-    int i, j, k, ti, tj, tk, tn;
-    double tmp_x, tmp_y, tmp_z;
+    int i, j, k, ti, tj;
+    double tmp_x, tmp_y, tmp_z, tmp_xyz;
     double nx, ny, nz;
-    double tmp_charge;
     double dxx,dyy,dzz;
-    //double tmp_moment = 0;
+
 
     for (i = 0; i < plan->p + 1; i++) {
         for (j = 0; j < plan->p - i + 1; j++) {
@@ -895,23 +719,24 @@ void compute_moment(fastsum_plan *plan, struct octree_node *tree, double ***mome
         dy = plan->x_s[3 * ti + 1] - y;
         dz = plan->x_s[3 * ti + 2] - z;
 
-        dxx=dx;
-        dyy=dy;
-        dzz=dz;
-
         if (dx==0){
         	dxx=1.0;
+        }else{
+        	dxx=1.0/dx*nx*plan->charge_density[tj];
         }
 
         if (dy==0){
         	dyy=1.0;
+        }else{
+        	dyy=1.0/dy*ny*plan->charge_density[tj];
         }
 
         if (dz==0){
         	dzz=1.0;
+        }else{
+        	dzz=1.0/dz*nz*plan->charge_density[tj];
         }
 
-        tmp_charge = plan->charge_density[tj];
 
         tmp_x = 1.0;
         for (i = 0; i < plan->p + 1; i++) {
@@ -919,10 +744,11 @@ void compute_moment(fastsum_plan *plan, struct octree_node *tree, double ***mome
              for (j = 0; j < plan->p - i + 1; j++) {
                     tmp_z = 1.0;
                     for (k = 0; k < plan->p - i - j + 1; k++) {
-                        moment[i][j][k] += tmp_charge * (
-                             i * tmp_x * tmp_y * tmp_z / dxx * nx +
-                             j * tmp_x * tmp_y * tmp_z / dyy * ny +
-                             k * tmp_x * tmp_y * tmp_z / dzz * nz);
+
+                    	tmp_xyz = tmp_x * tmp_y * tmp_z;
+
+                    	moment[i][j][k] += (i*tmp_xyz*dxx+j*tmp_xyz*dyy+k*tmp_xyz*dzz);
+
                         tmp_z *= dz;
                     }
                     tmp_y *= dy;
@@ -931,91 +757,8 @@ void compute_moment(fastsum_plan *plan, struct octree_node *tree, double ***mome
             }
     }
 
-
 }
 
-
-
-double compute_potential_single_target(fastsum_plan *plan, struct octree_node *tree, int index, double ***a) {
-
-    double R;
-    int i, j, k;
-    double res = 0;
-    double dx, dy, dz;
-
-
-    R = pow2(plan->x_t[3 * index] - tree->x)
-            + pow2(plan->x_t[3 * index + 1] - tree->y)
-            + pow2(plan->x_t[3 * index + 2] - tree->z);
-
-
-    if (plan->mac_square * R > tree->radius_square) {
-        if (!tree->have_moment) {
-            tree->moment = alloc_3d_double(plan->p + 1, plan->p + 1, plan->p + 1);
-            tree->have_moment = 1;
-            tree->need_upadte_moment = 1;
-        }
-
-
-        if (tree->need_upadte_moment) {
-            compute_moment(plan, tree, tree->moment, tree->x, tree->y, tree->z);
-            tree->need_upadte_moment = 0;
-        }
-
-
-        dx = plan->x_t[3 * index] - tree->x;
-        dy = plan->x_t[3 * index + 1] - tree->y;
-        dz = plan->x_t[3 * index + 2] - tree->z;
-        compute_Taylor(a, dx, dy, dz, plan->p);
-
-        for (i = 0; i < plan->p + 1; i++) {
-            for (j = 0; j < plan->p - i + 1; j++) {
-                for (k = 0; k < plan->p - i - j + 1; k++) {
-                    res += a[i][j][k] * tree->moment[i][j][k];
-                }
-            }
-        }
-
-        return res;
-
-    } else {
-
-        if (tree->num_children > 0) {
-
-            for (i = 0; i < tree->num_children; i++) {
-                res += compute_potential_single_target(plan, tree->children[i], index, a);
-            }
-
-            return res;
-
-        } else {
-
-            //in this simplified version, we don't compute direct interaction
-            /*
-           for (i = tree->begin; i < tree->end; i++) {
-
-            k = plan->x_s_ids[i];
-            dx = plan->x_t[3 * index]-plan->x_s[3 * i];
-            dy = plan->x_t[3 * index + 1]-plan->x_s[3 * i + 1];
-            dz = plan->x_t[3 * index + 2]-plan->x_s[3 * i + 2];
-            R = dx * dx + dy * dy + dz*dz;
-
-
-            dx *= plan->t_normal[3 * k];
-            dy *= plan->t_normal[3 * k + 1];
-            dz *= plan->t_normal[3 * k + 2];
-
-            if (R > 0) {
-                res += plan->charge_density[k]*(dx + dy + dz) / (R*sqrt(R));
-            }
-        }
-             */
-
-            return 0;
-        }
-    }
-
-}
 
 fastsum_plan * create_plan() {
 
@@ -1025,7 +768,8 @@ fastsum_plan * create_plan() {
     return plan;
 }
 
-void init_fastsum(fastsum_plan *plan, int N_target, int triangle_num, int p, double mac, int num_limit) {
+
+void init_fastsum_I(fastsum_plan *plan, int N_target, int triangle_num, int p, double mac, int num_limit) {
 
     int i;
 
@@ -1033,10 +777,7 @@ void init_fastsum(fastsum_plan *plan, int N_target, int triangle_num, int p, dou
     plan->N_source = triangle_num;
     plan->triangle_num = triangle_num;
 
-
     plan->x_s = (double *) malloc(3 * plan->N_source * (sizeof (double)));
-    plan->x_s_tri = (double *) malloc(3 * plan->triangle_num * (sizeof (double)));
-
 
     plan->charge_density = (double *) malloc(plan->N_source * (sizeof (double)));
     plan->weights = (double *) malloc(plan->N_source * (sizeof (double)));
@@ -1062,9 +803,12 @@ void init_fastsum(fastsum_plan *plan, int N_target, int triangle_num, int p, dou
 
     plan->id_nn = (int *) malloc(N_target * (sizeof (int)));
 
+    plan->r_eps_factor=1.0;
+
 }
 
-void init_mesh(fastsum_plan *plan, double *x_t, double *t_normal, int *triangle_nodes,  double *vert_bsa) {
+
+void init_mesh(fastsum_plan *plan, double *x_t, double *t_normal, int *triangle_nodes, double *vert_bsa) {
 
     int k;
 
@@ -1085,12 +829,61 @@ void init_mesh(fastsum_plan *plan, double *x_t, double *t_normal, int *triangle_
     }
 }
 
+
+
+void compute_source_nodes_weights(fastsum_plan *plan) {
+    int face, f, k;
+
+    double x1, y1, z1;
+    double x2, y2, z2;
+    double x3, y3, z3;
+    double v, *p1, *p2, *p3;
+    double total_area=0;
+
+    for (face = 0; face < plan->triangle_num; face++) {
+
+        f = 3 * face;
+
+        k = plan->triangle_nodes[f];
+        p1 = &plan->x_t[3 * k];
+        x1 = p1[0];
+        y1 = p1[1];
+        z1 = p1[2];
+
+        k = plan->triangle_nodes[f + 1];
+        p2 = &plan->x_t[3 * k];
+        x2 = p2[0] - x1;
+        y2 = p2[1] - y1;
+        z2 = p2[2] - z1;
+
+        k = plan->triangle_nodes[f + 2];
+        p3 = &plan->x_t[3 * k];
+        x3 = p3[0] - x1;
+        y3 = p3[1] - y1;
+        z3 = p3[2] - z1;
+
+        v = det2(p1, p2, p3);
+
+        plan->x_s[f] = x2 / 3.0 + x3 / 3.0 + x1;
+        plan->x_s[f + 1] = y2 / 3.0 + y3 / 3.0 + y1;
+        plan->x_s[f + 2] = z2 / 3.0 + z3 / 3.0 + z1;
+
+        plan->weights[face] = v / 2.0 / (4 * M_PI);
+
+        total_area += v/2.0;
+    }
+
+    total_area=total_area/plan->triangle_num*2.0/sqrt(3);
+    plan->r_eps=sqrt(total_area)*plan->r_eps_factor;
+}
+
 void update_potential_u1(fastsum_plan *plan, double *u1) {
 
-    int face, f, k;
+    int face, f;
     int i1, i2, i3;
     double sa, sb, sc;
     double tmp = 0;
+
 
     for (face = 0; face < plan->triangle_num; face++) {
 
@@ -1105,60 +898,24 @@ void update_potential_u1(fastsum_plan *plan, double *u1) {
 
         tmp = sa + (sb - sa) / 3.0 + (sc - sa) / 3.0;
         plan->charge_density[face] = tmp * plan->weights[face];
-    }
-}
-
-
-void fastsum(fastsum_plan *plan, double *phi, double *u1) {
-    int i, j, k;
-
-    if (plan->mac_square > 0) {
-
-        double ***a = alloc_3d_double(plan->p + 1, plan->p + 1, plan->p + 1);
-
-        for (j = 0; j < plan->N_target; j++) {
-            phi[j] = compute_potential_single_target(plan, plan->tree, j, a);
-        }
-        free_3d_double(a, plan->p + 1);
 
     }
-
-    int total_j = 0;
-
-    for (i = 0; i < plan->N_target; i++) {
-
-        for (j = 0; j < plan->id_nn[i]; j++) {
-            k = plan->id_n[total_j];
-            phi[i] += plan->b_m[total_j] * u1[k];
-            total_j++;
-        }
-
-        phi[i] += plan->vert_bsa[i] * u1[i];
-    }
-
 
 }
 
-void copy_B(fastsum_plan *plan, double *B, int n) {
-    int i;
-    for (i = 0; i < n; i++) {
-        B[i] = plan->b_m[i];
-    }
-
-}
 
 void fastsum_finalize(fastsum_plan * plan) {
 
     free_tree(plan, plan->tree);
 
     free(plan->charge_density);
-    free(plan->x_s_ids);
+
     free(plan->t_normal);
     free(plan->triangle_nodes);
     free(plan->weights);
     free(plan->x_s);
-    free(plan->x_s_tri);
     free(plan->x_t);
+    free(plan->x_s_ids);
 
     free(plan);
 
