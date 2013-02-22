@@ -4783,3 +4783,21 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-02-21 15:41:04 mb8g11: That's the same issue than in the example before: No way to distinguish the two, since the two input functions are not orthogonal.
 2013-02-21 15:41:33 mb8g11: But they correspond in fact to only one wavelength.
 2013-02-21 15:43:13 mb8g11: In the example before, I could eliminate one, but not here.
+2013-02-22 09:47:49 mb4e10: Good morning all. Is it possible to change gyromagnetic ratio gamma in finmag?
+2013-02-22 09:52:41 fangohr-adium: It must be possible. Why would you want to do this?
+2013-02-22 09:53:34 mb4e10: In Greg's standard model, gamma is specified. I am not sure if this is important.
+2013-02-22 09:56:40 fangohr-adium: I'd hope we use the same value as he cites. Probably in the LLG C++ code.
+2013-02-22 09:59:33 mb4e10: ok, I'll try to change that.
+2013-02-22 16:21:45 fangohr-adium: Hi, have you done the octopus merge yet? Is that what we are building now?
+2013-02-22 17:14:55 mb8g11_: Can you install https://wiki.jenkins-ci.org/display/JENKINS/SLOCCount+Plugin ?
+2013-02-22 17:16:18 mb8g11_: And maybe https://wiki.jenkins-ci.org/display/JENKINS/AnsiColor+Plugin
+2013-02-22 17:18:19 fangohr-adium: Wohooo — fast tests has passed :)
+2013-02-22 17:18:24 fangohr-adium: We start to be very much in business now.
+2013-02-22 17:18:53 fangohr-adium: Good work Max, MA.
+2013-02-22 17:19:26 mb8g11_: Max did most of the work, including the merge.
+2013-02-22 17:19:56 fangohr-adium: Okay: Good work, Max.
+2013-02-22 17:19:57 fangohr-adium: ;)
+2013-02-22 17:23:37 mb8g11_: Installed them myself, jenkins will restart, sorry.
+2013-02-22 20:09:09 mb8g11_: There's a new tab on the Jenkins Dashboard on aleph0 called "FinMag Pipeline". It shows the dependencies of the jobs we have defined.
+2013-02-22 20:09:53 mb8g11_: Summary: finmag_fast_tests will poll bitbucket every few minutes. If finmag_fast_tests builds, then it trigger finmag_slow_tests and finmag_reproduce_ipython_notebooks.
+2013-02-22 20:10:11 mb8g11_: If finmag_slow_tests builds that triggers finmag_binary_build and finmag_sphinx_documentation.
