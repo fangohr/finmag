@@ -1,6 +1,6 @@
-#include "treecode_bem_helper.h"
+#include "common.h"
 
-//gcc test.c treecode_bem_helper.c -lm
+//gcc test.c common.c -lm
 
 void test_single_layer_potential(int p){
 

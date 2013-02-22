@@ -1,4 +1,4 @@
-#include "treecode_bem_helper.h"
+#include "common.h"
 
 
 void bulid_indices_single_I(fastsum_plan *plan, struct octree_node *tree,

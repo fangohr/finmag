@@ -43,9 +43,9 @@ $(MODULE_DIR)/fast_sum_lib.so:
 	cd src/fast_sum_lib && python setup.py build_ext --inplace
 	install src/fast_sum_lib/fast_sum_lib.so ../src/finmag/native
 
-$(MODULE_DIR)/treecode_bem.so: src/tree_code_bem/treecode_bem_I.c  src/tree_code_bem/treecode_bem_II.c src/tree_code_bem/treecode_bem_helper.c src/tree_code_bem/treecode_bem_lib.pyx
-	cd src/tree_code_bem && python setup.py build_ext --inplace
-	install src/tree_code_bem/treecode_bem.so ../src/finmag/native
+$(MODULE_DIR)/treecode_bem.so: src/treecode_bem/treecode_bem_I.c  src/treecode_bem/treecode_bem_II.c src/treecode_bem/common.c src/treecode_bem/treecode_bem_lib.pyx
+	cd src/treecode_bem && python setup.py build_ext --inplace
+	install src/treecode_bem/treecode_bem.so ../src/finmag/native
 
 $(UNIT_TEST_BINARY) : tests/run_ci_tests.o src/util/np_array.o src/sundials/tests/sundials_tests.o src/sundials/numpy_malloc.o 
 run_ci_tests_LDFLAGS=-lboost_prg_exec_monitor /usr/lib/libboost_unit_test_framework.a $(SUNDIALS_NVECTOR_SO) -ldolfin

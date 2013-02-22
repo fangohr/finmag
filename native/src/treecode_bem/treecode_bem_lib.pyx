@@ -4,7 +4,7 @@ cimport numpy as np
 import time
 
 
-cdef extern from "treecode_bem_helper.h":
+cdef extern from "common.h":
     ctypedef struct fastsum_plan:
         pass
 

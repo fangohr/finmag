@@ -1,5 +1,4 @@
-#include "treecode_bem_helper.h"
-
+#include "common.h"
 
 
 void init_fastsum_II(fastsum_plan *plan, int N_target, int triangle_num, int p, double mac, int num_limit, double correct_factor) {
