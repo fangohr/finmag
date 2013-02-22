@@ -22,45 +22,41 @@ def test_can_read_restart_file():
 
 
 def test_try_to_restart_a_simulation():
+    t0 = 10e-12
+    t1 = 20e-12
+
+    # Create simulation, integrate until t0, save restart data,
+    # and integrate until t1.
     sim1 = barmini()
-    sim1.run_until(10e-12)  # create integrator
+    sim1.run_until(t0)
+    print("Stats for sim1 at t = {} s:\n{}.".format(sim1.t, sim1.integrator.stats()))
     sim_helpers.save_restart_data(sim1)
-    # continue up to 2e-12
-    sim1.run_until(20e-12)
-    print("Stats for sim1 at t=2e-12: %s" % sim1.integrator.stats())
-    # now create a new simulation object
+    sim1.run_until(t1)
+    print("Stats for sim1 at t = {} s:\n{}.".format(sim1.t, sim1.integrator.stats()))
+
+    # Bring new simulation object into previously saved
+    # state (which is at t0)...
+    data = sim_helpers.load_restart_data(sim1)
     sim2 = barmini()
-    # and try to bring it back into the restart state.
-    # To be done.
-
-    data = sim_helpers.load_restart_data(sim2)
-    print("Have reloaded data: %s" % data)
-    sim2.llg._m.vector()[:] = data['m']
+    sim2.set_m(data['m'])
     sim2.integrator = llg_integrator(sim2.llg, sim2.llg.m,
-        backend=sim2.integrator_backend, t0=data['simtime'])
+                                     backend=sim2.integrator_backend, t0=data['simtime'])
+    # ... and integrate until t1.
+    sim2.run_until(t1)
+    print("Stats for sim2 at t = {} s:\n{}.".format(sim2.t, sim2.integrator.stats()))
 
-    # At this point, we should have re-instantiated sim2 to the same
-    # state (nearly) that sim1 was when cur_t was 1e-12.
-    print "Need to call run_until to update stats (not yet done):"
-    print sim2.integrator.stats()
-    sim2.run_until(sim2.t + 1e-20)
-    print("Have called run_until, stats now are")
-    print sim2.integrator.stats()
+    # Check that we have the same data in both simulation objects.
+    print "Time for sim1: {} s, time for sim2: {} s.".format(sim1.t, sim2.t)
+    assert abs(sim1.t - sim2.t) < 1e-16
+    print "Average magnetisation for sim1:\n\t{}\nfor sim2:\n\t{}.".format(
+                        sim1.m_average, sim2.m_average)
+    assert np.allclose(sim1.m, sim2.m, atol=5e-6, rtol=1e-8)
 
-    # complete time integration
-    sim2.run_until(20e-12)
-    print sim2.integrator.stats()
-
-    print sim2.m_average, sim2.t
-    print sim1.m_average, sim1.t
-    print("Max deviation: = %g" % (max(sim2.m - sim1.m)))
-    assert max(sim2.m - sim1.m) < 2e-06
-    assert sim1.t == sim2.t
-
-    # For the second 10e-12 seconds, we needed much fewer steps. Check:
+    # Check that sim2 had less work to do, since it got the
+    # results up to t0 for free.
     stats1 = sim1.integrator.stats()
     stats2 = sim2.integrator.stats()
-    assert stats2['nsteps'] * 4 < stats1['nsteps']
+    assert stats2['nsteps'] < stats1['nsteps']
 
 
 def test_create_backup_if_file_exists():
