@@ -11,7 +11,7 @@ from finmag.util.meshes import from_geofile, mesh_volume
 logger = logging.getLogger(name='finmag')
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
-REL_TOLERANCE = 1e-4
+REL_TOLERANCE = 5e-4
 Ms = 0.86e6
 unit_length = 1e-9
 mesh = from_geofile(os.path.join(MODULE_DIR, "bar30_30_100.geo"))
