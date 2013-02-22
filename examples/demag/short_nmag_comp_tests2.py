@@ -191,9 +191,12 @@ for i,maxh in enumerate(meshsizes):
             #output = subprocess.check_output(cmd, shell=shell, stderr=subprocess.STDOUT)
             status, output = commands.getstatusoutput(" ".join(cmd))
             if verbose:
+                print "========== [DDD] Exit status: {} ===================".format(status)
                 print "========== [DDD] Output of command '{}': ===================".format(cmd)
                 print output
                 print "======================================================="
+                if status != 0:
+                    sys.exit(44)
         except subprocess.CalledProcessError as e:
             print e
             print "========== [EEE] Output of command '{}': ===================".format(cmd)
