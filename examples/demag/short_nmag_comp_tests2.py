@@ -186,6 +186,16 @@ for i,maxh in enumerate(meshsizes):
     #Generate Nmag Data
     ####################
 
+    def run_subprocess_command(cmd):
+        try:
+            output = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError as e:
+            print e
+            print "==========================================================="
+            print e.output
+            print "==========================================================="
+            raise
+
 
     """
     # Nmag data
@@ -199,27 +209,21 @@ for i,maxh in enumerate(meshsizes):
     has_nmag = True
 
     # Create neutral mesh
-    cmd1 = 'netgen -geofile=%s -meshfiletype="Neutral Format" -meshfile=%s.neutral -batchmode' % (geofile, geofilename)
-    status, output = commands.getstatusoutput(cmd1)
-    #if status != 0:
-    #    print 'Netgen failed. Aborted.'
-    #    sys.exit(1)
+    cmd1 = ['netgen',
+            '-geofile={}'.format(geofile),
+            '-meshfiletype="Neutral Format"',
+            '-meshfile={}.neutral'.format(geofilename),
+            '-batchmode']
+    run_subprocess_command(cmd1)
 
     # Convert neutral mesh to nmag type mesh
-    cmd2 = 'nmeshimport --netgen %s.neutral %s.nmesh.h5' % (geofilename, geofilename)
-    status, output = commands.getstatusoutput(cmd2)
-    if status != 0:
-        print 'Nmeshimport failed. Aborted.'
-        print output
-        sys.exit(2)
+    cmd2 = ['nmeshimport', '--netgen', geofilename + '.neutral', geofilename + '.nmesh.h5']
+    run_subprocess_command(cmd2)
 
     # Run nmag
-    cmd3 = 'nsim run_nmag.py --clean %s.nmesh.h5 nmag_data.dat' % geofilename
+    cmd3 = ['nsim', 'run_nmag.py', '--clean', geofilename + '.nmesh.h5', 'nmag_data.dat']
     starttime = time.time()
-    status, output = commands.getstatusoutput(cmd3)
-    print "Ran nmag, status was {}.".format(status)
-    print "[DDD] cmd3 = {}".format(cmd3)
-    print "[DDD] Nmag output: {}".format(output)
+    run_subprocess_command(cmd3)
     endtime = time.time()
 
     runtime = endtime - starttime
@@ -228,10 +232,6 @@ for i,maxh in enumerate(meshsizes):
     runtimes["bem"]["nmag"].append(bemtime)
     runtimes["solve"]["nmag"].append(runtime - bemtime)
 
-    if status != 0:
-        print output
-        print 'Running nsim failed. Aborted.'
-        sys.exit(3)
     print "\nDone with nmag."
 
 
