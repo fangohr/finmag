@@ -201,6 +201,7 @@ for i,maxh in enumerate(meshsizes):
     print "Will run command: {}.".format(run_netgen)
     try:
         output = subprocess.check_output(run_netgen, shell=True)
+        print "Output:\n{}.".format(output)
     except subprocess.CalledProcessError as e:
         print "Failed."
         print "Returncode: {}.".format(e.returncode)
@@ -210,11 +211,11 @@ for i,maxh in enumerate(meshsizes):
     import_mesh = " ".join(('nmeshimport', '--netgen',
         geofilename + '.neutral', geofilename + '.nmesh.h5'))
     print "Will run command: {}.".format(import_mesh)
-    output = subprocess.check_output(import_mesh)
+    output = subprocess.check_output(import_mesh, shell=True)
     print "Ran, and output was:\n{}.".format(output)
 
     print "Checking for nmag... "
-    output = subprocess.check_output("which nsim")
+    output = subprocess.check_output("which nsim", shell=True)
     print ".. found in {}.".format(output)
 
     files = os.listdir(cwd)
@@ -224,7 +225,7 @@ for i,maxh in enumerate(meshsizes):
 
     starttime = time.time()
     run_nmag = " ".join(['nsim', 'run_nmag.py', '--clean', geofilename + '.nmesh.h5', 'nmag_data.dat'])
-    output = subprocess.check_output(run_nmag)
+    output = subprocess.check_output(run_nmag, shell=True)
     endtime = time.time()
     print "Output of call to nmag:\n{}.".format(output)
 
