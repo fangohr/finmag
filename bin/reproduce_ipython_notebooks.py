@@ -11,7 +11,7 @@ import pytest
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-ipynb_files = sorted(glob(os.path.join(MODULE_DIR, '../doc/ipython_notebooks_src/*.ipynb'))
+ipynb_files = sorted(glob(os.path.join(MODULE_DIR, '../doc/ipython_notebooks_src/*.ipynb')))
 
 @pytest.mark.parametrize("ipynb", ipynb_files)
 def test_reproduce_ipython_notebook(ipynb):
