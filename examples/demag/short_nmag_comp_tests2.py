@@ -192,7 +192,7 @@ for i,maxh in enumerate(meshsizes):
             output = subprocess.check_output(cmd, shell=shell, stderr=subprocess.STDOUT)
             #status, output = commands.getstatusoutput(" ".join(cmd))
             if verbose:
-                print "========== [DDD] Exit status: {} ===================".format(status)
+                #print "========== [DDD] Exit status: {} ===================".format(status)
                 print "========== [DDD] Output of command '{}': ===================".format(cmd)
                 print output
                 print "======================================================="
