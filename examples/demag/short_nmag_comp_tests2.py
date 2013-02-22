@@ -195,8 +195,8 @@ for i,maxh in enumerate(meshsizes):
                 print "========== [DDD] Output of command '{}': ===================".format(cmd)
                 print output
                 print "======================================================="
-                if status != 0:
-                    sys.exit(44)
+                # if status != 0:
+                #     sys.exit(44)
         except subprocess.CalledProcessError as e:
             print e
             print "========== [EEE] Output of command '{}': ===================".format(cmd)
@@ -205,9 +205,10 @@ for i,maxh in enumerate(meshsizes):
             sys.exit(42)
         except Exception as e:
             print e
-            print "========== [EEE] Output of command '{}': ===================".format(cmd)
-            print e.output
-            print "==========================================================="
+            if hasattr(e, 'output'):
+                print "========== [EEE] Output of command '{}': ===================".format(cmd)
+                print e.output
+                print "==========================================================="
             sys.exit(43)
 
 
