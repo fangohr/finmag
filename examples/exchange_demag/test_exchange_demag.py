@@ -140,7 +140,7 @@ def test_compare_energies():
     diff = abs(exch - exch_nmag)
     rel_diff = np.abs(diff / max(exch))
     print "Exchange energy, max relative error:", max(rel_diff)
-    assert max(rel_diff) < REL_TOLERANCE, \
+    assert max(rel_diff) < 0.002, \
         "Max relative error in exchange energy = {} is larger than " \
         "tolerance (= {})".format(max(rel_diff), REL_TOLERANCE)
 
