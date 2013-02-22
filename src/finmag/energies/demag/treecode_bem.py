@@ -10,88 +10,12 @@ import finmag.util.solver_benchmark as bench
 from finmag.native.treecode_bem import FastSum
 from finmag.native.treecode_bem import compute_solid_angle_single
 
-
-def GetDet3(x,y,z):
-    """
-    helper function
-    """
-    d = x[0] * y[1] * z[2] + x[1] * y[2] * z[0] \
-      + x[2] * y[0] * z[1] - x[0] * y[2] * z[1] \
-      - x[1] * y[0] * z[2] - x[2] * y[1] * z[0];
-    return d;
-
-def GetTetVol(x1,x2,x3,x4):
-    """
-    helper fuctioen
-    """
-    v = GetDet3(x2, x3, x4) - GetDet3(x1, x3, x4) + GetDet3(x1, x2, x4) - GetDet3(x1, x2, x3);
-    return 1.0 / 6.0 * v;
-
-
-def compute_bnd_mapping(mesh):
-    """
-    we can remove this function if the order bug of dolfin is fixed
-    """
-    mesh.init()
-
-    number_nodes=mesh.num_vertices()
-
-    number_faces_bnd=0
-
-    bnd_face_verts=[]
-    gnodes_to_bnodes=np.zeros(number_nodes,int)
-    node_at_boundary=np.zeros(number_nodes,int)
-    nodes_xyz=mesh.coordinates()
-
-    for face in df.faces(mesh):
-        cells = face.entities(3)
-        if len(cells)==1:
-            face_nodes=face.entities(0)
-            cell = df.Cell(mesh,cells[0])
-            cell_nodes=cell.entities(0)
-
-            #print set(cell_nodes)-set(face_nodes),face_nodes
-            tmp_set=set(cell_nodes)-set(face_nodes)
-
-            x1=nodes_xyz[tmp_set.pop()]
-            x2=nodes_xyz[face_nodes[0]]
-            x3=nodes_xyz[face_nodes[1]]
-            x4=nodes_xyz[face_nodes[2]]
-
-            tmp_vol=GetTetVol(x1,x2,x3,x4)
-
-            local_nodes=[face_nodes[0]]
-            if tmp_vol<0:
-                local_nodes.append(face_nodes[2])
-                local_nodes.append(face_nodes[1])
-            else:
-                local_nodes.append(face_nodes[1])
-                local_nodes.append(face_nodes[2])
-
-            bnd_face_verts.append(local_nodes)
-            for i in face_nodes:
-                node_at_boundary[i]=1
-            number_faces_bnd+=1
-
-    bnd_face_verts=np.array(bnd_face_verts)
-
-    number_nodes_bnd=0
-    for i in range(number_nodes):
-        if node_at_boundary[i]>0:
-            gnodes_to_bnodes[i]=number_nodes_bnd
-            number_nodes_bnd+=1
-        else:
-            gnodes_to_bnodes[i]=-1
-
-    return (bnd_face_verts,gnodes_to_bnodes,number_faces_bnd,number_nodes_bnd)
-
 logger = logging.getLogger(name='finmag')
 __all__ = ["TreecodeBEM"]
 class TreecodeBEM(sb.FemBemDeMagSolver):
-    @mtimed
     def __init__(self,mesh,m, parameters=sb.default_parameters , degree=1, element="CG",
                  project_method='magpar', unit_length=1,Ms = 1.0,bench = False,
-                 mac=0.3,p=3,num_limit=100,correct_factor=10):
+                 mac=0.3,p=3,num_limit=100,correct_factor=10, type_I=True):
         
         sb.FemBemDeMagSolver.__init__(self,mesh,m, parameters, degree, element=element,
                                       project_method = project_method,
@@ -111,38 +35,31 @@ class TreecodeBEM(sb.FemBemDeMagSolver):
         # Eq (1) and code-block 2 - two first lines.
         b = self.Ms*df.inner(self.w, df.grad(self.v))*df.dx
         self.D = df.assemble(b)
-
-        self.p=p
-        self.mac=mac
-        self.num_limit=num_limit
-        self.correct_factor=correct_factor
         
+        self.mesh=mesh
+        
+        self.bmesh = df.BoundaryMesh(mesh,False)
+        self.b2g_map = self.bmesh.vertex_map().array()
         
         self.compute_triangle_normal()
 
-        self.__bulid_Mapping()
+        self.__compute_bsa()
+        
+        fast_sum=FastSum(p=p,mac=mac,num_limit=num_limit,correct_factor=correct_factor,type_I=type_I)
 
-        fast_sum=FastSum(p=self.p,mac=self.mac,num_limit=self.num_limit,r_eps=self.correct_factor)
-
-        xt=self.mesh.coordinates()
-        self.bnd_face_nodes=np.array(self.bnd_face_nodes,dtype=np.int32)
-        self.g2b=np.array(self.gnodes_to_bnodes,dtype=np.int32)
-
-        fast_sum.init_mesh(xt,self.t_normals,self.bnd_face_nodes,self.g2b,self.vert_bsa)
+        coords=self.bmesh.coordinates()
+        face_nodes=np.array(self.bmesh.cells(),dtype=np.int32)
+        
+        fast_sum.init_mesh(coords,self.t_normals,face_nodes,self.vert_bsa)
         self.fast_sum=fast_sum
-        self.res=np.zeros(len(self.mesh.coordinates()))
+        
+        self.phi2_b = np.zeros(self.bmesh.num_vertices())
 
-    def __bulid_Mapping(self):
-        self.bnd_face_nodes,\
-        self.gnodes_to_bnodes,\
-        self.bnd_faces_number,\
-        self.bnd_nodes_number=compute_bnd_mapping(self.mesh)
 
-        self.nodes_number=self.mesh.num_vertices()
+    def __compute_bsa(self):
 
-        vert_bsa=np.zeros(self.nodes_number)
-
-        g2b=self.gnodes_to_bnodes
+        vert_bsa=np.zeros(self.mesh.num_vertices())
+        
         mc=self.mesh.cells()
         xyz=self.mesh.coordinates()
         for i in range(self.mesh.num_cells()):
@@ -156,34 +73,23 @@ class TreecodeBEM(sb.FemBemDeMagSolver):
 
                 vert_bsa[mc[i][j]]+=tmp_omega
 
+        vert_bsa=vert_bsa/(4*np.pi)-1
 
-        for i in range(self.nodes_number):
-            j=g2b[i]
-            if j<0:
-                vert_bsa[i]=0
-            else:
-                vert_bsa[i]=vert_bsa[i]/(4*np.pi)-1
-
-        self.vert_bsa=vert_bsa
+        self.vert_bsa=vert_bsa[self.b2g_map]
 
 
     def compute_triangle_normal(self):
 
-        self.face_nodes=[]
-        self.face_norms=[]
         self.t_normals=[]
         
         for face in df.faces(self.mesh):
             t=face.normal()  #one must call normal() before entities(3),...
             cells = face.entities(3)
             if len(cells)==1:
-                face_nodes=face.entities(0)
-                self.face_nodes.append(face_nodes)
-                self.face_norms.append(t)
                 self.t_normals.append([t.x(),t.y(),t.z()])
 
         self.t_normals=np.array(self.t_normals)
-        self.face_nodes_array=np.array(self.face_nodes,dtype=np.int32)
+        
 
 
     #used for debug
@@ -205,13 +111,16 @@ class TreecodeBEM(sb.FemBemDeMagSolver):
             self.poisson_iter = self.poisson_solver.solve(self.phi1.vector(), g1)
             timings.stop(self.__class__.__name__, "1st linear solve")
         # Restrict phi1 to the boundary
+        
+        self.phi1_b = self.phi1.vector()[self.b2g_map]
+        
         timings.start_next(self.__class__.__name__, "Compute phi2 at boundary")
         
-        self.fast_sum.fastsum(self.res,self.phi1.vector().array())
-        #self.fast_sum.directsum(self.res,self.phi1.vector().array())
+        self.fast_sum.fastsum(self.phi2_b, self.phi1_b.array())
+        #self.fast_sum.directsum(self.phi2_b,self.phi1_b.array())
 
         #print 'phi2 at boundary',self.res
-        self.phi2.vector().set_local(self.res)
+        self.phi2.vector()[self.b2g_map[:]] = self.phi2_b
         
         # Compute Laplace's equation inside the domain,
         # eq. (2) and last code-block
@@ -232,8 +141,10 @@ if __name__ == "__main__":
     #mesh = BoxMesh(-1, 0, 0, 1, 1, 1, 10, 2, 2)
     #mesh=sphere(3.0,0.3)
     #mesh=df.Mesh('tet.xml')
-    mesh = df.BoxMesh(0, 0, 0, 100, 1, 1, 100, 1, 1)
+    #mesh = df.BoxMesh(0, 0, 0, 100, 1, 1, 100, 1, 1)
     #expr = df.Expression(('4.0*sin(x[0])', '4*cos(x[0])','0'))
+    from finmag.util.meshes import elliptic_cylinder,sphere
+    mesh = elliptic_cylinder(100,150,5,4.5,directory='meshes')
     
     Vv=df.VectorFunctionSpace(mesh, "Lagrange", 1)
     
@@ -248,10 +159,10 @@ if __name__ == "__main__":
     f1= fk.compute_field()
 
 
-    demag=TreecodeBEM(mesh,m,mac=0.3,p=3,num_limit=100,correct_factor=10,Ms=Ms)
+    demag=TreecodeBEM(mesh,m,mac=0.3,p=4,num_limit=100,correct_factor=10,Ms=Ms,type_I=True)
     f2=demag.compute_field()
     
     f3=f1-f2
     print f1[0:10],f2[0:10]
-    print np.average(np.abs(f3[0:200]/f1[0:200]))
+    print np.average(np.abs(f3[-200:]/f1[-200:]))
     

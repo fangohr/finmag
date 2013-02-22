@@ -43,7 +43,7 @@ $(MODULE_DIR)/fast_sum_lib.so:
 	cd src/fast_sum_lib && python setup.py build_ext --inplace
 	install src/fast_sum_lib/fast_sum_lib.so ../src/finmag/native
 
-$(MODULE_DIR)/treecode_bem.so: src/tree_code_bem/treecode_bem.c src/tree_code_bem/treecode_bem_lib.pyx
+$(MODULE_DIR)/treecode_bem.so: src/tree_code_bem/treecode_bem_I.c  src/tree_code_bem/treecode_bem_II.c src/tree_code_bem/treecode_bem_helper.c src/tree_code_bem/treecode_bem_lib.pyx
 	cd src/tree_code_bem && python setup.py build_ext --inplace
 	install src/tree_code_bem/treecode_bem.so ../src/finmag/native
 

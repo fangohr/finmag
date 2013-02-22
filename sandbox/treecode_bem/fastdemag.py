@@ -93,12 +93,16 @@ class TreecodeBEM(sb.FemBemDeMagSolver):
 
         self.t_normals=[]
         
-        for f in df.faces(self.bmesh):
-            face=df.Face(mesh,f.index())
-            t=face.normal()
-            self.t_normals.append([t.x(),t.y(),t.z()])
-            
+        for face in df.faces(self.mesh):
+            t=face.normal()  #one must call normal() before entities(3),...
+            cells = face.entities(3)
+            if len(cells)==1:
+                self.t_normals.append([t.x(),t.y(),t.z()])
+
         self.t_normals=np.array(self.t_normals)
+        
+        #print 'diff=',self.t_normals_2-self.t_normals
+        #print np.array(self.face_nodes),self.bmesh.cells()
 
 
     #used for debug
@@ -161,7 +165,7 @@ if __name__ == "__main__":
     m = df.interpolate(expr, Vv)
     m = df.interpolate(df.Constant((0, 0, 1)), Vv)
 
-    demag=TreecodeBEM(mesh,m,mac=0.2,p=1,num_limit=400,Ms=Ms)
+    demag=TreecodeBEM(mesh,m,mac=0.3,p=4,num_limit=100,Ms=Ms)
     f1 = demag.compute_field()
     
     from finmag.energies.demag.solver_fk import FemBemFKSolver as FKSolver
@@ -169,7 +173,7 @@ if __name__ == "__main__":
     fk = FKSolver(mesh, m, Ms=Ms)
     f2 = fk.compute_field()
     
-    delta = f1-f2
-    print f1[-100:]
-    print delta[-100:]/f1[-100:]
+    f3=f1-f2
+    print f1[0:10],f2[0:10]
+    print np.average(np.abs(f3[-200:]/f1[-200:]))
     
