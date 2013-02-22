@@ -68,7 +68,7 @@ def get_nmag_bemtime():
     inputfile = open("run_nmag_log.log", "r")
     nmaglog = inputfile.read()
 
-    #The time should be between the two key words
+    #The time should be between the two keywords
     keyword1 = "Populating BEM took"
     keyword2 = "seconds"
 
@@ -187,67 +187,45 @@ for i,maxh in enumerate(meshsizes):
     #Generate Nmag Data
     ####################
 
-    def run_subprocess_command(cmd, shell=False, verbose=False):
-        try:
-            output = subprocess.check_output(cmd, shell=shell, stderr=subprocess.STDOUT)
-            #status, output = commands.getstatusoutput(" ".join(cmd))
-            if verbose:
-                #print "========== [DDD] Exit status: {} ===================".format(status)
-                print "========== [DDD] Output of command '{}': ===================".format(cmd)
-                print output
-                print "======================================================="
-                # if status != 0:
-                #     sys.exit(44)
-        except subprocess.CalledProcessError as e:
-            print e
-            print "========== [EEE] Output of command '{}': ===================".format(cmd)
-            print e.output
-            print "==========================================================="
-            sys.exit(42)
-        except Exception as e:
-            print e
-            if hasattr(e, 'output'):
-                print "========== [EEE] Output of command '{}': ===================".format(cmd)
-                print e.output
-                print "==========================================================="
-            sys.exit(43)
-
-
-    """
-    # Nmag data
-    if subprocess.call(["which", "nsim"]) == 0:
-        print "Running nmag now."
-        has_nmag = True
-    else:
-        has_nmag = False
-        continue
-    """
-    has_nmag = True
-
-    # Create neutral mesh
-    cmd1 = ['netgen',
-            '-geofile={}'.format(geofile),
-            '-meshfiletype="Neutral Format"',
-            '-meshfile={}.neutral'.format(geofilename),
-            '-batchmode']
-    run_subprocess_command(cmd1, shell=True, verbose=True)
-
-    # Convert neutral mesh to nmag type mesh
-    cmd2 = ['nmeshimport', '--netgen', geofilename + '.neutral', geofilename + '.nmesh.h5']
-    run_subprocess_command(cmd2, shell=True, verbose=True)
-
-    # Run nmag
     print "\n\n--- critical nmag code below ---\n\n"
-    run_subprocess_command(['which', 'nsim'], verbose=True)
-    starttime = time.time()
-    cmd3 = ['nsim', 'run_nmag.py', '--clean', geofilename + '.nmesh.h5', 'nmag_data.dat']
-    run_subprocess_command(cmd3, shell=True, verbose=True)
-    endtime = time.time()
+
+    run_netgen = " ".join(('netgen', '-geofile={}'.format(geofile),
+        '-meshfiletype="Neutral Format"', '-meshfile={}.neutral'.format(geofilename),
+        '-batchmode'))
+    print "Will run command: {}.".format(run_netgen)
+    try:
+        output = subprocess.check_output(run_netgen)
+    except CalledProcessError as e:
+        print "Failed."
+        print "Returncode: {}.".format(e.returncode)
+        print "Output:\n{}.".format(e.output)
+        print "We will just go on, because this is likely netgen horsing around again."
+
+    import_mesh = " ".join(('nmeshimport', '--netgen',
+        geofilename + '.neutral', geofilename + '.nmesh.h5'))
+    print "Will run command: {}.".format(import_mesh)
+    output = subprocess.check_output(import_mesh)
+    print "Ran, and output was:\n{}.".format(output)
+
+    print "Checking for nmag... "
+    output = subprocess.check_output("which nsim")
+    print ".. found in {}.".format(output)
 
     cwd = os.getcwd()
     print "Current working directory: {}.".format(cwd)
     files = os.listdir(cwd)
     print "Files in this directory:\n{}".format(files)
+
+    print "\nWill now run nmag."
+
+    starttime = time.time()
+    run_nmag = " ".join(['nsim', 'run_nmag.py', '--clean', geofilename + '.nmesh.h5', 'nmag_data.dat'])
+    output = subprocess.check_output(run_nmag)
+    endtime = time.time()
+    print "Output of call to nmag:\n{}.".format(output)
+
+    files = os.listdir(cwd)
+    print "Files in the directory after running nmag:\n{}".format(files)
 
     runtime = endtime - starttime
     bemtime = get_nmag_bemtime()
@@ -263,27 +241,23 @@ for i,maxh in enumerate(meshsizes):
 ############################################
 
 # Extract nmag data
-if has_nmag:
-    f = open('nmag_data.dat', 'r')
-    lines = f.readlines()
-    f.close()
-    for line in lines:
-        line = line.split()
-        if len(line) == 3:
-            xavg["nmag"].append(float(line[0]))
-            xmax["nmag"].append(float(line[1]))
-            stddev["nmag"].append(float(line[2]))
+f = open('nmag_data.dat', 'r')
+lines = f.readlines()
+f.close()
+for line in lines:
+    line = line.split()
+    if len(line) == 3:
+        xavg["nmag"].append(float(line[0]))
+        xmax["nmag"].append(float(line[1]))
+        stddev["nmag"].append(float(line[2]))
 
 p.plot(vertices, xavg["FK"], 'x--',label='Finmag FK x-avg')
 p.plot(vertices, xmax["FK"], 'o-',label='Finmag FK x-max')
 p.plot(vertices, xmin["FK"], '^:',label='Finmag FK x-min')
 
-if has_nmag:
-    p.plot(vertices, xavg["nmag"], label='Nmag x-avg')
-    p.plot(vertices, xmax["nmag"], label='Nmag x-max')
-    p.title('Nmag - Finmag FK comparison')
-else:
-    p.title('Finmag x vs vertices')
+p.plot(vertices, xavg["nmag"], label='Nmag x-avg')
+p.plot(vertices, xmax["nmag"], label='Nmag x-max')
+p.title('Nmag - Finmag FK comparison')
 
 p.xlabel('vertices')
 p.grid()
@@ -300,12 +274,9 @@ if not is_dolfin_1_1:
     p.plot(vertices, xmax["GCR"], 'o-',label='Finmag GCR x-max')
     p.plot(vertices, xmin["GCR"], '^:',label='Finmag GCR x-min')
 
-    if has_nmag:
-        p.plot(vertices, xavg["nmag"], label='Nmag x-avg')
-        p.plot(vertices, xmax["nmag"], label='Nmag x-max')
-        p.title('Nmag - Finmag GCR comparison')
-    else:
-        p.title('Finmag x vs vertices')
+    p.plot(vertices, xavg["nmag"], label='Nmag x-avg')
+    p.plot(vertices, xmax["nmag"], label='Nmag x-max')
+    p.title('Nmag - Finmag GCR comparison')
 
     p.xlabel('vertices')
     p.grid()
@@ -318,8 +289,7 @@ p.plot(vertices, stddev["FK"], label='Finmag FK standard deviation')
 if not is_dolfin_1_1:
     p.plot(vertices, stddev["GCR"], label='Finmag GCR standard deviation')
 
-if has_nmag:
-    p.plot(vertices, stddev["nmag"], label='Nmag standard deviation')
+p.plot(vertices, stddev["nmag"], label='Nmag standard deviation')
 
 p.xlabel('vertices')
 p.title('Standard deviation')
@@ -355,8 +325,7 @@ p.loglog(vertices, stddev["FK"], label='Finmag FK standard deviation')
 if not is_dolfin_1_1:
     p.loglog(vertices, stddev["GCR"], label='Finmag GCR standard deviation')
 
-if has_nmag:
-    p.loglog(vertices, stddev["nmag"], label='Nmag standard deviation')
+p.loglog(vertices, stddev["nmag"], label='Nmag standard deviation')
 
 p.xlabel('vertices')
 p.title('Standard deviation (log-log)')
