@@ -4557,3 +4557,229 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-02-09 00:55:13 fangohr1: Good night folks.
 2013-02-09 15:11:04 mb8g11: Hi all.
 2013-02-09 22:39:55 fangohr1: Good Evening.
+2013-02-11 08:31:12 mb8g11: Good morning!
+2013-02-11 09:19:56 fangohr-adium: Good Morning!
+2013-02-11 09:20:02 max_albert: Good morning!
+2013-02-11 09:20:08 fangohr-adium: Great news the progress regarding 1.1. Well done all!
+2013-02-11 09:26:31 max_albert: You mean the immensely successful build history on aleph0, with 63 failed builds? ;-)
+2013-02-11 09:26:43 fangohr: No :)
+2013-02-11 09:26:56 fangohr: I haven't seen that yet, but now that you mention it ...
+2013-02-11 09:27:15 fangohr: I am just running the py.test on aleph0 after fetching the latest.
+2013-02-11 09:27:33 fangohr: Netgen keeps popping up windows. Have you seen that before?
+2013-02-11 09:27:49 max_albert: Oh, that should be gone again!?
+2013-02-11 09:27:57 fangohr: I think I need to click on 'quit' to continue, although nothing is displayed.
+2013-02-11 09:28:03 max_albert: Hmm...
+2013-02-11 09:28:03 fangohr: i.e. no geometry visible.
+2013-02-11 09:28:34 max_albert: I had added a helper function which reports the Netgen version, but removed that again after realising that calling netgen with the -v or --version options still opens a GUI.
+2013-02-11 09:28:44 max_albert: (I was sure I had tested that before though...)
+2013-02-11 09:28:59 max_albert: Maybe there is some remainder left somewhere, or I committed the fix to the wrong branch.
+2013-02-11 09:29:03 fangohr: Is it posible that you don't see that anymore because our meshes arecashed once generated? Or latest changes not pushed?
+2013-02-11 09:29:05 max_albert: Let me have a quick look.
+2013-02-11 09:29:07 fangohr: Yeah.
+2013-02-11 09:29:13 fangohr: No rush -- I should actually be doing something else ;-)
+2013-02-11 09:29:19 fangohr: but couldn't resist...
+2013-02-11 09:30:20 fangohr: Maybe 63 build failures in a row is not ideal, but looking at the plot of the number of tests that pass, this is pretty good!
+2013-02-11 09:30:36 max_albert: Yeah, we're pretty close to a clean build again.
+2013-02-11 09:31:01 max_albert: Although there are a few points worth investigating I think, because some of the tests seem(ed) to behave weirdly.
+2013-02-11 09:31:51 fangohr: Yes, can you take a note which ones these are?
+2013-02-11 09:32:35 max_albert: Essentially these ones I think: http://aleph0.kk.soton.ac.uk:8080/job/finmag/60/testReport/
+2013-02-11 09:32:48 max_albert: Although I haven't looked at *all* of them.
+2013-02-11 09:33:39 max_albert: Regarding the Netgen issue: indeed I can't see my latest fix in the history.
+2013-02-11 09:34:10 max_albert: This is really strange because this already happened yesterday, when I was sure I had committed (and pushed) it but had to do it a second time because I couldn't find it.
+2013-02-11 09:34:17 max_albert: Now I need to do it a third time?!?! Weird...
+2013-02-11 09:36:07 max_albert: Just pushed the change. Can you try again and see if it works now?
+2013-02-11 09:36:19 fangohr: Yes.
+2013-02-11 09:36:25 max_albert: Thanks.
+2013-02-11 09:37:29 fangohr: I think it is gone (only done one test that had the GUI showing before).
+2013-02-11 09:37:39 max_albert: Ok, good to hear.
+2013-02-11 09:37:40 fangohr: Will do them all now.
+2013-02-11 09:37:54 fangohr: I also had a problem starting Nmag (will post details here in a moment).
+2013-02-11 09:38:09 max_albert: Ok, that would be good to know about.
+2013-02-11 09:38:45 fangohr: Some of the nmag tests failed. I am not sure the following is the cause, but I might as well document what I know.
+2013-02-11 09:38:51 fangohr: When calling 'nsim', I get the following:
+2013-02-11 09:38:54 fangohr: ^[[Afangohr@aleph0 ~ $ nsim
+2013-02-11 09:38:54 fangohr:        nsim:2013-02-11 09:32:01,304   setup.py  471    INFO Nsim 0.2.1
+2013-02-11 09:38:54 fangohr:        nsim:2013-02-11 09:32:01,304   setup.py  472    INFO Runid is 'interactive-session'
+2013-02-11 09:38:54 fangohr:        nsim:2013-02-11 09:32:01,304   setup.py  473    INFO Using 1 CPUs
+2013-02-11 09:38:54 fangohr: WARNING: Configuration file ipythonrc not found. Ignoring request.
+2013-02-11 09:38:55 fangohr: ------------------------------------------------------------
+2013-02-11 09:38:57 fangohr: Traceback (most recent call last):
+2013-02-11 09:39:01 fangohr:   File "/usr/local/software/nmag-0.2.1/nmag-0.2.1/lib/python2.7/site-packages/IPython/ConfigLoader.py", line 66, in load
+2013-02-11 09:39:04 fangohr:     fname = filefind(fname,incpath)
+2013-02-11 09:39:06 fangohr:   File "/usr/local/software/nmag-0.2.1/nmag-0.2.1/lib/python2.7/site-packages/IPython/genutils.py", line 555, in filefind
+2013-02-11 09:39:09 fangohr:     ' not found in current or supplied directories:' + `alt_dirs`
+2013-02-11 09:39:11 fangohr: IOError: File'ipythonrc' not found in current or supplied directories:u'/home/fangohr/.ipython'
+2013-02-11 09:39:13 fangohr: WARNING: Problems loading configuration file 'ipythonrc'
+2013-02-11 09:39:15 fangohr: Starting with default -bare bones- configuration.
+2013-02-11 09:39:17 fangohr: In [1]:
+2013-02-11 09:39:37 fangohr: The key here seems to be that ipython cannot find its config file and is unhappy about that. I am guessing that the IPython we bundled with Nmag is old, and thus expets a different config file.
+2013-02-11 09:40:11 max_albert: But does nmag not work because of that?
+2013-02-11 09:40:17 max_albert: Or is it just a warning?
+2013-02-11 09:40:32 fangohr: A way to 'fix' that is that create that old ipython config file. This can be done by starting the old IPython. And here is the key information: it is located in /usr/local/software/nmag-0.2.1/nmag-0.2.1/bin as executable 'ipython'.
+2013-02-11 09:41:06 fangohr: This may not be the problem, but it is certainly irritating ;-). So I just wanted to share where the binary files are that are shipped with Nmag (because they are not in /usr/bin, etc).
+2013-02-11 09:41:27 max_albert: I just tried callin 'nsim' and I don't get that error message...
+2013-02-11 09:41:32 fangohr: I am just running the tests again, and this change does not seem to have fixed the failures (although code still going). Will keep you posted.
+2013-02-11 09:42:19 max_albert: Just as a note, I installed nmag system-wide on aleph0 (so that it would be available to all users). However, I noticed that on summer it was installed locally in Jenkins' home directory. And I did see issues with wrong permissions when nmag is installed via 'sudo'. So perhaps this is related (although it may not be).
+2013-02-11 09:42:51 max_albert: Also, if you start nsim a second time, do you still get the error?
+2013-02-11 10:02:13 fangohr: Yes, the error didn't go away. Not quite sure why: as you seem to be guessing, these init files should be created automatically. Never mind.
+2013-02-11 10:08:14 fangohr: Yes, the local installation could relate to that. I'll keep you posted with any news.
+2013-02-11 10:08:52 fangohr: Hi Dmitri :)
+2013-02-11 10:09:00 max_albert: Do you think I should remove the global nmag installation again? This may make the error go away, but would require everyone to install nmag themselves.
+2013-02-11 10:09:16 D_Chernyshenko_: Good morning
+2013-02-11 10:10:06 fangohr: Max: I am just installing nmag locally -- if that fixes it, I suggest to remove the global one. Not very elegant, but disk space is not an issue, and calling our nmag installations script is trivial. So we might as well install locally if that makes it better.
+2013-02-11 10:10:33 max_albert: Ok, I agree.
+2013-02-11 11:21:02 mb8g11: Does anyone know how to effectively control the maximum mesh size using gmsh?
+2013-02-11 11:22:23 mb8g11: It doesn't seem to care about Mesh.CharacteristicLengthMax in the geofile.
+2013-02-11 11:23:03 ww1g11: seems point size is the most import one
+2013-02-11 11:25:32 mb8g11: Thanks, will play with that. Seems that CharacteristicLengthMax specifies something other than maximum edge length.
+2013-02-11 11:27:43 fangohr: No idea, sorry.
+2013-02-11 11:28:14 ww1g11: looks like the mesh become coarse if you only CharacteristicLengthMax quite large and mesh sizes are not uniformly distributed
+2013-02-11 11:33:01 fangohr: Off topic: seems to be snowing.
+2013-02-11 11:35:31 ww1g11: yeah,  heavy snow
+2013-02-12 09:21:26 mb8g11: Good morning!
+2013-02-12 09:33:34 D_Chernyshenko_: Morning
+2013-02-12 09:47:05 fangohr-adium: Morning folks.
+2013-02-12 09:47:10 max_albert: Good morning.
+2013-02-12 10:38:23 fangohr-adium: Max, did you start to put any information in the finmag-jenkins repository? I am asking as I would want to jot down a few notes on email setup, and don't know whether to start a new repository or not.
+2013-02-12 10:40:01 max_albert: Yes, I basically put a set of step-by-step instructions there on how to set up a working Jenkins environment from scratch. These are the (slightly brushed up) notes that Weiwei and I took when we set it up on aleph0.
+2013-02-12 10:40:23 fangohr-adium: Great stuff. Is this on bitbucket already?
+2013-02-12 10:40:32 max_albert: Yes.
+2013-02-12 10:40:52 max_albert: https://bitbucket.org/fangohr/finmag-jenkins
+2013-02-12 10:41:00 fangohr-adium: Thank you.
+2013-02-12 10:41:48 max_albert: I also wanted to commit the config.xml file to this repository, but would rather do that when the installation is completely working and all tests pass.
+2013-02-12 10:42:01 fangohr-adium: Sure.
+2013-02-12 10:51:27 max_albert: Interesting. I just checked the situation on aleph0 again and saw that one of Weiwei's latest commits (https://bitbucket.org/fangohr/finmag/commits/dc4ae5132569/) fixed one of the 3 failing tests on aleph0.
+2013-02-12 10:52:05 max_albert: The test in question is in src/finmag/tests/comparison/demag/test_demag_field.py
+2013-02-12 10:52:29 max_albert: And the output of the failed test is here: http://aleph0.kk.soton.ac.uk:8080/job/finmag/65/testReport/src.finmag.tests.comparison.demag/test_demag_field/test_using_magpar/
+2013-02-12 10:52:56 max_albert: However, the only change that Weiwei did (AFAICS) was a cosmetic change in the output (use %g as the formatting string instead of %f).
+2013-02-12 10:53:30 max_albert: And I can't see how that could be broken before since neither the test file nor src/finmag/util/magpar.py (where the change happened) have been touched in ages.
+2013-02-12 10:53:38 max_albert: Weird...
+2013-02-12 10:54:01 max_albert: But anyway, if it fixed a test... ;-)
+2013-02-12 10:54:24 max_albert: So we're only two failures away from a stable build (modulo the skipped/disabled tests of course).
+2013-02-12 12:46:24 max_albert: Anybody interested in lunch in a bit?
+2013-02-12 13:34:14 fangohr: No lunch for me, sorry.
+2013-02-12 13:55:00 fangohr-adium: Hi all, just to say that email delivery from aleph0.kk.soton.ac.uk works now.
+2013-02-12 13:59:35 fangohr-adium: Max, Weiwei, have just looked at your documentation for setting up jenkins: very well done. With this, we have quite some confidence that we can do it again, if necessary. Let's keep extending this as we make further changes (such as adding email notification, say).
+2013-02-12 14:19:41 max_albert: Thanks, Hans!
+2013-02-12 14:21:01 max_albert: I saw that you also updated the notes with info about setting up email notifications.
+2013-02-12 14:21:10 max_albert: (Haven't read them yet though.)
+2013-02-12 14:21:15 max_albert: Does this work now?
+2013-02-12 14:21:35 fangohr-adium: Yes, should all work now.
+2013-02-12 14:21:59 max_albert: Awesome! What was the problem? (Sorry, it's probably written in your explanations... Will read them first.)
+2013-02-12 14:22:55 max_albert: Ok, just read it.
+2013-02-12 14:23:19 max_albert: So iSolutions did have to allow sending email for that machine? That's interesting.
+2013-02-12 14:23:26 fangohr-adium: Yes.
+2013-02-12 14:23:46 fangohr-adium: In the old days, any unix machine could send email. But that opens the door to lots of spam if only one of them is broken into.
+2013-02-12 14:24:09 max_albert: Right. Makes sense that they want to be able to control it.
+2013-02-12 14:54:24 max_albert: Hi Hans! Just FYI email notifications indeed work now on aleph0. The emails are currently sent to my account (I set this up for testing, but will change it to you once everything works, or straight away if you prefer).
+2013-02-12 14:54:45 max_albert: One small thing: the sender is still being reported as "address not configured yet [nobody@nowhere]". Do you know where to change this?
+2013-02-12 16:44:30 mb8g11: max_albert: The change Weiwei did (replacing %f with %g in util/magpar.py) was not a cosmetic one. The function the change happened in compares finmag results with magpar results.
+2013-02-12 16:45:15 mb8g11: The degrees of freedom are ordered differently in magpar and finmag. The code compares the coordinates to find the corresponding degrees of freedom.
+2013-02-12 16:45:51 mb8g11: Due to the fact that the data is read from a file and weird rounding issues exist the comparison is made string-based.
+2013-02-12 16:46:46 mb8g11: (of the coordinates, mind you)
+2013-02-12 16:47:08 max_albert: Oh, I see. Thanks for the explanation!
+2013-02-12 16:47:20 max_albert: However, isn't string-based comparison even more dangerous/prone to changes?
+2013-02-12 16:47:31 max_albert: Would numpy.allclose() (with appropriate tolerances) be able to do the job?
+2013-02-12 16:48:00 max_albert: Also, when did this test actually break? It seemed to me that none of the relevant files have been touched in a long time.
+2013-02-12 16:48:09 mb8g11: It broke on the new machine.
+2013-02-12 16:48:15 mb8g11: Or something to that effect.
+2013-02-12 16:48:35 mb8g11: I had some breakage on my own machine last time I upgraded Ubuntu,
+2013-02-12 16:49:03 max_albert: Oh, so the comparison was actually so strict that small changes (e.g. due to running it on a different machine) could break it?
+2013-02-12 16:49:10 mb8g11: It's not the data that is compared by string, just the algorithm that tries to find which node belongs to which.
+2013-02-12 16:50:19 mb8g11: Imagine a very fine mesh, expressed in meters (so coordinates of 1e-9 and smaller)... and now magpar round the coordinates and stores them in a file with limited precision.
+2013-02-12 16:51:07 max_albert: Ok. And then what exactly is compared?
+2013-02-12 16:51:37 mb8g11: Coordinates of the mesh when read back from magpar against coordinates of the same mesh given to us by finmag.
+2013-02-12 16:51:48 mb8g11: To find out which degree of freedom corresponds to which vertex.
+2013-02-12 16:54:06 max_albert: Aha!
+2013-02-12 16:54:59 max_albert: Might be good to add some info to this effect to the docstring of "compare_field_directly()" in src/finmag/util/magpar.py.
+2013-02-12 16:55:42 max_albert: From the naming of the function I would not have guessed that it does what you described above.
+2013-02-12 16:56:31 mb8g11: It's only part of what it does.
+2013-02-12 16:57:26 mb8g11: It gets coordinates and values for magpar, coordinates and values for finmag and compares the two. So the naming is okay. It's just there is a lot of work involved to be able to compare that data.
+2013-02-12 16:58:33 mb8g11: Namely, sorting the data by coordinates.
+2013-02-12 16:59:10 max_albert: Ah, ok. Maybe still worth putting that down as comments in that function (otherwise people like me who don't take the time to understand the code in detail will likely get confused again ;-)).
+2013-02-12 16:59:29 max_albert: I'll try to do that based on your explanations (until you are very keen to do it yourself).
+2013-02-12 16:59:30 mb8g11: Will do right now.
+2013-02-12 16:59:36 max_albert: s/until/unless/
+2013-02-12 16:59:41 max_albert: Oh, thanks!
+2013-02-12 17:00:23 max_albert: I'd have to read the code in detail to be able to tell, but do you think string comparison is still the right way to go?
+2013-02-12 17:00:37 max_albert: Are all the strings produced by magpar (and thus can be expected to be the same)?
+2013-02-12 17:01:00 max_albert: Or is the comparison between strings produced by Magpar and Finmag, respectively?
+2013-02-12 17:05:41 mb8g11: (pushed)
+2013-02-12 17:05:49 max_albert: Thanks!
+2013-02-12 17:09:00 mb8g11: We get coordinates and values back from magpar, and coordinates and values from finmag. We want to compare the values - but we do not know which value in the results array of magpar corresponds to which entry in finmags results.
+2013-02-12 17:09:22 mb8g11: So we turn to the coordinates.
+2013-02-12 17:09:53 mb8g11: But sadly, magpar has somehow mangled the coordinates by rounding them and/or saving them to file with limited precision
+2013-02-12 17:11:00 mb8g11: The codes solution: Build a dictionary of coordinates to results. The keys of this dictionary is then simply "xyz" truncated by string operation.
+2013-02-12 17:11:16 max_albert: Ok, got it. Sorry if I'm a bit slow today... Might have been in the office for too long. ;-)
+2013-02-12 17:12:04 mb8g11: It's a solution prone to occasional breakage but it was much less effort to implement than something which looks for the "closest" point
+2013-02-12 17:13:10 mb8g11: I think Weiwei wrote it originally. Stumbled upon it, had the same reaction as you. Decided to re-do it the correct way. After a few hours I just decided to let it be the way it is and just refactor a little.
+2013-02-12 17:13:28 mb8g11: The whole file, that is ;)
+2013-02-12 17:13:50 max_albert: Yeah, I can believe that. It's not a bad solution at all. I even wonder why it would break if the precision of the printed strings is limited to the precision we need/want to accept.
+2013-02-12 17:14:30 mb8g11: Because the precision we need, the precision of the strings and the precision we get from magpar are very close to each other :-/
+2013-02-12 17:14:49 max_albert: :-)
+2013-02-12 17:15:37 max_albert: Ok, I need to go. Thanks again for the explanations and have a good evening everyone!
+2013-02-12 17:15:44 mb8g11: Bye Max!
+2013-02-13 08:33:23 mb8g11: Good morning!
+2013-02-13 08:33:28 max_albert: Good morning!
+2013-02-13 08:38:02 mb8g11: How is it going?
+2013-02-13 08:39:02 max_albert: Not bad, thanks! Trying to get into a routine of coming to the office a bit earlier. Which is nice because it's very quiet and you feel you can get a bit done before everybody else turns up. :)
+2013-02-13 08:39:19 max_albert: How are things in Hamburg?
+2013-02-13 08:42:50 mb8g11: Hehe.
+2013-02-13 08:43:06 mb8g11: Things are fine, it's starting to snow a little.
+2013-02-13 08:44:09 max_albert: No skiing possible in the streets, though, I guess... Ice-skating maybe? Or at least building snowmen?
+2013-02-13 08:59:58 max_albert: Tea time! :-)
+2013-02-13 09:39:32 mb8g11: Not yet.
+2013-02-13 13:45:55 mb8g11: What are you currently working on, Max?
+2013-02-13 13:48:18 max_albert: Looking into a simulation which Peter Metaxas (from Australia) sent us (it's a Mumax2 script, though, not Finmag).
+2013-02-13 13:49:06 max_albert: It attempts to compute the normal modes of a nanodisk via a Fourier transform of m_x(t).
+2013-02-13 13:49:26 max_albert: I'd like to run that with varying parameters to see how that changes things, and am using that as an excuse to get acquainted with Sumatra.
+2013-02-13 13:49:41 max_albert: Why are you interested?
+2013-02-13 13:57:59 mb8g11: for fun.
+2013-02-13 14:07:36 max_albert: :-)
+2013-02-13 14:07:46 max_albert: How about you?
+2013-02-13 14:20:20 mb8g11: nothing much, post-processing data to create dispersion curves corresponding to the nmag dispersion example
+2013-02-13 14:20:41 mb8g11: But decided to use an ipython notebook ^^
+2013-02-13 14:20:52 max_albert: ;-)
+2013-02-13 14:20:59 max_albert: How is that working for you?
+2013-02-13 14:23:01 mb8g11: It's ideal for that task, when the data exists already and you work on the steps to achieve the end-result iteratively.
+2013-02-13 14:26:38 mb8g11: And I prefer the UI to ipython (even though you can embed images with ipython as well)
+2013-02-13 14:26:53 mb8g11: Overall, it's cool, thanks for introducing it to us.
+2013-02-13 14:29:27 mb8g11: And the tab-to-doc is reaaaally nice.
+2013-02-14 08:09:15 mb8g11: Good morning!
+2013-02-14 12:41:53 fangohr: Greetings.
+2013-02-14 12:42:18 fangohr: What is 'tab-to-doc'?
+2013-02-14 12:48:19 mb8g11: I don't know how to call it: When you hit tab in an ipython notebook and the docstring for the function/method the cursor is on appears.
+2013-02-14 13:01:12 fangohr: I see -- I thought the help string would be displayed after you type '(' -- this is correct. And then you can use 'tab' to change how the help is displayed. Useful indeed. Thanks.
+2013-02-14 15:14:08 mb8g11: Wasn't precise enough: Indeed meant "inside the paranthesis".
+2013-02-14 15:14:57 mb8g11: Didn't know I could hit tab once more to see more of the doc. Nice, thanks.
+2013-02-15 10:16:07 fangohr-adium: Morning all.
+2013-02-15 10:19:39 max_albert: Good morning Hans.
+2013-02-15 10:49:28 fangohr-adium: Hi folks — the oxford gang has arrived. Do come over, and bring a cup of tea or coffee or what you like. We have biscuits.
+2013-02-15 10:51:37 max_albert: Awesome, we'll be over in a minute.
+2013-02-18 21:51:54 mb8g11: https://trac.soton.ac.uk/linuxdesktops/
+2013-02-18 21:51:59 mb8g11: Includes a printing guide...
+2013-02-19 08:46:43 fangohr: Good Morning.
+2013-02-19 08:46:53 fangohr: Very nice link, Marc-Antonio.
+2013-02-20 10:50:58 mb8g11: Hi all. Anybody there?
+2013-02-20 10:51:21 D_Chernyshenko: Hi
+2013-02-20 10:52:02 mb8g11: Hi Dmitri.
+2013-02-20 11:49:27 fangohr-adium: Hi all.
+2013-02-20 11:49:51 fangohr-adium: Just spend all morning since 9:00 discussing student marks. Delightful. ;-)
+2013-02-20 11:50:05 fangohr-adium: Weiwei, can we stick to 12:15, please.
+2013-02-20 11:50:50 ww1g11: sure, ;-)
+2013-02-20 11:51:33 mb8g11: Discussing student marks... as in justifying? Dreadful.
+2013-02-20 11:52:40 fangohr: Nothing wrong with the content - just the duration was undesirable.
+2013-02-20 12:14:27 mb8g11: I see.
+2013-02-20 14:39:36 mb8g11: Dmitri, are you connect via telnet? ;)
+2013-02-20 20:41:36 mb8g11: Good night.
+2013-02-21 09:19:55 max_albert: Good morning,
+2013-02-21 09:37:31 fangohr-adium: Hey, good morning :)
+2013-02-21 13:49:08 fangohr: Hi Max, Marijan, (Weiwei),
+2013-02-21 13:49:22 mb4e10: Hi
+2013-02-21 13:49:31 fangohr: for our meeting at 14:00 regarding normal modes, would it make sense if I came to your area? We could then look at the stuff that you have been working on more easily.
+2013-02-21 13:50:04 mb4e10: sure
+2013-02-21 13:50:52 fangohr: Okay, I'll come over for 14:00 then.
+2013-02-21 15:40:18 mb8g11: Just an addendum to the tutorial example with the fake magnetisation data: There are two vertical lines in the Fourier transform plot.
+2013-02-21 15:41:04 mb8g11: That's the same issue than in the example before: No way to distinguish the two, since the two input functions are not orthogonal.
+2013-02-21 15:41:33 mb8g11: But they correspond in fact to only one wavelength.
+2013-02-21 15:43:13 mb8g11: In the example before, I could eliminate one, but not here.

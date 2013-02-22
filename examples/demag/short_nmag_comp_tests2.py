@@ -18,7 +18,7 @@ class FemBemGCRboxSolver(FemBemGCRSolver):
     def __init__(self, mesh,m, parameters=sb.default_parameters, degree=1, element="CG",
          project_method='magpar', unit_length=1, Ms = 1.0,bench = False,
          qvector_method = 'box'):
-        
+
         FemBemGCRSolver.__init__(self,mesh,m, parameters, degree, element,
          project_method, unit_length, Ms,bench,qvector_method )
 
@@ -51,7 +51,7 @@ def printsolverparams(mesh,m):
     # Write output to linsolveparams.rst
     output = open(os.path.join(MODULE_DIR, "linsolveparams.rst"), "w")
     for demagtype in finmagsolvers.keys():
-        
+
         #create a solver to read out it's default linear solver data
         solver = finmagsolvers[demagtype](mesh,m)
         output.write("\nFinmag %s solver parameters:\n"%demagtype)
@@ -63,7 +63,7 @@ def printsolverparams(mesh,m):
 
 def get_nmag_bemtime():
     """Read the nmag log to get the BEM assembly time"""
-    
+
     inputfile = open("run_nmag_log.log", "r")
     nmaglog = inputfile.read()
 
@@ -77,7 +77,7 @@ def get_nmag_bemtime():
     time =  nmaglog[begin + len(keyword1):end]
     return float(time)
 
-    
+
 #for maxh in (2, 1, 0.8, 0.7):
 meshsizes = (5, 3, 2, 1.5,1.0,0.8)
 #meshsizes = (5,3,2)
@@ -98,7 +98,7 @@ for i,maxh in enumerate(meshsizes):
 
     # Finmag data
     mesh = from_geofile(geofile)
-    
+
     #mesh.coordinates()[:] = mesh.coordinates()[:]*1e-9 #this makes the results worse!!! HF
     print "Using mesh with %g vertices" % mesh.num_vertices()
     V = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
@@ -142,15 +142,15 @@ for i,maxh in enumerate(meshsizes):
         endtime = time.time()
 
         #Store the times
-        runtimes["bem"][demagtype].append(sb.demag_timings.time(finmagsolvers[demagtype].__name__, "build BEM"))
+        runtimes["bem"][demagtype].append(sb.demag_timings.time("build BEM", finmagsolvers[demagtype].__name__))
         runtimes["solve"][demagtype].append(endtime - starttime)
-        
+
 
         #store the number of krylov iterations
         krylov_iter[demagtype]["poisson"].append(solver.poisson_iter)
         krylov_iter[demagtype]["laplace"].append(solver.laplace_iter)
-        
-                
+
+
         H_demag = df.Function(V)
         H_demag.vector()[:] = demag
         demag.shape = (3, -1)
@@ -181,10 +181,35 @@ for i,maxh in enumerate(meshsizes):
         tmpmaxerror = max(abs(tmperror))
         errorH[demagtype].append(tmperror)
         maxerror[demagtype].append(tmpmaxerror)
-        
+
     ####################
     #Generate Nmag Data
     ####################
+
+    def run_subprocess_command(cmd, shell=False, verbose=False):
+        try:
+            output = subprocess.check_output(cmd, shell=shell, stderr=subprocess.STDOUT)
+            #status, output = commands.getstatusoutput(" ".join(cmd))
+            if verbose:
+                print "========== [DDD] Exit status: {} ===================".format(status)
+                print "========== [DDD] Output of command '{}': ===================".format(cmd)
+                print output
+                print "======================================================="
+                # if status != 0:
+                #     sys.exit(44)
+        except subprocess.CalledProcessError as e:
+            print e
+            print "========== [EEE] Output of command '{}': ===================".format(cmd)
+            print e.output
+            print "==========================================================="
+            sys.exit(42)
+        except Exception as e:
+            print e
+            if hasattr(e, 'output'):
+                print "========== [EEE] Output of command '{}': ===================".format(cmd)
+                print e.output
+                print "==========================================================="
+            sys.exit(43)
 
 
     """
@@ -199,36 +224,30 @@ for i,maxh in enumerate(meshsizes):
     has_nmag = True
 
     # Create neutral mesh
-    cmd1 = 'netgen -geofile=%s -meshfiletype="Neutral Format" -meshfile=%s.neutral -batchmode' % (geofile, geofilename)
-    status, output = commands.getstatusoutput(cmd1)
-    #if status != 0:
-    #    print 'Netgen failed. Aborted.'
-    #    sys.exit(1)
+    cmd1 = ['netgen',
+            '-geofile={}'.format(geofile),
+            '-meshfiletype="Neutral Format"',
+            '-meshfile={}.neutral'.format(geofilename),
+            '-batchmode']
+    run_subprocess_command(cmd1, shell=True, verbose=True)
 
     # Convert neutral mesh to nmag type mesh
-    cmd2 = 'nmeshimport --netgen %s.neutral %s.nmesh.h5' % (geofilename, geofilename)
-    status, output = commands.getstatusoutput(cmd2)
-    if status != 0:
-        print 'Nmeshimport failed. Aborted.'
-        print output
-        sys.exit(2)
+    cmd2 = ['nmeshimport', '--netgen', geofilename + '.neutral', geofilename + '.nmesh.h5']
+    run_subprocess_command(cmd2, shell=True, verbose=True)
 
     # Run nmag
-    cmd3 = 'nsim run_nmag.py --clean %s.nmesh.h5 nmag_data.dat' % geofilename
+    run_subprocess_command(['which', 'nsim'], verbose=True)
+    cmd3 = ['nsim', 'run_nmag.py', '--clean', geofilename + '.nmesh.h5', 'nmag_data.dat']
     starttime = time.time()
-    status, output = commands.getstatusoutput(cmd3)
+    run_subprocess_command(cmd3, shell=True, verbose=True)
     endtime = time.time()
 
     runtime = endtime - starttime
     bemtime = get_nmag_bemtime()
-    
+
     runtimes["bem"]["nmag"].append(bemtime)
     runtimes["solve"]["nmag"].append(runtime - bemtime)
-    
-    if status != 0:
-        print output
-        print 'Running nsim failed. Aborted.'
-        sys.exit(3)
+
     print "\nDone with nmag."
 
 

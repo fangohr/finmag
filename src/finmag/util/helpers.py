@@ -886,7 +886,7 @@ def vector_field_from_dolfin_function(f, xlims=None, ylims=None, zlims=None,
 
     return X, Y, Z, U, V, W
 
-def probe(dolfin_function, points):
+def probe(dolfin_function, points, apply_func=None):
     """
     Probe the dolfin function at the given points.
 
@@ -904,17 +904,18 @@ def probe(dolfin_function, points):
         the field is probed at all points on a regular grid of
         size 10 x 20 x 5.
 
+    apply_func: any callable
+
+        Optional function to be applied to the returned values. If not
+        provided, the values are returned unchanged.
+
     *Returns*
 
-    A numpy.array of the same shape as `pts`, where the last
-    axis contains the field values instead of the point
-    locations.
-
-    *Limitations*
-
-    Currently the points where the field is probed must lie inside
-    the mesh. For points which lie outside the mesh the returned
-    field values will be NaN.
+    A numpy.ma.masked_array of the same shape as `pts`, where the last
+    axis contains the field values instead of the point locations (or
+    `apply_func` applied to the field values in case it is provided.).
+    Positions in the output array corresponding to probing point which
+    lie outside the mesh are masked out.
 
     """
     points = np.array(points)
@@ -924,16 +925,28 @@ def probe(dolfin_function, points):
             "i.e. the last axis must have dimension 3. Shape of "
             "'pts' is: {}".format(points.shape))
 
-    def _safe_single_probe(point):
-        try:
-            return dolfin_function(point)
-        except RuntimeError:
-            return np.array([np.NaN, np.NaN, np.NaN])
+    if apply_func == None:
+        # use the identity operation by default
+        apply_func = lambda x: x
 
-    res = np.empty(points.shape)
+    output_shape = np.array(apply_func([0, 0, 0])).shape
+
+    res = np.ma.empty(points.shape[:-1] + output_shape)
+    # N.B.: setting the mask to a full matrix right from the start (as
+    # we do in the next line) might be slightly memory-inefficient; if
+    # that becomes a problem we can always set it to 'np.ma.nomask'
+    # here, but then we need a check for res.mask == np.ma.nomask in
+    # the 'except' branch below and set it to a full mask if we
+    # actually need to mask out any values during the loop.
+    res.mask = np.zeros_like(res, dtype=bool)
     loop_indices = itertools.product(*map(xrange, points.shape[:-1]))
     for idx in loop_indices:
-        res[idx] = _safe_single_probe(points[idx])
+        try:
+            pt = points[idx]
+            res[idx] = apply_func(dolfin_function(pt))
+        except RuntimeError:
+            res.mask[idx] = True
+
     return res
 
 

@@ -8,16 +8,16 @@ nmag_file = os.path.join(sim.MODULE_DIR, "averages_nmag5.txt")
 
 def test_validation():
     #short run:
-    tmax = 0.05e-9; tolerance = 3e-7
+    tmax = 0.05e-9; tolerance = 5e-6
 
     #long run
     #tmax = 10e-9; tolerance = 1e-4
 
-    n = sim.run_simulation(t_max=tmax) 
+    n = sim.run_simulation(t_max=tmax)
 
     averages = np.loadtxt(sim.averages_file)
     nmag_avg = np.loadtxt(nmag_file)[:n,:]
-   
+
     diff = np.abs(np.array(averages) - np.array(nmag_avg))
     print("Deviation is %s" % (np.max(diff)))
     assert np.max(diff[:,0]) < epsilon # compare times

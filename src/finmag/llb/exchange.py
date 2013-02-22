@@ -171,4 +171,3 @@ if __name__ == "__main__":
     print exch.compute_field()
     
     #print timings.report()
-
