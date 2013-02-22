@@ -4,17 +4,14 @@
 #
 # CONTACT: h.fangohr@soton.ac.uk
 #
-# AUTHOR(S) OF THIS FILE: Dmitri Chernyshenko (d.chernyshenko@soton.ac.uk)
-
-#######################################
-# Currently, this makefile is only used to perform the Jenkins build
-# 
 # Jenkins will call the 'ci' (for Continuous Integration) target.
-#
-# 
 
-# The directory containing ng.tcl
-NETGENDIR ?= /usr/share/netgen/
+# This target can be used to print Makefile variables (such as PROJECT_DIR)
+# from the command line, for example by saying 'make print-PROJECT_DIR'.
+print-%:
+	@echo $($*)
+
+NETGENDIR ?= /usr/share/netgen/  # The directory containing ng.tcl
 PYTHON ?= python
 
 # The command to purge all untracked files in the repository.
@@ -37,7 +34,8 @@ RUN_UNIT_TESTS = $(PROJECT_DIR)/src/finmag/util/run_ci_tests.py
 NATIVE_DIR = native
 # The list of directories that contain unittest unit tests
 TEST_ROOTS = src
-# Set TEST_OPTIONS to e.g. '-sxv' to disable capturing of standard output, exit instantly on the first error, and increase verbosity.
+# Set TEST_OPTIONS to e.g. '-sxv' to disable capturing of standard output,
+# exit instantly on the first error, and increase verbosity.
 TEST_OPTIONS ?=
 
 ######### Other variables
@@ -112,11 +110,13 @@ purge: clean
 create-dirs:
 	mkdir -p test-reports/junit
 
-test: clean print-debugging-info make-modules run-unittest-tests run-pytest-tests run-ci-tests
+test: clean make-modules run-unittest-tests pytest run-ci-tests
 
 print-debugging-info:
 	@echo "[DDD] Makefile NETGENDIR: ${NETGENDIR}"
 
+# TODO: Can this be deleted? Doesn't seem to do anything on
+# aleph0 and my machine (MAB).
 run-unittest-tests : $(addsuffix /__runtests__,$(TEST_ROOTS))
 
 fasttest : make-modules $(addsuffix /__runtests__,$(TEST_ROOTS)) run-ci-tests
@@ -133,9 +133,15 @@ run-pytest-tests : create-dirs
 run-ci-tests :
 	make -C $(NATIVE_DIR) run-ci-tests
 
-# This target can be used to print Makefile variables (such as PROJECT_DIR)
-# from the command line, for example by saying 'make print-PROJECT_DIR'.
-print-%:
-	@echo $($*)
+# Will not run tests marked as slow.
+pytest:
+	PYTHONPATH=$(PYTHON_ROOTS) py.test $(TEST_OPTIONS) -m "not slow" \
+			   --junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
 
-.PHONY: ci default make-modules test run-ci-tests run-pytest-tests run-unittest-tests
+# Will only run tests marked as slow.
+pytest-slow:
+	PYTHONPATH=$(PYTHON_ROOTS) py.test $(TEST_OPTIONS) -m "slow" \
+			   --junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
+
+.PHONY: ci default make-modules test run-ci-tests run-pytest-tests \
+   	run-unittest-tests pytest pytest-slow
