@@ -195,10 +195,16 @@ for i,maxh in enumerate(meshsizes):
                 print "======================================================="
         except subprocess.CalledProcessError as e:
             print e
-            print "============= [DDD] Output of command: ===================="
+            print "========== [DDD] Output of command '{}': ===================".format(cmd)
             print e.output
             print "==========================================================="
             sys.exit(42)
+        except Exception as e:
+            print e
+            print "========== [DDD] Output of command '{}': ===================".format(cmd)
+            print e.output
+            print "==========================================================="
+            sys.exit(43)
 
 
     """
