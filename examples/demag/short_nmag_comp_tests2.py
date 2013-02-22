@@ -211,7 +211,7 @@ for i,maxh in enumerate(meshsizes):
     import_mesh = " ".join(('nmeshimport', '--netgen',
         geofilename + '.neutral', geofilename + '.nmesh.h5'))
     print "Will run command: {}.".format(import_mesh)
-    output = subprocess.check_output(import_mesh, shell=True)
+    output = subprocess.check_output(import_mesh, shell=True, stderr=subprocess.STDOUT)
     print "Ran, and output was:\n{}.".format(output)
 
     print "Checking for nmag... "
