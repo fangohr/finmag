@@ -186,9 +186,13 @@ for i,maxh in enumerate(meshsizes):
     #Generate Nmag Data
     ####################
 
-    def run_subprocess_command(cmd):
+    def run_subprocess_command(cmd, verbose=False):
         try:
             output = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
+            if verbose:
+                print "========== [DDD] Output of command '{}': ===================".format(cmd)
+                print output
+                print "======================================================="
         except subprocess.CalledProcessError as e:
             print e
             print "============= [DDD] Output of command: ===================="
@@ -223,7 +227,7 @@ for i,maxh in enumerate(meshsizes):
     # Run nmag
     cmd3 = ['nsim', 'run_nmag.py', '--clean', geofilename + '.nmesh.h5', 'nmag_data.dat']
     starttime = time.time()
-    run_subprocess_command(cmd3)
+    run_subprocess_command(cmd3, verbose=True)
     endtime = time.time()
 
     runtime = endtime - starttime
