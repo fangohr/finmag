@@ -224,17 +224,17 @@ for i,maxh in enumerate(meshsizes):
             '-meshfiletype="Neutral Format"',
             '-meshfile={}.neutral'.format(geofilename),
             '-batchmode']
-    run_subprocess_command(cmd1)
+    run_subprocess_command(cmd1, verbose=True)
 
     # Convert neutral mesh to nmag type mesh
     cmd2 = ['nmeshimport', '--netgen', geofilename + '.neutral', geofilename + '.nmesh.h5']
-    run_subprocess_command(cmd2)
+    run_subprocess_command(cmd2, verbose=True)
 
     # Run nmag
     run_subprocess_command(['which', 'nsim'], verbose=True)
     cmd3 = ['nsim', 'run_nmag.py', '--clean', geofilename + '.nmesh.h5', 'nmag_data.dat']
     starttime = time.time()
-    run_subprocess_command(cmd3, shell=True, verbose=True)
+    run_subprocess_command(cmd3, verbose=True)
     endtime = time.time()
 
     runtime = endtime - starttime
