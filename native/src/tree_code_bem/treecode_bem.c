@@ -957,8 +957,6 @@ void compute_moment(fastsum_plan *plan, struct octree_node *tree, double ***mome
     double tmp_charge;
     //double tmp_moment = 0;
 
-
-
     for (i = 0; i < plan->p + 1; i++) {
         for (j = 0; j < plan->p - i + 1; j++) {
             for (k = 0; k < plan->p - i - j + 1; k++) {
