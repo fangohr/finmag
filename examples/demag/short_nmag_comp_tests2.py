@@ -10,6 +10,7 @@ import finmag.energies.demag.solver_base as sb
 import sys, os, commands, subprocess,time
 from finmag.sim.llg import LLG
 import copy
+import tee
 
 import finmag
 is_dolfin_1_1 = (finmag.util.versions.get_version_dolfin() == "1.1.0")
@@ -210,9 +211,11 @@ for i,maxh in enumerate(meshsizes):
 
     import_mesh = " ".join(('nmeshimport', '--netgen',
         geofilename + '.neutral', geofilename + '.nmesh.h5'))
+    print "[DDD] geofilename: {}".format(geofilename)
     print "Will run command: {}.".format(import_mesh)
-    output = subprocess.check_output(import_mesh, shell=True, stderr=subprocess.STDOUT)
-    print "Ran, and output was:\n{}.".format(output)
+    # output = subprocess.check_output(import_mesh, shell=True, stderr=subprocess.STDOUT)
+    # print "Ran, and output was:\n{}.".format(output)
+    tee.system2(import_mesh, logger='/tmp/output_import_mesh.txt', stdout=True)
 
     print "Checking for nmag... "
     output = subprocess.check_output("which nsim", shell=True)
