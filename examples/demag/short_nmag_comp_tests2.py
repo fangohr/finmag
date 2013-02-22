@@ -18,7 +18,7 @@ class FemBemGCRboxSolver(FemBemGCRSolver):
     def __init__(self, mesh,m, parameters=sb.default_parameters, degree=1, element="CG",
          project_method='magpar', unit_length=1, Ms = 1.0,bench = False,
          qvector_method = 'box'):
-        
+
         FemBemGCRSolver.__init__(self,mesh,m, parameters, degree, element,
          project_method, unit_length, Ms,bench,qvector_method )
 
@@ -51,7 +51,7 @@ def printsolverparams(mesh,m):
     # Write output to linsolveparams.rst
     output = open(os.path.join(MODULE_DIR, "linsolveparams.rst"), "w")
     for demagtype in finmagsolvers.keys():
-        
+
         #create a solver to read out it's default linear solver data
         solver = finmagsolvers[demagtype](mesh,m)
         output.write("\nFinmag %s solver parameters:\n"%demagtype)
@@ -63,7 +63,7 @@ def printsolverparams(mesh,m):
 
 def get_nmag_bemtime():
     """Read the nmag log to get the BEM assembly time"""
-    
+
     inputfile = open("run_nmag_log.log", "r")
     nmaglog = inputfile.read()
 
@@ -77,7 +77,7 @@ def get_nmag_bemtime():
     time =  nmaglog[begin + len(keyword1):end]
     return float(time)
 
-    
+
 #for maxh in (2, 1, 0.8, 0.7):
 meshsizes = (5, 3, 2, 1.5,1.0,0.8)
 #meshsizes = (5,3,2)
@@ -98,7 +98,7 @@ for i,maxh in enumerate(meshsizes):
 
     # Finmag data
     mesh = from_geofile(geofile)
-    
+
     #mesh.coordinates()[:] = mesh.coordinates()[:]*1e-9 #this makes the results worse!!! HF
     print "Using mesh with %g vertices" % mesh.num_vertices()
     V = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
@@ -144,13 +144,13 @@ for i,maxh in enumerate(meshsizes):
         #Store the times
         runtimes["bem"][demagtype].append(sb.demag_timings.time(finmagsolvers[demagtype].__name__, "build BEM"))
         runtimes["solve"][demagtype].append(endtime - starttime)
-        
+
 
         #store the number of krylov iterations
         krylov_iter[demagtype]["poisson"].append(solver.poisson_iter)
         krylov_iter[demagtype]["laplace"].append(solver.laplace_iter)
-        
-                
+
+
         H_demag = df.Function(V)
         H_demag.vector()[:] = demag
         demag.shape = (3, -1)
@@ -181,7 +181,7 @@ for i,maxh in enumerate(meshsizes):
         tmpmaxerror = max(abs(tmperror))
         errorH[demagtype].append(tmperror)
         maxerror[demagtype].append(tmpmaxerror)
-        
+
     ####################
     #Generate Nmag Data
     ####################
@@ -217,14 +217,19 @@ for i,maxh in enumerate(meshsizes):
     cmd3 = 'nsim run_nmag.py --clean %s.nmesh.h5 nmag_data.dat' % geofilename
     starttime = time.time()
     status, output = commands.getstatusoutput(cmd3)
+    print "Ran nmag, status was {}.".format(status)
     endtime = time.time()
 
     runtime = endtime - starttime
-    bemtime = get_nmag_bemtime()
-    
+    try:
+        bemtime = get_nmag_bemtime()
+    except:
+        print output
+        raise
+
     runtimes["bem"]["nmag"].append(bemtime)
     runtimes["solve"]["nmag"].append(runtime - bemtime)
-    
+
     if status != 0:
         print output
         print 'Running nsim failed. Aborted.'
