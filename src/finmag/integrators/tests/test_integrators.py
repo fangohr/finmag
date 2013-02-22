@@ -7,6 +7,7 @@
 # AUTHOR(S) OF THIS FILE: Dmitri Chernyshenko (d.chernyshenko@soton.ac.uk)
 
 import unittest
+import py
 from finmag.tests.jacobean.domain_wall_cobalt import setup_domain_wall_cobalt, domain_wall_error
 from finmag.integrators.llg_integrator import llg_integrator
 from datetime import datetime
@@ -14,6 +15,7 @@ from datetime import datetime
 NODE_COUNT = 100
 END_TIME = 1e-10
 
+@py.test.mark.slow
 class IntegratorTests(unittest.TestCase):
     def run_test(self, backend, method, nsteps=40000):
         llg = setup_domain_wall_cobalt(node_count=NODE_COUNT)
