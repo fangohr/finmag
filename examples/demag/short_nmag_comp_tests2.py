@@ -189,12 +189,18 @@ for i,maxh in enumerate(meshsizes):
 
     print "\n\n--- critical nmag code below ---\n\n"
 
+    cwd = os.getcwd()
+    print "Current working directory: {}.".format(cwd)
+
+    files = os.listdir(cwd)
+    print "Files in this directory initally:\n{}".format(files)
+
     run_netgen = " ".join(('netgen', '-geofile={}'.format(geofile),
         '-meshfiletype="Neutral Format"', '-meshfile={}.neutral'.format(geofilename),
         '-batchmode'))
     print "Will run command: {}.".format(run_netgen)
     try:
-        output = subprocess.check_output(run_netgen)
+        output = subprocess.check_output(run_netgen, shell=True)
     except subprocess.CalledProcessError as e:
         print "Failed."
         print "Returncode: {}.".format(e.returncode)
@@ -211,8 +217,6 @@ for i,maxh in enumerate(meshsizes):
     output = subprocess.check_output("which nsim")
     print ".. found in {}.".format(output)
 
-    cwd = os.getcwd()
-    print "Current working directory: {}.".format(cwd)
     files = os.listdir(cwd)
     print "Files in this directory:\n{}".format(files)
 
