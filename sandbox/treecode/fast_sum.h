@@ -48,11 +48,6 @@ typedef struct {
     double *t_normal;//store the normal of the triangles in the boundary
     int *triangle_nodes;//store the mapping between face and nodes
     
-    int tetrahedron_num;
-    int *tetrahedron_nodes;//store the mapping between tetrahedron and nodes
-    double *tetrahedron_correction;//store the correction coefficients 
-    double *tet_charge_density;//used for  correction too
-
     double critical_sigma;
     struct octree_node *tree;
     int p;

@@ -240,7 +240,7 @@ if __name__ == "__main__":
     Ms = 8.6e5
     expr = df.Expression(('cos(x[0])', 'sin(x[0])','0'))
     m = df.interpolate(expr, Vv)
-    #m = df.interpolate(df.Constant((1, 0, 0)), Vv)
+    m = df.interpolate(df.Constant((0, 0, 1)), Vv)
     
     from finmag.energies.demag.solver_fk import FemBemFKSolver as FKSolver
     
