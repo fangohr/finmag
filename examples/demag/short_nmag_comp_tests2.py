@@ -195,7 +195,7 @@ for i,maxh in enumerate(meshsizes):
     print "Will run command: {}.".format(run_netgen)
     try:
         output = subprocess.check_output(run_netgen)
-    except CalledProcessError as e:
+    except subprocess.CalledProcessError as e:
         print "Failed."
         print "Returncode: {}.".format(e.returncode)
         print "Output:\n{}.".format(e.output)
