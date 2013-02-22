@@ -3,6 +3,7 @@
 from IPython.nbformat.current import reads
 from ipnbdoctest import test_notebook as reproduce_notebook
 from glob import glob
+import os
 import pytest
 
 #ipynb_files = ['doc/ipython_notebooks_src/tutorial-using-ipython-notebook.ipynb',  # passes
