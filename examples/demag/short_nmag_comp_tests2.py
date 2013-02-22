@@ -1,4 +1,5 @@
 ##import io
+import os
 import numpy as np
 import dolfin as df
 from finmag.util.meshes import from_geofile
@@ -236,11 +237,17 @@ for i,maxh in enumerate(meshsizes):
     run_subprocess_command(cmd2, shell=True, verbose=True)
 
     # Run nmag
+    print "\n\n--- critical nmag code below ---\n\n"
     run_subprocess_command(['which', 'nsim'], verbose=True)
-    cmd3 = ['nsim', 'run_nmag.py', '--clean', geofilename + '.nmesh.h5', 'nmag_data.dat']
     starttime = time.time()
+    cmd3 = ['nsim', 'run_nmag.py', '--clean', geofilename + '.nmesh.h5', 'nmag_data.dat']
     run_subprocess_command(cmd3, shell=True, verbose=True)
     endtime = time.time()
+
+    cwd = os.getcwd()
+    print "Current working directory: {}.".format(cwd)
+    files = os.listdir(cwd)
+    print "Files in this directory:\n{}".format(files)
 
     runtime = endtime - starttime
     bemtime = get_nmag_bemtime()
@@ -248,7 +255,7 @@ for i,maxh in enumerate(meshsizes):
     runtimes["bem"]["nmag"].append(bemtime)
     runtimes["solve"]["nmag"].append(runtime - bemtime)
 
-    print "\nDone with nmag."
+    print "\n\n--- critical nmag code above ---\n\n"
 
 
 ############################################
