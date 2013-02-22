@@ -188,20 +188,21 @@ for i,maxh in enumerate(meshsizes):
 
     def run_subprocess_command(cmd, shell=False, verbose=False):
         try:
-            output = subprocess.check_output(cmd, shell=shell, stderr=subprocess.STDOUT)
+            #output = subprocess.check_output(cmd, shell=shell, stderr=subprocess.STDOUT)
+            status, output = commands.getstatusoutput(" ".join(cmd))
             if verbose:
                 print "========== [DDD] Output of command '{}': ===================".format(cmd)
                 print output
                 print "======================================================="
         except subprocess.CalledProcessError as e:
             print e
-            print "========== [DDD] Output of command '{}': ===================".format(cmd)
+            print "========== [EEE] Output of command '{}': ===================".format(cmd)
             print e.output
             print "==========================================================="
             sys.exit(42)
         except Exception as e:
             print e
-            print "========== [DDD] Output of command '{}': ===================".format(cmd)
+            print "========== [EEE] Output of command '{}': ===================".format(cmd)
             print e.output
             print "==========================================================="
             sys.exit(43)
