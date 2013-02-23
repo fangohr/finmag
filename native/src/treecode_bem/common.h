@@ -56,6 +56,7 @@ typedef struct {
     double critical_sigma;
     struct octree_node *tree;
     int p;
+    double mac;
     double mac_square;
     int num_limit;
 
@@ -64,6 +65,7 @@ typedef struct {
 
     double r_eps;
     double r_eps_factor;
+    double r_eps_squre;
     int *id_t; //indices tri
     int *id_n; // indices nodes
     double *b_m;//boundary matrix
@@ -82,8 +84,7 @@ fastsum_plan *create_plan();
 void update_potential_u1(fastsum_plan *plan,double *u1);
 void fastsum_finalize(fastsum_plan *plan);
 
-void init_fastsum_I(fastsum_plan *plan, int N_target, int triangle_num, int p, double mac, int num_limit);
-void init_fastsum_II(fastsum_plan *plan, int N_target, int triangle_num, int p, double mac, int num_limit, double correct_factor);
+void init_fastsum(fastsum_plan *plan, int N_target, int triangle_num, int p, double mac, int num_limit, double correct_factor);
 void init_mesh(fastsum_plan *plan, double *x_t, double *t_normal, int *triangle_nodes, double *vert_bsa);
 void build_tree(fastsum_plan *plan);
 void bulid_indices_I(fastsum_plan *plan);

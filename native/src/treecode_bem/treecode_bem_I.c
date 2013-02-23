@@ -199,7 +199,7 @@ double compute_potential_single_target_I(fastsum_plan *plan, struct octree_node 
 void fast_sum_I(fastsum_plan *plan, double *phi, double *u1) {
     int i, j, k;
 
-    if (plan->mac_square > 0) {
+    if (plan->mac > 0) {
 
         double ***a = alloc_3d_double(plan->p + 1, plan->p + 1, plan->p + 1);
 
