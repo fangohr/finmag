@@ -538,9 +538,9 @@ void printree(struct octree_node *tree) {
             printree(tree->children[i]);
         }
     } else {
-        printf("xyz=%f  %f  %f children=%d  begin %d, %d  radius=%g\n",
+        printf("xyz=%f  %f  %f children=%d  range: %d, %d  radius=%g  num=%d\n",
                 tree->x, tree->y, tree->z, tree->num_children,
-                tree->begin, tree->end, sqrt(tree->radius_square));
+                tree->begin, tree->end, tree->radius,tree->end-tree->begin);
     }
 
 }
@@ -579,6 +579,9 @@ void build_tree(fastsum_plan *plan) {
     bnd[5] = array_max(plan->x_s, plan->triangle_num, 2);
 
     create_tree(plan, plan->tree, 0, plan->triangle_num, bnd);
+
+    //printf("r_eps=%g  with mac=%g\n",plan->r_eps,plan->mac*plan->r_eps);
+    //printree(plan->tree);
 
 }
 
@@ -769,7 +772,7 @@ fastsum_plan * create_plan() {
 }
 
 
-void init_fastsum_I(fastsum_plan *plan, int N_target, int triangle_num, int p, double mac, int num_limit) {
+void init_fastsum(fastsum_plan *plan, int N_target, int triangle_num, int p, double mac, int num_limit, double correct_factor) {
 
     int i;
 
@@ -789,6 +792,7 @@ void init_fastsum_I(fastsum_plan *plan, int N_target, int triangle_num, int p, d
     plan->t_normal = (double *) malloc(3 * triangle_num * (sizeof (double)));
 
     plan->p = p;
+    plan->mac=mac;
     plan->mac_square = mac*mac;
 
     plan->x_s_ids = (int *) malloc(plan->triangle_num * (sizeof (int)));
@@ -803,7 +807,7 @@ void init_fastsum_I(fastsum_plan *plan, int N_target, int triangle_num, int p, d
 
     plan->id_nn = (int *) malloc(N_target * (sizeof (int)));
 
-    plan->r_eps_factor=1.0;
+    plan->r_eps_factor=correct_factor;
 
 }
 
@@ -875,6 +879,7 @@ void compute_source_nodes_weights(fastsum_plan *plan) {
 
     total_area=total_area/plan->triangle_num*2.0/sqrt(3);
     plan->r_eps=sqrt(total_area)*plan->r_eps_factor;
+    plan->r_eps_squre=pow2(plan->r_eps);
 }
 
 void update_potential_u1(fastsum_plan *plan, double *u1) {
@@ -909,7 +914,6 @@ void fastsum_finalize(fastsum_plan * plan) {
     free_tree(plan, plan->tree);
 
     free(plan->charge_density);
-
     free(plan->t_normal);
     free(plan->triangle_nodes);
     free(plan->weights);

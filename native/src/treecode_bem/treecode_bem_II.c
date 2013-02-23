@@ -1,20 +1,8 @@
 #include "common.h"
 
 
-void init_fastsum_II(fastsum_plan *plan, int N_target, int triangle_num, int p, double mac, int num_limit, double correct_factor) {
-
-	init_fastsum_I(plan,N_target,triangle_num,p,mac,num_limit);
-
-    plan->id_tn = (int *) malloc(N_target * (sizeof (int)));
-
-    plan->r_eps_factor=correct_factor;
-
-
-}
-
-
 void bulid_indices_single_II(fastsum_plan *plan, struct octree_node *tree,
-        int index, int *it, int *in, double *value, int compute_bm) {
+        int index, int *in, double *value, int compute_bm) {
 
     int i, j;
     double r,dx, dy, dz;
@@ -36,7 +24,7 @@ void bulid_indices_single_II(fastsum_plan *plan, struct octree_node *tree,
     if (tree->num_children > 0) {
 
         for (i = 0; i < tree->num_children; i++) {
-            bulid_indices_single_II(plan, tree->children[i], index, it, in, value, compute_bm);
+            bulid_indices_single_II(plan, tree->children[i], index, in, value, compute_bm);
         }
         return;
 
@@ -51,8 +39,7 @@ void bulid_indices_single_II(fastsum_plan *plan, struct octree_node *tree,
 
             r = sqrt(dx * dx + dy * dy + dz * dz);
 
-            if (r < plan->r_eps) {
-                it[i] = 1;
+            if (r <= plan->r_eps) {
 
                 j = plan->x_s_ids[i];
                 p0 = &plan->x_t[3 * index];
@@ -86,13 +73,11 @@ void bulid_indices_II(fastsum_plan *plan) {
 
     int i, j;
 
-    int *indices_t = malloc(plan->N_source * sizeof ( int));
     int *indices_n = malloc(plan->N_target * sizeof ( int));
     double *values = malloc(plan->N_target * sizeof ( double));
 
-    int tmp_length_t = 0;
+
     int tmp_length_n = 0;
-    int total_length_t = 0;
     int total_length_n = 0;
 
     for (i = 0; i < plan->N_target; i++) {
@@ -100,20 +85,10 @@ void bulid_indices_II(fastsum_plan *plan) {
         values[i] = 0;
     }
 
-    for (i = 0; i < plan->N_source; i++) {
-        indices_t[i] = 0;
-    }
 
     for (i = 0; i < plan->N_target; i++) {
 
-        bulid_indices_single_II(plan, plan->tree, i, indices_t, indices_n, values, 0);
-
-        for (j = 0; j < plan->N_source; j++) {
-            if (indices_t[j] > 0) {
-                total_length_t++;
-                indices_t[j] = 0;
-            }
-        }
+    	bulid_indices_single_II(plan, plan->tree, i, indices_n, values, 0);
 
         for (j = 0; j < plan->N_target; j++) {
             if (indices_n[j] > 0) {
@@ -124,30 +99,23 @@ void bulid_indices_II(fastsum_plan *plan) {
 
     }
 
-    plan->id_t = malloc(total_length_t * sizeof ( int));
+    plan->total_length_n=total_length_n;
+
     plan->id_n = malloc(total_length_n * sizeof ( int));
     plan->b_m = malloc(total_length_n * sizeof ( double));
 
+    for (i = 0; i < total_length_n; i++) {
+        plan->id_n[i] = 0;
+        plan->b_m[i] = 0;
+    }
 
-    total_length_t = 0;
+
     total_length_n = 0;
     for (i = 0; i < plan->N_target; i++) {
-        plan->id_tn[i] = 0;
-        plan->id_nn[i] = 0;
 
-        bulid_indices_single_II(plan, plan->tree, i, indices_t, indices_n, values, 1);
+    	bulid_indices_single_II(plan, plan->tree, i, indices_n, values, 1);
 
-        tmp_length_t = 0;
         tmp_length_n = 0;
-
-        for (j = 0; j < plan->N_source; j++) {
-            if (indices_t[j] > 0) {
-                plan->id_t[total_length_t] = j;
-                total_length_t++;
-                tmp_length_t++;
-                indices_t[j] = 0;
-            }
-        }
 
         for (j = 0; j < plan->N_target; j++) {
             if (indices_n[j] > 0) {
@@ -161,33 +129,50 @@ void bulid_indices_II(fastsum_plan *plan) {
             }
         }
 
-        plan->id_tn[i] = tmp_length_t;
         plan->id_nn[i] = tmp_length_n;
     }
 
-    plan->total_length_n=total_length_n;
 
-    /*
-    for (i = 0; i < plan->N_target; i++) {
-        printf("%d = %d   %d\n", i, plan->id_tn[i], plan->id_nn[i]);
-    }
-
-    for (i = 0; i < total_length_t; i++) {
-        printf("id_t[%d] =    %d\n", i, plan->id_t[i]);
-    }
-    */
-
-    free(indices_t);
     free(indices_n);
     free(values);
 
 }
 
 
+inline double direct_compute_potential_leaf(fastsum_plan *plan, struct octree_node *tree, int index){
+
+	int i,k;
+	double res=0;
+	double dx,dy,dz,R;
+
+	for (i = tree->begin; i < tree->end; i++) {
+
+		dx = plan->x_t[3 * index]-plan->x_s[3 * i];
+	    dy = plan->x_t[3 * index + 1]-plan->x_s[3 * i + 1];
+	    dz = plan->x_t[3 * index + 2]-plan->x_s[3 * i + 2];
+
+	    R = dx * dx + dy * dy + dz * dz;
+
+	    if (R>plan->r_eps_squre){
+
+	    	k = plan->x_s_ids[i];
+	    	dx *= plan->t_normal[3 * k];
+	    	dy *= plan->t_normal[3 * k + 1];
+	        dz *= plan->t_normal[3 * k + 2];
+
+	        res += plan->charge_density[k]*(dx + dy + dz) / (R*sqrt(R));
+
+	    }
+	}
+
+	return res;
+
+}
+
 
 double compute_potential_single_target_II(fastsum_plan *plan, struct octree_node *tree, int index, double ***a) {
 
-    double R;
+    double R,r;
     int i, j, k;
     double res = 0;
     double dx, dy, dz;
@@ -197,12 +182,22 @@ double compute_potential_single_target_II(fastsum_plan *plan, struct octree_node
             + pow2(plan->x_t[3 * index + 1] - tree->y)
             + pow2(plan->x_t[3 * index + 2] - tree->z);
 
+    r = sqrt(R);
 
-    if (plan->mac_square * R > tree->radius_square) {
+    if (plan->mac * r > tree->radius) {
+
+        if (plan->r_eps>r*(1-plan->mac)){
+
+        	res=direct_compute_potential_leaf(plan,tree,index);
+
+        	return res;
+
+        }
+
         if (!tree->have_moment) {
-            tree->moment = alloc_3d_double(plan->p + 1, plan->p + 1, plan->p + 1);
-            tree->have_moment = 1;
-            tree->need_upadte_moment = 1;
+                tree->moment = alloc_3d_double(plan->p + 1, plan->p + 1, plan->p + 1);
+                tree->have_moment = 1;
+                tree->need_upadte_moment = 1;
         }
 
 
@@ -225,10 +220,10 @@ double compute_potential_single_target_II(fastsum_plan *plan, struct octree_node
             }
         }
 
+
         return res;
 
     } else {
-
 
         if (tree->num_children > 0) {
 
@@ -240,22 +235,7 @@ double compute_potential_single_target_II(fastsum_plan *plan, struct octree_node
 
         } else {
 
-        	res=0;
-        	for (i = tree->begin; i < tree->end; i++) {
-        		k = plan->x_s_ids[i];
-        	    dx = plan->x_t[3 * index]-plan->x_s[3 * i];
-        	    dy = plan->x_t[3 * index + 1]-plan->x_s[3 * i + 1];
-        	    dz = plan->x_t[3 * index + 2]-plan->x_s[3 * i + 2];
-
-        	    R = dx * dx + dy * dy + dz * dz;
-
-        	    dx *= plan->t_normal[3 * k];
-        	    dy *= plan->t_normal[3 * k + 1];
-        	    dz *= plan->t_normal[3 * k + 2];
-
-        	    res += plan->charge_density[k]*(dx + dy + dz) / (R*sqrt(R));
-
-        	}
+        	res=direct_compute_potential_leaf(plan,tree,index);
 
         	return res;
         }
@@ -264,36 +244,12 @@ double compute_potential_single_target_II(fastsum_plan *plan, struct octree_node
 }
 
 
-void compute_correction(fastsum_plan *plan, double *phi, double *u1) {
-    int i, j, k, t;
-    double dx,dy,dz;
-    double R;
+void compute_analytical_potential(fastsum_plan *plan, double *phi, double *u1) {
+
+	int i, j, k;
     int total_j = 0;
-    int total_t = 0;
 
     for (i = 0; i < plan->N_target; i++) {
-
-        for (j = 0; j < plan->id_tn[i]; j++) {
-
-        	k=plan->id_t[total_t];
-
-            dx = plan->x_t[3 * i]-plan->x_s[3 * k];
-            dy = plan->x_t[3 * i + 1]-plan->x_s[3 * k + 1];
-            dz = plan->x_t[3 * i + 2]-plan->x_s[3 * k + 2];
-
-            R = dx * dx + dy * dy + dz * dz;
-
-            t = plan->x_s_ids[k];
-
-            dx *= plan->t_normal[3 * t];
-      	    dy *= plan->t_normal[3 * t + 1];
-      	    dz *= plan->t_normal[3 * t + 2];
-
-      	    phi[i] -= plan->charge_density[t]*(dx + dy + dz) / (R*sqrt(R));
-
-      	    total_t++;
-        }
-
 
         for (j = 0; j < plan->id_nn[i]; j++) {
             k = plan->id_n[total_j];
@@ -320,18 +276,22 @@ void direct_sum_I(fastsum_plan *plan, double *phi, double *u1) {
 
          for(i=0;i<plan->N_source;i++){
 
-        	 k = plan->x_s_ids[i];
-             dx = plan->x_t[3 * j]-plan->x_s[3 * i];
-             dy = plan->x_t[3 * j + 1]-plan->x_s[3 * i + 1];
-             dz = plan->x_t[3 * j + 2]-plan->x_s[3 * i + 2];
+        	 dx = plan->x_t[3 * j]-plan->x_s[3 * i];
+        	 dy = plan->x_t[3 * j + 1]-plan->x_s[3 * i + 1];
+        	 dz = plan->x_t[3 * j + 2]-plan->x_s[3 * i + 2];
 
-             R = dx * dx + dy * dy + dz * dz;
+        	 R = dx * dx + dy * dy + dz * dz;
 
-             dx *= plan->t_normal[3 * k];
-             dy *= plan->t_normal[3 * k + 1];
-             dz *= plan->t_normal[3 * k + 2];
+        	 if (R>plan->r_eps_squre){
 
-             res += plan->charge_density[k]*(dx + dy + dz) / (R*sqrt(R));
+        	 	 k = plan->x_s_ids[i];
+        	 	 dx *= plan->t_normal[3 * k];
+        	 	 dy *= plan->t_normal[3 * k + 1];
+        	 	 dz *= plan->t_normal[3 * k + 2];
+
+        	 	 res += plan->charge_density[k]*(dx + dy + dz) / (R*sqrt(R));
+
+        	 }
 
          }
 
@@ -339,14 +299,14 @@ void direct_sum_I(fastsum_plan *plan, double *phi, double *u1) {
 
     }
 
-    compute_correction(plan,phi,u1);
+    compute_analytical_potential(plan,phi,u1);
 
 }
 
 
 void fast_sum_II(fastsum_plan *plan, double *phi, double *u1) {
 
-	int j;
+	int i,j;
 
     double ***a = alloc_3d_double(plan->p + 1, plan->p + 1, plan->p + 1);
 
@@ -356,9 +316,9 @@ void fast_sum_II(fastsum_plan *plan, double *phi, double *u1) {
 
      }
 
-     free_3d_double(a, plan->p + 1);
+    compute_analytical_potential(plan,phi,u1);
 
-     compute_correction(plan,phi,u1);
+    free_3d_double(a, plan->p + 1);
 
 }
 
