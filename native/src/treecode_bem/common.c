@@ -589,6 +589,7 @@ void build_tree(fastsum_plan *plan) {
 void compute_coefficient(double ***a, double dx, double dy, double dz, int p) {
     int i, j, k;
     double R, r, r3, r5;
+    return ;
 
     double *cf = (double *) malloc((p + 1) * sizeof (double));
     double *cg = (double *) malloc((p + 1) * sizeof (double));
@@ -702,7 +703,6 @@ void compute_moment(fastsum_plan *plan, struct octree_node *tree, double ***mome
     double nx, ny, nz;
     double dxx,dyy,dzz;
 
-
     for (i = 0; i < plan->p + 1; i++) {
         for (j = 0; j < plan->p - i + 1; j++) {
             for (k = 0; k < plan->p - i - j + 1; k++) {
@@ -710,6 +710,7 @@ void compute_moment(fastsum_plan *plan, struct octree_node *tree, double ***mome
             }
         }
     }
+
 
     for (ti = tree->begin; ti < tree->end; ti++) {
 
@@ -915,12 +916,15 @@ void fastsum_finalize(fastsum_plan * plan) {
     free_tree(plan, plan->tree);
 
     free(plan->charge_density);
-    free(plan->t_normal);
-    free(plan->triangle_nodes);
     free(plan->weights);
     free(plan->x_s);
     free(plan->x_t);
     free(plan->x_s_ids);
+    free(plan->t_normal);
+    free(plan->vert_bsa);
+    free(plan->b_m);
+    free(plan->id_n);
+    free(plan->id_nn);
 
     free(plan);
 

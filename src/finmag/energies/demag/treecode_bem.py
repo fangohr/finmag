@@ -88,7 +88,6 @@ class TreecodeBEM(sb.FemBemDeMagSolver):
                 self.t_normals.append([t.x(),t.y(),t.z()])
 
         self.t_normals=np.array(self.t_normals)
-        
 
 
     #used for debug
@@ -114,12 +113,10 @@ class TreecodeBEM(sb.FemBemDeMagSolver):
         self.phi1_b = self.phi1.vector()[self.b2g_map]
         
         default_timer.start_next("Compute phi2 at boundary", self.__class__.__name__)
-
-        
         self.fast_sum.fastsum(self.phi2_b, self.phi1_b.array())
-        #self.fast_sum.directsum(self.phi2_b,self.phi1_b.array())
 
         #print 'phi2 at boundary',self.res
+        default_timer.start_next("phi2 <- Phi2", self.__class__.__name__)
         self.phi2.vector()[self.b2g_map[:]] = self.phi2_b
         
         # Compute Laplace's equation inside the domain,
@@ -144,8 +141,8 @@ if __name__ == "__main__":
     #mesh = df.BoxMesh(0, 0, 0, 100, 1, 1, 100, 1, 1)
     #expr = df.Expression(('4.0*sin(x[0])', '4*cos(x[0])','0'))
     from finmag.util.meshes import elliptic_cylinder,sphere,box
-    #mesh = elliptic_cylinder(100,150,5,4.5,directory='meshes')
-    mesh=box(0,0,0,5,5,1000,5,directory='meshes')
+    mesh = elliptic_cylinder(100,150,5,4.5,directory='meshes')
+    #mesh=box(0,0,0,5,5,1000,5,directory='meshes')
     
     Vv=df.VectorFunctionSpace(mesh, "Lagrange", 1)
     
@@ -156,14 +153,25 @@ if __name__ == "__main__":
     
     from finmag.energies.demag.solver_fk import FemBemFKSolver as FKSolver
     
+    import time
+    
     fk = FKSolver(mesh, m, Ms=Ms)
+    start=time.time()
     f1= fk.compute_field()
+    stop=time.time()
 
 
-    demag=TreecodeBEM(mesh,m,mac=0.3,p=4,num_limit=100,correct_factor=11,Ms=Ms,type_I=False)
+    demag=TreecodeBEM(mesh,m,mac=0.1,p=1,num_limit=100,correct_factor=10,Ms=Ms,type_I=True)
+    start2=time.time()
     f2=demag.compute_field()
+    stop2=time.time()
     
     f3=f1-f2
-    print f1[0:10],f2[0:10]
-    print np.average(np.abs(f3[:200]/f1[:200]))
+    #print f1[0:10],f2[0:10]
+    #print np.average(np.abs(f3[:200]/f1[:200]))
+    
+    print stop-start,stop2-start2
+    
+    from finmag.util.timings import default_timer
+    print default_timer.report(20)
     
