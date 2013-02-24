@@ -88,7 +88,6 @@ class TreecodeBEM(sb.FemBemDeMagSolver):
                 self.t_normals.append([t.x(),t.y(),t.z()])
 
         self.t_normals=np.array(self.t_normals)
-        print 'triangle num of boundary mesh:',len(self.t_normals)
         
 
 

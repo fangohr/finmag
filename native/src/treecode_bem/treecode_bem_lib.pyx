@@ -66,15 +66,14 @@ cdef class FastSum:
         
         num_target = x_t.shape[0]
         num_faces = face_nodes.shape[0]
-
+        
         init_fastsum(self._c_plan, num_target, num_faces, self.p, self.mac, self.num_limit, self.correct_factor)
         
         init_mesh(self._c_plan,&x_t[0,0],&t_normal[0,0],&face_nodes[0,0],&vert_bsa[0])
         
         compute_source_nodes_weights(self._c_plan)
        
-        build_tree(self._c_plan)
-        
+        build_tree(self._c_plan)        
         
         if self.type_I:
             bulid_indices_I(self._c_plan)

@@ -555,8 +555,9 @@ void free_tree(fastsum_plan *plan, struct octree_node *tree) {
             free_tree(plan, tree->children[i]);
         }
     } else {
-        if (tree->moment != NULL) {
-            free_3d_double(tree->moment, plan->p + 1);
+
+        if (tree->have_moment&&tree->moment != NULL) {
+            free_3d_double(tree->moment, plan->p + 1  );
         }
         free(tree);
     }
