@@ -66,14 +66,12 @@ typedef struct {
     double r_eps;
     double r_eps_factor;
     double r_eps_squre;
-    int *id_t; //indices tri
+
     int *id_n; // indices nodes
     double *b_m;//boundary matrix
-    int *id_tn;
     int *id_nn;
 
-    int total_length_n;
-    int total_length_t;
+    int total_length_n
 } fastsum_plan;
 
 void compute_coefficient(double ***a, double dx, double dy, double dz, int p);
