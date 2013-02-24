@@ -58,7 +58,7 @@ default:
 
 ci: purge test doc
 
-doc: doc-html doc-pdf doc-singlehtml
+doc: make-modules doc-html doc-pdf doc-singlehtml
 
 doc-html:
 	make -C doc generate-doc html

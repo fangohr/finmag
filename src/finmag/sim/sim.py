@@ -14,7 +14,7 @@ from finmag.sim import sim_helpers
 from finmag.energies import Exchange, Zeeman, Demag, UniaxialAnisotropy, DMI
 from finmag.integrators.llg_integrator import llg_integrator
 from finmag.integrators import scheduler, events
-
+from finmag.integrators.common import run_with_schedule
 
 ONE_DEGREE_PER_NS = 17453292.5  # in rad/s
 
@@ -83,9 +83,9 @@ class Simulation(object):
         self.vtk_savers = {}
 
         self.scheduler_shortcuts = {
-            'save_restart_data': Simulation.save_restart_data,
+            'save_restart_data': sim_helpers.save_restart_data,
             'save_ndt': sim_helpers.save_ndt,
-            'save_vtk': Simulation.save_vtk,
+            'save_vtk': self.save_vtk,
             'switch_off_H_ext': Simulation.switch_off_H_ext,
         }
 
@@ -292,7 +292,7 @@ class Simulation(object):
         exit_at = events.StopIntegrationEvent(t)
         self.scheduler._add(exit_at)
 
-        self.integrator.run_with_schedule(self.scheduler)
+        run_with_schedule(self.integrator, self.scheduler)
         log.info("Simulation has reached time t = {:.2g} s.".format(self.t))
 
         self.scheduler._remove(exit_at)
@@ -317,7 +317,7 @@ class Simulation(object):
         self.relaxation = events.RelaxationEvent(self, stopping_dmdt, dmdt_increased_counter_limit, dt_limit)
         self.scheduler._add(self.relaxation)
 
-        self.integrator.run_with_schedule(self.scheduler)
+        run_with_schedule(self.integrator, self.scheduler)
         self.integrator.reinit()
         log.info("Relaxation finished at time t = {:.2g}.".format(self.t))
 
@@ -516,13 +516,22 @@ class Simulation(object):
                 log.error(msg)
                 raise KeyError(msg)
 
-        func_args = inspect.getargspec(func).args
-        illegal_argnames = ['at', 'after', 'every', 'at_end', 'realtime']
-        for kw in illegal_argnames:
-            if kw in func_args:
-                raise ValueError(
-                    "The scheduled function must not use any of the following "
-                    "argument names: {}".format(illegal_argnames))
+        try:
+            func_args = inspect.getargspec(func).args
+        except TypeError:
+            # This can happen when running the binary distribution, since compiled
+            # functions cannot be inspected. Not a great problem, though, because
+            # this will result in an error once the scheduled function is called,
+            # even though it would be preferable to catch this early.
+            func_args = None
+
+        if func_args != None:
+            illegal_argnames = ['at', 'after', 'every', 'at_end', 'realtime']
+            for kw in illegal_argnames:
+                if kw in func_args:
+                    raise ValueError(
+                        "The scheduled function must not use any of the following "
+                        "argument names: {}".format(illegal_argnames))
 
         at = kwargs.pop('at', None)
         every = kwargs.pop('every', None)
