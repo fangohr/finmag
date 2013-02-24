@@ -83,10 +83,10 @@ class Simulation(object):
         self.vtk_savers = {}
 
         self.scheduler_shortcuts = {
-            'save_restart_data': self.save_restart_data,
+            'save_restart_data': sim_helpers.save_restart_data,
             'save_ndt': sim_helpers.save_ndt,
             'save_vtk': self.save_vtk,
-            'switch_off_H_ext': self.switch_off_H_ext,
+            'switch_off_H_ext': Simulation.switch_off_H_ext,
         }
 
         # At the moment, we can only have cvode as the driver, and thus do
