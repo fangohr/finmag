@@ -589,7 +589,6 @@ void build_tree(fastsum_plan *plan) {
 void compute_coefficient(double ***a, double dx, double dy, double dz, int p) {
     int i, j, k;
     double R, r, r3, r5;
-    return ;
 
     double *cf = (double *) malloc((p + 1) * sizeof (double));
     double *cg = (double *) malloc((p + 1) * sizeof (double));
