@@ -14,7 +14,7 @@ from finmag.sim import sim_helpers
 from finmag.energies import Exchange, Zeeman, Demag, UniaxialAnisotropy, DMI
 from finmag.integrators.llg_integrator import llg_integrator
 from finmag.integrators import scheduler, events
-
+from finmag.integrators.common import run_with_schedule
 
 ONE_DEGREE_PER_NS = 17453292.5  # in rad/s
 
@@ -292,7 +292,7 @@ class Simulation(object):
         exit_at = events.StopIntegrationEvent(t)
         self.scheduler._add(exit_at)
 
-        self.integrator.run_with_schedule(self.scheduler)
+        run_with_schedule(self.integrator, self.scheduler)
         log.info("Simulation has reached time t = {:.2g} s.".format(self.t))
 
         self.scheduler._remove(exit_at)
@@ -317,7 +317,7 @@ class Simulation(object):
         self.relaxation = events.RelaxationEvent(self, stopping_dmdt, dmdt_increased_counter_limit, dt_limit)
         self.scheduler._add(self.relaxation)
 
-        self.integrator.run_with_schedule(self.scheduler)
+        run_with_schedule(self.integrator, self.scheduler)
         self.integrator.reinit()
         log.info("Relaxation finished at time t = {:.2g}.".format(self.t))
 
