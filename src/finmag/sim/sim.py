@@ -516,13 +516,22 @@ class Simulation(object):
                 log.error(msg)
                 raise KeyError(msg)
 
-        func_args = inspect.getargspec(func).args
-        illegal_argnames = ['at', 'after', 'every', 'at_end', 'realtime']
-        for kw in illegal_argnames:
-            if kw in func_args:
-                raise ValueError(
-                    "The scheduled function must not use any of the following "
-                    "argument names: {}".format(illegal_argnames))
+        try:
+            func_args = inspect.getargspec(func).args
+        except TypeError:
+            # This can happen when running the binary distribution, since compiled
+            # functions cannot be inspected. Not a great problem, though, because
+            # this will result in an error once the scheduled function is called,
+            # even though it would be preferable to catch this early.
+            func_args = None
+
+        if func_args != None:
+            illegal_argnames = ['at', 'after', 'every', 'at_end', 'realtime']
+            for kw in illegal_argnames:
+                if kw in func_args:
+                    raise ValueError(
+                        "The scheduled function must not use any of the following "
+                        "argument names: {}".format(illegal_argnames))
 
         at = kwargs.pop('at', None)
         every = kwargs.pop('every', None)
