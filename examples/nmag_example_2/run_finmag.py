@@ -2,10 +2,11 @@ from finmag import Simulation
 from finmag.integrators.llg_integrator import llg_integrator
 from finmag.energies import Exchange, Demag
 from finmag.util.timings import default_timer
+from finmag.util.meshes import from_geofile
 import dolfin as df
 
 def run_simulation():
-    mesh = df.Mesh("bar.xml.gz")
+    mesh = from_geofile("bar.geo")
 
     sim = Simulation(mesh, Ms=0.86e6, unit_length=1e-9, name="finmag_bar")
     sim.set_m((1, 0, 1))
