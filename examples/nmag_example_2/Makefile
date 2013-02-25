@@ -1,4 +1,4 @@
-plots: agreement_averages.png
+all: agreement_averages.png
 
 agreement_averages.png: averages_ref.txt averages.txt
 	gnuplot plot.gnu
@@ -6,7 +6,7 @@ agreement_averages.png: averages_ref.txt averages.txt
 clean:
 	rm -f averages_ref.txt averages.txt finmag_bar.log run_nmag_log.log bar_mat.xml bar.xml.gz agreement_averages.png
 
-.PHONY: plot clean
+.PHONY: all clean
 
 .INTERMEDIATE: nmag_bar_dat.ndt finmag_bar.ndt bar.nmesh.h5
 
