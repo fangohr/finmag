@@ -163,6 +163,16 @@ class Simulation(object):
         log.debug("Adding interaction %s to simulation '%s'" % (str(interaction),self.name))
         interaction.setup(self.S3, self.llg._m, self.llg._Ms_dg, self.unit_length)
         self.llg.effective_field.add(interaction, with_time_update)
+        
+        if interaction.__class__.__name__=='Zeeman':
+            self.zeeman_interation=interaction
+            self.tablewriter.entities['zeeman']={
+                        'unit': '<A/m>',
+                        'get': lambda sim: sim.zeeman_interation.average_field(),
+                        'header': ('h_x', 'h_y', 'h_z')}
+        
+            self.tablewriter.update_entity_order()
+        
 
     def total_energy(self):
         """
