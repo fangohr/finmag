@@ -200,7 +200,11 @@ for i,maxh in enumerate(meshsizes):
     nmag_meshfile = geofilename + ".nmesh.h5"
     print "Will need meshfile '{}'. Calling makefile now.".format(nmag_meshfile)
 
-    output = subprocess.check_output(["make", nmag_meshfile], stderr=subprocess.STDOUT)
+    try:
+        output = subprocess.check_output(["make", nmag_meshfile], stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:
+        print "Failed with returncode {}, output:\n{}".format(e.returncode, e.output)
+        raise
     print output
 
     files = os.listdir(cwd)
