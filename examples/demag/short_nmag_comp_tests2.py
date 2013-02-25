@@ -218,7 +218,7 @@ for i,maxh in enumerate(meshsizes):
     print "\nWill now run nmag."
     starttime = time.time()
     try:
-        print subprocess.check_output(["make", nmagoutput, "MESH={}".format(nmag_meshfile)], stderr=subprocess.STDOUT)
+        print subprocess.check_output(["make", os.path.split(nmagoutput)[1], "MESH={}".format(nmag_meshfile)], stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:
         print "Failed with returncode {}, output:\n{}".format(e.returncode, e.output)
         with open("run_nmag_log.log", "r") as f:
