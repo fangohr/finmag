@@ -1,5 +1,8 @@
 ##import io
 import os
+import sys
+import time
+import subprocess
 import numpy as np
 import dolfin as df
 from finmag.util.meshes import from_geofile
@@ -7,10 +10,8 @@ from finmag.energies.demag.solver_fk import FemBemFKSolver
 from finmag.energies.demag.solver_gcr import FemBemGCRSolver
 import pylab as p
 import finmag.energies.demag.solver_base as sb
-import sys, os, commands, subprocess,time
 from finmag.sim.llg import LLG
 import copy
-import tee
 
 import finmag
 is_dolfin_1_1 = (finmag.util.versions.get_version_dolfin() == "1.1.0")
@@ -196,50 +197,25 @@ for i,maxh in enumerate(meshsizes):
     files = os.listdir(cwd)
     print "Files in this directory initally:\n{}".format(files)
 
-    run_netgen = " ".join(('netgen', '-geofile={}'.format(geofile),
-        '-meshfiletype="Neutral Format"', '-meshfile={}.neutral'.format(geofilename),
-        '-batchmode'))
-    print "Will run command: {}.".format(run_netgen)
-    #try:
-    #    output = subprocess.check_output(run_netgen, shell=True)
-    #    print "Output:\n{}.".format(output)
-    #except subprocess.CalledProcessError as e:
-    #    print "Failed."
-    #    print "Returncode: {}.".format(e.returncode)
-    #    print "Output:\n{}.".format(e.output)
-    #    print "We will just go on, because this is likely netgen horsing around again."
-    status, output_stdouterr = tee.system3(run_netgen)
-    print "[DDD] Exit status: {}, output:\n {}".format(status, output_stdouterr)
-    print "======================================================"
+    nmag_meshfile = geofilename + ".nmesh.h5"
+    print "Will need meshfile '{}'. Calling makefile now.".format(nmag_meshfile)
 
-    import_mesh = " ".join(('nmeshimport', '--netgen',
-        geofilename + '.neutral', geofilename + '.nmesh.h5'))
-    print "[DDD] geofilename: {}".format(geofilename)
-    print "Will run command: {}.".format(import_mesh)
-    # output = subprocess.check_output(import_mesh, shell=True, stderr=subprocess.STDOUT)
-    # print "Ran, and output was:\n{}.".format(output)
-    #tee.system2(import_mesh, logger='/tmp/output_import_mesh.txt', stdout=True)
-    status, output_stdouterr = tee.system3(import_mesh)
-    print "[DDD] Exit status: {}, output:\n {}".format(status, output_stdouterr)
-    print "======================================================"
-
-    print "Checking for nmag... "
-    output = subprocess.check_output("which nsim", shell=True)
-    print ".. found in {}.".format(output)
+    output = subprocess.check_output(["make", nmag_meshfile], stderr=subprocess.STDOUT)
+    print output
 
     files = os.listdir(cwd)
-    print "Files in this directory:\n{}".format(files)
+    print "Files in this directory after building the mesh:\n{}".format(files)
+
+    if os.path.isfile(nmag_meshfile):
+        print "The meshfile '{}' has successfully been generated.".format(nmag_meshfile)
+    else:
+        print "The meshfile '{}' still doesn't exist. Aborting.".format(nmag_meshfile)
+        sys.exit(1)
 
     print "\nWill now run nmag."
-
     starttime = time.time()
-    run_nmag = " ".join(['nsim', 'run_nmag.py', '--clean', geofilename + '.nmesh.h5', 'nmag_data.dat'])
-    #output = subprocess.check_output(run_nmag, shell=True)
-    status, output_stdouterr = tee.system3(run_nmag)
+    output = subprocess.check_output(["make", nmagoutput, "MESH={}".format(nmag_meshfile)], stderr=subprocess.STDOUT)
     endtime = time.time()
-    #print "Output of call to nmag:\n{}.".format(output)
-    print "[DDD] Exit status: {}, output:\n {}".format(status, output_stdouterr)
-    print "======================================================"
 
     files = os.listdir(cwd)
     print "Files in the directory after running nmag:\n{}".format(files)
@@ -251,7 +227,6 @@ for i,maxh in enumerate(meshsizes):
     runtimes["solve"]["nmag"].append(runtime - bemtime)
 
     print "\n\n--- critical nmag code above ---\n\n"
-
 
 ############################################
 #Useful Plot xvalues
