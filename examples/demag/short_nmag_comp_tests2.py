@@ -201,7 +201,7 @@ for i,maxh in enumerate(meshsizes):
     print "Will need meshfile '{}'. Calling makefile now.".format(nmag_meshfile)
 
     try:
-        print subprocess.check_output(["make", os.path.split(nmag_meshfile)[1]], stderr=subprocess.STDOUT)
+        print subprocess.check_output(["make", os.path.split(nmag_meshfile)[1]], stderr=subprocess.STDOUT, shell=True)
     except subprocess.CalledProcessError as e:
         print "Failed with returncode {}, output:\n{}".format(e.returncode, e.output)
         raise
