@@ -201,11 +201,10 @@ for i,maxh in enumerate(meshsizes):
     print "Will need meshfile '{}'. Calling makefile now.".format(nmag_meshfile)
 
     try:
-        output = subprocess.check_output(["make", nmag_meshfile], stderr=subprocess.STDOUT)
+        print subprocess.check_output(["make", nmag_meshfile], stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:
         print "Failed with returncode {}, output:\n{}".format(e.returncode, e.output)
         raise
-    print output
 
     files = os.listdir(cwd)
     print "Files in this directory after building the mesh:\n{}".format(files)
@@ -218,7 +217,11 @@ for i,maxh in enumerate(meshsizes):
 
     print "\nWill now run nmag."
     starttime = time.time()
-    output = subprocess.check_output(["make", nmagoutput, "MESH={}".format(nmag_meshfile)], stderr=subprocess.STDOUT)
+    try:
+        print subprocess.check_output(["make", nmagoutput, "MESH={}".format(nmag_meshfile)], stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:
+        print "Failed with returncode {}, output:\n{}".format(e.returncode, e.output)
+        raise
     endtime = time.time()
 
     files = os.listdir(cwd)
