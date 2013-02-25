@@ -200,14 +200,17 @@ for i,maxh in enumerate(meshsizes):
         '-meshfiletype="Neutral Format"', '-meshfile={}.neutral'.format(geofilename),
         '-batchmode'))
     print "Will run command: {}.".format(run_netgen)
-    try:
-        output = subprocess.check_output(run_netgen, shell=True)
-        print "Output:\n{}.".format(output)
-    except subprocess.CalledProcessError as e:
-        print "Failed."
-        print "Returncode: {}.".format(e.returncode)
-        print "Output:\n{}.".format(e.output)
-        print "We will just go on, because this is likely netgen horsing around again."
+    #try:
+    #    output = subprocess.check_output(run_netgen, shell=True)
+    #    print "Output:\n{}.".format(output)
+    #except subprocess.CalledProcessError as e:
+    #    print "Failed."
+    #    print "Returncode: {}.".format(e.returncode)
+    #    print "Output:\n{}.".format(e.output)
+    #    print "We will just go on, because this is likely netgen horsing around again."
+    status, output_stdouterr = tee.system3(run_netgen)
+    print "[DDD] Exit status: {}, output:\n {}".format(status, output_stdouterr)
+    print "======================================================"
 
     import_mesh = " ".join(('nmeshimport', '--netgen',
         geofilename + '.neutral', geofilename + '.nmesh.h5'))
@@ -215,7 +218,10 @@ for i,maxh in enumerate(meshsizes):
     print "Will run command: {}.".format(import_mesh)
     # output = subprocess.check_output(import_mesh, shell=True, stderr=subprocess.STDOUT)
     # print "Ran, and output was:\n{}.".format(output)
-    tee.system2(import_mesh, logger='/tmp/output_import_mesh.txt', stdout=True)
+    #tee.system2(import_mesh, logger='/tmp/output_import_mesh.txt', stdout=True)
+    status, output_stdouterr = tee.system3(import_mesh)
+    print "[DDD] Exit status: {}, output:\n {}".format(status, output_stdouterr)
+    print "======================================================"
 
     print "Checking for nmag... "
     output = subprocess.check_output("which nsim", shell=True)
@@ -228,9 +234,12 @@ for i,maxh in enumerate(meshsizes):
 
     starttime = time.time()
     run_nmag = " ".join(['nsim', 'run_nmag.py', '--clean', geofilename + '.nmesh.h5', 'nmag_data.dat'])
-    output = subprocess.check_output(run_nmag, shell=True)
+    #output = subprocess.check_output(run_nmag, shell=True)
+    status, output_stdouterr = tee.system3(run_nmag)
     endtime = time.time()
-    print "Output of call to nmag:\n{}.".format(output)
+    #print "Output of call to nmag:\n{}.".format(output)
+    print "[DDD] Exit status: {}, output:\n {}".format(status, output_stdouterr)
+    print "======================================================"
 
     files = os.listdir(cwd)
     print "Files in the directory after running nmag:\n{}".format(files)
