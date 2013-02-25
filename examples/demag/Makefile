@@ -12,7 +12,11 @@ force:
 
 %.nmesh.h5: %.neutral
 	@echo "\n--- DEBUG: Will run nmeshimport ---\n"
+	echo $PATH
+	echo `which nmeshimport`
+	du $<
 	nmeshimport --netgen $< $@
+	/var/lib/jenkins/nmag-0.2.1/bin/nmeshimport --netgen $< $@
 	@echo "\n--- DEBUG: Have run nmeshimport, will tell you file size ---\n"
 	du $@
 
