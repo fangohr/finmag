@@ -1,31 +1,37 @@
-all:
-	make averages.txt
-	make averages_ref.txt
-	echo "Results plotted in comparison.png"
+plots: agreement_averages.png
 
-bar.nmesh.h5:
-	- netgen -geofile=bar.geo -meshfiletype="Neutral Format" -meshfile=bar.neutral -batchmode
-	nmeshimport --netgen bar.neutral bar.nmesh.h5
-	rm bar.neutral
-
-bar.xml.gz:
-	- netgen -geofile=bar.geo -meshfiletype="DIFFPACK Format" -meshfile=bar.grid -batchmode
-	dolfin-convert bar.grid bar.xml
-	gzip -f bar.xml
-	rm bar.grid bar_bi.xml bar_mat.xml bar.xml.bak
-
-averages_ref.txt: bar.nmesh.h5
-	nsim run_nmag.py --clean
-	ncol nmag_bar time m_Py_0 m_Py_1 m_Py_2 > averages_ref.txt
-
-averages.txt: bar.xml.gz
-	python run_finmag.py
-	ncol finmag_bar.ndt time m_x m_y m_z > averages.txt
-
-plot: averages_ref.txt averages.txt
+agreement_averages.png: averages_ref.txt averages.txt
 	gnuplot plot.gnu
 
 clean:
-	rm nmag_bar_dat.ndt averages_ref.txt finmag_bar.ndt averages.txt
+	rm -f averages_ref.txt averages.txt finmag_bar.log run_nmag_log.log bar_mat.xml bar.xml.gz agreement_averages.png
 
 .PHONY: plot clean
+
+.INTERMEDIATE: nmag_bar_dat.ndt finmag_bar.ndt bar.nmesh.h5
+
+#
+# Rules to create nmag's data.
+#
+
+averages_ref.txt: nmag_bar_dat.ndt
+	ncol nmag_bar time m_Py_0 m_Py_1 m_Py_2 > averages_ref.txt
+
+nmag_bar_dat.ndt: bar.nmesh.h5
+	nsim run_nmag.py --clean
+
+%.nmesh.h5: %.neutral
+	nmeshimport --netgen $< $@
+
+%.neutral: %.geo
+	- netgen -geofile=$< -meshfiletype="Neutral Format" -meshfile=$@ -batchmode
+
+#
+# Rules to create finmag's results.
+#
+
+averages.txt: finmag_bar.ndt
+	ncol finmag_bar.ndt time m_x m_y m_z > averages.txt
+
+finmag_bar.ndt:
+	python run_finmag.py
