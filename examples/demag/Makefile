@@ -7,12 +7,14 @@ force:
 %.neutral: %.geo
 	@echo "\n--- DEBUG: Will run netgen ---\n"
 	- netgen -geofile=$< -meshfiletype="Neutral Format" -meshfile=$@ -batchmode
-	@echo "\n--- DEBUG: Have run netgen ---\n"
+	@echo "\n--- DEBUG: Have run netgen, will tell you file size ---\n"
+	du $@
 
 %.nmesh.h5: %.neutral
 	@echo "\n--- DEBUG: Will run nmeshimport ---\n"
 	nmeshimport --netgen $< $@
-	@echo "\n--- DEBUG: Have run nmeshimport ---\n"
+	@echo "\n--- DEBUG: Have run nmeshimport, will tell you file size ---\n"
+	du $@
 
 nmag_data.dat: $(MESH)
 	@echo "\n--- DEBUG: Will run nmag ---\n"
