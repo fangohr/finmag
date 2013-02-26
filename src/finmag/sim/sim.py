@@ -350,7 +350,7 @@ class Simulation(object):
 
         self.llg._m.vector()[:] = data['m']
 
-        self.reset_time(t0 or data["simtime"])
+        self.reset_time(data["simtime"] if (t0 == None) else t0)
 
         log.info("Reloaded and set m (<m>=%s) and time=%s from %s." % \
             (self.llg.m_average, self.t, filename))
