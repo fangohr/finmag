@@ -276,6 +276,10 @@ class TestSimulation(object):
         assert(np.allclose(a[:, 1:], b[:, 1:]))
         assert(np.allclose(sim1.m, sim2.m, atol=1e-6))
 
+        # Check that resetting the time to zero works (this used to not work due to a bug).
+        sim1.restart('barmini.npz', t0=0.0)
+        assert(sim1.t == 0.0)
+
     def test_reset_time(self, tmpdir):
         """
         Integrate a simple macrospin simulation for a bit, then reset
