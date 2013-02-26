@@ -83,7 +83,7 @@ def FFT_m(filename, t_step, t_ini=0, subtract_values=None):
 
 
 def plot_FFT_m(filename, t_step, t_ini=0.0, subtract_values=None,
-               components="xyz", figsize=None):
+               components="xyz", xlim=None, figsize=None):
     """
     Plot the frequency spectrum of the components of the magnetisation m.
 
@@ -111,6 +111,7 @@ def plot_FFT_m(filename, t_step, t_ini=0.0, subtract_values=None,
     fmin = int(min(fft_freq) / 1e9)
     fmax = int(max(fft_freq) / 1e9)
     ax.set_xticks(np.arange(fmin, fmax))
+    ax.set_xlim(xlim)
     plt.legend()
     ax.grid()
 
