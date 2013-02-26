@@ -46,7 +46,7 @@ def setup_module(module=None):
     global third_node
     third_node = []
 
-    while t <= t1: 
+    while t <= t1:
         mx, my, mz = sim.llg.m_average
         averages.append([t, mx, my, mz])
         av_f.write(str(t) + " " + str(mx) + " " + str(my) + " " + str(mz) + "\n")
@@ -63,7 +63,7 @@ def setup_module(module=None):
     tn_f.close()
 
 def test_angles():
-    TOLERANCE = 2e-8
+    TOLERANCE = 5e-8
 
     m = h.vectors(sim.m)
     angles = np.array([h.angle(m[i], m[i+1]) for i in xrange(len(m)-1)])
@@ -132,7 +132,7 @@ def test_m_cross_H():
     """
     compares m x H_exc at the beginning of the simulation.
 
-    """ 
+    """
     REL_TOLERANCE = 8e-8
 
     m_ref = np.genfromtxt(os.path.join(MODULE_DIR, "m_t0_ref.txt"))
@@ -150,7 +150,7 @@ def test_m_cross_H():
     diff = np.abs(m_cross_H_ref - m_cross_H_computed)
     max_norm = max([h.norm(v) for v in m_cross_H_ref])
     rel_diff = diff/max_norm
-  
+
     print "test_m_cross_H, max. relative difference per axis:"
     print np.nanmax(rel_diff, axis=0)
     assert np.max(rel_diff) < REL_TOLERANCE

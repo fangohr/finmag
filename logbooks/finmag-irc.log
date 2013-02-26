@@ -4772,3 +4772,64 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-02-20 12:14:27 mb8g11: I see.
 2013-02-20 14:39:36 mb8g11: Dmitri, are you connect via telnet? ;)
 2013-02-20 20:41:36 mb8g11: Good night.
+2013-02-21 09:19:55 max_albert: Good morning,
+2013-02-21 09:37:31 fangohr-adium: Hey, good morning :)
+2013-02-21 13:49:08 fangohr: Hi Max, Marijan, (Weiwei),
+2013-02-21 13:49:22 mb4e10: Hi
+2013-02-21 13:49:31 fangohr: for our meeting at 14:00 regarding normal modes, would it make sense if I came to your area? We could then look at the stuff that you have been working on more easily.
+2013-02-21 13:50:04 mb4e10: sure
+2013-02-21 13:50:52 fangohr: Okay, I'll come over for 14:00 then.
+2013-02-21 15:40:18 mb8g11: Just an addendum to the tutorial example with the fake magnetisation data: There are two vertical lines in the Fourier transform plot.
+2013-02-21 15:41:04 mb8g11: That's the same issue than in the example before: No way to distinguish the two, since the two input functions are not orthogonal.
+2013-02-21 15:41:33 mb8g11: But they correspond in fact to only one wavelength.
+2013-02-21 15:43:13 mb8g11: In the example before, I could eliminate one, but not here.
+2013-02-22 09:47:49 mb4e10: Good morning all. Is it possible to change gyromagnetic ratio gamma in finmag?
+2013-02-22 09:52:41 fangohr-adium: It must be possible. Why would you want to do this?
+2013-02-22 09:53:34 mb4e10: In Greg's standard model, gamma is specified. I am not sure if this is important.
+2013-02-22 09:56:40 fangohr-adium: I'd hope we use the same value as he cites. Probably in the LLG C++ code.
+2013-02-22 09:59:33 mb4e10: ok, I'll try to change that.
+2013-02-22 16:21:45 fangohr-adium: Hi, have you done the octopus merge yet? Is that what we are building now?
+2013-02-22 17:14:55 mb8g11_: Can you install https://wiki.jenkins-ci.org/display/JENKINS/SLOCCount+Plugin ?
+2013-02-22 17:16:18 mb8g11_: And maybe https://wiki.jenkins-ci.org/display/JENKINS/AnsiColor+Plugin
+2013-02-22 17:18:19 fangohr-adium: Wohooo — fast tests has passed :)
+2013-02-22 17:18:24 fangohr-adium: We start to be very much in business now.
+2013-02-22 17:18:53 fangohr-adium: Good work Max, MA.
+2013-02-22 17:19:26 mb8g11_: Max did most of the work, including the merge.
+2013-02-22 17:19:56 fangohr-adium: Okay: Good work, Max.
+2013-02-22 17:19:57 fangohr-adium: ;)
+2013-02-22 17:23:37 mb8g11_: Installed them myself, jenkins will restart, sorry.
+2013-02-22 20:09:09 mb8g11_: There's a new tab on the Jenkins Dashboard on aleph0 called "FinMag Pipeline". It shows the dependencies of the jobs we have defined.
+2013-02-22 20:09:53 mb8g11_: Summary: finmag_fast_tests will poll bitbucket every few minutes. If finmag_fast_tests builds, then it trigger finmag_slow_tests and finmag_reproduce_ipython_notebooks.
+2013-02-22 20:10:11 mb8g11_: If finmag_slow_tests builds that triggers finmag_binary_build and finmag_sphinx_documentation.
+2013-02-25 09:12:50 fangohr-adium: Good Morning ,Marijan and Mar
+2013-02-25 09:12:54 fangohr-adium: vinbot.
+2013-02-25 09:25:49 max_albert: Good morning.
+2013-02-25 09:32:43 fangohr-adium: Good Morning, Max.
+2013-02-25 09:32:55 max_albert: Hello!
+2013-02-25 09:36:46 fangohr-adium: Hi Max, many thanks for your continued efforts to make the testing work.
+2013-02-25 09:36:53 fangohr-adium: This Nmag test seems a real beast.
+2013-02-25 09:37:16 max_albert: Yes, indeed.
+2013-02-25 09:37:24 max_albert: I still have no idea whatsoever what could be causing it.
+2013-02-25 09:37:46 max_albert: It drove me and Marc-Antonio nearly mad on Friday. ;-)
+2013-02-25 09:37:50 fangohr-adium: Err, yes.
+2013-02-25 09:38:18 fangohr-adium: Have we got any other nmag tests working?
+2013-02-25 09:39:02 max_albert: Good question. I don't know offhand, but I guess that quite a few of the regular py.tests should be using it. Fortunately, all of those pass now.
+2013-02-25 09:41:19 fangohr-adium: So maybe we can check what is different with them? Or take one of those and modify it to do what we want with this one?
+2013-02-25 09:41:30 fangohr-adium: Or we could give in and just produce the nmag output and store it in a file, and compare against it.
+2013-02-25 09:42:37 max_albert: Yes, that's true. Although it's really unsettling that something just doesn't seem to work, and there is no way to even get any debugging output.
+2013-02-25 09:42:51 fangohr-adium: I agree.
+2013-02-25 09:43:39 fangohr-adium: Or could we run the nmag commands and redirect all output (stderr and stdout) into files, and then analyise those? That would at least give us more post-runtime debug capability.
+2013-02-25 09:44:48 max_albert: Yes, I tried that. It does indeed produce *some* output (as opposed to none when we use the Python subprocess module, even with stderr redirected to stdout). But it is very short and doesn't give any indication of what might have been going wrong.
+2013-02-25 09:45:35 max_albert: I'll double check that at some point, though, because all the debugging back and forth may have led to some errors, too.
+2013-02-25 09:47:58 fangohr-adium: What we don't understand is how the jenkins runtime environment differst from running the same code as jenkins from the prompt, correct? If we got this sorted (although I don't know how), we would be in a much better position to test.
+2013-02-25 09:49:28 max_albert: I agree. I also observed differences in the environment variables a while ago (which also led to subtle and very hard to debug errors).
+2013-02-25 09:49:33 max_albert: E.g., Jenkins doesn't seem to source /etc/profile or ~/.bash_profile by default.
+2013-02-25 09:50:02 max_albert: So I wouldn't be surprised if this nmag error also has something to do with differences in the test runtime environment.
+2013-02-25 09:50:24 max_albert: I'm actually just running the doc build as user Jenkins to see if that works (I think I tried before and it did, but just to be sure).
+2013-02-25 09:51:17 max_albert: On a different note, have you heard anything from Pete yet?
+2013-02-25 09:53:50 fangohr-adium: Yes, he is in town. I expect him in the next 20 minutes or so. I'll let you know when he is here.
+2013-02-25 09:54:08 fangohr-adium: Can you entertain him 11:00 to 12:00? Could get him seated in your area, etc.
+2013-02-25 09:54:47 max_albert: Ok, great. I was just wondering since I hadn't heard anything and he is usually very good with being in touch... ;-)
+2013-02-25 09:54:57 max_albert: Yes, am happy to entertain him.
+2013-02-25 12:03:45 fangohr-adium: Max, am running slightly late. Will come and fetch you.
+2013-02-25 12:07:00 mb8g11_: Any news about netgen 5.0 on aleph0?
