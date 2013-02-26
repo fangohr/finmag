@@ -4,7 +4,7 @@ from finmag.util.helpers import probe
 import numpy as np
 import matplotlib.pyplot as plt
 
-def FFT_m(filename, t_step, t_ini=0):
+def FFT_m(filename, t_step, t_ini=0, subtract_values=None):
     """
     Given a data file (e.g. in .ndt format), compute and return the Fourier
     transforms of the x, y and z components of the magnetisation m. The
@@ -25,10 +25,38 @@ def FFT_m(filename, t_step, t_ini=0):
 
         Initial time for the resampled data (all input data before
         this time is discarded). Defaults to zero.
+
+    subtract_values:  None | 3-tuple of floats | 'first' | 'average'
+
+        If specified, the given values are subtracted from the data
+        before computing the Fourier transform. This can be used to
+        avoid potentially large peaks at zero frequency. If a 3-tuple
+        is given then it is interpreted as the three values to
+        subtract from mx, my and mz, respectively. If 'first' or
+        'average' is given, the first/average values of mx, my, mz are
+        determined and subtracted.
+
     """
     # Load the data; extract time steps and magnetisation
     data = np.loadtxt(filename)
     ts, mx, my, mz = data.transpose()
+
+    if subtract_values == 'first':
+        mx -= mx[0]
+        my -= my[0]
+        mz -= mz[0]
+    elif subtract_values == 'average':
+        mx -= mx.mean()
+        my -= my.mean()
+        mz -= mz.mean()
+    elif subtract_values != None:
+        try:
+            (sx, sy, sz) = subtract_values
+            mx -= sx
+            my -= sy
+            mz -= sz
+        except:
+            raise ValueError("Unsupported value for 'subtract_values': {}".format(subtract_values))
 
     f_sample = 1/t_step  # sampling frequency
     t_max = ts[-1]
@@ -54,12 +82,13 @@ def FFT_m(filename, t_step, t_ini=0):
     return fft_freq, fft_mx, fft_my, fft_mz
 
 
-def plot_FFT_m(filename, t_step, t_ini=0.0, components="xyz", figsize=None):
+def plot_FFT_m(filename, t_step, t_ini=0.0, subtract_values=None,
+               components="xyz", figsize=None):
     """
     Plot the frequency spectrum of the components of the magnetisation m.
 
-    The arguemtns `t_ini` and `t_step` have the same meaning as in the
-    FFT_m function.
+    The arguments `t_ini`, `t_step` and `subtract_values` have the
+    same meaning as in the FFT_m function.
 
     `components` can be a string or a list containing the components
     to plot. Default: 'xyz'.
@@ -70,7 +99,7 @@ def plot_FFT_m(filename, t_step, t_ini=0.0, components="xyz", figsize=None):
         raise ValueError("Components must only contain 'x', 'y' and 'z'. "
                          "Got: {}".format(components))
 
-    fft_freq, fft_mx, fft_my, fft_mz = FFT_m(filename, t_step, t_ini)
+    fft_freq, fft_mx, fft_my, fft_mz = FFT_m(filename, t_step, t_ini, subtract_values)
     fft_freq_GHz = fft_freq / 1e9
     fig = plt.figure(figsize=figsize)
     ax = fig.gca()
@@ -122,7 +151,11 @@ def fft_at_probing_points(dolfin_funcs, pts):
 
     """
     vals_probed = np.ma.masked_array([probe(f, pts) for f in dolfin_funcs])
-    vals_fft = np.ma.masked_array(np.fft.fft(vals_probed, axis=0),
-                                  mask=np.ma.getmask(vals_probed))
+    #vals_fft = np.ma.masked_array(np.fft.fft(vals_probed, axis=0),
+    #                              mask=np.ma.getmask(vals_probed))
+    #freqs = np.fft.fftfreq(
+    n = (len(dolfin_funcs) // 2) + 1
+    vals_fft = np.ma.masked_array(np.fft.rfft(vals_probed, axis=0),
+                                  mask=np.ma.getmask(vals_probed[:n, ...]))
 
     return vals_fft
