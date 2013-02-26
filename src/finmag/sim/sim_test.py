@@ -274,7 +274,7 @@ class TestSimulation(object):
         # the same and that we end up with the same magnetisation.
         a = np.concatenate([a[:10, :], a[11:, :]])  # delete the duplicate line due to the restart
         assert(np.allclose(a[:, 1:], b[:, 1:]))
-        assert(np.allclose(sim1.m, sim2.m))
+        assert(np.allclose(sim1.m, sim2.m, atol=1e-6))
 
     def test_reset_time(self, tmpdir):
         """
@@ -326,7 +326,7 @@ class TestSimulation(object):
         a = np.concatenate([a[:5, :], a[6:, :]])
 
         # Check that the magnetisation dynamics of sim1 and sim2 are the same.
-        assert(np.allclose(a[:, 1:], b[:, 1:]))
+        assert(np.allclose(a[:, 1:], b[:, 1:], atol=1e-4, rtol=1e-8))
 
     def test_save_vtk(self, tmpdir):
         os.chdir(str(tmpdir))
