@@ -4850,3 +4850,36 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-02-26 12:14:32 fangohr-adium: I'll come over.
 2013-02-26 12:16:17 max_albert: Sure, I'm in.
 2013-02-26 12:16:35 max_albert: Pete says he is too.
+2013-02-27 09:01:08 mb8g11: Good morning!
+2013-02-27 09:01:15 fangohr-adium: Good Morning all.
+2013-02-27 09:04:42 max_albert: Good morning.
+2013-02-27 09:08:12 fangohr-adium: Hi Max, Marc-Antonio, Marijan (?), have you got a preference for where we meet today 10:00 to 11:30? If you have results on your screens, it may be easier if I come over to your desks. Is that right?
+2013-02-27 09:08:49 mb8g11: I was just going to compile a few slides, but that's fine as well.
+2013-02-27 09:08:53 max_albert: Possibly yes.
+2013-02-27 09:09:39 fangohr-adium: Okay, I'll come over. The only thing we must not do during the meeting is to try to edit code and run it again — that will be eating time while most people do nothing. I can monitor that, though ;)
+2013-02-27 15:03:14 fangohr-adium: Hi all, could somebody let Dmitri know that his mailbox is full; -) My email to him is not coming through...
+2013-02-27 15:35:13 fangohr-adium: Marc-Antonio, are you out there? Could you let Dmitri know that I have put the text we worked on on eta:/tmp/draft.org, please?
+2013-02-27 15:36:01 fangohr-adium: Hi Dmitri, I'll just repeat my last message so MA does not need to tell you:
+2013-02-27 15:36:18 fangohr-adium: I have put the text we worked on on eta:/tmp/draft.org. (and your inbox seems full) ;-)
+2013-02-27 15:37:49 D_Chernyshenko: Thanks, Max has told me now too. I'm trying to sort out the inbox; somehow the act of deleting messages from the Inbox made it overflow...
+2013-02-27 15:38:51 mb8g11: Have you configured it to mark items as deleted, or move them to the trash?
+2013-02-27 15:39:17 fangohr-adium: I don't want to appear as biased, but it is a MS exchange server. Anything could happen.
+2013-02-27 15:39:48 mb8g11: Chuckles go around in the office..
+2013-02-27 15:40:36 D_Chernyshenko: I'm not exactly sure. The web interface could not sort messages by size, so what I did was delete messages from Inbox using Thunderbird, and then from the Deleted folder using the web interface.
+2013-02-27 15:40:41 D_Chernyshenko: Clearly that was too complicated
+2013-02-27 15:41:04 fangohr-adium: ;-)
+2013-02-27 15:41:15 mb8g11: For future reference: print demag.demag.laplace_solver.parameters.to_dict() to read the demag parameters/tolerances. And demag.demag.laplace_solver.parameters["absolute_tolerance"] = X.
+2013-02-27 15:41:45 max_albert: Marc-Antonio: is this in Finmag or Nmag?
+2013-02-27 15:42:24 mb8g11: finmag. Have looked into the Simulation object from nmag, but couldn't find the relevant info. Just how you can set it (keyword argument ksp_tolerances).
+2013-02-27 15:42:43 max_albert: Did you dig into the source code, too?
+2013-02-27 15:43:07 max_albert: Maybe there actually are no defaults in Nmag, but it just uses PETSc's defaults which you can override from Nmag?
+2013-02-27 15:43:14 max_albert: Pure guesswork here though. Hans may know more.
+2013-02-27 15:43:29 mb8g11: Maybe. For now, checking if changing them has any effect at all.
+2013-02-27 15:43:35 mb8g11: (in finmag that is)
+2013-02-27 16:15:16 max_albert: Dmitri: I followed the guide on this page to set up my printer: https://www.southampton.ac.uk/isolutions/services/printing_on_managed_mfd/how_do_i.php
+2013-02-27 16:15:34 max_albert: It used to be called "How to add an MFD print queue on a non-University Linux Ubuntu machine" but it now refers to a RedHat machine...
+2013-02-27 18:27:44 mb8g11: Spin polarisation P = (x-y)/(x+y), where x and y are the fractions of spin up/down electrons.
+2013-02-27 18:27:58 max_albert: Thanks! :)
+2013-02-27 18:29:41 mb8g11: My pleasure.
+2013-02-27 18:30:09 mb8g11: To be honest, x+y=1, so the formula is more complicated than it needs to be ;-)
+2013-02-27 18:30:26 max_albert: Fair point. :-)
