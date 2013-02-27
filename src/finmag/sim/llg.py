@@ -351,7 +351,7 @@ class LLG(object):
         J is the current density in A/m^2 as a number, dolfin function or expression,
         P is the polarisation (between 0 and 1),
         d the thickness of the free layer in m,
-        p the direction (unit length) of the polarisation as a triple.
+        p the direction of the polarisation as a triple (will be normalised to unit length)
 
         """
         self.do_slonczewski = True
@@ -369,3 +369,5 @@ class LLG(object):
         polarisation = df.Function(self.S3)
         polarisation.assign(df.Constant((p)))
         self.p = polarisation.vector().array().reshape((3, -1))
+        # ensure that p has unit length
+        self.p /= np.linalg.norm(self.p)
