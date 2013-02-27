@@ -208,7 +208,7 @@ class Simulation(object):
 
     def set_H_ext(self, H_ext):
         """
-        Convenience function to set the external field.
+        Set the external field (in A/m).
         """
         H = self.get_interaction("Zeeman")
         H.set_value(H_ext)

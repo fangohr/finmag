@@ -8,7 +8,7 @@ log = logging.getLogger("finmag")
 class Zeeman(object):
     def __init__(self, H, **kwargs):
         """
-        Specify an external field.
+        Specify an external field (in A/m).
 
         H can have any of the forms accepted by the function
         'finmag.util.helpers.vector_valued_function' (see its docstring for details).
@@ -26,7 +26,7 @@ class Zeeman(object):
 
     def set_value(self, value, **kwargs):
         """
-        Set the value of the field.
+        Set the value of the field (in A/m).
 
         `value` can have any of the forms accepted by the function
         'finmag.util.helpers.vector_valued_function' (see its
@@ -47,7 +47,7 @@ class Zeeman(object):
 class TimeZeeman(Zeeman):
     def __init__(self, field_expression, t_off=None):
         """
-        Specify a time dependent external field, which gets updated as continuously as possible.
+        Specify a time dependent external field (in A/m), which gets updated as continuously as possible.
         
         Pass in a dolfin expression that depends on time. Make sure the time
         variable is called t. It will get refreshed by calls to update. 
