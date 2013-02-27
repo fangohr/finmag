@@ -200,8 +200,9 @@ class LLG(object):
         dmdt = np.zeros(m.shape)
         # Calculate dm/dt
         if self.do_slonczewski:
-            # if slonczewski_depends_on_time:
-            #     # recompute J
+            if self.fun_slonczewski_time_update != None:
+                J_new = self.fun_slonczewski_time_update(t)
+                self.J[:] = J_new
             native_llg.calc_llg_slonczewski_dmdt(
                 m, H_eff, t, dmdt, self.pins,
                 self.gamma, self.alpha_vec,
@@ -346,13 +347,21 @@ class LLG(object):
         # Nonnegative exit code indicates success
         return 0
 
-    def use_slonczewski(self, J, P, d, p):
+    def use_slonczewski(self, J, P, d, p, with_time_update=None):
         """
         Activates the computation of the Slonczewski spin-torque term in the LLG.
 
         *Arguments*
 
-        J is the current density in A/m^2 as a number, dolfin function or expression.
+        J is the current density in A/m^2 as a number, dolfin function,
+          dolfin expression or Python function. In the last case the
+          current density is assumed to be spatially constant but can
+          vary with time. Thus J=J(t) should be a function expecting a
+          single variable t (the simulation time) and return a number.
+
+          Note that a time-dependent current density can also be given
+          as a dolfin Expression, but a python function should be much
+          more efficient.
 
         P is the polarisation (between 0 and 1). It is defined as P = (x-y)/(x+y),
         where x and y are the fractions of spin up/down electrons).
@@ -361,8 +370,18 @@ class LLG(object):
 
         p is the direction of the polarisation as a triple (is automatically normalised to unit length).
 
+        - with_time_update:
+
+             A function of the form J(t), which accepts a time step `t`
+             as its only argument and returns the new current density.
+
+             N.B.: For efficiency reasons, the return value is currently
+                   assumed to be a number, i.e. J is assumed to be spatially
+                   constant (and only varying with time).
+
         """
         self.do_slonczewski = True
+        self.fun_slonczewski_time_update = with_time_update
 
         if isinstance(J, df.Expression):
             J = df.interpolate(J, self.S1)

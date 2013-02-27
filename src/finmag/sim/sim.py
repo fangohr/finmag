@@ -417,7 +417,7 @@ class Simulation(object):
             log.warning("Integrator reinit was requested, but no integrator "
                         "is present in the simulation!")
 
-    def set_stt(self, current_density, polarisation, thickness, direction):
+    def set_stt(self, current_density, polarisation, thickness, direction, with_time_update=None):
         """
         Activate the computation of the Slonczewski spin-torque term
         in the LLG.
@@ -434,8 +434,18 @@ class Simulation(object):
         - Direction of the polarisation as a triple (is automatically
           normalised to unit length).
 
+        - with_time_update:
+
+             A function of the form J(t), which accepts a time step `t`
+             as its only argument and returns the new current density.
+
+             N.B.: For efficiency reasons, the return value is currently
+                   assumed to be a number, i.e. J is assumed to be spatially
+                   constant (and only varying with time).
+
         """
-        self.llg.use_slonczewski(current_density, polarisation, thickness, direction)
+        self.llg.use_slonczewski(current_density, polarisation, thickness,
+                                 direction, with_time_update=with_time_update)
 
     def toggle_stt(self, new_state=None):
         """
