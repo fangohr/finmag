@@ -422,10 +422,17 @@ class Simulation(object):
         Activate the computation of the Slonczewski spin-torque term
         in the LLG.
 
-        Current density in A/m^2 is a dolfin expression,
-        Polarisation is between 0 and 1,
-        Thickness of the free layer in m,
-        Direction (unit length) of the polarisation as a triple.
+        *Arguments*
+
+        - Current density in A/m^2 as a number, dolfin function or expression.
+
+        - Polarisation is between 0 and 1. It is defined as P = (x-y)/(x+y),
+          where x and y are the fractions of spin up/down electrons).
+
+        - Thickness of the free layer in m.
+
+        - Direction of the polarisation as a triple (is automatically
+          normalised to unit length).
 
         """
         self.llg.use_slonczewski(current_density, polarisation, thickness, direction)

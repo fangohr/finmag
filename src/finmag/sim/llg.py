@@ -200,6 +200,8 @@ class LLG(object):
         dmdt = np.zeros(m.shape)
         # Calculate dm/dt
         if self.do_slonczewski:
+            # if slonczewski_depends_on_time:
+            #     # recompute J
             native_llg.calc_llg_slonczewski_dmdt(
                 m, H_eff, t, dmdt, self.pins,
                 self.gamma, self.alpha_vec,
@@ -348,10 +350,16 @@ class LLG(object):
         """
         Activates the computation of the Slonczewski spin-torque term in the LLG.
 
-        J is the current density in A/m^2 as a number, dolfin function or expression,
-        P is the polarisation (between 0 and 1),
-        d the thickness of the free layer in m,
-        p the direction of the polarisation as a triple (will be normalised to unit length)
+        *Arguments*
+
+        J is the current density in A/m^2 as a number, dolfin function or expression.
+
+        P is the polarisation (between 0 and 1). It is defined as P = (x-y)/(x+y),
+        where x and y are the fractions of spin up/down electrons).
+
+        d is the thickness of the free layer in m.
+
+        p is the direction of the polarisation as a triple (is automatically normalised to unit length).
 
         """
         self.do_slonczewski = True
