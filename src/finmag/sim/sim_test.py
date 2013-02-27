@@ -451,3 +451,35 @@ class TestSimulation(object):
         sim.set_H_ext([-4, -5, -6])
         H = sim.probe_field('Zeeman', [0.5e-9, 0.5e-9, 0.5e-9])
         assert(np.allclose(H, [-4, -5, -6]))
+
+    def test_set_stt(self):
+        """
+        Simple macrospin simulation with STT where the current density
+        changes sign halfway through the simulation.
+        """
+        import matplotlib.pyplot as plt
+        mesh = df.Box(0, 0, 0, 1, 1, 1, 1, 1, 1)
+        sim = Simulation(mesh, Ms=8.6e5, unit_length=1e-9, name='macrospin_with_stt')
+        sim.m = (1, 0, 0)
+        sim.add(Zeeman([0, 0, 1e5]))
+        sim.alpha = 0.0  # no damping
+
+        def J(t):
+            return 0.5e11 if (t < 2.5e-9) else -0.5e11
+
+        sim.set_stt(0.05e11, 1.0, 2e-9, (0, 0, 1), with_time_update=J)
+        sim.schedule('save_ndt', every=1e-11)
+        sim.run_until(5e-9)
+
+        ts, xs, ys, zs = np.loadtxt('macrospin_with_stt.ndt').T
+        fig = plt.figure(figsize=(20, 5))
+        ax1 = fig.add_subplot(131); ax1.plot(ts, xs)
+        ax2 = fig.add_subplot(132); ax2.plot(ts, ys)
+        ax3 = fig.add_subplot(133); ax3.plot(ts, zs)
+        fig.savefig('macrospin_with_stt.png')
+
+        # Assert that the dynamics of m_z are symmetric over time. In
+        # theory, this should also be true of m_x and m_y, but since
+        # they oscillate rapidly there is quite a bit of numerical
+        # inaccuracy, so we're only testing for m_z here.
+        assert max(abs(zs - zs[::-1])) < 0.001
