@@ -69,10 +69,10 @@ class TimeZeeman(Zeeman):
             self.H = df.interpolate(self.value, self.S3)
 
     def switch_off(self):
-        # It might be nice to remove the Zeeman interaction from the
-        # simulation altogether (or at least provide an option to do
-        # so) in order to avoid computing the Zeeman energy at all
-        # once the field is switched off.
+        # It might be nice to provide the option to remove the Zeeman
+        # interaction from the simulation altogether (or at least
+        # provide an option to do so) in order to avoid computing the
+        # Zeeman energy at all once the field is switched off.
         log.debug("Switching external field off.")
         self.H.assign(df.Constant((0, 0, 0)))
         self.value = None
