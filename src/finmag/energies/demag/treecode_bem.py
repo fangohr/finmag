@@ -161,14 +161,14 @@ if __name__ == "__main__":
     stop=time.time()
 
 
-    demag=TreecodeBEM(mesh,m,mac=0.1,p=1,num_limit=100,correct_factor=10,Ms=Ms,type_I=True)
+    demag=TreecodeBEM(mesh,m,mac=0.3,p=5,num_limit=100,correct_factor=12,Ms=Ms,type_I=False)
     start2=time.time()
     f2=demag.compute_field()
     stop2=time.time()
     
     f3=f1-f2
     #print f1[0:10],f2[0:10]
-    #print np.average(np.abs(f3[:200]/f1[:200]))
+    print np.average(np.abs(f3[:200]/f1[:200]))
     
     print stop-start,stop2-start2
     
