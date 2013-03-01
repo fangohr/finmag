@@ -4905,3 +4905,35 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-02-28 15:05:06 max_albert: So I was curious what the status is.
 2013-02-28 15:05:25 fangohr-adium: (I think MA is not online any more).
 2013-02-28 15:05:53 max_albert: Yes, I know. But I think he can read previous messages whenever he logs back on.
+2013-03-01 09:52:46 mb8g11: Hi all (from the office).
+2013-03-01 11:49:43 fangohr-adium: Greetings.
+2013-03-01 11:49:56 max_albert: Hello Hans.
+2013-03-01 11:49:57 mb8g11: fangohr-adium, Max told me there is a talk at 12:00?
+2013-03-01 11:50:02 fangohr-adium: Will I see you at 12:00 for Dr Hovorka's brief presentation in the boardroom?
+2013-03-01 11:50:04 fangohr-adium: Yes.
+2013-03-01 11:50:13 fangohr-adium: I thought I had sent an email around regarding this.
+2013-03-01 11:50:20 max_albert: Yep, planning to come.
+2013-03-01 11:50:21 fangohr-adium: Maybe it didn't get out of my outbox.
+2013-03-01 11:50:25 fangohr-adium: Good, thanks.
+2013-03-01 11:51:05 mb4e10: yes
+2013-03-01 11:51:21 mb8g11: Yes.
+2013-03-01 11:52:06 mb8g11: I wasn't in the recipients.
+2013-03-01 14:34:01 ww1g11: I have some weird hysteresis loops, any one want to see and give suggestion on them?
+2013-03-01 17:11:07 fangohr-adium: MA, sorry, my mistake.
+2013-03-01 17:11:33 fangohr-adium: Weiwei, I only saw your message now — I always like to to see weird hysteresis loops; maybe we can do that next week.
+2013-03-01 17:12:33 fangohr-adium: All, I have put a Chicken Salat Sandwhich into the fridge (in the door) just outside my office. This is still closed in a plastic box and spare from the interview today. Feel free to get it and eat it if anyone is hungry; otherwise it just goes off over the weekend.
+2013-03-01 17:16:07 fangohr-adium: Over and out.
+2013-03-01 17:25:18 max_albert: Hi Hans! You probably won't read this before next week, but I just discussed the strange hysteresis loops with Weiwei and we're a bit at a loss to what's going on.
+2013-03-01 17:26:29 max_albert: But as you said we can discuss it next week. (I think Weiwei is going to commit a couple of small scripts that exhibit the problem to the sandbox so we can take it from there.)
+2013-03-01 17:43:21 mb8g11: Hi Weiwei, just writing this down because you took the time to explain it to me: You are re-doing the hysteresis loop example from the nmag manual. When you use the FK method for the demag, the results agree with nmag and across the two differents approaches you used.
+2013-03-01 17:44:04 mb8g11: The two approaches are: 1) Use a simulation object and relax it several times with new fields. 2) Use a new simulation object for every field.
+2013-03-01 17:44:43 mb8g11: When you use the Treecode method, the results don't agree with nmag anymore and they don't agree across the two approaches.
+2013-03-01 17:45:01 mb8g11: Did I get this right so far?
+2013-03-01 17:48:29 ww1g11: Not exactly, it seems that treecode also can give a reasonable result using the second approach
+2013-03-01 17:49:39 max_albert: But you only see a noticeable difference between the two methods when using the Treecode method, whereas the FK method always seems to be ok in both cases?
+2013-03-01 17:50:22 ww1g11: yes, FK always works
+2013-03-01 17:57:23 mb8g11: If my intuition is right, the following test might uncover the root of the bug: Create simulation objects A and B. Check the treecode demag fields are the same. Let simulation run A run for some time, then use its magnetisation to create a new simulation object C. Check if treecode demag fields of A and C agree.
+2013-03-01 17:57:36 mb8g11: If they don't you have your bug, if they do, you are doing something wrong in your scripts.
+2013-03-01 17:58:32 max_albert: I like that suggestion. It's clear you have been a bug hunter for some time. :)
+2013-03-01 17:58:53 mb8g11: Haha.
+2013-03-01 18:00:03 ww1g11: Good suggestion
