@@ -910,6 +910,23 @@ void update_potential_u1(fastsum_plan *plan, double *u1) {
 }
 
 
+void reset_moment(fastsum_plan *plan, struct octree_node *tree){
+
+	int i;
+	if (tree == NULL) {
+	    return;
+	}
+
+	tree->need_upadte_moment = 1;
+	if (tree->num_children > 0) {
+	        for (i = 0; i < tree->num_children; i++) {
+	        	reset_moment(plan, tree->children[i]);
+	        }
+	}
+
+}
+
+
 void fastsum_finalize(fastsum_plan * plan) {
 
     free_tree(plan, plan->tree);
