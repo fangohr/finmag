@@ -301,6 +301,8 @@ void direct_sum_I(fastsum_plan *plan, double *phi, double *u1) {
 
     compute_analytical_potential(plan,phi,u1);
 
+    reset_moment(plan,plan->tree);
+
 }
 
 
@@ -317,6 +319,8 @@ void fast_sum_II(fastsum_plan *plan, double *phi, double *u1) {
      }
 
     compute_analytical_potential(plan,phi,u1);
+
+    reset_moment(plan,plan->tree);
 
     free_3d_double(a, plan->p + 1);
 

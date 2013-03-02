@@ -131,6 +131,22 @@ class TreecodeBEM(sb.FemBemDeMagSolver):
         default_timer.stop("Add phi1 and phi2", self.__class__.__name__)
         return self.phi
 
+
+def compare_field(f1,f2):
+    f1.shape=(3,-1)
+    f2.shape=(3,-1)
+    d=f1-f2
+    res=[]
+    for i in range(d.shape[1]):
+        v=f1[0][i]**2+f1[1][i]**2+f1[2][i]**2
+        t=d[0][i]**2+d[1][i]**2+d[2][i]**2
+        res.append(t/v)
+    
+    f1.shape=(-1,)
+    f2.shape=(-1,)
+    
+    return np.max(np.sqrt(res))
+
 if __name__ == "__main__":
 
     n=4
@@ -161,7 +177,7 @@ if __name__ == "__main__":
     stop=time.time()
 
 
-    demag=TreecodeBEM(mesh,m,mac=0.3,p=5,num_limit=100,correct_factor=12,Ms=Ms,type_I=False)
+    demag=TreecodeBEM(mesh,m,mac=0.2,p=5,num_limit=1000,correct_factor=12,Ms=Ms,type_I=True)
     start2=time.time()
     f2=demag.compute_field()
     stop2=time.time()
@@ -170,8 +186,12 @@ if __name__ == "__main__":
     #print f1[0:10],f2[0:10]
     print np.average(np.abs(f3[:200]/f1[:200]))
     
+    print 'max errror:',compare_field(f1,f2)
+    
+    """
     print stop-start,stop2-start2
     
     from finmag.util.timings import default_timer
     print default_timer.report(20)
+    """
     

@@ -223,6 +223,7 @@ void fast_sum_I(fastsum_plan *plan, double *phi, double *u1) {
         phi[i] += plan->vert_bsa[i] * u1[i];
     }
 
+    reset_moment(plan,plan->tree);
 
 }
 
