@@ -13,6 +13,7 @@ import dolfin as df
 import finmag.util.timings as timings
 from finmag.util.consts import mu0
 from finmag.native.llg import OrientedBoundaryMesh, compute_bem_fk
+from finmag.util.meshes import nodal_volume
 
 params = df.Parameters("fk_demag")
 poisson_params = df.Parameters("poisson")
@@ -24,7 +25,6 @@ laplace_params.add("preconditioner", "default")
 params.add(poisson_params)
 params.add(laplace_params)
 
-# TODO: Add unit tests.
 # TODO: Add benchmark to document once we get faster than existing implementation.
 
 
@@ -56,7 +56,7 @@ class FKDemag(object):
         self._trial3 = df.TrialFunction(self.S3)
 
         # for computation of energy
-        self._nodal_volumes = df.assemble(self._test1 * df.dx).array()
+        self._nodal_volumes = nodal_volume(self.S1, unit_length)
         self._H_func = df.Function(S3)  # we will copy field into this when we need the energy
         self._E_integrand = -0.5 * mu0 * df.dot(self._H_func, self.Ms * self.m)
         self._E = self._E_integrand * df.dx
@@ -171,23 +171,3 @@ class FKDemag(object):
         # TODO: Write down how we would achieve the same result using df.project, albeit more slowly.
         H = self.G * self._phi.vector()
         return H.array() / self.L
-
-if __name__ == "__main__":
-    from finmag.util.meshes import sphere
-
-    mesh = sphere(r=1.0, maxh=0.1)
-    S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
-    m = df.Function(S3)
-    m.assign(df.Constant((1, 0, 0)))
-    Ms = 1
-
-    demag = FKDemag()
-    demag.setup(S3, m, Ms, unit_length=1e-9)
-
-    H = demag.compute_field().reshape((3, -1))
-    H_expected = np.array([-1.0 / 3.0, 0, 0])
-    print "Computation of demagnetising field of uniformly magnetised sphere with Fredkin-Koehler method."
-    print "Result H_d =\n\t{},\nshould be close to\n\t{}.".format(H.mean(1), H_expected)
-    diff = np.max(np.abs(H.mean(1) - H_expected))
-    print "Maximum difference to analytical result: {:.1e}.".format(diff)
-    assert diff < 1e-3
