@@ -32,7 +32,15 @@ fk_timer = Timings()
 
 
 class FKDemag(object):
-    # TODO: Add documentation.
+    """
+    Computation of the demagnetising field using the Fredkin-Koehler hybrid FEM/BEM technique.
+
+    Fredkin, D.R. and Koehler, T.R., "`Hybrid method for computing demagnetizing fields`_",
+    IEEE Transactions on Magnetics, vol.26, no.2, pp.415-417, Mar 1990.
+
+    .. _Hybrid method for computing demagnetizing fields: http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=106342
+
+    """
     def __init__(self):
         """
         Create a new FKDemag instance.
@@ -66,19 +74,15 @@ class FKDemag(object):
             The length (in m) represented by one unit on the mesh. Default 1.
 
         """
-        # TODO: Find more meaningful names for some attributes like _D.
-        # TODO: Overthink liberal use of _ prefix for attribute names.
         self.m = m
         self.Ms = Ms
         self.unit_length = unit_length
 
-        # related to mesh
         mesh = S3.mesh()
         self.S1 = df.FunctionSpace(mesh, "Lagrange", 1)
         self.S3 = S3
         self.dim = mesh.topology().dim()
 
-        # test and trial functions
         self._test1 = df.TestFunction(self.S1)
         self._trial1 = df.TrialFunction(self.S1)
         self._test3 = df.TestFunction(self.S3)
@@ -92,7 +96,7 @@ class FKDemag(object):
         self._nodal_E = df.dot(self._E_integrand, self._test1) * df.dx
         self._nodal_E_func = df.Function(self.S1)
 
-        # for computation of field
+        # for computation of field and scalar magnetic potential
         self._poisson_matrix = self._poisson_matrix()
         self._poisson_solver = df.KrylovSolver(self._poisson_matrix, params["poisson"]["method"], params["poisson"]["preconditioner"])
         self._laplace_zeros = df.Function(self.S1).vector()
@@ -103,8 +107,13 @@ class FKDemag(object):
         self._phi_1 = df.Function(self.S1)  # solution of inhomogeneous Neumann problem
         self._phi_2 = df.Function(self.S1)  # solution of Laplace equation inside domain
         self._phi = df.Function(self.S1)  # magnetic potential phi_1 + phi_2
-        self._D = df.assemble(self.Ms * df.inner(self._trial3, df.grad(self._test1)) * df.dx)
-        self._setup_field()
+
+        # To be applied to the vector field m as first step of computation of _phi_1.
+        # This gives us div(M), which is equal to Laplace(_phi_1), equation
+        # which is then solved using _poisson_solver.
+        self._Ms_times_divergence = df.assemble(self.Ms * df.inner(self._trial3, df.grad(self._test1)) * df.dx)
+
+        self._setup_gradient_computation()
 
     @mtimed(default_timer)
     def compute_field(self):
@@ -117,7 +126,7 @@ class FKDemag(object):
 
         """
         self._compute_magnetic_potential()
-        return self._compute_field()
+        return self._compute_gradient_of_magnetic_potential()
 
     @mtimed(default_timer)
     def compute_energy(self):
@@ -177,13 +186,12 @@ class FKDemag(object):
     @mtimed(fk_timer)
     def _compute_magnetic_potential(self):
         # compute _phi_1 on the whole domain
-        g_1 = self._D * self.m.vector()
+        g_1 = self._Ms_times_divergence * self.m.vector()
         self._poisson_solver.solve(self._phi_1.vector(), g_1)
 
-        # _phi_1 restricted to the boundary
+        # compute _phi_2 on the boundary using the Dirichlet boundary
+        # conditions we get from BEM * _phi_1 on the boundary.
         phi_1 = self._phi_1.vector()[self._b2g_map]
-
-        # compute _phi_2 on the boundary
         self._phi_2.vector()[self._b2g_map[:]] = np.dot(self._bem, phi_1.array())
 
         # compute _phi_2 inside the domain
@@ -197,15 +205,45 @@ class FKDemag(object):
         self._phi.vector()[:] = self._phi_1.vector() + self._phi_2.vector()
 
     @mtimed(fk_timer)
-    def _setup_field(self):
-        # TODO: This is the magpar method. Document how it works.
-        a = df.inner(df.grad(self._trial1), self._test3) * df.dx
-        b = df.dot(self._test3, df.Constant((-1, -1, -1))) * df.dx
-        self.G = df.assemble(a)
-        self.L = df.assemble(b).array()
+    def _setup_gradient_computation(self):
+        """
+        Prepare the discretised gradient to use in :py:meth:`FKDemag._compute_gradient_of_magnetic_potential`.
+
+        We don't need the gradient field as a continuous field, we are only
+        interested in the values at specific points. It is thus a waste of
+        computational effort to use a projection of the gradient field, since
+        it performs the fairly large operation of assembling a matrix and
+        solving a linear system of equations.
+
+        """
+        A = df.inner(self._test3, - df.grad(self._trial1)) * df.dx
+        # This can be applied to scalar functions.
+        self._gradient = df.assemble(A)
+
+        # The `A` above is in fact not quite the gradient, since we integrated
+        # over the volume as well. We will divide by the volume later, after
+        # the multiplication of the scalar magnetic potential. Since the two
+        # operations are symmetric (multiplying by volume, dividing by volume)
+        # we don't have to care for the units, i.e. unit_length.
+        b = df.dot(self._test3, df.Constant((1, 1, 1))) * df.dx
+        self._nodal_volumes_S3_no_units = df.assemble(b)
 
     @mtimed(fk_timer)
-    def _compute_field(self):
-        # TODO: Write down how we would achieve the same result using df.project, albeit more slowly.
-        H = self.G * self._phi.vector()
-        return H.array() / self.L
+    def _compute_gradient_of_magnetic_potential(self):
+        """
+        Get the demagnetising field from the magnetic scalar potential.
+
+        .. math::
+
+            \\vec{H}_{\\mathrm{d}} = - \\nabla \\phi (\\vec{r})
+
+        Using dolfin, we would translate this to
+
+        .. sourcecode::
+
+            H_d = df.project(- df.grad(self._phi), self.S3)
+
+        but the method used here is computationally less expensive.
+
+        """
+        return (self._gradient * self._phi.vector()).array() / self._nodal_volumes_S3_no_units
