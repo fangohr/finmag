@@ -92,7 +92,7 @@ class SingleTiming(object):
     Saves number of calls and total running time of a method.
 
     """
-    def __init__(self, group, name):
+    def __init__(self, name, group):
         self.group = group
         self.name = name
         self.calls = 0
