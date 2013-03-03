@@ -1,6 +1,11 @@
 #include "common.h"
 
 
+static int ccc[35]={
+		1, 1, 2, 6, 24, 1, 1, 2, 6, 2, 2, 4, 6, 6, 24, 1, 1, 2, 6, 1, 1, 2,
+		2, 2, 6, 2, 2, 4, 2, 2, 4, 6, 6, 6, 24
+};
+
 inline double pow2(double x) {
     return x*x;
 }
@@ -480,13 +485,17 @@ void create_tree(fastsum_plan *plan, struct octree_node *tree, int begin, int en
     int possible_children_num;
     int i;
 
+    double critial,rx2,ry2,rz2,r2;
+
     tree->have_moment = 0;
 
     tree->begin = begin;
     tree->end = end;
     tree->num_particle = end - begin;
 
-    plan->tree->have_moment = 0;
+
+    tree->moment=NULL;
+    tree->mom=NULL;
 
     tree->rx = (bnd[1] - bnd[0]) / 2.0;
     tree->ry = (bnd[3] - bnd[2]) / 2.0;
@@ -505,7 +514,15 @@ void create_tree(fastsum_plan *plan, struct octree_node *tree, int begin, int en
     tree->num_children = 0;
 
 
-    if (tree->num_particle > plan->num_limit) {
+    critial = tri_max(tree->rx, tree->ry, tree->rz) / sqrt(2.0);
+
+    rx2 =  tree->rx > critial? tree->rx/2: tree->rx;
+    ry2 =  tree->ry > critial? tree->ry/2: tree->ry;
+    rz2 =  tree->rz > critial? tree->rz/2: tree->rz;
+
+    r2 = sqrt(rx2*rx2+ry2*ry2+rz2*rz2);
+
+    if (tree->num_particle > plan->num_limit && r2*(1-plan->mac)>=plan->r_eps*plan->mac) {
 
         bnds = alloc_2d_double(8, 6);
 
@@ -559,6 +576,10 @@ void free_tree(fastsum_plan *plan, struct octree_node *tree) {
         if (tree->have_moment&&tree->moment != NULL) {
             free_3d_double(tree->moment, plan->p + 1  );
         }
+        if (tree->have_moment&&tree->mom != NULL) {
+        	free(tree->mom);
+        }
+
         free(tree);
     }
 
@@ -764,8 +785,92 @@ void compute_moment(fastsum_plan *plan, struct octree_node *tree, double ***mome
 }
 
 
+void compute_coefficient_directly_debug(double *a, double x, double y, double z, int p) {
+
+    double R, r, r2, r3, r5, r7, r9;
+
+    double x2=x*x;
+    double y2=y*y;
+    double z2=z*z;
+    double xy=x*y;
+    double xz=x*z;
+    double yz=y*z;
+    double xyz=xy*z;
+
+    double tx,ty,tz;
+    double tx2,ty2,tz2;
+
+    R = (x2+y2+z2);
+
+    r2 = 1.0/R;
+    r = sqrt(r2);
+    r3 = r*r2;
+    r5 = 3*r3*r2; //contain a factor of 3
+    r7 = 5*r5*r2; //contain a factor of 15
+    r9 = 7*r7*r2; //contain a factor of 105
+
+    tx=x2*r7-r5;
+    ty=y2*r7-r5;
+    tz=z2*r7-r5;
+
+	tx2 = x2*r9-r7;
+	ty2 = y2*r9-r7;
+	tz2 = z2*r9-r7;
+
+    a[0] = r;
+    a[1] = z*r3;
+    a[5] = y*r3;
+    a[15] = x*r3;
+
+    if(p>1){
+    	a[25] = x2*r5-r3;
+    	a[19] = xy*r5;
+    	a[16] = xz*r5;
+    	a[9] = y2*r5-r3;
+    	a[6] = yz*r5;
+    	a[2] = z2*r5-r3;
+    }
+
+    if(p>2){
+
+    	a[31]=x*(tx-2*r5);
+    	a[28]=y*tx;
+    	a[26]=z*tx;
+    	a[22]=x*ty;
+    	a[20]=xyz*r7;
+    	a[17]=x*tz;
+    	a[12]=y*(ty-2*r5);
+    	a[10]=z*ty;
+    	a[7] = y*tz;
+    	a[3] = z*(tz-2*r5);
+
+    }
+
+    if (p>3){
+
+    	a[34]=x2*(tx2-5*r7)+3*r5;
+    	a[33]=xy*(tx2-2*r7);
+    	a[32]=xz*(tx2-2*r7);
+    	a[30]=x2*ty2-y2*r7+r5;
+    	a[29]=yz*tx2;
+    	a[27]=x2*tz2-z2*r7+r5;
+    	a[24]=xy*(ty2-2*r7);
+    	a[23]=xz*ty2;
+    	a[21]=xy*tz2;
+    	a[18]=xz*(tz2-2*r7);
+    	a[14]=y2*(ty2-5*r7)+3*r5;
+    	a[13]=yz*(ty2-2*r7);
+    	a[11]=z2*ty2-y2*r7+r5;
+    	a[8] = yz*(tz2-2*r7);
+    	a[4] = z2*(tz2-5*r7)+3*r5;
+    }
+
+    return;
+}
+
+
 void compute_coefficient_directly(double *a, double x, double y, double z, int p) {
-    int i, j, k;
+
     double R, r, r2, r3, r5, r7, r9;
 
     double x2=x*x;
@@ -849,9 +954,8 @@ void compute_moment_directly(fastsum_plan *plan, struct octree_node *tree, doubl
     double dxx,dyy,dzz;
 
     int index=0;
-    int p=plan->p+1;
-    int N=p*(p+1)*(p+2)/6;
-    memset(moment, 0, N); //Always suppose N=35, n=5, size=n*(n+1)*(n+2)/6
+
+    memset(moment, 0, 35*sizeof ( double)); //Always suppose N=35, n=5, size=n*(n+1)*(n+2)/6
 
     for (ti = tree->begin; ti < tree->end; ti++) {
 
@@ -883,16 +987,18 @@ void compute_moment_directly(fastsum_plan *plan, struct octree_node *tree, doubl
         	dzz=1.0/dz*nz*plan->charge_density[tj];
         }
 
+        index=0;
         tmp_x = 1.0;
-        for (i = 0; i < plan->p + 1; i++) {
+        for (i = 0; i < 5; i++) {
              tmp_y = 1.0;
-             for (j = 0; j < plan->p - i + 1; j++) {
+             for (j = 0; j < 5 - i; j++) {
                     tmp_z = 1.0;
-                    for (k = 0; k < plan->p - i - j + 1; k++) {
+                    for (k = 0; k < 5 - i - j; k++) {
 
                     	tmp_xyz = tmp_x * tmp_y * tmp_z;
 
-                    	moment[i] += (i*tmp_xyz*dxx+j*tmp_xyz*dyy+k*tmp_xyz*dzz);
+                    	moment[index] += (i*tmp_xyz*dxx+j*tmp_xyz*dyy+k*tmp_xyz*dzz);
+                    	index += 1;
 
                         tmp_z *= dz;
                     }
@@ -900,6 +1006,10 @@ void compute_moment_directly(fastsum_plan *plan, struct octree_node *tree, doubl
                 }
                 tmp_x *= dx;
             }
+    }
+
+    for(i=0;i<35;i++){
+    	moment[i]=moment[i]/ccc[i];
     }
 
 }

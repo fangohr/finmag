@@ -129,12 +129,41 @@ void bulid_indices_I(fastsum_plan *plan) {
 }
 
 
-double compute_potential_single_target_I(fastsum_plan *plan, struct octree_node *tree, int index, double ***a) {
+inline double direct_compute_potential_leaf_I(fastsum_plan *plan, struct octree_node *tree, int index){
+
+	int i,k;
+	double res=0;
+	double dx,dy,dz,R;
+
+	for (i = tree->begin; i < tree->end; i++) {
+
+		dx = plan->x_t[3 * index]-plan->x_s[3 * i];
+	    dy = plan->x_t[3 * index + 1]-plan->x_s[3 * i + 1];
+	    dz = plan->x_t[3 * index + 2]-plan->x_s[3 * i + 2];
+
+	    R = dx * dx + dy * dy + dz * dz;
+
+	    k = plan->x_s_ids[i];
+	    dx *= plan->t_normal[3 * k];
+	    dy *= plan->t_normal[3 * k + 1];
+	    dz *= plan->t_normal[3 * k + 2];
+
+	    res += plan->charge_density[k]*(dx + dy + dz) / (R*sqrt(R));
+
+	}
+
+	return res;
+
+}
+
+
+double compute_potential_single_target_I(fastsum_plan *plan, struct octree_node *tree, int index) {
 
     double R;
     int i, j, k;
     double res = 0;
     double dx, dy, dz;
+    double a[35];
 
 
     R = pow2(plan->x_t[3 * index] - tree->x)
@@ -143,15 +172,22 @@ double compute_potential_single_target_I(fastsum_plan *plan, struct octree_node 
 
 
     if (plan->mac_square * R > tree->radius_square) {
+
+    	if (tree->num_particle<10){
+    		res=direct_compute_potential_leaf_I(plan,tree,index);
+    		return res;
+    	}
+
+
         if (!tree->have_moment) {
-            tree->moment = alloc_3d_double(plan->p + 1, plan->p + 1, plan->p + 1);
+            tree->mom = (double *)malloc(35 * sizeof (double));
             tree->have_moment = 1;
             tree->need_upadte_moment = 1;
         }
 
 
         if (tree->need_upadte_moment) {
-            compute_moment(plan, tree, tree->moment, tree->x, tree->y, tree->z);
+        	compute_moment_directly(plan, tree, tree->mom, tree->x, tree->y, tree->z);
             tree->need_upadte_moment = 0;
         }
 
@@ -159,14 +195,10 @@ double compute_potential_single_target_I(fastsum_plan *plan, struct octree_node 
         dx = plan->x_t[3 * index] - tree->x;
         dy = plan->x_t[3 * index + 1] - tree->y;
         dz = plan->x_t[3 * index + 2] - tree->z;
-        compute_coefficient(a, dx, dy, dz, plan->p);
+        compute_coefficient_directly(a, dx, dy, dz, plan->p);
 
-        for (i = 0; i < plan->p + 1; i++) {
-            for (j = 0; j < plan->p - i + 1; j++) {
-                for (k = 0; k < plan->p - i - j + 1; k++) {
-                    res += a[i][j][k] * tree->moment[i][j][k];
-                }
-            }
+        for(i=0;i<35;i++){
+        	res+=tree->mom[i]*a[i];
         }
 
         return res;
@@ -176,7 +208,7 @@ double compute_potential_single_target_I(fastsum_plan *plan, struct octree_node 
         if (tree->num_children > 0) {
 
             for (i = 0; i < tree->num_children; i++) {
-                res += compute_potential_single_target_I(plan, tree->children[i], index, a);
+                res += compute_potential_single_target_I(plan, tree->children[i], index);
             }
 
             return res;
@@ -193,22 +225,17 @@ double compute_potential_single_target_I(fastsum_plan *plan, struct octree_node 
 
 
 
-
-
-
 void fast_sum_I(fastsum_plan *plan, double *phi, double *u1) {
     int i, j, k;
 
     if (plan->mac > 0) {
 
-        double ***a = alloc_3d_double(plan->p + 1, plan->p + 1, plan->p + 1);
-
         for (j = 0; j < plan->N_target; j++) {
-            phi[j] = compute_potential_single_target_I(plan, plan->tree, j, a);
+            phi[j] = compute_potential_single_target_I(plan, plan->tree, j);
         }
-        free_3d_double(a, plan->p + 1);
 
     }
+
 
     int total_j = 0;
 

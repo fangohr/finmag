@@ -3,6 +3,11 @@
 
 //gcc test.c common.c -lm
 
+static int ccc[35]={
+		1, 1, 2, 6, 24, 1, 1, 2, 6, 2, 2, 4, 6, 6, 24, 1, 1, 2, 6, 1, 1, 2,
+		2, 2, 6, 2, 2, 4, 2, 2, 4, 6, 6, 6, 24
+};
+
 void test_compute_coefficient_directly(){
 	double a[35];
 	//computed using Mathematica
@@ -21,7 +26,7 @@ void test_compute_coefficient_directly(){
 			-0.12189132671555247, -0.2021037753054538};
 
 	double eps=1e-16;
-	compute_coefficient_directly(a,1.1,1.2,1.3,4);
+	compute_coefficient_directly_debug(a,1.1,1.2,1.3,4);
 
 
 	int i;
@@ -32,6 +37,71 @@ void test_compute_coefficient_directly(){
 
 
 }
+
+
+void test_directly_potential(int p){
+
+	double a[35];
+	double moment[35];
+
+	double x[3]={2,0.2,0.3};
+	double y[3]={0.12,0.13,0.14};
+	double charge_density=1000;
+
+	double dx=y[0];
+	double dy=y[1];
+	double dz=y[2];
+
+	double tmp_x, tmp_y, tmp_z, R;
+	double res_direct,res=0;
+
+	int i,j,k,index=0;
+
+	for(i=0;i<35;i++){
+		a[i]=0;
+		moment[i]=0;
+	}
+
+    tmp_x = 1.0;
+    for (i = 0; i < 5; i++) {
+         tmp_y = 1.0;
+         for (j = 0; j < 5 - i ; j++) {
+                tmp_z = 1.0;
+                for (k = 0; k < 5 - i - j; k++) {
+                	if (i+j+k<p+1){
+                		moment[index] += charge_density *tmp_x * tmp_y * tmp_z;
+                	}
+
+                	index++;
+                    tmp_z *= dz;
+                }
+                tmp_y *= dy;
+            }
+            tmp_x *= dx;
+     	 }
+
+    compute_coefficient_directly_debug(a,x[0],x[1],x[2],p+1);
+    for(i=0;i<35;i++){
+    	res+=moment[i]*a[i]/ccc[i];
+    }
+
+
+    /*
+     * compute directly
+     */
+
+    dx = x[0] - y[0];
+    dy = x[1] - y[1];
+    dz = x[2] - y[2];
+    R = dx * dx + dy * dy + dz*dz;
+
+
+    res_direct = charge_density / sqrt(R);
+
+    printf("exact result: %g   fast sum: %g  and p=%d  rel_error=%g\n",res_direct,res,p,(res-res_direct)/res);
+
+}
+
 
 
 
@@ -202,6 +272,10 @@ int main() {
 
 	test_compute_coefficient_directly();
 
+	printf("Test direct method :\n");
+	for (i=1;i<5;i++){
+		test_directly_potential(i);
+	}
     return 0;
 
 }

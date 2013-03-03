@@ -154,18 +154,19 @@ if __name__ == "__main__":
     #mesh = BoxMesh(-1, 0, 0, 1, 1, 1, 10, 2, 2)
     #mesh=sphere(3.0,0.3)
     #mesh=df.Mesh('tet.xml')
-    #mesh = df.BoxMesh(0, 0, 0, 100, 1, 1, 100, 1, 1)
+    #
     #expr = df.Expression(('4.0*sin(x[0])', '4*cos(x[0])','0'))
     from finmag.util.meshes import elliptic_cylinder,sphere,box
     mesh = elliptic_cylinder(100,150,5,4.5,directory='meshes')
-    #mesh=box(0,0,0,5,5,1000,5,directory='meshes')
-    
+    #mesh=box(0,0,0,5,5,100,5,directory='meshes')
+    #mesh = df.BoxMesh(0, 0, 0, 100, 2, 2, 400, 2, 2)
+    mesh=sphere(15,1,directory='meshes')
     Vv=df.VectorFunctionSpace(mesh, "Lagrange", 1)
     
     Ms = 8.6e5
     expr = df.Expression(('cos(x[0])', 'sin(x[0])','0'))
     m = df.interpolate(expr, Vv)
-    m = df.interpolate(df.Constant((1, 0, 0)), Vv)
+    #m = df.interpolate(df.Constant((1, 0, 0)), Vv)
     
     from finmag.energies.demag.solver_fk import FemBemFKSolver as FKSolver
     
@@ -177,13 +178,13 @@ if __name__ == "__main__":
     stop=time.time()
 
 
-    demag=TreecodeBEM(mesh,m,mac=0.2,p=5,num_limit=1000,correct_factor=12,Ms=Ms,type_I=True)
+    demag=TreecodeBEM(mesh,m,mac=0.4,p=5,num_limit=1,correct_factor=10,Ms=Ms,type_I=False)
     start2=time.time()
     f2=demag.compute_field()
     stop2=time.time()
     
     f3=f1-f2
-    #print f1[0:10],f2[0:10]
+    print f1[0:10],f2[0:10]
     print np.average(np.abs(f3[:200]/f1[:200]))
     
     print 'max errror:',compare_field(f1,f2)
