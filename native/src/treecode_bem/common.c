@@ -764,6 +764,148 @@ void compute_moment(fastsum_plan *plan, struct octree_node *tree, double ***mome
 }
 
 
+void compute_coefficient_directly(double *a, double x, double y, double z, int p) {
+    int i, j, k;
+    double R, r, r2, r3, r5, r7, r9;
+
+    double x2=x*x;
+    double y2=y*y;
+    double z2=z*z;
+    double xy=x*y;
+    double xz=x*z;
+    double yz=y*z;
+    double xyz=xy*z;
+
+    double tx,ty,tz;
+    double tx2,ty2,tz2;
+
+    R = (x2+y2+z2);
+
+    r2 = 1.0/R;
+    r = sqrt(r2);
+    r3 = r*r2;
+    r5 = 3*r3*r2; //contain a factor of 3
+    r7 = 5*r5*r2; //contain a factor of 15
+    r9 = 7*r7*r2; //contain a factor of 105
+
+    tx=x2*r7-r5;
+    ty=y2*r7-r5;
+    tz=z2*r7-r5;
+
+	tx2 = x2*r9-r7;
+	ty2 = y2*r9-r7;
+	tz2 = z2*r9-r7;
+
+    a[0] = r;
+    a[1] = z*r3;
+    a[2] = z2*r5-r3;
+    a[3] = z*(tz-2*r5);
+    a[4] = z2*(tz2-5*r7)+3*r5;
+
+    a[5] = y*r3;
+    a[6] = yz*r5;
+    a[7] = y*tz;
+    a[8] = yz*(tz2-2*r7);
+    a[9] = y2*r5-r3;
+    a[10] = z*ty;
+    a[11] = z2*ty2-y2*r7+r5;
+
+    a[12] = y*(ty-2*r5);
+    a[13] = yz*(ty2-2*r7);
+    a[14] = y2*(ty2-5*r7)+3*r5;
+    a[15] = x*r3;
+    a[16] = xz*r5;
+    a[17] = x*tz;
+    a[18] = xz*(tz2-2*r7);
+
+    a[19] = xy*r5;
+    a[20] = xyz*r7;
+    a[21] = xy*tz2;
+    a[22] = x*ty;
+    a[23] = xz*ty2;
+    a[24] = xy*(ty2-2*r7);
+
+    a[25] = x2*r5-r3;
+    a[26] = z*tx;
+    a[27] = x2*tz2-z2*r7+r5;
+    a[28] = y*tx;
+    a[29] = yz*tx2;
+    a[30] = x2*ty2-y2*r7+r5;
+
+    a[31]=x*(tx-2*r5);
+    a[32]=xz*(tx2-2*r7);
+    a[33]=xy*(tx2-2*r7);
+    a[34]=x2*(tx2-5*r7)+3*r5;
+
+    return;
+}
+
+
+void compute_moment_directly(fastsum_plan *plan, struct octree_node *tree, double *moment, double x, double y, double z) {
+    double dx, dy, dz;
+    int i, j, k, ti, tj;
+    double tmp_x, tmp_y, tmp_z, tmp_xyz;
+    double nx, ny, nz;
+    double dxx,dyy,dzz;
+
+    int index=0;
+    int p=plan->p+1;
+    int N=p*(p+1)*(p+2)/6;
+    memset(moment, 0, N); //Always suppose N=35, n=5, size=n*(n+1)*(n+2)/6
+
+    for (ti = tree->begin; ti < tree->end; ti++) {
+
+        tj = plan->x_s_ids[ti];
+
+        nx = plan->t_normal[3 * tj];
+        ny = plan->t_normal[3 * tj + 1];
+        nz = plan->t_normal[3 * tj + 2];
+
+        dx = plan->x_s[3 * ti] - x;
+        dy = plan->x_s[3 * ti + 1] - y;
+        dz = plan->x_s[3 * ti + 2] - z;
+
+        if (dx==0){
+        	dxx=1.0;
+        }else{
+        	dxx=1.0/dx*nx*plan->charge_density[tj];
+        }
+
+        if (dy==0){
+        	dyy=1.0;
+        }else{
+        	dyy=1.0/dy*ny*plan->charge_density[tj];
+        }
+
+        if (dz==0){
+        	dzz=1.0;
+        }else{
+        	dzz=1.0/dz*nz*plan->charge_density[tj];
+        }
+
+        tmp_x = 1.0;
+        for (i = 0; i < plan->p + 1; i++) {
+             tmp_y = 1.0;
+             for (j = 0; j < plan->p - i + 1; j++) {
+                    tmp_z = 1.0;
+                    for (k = 0; k < plan->p - i - j + 1; k++) {
+
+                    	tmp_xyz = tmp_x * tmp_y * tmp_z;
+
+                    	moment[i] += (i*tmp_xyz*dxx+j*tmp_xyz*dyy+k*tmp_xyz*dzz);
+
+                        tmp_z *= dz;
+                    }
+                    tmp_y *= dy;
+                }
+                tmp_x *= dx;
+            }
+    }
+
+}
+
+
+
 fastsum_plan * create_plan() {
 
     fastsum_plan *plan = (fastsum_plan*) malloc(sizeof (fastsum_plan));

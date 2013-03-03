@@ -71,7 +71,7 @@ typedef struct {
     double *b_m;//boundary matrix
     int *id_nn;
 
-    int total_length_n
+    int total_length_n;
 } fastsum_plan;
 
 void compute_coefficient(double ***a, double dx, double dy, double dz, int p);
@@ -98,3 +98,6 @@ void direct_sum_I(fastsum_plan *plan, double *phi, double *u1);
 double solid_angle_single(double *p, double *x1, double *x2, double *x3);
 void boundary_element(double *xp, double *x1, double *x2, double *x3, double *res);
 int get_total_length(fastsum_plan *plan);
+
+
+void compute_coefficient_directly(double *a, double x, double y, double z, int p);
