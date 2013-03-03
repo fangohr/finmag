@@ -329,6 +329,7 @@ class Simulation(object):
 
         run_with_schedule(self.integrator, self.scheduler)
         self.integrator.reinit()
+        self.set_m(self.m)
         log.info("Relaxation finished at time t = {:.2g}.".format(self.t))
 
         self.scheduler._remove(self.relaxation)

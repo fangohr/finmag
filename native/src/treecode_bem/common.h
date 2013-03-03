@@ -23,6 +23,7 @@ struct octree_node {
     double radius;
 
     double ***moment;
+    double *mom;
     struct octree_node *children[8];
 
 };
@@ -101,3 +102,5 @@ int get_total_length(fastsum_plan *plan);
 
 
 void compute_coefficient_directly(double *a, double x, double y, double z, int p);
+void compute_moment_directly(fastsum_plan *plan, struct octree_node *tree, double *moment, double x, double y, double z);
+
