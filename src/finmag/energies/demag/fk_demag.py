@@ -14,6 +14,7 @@ import finmag.util.timings as timings
 from finmag.util.consts import mu0
 from finmag.native.llg import OrientedBoundaryMesh, compute_bem_fk
 from finmag.util.meshes import nodal_volume
+from finmag.util.timings import Timings, default_timer, timed, mtimed
 
 params = df.Parameters("fk_demag")
 poisson_params = df.Parameters("poisson")
@@ -25,18 +26,46 @@ laplace_params.add("preconditioner", "default")
 params.add(poisson_params)
 params.add(laplace_params)
 
+fk_timer = Timings()
+
 # TODO: Add benchmark to document once we get faster than existing implementation.
 
 
 class FKDemag(object):
     # TODO: Add documentation.
-    # TODO: Add timings provided by finmag.util.timings.
     def __init__(self):
+        """
+        Create a new FKDemag instance.
+
+        """
         # TODO: Add way to change solver parameters.
         # Either here or after the instance was created. Maybe both.
         pass
 
+    @mtimed(default_timer)
     def setup(self, S3, m, Ms, unit_length=1):
+        """
+        Setup the FKDemag instance. Usually called automatically by the Simulation object.
+
+        *Arguments*
+
+        S3: dolfin.VectorFunctionSpace
+
+            The finite element space the magnetisation is defined on.
+
+        m: dolfin.Function on S3
+
+            The unit magnetisation.
+
+        Ms: float
+
+            The saturation magnetisation in A/m.
+
+        unit_length: float
+
+            The length (in m) represented by one unit on the mesh. Default 1.
+
+        """
         # TODO: Find more meaningful names for some attributes like _D.
         # TODO: Overthink liberal use of _ prefix for attribute names.
         self.m = m
@@ -69,13 +98,15 @@ class FKDemag(object):
         self._laplace_zeros = df.Function(self.S1).vector()
         self._laplace_solver = df.KrylovSolver(params["laplace"]["method"], params["laplace"]["preconditioner"])
         self._laplace_solver.parameters["preconditioner"]["same_nonzero_pattern"] = True
-        self._bem, self._b2g_map = compute_bem_fk(OrientedBoundaryMesh(mesh))
+        with timed('compute BEM', self.__class__.__name__, fk_timer):
+            self._bem, self._b2g_map = compute_bem_fk(OrientedBoundaryMesh(mesh))
         self._phi_1 = df.Function(self.S1)  # solution of inhomogeneous Neumann problem
         self._phi_2 = df.Function(self.S1)  # solution of Laplace equation inside domain
         self._phi = df.Function(self.S1)  # magnetic potential phi_1 + phi_2
         self._D = df.assemble(self.Ms * df.inner(self._trial3, df.grad(self._test1)) * df.dx)
         self._setup_field()
 
+    @mtimed(default_timer)
     def compute_field(self):
         """
         Compute the demagnetising field.
@@ -88,6 +119,7 @@ class FKDemag(object):
         self._compute_magnetic_potential()
         return self._compute_field()
 
+    @mtimed(default_timer)
     def compute_energy(self):
         """
         Compute the total energy of the field.
@@ -105,6 +137,7 @@ class FKDemag(object):
         self._H_func.vector()[:] = self.compute_field()
         return df.assemble(self._E) * self.unit_length ** self.dim
 
+    @mtimed(default_timer)
     def energy_density(self):
         """
         Compute the energy density in the field.
@@ -123,6 +156,7 @@ class FKDemag(object):
         nodal_E = df.assemble(self._nodal_E).array() * self.unit_length ** self.dim
         return nodal_E / self._nodal_volumes
 
+    @mtimed(default_timer)
     def energy_density_function(self):
         """
         Returns the energy density in the field as a dolfin function to allow probing.
@@ -135,10 +169,12 @@ class FKDemag(object):
         self._nodal_E_func.vector()[:] = self.energy_density()
         return self._nodal_E_func
 
+    @mtimed(fk_timer)
     def _poisson_matrix(self):
         A = df.dot(df.grad(self._trial1), df.grad(self._test1)) * df.dx
         return df.assemble(A)  # stiffness matrix for Poisson equation
 
+    @mtimed(fk_timer)
     def _compute_magnetic_potential(self):
         # compute _phi_1 on the whole domain
         g_1 = self._D * self.m.vector()
@@ -160,6 +196,7 @@ class FKDemag(object):
         # add _phi_1 and _phi_2 to obtain magnetic potential
         self._phi.vector()[:] = self._phi_1.vector() + self._phi_2.vector()
 
+    @mtimed(fk_timer)
     def _setup_field(self):
         # TODO: This is the magpar method. Document how it works.
         a = df.inner(df.grad(self._trial1), self._test3) * df.dx
@@ -167,6 +204,7 @@ class FKDemag(object):
         self.G = df.assemble(a)
         self.L = df.assemble(b).array()
 
+    @mtimed(fk_timer)
     def _compute_field(self):
         # TODO: Write down how we would achieve the same result using df.project, albeit more slowly.
         H = self.G * self._phi.vector()
