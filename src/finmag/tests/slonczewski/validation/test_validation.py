@@ -1,10 +1,10 @@
 import os
-import run_validation_sim as sim
+import run_validation_sim as vsim
 import numpy as np
 
 epsilon = 1e-16
 tolerance = 1e-4
-nmag_file = os.path.join(sim.MODULE_DIR, "averages_nmag5.txt")
+nmag_file = os.path.join(vsim.MODULE_DIR, "averages_nmag5.txt")
 
 def test_validation():
     #short run:
@@ -13,9 +13,9 @@ def test_validation():
     #long run
     #tmax = 10e-9; tolerance = 1e-4
 
-    n = sim.run_simulation(t_max=tmax)
+    n = vsim.run_simulation(t_max=tmax)
 
-    averages = np.loadtxt(sim.averages_file)
+    averages = np.loadtxt(vsim.averages_file)
     nmag_avg = np.loadtxt(nmag_file)[:n,:]
 
     diff = np.abs(np.array(averages) - np.array(nmag_avg))
