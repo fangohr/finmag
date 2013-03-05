@@ -964,3 +964,28 @@ def compute_dmdt(t0, m0, t1, m1):
     dt = abs(t1 - t0)
     max_dmdt = max_dm / dt
     return max_dmdt
+
+
+def npy_to_dolfin_function(filename, mesh_or_space):
+    """
+    Create a dolfin function on the given mesh or function space whose
+    coefficients are stored in the given file.
+
+    *Arguments*
+
+    filename : str
+
+       The .npy file in which the function coefficients are stored.
+
+    mesh_or_space :
+
+        Either a dolfin.Mesh or a dolfin.VectorFunctionSpace of dimension 3.
+
+    """
+    # XXX TODO: Implement a test which writes a function, then reads
+    # it back in and checks that it's the same. Also vice versa.
+    a = np.load(filename)
+    _, V = mesh_and_space(mesh_or_space)
+    fun = df.Function(V)
+    fun.vector().set_local(a)
+    return fun
