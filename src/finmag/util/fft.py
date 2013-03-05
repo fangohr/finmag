@@ -1,7 +1,10 @@
 from __future__ import division
 from scipy.interpolate import InterpolatedUnivariateSpline
 from finmag.util.helpers import probe
+from glob import glob
+from time import time
 import numpy as np
+import dolfin as df
 import matplotlib.pyplot as plt
 import logging
 import matplotlib.cm as cm
@@ -248,3 +251,96 @@ def plot_spatially_resolved_normal_modes(m_vals_on_grid, idx_fourier_coeff,
         logger.warning("Omitting figure title because no t_step argument was specified.")
 
     return fig
+
+
+def export_normal_mode_animation(npy_files, outfilename, mesh, t_step, idx, dm_only=False):
+    """
+    Read in a bunch of .npy files (containing the magnetisation
+    sampled at regular time steps) and export an animation of the
+    normal mode corresponding to a specific frequency.
+
+    npy_files :  string (including shell wildcards) or list of filenames
+
+        The list of files containing the magnetisation values sampled
+        at the mesh vertices. There should be one file per stime step.
+
+    outfilename :  string
+
+        Name of the .pvd file to which the animation is exported.
+
+    mesh :  dolfin.Mesh
+
+        The mesh on which the magnetisation was sampled.l
+
+    t_step :  float
+
+        The interval between subsequent time steps.
+
+    idx:  int
+
+        Index of the frequency for which the normal mode is to be plotted.
+
+    dm_only :  bool (optional)
+
+        If False (the default), plots `m0 + dm(t)`, where m0 is the
+        average magnetisation and dm(t) the (spatially varying)
+        oscillation corresponding to the frequency of the normal mode.
+        If True, only `dm(t)` is plotted.
+    """
+    if isinstance(npy_files, str):
+        files = sorted(glob(npy_files))
+    else:
+        files = list(npy_files)
+    N = len(files)  # number of timesteps
+    num_nodes = len(mesh.coordinates())
+
+    # Read in the signal
+    signal = np.empty([N, 3*num_nodes])
+    for (i, filename) in enumerate(files):
+        signal[i, :] = np.load(filename)
+    logger.debug("Signal occupies {} MB of memory".format(signal.nbytes / 1024**2))
+
+    # Fourier transform the signal
+    t0 = time()
+    fft_vals = np.fft.rfft(signal, axis=0)
+    t1 = time()
+    logger.debug("Computing the Fourier transform took {:.2g} seconds".format(t1-t0))
+    fft_freqs = np.fft.fftfreq(N, d=t_step)[:len(fft_vals)]
+
+    # XXX TODO: The full invere Fourier transform should be replaced by the explicit formula for the single coefficient to save memory and computational effort
+    fft_vals_filtered = np.zeros(fft_vals.shape, dtype=fft_vals.dtype)
+    fft_vals_filtered[idx] = fft_vals[idx]
+    t0 = time()
+    signal_inv_filtered = np.fft.irfft(fft_vals_filtered, N, axis=0)
+    t1 = time()
+    logger.debug("Computing the inverse Fourier transform took {:.2f} seconds.".format(t1-t0))
+
+    # Determine a sensible scaling factor so that the oscillations are visible but not too large.
+    # N.B.: Even though it looks convoluted, computing the maximum value
+    # in this iterated way is actually much faster than doing it directly.
+    maxval = max(np.max(signal_inv_filtered, axis=0))
+    logger.debug("Maximum value of the signal: {}".format(maxval))
+    scaling_factor = 0.3 / maxval
+    logger.debug("Scaling factor: {}".format(scaling_factor))
+
+    V = df.VectorFunctionSpace(mesh, 'CG', 1, dim=3)
+    func = df.Function(V)
+    if dm_only == True:
+        signal_normal_mode = scaling_factor * signal_inv_filtered
+    else:
+        signal_normal_mode = signal.mean(axis=0).T + scaling_factor * signal_inv_filtered
+
+    logger.debug("Saving normal mode to file '{}'.".format(outfilename))
+    t0 = time()
+    f = df.File(outfilename, 'compressed')
+    # XXX TODO: We need the strange temporary array 'aaa' here because if we write the values directly into func.vector() then they end up being different (as illustrated below)!!!
+    aaa = np.empty(3*num_nodes)
+    #for i in xrange(len(ts)):
+    for i in xrange(20):
+        if i % 20 == 0:
+            print "i={} ".format(i),
+        aaa[:] = signal_normal_mode[i][:]
+        func.vector()[:] = aaa
+        f << func
+    t1 = time()
+    logger.debug("Saving the data took {} seconds".format(t1 - t0))
