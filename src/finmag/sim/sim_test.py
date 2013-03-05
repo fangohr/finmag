@@ -11,8 +11,7 @@ from finmag.example import barmini
 from math import sqrt, cos, sin, pi
 from finmag.util.helpers import assert_number_of_files
 from finmag.sim import sim_helpers
-from finmag.energies.zeeman import Zeeman
-from finmag.energies.exchange import Exchange
+from finmag.energies import Zeeman, Exchange, UniaxialAnisotropy
 
 logger = logging.getLogger("finmag")
 
@@ -483,3 +482,28 @@ class TestSimulation(object):
         # they oscillate rapidly there is quite a bit of numerical
         # inaccuracy, so we're only testing for m_z here.
         assert max(abs(zs - zs[::-1])) < 0.001
+
+    def test_mesh_info(self):
+        mesh = df.Box(0, 0, 0, 1, 1, 1, 1, 1, 1)
+        Ms = 8.6e5
+        unit_length = 1e-9
+
+        # Simulation without exchange/anisotropy
+        sim1 = Simulation(mesh, Ms, unit_length)
+        print sim1.mesh_info()
+
+        # Simulation with exchange but without anisotropy
+        sim2 = Simulation(mesh, Ms, unit_length)
+        sim2.add(Exchange(A=13e-12))
+        print sim2.mesh_info()
+
+        # Simulation with anisotropy but without exchange
+        sim3 = Simulation(mesh, Ms, unit_length)
+        sim3.add(UniaxialAnisotropy(K1=520e3, axis=[0, 0, 1]))
+        print sim3.mesh_info()
+
+        # Simulation with both exchange and anisotropy
+        sim4 = Simulation(mesh, Ms, unit_length)
+        sim4.add(Exchange(A=13e-12))
+        sim4.add(UniaxialAnisotropy(K1=520e3, axis=[0, 0, 1]))
+        pytest.xfail("print sim4.mesh_info()")
