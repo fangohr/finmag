@@ -4833,3 +4833,110 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-02-25 09:54:57 max_albert: Yes, am happy to entertain him.
 2013-02-25 12:03:45 fangohr-adium: Max, am running slightly late. Will come and fetch you.
 2013-02-25 12:07:00 mb8g11_: Any news about netgen 5.0 on aleph0?
+2013-02-26 09:23:45 fangohr-adium: Good Morning.
+2013-02-26 09:23:49 max_albert: Good morning.
+2013-02-26 09:23:55 fangohr-adium: That was quick ;-)
+2013-02-26 09:24:01 fangohr-adium: Has Pete arrived already?
+2013-02-26 09:24:04 max_albert: ;-)
+2013-02-26 09:24:08 max_albert: Nope.
+2013-02-26 09:24:32 fangohr-adium: Let me know when he does, and I'll come over for a morning coffee//chat. (Have a meeting at 10:30.)
+2013-02-26 09:24:34 max_albert: But he was a bit later yesterday, too. And he wanted to go to Student Services, too.
+2013-02-26 09:24:42 max_albert: Ok, will do.
+2013-02-26 09:36:18 max_albert: Hi Hans,Pete just arrived.
+2013-02-26 09:36:28 fangohr-adium: Good stuff.
+2013-02-26 09:36:33 fangohr-adium: I'll be over in 10 minutes.
+2013-02-26 11:18:44 mb8g11: Hi all.
+2013-02-26 12:13:56 fangohr-adium: Anybody up for lunch?
+2013-02-26 12:14:32 fangohr-adium: I'll come over.
+2013-02-26 12:16:17 max_albert: Sure, I'm in.
+2013-02-26 12:16:35 max_albert: Pete says he is too.
+2013-02-27 09:01:08 mb8g11: Good morning!
+2013-02-27 09:01:15 fangohr-adium: Good Morning all.
+2013-02-27 09:04:42 max_albert: Good morning.
+2013-02-27 09:08:12 fangohr-adium: Hi Max, Marc-Antonio, Marijan (?), have you got a preference for where we meet today 10:00 to 11:30? If you have results on your screens, it may be easier if I come over to your desks. Is that right?
+2013-02-27 09:08:49 mb8g11: I was just going to compile a few slides, but that's fine as well.
+2013-02-27 09:08:53 max_albert: Possibly yes.
+2013-02-27 09:09:39 fangohr-adium: Okay, I'll come over. The only thing we must not do during the meeting is to try to edit code and run it again — that will be eating time while most people do nothing. I can monitor that, though ;)
+2013-02-27 15:03:14 fangohr-adium: Hi all, could somebody let Dmitri know that his mailbox is full; -) My email to him is not coming through...
+2013-02-27 15:35:13 fangohr-adium: Marc-Antonio, are you out there? Could you let Dmitri know that I have put the text we worked on on eta:/tmp/draft.org, please?
+2013-02-27 15:36:01 fangohr-adium: Hi Dmitri, I'll just repeat my last message so MA does not need to tell you:
+2013-02-27 15:36:18 fangohr-adium: I have put the text we worked on on eta:/tmp/draft.org. (and your inbox seems full) ;-)
+2013-02-27 15:37:49 D_Chernyshenko: Thanks, Max has told me now too. I'm trying to sort out the inbox; somehow the act of deleting messages from the Inbox made it overflow...
+2013-02-27 15:38:51 mb8g11: Have you configured it to mark items as deleted, or move them to the trash?
+2013-02-27 15:39:17 fangohr-adium: I don't want to appear as biased, but it is a MS exchange server. Anything could happen.
+2013-02-27 15:39:48 mb8g11: Chuckles go around in the office..
+2013-02-27 15:40:36 D_Chernyshenko: I'm not exactly sure. The web interface could not sort messages by size, so what I did was delete messages from Inbox using Thunderbird, and then from the Deleted folder using the web interface.
+2013-02-27 15:40:41 D_Chernyshenko: Clearly that was too complicated
+2013-02-27 15:41:04 fangohr-adium: ;-)
+2013-02-27 15:41:15 mb8g11: For future reference: print demag.demag.laplace_solver.parameters.to_dict() to read the demag parameters/tolerances. And demag.demag.laplace_solver.parameters["absolute_tolerance"] = X.
+2013-02-27 15:41:45 max_albert: Marc-Antonio: is this in Finmag or Nmag?
+2013-02-27 15:42:24 mb8g11: finmag. Have looked into the Simulation object from nmag, but couldn't find the relevant info. Just how you can set it (keyword argument ksp_tolerances).
+2013-02-27 15:42:43 max_albert: Did you dig into the source code, too?
+2013-02-27 15:43:07 max_albert: Maybe there actually are no defaults in Nmag, but it just uses PETSc's defaults which you can override from Nmag?
+2013-02-27 15:43:14 max_albert: Pure guesswork here though. Hans may know more.
+2013-02-27 15:43:29 mb8g11: Maybe. For now, checking if changing them has any effect at all.
+2013-02-27 15:43:35 mb8g11: (in finmag that is)
+2013-02-27 16:15:16 max_albert: Dmitri: I followed the guide on this page to set up my printer: https://www.southampton.ac.uk/isolutions/services/printing_on_managed_mfd/how_do_i.php
+2013-02-27 16:15:34 max_albert: It used to be called "How to add an MFD print queue on a non-University Linux Ubuntu machine" but it now refers to a RedHat machine...
+2013-02-27 18:27:44 mb8g11: Spin polarisation P = (x-y)/(x+y), where x and y are the fractions of spin up/down electrons.
+2013-02-27 18:27:58 max_albert: Thanks! :)
+2013-02-27 18:29:41 mb8g11: My pleasure.
+2013-02-27 18:30:09 mb8g11: To be honest, x+y=1, so the formula is more complicated than it needs to be ;-)
+2013-02-27 18:30:26 max_albert: Fair point. :-)
+2013-02-28 09:53:40 fangohr-adium: Good Morning.
+2013-02-28 09:54:30 fangohr-adium: I suggest we have gather at 10:00 today in my office to listen to the stuff that Weiwei has been up to. Bring tea and coffee, I have got biscuits.
+2013-02-28 09:57:49 fangohr-adium: Does that work for you, Weiwei, or would it be better to be at your computer?
+2013-02-28 09:58:25 mb4e10: Good morning, no problem
+2013-02-28 09:58:36 ww1g11: both are okay
+2013-02-28 10:00:03 fangohr-adium: Okay, let's do it here, then (i.e. my office).
+2013-02-28 10:00:14 ww1g11: okay
+2013-02-28 10:03:10 mb8g11: Good morning guys. Just wanted to say I upset my stomach and won't be able to join you for the meeting.
+2013-02-28 12:31:52 fangohr-adium: I will head for lunch with Pete at 13:00 if anybody wants to join.
+2013-02-28 12:54:06 ww1g11: I'm in
+2013-02-28 13:01:38 fangohr-adium: Okay, great.
+2013-02-28 13:01:50 fangohr-adium: I'll come and pick you up. (Now)
+2013-02-28 13:04:52 fangohr-adium: Actulaly, give me 5 more minutes (sorry).
+2013-02-28 13:13:55 fangohr-adium: Okay, now.
+2013-02-28 13:13:56 fangohr-adium: Really.
+2013-02-28 15:04:41 max_albert: Hi all! (And Marc-Antonio in particular.)
+2013-02-28 15:04:46 max_albert: I saw that there are tests for the Slonczewski spin torque in the Finmag code base.
+2013-02-28 15:04:51 max_albert: Are they actually run at all, and do they work?
+2013-02-28 15:05:01 max_albert: I'm not implying that they don't, but I ran one of the scripts last night and it took quite a long time to finish (~3 hours, although this was with other jobs running alongside).
+2013-02-28 15:05:06 max_albert: So I was curious what the status is.
+2013-02-28 15:05:25 fangohr-adium: (I think MA is not online any more).
+2013-02-28 15:05:53 max_albert: Yes, I know. But I think he can read previous messages whenever he logs back on.
+2013-03-01 09:52:46 mb8g11: Hi all (from the office).
+2013-03-01 11:49:43 fangohr-adium: Greetings.
+2013-03-01 11:49:56 max_albert: Hello Hans.
+2013-03-01 11:49:57 mb8g11: fangohr-adium, Max told me there is a talk at 12:00?
+2013-03-01 11:50:02 fangohr-adium: Will I see you at 12:00 for Dr Hovorka's brief presentation in the boardroom?
+2013-03-01 11:50:04 fangohr-adium: Yes.
+2013-03-01 11:50:13 fangohr-adium: I thought I had sent an email around regarding this.
+2013-03-01 11:50:20 max_albert: Yep, planning to come.
+2013-03-01 11:50:21 fangohr-adium: Maybe it didn't get out of my outbox.
+2013-03-01 11:50:25 fangohr-adium: Good, thanks.
+2013-03-01 11:51:05 mb4e10: yes
+2013-03-01 11:51:21 mb8g11: Yes.
+2013-03-01 11:52:06 mb8g11: I wasn't in the recipients.
+2013-03-01 14:34:01 ww1g11: I have some weird hysteresis loops, any one want to see and give suggestion on them?
+2013-03-01 17:11:07 fangohr-adium: MA, sorry, my mistake.
+2013-03-01 17:11:33 fangohr-adium: Weiwei, I only saw your message now — I always like to to see weird hysteresis loops; maybe we can do that next week.
+2013-03-01 17:12:33 fangohr-adium: All, I have put a Chicken Salat Sandwhich into the fridge (in the door) just outside my office. This is still closed in a plastic box and spare from the interview today. Feel free to get it and eat it if anyone is hungry; otherwise it just goes off over the weekend.
+2013-03-01 17:16:07 fangohr-adium: Over and out.
+2013-03-01 17:25:18 max_albert: Hi Hans! You probably won't read this before next week, but I just discussed the strange hysteresis loops with Weiwei and we're a bit at a loss to what's going on.
+2013-03-01 17:26:29 max_albert: But as you said we can discuss it next week. (I think Weiwei is going to commit a couple of small scripts that exhibit the problem to the sandbox so we can take it from there.)
+2013-03-01 17:43:21 mb8g11: Hi Weiwei, just writing this down because you took the time to explain it to me: You are re-doing the hysteresis loop example from the nmag manual. When you use the FK method for the demag, the results agree with nmag and across the two differents approaches you used.
+2013-03-01 17:44:04 mb8g11: The two approaches are: 1) Use a simulation object and relax it several times with new fields. 2) Use a new simulation object for every field.
+2013-03-01 17:44:43 mb8g11: When you use the Treecode method, the results don't agree with nmag anymore and they don't agree across the two approaches.
+2013-03-01 17:45:01 mb8g11: Did I get this right so far?
+2013-03-01 17:48:29 ww1g11: Not exactly, it seems that treecode also can give a reasonable result using the second approach
+2013-03-01 17:49:39 max_albert: But you only see a noticeable difference between the two methods when using the Treecode method, whereas the FK method always seems to be ok in both cases?
+2013-03-01 17:50:22 ww1g11: yes, FK always works
+2013-03-01 17:57:23 mb8g11: If my intuition is right, the following test might uncover the root of the bug: Create simulation objects A and B. Check the treecode demag fields are the same. Let simulation run A run for some time, then use its magnetisation to create a new simulation object C. Check if treecode demag fields of A and C agree.
+2013-03-01 17:57:36 mb8g11: If they don't you have your bug, if they do, you are doing something wrong in your scripts.
+2013-03-01 17:58:32 max_albert: I like that suggestion. It's clear you have been a bug hunter for some time. :)
+2013-03-01 17:58:53 mb8g11: Haha.
+2013-03-01 18:00:03 ww1g11: Good suggestion
+2013-03-02 07:26:08 fangohr1: Hi Weiwei, MA, Max, thanks for reporting of the odd hysteresis loop — doing it via IRC may be quite effective as (i) we archive it and (ii) everybody can chip in ideas, and (iii) I see what is working [and not working] although I am not in your open plan area.
+2013-03-02 07:26:45 fangohr1: Keep us posted, Weiwei with any insights, further problems etc.
+2013-03-02 07:28:00 fangohr1: (A problem of comparing the demag fields is that we cannot expect full agreement of course - there will be numerical noise. However, it is certainly something we should try! Plotting the magnitude of the difference vector [or so] may or may not show something.)
