@@ -886,6 +886,7 @@ def vector_field_from_dolfin_function(f, xlims=None, ylims=None, zlims=None,
 
     return X, Y, Z, U, V, W
 
+
 def probe(dolfin_function, points, apply_func=None):
     """
     Probe the dolfin function at the given points.
@@ -942,6 +943,15 @@ def probe(dolfin_function, points, apply_func=None):
     loop_indices = itertools.product(*map(xrange, points.shape[:-1]))
     for idx in loop_indices:
         try:
+            # XXX TODO: The docstring of a df.Function says at the very
+            # end that it's possible to pass (slices of) a larger array
+            # in order to fast fill up an array with multiple evaluations.
+            # This might be worth investigating!
+            #
+            # Alternatively, it may be good to write special helper functions
+            # For the most common cases Nx3 and (nx x ny x nz x 3). Or can
+            # we even reshape the array in the beginning and then only use the
+            # first case?
             pt = points[idx]
             res[idx] = apply_func(dolfin_function(pt))
         except RuntimeError:
