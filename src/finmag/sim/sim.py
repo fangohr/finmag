@@ -581,11 +581,15 @@ class Simulation(object):
 
         Also print a distribution of edge lengths present in the mesh
         and how they compare to the exchange length and the Bloch
-        parameter (if these can be computed). This information is
-        relevant to estimate whether the mesh discretisation
-        is too coarse and might result in numerical artefacts (see W. Rave,
-        K. Fabian, A. Hubert, "Magnetic states ofsmall cubic particles with
-        uniaxial anisotropy", J. Magn. Magn. Mater. 190 (1998), 332-348).
+        parameter (if these can be computed, which requires an
+        exchange interaction (plus anisotropy for the Bloch
+        parameter); note that for spatially varying exchange strength
+        and anisotropy constant the average values are used). This
+        information is relevant to estimate whether the mesh
+        discretisation is too coarse and might result in numerical
+        artefacts (see W. Rave, K. Fabian, A. Hubert, "Magnetic states
+        ofsmall cubic particles with uniaxial anisotropy", J. Magn.
+        Magn. Mater. 190 (1998), 332-348).
 
         """
         info_string = "{}\n".format(mesh_info(self.mesh))
@@ -604,8 +608,9 @@ class Simulation(object):
             return info
 
         if hasattr(self.llg.effective_field, "exchange"):
-            A = self.llg.effective_field.exchange.A
-            l_ex = exchange_length(A, self.llg.Ms)
+            A = self.llg.effective_field.exchange.A.vector().array().mean()
+            Ms = self.llg.Ms.vector().array().mean()
+            l_ex = exchange_length(A, Ms)
             info_string += added_info(l_ex, 'exchange length', 'l_ex')
             if hasattr(self.llg.effective_field, "anisotropy"):
                 K1 = float(self.llg.effective_field.anisotropy.K1)
