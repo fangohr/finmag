@@ -3,6 +3,11 @@ from scipy.interpolate import InterpolatedUnivariateSpline
 from finmag.util.helpers import probe
 import numpy as np
 import matplotlib.pyplot as plt
+import logging
+import matplotlib.cm as cm
+
+logger = logging.getLogger("finmag")
+
 
 def FFT_m(filename, t_step, t_ini=0, subtract_values=None):
     """
@@ -160,3 +165,86 @@ def fft_at_probing_points(dolfin_funcs, pts):
                                   mask=np.ma.getmask(vals_probed[:n, ...]))
 
     return vals_fft
+
+
+def plot_spatially_resolved_normal_modes(m_vals_on_grid, idx_fourier_coeff,
+                                         t_step=None, figsize=None,
+                                         yshift_title=1.5, cmap=cm.jet):
+    """
+    XXX Warning: The interface for this function hasn't matured yet,
+                 so be prepared for it to change in the future.
+
+    Given the time evolution of the magnetisation (probed on a regular
+    grid), compute and plot the normal mode shapes corresponding to a
+    certain frequency. More precisely, this plots the absolute values
+    and the phase of the Fourier coefficients at each probing point
+    for each of m_x, m_y and m_z.
+
+    m_vals_on_grid : numpy.array of shape (nt, nx, ny, nz, 3)
+        Array containing the magnetisation values probed at regular
+        time steps on a regular grid. Here `nt` is the number of time
+        steps and `nx`, `ny`, `nz` determine the size of the probing
+        grid. Thus The 3-vector m_vals_on_grid[t0, x0, y0, z0]
+        contains the magnetisation at time `t0` probed at the grid
+        point with coordinates (x0, y0, z0).
+
+    idx_fourier_coeff : int
+
+        Index of the Fourier coefficient for which to compute the normal
+        modes. This should be between 0 and (number of files - 1).
+
+    t_step : float (optional)
+
+        The interval between subsequent time steps of the probed
+        magnetisation values. This is only relevant to print the
+        frequency of the normal mode in the figure title.
+
+    figsize : pair of float
+
+        The size of the resulting figure.
+
+    yshift_title : float
+
+        Amount by which the title should be shifted up (this can be
+        used to tweak the figure if the title overlaps with one of the
+        colorbars, say).
+
+    cmap :
+
+        The colormap to use.
+
+    *Returns*
+
+    The matplotlib figure containing.
+    """
+    n = (m_vals_on_grid.shape[0] // 2) + 1
+    fft_vals = np.ma.masked_array(np.fft.rfft(m_vals_on_grid, axis=0),
+                                  mask=np.ma.getmask(m_vals_on_grid[:n, ...]))
+    fig = plt.figure(figsize=figsize)
+    axes = []
+    for k in [0, 1, 2]:
+        ax = fig.add_subplot(2, 3, k+1)
+        ax.set_title('m_{}'.format('xyz'[k]))
+        im = ax.imshow(abs(fft_vals[idx_fourier_coeff, :, :, 0, k]), origin='lower', cmap=cmap)
+        fig.colorbar(im)
+        axes.append(ax)
+
+        ax = fig.add_subplot(2, 3, k+3+1)
+        axes.append(ax)
+        ax.set_title('m_{} (phase)'.format('xyz'[k]))
+        im = ax.imshow(np.angle(fft_vals[idx_fourier_coeff, :, :, 0, k], deg=True), origin='lower', cmap=cmap)
+        fig.colorbar(im)
+    if t_step != None:
+        # XXX TODO: Which value of nn is the correct one?
+        #nn = n
+        nn = len(m_vals_on_grid)
+        fft_freqs = np.fft.fftfreq(nn, t_step)[:nn]
+        figure_title = "Mode shapes for frequency f={:.2f} GHz".format(fft_freqs[idx_fourier_coeff] / 1e9)
+        plt.text(0.5, yshift_title, figure_title,
+             horizontalalignment='center',
+             fontsize=20,
+             transform = axes[2].transAxes)
+    else:
+        logger.warning("Omitting figure title because no t_step argument was specified.")
+
+    return fig
