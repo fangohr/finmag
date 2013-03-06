@@ -4947,3 +4947,72 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-03-05 09:47:53 D_Chernyshenko_: Good morning.
 2013-03-05 13:31:49 fangohr: Hi folks, there are sandwhichs
 2013-03-05 13:32:21 fangohr: sandwiches and other things to eat outside my office if you are interested.
+2013-03-06 08:58:49 mb8g11: Good morning!
+2013-03-06 08:59:02 max_albert: Good morning!
+2013-03-06 09:02:18 mb8g11: Any news from the Slonczewski?
+2013-03-06 09:02:57 max_albert: Not yet, I'm afraid. Didn't have time to look into it any more yesterday, but will do so soon.
+2013-03-06 09:08:44 mb8g11: Still, it was a good change.
+2013-03-06 09:28:43 fangohr-adium: Good Morning all.
+2013-03-06 09:33:36 mb8g11: Morning!
+2013-03-06 09:34:07 fangohr-adium: MA, will you come over for our meeting?
+2013-03-06 09:36:34 mb8g11: Can we skype?
+2013-03-06 09:36:39 fangohr-adium: Sure.
+2013-03-06 09:37:08 fangohr-adium: Just starting up Skype ...
+2013-03-06 09:37:18 mb8g11: Reboot.
+2013-03-06 09:38:41 fangohr-adium: ;-)
+2013-03-06 09:52:09 mb8g11: It just won't connect.
+2013-03-06 09:55:50 fangohr-adium: Never mind. We can talk on the phone briefly if you like? Just give me a call on 02380598345
+2013-03-06 09:58:01 mb8g11: Perfect.
+2013-03-06 10:00:54 fangohr-adium: Max, Marijan, can you give MA and me 10 minutes, so that I see in 10 minutes in my office?
+2013-03-06 10:01:14 max_albert: Yes, sure.
+2013-03-06 10:01:15 mb4e10: no problem
+2013-03-06 10:11:33 fangohr-adium: Max, Marijan, ready for you when you are.
+2013-03-06 13:16:09 mb8g11: Found the bug which caused the stripes on my images.
+2013-03-06 13:16:26 max_albert: Nice! What was it?
+2013-03-06 13:18:43 mb8g11: I can't really tell what's wrong, just the symptoms: I have m_y for every point in time in an array with dimensions (nb_times, nb_points). Let's call this array m_y_t.
+2013-03-06 13:19:23 mb8g11: I want to substract the initial magnetisation from this array so that only the variation of the magnetisation over time remains, since I don't care for the absolute values.
+2013-03-06 13:19:31 mb8g11: So I do: m_y_t -= m_y_t[0]
+2013-03-06 13:20:12 mb8g11: For a reason I don't understand, this only substracts m_y_t[0] for roughly half of the array, but lets the remaing half untouched.
+2013-03-06 13:20:30 mb8g11: Doing delta_m_y_t = m_y_t - m_y_t[0] works, and the stripes disappear.
+2013-03-06 13:20:54 max_albert: That's really weird!!
+2013-03-06 13:21:06 mb8g11: Ah, should have mentioned: The stripes are in fact what the initial magnetisation looks like (m_y fluctuates a little over the length of the cylinder).
+2013-03-06 13:23:10 mb8g11: I'll try to narrow it down. Honestly, I have a hard time believing it's a numpy bug considering some stupid mistakes I have made in the last year ;-)
+2013-03-06 13:27:14 D_Chernyshenko_: Hi Hans, do you have time for our meeting at 2pm (or later) rather than 1:30? For some reason I thought it was scheduled at 2pm and mis-timed my lunch
+2013-03-06 13:28:08 mb4e10: Hans says no sorry.
+2013-03-06 13:28:26 D_Chernyshenko_: Ouch
+2013-03-06 13:28:33 D_Chernyshenko_: Well I'll run
+2013-03-06 13:34:51 max_albert: Hi Hans! Weiwei is back in the office and we're ready to register for the workshop any time.
+2013-03-06 13:34:55 max_albert: Could you please let us know when you have written the email to the relevant person so that we can go there and register? (What's his name again?)
+2013-03-06 13:35:13 fangohr-adium: Just done — CCed to you.
+2013-03-06 13:35:19 max_albert: Awesome, thank you!
+2013-03-06 13:54:22 mb8g11: I can reproduce the bug from scratch (a few lines of code) in an ipython notebook. Checking a script now.
+2013-03-06 13:54:37 max_albert: That would be interesting to see.
+2013-03-06 13:55:45 mb8g11: Will commit to finmag/sandbox then, give me a few minutes to put a few comments in.
+2013-03-06 13:55:55 max_albert: Sure, no rush.
+2013-03-06 14:17:33 mb8g11: Have a visualisation ready, trying to find the minimal failing code.
+2013-03-06 14:34:20 mb8g11: Pushed.
+2013-03-06 14:39:08 mb8g11: Pushed a second script which fails on the two machines I tried it on - will ask on numpy mailing list.
+2013-03-06 14:53:03 max_albert: Hi Marc-Antonio!
+2013-03-06 14:53:13 max_albert: I just tried the script that you pushed.
+2013-03-06 14:53:35 max_albert: I haven't looked into this in detail, but I have a hunch it may be due to the way meshgrid works.
+2013-03-06 14:54:05 max_albert: Sorry, ignore that.
+2013-03-06 14:54:27 max_albert: Thought I had read something on the screen that wasn't actually there. :)
+2013-03-06 14:54:48 mb8g11: 14:49 < mb8g11> Hi everybody. I found something which looks a bug in numpy to me, built a minimal example to show it and reproduced it on two machines. Has anybody a few minutes to check it out  and tell me what is wrong? http://pastebin.com/cWdSdYXW
+2013-03-06 14:54:52 mb8g11: 14:51 < seberg> mb8g11, its unfortunat, but not a bug
+2013-03-06 14:54:55 mb8g11: 14:52 < seberg> (though there are half plans that it should be warned about it I think, at least I think it should be, but its a bit annoying)
+2013-03-06 14:54:58 mb8g11: 14:52 < seberg> mb8g11, the basic problem is, numpy operations are in-place, and they are ill defined if this in-place stuff may read itself
+2013-03-06 14:55:01 mb8g11: 14:52 < seberg> there is also buffering involved (or there can be at least)
+2013-03-06 14:55:03 mb8g11: 14:52 < mb8g11> I guess that at some point during the computation Z[0] is overwritten and becomes zero?
+2013-03-06 14:55:06 mb8g11: 14:53 < seberg> yes
+2013-03-06 14:55:09 mb8g11: 14:53 < seberg> Z[0] is part of Z
+2013-03-06 14:55:11 mb8g11: 14:53 < seberg> since you change Z, you change Z[0]
+2013-03-06 14:55:14 mb8g11: 14:53 < seberg> and how that happens is *not* predictable (generally, there are some exceptions, but I am not even sure when exactly you can know it)
+2013-03-06 14:55:17 mb8g11: 14:54 < mb8g11> Too bad, still, helpful information, thank you!
+2013-03-06 14:55:19 mb8g11: 14:54 < seberg> that said, numpy could try to check if the out array shares memory with the inputs in a non-trivial manner and give a warning, and I think everyone would agree if that is  implemented...
+2013-03-06 14:55:23 mb8g11: (from scipy IRC channel where I asked my question)
+2013-03-06 14:56:21 max_albert: Ah, that makes sense. That's actually what I thought might be the reason (although as I said I interpreted the output totally wrongly ;-)).
+2013-03-06 14:56:24 max_albert: Tricky one.
+2013-03-06 15:01:29 mb8g11: Absolutely. Not the first person to walk into that trap: https://github.com/numpy/numpy/issues/1683
+2013-03-06 15:09:23 mb8g11: Haha, just saw that you fixed a typo in the numpy fft docs.
+2013-03-06 15:09:28 mb8g11: @max_albert.
+2013-03-06 15:09:31 max_albert: :)
