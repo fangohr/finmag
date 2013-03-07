@@ -27,5 +27,5 @@ def test_against_nmag():
     finally:
         os.chdir(cwd_backup)
 
-    np.testing.assert_allclose(m_nmag, m_finmag, rtol=1e-2)
+    np.testing.assert_allclose(m_nmag, m_finmag, rtol=1e-4, atol=1e-4)
     # atol is 0 by default when using assert_allclose
