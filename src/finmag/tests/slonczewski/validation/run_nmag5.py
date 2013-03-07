@@ -1,4 +1,5 @@
 import os, sys, math
+import numpy as np
 from nsim.netgen import netgen_mesh_from_string
 from nmag.common import SI, degrees_per_ns, Tesla, mu0, at, every
 from nmag.nmag5 import Simulation, MagMaterial, uniaxial_anisotropy
@@ -37,12 +38,14 @@ sim.load_mesh(mesh_filename, [("region1", mat)], unit_length=nm)
 sim.set_m([1, 0.01, 0.01])
 sim.set_H_ext(Happ_dir, 0.001*Tesla/mu0)
 
-# Direction of the polarization
+# Direction of the polarization. We normalize this by hand because
+# nmag doesn't seem to do it automatically.
 theta_rad = math.pi*theta/180.0
 phi_rad = math.pi*phi/180.0
-P_direction = [math.sin(theta_rad)*math.cos(phi_rad),
-               math.sin(theta_rad)*math.sin(phi_rad),
-               math.cos(theta_rad)]
+P_direction = np.array([math.sin(theta_rad)*math.cos(phi_rad),
+                        math.sin(theta_rad)*math.sin(phi_rad),
+                        math.cos(theta_rad)])
+P_direction = list(P_direction / np.linalg.norm(P_direction))
 
 # Set the polarization direction and current density
 sim.model.quantities["sl_fix"].set_value(Value(P_direction))
