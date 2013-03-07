@@ -77,13 +77,20 @@ class FixedEnergyDW(object):
 			filename="mesh_%d.xml"%i
 			self.write_xml(filename,cds,cells)
 			
-			demag=Demag()
+			demag=Demag(solver='Treecode')
 			mesh=df.Mesh(filename)
 			Vv = df.VectorFunctionSpace(mesh, 'Lagrange', 1)
+			
+			dg = df.FunctionSpace(mesh, "DG", 0)
+			Ms_tmp=df.Function(dg)
+			Ms_list=list(self.Ms.vector().array())
+			Ms_tmp.vector().set_local(np.array(Ms_list+Ms_list))
+
+			
 			m=df.Function(Vv)
 			tmp_init_m=self.init_m.reshape((1,-1),order='F')[0]
 			m.vector().set_local(tmp_init_m)
-			demag.setup(Vv,m,self.Ms)
+			demag.setup(Vv,m,Ms_tmp)
 			self.tmp_field+=demag.compute_field()
 			
 			os.remove(filename)
@@ -96,13 +103,19 @@ class FixedEnergyDW(object):
 			filename="mesh_%d.xml"%i
 			self.write_xml(filename,cds,cells)
 			
-			demag=Demag()
+			demag=Demag(solver='Treecode')
 			mesh=df.Mesh(filename)
 			Vv = df.VectorFunctionSpace(mesh, 'Lagrange', 1)
+			
+			dg = df.FunctionSpace(mesh, "DG", 0)
+			Ms_tmp=df.Function(dg)
+			Ms_list=list(self.Ms.vector().array())
+			Ms_tmp.vector().set_local(np.array(Ms_list+Ms_list))
+			
 			m=df.Function(Vv)
 			tmp_init_m=self.init_m.reshape((1,-1),order='F')[0]
 			m.vector().set_local(tmp_init_m)
-			demag.setup(Vv,m,self.Ms)
+			demag.setup(Vv,m,Ms_tmp)
 			self.tmp_field+=demag.compute_field()
 			
 			os.remove(filename)
@@ -114,7 +127,7 @@ class FixedEnergyDW(object):
 	
 if __name__=='__main__':
 
-	mesh = df.Box(0, 0, 0, 500, 20, 5, 100, 4, 1)
+	mesh = df.BoxMesh(0, 0, 0, 500, 20, 5, 100, 4, 1)
 	
 	dw=FixedEnergyDW(repeat_time=5)
 	S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)

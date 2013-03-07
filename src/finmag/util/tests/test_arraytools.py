@@ -45,7 +45,7 @@ def test_dolfinvectordatalayout():
     """Check that the dolfin data layout is compatible with the flat/unflat
     functions."""
     import dolfin
-    mesh=dolfin.Interval(10,0,1)
+    mesh=dolfin.IntervalMesh(10,0,1)
     V = dolfin.VectorFunctionSpace(mesh,"CG",1,dim=3)
     f = dolfin.Expression(("0.","1.0","2.0"))
     u = dolfin.interpolate(f,V)

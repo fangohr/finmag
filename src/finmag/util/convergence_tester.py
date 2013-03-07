@@ -201,10 +201,10 @@ if __name__ == "__main__":
             self.Hdemagx,self.Hdemagy,self.Hdemagz = self.Hdemag.split(True) 
 
     #Define fineness values for meshes.
-    finenesslist = range(2,4)
+    maxhlist = range(2,4)
     
     #Define Demag problems using the mesh fineness values
-    problems = [pft.MagUnitSphere(n) for n in finenesslist]
+    problems = [pft.MagUnitSphere(maxh) for maxh in maxhlist]
 
     #The x- axis in the final plot will be "Number of elements"
     numelement = [p.mesh.num_cells() for p in problems]

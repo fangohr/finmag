@@ -14,7 +14,7 @@ from finmag.sim import sim_helpers
 from finmag.energies import Exchange, Zeeman, Demag, UniaxialAnisotropy, DMI
 from finmag.integrators.llg_integrator import llg_integrator
 from finmag.integrators import scheduler, events
-
+from finmag.integrators.common import run_with_schedule
 
 ONE_DEGREE_PER_NS = 17453292.5  # in rad/s
 
@@ -30,7 +30,7 @@ class Simulation(object):
 
     """
     @mtimed
-    def __init__(self, mesh, Ms, unit_length=1, name='unnamed', integrator_backend="sundials"):
+    def __init__(self, mesh, Ms, unit_length=1, name='unnamed', integrator_backend="sundials",pbc2d=None):
         """Simulation object.
 
         *Arguments*
@@ -70,7 +70,7 @@ class Simulation(object):
         self.integrator_backend = integrator_backend
         self.S1 = df.FunctionSpace(mesh, "Lagrange", 1)
         self.S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
-        self.llg = LLG(self.S1, self.S3)
+        self.llg = LLG(self.S1, self.S3, pbc2d=pbc2d)
         self.llg.Ms = Ms
         self.Volume = mesh_volume(mesh)
 
@@ -83,9 +83,9 @@ class Simulation(object):
         self.vtk_savers = {}
 
         self.scheduler_shortcuts = {
-            'save_restart_data': Simulation.save_restart_data,
+            'save_restart_data': sim_helpers.save_restart_data,
             'save_ndt': sim_helpers.save_ndt,
-            'save_vtk': Simulation.save_vtk,
+            'save_vtk': self.save_vtk,
             'switch_off_H_ext': Simulation.switch_off_H_ext,
         }
 
@@ -163,6 +163,16 @@ class Simulation(object):
         log.debug("Adding interaction %s to simulation '%s'" % (str(interaction),self.name))
         interaction.setup(self.S3, self.llg._m, self.llg._Ms_dg, self.unit_length)
         self.llg.effective_field.add(interaction, with_time_update)
+        
+        if interaction.__class__.__name__=='Zeeman':
+            self.zeeman_interation=interaction
+            self.tablewriter.entities['zeeman']={
+                        'unit': '<A/m>',
+                        'get': lambda sim: sim.zeeman_interation.average_field(),
+                        'header': ('h_x', 'h_y', 'h_z')}
+        
+            self.tablewriter.update_entity_order()
+        
 
     def total_energy(self):
         """
@@ -208,7 +218,7 @@ class Simulation(object):
 
     def set_H_ext(self, H_ext):
         """
-        Set the external field (in A/m).
+        Convenience function to set the external field.
         """
         H = self.get_interaction("Zeeman")
         H.set_value(H_ext)
@@ -292,7 +302,7 @@ class Simulation(object):
         exit_at = events.StopIntegrationEvent(t)
         self.scheduler._add(exit_at)
 
-        self.integrator.run_with_schedule(self.scheduler)
+        run_with_schedule(self.integrator, self.scheduler)
         log.info("Simulation has reached time t = {:.2g} s.".format(self.t))
 
         self.scheduler._remove(exit_at)
@@ -317,8 +327,9 @@ class Simulation(object):
         self.relaxation = events.RelaxationEvent(self, stopping_dmdt, dmdt_increased_counter_limit, dt_limit)
         self.scheduler._add(self.relaxation)
 
-        self.integrator.run_with_schedule(self.scheduler)
+        run_with_schedule(self.integrator, self.scheduler)
         self.integrator.reinit()
+        self.set_m(self.m)
         log.info("Relaxation finished at time t = {:.2g}.".format(self.t))
 
         self.scheduler._remove(self.relaxation)
@@ -383,7 +394,16 @@ class Simulation(object):
         return self.llg.pins
 
     def __set_pins(self, nodes):
-        self.llg.pins = nodes
+        pinlist=[]
+        if hasattr(nodes, '__call__'):
+            coords = self.mesh.coordinates()
+            for i,c in enumerate(coords):
+                if nodes(c):
+                    pinlist.append(i)
+            pinlist=np.array(pinlist)
+            self.llg.pins=pinlist
+        else:
+            self.llg.pins = nodes
 
     pins = property(__get_pins, __set_pins)
 
@@ -524,13 +544,22 @@ class Simulation(object):
                 log.error(msg)
                 raise KeyError(msg)
 
-        func_args = inspect.getargspec(func).args
-        illegal_argnames = ['at', 'after', 'every', 'at_end', 'realtime']
-        for kw in illegal_argnames:
-            if kw in func_args:
-                raise ValueError(
-                    "The scheduled function must not use any of the following "
-                    "argument names: {}".format(illegal_argnames))
+        try:
+            func_args = inspect.getargspec(func).args
+        except TypeError:
+            # This can happen when running the binary distribution, since compiled
+            # functions cannot be inspected. Not a great problem, though, because
+            # this will result in an error once the scheduled function is called,
+            # even though it would be preferable to catch this early.
+            func_args = None
+
+        if func_args != None:
+            illegal_argnames = ['at', 'after', 'every', 'at_end', 'realtime']
+            for kw in illegal_argnames:
+                if kw in func_args:
+                    raise ValueError(
+                        "The scheduled function must not use any of the following "
+                        "argument names: {}".format(illegal_argnames))
 
         at = kwargs.pop('at', None)
         every = kwargs.pop('every', None)

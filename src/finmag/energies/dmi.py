@@ -195,7 +195,7 @@ class DMI(EnergyBase):
 
             m    = 1e-8
             n    = 5
-            mesh = Box(0, m, 0, m, 0, m, n, n, n)
+            mesh = BoxMesh(0, m, 0, m, 0, m, n, n, n)
 
             S3  = VectorFunctionSpace(mesh, "Lagrange", 1)
             D  = 5e-3 # J/m exchange constant
@@ -214,8 +214,8 @@ class DMI(EnergyBase):
             H_dmi_np = dmi_np.compute_field()
     """
 
-    def __init__(self, D, method="box-matrix-petsc"):
-        super(DMI, self).__init__(method, in_jacobian=True)
+    def __init__(self, D, method="box-matrix-petsc",pbc2d=None):
+        super(DMI, self).__init__(method, in_jacobian=True,pbc2d=pbc2d)
         self.D = D
 
     @mtimed
@@ -250,8 +250,10 @@ class DMI(EnergyBase):
         # This might also solve the problem with the energy conservation we have
         # seen.
 
+        
         # Dzyaloshinsky-Moriya Constant
-        self.DMIconstant = df.Constant(mu0 * self.D / unit_length ** 2) * Ms
+        # change unit_length**2 to unit_length since scaling effect DMI by Delta
+        self.DMIconstant = df.Constant(mu0 * self.D / unit_length ) * Ms
 
         self.v = df.TestFunction(S3)
         #Equation is chosen from the folowing papers
@@ -352,7 +354,7 @@ class DMI_Old(EnergyBase):
 
             m    = 1e-8
             n    = 5
-            mesh = Box(0, m, 0, m, 0, m, n, n, n)
+            mesh = BoxMesh(0, m, 0, m, 0, m, n, n, n)
             
             S3  = VectorFunctionSpace(mesh, "Lagrange", 1)
             D  = 5e-3 # J/m exchange constant

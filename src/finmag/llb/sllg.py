@@ -12,12 +12,13 @@ from finmag.util.fileio import Tablewriter
 from finmag.energies import Zeeman
 from finmag.energies import Exchange
 from finmag.energies import Demag
+from finmag.util.pbc2d import PeriodicBoundary2D
 
 import logging
 log = logging.getLogger(name="finmag")
 
 class SLLG(object):
-    def __init__(self,mesh,Ms=8.6e5,unit_length=1.0,name='unnamed',auto_save_data=True,method='RK2b'):
+    def __init__(self,mesh,Ms=8.6e5,unit_length=1.0,name='unnamed',auto_save_data=True,method='RK2b',checking_length=False, pbc2d=None):
         self._t=0
         self.time_scale=1e-9
         self.mesh=mesh
@@ -41,9 +42,14 @@ class SLLG(object):
         self._Ms = np.zeros(3*self.nxyz) #Note: nxyz for Ms length is more suitable? 
         self.effective_field = EffectiveField(mesh)
         
+        
+        self.pbc2d=pbc2d
+        if self.pbc2d:
+            self.pbc2d=PeriodicBoundary2D(self.S3)
 
         self.pin_fun=None
         self.method=method
+        self.checking_length=checking_length
 
         self.set_default_values()
         self.auto_save_data=auto_save_data
@@ -89,6 +95,7 @@ class SLLG(object):
         self._seed=np.random.random_integers(4294967295)
         self.dt=1e-13
         self.T=0
+        
   
     @property
     def t(self):
@@ -127,19 +134,29 @@ class SLLG(object):
     
     def setup_parameters(self):
         #print 'seed:', self.seed
-        self.integrator.set_parameters(self.dt,self.gamma,self.seed)
-        log.debug("seed=%d."%self.seed)
-        log.debug("dt=%g."%self.dt)
-        log.debug("gamma=%g."%self.gamma)
+        self.integrator.set_parameters(self.dt,self.gamma,self.seed,self.checking_length)
+        log.info("seed=%d."%self.seed)
+        log.info("dt=%g."%self.dt)
+        log.info("gamma=%g."%self.gamma)
+        log.info("checking_length: "+str(self.checking_length))
                 
     def set_m(self,value):
-        self._m.vector().set_local(helpers.vector_valued_function(value, self.S3, normalise=False).vector().array())
+        self._m.vector().set_local(helpers.vector_valued_function(value, self.S3, normalise=True).vector().array())
         self.m[:]=self._m.vector().array()[:]
 
     def add(self,interaction,with_time_update=None):
         log.debug("Adding interaction %s to simulation '%s'" % (str(interaction),self.name))
         interaction.setup(self.S3, self._m, self._Ms_dg, self.unit_length)
         self.effective_field.add(interaction, with_time_update)
+        
+        if interaction.__class__.__name__=='Zeeman':
+            self.zeeman_interation=interaction
+            self.tablewriter.entities['zeeman']={
+                        'unit': '<A/m>',
+                        'get': lambda sim: sim.zeeman_interation.average_field(),
+                        'header': ('h_x', 'h_y', 'h_z')}
+        
+            self.tablewriter.update_entity_order()
 
 
     def run_until(self,t):
@@ -147,12 +164,20 @@ class SLLG(object):
         
         if tp <= self._t:
             return
-        
-        while tp-self._t>1e-12:
-            self.integrator.run_step(self.field)
-            self._m.vector().set_local(self.m)
-            self._t+=self._dt
-        
+        try:
+            while tp-self._t>1e-12:
+                self.integrator.run_step(self.field)
+                self._m.vector().set_local(self.m)
+                if self.pbc2d:
+                    self.pbc2d.modify_m(self._m.vector())
+                self._t+=self._dt
+            
+            
+        except Exception,error:
+            log.info(error)
+            raise Exception(error)
+            
+            
         if abs(tp-self._t)<1e-12:
             self._t=tp
         log.debug("Integrating dynamics up to t = %g" % t)
@@ -165,6 +190,8 @@ class SLLG(object):
         self._m.vector().set_local(y)
         
         self.field[:] = self.effective_field.compute(self.t)[:]
+        
+        #print self.field[:]
 
     
     @property
@@ -174,6 +201,7 @@ class SLLG(object):
     @T.setter
     def T(self, value):
         self._T[:]=helpers.scalar_valued_function(value,self.S1).vector().array()[:]
+        log.info('Temperature  : %g',self._T[0])
         
     @property
     def alpha(self):

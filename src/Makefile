@@ -36,6 +36,7 @@ cp:
 	cp ../pytest.ini ${FINMAGDIST_BUILD_DIR}
 
 test:
+	@echo "Running target 'test' using PYTHONPATH=${FINMAGDIST_BUILD_DIR}"
 	cd ${FINMAGDIST_BUILD_DIR} && PYTHONPATH=${FINMAGDIST_BUILD_DIR} py.test --verbose -x
 
 bundle:

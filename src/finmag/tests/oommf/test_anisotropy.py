@@ -29,7 +29,7 @@ def test_three_dimensional_problem():
 def small_problem():
     # The oommf mesh corresponding to this problem only has a single cell.
     x_max = 1e-9; y_max = 1e-9; z_max = 1e-9;
-    dolfin_mesh = df.Box(0, 0, 0, x_max, y_max, z_max, 5, 5, 5)
+    dolfin_mesh = df.BoxMesh(0, 0, 0, x_max, y_max, z_max, 5, 5, 5)
     oommf_mesh = mesh.Mesh((1, 1, 1), size=(x_max, y_max, z_max))
 
     def m_gen(rs):
@@ -41,7 +41,7 @@ def small_problem():
 
 def one_dimensional_problem():
     x_min = 0; x_max = 100e-9; x_n = 100000;
-    dolfin_mesh = df.Interval(x_n, x_min, x_max)
+    dolfin_mesh = df.IntervalMesh(x_n, x_min, x_max)
     oommf_mesh = mesh.Mesh((20, 1, 1), size=(x_max, 1e-12, 1e-12))
 
     def m_gen(rs):
@@ -54,7 +54,7 @@ def three_dimensional_problem():
     x_max = 100e-9; y_max = z_max = 1e-9;
     x_n=20; y_n = z_n = 1;
 
-    dolfin_mesh = df.Box(0, 0, 0, x_max, y_max, z_max, x_n, y_n, z_n)
+    dolfin_mesh = df.BoxMesh(0, 0, 0, x_max, y_max, z_max, x_n, y_n, z_n)
     print dolfin_mesh.num_vertices()
     oommf_mesh = mesh.Mesh((x_n, y_n, z_n), size=(x_max, y_max, z_max))
 

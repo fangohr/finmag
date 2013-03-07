@@ -35,7 +35,7 @@ def test_domain_wall_profile(do_plot=False):
     simplices = 500
     L = 504e-9
     dim = 3
-    mesh = df.Interval(simplices, 0, L)
+    mesh = df.IntervalMesh(simplices, 0, L)
     V = df.VectorFunctionSpace(mesh, "CG", 1, dim=dim)
 
     m0 = df.Function(V)        

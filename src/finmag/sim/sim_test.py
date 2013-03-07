@@ -9,7 +9,7 @@ from tempfile import mkdtemp
 from finmag import sim_with, Simulation
 from finmag.example import barmini
 from math import sqrt, cos, sin, pi
-from finmag.util.helpers import assert_number_of_files
+from finmag.util.helpers import assert_number_of_files,vector_valued_function
 from finmag.sim import sim_helpers
 from finmag.energies import Zeeman, Exchange, UniaxialAnisotropy
 
@@ -30,7 +30,7 @@ class TestSimulation(object):
         # efficiency. Thus they should be regarded as read-only and
         # not be changed in any test method, otherwise there may be
         # unpredicted bugs or errors in unrelated test methods!
-        cls.mesh = df.Box(0, 0, 0, 1, 1, 1, 5, 5, 5)
+        cls.mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 5, 5, 5)
         cls.sim = sim_with(cls.mesh, Ms=8.6e5, m_init=(1, 0, 0), alpha=1.0,
                            unit_length=1e-9, A=13.0e-12, demag_solver='FK')
         cls.sim.relax()
@@ -85,7 +85,7 @@ class TestSimulation(object):
         assert(np.allclose(v_probed_1d, v_ref))
 
     def test_probe_constant_m_at_individual_points(self):
-        mesh = df.Box(-2, -2, -2, 2, 2, 2, 5, 5, 5)
+        mesh = df.BoxMesh(-2, -2, -2, 2, 2, 2, 5, 5, 5)
         m_init = np.array([0.2, 0.7, -0.4])
         m_init /= np.linalg.norm(m_init)  # normalize the vector for later comparison
         sim = sim_with(mesh, Ms=8.6e5, m_init=m_init, unit_length=1e-9, demag_solver=None)
@@ -114,7 +114,7 @@ class TestSimulation(object):
         TOL=1e-5
 
         unit_length = 1e-9
-        mesh = df.Box(0, 0, 0, 1, 1, 1, 1000, 2, 2)
+        mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 1000, 2, 2)
         m_init = df.Expression(("cos(x[0]*pi)",
                                 "sin(x[0]*pi)",
                                 "0.0"),
@@ -292,7 +292,7 @@ class TestSimulation(object):
 
         # First simulation: run for 50 ps, reset the time to 30 ps and run
         # again for 50 ps.
-        mesh = df.Box(0, 0, 0, 1, 1, 1, 1, 1, 1)
+        mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 1, 1, 1)
         sim1 = Simulation(mesh, Ms=1, name='test_save_ndt')
         sim1.alpha = 0.05
         sim1.set_m((1, 0, 0))
@@ -401,7 +401,7 @@ class TestSimulation(object):
 
     def test_remove_interaction(self):
 
-        mesh = df.Box(0, 0, 0, 1, 1, 1, 1, 1, 1)
+        mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 1, 1, 1)
         sim = Simulation(mesh, Ms=1, unit_length=1e-9)
         sim.add(Zeeman((0, 0, 1)))
         sim.add(Exchange(13e-12))
@@ -427,7 +427,7 @@ class TestSimulation(object):
         """
         Simply test that we can call sim.switch_off_H_ext()
         """
-        mesh = df.Box(0, 0, 0, 1, 1, 1, 1, 1, 1)
+        mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 1, 1, 1)
         sim = Simulation(mesh, Ms=1, unit_length=1e-9)
         sim.add(Zeeman((1, 2, 3)))
 
@@ -439,7 +439,7 @@ class TestSimulation(object):
         assert(num_interactions(sim) == 0)
 
     def test_set_H_ext(self):
-        mesh = df.Box(0, 0, 0, 1, 1, 1, 1, 1, 1)
+        mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 1, 1, 1)
         sim = Simulation(mesh, Ms=1, unit_length=1e-9)
         sim.add(Zeeman((1, 2, 3)))
 
@@ -451,59 +451,21 @@ class TestSimulation(object):
         H = sim.probe_field('Zeeman', [0.5e-9, 0.5e-9, 0.5e-9])
         assert(np.allclose(H, [-4, -5, -6]))
 
-    def test_set_stt(self):
-        """
-        Simple macrospin simulation with STT where the current density
-        changes sign halfway through the simulation.
-        """
-        import matplotlib.pyplot as plt
-        mesh = df.Box(0, 0, 0, 1, 1, 1, 1, 1, 1)
-        sim = Simulation(mesh, Ms=8.6e5, unit_length=1e-9, name='macrospin_with_stt')
-        sim.m = (1, 0, 0)
-        sim.add(Zeeman([0, 0, 1e5]))
-        sim.alpha = 0.0  # no damping
+    def test_pbc2d_m_init(self):
 
-        def J(t):
-            return 0.5e11 if (t < 2.5e-9) else -0.5e11
-
-        sim.set_stt(0.05e11, 1.0, 2e-9, (0, 0, 1), with_time_update=J)
-        sim.schedule('save_ndt', every=1e-11)
-        sim.run_until(5e-9)
-
-        ts, xs, ys, zs = np.loadtxt('macrospin_with_stt.ndt').T
-        fig = plt.figure(figsize=(20, 5))
-        ax1 = fig.add_subplot(131); ax1.plot(ts, xs)
-        ax2 = fig.add_subplot(132); ax2.plot(ts, ys)
-        ax3 = fig.add_subplot(133); ax3.plot(ts, zs)
-        fig.savefig('macrospin_with_stt.png')
-
-        # Assert that the dynamics of m_z are symmetric over time. In
-        # theory, this should also be true of m_x and m_y, but since
-        # they oscillate rapidly there is quite a bit of numerical
-        # inaccuracy, so we're only testing for m_z here.
-        assert max(abs(zs - zs[::-1])) < 0.001
-
-    def test_mesh_info(self):
-        mesh = df.Box(0, 0, 0, 1, 1, 1, 1, 1, 1)
-        Ms = 8.6e5
-        unit_length = 1e-9
-
-        # Simulation without exchange/anisotropy
-        sim1 = Simulation(mesh, Ms, unit_length)
-        print sim1.mesh_info()
-
-        # Simulation with exchange but without anisotropy
-        sim2 = Simulation(mesh, Ms, unit_length)
-        sim2.add(Exchange(A=13e-12))
-        print sim2.mesh_info()
-
-        # Simulation with anisotropy but without exchange
-        sim3 = Simulation(mesh, Ms, unit_length)
-        sim3.add(UniaxialAnisotropy(K1=520e3, axis=[0, 0, 1]))
-        print sim3.mesh_info()
-
-        # Simulation with both exchange and anisotropy
-        sim4 = Simulation(mesh, Ms, unit_length)
-        sim4.add(Exchange(A=13e-12))
-        sim4.add(UniaxialAnisotropy(K1=520e3, axis=[0, 0, 1]))
-        pytest.xfail("print sim4.mesh_info()")
+        def m_init_fun(pos):
+            if pos[0]==0 or pos[1]==0:
+                return [0,0,1]
+            else:
+                return [0,0,-1]
+                
+        mesh = df.UnitSquareMesh(3, 3)
+        
+        m_init = vector_valued_function(m_init_fun, mesh)
+        sim = Simulation(mesh, Ms=1, pbc2d=True)
+        sim.set_m(m_init)
+        expect_m=np.zeros((3,16))
+        expect_m[2,:]=np.array([1, 1, 1, 1, 1, -1, -1,  1,  1, -1, -1,  1,  1,  1,  1,  1])
+        expect_m.shape=(48,)
+        
+        assert np.array_equal(sim.m,expect_m)

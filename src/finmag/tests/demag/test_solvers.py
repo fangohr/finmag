@@ -5,10 +5,13 @@ __copyright__ = __author__
 __project__ = "Finmag"
 __organisation__ = "University of Southampton"
 
+from finmag.util.versions import get_version_dolfin
 from dolfin import *
+import pytest
 import problems.prob_fembem_testcases as pftc
 import finmag.energies.demag.solver_base as sb
 import finmag.energies.demag.solver_gcr as sgcr
+
 
 def L2_error(f1,f2,cell_domains = None,interior_facet_domains = None, dx = dx):
     """L2 error norm for functions f1 and f2, dx = Measure"""
@@ -28,6 +31,7 @@ class UnitSphere_Analytical(object):
         self.potential = project(Expression("-x[0]/3.0"),self.V)
         self.Hdemag = project(Expression(("1.0/3.0","0.0","0.0")),self.VV)
 
+
 class DemagTester(object):
     """Base class for demag testers"""
     def error_norm(self,func1,func2,cell_domains = None,interior_facet_domains = None, dx = dx):
@@ -41,6 +45,7 @@ class DemagTester(object):
         #L2error = self.error_norm(compsol, analyticalsol) 
         print testname, "Comparison L2error = ", L2error
         assert L2error < self.TOL,"Error in" +testname+ "L2 error %g is not less than the Tolerance %g"%(L2error,self.TOL)   
+
 
 class TestFemBemDeMagSolver(object):
     """Test the FemBemDeMagSolver class """
@@ -71,6 +76,8 @@ class TestFemBemDeMagSolver(object):
             Laplace solution does not equal original solution"
         print "solve_laplace_inside testpassed"
 
+
+@pytest.mark.skipif("get_version_dolfin()[:3] != '1.0'")
 class Test_FemBemGCRSolver(DemagTester):
     """Tests for the Class FemBemGCRSolver"""
     def setup_class(self):

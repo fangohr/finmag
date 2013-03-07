@@ -5,7 +5,7 @@ from finmag.sim.llg import LLG
 def test_spatially_varying_alpha():
     length = 20e-9 # m
     simplices = 10
-    mesh = df.Interval(simplices, 0, length)
+    mesh = df.IntervalMesh(simplices, 0, length)
 
     S1 = df.FunctionSpace(mesh, "Lagrange", 1)
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)

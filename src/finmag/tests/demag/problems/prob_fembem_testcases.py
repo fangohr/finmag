@@ -19,18 +19,19 @@ class MagUnitCircle(object):
     def desc(self):
         return "unit circle demagnetisation test problem fembem"
     
+# XXX TODO: This should probably be merged with MagSphereBase below?!
 class MagUnitSphere(object):
     """Uniformly magnetized sphere problem for fembem solvers"""
-    def __init__(self, n=10):
-        self.mesh = UnitSphere(n)
+    def __init__(self, maxh=0.5):
+        self.mesh = meshes.sphere(1.0, maxh=maxh, directory=MODULE_DIR)
         #M = ("1","0","0")
         self.Ms = 1
-        self.n = n
+        self.maxh = maxh
         self.M = (str(self.Ms), "0", "0")
     def desc(self):
-        return "Unit sphere demagnetisation test problem fembem, n=%d, Ms=%g" % (self.n, self.Ms)
+        return "Unit sphere demagnetisation test problem fembem, maxh={}, Ms={}".format(self.maxh, self.Ms)
 
-class MagUnitInterval(object):
+class MagUnitIntervalMesh(object):
     """Create 1d test problem where define a mesh,
     and a part of the mesh has been marked to be vacuum (with 0) and
     a part has been marked to be the ferromagnetic body (with 1).
@@ -42,7 +43,7 @@ class MagUnitInterval(object):
     have marked facets.
     """
     def __init__(self, n=10):
-        self.mesh = UnitInterval(n)
+        self.mesh = UnitIntervalMesh(n)
 
         #TODO: Make M into a 3d vector here
         self.M = "1"

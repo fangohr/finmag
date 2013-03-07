@@ -8,7 +8,6 @@ Examples
 .. include:: ../examples/nmag_example_2/doc.rst
 .. include:: ../examples/magnetic_grain/suess_2001.rst
 .. include:: ../examples/time-dependent-applied-field/doc.rst
-.. include:: ../examples/demag/demag_doc.rst
 .. include:: ../examples/exchange_demag/doc.rst
 .. include:: ../examples/spatially-varying-anisotropy/doc.rst
 .. include:: ./comparison-tables.rst.txt

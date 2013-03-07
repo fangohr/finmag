@@ -1,6 +1,6 @@
 
 import dolfin as df
-mesh = df.Box(0,0,0,1,1,1, 10, 10, 10)
+mesh = df.BoxMesh(0,0,0,1,1,1, 10, 10, 10)
 
 V1 = df.VectorFunctionSpace(mesh,"CG",1)
 VT = df.TensorFunctionSpace(mesh,"CG",1)
@@ -53,8 +53,8 @@ def compare_dmi_term2d_with_dolfin(Mexp):
     return abs(E1-E2)
 
 def test_dmi_term2d():
-    mesh = df.Box(0,0,0,1,1,1, 10, 10, 10)
-    mesh2d = df.Rectangle(0,0,1,1,10,10)
+    mesh = df.BoxMesh(0,0,0,1,1,1, 10, 10, 10)
+    mesh2d = df.RectangleMesh(0,0,1,1,10,10)
     
     
     eps=1e-15

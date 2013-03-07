@@ -19,17 +19,16 @@ namespace finmag {
             // Unfortunately, the Mesh hierarchy does not declare a virtual destructor (!)
             // TODO: not use MPL here
             typedef boost::mpl::list<
-                dolfin::Box,
-                dolfin::Interval,
-                dolfin::Rectangle,
+                dolfin::BoxMesh,
+                dolfin::IntervalMesh,
+                dolfin::RectangleMesh,
                 dolfin::SubMesh,
-                dolfin::UnitCircle,
-                dolfin::UnitCube,
-                dolfin::UnitInterval,
-                dolfin::UnitSphere,
-                dolfin::UnitSquare,
-                dolfin::UnitTetrahedron,
-                dolfin::UnitTriangle,
+                dolfin::UnitCircleMesh,
+                dolfin::UnitCubeMesh,
+                dolfin::UnitIntervalMesh,
+                dolfin::UnitSquareMesh,
+                dolfin::UnitTetrahedronMesh,
+                dolfin::UnitTriangleMesh,
                 dolfin::BoundaryMesh
             >::type derived_classes;
 

@@ -1,3 +1,4 @@
+import py
 import os
 import dolfin
 import numpy
@@ -22,8 +23,9 @@ MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 TOLERANCE = 2e-6
 
 rtols_powers_of_ten = [-7, -8, -9, -10, -11] # easier LaTeX formatting
-mesh = dolfin.Box(0,1, 0,1, 0,1, 1,1,1)
+mesh = dolfin.BoxMesh(0,1, 0,1, 0,1, 1,1,1)
 
+@py.test.mark.slow
 def test_deviations_over_alpha_and_tol(number_of_alphas=5, do_plot=False):
     alphas = numpy.linspace(0.01, 1.00, number_of_alphas)
 

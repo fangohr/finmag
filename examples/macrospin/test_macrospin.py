@@ -1,5 +1,6 @@
 import dolfin
 import os
+import py
 import numpy
 from finmag import Simulation
 from finmag.integrators.llg_integrator import llg_integrator
@@ -26,7 +27,7 @@ def compare_with_analytic_solution(alpha=0.5, max_t=1e-9):
     x0 = y0 = z0 = 0
     x1 = y1 = z1 = 10e-9
     nx = ny = nz = 1
-    mesh = dolfin.Box(x0, x1, y0, y1, z0, z1, nx, ny, nz)
+    mesh = dolfin.BoxMesh(x0, x1, y0, y1, z0, z1, nx, ny, nz)
 
     sim = Simulation(mesh, Ms=1)
     sim.alpha = alpha
@@ -104,10 +105,12 @@ def test_macrospin_alpha_0_001():
     compare_with_analytic_solution(alpha=0.001, max_t=1e-11)
 
 
+@py.test.mark.slow
 def test_macrospin_very_low_damping():
     compare_with_analytic_solution(alpha=0.02, max_t=0.5e-9)
 
 
+@py.test.mark.slow
 def test_macrospin_low_damping():
     compare_with_analytic_solution(alpha=0.1, max_t=4e-10)
 
@@ -116,6 +119,7 @@ def test_macrospin_standard_damping():
     compare_with_analytic_solution(alpha=0.5, max_t=1e-10)
 
 
+@py.test.mark.slow
 def test_macrospin_higher_damping():
     compare_with_analytic_solution(alpha=1, max_t=1e-10)
 

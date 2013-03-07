@@ -1,57 +1,53 @@
 import os
+import pytest
+import logging
 import dolfin as df
 from numpy import pi, sqrt
 from finmag.energies import Demag
+from finmag.util.meshes import from_geofile
+from finmag.util.consts import mu0
 
-TOL = 1.9e-2
+log = logging.getLogger("finmag")
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
+energy_file = os.path.join(MODULE_DIR, "demagenergies.txt")
 Ms = 1e5
+volume = 4 * pi / 3
+E_analytical = mu0 * Ms**2 * volume / 6
+TOL = 1.9e-2
 
-def test_energy():
 
-    """
-    Test the demag energy.
+def test_demag_energy_fk():
+    E, error = demag_energy("FK")
+    assert error < TOL
 
-    Read the corresponding documentation for explanation.
 
-    """
+@pytest.mark.xfail
+def test_demag_energy_gcr():
+    E, error = demag_energy("GCR")
+    assert error < TOL
 
-    # The dolfin UnitSphere gives a coarse and low quality mesh.
-    # Use this instead when the lindholm formulation is implemented.
-    # Then we can also set TOL = 1.5e-3
-    #mesh = from_geofile(os.path.join(MODULE_DIR, "sphere_fine.geo"))
 
-    # Using unit sphere mesh
-    mesh = df.UnitSphere(10)
+def demag_energy(solver):
+    mesh = from_geofile(os.path.join(MODULE_DIR, "sphere_fine.geo"))
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
     m = df.interpolate(df.Constant((1, 0, 0)), S3)
 
-    vol = 4*pi/3
-    mu0 = 4*pi*10**-7
-    E_exact = 1./6*mu0*Ms**2*vol
-    print "Exact solution:", E_exact
-    print "Numerical solution on the netgen mesh: 8758.92651323\n"
+    demag = Demag(solver)
+    demag.setup(S3, m, Ms, unit_length=1)
 
-    res = {"FK":{},"GCR":{}}
-    for demagtype in ["FK","GCR"]:
-        demag = Demag(demagtype)
-        demag.setup(S3, m, Ms, unit_length=1)
+    E = demag.demag.compute_energy()
+    rel_error = abs(E - E_analytical) / abs(E_analytical)
+    print "Energy with {} method: {}.".format(solver, E)
+    return E, rel_error
 
-        E_demag = demag.demag.compute_energy()
-        print "\n%s Demag energy:"%demagtype, E_demag
 
-        diff = abs(E_demag - E_exact)
-        rel_error =  diff/sqrt(E_exact**2 + E_demag**2)
-        print "Relative error:", rel_error
-        res[demagtype]["relE"] = rel_error
-        res[demagtype]["nrg"] = E_exact
-        assert rel_error < TOL, "Relative error is %g, should be zero" % rel_error
-
-    output = open(os.path.join(MODULE_DIR, "demagenergies.txt"), "w")
-    for demagtype in ["FK","GCR"]:
-        output.write("%s Demag energy %s\n"%(demagtype,str(res[demagtype]["nrg"])))
-        output.write("%s Relative error %s\n"%(demagtype,str(res[demagtype]["relE"])))                  
-    output.close()
-                  
 if __name__ == '__main__':
-    test_energy()
+    with open(energy_file, "w") as f:
+        for solver in ["FK", "GCR"]:
+            try:
+                E, error = demag_energy(solver)
+            except Exception as e:
+                log.warning("Could not add {} demag energy to documentation example.".format(solver))
+                print e
+            else:
+                f.write("{}: E = {}, relative error = {}.\n".format(solver, E, error))

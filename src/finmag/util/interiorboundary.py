@@ -126,7 +126,7 @@ def translate(p):
 #######################################################################
 class TestProblem():
     def __init__(self):
-        self.mesh = Rectangle(0.0,0.0,4,4,4,4)
+        self.mesh = RectangleMesh(0.0,0.0,4,4,4,4)
         #plot(self.mesh)
         self.cell_domains = MeshFunction("uint", self.mesh, 2)
         class Structure(SubDomain):

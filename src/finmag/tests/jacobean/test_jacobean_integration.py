@@ -9,6 +9,7 @@
 import numpy as np
 import scipy.integrate
 import unittest
+import py
 from domain_wall_cobalt import setup_domain_wall_cobalt, domain_wall_error
 from finmag.native import sundials
 from finmag.util.ode import scipy_to_cvode_rhs
@@ -17,6 +18,7 @@ from datetime import datetime
 NODE_COUNT = 100
 END_TIME = 1e-10
 
+@py.test.mark.slow
 class JacobeanIntegrationTests(unittest.TestCase):
     def setUp(self):
         self.n_rhs_evals = 0
