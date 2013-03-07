@@ -12,7 +12,7 @@ import numpy as np
 import dolfin as df
 import finmag.util.timings as timings
 from finmag.util.consts import mu0
-from finmag.native.llg import OrientedBoundaryMesh, compute_bem_fk
+from finmag.native.llg import compute_bem_fk
 from finmag.util.meshes import nodal_volume
 from finmag.util.timings import Timings, default_timer, timed, mtimed
 
@@ -103,7 +103,7 @@ class FKDemag(object):
         self._laplace_solver = df.KrylovSolver(params["laplace"]["method"], params["laplace"]["preconditioner"])
         self._laplace_solver.parameters["preconditioner"]["same_nonzero_pattern"] = True
         with timed('compute BEM', self.__class__.__name__, fk_timer):
-            self._bem, self._b2g_map = compute_bem_fk(OrientedBoundaryMesh(mesh))
+            self._bem, self._b2g_map = compute_bem_fk(df.BoundaryMesh(mesh, False))
         self._phi_1 = df.Function(self.S1)  # solution of inhomogeneous Neumann problem
         self._phi_2 = df.Function(self.S1)  # solution of Laplace equation inside domain
         self._phi = df.Function(self.S1)  # magnetic potential phi_1 + phi_2
