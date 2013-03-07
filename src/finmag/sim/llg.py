@@ -395,6 +395,5 @@ class LLG(object):
         self.d = d
         polarisation = df.Function(self.S3)
         polarisation.assign(df.Constant((p)))
-        self.p = polarisation.vector().array().reshape((3, -1))
-        # ensure that p has unit length
-        self.p /= np.linalg.norm(self.p)
+        # we use fnormalise to ensure that p has unit length
+        self.p = helpers.fnormalise(polarisation.vector().array()).reshape((3, -1))
