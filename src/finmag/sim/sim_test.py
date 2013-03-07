@@ -476,7 +476,7 @@ class TestSimulation(object):
         changes sign halfway through the simulation.
         """
         import matplotlib.pyplot as plt
-        mesh = df.Box(0, 0, 0, 1, 1, 1, 1, 1, 1)
+        mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 1, 1, 1)
         sim = Simulation(mesh, Ms=8.6e5, unit_length=1e-9, name='macrospin_with_stt')
         sim.m = (1, 0, 0)
         sim.add(Zeeman([0, 0, 1e5]))
@@ -503,7 +503,7 @@ class TestSimulation(object):
         assert max(abs(zs - zs[::-1])) < 0.001
 
     def test_mesh_info(self):
-        mesh = df.Box(0, 0, 0, 1, 1, 1, 1, 1, 1)
+        mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 1, 1, 1)
         Ms = 8.6e5
         unit_length = 1e-9
 
