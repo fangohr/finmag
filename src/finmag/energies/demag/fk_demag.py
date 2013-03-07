@@ -126,7 +126,7 @@ class FKDemag(object):
 
         """
         self._compute_magnetic_potential()
-        return self._compute_gradient_of_magnetic_potential()
+        return self._compute_gradient()
 
     @mtimed(default_timer)
     def compute_energy(self):
@@ -207,7 +207,7 @@ class FKDemag(object):
     @mtimed(fk_timer)
     def _setup_gradient_computation(self):
         """
-        Prepare the discretised gradient to use in :py:meth:`FKDemag._compute_gradient_of_magnetic_potential`.
+        Prepare the discretised gradient to use in :py:meth:`FKDemag._compute_gradient`.
 
         We don't need the gradient field as a continuous field, we are only
         interested in the values at specific points. It is thus a waste of
@@ -226,10 +226,10 @@ class FKDemag(object):
         # operations are symmetric (multiplying by volume, dividing by volume)
         # we don't have to care for the units, i.e. unit_length.
         b = df.dot(self._test3, df.Constant((1, 1, 1))) * df.dx
-        self._nodal_volumes_S3_no_units = df.assemble(b)
+        self._nodal_volumes_S3_no_units = df.assemble(b).array()
 
     @mtimed(fk_timer)
-    def _compute_gradient_of_magnetic_potential(self):
+    def _compute_gradient(self):
         """
         Get the demagnetising field from the magnetic scalar potential.
 
@@ -246,4 +246,5 @@ class FKDemag(object):
         but the method used here is computationally less expensive.
 
         """
-        return (self._gradient * self._phi.vector()).array() / self._nodal_volumes_S3_no_units
+        H = self._gradient * self._phi.vector()
+        return H.array() / self._nodal_volumes_S3_no_units
