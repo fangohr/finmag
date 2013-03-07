@@ -5,6 +5,7 @@ from finmag.util.timings import default_timer, mtimed
 from solver_fk import FemBemFKSolver
 from solver_gcr import FemBemGCRSolver
 from treecode_bem import TreecodeBEM
+from fk_demag import FKDemag
 from solver_base import default_parameters
 
 
@@ -18,7 +19,7 @@ class Demag(object):
 
     *Arguments*
         solver
-            demag solver method: "FK" or "GCR"
+            demag solver method: "FK", "GCR", "Treecode", "new_fk"
 
     """
     def __init__(self, solver="FK", degree=1, element="CG", project_method="magpar",bench = False,
@@ -26,10 +27,10 @@ class Demag(object):
         self.in_jacobian = False
         log.debug("Creating Demag object with " + solver + " solver.")
 
-        if solver in ["FK", "GCR","Treecode"]:
+        if solver in ["FK", "GCR","Treecode", "new_fk"]:
             self.solver = solver
         else:
-            raise NotImplementedError("Only 'FK', 'GCR' and 'Treecode' are implemented")
+            raise NotImplementedError("Only 'FK', 'GCR', 'Treecode' and 'new_fk' are implemented")
 
         self.degree = degree
         self.element = element
@@ -65,12 +66,21 @@ class Demag(object):
         
         if self.solver == "FK":
             self.demag = FemBemFKSolver(**kwargs)
+            for (name, solver) in (("Poisson", self.demag.poisson_solver), ("Laplace", self.demag.laplace_solver)):
+                params = repr(solver.parameters.to_dict())
+                log.debug("{}: {} solver parameters.\n{}".format(
+                            self.__class__.__name__, name, textwrap.fill(params, width=100,
+                            initial_indent=4*" ", subsequent_indent=4*" ")))
         #MagparFKSolver does not exist? (HF 17 June 2012)
         #elif self.solver == "FK_magpar":
         #    self.demag = MagparFKSolver(**kwargs)
         elif self.solver == "GCR":
             self.demag = FemBemGCRSolver(**kwargs)
-            
+            for (name, solver) in (("Poisson", self.demag.poisson_solver), ("Laplace", self.demag.laplace_solver)):
+                params = repr(solver.parameters.to_dict())
+                log.debug("{}: {} solver parameters.\n{}".format(
+                            self.__class__.__name__, name, textwrap.fill(params, width=100,
+                            initial_indent=4*" ", subsequent_indent=4*" ")))
         elif self.solver == "Treecode":
             kwargs["p"]=p
             kwargs["mac"]=mac
@@ -79,14 +89,13 @@ class Demag(object):
             kwargs["type_I"]=type_I
             
             self.demag = TreecodeBEM(**kwargs)
+        elif self.solver == "new_fk":
+            demag = FKDemag()
+            demag.setup(S3, m, Ms, unit_length)
+            self.demag = demag
         
         #Log the linear solver parameters
         
-        for (name, solver) in (("Poisson", self.demag.poisson_solver), ("Laplace", self.demag.laplace_solver)):
-            params = repr(solver.parameters.to_dict())
-            log.debug("{}: {} solver parameters.\n{}".format(
-                        self.__class__.__name__, name, textwrap.fill(params, width=100,
-                        initial_indent=4*" ", subsequent_indent=4*" ")))
 
     @mtimed
     def compute_field(self):
