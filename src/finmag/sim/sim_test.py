@@ -489,7 +489,7 @@ class TestSimulation(object):
         sim.schedule('save_ndt', every=1e-11)
         sim.run_until(5e-9)
 
-        ts, xs, ys, zs = np.loadtxt('macrospin_with_stt.ndt').T
+        ts, xs, ys, zs = np.loadtxt('macrospin_with_stt.ndt').T[:4]
         fig = plt.figure(figsize=(20, 5))
         ax1 = fig.add_subplot(131); ax1.plot(ts, xs)
         ax2 = fig.add_subplot(132); ax2.plot(ts, ys)
@@ -500,7 +500,7 @@ class TestSimulation(object):
         # theory, this should also be true of m_x and m_y, but since
         # they oscillate rapidly there is quite a bit of numerical
         # inaccuracy, so we're only testing for m_z here.
-        assert max(abs(zs - zs[::-1])) < 0.001
+        assert max(abs(zs - zs[::-1])) < 0.005
 
     def test_mesh_info(self):
         mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 1, 1, 1)
