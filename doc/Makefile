@@ -224,10 +224,7 @@ examples-for-doc: ../examples/macrospin/alpha-1-00.png ../examples/macrospin/alp
 	../examples/time-dependent-applied-field/fit.png ../examples/time-dependent-applied-field/results.png \
 	../examples/exchange_demag/exchange_demag.png ../examples/exchange_demag/exchange_energy.png \
 	../examples/exchange_demag/exchange_density.png ../examples/exchange_demag/demag_density.png \
-	../examples/exchange_demag/demag_energy.png ../examples/demag/stddev_loglog.png ../examples/demag/xvalues.png \
-        ../examples/demag/linsolveparams.rst ../examples/demag/xvaluesgcr.png ../examples/demag/bemtimings.png \
-        ../examples/demag/solvetimings.png \
-	../examples/demag/errnorm_loglog.png ../examples/demag/results_field.txt ../examples/demag/demagenergies.txt \
+	../examples/exchange_demag/demag_energy.png \
 	../src/finmag/tests/comparison/exchange/table.rst ../src/finmag/tests/comparison/anisotropy/table.rst \
 	../src/finmag/tests/comparison/demag/table.rst ../examples/exchange_demag/simple1D.png \
 	../examples/exchange_demag/finmag_exch_density.npy ../examples/exchange_demag/finmag_demag_density.npy \
@@ -256,17 +253,8 @@ examples-for-doc: ../examples/macrospin/alpha-1-00.png ../examples/macrospin/alp
 ../examples/exchange_demag/exchange_demag.png ../examples/exchange_demag/exchange_energy.png ../examples/exchange_demag/demag_energy.png ../examples/exchange_demag/exchange_density.png ../examples/exchange_demag/demag_density.png: ../examples/exchange_demag/test_exchange_demag.py
 	cd ../examples/exchange_demag/ && PYTHONPATH=$(PYTHON_ROOTS) python test_exchange_demag.py
 
-../examples/demag/stddev_loglog.png ../examples/demag/xvalues.png ../examples/demag/xvaluesgcr.png ../examples/demag/errnorm_loglog.png ../examples/demag/linsolveparams.rst ../examples/demag/krylovitr.png ../examples/demag/bemtimings.png ../examples/demag/solvetimings: ../examples/demag/short_nmag_comp_tests2.py
-	cd ../examples/demag/ && PYTHONPATH=$(PYTHON_ROOTS) python short_nmag_comp_tests2.py
-
 ../examples/exchange_demag/timings/results.rst: ../examples/exchange_demag/timings/run_finmag.py
 	cd ../examples/exchange_demag/timings/ && PYTHONPATH=$(PYTHON_ROOTS) python run_finmag.py
-
-../examples/demag/results_field.txt: ../examples/demag/test_field.py
-	cd ../examples/demag/ && PYTHONPATH=$(PYTHON_ROOTS) python test_field.py > results_field.txt
-
-../examples/demag/demagenergies.txt: ../examples/demag/test_energy.py
-	cd ../examples/demag/ && PYTHONPATH=$(PYTHON_ROOTS) python test_energy.py
 
 ../src/finmag/tests/comparison/exchange/table.rst:
 	cd ../src/finmag/tests/comparison/exchange/ && PYTHONPATH=$(PYTHON_ROOTS) python test_exchange_field.py

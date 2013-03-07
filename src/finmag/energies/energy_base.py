@@ -4,6 +4,7 @@ import numpy as np
 from finmag.util.timings import mtimed
 from finmag.util.consts import mu0
 from finmag.util.meshes import nodal_volume
+from finmag.util.pbc2d import PeriodicBoundary2D
 
 logger = logging.getLogger('finmag')
 
@@ -48,7 +49,7 @@ class EnergyBase(object):
     """
     _supported_methods = ['box-assemble', 'box-matrix-numpy', 'box-matrix-petsc', 'project']
 
-    def __init__(self, method="box-matrix-petsc", in_jacobian=False):
+    def __init__(self, method="box-matrix-petsc", in_jacobian=False, pbc2d=None):
 
         if not method in self._supported_methods:
             logger.error("Can't create '{}' object with method '{}'. Possible choices are {}.".format(
@@ -61,6 +62,7 @@ class EnergyBase(object):
 
         self.in_jacobian = in_jacobian
         self.method = method
+        self.pbc2d=pbc2d
 
     def setup(self, E_integrand, S3, m, Ms, unit_length=1):
         """
@@ -104,6 +106,7 @@ class EnergyBase(object):
         # same as nodal_volume_S1, just three times in an array to have the same
         # number of elements in the array as the field to be able to divide it.
         self.nodal_volume_S3 = nodal_volume(self.S3)
+        
 
         if self.method == 'box-assemble':
             self.__compute_field = self.__compute_field_assemble
@@ -121,6 +124,14 @@ class EnergyBase(object):
                 self.__class__.__name__, self.method, self._supported_methods))
             raise ValueError("Unsupported method '{}' should be one of {}.".format(
                 self.method, self._supported_methods))
+        
+        if self.pbc2d:
+            self.pbc2d=PeriodicBoundary2D(self.S3)
+            self.nodal_volume_S3[:]=self.pbc2d.L[:]
+            print self.nodal_volume_S3
+            print self.g_petsc.array()
+            self.pbc2d.apply_pbc_K(self.g_petsc)
+            print '='*50,'\n',self.g_petsc.array()
 
     @mtimed
     def compute_energy(self):
@@ -183,6 +194,10 @@ class EnergyBase(object):
         """
 
         Hex = self.__compute_field()
+        
+        if self.pbc2d:
+            self.pbc2d.modify_field(Hex)
+            
         return Hex
 
     def __compute_field_assemble(self):

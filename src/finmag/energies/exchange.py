@@ -1,4 +1,5 @@
 import dolfin as df
+import numpy as np
 import logging
 from finmag.util.timings import mtimed
 from energy_base import EnergyBase
@@ -36,7 +37,7 @@ class Exchange(EnergyBase):
             # Define a mesh representing a cube with edge length L
             L = 1e-8
             n = 5
-            mesh = df.Box(0, L, 0, L, 0, L, n, n, n)
+            mesh = df.BoxMesh(0, L, 0, L, 0, L, n, n, n)
 
             S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
             A = 1.3e-11 # J/m exchange constant
@@ -58,9 +59,9 @@ class Exchange(EnergyBase):
             H_exch_np = exchange_np.compute_field()
 
     """
-    def __init__(self, A, method="box-matrix-petsc"):
+    def __init__(self, A, method="box-matrix-petsc",pbc2d=None):
         self.A_waiting_for_mesh = A
-        super(Exchange, self).__init__(method, in_jacobian=True)
+        super(Exchange, self).__init__(method, in_jacobian=True,pbc2d=pbc2d)
 
     def exchange_length(self):
         return exchange_length(self.A.vector().array(), self.Ms.vector().array())
@@ -70,6 +71,7 @@ class Exchange(EnergyBase):
         self.exchange_factor = df.Constant(1.0 / unit_length ** 2)
         self.S3 = S3
         self.A = helpers.scalar_valued_dg_function(self.A_waiting_for_mesh, self.S3.mesh())
+        self.A_av = np.average(self.A.vector().array())
         del(self.A_waiting_for_mesh)
         E_integrand = self.exchange_factor * self.A * df.inner(df.grad(m), df.grad(m))
 

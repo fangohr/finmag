@@ -29,7 +29,7 @@ def test_thin_film_demag():
     compare_with_demag_from_initial_m(lambda m: -Ms * m, (0, 0, 1))
 
 def test_thin_film_demag_against_real_demag():
-    sim = Sim(df.Box(0, 0, 0, 500e-9, 500e-9, 1e-9, 50, 50, 1), Ms)
+    sim = Sim(df.BoxMesh(0, 0, 0, 500e-9, 500e-9, 1e-9, 50, 50, 1), Ms)
     sim.set_m((0, 0, 1))
 
     tfdemag = ThinFilmDemag()

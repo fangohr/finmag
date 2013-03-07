@@ -47,7 +47,7 @@ def compute_dispersion(series,dx,file_name):
 
 def run_finmag():
     x_max = 2000; y_max = 2; z_max = 2;
-    mesh = df.Box(0, 0, 0, x_max, y_max, z_max, 1000, 1, 1)
+    mesh = df.BoxMesh(0, 0, 0, x_max, y_max, z_max, 1000, 1, 1)
     S1 = df.FunctionSpace(mesh, "Lagrange", 1)
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
     llg = LLG(S1, S3, unit_length=1e-9)

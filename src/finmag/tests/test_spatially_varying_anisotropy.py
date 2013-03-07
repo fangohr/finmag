@@ -24,7 +24,7 @@ def run_simulation():
     L = lexch # cube length in m
     nx = 20
     Lx = L*nx
-    mesh = df.Interval(nx, 0, Lx)
+    mesh = df.IntervalMesh(nx, 0, Lx)
 
     #anisotropy direction starts at [0,1,0] at x=0 and changes to [1,0,0] at x=Lx, but keep normalised
     expr_a = df.Expression(("x[0]/sqrt(x[0]*x[0]+(Lx-x[0])*(Lx-x[0]))",

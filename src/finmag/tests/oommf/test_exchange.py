@@ -18,7 +18,7 @@ def test_one_dimensional_problem():
 def one_dimensional_problem(vertices):
     x_min = 0; x_max = 100e-9;
 
-    dolfin_mesh = df.Interval(vertices, x_min, x_max)
+    dolfin_mesh = df.IntervalMesh(vertices, x_min, x_max)
     oommf_mesh = mesh.Mesh((vertices, 1, 1), size=(x_max, 1e-12, 1e-12))
 
     def m_gen(coords):

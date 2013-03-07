@@ -1,5 +1,7 @@
 import numpy as np
 import dolfin as df
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from math import sin
 from simple_timer import SimpleTimer
@@ -91,7 +93,8 @@ vertices = []
 runtimes = []
 alternate_methods = [time_numpy_loop, time_numpy_vectorised, time_numpy_smart]
 for i, dL in enumerate(dLs):
-    mesh = df.Box(0, 0, 0, L, L, L, dL, dL, dL)
+    #mesh = df.Box(0, 0, 0, L, L, L, dL, dL, dL)
+    mesh = df.BoxMesh(0, 0, 0, L, L, L, dL, dL, dL)
     print "Running for a mesh with {} vertices [{}/{}].".format(
             mesh.num_vertices(), i+1, len(dLs))
 

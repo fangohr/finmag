@@ -14,7 +14,7 @@ third_node = []
 def setup_module(module=None):
     x_max = 100e-9 # m
     simplexes = 50
-    mesh = dolfin.Interval(simplexes, 0, x_max)
+    mesh = dolfin.IntervalMesh(simplexes, 0, x_max)
 
     def m_gen(coords):
         x = coords[0]

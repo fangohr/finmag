@@ -6,7 +6,7 @@ from finmag.util.helpers import plot_hysteresis_loop
 ONE_DEGREE_PER_NS = 17453292.5 # in rad/s
 
 def test_hysteresis_loop_and_plotting():
-    mesh = df.Box(0, 0, 0, 1, 1, 1, 1, 1, 1)
+    mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 1, 1, 1)
     sim = sim_with(mesh, Ms=1e6, m_init=(0.8, 0.2, 0), alpha=1.0, unit_length=1e-9, A=None, demag_solver=None)#'FK')
 
     H = 0.2e6  # maximum external field strength in A/m

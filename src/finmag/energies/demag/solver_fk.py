@@ -2,7 +2,7 @@ import logging
 import numpy as np
 import dolfin as df
 import solver_base as sb
-from finmag.native.llg import OrientedBoundaryMesh, compute_bem_fk
+from finmag.native.llg import compute_bem_fk
 import finmag.util.solver_benchmark as bench
 
 fk_timings = sb.demag_timings
@@ -276,7 +276,7 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
 
         # Compute boundary element matrix and global-to-boundary mapping
         fk_timings.start_next("build BEM", self.__class__.__name__)
-        self.bem, self.b2g_map = compute_bem_fk(OrientedBoundaryMesh(self.mesh))
+        self.bem, self.b2g_map = compute_bem_fk(df.BoundaryMesh(self.mesh, False))
         fk_timings.stop("build BEM", self.__class__.__name__)
 
     def solve(self):

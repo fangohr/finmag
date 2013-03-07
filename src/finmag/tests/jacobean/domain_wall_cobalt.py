@@ -24,7 +24,7 @@ def reference_mz(x):
     return math.cos(math.pi / 2 + math.atan(math.sinh((x - LENGTH / 2) / math.sqrt(A_Co / K1_Co))))
 
 def setup_domain_wall_cobalt(node_count=NODE_COUNT, A=A_Co, Ms=Ms_Co, K1=K1_Co, length=LENGTH, do_precession=True):
-    mesh = df.Interval(node_count - 1, 0, length)
+    mesh = df.IntervalMesh(node_count - 1, 0, length)
     S1 = df.FunctionSpace(mesh, "Lagrange", 1)
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
     llg = LLG(S1, S3)

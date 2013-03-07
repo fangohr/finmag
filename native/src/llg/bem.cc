@@ -14,8 +14,6 @@
 
 #include "vector3.h"
 
-#include "oriented_boundary_mesh.h"
-
 namespace finmag { namespace llg {
     namespace df = dolfin;
     namespace vector = finmag::vector;
@@ -122,7 +120,8 @@ namespace finmag { namespace llg {
     // If ComputeDoubleLayerPotential == true, computes the FK BEM
      // If ComputeDoubleLayerPotential == false, computes the GCR BEM
     template<bool ComputeDoubleLayerPotential>
-    bp::object compute_bem(const OrientedBoundaryMesh &bm) {
+    bp::object compute_bem(const boost::shared_ptr<df::BoundaryMesh> bm_ptr) {
+        df::BoundaryMesh &bm = *bm_ptr;
         ASSERT(bm.geometry().dim() == 3);
         ASSERT(bm.topology().dim() == 2);
 

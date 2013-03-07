@@ -42,10 +42,8 @@ def test_negative_uniform_external_field():
 
 def test_non_uniform_external_field():
     TOLERANCE = 1e-9
-
-    length = 10e-9
-    vertices = 5
-    mesh = df.Interval(vertices, 0, length)
+    length = 10e-9; vertices = 5;
+    mesh = df.IntervalMesh(vertices, 0, length)
     sim = Sim(mesh, Ms)
     sim.set_m((1, 0, 0))
     # applied field

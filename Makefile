@@ -58,7 +58,7 @@ default:
 
 ci: purge test doc
 
-doc: doc-html doc-pdf doc-singlehtml
+doc: make-modules doc-html doc-pdf doc-singlehtml
 
 doc-html:
 	make -C doc generate-doc html
@@ -112,7 +112,10 @@ create-dirs:
 
 test: clean make-modules run-unittest-tests pytest run-ci-tests
 
-# TODO: Can this be deleted? Doesn't seem to do anything on 
+print-debugging-info:
+	@echo "[DDD] Makefile NETGENDIR: ${NETGENDIR}"
+
+# TODO: Can this be deleted? Doesn't seem to do anything on
 # aleph0 and my machine (MAB).
 run-unittest-tests : $(addsuffix /__runtests__,$(TEST_ROOTS))
 
@@ -121,21 +124,29 @@ fasttest : make-modules $(addsuffix /__runtests__,$(TEST_ROOTS)) run-ci-tests
 %/__runtests__ : create-dirs
 	(cd $(dir $@) && NETGENDIR=$(NETGENDIR) PYTHONPATH=$(PYTHON_ROOTS):. python $(RUN_UNIT_TESTS))
 
+run-pytest-reproduce-ipython-notebooks : create-dirs
+	NETGENDIR=$(NETGENDIR) PYTHONPATH=$(PYTHON_ROOTS) py.test $(TEST_OPTIONS) bin/reproduce_ipython_notebooks.py --junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
+
 run-pytest-tests : create-dirs
-	PYTHONPATH=$(PYTHON_ROOTS) py.test $(TEST_OPTIONS) src examples --junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
+	NETGENDIR=$(NETGENDIR) PYTHONPATH=$(PYTHON_ROOTS) py.test $(TEST_OPTIONS) src examples --junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
 
 run-ci-tests :
 	make -C $(NATIVE_DIR) run-ci-tests
 
 # Will not run tests marked as slow.
-pytest:
+pytest: create-dirs make-modules
 	PYTHONPATH=$(PYTHON_ROOTS) py.test $(TEST_OPTIONS) -m "not slow" \
 			   --junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
 
 # Will only run tests marked as slow.
-pytest-slow:
+pytest-slow: create-dirs make-modules
 	PYTHONPATH=$(PYTHON_ROOTS) py.test $(TEST_OPTIONS) -m "slow" \
 			   --junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
 
-.PHONY: ci default make-modules test run-ci-tests run-pytest-tests \
-   	run-unittest-tests pytest pytest-slow
+native-tests: make-modules run-ci-tests
+
+# Will run the fast py.test tests as well as the native tests
+tests-fast: pytest native-tests
+
+
+.PHONY: ci default make-modules test run-ci-tests run-pytest-tests run-unittest-tests pytest pytest-slow

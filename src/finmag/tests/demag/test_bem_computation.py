@@ -1,11 +1,14 @@
+import pytest
+from finmag.util.versions import get_version_dolfin
+
 import unittest
 import numpy as np
 import dolfin as df
 import os
-from finmag.native.llg import compute_lindholm_L, compute_lindholm_K, compute_bem_fk, compute_bem_gcr, OrientedBoundaryMesh
+from finmag.native.llg import compute_lindholm_L, compute_lindholm_K, compute_bem_fk, compute_bem_gcr
 from finmag.util import time_counter
 from finmag.util import helpers
-from finmag.util.meshes import mesh_volume
+from finmag.util.meshes import mesh_volume, sphere
 from finmag.energies.demag import belement_magpar
 from finmag.energies.demag import belement
 from finmag.tests.test_solid_angle_invariance import random_3d_rotation_matrix
@@ -79,7 +82,7 @@ class BemComputationTests(unittest.TestCase):
     def test_cell_ordering(self):
         mesh = df.UnitCube(1,1,1)
         centre = np.array([0.5, 0.5, 0.5])
-        boundary_mesh = df.BoundaryMesh(mesh)
+        boundary_mesh = df.BoundaryMesh(mesh, False)
         coordinates = boundary_mesh.coordinates()
         for i in xrange(boundary_mesh.num_cells()):
             cell = df.Cell(boundary_mesh, i)
@@ -96,7 +99,7 @@ class BemComputationTests(unittest.TestCase):
 
         bem_magpar,g2finmag = belement.BEM_matrix(mesh)
         bem_finmag = np.zeros(bem_magpar.shape)
-        bem, b2g = compute_bem_fk(OrientedBoundaryMesh(mesh))
+        bem, b2g = compute_bem_fk(df.BoundaryMesh(mesh, False))
         for i_dolfin in xrange(bem.shape[0]):
             i_finmag = g2finmag[b2g[i_dolfin]]
 
@@ -106,23 +109,22 @@ class BemComputationTests(unittest.TestCase):
         if np.max(np.abs(bem_finmag - bem_magpar)) > 1e-12:
             print "Finmag:", np.round(bem_finmag, 4)
             print "Magpar:", np.round(bem_magpar, 4)
-            print "Difference:", np.round(bem_native - bem_finmag, 4)
+            print "Difference:", np.round(bem_magpar - bem_finmag, 4)
             self.fail("Finmag and magpar computation of BEM differ, mesh: " + str(mesh))
 
     def test_bem_computation(self):
-        self.run_bem_computation_test(df.UnitSphere(1))
-        self.run_bem_computation_test(df.UnitSphere(2))
-        self.run_bem_computation_test(df.UnitSphere(3))
-        self.run_bem_computation_test(df.UnitSphere(4))
-        self.run_bem_computation_test(df.UnitSphere(6))
+        self.run_bem_computation_test(sphere(1., 0.8))
+        self.run_bem_computation_test(sphere(1., 0.4))
+        self.run_bem_computation_test(sphere(1., 0.3))
+        self.run_bem_computation_test(sphere(1., 0.2))
         self.run_bem_computation_test(df.UnitCube(3,3,3))
 
     def test_bem_perf(self):
         mesh = df.UnitCube(15, 15, 15)
-        boundary_mesh = OrientedBoundaryMesh(mesh)
+        boundary_mesh = df.BoundaryMesh(mesh, False)
         c = time_counter.counter()
         while c.next():
-            OrientedBoundaryMesh(mesh)
+            df.BoundaryMesh(mesh, False)
         print "Boundary mesh computation for %s: %s" % (mesh, c)
         c = time_counter.counter()
         while c.next():
@@ -137,7 +139,7 @@ class BemComputationTests(unittest.TestCase):
     def test_bem_netgen(self):
         module_dir = os.path.dirname(os.path.abspath(__file__))
         netgen_mesh = df.Mesh(os.path.join(module_dir, "bem_netgen_test_mesh.xml.gz"))
-        bem, b2g_map = compute_bem_fk(OrientedBoundaryMesh(netgen_mesh))
+        bem, b2g_map = compute_bem_fk(df.BoundaryMesh(netgen_mesh, False))
 
     def run_demag_computation_test(self, mesh, m_expr, compute_func, method_name, tol=1e-10, ref=compute_scalar_potential_llg,k = 0):
         phi_a = ref(mesh, m_expr)
@@ -160,7 +162,7 @@ class BemComputationTests(unittest.TestCase):
                                                 compute_scalar_potential_native_fk,
                                                 "native, FK")
                 
-                self.run_demag_computation_test(df.UnitSphere(k), exp,
+                self.run_demag_computation_test(sphere(1., 1./k), exp,
                                                 compute_scalar_potential_native_fk,
                                                 "native, FK")
                 
@@ -169,12 +171,13 @@ class BemComputationTests(unittest.TestCase):
                                             "native, FK")
 
 
+    @pytest.mark.skipif("get_version_dolfin()[:3] != '1.0'")
     def test_compute_scalar_potential_gcr(self):
         m1 = df.Constant([1, 0, 0])
         m2 = df.Expression(["x[0]*x[1]+3", "x[2]+5", "x[1]+7"])
         tol = 1e-1
         expressions = [m1,m2]
-        self.run_demag_computation_test(MagSphereBase(0.1, 1).mesh, m1,
+        self.run_demag_computation_test(MagSphereBase(0.1, 1.).mesh, m1,
                                         compute_scalar_potential_native_gcr,
                                         "native, GCR",
                                         ref=compute_scalar_potential_native_fk, tol=tol)
