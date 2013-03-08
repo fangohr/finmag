@@ -8,7 +8,7 @@ import subprocess
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # run nmag
-subprocess.call("nsim {} --clean".format(os.path.join(MODULE_DIR, "simple_1D_nmag.py")), shell=True)
+subprocess.call("var/lib/jenkins/nmag-0.2.1/nsim/bin/nsim {} --clean".format(os.path.join(MODULE_DIR, "simple_1D_nmag.py")), shell=True)
 
 nd = np.load(os.path.join(MODULE_DIR, "nmag_hansconf.npy"))
 
