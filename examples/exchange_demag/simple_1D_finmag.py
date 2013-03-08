@@ -8,8 +8,15 @@ import subprocess
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # run nmag
+print "======================================================="
+print "Environment variables:"
+for (k,v) in os.environ.items(): print "{}={}".format(k, v)
+print "======================================================="
+print "Double-checking environment variables:"
+print subprocess.check_output("env", shell=True, stderr=subprocess.STDOUT)
+print "======================================================="
 print "Running 'nsim simple_1D_nmag.py' ..."
-output = subprocess.check_output("/foo/bar/nsim {} --clean".format(os.path.join(MODULE_DIR, "simple_1D_nmag.py")), shell=True, stderr=subprocess.STDOUT)
+output = subprocess.check_output("/var/lib/jenkins/nmag-0.2.1/nsim/bin/nsim {} --clean".format(os.path.join(MODULE_DIR, "simple_1D_nmag.py")), shell=True, stderr=subprocess.STDOUT)
 print "Done."
 print "======================================================="
 print "Output of 'nsim simple_1D_nmag.py:"
