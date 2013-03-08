@@ -13,7 +13,7 @@ def test_hysteresis_loop_and_plotting():
     initial_direction = np.array([1.0, 0.01, 0.0])
     N = 5
 
-    (H_vals, m_vals) = sim.hysteresis_loop(H, initial_direction, N, stopping_dmdt=10*ONE_DEGREE_PER_NS)
+    (H_vals, m_vals) = sim.hysteresis_loop(H, initial_direction, N, stopping_dmdt=10)
 
     assert(np.allclose(m_vals, [1.0 for _ in xrange(2*N)], atol=1e-4))
 
