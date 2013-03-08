@@ -8,15 +8,13 @@ import subprocess
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 env_for_nsim = os.environ
-for (k, v) in [('SHELL', '/bin/bash'),
-               ('TERM', 'xterm-color'),
-               #XDG_SESSION_COOKIE=8af353b7a3b6393817145c93510d6bc0-1362738137.315900-1641842564
-               #('OLDPWD', '/var/lib/jenkins'),
-               ('USER', 'jenkins'),
-               ('MAIL', '/var/mail/jenkins'),
-               ('PATH', '/var/lib/jenkins/nmag-0.2.1/nsim/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games'),
-               ('PWD', '/var/lib/jenkins/jobs/finmag_fast_tests/workspace/examples/exchange_demag'),
-               ('NETGENDIR', '/usr/share/netgen'),
+for (k, v) in [#('SHELL', '/bin/bash'),
+               #('TERM', 'xterm-color'),
+               #('USER', 'jenkins'),
+               #('MAIL', '/var/mail/jenkins'),
+               #('PATH', '/var/lib/jenkins/nmag-0.2.1/nsim/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games'),
+               #('PWD', '/var/lib/jenkins/jobs/finmag_fast_tests/workspace/examples/exchange_demag'),
+               #('NETGENDIR', '/usr/share/netgen'),
                ('LANG', 'en_GB.UTF-8'),
                ('SHLVL', '1'),
                ('HOME', '/var/lib/jenkins'),
