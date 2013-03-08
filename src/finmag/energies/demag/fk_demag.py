@@ -10,25 +10,12 @@ a template for other techniques like the GCR.
 """
 import numpy as np
 import dolfin as df
-import finmag.util.timings as timings
 from finmag.util.consts import mu0
 from finmag.native.llg import compute_bem_fk
 from finmag.util.meshes import nodal_volume
 from finmag.util.timings import Timings, default_timer, timed, mtimed
 
-params = df.Parameters("fk_demag")
-poisson_params = df.Parameters("poisson")
-poisson_params.add("method", "default")
-poisson_params.add("preconditioner", "default")
-laplace_params = df.Parameters("laplace")
-laplace_params.add("method", "default")
-laplace_params.add("preconditioner", "default")
-params.add(poisson_params)
-params.add(laplace_params)
-
 fk_timer = Timings()
-
-# TODO: Add benchmark to document once we get faster than existing implementation.
 
 
 class FKDemag(object):
@@ -46,9 +33,11 @@ class FKDemag(object):
         Create a new FKDemag instance.
 
         """
-        # TODO: Add way to change solver parameters.
-        # Either here or after the instance was created. Maybe both.
-        pass
+        # The parameters for the KrylovSolvers won't be changed often enough
+        # to warrant addition to the __init__ parameters. However, they are
+        # made accessible as attributes, so they can be changed for benchmarks.
+        self.phi_1_solver_params = ("default", "default")
+        self.phi_2_solver_params = ("default", "default")  # method, preconditioner
 
     @mtimed(default_timer)
     def setup(self, S3, m, Ms, unit_length=1):
@@ -98,9 +87,9 @@ class FKDemag(object):
 
         # for computation of field and scalar magnetic potential
         self._poisson_matrix = self._poisson_matrix()
-        self._poisson_solver = df.KrylovSolver(self._poisson_matrix, params["poisson"]["method"], params["poisson"]["preconditioner"])
+        self._poisson_solver = df.KrylovSolver(self._poisson_matrix, self.phi_1_solver_params[0], self.phi_1_solver_params[1])
         self._laplace_zeros = df.Function(self.S1).vector()
-        self._laplace_solver = df.KrylovSolver(params["laplace"]["method"], params["laplace"]["preconditioner"])
+        self._laplace_solver = df.KrylovSolver(self.phi_2_solver_params[0], self.phi_2_solver_params[1])
         self._laplace_solver.parameters["preconditioner"]["same_nonzero_pattern"] = True
         with timed('compute BEM', self.__class__.__name__, fk_timer):
             self._bem, self._b2g_map = compute_bem_fk(df.BoundaryMesh(mesh, False))
