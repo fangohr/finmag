@@ -5331,3 +5331,63 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-03-07 18:15:21 max_albert: Marc-Antonio, you lost one of my tests during your merge!!! How dare you. :-P
 2013-03-07 18:19:49 max_albert: Actually, you lost two: test_set_stt and test_mesh_info (both in src/finmag/sim/sim_test.py). Just adding them back in...
 2013-03-07 19:28:37 mb8g11: Sorry.
+2013-03-08 00:57:18 fangohr1: Good evening. It seems rather busy here. I can only hope that most people are not actually online.
+2013-03-08 00:57:53 fangohr1: Thanks for making the binary build pass the tests. That's very nice (and was due to an upgrade of Cython if I understand correctly).
+2013-03-08 01:40:04 fangohr1: Over and out.
+2013-03-08 09:20:56 fangohr-adium: Good Morning, all.
+2013-03-08 09:22:58 fangohr-adium: Nice merge paths on https://bitbucket.org/fangohr/finmag/commits/all at the moment.
+2013-03-08 13:19:03 fangohr-adium: Looks like Max is bisecting. I like it.
+2013-03-08 13:19:27 fangohr-adium: [Just emerged from the viva of one of Kees de Groot PhD students — he passed :)]
+2013-03-08 13:20:13 max_albert: Hi Hans! Yes, I think I may have found the root of errors that have caused us all this headache. Will do one final check and then I can confirm (or we're back to square zero).
+2013-03-08 13:20:21 max_albert: And glad to hear the student passed. :)
+2013-03-08 13:22:20 max_albert: Regarding the binary build: you are right, the problem was fixed by upgrading Cython to version 0.18.
+2013-03-08 13:23:25 max_albert: However, we had a situation where a couple of tests failed in finmag_fast_tests but the same tests passed when using the binary distribution. This is a bit odd, and I'm not sure if it is reason for concern or whether we can ignore this.
+2013-03-08 13:39:54 max_albert: Yay!! We have a working documentation build! :-)
+2013-03-08 13:46:34 mb8g11: final viva?
+2013-03-08 13:47:12 mb8g11: Sooo.... did you find the reason? I'm really looking forward to hearing an explanation.
+2013-03-08 13:47:42 max_albert: I don't really have an explanation yet.
+2013-03-08 13:48:13 max_albert: But what caused the problem was that the environment variable USER was not set during Jenkins runs.
+2013-03-08 13:48:33 max_albert: There is a configuration option in Jenkins to set environment variables during builds.
+2013-03-08 13:49:02 max_albert: I added the setting "USER=jenkins" there, and now it works.
+2013-03-08 13:49:20 max_albert: But I have not the faintest idea why nsim failed completely silently when that variable wasn't set...
+2013-03-08 13:50:31 fangohr-adium: Maybe it was looking for the home direcotry of the user at some point for some config files?
+2013-03-08 13:50:57 fangohr-adium: I know that cronjobs can be a bit sensitive to this: for some reason HOME is not defined, but USER is, or something along those lines.
+2013-03-08 13:52:05 max_albert: But why would it not produce an error then? The weird thing is that when we called nsim using the subprocess module, we captured all the output (stdout and stderr), but there was *no output whatsever* from the call, and the exit status was 0.
+2013-03-08 13:52:46 mb8g11: So do we have the USER set on summer?
+2013-03-08 13:52:59 max_albert: That's a really good question. Let me check...
+2013-03-08 13:53:24 fangohr-adium: [I am guessing ]:
+2013-03-08 13:53:26 fangohr-adium: Yes
+2013-03-08 13:54:55 max_albert: Hmm, I can't find any setting that would set the USER variable...
+2013-03-08 13:55:01 max_albert: So I presume: no.
+2013-03-08 13:55:19 fangohr-adium: [Guessed wrong then.]
+2013-03-08 13:55:28 mb8g11: Too bad.
+2013-03-08 13:55:43 max_albert: Why "too bad"?
+2013-03-08 13:56:31 mb8g11: If it works on summer and doesn't on aleph0, and you say this is due to the USER environment variable but USER is not set on summer, then your explanation is likely wrong, isn't it?
+2013-03-08 13:56:47 mb8g11: :-(
+2013-03-08 13:57:14 max_albert: It might be set implicitly. (I may actually check that soon.)
+2013-03-08 13:57:23 mb8g11: True. Good idea.
+2013-03-08 13:58:25 max_albert: But I'm pretty sure it's the reason. I manually injected this variable into the subprocess that called nsim, and when I did that it worked, and when I didn't do it then it failed.
+2013-03-08 13:59:27 max_albert: Also, I have now removed that manual environment injection and set the USER=jenkins variable in the Jenkins configuration, and now it also works. (And that's the only change I did, so I'm pretty certain that's the reason.)
+2013-03-08 13:59:37 max_albert: But I still have no explanation for it.
+2013-03-08 14:00:28 mb8g11: Still manages to convince me. Nice, good job figuring it out - stumped me for sure.
+2013-03-08 14:01:26 max_albert: Ok, here is the final proof:
+2013-03-08 14:01:52 max_albert: Type the following in your bash:
+2013-03-08 14:01:58 max_albert: unset USER
+2013-03-08 14:02:21 max_albert: cd /path/to/your/finmag/examples/exchange_demag
+2013-03-08 14:02:31 max_albert: nsim --clean simple_1D_nmag.py
+2013-03-08 14:02:56 mb8g11: Wow!
+2013-03-08 14:03:06 mb8g11: Fails silently.
+2013-03-08 14:03:07 max_albert: This will 'run' nsim but produce no output whatsoever, but the exit status is 0.
+2013-03-08 14:03:18 max_albert: No: succeeds silently. ;-)
+2013-03-08 14:03:38 mb8g11: Really? Didn't look like it does anything.
+2013-03-08 14:03:53 max_albert: Well, the exit status is 0, and that means "success". :-P
+2013-03-08 14:04:01 mb8g11: Haha, okay.
+2013-03-08 14:04:41 max_albert: Incidentally, this is exactly what the unix command "true" does:
+2013-03-08 14:04:50 max_albert: "do nothing, successfully" (from its manpage)
+2013-03-08 14:30:18 mb8g11: I see. ^^
+2013-03-08 14:55:03 max_albert: Bloody hell, Netgen is such a poorly written piece of software when it comes to dealing with wrong input and reporting errors etc.
+2013-03-08 16:23:13 mb8g11: Hahahaha. Tell us!
+2013-03-08 16:23:16 mb8g11: What's the deal?
+2013-03-08 17:04:47 fangohr-adium: [Coming back]: Great stuff, well done Max. Looking at http://aleph0.kk.soton.ac.uk:8080, we now have everything building as we had on summer, plus the binary build (successful), and all based on dolfin 1.1. Very good.
+2013-03-08 17:04:58 fangohr-adium: So I guess we should all upgrade to dolfin 1.1 if not done yet?
+2013-03-08 17:05:07 fangohr-adium: [Over and out for now.]
