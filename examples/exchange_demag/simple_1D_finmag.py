@@ -2,12 +2,14 @@ import dolfin as df
 from finmag.energies import Exchange
 import numpy as np
 import matplotlib.pylab as plt
-import os, commands
+import os
+import subprocess
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # run nmag
-commands.getstatusoutput("nsim %s --clean" % os.path.join(MODULE_DIR, "simple_1D_nmag.py"))
+subprocess.call("nsim {} -- clean".format(os.path.join(MODULE_DIR, "simple_1D_nmag.py")), shell=True)
+
 nd = np.load(os.path.join(MODULE_DIR, "nmag_hansconf.npy"))
 
 # run finmag
