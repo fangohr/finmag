@@ -4,7 +4,10 @@ agreement_averages.png: averages_ref.txt averages.txt
 	gnuplot plot.gnu
 
 clean:
-	rm -f averages_ref.txt averages.txt finmag_bar.log run_nmag_log.log bar_mat.xml bar.xml.gz agreement_averages.png
+	rm -f averages.txt finmag_bar.log run_nmag_log.log bar_mat.xml bar.xml.gz agreement_averages.png
+
+purge:
+	rm -f averages_ref.txt
 
 .PHONY: all clean
 
