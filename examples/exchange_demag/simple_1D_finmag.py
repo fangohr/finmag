@@ -8,7 +8,14 @@ import subprocess
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # run nmag
-subprocess.call("var/lib/jenkins/nmag-0.2.1/nsim/bin/nsim {} --clean".format(os.path.join(MODULE_DIR, "simple_1D_nmag.py")), shell=True)
+print "Running 'nsim simple_1D_nmag.py' ..."
+output = subprocess.check_output("nsim {} --clean".format(os.path.join(MODULE_DIR, "simple_1D_nmag.py")), shell=True, stderr=subprocess.STDOUT)
+print "Done."
+print "======================================================="
+print "Output of 'nsim simple_1D_nmag.py:"
+print output
+print "======================================================="
+
 
 nd = np.load(os.path.join(MODULE_DIR, "nmag_hansconf.npy"))
 
