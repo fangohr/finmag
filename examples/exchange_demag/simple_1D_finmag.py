@@ -16,11 +16,17 @@ print "Double-checking environment variables:"
 print subprocess.check_output("env", shell=True, stderr=subprocess.STDOUT)
 print "======================================================="
 print "Running 'nsim simple_1D_nmag.py' ..."
-output = subprocess.check_output("/var/lib/jenkins/nmag-0.2.1/nsim/bin/nsim {} --clean".format(os.path.join(MODULE_DIR, "simple_1D_nmag.py")), shell=True, stderr=subprocess.STDOUT)
-print "Done."
+#output = subprocess.check_output("/var/lib/jenkins/nmag-0.2.1/nsim/bin/nsim {} --clean".format(os.path.join(MODULE_DIR, "simple_1D_nmag.py")), shell=True, stderr=subprocess.STDOUT)
+p = subprocess.Popen(['/var/lib/jenkins/nmag-0.2.1/nsim/bin/nsim', '--clean', os.path.join(MODULE_DIR, "simple_1D_nmag.py")], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+p.wait()
+(stdout, stderr) = p.communicate()
+print "Done. Exit status was: {}".format(p.returncode)
 print "======================================================="
 print "Output of 'nsim simple_1D_nmag.py:"
-print output
+print "===== Stdout: ====="
+print stdout
+print "===== Stderr: ====="
+print stderr
 print "======================================================="
 
 
