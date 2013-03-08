@@ -233,6 +233,7 @@ class RelaxationEvent(object):
         self.dmdt_increased_counter = 0
         self.dmdt_increased_counter_limit = dmdt_increased_counter_limit
         self.dmdts = []  # list of (t, max_dmdt) tuples
+        self.energies = []
 
         self.sim = sim
         self.last_t = sim.t
@@ -256,6 +257,8 @@ class RelaxationEvent(object):
         if self.last_m is not None:
             dmdt = compute_dmdt(self.last_t, self.last_m, t, m)
             self.dmdts.append((t, dmdt))
+            energy = self.sim.total_energy()
+            self.energies.append(energy)
 
             if dmdt > self.stopping_dmdt:
                 if self.dt < self.dt_limit / self.dt_increment_multi:
@@ -283,7 +286,7 @@ class RelaxationEvent(object):
 
         """
         if len(self.dmdts) >= 2:
-            if self.dmdts[-1][1] > self.dmdts[-2][1]:
+            if self.dmdts[-1][1] > self.dmdts[-2][1] and self.energies[-1] > self.energies[-2]:
                 self.dmdt_increased_counter += 1
                 log.debug("dmdt {} times larger than last time (counting {}/{}).".format(
                     self.dmdts[-1][1] / self.dmdts[-2][1],
