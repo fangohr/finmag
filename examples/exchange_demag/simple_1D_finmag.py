@@ -9,7 +9,7 @@ MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # run nmag
 print "Running 'nsim simple_1D_nmag.py' ..."
-output = subprocess.check_output("nsim {} --clean".format(os.path.join(MODULE_DIR, "simple_1D_nmag.py")), shell=True, stderr=subprocess.STDOUT)
+output = subprocess.check_output("/foo/bar/nsim {} --clean".format(os.path.join(MODULE_DIR, "simple_1D_nmag.py")), shell=True, stderr=subprocess.STDOUT)
 print "Done."
 print "======================================================="
 print "Output of 'nsim simple_1D_nmag.py:"
