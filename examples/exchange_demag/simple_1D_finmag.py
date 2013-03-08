@@ -11,7 +11,7 @@ commands.getstatusoutput("nsim %s --clean" % os.path.join(MODULE_DIR, "simple_1D
 nd = np.load(os.path.join(MODULE_DIR, "nmag_hansconf.npy"))
 
 # run finmag
-mesh = df.Interval(100, 0, 10e-9)
+mesh = df.IntervalMesh(100, 0, 10e-9)
 S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
 m = df.interpolate(df.Expression(("cos(x[0]*pi/10e-9)", "sin(x[0]*pi/10e-9)", "0")), S3)
 
