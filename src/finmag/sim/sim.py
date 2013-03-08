@@ -307,8 +307,8 @@ class Simulation(object):
 
         self.scheduler._remove(exit_at)
 
-    def relax(self, stopping_dmdt=ONE_DEGREE_PER_NS, dt_limit=1e-10,
-              dmdt_increased_counter_limit=500):
+    def relax(self, stopping_dmdt=1.0, dt_limit=1e-10,
+              dmdt_increased_counter_limit=10):
         """
         Run the simulation until the magnetisation has relaxed.
 
@@ -324,7 +324,7 @@ class Simulation(object):
         if hasattr(self, "relaxation"):
             del(self.relaxation)
 
-        self.relaxation = events.RelaxationEvent(self, stopping_dmdt, dmdt_increased_counter_limit, dt_limit)
+        self.relaxation = events.RelaxationEvent(self, stopping_dmdt*ONE_DEGREE_PER_NS, dmdt_increased_counter_limit, dt_limit)
         self.scheduler._add(self.relaxation)
 
         run_with_schedule(self.integrator, self.scheduler)
