@@ -10,7 +10,7 @@ MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 env_for_nsim = os.environ
 for (k, v) in [#('SHELL', '/bin/bash'),
                ('TERM', 'xterm-color'),
-               ('USER', 'jenkins'),
+               #('USER', 'jenkins'),
                #('MAIL', '/var/mail/jenkins'),
                #('PATH', '/var/lib/jenkins/nmag-0.2.1/nsim/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games'),
                #('PWD', '/var/lib/jenkins/jobs/finmag_fast_tests/workspace/examples/exchange_demag'),
