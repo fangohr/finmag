@@ -8,7 +8,7 @@ import subprocess
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 env_for_nsim = os.environ
-for (k, v) in [('SHELL', '/bin/bash'),
+for (k, v) in [#('SHELL', '/bin/bash'),
                ('TERM', 'xterm-color'),
                ('USER', 'jenkins'),
                #('MAIL', '/var/mail/jenkins'),
