@@ -20,11 +20,10 @@ def test_against_nmag():
         sp.call(cmd)
         m_nmag = np.genfromtxt(os.path.join(MODULE_DIR, filename))
 
-        if not os.path.exists("averages.txt"):
+        filename = 'finmag_bar.ndt'
+        if not os.path.exists(filename):
             run_finmag.run_simulation()
-            cmd = 'ncol finmag_bar.ndt time m_x m_y m_z > averages.txt'
-            sp.call(cmd, shell=True)
-        m_finmag = np.genfromtxt(os.path.join(MODULE_DIR, 'averages.txt'))
+        m_finmag = np.genfromtxt(os.path.join(MODULE_DIR, filename))
 
     except sp.CalledProcessError as ex:
         print("Running command '{}' was unsuccessful. The error "
