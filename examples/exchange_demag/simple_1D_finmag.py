@@ -7,24 +7,6 @@ import subprocess
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-env_for_nsim = os.environ
-for (k, v) in [#('SHELL', '/bin/bash'),
-               ('TERM', 'xterm-color'),
-               #('USER', 'jenkins'),
-               #('MAIL', '/var/mail/jenkins'),
-               #('PATH', '/var/lib/jenkins/nmag-0.2.1/nsim/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games'),
-               #('PWD', '/var/lib/jenkins/jobs/finmag_fast_tests/workspace/examples/exchange_demag'),
-               #('NETGENDIR', '/usr/share/netgen'),
-               #('LANG', 'en_GB.UTF-8'),
-               #('SHLVL', '1'),
-               #('HOME', '/var/lib/jenkins'),
-               #('LANGUAGE', 'en_GB:en'),
-               #('PYTHONPATH', '/var/lib/jenkins/jobs/finmag_fast_tests/workspace/src/'),
-               #('LOGNAME', 'jenkins'),
-               #('XDG_RUNTIME_DIR', '/run/user/jenkins'),
-              ]:
-    env_for_nsim[k] = v
-
 # run nmag
 print "======================================================="
 print "Environment variables:"
@@ -35,7 +17,7 @@ print subprocess.check_output("env", shell=True, stderr=subprocess.STDOUT)
 print "======================================================="
 print "Running 'nsim simple_1D_nmag.py' ..."
 #output = subprocess.check_output("/var/lib/jenkins/nmag-0.2.1/nsim/bin/nsim {} --clean".format(os.path.join(MODULE_DIR, "simple_1D_nmag.py")), shell=True, stderr=subprocess.STDOUT)
-p = subprocess.Popen(['/var/lib/jenkins/nmag-0.2.1/nsim/bin/nsim', '--clean', os.path.join(MODULE_DIR, "simple_1D_nmag.py")], env=env_for_nsim, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+p = subprocess.Popen(['/var/lib/jenkins/nmag-0.2.1/nsim/bin/nsim', '--clean', os.path.join(MODULE_DIR, "simple_1D_nmag.py")], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 p.wait()
 (stdout, stderr) = p.communicate()
 print "Done. Exit status was: {}".format(p.returncode)
