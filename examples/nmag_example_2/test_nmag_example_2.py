@@ -9,9 +9,11 @@ def test_against_nmag():
     os.chdir(MODULE_DIR)
 
     try:
-        # the nmag file should be in version control. However, it is convenient
-        # that the test recomputes it if needed.
         try:
+            sp.check_output(['make', 'clean'], stderr=sp.STDOUT)
+
+            # the nmag file should be in version control. However, it is
+            # convenient that the test can recompute it if needed.
             filename = "averages_ref.txt"
             sp.check_output(['make', filename], stderr=sp.STDOUT)
             m_nmag = np.genfromtxt(os.path.join(MODULE_DIR, filename))
