@@ -8,20 +8,20 @@ import subprocess
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 env_for_nsim = os.environ
-for (k, v) in [#('SHELL', '/bin/bash'),
-               #('TERM', 'xterm-color'),
-               #('USER', 'jenkins'),
-               #('MAIL', '/var/mail/jenkins'),
-               #('PATH', '/var/lib/jenkins/nmag-0.2.1/nsim/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games'),
-               #('PWD', '/var/lib/jenkins/jobs/finmag_fast_tests/workspace/examples/exchange_demag'),
-               #('NETGENDIR', '/usr/share/netgen'),
-               ('LANG', 'en_GB.UTF-8'),
-               ('SHLVL', '1'),
-               ('HOME', '/var/lib/jenkins'),
-               ('LANGUAGE', 'en_GB:en'),
-               ('PYTHONPATH', '/var/lib/jenkins/jobs/finmag_fast_tests/workspace/src/'),
-               ('LOGNAME', 'jenkins'),
-               ('XDG_RUNTIME_DIR', '/run/user/jenkins'),
+for (k, v) in [('SHELL', '/bin/bash'),
+               ('TERM', 'xterm-color'),
+               ('USER', 'jenkins'),
+               ('MAIL', '/var/mail/jenkins'),
+               ('PATH', '/var/lib/jenkins/nmag-0.2.1/nsim/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games'),
+               ('PWD', '/var/lib/jenkins/jobs/finmag_fast_tests/workspace/examples/exchange_demag'),
+               ('NETGENDIR', '/usr/share/netgen'),
+               #('LANG', 'en_GB.UTF-8'),
+               #('SHLVL', '1'),
+               #('HOME', '/var/lib/jenkins'),
+               #('LANGUAGE', 'en_GB:en'),
+               #('PYTHONPATH', '/var/lib/jenkins/jobs/finmag_fast_tests/workspace/src/'),
+               #('LOGNAME', 'jenkins'),
+               #('XDG_RUNTIME_DIR', '/run/user/jenkins'),
               ]:
     env_for_nsim[k] = v
 
