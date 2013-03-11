@@ -34,7 +34,6 @@ def angles_after_a_nanosecond(initial_M, pins=[]):
     angles = np.array([angle(m[i], m[i+1]) for i in xrange(len(m)-1)])
     return angles
 
-@py.test.mark.slow
 def test_all_orientations_without_pinning():
     for m0 in possible_orientations:
         angles = angles_after_a_nanosecond(m0)
@@ -42,7 +41,6 @@ def test_all_orientations_without_pinning():
         print angles
         assert np.nanmax(angles) < TOLERANCE
 
-@py.test.mark.slow
 def test_all_orientations_with_pinning():
     for m0 in possible_orientations:
         angles = angles_after_a_nanosecond(m0, [0, 10])
