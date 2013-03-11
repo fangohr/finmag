@@ -13,7 +13,7 @@ def test_incremental_saver(tmpdir):
     a2 = np.arange(20)
 
     # Test saving to .npz
-    s = IncrementalSaver('data_npy.npy')
+    s = FieldSaver('data_npy.npy', incremental=True)
     s.save(a1)
     s.save(a1)
     s.save(a2)  # nothing wrong with saving arrays of different shapes
@@ -24,48 +24,28 @@ def test_incremental_saver(tmpdir):
 
     with pytest.raises(IOError):
         # Existing files should not be overwritten
-        IncrementalSaver('data_npy.npy')
+        FieldSaver('data_npy.npy', incremental=True)
 
     # Using 'overwrite=True' should remove existing files
-    s = IncrementalSaver('data_npy.npy', overwrite=True)
+    s = FieldSaver('data_npy.npy', overwrite=True, incremental=True)
     assert(len(glob('data_npy*.npy')) == 0)
     s.save(a1)
     s.save(a1)
     assert(len(glob('data_npy*.npy')) == 2)
 
-    with pytest.raises(ValueError):
-        IncrementalSaver('data_npz.npz')
+    # Tidying up: remove files created so far
+    for f in glob('data_npy*.npy'):
+        os.remove(f)
 
-    with pytest.raises(ValueError):
-        IncrementalSaver('data_vtk.pvd')
+    # Non-incremental saving
+    s = FieldSaver('data_npy.npy', overwrite=True, incremental=False)
+    assert(len(glob('data_npy*.npy')) == 0)
+    s.save(a1)
+    s.save(a1)
+    s.save(a1)
+    assert(len(glob('data_npy*.npy')) == 1)
 
-    with pytest.raises(ValueError):
-        IncrementalSaver('data_hdf5.h5')
-
-    # # Test saving to .npz
-    # s = IncrementalSaver('data_npz.npz')
-    # s.save(a1)
-    # s.save(a1)
-    # s.save(a2)  # nothing wrong with saving arrays of different shapes
-    # s.save(a2)
-    # assert(len(glob('data_npz*.npz')) == 1)
-    # f = np.load('data_npz.npz')
-    # assert(np.allclose(a1, f['000000']))
-    # assert(np.allclose(a1, f['000001']))
-    # assert(np.allclose(a2, f['000002']))
-    # assert(np.allclose(a2, f['000003']))
-    #
-    # # Test saving to vtk
-    # s = IncrementalSaver('data_vtk.pvd')
-    # s.save(a1)
-    # s.save(a2)  # nothing wrong with saving arrays of different shapes
-    # assert(len(glob('data_vtk*.pvd')) == 1)
-    # assert(len(glob('data_vtk*.vtu')) == 2)
-    #
-    # # Test saving to ndt
-    # s = IncrementalSaver('data_averages.ndt')
-    # sim = barmini()
-    # s.save(sim)
-    # s.save(sim)
-    # s.save(sim)
-    # # XXX TODO: Check that saving the averages worked!
+    # Extension is added automatically
+    s = FieldSaver('data_npy.foo')
+    s.save(a1)
+    assert(len(glob('data_npy.foo*.npy')) == 1)

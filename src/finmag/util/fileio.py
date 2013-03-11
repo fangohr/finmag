@@ -182,7 +182,7 @@ class Tablereader(object):
         return self.datadic[entity]
 
 
-class IncrementalSaver(object):
+class FieldSaver(object):
     """
     Wrapper class which can incrementally save data to one file or
     multiple files (depending on the file type). Internally, this
@@ -197,36 +197,28 @@ class IncrementalSaver(object):
 
     cnt_pattern = '_{:06d}'
 
-    def __init__(self, filename, overwrite=False):
-        # This dictionary provides the 'open' and 'save' methods for each filetype.
-        self.file_funcs = {
-            '.npy': (self._open_npy_incremental, np.save),
-            }
+    def __init__(self, filename, overwrite=False, incremental=False):
+        if not filename.endswith('.npy'):
+            filename += '.npy'
 
         self.filename = filename
         self.basename, self.ext = os.path.splitext(filename)
+        self.incremental = incremental
         self.counter = 0
 
-        try:
-            file_open = self.file_funcs[self.ext][0]
-            if file_open is not None:
-                file_open(self.filename, overwrite=overwrite)
-        except KeyError:
-            raise ValueError("Incremental saving to file type '{}' "
-                             "is not supported.".format(self.ext))
+        if incremental:
+            existing_files = glob(self.basename + '_*' + self.ext)
+        else:
+            existing_files = glob(self.filename)
 
-    def _open_npy_incremental(self, filename, overwrite=False):
-        basename, ext = os.path.splitext(filename)
-        existing_files = glob(basename + '_*' + ext)
-        print "Existing files: {}".format(existing_files)
         if len(existing_files) > 0:
             if overwrite == False:
-                raise IOError("Will not overwrite existing files '{}_*.npy'. "
-                              "Use 'overwrite=True' if this is what you "
-                              "want.".format(basename))
+                raise IOError(
+                    "Will not overwrite existing file(s). Use 'overwrite=True' "
+                    "if this is what you want.".format(self.basename))
             else:
-                logger.debug("Overwriting {} existing files matching the pattern"
-                             "'{}_*.npy'.".format(len(existing_files), basename))
+                logger.debug("Overwriting {} existing file(s) "
+                             "'{}*.npy'.".format(len(existing_files), self.basename))
                 for f in existing_files:
                     os.remove(f)
 
@@ -235,11 +227,14 @@ class IncrementalSaver(object):
         Save the given data (which should be a numpy array).
 
         """
-        cur_filename = self.basename + self.cnt_pattern.format(self.counter) + self.ext
+        if self.incremental:
+            cur_filename = self.basename + self.cnt_pattern.format(self.counter) + self.ext
+        else:
+            cur_filename = self.filename
+
+        np.save(cur_filename, data)
         self.counter += 1
 
-        file_save = self.file_funcs[self.ext][1]
-        file_save(cur_filename, data)
 
 if __name__ == "__main__":
     #create example simulation

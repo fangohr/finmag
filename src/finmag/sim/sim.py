@@ -6,7 +6,7 @@ from finmag.sim.llg import LLG
 from finmag.util.timings import mtimed
 from finmag.util.consts import exchange_length, bloch_parameter
 from finmag.util.meshes import mesh_info, mesh_volume
-from finmag.util.fileio import Tablewriter, IncrementalSaver
+from finmag.util.fileio import Tablewriter, FieldSaver
 from finmag.util import helpers
 from finmag.util.vtk_saver import VTKSaver
 from finmag.sim.hysteresis import hysteresis as hyst, hysteresis_loop as hyst_loop
@@ -607,21 +607,23 @@ class Simulation(object):
         vtk_saver = self._get_vtk_saver(filename, overwrite)
         self._save_m_to_vtk(vtk_saver)
 
-    def _get_field_saver(self, field_name, filename=None, overwrite=False):
+    def _get_field_saver(self, field_name, filename=None, overwrite=False, incremental=False):
         if filename is None:
             filename = '{}_{}.npy'.format(self.sanitized_name, field_name.lower())
         if not filename.endswith('.npy'):
             filename += '.npy'
 
-        if self.field_savers.has_key(filename):
+        s = None
+        if self.field_savers.has_key(filename) and self.field_savers[filename].incremental == incremental:
             s = self.field_savers[filename]
-        else:
-            s = IncrementalSaver(filename, overwrite=overwrite)
+
+        if s is None:
+            s = FieldSaver(filename, overwrite=overwrite, incremental=incremental)
             self.field_savers[filename] = s
 
         return s
 
-    def save_field(self, field_name, filename=None):
+    def save_field(self, field_name, filename=None, incremental=False):
         """
         Save the given field data to a .npy file.
 
@@ -640,9 +642,11 @@ class Simulation(object):
             name of the field to be saved. If a file with the same name
             already exists, an exception of type IOError will be raised.
 
+        incremental : bool
+
         """
         field_data = self.get_field_as_dolfin_function(field_name)
-        field_saver = self._get_field_saver(field_name, filename)
+        field_saver = self._get_field_saver(field_name, filename, incremental=incremental)
         field_saver.save(field_data.vector().array())
 
     def mesh_info(self):
