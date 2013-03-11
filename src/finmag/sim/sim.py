@@ -602,6 +602,8 @@ class Simulation(object):
         vtk_saver = self._get_vtk_saver(filename, overwrite)
         self._save_m_to_vtk(vtk_saver)
 
+    save_field = sim_helpers.save_field
+
     def mesh_info(self):
         """
         Return a string containing some basic information about the

@@ -526,3 +526,25 @@ class TestSimulation(object):
         sim4.add(Exchange(A=13e-12))
         sim4.add(UniaxialAnisotropy(K1=520e3, axis=[0, 0, 1]))
         pytest.xfail("print sim4.mesh_info()")
+
+
+    def test_save_field(self, tmpdir):
+        os.chdir(str(tmpdir))
+        sim = barmini()
+
+        # Save the magnetisation using the default filename
+        sim.save_field('m')
+        assert(os.path.exists('barmini_m.npy'))
+
+        # Saving m again should raise an error
+        with pytest.raises(IOError):
+            sim.save_field('m')
+
+        # Using 'overwrite=True', no error should occur
+        sim.save_field('m', overwrite=True)
+
+        sim.save_field('Demag')
+        assert(os.path.exists('barmini_demag.npy'))
+
+        sim.save_field('Demag', filename='demag.npy')
+        assert(os.path.exists('demag.npy'))
