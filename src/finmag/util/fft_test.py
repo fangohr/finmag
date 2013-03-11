@@ -63,7 +63,8 @@ def test_analytical_inverse_DFT():
         C_k = A_k.imag
         print "Fourier coefficient at index k={} is: {}".format(k, A_k)
 
-        signal_analytical_1 = 1.0/n * (2*B_k*cos(2*pi*m_vals*k/n) - 2*C_k*sin(2*pi*m_vals*k/n))
+        tt = 2*pi*m_vals*k/n
+        signal_analytical_1 = 2.0/n * (B_k * cos(tt) - C_k * sin(tt))
         signal_analytical_2 = real(1.0/n * (A_k * exp(2*pi*1j*m_vals*k/n) + conj(A_k) * exp(2*pi*1j*m_vals*(n-k)/n)))
 
         base_oscillation = sin(ts) if (k == 2) else 2*cos(3*ts)
