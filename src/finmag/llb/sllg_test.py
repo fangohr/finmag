@@ -161,7 +161,7 @@ def test_sllg_save_data():
     
 def plot_random_number():
     from finmag.native.llb import RandomMT19937
-    mt=RandomMT19937() 
+    mt = RandomMT19937() 
     mt.initial_random(422353390)
     
     x=np.zeros(10000000,dtype=np.float)

@@ -294,7 +294,7 @@ namespace finmag { namespace llb {
     	this->seed=seed;
     	this->do_precession=do_precession;
     	this->using_type_II=using_type_II;
-    	mt_random.seed(seed);
+    	mt_random.initial_random(seed);
     }
 
     void StochasticLLBIntegrator::calc_llb_adt_bdw(double *m, double *h, double *dm){
