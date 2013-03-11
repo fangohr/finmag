@@ -19,6 +19,45 @@ def save_ndt(sim):
     sim.tablewriter.save()
 
 
+def save_field(sim, field_name, filename=None, overwrite=False):
+    """
+    Save the field data to a .npy file.
+
+    *Arguments*
+
+    field_name : string
+
+        The name of the field to be saved. This should be either 'm'
+        or the name of one of the interactions present in the
+        simulation (e.g. Demag, Zeeman, Exchange, UniaxialAnisotropy).
+
+    filename : string
+
+        Output filename. If not specified, a default name will be
+        generated automatically based on the simulation name and the
+        name of the field to be saved. If a file with the same name
+        already exists, an exception of type IOError will be raised.
+
+    *Returns*
+
+    The output filename: either `filename` (if given) or the
+    automatically generated name.
+
+    """
+    if filename is None:
+        filename = '{}_{}.npy'.format(sim.name, field_name.lower())
+    if not filename.endswith('.npy'):
+        filename += '.npy'
+    if os.path.exists(filename) and not overwrite == True:
+        raise IOError("Could not save field '{}' to file '{}': "
+                      "file already exists".format(field_name, filename))
+
+    field = sim.get_field_as_dolfin_function(field_name)
+    np.save(filename, field.vector().array())
+
+    return filename
+
+
 def create_backup_file_if_file_exists(filename, backupextension='.backup'):
     if os.path.exists(filename):
         backup_file_name = filename + backupextension
