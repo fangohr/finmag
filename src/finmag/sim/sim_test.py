@@ -536,10 +536,19 @@ class TestSimulation(object):
         sim.save_field('m')
         sim.save_field('m')
         sim.save_field('m')
+        assert(len(glob('barmini_m*.npy')) == 1)
+        os.remove('barmini_m.npy')
+
+        # Save incrementally
+        sim.save_field('m', incremental=True)
+        sim.save_field('m', incremental=True)
+        sim.save_field('m', incremental=True)
         assert(len(glob('barmini_m_[0-9]*.npy')) == 3)
 
-        sim.save_field('Demag')
+        sim.save_field('Demag', incremental=True)
         assert(os.path.exists('barmini_demag_000000.npy'))
+        sim.save_field('Demag')
+        assert(os.path.exists('barmini_demag.npy'))
 
-        sim.save_field('Demag', filename='demag.npy')
+        sim.save_field('Demag', filename='demag.npy', incremental=True)
         assert(os.path.exists('demag_000000.npy'))
