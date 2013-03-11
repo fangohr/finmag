@@ -105,12 +105,10 @@ def test_macrospin_alpha_0_001():
     compare_with_analytic_solution(alpha=0.001, max_t=1e-11)
 
 
-@py.test.mark.slow
 def test_macrospin_very_low_damping():
     compare_with_analytic_solution(alpha=0.02, max_t=0.5e-9)
 
 
-@py.test.mark.slow
 def test_macrospin_low_damping():
     compare_with_analytic_solution(alpha=0.1, max_t=4e-10)
 
@@ -119,7 +117,6 @@ def test_macrospin_standard_damping():
     compare_with_analytic_solution(alpha=0.5, max_t=1e-10)
 
 
-@py.test.mark.slow
 def test_macrospin_higher_damping():
     compare_with_analytic_solution(alpha=1, max_t=1e-10)
 

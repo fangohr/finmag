@@ -1,4 +1,5 @@
 import os
+import py
 import pytest
 import logging
 import dolfin as df
@@ -16,12 +17,14 @@ E_analytical = mu0 * Ms**2 * volume / 6
 TOL = 1.9e-2
 
 
+@pytest.mark.slow
 def test_demag_energy_fk():
     E, error = demag_energy("FK")
     assert error < TOL
 
 
 @pytest.mark.xfail
+@pytest.mark.slow
 def test_demag_energy_gcr():
     E, error = demag_energy("GCR")
     assert error < TOL

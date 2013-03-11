@@ -1,10 +1,12 @@
 import os
+import pytest
 import subprocess as sp
 import numpy as np
 import run_finmag
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+@pytest.mark.slow
 def test_against_nmag():
     cwd_backup = os.getcwd()
     os.chdir(MODULE_DIR)

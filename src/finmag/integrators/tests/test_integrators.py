@@ -15,7 +15,6 @@ from datetime import datetime
 NODE_COUNT = 100
 END_TIME = 1e-10
 
-@py.test.mark.slow
 class IntegratorTests(unittest.TestCase):
     def run_test(self, backend, method, nsteps=40000):
         llg = setup_domain_wall_cobalt(node_count=NODE_COUNT)
