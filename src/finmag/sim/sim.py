@@ -6,7 +6,7 @@ from finmag.sim.llg import LLG
 from finmag.util.timings import mtimed
 from finmag.util.consts import exchange_length, bloch_parameter
 from finmag.util.meshes import mesh_info, mesh_volume
-from finmag.util.fileio import Tablewriter
+from finmag.util.fileio import Tablewriter, IncrementalSaver
 from finmag.util import helpers
 from finmag.util.vtk_saver import VTKSaver
 from finmag.sim.hysteresis import hysteresis as hyst, hysteresis_loop as hyst_loop
@@ -80,7 +80,11 @@ class Simulation(object):
         self.domains.set_all(0)
         self.region_id = 0
 
+        # XXX TODO: this separation between vtk_savers and
+        # field_savers is artificial and should/will be removed once
+        # we have a robust, unified field saving mechanism.
         self.vtk_savers = {}
+        self.field_savers = {}
 
         self.scheduler_shortcuts = {
             'save_restart_data': sim_helpers.save_restart_data,
@@ -603,7 +607,43 @@ class Simulation(object):
         vtk_saver = self._get_vtk_saver(filename, overwrite)
         self._save_m_to_vtk(vtk_saver)
 
-    save_field = sim_helpers.save_field
+    def _get_field_saver(self, field_name, filename=None, overwrite=False):
+        if filename is None:
+            filename = '{}_{}.npy'.format(self.sanitized_name, field_name.lower())
+        if not filename.endswith('.npy'):
+            filename += '.npy'
+
+        if self.field_savers.has_key(filename):
+            s = self.field_savers[filename]
+        else:
+            s = IncrementalSaver(filename, overwrite=overwrite)
+            self.field_savers[filename] = s
+
+        return s
+
+    def save_field(self, field_name, filename=None):
+        """
+        Save the given field data to a .npy file.
+
+        *Arguments*
+
+        field_name : string
+
+            The name of the field to be saved. This should be either 'm'
+            or the name of one of the interactions present in the
+            simulation (e.g. Demag, Zeeman, Exchange, UniaxialAnisotropy).
+
+        filename : string
+
+            Output filename. If not specified, a default name will be
+            generated automatically based on the simulation name and the
+            name of the field to be saved. If a file with the same name
+            already exists, an exception of type IOError will be raised.
+
+        """
+        field_data = self.get_field_as_dolfin_function(field_name)
+        field_saver = self._get_field_saver(field_name, filename)
+        field_saver.save(field_data.vector().array())
 
     def mesh_info(self):
         """
