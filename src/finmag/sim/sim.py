@@ -86,6 +86,7 @@ class Simulation(object):
             'save_restart_data': sim_helpers.save_restart_data,
             'save_ndt': sim_helpers.save_ndt,
             'save_vtk': self.save_vtk,
+            'save_field': self.save_field,
             'switch_off_H_ext': Simulation.switch_off_H_ext,
         }
 
