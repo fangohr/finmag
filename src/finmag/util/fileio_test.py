@@ -6,7 +6,7 @@ from glob import glob
 from fileio import *
 
 
-def test_incremental_saver(tmpdir):
+def test_field_saver(tmpdir):
     os.chdir(str(tmpdir))
 
     a1 = np.arange(10)
