@@ -1,11 +1,12 @@
-#include <boost/random.hpp>
-#include <boost/random/normal_distribution.hpp>
+//#include <boost/random.hpp>
+//#include <boost/random/normal_distribution.hpp>
 
 #include "util/np_array.h"
 
 
 namespace finmag { namespace llb {
 
+	/*
 	class RandomMT19937 {
 
 		private:
@@ -27,6 +28,28 @@ namespace finmag { namespace llb {
 			}
 
 	};
+	*/
+
+
+		#define MT19937_N   624
+
+
+        class RandomMT19937 {
+
+                int random_index;
+                unsigned int MT[MT19937_N];
+
+                private:
+                        double ltqnorm(void);
+
+                public:
+                        RandomMT19937():random_index(0){};
+                        double random(void);
+                        void initial_random(unsigned int seed);
+                        void gaussian_random_vec(double *x, int n, double dev);
+                        void gaussian_random_np(const np_array<double> &pa);
+
+        };
 
 }}
 
