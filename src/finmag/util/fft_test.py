@@ -66,15 +66,15 @@ def test_analytical_inverse_DFT():
         signal_analytical_1 = 1.0/n * (2*B_k*cos(2*pi*m_vals*k/n) - 2*C_k*sin(2*pi*m_vals*k/n))
         signal_analytical_2 = real(1.0/n * (A_k * exp(2*pi*1j*m_vals*k/n) + conj(A_k) * exp(2*pi*1j*m_vals*(n-k)/n)))
 
-        pure_oscillation = sin(ts) if (k == 2) else 2*cos(3*ts)
-        print "Maximum deviation of filtered signal from pure sinusoidal contribution: {}".format(max(abs(pure_oscillation - signal_filtered)))
+        base_oscillation = sin(ts) if (k == 2) else 2*cos(3*ts)
+        print "Maximum deviation of filtered signal from the base sinusoidal oscillation: {}".format(max(abs(base_oscillation - signal_filtered)))
 
-        assert np.allclose(pure_oscillation, signal_filtered, atol=0.05, rtol=0)
+        assert np.allclose(base_oscillation, signal_filtered, atol=0.05, rtol=0)
         assert np.allclose(signal_filtered, signal_analytical_1, atol=1e-11, rtol=0)
         assert np.allclose(signal_filtered, signal_analytical_2, atol=1e-11, rtol=0)
 
         plt.figure()
-        plt.plot(ts, pure_oscillation, '-', label='sin(t)')
+        plt.plot(ts, base_oscillation, '-', label='sin(t)')
         plt.plot(ts, signal_filtered, 'x', label='filtered (iDFT)')
         plt.plot(ts, signal_analytical_1, '-', label='filtered (analytical #1)')
         plt.plot(ts, signal_analytical_2, '.', label='filtered (analytical #1)')
