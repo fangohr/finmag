@@ -16,7 +16,7 @@ force:
 	echo `which nmeshimport`
 	du $<
 	nmeshimport --netgen $< $@
-	/var/lib/jenkins/nmag-0.2.1/bin/nmeshimport --netgen $< $@
+	nmeshimport --netgen $< $@
 	@echo "\n--- DEBUG: Have run nmeshimport, will tell you file size ---\n"
 	du $@
 
