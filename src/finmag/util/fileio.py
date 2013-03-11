@@ -1,6 +1,7 @@
-import os.path
+import os
 import logging
-import numpy
+import numpy as np
+from glob import glob
 from finmag.util.timings import mtimed
 logger = logging.getLogger(name='finmag')
 
@@ -106,7 +107,7 @@ class Tablewriter(object):
             f.write(' ' * len(self.comment_symbol))  # account for comment symbol width
             for entityname in self.entity_order:
                 value = self.entities[entityname]['get'](self.sim)
-                if isinstance(value, numpy.ndarray):
+                if isinstance(value, np.ndarray):
                     if len(value) == 3:  # 3d vector
                         for i in range(3):
                             f.write(self.float_format % value[i])
@@ -149,7 +150,7 @@ class Tablereader(object):
         assert len(headers) == len(units)
 
         # use numpy to read remaining data
-        self.data = numpy.loadtxt(self.f)
+        self.data = np.loadtxt(self.f)
         self.f.close()
 
         # some consistency checks: must have as many columns as
@@ -180,6 +181,66 @@ class Tablereader(object):
         """Given the entity name, return the data as numpy array"""
         return self.datadic[entity]
 
+
+class IncrementalSaver(object):
+    """
+    Wrapper class which can incrementally save data to one file or
+    multiple files (depending on the file type). Internally, this
+    keeps a counter which is included in the file name if multiple
+    files need to be created.
+
+    Supported file types:
+
+       .npy  --  Creates multiple, incrementally numbered .npy files.
+
+    """
+
+    cnt_pattern = '_{:06d}'
+
+    def __init__(self, filename, overwrite=False):
+        # This dictionary provides the 'open' and 'save' methods for each filetype.
+        self.file_funcs = {
+            '.npy': (self._open_npy_incremental, np.save),
+            }
+
+        self.filename = filename
+        self.basename, self.ext = os.path.splitext(filename)
+        self.counter = 0
+
+        try:
+            file_open = self.file_funcs[self.ext][0]
+            if file_open is not None:
+                file_open(self.filename, overwrite=overwrite)
+        except KeyError:
+            raise ValueError("Incremental saving to file type '{}' "
+                             "is not supported.".format(self.ext))
+
+    def _open_npy_incremental(self, filename, overwrite=False):
+        basename, ext = os.path.splitext(filename)
+        existing_files = glob(basename + '_*' + ext)
+        print "Existing files: {}".format(existing_files)
+        if len(existing_files) > 0:
+            if overwrite == False:
+                raise IOError("Will not overwrite existing files '{}_*.npy'. "
+                              "Use 'overwrite=True' if this is what you "
+                              "want.".format(basename))
+            else:
+                logger.debug("Overwriting {} existing files matching the pattern"
+                             "'{}_*.npy'.".format(len(existing_files), basename))
+                for f in existing_files:
+                    os.remove(f)
+
+    def save(self, data):
+        """
+        Save the given data (which should be a numpy array).
+
+        """
+        cur_filename = self.basename + self.cnt_pattern.format(self.counter) + self.ext
+        self.counter += 1
+
+        file_save = self.file_funcs[self.ext][1]
+        file_save(cur_filename, data)
+
 if __name__ == "__main__":
     #create example simulation
     import finmag
@@ -192,7 +253,7 @@ if __name__ == "__main__":
     sim = finmag.sim_with(mesh, Ms=0.86e6, alpha=0.5, unit_length=1e-9, A=13e-12, m_init=(1, 0, 1))
     filename = 'data.txt'
     ndt = Tablewriter(filename, sim)
-    times = numpy.linspace(0, 3.0e-11, 6 + 1)
+    times = np.linspace(0, 3.0e-11, 6 + 1)
     for i, time in enumerate(times):
         print("In iteration {}, computing up to time {}".format(i, time))
         sim.run_until(time)
