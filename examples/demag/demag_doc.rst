@@ -204,8 +204,11 @@ the FK method for demag computation as well, the results are quite similar to th
 
 Comparing the GCR with nmag gives the following results
 
-.. figure:: ../examples/demag/xvaluesgcr.png
-    :scale: 75
+..
+    .. figure:: ../examples/demag/xvaluesgcr.png
+        :scale: 75
+
+[This plot is currently de-activated because the GCR solver doesn't work with dolfin-1.1]
 
 The `errornorm <http://fenicsproject.org/documentation/dolfin/1.0.0/python/programmers-reference/fem/norms/errornorm.html#dolfin.fem.norms.errornorm>`_
 is decreasing as the mesh gets finer. The precision of the GCR method with point evaluation q assembly is better than the GCR method with the box method.  

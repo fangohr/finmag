@@ -189,36 +189,17 @@ for i,maxh in enumerate(meshsizes):
     #Generate Nmag Data
     ####################
 
-    print "\n\n--- critical nmag code below ---\n\n"
-
-    cwd = os.getcwd()
-    print "Current working directory: {}.".format(cwd)
-
-    files = os.listdir(cwd)
-    print "Files in this directory initally:\n{}".format(files)
-
     nmag_meshfile = geofilename + ".nmesh.h5"
-    print "Will need meshfile '{}'. Calling makefile now.".format(nmag_meshfile)
-
     try:
-        print subprocess.check_output(["make", os.path.split(nmag_meshfile)[1]], stderr=subprocess.STDOUT, shell=True)
+        subprocess.call('netgen -geofile={} -meshfiletype="Neutral Format" -meshfile={}.neutral -batchmode'.format(geofile, geofilename), shell=True)
+        subprocess.call('nmeshimport --netgen {}.neutral {}'.format(geofilename, nmag_meshfile), shell=True)
     except subprocess.CalledProcessError as e:
         print "Failed with returncode {}, output:\n{}".format(e.returncode, e.output)
         raise
 
-    files = os.listdir(cwd)
-    print "Files in this directory after building the mesh:\n{}".format(files)
-
-    if os.path.isfile(nmag_meshfile):
-        print "The meshfile '{}' has successfully been generated.".format(nmag_meshfile)
-    else:
-        print "The meshfile '{}' still doesn't exist. Aborting.".format(nmag_meshfile)
-        sys.exit(1)
-
-    print "\nWill now run nmag."
     starttime = time.time()
     try:
-        print subprocess.check_output(["make", os.path.split(nmagoutput)[1], "MESH={}".format(nmag_meshfile)], stderr=subprocess.STDOUT)
+        subprocess.call('nsim run_nmag.py --clean {} {}'.format(nmag_meshfile, nmagoutput), shell=True)
     except subprocess.CalledProcessError as e:
         print "Failed with returncode {}, output:\n{}".format(e.returncode, e.output)
         with open("run_nmag_log.log", "r") as f:
@@ -226,16 +207,12 @@ for i,maxh in enumerate(meshsizes):
         raise
     endtime = time.time()
 
-    files = os.listdir(cwd)
-    print "Files in the directory after running nmag:\n{}".format(files)
-
     runtime = endtime - starttime
     bemtime = get_nmag_bemtime()
 
     runtimes["bem"]["nmag"].append(bemtime)
     runtimes["solve"]["nmag"].append(runtime - bemtime)
 
-    print "\n\n--- critical nmag code above ---\n\n"
 
 ############################################
 #Useful Plot xvalues
