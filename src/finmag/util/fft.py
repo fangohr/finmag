@@ -8,6 +8,7 @@ import dolfin as df
 import matplotlib.pyplot as plt
 import logging
 import matplotlib.cm as cm
+from numpy import sin, cos, pi
 
 logger = logging.getLogger("finmag")
 
@@ -253,7 +254,46 @@ def plot_spatially_resolved_normal_modes(m_vals_on_grid, idx_fourier_coeff,
     return fig
 
 
-def export_normal_mode_animation(npy_files, outfilename, mesh, t_step, idx, dm_only=False):
+def filter_frequency_component(signal, k):
+    """
+    Filter the given signal by only keeping the frequency component
+    corresponding to the k-th Fourier coefficient.
+
+    XXX TODO: This is probably a bad interface. We should require a
+    frequency as the input and compute the index automatically.
+
+    *Arguments*
+
+    signal : numpy array
+
+        Must be a 2d array, where the first index represents time and
+        the second index the data. Thus `signal[i, :]` is the signal
+        at time `i`.
+
+    k : int
+
+        The index of the Fourier coefficient which should be used for
+        filtering.
+
+    """
+    n = len(signal)
+
+    # Fourier transform the signal
+    t0 = time()
+    rfft_vals = np.fft.rfft(signal, axis=0)
+    t1 = time()
+    logger.debug("Computing the Fourier transform took {:.2g} seconds".format(t1-t0))
+    #rfft_freqs = np.arange(n // 2 + 1) / (dt*n)
+
+    # Only keep the Fourier coefficients for the given frequency component
+    A_k = rfft_vals[k]
+
+    tt = (2 * pi * k * np.arange(n) / n)[:, np.newaxis]
+    signal_filtered = 2.0/n * (A_k.real * cos(tt) - A_k.imag * sin(tt))
+    return signal_filtered
+
+
+def export_normal_mode_animation(npy_files, outfilename, mesh, ts, k, dm_only=False):
     """
     Read in a bunch of .npy files (containing the magnetisation
     sampled at regular time steps) and export an animation of the
