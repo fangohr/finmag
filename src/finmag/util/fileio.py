@@ -65,8 +65,6 @@ class Tablewriter(object):
         
         self.save_head=False
 
-        self.sim = simulation
-
     def default_entity_order(self):
         keys = self.entities.keys()
         # time needs to go first
