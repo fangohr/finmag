@@ -5391,3 +5391,58 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-03-08 17:04:47 fangohr-adium: [Coming back]: Great stuff, well done Max. Looking at http://aleph0.kk.soton.ac.uk:8080, we now have everything building as we had on summer, plus the binary build (successful), and all based on dolfin 1.1. Very good.
 2013-03-08 17:04:58 fangohr-adium: So I guess we should all upgrade to dolfin 1.1 if not done yet?
 2013-03-08 17:05:07 fangohr-adium: [Over and out for now.]
+2013-03-11 09:22:47 fangohr-adium: Good morning, all.
+2013-03-11 09:49:22 max_albert: Good morning.
+2013-03-11 10:06:44 fangohr-adium: Hi all, have you seen the pipeline feature display from jenkins (at http://aleph0.kk.soton.ac.uk:8080/view/Pipeline/)?
+2013-03-11 10:07:25 max_albert: Yes, I think this is what Marc-Antonio introduced / played around with recently.
+2013-03-11 10:07:42 fangohr-adium: I see. Very nice â€” good idea.
+2013-03-11 13:32:06 max_albert: Just for general information, I backported one bug fix to the dolfin-1.0.0 branch so that the test suite now also passes on summer.
+2013-03-11 13:32:10 max_albert: This means that we can leave the dolfin-1.0.0 branch completely alone now (but keep it for archiving/reference or if we ever hit a bug in later dolfin versions that forces us to go back to a version of Finmag that works with dolfin-1.0).
+2013-03-11 13:32:42 max_albert: So I guess Hans is right that all further development should happen on the "default" branch (which corresponds to dolfin-1.1.0 at the moment).
+2013-03-11 13:34:06 mb8g11: The pipeline is a jenkins plugin. Required next to no setup.
+2013-03-11 13:55:51 max_albert: Hi all, is anybody using the latest Finmag code on Ubuntu 12.04 by any chance?
+2013-03-11 13:56:13 max_albert: I get a compiler error which is probably related to an older version of the boost libraries (or the compiler).
+2013-03-11 13:57:21 max_albert: Was wondering if I need to upgrade my system, or if we want to support 12.04 (since it's a more stable LTS release). But in the latter case I don't know offhand how to fix the error.
+2013-03-11 13:58:00 max_albert: (It's related to the random number generator in the LLB code: "src/llb/mt19937.h:12:7: error: ‘mt19937’ in namespace ‘boost::random’ does not name a type")
+2013-03-11 14:12:36 max_albert: No opinions?
+2013-03-11 14:12:50 max_albert: Looks like I can't use Finmag at all on my system at the moment due to this error.
+2013-03-11 14:13:59 max_albert: Would it be possible to replace the random number generator with another one?
+2013-03-11 14:14:01 max_albert: (One of the comments in this post suggests that this solution: http://stackoverflow.com/questions/8599238/random-number-generation-in-c-first-number-not-very-random)
+2013-03-11 14:14:10 max_albert: Or should I upgrade my system?
+2013-03-11 14:17:20 D_Chernyshenko_: Hi Max I missed the first half of the question, random numbers?
+2013-03-11 14:18:07 max_albert: Yes. I have been using dolfin-1.0 on my computer so far but just upgraded to dolfin-1.1.
+2013-03-11 14:18:26 max_albert: However, now I can't compile Finmag any more.
+2013-03-11 14:19:14 D_Chernyshenko_: What's the error message?
+2013-03-11 14:19:39 max_albert: http://pastebin.com/6EiakmRH
+2013-03-11 14:20:23 max_albert: I only did very little Googling, but it seems that it's related to an old version of either boost or gcc.
+2013-03-11 14:20:32 D_Chernyshenko_: Ah, this looks like Weiwei's work on the RNG
+2013-03-11 14:20:36 D_Chernyshenko_: Yes this is an old version of boost
+2013-03-11 14:20:43 D_Chernyshenko_: That doesn't have boost::random?
+2013-03-11 14:20:50 ww1g11: Hi Max, I will replace it to the old code if it's the library version problem
+2013-03-11 14:20:55 D_Chernyshenko_: Or maybe it's not installed (unlikely but worth checking)
+2013-03-11 14:21:39 D_Chernyshenko_: Weiwei, did you manage to have a look at dSFMT though? Is it too much work to integrate it?
+2013-03-11 14:22:23 max_albert: Good point, Dmitri. I didn't know there is a separate Ubuntu package for libbost-random. It wasn't installed, but I get the same error now that I have installed it.
+2013-03-11 14:22:24 ww1g11: No, I haven't, but we also have a independent version of mt19973
+2013-03-11 14:23:07 max_albert: Hi Weiwei, thanks for offering to replace it. Is there an easy way to do that?
+2013-03-11 14:23:13 D_Chernyshenko_: Ah, that could do it then
+2013-03-11 14:23:48 D_Chernyshenko_: I could see if I could adapt my dSFMT code eventually, but this might take a while (probably not this week)
+2013-03-11 14:24:07 D_Chernyshenko_: What about libboost-random-dev?
+2013-03-11 14:24:14 D_Chernyshenko_: libboost-random is probalby just the runtime
+2013-03-11 14:24:34 max_albert: Dmitri: yep, installed that. Still fails, though. :-S
+2013-03-11 14:24:55 max_albert: Weiwei: I don't want to force you using an inferior version of the random number generator just because I'm using an older system.
+2013-03-11 14:25:04 ww1g11: It would be nice to port  dsFMT to finmag since it's fast
+2013-03-11 14:25:26 max_albert: But other people (e.g. the Oxford folks?) may do that too, so perhaps it's worth keeping a bit of backwards compatibility.
+2013-03-11 14:25:38 D_Chernyshenko_: Version 1.47.0
+2013-03-11 14:25:38 D_Chernyshenko_: July 11th, 2011 22:19 GMT
+2013-03-11 14:25:38 D_Chernyshenko_: New Libraries: Chrono, Geometry, Phoenix and Ratio. Updated Libraries: Accumulators, Asio, Config, DateTime, Dynamic Bitset, Foreach, Function, Function Types, Graph, Iostreams, Iterator, Lexical Cast, Logic, Math, Meta State Machine, MultiIndex, Proto, Random, Range, Spirit, Tokenizer, Utility, Uuid, Wave
+2013-03-11 14:25:39 ww1g11: I haven't test the speed so it's hard to say which is fast
+2013-03-11 14:25:46 D_Chernyshenko_: Boost.Random was added in 1.47
+2013-03-11 14:26:58 max_albert: Hmm, that's strange. I could install libboost-random-dev, and when I check the version (using dpkg -s) it reports 1.48.0.2, but it seems that my boost version is actually 1.46 because that's what dolfin/fenics depends on.
+2013-03-11 14:27:14 D_Chernyshenko_: Yeah, dSFMT actually has no external dependencies and we can package it with the source code, so it should be backwards compatible
+2013-03-11 14:27:18 D_Chernyshenko_: That is weird indeed
+2013-03-11 17:02:25 max_albert: Happy side note: we have all sunshine for our core test suite on aleph0. :-)
+2013-03-11 17:19:51 fangohr-adium: :)
+2013-03-11 17:22:36 mb8g11: Cool.
+2013-03-11 17:24:42 max_albert: Hans, did you have time to follow the discussion above about the compilation issue by any chance? If so, do you have any opinion on it?
+2013-03-11 17:25:07 max_albert: In particular, do you think it's worth keeping the Finmag code compatible with Ubuntu 12.04 or not?
+2013-03-11 23:50:15 fangohr: Good evening folks. Looks busy.
