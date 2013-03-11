@@ -534,17 +534,12 @@ class TestSimulation(object):
 
         # Save the magnetisation using the default filename
         sim.save_field('m')
-        assert(os.path.exists('barmini_m.npy'))
-
-        # Saving m again should raise an error
-        with pytest.raises(IOError):
-            sim.save_field('m')
-
-        # Using 'overwrite=True', no error should occur
-        sim.save_field('m', overwrite=True)
+        sim.save_field('m')
+        sim.save_field('m')
+        assert(len(glob('barmini_m_[0-9]*.npy')) == 3)
 
         sim.save_field('Demag')
-        assert(os.path.exists('barmini_demag.npy'))
+        assert(os.path.exists('barmini_demag_000000.npy'))
 
         sim.save_field('Demag', filename='demag.npy')
-        assert(os.path.exists('demag.npy'))
+        assert(os.path.exists('demag_000000.npy'))
