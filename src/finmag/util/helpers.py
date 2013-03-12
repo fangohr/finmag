@@ -410,7 +410,8 @@ def vector_valued_function(value, mesh_or_space, normalise=False, **kwargs):
         fun = df.Function(S3)
         fun.vector()[:] = np.concatenate([vals[:, 0], vals[:, 1], vals[:, 2]])
     else:
-        raise AttributeError
+        raise TypeError("Cannot set value of vector-valued function from "
+                        "argument of type '{}'".format(type(value)))
 
     if normalise:
         fun.vector()[:] = fnormalise(fun.vector().array())
@@ -462,7 +463,8 @@ def scalar_valued_function(value, mesh_or_space):
         for i in xrange(len(coords)):   
             fun.vector()[i] = value(coords[i])
     else:
-        raise AttributeError
+        raise TypeError("Cannot set value of scalar-valued function from "
+                        "argument of type '{}'".format(type(value)))
 
     return fun
 
@@ -521,7 +523,8 @@ def scalar_valued_dg_function(value, mesh_or_space):
             index+=1
             
     else:
-        raise AttributeError
+        raise TypeError("Cannot set value of scalar-valued DG function from "
+                        "argument of type '{}'".format(type(value)))
 
     return fun
 
