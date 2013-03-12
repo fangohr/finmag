@@ -232,6 +232,7 @@ class FieldSaver(object):
         else:
             cur_filename = self.filename
 
+        logger.debug("Saving field data to file '{}'.".format(cur_filename))
         np.save(cur_filename, data)
         self.counter += 1
 
