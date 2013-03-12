@@ -545,6 +545,14 @@ class TestSimulation(object):
         sim.save_field('m', incremental=True)
         assert(len(glob('barmini_m_[0-9]*.npy')) == 3)
 
+        # Check that the 'overwrite' keyword works
+        sim2 = barmini()
+        with pytest.raises(IOError):
+            sim2.save_field('m', incremental=True)
+        sim2.save_field('m', incremental=True, overwrite=True)
+        sim2.save_field('m', incremental=True)
+        assert(len(glob('barmini_m_[0-9]*.npy')) == 2)
+
         sim.save_field('Demag', incremental=True)
         assert(os.path.exists('barmini_demag_000000.npy'))
         sim.save_field('Demag')

@@ -623,7 +623,7 @@ class Simulation(object):
 
         return s
 
-    def save_field(self, field_name, filename=None, incremental=False):
+    def save_field(self, field_name, filename=None, incremental=False, overwrite=False):
         """
         Save the given field data to a .npy file.
 
@@ -646,11 +646,11 @@ class Simulation(object):
 
         """
         field_data = self.get_field_as_dolfin_function(field_name)
-        field_saver = self._get_field_saver(field_name, filename, incremental=incremental)
+        field_saver = self._get_field_saver(field_name, filename, incremental=incremental, overwrite=overwrite)
         field_saver.save(field_data.vector().array())
 
-    def _save_field_incremental(self, field_name, filename=None):
-        self.save_field(field_name, filename, incremental=True)
+    def _save_field_incremental(self, field_name, filename=None, overwrite=False):
+        self.save_field(field_name, filename, incremental=True, overwrite=overwrite)
 
     def mesh_info(self):
         """
