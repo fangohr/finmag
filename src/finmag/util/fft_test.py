@@ -1,3 +1,6 @@
+from __future__ import division
+from fft import *
+
 import numpy as np
 from numpy import sin, cos, pi, exp, real, conj
 import matplotlib.pyplot as plt
@@ -21,11 +24,11 @@ def test_analytical_inverse_DFT():
        [1] http://docs.scipy.org/doc/numpy/reference/routines.fft.html
     """
     n = 1000
-    tmin = 0.0
-    tmax = 4*pi
+    tmin = 0.23*pi
+    tmax = 4.23*pi
     dt = (tmax - tmin) / (n - 1)
 
-    # Time steps
+    # Time steps of the signal
     ts = np.linspace(tmin, tmax, n)
 
     # Define a simple signal that is a superposition of two waves
@@ -56,23 +59,24 @@ def test_analytical_inverse_DFT():
         rfft_vals_filtered[k] = rfft_vals[k]
         signal_filtered = np.fft.irfft(rfft_vals_filtered)
 
-        # Manually construct a filtered signal
-        m_vals = np.arange(n)
-        A_k = rfft_vals[k]  # Fourier coefficient of the peak at index k
+        # Manually construct a filtered signal in various ways
+        A_k = rfft_vals[k]  # Fourier coefficient at the peak
         B_k = A_k.real
         C_k = A_k.imag
         print "Fourier coefficient at index k={} is: {}".format(k, A_k)
 
-        tt = 2*pi*m_vals*k/n
-        signal_analytical_1 = 2.0/n * (B_k * cos(tt) - C_k * sin(tt))
-        signal_analytical_2 = real(1.0/n * (A_k * exp(2*pi*1j*m_vals*k/n) + conj(A_k) * exp(2*pi*1j*m_vals*(n-k)/n)))
+        tt = 2 * pi * k * np.arange(n) / n
+        signal_analytical_1 = np.squeeze(filter_frequency_component(signal, k, tmin, tmax))
+        signal_analytical_2 = 2.0/n * (B_k * cos(tt) - C_k * sin(tt))
+        signal_analytical_3 = real(1.0/n * (A_k * exp(1j*tt) + conj(A_k) * exp(-1j*tt)))
 
         base_oscillation = sin(ts) if (k == 2) else 2*cos(3*ts)
-        print "Maximum deviation of filtered signal from the base sinusoidal oscillation: {}".format(max(abs(base_oscillation - signal_filtered)))
 
+        print "Maximum deviation of filtered signal from the base sinusoidal oscillation: {}".format(max(abs(base_oscillation - signal_filtered)))
         assert np.allclose(base_oscillation, signal_filtered, atol=0.05, rtol=0)
         assert np.allclose(signal_filtered, signal_analytical_1, atol=1e-11, rtol=0)
         assert np.allclose(signal_filtered, signal_analytical_2, atol=1e-11, rtol=0)
+        assert np.allclose(signal_filtered, signal_analytical_3, atol=1e-11, rtol=0)
 
         plt.figure()
         plt.plot(ts, base_oscillation, '-', label='sin(t)')
