@@ -18,7 +18,6 @@ from datetime import datetime
 NODE_COUNT = 100
 END_TIME = 1e-10
 
-@py.test.mark.slow
 class JacobeanIntegrationTests(unittest.TestCase):
     def setUp(self):
         self.n_rhs_evals = 0

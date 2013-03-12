@@ -88,7 +88,6 @@ def run_test(backend, method, mode='onego', nsteps=40000):
 
 
 
-@py.test.mark.slow
 def test_reinit_resets_num_rhs_eval_counter():
     int = run_test("sundials", "bdf_diag", mode='twogoesreinit')
     int = run_test("sundials", "adams", mode='twogoesreinit')

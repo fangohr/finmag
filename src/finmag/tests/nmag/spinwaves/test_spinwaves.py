@@ -1,6 +1,7 @@
 import os
 import cProfile
 import pstats
+import pytest
 import numpy as np
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -10,6 +11,7 @@ def setup_module(module):
     import run_finmag as f
     f.run_simulation()
 
+@pytest.mark.slow
 def test_compare_averages():
     ref = np.loadtxt(os.path.join(MODULE_DIR, "averages_ref.txt"))
     computed = np.loadtxt(os.path.join(MODULE_DIR, "averages.txt"))
@@ -40,6 +42,3 @@ if __name__ == "__main__":
     p.sort_stats("cumulative").print_stats(10)
     print "TOP10 Time inside a function:"
     p.sort_stats("time").print_stats(10)
-
-
-

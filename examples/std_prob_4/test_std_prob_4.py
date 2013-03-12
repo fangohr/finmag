@@ -1,5 +1,5 @@
 import os
-import py
+import pytest
 import numpy as np
 import dolfin as df
 import matplotlib.pyplot as plt
@@ -125,7 +125,7 @@ def run_simulation(stop_when_mx_eq_zero):
     return sim.t
 
 
-@py.test.mark.slow
+@pytest.mark.slow
 def test_std_prob_4_field_1(stop_when_mx_eq_zero=True):
     PRECISION = 4e-12
 
