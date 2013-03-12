@@ -233,7 +233,7 @@ namespace finmag { namespace llb {
     	this->Q = k_B / (gamma * mu_0);
     	this->seed=seed;
     	this->check_magnetisation_length=checking;
-    	mt_random.seed(seed);
+    	mt_random.initial_random(seed);
     }
 
 
