@@ -552,3 +552,18 @@ class TestSimulation(object):
 
         sim.save_field('Demag', filename='demag.npy', incremental=True)
         assert(os.path.exists('demag_000000.npy'))
+
+    def test_save_field_scheduled(self, tmpdir):
+        os.chdir(str(tmpdir))
+        sim = barmini()
+        sim.schedule('save_field', 'm', every=1e-12)
+        sim.run_until(2.5e-12)
+        assert(len(glob('barmini_m_[0-9]*.npy')) == 3)
+        sim.run_until(5.5e-12)
+        assert(len(glob('barmini_m_[0-9]*.npy')) == 6)
+
+        sim.clear_schedule()
+        sim.schedule('save_field', 'm', filename='mag.npy', every=1e-12)
+        sim.run_until(7.5e-12)
+        assert(len(glob('barmini_m_[0-9]*.npy')) == 6)
+        assert(len(glob('mag_[0-9]*.npy')) == 3)

@@ -90,7 +90,7 @@ class Simulation(object):
             'save_restart_data': sim_helpers.save_restart_data,
             'save_ndt': sim_helpers.save_ndt,
             'save_vtk': self.save_vtk,
-            'save_field': self.save_field,
+            'save_field': Simulation._save_field_incremental,
             'switch_off_H_ext': Simulation.switch_off_H_ext,
         }
 
@@ -648,6 +648,9 @@ class Simulation(object):
         field_data = self.get_field_as_dolfin_function(field_name)
         field_saver = self._get_field_saver(field_name, filename, incremental=incremental)
         field_saver.save(field_data.vector().array())
+
+    def _save_field_incremental(self, field_name, filename=None):
+        self.save_field(field_name, filename, incremental=True)
 
     def mesh_info(self):
         """
