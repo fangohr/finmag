@@ -254,7 +254,7 @@ def plot_spatially_resolved_normal_modes(m_vals_on_grid, idx_fourier_coeff,
     return fig
 
 
-def filter_frequency_component(signal, k):
+def filter_frequency_component(signal, k, t_start, t_end, ts_sampling=None):
     """
     Filter the given signal by only keeping the frequency component
     corresponding to the k-th Fourier coefficient.
@@ -275,6 +275,15 @@ def filter_frequency_component(signal, k):
         The index of the Fourier coefficient which should be used for
         filtering.
 
+    t_start, t_end : float
+
+        First and last time step of the signal. Note that this function
+        assumes that the time steps are evenly spaced.
+
+    ts_sampling : numpy array
+
+        The time steps at which the filtered signal should be evaluated.
+
     """
     n = len(signal)
 
@@ -288,8 +297,19 @@ def filter_frequency_component(signal, k):
     # Only keep the Fourier coefficients for the given frequency component
     A_k = rfft_vals[k]
 
-    tt = (2 * pi * k * np.arange(n) / n)[:, np.newaxis]
-    signal_filtered = 2.0/n * (A_k.real * cos(tt) - A_k.imag * sin(tt))
+    # Since the DFT formula know nothing about the true timesteps at which the
+    # signal is given, we need to rescale the sampling timesteps so that they
+    # lie in the interval [0, 2*pi*k]
+    if ts_sampling is None:
+        ts_rescaled = (2 * pi * k * np.arange(n) / n)
+    else:
+        ts_rescaled = (ts_sampling - t_start) / (t_end - t_start) * 2 * pi * k * (n - 1) / n
+
+    # 'Transpose' the 1D vector so that the linear combination below
+    # produces the correct 2D output format.
+    ts_rescaled = ts_rescaled[:, np.newaxis]
+
+    signal_filtered = 2.0/n * (A_k.real * cos(ts_rescaled) - A_k.imag * sin(ts_rescaled))
     return signal_filtered
 
 
