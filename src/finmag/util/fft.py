@@ -1,6 +1,7 @@
 from __future__ import division
 from scipy.interpolate import InterpolatedUnivariateSpline
 from finmag.util.helpers import probe
+from finmag.util.fileio import Tablereader
 from glob import glob
 from time import time
 import numpy as np
@@ -47,8 +48,11 @@ def FFT_m(filename, t_step, t_ini=0, subtract_values=None):
 
     """
     # Load the data; extract time steps and magnetisation
-    data = np.loadtxt(filename)
-    ts, mx, my, mz = data.transpose()
+    data = Tablereader(filename)
+    ts = data['time']
+    mx = data['m_x']
+    my = data['m_y']
+    mz = data['m_z']
 
     if subtract_values == 'first':
         mx -= mx[0]
