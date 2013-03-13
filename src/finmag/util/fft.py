@@ -328,9 +328,10 @@ def export_normal_mode_animation(npy_files, outfilename, mesh, ts, k, dm_only=Fa
 
         Name of the .pvd file to which the animation is exported.
 
-    mesh :  dolfin.Mesh
+    mesh :  dolfin.Mesh or string
 
-        The mesh on which the magnetisation was sampled.l
+        The mesh (or name of the .xml.gz file containing the mesh) on
+        which the magnetisation was sampled.
 
     t_step :  float
 
@@ -351,6 +352,10 @@ def export_normal_mode_animation(npy_files, outfilename, mesh, ts, k, dm_only=Fa
         files = sorted(glob(npy_files))
     else:
         files = list(npy_files)
+
+    if isinstance(mesh, str):
+        mesh = df.Mesh(mesh)
+
     N = len(files)  # number of timesteps
     num_nodes = len(mesh.coordinates())
 
