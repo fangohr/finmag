@@ -14,7 +14,7 @@ from numpy import sin, cos, pi
 logger = logging.getLogger("finmag")
 
 
-def FFT_m(filename, t_step, t_ini=0, subtract_values=None):
+def FFT_m(ndt_filename, t_step, t_ini=0, subtract_values=None):
     """
     Given a data file (e.g. in .ndt format), compute and return the Fourier
     transforms of the x, y and z components of the magnetisation m. The
@@ -22,10 +22,9 @@ def FFT_m(filename, t_step, t_ini=0, subtract_values=None):
 
     *Arguments*
 
-    filename:
+    ndt_filename:
 
-        The data file. Each line must contain four numbers, representing
-        the time step and the x, y, z components of m, respectively.
+        The .ndt data file containing the magnetisation values.
 
     t_step:
 
@@ -48,7 +47,7 @@ def FFT_m(filename, t_step, t_ini=0, subtract_values=None):
 
     """
     # Load the data; extract time steps and magnetisation
-    data = Tablereader(filename)
+    data = Tablereader(ndt_filename)
     ts = data['time']
     mx = data['m_x']
     my = data['m_y']
@@ -97,7 +96,7 @@ def FFT_m(filename, t_step, t_ini=0, subtract_values=None):
     return rfft_freqs, fft_mx, fft_my, fft_mz
 
 
-def plot_FFT_m(filename, t_step, t_ini=0.0, subtract_values=None,
+def plot_FFT_m(ndt_filename, t_step, t_ini=0.0, subtract_values=None,
                components="xyz", xlim=None, figsize=None):
     """
     Plot the frequency spectrum of the components of the magnetisation m.
@@ -114,7 +113,7 @@ def plot_FFT_m(filename, t_step, t_ini=0.0, subtract_values=None,
         raise ValueError("Components must only contain 'x', 'y' and 'z'. "
                          "Got: {}".format(components))
 
-    fft_freq, fft_mx, fft_my, fft_mz = FFT_m(filename, t_step, t_ini, subtract_values)
+    fft_freq, fft_mx, fft_my, fft_mz = FFT_m(ndt_filename, t_step, t_ini, subtract_values)
     fft_freq_GHz = fft_freq / 1e9
     fig = plt.figure(figsize=figsize)
     ax = fig.gca()
