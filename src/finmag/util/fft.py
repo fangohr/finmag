@@ -318,11 +318,11 @@ def filter_frequency_component(signal, k, t_start, t_end, ts_sampling=None):
     return signal_filtered
 
 
-def export_normal_mode_animation(npy_files, outfilename, mesh, ts, k, dm_only=False):
+def export_normal_mode_animation(npy_files, outfilename, mesh, t_step, k, scaling=0.25, dm_only=False):
     """
-    Read in a bunch of .npy files (containing the magnetisation
-    sampled at regular time steps) and export an animation of the
-    normal mode corresponding to a specific frequency.
+    Read a bunch of .npy files (containing the magnetisation sampled
+    at regular time steps) and export an animation of the normal mode
+    corresponding to a specific frequency.
 
     npy_files :  string (including shell wildcards) or list of filenames
 
@@ -342,13 +342,19 @@ def export_normal_mode_animation(npy_files, outfilename, mesh, ts, k, dm_only=Fa
 
         The interval between subsequent time steps.
 
-    idx:  int
+    k:  int
 
         Index of the frequency for which the normal mode is to be plotted.
 
+    scaling : float
+
+        If `dm_only` is False, this determines the maximum size of the
+        oscillation (relative to the magnetisation vector) in the
+        visualisation. If `dm_only` is True, this has no effect.
+
     dm_only :  bool (optional)
 
-        If False (the default), plots `m0 + dm(t)`, where m0 is the
+        If False (the default), plots `m0 + scaling*dm(t)`, where m0 is the
         average magnetisation and dm(t) the (spatially varying)
         oscillation corresponding to the frequency of the normal mode.
         If True, only `dm(t)` is plotted.
@@ -379,7 +385,7 @@ def export_normal_mode_animation(npy_files, outfilename, mesh, ts, k, dm_only=Fa
 
     # XXX TODO: The full invere Fourier transform should be replaced by the explicit formula for the single coefficient to save memory and computational effort
     fft_vals_filtered = np.zeros(fft_vals.shape, dtype=fft_vals.dtype)
-    fft_vals_filtered[idx] = fft_vals[idx]
+    fft_vals_filtered[k] = fft_vals[k]
     t0 = time()
     signal_inv_filtered = np.fft.irfft(fft_vals_filtered, N, axis=0)
     t1 = time()
@@ -390,15 +396,14 @@ def export_normal_mode_animation(npy_files, outfilename, mesh, ts, k, dm_only=Fa
     # in this iterated way is actually much faster than doing it directly.
     maxval = max(np.max(signal_inv_filtered, axis=0))
     logger.debug("Maximum value of the signal: {}".format(maxval))
-    scaling_factor = 0.3 / maxval
-    logger.debug("Scaling factor: {}".format(scaling_factor))
 
     V = df.VectorFunctionSpace(mesh, 'CG', 1, dim=3)
     func = df.Function(V)
+    func.rename('m', 'magnetisation')
     if dm_only == True:
-        signal_normal_mode = scaling_factor * signal_inv_filtered
+        signal_normal_mode = 1 / maxval * signal_inv_filtered
     else:
-        signal_normal_mode = signal.mean(axis=0).T + scaling_factor * signal_inv_filtered
+        signal_normal_mode = signal.mean(axis=0).T + scaling / maxval * signal_inv_filtered
 
     logger.debug("Saving normal mode to file '{}'.".format(outfilename))
     t0 = time()
@@ -406,9 +411,12 @@ def export_normal_mode_animation(npy_files, outfilename, mesh, ts, k, dm_only=Fa
     # XXX TODO: We need the strange temporary array 'aaa' here because if we write the values directly into func.vector() then they end up being different (as illustrated below)!!!
     aaa = np.empty(3*num_nodes)
     #for i in xrange(len(ts)):
-    for i in xrange(20):
+    #for i in xrange(20):
+    import sys
+    for i in xrange(N):
         if i % 20 == 0:
             print "i={} ".format(i),
+            sys.stdout.flush()
         aaa[:] = signal_normal_mode[i][:]
         func.vector()[:] = aaa
         f << func
