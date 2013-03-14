@@ -90,9 +90,11 @@ def FFT_m(filename, t_step, t_ini=0, subtract_values=None):
     fft_mz = abs(np.fft.rfft(mz_resampled))
     n = len(fft_mx)
 
-    fft_freq = np.fft.fftfreq(len(mx_resampled), t_step)[:n]
+    # When using np.fft.fftfreq, the last frequency sometimes becomes
+    # negative; to avoid this we compute the frequencies by hand.
+    rfft_freqs = np.arange(n) / (t_step*(len(ts) - 1))
 
-    return fft_freq, fft_mx, fft_my, fft_mz
+    return rfft_freqs, fft_mx, fft_my, fft_mz
 
 
 def plot_FFT_m(filename, t_step, t_ini=0.0, subtract_values=None,
