@@ -18,7 +18,7 @@ _markers = "ov^<>1234sp*hH+xDd|_"
 def create_linear_system(n):
     "Create linear system for Poisson's equation on n x n x n mesh"
 
-    mesh = UnitCube(n, n, n)
+    mesh = UnitCubeMesh(n, n, n)
     V = FunctionSpace(mesh, "Lagrange", 1)
     u = TrialFunction(V)
     v = TestFunction(V)

@@ -3,7 +3,7 @@
 from dolfin import *
 import math
 
-mesh = UnitSquare(30,30)
+mesh = UnitSquareMesh(30,30)
 
 lv = [c.volume() for c in cells(mesh)]
 print "ratio of max and min volume: ", max(lv)/min(lv)
