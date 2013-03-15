@@ -18,6 +18,6 @@ sudo aptitude install libdolfin1.1
 
 and
 
-sudo aptitude install python-dolfin
+sudo aptitude install python-dolfin dolfin-bin
 
 """
