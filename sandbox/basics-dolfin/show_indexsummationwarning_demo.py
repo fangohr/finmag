@@ -12,7 +12,7 @@ when it is compiled.
 """
 import dolfin as df
 
-mesh = df.UnitCube(1, 1, 1)
+mesh = df.UnitCubeMesh(1, 1, 1)
 V = df.VectorFunctionSpace(mesh,"CG",1)
 a = df.Constant((0, 0, 1))
 M = df.interpolate(df.Constant((0, 0, 8.6e5)), V)

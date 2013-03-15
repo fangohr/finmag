@@ -10,7 +10,7 @@ import dolfin as df
 #
 # Seems to work. Hans & Weiwei, 19 April 2012.
 
-mesh = df.Rectangle(0,0,1,1,1,1)
+mesh = df.RectangleMesh(0,0,1,1,1,1)
 
 VV = df.VectorFunctionSpace(mesh,"CG",1,dim=3)
 V  = df.FunctionSpace(mesh,"DG",0)

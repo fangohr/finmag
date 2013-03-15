@@ -8,7 +8,7 @@ from dolfin import *
 # Mesh and functionspace
 L = 10e-9    #10 nm
 n = 5
-mesh = Box(0,0,0,L,L,L,n,n,n)
+mesh = BoxMesh(0,0,0,L,L,L,n,n,n)
 V  = VectorFunctionSpace(mesh, "CG", 1)
 
 # Initial magnetisation 
