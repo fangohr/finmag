@@ -1,0 +1,23 @@
+""" Here is the procedure that seemed to work on Ubuntu 12.04 (osiris)
+
+Add
+
+deb http://ppa.launchpad.net/fenics-packages/fenics/ubuntu precise main 
+deb-src http://ppa.launchpad.net/fenics-packages/fenics/ubuntu precise main 
+
+to /etc/apt/sources.list
+
+run 
+
+sudo aptitude update
+(may have to remove old instances of dolfin installs)
+
+then install
+
+sudo aptitude install libdolfin1.1
+
+and
+
+sudo aptitude install python-dolfin
+
+"""
