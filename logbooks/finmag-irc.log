@@ -5464,3 +5464,100 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-03-14 12:05:53 fangohr-adium1: Greetings.
 2013-03-14 12:24:22 mb4e10: Greetings
 2013-03-14 12:55:43 max_albert: Greetings.
+2013-03-15 09:53:26 fangohr-adium1: Good Morning folks.
+2013-03-15 09:53:34 max_albert: Good morning.
+2013-03-15 09:59:30 mb4e10: good morning
+2013-03-15 10:00:26 fangohr_: I suppose I should now upgrade dolfin to dolfin 1.1 on my 12.04 Ubuntu. Does anybody know the right sequence of commands off-hand?
+2013-03-15 10:00:41 fangohr_: I'll get some biscuits out to attract you all to come over here now.
+2013-03-15 10:00:51 max_albert: It should be enough to say something like "apt-get install dolfin-bin" or something along those lines.
+2013-03-15 13:47:18 fangohr_: Hi all, I just had a quick look at the hdf5 situation in Nmag, and will give some pointers here.
+2013-03-15 13:48:04 fangohr_: There is a baseclass defined in nmag-meta/src/interface/nfem/hdf5.py, and there is a derived class that does the actual work in the same directory, in the file hdf5_v02.py
+2013-03-15 13:52:10 fangohr_: Correction: [sorry was writing as I looked at this] What I described above was the incomplete attempt to create these classes, and tidy code up.
+2013-03-15 13:52:32 fangohr_: The brutal truth is a collection of functions in the file hdf5_v01.py (same directory), that does all the work.
+2013-03-15 13:55:39 fangohr_: Code that is used to read from the h5 file is, for example, in the script 'nmagpp' and 'nmagprobe' (nmagprobe contains the efficient probing of a time-series of magnetisation fields as I discussed with Max and Marc-Antonio on the way to lunch).
+2013-03-15 13:56:24 max_albert: Thanks for these pointers, Hans!
+2013-03-15 13:57:41 max_albert: So what do you think would be the best way forward in terms of saving to HDF5? I suspect nmag does not support writing/reading data in parallel, right? Would it thus make sense to try and use dolfin's own storage mechanisms if possible?
+2013-03-15 13:58:43 max_albert: I'll have a look at what dolfin already supports, and how easy it would be extend it to allow e.g. having an optional argument to provide the group name inside the hdf5 file where the data should be stored.
+2013-03-15 13:59:04 max_albert: Also whether it already allows saving the time steps together with field data.
+2013-03-15 14:00:10 fangohr_: Addition: the code that writes the data to the h5 file in Nmag is in nmag-meta/src/interface/nmag/nmag5.py, for example in the _save_fields method. (Just to complete the documentation of this.)
+2013-03-15 14:01:21 fangohr_: The nmag code uses pytables to do this, which is meant to sit on top of h5. I am not 100% sure whether it is fully compatible, but I expect it should be, or it should be able to use it so. You have shown this morning that pytables is a pleasure to use, so I amvery much in favour of that (if only for reading).
+2013-03-15 14:02:15 fangohr_: I don't know whether this supports parallel writes, but I would prefer to use dolfin functions to write the data to exploit as much as possible from what is provided through dolfin. In an ideal world, this would create standard h5 files that we can post process with pytables.
+2013-03-15 14:02:48 max_albert: I agree about pytables and that it would be nice to use it. Especially for our own post-processing that should be the way to go.
+2013-03-15 14:03:32 fangohr_: One feature that pytables introduces (over the hdf5 writing we have seen from dolfin so far) is that of the tables, which are particularly suited for time series.
+2013-03-15 14:03:45 max_albert: True.
+2013-03-15 14:04:13 max_albert: However, for writing and reading the data into our internal Finmag data structures (which are mostly dolfin functions), what worries me a bit is stuff like the reodering of dofs (and potentially other things that we are not aware of), which might force us to understand and reimplement some of the dolfin logic in our own code.
+2013-03-15 14:04:38 fangohr_: Good point.
+2013-03-15 14:04:42 max_albert: So it seems if we could use dolfin as much as possible that would be ideal.
+2013-03-15 14:04:46 fangohr_: Agreed.
+2013-03-15 14:05:18 max_albert: I'm imagining that all we deal with in our own code would be dolfin functions, which we can probe or play around with.
+2013-03-15 14:06:03 max_albert: Whenever it comes to saving or reading, we would use dolfin which "magically" does its own stuff to write the function, and later read it back into another function which we can then deal with again.
+2013-03-15 14:06:21 max_albert: So we'd never have to think about dolfin-related problems when it comes to saving and reading data.
+2013-03-15 14:06:41 max_albert: This is in an ideal world, of course. And it assumes that dolfin provides (or will provide) all the functionality we need.
+2013-03-15 14:07:11 fangohr_: Yes, that sounds about right. The question is wether they are sufficiently interested in supporting time-series data so that we can do that as you outline, only with dofin functions.
+2013-03-15 14:07:38 fangohr_: I also think we want to be able to read the saved data and make sense of it without dolfin: if only to create custom vtk files that contain multiple fields.
+2013-03-15 14:07:42 max_albert: Precisely. And I'm not 100% sure they are, but it would be good to try pushing them a little.
+2013-03-15 14:08:05 fangohr_: So we really need to understand what they do with their degrees of  freedoms, and how this information isstored. There is no magic to it, we just need to know what their plan is.
+2013-03-15 14:08:21 max_albert: Agreed.
+2013-03-15 14:09:25 fangohr_: If we were looking for some fun entertainment, I suppose we could play around a little with parallel saving: for example, we could try to write to a h5 file from dolfin in a parallel run, and see what we get: is it just one h5 file that looks right that two processes have written to? Does it have etxra data saved regarding (mesh) nodes and processes? Or we just ask them in 2 days. ;-)
+2013-03-15 14:10:53 max_albert: Yes, I wanted to try parallel saving, too. Will do that in a minute. :)
+2013-03-15 14:12:18 max_albert: Getting back to your last point, even if we understand what's going on with the dofs and could in principle implement our own saving mechanism, it still wouldn't make sense to roll out our own code if theirs is already 80% there.
+2013-03-15 14:12:27 max_albert: Plus, they may decide to change things again in the future.
+2013-03-15 14:14:22 fangohr_: I am hoping that we can exploit their hdf5 reading and writing, and that this is compatible with pytables to give us nice time series and convenience, and that we can understand how the degrees of freedom or sorted (or looked up), but don't have to do anything with that information.
+2013-03-15 14:14:31 fangohr_: [Optimistic, I know.]
+2013-03-15 14:14:51 max_albert: That's a good summary of my hopes, too. :)
+2013-03-15 14:17:11 fangohr_: Okay, just trying to upgrade osiris to dolfin1.1. Will keep you posted.
+2013-03-15 14:28:33 max_albert: Hans, you said that it's possible to get the process ID inside the python script when running in parallel. Do you remember how?
+2013-03-15 14:38:24 max_albert: Following up on what you said earlier, I just tried to save a mesh in parallel and read it back in.
+2013-03-15 14:38:57 max_albert: When saving the mesh (using the HDF5File approach I showed earlier during the meeting) I get a warning like this on every processor:
+2013-03-15 14:39:05 max_albert: Process 4: *** Warning: Writing globally indexed mesh - not suitable for visualisation
+2013-03-15 14:39:46 max_albert: Does this mean that each process is actually writing the whole mesh? Not sure.
+2013-03-15 14:40:52 fangohr_: Can you see anything when you use h5dump?
+2013-03-15 14:41:12 max_albert: Yes, the output from h5dump looks identical.
+2013-03-15 14:41:44 max_albert: However, it seems like reading the file back in isn't reliable (or I'm doing something wrong).
+2013-03-15 14:42:40 max_albert: When I read the mesh in serial, the mesh cells seem to be reordered sometimes. I guess that's to be expected, if multiple processes previously wrote it concurrently.
+2013-03-15 14:44:14 max_albert: However, reading the mesh in parallel seems to corrupt the mesh (at least my checks whether mesh.coordinates() and mesh.cells() coincide with the original mesh report False).
+2013-03-15 14:44:32 max_albert: (Even when I sort the lists before comparing.)
+2013-03-15 14:44:38 fangohr_: Can you readthe mesh in parallel when you write serially?
+2013-03-15 14:45:03 max_albert: Good question. Can try that now.
+2013-03-15 14:45:42 max_albert: Looks like that works indeed. Interesting.
+2013-03-15 14:46:19 max_albert: Btw, do you remember how to get the process ID inside the python script?
+2013-03-15 14:47:14 fangohr_: No.
+2013-03-15 14:47:22 max_albert: Ok. No worries. :)
+2013-03-15 15:11:02 max_albert: For the record (to answer my own question): one can use the mpi4py module to do this.
+2013-03-15 15:11:04 max_albert: Example:
+2013-03-15 15:11:13 max_albert: from mpi4py import MPI
+2013-03-15 15:11:16 max_albert: comm = MPI.COMM_WORLD
+2013-03-15 15:11:19 max_albert: rank = comm.Get_rank()
+2013-03-15 15:14:49 fangohr_: Weiwei, I have a problem getting Magpar to work on Mint. Could you have a look whether the error means anything to you?
+2013-03-15 15:20:56 ww1g11: Yes, please paste the error message or I can install magpar in my machine to see what happens
+2013-03-15 15:26:30 fangohr_: Weiwei, I have put the error in the to-discuss folder on Dropbox.
+2013-03-15 15:32:17 ww1g11: I don't know why no writedataavs.o file, I am running the script to see whether it works for this machine
+2013-03-15 15:35:41 fangohr_: Okay. My best guess is that some package is missing, so I hope you run into the same mistake ;-)
+2013-03-15 15:42:10 ww1g11: It works in my machine, ;-), may be you can check whether writedataavs.o exists?
+2013-03-15 15:44:10 fangohr_: No, it doesn't. I guess something goes wrong earlier.
+2013-03-15 15:44:32 ww1g11:  writedataavs.c?
+2013-03-15 15:47:24 fangohr_: I'll update the OS, and start the process again; just making sure to start from good ground. Will keep you posted; thanks.
+2013-03-15 16:33:14 fangohr_: Update: osiris is upgraded to dolfin1.1, and all tests pass.
+2013-03-15 16:33:33 max_albert: Awesome. Congratulations! :)
+2013-03-15 16:33:41 fangohr_: Aww, thanks.
+2013-03-15 16:33:43 fangohr_: It wasn't that hard.
+2013-03-15 16:33:55 max_albert: I may also have a slightly better understanding of the dofmap thingy.
+2013-03-15 16:33:59 fangohr_: More embarressed it took me two hours (amongst other things) to get this sorted.
+2013-03-15 16:34:07 max_albert: ;-)
+2013-03-15 16:34:30 fangohr_: I have a version control question: I have three heads (and can't use my preferred 'fetch' extension because of that); see output below:
+2013-03-15 16:35:01 fangohr_: Okay, I can't paste the ouput, but there are three:
+2013-03-15 16:35:22 fangohr_: dolfin-1.0.0
+2013-03-15 16:35:28 fangohr_: the default tip
+2013-03-15 16:35:33 fangohr_: and marvin's branch
+2013-03-15 16:35:42 fangohr_: This seems wrong, doesn't it?
+2013-03-15 16:35:50 fangohr_: No need to sort now, but just wanted to record this.
+2013-03-15 16:35:50 max_albert: No, that's ok.
+2013-03-15 16:36:29 max_albert: The marvin branch is one that was created when Marvin was confused by the two different branches for dolfin-1.0 and dolfin-1.1
+2013-03-15 16:36:38 max_albert: It's the one that some of the IRC logs got committed to.
+2013-03-15 16:37:12 max_albert: Marc-Antonio kept it active a while ago for some reason (probably to avoid problems caused by our lack of understanding of branches).
+2013-03-15 16:37:39 max_albert: But I think all the logs have been copied, and things have been stable for a while, so I guess we can close it now.
+2013-03-15 16:38:18 max_albert: I don't know the magic command for that though. :)
+2013-03-15 16:43:22 fangohr_: Marc-Antonio, could you close that branch now (when you have landed, or a bit later ...)? Ta.
+2013-03-15 17:08:20 fangohr_: Weiwei, the magpar compilation just worked. So all is well.
+2013-03-15 17:12:44 ww1g11: Great, Hans
+2013-03-15 18:33:52 max_albert: Hi Hans and Marc-Antonio, I just tried to close the old Marvin branch. Hope it worked...
