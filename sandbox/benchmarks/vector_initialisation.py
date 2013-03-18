@@ -4,6 +4,8 @@ import numpy as np
 import dolfin as df
 import timeit
 
+df.parameters.reorder_dofs_serial = False # for dolfin 1.1.0
+
 # Define a rectangular mesh and a vector-function space on it
 
 n1 = 100
@@ -11,7 +13,7 @@ n2 = 40
 n3 = 25
 
 print "Initialising mesh and function space..."
-mesh = df.UnitCube(n1, n2, n3)
+mesh = df.UnitCubeMesh(n1, n2, n3)
 S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
 
 print "Number of mesh nodes: {}".format(mesh.num_vertices())
