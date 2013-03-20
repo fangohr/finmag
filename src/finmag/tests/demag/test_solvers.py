@@ -57,7 +57,7 @@ class TestFemBemDeMagSolver(object):
 
     def test_solve_laplace_inside(self):
         """Solve a known laplace equation to check the method solve_laplace_inside"""
-        mesh = UnitSquare(2,2)
+        mesh = UnitSquareMesh(2,2)
         V = FunctionSpace(mesh,"CG",1)
         #Insert V into the solver and recreate the test and trial functions
         self.solver.V = V

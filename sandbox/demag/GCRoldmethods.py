@@ -201,12 +201,12 @@ class ProxyGCR():
         coord = self.solver.doftionary
         
         #Tests
-        assert len(facetdic[0]) == 2,"Error in normal dictionary creation, 1,1 UnitSquare with CG1 has two normals per boundary dof"
+        assert len(facetdic[0]) == 2,"Error in normal dictionary creation, 1,1 UnitSquareMesh with CG1 has two normals per boundary dof"
         assert facetdic.keys() == coord.keys(),"error in normal dictionary creation, boundary dofs do not agree with those obtained from \
                                             get_boundary_dof_coordinate_dict"
 
     def easyspace(self):
-        mesh = UnitSquare(1,1)
+        mesh = UnitSquareMesh(1,1)
         return FunctionSpace(mesh,"CG",1)
     def test_get_dof_normal_dict_avg(self):
         """
