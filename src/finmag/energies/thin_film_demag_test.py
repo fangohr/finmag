@@ -7,7 +7,7 @@ TOLERANCE = 1e-9
 Ms = 8.6e5
 
 def compare_with_demag_from_initial_m(H_gen, m_init):
-    sim = Sim(df.UnitCube(2, 2, 2), Ms)
+    sim = Sim(df.UnitCubeMesh(2, 2, 2), Ms)
     sim.set_m(m_init)
 
     demag = ThinFilmDemag()

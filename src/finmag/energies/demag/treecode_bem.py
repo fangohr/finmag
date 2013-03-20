@@ -150,7 +150,7 @@ def compare_field(f1,f2):
 if __name__ == "__main__":
 
     n=4
-    #mesh = UnitCube(n, n, n)
+    #mesh = UnitCubeMesh(n, n, n)
     #mesh = BoxMesh(-1, 0, 0, 1, 1, 1, 10, 2, 2)
     #mesh=sphere(3.0,0.3)
     #mesh=df.Mesh('tet.xml')

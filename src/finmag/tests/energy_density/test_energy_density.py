@@ -143,7 +143,7 @@ def test_DMI_Old_energy_density_2D():
 
 def test_DMI_energy_density_3D():
     """Same as above, on a 3D mesh."""
-    mesh = df.UnitCube(4, 4, 4)
+    mesh = df.UnitCubeMesh(4, 4, 4)
     V = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
     M = df.interpolate(df.Expression(("-0.5*x[1]", "0.5*x[0]", "1")), V)
     Ms = 10
@@ -162,7 +162,7 @@ def test_DMI_energy_density_3D():
 
 def test_DMI_Old_energy_density_3D():
     """Same as above, on a 3D mesh."""
-    mesh = df.UnitCube(4, 4, 4)
+    mesh = df.UnitCubeMesh(4, 4, 4)
     V = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
     M = df.interpolate(df.Expression(("-0.5*x[1]", "0.5*x[0]", "1")), V)
     Ms = 10

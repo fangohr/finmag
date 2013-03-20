@@ -3,7 +3,7 @@ import dolfin as df
 import pytest
 from finmag.energies import TimeZeeman, DiscreteTimeZeeman
 
-mesh = df.UnitCube(2, 2, 2)
+mesh = df.UnitCubeMesh(2, 2, 2)
 S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
 m = df.Function(S3)
 m.assign(df.Constant((1, 0, 0)))

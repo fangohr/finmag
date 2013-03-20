@@ -26,7 +26,7 @@ if __name__ == '__main__':
         
 	mesh = df.Box(x0, y0, z0, x1, y1, z1, nx, ny, nz)
         n = 20
-        mesh = df.UnitCube(n, n, n)
+        mesh = df.UnitCubeMesh(n, n, n)
 	mesh.coordinates()[:]*=1e-1
 	number=mesh.num_vertices()
 	print 'vertices number:',number
@@ -34,7 +34,7 @@ if __name__ == '__main__':
 	xs=mesh.coordinates()
         
         n=10
-        mesh = df.UnitCube(n, n, n)
+        mesh = df.UnitCubeMesh(n, n, n)
 	mesh.coordinates()[:]*=1e-1
         xt=mesh.coordinates()
         number=mesh.num_vertices()

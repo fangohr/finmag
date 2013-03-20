@@ -143,7 +143,7 @@ class TestProblem():
 
 class TestProblemCube():
     def __init__(self):
-        self.mesh = UnitCube(4,4,4)
+        self.mesh = UnitCubeMesh(4,4,4)
         #plot(self.mesh)
         self.cell_domains = MeshFunction("uint", self.mesh, 3)
         class Structure(SubDomain):

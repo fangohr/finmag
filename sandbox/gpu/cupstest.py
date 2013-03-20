@@ -8,7 +8,7 @@ def run_test():
 
     mesh = Box(0,0,0,30,30,100,10,10,30)
     #mesh = Mesh(convert_mesh("bar.geo"))
-    #mesh = UnitCube(32,32,32)
+    #mesh = UnitCubeMesh(32,32,32)
     V = FunctionSpace(mesh, "CG", 1)
     W = VectorFunctionSpace(mesh, "CG", 1)
 

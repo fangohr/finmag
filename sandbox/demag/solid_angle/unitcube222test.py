@@ -133,7 +133,7 @@ tmpdic = { \
 # Values - Node number
 
 
-mesh = UnitCube(2,2,2)
+mesh = UnitCubeMesh(2,2,2)
 V = FunctionSpace(mesh, "CG", 1)
 mesh.init()
 d = mesh.topology().dim()

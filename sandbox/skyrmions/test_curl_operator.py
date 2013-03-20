@@ -1,6 +1,6 @@
 
 from dolfin import *
-mesh=UnitCube(1,1,1)
+mesh=UnitCubeMesh(1,1,1)
 V=VectorFunctionSpace(mesh,"CG",1)
 
 M=interpolate(Constant((1,1,1)),V)
