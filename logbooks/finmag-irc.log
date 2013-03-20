@@ -5569,3 +5569,31 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-03-17 15:22:11 mb4e10: we are here
 2013-03-17 15:22:28 fangohr-adium1: Okay, I'll come over in 5 minutes and then we can go?
 2013-03-18 06:57:55 fangohr: Good Morning.
+2013-03-20 07:45:13 mb8g11: Hi guys. I hope you had a splendid time in Cambridge. Looking forward to hearing about it.
+2013-03-20 07:45:59 mb8g11: I'm going to the library now to get some reading done, but I may be online this afternoon.
+2013-03-20 10:20:43 D_Chernyshenko_: Hi Hans, I will be a bit late (10:45), I only woke up 10 minutes ago, was too tired yesterday
+2013-03-20 10:50:44 fangohr-adium: Hi Dmitri, no problem. Am in my office.
+2013-03-20 13:34:22 fangohr_: Hi Marc-Antonio, yes, visit to Cambride and the fenics workshop was very interesting I would say. Don't know what the others think.
+2013-03-20 13:34:33 fangohr_: If nothing else, at least we now know many of the key people in person.
+2013-03-20 15:24:53 mb8g11: Hi.
+2013-03-20 15:28:12 fangohr_: Hi :)
+2013-03-20 15:28:27 fangohr_: Have replied to your earlier question earlier ;-) (when you were offline I think).
+2013-03-20 15:30:12 fangohr_: Weiwei, I have question on periodic boundary conditions in OOMMF: am I correct to think that the demag tensor for periodic boundary conditions is computed so that contributions from more and more image cells are added [starting with the image cells nearby, then adding more and more with growing distance to the primary cell], until numerically the effect of these far-away image cells is so small that it does not (or not significantly) change the demag field
+2013-03-20 15:30:12 fangohr_:  in the primary cell?
+2013-03-20 15:33:19 ww1g11_: Yes, that's the basic idea and actually an asymptotic expression is used to represent the interaction far away
+2013-03-20 15:34:53 fangohr_: Thank you. (And Dmitri knows all about the need for the asymptotic expression ...)
+2013-03-20 16:42:26 max_albert: Hi Marc-Antonio!
+2013-03-20 16:42:34 max_albert: We were just discussing the HMM conference in Italy. Have you booked your ticket yet? Otherwise we may book it together soon.
+2013-03-20 16:44:12 max_albert: We discussed it in Cambridge a couple of days ago and it seems we would all be leaving on Thursday evening so that we can go see the Etna on Thursday morning (either with the guided tour, or on our own).
+2013-03-20 16:44:51 max_albert: Would you do the same? Once we know we can write to AmityTravel and book the tickets.
+2013-03-20 18:32:23 mb8g11: Yes, I'd like to do the same.
+2013-03-20 18:32:47 mb8g11: I have registered to the conference, but haven't booked any flights or accomodation.
+2013-03-20 18:33:17 max_albert: Great. Then we can do that together. I'll ask Marijan whether he can send the flights he looked up to AmityTravel.
+2013-03-20 18:33:33 mb8g11: Cool. What do I need to do/
+2013-03-20 18:33:47 max_albert: Nothing at the moment I think.
+2013-03-20 18:34:03 max_albert: Oh, we may need your cost code because AmityTravel will want to know that.
+2013-03-20 18:35:30 max_albert: Do you know it?
+2013-03-20 18:51:24 mb8g11: Even if I have one, I don't think I can use it for this conference I'm afraid. However, I can do debit/credit card over the phone if they call me, or wire transfer.
+2013-03-20 18:52:43 max_albert: Oh, that's a shame. Are you sure? If that's true it may even be cheaper for you to book the flight directly (because the travel agency may add a surcharge).
+2013-03-20 18:55:30 mb8g11: Yes. However, there's the convenience and the guarantee to have the same flight and seats like you guys.
+2013-03-20 18:55:53 mb8g11: Don't want to have to sit on my own ;)
