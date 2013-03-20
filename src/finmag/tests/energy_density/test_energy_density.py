@@ -123,7 +123,7 @@ def test_DMI_Old_energy_density_2D():
     the curl is exactly 1.0. (HF)
 
     """
-    mesh = df.UnitSquare(4, 4)
+    mesh = df.UnitSquareMesh(4, 4)
     V = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
     M = df.interpolate(df.Expression(("-0.5*x[1]", "0.5*x[0]", "1")), V)
     Ms = 1

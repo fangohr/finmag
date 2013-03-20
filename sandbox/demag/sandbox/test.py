@@ -6,7 +6,7 @@ from solver_nitsche import *
 
 class tester(TruncDeMagSolver):
     def __init__(self):
-        mesh = UnitSquare(2,2)
+        mesh = UnitSquareMesh(2,2)
         V = FunctionSpace(mesh,"CG",1)
         u = interpolate(Expression("1 - x[0]"),V)
         
@@ -21,7 +21,7 @@ class tester(TruncDeMagSolver):
 
 def orig():
     #Original script that should work
-        mesh = UnitSquare(2,2)
+        mesh = UnitSquareMesh(2,2)
         V = FunctionSpace(mesh,"CG",1)
         u = interpolate(Expression("1 - x[0]"),V)
         
