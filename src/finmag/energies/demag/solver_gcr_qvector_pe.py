@@ -94,7 +94,7 @@ class PEQBuilder(object):
                     #If gdof not in dictionary initialize a list
                     if gdof not in doftonormal:
                         doftonormal[gdof] = []
-                    #Prevent redundancy in Normals (for example 3d UnitCube CG1)
+                    #Prevent redundancy in Normals (for example 3d UnitCubeMesh CG1)
                     if ntup not in doftonormal[gdof]:
                         doftonormal[gdof].append(ntup)
 

@@ -1,6 +1,6 @@
 from dolfin import *
 
-mesh = UnitCube(30,30,30)
+mesh = UnitCubeMesh(30,30,30)
 V = FunctionSpace(mesh, "CG", 1)
 v = TestFunction(V)
 F = Function(V)

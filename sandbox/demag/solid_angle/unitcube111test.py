@@ -1,7 +1,7 @@
 import numpy as np
 import dolfin as df
 
-mesh = df.UnitCube(2,2,2)
+mesh = df.UnitCubeMesh(2,2,2)
 mesh.init()
 
 boundary = df.DomainBoundary()

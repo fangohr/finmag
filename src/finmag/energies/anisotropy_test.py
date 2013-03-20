@@ -14,7 +14,7 @@ def fixt():
     Create an UniaxialAnisotropy object that will be re-used during testing.
 
     """
-    mesh = df.UnitCube(1, 1, 1)
+    mesh = df.UnitCubeMesh(1, 1, 1)
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
     K1 = 1
     Ms = 1

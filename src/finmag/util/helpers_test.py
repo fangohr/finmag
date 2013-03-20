@@ -86,7 +86,7 @@ def test_vector_valued_function():
     results.
 
     """
-    mesh = df.UnitCube(2, 2, 2)
+    mesh = df.UnitCubeMesh(2, 2, 2)
     mesh.coordinates()[:] = mesh.coordinates() + 1.0  # shift mesh coords to avoid dividing by zero when normalising below
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
     num_vertices = mesh.num_vertices()
@@ -149,7 +149,7 @@ def test_vector_valued_function():
     
     
 def test_scalar_valued_dg_function():
-    mesh = df.UnitCube(2, 2, 2)
+    mesh = df.UnitCubeMesh(2, 2, 2)
     
     def init_f(coord):
         x,y,z=coord
@@ -254,7 +254,7 @@ def test_piecewise_on_subdomains():
     which takes different values on these subdomains and check that the
     resulting function really has the right values.
     """
-    mesh = df.UnitCube(1, 1, 1)
+    mesh = df.UnitCubeMesh(1, 1, 1)
     fun_vals = (42, 23, -3.14)
     g = df.MeshFunction('uint', mesh, 3)
     g.array()[:] = [1, 1, 2, 3, 1, 3]

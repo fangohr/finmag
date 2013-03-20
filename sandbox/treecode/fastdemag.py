@@ -516,7 +516,7 @@ class Demag():
 if __name__ == "__main__":
    
     n=10
-    #mesh = UnitCube(n, n, n)
+    #mesh = UnitCubeMesh(n, n, n)
     #mesh = Box(-1, 0, 0, 1, 1, 1, 10, 2, 2)
     mesh = UnitSphere(5)
     mesh.coordinates()[:]*=1

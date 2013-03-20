@@ -80,7 +80,7 @@ class BemComputationTests(unittest.TestCase):
         self.assertAlmostEqual(np.max(np.abs(be_magpar - be_native)), 0, delta=1e-12)
 
     def test_cell_ordering(self):
-        mesh = df.UnitCube(1,1,1)
+        mesh = df.UnitCubeMesh(1,1,1)
         centre = np.array([0.5, 0.5, 0.5])
         boundary_mesh = df.BoundaryMesh(mesh, False)
         coordinates = boundary_mesh.coordinates()
@@ -117,10 +117,10 @@ class BemComputationTests(unittest.TestCase):
         self.run_bem_computation_test(sphere(1., 0.4))
         self.run_bem_computation_test(sphere(1., 0.3))
         self.run_bem_computation_test(sphere(1., 0.2))
-        self.run_bem_computation_test(df.UnitCube(3,3,3))
+        self.run_bem_computation_test(df.UnitCubeMesh(3,3,3))
 
     def test_bem_perf(self):
-        mesh = df.UnitCube(15, 15, 15)
+        mesh = df.UnitCubeMesh(15, 15, 15)
         boundary_mesh = df.BoundaryMesh(mesh, False)
         c = time_counter.counter()
         while c.next():
@@ -158,7 +158,7 @@ class BemComputationTests(unittest.TestCase):
         expressions = [m1,m2]
         for exp in expressions: 
             for k in xrange(1,5+1):
-                self.run_demag_computation_test(df.UnitCube(k,k,k), exp,
+                self.run_demag_computation_test(df.UnitCubeMesh(k,k,k), exp,
                                                 compute_scalar_potential_native_fk,
                                                 "native, FK")
                 
@@ -183,7 +183,7 @@ class BemComputationTests(unittest.TestCase):
                                         ref=compute_scalar_potential_native_fk, tol=tol)
         for exp in expressions: 
             for k in xrange(3,10+1,2):
-                self.run_demag_computation_test(df.UnitCube(k,k,k), exp,
+                self.run_demag_computation_test(df.UnitCubeMesh(k,k,k), exp,
                                                 compute_scalar_potential_native_gcr,
                                                 "native, GCR, cube", tol=tol,
                                                 ref=compute_scalar_potential_native_fk)
@@ -240,7 +240,7 @@ class BemComputationTests(unittest.TestCase):
             self.assertAlmostEqual(np.max(np.abs(L1 - L2)), 0, delta=1e-10)
 
     def test_facet_normal_direction(self):
-        mesh = df.UnitCube(1,1,1)
+        mesh = df.UnitCubeMesh(1,1,1)
         field = df.Expression(["x[0]", "x[1]", "x[2]"])
         n = df.FacetNormal(mesh)
         # Divergence of R is 3, the volume of the unit cube is 1 so we divide by 3

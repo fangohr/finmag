@@ -9,7 +9,7 @@ Ms = 8.6e5
 def test_uniform_external_field():
     TOLERANCE = 3.5e-10
 
-    mesh = df.UnitCube(2, 2, 2)
+    mesh = df.UnitCubeMesh(2, 2, 2)
     sim = Sim(mesh, Ms)
     sim.set_m((1, 0, 0))
     sim.add(Zeeman((0, Ms, 0)))
@@ -25,7 +25,7 @@ def test_uniform_external_field():
 def test_negative_uniform_external_field():
     TOLERANCE = 1e-10
 
-    mesh = df.UnitCube(2, 2, 2)
+    mesh = df.UnitCubeMesh(2, 2, 2)
     sim = Sim(mesh, Ms)
     sim.set_m((1, 0.1, 0))  # slightly misaligned
     sim.add(Zeeman((-1.0 * Ms, 0, 0)))
