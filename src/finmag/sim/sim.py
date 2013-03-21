@@ -710,7 +710,7 @@ class Simulation(object):
 
 
 def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sundials",
-             A=None, K1=None, K1_axis=None, H_ext=None, demag_solver='FK',
+             A=None, K1=None, K1_axis=None, H_ext=None, demag_solver='FK', demag_solver_type=None,
              D=None, name="unnamed"):
     """
     Create a Simulation instance based on the given parameters.
@@ -751,6 +751,6 @@ def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sun
     if D != None:
         sim.add(DMI(D))
     if demag_solver != None:
-        sim.add(Demag(solver=demag_solver))
+        sim.add(Demag(solver=demag_solver, solver_type=demag_solver_type))
 
     return sim

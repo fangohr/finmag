@@ -4,7 +4,7 @@ from finmag.util.timings import Timings
 from finmag.util import helpers
 import finmag.util.solver_benchmark as bench
 
-#Define default parameters for the fembem solvers
+# Define default parameters for the fembem solvers
 default_parameters = df.Parameters("demag_options")
 poisson = df.Parameters("poisson_solver")
 poisson.add("method", "default")
@@ -50,7 +50,7 @@ class FemBemDeMagSolver(object):
     """
 
     def __init__(self, mesh,m, parameters=None, degree=1, element="CG", project_method='magpar',
-                 unit_length=1,Ms = 1.0,bench = False, normalize=True):
+                 unit_length=1, Ms=1.0, bench=False, normalize=True, solver_type=None):
         #Problem objects and parameters
         self.mesh = mesh
         self.unit_length = unit_length
@@ -110,8 +110,14 @@ class FemBemDeMagSolver(object):
         else:
             method, pc = "default", "default"
 
-        self.laplace_solver = df.KrylovSolver(method, pc)
-        self.laplace_solver.parameters["preconditioner"]["same_nonzero_pattern"] = True
+        if solver_type == 'lu':
+            self.laplace_solver = df.LUSolver()
+            self.laplace_solver.parameters["reuse_factorization"] = True
+        elif solver_type == 'krylov':
+            self.laplace_solver = df.KrylovSolver(method, pc)
+            self.laplace_solver.parameters["preconditioner"]["same_nonzero_pattern"] = True
+        else:
+            raise ValueError("Wrong solver type specified: '{}' (allowed values: 'Krylov', 'LU')".format(solver_type))
 
         #Objects needed for energy density computation
         self.nodal_vol = df.assemble(self.v*df.dx, mesh=self.mesh).array()

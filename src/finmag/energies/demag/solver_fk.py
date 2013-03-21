@@ -2,8 +2,8 @@ import logging
 import numpy as np
 import dolfin as df
 import solver_base as sb
-from finmag.native.llg import compute_bem_fk
 import finmag.util.solver_benchmark as bench
+from finmag.native.llg import compute_bem_fk
 
 fk_timings = sb.demag_timings
 logger = logging.getLogger(name='finmag')
@@ -253,19 +253,25 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
     *Example of usage*
         See the exchange_demag example.
     """
-    def __init__(self,mesh,m, parameters=sb.default_parameters , degree=1, element="CG",
-                 project_method='magpar', unit_length=1,Ms = 1.0,bench = False):
+    def __init__(self,mesh,m, parameters=sb.default_parameters, degree=1, element="CG",
+                 project_method='magpar', unit_length=1, Ms=1.0, bench=False, solver_type=None):
         fk_timings.start("FKSolver init", self.__class__.__name__)
         sb.FemBemDeMagSolver.__init__(self,mesh,m, parameters, degree, element=element,
-                                      project_method = project_method,
-                                      unit_length = unit_length,Ms = Ms,bench = bench)
+                                      project_method=project_method,
+                                      unit_length=unit_length, Ms=Ms, bench=bench, solver_type=solver_type)
         self.__name__ = "FK Demag Solver"
         
-        #Linear Solver parameters
+        # Linear Solver parameters
         method = parameters["poisson_solver"]["method"]
         pc = parameters["poisson_solver"]["preconditioner"]
         
-        self.poisson_solver = df.KrylovSolver(self.poisson_matrix, method, pc)
+        if solver_type == 'lu':
+            self.poisson_solver = df.LUSolver(self.poisson_matrix)
+            self.poisson_solver.parameters["reuse_factorization"] = True
+        elif solver_type == 'krylov':
+            self.poisson_solver = df.KrylovSolver(self.poisson_matrix, method, pc)
+        else:
+            raise ValueError("Wrong solver type: '{}' (allowed values: 'Krylov', 'LU')".format(solver_type))
 
         self.phi1 = df.Function(self.V)
         self.phi2 = df.Function(self.V)
