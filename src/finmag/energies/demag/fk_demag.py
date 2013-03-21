@@ -32,12 +32,36 @@ class FKDemag(object):
         """
         Create a new FKDemag instance.
 
+        The attribute `parameters` is a dict that contains the settings for the solvers
+        for the Neumann (potential phi_1) and Laplace (potential phi_2) problems.
+
+        Setting the method used by the solvers:
+        Change the entries `phi_1_solver` and `phi_2_solver` to a value from
+        `df.list_krylov_solver_methods()`. Default is dolfin's default.
+
+        Setting the preconditioners:
+        Change the entries `phi_1_preconditioner` and `phi_2_preconditioner` to
+        a value from `df.list_krylov_solver_preconditioners()`. Default is dolfin's default.
+
+        Setting the tolerances:
+        Change the existing entries inside `phi_1` and `phi_2` which are themselves dicts.
+        You can add new entries to these dicts as well. Everything which is
+        understood by `df.KrylovSolver` is valid.
+
         """
-        # The parameters for the KrylovSolvers won't be changed often enough
-        # to warrant addition to the __init__ parameters. However, they are
-        # made accessible as attributes, so they can be changed for benchmarks.
-        self.phi_1_solver_params = ("default", "default")
-        self.phi_2_solver_params = ("default", "default")  # method, preconditioner
+        default_parameters = {
+            'absolute_tolerance': 1e-6,
+            'relative_tolerance': 1e-6,
+            'maximum_iterations': int(1e4)
+        }
+        self.parameters = {
+                'phi_1_solver': 'default',
+                'phi_1_preconditioner': 'default',
+                'phi_1': default_parameters,
+                'phi_2_solver': 'default',
+                'phi_2_preconditioner': 'default',
+                'phi_2': default_parameters.copy()
+        }
 
     @mtimed(default_timer)
     def setup(self, S3, m, Ms, unit_length=1):
@@ -87,9 +111,13 @@ class FKDemag(object):
 
         # for computation of field and scalar magnetic potential
         self._poisson_matrix = self._poisson_matrix()
-        self._poisson_solver = df.KrylovSolver(self._poisson_matrix, self.phi_1_solver_params[0], self.phi_1_solver_params[1])
+        self._poisson_solver = df.KrylovSolver(self._poisson_matrix,
+                self.parameters['phi_1_solver'], self.parameters['phi_1_preconditioner'])
+        self._poisson_solver.parameters.update(self.parameters['phi_1'])
         self._laplace_zeros = df.Function(self.S1).vector()
-        self._laplace_solver = df.KrylovSolver(self.phi_2_solver_params[0], self.phi_2_solver_params[1])
+        self._laplace_solver = df.KrylovSolver(
+                self.parameters['phi_2_solver'], self.parameters['phi_2_preconditioner'])
+        self._laplace_solver.parameters.update(self.parameters['phi_2'])
         self._laplace_solver.parameters["preconditioner"]["same_nonzero_pattern"] = True
         with timed('compute BEM', self.__class__.__name__, fk_timer):
             self._bem, self._b2g_map = compute_bem_fk(df.BoundaryMesh(mesh, False))

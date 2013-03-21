@@ -13,7 +13,7 @@ Ms = 1
 H_ref = np.array((- Ms / 3.0, 0, 0))
 
 vertices = []
-solvers = ["new_fk", "FK", "Treecode"]
+solvers = ["old_FK", "FK", "Treecode"]
 timings = [[], [], []]
 errors = [[], [], []]
 

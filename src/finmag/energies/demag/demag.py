@@ -27,7 +27,7 @@ class Demag(object):
         self.in_jacobian = False
         log.debug("Creating Demag object with " + solver + " solver.")
 
-        if solver in ["FK", "GCR","Treecode", "old_fk"]:
+        if solver in ["FK", "GCR","Treecode", "old_FK"]:
             self.solver = solver
             if solver_type is None:
                 solver_type = get_config_option('demag', 'solver_type', 'Krylov')
@@ -37,7 +37,8 @@ class Demag(object):
                                  "Allowed values are: 'Krylov', 'LU'".format(solver_type))
             log.debug("Using demag solver of type '{}'".format(solver_type))
         else:
-            raise NotImplementedError("Only 'FK', 'GCR', 'Treecode' and 'old_FK' are implemented")
+            raise NotImplementedError(
+                    "Don't know method '{}'. Only 'FK', 'GCR', 'Treecode' and 'old_FK' are implemented.".format(solver))
 
         self.degree = degree
         self.element = element
