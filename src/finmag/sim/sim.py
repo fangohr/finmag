@@ -284,13 +284,23 @@ class Simulation(object):
         pts = np.array(pts) / self.unit_length
         return helpers.probe(self.get_field_as_dolfin_function(field_type), pts)
 
+    def create_integrator(self, backend=None, **kwargs):
+        if not hasattr(self, "integrator"):
+            if backend == None:
+                backend = self.integrator_backend
+            log.info("Create integrator {} with kwargs={}".format(backend, kwargs))
+            self.integrator = llg_integrator(self.llg, self.llg.m, backend=backend, **kwargs)
+        else:
+            log.warning("Cannot create integrator - exists already: {}".format(self.integrator))
+        return self.integrator
+
     def advance_time(self, t):
         """
         The lower-level counterpart to run_until, this runs without a schedule.
 
         """
         if not hasattr(self, "integrator"):
-            self.integrator = llg_integrator(self.llg, self.llg.m, backend=self.integrator_backend)
+            self.create_integrator()
 
         log.debug("Advancing time to t = {} s.".format(t))
         self.integrator.advance_time(t)
@@ -301,7 +311,7 @@ class Simulation(object):
 
         """
         if not hasattr(self, "integrator"):
-            self.integrator = llg_integrator(self.llg, self.llg.m, backend=self.integrator_backend)
+            self.create_integrator()
 
         log.info("Simulation will run until t = {:.2g} s.".format(t))
         exit_at = events.StopIntegrationEvent(t)
@@ -323,7 +333,7 @@ class Simulation(object):
 
         """
         if not hasattr(self, "integrator"):
-            self.integrator = llg_integrator(self.llg, self.llg.m, backend=self.integrator_backend)
+            self.create_integrator()
         log.info("Simulation will run until relaxation of the magnetisation.")
 
         if hasattr(self, "relaxation"):
