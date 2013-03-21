@@ -17,10 +17,6 @@ from finmag.util.timings import Timings, default_timer, timed, mtimed
 
 fk_timer = Timings()
 
-default_parameters = df.Parameters("FKDemag")
-default_parameters.add(df.Parameters("phi_1"))
-default_parameters.add(df.Parameters("phi_2"))
-
 
 class FKDemag(object):
     """
