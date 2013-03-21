@@ -27,7 +27,7 @@ class Demag(object):
         self.in_jacobian = False
         log.debug("Creating Demag object with " + solver + " solver.")
 
-        if solver in ["FK", "GCR","Treecode", "new_fk"]:
+        if solver in ["FK", "GCR","Treecode", "old_fk"]:
             self.solver = solver
             if solver_type is None:
                 solver_type = get_config_option('demag', 'solver_type', 'Krylov')
@@ -37,7 +37,7 @@ class Demag(object):
                                  "Allowed values are: 'Krylov', 'LU'".format(solver_type))
             log.debug("Using demag solver of type '{}'".format(solver_type))
         else:
-            raise NotImplementedError("Only 'FK', 'GCR', 'Treecode' and 'new_fk' are implemented")
+            raise NotImplementedError("Only 'FK', 'GCR', 'Treecode' and 'old_FK' are implemented")
 
         self.degree = degree
         self.element = element
@@ -72,10 +72,11 @@ class Demag(object):
                   "project_method":'magpar',
                   "bench": self.bench}
         
-        if self.solver == "FK":
+        if self.solver == "old_FK":
             self.demag = FemBemFKSolver(**kwargs)
             for (name, solver) in (("Poisson", self.demag.poisson_solver), ("Laplace", self.demag.laplace_solver)):
                 params = repr(solver.parameters.to_dict())
+                #Log the linear solver parameters
                 log.debug("{}: {} solver parameters.\n{}".format(
                             self.__class__.__name__, name, textwrap.fill(params, width=100,
                             initial_indent=4*" ", subsequent_indent=4*" ")))
@@ -97,13 +98,10 @@ class Demag(object):
             kwargs["type_I"]=type_I
             
             self.demag = TreecodeBEM(**kwargs)
-        elif self.solver == "new_fk":
+        elif self.solver == "FK":
             demag = FKDemag()
             demag.setup(S3, m, Ms, unit_length)
             self.demag = demag
-        
-        #Log the linear solver parameters
-        
 
     @mtimed
     def compute_field(self):
