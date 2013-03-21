@@ -9,7 +9,9 @@ class SimpleTimer():
         benchmark = SimpleTimer()
         with benchmark:
             do_stuff()
-        print benchmark.last_measurement()
+        print benchmark.elapsed
+
+    A SimpleTimer instance can be reused.
 
     """
     def __init__(self):
