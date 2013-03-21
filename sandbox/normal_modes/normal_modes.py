@@ -1,6 +1,4 @@
 import dolfin as df
-from hgviewlib.hggraph import diff
-from sympy.mpmath.function_docs import ei
 from finmag import Simulation
 from finmag.energies import Demag, Exchange, Zeeman
 from finmag.util.consts import Oersted_to_SI
@@ -17,7 +15,8 @@ def groundstate_filename(ns):
 def eigenvector_filename(ns, n):
     return "eigenvector-%d-%d-%d-%d" % (ns[0], ns[1], ns[2], n)
 
-def read_relaxed_state(ns):
+def read_relaxed_state(problem):
+    fn = sim.name() + "-groundstate.h5"
     fn = groundstate_filename(ns) + ".h5"
     print "Reading the m vector from", fn
     f = h5py.File(fn, "r")
@@ -44,11 +43,10 @@ def setup_sim(ns, m0):
 
     return sim
 
+def find_relaxed_state(problem):
+    sim = problem.setup_sim(problem.initial_m())
 
-def find_relaxed_state(ns):
-    sim = setup_sim(ns, (1, 0, 0))
-
-    print "Finding the relaxed state for", sim.mesh
+    print "Finding the relaxed state for ", problem.name(), ", mesh",sim.mesh
 
     def print_progress(sim):
         print "Reached simulation time: {} ns".format(sim.t*1e9)
@@ -59,11 +57,37 @@ def find_relaxed_state(ns):
     m = sim.llg._m
 
     # Save the result
-    filename = groundstate_filename(ns) + ".xdmf"
+    filename = sim.name() + "-groundstate.xdmf"
     f = df.File(filename)
     f << m
     f = None
     print "Relaxed field saved to", filename
+
+def find_normal_modes(problem):
+    sim = problem.setup_sim(read_relaxed_state(problem))
+    m0 = sim.m
+    n = sim.m.size
+
+    def compute_H(m):
+        sim.llg._m.vector()[:] = fnormalise(m)
+        return sim.llg.effective_field.compute()
+
+    steps = [0]
+    # eq (116) in d'Aquino (2009)
+    def D_times_vec(dm):
+        steps[0] += 1
+        return differentiate_fd(compute_H, m0, dm)
+
+    # Solve the eigenvalue problem using ARPACK
+    # The eigenvalue problem is not formulated correctly at all
+    # The correct formulation is in the paper from d'Aquino
+    J = scipy.sparse.linalg.LinearOperator((n, n), matvec=J_times_vec)
+    n_values = 3
+    w, v = scipy.sparse.linalg.eigs(J, n_values, which='LM')
+
+    print w.shape, v.shape
+    print "Computed %d largest eigenvectors for %s" % (n_values, sim.mesh)
+    print "Eigenvalues:", w
 
 def differentiate_fd(f, x, dx):
     h = 0.01*np.sqrt(np.dot(x, x))/np.sqrt(np.dot(dx, dx)+1e-100)
@@ -73,34 +97,6 @@ def differentiate_fd(f, x, dx):
     return res
 
 if __name__=="__main__":
-    ns = [29, 15, 2]
-    m0 = read_relaxed_state(ns)
-    sim = setup_sim(ns, m0)
-    m0 = sim.m
-
-    n = sim.m.size
-
-    steps = [0]
-
-    def compute_H(m):
-        sim.llg._m.vector()[:] = fnormalise(m)
-        return sim.llg.effective_field.compute()
-
-    def J_times_vec(dm):
-        steps[0] += 1
-        return differentiate_fd(compute_H, m0, dm)
-
-    # Solve the eigenvalue problem using ARPACK
-    # The eigenvalue problem is not formulated correctly at all
-    # The correct formulation is in the paper from d'Aquino
-    J = scipy.sparse.linalg.LinearOperator((n,n), matvec=J_times_vec)
-    n_values = 3
-    w, v = scipy.sparse.linalg.eigs(J, n_values, which='LM')
-
-    print w.shape, v.shape
-    print "Computed %d largest eigenvectors for %s" % (n_values,sim.mesh)
-    print "Eigenvalues:", w
-
     for i, x in enumerate(v.T):
         M = df.Function(sim.S3)
 #        print x.shape, np.real(x).shape
