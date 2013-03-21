@@ -2,12 +2,12 @@ import logging
 import textwrap
 import dolfin as df
 from finmag.util.timings import default_timer, mtimed
+from finmag.util.configuration import get_config_option
 from solver_fk import FemBemFKSolver
 from solver_gcr import FemBemGCRSolver
 from treecode_bem import TreecodeBEM
 from fk_demag import FKDemag
 from solver_base import default_parameters
-
 
 log = logging.getLogger("finmag")
 
@@ -22,13 +22,20 @@ class Demag(object):
             demag solver method: "FK", "GCR", "Treecode", "new_fk"
 
     """
-    def __init__(self, solver="FK", degree=1, element="CG", project_method="magpar",bench = False,
-                 parameters = default_parameters):
+    def __init__(self, solver="FK", degree=1, element="CG", project_method="magpar", bench=False,
+                 parameters=default_parameters, solver_type=None):
         self.in_jacobian = False
         log.debug("Creating Demag object with " + solver + " solver.")
 
         if solver in ["FK", "GCR","Treecode", "new_fk"]:
             self.solver = solver
+            if solver_type is None:
+                solver_type = get_config_option('demag', 'solver_type', 'Krylov')
+            self.solver_type = solver_type.lower()
+            if self.solver_type not in ['lu', 'krylov']:
+                raise ValueError("Wrong solver type specified (either directly or in .finmagrc): '{}'. "
+                                 "Allowed values are: 'Krylov', 'LU'".format(solver_type))
+            log.debug("Using demag solver of type '{}'".format(solver_type))
         else:
             raise NotImplementedError("Only 'FK', 'GCR', 'Treecode' and 'new_fk' are implemented")
 
@@ -59,6 +66,7 @@ class Demag(object):
                   "Ms":Ms,
                   "unit_length":unit_length,
                   "parameters":self.parameters,
+                  "solver_type": self.solver_type,
                   "degree":1,
                   "element":"CG",
                   "project_method":'magpar',
