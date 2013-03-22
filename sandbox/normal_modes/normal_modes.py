@@ -42,6 +42,8 @@ def differentiate_fd4(f, x, dx):
         res = 0.
     for w, a in zip([1./12., -2./3., 2./3., -1./12.], [-2., -1., 1., 2.]):
         res += (w/h)*f(x + a*h*dx)
+#        print (res/(w/h)/ f(x + a * h * dx))[:4]
+#    print res[:4]
     return res
 
 
@@ -78,7 +80,7 @@ def transpose(a):
     return np.transpose(a, [1,0,2])
 
 # Matrix-vector or Matrix-matrix product
-def mult(a, b):
+def mult_one(a, b):
     # a and b are ?x?xn arrays where ? = 1..3
     assert len(a.shape) == 3
     assert len(b.shape) == 3
@@ -96,6 +98,18 @@ def mult(a, b):
                 res[i,j,:] += a[i,k,:]*b[k,j,:]
 
     return res
+
+
+def mult(*args):
+    if len(args) < 2:
+        raise Exception("mult requires at least 2 arguments")
+
+    res = args[0]
+    for i in xrange(1, len(args)):
+        res = mult_one(res, args[i])
+
+    return res
+
 
 def cross(a, b):
     assert a.shape == (3, 1, a.shape[2])
@@ -129,7 +143,7 @@ def precompute_arrays(m0):
 
     B0 = -1j*Mcross
     # (114), multiplying on the left again
-    B0p = mult(transpose(R), mult(B0, R))
+    B0p = mult(transpose(R), B0, R)
 
     # Matrix for the projection onto the plane perpendicular to m0
     Pm0 = np.zeros((3,3,n))
@@ -144,16 +158,42 @@ def precompute_arrays(m0):
     S[1,1,:] = 1.
     # Matrix for the projection from 3n to 2n is transpose(S)
 
-    B0pp = mult(transpose(S), mult(B0p, S))
+    B0pp = mult(transpose(S), B0p, S)
 
     # The eigenproblem is
     # D phi = omega phi
-    # D = B0pp * S- * R^t (C+H0) R * S+
+    # D = B0pp * S- * R^t Pm0 (C+H0) R * S+
     # D = Dleft * (C+H0) * Dright
     #
     Dright = mult(R, S).copy()
-    Dleft = mult(B0pp, mult(transpose(S), transpose(R))).copy()
+    Dleft = mult(B0pp, transpose(S), transpose(R), Pm0).copy()
     return R, Mcross, Pm0, B0pp, Dleft, Dright
+
+def compute_A(sim):
+    m0_flat = sim.m.copy()
+    m0 = m0_flat.view()
+    m0.shape = (3, 1, -1)
+    n = m0.shape[2]
+
+    A = np.zeros((3*n,3*n))
+    compute_H = compute_H_func(sim)
+
+    H0 = compute_H(m0_flat).copy()
+
+    H0.shape = (1, 3, n)
+    H0 = mult(H0, m0)
+    H0.shape = (n,)
+
+    for k in xrange(n):
+        for i in xrange(3):
+            dm = np.zeros((3*n))
+            dm[3*i+k] = 1.
+#            v = np.zeros(3*n,)
+            v = differentiate_fd2(compute_H, m0_flat, dm)
+            v[3*i+k] += H0[k]
+            A[:,3*i+k] = v
+
+    return A, m0_flat
 
 def find_normal_modes(sim):
 #    sim = problem.setup_sim(read_relaxed_state(problem))
@@ -174,19 +214,13 @@ def find_normal_modes(sim):
 
     def D_times_vec(phi):
         steps[0] += 1
-        if steps[0] == 1:
-            sys.stderr.write("1\n")
         phi = phi.view()
         # Multiply by Dright
         phi.shape = (2,1,n)
         dm = mult(Dright, phi)
         # Multiply by C+H0
         dm.shape = (-1,)
-        if steps[0] == 1:
-            sys.stderr.write("21\n")
         v = differentiate_fd4(compute_H, m0_flat, dm)
-        if steps[0] == 1:
-            sys.stderr.write("31\n")
         v.shape = (3,n)
         dm.shape = (3,n)
         v[0] += H0*dm[0]
@@ -206,7 +240,7 @@ def find_normal_modes(sim):
     # The eigenvalue problem is not formulated correctly at all
     # The correct formulation is in the paper from d'Aquino
     D = scipy.sparse.linalg.LinearOperator((2*n, 2*n), matvec=D_times_vec, dtype=complex)
-    n_values = 3
+    n_values = 1
     w, v = scipy.sparse.linalg.eigs(D, n_values, which='LM')
 
     print w.shape, v.shape
