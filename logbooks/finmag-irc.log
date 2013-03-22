@@ -5608,3 +5608,8 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-03-21 11:30:53 fangohr-adium: Okay, will go online now.
 2013-03-21 11:31:07 mb8g11: It says you are already.
 2013-03-21 21:31:16 mb8g11: Nighty night.
+2013-03-22 09:48:55 mb8g11: Does anyone know what PC.rtol, PC.atol do in the ksp_tolerances argument in the nmag Simulation class consstructor? I've seen their usage a couple of times, but no internals that explicitly make use of them.
+2013-03-22 09:52:23 max_albert: I don't know, sorry. Maybe Dmitri or Hans have an idea.
+2013-03-22 09:55:45 mb8g11: My guess it's for a PETSc preconditioner.
+2013-03-22 09:56:02 max_albert: Yes, that makes sense.
+2013-03-22 17:12:38 max_albert: Hi Marc-Antonio, are you there by any chance?
