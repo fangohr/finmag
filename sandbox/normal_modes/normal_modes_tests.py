@@ -7,7 +7,7 @@ from finmag.util.consts import mu0, Oersted_to_SI
 from finmag.util.helpers import fnormalise
 from normal_modes import differentiate_fd4
 from normal_modes import differentiate_fd2
-from normal_modes import compute_H_func, normalise, mult, transpose, precompute_arrays, cross, find_normal_modes
+from normal_modes import compute_H_func, normalise, mult, transpose, precompute_arrays, cross, find_normal_modes, compute_A
 
 def test_differentiate_fd4():
     def f(x):
@@ -75,6 +75,8 @@ def test_compute_main():
     Hz = [10e3*Oersted_to_SI(1.), 0, 0]
 
     mesh = df.BoxMesh(0, 0, 0, 50, 50, 10, 6, 6, 2)
+    mesh = df.BoxMesh(0, 0, 0, 5, 5, 5, 1, 1, 1)
+    print mesh
 
     # Find the ground state
     sim = Simulation(mesh, Ms)
@@ -84,8 +86,22 @@ def test_compute_main():
     sim.add(Zeeman(Hz))
     sim.relax()
 
-    # Compute the eigenvalues
+    # Compute the eigenvalues - does not converge
 #    find_normal_modes(sim)
 
+def test_compute_A():
+    Ms = 1700e3
+    A = 2.5e-6 * 1e-5
+    Hz = [10e3 * Oersted_to_SI(1.), 0, 0]
+    mesh = df.BoxMesh(0, 0, 0, 5, 5, 5, 2, 2, 2)
+    sim = Simulation(mesh, Ms)
+    sim.set_m([1, 0, 0])
+    sim.add(Demag())
+#    sim.add(Exchange(A))
+#    sim.add(Zeeman(Hz))
+    sim.relax()
 
-
+    print mesh
+    A0, m0 = compute_A(sim)
+    print A0[:3,:3]
+    print m0
