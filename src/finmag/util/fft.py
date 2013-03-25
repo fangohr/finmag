@@ -16,9 +16,10 @@ logger = logging.getLogger("finmag")
 
 def FFT_m(ndt_filename, t_step, t_ini=None, t_end=None, subtract_values=None):
     """
-    Given a data file (e.g. in .ndt format), compute and return the Fourier
-    transforms of the x, y and z components of the magnetisation m. The
-    data is first resampled at regularly spaced intervals.
+    Given a data file (e.g. in .ndt format), compute and return the
+    (absolute values of the) Fourier transforms of the x, y and z
+    components of the magnetisation m. The data is first resampled at
+    regularly spaced intervals.
 
     *Arguments*
 
@@ -99,7 +100,7 @@ def FFT_m(ndt_filename, t_step, t_ini=None, t_end=None, subtract_values=None):
 
     # When using np.fft.fftfreq, the last frequency sometimes becomes
     # negative; to avoid this we compute the frequencies by hand.
-    rfft_freqs = np.arange(n) / (t_step*(len(ts) - 1))
+    rfft_freqs = np.arange(n) / (t_step*len(t_sampling))
 
     return rfft_freqs, fft_mx, fft_my, fft_mz
 
