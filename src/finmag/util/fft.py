@@ -14,7 +14,7 @@ from numpy import sin, cos, pi
 logger = logging.getLogger("finmag")
 
 
-def FFT_m(ndt_filename, t_step, t_ini=0, subtract_values=None):
+def FFT_m(ndt_filename, t_step, t_ini=0, t_end=None, subtract_values=None):
     """
     Given a data file (e.g. in .ndt format), compute and return the Fourier
     transforms of the x, y and z components of the magnetisation m. The
@@ -34,6 +34,12 @@ def FFT_m(ndt_filename, t_step, t_ini=0, subtract_values=None):
 
         Initial time for the resampled data (all input data before
         this time is discarded). Defaults to zero.
+
+    t_end:
+
+        Last time step for the resampled data (all input data after
+        this time is discarded). Defaults to the last time step saved
+        in the .ndt file.
 
     subtract_values:  None | 3-tuple of floats | 'first' | 'average'
 
@@ -71,7 +77,8 @@ def FFT_m(ndt_filename, t_step, t_ini=0, subtract_values=None):
             raise ValueError("Unsupported value for 'subtract_values': {}".format(subtract_values))
 
     f_sample = 1/t_step  # sampling frequency
-    t_max = ts[-1]
+    if t_end is None:
+        t_end = ts[-1]
 
     # Interpolating functions for mx, my, mz
     f_mx = InterpolatedUnivariateSpline(ts, mx)
@@ -79,7 +86,7 @@ def FFT_m(ndt_filename, t_step, t_ini=0, subtract_values=None):
     f_mz = InterpolatedUnivariateSpline(ts, mz)
 
     # Sample the interpolating functions at regularly spaced time steps
-    t_sampling = np.arange(t_ini, t_max, t_step)
+    t_sampling = np.arange(t_ini, t_end, t_step)
     mx_resampled = [f_mx(t) for t in t_sampling]
     my_resampled = [f_my(t) for t in t_sampling]
     mz_resampled = [f_mz(t) for t in t_sampling]
@@ -96,13 +103,13 @@ def FFT_m(ndt_filename, t_step, t_ini=0, subtract_values=None):
     return rfft_freqs, fft_mx, fft_my, fft_mz
 
 
-def plot_FFT_m(ndt_filename, t_step, t_ini=0.0, subtract_values=None,
+def plot_FFT_m(ndt_filename, t_step, t_ini=0.0, t_end=None, subtract_values=None,
                components="xyz", xlim=None, figsize=None):
     """
     Plot the frequency spectrum of the components of the magnetisation m.
 
-    The arguments `t_ini`, `t_step` and `subtract_values` have the
-    same meaning as in the FFT_m function.
+    The arguments `t_step`, `t_ini`, `t_end` and `subtract_values` have the
+    same meaning as in the function `FFT_m`.
 
     `components` can be a string or a list containing the components
     to plot. Default: 'xyz'.
@@ -113,7 +120,7 @@ def plot_FFT_m(ndt_filename, t_step, t_ini=0.0, subtract_values=None,
         raise ValueError("Components must only contain 'x', 'y' and 'z'. "
                          "Got: {}".format(components))
 
-    fft_freq, fft_mx, fft_my, fft_mz = FFT_m(ndt_filename, t_step, t_ini, subtract_values)
+    fft_freq, fft_mx, fft_my, fft_mz = FFT_m(ndt_filename, t_step, t_ini, t_end, subtract_values)
     fft_freq_GHz = fft_freq / 1e9
     fig = plt.figure(figsize=figsize)
     ax = fig.gca()
