@@ -2,9 +2,88 @@ from __future__ import division
 from fft import *
 
 import numpy as np
-from numpy import sin, cos, pi, exp, real, conj
+from numpy import sqrt, sin, cos, pi, exp, real, conj
 import matplotlib.pyplot as plt
+import subprocess as sp
 import logging
+import os
+
+from finmag.util.consts import gamma, mu0
+
+
+def test_FFT_m(tmpdir):
+    os.chdir(str(tmpdir))
+    RTOL = 1e-10
+
+    #
+    # Construct a time series of artificial magnetisation data and
+    # save it to a .ndt file.
+    #
+    H = 1e6  # external field in A/m
+    omega = gamma * H  # precession frequency
+    alpha = 0.5  # some sort of damping constant
+    print "Precessional frequency: {} GHz".format(omega / 1e9)
+
+    t_step = 1e-11
+    t_ini = 0
+    t_end = 10e-9
+
+    ts = np.arange(t_ini, t_end, t_step)
+    print len(ts)
+
+    # Use damped harmonic oscillator to create fake magnetisation dynamics
+    mx = exp(-ts * 1e8 / alpha) * sin(omega * ts)
+    my = exp(-ts * 1e8 / alpha) * cos(omega * ts)
+    mz = 1 - sqrt(mx**2 + my**2)
+
+    fig = plt.figure(figsize=(20, 5))
+    ax = fig.gca()
+    ax.plot(ts, mx)
+    ax.plot(ts, my)
+    ax.plot(ts, mz)
+    fig.savefig('m_vs_t.png')
+
+    data = np.array([ts, mx, my, mz]).T
+
+    # The sed commands add the two header lines which are expected
+    # in a .ndt file
+    ndt_filename = 'fake_relaxation.ndt'
+    np.savetxt(ndt_filename, data)
+    sp.check_call("sed -i '1 i # time  m_x  m_y  m_z' ./fake_relaxation.ndt", shell=True)
+    sp.check_call("sed -i '2 i # <s>   <>   <>   <>' ./fake_relaxation.ndt", shell=True)
+
+    #
+    # Now compute the FFT of a resampled time series, both by hand and
+    # using FFT_m and check that the results are the same.
+    #
+    t_step_res = 2e-11
+    t_ini_res = 1e-10
+    t_end_res = 9.9e-9
+    ts_resampled = np.arange(t_ini_res, t_end_res, t_step_res)
+    N = len(ts_resampled) // 2 + 1  # expected length of real-valued FFT
+
+    # Compute time series based on resampled timesteps
+    mx_res = exp(-ts_resampled * 1e8 / alpha) * sin(omega * ts_resampled)
+    my_res = exp(-ts_resampled * 1e8 / alpha) * cos(omega * ts_resampled)
+    mz_res = 1 - sqrt(mx_res**2 + my_res**2)
+
+    # Compute 'analytical' Fourier transform of resampled time series
+    fft_mx_res_expected = abs(np.fft.rfft(mx_res))
+    fft_my_res_expected = abs(np.fft.rfft(my_res))
+    fft_mz_res_expected = abs(np.fft.rfft(mz_res))
+
+    # Compute Fourier transform of resampled time series using FFT_m
+    fft_freqs_res, fft_mx_res, fft_my_res, fft_mz_res = \
+        FFT_m(ndt_filename, t_step_res,t_ini=t_ini_res, t_end=t_end_res)
+
+    # Compare both results
+    assert(np.allclose(fft_mx_res, fft_mx_res_expected, atol=0, rtol=RTOL))
+    assert(np.allclose(fft_my_res, fft_my_res_expected, atol=0, rtol=RTOL))
+    assert(np.allclose(fft_mz_res, fft_mz_res_expected, atol=0, rtol=RTOL))
+
+    # Also check that the frequency range is as expected
+    fft_freqs_np = np.fft.fftfreq(len(ts_resampled), d=t_step_res)[:N]
+    assert(np.allclose(fft_freqs_res, fft_freqs_np, atol=0, rtol=RTOL))
 
 
 def test_analytical_inverse_DFT():
