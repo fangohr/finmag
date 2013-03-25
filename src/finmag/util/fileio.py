@@ -201,6 +201,11 @@ class FieldSaver(object):
         if not filename.endswith('.npy'):
             filename += '.npy'
 
+        # Create any non-existing directory components
+        dirname = os.path.dirname(filename)
+        if dirname != '' and not os.path.exists(dirname):
+            os.makedirs(dirname)
+
         self.filename = filename
         self.basename, self.ext = os.path.splitext(filename)
         self.incremental = incremental
