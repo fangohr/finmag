@@ -133,6 +133,19 @@ class FKDemag(object):
         self._setup_gradient_computation()
 
     @mtimed(default_timer)
+    def compute_potential(self):
+        """
+        Compute the magnetic potential.
+
+        *Returns*
+            df.Function
+                The magnetic potential.
+
+        """
+        self._compute_magnetic_potential()
+        return self._phi
+
+    @mtimed(default_timer)
     def compute_field(self):
         """
         Compute the demagnetising field.
