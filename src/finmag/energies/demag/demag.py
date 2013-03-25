@@ -113,6 +113,8 @@ class Demag(object):
         return self.demag.compute_energy()
 
     def compute_potential(self):
+        if self.solver == "FK":
+            return self.demag.compute_potential()
         self.demag.solve()
         return self.demag.phi
 
