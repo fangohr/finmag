@@ -14,7 +14,7 @@ from numpy import sin, cos, pi
 logger = logging.getLogger("finmag")
 
 
-def FFT_m(ndt_filename, t_step, t_ini=0, t_end=None, subtract_values=None):
+def FFT_m(ndt_filename, t_step, t_ini=None, t_end=None, subtract_values=None):
     """
     Given a data file (e.g. in .ndt format), compute and return the Fourier
     transforms of the x, y and z components of the magnetisation m. The
@@ -33,13 +33,14 @@ def FFT_m(ndt_filename, t_step, t_ini=0, t_end=None, subtract_values=None):
     t_ini:
 
         Initial time for the resampled data (all input data before
-        this time is discarded). Defaults to zero.
+        this time is discarded). Defaults to the first time step saved
+        in the .ndt data file.
 
     t_end:
 
         Last time step for the resampled data (all input data after
         this time is discarded). Defaults to the last time step saved
-        in the .ndt file.
+        in the .ndt data file.
 
     subtract_values:  None | 3-tuple of floats | 'first' | 'average'
 
@@ -77,8 +78,8 @@ def FFT_m(ndt_filename, t_step, t_ini=0, t_end=None, subtract_values=None):
             raise ValueError("Unsupported value for 'subtract_values': {}".format(subtract_values))
 
     f_sample = 1/t_step  # sampling frequency
-    if t_end is None:
-        t_end = ts[-1]
+    if t_ini is None: t_ini = ts[0]
+    if t_end is None: t_end = ts[-1]
 
     # Interpolating functions for mx, my, mz
     f_mx = InterpolatedUnivariateSpline(ts, mx)
@@ -103,7 +104,7 @@ def FFT_m(ndt_filename, t_step, t_ini=0, t_end=None, subtract_values=None):
     return rfft_freqs, fft_mx, fft_my, fft_mz
 
 
-def plot_FFT_m(ndt_filename, t_step, t_ini=0.0, t_end=None, subtract_values=None,
+def plot_FFT_m(ndt_filename, t_step, t_ini=None, t_end=None, subtract_values=None,
                components="xyz", xlim=None, figsize=None):
     """
     Plot the frequency spectrum of the components of the magnetisation m.
