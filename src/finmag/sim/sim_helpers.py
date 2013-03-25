@@ -27,7 +27,7 @@ def create_backup_file_if_file_exists(filename, backupextension='.backup'):
 
 
 def canonical_restart_filename(sim):
-    return sim.name + "-restart.npz"
+    return sim.sanitized_name + "-restart.npz"
 
 
 def save_restart_data(sim, filename=None):
