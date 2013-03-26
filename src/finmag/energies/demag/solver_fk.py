@@ -264,7 +264,10 @@ class FemBemFKSolver(sb.FemBemDeMagSolver):
         # Linear Solver parameters
         method = parameters["poisson_solver"]["method"]
         pc = parameters["poisson_solver"]["preconditioner"]
-        
+
+        if solver_type is None:
+            solver_type = 'Krylov'
+        solver_type = solver_type.lower()
         if solver_type == 'lu':
             self.poisson_solver = df.LUSolver(self.poisson_matrix)
             self.poisson_solver.parameters["reuse_factorization"] = True

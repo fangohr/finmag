@@ -110,6 +110,9 @@ class FemBemDeMagSolver(object):
         else:
             method, pc = "default", "default"
 
+        if solver_type is None:
+            solver_type = 'Krylov'
+        solver_type = solver_type.lower()
         if solver_type == 'lu':
             self.laplace_solver = df.LUSolver()
             self.laplace_solver.parameters["reuse_factorization"] = True
