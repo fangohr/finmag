@@ -88,10 +88,10 @@ def FFT_m(ndt_filename, t_step, t_ini=None, t_end=None, subtract_values=None):
     f_mz = InterpolatedUnivariateSpline(ts, mz)
 
     # Sample the interpolating functions at regularly spaced time steps
-    t_sampling = np.arange(t_ini, t_end, t_step)
-    mx_resampled = [f_mx(t) for t in t_sampling]
-    my_resampled = [f_my(t) for t in t_sampling]
-    mz_resampled = [f_mz(t) for t in t_sampling]
+    ts_resampled = np.arange(t_ini, t_end, t_step)
+    mx_resampled = [f_mx(t) for t in ts_resampled]
+    my_resampled = [f_my(t) for t in ts_resampled]
+    mz_resampled = [f_mz(t) for t in ts_resampled]
 
     fft_mx = abs(np.fft.rfft(mx_resampled))
     fft_my = abs(np.fft.rfft(my_resampled))
@@ -100,7 +100,7 @@ def FFT_m(ndt_filename, t_step, t_ini=None, t_end=None, subtract_values=None):
 
     # When using np.fft.fftfreq, the last frequency sometimes becomes
     # negative; to avoid this we compute the frequencies by hand.
-    rfft_freqs = np.arange(n) / (t_step*len(t_sampling))
+    rfft_freqs = np.arange(n) / (t_step*len(ts_resampled))
 
     return rfft_freqs, fft_mx, fft_my, fft_mz
 
