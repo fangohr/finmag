@@ -122,14 +122,14 @@ def plot_FFT_m(ndt_filename, t_step, t_ini=None, t_end=None, subtract_values=Non
         raise ValueError("Components must only contain 'x', 'y' and 'z'. "
                          "Got: {}".format(components))
 
-    fft_freq, fft_mx, fft_my, fft_mz = FFT_m(ndt_filename, t_step, t_ini, t_end, subtract_values)
+    fft_freq, fft_mx, fft_my, fft_mz = FFT_m(ndt_filename, t_step, t_ini=t_ini, t_end=t_end, subtract_values=subtract_values)
     fft_freq_GHz = fft_freq / 1e9
     fig = plt.figure(figsize=figsize)
     ax = fig.gca()
     if 'x' in components: ax.plot(fft_freq_GHz, fft_mx, '.-', label=r'FFT of $m_x$')
     if 'y' in components: ax.plot(fft_freq_GHz, fft_my, '.-', label=r'FFT of $m_y$')
     if 'z' in components: ax.plot(fft_freq_GHz, fft_mz, '.-', label=r'FFT of $m_z$')
-    ax.set_xlabel('fGHz')
+    ax.set_xlabel('Frequency (GHz)')
     ax.set_ylabel('Amplitude')
     fmin = int(min(fft_freq) / 1e9)
     fmax = int(max(fft_freq) / 1e9)
