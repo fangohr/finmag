@@ -104,7 +104,7 @@ class FKDemag(object):
         # for computation of energy
         self._nodal_volumes = nodal_volume(self.S1, unit_length)
         self._H_func = df.Function(S3)  # we will copy field into this when we need the energy
-        self._E_integrand = -0.5 * mu0 * df.dot(self._H_func, self.Ms * self.m)
+        self._E_integrand = -0.5 * mu0 * df.dot(self._H_func, self.m * self.Ms)
         self._E = self._E_integrand * df.dx
         self._nodal_E = df.dot(self._E_integrand, self._test1) * df.dx
         self._nodal_E_func = df.Function(self.S1)
