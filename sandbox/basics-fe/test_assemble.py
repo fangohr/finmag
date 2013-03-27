@@ -50,8 +50,8 @@ def test_assemble(mesh):
 
 if __name__ == "__main__":
         
-    mesh = df.UnitSphere(1)
-    mesh = Rectangle(0, 0, 2, 2, 1, 1)
+    mesh = df.UnitCubeMesh(1,1,1)
+    mesh = RectangleMesh(0, 0, 2, 2, 1, 1)
     test_assemble(mesh)
 
     
