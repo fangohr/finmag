@@ -5613,3 +5613,36 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-03-22 09:55:45 mb8g11: My guess it's for a PETSc preconditioner.
 2013-03-22 09:56:02 max_albert: Yes, that makes sense.
 2013-03-22 17:12:38 max_albert: Hi Marc-Antonio, are you there by any chance?
+2013-03-27 09:51:09 fangohr-adium1: Hello Marvin_Bot; good to see you again.
+2013-03-27 09:53:00 fangohr-adium1: finmag-dg0: We have discussed at various points with various people that it might be interesting to run finite element micromagnetics with basis functions that are constant throughout a cell, i.e. discontinous galerkin elements of order 0. This would be a little bit like the finite difference approach (fields constant in each cell) but with irregular cell shapes.
+2013-03-27 09:55:47 fangohr-adium1: Why the extra repository? Weiwei has started some work on this and changed the time integration to be based on DG0 cells but computes the effective field with CG1 on the nodes (and then interpolates backwards and forwards). I have started to change effective field computation to use DG0 instead of CG1 (but not touched the time integration). I have not completed the job: my version fails to compile a  form. Also, I have changed the hard coded 'CG1
+2013-03-27 10:02:57 fangohr-adium1: What do we expect from DG0? We expect an increase of degrees of freedom (as there are more tetrahedra than nodes in an unstructured mesh); so in some sense that should make things worse. However, there may be other positive effects (maybe stiffness matrices are less stiff) that we can't understand now, and this may come in handy for particular problems.
+2013-03-27 11:44:28 fangohr: Marc-Antonio, are you still there? I am thinking about adding finmag emails to the repository using something like Marvin Bot. In principle this shouldn't be hard. We need to
+2013-03-27 11:44:37 fangohr: (i) have an email account for Marvin_Bot
+2013-03-27 11:44:44 fangohr: (ii) subscribe that email account to finmag-team
+2013-03-27 11:44:56 fangohr: (iii) use fetchmail or getmail to regularly fetch email from that account and
+2013-03-27 11:45:11 fangohr: (iv) append it to a text file in the repository (in the same way as we append IRC messages to a text file in the repository) and
+2013-03-27 11:45:15 fangohr: (v) commit nightly.
+2013-03-27 11:45:56 fangohr: Regarding implementation: (v) is done already for the irc, so we could just re-use that account on summer.kk.
+2013-03-27 11:46:23 fangohr: Regarding (i): have we got an email account for marvin already? [I suppose we could create one on gmail if required.]
+2013-03-27 11:50:01 mb8g11: I am.
+2013-03-27 11:51:11 mb8g11: Well, there is the one on bisotti.de, but an independent one on gmail will be better. And we could move marvin's bitbucket account to the new e-mail address.
+2013-03-27 11:52:59 mb8g11: But there is software that exists for this purpose, like Hypermail.
+2013-03-27 11:56:27 mb8g11: Hypermail + Swish-e (or other) = Indexed and searchable HTML archive of mailing list.
+2013-03-27 11:56:55 mb8g11: Using open-source software.
+2013-03-27 11:57:43 mb8g11: It basically transforms a mailbox to HMTL.
+2013-03-27 11:58:14 mb8g11: I would prefer this to raw copying of mails to a text-file, since the latter doesn't respect intertwined threads.
+2013-03-27 12:06:15 mb8g11: There's no way we could get an e-mail address for Marvin from isolutions, is thee?
+2013-03-27 13:39:46 fangohr: Hi Marc-Antonio, thanks for the input. How about storing the mailbox file in the repository, and doing the conversion to html when we need it?
+2013-03-27 13:40:07 fangohr: Don't think isolutions can give us an account for Marvin. But is anything wrong with a gmail account?
+2013-03-27 13:57:03 mb8g11: Not at all.
+2013-03-27 13:57:12 mb8g11: *Nothing
+2013-03-27 13:58:10 mb8g11: We can do that - I presume this is because it gives us an additional layer of backup? Or is this because one may want to grep through it?
+2013-03-27 14:16:10 fangohr: Yes, 'grep' indeed, or just load the file in an editor and search for the keywords. There is even a tool called 'mgrep' or 'mailgrep' which works on an mbox file and will display those mails out of it that contain the term you grep for.
+2013-03-27 14:16:52 fangohr: I accept the thread-argument, but if we can create that dynamically, it seems more elegant than to put all the html tags and overheads into the repository. Not a big deal in any case.
+2013-03-27 14:27:50 mb8g11: Will you create the e-mail account? I'll happily set up the mailbox on aleph0 then.
+2013-03-27 15:46:48 fangohr: Hi MA, the email account is marvinbotfinmag@gmail.com.
+2013-03-27 15:53:05 fangohr: I have also subscribed MarvinBot to the mailing list now.
+2013-03-27 16:28:45 fangohr: Marc-Antonio, if you could do (iii) and (iv) from the list above, and (v) is done already due to the IRC logging, then we should be done (I have dealt with (i) and (ii)). Thanks for your help with this.
+2013-03-27 18:13:10 mb8g11_: I like the Marvin's avatar :)
+2013-03-27 18:21:07 mb8g11_: Will start by setting up fetchmail and procmail on aleph0.
