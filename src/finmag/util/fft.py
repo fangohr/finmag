@@ -186,8 +186,8 @@ def fft_at_probing_points(dolfin_funcs, pts):
 
 
 def plot_spatially_resolved_normal_modes(m_vals_on_grid, idx_fourier_coeff,
-                                         t_step=None, figsize=None,
-                                         yshift_title=1.5, cmap=cm.jet):
+                                         t_step=None, figsize=None, yshift_title=1.5,
+                                         show_colorbars=True, cmap=cm.jet):
     """
     XXX Warning: The interface for this function hasn't matured yet,
                  so be prepared for it to change in the future.
@@ -227,6 +227,10 @@ def plot_spatially_resolved_normal_modes(m_vals_on_grid, idx_fourier_coeff,
         used to tweak the figure if the title overlaps with one of the
         colorbars, say).
 
+    show_colorbars : bool
+
+        Whether to show a colorbar in each subplot (default: True).
+
     cmap :
 
         The colormap to use.
@@ -244,14 +248,16 @@ def plot_spatially_resolved_normal_modes(m_vals_on_grid, idx_fourier_coeff,
         ax = fig.add_subplot(2, 3, k+1)
         ax.set_title('m_{}'.format('xyz'[k]))
         im = ax.imshow(abs(fft_vals[idx_fourier_coeff, :, :, 0, k]), origin='lower', cmap=cmap)
-        fig.colorbar(im)
+        if show_colorbars:
+            fig.colorbar(im)
         axes.append(ax)
 
         ax = fig.add_subplot(2, 3, k+3+1)
         axes.append(ax)
         ax.set_title('m_{} (phase)'.format('xyz'[k]))
         im = ax.imshow(np.angle(fft_vals[idx_fourier_coeff, :, :, 0, k], deg=True), origin='lower', cmap=cmap)
-        fig.colorbar(im)
+        if show_colorbars:
+            fig.colorbar(im)
     if t_step != None:
         # XXX TODO: Which value of nn is the correct one?
         #nn = n
@@ -264,6 +270,7 @@ def plot_spatially_resolved_normal_modes(m_vals_on_grid, idx_fourier_coeff,
              transform = axes[2].transAxes)
     else:
         logger.warning("Omitting figure title because no t_step argument was specified.")
+    plt.tight_layout()
 
     return fig
 
@@ -423,9 +430,9 @@ def export_normal_mode_animation(npy_files, outfilename, mesh, t_step, k, scalin
     #for i in xrange(20):
     import sys
     for i in xrange(N):
-        if i % 20 == 0:
-            print "i={} ".format(i),
-            sys.stdout.flush()
+        #if i % 20 == 0:
+        #    print "i={} ".format(i),
+        #    sys.stdout.flush()
         aaa[:] = signal_normal_mode[i][:]
         func.vector()[:] = aaa
         f << func
