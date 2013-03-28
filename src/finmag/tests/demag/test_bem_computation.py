@@ -22,11 +22,6 @@ def compute_belement_magpar(r1, r2, r3):
     compute_belement(np.zeros(3), np.array(r1, dtype=float), np.array(r2, dtype=float), np.array(r3, dtype=float), res)
     return res
 
-def compute_demag_solver():
-    g1 = df.assemble(self.Ms * df.dot(self.n, self.m) * self.v * df.ds\
-    - self.Ms * df.div(self.m) * self.v * df.dx)
-    self.phi1_solver.solve(self.phi1.vector(), g1)
-
 def normalise_phi(phi, mesh):
     volume = mesh_volume(mesh)
     average = df.assemble(phi * df.dx, mesh=mesh)
@@ -35,6 +30,7 @@ def normalise_phi(phi, mesh):
 def compute_scalar_potential_llg(mesh, m_expr=df.Constant([1, 0, 0]), Ms=1.):
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
     m = df.interpolate(m_expr, S3)
+    m.vector()[:] = helpers.fnormalise(m.vector().array())
 
     demag = Demag()
     demag.setup(S3, m, Ms=Ms, unit_length=1)
@@ -160,15 +156,15 @@ class BemComputationTests(unittest.TestCase):
             for k in xrange(1,5+1):
                 self.run_demag_computation_test(df.UnitCubeMesh(k,k,k), exp,
                                                 compute_scalar_potential_native_fk,
-                                                "native, FK")
+                                                "native, FK", k=k)
                 
                 self.run_demag_computation_test(sphere(1., 1./k), exp,
                                                 compute_scalar_potential_native_fk,
-                                                "native, FK")
+                                                "native, FK", k=k)
                 
             self.run_demag_computation_test(MagSphereBase(0.25, 1).mesh, exp,
                                             compute_scalar_potential_native_fk,
-                                            "native, FK")
+                                            "native, FK", k=k)
 
 
     @pytest.mark.skipif("get_version_dolfin()[:3] != '1.0'")
