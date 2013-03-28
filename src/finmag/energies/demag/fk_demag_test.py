@@ -85,3 +85,14 @@ def test_energy_density_for_uniformly_magnetised_sphere_as_function():
     print "Maximum relative difference = {:.3g}%. Comparing to limit {:.3g}%.".format(
         100 * rel_diff, 100 * REL_TOL)
     assert rel_diff < REL_TOL
+
+def test_regression_Ms_numpy_type():
+    mesh = sphere(r=radius, maxh=maxh)
+    S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
+
+    m = df.Function(S3)
+    m.assign(df.Constant((1, 0, 0)))
+
+    Ms = np.sqrt(6.0 / mu0)  # math.sqrt(6.0 / mu0) would work
+    demag = FKDemag()
+    demag.setup(S3, m, Ms, unit_length)  # this used to fail
