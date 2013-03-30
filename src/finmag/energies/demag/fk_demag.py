@@ -120,7 +120,7 @@ class FKDemag(object):
         self._laplace_solver.parameters.update(self.parameters['phi_2'])
         self._laplace_solver.parameters["preconditioner"]["same_nonzero_pattern"] = True
         with timed('compute BEM', self.__class__.__name__, fk_timer):
-            self._bem, self._b2g_map = compute_bem_fk(df.BoundaryMesh(mesh, False))
+            self._bem, self._b2g_map = compute_bem_fk(df.BoundaryMesh(mesh, 'exterior', False))
         self._phi_1 = df.Function(self.S1)  # solution of inhomogeneous Neumann problem
         self._phi_2 = df.Function(self.S1)  # solution of Laplace equation inside domain
         self._phi = df.Function(self.S1)  # magnetic potential phi_1 + phi_2
