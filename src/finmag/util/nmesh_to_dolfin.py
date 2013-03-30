@@ -164,12 +164,13 @@ class Emitter(object):
         s = '    <vertices size="{}">'
         self._write(s.format(n))
 
-    def vertex(self, (x, y, z)):
+    def vertex(self, coords):
         """
         Save a single vertex with the coordinates `x`, `y` and `z`.
         Indexed automatically.
 
         """
+        x, y, z = coords
         if not self._done_with_vertices:
             s = '      <vertex index="{}" x="{}" y="{}" z="{}" />'
             self._write(s.format(self.vi, x, y, z))
@@ -189,13 +190,14 @@ class Emitter(object):
         s = '    <cells size="{}">'
         self._write(s.format(n))
 
-    def simplex(self, (region, v0, v1, v2, v3)):
+    def simplex(self, argtuple):
         """
         Save a single simplex, identified by its vertices `v0`, `v1`, `v2` and `v3`.
         Region number is discarded as of now.
         Indexed automatically.
 
         """
+        region, v0, v1,v2, v3 = argtuple
         if not self._done_with_simplices:
             s = '      <tetrahedron index="{}" v0="{}" v1="{}" v2="{}" v3="{}" />'
             self._write(s.format(self.si, v0, v1, v2, v3))
