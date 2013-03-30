@@ -5,6 +5,7 @@ from finmag.energies import DMI,Exchange
 from finmag import Simulation
 from finmag.util.helpers import vector_valued_function
 
+@pytest.skip
 def test_dmi_pbc2d():
     mesh = df.BoxMesh(0, 0, 0, 1, 1, 0.1, 5, 5, 1)
 

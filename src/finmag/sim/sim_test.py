@@ -451,6 +451,7 @@ class TestSimulation(object):
         H = sim.probe_field('Zeeman', [0.5e-9, 0.5e-9, 0.5e-9])
         assert(np.allclose(H, [-4, -5, -6]))
 
+    @pytest.skip
     def test_pbc2d_m_init(self):
 
         def m_init_fun(pos):
