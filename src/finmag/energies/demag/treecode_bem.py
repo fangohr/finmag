@@ -37,7 +37,7 @@ class TreecodeBEM(sb.FemBemDeMagSolver):
         
         self.mesh=mesh
         
-        self.bmesh = df.BoundaryMesh(mesh,False)
+        self.bmesh = df.BoundaryMesh(mesh, 'exterior', False)
         self.b2g_map = self.bmesh.vertex_map().array()
         
         self.compute_triangle_normal()

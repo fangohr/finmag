@@ -78,7 +78,7 @@ class BemComputationTests(unittest.TestCase):
     def test_cell_ordering(self):
         mesh = df.UnitCubeMesh(1,1,1)
         centre = np.array([0.5, 0.5, 0.5])
-        boundary_mesh = df.BoundaryMesh(mesh, False)
+        boundary_mesh = df.BoundaryMesh(mesh, 'exterior', False)
         coordinates = boundary_mesh.coordinates()
         for i in xrange(boundary_mesh.num_cells()):
             cell = df.Cell(boundary_mesh, i)
@@ -95,7 +95,7 @@ class BemComputationTests(unittest.TestCase):
 
         bem_magpar,g2finmag = belement.BEM_matrix(mesh)
         bem_finmag = np.zeros(bem_magpar.shape)
-        bem, b2g = compute_bem_fk(df.BoundaryMesh(mesh, False))
+        bem, b2g = compute_bem_fk(df.BoundaryMesh(mesh, 'exterior', False))
         for i_dolfin in xrange(bem.shape[0]):
             i_finmag = g2finmag[b2g[i_dolfin]]
 
@@ -117,10 +117,10 @@ class BemComputationTests(unittest.TestCase):
 
     def test_bem_perf(self):
         mesh = df.UnitCubeMesh(15, 15, 15)
-        boundary_mesh = df.BoundaryMesh(mesh, False)
+        boundary_mesh = df.BoundaryMesh(mesh, 'exterior', False)
         c = time_counter.counter()
         while c.next():
-            df.BoundaryMesh(mesh, False)
+            df.BoundaryMesh(mesh, 'exterior', False)
         print "Boundary mesh computation for %s: %s" % (mesh, c)
         c = time_counter.counter()
         while c.next():
@@ -135,7 +135,7 @@ class BemComputationTests(unittest.TestCase):
     def test_bem_netgen(self):
         module_dir = os.path.dirname(os.path.abspath(__file__))
         netgen_mesh = df.Mesh(os.path.join(module_dir, "bem_netgen_test_mesh.xml.gz"))
-        bem, b2g_map = compute_bem_fk(df.BoundaryMesh(netgen_mesh, False))
+        bem, b2g_map = compute_bem_fk(df.BoundaryMesh(netgen_mesh, 'exterior', False))
 
     def run_demag_computation_test(self, mesh, m_expr, compute_func, method_name, tol=1e-10, ref=compute_scalar_potential_llg,k = 0):
         phi_a = ref(mesh, m_expr)

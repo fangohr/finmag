@@ -711,7 +711,7 @@ def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, dg_fun=None,**kwar
                 "release is 1.2.0, so you have to install the development "
                 "version manually. Apologies for the inconvenience!")
 
-        bm = df.BoundaryMesh(mesh)
+        bm = df.BoundaryMesh(mesh, 'exterior')
         coords = bm.coordinates()
 
         x = coords[:, 0]

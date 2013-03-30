@@ -204,7 +204,7 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver,PEQBuilder):
         
         #Buffer the BEM
         gcr_timings.start_next("build BEM", self.__class__.__name__)
-        self.boundary_mesh = df.BoundaryMesh(self.mesh, False)
+        self.boundary_mesh = df.BoundaryMesh(self.mesh, 'exterior', False)
         self.bem, self.b2g = compute_bem_gcr(self.boundary_mesh)
         gcr_timings.stop("build BEM", self.__class__.__name__)
 
