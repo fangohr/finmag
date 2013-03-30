@@ -46,10 +46,6 @@ class PEQBuilder(object):
         dm = self.V.dofmap()
         boundarydofs = self.get_boundary_dofs(self.V)
 
-        #It is very import that this vector has the right length
-        #It holds the local dof numbers associated to a facet
-        facetdofs = np.zeros(dm.num_facet_dofs(),dtype=np.uintc)
-
         #Initialize dof-to-normal dictionary
         doftonormal = {}
         doftionary = {}
@@ -84,7 +80,7 @@ class PEQBuilder(object):
                 #Find Normals
                 #######################################
                 local_fi = cell.index(facet)
-                dm.tabulate_facet_dofs(facetdofs,local_fi)
+                facetdofs = dm.tabulate_facet_dofs(local_fi)
                 #Global numbers of facet dofs
                 globaldoffacet = [globaldofcell[ld] for ld in facetdofs]
                 #add the facet's normal to every dof it contains
