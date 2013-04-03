@@ -106,7 +106,7 @@ def FFT_m(ndt_filename, t_step, t_ini=None, t_end=None, subtract_values=None):
 
 
 def plot_FFT_m(ndt_filename, t_step, t_ini=None, t_end=None, subtract_values=None,
-               components="xyz", xlim=None, figsize=None):
+               components="xyz", xlim=None, ticks=5, figsize=None):
     """
     Plot the frequency spectrum of the components of the magnetisation m.
 
@@ -133,12 +133,16 @@ def plot_FFT_m(ndt_filename, t_step, t_ini=None, t_end=None, subtract_values=Non
     ax.set_ylabel('Amplitude')
     fmin = int(min(fft_freq) / 1e9)
     fmax = int(max(fft_freq) / 1e9)
-    ax.set_xticks(np.arange(fmin, fmax))
+
+    if xlim != None:
+        fmax = xlim[1]
+
+    ax.set_xticks(np.linspace(fmin, fmax, ticks))
     ax.set_xlim(xlim)
     plt.legend()
     ax.grid()
 
-    return ax
+    return fig
 
 
 def fft_at_probing_points(dolfin_funcs, pts):
