@@ -6,6 +6,7 @@ import os
 import shutil
 from glob import glob
 from tempfile import mkdtemp
+from distutils.version import StrictVersion
 from finmag import sim_with, Simulation
 from finmag.example import barmini
 from math import sqrt, cos, sin, pi
@@ -451,7 +452,7 @@ class TestSimulation(object):
         H = sim.probe_field('Zeeman', [0.5e-9, 0.5e-9, 0.5e-9])
         assert(np.allclose(H, [-4, -5, -6]))
 
-    @pytest.skip
+    @pytest.mark.skipif("not StrictVersion(df.__version__) < StrictVersion('1.2.0')")
     def test_pbc2d_m_init(self):
 
         def m_init_fun(pos):
