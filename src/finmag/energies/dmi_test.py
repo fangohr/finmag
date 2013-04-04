@@ -1,11 +1,12 @@
 import pytest
 import numpy as np
 import dolfin as df
+from distutils.version import StrictVersion
 from finmag.energies import DMI,Exchange
 from finmag import Simulation
 from finmag.util.helpers import vector_valued_function
 
-@pytest.skip
+@pytest.mark.skipif("not StrictVersion(df.__version__) < StrictVersion('1.2.0')")
 def test_dmi_pbc2d():
     mesh = df.BoxMesh(0, 0, 0, 1, 1, 0.1, 5, 5, 1)
 
@@ -20,6 +21,7 @@ def test_dmi_pbc2d():
     assert np.max(field) < 1e-15
 
 
+@pytest.mark.skipif("not StrictVersion(df.__version__) < StrictVersion('1.2.0')")
 def test_dmi_pbc2d_1D(plot=False):
 
     def m_init_fun(p):
