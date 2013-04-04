@@ -192,10 +192,10 @@ def plot_random_number_np():
 
 if __name__ == "__main__":
     #test_sllg_zero_temperature(do_plot=True)
-    #test_sllg_100(do_plot=True)
+    test_sllg_100(do_plot=True)
     #test_sllg_time()
     #test_sllg_save_data()
-    plot_random_number()
+    #plot_random_number()
     #plot_random_number_np()
     
 
