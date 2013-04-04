@@ -129,7 +129,8 @@ namespace finmag { namespace llg {
         np_array<double> bem(n, n);
         // compute the boundary-to-global index mapping
         np_array<int> b2g_map(n);
-        auto values = bm.entity_map(0).values();
+        //auto values = bm.entity_map(0).values();//seems doesn't work so far, 4-April-2013
+        auto values = bm.vertex_map().values();
         for (int i = 0; i < n; i++) b2g_map.data()[i] = values[i];
 
         // compute the BEM
