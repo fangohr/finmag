@@ -5660,3 +5660,8 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-04-03 15:45:32 mb8g11: Hi Max, are you working on the normal modes ipython notebook right now? Going through it and might edit it a little.
 2013-04-04 09:27:38 fangohr-adium1: Good Morning.
 2013-04-04 12:16:20 ww1g11: Hi, it seems new finmag doesn't work? failed to compile bem.cc, does finmag work for dolfin1.1 or dolfin1.2, I just doubt I broke the dolfin package
+2013-04-05 09:48:51 fangohr-adium1: Hi Weiwei, not sure what you mean exactly. What breaks, and does it still run on Jenkins?
+2013-04-05 11:36:49 ww1g11: There is no PeriodicBC class anymore in dolfin 1.2, which was moved into functionspace and can be used with option constrained_domain=pbc when construct a functionspace
+2013-04-05 11:37:16 fangohr-adium1: Hm, interesting. Will this work for us??
+2013-04-05 11:37:46 ww1g11: I guess it does, but we need to change the interface slightly
+2013-04-05 17:16:31 fangohr-adium1: Hi all, I am off to Italy tomorrow morning. Back on Thursday in the office, probably won't have email until then.
