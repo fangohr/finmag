@@ -29,7 +29,7 @@ class LLG(object):
 
     """
     @mtimed
-    def __init__(self, S1, S3, do_precession=True,pbc2d=None):
+    def __init__(self, S1, S3, do_precession=True):
         """
         S1 and S3 are df.FunctionSpace and df.VectorFunctionSpace objects,
         and the boolean do_precession controls whether the precession of the
@@ -40,13 +40,11 @@ class LLG(object):
         self.S1 = S1
         self.S3 = S3
         self.mesh=S1.mesh()
-        self.nxyz=self.mesh.num_vertices()
-        self._Ms = np.zeros(self.nxyz)
-        self.pbc2d=pbc2d
+        
         self.set_default_values()
         self.do_precession = do_precession
         self.do_slonczewski = False
-        self.effective_field = EffectiveField(S3.mesh())
+        self.effective_field = EffectiveField(S3)
         self.Volume = None  # will be computed on demand, and carries volume of the mesh 
                
 
@@ -54,10 +52,7 @@ class LLG(object):
     def set_default_values(self):
         self._alpha_mult = df.Function(self.S1)
         self._alpha_mult.assign(df.Constant(1))
-        
-        if self.pbc2d:
-            self.pbc2d=PeriodicBoundary2D(self.S3)
-        
+                
         self.alpha = 0.5  # alpha for solve: alpha * _alpha_mult
         self.gamma = consts.gamma
         self.c = 1e11  # 1/s numerical scaling correction \
@@ -91,10 +86,7 @@ class LLG(object):
         else:
             self._pins = np.array([], dtype="int")
         
-        if self.pbc2d:
-            self._pins=np.concatenate([self.pbc2d.ids_pbc,self._pins])
-            
-
+        
     def pins(self):
         return self._pins
     pins = property(pins, set_pins)
@@ -128,10 +120,10 @@ class LLG(object):
     
     @Ms.setter
     def Ms(self, value):
-        self._Ms_dg=helpers.scalar_valued_dg_function(value, self.mesh)
+        self._Ms_dg=helpers.scalar_valued_dg_function(value, self.S1)
         self.volumes = df.assemble(df.TestFunction(self.S1) * df.dx)
-        Ms=df.assemble(self._Ms_dg*df.TestFunction(self.S1)* df.dx).array()/self.volumes
-        self._Ms[:] = Ms[:]
+        Ms = df.assemble(self._Ms_dg*df.TestFunction(self.S1)* df.dx).array()/self.volumes
+        self._Ms = Ms.copy()
         self.Ms_av = np.average(self._Ms_dg.vector().array())
 
     @property
@@ -160,11 +152,7 @@ class LLG(object):
         # Not enforcing unit length here, as that is better done
         # once at the initialisation of m.
         self._m.vector()[:] = value
-        
-        if self.pbc2d:
-            self.pbc2d.modify_m(self._m.vector())
-
-    
+            
     def m_average_fun(self,dx=df.dx):
         """
         Compute and return the average polarisation according to the formula
@@ -229,6 +217,7 @@ class LLG(object):
                                  self.gamma, self.alpha_vec,
                                  char_time, self.do_precession)
         dmdt.shape = (-1,)
+        H_eff.shape=(-1,)
 
         default_timer.stop("solve", self.__class__.__name__)
 

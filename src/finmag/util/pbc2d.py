@@ -5,60 +5,34 @@ import numpy as np
 import finmag
 
 
-class PeriodicBoundaryX(df.SubDomain):
-    
-    def __init__(self,xmin,width,dim):
-        super(PeriodicBoundaryX, self).__init__()
-        self.xmin=xmin
-        self.width=width
-        self.dim=dim
+
+class PeriodicBoundary2D(df.SubDomain):
+    """
+    Periodic Boundary condition in xy-plane.
+    """
+    def __init__(self, mesh):
+        super(PeriodicBoundary2D, self).__init__()
         
-
-    def inside(self, x, on_boundary):
-        return df.near(x[0],self.xmin) and on_boundary
-
-    def map(self, x, y):
-        y[0] = x[0] - self.width
-        y[1] = x[1]
-        if self.dim==3:
-            y[2] = x[2]
-
-class PeriodicBoundaryY(df.SubDomain):
-    
-    def __init__(self,ymin,height,dim):
-        super(PeriodicBoundaryY, self).__init__()
-        self.ymin=ymin
-        self.height=height
-        self.dim=dim
-
-    def inside(self, x, on_boundary):
-        return df.near(x[1],self.ymin) and on_boundary
-
-    def map(self, x, y):
-        y[0] = x[0] 
-        y[1] = x[1] - self.height
-        if self.dim==3:
-            y[2] = x[2]            
-            
-
-class PeriodicBoundary2D(object):
-    """
-    Periodic Boundary condition in xy-plane potentially can be applied to the energy_base class.
-    """
-    def __init__(self,V):
-        self.V=V
-        self.mesh=V.mesh()
+        self.mesh = mesh
         
         self.find_mesh_info()
         
-        v = df.TestFunction(V)
-        if isinstance(V, df.VectorFunctionSpace):
-            self.L=df.assemble(df.dot(v, df.Constant((1, 1, 1))) * df.dx)
-        else: 
-            self.L=df.assemble(v * df.dx)
-            
-        self.apply_pbc_L()
+    def inside(self, x, on_boundary):
+        on_x = bool(df.near(x[0],self.xmin) and not df.near(x[1],self.ymax) and on_boundary)
+        on_y = bool(df.near(x[1],self.ymin) and not df.near(x[0],self.xmax) and on_boundary)
+        return on_x or on_y  
+
+    def map(self, x, y):
+        y[0] = x[0] 
+        y[1] = x[1]
+        if self.dim == 3:
+            y[2] = x[2]
+
+        if df.near(x[0],self.xmax):
+            y[0] = x[0] - self.width
         
+        if df.near(x[1],self.ymax):
+            y[1] = x[1] - self.height        
         
     def find_mesh_info(self):
         xt=self.mesh.coordinates()
@@ -124,25 +98,11 @@ class PeriodicBoundary2D(object):
         self.ids.shape=(-1,)
         self.ids_pbc.shape=(-1,)
         
-    
-    def apply_pbc_L(self):
-        self.bcx=df.PeriodicBC(self.V,PeriodicBoundaryX(self.xmin,self.width,self.dim))
-        self.bcy=df.PeriodicBC(self.V,PeriodicBoundaryY(self.ymin,self.height,self.dim))
-        self.bcx.apply(self.L)
-        self.bcy.apply(self.L)
-        
-        """
-        must call the sequence in order
-        also must import finmag at the beginning of the file (about order stuff?)
-        """
-        for i in range(len(self.ids_pbc)):
-            self.L[self.ids_pbc[i]]=self.L[self.ids[i]]
-
-    def apply_pbc_K(self,K):
-        self.bcx.apply(K)
-        self.bcy.apply(K)
-        
+            
     def modify_m(self,m):
+        """
+        This method might be not necessary ... 
+        """
         for i in range(len(self.ids_pbc)):
             j=self.ids_pbc[i]
             k=self.ids[i]

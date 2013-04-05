@@ -1,4 +1,5 @@
 import logging
+import dolfin as df
 import numpy as np
 from finmag.util.helpers import vector_valued_function
 from finmag.energies import Exchange, UniaxialAnisotropy
@@ -7,8 +8,11 @@ logger = logging.getLogger(name="finmag")
 
 
 class EffectiveField(object):
-    def __init__(self, mesh):
-        self._output_shape = 3 * mesh.num_vertices()
+    def __init__(self, S3):
+        fun = df.Function(S3)
+        self._output_shape = fun.vector().size()
+        self.H_eff = fun.vector().array()
+        
         self.interactions = []
         self._callables = []  # functions for time update of interactions
 
@@ -48,10 +52,10 @@ class EffectiveField(object):
             if self._callables != []:
                 raise ValueError("Some interactions require a time update, but no time step was given.")
 
-        H_eff = np.zeros(self._output_shape)
+        self.H_eff[:] = 0
         for interaction in self.interactions:
-            H_eff += interaction.compute_field()
-        self.H_eff = H_eff
+            self.H_eff  += interaction.compute_field()
+
         return self.H_eff
 
     def compute_jacobian_only(self, t):
