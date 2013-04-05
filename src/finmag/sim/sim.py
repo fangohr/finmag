@@ -15,6 +15,7 @@ from finmag.energies import Exchange, Zeeman, Demag, UniaxialAnisotropy, DMI
 from finmag.integrators.llg_integrator import llg_integrator
 from finmag.integrators import scheduler, events
 from finmag.integrators.common import run_with_schedule
+from finmag.util.pbc2d import PeriodicBoundary2D
 
 ONE_DEGREE_PER_NS = 17453292.5  # in rad/s
 
@@ -30,7 +31,7 @@ class Simulation(object):
 
     """
     @mtimed
-    def __init__(self, mesh, Ms, unit_length=1, name='unnamed', integrator_backend="sundials",pbc2d=None):
+    def __init__(self, mesh, Ms, unit_length=1, name='unnamed', integrator_backend="sundials", pbc=None):
         """Simulation object.
 
         *Arguments*
@@ -43,6 +44,8 @@ class Simulation(object):
                        distance 1.0 in the mesh object.
 
           name : the Simulation name (used for writing data files, for examples)
+          
+          pbc : Periodic boundary type: None or '2d'
         """
         # Store the simulation name and a 'sanitized' version of it which
         # contains only alphanumeric characters and underscores. The latter
@@ -63,14 +66,19 @@ class Simulation(object):
         log.info("Creating Sim object '{}' (rank={}/{}).".format(
             self.name, df.MPI.process_number(), df.MPI.num_processes()))
         log.info(mesh)
+        
+        self.pbc = pbc
+        if pbc == '2d':
+            self.pbc = PeriodicBoundary2D(mesh)
+
 
         self.mesh = mesh
         self.Ms = Ms
         self.unit_length = unit_length
         self.integrator_backend = integrator_backend
-        self.S1 = df.FunctionSpace(mesh, "Lagrange", 1)
-        self.S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
-        self.llg = LLG(self.S1, self.S3, pbc2d=pbc2d)
+        self.S1 = df.FunctionSpace(mesh, "Lagrange", 1, constrained_domain=self.pbc)
+        self.S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3, constrained_domain=self.pbc)
+        self.llg = LLG(self.S1, self.S3)
         self.llg.Ms = Ms
         self.Volume = mesh_volume(mesh)
 

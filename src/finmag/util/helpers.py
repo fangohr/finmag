@@ -335,7 +335,9 @@ def mesh_equal(mesh1,mesh2):
     cds2=mesh2.coordinates()
     return np.array_equal(cds1,cds2)
 
-
+# TODO: In dolfin 1.2 if the pbc are used, the degree of freedom for functionspace
+#       is different from the number of  mesh coordinates, so we need to consider this
+#       problem as well
 def vector_valued_function(value, mesh_or_space, normalise=False, **kwargs):
     """
     Create a vector-valued function on the given mesh or VectorFunctionSpace.
@@ -394,9 +396,10 @@ def vector_valued_function(value, mesh_or_space, normalise=False, **kwargs):
             expr = df.Expression(value, **kwargs)
             fun = df.interpolate(expr, S3)
         else:
-            vec = np.empty((mesh.num_vertices(), 3))
-            vec[:] = value # using broadcasting
             fun = df.Function(S3)
+            vec = np.empty((fun.vector().size()/3, 3))
+            vec[:] = value # using broadcasting
+            
             fun.vector().set_local(vec.transpose().reshape(-1))
     elif isinstance(value, np.ndarray):
         fun = df.Function(S3)
@@ -404,11 +407,24 @@ def vector_valued_function(value, mesh_or_space, normalise=False, **kwargs):
             assert value.shape[1] == 3
             value = value.reshape(value.size, order="F")
         fun.vector()[:] = value
+    
+    #if it's a normal function, we wrapper it into a dolfin expression
     elif hasattr(value, '__call__'):
-        coords = mesh.coordinates()
-        vals = np.array(map(value, coords))
-        fun = df.Function(S3)
-        fun.vector()[:] = np.concatenate([vals[:, 0], vals[:, 1], vals[:, 2]])
+        
+        class HelperExpression(df.Expression):
+            def __init__(self,value):
+                super(HelperExpression, self).__init__()
+                self.fun = value
+        
+            def eval(self, value, x):
+                value[:] = self.fun(x)[:]                
+            
+            def value_shape(self):
+                return (3,)
+            
+        hexp = HelperExpression(value)
+        fun = df.interpolate(hexp, S3)
+        
     else:
         raise TypeError("Cannot set value of vector-valued function from "
                         "argument of type '{}'".format(type(value)))

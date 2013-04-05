@@ -6,17 +6,19 @@ mpl.use("Agg")
 import matplotlib.pyplot as plt
 from finmag import Simulation as Sim
 from finmag.energies import Zeeman
+from finmag.energies import Exchange
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def test_sim_ode(do_plot=False):
     mesh = df.BoxMesh(0, 0, 0, 2, 2, 2, 1, 1, 1)
-    sim = Sim(mesh, 8.6e5, unit_length=1e-9)
+    sim = Sim(mesh, 8.6e5, unit_length=1e-9, pbc='2d')
     sim.alpha = 0.1
     sim.set_m((1, 0, 0))
 
     H0 = 1e5
     sim.add(Zeeman((0, 0, H0)))
+    #sim.add(Exchange(1.3e-11))
 
     dt = 1e-12; ts = np.linspace(0, 500 * dt, 100)
 

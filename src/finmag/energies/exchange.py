@@ -59,9 +59,9 @@ class Exchange(EnergyBase):
             H_exch_np = exchange_np.compute_field()
 
     """
-    def __init__(self, A, method="box-matrix-petsc",pbc2d=None):
+    def __init__(self, A, method="box-matrix-petsc"):
         self.A_waiting_for_mesh = A
-        super(Exchange, self).__init__(method, in_jacobian=True,pbc2d=pbc2d)
+        super(Exchange, self).__init__(method, in_jacobian=True)
 
     def exchange_length(self):
         return exchange_length(self.A.vector().array(), self.Ms.vector().array())
