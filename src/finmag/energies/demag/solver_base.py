@@ -46,7 +46,7 @@ class FemBemDeMagSolver(object):
                 * 'project'
         bench
             set to True to run a benchmark of linear solvers
-            
+
     """
 
     def __init__(self, mesh,m, parameters=None, degree=1, element="CG", project_method='magpar',
@@ -60,7 +60,7 @@ class FemBemDeMagSolver(object):
 
         #This is used in energy density calculations
         self.mu0 = np.pi*4e-7 # Vs/(Am)
-        
+
         #Mesh Facet Normal
         self.n = df.FacetNormal(self.mesh)
 
@@ -81,19 +81,19 @@ class FemBemDeMagSolver(object):
         #interpolation
         if isinstance(m, df.Expression) or isinstance(m, df.Constant):
             self.m = df.interpolate(m,self.W)
-            
+
         elif isinstance(m,tuple):
             self.m = df.interpolate(df.Expression(m),self.W)
-            
+
         elif isinstance(m,list):
             self.m = df.interpolate(df.Expression(tuple(m)),self.W)
-            
+
         else:
             self.m = m
         #Normalize m (should be normalized anyway).
         if normalize:
             self.m.vector()[:] = helpers.fnormalise(self.m.vector().array())
-        
+
         self.Ms = Ms
 
         # Initilize the boundary element matrix variable
@@ -156,6 +156,10 @@ class FemBemDeMagSolver(object):
         """
         self.solve()
         return self.__compute_field()
+
+    def compute_potential(self):
+        self.solve()
+        return self.phi
 
     def scalar_potential(self):
         """Return the scalar potential."""
@@ -269,7 +273,7 @@ class FemBemDeMagSolver(object):
         """
         if phi is None:
             phi = self.phi
-        
+
         Hdemag = -df.grad(phi)
         if use_default_function_space == True:
             Hdemag = df.project(Hdemag,self.W)
