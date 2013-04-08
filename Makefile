@@ -28,12 +28,8 @@ PROJECT_DIR = $(abspath .)
 ######### Project-specific variables
 # Paths that have to be added to PYTHONPATH prior to running the tests
 PYTHON_ROOTS = $(PROJECT_DIR)/src
-# This script runs all unit tests found in the current directory
-RUN_UNIT_TESTS = $(PROJECT_DIR)/src/finmag/util/run_ci_tests.py
 # The directory that contains native code
 NATIVE_DIR = native
-# The list of directories that contain unittest unit tests
-TEST_ROOTS = src
 # Set TEST_OPTIONS to e.g. '-sxv' to disable capturing of standard output,
 # exit instantly on the first error, and increase verbosity.
 TEST_OPTIONS ?=
@@ -110,31 +106,16 @@ purge: clean
 create-dirs:
 	mkdir -p test-reports/junit
 
-test: clean make-modules run-unittest-tests pytest run-ci-tests
+test: clean make-modules pytest-tests native-tests
 
 print-debugging-info:
 	@echo "[DDD] Makefile NETGENDIR: ${NETGENDIR}"
 
-# TODO: Can this be deleted? Doesn't seem to do anything on
-# aleph0 and my machine (MAB).
-run-unittest-tests : $(addsuffix /__runtests__,$(TEST_ROOTS))
-
-fasttest : make-modules $(addsuffix /__runtests__,$(TEST_ROOTS)) run-ci-tests
-
-%/__runtests__ : create-dirs
-	(cd $(dir $@) && NETGENDIR=$(NETGENDIR) PYTHONPATH=$(PYTHON_ROOTS):. python $(RUN_UNIT_TESTS))
-
 run-pytest-reproduce-ipython-notebooks : create-dirs
 	NETGENDIR=$(NETGENDIR) PYTHONPATH=$(PYTHON_ROOTS) py.test $(TEST_OPTIONS) bin/reproduce_ipython_notebooks.py --junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
 
-run-pytest-tests : create-dirs
-	NETGENDIR=$(NETGENDIR) PYTHONPATH=$(PYTHON_ROOTS) py.test $(TEST_OPTIONS) src examples --junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
-
-run-ci-tests :
-	make -C $(NATIVE_DIR) run-ci-tests
-
 # Will not run tests marked as slow.
-pytest: create-dirs make-modules
+pytest-fast: create-dirs make-modules
 	PYTHONPATH=$(PYTHON_ROOTS) py.test $(TEST_OPTIONS) -m "not slow" \
 			   --junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
 
@@ -143,10 +124,13 @@ pytest-slow: create-dirs make-modules
 	PYTHONPATH=$(PYTHON_ROOTS) py.test $(TEST_OPTIONS) -m "slow" \
 			   --junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
 
-native-tests: make-modules run-ci-tests
+pytest-tests: pytest-fast pytest-slow
+
+native-tests: make-modules
+	make -C $(NATIVE_DIR) run-ci-tests
 
 # Will run the fast py.test tests as well as the native tests
-tests-fast: pytest native-tests
+tests-fast: pytest-fast native-tests
 
 
-.PHONY: ci default make-modules test run-ci-tests run-pytest-tests run-unittest-tests pytest pytest-slow
+.PHONY: ci default make-modules test pytest-tests pytest-fast pytest-slow
