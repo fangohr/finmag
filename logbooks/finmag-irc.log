@@ -5665,3 +5665,13 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-04-05 11:37:16 fangohr-adium1: Hm, interesting. Will this work for us??
 2013-04-05 11:37:46 ww1g11: I guess it does, but we need to change the interface slightly
 2013-04-05 17:16:31 fangohr-adium1: Hi all, I am off to Italy tomorrow morning. Back on Thursday in the office, probably won't have email until then.
+2013-04-08 13:36:55 mb8g11: Re-installing fenics, will have a look at the test right afterwards.
+2013-04-08 13:38:53 cilix: Cool, thanks. I think I have fixed the immediate error (see commit https://bitbucket.org/fangohr/finmag/commits/c32806ca3a4186b3d587a05f786f1e052789eb2c), but it would be good if you could have a look at how the parameters are set in that test and whether they have any effect at all.
+2013-04-08 14:10:46 mb8g11: Upgraded to Ubuntu 12.10 from Ubuntu 12.04. Scipy would run into the issue 'ImportError: scipy/linalg/clapack.so: undefined symbol: clapack_sgesv'.
+2013-04-08 14:11:49 mb8g11: Turns out it stopped using the libblas and liblapack from atlas-base which exports all the needed symbols.
+2013-04-08 14:13:27 mb8g11: Fix: 'sudo update-alternatives --config libblas.so.3' and 'sudo update-alternatives --config liblapack.so.3' to use the libraries in '/usr/lib/atlas-base/atlas/'.
+2013-04-08 14:42:54 mb8g11: @cilix: The code does what you expect.
+2013-04-08 14:43:29 cilix: You mean the code in the demag example for the documentation?
+2013-04-08 14:44:31 cilix: Hmm, I thought the parameters were renamed in FKDemag. Or does the parent Demag class still accept the old ones?
+2013-04-08 14:50:31 mb8g11: I was tricked by the code. For whatever reason, our Demag class (which wraps our implementations) maintains its own set of parameters for some reason.
+2013-04-08 14:50:38 mb8g11: Am investigatin.
