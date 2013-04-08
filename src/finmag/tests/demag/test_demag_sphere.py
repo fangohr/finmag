@@ -2,19 +2,11 @@ import pytest
 import numpy as np
 import dolfin as df
 from finmag.util.meshes import sphere
-from finmag.energies.demag.solver_fk import FemBemFKSolver as FKSolver
-from finmag.energies.demag.solver_gcr import FemBemGCRSolver as GCRSolver
-from finmag.energies.demag.treecode_bem import TreecodeBEM as Treecode
-
-import finmag
-if finmag.util.versions.get_version_dolfin() == "1.1.0":
-    solvers = [FKSolver,Treecode] # FIXME: disabled GCRSolver for dolfin 1.1.0
-else:
-    solvers = [FKSolver, GCRSolver]
-print("Testing for solvers: %s" % solvers)
+from finmag.energies import Demag
 
 TOL = 1e-2
-print solvers
+solvers = ['FK', 'GCR', 'Treecode']
+
 
 @pytest.fixture(scope="module")
 def uniformly_magnetised_sphere():
@@ -26,19 +18,22 @@ def uniformly_magnetised_sphere():
 
     solutions = []
     for solver in solvers:
-        solution = solver(mesh, m, Ms=Ms)
-        solution.H = solution.compute_field()
-        solutions.append(solution)
+        demag = Demag(solver)
+        demag.setup(S3, m, Ms, unit_length=1e-9)
+        demag.H = demag.compute_field()
+        solutions.append(demag)
     return solutions
+
 
 def test_H_demag(uniformly_magnetised_sphere):
     for solution in uniformly_magnetised_sphere:
         H = solution.H.reshape((3, -1)).mean(1)
-        H_expected = np.array([-1.0/3.0, 0, 0])
+        H_expected = np.array([-1.0 / 3.0, 0, 0])
         print "{}: Hx = {}, should be {}.".format(
-                solution.__class__.__name__, H, H_expected)
+            solution.__class__.__name__, H, H_expected)
         diff = np.max(np.abs(H - H_expected))
         assert diff < TOL
+
 
 def test_H_demag_deviation(uniformly_magnetised_sphere):
     for solution in uniformly_magnetised_sphere:

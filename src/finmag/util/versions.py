@@ -31,7 +31,18 @@ def get_module_version(name):
 
 
 def get_version_ipython():
-    return get_module_version('IPython')
+    try:
+        return get_module_version('IPython')
+    except ValueError:
+        # This is needed due to a strange error seen in some test runs:
+        #
+        #    /usr/lib/python2.7/dist-packages/IPython/utils/io.py:32: in __init__
+        #    >               raise ValueError("fallback required, but not specified")
+        #    E               ValueError: fallback required, but not specified
+        #
+        # It seems that this can happen because standard output is caught by
+        # py.test, but providing the -s switch didn't help either.
+        return None
 
 
 def get_version_dolfin():
