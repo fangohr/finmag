@@ -1,7 +1,0 @@
-This folder contains solvers for demag problems.
-
-solver_base.py - Contains base classes for fembem and domain truncation type solvers.
-solver_fk.py - Contains a fredkin koehler approach fembem solver.
-solver_gcr.py - Contains a Garcia-Cervera-Roma approach fembem solver.
-solver_nitsche.py - Contains a solver using Nitsche's discontinuous formulation for 
-                     a truncated domain.
