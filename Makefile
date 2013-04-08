@@ -128,7 +128,7 @@ run-ci-tests :
 	make -C $(NATIVE_DIR) run-ci-tests
 
 # Will not run tests marked as slow.
-pytest: create-dirs make-modules
+pytest-fast: create-dirs make-modules
 	PYTHONPATH=$(PYTHON_ROOTS) py.test $(TEST_OPTIONS) -m "not slow" \
 			   --junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
 
@@ -136,6 +136,8 @@ pytest: create-dirs make-modules
 pytest-slow: create-dirs make-modules
 	PYTHONPATH=$(PYTHON_ROOTS) py.test $(TEST_OPTIONS) -m "slow" \
 			   --junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
+
+pytest: pytest-fast pytest-slow
 
 native-tests: make-modules run-ci-tests
 
