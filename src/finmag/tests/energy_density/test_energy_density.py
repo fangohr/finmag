@@ -62,14 +62,14 @@ def test_exchange_energy_density():
     w = df.TestFunction(S1)
     vol = sum(df.assemble(df.dot(df.Constant([1]), w) * df.dx))
     #finmag 'manually' computed, based on node values of energy density:
-    energy1 = average_energy_density * vol   
+    energy1 = average_energy_density * vol
     #finmag computed by energy class
     energy2 = exch.compute_energy()
     #comparison with Nmag
     energy3 = np.average(nmag_data) * vol
     print energy1, energy2, energy3
-    
-    assert abs(energy1 - energy2) < 1e-12 # actual value is 0, but 
+
+    assert abs(energy1 - energy2) < 1e-12 # actual value is 0, but
                                           # that must be pure luck.
     assert abs(energy1 - energy3) < 5e-8  # actual value
                                           # is 1.05e-8, 30 June 2012
@@ -210,7 +210,7 @@ def test_demag_energy_density():
     Ms = np.sqrt(6.0 / mu0)
     demag.setup(S3, m, Ms, 1)
 
-    density = demag.demag.energy_density()
+    density = demag.energy_density()
     deviation = np.abs(density - 1.0)
 
     print "Demag energy density (expect array of 1s):"

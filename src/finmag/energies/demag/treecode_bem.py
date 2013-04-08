@@ -50,9 +50,9 @@ class TreecodeBEM(sb.FemBemDeMagSolver):
         b = self.Ms*df.inner(self.w, df.grad(self.v))*df.dx
         self.D = df.assemble(b)
 
-        self.mesh=mesh
+        self.mesh= S3.mesh()
 
-        self.bmesh = df.BoundaryMesh(mesh, 'exterior', False)
+        self.bmesh = df.BoundaryMesh(self.mesh, 'exterior', False)
         #self.b2g_map = self.bmesh.vertex_map().array()
         self.b2g_map = self.bmesh.entity_map(0).array()
 
@@ -60,7 +60,7 @@ class TreecodeBEM(sb.FemBemDeMagSolver):
 
         self.__compute_bsa()
 
-        fast_sum=FastSum(p=p,mac=mac,num_limit=num_limit,correct_factor=correct_factor,type_I=type_I)
+        fast_sum=FastSum(p=self.p, mac=self.mac, num_limit=self.num_limit, correct_factor=self.correct_factor, type_I=self.type_I)
 
         coords=self.bmesh.coordinates()
         face_nodes=np.array(self.bmesh.cells(),dtype=np.int32)

@@ -52,6 +52,7 @@ class FemBemDeMagSolver(object):
     def __init__(self, mesh,m, parameters=None, degree=1, element="CG", project_method='magpar',
                  unit_length=1, Ms=1.0, bench=False, normalize=True, solver_type=None):
         #Problem objects and parameters
+        self.in_jacobian = False
         self.mesh = mesh
         self.unit_length = unit_length
         self.degree = degree
