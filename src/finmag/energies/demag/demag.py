@@ -38,7 +38,7 @@ class Demag(object):
             log.debug("Using demag solver of type '{}'".format(solver_type))
         else:
             raise NotImplementedError(
-                    "Don't know method '{}'. Only 'FK', 'GCR', 'Treecode' and 'old_FK' are implemented.".format(solver))
+                "Don't know method '{}'. Only 'FK', 'GCR', 'Treecode' and 'old_FK' are implemented.".format(solver))
 
         self.degree = degree
         self.element = element
@@ -46,8 +46,8 @@ class Demag(object):
         self.bench = bench
         self.parameters = parameters
 
-    def setup(self, S3, m, Ms, unit_length = 1,
-              p=4,mac=0.35,number_limit=1,correct_factor=10,type_I=True):
+    def setup(self, S3, m, Ms, unit_length=1,
+              p=4, mac=0.35, number_limit=1, correct_factor=10, type_I=True):
         """
         S3
             dolfin VectorFunctionSpace
@@ -59,45 +59,45 @@ class Demag(object):
         unit_length
             The scale of the mesh, default is 1.
 
+        p, mac, number_limit, correct_factor, type_I
+            only apply to the Treecode method
+
         """
 
         self.S3 = S3
-        kwargs = {"mesh":S3.mesh(),
-                  "m":m,
-                  "Ms":Ms,
-                  "unit_length":unit_length,
-                  "parameters":self.parameters,
+        kwargs = {"mesh": S3.mesh(),
+                  "m": m,
+                  "Ms": Ms,
+                  "unit_length": unit_length,
+                  "parameters": self.parameters,
                   "solver_type": self.solver_type,
-                  "degree":1,
-                  "element":"CG",
-                  "project_method":'magpar',
+                  "degree": 1,
+                  "element": "CG",
+                  "project_method": 'magpar',
                   "bench": self.bench}
-        
+
         if self.solver == "old_FK":
             self.demag = FemBemFKSolver(**kwargs)
             for (name, solver) in (("Poisson", self.demag.poisson_solver), ("Laplace", self.demag.laplace_solver)):
                 params = repr(solver.parameters.to_dict())
                 #Log the linear solver parameters
                 log.debug("{}: {} solver parameters.\n{}".format(
-                            self.__class__.__name__, name, textwrap.fill(params, width=100,
-                            initial_indent=4*" ", subsequent_indent=4*" ")))
-        #MagparFKSolver does not exist? (HF 17 June 2012)
-        #elif self.solver == "FK_magpar":
-        #    self.demag = MagparFKSolver(**kwargs)
+                    self.__class__.__name__, name, textwrap.fill(
+                        params, width=100, initial_indent=4 * " ", subsequent_indent=4 * " ")))
         elif self.solver == "GCR":
             self.demag = FemBemGCRSolver(**kwargs)
             for (name, solver) in (("Poisson", self.demag.poisson_solver), ("Laplace", self.demag.laplace_solver)):
                 params = repr(solver.parameters.to_dict())
                 log.debug("{}: {} solver parameters.\n{}".format(
-                            self.__class__.__name__, name, textwrap.fill(params, width=100,
-                            initial_indent=4*" ", subsequent_indent=4*" ")))
+                    self.__class__.__name__, name, textwrap.fill(
+                        params, width=100, initial_indent=4 * " ", subsequent_indent=4 * " ")))
         elif self.solver == "Treecode":
-            kwargs["p"]=p
-            kwargs["mac"]=mac
-            kwargs["num_limit"]=number_limit
-            kwargs["correct_factor"]=correct_factor
-            kwargs["type_I"]=type_I
-            
+            kwargs["p"] = p
+            kwargs["mac"] = mac
+            kwargs["num_limit"] = number_limit
+            kwargs["correct_factor"] = correct_factor
+            kwargs["type_I"] = type_I
+
             self.demag = TreecodeBEM(**kwargs)
         elif self.solver == "FK":
             demag = FKDemag()
@@ -117,15 +117,3 @@ class Demag(object):
             return self.demag.compute_potential()
         self.demag.solve()
         return self.demag.phi
-
-if __name__ == "__main__":
-    from finmag.tests.demag.problems import prob_fembem_testcases as pft
-    prob = pft.MagSphereBase(10, 0.8)
-
-    demag = Demag("GCR")
-    demag.setup(prob.V, prob.m, prob.Ms, unit_length = 1)
-
-    print default_timer
-
-    df.plot(demag.compute_potential())
-    df.interactive()
