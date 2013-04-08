@@ -38,7 +38,7 @@ def demag_energy(solver):
     demag = Demag(solver)
     demag.setup(S3, m, Ms, unit_length=1)
 
-    E = demag.demag.compute_energy()
+    E = demag.compute_energy()
     rel_error = abs(E - E_analytical) / abs(E_analytical)
     print "Energy with {} method: {}.".format(solver, E)
     return E, rel_error
