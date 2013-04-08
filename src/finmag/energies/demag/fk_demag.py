@@ -49,6 +49,7 @@ class FKDemag(object):
         understood by `df.KrylovSolver` is valid.
 
         """
+        self.in_jacobian = False
         default_parameters = {
             'absolute_tolerance': 1e-6,
             'relative_tolerance': 1e-6,

@@ -44,7 +44,7 @@ class Simulation(object):
                        distance 1.0 in the mesh object.
 
           name : the Simulation name (used for writing data files, for examples)
-          
+
           pbc : Periodic boundary type: None or '2d'
 
         """
@@ -67,7 +67,7 @@ class Simulation(object):
         log.info("Creating Sim object '{}' (rank={}/{}).".format(
             self.name, df.MPI.process_number(), df.MPI.num_processes()))
         log.info(mesh)
-        
+
         self.pbc = pbc
         if pbc == '2d':
             self.pbc = PeriodicBoundary2D(mesh)
@@ -177,16 +177,16 @@ class Simulation(object):
         log.debug("Adding interaction %s to simulation '%s'" % (str(interaction),self.name))
         interaction.setup(self.S3, self.llg._m, self.llg._Ms_dg, self.unit_length)
         self.llg.effective_field.add(interaction, with_time_update)
-        
+
         if interaction.__class__.__name__=='Zeeman':
             self.zeeman_interation=interaction
             self.tablewriter.entities['zeeman']={
                         'unit': '<A/m>',
                         'get': lambda sim: sim.zeeman_interation.average_field(),
                         'header': ('h_x', 'h_y', 'h_z')}
-        
+
             self.tablewriter.update_entity_order()
-        
+
 
     def total_energy(self):
         """
@@ -719,7 +719,7 @@ class Simulation(object):
 
 
 def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sundials",
-             A=None, K1=None, K1_axis=None, H_ext=None, demag_solver='FK', demag_solver_type=None,
+             A=None, K1=None, K1_axis=None, H_ext=None, demag_solver='FK',
              D=None, name="unnamed"):
     """
     Create a Simulation instance based on the given parameters.
@@ -760,6 +760,6 @@ def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sun
     if D != None:
         sim.add(DMI(D))
     if demag_solver != None:
-        sim.add(Demag(solver=demag_solver, solver_type=demag_solver_type))
+        sim.add(Demag(solver=demag_solver))
 
     return sim
