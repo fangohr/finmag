@@ -13,12 +13,12 @@ Ms = 1
 H_ref = np.array((- Ms / 3.0, 0, 0))
 
 vertices = []
-solvers = ["FK", "Treecode"]
+solvers = ["FK", "GCR", "Treecode"]
 timings = [[], [], []]
 errors = [[], [], []]
 
 for maxh in maxhs:
-    mesh = sphere(r = radius, maxh = maxh)
+    mesh = sphere(r=radius, maxh=maxh)
     vertices.append(mesh.num_vertices())
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
     m = df.Function(S3)
