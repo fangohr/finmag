@@ -79,7 +79,7 @@ void compute_coefficient(double ***a, double dx, double dy, double dz, int p);
 void compute_moment(fastsum_plan *plan, struct octree_node *tree, double ***moment, double x, double y, double z);
 void reset_moment(fastsum_plan *plan, struct octree_node *tree);
 
-fastsum_plan *create_plan();
+fastsum_plan *create_plan(void);
 void update_potential_u1(fastsum_plan *plan,double *u1);
 void fastsum_finalize(fastsum_plan *plan);
 

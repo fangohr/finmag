@@ -308,7 +308,7 @@ void direct_sum_I(fastsum_plan *plan, double *phi, double *u1) {
 
 void fast_sum_II(fastsum_plan *plan, double *phi, double *u1) {
 
-	int i,j;
+	int j;
 
     double ***a = alloc_3d_double(plan->p + 1, plan->p + 1, plan->p + 1);
 
