@@ -70,7 +70,6 @@ class Demag(object):
                   "Ms": Ms,
                   "unit_length": unit_length,
                   "parameters": self.parameters,
-                  "solver_type": self.solver_type,
                   "degree": 1,
                   "element": "CG",
                   "project_method": 'magpar',
