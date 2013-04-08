@@ -1,7 +1,5 @@
 import os
-import dolfin as df
 import numpy as np
-from math import pi, sin, cos
 from finmag import Simulation as Sim
 from finmag.energies import Exchange, Zeeman
 from finmag.util.meshes import from_geofile

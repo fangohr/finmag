@@ -1,10 +1,9 @@
 import pytest
-from finmag.util.versions import get_version_dolfin
-
 import unittest
 import numpy as np
 import dolfin as df
 import os
+from finmag.util.versions import get_version_dolfin
 from finmag.native.llg import compute_lindholm_L, compute_lindholm_K, compute_bem_fk, compute_bem_gcr
 from finmag.util import time_counter
 from finmag.util import helpers
@@ -147,21 +146,21 @@ class BemComputationTests(unittest.TestCase):
         print "K = ",k
         print "m_expr = ",m_expr
         self.assertAlmostEqual(error, 0, delta=tol, msg="Error is above threshold %g, %s" % (tol, message))
-        
+
     def test_compute_scalar_potential_fk(self):
         m1 = df.Constant([1, 0, 0])
         m2 = df.Expression(["x[0]*x[1]+3", "x[2]+5", "x[1]+7"])
         expressions = [m1,m2]
-        for exp in expressions: 
+        for exp in expressions:
             for k in xrange(1,5+1):
                 self.run_demag_computation_test(df.UnitCubeMesh(k,k,k), exp,
                                                 compute_scalar_potential_native_fk,
                                                 "native, FK", k=k)
-                
+
                 self.run_demag_computation_test(sphere(1., 1./k), exp,
                                                 compute_scalar_potential_native_fk,
                                                 "native, FK", k=k)
-                
+
             self.run_demag_computation_test(MagSphereBase(0.25, 1).mesh, exp,
                                             compute_scalar_potential_native_fk,
                                             "native, FK", k=k)
@@ -177,18 +176,18 @@ class BemComputationTests(unittest.TestCase):
                                         compute_scalar_potential_native_gcr,
                                         "native, GCR",
                                         ref=compute_scalar_potential_native_fk, tol=tol)
-        for exp in expressions: 
+        for exp in expressions:
             for k in xrange(3,10+1,2):
                 self.run_demag_computation_test(df.UnitCubeMesh(k,k,k), exp,
                                                 compute_scalar_potential_native_gcr,
                                                 "native, GCR, cube", tol=tol,
                                                 ref=compute_scalar_potential_native_fk)
-                
+
                 self.run_demag_computation_test(MagSphereBase(1./k, 1.).mesh, exp,
                                                 compute_scalar_potential_native_gcr,
                                                 "native, GCR, sphere", tol=tol,
                                                 ref=compute_scalar_potential_native_fk,k=k)
-        
+
     def run_symmetry_test(self, formula):
         func = globals()[formula]
         np.random.seed(1)

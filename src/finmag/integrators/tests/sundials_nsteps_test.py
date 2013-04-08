@@ -1,5 +1,4 @@
 import finmag
-import pytest
 
 def test_integrator_get_set_max_steps():
     """Tests setting and getting of nsteps"""
@@ -64,7 +63,7 @@ def test_integrator_run_until_return_value():
     assert sim.integrator.cur_t == sim.integrator.stats()['tcur']
 
     # if integration succeeds, we should get True back
-    sim.integrator.set_max_steps(500) # default value 
+    sim.integrator.set_max_steps(500) # default value
     ret_val = sim.integrator.advance_time(1e-15)
     print("For information: nsteps = {nsteps}".format(**sim.integrator.stats()))  # about 6 steps
     assert ret_val == True

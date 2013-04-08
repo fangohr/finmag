@@ -6,7 +6,6 @@ mpl.use("Agg")
 import matplotlib.pyplot as plt
 from finmag import Simulation as Sim
 from finmag.energies import Zeeman
-from finmag.energies import Exchange
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 

@@ -1,9 +1,6 @@
-import numpy as np
 import dolfin as df
 import logging
 from finmag.util.timings import mtimed
-from finmag.util.consts import mu0
-from finmag.util.helpers import fnormalise
 from finmag.energies.energy_base import EnergyBase
 from material import Material
 logger = logging.getLogger('finmag')
@@ -12,18 +9,18 @@ logger = logging.getLogger('finmag')
 class LLBAnisotropy(EnergyBase):
     """
     Compute the anisotropy field for LLB case
-    
+
     H = -(m_x e_x + m_y e_y)/chi_perp
-    
+
     ==>
-    
-    E = 0.5 * (m_x^2 + m_y^2)/chi_perp 
+
+    E = 0.5 * (m_x^2 + m_y^2)/chi_perp
 
     """
-    
+
     def __init__(self, mat, method="box-matrix-petsc"):
-        self.e_x = df.Constant([1, 0, 0]) 
-        self.e_y = df.Constant([0, 1, 0]) 
+        self.e_x = df.Constant([1, 0, 0])
+        self.e_y = df.Constant([0, 1, 0])
         self.inv_chi_perp = mat.inv_chi_perp
         super(LLBAnisotropy, self).__init__(method, in_jacobian=True)
 
@@ -36,7 +33,7 @@ class LLBAnisotropy(EnergyBase):
         self.v = df.TestFunction(S3)
 
         # Anisotropy energy
-        E = 0.5 * ((df.dot(self.e_x, self.m)) ** 2 + df.dot(self.e_y, self.m) ** 2) 
+        E = 0.5 * ((df.dot(self.e_x, self.m)) ** 2 + df.dot(self.e_y, self.m) ** 2)
 
 
         # Needed for energy density
@@ -63,12 +60,12 @@ class LLBAnisotropy(EnergyBase):
 
         """
 
-        
+
         Han = super(LLBAnisotropy, self).compute_field()
-                
+
         return Han * self.inv_chi_perp
 
-    
+
 
 if __name__ == "__main__":
     from dolfin import *
@@ -79,9 +76,9 @@ if __name__ == "__main__":
 
     mat = Material(mesh)
     mat.set_m((1,2,3))
-    
+
     anis = LLBAnisotropy(mat)
-    
+
 
     anis.setup(mat.S3, mat._m, mat.Ms0)
 

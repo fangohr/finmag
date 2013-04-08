@@ -432,10 +432,10 @@ def export_normal_mode_animation(npy_files, outfilename, mesh, t_step, k, scalin
     aaa = np.empty(3*num_nodes)
     #for i in xrange(len(ts)):
     #for i in xrange(20):
-    import sys
     for i in xrange(N):
         #if i % 20 == 0:
         #    print "i={} ".format(i),
+        #    import sys
         #    sys.stdout.flush()
         aaa[:] = signal_normal_mode[i][:]
         func.vector()[:] = aaa

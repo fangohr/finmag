@@ -6,7 +6,6 @@ from finmag.energies.effective_field import EffectiveField
 from finmag.native import llg as native_llg
 from finmag.util.timings import default_timer, mtimed
 from finmag.util import helpers
-from finmag.util.pbc2d import PeriodicBoundary2D
 
 #default settings for logger 'finmag' set in __init__.py
 #getting access to logger here
@@ -40,19 +39,19 @@ class LLG(object):
         self.S1 = S1
         self.S3 = S3
         self.mesh=S1.mesh()
-        
+
         self.set_default_values()
         self.do_precession = do_precession
         self.do_slonczewski = False
         self.effective_field = EffectiveField(S3)
-        self.Volume = None  # will be computed on demand, and carries volume of the mesh 
-               
+        self.Volume = None  # will be computed on demand, and carries volume of the mesh
+
 
 
     def set_default_values(self):
         self._alpha_mult = df.Function(self.S1)
         self._alpha_mult.assign(df.Constant(1))
-                
+
         self.alpha = 0.5  # alpha for solve: alpha * _alpha_mult
         self.gamma = consts.gamma
         self.c = 1e11  # 1/s numerical scaling correction \
@@ -64,8 +63,8 @@ class LLG(object):
         # exported VTK file.
         self._m.rename("m", "magnetisation")
         self.pins = []  # nodes where the magnetisation gets pinned
-        
-        
+
+
 
     def set_pins(self, nodes):
         """
@@ -85,8 +84,8 @@ class LLG(object):
                 logger.error("Indices of pinned nodes should be in [0, {}), were [{}, {}].".format(nb_nodes_mesh, min(nodes), max(nodes)))
         else:
             self._pins = np.array([], dtype="int")
-        
-        
+
+
     def pins(self):
         return self._pins
     pins = property(pins, set_pins)
@@ -112,12 +111,12 @@ class LLG(object):
         # need to update the alpha vector as well, which is
         # why we have this property at all.
         self.alpha_vec = self._alpha * self._alpha_mult.vector().array()
-        
-    
+
+
     @property
     def Ms(self):
         return self._Ms_dg
-    
+
     @Ms.setter
     def Ms(self, value):
         self._Ms_dg=helpers.scalar_valued_dg_function(value, self.S1)
@@ -152,23 +151,23 @@ class LLG(object):
         # Not enforcing unit length here, as that is better done
         # once at the initialisation of m.
         self._m.vector()[:] = value
-            
+
     def m_average_fun(self,dx=df.dx):
         """
         Compute and return the average polarisation according to the formula
         :math:`\\langle m \\rangle = \\frac{1}{V} \int m \: \mathrm{d}V`
 
-        """ 
-        
+        """
+
         mx = df.assemble(self._Ms_dg*df.dot(self._m, df.Constant([1, 0, 0])) * dx)
         my = df.assemble(self._Ms_dg*df.dot(self._m, df.Constant([0, 1, 0])) * dx)
         mz = df.assemble(self._Ms_dg*df.dot(self._m, df.Constant([0, 0, 1])) * dx)
         volume = df.assemble(self._Ms_dg*dx,mesh=self.mesh)
-                        
+
         return np.array([mx, my, mz]) / volume
     m_average=property(m_average_fun)
-    
-        
+
+
     def set_m(self, value, **kwargs):
         """
         Set the magnetisation (it is automatically normalised to unit length).

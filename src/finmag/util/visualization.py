@@ -1,4 +1,3 @@
-import pickle
 import subprocess as sp
 import textwrap
 import logging

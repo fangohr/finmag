@@ -1,5 +1,4 @@
 import os
-import dolfin as df
 import numpy as np
 from finmag import Simulation as Sim
 from finmag.energies import Exchange, Demag
@@ -18,7 +17,7 @@ def m_gen(rs):
     v[1] = rs[2] - mesh_centre[2]
     v[2] = - (rs[1] - mesh_centre[1])
     return v
- 
+
 def create_initial_state():
     print "Creating initial relaxed state."
     sim = Sim(mesh, Ms=Ms, unit_length=1e-9)

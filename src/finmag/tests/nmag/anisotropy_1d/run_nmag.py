@@ -1,9 +1,7 @@
 # One dimensional magnetic system studied using nsim
-import math
 import numpy as np
 import nmag
-from nmag import SI, mesh
-from nsim.si_units.si import mu0, degrees_per_ns
+from nmag import SI
 import nmeshlib.unidmesher as unidmesher
 
 # Details about the layers and the mesh and the material

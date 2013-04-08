@@ -1,5 +1,4 @@
 import os
-import dolfin as df
 import numpy as np
 from math import pi, sin, cos
 from finmag import Simulation as Sim

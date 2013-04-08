@@ -7,7 +7,6 @@
 # AUTHOR(S) OF THIS FILE: Dmitri Chernyshenko (d.chernyshenko@soton.ac.uk)
 
 import unittest
-import py
 from finmag.tests.jacobean.domain_wall_cobalt import setup_domain_wall_cobalt, domain_wall_error
 from finmag.integrators.llg_integrator import llg_integrator
 from datetime import datetime

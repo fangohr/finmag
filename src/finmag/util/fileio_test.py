@@ -1,7 +1,6 @@
 import numpy as np
 import pytest
 import os
-from finmag.example import barmini
 from glob import glob
 from fileio import *
 

@@ -1,9 +1,7 @@
 import os
 import pytest
-import tempfile
 import dolfin as df
 import numpy as np
-from glob import glob
 from vtk_saver import VTKSaver
 from finmag.util.helpers import assert_number_of_files
 
@@ -41,7 +39,7 @@ class TestVTKSaver(object):
 
     def test_existing_files_are_deleted_if_requested(self, tmpdir):
         """
-        
+
         """
         os.chdir(str(tmpdir))
 

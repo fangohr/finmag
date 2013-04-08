@@ -6,9 +6,7 @@
 #
 # AUTHOR(S) OF THIS FILE: Dmitri Chernyshenko (d.chernyshenko@soton.ac.uk)
 
-from finmag.util.ode import cvode
 import unittest
-import math
 import numpy as np
 import finmag.native.sundials as sundials
 from finmag.util.ode import scipy_to_cvode_jtimes, scipy_to_cvode_rhs

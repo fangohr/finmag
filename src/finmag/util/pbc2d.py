@@ -1,9 +1,5 @@
-import os
-import time
 import dolfin as df
 import numpy as np
-import finmag
-
 
 
 class PeriodicBoundary2D(df.SubDomain):
@@ -12,44 +8,44 @@ class PeriodicBoundary2D(df.SubDomain):
     """
     def __init__(self, mesh):
         super(PeriodicBoundary2D, self).__init__()
-        
+
         self.mesh = mesh
-        
+
         self.find_mesh_info()
-        
+
     def inside(self, x, on_boundary):
         on_x = bool(df.near(x[0],self.xmin) and not df.near(x[1],self.ymax) and on_boundary)
         on_y = bool(df.near(x[1],self.ymin) and not df.near(x[0],self.xmax) and on_boundary)
-        return on_x or on_y  
+        return on_x or on_y
 
     def map(self, x, y):
-        y[0] = x[0] 
+        y[0] = x[0]
         y[1] = x[1]
         if self.dim == 3:
             y[2] = x[2]
 
         if df.near(x[0],self.xmax):
             y[0] = x[0] - self.width
-        
+
         if df.near(x[1],self.ymax):
-            y[1] = x[1] - self.height        
-        
+            y[1] = x[1] - self.height
+
     def find_mesh_info(self):
         xt=self.mesh.coordinates()
         self.length=len(xt)
         max_v=xt.max(axis=0)
         min_v=xt.min(axis=0)
-        
+
         self.xmin=min_v[0]
         self.xmax=max_v[0]
         self.ymin=min_v[1]
         self.ymax=max_v[1]
-        
+
         self.width=self.xmax-self.xmin
         self.height=self.ymax-self.ymin
-        
+
         self.dim=self.mesh.topology().dim()
-        
+
         px_mins=[]
         px_maxs=[]
         py_mins=[]
@@ -60,12 +56,12 @@ class PeriodicBoundary2D(df.SubDomain):
                 px_mins.append(df.Vertex(mesh,vertex.index()))
             elif vertex.point().x()==self.xmax:
                 px_maxs.append(df.Vertex(mesh,vertex.index()))
-            
+
             if vertex.point().y()==self.ymin:
                 py_mins.append(df.Vertex(mesh,vertex.index()))
             elif vertex.point().y()==self.ymax:
                 py_maxs.append(df.Vertex(mesh,vertex.index()))
-                
+
         indics=[]
         indics_pbc=[]
 
@@ -94,32 +90,32 @@ class PeriodicBoundary2D(df.SubDomain):
 
         self.ids=np.array([ids[:],ids[:]+self.length,ids[:]+self.length*2],dtype=np.int32)
         self.ids_pbc=np.array([ids_pbc[:],ids_pbc[:]+self.length,ids_pbc[:]+self.length*2],dtype=np.int32)
-                
+
         self.ids.shape=(-1,)
         self.ids_pbc.shape=(-1,)
-        
-            
+
+
     def modify_m(self,m):
         """
-        This method might be not necessary ... 
+        This method might be not necessary ...
         """
         for i in range(len(self.ids_pbc)):
             j=self.ids_pbc[i]
             k=self.ids[i]
             m[j]=m[k]
-         
+
     def modify_field(self,v):
         """
         modifiy the corresponding fields, magnetisation m or the volumes of nodes.
         """
         for i in range(len(self.ids_pbc)):
             v[self.ids_pbc[i]]=v[self.ids[i]]
-        
-        
+
+
 
 if __name__=="__main__":
     mesh=df.BoxMesh(0,0,0,10,5,1,10,5,1)
-    #mesh = df.UnitSquareMesh(2, 2)  
+    #mesh = df.UnitSquareMesh(2, 2)
     V=df.FunctionSpace(mesh, "Lagrange", 1)
     V3=df.VectorFunctionSpace(mesh, "Lagrange", 1)
     u1 = df.TrialFunction(V)
@@ -130,5 +126,5 @@ if __name__=="__main__":
     pbc=PeriodicBoundary2D(V3)
     print pbc.L.array()
     print 'after',K.array()
-    
-    
+
+

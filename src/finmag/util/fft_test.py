@@ -1,14 +1,12 @@
 from __future__ import division
 from fft import *
-
 import numpy as np
 from numpy import sqrt, sin, cos, pi, exp, real, conj
 import matplotlib.pyplot as plt
 import subprocess as sp
-import logging
 import os
 
-from finmag.util.consts import gamma, mu0
+from finmag.util.consts import gamma
 
 
 def test_FFT_m(tmpdir):

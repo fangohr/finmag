@@ -10,12 +10,12 @@
 """The purpose of this file is to test whether the reinit() function
 is working correctly. This should tell Sundials' cvode integrator that
 it should expect some drastic change in the equation we integrate. While
-the values of the dynamic degrees of freedom should remain the same, we 
+the values of the dynamic degrees of freedom should remain the same, we
 want to warn the integrator that the right hand side may change quickly.
 
 In the magnetic context, this could be a sudden change in the applied field
 which will propagate to the effective field, and thus result in a sudden
-change in the torque from the precession term (and others). 
+change in the torque from the precession term (and others).
 
 After receiving the re-init signal, sundials will forget the history of
 the integration, and start to explore the equations again to determine
@@ -23,10 +23,10 @@ appropriate time steps.
 
 
 It would be nice to show that this actually happens, but I have not found
-a good example yet. This file can be run directly, and it shows that 
+a good example yet. This file can be run directly, and it shows that
 using re-init can actually decrease the total number of function evaluations.
 
-It also shows that sundials resets the counters for the evalutaions of 
+It also shows that sundials resets the counters for the evalutaions of
 the right hand side. So for now, this is the only firm criterion used
 here for testing.
 
@@ -37,10 +37,8 @@ from finmag.tests.jacobean.domain_wall_cobalt import setup_domain_wall_cobalt, \
                                                      domain_wall_error
 from finmag.integrators.llg_integrator import llg_integrator
 from datetime import datetime
-import py
 
 NODE_COUNT = 100
-
 END_TIME1 = 0.1e-10
 END_TIME2 = END_TIME1 + 0.1e-10
 
