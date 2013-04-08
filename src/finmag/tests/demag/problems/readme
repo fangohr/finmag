@@ -1,4 +1,0 @@
-This folder contains demag problems that can be solved using the solvers in the parent folder demag. 
-
-prob_fembem_testcases.py - Contains test problems of fembem type.
-
