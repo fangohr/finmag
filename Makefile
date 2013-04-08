@@ -110,14 +110,10 @@ purge: clean
 create-dirs:
 	mkdir -p test-reports/junit
 
-test: clean make-modules run-unittest-tests pytest run-ci-tests
+test: clean make-modules pytest run-ci-tests
 
 print-debugging-info:
 	@echo "[DDD] Makefile NETGENDIR: ${NETGENDIR}"
-
-# TODO: Can this be deleted? Doesn't seem to do anything on
-# aleph0 and my machine (MAB).
-run-unittest-tests : $(addsuffix /__runtests__,$(TEST_ROOTS))
 
 %/__runtests__ : create-dirs
 	(cd $(dir $@) && NETGENDIR=$(NETGENDIR) PYTHONPATH=$(PYTHON_ROOTS):. python $(RUN_UNIT_TESTS))
@@ -147,4 +143,4 @@ native-tests: make-modules run-ci-tests
 tests-fast: pytest native-tests
 
 
-.PHONY: ci default make-modules test run-ci-tests run-pytest-tests run-unittest-tests pytest pytest-slow
+.PHONY: ci default make-modules test run-ci-tests run-pytest-tests pytest pytest-slow
