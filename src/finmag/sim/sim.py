@@ -46,6 +46,7 @@ class Simulation(object):
           name : the Simulation name (used for writing data files, for examples)
           
           pbc : Periodic boundary type: None or '2d'
+
         """
         # Store the simulation name and a 'sanitized' version of it which
         # contains only alphanumeric characters and underscores. The latter

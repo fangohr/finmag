@@ -18,7 +18,7 @@ import logging
 log = logging.getLogger(name="finmag")
 
 class SLLG(object):
-    def __init__(self,mesh,Ms=8.6e5,unit_length=1.0,name='unnamed',auto_save_data=True,method='RK2b',checking_length=False, pbc2d=None):
+    def __init__(self,mesh,Ms=8.6e5,unit_length=1.0,name='unnamed',auto_save_data=True,method='RK2b',checking_length=False, pbc=None):
         self._t=0
         self.time_scale=1e-9
         self.mesh=mesh
@@ -27,8 +27,12 @@ class SLLG(object):
         self.dx = df.Measure("dx")[self.domains]
         self.region_id=0
         
-        self.S1 = df.FunctionSpace(mesh, "Lagrange", 1)
-        self.S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1,dim=3)
+        self.pbc = pbc
+        if pbc == '2d':
+            self.pbc = PeriodicBoundary2D(mesh)
+        
+        self.S1 = df.FunctionSpace(mesh, "Lagrange", 1, constrained_domain=self.pbc)
+        self.S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3, constrained_domain=self.pbc)
         self._m = df.Function(self.S3)
         self.nxyz=mesh.num_vertices()
         
@@ -40,12 +44,8 @@ class SLLG(object):
         self.field=np.zeros(3*self.nxyz)
         self.dm_dt=np.zeros(3*self.nxyz)
         self._Ms = np.zeros(3*self.nxyz) #Note: nxyz for Ms length is more suitable? 
-        self.effective_field = EffectiveField(mesh)
+        self.effective_field = EffectiveField(self.S3)
         
-        
-        self.pbc2d=pbc2d
-        if self.pbc2d:
-            self.pbc2d=PeriodicBoundary2D(self.S3)
 
         self.pin_fun=None
         self.method=method
@@ -168,8 +168,7 @@ class SLLG(object):
             while tp-self._t>1e-12:
                 self.integrator.run_step(self.field)
                 self._m.vector().set_local(self.m)
-                if self.pbc2d:
-                    self.pbc2d.modify_m(self._m.vector())
+
                 self._t+=self._dt
             
             
