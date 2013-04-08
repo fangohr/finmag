@@ -6,7 +6,6 @@ import subprocess
 import numpy as np
 import dolfin as df
 from finmag.util.meshes import from_geofile
-from finmag.energies.demag.solver_fk import FemBemFKSolver
 from finmag.energies.demag.solver_gcr import FemBemGCRSolver
 import pylab as p
 import finmag.energies.demag.solver_base as sb
@@ -33,10 +32,7 @@ nmagoutput = os.path.join(MODULE_DIR, 'nmag_data.dat')
 if os.path.isfile(nmagoutput):
     os.remove(nmagoutput)
 
-if is_dolfin_1_1:
-    finmagsolvers = {"FK": FemBemFKSolver, "GCRbox": FemBemGCRboxSolver}
-else:
-    finmagsolvers = {"FK": FemBemFKSolver, "GCR": FemBemGCRSolver, "GCRbox": FemBemGCRboxSolver}
+finmagsolvers = {"GCR": FemBemGCRSolver, "GCRbox": FemBemGCRboxSolver}
 
 #Define data arrays to be with data for later plotting
 vertices = []

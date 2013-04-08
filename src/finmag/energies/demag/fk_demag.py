@@ -2,8 +2,8 @@
 Computation of the demagnetising field using the Fredkin-Koehler
 technique and the infamous magpar method.
 
-Rationale: The existing implementation in FemBemFKSolver (child class
-of FemBemDeMagSolver) is kind of a mess. This does the same thing in the same
+Rationale: The previous implementation in FemBemFKSolver (child class
+of FemBemDeMagSolver) was kind of a mess. This does the same thing in the same
 time with less code. Should be more conducive to further optimisation or as
 a template for other techniques like the GCR.
 
