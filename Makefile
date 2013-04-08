@@ -32,8 +32,6 @@ PYTHON_ROOTS = $(PROJECT_DIR)/src
 RUN_UNIT_TESTS = $(PROJECT_DIR)/src/finmag/util/run_ci_tests.py
 # The directory that contains native code
 NATIVE_DIR = native
-# The list of directories that contain unittest unit tests
-TEST_ROOTS = src
 # Set TEST_OPTIONS to e.g. '-sxv' to disable capturing of standard output,
 # exit instantly on the first error, and increase verbosity.
 TEST_OPTIONS ?=
@@ -110,19 +108,13 @@ purge: clean
 create-dirs:
 	mkdir -p test-reports/junit
 
-test: clean make-modules pytest run-ci-tests
+test: clean make-modules pytest native-tests
 
 print-debugging-info:
 	@echo "[DDD] Makefile NETGENDIR: ${NETGENDIR}"
 
-%/__runtests__ : create-dirs
-	(cd $(dir $@) && NETGENDIR=$(NETGENDIR) PYTHONPATH=$(PYTHON_ROOTS):. python $(RUN_UNIT_TESTS))
-
 run-pytest-reproduce-ipython-notebooks : create-dirs
 	NETGENDIR=$(NETGENDIR) PYTHONPATH=$(PYTHON_ROOTS) py.test $(TEST_OPTIONS) bin/reproduce_ipython_notebooks.py --junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
-
-run-ci-tests :
-	make -C $(NATIVE_DIR) run-ci-tests
 
 # Will not run tests marked as slow.
 pytest-fast: create-dirs make-modules
@@ -136,10 +128,11 @@ pytest-slow: create-dirs make-modules
 
 pytest: pytest-fast pytest-slow
 
-native-tests: make-modules run-ci-tests
+native-tests: make-modules
+	make -C $(NATIVE_DIR) run-ci-tests
 
 # Will run the fast py.test tests as well as the native tests
 tests-fast: pytest native-tests
 
 
-.PHONY: ci default make-modules test run-ci-tests pytest pytest-fast pytest-slow
+.PHONY: ci default make-modules test pytest pytest-fast pytest-slow
