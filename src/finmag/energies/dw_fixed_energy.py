@@ -1,7 +1,7 @@
 import os
 import dolfin as df
 import numpy as np
-from demag.demag import Demag
+from demag import Demag
 
 
 class FixedEnergyDW(object):
