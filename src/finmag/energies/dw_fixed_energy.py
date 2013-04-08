@@ -1,7 +1,7 @@
 import os
 import dolfin as df
 import numpy as np
-from finmag.energies import Demag
+from demag.demag import Demag
 
 
 class FixedEnergyDW(object):
@@ -10,7 +10,7 @@ class FixedEnergyDW(object):
 		self.right=right
 		self.repeat_time=repeat_time
 		self.in_jacobian=False
-	
+
 	def write_xml(self,filename,coordinates,cells):
 
 		f=open(filename,'w')
@@ -33,20 +33,20 @@ class FixedEnergyDW(object):
 													  cells[i][3]))
 		f.write("""     </cells>\n""")
 		f.write("""  </mesh>\n</dolfin>""")
-	
+
 	def bias_mesh(self,step):
 		cds=np.array(self.mesh.coordinates())
 		cells=np.array(self.mesh.cells())
-		
+
 		cells+=len(cds)
 		cells=np.concatenate((self.mesh.cells(),cells))
 
-		cds[:,0]+=self.xlength*step		
+		cds[:,0]+=self.xlength*step
 		cds=np.concatenate((self.mesh.coordinates(), cds))
-		
+
 		return cells,cds
-		
-	
+
+
 	def setup(self, S3, m, Ms, unit_length=1):
 		self.S3=S3
 		self.mesh=S3.mesh()
@@ -55,80 +55,80 @@ class FixedEnergyDW(object):
 		self.tmp_field=np.zeros(6*n)
 		self.field=np.zeros((n,3))
 		self.init_m=np.zeros((2*n,3))
-		
+
 		c=self.mesh.coordinates()
 		self.xlength=np.max(c[:,0])-np.min(c[:,0])
-		
+
 		self.__compute_field()
 		tmp=self.tmp_field.reshape((3,-1),order='C')
 		self.field=np.array(tmp[:,:n])
 		self.field.shape=(1,-1)
 		self.field=self.field[0]
-		
-				
-	
+
+
+
 	def __compute_field(self):
 		n=self.mesh.num_vertices()
 		self.init_m[:n,0]=1
 		self.init_m[n:,:]=self.left
-		
+
 		for i in range(-self.repeat_time,0):
 			cells,cds=self.bias_mesh(i-1e-10)
 			filename="mesh_%d.xml"%i
 			self.write_xml(filename,cds,cells)
-			
+
 			demag=Demag(solver='Treecode')
 			mesh=df.Mesh(filename)
 			Vv = df.VectorFunctionSpace(mesh, 'Lagrange', 1)
-			
+
 			dg = df.FunctionSpace(mesh, "DG", 0)
 			Ms_tmp=df.Function(dg)
 			Ms_list=list(self.Ms.vector().array())
 			Ms_tmp.vector().set_local(np.array(Ms_list+Ms_list))
 
-			
+
 			m=df.Function(Vv)
 			tmp_init_m=self.init_m.reshape((1,-1),order='F')[0]
 			m.vector().set_local(tmp_init_m)
 			demag.setup(Vv,m,Ms_tmp)
 			self.tmp_field+=demag.compute_field()
-			
+
 			os.remove(filename)
 
 		self.init_m[:n,0]=-1
 		self.init_m[n:,:]=self.right
-		
+
 		for i in range(1,self.repeat_time+1):
 			cells,cds=self.bias_mesh(i+1e-10)
 			filename="mesh_%d.xml"%i
 			self.write_xml(filename,cds,cells)
-			
+
 			demag=Demag(solver='Treecode')
 			mesh=df.Mesh(filename)
 			Vv = df.VectorFunctionSpace(mesh, 'Lagrange', 1)
-			
+
 			dg = df.FunctionSpace(mesh, "DG", 0)
 			Ms_tmp=df.Function(dg)
 			Ms_list=list(self.Ms.vector().array())
 			Ms_tmp.vector().set_local(np.array(Ms_list+Ms_list))
-			
+
 			m=df.Function(Vv)
 			tmp_init_m=self.init_m.reshape((1,-1),order='F')[0]
 			m.vector().set_local(tmp_init_m)
 			demag.setup(Vv,m,Ms_tmp)
 			self.tmp_field+=demag.compute_field()
-			
+
 			os.remove(filename)
-		
+
 	def compute_field(self):
 		return self.field
-	
-	
-	
+
+
+
 if __name__=='__main__':
 
 	mesh = df.BoxMesh(0, 0, 0, 500, 20, 5, 100, 4, 1)
-	
+
 	dw=FixedEnergyDW(repeat_time=5)
 	S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
 	m=df.Function(S3)
@@ -138,5 +138,5 @@ if __name__=='__main__':
 	for x in range(100):
 		print x*5+2.5,m(x*5+2.5,17.5,2.5)
 
-	
-	
+
+
