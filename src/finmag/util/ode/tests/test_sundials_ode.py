@@ -6,7 +6,6 @@
 #
 # AUTHOR(S) OF THIS FILE: Dmitri Chernyshenko (d.chernyshenko@soton.ac.uk)
 
-from finmag.util.ode import cvode
 import unittest
 import math
 import numpy as np

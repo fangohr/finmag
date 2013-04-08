@@ -1,4 +1,3 @@
-import py
 import numpy as np
 import dolfin as df
 from finmag import Simulation as Sim

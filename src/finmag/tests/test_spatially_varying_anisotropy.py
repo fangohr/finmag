@@ -1,10 +1,9 @@
 import os
-import numpy as np
 import pylab
+import numpy as np
 import dolfin as df
-
 from finmag import Simulation
-from finmag.energies import UniaxialAnisotropy, Exchange, Demag
+from finmag.energies import UniaxialAnisotropy
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 """
@@ -30,12 +29,12 @@ def run_simulation():
     expr_a = df.Expression(("x[0]/sqrt(x[0]*x[0]+(Lx-x[0])*(Lx-x[0]))",
                             "(Lx-x[0])/sqrt(x[0]*x[0]+(Lx-x[0])*(Lx-x[0]))",
                             "0"),Lx=Lx)
-    
+
 
     #descritise material parameter. Generally a discontinous Galerkin order 0 basis function
     #is a good choice here (see example in manual) but for the test we use CG1 space.
 
-    V3_CG1 = df.VectorFunctionSpace(mesh,"CG",1,dim=3) 
+    V3_CG1 = df.VectorFunctionSpace(mesh,"CG",1,dim=3)
     a = df.interpolate(expr_a,V3_CG1)
 
     sim = Simulation(mesh, Ms)
@@ -53,7 +52,7 @@ def run_simulation():
         pos = (x,)
         Mx.append(sim.llg._m(pos)[0])
         ax.append(a(pos)[0])
-        
+
     pylab.plot(xs,Mx,'-o',label='Mx')
     pylab.plot(xs,ax,'-x',label='ax')
     pylab.savefig(os.path.join(MODULE_DIR,'profile.png'))
@@ -75,7 +74,7 @@ def test_spatially_varying_anisotropy_direction_a():
     print "maxdiff=",maxdiff
     print "The fairly large error seems to come from x=0. Why?"
     assert maxdiff < 0.018
-    
+
     if __name__ == "__main__":
 
         f=df.File('test.pvd')

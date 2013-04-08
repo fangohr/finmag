@@ -1,7 +1,5 @@
-import pytest
 import numpy as np
 import dolfin as df
-from distutils.version import StrictVersion
 from finmag.energies import DMI,Exchange
 from finmag import Simulation
 from finmag.util.helpers import vector_valued_function
@@ -20,7 +18,7 @@ def test_dmi_pbc2d():
     dmi = DMI(1)
     dmi.setup(S3, m, 1)
     field = dmi.compute_field()
-    
+
     assert np.max(field) < 1e-15
 
 

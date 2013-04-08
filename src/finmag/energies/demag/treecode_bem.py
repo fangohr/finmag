@@ -2,7 +2,7 @@ import logging
 import numpy as np
 import dolfin as df
 import solver_base as sb
-from finmag.util.timings import default_timer, mtimed
+from finmag.util.timings import default_timer
 import finmag.util.solver_benchmark as bench
 from finmag.native.treecode_bem import FastSum
 from finmag.native.treecode_bem import compute_solid_angle_single
@@ -172,7 +172,7 @@ if __name__ == "__main__":
     #mesh=df.Mesh('tet.xml')
     #
     #expr = df.Expression(('4.0*sin(x[0])', '4*cos(x[0])','0'))
-    from finmag.util.meshes import elliptic_cylinder,sphere,box
+    from finmag.util.meshes import elliptic_cylinder, sphere
     mesh = elliptic_cylinder(100,150,5,4.5,directory='meshes')
     #mesh=box(0,0,0,5,5,100,5,directory='meshes')
     #mesh = df.BoxMesh(0, 0, 0, 100, 2, 2, 400, 2, 2)

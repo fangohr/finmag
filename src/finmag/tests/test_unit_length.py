@@ -1,7 +1,6 @@
 import os
 import numpy as np
 import dolfin as df
-from finmag.util.helpers import fnormalise
 from finmag.energies import Exchange
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))

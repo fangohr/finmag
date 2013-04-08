@@ -2,7 +2,6 @@ import pytest
 import subprocess
 import dolfin as df
 import numpy as np
-
 from finmag.sim.llg import LLG
 from finmag.energies import Zeeman
 from finmag.util.oommf import mesh, oommf_dmdt
@@ -18,7 +17,7 @@ S3 = df.VectorFunctionSpace(msh, "Lagrange", 1)
 
 @pytest.mark.skipif('subprocess.call(["which", "oommf"]) != 0')
 def test_dmdt_computation_with_oommf():
-    # set up finmag 
+    # set up finmag
     llg = LLG(S1, S3)
     llg.set_m((-3, -2, 1))
 
@@ -27,7 +26,7 @@ def test_dmdt_computation_with_oommf():
     h = Ms/2
     H_app = (h/np.sqrt(3), h/np.sqrt(3), h/np.sqrt(3))
     zeeman = Zeeman(H_app)
-    zeeman.setup(S3, llg._m, llg.Ms, 1)  
+    zeeman.setup(S3, llg._m, llg.Ms, 1)
     llg.effective_field.add(zeeman)
 
     dmdt_finmag = df.Function(llg.S3)

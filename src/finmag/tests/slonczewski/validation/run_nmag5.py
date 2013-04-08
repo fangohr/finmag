@@ -1,4 +1,4 @@
-import os, sys, math
+import os, math
 import numpy as np
 from nsim.netgen import netgen_mesh_from_string
 from nmag.common import SI, degrees_per_ns, Tesla, mu0, at, every

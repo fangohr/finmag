@@ -23,7 +23,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
-from dolfin import Mesh, assemble, Constant, dx
 from types import ListType, TupleType
 
 logger = logging.getLogger(name='finmag')
@@ -55,7 +54,7 @@ def from_geofile(geofile, save_result=True):
 
         .. code-block:: python
 
-            import dolfin 
+            import dolfin
             from finmag.util.meshes import from_geofile
             mesh = from_geofile(path_to_my_geofile)
             dolfin.plot(mesh, interactive=True)
@@ -84,7 +83,7 @@ def from_geofile(geofile, save_result=True):
         change_xml_marker_starts_with_zero(xml)
         result_filename = compress(xml)
 
-    mesh = Mesh(result_filename)
+    mesh = df.Mesh(result_filename)
     if not save_result and not result_file_exists:
         # We delete the .xml.gz file only if it didn't exist previously
         os.remove(result_filename)
@@ -197,7 +196,7 @@ def convert_diffpack_to_xml(diffpackfile):
         print output
         print "dolfin-convert failed with exit code", status
         sys.exit(3)
- 
+
     files = ["%s.xml.bak" % basename,
              "%s_bi.xml" % basename,
              diffpackfile]
@@ -210,18 +209,18 @@ def convert_diffpack_to_xml(diffpackfile):
 def change_xml_marker_starts_with_zero(xmlfile):
     """
     the xml file also contains mesh_value_collection in dolfin 1.1 (not in dolfin 1.0) and
-    the marker index starts with 1 but the default df.dx refers to dx(0), so this function is 
-    going to fix this problem (could we report this as a very small bug? seems that dolfin 
-    community will abandon netegn later?) 
+    the marker index starts with 1 but the default df.dx refers to dx(0), so this function is
+    going to fix this problem (could we report this as a very small bug? seems that dolfin
+    community will abandon netegn later?)
     """
-    
+
     f=open(xmlfile,'r')
     data=f.read()
     f.close()
 
     data_begin=False
     values=[]
-    
+
     for line in data.splitlines():
 
         if 'mesh_value_collection' in line:
@@ -229,7 +228,7 @@ def change_xml_marker_starts_with_zero(xmlfile):
                 data_begin=True
             else:
                 data_begin=False
-                
+
         if data_begin and 'value="' in line:
             v=line.split('value="')[1]
             v=v.split('"')[0]
@@ -237,24 +236,24 @@ def change_xml_marker_starts_with_zero(xmlfile):
 
     if len(values)==0:
         return
-    
+
     if min(values)==0:
         return
     elif min(values)<0:
         raise ValueError("Mesh markers are wrong?!")
-    
+
     min_index=min(values)
-    
+
     f=open(xmlfile,'w')
     data_begin=False
     for line in data.splitlines():
-       
+
         if 'mesh_value_collection' in line:
             if 'dim="3"' in line:
                 data_begin=True
             else:
                 data_begin=False
-        
+
         if data_begin and 'value="' in line:
             v=line.split('value="')
             v_bak=v[0]
@@ -263,7 +262,7 @@ def change_xml_marker_starts_with_zero(xmlfile):
             f.write(v_bak+ 'value="%d"/>\n'%v)
         else:
             f.write(line+'\n')
-            
+
     f.close()
 
 def compress(filename):
@@ -432,7 +431,7 @@ def ellipsoid(r1, r2, r3, maxh, save_result=True, filename='', directory=''):
 
 def ring(r1,r2, h, maxh, save_result=True, filename='', directory='',with_middle_plane=False):
     """
-    Return a dolfin mesh representing a ring with inner radius `r1`, outer 
+    Return a dolfin mesh representing a ring with inner radius `r1`, outer
     radius `r2` and height `h`. The argument `maxh` controls the maximal element size
     in the mesh (see the Netgen manual 4.x, Chapter 2).
 
@@ -456,7 +455,7 @@ def ring(r1,r2, h, maxh, save_result=True, filename='', directory='',with_middle
         solid fincyl2 = cylinder (0, 0, -{h}; 0, 0, 0; {r2} )
               and plane (0, 0, -{h}; 0, 0, -1)
               and plane (0, 0, {h}; 0, 0, 1);
-          
+
 	solid ring = fincyl2 and not fincyl -maxh = {maxh};
         tlo ring;
         """).format(r1=r1,r2=r2, h=h/2.0, maxh=maxh)
@@ -470,15 +469,15 @@ def ring(r1,r2, h, maxh, save_result=True, filename='', directory='',with_middle
         solid fincyl2 = cylinder (0, 0, -{h}; 0, 0, 0; {r2} )
               and plane (0, 0, -{h}; 0, 0, -1)
               and plane (0, 0, 0; 0, 0, 1);
-        
+
         solid fincyl3 = cylinder (0, 0, 0; 0, 0, {h}; {r2} )
               and plane (0, 0, 0; 0, 0, -1)
               and plane (0, 0, {h}; 0, 0, 1);
-  
+
 	solid ring = (fincyl2 or fincyl3) and not fincyl -maxh = {maxh};
         tlo ring;
         """).format(r1=r1,r2=r2, h=h/2.0, maxh=maxh)
-        
+
 
 
     if save_result == True and filename == '':
@@ -673,20 +672,20 @@ def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, dg_fun=None,**kwar
         if figsize != None:
             logger.warning("Ignoring argument `figsize` because `ax` was "
                            "provided explicitly.")
-            
+
     if dg_fun==None:
         dg_fun=df.Function(df.FunctionSpace(mesh, 'DG', 0))
         dg_fun.vector()[:]=1
-    
+
     if dim == 2:
         coords = mesh.coordinates()
         x = coords[:,0]
         y = coords[:,1]
         triangs = np.array([[v.index() for v in df.vertices(s)] for s in df.faces(mesh)])
-        
+
         xmid = x[triangs].mean(axis=1)
         ymid = y[triangs].mean(axis=1)
-        
+
         zfaces=np.array([dg_fun(xmid[i],ymid[i]) for i in range(len(xmid))])
 
         if scalar_field != None:
@@ -700,7 +699,7 @@ def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, dg_fun=None,**kwar
         ## scalar function on a mesh).
         #ax.tripcolor(x, y, triangles=triangs)
         ax.tripcolor(x, y, triangles=triangs, facecolors=zfaces, edgecolors='k', **kwargs)
-        
+
     elif dim == 3:
         # TODO: Remove this error message once matplotlib 1.3 has been released!
         import matplotlib

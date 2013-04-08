@@ -2,7 +2,6 @@ import numpy as np
 import dolfin as df
 from finmag.util.helpers import *
 from finmag.util.meshes import box, cylinder
-import pytest
 
 TOLERANCE = 1e-15
 
@@ -53,7 +52,7 @@ def test_fnormalise():
     #        1   0   0   0
     #
     #can also write as
-    
+
     a3=np.array([[0,0,1.],[0,2,0],[3,0,0],[4,5,0]]).transpose()
 
     c=np.sqrt(4**2+5**2)
@@ -123,7 +122,7 @@ def test_vector_valued_function():
     # A few normalised versions, too
     f_tuple_normalised = vector_valued_function(tuple(vec), S3, normalise=True)
     f_expr_normalised = vector_valued_function(('a*x[0]', 'b*x[1]', 'c*x[2]'), S3, a=a, b=b, c=c, normalise=True)
-    
+
     # Cython 0.17.1 does not like this
     #f_callable_normalised = vector_valued_function(lambda (x,y,z): (a*x, b*y, c*z), S3, normalise=True)
     # but accepts this rephrased version:
@@ -146,36 +145,36 @@ def test_vector_valued_function():
 
     assert(all(f_expr_normalised.vector() == v_ref_expr_normalised))
     assert(all(f_callable_normalised.vector() == v_ref_expr_normalised))
-    
-    
+
+
 def test_scalar_valued_dg_function():
     mesh = df.UnitCubeMesh(2, 2, 2)
-    
+
     def init_f(coord):
         x,y,z=coord
         if z<=0.5:
             return 1
         else:
             return 10
-    
+
     f=scalar_valued_dg_function(init_f, mesh)
-    
+
     assert f(0,0,0.51)==10.0
     assert f(0.5,0.7,0.51)==10.0
     assert f(0.4,0.3,0.96)==10.0
     assert f(0,0,0.49)==1.0
     fa=f.vector().array().reshape(2,-1)
-    
+
     assert np.min(fa[0])==np.max(fa[0])==1
     assert np.min(fa[1])==np.max(fa[1])==10
-    
-    
+
+
     dg = df.FunctionSpace(mesh, "DG", 0)
     dgf=df.Function(dg)
     dgf.vector()[0]=9.9
     f=scalar_valued_dg_function(dgf, mesh)
     assert f.vector().array()[0]==9.9
-    
+
 
 def test_angle():
     assert abs(angle([1,0,0], [1,0,0]))           < TOLERANCE
@@ -361,6 +360,6 @@ def test_probe():
     assert(np.ma.allclose(res1, res1_expected))
     assert(np.ma.allclose(res2, res2_expected))
 
-    
+
 if __name__ == '__main__':
     test_scalar_valued_dg_function()

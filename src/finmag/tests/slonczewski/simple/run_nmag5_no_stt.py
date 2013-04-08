@@ -1,7 +1,6 @@
-import os, sys, math
+import math
 from nmag.common import SI, degrees_per_ns, Tesla, mu0, at, every
-from nmag.nmag5 import Simulation, MagMaterial, uniaxial_anisotropy
-from nsim.model import Value
+from nmag.nmag5 import Simulation, MagMaterial
 
 # Applied field
 Happ_dir = [0, 0, 10] # in mT

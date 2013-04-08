@@ -2,12 +2,11 @@ from dolfin import *
 from finmag.sim.llg import LLG
 from finmag.energies import Exchange
 from math import log
-import random
 
 class MyLLG(LLG):
     """
     Temporary extension of LLG because the current version
-    does its computations externally in C++, and doesn't 
+    does its computations externally in C++, and doesn't
     compute the variational forms, and thus makes it
     impossible to compute the jacobian.
     """
@@ -35,7 +34,7 @@ class MyLLG(LLG):
     def compute_variational_forms(self):
         M, H, Ms, p, c, alpha, V = self._m, self.H_eff(), \
                 self.Ms, self.p, self.c, self.alpha, self.S3
-        
+
         u = TrialFunction(V)
         v = TestFunction(V)
 
@@ -57,7 +56,7 @@ class MyLLG(LLG):
 
 def derivative_test(L, M, x, hs, J=None):
     """
-    Taylor remainder test. 
+    Taylor remainder test.
 
     *Arguments*
 
@@ -69,7 +68,7 @@ def derivative_test(L, M, x, hs, J=None):
 
       hs - sequence of step width h
 
-      We compute the taylor series of dm/dt represented by L for a statevector P = M + h*x 
+      We compute the taylor series of dm/dt represented by L for a statevector P = M + h*x
 
       J - Jacobian. If Jacobian J is given, use that, if not don't.
     """
@@ -120,7 +119,7 @@ hs = [2.0/n for n in (1, 2, 4, 8, 16, 32)]
 TOL = 1e-11
 
 def test_convergence_linear():
-    """All convergence rates should be 1 as the differences 
+    """All convergence rates should be 1 as the differences
     should convert as O(n)."""
 
     errors = derivative_test(L, M, x, hs)

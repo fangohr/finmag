@@ -9,7 +9,6 @@
 import numpy as np
 import scipy.integrate
 import unittest
-import py
 from domain_wall_cobalt import setup_domain_wall_cobalt, domain_wall_error
 from finmag.native import sundials
 from finmag.util.ode import scipy_to_cvode_rhs
