@@ -27,7 +27,7 @@ class Demag(object):
         self.in_jacobian = False
         log.debug("Creating Demag object with " + solver + " solver.")
 
-        if solver in ["FK", "GCR","Treecode", "old_FK"]:
+        if solver in ["FK", "GCR", "Treecode", "old_FK"]:
             self.solver = solver
             if solver_type is None:
                 solver_type = get_config_option('demag', 'solver_type', 'Krylov')
