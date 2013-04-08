@@ -3,7 +3,6 @@ import textwrap
 import dolfin as df
 from finmag.util.timings import default_timer, mtimed
 from finmag.util.configuration import get_config_option
-from solver_fk import FemBemFKSolver
 from solver_gcr import FemBemGCRSolver
 from treecode_bem import TreecodeBEM
 from fk_demag import FKDemag
@@ -27,7 +26,7 @@ class Demag(object):
         self.in_jacobian = False
         log.debug("Creating Demag object with " + solver + " solver.")
 
-        if solver in ["FK", "GCR", "Treecode", "old_FK"]:
+        if solver in ["FK", "GCR", "Treecode"]:
             self.solver = solver
             if solver_type is None:
                 solver_type = get_config_option('demag', 'solver_type', 'Krylov')
@@ -38,7 +37,7 @@ class Demag(object):
             log.debug("Using demag solver of type '{}'".format(solver_type))
         else:
             raise NotImplementedError(
-                "Don't know method '{}'. Only 'FK', 'GCR', 'Treecode' and 'old_FK' are implemented.".format(solver))
+                "Don't know method '{}'. Only 'FK', 'GCR', 'Treecode' are implemented.".format(solver))
 
         self.degree = degree
         self.element = element
@@ -75,15 +74,7 @@ class Demag(object):
                   "project_method": 'magpar',
                   "bench": self.bench}
 
-        if self.solver == "old_FK":
-            self.demag = FemBemFKSolver(**kwargs)
-            for (name, solver) in (("Poisson", self.demag.poisson_solver), ("Laplace", self.demag.laplace_solver)):
-                params = repr(solver.parameters.to_dict())
-                #Log the linear solver parameters
-                log.debug("{}: {} solver parameters.\n{}".format(
-                    self.__class__.__name__, name, textwrap.fill(
-                        params, width=100, initial_indent=4 * " ", subsequent_indent=4 * " ")))
-        elif self.solver == "GCR":
+        if self.solver == "GCR":
             self.demag = FemBemGCRSolver(**kwargs)
             for (name, solver) in (("Poisson", self.demag.poisson_solver), ("Laplace", self.demag.laplace_solver)):
                 params = repr(solver.parameters.to_dict())
