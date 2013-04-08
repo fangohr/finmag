@@ -7,7 +7,7 @@ def test_validation():
     epsilon = 1e-16
 
     #short run:
-    tmax = 0.05e-9; tolerance = 3.5e-6
+    tmax = 0.05e-9; tolerance = 5e-6
 
     #long run
     #tmax = 10e-9; tolerance = 1e-4
