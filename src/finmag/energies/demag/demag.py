@@ -9,6 +9,17 @@ from fk_demag import FKDemag
 from solver_base import default_parameters
 
 log = logging.getLogger("finmag")
+KNOWN_SOLVERS = {'FK': FKDemag, 'GCR': FemBemGCRSolver, 'Treecode': TreecodeBEM}
+
+
+def NewDemag(solver='FK', *args, **kwargs):
+    if not solver in KNOWN_SOLVERS:
+        log.error("Tried to create a Demag object with unknown solver '{}'".format(solver))
+        raise NotImplementedError(
+            "Solver '{}' not implemented. Valid choices: one of '{}'.".format(solver, KNOWN_SOLVERS.keys()))
+
+    log.debug("Creating Demag object with solver '{}'.".format(solver))
+    return KNOWN_SOLVERS[solver](*args, **kwargs)
 
 
 class Demag(object):
@@ -18,7 +29,7 @@ class Demag(object):
 
     *Arguments*
         solver
-            demag solver method: "FK", "GCR", "Treecode", "new_fk"
+            demag solver method: "FK", "GCR", "Treecode"
 
     """
     def __init__(self, solver="FK", degree=1, element="CG", project_method="magpar", bench=False,

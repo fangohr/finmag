@@ -6,6 +6,7 @@ import subprocess
 import numpy as np
 import dolfin as df
 from finmag.util.meshes import from_geofile
+from finmag.energies import Demag
 from finmag.energies.demag.solver_gcr import FemBemGCRSolver
 import pylab as p
 import finmag.energies.demag.solver_base as sb
@@ -17,12 +18,10 @@ is_dolfin_1_1 = (finmag.util.versions.get_version_dolfin() == "1.1.0")
 
 class FemBemGCRboxSolver(FemBemGCRSolver):
     "GCR Solver but with point evaluation of the q vector as the default"
-    def __init__(self, mesh,m, parameters=sb.default_parameters, degree=1, element="CG",
-         project_method='magpar', unit_length=1, Ms = 1.0,bench = False,
-         qvector_method = 'box'):
-
-        FemBemGCRSolver.__init__(self,mesh,m, parameters, degree, element,
-         project_method, unit_length, Ms,bench,qvector_method )
+    def __init__(self, parameters=sb.default_parameters, degree=1, element="CG",
+         project_method='magpar', bench = False, qvector_method = 'box'):
+        FemBemGCRSolver.__init__(self, parameters, degree, element,
+         project_method, bench, qvector_method )
 
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
