@@ -119,8 +119,6 @@ print-debugging-info:
 # aleph0 and my machine (MAB).
 run-unittest-tests : $(addsuffix /__runtests__,$(TEST_ROOTS))
 
-fasttest : make-modules $(addsuffix /__runtests__,$(TEST_ROOTS)) run-ci-tests
-
 %/__runtests__ : create-dirs
 	(cd $(dir $@) && NETGENDIR=$(NETGENDIR) PYTHONPATH=$(PYTHON_ROOTS):. python $(RUN_UNIT_TESTS))
 
