@@ -1,8 +1,8 @@
+import os
 import pytest
 import unittest
 import numpy as np
 import dolfin as df
-import os
 from finmag.util.versions import get_version_dolfin
 from finmag.native.llg import compute_lindholm_L, compute_lindholm_K, compute_bem_fk, compute_bem_gcr
 from finmag.util import time_counter
@@ -11,10 +11,25 @@ from finmag.util.meshes import mesh_volume, sphere
 from finmag.energies.demag import belement_magpar
 from finmag.energies.demag import belement
 from finmag.tests.test_solid_angle_invariance import random_3d_rotation_matrix
-from problems.prob_fembem_testcases import MagSphereBase
 from finmag.energies import Demag
 
 compute_belement = belement_magpar.return_bele_magpar()
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+class MagSphereBase(object):
+    """Base class for MagSphere classes"""
+    def __init__(self,maxh,radius=10):
+        self.mesh = sphere(radius, maxh, directory=MODULE_DIR)
+        self.Ms = 1.0
+        self.m = (str(self.Ms), "0.0", "0.0")
+        self.M = self.m # do we need this?
+        self.V = df.VectorFunctionSpace(self.mesh, "CG", 1)
+        self.m = df.interpolate(df.Expression(self.m), self.V)
+        self.r = radius
+        self.maxh = maxh
+
+    def desc(self):
+        return "Sphere demag test problem, Ms=%g, radius=%g, maxh=%g" %(self.Ms, self.r, self.maxh)
 
 def compute_belement_magpar(r1, r2, r3):
     res = np.zeros(3)
