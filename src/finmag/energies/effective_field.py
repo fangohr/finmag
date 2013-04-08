@@ -12,7 +12,7 @@ class EffectiveField(object):
         fun = df.Function(S3)
         self._output_shape = fun.vector().size()
         self.H_eff = fun.vector().array()
-        
+
         self.interactions = []
         self._callables = []  # functions for time update of interactions
 
@@ -54,7 +54,7 @@ class EffectiveField(object):
 
         self.H_eff[:] = 0
         for interaction in self.interactions:
-            self.H_eff  += interaction.compute_field()
+            self.H_eff += interaction.compute_field()
 
         return self.H_eff
 
@@ -86,13 +86,14 @@ class EffectiveField(object):
         found.
 
         """
-        added_interaction_types = set([]) # for debugging output to user
+        added_interaction_types = set([])  # for debugging output to user
         matching_interaction = None
 
         for inter in self.interactions:
             added_interaction_types.add(inter.__class__.__name__)
-            if inter.__class__.__name__.capitalize() == interaction_type.capitalize():
-                if matching_interaction != None:
+            if ((hasattr(inter, 'name') and inter.name.capitalize() == interaction_type.capitalize())
+                    or inter.__class__.__name__.capitalize() == interaction_type.capitalize()):
+                if matching_interaction is not None:
                     raise ValueError(
                         "Found more than one interaction of type '{}'.".format(interaction_type))
                 matching_interaction = inter
