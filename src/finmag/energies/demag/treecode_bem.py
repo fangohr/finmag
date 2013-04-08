@@ -4,27 +4,42 @@ import dolfin as df
 import solver_base as sb
 from finmag.util.timings import default_timer, mtimed
 import finmag.util.solver_benchmark as bench
-
-
 from finmag.native.treecode_bem import FastSum
 from finmag.native.treecode_bem import compute_solid_angle_single
 
 logger = logging.getLogger(name='finmag')
-__all__ = ["TreecodeBEM"]
+
+
 class TreecodeBEM(sb.FemBemDeMagSolver):
-    def __init__(self,mesh,m, parameters=sb.default_parameters , degree=1, element="CG",
-                 project_method='magpar', unit_length=1,Ms = 1.0,bench = False,
-                 mac=0.3,p=3,num_limit=100,correct_factor=10, type_I=True,solver_type=None):
+    def __init__(self, parameters=sb.default_parameters, degree=1, element="CG",
+                 project_method='magpar', bench=False,
+                 mac=0.3, p=3, num_limit=100, correct_factor=10, type_I=True, solver_type=None):
+        self.parameters = parameters
+        self.degree = degree
+        self.element = element
+        self.project_method = project_method
+        self.bench = bench
+        self.mac = mac
+        self.p = p
+        self.num_limit = num_limit
+        self.correct_factor = correct_factor
+        self.type_I = type_I
+        self.solver_type = solver_type
 
-        sb.FemBemDeMagSolver.__init__(self,mesh,m, parameters, degree, element=element,
-                                      project_method = project_method,
-                                      unit_length = unit_length,Ms = Ms,bench = bench,solver_type=solver_type)
-        self.__name__ = "Treecode Demag Solver"
-
+    def setup(self, S3, m, Ms, unit_length=1):
+        sb.FemBemDeMagSolver.__init__(self,
+                                      S3.mesh(), m,
+                                      self.parameters,
+                                      self.degree, self.element,
+                                      self.project_method,
+                                      unit_length,
+                                      Ms,
+                                      self.bench,
+                                      True)
 
         #Linear Solver parameters
-        method = parameters["poisson_solver"]["method"]
-        pc = parameters["poisson_solver"]["preconditioner"]
+        method = self.parameters["poisson_solver"]["method"]
+        pc = self.parameters["poisson_solver"]["preconditioner"]
 
         self.poisson_solver = df.KrylovSolver(self.poisson_matrix, method, pc)
 

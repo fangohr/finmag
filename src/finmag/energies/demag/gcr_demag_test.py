@@ -2,7 +2,7 @@ import dolfin as df
 import numpy as np
 from math import pi
 from finmag.util.meshes import sphere
-from finmag.energies.demag.demag import NewDemag
+from finmag.energies import Demag
 from finmag.util.consts import mu0
 
 radius = 1.0
@@ -16,7 +16,7 @@ def setup_demag_sphere(Ms):
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
     m = df.Function(S3)
     m.assign(df.Constant((1, 0, 0)))
-    demag = NewDemag('GCR')
+    demag = Demag('GCR')
     demag.setup(S3, m, Ms, unit_length)
     return demag
 
