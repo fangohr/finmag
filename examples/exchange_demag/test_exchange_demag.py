@@ -56,7 +56,7 @@ def run_finmag():
         # Energy densities
         if counter == 10:
             exch_energy = exchange.energy_density_function()
-            demag_energy = demag.demag.energy_density_function()
+            demag_energy = demag.energy_density_function()
             finmag_exch, finmag_demag = [], []
             R = range(100)
             for i in R:
