@@ -821,7 +821,7 @@ void compute_moment(fastsum_plan *plan, struct octree_node *tree, double ***mome
 
 double compute_potential_single_target(fastsum_plan *plan, struct octree_node *tree, int index, double ***a) {
 
-    double R, rc;
+    double R;
     int i, j, k;
     double res = 0;
     double dx, dy, dz;
@@ -977,7 +977,7 @@ void init_mesh(fastsum_plan *plan, double *x_t, double *t_normal,
 void update_charge_density(fastsum_plan *plan, double *m) {
 
     int face, f, k, tet, j;
-    int i1, i2, i3, i4;
+    int i1, i2, i3;
     double sa, sb, sc;
     double m0[3], m1[3], m2[3], m3[3];
     double x0, y0, z0;
@@ -1130,7 +1130,7 @@ inline double correction_over_tetrahedron(fastsum_plan *plan, int base_index,
 
     double res = 0, exact = 0;
 
-    int i, j, k;
+    int i, j;
     int n = tet_quad_n[plan->tetrahedron_p];
 
 
@@ -1264,14 +1264,14 @@ void fastsum_finalize(fastsum_plan *plan) {
 
 }
 
-int main() {
+int main(void) {
     
     int p = 4;
     double mac = 0.5;
     int num_limit = 2;
     int i, j, k;
     int N_source = 8, N_target = 1;
-    double res = 0, r;
+    double res = 0;
     
     double ***a = alloc_3d_double(p + 1, p + 1, p + 1);
 

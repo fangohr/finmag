@@ -61,7 +61,7 @@ typedef struct {
     
 } fastsum_plan;
 
-fastsum_plan *create_plan();
+fastsum_plan *create_plan(void);
 void init_mesh(fastsum_plan *plan, double *x_t, double *t_normal,
         int *triangle_nodes, int *tetrahedron_nodes);
 void update_charge_density(fastsum_plan *plan,double *m);

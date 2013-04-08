@@ -160,7 +160,7 @@ inline double direct_compute_potential_leaf_I(fastsum_plan *plan, struct octree_
 double compute_potential_single_target_I(fastsum_plan *plan, struct octree_node *tree, int index) {
 
     double R;
-    int i, j, k;
+    int i;
     double res = 0;
     double dx, dy, dz;
     double a[35];
