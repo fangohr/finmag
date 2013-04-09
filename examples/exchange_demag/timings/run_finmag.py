@@ -25,26 +25,15 @@ if not os.path.isfile(os.path.join(MODULE_DIR, "bar.xml.gz")):
 # Run nmag
 commands.getstatusoutput("nsim run_nmag.py --clean")
 
-# Run finmag
-# setupstart = time.time()
-# Set up LLG
-#mesh = df.Mesh(os.path.join(MODULE_DIR, "bar.xml.gz"))
-#llg = LLG(mesh, unit_length=1e-9)
-#llg.Ms = 0.86e6
-#llg.A = 13.0e-12
-#llg.alpha = 0.5
-#llg.set_m((1,0,1))
-#llg.setup(use_exchange=True, use_dmi=False, use_demag=True, demag_method="FK")
-
 # Setup
 setupstart = time.time()
 mesh = df.Mesh(os.path.join(MODULE_DIR, "bar.xml.gz"))
 sim = Simulation(mesh, Ms=0.86e6, unit_length=1e-9)
 sim.set_m((1, 0, 1))
 demag = Demag()
-demag.parameters["poisson_solver"]["method"] = "minres"
-demag.parameters["laplace_solver"]["method"] = "gmres"
-demag.parameters["laplace_solver"]["preconditioner"] = "sor"
+demag.parameters["phi_1_solver"] = "minres"
+demag.parameters["phi_2_solver"] = "gmres"
+demag.parameters["phi_2_preconditioner"] = "sor"
 sim.add(demag)
 sim.add(Exchange(13.0e-12))
 
