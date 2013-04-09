@@ -165,7 +165,7 @@ def run_netgen(geofile):
 
     status, output = commands.getstatusoutput(netgen_cmd)
     if status == 34304:
-        print "Warning: Netgen output status was 34304, but this seems to be a spurious error that only occurred on Anders Johansen's machine. Ignoring for now..."
+        logger.warning("Warning: Ignoring netgen's output status of 34304.")
     elif status != 0:
         print output
         print "netgen failed with exit code", status
