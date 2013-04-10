@@ -15,7 +15,14 @@ from finmag.native.llg import compute_bem_fk
 from finmag.util.meshes import nodal_volume
 from finmag.util.timings import Timings, default_timer, timed, mtimed
 
+
+def prepared_timed(measurement_group, timer_to_use):
+    def new_timed(measurement_name):
+        return timed(measurement_name, measurement_group, timer_to_use)
+    return new_timed
+
 fk_timer = Timings()
+fk_timed = prepared_timed("FKDemag", fk_timer)
 
 
 class FKDemag(object):
@@ -121,7 +128,7 @@ class FKDemag(object):
                 self.parameters['phi_2_solver'], self.parameters['phi_2_preconditioner'])
         self._laplace_solver.parameters.update(self.parameters['phi_2'])
         self._laplace_solver.parameters["preconditioner"]["same_nonzero_pattern"] = True
-        with timed('compute BEM', self.__class__.__name__, fk_timer):
+        with fk_timed('compute BEM'):
             self._bem, self._b2g_map = compute_bem_fk(df.BoundaryMesh(mesh, 'exterior', False))
         self._phi_1 = df.Function(self.S1)  # solution of inhomogeneous Neumann problem
         self._phi_2 = df.Function(self.S1)  # solution of Laplace equation inside domain
@@ -215,23 +222,25 @@ class FKDemag(object):
         A = df.dot(df.grad(self._trial1), df.grad(self._test1)) * df.dx
         return df.assemble(A)  # stiffness matrix for Poisson equation
 
-    @mtimed(fk_timer)
     def _compute_magnetic_potential(self):
         # compute _phi_1 on the whole domain
         g_1 = self._Ms_times_divergence * self.m.vector()
-        self._poisson_solver.solve(self._phi_1.vector(), g_1)
+        with fk_timed("first linear solve"):
+            self._poisson_solver.solve(self._phi_1.vector(), g_1)
 
         # compute _phi_2 on the boundary using the Dirichlet boundary
         # conditions we get from BEM * _phi_1 on the boundary.
-        phi_1 = self._phi_1.vector()[self._b2g_map]
-        self._phi_2.vector()[self._b2g_map[:]] = np.dot(self._bem, phi_1.array())
+        with fk_timed("using boundary conditions"):
+            phi_1 = self._phi_1.vector()[self._b2g_map]
+            self._phi_2.vector()[self._b2g_map[:]] = np.dot(self._bem, phi_1.array())
+            boundary_condition = df.DirichletBC(self.S1, self._phi_2, df.DomainBoundary())
+            A = self._poisson_matrix.copy()
+            b = self._laplace_zeros
+            boundary_condition.apply(A, b)
 
-        # compute _phi_2 inside the domain
-        boundary_condition = df.DirichletBC(self.S1, self._phi_2, df.DomainBoundary())
-        A = self._poisson_matrix.copy()
-        b = self._laplace_zeros
-        boundary_condition.apply(A, b)
-        self._laplace_solver.solve(A, self._phi_2.vector(), b)
+        # compute _phi_2 on the whole domain
+        with fk_timed("second linear solve"):
+            self._laplace_solver.solve(A, self._phi_2.vector(), b)
 
         # add _phi_1 and _phi_2 to obtain magnetic potential
         self._phi.vector()[:] = self._phi_1.vector() + self._phi_2.vector()
