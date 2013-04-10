@@ -539,18 +539,17 @@ def render_paraview_scene(
                              "[0, 1, 2, -1] or ['x', 'y', 'z', 'magnitude']. "
                              "Got: {}".format(color_by_axis))
 
-    tmpdir = tempfile.mkdtemp()
-
     # Use absolute path for filenames because the script will be
     # written to a temporary directory in a different location.
     vtu_file = os.path.abspath(vtu_file)
     if outfile is None:
-        _, outfile = tempfile.mkstemp(dir=tmpdir, suffix='.png')
+        _, outfile = tempfile.mkstemp(suffix='.png')
     outfile = os.path.abspath(outfile)
 
     #
     # Create the temporary script
     #
+    tmpdir = tempfile.mkdtemp()
     scriptfile = os.path.join(tmpdir, 'render_scene.py')
     script_string = textwrap.dedent("""
               from visualization_impl import render_paraview_scene
