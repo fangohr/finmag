@@ -741,6 +741,27 @@ def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, dg_fun=None,**kwar
     return ax
 
 
+def plot_mesh_with_paraview(mesh, **kwargs):
+    """
+    Use Paraview to render the mesh. This is just a convenience
+    function which saves the mesh to a temporary .vtu file and then
+    calls `finmag.util.visualization.render_paraview_scene` on that
+    file. Any keyword arguments given are passed on to
+    `render_paraview_scene` - see its docstring for more information.
+    """
+    import tempfile
+    from finmag.util.visualization import render_paraview_scene
+    tmpdir = tempfile.mkdtemp()
+    tmp_meshfile_pvd = os.path.join(tmpdir, 'mesh.pvd')
+    tmp_meshfile_vtu = os.path.join(tmpdir, 'mesh000000.vtu')
+    print "tmpdir: {}".format(tmpdir)
+    F = df.File(tmp_meshfile_pvd)
+    F << mesh
+    return render_paraview_scene(
+        tmp_meshfile_vtu, field_name=None, add_glyphs=False,
+        rescale_colormap_to_data_range=False, show_colorbar=False)
+
+
 def plot_mesh_regions(fun_mesh_regions, regions, colors=None, alphas=None,
                       markers='.', marker_sizes=None, zoom_to_mesh_size=True,
                       ax=None, **kwargs):
