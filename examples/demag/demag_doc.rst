@@ -41,7 +41,7 @@ with discontinuous normal derivative,
 It is also required that the potential is zero at infinity, hence :math:`\phi(\vec r) \rightarrow 0` for :math:`\lvert \vec r \rvert \rightarrow \infty`.
 
 We have currently implemented two different approaches for solving the demagnetisation field, the
-:doc:`Fredkin-Koehler method <modules/FKSolver>` and the :doc:`Garcia-Cervera-Roma method
+:doc:`Fredkin-Koehler method <modules/FKDemag>` and the :doc:`Garcia-Cervera-Roma method
 <modules/GCRSolver>`.
 
 
@@ -187,7 +187,7 @@ Comparing nmag, Finmag FK and Finmag GCR
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In this section the results from the nmag demag solver are compared to those of the Finmag FK
-:doc:`Fredkin-Koehler method <modules/FKSolver>` and Finmag GCR :doc:`Garcia-Cervera-Roma method
+:doc:`Fredkin-Koehler method <modules/FKDemag>` and Finmag GCR :doc:`Garcia-Cervera-Roma method
 <modules/GCRSolver>`. Additionally the GCR method is tested with two different methods of q vector assembly, the default
 point evaluation method, and the box method.
 
