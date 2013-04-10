@@ -5675,3 +5675,4 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-04-08 14:44:31 cilix: Hmm, I thought the parameters were renamed in FKDemag. Or does the parent Demag class still accept the old ones?
 2013-04-08 14:50:31 mb8g11: I was tricked by the code. For whatever reason, our Demag class (which wraps our implementations) maintains its own set of parameters for some reason.
 2013-04-08 14:50:38 mb8g11: Am investigatin.
+2013-04-09 16:58:26 mb8g11_: Jenkins is stuck on the build documentation job.
