@@ -181,14 +181,31 @@ class Timings(object):
         Returns the number of calls to the method of *group* with *name*.
 
         """
-        return self._timings[self.key(name, group)].calls
+        try:
+            return self._timings[self.key(name, group)].calls
+        except KeyError:
+            print "Unknown measurement '{}'.".format(self.key(name, group))
+            print "Known measurements: '{}'.".format(self._timings.keys())
+            raise
 
     def time(self, name, group=default_group):
         """
         Returns the total running time of the method of *group* with *name*.
 
         """
-        return self._timings[self.key(name, group)].tot_time
+        try:
+            return self._timings[self.key(name, group)].tot_time
+        except KeyError:
+            print "Unknown measurement '{}'.".format(self.key(name, group))
+            print "Known measurements: '{}'.".format(self._timings.keys())
+            raise
+
+    def time_per_call(self, name, group=default_group):
+        """
+        Returns the time one call to the method *name* of *group* needed on average.
+
+        """
+        return self.time(name, group) / self.calls(name, group)
 
     def report(self, max_items=10):
         """
