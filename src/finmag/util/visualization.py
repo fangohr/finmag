@@ -67,6 +67,7 @@ import paraview.simple as pv
 
 import os
 import textwrap
+import tempfile
 import logging
 import subprocess
 import IPython.core.display
@@ -209,15 +210,13 @@ def render_paraview_scene(
                              "Got: {}".format(color_by_axis))
     color_by_axis_name = _axes_names[color_by_axis]
 
-    dataInfo = reader.GetDataInformation()
-    pointDataInfo = dataInfo.GetPointDataInformation()
-    arrayInfo = pointDataInfo.GetArrayInformation(field_name)
-
+    data_range = (-1.0, 1.0)
     if rescale_colormap_to_data_range:
+        dataInfo = reader.GetDataInformation()
+        pointDataInfo = dataInfo.GetPointDataInformation()
+        arrayInfo = pointDataInfo.GetArrayInformation(field_name)
         data_range = arrayInfo.GetComponentRange(color_by_axis)
         logger.debug("Rescaling colormap to data range: {}".format(data_range))
-    else:
-        data_range = (-1.0, 1.0)
 
     # Set the correct colormap and rescale it if necessary.
     try:
@@ -257,8 +256,9 @@ def render_paraview_scene(
         lut.VectorMode = "Magnitude"
         lut.VectorComponent = color_by_axis
     repr.LookupTable = lut
-    repr.ColorArrayName = field_name
-    repr.ColorAttributeType = "POINT_DATA"
+    if field_name is not None:
+        repr.ColorArrayName = field_name
+        repr.ColorAttributeType = "POINT_DATA"
 
     if add_glyphs:
         logger.debug("Adding cone glyphs.")
@@ -333,6 +333,9 @@ def render_paraview_scene(
 
     reader.UpdatePipelineInformation()
 
+    if outfile is None:
+        _, outfile = tempfile.mkstemp(dir=tmpdir, suffix='.png')
+
     view.ViewSize = view_size
     view.WriteImage(outfile, "vtkPNGWriter", magnification)
     servermanager.Disconnect()
@@ -358,7 +361,7 @@ def render_paraview_scene(
 
 def render_paraview_scene(
     vtu_file,
-    outfile,
+    outfile=None,
     field_name='m',
     camera_position=[0, -200, +200],
     camera_focal_point=[0, 0, 0],
@@ -399,8 +402,9 @@ def render_paraview_scene(
 
     outfile:
 
-        Name of the output image file. The image type (e.g. PNG) is
-        derived from the file extension.
+        Name of the output image file (may be None, which is the
+        default). The image type (e.g. PNG) is derived from the file
+        extension.
 
     field_name:
 
@@ -535,21 +539,24 @@ def render_paraview_scene(
                              "[0, 1, 2, -1] or ['x', 'y', 'z', 'magnitude']. "
                              "Got: {}".format(color_by_axis))
 
+    tmpdir = tempfile.mkdtemp()
+
     # Use absolute path for filenames because the script will be
     # written to a temporary directory in a different location.
     vtu_file = os.path.abspath(vtu_file)
+    if outfile is None:
+        _, outfile = tempfile.mkstemp(dir=tmpdir, suffix='.png')
     outfile = os.path.abspath(outfile)
 
     #
     # Create the temporary script
     #
-    tmpdir = tempfile.mkdtemp()
     scriptfile = os.path.join(tmpdir, 'render_scene.py')
     script_string = textwrap.dedent("""
               from visualization_impl import render_paraview_scene
 
               render_paraview_scene(
-                  '{}', '{}', '{}',
+                  '{}', '{}', {},
                   {}, {}, {},
                   {}, {}, {}, {},
                   '{}', {}, {},
@@ -558,7 +565,7 @@ def render_paraview_scene(
                   {}, {},
                   {}, '{}', '{}', {})
               """.format(
-            vtu_file, outfile, field_name,
+            vtu_file, outfile, repr(field_name),
             camera_position, camera_focal_point, camera_view_up,
             view_size, magnification, fit_view_to_scene, color_by_axis,
             colormap, rescale_colormap_to_data_range, show_colorbar,
@@ -576,7 +583,7 @@ def render_paraview_scene(
     try:
         os.chdir(tmpdir)
         with open('/dev/null') as devnull:
-            sp.check_output(['python', 'render_scene.py'] , stderr=devnull)
+            sp.check_output(['python', 'render_scene.py'], stderr=devnull)
     except sp.CalledProcessError as ex:
         logger.error("Could not render Paraview scene. The error "
                      "message was: {}".format(ex.output))
