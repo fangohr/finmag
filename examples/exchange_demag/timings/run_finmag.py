@@ -1,5 +1,7 @@
 import commands
-import os, time
+import os
+import time
+import pprint
 import dolfin as df
 from finmag.util.timings import default_timer
 from finmag.util.meshes import from_geofile
@@ -23,7 +25,9 @@ if not os.path.isfile(os.path.join(MODULE_DIR, "bar.xml.gz")):
     from_geofile(os.path.join(MODULE_DIR, "bar.geo"))
 
 # Run nmag
+print "Running nmag..."
 commands.getstatusoutput("nsim run_nmag.py --clean")
+print "Done."
 
 # Setup
 setupstart = time.time()
@@ -46,15 +50,13 @@ endtime = time.time()
 output = open(os.path.join(MODULE_DIR, "results.rst"), "a")
 output.write("\nFinmag results:\n")
 output.write("---------------\n")
-output.write("Setup: %.3f sec.\n" % (dynamicsstart-setupstart))
-output.write("Dynamics: %.3f sec.\n" % (endtime-dynamicsstart))
-output.write("\nFinmag details:\n")
-output.write("---------------\n")
+output.write("Setup: %.3f sec.\n" % (dynamicsstart - setupstart))
+output.write("Dynamics: %.3f sec.\n" % (endtime - dynamicsstart))
 output.write("\nFinmag solver parameters:\n")
-output.write("%s \n"%repr(demag.parameters.to_dict()))
-output.write("\nFinmag solver tolerances:")
-output.write("\nFirst linear solve :%s" %(demag.demag._poisson_solver.parameters.to_dict()["relative_tolerance"]))
-output.write("\nSecond linear solve: %s \n \n"% (demag.demag._laplace_solver.parameters.to_dict()["relative_tolerance"]))
+output.write("-------------------------\n")
+pp = pprint.PrettyPrinter()
+output.write("\nfirst linear solve\n{}\n".format(pp.pformat(demag._poisson_solver.parameters.to_dict())))
+output.write("\nsecond linear solve\n{}\n\n".format(pp.pformat(demag._laplace_solver.parameters.to_dict())))
 output.write(str(default_timer))
 output.close()
 
