@@ -11,7 +11,7 @@ We combine Python code using Dolfin from the Fenics project, with some C++ code 
 Python class layout
 ^^^^^^^^^^^^^^^^^^^
 
-The :doc:`LLG <modules/LLG>` class contains the physics of the LLG equation, and the central dolfin function that carries the normalised magnetisation (currently in LLG._m) which is used in the the :doc:`Exchange <modules/Exchange>`, :doc:`Anisotropy <modules/Anisotropy>`, :doc:`Demag <modules/FKSolver>` and :doc:`DMI <modules/DMI>` class to compute the respective fields and energies.
+The :doc:`LLG <modules/LLG>` class contains the physics of the LLG equation, and the central dolfin function that carries the normalised magnetisation (currently in LLG._m) which is used in the the :doc:`Exchange <modules/Exchange>`, :doc:`Anisotropy <modules/Anisotropy>`, :doc:`Demag <modules/FKDemag>` and :doc:`DMI <modules/DMI>` class to compute the respective fields and energies.
 The Exchange, Anisotropy and DMI module are based on the :doc:`EnergyBase <modules/EnergyBase>` class.
 
 The ``TimeStepper class`` [XXX exact name, and add link (this is not yet included in the documentation)] is used for time integration, and then carries the state of the independent degrees of freedom (such as the magnetisation) when sundials is used. (The LLG._m is not suitable for this, although it is used by the time integration class internally.)

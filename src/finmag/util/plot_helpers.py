@@ -12,7 +12,7 @@ from matplotlib import cm
 from mpl_toolkits.mplot3d import axes3d  # used in fig.gca(projection="3d")
 
 
-def surface_2d(x, y, u, labels=("", "", ""), title="", path=""):
+def surface_2d(x, y, u, labels=("", "", ""), title="", ylim=None, xlim=None, clim=None, path=""):
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
@@ -20,6 +20,12 @@ def surface_2d(x, y, u, labels=("", "", ""), title="", path=""):
     surf = ax.pcolormesh(X, Y, u)
 
     ax.set_xlabel(labels[0])
+    if xlim is not None:
+        ax.set_xlim(xlim)
+    if ylim is not None:
+        ax.set_ylim(ylim)
+    if clim is not None:
+        surf.set_clim(vmin=clim[0], vmax=clim[1])
     ax.set_ylabel(labels[1])
     cb = fig.colorbar(surf)
     cb.ax.yaxis.set_label_position('right')

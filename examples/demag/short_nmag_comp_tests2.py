@@ -45,18 +45,17 @@ runtimes = {"bem": copy.deepcopy(initialdata),
 iterdict = {"poisson":[],"laplace":[]}
 krylov_iter = {k:copy.deepcopy(iterdict) for k in finmagsolvers.keys()}
 
-def printsolverparams(mesh,m):
-    # Write output to linsolveparams.rst
+def printsolverparams(mesh, m):
     output = open(os.path.join(MODULE_DIR, "linsolveparams.rst"), "w")
-    for demagtype in finmagsolvers.keys():
-
-        #create a solver to read out it's default linear solver data
-        solver = finmagsolvers[demagtype](mesh,m)
-        output.write("\nFinmag %s solver parameters:\n"%demagtype)
-        output.write("%s \n"%repr(solver.parameters.to_dict()))
-        output.write("\nFinmag %s solver tolerances:"%demagtype)
-        output.write("\nFirst linear solve :%s" %(solver.poisson_solver.parameters.to_dict()["relative_tolerance"]))
-        output.write("\nSecond linear solve: %s \n \n"% (solver.laplace_solver.parameters.to_dict()["relative_tolerance"]))
+    for name, DemagClass in finmagsolvers.items():
+        demag = DemagClass()  # create a solver to read out its default linear solver data
+        demag.setup(df.VectorFunctionSpace(mesh, "CG", 1), m, 1, 1e-9)
+        output.write("\nFinmag %s solver parameters:\n" % name)
+        output.write("%s \n"%repr(demag.parameters.to_dict()))
+        output.write("\nFinmag %s solver tolerances:" % name)
+        print dir(demag)
+        output.write("\nFirst linear solve :%s" %(demag.poisson_solver.parameters.to_dict()["relative_tolerance"]))
+        output.write("\nSecond linear solve: %s \n \n"% (demag.laplace_solver.parameters.to_dict()["relative_tolerance"]))
     output.close()
 
 def get_nmag_bemtime():
@@ -135,7 +134,8 @@ for i,maxh in enumerate(meshsizes):
     for demagtype in finmagsolvers.keys():
         #Assemble the bem and get the time.
         starttime = time.time()
-        solver = finmagsolvers[demagtype](mesh,m)
+        solver = finmagsolvers[demagtype]()
+        solver.setup(V, m, 1, 1e-9)
         demag = solver.compute_field()
         endtime = time.time()
 
@@ -224,9 +224,9 @@ for line in lines:
         xmax["nmag"].append(float(line[1]))
         stddev["nmag"].append(float(line[2]))
 
-p.plot(vertices, xavg["FK"], 'x--',label='Finmag FK x-avg')
-p.plot(vertices, xmax["FK"], 'o-',label='Finmag FK x-max')
-p.plot(vertices, xmin["FK"], '^:',label='Finmag FK x-min')
+#p.plot(vertices, xavg["FK"], 'x--',label='Finmag FK x-avg')
+#p.plot(vertices, xmax["FK"], 'o-',label='Finmag FK x-max')
+#p.plot(vertices, xmin["FK"], '^:',label='Finmag FK x-min')
 
 p.plot(vertices, xavg["nmag"], label='Nmag x-avg')
 p.plot(vertices, xmax["nmag"], label='Nmag x-max')
@@ -258,7 +258,7 @@ if not is_dolfin_1_1:
 
 #Standard deviation plot
 p.figure()
-p.plot(vertices, stddev["FK"], label='Finmag FK standard deviation')
+#p.plot(vertices, stddev["FK"], label='Finmag FK standard deviation')
 if not is_dolfin_1_1:
     p.plot(vertices, stddev["GCR"], label='Finmag GCR standard deviation')
 
@@ -272,7 +272,7 @@ p.savefig(os.path.join(MODULE_DIR, 'stddev.png'))
 
 #Error Norm convergence plot
 p.figure()
-p.plot(vertices, errnorm["FK"], label='Finmag errornorm')
+#p.plot(vertices, errnorm["FK"], label='Finmag errornorm')
 p.xlabel('vertices')
 p.title('Error norm')
 p.grid()
@@ -281,9 +281,9 @@ p.savefig(os.path.join(MODULE_DIR, 'errnorm.png'))
 
 #Max error plot
 p.figure()
-p.plot(vertices, maxerror["FK"], 'o-',label='Finmag maxerror H_demag-x')
-p.plot(vertices, ymax["FK"], 'x-',label='Finmag maxerror H_demag-y')
-p.plot(vertices, zmax["FK"], '^-',label='Finmag maxerror H_demag-z')
+#p.plot(vertices, maxerror["FK"], 'o-',label='Finmag maxerror H_demag-x')
+#p.plot(vertices, ymax["FK"], 'x-',label='Finmag maxerror H_demag-y')
+#p.plot(vertices, zmax["FK"], '^-',label='Finmag maxerror H_demag-z')
 p.xlabel('vertices')
 p.title('Max Error per component')
 p.grid()
@@ -294,7 +294,7 @@ p.savefig(os.path.join(MODULE_DIR, 'maxerror.png'))
 #Useful Plot Standard deviation
 ############################################
 p.figure()
-p.loglog(vertices, stddev["FK"], label='Finmag FK standard deviation')
+#p.loglog(vertices, stddev["FK"], label='Finmag FK standard deviation')
 if not is_dolfin_1_1:
     p.loglog(vertices, stddev["GCR"], label='Finmag GCR standard deviation')
 
@@ -311,7 +311,7 @@ p.savefig(os.path.join(MODULE_DIR, 'stddev_loglog.png'))
 #Useful Plot Error Norm log-log
 ############################################
 p.figure()
-p.loglog(vertices, errnorm["FK"], label='Finmag FK errornorm')
+#p.loglog(vertices, errnorm["FK"], label='Finmag FK errornorm')
 if not is_dolfin_1_1:
     p.loglog(vertices, errnorm["GCR"], label='Finmag GCR errornorm')
 p.loglog(vertices, errnorm["GCRbox"], label='Finmag GCR box method errornorm')
@@ -329,7 +329,7 @@ titles = ["Runtime without Bem assembly","Bem assembly times"]
 
 for title,k in zip(titles,runtimes.keys()):
     p.figure()
-    p.loglog(vertices, runtimes[k]["FK"],'o-', label='Finmag FK timings')
+    #p.loglog(vertices, runtimes[k]["FK"],'o-', label='Finmag FK timings')
     if not is_dolfin_1_1:
         p.loglog(vertices, runtimes[k]["GCR"],'x-', label='Finmag GCR timings')
 
@@ -349,8 +349,8 @@ for title,k in zip(titles,runtimes.keys()):
 #Useful Plot krylov iterations
 ############################################
 p.figure()
-p.plot(vertices, krylov_iter["FK"]["laplace"],'o-', label='Finmag FK laplace')
-p.plot(vertices, krylov_iter["FK"]["poisson"],'x-', label='Finmag FK poisson')
+#p.plot(vertices, krylov_iter["FK"]["laplace"],'o-', label='Finmag FK laplace')
+#p.plot(vertices, krylov_iter["FK"]["poisson"],'x-', label='Finmag FK poisson')
 if not is_dolfin_1_1:
     p.plot(vertices, krylov_iter["GCR"]["laplace"], label='Finmag GCR laplace')
     p.plot(vertices, krylov_iter["GCR"]["poisson"], label='Finmag GCR poisson')
