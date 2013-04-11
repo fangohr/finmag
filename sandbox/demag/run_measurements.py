@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 from finmag.util.timings import default_timer
 
 
-def create_measurement_runner(S3, m, Ms, unit_length, H_expected=None, tol=1e-3, bem=None, boundary_to_global=None):
-    def runner(timed_method_name, s_param, solvers, p_param, preconditioners, full_timings_log=None, results_cache=None):
+def create_measurement_runner(S3, m, Ms, unit_length, H_expected=None, tol=1e-3, repeats=10, bem=None, boundary_to_global=None):
+    def runner(timed_method_name, s_param, solvers, p_param, preconditioners, skip=[], full_timings_log=None, results_cache=None):
         results, failed = [], []
 
         for timer in (default_timer, fk.fk_timer):
@@ -40,6 +40,10 @@ def create_measurement_runner(S3, m, Ms, unit_length, H_expected=None, tol=1e-3,
                     # Compute the demagnetising field with the current solver and each of the preconditioners.
                     results_for_this_solver = []
                     for i, prec in enumerate(preconditioners):
+                        if (solver, prec) in skip:
+                            print "{:>{w}}".format("s", w=columns[i + 1]),
+                            continue
+
                         demag = fk.FKDemag()
                         if bem is not None:
                             # Use the pre-computed BEM if it was provided.
@@ -48,7 +52,7 @@ def create_measurement_runner(S3, m, Ms, unit_length, H_expected=None, tol=1e-3,
                         demag.parameters[p_param] = prec
                         demag.setup(S3, m, Ms, unit_length)
                         try:
-                            for j in xrange(10):  # Repeat to average out little fluctuations.
+                            for j in xrange(repeats):  # Repeat to average out little fluctuations.
                                 H = demag.compute_field()  # This can fail with some method/preconditioner combinations.
                         except RuntimeError as e:
                             default_timer.stop_last()
