@@ -125,10 +125,18 @@ def from_csg(csg, save_result=True, filename="", directory=""):
             # created in MODULE_DIR), but it would be good to
             # double-check that.
             directory = os.curdir
+
+        geofile = os.path.abspath(os.path.join(directory, filename) + ".geo")
+
+        # Make sure that 'directory' actually contains all the
+        # directory components of the path:
+        directory, _ = os.path.split(geofile)
+
         if not os.path.exists(directory):
             logger.debug("Creating directory '{}' as it does not exist.".format(directory))
             os.mkdir(directory)
-        geofile = os.path.join(directory, filename) + ".geo"
+
+
         if not os.path.exists(geofile):
             with open(geofile, "w") as f:
                 f.write(csg)
