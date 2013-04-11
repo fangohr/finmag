@@ -5676,3 +5676,42 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-04-08 14:50:31 mb8g11: I was tricked by the code. For whatever reason, our Demag class (which wraps our implementations) maintains its own set of parameters for some reason.
 2013-04-08 14:50:38 mb8g11: Am investigatin.
 2013-04-09 16:58:26 mb8g11_: Jenkins is stuck on the build documentation job.
+2013-04-11 09:02:07 fangohr-adium1: Good morning, folks.
+2013-04-11 11:38:08 cilix: Good morning, Hans.
+2013-04-11 11:38:12 cilix: Welcome back! :)
+2013-04-11 12:53:10 fangohr-adium1: Hi Max. Very impressive commit activity in my inbox — good stuff.
+2013-04-11 12:55:49 fangohr-adium1: Hi Marc-Antonio, was just saying: Very impressive commit activity in my inbox — good stuff.
+2013-04-11 12:59:12 cilix: Mostly Marc-Antonios work (nice cleanup of the Demag classes).
+2013-04-11 12:59:14 cilix: Fortunately we managed to get the builds 'green' just before your return. ;-)
+2013-04-11 12:59:42 fangohr-adium1: Yes, cool. Was actually just looking at the aleph0 overview.
+2013-04-11 13:00:22 fangohr-adium1: The Ipython notebook tests are all broken apart from one — I guess some of these are those that had passed already, but are now invalid due to the changes — maybe just log messages?
+2013-04-11 13:02:17 fangohr-adium1: I also like the additional slave node for a different OS. All very exciting. Maybe MA can give us a summary of what he has done tomorrow?
+2013-04-11 13:03:14 cilix: Yes, I need to look into the ipython notebook stuff when I find the time.
+2013-04-11 13:03:31 cilix: It should be an easy-ish task in principle to get the tests up and running, but it may take a while to sort out the details, that's why I haven't done it yet.
+2013-04-11 13:03:38 fangohr-adium1: Yes, but it should not be just your problem.
+2013-04-11 13:04:01 fangohr-adium1: I am hoping that it will be easier with the iython notebooks once they have all passed, as we then know what are genuine problems, and what is minor stuff.
+2013-04-11 13:04:19 cilix: Agreed.
+2013-04-11 13:04:25 fangohr-adium1: Maybe we need another demonstration / training unit tomorrow (group meeting) how to run these tests, and updated them accordingly.
+2013-04-11 13:05:41 cilix: The main technical difficulty with the tests at the moment is that the testing script (which is essentially the version downloaded from the web) cannot just ignore lines in the output.
+2013-04-11 13:06:15 cilix: Shouldn't be hard at all to implement this, but it's a stumbling block before we can seriously adopt the ipython notebook testing.
+2013-04-11 13:06:59 cilix: There may be ways around this, but my feeling is that they would require a great deal of care on our side, so I'd rather have a proper solution (especially if it looks reasonably easy to do).
+2013-04-11 13:07:08 mb8g11: Hi Hans
+2013-04-11 13:07:14 mb8g11: thanks.
+2013-04-11 13:08:43 mb8g11: I have nothing to do with the slave node at all - but would be courious to hear about it. Max, that was you wasn't it?
+2013-04-11 13:08:52 cilix: Yep.
+2013-04-11 13:08:59 fangohr-adium1: Yes, sorry, it was Max. Mixed the two things up in one paragraph ;-)
+2013-04-11 13:14:05 cilix: So how was Italy? Was it a "business" trip?
+2013-04-11 13:16:07 cilix: And I hope you had a nice Easter "holiday", too!
+2013-04-11 13:17:03 fangohr-adium1: No, not business ;-), Went to a place close to Livorno for a few days (tuscany). A nice break ;-), thank you.
+2013-04-11 13:17:43 cilix: Awesome, looks nice! :-) Glad you managed to get some time off.
+2013-04-11 13:24:20 mb8g11: And you escaped Southampton's weather...
+2013-04-11 13:38:59 fangohr-adium1: Yes, if only for a few days.
+2013-04-11 19:08:33 D_Chernyshenko: Hey guys, did we ever receive the flight tickets to HMM? The last emails I have are about sending the charge codes for the purchase order....
+2013-04-11 19:10:09 cilix: Did you send the charge code to Jackie Allen? She said she can only proceed if she has all the charge codes (at least from the ones who are funded by FEE, i.e. from Weiwei, you and me). Maybe we should follow up with her.
+2013-04-11 19:10:36 cilix: But I think in principle the tickets are booked (my guess is that the travel agency paid for it and is waiting to be refunded by FEE).
+2013-04-11 19:10:53 cilix: Maybe we can ask Jackie tomorrow morning before or after the group meeting.
+2013-04-11 19:11:43 D_Chernyshenko: I did send the charge code, that was on the 26th of March. No reply since...
+2013-04-11 19:12:23 cilix: Hmm, so did I, and I think Weiwei also sent her his. So we should indeed follow that up (although there may have been some delay due to the Easter break).
+2013-04-11 19:16:22 mb8g11: And I called to give my debit card information the 27th of March
+2013-04-11 19:16:52 cilix: mb8g11: you gave it to Amity Travel directly, I suppose?
+2013-04-11 19:39:36 mb8g11: Yes, to Caroll on the phone.
