@@ -104,13 +104,13 @@ class SingleTiming(object):
         assert not self.running, \
             "Can't start running measurement '{}' of group '{}' again. You could call stop_last on the timings object.".format(self.name, self.group)
         self.running = True
+        self.calls += 1
         self._start = time.time()
 
     def stop(self):
         assert self.running, \
             "Measurement '{}' of group '{}' not running, can't stop it.".format(self.name, self.group)
         self.running = False
-        self.calls += 1
         self.tot_time += time.time() - self._start
 
 
