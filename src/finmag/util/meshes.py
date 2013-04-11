@@ -767,7 +767,7 @@ def plot_mesh_with_paraview(mesh, **kwargs):
     F << mesh
     image = render_paraview_scene(
         tmp_meshfile_vtu, field_name=None, add_glyphs=False,
-        rescale_colormap_to_data_range=False, show_colorbar=False)
+        rescale_colormap_to_data_range=False, show_colorbar=False, **kwargs)
     shutil.rmtree(tmpdir)
     return image
 
