@@ -121,7 +121,7 @@ class FKDemag(object):
         # for computation of field and scalar magnetic potential
         self._poisson_matrix = self._poisson_matrix()
         self._poisson_solver = df.KrylovSolver(self._poisson_matrix,
-                self.parameters['phi_1_solver'], self.parameters['phi_1_preconditioner'])
+            self.parameters['phi_1_solver'], self.parameters['phi_1_preconditioner'])
         self._poisson_solver.parameters.update(self.parameters['phi_1'])
         self._laplace_zeros = df.Function(self.S1).vector()
         self._laplace_solver = df.KrylovSolver(
@@ -129,7 +129,8 @@ class FKDemag(object):
         self._laplace_solver.parameters.update(self.parameters['phi_2'])
         self._laplace_solver.parameters["preconditioner"]["same_nonzero_pattern"] = True
         with fk_timed('compute BEM'):
-            self._bem, self._b2g_map = compute_bem_fk(df.BoundaryMesh(mesh, 'exterior', False))
+            if not hasattr(self, "_bem"):
+                self._bem, self._b2g_map = compute_bem_fk(df.BoundaryMesh(mesh, 'exterior', False))
         self._phi_1 = df.Function(self.S1)  # solution of inhomogeneous Neumann problem
         self._phi_2 = df.Function(self.S1)  # solution of Laplace equation inside domain
         self._phi = df.Function(self.S1)  # magnetic potential phi_1 + phi_2
@@ -140,6 +141,16 @@ class FKDemag(object):
         self._Ms_times_divergence = df.assemble(self.Ms * df.inner(self._trial3, df.grad(self._test1)) * df.dx)
 
         self._setup_gradient_computation()
+
+    @mtimed(default_timer)
+    def precomputed_bem(self, bem, b2g_map):
+        """
+        If the BEM and a boundary to global vertices map are known, they can be
+        passed to the FKDemag object with this method so it will skip
+        re-computing them.
+
+        """
+        self._bem, self._b2g_map = bem, b2g_map
 
     @mtimed(default_timer)
     def compute_potential(self):
