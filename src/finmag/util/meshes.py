@@ -13,6 +13,7 @@ set the desired length scale when reading the mesh into Finmag!
 import os
 import sys
 import copy
+import shutil
 import commands
 import logging
 import textwrap
@@ -125,10 +126,18 @@ def from_csg(csg, save_result=True, filename="", directory=""):
             # created in MODULE_DIR), but it would be good to
             # double-check that.
             directory = os.curdir
+
+        geofile = os.path.abspath(os.path.join(directory, filename) + ".geo")
+
+        # Make sure that 'directory' actually contains all the
+        # directory components of the path:
+        directory, _ = os.path.split(geofile)
+
         if not os.path.exists(directory):
             logger.debug("Creating directory '{}' as it does not exist.".format(directory))
             os.mkdir(directory)
-        geofile = os.path.join(directory, filename) + ".geo"
+
+
         if not os.path.exists(geofile):
             with open(geofile, "w") as f:
                 f.write(csg)
@@ -754,12 +763,13 @@ def plot_mesh_with_paraview(mesh, **kwargs):
     tmpdir = tempfile.mkdtemp()
     tmp_meshfile_pvd = os.path.join(tmpdir, 'mesh.pvd')
     tmp_meshfile_vtu = os.path.join(tmpdir, 'mesh000000.vtu')
-    print "tmpdir: {}".format(tmpdir)
     F = df.File(tmp_meshfile_pvd)
     F << mesh
-    return render_paraview_scene(
+    image = render_paraview_scene(
         tmp_meshfile_vtu, field_name=None, add_glyphs=False,
-        rescale_colormap_to_data_range=False, show_colorbar=False)
+        rescale_colormap_to_data_range=False, show_colorbar=False, **kwargs)
+    shutil.rmtree(tmpdir)
+    return image
 
 
 def plot_mesh_regions(fun_mesh_regions, regions, colors=None, alphas=None,
