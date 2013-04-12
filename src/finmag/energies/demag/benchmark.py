@@ -13,12 +13,13 @@ Ms = 1
 H_ref = np.array((- Ms / 3.0, 0, 0))
 
 vertices = []
-solvers = ["FK", "GCR", "Treecode"]
-timings = [[], [], []]
-errors = [[], [], []]
+solvers = ["FK", "FK", "GCR", "Treecode"]
+solvers_label = ["FK", "FK opt", "GCR", "Treecode"]
+timings = [[], [], [], []]
+errors = [[], [], [], []]
 
 for maxh in maxhs:
-    mesh = sphere(r=radius, maxh=maxh)
+    mesh = sphere(r=radius, maxh=maxh, directory="meshes")
     vertices.append(mesh.num_vertices())
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
     m = df.Function(S3)
@@ -26,6 +27,17 @@ for maxh in maxhs:
 
     for i, solver in enumerate(solvers):
         demag = Demag(solver)
+        if solver == "FK":
+            if i == 0:
+                demag.parameters["phi_1_solver"] = "default"
+                demag.parameters["phi_1_preconditioner"] = "default"
+                demag.parameters["phi_2_solver"] = "default"
+                demag.parameters["phi_2_preconditioner"] = "default"
+            if i == 1:
+                demag.parameters["phi_1_solver"] = "cg"
+                demag.parameters["phi_1_preconditioner"] = "ilu"
+                demag.parameters["phi_2_solver"] = "cg"
+                demag.parameters["phi_2_preconditioner"] = "ilu"
         demag.setup(S3, m, Ms, unit_length)
 
         start = time.time()
@@ -42,7 +54,7 @@ fig = plt.figure()
 ax = fig.add_subplot(211)
 ax.set_title("Runtime")
 for i, solver in enumerate(solvers):
-    ax.plot(vertices, timings[i], label=solvers[i])
+    ax.plot(vertices, timings[i], label=solvers_label[i])
 ax.legend(loc=2)
 ax.set_xlabel("vertices")
 ax.set_ylabel("time (s)")
@@ -50,7 +62,7 @@ ax.set_ylabel("time (s)")
 ax = fig.add_subplot(212)
 ax.set_title("Inaccuracy")
 for i, solver in enumerate(solvers):
-    ax.plot(vertices, errors[i], label=solvers[i])
+    ax.plot(vertices, errors[i], label=solvers_label[i])
 ax.legend(loc=2)
 ax.set_xlabel("vertices")
 ax.set_ylabel("relative error (%)")
