@@ -13,6 +13,22 @@ from finmag.util.helpers import set_logging_level
 from __version__ import __version__
 import example
 
+
+def timings_report(n=10):
+    """
+    Returns the timings report, which is an overview of where finmag's runtime is spent.
+
+    By default, it will show the 10 functions where the most runtime has been spent.
+    This number can be changed by passing an integer to this function.
+
+    Usage:
+        import finmag
+        print finmag.timings_report()
+
+    """
+    from finmag.util.timings import default_timer
+    return default_timer.report(n)
+
 logger.debug("%20s: %s" % ("Finmag", __version__))
 import util.versions
 logger.debug("%20s: %s" % ("Dolfin", util.versions.get_version_dolfin()))
