@@ -5715,3 +5715,65 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-04-11 19:16:22 mb8g11: And I called to give my debit card information the 27th of March
 2013-04-11 19:16:52 cilix: mb8g11: you gave it to Amity Travel directly, I suppose?
 2013-04-11 19:39:36 mb8g11: Yes, to Caroll on the phone.
+2013-04-12 10:29:37 fangohr-adium1: Good morning, just to confirm that I am back in the office now, ready for our meeting at 10:30.
+2013-04-12 10:31:40 cilix: We're coming over
+2013-04-12 10:32:10 fangohr-adium1: Thanks, tha.
+2013-04-12 10:32:14 fangohr-adium1: (ta)
+2013-04-12 15:48:33 fangohr_: Woohoo, upgraded to dolfin 1.2.
+2013-04-12 15:48:47 fangohr_: 246 tests passed, 3 skipped, 1xfailed. That's okay, I suppose?
+2013-04-12 15:48:47 cilix: Nice :-)
+2013-04-12 16:27:06 fangohr_: Weiwei, are you there?
+2013-04-12 16:44:58 ww1g11: Yes
+2013-04-12 16:45:25 ww1g11: sorry not watching irc
+2013-04-12 16:45:32 fangohr_: No problem.
+2013-04-12 16:45:52 fangohr_: I was gonna ask you some questions regarding the FMR paper, and the discussion of the modes, and your work on the demag tensor in there.
+2013-04-12 16:46:06 fangohr_: Can we discuss this Monday morning at 10am, maybe?
+2013-04-12 16:46:27 ww1g11: Yes, good idea
+2013-04-12 16:46:48 ww1g11: and I can prepare some data then
+2013-04-12 16:46:49 fangohr_: In preparation for that, could you check out the repository and read through the relevant sections? Feel free to actually change things to correct/improve them -- a lot is not quite accurate in there yet.
+2013-04-12 16:46:54 fangohr_: Yes, that's great, too.
+2013-04-12 16:47:09 fangohr_: Wait with checking out the repository for a little - I am just working on it.
+2013-04-12 16:47:31 ww1g11: okay, will do it later
+2013-04-12 16:59:09 D_Chernyshenko: By the way Weiwei, avoid the Italian consulate if you can for the visa. They're quite awful so the intermediary companies will probably do a better job
+2013-04-12 17:00:03 ww1g11: but it seems I have to apply it in person, ;-)
+2013-04-12 17:00:20 D_Chernyshenko: Looks like I missed your previous message due to the relog
+2013-04-12 17:00:38 ww1g11: but it seems I have to apply it in person, ;-)
+2013-04-12 17:00:49 D_Chernyshenko: But yeah you have to apply in person even via the intermediary
+2013-04-12 17:01:08 D_Chernyshenko: However at least they can send you you passport back, don't think the consulate does that
+2013-04-12 17:01:38 ww1g11: yes, I guess they want to see the applicant
+2013-04-12 17:01:44 D_Chernyshenko: Also, they sent me back for "more documents" along with 3 other people who were there. None of the 4 of us actually managed to submit the documents
+2013-04-12 17:01:54 D_Chernyshenko: Including a guy who was there for the second time and was quite pissed off...
+2013-04-12 17:02:11 D_Chernyshenko: It was really just like Monty Python
+2013-04-12 17:02:12 ww1g11: ... it's terrible
+2013-04-12 17:02:15 D_Chernyshenko: Yeah
+2013-04-12 17:02:41 D_Chernyshenko: So I'll go via some of the companies now
+2013-04-12 17:02:52 D_Chernyshenko: *via one of the companies
+2013-04-12 17:03:02 ww1g11: okay, I will careful for the documentation
+2013-04-12 17:03:27 D_Chernyshenko: Also apparently we need the "tourist" visa and not the "business visa", at least according to the lady who send me packing
+2013-04-12 17:03:39 fangohr_: Hi Dmitri, sorry to hear that.
+2013-04-12 17:03:44 D_Chernyshenko: Yeah it's quite annoying
+2013-04-12 17:04:08 D_Chernyshenko: She was however unable to define who actually is supposed to apply for a business visa so I'm still not 100% sure there
+2013-04-12 17:04:46 ww1g11: the  documents for  "business visa" is simpler than that for the tourist
+2013-04-12 17:05:15 D_Chernyshenko: Yeah, for the tourist visa one of the required things is the ticket which we don't have yet somehow
+2013-04-12 17:05:22 D_Chernyshenko: 2 weeks after asking Amity Travel...
+2013-04-12 17:05:55 ww1g11: maybe we can print the ticket information for the visa?
+2013-04-12 17:06:41 D_Chernyshenko: We can, once we get the ticket...
+2013-04-12 17:07:31 ww1g11: I always thought we already got the ticket ...
+2013-04-12 17:10:52 fangohr_: Hi Dmitri, you got an email with the ticket confirmation and e-ticket numbers etc. That's probably all you get, although Max etal wanted to ask Amity. You may be able to print something like a ticket via the Al Italia website (with the e-ticket number or so).
+2013-04-12 17:14:57 D_Chernyshenko: Hmm, I can't find the email with the ticket confirmation/any numbers. I will look what I can get via the Al Italia website...
+2013-04-12 17:15:16 fangohr_: Max had it -- probably forwarded from Marijan or so.
+2013-04-12 17:15:34 fangohr_: Over and out for now.
+2013-04-12 17:16:37 cilix: Hi Dmitri, I'll forward the email to you again.
+2013-04-12 17:17:04 cilix: Hans said in the meeting this morning that this is probably all we need (and get) for the flight.
+2013-04-12 17:17:33 cilix: Regarding busincess vs. tourist visa, I think when I went to the MMM in Atlanta a few years back I also applied for a tourist visa because it was much less hassle.
+2013-04-12 17:23:32 cilix: Not sure what the rules/guidelines for Italy are, though, and if they are any different from America.
+2013-04-12 17:25:45 D_Chernyshenko: Yeah I went to the website for the intermediary company and they have different rules/different list of documents than the consulate. Also they say "applicants traveling for a conference should provide documents according to the tourist checklist "
+2013-04-12 17:25:53 D_Chernyshenko: So it seems to be a rule specific to conferences only
+2013-04-12 17:26:15 cilix: Ok.
+2013-04-12 17:26:23 cilix: Just forwarded you the email with the tickets again.
+2013-04-12 17:30:36 D_Chernyshenko: Thanks. Hopefully this is enough. The visa website asks for "proof of payment" which this isn't, but I'm not sure if there was any traceable payment for this ticket yet at all anywhere. so the rule makes no sense
+2013-04-12 17:31:21 D_Chernyshenko: Considering Amity probably are on credit with the airline and the University is on credit with Amity the money might not even chagne hands until 1-2 months later...
+2013-04-12 17:32:04 cilix: True, although you can probably get a confirmation from Amity Travel that they purchased the tickets (which they will hopefully give you in reply to your email earlier).
+2013-04-12 17:41:48 D_Chernyshenko: Okay Carol has just sent me their invoice to the University as well, this should be enough
+2013-04-12 17:44:09 D_Chernyshenko: Yeah, the invoice is due to be paid by May 15th (after our flight)
+2013-04-12 17:44:11 D_Chernyshenko: As expected...
