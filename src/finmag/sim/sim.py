@@ -64,6 +64,12 @@ class Simulation(object):
         # timesteps.
         self.tablewriter = Tablewriter(self.ndtfilename, self, override=True)
 
+        self.tablewriter.entities['E_total'] = {
+            'unit': '<J>',
+            'get': lambda sim: sim.total_energy(),
+            'header': 'E_total'}
+        self.tablewriter.update_entity_order()
+
         log.info("Creating Sim object '{}' (rank={}/{}).".format(
             self.name, df.MPI.process_number(), df.MPI.num_processes()))
         log.info(mesh)
@@ -174,15 +180,28 @@ class Simulation(object):
              `t` as its only single parameter and updates the internal
              state of the interaction accordingly.
         """
+        # Make sure that interaction names are unique
+        if interaction.name in [i.name for i in self.llg.effective_field.interactions]:
+            raise ValueError("Interaction names must be unique, but an "
+                             "interaction with the same name already "
+                             "exists: {}".format(interaction.name))
+
         log.debug("Adding interaction %s to simulation '%s'" % (str(interaction),self.name))
         interaction.setup(self.S3, self.llg._m, self.llg._Ms_dg, self.unit_length)
         self.llg.effective_field.add(interaction, with_time_update)
 
-        if interaction.__class__.__name__=='Zeeman':
-            self.zeeman_interation=interaction
-            self.tablewriter.entities['zeeman']={
+        energy_name = 'E_{}'.format(interaction.name)
+        self.tablewriter.entities[energy_name] = {
+            'unit': '<J>',
+            'get': lambda sim: sim.get_interaction(interaction.name).compute_energy(),
+            'header': energy_name}
+        self.tablewriter.update_entity_order()
+
+        if interaction.__class__.__name__ == 'Zeeman':
+            self.zeeman_interaction = interaction
+            self.tablewriter.entities['zeeman'] = {
                         'unit': '<A/m>',
-                        'get': lambda sim: sim.zeeman_interation.average_field(),
+                        'get': lambda sim: sim.zeeman_interaction.average_field(),
                         'header': ('h_x', 'h_y', 'h_z')}
 
             self.tablewriter.update_entity_order()
