@@ -338,7 +338,7 @@ class Simulation(object):
 
         This means the magnetisation reaches a state where its change over time
         at each node is smaller than the threshold `stopping_dm_dt` (which
-        should be given in rad/s).
+        should be given in multiples of degree/nanosecond).
 
         """
         if not hasattr(self, "integrator"):
