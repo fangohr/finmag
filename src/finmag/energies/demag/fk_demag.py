@@ -14,6 +14,7 @@ from finmag.util.consts import mu0
 from finmag.native.llg import compute_bem_fk
 from finmag.util.meshes import nodal_volume
 from finmag.util.timings import Timings, default_timer, timed, mtimed
+from finmag.util import helpers
 
 
 def prepared_timed(measurement_group, timer_to_use):
@@ -177,6 +178,12 @@ class FKDemag(object):
         """
         self._compute_magnetic_potential()
         return self._compute_gradient()
+
+    def average_field(self):
+        """
+        Compute the average demag field.
+        """
+        return helpers.average_field(self.compute_field())
 
     @mtimed(default_timer)
     def compute_energy(self):

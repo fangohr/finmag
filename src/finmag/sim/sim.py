@@ -68,6 +68,10 @@ class Simulation(object):
             'unit': '<J>',
             'get': lambda sim: sim.total_energy(),
             'header': 'E_total'}
+        self.tablewriter.entities['H_total'] = {
+            'unit': '<A/m>',
+            'get': lambda sim: helpers.average_field(sim.llg.effective_field.compute()),
+            'header': ('H_total_x', 'H_total_y', 'H_total_z')}
         self.tablewriter.update_entity_order()
 
         log.info("Creating Sim object '{}' (rank={}/{}).".format(
@@ -191,10 +195,15 @@ class Simulation(object):
         self.llg.effective_field.add(interaction, with_time_update)
 
         energy_name = 'E_{}'.format(interaction.name)
+        field_name = 'H_{}'.format(interaction.name)
         self.tablewriter.entities[energy_name] = {
             'unit': '<J>',
             'get': lambda sim: sim.get_interaction(interaction.name).compute_energy(),
             'header': energy_name}
+        self.tablewriter.entities[field_name] = {
+            'unit': '<A/m>',
+            'get': lambda sim: sim.get_interaction(interaction.name).average_field(),
+            'header': (field_name + '_x', field_name + '_y', field_name + '_z')}
         self.tablewriter.update_entity_order()
 
         if interaction.__class__.__name__ == 'Zeeman':

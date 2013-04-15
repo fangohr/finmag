@@ -156,9 +156,9 @@ class Tablereader(object):
         # some consistency checks: must have as many columns as
         # headers (disregarding the comment symbol)
         # for the case that only one line data 
-        if len(self.data)==self.data.size:
+        if len(self.data) == self.data.size:
             assert self.data.size == len(headers) - 1
-            self.data.shape=(1,self.data.size)
+            self.data.shape=(1, self.data.size)
         else:
             assert self.data.shape[1] == len(headers) - 1
 
