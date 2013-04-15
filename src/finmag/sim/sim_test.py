@@ -224,8 +224,14 @@ class TestSimulation(object):
         sim = barmini()
         sim.schedule('save_ndt', every=2e-13)
         sim.run_until(1.1e-12)
-        a = np.loadtxt('barmini.ndt')
-        assert(len(a) == 6)  # we should have saved 6 time steps
+        f = Tablereader('barmini.ndt')
+        assert(len(f.timesteps()) == 6)  # we should have saved 6 time steps
+
+        # Also assert that all the energy terms are written automatically
+        entities = f.entities()
+        assert 'E_Exchange' in entities
+        assert 'E_Demag' in entities
+
 
     def test_save_restart_data(self, tmpdir):
         """
