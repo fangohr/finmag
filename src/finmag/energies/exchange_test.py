@@ -3,6 +3,7 @@ import numpy as np
 import dolfin as df
 from finmag.energies import Exchange
 
+
 @pytest.fixture(scope = "module")
 def fixt():
     """
@@ -17,6 +18,15 @@ def fixt():
     exch = Exchange(A)
     exch.setup(S3, m, Ms)
     return {"exch": exch, "m": m, "A": A, "S3": S3, "Ms": Ms}
+
+
+def test_interaction_accepts_name():
+    """
+    Check that the interaction accepts a 'name' argument and has a 'name' attribute.
+    """
+    exch = Exchange(13e-12, name='MyExchange')
+    assert hasattr(exch, 'name')
+
 
 def test_there_should_be_no_exchange_for_uniform_m(fixt):
     """
@@ -34,6 +44,7 @@ def test_there_should_be_no_exchange_for_uniform_m(fixt):
     print "Asserted zero exchange energy for uniform m = (1, 0, 0), got E = {}.".format(E)
     assert abs(E) < TOLERANCE
 
+
 def test_exchange_energy_analytical(fixt):
     """
     Compare one Exchange energy with the corresponding analytical result.
@@ -48,6 +59,7 @@ def test_exchange_energy_analytical(fixt):
 
     print "With m = (0, sqrt(1-x^2), x), expecting E = {}. Got E = {}.".format(expected_E, E)
     assert abs(E - expected_E)/expected_E < REL_TOLERANCE
+
 
 def test_exchange_field_supported_methods(fixt):
     """
@@ -75,10 +87,7 @@ def test_exchange_field_supported_methods(fixt):
         assert np.nanmax(rel_diff) < REL_TOLERANCE
 
 
-
 if __name__ == "__main__":
-   
-    
     mesh = df.BoxMesh(0,0,0,2*np.pi,1,1,10, 1, 1)
      
     S = df.FunctionSpace(mesh, "Lagrange", 1)

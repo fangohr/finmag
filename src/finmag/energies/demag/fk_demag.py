@@ -35,7 +35,7 @@ class FKDemag(object):
     .. _Hybrid method for computing demagnetizing fields: http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=106342
 
     """
-    def __init__(self):
+    def __init__(self, name='Demag'):
         """
         Create a new FKDemag instance.
 
@@ -56,7 +56,7 @@ class FKDemag(object):
         understood by `df.KrylovSolver` is valid.
 
         """
-        self.name = "Demag"
+        self.name = name
         self.in_jacobian = False
         default_parameters = {
             'absolute_tolerance': 1e-6,
