@@ -25,6 +25,17 @@ def fixt():
     return {"anis": anis, "m": m, "a": a, "S3": S3, "Ms": Ms, "K1": K1}
 
 
+def test_interaction_accepts_name(fixt):
+    """
+    Check that the interaction accepts a 'name' argument and has a 'name' attribute.
+    """
+    K1 = 1
+    a = df.Constant((0, 0, 1))
+
+    anis = UniaxialAnisotropy(K1, a, name='MyAnisotropy')
+    assert hasattr(anis, 'name')
+
+
 @pytest.mark.parametrize(("m", "expected_E"), [
     ((0, 0, 1), 0), ((0, 0, -1), 0), ((0, 1, 0), 1), ((-1, 0, 0), 1)])
 def test_anisotropy_energy_simple_configurations(fixt, m, expected_E):

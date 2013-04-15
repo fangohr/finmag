@@ -21,6 +21,14 @@ def setup_demag_sphere(Ms):
     return demag
 
 
+def test_interaction_accepts_name():
+    """
+    Check that the interaction accepts a 'name' argument and has a 'name' attribute.
+    """
+    demag = FKDemag(name='MyDemag')
+    assert hasattr(demag, 'name')
+
+
 def test_demag_field_for_uniformly_magnetised_sphere():
     demag = setup_demag_sphere(Ms=1)
     H = demag.compute_field().reshape((3, -1))

@@ -24,6 +24,20 @@ def diff(H_ext, expected_field):
     return np.max(np.abs(H - expected_field))
 
 
+def test_interaction_accepts_name():
+    """
+    Check that the interaction accepts a 'name' argument and has a 'name' attribute.
+    """
+    field_expr = df.Expression(("0", "t", "0"), t=0)
+
+    zeeman = Zeeman([0, 0, 1], name='MyZeeman')
+    assert hasattr(zeeman, 'name')
+    zeeman = TimeZeeman(field_expr, name='MyTimeZeeman')
+    assert hasattr(zeeman, 'name')
+    zeeman = DiscreteTimeZeeman(field_expr, dt_update=2, name='MyDiscreteTimeZeeman')
+    assert hasattr(zeeman, 'name')
+
+
 def test_compute_energy():
     """
     Compute Zeeman energies of a cuboid and sphere for various

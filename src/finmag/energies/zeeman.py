@@ -7,7 +7,7 @@ from finmag.util import helpers
 log = logging.getLogger("finmag")
 
 class Zeeman(object):
-    def __init__(self, H, **kwargs):
+    def __init__(self, H, name='Zeeman', **kwargs):
         """
         Specify an external field (in A/m).
 
@@ -16,6 +16,7 @@ class Zeeman(object):
 
         """
         self.value = H
+        self.name = name
         self.kwargs = kwargs
         self.in_jacobian = False
 
@@ -57,7 +58,7 @@ class Zeeman(object):
 
 
 class TimeZeeman(Zeeman):
-    def __init__(self, field_expression, t_off=None):
+    def __init__(self, field_expression, t_off=None, name='TimeZeeman'):
         """
         Specify a time dependent external field (in A/m), which gets updated as continuously as possible.
         
@@ -68,7 +69,7 @@ class TimeZeeman(Zeeman):
 
         """
         assert isinstance(field_expression, df.Expression)
-        super(TimeZeeman, self).__init__(field_expression)
+        super(TimeZeeman, self).__init__(field_expression, name=name)
         self.t_off = t_off
         self.switched_off = False
 
@@ -92,7 +93,7 @@ class TimeZeeman(Zeeman):
 
 
 class DiscreteTimeZeeman(TimeZeeman):
-    def __init__(self, field_expression, dt_update=None, t_off=None):
+    def __init__(self, field_expression, dt_update=None, t_off=None, name='DiscreteTimeZeeman'):
         """
         Specify a time dependent external field which gets updated in
         discrete time intervals.
@@ -109,7 +110,7 @@ class DiscreteTimeZeeman(TimeZeeman):
         if dt_update is None and t_off is None:
             raise ValueError("At least one of the arguments 'dt_update' and "
                              "'t_off' must be given.")
-        super(DiscreteTimeZeeman, self).__init__(field_expression, t_off)
+        super(DiscreteTimeZeeman, self).__init__(field_expression, t_off, name=name)
         self.dt_update = dt_update
         self.t_last_update = 0.0
 

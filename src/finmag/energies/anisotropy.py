@@ -51,7 +51,7 @@ class UniaxialAnisotropy(EnergyBase):
 
     """
     
-    def __init__(self, K1, axis, method="box-matrix-petsc"):
+    def __init__(self, K1, axis, method="box-matrix-petsc", name='Anisotropy'):
         """
         Define a uniaxial anisotropy with (first) anisotropy constant `K1`
         (in J/m^3) and easy axis `axis`.
@@ -74,6 +74,7 @@ class UniaxialAnisotropy(EnergyBase):
             logger.debug("Will create anisotropy axis from '{}'.".format(axis))
             self.axis = df.Constant(axis)
 
+        self.name = name
         super(UniaxialAnisotropy, self).__init__(method, in_jacobian=True)
 
     @mtimed
