@@ -23,6 +23,7 @@ class Zeeman(object):
         self.S3 = S3
         self.m = m
         self.Ms = Ms
+        self.unit_length = unit_length
         self.set_value(self.value, **self.kwargs)
 
     def set_value(self, value, **kwargs):
@@ -51,7 +52,7 @@ class Zeeman(object):
         return self.H.vector().array()
 
     def compute_energy(self):
-        E = df.assemble(self.E)
+        E = df.assemble(self.E) * self.unit_length**3
         return E
 
 
