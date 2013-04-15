@@ -173,7 +173,7 @@ class Tablereader(object):
         """Returns list of available entities"""
         return self.datadic.keys()
 
-    def time(self):
+    def timesteps(self):
         """Returns list of available time steps"""
         return self.datadic['time']
 
@@ -262,5 +262,5 @@ if __name__ == "__main__":
 
     # now open file for reading
     f = Tablereader(filename)
-    print f.time()
+    print f.timesteps()
     print f['m_x']
