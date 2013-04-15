@@ -5777,3 +5777,42 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-04-12 17:41:48 D_Chernyshenko: Okay Carol has just sent me their invoice to the University as well, this should be enough
 2013-04-12 17:44:09 D_Chernyshenko: Yeah, the invoice is due to be paid by May 15th (after our flight)
 2013-04-12 17:44:11 D_Chernyshenko: As expected...
+2013-04-15 11:48:59 mb8g11: Who is up for lunch at 12:15?
+2013-04-15 16:39:35 D_Chernyshenko: Hey Max, were you able to get NX client/server working on Ubuntu 12.10?
+2013-04-15 16:40:12 max_albert: Hi Dmitri! I didnt' try it on Ubunut 12.10 as I'm still running 12.04, but it works there.
+2013-04-15 16:40:34 D_Chernyshenko: Ah right, just to warn you it seems incompatible with 12.10, I'm still trying to figure out a way
+2013-04-15 16:40:51 max_albert: (I should say that I haven't used it extensively, and I saw some glitches when I used the wrong resolutions, but when it works it's very useful.)
+2013-04-15 16:41:00 max_albert: Ah, thanks for the heads-up!
+2013-04-15 17:24:53 D_Chernyshenko: Do we get email notifications from the new Jenkins? Just realised my build notifications folder is empty...
+2013-04-15 17:27:29 max_albert: Yes, they are enabled. However, recently there was a glitch which resulted in people needing to sign up again, so maybe that's why you're not getting any notifications at the moment.
+2013-04-15 17:27:59 max_albert: Jenkins does automatically extract email addresses from commits, but they are usually mangled so maybe that's also a reason.
+2013-04-15 17:28:17 max_albert: I just fixed the your email address there, maybe that already helps.
+2013-04-15 17:28:29 max_albert: Otherwise just sign up again and that should hopefully resolve things.
+2013-04-15 17:28:50 D_Chernyshenko: That's right, I still need to do it. I think the messages are not being filtered by my filter which is why the folder is not empty. And they weren't on the last 2-3 screens of emails because of the requireed re-signup
+2013-04-15 17:28:58 D_Chernyshenko: *why the folder is empty
+2013-04-15 17:29:31 D_Chernyshenko: Anyway, actually I wanted to ask how you set up email transport (assuming that was you)?
+2013-04-15 17:29:54 max_albert: What do you mean by email "transport"?
+2013-04-15 17:30:00 D_Chernyshenko: Trying to set up email delivery from my workstation (mu) again after the Ubuntu upgrade
+2013-04-15 17:30:28 D_Chernyshenko: As in, being able to send Unix mail from the computer Jenkins is running on? Or are you using some different way of delivering mail?
+2013-04-15 17:30:54 max_albert: You mean setting up sendmail or whatever it is that's doing the low-level magic? I think it was Hans who did that.
+2013-04-15 17:31:02 D_Chernyshenko: Ah, okay
+2013-04-15 17:31:08 D_Chernyshenko: Yeah, that's what I meant
+2013-04-15 17:31:22 D_Chernyshenko: Thanks!
+2013-04-15 17:31:56 max_albert: I just saw that he added some notes to the finmag-jenkins repository about setting up email. Do you have access to that?
+2013-04-15 17:32:15 max_albert: If not, I can send you the relevant part via email.
+2013-04-15 17:32:39 max_albert: It's bullet point No. 17 in the file "steps_for_setting_up_jenkins_from_scratch.txt"
+2013-04-15 17:33:32 D_Chernyshenko: Yeah, I have access to that, looking at it now.
+2013-04-15 17:36:29 D_Chernyshenko: Yeah, that's the way Hans sets it up, I was hoping that if it was you or Marc-Antonio, maybe you found out a better way. The problem is that iSolutions had to add the machine sending mail (aleph0) to the list of machines allowed to send mail without authentication
+2013-04-15 17:37:43 D_Chernyshenko: Don't think it's a good idea to have that for a workstation so I had a workaround... Anyway, thanks for clearing it up
+2013-04-15 17:37:50 max_albert: Ah, I see.
+2013-04-15 17:39:20 max_albert: Actually, I guess there should be a way around it. I'm having a script which sends me notifications about library books that need to be returned, and it uses the 'mailx' command to send me the email. But to be honest, I have no idea any more what I needed to do (if anything) to get it to work, so I can't help you there. :(
+2013-04-15 17:41:18 D_Chernyshenko: Well, my workaround was to set up mail delivery via a SSH tunnel to eta (which can send mail due to having that permission from iSolutions). I.e. every time the computer sends mail it will log in to eta and send it there.
+2013-04-15 20:30:58 D_Chernyshenko: Hmm, is there any particular reason why in finmag/init.py we import "from finmag.sim.sim import Simulation, sim_with"
+2013-04-15 20:31:02 D_Chernyshenko: Those don't seem to be used
+2013-04-15 20:31:55 max_albert: I guess this imports these names into the "finmag" namespace. Otherwise we wouldn't be able to say "from finmag import sim_with" in our simulation scripts.
+2013-04-15 20:37:34 D_Chernyshenko: That's right. A side effect is that Simulation (and everything that it requires) is loaded whenever any module in finmag.* is imported, I got round that by commenting out the import temporarily
+2013-04-15 20:37:50 D_Chernyshenko: Debugging a nasty segfault and was trying to run finmag in valgrind
+2013-04-15 20:38:15 D_Chernyshenko: It used to work in 12.10 at some point, but now I'm getting errors
+2013-04-15 20:38:33 max_albert: Whoa! Segfault? Wondering what you are working on... Need to leave now, but would be interested to hear about it tomorrow!
+2013-04-15 20:38:39 max_albert: Have a good evening everyone!
+2013-04-15 20:38:43 D_Chernyshenko: Have a good evening
