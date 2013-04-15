@@ -196,16 +196,15 @@ class Simulation(object):
         """
         return self.llg.effective_field.total_energy()
 
-    def get_interaction(self, interaction_type):
+    def get_interaction(self, interaction_name):
         """
-        Returns the interaction of the given type.
+        Returns the interaction with the given name
 
         *Arguments*
 
-        interaction_type: string
+        interaction_name: string
 
-            The allowed types are those finmag knows about by classname, for
-            example: 'Demag', 'Exchange', 'UniaxialAnisotropy', 'Zeeman'.
+            Name of the interaction.
 
         *Returns*
 
@@ -213,7 +212,7 @@ class Simulation(object):
         interaction is found, a ValueError is raised.
 
         """
-        return self.llg.effective_field.get_interaction(interaction_type)
+        return self.llg.effective_field.get_interaction(interaction_name)
 
     def remove_interaction(self, interaction_type):
         """

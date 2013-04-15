@@ -79,31 +79,26 @@ class EffectiveField(object):
             energy += interaction.compute_energy()
         return energy
 
-    def get_interaction(self, interaction_type):
+    def get_interaction(self, interaction_name):
         """
-        Returns the interaction object of the given type. Raises a
+        Returns the interaction object with the given name. Raises a
         ValueError if no (or more than one) matching interaction is
         found.
 
         """
-        added_interaction_types = set([])  # for debugging output to user
-        matching_interaction = None
+        matching_interactions = filter(lambda x: x.name == interaction_name,
+                                      self.interactions)
 
-        for inter in self.interactions:
-            added_interaction_types.add(inter.__class__.__name__)
-            if ((hasattr(inter, 'name') and inter.name.capitalize() == interaction_type.capitalize())
-                    or inter.__class__.__name__.capitalize() == interaction_type.capitalize()):
-                if matching_interaction is not None:
-                    raise ValueError(
-                        "Found more than one interaction of type '{}'.".format(interaction_type))
-                matching_interaction = inter
+        if len(matching_interactions) == 0:
+            raise ValueError("Couldn't find interaction of type '{}'. "
+                             "Did you mean one of {}?".format(
+                    interaction_name, [x.name for x in self.interactions]))
 
-        if not matching_interaction:
-            raise ValueError(
-                "Couldn't find interaction of type '{}'. Did you mean one of {}?".format(
-                    interaction_type, list(added_interaction_types)))
+        if len(matching_interactions) > 1:
+            raise ValueError("Found more than one interaction with name "
+                             "'{}'.".format(interaction_name))
 
-        return matching_interaction
+        return matching_interactions[0]
 
     def remove_interaction(self, interaction_type):
         """

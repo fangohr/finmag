@@ -11,6 +11,7 @@ from math import sqrt, cos, sin, pi
 from finmag.util.helpers import assert_number_of_files,vector_valued_function
 from finmag.sim import sim_helpers
 from finmag.energies import Zeeman, Exchange, UniaxialAnisotropy
+from finmag.util.fileio import Tablereader
 
 logger = logging.getLogger("finmag")
 
@@ -34,13 +35,25 @@ class TestSimulation(object):
                            unit_length=1e-9, A=13.0e-12, demag_solver='FK')
         cls.sim.relax()
 
+    def test_get_interaction(self):
+        # These should just work
+        self.sim.get_interaction('Exchange')
+        self.sim.get_interaction('Demag')
+
+        with pytest.raises(ValueError):
+            self.sim.get_interaction('foobar')
+
+        exch = Exchange(A=13e-12, name='foobar')
+        self.sim.add(exch)
+        assert exch == self.sim.get_interaction('foobar')
+
     def test_get_field_as_dolfin_function(self):
         """
         Convert the demag field into a dolfin function, evaluate it a all
         nodes and check that the resulting vector of the field values is
         the same as the one internally stored in the simulation.
         """
-        fun_demag = self.sim.get_field_as_dolfin_function("demag")
+        fun_demag = self.sim.get_field_as_dolfin_function("Demag")
 
         # Evalute the field function at all mesh vertices. This gives a
         # Nx3 array, which we convert back into a 1D array using dolfin's
@@ -50,7 +63,7 @@ class TestSimulation(object):
 
         # Now check that this is essentially the same as vector of the
         # original demag interaction.
-        demag = self.sim.get_interaction("demag")
+        demag = self.sim.get_interaction("Demag")
         v_demag = demag.compute_field()
 
         assert(np.allclose(v_demag, v_eval_1d))
@@ -67,14 +80,14 @@ class TestSimulation(object):
         # Probe field at all mesh vertices and at the first vertex;
         # also convert a 1d version of the probed vector following
         # dolfin's coordinate convention.
-        v_probed = self.sim.probe_field("demag", coords * self.sim.unit_length)
+        v_probed = self.sim.probe_field("Demag", coords * self.sim.unit_length)
         v_probed_1d = np.concatenate([v_probed[:, 0],
                                       v_probed[:, 1],
                                       v_probed[:, 2]])
-        v0_probed = self.sim.probe_field("demag", coords[0])
+        v0_probed = self.sim.probe_field("Demag", coords[0])
 
         # Create reference vectors at the same positions
-        v_ref = self.sim.get_interaction("demag").compute_field()
+        v_ref = self.sim.get_interaction("Demag").compute_field()
         v0_ref = v_ref[[0, N, 2*N]]
 
         # Check that the results coincide
@@ -416,11 +429,11 @@ class TestSimulation(object):
         with pytest.raises(ValueError):
             sim.remove_interaction("Zeeman")
 
-        # Two different Zeeman interaction present
+        # Two different Zeeman interactions present
         sim.add(Zeeman((0, 0, 1)))
-        sim.add(Zeeman((0, 0, 2)))
-        with pytest.raises(ValueError):
-            sim.remove_interaction("Zeeman")
+        sim.add(Zeeman((0, 0, 2), name="Zeeman2"))
+        sim.remove_interaction("Zeeman")
+        sim.remove_interaction("Zeeman2")
 
     def test_switch_off_H_ext(self):
         """
