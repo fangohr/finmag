@@ -227,10 +227,16 @@ class TestSimulation(object):
         f = Tablereader('barmini.ndt')
         assert(len(f.timesteps()) == 6)  # we should have saved 6 time steps
 
-        # Also assert that all the energy terms are written automatically
+        # Also assert that the energy and field terms are written automatically
         entities = f.entities()
         assert 'E_Exchange' in entities
+        assert 'H_Exchange_x' in entities
+        assert 'H_Exchange_y' in entities
+        assert 'H_Exchange_z' in entities
         assert 'E_Demag' in entities
+        assert 'H_Demag_x' in entities
+        assert 'H_Demag_y' in entities
+        assert 'H_Demag_z' in entities
 
 
     def test_save_restart_data(self, tmpdir):

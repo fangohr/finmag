@@ -1018,3 +1018,17 @@ def npy_to_dolfin_function(filename, mesh_or_space):
     fun = df.Function(V)
     fun.vector().set_local(a)
     return fun
+
+
+def average_field(field_vals):
+    """
+    Return the average value of the given field. `field_vals` must be
+    a numpy.array of shape (N,) followingg the dolfin convention for
+    the field values.
+    """
+    assert field_vals.ndim == 1
+
+    field_vals.shape = (3,-1)
+    av = np.average(field_vals, axis=1)
+    field_vals.shape = (-1,)
+    return av

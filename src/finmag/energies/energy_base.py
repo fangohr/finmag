@@ -4,6 +4,7 @@ import numpy as np
 from finmag.util.timings import mtimed
 from finmag.util.consts import mu0
 from finmag.util.meshes import nodal_volume
+from finmag.util import helpers
 
 logger = logging.getLogger('finmag')
 
@@ -188,6 +189,12 @@ class EnergyBase(object):
         Hex = self.__compute_field()
             
         return Hex
+
+    def average_field(self):
+        """
+        Compute the average field.
+        """
+        return helpers.average_field(self.compute_field())
 
     def __compute_field_assemble(self):
         return df.assemble(self.dE_dm).array() / self.nodal_volume_S3

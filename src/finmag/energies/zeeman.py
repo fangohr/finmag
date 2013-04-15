@@ -41,13 +41,9 @@ class Zeeman(object):
     
     def average_field(self):
         """
-        return the average applied filed might be used in save_ndt
+        Compute the average applied field.
         """
-        field=self.compute_field()
-        field.shape=(3,-1)
-        av = np.average(field,axis=1)
-        field.shape=(-1,)
-        return av
+        return helpers.average_field(self.compute_field())
 
     def compute_field(self):
         return self.H.vector().array()
