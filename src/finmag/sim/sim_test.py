@@ -486,7 +486,7 @@ class TestSimulation(object):
             return 0.5e11 if (t < 2.5e-9) else -0.5e11
 
         sim.set_stt(0.05e11, 1.0, 2e-9, (0, 0, 1), with_time_update=J)
-        sim.schedule('save_ndt', every=1e-10)
+        sim.schedule('save_ndt', every=1e-11)
         sim.run_until(5e-9)
 
         ts, xs, ys, zs = np.loadtxt('macrospin_with_stt.ndt').T[:4]
