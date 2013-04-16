@@ -9,8 +9,12 @@ log = logging.getLogger("finmag")
 
 
 def save_ndt(sim):
-    """Given the simulation object, saves one line to the ndt finalise
-    (through the TableWriter object)."""
+    """
+    Save the average field values (such as the magnetisation) to a file.
+
+    The filename is derived from the simulation name (as given when the
+    simulation was initialised) and has the extension .ndt'.
+    """
     if sim.driver == 'cvode':
         log.debug("Saving data to ndt file at t={} "
                   "(sim.name={}).".format(sim.t, sim.name))

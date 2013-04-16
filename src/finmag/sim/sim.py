@@ -108,6 +108,7 @@ class Simulation(object):
         self.scheduler_shortcuts = {
             'save_restart_data': sim_helpers.save_restart_data,
             'save_ndt': sim_helpers.save_ndt,
+            'save_averages': sim_helpers.save_ndt,
             'save_vtk': self.save_vtk,
             'save_field': Simulation._save_field_incremental,
             'switch_off_H_ext': Simulation.switch_off_H_ext,
@@ -428,16 +429,7 @@ class Simulation(object):
         self.scheduler.reset(t0)
         assert self.t == t0  # self.t is read from integrator
 
-    def save_averages(self):
-        """
-        Save average field values (such as the magnetisation) to a file.
-
-        The filename is derived from the simulation name (as given when the
-        simulation was initialised) and has the extension .ndt'.
-        """
-        log.debug("Saving average field values for simulation '{}'.".format(self.name))
-        self.tablewriter.save()
-
+    save_averages = sim_helpers.save_ndt
     hysteresis = hyst
     hysteresis_loop = hyst_loop
 
