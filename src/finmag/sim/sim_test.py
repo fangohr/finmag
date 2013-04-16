@@ -276,11 +276,11 @@ class TestSimulation(object):
         sim1.run_until(1.5e-12)
 
         # Check that the time steps for sim1 are as expected
-        a = np.loadtxt('barmini1.ndt')
-        ta = a[:, 0]
-        ta_expected = np.concatenate([np.linspace(0, 1e-12, 11),
+        f1 = Tablereader('barmini1.ndt')
+        t1 = f1.timesteps()
+        t1_expected = np.concatenate([np.linspace(0, 1e-12, 11),
                                       np.linspace(0.5e-12, 1.5e-12, 11)])
-        assert(np.allclose(ta, ta_expected, atol=0))
+        assert(np.allclose(t1, t1_expected, atol=0))
 
         # Run a second simulation for 2 ps continuously
         sim2 = barmini(name='barmini2')
@@ -288,15 +288,18 @@ class TestSimulation(object):
         sim2.run_until(2e-12)
 
         # Check that the time steps for sim1 are as expected
-        b = np.loadtxt('barmini2.ndt')
-        tb = b[:, 0]
-        tb_expected = np.linspace(0, 2e-12, 21)
-        assert(np.allclose(tb, tb_expected, atol=0))
+        f2 = Tablereader('barmini2.ndt')
+        t2 = f2.timesteps()
+        t2_expected = np.linspace(0, 2e-12, 21)
+        assert(np.allclose(t2, t2_expected, atol=0))
 
         # Check that the magnetisation dynamics of sim1 and sim2 are
         # the same and that we end up with the same magnetisation.
-        a = np.concatenate([a[:10, :], a[11:, :]])  # delete the duplicate line due to the restart
-        assert(np.allclose(a[:, 1:], b[:, 1:]))
+        for col in ['m_x', 'm_y', 'm_z']:
+            a = f1[col]
+            b = f2[col]
+            a = np.concatenate([a[:10], a[11:]])  # delete the duplicate line due to the restart
+            assert(np.allclose(a, b))
         assert(np.allclose(sim1.m, sim2.m, atol=1e-6))
 
         # Check that resetting the time to zero works (this used to not work due to a bug).
