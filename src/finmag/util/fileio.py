@@ -2,6 +2,7 @@ import os
 import logging
 import numpy as np
 from glob import glob
+from types import TupleType, StringType
 from finmag.util.timings import mtimed
 logger = logging.getLogger(name='finmag')
 
@@ -178,8 +179,20 @@ class Tablereader(object):
         return self.datadic['time']
 
     def __getitem__(self, entity):
-        """Given the entity name, return the data as numpy array"""
-        return self.datadic[entity]
+        """
+        Given the entity name, return the data as a 1D numpy array.
+        If multiple entity names (separated by commas) are given
+        then a 2D numpy array is returned where the columns represent
+        the data for the entities.
+        """
+        if isinstance(entity, StringType):
+            res = self.datadic[entity]
+        elif isinstance(entity, TupleType):
+            res = np.array([self.datadic[e] for e in entity]).T
+        else:
+            raise TypeError("'entity' must be a string or a tuple. "
+                            "Got: {} ({})".format(entity, type(entity)))
+        return res
 
 
 class FieldSaver(object):

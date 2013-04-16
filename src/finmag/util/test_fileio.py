@@ -34,6 +34,13 @@ def test_Table_writer_and_reader(tmpdir):
     assert abs(data['m_y'][-1] - my) < 1e-11
     assert abs(data['m_z'][-1] - mz) < 1e-11
 
+    # Try reading multiple columns at once
+    dmx = data['m_x']
+    dmy = data['m_y']
+    dmz = data['m_z']
+    dm = numpy.vstack([dmx, dmy, dmz]).T  # stack the arrays together
+    assert numpy.allclose(dm, data['m_x', 'm_y', 'm_z'])
+
 
 if __name__ == "__main__":
     test_Table_writer_and_reader()
