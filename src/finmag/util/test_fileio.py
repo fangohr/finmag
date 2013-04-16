@@ -3,7 +3,8 @@ import numpy
 from fileio import Tablewriter, Tablereader
 
 
-def test_Table_writer_and_reader(tmpdir=os.getcwd()):
+def test_Table_writer_and_reader(tmpdir):
+    os.chdir(str(tmpdir))
     import finmag
     import dolfin as df
 
@@ -15,7 +16,7 @@ def test_Table_writer_and_reader(tmpdir=os.getcwd()):
     sim = finmag.sim_with(mesh, Ms=0.86e6, alpha=0.5, unit_length=1e-9,
                           A=13e-12, m_init=(1, 0, 1))
 
-    filename = os.path.join(tmpdir, 'test-save_averages-data.ndt')
+    filename = 'test-save_averages-data.ndt'
     ndt = Tablewriter(filename, sim)
     times = numpy.linspace(0, 3.0e-11, 6 + 1)
     for i, time in enumerate(times):
@@ -25,9 +26,9 @@ def test_Table_writer_and_reader(tmpdir=os.getcwd()):
 
     # now open file for reading
     data = Tablereader(filename)
-    print data.time() - times
+    print data.timesteps() - times
     print("III")
-    assert numpy.all(numpy.abs(data.time() - times)) < 1e-25
+    assert numpy.all(numpy.abs(data.timesteps() - times)) < 1e-25
     mx, my, mz = sim.m_average
     assert abs(data['m_x'][-1] - mx) < 1e-11
     assert abs(data['m_y'][-1] - my) < 1e-11
