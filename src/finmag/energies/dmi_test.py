@@ -1,9 +1,19 @@
 import numpy as np
 import dolfin as df
-from finmag.energies import DMI,Exchange
+from finmag.energies import DMI, DMI_Old, Exchange
 from finmag import Simulation
 from finmag.util.helpers import vector_valued_function
 from finmag.util.pbc2d import PeriodicBoundary2D
+
+
+def test_interaction_accepts_name():
+    """
+    Check that the interaction accepts a 'name' argument and has a 'name' attribute.
+    """
+    dmi = DMI(1)
+    dmi_old = DMI_Old(1)
+    assert hasattr(dmi, 'name')
+    assert hasattr(dmi_old, 'name')
 
 
 def test_dmi_pbc2d():
@@ -20,7 +30,6 @@ def test_dmi_pbc2d():
     field = dmi.compute_field()
 
     assert np.max(field) < 1e-15
-
 
 
 def test_dmi_pbc2d_1D(plot=False):

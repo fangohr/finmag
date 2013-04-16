@@ -214,9 +214,10 @@ class DMI(EnergyBase):
             H_dmi_np = dmi_np.compute_field()
     """
 
-    def __init__(self, D, method="box-matrix-petsc"):
+    def __init__(self, D, method="box-matrix-petsc", name='DMI'):
         super(DMI, self).__init__(method, in_jacobian=True)
         self.D = D
+        self.name = name
 
     @mtimed
     def setup(self, S3, M, Ms, unit_length=1):
@@ -374,11 +375,12 @@ class DMI_Old(EnergyBase):
             
     """
     @mtimed
-    def __init__(self, D, method="box-matrix-petsc"):
+    def __init__(self, D, method="box-matrix-petsc", name='DMI_Old'):
         logger.debug("DMI(): method = %s" % method)
 
         self.D = D
         self.method = method
+        self.name = name
         self.in_jacobian = True
 
     @mtimed
