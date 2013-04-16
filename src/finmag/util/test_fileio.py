@@ -33,11 +33,6 @@ def test_Table_writer_and_reader(tmpdir):
     assert abs(data['m_x'][-1] - mx) < 1e-11
     assert abs(data['m_y'][-1] - my) < 1e-11
     assert abs(data['m_z'][-1] - mz) < 1e-11
-    
-    try:
-        os.remove(filename)
-    except:
-        pass
 
 
 if __name__ == "__main__":
