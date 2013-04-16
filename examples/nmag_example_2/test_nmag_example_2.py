@@ -3,8 +3,10 @@ import pytest
 import subprocess as sp
 import numpy as np
 import run_finmag
+from finmag.util.fileio import Tablereader
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 
 @pytest.mark.slow
 def test_against_nmag():
@@ -25,7 +27,8 @@ def test_against_nmag():
         filename = 'finmag_bar.ndt'
         if not os.path.exists(filename):
             run_finmag.run_simulation()
-        m_finmag = np.genfromtxt(os.path.join(MODULE_DIR, filename))
+        f = Tablereader(os.path.join(MODULE_DIR, filename))
+        m_finmag = f['time', 'm_x', 'm_y', 'm_z']
 
     except sp.CalledProcessError as ex:
         print("Running command '{}' was unsuccessful. The error "
