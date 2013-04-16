@@ -11,7 +11,7 @@ class ThinFilmDemag(object):
     Hj = Hk = 0 and Hi = - Mi.
 
     """
-    def __init__(self, direction="z", field_strength=None, in_jacobian=False):
+    def __init__(self, direction="z", field_strength=None, in_jacobian=False, name='ThinFilmDemag'):
         """
         field_strength is Ms by default
 
@@ -20,6 +20,7 @@ class ThinFilmDemag(object):
         self.direction = ord(direction) - 120 # converts x,y,z to 0,1,2
         self.strength = field_strength
         self.in_jacobian = in_jacobian
+        self.name = name
         in_jacobian_msg = "in Jacobian" if in_jacobian else "not in Jacobian"
         logger.debug("Creating {} object, {}.".format(
             self.__class__.__name__, in_jacobian_msg))

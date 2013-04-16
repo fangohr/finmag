@@ -5,6 +5,15 @@ from finmag.energies import ThinFilmDemag, Demag
 
 Ms = 8.6e5
 
+
+def test_interaction_accepts_name():
+    """
+    Check that the interaction accepts a 'name' argument and has a 'name' attribute.
+    """
+    demag = ThinFilmDemag()
+    assert hasattr(demag, 'name')
+
+
 def compare_with_demag_from_initial_m(H_gen, m_init, atol=0, rtol=0):
     sim = Sim(df.UnitCubeMesh(2, 2, 2), Ms)
     sim.set_m(m_init)
