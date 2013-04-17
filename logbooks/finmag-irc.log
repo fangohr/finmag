@@ -5833,3 +5833,37 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-04-17 12:26:36 mb8g11: Just asked because I coudln't tell from a glance at the code. Very nice!
 2013-04-17 12:26:51 mb8g11: Hans, will do now.
 2013-04-17 12:30:03 mb8g11: Can confirm it's already saving finmag-team e-mails in a separate folder.
+2013-04-17 13:31:29 mb8g11: Hi Marvin_Bot. Glad to see you found a new home.
+2013-04-17 13:42:38 fangohr: Hello Marvin_Bot 2.
+2013-04-17 13:43:22 mb8g11: The idea being that Marvin on aleph0 will commit the e-mails and IRC logs every night.
+2013-04-17 13:43:55 fangohr: Okay. o we are moving all our infrastructure for finmag from summer.kk to aleph0, correct?
+2013-04-17 13:44:04 fangohr: So it seems we are moving ...
+2013-04-17 13:44:14 fangohr: [issues typing ... [sigh]] ;-)
+2013-04-17 13:44:27 fangohr: Can anybody think of any functionality left on summer that we rely on?
+2013-04-17 13:44:41 fangohr: Repositories are on bitbucket, jenkins and marvin bot are both on aleph0.
+2013-04-17 13:44:52 fangohr: [There may be other non-finmag repositories on summer.]
+2013-04-17 13:45:15 max_albert: I can't think of any.
+2013-04-17 13:45:53 mb8g11: Me neither.
+2013-04-17 13:47:57 fangohr: Okay, thank you.
+2013-04-17 13:48:36 fangohr: We'll certainly keep in running for now. I have at least one other use case on there, but may well use the machine for something else in the future. So my assumption is that we don't need it for finmag anymore, unless anybody tells me otherwise (now or later).
+2013-04-17 14:34:37 mb8g11: Okay, the mails in finmag-team are now being committed to the finmag repository. While I was setting everything up and moved Marvin_Bot to aleph0, I also gathered all his scripts and configuration in a mercurial repository on bitbucket.
+2013-04-17 14:36:15 max_albert: Nice! Which repository is this? I was also thinking that now that the builds are all configured and working well (apart from the ipython notebooks tests), it would be good to commit the configuration files for Jenkins in a repository. This would probably be finmag-jenkins, so does it make sense to gather Marvin's configuration files in there as well?
+2013-04-17 14:39:50 mb8g11: Will grant all of you access, it-s mb8g11/Marvin
+2013-04-17 14:40:10 mb8g11: Maybe not, Jenkins is Jenkins, and Marvin is just the IRC/logging stuff.
+2013-04-17 14:40:51 mb8g11: Then again, a repository containing *all* the configuration files of the infrastructure around finmag might be nice as well. Hans, what's your opinion?
+2013-04-17 14:41:17 max_albert: True. I was just thinking that both repositories belong to the category "development infrastructure" and are (and probably will remain) quite small, so perhaps it's better to make all the configuration easier to find by bundling it in a single repository.
+2013-04-17 14:41:22 max_albert: Yes, exactly.
+2013-04-17 14:41:38 max_albert: Of course, this should be named differently (not finmag-jenkins). ;-)
+2013-04-17 14:43:51 mb8g11: (Access granted)
+2013-04-17 14:43:59 max_albert: Just saw the email. Thanks!
+2013-04-17 14:59:39 fangohr: Should we have one repository with all the config files, or multiple ones? I don't know -- both have advantages and disadvantages. What is the latest on hg-subrepositories? Maybe we can put a meta-repository together that includes all the others as subdirectories, so that one just checks out the meta-one, and this contains the others? Or the meta one can contain a script to pull all the others (The latter option is how the nmag-meta repository works, for th
+2013-04-17 14:59:40 fangohr: ose that know it.)
+2013-04-17 15:48:08 mb8g11: Would anyone use a web-interface to read the finmag-team interface?
+2013-04-17 15:48:15 mb8g11: *mails
+2013-04-17 15:55:23 fangohr: Thanks, MA. Have tried the 'mutt -f finmag' trick, and that works. Ta.
+2013-04-17 16:00:34 fangohr: What do you mean with web-interface? You mean something that looks neater than mutt?
+2013-04-17 16:03:23 mb8g11: http://aleph0.kk.soton.ac.uk:8008/html/ ;-)
+2013-04-17 16:06:02 fangohr: Ah, very impressive. How is this run?
+2013-04-17 16:07:04 mb8g11: Generated statically by a program called hypermail. Would need to tell it to update the html in regular intervals and maybe intergrate a search.
+2013-04-17 16:26:56 mb8g11: http://www.hypermail-project.org/
+2013-04-17 16:42:57 mb8g11: The HTML should now stay up-to-date as mails come in.
