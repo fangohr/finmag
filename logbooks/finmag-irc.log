@@ -5818,3 +5818,18 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-04-15 20:38:43 D_Chernyshenko: Have a good evening
 2013-04-16 09:04:01 fangohr-adium1: Good Morning.
 2013-04-16 09:28:03 mb8g11: Good morning.
+2013-04-17 08:21:42 max_albert: Good morning.
+2013-04-17 09:26:13 fangohr-adium1: Good Morning.
+2013-04-17 10:56:57 mb8g11: Max, are name attributes on interaction objects now a must? I implemented a system (just last week) that would look up a name attribute, but would default to use the interaction class-name. I see that you removed that part of the code.
+2013-04-17 11:39:23 max_albert: Hi Marc-Antonio. Yes, the name attributes are now required for all interactions.
+2013-04-17 11:39:27 max_albert: But if no name is provided by the user, they always default to the interaction class name.
+2013-04-17 11:39:37 max_albert: So I haven't removed the functionality of your code, I have simply extended it to all interactions (and made it a bit more generic).
+2013-04-17 11:49:26 fangohr: Hi folks, great idea to push ahead with the names, thank you.
+2013-04-17 11:50:14 fangohr: Marc-Antonio (just spelling it out because of the many 'MA' we have ... ;-)), can you look into adding the finmag-mailing list emails into the repository? You said that probably this is all done apart from committing/pushing?
+2013-04-17 11:50:27 fangohr: Completely orthogonal: anybody up for volleyball at 12:00?
+2013-04-17 11:50:37 max_albert: Yes! (Volleyball, that is...)
+2013-04-17 11:50:53 max_albert: Regarding the interaction names, I have already noticed how this makes dealing with different interactions much easier.
+2013-04-17 11:53:29 fangohr-adium: Nice.
+2013-04-17 12:26:36 mb8g11: Just asked because I coudln't tell from a glance at the code. Very nice!
+2013-04-17 12:26:51 mb8g11: Hans, will do now.
+2013-04-17 12:30:03 mb8g11: Can confirm it's already saving finmag-team e-mails in a separate folder.
