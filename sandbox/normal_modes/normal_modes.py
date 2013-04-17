@@ -2,7 +2,7 @@ import dolfin as df
 import sys
 from finmag import Simulation
 from finmag.energies import Demag, Exchange, Zeeman
-from finmag.util.consts import Oersted_to_SI
+from finmag.util.consts import Oersted_to_SI, gamma
 import h5py
 import scipy.sparse.linalg
 import numpy as np
@@ -218,7 +218,7 @@ def find_normal_modes(sim):
         # Multiply by Dright
         phi.shape = (2,1,n)
         dm = mult(Dright, phi)
-        # Multiply by C+H0
+        # Multiply by gamma(C+H0)
         dm.shape = (-1,)
         v = differentiate_fd4(compute_H, m0_flat, dm)
         v.shape = (3,n)
@@ -226,6 +226,7 @@ def find_normal_modes(sim):
         v[0] += H0*dm[0]
         v[1] += H0*dm[1]
         v[2] += H0*dm[2]
+        v *= gamma
         # Multiply by Dleft
         v.shape = (3, 1, n)
         res = mult(Dleft, v)
