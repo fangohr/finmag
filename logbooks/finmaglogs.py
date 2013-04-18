@@ -47,7 +47,7 @@ class HelloWorld:
 cherrypy.root = HelloWorld()
 
 if __name__ == '__main__':
-    cherrypy.config.update(file = 'cherrypy.conf')
+    cherrypy.config.update('cherrypy.conf')
     # Start the CherryPy server.
     cherrypy.server.start()
 
