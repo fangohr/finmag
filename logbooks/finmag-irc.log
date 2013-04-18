@@ -5878,3 +5878,14 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-04-18 12:23:41 fangohr: If you could re-activate them, that would be nice, otherwise I do it later.
 2013-04-18 13:01:10 mb8g11: So our group meeting is today at 14:00?
 2013-04-18 13:03:38 D_Chernyshenko: I believe so, I'm not around though
+2013-04-18 13:23:54 fangohr: Yes, correct. ;-)
+2013-04-18 13:48:44 mb8g11: Can I join in by skype?
+2013-04-18 13:49:37 fangohr-adium: Should be alright. I'll dig out a computer.
+2013-04-18 13:50:47 mb8g11: Thx. (or Ta, is that the same thing?)
+2013-04-18 13:52:00 fangohr-adium: Similar meaning, different words I think. You should ask a Brit — of course we haven't got one.
+2013-04-18 13:53:18 mb8g11: Hehe.
+2013-04-18 14:01:42 mb8g11: Online.
+2013-04-18 14:02:26 max_albert: We'll be over in a minute
+2013-04-18 14:07:51 mb8g11: Ok.
+2013-04-18 21:06:51 mb8g11_: Dolfin Blueprint, Evaluation of the gradient of a function https://blueprints.launchpad.net/dolfin/+spec/gradient-evaluation-for-functions
+2013-04-18 21:07:19 mb8g11_: This will be useful for us in a few places where we are either using the 'magpar method' or would have to do a projection.
