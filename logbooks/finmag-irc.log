@@ -5867,3 +5867,14 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-04-17 16:07:04 mb8g11: Generated statically by a program called hypermail. Would need to tell it to update the html in regular intervals and maybe intergrate a search.
 2013-04-17 16:26:56 mb8g11: http://www.hypermail-project.org/
 2013-04-17 16:42:57 mb8g11: The HTML should now stay up-to-date as mails come in.
+2013-04-18 09:09:05 fangohr: Good morning.
+2013-04-18 09:09:38 fangohr: MA, thanks for the info and setting up the hypermail thing. We should note that anybody in Southampton can read those emails, or anybody with the possibility to create a VPN connection. Probably fine, but worth bearing in mind.
+2013-04-18 09:11:15 fangohr: While we are talking tools and infrastructure: I am tempted to re-surrect the cherrypy thing to be able to display the IRC chat of today conveniently. The simplehttp server is nice to display the whole chat, but the typical use case is that I was not logged in to IRC and want to see what has happened so far today. Or I may not even have an IRC client but would like to follow what is being discussed (and could then use a browser and have the page auto-refres
+2013-04-18 09:11:15 fangohr: hed).
+2013-04-18 11:05:14 mb8g11: Hi.
+2013-04-18 11:06:57 mb8g11: Sounds useful, do we still have the scripts you wrote somewhere? In version control maybe.
+2013-04-18 12:23:01 fangohr: Hi, yes, the files are available in finmag/logbooks/irc-logging-diff-serve
+2013-04-18 12:23:30 fangohr: You need to 'update' (or downdate) to revision 1979 (46c3bde083d4) to see them.
+2013-04-18 12:23:41 fangohr: If you could re-activate them, that would be nice, otherwise I do it later.
+2013-04-18 13:01:10 mb8g11: So our group meeting is today at 14:00?
+2013-04-18 13:03:38 D_Chernyshenko: I believe so, I'm not around though
