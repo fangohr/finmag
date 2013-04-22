@@ -395,7 +395,9 @@ namespace finmag { namespace llg {
         }
 
         /*
-        Compute the Baryakhtar term for cubic crystal anisotropy.
+        Compute the Baryakhtar term for cubic crystal anisotropy
+        and uniaxial crystal anisotropy, suppose nx=(1,0,0),
+        type=1 corresponding to cubic and 0 for uniaxial.
         dM/dt = - gamma M x H  +  gamma M0 (alpha H - beta Delta H)
         */
         void calc_baryakhtar_dmdt(
@@ -407,6 +409,7 @@ namespace finmag { namespace llg {
                 const np_array<double> &beta,
                 double M0, 
                 double gamma,
+                double type,
                 bool do_precession,
                 const np_array<long> &pins) {
             
@@ -442,7 +445,7 @@ namespace finmag { namespace llg {
         		  dm_dt[i3]=0;
                 }{
 
-                	dm_dt[i1]=damping_coeff*(a[i]*h[i1] - b[i]*delta_h[i1]);
+                	dm_dt[i1]=damping_coeff*(a[i]*h[i1]*type - b[i]*delta_h[i1]);
                 	dm_dt[i2]=damping_coeff*(a[i]*h[i2] - b[i]*delta_h[i2]);
                 	dm_dt[i3]=damping_coeff*(a[i]*h[i3] - b[i]*delta_h[i3]);
                 
@@ -457,7 +460,7 @@ namespace finmag { namespace llg {
             }
 
         }
-        
+
         void baryakhtar_helper_M2(
                 const np_array<double> &M,
                 const np_array<double> &Ms){
@@ -632,15 +635,18 @@ namespace finmag { namespace llg {
 	def("calc_baryakhtar_dmdt", &calc_baryakhtar_dmdt, (
             arg("M"),
             arg("H"),
-	    arg("delta_H"),
+	        arg("delta_H"),
             arg("dmdt"),
             arg("alpha"),
-	    arg("beta"),
-            arg("M0"), 
+	        arg("beta"),
+            arg("M0"),
             arg("gamma"),
+            arg("type"),
             arg("do_precession"),
             arg("pins")
         ));
+
+
         
         def("baryakhtar_helper_M2", &baryakhtar_helper_M2, (
             arg("M"),

@@ -2,13 +2,14 @@ import logging
 import numpy as np
 import dolfin as df
 
-
 from finmag.util import helpers
 import finmag.util.consts as consts
+from finmag.util.fileio import Tablewriter
 
 from finmag.native import sundials
 from finmag.native import llg as native_llg
 from finmag.util.timings import default_timer
+from finmag.energies import Zeeman
 
 
 #default settings for logger 'finmag' set in __init__.py
@@ -19,10 +20,18 @@ class LLB(object):
     """
     Implementation of the Baryakhtar equation
     """
-    def __init__(self, S1, S3,chi=0.001):
-        self.S1 = S1
-        self.S3 = S3
+    def __init__(self, mesh, chi=0.001, unit_length=1e-9, name='unnamed', auto_save_data=True, type=1.0):
+        #type=1 : cubic crystal 
+        #type=0 : uniaxial crystal
+        
+        self.mesh = mesh
+        
+        self.S1 = df.FunctionSpace(mesh, "Lagrange", 1)
+        self.S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1,dim=3)
+
+        #self._Ms = df.Function(self.S1)
         self._M = df.Function(self.S3)
+        self._m = df.Function(self.S3)
         self.M = self._M.vector().array()
         
         self.dm_dt = np.zeros(self.M.shape)
@@ -31,9 +40,22 @@ class LLB(object):
         self.call_field_times=0
         self.call_field_jtimes=0
         
-        self.chi=chi
+        self.chi = chi
+        self.unit_length = unit_length
          
         self.set_default_values()
+        
+        self.auto_save_data=auto_save_data
+        self.name = name
+        self.sanitized_name = helpers.clean_filename(name)
+        
+        self.type = type
+        
+        assert (type==0 or type==1.0)
+        
+        if self.auto_save_data:
+            self.ndtfilename = self.sanitized_name + '.ndt'
+            self.tablewriter = Tablewriter(self.ndtfilename, self, override=True)
                 
     def set_default_values(self):
         self._alpha_mult = df.Function(self.S1)
@@ -87,8 +109,20 @@ class LLB(object):
         self._beta = value
         self.beta_vec = self._beta * self._beta_mult.vector().array()
     
-    
-    
+    def add(self,interaction):
+        interaction.setup(self.S3, self._M, self.M0, self.unit_length)
+        self.interactions.append(interaction)
+        
+        if interaction.__class__.__name__=='Zeeman':
+            self.zeeman_interation=interaction
+            self.tablewriter.entities['zeeman']={
+                        'unit': '<A/m>',
+                        'get': lambda sim: sim.zeeman_interation.average_field(),
+                        'header': ('h_x', 'h_y', 'h_z')}
+        
+            self.tablewriter.update_entity_order()
+            
+                    
     @property
     def pins(self):
         return self._pins
@@ -109,26 +143,6 @@ class LLB(object):
         
 
     def set_M(self, value, **kwargs):
-        """
-        Set the magnetisation (scaled automatically).
-       
-        There are several ways to use this function. Either you provide
-        a 3-tuple of numbers, which will get cast to a dolfin.Constant, or
-        a dolfin.Constant directly.
-        Then a 3-tuple of strings (with keyword arguments if needed) that will
-        get cast to a dolfin.Expression, or directly a dolfin.Expression.
-        You can provide a numpy.ndarray of nodal values of shape (3*n,),
-        where n is the number of nodes.
-        Finally, you can pass a function (any callable object will do) which
-        accepts the coordinates of the mesh as a numpy.ndarray of
-        shape (3, n) and returns the magnetisation like that as well.
-
-        You can call this method anytime during the simulation. However, when
-        providing a numpy array during time integration, the use of
-        the attribute m instead of this method is advised for performance
-        reasons and because the attribute m doesn't normalise the vector.
-
-        """
         self._M = helpers.vector_valued_function(value, self.S3, normalise=False)
         self.M[:]=self._M.vector().array()[:]
         
@@ -155,8 +169,6 @@ class LLB(object):
         for interaction in self.interactions:
             H_eff += interaction.compute_field()
         
-        #print 'M_',self._M.vector().array()
-        #print 'heff=',H_eff
         self.H_eff = H_eff
         
 
@@ -175,11 +187,18 @@ class LLB(object):
         
         self.integrator.advance_time(t, self.M)
         self._M.vector().set_local(self.M)
+        self.t = t
         
+        if self.auto_save_data:
+            self.tablewriter.save()
+        
+    
     
     def sundials_rhs(self, t, y, ydot):
         self.t = t
-        self._M.vector().set_local(y)
+        
+        self.M[:] = y[:] 
+        self._M.vector().set_local(self.M)
         
         for func in self._pre_rhs_callables:
             func(self.t)
@@ -192,7 +211,7 @@ class LLB(object):
         default_timer.start("sundials_rhs", self.__class__.__name__)
         # Use the same characteristic time as defined by c
         
-        native_llg.calc_baryakhtar_dmdt(self._M.vector().array(), 
+        native_llg.calc_baryakhtar_dmdt(self.M, 
                                  self.H_eff,
                                  delta_Heff, 
                                  self.dm_dt,
@@ -200,6 +219,7 @@ class LLB(object):
                                  self.beta_vec,
                                  self.M0,
                                  self.gamma, 
+                                 self.type,
                                  self.do_precession,
                                  self.pins)
 
@@ -255,12 +275,33 @@ class LLB(object):
         # when it is passed to set_spils_preconditioner() in the cvode class.
         z[:] = r
         return 0
+    
     @property
-    def M_average(self):
-        """The average magnetisation, computed with m_average()."""
+    def Ms(self):
+        
+        a = self.M
+        a.shape=(3,-1)
+        res = np.sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2])
+        a.shape=(-1,)
 
-        tmp=self.M
-        tmp.shape=(3,-1)
-        res=np.average(tmp,axis=1)
-        tmp.shape=(-1,)
         return res 
+    
+    @property
+    def m(self):
+        mh = helpers.fnormalise(self.M)
+        self._m.vector().set_local(mh)
+        return mh
+    
+    
+    @property
+    def m_average(self):        
+
+        self._m.vector().set_local(helpers.fnormalise(self.M))
+        
+        mx = df.assemble(df.dot(self._m, df.Constant([1, 0, 0])) * df.dx)
+        my = df.assemble(df.dot(self._m, df.Constant([0, 1, 0])) * df.dx)
+        mz = df.assemble(df.dot(self._m, df.Constant([0, 0, 1])) * df.dx)
+        
+        volume = df.assemble(df.Constant(1)*df.dx, mesh=self.mesh)
+        
+        return np.array([mx, my, mz])/volume

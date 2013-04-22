@@ -9,21 +9,21 @@ logger=logging.getLogger('finmag')
 
     
 class Exchange(object):
-    def __init__(self, C, chi=1,in_jacobian=True):
+    def __init__(self, C, chi=1, in_jacobian=True):
         self.C = C
-        self.chi=chi
+        self.chi = chi
         self.in_jacobian=in_jacobian
    
     @mtimed
-    def setup(self, S3, M, Mo, unit_length=1.0): 
+    def setup(self, S3, M, M0, unit_length=1.0): 
         self.S3 = S3
         self.M = M
-        self.Mo=Mo
+        self.M0 = M0
         self.unit_length = unit_length
         self.Ms2=np.array(self.M.vector().array())
 
         self.mu0 = mu0
-        self.exchange_factor = 1.0 * self.C / (self.mu0  * self.unit_length**2)
+        self.exchange_factor = 2.0 * self.C / (self.mu0 * M0**2 * self.unit_length**2)
 
         u3 = df.TrialFunction(S3)
         v3 = df.TestFunction(S3)
@@ -34,7 +34,7 @@ class Exchange(object):
         self.vol = df.assemble(df.dot(v3, df.Constant([1, 1, 1])) * df.dx).array()
         
         self.coeff1=-self.exchange_factor/(self.vol)
-        self.coeff2=-0.5/(self.chi*Mo*Mo)
+        self.coeff2=-0.5/(self.chi*M0**2)
     
     def compute_field(self):
         self.K.mult(self.M.vector(), self.H)
@@ -42,9 +42,9 @@ class Exchange(object):
         
         native_llg.baryakhtar_helper_M2(v,self.Ms2)
         
-        relax = self.coeff2*(self.Ms2-self.Mo**2)*v
+        relax = self.coeff2*(self.Ms2-self.M0**2)*v
         
-        return  self.coeff1*self.H.array()/self.Ms2+relax
+        return  self.coeff1*self.H.array()+relax
     
   
 if __name__ == "__main__":
