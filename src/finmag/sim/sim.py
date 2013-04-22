@@ -16,6 +16,7 @@ from finmag.integrators.llg_integrator import llg_integrator
 from finmag.integrators import scheduler, events
 from finmag.integrators.common import run_with_schedule
 from finmag.util.pbc2d import PeriodicBoundary2D
+from finmag.llb.sllg import SLLG
 
 ONE_DEGREE_PER_NS = 17453292.5  # in rad/s
 
@@ -31,7 +32,7 @@ class Simulation(object):
 
     """
     @mtimed
-    def __init__(self, mesh, Ms, unit_length=1, name='unnamed', integrator_backend="sundials", pbc=None):
+    def __init__(self, mesh, Ms, unit_length=1, name='unnamed', kernal='llg' ,integrator_backend="sundials", pbc=None):
         """Simulation object.
 
         *Arguments*
@@ -46,6 +47,8 @@ class Simulation(object):
           name : the Simulation name (used for writing data files, for examples)
 
           pbc : Periodic boundary type: None or '2d'
+          
+          kernal : 'llg' or 'sllg'
 
         """
         # Store the simulation name and a 'sanitized' version of it which
@@ -89,7 +92,16 @@ class Simulation(object):
         self.integrator_backend = integrator_backend
         self.S1 = df.FunctionSpace(mesh, "Lagrange", 1, constrained_domain=self.pbc)
         self.S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3, constrained_domain=self.pbc)
-        self.llg = LLG(self.S1, self.S3)
+        
+        if kernal=='llg':
+            self.llg = LLG(self.S1, self.S3)
+        elif kernal=='sllg':
+            self.llg = SLLG(self.S1, self.S3, unit_length=unit_length)
+        else:
+            raise ValueError("kernal must be either llg or sllg.")
+        
+        self.kernal = kernal
+        
         self.llg.Ms = Ms
         self.Volume = mesh_volume(mesh)
 
@@ -322,11 +334,15 @@ class Simulation(object):
         return helpers.probe(self.get_field_as_dolfin_function(field_type), pts)
 
     def create_integrator(self, backend=None, **kwargs):
+
         if not hasattr(self, "integrator"):
             if backend == None:
                 backend = self.integrator_backend
             log.info("Create integrator {} with kwargs={}".format(backend, kwargs))
-            self.integrator = llg_integrator(self.llg, self.llg.m, backend=backend, **kwargs)
+            if self.kernal == 'sllg':
+                self.integrator = self.llg
+            else:
+                self.integrator = llg_integrator(self.llg, self.llg.m, backend=backend, **kwargs)
         else:
             log.warning("Cannot create integrator - exists already: {}".format(self.integrator))
         return self.integrator
@@ -468,6 +484,22 @@ class Simulation(object):
         self.llg.gamma = value
 
     gamma = property(__get_gamma, __set_gamma)
+    
+    def __get_dt(self):
+        return self.llg.dt
+    
+    def __set_dt(self, value):
+        self.llg.dt = value
+    
+    dt = property(__get_dt, __set_dt)
+    
+    def __get_T(self):
+        return self.llg.T
+    
+    def __set_T(self, value):
+        self.llg.T = value
+    
+    T = property(__get_T, __set_T)
 
     def reinit_integrator(self):
         """
