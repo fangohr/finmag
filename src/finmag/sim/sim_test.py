@@ -14,6 +14,7 @@ from finmag.energies import Zeeman, Exchange, UniaxialAnisotropy
 from finmag.util.fileio import Tablereader
 
 logger = logging.getLogger("finmag")
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def num_interactions(sim):
     """
@@ -632,6 +633,7 @@ class TestSimulation(object):
         mz=np.array(mz)
 
         if do_plot:
+            import matplotlib.pyplot as plt
             ts_ns = np.array(real_ts) * 1e9
             plt.plot(ts_ns, mz, "b.", label="computed") 
             plt.plot(ts_ns, mz_ref, "r-", label="analytical") 
