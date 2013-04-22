@@ -44,8 +44,8 @@ def plot_random_number_np():
 
 if __name__ == "__main__":
 
-    #plot_random_number()
-    #plot_random_number_np()
+    plot_random_number()
+    plot_random_number_np()
     
 
 
