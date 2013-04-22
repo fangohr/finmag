@@ -428,7 +428,7 @@ def render_paraview_scene(
     reader.UpdatePipelineInformation()
 
     if outfile is None:
-        _, outfile = tempfile.mkstemp(dir=tmpdir, suffix='.png')
+        _, outfile = tempfile.mkstemp(suffix='.png')
 
     view.ViewSize = view_size
     view.WriteImage(outfile, "vtkPNGWriter", magnification)
