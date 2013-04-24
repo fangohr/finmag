@@ -62,12 +62,17 @@ if util.versions.running_binary_distribution():
     # should be able to check by comparing the linux distribution.
     import util.binary # Where is this module?
     logger.debug("%20s: %s" % ("Build Linux", util.binary.buildlinux))
-    if util.binary.buildlinux == util.versions.get_linux_issue():
+    vb = util.binary.buildlinux
+    vr = util.versions.get_linux_issue()
+    if  vb == vr:
         logger.debug("Build Linux and host linux versions agree.")
     else:
-        logger.error("Build Linux = %s" % util.binary.buildlinux)
-        logger.error("Host Linux = %s" % util.versions.get_linux_issue())
-        raise RuntimeError("Build and Host linux must be identical, otherwise sundials may produce wrong results / crash")
+        if util.versions.loose_compare_ubuntu_version(vb,vr):
+            logger.warn("Build Linux and host linux versions agree approximately.")
+        else:
+            logger.error("Build Linux = %s" % util.binary.buildlinux)
+            logger.error("Host Linux = %s" % util.versions.get_linux_issue())
+            raise RuntimeError("Build and Host linux must be identical, otherwise sundials may produce wrong results / crash")
 
 # create extreme debugging logging level, which has numerical value 5
 logging.EXTREMEDEBUG = 5

@@ -1,6 +1,7 @@
 import logging
 import numpy as np
 import dolfin as df
+from finmag.util import helpers
 
 logger = logging.getLogger('finmag')
 
@@ -11,7 +12,7 @@ class SimpleDemag(object):
     Hj = Hk = 0 and Hi = - Mi.
 
     """
-    def __init__(self, Ms, Nx=0, Ny=0.5, Nz=0.5, in_jacobian=False):
+    def __init__(self, Ms, Nx=0, Ny=0.5, Nz=0.5, in_jacobian=False, name='SimpleDemag'):
         """
         field_strength is Ms by default
 
@@ -21,6 +22,8 @@ class SimpleDemag(object):
         self.Nx = Nx
         self.Ny = Ny
         self.Nz = Nz
+        
+        self.name = name
         
         self.in_jacobian = in_jacobian
         in_jacobian_msg = "in Jacobian" if in_jacobian else "not in Jacobian"
@@ -41,3 +44,9 @@ class SimpleDemag(object):
 
     def compute_energy(self):
         return 0
+    
+    def average_field(self):
+        """
+        Compute the average field.
+        """
+        return helpers.average_field(self.compute_field())
