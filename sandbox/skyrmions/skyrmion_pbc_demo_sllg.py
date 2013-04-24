@@ -1,7 +1,7 @@
 import numpy as np
 import dolfin as df
 from finmag import Simulation
-from finmag.energies import Exchange, DMI_Old, DMI, Demag,Zeeman
+from finmag.energies import Exchange, DMI, Demag, Zeeman
 from finmag.util.helpers import vector_valued_function
 from finmag.llb.sllg import SLLG
 

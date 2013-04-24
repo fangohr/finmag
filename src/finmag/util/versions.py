@@ -162,11 +162,28 @@ def running_binary_distribution():
         logger.error("thefile=%s" % thefile)
     raise RuntimeError("This is impossible.")
 
+def loose_compare_ubuntu_version(v1,v2):
+    
+    if not v1.startswith('Ubuntu') or not v2.startswith('Ubuntu'):
+        return False
+
+    from distutils.version import LooseVersion
+    t1 = LooseVersion(v1).version
+    t2 = LooseVersion(v2).version
+    
+    if t1[3] == t2[3] and t1[4] == t2[4]:
+        return True
+    
+    return False
+    
+
 
 if __name__ == "__main__":
     linux_issue = get_linux_issue()
-
+    
     print("__file__ = %s" % __file__)
     print("Linux issue: %s" % linux_issue)
     print("Binary distribution: %s" % running_binary_distribution())
     print("Sundials version: %s" % get_version_sundials())
+    
+    print loose_compare_ubuntu_version('Ubuntu 12.04.1 LTS', "Ubuntu 12.04.2 LTS")
