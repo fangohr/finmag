@@ -5893,3 +5893,24 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-04-22 10:05:00 mb4e10: Carol from Amity just asked me what are our nationalities.
 2013-04-22 10:05:26 mb4e10: Max and I think you have a German passport but we are not sure.
 2013-04-22 10:16:05 mb4e10: If someone else knows for sure, please tell me. I sent her you have a German passport. If not, send her an email at carol.munro@amitytravel.co.uk or call her 01489589958
+2013-04-24 08:53:02 fangohr-adium: Good Morning.
+2013-04-24 10:27:11 ww1g11: good morning, Hans, do you think it's necessary to build a deb package for finmag?
+2013-04-24 13:14:53 fangohr-adium: Hi Weiwei, a (binary) debian package would be very cool, I'd think.
+2013-04-24 13:22:45 max_albert: Hi Weiwei, for comparing the software versions, take a look at Marc-Antonio's commit 24d2aa6ab26c from 4. April 2013 (commit message: "conditional skipping of tests with PeriodicBC for dolfin versions >= 1.2.0")
+2013-04-24 13:24:34 max_albert: He uses the function distutils.version.StrictVersion (which I didn't know about but which looks like it might be helpful).
+2013-04-24 13:27:31 ww1g11: thanks Max, it's very useful
+2013-04-24 13:28:26 ww1g11: Hans, I am looking for how to build a deb for ubuntu, not sure it's easy or not to build the package
+2013-04-24 13:30:00 max_albert: Hans, one question that came up earlier when Weiwei and I discussed this:
+2013-04-24 13:30:18 max_albert: Currently we do a strict comparison of the versions in the binary package. If they differ than we throw an error.
+2013-04-24 13:30:40 max_albert: For example, "Ubuntu 12.04.1 LTS" and "Ubuntu 12.04.2 LTS" would be considered as different systems.
+2013-04-24 13:31:33 max_albert: Apparently this is a problem because we are building the binary version on Ubuntu 12.04.1, but the Oxford guys are using 12.04.2, so the version which Weiwei sent to them aborts on startup.
+2013-04-24 13:32:02 fangohr-adium: I see. The history behind this was the different versions of sundials: if we build against one of them, it will only run with the same version. As sundials has no function (!) to report its version, we have no way to check this. So the work-around was to require that the ubuntu version is the same. I suppose we could relax this assuming that the sundials version didn't change between 12.04.1 and 12.04.2.
+2013-04-24 13:32:28 fangohr-adium: Building a debian package would relieve us from having to check this as the package itself would make sure we have the right sundials version installed (I think).
+2013-04-24 13:32:34 max_albert: We were thinking that for the time being it may be best to be less strict in the comparison (i.e. only compare 12.04 vs. 12.10, for example).
+2013-04-24 13:32:42 fangohr-adium: Yes, agreed.
+2013-04-24 13:32:50 max_albert: We should still print a warning, however.
+2013-04-24 13:33:06 fangohr-adium: Okay.
+2013-04-24 13:34:08 max_albert: If we see that there are incompatibilities even between 12.04.1 and 12.04.2 then we can adopt a policy such as always running the latest version of Ubuntu for our binary builds and ask our users to upgrade to the latest version of their release (e.g. 12.04 or 12.10).
+2013-04-24 13:34:57 fangohr-adium: Sounds good.
+2013-04-24 16:35:46 fangohr-adium: Hi Weiwei, ready for you now. Sorry for the delay.
+2013-04-24 16:36:02 ww1g11: No problem at all
