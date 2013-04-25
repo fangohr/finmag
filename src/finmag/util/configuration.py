@@ -71,7 +71,9 @@ color_scheme = dark_bg
 #
 # - Files with an absolute path name (such as '~/.finmag/global.log')
 #   define global logfiles to which all finmag programs will add
-#   log statements.
+#   log statements. Their file size can be limited by setting appropriate
+#   values for 'maxBytes' and 'backupCount' (see the documentation of
+#   'logging.handlers.RotatingFileHander' for details on what they mean).
 #
 # - Filenames without an absolute path (such as 'session.log') result in
 #   a logfile of that name being created in the current working
@@ -85,6 +87,12 @@ color_scheme = dark_bg
 
 logfiles =
     ~/.finmag/global.log
+
+# Logfile size limit in bytes (default: 50 MB)
+maxBytes = 52428800
+
+# Number of backups for logfiles when they exceed the size limit
+maxBytes = 1
 
 # Useful logging level choices: [DEBUG, INFO, WARNING]
 console_logging_level = DEBUG
