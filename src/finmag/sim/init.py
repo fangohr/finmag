@@ -68,4 +68,13 @@ logger.addHandler(ch)
 
 # Now add file handlers for all logfiles listed in the finmag configuration file.
 for f in logfiles:
-    start_logging_to_file(f, formatter=formatter, mode="a", level=finmag_level)
+    # XXX TODO: There still seems to be a small bug here. If a logfile
+    # exists whose size is greater than the specified limit then the
+    # RotatingFileHandler appears to leave it untouched. Thus we
+    # should explicitly test for any existing logfiles here which are
+    # too large and to a manual rollover if this is the case!
+    maxBytes = configuration.get_config_option("logging", "maxBytes", 51200)
+    print "Using maxBytes: {}".format(maxBytes)
+    backupCount = configuration.get_config_option("logging", "backupCount", 1)
+    start_logging_to_file(f, formatter=formatter, mode='a', level=finmag_level,
+                          rotating=True, maxBytes=maxBytes, backupCount=backupCount)

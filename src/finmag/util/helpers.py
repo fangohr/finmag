@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import subprocess
 import itertools
 import logging
+import logging.handlers
 import numpy as np
 import dolfin as df
 import math
@@ -32,7 +33,7 @@ def logging_status_str():
             #add output depending on handler class
             if handler.__class__ == logging.StreamHandler:
                 handlerstr = str(handler.stream)
-            elif handler.__class__ == logging.FileHandler:
+            elif handler.__class__ in [logging.FileHandler, logging.handlers.RotatingFileHandler]:
                 handlerstr = str(handler.baseFilename)
             else:
                 handlerstr = str(handler)
@@ -61,7 +62,7 @@ def set_logging_level(level):
     logger.setLevel(level)
 
 
-def start_logging_to_file(filename, formatter=None, mode='a', level=logging.DEBUG):
+def start_logging_to_file(filename, formatter=None, mode='a', level=logging.DEBUG, rotating=False, maxBytes=0, backupCount=1):
     """
     Add a logging handler to the "finmag" logger which writes all
     (future) logging output to the given file. It is possible to call
@@ -80,6 +81,13 @@ def start_logging_to_file(filename, formatter=None, mode='a', level=logging.DEBU
 
         Determines whether new content is appended at the end ('a') or
         whether logfile contents are overwritten ('w'). Default: 'a'.
+
+    rotating: bool
+
+        If True (default: False), limit the size of the logfile to
+        `maxBytes` (0 means unlimited). Once the file size is near
+        this limit, a 'rollover' will occur. See the docstring of
+        `logging.handlers.RotatingFileHandler` for details.
     """
     if formatter is None:
         formatter = logging.Formatter(
@@ -89,7 +97,7 @@ def start_logging_to_file(filename, formatter=None, mode='a', level=logging.DEBU
     dirname = os.path.dirname(filename)
     if not os.path.exists(dirname):
         os.makedirs(dirname)
-    h = logging.FileHandler(filename, mode=mode)
+    h = logging.handlers.RotatingFileHandler(filename, mode=mode, maxBytes=maxBytes, backupCount=backupCount)
     h.setLevel(level)
     h.setFormatter(formatter)
     if mode == 'a':
