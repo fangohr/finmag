@@ -1,7 +1,7 @@
 from datetime import datetime
 from glob import glob
 import matplotlib.pyplot as plt
-import subprocess
+import subprocess as sp
 import itertools
 import logging
 import logging.handlers
@@ -127,6 +127,31 @@ def start_logging_to_file(filename, formatter=None, mode='a', level=logging.DEBU
         logger.info("Finmag logging output will be written to file: '{}' "
                     "(any old content will be overwritten).".format(filename))
     logger.addHandler(h)
+
+
+def binary_tarball_name(repo, revision='tip', suffix=''):
+    """
+    Returns the name of the Finmag binary tarball if built from the
+    given repository and revision.
+
+    The general pattern is something like:
+
+       FinMag-dist__2013-04-25__rev3486_18e7def5e18a.tar.bz2
+
+    If specified, the suffix is inserted immediately before '.tar.bz2'.
+    """
+    cwd_bak = os.getcwd()
+    os.chdir(os.path.expanduser(repo))
+
+    rev_nr = sp.check_output(['hg', 'id', '-n', '-r', revision]).strip()
+    rev_id = sp.check_output(['hg', 'id', '-i', '-r', revision]).strip()
+    rev_log = sp.check_output(['hg', 'log', '-r', revision]).strip()
+    rev_date = sp.check_output(['hg', 'log', '-r', revision, '--template', '{date|isodate}']).split()[0]
+
+    tarball_name = "FinMag-dist__{}__rev{}_{}{}.tar.bz2".format(rev_date, rev_nr, rev_id, suffix)
+    os.chdir(cwd_bak)
+
+    return tarball_name
 
 
 def clean_filename(filename):
@@ -711,7 +736,7 @@ def duplicate_output_to_file(filename, add_timestamp=False, timestamp_fmt='__%Y-
     logger.debug("Duplicating output to file '{}'".format(filename))
     sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
 
-    tee = subprocess.Popen(["tee", filename], stdin=subprocess.PIPE)
+    tee = sp.Popen(["tee", filename], stdin=sp.PIPE)
     os.dup2(tee.stdin.fileno(), sys.stdout.fileno())
     os.dup2(tee.stdin.fileno(), sys.stderr.fileno())
 
