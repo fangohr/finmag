@@ -10,15 +10,14 @@ FINMAGDIST_DESTDIR ?= $(FINMAGDIST_TMPDIR)
 
 FINMAGDIST_BUILD_DIR = ${FINMAGDIST_TMPDIR}/finmag
 FINMAGDIST_REVISION ?= tip
-
-REVISION_NR = $(shell hg id -n -r ${FINMAGDIST_REVISION})
-REVISION_ID = $(shell hg id -i -r ${FINMAGDIST_REVISION})
-REVISION_DATE = $(shell hg log -r ${FINMAGDIST_REVISION} | grep "^date:" | awk '{print $$3 " " $$4 " " $$6}')
 FINMAGDIST_TARBALL_SUFFIX ?=
-FINMAGDIST_DEST_TARBALL = ${FINMAGDIST_DESTDIR}/FinMag-dist__$(shell date -d "${REVISION_DATE}" +%Y-%m-%d)__rev${REVISION_NR}_${REVISION_ID}${FINMAGDIST_TARBALL_SUFFIX}.tar.bz2
+
+# The tarball name is determined from the
+FINMAGDIST_DEST_TARBALL = $(shell python print_tarball_name.py ${FINMAGDIST_REVISION} "${FINMAGDIST_TARBALL_SUFFIX}" ${FINMAGDIST_DESTDIR} 2>/dev/null | tail -n1)
 
 info:
 	echo "Makefile to help putting a compiled version of finmag together"
+	echo "Tarball name: ${FINMAGDIST_DEST_TARBALL}"
 
 libs:
 	python setup-cython.py build_ext --inplace
