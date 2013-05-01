@@ -10,7 +10,8 @@ from finmag.util.helpers import norm
 
 log = logging.getLogger(name="finmag")
 
-def hysteresis(sim, H_ext_list, fun=None, save_snapshots=False, **kwargs):
+def hysteresis(sim, H_ext_list, fun=None, save_every=None,
+               save_at_stage_end=True, **kwargs):
     """
     Set the applied field to the first value in `H_ext_list` (which should
     be a list of external field vectors) and then call the relax() method.
@@ -24,25 +25,42 @@ def hysteresis(sim, H_ext_list, fun=None, save_snapshots=False, **kwargs):
 
     *Arguments*
 
-        H_ext_list -- list of external fields, where each field can have
-                      any of the forms accepted by Zeeman.__init__()
-                      (see its docstring for more details)
+        H_ext_list:  list of 3-vectors
 
-       fun -- the user can pass a function here (which should accept the
-              Simulation object as its only argument); this function is
-              called after each relaxation and can be used for example to
-              save the value of the averaged magnetisation.
+            List of external fields, where each field can have any of
+            the forms accepted by Zeeman.__init__() (see its docstring
+            for more details).
 
-    If `fun` is not None then this function returns a list containing
-    an accumulation of all the return values of `fun` after each stage.
-    Otherwise this function returns None.
+        fun:  callable
 
-    For a list of keyword arguments accepted by this method see the
-    documentation of the relax() method, to which all given keyword
+            The user can pass a function here (which should accept the
+            Simulation object as its only argument); this function is
+            called after each relaxation and can be used for example
+            to save the value of the averaged magnetisation.
+
+        save_every:  float | None
+
+            Time interval between subsequent vtk snapshots during the
+            simulation (the default is `None`, which means not to save
+            regular vtk snapshots).
+
+        save_at_stage_end:  bool
+
+            Whether a vtk snapshot of the final relaxed state should
+            be saved after each stage (default: True).
+
+    For a list of other keyword arguments accepted by this method see
+    the documentation of the relax() method, to which all given keyword
     arguments are passed on. Note that if a `filename` argument is
     provided, the string 'stage_xxx' is appended to it, where xxx is
     a running counter which indicates for which field in H_ext_list
     the relax() method is being executed.
+
+    *Return value*
+
+    If `fun` is not None then the return value is a list containing an
+    accumulation of all the return values of `fun` after each stage.
+    Otherwise the return value is None.
 
     """
     if H_ext_list == []:
@@ -79,6 +97,8 @@ def hysteresis(sim, H_ext_list, fun=None, save_snapshots=False, **kwargs):
 
     res = []
 
+    save_vtk_snapshots = (save_every is not None or save_at_stage_end == True)
+
     try:
         while True:
             H_cur = H_ext_list[cur_stage]
@@ -89,12 +109,18 @@ def hysteresis(sim, H_ext_list, fun=None, save_snapshots=False, **kwargs):
 
             if filename != '':
                 cur_filename = filename + "__stage_{:03d}__.pvd".format(cur_stage)
+            if save_vtk_snapshots:
+                item = sim.schedule('save_vtk', every=save_every,
+                                    at_end=save_at_stage_end,
+                                    filename=cur_filename)
             # XXX TODO: After the recent run_until refactoring the
             # relax() method doesn't accept a filename any more. We
             # need to schedule the snapshot saving ourselves here, or
             # ask the user to do it! (Need to think which alternative
             # is better.) -- Max, 30.1.2013
             sim.relax(**kwargs)
+            if save_vtk_snapshots:
+                sim.unschedule(item)
             cur_stage += 1
             if fun is not None:
                 retval = fun(sim)
@@ -107,7 +133,7 @@ def hysteresis(sim, H_ext_list, fun=None, save_snapshots=False, **kwargs):
     log.info("Removing the applied field used for hysteresis.")
     sim.llg.effective_field.interactions.remove(H)
 
-    if save_snapshots:
+    if save_vtk_snapshots:
         # We now remove trailing underscores from output filenames
         # (for cosmetic resons only ... ;-) and create a 'global'
         # output file which combines all stages of the simulation.

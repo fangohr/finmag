@@ -560,6 +560,10 @@ class Simulation(object):
     def schedule(self, func, *args, **kwargs):
         """
         Register a function that should be called during the simulation.
+        To un-schedule this function later, store the return value `item`
+        of this function and call sim.unschedule(item) later. Alternatively,
+        you can call `sim.clear_schedule`, which unregisters *all* scheduled
+        functions.
 
         By default, the schedule operates on simulation time expressed in
         seconds. Use either the `at` keyword argument to define a single point
@@ -590,6 +594,7 @@ class Simulation(object):
 
         If func is a string, it will be looked up in self.scheduler_shortcuts,
         which includes 'save_restart_data', 'save_ndt' and 'save_vtk'.
+
         """
         if isinstance(func, str):
             if func in self.scheduler_shortcuts:
@@ -643,8 +648,18 @@ class Simulation(object):
         at_end = kwargs.pop('at_end', False)
         realtime = kwargs.pop('realtime', False)
 
-        self.scheduler.add(func, [self] + list(args), kwargs,
-                at=at, at_end=at_end, every=every, after=after, realtime=realtime)
+        scheduled_item = self.scheduler.add(func, [self] + list(args), kwargs,
+                                            at=at, at_end=at_end, every=every,
+                                            after=after, realtime=realtime)
+        return scheduled_item
+
+    def unschedule(self, item):
+        """
+        Unschedule a previously scheduled callback function. The
+        argument `item` should be the object returned by the call to
+        sim.schedule(...) which scheduled that function.
+        """
+        self.scheduler._remove(item)
 
     def snapshot(self, filename="", directory="", force_overwrite=False):
         """

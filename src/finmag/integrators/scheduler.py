@@ -52,6 +52,10 @@ class Scheduler(object):
         """
         Register a function with the scheduler.
 
+        Returns the scheduled item, which can be removed again by
+        calling Scheduler._remove(item). Note that this may change in
+        the future, so use with care.
+
         """
         if not hasattr(func, "__call__"):
             raise TypeError("The function must be callable but object '%s' is of type '%s'" %
@@ -68,16 +72,17 @@ class Scheduler(object):
             if at_end:
                 at_end_item = SingleEvent(None, True).call(callback)
                 self._add(at_end_item)
-            return
+            return at_end_item
 
         if at or (at_end and not every):
             at_item = SingleEvent(at, at_end).call(callback)
             self._add(at_item)
-            return
+            return at_item
 
         if every:
             every_item = RepeatingEvent(every, after, at_end).call(callback)
             self._add(every_item)
+            return every_item
 
     def _add(self, item):
         self.items.append(item)
