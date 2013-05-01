@@ -36,42 +36,46 @@ def test_hysteresis_loop_and_plotting(tmpdir):
     run_hysteresis_loop(save_every=None, save_at_stage_end=False, filename='test_01/no_snapshots.pvd')
     assert(not os.path.exists('test_01'))  # without saving, no files should exist
 
-    # 2) Only save snapshots at the end of stages. This should result
+    # 2) Try saving snapshots but omit filename. Still no files should be created.
+    run_hysteresis_loop(save_every=1e-10, save_at_stage_end=True, filename='test_02/no_snapshots.pvd')
+    assert(not os.path.exists('test_01'))  # without saving, no files should exist
+
+    # 3) Only save snapshots at the end of stages. This should result
     #    in one snapshot for each of the 2*N stages.
-    run_hysteresis_loop(save_every=None, save_at_stage_end=True, filename='test_02/snapshots.pvd')
-    vtu_files = sorted(glob('test_02/*.vtu'))
-    vtu_files_expected = ['test_02/snapshots__stage_{:03d}__000000.vtu'.format(i) for i in xrange(2*N)]
+    run_hysteresis_loop(save_every=None, save_at_stage_end=True, filename='test_03/snapshots.pvd')
+    vtu_files = sorted(glob('test_03/*.vtu'))
+    vtu_files_expected = ['test_03/snapshots__stage_{:03d}__000000.vtu'.format(i) for i in xrange(2*N)]
     assert(vtu_files == vtu_files_expected)
-    pvd_files = sorted(glob('test_02/*.pvd'))
-    pvd_files_expected = ['test_02/snapshots.pvd'] + ['test_02/snapshots__stage_{:03d}.pvd'.format(i) for i in xrange(2*N)]
+    pvd_files = sorted(glob('test_03/*.pvd'))
+    pvd_files_expected = ['test_03/snapshots.pvd'] + ['test_03/snapshots__stage_{:03d}.pvd'.format(i) for i in xrange(2*N)]
     assert(pvd_files == pvd_files_expected)
 
-    # 3) Save snapshots at regular intervals (every 10 ns) during the
+    # 4) Save snapshots at regular intervals (every 10 ns) during the
     #    simulation. Currently the first relaxation finishes at ca. 22
     #    ns, so this should result in three .vtu snapshots for the
     #    first stage. Since nothing happens at subsequent stages,
     #    there should be a single file for each of the remaining ones.
-    run_hysteresis_loop(save_every=1e-10, save_at_stage_end=False, filename='test_03/snapshots.pvd')
-    vtu_files = sorted(glob('test_03/*.vtu'))
-    vtu_files_expected = sorted(['test_03/snapshots__stage_{:03d}__000000.vtu'.format(i) for i in xrange(2*N)] +
-                                ['test_03/snapshots__stage_000__000001.vtu',
-                                 'test_03/snapshots__stage_000__000002.vtu'])
+    run_hysteresis_loop(save_every=1e-10, save_at_stage_end=False, filename='test_04/snapshots.pvd')
+    vtu_files = sorted(glob('test_04/*.vtu'))
+    vtu_files_expected = sorted(['test_04/snapshots__stage_{:03d}__000000.vtu'.format(i) for i in xrange(2*N)] +
+                                ['test_04/snapshots__stage_000__000001.vtu',
+                                 'test_04/snapshots__stage_000__000002.vtu'])
     assert(vtu_files == vtu_files_expected)
-    pvd_files = sorted(glob('test_03/*.pvd'))
-    pvd_files_expected = sorted(['test_03/snapshots_all.pvd'] + ['test_03/snapshots__stage_{:03d}.pvd'.format(i) for i in xrange(2*N)])
+    pvd_files = sorted(glob('test_04/*.pvd'))
+    pvd_files_expected = sorted(['test_04/snapshots_all.pvd'] + ['test_04/snapshots__stage_{:03d}.pvd'.format(i) for i in xrange(2*N)])
     assert(pvd_files == pvd_files_expected)
 
     # 4) Save snapshots at regular intervals *and* at the end of each
     #    relaxation. This should add one snapshot per stage as
     #    compared to the previous test.
-    H_vals, m_vals = run_hysteresis_loop(save_every=1e-10, save_at_stage_end=True, filename='test_04/snapshots.pvd')
-    vtu_files = sorted(glob('test_04/*.vtu'))
-    vtu_files_expected = sorted(['test_04/snapshots__stage_{:03d}__00000{}.vtu'.format(i, j) for i in xrange(2*N) for j in [0,1]] +
-                                ['test_04/snapshots__stage_000__000002.vtu',
-                                 'test_04/snapshots__stage_000__000003.vtu'])
+    H_vals, m_vals = run_hysteresis_loop(save_every=1e-10, save_at_stage_end=True, filename='test_05/snapshots.pvd')
+    vtu_files = sorted(glob('test_05/*.vtu'))
+    vtu_files_expected = sorted(['test_05/snapshots__stage_{:03d}__00000{}.vtu'.format(i, j) for i in xrange(2*N) for j in [0,1]] +
+                                ['test_05/snapshots__stage_000__000002.vtu',
+                                 'test_05/snapshots__stage_000__000003.vtu'])
     assert(vtu_files == vtu_files_expected)
-    pvd_files = sorted(glob('test_04/*.pvd'))
-    pvd_files_expected = sorted(['test_04/snapshots.pvd', 'test_04/snapshots_all.pvd'] + ['test_04/snapshots__stage_{:03d}.pvd'.format(i) for i in xrange(2*N)])
+    pvd_files = sorted(glob('test_05/*.pvd'))
+    pvd_files_expected = sorted(['test_05/snapshots.pvd', 'test_05/snapshots_all.pvd'] + ['test_05/snapshots__stage_{:03d}.pvd'.format(i) for i in xrange(2*N)])
     assert(pvd_files == pvd_files_expected)
 
     # Check that the magnetisation values are as trivial as we expect
