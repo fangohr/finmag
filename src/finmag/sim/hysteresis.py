@@ -134,34 +134,57 @@ def hysteresis(sim, H_ext_list, fun=None, save_every=None,
     sim.llg.effective_field.interactions.remove(H)
 
     if save_vtk_snapshots:
-        # We now remove trailing underscores from output filenames
-        # (for cosmetic resons only ... ;-) and create a 'global'
-        # output file which combines all stages of the simulation.
-        #
-        f_global = open(filename + '.pvd', 'w')
-        f_global.write(textwrap.dedent("""\
-            <?xml version="1.0"?>
-            <VTKFile type="Collection" version="0.1">
-              <Collection>
-            """))
+        # Here we create two 'global' output files: one which combines
+        # all .vtu files produced during the simulation, and one which
+        # comprises only the final relaxed states of each stage.
 
-        cur_stage = 0
-        cur_timestep = 0
+        # Remove trailing underscores from output .pvd files
+        # (for cosmetic reasons only... ;-)).
         for f in sorted(glob.glob(filename + "__stage_[0-9][0-9][0-9]__.pvd")):
-            f_global.write("    <!-- Hysteresis stage #{:03d} -->\n".format(cur_stage))
-            for line in fileinput.input([f]):
-                if re.match('^\s*<DataSet .*/>$', line):
-                    # We require sequentially increasing timesteps, so
-                    # we have to manually substitue them (TODO: unless
-                    # we can already do this when saving the snapshot?!?)
-                    line = re.sub('timestep="[0-9]+"', 'timestep="{}"'.format(cur_timestep), line)
-                    f_global.write(line)
-                    cur_timestep += 1
-            f_global.write("\n")
             os.rename(f, re.sub('__\.pvd', '.pvd', f))
-            cur_stage += 1
-        f_global.write("  </Collection>\n</VTKFile>\n")
-        f_global.close()
+
+        if save_every is not None:
+            # First we write the file containing *all* .vtu files.
+            f_global = open(filename + '_all.pvd', 'w')
+            f_global.write(textwrap.dedent("""\
+                <?xml version="1.0"?>
+                <VTKFile type="Collection" version="0.1">
+                  <Collection>
+                """))
+
+            cur_stage = 0
+            cur_timestep = 0
+            for f in sorted(glob.glob(filename + "__stage_[0-9][0-9][0-9].pvd")):
+                f_global.write("    <!-- Hysteresis stage #{:03d} -->\n".format(cur_stage))
+                for line in fileinput.input([f]):
+                    if re.match('^\s*<DataSet .*/>$', line):
+                        # We require sequentially increasing timesteps, so
+                        # we have to manually substitue them (TODO: unless
+                        # we can already do this when saving the snapshot?!?)
+                        line = re.sub('timestep="[0-9]+"', 'timestep="{}"'.format(cur_timestep), line)
+                        f_global.write(line)
+                        cur_timestep += 1
+                f_global.write("\n")
+                cur_stage += 1
+            f_global.write("  </Collection>\n</VTKFile>\n")
+            f_global.close()
+
+        if save_at_stage_end == True:
+            # Write the last .vtu file produced during each stage to a
+            # global .pvd file.
+            f_global = open(filename + '.pvd', 'w')
+            f_global.write(textwrap.dedent("""\
+                <?xml version="1.0"?>
+                <VTKFile type="Collection" version="0.1">
+                  <Collection>
+                """))
+
+            for i in xrange(num_stages):
+                f_global.write("    <!-- Hysteresis stage #{:03d} -->\n".format(i))
+                vtu_files = sorted(glob.glob(filename + '__stage_{:03d}__*.vtu'.format(i)))
+                f_global.write('    <DataSet timestep="{}" part="0" file="{}" />\n'.format(i, os.path.basename(vtu_files[-1])))
+            f_global.write("  </Collection>\n</VTKFile>\n")
+            f_global.close()
 
     return res or None
 
