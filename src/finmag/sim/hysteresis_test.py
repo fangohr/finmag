@@ -86,5 +86,10 @@ def test_hysteresis_loop_and_plotting(tmpdir):
     # errors. It currently does *not* check that it produces
     # meaningful results (and the plot is quite boring for the system
     # above anyway).
-    plot_hysteresis_loop(H_vals, m_vals, infobox=["param_A = 23", ("param_B", 42)], title="Hysteresis plot test",
-                         xlabel="H_ext", ylabel="m_avg", figsize=(5,4), infobox_loc="bottom left")
+    plot_hysteresis_loop(H_vals, m_vals, infobox=["param_A = 23", ("param_B", 42)],
+                         title="Hysteresis plot test", xlabel="H_ext", ylabel="m_avg",
+                         figsize=(5,4), infobox_loc="bottom left",
+                         filename='test_plot.pdf')
+
+    # Test multiple filenames, too
+    plot_hysteresis_loop(H_vals, m_vals, filename=['test_plot.pdf', 'test_plot.png'])

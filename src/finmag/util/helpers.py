@@ -654,7 +654,8 @@ def plot_hysteresis_loop(H_vals, m_vals, style='x-', add_point_labels=False, poi
                   on separate lines. Strings are printed verbatim, whereas name/value pairs are
                   converted to a string of the form "name = value".
 
-       filename -- if given, save the resulting plot to a file with the specified name
+       filename -- if given, save the resulting plot to a file with the specified name;
+                   can also be a list of files
     """
     if not all([isinstance(x, (types.IntType, types.FloatType)) for x in m_vals]):
         raise ValueError("m_vals must be a list of scalar values, got: {}".format(m_vals))
@@ -713,8 +714,11 @@ def plot_hysteresis_loop(H_vals, m_vals, style='x-', add_point_labels=False, poi
     plt.tight_layout()
 
     if filename:
-        _create_nonexistent_directory_components(filename)
-        fig.savefig(filename)
+        filenames = [filename] if isinstance(filename, basestring) else filename
+
+        for name in filenames:
+            _create_nonexistent_directory_components(name)
+            fig.savefig(name)
 
 def duplicate_output_to_file(filename, add_timestamp=False, timestamp_fmt='__%Y-%m-%d_%H.%M.%S'):
     """
