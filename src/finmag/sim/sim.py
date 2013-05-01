@@ -561,14 +561,15 @@ class Simulation(object):
         """
         Register a function that should be called during the simulation.
 
-        By default the schedule operates on simulation time expressed in
+        By default, the schedule operates on simulation time expressed in
         seconds. Use either the `at` keyword argument to define a single point
         in time at which your function is called, or use the `every` keyword to
         specify an interval between subsequent calls to your function. When
         specifying the interval, you can optionally use the `after` keyword to
         delay the first execution of your function. Additionally, you can set
-        the `at_end` option to `True` to have your function called at the end
-        of the simulation. This can be combined with `at` and `every`.
+        the `at_end` option to `True` (default is `False`) to have your
+        function called at the end of the simulation. This can be combined
+        with `at` and `every`.
 
         Note that if the internal simulation time is not zero (i.e.. if the
         simulation has already run for some time) then using the 'every'
