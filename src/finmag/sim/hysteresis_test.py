@@ -58,7 +58,7 @@ def test_hysteresis_loop_and_plotting(tmpdir):
                                  'test_03/snapshots__stage_000__000002.vtu'])
     assert(vtu_files == vtu_files_expected)
     pvd_files = sorted(glob('test_03/*.pvd'))
-    pvd_files_expected = sorted(['test_03/snapshots.pvd'] + ['test_03/snapshots__stage_{:03d}.pvd'.format(i) for i in xrange(2*N)])
+    pvd_files_expected = sorted(['test_03/snapshots_all.pvd'] + ['test_03/snapshots__stage_{:03d}.pvd'.format(i) for i in xrange(2*N)])
     assert(pvd_files == pvd_files_expected)
 
     # 4) Save snapshots at regular intervals *and* at the end of each
@@ -71,7 +71,7 @@ def test_hysteresis_loop_and_plotting(tmpdir):
                                  'test_04/snapshots__stage_000__000003.vtu'])
     assert(vtu_files == vtu_files_expected)
     pvd_files = sorted(glob('test_04/*.pvd'))
-    pvd_files_expected = sorted(['test_04/snapshots.pvd'] + ['test_04/snapshots__stage_{:03d}.pvd'.format(i) for i in xrange(2*N)])
+    pvd_files_expected = sorted(['test_04/snapshots.pvd', 'test_04/snapshots_all.pvd'] + ['test_04/snapshots__stage_{:03d}.pvd'.format(i) for i in xrange(2*N)])
     assert(pvd_files == pvd_files_expected)
 
     # Check that the magnetisation values are as trivial as we expect
