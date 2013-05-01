@@ -66,7 +66,19 @@ def hysteresis(sim, H_ext_list, fun=None, save_every=None,
     if H_ext_list == []:
         return
 
+    save_vtk_snapshots = (save_every is not None or save_at_stage_end == True)
     filename = kwargs.get('filename', None)
+
+    if filename is None:
+        if save_vtk_snapshots == True:
+            log.warning("The keywords 'save_every' and 'save_at_stage_end' "
+                        "will be ignored because no filename was given. "
+                        "Please provide one if you would like to save VTK "
+                        "snapshots.")
+        save_every = None
+        save_at_stage_end = False
+        save_vtk_snapshots = False
+
     force_overwrite = kwargs.get('force_overwrite', False)
     if filename != None and force_overwrite == True:
         if os.path.exists(filename):
@@ -97,8 +109,6 @@ def hysteresis(sim, H_ext_list, fun=None, save_every=None,
 
     res = []
 
-    save_vtk_snapshots = (save_every is not None or save_at_stage_end == True)
-
     try:
         while True:
             H_cur = H_ext_list[cur_stage]
@@ -107,9 +117,9 @@ def hysteresis(sim, H_ext_list, fun=None, save_every=None,
                                               cur_stage + 1, num_stages))
             H.set_value(H_cur)
 
-            if filename != '':
-                cur_filename = filename + "__stage_{:03d}__.pvd".format(cur_stage)
             if save_vtk_snapshots:
+                if filename != '':
+                    cur_filename = filename + "__stage_{:03d}__.pvd".format(cur_stage)
                 item = sim.schedule('save_vtk', every=save_every,
                                     at_end=save_at_stage_end,
                                     filename=cur_filename)
