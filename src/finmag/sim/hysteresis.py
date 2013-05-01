@@ -10,8 +10,7 @@ from finmag.util.helpers import norm
 
 log = logging.getLogger(name="finmag")
 
-def hysteresis(sim, H_ext_list, leave_last_field_on=False, fun=None,
-               save_snapshots=False, **kwargs):
+def hysteresis(sim, H_ext_list, fun=None, save_snapshots=False, **kwargs):
     """
     Set the applied field to the first value in `H_ext_list` (which should
     be a list of external field vectors) and then call the relax() method.
@@ -28,10 +27,6 @@ def hysteresis(sim, H_ext_list, leave_last_field_on=False, fun=None,
         H_ext_list -- list of external fields, where each field can have
                       any of the forms accepted by Zeeman.__init__()
                       (see its docstring for more details)
-
-       leave_last_field_on -- if False (the default) then the external
-                              field is switched off again after all
-                              relaxations are finished.
 
        fun -- the user can pass a function here (which should accept the
               Simulation object as its only argument); this function is
@@ -109,9 +104,8 @@ def hysteresis(sim, H_ext_list, leave_last_field_on=False, fun=None,
     except IndexError:
         log.info("Hysteresis is finished.")
 
-    if not leave_last_field_on:
-        log.info("Switching off the applied field used for hysteresis.")
-        sim.llg.effective_field.interactions.remove(H)
+    log.info("Removing the applied field used for hysteresis.")
+    sim.llg.effective_field.interactions.remove(H)
 
     if save_snapshots:
         # We now remove trailing underscores from output filenames
