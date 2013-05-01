@@ -11,7 +11,7 @@ from finmag.util.helpers import norm
 log = logging.getLogger(name="finmag")
 
 def hysteresis(sim, H_ext_list, fun=None, save_every=None,
-               save_at_stage_end=True, **kwargs):
+               save_at_stage_end=True, filename='', **kwargs):
     """
     Set the applied field to the first value in `H_ext_list` (which should
     be a list of external field vectors) and then call the relax() method.
@@ -67,9 +67,8 @@ def hysteresis(sim, H_ext_list, fun=None, save_every=None,
         return
 
     save_vtk_snapshots = (save_every is not None or save_at_stage_end == True)
-    filename = kwargs.get('filename', None)
 
-    if filename is None:
+    if filename == '':
         if save_vtk_snapshots == True:
             log.warning("The keywords 'save_every' and 'save_at_stage_end' "
                         "will be ignored because no filename was given. "
@@ -80,7 +79,7 @@ def hysteresis(sim, H_ext_list, fun=None, save_every=None,
         save_vtk_snapshots = False
 
     force_overwrite = kwargs.get('force_overwrite', False)
-    if filename != None and force_overwrite == True:
+    if filename != '' and force_overwrite == True:
         if os.path.exists(filename):
             # Delete the global .pvd file as well as all existing .pvd
             # and .vtu file from any previously run hysteresis stages.
@@ -104,7 +103,7 @@ def hysteresis(sim, H_ext_list, fun=None, save_every=None,
     # includes the current stage number.
     cur_stage = 0
     num_stages = len(H_ext_list)
-    filename = re.sub('\.pvd$', '', kwargs.pop('filename', ''))
+    filename = re.sub('\.pvd$', '', filename)
     cur_filename = ''
 
     res = []
