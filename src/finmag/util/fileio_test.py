@@ -36,12 +36,13 @@ def test_Table_writer_and_reader(tmpdir):
     assert abs(data['m_y'][-1] - my) < 1e-11
     assert abs(data['m_z'][-1] - mz) < 1e-11
 
-    # Try reading multiple columns at once
+    # Try reading multiple columns at once by indexing 'data'
+    # with multiple indices (in the assert statement).
     dmx = data['m_x']
     dmy = data['m_y']
     dmz = data['m_z']
     dm = np.vstack([dmx, dmy, dmz]).T  # stack the arrays together
-    assert np.allclose(dm, data['m_x', 'm_y', 'm_z'])
+    assert np.allclose(dm, np.array(data['m_x', 'm_y', 'm_z']).T)
 
 
 def test_field_saver(tmpdir):
