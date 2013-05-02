@@ -188,7 +188,7 @@ class Tablereader(object):
         if isinstance(entity, StringType):
             res = self.datadic[entity]
         elif isinstance(entity, TupleType):
-            res = np.array([self.datadic[e] for e in entity]).T
+            res = [self.datadic[e] for e in entity]
         else:
             raise TypeError("'entity' must be a string or a tuple. "
                             "Got: {} ({})".format(entity, type(entity)))
