@@ -23,7 +23,7 @@ def macrospin(Ms=0.86e6, m_init=(1, 0, 0), H_ext=(0, 0, 1e6), alpha=0.1,
         alpha = 0.1  (Gilbert damping coefficient)
 
     """
-    mesh = df.UnitInterval()
+    mesh = df.UnitIntervalMesh()
 
     sim = Simulation(mesh, Ms=Ms, unit_length=1e-9, name=name)
     sim.alpha = alpha
@@ -54,7 +54,7 @@ def macrospin_interval(Ms=0.86e6, m_init=(1, 0, 0), H_ext=(0, 0, 1e6), alpha=0.1
         alpha = 0.1  (Gilbert damping coefficient)
 
     """
-    mesh = df.UnitInterval()
+    mesh = df.UnitIntervalMesh()
     sim = sim_with(mesh, Ms=1e6, m_init=(1, 0, 0), alpha=alpha,
                    unit_length=1e-9, H_ext=H_ext, A=None, demag_solver=None, name=name)
     return sim
@@ -81,7 +81,7 @@ def macrospin_box(Ms=0.86e6, m_init=(1, 0, 0), H_ext=(0, 0, 1e6), alpha=0.1, nam
         alpha = 0.1  (Gilbert damping coefficient)
 
     """
-    mesh = df.Box(0, 0, 0, 1, 1, 1, 1, 1, 1)
+    mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 1, 1, 1)
     sim = sim_with(mesh, Ms=0.86e6, alpha=alpha, unit_length=1e-9,
                    A=None, H_ext=H_ext, m_init=(1, 0, 0), name=name)
     return sim
