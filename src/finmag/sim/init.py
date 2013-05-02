@@ -74,7 +74,6 @@ for f in logfiles:
     # should explicitly test for any existing logfiles here which are
     # too large and to a manual rollover if this is the case!
     maxBytes = configuration.get_config_option("logging", "maxBytes", 51200)
-    print "Using maxBytes: {}".format(maxBytes)
     backupCount = configuration.get_config_option("logging", "backupCount", 1)
     start_logging_to_file(f, formatter=formatter, mode='a', level=finmag_level,
                           rotating=True, maxBytes=maxBytes, backupCount=backupCount)
