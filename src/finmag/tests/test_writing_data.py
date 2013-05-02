@@ -27,8 +27,8 @@ def test_write_ndt_file():
     # are not 100% reproducible)
     f_out = Tablereader(output_file)
     f_ref = Tablereader(reference_file)
-    a_out = f_out['time', 'm_x', 'm_y', 'm_z']
-    a_ref = f_ref['time', 'm_x', 'm_y', 'm_z']
+    a_out = np.array(f_out['time', 'm_x', 'm_y', 'm_z'])
+    a_ref = np.array(f_ref['time', 'm_x', 'm_y', 'm_z'])
 
     diff = np.abs(a_out - a_ref)
     print "Maximum difference: {}.".format(np.max(diff))
