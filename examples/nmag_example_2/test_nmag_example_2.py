@@ -28,7 +28,7 @@ def test_against_nmag():
         if not os.path.exists(filename):
             run_finmag.run_simulation()
         f = Tablereader(os.path.join(MODULE_DIR, filename))
-        m_finmag = f['time', 'm_x', 'm_y', 'm_z']
+        m_finmag = np.array(f['time', 'm_x', 'm_y', 'm_z']).T
 
     except sp.CalledProcessError as ex:
         print("Running command '{}' was unsuccessful. The error "
