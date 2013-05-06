@@ -56,6 +56,7 @@ class LLB(object):
         if self.auto_save_data:
             self.ndtfilename = self.sanitized_name + '.ndt'
             self.tablewriter = Tablewriter(self.ndtfilename, self, override=True)
+        
                 
     def set_default_values(self):
         self._alpha_mult = df.Function(self.S1)
@@ -97,8 +98,14 @@ class LLB(object):
 
     @alpha.setter
     def alpha(self, value):
-        self._alpha = value
-        self.alpha_vec = self._alpha * self._alpha_mult.vector().array()
+        fun = df.Function(self.S1)
+    
+        if not isinstance(value, df.Expression):
+            value=df.Constant(value)
+        
+        fun.assign(value)
+        self.alpha_vec = fun.vector().array()
+        self._alpha = self.alpha_vec
         
     @property
     def beta(self):
@@ -112,7 +119,7 @@ class LLB(object):
     def add(self,interaction):
         interaction.setup(self.S3, self._M, self.M0, self.unit_length)
         self.interactions.append(interaction)
-        
+            
         if interaction.__class__.__name__=='Zeeman':
             self.zeeman_interation=interaction
             self.tablewriter.entities['zeeman']={
@@ -130,17 +137,7 @@ class LLB(object):
     @pins.setter
     def pins(self, value):
         self._pins[:]=helpers.scalar_valued_function(value,self.S1).vector().array()[:]
-    
-    def spatially_varying_alpha(self, baseline_alpha, multiplicator):
-        """
-        Accepts a dolfin function over llg.S1 of values
-        with which to multiply the baseline alpha to get the spatially
-        varying alpha.
-
-        """
-        self.alpha = baseline_alpha
-        self._alpha_mult = multiplicator
-        
+            
 
     def set_M(self, value, **kwargs):
         self._M = helpers.vector_valued_function(value, self.S3, normalise=False)
@@ -167,6 +164,9 @@ class LLB(object):
     def compute_effective_field(self):
         H_eff = np.zeros(self.M.shape)
         for interaction in self.interactions:
+            if interaction.__class__.__name__=='TimeZeemanPython':
+                interaction.update(self.t)
+            
             H_eff += interaction.compute_field()
         
         self.H_eff = H_eff
