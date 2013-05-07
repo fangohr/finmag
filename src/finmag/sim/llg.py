@@ -28,7 +28,7 @@ class LLG(object):
 
     """
     @mtimed
-    def __init__(self, S1, S3, do_precession=True):
+    def __init__(self, S1, S3, do_precession=True, average=False):
         """
         S1 and S3 are df.FunctionSpace and df.VectorFunctionSpace objects,
         and the boolean do_precession controls whether the precession of the
@@ -43,7 +43,7 @@ class LLG(object):
         self.set_default_values()
         self.do_precession = do_precession
         self.do_slonczewski = False
-        self.effective_field = EffectiveField(S3)
+        self.effective_field = EffectiveField(S3, average)
         self.Volume = None  # will be computed on demand, and carries volume of the mesh
 
 

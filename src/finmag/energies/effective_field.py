@@ -8,13 +8,22 @@ logger = logging.getLogger(name="finmag")
 
 
 class EffectiveField(object):
-    def __init__(self, S3):
+    def __init__(self, S3, average=False):
         fun = df.Function(S3)
         self._output_shape = fun.vector().size()
         self.H_eff = fun.vector().array()
 
         self.interactions = []
         self._callables = []  # functions for time update of interactions
+        
+        self.cell_average = average
+        
+        if self.cell_average:
+            self.fun = fun
+            self.dg_v = df.VectorFunctionSpace(S3.mesh(), "DG", 0)
+            self.v3 = df.TestFunction(S3)
+            self.volumes = df.assemble(df.dot(self.v3, df.Constant([1, 1, 1])) * df.dx).array()
+            
 
     def add(self, field, with_time_update=None):
         """
@@ -56,6 +65,12 @@ class EffectiveField(object):
         for interaction in self.interactions:
             self.H_eff += interaction.compute_field()
 
+        if self.cell_average:
+            self.fun.vector().set_local(self.H_eff)
+            H_eff_dg = df.interpolate(self.fun, self.dg_v)
+            self.H_eff[:] = df.assemble(df.dot(H_eff_dg, self.v3) * df.dx)/self.volumes
+            
+        
         return self.H_eff
 
     def compute_jacobian_only(self, t):
