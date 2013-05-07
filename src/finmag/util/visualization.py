@@ -49,7 +49,9 @@ def render_paraview_scene(
     show_center_axes=False,
     representation="Surface With Edges",
     palette='screen',
-    trim_border=True):
+    trim_border=True,
+    diffuse_color=None,
+    debugging=False):
 
     # Convert color_by_axis to integer and store the name separately
     try:
@@ -85,7 +87,7 @@ def render_paraview_scene(
                   '{}', {}, '{}',
                   {}, {}, {},
                   {}, {},
-                  {}, '{}', '{}', {})
+                  {}, '{}', '{}', {}, {})
               """.format(
             vtu_file, outfile, repr(field_name),
             camera_position, camera_focal_point, camera_view_up,
@@ -94,7 +96,8 @@ def render_paraview_scene(
             colorbar_label_format, add_glyphs, glyph_type,
             glyph_scale_factor, glyph_random_mode, glyph_mask_points,
             glyph_max_number_of_points, show_orientation_axes,
-            show_center_axes, representation, palette, trim_border))
+            show_center_axes, representation, palette, trim_border,
+            diffuse_color))
     with open(scriptfile, 'w') as f:
         f.write(script_string)
     shutil.copy(os.path.join(os.path.dirname(__file__), './visualization_impl.py'), tmpdir)
@@ -110,7 +113,12 @@ def render_paraview_scene(
                      "message was: {}".format(ex.output))
         raise
     finally:
-        shutil.rmtree(tmpdir)
+        if debugging == True:
+            logger.debug("Temporary directory '{}' kept for debugging. You "
+                         "can try to run 'render_script.py' manually "
+                         "there.".format(tmpdir))
+        else:
+            shutil.rmtree(tmpdir)
         os.chdir(curdir_bak)  # change back into the original directory
 
     image = IPython.core.display.Image(filename=outfile)
