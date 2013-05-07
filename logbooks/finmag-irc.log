@@ -5941,3 +5941,37 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-05-02 09:03:03 max_albert: Awesome. Hope it's gonna work out well!
 2013-05-03 10:01:48 max_albert: Hi Hans, is it ok if I join you guys a few minutes later? Need to quickly write an urgent email. Sorry!
 2013-05-03 10:02:09 fangohr-adium1: Sure, no worries.
+2013-05-07 09:17:51 fangohr-adium1: Good Morning. A very sunny day, after quite a few sunny days. Not sure I can take all these photons, after not having seen many of them in the last 6 months … ;-)
+2013-05-07 13:25:38 mb8g11: Hi all!
+2013-05-07 13:25:53 fangohr-adium1: Hi ;) Are you back?
+2013-05-07 13:41:38 max_albert: Hi Hans, do you know if there is an example script for Nmag with Slonczewski spin torque available somewhere (maybe on the wiki)?
+2013-05-07 13:41:42 max_albert: There is one in Matteo's report, but it can't be copied & pasted out of the pdf because the spacing is all messed up. :-S
+2013-05-07 14:11:02 mb8g11: In finmag's src/finmag/tests/slonczewski. The nmag script are essentially those of the nmag-meta repository and Matteo's report.
+2013-05-07 14:18:16 fangohr-adium1: Thanks, MA.
+2013-05-07 14:18:53 max_albert: Thanks!
+2013-05-07 14:34:03 mb8g11: ww1g11: My dropbox account mail@marc-antonio.de.
+2013-05-07 14:34:55 max_albert: Hans, I just saw your email about the energy calculation in Finmag (in relation to Luzanne's report). Does this still need investigating?
+2013-05-07 14:51:12 fangohr-adium1: Yes - although maybe we should think of a different problem and work out the demag energy (basically creating a suitable regression test).
+2013-05-07 14:52:03 fangohr-adium1: I could imagine having two disconnected cubes, one with M pointing up, and one with M pointing down. Then compute the energy (and maybe compare with corresponding simulation in OOMMF). Then repeat for both cubes pointing up. The latter should give a higher energy.
+2013-05-07 14:52:04 mb8g11: How old is Luzanne's finmag version? I found a bug in the Demag energy 1/2 months ago and fixed it in the new Demag class. Wrote a test for it as well.
+2013-05-07 14:52:27 mb8g11: Don't know if this is related at all and the computation maybe still wrong.
+2013-05-07 14:52:35 fangohr-adium1: We could also make the cubes quite small and far apart — then we have essentially magnetic dipoles interacting and use an anylitical equation to check against.
+2013-05-07 14:53:13 max_albert: mb8g11: Good point. It's still the rather old original version which we gave to Jef and Luzanne in the beginning.
+2013-05-07 14:54:02 fangohr-adium1: Might be good to have a test along the lines outlined above anyway. I quite like the second version of interacting dipoles.
+2013-05-07 14:54:24 max_albert: Do you remember what the bug was (or how it showed up)?
+2013-05-07 14:55:43 mb8g11: It showed up when I compared my code with the old one and used the homogeneously magnetised sphere to see who was right ;-)
+2013-05-07 14:55:54 mb8g11: So I can't really say what was the issue.
+2013-05-07 14:56:14 max_albert: But what was the error (i.e. what was wrong)?
+2013-05-07 14:56:28 mb8g11: The total energy.
+2013-05-07 14:58:25 mb8g11: I should have tried to fix the old code and document the error, but I didn't because the old code was meant to be deleted sometime anyways. Sorry this is now biting us :-/
+2013-05-07 14:58:44 mb8g11: (assuming we are still seeing the same error)
+2013-05-07 14:59:31 max_albert: I don't think it's biting us. :) Good to know something was fixed. ;-) And we should have a test like the one suggested by Hans anyway I guess.
+2013-05-07 15:00:17 mb8g11: Yes.
+2013-05-07 15:00:26 ww1g11: I think we need to distinguish whether it comes from the mesh discretisation, so we can compute the energy for pattern up-up, up-down, down-up and down-down
+2013-05-07 15:01:10 ww1g11: because oommf show the energy gap for two vertices are fairly small
+2013-05-07 15:12:25 max_albert: Related to my previous question: do we have a working installation of nmag5 lying around somewhere?
+2013-05-07 15:12:44 max_albert: I can't get it to work on my computer (I seem to have the older version 0.2.1 which is available on the website, and I get an error when trying to compile it from the nmag-meta repository).
+2013-05-07 15:13:58 fangohr-adium1: I think in my home directory on osiris — not sure you can use that. Somewhere in hg/nmag-meta — you are welcome to try it.
+2013-05-07 15:16:19 max_albert: Thanks. I have found it but can't seem to get it to work ("error while loading shared libraries"). I'll try to compile it again later.
+2013-05-07 15:16:21 max_albert: I wonder if we have it installed on aleph0? Surely it seems to be needed for the tests if there is a Slonczewski test that compares Finmag against Nmag?
+2013-05-07 15:17:54 mb8g11: Some of our tests run nmag, most use stored nmag results. But it will be installed on aleph0 for sure.

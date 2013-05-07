@@ -3047,3 +3047,174 @@ Hans
 -------------------------------------
 finmag-team mailing list.
 
+From marvin  Tue May  7 19:27:59 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Tue, 07 May 2013 19:27:59 +0100 (BST)
+Received: by 10.49.84.100 with SMTP id x4csp23953qey;
+        Tue, 7 May 2013 11:03:58 -0700 (PDT)
+X-Received: by 10.14.111.5 with SMTP id v5mr7733327eeg.27.1367949837269;
+        Tue, 07 May 2013 11:03:57 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk. [152.78.128.16])
+        by mx.google.com with ESMTP id k4si36209897eey.44.2013.05.07.11.03.56
+        for <multiple recipients>;
+        Tue, 07 May 2013 11:03:57 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) client-ip=152.78.128.16;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r47I2xAp016387;
+	Tue, 7 May 2013 19:02:59 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk [152.78.119.37])
+	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk [152.78.128.16]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p46J2x0669338473YO ret-id none; Tue, 07 May 2013 19:02:59 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.37) with Microsoft SMTP Server (TLS) id 14.2.342.3; Tue, 7 May
+ 2013 19:02:19 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r47I2JYt027841;	Tue, 7 May 2013 19:02:19 +0100
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r47I2JEb027838	for <finmag-team@lists.soton.ac.uk>; Tue, 7 May 2013 19:02:19
+ +0100
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r47I1X5A012934	for
+ <finmag-team@lists.soton.ac.uk>; Tue, 7 May 2013 19:01:33 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk
+ [152.78.119.37])	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16]) envelope-from <mb8g11@soton.ac.uk> with ESMTP	id
+ p46J1X0669338455bU ret-id none; Tue, 07 May 2013 19:01:34 +0100
+Received: from [152.78.97.55] (152.78.97.55) by smtp.soton.ac.uk
+ (152.78.119.37) with Microsoft SMTP Server (TLS) id 14.2.342.3; Tue, 7 May
+ 2013 19:01:33 +0100
+Message-ID: <5189417A.6060803@soton.ac.uk>
+Date: Tue, 7 May 2013 19:01:30 +0100
+From: Marc-Antonio Bisotti <mb8g11@soton.ac.uk>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:17.0) Gecko/20130329 Thunderbird/17.0.5
+MIME-Version: 1.0
+To: <finmag-team@lists.soton.ac.uk>
+Subject: [finmag-team] FEniCS's move to bitbucket
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<mb8g11@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p46J2H066933847300; tid=p46J2x0669338473YO; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r47I2xAp016387
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi all
+
+it seems dolfin has started its move to bitbucket, away from launchpad. 
+Just wanted to collect a few helpful links:
+
+All the FEniCS Projects
+https://bitbucket.org/fenics-project
+
+DOLFIN
+https://bitbucket.org/fenics-project/dolfin
+The repository was converted from bzr to git in the process.
+
+User questions
+http://scicomp.stackexchange.com/questions/tagged/fenics
+Basically use stackexchange with the fenics tag. Support and 
+installation questions should be asked on the mailing list below.
+
+Report Bugs
+https://bitbucket.org/fenics-project/dolfin/issues
+
+Mailing List (this may not have changed from before)
+http://fenicsproject.org/mailman/listinfo/fenics
+
+Since we use bitbucket anyways, hopefully this help us follow dolfin's 
+development more closely.
+
+Kind regards
+MA
+
+
+
+
+
+
+
+-------------------------------------
+finmag-team mailing list.
+
+From marvin  Tue May  7 20:28:02 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Tue, 07 May 2013 20:28:02 +0100 (BST)
+Received: by 10.49.84.100 with SMTP id x4csp23993qey;
+        Tue, 7 May 2013 11:05:10 -0700 (PDT)
+X-Received: by 10.15.35.71 with SMTP id f47mr7784701eev.15.1367949910564;
+        Tue, 07 May 2013 11:05:10 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk. [152.78.128.16])
+        by mx.google.com with ESMTP id 45si36106321eed.254.2013.05.07.11.05.10
+        for <multiple recipients>;
+        Tue, 07 May 2013 11:05:10 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) client-ip=152.78.128.16;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r47I4k1f020181;
+	Tue, 7 May 2013 19:04:46 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk [152.78.119.37])
+	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk [152.78.128.16]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p46J4k066933851695 ret-id none; Tue, 07 May 2013 19:04:47 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.37) with Microsoft SMTP Server (TLS) id 14.2.342.3; Tue, 7 May
+ 2013 19:04:45 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r47I4kPZ030252;	Tue, 7 May 2013 19:04:46 +0100
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk
+ [152.78.128.11])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r47I4jJB030249	for <finmag-team@lists.soton.ac.uk>; Tue, 7 May 2013 19:04:45
+ +0100
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r47I4W7Y003426	for
+ <finmag-team@lists.soton.ac.uk>; Tue, 7 May 2013 19:04:32 +0100
+Received: from UOS-MSG00036-VS.soton.ac.uk (uos-msg00036-vs.soton.ac.uk
+ [152.78.119.38])	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk
+ [152.78.128.11]) envelope-from <mb8g11@soton.ac.uk> with ESMTP	id
+ p46J4W3110164914N0 ret-id none; Tue, 07 May 2013 19:04:32 +0100
+Received: from [152.78.97.55] (152.78.97.55) by smtp.soton.ac.uk
+ (152.78.119.38) with Microsoft SMTP Server (TLS) id 14.2.342.3; Tue, 7 May
+ 2013 19:04:31 +0100
+Message-ID: <5189422C.4000206@soton.ac.uk>
+Date: Tue, 7 May 2013 19:04:28 +0100
+From: Marc-Antonio Bisotti <mb8g11@soton.ac.uk>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:17.0) Gecko/20130329 Thunderbird/17.0.5
+MIME-Version: 1.0
+To: <finmag-team@lists.soton.ac.uk>
+Subject: [finmag-team] FEniCS move to bitbucket continued
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.38; helo=<UOS-MSG00036-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.38; envelope-from=<mb8g11@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p46J4k066933851600; tid=p46J4k066933851695; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r47I4k1f020181
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Sorry, the support mailing list is here:
+http://fenicsproject.org/mailman/listinfo/fenics-support
+
+The mailing list in the previous email is the general development one.
+-------------------------------------
+finmag-team mailing list.
+
