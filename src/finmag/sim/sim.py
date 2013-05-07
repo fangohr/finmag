@@ -32,7 +32,7 @@ class Simulation(object):
 
     """
     @mtimed
-    def __init__(self, mesh, Ms, unit_length=1, name='unnamed', kernal='llg' ,integrator_backend="sundials", pbc=None):
+    def __init__(self, mesh, Ms, unit_length=1, name='unnamed', kernal='llg' ,integrator_backend="sundials", pbc=None, average=False):
         """Simulation object.
 
         *Arguments*
@@ -49,6 +49,8 @@ class Simulation(object):
           pbc : Periodic boundary type: None or '2d'
           
           kernal : 'llg' or 'sllg'
+          
+          average : take the cell averaged effective field, only for test, will delete it if doesn't work.
 
         """
         # Store the simulation name and a 'sanitized' version of it which
@@ -94,7 +96,7 @@ class Simulation(object):
         self.S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3, constrained_domain=self.pbc)
         
         if kernal=='llg':
-            self.llg = LLG(self.S1, self.S3)
+            self.llg = LLG(self.S1, self.S3, average = average)
         elif kernal=='sllg':
             self.llg = SLLG(self.S1, self.S3, unit_length=unit_length)
         else:
@@ -156,8 +158,8 @@ class Simulation(object):
 
     def save_m_in_region(self,region,name='unnamed'):
 
-        self.region_id+=1
-        helpers.mark_subdomain_by_function(region, self.mesh, self.region_id,self.domains)
+        self.region_id += 1
+        helpers.mark_subdomain_by_function(region, self.mesh, self.region_id, self.domains)
         self.dx = df.Measure("dx")[self.domains]
 
         if name=='unnamed':
@@ -218,16 +220,6 @@ class Simulation(object):
             'get': lambda sim: sim.get_interaction(interaction.name).average_field(),
             'header': (field_name + '_x', field_name + '_y', field_name + '_z')}
         self.tablewriter.update_entity_order()
-
-        if interaction.__class__.__name__ == 'Zeeman':
-            self.zeeman_interaction = interaction
-            self.tablewriter.entities['zeeman'] = {
-                        'unit': '<A/m>',
-                        'get': lambda sim: sim.zeeman_interaction.average_field(),
-                        'header': ('h_x', 'h_y', 'h_z')}
-
-            self.tablewriter.update_entity_order()
-
 
     def total_energy(self):
         """

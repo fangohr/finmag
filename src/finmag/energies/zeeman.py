@@ -123,3 +123,52 @@ class DiscreteTimeZeeman(TimeZeeman):
                     self.H = df.interpolate(self.value, self.S3)
                     log.debug("At t={}, after dt={}, update external field again.".format(
                         t, dt_since_last_update))
+
+
+class TimeZeemanPython(object):
+    def __init__(self, df_expression, time_fun , t_off=None, name='TimeZeemanPython'):
+        """
+        Speedup the TimeZeeman class if the space function and time function are
+        independent, in this situation, dolfin interpolate method only need to be
+        evaluated once if user provide a separately time function.
+        """
+        assert isinstance(df_expression, df.Expression)
+        self.df_expression = df_expression
+        self.time_fun = time_fun
+        self.t_off = t_off
+        self.switched_off = False
+        
+        
+        
+    def setup(self, S3, m, Ms, unit_length=1):
+        self.S3 = S3
+        self.m = m
+        self.Ms = Ms
+        self.unit_length = unit_length
+        self.H0 = helpers.vector_valued_function(self.df_expression, self.S3)
+        self.E = - mu0 * self.Ms * df.dot(self.m, self.H0) * df.dx
+        
+        self.H0 = self.H0.vector().array()
+        self.H = self.H0.copy()
+
+    def update(self, t):
+        if not self.switched_off:
+            if self.t_off and t >= self.t_off:
+                self.switch_off()
+                return
+            
+            self.H[:] = self.H0[:]*self.time_fun(t)
+            
+            
+    def average_field(self):
+        """
+        Compute the average applied field.
+        """
+        return helpers.average_field(self.compute_field())
+
+    def compute_field(self):
+        return self.H
+
+    def compute_energy(self):
+        E = df.assemble(self.E) * self.unit_length**3
+        return E
