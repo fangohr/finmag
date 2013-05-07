@@ -757,6 +757,7 @@ def plot_mesh_with_paraview(mesh, **kwargs):
     calls `finmag.util.visualization.render_paraview_scene` on that
     file. Any keyword arguments given are passed on to
     `render_paraview_scene` - see its docstring for more information.
+    Use the `diffuse_color` keyword to set the mesh color.
     """
     import tempfile
     from finmag.util.visualization import render_paraview_scene
@@ -765,9 +766,11 @@ def plot_mesh_with_paraview(mesh, **kwargs):
     tmp_meshfile_vtu = os.path.join(tmpdir, 'mesh000000.vtu')
     F = df.File(tmp_meshfile_pvd)
     F << mesh
+    diffuse_color = kwargs.pop('diffuse_color', [0, 0.9, 0])
     image = render_paraview_scene(
         tmp_meshfile_vtu, field_name=None, add_glyphs=False,
-        rescale_colormap_to_data_range=False, show_colorbar=False, **kwargs)
+        rescale_colormap_to_data_range=False, show_colorbar=False,
+        diffuse_color=diffuse_color, **kwargs)
     shutil.rmtree(tmpdir)
     return image
 

@@ -86,7 +86,8 @@ def render_paraview_scene(
     show_center_axes=False,
     representation="Surface With Edges",
     palette='screen',
-    trim_border=True):
+    trim_border=True,
+    diffuse_color=None):
     """
     Load a *.vtu file, render the scene in it and save the result to an image file.
 
@@ -230,6 +231,11 @@ def render_paraview_scene(
         will be trimmed from the saved image. This requires imagemagick
         to be installed.
 
+    diffuse_color: 3-tuple of RGB values
+
+        The solid color of the body. If given, this overrides any
+        colormap-related values.
+
     """
     from paraview import servermanager
     import paraview.simple as pv
@@ -349,7 +355,11 @@ def render_paraview_scene(
     elif color_by_axis == -1:
         lut.VectorMode = "Magnitude"
         lut.VectorComponent = color_by_axis
-    repr.LookupTable = lut
+    if diffuse_color is not None:
+        print "diffuse_color: {} ({})".format(diffuse_color, type(diffuse_color))
+        repr.DiffuseColor = diffuse_color
+    else:
+        repr.LookupTable = lut
     if field_name is not None:
         repr.ColorArrayName = field_name
         repr.ColorAttributeType = "POINT_DATA"
