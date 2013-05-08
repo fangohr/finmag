@@ -5975,3 +5975,8 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-05-07 15:16:19 max_albert: Thanks. I have found it but can't seem to get it to work ("error while loading shared libraries"). I'll try to compile it again later.
 2013-05-07 15:16:21 max_albert: I wonder if we have it installed on aleph0? Surely it seems to be needed for the tests if there is a Slonczewski test that compares Finmag against Nmag?
 2013-05-07 15:17:54 mb8g11: Some of our tests run nmag, most use stored nmag results. But it will be installed on aleph0 for sure.
+2013-05-08 09:11:55 fangohr-adium: Good Morning.
+2013-05-08 09:58:14 max_albert: Good morning.
+2013-05-08 10:00:26 max_albert: All of a sudden we have build failures on aleph0 due to some Sundials. Has anything changed recently?
+2013-05-08 10:01:17 max_albert: I get the impression that it's trying to compile the Finmag code for Sundials 2.4, whereas aleph0 has Sundials 2.5 installed.
+2013-05-08 10:01:30 max_albert: I may be completely wrong though.
