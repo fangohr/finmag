@@ -5980,3 +5980,10 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-05-08 10:00:26 max_albert: All of a sudden we have build failures on aleph0 due to some Sundials. Has anything changed recently?
 2013-05-08 10:01:17 max_albert: I get the impression that it's trying to compile the Finmag code for Sundials 2.4, whereas aleph0 has Sundials 2.5 installed.
 2013-05-08 10:01:30 max_albert: I may be completely wrong though.
+2013-05-09 14:26:45 mb8g11_: Restarted Marvin_Bot (DokosBot). For future reference, on aleph0: "sudo start dokosbot".
+2013-05-09 16:08:48 max_albert: Hi Hans, thanks for the information on the taxi. We'll ask Alicia to book it then.
+2013-05-09 16:09:45 max_albert: Regarding the Sundials issue, I now actually don't think it's the version number, since all the sundials-related packages on aleph0 have version 2.5.0-1.
+2013-05-09 16:10:11 max_albert: I really have no clue offhand what could be causing the error. Does anyone else have any ideas?
+2013-05-09 16:11:02 max_albert: Also, the binary build is broken, but for a different reason. I thought it had to do with one of my recent commits to the finmag-dist repository, but even with an earlier version I get the same error. :-(
+2013-05-09 16:11:38 max_albert: The error appears when the script calls 'make bundle', and the error message is: "tar: .: file changed as we read it"
+2013-05-09 16:12:02 max_albert: This doesn't ring any bell at all with me.
