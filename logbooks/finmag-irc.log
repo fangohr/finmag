@@ -5987,3 +5987,13 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-05-09 16:11:02 max_albert: Also, the binary build is broken, but for a different reason. I thought it had to do with one of my recent commits to the finmag-dist repository, but even with an earlier version I get the same error. :-(
 2013-05-09 16:11:38 max_albert: The error appears when the script calls 'make bundle', and the error message is: "tar: .: file changed as we read it"
 2013-05-09 16:12:02 max_albert: This doesn't ring any bell at all with me.
+2013-05-10 09:10:29 fangohr-adium1: Morning folks. Can you send me your flight numbers and departure times (or just the whole schedule)? I can kick the taxi booking off with that.
+2013-05-10 09:10:51 fangohr-adium1: Regarding the build failure: it sounds like there are two processes working on the files: one trying to tar it, the other one modifying (compiling?) files.
+2013-05-10 09:14:07 mb4e10: Good morning. Our departure flight is AZ201 London (LHR Terminal 4) to Rome at 6.45. Inbound flight is AZ210 Rome to London (Heathrow Terminal 4), arrival time 23.05.
+2013-05-10 09:15:20 mb4e10: Dates are Sunday 12 May and Thursday 16 May.
+2013-05-10 09:19:10 fangohr-adium1: Thanks, Marijan.
+2013-05-10 09:19:35 fangohr-adium1: I also understand that we need the Taxi for Marijan, Marc-Antonio, Max and Weiwei, but not Dmitri?
+2013-05-10 09:21:50 mb4e10: As long as I know, its for four of us (no Dmitri).
+2013-05-10 09:22:14 mb4e10: I will ask Max.
+2013-05-10 10:20:32 mb8g11: Is easyjet the company where you don't get a seat assigned to you?
+2013-05-10 11:09:56 mb8g11: http://www.gotaormina.com/en/how_to_arrive/public_transport.html
