@@ -3756,3 +3756,431 @@ PS Hope you made it back well.
 -------------------------------------
 finmag-team mailing list.
 
+From marvin  Fri May 17 08:32:52 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Fri, 17 May 2013 08:32:52 +0100 (BST)
+Received: by 10.49.84.100 with SMTP id x4csp114842qey;
+        Thu, 16 May 2013 23:34:44 -0700 (PDT)
+X-Received: by 10.205.32.140 with SMTP id sk12mr14605415bkb.75.1368772483791;
+        Thu, 16 May 2013 23:34:43 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk. [152.78.128.16])
+        by mx.google.com with ESMTP id xv5si2591250bkb.182.2013.05.16.23.34.43
+        for <multiple recipients>;
+        Thu, 16 May 2013 23:34:43 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) client-ip=152.78.128.16;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r4H6XlSM026267;
+	Fri, 17 May 2013 07:33:47 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk [152.78.119.37])
+	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk [152.78.128.16]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p4G7Xl0669307379b4 ret-id none; Fri, 17 May 2013 07:33:47 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.37) with Microsoft SMTP Server (TLS) id 14.2.342.3; Fri, 17 May
+ 2013 07:33:47 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r4H6XkXX013624;	Fri, 17 May 2013 07:33:46 +0100
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r4H6XkTk013621	for <finmag-team@lists.soton.ac.uk>; Fri, 17 May 2013 07:33:46
+ +0100
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r4H6OaT1029801	for
+ <finmag-team@lists.soton.ac.uk>; Fri, 17 May 2013 07:24:36 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk
+ [152.78.119.37])	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16]) envelope-from <H.FANGOHR@soton.ac.uk> with ESMTP	id
+ p4G7Oa0669307279Py ret-id none; Fri, 17 May 2013 07:24:36 +0100
+Received: from UOS-MSG00041-SI.soton.ac.uk ([169.254.3.198]) by
+ UOS-MSG00035-VS.soton.ac.uk ([152.78.119.37]) with mapi id 14.02.0342.003;
+ Fri, 17 May 2013 07:24:36 +0100
+From: "Fangohr H." <H.FANGOHR@soton.ac.uk>
+To: "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+CC: "Fangohr H." <h.fangohr@soton.ac.uk>
+Subject: [finmag-team] group meeting at 10 as usual
+Thread-Topic: group meeting at 10 as usual
+Thread-Index: AQHOUscy/lSUSpPzhEWHKyFWZNJqyA==
+Date: Fri, 17 May 2013 06:24:34 +0000
+Message-ID: <A0FFD8F8-26BD-4D55-BCD0-FB5314F4405F@soton.ac.uk>
+Accept-Language: en-GB, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [152.78.54.126]
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <17EA7CE1698367438C6C8FD9C3C4D2EC@exchange.soton.ac.uk>
+MIME-Version: 1.0
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<H.FANGOHR@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from quoted-printable to 8bit by maillists.sucs.soton.ac.uk id r4H6XkTk013622
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p4G7Xl066930737900; tid=p4G7Xl0669307379b4; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r4H6XlSM026267
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi all,
+
+I plan to have a group meeting (with Coffee) for debriefing the conference =
+at 10 as usual.
+
+Cheers,
+
+Hans
+
+
+
+-------------------------------------
+finmag-team mailing list.
+
+From marvin  Fri May 17 10:32:56 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Fri, 17 May 2013 10:32:56 +0100 (BST)
+Received: by 10.49.84.100 with SMTP id x4csp120188qey;
+        Fri, 17 May 2013 02:10:20 -0700 (PDT)
+X-Received: by 10.205.41.199 with SMTP id tv7mr15091137bkb.97.1368781820210;
+        Fri, 17 May 2013 02:10:20 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id yh6si2747994bkb.33.2013.05.17.02.10.19
+        for <multiple recipients>;
+        Fri, 17 May 2013 02:10:20 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk;
+       dkim=neutral (bad format) header.i=@gmail.com
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r4H995Hb004141;
+	Fri, 17 May 2013 10:09:05 +0100
+Received: from UOS-MSG00036-VS.soton.ac.uk (uos-msg00036-vs.soton.ac.uk [152.78.119.38])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p4GA953110104684YZ ret-id none; Fri, 17 May 2013 10:09:05 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.38) with Microsoft SMTP Server (TLS) id 14.2.342.3; Fri, 17 May
+ 2013 10:09:04 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r4H994M2030360;	Fri, 17 May 2013 10:09:04 +0100
+Received: from mailgate5.iss.soton.ac.uk (mailgate5.iss.soton.ac.uk
+ [152.78.128.106])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r4H994wH030357	for <finmag-team@lists.soton.ac.uk>; Fri, 17 May 2013 10:09:04
+ +0100
+Received: from mailgate5.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate5.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r4H97eVv017903	for
+ <finmag-team@lists.soton.ac.uk>; Fri, 17 May 2013 10:07:40 +0100
+Received: from mail-ea0-f181.google.com (mail-ea0-f181.google.com
+ [209.85.215.181])	by mailgate5.iss.soton.ac.uk (mailgate5.iss.soton.ac.uk
+ [152.78.128.106]) envelope-from <fangohr.hans@gmail.com> with ESMTP	id
+ p4GA7e2597247400Sx ret-id none; Fri, 17 May 2013 10:07:40 +0100
+Received: by mail-ea0-f181.google.com with SMTP id a11so2385364eae.40
+        for <finmag-team@lists.soton.ac.uk>; Fri, 17 May 2013 02:07:40 -0700
+ (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:content-type:mime-version:subject:from:in-reply-to:date
+         :cc:content-transfer-encoding:message-id:references:to:x-mailer;
+        bh=d1NBnd/M0A+2EOysMa+j/VU0PtDyQfvReLPf7ltsUWo=;
+        b=ADQg2f9g8J6ekjTX0RSQWV5os6JwWXAXAuyDDeB3DoZca8kvATk8TrYaypqZSWu5Jk
+         WBjZ+qI8meX4I3iEvYMyXs92xu3xJwq3Dd9HpxC2mvw3CD3wcdeZboc+rTDF24/WBVFF
+         dIN7VUFLLMILAG6CE78GZpO8txk1uBKZB0CXN8kqSC1Z3z0R2h8yJkoZn/uoScG/0GfI
+         JzoA1cEmE5dTxBwuzGcgUf33ZJlh9pG4pFt4G2AQkbn5MLX7SXNmzhNx4VTAMlIk3ylz
+         Oyt07S33lxopoTTcpKeA6xXf594ivW9rEw4vaR5YmBpp7koKXUAVJwNTjeEv62gaVkYc
+         ntrw==
+X-Received: by 10.15.24.136 with SMTP id j8mr126130877eeu.39.1368781660421;
+        Fri, 17 May 2013 02:07:40 -0700 (PDT)
+Received: from iota.kk.soton.ac.uk (iota.kk.soton.ac.uk. [152.78.96.70])
+        by mx.google.com with ESMTPSA id
+ g7sm17232683eew.15.2013.05.17.02.07.38        for <multiple recipients>
+        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);        Fri, 17
+ May 2013 02:07:39 -0700 (PDT)
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0 (Mac OS X Mail 6.3 \(1503\))
+Subject: Re: [finmag-team] group meeting at 10 as usual
+From: Hans Fangohr G <fangohr.hans@gmail.com>
+In-Reply-To: <A0FFD8F8-26BD-4D55-BCD0-FB5314F4405F@soton.ac.uk>
+Date: Fri, 17 May 2013 10:07:37 +0100
+CC: "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+Message-ID: <357DDE8A-1161-4332-977E-CEBB615D1701@gmail.com>
+References: <A0FFD8F8-26BD-4D55-BCD0-FB5314F4405F@soton.ac.uk>
+To: "Fangohr H." <h.fangohr@soton.ac.uk>
+X-Mailer: Apple Mail (2.1503)
+Received-SPF: None; receiver=mailgate5.iss.soton.ac.uk; client-ip=209.85.215.181; helo=<mail-ea0-f181.google.com>
+Received-SPF: Pass; receiver=mailgate5.iss.soton.ac.uk; client-ip=209.85.215.181; envelope-from=<fangohr.hans@gmail.com>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from quoted-printable to 8bit by maillists.sucs.soton.ac.uk id r4H994wH030358
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p4GA95311010468400; tid=p4GA953110104684YZ; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.38; helo=<UOS-MSG00036-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.38; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r4H995Hb004141
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi all,
+
+just realised that you got back at 2am - so let's cancel the morning's grou=
+p meeting. We could have coffee together later if you like.
+
+Cheers,
+
+Hans
+
+
+On 17 May 2013, at 07:24, Fangohr H. <h.fangohr@soton.ac.uk> wrote:
+
+> Hi all,
+>=20
+> I plan to have a group meeting (with Coffee) for debriefing the conferenc=
+e at 10 as usual.
+>=20
+> Cheers,
+>=20
+> Hans
+>=20
+>=20
+>=20
+> -------------------------------------
+> finmag-team mailing list.
+
+
+-------------------------------------
+finmag-team mailing list.
+
+From marvin  Fri May 17 15:33:03 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Fri, 17 May 2013 15:33:03 +0100 (BST)
+Received: by 10.49.84.100 with SMTP id x4csp136176qey;
+        Fri, 17 May 2013 07:00:15 -0700 (PDT)
+X-Received: by 10.205.35.13 with SMTP id su13mr15900966bkb.40.1368799214884;
+        Fri, 17 May 2013 07:00:14 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id zd5si2973679bkb.250.2013.05.17.07.00.14
+        for <multiple recipients>;
+        Fri, 17 May 2013 07:00:14 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r4HDwpw9003395;
+	Fri, 17 May 2013 14:58:51 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk [152.78.119.37])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p4GEwp311011552038 ret-id none; Fri, 17 May 2013 14:58:52 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.37) with Microsoft SMTP Server (TLS) id 14.2.342.3; Fri, 17 May
+ 2013 14:58:51 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r4HDwpMd000598;	Fri, 17 May 2013 14:58:51 +0100
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r4HDwpW0000578	for <finmag-team@lists.soton.ac.uk>; Fri, 17 May 2013 14:58:51
+ +0100
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r4HDw6Ud028667	for
+ <finmag-team@lists.soton.ac.uk>; Fri, 17 May 2013 14:58:06 +0100
+Received: from UOS-MSG00037-VS.soton.ac.uk (uos-msg00037-vs.soton.ac.uk
+ [152.78.119.39])	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16]) envelope-from <H.FANGOHR@soton.ac.uk> with ESMTP	id
+ p4GEw60669319180R8 ret-id none; Fri, 17 May 2013 14:58:06 +0100
+Received: from UOS-MSG00041-SI.soton.ac.uk ([169.254.3.198]) by
+ UOS-MSG00037-VS.soton.ac.uk ([152.78.119.39]) with mapi id 14.02.0342.003;
+ Fri, 17 May 2013 14:58:04 +0100
+From: "Fangohr H." <H.FANGOHR@soton.ac.uk>
+To: "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+Subject: [finmag-team] osiris and Ubuntu 13.04
+Thread-Topic: osiris and Ubuntu 13.04
+Thread-Index: AQHOUwaNgMyFeTepIkGWsBeFXGc2yw==
+Date: Fri, 17 May 2013 13:58:05 +0000
+Message-ID: <C4A86385-17DD-4B69-A2A6-B729690B11AC@soton.ac.uk>
+Accept-Language: en-GB, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [152.78.54.126]
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <2C4075DB1EEC144C8D82AB17385ABB5D@exchange.soton.ac.uk>
+MIME-Version: 1.0
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.39; helo=<UOS-MSG00037-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.39; envelope-from=<H.FANGOHR@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from quoted-printable to 8bit by maillists.sucs.soton.ac.uk id r4HDwpW0000579
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p4GEwp311011552000; tid=p4GEwp311011552038; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r4HDwpw9003395
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi all,
+
+I have upgraded Osiris to Ubuntu 13.04 Server (64 bit).=20
+
+I am not sure this was a wise move yet (and I the old 12.04 root partition =
+is still there, so we can boot into the old system if required).
+
+You should be able to log in to the machine and find your old files as usua=
+l.
+
+I have not managed to compile Finmag yet, the messages include:
+
+/usr/include/python2.7/numpy/npy_deprecated_api.h:11:2: error: #warning "Us=
+ing deprecated NumPy API, disable it by #defining NPY_NO_DEPRECATED_API NPY=
+_1_7_API_VERSION" [-Werror=3Dcpp]In file included from /usr/include/python2=
+.7/numpy/ndarraytypes.h:1728:0,
+
+
+If anybody wants to have a go at fixing this, please do. (Ideally so that i=
+t still compiles on 12.10 and 12.04).
+
+If you need any package that is not installed, please let me know and I'll =
+install it asap.
+
+Cheers,
+
+Hans
+
+
+-------------------------------------
+finmag-team mailing list.
+
+From marvin  Fri May 17 16:33:05 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Fri, 17 May 2013 16:33:05 +0100 (BST)
+Received: by 10.49.84.100 with SMTP id x4csp140429qey;
+        Fri, 17 May 2013 08:25:08 -0700 (PDT)
+X-Received: by 10.205.18.194 with SMTP id qh2mr16066366bkb.36.1368804308084;
+        Fri, 17 May 2013 08:25:08 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id ri10si3067485bkb.124.2013.05.17.08.25.07
+        for <multiple recipients>;
+        Fri, 17 May 2013 08:25:08 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r4HFOQqx002656;
+	Fri, 17 May 2013 16:24:26 +0100
+Received: from UOS-MSG00036-VS.soton.ac.uk (uos-msg00036-vs.soton.ac.uk [152.78.119.38])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p4GGOQ3110118197fJ ret-id none; Fri, 17 May 2013 16:24:26 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.38) with Microsoft SMTP Server (TLS) id 14.2.342.3; Fri, 17 May
+ 2013 16:24:25 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r4HFOPpt029899;	Fri, 17 May 2013 16:24:25 +0100
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r4HFOPMk029884	for <finmag-team@lists.soton.ac.uk>; Fri, 17 May 2013 16:24:25
+ +0100
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r4HFNr2o013392	for
+ <finmag-team@lists.soton.ac.uk>; Fri, 17 May 2013 16:23:53 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk
+ [152.78.119.37])	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16]) envelope-from <mb4e10@ecs.soton.ac.uk> with ESMTP	id
+ p4GGNr0669321921S4 ret-id none; Fri, 17 May 2013 16:23:54 +0100
+Received: from ip-097-017.net-097.dhcp.soton.ac.uk (152.78.97.17) by
+ smtp.soton.ac.uk (152.78.119.37) with Microsoft SMTP Server (TLS) id
+ 14.2.342.3; Fri, 17 May 2013 16:23:53 +0100
+Subject: Re: [finmag-team] osiris and Ubuntu 13.04
+MIME-Version: 1.0 (Apple Message framework v1283)
+Content-Type: text/plain; charset="us-ascii"
+From: Marijan Beg <mb4e10@ecs.soton.ac.uk>
+In-Reply-To: <C4A86385-17DD-4B69-A2A6-B729690B11AC@soton.ac.uk>
+Date: Fri, 17 May 2013 16:23:50 +0100
+CC: "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+Message-ID: <3F6635BB-8D84-4CFD-9F14-C7E1B2F62A3C@soton.ac.uk>
+References: <C4A86385-17DD-4B69-A2A6-B729690B11AC@soton.ac.uk>
+To: "Fangohr H." <h.fangohr@soton.ac.uk>
+X-Mailer: Apple Mail (2.1283)
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<mb4e10@ecs.soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from quoted-printable to 8bit by maillists.sucs.soton.ac.uk id r4HFOPMk029885
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p4GGOQ311011819700; tid=p4GGOQ3110118197fJ; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.38; helo=<UOS-MSG00036-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.38; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r4HFOQqx002656
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi all,
+
+I have tried fixing this before. I added #define NPY_NO_DEPRECATED_API NPY_=
+1_7_API_VERSION in native/src/util/np_array.cc and native/src/sundials/test=
+s/sundials_tests.cc and this warning was solved.
+
+https://github.com/numpy/numpy/issues/3008
+
+However, after doing that another problem appeared. As I understood from fo=
+rums it is because of some kind of incompatibility with Cython.=20
+
+http://comments.gmane.org/gmane.comp.python.numeric.general/51770
+
+I guess this does not help much, but maybe the links are useful. :)
+
+Cheers,
+Marijan
+
+On 17 May 2013, at 14:58, Fangohr H. wrote:
+
+> Hi all,
+>=20
+> I have upgraded Osiris to Ubuntu 13.04 Server (64 bit).=20
+>=20
+> I am not sure this was a wise move yet (and I the old 12.04 root partitio=
+n is still there, so we can boot into the old system if required).
+>=20
+> You should be able to log in to the machine and find your old files as us=
+ual.
+>=20
+> I have not managed to compile Finmag yet, the messages include:
+>=20
+> /usr/include/python2.7/numpy/npy_deprecated_api.h:11:2: error: #warning "=
+Using deprecated NumPy API, disable it by #defining NPY_NO_DEPRECATED_API N=
+PY_1_7_API_VERSION" [-Werror=3Dcpp]In file included from /usr/include/pytho=
+n2.7/numpy/ndarraytypes.h:1728:0,
+>=20
+>=20
+> If anybody wants to have a go at fixing this, please do. (Ideally so that=
+ it still compiles on 12.10 and 12.04).
+>=20
+> If you need any package that is not installed, please let me know and I'l=
+l install it asap.
+>=20
+> Cheers,
+>=20
+> Hans
+>=20
+>=20
+> -------------------------------------
+> finmag-team mailing list.
+
+
+-------------------------------------
+finmag-team mailing list.
+
