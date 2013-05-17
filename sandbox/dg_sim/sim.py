@@ -13,10 +13,10 @@ from finmag.native import llg as native_llg
 from finmag.util.fileio import Tablewriter
 
 from finmag.energies import Zeeman
-from finmag.energies import Exchange
-from finmag.energies import Demag
+from exchange import ExchangeDG as Exchange
+#from finmag.energies import Demag
 
-
+from fk_demag import FKDemagDG as Demag
 
 
 logger = logging.getLogger(name='finmag')
@@ -28,30 +28,18 @@ class Sim(object):
         self.mesh = mesh
         self.unit_length=unit_length
         
-        self.S1 = df.FunctionSpace(mesh, "Lagrange", 1)
         self.DG = df.FunctionSpace(mesh, "DG", 0)
-        self.S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1,dim=3)
         self.DG3 = df.VectorFunctionSpace(mesh, "DG", 0, dim=3)
         
-        self._m = df.Function(self.S3)
-        self._m_x = df.Function(self.DG)
-        self._m_y = df.Function(self.DG)
-        self._m_z = df.Function(self.DG)
-        
-        self.H_fun=df.Function(self.S3)
+        self._m = df.Function(self.DG3)
         
         self.Ms = Ms
         
-        self.nxyz=mesh.num_vertices()
-        self.m_cg=np.zeros(3*self.nxyz)
-        
         self.nxyz_cell=mesh.num_cells()
         self._alpha = np.zeros(self.nxyz_cell)
-        self.m=np.zeros(3*self.nxyz_cell)
-        self.H_eff=np.zeros(3*self.nxyz)
-        
-        self.H_eff_cell=np.zeros(3*self.nxyz_cell)
-        self.dm_dt=np.zeros(3*self.nxyz_cell)
+        self.m = np.zeros(3*self.nxyz_cell)
+        self.H_eff = np.zeros(3*self.nxyz_cell)
+        self.dm_dt = np.zeros(3*self.nxyz_cell)
         
         self.set_default_values()
         
@@ -68,17 +56,16 @@ class Sim(object):
         
         self._pins = np.array([], dtype="int")
         
-        self.volumes = df.assemble(df.TestFunction(self.S1) * df.dx).array()
+        self.volumes = df.assemble(df.TestFunction(self.DG) * df.dx).array()
         
         self.real_volumes=self.volumes*self.unit_length**3
-        self.Volume = mesh_volume(self.mesh)
+        self.Volume = np.sum(self.volumes)
         
         self.alpha = 0.5  # alpha for solve: alpha * _alpha_mult
         self.gamma = consts.gamma
         self.c = 1e11  # 1/s numerical scaling correction \
         #               0.1e12 1/s is the value used by default in nmag 0.2
        
-        self._m = df.Function(self.S3)
         self.do_precession = True
                         
         self._pins = np.array([], dtype="int")
@@ -119,15 +106,9 @@ class Sim(object):
         for interaction in self.interactions:
             self.H_eff += interaction.compute_field()
         
-        self.H_fun.vector().set_local(self.H_eff)
-        
-        H_fun_dg = df.interpolate(self.H_fun, self.DG3)
-        
-        self.H_eff_cell[:] = H_fun_dg.vector().array()[:]
 
- 
     def add(self,interaction):
-        interaction.setup(self.S3, 
+        interaction.setup(self.DG3, 
                           self._m, 
                           self.Ms,
                           unit_length=self.unit_length)
@@ -144,66 +125,44 @@ class Sim(object):
             return
         
         self.integrator.advance_time(t,self.m)
-        self.compute_cg_m_from_dg()
+        self._m.vector().set_local(self.m)
+
         self.t=t
         
         if self.auto_save_data:
             self.tablewriter.save()
-    
-    def compute_cg_m_from_dg(self):
-        self.m.shape=(3,-1)
-        self._m_x.vector().set_local(self.m[0])
-        self._m_y.vector().set_local(self.m[1])
-        self._m_z.vector().set_local(self.m[2])
-        self.m.shape=(-1,)
-        
-        mnx = df.assemble(self._m_x*df.TestFunction(self.S1) * df.dx).array()
-        mny = df.assemble(self._m_y*df.TestFunction(self.S1) * df.dx).array()
-        mnz = df.assemble(self._m_z*df.TestFunction(self.S1) * df.dx).array()
-        
-        mcg = self.m_cg
-        mcg.shape=(3,-1)
-        mcg[0][:]=mnx/self.volumes
-        mcg[1][:]=mny/self.volumes
-        mcg[2][:]=mnz/self.volumes
-        mcg/=np.sqrt(mcg[0]**2+mcg[1]**2+mcg[2]**2)
-        mcg.shape=(-1,)
-        
-        self._m.vector().set_local(mcg)
         
     
     def sundials_rhs(self, t, y, ydot):
         self.t = t
         
         self.m[:]=y[:]
-        
-        self.compute_cg_m_from_dg()
-        
+        self._m.vector().set_local(self.m)
         self.compute_effective_field()
 
         self.dm_dt[:]=0
         char_time = 0.1 / self.c
         self.m.shape=(3,-1)
-        self.H_eff_cell.shape=(3,-1)
+        self.H_eff.shape=(3,-1)
         self.dm_dt.shape=(3,-1)
         
         
-        native_llg.calc_llg_dmdt(self.m, self.H_eff_cell, t, self.dm_dt, self.pins,
+        native_llg.calc_llg_dmdt(self.m, self.H_eff, t, self.dm_dt, self.pins,
                                  self.gamma, self.alpha_vec,
                                  char_time, self.do_precession)
 
         self.m.shape=(-1)
         self.dm_dt.shape=(-1)
-        self.H_eff_cell.shape=(-1)
+        self.H_eff.shape=(-1)
         
         ydot[:] = self.dm_dt[:]
         
         return 0
     
     def set_m(self,value):
-        self._m.vector().set_local(helpers.vector_valued_function(value, self.S3, normalise=True).vector().array())
-        self._m_dg = df.interpolate(self._m,self.DG3)
-        self.m[:]=self._m_dg.vector().array()[:]
+        self.m[:]=helpers.vector_valued_dg_function(value, self.DG3, normalise=True).vector().array()
+        self._m.vector().set_local(self.m)
+
     
     @property
     def m_average(self):
@@ -229,15 +188,17 @@ if __name__ == "__main__":
     sim.set_up_solver()
     ts = np.linspace(0, 1e-10, 11)
     
-    
     H0 = 1e6
     sim.add(Zeeman((0, 0, H0)))
     
     exchange = Exchange(13.0e-12)
     sim.add(exchange)
     
-    demag=Demag(solver='FK')
+    print mesh.num_cells(), mesh.num_vertices()
+    
+    demag=Demag()
     sim.add(demag)
+    print demag.compute_field()
     
     
     for t in ts:
