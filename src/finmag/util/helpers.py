@@ -578,6 +578,80 @@ def scalar_valued_dg_function(value, mesh_or_space):
     return fun
 
 
+def vector_valued_dg_function(value, mesh_or_space, normalise=False):
+    """
+    Create a vector function on the given mesh or VectorFunctionSpace.
+
+    If mesh_or_space is a FunctionSpace, it should be of type "DG"
+    (for "Lagrange" spaces use the function `scalar_valued_function`
+    instead). Returns an object of type 'df.Function'.
+    
+    `value` can be any of the following (see `vector_valued_function`
+    for more details):
+
+        - a number
+        
+        - numpy.ndarray or a common list
+
+        - dolfin.Constant or dolfin.Expression
+
+        - function (or any callable object)
+    """
+    if isinstance(mesh_or_space, df.VectorFunctionSpace):
+        dg = mesh_or_space
+        mesh = dg.mesh()
+    else:
+        mesh = mesh_or_space
+        dg = df.VectorFunctionSpace(mesh, "DG", 0)
+    
+    if isinstance(value, (df.Constant, df.Expression)):
+        fun = df.interpolate(value, dg)
+    elif isinstance(value, (tuple, list, np.ndarray)) and len(value) == 3:
+        # We recognise a sequence of strings as ingredient for a df.Expression.
+        if all(isinstance(item, basestring) for item in value):
+            expr = df.Expression(value, )
+            fun = df.interpolate(expr, dg)
+        else:
+            fun = df.Function(dg)
+            vec = np.empty((fun.vector().size()/3, 3))
+            vec[:] = value # using broadcasting
+            
+            fun.vector().set_local(vec.transpose().reshape(-1))
+    elif isinstance(value, (np.ndarray,list)):
+        fun = df.Function(dg)
+        assert(len(value)==fun.vector().size())
+        fun.vector().set_local(value)
+    elif isinstance(value,(int,float,long)):
+        fun = df.Function(dg)
+        fun.vector()[:]=value
+    elif isinstance(value, df.Function):
+        mesh1=value.function_space().mesh()
+        fun = df.Function(dg)
+        if mesh_equal(mesh,mesh1) and value.vector().size()==fun.vector().size():
+            fun=value
+        else:
+            raise RuntimeError("Meshes are not compatible for given function.")
+    elif hasattr(value, '__call__'):
+        fun = df.Function(dg)
+        cds=mesh.coordinates()
+    
+        index=0
+        for cell in df.cells(mesh):
+            p1,p2,p3,p4=cell.entities(0)
+            coord=(cds[p1]+cds[p2]+cds[p3]+cds[p4])/4.0
+            fun.vector()[index] = value(coord)
+            index+=1
+            
+    else:
+        raise TypeError("Cannot set value of vector-valued DG function from "
+                        "argument of type '{}'".format(type(value)))
+        
+    if normalise:
+        fun.vector()[:] = fnormalise(fun.vector().array())
+
+    return fun
+
+
 def mark_subdomain_by_function(fun,mesh_or_space,domain_index,subdomains):
     """
     Mark the subdomains with given index if user provide a region by function, such as

@@ -19,6 +19,12 @@ def delta_cg(mesh,expr):
     
     return h
 
+def printaa(expr,name):
+    print '='*100
+    print name
+    print np.max(np.abs(df.assemble(expr).array()))
+    print '-'*100
+
 
 def delta_dg(mesh,expr):
     V = df.FunctionSpace(mesh, "DG", 0)
@@ -34,6 +40,7 @@ def delta_dg(mesh,expr):
     u = df.TrialFunction(V)
     v = df.TestFunction(V)
     
+    
     a = df.dot(df.grad(v), df.grad(u))*df.dx \
         - df.dot(df.avg(df.grad(v)), df.jump(u, n))*df.dS \
         - df.dot(df.jump(v, n), df.avg(df.grad(u)))*df.dS \
@@ -42,8 +49,27 @@ def delta_dg(mesh,expr):
         - df.dot(v*n, df.grad(u))*df.ds \
         + gamma/h*v*u*df.ds
     
+    
+    a1 = df.dot(df.grad(v), df.grad(u))*df.dx 
+    a2 = df.dot(df.avg(df.grad(v)), df.jump(u, n))*df.dS
+    a3 = df.dot(df.jump(v, n), df.avg(df.grad(u)))*df.dS
+    a4 = alpha/h_avg*df.dot(df.jump(v, n), df.jump(u, n))*df.dS 
+    a5 = df.dot(df.grad(v), u*n)*df.ds
+    a6 = df.dot(v*n, df.grad(u))*df.ds
+    
+    printaa(a1,'a1')
+    printaa(a2,'a2')
+    printaa(a3,'a3')
+    printaa(a4,'a4')
+    printaa(a5,'a5')
+    printaa(a6,'a6')
+    
+    
     K = df.assemble(a).array()
     L = df.assemble(v * df.dx).array()
+    
+    K2 = df.assemble(a4).array()
+    print K2-K
     
     h = -np.dot(K,m.vector().array())/L
     
@@ -75,18 +101,8 @@ def plot_m(mesh,expr,m_an,name='compare.pdf'):
 
 if __name__ == "__main__":
     
-    mesh = df.UnitIntervalMesh(10)
-    xs=mesh.coordinates().flatten()
+    mesh = df.BoxMesh(0,0,0,2*np.pi,1,1,10, 1, 1)
     
     expr = df.Expression('cos(2*pi*x[0])')
-    m_an=-(2*np.pi)**2*np.cos(2*np.pi*xs)
-    plot_m(mesh, expr, m_an, name='cos.pdf')
-    
-    expr = df.Expression('sin(2*pi*x[0])')
-    m_an=-(2*np.pi)**2*np.sin(2*np.pi*xs)
-    plot_m(mesh, expr, m_an, name='sin.pdf')
-    
-    expr = df.Expression('x[0]*x[0]')
-    m_an=2+1e-10*xs
-    plot_m(mesh, expr, m_an, name='x2.pdf') 
-    
+
+    delta_dg(mesh,expr)
