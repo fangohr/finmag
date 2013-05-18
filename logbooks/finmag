@@ -4184,3 +4184,130 @@ l install it asap.
 -------------------------------------
 finmag-team mailing list.
 
+From marvin  Sat May 18 15:33:31 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Sat, 18 May 2013 15:33:31 +0100 (BST)
+Received: by 10.49.62.68 with SMTP id w4csp21693qer;
+        Sat, 18 May 2013 06:42:01 -0700 (PDT)
+X-Received: by 10.14.93.201 with SMTP id l49mr73370059eef.23.1368884521060;
+        Sat, 18 May 2013 06:42:01 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id c5si22924750eep.135.2013.05.18.06.42.00
+        for <multiple recipients>;
+        Sat, 18 May 2013 06:42:01 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r4IDfngc024825;
+	Sat, 18 May 2013 14:41:49 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk [152.78.119.37])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p4HEfn3110144267Yb ret-id none; Sat, 18 May 2013 14:41:50 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.37) with Microsoft SMTP Server (TLS) id 14.2.342.3; Sat, 18 May
+ 2013 14:41:49 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r4IDfndq017923;	Sat, 18 May 2013 14:41:49 +0100
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r4IDfm6u017919	for <finmag-team@lists.soton.ac.uk>; Sat, 18 May 2013 14:41:48
+ +0100
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r4IDfbBj022060	for
+ <finmag-team@lists.soton.ac.uk>; Sat, 18 May 2013 14:41:37 +0100
+Received: from UOS-MSG00037-VS.soton.ac.uk (uos-msg00037-vs.soton.ac.uk
+ [152.78.119.39])	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16]) envelope-from <d.chernyshenko@soton.ac.uk> with ESMTP	id
+ p4HEfb0669350519Y3 ret-id none; Sat, 18 May 2013 14:41:37 +0100
+Received: from [152.78.36.108] (152.78.36.108) by smtp.soton.ac.uk
+ (152.78.119.39) with Microsoft SMTP Server (TLS) id 14.2.342.3; Sat, 18 May
+ 2013 14:41:36 +0100
+Message-ID: <51978511.3000102@soton.ac.uk>
+Date: Sat, 18 May 2013 14:41:37 +0100
+From: Dmitri Chernyshenko <d.chernyshenko@soton.ac.uk>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:17.0) Gecko/20130510 Thunderbird/17.0.6
+MIME-Version: 1.0
+To: Marijan Beg <mb4e10@ecs.soton.ac.uk>
+CC: "Fangohr H." <h.fangohr@soton.ac.uk>,
+        "<finmag-team@lists.soton.ac.uk>"
+	<finmag-team@lists.soton.ac.uk>
+Subject: Re: [finmag-team] osiris and Ubuntu 13.04
+References: <C4A86385-17DD-4B69-A2A6-B729690B11AC@soton.ac.uk> <3F6635BB-8D84-4CFD-9F14-C7E1B2F62A3C@soton.ac.uk>
+In-Reply-To: <3F6635BB-8D84-4CFD-9F14-C7E1B2F62A3C@soton.ac.uk>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.39; helo=<UOS-MSG00037-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.39; envelope-from=<d.chernyshenko@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p4HEfn311014426700; tid=p4HEfn3110144267Yb; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r4IDfngc024825
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi all,
+
+I've added a fix for this, it *should* work on numpy 1.6 (Ubuntu 
+<=12.10) and numpy 1.7 (Ubuntu 13.04) now (I've tested what I could from 
+my laptop here). It was a bit tricky because of incompatible changes 
+between 1.6 and 1.7 versions of the numpy C API.
+
+Cheers
+Dmitri
+
+On 17/05/13 16:23, Marijan Beg wrote:
+> Hi all,
+>
+> I have tried fixing this before. I added #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION in native/src/util/np_array.cc and native/src/sundials/tests/sundials_tests.cc and this warning was solved.
+>
+> https://github.com/numpy/numpy/issues/3008
+>
+> However, after doing that another problem appeared. As I understood from forums it is because of some kind of incompatibility with Cython.
+>
+> http://comments.gmane.org/gmane.comp.python.numeric.general/51770
+>
+> I guess this does not help much, but maybe the links are useful. :)
+>
+> Cheers,
+> Marijan
+>
+> On 17 May 2013, at 14:58, Fangohr H. wrote:
+>
+>> Hi all,
+>>
+>> I have upgraded Osiris to Ubuntu 13.04 Server (64 bit).
+>>
+>> I am not sure this was a wise move yet (and I the old 12.04 root partition is still there, so we can boot into the old system if required).
+>>
+>> You should be able to log in to the machine and find your old files as usual.
+>>
+>> I have not managed to compile Finmag yet, the messages include:
+>>
+>> /usr/include/python2.7/numpy/npy_deprecated_api.h:11:2: error: #warning "Using deprecated NumPy API, disable it by #defining NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION" [-Werror=cpp]In file included from /usr/include/python2.7/numpy/ndarraytypes.h:1728:0,
+>>
+>>
+>> If anybody wants to have a go at fixing this, please do. (Ideally so that it still compiles on 12.10 and 12.04).
+>>
+>> If you need any package that is not installed, please let me know and I'll install it asap.
+>>
+>> Cheers,
+>>
+>> Hans
+>>
+>>
+>> -------------------------------------
+>> finmag-team mailing list.
+>
+> -------------------------------------
+> finmag-team mailing list.
+
+-------------------------------------
+finmag-team mailing list.
+
