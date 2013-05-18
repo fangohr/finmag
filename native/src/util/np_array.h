@@ -23,6 +23,8 @@ extern void assertion_failed(const char *msg, const char* file, int line);
 // finmag_PyArray_API will be defined in a separate compilation unit (np_array.cc)
 #define PY_ARRAY_UNIQUE_SYMBOL finmag_PyArray_API
 #define NO_IMPORT_ARRAY
+// There is no way to disable a specific #warning or all #warning's from source, so...
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
 
  namespace bp = boost::python;
@@ -30,20 +32,20 @@ extern void assertion_failed(const char *msg, const char* file, int line);
 
  // Possible np_array types and their corresponding ndarray type numbers
  typedef mpl::map<
-     mpl::pair<short, mpl::int_<PyArray_SHORT> >,
-     mpl::pair<int, mpl::int_<PyArray_INT> >,
-     mpl::pair<long, mpl::int_<PyArray_LONG> >,
-     mpl::pair<long long, mpl::int_<PyArray_LONGLONG> >,
-     mpl::pair<unsigned short, mpl::int_<PyArray_USHORT> >,
-     mpl::pair<unsigned int, mpl::int_<PyArray_UINT> >,
-     mpl::pair<unsigned long, mpl::int_<PyArray_ULONG> >,
-     mpl::pair<unsigned long long, mpl::int_<PyArray_ULONGLONG> >,
-     mpl::pair<float, mpl::int_<PyArray_FLOAT> >,
-     mpl::pair<double, mpl::int_<PyArray_DOUBLE> >,
-     mpl::pair<long double, mpl::int_<PyArray_LONGDOUBLE> >,
-     mpl::pair<std::complex<float>, mpl::int_<PyArray_CFLOAT> >,
-     mpl::pair<std::complex<double>, mpl::int_<PyArray_CDOUBLE> >,
-     mpl::pair<std::complex<long double>, mpl::int_<PyArray_CLONGDOUBLE> >
+     mpl::pair<short, mpl::int_<NPY_SHORT> >,
+     mpl::pair<int, mpl::int_<NPY_INT> >,
+     mpl::pair<long, mpl::int_<NPY_LONG> >,
+     mpl::pair<long long, mpl::int_<NPY_LONGLONG> >,
+     mpl::pair<unsigned short, mpl::int_<NPY_USHORT> >,
+     mpl::pair<unsigned int, mpl::int_<NPY_UINT> >,
+     mpl::pair<unsigned long, mpl::int_<NPY_ULONG> >,
+     mpl::pair<unsigned long long, mpl::int_<NPY_ULONGLONG> >,
+     mpl::pair<float, mpl::int_<NPY_FLOAT> >,
+     mpl::pair<double, mpl::int_<NPY_DOUBLE> >,
+     mpl::pair<long double, mpl::int_<NPY_LONGDOUBLE> >,
+     mpl::pair<std::complex<float>, mpl::int_<NPY_CFLOAT> >,
+     mpl::pair<std::complex<double>, mpl::int_<NPY_CDOUBLE> >,
+     mpl::pair<std::complex<long double>, mpl::int_<NPY_CLONGDOUBLE> >
  > numpy_types;
 
 // np_array is a Boost.Python wrapper for a numpy array
@@ -74,10 +76,10 @@ public:
     // Shortcuts for ndarray access
     PyArrayObject * array() const { return (PyArrayObject *) obj.ptr(); }
 
-    T* data() const { return (T*) array()->data; }
-    int ndim() const { return array()->nd; }
-    npy_intp* dim() const { return array()->dimensions; }
-    npy_intp* strides() const { return array()->strides; }
+    T* data() const { return (T*) PyArray_DATA(array()); }
+    int ndim() const { return PyArray_NDIM(array()); }
+    npy_intp* dim() const { return PyArray_DIMS(array()); }
+    npy_intp* strides() const { return PyArray_STRIDES(array()->strides); }
 
     bp::object get_object() { return obj; }
     bp::object get_object() const { return obj; }
@@ -188,7 +190,7 @@ private:
     static void* convertible(PyObject* obj_ptr) {
         if (!PyArray_Check(obj_ptr)) return 0;
         PyArrayObject *array = (PyArrayObject *) obj_ptr;
-        if (array->descr->type_num != typenum) return 0;
+        if (PyArray_TYPE(array) != typenum) return 0;
         if (!PyArray_ISCONTIGUOUS(array)) return 0;
         return obj_ptr;
     }
