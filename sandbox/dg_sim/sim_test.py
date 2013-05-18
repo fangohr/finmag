@@ -6,7 +6,7 @@ mpl.use("Agg")
 import matplotlib.pyplot as plt
 from sim import Sim
 from finmag.energies import Zeeman
-from finmag.energies import Exchange
+from exchange import ExchangeDG as Exchange
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
