@@ -4,10 +4,13 @@ import logging
 from finmag.util.consts import mu0
 from finmag.util.timings import mtimed
 from finmag.util import helpers
+from scipy.sparse import csr_matrix
 
 logger=logging.getLogger('finmag')
 
-
+"""
+This is also not a real DG method.
+"""
     
 class ExchangeDG(object):
     def __init__(self, C, in_jacobian = False, name='ExchangeDG'):
@@ -24,45 +27,48 @@ class ExchangeDG(object):
         
         mesh = DG3.mesh()
         
-        n = df.FacetNormal(mesh)
-        h = df.CellSize(mesh)
-        h_avg = (h('+') + h('-'))/2
-        
-        u = df.TrialFunction(DG3)
-        v = df.TestFunction(DG3)
-        
-        u0 = df.dot(u, df.Constant([1, 0, 0]))
-        v0 = df.dot(v, df.Constant([1, 0, 0]))
-        u1 = df.dot(u, df.Constant([0, 1, 0]))
-        v1 = df.dot(v, df.Constant([0, 1, 0]))
-        u2 = df.dot(u, df.Constant([0, 0, 1]))
-        v2 = df.dot(v, df.Constant([0, 0, 1]))
-        v3 = df.dot(v, df.Constant([1, 1, 1]))
-        
+        DG = df.FunctionSpace(mesh, "DG", 0)
+        CG3 = df.VectorFunctionSpace(mesh, "CG", 1)
     
-        a = 1.0/h_avg*df.dot(df.jump(v0, n), df.jump(u0, n))*df.dS \
-            + 1.0/h_avg*df.dot(df.jump(v1, n), df.jump(u1, n))*df.dS \
-            + 1.0/h_avg*df.dot(df.jump(v2, n), df.jump(u2, n))*df.dS 
-        
-
+        n = df.FacetNormal(mesh)
+    
+        u_dg = df.TrialFunction(DG)
+        v_dg = df.TestFunction(DG)
+    
+        u3 = df.TrialFunction(CG3)
+        v3 = df.TestFunction(CG3)
+    
+        a1 = u_dg * df.inner(v3, n) * df.ds - u_dg * df.div(v3) * df.dx
+        self.K1 = csr_matrix(df.assemble(a1).array())
+        self.L3 = df.assemble(df.dot(v3, df.Constant([1,1,1])) * df.dx).array()
+    
+        a2 = df.div(u3) * v_dg * df.dx
+        self.K2 = csr_matrix(df.assemble(a2).array())
+        self.L = df.assemble(v_dg * df.dx).array()
+    
         self.mu0 = mu0
         self.exchange_factor = 2.0 * self.C / (self.mu0 * Ms**2 * self.unit_length**2)
-
-        self.K = df.PETScMatrix()
-        df.assemble(a, tensor=self.K)
-        self.H = df.PETScVector()
+                
+        self.L = df.assemble(v_dg * df.dx).array()
         
-        self.vol = df.assemble(v3 * df.dx).array()
+        self.coeff1 = 1.0/self.L3
+        self.coeff2 = self.exchange_factor/self.L
         
-        self.coeff = -self.exchange_factor/(self.vol)
-        #self.K = df.assemble(a).array()
-
+        self.H = m.vector().array()
     
     def compute_field(self):
+        mm = self.m.vector().array()
+        mm.shape = (3,-1)
+        self.H.shape=(3,-1)
+
+        for i in range(3):
+            f = self.coeff1*(self.K1*mm[i])
+            self.H[i][:] = self.coeff2 * (self.K2 * f)
         
-        self.K.mult(self.m.vector(), self.H)
+        mm.shape = (-1,)
+        self.H.shape=(-1,)
         
-        return  self.coeff*self.H.array()
+        return self.H
     
     def average_field(self):
         """
@@ -72,6 +78,8 @@ class ExchangeDG(object):
   
 if __name__ == "__main__":
     mesh = df.IntervalMesh(5, 0, 2*np.pi)
+    mesh = df.BoxMesh(0,0,0,2*np.pi,1,1,10, 1, 1)
+    
     S3 = df.VectorFunctionSpace(mesh, "DG", 0, dim=3)
     C = 1
     expr = df.Expression(('0', '4*cos(x[0])','4.0*sin(x[0])'))

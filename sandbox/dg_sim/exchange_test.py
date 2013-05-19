@@ -42,26 +42,38 @@ def test_there_should_be_no_exchange_for_uniform_m(fixt):
     assert np.max(np.abs(H)) < TOLERANCE
 
    
-
-
-
 if __name__ == "__main__":
-    mesh = df.BoxMesh(0,0,0,2*np.pi,1,1,10, 1, 1)
+    mesh = df.BoxMesh(0,0,0,2*np.pi,10,1,10, 1, 1)
      
     S = df.FunctionSpace(mesh, "DG", 0)
-    S3 = df.VectorFunctionSpace(mesh, "DG", 0)
-
+    DG3 = df.VectorFunctionSpace(mesh, "DG", 0)
     expr = df.Expression(("0", "cos(x[0])", "sin(x[0])"))
     
-    m = df.interpolate(expr, S3)
-    
+    m = df.interpolate(expr, DG3)
     exch = Exchange(1)
-    exch.setup(S3, m, 1)
-    print exch.compute_field()
+    exch.setup(DG3, m, 1)
     
-    field=df.Function(S3)
+    field=df.Function(DG3)
     field.vector().set_local(exch.compute_field())
     
-    df.plot(m)
+    from finmag.util.helpers import save_dg_fun_points
+    save_dg_fun_points(m, name='m.vtk',dataname='m')
+    save_dg_fun_points(field, name='exch.vtk',dataname='exch')
+    
+    
+    S3 = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
+    m = df.interpolate(expr, S3)
+    
+    from finmag.energies import Exchange
+    exch = Exchange(1)
+    exch.setup(S3, m, 1)
+    f = exch.compute_field()
+    field2=df.Function(S3)
+    field2.vector().set_local(f)
+    
+    file = df.File('field.pvd')
+    file << field2
+
     df.plot(field)
+    df.plot(field2)
     df.interactive()
