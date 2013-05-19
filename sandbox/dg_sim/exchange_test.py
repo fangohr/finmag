@@ -1,8 +1,13 @@
+import matplotlib as mpl
+mpl.use("Agg")
+import matplotlib.pyplot as plt
+
 import pytest
 import numpy as np
 import dolfin as df
-from exchange import ExchangeDG as Exchange
-#from finmag.energies.exchange import  Exchange
+from exchange import ExchangeDG
+from finmag.energies.exchange import Exchange
+from finmag.util.consts import mu0
 
 
 @pytest.fixture(scope = "module")
@@ -16,7 +21,7 @@ def fixt():
     Ms = 1
     A = 1
     m = df.Function(S3)
-    exch = Exchange(A)
+    exch = ExchangeDG(A)
     exch.setup(S3, m, Ms)
     return {"exch": exch, "m": m, "A": A, "S3": S3, "Ms": Ms}
 
@@ -41,9 +46,27 @@ def test_there_should_be_no_exchange_for_uniform_m(fixt):
     print "Asserted zero exchange field for uniform m = (1, 0, 0), got H =\n{}.".format(H.reshape((3, -1)))
     assert np.max(np.abs(H)) < TOLERANCE
 
+
+def plot_m(mesh,xs,m_an,f_dg,f_cg,name='compare.pdf'):
+    
+    fig=plt.figure()
+    
+    plt.plot(xs,m_an,'--',label='Analytical')
+    
+    dg=[]
+    cg=[]
+    for x in xs:
+        dg.append(f_dg(x,0.5,0.5)[1])
+        cg.append(f_cg(x,0.5,0.5)[1])
+    plt.plot(xs,dg,'.-',label='dg')
+    plt.plot(xs,cg,'^-',label='cg')
+    
+    plt.legend(loc=8)
+    fig.savefig(name)
+ 
    
-if __name__ == "__main__":
-    mesh = df.BoxMesh(0,0,0,2*np.pi,10,1,10, 1, 1)
+if __name__ == "__main__2":
+    mesh = df.BoxMesh(0,0,0,2*np.pi,5,1,10, 5, 1)
      
     S = df.FunctionSpace(mesh, "DG", 0)
     DG3 = df.VectorFunctionSpace(mesh, "DG", 0)
@@ -77,3 +100,36 @@ if __name__ == "__main__":
     df.plot(field)
     df.plot(field2)
     df.interactive()
+
+
+if __name__ == "__main__":
+    mesh = df.IntervalMesh(5, 0, 2*np.pi)
+    mesh = df.BoxMesh(0,0,0,2*np.pi,1,1,10, 1, 1)
+    
+    S3 = df.VectorFunctionSpace(mesh, "DG", 0, dim=3)
+    C = 0.5*mu0
+    expr = df.Expression(('0', 'cos(x[0])','0'))
+    Ms = 1
+    m = df.interpolate(expr, S3)
+        
+    exch = ExchangeDG(C)
+    exch.setup(S3, m, Ms)
+    f = exch.compute_field()
+    
+    xs=np.linspace(1e-10,2*np.pi,10)
+    m_an=-np.cos(xs)
+    
+    
+    field=df.Function(S3)
+    field.vector().set_local(exch.compute_field())
+    
+    S3 = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
+    m = df.interpolate(expr, S3)
+    
+    exch = Exchange(C)
+    exch.setup(S3, m, Ms)
+    f = exch.compute_field()
+    field2=df.Function(S3)
+    field2.vector().set_local(f)
+    
+    plot_m(mesh,xs,m_an,field,field2)
