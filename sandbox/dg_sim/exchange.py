@@ -6,6 +6,7 @@ from finmag.util.timings import mtimed
 from finmag.util import helpers
 from scipy.sparse import csr_matrix
 
+
 logger=logging.getLogger('finmag')
 
 """
@@ -75,35 +76,12 @@ class ExchangeDG(object):
         Compute the average field.
         """
         return helpers.average_field(self.compute_field())
-  
-if __name__ == "__main__":
-    mesh = df.IntervalMesh(5, 0, 2*np.pi)
-    mesh = df.BoxMesh(0,0,0,2*np.pi,1,1,10, 1, 1)
     
-    S3 = df.VectorFunctionSpace(mesh, "DG", 0, dim=3)
-    C = 1
-    expr = df.Expression(('0', '4*cos(x[0])','4.0*sin(x[0])'))
-    Ms = 2
-    m = df.interpolate(expr, S3)
-        
-    exch = ExchangeDG(C)
-    exch.setup(S3, m, Ms)
-    f = exch.compute_field()
-    f.shape = (3,-1)
-    print 'field\n--------------',f
+
+
     
-    field=df.Function(S3)
-    field.vector().set_local(exch.compute_field())
     
-    # the export field are wrong (still using CG spave)
-    file = df.File('field.pvd')
-    file << field
     
-    file = df.File('m.pvd')
-    file << m
     
-    df.plot(m)
-    df.plot(field)
-    df.interactive()
 
     
