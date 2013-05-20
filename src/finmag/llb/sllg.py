@@ -174,6 +174,21 @@ class SLLG(object):
         tmp=tmp/self.volumes
         self._Ms[:]=tmp[:]
         
+    def m_average_fun(self,dx=df.dx):
+        """
+        Compute and return the average polarisation according to the formula
+        :math:`\\langle m \\rangle = \\frac{1}{V} \int m \: \mathrm{d}V`
+
+        """ 
+        
+        mx = df.assemble(self._Ms_dg*df.dot(self._m, df.Constant([1, 0, 0])) * dx)
+        my = df.assemble(self._Ms_dg*df.dot(self._m, df.Constant([0, 1, 0])) * dx)
+        mz = df.assemble(self._Ms_dg*df.dot(self._m, df.Constant([0, 0, 1])) * dx)
+        volume = df.assemble(self._Ms_dg*dx, mesh=self.mesh)
+                        
+        return np.array([mx, my, mz]) / volume
+    m_average=property(m_average_fun)
+        
         
 if __name__ == "__main__":
     mesh = df.Box(0, 0, 0, 5, 5, 5, 1, 1, 1)
