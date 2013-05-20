@@ -16,6 +16,19 @@
 
 namespace finmag { namespace sundials {
     namespace {
+	#if NPY_FEATURE_VERSION < 7
+	// numpy 1.6 and below
+	inline void py_array_set_base(PyArrayObject *arr, PyObject *obj) {
+	        PyArray_BASE(arr) = obj;
+	}
+	#else
+	// numpy 1.7
+	inline void py_array_set_base(PyArrayObject *arr, PyObject *obj) {
+	        PyArray_SetBaseObject(arr, obj);
+	}
+	#endif
+
+
         static const unsigned long DATA_MAGIC = 0xF6833C73196E621Cul;
         static const unsigned long NVEC_MAGIC = 0x24A3D2A040B0D56Ful;
 
@@ -95,7 +108,7 @@ namespace finmag { namespace sundials {
         // Note that return 0 will release the memory pointed to by mem
         if (!arr) return 0;
         // incref mem_release and save it in arr
-        PyArray_BASE(arr) = bp::handle<>(bp::borrowed(mem_release.ptr())).release();
+	py_array_set_base((PyArrayObject *) arr, bp::handle<>(bp::borrowed(mem_release.ptr())).release());
 
         // set up the payload
         payload->arr = arr;
@@ -163,7 +176,7 @@ namespace finmag { namespace sundials {
         if (array_data) {
             // array_data is set, use the pointer
             // for safety, check that the data pointer in the numpy array is the same as in the NVector
-            ASSERT((void*) PyArray_BYTES(array_data) == (void*) NV_DATA_S(vec));
+            ASSERT((void*) PyArray_BYTES((PyArrayObject*) array_data) == (void*) NV_DATA_S(vec));
             return bp::object(bp::handle<>(bp::borrowed(array_data)));
         }
 
