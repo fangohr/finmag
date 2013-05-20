@@ -6007,3 +6007,8 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-05-17 14:14:26 fangohr-adium: Could you log out, and log in again, please? Is the warning still there?
 2013-05-17 14:14:53 mb4e10: Problem solved.
 2013-05-17 14:15:07 fangohr-adium: Thank you.
+2013-05-20 09:14:52 fangohr-adium: Good Morning, Max and DokosBot.
+2013-05-20 17:23:34 fangohr-adium: Good news: Dmitri's fixes for the new Numpy version work: finmag compiles happily on Ubuntu 13.04.
+2013-05-20 17:23:48 fangohr-adium: I have also checked compilation of Magpar on 13.04, and it seems to work.
+2013-05-20 17:24:09 fangohr-adium: (Same for Nmag - no changes to our build script for that, either.)
+2013-05-20 17:24:23 fangohr-adium: So you should all be able to use osiris again — any missing packages, do let me know.
