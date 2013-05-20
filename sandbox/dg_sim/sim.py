@@ -13,10 +13,10 @@ from finmag.native import llg as native_llg
 from finmag.util.fileio import Tablewriter
 
 from finmag.energies import Zeeman
-from exchange import ExchangeDG as Exchange
+#from exchange import ExchangeDG as Exchange
 #from finmag.energies import Demag
 
-from fk_demag import FKDemagDG as Demag
+from fk_demag import FKDemagDG
 
 
 logger = logging.getLogger(name='finmag')
@@ -191,12 +191,12 @@ if __name__ == "__main__":
     H0 = 1e6
     sim.add(Zeeman((0, 0, H0)))
     
-    exchange = Exchange(13.0e-12)
+    exchange = ExchangeDG(13.0e-12)
     sim.add(exchange)
     
     print mesh.num_cells(), mesh.num_vertices()
     
-    demag=Demag()
+    demag=FKDemagDG()
     sim.add(demag)
     print demag.compute_field()
     

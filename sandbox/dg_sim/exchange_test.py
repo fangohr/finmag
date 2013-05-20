@@ -56,8 +56,8 @@ def plot_m(mesh,xs,m_an,f_dg,f_cg,name='compare.pdf'):
     dg=[]
     cg=[]
     for x in xs:
-        dg.append(f_dg(x,0.5,0.5)[1])
-        cg.append(f_cg(x,0.5,0.5)[1])
+        dg.append(f_dg(x,0.5,0.5)[2])
+        cg.append(f_cg(x,0.5,0.5)[2])
     plt.plot(xs,dg,'.-',label='dg')
     plt.plot(xs,cg,'^-',label='cg')
     
@@ -104,20 +104,20 @@ if __name__ == "__main__2":
 
 if __name__ == "__main__":
     mesh = df.IntervalMesh(5, 0, 2*np.pi)
-    mesh = df.BoxMesh(0,0,0,2*np.pi,1,1,10, 1, 1)
+    mesh = df.BoxMesh(0,0,0,2*np.pi,1,1,20, 1, 1)
     
     S3 = df.VectorFunctionSpace(mesh, "DG", 0, dim=3)
     C = 0.5*mu0
-    expr = df.Expression(('0', 'cos(x[0])','0'))
+    expr = df.Expression(('0', 'sin(x[0])','cos(x[0])'))
     Ms = 1
     m = df.interpolate(expr, S3)
-        
+    
     exch = ExchangeDG(C)
-    exch.setup(S3, m, Ms)
+    exch.setup(S3, m, Ms, unit_length=0.1)
     f = exch.compute_field()
     
-    xs=np.linspace(1e-10,2*np.pi,10)
-    m_an=-np.cos(xs)
+    xs=np.linspace(1e-10,2*np.pi-1e-10,20)
+    m_an=-100*np.cos(xs)
     
     
     field=df.Function(S3)
@@ -127,7 +127,7 @@ if __name__ == "__main__":
     m = df.interpolate(expr, S3)
     
     exch = Exchange(C)
-    exch.setup(S3, m, Ms)
+    exch.setup(S3, m, Ms, unit_length=0.1)
     f = exch.compute_field()
     field2=df.Function(S3)
     field2.vector().set_local(f)

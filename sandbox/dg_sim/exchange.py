@@ -40,6 +40,7 @@ class ExchangeDG(object):
         v3 = df.TestFunction(CG3)
     
         a1 = u_dg * df.inner(v3, n) * df.ds - u_dg * df.div(v3) * df.dx
+        a1 = u_dg * df.inner(v3, n) * df.ds - u_dg * df.div(v3) * df.dx
         self.K1 = csr_matrix(df.assemble(a1).array())
         self.L3 = df.assemble(df.dot(v3, df.Constant([1,1,1])) * df.dx).array()
     
