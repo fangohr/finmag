@@ -2,6 +2,7 @@
 A collection of constants we use (in SI units).
 
 """
+from __future__ import division
 from math import pi, sqrt
 
 mu0 = 4 * pi * 1e-7  # Vs/(Am)

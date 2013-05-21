@@ -2,6 +2,8 @@ import pytest
 import numpy as np
 import dolfin as df
 from finmag.energies import Exchange
+from math import sqrt
+from finmag.util.consts import mu0
 
 
 @pytest.fixture(scope = "module")
@@ -85,6 +87,43 @@ def test_exchange_field_supported_methods(fixt):
 
         rel_diff = np.abs((H - H_default) / H_default)
         assert np.nanmax(rel_diff) < REL_TOLERANCE
+
+
+def test_exchange_length(fixt):
+    mesh = df.UnitCubeMesh(10, 10, 10)
+    S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
+    m = df.Function(S3)
+    Ms = 8e5
+    A = 13e-12
+    l_ex_expected = sqrt(2 * A / (mu0 * Ms**2))
+
+    # Test with various options for A and Ms: pure number;
+    # df.Constant, df.Expression.
+    exch = Exchange(A)
+    exch.setup(S3, m, Ms)
+    l_ex = exch.exchange_length()
+    assert(np.allclose(l_ex, l_ex_expected, atol=0))
+
+    exch2 = Exchange(df.Constant(A))
+    exch2.setup(S3, m, df.Constant(Ms))
+    l_ex2 = exch2.exchange_length()
+    assert(np.allclose(l_ex2, l_ex_expected, atol=0))
+
+    exch3 = Exchange(df.Expression('A', A=A))
+    exch3.setup(S3, m, df.Expression('Ms', Ms=Ms))
+    l_ex3 = exch3.exchange_length()
+    assert(np.allclose(l_ex3, l_ex_expected, atol=0))
+
+    # We should get an error with spatially non-uniform values of A or Ms
+    exch4 = Exchange(df.Expression('A*x[0]', A=A))
+    exch4.setup(S3, m, Ms)
+    with pytest.raises(ValueError):
+        exch4.exchange_length()
+
+    exch5 = Exchange(A)
+    exch5.setup(S3, m, df.Expression('Ms*x[0]', Ms=Ms))
+    with pytest.raises(ValueError):
+        exch5.exchange_length()
 
 
 if __name__ == "__main__":
