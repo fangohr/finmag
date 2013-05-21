@@ -6012,3 +6012,9 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-05-20 17:23:48 fangohr-adium: I have also checked compilation of Magpar on 13.04, and it seems to work.
 2013-05-20 17:24:09 fangohr-adium: (Same for Nmag - no changes to our build script for that, either.)
 2013-05-20 17:24:23 fangohr-adium: So you should all be able to use osiris again — any missing packages, do let me know.
+2013-05-21 11:21:43 mb8g11_: So in theory, an upgrade to 13.04 should "just work"?
+2013-05-21 11:28:39 D_Chernyshenko_: Yeah it should. If it works for you I might try it too :)
+2013-05-21 12:40:13 mb8g11_: haha
+2013-05-21 13:46:53 fangohr-adium: It worked for me. Try it out on osiris if you like.
+2013-05-21 17:52:55 ww1g11: Hi all, it seems that finmag are failed to be built in aleph0 due to the sundials problem, but the sundials version is the same as that in my machine which works, any idea?
+2013-05-21 18:07:22 max_albert: Hi Weiwei! Yes, unfortunately this has been going on for a while. I had a very brief look but couldn't work it out and then left it due to the HMM etc.
