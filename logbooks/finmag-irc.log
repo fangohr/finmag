@@ -6044,3 +6044,4 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-05-24 12:36:07 fangohr-adium: I also wonder whether we should download a more recent version of OOMMF - but no strong feelings about this.
 2013-05-24 12:36:11 fangohr-adium: (if there is one).
 2013-05-24 13:20:53 fangohr-adium: Oh, okay so the 'python dist-wrapper.py' which sits in the finmag-dist repository, actually calls src/Makefile in the finmag repository. I'll wait for Weiwei to look into the OOMMF problem, then I can investigate further at this end (i.e. I am not looking at aleph0 at all for now).
+2013-05-27 11:05:27 mb8g11: Hi all.
