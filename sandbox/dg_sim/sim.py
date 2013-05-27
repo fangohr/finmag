@@ -105,8 +105,7 @@ class Sim(object):
         self.H_eff[:]=0 
         for interaction in self.interactions:
             self.H_eff += interaction.compute_field()
-        
-
+            
     def add(self,interaction):
         interaction.setup(self.DG3, 
                           self._m, 

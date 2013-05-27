@@ -56,8 +56,8 @@ def plot_m(mesh,xs,m_an,f_dg,f_cg,name='compare.pdf'):
     dg=[]
     cg=[]
     for x in xs:
-        dg.append(f_dg(x,0.5,0.5)[2])
-        cg.append(f_cg(x,0.5,0.5)[2])
+        dg.append(f_dg(x,0.5, 0.5)[2])
+        cg.append(f_cg(x,0.5, 0.5)[2])
     plt.plot(xs,dg,'.-',label='dg')
     plt.plot(xs,cg,'^-',label='cg')
     
@@ -67,20 +67,23 @@ def plot_m(mesh,xs,m_an,f_dg,f_cg,name='compare.pdf'):
    
 if __name__ == "__main__2":
     mesh = df.BoxMesh(0,0,0,2*np.pi,5,1,10, 5, 1)
-     
+
     S = df.FunctionSpace(mesh, "DG", 0)
     DG3 = df.VectorFunctionSpace(mesh, "DG", 0)
-    expr = df.Expression(("0", "cos(x[0])", "sin(x[0])"))
+    #expr = df.Expression(("0", "cos(x[0])", "sin(x[0])"))
+    expr = df.Expression(("0", "cos(x[0])"))
     
     m = df.interpolate(expr, DG3)
-    exch = Exchange(1)
+    exch = ExchangeDG(1)
     exch.setup(DG3, m, 1)
     
     field=df.Function(DG3)
     field.vector().set_local(exch.compute_field())
     
+    #field = df.project(field, df.VectorFunctionSpace(mesh, "CG", 1, dim=3))
+    
     from finmag.util.helpers import save_dg_fun_points
-    save_dg_fun_points(m, name='m.vtk',dataname='m')
+    #save_dg_fun_points(m, name='m.vtk',dataname='m')
     save_dg_fun_points(field, name='exch.vtk',dataname='exch')
     
     
@@ -103,31 +106,34 @@ if __name__ == "__main__2":
 
 
 if __name__ == "__main__":
-    mesh = df.IntervalMesh(5, 0, 2*np.pi)
-    mesh = df.BoxMesh(0,0,0,2*np.pi,1,1,20, 1, 1)
+    #mesh = df.IntervalMesh(5, 0, 2*np.pi)
+    mesh = df.BoxMesh(0,0,0,2*np.pi,1,1,40, 1, 1)
+    #mesh = df.RectangleMesh(0,0,2*np.pi,1,10,1)
     
     S3 = df.VectorFunctionSpace(mesh, "DG", 0, dim=3)
-    C = 0.5*mu0
-    expr = df.Expression(('0', 'sin(x[0])','cos(x[0])'))
-    Ms = 1
+    C = 1.0
+    expr = df.Expression(('sin(0.5*x[0])', 'sin(x[0])','cos(x[0])'))
+    Ms = 8.6e5
     m = df.interpolate(expr, S3)
     
     exch = ExchangeDG(C)
-    exch.setup(S3, m, Ms, unit_length=0.1)
+    exch.setup(S3, m, Ms, unit_length=1)
     f = exch.compute_field()
     
     xs=np.linspace(1e-10,2*np.pi-1e-10,20)
-    m_an=-100*np.cos(xs)
+    m_an= -1.0*2*C/(mu0*Ms)*np.cos(xs)
     
     
     field=df.Function(S3)
     field.vector().set_local(exch.compute_field())
     
-    S3 = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
-    m = df.interpolate(expr, S3)
     
+    S3 = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
+    m2 = df.interpolate(expr, S3)
+    #field=df.interpolate(field,S3)
+
     exch = Exchange(C)
-    exch.setup(S3, m, Ms, unit_length=0.1)
+    exch.setup(S3, m2, Ms, unit_length=1)
     f = exch.compute_field()
     field2=df.Function(S3)
     field2.vector().set_local(f)

@@ -8,7 +8,7 @@ import numpy as np
 
 
 
-xs=np.linspace(1e-10,2*np.pi,10)
+xs=np.linspace(1e-10+0.5,2*np.pi-0.5,10)
 
 def delta_cg(mesh,expr):
     V = df.FunctionSpace(mesh, "CG", 1)
@@ -24,9 +24,21 @@ def delta_cg(mesh,expr):
     fun = df.Function(V)
     fun.vector().set_local(h)
     
-    res = []
-    for x in xs:
-        res.append(fun(x,0.5,0.5))
+    dim = mesh.topology().dim()
+    
+    res = []    
+    
+    if dim == 1:
+        for x in xs:
+            res.append(fun(x))
+    elif dim == 2:
+        df.plot(fun)
+        #df.interactive()
+        for x in xs:
+            res.append(fun(x,0.5))
+    elif dim == 3:
+        for x in xs:
+            res.append(fun(x,0.5,0.5))
     
     return res
 
@@ -38,13 +50,14 @@ def printaa(expr,name):
 
 
 def delta_dg(mesh,expr):
-    V = df.FunctionSpace(mesh, "DG", 0)
+    V = df.FunctionSpace(mesh, "DG", 1)
     m = df.interpolate(expr, V)
     
     n = df.FacetNormal(mesh)
     h = df.CellSize(mesh)
+    h_avg = (h('+') + h('-'))/2.0
     
-    alpha = 2
+    alpha = 1.0
     gamma = 0
     
     u = df.TrialFunction(V)
@@ -54,12 +67,17 @@ def delta_dg(mesh,expr):
     a = df.dot(df.grad(v), df.grad(u))*df.dx \
         - df.dot(df.avg(df.grad(v)), df.jump(u, n))*df.dS \
         - df.dot(df.jump(v, n), df.avg(df.grad(u)))*df.dS \
-        + alpha/h('+')*df.dot(df.jump(v, n), df.jump(u, n))*df.dS \
-        - df.dot(df.grad(v), u*n)*df.ds \
-        - df.dot(v*n, df.grad(u))*df.ds \
-        + gamma/h*v*u*df.ds
-    
-    
+        + alpha/h_avg*df.dot(df.jump(v, n), df.jump(u, n))*df.dS 
+        #- df.dot(df.grad(v), u*n)*df.ds \
+        #- df.dot(v*n, df.grad(u))*df.ds \
+        #+ gamma/h*v*u*df.ds
+        
+    #a = 1.0/h_avg*df.dot(df.jump(v, n), df.jump(u, n))*df.dS 
+        
+        #- df.dot(df.grad(v), u*n)*df.ds \
+        #- df.dot(v*n, df.grad(u))*df.ds \
+        #+ gamma/h*v*u*df.ds
+
     """
     a1 = df.dot(df.grad(v), df.grad(u))*df.dx 
     a2 = df.dot(df.avg(df.grad(v)), df.jump(u, n))*df.dS
@@ -87,9 +105,27 @@ def delta_dg(mesh,expr):
     fun = df.Function(V)
     fun.vector().set_local(h)
     
-    res = []
-    for x in xs:
-        res.append(fun(x,0.5,0.5))
+    DG1 = df.FunctionSpace(mesh, "DG", 1)
+    CG1 = df.FunctionSpace(mesh, "CG", 1)
+    #fun = df.interpolate(fun, DG1)
+    fun = df.project(fun, CG1)
+    
+    dim = mesh.topology().dim()
+    
+    res = []    
+    
+    if dim == 1:
+        for x in xs:
+            res.append(fun(x))
+    elif dim == 2:
+        df.plot(fun)
+        df.interactive()
+        for x in xs:
+            res.append(fun(x,0.5))
+    elif dim == 3:
+        for x in xs:
+            res.append(fun(x,0.5,0.5))
+            
     return res
 
 
@@ -112,12 +148,24 @@ def plot_m(mesh,expr,m_an,xs=xs,name='compare.pdf'):
 
 if __name__ == "__main__":
     
-    mesh = df.BoxMesh(0,0,0,2*np.pi,1,1,10, 1, 1)
     
     expr = df.Expression('cos(x[0])')
     m_an=-np.cos(xs)
+    
+    
+    mesh = df.IntervalMesh(100, 0, 2*np.pi)
+    plot_m(mesh, expr, m_an, name='cos_1d.pdf')
+    
+    mesh = df.RectangleMesh(0,0,2*np.pi, 1, 20, 1)
+    plot_m(mesh, expr, m_an, name='cos_2d.pdf')
+    
+    mesh = df.BoxMesh(0,0,0,2*np.pi,1,1,50, 1, 1)
     plot_m(mesh, expr, m_an, name='cos_3d.pdf')
     
+    
+    
+    
+    """
     expr = df.Expression('sin(x[0])')
     m_an=-np.sin(xs)
     plot_m(mesh, expr, m_an, name='sin_3d.pdf')
@@ -125,3 +173,4 @@ if __name__ == "__main__":
     expr = df.Expression('x[0]*x[0]')
     m_an=2+1e-10*xs
     plot_m(mesh, expr, m_an, name='x2_3d.pdf') 
+    """

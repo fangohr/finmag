@@ -8,7 +8,7 @@ import numpy as np
 
 
 
-xs=np.linspace(1e-10,2*np.pi,10)
+xs=np.linspace(0.5,2*np.pi-0.5,10)
 
 def delta_cg(mesh,expr):
     V = df.FunctionSpace(mesh, "CG", 1)
@@ -104,7 +104,7 @@ def plot_m(mesh,expr,m_an,xs=xs,name='compare.pdf'):
 
 if __name__ == "__main__":
     
-    mesh = df.BoxMesh(0,0,0,2*np.pi,10,1,10, 10, 1)
+    mesh = df.BoxMesh(0,0,0,2*np.pi,10,1,100, 10, 1)
     #mesh = df.IntervalMesh(10, 0, 2*np.pi)
     
     expr = df.Expression('cos(x[0])')
@@ -113,7 +113,7 @@ if __name__ == "__main__":
     m_an=-np.cos(xs)
     plot_m(mesh, expr, m_an, name='cos_3d_2.pdf')
     
-    """
+    
     expr = df.Expression(('sin(x[0])','0','0'))
     m_an=-np.sin(xs)
     plot_m(mesh, expr, m_an, name='sin_3d_2.pdf')
@@ -122,7 +122,7 @@ if __name__ == "__main__":
     expr = df.Expression(('x[0]*x[0]','0','0'))
     m_an=2+1e-10*xs
     plot_m(mesh, expr, m_an, name='x2_3d_2.pdf')
-    """
+    
     
     
     #df.interactive()
