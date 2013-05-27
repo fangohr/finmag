@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 import dolfin as df
 from finmag.energies import Exchange
-from math import sqrt
+from math import sqrt, pi
 from finmag.util.consts import mu0
 
 
@@ -61,6 +61,34 @@ def test_exchange_energy_analytical(fixt):
 
     print "With m = (0, sqrt(1-x^2), x), expecting E = {}. Got E = {}.".format(expected_E, E)
     assert abs(E - expected_E)/expected_E < REL_TOLERANCE
+
+
+def test_exchange_energy_analytical_2():
+    """
+    Compare one Exchange energy with the corresponding analytical result.
+
+    """
+    REL_TOLERANCE = 5e-5
+    lx = 6
+    ly = 3
+    lz = 2
+    nx = 300
+    ny = nz = 1
+    mesh = df.BoxMesh(0, 0, 0, lx, ly, lz, nx, ny, nz)
+    unit_length = 1e-9
+    S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
+    Ms = 8e5
+    A = 13e-12
+    m = df.Function(S3)
+    f = df.project(df.Expression(['0', 'sin(2*pi*x[0]/l_x)', 'cos(2*pi*x[0]/l_x)'], l_x=lx), S3)
+    m.vector().set_local(f.vector().array())
+    exch = Exchange(A)
+    exch.setup(S3, m, Ms, unit_length=unit_length)
+    E_expected = A * 4 * pi**2 * (ly * unit_length) * (lz * unit_length) / (lx * unit_length)
+    E = exch.compute_energy()
+    print "expected energy: {}".format(E)
+    print "computed energy: {}".format(E_expected)
+    assert abs((E - E_expected) / E_expected) < REL_TOLERANCE
 
 
 def test_exchange_field_supported_methods(fixt):
