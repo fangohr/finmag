@@ -28,7 +28,7 @@ def delta_dg(mesh,expr):
     h = df.CellSize(mesh)
     h_avg = (h('+') + h('-'))/2
     
-    alpha = 2.0
+    alpha = 1.0
     gamma = 0.0
     
     u = df.TrialFunction(V)
@@ -38,7 +38,7 @@ def delta_dg(mesh,expr):
     a = df.dot(df.grad(v), df.grad(u))*df.dx \
         - df.dot(df.avg(df.grad(v)), df.jump(u, n))*df.dS \
         - df.dot(df.jump(v, n), df.avg(df.grad(u)))*df.dS \
-        + alpha/h('+')*df.dot(df.jump(v, n), df.jump(u, n))*df.dS \
+        + alpha/h_avg*df.dot(df.jump(v, n), df.jump(u, n))*df.dS \
         - df.dot(df.grad(v), u*n)*df.ds \
         - df.dot(v*n, df.grad(u))*df.ds \
         + gamma/h*v*u*df.ds
@@ -46,7 +46,7 @@ def delta_dg(mesh,expr):
     K = df.assemble(a).array()
     L = df.assemble(v * df.dx).array()
     
-    h = -np.dot(K,m.vector().array())/(2.0*L)
+    h = -np.dot(K,m.vector().array())/(L)
     
     xs=[]
     for cell in df.cells(mesh):

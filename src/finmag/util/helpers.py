@@ -632,15 +632,20 @@ def vector_valued_dg_function(value, mesh_or_space, normalise=False):
         else:
             raise RuntimeError("Meshes are not compatible for given function.")
     elif hasattr(value, '__call__'):
-        fun = df.Function(dg)
-        cds=mesh.coordinates()
-    
-        index=0
-        for cell in df.cells(mesh):
-            p1,p2,p3,p4=cell.entities(0)
-            coord=(cds[p1]+cds[p2]+cds[p3]+cds[p4])/4.0
-            fun.vector()[index] = value(coord)
-            index+=1
+        
+        class HelperExpression(df.Expression):
+            def __init__(self,value):
+                super(HelperExpression, self).__init__()
+                self.fun = value
+        
+            def eval(self, value, x):
+                value[:] = self.fun(x)[:]                
+            
+            def value_shape(self):
+                return (3,)
+            
+        hexp = HelperExpression(value)
+        fun = df.interpolate(hexp, dg)
             
     else:
         raise TypeError("Cannot set value of vector-valued DG function from "
