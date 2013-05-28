@@ -116,7 +116,7 @@ def plot_FFT_m(ndt_filename, t_step, t_ini=None, t_end=None, subtract_values=Non
     `components` can be a string or a list containing the components
     to plot. Default: 'xyz'.
 
-    Returns the matplotlib Axis instance containing the plot.
+    Returns the matplotlib Figure instance containing the plot.
     """
     if not set(components).issubset("xyz"):
         raise ValueError("Components must only contain 'x', 'y' and 'z'. "
