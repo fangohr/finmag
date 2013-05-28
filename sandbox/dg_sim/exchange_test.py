@@ -107,7 +107,7 @@ if __name__ == "__main__2":
 
 if __name__ == "__main__":
     #mesh = df.IntervalMesh(5, 0, 2*np.pi)
-    mesh = df.BoxMesh(0,0,0,2*np.pi,1,1,40, 1, 1)
+    mesh = df.BoxMesh(0,0,0,2*np.pi,1,1,40, 3, 3)
     #mesh = df.RectangleMesh(0,0,2*np.pi,1,10,1)
     
     S3 = df.VectorFunctionSpace(mesh, "DG", 0, dim=3)
@@ -120,7 +120,7 @@ if __name__ == "__main__":
     exch.setup(S3, m, Ms, unit_length=1)
     f = exch.compute_field()
     
-    xs=np.linspace(1e-10,2*np.pi-1e-10,20)
+    xs=np.linspace(0.1,2*np.pi-0.1,10)
     m_an= -1.0*2*C/(mu0*Ms)*np.cos(xs)
     
     
