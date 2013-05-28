@@ -757,7 +757,9 @@ def plot_mesh_with_paraview(mesh, **kwargs):
     calls `finmag.util.visualization.render_paraview_scene` on that
     file. Any keyword arguments given are passed on to
     `render_paraview_scene` - see its docstring for more information.
-    Use the `diffuse_color` keyword to set the mesh color.
+    Use the `diffuse_color` keyword to set the mesh color and the
+    `outfile` keyword to give a output filename in case the plot should
+    be saved to a PNG file.
     """
     import tempfile
     from finmag.util.visualization import render_paraview_scene
