@@ -6045,3 +6045,26 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-05-24 12:36:11 fangohr-adium: (if there is one).
 2013-05-24 13:20:53 fangohr-adium: Oh, okay so the 'python dist-wrapper.py' which sits in the finmag-dist repository, actually calls src/Makefile in the finmag repository. I'll wait for Weiwei to look into the OOMMF problem, then I can investigate further at this end (i.e. I am not looking at aleph0 at all for now).
 2013-05-27 11:05:27 mb8g11: Hi all.
+2013-05-28 09:52:36 fangohr-adium: Good Morning, all.
+2013-05-28 10:07:14 mb8g11: Hi Hans
+2013-05-28 11:04:36 fangohr-adium: Hi - is Dmitri there? I have question for him (with Alex) in my office.
+2013-05-28 11:05:58 ww1g11: No, he is not here
+2013-05-28 11:06:16 fangohr-adium: Thanks, will catch up later with him then.
+2013-05-28 11:12:14 fangohr-adium: Marijan, do you have the technical report/summary of trying the sync pulse for the standard problem somewhere? Could you point me to it, or put it into Dropbox or so? Would be useful for the discussion with Alex at the moment.
+2013-05-28 11:13:10 mb4e10: There is a summary in monthly report
+2013-05-28 11:13:14 mb4e10: for march
+2013-05-28 11:14:39 mb4e10: page 8
+2013-05-28 11:21:09 mb8g11: Has anybody computed the normal modes on other geometries than cuboids? Wondering if what I'm doing will 'just work'.
+2013-05-28 11:23:13 mb4e10: I think Max did for disc
+2013-05-28 11:25:53 mb8g11: Perfect, will ask him.
+2013-05-28 11:26:00 mb8g11: Thanks.
+2013-05-28 12:27:35 fangohr-adium: Hi Dmitri, Alex is around for another 40 minutes or so, if you want to discuss your results with him, this would be a nice opportunity. He is currently talking to Marijan. I'll describe next what is the 'interesting' thing we see, where I would like your and Marijan's views on:
+2013-05-28 12:28:50 fangohr-adium: The frequency spectrum computed with Dmitri's code gives very little prominence to the modes around 7GHz, although the code clearly detects them. The explanation that Alex and I came up with this morning is that the overlap of our excitation signal with those modes must be big, and thus we get to see them in the FMR data from the dynamic simulations.
+2013-05-28 12:30:47 fangohr-adium: The right thing to compare Dmitri's results against should be the frequency spectrum data based on spatially resolved measurements, as this will be most inclusive for the modes. However, the frequency spectrum obtained from spatially averaged simulations matches Dmitri's curve much better. I would argue that this just happens to be so, but is co-incidence. Dmitri, would you agree?
+2013-05-28 12:31:40 D_Chernyshenko_: Oh, my frequency spectrum *is* the spatially averaged one
+2013-05-28 12:31:46 fangohr-adium: Finally, Marijan has done some experiments with a sync excitation pulse (in time, or also in space?). I would hope that the resonance curve we get from that should be very close to Dmitri's curve, but I didn't have time/data to look at this. Something to explore further.
+2013-05-28 12:32:02 fangohr-adium: Dmitri, that's interesting and would explain it. Can you produce the other one as well?
+2013-05-28 12:32:57 D_Chernyshenko_: What is the other one? I will be in the office in ~10 min, we can discuss it there if it's easier
+2013-05-28 12:33:34 D_Chernyshenko_: I used the formula (1) from the paper to compute the spectrum
+2013-05-28 12:45:31 mb4e10: Alex is in our office waiting for you
+2013-05-28 12:48:06 mb4e10: I think this mode is big because of the pertubation. I think the pertubation of external field can be imagined as a Heaviside (step function). The Fourier transform of Heaviside contains the delta impulse, which might be close to the mode that Alex see.
