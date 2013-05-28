@@ -1,4 +1,6 @@
 import numpy
+import numbers
+
 
 def make_analytic_solution(H, alpha, gamma):
     """
@@ -16,6 +18,8 @@ def make_analytic_solution(H, alpha, gamma):
         - gamma (alias OOMMF's gamma_G): gyromagnetic ratio (in m/A*s)
 
     """
+    if not isinstance(H, numbers.Number):
+        raise TypeError("H must be a single number, but got: {}".format(H))
     p = float(gamma) / (1 + alpha ** 2)
     theta0 = numpy.pi / 2
     t0 = numpy.log(numpy.sin(theta0) / (1 + numpy.cos(theta0))) / (p * alpha * H)

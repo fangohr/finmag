@@ -6007,3 +6007,41 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-05-17 14:14:26 fangohr-adium: Could you log out, and log in again, please? Is the warning still there?
 2013-05-17 14:14:53 mb4e10: Problem solved.
 2013-05-17 14:15:07 fangohr-adium: Thank you.
+2013-05-20 09:14:52 fangohr-adium: Good Morning, Max and DokosBot.
+2013-05-20 17:23:34 fangohr-adium: Good news: Dmitri's fixes for the new Numpy version work: finmag compiles happily on Ubuntu 13.04.
+2013-05-20 17:23:48 fangohr-adium: I have also checked compilation of Magpar on 13.04, and it seems to work.
+2013-05-20 17:24:09 fangohr-adium: (Same for Nmag - no changes to our build script for that, either.)
+2013-05-20 17:24:23 fangohr-adium: So you should all be able to use osiris again — any missing packages, do let me know.
+2013-05-21 11:21:43 mb8g11_: So in theory, an upgrade to 13.04 should "just work"?
+2013-05-21 11:28:39 D_Chernyshenko_: Yeah it should. If it works for you I might try it too :)
+2013-05-21 12:40:13 mb8g11_: haha
+2013-05-21 13:46:53 fangohr-adium: It worked for me. Try it out on osiris if you like.
+2013-05-21 17:52:55 ww1g11: Hi all, it seems that finmag are failed to be built in aleph0 due to the sundials problem, but the sundials version is the same as that in my machine which works, any idea?
+2013-05-21 18:07:22 max_albert: Hi Weiwei! Yes, unfortunately this has been going on for a while. I had a very brief look but couldn't work it out and then left it due to the HMM etc.
+2013-05-22 08:56:06 fangohr-adium: Good Morning.
+2013-05-22 09:21:19 mb8g11_: Good morning!
+2013-05-23 09:59:51 mb8g11: Good morning.
+2013-05-23 10:00:02 D_Chernyshenko: Morning
+2013-05-23 10:00:27 mb8g11: Dmitri, can you say something again?
+2013-05-23 10:00:32 D_Chernyshenko: Something
+2013-05-23 10:00:56 mb8g11: The keys on your keyboard weren't pressed... So I assume you're not invisible, but at home?
+2013-05-23 10:01:09 mb8g11: *conclude
+2013-05-23 10:01:16 D_Chernyshenko: Excellent deduction
+2013-05-23 10:01:29 mb8g11: Thanks.
+2013-05-23 13:53:25 fangohr-adium: Greetings.
+2013-05-23 14:10:39 mb4e10: Greetings
+2013-05-24 09:50:01 fangohr-adium: Good Morning.
+2013-05-24 09:50:08 fangohr-adium: A quick reminder for the group meeting today at 10am.
+2013-05-24 09:50:26 fangohr-adium: I have got dark chocolate Kitkats if that changes anything for anybody.
+2013-05-24 09:56:06 D_Chernyshenko: I'll be 5-10 mins late, was reading emails and didn't watch the time, sorry!
+2013-05-24 09:56:30 fangohr-adium: Okay.
+2013-05-24 09:59:07 fangohr-adium: Why don't we start 10 past 10 in earnest, but people are welcome to drop in before, make teas and coffee etc.
+2013-05-24 12:19:43 fangohr-adium: Hi again. I am just trying to build the binary installation on osiris to see whether it works there. I have a question regarding the Makefile that contains the 'bundle' target that jenkins tries to execute: is this only on aleph0 or in some repository as well?
+2013-05-24 12:24:11 max_albert:  Hi Hans, I'm not sure I understand your question correctly, but the "bundle" target is actually in src/Makefile, not in the toplevel Makefile.
+2013-05-24 12:24:29 fangohr-adium: Ah, thanks. I think that is the information I was after.
+2013-05-24 12:34:33 fangohr-adium: Okay, — I had forgotten how this works: we also need to use the finmag-dist repository for the process, but a lot of it takes place in the normal finmag repository. I'll keep looking.
+2013-05-24 12:35:35 fangohr-adium: Weiwei, we have a oommf.sh installation file in finmag/install/oommf.sh. This seems not to work on Osiris 13.04. Could you try to run this and have a look what's wrong? Either I have not installed the right packages yet, or the packages are to recent, or I have made a silly mistake. Please advise.
+2013-05-24 12:36:07 fangohr-adium: I also wonder whether we should download a more recent version of OOMMF - but no strong feelings about this.
+2013-05-24 12:36:11 fangohr-adium: (if there is one).
+2013-05-24 13:20:53 fangohr-adium: Oh, okay so the 'python dist-wrapper.py' which sits in the finmag-dist repository, actually calls src/Makefile in the finmag repository. I'll wait for Weiwei to look into the OOMMF problem, then I can investigate further at this end (i.e. I am not looking at aleph0 at all for now).
+2013-05-27 11:05:27 mb8g11: Hi all.
