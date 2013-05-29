@@ -6068,3 +6068,22 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-05-28 12:33:34 D_Chernyshenko_: I used the formula (1) from the paper to compute the spectrum
 2013-05-28 12:45:31 mb4e10: Alex is in our office waiting for you
 2013-05-28 12:48:06 mb4e10: I think this mode is big because of the pertubation. I think the pertubation of external field can be imagined as a Heaviside (step function). The Fourier transform of Heaviside contains the delta impulse, which might be close to the mode that Alex see.
+2013-05-29 08:13:19 mb8g11: Good morning!
+2013-05-29 12:26:47 D_Chernyshenko__: Hi Hans, an update on the FMR paper - yesterday we worked out what the 2 different methods for computing the spectrum are, so I can compute the 2nd (alternative) one as well
+2013-05-29 15:33:24 fangohr-adium: Hi Dmitri, didn't see your message before.
+2013-05-29 15:34:06 fangohr-adium: From what Marijan told me, you basically worked out that the two methods should give the same result (which you have computed already), only that we have taken the magnitude before summer complex numbers, and thus got different results — is that about right?
+2013-05-29 15:36:39 D_Chernyshenko__: Sort of, with formula (1) I was computing the Fourier transform of the spatially averaged magnetisation
+2013-05-29 15:37:33 D_Chernyshenko__: The other way is to compute the Fourier transform at each point in space, take the absolute value there (to compute the magnitude of the oscillation), and then average spatially
+2013-05-29 15:38:27 D_Chernyshenko__: I.e., the spatially averaged magnitude of all oscillations != magnitude of the spatially averaged oscillation
+2013-05-29 15:39:05 D_Chernyshenko__: It's not entirely clear which way is the right one but Marijan says most paper use the "spatially averaged magnitude of oscillations" method
+2013-05-29 15:39:12 D_Chernyshenko__: *most papers
+2013-05-29 15:40:48 D_Chernyshenko__: Also, this choice isnt specific to the eigenvalue method, just a question of how to compute the spectrum from M(r, t)
+2013-05-29 15:42:11 mb4e10: In this paper equations 1 and 2: http://jap.aip.org/resource/1/japiau/v97/i10/p10J901_s1
+2013-05-29 15:43:11 mb4e10: here they sum the power, so they do not look for the average
+2013-05-29 15:46:30 mb4e10: The problem arose because we used equations from Greg's report. They are correct but give the same result.
+2013-05-29 15:47:26 mb4e10: I use the method from the McMichael paper
+2013-05-29 15:47:47 fangohr-adium: Interesting, thanks. Did Alex get this, so that he can update the paper accordingly? (Not sure whethre we have a view which of the options to follow in the paper.)
+2013-05-29 15:49:48 mb4e10: I think he understood. I think the most logical procedure is in McMichael paper. Every mesh cell has its own power frequency spectrum and the sum of all them gives the overall power spectrum.
+2013-05-29 15:50:20 mb4e10: since the power can be summed and gives total power
+2013-05-29 15:50:43 D_Chernyshenko__: Yeah, we probably don't need to discuss this in detail in the paper, as long as we provide the equation we use. And yeah I agree the method from the McMichael paper ("average power spectrum") is the more appropriate one probably
+2013-05-29 17:18:05 fangohr-adium: Okay. I am happy to go with McMichaels equation: this means that order of averaging and Fouriertransform should not change the spectrum, correct?
