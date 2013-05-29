@@ -779,9 +779,7 @@ class Simulation(object):
 
 def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sundials",
              A=None, K1=None, K1_axis=None, H_ext=None, demag_solver='FK',
-             phi_1_solver='default', phi_1_preconditioner='default',
-             phi_2_solver='default', phi_2_preconditioner='default',
-             D=None, name="unnamed"):
+             demag_solver_params={}, D=None, name="unnamed"):
     """
     Create a Simulation instance based on the given parameters.
 
@@ -798,10 +796,13 @@ def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sun
        exchange = Exchange(A)
        sim.add(exchange)
 
+    The argument `demag_solver_params` can be used to configure the demag solver
+    (if the chosen solver class supports this). Example with the 'FK' solver:
 
-    The arguments phi_{1|2}_{solver|preconditioner} are only valid if
-    demag_solver=='FK' and are ignored otherwise. See the docstring of the
-    class finmag.energies.demag.FKDemag for information on what they mean.
+       demag_solver_params = {'phi_1_solver': 'cg', phi_1_preconditioner: 'ilu'}
+
+    See the docstring of the individual solver classes (e.g. finmag.energies.demag.FKDemag)
+    for more information on possible parameters.
     """
     sim = Simulation(mesh, Ms, unit_length=unit_length,
                      integrator_backend=integrator_backend,
@@ -827,11 +828,10 @@ def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sun
         sim.add(DMI(D))
     if demag_solver != None:
         demag = Demag(solver=demag_solver)
-        if demag_solver == 'FK':
-            demag.parameters['phi_1_solver'] = phi_1_solver
-            demag.parameters['phi_1_preconditioner'] = phi_1_preconditioner
-            demag.parameters['phi_2_solver'] = phi_2_solver
-            demag.parameters['phi_2_preconditioner'] = phi_2_preconditioner
+        if demag_solver_params != {}:
+            demag.parameters.update(demag_solver_params)
+            for (k, v) in demag_solver_params.items():
+                log.debug("Setting demag solver parameter {}='{}' for simulation '{}'".format(k, v, sim.name))
         sim.add(demag)
 
     return sim
