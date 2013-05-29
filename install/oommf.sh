@@ -48,12 +48,14 @@ mv oommf12a4pre-20100719bis oommf
 cd oommf
 
 # install oommf
-OOMMF_TCL_INCLUDE_DIR=/usr/include/tcl8.5/; export OOMMF_TCL_INCLUDE_DIR
-OOMMF_TK_INCLUDE_DIR=/usr/include/tcl8.5/; export OOMMF_TK_INCLUDE_DIR
-./oommf.tcl pimake distclean
-./oommf.tcl pimake upgrade
-./oommf.tcl pimake
-./oommf.tcl +platform
+#OOMMF_TCL_INCLUDE_DIR=/usr/include/tcl8.5/; export OOMMF_TCL_INCLUDE_DIR
+#OOMMF_TK_INCLUDE_DIR=/usr/include/tcl8.5/; export OOMMF_TK_INCLUDE_DIR
+export OOMMF_TCL_CONFIG='/usr/lib/tcl8.6/tclConfig.sh'
+export OOMMF_TK_CONFIG='/usr/lib/tk8.6/tkConfig.sh'
+tclsh8.6 oommf.tcl pimake distclean
+tclsh8.6 oommf.tcl pimake upgrade
+tclsh8.6 oommf.tcl pimake
+tclsh8.6 oommf.tcl +platform
 
 # create an executable called 'oommf' to call oommf in /usr/local/bin
 oommf_command=$(cat <<EOF
