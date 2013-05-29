@@ -779,6 +779,8 @@ class Simulation(object):
 
 def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sundials",
              A=None, K1=None, K1_axis=None, H_ext=None, demag_solver='FK',
+             phi_1_solver='default', phi_1_preconditioner='default',
+             phi_2_solver='default', phi_2_preconditioner='default',
              D=None, name="unnamed"):
     """
     Create a Simulation instance based on the given parameters.
@@ -795,6 +797,11 @@ def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sun
 
        exchange = Exchange(A)
        sim.add(exchange)
+
+
+    The arguments phi_{1|2}_{solver|preconditioner} are only valid if
+    demag_solver=='FK' and are ignored otherwise. See the docstring of the
+    class finmag.energies.demag.FKDemag for information on what they mean.
     """
     sim = Simulation(mesh, Ms, unit_length=unit_length,
                      integrator_backend=integrator_backend,
@@ -819,6 +826,12 @@ def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sun
     if D != None:
         sim.add(DMI(D))
     if demag_solver != None:
-        sim.add(Demag(solver=demag_solver))
+        demag = Demag(solver=demag_solver)
+        if demag_solver == 'FK':
+            demag.parameters['phi_1_solver'] = phi_1_solver
+            demag.parameters['phi_1_preconditioner'] = phi_1_preconditioner
+            demag.parameters['phi_2_solver'] = phi_2_solver
+            demag.parameters['phi_2_preconditioner'] = phi_2_preconditioner
+        sim.add(demag)
 
     return sim
