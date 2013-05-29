@@ -16,12 +16,14 @@ from finmag.util.fileio import Tablereader
 logger = logging.getLogger("finmag")
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+
 def num_interactions(sim):
     """
     Helper function to determine the number of interactions present in
     the Simulation.
     """
     return len(sim.llg.effective_field.interactions)
+
 
 class TestSimulation(object):
     @classmethod
@@ -671,4 +673,17 @@ class TestSimulation(object):
             np.max(np.abs(ts - real_ts))))
     
         assert np.max(np.abs(ts - real_ts)) < 1e-24
-        
+
+
+def test_sim_with(tmpdir):
+    """
+    Check that we can call sim_with with random values for all parameters.
+
+    TODO: This test should arguably be more comprehensive.
+    """
+    os.chdir(str(tmpdir))
+    mesh = df.UnitCubeMesh(3, 3, 3)
+    demag_solver_params={'phi_1_solver': 'cg', 'phi_2_solver': 'cg', 'phi_1_preconditioner': 'ilu', 'phi_2_preconditioner': 'ilu'}
+    sim = sim_with(mesh, Ms=8e5, m_init=[1, 0, 0], alpha=1.0, unit_length=1e-9, integrator_backend='sundials',
+                   A=13e-12, K1=520e3, K1_axis=[0, 1, 1], H_ext=[0, 0, 1e6], D=6.98e-3, demag_solver='FK',
+                   demag_solver_params=demag_solver_params, name='test_simulation')
