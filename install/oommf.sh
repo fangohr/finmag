@@ -11,7 +11,7 @@
 set -o errexit
 
 # Install prerequisites if needed
-PKGS="tk-dev tcl-dev"
+PKGS="tk8.6-dev tcl8.6-dev"
 for pkg in $PKGS; do
     if ! dpkg -s $pkg > /dev/null 2>&1; then
 	echo "OOMMF needs the package $pkg. Trying to install it..."

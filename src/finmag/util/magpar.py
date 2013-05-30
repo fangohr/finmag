@@ -46,12 +46,20 @@ def gen_magpar_conf(base_name, init_m,
     file_name=os.path.join(conf_path, base_name+".0000.inp")
     save_inp_of_inital_m(init_m,file_name)
 
+    logger.debug("Completed gen_magpar_conf()")
+
 def run_magpar(base_name):
     magpar_cmd=(os.path.join("magpar.exe"))
    
     save_path=os.getcwd()
     new_path=os.path.join(MODULE_DIR, base_name)
+ 
+    logger.debug("Preparing to run magpar")
+    logger.debug("save_path = {}, new_path = {}".format(save_path, new_path))
+
     os.chdir(new_path)
+
+    logger.info("About to call {}".format(magpar_cmd))
 
     subprocess.check_call(magpar_cmd,stdout=subprocess.PIPE)
 
