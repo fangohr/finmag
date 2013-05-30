@@ -6087,3 +6087,9 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-05-29 15:50:20 mb4e10: since the power can be summed and gives total power
 2013-05-29 15:50:43 D_Chernyshenko__: Yeah, we probably don't need to discuss this in detail in the paper, as long as we provide the equation we use. And yeah I agree the method from the McMichael paper ("average power spectrum") is the more appropriate one probably
 2013-05-29 17:18:05 fangohr-adium: Okay. I am happy to go with McMichaels equation: this means that order of averaging and Fouriertransform should not change the spectrum, correct?
+2013-05-30 09:51:03 fangohr-adium: Thanks, Weiwei, that OOMMF installation now works out of the box on Ubuntu 13.04 (using finmag/install/oommf.sh).
+2013-05-30 10:04:50 mb8g11: Is Max in the office?
+2013-05-30 10:05:36 mb4e10: No
+2013-05-30 10:06:11 mb4e10: I think he sprinkled his ankle
+2013-05-30 10:20:05 mb8g11: I know, thought he may be better. Thx.
+2013-05-30 11:40:49 mb4e10: Can anyone tell me the command to copy from osiris on my computer?
