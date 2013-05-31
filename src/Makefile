@@ -16,8 +16,8 @@ FINMAGDIST_TARBALL_SUFFIX ?=
 FINMAGDIST_DEST_TARBALL = $(shell python print_tarball_name.py ${FINMAGDIST_REVISION} "${FINMAGDIST_TARBALL_SUFFIX}" ${FINMAGDIST_DESTDIR} 2>/dev/null | tail -n1)
 
 info:
-	echo "Makefile to help putting a compiled version of finmag together"
-	echo "Tarball name: ${FINMAGDIST_DEST_TARBALL}"
+	@echo "This is the Makefile to help putting a compiled version of finmag together"
+	@echo "Output tarball name: ${FINMAGDIST_DEST_TARBALL}"
 
 libs:
 	python setup-cython.py build_ext --inplace
@@ -38,7 +38,7 @@ test:
 	@echo "Running target 'test' using PYTHONPATH=${FINMAGDIST_BUILD_DIR}"
 	cd ${FINMAGDIST_BUILD_DIR} && PYTHONPATH=${FINMAGDIST_BUILD_DIR} py.test --verbose -x
 
-bundle:
+bundle: info
 	cd ${FINMAGDIST_BUILD_DIR} && tar cvjf ${FINMAGDIST_DEST_TARBALL} \
 		--exclude='*test*' \
 		--exclude=1d.nmesh \
