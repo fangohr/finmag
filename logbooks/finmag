@@ -4661,3 +4661,115 @@ Hans
 -------------------------------------
 finmag-team mailing list.
 
+From marvin  Fri May 31 19:39:09 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Fri, 31 May 2013 19:39:09 +0100 (BST)
+Received: by 10.49.62.68 with SMTP id w4csp62315qer;
+        Fri, 31 May 2013 11:21:46 -0700 (PDT)
+X-Received: by 10.15.101.1 with SMTP id bo1mr14428970eeb.128.1370024505933;
+        Fri, 31 May 2013 11:21:45 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id w42si7587721eeo.215.2013.05.31.11.21.45
+        for <multiple recipients>;
+        Fri, 31 May 2013 11:21:45 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk;
+       dkim=neutral (bad format) header.i=@gmail.com
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r4VILYkp029338;
+	Fri, 31 May 2013 19:21:34 +0100
+Received: from UOS-MSG00037-VS.soton.ac.uk (uos-msg00037-vs.soton.ac.uk [152.78.119.39])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p4UJLY3110117341I1 ret-id none; Fri, 31 May 2013 19:21:34 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.39) with Microsoft SMTP Server (TLS) id 14.2.342.3; Fri, 31 May
+ 2013 19:21:33 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r4VILX3E005709;	Fri, 31 May 2013 19:21:33 +0100
+Received: from mailgate4.iss.soton.ac.uk (mailgate4.iss.soton.ac.uk
+ [152.78.128.105])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r4VILXGq005706	for <finmag-team@lists.soton.ac.uk>; Fri, 31 May 2013 19:21:33
+ +0100
+Received: from mailgate4.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate4.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r4VIKlcv032360	for
+ <finmag-team@lists.soton.ac.uk>; Fri, 31 May 2013 19:20:47 +0100
+Received: from mail-qa0-f51.google.com (mail-qa0-f51.google.com
+ [209.85.216.51])	by mailgate4.iss.soton.ac.uk (mailgate4.iss.soton.ac.uk
+ [152.78.128.105]) envelope-from <maximilian.albert@gmail.com> with ESMTP	id
+ p4UJKl24683146296m ret-id none; Fri, 31 May 2013 19:20:47 +0100
+Received: by mail-qa0-f51.google.com with SMTP id i13so669596qae.17        for
+ <finmag-team@lists.soton.ac.uk>; Fri, 31 May 2013 11:20:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:date:message-id:subject:from:to:cc:content-type;
+        bh=MDJgBVj9KJkWizwUzSsd5j5fLVjjE+12ovRLHHx2g9M=;
+        b=UVT/1mOA9UCS+6KpC9mhBVSkHJl5J8kTLHNACSFLLuavsppDiv3/ZZnuHeGUUbRjnT
+         LqQeQzUvL9/kOLF4MYE/aFZ8BHj7LWEhjUx+zM3ZzLFv/7bUqDcVdIYAA/dObd08OWyZ
+         Slt0EvPCy33d4G8ExOerVCGnVzA6WvIegpfSjIaKQT0XzUREwdLUrz0vR9MibsPHsRFc
+         tVOaNIulEsas9lQ0mEO0TksKorPDevdSE8RqzgIZJaVcniU9PhOOg9QiRlC7U5zi9Wl4
+         fIOyT+xKaZMD7jL0zArkOUwPnRFwrkUX4ZOz3w0eF8VVKuxS4yFz9mRzRn+lDF0/9A37
+         fpBQ==
+MIME-Version: 1.0
+X-Received: by 10.49.74.68 with SMTP id r4mr11695611qev.5.1370024446456; Fri,
+ 31 May 2013 11:20:46 -0700 (PDT)
+Received: by 10.224.50.208 with HTTP; Fri, 31 May 2013 11:20:46 -0700 (PDT)
+Date: Fri, 31 May 2013 19:20:46 +0100
+Message-ID: <CAGA_dmjY2vkoSE_HEdSc1kbLRQpEHhFW_Byq=mo6kdLsWDTVYw@mail.gmail.com>
+Subject: [finmag-team] Using Simlib for normal mode computations of large disks?
+From: Maximilian Albert <maximilian.albert@gmail.com>
+To: Dmitri Chernyshenko <chernyshenko@gmail.com>
+CC: "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+Content-Type: text/plain; charset="ISO-8859-1"
+Received-SPF: None; receiver=mailgate4.iss.soton.ac.uk; client-ip=209.85.216.51; helo=<mail-qa0-f51.google.com>
+Received-SPF: Pass; receiver=mailgate4.iss.soton.ac.uk; client-ip=209.85.216.51; envelope-from=<maximilian.albert@gmail.com>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p4UJLY311011734100; tid=p4UJLY3110117341I1; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.39; helo=<UOS-MSG00037-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.39; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r4VILYkp029338
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi Dmitri,
+
+we had a discussion in the group meeting this morning about some
+normal mode computations of nanodisks which I did over the past few
+days. Unfortunately, I was only able to simulate relatively small
+disks (up to 100 nm diameter) with Finmag. But I'd be quite interested
+in trying the d'Aquino method (which you implemented in your 'Simlib'
+code) with larger disks. Do you think it's realistic do apply that
+method to a system of two coupled disks, each of which has ca. 700 nm
+diameter?
+
+Even this is too large for the eigenvalue method, it would be great to
+use your finite difference code in Simlib to do some normal mode
+computations "the ordinary way" (via a Fourier transform of the system
+response). So I was going to ask if you could provide some help
+getting me going. (I'm cc'ing to the Finmag list because I'm sure the
+others are also interested).
+
+First of all, I guess I need to install the MKL library. On the Intel
+website [1] I only found it bundled up in some product suites (e.g.
+"Intel Software Development Suite Student Edition"). Can you point me
+to the correct version, and tell me which license is the appropriate
+one?
+
+Once I have it installed, are there any other prerequisites or steps,
+or should this be enough to compile and use your code? Finally, are
+there any examples how to use it for simulations? (I guess the best
+place to look is in the tests?)
+
+Many thanks!
+Max
+
+
+[1] http://software.intel.com/en-us/intel-mkl
+-------------------------------------
+finmag-team mailing list.
+
