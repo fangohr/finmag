@@ -11,6 +11,7 @@ class VTKSaver(object):
     def __init__(self, filename=None, overwrite=False):
         self.filename = filename
         self.f = None
+        self.counter = 0
         if filename != None:
             self.open(filename, overwrite)
 
@@ -58,11 +59,11 @@ class VTKSaver(object):
         t:  float
 
             The time step with which the data is associated
-        """
-        pass
 
+        """
+        self.counter += 1
         t0 = time.time()
         self.f << field_data
         t1 = time.time()
-        log.debug("Saved field at t={} to file '{}' (saving took "
-                  "{:.3g} seconds).".format(t, self.filename, t1 - t0))
+        log.debug("Saved field at t={} to file '{}' (snapshot #{}; saving took "
+                  "{:.3g} seconds).".format(t, self.filename, self.counter, t1 - t0))
