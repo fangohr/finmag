@@ -382,6 +382,9 @@ class Simulation(object):
         if not hasattr(self, "integrator"):
             self.create_integrator()
         log.info("Simulation will run until relaxation of the magnetisation.")
+        log.debug("Relaxation parameters: stopping_dmdt={} (degrees per nanosecond), "
+                  "dt_limit={}, dmdt_increased_counter_limit={}".format(
+                              stopping_dmdt, dt_limit, dmdt_increased_counter_limit))
 
         if hasattr(self, "relaxation"):
             del(self.relaxation)
