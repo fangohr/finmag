@@ -145,6 +145,19 @@ class Simulation(object):
         return self.llg.m
 
     def set_m(self, value, **kwargs):
+        """
+        Set the magnetisation (it is automatically normalised to unit length).
+
+        `value` can have any of the forms accepted by the function
+        'finmag.util.helpers.vector_valued_function' (see its
+        docstring for details).
+
+        You can call this method anytime during the simulation. However, when
+        providing a numpy array during time integration, the use of
+        the attribute m instead of this method is advised for performance
+        reasons and because the attribute m doesn't normalise the vector.
+
+        """
         self.llg.set_m(value, **kwargs)
 
     m = property(__get_m, set_m)
