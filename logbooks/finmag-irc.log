@@ -6108,3 +6108,10 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-05-31 17:20:10 fangohr-adium: Hm, maybe drop an email to Robin Wilson (from DTC) to let him know that you don't know where to go. Others may not know either.
 2013-05-31 17:20:39 mb4e10: Ok, thanks
 2013-05-31 17:21:06 fangohr-adium: Over and out for today.
+2013-06-03 08:52:44 fangohr-adium: Good Morning, all. I'll be attending the Software Carpentry workshop (and be in small meetings during the breaks), so will not read much here during the next 2 days. However, email should work as always if there are any queries, news, etc.
+2013-06-03 13:18:10 ww1g11: A funny error for the anisotropy test, I just wondering how it could happen: test_anis_nmag.py:12: in test_against_nmag
+2013-06-03 13:18:11 ww1g11: >       assert m_ref.shape == m_computed.shape
+2013-06-03 13:18:11 ww1g11: E       assert (1538, 3) == (1537, 3)
+2013-06-03 13:18:11 ww1g11: E         At index 0 diff: 1538 != 1537
+2013-06-03 13:34:59 fangohr-adium: Interesting. The meshes seem to be different by one. Miscounting due to use of arange(0,x,dx) somewhere in the mesh creation? What meshes are used?
+2013-06-03 18:07:41 ww1g11: good point, thanks, the test past after I downgraded the netgen to 4.9.13
