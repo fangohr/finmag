@@ -6115,3 +6115,100 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-06-03 13:18:11 ww1g11: E         At index 0 diff: 1538 != 1537
 2013-06-03 13:34:59 fangohr-adium: Interesting. The meshes seem to be different by one. Miscounting due to use of arange(0,x,dx) somewhere in the mesh creation? What meshes are used?
 2013-06-03 18:07:41 ww1g11: good point, thanks, the test past after I downgraded the netgen to 4.9.13
+2013-06-04 09:18:48 fangohr: Max, regarding your question in your last commit (re-use of docstrings), here is the only 'solution' I can think of:
+2013-06-04 09:18:51 fangohr: def f1():
+2013-06-04 09:18:51 fangohr:     """This is my generic docstring, which I would like to reuse."""
+2013-06-04 09:18:51 fangohr:     pass
+2013-06-04 09:18:51 fangohr: def f2():
+2013-06-04 09:18:51 fangohr:     pass
+2013-06-04 09:18:53 fangohr: f2.__doc__ = f1.__doc__
+2013-06-04 11:02:08 fangohr: Hi MA, are you around? We are all in a training course in 85/2207; I guess you can come along if you like, although you probably know most of the stuff already. Next item is on testing — but aimed at beginners, starting at 11:00.
+2013-06-04 11:02:52 fangohr: Dmitri, are you around or online? Various people (Marc-Antonio?) would like to use your code; ideally get it ready for tomorrow when we have summer students starting.
+2013-06-04 11:03:06 fangohr: Also, Max would like to compile and use it.
+2013-06-04 11:04:55 mb8g11: Hi all.
+2013-06-04 11:05:05 mb8g11: At the software carpentry workshop again?
+2013-06-04 11:16:12 fangohr: Yes.
+2013-06-04 13:59:53 mb8g11: I am logged into eta.
+2013-06-04 14:02:38 mb8g11: As a side note, a comment of Garth Wells: "The whole DOLFIN/numpy interface in parallel needs to be carefully planned out at some point."
+2013-06-04 14:02:44 mb8g11: https://bitbucket.org/fenics-project/dolfin/pull-request/32/fix-issue-in-genericvector__getitem__/diff#comment-286813
+2013-06-04 14:02:59 fangohr-adium: Hi Dmitri, I am just trying to give MA access to your simlib code so he can get it ready for tomorrow morning ;-).
+2013-06-04 14:03:09 fangohr-adium: MA, the repository is sitting on eta.kk.soton.ac.uk in /home/hg/chern/simlib
+2013-06-04 14:03:13 fangohr-adium: Can you clone from there?
+2013-06-04 14:03:34 fangohr-adium: I need to disappear now, will check email every now and then.
+2013-06-04 14:04:24 D_Chernyshenko__: That's fine, I can help with the setup if needed
+2013-06-04 14:04:37 mb8g11: I can clone.
+2013-06-04 14:04:40 mb8g11: Thanks.
+2013-06-04 14:04:40 fangohr-adium: Excellent; many thanks.
+2013-06-04 14:04:47 fangohr-adium: Okay, MA — good luck ;-)
+2013-06-04 14:04:57 mb8g11: Thx ^^
+2013-06-04 14:05:19 fangohr-adium: You will need the Intel Math Kernel Library for Linux (64 bit), knows as Intel MKL. This should be free to use for PhD students, but I am not familiar with how you obtain it, etc.
+2013-06-04 14:05:23 fangohr-adium: Over and out for now.
+2013-06-04 14:05:31 mb8g11: Bye.
+2013-06-04 14:12:43 mb8g11: I found the website for the free download of Intel C++ Studio XE for Linux for students.
+2013-06-04 14:13:28 D_Chernyshenko__: I am looking through the license again and it seems that graduate students aren't actually included in the noncommercial license
+2013-06-04 14:13:55 D_Chernyshenko__: They changed the wording a second time and now it's pretty clear phd students are excluded
+2013-06-04 14:14:05 mb8g11: link?
+2013-06-04 14:14:19 D_Chernyshenko__: http://software.intel.com/en-us/non-commercial-software-development
+2013-06-04 14:14:29 D_Chernyshenko__: For the license, 1 sec
+2013-06-04 14:14:35 mb8g11: That's the website I am on right now :)
+2013-06-04 14:14:45 D_Chernyshenko__: You need the MKL link though
+2013-06-04 14:14:50 D_Chernyshenko__: You don't need the full suite
+2013-06-04 14:14:58 D_Chernyshenko__: Under performance libraries
+2013-06-04 14:15:14 mb8g11: I realised this - found the suite first, before finding the full list for non-commercial dev work
+2013-06-04 14:15:56 mb8g11: I was here: http://software.intel.com/en-us/intel-education-offerings#pid-2460-93
+2013-06-04 14:16:10 D_Chernyshenko__: http://software.intel.com/sites/products/documentation/EULA/Intel_SW_Dev_Products_EULA.pdf
+2013-06-04 14:16:30 D_Chernyshenko__: the license, there is a section for the non-commercial use license
+2013-06-04 14:17:30 mb8g11: C. iii.
+2013-06-04 14:19:29 mb8g11: That's open to interpretation...
+2013-06-04 14:20:03 D_Chernyshenko__: Yeah true
+2013-06-04 14:20:52 D_Chernyshenko__: We aren't compensated for developing software, the scholarship is about studying
+2013-06-04 14:21:00 D_Chernyshenko__: The wording is strange
+2013-06-04 14:36:43 mb8g11: Intel uses big buttons on their website. But only the text is actually a hyperlink. I'm surprised, and then again, I'm not.
+2013-06-04 15:53:19 mb8g11: I compiled the MKL and tried compiling Simlib. Needed to install valgrind and libeigen3-dev. However, I get this error:
+2013-06-04 15:54:52 mb8g11: http://pastebin.com/xyHAvuD6
+2013-06-04 15:55:44 D_Chernyshenko__: Blargh, that's the Ubuntu 13.04 problem that I fixed in finmag but not simlib yet
+2013-06-04 15:56:06 mb8g11: A warning (promoted to error) about deprecated numpy libraries. I tried #defining NPY_NO_DEPRECRATED_API NPY_1_7_API_VERSION, which makes it obvious some API have indeed changed.
+2013-06-04 15:56:31 D_Chernyshenko__: Yeah, the fix wasn't easy, I need to copy the fix from finmag here
+2013-06-04 15:56:36 D_Chernyshenko__: There is no easy workaround
+2013-06-04 15:56:38 mb8g11: Can you point me to the commit(s) in finmag? I might as well try to mimicry them for simlib.
+2013-06-04 15:56:56 D_Chernyshenko__: Hmm, why not
+2013-06-04 15:58:31 D_Chernyshenko__: Ok its changeset
+2013-06-04 15:58:32 D_Chernyshenko__: 9209f7a1e424
+2013-06-04 15:58:40 D_Chernyshenko__: "Attempting to fix compilation for numpy 1.7"
+2013-06-04 16:01:18 mb8g11: Cool, let me see what I can do.
+2013-06-04 16:02:50 D_Chernyshenko__: I've just made a patch out of the finmag changes and applied it to simlib with no problems
+2013-06-04 16:02:57 D_Chernyshenko__: Let me see if it compiles on 12.10 and I will just commit it
+2013-06-04 16:02:59 D_Chernyshenko__: That might just work...
+2013-06-04 16:03:56 D_Chernyshenko__: Okay, do a hg pull
+2013-06-04 16:04:00 D_Chernyshenko__: It compiles and I pushed the changes
+2013-06-04 16:06:40 mb8g11: You diffed, patched, compiled and pushed faster than I could copy and paste ;-)
+2013-06-04 16:07:05 D_Chernyshenko__: I even had to google how to make a patch out of a commit :)
+2013-06-04 16:07:13 D_Chernyshenko__: It was hg diff --change REV
+2013-06-04 16:07:18 mb8g11: Good to know.
+2013-06-04 16:07:21 mb8g11: http://pastebin.com/xQKyE09m
+2013-06-04 16:07:24 D_Chernyshenko__: Was really handy
+2013-06-04 16:07:57 D_Chernyshenko__: Is that with the new code?
+2013-06-04 16:08:06 mb8g11: Yes.
+2013-06-04 16:08:35 mb8g11: Only fails on a single file now, which seems to be np_array.cc itself
+2013-06-04 16:09:10 D_Chernyshenko__: Oh, the patch didn't apply to np_array.cc at all
+2013-06-04 16:09:12 D_Chernyshenko__: Weird.
+2013-06-04 16:09:20 D_Chernyshenko__: So the magic command didn't work that well
+2013-06-04 16:09:52 mb8g11: Is the directory structure *exactly* the same? Let me check. I noticed it's very similar though... what a coincide ;-)
+2013-06-04 16:09:57 mb8g11: *coincidence
+2013-06-04 16:10:04 D_Chernyshenko__: Nope, it's different< i had to edit
+2013-06-04 16:10:05 D_Chernyshenko__: But
+2013-06-04 16:10:40 D_Chernyshenko__: Put "#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION" before #include <numpy/arrayobject.h> in np_array.cc
+2013-06-04 16:10:53 D_Chernyshenko__: That seems the only change thats required in np_array.cc
+2013-06-04 16:12:29 D_Chernyshenko__: I pushed the change to np_array.cc too
+2013-06-04 16:13:41 D_Chernyshenko__: Are you going to be working with simlib code? I can add your email to the list for commit notifications
+2013-06-04 16:13:56 mb8g11: Yes, please.
+2013-06-04 16:16:58 mb8g11: Making progress, but not quite there. Would fail with the same error on dipoles/py_dipoles_module.cc, which is why I added the #define there (I could add it in module_includes.h instead). Now it complains about missing members on the PyArrayObject.
+2013-06-04 16:17:43 D_Chernyshenko__: Which machine is that on? Do I have an account? Might be easier for me to ssh into it and edit the file there
+2013-06-04 16:17:54 D_Chernyshenko__: or well
+2013-06-04 16:18:24 mb8g11: It's my machine, let me create an account for you.
+2013-06-04 16:20:11 D_Chernyshenko__: There are incompatible changes in the numpy API which is why all of this is so hard
+2013-06-04 16:20:22 D_Chernyshenko__: No easy workaround at all
+2013-06-04 16:25:15 mb8g11: I see.
+2013-06-04 16:32:10 D_Chernyshenko__: Ok, it compiles now. Try to pull the latest changes and compile
+2013-06-04 16:36:23 mb8g11: I can confirm compilation :-) Thank you!
+2013-06-04 16:45:06 D_Chernyshenko__: Great!
