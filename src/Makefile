@@ -13,7 +13,7 @@ FINMAGDIST_REVISION ?= tip
 FINMAGDIST_TARBALL_SUFFIX ?=
 
 # The tarball name is determined from the
-FINMAGDIST_DEST_TARBALL = $(shell python print_tarball_name.py ${FINMAGDIST_REVISION} "${FINMAGDIST_TARBALL_SUFFIX}" ${FINMAGDIST_DESTDIR} 2>/dev/null | tail -n1)
+FINMAGDIST_DEST_TARBALL = $(shell python print_tarball_name.py ${FINMAGDIST_REVISION} "${FINMAGDIST_TARBALL_SUFFIX}" ${FINMAGDIST_DESTDIR} 2>/tmp/debugging_output_print_tarball_name_$$$$.txt | tail -n1)
 
 info:
 	@echo "This is the Makefile to help putting a compiled version of finmag together"
@@ -39,6 +39,10 @@ test:
 	cd ${FINMAGDIST_BUILD_DIR} && PYTHONPATH=${FINMAGDIST_BUILD_DIR} py.test --verbose -x
 
 bundle: info
+ifeq "${FINMAGDIST_DEST_TARBALL}" ""
+	    @echo "Error: FINMAGDIST_DEST_TARBALL is empty"
+	    exit 1
+endif
 	cd ${FINMAGDIST_BUILD_DIR} && tar cvjf ${FINMAGDIST_DEST_TARBALL} \
 		--exclude='*test*' \
 		--exclude=1d.nmesh \
