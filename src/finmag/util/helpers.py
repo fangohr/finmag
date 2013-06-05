@@ -129,16 +129,25 @@ def start_logging_to_file(filename, formatter=None, mode='a', level=logging.DEBU
     logger.addHandler(h)
 
 
-def binary_tarball_name(repo, revision='tip', suffix=''):
+def binary_tarball_name(repo_dir, revision='tip', suffix=''):
     """
     Returns the name of the Finmag binary tarball if built from the
     given repository and revision.
 
     The general pattern is something like:
 
-       FinMag-dist__2013-04-25__rev3486_18e7def5e18a.tar.bz2
+       FinMag-dist__2013-04-25__rev3486_18e7def5e18a_suffix.tar.bz2
 
     If specified, the suffix is inserted immediately before '.tar.bz2'.
+
+
+    *Arguments*
+
+    repo_dir :  name of a directory containing a valid Finmag repository.
+
+    revision :  the revision to be bundled in the tarball.
+
+    suffix :  string to be appended to the tarball
     """
     cwd_bak = os.getcwd()
     try:
@@ -1221,28 +1230,3 @@ def save_dg_fun_points(fun, name='unnamed.vtk', dataname='m', binary=False):
         vtk.tofile(name,'binary')
     else:
         vtk.tofile(name)
-    
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
