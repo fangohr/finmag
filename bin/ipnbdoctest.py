@@ -192,6 +192,10 @@ def test_notebook(nb):
                 if not compare_outputs(out, ref):
                     failed = True
             if failed:
+                print "Failed to replicate cell with the following input: "
+                print "=== BEGIN INPUT ==================================="
+                print cell.input
+                print "=== END INPUT ====================================="
                 failures += 1
             else:
                 successes += 1
