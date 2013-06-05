@@ -98,7 +98,7 @@ def storeversions(targetfile):
     The data in the file is used to store which version of software we 
     had when the binary distribution was created."""
     if os.path.exists(targetfile):
-        print("This is odd: the file '%s' exists already, but is only" % targefile)
+        print("This is odd: the file '%s' exists already, but is only" % targetfile)
         print("meant to be created now (in function storeversions() in distcp.py)")
         raise RuntimeError("odd error when running %s" % __file__)
 
