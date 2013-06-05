@@ -376,8 +376,8 @@ def test_binary_tarball_name(tmpdir):
         binary_tarball_name('invalid_repo')
     with pytest.raises(ValueError):
         binary_tarball_name(finmag_repo, revision='invalid_revision')
-    expected_tarball_name = 'FinMag-dist__2013-06-03__rev3572_c648f1a0acd5_foobar.tar.bz2'
-    assert(binary_tarball_name(finmag_repo, revision='c648f1a0acd5', suffix='_foobar') == expected_tarball_name)
+    expected_tarball_name = 'FinMag-dist__2012-02-02__rev4_d330c151a7ce_foobar.tar.bz2'
+    assert(binary_tarball_name(finmag_repo, revision='d330c151a7ce', suffix='_foobar') == expected_tarball_name)
 
 
 if __name__ == '__main__':
