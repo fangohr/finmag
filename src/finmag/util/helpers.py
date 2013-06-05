@@ -141,12 +141,20 @@ def binary_tarball_name(repo, revision='tip', suffix=''):
     If specified, the suffix is inserted immediately before '.tar.bz2'.
     """
     cwd_bak = os.getcwd()
-    os.chdir(os.path.expanduser(repo))
+    try:
+        os.chdir(os.path.expanduser(repo))
+    except OSError:
+        raise ValueError("Expected a valid repository, but directory does not exist: '{}'".format(repo))
 
-    rev_nr = sp.check_output(['hg', 'id', '-n', '-r', revision]).strip()
-    rev_id = sp.check_output(['hg', 'id', '-i', '-r', revision]).strip()
-    rev_log = sp.check_output(['hg', 'log', '-r', revision]).strip()
-    rev_date = sp.check_output(['hg', 'log', '-r', revision, '--template', '{date|isodate}']).split()[0]
+    try:
+        rev_nr = sp.check_output(['hg', 'id', '-n', '-r', revision]).strip()
+        rev_id = sp.check_output(['hg', 'id', '-i', '-r', revision]).strip()
+        rev_log = sp.check_output(['hg', 'log', '-r', revision]).strip()
+        rev_date = sp.check_output(['hg', 'log', '-r', revision, '--template', '{date|isodate}']).split()[0]
+    except sp.CalledProcessError:
+        raise ValueError("Invalid revision '{}', or invalid Mercurial repository: '{}'".format(revision, repo))
+
+    # XXX TODO: Should we also check whether the repo is actually a Finmag repository?!?
 
     tarball_name = "FinMag-dist__{}__rev{}_{}{}.tar.bz2".format(rev_date, rev_nr, rev_id, suffix)
     os.chdir(cwd_bak)

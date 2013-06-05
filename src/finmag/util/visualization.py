@@ -111,7 +111,7 @@ def render_paraview_scene(
     except sp.CalledProcessError as ex:
         logger.error("Could not render Paraview scene. The error "
                      "message was: {}".format(ex.output))
-        raise
+        #raise
     finally:
         if debugging == True:
             logger.debug("Temporary directory '{}' kept for debugging. You "
