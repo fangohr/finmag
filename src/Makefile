@@ -13,7 +13,8 @@ FINMAGDIST_REVISION ?= tip
 FINMAGDIST_TARBALL_SUFFIX ?=
 
 # The tarball name is determined from the
-FINMAGDIST_DEST_TARBALL = $(shell python print_tarball_name.py ${FINMAGDIST_REVISION} "${FINMAGDIST_TARBALL_SUFFIX}" ${FINMAGDIST_DESTDIR} 2>/dev/null | tail -n1)
+#FINMAGDIST_DEST_TARBALL = $(shell python print_tarball_name.py ${FINMAGDIST_REVISION} "${FINMAGDIST_TARBALL_SUFFIX}" ${FINMAGDIST_DESTDIR} 2>/dev/null | tail -n1)
+FINMAGDIST_DEST_TARBALL ?=
 
 info:
 	@echo "This is the Makefile to help putting a compiled version of finmag together"
@@ -54,7 +55,7 @@ bundle: info
 		--exclude=_mat.xml \
 		--exclude=_bi.xml \
 		--exclude=unnamed.log\
-		--exclude=__pycache__ .
+		--exclude=__pycache__ finmag
 
 cleanbin:
 	cd ${FINMAGDIST_BUILD_DIR}/finmag && find . -name "*.so" | xargs rm -f
