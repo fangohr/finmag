@@ -25,6 +25,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
 from types import ListType, TupleType
+from math import sin, cos, pi
 
 logger = logging.getLogger(name='finmag')
 
@@ -382,6 +383,63 @@ def cylinder(r, h, maxh, save_result=True, filename='', directory=''):
     if save_result == True and filename == '':
         filename = "cyl-{:.1f}-{:.1f}-{:.1f}".format(r, h, maxh).replace(".", "_")
     return from_csg(csg_string, save_result=save_result, filename=filename, directory=directory)
+
+
+def pair_of_disks(d1, d2, h1, h2, sep, theta, maxh, save_result=True, filename='', directory=''):
+    """
+    Return a dolfin mesh representing a pair of disks. The first disk
+    is always centered at the origin; the center of the second one is
+    at a distance `sep` from the origin, and the angle between the x-axis
+    and the line joining the disk centers is given by `theta`.
+
+    *Arguments*
+
+    d1, d2:  float
+
+        Diameters of the two disks.
+
+    h1, h2:  float
+
+        Heights of the two disks.
+
+    sep:  float
+
+        Edge-to-edge separation between the disks (note that this is *not* the distance
+        between the disk centers).
+
+    theta:  float
+
+        Angle (in degrees) between the x-axis and the line joining the disk centers.
+
+    maxh:  float
+
+        Mesh discretisation.
+
+    For the meaning of the arguments `save_result`, `filename`, and `directory` see
+    the docstring of the `cylinder` function.
+
+    """
+    theta_rad = theta * pi/180.0
+    r1 = 0.5 * d1
+    r2 = 0.5 * d2
+    sep_centers = r1 + sep + r2
+    x2 = sep_centers * cos(theta_rad)
+    y2 = sep_centers * sin(theta_rad)
+    csg_string = textwrap.dedent("""\
+        algebraic3d
+        solid disk1 = cylinder (0, 0, 1; 0, 0, -1; {r1} )
+              and plane (0, 0, 0; 0, 0, -1)
+              and plane (0, 0, {h1}; 0, 0, 1) -maxh = {maxh};
+        solid disk2 = cylinder ({x2}, {y2}, 1; {x2}, {y2}, -1; {r2} )
+              and plane (0, 0, 0; 0, 0, -1)
+              and plane (0, 0, {h2}; 0, 0, 1) -maxh = {maxh};
+        tlo disk1;
+        tlo disk2;
+        """).format(r1=r1, h1=h1, x2=x2, y2=y2, r2=r2, h2=h2, maxh=maxh)
+    if save_result == True and filename == '':
+        filename = "diskpair-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}".format(r1, r2, h1, h2, sep, theta, maxh).replace(".", "_")
+    return from_csg(csg_string, save_result=save_result, filename=filename, directory=directory)
+
 
 def elliptic_cylinder(r1, r2, h, maxh, save_result=True, filename='', directory=''):
     """

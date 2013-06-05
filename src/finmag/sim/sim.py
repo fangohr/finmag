@@ -1,5 +1,7 @@
+import os
 import inspect
 import logging
+import tempfile
 import dolfin as df
 import numpy as np
 from finmag.sim.llg import LLG
@@ -143,6 +145,19 @@ class Simulation(object):
         return self.llg.m
 
     def set_m(self, value, **kwargs):
+        """
+        Set the magnetisation (it is automatically normalised to unit length).
+
+        `value` can have any of the forms accepted by the function
+        'finmag.util.helpers.vector_valued_function' (see its
+        docstring for details).
+
+        You can call this method anytime during the simulation. However, when
+        providing a numpy array during time integration, the use of
+        the attribute m instead of this method is advised for performance
+        reasons and because the attribute m doesn't normalise the vector.
+
+        """
         self.llg.set_m(value, **kwargs)
 
     m = property(__get_m, set_m)
@@ -380,6 +395,9 @@ class Simulation(object):
         if not hasattr(self, "integrator"):
             self.create_integrator()
         log.info("Simulation will run until relaxation of the magnetisation.")
+        log.debug("Relaxation parameters: stopping_dmdt={} (degrees per nanosecond), "
+                  "dt_limit={}, dmdt_increased_counter_limit={}".format(
+                              stopping_dmdt, dt_limit, dmdt_increased_counter_limit))
 
         if hasattr(self, "relaxation"):
             del(self.relaxation)
@@ -775,6 +793,26 @@ class Simulation(object):
                 info_string += added_info(l_bloch, 'Bloch parameter', 'l_bloch')
 
         return info_string
+
+    def render_scene(self, **kwargs):
+        """
+        This is a convenience wrapper around the helper function
+        `finmag.util.visualization.render_paraview_scene`. It saves
+        the current magnetisation to a temporary file and uses
+        `render_paraview_scene` to plot it. All keyword arguments
+        are passed on to `render_paraview_scene`; see its docstring
+        for details (one useful option is `outfile`, which can be used
+        to save the resulting image to a png file).
+
+        Returns the IPython.core.display.Image produced by
+        `render_paraview_scene`.
+
+        """
+        from finmag.util.visualization import render_paraview_scene
+        tmpdir = tempfile.mkdtemp()
+        basename = os.path.join(tmpdir, 'paraview_scene_{}'.format(self.name))
+        self.save_vtk(filename=basename + '.pvd')
+        return render_paraview_scene(basename + '000000.vtu', **kwargs)
 
 
 def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sundials",

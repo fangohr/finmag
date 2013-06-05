@@ -40,6 +40,10 @@ test:
 	cd ${FINMAGDIST_BUILD_DIR} && PYTHONPATH=${FINMAGDIST_BUILD_DIR} py.test --verbose -x
 
 bundle: info
+ifeq "${FINMAGDIST_DEST_TARBALL}" ""
+	    @echo "Error: FINMAGDIST_DEST_TARBALL is empty"
+	    exit 1
+endif
 	cd ${FINMAGDIST_BUILD_DIR} && tar cvjf ${FINMAGDIST_DEST_TARBALL} \
 		--exclude='*test*' \
 		--exclude=1d.nmesh \
