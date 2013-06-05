@@ -152,7 +152,7 @@ def binary_tarball_name(repo, revision='tip', suffix=''):
         rev_log = sp.check_output(['hg', 'log', '-r', revision]).strip()
         rev_date = sp.check_output(['hg', 'log', '-r', revision, '--template', '{date|isodate}']).split()[0]
     except sp.CalledProcessError:
-        raise ValueError("Directory does not seem to be a valid Mercurial repository: '{}'".format(repo))
+        raise ValueError("Invalid revision '{}', or invalid Mercurial repository: '{}'".format(revision, repo))
 
     # XXX TODO: Should we also check whether the repo is actually a Finmag repository?!?
 
