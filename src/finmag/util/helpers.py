@@ -151,9 +151,9 @@ def binary_tarball_name(repo_dir, revision='tip', suffix=''):
     """
     cwd_bak = os.getcwd()
     try:
-        os.chdir(os.path.expanduser(repo))
+        os.chdir(os.path.expanduser(repo_dir))
     except OSError:
-        raise ValueError("Expected a valid repository, but directory does not exist: '{}'".format(repo))
+        raise ValueError("Expected a valid repository, but directory does not exist: '{}'".format(repo_dir))
 
     try:
         rev_nr = sp.check_output(['hg', 'id', '-n', '-r', revision]).strip()
@@ -161,7 +161,7 @@ def binary_tarball_name(repo_dir, revision='tip', suffix=''):
         rev_log = sp.check_output(['hg', 'log', '-r', revision]).strip()
         rev_date = sp.check_output(['hg', 'log', '-r', revision, '--template', '{date|isodate}']).split()[0]
     except sp.CalledProcessError:
-        raise ValueError("Invalid revision '{}', or invalid Mercurial repository: '{}'".format(revision, repo))
+        raise ValueError("Invalid revision '{}', or invalid Mercurial repository: '{}'".format(revision, repo_dir))
 
     # XXX TODO: Should we also check whether the repo is actually a Finmag repository?!?
 
