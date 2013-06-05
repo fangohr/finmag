@@ -56,8 +56,8 @@ def plot_m(mesh,xs,m_an,f_dg,f_cg,name='compare.pdf'):
     dg=[]
     cg=[]
     for x in xs:
-        dg.append(f_dg(x,0.5, 0.5)[2])
-        cg.append(f_cg(x,0.5, 0.5)[2])
+        dg.append(f_dg(x,5, 0.5)[2])
+        cg.append(f_cg(x,5, 0.5)[2])
     plt.plot(xs,dg,'.-',label='dg')
     plt.plot(xs,cg,'^-',label='cg')
     
@@ -107,7 +107,7 @@ if __name__ == "__main__2":
 
 if __name__ == "__main__":
     #mesh = df.IntervalMesh(5, 0, 2*np.pi)
-    mesh = df.BoxMesh(0,0,0,2*np.pi,1,1,40, 3, 3)
+    mesh = df.BoxMesh(0,0,0,2*np.pi,10,1,40, 1, 1)
     #mesh = df.RectangleMesh(0,0,2*np.pi,1,10,1)
     
     S3 = df.VectorFunctionSpace(mesh, "DG", 0, dim=3)
@@ -130,7 +130,7 @@ if __name__ == "__main__":
     
     S3 = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
     m2 = df.interpolate(expr, S3)
-    #field=df.interpolate(field,S3)
+    field = df.project(field,S3)
 
     exch = Exchange(C)
     exch.setup(S3, m2, Ms, unit_length=1)

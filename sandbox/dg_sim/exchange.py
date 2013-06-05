@@ -11,9 +11,37 @@ logger=logging.getLogger('finmag')
 
 """
 Compute the exchange field in DG0 space with the help of BDM1 space.
-""" 
 
-class ExchangeDG(object):
+With the known magnetisation m in DG space, its gradient sigma in BDM 
+space can be obtained by solving the linear equation:
+
+    A sigma = K1 m
+
+then the exchange fields F can be approached by 
+
+    F = K2 sigma
+    
+""" 
+def copy_petsc_to_csc(pm):
+    (m,n) = pm.size(0), pm.size(1)
+    matrix = sp.lil_matrix((m,n))
+    for i in range(m):
+        ids, values = pm.getrow(i)
+        matrix[i,ids] = values
+
+    return matrix.tocsc()
+
+def copy_petsc_to_csr(pm):
+    (m,n) = pm.size(0), pm.size(1)
+    matrix = sp.lil_matrix((m,n))
+    for i in range(m):
+        ids, values = pm.getrow(i)
+        matrix[i,ids] = values
+    
+    return matrix.tocsr()
+
+
+class ExchangeDG2(object):
     def __init__(self, C, in_jacobian = True, name='ExchangeDG'):
         self.C = C
         self.in_jacobian=in_jacobian
@@ -48,6 +76,9 @@ class ExchangeDG(object):
          
         a1 = - (df.div(tau) * u) * df.dx
         self.K1 = df.assemble(a1)
+        
+        C = sp.lil_matrix(self.K1.array())
+        self.KK1 = C.tocsr()
     
         
         def boundary(x, on_boundary):
@@ -57,9 +88,10 @@ class ExchangeDG(object):
         
         zero = df.Constant((0,0,0))
         self.bc = df.DirichletBC(BDM, zero, boundary)
-        self.bc.apply(self.A)
+        #self.bc.apply(self.A)
         
-        AA = sp.lil_matrix(self.A.array())
+        #AA = sp.lil_matrix(self.A.array())
+        AA = copy_petsc_to_csc(self.A)
         
         self.solver = sp.linalg.factorized(AA.tocsc())
         
@@ -75,8 +107,7 @@ class ExchangeDG(object):
 
         self.coeff = self.exchange_factor/self.L
         
-        B = sp.lil_matrix(self.K2.array())
-        self.K2 = B.tocsr()
+        self.K2 = copy_petsc_to_csr(self.K2)
         
         # b = K m
         self.b = df.PETScVector()        
@@ -88,6 +119,7 @@ class ExchangeDG(object):
         self.H_eff = m.vector().array()
         
         self.m_x = df.PETScVector(self.m.vector().size()/3)
+        
     
     @mtimed
     def compute_field(self):
@@ -99,7 +131,7 @@ class ExchangeDG(object):
         for i in range(3):
             self.m_x.set_local(mm[i])
             self.K1.mult(self.m_x, self.b)
-            self.bc.apply(self.b)
+            #self.bc.apply(self.b)      
             
             H = self.solver(self.b.array())
             #df.solve(self.A, self.sigma_v, self.b)
@@ -120,7 +152,7 @@ class ExchangeDG(object):
     
 
 
-class ExchangeDG2(object):
+class ExchangeDG(object):
     def __init__(self, C, in_jacobian = False, name='ExchangeDG'):
         self.C = C
         self.in_jacobian=in_jacobian
@@ -136,20 +168,24 @@ class ExchangeDG2(object):
         mesh = DG3.mesh()
         
         DG = df.FunctionSpace(mesh, "DG", 0)
-        CG3 = df.FunctionSpace(mesh, "BDM", 1)
+        BDM = df.FunctionSpace(mesh, "BDM", 1)
     
         n = df.FacetNormal(mesh)
     
         u_dg = df.TrialFunction(DG)
         v_dg = df.TestFunction(DG)
     
-        u3 = df.TrialFunction(CG3)
-        v3 = df.TestFunction(CG3)
+        u3 = df.TrialFunction(BDM)
+        v3 = df.TestFunction(BDM)
     
         #a1 = u_dg * df.inner(v3, n) * df.ds - u_dg * df.div(v3) * df.dx
         a1 = u_dg * df.inner(v3, n) * df.ds - u_dg * df.div(v3) * df.dx
         self.K1 = sp.csr_matrix(df.assemble(a1).array())
-        self.L3 = df.assemble(df.dot(v3, df.Constant([1,1,1])) * df.dx).array()
+        
+        f_ones = df.Function(BDM)
+        f_ones.vector()[:] = 1
+        self.L3 = df.assemble(df.dot(f_ones, v3) * df.dx).array()
+        print 'YY'*50, self.L3
     
         a2 = df.div(u3) * v_dg * df.dx
         self.K2 = sp.csr_matrix(df.assemble(a2).array())
@@ -159,7 +195,7 @@ class ExchangeDG2(object):
         self.exchange_factor = 2.0 * self.C / (self.mu0 * Ms * self.unit_length**2)
         
         # coeff1 should multiply something, I have no idea so far ....
-        self.coeff1 = 1.0
+        self.coeff1 = -1/self.L3
         self.coeff2 = self.exchange_factor/self.L
         
         self.H = m.vector().array()

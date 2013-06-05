@@ -256,7 +256,7 @@ if __name__=="__main__":
     minx = -3
     maxx = 2
     n = 5
-    mesh = df.Interval(n,minx,maxx)
+    mesh = df.IntervalMesh(n,minx,maxx)
     #V = df.FunctionSpace(mesh,"CG",1)
     V = df.FunctionSpace(mesh,"CG",2)
     test_shape_function_volumes(V)
