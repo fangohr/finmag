@@ -6,6 +6,8 @@ import os
 from finmag.util.helpers import *
 from finmag.util.meshes import box, cylinder
 
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 TOLERANCE = 1e-15
 
 def test_components():
@@ -365,7 +367,7 @@ def test_probe():
 
 
 def test_binary_tarball_name(tmpdir):
-    finmag_repo = os.path.abspath(os.curdir)
+    finmag_repo = MODULE_DIR
     os.chdir(str(tmpdir))
     os.mkdir('invalid_repo')
     with pytest.raises(ValueError):
