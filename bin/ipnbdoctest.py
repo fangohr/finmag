@@ -157,6 +157,21 @@ def run_cell(km, cell):
     return outs
 
 
+def merge_streams(outputs):
+    if outputs == []:
+        return []
+
+    res = outputs[:1]
+    for out in outputs[1:]:
+        prev_out = res[-1]
+        if (prev_out['output_type'] == 'stream' and out['output_type'] == 'stream' and prev_out['stream'] == out['stream']):
+            prev_out['text'] += out['text']
+        else:
+            res.append(out)
+
+    return res
+
+
 def test_notebook(nb):
     km = BlockingKernelManager()
     km.start_kernel(extra_arguments=['--pylab=inline'],
@@ -188,7 +203,9 @@ def test_notebook(nb):
                 continue
 
             failed = False
-            for out, ref in zip(outs, cell.outputs):
+            outs_merged = merge_streams(outs)
+            cell_outputs_merged = merge_streams(cell.outputs)
+            for out, ref in zip(outs_merged, cell_outputs_merged):
                 if not compare_outputs(out, ref):
                     failed = True
             if failed:
