@@ -1,5 +1,8 @@
 import numpy as np
 import dolfin as df
+import tempfile
+import pytest
+import os
 from finmag.util.helpers import *
 from finmag.util.meshes import box, cylinder
 
@@ -359,6 +362,20 @@ def test_probe():
     # Check that the non-masked values are the same
     assert(np.ma.allclose(res1, res1_expected))
     assert(np.ma.allclose(res2, res2_expected))
+
+
+def test_binary_tarball_name(tmpdir):
+    finmag_repo = os.path.abspath(os.curdir)
+    os.chdir(str(tmpdir))
+    os.mkdir('invalid_repo')
+    with pytest.raises(ValueError):
+        binary_tarball_name('nonexisting_directory')
+    with pytest.raises(ValueError):
+        binary_tarball_name('invalid_repo')
+    with pytest.raises(ValueError):
+        binary_tarball_name(finmag_repo, revision='invalid_revision')
+    expected_tarball_name = 'FinMag-dist__2013-06-03__rev3572_c648f1a0acd5_foobar.tar.bz2'
+    assert(binary_tarball_name(finmag_repo, revision='c648f1a0acd5', suffix='_foobar') == expected_tarball_name)
 
 
 if __name__ == '__main__':
