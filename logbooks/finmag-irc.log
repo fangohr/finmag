@@ -6228,3 +6228,120 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-06-05 11:18:41 fangohr: So as long as we have 5 or fewer users per pad, it should be free. I think.
 2013-06-05 11:46:02 mb8g11: So you, Becky and I + Simon and Murali? We will use IRC to communicate with Dmitri.
 2013-06-05 13:12:46 fangohr: Marc-Antonio, yes, I'd say so.
+2013-06-05 18:47:00 mb8g11: Dmitri, just wanted to say we managed to get your code to compile and the test suite to run without errors :)
+2013-06-05 18:47:00 D_Chernyshenko: Ah excellent
+2013-06-05 18:47:00 D_Chernyshenko: I will be around tomorrow afternoon. Still a bit ill but I stopped coughing, so hopefully its safe to be at the office now
+2013-06-05 18:48:00 mb8g11: After installing all the packages we needed, we just needed to tweak the PYTHONPATH set in the Makefile and the location of oommf.
+2013-06-05 18:48:00 D_Chernyshenko: Ah right, the oommf location
+2013-06-05 18:48:00 D_Chernyshenko: I guess I need to adjust it so that it works the same way we have it in finmag
+2013-06-05 18:49:00 max_albert: Hi Dmitri, sorry to hear you are ill! Hope you'll be better very soon!
+2013-06-05 18:49:00 D_Chernyshenko: We've done a lot of improvements to the Makefile in finmag but I haven't backported them to simlib 
+2013-06-05 18:49:00 max_albert: I also managed to compile your code (nearly without problems) and actually just ran your sample normal mode computation. :)
+2013-06-05 18:49:00 max_albert: Just needed a couple of tweaks.
+2013-06-05 18:50:00 D_Chernyshenko: Ah great
+2013-06-05 18:50:00 max_albert: Now I just need to understand how to interpret the results. ;-)
+2013-06-05 18:50:00 max_albert: The eigenvalues should in theory correspond to the normal mode frequencies, right?
+2013-06-05 18:51:00 D_Chernyshenko: For the simulation with discs, I forgot to say but the code doesn't support non-rectangular regions. Adding support for regions via something like a spatiallly varyimg Ms would be easy, but I think oommf also does some corrections to demag for non-rectangular regions
+2013-06-05 18:51:00 D_Chernyshenko: Yes they should be, with proper units
+2013-06-05 18:52:00 D_Chernyshenko: I think my code adjusts the units so that eigenvalues = frequencies in GHz
+2013-06-05 18:52:00 D_Chernyshenko: (real part of eigenvalues)
+2013-06-05 18:53:00 max_albert: Ok. That sounds good. Which information is contained in the imaginary part?
+2013-06-05 18:53:00 D_Chernyshenko: The imaginary part determines the decay rate of the normal mode
+2013-06-05 18:53:00 max_albert: Ah, of course.
+2013-06-05 18:54:00 max_albert: Regarding your other comment, I was actually wondering whether non-rectangular regions would be supported. So it sounds like that would need some tweaking.
+2013-06-05 18:54:00 D_Chernyshenko: The ansatz solution is v exp(i omega t/[unit correction])
+2013-06-05 18:54:00 max_albert: Is a spatially varying value of Ms already possible?
+2013-06-05 18:54:00 D_Chernyshenko: Nope, but it would be very straightforward
+2013-06-05 18:55:00 max_albert: Ok, I'll take a look.
+2013-06-05 18:55:00 D_Chernyshenko: Probably easier than trying to run a 700nm simulation in finmag
+2013-06-05 18:55:00 max_albert: Yes, definitely. :)
+2013-06-05 18:55:00 D_Chernyshenko: Another option for you would be to use oommf and the dynamical method
+2013-06-05 18:57:00 max_albert: Yes. Although I tried the dynamical method with some smaller disks in Finmag yesterday and it wasn't straightforward to find a good excitation that would excite the modes so that I could plot them.
+2013-06-05 18:57:00 max_albert: But I didn't spend much time on it.
+2013-06-05 18:57:00 max_albert: Btw, if I want to plot the mode shapes with "your" method, these should be encoded in  the eigenvectors, right?
+2013-06-05 18:58:00 D_Chernyshenko: Yeah, are you trying to compute the damped or non-damped eigenmodes? Non-damped would be easier so you can start with those
+2013-06-05 18:59:00 max_albert: Yes, non-damped would be fine for now I guess. I presume this is what your code does? I haven't looked at how to compute non-damped modes yet.
+2013-06-05 18:59:00 D_Chernyshenko: The computed eigenvalues are normal modes in the "W" coordinate system in the space of 2d vectors perpendicular to m0
+2013-06-05 18:59:00 D_Chernyshenko: The computed eigenvalues are normal modes in the "W" coordinate system in the space of 2d vectors perpendicular to m0
+2013-06-05 19:00:00 D_Chernyshenko: So to get the normal modes in the ordinary R3 coordinate system, W needs to be multiplied by the Q matrix I think (or Q_inv)
+2013-06-05 19:00:00 D_Chernyshenko: You can see how I'm doing it in the normal modes simulation
+2013-06-05 19:00:00 D_Chernyshenko: (using the mf_mult function to multiply by Q at each mesh site)
+2013-06-05 19:01:00 max_albert: Oh yeah, I remember that d'Aquino did a coordinate transformation. That makes sense, I'll take a look.
+2013-06-05 19:01:00 max_albert: Thanks for your help!
+2013-06-05 19:01:00 max_albert: Need to head off now but hope to be in the office tomorrow.
+2013-06-05 19:01:00 max_albert: Have a good evening, everyone!
+2013-06-05 19:01:00 D_Chernyshenko: Okay
+2013-06-05 19:01:00 D_Chernyshenko: Have a good evening too
+2013-06-05 19:02:00 max_albert: And get better soon! ;-)
+2013-06-05 19:04:00 mb8g11: Good evening, don't worry about having to come in tomorrow Dmitri (at least not for me and Becky). We will have a look at the examples included in your code and try to come up with something simple on our own.
+2013-06-06 08:47:00 fangohr: Good Morning.
+2013-06-06 09:14:00 max_albert1: Test
+2013-06-06 09:39:00 max_albert1: Good morning! Can anybody read this? Trying to set up an IRC client on my laptop, but not sure it's working.
+2013-06-06 10:02:00 Beckie: Good Morning! Yes Max, it's working :)
+2013-06-06 10:56:00 fangohr: Max, testing, one, two, one, two. Seems to work :)
+2013-06-06 10:57:00 mb8g11_: Hi!
+2013-06-06 11:17:15 max_albert1: Awesome, thanks.
+2013-06-06 13:07:55 fangohr: Weiwei, etal, is our debian package for 13.04?
+2013-06-06 13:08:48 ww1g11__: no, it only for 12.10 and it seems still doesn't work properly
+2013-06-06 13:11:41 ww1g11__: but we can change it to 13.04 easily once I got it work
+2013-06-06 13:13:48 Beckie: http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=05268979
+2013-06-06 13:31:24 max_albert1: Hi Weiwei! How do you test the debian package? Is it worth setting up a virtual machine with a clean Ubuntu installation for this? (Otherwise it may be difficult to check e.g. that all dependencies are resolved correctly etc.)
+2013-06-06 13:32:27 ww1g11__: I only test it in my machine, I clean the finmag path, it looks like promising
+2013-06-06 13:32:42 ww1g11__: [2013-06-06 13:29:58] ERROR: thefile=/usr/lib/python2.7/dist-packages/finmag/util/versions.so
+2013-06-06 13:33:16 ww1g11__: /usr/lib/python2.7/dist-packages/finmag/util/versions.so in finmag.util.versions.running_binary_distribution (finmag/util/versions.c:3011)()
+2013-06-06 13:33:17 ww1g11__: RuntimeError: This is impossible.
+2013-06-06 13:33:37 ww1g11__: oh it seems that this error is expected
+2013-06-06 13:34:54 ww1g11__: I guess we need to generate some key files for finmag otherwise it should complain this
+2013-06-06 13:36:37 fangohr: Hi Weiwei, yes, you need to create a license file, although I would hope that the error message is more explicit about this. The right file to create license is in finmag-dist. Maybe Marc-Antonio knows the proceduce (generate license request file first, then create license from that request file), or ask again and I'll explain/come over.
+2013-06-06 13:37:56 fangohr: Max, having a (virtual?) machine to run the debian package test would be a good idea if we can arrange this somewhere. The main cost of doing this is the RAM for the virtual machine. Although I'd expect that if the machine is unused, the memory footprint is very small and most of it can be swapped out to disk if necessary.
+2013-06-06 13:38:43 max_albert1: The procedure for creating a license file should hopefully be explained well enough in the README file (in the finmag-dist repository). If not, let me know or feel free to edit it yourself. :)
+2013-06-06 13:38:52 ww1g11__: I realised this because yesterday I ever comment this line to debug the complier error, but the question is can we change the location of license file, I mean, in user's home directory
+2013-06-06 13:40:06 fangohr: The code that is looking for the license will look in various places (first local directory, then user home) I think, so this should work the same independent of whether you have the binary distribution or the debian package. It should (!) just work, if the right file is there.
+2013-06-06 13:40:59 max_albert1: Hans, I hadn't actually thought of running a test for installing the debian package, although this is a great idea if we can get it to work. I was more thinking of temporarily having a VM for debugging the debian package until it works.
+2013-06-06 13:55:14 fangohr: Max, that's also a good idea and the right way to go. Weiwei, I use 'virtual box' often for this kind of testing. Best to save a snapshot just after installing linux and running aptitude ugrade etc, so that you can go back to that state again and again to test new versions of the dpkg.
+2013-06-06 13:56:20 max_albert1: VirtualBox is already installed on aleph0. I wanted to set up a clean Ubuntu installation for testing the debian package but haven't gotton round to it. Feel free to do that, Weiwei, if you have the time.
+2013-06-06 13:57:41 ww1g11__: yeah, I will try once it works at this machine
+2013-06-06 13:58:01 mb8g11: D_Chernyshenko, the code in tests/fd/stdprob2/stdprob2.py references a VtkMeshfield. Where does this come from? It is not imported.
+2013-06-06 13:59:04 D_Chernyshenko: That is some very old attempt at a test for standard problem #2, and it doesn't work
+2013-06-06 13:59:31 ww1g11__: actually, this is a running bug
+2013-06-06 13:59:45 D_Chernyshenko: I dunno about VtkMeshfield though, why do you need stdprob2.py?
+2013-06-06 13:59:49 D_Chernyshenko: I probably should just delete it
+2013-06-06 14:00:05 D_Chernyshenko: Oh, is that in finmag?
+2013-06-06 14:00:30 mb8g11: No no, simlib. Just digging into the code. We want to find out how to export to VTK, if this is implemented.
+2013-06-06 14:00:44 D_Chernyshenko: It is, let me see
+2013-06-06 14:02:32 D_Chernyshenko: Okay, this is defined in src/simlib/fd/paraview_plot.py and the method is called save_vector_field
+2013-06-06 14:03:35 D_Chernyshenko: If you want to adjust it I guess you can just copy the recipe, it's fairly simple
+2013-06-06 14:04:43 D_Chernyshenko: Unfortunately that file imports lxml and paraview even though it's not used in the method itself (only used for the xml export which doesn't work for some reason)
+2013-06-06 14:04:50 D_Chernyshenko: *xdmf export
+2013-06-06 14:06:48 mb8g11: Thank you!
+2013-06-06 14:25:55 max_albert1: How do you restart him again?
+2013-06-06 14:27:54 mb8g11: Log into aleph0, "sudo start dokosbot"
+2013-06-06 14:28:42 max_albert1: Neat! :)
+2013-06-06 14:35:43 mb8g11: Our mailing list: http://aleph0.kk.soton.ac.uk:8008/html/
+2013-06-06 14:36:45 max_albert1: Even neater! :) I had forgotten that we keep an archive of those.
+2013-06-06 14:38:02 mb8g11: At some point Marvin got a gmail adress. He is subscribed to our mailing list and downloads them to a mbox in his home directory.
+2013-06-06 14:38:17 mb8g11: From time to time, I run the command to update the html ;-) Will automate that now.
+2013-06-06 14:38:50 max_albert1: He is a clever fellow, our Marvin. Brain the size of a planet.
+2013-06-06 14:40:16 mb8g11: What is it with IRC and ping timeouts these days?
+2013-06-06 14:44:33 mb8g11: Haha, he is. He will also update the HTML every night.
+2013-06-06 14:44:43 mb8g11: He's such a fast learner ;-)
+2013-06-06 14:45:26 fangohr: … and where are the chats of the last 24 hours or so hosted?
+2013-06-06 14:55:33 fangohr: Hi Max, I think I have just discovered that sumatra is based on Django? (By trying to open http://aleph0.kk.soton.ac.uk:8000). Interesting - I should have guessed that Django (or Ruby) might be involved.
+2013-06-06 15:08:11 mb8g11: The logs of the last 24 hours? Why, they are where they always are O:)
+2013-06-06 15:09:53 mb8g11: Oh wait.
+2013-06-06 15:11:10 mb8g11: I copied the chat of the time Dokos was down into the logfile by hand to be able to make this remark, but that's not what you meant.
+2013-06-06 15:12:13 fangohr: No ;-)  -  I meant the cherrypy-based dynamic webpage creation that internally would run a 'tail -n 50' or so to create the page content. If that makes any sense to you.
+2013-06-06 15:12:36 mb8g11: Yes, the one you asked me to re-enable. Checking what's wrong.
+2013-06-06 15:14:05 mb8g11: Aah. Port 8080 is not free anymore, since that is where Jenkins runs. Fixing it.
+2013-06-06 15:17:13 max_albert1: Hi Hans, yes Sumatra is based on Django. The web interface for viewing simulation records is actually not bad (could be improved, but it's very nice to quickly navigate through results). The error message you saw is probably related to some hacks which I added to my local sumatra repository which changed something in the configuration or so. I should actually terminate that server.
+2013-06-06 15:20:14 MarkV: I'm having a strange error when importing finmag in python (on 12.10) any clues?:
+2013-06-06 15:20:20 MarkV: /home/mark/Desktop/treecode_bem.py in init finmag.energies.demag.treecode_bem (finmag/energies/demag/treecode_bem.c:4626)()
+2013-06-06 15:20:24 MarkV: /home/mark/Desktop/numpy.pxd in init treecode_bem (treecode_bem_lib.c:5325)()
+2013-06-06 15:20:26 MarkV: ValueError: numpy.dtype has the wrong size, try recompiling
+2013-06-06 15:21:31 fangohr: This is one for Weiwei; maybe.
+2013-06-06 15:22:54 MarkV: Weiwei can import it correctly on his machine, though mine seems to disagree.
+2013-06-06 15:41:34 mb8g11: Have to take Marvin offline for a sec.
+2013-06-06 15:43:31 mb8g11: Welcome back.
+2013-06-06 15:47:26 mb8g11: Okay, http://aleph0.kk.soton.ac.uk:8008/ The file finmag-irc-today.log will only show today's discussion.
+2013-06-06 16:55:31 fangohr: Marijan, Beckie, very impressive progress.
+2013-06-06 23:47:28 fangohr: One more comment on Marvin_Bot: he has disappeared repeatedly in the recent past: this could be just a network connection going down somewhere in building 25 or so, or the process stopping. When this happened in the past and I logged onto the machine (summer.kk at the time), I noticed that the process had actually died. If this is still the case, we could use something like the 'monit' deamon to check for the existence of the process, and
