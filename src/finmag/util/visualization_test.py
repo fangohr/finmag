@@ -3,8 +3,6 @@ import pytest
 import os
 from finmag.util.visualization import render_paraview_scene
 
-# Skipping this test for now because it might not work without running X server
-@pytest.skip
 def test_render_paraview_scene(tmpdir):
     """
     This simply checks whether we can call the function. No check on
@@ -18,4 +16,4 @@ def test_render_paraview_scene(tmpdir):
     # XXX TODO: Maybe call this function a few times with varying parameters?
     render_paraview_scene(
         'initial_state000000.vtu', 'initial_state.png',
-        color_by_axis='Z', rescale_colormap_to_data_range=False)
+        color_by_axis='Z', rescale_colormap_to_data_range=False, debugging=False)
