@@ -6345,3 +6345,91 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-06-06 15:47:26 mb8g11: Okay, http://aleph0.kk.soton.ac.uk:8008/ The file finmag-irc-today.log will only show today's discussion.
 2013-06-06 16:55:31 fangohr: Marijan, Beckie, very impressive progress.
 2013-06-06 23:47:28 fangohr: One more comment on Marvin_Bot: he has disappeared repeatedly in the recent past: this could be just a network connection going down somewhere in building 25 or so, or the process stopping. When this happened in the past and I logged onto the machine (summer.kk at the time), I noticed that the process had actually died. If this is still the case, we could use something like the 'monit' deamon to check for the existence of the process, and
+2013-06-07 09:08:49 fangohr: Good Morning.
+2013-06-07 09:09:19 Beckie: I disagree. I'm going to get very wet ver soon :-S
+2013-06-07 09:10:51 Beckie: (so it's not a good morning!)
+2013-06-07 09:20:28 fangohr: Arr, yes, I did already get wet racing on my scooter through highfield. So my outlook is now positive. It is meant (!) to get nice later in the day though ...
+2013-06-07 10:39:54 fangohr-adium1: Hi Dmitri, do you mind if Marc-Antonio and Max push improvements to simlib to the repository, or would you rather review/discuss those first? (If you are reading this.)
+2013-06-07 11:42:27 mb8g11: ipython notebook http://ipython.org/notebook.html
+2013-06-07 11:44:27 MarkV: Finmag imports with no errors (from the deb file), am looking for an example to run.
+2013-06-07 11:52:27 fangohr: Whoohoo.
+2013-06-07 11:52:51 fangohr: If somebody (??) can give you the ipython notebooks for finmag, you have plenty of examples in there.
+2013-06-07 11:52:56 fangohr: Have you got a license file already?
+2013-06-07 11:54:26 fangohr: Here is a quick one to check:
+2013-06-07 11:54:28 fangohr: import finmag
+2013-06-07 11:54:37 fangohr: s = finmag.example.barmini()
+2013-06-07 11:55:05 fangohr: s.run_until(1e-6)
+2013-06-07 12:03:15 fangohr-adium1: From the deb-file?? Didn't even see that. Even better.
+2013-06-07 12:13:05 MarkV: Yes, the examples work, am now looking at the ipython notebook tutorials :).
+2013-06-07 12:13:29 fangohr: Very good; all sorted then ;-)
+2013-06-07 12:15:14 fangohr: Weiwei, the installation on Mark's machine is using your debian package and you have built this on osiris?
+2013-06-07 12:15:50 ww1g11__: yes, it the one built on osiris
+2013-06-07 12:15:51 fangohr: What have we done with the license file? Did you create one for Mark and gave that to him, or is it included in the debian package (I'd prefer the former).
+2013-06-07 12:16:27 ww1g11__: I create it for Mark separately
+2013-06-07 12:16:33 fangohr: Good.
+2013-06-07 12:17:09 fangohr: Could you create a binary debian file on a 12.10 Ubuntu system (but not mint as this may not work) and try to install this (with Marijan) on the macihne for Matt? It should (!) just work...maybe?
+2013-06-07 12:19:09 ww1g11__: yeah, maybe we can create a virtual machine to build the deb package automatically in Jenkins ?
+2013-06-07 12:19:23 ww1g11__: just like the ubuntu 12.04
+2013-06-07 12:19:34 max_albert: Yes, that should be possible.
+2013-06-07 12:20:23 max_albert: I saw that there is a command called 'VBoxManage'. It  looks that this can be used to control a virtual machine form the command line or from within a script.
+2013-06-07 12:20:40 max_albert: See: http://www.virtualbox.org/manual/ch08.html
+2013-06-07 12:21:11 max_albert: With this it should be possible to create a slave process within a VM which can be called from Jenkins.
+2013-06-07 12:21:44 max_albert: So we may be able to create different VMs with different operating systems, but run them all on aleph0 and so keep the entire test environment on a single machine.
+2013-06-07 12:21:52 max_albert: Not sure if this is desirable, but it's kinda neat. :)
+2013-06-07 12:27:32 ww1g11__: yeah, we can try this later.
+2013-06-07 12:28:49 mb8g11: I have set up an Ubuntu 13.04 installation in VirtualBox on aleph0.
+2013-06-07 12:41:54 fangohr-adium1: Max, that sounds very neat.
+2013-06-07 12:42:40 max_albert: Geekgasm!! :-)
+2013-06-07 12:43:02 max_albert: I think I have finally found a way to solve the annoying problem that the Paraview visualizations wouldn't work in notebooks or via ssh.
+2013-06-07 12:43:14 fangohr-adium1: Weiwei, can you test the 12.10 binary now (build it manually if required): Marijan needs to set up the machine for Matt today as Matt will come in Monday morning, and Marijan will be in York.
+2013-06-07 12:43:24 fangohr-adium1: Glad to see you are happy, Max :)
+2013-06-07 12:43:44 max_albert: ;-)
+2013-06-07 12:44:28 ww1g11__: sure, I only need to find a ubuntu 12.10, or I can install it using the virtual machine
+2013-06-07 12:44:57 max_albert: The process which renders the scene via Paraview now uses a display in a virtual framebuffer so no X server is required. So now plotting via Paraview should work in any context, in particular from within IPython notebooks etc.
+2013-06-07 12:45:33 fangohr: Weiwei, great, thank you.
+2013-06-07 12:45:44 fangohr: Nice, Max.
+2013-06-07 12:46:35 max_albert: And also from within screen sessions (which stopped me from visualising anything earlier this week whilst working via ssh during the workshop).
+2013-06-07 12:47:44 max_albert: Just as a note, it requires xvfb to be installed, so if anybody wants to use the paraview visualization then they now need to install the corresponding Ubuntu package.
+2013-06-07 12:47:50 max_albert: I'm pPlanning to change it so that
+2013-06-07 12:48:35 max_albert: Sorry! Meant to say that I'm planning to change it so that it tries the normal rendering first and only falls back to Xvfb if an error occurs, but I think that'll require more time and testing so I'm leaving it for now.
+2013-06-07 14:03:23 mb8g11: That's pretty cool Max.
+2013-06-07 14:13:04 fangohr-adium1: Weiwei, I was delayed a little. Can you come over in 10 minutes, please? I'll ping again when I am ready.
+2013-06-07 14:13:27 ww1g11__: no problem
+2013-06-07 14:17:48 mb8g11: simlib core dumps...
+2013-06-07 14:18:02 D_Chernyshenko: Oh dear
+2013-06-07 14:18:06 mb8g11: Haha.
+2013-06-07 14:18:19 mb8g11: Installing python debugging symbols, let's what it is.
+2013-06-07 14:18:25 mb8g11: +see
+2013-06-07 14:18:44 D_Chernyshenko: Hmm, I had problems running finmag under the debug version of python
+2013-06-07 14:19:00 D_Chernyshenko: Maybe simlib can work though
+2013-06-07 14:31:45 fangohr: Weiwei, I am ready now.
+2013-06-07 15:06:44 mb8g11: Okay, I've narrowed it down. Calling native.newell_N_digits with x >= 10^11 will raise "../../src/const_pi.c:90: MPFR assertion failed: (__builtin_constant_p (1) && (mpfr_ulong) (1) == 0 ? (mpfr_sgn) (S) : mpfr_cmp_ui_2exp ((S), (1), 0)) < 0" on line 847 in demag_tensor.cc. Is there anything you know about this? No worries, I don't need simlib urgently.
+2013-06-07 15:08:21 mb8g11: The crash occurs when I run src/simlib/fd/tests/demag_tensor_tests.py on my machine.
+2013-06-07 15:08:48 D_Chernyshenko: I think I had this before
+2013-06-07 15:09:49 D_Chernyshenko: Does it only happen when you run the test, or when you run your code as well
+2013-06-07 15:10:02 D_Chernyshenko: This is a really annoying bug in MPFR
+2013-06-07 15:10:29 mb8g11: I can reproduce it on its own.
+2013-06-07 15:11:37 D_Chernyshenko: I mean, does it prevent you from using simlib
+2013-06-07 15:11:59 D_Chernyshenko: The bug is in the high-precision calculation of PI which is not needed for normal operation, only when I'm testing my demag tensor stuff
+2013-06-07 15:12:37 D_Chernyshenko: I will look into how to disable it, I never found a workaround for that bug, apart from fiddling with the # of digits until the problem went away
+2013-06-07 15:13:03 D_Chernyshenko: Just need to organise the code so that pi is not calculated during normal operation
+2013-06-07 15:13:04 mb8g11: I see. I can use simlib fine, just wanted to let you know.
+2013-06-07 15:13:20 D_Chernyshenko: Yeah that bug was really annoying and I wasted a lot of time on it
+2013-06-07 15:13:34 mb8g11: What happens?
+2013-06-07 15:13:48 D_Chernyshenko: Well its that assertion during the calculation of pi
+2013-06-07 15:14:29 D_Chernyshenko: And I could never find why it happend
+2013-06-07 15:15:00 D_Chernyshenko: Couldn't find anything on google, but it looks like there are some "safe" values of precision where it doesn't occur
+2013-06-07 15:15:07 D_Chernyshenko: But looks like that is machine-dependent, too
+2013-06-07 15:15:28 D_Chernyshenko: Didn't you say that all simlib tests passed on your machine? Or was that Max
+2013-06-07 15:16:22 mb8g11: All the tests passed on Beckies machine, where we installed simlib first.
+2013-06-07 15:16:55 mb8g11: I thought it may be good to have it on my computer too, where I stumbled upon this.
+2013-06-07 15:17:12 mb8g11: Sounds like a really elusive bug.
+2013-06-07 15:17:39 D_Chernyshenko: Anyway, MPFR is the GNU high-precision floating point library. It seems that the bug happens when pi is computed to a requested number of digits. I don't see any way to influence it (apart from changing precision)
+2013-06-07 15:18:02 D_Chernyshenko: Since the computation of pi should "just work", it's just a constant.
+2013-06-07 15:18:51 D_Chernyshenko: However, since high-precision computation is not needed for normal simulations, we can make it so that the relevant code isn't run, unless we're running demag tensor tests.
+2013-06-07 15:19:53 mb8g11: Yo.
+2013-06-07 15:31:12 mb8g11: Thx for the explanation :)
+2013-06-07 16:53:45 fangohr: Beckie, well done finding the material parameters. Can you add the journal reference (name, volume, page number and year) to the hack pad? Will be useful later when you have forgotten which paper this was ;-)
+2013-06-07 16:54:58 Beckie: will do!
+2013-06-07 17:11:56 fangohr: Don't work too long - over and out from here.
+2013-06-07 18:25:50 mb8g11: Okay, okay, if you insist ;-) Bye!
