@@ -34,6 +34,7 @@ cleansrc:
 cp:
 	python distcp.py ${FINMAGDIST_BUILD_DIR}
 	cp ../pytest.ini ${FINMAGDIST_BUILD_DIR}
+	cp *.egg-info ${FINMAGDIST_BUILD_DIR}
 
 test:
 	@echo "Running target 'test' using PYTHONPATH=${FINMAGDIST_BUILD_DIR}"
@@ -59,7 +60,7 @@ endif
 		--exclude=_mat.xml \
 		--exclude=_bi.xml \
 		--exclude=unnamed.log\
-		--exclude=__pycache__ finmag
+		--exclude=__pycache__ . 
 
 cleanbin:
 	cd ${FINMAGDIST_BUILD_DIR}/finmag && find . -name "*.so" | xargs rm -f
