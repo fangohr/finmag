@@ -152,15 +152,15 @@ def running_binary_distribution():
 
     thefile = __file__
 
-    if thefile.split('.')[1] in ['py', 'pyc']:
+    if thefile.endswith('.py') or thefile.endswith('.pyc'):
         #logger.debug("Running source code version")
         return False
-    elif thefile.split('.')[1] == 'so':
+    elif thefile.endswith('.so'):
         #logger.debug("Binary finmag distribution")
         return True
     else:
         logger.error("thefile=%s" % thefile)
-    raise RuntimeError("This is impossible.")
+    raise RuntimeError("Checking running_binary_distribution failed!")
 
 def loose_compare_ubuntu_version(v1,v2):
     
