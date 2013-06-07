@@ -1,0 +1,10 @@
+Metadata-Version: 1.0
+Name: Finmag
+Version: 0.1
+Summary: FinMag - a thin layer on top of FEniCS to enable micromagnetic multi-physics simulations.
+Home-page: UNKNOWN
+Author: Hans Fangohr
+Author-email: fangohr@soton.ac.uk
+License: UNKNOWN
+Description: UNKNOWN
+Platform: UNKNOWN
