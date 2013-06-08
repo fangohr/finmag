@@ -511,6 +511,8 @@ class Simulation(object):
     
     T = property(__get_T, __set_T)
 
+    run_normal_modes_computation = sim_helpers.run_normal_modes_computation
+
     def reinit_integrator(self):
         """
         If an integrator is already present in the simulation, call

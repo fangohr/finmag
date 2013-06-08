@@ -4,6 +4,8 @@ import sim_helpers
 from datetime import datetime, timedelta
 from finmag.example import barmini
 from finmag.integrators.llg_integrator import llg_integrator
+from finmag.util.helpers import assert_number_of_files
+from finmag.util.fileio import Tablereader
 
 
 def test_can_read_restart_file():
@@ -84,6 +86,44 @@ def test_create_backup_if_file_exists():
     assert open(backupfilename).readline()[:-1] == "Hello World"
 
     assert open(backupfilename).read() == open(testfilename).read()
+
+
+def test_run_normal_modes_computation(tmpdir):
+    os.chdir(str(tmpdir))
+    sim = barmini(name='barmini')
+    # XXX TODO: Do we need stopping keywords?
+    #sim.run_normal_modes_computation(alpha_relax=1.0, alpha_precess=0.01, t_end=10e-9, save_ndt_every=1e-11, save_vtk_every=None, )
+    params_relax = {
+        'alpha': 1.0,
+	'H_ext': [1e3, 0, ],
+	'save_ndt_every': None,
+	'save_vtk_every': None,
+	'save_npy_every': None,
+	'save_relaxed_state': True,
+	'filename': None
+	}
+    params_precess = {
+        'alpha': 0.0,
+	'H_ext': [1e3, 0, 0],
+	't_end': 1e-10,
+	'save_ndt_every': 1e-11,
+	'save_vtk_every': 3e-11,
+	'save_npy_every': 2e-11,
+	'filename': None,
+	}
+    sim.run_normal_modes_computation(params_relax, params_precess)
+
+    # XXX TODO: We should change the filename of the .ndt file to 'barmini_precess.ndt'
+    #           once different filenames for .ndt files are supported.
+    f = Tablereader('barmini.ndt')
+    ts, mx, my, mz = f['time', 'm_x', 'm_y', 'm_z']
+    assert(len(ts) == 11)
+    assert_number_of_files('*_relaxed.npy', 1)
+    assert_number_of_files('*_relaxed.pvd', 1)
+    assert_number_of_files('*_relaxed*.vtu', 1)
+    assert_number_of_files('*_precess.pvd', 1)
+    assert_number_of_files('*_precess*.vtu', 4)
+    assert_number_of_files('*_precess*.npy', 6)
 
 
 if __name__ == '__main__':
