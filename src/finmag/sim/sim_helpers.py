@@ -83,3 +83,69 @@ def load_restart_data(filename_or_simulation):
         else:
             data2[key] = data[key]
     return data2
+
+
+def run_normal_modes_computation(sim, params_relax=None, params_precess=None):
+    """
+    Run a normal modes computation consisting of two stages. During the first
+    stage, the simulation is relaxed with the given parameters. During the
+    second ('precessional') stage, the computation is run up to a certain
+    time. The magnetisation can be saved at regular intervals (specified by
+    the corresponding parameters in params_relax and params_precess), and this
+    can be used for post-processing such as plotting normal modes, etc.
+
+    XXX TODO: Document the parameter dictionaries params_relax, params_precess.
+
+    """
+    default_params_relax = {
+        'alpha': 1.0,
+        'H_ext': None,
+        'save_ndt_every': None,
+        'save_vtk_every': None,
+        'save_npy_every': None,
+        'save_relaxed_vtk': True,
+        'save_relaxed_npy': True,
+        'filename': None
+        }
+
+    default_params_precess = {
+        'alpha': 0.0,
+        'H_ext': None,
+        'save_ndt_every': 1e-11,
+        'save_vtk_every': None,
+        'save_npy_every': None,
+	't_end': 10e-9,
+        'filename': None
+        }
+
+    #if params_precess == None:
+    #    raise ValueError("No precession parameters given. Expected params_precess != None.")
+
+    def set_simulation_parameters_and_schedule(sim, params, suffix=''):
+        sim.alpha = params['alpha']
+        sim.set_H_ext = params['H_ext']
+        #if params['save_ndt_every'] != None: sim.schedule('save_ndt', filename=sim.name + '_precess.ndt', every=params['save_ndt_every'])
+        if params['save_ndt_every'] != None: sim.schedule('save_ndt', every=params['save_ndt_every'])
+        #if params['save_ndt_every'] != None: raise NotImplementedError("XXX FIXME: This is currently not implemented because we need a different .ndt filename but it cannot be changed at present.")
+        if params['save_vtk_every'] != None: sim.schedule('save_vtk', filename=sim.name + suffix + '.pvd', every=params['save_vtk_every'])
+        if params['save_npy_every'] != None: sim.schedule('save_field', 'm', filename=sim.name + suffix + '.npy', every=params['save_npy_every'])
+
+    if params_relax == None:
+	pass  # skip the relaxation phase
+    else:
+        params = default_params_relax
+	params.update(params_relax)
+        set_simulation_parameters_and_schedule(sim, params, suffix='_relax')
+ 	sim.relax()
+	if params['save_relaxed_vtk']:
+	    sim.save_vtk(filename=sim.name + '_relaxed.pvd')
+	if params['save_relaxed_npy']:
+	    sim.save_field('m', filename=sim.name + '_relaxed.npy')
+
+    sim.reset_time(0.0)
+    sim.clear_schedule()
+    params = default_params_precess
+    if params_precess != None:
+        params.update(params_precess)
+    set_simulation_parameters_and_schedule(sim, params, suffix='_precess')
+    sim.run_until(params['t_end'])
