@@ -6450,3 +6450,29 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-06-12 10:17:43 max_albert: Good morning.
 2013-06-12 10:17:49 mb8g11: Hi Hans.
 2013-06-12 10:30:50 Matt_mc8g08: Morning
+2013-06-13 09:58:20 fangohr: Good Morning.
+2013-06-13 10:11:04 Beckie: Morning!
+2013-06-13 11:25:42 Beckie: D_Chernyshenko in simlib is it possible to have a cuboidal mesh structure rather than cubes? As in, can I have a finer mesh structure in a particular direction?
+2013-06-13 11:27:02 D_Chernyshenko: Yes, when you create the Mesh object you specify the cell size in each direction, they don't have to be equal
+2013-06-13 11:27:28 Beckie: cheers
+2013-06-13 11:28:25 D_Chernyshenko: You can create the Mesh using the parameters for cell size + number of cells in each direction, or the size of the whole region + number of cells in each direction
+2013-06-13 13:28:05 mb8g11: http://imgur.com/LjvoM6F :-( That's mine.
+2013-06-13 13:28:39 fangohr: Oh no! What happened?
+2013-06-13 13:30:18 mb8g11: Didn't you get my emails?
+2013-06-13 13:30:37 mb8g11: Basically I didn't properly secure the window when opening it, it turned around and shattered.
+2013-06-13 13:31:16 fangohr: Nope, didn't get any email from you.
+2013-06-13 13:31:17 fangohr: Oops.
+2013-06-13 13:31:40 mb8g11: (sent them from my mobile phone - good to know, thanks, because the agency is waiting for a picture)
+2013-06-13 13:31:50 mb8g11: A glazier will be here at 0200
+2013-06-13 13:33:40 mb8g11: Ah, sent them to your gmail account on accident.
+2013-06-13 13:34:01 fangohr: Okay. So you'll miss out on the meeting; never mind.
+2013-06-13 13:34:29 fangohr: Yes, emails arrived in gmail account - just didn't check there.
+2013-06-13 13:34:37 fangohr: Where is the flat?
+2013-06-13 13:34:53 mb8g11: I know, bummer. Was looking forward to Beckie's, Matt's and Mark's presentations.
+2013-06-13 13:35:09 mb8g11: Glenwood Ave in Bassett.
+2013-06-13 13:38:56 mb8g11: Why? Catastrophy Tourism in mind? ;-)
+2013-06-13 13:39:43 fangohr: No, just curious. I was living in Bencraft Court for a year. Not to mention my 5 years in St Mary's. So was just curious where this fitted in.
+2013-06-13 13:42:27 mb8g11: Bencraft Court, is that the one further away?
+2013-06-13 13:43:25 mb8g11: Ah, no.
+2013-06-13 13:44:41 mb8g11: Basically, I'm just north of the Glen Eyre complex.
+2013-06-13 13:45:30 mb8g11: You may remember dropping me off there after our dinner with Anil.
