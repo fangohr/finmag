@@ -579,12 +579,11 @@ def scalar_valued_dg_function(value, mesh_or_space):
             raise RuntimeError("Meshes are not compatible for given function.")
     elif hasattr(value, '__call__'):
         fun = df.Function(dg)
-        cds=mesh.coordinates()
-    
+        
         index=0
         for cell in df.cells(mesh):
-            p1,p2,p3,p4=cell.entities(0)
-            coord=(cds[p1]+cds[p2]+cds[p3]+cds[p4])/4.0
+            p = cell.midpoint()
+            coord=np.array([p.x(),p.y(),p.z()])
             fun.vector()[index] = value(coord)
             index+=1
             

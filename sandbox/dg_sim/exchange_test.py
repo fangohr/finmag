@@ -107,12 +107,12 @@ if __name__ == "__main__2":
 
 if __name__ == "__main__":
     #mesh = df.IntervalMesh(5, 0, 2*np.pi)
-    mesh = df.BoxMesh(0,0,0,2*np.pi,10,1,40, 1, 1)
+    mesh = df.BoxMesh(0,0,0,2*np.pi,10,1,40, 2, 2)
     #mesh = df.RectangleMesh(0,0,2*np.pi,1,10,1)
     
     S3 = df.VectorFunctionSpace(mesh, "DG", 0, dim=3)
     C = 1.0
-    expr = df.Expression(('sin(0.5*x[0])', 'sin(x[0])','cos(x[0])'))
+    expr = df.Expression(('0', 'sin(x[0])','cos(x[0])'))
     Ms = 8.6e5
     m = df.interpolate(expr, S3)
     
