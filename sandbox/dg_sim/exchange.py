@@ -41,7 +41,7 @@ def copy_petsc_to_csr(pm):
     return matrix.tocsr()
 
 
-class ExchangeDG2(object):
+class ExchangeDG(object):
     def __init__(self, C, in_jacobian = True, name='ExchangeDG'):
         self.C = C
         self.in_jacobian=in_jacobian
@@ -58,7 +58,7 @@ class ExchangeDG2(object):
         self.mesh = mesh
         
         DG = df.FunctionSpace(mesh, "DG", 0)
-        BDM = df.FunctionSpace(mesh, "BDM", 1)
+        BDM = df.FunctionSpace(mesh, "RT", 1)
         
         #deal with three components simultaneously, each represents a vector
        
@@ -88,7 +88,11 @@ class ExchangeDG2(object):
         
         zero = df.Constant((0,0,0))
         self.bc = df.DirichletBC(BDM, zero, boundary)
-        #self.bc.apply(self.A)
+        #print 'before',self.A.array()
+        
+        self.bc.apply(self.A)
+        
+        #print 'after',self.A.array()
         
         #AA = sp.lil_matrix(self.A.array())
         AA = copy_petsc_to_csc(self.A)
@@ -131,7 +135,7 @@ class ExchangeDG2(object):
         for i in range(3):
             self.m_x.set_local(mm[i])
             self.K1.mult(self.m_x, self.b)
-            #self.bc.apply(self.b)      
+            self.bc.apply(self.b)      
             
             H = self.solver(self.b.array())
             #df.solve(self.A, self.sigma_v, self.b)
@@ -152,7 +156,7 @@ class ExchangeDG2(object):
     
 
 
-class ExchangeDG(object):
+class ExchangeDG2(object):
     def __init__(self, C, in_jacobian = False, name='ExchangeDG'):
         self.C = C
         self.in_jacobian=in_jacobian
