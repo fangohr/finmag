@@ -4,6 +4,7 @@ import logging
 import tempfile
 import shutil
 import os
+import sys
 import IPython.core.display
 from visualization_impl import _axes
 
@@ -69,6 +70,19 @@ def render_paraview_scene(
         _, outfile = tempfile.mkstemp(suffix='.png')
     outfile = os.path.abspath(outfile)
 
+    # Check that Xvfb is installed. We use it in case there is no X
+    # connection (e.g. via ssh etc.)
+    #
+    # XXX TODO: It would be nice if we could try without Xvfb first
+    #           and only rely on Xvfb if that fails.
+    try:
+        sp.check_output(['which', 'Xvfb'])
+    except sp.CalledProcessError:
+        logger.error("Xvfb is required for render_paraview_scene() to work, "
+                     "but it doesn't seem to be installed or is not working "
+                     "properly. Please check the installation  and try again.")
+        sys.exit(1)
+
     #
     # Create the temporary script. The string 'script_string' will
     # contain a call to the function in 'visualization_impl.py' which
@@ -78,7 +92,25 @@ def render_paraview_scene(
     scriptfile = os.path.join(tmpdir, 'render_scene.py')
     script_string = textwrap.dedent("""
               from visualization_impl import render_paraview_scene
+              from subprocess import Popen
+              import time
+              import os
 
+              # Try to find an unused display
+              for display in xrange(10, 100):
+                  DISPLAY = ':' + str(display)
+                  process = Popen(['Xvfb', DISPLAY, '-screen', '0', '1024x768x16'])
+                  time.sleep(0.5)  # this assumes that Xvfb exits quickly if an error
+                                   # occurs because the display is already in use
+                  returncode = process.poll()
+                  if returncode == None:
+                      # we assume that everything is well because the Xvfb process is still running
+                      break
+                  else:
+                      print "[DEBUG] Display " + str(display) + " seems to be in use already. Trying next one."
+
+              print "[DEBUG] Using DISPLAY: " + str(DISPLAY)
+              os.environ['DISPLAY'] = DISPLAY
               render_paraview_scene(
                   '{}', '{}', {},
                   {}, {}, {},
@@ -88,6 +120,8 @@ def render_paraview_scene(
                   {}, {}, {},
                   {}, {},
                   {}, '{}', '{}', {}, {})
+
+              process.terminate()
               """.format(
             vtu_file, outfile, repr(field_name),
             camera_position, camera_focal_point, camera_view_up,

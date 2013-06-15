@@ -5529,3 +5529,1212 @@ Max
 -------------------------------------
 finmag-team mailing list.
 
+From marvin  Thu Jun  6 10:41:55 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Thu, 06 Jun 2013 10:41:55 +0100 (BST)
+Received: by 10.49.62.68 with SMTP id w4csp47682qer;
+        Thu, 6 Jun 2013 01:51:57 -0700 (PDT)
+X-Received: by 10.15.43.71 with SMTP id w47mr33505113eev.32.1370508716393;
+        Thu, 06 Jun 2013 01:51:56 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id q6si53632940eew.264.2013.06.06.01.51.55
+        for <multiple recipients>;
+        Thu, 06 Jun 2013 01:51:56 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk;
+       dkim=neutral (bad format) header.i=@gmail.com
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r568lTAi024593;
+	Thu, 6 Jun 2013 09:47:29 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk [152.78.119.37])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p559lY3110142415qB ret-id none; Thu, 06 Jun 2013 09:47:30 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.37) with Microsoft SMTP Server (TLS) id 14.2.342.3; Thu, 6 Jun
+ 2013 09:47:29 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r568lTJd026335;	Thu, 6 Jun 2013 09:47:29 +0100
+Received: from mailgate3.iss.soton.ac.uk (mailgate3.iss.soton.ac.uk
+ [152.78.128.104])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r568lTFC026320	for <finmag-team@lists.soton.ac.uk>; Thu, 6 Jun 2013 09:47:29
+ +0100
+Received: from mailgate3.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate3.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r568koON000584	for
+ <finmag-team@lists.soton.ac.uk>; Thu, 6 Jun 2013 09:46:50 +0100
+Received: from mail-qe0-f47.google.com (mail-qe0-f47.google.com
+ [209.85.128.47])	by mailgate3.iss.soton.ac.uk (mailgate3.iss.soton.ac.uk
+ [152.78.128.104]) envelope-from <maximilian.albert@gmail.com> with ESMTP	id
+ p559ko2131859960AL ret-id none; Thu, 06 Jun 2013 09:46:50 +0100
+Received: by mail-qe0-f47.google.com with SMTP id 1so1721602qec.34        for
+ <finmag-team@lists.soton.ac.uk>; Thu, 06 Jun 2013 01:46:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=5j6AY1a3OvZ4Ia2jY6TGYfdF1K8irOdNN7b0tu9qNsg=;
+        b=w1jOUAph0K2/WHB+QcNRdMsl0MBdXouiVeWUA9ZueNplMCDEQttBE2CCTkOwLzpNEf
+         WSAX7C/fRIa+K/hax1+/rT18IewfdOie6lRdOK4HKssnlRQEt5A/5wHGTa10msO2SZu2
+         pB5eiZ+ZZihAuOtgz0tFiFy3iamPakQLucp0l9FKoljx6Pn5bLXYpjq0yT9GLlzzE9Wd
+         0lzBVFeYL3FWUPi0SKQCWBzx3VoQFAhkbsOYEFbvJg+yhG5ZmhChLexeFpoR5RvBVpZj
+         VVapZJrwbAWlUjErpmOgAkyWyZH9Ur2uYkwNjbYPykr5cEra2e3HmREuwUtAQSbHxNul
+         91YQ==
+MIME-Version: 1.0
+X-Received: by 10.49.35.132 with SMTP id h4mr39173539qej.29.1370508409346;
+ Thu, 06 Jun 2013 01:46:49 -0700 (PDT)
+Received: by 10.224.50.208 with HTTP; Thu, 6 Jun 2013 01:46:49 -0700 (PDT)
+In-Reply-To: <CAGA_dmisn1qHd8uyqOETW5MsYMebnSxtoGT6Q8bdqPWqkoU1cA@mail.gmail.com>
+References: <CAGA_dmjY2vkoSE_HEdSc1kbLRQpEHhFW_Byq=mo6kdLsWDTVYw@mail.gmail.com>
+	<F1036F37B6142C47AF7ABB1D574A0DF8242A0DB9@UOS-MSG00040-SI.soton.ac.uk>
+	<CAGA_dmisn1qHd8uyqOETW5MsYMebnSxtoGT6Q8bdqPWqkoU1cA@mail.gmail.com>
+Date: Thu, 6 Jun 2013 09:46:49 +0100
+Message-ID: <CAGA_dmiEqGFjyzvoLjJYCXTYBJZJ=7Npsren+b1rdVz0P-O1wQ@mail.gmail.com>
+Subject: Re: [finmag-team] Using Simlib for normal mode computations of large disks?
+From: Maximilian Albert <maximilian.albert@gmail.com>
+To: "Chernyshenko D." <d.chernyshenko@soton.ac.uk>
+CC: "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+Content-Type: text/plain; charset="ISO-8859-1"
+Received-SPF: None; receiver=mailgate3.iss.soton.ac.uk; client-ip=209.85.128.47; helo=<mail-qe0-f47.google.com>
+Received-SPF: Pass; receiver=mailgate3.iss.soton.ac.uk; client-ip=209.85.128.47; envelope-from=<maximilian.albert@gmail.com>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p559lY311014241500; tid=p559lY3110142415qB; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r568lTAi024593
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi Dmitri,
+
+(I should probably ask this via IRC, but won't be in the office until
+later and still haven't got it to work on my laptop.)
+
+> I'll try to have a look at the eigenvalue method now and will see how I get on.
+
+I managed to run your d'Aquino example yesterday, which is promising. :)
+
+However, I had to adjust the relaxation tolerance because otherwise
+the first stage (to find a relaxed, metastable state) wouldn't finish.
+I saw that the 'stop_tol' argument of the NormalModeProblem.relax()
+method has the default value 1e-10, whereas the same argument in
+ScipyIntegrator.run_until_relaxation() has a default tolerance of
+1e-4. I presume the order of magnitude of the latter is more
+reasonable? Did you choose any other values during your experiments?
+
+What I did yesterday was to run the relaxation with stop_tol=1e-4, and
+then run the eigenvalue computation in
+sandbox/normal_modes/compute_normal_modes.py. The computation itself
+worked, but what is odd is that when I changed the number of computed
+eigenvalues from 1 to 2 (or more), I got completely different results.
+For example, here is the output for 1 eigenvalue:
+
+==>
+Calling eigs
+Evaluation # 100
+[...]
+Evaluation # 2000
+Evaluation # 2200
+Evaluation # 2300
+Computed 1 largest eigenvectors for
+Eigenvalues: [-0.01156805-17.9289068j]
+<==
+
+
+And here is the output for two eigenvalues:
+
+==>
+Calling eigs
+Evaluation # 100
+[...]
+Evaluation # 800
+Evaluation # 900
+Evaluation # 1000
+Computed 2 largest eigenvectors for
+Eigenvalues: [ -2.48956978e-04+17.91083793j   8.55789160e-07-17.91079104j]
+<==
+
+Does this mean that my chosen tolerance for the relaxation tolerance
+is too low? When I changed it from 1e-4 to 1e-5 and re-did the
+computation, the value for the single eigenvalue didn't change that
+much:
+
+======== Single eigenvalue with stop_tol=1e-5 =====>
+Eigenvalues: [-0.0115681-17.92890663j]
+<========================================
+
+whereas the values for the two eigenvalues actually did:
+
+======== Two eigenvalues with stop_tol=1e-5 =====>
+Eigenvalues: [ -2.84142171e-04+17.91084902j  -3.65380947e-06-17.91080208j]
+<========================================
+
+Also, I find it slightly odd that the number of evaluations which
+libeigen3 performs in order to compute the eigenvalues *decreases*
+(from 2300 to 1000 in the examples above) when I ask for *more*
+eigenvalues.
+
+So I get the feeling I'm doing something wrong, but I'm not sure
+exactly what. So if you happen to have any ideas, that would be much
+appreciated. Btw, which version of libeigen3 are you using? As I
+mentioned in a previous email, I got a warning about the Sparse module
+not being stable yet, so I wonder whether this has anything to do with
+it.
+
+Many thanks!
+Max
+-------------------------------------
+finmag-team mailing list.
+
+From marvin  Thu Jun  6 12:41:58 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Thu, 06 Jun 2013 12:41:58 +0100 (BST)
+Received: by 10.49.62.68 with SMTP id w4csp51949qer;
+        Thu, 6 Jun 2013 03:59:57 -0700 (PDT)
+X-Received: by 10.15.42.129 with SMTP id u1mr2816003eev.116.1370516396581;
+        Thu, 06 Jun 2013 03:59:56 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id q6si54045892eew.234.2013.06.06.03.59.55
+        for <multiple recipients>;
+        Thu, 06 Jun 2013 03:59:56 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r56Ax8Li016022;
+	Thu, 6 Jun 2013 11:59:08 +0100
+Received: from UOS-MSG00036-VS.soton.ac.uk (uos-msg00036-vs.soton.ac.uk [152.78.119.38])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p55Bx83110148187x9 ret-id none; Thu, 06 Jun 2013 11:59:08 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.38) with Microsoft SMTP Server (TLS) id 14.2.342.3; Thu, 6 Jun
+ 2013 11:59:07 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r56Ax7Kd009146;	Thu, 6 Jun 2013 11:59:07 +0100
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk
+ [152.78.128.11])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r56Ax7RH009143	for <finmag-team@lists.soton.ac.uk>; Thu, 6 Jun 2013 11:59:07
+ +0100
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r56AwNMW013689;
+	Thu, 6 Jun 2013 11:58:23 +0100
+Received: from UOS-MSG00036-VS.soton.ac.uk (uos-msg00036-vs.soton.ac.uk
+ [152.78.119.38])	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk
+ [152.78.128.11]) envelope-from <d.chernyshenko@soton.ac.uk> with ESMTP	id
+ p55BwN3110148152AS ret-id none; Thu, 06 Jun 2013 11:58:23 +0100
+Received: from UOS-MSG00040-SI.soton.ac.uk ([169.254.2.227]) by
+ UOS-MSG00036-VS.soton.ac.uk ([152.78.119.38]) with mapi id 14.02.0342.003;
+ Thu, 6 Jun 2013 11:58:22 +0100
+From: "Chernyshenko D." <d.chernyshenko@soton.ac.uk>
+To: Maximilian Albert <maximilian.albert@gmail.com>
+CC: "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+Subject: RE: [finmag-team] Using Simlib for normal mode computations of
+ large disks?
+Thread-Topic: [finmag-team] Using Simlib for normal mode computations of
+ large disks?
+Thread-Index: AQHOXiuuoRYr2xvSo0G0TvgqySbGepklizL3gAGRkYCAATrmgIAAL2Zj
+Date: Thu, 6 Jun 2013 10:58:22 +0000
+Message-ID: <F1036F37B6142C47AF7ABB1D574A0DF8242A28EA@UOS-MSG00040-SI.soton.ac.uk>
+References: <CAGA_dmjY2vkoSE_HEdSc1kbLRQpEHhFW_Byq=mo6kdLsWDTVYw@mail.gmail.com>
+	<F1036F37B6142C47AF7ABB1D574A0DF8242A0DB9@UOS-MSG00040-SI.soton.ac.uk>
+	<CAGA_dmisn1qHd8uyqOETW5MsYMebnSxtoGT6Q8bdqPWqkoU1cA@mail.gmail.com>,<CAGA_dmiEqGFjyzvoLjJYCXTYBJZJ=7Npsren+b1rdVz0P-O1wQ@mail.gmail.com>
+In-Reply-To: <CAGA_dmiEqGFjyzvoLjJYCXTYBJZJ=7Npsren+b1rdVz0P-O1wQ@mail.gmail.com>
+Accept-Language: en-US, en-GB
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [152.78.54.126]
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.38; helo=<UOS-MSG00036-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.38; envelope-from=<d.chernyshenko@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from quoted-printable to 8bit by maillists.sucs.soton.ac.uk id r56Ax7RH009144
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p55Bx8311014818700; tid=p55Bx83110148187x9; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.38; helo=<UOS-MSG00036-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.38; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r56Ax8Li016022
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+HI,
+
+It's a bit strange that the first stage does not finish with a lower tolera=
+nce, however 1e-4 might be too low and I'd recommend trying with something =
+like 1e-6, since it's assumed that dm/dt =3D 0 in a couple of places.
+
+Which method are you using for solving the eigenvalues problem? In a system=
+ without damping, all eigenvalues will be real - and if the eigenvalues are=
+ found using the generalised eigenvalue problem solver, they should be exac=
+tly real. However in the simulation there is a large imaginary part for the=
+ eigenvalue.
+
+Cheers
+Dmitri
+________________________________________
+From: owner-finmag-team@lists.soton.ac.uk [owner-finmag-team@lists.soton.ac=
+.uk] on behalf of Maximilian Albert [maximilian.albert@gmail.com]
+Sent: Thursday, June 06, 2013 9:46 AM
+To: Chernyshenko D.
+Cc: <finmag-team@lists.soton.ac.uk>
+Subject: Re: [finmag-team] Using Simlib for normal mode computations of lar=
+ge disks?
+
+Hi Dmitri,
+
+(I should probably ask this via IRC, but won't be in the office until
+later and still haven't got it to work on my laptop.)
+
+> I'll try to have a look at the eigenvalue method now and will see how I g=
+et on.
+
+I managed to run your d'Aquino example yesterday, which is promising. :)
+
+However, I had to adjust the relaxation tolerance because otherwise
+the first stage (to find a relaxed, metastable state) wouldn't finish.
+I saw that the 'stop_tol' argument of the NormalModeProblem.relax()
+method has the default value 1e-10, whereas the same argument in
+ScipyIntegrator.run_until_relaxation() has a default tolerance of
+1e-4. I presume the order of magnitude of the latter is more
+reasonable? Did you choose any other values during your experiments?
+
+What I did yesterday was to run the relaxation with stop_tol=3D1e-4, and
+then run the eigenvalue computation in
+sandbox/normal_modes/compute_normal_modes.py. The computation itself
+worked, but what is odd is that when I changed the number of computed
+eigenvalues from 1 to 2 (or more), I got completely different results.
+For example, here is the output for 1 eigenvalue:
+
+=3D=3D>
+Calling eigs
+Evaluation # 100
+[...]
+Evaluation # 2000
+Evaluation # 2200
+Evaluation # 2300
+Computed 1 largest eigenvectors for
+Eigenvalues: [-0.01156805-17.9289068j]
+<=3D=3D
+
+
+And here is the output for two eigenvalues:
+
+=3D=3D>
+Calling eigs
+Evaluation # 100
+[...]
+Evaluation # 800
+Evaluation # 900
+Evaluation # 1000
+Computed 2 largest eigenvectors for
+Eigenvalues: [ -2.48956978e-04+17.91083793j   8.55789160e-07-17.91079104j]
+<=3D=3D
+
+Does this mean that my chosen tolerance for the relaxation tolerance
+is too low? When I changed it from 1e-4 to 1e-5 and re-did the
+computation, the value for the single eigenvalue didn't change that
+much:
+
+=3D=3D=3D=3D=3D=3D=3D=3D Single eigenvalue with stop_tol=3D1e-5 =3D=3D=3D=
+=3D=3D>
+Eigenvalues: [-0.0115681-17.92890663j]
+<=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+
+whereas the values for the two eigenvalues actually did:
+
+=3D=3D=3D=3D=3D=3D=3D=3D Two eigenvalues with stop_tol=3D1e-5 =3D=3D=3D=3D=
+=3D>
+Eigenvalues: [ -2.84142171e-04+17.91084902j  -3.65380947e-06-17.91080208j]
+<=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+
+Also, I find it slightly odd that the number of evaluations which
+libeigen3 performs in order to compute the eigenvalues *decreases*
+(from 2300 to 1000 in the examples above) when I ask for *more*
+eigenvalues.
+
+So I get the feeling I'm doing something wrong, but I'm not sure
+exactly what. So if you happen to have any ideas, that would be much
+appreciated. Btw, which version of libeigen3 are you using? As I
+mentioned in a previous email, I got a warning about the Sparse module
+not being stable yet, so I wonder whether this has anything to do with
+it.
+
+Many thanks!
+Max
+-------------------------------------
+finmag-team mailing list.
+
+-------------------------------------
+finmag-team mailing list.
+
+From marvin  Thu Jun  6 13:42:01 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Thu, 06 Jun 2013 13:42:01 +0100 (BST)
+Received: by 10.49.62.68 with SMTP id w4csp52577qer;
+        Thu, 6 Jun 2013 04:17:01 -0700 (PDT)
+X-Received: by 10.14.8.68 with SMTP id 44mr33965184eeq.56.1370517421322;
+        Thu, 06 Jun 2013 04:17:01 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id c48si31455403eeb.332.2013.06.06.04.17.00
+        for <multiple recipients>;
+        Thu, 06 Jun 2013 04:17:01 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk;
+       dkim=neutral (bad format) header.i=@gmail.com
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r56BG2MC022654;
+	Thu, 6 Jun 2013 12:16:02 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk [152.78.119.37])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p55CG23110148764Kh ret-id none; Thu, 06 Jun 2013 12:16:02 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.37) with Microsoft SMTP Server (TLS) id 14.2.342.3; Thu, 6 Jun
+ 2013 12:15:57 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r56BFvTm032436;	Thu, 6 Jun 2013 12:15:57 +0100
+Received: from mailgate5.iss.soton.ac.uk (mailgate5.iss.soton.ac.uk
+ [152.78.128.106])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r56BFvlb032422	for <finmag-team@lists.soton.ac.uk>; Thu, 6 Jun 2013 12:15:57
+ +0100
+Received: from mailgate5.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate5.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r56BDY0W020256	for
+ <finmag-team@lists.soton.ac.uk>; Thu, 6 Jun 2013 12:13:34 +0100
+Received: from mail-qe0-f47.google.com (mail-qe0-f47.google.com
+ [209.85.128.47])	by mailgate5.iss.soton.ac.uk (mailgate5.iss.soton.ac.uk
+ [152.78.128.106]) envelope-from <maximilian.albert@gmail.com> with ESMTP	id
+ p55CDY2597260708yZ ret-id none; Thu, 06 Jun 2013 12:13:34 +0100
+Received: by mail-qe0-f47.google.com with SMTP id 1so1795680qec.34        for
+ <finmag-team@lists.soton.ac.uk>; Thu, 06 Jun 2013 04:13:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=6ghnF7SOlHdxqBnRPRS7061nI3SeJXny2FlbMyr16vY=;
+        b=ARpP4YoWlw257hqYuGl8ifXQF9LEksun0hwgP/Zg7LMDcwlshcWJaw4EV2Aq6H/qJA
+         TNTo6Q+kKAIPu08ZAzzHzyW/bey5t1dHm/3n1xa+3jNKShjRcxPDxRzPgjPAvElDnbOo
+         ZIqXJ/CB+JIUL9SYM18SD4N/OYImMArRcki8gU2MJt9kz0gXwpKg8Qb6cVYnxn2bQfdM
+         I2VYLGHR6wcjSygk1VdvxQINBxTrGbfxBVEBUl/s+trNtMepYu/IyqcW0sPjgJVB1Tl6
+         z2A7nRTXkmtm3FmuhEGgnMRvIoVAcIP5DROHopiGct+ln+GU7QiqTTAdOhNUf/Tyw59t
+         UAWw==
+MIME-Version: 1.0
+X-Received: by 10.229.164.202 with SMTP id f10mr217581qcy.27.1370517213518;
+ Thu, 06 Jun 2013 04:13:33 -0700 (PDT)
+Received: by 10.224.50.208 with HTTP; Thu, 6 Jun 2013 04:13:33 -0700 (PDT)
+In-Reply-To: <F1036F37B6142C47AF7ABB1D574A0DF8242A28EA@UOS-MSG00040-SI.soton.ac.uk>
+References: <CAGA_dmjY2vkoSE_HEdSc1kbLRQpEHhFW_Byq=mo6kdLsWDTVYw@mail.gmail.com>
+	<F1036F37B6142C47AF7ABB1D574A0DF8242A0DB9@UOS-MSG00040-SI.soton.ac.uk>
+	<CAGA_dmisn1qHd8uyqOETW5MsYMebnSxtoGT6Q8bdqPWqkoU1cA@mail.gmail.com>
+	<CAGA_dmiEqGFjyzvoLjJYCXTYBJZJ=7Npsren+b1rdVz0P-O1wQ@mail.gmail.com>
+	<F1036F37B6142C47AF7ABB1D574A0DF8242A28EA@UOS-MSG00040-SI.soton.ac.uk>
+Date: Thu, 6 Jun 2013 12:13:33 +0100
+Message-ID: <CAGA_dmgR4q_t8j1ZarNHvdNpD8o=hX6t2SwcGpuJtpZqZNXYqQ@mail.gmail.com>
+Subject: Re: [finmag-team] Using Simlib for normal mode computations of large disks?
+From: Maximilian Albert <maximilian.albert@gmail.com>
+To: "Chernyshenko D." <d.chernyshenko@soton.ac.uk>
+CC: "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+Content-Type: text/plain; charset="ISO-8859-1"
+Received-SPF: None; receiver=mailgate5.iss.soton.ac.uk; client-ip=209.85.128.47; helo=<mail-qe0-f47.google.com>
+Received-SPF: Pass; receiver=mailgate5.iss.soton.ac.uk; client-ip=209.85.128.47; envelope-from=<maximilian.albert@gmail.com>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p55CFy311014876400; tid=p55CG23110148764Kh; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r56BG2MC022654
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi Dmitri,
+
+==>
+It's a bit strange that the first stage does not finish with a lower
+tolerance, however 1e-4 might be too low and I'd recommend trying with
+something like 1e-6, since it's assumed that dm/dt = 0 in a couple of
+places.
+<==
+
+Ok, that's good to know. I tried it again this morning and it turns
+out that a relaxation with stop_tol=1e-9 finishes in just a few
+minutes (it just seems that the default value 1e-10 takes ages), so
+I'm going to run the eigenvalue computation again with this more
+properly relaxed state.
+
+==>
+Which method are you using for solving the eigenvalues problem? In a
+system without damping, all eigenvalues will be real - and if the
+eigenvalues are found using the generalised eigenvalue problem solver,
+they should be exactly real. However in the simulation there is a
+large imaginary part for the eigenvalue.
+<==
+
+To be honest, I don't know which method I'm using since I'm still
+trying to familiarise myself with the code. All I'm doing at the
+moment is running the example in
+sandbox/normal_modes/compute_normal_modes.py (with different sets of
+parameters to see how that affects things). Does this include damping
+somehow?
+
+It looks like the eigenvalue method called in
+src/simlib/fd/normal_modes/normal_modes.py is
+'scipy.sparse.linalg.eigs' [1], which is capable of solving
+generalised eigenvalue problems. But the 'M' argument is not provided,
+so it doesn't actually solve a generalised problem, right? Not sure if
+this helps, I'm still trying to get my head around things...
+
+Cheers,
+Max
+
+[1] http://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.eigs.html#scipy.sparse.linalg.eigs
+-------------------------------------
+finmag-team mailing list.
+
+From marvin  Thu Jun  6 14:42:04 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Thu, 06 Jun 2013 14:42:04 +0100 (BST)
+Received: by 10.49.62.68 with SMTP id w4csp53003qer;
+        Thu, 6 Jun 2013 04:30:02 -0700 (PDT)
+X-Received: by 10.14.10.9 with SMTP id 9mr34208747eeu.75.1370518201953;
+        Thu, 06 Jun 2013 04:30:01 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk. [152.78.128.16])
+        by mx.google.com with ESMTP id z43si54111921een.343.2013.06.06.04.30.01
+        for <multiple recipients>;
+        Thu, 06 Jun 2013 04:30:01 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) client-ip=152.78.128.16;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r56BTUwP001026;
+	Thu, 6 Jun 2013 12:29:30 +0100
+Received: from UOS-MSG00037-VS.soton.ac.uk (uos-msg00037-vs.soton.ac.uk [152.78.119.39])
+	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk [152.78.128.16]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p55CYU0669331065Yv ret-id none; Thu, 06 Jun 2013 12:29:30 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.39) with Microsoft SMTP Server (TLS) id 14.2.342.3; Thu, 6 Jun
+ 2013 12:28:45 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r56BSjIg018083;	Thu, 6 Jun 2013 12:28:45 +0100
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk
+ [152.78.128.11])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r56BSjRL018080	for <finmag-team@lists.soton.ac.uk>; Thu, 6 Jun 2013 12:28:45
+ +0100
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r56BRs49019203;
+	Thu, 6 Jun 2013 12:27:54 +0100
+Received: from UOS-MSG00036-VS.soton.ac.uk (uos-msg00036-vs.soton.ac.uk
+ [152.78.119.38])	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk
+ [152.78.128.11]) envelope-from <d.chernyshenko@soton.ac.uk> with ESMTP	id
+ p55CRs3110149122cc ret-id none; Thu, 06 Jun 2013 12:27:54 +0100
+Received: from UOS-MSG00040-SI.soton.ac.uk ([169.254.2.227]) by
+ UOS-MSG00036-VS.soton.ac.uk ([152.78.119.38]) with mapi id 14.02.0342.003;
+ Thu, 6 Jun 2013 12:27:31 +0100
+From: "Chernyshenko D." <d.chernyshenko@soton.ac.uk>
+To: Maximilian Albert <maximilian.albert@gmail.com>
+CC: "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+Subject: RE: [finmag-team] Using Simlib for normal mode computations of
+ large disks?
+Thread-Topic: [finmag-team] Using Simlib for normal mode computations of
+ large disks?
+Thread-Index: AQHOXiuuoRYr2xvSo0G0TvgqySbGepklizL3gAGRkYCAATrmgIAAL2Zj///5mYCAABI/4g==
+Date: Thu, 6 Jun 2013 11:27:31 +0000
+Message-ID: <F1036F37B6142C47AF7ABB1D574A0DF8242A290C@UOS-MSG00040-SI.soton.ac.uk>
+References: <CAGA_dmjY2vkoSE_HEdSc1kbLRQpEHhFW_Byq=mo6kdLsWDTVYw@mail.gmail.com>
+	<F1036F37B6142C47AF7ABB1D574A0DF8242A0DB9@UOS-MSG00040-SI.soton.ac.uk>
+	<CAGA_dmisn1qHd8uyqOETW5MsYMebnSxtoGT6Q8bdqPWqkoU1cA@mail.gmail.com>
+	<CAGA_dmiEqGFjyzvoLjJYCXTYBJZJ=7Npsren+b1rdVz0P-O1wQ@mail.gmail.com>
+	<F1036F37B6142C47AF7ABB1D574A0DF8242A28EA@UOS-MSG00040-SI.soton.ac.uk>,<CAGA_dmgR4q_t8j1ZarNHvdNpD8o=hX6t2SwcGpuJtpZqZNXYqQ@mail.gmail.com>
+In-Reply-To: <CAGA_dmgR4q_t8j1ZarNHvdNpD8o=hX6t2SwcGpuJtpZqZNXYqQ@mail.gmail.com>
+Accept-Language: en-US, en-GB
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [152.78.54.126]
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.38; helo=<UOS-MSG00036-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.38; envelope-from=<d.chernyshenko@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from quoted-printable to 8bit by maillists.sucs.soton.ac.uk id r56BSjRL018081
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p55CYY066933106500; tid=p55CYU0669331065Yv; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.39; helo=<UOS-MSG00037-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.39; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r56BTUwP001026
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi,
+
+Oh, I see, try using the method in normal_modes_grimsditch.py (compute_eige=
+nv_generalised), that should work better. I believe you've defined a nonzer=
+o damping constant which will not work very well unless it is close to 0.
+
+The code in normal_modes_* .py is newer so best to use that as a template. =
+Unfortunately it still compute the dense 2n x 2x matrix so it has to fit in=
+ the system memory. Now that we know the workaround for the ARPACK crash, t=
+his can be fixed so that the eigenvalue solver uses the matrix-vector produ=
+ct without storing the matrix in RAM.
+
+Cheers
+________________________________________
+From: owner-finmag-team@lists.soton.ac.uk [owner-finmag-team@lists.soton.ac=
+.uk] on behalf of Maximilian Albert [maximilian.albert@gmail.com]
+Sent: Thursday, June 06, 2013 12:13 PM
+To: Chernyshenko D.
+Cc: <finmag-team@lists.soton.ac.uk>
+Subject: Re: [finmag-team] Using Simlib for normal mode computations of lar=
+ge disks?
+
+Hi Dmitri,
+
+=3D=3D>
+It's a bit strange that the first stage does not finish with a lower
+tolerance, however 1e-4 might be too low and I'd recommend trying with
+something like 1e-6, since it's assumed that dm/dt =3D 0 in a couple of
+places.
+<=3D=3D
+
+Ok, that's good to know. I tried it again this morning and it turns
+out that a relaxation with stop_tol=3D1e-9 finishes in just a few
+minutes (it just seems that the default value 1e-10 takes ages), so
+I'm going to run the eigenvalue computation again with this more
+properly relaxed state.
+
+=3D=3D>
+Which method are you using for solving the eigenvalues problem? In a
+system without damping, all eigenvalues will be real - and if the
+eigenvalues are found using the generalised eigenvalue problem solver,
+they should be exactly real. However in the simulation there is a
+large imaginary part for the eigenvalue.
+<=3D=3D
+
+To be honest, I don't know which method I'm using since I'm still
+trying to familiarise myself with the code. All I'm doing at the
+moment is running the example in
+sandbox/normal_modes/compute_normal_modes.py (with different sets of
+parameters to see how that affects things). Does this include damping
+somehow?
+
+It looks like the eigenvalue method called in
+src/simlib/fd/normal_modes/normal_modes.py is
+'scipy.sparse.linalg.eigs' [1], which is capable of solving
+generalised eigenvalue problems. But the 'M' argument is not provided,
+so it doesn't actually solve a generalised problem, right? Not sure if
+this helps, I'm still trying to get my head around things...
+
+Cheers,
+Max
+
+[1] http://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg=
+.eigs.html#scipy.sparse.linalg.eigs
+-------------------------------------
+finmag-team mailing list.
+
+-------------------------------------
+finmag-team mailing list.
+
+From marvin  Thu Jun  6 15:42:06 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Thu, 06 Jun 2013 15:42:06 +0100 (BST)
+Received: by 10.49.62.68 with SMTP id w4csp58495qer;
+        Thu, 6 Jun 2013 06:55:17 -0700 (PDT)
+X-Received: by 10.14.206.136 with SMTP id l8mr34602917eeo.26.1370526916810;
+        Thu, 06 Jun 2013 06:55:16 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id f44si21520967eev.291.2013.06.06.06.55.16
+        for <multiple recipients>;
+        Thu, 06 Jun 2013 06:55:16 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r56DsIHu021539;
+	Thu, 6 Jun 2013 14:54:18 +0100
+Received: from UOS-MSG00037-VS.soton.ac.uk (uos-msg00037-vs.soton.ac.uk [152.78.119.39])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p55EsI3110152940yc ret-id none; Thu, 06 Jun 2013 14:54:18 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.39) with Microsoft SMTP Server (TLS) id 14.2.342.3; Thu, 6 Jun
+ 2013 14:54:13 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r56Ds8jv018520;	Thu, 6 Jun 2013 14:54:08 +0100
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r56Ds8HB018517	for <finmag-team@lists.soton.ac.uk>; Thu, 6 Jun 2013 14:54:08
+ +0100
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r56Dma20012920	for
+ <finmag-team@lists.soton.ac.uk>; Thu, 6 Jun 2013 14:48:36 +0100
+Received: from UOS-MSG00036-VS.soton.ac.uk (uos-msg00036-vs.soton.ac.uk
+ [152.78.119.38])	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16]) envelope-from <H.FANGOHR@soton.ac.uk> with ESMTP	id
+ p55Ema0669336706QV ret-id none; Thu, 06 Jun 2013 14:48:36 +0100
+Received: from UOS-MSG00041-SI.soton.ac.uk ([169.254.3.198]) by
+ UOS-MSG00036-VS.soton.ac.uk ([152.78.119.38]) with mapi id 14.02.0342.003;
+ Thu, 6 Jun 2013 14:48:35 +0100
+From: "Fangohr H." <H.FANGOHR@soton.ac.uk>
+To: "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+CC: "Fangohr H." <h.fangohr@soton.ac.uk>,
+        "vousden m. (mv3g08)"
+	<mark.vousden@soton.ac.uk>,
+        "carey r.l. (rlc2v07)" <r.carey@soton.ac.uk>
+Subject: [finmag-team] group meeting tomorrow 10am
+Thread-Topic: group meeting tomorrow 10am
+Thread-Index: AQHOYryK8z1tapzhn0ifF4/VWXIz/A==
+Date: Thu, 6 Jun 2013 13:48:35 +0000
+Message-ID: <507E23A7-4240-4486-8E99-378C3E3FB2CB@soton.ac.uk>
+Accept-Language: en-GB, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [152.78.54.126]
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <2D41CF65CD4340489D9E8CF8D7882437@exchange.soton.ac.uk>
+MIME-Version: 1.0
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.38; helo=<UOS-MSG00036-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.38; envelope-from=<H.FANGOHR@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from quoted-printable to 8bit by maillists.sucs.soton.ac.uk id r56Ds8HB018518
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p55EsD311015294000; tid=p55EsI3110152940yc; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.39; helo=<UOS-MSG00037-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.39; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r56DsIHu021539
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi all,
+
+as usual on Fridays, can we get together at 10am in my office please for a =
+quick update who is doing what, please? I am around afterwards to discuss a=
+ny specific problems in smaller groups.
+
+Thanks,
+
+Hans
+
+
+
+
+
+-------------------------------------
+finmag-team mailing list.
+
+From marvin  Wed Jun 12 00:44:20 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Wed, 12 Jun 2013 00:44:20 +0100 (BST)
+Received: by 10.49.52.211 with SMTP id v19csp90627qeo;
+        Tue, 11 Jun 2013 15:48:42 -0700 (PDT)
+X-Received: by 10.14.216.73 with SMTP id f49mr18477521eep.119.1370990922428;
+        Tue, 11 Jun 2013 15:48:42 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id h48si13184487eev.265.2013.06.11.15.48.41
+        for <multiple recipients>;
+        Tue, 11 Jun 2013 15:48:42 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r5BMlfO0000924;
+	Tue, 11 Jun 2013 23:47:41 +0100
+Received: from UOS-MSG00036-VS.soton.ac.uk (uos-msg00036-vs.soton.ac.uk [152.78.119.38])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p5ANlf3110159276N2 ret-id none; Tue, 11 Jun 2013 23:47:41 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.38) with Microsoft SMTP Server (TLS) id 14.2.342.3; Tue, 11 Jun
+ 2013 23:46:01 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r5BMk1QN021827;	Tue, 11 Jun 2013 23:46:01 +0100
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r5BMk0PE021824	for <finmag-team@lists.soton.ac.uk>; Tue, 11 Jun 2013 23:46:00
+ +0100
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r5BMjnqu032646	for
+ <finmag-team@lists.soton.ac.uk>; Tue, 11 Jun 2013 23:45:49 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk
+ [152.78.119.37])	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16]) envelope-from <H.FANGOHR@soton.ac.uk> with ESMTP	id
+ p5ANjn0669342135K8 ret-id none; Tue, 11 Jun 2013 23:45:50 +0100
+Received: from UOS-MSG00041-SI.soton.ac.uk ([169.254.3.198]) by
+ UOS-MSG00035-VS.soton.ac.uk ([152.78.119.37]) with mapi id 14.02.0342.003;
+ Tue, 11 Jun 2013 23:45:48 +0100
+From: "Fangohr H." <H.FANGOHR@soton.ac.uk>
+To: "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>,
+        "carey
+ r.l. (rlc2v07)" <r.carey@soton.ac.uk>,
+        "vousden m. (mv3g08)"
+	<mark.vousden@soton.ac.uk>,
+        "corcoran m. (mc8g08)" <mc8g08@soton.ac.uk>
+CC: "Fangohr H." <h.fangohr@soton.ac.uk>
+Subject: [finmag-team] Group meetings, moved to Thursday 10am
+Thread-Topic: Group meetings, moved to Thursday 10am
+Thread-Index: AQHOZvVpAVLTSwuSLkiNoAG3cpfVeg==
+Date: Tue, 11 Jun 2013 22:45:47 +0000
+Message-ID: <C79D2E7C-3A3A-40C4-9A93-777D2EF20446@soton.ac.uk>
+Accept-Language: en-GB, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [152.78.54.126]
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <FA9AC5EAF244524BB7B904442572F9DF@exchange.soton.ac.uk>
+MIME-Version: 1.0
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<H.FANGOHR@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from quoted-printable to 8bit by maillists.sucs.soton.ac.uk id r5BMk0PE021825
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p5ANlW311015927600; tid=p5ANlf3110159276N2; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.38; helo=<UOS-MSG00036-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.38; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r5BMlfO0000924
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Dear all,
+
+I suggest to move the group meeting for the foreseeable future to Thursday =
+10:00 (from Friday) as I am occupied/travelling most of the coming Friday m=
+ornings. There is a small chance I need to attend a meeting at 11:00 this T=
+hursday, but let's plan for 10am in any case for this week, and the coming =
+weeks.
+
+Can PhD students (i.e. not Becky, Matt and Mark) outline what is the status=
+ of abstract for the MMM, please? If you are ready to draft something with =
+a title, some text (keywords sufficient) and an image at this stage, that w=
+ould be useful.
+
+I'll try to keep the meeting brief, and can discuss abstracts and ongoing w=
+ork in smaller groups later.
+
+Best wishes,
+
+Hans
+
+
+
+
+
+-------------------------------------
+finmag-team mailing list.
+
+From marvin  Wed Jun 12 09:44:30 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Wed, 12 Jun 2013 09:44:30 +0100 (BST)
+Received: by 10.49.52.211 with SMTP id v19csp106203qeo;
+        Wed, 12 Jun 2013 01:28:24 -0700 (PDT)
+X-Received: by 10.15.10.65 with SMTP id f41mr3410921eet.133.1371025704190;
+        Wed, 12 Jun 2013 01:28:24 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk. [152.78.128.16])
+        by mx.google.com with ESMTP id s6si192978eew.183.2013.06.12.01.28.23
+        for <multiple recipients>;
+        Wed, 12 Jun 2013 01:28:24 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) client-ip=152.78.128.16;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r5C8RWJH027288;
+	Wed, 12 Jun 2013 09:27:32 +0100
+Received: from UOS-MSG00037-VS.soton.ac.uk (uos-msg00037-vs.soton.ac.uk [152.78.119.39])
+	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk [152.78.128.16]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p5B9RW0669349678IS ret-id none; Wed, 12 Jun 2013 09:27:32 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.39) with Microsoft SMTP Server (TLS) id 14.2.342.3; Wed, 12 Jun
+ 2013 09:27:28 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r5C8RSgB008294;	Wed, 12 Jun 2013 09:27:28 +0100
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r5C8RSOZ008291	for <finmag-team@lists.soton.ac.uk>; Wed, 12 Jun 2013 09:27:28
+ +0100
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r5C8R0Do025661	for
+ <finmag-team@lists.soton.ac.uk>; Wed, 12 Jun 2013 09:27:00 +0100
+Received: from UOS-MSG00037-VS.soton.ac.uk (uos-msg00037-vs.soton.ac.uk
+ [152.78.119.39])	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16]) envelope-from <H.FANGOHR@soton.ac.uk> with ESMTP	id
+ p5B9R00669349687dv ret-id none; Wed, 12 Jun 2013 09:27:00 +0100
+Received: from UOS-MSG00041-SI.soton.ac.uk ([169.254.3.198]) by
+ UOS-MSG00037-VS.soton.ac.uk ([152.78.119.39]) with mapi id 14.02.0342.003;
+ Wed, 12 Jun 2013 09:26:13 +0100
+From: "Fangohr H." <H.FANGOHR@soton.ac.uk>
+To: "Fangohr H." <h.fangohr@soton.ac.uk>
+CC: "Fangohr H." <h.fangohr@soton.ac.uk>,
+        "<finmag-team@lists.soton.ac.uk>"
+	<finmag-team@lists.soton.ac.uk>,
+        "carey r.l. (rlc2v07)"
+	<r.carey@soton.ac.uk>,
+        "vousden m. (mv3g08)" <mark.vousden@soton.ac.uk>,
+        "corcoran m. (mc8g08)" <mc8g08@soton.ac.uk>
+Subject: Re: [finmag-team] Group meetings, moved to Thursday 10am
+Thread-Topic: [finmag-team] Group meetings, moved to Thursday 10am
+Thread-Index: AQHOZvVpAVLTSwuSLkiNoAG3cpfVepkxrnEA
+Date: Wed, 12 Jun 2013 08:26:13 +0000
+Message-ID: <1AE5CFC2-9864-4858-A27A-2AF37D1672DE@soton.ac.uk>
+References: <C79D2E7C-3A3A-40C4-9A93-777D2EF20446@soton.ac.uk>
+In-Reply-To: <C79D2E7C-3A3A-40C4-9A93-777D2EF20446@soton.ac.uk>
+Accept-Language: en-GB, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [152.78.54.126]
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <C4F54DEE837F4E40A7CDCFE5487DDA93@exchange.soton.ac.uk>
+MIME-Version: 1.0
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.39; helo=<UOS-MSG00037-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.39; envelope-from=<H.FANGOHR@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from quoted-printable to 8bit by maillists.sucs.soton.ac.uk id r5C8RSOZ008292
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p5B9Pl066934967800; tid=p5B9RW0669349678IS; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=1
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.39; helo=<UOS-MSG00037-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.39; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r5C8RWJH027288
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi again,
+
+apologies - I do need to be somewhere else Thursday at 11:00.  Let's get to=
+gether instead Thursday 14:00 this week, and stick to Thursday 10am for the=
+ future.
+
+Hope that is alright. Am around today and tomorrow morning if you need any =
+input on drafting abstracts for the MMM, or anything else - just drop in.
+
+Cheers,
+
+Hans
+
+On 11 Jun 2013, at 23:45, Fangohr H. <H.FANGOHR@soton.ac.uk> wrote:
+
+> Dear all,
+>=20
+> I suggest to move the group meeting for the foreseeable future to Thursda=
+y 10:00 (from Friday) as I am occupied/travelling most of the coming Friday=
+ mornings. There is a small chance I need to attend a meeting at 11:00 this=
+ Thursday, but let's plan for 10am in any case for this week, and the comin=
+g weeks.
+>=20
+> Can PhD students (i.e. not Becky, Matt and Mark) outline what is the stat=
+us of abstract for the MMM, please? If you are ready to draft something wit=
+h a title, some text (keywords sufficient) and an image at this stage, that=
+ would be useful.
+>=20
+> I'll try to keep the meeting brief, and can discuss abstracts and ongoing=
+ work in smaller groups later.
+>=20
+> Best wishes,
+>=20
+> Hans
+>=20
+>=20
+>=20
+>=20
+>=20
+> -------------------------------------
+> finmag-team mailing list.
+
+
+-------------------------------------
+finmag-team mailing list.
+
+From marvin  Wed Jun 12 10:44:31 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Wed, 12 Jun 2013 10:44:31 +0100 (BST)
+Received: by 10.49.52.211 with SMTP id v19csp107877qeo;
+        Wed, 12 Jun 2013 02:26:57 -0700 (PDT)
+X-Received: by 10.14.203.194 with SMTP id f42mr20792415eeo.53.1371029217385;
+        Wed, 12 Jun 2013 02:26:57 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk. [152.78.128.16])
+        by mx.google.com with ESMTP id e5si14402665eeg.162.2013.06.12.02.26.56
+        for <multiple recipients>;
+        Wed, 12 Jun 2013 02:26:57 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) client-ip=152.78.128.16;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk;
+       dkim=neutral (bad format) header.i=@gmail.com
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r5C9QRbc016714;
+	Wed, 12 Jun 2013 10:26:27 +0100
+Received: from UOS-MSG00037-VS.soton.ac.uk (uos-msg00037-vs.soton.ac.uk [152.78.119.39])
+	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk [152.78.128.16]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p5BAQR0669351047Iv ret-id none; Wed, 12 Jun 2013 10:26:27 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.39) with Microsoft SMTP Server (TLS) id 14.2.342.3; Wed, 12 Jun
+ 2013 10:26:27 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r5C9QQWP027549;	Wed, 12 Jun 2013 10:26:26 +0100
+Received: from mailgate3.iss.soton.ac.uk (mailgate3.iss.soton.ac.uk
+ [152.78.128.104])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r5C9QQ3O027546	for <finmag-team@lists.soton.ac.uk>; Wed, 12 Jun 2013 10:26:26
+ +0100
+Received: from mailgate3.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate3.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r5C9PFi1028881	for
+ <finmag-team@lists.soton.ac.uk>; Wed, 12 Jun 2013 10:25:15 +0100
+Received: from mail-wg0-f49.google.com (mail-wg0-f49.google.com
+ [74.125.82.49])	by mailgate3.iss.soton.ac.uk (mailgate3.iss.soton.ac.uk
+ [152.78.128.104]) envelope-from <fangohr.hans@gmail.com> with ESMTP	id
+ p5BAPF21318356602i ret-id none; Wed, 12 Jun 2013 10:25:15 +0100
+Received: by mail-wg0-f49.google.com with SMTP id a12so4811128wgh.28
+        for <finmag-team@lists.soton.ac.uk>; Wed, 12 Jun 2013 02:25:15 -0700
+ (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=content-type:mime-version:subject:from:in-reply-to:date:cc
+         :content-transfer-encoding:message-id:references:to:x-mailer;
+        bh=BaNX5lmAzRjAUqx5Bc5QFTREMs1JY6E4oVPNAahUa8k=;
+        b=IekCX+6EJbmWreWkEBG6fi+c366h8GussvMQzHSn0guTjySjZADWzSZK1B2Fntu09y
+         R9rV/QFoj3V/VhM9htQ3vFKW0bjXXP1bO0C7CrEtdvpWwe/dCfQ9Yg7v/R4R1oz4hFFN
+         NfJT9uwJgEC5IRY3OsXkpDhwItUb8wIzrGPKCgFMTy5FxKKJnd/dbNoa4cVsuISVTDAx
+         9pZOeoiLOXQIIo5lUIGYW36Zkt9o/9T12G48ApdtmMdcSpID2/dqCIGTNg5Lh4mGr/v8
+         Oo+aKDlG+DCnOXiHUSmOc/cTtDvLSU6/HwyY5jTJ9YnT6KvreffqPlQjG6tC9q1bqKh8
+         tIiw==
+X-Received: by 10.194.120.134 with SMTP id lc6mr11525109wjb.55.1371029115466;
+        Wed, 12 Jun 2013 02:25:15 -0700 (PDT)
+Received: from ip-038-040.vpn.soton.ac.uk (ip-038-040.vpn.soton.ac.uk.
+ [152.78.38.40])        by mx.google.com with ESMTPSA id
+ o14sm2063436wiv.3.2013.06.12.02.25.13        for <multiple recipients>
+        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);        Wed, 12
+ Jun 2013 02:25:13 -0700 (PDT)
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0 (Mac OS X Mail 6.3 \(1503\))
+Subject: Re: [finmag-team] Group meetings, moved to Thursday 10am
+From: fangohr <fangohr.hans@gmail.com>
+In-Reply-To: <1AE5CFC2-9864-4858-A27A-2AF37D1672DE@soton.ac.uk>
+Date: Wed, 12 Jun 2013 10:25:41 +0100
+CC: fangohr <fangohr.hans@gmail.com>,
+        "<finmag-team@lists.soton.ac.uk>"
+	<finmag-team@lists.soton.ac.uk>,
+        "carey r.l. (rlc2v07)"
+	<r.carey@soton.ac.uk>,
+        "vousden m. (mv3g08)" <mark.vousden@soton.ac.uk>,
+        "corcoran m. (mc8g08)" <mc8g08@soton.ac.uk>
+Message-ID: <7A666D4D-E3A6-4FAC-B4FD-03B5C0E64DE3@gmail.com>
+References: <C79D2E7C-3A3A-40C4-9A93-777D2EF20446@soton.ac.uk> <1AE5CFC2-9864-4858-A27A-2AF37D1672DE@soton.ac.uk>
+To: "Fangohr H." <h.fangohr@soton.ac.uk>
+X-Mailer: Apple Mail (2.1503)
+Received-SPF: None; receiver=mailgate3.iss.soton.ac.uk; client-ip=74.125.82.49; helo=<mail-wg0-f49.google.com>
+Received-SPF: Pass; receiver=mailgate3.iss.soton.ac.uk; client-ip=74.125.82.49; envelope-from=<fangohr.hans@gmail.com>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from quoted-printable to 8bit by maillists.sucs.soton.ac.uk id r5C9QQ3O027547
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p5BAQR066935104700; tid=p5BAQR0669351047Iv; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.39; helo=<UOS-MSG00037-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.39; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r5C9QRbc016714
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi Matt, Mark, Beckie,
+
+for the meeting tomorrow at 14:00, could you bring one or two pages of mate=
+rial to present (you may also want to put those on your hack pads) that sho=
+w one example calculation you have been doing, please.=20
+
+This could be just one of the examples we have given you, but it would be n=
+ice to see the source code of the script and one or a few images (configura=
+tions, hysteresis loop, whatever is appropriate). I'd like to ask each of y=
+ou to describe this very very briefly in the meeting. Maybe you talk for a =
+minute, and we ask questions for 4 minutes before moving on. No big deal at=
+ all, just to let everybody know what you are up to. (And I am also interes=
+ted what a simlib script looks like ;-)
+
+Thanks,
+
+Hans
+
+
+
+On 12 Jun 2013, at 09:26, Fangohr H. <H.FANGOHR@soton.ac.uk> wrote:
+
+> Hi again,
+>=20
+> apologies - I do need to be somewhere else Thursday at 11:00.  Let's get =
+together instead Thursday 14:00 this week, and stick to Thursday 10am for t=
+he future.
+>=20
+> Hope that is alright. Am around today and tomorrow morning if you need an=
+y input on drafting abstracts for the MMM, or anything else - just drop in.
+>=20
+> Cheers,
+>=20
+> Hans
+>=20
+> On 11 Jun 2013, at 23:45, Fangohr H. <H.FANGOHR@soton.ac.uk> wrote:
+>=20
+>> Dear all,
+>>=20
+>> I suggest to move the group meeting for the foreseeable future to Thursd=
+ay 10:00 (from Friday) as I am occupied/travelling most of the coming Frida=
+y mornings. There is a small chance I need to attend a meeting at 11:00 thi=
+s Thursday, but let's plan for 10am in any case for this week, and the comi=
+ng weeks.
+>>=20
+>> Can PhD students (i.e. not Becky, Matt and Mark) outline what is the sta=
+tus of abstract for the MMM, please? If you are ready to draft something wi=
+th a title, some text (keywords sufficient) and an image at this stage, tha=
+t would be useful.
+>>=20
+>> I'll try to keep the meeting brief, and can discuss abstracts and ongoin=
+g work in smaller groups later.
+>>=20
+>> Best wishes,
+>>=20
+>> Hans
+>>=20
+>>=20
+>>=20
+>>=20
+>>=20
+>> -------------------------------------
+>> finmag-team mailing list.
+>=20
+>=20
+> -------------------------------------
+> finmag-team mailing list.
+
+
+-------------------------------------
+finmag-team mailing list.
+
+From marvin  Fri Jun 14 10:45:31 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Fri, 14 Jun 2013 10:45:31 +0100 (BST)
+Received: by 10.49.52.211 with SMTP id v19csp51128qeo;
+        Fri, 14 Jun 2013 01:50:35 -0700 (PDT)
+X-Received: by 10.112.188.231 with SMTP id gd7mr630756lbc.1.1371199835072;
+        Fri, 14 Jun 2013 01:50:35 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id qo8si642256lbb.134.2013.06.14.01.50.33
+        for <multiple recipients>;
+        Fri, 14 Jun 2013 01:50:34 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r5E8Yj3T006989;
+	Fri, 14 Jun 2013 09:34:45 +0100
+Received: from UOS-MSG00036-VS.soton.ac.uk (uos-msg00036-vs.soton.ac.uk [152.78.119.38])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p5D9Yj3110150014LZ ret-id none; Fri, 14 Jun 2013 09:34:45 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.38) with Microsoft SMTP Server (TLS) id 14.2.342.3; Fri, 14 Jun
+ 2013 09:33:47 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r5E8XlWq018526;	Fri, 14 Jun 2013 09:33:47 +0100
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r5E8XTmv018079	for <finmag-team@lists.soton.ac.uk>; Fri, 14 Jun 2013 09:33:47
+ +0100
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r5E8M5hU001819	for
+ <finmag-team@lists.soton.ac.uk>; Fri, 14 Jun 2013 09:22:05 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk
+ [152.78.119.37])	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16]) envelope-from <H.FANGOHR@soton.ac.uk> with ESMTP	id
+ p5D9M50669333354Jh ret-id none; Fri, 14 Jun 2013 09:22:05 +0100
+Received: from UOS-MSG00041-SI.soton.ac.uk ([169.254.3.198]) by
+ UOS-MSG00035-VS.soton.ac.uk ([152.78.119.37]) with mapi id 14.02.0342.003;
+ Fri, 14 Jun 2013 09:21:56 +0100
+From: "Fangohr H." <H.FANGOHR@soton.ac.uk>
+To: "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+CC: "Fangohr H." <h.fangohr@soton.ac.uk>
+Subject: [finmag-team] MMM
+Thread-Topic: MMM
+Thread-Index: AQHOaNg7ewPuedE+LkOzW94vG700gQ==
+Date: Fri, 14 Jun 2013 08:21:55 +0000
+Message-ID: <3242EDC2-31EE-4881-A20C-0911801E4008@soton.ac.uk>
+Accept-Language: en-GB, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [152.78.54.126]
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <78580FF77A9A014A8A10A8AD46C9F9D0@exchange.soton.ac.uk>
+MIME-Version: 1.0
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<H.FANGOHR@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from quoted-printable to 8bit by maillists.sucs.soton.ac.uk id r5E8Xlmt018524
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p5D9Yg311015001400; tid=p5D9Yj3110150014LZ; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.38; helo=<UOS-MSG00036-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.38; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r5E8Yj3T006989
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi Max, Weiwei, Dmitri, Marc-Antonio, Marijan,
+
+in the group meeting yesterday we started to talk about MMM abstracts. Can =
+you please put a first draft of your submission (or submissions) into the D=
+ropbox folder Group/reports/monthly/2013-05-mmm-abstracts by Monday midday,=
+ please? I have reserved some time at 12:30 on Monday to review those and g=
+ive you some feedback.=20
+
+No need to have this complete, but a rough title, a few sentences or keywor=
+ds on content and a plot (or a sentence saying what the plot might show) wo=
+uld be good.=20
+
+Deadline is 26 June, but it helps to have a few days to iterate over this, =
+so I'd like to you to start now. Monday is the 17th, so by then we will hav=
+e 9 days remaining. If you need any help, drop me an email or come to my of=
+fice.
+
+Thanks,
+
+Hans
+
+
+
+-------------------------------------
+finmag-team mailing list.
+
