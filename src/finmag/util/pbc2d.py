@@ -2,6 +2,45 @@ import dolfin as df
 import numpy as np
 
 
+class PeriodicBoundary1D(df.SubDomain):
+    """
+    Periodic Boundary condition in in x direction
+    """
+    def __init__(self, mesh):
+        super(PeriodicBoundary1D, self).__init__()
+
+        self.mesh = mesh
+
+        self.find_mesh_info()
+
+    def inside(self, x, on_boundary):
+        on_x = bool(df.near(x[0],self.xmin) and on_boundary)
+        return on_x 
+
+    def map(self, x, y):
+        y[0] = x[0]
+        y[1] = x[1]
+        if self.dim == 3:
+            y[2] = x[2]
+
+        if df.near(x[0],self.xmax):
+            y[0] = x[0] - self.width
+
+
+    def find_mesh_info(self):
+        xt=self.mesh.coordinates()
+        self.length=len(xt)
+        max_v=xt.max(axis=0)
+        min_v=xt.min(axis=0)
+
+        self.xmin=min_v[0]
+        self.xmax=max_v[0]
+       
+        self.width=self.xmax-self.xmin
+        
+        self.dim=self.mesh.topology().dim()
+
+
 class PeriodicBoundary2D(df.SubDomain):
     """
     Periodic Boundary condition in xy-plane.
