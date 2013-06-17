@@ -42,7 +42,7 @@ class MagnetostaticField(object):
     """
     def __init__(self, Ms, Nxx, Nyy, Nzz):
         """
-        Initialise a UniformDemag object.
+        Initialise object with Ms and demagnetising factors.
 
         Ms is the saturation magnetisation in A/m and the demagnetising
         factors should be given as floats that sum to 1.
