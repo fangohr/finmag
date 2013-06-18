@@ -33,13 +33,20 @@ class SimpleDemag(object):
     def setup(self, S3, m, Ms, unit_length):
         self.m = m
         self.H = np.zeros((3, S3.mesh().num_vertices()))
+        self.Ms_array = np.zeros(3*S3.mesh().num_vertices())
+        if isinstance(self.Ms, (int,float)):
+            self.Ms_array[:] = self.Ms
+        else:
+            self.Ms_array[:] = self.Ms[:]
+        
+        self.Ms_array.shape=(3,-1)
 
 
     def compute_field(self):
         m = self.m.vector().array().view().reshape((3, -1))
-        self.H[0][:] = -self.Nx*m[0][:]*self.Ms
-        self.H[1][:] = -self.Ny*m[1][:]*self.Ms
-        self.H[2][:] = -self.Nz*m[2][:]*self.Ms
+        self.H[0][:] = -self.Nx*m[0][:]*self.Ms_array[0]
+        self.H[1][:] = -self.Ny*m[1][:]*self.Ms_array[1]
+        self.H[2][:] = -self.Nz*m[2][:]*self.Ms_array[2]
         return self.H.ravel()
 
     def compute_energy(self):
