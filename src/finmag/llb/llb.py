@@ -209,6 +209,10 @@ class LLB(object):
         self.H_eff[:]=0 
         for interaction in self.interactions:
             self.H_eff += interaction.compute_field()
+            
+    def total_energy(self):
+        #FIXME: change to the real total energy
+        return 0
         
     
     def stochastic_rhs(self, y):
