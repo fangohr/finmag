@@ -8,6 +8,7 @@ import dolfin as df
 from exchange import ExchangeDG
 from finmag.energies.exchange import Exchange
 from finmag.util.consts import mu0
+from finmag.util.meshes import box
 
 
 @pytest.fixture(scope = "module")
@@ -56,11 +57,12 @@ def plot_m(mesh,xs,m_an,f_dg,f_cg,name='compare.pdf'):
     dg=[]
     cg=[]
     for x in xs:
-        dg.append(f_dg(x,5, 0.5)[2])
-        cg.append(f_cg(x,5, 0.5)[2])
+        dg.append(f_dg(x,0.25, 0.25)[2])
+        cg.append(f_cg(x,0.25, 0.25)[2])
     plt.plot(xs,dg,'.-',label='dg')
     plt.plot(xs,cg,'^-',label='cg')
-    
+    plt.xlabel('x')
+    plt.ylabel('mx')
     plt.legend(loc=8)
     fig.savefig(name)
  
@@ -107,9 +109,16 @@ if __name__ == "__main__2":
 
 if __name__ == "__main__":
     #mesh = df.IntervalMesh(5, 0, 2*np.pi)
-    mesh = df.BoxMesh(0,0,0,2*np.pi,10,1,40, 2, 2)
+    mesh = df.BoxMesh(0,0,0,2*np.pi,1,1,40, 1, 1)
     #mesh = df.RectangleMesh(0,0,2*np.pi,1,10,1)
     
+    mesh = box(0,0,0,2*np.pi,0.5,0.5, maxh=0.2) 
+
+    n = mesh.num_vertices()
+    rand = np.random.random((n,3))*0.01
+    mesh.coordinates()[:]+= rand
+    df.plot(mesh)
+    df.interactive()
     S3 = df.VectorFunctionSpace(mesh, "DG", 0, dim=3)
     C = 1.0
     expr = df.Expression(('0', 'sin(x[0])','cos(x[0])'))
@@ -120,7 +129,7 @@ if __name__ == "__main__":
     exch.setup(S3, m, Ms, unit_length=1)
     f = exch.compute_field()
     
-    xs=np.linspace(0.1,2*np.pi-0.1,10)
+    xs=np.linspace(0.2,2*np.pi-0.2,10)
     m_an= -1.0*2*C/(mu0*Ms)*np.cos(xs)
     
     
