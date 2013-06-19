@@ -6738,3 +6738,93 @@ Hans
 -------------------------------------
 finmag-team mailing list.
 
+From marvin  Tue Jun 18 23:47:36 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Tue, 18 Jun 2013 23:47:36 +0100 (BST)
+Received: by 10.49.52.211 with SMTP id v19csp134507qeo;
+        Tue, 18 Jun 2013 14:51:05 -0700 (PDT)
+X-Received: by 10.152.37.69 with SMTP id w5mr9968066laj.56.1371592264940;
+        Tue, 18 Jun 2013 14:51:04 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk. [152.78.128.16])
+        by mx.google.com with ESMTP id qo8si8928960lbb.89.2013.06.18.14.51.01
+        for <multiple recipients>;
+        Tue, 18 Jun 2013 14:51:04 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) client-ip=152.78.128.16;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk;
+       dkim=neutral (bad format) header.i=@gmail.com
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r5ILomuZ015169;
+	Tue, 18 Jun 2013 22:50:48 +0100
+Received: from UOS-MSG00037-VS.soton.ac.uk (uos-msg00037-vs.soton.ac.uk [152.78.119.39])
+	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk [152.78.128.16]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p5HMom0669311383UW ret-id none; Tue, 18 Jun 2013 22:50:48 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.39) with Microsoft SMTP Server (TLS) id 14.2.342.3; Tue, 18 Jun
+ 2013 22:50:48 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r5ILoms1015002;	Tue, 18 Jun 2013 22:50:48 +0100
+Received: from mailgate1.iss.soton.ac.uk (mailgate1.iss.soton.ac.uk
+ [152.78.128.102])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r5ILoldk014999	for <finmag-team@lists.soton.ac.uk>; Tue, 18 Jun 2013 22:50:47
+ +0100
+Received: from mailgate1.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate1.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r5ILoZko021998	for
+ <finmag-team@lists.soton.ac.uk>; Tue, 18 Jun 2013 22:50:35 +0100
+Received: from mail-qc0-f180.google.com (mail-qc0-f180.google.com
+ [209.85.216.180])	by mailgate1.iss.soton.ac.uk (mailgate1.iss.soton.ac.uk
+ [152.78.128.102]) envelope-from <maximilian.albert@gmail.com> with ESMTP	id
+ p5HMoZ1467415236jd ret-id none; Tue, 18 Jun 2013 22:50:36 +0100
+Received: by mail-qc0-f180.google.com with SMTP id a1so2593675qcx.25
+        for <finmag-team@lists.soton.ac.uk>; Tue, 18 Jun 2013 14:50:35 -0700
+ (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:date:message-id:subject:from:to:content-type;
+        bh=+ma9mAQTOKK5fOpeYngb2BGffU3+5LevpxVxx5tgJGw=;
+        b=rVoaXSQrich9NPEoctJMlAD1TvTzDpciJo98CNRDnyDpKKlRph5/7HHXLPyZgA2ATa
+         8N5035PzMyZchMiyJBPxVWoQGne8EjnSnlrN32WoyzyASO6usLNSEKpyq16NlJnlw2qb
+         1kOesXr+P17lqx2sLqsXtOoqRrtjX1TnVyg4dTdoZBR8m5EnJNQTvYeROcf7DwqJlyra
+         HxPC3C7aJCMZj5xQYkHlprreBltEmjasR41P/cJlstFIHPM0qAWLqFeOg7xQ6/qdfeV5
+         3HaNh6zsDi+4dxf5wiPyW5IudPH9zXzBJ2ulabeSAS4GDzx4JjJT/0FZECokq0kjGiWm
+         glPA==
+MIME-Version: 1.0
+X-Received: by 10.224.28.197 with SMTP id n5mr622619qac.64.1371592234998; Tue,
+ 18 Jun 2013 14:50:34 -0700 (PDT)
+Received: by 10.224.50.208 with HTTP; Tue, 18 Jun 2013 14:50:34 -0700 (PDT)
+Date: Tue, 18 Jun 2013 22:50:34 +0100
+Message-ID: <CAGA_dmhDyCVAYm5+g5Yp4eUeDTO=T1cd860HukCa+pOqTWxu+Q@mail.gmail.com>
+Subject: [finmag-team] Vagrant
+From: Maximilian Albert <maximilian.albert@gmail.com>
+To: "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+Content-Type: text/plain; charset="ISO-8859-1"
+Received-SPF: None; receiver=mailgate1.iss.soton.ac.uk; client-ip=209.85.216.180; helo=<mail-qc0-f180.google.com>
+Received-SPF: Pass; receiver=mailgate1.iss.soton.ac.uk; client-ip=209.85.216.180; envelope-from=<maximilian.albert@gmail.com>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p5HMom066931138300; tid=p5HMom0669311383UW; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.39; helo=<UOS-MSG00037-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.39; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r5ILomuZ015169
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi all,
+
+following a link on the IPython mailing list, I just stumbled upon
+this: http://www.vagrantup.com/
+
+Maybe this could be helpful for automated testing of our binary
+distribution/Debian packages on various Linux/Ubuntu versions? Or even
+to easily produce a ready-to-use Virtual Machine with Finmag for our
+collaborators?
+
+Cheers,
+Max
+-------------------------------------
+finmag-team mailing list.
+
