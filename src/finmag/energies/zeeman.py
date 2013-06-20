@@ -137,6 +137,8 @@ class TimeZeemanPython(object):
         self.time_fun = time_fun
         self.t_off = t_off
         self.switched_off = False
+        self.name = name
+        self.in_jacobian = False
         
         
         
