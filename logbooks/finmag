@@ -7529,3 +7529,126 @@ Hans
 -------------------------------------
 finmag-team mailing list.
 
+From marvin  Fri Jun 21 20:48:56 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Fri, 21 Jun 2013 20:48:56 +0100 (BST)
+Received: by 10.49.116.161 with SMTP id jx1csp75907qeb;
+        Fri, 21 Jun 2013 12:29:48 -0700 (PDT)
+X-Received: by 10.14.176.68 with SMTP id a44mr14063377eem.31.1371842987992;
+        Fri, 21 Jun 2013 12:29:47 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk. [152.78.128.16])
+        by mx.google.com with ESMTP id l7si4724021eey.30.2013.06.21.12.29.47
+        for <multiple recipients>;
+        Fri, 21 Jun 2013 12:29:47 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) client-ip=152.78.128.16;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r5LJTLBZ032213;
+	Fri, 21 Jun 2013 20:29:21 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk [152.78.119.37])
+	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk [152.78.128.16]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p5KKYL0669330326qZ ret-id none; Fri, 21 Jun 2013 20:29:21 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.37) with Microsoft SMTP Server (TLS) id 14.2.342.3; Fri, 21 Jun
+ 2013 20:29:20 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r5LJTKuk025526;	Fri, 21 Jun 2013 20:29:20 +0100
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk
+ [152.78.128.11])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r5LJTKNh025510	for <finmag-team@lists.soton.ac.uk>; Fri, 21 Jun 2013 20:29:20
+ +0100
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r5LJT5En000381	for
+ <finmag-team@lists.soton.ac.uk>; Fri, 21 Jun 2013 20:29:05 +0100
+Received: from UOS-MSG00037-VS.soton.ac.uk (uos-msg00037-vs.soton.ac.uk
+ [152.78.119.39])	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk
+ [152.78.128.11]) envelope-from <H.FANGOHR@soton.ac.uk> with ESMTP	id
+ p5KKY53110151097W9 ret-id none; Fri, 21 Jun 2013 20:29:06 +0100
+Received: from UOS-MSG00041-SI.soton.ac.uk ([169.254.3.198]) by
+ UOS-MSG00037-VS.soton.ac.uk ([152.78.119.39]) with mapi id 14.02.0342.003;
+ Fri, 21 Jun 2013 20:29:05 +0100
+From: "Fangohr H." <H.FANGOHR@soton.ac.uk>
+To: "carey r.l. (rlc2v07)" <r.carey@soton.ac.uk>,
+        "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+Subject: [finmag-team] Normal modes, nice experiment
+Thread-Topic: Normal modes, nice experiment
+Thread-Index: AQHObrWXCCtLiEKvYEOVn3UWp1tClw==
+Date: Fri, 21 Jun 2013 19:29:04 +0000
+Message-ID: <08DEF795-803A-42DA-A99F-E23A1C630815@soton.ac.uk>
+References: <FBE60534-E28A-4041-A0CD-06252DB63989@soton.ac.uk>
+In-Reply-To: <FBE60534-E28A-4041-A0CD-06252DB63989@soton.ac.uk>
+Accept-Language: en-GB, en-US
+Content-Language: en-GB
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.39; helo=<UOS-MSG00037-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.39; envelope-from=<H.FANGOHR@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from quoted-printable to 8bit by maillists.sucs.soton.ac.uk id r5LJTKNh025511
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p5KKYL066933032600; tid=p5KKYL0669330326qZ; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r5LJTLBZ032213
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi all,
+
+Thought you might enjoy the normal mode visualisation in this video.
+
+I think the salt (?) gathers at the nodes of vibration modes to minimise en=
+ergy, so we see something like isolines of the spatially varying amplitude =
+of the normal modes.
+
+[We could try the isolines trick to visualise our magnetic modes as well. ]
+
+Cheers
+
+Hans
+
+
+----
+
+Sent from mobile device
+
+----
+
+Hans Fangohr
+University of Southampton
+http://www.soton.ac.uk/~fangohr
+
+Begin forwarded message:
+
+From: Fangohr H. <H.FANGOHR@soton.ac.uk<mailto:H.FANGOHR@soton.ac.uk>>
+Date: 21 June 2013 18:08:54 BST
+To: Fangohr H. <H.FANGOHR@soton.ac.uk<mailto:H.FANGOHR@soton.ac.uk>>
+Subject: Amazing Resonance Experiment!
+
+Take a look at this video on YouTube:
+
+http://youtu.be/wvJAgrUBF4w
+
+
+
+----
+
+Sent from mobile device
+
+----
+
+Hans Fangohr
+University of Southampton
+http://www.soton.ac.uk/~fangohr
+
+-------------------------------------
+finmag-team mailing list.
+
