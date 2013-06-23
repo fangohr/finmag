@@ -114,7 +114,7 @@ def run_normal_modes_computation(sim, params_relax=None, params_precess=None):
         'save_ndt_every': 1e-11,
         'save_vtk_every': None,
         'save_npy_every': None,
-	't_end': 10e-9,
+        't_end': 10e-9,
         'filename': None
         }
 
@@ -131,16 +131,16 @@ def run_normal_modes_computation(sim, params_relax=None, params_precess=None):
         if params['save_npy_every'] != None: sim.schedule('save_field', 'm', filename=sim.name + suffix + '.npy', every=params['save_npy_every'])
 
     if params_relax == None:
-	pass  # skip the relaxation phase
+        pass  # skip the relaxation phase
     else:
         params = default_params_relax
-	params.update(params_relax)
+        params.update(params_relax)
         set_simulation_parameters_and_schedule(sim, params, suffix='_relax')
- 	sim.relax()
-	if params['save_relaxed_vtk']:
-	    sim.save_vtk(filename=sim.name + '_relaxed.pvd')
-	if params['save_relaxed_npy']:
-	    sim.save_field('m', filename=sim.name + '_relaxed.npy')
+        sim.relax()
+        if params['save_relaxed_vtk']:
+            sim.save_vtk(filename=sim.name + '_relaxed.pvd')
+        if params['save_relaxed_npy']:
+            sim.save_field('m', filename=sim.name + '_relaxed.npy')
 
     sim.reset_time(0.0)
     sim.clear_schedule()
