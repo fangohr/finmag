@@ -5,6 +5,7 @@ from finmag.util.consts import mu0
 from finmag.util.timings import mtimed
 from finmag.util import helpers
 import scipy.sparse as sp
+import scipy.sparse.linalg as spl
 from scipy.sparse.linalg.dsolve import linsolve
 
 logger=logging.getLogger('finmag')
@@ -39,6 +40,319 @@ def copy_petsc_to_csr(pm):
         matrix[i,ids] = values
     
     return matrix.tocsr()
+
+
+def generate_nonzero_ids(mat):
+    """
+    generate the nonzero column ids for every rows
+    """
+       
+    idxs,idys = mat.nonzero()
+    
+    max_x=0
+    for x in idxs:
+        if x>max_x:
+            max_x=x
+    idy=[]
+    for i in range(max_x+1):
+        idy.append([])
+
+    for i, x in enumerate(idxs):
+        idy[x].append(idys[i])
+     
+    assert(len(idy)==max_x+1)
+    return np.array(idy)
+
+
+def compute_nodal_triangle():
+    """
+    The nodal vectors are computed using the following normals
+        n0 = np.array([1,1])/np.sqrt(2)
+        n1 = np.array([1.0,0])
+        n2 = np.array([0,-1.0])
+    """
+    
+    v0=[[0,0],[0,0],[1,0],[0,0],[0,-1],[0,0]]
+    v1=[[1,0],[0,0],[0,0],[0,0],[0,0],[1,-1]]
+    v2=[[0,0],[0,1],[0,0],[1,-1],[0,0],[0,0]]
+    
+    divs = np.array([1,1,-1,-1,1,1])/2.0
+        
+    return v0, v1, v2, divs
+
+def compute_nodal_tetrahedron():
+    """
+    The nodal vectors are computed using the following normals
+        n0 = np.array([-1,-1, -1])/np.sqrt(3)
+        n1 = np.array([-1, 0, 0])
+        n2 = np.array([0, 1, 0])
+        n3 = np.array([0, 0, -1])
+    """
+    
+
+    v0 = [[0,0,0],[0,0,0],[0,0,0],[-1,0,0],[0,0,0],[0,0,0],\
+         [0,1,0],[0,0,0],[0,0,0],[0,0,-1],[0,0,0],[0,0,0]]
+    
+    v1 = [[-1,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],\
+         [0,0,0],[-1,1,0],[0,0,0],[0,0,0],[1,0,-1],[0,0,0]]
+    
+    v2 = [[0,0,0],[0,-1,0],[0,0,0],[0,0,0],[-1,1,0],[0,0,0],\
+         [0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,1,-1]]
+    
+    v3 = [[0,0,0],[0,0,0],[0,0,-1],[0,0,0],[0,0,0],[-1,0,1],\
+         [0,0,0],[0,0,0],[0,1,-1],[0,0,0],[0,0,0],[0,0,0]]
+    
+    divs = np.array([-1,-1,-1,1,1,1,-1,-1,-1,1,1,1])/6.0
+        
+    return v0, v1, v2, v3, divs
+
+
+def assemble_1d(mesh):
+    DG = df.FunctionSpace(mesh, "DG", 0)
+    n = df.FacetNormal(mesh)
+    h = df.CellSize(mesh)
+    h_avg = (h('+') + h('-'))/2
+    
+    u = df.TrialFunction(V)
+    v = df.TestFunction(V)
+    
+    a = 1.0/h_avg*df.dot(df.jump(v, n), df.jump(u, n))*df.dS
+    
+    K = df.assemble(a)
+    L = df.assemble(v * df.dx).array()
+    
+    return copy_petsc_to_csr(K), L
+
+def assemble_2d(mesh):
+    
+    v0, v1, v2, divs = compute_nodal_triangle()
+
+    cs = mesh.coordinates()
+    BDM = df.FunctionSpace(mesh, "BDM", 1)
+    fun = df.Function(BDM)
+    n = fun.vector().size()
+    mat = sp.lil_matrix((n,n))
+    
+    m = mesh.num_cells()
+    mat_K = sp.lil_matrix((n,m))
+
+    map = BDM.dofmap()
+    
+    for cell in df.cells(mesh):
+        
+        i = cell.entities(0)
+        
+        cm = []
+        cm.append(cs[i[1]] - cs[i[0]])
+        cm.append(cs[i[2]] - cs[i[0]])
+        
+        A = np.transpose(np.array(cm))
+        B = np.dot(np.transpose(A),A)
+        J = np.linalg.det(A)
+
+        K = B/abs(J)        
+        cfs = map.cell_dofs(cell.index())
+            
+        for i in range(6):
+            for j in range(6):
+                existing = mat[cfs[i],cfs[j]]
+                add_new = np.dot(np.dot(K,v0[i]),v0[j]) \
+                            + np.dot(np.dot(K,v1[i]),v1[j]) \
+                            + np.dot(np.dot(K,v2[i]),v2[j])
+                            
+                mat[cfs[i],cfs[j]] = existing + add_new/6.0
+                
+        id_c = cell.index()
+        for j in range(6):
+            existing = mat_K[cfs[j],id_c]
+            if J>0:
+                mat_K[cfs[j],id_c] = existing + divs[j] 
+            else:
+                mat_K[cfs[j],id_c] = existing - divs[j]
+
+    idy = generate_nonzero_ids(mat)
+    #set the Neumann boundary condition here
+    mesh.init(1,2)
+    for edge in df.edges(mesh):
+        faces = edge.entities(2)
+        if len(faces)==1:
+            f = df.Face(mesh,faces[0])
+            cfs = map.cell_dofs(f.index())
+            ids = map.tabulate_facet_dofs(f.index(edge))
+            zid = cfs[ids]
+            
+            for i in zid:
+                mat[i,idy[i]]=0
+                mat[idy[i],i]=0
+                mat[i,i] = 1
+    
+
+    A_inv = spl.inv(mat.tocsc())
+    K3 = A_inv * mat_K.tocsr()
+
+    K3 = K3.tolil()
+    idy=generate_nonzero_ids(K3)
+    mesh.init(1,2)
+    for edge in df.edges(mesh):
+        faces = edge.entities(2)
+        if len(faces)==1:
+            f = df.Face(mesh,faces[0])
+            cfs = map.cell_dofs(f.index())
+            ids = map.tabulate_facet_dofs(f.index(edge))
+            for i in cfs[ids]:
+                K3[i,idy[i]] = 0
+                
+    
+    K1 = mat_K.transpose()
+    K = K1*K3.tocsr()
+
+    DG = df.FunctionSpace(mesh, "DG", 0)
+    v = df.TestFunction(DG)
+
+    L = df.assemble(v * df.dx).array()
+    
+    return K,L
+
+
+def assemble_3d(mesh):
+    
+    v0, v1, v2, v3, divs = compute_nodal_tetrahedron()
+
+    cs = mesh.coordinates()
+    BDM = df.FunctionSpace(mesh, "BDM", 1)
+    fun = df.Function(BDM)
+    n = fun.vector().size()
+    mat = sp.lil_matrix((n,n))
+    
+    m = mesh.num_cells()
+    mat_K = sp.lil_matrix((n,m))
+
+    map = BDM.dofmap()
+    
+    for cell in df.cells(mesh):
+        
+        ci = cell.entities(0)
+        
+        cm = []
+        cm.append(cs[ci[1]] - cs[ci[0]])
+        cm.append(cs[ci[2]] - cs[ci[0]])
+        cm.append(cs[ci[3]] - cs[ci[0]])
+        
+        A = np.transpose(np.array(cm))
+        B = np.dot(np.transpose(A),A)
+        
+        J = np.linalg.det(A)
+        
+        K = B/abs(J)
+        
+        cfs = map.cell_dofs(cell.index())
+        
+        for i in range(12):
+            for j in range(12):
+                tmp = mat[cfs[i],cfs[j]]
+                tmp_res = np.dot(np.dot(K,v0[i]),v0[j]) \
+                            + np.dot(np.dot(K,v1[i]),v1[j]) \
+                            + np.dot(np.dot(K,v2[i]),v2[j]) \
+                            + np.dot(np.dot(K,v3[i]),v3[j])
+                mat[cfs[i],cfs[j]] = tmp + tmp_res/24.0
+                
+        id_c = cell.index()
+        
+        for j in range(12):
+            tmp = mat_K[cfs[j],id_c]
+            if J>0:
+                mat_K[cfs[j],id_c] = tmp + divs[j]
+            else:
+                mat_K[cfs[j],id_c] = tmp - divs[j]
+
+    idy=generate_nonzero_ids(mat)
+    mesh.init(2,3)
+    for face in df.faces(mesh):
+        cells = face.entities(3)
+        if len(cells)==1:
+            c = df.Cell(mesh,cells[0])
+            cfs = map.cell_dofs(c.index())
+            ids = map.tabulate_facet_dofs(c.index(face))
+            zid = cfs[ids]
+            for i in zid:
+                mat[i,idy[i]]=0
+                mat[idy[i],i]=0
+                mat[i,i] = 1
+    
+    A_inv = spl.inv(mat.tocsc())
+    K3 = A_inv * mat_K.tocsr()
+    
+    K3 = K3.tolil()
+    idy=generate_nonzero_ids(K3)
+    mesh.init(2,3)
+    for face in df.faces(mesh):
+        cells = face.entities(3)
+        if len(cells)==1:
+            c = df.Cell(mesh,cells[0])
+            cfs = map.cell_dofs(c.index())
+            ids = map.tabulate_facet_dofs(c.index(face))
+            for i in cfs[ids]:
+                K3[i,idy[i]] = 0
+        
+    K1 = mat_K.transpose()
+    K = K1*K3.tocsr()
+
+    DG = df.FunctionSpace(mesh, "DG", 0)
+    v = df.TestFunction(DG)
+
+    L = df.assemble(v * df.dx).array()
+    
+    return K,L
+
+class ExchangeDG(object):
+    def __init__(self, C, in_jacobian = False, name='ExchangeDG'):
+        self.C = C
+        self.in_jacobian=in_jacobian
+        self.name = name
+   
+    #@mtimed
+    def setup(self, DG3, m, Ms, unit_length=1.0): 
+        self.DG3 = DG3
+        self.m = m
+        self.Ms = Ms
+        self.unit_length = unit_length
+        
+        mesh = DG3.mesh()
+        dim = mesh.topology().dim()
+        
+        if dim == 1:
+            self.K, self.L = assemble_1d(mesh)
+        elif dim == 2:
+            self.K, self.L = assemble_2d(mesh)
+        elif dim == 3:
+            self.K, self.L = assemble_3d(mesh)
+        
+        self.mu0 = mu0
+        self.exchange_factor = 2.0 * self.C / (self.mu0 * Ms * self.unit_length**2)
+        
+        self.coeff = -self.exchange_factor/self.L
+        
+        self.H = m.vector().array()
+    
+    def compute_field(self):
+        mm = self.m.vector().array()
+        mm.shape = (3,-1)
+        self.H.shape=(3,-1)
+
+        for i in range(3):
+            self.H[i][:] = self.coeff * (self.K * mm[i])
+        
+        mm.shape = (-1,)
+        self.H.shape=(-1,)
+        
+        return self.H
+    
+    def average_field(self):
+        """
+        Compute the average field.
+        """
+        return helpers.average_field(self.compute_field())
+
 
 
 class ExchangeDG2(object):
@@ -88,7 +402,11 @@ class ExchangeDG2(object):
         
         zero = df.Constant((0,0,0))
         self.bc = df.DirichletBC(BDM, zero, boundary)
-        #self.bc.apply(self.A)
+        #print 'before',self.A.array()
+        
+        self.bc.apply(self.A)
+        
+        #print 'after',self.A.array()
         
         #AA = sp.lil_matrix(self.A.array())
         AA = copy_petsc_to_csc(self.A)
@@ -131,7 +449,7 @@ class ExchangeDG2(object):
         for i in range(3):
             self.m_x.set_local(mm[i])
             self.K1.mult(self.m_x, self.b)
-            #self.bc.apply(self.b)      
+            self.bc.apply(self.b)      
             
             H = self.solver(self.b.array())
             #df.solve(self.A, self.sigma_v, self.b)
@@ -143,76 +461,6 @@ class ExchangeDG2(object):
         
         return self.H_eff
         
-    
-    def average_field(self):
-        """
-        Compute the average field.
-        """
-        return helpers.average_field(self.compute_field())
-    
-
-
-class ExchangeDG(object):
-    def __init__(self, C, in_jacobian = False, name='ExchangeDG'):
-        self.C = C
-        self.in_jacobian=in_jacobian
-        self.name = name
-   
-    #@mtimed
-    def setup(self, DG3, m, Ms, unit_length=1.0): 
-        self.DG3 = DG3
-        self.m = m
-        self.Ms = Ms
-        self.unit_length = unit_length
-        
-        mesh = DG3.mesh()
-        
-        DG = df.FunctionSpace(mesh, "DG", 0)
-        BDM = df.FunctionSpace(mesh, "BDM", 1)
-    
-        n = df.FacetNormal(mesh)
-    
-        u_dg = df.TrialFunction(DG)
-        v_dg = df.TestFunction(DG)
-    
-        u3 = df.TrialFunction(BDM)
-        v3 = df.TestFunction(BDM)
-    
-        #a1 = u_dg * df.inner(v3, n) * df.ds - u_dg * df.div(v3) * df.dx
-        a1 = u_dg * df.inner(v3, n) * df.ds - u_dg * df.div(v3) * df.dx
-        self.K1 = sp.csr_matrix(df.assemble(a1).array())
-        
-        f_ones = df.Function(BDM)
-        f_ones.vector()[:] = 1
-        self.L3 = df.assemble(df.dot(f_ones, v3) * df.dx).array()
-        print 'YY'*50, self.L3
-    
-        a2 = df.div(u3) * v_dg * df.dx
-        self.K2 = sp.csr_matrix(df.assemble(a2).array())
-        self.L = df.assemble(v_dg * df.dx).array()
-    
-        self.mu0 = mu0
-        self.exchange_factor = 2.0 * self.C / (self.mu0 * Ms * self.unit_length**2)
-        
-        # coeff1 should multiply something, I have no idea so far ....
-        self.coeff1 = -1/self.L3
-        self.coeff2 = self.exchange_factor/self.L
-        
-        self.H = m.vector().array()
-    
-    def compute_field(self):
-        mm = self.m.vector().array()
-        mm.shape = (3,-1)
-        self.H.shape=(3,-1)
-
-        for i in range(3):
-            f = self.coeff1*(self.K1*mm[i])
-            self.H[i][:] = self.coeff2 * (self.K2 * f)
-        
-        mm.shape = (-1,)
-        self.H.shape=(-1,)
-        
-        return self.H
     
     def average_field(self):
         """
@@ -269,9 +517,6 @@ class ExchangeDG_bak(object):
         self.bc = df.DirichletBC(W1, zero, boundary)
         self.bc.apply(self.A)
         
-        #tmp =  self.A.array()
-        #self.A = sp.lil_matrix(tmp)
-        #self.A = self.A.tocsr()
         
         a2 = (df.div(sigma0) * v0 + df.div(sigma1) * v1 + df.div(sigma2) * v2) * df.dx
         self.K2 = df.assemble(a2)
@@ -300,8 +545,6 @@ class ExchangeDG_bak(object):
         self.bc.apply(self.b)
         
         df.solve(self.A, self.sigma_v, self.b)
-        #phi = linsolve.spsolve(self.A,self.b.array())
-        #self.sigma_v.set_local(phi)
         
         self.K2.mult(self.sigma_v, self.H)
 
