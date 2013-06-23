@@ -95,22 +95,22 @@ def test_run_normal_modes_computation(tmpdir):
     #sim.run_normal_modes_computation(alpha_relax=1.0, alpha_precess=0.01, t_end=10e-9, save_ndt_every=1e-11, save_vtk_every=None, )
     params_relax = {
         'alpha': 1.0,
-	'H_ext': [1e3, 0, ],
-	'save_ndt_every': None,
-	'save_vtk_every': None,
-	'save_npy_every': None,
-	'save_relaxed_state': True,
-	'filename': None
-	}
+        'H_ext': [1e3, 0, ],
+        'save_ndt_every': None,
+        'save_vtk_every': None,
+        'save_npy_every': None,
+        'save_relaxed_state': True,
+        'filename': None
+        }
     params_precess = {
         'alpha': 0.0,
-	'H_ext': [1e3, 0, 0],
-	't_end': 1e-10,
-	'save_ndt_every': 1e-11,
-	'save_vtk_every': 3e-11,
-	'save_npy_every': 2e-11,
-	'filename': None,
-	}
+        'H_ext': [1e3, 0, 0],
+        't_end': 1e-10,
+        'save_ndt_every': 1e-11,
+        'save_vtk_every': 3e-11,
+        'save_npy_every': 2e-11,
+        'filename': None,
+        }
     sim.run_normal_modes_computation(params_relax, params_precess)
 
     # XXX TODO: We should change the filename of the .ndt file to 'barmini_precess.ndt'
