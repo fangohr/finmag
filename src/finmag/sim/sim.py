@@ -17,7 +17,7 @@ from finmag.energies import Exchange, Zeeman, Demag, UniaxialAnisotropy, DMI
 from finmag.integrators.llg_integrator import llg_integrator
 from finmag.integrators import scheduler, events
 from finmag.integrators.common import run_with_schedule
-from finmag.util.pbc2d import PeriodicBoundary2D
+from finmag.util.pbc2d import PeriodicBoundary1D,PeriodicBoundary2D
 from finmag.llb.sllg import SLLG
 
 ONE_DEGREE_PER_NS = 17453292.5  # in rad/s
@@ -88,6 +88,8 @@ class Simulation(object):
         self.pbc = pbc
         if pbc == '2d':
             self.pbc = PeriodicBoundary2D(mesh)
+        elif pbc == '1d':
+            self.pbc = PeriodicBoundary1D(mesh)
 
 
         self.mesh = mesh
@@ -510,6 +512,8 @@ class Simulation(object):
         self.llg.T = value
     
     T = property(__get_T, __set_T)
+
+    run_normal_modes_computation = sim_helpers.run_normal_modes_computation
 
     def reinit_integrator(self):
         """

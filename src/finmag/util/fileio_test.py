@@ -4,6 +4,8 @@ import os
 from glob import glob
 from fileio import *
 
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 
 def test_Table_writer_and_reader(tmpdir):
     os.chdir(str(tmpdir))
@@ -43,6 +45,10 @@ def test_Table_writer_and_reader(tmpdir):
     dmz = data['m_z']
     dm = np.vstack([dmx, dmy, dmz]).T  # stack the arrays together
     assert np.allclose(dm, np.array(data['m_x', 'm_y', 'm_z']).T)
+
+    # Reading an incomplete dataset should raise a runtime error
+    with pytest.raises(RuntimeError):
+        Tablereader(os.path.join(MODULE_DIR, 'test-incomplete-data.ndt'))
 
 
 def test_field_saver(tmpdir):

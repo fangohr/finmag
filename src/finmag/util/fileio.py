@@ -151,7 +151,10 @@ class Tablereader(object):
         assert len(headers) == len(units)
 
         # use numpy to read remaining data
-        self.data = np.loadtxt(self.f)
+        try:
+            self.data = np.loadtxt(self.f)
+        except ValueError:
+            raise RuntimeError("Cannot load data from file '{}'. Maybe the file was incompletely written?".format(self.f))
         self.f.close()
 
         # some consistency checks: must have as many columns as
