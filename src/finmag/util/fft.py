@@ -401,7 +401,7 @@ def filter_frequency_component(signal, k, t_start, t_end, ts_sampling=None):
     return signal_filtered
 
 
-def export_normal_mode_animation(npy_files, outfilename, mesh, t_step, k, scaling=0.25, dm_only=False):
+def export_normal_mode_animation(npy_files, outfilename, mesh, t_step, k, scaling=0.2, dm_only=False, num_cycles=5, num_frames_per_cycle=10):
     """
     Read a bunch of .npy files (containing the magnetisation sampled
     at regular time steps) and export an animation of the normal mode
@@ -441,11 +441,18 @@ def export_normal_mode_animation(npy_files, outfilename, mesh, t_step, k, scalin
         average magnetisation and dm(t) the (spatially varying)
         oscillation corresponding to the frequency of the normal mode.
         If True, only `dm(t)` is plotted.
+
+    num_cycles :  int
+
+        The number of cycles to be animated (default: 5).
+
+    num_frames_per_cycle :  int
+
+        The number of snapshot per cycle to be exported (default: 10). Thus the
+        total number of exported frames is (num_frames_per_cycle * num_cycles).
+
     """
-    if isinstance(npy_files, str):
-        files = sorted(glob(npy_files))
-    else:
-        files = list(npy_files)
+    files = sorted(glob(npy_files)) if isinstance(npy_files, str) else list(npy_files)
 
     if isinstance(mesh, str):
         mesh = df.Mesh(mesh)
@@ -453,11 +460,12 @@ def export_normal_mode_animation(npy_files, outfilename, mesh, t_step, k, scalin
     N = len(files)  # number of timesteps
     num_nodes = len(mesh.coordinates())
 
-    # Read in the signal
+    # Read in the magnetisation dynamics
     signal = np.empty([N, 3*num_nodes])
     for (i, filename) in enumerate(files):
         signal[i, :] = np.load(filename)
-    logger.debug("Signal occupies {} MB of memory".format(signal.nbytes / 1024**2))
+    logger.debug("Array with magnetisation dynamics occupies "
+                 "{} MB of memory".format(signal.nbytes / 1024**2))
 
     # Fourier transform the signal
     t0 = time()
@@ -466,36 +474,51 @@ def export_normal_mode_animation(npy_files, outfilename, mesh, t_step, k, scalin
     logger.debug("Computing the Fourier transform took {:.2g} seconds".format(t1-t0))
     fft_freqs = np.fft.fftfreq(N, d=t_step)[:len(fft_vals)]
 
-    # XXX TODO: The full invere Fourier transform should be replaced by the explicit formula for the single coefficient to save memory and computational effort
-    fft_vals_filtered = np.zeros(fft_vals.shape, dtype=fft_vals.dtype)
-    fft_vals_filtered[k] = fft_vals[k]
-    t0 = time()
-    signal_inv_filtered = np.fft.irfft(fft_vals_filtered, N, axis=0)
-    t1 = time()
-    logger.debug("Computing the inverse Fourier transform took {:.2f} seconds.".format(t1-t0))
+    # Only keep the k-th Fourier coefficient for each location
+    A_k = fft_vals[k]
+    abs_k = np.abs(A_k)[np.newaxis, :]
+    theta_k = np.angle(A_k)[np.newaxis, :]
 
-    # Determine a sensible scaling factor so that the oscillations are visible but not too large.
-    # N.B.: Even though it looks convoluted, computing the maximum value
-    # in this iterated way is actually much faster than doing it directly.
-    maxval = max(np.max(signal_inv_filtered, axis=0))
+    num_frames = num_frames_per_cycle * num_cycles
+    signal_filtered = np.empty([num_frames, 3*num_nodes])
+
+    omega = fft_freqs[k]  # frequency associated with the k-th Fourier coefficient
+    cycle_length = 1.0 / omega
+    timesteps = np.linspace(0, num_cycles * cycle_length, num_frames, endpoint=False)[:, np.newaxis]
+    t_end = (N - 1) * t_step
+
+    # Compute 'snapshots' of the oscillation and store them in signal_filtered
+    #
+    # TODO: Write a unit test for this formula, just to be 100% sure
+    #       that it is correct!
+    signal_filtered = 2.0/N * abs_k * cos(k*2*pi * timesteps / t_end + theta_k)
+
+    # Determine a sensible scaling factor so that the oscillations are
+    # visible but not too large. (Note that, even though it looks
+    # convoluted, computing the maximum value in this iterated way is
+    # actually much faster than doing it directly.)
+    maxval = max(np.max(signal_filtered, axis=0))
     logger.debug("Maximum value of the signal: {}".format(maxval))
 
     V = df.VectorFunctionSpace(mesh, 'CG', 1, dim=3)
     func = df.Function(V)
     func.rename('m', 'magnetisation')
     if dm_only == True:
-        signal_normal_mode = 1 / maxval * signal_inv_filtered
+        signal_normal_mode = 1 / maxval * signal_filtered
     else:
-        signal_normal_mode = signal.mean(axis=0).T + scaling / maxval * signal_inv_filtered
+        signal_normal_mode = signal.mean(axis=0).T + scaling / maxval * signal_filtered
 
-    logger.debug("Saving normal mode to file '{}'.".format(outfilename))
+    # XXX TODO: Check for an existing file and ask for confirmation whether it should be overwritten!
+    logger.debug("Saving normal mode animation to file '{}'.".format(outfilename))
     t0 = time()
     f = df.File(outfilename, 'compressed')
-    # XXX TODO: We need the strange temporary array 'aaa' here because if we write the values directly into func.vector() then they end up being different (as illustrated below)!!!
+    # XXX TODO: We need the strange temporary array 'aaa' here because
+    #           if we write the values directly into func.vector() then
+    #           they end up being different (as illustrated below)!!!
     aaa = np.empty(3*num_nodes)
     #for i in xrange(len(ts)):
     #for i in xrange(20):
-    for i in xrange(N):
+    for i in xrange(num_frames):
         #if i % 20 == 0:
         #    print "i={} ".format(i),
         #    import sys
