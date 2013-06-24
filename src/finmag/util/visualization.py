@@ -155,7 +155,11 @@ def render_paraview_scene(
             shutil.rmtree(tmpdir)
         os.chdir(curdir_bak)  # change back into the original directory
 
-    image = IPython.core.display.Image(filename=outfile)
+    try:
+        image = IPython.core.display.Image(filename=outfile)
+    except IOError:
+        # Something went wrong (missing X display?); let's not choke but return None instead.
+        image = None
     return image
 
 
