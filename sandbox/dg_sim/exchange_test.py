@@ -62,10 +62,29 @@ def plot_m(mesh,xs,m_an,f_dg,f_cg,name='compare.pdf'):
     plt.plot(xs,dg,'.-',label='dg')
     plt.plot(xs,cg,'^-',label='cg')
     plt.xlabel('x')
-    plt.ylabel('mx')
+    plt.ylabel('Field')
     plt.legend(loc=8)
     fig.savefig(name)
  
+ 
+def map_dg2cg(mesh, fun_dg):
+    
+    CG = df.VectorFunctionSpace(mesh, 'CG', 1)
+    DG = df.VectorFunctionSpace(mesh, 'DG', 0)
+    fun_cg = df.Function(CG)
+    
+    u = df.TrialFunction(DG)
+    v = df.TestFunction(CG)
+    L = df.assemble(df.dot(v, df.Constant([1,1,1]))*df.dx).array()
+    a = df.dot(u, v) * df.dx
+    A = df.assemble(a).array()
+
+    m = fun_dg.vector().array()
+
+    fun_cg.vector()[:]=np.dot(A,m)/L
+    
+    return fun_cg
+    
    
 if __name__ == "__main__2":
     mesh = df.BoxMesh(0,0,0,2*np.pi,5,1,10, 5, 1)
@@ -119,28 +138,27 @@ if __name__ == "__main__":
     mesh.coordinates()[:]+= rand
     df.plot(mesh)
     df.interactive()
-    S3 = df.VectorFunctionSpace(mesh, "DG", 0, dim=3)
+    DG = df.VectorFunctionSpace(mesh, "DG", 0, dim=3)
     C = 1.0
     expr = df.Expression(('0', 'sin(x[0])','cos(x[0])'))
     Ms = 8.6e5
-    m = df.interpolate(expr, S3)
+    m = df.interpolate(expr, DG)
     
     exch = ExchangeDG(C)
-    exch.setup(S3, m, Ms, unit_length=1)
+    exch.setup(DG, m, Ms, unit_length=1)
     f = exch.compute_field()
     
     xs=np.linspace(0.2,2*np.pi-0.2,10)
     m_an= -1.0*2*C/(mu0*Ms)*np.cos(xs)
     
     
-    field=df.Function(S3)
-    field.vector().set_local(exch.compute_field())
+    field=df.Function(DG)
+    field.vector().set_local(f)
+    field=map_dg2cg(mesh, field)
     
     
     S3 = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
     m2 = df.interpolate(expr, S3)
-    field = df.project(field,S3)
-
     exch = Exchange(C)
     exch.setup(S3, m2, Ms, unit_length=1)
     f = exch.compute_field()
