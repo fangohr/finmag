@@ -104,9 +104,9 @@ class Simulation(object):
         elif kernel=='sllg':
             self.llg = SLLG(self.S1, self.S3, unit_length=unit_length)
         else:
-            raise ValueError("kernal must be either llg or sllg.")
+            raise ValueError("kernel must be either llg or sllg.")
         
-        self.kernal = kernal
+        self.kernel = kernel
         
         self.llg.Ms = Ms
         self.Volume = mesh_volume(mesh)
@@ -348,7 +348,7 @@ class Simulation(object):
             if backend == None:
                 backend = self.integrator_backend
             log.info("Create integrator {} with kwargs={}".format(backend, kwargs))
-            if self.kernal == 'sllg':
+            if self.kernel == 'sllg':
                 self.integrator = self.llg
             else:
                 self.integrator = llg_integrator(self.llg, self.llg.m, backend=backend, **kwargs)
