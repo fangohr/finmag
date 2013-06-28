@@ -6503,3 +6503,10 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-06-27 14:37:09 fangohr-adium: Remembre that the SCCS is very broad and not specific for magnetism, or even materials, or engineering.
 2013-06-27 14:37:25 mb4e10: Ok, thank you.
 2013-06-27 15:11:05 fangohr-adium: By the way, there is a selection of sandwiches outside my office.
+2013-06-28 09:48:16 mb8g11: ww1g11, in your report, you rotate a mesh by twiddling with the coordinates. Did you know about the 'rotate' method of mesh? I know this is only tangentially related to the main problem you explore, but could fix the particular issue you are seing.
+2013-06-28 10:03:44 mb8g11: Okay, I just tried it myself, 'mesh.rotate(pi/4, 2, Point(0, 0, 0))' works.
+2013-06-28 10:06:34 mb8g11: As you would expect, rotating the mesh doesn't change the results. (that's section 2 2) in your report)
+2013-06-28 13:08:33 ww1g11: Hi Marc-Antonio, sorry that just noticed this information, great finding, but it seems that we should use degree say mesh.rotate(45, 2, Point(0, 0, 0))
+2013-06-28 13:11:15 ww1g11: and after rotation the solution indeed changed
+2013-06-28 13:17:58 ww1g11: okay, my mistake, we should rotate from the mesh center, say mesh.rotate(45, 2, Point(0.5, 0.5, 0))
+2013-06-28 14:18:15 mb8g11: Indeed :)
