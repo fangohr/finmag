@@ -6510,3 +6510,5 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-06-28 13:11:15 ww1g11: and after rotation the solution indeed changed
 2013-06-28 13:17:58 ww1g11: okay, my mistake, we should rotate from the mesh center, say mesh.rotate(45, 2, Point(0.5, 0.5, 0))
 2013-06-28 14:18:15 mb8g11: Indeed :)
+2013-07-01 11:38:49 fangohr-adium: Greetings, all.
+2013-07-01 11:51:04 MarkV: Hello
