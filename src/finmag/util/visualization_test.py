@@ -20,3 +20,6 @@ def test_render_paraview_scene(tmpdir):
     render_paraview_scene(
         'initial_state000000.vtu', 'initial_state.png',
         color_by_axis='Z', rescale_colormap_to_data_range=False, debugging=False)
+
+    # Check that the expected output file exists
+    assert(os.path.exists('initial_state.png'))
