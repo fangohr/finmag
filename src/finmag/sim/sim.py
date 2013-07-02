@@ -17,7 +17,7 @@ from finmag.energies import Exchange, Zeeman, Demag, UniaxialAnisotropy, DMI
 from finmag.integrators.llg_integrator import llg_integrator
 from finmag.integrators import scheduler, events
 from finmag.integrators.common import run_with_schedule
-from finmag.util.pbc2d import PeriodicBoundary1D,PeriodicBoundary2D
+from finmag.util.pbc2d import PeriodicBoundary1D, PeriodicBoundary2D
 from finmag.llb.sllg import SLLG
 
 ONE_DEGREE_PER_NS = 17453292.5  # in rad/s
@@ -34,7 +34,7 @@ class Simulation(object):
 
     """
     @mtimed
-    def __init__(self, mesh, Ms, unit_length=1, name='unnamed', kernal='llg' ,integrator_backend="sundials", pbc=None, average=False):
+    def __init__(self, mesh, Ms, unit_length=1, name='unnamed', kernel='llg' ,integrator_backend="sundials", pbc=None, average=False):
         """Simulation object.
 
         *Arguments*
@@ -50,7 +50,7 @@ class Simulation(object):
 
           pbc : Periodic boundary type: None or '2d'
           
-          kernal : 'llg' or 'sllg'
+          kernel : 'llg' or 'sllg'
           
           average : take the cell averaged effective field, only for test, will delete it if doesn't work.
 
@@ -99,14 +99,14 @@ class Simulation(object):
         self.S1 = df.FunctionSpace(mesh, "Lagrange", 1, constrained_domain=self.pbc)
         self.S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3, constrained_domain=self.pbc)
         
-        if kernal=='llg':
+        if kernel=='llg':
             self.llg = LLG(self.S1, self.S3, average = average)
-        elif kernal=='sllg':
+        elif kernel=='sllg':
             self.llg = SLLG(self.S1, self.S3, unit_length=unit_length)
         else:
-            raise ValueError("kernal must be either llg or sllg.")
+            raise ValueError("kernel must be either llg or sllg.")
         
-        self.kernal = kernal
+        self.kernel = kernel
         
         self.llg.Ms = Ms
         self.Volume = mesh_volume(mesh)
@@ -348,7 +348,7 @@ class Simulation(object):
             if backend == None:
                 backend = self.integrator_backend
             log.info("Create integrator {} with kwargs={}".format(backend, kwargs))
-            if self.kernal == 'sllg':
+            if self.kernel == 'sllg':
                 self.integrator = self.llg
             else:
                 self.integrator = llg_integrator(self.llg, self.llg.m, backend=backend, **kwargs)

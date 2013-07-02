@@ -453,6 +453,10 @@ def export_normal_mode_animation(npy_files, outfilename, mesh, t_step, k, scalin
 
     """
     files = sorted(glob(npy_files)) if isinstance(npy_files, str) else list(npy_files)
+    if len(files) == 0:
+        logger.error("Cannot produce normal mode animation. No input .npy "
+                     "files found matching '{}'".format(npy_files))
+        return
 
     if isinstance(mesh, str):
         mesh = df.Mesh(mesh)
