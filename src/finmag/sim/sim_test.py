@@ -609,7 +609,7 @@ class TestSimulation(object):
 
     def test_sim_sllg(self, do_plot=False):
         mesh = df.BoxMesh(0, 0, 0, 2, 2, 2, 1, 1, 1)
-        sim = Simulation(mesh, 8.6e5, unit_length=1e-9, kernal='sllg')
+        sim = Simulation(mesh, 8.6e5, unit_length=1e-9, kernel='sllg')
         alpha=0.1
         sim.alpha = alpha
         sim.set_m((1, 0, 0))
@@ -653,7 +653,7 @@ class TestSimulation(object):
         
     def test_sim_sllg_time(self):
         mesh = df.BoxMesh(0, 0, 0, 5, 5, 5, 1, 1, 1)
-        sim = Simulation(mesh, 8.6e5, unit_length=1e-9, kernal='sllg')
+        sim = Simulation(mesh, 8.6e5, unit_length=1e-9, kernel='sllg')
         sim.alpha = 0.1
         sim.set_m((1, 0, 0))
         sim.T = 10
