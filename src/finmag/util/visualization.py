@@ -124,11 +124,9 @@ def render_paraview_scene(
     curdir_bak = os.getcwd()
     try:
         os.chdir(tmpdir)
-        with open('/dev/null') as devnull:
-            sp.check_output(['python', 'render_scene.py'], stderr=devnull)
+        sp.check_output(['python', 'render_scene.py'], stderr=sp.STDOUT)
     except sp.CalledProcessError as ex:
-        logger.error("Could not render Paraview scene. The error "
-                     "message was: {}".format(ex.output))
+        logger.error("Could not render Paraview scene. The error message was: {}".format(ex.output))
         #raise
     finally:
         if debugging == True:
