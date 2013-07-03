@@ -5,6 +5,7 @@
 # CONTACT: h.fangohr@soton.ac.uk
 #
 from init import *
+from __version__ import __version__
 
 # dolfin 1.1.0 re-orders the degrees of freedom
 # to speed up some iterative algorithms. However,
