@@ -96,21 +96,7 @@ def render_paraview_scene(
               import time
               import os
 
-              # Try to find an unused display
-              for display in xrange(10, 100):
-                  DISPLAY = ':' + str(display)
-                  process = Popen(['Xvfb', DISPLAY, '-screen', '0', '1024x768x16'])
-                  time.sleep(0.5)  # this assumes that Xvfb exits quickly if an error
-                                   # occurs because the display is already in use
-                  returncode = process.poll()
-                  if returncode == None:
-                      # we assume that everything is well because the Xvfb process is still running
-                      break
-                  else:
-                      print "[DEBUG] Display " + str(display) + " seems to be in use already. Trying next one."
-
-              print "[DEBUG] Using DISPLAY: " + str(DISPLAY)
-              os.environ['DISPLAY'] = DISPLAY
+              os.environ['DISPLAY'] = ':0'
               render_paraview_scene(
                   '{}', '{}', {},
                   {}, {}, {},
@@ -120,8 +106,6 @@ def render_paraview_scene(
                   {}, {}, {},
                   {}, {},
                   {}, '{}', '{}', {}, {})
-
-              process.terminate()
               """.format(
             vtu_file, outfile, repr(field_name),
             camera_position, camera_focal_point, camera_view_up,
@@ -140,11 +124,9 @@ def render_paraview_scene(
     curdir_bak = os.getcwd()
     try:
         os.chdir(tmpdir)
-        with open('/dev/null') as devnull:
-            sp.check_output(['python', 'render_scene.py'], stderr=devnull)
+        sp.check_output(['python', 'render_scene.py'], stderr=sp.STDOUT)
     except sp.CalledProcessError as ex:
-        logger.error("Could not render Paraview scene. The error "
-                     "message was: {}".format(ex.output))
+        logger.error("Could not render Paraview scene. The error message was: {}".format(ex.output))
         #raise
     finally:
         if debugging == True:
