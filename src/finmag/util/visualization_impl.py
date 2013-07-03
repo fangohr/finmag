@@ -24,6 +24,23 @@ import numpy as np
 logger = logging.getLogger("finmag")
 
 
+def find_valid_X_display():
+    # An (probably faster) alternative way would be to write a temporary
+    # shell script which contains the loop and run that using a single
+    # subprocess call. However, since usually display :0 will be available
+    # the loop below should terminate quite quickly.
+    for display in xrange(1, 100):
+        try:
+            sp.check_output(['xdpyinfo', '-display', ':{}'.format(display)], stderr=sp.STDOUT)
+            # This display is available since the command finished successfully
+            res = display
+            break
+        except sp.CalledProcessError:
+            # this display is not available
+            continue
+    return res
+
+
 class ColorMap(object):
     def __init__(self, color_space, rgb_points, nan_color):
         self.color_space = color_space
