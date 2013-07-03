@@ -108,12 +108,13 @@ def render_paraview_scene(
     tmpdir = tempfile.mkdtemp()
     scriptfile = os.path.join(tmpdir, 'render_scene.py')
     script_string = textwrap.dedent("""
-              from visualization_impl import render_paraview_scene
+              from visualization_impl import render_paraview_scene, find_valid_X_display
               from subprocess import Popen
               import time
               import os
 
-              os.environ['DISPLAY'] = ':0'
+              if not os.environ.has_key('DISPLAY'):
+                  os.environ['DISPLAY'] = ':' + str(find_valid_X_display)
               render_paraview_scene(
                   '{}', '{}', {},
                   {}, {}, {},
