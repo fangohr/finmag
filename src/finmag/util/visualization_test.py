@@ -5,7 +5,7 @@ from finmag.util.visualization import render_paraview_scene
 
 # Skipping this test for now because it still doesn't work on aleph0
 # (although it works on my machine) -- Max, 7.6.2013
-@pytest.skip
+pytest.skip
 def test_render_paraview_scene(tmpdir):
     """
     This simply checks whether we can call the function. No check on
