@@ -25,6 +25,23 @@ logger = logging.getLogger("finmag")
 # only take the code from the string, and it should hopefully work
 # without changes.
 
+def find_valid_X_display():
+    # An (probably faster) alternative way would be to write a temporary
+    # shell script which contains the loop and run that using a single
+    # subprocess call. However, since usually display :0 will be available
+    # the loop below should terminate quite quickly.
+    for display in xrange(1, 100):
+        try:
+            sp.check_output(['xdpyinfo', '-display', ':{}'.format(display)], stderr=sp.STDOUT)
+            # This display is available since the command finished successfully
+            res = display
+            break
+        except sp.CalledProcessError:
+            # this display is not available
+            continue
+    return res
+
+
 def render_paraview_scene(
     vtu_file,
     outfile=None,
