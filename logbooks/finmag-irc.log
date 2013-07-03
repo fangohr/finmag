@@ -6512,3 +6512,14 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-06-28 14:18:15 mb8g11: Indeed :)
 2013-07-01 11:38:49 fangohr-adium: Greetings, all.
 2013-07-01 11:51:04 MarkV: Hello
+2013-07-02 08:53:26 mb8g11: Good morning!
+2013-07-02 12:08:34 DChernyshenko: Hans, should I just email Jess the Mercurial repository for iridus/lyceum cluster status scripts?
+2013-07-02 12:49:15 fangohr-adium: Hi Dmitri, yes, great idea.
+2013-07-02 12:49:37 fangohr-adium: She may also be interested in the historic data we have, please send that to her as well.
+2013-07-02 14:36:41 max_albert: Hi Dmitri! Just out of curiosity, what kinds of scripts are these?
+2013-07-02 14:37:56 DChernyshenko: These are some scripts that collect data on node utilisation on iridis/lyceum and put it into a Google Chart on http://cmg.soton.ac.uk/status/iridis/iridis.html
+2013-07-02 14:38:04 DChernyshenko: Did you want to have a look at those?
+2013-07-02 14:38:50 max_albert: Oh, cool! Did you write these? No need to take a look at the moment, I was just curious. :)
+2013-07-02 14:39:24 max_albert: Btw, is there any news on when Iridis4 will be completely usable? Not that I need it at the moment, just wondering.
+2013-07-02 14:39:30 DChernyshenko: I wrote some bits a while ago, also Hans (and Richard Boardman?) worked on those
+2013-07-02 14:40:26 DChernyshenko: I haven't heard anything, this morning I received an email from Iridis people (related to those scripts..) and it seems like they're still working on it
