@@ -28,15 +28,15 @@ class VTKSaver(object):
             if overwrite:
                 log.warning(
                     "Removing file '{}' and all associated .vtu files "
-                    "(because force_overwrite=True).".format(self.filename))
+                    "(because overwrite=True).".format(self.filename))
                 os.remove(self.filename)
                 for f in glob.glob(self.basename + "*.vtu"):
                     os.remove(f)
             else:
                 raise IOError(
                     "Aborting snapshot creation. File already exists and "
-                    "would overwritten: '{}' (use force_overwrite=True if "
-                    "this is what you want)".format(self.filename))
+                    "would overwritten: '{}' (use overwrite=True if this"
+                    "is what you want)".format(self.filename))
 
 
         # Open the file here so that it stays open during all calls to
