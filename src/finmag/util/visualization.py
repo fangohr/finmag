@@ -30,7 +30,7 @@ def find_valid_X_display():
     # shell script which contains the loop and run that using a single
     # subprocess call. However, since usually display :0 will be available
     # the loop below should terminate quite quickly.
-    for display in xrange(1, 100):
+    for display in xrange(0, 100):
         try:
             sp.check_output(['xdpyinfo', '-display', ':{}'.format(display)], stderr=sp.STDOUT)
             # This display is available since the command finished successfully
