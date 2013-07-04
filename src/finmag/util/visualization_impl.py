@@ -25,11 +25,15 @@ import numpy as np
 logger = logging.getLogger("finmag")
 
 
-def find_valid_X_display():
+def find_valid_X_display(displays_to_try=xrange(100)):
     """
-    Sequentially checks all X displays from :0 to :99 and returns the
-    number of the first valid display that is found. Returns None if
-    no valid display could be found.
+    Sequentially checks all X displays in the given list (default: :0 through :99)
+    and returns the number of the first valid display that is found. Returns None
+    if no valid display could be found.
+
+    *Arguments*
+
+    displays_to_try:  list of displays to search (default: [0, ..., 99])
 
     """
     # A (probably faster) alternative way would be to write a temporary
@@ -37,7 +41,7 @@ def find_valid_X_display():
     # subprocess call. However, since usually display :0 will be available
     # the loop below should terminate quite quickly.
     logger.debug("Looking for valid X display.")
-    for display in xrange(100):
+    for display in displays_to_try:
         logger.debug("Trying display :{}".format(display))
         try:
             sp.check_output(['xdpyinfo', '-display', ':{}'.format(display)], stderr=sp.STDOUT)
