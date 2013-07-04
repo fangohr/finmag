@@ -2,7 +2,7 @@ from __future__ import division
 import numpy as np
 import dolfin as df
 import pytest
-from finmag.energies import Zeeman, TimeZeeman, DiscreteTimeZeeman
+from finmag.energies import Zeeman, TimeZeeman, DiscreteTimeZeeman, OscillatingZeeman
 from finmag.util.consts import mu0
 from math import sqrt, pi, cos
 
@@ -134,3 +134,37 @@ def test_discrete_time_zeeman_switchoff_only():
     assert diff(H_ext, np.array([1, 2, 3])) < TOL  # not yet updating
     H_ext.update(2.1)
     assert diff(H_ext, np.array([0, 0, 0])) < TOL
+
+
+def test_oscillating_zeeman():
+    """
+    """
+    def check_field_at_time(t, val):
+        H_osc.update(t)
+        a = H_osc.compute_field().reshape(3, -1).T
+        assert(np.allclose(a, val, atol=0, rtol=1e-8))
+
+    H = np.array([1e6, 0, 0])
+    freq = 2e9
+    t_off = 10e-9
+
+    H_osc = OscillatingZeeman(H0=H, freq=freq, phase=0, t_off=t_off)
+    H_osc.setup(S3, m, Ms)
+
+    # Check that the field has the original value at the end of the
+    # first few cycles.
+    for i in xrange(19):
+        check_field_at_time(i * 1.0/freq, H)
+
+    # Check that the field is switched off at the specified time (and
+    # stays switched off thereafter)
+    check_field_at_time(t_off, [0, 0, 0])
+    check_field_at_time(t_off + 1e-11, [0, 0, 0])
+    check_field_at_time(t_off + 1, [0, 0, 0])
+
+    # Check that the field values vary sinusoidally as expected
+    phase = 0.1e-9
+    H_osc = OscillatingZeeman(H0=H, freq=freq, phase=phase, t_off=None)
+    H_osc.setup(S3, m, Ms)
+    for t in np.linspace(0, 20e-9, 100):
+        check_field_at_time(t, H * cos(2 * pi * freq * t + phase))
