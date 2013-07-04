@@ -26,20 +26,25 @@ logger = logging.getLogger("finmag")
 # without changes.
 
 def find_valid_X_display():
-    # An (probably faster) alternative way would be to write a temporary
+    """
+    Sequentially checks all X displays from :0 to :99 and returns the
+    number of the first valid display that is found. Returns None if
+    no valid display could be found.
+
+    """
+    # A (probably faster) alternative way would be to write a temporary
     # shell script which contains the loop and run that using a single
     # subprocess call. However, since usually display :0 will be available
     # the loop below should terminate quite quickly.
-    for display in xrange(0, 100):
+    for display in xrange(100):
         try:
             sp.check_output(['xdpyinfo', '-display', ':{}'.format(display)], stderr=sp.STDOUT)
             # This display is available since the command finished successfully
-            res = display
-            break
+            return display
         except sp.CalledProcessError:
-            # this display is not available
+            # This display is not available
             continue
-    return res
+    return None
 
 
 def render_paraview_scene(
