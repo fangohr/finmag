@@ -109,7 +109,7 @@ def render_paraview_scene(
                   if display is None:
                       raise RuntimeError("Could not render Paraview scene as no valid X display was found.")
                   else:
-                      os.environ['DISPLAY'] = ':' + str()
+                      os.environ['DISPLAY'] = ':' + str(display)
               render_paraview_scene(
                   '{}', '{}', {},
                   {}, {}, {},
