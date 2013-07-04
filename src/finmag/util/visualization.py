@@ -36,14 +36,18 @@ def find_valid_X_display():
     # shell script which contains the loop and run that using a single
     # subprocess call. However, since usually display :0 will be available
     # the loop below should terminate quite quickly.
+    logger.debug("Looking for valid X display.")
     for display in xrange(100):
+        logger.debug("Trying display :{}".format(display))
         try:
             sp.check_output(['xdpyinfo', '-display', ':{}'.format(display)], stderr=sp.STDOUT)
             # This display is available since the command finished successfully
+            logger.debug("Found valid display :{}".format(display))
             return display
         except sp.CalledProcessError:
             # This display is not available
             continue
+    logger.debug("No valid display found.")
     return None
 
 
