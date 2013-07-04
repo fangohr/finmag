@@ -25,30 +25,12 @@ logger = logging.getLogger("finmag")
 # only take the code from the string, and it should hopefully work
 # without changes.
 
-def find_valid_X_display():
-    """
-    Sequentially checks all X displays from :0 to :99 and returns the
-    number of the first valid display that is found. Returns None if
-    no valid display could be found.
-
-    """
-    # A (probably faster) alternative way would be to write a temporary
-    # shell script which contains the loop and run that using a single
-    # subprocess call. However, since usually display :0 will be available
-    # the loop below should terminate quite quickly.
-    logger.debug("Looking for valid X display.")
-    for display in xrange(100):
-        logger.debug("Trying display :{}".format(display))
-        try:
-            sp.check_output(['xdpyinfo', '-display', ':{}'.format(display)], stderr=sp.STDOUT)
-            # This display is available since the command finished successfully
-            logger.debug("Found valid display :{}".format(display))
-            return display
-        except sp.CalledProcessError:
-            # This display is not available
-            continue
-    logger.debug("No valid display found.")
-    return None
+# XXX TODO: The function 'find_valid_X_display' should ideally be
+# defined in this module, but this isn't possible due to the paraview
+# incompatibilities mentioned above. To avoid code duplication and
+# errors due to not keeping the two in sync, we only define it in
+# visualization_impl.py and import it here.
+from visualization_impl import find_valid_X_display
 
 
 def render_paraview_scene(
