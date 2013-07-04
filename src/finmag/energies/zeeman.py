@@ -3,6 +3,7 @@ import dolfin as df
 import numpy as np
 from finmag.util.consts import mu0
 from finmag.util import helpers
+from math import pi, cos
 
 log = logging.getLogger("finmag")
 
@@ -64,7 +65,7 @@ class TimeZeeman(Zeeman):
         get switched off.
 
         """
-        assert isinstance(field_expression, df.Expression)
+        assert isinstance(field_expression, (df.Expression, df.Constant))
         super(TimeZeeman, self).__init__(field_expression, name=name)
         self.t_off = t_off
         self.switched_off = False
@@ -125,23 +126,44 @@ class DiscreteTimeZeeman(TimeZeeman):
                         t, dt_since_last_update))
 
 
-class TimeZeemanPython(object):
-    def __init__(self, df_expression, time_fun , t_off=None, name='TimeZeemanPython'):
+class TimeZeemanPython(TimeZeeman):
+    def __init__(self, df_expression, time_fun, t_off=None, name='TimeZeemanPython'):
         """
-        Speedup the TimeZeeman class if the space function and time function are
-        independent, in this situation, dolfin interpolate method only need to be
-        evaluated once if user provide a separately time function.
+        Faster version of the TimeZeeman class for the special case
+        that only the amplitude (but not the direction) of the field
+        varies over time. That is, if `H_0` denotes the field at time
+        t=0 then the field value at some point `x` at time `t` is
+        assumed to be of the form:
+
+           H(t, x) = H_0(x) * time_fun(t)
+
+        In this situation, the dolfin.interpolate method only needs to
+        be evaluated once at the beginning for the spatial expression,
+        which saves a lot of computational effort.
+
+        *Arguments*
+
+        df_expression :  dolfin.Expression
+
+            The dolfin Expression representing the inital field value
+            (this can vary spatially but must not depend on time).
+
+        time_fun :  callable
+
+            Function representing the scaling factor for the amplitude at time
+
+        t_off :  float
+
+            Time at which the field is switched off.
         """
-        assert isinstance(df_expression, df.Expression)
+        assert isinstance(df_expression, (df.Expression, df.Constant))
         self.df_expression = df_expression
         self.time_fun = time_fun
         self.t_off = t_off
         self.switched_off = False
         self.name = name
         self.in_jacobian = False
-        
-        
-        
+
     def setup(self, S3, m, Ms, unit_length=1):
         self.S3 = S3
         self.m = m
@@ -158,10 +180,19 @@ class TimeZeemanPython(object):
             if self.t_off and t >= self.t_off:
                 self.switch_off()
                 return
-            
+
             self.H[:] = self.H0[:]*self.time_fun(t)
-            
-            
+
+    def switch_off(self):
+        # It might be nice to provide the option to remove the Zeeman
+        # interaction from the simulation altogether (or at least
+        # provide an option to do so) in order to avoid computing the
+        # Zeeman energy at all once the field is switched off.
+        log.debug("Switching external field off.")
+        self.H = np.zeros_like(self.H)
+        self.value = None
+        self.switched_off = True
+
     def average_field(self):
         """
         Compute the average applied field.
@@ -174,3 +205,42 @@ class TimeZeemanPython(object):
     def compute_energy(self):
         E = df.assemble(self.E) * self.unit_length**3
         return E
+
+
+class OscillatingZeeman(TimeZeemanPython):
+    def __init__(self, H0, freq, phase=0, t_off=None, name='OscillatingZeeman'):
+        """
+        Create a field which is constant in space but whose amplitude
+        varies sinusoidally with the given frequency and phase. More
+        precisely, the field value at time t is:
+
+            H(t) = H0 * cos(2*pi*freq*t + phase)
+
+        Where H0 is a constant 3-vector representing the 'base field'.
+
+
+        *Arguments*
+
+        H0 :  3-vector
+
+            The constant 'base field' which is scaled by the oscillating amplitude.
+
+        freq :  float
+
+            The oscillation frequency.
+
+        phase :  float
+
+            The phase of the oscillation.
+
+        t_off :  float
+
+            Time at which the field is switched off.
+
+        """
+        H0_expr = df.Constant(map(str, H0))
+
+        def amplitude(t):
+            return cos(2 * pi * freq * t + phase)
+
+        super(OscillatingZeeman, self).__init__(H0_expr, amplitude, t_off=t_off, name=name)
