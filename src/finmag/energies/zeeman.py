@@ -64,7 +64,28 @@ class TimeZeeman(Zeeman):
         The argument t_off can specify a time at which the field will
         get switched off.
 
+        Alternatively, `field_expression` can be a 3-array representing a
+        constant field. In this case `t_off` must be specified, otherwise
+        a ValuError is raised (this is a safety measure because in this
+        case there would be no time update at all, so it's likely that the
+        user intended to do something else).
+
         """
+        if isinstance(field_expression, (list, tuple, np.ndarray)):
+            field_expression = np.asarray(field_expression)
+            if not field_expression.shape == (3,):
+                raise ValueError(
+                    "If field_expression is not a dolfin expression, it must "
+                    "be a 3-array (representing a constant external field)")
+            if t_off is None:
+                raise ValueError(
+                    "The argument 'field_expression' is a constant array, but "
+                    "t_off was not specified so there will be no time update "
+                    "at all. Use the Zeeman class instead of TimeZeeman if "
+                    "this is what you really want.")
+            # Convert the array to a dolfin constant so that we can proceed as normal
+            field_expression = df.Constant(map(str, field_expression))
+
         assert isinstance(field_expression, (df.Expression, df.Constant))
         super(TimeZeeman, self).__init__(field_expression, name=name)
         # TODO: Maybe set a 'checkpoint' for the time integrator at
