@@ -67,12 +67,20 @@ class TimeZeeman(Zeeman):
         """
         assert isinstance(field_expression, (df.Expression, df.Constant))
         super(TimeZeeman, self).__init__(field_expression, name=name)
+        # TODO: Maybe set a 'checkpoint' for the time integrator at
+        #       time t_off? (See comment in update() below.)
         self.t_off = t_off
         self.switched_off = False
 
     def update(self, t):
         if not self.switched_off:
             if self.t_off and t >= self.t_off:
+                # TODO: It might be cleaner to explicitly set a
+                #       'checkpoint' for the time integrator at time
+                #       t_off, otherwise there is the possibility of
+                #       it slightly "overshooting" and thus missing
+                #       the exact time the field is switched off.
+                #       (This should probably happen in __init__)
                 self.switch_off()
                 return
             self.value.t = t
