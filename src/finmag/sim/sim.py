@@ -77,7 +77,7 @@ class Simulation(object):
             'header': 'E_total'}
         self.tablewriter.entities['H_total'] = {
             'unit': '<A/m>',
-            'get': lambda sim: helpers.average_field(sim.llg.effective_field.compute()),
+            'get': lambda sim: helpers.average_field(sim.effective_field()),
             'header': ('H_total_x', 'H_total_y', 'H_total_z')}
         self.tablewriter.update_entity_order()
 
@@ -251,7 +251,7 @@ class Simulation(object):
         Compute and return the effective field.
 
         """
-        return self.llg.effective_field.compute()
+        return self.llg.effective_field.compute(self.t)
 
     def total_energy(self):
         """
