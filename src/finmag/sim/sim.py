@@ -381,6 +381,10 @@ class Simulation(object):
 
         log.debug("Advancing time to t = {} s.".format(t))
         self.integrator.advance_time(t)
+        # The following line is necessary because the time integrator may
+        # slightly overshoot the requested end time, so here we make sure
+        # that the field values represent that requested time exactly.
+        self.llg.effective_field.update(t)
 
     def run_until(self, t):
         """
@@ -395,6 +399,10 @@ class Simulation(object):
         self.scheduler._add(exit_at)
 
         run_with_schedule(self.integrator, self.scheduler)
+        # The following line is necessary because the time integrator may
+        # slightly overshoot the requested end time, so here we make sure
+        # that the field values represent that requested time exactly.
+        self.llg.effective_field.update(t)
         log.info("Simulation has reached time t = {:.2g} s.".format(self.t))
 
         self.scheduler._remove(exit_at)
