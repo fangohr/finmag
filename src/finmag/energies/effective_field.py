@@ -54,6 +54,19 @@ class EffectiveField(object):
             self._callables.append(with_time_update)
 
     def compute(self, t=None):
+        """
+        Compute and return the effective field.
+
+        WARNING! For efficiency this directly returns the numpy array
+                 that is used internally, so if you do something like
+                 this:
+
+                    h = effective_field.compute()
+                    effective_field.compute(t=1)
+
+                 then the value of h will have changed to represent
+                 the time step t=1 after the second command!
+        """
         if t is not None:
             for func in self._callables:
                 func(t)
@@ -69,8 +82,7 @@ class EffectiveField(object):
             self.fun.vector().set_local(self.H_eff)
             H_eff_dg = df.interpolate(self.fun, self.dg_v)
             self.H_eff[:] = df.assemble(df.dot(H_eff_dg, self.v3) * df.dx)/self.volumes
-            
-        
+
         return self.H_eff
 
     def compute_jacobian_only(self, t):
