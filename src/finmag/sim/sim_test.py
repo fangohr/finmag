@@ -689,7 +689,7 @@ def test_sim_with(tmpdir):
                    demag_solver_params=demag_solver_params, name='test_simulation')
 
 
-def test_effective_field_changes(tmpdir):
+def test_document_behaviour_of_effective_field_computation(tmpdir):
     """
     Currently EffectiveField.compute() returns a 'reference' (in C
     lingo) to the internal numpy array, which leads to the following
