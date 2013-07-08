@@ -10,7 +10,7 @@ from finmag.example import barmini
 from math import sqrt, cos, sin, pi
 from finmag.util.helpers import assert_number_of_files,vector_valued_function
 from finmag.sim import sim_helpers
-from finmag.energies import Zeeman, Exchange, UniaxialAnisotropy
+from finmag.energies import Zeeman, TimeZeeman, Exchange, UniaxialAnisotropy
 from finmag.util.fileio import Tablereader
 
 logger = logging.getLogger("finmag")
@@ -687,3 +687,29 @@ def test_sim_with(tmpdir):
     sim = sim_with(mesh, Ms=8e5, m_init=[1, 0, 0], alpha=1.0, unit_length=1e-9, integrator_backend='sundials',
                    A=13e-12, K1=520e3, K1_axis=[0, 1, 1], H_ext=[0, 0, 1e6], D=6.98e-3, demag_solver='FK',
                    demag_solver_params=demag_solver_params, name='test_simulation')
+
+
+def test_timezeeman_is_updated_automatically(tmpdir):
+    """
+    Check that the TimeZeeman.update() method is called automatically
+    through sim.run_until() so that the field has the correct value at
+    each time step.
+
+    """
+    def check_field_value(val):
+        assert(np.allclose(H_ext.compute_field().reshape(3, -1).T, val, atol=0, rtol=1e-8))
+
+    t_off = 3e-11
+    t_end = 5e-11
+
+    for method_name in ['run_until', 'advance_time']:
+        sim = barmini()
+        f = getattr(sim, method_name)
+
+        field_expr = df.Expression(("0", "t", "0"), t=0)
+        H_ext = TimeZeeman(field_expr, t_off=t_off)
+        sim.add(H_ext)  # this should automatically register H_ext.update(), which is what we check next
+
+        for t in np.linspace(0, t_end, 11):
+            f(t)
+            check_field_value([0, t, 0] if t < t_off else [0, 0, 0])
