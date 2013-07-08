@@ -2,18 +2,13 @@ import numpy as np
 from finmag.example import barmini
 
 
-def test_unexpected_behaviour():
+def test_effective_field_compute_returns_copy():
     """
-    This test documents some potentially unexpected behaviour, where
-    the value of a variable which was assigned the return value of
-    sim.llg.effective_field.compute() can change without prior notice.
-    This is because currently sim.llg.effective_field.compute()
-    returns a 'reference' to its internal numpy array which can get
-    updated as the simulation progresses.
-
-    This is done for efficiency, but it can cause great confusion if
-    the user isn't aware of it. Maybe we should change it in the
-    future, but for now this test documents the current behaviour.
+    Regression test to ensure that the value returned by
+    EffectiveField.compute() does not change as a simulation
+    progresses. This used to happen since EffectiveField.compute()
+    returned a reference to an internal numpy array instead of a copy.
+    Here we check that this is fixed.
 
     """
     sim = barmini()
@@ -22,7 +17,5 @@ def test_unexpected_behaviour():
     sim.run_until(1e-12)
     h1 = sim.llg.effective_field.compute()
 
-    # Yes, these assert statements are correct. The behaviour is *not*
-    # what you would expect.
-    assert not np.allclose(h0, h0_copy, atol=0, rtol=1e-8)
-    assert (h0 == h1).all()
+    assert np.allclose(h0, h0_copy, atol=0, rtol=1e-8)
+    assert not np.allclose(h0, h1, atol=0, rtol=1e-8)

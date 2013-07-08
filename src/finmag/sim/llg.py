@@ -191,7 +191,8 @@ class LLG(object):
         return value
 
     def solve(self, t):
-        H_eff = self.effective_field.compute(t)
+        self.effective_field.update(t)  # we don't use self.effective_field.compute(t) for performance reasons
+        H_eff = self.effective_field.H_eff  # alias (for readability)
         H_eff.shape = (3, -1)
 
         default_timer.start("solve", self.__class__.__name__)
@@ -329,7 +330,7 @@ class LLG(object):
         # If the field m has changed, recompute H_eff as well
             if not np.array_equal(self.m, m):
                 self.m = m
-                self.effective_field.compute(t)
+                self.effective_field.update(t)
             else:
                 pass
                 #print "This actually happened."

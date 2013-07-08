@@ -687,35 +687,3 @@ def test_sim_with(tmpdir):
     sim = sim_with(mesh, Ms=8e5, m_init=[1, 0, 0], alpha=1.0, unit_length=1e-9, integrator_backend='sundials',
                    A=13e-12, K1=520e3, K1_axis=[0, 1, 1], H_ext=[0, 0, 1e6], D=6.98e-3, demag_solver='FK',
                    demag_solver_params=demag_solver_params, name='test_simulation')
-
-
-def test_document_behaviour_of_effective_field_computation(tmpdir):
-    """
-    Currently EffectiveField.compute() returns a 'reference' (in C
-    lingo) to the internal numpy array, which leads to the following
-    somewhat unexpected behaviour:
-
-       H0 = sim.llg.effective_field.compute()
-       sim.run_until(1e-11)
-       H1 = sim.llg.effective_field.compute()
-       assert(H0 == H1)  # --> this passes!
-
-    The reason for this is that since H0 is a 'reference' to the
-    internal numpy array that sim.llg.effective_field uses, it is
-    automatically updated during the sim.run_until() command.
-
-    For this reason the method sim.effective_field() existis. This
-    returns a copy of the vector returned by
-    sim.llg.effective_field.compute() so that variables which are
-    assigned the return value of sim.effective_field() shouldn't
-    change. This is what we test below.
-
-    """
-    os.chdir(str(tmpdir))
-    sim = barmini()
-    H0 = sim.effective_field()
-    H0_copy = H0.copy()
-    sim.run_until(1e-11)
-    H1 = sim.effective_field()
-    assert (H0 == H0_copy).all()
-    assert not np.allclose(H0, H1, atol=0, rtol=1e-8)

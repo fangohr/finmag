@@ -61,7 +61,7 @@ def compute_H_func(sim):
     def compute_H(m):
         # no normalisation since we want linearity
         sim.llg._m.vector()[:] = m
-        return sim.llg.effective_field.compute()
+        return sim.effective_field()
 
     def compute_H_complex(m):
         if np.iscomplexobj(m):
