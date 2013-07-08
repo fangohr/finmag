@@ -13,7 +13,7 @@ from finmag.util import helpers
 from finmag.util.vtk_saver import VTKSaver
 from finmag.sim.hysteresis import hysteresis as hyst, hysteresis_loop as hyst_loop
 from finmag.sim import sim_helpers
-from finmag.energies import Exchange, Zeeman, Demag, UniaxialAnisotropy, DMI
+from finmag.energies import Exchange, Zeeman, TimeZeeman, Demag, UniaxialAnisotropy, DMI
 from finmag.integrators.llg_integrator import llg_integrator
 from finmag.integrators import scheduler, events
 from finmag.integrators.common import run_with_schedule
@@ -224,6 +224,14 @@ class Simulation(object):
 
         log.debug("Adding interaction %s to simulation '%s'" % (str(interaction),self.name))
         interaction.setup(self.S3, self.llg._m, self.llg._Ms_dg, self.unit_length)
+        # TODO: The following feels somewhat hack-ish because we
+        #       explicitly check for TimeZeeman and it's likely that
+        #       there will be other classes in the future that also
+        #       come with time updates which would then also have to
+        #       be added here by hand. Is there a more elegant and
+        #       automatic solution?
+        if isinstance(interaction, TimeZeeman):
+            with_time_update = interaction.update
         self.llg.effective_field.add(interaction, with_time_update)
 
         energy_name = 'E_{}'.format(interaction.name)
