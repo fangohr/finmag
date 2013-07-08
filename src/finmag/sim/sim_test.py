@@ -713,3 +713,31 @@ def test_timezeeman_is_updated_automatically(tmpdir):
         for t in np.linspace(0, t_end, 11):
             f(t)
             check_field_value([0, t, 0] if t < t_off else [0, 0, 0])
+
+
+def test_ndt_writing_with_time_dependent_field(tmpdir):
+    """
+    """
+    os.chdir(str(tmpdir))
+    TOL = 1e-8
+
+    field_expr = df.Expression(("0", "t", "0"), t=0)
+    H_ext = TimeZeeman(field_expr, t_off=2e-11)
+    sim = barmini()
+    sim.add(H_ext)
+    sim.schedule('save_ndt', every=1e-12)
+    sim.run_until(3e-11)
+
+    f = Tablereader('barmini.ndt')
+    print f.timesteps()
+    print f['H_TimeZeeman_x']
+    print f['H_TimeZeeman_y']
+    print f['H_TimeZeeman_z']
+
+    Hy_expected = np.linspace(0, 3e-11, 31)
+    Hy_expected[19:] = 0  # should be zero after the field was switched off
+
+    assert np.allclose(f.timesteps(), np.linspace(0, 3e-11, 31), atol=0, rtol=TOL)
+    assert np.allclose(f['H_TimeZeeman_x'], 0, atol=0, rtol=TOL)
+    assert np.allclose(f['H_TimeZeeman_y'], Hy_expected, atol=0, rtol=TOL)
+    assert np.allclose(f['H_TimeZeeman_z'], 0, atol=0, rtol=TOL)
