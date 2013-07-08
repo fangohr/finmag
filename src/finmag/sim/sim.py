@@ -239,8 +239,11 @@ class Simulation(object):
         self.tablewriter.update_entity_order()
 
     def effective_field(self):
-        h_eff = self.llg.effective_field.compute()
-        return h_eff.copy()
+        """
+        Compute and return the effective field.
+
+        """
+        return self.llg.effective_field.compute()
 
     def total_energy(self):
         """

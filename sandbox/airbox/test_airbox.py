@@ -47,7 +47,7 @@ def test_airbox_method():
                    unit_length=1e-9, A=13.0e-12, demag_solver='FK')
 
     print "Computing effective field..."
-    H_eff = sim.llg.effective_field.compute()
+    H_eff = sim.effective_field()
     print "Computed field: {}".format(H_eff)
 
     sim.relax(save_snapshots=True, save_every=1e-11,
