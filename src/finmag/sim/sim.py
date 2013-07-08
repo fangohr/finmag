@@ -112,6 +112,7 @@ class Simulation(object):
         self.Volume = mesh_volume(mesh)
 
         self.scheduler = scheduler.Scheduler()
+        self.callbacks_at_scheduler_events = []
 
         self.domains = df.CellFunction("uint", self.mesh)
         self.domains.set_all(0)
@@ -231,7 +232,14 @@ class Simulation(object):
         #       be added here by hand. Is there a more elegant and
         #       automatic solution?
         if isinstance(interaction, TimeZeeman):
+            # The following line ensures that the time integrator is notified
+            # about the correct field values at the time steps it chooses.
             with_time_update = interaction.update
+            # The following line ensures that the field value is updated
+            # correctly whenever the time integration reaches a scheduler
+            # "checkpoint" (i.e. whenever integrator.advance_time(t) finishes
+            # successfully).
+            self.callbacks_at_scheduler_events.append(interaction.update)
         self.llg.effective_field.add(interaction, with_time_update)
 
         energy_name = 'E_{}'.format(interaction.name)
@@ -398,7 +406,7 @@ class Simulation(object):
         exit_at = events.StopIntegrationEvent(t)
         self.scheduler._add(exit_at)
 
-        run_with_schedule(self.integrator, self.scheduler)
+        run_with_schedule(self.integrator, self.scheduler, self.callbacks_at_scheduler_events)
         # The following line is necessary because the time integrator may
         # slightly overshoot the requested end time, so here we make sure
         # that the field values represent that requested time exactly.
@@ -430,7 +438,7 @@ class Simulation(object):
         self.relaxation = events.RelaxationEvent(self, stopping_dmdt*ONE_DEGREE_PER_NS, dmdt_increased_counter_limit, dt_limit)
         self.scheduler._add(self.relaxation)
 
-        run_with_schedule(self.integrator, self.scheduler)
+        run_with_schedule(self.integrator, self.scheduler, self.callbacks_at_scheduler_events)
         self.integrator.reinit()
         self.set_m(self.m)
         log.info("Relaxation finished at time t = {:.2g}.".format(self.t))

@@ -715,9 +715,13 @@ def test_timezeeman_is_updated_automatically(tmpdir):
             check_field_value([0, t, 0] if t < t_off else [0, 0, 0])
 
 
-@pytest.mark.xfail(reason="Time updates for the field are still done at integrator-internal timesteps, not scheduled timesteps")
 def test_ndt_writing_with_time_dependent_field(tmpdir):
     """
+    Check that when we save time-dependent field values to a .ndt
+    file, we actually write the values at the correct time steps (i.e.
+    the ones requested by the scheduler and not the ones which are
+    internally used by the time integrator).
+
     """
     os.chdir(str(tmpdir))
     TOL = 1e-8
@@ -729,15 +733,10 @@ def test_ndt_writing_with_time_dependent_field(tmpdir):
     sim.schedule('save_ndt', every=1e-12)
     sim.run_until(3e-11)
 
-    f = Tablereader('barmini.ndt')
-    print f.timesteps()
-    print f['H_TimeZeeman_x']
-    print f['H_TimeZeeman_y']
-    print f['H_TimeZeeman_z']
-
     Hy_expected = np.linspace(0, 3e-11, 31)
-    Hy_expected[19:] = 0  # should be zero after the field was switched off
+    Hy_expected[20:] = 0  # should be zero after the field was switched off
 
+    f = Tablereader('barmini.ndt')
     assert np.allclose(f.timesteps(), np.linspace(0, 3e-11, 31), atol=0, rtol=TOL)
     assert np.allclose(f['H_TimeZeeman_x'], 0, atol=0, rtol=TOL)
     assert np.allclose(f['H_TimeZeeman_y'], Hy_expected, atol=0, rtol=TOL)
