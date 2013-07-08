@@ -715,6 +715,7 @@ def test_timezeeman_is_updated_automatically(tmpdir):
             check_field_value([0, t, 0] if t < t_off else [0, 0, 0])
 
 
+@pytest.mark.xfail(reason="Time updates for the field are still done at integrator-internal timesteps, not scheduled timesteps")
 def test_ndt_writing_with_time_dependent_field(tmpdir):
     """
     """
