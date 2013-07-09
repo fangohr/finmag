@@ -6685,3 +6685,7 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-07-09 13:40:47 max_albert: But I may just add the changes and commit them even if it changes the encoding. (Unless you have a better idea.)
 2013-07-09 13:41:30 DChernyshenko: Nope, I was hoping you would find a way :)
 2013-07-09 13:42:09 DChernyshenko: But I think it's OK, the only issue is the ugly diff, but there is little point in diffing those IRC logs...
+2013-07-09 13:45:57 max_albert: Yup, I guess you are right. I just committed the change. Hope everything worked.
+2013-07-09 15:09:38 fangohr-adium: Thanks.
+2013-07-09 15:09:48 fangohr-adium: Have just learned that Marijan and Weiwei are in Warwick until Thursday night.
+2013-07-09 15:09:58 fangohr-adium: Just so everybody knows why they are not here.
