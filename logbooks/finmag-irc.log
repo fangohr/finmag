@@ -28,7 +28,7 @@ fangohr: Still testing ...
 2012-02-14 13:49:50 HansFangohr: Hi Gabriel, that's great. What is Nitsche's method ? ;-) Do you have a reference for it? I haven't heard of the name yet.
 2012-02-14 13:54:50 mb8g11:  1ffd48ebd533b81339e58e1f185c32a8ebeedce8
 2012-02-14 13:55:01 mb8g11: J.A. Nitsche, Uber ein Variationsprinzip zur Loesung von Dirichlet-Problemen bei Verwendung von Teilraeumen, die keinen Randbedingungen unterworfen sind, Abhandlungen aus
-2012-02-14 13:55:04 mb8g11: dem Mathematischen Seminar der Universitaet Hamburg 36 (1970/71), 9–15. MR0341903(49:6649)
+2012-02-14 13:55:04 mb8g11: dem Mathematischen Seminar der Universitaet Hamburg 36 (1970/71), 9â15. MR0341903(49:6649)
 2012-02-14 13:55:17 mb8g11: disregard the first message, that was a paste gone wrong
 2012-02-14 13:58:32 mb8g11: @GabrielB it is not possible to represent an empty directory in Mercurial. As soon as you put a file in it though, you can simply commit the file and the repository will get added as well.
 2012-02-14 13:58:46 mb8g11: *and the directory
@@ -658,7 +658,7 @@ fangohr: Still testing ...
 2012-03-23 22:32:32 mb8g11: @window-titles: I'll look into it.
 2012-03-23 22:32:56 fangohr___: Okay, great.
 2012-03-23 22:33:26 mb8g11: Quick question, I get confused by matplotlib and mayavi.mlab... Are they the same thing underneath?
-2012-03-23 22:33:40 fangohr___: Hmm….not sure. I think not.
+2012-03-23 22:33:40 fangohr___: Hmmâ¦.not sure. I think not.
 2012-03-23 22:35:16 mb8g11: @window-titles: Yes.
 2012-03-23 22:35:51 mb8g11: Ok.
 2012-03-23 22:38:22 fangohr___: One more suggestion: when you work out the relative deviation of some data, you may get NaN if the true value is 0 (because you divide by zero). If this happens for a vector field for one component, then we could work around this: Imagine dx=(H2x-H1x)/H2x where H1 is the finmag solution, H2 the oommf solution and dx is the relative error. Instead of computing dx this way, we could scale the deviation relative to the total magnitude
@@ -673,11 +673,11 @@ fangohr: Still testing ...
 2012-03-26 12:40:06 SebastianS: okay i'll be up in a minute
 2012-03-27 08:59:56 GabrielB: hei Anders
 2012-03-27 09:00:02 andersej: Hei!
-2012-03-27 09:00:51 GabrielB: Godmorgen. Har du tid til å skype litt og prate litt om convert_mesh?
+2012-03-27 09:00:51 GabrielB: Godmorgen. Har du tid til Ã¥ skype litt og prate litt om convert_mesh?
 2012-03-27 09:01:13 GabrielB: eller kansje vi kan skrive hvis du vil
 2012-03-27 09:01:56 GabrielB: Jeg lagd en problem fil som buker convert mesh.
-2012-03-27 09:02:17 GabrielB: Og prøve og bruke dem fra en annen fil
-2012-03-27 09:02:28 GabrielB: og få feilmelding
+2012-03-27 09:02:17 GabrielB: Og prÃ¸ve og bruke dem fra en annen fil
+2012-03-27 09:02:28 GabrielB: og fÃ¥ feilmelding
 2012-03-27 09:02:30 GabrielB: Using netgen to convert sphere10.geo to Gmsh2 format...
 2012-03-27 09:02:30 GabrielB: NETGEN-4.9.13
 2012-03-27 09:02:30 GabrielB: Developed at RWTH Aachen University, Germany
@@ -1158,7 +1158,7 @@ fangohr: Still testing ...
 2012-05-11 11:01:59 SebastianS: hans, as the anisotropy is not implemented yet, I have some time at my hands. I remembered you suggested to put together a documentation for the simlib code using Sphinx and I was wondering if I should start with that. Do you still think this would be a good idea?
 2012-05-14 14:44:53 gabrielbalaban: Hi Anders,
 2012-05-14 14:48:57 andersej: Hello!
-2012-05-14 14:57:55 gabrielbalaban: Jobber du tilfeldigvis med FK solveren? Jeg har tenkt å jobbe med den litt, men jeg kan godt vente med det.
+2012-05-14 14:57:55 gabrielbalaban: Jobber du tilfeldigvis med FK solveren? Jeg har tenkt Ã¥ jobbe med den litt, men jeg kan godt vente med det.
 2012-05-14 14:58:47 andersej: Nei, skal gjoere noe annet naa, bare sett i gang.
 2012-05-14 15:01:01 gabrielbalaban: ok kult! Jeg skal jobbe omtrent en time med FKsolveren.
 2012-05-15 17:15:37 fangohr_laptop: Hello DokosBot and Marc Antonio :)
@@ -1173,11 +1173,11 @@ fangohr: Still testing ...
 2012-05-15 17:27:23 mb8g11: Counting on you to bring fresh ideas back ;)
 2012-05-16 10:16:30 gabrielbalaban: Hei Anders!
 2012-05-16 10:16:36 andersej: Hei!
-2012-05-16 10:16:55 gabrielbalaban: Går det bra?
+2012-05-16 10:16:55 gabrielbalaban: GÃ¥r det bra?
 2012-05-16 10:17:16 andersej: Ja, ganske. Enn du?
-2012-05-16 10:18:16 gabrielbalaban: ja også ganske, jeg glede meg til i morn (17 mai!) og jobbe litt med finmag. Jeg har ut  df.KrylovSolver slik som du bruker i FK
-2012-05-16 10:18:28 gabrielbalaban: og lurer på om du vet hvordan man kan sette toleransen?
-2012-05-16 10:20:19 gabrielbalaban: I en Unit Test til Dimitri får jeg en L2 feil av størrelse 0.0107519, selv om krylov toleransen er antaglivis omternt 10x -7!
+2012-05-16 10:18:16 gabrielbalaban: ja ogsÃ¥ ganske, jeg glede meg til i morn (17 mai!) og jobbe litt med finmag. Jeg har ut  df.KrylovSolver slik som du bruker i FK
+2012-05-16 10:18:28 gabrielbalaban: og lurer pÃ¥ om du vet hvordan man kan sette toleransen?
+2012-05-16 10:20:19 gabrielbalaban: I en Unit Test til Dimitri fÃ¥r jeg en L2 feil av stÃ¸rrelse 0.0107519, selv om krylov toleransen er antaglivis omternt 10x -7!
 2012-05-16 10:24:50 gabrielbalaban: se her http://fenicsproject.org/pub/femcenter/pub/software/dolfin/doc/KrylovSolver_8h-source.html
 2012-05-16 10:25:05 gabrielbalaban: Jeg tror TOL er privat owwwww!
 2012-05-16 10:26:46 andersej: Jeg ville tippet at dette kunne endres ved solver.parameters["absolute_tolerance"] = ... eller noe i den stilen.
@@ -1187,7 +1187,7 @@ fangohr: Still testing ...
 2012-05-16 10:31:41 andersej: >>> print s.parameters["absolute_tolerance"]
 2012-05-16 10:31:41 andersej: 1e-15
 2012-05-16 10:41:03 gabrielbalaban: takk!
-2012-05-16 10:43:20 gabrielbalaban: hmm selv om toleransen er 1e-15 så for jeg en feil av orden -11
+2012-05-16 10:43:20 gabrielbalaban: hmm selv om toleransen er 1e-15 sÃ¥ for jeg en feil av orden -11
 2012-05-16 10:45:40 gabrielbalaban: FYI dette hjelper self.phia_solver.parameters["relative_tolerance"] = df.e-12
 2012-05-16 10:46:07 andersej: Fint!
 2012-05-16 13:13:32 andersej: http://sn0v.wordpress.com/2012/05/11/installing-cuda-on-ubuntu-12-04/
@@ -1217,11 +1217,11 @@ fangohr: Still testing ...
 2012-05-23 17:42:19 fangohr: :)
 2012-05-23 17:42:54 fangohr: I have been told it is hot in Southampton?
 2012-05-23 17:43:35 andersej: I can confirm this. Not many people in the building..
-2012-05-23 17:43:53 fangohr: :) — have you got the aircon activated?
+2012-05-23 17:43:53 fangohr: :) â have you got the aircon activated?
 2012-05-23 17:44:39 andersej: No, I just use it in extreme situations. Afraid they'll give me a cold.
 2012-05-23 17:46:30 fangohr: That's the right attitude.
-2012-05-23 17:48:52 fangohr: I see from the commit that you are using PetscCusp — I think I start to understand now how this works together.
-2012-05-23 17:52:09 fangohr_laptop: Hello Anders, Fangohr, DokosBot. (Just struggling with IRC clients here…)
+2012-05-23 17:48:52 fangohr: I see from the commit that you are using PetscCusp â I think I start to understand now how this works together.
+2012-05-23 17:52:09 fangohr_laptop: Hello Anders, Fangohr, DokosBot. (Just struggling with IRC clients hereâ¦)
 2012-05-23 18:34:06 andersej: Hehe, fangohr_laptop was new.. Yes, I've started to test out the gpu solver. Just got remote access to Maxim's computer. The problem now is that small sets of equations take longer time to copy to the gpu than we gain by solving them there. Larger sets take forever to build the boundary element matrix as we have to use the python-magpar code. So I haven't seen any speedup in our code yet.
 2012-05-23 18:40:57 andersej: How is the conference?
 2012-05-25 16:28:33 MaximS: Hi Anders
@@ -1335,7 +1335,7 @@ fangohr: Still testing ...
 2012-07-31 08:48:32 mb8g11: Hey.
 2012-08-01 16:10:25 fangohr-adium: Greetings :)
 2012-08-01 16:23:41 fangohr-adium: Marc-Antonio, are you still there?
-2012-08-01 16:42:29 fangohr-adium: MA, I'll catch up with you later — it's not urgent.
+2012-08-01 16:42:29 fangohr-adium: MA, I'll catch up with you later â it's not urgent.
 2012-08-01 20:00:54 Fangohr: Hello, connectin from smartphone - lets see how this works out.
 2012-08-02 08:16:50 mb8g11: Hello DokosBot!
 2012-08-02 08:27:54 mb8g11: exit
@@ -1392,7 +1392,7 @@ fangohr: Still testing ...
 2012-08-29 16:00:32 mb8g11: Forgot to cut them off with planes.
 2012-08-29 16:10:35 mb8g11: 16:59 < mb8g11> Didn't read the docu carefully enough. Thought cylinders were bounded, in fact they are infinitely long.
 2012-08-29 16:10:38 mb8g11: 16:59 < mb8g11> Forgot to cut them off with planes.
-2012-08-29 16:13:09 fangohr-adium: I see — have done that as well. And then your mesh gets quite big and you run out of memory, or it just crashes? The latter would be silghly disappointing, but then again we shouldn't complain too much about a free tool.
+2012-08-29 16:13:09 fangohr-adium: I see â have done that as well. And then your mesh gets quite big and you run out of memory, or it just crashes? The latter would be silghly disappointing, but then again we shouldn't complain too much about a free tool.
 2012-08-29 16:15:08 mb8g11: Crashed. Not really complaining, although it irks me that netgen seldomly exits correctly.
 2012-08-29 16:26:32 fangohr-adium: Ah, yes, I agree. I very much dislike the reliable segfault when batch execution 'completes'.
 2012-08-29 16:56:12 fangohr-adium: Hi MA,  have just run your 'point_contacts.py' script: the round mesh looks good. The current doesn't quite match the nice mesh in the visualisation. Made some suggestions and committed.
@@ -1420,7 +1420,7 @@ fangohr: Still testing ...
 2012-08-31 10:27:19 fangohr-adium: We ask sundials (take as synonym here for CVODE) to integrate our ODEs for a given starting m0 and t0 up to a new t and to determine m=m(t). It will do that in its own way (and we should not care about it), and when it completes, it returns to us the desired m(t).
 2012-08-31 10:28:37 fangohr-adium: What happens internally is that it may well use time steps that do not lead directly to our desired t; for example it may skip ahead to "t+some delta t" because that is the step size it considers appropriate, and then use interpolation from the previous t it has used to our desired t, using the information it has for "t+some delta t".
 2012-08-31 10:29:21 fangohr-adium: I think this is the situation we see in the current version of the sandbox/interference_patterns/run.py programm: sundials only computes a new dm/dt for a few times, and providse interpolated results in between.
-2012-08-31 10:30:45 fangohr-adium: The one thing we must not do, is to use the information that has been created when sundials has called our code to compute dm/dt, etc. for example we should not use the demag field values — while these will have been updated by sundials when calling the code to compute dm/dt —  we don't know for what time this was. )This problem arises because we share the same data with sundials.)
+2012-08-31 10:30:45 fangohr-adium: The one thing we must not do, is to use the information that has been created when sundials has called our code to compute dm/dt, etc. for example we should not use the demag field values â while these will have been updated by sundials when calling the code to compute dm/dt â  we don't know for what time this was. )This problem arises because we share the same data with sundials.)
 2012-08-31 10:30:50 fangohr-adium: Does that clarify the situation?
 2012-08-31 10:33:36 mb8g11: Yes.
 2012-08-31 10:35:50 fangohr-adium: Nice.
@@ -1433,7 +1433,7 @@ fangohr: Still testing ...
 2012-08-31 10:41:05 mb8g11: So, keepin this in mind, it all becomes a non-issue.
 2012-08-31 10:43:49 mb8g11: About the logs: There's the commit message on bitbucket.
 2012-08-31 11:00:49 mb8g11: Wait. Actually, when sundials asks us to compute the right hand side for a value of m, we store that m as our magnetisation.
-2012-08-31 11:46:17 fangohr-adium: Hey, DokosBot: I just got an email from Anders — he asks me to send his regards to you.
+2012-08-31 11:46:17 fangohr-adium: Hey, DokosBot: I just got an email from Anders â he asks me to send his regards to you.
 2012-08-31 13:29:10 fangohr-adium: Hi MA, welcome back.
 2012-08-31 13:29:30 sMAshdot: Hi Hans!
 2012-08-31 13:30:07 fangohr-adium: Regarding logs: most people do not get commits emailed, I think, they need to look them up. So I am not sure this is good enough. On the other hand, I don't want to annoy folks with too much input. Let's wait and see.
@@ -1459,7 +1459,7 @@ fangohr: Still testing ...
 2012-09-03 16:18:26 fangohr-adium: Any problems, let me know.
 2012-09-03 16:22:03 marijan: I've got it.
 2012-09-03 16:22:06 marijan: Thanks
-2012-09-03 16:23:06 fangohr-adium: Great. Try to run the 'make_html.sh' and 'make_pdf.sh' files — this will tell if you have all required tools installed (probably not). Do ask for help.
+2012-09-03 16:23:06 fangohr-adium: Great. Try to run the 'make_html.sh' and 'make_pdf.sh' files â this will tell if you have all required tools installed (probably not). Do ask for help.
 2012-09-03 16:23:17 fangohr-adium: q
 2012-09-03 16:26:52 mb8g11: Are these makefiles for compiling the logbooks to something nice to look at?
 2012-09-03 16:27:51 marijan: I do not have this rst2html.py file....
@@ -1507,17 +1507,17 @@ fangohr: Still testing ...
 2012-09-03 17:09:20 albert: If I get too fed up with adding interactions manually I might write one soon, thanks for the suggestion.
 2012-09-03 17:09:41 albert: (Ideas for names are welcome, I'm quite bad at coming up with good names.)
 2012-09-03 17:09:58 fangohr-adium: That would be fine by me: if it is derived, you can do withit what you like (and likely everybody will be using it soon) but cannot ccause any damage. Please proceed if you like :)
-2012-09-03 17:10:57 fangohr-adium: Names: don't know: 'SimulationOneMaterial', — too long. May not even be true (as material parameters can vary).
+2012-09-03 17:10:57 fangohr-adium: Names: don't know: 'SimulationOneMaterial', â too long. May not even be true (as material parameters can vary).
 2012-09-03 17:11:14 fangohr-adium: Or maybe just 'sim'? Very convenient, but maybe overconfident.
 2012-09-03 17:11:36 albert: Perhaps "SimpleSimulation" or "SimpleSim"?
-2012-09-03 17:11:39 fangohr-adium: How about 'sim1' — reading this as the first version of convenience class that we call 'sim' because that is to conveniently short?
+2012-09-03 17:11:39 fangohr-adium: How about 'sim1' â reading this as the first version of convenience class that we call 'sim' because that is to conveniently short?
 2012-09-03 17:12:02 albert: That doesn't sound bad.
 2012-09-03 17:12:05 fangohr-adium: SimpleSim is also fine with me.
 2012-09-03 17:12:18 fangohr-adium: (or maybe SimpleSim1?)
 2012-09-03 17:12:36 fangohr-adium: Could also bring in micromagnetics: SimpleMag1 ?
 2012-09-03 17:13:11 fangohr-adium: I need to leave for the day; good catching up with people today - bye for now.
 2012-09-03 17:13:29 albert: Thanks, and see you later!
-2012-09-03 19:41:55 fangohr: Hi MA, Max, do you get email notifications when commits are pushed to bitbucket? (I do, and I think we should just sent those to everybody — this will deliver the IRC logs, and also keep everybody up to date as to what is happening). Any views?
+2012-09-03 19:41:55 fangohr: Hi MA, Max, do you get email notifications when commits are pushed to bitbucket? (I do, and I think we should just sent those to everybody â this will deliver the IRC logs, and also keep everybody up to date as to what is happening). Any views?
 2012-09-03 19:43:09 albert: Yes, I do get email notifications (but I had to turn them on explicitly last week).
 2012-09-03 19:43:10 albert: I personally think it would be useful to email commits to everybody. It's not very high traffic, but it's useful to see what has been going on.
 2012-09-03 19:43:42 mb8g11: test
@@ -1597,7 +1597,7 @@ fangohr: Still testing ...
 2012-09-04 12:40:41 fangohr-adium: Max, are you out there?
 2012-09-04 14:46:49 albert: Hi Hans!
 2012-09-04 14:47:49 albert: Sorry I didn't reply earlier. I had set my status to "away" last night, but I'm not sure this is communicated anywhere.
-2012-09-04 14:48:30 fangohr-adium:  No, it isn't. No problem though ;-). I sent you an email with my query. (Need to go now - see you tomorrow at 10am for moving offices … ;) )
+2012-09-04 14:48:30 fangohr-adium:  No, it isn't. No problem though ;-). I sent you an email with my query. (Need to go now - see you tomorrow at 10am for moving offices â¦ ;) )
 2012-09-05 09:21:32 fangohr-adium: Good morning Marijan.
 2012-09-05 14:46:56 fangohr-adium: Marijan, the meeting with Ian Hawke is today, is that right?
 2012-09-05 14:47:13 marijan: Yes, at 3pm
@@ -1652,10 +1652,10 @@ fangohr: Still testing ...
 2012-09-13 09:27:20 fangohr-adium: Good morning all.
 2012-09-13 09:27:42 JustinD: Good morning
 2012-09-13 14:48:50 mb8g11: Just had a really nice chat with Richard Boardman.
-2012-09-13 14:50:44 fangohr-adium: Good — he his done lots of stuff in OOMMF and Magpar in the days before Nmag; approximately 2002-2005. He is also the visualisation guru, and would routinely take VTK-vector scenes and export them to povray or other raytracers.
+2012-09-13 14:50:44 fangohr-adium: Good â he his done lots of stuff in OOMMF and Magpar in the days before Nmag; approximately 2002-2005. He is also the visualisation guru, and would routinely take VTK-vector scenes and export them to povray or other raytracers.
 2012-09-13 14:50:55 mb8g11: Besides some nostalgia about micromagnetics on his part, he seems to be really knowledgeable about parallel computing.
 2012-09-13 14:52:19 mb8g11: And he is intrigued by fenics. Definitily some potential to trade a few hints :)
-2012-09-13 14:53:09 fangohr-adium: Yes — I had a chat with him about fenics last week and tried to sell it to him (or rather to one of the post-docs in his group).
+2012-09-13 14:53:09 fangohr-adium: Yes â I had a chat with him about fenics last week and tried to sell it to him (or rather to one of the post-docs in his group).
 2012-09-13 14:53:40 fangohr-adium: All good. He also has graphs on OOMMF and Magpar memory consumption in his PhD thesis. We should show these to Weiwei.
 2012-09-13 14:54:18 mb8g11: @povray: I'm impressed. @fenics: Told me you had a talk about this.
 2012-09-13 14:54:40 mb8g11: Oh, okay, I'll tell Weiwei right now.
@@ -1672,16 +1672,16 @@ fangohr: Still testing ...
 2012-09-13 15:18:25 fangohr-adium: We used a linux cluster (with 8 500MHz alpha machines) to render the frames for this. A bit like Pixar, only less successful.
 2012-09-13 15:18:46 fangohr-adium: I should say for completeness that there is also some interesting science in the motion of these objects; but that's a different story.
 2012-09-13 15:19:05 mb8g11: I have no idea what I'm looking at, but the DOOM perspective is awesome.
-2012-09-13 15:19:39 fangohr-adium: Ah, yes — you mean the camera attached to one of the spheres?
+2012-09-13 15:19:39 fangohr-adium: Ah, yes â you mean the camera attached to one of the spheres?
 2012-09-13 15:20:00 mb8g11: Yes. Okay, just figured out the marbles are vortices.
 2012-09-13 15:20:58 fangohr-adium: So here is your challenge should you wish to accept it: Can you locate a camera on top of a travelling spin wave (maybe moving with the group velocity??) and visualise the motion accordingly? Surely we can something comparable for a magnetic system if we think long enough ...
 2012-09-13 15:21:54 mb8g11: Certainly, but what would the camera be looking at?
 2012-09-13 15:22:33 mb8g11: Wait. Another spin-wave coming at it. That should be a rough ride.
-2012-09-13 15:23:02 fangohr-adium: We could choose the direction perpendicular to the wave front (and within the  film plane) as the direction for the camera to look at. Then look at the magnetisation, and — as you just suggest — other spin waves, or reflections etc.
+2012-09-13 15:23:02 fangohr-adium: We could choose the direction perpendicular to the wave front (and within the  film plane) as the direction for the camera to look at. Then look at the magnetisation, and â as you just suggest â other spin waves, or reflections etc.
 2012-09-13 15:24:31 mb8g11: Sounds nice, even if I have no idea how I would even start building an animation like that.
 2012-09-13 15:24:58 mb8g11: Nevermind, let's do a feature-length movie out of it.
 2012-09-13 15:25:12 fangohr-adium: I have some ideas although it is all a bit whacky at this stage. Let's try to push the science a bit further first; then I am quite happy to discuss.
-2012-09-13 15:25:38 fangohr-adium: Agree — this will be financially more lucrative than any engineering we can come up. Should get Spielberg involved.
+2012-09-13 15:25:38 fangohr-adium: Agree â this will be financially more lucrative than any engineering we can come up. Should get Spielberg involved.
 2012-09-13 15:30:49 mb8g11: Spielberg Schmielberg. I want no lesser man that Uwe Boll, hero of the low-budget and direct-to-video productions and the only director alive brave enough to challenge his many critics to a boxing match and indeed beat one of them to a bloody pulp!
 2012-09-13 15:31:11 mb8g11: That's the stuff dreams are made of.
 2012-09-13 15:31:43 fangohr-adium: Uwe Boll: fine. No boxing for me, please.
@@ -1706,11 +1706,11 @@ fangohr: Still testing ...
 2012-09-18 09:17:07 JustinD: A language purely for the purpose of confusing people in your office - sounds fun
 2012-09-18 09:29:21 fangohr-adium: Ah, yes. Sadly some of my intended English ends up that way already.
 2012-09-18 09:34:31 JustinD: Haven't really noticed to be honest
-2012-09-18 09:35:23 fangohr-adium: It's probably not that bad. However, I did notice that the odd German word has started to slip into long speeches since I regularly talk German at home with the children. Never mind …
+2012-09-18 09:35:23 fangohr-adium: It's probably not that bad. However, I did notice that the odd German word has started to slip into long speeches since I regularly talk German at home with the children. Never mind â¦
 2012-09-18 09:36:01 JustinD: I know the feeling, have been stuck for an English word quite a few times
 2012-09-20 09:14:16 fangohr-adium: Morning DokosBot. Just to say that I am busy delivering an intense teaching course today, tomorrow, Monday and Tuesday.
 2012-09-20 16:33:24 JustinD: Hans, do you mind if I drop by your office in a minute?
-2012-09-20 16:56:51 fangohr-adium: Hi Justin, only saw your message now — was coincidence I came past your desk ;-)
+2012-09-20 16:56:51 fangohr-adium: Hi Justin, only saw your message now â was coincidence I came past your desk ;-)
 2012-09-20 16:57:11 JustinD: Oh, that was lucky then :)
 2012-09-20 16:57:54 JustinD: Do you mind if I restrict the benchmark to even numbers of iterations?
 2012-09-20 16:58:04 fangohr-adium: No.
@@ -1732,7 +1732,7 @@ fangohr: Still testing ...
 2012-09-21 17:05:49 fangohr-adium: I am sending some feedback by email.
 2012-09-21 17:05:58 JustinD: Thanks
 2012-09-21 17:06:04 fangohr-adium: On my machine there is some OpenCL library missing. Let me check the error message ...
-2012-09-21 17:07:25 fangohr-adium: Maybe I am just lakcing the right hardware: when trying to run 'python benchmark.py' I get ptxas application ptx input, line …. Instructions * requiers SM1.3 or higher, or map_f64_to_f32. So I guess this fails because my card cannot do any 64 bit operations?
+2012-09-21 17:07:25 fangohr-adium: Maybe I am just lakcing the right hardware: when trying to run 'python benchmark.py' I get ptxas application ptx input, line â¦. Instructions * requiers SM1.3 or higher, or map_f64_to_f32. So I guess this fails because my card cannot do any 64 bit operations?
 2012-09-21 17:11:57 JustinD: Yes, that's what it sounds like
 2012-09-21 17:12:12 JustinD: i did everything in double since that is what python was probably doing
 2012-09-21 17:12:31 JustinD: anyway, I unfortunately have an appointment in a few minutes and need to leave
@@ -1752,14 +1752,14 @@ fangohr: Still testing ...
 2012-10-01 09:18:19 fangohr-adium: Good Morning DokosBot!
 2012-10-01 14:36:17 fangohr-adium: Hi Dmitri, well done ;-)
 2012-10-01 14:37:57 D_Chernyshenko: Ok, this seems to be working!
-2012-10-02 09:28:22 fangohr-adium: … and there DokosBot is again — phew.
+2012-10-02 09:28:22 fangohr-adium: â¦ and there DokosBot is again â phew.
 2012-10-02 14:48:12 fangohr-adium: Leaving the office for most of the afternoon.
 2012-10-03 09:11:03 fangohr-adium: Good morning Max, DokosBot.
 2012-10-03 09:24:12 albert_: Good morning Hans, DokosBot.
 2012-10-03 13:47:42 fangohr-adium: Greetings all.
 2012-10-03 14:11:01 mb8g11: Hi Hans
 2012-10-03 17:11:29 fangohr-adium: Hi all,I am  leaving for the day. Over and out.
-2012-10-04 09:13:11 fangohr-adium: Morning Guest17629 — who are you? ;)
+2012-10-04 09:13:11 fangohr-adium: Morning Guest17629 â who are you? ;)
 2012-10-04 11:26:33 Guest17629: Morning Hans, I'm Max. :) For some reason xchat automatically changed my name. No idea why...
 2012-10-04 11:27:34 Guest17629: Maybe I should find another client anyway. It seems to behave slightly awkward sometimes...
 2012-10-04 11:32:29 albert: Ok, back again as 'albert'... ;-)
@@ -1783,7 +1783,7 @@ fangohr: Still testing ...
 2012-10-04 12:49:04 fangohr-adium1: (not sure the message came through before)
 2012-10-04 12:50:11 mb8g11: Max and I'll join you then.
 2012-10-04 12:56:40 fangohr-adium1: Nice. I'll drop a note here when we are about to go.
-2012-10-04 13:35:37 fangohr-adium1: Hi Max, Marc-Antonio, we are ready to go — do you want to come by my office?
+2012-10-04 13:35:37 fangohr-adium1: Hi Max, Marc-Antonio, we are ready to go â do you want to come by my office?
 2012-10-04 13:35:56 mb8g11: On our way.
 2012-10-04 13:35:57 albert_: Sure, we'll be there in a minute!
 2012-10-04 13:36:52 fangohr-adium1: if we are gone, just follow to staff club.
@@ -1819,14 +1819,14 @@ fangohr: Still testing ...
 2012-10-10 13:03:50 fangohr-adium1: Greetings. :)
 2012-10-10 14:07:03 mb8g11_: There was a way to start nmag in interactive mode, wasn't there? Can't find it in the doc.
 2012-10-10 17:05:50 fangohr-adium1: Hi Marc-Antonio, I guess you are just upgrading summer ;-)?
-2012-10-10 17:06:52 fangohr-adium1: I logged on just now, and  found a welcome message for Ubuntu 12.04 and an up-time of 34 days. That's cool — upgraded without reboot … ;-)
+2012-10-10 17:06:52 fangohr-adium1: I logged on just now, and  found a welcome message for Ubuntu 12.04 and an up-time of 34 days. That's cool â upgraded without reboot â¦ ;-)
 2012-10-10 17:08:15 mb8g11_: Hehe, let's see what it says when it's done with upgrading.
 2012-10-10 17:09:20 fangohr-adium1: To run nmag interactively, it should be enough to just call 'nsim'.
 2012-10-10 17:16:15 fangohr-adium1: Over and out from me for now.
 2012-10-11 10:25:14 mb8g11: Hello
 2012-10-11 10:25:24 cilix: Good morning!
 2012-10-11 12:25:15 mb8g11: Who's up for lunch at one o'clock?
-2012-10-11 12:25:55 fangohr-adium1: Nice initiative — I am teaching at 13:00 today (exceptionally), otherwise would have liked that.
+2012-10-11 12:25:55 fangohr-adium1: Nice initiative â I am teaching at 13:00 today (exceptionally), otherwise would have liked that.
 2012-10-11 12:26:06 fangohr-adium1: (Could do tomorrow 12:00, by the way.)
 2012-10-11 12:26:28 cilix: Sounds good to me!
 2012-10-11 12:26:34 cilix: (Lunch, that is, not teaching :-P
@@ -1842,7 +1842,7 @@ fangohr: Still testing ...
 2012-10-12 09:21:11 fangohr-adium1: Shall we chat about your hysteresis loop in the group meeting? I thought this may well be interesting to all.
 2012-10-12 09:21:31 cilix: Sure, why not.
 2012-10-12 09:22:08 cilix: Don't know if I have many interesting observations yet (other than that it takes long), but we can certainly discuss it.
-2012-10-12 09:23:27 fangohr-adium1: It is typical that the first relaxation (for some applied field) takes a long time. Changing the field a little, and waiting for the magnetisation to relax in that new field, would typically take much less time. Once the reversal starts (and we have to move far in phase space — if that makes any sense), it might take a lot of time again. Could it be this pattern?
+2012-10-12 09:23:27 fangohr-adium1: It is typical that the first relaxation (for some applied field) takes a long time. Changing the field a little, and waiting for the magnetisation to relax in that new field, would typically take much less time. Once the reversal starts (and we have to move far in phase space â if that makes any sense), it might take a lot of time again. Could it be this pattern?
 2012-10-12 09:23:56 cilix: Yes, that seems to be the case indeed.
 2012-10-12 09:24:22 fangohr-adium1: You can speed up the initial step by choosing an initial magnetic configuration that is similar to the relaxed state at the first applied field.
 2012-10-12 09:25:05 cilix: That's what I did, actually. So I was surprised to see that it still takes very long.
@@ -1878,7 +1878,7 @@ fangohr: Still testing ...
 2012-10-18 12:26:50 fangohr-adium: ;-)
 2012-10-18 12:26:54 fangohr-adium: Max, will be over in 3.
 2012-10-18 12:27:24 mb8g11: (and I want to get distribution working before our meeting tomorrow)
-2012-10-18 13:13:22 fangohr-adium: … [back from lunch] … that would be great; thanks.
+2012-10-18 13:13:22 fangohr-adium: â¦ [back from lunch] â¦ that would be great; thanks.
 2012-10-18 13:29:49 cilix: Hi Hans, thanks for the chat during lunch!  I just checked my script and indeed I used a wrong (= much too large) value for stopping_dmdt in my recent simulations with large damping.
 2012-10-18 13:29:57 cilix: (Stupid copy & paste oversight.)
 2012-10-18 13:30:13 fangohr-adium: That makes me quite happy.
@@ -1890,7 +1890,7 @@ fangohr: Still testing ...
 2012-10-18 13:35:18 cilix: MA: No, I didn't. How do I do that in Finmag?
 2012-10-18 13:38:51 mb8g11: with a Simulation instance called sim: sim.llg.do_precession = False
 2012-10-18 13:39:50 cilix: Excellent, will try that (didn't even know this was possible). Thanks!
-2012-10-18 13:40:16 fangohr-adium: … which raises the question: have we documented this somewhere? Ideally in an example.
+2012-10-18 13:40:16 fangohr-adium: â¦ which raises the question: have we documented this somewhere? Ideally in an example.
 2012-10-18 13:42:25 cilix: A quick search in the Finmag manual shows that it's mentioned in the documentation LLG class, but only as an argument in the class constructor, and the meaning of the argument isn't explained (even though it's quite obvious what it does).
 2012-10-18 13:42:27 mb8g11: Just checked. No. Will add a pivotal tracker story. Will have to document the constructor of LLG and write a small example that runs a simulation once with, and once without precession and plots the two curves.
 2012-10-18 13:43:33 mb8g11: Might rework the constructor of LLG as well - it takes a FunctionSpace and a VectorFunctionSpace... might as well just take the mesh.
@@ -1915,7 +1915,7 @@ fangohr: Still testing ...
 2012-10-22 13:16:44 D_Chernyshenko_: Ah, that's fine then
 2012-10-22 15:40:38 cilix: Hi Hans, I was just wondering if there is a way in Finmag to probe the stray field of e.g. a magnetic particle in the surrounding space. AFAICS, this doesn't currently exist. However, nmag does provide such a method, right? Do you know what the best way of doing this is, and/or how it is implemented in nmag?
 2012-10-22 15:59:17 fangohr-adium: Hm, good question. The best way may be to implement a fake magnetic material (with Ms=0, or Ms=eps if 0 causes divisions by zero) in the area where you want to probe. Note that the field outside the magnetic body can be fairly coarse (depending a little on the resolution you desire). There is in fact the 'air-box-method' of computing demag fields, where you enclose a magnetic object with 'air' (where the main property of the air is that it is non-
-2012-10-22 15:59:33 fangohr-adium: Sorry — wanted to edit the text a little, but pressed return to early.
+2012-10-22 15:59:33 fangohr-adium: Sorry â wanted to edit the text a little, but pressed return to early.
 2012-10-22 16:00:12 fangohr-adium: The main point being that the airbox method is used to reduce the size of the BEM. For the problem you are looking at (i.e. determine demag field outside the magnetic parts), you could probe in the airbox.
 2012-10-22 16:01:03 mb8g11: Does nmag implement the airbox method?
 2012-10-22 16:01:14 fangohr-adium: No.
@@ -2056,7 +2056,7 @@ fangohr: Still testing ...
 2012-11-05 10:23:28 max_albert: Good morning, Hans! Welcome back! :-)
 2012-11-05 11:03:08 fangohr-adium: Hi Max, thanks. Anybody up for food today?
 2012-11-05 11:03:54 max_albert: I think I would be up for it. Depends a bit on the time, when were you thinking? I don't know about Marijan and Weiwei but I can ask them.
-2012-11-05 11:04:35 fangohr-adium: I am easy — have a meeting with Jon and Seth now which probably finishes at 12:00. I could go anytime after that — any preference?
+2012-11-05 11:04:35 fangohr-adium: I am easy â have a meeting with Jon and Seth now which probably finishes at 12:00. I could go anytime after that â any preference?
 2012-11-05 11:05:44 max_albert: I'm not feeling too hungry at the moment, but guess around 1pm or 12.30pm would be ok. Also depends on when you're getting hungry of course. :) Do you want to check again when the meeting is over?
 2012-11-05 11:11:09 fangohr-adium: Sounds good to me; let's chat later.
 2012-11-05 12:26:03 fangohr-adium: Hi Max, what's the calorie situation like? I am ready to go, but easy (have biscuits...)
@@ -2106,7 +2106,7 @@ fangohr: Still testing ...
 2012-11-07 12:48:04 mb8g11: He's not very talkative, might have to patch that.
 2012-11-08 09:12:44 max_albert: Good morning Hans!
 2012-11-08 09:12:48 max_albert:  I need a quick opinion: is there any harm in including the Finmag version (= hg revision number and hash) in the filename of the tarball that is generated for the binary distribution?
-2012-11-08 09:12:59 fangohr-adium: Good morning — are you up again???
+2012-11-08 09:12:59 fangohr-adium: Good morning â are you up again???
 2012-11-08 09:13:12 max_albert: Yes... :-S
 2012-11-08 09:13:31 fangohr-adium: Impressive ;)
 2012-11-08 09:14:00 fangohr-adium: Including the tag is fine with me. WHat is the difference between revision number and hash?
@@ -2189,7 +2189,7 @@ fangohr: Still testing ...
 2012-11-12 11:00:15 max_albert: Good morning!
 2012-11-12 11:07:27 D_Chernyshenko: It was 15:00 I think.
 2012-11-12 11:07:31 D_Chernyshenko: Morning Max!
-2012-11-12 11:07:46 fangohr-adium: Hi Dmitri, good — let's go with 15:00. Thanks.
+2012-11-12 11:07:46 fangohr-adium: Hi Dmitri, good â let's go with 15:00. Thanks.
 2012-11-13 11:14:31 fangohr-adium: Morning folks.
 2012-11-13 11:27:24 max_albert: Good morning, Hans.
 2012-11-13 15:57:30 max_albert: Hi Dmitri, do you know if it is safe to restart jenkins by invoking "/etc/init.d/jenkins restart"?
@@ -2217,7 +2217,7 @@ fangohr: Still testing ...
 2012-11-14 15:22:39 max_albert: Great! Glad to hear it works. :)
 2012-11-15 09:24:08 fangohr-adium: Good morning all.
 2012-11-15 10:32:47 fangohr-adium: Max, are you there? Given a dolfin mesh object, are you aware of a matplotlib function we can use to plot this? Or given a dolfin function, have we got a matplotlib function to plot that (both vector and scalar would be useful)? I guess the answer is no. [This would be handy  for the ipython notebook documentation.]
-2012-11-15 10:33:36 fangohr-adium: We could write some finmag functions that do the job for us — if necessary we could slice the 3d meshes and only show a 2d cut with matplotlib; that should work in any case.
+2012-11-15 10:33:36 fangohr-adium: We could write some finmag functions that do the job for us â if necessary we could slice the 3d meshes and only show a 2d cut with matplotlib; that should work in any case.
 2012-11-15 12:44:32 max_albert: Hi Hans! Sorry, I was working at home this morning and our internet wasn't working.
 2012-11-15 12:45:01 max_albert: I don't know if matplotlib can do this (but will have a look). I'd rather think it can't at the moment.
 2012-11-15 12:46:04 max_albert: However, mayavi may have some functions of for this. It looks like the "mayavi.mlab.triangular_mesh" function can do this.
@@ -2234,10 +2234,10 @@ fangohr: Still testing ...
 2012-11-15 14:03:00 max_albert: Well, it might work in some cases. But often ipython gets confused when using Ctrl+v if there are different levels of indentation.
 2012-11-15 14:03:25 max_albert: In this case %paste is the recommended way of pasting blocks of code.
 2012-11-15 14:03:41 max_albert: I seem to remember that you also said there was a menu item somewhere with the same functionality?
-2012-11-15 14:03:52 fangohr-adium: I remember you saying this ;-). I'll see how it goes — the %paste things certainly does not work. Maybe I need to change something with my default settings? Anyway, I am sure we will find out over time what is happening.
+2012-11-15 14:03:52 fangohr-adium: I remember you saying this ;-). I'll see how it goes â the %paste things certainly does not work. Maybe I need to change something with my default settings? Anyway, I am sure we will find out over time what is happening.
 2012-11-15 14:04:01 fangohr-adium: regarding the menu item: that has disappeared in 0.13 ;-)
 2012-11-15 14:10:45 max_albert: Oh, one question: are you using %paste magic command in the qtconsole or in a "pure" ipython prompt?
-2012-11-15 14:11:02 fangohr-adium: In the notebook — is that the issue?
+2012-11-15 14:11:02 fangohr-adium: In the notebook â is that the issue?
 2012-11-15 14:12:19 max_albert: Hmm, it might be. But in the notebook pasting stuff using Ctrl-v should never be a problem. It's only an issue when pasting directly into the ipython prompt in a terminal.
 2012-11-15 14:12:51 fangohr-adium: Oh, I see. I have also tried this in the qtconsole (in lectures), and there seemed not to be the %paste command.
 2012-11-15 14:13:20 fangohr-adium: Regarding plots: the mayavi works, but doesn't give output that we could readily use in notebooks. I am still looking into matplotlib at the moment.
@@ -2250,16 +2250,16 @@ fangohr: Still testing ...
 2012-11-15 14:19:58 max_albert: Although actually it looks like it doesn't readily plot triangulated surfaces.
 2012-11-15 14:28:42 max_albert: But yes, plot_trisurf looks like it is the right tool for the job.
 2012-11-15 16:49:52 max_albert: Hi Hans! Just out of curiousity, have you had any luck with the mesh plotting?
-2012-11-15 16:58:51 fangohr-adium: No, was in a meeting the last two hours ;-). We can discuss this a little nevertheless: The plot_trisurf is nice to show the shape of some geometries. We should be able to take a mesh, extract the boundary mesh, and pass this to plot_trisurf — this should be a few lines.
+2012-11-15 16:58:51 fangohr-adium: No, was in a meeting the last two hours ;-). We can discuss this a little nevertheless: The plot_trisurf is nice to show the shape of some geometries. We should be able to take a mesh, extract the boundary mesh, and pass this to plot_trisurf â this should be a few lines.
 2012-11-15 16:59:12 fangohr-adium: What will not be so easy is to display the data on the mesh as the function expects the data values for the triangles if I understand this correctly.
 2012-11-15 16:59:41 fangohr-adium: Could all be done; but maybe having a quick way of showing a mesh (by looking at the surface) is quite nice already.
 2012-11-15 17:00:22 max_albert: Regarding your first comment, I was also thinking that it should be quite quick. I had a very brief look but I'm having trouble finding out how to extract the boundary mesh. Do you know how to do this?
 2012-11-15 17:00:46 max_albert: I don't understand your other comments, to be honest. :-P What do you mean by "data on the mesh"?
-2012-11-15 17:01:34 fangohr-adium: Not exactly … ;-) I think there is a (dolfin) BoundaryMesh class or function that can be given a mesh and returns the Boundary mesh.
-2012-11-15 17:03:36 fangohr-adium: Regarding the data: I was thinking of visualising a scalar field, such as anisotropy energy. We would normally evaluate and store that on the nodes. If we had that data available for each surafec triangle, we could pass it to the plotting function so that the colour of the triangles reflects the value of that scalar field. Does that make it clearer? (It was very brief before, I have to agree….)
+2012-11-15 17:01:34 fangohr-adium: Not exactly â¦ ;-) I think there is a (dolfin) BoundaryMesh class or function that can be given a mesh and returns the Boundary mesh.
+2012-11-15 17:03:36 fangohr-adium: Regarding the data: I was thinking of visualising a scalar field, such as anisotropy energy. We would normally evaluate and store that on the nodes. If we had that data available for each surafec triangle, we could pass it to the plotting function so that the colour of the triangles reflects the value of that scalar field. Does that make it clearer? (It was very brief before, I have to agreeâ¦.)
 2012-11-15 17:04:06 max_albert: Ah, yes, that makes more sense. :)
 2012-11-15 17:04:39 max_albert: So you are still envisioning plotting a "closed" surface (as opposed to a wireframe), and the surface triangles are coloured according to the scalar values?
-2012-11-15 17:06:07 fangohr-adium: That is what plot_trisurf does if I read it correctly. A wire frame would be good to — haven't found that function yet (but haven't searched for long either).
+2012-11-15 17:06:07 fangohr-adium: That is what plot_trisurf does if I read it correctly. A wire frame would be good to â haven't found that function yet (but haven't searched for long either).
 2012-11-15 17:13:09 fangohr-adium: Over and out for today.
 2012-11-15 17:13:14 max_albert: See you!
 2012-11-16 11:09:56 max_albert: Good morning!
@@ -2278,7 +2278,7 @@ fangohr: Still testing ...
 2012-11-16 12:58:02 mb8g11: Doesn't do meshes though.
 2012-11-16 12:58:10 mb8g11: Hi all.
 2012-11-16 12:58:20 max_albert: Hi Marc-Antonio!
-2012-11-16 12:59:07 fangohr-adium: (just going into meeting — expect some silence from me now …sorry)
+2012-11-16 12:59:07 fangohr-adium: (just going into meeting â expect some silence from me now â¦sorry)
 2012-11-16 13:00:05 max_albert: MA, is this the quiver function you are talking about?
 2012-11-16 13:01:39 mb8g11: Yes. I remember writing it to abstract away the difference between plotting 2D functions and 3D functions on 3D space.
 2012-11-16 13:02:12 max_albert: Cool.
@@ -2463,7 +2463,7 @@ fangohr: Still testing ...
 2012-11-19 13:09:31 max_albert: Yes, sure. Do you want me to pick you up?
 2012-11-19 13:09:44 fangohr-adium: OKay, will be right there.
 2012-11-19 13:09:55 max_albert: Great.
-2012-11-19 15:40:47 fangohr-adium: Hi Marc-Antonio, please come over when it is convenient — am back in the office now.
+2012-11-19 15:40:47 fangohr-adium: Hi Marc-Antonio, please come over when it is convenient â am back in the office now.
 2012-11-20 11:05:44 fangohr-adium: Good Morning.
 2012-11-20 11:27:10 max_albert: Good morning.
 2012-11-20 11:43:32 max_albert: Hi MA, here is the link which describes the IPython notebook in more detail: http://ipython.org/ipython-doc/dev/interactive/htmlnotebook.html
@@ -2489,8 +2489,8 @@ fangohr: Still testing ...
 2012-11-22 14:17:52 fangohr-adium: Hi all.
 2012-11-22 14:17:52 fangohr-adium: Dmitri, to answer your earlier question: I am now in the office, but I guess we have sorted that by email already?
 2012-11-22 14:41:40 D_Chernyshenko: Yep!
-2012-11-22 15:10:44 ww1g11: Hi I got a problem in compiling finmag in the new machine, src/sundials/numpy_malloc.cc: In function ‘void* finmag::sundials::numpy_malloc(size_t, size_t)’:
-2012-11-22 15:10:44 ww1g11: File "/home/ww1g11/Softwares/finmag/native/src/sundials/numpy_malloc.cc", line 93 (33): error: narrowing conversion of ‘len’ from ‘size_t {aka long unsigned int}’ to ‘npy_intp {aka long int}’ inside { } [-Werror=narrowing]
+2012-11-22 15:10:44 ww1g11: Hi I got a problem in compiling finmag in the new machine, src/sundials/numpy_malloc.cc: In function âvoid* finmag::sundials::numpy_malloc(size_t, size_t)â:
+2012-11-22 15:10:44 ww1g11: File "/home/ww1g11/Softwares/finmag/native/src/sundials/numpy_malloc.cc", line 93 (33): error: narrowing conversion of âlenâ from âsize_t {aka long unsigned int}â to ânpy_intp {aka long int}â inside { } [-Werror=narrowing]
 2012-11-22 15:11:54 ww1g11: any suggestion?
 2012-11-22 15:17:01 D_Chernyshenko: Hi Weiwei, what's the OS version and GCC version? And is this 64 bit? I'm checking the code meanwhile
 2012-11-22 15:17:44 ww1g11: gcc version 4.7.2 x86_64
@@ -2539,7 +2539,7 @@ fangohr: Still testing ...
 2012-11-22 22:25:37 D_Chernyshenko: I.e., rather than support 2.4 and 2.5, it might be easier to support 2.5 either from Ubuntu or from source as needed
 2012-11-23 09:34:42 mb8g11: Hi Hans
 2012-11-23 09:43:37 fangohr: Hi MA.
-2012-11-23 09:44:01 fangohr: I can see your changes on the exchange: some of those are inline with what I did, and what I thought we should do next — good.
+2012-11-23 09:44:01 fangohr: I can see your changes on the exchange: some of those are inline with what I did, and what I thought we should do next â good.
 2012-11-23 09:45:32 fangohr: The changes fail a few tests (16), so not quite perfect but going in the right direction. Are you in the office?
 2012-11-23 09:48:55 mb8g11: Yes
 2012-11-23 09:49:39 mb8g11: Forgot the DMI, that's for sure
@@ -2553,7 +2553,7 @@ fangohr: Still testing ...
 2012-11-23 10:21:10 mb8g11: Who wrote the DMI code and its tests?
 2012-11-23 10:21:20 mb8g11: (nearly done fixing)
 2012-11-23 10:36:53 fangohr-adium: Marijan and I, I think. Try 'hg blame -u' ;-)
-2012-11-23 10:37:13 fangohr-adium: Going on and offline — technical issues here, sorry.
+2012-11-23 10:37:13 fangohr-adium: Going on and offline â technical issues here, sorry.
 2012-11-23 10:58:40 D_Chernyshenko: Erm, going to be 10 mins late to the meeting it seems, I'm leaving now...
 2012-11-23 11:06:24 fangohr1: No worries. Coffee is on the table. Looking for biscuits now.
 2012-11-23 11:06:57 max_albert: Hi Hans, shall we come over in 5 minutes so that we arrive at the same time as Dmitri?
@@ -2589,7 +2589,7 @@ fangohr: Still testing ...
 2012-11-23 16:45:45 fangohr-adium1: Nice, thank you.
 2012-11-23 18:18:08 max_albert: Hi Hans, I just pushed a change which should fix this. The error was due to the fact that osiris seems to use low-precision timestamps for file modification times. So since the test execution is very fast, the .geo file got the same timestamp as the .xml.gz file that was created less than a second before and it wasn't picked up as being newer.
 2012-11-23 18:18:30 max_albert: Let me know if you still experience problems.
-2012-11-23 20:41:20 fangohr2: Hi Max, all well now — tests pass perfectly. Many thanks!
+2012-11-23 20:41:20 fangohr2: Hi Max, all well now â tests pass perfectly. Many thanks!
 2012-11-26 08:10:45 mb8g11: Hello
 2012-11-26 09:19:56 fangohr-adium: Hello MA (think I just missed you).
 2012-11-26 13:30:56 mb8g11: I have sundials 2.5 working with finmag on my fresh Ubuntu 12.10. Will commit the needed changes as soon as I find out how to do an anonymous branch in Mercurial.
@@ -2647,14 +2647,14 @@ fangohr: Still testing ...
 2012-11-26 17:23:05 mb8g11: Bye Hans
 2012-11-27 11:56:21 fangohr-adium1: Hi Max et al. Anybody up for lunch later?
 2012-11-27 11:56:42 max_albert: Yes, I might be. What time are you thinking?
-2012-11-27 11:56:56 fangohr-adium1: Am easy — can wait a little if you like.
+2012-11-27 11:56:56 fangohr-adium1: Am easy â can wait a little if you like.
 2012-11-27 11:57:21 max_albert: I don't mind. Happy to go whenever it suits you best.
 2012-11-27 11:57:51 fangohr-adium1: How about 12:30 approx?
 2012-11-27 11:58:06 max_albert: Sounds good to me. I'll pass the information on to Marijan and Weiwei.
 2012-11-27 11:58:26 fangohr-adium1: Thanks.
 2012-11-27 12:19:51 max_albert: Hi Hans, quick question: is it ok to give the pdf (or html version) of the Finmag documentation to Luzanne, even though it contains some source snippets?
 2012-11-27 12:20:11 max_albert: I just wanted to tell her about the sim.relax() method and noticed she doesn't have the documentation yet.
-2012-11-27 12:21:10 fangohr-adium1: I think so. What we really need is a user guide — a lot of the documentation is not relevant for her. I am hoping we can add a few ipython notebooks that show exactly these things in due course. But do give her the pdf (or the relevant pages — it may not help her to have all the information).
+2012-11-27 12:21:10 fangohr-adium1: I think so. What we really need is a user guide â a lot of the documentation is not relevant for her. I am hoping we can add a few ipython notebooks that show exactly these things in due course. But do give her the pdf (or the relevant pages â it may not help her to have all the information).
 2012-11-27 12:21:34 max_albert: Ok, will do. Thanks!
 2012-11-27 12:21:46 max_albert: And yes, I totally agree about the usage examples.
 2012-11-27 12:31:08 max_albert: Hi Hans, just finishing a couple of emails but will be ready to go in a few minutes I guess.
@@ -2746,7 +2746,7 @@ fangohr: Still testing ...
 2012-11-28 15:53:57 D_Chernyshenko_: Hey guys, I've updated the sundials interface files in the main branch to work with 2.4 and 2.5. I've tested the library on 2.5, and it compiles on both. Let me know if you find any issues
 2012-11-28 15:54:50 D_Chernyshenko_: There's still the minor issue that if we compile against say 2.4, and link against 2.5, *bad* things will happen
 2012-11-28 15:55:12 D_Chernyshenko_: Link at run time that is (for example, when using a binary distribution)
-2012-11-28 17:02:04 fangohr-adium: Hi Dmitri, am only now catching up with IRC — thanks for all that; great stuff.
+2012-11-28 17:02:04 fangohr-adium: Hi Dmitri, am only now catching up with IRC â thanks for all that; great stuff.
 2012-11-28 17:02:38 fangohr-adium: MA, it was the empty line in the doc string in the end? Quite a mean missing '\n' to find.
 2012-11-28 17:14:24 fangohr-adium: Yes, compiles again on osiris.
 2012-11-29 09:06:00 mb8g11: Indeed! (the missing newline)
@@ -2821,23 +2821,23 @@ fangohr: Still testing ...
 2012-12-03 16:15:14 D_Chernyshenko: Yeah, my way was the most straightforward way of doing it when I was writing the Makefile (easier to call the linker, than to call the linker then cp), it doesn't really make a difference otherwise...
 2012-12-03 16:15:41 max_albert: That's true.
 2012-12-03 16:34:10 max_albert: Hi Hans, I just saw your commits about the logging options. Nice! :)
-2012-12-03 16:34:30 fangohr-adium: Ta. Done with the Ipython notebook — so much fun!
+2012-12-03 16:34:30 fangohr-adium: Ta. Done with the Ipython notebook â so much fun!
 2012-12-03 16:34:40 max_albert: I know... ;-)
 2012-12-03 16:34:58 max_albert: About the colour scheme "none": you mentioned problems with nbconvert in your commit message. Can you elaborate? Are colours a problem when converting notebooks?
 2012-12-03 16:36:19 fangohr-adium: Yes, correct. When you run a job via "!python sim.py" rather than "%run sim.py", then escape codes in the output are shown correctly inside the output box of the notebook, but nbconvert chokes when it has to convert them.
 2012-12-03 16:37:10 max_albert: Interesting. I'll keep this in mind and maybe submit a pull request for nbconvert if I find the time to fix this.
-2012-12-03 16:37:23 fangohr-adium: Running the simulation using '%run sim.py' is fine — coloured output from within Python is respected (or at least does not cause a halt of the conversion). However, using the magic 'run' seems not to be compatible with our input argument parsing: Options such as '-v info' seem to be ignored. That's why I used '!' instead.
+2012-12-03 16:37:23 fangohr-adium: Running the simulation using '%run sim.py' is fine â coloured output from within Python is respected (or at least does not cause a halt of the conversion). However, using the magic 'run' seems not to be compatible with our input argument parsing: Options such as '-v info' seem to be ignored. That's why I used '!' instead.
 2012-12-03 16:38:58 max_albert: It's also interesting that the options are ignored, because the documentation for %run seems to suggest otherwise.
 2012-12-03 16:39:14 max_albert: I seem to remember that I had a similar issue once. It should be in the Pivotal tracker.
 2012-12-03 16:40:10 max_albert: Oh yes, I found it. The title of the tracker issue is "Using argparse in simulation scripts does not work (arguments get overwritten by Finmag)"
 2012-12-03 16:40:19 max_albert: Can I somehow copy a link to that issue directly?
 2012-12-04 00:16:09 fangohr: Hi Max, in response to your question regarding direct access to issue URL: within the tracker, there is a paperclick icon. If you click on that, it is meant to copy the URL of the issue, so that you can paste that where you need it.
 2012-12-04 00:16:33 fangohr: If you want to chat about logging stuff, come and find me tomorro after 11:00; great progress with the global log file.
-2012-12-04 10:59:44 fangohr-adium1: Good Morning (back from teaching…)
+2012-12-04 10:59:44 fangohr-adium1: Good Morning (back from teachingâ¦)
 2012-12-04 10:59:57 max_albert: Good morning Hans.
 2012-12-04 11:03:05 D_Chernyshenko: Morning
 2012-12-04 14:12:08 max_albert: Hi Hans, as of the latest commit we now have per-simulation logging enabled. Feel free to test and report any issues.
-2012-12-04 14:18:56 fangohr-adium1: Hi Max, just done that — great.
+2012-12-04 14:18:56 fangohr-adium1: Hi Max, just done that â great.
 2012-12-04 14:19:27 fangohr-adium1: One suggestion for improvement: certainly for the global log file, and maybe for the others as well: should be replace the time tag at the beginning of each line with a date-time tag?
 2012-12-04 14:19:45 max_albert: Yes, I had considered that as well.
 2012-12-04 14:20:02 max_albert: I disabled it a while ago because it takes up a lot of space at the beginning of each line.
@@ -2846,14 +2846,14 @@ fangohr: Still testing ...
 2012-12-04 14:20:56 fangohr-adium1: Also, when simulations run multiple days, this is quite convenient.
 2012-12-04 14:21:03 max_albert: That would only save two characters, though. :)
 2012-12-04 14:21:11 fangohr-adium1: I except the space usage is annoying.
-2012-12-04 14:21:26 fangohr-adium1: (Maybe you just need to get a bigger screen …?)
+2012-12-04 14:21:26 fangohr-adium1: (Maybe you just need to get a bigger screen â¦?)
 2012-12-04 14:21:40 max_albert: Well, we could have the timestamp template string as a configuration option in .finmagrc.
 2012-12-04 14:21:51 max_albert: Oh, yes! A bigger screen would be very useful. ;-)
 2012-12-04 14:22:26 max_albert: By default the timestamp could include the date, but then a user could remove it if it takes up too much space.
 2012-12-04 14:22:30 fangohr-adium1: I'd keep it simple and just put it in the default formatter for all the logs. If it is unbearable, we could use only the time in the Simulation log, and add an extra line at the beginning that states the date.
-2012-12-04 14:22:59 fangohr-adium1: Yes, we are thinking along the same lines. I would not introduce a config option here — too much work, and not worth it I think. If we really need it, we will find out soon.
+2012-12-04 14:22:59 fangohr-adium1: Yes, we are thinking along the same lines. I would not introduce a config option here â too much work, and not worth it I think. If we really need it, we will find out soon.
 2012-12-04 14:23:45 max_albert: Ok.
-2012-12-04 14:24:19 fangohr-adium1: I have happily accept the completed stories on pivotal — very nice to see some green items :)
+2012-12-04 14:24:19 fangohr-adium1: I have happily accept the completed stories on pivotal â very nice to see some green items :)
 2012-12-04 14:25:49 max_albert: :)
 2012-12-04 14:26:05 max_albert: I just pushed the change for the timestamp so that it now includes the date.
 2012-12-04 14:26:56 fangohr-adium1: Ta.
@@ -2864,7 +2864,7 @@ fangohr: Still testing ...
 2012-12-06 16:15:29 max_albert: Great! Has it worked for you? Did you manage to create a functional tarball?
 2012-12-06 16:16:07 fangohr: Not quite functional; am just looking at this. Some ImportError "No module named tests.demag.probems".
 2012-12-06 16:16:45 max_albert: I have run into a strange bug where one of the tests wouldn't pass even though it passes in our regular distribution.
-2012-12-06 16:16:46 fangohr: But this is only after unpacking the tar-ball on a new machine — so I got pretty far.
+2012-12-06 16:16:46 fangohr: But this is only after unpacking the tar-ball on a new machine â so I got pretty far.
 2012-12-06 16:18:11 fangohr: Your strange bug should show up before the tarball is created, correct?
 2012-12-06 16:18:37 max_albert: I tried to debug this and bisect the history. At first it seems like hardly any of the revisions compiled at all with the dist-wrapper script (or it compiled and then the tests failed), but I am currently not sure if there is a problem with wrong environment variables. Am just investigating this.
 2012-12-06 16:18:58 max_albert: Yes, it would show up when just running dist-wrapper.py (*including* the test suite, so without --skip-tests).
@@ -2876,7 +2876,7 @@ fangohr: Still testing ...
 2012-12-06 16:26:56 fangohr: No worries ;-)
 2012-12-06 16:27:17 fangohr: Have found a possible problem, am trying the next iteration of the distributed code.
 2012-12-06 16:28:26 max_albert: What is the problem?
-2012-12-06 16:29:12 fangohr: See the diff in https://bitbucket.org/fangohr/finmag/commits/522275d716eeec58778035c9456b85d6 — I hope that solves the problem.
+2012-12-06 16:29:12 fangohr: See the diff in https://bitbucket.org/fangohr/finmag/commits/522275d716eeec58778035c9456b85d6 â I hope that solves the problem.
 2012-12-06 16:29:44 fangohr: Looks like a remainder from what Gabriel did. Not sure why this has not caused any problems before. So maybe it is just a symptom of something else going wrong (for me here).
 2012-12-06 16:37:25 fangohr: The fact that the date in the tarball is taken from the date of the last commit is very cool.
 2012-12-06 16:38:47 max_albert: Yes, it was a good suggestion to make the date in the tarball reflect the date of the revision that it is built from.
@@ -2888,7 +2888,7 @@ fangohr: Still testing ...
 2012-12-06 16:51:28 max_albert: Which is a pity, because this means the ability to check out older revisions is not as useful as I thought it would be.
 2012-12-06 16:51:41 max_albert: It may become more useful over time, though.
 2012-12-06 17:07:22 fangohr: I am sure it will.
-2012-12-06 17:10:24 fangohr: Max, there are a few spurious files in the tar ball (at the top level, i.e. even above the finmag directory). Files such as unnamed.log, box-2_0-1…
+2012-12-06 17:10:24 fangohr: Max, there are a few spurious files in the tar ball (at the top level, i.e. even above the finmag directory). Files such as unnamed.log, box-2_0-1â¦
 2012-12-06 17:10:33 fangohr: I was just looking where these are included, but I can't find the Makefile.
 2012-12-06 17:10:41 fangohr: Should this be in finmag-dist?
 2012-12-06 17:10:50 fangohr: I guess I am just blind, really...
@@ -2911,12 +2911,12 @@ fangohr: Still testing ...
 2012-12-10 10:25:14 mb8g11: exit
 2012-12-11 07:51:06 mb8g11: Hi all
 2012-12-11 09:07:31 max_albert: Good morning!
-2012-12-11 14:18:19 fangohr: Good morning — late response ;-)
+2012-12-11 14:18:19 fangohr: Good morning â late response ;-)
 2012-12-11 14:19:16 max_albert: I just saw your latest bunch of commits, Hans. Looks awesome!
 2012-12-11 14:22:44 fangohr: Ta; you have also been doing stuff :)
 2012-12-11 14:23:05 fangohr: Need to disappear for a while and will be back later.
 2012-12-11 14:23:12 max_albert: See you!
-2012-12-11 14:29:04 fangohr: [Still here…]: have you changed the ndt file format? You need to update the barmini_test.ndt.ref file as well I think.
+2012-12-11 14:29:04 fangohr: [Still hereâ¦]: have you changed the ndt file format? You need to update the barmini_test.ndt.ref file as well I think.
 2012-12-11 14:29:21 max_albert: Whoops, yes. Thank you.
 2012-12-11 14:29:57 max_albert: I added '#' symbols as comment indicators for the two header lines so that we can use numpy.loadtxt() on the file directly.
 2012-12-11 14:29:59 fangohr: I would just do it, but the interesting thing is that when I diff the new barmini.ndt and the ref file, the first number for the time has actually changed.
@@ -2981,7 +2981,7 @@ Sounds like a good idea.
 I'm wondering what to do with our test in test_writing_data.py, though. Looks like we can't just use a reference file because of the small differences in the times.
 14:07
 FANGOHR-ADIUM
-Yes — may have to rewrite to compare values numerically.
+Yes â may have to rewrite to compare values numerically.
 14:11
 MAX_ALBERT
 A quick fix could be to simply have one digit less of precision for the times. However, that feels like a bit of cheating (and it should definitely be documented somewhere).
@@ -3004,7 +3004,7 @@ As an aside, Weiwei just pointed out that we may have another (unrelated) small 
 He has a nice example in a short ipython notebook illustrating this, and I think he is going to submit it as a test soon (hopefully along with the proper fix ).
 15:58
 FANGOHR-ADIUM
-Hi — back now; was in meeting with Dmitri and something else. I have made some progress with the cvode object, and will hopefully commit that soon (even if prelimenary). This will be a good basis to sort out any cvode time confusion.
+Hi â back now; was in meeting with Dmitri and something else. I have made some progress with the cvode object, and will hopefully commit that soon (even if prelimenary). This will be a good basis to sort out any cvode time confusion.
 16:38
 Thanks for the allclose study; very useful to know.
 16:39
@@ -3174,7 +3174,7 @@ Yes, I have checked them (although not the drawers in other people's desks, only
 Which also doesn't mean that it isn't here, of course... 
 15:05
 FANGOHR1
-Okay, thanks. It will surface again when we expect it the least ….
+Okay, thanks. It will surface again when we expect it the least â¦.
 15:05
 MAX_ALBERT
 Yes, I guess so...
@@ -3283,7 +3283,7 @@ No problem.  It's obvious where the error comes from and thus easy to fix. But I
 FANGOHR
 Yes, and it 'should' be relatively easy to exclude these from the sphinx build. If not, we could move the tailored tutorial scripts somewhere else.
 22:32
-Over and out for today — have a good night.
+Over and out for today â have a good night.
 22:32
 MAX_ALBERT
 Good night!
@@ -3599,7 +3599,7 @@ MB8G11
 I'll have a go at it.
 09:17
 FANGOHR-ADIUM
-I didn't mean to suggest you should — just wanted to explain why I can't get to this immediately. 
+I didn't mean to suggest you should â just wanted to explain why I can't get to this immediately. 
 09:20
 fangohr left the room (quit: Quit: Leaving.).
 09:29
@@ -3649,9 +3649,9 @@ MB8G11
 Looking into it.
 16:30
 FANGOHR-ADIUM
-DokosBot crashes sometimes — don't know why.
+DokosBot crashes sometimes â don't know why.
 16:31
-I have an open session here — from when is the last message DokosBot recorded? Maybe I can save some history from here.
+I have an open session here â from when is the last message DokosBot recorded? Maybe I can save some history from here.
 16:31
 MB8G11
 12 Dec
@@ -3692,7 +3692,7 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2012-12-17 17:14:31 mb8g11: I am too!
 2012-12-17 17:15:13 mb8g11: Everything is fine, just a misunderstand I guess.
 2012-12-17 17:15:54 fangohr-adium: Done the removal, and found the error message. Okay, we mean the same thing then. Although I believe this is only so for the the value of t with which cvode has been initialised.
-2012-12-17 17:16:14 fangohr-adium: I have played a little with your performance test (next push just now). Interesting — Idon't know what's going on.
+2012-12-17 17:16:14 fangohr-adium: I have played a little with your performance test (next push just now). Interesting â Idon't know what's going on.
 2012-12-17 17:16:16 fangohr-adium: Over and out.
 2012-12-17 17:17:25 mb8g11: Bye!
 2012-12-17 17:23:51 mb8g11:  /quit
@@ -3729,12 +3729,12 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-01-15 13:13:04 fangohr: Yes.
 2013-01-16 11:28:55 fangohr-adium: Hi Max, ready to meet when you are ;)
 2013-01-16 11:29:21 max_albert: Awesome! Will pop over in a couple of minutes.
-2013-01-16 11:29:42 fangohr-adium: Best to go around the building on the outside — exams taking place in the workstation area under the gallery.
+2013-01-16 11:29:42 fangohr-adium: Best to go around the building on the outside â exams taking place in the workstation area under the gallery.
 2013-01-16 11:29:57 max_albert: Yes, I noticed that earlier. ;-)
 2013-01-16 12:51:53 fangohr-adium: MA, out there and interested in lunch?
 2013-01-17 09:19:16 mb8g11: Hi.
 2013-01-17 10:31:56 fangohr-adium: Hi :)
-2013-01-17 11:15:49 fangohr-adium: No lunch for me — have a work meeting from 11:30 to 14:00 or so.
+2013-01-17 11:15:49 fangohr-adium: No lunch for me â have a work meeting from 11:30 to 14:00 or so.
 2013-01-17 18:03:37 mb8g11: dolfin 1.1.0 release notes https://lists.launchpad.net/dolfin/msg26258.html
 2013-01-17 18:07:10 mb8g11: A few nice things in there. HDF5, bugfix in expression so one can use min, max; major speed-up or assembly of functions and expressions
 2013-01-17 18:07:27 mb8g11: meshes based on NETGEN csg format
@@ -3830,7 +3830,7 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-01-21 13:58:04 fangohr-adium: Different versions of Nmag?? (Assuming we compare anisotropy to Nmag.)
 2013-01-21 14:03:15 mb8g11: It compares the alternative methods with the default one.
 2013-01-21 14:04:34 mb8g11: ~~
-2013-01-21 14:05:54 fangohr-adium: While this should not be so significant, it could also relate to upgrades in third party libraries (sundials, Petsc, lapack, blas, …).
+2013-01-21 14:05:54 fangohr-adium: While this should not be so significant, it could also relate to upgrades in third party libraries (sundials, Petsc, lapack, blas, â¦).
 2013-01-21 14:14:47 mb8g11: True.
 2013-01-21 15:01:20 fangohr-adium: An orthogonal query: If I wanted something like a file explorer or Finder (Mac) on Linux, what applications might I try? I am thinking of 'standard' gnome or kde tools here, but don't know the application name to start.
 2013-01-21 15:01:47 mb8g11: Nautilus is for Ubuntu, thunar for Xubuntu
@@ -3853,7 +3853,7 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-01-21 16:43:02 max_albert: I also found a StackOverflow comment which said that it should be possible to restart jenkins by simply pointing the browser to the following URL:
 2013-01-21 16:43:05 max_albert: http://summer.kk.soton.ac.uk:8080/safeRestart
 2013-01-21 16:43:33 max_albert: This does indeed ask me if I want to restart jenkins, but I get a "Status Code: 500" error, too.
-2013-01-21 16:44:01 fangohr-adium: Let me try — to see whether it could be permissions.
+2013-01-21 16:44:01 fangohr-adium: Let me try â to see whether it could be permissions.
 2013-01-21 16:44:10 max_albert: Ok, thanks.
 2013-01-21 16:44:43 fangohr-adium: Same here.
 2013-01-21 16:45:15 max_albert: I seem to remember that we had some documentation which said how to restart Jenkins (or at least there was an email about it), but I can't find it right now.
@@ -3881,13 +3881,13 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-01-21 16:55:36 fangohr-adium: Any objections?
 2013-01-21 16:55:46 max_albert: Nope.
 2013-01-21 16:56:00 fangohr-adium: Done. Looks good. Is it running?
-2013-01-21 16:56:18 fangohr-adium: Yes, … booting.
+2013-01-21 16:56:18 fangohr-adium: Yes, â¦ booting.
 2013-01-21 16:56:30 fangohr-adium: Ttry: http://summer.kk.soton.ac.uk:8080
 2013-01-21 16:56:32 max_albert: Yes, I think so.
 2013-01-21 16:57:03 max_albert: Cool, so I probably could have restarted it using  "sudo /etc/init.d/jenkins restart" instead of the "sudo service jenkins restart" that the website recommended.
 2013-01-21 17:00:32 fangohr-adium: Maybe our jenkins is a bit older.
 2013-01-21 17:01:22 max_albert: Yes, or the website is outdated...
-2013-01-21 17:02:01 fangohr-adium: Yes — although I think the 'service' way is seen as slightly more modern. I think MA knows more (as he set up a service for DokosBot).
+2013-01-21 17:02:01 fangohr-adium: Yes â although I think the 'service' way is seen as slightly more modern. I think MA knows more (as he set up a service for DokosBot).
 2013-01-21 17:03:05 max_albert: Perhaps it would have worked if we had started jenkins via "sudo service jenkins restart" instead of going via /etc/init.d/jenkins (but that's a guess, and it's not wise to try that now that Jenkins is running again).
 2013-01-21 17:15:27 fangohr-adium: Over and out for today (at least from the office).
 2013-01-21 17:15:41 max_albert: Bye!
@@ -3953,7 +3953,7 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-01-23 11:47:30 fangohr-adium: Interesting. Good luck. :) [never heard of bookmarks]
 2013-01-23 11:48:27 max_albert: They seem to be a bit more like git's branches, i.e. more lightweight than named branches (which are persistent in history and never go away again).
 2013-01-23 11:48:47 max_albert: Haven't tried them yet though, will be interesting to see how MAB gets on with them.
-2013-01-23 11:49:52 fangohr-adium: Thanks for update. I never liked the branches in mercurial — maybe bookmarks are the answer.
+2013-01-23 11:49:52 fangohr-adium: Thanks for update. I never liked the branches in mercurial â maybe bookmarks are the answer.
 2013-01-23 13:44:28 mb8g11: Back from the PGR meeting. Let's see if I can get finmag to compile on aleph.
 2013-01-23 13:44:46 mb8g11: OrientedBoundaryMesh is gone, but they changed a few signatures as well.
 2013-01-23 14:41:35 fangohr-adium: Nice.
@@ -3970,7 +3970,7 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-01-23 16:09:59 max_albert: But to be on the safe side, I guess we should not use the simple "hg update" for a while.
 2013-01-23 16:10:31 max_albert: Also, make sure you use "hgview" or a similar GUI to check which branch/commit you are on before committing anything (and especially before pushing).
 2013-01-23 16:31:02 max_albert: Actually, it turns out that hgview doesn't display the bookmark names. The mercurial built-in viewer which can be called via "hg view" (note the space) does display them, but it seems to be a hassle to get it to work sometimes.
-2013-01-23 16:32:00 fangohr-adium: If we don't like the bookmarks, we could always fork from the main repository (bitbucket has a button for this ….) and merge back into the usual repository when we are done?
+2013-01-23 16:32:00 fangohr-adium: If we don't like the bookmarks, we could always fork from the main repository (bitbucket has a button for this â¦.) and merge back into the usual repository when we are done?
 2013-01-23 16:32:25 mb8g11: That's actually a sensible way to branch.
 2013-01-23 16:32:38 fangohr-adium: Dmitri and i
 2013-01-23 16:33:05 fangohr-adium: discussed that it is probably not worth the effort to maintain a 1.0 compatible version. So we could move to 1.1 completely, once this is working.
@@ -3999,7 +3999,7 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-01-25 13:20:27 max_albert: Yay! The Jenkins build succeeded, so that's good news.
 2013-01-25 13:20:48 max_albert: The only problem is that it has started to build continuously again...
 2013-01-25 13:21:13 max_albert: Which is good for our statistics in terms of successful builds, but it would be nice to get this sorted. ;-)
-2013-01-25 13:25:23 fangohr-adium: … could try restarting it ?
+2013-01-25 13:25:23 fangohr-adium: â¦ could try restarting it ?
 2013-01-25 13:25:48 max_albert: Maybe worth a try. But didn't we attempt that before?
 2013-01-25 13:26:32 max_albert: And how did that work again?
 2013-01-25 13:26:34 fangohr-adium: But that was to sort your email problem. This issue is new and started after the reboot.
@@ -4024,7 +4024,7 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-01-25 17:04:37 fangohr-adium: Over and out from the office. Probably online later; still lots of marking to be done.
 2013-01-25 17:04:57 max_albert: Oh dear, that sounds painful. Good luck! And have a nice weekend anyway...
 2013-01-25 17:05:57 mb8g11: See you!
-2013-01-25 17:06:39 fangohr-adium: Thanks. It is actually a very nice task so far as I need to write lots of code to automise the curation of submissions, and make the marking as easy as possible. So I haven't even got to the marking itself — it is just the writing of scripts to get there. However, it would be good if the deadline for delivery of everything was much later than it is ;-)
+2013-01-25 17:06:39 fangohr-adium: Thanks. It is actually a very nice task so far as I need to write lots of code to automise the curation of submissions, and make the marking as easy as possible. So I haven't even got to the marking itself â it is just the writing of scripts to get there. However, it would be good if the deadline for delivery of everything was much later than it is ;-)
 2013-01-25 17:06:43 fangohr-adium: Have good week end, too.
 2013-01-25 17:44:27 max_albert: Just for everyone's information, because of all this hassle with Mercurial bookmarks, Dmitri has now created a named branch called "dolfin-1.0.0" and I have just deleted the "dolfin_1_0_0" bookmark (it might still stick around in your local checkouts, but it's gone from the server).
 2013-01-25 17:44:59 max_albert: Hopefully that will stop the confusion for a while.
@@ -4093,7 +4093,7 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-02-04 11:51:12 max_albert: Sounds great! I'll definitely give it a try some time very soon.
 2013-02-04 11:51:40 max_albert: Oh, I guess you meant Marc-Antonio when you said "MA"? ;-)
 2013-02-04 11:52:30 fangohr-adium: I did. But it is also good to see you :)
-2013-02-04 11:52:53 fangohr-adium: (I think MA was not online yet when we exchanged greetings earlier today…)
+2013-02-04 11:52:53 fangohr-adium: (I think MA was not online yet when we exchanged greetings earlier todayâ¦)
 2013-02-04 12:28:03 mb8g11: Hi guys!
 2013-02-04 12:29:35 ww1g11: Hi MA
 2013-02-04 13:20:34 max_albert: Hi Marijan!
@@ -4515,7 +4515,7 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-02-08 19:00:06 max_albert: Have a good weekend everyone!
 2013-02-08 19:00:59 mb8g11: Have a good week-end yourself!
 2013-02-08 19:01:01 mb8g11: Bye all!
-2013-02-08 21:49:59 fangohr1: Hello — still people working out there?
+2013-02-08 21:49:59 fangohr1: Hello â still people working out there?
 2013-02-08 22:10:25 fangohr1: Just tried to run py.test on aleph0 with the dolfin-1.1 branch: 6 fails, and 200 (or so) passes. That's not bad.
 2013-02-08 22:10:55 fangohr1: Fixed the first fail by installing python-progressbar :)
 2013-02-08 22:21:00 mb8g11: no more errors?
@@ -4525,21 +4525,21 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-02-08 22:27:18 fangohr1: Cool; the ssh vpn business. Does that mean you start a text based IRC client on your machine via the path you describe? Anyway, not the right time to exploin I am sure ;-)
 2013-02-08 22:32:25 mb8g11: maybe.
 2013-02-08 22:33:48 mb8g11: mobile phone > vpn to uni > ssh to machine over ssh client > connect to screen session running IRC
-2013-02-08 22:37:54 fangohr1: Connect to screen — that sounds intriguing. Maybe you can show me when we meet next time.
+2013-02-08 22:37:54 fangohr1: Connect to screen â that sounds intriguing. Maybe you can show me when we meet next time.
 2013-02-08 22:44:21 mb8g11: of course. it's just a way to have independent terminal sessions you can connect to, and that don't die when you disconnect
 2013-02-08 22:45:03 mb8g11: not the fancy Mac OS X screen sharing stuff :) still, very useful
-2013-02-08 22:45:06 fangohr1: Oh right, something like 'vscreen' or so — have forgotten the name, but probably seen in the late 90s somewhere.
+2013-02-08 22:45:06 fangohr1: Oh right, something like 'vscreen' or so â have forgotten the name, but probably seen in the late 90s somewhere.
 2013-02-08 22:45:14 fangohr1: Much more useful if all you need is ssh!
 2013-02-08 22:45:20 mb8g11: 'screen'
-2013-02-08 22:45:35 fangohr1: Just screen — that sounds about rigth now.
+2013-02-08 22:45:35 fangohr1: Just screen â that sounds about rigth now.
 2013-02-08 22:45:44 mb8g11: haha yes.
 2013-02-08 22:46:36 fangohr1: Is it just me, or do others like this as well:
 2013-02-08 22:46:42 fangohr1: In [1]: import finmag
-2013-02-08 22:46:44 fangohr1: […]
+2013-02-08 22:46:44 fangohr1: [â¦]
 2013-02-08 22:46:52 fangohr1: [2013-02-08 22:45:35] DEBUG:                Linux: Linux Mint 14 Nadia
 2013-02-08 22:47:19 fangohr1: It just looks very 'mint'; to go with the flow.
 2013-02-08 22:48:48 mb8g11: no hacker cred though ;)
-2013-02-08 22:49:49 fangohr1: … well … some credit for daring to use an ever so slighty different distribution. I have made no effort at all so far to make finmag portable beyond Ubuntu.
+2013-02-08 22:49:49 fangohr1: â¦ well â¦ some credit for daring to use an ever so slighty different distribution. I have made no effort at all so far to make finmag portable beyond Ubuntu.
 2013-02-08 22:50:06 mb8g11: thx to weiwei we can now say finmag (doesn't) run on TWO linux distributions
 2013-02-08 22:51:03 mb8g11: the 'doesn't' part will be fixed soon, then this is indeed cool
 2013-02-08 22:51:33 mb8g11: never managed to compile dolfin on archlinux
@@ -4548,10 +4548,10 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-02-08 22:53:07 fangohr1: ;-)
 2013-02-08 22:53:35 mb8g11: usually fail to compile trilinos
 2013-02-08 22:54:24 mb8g11: why are you still working?
-2013-02-08 22:54:51 fangohr1: Yes — sound like the Nmag story: our own code is usually easy to compile. The hard bits and pieces are the sophisticated but not widely widely spread libraries such as petsc, and trilinos.
+2013-02-08 22:54:51 fangohr1: Yes â sound like the Nmag story: our own code is usually easy to compile. The hard bits and pieces are the sophisticated but not widely widely spread libraries such as petsc, and trilinos.
 2013-02-08 22:55:34 fangohr1: Lots to be done. Also, not working now, just chatting ;-). All this finmag stuff is only distraction to avoid the actual work I should be doing.
 2013-02-08 22:57:24 mb8g11: good to know even you procrastinate from time to time ;)
-2013-02-08 22:58:55 fangohr1: err … yes.
+2013-02-08 22:58:55 fangohr1: err â¦ yes.
 2013-02-08 23:00:07 mb8g11: haha. anyways, have a good night!
 2013-02-08 23:01:37 fangohr1: Same to you.
 2013-02-09 00:55:13 fangohr1: Good night folks.
@@ -4754,7 +4754,7 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-02-14 15:14:57 mb8g11: Didn't know I could hit tab once more to see more of the doc. Nice, thanks.
 2013-02-15 10:16:07 fangohr-adium: Morning all.
 2013-02-15 10:19:39 max_albert: Good morning Hans.
-2013-02-15 10:49:28 fangohr-adium: Hi folks — the oxford gang has arrived. Do come over, and bring a cup of tea or coffee or what you like. We have biscuits.
+2013-02-15 10:49:28 fangohr-adium: Hi folks â the oxford gang has arrived. Do come over, and bring a cup of tea or coffee or what you like. We have biscuits.
 2013-02-15 10:51:37 max_albert: Awesome, we'll be over in a minute.
 2013-02-18 21:51:54 mb8g11: https://trac.soton.ac.uk/linuxdesktops/
 2013-02-18 21:51:59 mb8g11: Includes a printing guide...
@@ -4791,7 +4791,7 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-02-22 16:21:45 fangohr-adium: Hi, have you done the octopus merge yet? Is that what we are building now?
 2013-02-22 17:14:55 mb8g11_: Can you install https://wiki.jenkins-ci.org/display/JENKINS/SLOCCount+Plugin ?
 2013-02-22 17:16:18 mb8g11_: And maybe https://wiki.jenkins-ci.org/display/JENKINS/AnsiColor+Plugin
-2013-02-22 17:18:19 fangohr-adium: Wohooo — fast tests has passed :)
+2013-02-22 17:18:19 fangohr-adium: Wohooo â fast tests has passed :)
 2013-02-22 17:18:24 fangohr-adium: We start to be very much in business now.
 2013-02-22 17:18:53 fangohr-adium: Good work Max, MA.
 2013-02-22 17:19:26 mb8g11_: Max did most of the work, including the merge.
@@ -4856,7 +4856,7 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-02-27 09:08:12 fangohr-adium: Hi Max, Marc-Antonio, Marijan (?), have you got a preference for where we meet today 10:00 to 11:30? If you have results on your screens, it may be easier if I come over to your desks. Is that right?
 2013-02-27 09:08:49 mb8g11: I was just going to compile a few slides, but that's fine as well.
 2013-02-27 09:08:53 max_albert: Possibly yes.
-2013-02-27 09:09:39 fangohr-adium: Okay, I'll come over. The only thing we must not do during the meeting is to try to edit code and run it again — that will be eating time while most people do nothing. I can monitor that, though ;)
+2013-02-27 09:09:39 fangohr-adium: Okay, I'll come over. The only thing we must not do during the meeting is to try to edit code and run it again â that will be eating time while most people do nothing. I can monitor that, though ;)
 2013-02-27 15:03:14 fangohr-adium: Hi all, could somebody let Dmitri know that his mailbox is full; -) My email to him is not coming through...
 2013-02-27 15:35:13 fangohr-adium: Marc-Antonio, are you out there? Could you let Dmitri know that I have put the text we worked on on eta:/tmp/draft.org, please?
 2013-02-27 15:36:01 fangohr-adium: Hi Dmitri, I'll just repeat my last message so MA does not need to tell you:
@@ -4920,7 +4920,7 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-03-01 11:52:06 mb8g11: I wasn't in the recipients.
 2013-03-01 14:34:01 ww1g11: I have some weird hysteresis loops, any one want to see and give suggestion on them?
 2013-03-01 17:11:07 fangohr-adium: MA, sorry, my mistake.
-2013-03-01 17:11:33 fangohr-adium: Weiwei, I only saw your message now — I always like to to see weird hysteresis loops; maybe we can do that next week.
+2013-03-01 17:11:33 fangohr-adium: Weiwei, I only saw your message now â I always like to to see weird hysteresis loops; maybe we can do that next week.
 2013-03-01 17:12:33 fangohr-adium: All, I have put a Chicken Salat Sandwhich into the fridge (in the door) just outside my office. This is still closed in a plastic box and spare from the interview today. Feel free to get it and eat it if anyone is hungry; otherwise it just goes off over the weekend.
 2013-03-01 17:16:07 fangohr-adium: Over and out.
 2013-03-01 17:25:18 max_albert: Hi Hans! You probably won't read this before next week, but I just discussed the strange hysteresis loops with Weiwei and we're a bit at a loss to what's going on.
@@ -4937,7 +4937,7 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-03-01 17:58:32 max_albert: I like that suggestion. It's clear you have been a bug hunter for some time. :)
 2013-03-01 17:58:53 mb8g11: Haha.
 2013-03-01 18:00:03 ww1g11: Good suggestion
-2013-03-02 07:26:08 fangohr1: Hi Weiwei, MA, Max, thanks for reporting of the odd hysteresis loop — doing it via IRC may be quite effective as (i) we archive it and (ii) everybody can chip in ideas, and (iii) I see what is working [and not working] although I am not in your open plan area.
+2013-03-02 07:26:08 fangohr1: Hi Weiwei, MA, Max, thanks for reporting of the odd hysteresis loop â doing it via IRC may be quite effective as (i) we archive it and (ii) everybody can chip in ideas, and (iii) I see what is working [and not working] although I am not in your open plan area.
 2013-03-02 07:26:45 fangohr1: Keep us posted, Weiwei with any insights, further problems etc.
 2013-03-02 07:28:00 fangohr1: (A problem of comparing the demag fields is that we cannot expect full agreement of course - there will be numerical noise. However, it is certainly something we should try! Plotting the magnitude of the difference vector [or so] may or may not show something.)
 2013-03-05 09:14:50 fangohr-adium: Good Morning, folks.
@@ -4983,7 +4983,7 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-03-06 13:28:33 D_Chernyshenko_: Well I'll run
 2013-03-06 13:34:51 max_albert: Hi Hans! Weiwei is back in the office and we're ready to register for the workshop any time.
 2013-03-06 13:34:55 max_albert: Could you please let us know when you have written the email to the relevant person so that we can go there and register? (What's his name again?)
-2013-03-06 13:35:13 fangohr-adium: Just done — CCed to you.
+2013-03-06 13:35:13 fangohr-adium: Just done â CCed to you.
 2013-03-06 13:35:19 max_albert: Awesome, thank you!
 2013-03-06 13:54:22 mb8g11: I can reproduce the bug from scratch (a few lines of code) in an ipython notebook. Checking a script now.
 2013-03-06 13:54:37 max_albert: That would be interesting to see.
@@ -5337,7 +5337,7 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-03-08 09:20:56 fangohr-adium: Good Morning, all.
 2013-03-08 09:22:58 fangohr-adium: Nice merge paths on https://bitbucket.org/fangohr/finmag/commits/all at the moment.
 2013-03-08 13:19:03 fangohr-adium: Looks like Max is bisecting. I like it.
-2013-03-08 13:19:27 fangohr-adium: [Just emerged from the viva of one of Kees de Groot PhD students — he passed :)]
+2013-03-08 13:19:27 fangohr-adium: [Just emerged from the viva of one of Kees de Groot PhD students â he passed :)]
 2013-03-08 13:20:13 max_albert: Hi Hans! Yes, I think I may have found the root of errors that have caused us all this headache. Will do one final check and then I can confirm (or we're back to square zero).
 2013-03-08 13:20:21 max_albert: And glad to hear the student passed. :)
 2013-03-08 13:22:20 max_albert: Regarding the binary build: you are right, the problem was fixed by upgrading Cython to version 0.18.
@@ -5395,7 +5395,7 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-03-11 09:49:22 max_albert: Good morning.
 2013-03-11 10:06:44 fangohr-adium: Hi all, have you seen the pipeline feature display from jenkins (at http://aleph0.kk.soton.ac.uk:8080/view/Pipeline/)?
 2013-03-11 10:07:25 max_albert: Yes, I think this is what Marc-Antonio introduced / played around with recently.
-2013-03-11 10:07:42 fangohr-adium: I see. Very nice — good idea.
+2013-03-11 10:07:42 fangohr-adium: I see. Very nice â good idea.
 2013-03-11 13:32:06 max_albert: Just for general information, I backported one bug fix to the dolfin-1.0.0 branch so that the test suite now also passes on summer.
 2013-03-11 13:32:10 max_albert: This means that we can leave the dolfin-1.0.0 branch completely alone now (but keep it for archiving/reference or if we ever hit a bug in later dolfin versions that forces us to go back to a version of Finmag that works with dolfin-1.0).
 2013-03-11 13:32:42 max_albert: So I guess Hans is right that all further development should happen on the "default" branch (which corresponds to dolfin-1.1.0 at the moment).
@@ -5403,7 +5403,7 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-03-11 13:55:51 max_albert: Hi all, is anybody using the latest Finmag code on Ubuntu 12.04 by any chance?
 2013-03-11 13:56:13 max_albert: I get a compiler error which is probably related to an older version of the boost libraries (or the compiler).
 2013-03-11 13:57:21 max_albert: Was wondering if I need to upgrade my system, or if we want to support 12.04 (since it's a more stable LTS release). But in the latter case I don't know offhand how to fix the error.
-2013-03-11 13:58:00 max_albert: (It's related to the random number generator in the LLB code: "src/llb/mt19937.h:12:7: error: �mt19937� in namespace �boost::random� does not name a type")
+2013-03-11 13:58:00 max_albert: (It's related to the random number generator in the LLB code: "src/llb/mt19937.h:12:7: error: mt19937 in namespace boost::random does not name a type")
 2013-03-11 14:12:36 max_albert: No opinions?
 2013-03-11 14:12:50 max_albert: Looks like I can't use Finmag at all on my system at the moment due to this error.
 2013-03-11 14:13:59 max_albert: Would it be possible to replace the random number generator with another one?
@@ -5679,12 +5679,12 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-04-11 09:02:07 fangohr-adium1: Good morning, folks.
 2013-04-11 11:38:08 cilix: Good morning, Hans.
 2013-04-11 11:38:12 cilix: Welcome back! :)
-2013-04-11 12:53:10 fangohr-adium1: Hi Max. Very impressive commit activity in my inbox — good stuff.
-2013-04-11 12:55:49 fangohr-adium1: Hi Marc-Antonio, was just saying: Very impressive commit activity in my inbox — good stuff.
+2013-04-11 12:53:10 fangohr-adium1: Hi Max. Very impressive commit activity in my inbox â good stuff.
+2013-04-11 12:55:49 fangohr-adium1: Hi Marc-Antonio, was just saying: Very impressive commit activity in my inbox â good stuff.
 2013-04-11 12:59:12 cilix: Mostly Marc-Antonios work (nice cleanup of the Demag classes).
 2013-04-11 12:59:14 cilix: Fortunately we managed to get the builds 'green' just before your return. ;-)
 2013-04-11 12:59:42 fangohr-adium1: Yes, cool. Was actually just looking at the aleph0 overview.
-2013-04-11 13:00:22 fangohr-adium1: The Ipython notebook tests are all broken apart from one — I guess some of these are those that had passed already, but are now invalid due to the changes — maybe just log messages?
+2013-04-11 13:00:22 fangohr-adium1: The Ipython notebook tests are all broken apart from one â I guess some of these are those that had passed already, but are now invalid due to the changes â maybe just log messages?
 2013-04-11 13:02:17 fangohr-adium1: I also like the additional slave node for a different OS. All very exciting. Maybe MA can give us a summary of what he has done tomorrow?
 2013-04-11 13:03:14 cilix: Yes, I need to look into the ipython notebook stuff when I find the time.
 2013-04-11 13:03:31 cilix: It should be an easy-ish task in principle to get the tests up and running, but it may take a while to sort out the details, that's why I haven't done it yet.
@@ -5882,7 +5882,7 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-04-18 13:48:44 mb8g11: Can I join in by skype?
 2013-04-18 13:49:37 fangohr-adium: Should be alright. I'll dig out a computer.
 2013-04-18 13:50:47 mb8g11: Thx. (or Ta, is that the same thing?)
-2013-04-18 13:52:00 fangohr-adium: Similar meaning, different words I think. You should ask a Brit — of course we haven't got one.
+2013-04-18 13:52:00 fangohr-adium: Similar meaning, different words I think. You should ask a Brit â of course we haven't got one.
 2013-04-18 13:53:18 mb8g11: Hehe.
 2013-04-18 14:01:42 mb8g11: Online.
 2013-04-18 14:02:26 max_albert: We'll be over in a minute
@@ -5941,7 +5941,7 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-05-02 09:03:03 max_albert: Awesome. Hope it's gonna work out well!
 2013-05-03 10:01:48 max_albert: Hi Hans, is it ok if I join you guys a few minutes later? Need to quickly write an urgent email. Sorry!
 2013-05-03 10:02:09 fangohr-adium1: Sure, no worries.
-2013-05-07 09:17:51 fangohr-adium1: Good Morning. A very sunny day, after quite a few sunny days. Not sure I can take all these photons, after not having seen many of them in the last 6 months … ;-)
+2013-05-07 09:17:51 fangohr-adium1: Good Morning. A very sunny day, after quite a few sunny days. Not sure I can take all these photons, after not having seen many of them in the last 6 months â¦ ;-)
 2013-05-07 13:25:38 mb8g11: Hi all!
 2013-05-07 13:25:53 fangohr-adium1: Hi ;) Are you back?
 2013-05-07 13:41:38 max_albert: Hi Hans, do you know if there is an example script for Nmag with Slonczewski spin torque available somewhere (maybe on the wiki)?
@@ -5955,7 +5955,7 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-05-07 14:52:03 fangohr-adium1: I could imagine having two disconnected cubes, one with M pointing up, and one with M pointing down. Then compute the energy (and maybe compare with corresponding simulation in OOMMF). Then repeat for both cubes pointing up. The latter should give a higher energy.
 2013-05-07 14:52:04 mb8g11: How old is Luzanne's finmag version? I found a bug in the Demag energy 1/2 months ago and fixed it in the new Demag class. Wrote a test for it as well.
 2013-05-07 14:52:27 mb8g11: Don't know if this is related at all and the computation maybe still wrong.
-2013-05-07 14:52:35 fangohr-adium1: We could also make the cubes quite small and far apart — then we have essentially magnetic dipoles interacting and use an anylitical equation to check against.
+2013-05-07 14:52:35 fangohr-adium1: We could also make the cubes quite small and far apart â then we have essentially magnetic dipoles interacting and use an anylitical equation to check against.
 2013-05-07 14:53:13 max_albert: mb8g11: Good point. It's still the rather old original version which we gave to Jef and Luzanne in the beginning.
 2013-05-07 14:54:02 fangohr-adium1: Might be good to have a test along the lines outlined above anyway. I quite like the second version of interacting dipoles.
 2013-05-07 14:54:24 max_albert: Do you remember what the bug was (or how it showed up)?
@@ -5971,7 +5971,7 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-05-07 15:01:10 ww1g11: because oommf show the energy gap for two vertices are fairly small
 2013-05-07 15:12:25 max_albert: Related to my previous question: do we have a working installation of nmag5 lying around somewhere?
 2013-05-07 15:12:44 max_albert: I can't get it to work on my computer (I seem to have the older version 0.2.1 which is available on the website, and I get an error when trying to compile it from the nmag-meta repository).
-2013-05-07 15:13:58 fangohr-adium1: I think in my home directory on osiris — not sure you can use that. Somewhere in hg/nmag-meta — you are welcome to try it.
+2013-05-07 15:13:58 fangohr-adium1: I think in my home directory on osiris â not sure you can use that. Somewhere in hg/nmag-meta â you are welcome to try it.
 2013-05-07 15:16:19 max_albert: Thanks. I have found it but can't seem to get it to work ("error while loading shared libraries"). I'll try to compile it again later.
 2013-05-07 15:16:21 max_albert: I wonder if we have it installed on aleph0? Surely it seems to be needed for the tests if there is a Slonczewski test that compares Finmag against Nmag?
 2013-05-07 15:17:54 mb8g11: Some of our tests run nmag, most use stored nmag results. But it will be installed on aleph0 for sure.
@@ -6011,7 +6011,7 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-05-20 17:23:34 fangohr-adium: Good news: Dmitri's fixes for the new Numpy version work: finmag compiles happily on Ubuntu 13.04.
 2013-05-20 17:23:48 fangohr-adium: I have also checked compilation of Magpar on 13.04, and it seems to work.
 2013-05-20 17:24:09 fangohr-adium: (Same for Nmag - no changes to our build script for that, either.)
-2013-05-20 17:24:23 fangohr-adium: So you should all be able to use osiris again — any missing packages, do let me know.
+2013-05-20 17:24:23 fangohr-adium: So you should all be able to use osiris again â any missing packages, do let me know.
 2013-05-21 11:21:43 mb8g11_: So in theory, an upgrade to 13.04 should "just work"?
 2013-05-21 11:28:39 D_Chernyshenko_: Yeah it should. If it works for you I might try it too :)
 2013-05-21 12:40:13 mb8g11_: haha
@@ -6039,7 +6039,7 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-05-24 12:19:43 fangohr-adium: Hi again. I am just trying to build the binary installation on osiris to see whether it works there. I have a question regarding the Makefile that contains the 'bundle' target that jenkins tries to execute: is this only on aleph0 or in some repository as well?
 2013-05-24 12:24:11 max_albert:  Hi Hans, I'm not sure I understand your question correctly, but the "bundle" target is actually in src/Makefile, not in the toplevel Makefile.
 2013-05-24 12:24:29 fangohr-adium: Ah, thanks. I think that is the information I was after.
-2013-05-24 12:34:33 fangohr-adium: Okay, — I had forgotten how this works: we also need to use the finmag-dist repository for the process, but a lot of it takes place in the normal finmag repository. I'll keep looking.
+2013-05-24 12:34:33 fangohr-adium: Okay, â I had forgotten how this works: we also need to use the finmag-dist repository for the process, but a lot of it takes place in the normal finmag repository. I'll keep looking.
 2013-05-24 12:35:35 fangohr-adium: Weiwei, we have a oommf.sh installation file in finmag/install/oommf.sh. This seems not to work on Osiris 13.04. Could you try to run this and have a look what's wrong? Either I have not installed the right packages yet, or the packages are to recent, or I have made a silly mistake. Please advise.
 2013-05-24 12:36:07 fangohr-adium: I also wonder whether we should download a more recent version of OOMMF - but no strong feelings about this.
 2013-05-24 12:36:11 fangohr-adium: (if there is one).
@@ -6071,7 +6071,7 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-05-29 08:13:19 mb8g11: Good morning!
 2013-05-29 12:26:47 D_Chernyshenko__: Hi Hans, an update on the FMR paper - yesterday we worked out what the 2 different methods for computing the spectrum are, so I can compute the 2nd (alternative) one as well
 2013-05-29 15:33:24 fangohr-adium: Hi Dmitri, didn't see your message before.
-2013-05-29 15:34:06 fangohr-adium: From what Marijan told me, you basically worked out that the two methods should give the same result (which you have computed already), only that we have taken the magnitude before summer complex numbers, and thus got different results — is that about right?
+2013-05-29 15:34:06 fangohr-adium: From what Marijan told me, you basically worked out that the two methods should give the same result (which you have computed already), only that we have taken the magnitude before summer complex numbers, and thus got different results â is that about right?
 2013-05-29 15:36:39 D_Chernyshenko__: Sort of, with formula (1) I was computing the Fourier transform of the spatially averaged magnetisation
 2013-05-29 15:37:33 D_Chernyshenko__: The other way is to compute the Fourier transform at each point in space, take the absolute value there (to compute the magnitude of the oscillation), and then average spatially
 2013-05-29 15:38:27 D_Chernyshenko__: I.e., the spatially averaged magnitude of all oscillations != magnitude of the spatially averaged oscillation
@@ -6122,7 +6122,7 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-06-04 09:18:51 fangohr: def f2():
 2013-06-04 09:18:51 fangohr:     pass
 2013-06-04 09:18:53 fangohr: f2.__doc__ = f1.__doc__
-2013-06-04 11:02:08 fangohr: Hi MA, are you around? We are all in a training course in 85/2207; I guess you can come along if you like, although you probably know most of the stuff already. Next item is on testing — but aimed at beginners, starting at 11:00.
+2013-06-04 11:02:08 fangohr: Hi MA, are you around? We are all in a training course in 85/2207; I guess you can come along if you like, although you probably know most of the stuff already. Next item is on testing â but aimed at beginners, starting at 11:00.
 2013-06-04 11:02:52 fangohr: Dmitri, are you around or online? Various people (Marc-Antonio?) would like to use your code; ideally get it ready for tomorrow when we have summer students starting.
 2013-06-04 11:03:06 fangohr: Also, Max would like to compile and use it.
 2013-06-04 11:04:55 mb8g11: Hi all.
@@ -6139,7 +6139,7 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-06-04 14:04:37 mb8g11: I can clone.
 2013-06-04 14:04:40 mb8g11: Thanks.
 2013-06-04 14:04:40 fangohr-adium: Excellent; many thanks.
-2013-06-04 14:04:47 fangohr-adium: Okay, MA — good luck ;-)
+2013-06-04 14:04:47 fangohr-adium: Okay, MA â good luck ;-)
 2013-06-04 14:04:57 mb8g11: Thx ^^
 2013-06-04 14:05:19 fangohr-adium: You will need the Intel Math Kernel Library for Linux (64 bit), knows as Intel MKL. This should be free to use for PhD students, but I am not familiar with how you obtain it, etc.
 2013-06-04 14:05:23 fangohr-adium: Over and out for now.
@@ -6220,9 +6220,9 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-06-05 11:05:51 fangohr: We should get Beckie onto IRC.
 2013-06-05 11:06:26 mb8g11_: Yes. She is backing up her files and will upgrade her Ubuntu. First thing we do afterwards is log her in into our channel.
 2013-06-05 11:06:35 fangohr: Very good.
-2013-06-05 11:18:07 fangohr: The Hackpad — which seems fun to use — is free for public pads. For private pads (what we are trialling for Beckie's project now) there is a charge if we have more than 5 people signed up to a pad.
+2013-06-05 11:18:07 fangohr: The Hackpad â which seems fun to use â is free for public pads. For private pads (what we are trialling for Beckie's project now) there is a charge if we have more than 5 people signed up to a pad.
 2013-06-05 11:18:12 fangohr: Or at least this is how I read it:
-2013-06-05 11:18:13 fangohr: 	◦	Private sites are free for 30 days or up to 5 users (whichever happens last)
+2013-06-05 11:18:13 fangohr: 	â¦	Private sites are free for 30 days or up to 5 users (whichever happens last)
 2013-06-05 11:18:13 fangohr: 		After that private sites are $2/member/month
 2013-06-05 11:18:23 fangohr: Source: https://hackpad.com/Hackpad-FAQ-tq56fI63mz3
 2013-06-05 11:18:41 fangohr: So as long as we have 5 or fewer users per pad, it should be free. I think.
@@ -6325,7 +6325,7 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-06-06 14:40:16 mb8g11: What is it with IRC and ping timeouts these days?
 2013-06-06 14:44:33 mb8g11: Haha, he is. He will also update the HTML every night.
 2013-06-06 14:44:43 mb8g11: He's such a fast learner ;-)
-2013-06-06 14:45:26 fangohr: … and where are the chats of the last 24 hours or so hosted?
+2013-06-06 14:45:26 fangohr: â¦ and where are the chats of the last 24 hours or so hosted?
 2013-06-06 14:55:33 fangohr: Hi Max, I think I have just discovered that sumatra is based on Django? (By trying to open http://aleph0.kk.soton.ac.uk:8000). Interesting - I should have guessed that Django (or Ruby) might be involved.
 2013-06-06 15:08:11 mb8g11: The logs of the last 24 hours? Why, they are where they always are O:)
 2013-06-06 15:09:53 mb8g11: Oh wait.
@@ -6533,3 +6533,155 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-07-04 08:42:49 mb8g11: Beckie, that's early!
 2013-07-04 08:58:52 Beckie: I'm a keen bean this morning!
 2013-07-04 09:16:43 max_albert: Good morning everyone
+* Matt_mc8g08 has quit (Quit: Leaving)
+* DChernyshenko (~DChernysh@host-89-240-165-244.as13285.net) has joined #finmag
+* DChernyshenko has quit (Quit: Leaving)
+* ww1g11_ (~ww1g11@ip-097-138.net-097.dhcp.soton.ac.uk) has joined #finmag
+* ww1g11 has quit (*.net *.split)
+* D_Chernyshenko_ (~chern@mu.kk.soton.ac.uk) has joined #finmag
+* D_Chernyshenko has quit (Ping timeout: 264 seconds)
+* Beckie_ (~Beckie@omicron.ses.soton.ac.uk) has joined #finmag
+* fangohr-adium (~Adium@iota.kk.soton.ac.uk) has joined #finmag
+* Beckie has quit (*.net *.split)
+* Marvin_Bot has quit (*.net *.split)
+* fangohr-adium1 has quit (*.net *.split)
+* mb8g11 has quit (*.net *.split)
+* mb8g11 (~mb8g11@ip-097-069.net-097.dhcp.soton.ac.uk) has joined #finmag
+<Beckie_> Morning all
+* MarkV (~mark@dhcp-162-96.wireless.soton.ac.uk) has joined #finmag
+* MarkV has quit (Quit: leaving)
+* mb4e10 has quit (Remote host closed the connection)
+* mb4e10 (~mb4e10@ip-097-084.net-097.dhcp.soton.ac.uk) has joined #finmag
+* MarkV (~mark@dhcp-202-020.wireless.soton.ac.uk) has joined #finmag
+* D_Chernyshenko_ has quit (*.net *.split)
+* mb4e10 has quit (*.net *.split)
+* MarkV has quit (*.net *.split)
+* fangohr-adium has quit (*.net *.split)
+* Beckie_ has quit (*.net *.split)
+* ww1g11_ has quit (*.net *.split)
+* Beckie_ (~Beckie@omicron.ses.soton.ac.uk) has joined #finmag
+* fangohr-adium (~Adium@iota.kk.soton.ac.uk) has joined #finmag
+* MarkV (~mark@dhcp-202-020.wireless.soton.ac.uk) has joined #finmag
+* ww1g11_ (~ww1g11@ip-097-138.net-097.dhcp.soton.ac.uk) has joined #finmag
+* DChernyshenko (~chern@host-78-147-176-211.as13285.net) has joined #finmag
+* D_Chernyshenko_ (~chern@mu.kk.soton.ac.uk) has joined #finmag
+* mb4e10 (~mb4e10@ip-097-084.net-097.dhcp.soton.ac.uk) has joined #finmag
+<MarkV> \quit
+* MarkV has quit (Quit: leaving)
+* fangohr-adium has quit (Quit: Leaving.)
+* fangohr-adium (~Adium@iota.kk.soton.ac.uk) has joined #finmag
+* fangohr-adium has quit (Quit: Leaving.)
+-tomaw- [Global notice] Quick services restart incoming...
+* mb4e10 has quit (Remote host closed the connection)
+* fangohr-adium (~Adium@iota.kk.soton.ac.uk) has joined #finmag
+* DChernyshenko has quit (Quit: Ex-Chat)
+<Beckie_> Morning everyone
+<max_albert> Good morning Beckie! You seem to get keener by the week. :-)
+<fangohr-adium> Err, yes. Good Morning, too.
+<fangohr-adium> Max, I thought you are on holiday??? ;-)
+<max_albert> Hans: Nope, that was about next week, not this week. (But it's still not 100% certain.)
+* MarkV (~mark@dhcp-163-9.wireless.soton.ac.uk) has joined #finmag
+* fangohr-adium has quit (Quit: Leaving.)
+* fangohr-adium (~Adium@iota.kk.soton.ac.uk) has joined #finmag
+<fangohr-adium> Hi, if you like milk for tea/coffee, do and get two of the pint-sized milk bottles that are in the fridge outside my office and take it to your kitchen for sharing — too much here, and presumably not enough at your side in the kitchen.
+<max_albert> Thanks Hans!
+<MarkV> Thanks
+<max_albert> Quick design question! I just wanted to write a test and did something like this:
+<max_albert> h = sim.llg.effective_field.compute()
+<max_albert> sim.run_until(1e-10)
+<max_albert> and was surprised to see that the value of h had changed to the value at time t=1e-10 after the run_until() command! (Actually, it took me quite a while to hunt this down!)
+<max_albert> The reason is that the method EffectiveField.compute() returns the value 'self.H_eff', which is a "reference" (in C lingo) to an internal variable that gets updated, and thus such updates are visible to the outside world.
+<max_albert> I was tempted to change this to "return self.H_eff.copy()", but I think that the compute() method is called quite often internally, so always creating a copy would be bad for performance reasons.
+<max_albert> The cleanest approach may be to have a method 'sim.compute_effective_field()', which returns a copy of the vector, and leave EffectiveField.compute() as it is (plus maybe add a warning in its docstring), even though this may potentially be dangerous. But one could argue that it's sufficiently low-level so that dangerous things are allowed to happen when using it.
+<max_albert> Any opinions?
+* fangohr-adium has quit (Quit: Leaving.)
+* DChernyshenko (~DChernysh@host-78-147-179-215.as13285.net) has joined #finmag
+* fangohr-adium (~Adium@iota.kk.soton.ac.uk) has joined #finmag
+<fangohr-adium> I would suggest to add a note to the docstring that this returns a reference (to a numpy vector of dolfin field?) and not a copy. If somebody wants a copy, they need to call sim.llg.effective_field.compute()[:] (if it isa numpy array), say, or call the copy method themselves.
+<fangohr-adium> Might be worth discussing with a particular example next time we meet, but I think as you say: this is so low-level that 'bad things' can happen if you want them to. We are looking at a compromise between performance and safety. And am happy to err on the performance side here (but if anybody has other views, please shout).
+<max_albert> Ok, thanks for your opinion. I do agree with what you said, but the current state of things leaves a slightly uneasy feeling since I seem to remember that we do directly access sim.llg.effective_field even from high-level functions in various places in our code (or in the tests?).
+<max_albert> I think the issue is mainly that calling a compute() function feels as though it should return something that doesn't change without you noticing. Maybe it would be an option to remove the compute() method and simply let code access the EffectiveField.H_eff attribute of  directly. That would make it clearer that it can change at any time.
+<max_albert> So we could have a method EffectiveField.update(t) which updates the internal value to the given time step, and then one would simply access EffectiveField.H_eff directly.
+<max_albert> Thinking about it, this is probably the cleanest approach. I may do that later (but have added a PivotalTracker issue in the meantime so I won't forget.)
+<fangohr-adium> Yes, I considered that change. We could leave the name 'compute' and do not need to change to 'update' if we just stop returning the field. or create an additional method 'update' and leave 'compute' in place.
+<max_albert> Yep, the latter is what I just committed.
+<fangohr-adium> By making this change, one would need a second line to get access to the updated field, but as this is a reference one only needs to do it once. 
+<fangohr-adium> It may be more re-assuring to use H=compute() everytime one wants H as this way it is clear that H is affected by the compute() call. 
+<fangohr-adium> (sorry to throw in a new point here.)
+<fangohr-adium> Another random addition to the brain storming: Returning a reference to an object is of course very pythonic so probably okay.
+* fangohr-adium has quit (Quit: Leaving.)
+<max_albert> Not sure I understood the comment starting with "It may be more re-assuring" to be honest.
+<max_albert> Also, I tend to disagree on returning a reference being Pythonic. Or at least I'm strongly against doing it in a light-hearted way.
+<max_albert> In general I think it is safest to always assume that returned objects have a fixed value and can't simply change at will.
+<max_albert> If something else is needed in certain places it should be a careful decision and be documented clearly (and be also be represented in the way a function is named).
+* MarkV has quit (Quit: leaving)
+* MarkV (~mark@dhcp-163-9.wireless.soton.ac.uk) has joined #finmag
+<mb8g11> Interesting find, Max. When I wrote this I definitely thought this would give the field value, not a 'reference'.
+<max_albert> So did I :)
+<max_albert> There is something else I stumbled upon, which is related to time updates of interactions that depend on time (such as TimeZeeman). But I'm still in the process of debugging it.
+<max_albert> I think the problem is the following:
+<max_albert> I have a simulation with a time-dependent external field, e.g.  h_ext = TimeZeeman(...)
+<max_albert> I want its value to be updated automatically as the simulation progresses, so I do something like this:
+<max_albert>     sim.add(h_ext, with_time_update=h_ext.update)
+<max_albert> (In fact, the 'with_time_update' argument should be extracted automatically, but this is not happening at the moment so I'm providing it explicitly.)
+<max_albert> Now when I say:
+<max_albert>     sim.run_until(1e-12)
+<max_albert> this will run the simulation until the given time and update the field accordingly.
+<max_albert> However, since the time integrator usually integrates a tiny bit beyond the specified time, h_ext will at the end have a value corresponding to the slightly later time (1e-12 + epsilon).
+<max_albert> This is not what should happen, right? You would expect the value of h_ext to reflect the value at exactly time 1e-12, wouldn't you?
+* MarkV has quit (Ping timeout: 276 seconds)
+* DChernyshenko has quit (Quit: Leaving)
+* MarkV (~mark@dhcp-103-189.wireless.soton.ac.uk) has joined #finmag
+* DChernyshenko (~DChernysh@host-78-147-179-215.as13285.net) has joined #finmag
+* MarkV has quit (Ping timeout: 268 seconds)
+<max_albert> Ok, turns out this is easy to fix (although it was somewhat hard to explicitly track down). Not the prettiest of fixes, though; it feels as though the fix should actually be made somewhere else, but I presume this would require us to do quite a bit of refactoring.
+* DChernyshenko has quit (Quit: Leaving)
+<mb8g11> Good morning!
+<mb8g11> The value of m after integration should be the one for exactly 1e-12. h_ext.compute_field() should give you the field for this. 
+* DChernyshenko (~DChernysh@host-2-98-200-210.as13285.net) has joined #finmag
+<max_albert> Good morning, too!
+<max_albert> Well, the problem was that when I had an instance of the TimeZeeman class (say, H_ext) and added it to the simulation via "sim.add(H_ext, with_time_update=H_ext.update)" then this function would be called internally by the time integrator whenever it was needed. But the last time it would be called would be at a time step slightly later than t=1e-12, whereas sim.t would be exactly 1e-12 (and as you say the value of m would also be at exactly tha
+<max_albert> t time). So H_ext.compute_field() would return a value for a time step that was different from the actual simulation time.
+<max_albert> (Just re-read that and with "this function" I meant H_ext.update() in the first sentence above.)
+<max_albert> This issue was also a problem for writing to .ndt files because the written field values would not be the ones for the requested time steps.
+<max_albert> I committed a fix for this last night but not sure it's the most elegant one. Maybe you have a better idea?
+<max_albert> On a different note, I haven't seen any commits by Marvin lately. Is he down by any chance? And how can I check that?
+* fangohr-adium (~Adium@iota.kk.soton.ac.uk) has joined #finmag
+<fangohr-adium> Hi all, just joining IRC again — seems DokosBot has disappeared again. I don't think he likes us.
+<max_albert> Yes, looks like no IRC logs have been committed in the past few days.
+* Marvin_Bot (~Marvin_Bo@aleph0.kk.soton.ac.uk) has joined #finmag
+2013-07-09 12:43:50 max_albert: I just restarted him. For the record: the command which Marc-Antonio told me is "sudo start dokosbot" (to be executed on aleph0.kk.soton.ac.uk).
+2013-07-09 12:44:22 fangohr-adium: I have a record until yesterday 12:35 which I could add manually to the right file. Has anybody else got the notes from yesterday 12:35 (just after midday) to now?
+2013-07-09 12:45:51 max_albert: I have them in my XChat window, but I don't know how to add them to that file in a nicely formatted way (copy & paste doesn't seem to work).
+2013-07-09 12:45:57 max_albert: Does XChat automatically log them somewhere?
+2013-07-09 12:46:29 fangohr-adium: No idea. I can't provide the nice format either, but at least there is some content ;-)
+2013-07-09 12:46:37 fangohr-adium: Done it before, nobody noticed.
+2013-07-09 12:46:52 max_albert: :-)
+2013-07-09 12:47:27 fangohr-adium: Don't worry if we can't copy and paste the last 24 hours or so. That is, unless, you have typed something important ;-)
+2013-07-09 12:50:00 max_albert: Well, I did in fact comment/ask about some issues related to my last few commits yesterday. I think I understand the issue enough now to be confident that the fixes work, but it may be worth having the thought process and explanations documented for later reference.
+2013-07-09 12:50:50 fangohr-adium: Weiwei, Beckie, Marc-Antonio, maybe we can copy and paste Max' comments out of your IRC client?
+2013-07-09 12:51:34 DChernyshenko: My IRC client is logged on 24/7 so I could extract the logs from it as well
+2013-07-09 12:53:05 max_albert: I just noticed that XChat keeps a scrollback of the most recent lines in the file ~/.xchat2/scrollback/FreeNode/#finmag.txt, but there are some early lines missing and the colour codes mess up the formatting.
+2013-07-09 12:53:31 max_albert: I can in fact copy & paste the conversation, but the dates are missing. But that should be enough if nobody else has a better record.
+2013-07-09 12:53:46 fangohr-adium: That's fine Max, don't worry about the dates.
+2013-07-09 12:54:16 max_albert: Do we need to be careful when editing the logfile by hand? Will there be conflicts with Marvin's automatic commits?
+2013-07-09 12:54:43 fangohr-adium: The relevant file is in finmag/logbooks/finmag-irc.log
+2013-07-09 12:55:31 fangohr-adium: The 'safest' way (in order not to confuse automatic merges and push from DokosBot) would be to add it to the file on aleph0 into which the logging takes place.
+2013-07-09 12:57:42 fangohr-adium: In theory, we might lose a new message typed on IRC if you edit the logfile while this is appended, and then save.
+2013-07-09 12:57:51 fangohr-adium: Can you take it from here?
+2013-07-09 12:57:59 max_albert: Yes, thanks for the hints!
+2013-07-09 12:58:13 max_albert: I presume the correct file is "/home/marvin/finmag/logbooks/finmag-irc.log" on aleph0?
+2013-07-09 13:10:07 fangohr-adium: I think so.
+2013-07-09 13:10:18 fangohr-adium: If you see it updating with these messages, then it is the right one.
+2013-07-09 13:10:32 max_albert: Yes, it is updating.
+2013-07-09 13:13:35 max_albert: Have you encountered problems with the file encoding before? When I try to save the file after adding the changes, it complains about the encoding (because sometimes special characters appear), and when I save it in an encoding that can deal with this I get a rather big diff (which includes older messages).
+2013-07-09 13:13:40 max_albert: But I presume this isn't a problem?
+2013-07-09 13:33:12 DChernyshenko: Max, did you use gedit for editing the file? gedit is pretty bad at preserving the encodings
+2013-07-09 13:33:28 max_albert: Nope, I tried it both with vim and emacs.
+2013-07-09 13:33:55 DChernyshenko: Ah, that's weird. I used vi before to fix this issue, and it worked
+2013-07-09 13:39:04 DChernyshenko: Did you find a solution?
+2013-07-09 13:39:12 DChernyshenko: Or did you just commit
+2013-07-09 13:39:49 max_albert: No, I haven't tried again. The file is still in the old state.
+2013-07-09 13:40:47 max_albert: But I may just add the changes and commit them even if it changes the encoding. (Unless you have a better idea.)
+2013-07-09 13:41:30 DChernyshenko: Nope, I was hoping you would find a way :)
+2013-07-09 13:42:09 DChernyshenko: But I think it's OK, the only issue is the ugly diff, but there is little point in diffing those IRC logs...
