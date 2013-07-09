@@ -5,6 +5,7 @@ import pytest
 import os
 from finmag.util.helpers import *
 from finmag.util.meshes import box, cylinder
+from finmag.example import barmini
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -378,6 +379,18 @@ def test_binary_tarball_name(tmpdir):
         binary_tarball_name(finmag_repo, revision='invalid_revision')
     expected_tarball_name = 'FinMag-dist__2012-02-02__rev4_d330c151a7ce_foobar.tar.bz2'
     assert(binary_tarball_name(finmag_repo, revision='d330c151a7ce', suffix='_foobar') == expected_tarball_name)
+
+
+def test_plot_ndt_columns(tmpdir):
+    """
+    Simply check that we can call the command `plot_ndt_columns` with some
+    """
+    os.chdir(str(tmpdir))
+    sim = barmini()
+    sim.schedule('save_ndt', every=1e-12)
+    sim.run_until(1e-11)
+    plot_ndt_columns('barmini.ndt', columns=['m_x', 'm_y', 'm_z', 'E_Demag', 'H_Exchange_x'], outfile='barmini.png', show_legend=True, legend_loc='center', figsize=(10, 4))
+    assert(os.path.exists('barmini.png'))
 
 
 if __name__ == '__main__':
