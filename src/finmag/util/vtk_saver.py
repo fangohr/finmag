@@ -61,9 +61,9 @@ class VTKSaver(object):
             The time step with which the data is associated
 
         """
-        self.counter += 1
         t0 = time.time()
         self.f << field_data
         t1 = time.time()
         log.debug("Saved field at t={} to file '{}' (snapshot #{}; saving took "
                   "{:.3g} seconds).".format(t, self.filename, self.counter, t1 - t0))
+        self.counter += 1
