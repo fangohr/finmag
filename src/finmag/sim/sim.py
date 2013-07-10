@@ -640,7 +640,19 @@ class Simulation(object):
         above) will be passed on to this function.
 
         If func is a string, it will be looked up in self.scheduler_shortcuts,
-        which includes 'save_restart_data', 'save_ndt' and 'save_vtk'.
+        which includes 'save_restart_data', 'save_ndt', 'save_vtk' and
+        'save_field'. For example, to save a vtk snapshot of the magnetisation
+        every nanosecond, use:
+
+            sim.schedule('save_vtk', every=1e-9, filename='m.pvd')
+
+        and to save the magnetisation to a .npy file every 2 nanoseconds, use:
+
+            sim.schedule('save_field', 'm', every=2e-9, filename='m.npy')
+
+        In both of these cases, a suffix representing the number of
+        the current snapshot will be added automatically, e.g.:
+        'm_00000.npy', 'm_000001.npy', etc.
 
         """
         if isinstance(func, str):
