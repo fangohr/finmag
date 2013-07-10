@@ -79,9 +79,9 @@ def hysteresis(sim, H_ext_list, fun=None, **kwargs):
     try:
         while True:
             H_cur = H_ext_list[cur_stage]
-            log.info("Entering hysteresis stage #{} "
-                     "({} out of {}).".format(cur_stage,
-                                              cur_stage + 1, num_stages))
+            log.info(
+                "Entering hysteresis stage #{} ({} out of {}). Current field: "
+                "{}".format(cur_stage, cur_stage + 1, num_stages, H_cur))
             H.set_value(H_cur)
             sim.relax(**kwargs)
             cur_stage += 1
