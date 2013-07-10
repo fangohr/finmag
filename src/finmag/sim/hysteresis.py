@@ -10,8 +10,7 @@ from finmag.util.helpers import norm
 
 log = logging.getLogger(name="finmag")
 
-def hysteresis(sim, H_ext_list, fun=None, save_every=None,
-               save_at_stage_end=True, filename='', **kwargs):
+def hysteresis(sim, H_ext_list, fun=None, **kwargs):
     """
     Set the applied field to the first value in `H_ext_list` (which should
     be a list of external field vectors) and then call the relax() method.
@@ -22,6 +21,15 @@ def hysteresis(sim, H_ext_list, fun=None, save_every=None,
           interactions that are already present in the simulation.
           In particular, if only one external field should be present then
           do not add any Zeeman interactions before calling this method.
+
+    If you would like to perform a certain action (e.g. save a VTK
+    snapshot of the magnetisation) at the end of each relaxation stage,
+    use the sim.schedule() command with the directive 'at_end=True' as
+    in the following example:
+
+        sim.schedule('save_vtk', at_end=True, ...)
+        sim.hysteresis(...)
+
 
     *Arguments*
 
@@ -35,26 +43,18 @@ def hysteresis(sim, H_ext_list, fun=None, save_every=None,
 
             The user can pass a function here (which should accept the
             Simulation object as its only argument); this function is
-            called after each relaxation and can be used for example
-            to save the value of the averaged magnetisation.
+            called after each relaxation and determines the return
+            value (see below). For example, if
 
-        save_every:  float | None
+               fun = (lambda sim: sim.m_average[0])
 
-            Time interval between subsequent vtk snapshots during the
-            simulation (the default is `None`, which means not to save
-            regular vtk snapshots).
+            then the return value is a list of values representing the
+            average x-component of the magnetisation at the end of
+            each relaxation.
 
-        save_at_stage_end:  bool
+    All other keyword arguments are passed on to the relax() method.
+    See its documentation for details.
 
-            Whether a vtk snapshot of the final relaxed state should
-            be saved after each stage (default: True).
-
-    For a list of other keyword arguments accepted by this method see
-    the documentation of the relax() method, to which all given keyword
-    arguments are passed on. Note that if a `filename` argument is
-    provided, the string 'stage_xxx' is appended to it, where xxx is
-    a running counter which indicates for which field in H_ext_list
-    the relax() method is being executed.
 
     *Return value*
 
@@ -66,45 +66,13 @@ def hysteresis(sim, H_ext_list, fun=None, save_every=None,
     if H_ext_list == []:
         return
 
-    save_vtk_snapshots = (save_every is not None or save_at_stage_end == True)
-
-    if filename == '':
-        if save_vtk_snapshots == True:
-            log.warning("The keywords 'save_every' and 'save_at_stage_end' "
-                        "will be ignored because no filename was given. "
-                        "Please provide one if you would like to save VTK "
-                        "snapshots.")
-        save_every = None
-        save_at_stage_end = False
-        save_vtk_snapshots = False
-
-    force_overwrite = kwargs.get('force_overwrite', False)
-    if filename != '' and force_overwrite == True:
-        if os.path.exists(filename):
-            # Delete the global .pvd file as well as all existing .pvd
-            # and .vtu file from any previously run hysteresis stages.
-            # Although the relax() command also checks for existing files,
-            # it would miss any stages that were previously run but are
-            # not reached during this run.
-            log.debug("Removing the file '{}' as well as all associated "
-                      ".pvd and .vtu files of previously run hysteresis "
-                      "stages.".format(filename))
-            pvdfiles = glob.glob(re.sub('\.pvd$', '', filename) + '*.pvd')
-            vtufiles = glob.glob(re.sub('\.pvd$', '', filename) + '*.vtu')
-            for f in pvdfiles + vtufiles:
-                os.remove(f)
-
     # Add a new Zeeman interaction, initialised to zero.
     H = Zeeman((0, 0, 0))
     sim.add(H)
 
     # We keep track of the current stage of the hysteresis loop.
-    # Each stage is saved to a different .pvd file, whose name
-    # includes the current stage number.
     cur_stage = 0
     num_stages = len(H_ext_list)
-    filename = re.sub('\.pvd$', '', filename)
-    cur_filename = ''
 
     res = []
 
@@ -115,21 +83,7 @@ def hysteresis(sim, H_ext_list, fun=None, save_every=None,
                      "({} out of {}).".format(cur_stage,
                                               cur_stage + 1, num_stages))
             H.set_value(H_cur)
-
-            if save_vtk_snapshots:
-                if filename != '':
-                    cur_filename = filename + "__stage_{:03d}__.pvd".format(cur_stage)
-                item = sim.schedule('save_vtk', every=save_every,
-                                    at_end=save_at_stage_end,
-                                    filename=cur_filename)
-            # XXX TODO: After the recent run_until refactoring the
-            # relax() method doesn't accept a filename any more. We
-            # need to schedule the snapshot saving ourselves here, or
-            # ask the user to do it! (Need to think which alternative
-            # is better.) -- Max, 30.1.2013
             sim.relax(**kwargs)
-            if save_vtk_snapshots:
-                sim.unschedule(item)
             cur_stage += 1
             if fun is not None:
                 retval = fun(sim)
@@ -142,60 +96,8 @@ def hysteresis(sim, H_ext_list, fun=None, save_every=None,
     log.info("Removing the applied field used for hysteresis.")
     sim.llg.effective_field.interactions.remove(H)
 
-    if save_vtk_snapshots:
-        # Here we create two 'global' output files: one which combines
-        # all .vtu files produced during the simulation, and one which
-        # comprises only the final relaxed states of each stage.
-
-        # Remove trailing underscores from output .pvd files
-        # (for cosmetic reasons only... ;-)).
-        for f in sorted(glob.glob(filename + "__stage_[0-9][0-9][0-9]__.pvd")):
-            os.rename(f, re.sub('__\.pvd', '.pvd', f))
-
-        if save_every is not None:
-            # First we write the file containing *all* .vtu files.
-            f_global = open(filename + '_all.pvd', 'w')
-            f_global.write(textwrap.dedent("""\
-                <?xml version="1.0"?>
-                <VTKFile type="Collection" version="0.1">
-                  <Collection>
-                """))
-
-            cur_stage = 0
-            cur_timestep = 0
-            for f in sorted(glob.glob(filename + "__stage_[0-9][0-9][0-9].pvd")):
-                f_global.write("    <!-- Hysteresis stage #{:03d} -->\n".format(cur_stage))
-                for line in fileinput.input([f]):
-                    if re.match('^\s*<DataSet .*/>$', line):
-                        # We require sequentially increasing timesteps, so
-                        # we have to manually substitue them (TODO: unless
-                        # we can already do this when saving the snapshot?!?)
-                        line = re.sub('timestep="[0-9]+"', 'timestep="{}"'.format(cur_timestep), line)
-                        f_global.write(line)
-                        cur_timestep += 1
-                f_global.write("\n")
-                cur_stage += 1
-            f_global.write("  </Collection>\n</VTKFile>\n")
-            f_global.close()
-
-        if save_at_stage_end == True:
-            # Write the last .vtu file produced during each stage to a
-            # global .pvd file.
-            f_global = open(filename + '.pvd', 'w')
-            f_global.write(textwrap.dedent("""\
-                <?xml version="1.0"?>
-                <VTKFile type="Collection" version="0.1">
-                  <Collection>
-                """))
-
-            for i in xrange(num_stages):
-                f_global.write("    <!-- Hysteresis stage #{:03d} -->\n".format(i))
-                vtu_files = sorted(glob.glob(filename + '__stage_{:03d}__*.vtu'.format(i)))
-                f_global.write('    <DataSet timestep="{}" part="0" file="{}" />\n'.format(i, os.path.basename(vtu_files[-1])))
-            f_global.write("  </Collection>\n</VTKFile>\n")
-            f_global.close()
-
     return res or None
+
 
 def hysteresis_loop(sim, H_max, direction, N, **kwargs):
     """
