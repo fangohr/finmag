@@ -79,6 +79,27 @@ def test_compute_energy():
     check_energy_for_m((-0.5, 2/sqrt(3), 0), -E_aligned * cos(pi * 60 / 180))
 
 
+def test_time_zeeman_init():
+    field_expr = df.Expression(("0", "t", "0"), t=0)
+    field_lst = [1, 0, 0]
+    field_tpl = (1, 0, 0)
+    field_arr = np.array([1, 0, 0])
+    # These should work
+    TimeZeeman(field_expr)
+    TimeZeeman(field_expr, t_off=1e-9)
+
+    # These should *not* work, since there is no time update
+    with pytest.raises(ValueError): TimeZeeman(field_lst, t_off=None)
+    with pytest.raises(ValueError): TimeZeeman(field_tpl, t_off=None)
+    with pytest.raises(ValueError): TimeZeeman(field_arr, t_off=None)
+
+    # These *should* work, since there is a time update (the field is
+    # switched off at some point)
+    TimeZeeman(field_lst, t_off=1e-9)
+    TimeZeeman(field_tpl, t_off=1e-9)
+    TimeZeeman(field_arr, t_off=1e-9)
+
+
 def test_time_dependent_field_update():
     field_expr = df.Expression(("0", "t", "0"), t=0)
     H_ext = TimeZeeman(field_expr)
@@ -90,14 +111,32 @@ def test_time_dependent_field_update():
 
 
 def test_time_dependent_field_switched_off():
+    # Check the time update (including switching off) with a varying field
     field_expr = df.Expression(("0", "t", "0"), t=0)
     H_ext = TimeZeeman(field_expr, t_off=1)
     H_ext.setup(S3, m, Ms)
     assert diff(H_ext, np.array([0, 0, 0])) < TOL
+    assert(H_ext.switched_off == False)
     H_ext.update(0.9)
     assert diff(H_ext, np.array([0, 0.9, 0])) < TOL
+    assert(H_ext.switched_off == False)
     H_ext.update(2)
     assert diff(H_ext, np.array([0, 0, 0])) < TOL  # It's off!
+    assert(H_ext.switched_off == True)
+
+    # The same again with a constant field
+    a = [42, 0, 5]
+    H_ext = TimeZeeman(a, t_off=1)
+    H_ext.setup(S3, m, Ms)
+    assert diff(H_ext, a) < TOL
+    assert(H_ext.switched_off == False)
+    H_ext.update(0.9)
+    assert diff(H_ext, a) < TOL
+    assert(H_ext.switched_off == False)
+    H_ext.update(2)
+    assert diff(H_ext, np.array([0, 0, 0])) < TOL  # It's off!
+    assert(H_ext.switched_off == True)
+
 
 
 def test_discrete_time_zeeman_updates_in_intervals():
@@ -130,10 +169,13 @@ def test_discrete_time_zeeman_switchoff_only():
     H_ext = DiscreteTimeZeeman(field_expr, dt_update=None, t_off=2)
     H_ext.setup(S3, m, Ms)
     assert diff(H_ext, np.array([1, 2, 3])) < TOL
+    assert(H_ext.switched_off == False)
     H_ext.update(1)
     assert diff(H_ext, np.array([1, 2, 3])) < TOL  # not yet updating
+    assert(H_ext.switched_off == False)
     H_ext.update(2.1)
     assert diff(H_ext, np.array([0, 0, 0])) < TOL
+    assert(H_ext.switched_off == True)
 
 
 def test_oscillating_zeeman():
@@ -158,9 +200,13 @@ def test_oscillating_zeeman():
 
     # Check that the field is switched off at the specified time (and
     # stays switched off thereafter)
+    assert(H_osc.switched_off == False)
     check_field_at_time(t_off, [0, 0, 0])
+    assert(H_osc.switched_off == True)
     check_field_at_time(t_off + 1e-11, [0, 0, 0])
+    assert(H_osc.switched_off == True)
     check_field_at_time(t_off + 1, [0, 0, 0])
+    assert(H_osc.switched_off == True)
 
     # Check that the field values vary sinusoidally as expected
     phase = 0.1e-9

@@ -1,8 +1,8 @@
 import numpy
 import numbers
+from finmag.util.consts import gamma as gamma_llg
 
-
-def make_analytic_solution(H, alpha, gamma):
+def make_analytic_solution(H, alpha, gamma=gamma_llg):
     """
     Returns a function `m(t)` which computes the magnetisation vector
     of a macrospin as a function of time, i.e. the typical precession

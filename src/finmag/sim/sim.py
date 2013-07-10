@@ -13,7 +13,7 @@ from finmag.util import helpers
 from finmag.util.vtk_saver import VTKSaver
 from finmag.sim.hysteresis import hysteresis as hyst, hysteresis_loop as hyst_loop
 from finmag.sim import sim_helpers
-from finmag.energies import Exchange, Zeeman, Demag, UniaxialAnisotropy, DMI
+from finmag.energies import Exchange, Zeeman, TimeZeeman, Demag, UniaxialAnisotropy, DMI
 from finmag.integrators.llg_integrator import llg_integrator
 from finmag.integrators import scheduler, events
 from finmag.integrators.common import run_with_schedule
@@ -77,7 +77,7 @@ class Simulation(object):
             'header': 'E_total'}
         self.tablewriter.entities['H_total'] = {
             'unit': '<A/m>',
-            'get': lambda sim: helpers.average_field(sim.llg.effective_field.compute()),
+            'get': lambda sim: helpers.average_field(sim.effective_field()),
             'header': ('H_total_x', 'H_total_y', 'H_total_z')}
         self.tablewriter.update_entity_order()
 
@@ -112,6 +112,7 @@ class Simulation(object):
         self.Volume = mesh_volume(mesh)
 
         self.scheduler = scheduler.Scheduler()
+        self.callbacks_at_scheduler_events = []
 
         self.domains = df.CellFunction("uint", self.mesh)
         self.domains.set_all(0)
@@ -224,6 +225,21 @@ class Simulation(object):
 
         log.debug("Adding interaction %s to simulation '%s'" % (str(interaction),self.name))
         interaction.setup(self.S3, self.llg._m, self.llg._Ms_dg, self.unit_length)
+        # TODO: The following feels somewhat hack-ish because we
+        #       explicitly check for TimeZeeman and it's likely that
+        #       there will be other classes in the future that also
+        #       come with time updates which would then also have to
+        #       be added here by hand. Is there a more elegant and
+        #       automatic solution?
+        if isinstance(interaction, TimeZeeman):
+            # The following line ensures that the time integrator is notified
+            # about the correct field values at the time steps it chooses.
+            with_time_update = interaction.update
+            # The following line ensures that the field value is updated
+            # correctly whenever the time integration reaches a scheduler
+            # "checkpoint" (i.e. whenever integrator.advance_time(t) finishes
+            # successfully).
+            self.callbacks_at_scheduler_events.append(interaction.update)
         self.llg.effective_field.add(interaction, with_time_update)
 
         energy_name = 'E_{}'.format(interaction.name)
@@ -237,6 +253,13 @@ class Simulation(object):
             'get': lambda sim: sim.get_interaction(interaction.name).average_field(),
             'header': (field_name + '_x', field_name + '_y', field_name + '_z')}
         self.tablewriter.update_entity_order()
+
+    def effective_field(self):
+        """
+        Compute and return the effective field.
+
+        """
+        return self.llg.effective_field.compute(self.t)
 
     def total_energy(self):
         """
@@ -366,6 +389,10 @@ class Simulation(object):
 
         log.debug("Advancing time to t = {} s.".format(t))
         self.integrator.advance_time(t)
+        # The following line is necessary because the time integrator may
+        # slightly overshoot the requested end time, so here we make sure
+        # that the field values represent that requested time exactly.
+        self.llg.effective_field.update(t)
 
     def run_until(self, t):
         """
@@ -379,7 +406,11 @@ class Simulation(object):
         exit_at = events.StopIntegrationEvent(t)
         self.scheduler._add(exit_at)
 
-        run_with_schedule(self.integrator, self.scheduler)
+        run_with_schedule(self.integrator, self.scheduler, self.callbacks_at_scheduler_events)
+        # The following line is necessary because the time integrator may
+        # slightly overshoot the requested end time, so here we make sure
+        # that the field values represent that requested time exactly.
+        self.llg.effective_field.update(t)
         log.info("Simulation has reached time t = {:.2g} s.".format(self.t))
 
         self.scheduler._remove(exit_at)
@@ -407,7 +438,7 @@ class Simulation(object):
         self.relaxation = events.RelaxationEvent(self, stopping_dmdt*ONE_DEGREE_PER_NS, dmdt_increased_counter_limit, dt_limit)
         self.scheduler._add(self.relaxation)
 
-        run_with_schedule(self.integrator, self.scheduler)
+        run_with_schedule(self.integrator, self.scheduler, self.callbacks_at_scheduler_events)
         self.integrator.reinit()
         self.set_m(self.m)
         log.info("Relaxation finished at time t = {:.2g}.".format(self.t))

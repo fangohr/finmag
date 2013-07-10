@@ -1,5 +1,6 @@
 from datetime import datetime
 from glob import glob
+from finmag.util.fileio import Tablereader
 import matplotlib.pyplot as plt
 import subprocess as sp
 import itertools
@@ -1229,3 +1230,47 @@ def save_dg_fun_points(fun, name='unnamed.vtk', dataname='m', binary=False):
         vtk.tofile(name,'binary')
     else:
         vtk.tofile(name)
+
+
+def plot_ndt_columns(ndt_file, columns=['m_x', 'm_y', 'm_z'], outfile=None, show_legend=True, legend_loc='best', figsize=None):
+    """
+    Helper function to quickly plot the time evolution of the specified
+    columns in an .ndt file (default: m_x, m_y, m_z) and optionally save
+    the output to a file.
+
+    *Arguments*
+
+    columns :  list of strings
+
+        The names of the columns to plot. These must coincide with the
+        names in the first header line of the .ndt file.
+
+    outfile :  None | string
+
+        If given, save the plot to a file with this name.
+
+    show_legend :  boolean
+
+        If True, a legend with the column names is displayed.
+
+    legend_loc :  string | integer
+
+        Optional location code for the legend (same as for pyplot's
+        legend() command).
+
+    figsize :  None | pair of float
+
+        Optional argument to set the figure size of the output plot.
+    """
+    f = Tablereader(ndt_file)
+    ts = f.timesteps()
+    column_vals = f[tuple(columns)]
+    fig = plt.figure(figsize=figsize)
+    ax = fig.gca()
+    for col_name, col in zip(columns, column_vals):
+        ax.plot(ts, col, label=col_name)
+    if show_legend:
+        ax.legend(loc=legend_loc)
+    if outfile:
+        fig.savefig(outfile)
+    return fig

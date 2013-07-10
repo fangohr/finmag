@@ -53,7 +53,15 @@ class EffectiveField(object):
         if with_time_update:
             self._callables.append(with_time_update)
 
-    def compute(self, t=None):
+    def update(self, t=None):
+        """
+        Update the effective field internally so that its value
+        reflects the value at time `t`.
+
+        The argument `t` can be omitted if no interaction requires a
+        time update.
+
+        """
         if t is not None:
             for func in self._callables:
                 func(t)
@@ -69,11 +77,24 @@ class EffectiveField(object):
             self.fun.vector().set_local(self.H_eff)
             H_eff_dg = df.interpolate(self.fun, self.dg_v)
             self.H_eff[:] = df.assemble(df.dot(H_eff_dg, self.v3) * df.dx)/self.volumes
-            
-        
-        return self.H_eff
+
+    def compute(self, t=None):
+        """
+        Compute and return the effective field.
+
+        The argument `t` is only required if one or more interactions
+        require a time-update.
+
+        """
+        self.update(t)
+        return self.H_eff.copy()
 
     def compute_jacobian_only(self, t):
+        """
+        Compute and return the total contribution of all interactions
+        that are included in the Jacobian.
+
+        """
         for func in self._callables:
             func(t)
 
