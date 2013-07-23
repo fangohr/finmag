@@ -745,7 +745,6 @@ def test_ndt_writing_with_time_dependent_field(tmpdir):
     assert np.allclose(f['H_TimeZeeman_z'], 0, atol=0, rtol=TOL)
 
 
-@pytest.mark.slow
 def test_removing_logger_handlers_allows_to_create_many_simulation_objects(tmpdir):
     """
     When many simulation objects are created in the same scripts, the
@@ -755,7 +754,15 @@ def test_removing_logger_handlers_allows_to_create_many_simulation_objects(tmpdi
     """
     os.chdir(str(tmpdir))
     set_logging_level('WARNING')  # avoid lots of annoying info/debugging messages
-    N = 5000  # maximum number of simulation objects to create
+
+    # Temporarily decrease the soft limit for the maximum number of
+    # allowed open file descriptors (to make the test run faster and
+    # ensure reproducibility across different machines).
+    import resource
+    soft_limit, hard_limit = resource.getrlimit(resource.RLIMIT_NOFILE)
+    resource.setrlimit(resource.RLIMIT_NOFILE, (42, hard_limit))
+
+    N = 150  # maximum number of simulation objects to create
 
     mesh = df.UnitIntervalMesh(1)
     Ms = 8e5
@@ -798,3 +805,7 @@ def test_removing_logger_handlers_allows_to_create_many_simulation_objects(tmpdi
 
     # Check that no file logging handler is left
     print logging_status_str()
+
+    # Restore the maximum number of allowed open file descriptors. Not
+    # sure this is actually necessary but can't hurt.
+    resource.setrlimit(resource.RLIMIT_NOFILE, (soft_limit, hard_limit))
