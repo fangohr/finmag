@@ -10,8 +10,10 @@
 
 set -o errexit
 
+TKTCLVERSION=8.6
+
 # Install prerequisites if needed
-PKGS="tk8.6-dev tcl8.6-dev"
+PKGS="tk$TKTCLVERSION-dev tcl$TKTCLVERSION-dev"
 for pkg in $PKGS; do
     if ! dpkg -s $pkg > /dev/null 2>&1; then
 	echo "OOMMF needs the package $pkg. Trying to install it..."
@@ -50,12 +52,12 @@ cd oommf
 # install oommf
 #OOMMF_TCL_INCLUDE_DIR=/usr/include/tcl8.5/; export OOMMF_TCL_INCLUDE_DIR
 #OOMMF_TK_INCLUDE_DIR=/usr/include/tcl8.5/; export OOMMF_TK_INCLUDE_DIR
-export OOMMF_TCL_CONFIG='/usr/lib/tcl8.6/tclConfig.sh'
-export OOMMF_TK_CONFIG='/usr/lib/tk8.6/tkConfig.sh'
-tclsh8.6 oommf.tcl pimake distclean
-tclsh8.6 oommf.tcl pimake upgrade
-tclsh8.6 oommf.tcl pimake
-tclsh8.6 oommf.tcl +platform
+export OOMMF_TCL_CONFIG=/usr/lib/tcl$TKTCLVERSION/tclConfig.sh
+export OOMMF_TK_CONFIG=/usr/lib/tk$TKTCLVERSION/tkConfig.sh
+tclsh$TKTCLVERSION oommf.tcl pimake distclean
+tclsh$TKTCLVERSION oommf.tcl pimake upgrade
+tclsh$TKTCLVERSION oommf.tcl pimake
+tclsh$TKTCLVERSION oommf.tcl +platform
 
 # create an executable called 'oommf' to call oommf in /usr/local/bin
 oommf_command=$(cat <<EOF
