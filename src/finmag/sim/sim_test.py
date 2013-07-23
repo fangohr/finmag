@@ -755,7 +755,7 @@ def test_removing_logger_handlers_allows_to_create_many_simulation_objects(tmpdi
     """
     os.chdir(str(tmpdir))
     set_logging_level('WARNING')  # avoid lots of annoying info/debugging messages
-    N = 2000  # maximum number of simulation objects to create
+    N = 5000  # maximum number of simulation objects to create
 
     mesh = df.UnitIntervalMesh(1)
     Ms = 8e5
