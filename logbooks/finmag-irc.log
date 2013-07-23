@@ -6703,3 +6703,62 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-07-19 10:47:51 fangohr-adium: Am out for the rest of the day; back on Monday.
 2013-07-22 14:26:36 fangohr-adium: Hello DokosBot, I have just restarted you.
 2013-07-22 14:43:08 fangohr-adium: Marc-Antonio, are you there? Do you want to meet up tomorrow, say? Just in case you have any new results we could discuss - I had another meeting with somebody else planned, but that is now postponed.
+2013-07-23 09:46:47 max_albert: Good morning, all.
+2013-07-23 09:47:02 fangohr-adium: Good Morning!
+2013-07-23 09:47:08 fangohr-adium: Back in town? :)
+2013-07-23 09:47:15 max_albert: Yes :)
+2013-07-23 09:47:18 fangohr-adium: Nice.
+2013-07-23 09:47:24 max_albert: Yes :)
+2013-07-23 09:50:27 max_albert: Marijan, I just read your message from yesterday. Do you have a sample script that exhibits the bug (ideally fast to run)? From what you write it sounds like you are running many relaxations in the same script and the logger can't cope with that for some reason (maybe because it tries to write all the logging output to different files). But it would be much easier to debug with some actual code at hand.
+2013-07-23 09:53:24 fangohr-adium: Hi Max, had a chat with Marijan yesterday: my guess was that we are not clossing the simulation specific logger files, and that he is creating many simulation objects in one file (as you suggest above I think). I suggested to try to delete the simulation object once he is done with it, which should close the logger files for loggers associated with that simulation I was hoping. Marjan, if this is still an issue, than a sample file would of course
+2013-07-23 09:56:44 max_albert: Yes, that sounds like what I would have suspected. Not sure if the logger files are (reliably!) closed automatically, though, when a Simulation object is 'deleted', since the destruction of the object is ultimately due to the garbage collection, and there are many subtleties involved with that (as I had to find out painfully a while ago). But let's hope that this solved Marijan's issue.
+2013-07-23 09:59:31 fangohr-adium: Agree - I think the garbage collection should(!) work here, but I am not 100% sure that the logger module works as we hope it does - it does keep state of created loggers that can be accessed from different python files through the logging module.
+2013-07-23 10:02:29 max_albert: Well, the trouble is that even if an object is 'deleted' (which really just means removing the binding from the namespace) there is no guarantee that it will get garbage collected - although it's likely
+2013-07-23 10:02:40 max_albert: if there are many other objects floating around in memory.
+2013-07-23 10:03:09 max_albert: However, even if it is garbage collected I'm not sure the loggers get cleaned up automatically. Would have to look into the logger module to check that.
+2013-07-23 10:03:13 fangohr-adium: Yes, although we are looking at 1000 files we need to exceed, and the simulations run slowly, so I hope that GC should work any.
+2013-07-23 10:04:14 fangohr-adium: We have a function 'logging_status_str()" in src/finmag/util/helpers which Marijan could try to run in between simulations: if I remember correctly, this should show all loggers defined in the logging module. We should be able to see how that list grows and shrinks in Marijan's for loop.
+2013-07-23 10:04:58 max_albert: Ah, that's interesting. I didn't know about that function.
+2013-07-23 10:07:37 max_albert: I just gave it a try interactively, but even after deleting one simulation object and explicitly calling the garbage collection through 'gc.collect()' the logger is still hanging around. :(
+2013-07-23 10:08:26 fangohr-adium: I suppose the question is: do we get a second logger if you create a second simulation object. (And does this survive as well.)
+2013-07-23 10:09:58 max_albert: Yes, we do get a second logger. And yes, none of the loggers is deleted.
+2013-07-23 10:11:28 max_albert: The trouble is that Python doesn't really have a concept of 'destructors' as C++ does, for example. So it'll be difficult to make sure that loggers are deleted once a simulation object is not needed any more. We could add a helper function which explicitly closes a logger, thought - just to be able to deal with this situation manually if it arises.
+2013-07-23 10:14:49 fangohr-adium: Does it not have destructors? I thought we can define a __del__ method (or similar name) for a class which is called when the object is destroyed? That would be the right place to add code to manually close the relevant loggers.
+2013-07-23 10:21:41 max_albert: Hah, that's exactly what I thought when I tried to use the __del__ method for a similar purpose a while ago. It's not true, though, and I saw it happen that __del__ never got called - even if the Python interpreter was quit!
+2013-07-23 10:22:11 max_albert: See here for example (e.g. the first answer, which also links to the documentation of __del__): http://stackoverflow.com/questions/6104535/i-dont-understand-this-python-del-behaviour
+2013-07-23 10:25:04 max_albert: Interestingly, reading the answers again they also mention the 'with' statement, which we *might* be able to use to our advantage in this situation (although I can't think offhand how to best do it). However, I think the easiest and clearest solution here would be to provide a way to explicitly disable/close the logger.
+2013-07-23 10:32:24 fangohr-adium: Okay :) I follow your path then ;-). Will look into this later. Maybe we do what you suggest and create a method to explicitely delete logger instances which Marijan has to call manually here.
+2013-07-23 10:33:10 fangohr-adium: (Got a meeting now, and also struggle to compile OOMMF on osiris. It shouldn't be that hard, should it …?) I'll come over later this morning for a chat - also need to talk to Weiwei.
+2013-07-23 10:40:22 max_albert: Quick follow-up: this is a very enlightening blog post about garbage collection (also linked to in the comments to the above-mentioned StackOverflow question): http://blogs.msdn.com/b/oldnewthing/archive/2010/08/09/10047586.aspx
+2013-07-23 10:41:03 max_albert: I particularly like his way of explaning it: "Garbage collection is simulating a computer with an infinite amount of memory. The rest is mechanism."
+2013-07-23 10:42:21 fangohr-adium: Seems that we could do something like
+2013-07-23 10:42:36 fangohr-adium: with Simulation() as s:
+2013-07-23 10:42:41 fangohr-adium:     do stuff with simulation
+2013-07-23 10:43:07 fangohr-adium: and when this block is left, the 'with' statement will call s.__exit__() in which we can delete the loggers. The remaining question is how to delete the loggers.
+2013-07-23 10:44:26 max_albert: Exactly. And we would have to implement the context manager. (This probably needs to have a name which is different from the Simulation class itself).
+2013-07-23 10:50:08 max_albert: Hmm, it seems that deleting loggers is actually not recommended (or even possible), according to this thread: http://grokbase.com/t/python/python-list/11bw1zxwnd/proper-way-to-delete-kill-a-logger
+2013-07-23 10:50:46 max_albert: It seems to be possible to remove handlers from a logger (which is probably what we want to do IIUC), but not sure what The Right Way (TM) of doing it is.
+2013-07-23 11:50:54 fangohr-adium: The problem arises as the bash(?) complains about too many open files. These are the handlers of the loggers. So removing those would solve this particular problem. I am happy to go with this in the absence of better knowledge.
+2013-07-23 12:02:15 max_albert: Yep, I think it's the easiest solution for the moment. I'm just debugging this using a script which Marijan sent me. Hopefully won't take too long to come up with a good workaround.
+2013-07-23 12:04:08 mb4e10: Hans, have you just added the Butenko thesis in Dropbox folder. Is it just a merge of two parts or with some changes?
+2013-07-23 12:04:24 fangohr-adium: It is just the merge of the two files into one.
+2013-07-23 12:04:26 fangohr-adium: Can you print this double-sided?
+2013-07-23 12:04:37 fangohr-adium: I seem to have lost ability to print double sided for now.
+2013-07-23 12:05:01 mb4e10: I can't print double side.
+2013-07-23 12:05:28 mb4e10: I never could.
+2013-07-23 12:05:34 fangohr-adium: Okay, thanks.
+2013-07-23 13:54:13 max_albert: Just to follow up on the logging issue: I just pushed a change which should hopefully allow to work around the problem.
+2013-07-23 13:54:47 max_albert: It's not an automatic solution since it requires the user to manually call 'sim.close_logfile()' if an old simulation object is not needed any more (e.g. at the end of each iteration of Marijan's loop).
+2013-07-23 13:57:11 max_albert: The solution with the context manager would be a bit more elegant, and it should be easy to add as well that if we wish (but I'm not planning to do it right now).
+2013-07-23 14:22:41 fangohr: Max, I am so impressed you have written tests for the log failure!
+2013-07-23 14:23:31 fangohr: (if they don't fail on aleph0, we could use 'ulimits' to reduce the number of open files while we run the tests (something like "ulimits -n 20", but I am not 100% sure where this needs to go within the testing code, the pytest calls etc.)
+2013-07-23 14:24:25 max_albert: Well, I needed a minimal example to reproduce the bug anyway, so turning it into a regression test wasn't much more work.
+2013-07-23 14:26:00 max_albert: Very nice suggestion!
+2013-07-23 15:30:06 max_albert: Great! The test works now and runs much faster, too. Thanks for the suggestion, Hans!
+2013-07-23 15:30:52 fangohr: Thanks for fixing the code, and writing the test!
+2013-07-23 15:32:09 mb4e10: Thanks Max.
+2013-07-23 15:32:25 max_albert: No worries.
+2013-07-23 16:55:14 fangohr-adium: Over and out for today.
+2013-07-23 16:55:22 max_albert: Bye!
+2013-07-23 16:59:07 fangohr: One more thing for Mac-Users: if you follow the instructions on this site (http://www.southampton.ac.uk/isolutions/services/auto_configure_eduroam_printing_and_vpn/index.php) to install a printer driver on your Mac, you can set it up to print double sided - have just done that and it works.
+2013-07-23 16:59:30 mb4e10: Great.
