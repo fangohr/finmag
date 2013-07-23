@@ -1,11 +1,11 @@
 import numpy as np
 import dolfin as df
 from finmag import Simulation
-from finmag.energies import Exchange, DMI_Old, DMI, Demag
+from finmag.energies import Exchange, DMI_Old, DMI, Demag, Zeeman
 from finmag.util.meshes import cylinder
 
 #mesh = df.BoxMesh(0,0,0,30,30,3,10,10,1)
-mesh =cylinder(20,3,3)
+mesh =cylinder(200,3,3)
 
 
 Ms = 8.6e5
@@ -16,6 +16,7 @@ A = 1.3e-11
 D = 4e-3
 sim.add(Exchange(A))
 sim.add(DMI(D))
+sim.add(Zeeman((0, 0, 0.1*Ms)))
 
 #sim.add(Demag())
 
@@ -26,5 +27,5 @@ def loop(final_time, steps=100):
         p = df.plot(sim.llg._m)
     df.interactive()
 
-loop(5e-10)
+loop(5e-9)
 
