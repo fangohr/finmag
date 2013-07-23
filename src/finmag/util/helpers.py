@@ -89,6 +89,10 @@ def start_logging_to_file(filename, formatter=None, mode='a', level=logging.DEBU
         `maxBytes` (0 means unlimited). Once the file size is near
         this limit, a 'rollover' will occur. See the docstring of
         `logging.handlers.RotatingFileHandler` for details.
+
+    *Returns*
+
+    The newly created logging hander is returned.
     """
     if formatter is None:
         formatter = logging.Formatter(
@@ -128,7 +132,7 @@ def start_logging_to_file(filename, formatter=None, mode='a', level=logging.DEBU
         logger.info("Finmag logging output will be written to file: '{}' "
                     "(any old content will be overwritten).".format(filename))
     logger.addHandler(h)
-
+    return h
 
 def binary_tarball_name(repo_dir, revision='tip', suffix=''):
     """
