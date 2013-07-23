@@ -5,13 +5,15 @@ import pytest
 import os
 from glob import glob
 from distutils.version import StrictVersion
-from finmag import sim_with, Simulation
+from finmag import sim_with, Simulation, set_logging_level
 from finmag.example import barmini
 from math import sqrt, cos, sin, pi
-from finmag.util.helpers import assert_number_of_files,vector_valued_function
+from finmag.util.helpers import assert_number_of_files, vector_valued_function, logging_status_str
 from finmag.sim import sim_helpers
 from finmag.energies import Zeeman, TimeZeeman, Exchange, UniaxialAnisotropy
 from finmag.util.fileio import Tablereader
+from finmag.util.timings import default_timer
+from finmag.util.ansistrm import ColorizingStreamHandler
 
 logger = logging.getLogger("finmag")
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -741,3 +743,58 @@ def test_ndt_writing_with_time_dependent_field(tmpdir):
     assert np.allclose(f['H_TimeZeeman_x'], 0, atol=0, rtol=TOL)
     assert np.allclose(f['H_TimeZeeman_y'], Hy_expected, atol=0, rtol=TOL)
     assert np.allclose(f['H_TimeZeeman_z'], 0, atol=0, rtol=TOL)
+
+
+@pytest.mark.slow
+def test_removing_logger_handlers_allows_to_create_many_simulation_objects(tmpdir):
+    """
+    When many simulation objects are created in the same scripts, the
+    logger will eventually complain about 'too many open files'.
+    Explicitly removing logger handlers should avoid this problem.
+
+    """
+    os.chdir(str(tmpdir))
+    set_logging_level('WARNING')  # avoid lots of annoying info/debugging messages
+    N = 2000  # maximum number of simulation objects to create
+
+    mesh = df.UnitIntervalMesh(1)
+    Ms = 8e5
+    unit_length = 1e-9
+
+    def create_loads_of_simulations(N, close_logfiles=False):
+        """
+        Helper function to create lots of simulation objects,
+        optionally closing previously created logfiles.
+
+        """
+        for i in xrange(N):
+            logger.warning("Creating simulation object #{}".format(i))
+            sim = Simulation(mesh, Ms, unit_length)
+            if close_logfiles:
+                sim.close_logfile()
+
+
+    # The following should raise an error because lots of loggers are
+    # created without being deleted again.
+    with pytest.raises(IOError):
+        create_loads_of_simulations(N, close_logfiles=False)
+
+    # The next line is needed so that we can proceed after the error
+    # raised above.
+    default_timer.stop_last()
+
+    # Remove all the file handlers created in the loop above
+    hdls = list(logger.handlers)  # We need a copy of the list because we
+                                  # are removing handlers from it below.
+    for h in hdls:
+        if isinstance(h, logging.handlers.RotatingFileHandler):
+            h.stream.close()  # this is essential, otherwise the file handler
+                              # will remain open
+            logger.removeHandler(h)
+
+    # The following should work since we explicitly close the logfiles
+    # before each Simulation object goes out of scope.
+    create_loads_of_simulations(N, close_logfiles=True)
+
+    # Check that no file logging handler is left
+    print logging_status_str()

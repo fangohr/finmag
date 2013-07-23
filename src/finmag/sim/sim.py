@@ -64,7 +64,7 @@ class Simulation(object):
         self.logfilename = self.sanitized_name + '.log'
         self.ndtfilename = self.sanitized_name + '.ndt'
 
-        helpers.start_logging_to_file(self.logfilename, mode='w', level=logging.DEBUG)
+        self.logging_handler = helpers.start_logging_to_file(self.logfilename, mode='w', level=logging.DEBUG)
 
         # Create a Tablewriter object for ourselves which will be used
         # by various methods to save the average magnetisation at given
@@ -862,6 +862,19 @@ class Simulation(object):
         basename = os.path.join(tmpdir, 'paraview_scene_{}'.format(self.name))
         self.save_vtk(filename=basename + '.pvd')
         return render_paraview_scene(basename + '000000.vtu', **kwargs)
+
+    def close_logfile(self):
+        """
+        Stop logging to the logfile associated with this simulation object.
+
+        This closes the file and removed the associated logging
+        handler from the 'finmag' logger. Note that logging to other
+        files (in particular the global logfile) is not affected.
+
+        """
+        self.logging_handler.stream.close()
+        log.removeHandler(self.logging_handler)
+        self.logging_handler = None
 
 
 def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sundials",
