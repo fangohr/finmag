@@ -489,6 +489,7 @@ class Simulation(object):
         assert self.t == t0  # self.t is read from integrator
 
     save_averages = sim_helpers.save_ndt
+    save_ndt = sim_helpers.save_ndt
     hysteresis = hyst
     hysteresis_loop = hyst_loop
 
