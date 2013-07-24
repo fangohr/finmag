@@ -6762,3 +6762,11 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-07-23 16:55:22 max_albert: Bye!
 2013-07-23 16:59:07 fangohr: One more thing for Mac-Users: if you follow the instructions on this site (http://www.southampton.ac.uk/isolutions/services/auto_configure_eduroam_printing_and_vpn/index.php) to install a printer driver on your Mac, you can set it up to print double sided - have just done that and it works.
 2013-07-23 16:59:30 mb4e10: Great.
+2013-07-24 09:26:41 mb4e10: My simulation has not crashed during night. Well done Max!
+2013-07-24 09:30:56 fangohr1: Well done indeed, Max.
+2013-07-24 09:31:20 fangohr1: Marijan, I suppose you should say your 'simulationS' — as you have probably run quite a few during the night??
+2013-07-24 10:41:27 mb4e10: Yes, Simulationsssssssssss :)
+2013-07-24 13:44:32 mb8g11: Max, how did you make the plots you just added to dropbox?
+2013-07-24 14:17:43 max_albert: mb8g11:  with maplotlib :-P
+2013-07-24 14:21:06 max_albert: Basically, I used the annotation facilities (AnnotationBbox in this case) - I'm just trying to find the exact demo which I copied it from.
+2013-07-24 14:57:16 max_albert: Ah, finally! Here is the demo I meant: http://matplotlib.org/examples/pylab_examples/demo_annotation_box.html
