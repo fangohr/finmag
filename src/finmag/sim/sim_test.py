@@ -594,9 +594,33 @@ class TestSimulation(object):
         sim.save_field('Demag', filename='demag.npy', incremental=True)
         assert(os.path.exists('demag_000000.npy'))
 
-        # Check that the alias 'save_m' works:
-        sim.save_m(filename='m2.npy')
+    def test_save_m(self, tmpdir):
+        """
+        Similar test as 'test_save_field', but for the convenience shortcut 'save_m'.
+        """
+        os.chdir(str(tmpdir))
+        sim = barmini()
 
+        # Save the magnetisation using the default filename
+        sim.save_m()
+        sim.save_m()
+        sim.save_m()
+        assert(len(glob('barmini_m*.npy')) == 1)
+        os.remove('barmini_m.npy')
+
+        # Save incrementally
+        sim.save_m(incremental=True)
+        sim.save_m(incremental=True)
+        sim.save_m(incremental=True)
+        assert(len(glob('barmini_m_[0-9]*.npy')) == 3)
+
+        # Check that the 'overwrite' keyword works
+        sim2 = barmini()
+        with pytest.raises(IOError):
+            sim2.save_m(incremental=True)
+        sim2.save_m(incremental=True, overwrite=True)
+        sim2.save_m(incremental=True)
+        assert(len(glob('barmini_m_[0-9]*.npy')) == 2)
 
     def test_save_field_scheduled(self, tmpdir):
         os.chdir(str(tmpdir))
