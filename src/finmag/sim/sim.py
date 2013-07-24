@@ -127,7 +127,7 @@ class Simulation(object):
         self.scheduler_shortcuts = {
             'save_restart_data': sim_helpers.save_restart_data,
             'save_ndt': sim_helpers.save_ndt,
-            'save_m': sim_helpers.save_m,
+            'save_m': Simulation._save_m_incremental,
             'save_averages': sim_helpers.save_ndt,
             'save_vtk': self.save_vtk,
             'save_field': Simulation._save_field_incremental,
