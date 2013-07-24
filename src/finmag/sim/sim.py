@@ -801,6 +801,9 @@ class Simulation(object):
     def _save_field_incremental(self, field_name, filename=None, overwrite=False):
         self.save_field(field_name, filename, incremental=True, overwrite=overwrite)
 
+    def _save_m_incremental(self, filename=None, overwrite=False):
+        self.save_field('m', filename, incremental=True, overwrite=overwrite)
+
     def mesh_info(self):
         """
         Return a string containing some basic information about the
