@@ -594,6 +594,10 @@ class TestSimulation(object):
         sim.save_field('Demag', filename='demag.npy', incremental=True)
         assert(os.path.exists('demag_000000.npy'))
 
+        # Check that the alias 'save_m' works:
+        sim.save_m(filename='m2.npy')
+
+
     def test_save_field_scheduled(self, tmpdir):
         os.chdir(str(tmpdir))
         sim = barmini()

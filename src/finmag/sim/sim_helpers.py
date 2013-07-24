@@ -23,6 +23,22 @@ def save_ndt(sim):
     sim.tablewriter.save()
 
 
+def save_m(sim, filename=None, incremental=False, overwrite=False):
+    """
+    Convenience function to save the magnetisation to a file (as a numpy array).
+
+    The following two calls do exactly the same thing:
+
+        sim.save_m(...)
+        sim.save_field('m', ...)
+
+    Thus see the documentation of sim.save_field() for details on
+    the arguments.
+
+    """
+    sim.save_field('m', filename=filename, incremental=incremental, overwrite=overwrite)
+
+
 def create_backup_file_if_file_exists(filename, backupextension='.backup'):
     if os.path.exists(filename):
         backup_file_name = filename + backupextension
