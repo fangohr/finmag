@@ -127,6 +127,7 @@ class Simulation(object):
         self.scheduler_shortcuts = {
             'save_restart_data': sim_helpers.save_restart_data,
             'save_ndt': sim_helpers.save_ndt,
+            'save_m': sim_helpers.save_m,
             'save_averages': sim_helpers.save_ndt,
             'save_vtk': self.save_vtk,
             'save_field': Simulation._save_field_incremental,
@@ -795,20 +796,7 @@ class Simulation(object):
         field_saver = self._get_field_saver(field_name, filename, incremental=incremental, overwrite=overwrite)
         field_saver.save(field_data.vector().array())
 
-    def save_m(self, filename=None, incremental=False, overwrite=False):
-        """
-        Convenience function to save the magnetisation to a file (as a numpy array).
-
-        The following two calls do exactly the same thing:
-
-            sim.save_m(...)
-            sim.save_field('m', ...)
-
-        Thus see the documentation of sim.save_field() for details on
-        the arguments.
-
-        """
-        self.save_field('m', filename=filename, incremental=incremental, overwrite=overwrite)
+    save_m = sim_helpers.save_m
 
     def _save_field_incremental(self, field_name, filename=None, overwrite=False):
         self.save_field(field_name, filename, incremental=True, overwrite=overwrite)
