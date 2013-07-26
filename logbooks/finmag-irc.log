@@ -6770,3 +6770,10 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-07-24 14:17:43 max_albert: mb8g11:  with maplotlib :-P
 2013-07-24 14:21:06 max_albert: Basically, I used the annotation facilities (AnnotationBbox in this case) - I'm just trying to find the exact demo which I copied it from.
 2013-07-24 14:57:16 max_albert: Ah, finally! Here is the demo I meant: http://matplotlib.org/examples/pylab_examples/demo_annotation_box.html
+2013-07-26 13:15:06 fangohr-adium: Hi all, plenty of danish pastries and muffins in the boardroom ready for collection. You may want to get one now to eat later during the group meeting??
+2013-07-26 15:07:07 fangohr-adium: Group meeting, anybody?
+2013-07-26 15:07:20 max_albert: We'll be over in a minute.
+2013-07-26 16:40:23 max_albert: Hi all, this is the "Light Table" editor/IDE which I mentioned in the group meeting (watch the video on the kickstarter page for a nice introduction of its concepts): http://www.kickstarter.com/projects/306316578/light-table
+2013-07-26 16:40:42 max_albert: And this is the website: http://www.chris-granger.com/lighttable/
+2013-07-26 16:41:50 max_albert: (Or this: http://www.lighttable.com/)
+2013-07-26 16:42:11 max_albert: Disclaimer: I haven't tried it. It looks like a neat idea, but not sure how good/useful it is in practice.
