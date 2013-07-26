@@ -837,3 +837,21 @@ def test_removing_logger_handlers_allows_to_create_many_simulation_objects(tmpdi
     # Restore the maximum number of allowed open file descriptors. Not
     # sure this is actually necessary but can't hurt.
     resource.setrlimit(resource.RLIMIT_NOFILE, (soft_limit, hard_limit))
+
+
+@pytest.mark.slow
+def test_schedule_render_scene(tmpdir):
+    """
+    Check that scheduling 'render_scene' will create incremental snapshots.
+    """
+    os.chdir(str(tmpdir))
+    sim = barmini()
+
+    # Save the magnetisation using the default filename
+    sim.schedule('render_scene', every=1e-11, filename='barmini_scene.png')
+    sim.run_until(4.5e-11)
+    assert(sorted(glob('barmini_scene_[0-9]*.png')) ==
+           ['barmini_scene_000000.png',
+            'barmini_scene_000001.png',
+            'barmini_scene_000002.png',
+            'barmini_scene_000003.png'])

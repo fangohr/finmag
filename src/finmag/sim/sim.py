@@ -123,6 +123,7 @@ class Simulation(object):
         # we have a robust, unified field saving mechanism.
         self.vtk_savers = {}
         self.field_savers = {}
+        self._render_scene_indices = {}
 
         self.scheduler_shortcuts = {
             'save_restart_data': sim_helpers.save_restart_data,
@@ -131,6 +132,7 @@ class Simulation(object):
             'save_averages': sim_helpers.save_ndt,
             'save_vtk': self.save_vtk,
             'save_field': Simulation._save_field_incremental,
+            'render_scene': Simulation._render_scene_incremental,
             'switch_off_H_ext': Simulation.switch_off_H_ext,
         }
 
@@ -869,6 +871,22 @@ class Simulation(object):
         basename = os.path.join(tmpdir, 'paraview_scene_{}'.format(self.name))
         self.save_vtk(filename=basename + '.pvd')
         return render_paraview_scene(basename + '000000.vtu', **kwargs)
+
+    def _render_scene_incremental(self, filename, **kwargs):
+        # XXX TODO: This should be tidied up by somehow combining it
+        # with the other incremental savers. We should have a more
+        # general mechanism which abstracts out the functionality of
+        # incremental saving.
+        try:
+            cur_index = self._render_scene_indices[filename]
+        except KeyError:
+            self._render_scene_indices[filename] = 0
+            cur_index = 0
+
+        basename, ext = os.path.splitext(filename)
+        outfilename = basename + '_{:06d}'.format(cur_index) + ext
+        self.render_scene(outfile=outfilename, **kwargs)
+        self._render_scene_indices[filename] += 1
 
     def close_logfile(self):
         """
