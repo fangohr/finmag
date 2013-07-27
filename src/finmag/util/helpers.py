@@ -1236,7 +1236,7 @@ def save_dg_fun_points(fun, name='unnamed.vtk', dataname='m', binary=False):
         vtk.tofile(name)
 
 
-def plot_ndt_columns(ndt_file, columns=['m_x', 'm_y', 'm_z'], outfile=None, show_legend=True, legend_loc='best', figsize=None):
+def plot_ndt_columns(ndt_file, columns=['m_x', 'm_y', 'm_z'], outfile=None, title=None, show_legend=True, legend_loc='best', figsize=None):
     """
     Helper function to quickly plot the time evolution of the specified
     columns in an .ndt file (default: m_x, m_y, m_z) and optionally save
@@ -1252,6 +1252,10 @@ def plot_ndt_columns(ndt_file, columns=['m_x', 'm_y', 'm_z'], outfile=None, show
     outfile :  None | string
 
         If given, save the plot to a file with this name.
+
+    title :  None | string
+
+        Title text to use for the plot.
 
     show_legend :  boolean
 
@@ -1273,6 +1277,8 @@ def plot_ndt_columns(ndt_file, columns=['m_x', 'm_y', 'm_z'], outfile=None, show
     ax = fig.gca()
     for col_name, col in zip(columns, column_vals):
         ax.plot(ts, col, label=col_name)
+    if title:
+        ax.set_title(title)
     if show_legend:
         ax.legend(loc=legend_loc)
     if outfile:
