@@ -1284,3 +1284,18 @@ def plot_ndt_columns(ndt_file, columns=['m_x', 'm_y', 'm_z'], outfile=None, titl
     if outfile:
         fig.savefig(outfile)
     return fig
+
+def vec2str(a, fmt='{}'):
+    """
+    Convert a 3-sequence (e.g. a numpy array) to a string, optionally
+    with some formatting options.
+
+    Examples:
+
+       a = numpy.array([1, 200, 30000])
+       vec2str(a)  -->  (1, 200, 30000)
+       vec2str(a, fmt='{:.3g})  -->  (1, 200, 30000)
+       vec2str(a, fmt='{:.2f}')  -->  (1.00, 200.00, 30000.00)
+
+    """
+    return ("({fmt}, {fmt}, {fmt})".format(fmt=fmt)).format(a[0], a[1], a[2])
