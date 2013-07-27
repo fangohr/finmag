@@ -389,7 +389,9 @@ def test_plot_ndt_columns(tmpdir):
     sim = barmini()
     sim.schedule('save_ndt', every=1e-12)
     sim.run_until(1e-11)
-    plot_ndt_columns('barmini.ndt', columns=['m_x', 'm_y', 'm_z', 'E_Demag', 'H_Exchange_x'], outfile='barmini.png', show_legend=True, legend_loc='center', figsize=(10, 4))
+    plot_ndt_columns('barmini.ndt', columns=['m_x', 'm_y', 'm_z', 'E_Demag', 'H_Exchange_x'],
+                     outfile='barmini.png', title="Some awesome title",
+                     show_legend=True, legend_loc='center', figsize=(10, 4))
     assert(os.path.exists('barmini.png'))
 
 
