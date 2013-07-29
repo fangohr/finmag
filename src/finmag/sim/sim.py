@@ -1,4 +1,5 @@
 import os
+import shutil
 import inspect
 import logging
 import tempfile
@@ -870,7 +871,10 @@ class Simulation(object):
         tmpdir = tempfile.mkdtemp()
         basename = os.path.join(tmpdir, 'paraview_scene_{}'.format(self.name))
         self.save_vtk(filename=basename + '.pvd')
-        return render_paraview_scene(basename + '000000.vtu', **kwargs)
+        try:
+           return render_paraview_scene(basename + '000000.vtu', **kwargs)
+        finally:
+            shutil.rmtree(tmpdir)
 
     def _render_scene_incremental(self, filename, **kwargs):
         # XXX TODO: This should be tidied up by somehow combining it
