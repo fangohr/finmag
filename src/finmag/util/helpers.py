@@ -4,7 +4,6 @@ from finmag.util.fileio import Tablereader
 import matplotlib.pyplot as plt
 import subprocess as sp
 import itertools
-import logging
 import logging.handlers
 import numpy as np
 import dolfin as df
@@ -163,7 +162,7 @@ def binary_tarball_name(repo_dir, revision='tip', suffix=''):
     try:
         rev_nr = sp.check_output(['hg', 'id', '-n', '-r', revision]).strip()
         rev_id = sp.check_output(['hg', 'id', '-i', '-r', revision]).strip()
-        rev_log = sp.check_output(['hg', 'log', '-r', revision]).strip()
+        #rev_log = sp.check_output(['hg', 'log', '-r', revision]).strip()
         rev_date = sp.check_output(['hg', 'log', '-r', revision, '--template', '{date|isodate}']).split()[0]
     except sp.CalledProcessError:
         raise ValueError("Invalid revision '{}', or invalid Mercurial repository: '{}'".format(revision, repo_dir))
@@ -964,8 +963,8 @@ def piecewise_on_subdomains(mesh, mesh_function, fun_vals):
     V = df.FunctionSpace(mesh, 'DG', 0)
     f = df.Function(V)
 
-    help = np.asarray(mesh_function.array() - 1, dtype=np.int32)
-    f.vector()[:] = np.choose(help, fun_vals)
+    a = np.asarray(mesh_function.array() - 1, dtype=np.int32)
+    f.vector()[:] = np.choose(a, fun_vals)
     return f
 
 
