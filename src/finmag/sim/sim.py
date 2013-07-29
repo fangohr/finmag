@@ -872,7 +872,7 @@ class Simulation(object):
         basename = os.path.join(tmpdir, 'paraview_scene_{}'.format(self.name))
         self.save_vtk(filename=basename + '.pvd')
         try:
-           return render_paraview_scene(basename + '000000.vtu', **kwargs)
+            return render_paraview_scene(basename + '000000.vtu', **kwargs)
         finally:
             shutil.rmtree(tmpdir)
 
