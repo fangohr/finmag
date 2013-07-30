@@ -1,4 +1,6 @@
+from __future__ import division
 import os
+import math
 import shutil
 import inspect
 import logging
@@ -150,6 +152,45 @@ class Simulation(object):
     def __get_m(self):
         """The unit magnetisation"""
         return self.llg.m
+
+    def initialise_vortex(self, vortex_core_radius):
+        """
+        Initialise the magnetisation to a pattern that resembles a vortex state.
+        This can be used as an initial guess for the magnetisation, which should
+        then be relaxed to actually obtain the true vortex pattern (in case it is
+        energetically stable).
+
+        The vortex core centre is placed at the sample centre (which is the point
+        where each coordinate lies exactly in the middle between the minimum and
+        maximum coordinate for each component). The magnetisation pattern is such
+        that m_z=1 in the vortex core centre (which, and it falls off in a radially
+        symmetric way until m_z=0 at a distance `vortex_core_radius` from the centre.
+
+        """
+        coords = np.array(self.mesh.coordinates())
+        center = 0.5 * (coords.min(axis=0) + coords.max(axis=0))
+        #sample_radius = max([np.linalg.norm(v) for v in (coords - center)])  # maximum distance from center to any mesh point
+        #if vortex_core_radius > sample_radius:
+        #    raise ValueError("Vortex core radius must be smaller than sample radius. "
+        #                     "Got: vortex_core_radius={}, sample radius={}".format(vortex_core_radius, sample_radius))
+
+        def fun_m_init((x, y, z)):
+            xc = x - center[0]
+            yc = y - center[1]
+            phi = math.atan2(yc, xc)
+            rho = math.sqrt(xc**2 + yc**2)
+            if rho < vortex_core_radius:
+                theta = 2 * math.atan(rho / vortex_core_radius)
+                mz = math.cos(theta)
+                mx = -math.sin(theta) * math.sin(phi)
+                my = math.sin(theta) * math.cos(phi)
+            else:
+                mz = 0
+                mx = -math.sin(phi)
+                my = math.cos(phi)
+            return (mx, my, mz)
+
+        self.set_m(fun_m_init)
 
     def set_m(self, value, **kwargs):
         """
