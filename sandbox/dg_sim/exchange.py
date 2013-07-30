@@ -42,6 +42,28 @@ def copy_petsc_to_csr(pm):
     return matrix.tocsr()
 
 
+
+def sparse_inverse(A):
+    """
+    suppose A is a sparse matrix and its inverse also a sparse matrix.
+    seems it's already speedup a bit, but we should be able to do better later.
+    """
+    solve = spl.factorized(A)
+    n = A.shape[0]
+    assert (n == A.shape[1])
+    mat = sp.lil_matrix((n,n))
+    
+    for i in range(n):
+        b = np.zeros(n)
+        b[i] = 1
+        x = solve(b)
+        ids =  np.nonzero(x)[0]
+        
+        for id in ids:
+            mat[id,i] = x[id]
+
+    return mat.tocsc()
+
 def generate_nonzero_ids(mat):
     """
     generate the nonzero column ids for every rows
@@ -113,8 +135,8 @@ def assemble_1d(mesh):
     h = df.CellSize(mesh)
     h_avg = (h('+') + h('-'))/2
     
-    u = df.TrialFunction(V)
-    v = df.TestFunction(V)
+    u = df.TrialFunction(DG)
+    v = df.TestFunction(DG)
     
     a = 1.0/h_avg*df.dot(df.jump(v, n), df.jump(u, n))*df.dS
     
@@ -278,9 +300,18 @@ def assemble_3d(mesh):
                 mat[i,idy[i]]=0
                 mat[idy[i],i]=0
                 mat[i,i] = 1
-    
-    A_inv = spl.inv(mat.tocsc())
+                
+    import time
+    t1=time.time()
+    A_inv=sparse_inverse(mat.tocsc())
+    #t2=time.time()
+    #print 't2-t1 (s)',t2-t1
+    #A_inv = spl.inv(mat.tocsc())
+    #t3=time.time()
+    #print 't3-t2 (s)',t3-t2
     K3 = A_inv * mat_K.tocsr()
+    
+
     
     K3 = K3.tolil()
     idy=generate_nonzero_ids(K3)
