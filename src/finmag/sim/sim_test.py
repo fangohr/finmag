@@ -9,6 +9,7 @@ from finmag import sim_with, Simulation, set_logging_level
 from finmag.example import barmini
 from math import sqrt, cos, sin, pi
 from finmag.util.helpers import assert_number_of_files, vector_valued_function, logging_status_str
+from finmag.util.meshes import cylinder
 from finmag.sim import sim_helpers
 from finmag.energies import Zeeman, TimeZeeman, Exchange, UniaxialAnisotropy
 from finmag.util.fileio import Tablereader
@@ -855,3 +856,32 @@ def test_schedule_render_scene(tmpdir):
             'barmini_scene_000001.png',
             'barmini_scene_000002.png',
             'barmini_scene_000003.png'])
+
+
+def test_sim_initialise_vortex(tmpdir, debug=False):
+    """
+    Call sim.initialise_vortex() for a cylindrical sample and a cuboid.
+    If debug==True, a snapshots is saved for each of them for visual
+    inspection.
+    """
+    os.chdir(str(tmpdir))
+    mesh = cylinder(r=30, h=5, maxh=3.0)
+    sim = sim_with(mesh, Ms=8e6, m_init=[1, 0, 0], unit_length=1e-9)
+
+    sim.initialise_vortex(vortex_core_radius=20)
+    if debug:
+        sim.save_vtk('disk_with_vortex.pvd')
+        sim.render_scene(outfile='disk_with_vortex.png')
+
+    # Vortex core is actually bigger than the sample but this shouldn't matter
+    sim.initialise_vortex(vortex_core_radius=40)
+    if debug:
+        sim.save_vtk('disk_with_vortex2.pvd')
+        sim.render_scene(outfile='disk_with_vortex2.png')
+
+    # Try a non-cylindrical sample, too
+    sim = barmini()
+    sim.initialise_vortex(vortex_core_radius=5)
+    if debug:
+        sim.save_vtk('barmini_with_vortex.pvd')
+        sim.render_scene(outfile='barmini_with_vortex.png')
