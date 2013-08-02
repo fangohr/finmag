@@ -11,12 +11,25 @@ import matplotlib.pyplot as plt
 
 
 class PeriodicBoundary1(df.SubDomain):
-    
+    def __init__(self, mesh):
+        super(PeriodicBoundary1, self).__init__()
+
+        self.mesh = mesh
+        
+        self.dim=self.mesh.topology().dim()
+
     def inside(self, x, on_boundary):
         return df.near(x[0],0) and on_boundary
 
     def map(self, x, y):
         y[0] = x[0] - 1.0
+        
+        if self.dim > 1:
+            y[1] = x[1]
+        if self.dim > 2:
+            y[2] = x[2]
+        
+        print x,y
 
 
 
@@ -68,8 +81,12 @@ def plot_m(mesh,m,xs,m_an,m2,name):
 
 
 if __name__ == "__main__":
-   
     
+    mesh = df.UnitSquareMesh(1,1)
+    mesh = df.BoxMesh(0,0,0,1,1,1,1,1,2) 
+    S=df.FunctionSpace(mesh, "Lagrange", 1, constrained_domain=PeriodicBoundary1(mesh))
+
+    """
     mesh = df.UnitIntervalMesh(10) 
     S = df.FunctionSpace(mesh, "Lagrange", 1)
 
@@ -84,7 +101,7 @@ if __name__ == "__main__":
     xs=mesh.coordinates().flatten()
     m_an=-(2*np.pi)**2*np.cos(2*np.pi*xs)
     plot_m(mesh,M.vector().array(),xs,m_an,M2.vector().array(),'1d_cos.png')
-    
+    """
 
     
     
