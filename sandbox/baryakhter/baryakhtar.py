@@ -73,8 +73,9 @@ class LLB(object):
         u3 = df.TrialFunction(self.S3)
         v3 = df.TestFunction(self.S3)
         self.K = df.PETScMatrix()
-        df.assemble(df.inner(df.grad(u3),df.grad(v3))*df.dx, tensor=self.K)
+        df.assemble(1.0/self.unit_length**2*df.inner(df.grad(u3),df.grad(v3))*df.dx, tensor=self.K)
         self.H_laplace = df.PETScVector()
+        self.H_eff_vec = df.PETScVector(len(self.M))
         
         self.vol = df.assemble(df.dot(df.TestFunction(self.S3), df.Constant([1, 1, 1])) * df.dx).array()
        
@@ -170,13 +171,12 @@ class LLB(object):
             H_eff += interaction.compute_field()
         
         self.H_eff = H_eff
+        self.H_eff_vec.set_local(H_eff)
         
 
  
     def compute_laplace_effective_field(self):
-        #grad_u = df.project(df.grad(self._M))
-        #tmp=df.project(df.div(grad_u))
-        self.K.mult(self._M.vector(), self.H_laplace)
+        self.K.mult(self.H_eff_vec, self.H_laplace)
         return self.H_laplace.array()
        
             
@@ -206,8 +206,11 @@ class LLB(object):
         self.call_field_times+=1
         self.compute_effective_field()
         delta_Heff = self.compute_laplace_effective_field()
-        #print 'delta_Heff',delta_Heff
- 
+        #print self.H_eff
+        #print 'delta_Heff',self.H_eff*0.01-delta_Heff*self.beta_vec[0]
+        
+        
+        
         default_timer.start("sundials_rhs", self.__class__.__name__)
         # Use the same characteristic time as defined by c
         
