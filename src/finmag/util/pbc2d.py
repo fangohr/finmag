@@ -18,14 +18,13 @@ class PeriodicBoundary1D(df.SubDomain):
         return on_x 
 
     def map(self, x, y):
-        y[0] = x[0]
-        y[1] = x[1]
-        if self.dim == 3:
+        
+        y[0] = x[0] - self.width
+        
+        if self.dim > 1:
+            y[1] = x[1]
+        if self.dim > 2:
             y[2] = x[2]
-
-        if df.near(x[0],self.xmax):
-            y[0] = x[0] - self.width
-
 
     def find_mesh_info(self):
         xt=self.mesh.coordinates()
@@ -53,21 +52,22 @@ class PeriodicBoundary2D(df.SubDomain):
         self.find_mesh_info()
 
     def inside(self, x, on_boundary):
-        on_x = bool(df.near(x[0],self.xmin) and not df.near(x[1],self.ymax) and on_boundary)
-        on_y = bool(df.near(x[1],self.ymin) and not df.near(x[0],self.xmax) and on_boundary)
+        on_x = bool(df.near(x[0],self.xmin) and x[1]<self.ymax and on_boundary)
+        on_y = bool(df.near(x[1],self.ymin) and x[0]<self.xmax and on_boundary)
         return on_x or on_y
 
     def map(self, x, y):
-        y[0] = x[0]
-        y[1] = x[1]
+        y[0] = x[0] - self.width
+        y[1] = x[1] - self.height
+        
         if self.dim == 3:
             y[2] = x[2]
 
-        if df.near(x[0],self.xmax):
-            y[0] = x[0] - self.width
+        if df.near(x[0],self.xmax) and x[1] < self.ymax:
+            y[1] = x[1]
 
-        if df.near(x[1],self.ymax):
-            y[1] = x[1] - self.height
+        if df.near(x[1],self.ymax) and x[0] < self.xmax:
+            y[0] = x[0]
 
     def find_mesh_info(self):
         xt=self.mesh.coordinates()

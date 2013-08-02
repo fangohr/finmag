@@ -13,21 +13,25 @@ import matplotlib.pyplot as plt
 class PeriodicBoundary2D(df.SubDomain):
 
     def inside(self, x, on_boundary):
-        
-        on_x = bool(df.near(x[0],0) and not df.near(x[1],1.0) and on_boundary)
-        on_y = bool(df.near(x[1],0) and not df.near(x[0],1.0) and on_boundary)
-        
+                
+        on_x = bool(df.near(x[0],0) and x[1]<1.0 and on_boundary)
+        on_y = bool(df.near(x[1],0) and x[0]<1.0 and on_boundary)
+         
         return on_x or on_y   
     
 
     def map(self, x, y):
-        y[0] = x[0]
-        y[1] = x[1]
-        if df.near(x[0],1):
-            y[0] = x[0] - 1
+        y[0] = x[0] - 1.0
+        y[1] = x[1] - 1.0
         
-        if df.near(x[1],1):
-            y[1] = x[1] - 1.0
+        if df.near(x[0],1) and x[1]<1.0:
+            y[1] = x[1]
+        
+        if df.near(x[1],1) and x[0]<1.0:
+            y[0] = x[0]
+
+        y[2]=x[2]
+        print x,y
         
         
         
@@ -66,10 +70,12 @@ def periodic_exchange(mesh,m):
 if __name__ == "__main__":
    
     
-    mesh = df.UnitSquareMesh(3,2) 
+    #mesh = df.UnitSquareMesh(4,4)
+    mesh = df.BoxMesh(0,0,0,1,1,1,2,2,1) 
     S = df.FunctionSpace(mesh, "Lagrange", 1)
+    S2 = df.FunctionSpace(mesh, "Lagrange", 1, constrained_domain=PeriodicBoundary2D())
     
-    
+    """
     expr = df.Expression('cos(2*pi*x[0])')
     M = df.interpolate(expr, S)
     df.plot(M)
@@ -82,7 +88,7 @@ if __name__ == "__main__":
     print exchange(mesh,M.vector().array())
     print '='*100
     print periodic_exchange(mesh,M2.vector().array())
-    
+    """
     
     
     
