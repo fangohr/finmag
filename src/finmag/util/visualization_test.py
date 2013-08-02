@@ -19,7 +19,7 @@ def test_render_paraview_scene(tmpdir):
 
     # Check whether 'xpra' is installed
     try:
-        subprocess.check_call(['xpra', 'list'])
+        subprocess.check_call(['xpra', '--version'])
     except OSError:
         finmag.logger.error("Could not find the 'xpra' executable, but it is needed to run this test. "
                             "Please install it using: 'sudo apt-get install xpra' (on Debian/Ubuntu-based systems).")
