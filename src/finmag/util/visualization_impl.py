@@ -55,6 +55,31 @@ def find_valid_X_display(displays_to_try=xrange(100)):
     return None
 
 
+def find_unused_X_display(displays_to_try=xrange(100)):
+    """
+    Sequentially checks all X displays in the given list (default: 0 through 99)
+    and returns the number of the first unused display that is found. Returns None
+    if no unused display could be found.
+
+    *Arguments*
+
+    displays_to_try:  list of displays to search (default: [0, ..., 99])
+
+    """
+    logger.debug("Looking for unused X display.")
+    for display in displays_to_try:
+        logger.debug("Trying display :{}".format(display))
+        try:
+            sp.check_output(['xdpyinfo', '-display', ':{}'.format(display)], stderr=sp.STDOUT)
+            # This display is already in used since the command finished successfully
+            logger.debug("Display :{} is already in use.".format(display))
+        except sp.CalledProcessError:
+            logger.debug("Found unused display :{}".format(display))
+            return display
+    logger.debug("No unused display found.")
+    return None
+
+
 class ColorMap(object):
     def __init__(self, color_space, rgb_points, nan_color):
         self.color_space = color_space
