@@ -57,8 +57,8 @@ def plot_m(mesh,xs,m_an,f_dg,f_cg,name='compare.pdf'):
     dg=[]
     cg=[]
     for x in xs:
-        dg.append(f_dg(x,0.25, 0.25)[2])
-        cg.append(f_cg(x,0.25, 0.25)[2])
+        dg.append(f_dg(x,0.25,0.25)[2])
+        cg.append(f_cg(x,0.25,0.25)[2])
     plt.plot(xs,dg,'.-',label='dg')
     plt.plot(xs,cg,'^-',label='cg')
     plt.xlabel('x')
@@ -69,8 +69,8 @@ def plot_m(mesh,xs,m_an,f_dg,f_cg,name='compare.pdf'):
  
 def map_dg2cg(mesh, fun_dg):
     
-    CG = df.VectorFunctionSpace(mesh, 'CG', 1)
-    DG = df.VectorFunctionSpace(mesh, 'DG', 0)
+    CG = df.VectorFunctionSpace(mesh, 'CG', 1, dim=3)
+    DG = df.VectorFunctionSpace(mesh, 'DG', 0, dim=3)
     fun_cg = df.Function(CG)
     
     u = df.TrialFunction(DG)
@@ -127,15 +127,14 @@ if __name__ == "__main__2":
 
 
 if __name__ == "__main__":
-    #mesh = df.IntervalMesh(5, 0, 2*np.pi)
-    mesh = df.BoxMesh(0,0,0,2*np.pi,1,1,40, 1, 1)
+    #mesh = df.IntervalMesh(10, 0, 2*np.pi)
+    #mesh = df.BoxMesh(0,0,0,2*np.pi,1,1,40, 1, 1)
     #mesh = df.RectangleMesh(0,0,2*np.pi,1,10,1)
     
     mesh = box(0,0,0,2*np.pi,0.5,0.5, maxh=0.2) 
+    #mesh = box(0,0,0,2*np.pi,0.5,0.5, maxh=0.3) 
 
-    n = mesh.num_vertices()
-    rand = np.random.random((n,3))*0.01
-    mesh.coordinates()[:]+= rand
+
     df.plot(mesh)
     df.interactive()
     DG = df.VectorFunctionSpace(mesh, "DG", 0, dim=3)
