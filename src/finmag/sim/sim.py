@@ -175,7 +175,8 @@ class Simulation(object):
         #    raise ValueError("Vortex core radius must be smaller than sample radius. "
         #                     "Got: vortex_core_radius={}, sample radius={}".format(vortex_core_radius, sample_radius))
 
-        def fun_m_init((x, y, z)):
+        def fun_m_init(pos):
+            (x, y, z) = pos
             xc = x - center[0]
             yc = y - center[1]
             phi = math.atan2(yc, xc)
