@@ -60,7 +60,8 @@ def render_paraview_scene(
     palette='screen',
     trim_border=True,
     diffuse_color=None,
-    debugging=False):
+    debugging=False,
+    use_display=None):
 
     # Convert color_by_axis to integer and store the name separately
     try:
@@ -135,8 +136,11 @@ def render_paraview_scene(
 
     # Execute the script in a separate process
     curdir_bak = os.getcwd()
+    display_bak = os.environ['DISPLAY']
     try:
         os.chdir(tmpdir)
+        if use_display is not None:
+            os.environ['DISPLAY'] = ':{}'.format(use_display)
         sp.check_output(['python', 'render_scene.py'], stderr=sp.STDOUT)
     except sp.CalledProcessError as ex:
         logger.error("Could not render Paraview scene. The error message was: {}".format(ex.output))
@@ -149,6 +153,7 @@ def render_paraview_scene(
         else:
             shutil.rmtree(tmpdir)
         os.chdir(curdir_bak)  # change back into the original directory
+        os.environ['DISPLAY'] = display_bak
 
     try:
         image = IPython.core.display.Image(filename=outfile)
