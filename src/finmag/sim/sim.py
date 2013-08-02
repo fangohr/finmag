@@ -162,8 +162,9 @@ class Simulation(object):
 
         The vortex core centre is placed at the sample centre (which is the point
         where each coordinate lies exactly in the middle between the minimum and
-        maximum coordinate for each component). The magnetisation pattern is such
-        that m_z=1 in the vortex core centre (which, and it falls off in a radially
+        maximum coordinate for each component) and the vortex lies in the x/y-plane
+        (i.e. the magnetisation is constant in z-direction). The magnetisation pattern
+        is such that m_z=1 in the vortex core centre, and it falls off in a radially
         symmetric way until m_z=0 at a distance `vortex_core_radius` from the centre.
 
         """
