@@ -136,7 +136,10 @@ def render_paraview_scene(
 
     # Execute the script in a separate process
     curdir_bak = os.getcwd()
-    display_bak = os.environ['DISPLAY']
+    try:
+        display_bak = os.environ['DISPLAY']
+    except KeyError:
+        display_bak = None
     try:
         os.chdir(tmpdir)
         if use_display is not None:
@@ -153,7 +156,8 @@ def render_paraview_scene(
         else:
             shutil.rmtree(tmpdir)
         os.chdir(curdir_bak)  # change back into the original directory
-        os.environ['DISPLAY'] = display_bak
+        if display_bak is not None:
+            os.environ['DISPLAY'] = display_bak
 
     try:
         image = IPython.core.display.Image(filename=outfile)
