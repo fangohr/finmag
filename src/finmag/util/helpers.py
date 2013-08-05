@@ -1288,7 +1288,8 @@ def plot_ndt_columns(ndt_file, columns=['m_x', 'm_y', 'm_z'], outfile=None, titl
 def vec2str(a, fmt='{}'):
     """
     Convert a 3-sequence (e.g. a numpy array) to a string, optionally
-    with some formatting options.
+    with some formatting options. The argument `a` is also allowed to
+    have the value `None`, in which case the string 'None' is returned.
 
     Examples:
 
@@ -1298,7 +1299,11 @@ def vec2str(a, fmt='{}'):
        vec2str(a, fmt='{:.2f}')  -->  (1.00, 200.00, 30000.00)
 
     """
-    return ("({fmt}, {fmt}, {fmt})".format(fmt=fmt)).format(a[0], a[1], a[2])
+    if a is None:
+        res = 'None'
+    else:
+       res = ("({fmt}, {fmt}, {fmt})".format(fmt=fmt)).format(a[0], a[1], a[2])
+    return res
 
 
 def vortex(r, center, right_handed=True):
