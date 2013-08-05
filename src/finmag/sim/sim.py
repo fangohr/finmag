@@ -339,8 +339,12 @@ class Simulation(object):
         """
         Convenience function to set the external field.
         """
-        H = self.get_interaction("Zeeman")
-        H.set_value(H_ext)
+        try:
+            H = self.get_interaction("Zeeman")
+            H.set_value(H_ext)
+        except ValueError:
+            H = Zeeman(H_ext)
+            self.add(H)
 
     def switch_off_H_ext(self, remove_interaction=True):
         """
