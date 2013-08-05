@@ -1284,6 +1284,7 @@ def plot_ndt_columns(ndt_file, columns=['m_x', 'm_y', 'm_z'], outfile=None, titl
         fig.savefig(outfile)
     return fig
 
+
 def vec2str(a, fmt='{}'):
     """
     Convert a 3-sequence (e.g. a numpy array) to a string, optionally
@@ -1298,3 +1299,41 @@ def vec2str(a, fmt='{}'):
 
     """
     return ("({fmt}, {fmt}, {fmt})".format(fmt=fmt)).format(a[0], a[1], a[2])
+
+
+def vortex(r, center, right_handed=True):
+    """
+    Returns a function f: (x,y,z) -> m representing a vortex magnetisation pattern
+    where the vortex lies in the x/y-plane (i.e. the magnetisation is constant along
+    the z-direction), the vortex core is centered around the point `center` and the
+    vortex core has radius `r`. More precisely, m_z=1 at the vortex core center and
+    m_z falls off in a radially symmetric way until m_z=0 at a distance `r` from the
+    center. If `right_handed` is True then the vortex curls counterclockwise around
+    the z-axis, otherwise clockwise. It should be noted that the returned function `f`
+    only represents an approximation to a true vortex state, so this can be used to
+    initialise the magnetisation in a simulation which is then relaxed.
+
+    Note that both `r` and the coordinates of `center` should be given in mesh
+    coordinates, not in metres.
+
+    """
+    def f((x, y, z)):
+        xc = x - center[0]
+        yc = y - center[1]
+        phi = math.atan2(yc, xc)
+        rho = math.sqrt(xc**2 + yc**2)
+        if rho < r:
+            theta = 2 * math.atan(rho / r)
+            mz = math.cos(theta)
+            mx = -math.sin(theta) * math.sin(phi)
+            my = math.sin(theta) * math.cos(phi)
+        else:
+            mz = 0
+            mx = -math.sin(phi)
+            my = math.cos(phi)
+        if not right_handed:
+            mx = -mx
+            my = -my
+        return (mx, my, mz)
+
+    return f
