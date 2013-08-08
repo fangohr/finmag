@@ -17,3 +17,8 @@ SOURCES = nvector_serial_custom_malloc.c sundials_math.c
 
 nvector_serial_custom_malloc.so : $(SOURCES) $(DEPS)
 	gcc $(SOURCES) $(CFLAGS) -shared -o ../../../../src/finmag/native/lib$@
+
+# This target can be used to print Makefile variables (such as PROJECT_DIR)
+# from the command line, for example by saying 'make print-PROJECT_DIR'.
+print-%:
+	@echo $($*)
