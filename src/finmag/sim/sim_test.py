@@ -857,7 +857,7 @@ def test_schedule_render_scene(tmpdir):
 
     # Save the magnetisation using the default filename
     sim.schedule('render_scene', every=1e-11, filename='barmini_scene.png')
-    sim.run_until(4.5e-11)
+    sim.run_until(3.5e-11)
     assert(sorted(glob('barmini_scene_[0-9]*.png')) ==
            ['barmini_scene_000000.png',
             'barmini_scene_000001.png',
@@ -865,7 +865,7 @@ def test_schedule_render_scene(tmpdir):
             'barmini_scene_000003.png'])
 
 
-def test_sim_initialise_vortex(tmpdir, debug=True):
+def test_sim_initialise_vortex(tmpdir, debug=False):
     """
     Call sim.initialise_vortex() for a cylindrical sample and a cuboid.
     If debug==True, a snapshots is saved for each of them for visual
