@@ -10,7 +10,11 @@
 
 set -o errexit
 
-TKTCLVERSION=8.6
+TKTCLVERSION=8.5
+
+OOMMFCODE=oommf12a4pre-20100719bis
+OOMMFCODE=oommf12a5rc-20120928
+OOMMFCODETARBALL=$OOMMFCODE.tar.gz
 
 # Install prerequisites if needed
 PKGS="tk$TKTCLVERSION-dev tcl$TKTCLVERSION-dev"
@@ -41,12 +45,15 @@ fi
 
 # download and extract oommf
 cd $OOMMF_PREFIX
-if [ ! -e "oommf12a4pre-20100719bis.tar.gz" ]
+if [ ! -e "$OOMMFCODETARBALL" ]
+#if [ ! -e "oommf12a5rc-20120928.tar.gz" ]
 then
-    wget http://math.nist.gov/oommf/snapshot/oommf12a4pre-20100719bis.tar.gz
+    #wget http://math.nist.gov/oommf/snapshot/$OOMMFCODETARBALL
+    wget http://math.nist.gov/oommf/dist/$OOMMFCODETARBALL
 fi
-tar -xzf oommf12a4pre-20100719bis.tar.gz
-mv oommf12a4pre-20100719bis oommf
+tar -xzf $OOMMFCODETARBALL
+#mv $OOMMFCODE oommf
+mv oommf-1.2a5 oommf
 cd oommf
 
 # install oommf
