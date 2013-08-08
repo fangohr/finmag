@@ -462,9 +462,10 @@ def export_normal_mode_animation(npy_files, outfilename, mesh, t_step, k, scalin
         mesh = df.Mesh(mesh)
 
     N = len(files)  # number of timesteps
-    num_nodes = len(mesh.coordinates())
+    num_nodes = mesh.num_vertices()
 
-    # Read in the magnetisation dynamics
+    # Read in the magnetisation dynamics from each .npy file and store
+    # it as successive time steps in the array 'signal'.
     signal = np.empty([N, 3*num_nodes])
     for (i, filename) in enumerate(files):
         signal[i, :] = np.load(filename)
@@ -478,7 +479,8 @@ def export_normal_mode_animation(npy_files, outfilename, mesh, t_step, k, scalin
     logger.debug("Computing the Fourier transform took {:.2g} seconds".format(t1-t0))
     fft_freqs = np.fft.fftfreq(N, d=t_step)[:len(fft_vals)]
 
-    # Only keep the k-th Fourier coefficient for each location
+    # Only keep the k-th Fourier coefficient at each mesh node
+    # (combined in the array A_k).
     A_k = fft_vals[k]
     abs_k = np.abs(A_k)[np.newaxis, :]
     theta_k = np.angle(A_k)[np.newaxis, :]
@@ -512,13 +514,14 @@ def export_normal_mode_animation(npy_files, outfilename, mesh, t_step, k, scalin
     else:
         signal_normal_mode = signal.mean(axis=0).T + scaling / maxval * signal_filtered
 
-    # XXX TODO: Check for an existing file and ask for confirmation whether it should be overwritten!
+    # XXX TODO: Should check for an existing file and ask for confirmation whether it should be overwritten!
     logger.debug("Saving normal mode animation to file '{}'.".format(outfilename))
     t0 = time()
     f = df.File(outfilename, 'compressed')
     # XXX TODO: We need the strange temporary array 'aaa' here because
-    #           if we write the values directly into func.vector() then
-    #           they end up being different (as illustrated below)!!!
+    #           if we write the values directly into func.vector()
+    #           then they end up being different (as illustrated in
+    #           the code that is commented out)!!!
     aaa = np.empty(3*num_nodes)
     #for i in xrange(len(ts)):
     #for i in xrange(20):
