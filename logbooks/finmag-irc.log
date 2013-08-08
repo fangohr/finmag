@@ -6779,3 +6779,8 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-07-26 16:42:11 max_albert: Disclaimer: I haven't tried it. It looks like a neat idea, but not sure how good/useful it is in practice.
 2013-08-07 09:47:30 fangohr-adium: Greetings all, I am in the office working through email and admin - but if you have any questions, do come along. (I'll come over at some point as well.)
 2013-08-07 09:47:50 fangohr-adium: I suggested to meet with everybody on Friday, I may have to move this to Thursday (tomorrow). Will email later if so.
+2013-08-08 10:04:46 fangohr-adium: Good Morning, anybody up for a group meeting? Mark has brought something to eat ;-)
+2013-08-08 10:06:06 max_albert: Yes!
+2013-08-08 14:15:16 max_albert: Strange... Something is wrong with our slow tests on aleph0.
+2013-08-08 14:15:21 max_albert: The past six runs all started hanging at some point inside the standard problem 4.
+2013-08-08 14:16:02 max_albert: No idea why... (Running them 'locally' outside of Jenkins seems to work fine.)
