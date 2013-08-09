@@ -107,25 +107,24 @@ def get_debian_package_version(pkg_name):
     import subprocess
     import re
 
-    supported_distros = ['Ubuntu', 'Debian', 'Linux Mint']
-    linux_issue = get_linux_issue()
     version = None
 
-    if any([d in linux_issue for d in supported_distros]):
-        try:
-            with open(os.devnull, 'w') as devnull:
-                output = subprocess.check_output(['dpkg', '-s', pkg_name], stderr=devnull)
-            lines = output.split('\n')
-            version_str = filter(lambda s: s.startswith('Version'), lines)[0]
-            version = re.sub('Version: ', '', version_str)
-        except subprocess.CalledProcessError:
-            pass
-    else:
-        raise NotImplementedError(
-            "This does not seem to be a supported (i.e. Debian-derived) "
-            "Linux distribution. Cannot determine version of package "
-            "'{}'".format(pkg_name))
+    try:
+        with open(os.devnull, 'w') as devnull:
+            output = subprocess.check_output(['dpkg', '-s', pkg_name], stderr=devnull)
+    except subprocess.CalledProcessError as e:
+        logger.error("Could not determine version of {} using dpkg.".format(pkg_name))
+        if e.returncode == 1:
+            logger.error("The package {} is probably not installed.".format(pkg_name))
+        elif e.returncode == 127:
+            logger.error("This does not seem to be a debian-derived Linux distribution.")
+        else:
+            logger.error("Can't determine cause of error.")
+        raise
 
+    lines = output.split('\n')
+    version_str = filter(lambda s: s.startswith('Version'), lines)[0]
+    version = re.sub('Version: ', '', version_str)
     return version
 
 
