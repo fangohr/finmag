@@ -35,7 +35,7 @@ $(MODULE_DIR)/sundials.so : src/sundials/py_sundials_module.o src/util/np_array.
 sundials_LDFLAGS =-lsundials_cvode -llapack $(SUNDIALS_NVECTOR_SO) -lboost_thread
 
 $(MODULE_DIR)/llg.so : src/llg/py_llg_module.o src/util/np_array.o src/util/swig_dolfin.o src/llg/bem.o src/llg/llg.o src/llg/heun.o
-llg_LDFLAGS = -ldolfin
+llg_LDFLAGS = -L$(HOME)/Work/FEniCS/lib -ldolfin
 
 $(MODULE_DIR)/llb.so : src/llb/py_llb_module.o src/util/np_array.o src/llb/material.o src/llb/llb.o src/llb/sllg.o src/llb/mt19937.o
 
@@ -48,7 +48,7 @@ $(MODULE_DIR)/treecode_bem.so: src/treecode_bem/treecode_bem_I.c  src/treecode_b
 	install src/treecode_bem/treecode_bem.so ../src/finmag/native
 
 $(UNIT_TEST_BINARY) : tests/run_ci_tests.o src/util/np_array.o src/sundials/tests/sundials_tests.o src/sundials/numpy_malloc.o 
-run_ci_tests_LDFLAGS=-lboost_prg_exec_monitor /usr/lib/libboost_unit_test_framework.a $(SUNDIALS_NVECTOR_SO) -ldolfin
+run_ci_tests_LDFLAGS=-lboost_prg_exec_monitor /usr/lib/libboost_unit_test_framework.a $(SUNDIALS_NVECTOR_SO) -L$(HOME)/Work/FEniCS/lib -ldolfin
 
 #######################################
 # Other variables
