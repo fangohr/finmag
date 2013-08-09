@@ -35,7 +35,7 @@ class VTKSaver(object):
             else:
                 raise IOError(
                     "Aborting snapshot creation. File already exists and "
-                    "would overwritten: '{}' (use overwrite=True if this"
+                    "would overwritten: '{}' (use overwrite=True if this "
                     "is what you want)".format(self.filename))
 
 
