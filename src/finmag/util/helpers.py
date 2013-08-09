@@ -1280,9 +1280,17 @@ def plot_ndt_columns(ndt_file, columns=['m_x', 'm_y', 'm_z'], outfile=None, titl
         ax.set_title(title)
     if show_legend:
         ax.legend(loc=legend_loc)
+
+    ymin, ymax = ax.get_ylim()
+    ax.set_ylim(ymin - 0.05, ymax + 0.05)
+
     if outfile:
         fig.savefig(outfile)
     return fig
+
+
+# Alias for the function above with a slightly easier to remember name
+plot_dynamics = plot_ndt_columns
 
 
 def vec2str(a, fmt='{}'):
