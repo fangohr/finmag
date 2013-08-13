@@ -395,5 +395,29 @@ def test_plot_ndt_columns(tmpdir):
     assert(os.path.exists('barmini.png'))
 
 
+def test_crossprod():
+    """
+    Compute the cross product of two functions f and g numerically
+    using `helpers.crossprod` and compare with the analytical
+    expression.
+
+    """
+    xmin = ymin = zmin = -2
+    xmax = ymax = zmax = 3
+    nx = ny = nz = 10
+    mesh = df.BoxMesh(xmin, ymin, zmin, xmax, ymax, zmax, nx, ny, nz)
+    V = df.VectorFunctionSpace(mesh, 'CG', 1, dim=3)
+    f = df.interpolate(df.Expression(['x[0]', 'x[1]', '0']), V)
+    g = df.interpolate(df.Expression(['-x[1]', 'x[0]', 'x[2]']), V)
+    h = df.interpolate(df.Expression(['x[1]*x[2]', '-x[0]*x[2]', 'x[0]*x[0]+x[1]*x[1]']), V)
+
+    a = f.vector().array()
+    b = g.vector().array()
+    c = h.vector().array()
+
+    axb = crossprod(a, b)
+    assert(np.allclose(axb, c))
+
+
 if __name__ == '__main__':
     test_scalar_valued_dg_function()
