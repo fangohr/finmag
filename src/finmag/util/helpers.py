@@ -244,6 +244,25 @@ def norm(vs):
         return np.linalg.norm(vs)
     return np.sqrt(np.add.reduce(vs*vs, axis=1))
 
+
+def crossprod(v, w):
+    """
+    Compute the point-wise cross product of two (3D) vector fields on a mesh.
+
+    The arguments `v` and `w` should be numpy.arrays representing
+    dolfin functions, i.e. they should be of the form [x0, ..., xn,
+    y0, ..., yn, z0, ..., zn]. The return value is again a numpy array
+    of the same form.
+
+    """
+    if df.parameters.reorder_dofs_serial != False:
+        raise RuntimeError("Please ensure that df.parameters.reorder_dofs_serial is set to False.")
+    assert(v.ndim == 1 and w.ndim == 1)
+    a = v.reshape(3, -1)
+    b = w.reshape(3, -1)
+    return np.cross(a, b, axisa=0, axisb=0, axisc=0).reshape(-1)
+
+
 def fnormalise(arr):
     """
     Returns a normalised copy of the vectors in arr.
