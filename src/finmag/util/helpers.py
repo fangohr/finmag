@@ -1312,24 +1312,40 @@ def plot_ndt_columns(ndt_file, columns=['m_x', 'm_y', 'm_z'], outfile=None, titl
 plot_dynamics = plot_ndt_columns
 
 
-def vec2str(a, fmt='{}'):
+def vec2str(a, fmt='{}', delims='()', sep=', '):
     """
     Convert a 3-sequence (e.g. a numpy array) to a string, optionally
     with some formatting options. The argument `a` is also allowed to
     have the value `None`, in which case the string 'None' is returned.
 
+    The argument `delims` can be used to specify different left and right
+    delimiters (default: opening and closing parentheses). If only one
+    delimiter is given (e.g. "|") then this is used both as left and right
+    delimiter. If `delims` is empty, no delimiters will be used.
+
     Examples:
 
        a = numpy.array([1, 200, 30000])
        vec2str(a)  -->  (1, 200, 30000)
-       vec2str(a, fmt='{:.3g})  -->  (1, 200, 30000)
+       vec2str(a, fmt='{:.3g}')  -->  (1, 200, 3e+04)
        vec2str(a, fmt='{:.2f}')  -->  (1.00, 200.00, 30000.00)
+       vec2str(a, delims='[]')  -->  [1, 200, 30000]
+       vec2str(a, delims='|', sep='__')  -->  |1__200__30000|
+       vec2str(a, delims='', sep=' - ')  -->  1 - 200 - 30000
 
     """
     if a is None:
         res = 'None'
     else:
-       res = ("({fmt}, {fmt}, {fmt})".format(fmt=fmt)).format(a[0], a[1], a[2])
+       try:
+           ldelim = delims[0]
+       except IndexError:
+           ldelim = ""
+       try:
+           rdelim = delims[1]
+       except IndexError:
+           rdelim = ldelim
+       res = ("{ldelim}{fmt}{sep}{fmt}{sep}{fmt}{rdelim}".format(fmt=fmt, ldelim=ldelim, rdelim=rdelim, sep=sep)).format(a[0], a[1], a[2])
     return res
 
 
