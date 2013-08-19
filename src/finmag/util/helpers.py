@@ -696,6 +696,32 @@ def vector_valued_dg_function(value, mesh_or_space, normalise=False):
     return fun
 
 
+def value_for_region(mesh, value, region, default_value=0, project_to_CG=False):
+    """
+    Returns a df.Function where `value` has been set for cells which correspond
+    to the region number given in `region`. The value for other cells will
+    be set to `default_value`.
+
+    The returned function will be defined on the cells unless project_to_CG
+    has been set to True (then it will be defined on the nodes).
+
+    """
+    DG0 = df.FunctionSpace(mesh, "DG", 0)
+    f = df.Function(DG0)
+
+    regions = mesh.domains().cell_domains()
+    for cell_no, region_no in enumerate(regions.array()):
+        # this assumes that the dofs are ordered like the regions information
+        if region_no == region:
+            f.vector()[cell_no] = value
+        else:
+            f.vector()[cell_no] = default_value
+
+    if project_to_CG == True:
+        return df.project(f, df.FunctionSpace(mesh, "CG", 1))
+    return f
+
+
 def mark_subdomain_by_function(fun,mesh_or_space,domain_index,subdomains):
     """
     Mark the subdomains with given index if user provide a region by function, such as
