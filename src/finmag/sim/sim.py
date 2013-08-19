@@ -560,24 +560,14 @@ class Simulation(object):
 
     def set_alpha(self, value):
         """
-        Set the damping constant to the supplied number, df.Constant,
-        df.Expression, df.Function or numpy.array.
+        Set the damping constant.
+
+        `value` can have any of the forms accepted by the function
+        'finmag.util.helpers.scalar_valued_function' (see its
+        docstring for details).
 
         """
-        alpha = None
-        if isinstance(value, df.Function):
-            # expecting value defined on a df.FunctionSpace(mesh, "CG", 1)
-            alpha = value 
-        elif isinstance(value, df.Expression):
-            alpha = df.project(value, self.S1)
-        else:
-            alpha = df.Function(self.S1)
-            if isinstance(value, df.Constant):
-                alpha.assign(value)
-            elif isinstance(value, np.ndarray):
-                alpha.vector()[:] = value  # copy
-            else:
-                alpha.assign(df.Constant(value))
+        alpha = helpers.scalar_valued_function(value, self.S1)
         self.llg.alpha_vec = alpha.vector().array()
         # TODO: this should be the default behaviour for sim.alpha = ...
 
