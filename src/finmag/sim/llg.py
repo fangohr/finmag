@@ -100,6 +100,9 @@ class LLG(object):
         self._alpha_mult = multiplicator
         self.alpha = baseline_alpha
 
+        # TODO: What I'd like to have is self.alpha be the df.Function.
+        # The attributes _alpha_mult, _alpha and alpha_vec could then be deleted.
+
     @property
     def alpha(self):
         """The damping factor :math:`\\alpha`."""

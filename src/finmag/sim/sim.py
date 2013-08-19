@@ -558,6 +558,29 @@ class Simulation(object):
     def spatial_alpha(self, alpha, multiplicator):
         self.llg.spatially_varying_alpha(alpha, multiplicator)
 
+    def set_alpha(self, value):
+        """
+        Set the damping constant to the supplied number, df.Constant,
+        df.Expression, df.Function or numpy.array.
+
+        """
+        alpha = None
+        if isinstance(value, df.Function):
+            # expecting value defined on a df.FunctionSpace(mesh, "CG", 1)
+            alpha = value 
+        elif isinstance(value, df.Expression):
+            alpha = df.project(value, self.S1)
+        else:
+            alpha = df.Function(self.S1)
+            if isinstance(value, df.Constant):
+                alpha.assign(value)
+            elif isinstance(value, np.ndarray):
+                alpha.vector()[:] = value  # copy
+            else:
+                alpha.assign(df.Constant(value))
+        self.llg.alpha_vec = alpha.vector().array()
+        # TODO: this should be the default behaviour for sim.alpha = ...
+
     def __get_gamma(self):
         return self.llg.gamma
 
