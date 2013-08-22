@@ -395,6 +395,12 @@ def test_plot_ndt_columns(tmpdir):
     assert(os.path.exists('barmini.png'))
 
 
+def test_vortex_functions():
+    f = vortex_feldtkeller(15.0, center=(0, 0, 0), right_handed=True)
+    f((0, 0, 0))
+    f((1, 2, 3))
+
+
 def test_crossprod():
     """
     Compute the cross product of two functions f and g numerically

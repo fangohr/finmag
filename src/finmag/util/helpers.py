@@ -1,3 +1,4 @@
+from __future__ import division
 from datetime import datetime
 from glob import glob
 from finmag.util.fileio import Tablereader
@@ -1375,7 +1376,7 @@ def vec2str(a, fmt='{}', delims='()', sep=', '):
     return res
 
 
-def vortex(r, center, right_handed=True):
+def vortex_simple(r, center, right_handed=True):
     """
     Returns a function f: (x,y,z) -> m representing a vortex magnetisation pattern
     where the vortex lies in the x/y-plane (i.e. the magnetisation is constant along
@@ -1405,6 +1406,44 @@ def vortex(r, center, right_handed=True):
             mz = 0
             mx = -math.sin(phi)
             my = math.cos(phi)
+        if not right_handed:
+            mx = -mx
+            my = -my
+        return (mx, my, mz)
+
+    return f
+
+
+def vortex_feldtkeller(beta, center, right_handed=True):
+    """
+    Returns a function f: (x,y,z) -> m representing a vortex
+    magnetisation pattern where the vortex lies in the x/y-plane (i.e.
+    the magnetisation is constant along the z-direction), the vortex
+    core is centered around the point `center` and the m_z component
+    falls off exponentially as given by the following formula, which
+    is a result by Feldtkeller and Thomas [1].:
+
+        m_z = exp(-2*r^2/beta^2).
+
+    Here `r` is the distance from the vortex core centre and `beta` is
+    a parameter, whose value is taken from the first argument to this
+    function.
+
+    [1] E. Feldtkeller and H. Thomas, "Struktur und Energie von
+        Blochlinien in Duennen Ferromagnetischen Schichten", Phys.
+        Kondens. Materie 8, 8 (1965).
+
+    """
+    beta_sq = beta**2
+
+    def f((x, y, z)):
+        xc = x - center[0]
+        yc = y - center[1]
+        phi = math.atan2(yc, xc)
+        r_sq = xc**2 + yc**2
+        mz = math.exp(-2.0 * r_sq / beta_sq)
+        mx = -math.sqrt(1 - mz*mz) * math.sin(phi)
+        my = math.sqrt(1 - mz*mz) * math.cos(phi)
         if not right_handed:
             mx = -mx
             my = -my
