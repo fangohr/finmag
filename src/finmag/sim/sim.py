@@ -153,7 +153,7 @@ class Simulation(object):
         """The unit magnetisation"""
         return self.llg.m
 
-    def initialise_vortex(self, r, center=None, right_handed=True):
+    def initialise_vortex(self, type, center=None, **kwargs):
         """
         Initialise the magnetisation to a pattern that resembles a vortex state.
         This can be used as an initial guess for the magnetisation, which should
@@ -165,8 +165,25 @@ class Simulation(object):
         the minimum and maximum coordinate for each component). The vortex lies in
         the x/y-plane (i.e. the magnetisation is constant in z-direction). The
         magnetisation pattern is such that m_z=1 in the vortex core centre, and it
-        falls off in a radially symmetric way until m_z=0 at a distance `r` from the
-        centre.
+        falls off in a radially symmetric way.
+
+        The exact vortex profile depends on the argument `type`. Currently the
+        following types are supported:
+
+           'simple':
+
+               m_z falls off in a radially symmetric way until m_z=0 at
+               distance `r` from the centre.
+
+           'feldtkeller':
+
+               m_z follows the profile m_z = exp(-2*r^2/beta^2), where `beta`
+               is a user-specified parameter.
+
+        All provided keyword arguments are passed on to the helper functions which
+        implement the vortex profiles (e.g., finmag.util.helpers.vortex_simple or
+        finmag.util.helpers.vortex_feldtkeller). See their documentation for details
+        and other allowed arguments.
 
         """
         coords = np.array(self.mesh.coordinates())
@@ -177,7 +194,16 @@ class Simulation(object):
         #    raise ValueError("Vortex core radius must be smaller than sample radius. "
         #                     "Got: radius={}, sample radius={}".format(radius, sample_radius))
 
-        fun_m_init = helpers.vortex(r, center, right_handed=right_handed)
+        vortex_funcs = {
+            'simple': helpers.vortex_simple,
+            'feldtkeller': helpers.vortex_feldtkeller,
+            }
+
+        try:
+            fun_m_init = vortex_funcs[type](center=center, **kwargs)
+        except KeyError:
+            raise ValueError("Vortex type must be one of {}. Got: {}".format(vortex_funcs.keys(), type))
+
         self.set_m(fun_m_init)
 
     def set_m(self, value, **kwargs):

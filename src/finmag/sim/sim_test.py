@@ -875,20 +875,23 @@ def test_sim_initialise_vortex(tmpdir, debug=False):
     mesh = cylinder(r=30, h=5, maxh=3.0)
     sim = sim_with(mesh, Ms=8e6, m_init=[1, 0, 0], unit_length=1e-9)
 
-    sim.initialise_vortex(r=20)
-    if debug:
-        sim.save_vtk('disk_with_vortex.pvd')
-        sim.render_scene(outfile='disk_with_vortex.png')
+    def save_debugging_output(sim, basename):
+        if debug:
+            sim.save_vtk(basename + '.pvd')
+            sim.render_scene(outfile=basename + '.png')
+
+    sim.initialise_vortex('simple', r=20)
+    save_debugging_output(sim, 'disk_with_simple_vortex')
 
     # Vortex core is actually bigger than the sample but this shouldn't matter.
-    sim.initialise_vortex(r=40)
-    if debug:
-        sim.save_vtk('disk_with_vortex2.pvd')
-        sim.render_scene(outfile='disk_with_vortex2.png')
+    sim.initialise_vortex('simple', r=40)
+    save_debugging_output(sim, 'disk_with_simple_vortex2')
+
+    # Try the Feldtkeller profile
+    sim.initialise_vortex('feldtkeller', beta=15, center=(0, 0, 2), right_handed=False)
+    save_debugging_output(sim, 'disk_with_feldtkeller_vortex')
 
     # Try a non-cylindrical sample, too, and optional arguments.
     sim = barmini()
-    sim.initialise_vortex(r=5, center=(2, 0, 0), right_handed=False)
-    if debug:
-        sim.save_vtk('barmini_with_vortex.pvd')
-        sim.render_scene(outfile='barmini_with_vortex.png')
+    sim.initialise_vortex('simple', r=5, center=(2, 0, 0), right_handed=False)
+    save_debugging_output(sim, 'barmini_with_vortex')
