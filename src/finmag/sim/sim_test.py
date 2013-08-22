@@ -865,7 +865,7 @@ def test_schedule_render_scene(tmpdir):
             'barmini_scene_000003.png'])
 
 
-def test_sim_initialise_vortex(tmpdir, debug=False):
+def test_sim_initialise_vortex(tmpdir, debug=True):
     """
     Call sim.initialise_vortex() for a cylindrical sample and a cuboid.
     If debug==True, a snapshots is saved for each of them for visual
@@ -888,7 +888,7 @@ def test_sim_initialise_vortex(tmpdir, debug=False):
     save_debugging_output(sim, 'disk_with_simple_vortex2')
 
     # Try the Feldtkeller profile
-    sim.initialise_vortex('feldtkeller', beta=15, center=(0, 0, 2), right_handed=False)
+    sim.initialise_vortex('feldtkeller', beta=15, center=(10, 0, 0), right_handed=False)
     save_debugging_output(sim, 'disk_with_feldtkeller_vortex')
 
     # Try a non-cylindrical sample, too, and optional arguments.

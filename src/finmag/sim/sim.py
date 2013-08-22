@@ -189,18 +189,17 @@ class Simulation(object):
         coords = np.array(self.mesh.coordinates())
         if center == None:
             center = 0.5 * (coords.min(axis=0) + coords.max(axis=0))
-        #sample_radius = max([np.linalg.norm(v) for v in (coords - center)])  # maximum distance from center to any mesh point
-        #if radius > sample_radius:
-        #    raise ValueError("Vortex core radius must be smaller than sample radius. "
-        #                     "Got: radius={}, sample radius={}".format(radius, sample_radius))
 
         vortex_funcs = {
             'simple': helpers.vortex_simple,
             'feldtkeller': helpers.vortex_feldtkeller,
             }
 
+        kwargs['center'] = center
+
         try:
-            fun_m_init = vortex_funcs[type](center=center, **kwargs)
+            fun_m_init = vortex_funcs[type](**kwargs)
+            log.debug("Initialising vortex of type '{}' with arguments: {}".format(type, kwargs))
         except KeyError:
             raise ValueError("Vortex type must be one of {}. Got: {}".format(vortex_funcs.keys(), type))
 
