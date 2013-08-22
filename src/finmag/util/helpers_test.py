@@ -396,9 +396,22 @@ def test_plot_ndt_columns(tmpdir):
 
 
 def test_vortex_functions():
-    f = vortex_feldtkeller(15.0, center=(0, 0, 0), right_handed=True)
-    f((0, 0, 0))
-    f((1, 2, 3))
+    f_simple = vortex_simple(r=20, center=(0, 0, 1), right_handed=True)
+    f_feldtkeller = vortex_feldtkeller(beta=15, center=(0, 0, 1), right_handed=False)
+
+    funcs = [f_simple, f_feldtkeller]
+    pts = [(0, 0, 0), (1, 0, 0), (-1, 0, 0), (12, 42, 23)]
+
+    # Try calling the functions with a few points to see if we get any errors
+    for f in funcs:
+        for pt in pts:
+            f(pt)
+
+    # Final sanity check: f_simple should yield zero z-coordinate
+    # outside the vortex core radius, and the magnetisation should
+    # curl around the center.
+    assert(np.allclose(f_simple((21, 0, 0)), [0, 1, 0]))
+    assert(np.allclose(f_simple((-16, 16, 20)), [-1./np.sqrt(2), -1./np.sqrt(2), 0]))
 
 
 def test_crossprod():
