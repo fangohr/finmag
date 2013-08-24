@@ -87,11 +87,19 @@ def FFT_m(ndt_filename, t_step, t_ini=None, t_end=None, subtract_values=None):
     f_my = InterpolatedUnivariateSpline(ts, my)
     f_mz = InterpolatedUnivariateSpline(ts, mz)
 
-    # Sample the interpolating functions at regularly spaced time steps
     ts_resampled = np.arange(t_ini, t_end, t_step)
-    mx_resampled = [f_mx(t) for t in ts_resampled]
-    my_resampled = [f_my(t) for t in ts_resampled]
-    mz_resampled = [f_mz(t) for t in ts_resampled]
+    if (ts.shape == ts_resampled.shape and np.allclose(ts, ts_resampled, atol=0, rtol=1e-8)):
+        logger.debug("Data already given at the specified regular intervals. No need to resample.")
+        mx_resampled = mx
+        my_resampled = my
+        mz_resampled = mz
+    else:
+        logger.debug("Resampling data at specified timesteps.")
+
+        # Sample the interpolating functions at regularly spaced time steps
+        mx_resampled = [f_mx(t) for t in ts_resampled]
+        my_resampled = [f_my(t) for t in ts_resampled]
+        mz_resampled = [f_mz(t) for t in ts_resampled]
 
     fft_mx = abs(np.fft.rfft(mx_resampled))
     fft_my = abs(np.fft.rfft(my_resampled))
