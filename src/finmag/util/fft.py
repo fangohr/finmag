@@ -17,9 +17,12 @@ logger = logging.getLogger("finmag")
 def FFT_m(ndt_filename, t_step, t_ini=None, t_end=None, subtract_values=None):
     """
     Given a data file (e.g. in .ndt format), compute and return the
-    (absolute values of the) Fourier transforms of the x, y and z
-    components of the magnetisation m. If necessary, the data is
-    first resampled at regularly spaced intervals.
+    frequencies and the (absolute values of the) Fourier transforms
+    of the x, y and z components of the magnetisation m. If necessary,
+    the data is first resampled at regularly spaced intervals. Note
+    that this performs a real-valued Fourier transform (i.e. it uses
+    np.fft.rfft internally) and thus does not return Fourier coefficients
+    belonging to negative frequencies.
 
     *Arguments*
 
@@ -52,6 +55,13 @@ def FFT_m(ndt_filename, t_step, t_ini=None, t_end=None, subtract_values=None):
         subtract from mx, my and mz, respectively. If 'first' or
         'average' is given, the first/average values of mx, my, mz are
         determined and subtracted.
+
+
+    *Returns*
+
+    Returns a tuple (fft_freqs, fft_mx, fft_my, fft_mz), where fft_mx,
+    fft_my, fft_mz are the Fourier transform of the x/y/z-component of
+    the magnetisation and fft_freqs are the corresponding frequencies.
 
     """
     # Load the data; extract time steps and magnetisation
