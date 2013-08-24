@@ -18,8 +18,8 @@ def FFT_m(ndt_filename, t_step, t_ini=None, t_end=None, subtract_values=None):
     """
     Given a data file (e.g. in .ndt format), compute and return the
     (absolute values of the) Fourier transforms of the x, y and z
-    components of the magnetisation m. The data is first resampled at
-    regularly spaced intervals.
+    components of the magnetisation m. If necessary, the data is
+    first resampled at regularly spaced intervals.
 
     *Arguments*
 
