@@ -99,7 +99,7 @@ def FFT_m(ndt_filename, t_step, t_ini=None, t_end=None, subtract_values=None):
 
     ts_resampled = np.arange(t_ini, t_end, t_step)
     if (ts.shape == ts_resampled.shape and np.allclose(ts, ts_resampled, atol=0, rtol=1e-8)):
-        logger.debug("Data already given at the specified regular intervals. No need to resample.")
+        #logger.debug("Data already given at the specified regular intervals. No need to resample.")
         mx_resampled = mx
         my_resampled = my
         mz_resampled = mz
