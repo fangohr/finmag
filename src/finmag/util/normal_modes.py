@@ -211,6 +211,8 @@ def compute_eigenproblem_matrix(sim, frequency_unit=1e9, filename=None):
             logger.debug("Processing row {}/{}  (time taken so far: {:.2f} seconds)".format(i, 2*n, df.toc()))
         D[:,i] = linearised_llg_times_tangential_vector(w)
 
+    logger.debug("Eigenproblem matrix D occupies {:.2f} MB of memory.".format(D.nbytes / 1024.**2))
+
     if filename != None:
         logger.info("Saving eigenproblem matrix to file '{}'".format(filename))
         np.save(filename, D)
@@ -223,6 +225,7 @@ def compute_eigenproblem_matrix(sim, frequency_unit=1e9, filename=None):
 
 
 def compute_normal_modes(D, n_values=10, sigma=0., tol=1e-8, which='LM'):
+    logger.debug("Solving eigenproblem. This may take a while...".format(df.toc()))
     df.tic()
     omega, w = scipy.sparse.linalg.eigs(D, n_values, which=which, sigma=0., tol=tol, return_eigenvectors=True)
     logger.debug("Computing the eigenvalues and eigenvectors took {:.2f} seconds".format(df.toc()))
