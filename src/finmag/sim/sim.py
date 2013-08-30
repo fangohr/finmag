@@ -1,6 +1,7 @@
 from __future__ import division
 import os
 import math
+import types
 import shutil
 import inspect
 import logging
@@ -14,7 +15,7 @@ from finmag.util.meshes import mesh_info, mesh_volume
 from finmag.util.fileio import Tablewriter, FieldSaver
 from finmag.util import helpers
 from finmag.util.vtk_saver import VTKSaver
-from finmag.util.fft import plot_FFT_m
+from finmag.util.fft import FFT_m, plot_FFT_m, find_peak_near_frequency, _plot_spectrum, export_normal_mode_animation
 from finmag.util.helpers import plot_dynamics
 from finmag.sim.hysteresis import hysteresis as hyst, hysteresis_loop as hyst_loop
 from finmag.sim import sim_helpers
@@ -1034,6 +1035,10 @@ class NormalModeSimulation(Simulation):
         super(NormalModeSimulation, self).__init__(*args, **kwargs)
         self.m_snapshots_filename = None
         self.t_step_ndt = None
+        self.fft_freqs = None
+        self.fft_mx = None
+        self.fft_my = None
+        self.fft_mz = None
 
     def run_ringdown(self, t_end, alpha, H_ext, reset_time=True, clear_schedule=True,
                      save_ndt_every=None, save_vtk_every=None, save_m_every=None,
@@ -1076,6 +1081,7 @@ class NormalModeSimulation(Simulation):
         self.set_H_ext(H_ext)
         if save_ndt_every:
             self.schedule('save_ndt', every=save_ndt_every)
+            log.debug("Setting self.t_step_ndt = {}".format(save_ndt_every))
             self.t_step_ndt = save_ndt_every
 
         def schedule_saving(which, every, filename, default_suffix):
@@ -1101,7 +1107,27 @@ class NormalModeSimulation(Simulation):
 
         self.run_until(t_end)
 
-    def plot_spectrum(self, use_averaged_m=True, **kwargs):
+    def _compute_spectrum(self, use_averaged_m=True, **kwargs):
+        if not use_averaged_m:
+           raise NotImplementedError("Plotting the spectrum using the spatially resolved magnetisation is not supported yet.")
+
+        # Derive a sensible value of t_step: uses the value in **kwargs
+        # if one was provided, or the one specified during a previous
+        # call of run_ringdown() otherwise.
+        t_step = kwargs.pop('t_step', None) or self.t_step_ndt
+        if t_step == None:
+            raise ValueError(
+                "No sensible default for 't_step' could be determined. "
+                "(It seems like 'run_ringdown()' was not run, or it was not "
+                "given a value for its argument 'save_ndt_every'). Please "
+                "provide the argument 't_step' explicitly.")
+
+        self.fft_freqs, self.fft_mx, self.fft_my, self.fft_mz = \
+            FFT_m(self.ndtfilename, t_step=t_step, **kwargs)
+
+    def plot_spectrum(self, t_step=None, t_ini=None, t_end=None, subtract_values='average',
+                      components="xyz", xlim=None, ticks=5, figsize=None, title="",
+                      outfilename=None, use_averaged_m=True):
         """
         Plot the normal mode spectrum of the simulation.
 
@@ -1125,19 +1151,124 @@ class NormalModeSimulation(Simulation):
         if not use_averaged_m:
            raise NotImplementedError("Plotting the spectrum using the spatially resolved magnetisation is not supported yet.") 
 
-        t_step = kwargs.pop('t_step', self.t_step_ndt)
-        if t_step == None:
-            raise ValueError(
-                "No sensible default for 't_step' could be determined. "
-                "(It seems like 'run_ringdown()' was not run, or it was not "
-                "given a value for its argument 'save_ndt_every'). Please "
-                "provide the argument 't_step' explicitly.")
+        self._compute_spectrum(t_step=t_step, t_ini=t_ini, t_end=t_end, subtract_values=subtract_values, use_averaged_m=use_averaged_m)
 
-        if not kwargs.has_key('ndt_filename'):
-            ndt_filename = self.ndtfilename
-        log.debug("Reading averaged magnetisation from file: '{}'".format(ndt_filename))
-        fig = plot_FFT_m(ndt_filename, t_step, **kwargs)
+        fig = _plot_spectrum(self.fft_freqs, self.fft_mx, self.fft_my, self.fft_mz,
+                             components=components, xlim=xlim, ticks=ticks,
+                             figsize=figsize, title=title, outfilename=outfilename)
         return fig
+
+    def _get_fft_component(self, component):
+        try:
+            res = {'x': self.fft_mx,
+                   'y': self.fft_my,
+                   'z': self.fft_mz
+                   }[component]
+        except KeyError:
+            raise ValueError("Argument `component` must be exactly one of 'x', 'y', 'z'.")
+        return res
+
+    def find_peak_near_frequency(self, f_approx, component):
+        """
+        XXX TODO: Write me!
+        """
+        if f_approx is None:
+            raise TypeError("Argument 'f_approx' must not be None.")
+        if not isinstance(component, types.StringTypes):
+            raise TypeError("Argument 'component' must be of type string.")
+
+        fft_cmpnt = self._get_fft_component(component)
+        if self.fft_freqs == None or self.fft_mx == None or \
+                self.fft_my ==None or self.fft_mz == None:
+            self._compute_spectrum(self, use_averaged_m=True)
+
+        return find_peak_near_frequency(f_approx, self.fft_freqs, fft_cmpnt)
+
+    def plot_peak_near_frequency(self, f_approx, component, **kwargs):
+        """
+        Convenience function for debugging which first finds a peak
+        near the given frequency and then plots the spectrum together
+        with a point marking the detected peak.
+
+        Internally, this calls `sim.find_peak_near_frequency` and
+        `sim.plot_spectrum()` and accepts all keyword arguments
+        supported by these two functions.
+
+        """
+        peak_idx, peak_freq = self.find_peak_near_frequency(f_approx, component)
+        fft_cmpnt = self._get_fft_component(component)
+        fig = self.plot_spectrum(**kwargs)
+        fig.gca().plot(self.fft_freqs[peak_idx] / 1e9, fft_cmpnt[peak_idx], 'bo')
+        return fig
+
+    def export_normal_mode_animation(self, npy_files, peak_idx=None,
+                                     f_approx=None, component=None,
+                                     outfilename=None, directory='',
+                                     t_step=None, scaling=0.2, dm_only=False,
+                                     num_cycles=5, num_frames_per_cycle=10):
+        """
+        XXX TODO: Complete me!
+
+        If the exact index of the peak in the FFT array is known, e.g.
+        because it was computed via `sim.find_peak_near_frequency()`,
+        then this can be given as the argument `peak_index`.
+        Otherwise, `component` and `f_approx` must be given and these
+        are passed on to `sim.find_peak_near_frequency()` to determine
+        the exact location of the peak.
+
+        The output filename can be specified via `outfilename`. If
+        this is None then a filename of the form
+        'normal_mode_N__xx.xxx_GHz.pvd' is generated automatically,
+        where N is the peak index and xx.xx is the frequency of the
+        peak (as returned by `sim.find_peak_near_frequency()`).
+
+
+        *Arguments:
+
+        peak_idx:  int
+
+           The index of the peak in the FFT spectrum. This can be
+           obtained by calling `sim.find_peak_near_frequency()`.
+           Alternatively, if the arguments `f_approx` and `component`
+           are given then this index is computed automatically. Note
+           that if `peak_idx` is given the other two arguments are
+           ignored.
+
+        f_approx:  float
+
+           Find and animate peak closest to this frequency.
+
+        component:  str
+
+           The component in which a peak should be searched. This is
+           ignored if peak_idx is given.
+
+        """
+        if self.fft_freqs == None or self.fft_mx == None or \
+                self.fft_my ==None or self.fft_mz == None:
+            self._compute_spectrum(self, use_averaged_m=True)
+
+        if peak_idx is None:
+            if f_approx is None or component is None:
+                raise ValueError("Please specify either 'peak_idx' or both 'f_approx' and 'component'.")
+            peak_idx, peak_freq = self.find_peak_near_frequency(f_approx, component)
+        else:
+            if f_approx != None:
+                log.warning("Ignoring argument 'f_approx' because 'peak_idx' was specified.")
+            if component != None:
+                log.warning("Ignoring argument 'component' because 'peak_idx' was specified.")
+            peak_freq = self.fft_freqs[peak_idx]
+
+        if outfilename is None:
+            if directory is '':
+                raise ValueError("Please specify at least one of the arguments 'outfilename' or 'directory'")
+            outfilename = 'normal_mode_{}__{:.2f}_GHz.pvd'.format(peak_idx, peak_freq / 1e9)
+        outfilename = os.path.join(directory, outfilename)
+
+        t_step = t_step or self.t_step_ndt
+        export_normal_mode_animation(npy_files, outfilename, self.mesh, t_step,
+                                     peak_idx, dm_only=dm_only, num_cycles=num_cycles,
+                                     num_frames_per_cycle=num_frames_per_cycle)
 
 
 def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sundials",
