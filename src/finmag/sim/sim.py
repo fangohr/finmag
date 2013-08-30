@@ -15,6 +15,7 @@ from finmag.util.fileio import Tablewriter, FieldSaver
 from finmag.util import helpers
 from finmag.util.vtk_saver import VTKSaver
 from finmag.util.fft import plot_FFT_m
+from finmag.util.helpers import plot_dynamics
 from finmag.sim.hysteresis import hysteresis as hyst, hysteresis_loop as hyst_loop
 from finmag.sim import sim_helpers
 from finmag.energies import Exchange, Zeeman, TimeZeeman, Demag, UniaxialAnisotropy, DMI
@@ -989,6 +990,12 @@ class Simulation(object):
         self.logging_handler.stream.close()
         log.removeHandler(self.logging_handler)
         self.logging_handler = None
+
+    def plot_dynamics(self, components='xyz', **kwargs):
+        ndt_file = kwargs.pop('ndt_file', self.ndtfilename)
+        if not os.path.exists(ndt_file):
+            raise RuntimeError("File was not found: '{}'. Did you forget to schedule saving the averages to a .ndt file before running the simulation?".format(ndt_file))
+        return plot_dynamics(ndt_file, components=components, **kwargs)
 
 
 class NormalModeSimulation(Simulation):
