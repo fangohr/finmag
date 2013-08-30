@@ -385,6 +385,30 @@ def cylinder(r, h, maxh, save_result=True, filename='', directory=''):
     return from_csg(csg_string, save_result=save_result, filename=filename, directory=directory)
 
 
+def nanodisk(d, h, maxh, save_result=True, filename='', directory=''):
+    """
+    This is almost exactly the same as `cylinder`, but the first
+    argument is the *diameter* of the disk, not the radius. This is
+    often more intuitive than specifying the radius.
+
+    *Arugments*
+
+    d:  disk diameter
+
+    h:  disk height (= thickness)
+
+    maxh:  mesh discretization
+
+    For the other keyword arguments, see the documentation of `cylinder`.
+
+    *Returns*
+
+    The mesh for a cylindrical nanodisk of the specified shape.
+
+    """
+    return cylinder(0.5 * d, h, maxh, save_result=save_result, filename=filename, directory=directory)
+
+
 def pair_of_disks(d1, d2, h1, h2, sep, theta, maxh, save_result=True, filename='', directory=''):
     """
     Return a dolfin mesh representing a pair of disks. The first disk
