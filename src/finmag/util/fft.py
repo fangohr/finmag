@@ -14,7 +14,7 @@ from numpy import sin, cos, pi
 logger = logging.getLogger("finmag")
 
 
-def FFT_m(ndt_filename, t_step, t_ini=None, t_end=None, subtract_values='average'):
+def FFT_m(ndt_filename, t_step=None, t_ini=None, t_end=None, subtract_values='average'):
     """
     Given a data file (e.g. in .ndt format), compute and return the
     frequencies and the (absolute values of the) Fourier transforms
@@ -33,6 +33,8 @@ def FFT_m(ndt_filename, t_step, t_ini=None, t_end=None, subtract_values='average
     t_step:
 
         Interval between consecutive time steps in the resampled data.
+        If the timesteps in the .ndt file are equidistantly spaced,
+        this distance is used as the default value.
 
     t_ini:
 
@@ -88,6 +90,12 @@ def FFT_m(ndt_filename, t_step, t_ini=None, t_end=None, subtract_values='average
         except:
             raise ValueError("Unsupported value for 'subtract_values': {}".format(subtract_values))
 
+    if t_step is None:
+        t_step = ts[1] - ts[0]
+        if not(np.allclose(t_step, np.diff(ts))):
+            raise ValueError("A value for t_step must be explicitly provided "
+                             "since timesteps in the file '{}' are not "
+                             "equidistantly spaced.".format(ndt_filename))
     f_sample = 1/t_step  # sampling frequency
     if t_ini is None: t_ini = ts[0]
     if t_end is None: t_end = ts[-1]
