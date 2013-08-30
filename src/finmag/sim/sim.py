@@ -14,6 +14,7 @@ from finmag.util.meshes import mesh_info, mesh_volume
 from finmag.util.fileio import Tablewriter, FieldSaver
 from finmag.util import helpers
 from finmag.util.vtk_saver import VTKSaver
+from finmag.util.fft import plot_FFT_m
 from finmag.sim.hysteresis import hysteresis as hyst, hysteresis_loop as hyst_loop
 from finmag.sim import sim_helpers
 from finmag.energies import Exchange, Zeeman, TimeZeeman, Demag, UniaxialAnisotropy, DMI
@@ -999,6 +1000,7 @@ class NormalModeSimulation(Simulation):
     def __init__(self, *args, **kwargs):
         super(NormalModeSimulation, self).__init__(*args, **kwargs)
         self.m_snapshots_filename = None
+        self.t_step_ndt = None
 
     def run_ringdown(self, t_end, alpha, H_ext, reset_time=True, clear_schedule=True,
                      save_ndt_every=None, save_vtk_every=None, save_m_every=None,
@@ -1037,6 +1039,7 @@ class NormalModeSimulation(Simulation):
         self.set_H_ext(H_ext)
         if save_ndt_every:
             self.schedule('save_ndt', every=save_ndt_every)
+            self.t_step_ndt = save_ndt_every
 
         def schedule_saving(which, every, filename, default_suffix):
             try:
@@ -1060,6 +1063,43 @@ class NormalModeSimulation(Simulation):
             schedule_saving('save_m', save_m_every, m_snapshots_filename, '_m.npy')
 
         self.run_until(t_end)
+
+    def plot_spectrum(self, use_averaged_m=True, **kwargs):
+        """
+        Plot the normal mode spectrum of the simulation.
+
+        This is a convenience wrapper around finmag.util.fft.plot_FFT_m
+        and accepts the same keyword arguments, but provides sensible
+        defaults for some of them so that it is more convenient to use.
+
+        For example, `ndt_filename` will be the simulation's .ndt file
+        by default, and t_step will be taken from the value of the
+        argument `save_ndt_every` when sim.run_ringdown() was run.
+
+        XXX TODO: currently only plotting the spectrum from the
+        averaged magnetisation is supported (which is used if
+        `use_averaged_m` is True). In the near future, the method by
+        McMichael and Stiles [1] which uses the spatially resolved
+        magnetisation will be the default.
+
+        [1] McMichael, Stiles, "Magnetic normal modes of nanoelements", J Appl Phys 97 (10), 10J901, 2005.
+
+        """
+        if not use_averaged_m:
+           raise NotImplementedError("Plotting the spectrum using the spatially resolved magnetisation is not supported yet.") 
+
+        t_step = kwargs.pop('t_step', self.t_step_ndt)
+        if t_step == None:
+            raise ValueError(
+                "No sensible default for 't_step' could be determined. "
+                "(It seems like 'run_ringdown()' was not run, or it was not "
+                "given a value for its argument 'save_ndt_every'). Please "
+                "provide the argument 't_step' explicitly.")
+
+        if not kwargs.has_key('ndt_filename'):
+            ndt_filename = self.ndtfilename
+        log.debug("Reading averaged magnetisation from file: '{}'".format(ndt_filename))
+        plot_FFT_m(ndt_filename, t_step, **kwargs)
 
 
 def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sundials",

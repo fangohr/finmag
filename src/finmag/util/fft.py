@@ -124,7 +124,7 @@ def FFT_m(ndt_filename, t_step, t_ini=None, t_end=None, subtract_values=None):
 
 
 def plot_FFT_m(ndt_filename, t_step, t_ini=None, t_end=None, subtract_values=None,
-               components="xyz", xlim=None, ticks=5, figsize=None):
+               components="xyz", xlim=None, ticks=5, figsize=None, outfilename=None):
     """
     Plot the frequency spectrum of the components of the magnetisation m.
 
@@ -135,6 +135,8 @@ def plot_FFT_m(ndt_filename, t_step, t_ini=None, t_end=None, subtract_values=Non
     to plot. Default: 'xyz'.
 
     Returns the matplotlib Figure instance containing the plot.
+
+    If `outfilename` is not None, it also saves the plot to the specified file.
     """
     if not set(components).issubset("xyz"):
         raise ValueError("Components must only contain 'x', 'y' and 'z'. "
@@ -159,6 +161,9 @@ def plot_FFT_m(ndt_filename, t_step, t_ini=None, t_end=None, subtract_values=Non
     ax.set_xlim(xlim)
     plt.legend()
     ax.grid()
+
+    if outfilename is not None:
+        fig.savefig(outfilename)
 
     return fig
 
