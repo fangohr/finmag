@@ -940,14 +940,15 @@ def test_NormalModeSimulation(tmpdir):
     sim = sim_for_normal_mode_simulation(mesh, Ms=8e5, A=13e-12, m_init=[1, 0, 0], alpha=1.0, unit_length=1e-9, H_ext=[1e5, 1e3, 0], name='sim')
     sim.relax(stopping_dmdt=10.0)
 
-    sim.run_ringdown(t_end=1e-12, alpha=0.01, H_ext=[1e5, 0, 0], reset_time=True, save_ndt_every=1e-13, save_m_every=1e-13, m_snapshots_filename='foobar/foo_m.npy')
+    t_step = 1e-13
+    sim.run_ringdown(t_end=1e-12, alpha=0.01, H_ext=[1e5, 0, 0], reset_time=True, save_ndt_every=t_step, save_m_every=t_step, m_snapshots_filename='foobar/foo_m.npy')
 
     assert(len(glob('foobar/foo_m*.npy')) == 11)
     f = Tablereader('sim.ndt')
     assert(np.allclose(f.timesteps(), np.linspace(0, 1e-12, 11), atol=0, rtol=1e-8))
 
     sim.reset_time(1.1e-12)  # hack to avoid a duplicate timestep at t=1e-12
-    sim.run_ringdown(t_end=2e-12, alpha=0.02, H_ext=[1e4, 0, 0], reset_time=False, save_ndt_every=1e-13, save_vtk_every=2e-13, vtk_snapshots_filename='baz/sim_m.pvd')
+    sim.run_ringdown(t_end=2e-12, alpha=0.02, H_ext=[1e4, 0, 0], reset_time=False, save_ndt_every=t_step, save_vtk_every=2*t_step, vtk_snapshots_filename='baz/sim_m.pvd')
     f.reload()
     assert(os.path.exists('baz/sim_m.pvd'))
     assert(len(glob('baz/sim_m*.vtu')) == 5)
@@ -958,6 +959,24 @@ def test_NormalModeSimulation(tmpdir):
     # sim.plot_spectrum(use_averaged_m=False)
     # sim.plot_spectrum(use_averaged_m=True, t_step=1.5e-12, subtract_values='first', figsize=(16, 6), outfilename='fft_m_spatially_resolved.png')
     assert(os.path.exists('fft_m.png'))
+
+    sim.plot_spectrum(t_step=t_step, outfilename='fft_m.png')
+
+    sim.find_peak_near_frequency(10e9, component='y')
+
+    sim.export_normal_mode_animation('foobar/foo_m*.npy', peak_idx=2,
+                                     outfilename='animations/foo_peak_idx_2.pvd',
+                                     num_cycles=1, num_frames_per_cycle=4)
+    sim.export_normal_mode_animation('foobar/foo_m*.npy', f_approx=0.0, component='y',
+                                     directory='animations', num_cycles=1, num_frames_per_cycle=4)
+    assert(os.path.exists('animations/foo_peak_idx_2.pvd'))
+    assert(len(glob('animations/foo_peak_idx_2*.vtu')) == 4)
+
+    # Either 'peak_idx' or both 'f_approx' and 'component' must be given
+    with pytest.raises(ValueError):
+        sim.export_normal_mode_animation('foobar/foo_m*.npy', f_approx=0)
+    with pytest.raises(ValueError):
+        sim.export_normal_mode_animation('foobar/foo_m*.npy', component='x')
 
     # Check that by default snapshots are not overwritten
     sim = sim_for_normal_mode_simulation(mesh, Ms=8e5, A=13e-12, m_init=[1, 0, 0], alpha=1.0, unit_length=1e-9, H_ext=[1e5, 1e3, 0], name='sim')
