@@ -1110,7 +1110,8 @@ class NormalModeSimulation(Simulation):
         if not kwargs.has_key('ndt_filename'):
             ndt_filename = self.ndtfilename
         log.debug("Reading averaged magnetisation from file: '{}'".format(ndt_filename))
-        plot_FFT_m(ndt_filename, t_step, **kwargs)
+        fig = plot_FFT_m(ndt_filename, t_step, **kwargs)
+        return fig
 
 
 def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sundials",
