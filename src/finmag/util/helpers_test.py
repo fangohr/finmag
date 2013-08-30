@@ -381,7 +381,25 @@ def test_binary_tarball_name(tmpdir):
     assert(binary_tarball_name(finmag_repo, revision='d330c151a7ce', suffix='_foobar') == expected_tarball_name)
 
 
-def test_plot_ndt_columns(tmpdir):
+def test_plot_ndt_columns_and_plot_dynamics(tmpdir):
+    """
+    Simply check that we can call the command `plot_ndt_columns` with some
+    """
+    os.chdir(str(tmpdir))
+    sim = barmini()
+    sim.schedule('save_ndt', every=1e-12)
+    sim.run_until(1e-11)
+    plot_ndt_columns('barmini.ndt', columns=['m_x', 'm_y', 'm_z', 'E_Demag', 'H_Exchange_x'],
+                     outfile='barmini.png', title="Some awesome title",
+                     show_legend=True, legend_loc='center', figsize=(10, 4))
+
+    plot_dynamics('barmini.ndt', components='xz', outfile='barmini2.png')
+
+    assert(os.path.exists('barmini.png'))
+    assert(os.path.exists('barmini2.png'))
+
+
+def test_plot_dynamics(tmpdir):
     """
     Simply check that we can call the command `plot_ndt_columns` with some
     """

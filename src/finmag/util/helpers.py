@@ -1335,8 +1335,19 @@ def plot_ndt_columns(ndt_file, columns=['m_x', 'm_y', 'm_z'], outfile=None, titl
     return fig
 
 
-# Alias for the function above with a slightly easier to remember name
-plot_dynamics = plot_ndt_columns
+def plot_dynamics(ndt_file, components='xyz', **kwargs):
+    """
+    Convenience wrapper around `plot_ndt_columns` with a slightly
+    easier to remember name. The main difference is that this function
+    can only plot the dynamics of the magnetisation, not other fields.
+
+    The magnetisation components to plot are specified in the argument
+    `components`. All other keyword arguments are the same as for
+    `plot_ndt_columns`.
+
+    """
+    columns = ['m_{}'.format(c) for c in components]
+    return plot_ndt_columns(ndt_file, columns=columns, **kwargs)
 
 
 def vec2str(a, fmt='{}', delims='()', sep=', '):
