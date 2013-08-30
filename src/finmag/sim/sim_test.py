@@ -943,5 +943,11 @@ def test_NormalModeSimulation(tmpdir):
     sim.plot_spectrum(use_averaged_m=True, t_step=1.5e-12, subtract_values='first', figsize=(16, 6), outfilename='fft_m.png')
     # sim.plot_spectrum(use_averaged_m=False)
     # sim.plot_spectrum(use_averaged_m=True, t_step=1.5e-12, subtract_values='first', figsize=(16, 6), outfilename='fft_m_spatially_resolved.png')
-
     assert(os.path.exists('fft_m.png'))
+
+    # Check that by default snapshots are not overwritten
+    sim = sim_for_normal_mode_simulation(mesh, Ms=8e5, A=13e-12, m_init=[1, 0, 0], alpha=1.0, unit_length=1e-9, H_ext=[1e5, 1e3, 0], name='sim')
+    with pytest.raises(IOError):
+        sim.run_ringdown(t_end=1e-12, alpha=0.02, H_ext=[1e4, 0, 0], save_vtk_every=2e-13, vtk_snapshots_filename='baz/sim_m.pvd')
+    with pytest.raises(IOError):
+        sim.run_ringdown(t_end=1e-12, alpha=0.02, H_ext=[1e4, 0, 0], save_m_every=2e-13, m_snapshots_filename='foobar/foo_m.npy')

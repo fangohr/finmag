@@ -1012,12 +1012,12 @@ class NormalModeSimulation(Simulation):
     def run_ringdown(self, t_end, alpha, H_ext, reset_time=True, clear_schedule=True,
                      save_ndt_every=None, save_vtk_every=None, save_m_every=None,
                      vtk_snapshots_filename=None, m_snapshots_filename=None,
-                     overwrite_existing_snapshots=True):
+                     overwrite=False):
         """
         Run the ringdown phase of a normal modes simulation, optionally saving
         averages, vtk snapshots and magnetisation snapshots to the respective
         .ndt, .pvd and .npy files. Note that by default existing snapshots will
-        be overwritten! Set `overwrite_existing_snapshots`=False to avoid this.
+        not be overwritten. Use `overwrite=True` to achieve this.
 
         This function essentially wraps up the re-setting of parameters such as
         the damping value, the external field and the scheduled saving of data
@@ -1061,7 +1061,7 @@ class NormalModeSimulation(Simulation):
                 dirname = os.curdir
                 basename = self.name + default_suffix
             outfilename = os.path.join(dirname, basename)
-            self.schedule(which, every=every, filename=outfilename, overwrite=overwrite_existing_snapshots)
+            self.schedule(which, every=every, filename=outfilename, overwrite=overwrite)
 
             if which == 'save_m':
                 # Store the filename so that we can later compute normal modes more conveniently
