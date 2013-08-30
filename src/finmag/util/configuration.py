@@ -96,4 +96,8 @@ maxBytes = 1
 
 # Useful logging level choices: [DEBUG, INFO, WARNING]
 console_logging_level = DEBUG
+
+# Set this to False to suppress the initial debugging messages
+# reporting the versions of various modules.
+display_module_versions_at_startup = True
 """
