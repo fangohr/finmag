@@ -329,6 +329,27 @@ class Simulation(object):
         """
         return self.llg.effective_field.total_energy()
 
+    def compute_energy(self, name):
+        """
+        Compute and return the energy contribution from a specific
+        interaction (Exchange, Demag, Zeeman, etc.).
+
+        *Arguments*
+
+        name:  string
+
+            The name of the interaction for which the energy should be
+            computed, or 'total' for the total energy present in the
+            simulation.
+
+        """
+        if name.lower() == 'total':
+            res = self.total_energy()
+        else:
+            interaction = self.get_interaction(name)
+            res = interaction.compute_energy()
+        return res
+
     def get_interaction(self, interaction_name):
         """
         Returns the interaction with the given name
