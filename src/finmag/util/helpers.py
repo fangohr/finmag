@@ -1414,6 +1414,66 @@ def vortex_simple(r, center, right_handed=True):
     return f
 
 
+def pairwise(iterable):
+    """
+    s -> (s0,s1), (s1,s2), (s2, s3), ...
+    """
+    a, b = itertools.tee(iterable)
+    next(b, None)
+    return itertools.izip(a, b)
+
+
+def apply_vertexwise(f, *args):
+    """
+    Apply the function f to the values of the given arguments
+    at each vertex separately and aggregate the result into a
+    new dolfin.Function.
+
+    *Arguments*
+
+    f :  callable
+
+        The function that is to be applied to the vertex values.
+
+    *args :  collection of dolfin.Functions
+
+        The fields
+
+    """
+    # XXX TODO: Some of this is horribly inefficient. Should clean it up...
+    mesh = args[0].function_space().mesh()
+    # XXX TODO: the following check(s) seems to fail even if the meshes are the same. How to do this properly in dolfin?
+    #assert(all((mesh == u.function_space().mesh() for u in args)))  # check that all meshes coincide
+    #assert(all(u.function_space().mesh() == u.function_space().mesh() for (u, v) in pairwise(args)))  # check that all meshes coincide
+
+    # Extract the array for each dolfin.Function
+    aa = [u.vector().array() for u in args]
+    #V = args[0].function_space()
+    #assert(all([V == a.function_space() for a in aa]))  # XXX TODO: how to deal with functions defined on different function spaces?!?
+
+    # Reshape each array according to the dimension of the VectorFunctionSpace
+    dims = [u.domain().geometric_dimension() for u in args]
+    aa_reshaped = [a.reshape(dim, -1).T for (a, dim) in itertools.izip(aa, dims)]
+
+    # Evaluate f on successive rows of the reshaped arrays
+    aa_evaluated = [f(*args) for args in itertools.izip(*aa_reshaped)]
+
+    #import ipdb; ipdb.set_trace()
+    try:
+        dim_out = len(aa_evaluated[0])
+    except TypeError:
+        dim_out = None
+
+    if dim_out is None:
+        W = df.FunctionSpace(mesh, 'CG', 1)
+    else:
+        assert(all(dim_out == len(x) for x in aa_evaluated))
+        W = df.VectorFunctionSpace(mesh, 'CG', 1, dim=dim_out)  # XXX TODO: should we use df.FunctionSpace if dim_out == 1 ?
+    res = df.Function(W)
+    res.vector().set_local(np.array(aa_evaluated).T.reshape(-1))
+    return res
+
+
 def vortex_feldtkeller(beta, center, right_handed=True):
     """
     Returns a function f: (x,y,z) -> m representing a vortex
