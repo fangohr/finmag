@@ -131,29 +131,14 @@ def FFT_m(ndt_filename, t_step=None, t_ini=None, t_end=None, subtract_values='av
     return rfft_freqs, fft_mx, fft_my, fft_mz
 
 
-def plot_FFT_m(ndt_filename, t_step, t_ini=None, t_end=None, subtract_values='average',
-               components="xyz", xlim=None, ticks=5, figsize=None, title="", outfilename=None):
+def _plot_spectrum(fft_freq, fft_mx, fft_my, fft_mz, components="xyz",
+                  xlim=None, ticks=5, figsize=None, title="", outfilename=None):
     """
-    Plot the frequency spectrum of the components of the magnetisation m.
+    Internal helper function to plot certain components of the
+    spectrum. This is only separated out from plot_FFT_m so that it
+    can be re-used elsewhere, e.g. in the NormalModeSimulation class.
 
-    The arguments `t_step`, `t_ini`, `t_end` and `subtract_values` have the
-    same meaning as in the function `FFT_m`.
-
-    `components` can be a string or a list containing the components
-    to plot. Default: 'xyz'.
-
-    The arguments `figsize` and `title` control the figure size and
-    plot title.
-
-    Returns the matplotlib Figure instance containing the plot. If
-    `outfilename` is not None, it also saves the plot to the specified
-    file.
     """
-    if not set(components).issubset("xyz"):
-        raise ValueError("Components must only contain 'x', 'y' and 'z'. "
-                         "Got: {}".format(components))
-
-    fft_freq, fft_mx, fft_my, fft_mz = FFT_m(ndt_filename, t_step, t_ini=t_ini, t_end=t_end, subtract_values=subtract_values)
     fft_freq_GHz = fft_freq / 1e9
     fig = plt.figure(figsize=figsize)
     ax = fig.gca()
@@ -180,6 +165,33 @@ def plot_FFT_m(ndt_filename, t_step, t_ini=None, t_end=None, subtract_values='av
         fig.savefig(outfilename)
 
     return fig
+
+
+def plot_FFT_m(ndt_filename, t_step, t_ini=None, t_end=None, subtract_values='average',
+               components="xyz", xlim=None, ticks=5, figsize=None, title="", outfilename=None):
+    """
+    Plot the frequency spectrum of the components of the magnetisation m.
+
+    The arguments `t_step`, `t_ini`, `t_end` and `subtract_values` have the
+    same meaning as in the function `FFT_m`.
+
+    `components` can be a string or a list containing the components
+    to plot. Default: 'xyz'.
+
+    The arguments `figsize` and `title` control the figure size and
+    plot title.
+
+    Returns the matplotlib Figure instance containing the plot. If
+    `outfilename` is not None, it also saves the plot to the specified
+    file.
+    """
+    if not set(components).issubset("xyz"):
+        raise ValueError("Components must only contain 'x', 'y' and 'z'. "
+                         "Got: {}".format(components))
+
+    fft_freq, fft_mx, fft_my, fft_mz = FFT_m(ndt_filename, t_step, t_ini=t_ini, t_end=t_end, subtract_values=subtract_values)
+
+    return _plot_spectrum(fft_freq, fft_mx, fft_my, fft_mz, components=components, xlim=xlim, ticks=ticks, figsize=figsize, title=title, outfilename=outfilename)
 
 
 def find_peak_near_frequency(f_approx, fft_freqs, fft_m_xyz):
