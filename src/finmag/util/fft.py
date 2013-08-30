@@ -97,7 +97,7 @@ def FFT_m(ndt_filename, t_step, t_ini=None, t_end=None, subtract_values=None):
     f_my = InterpolatedUnivariateSpline(ts, my)
     f_mz = InterpolatedUnivariateSpline(ts, mz)
 
-    ts_resampled = np.arange(t_ini, t_end, t_step)
+    ts_resampled = np.arange(t_ini, t_end + (1e-8 * t_end), t_step)
     if (ts.shape == ts_resampled.shape and np.allclose(ts, ts_resampled, atol=0, rtol=1e-8)):
         #logger.debug("Data already given at the specified regular intervals. No need to resample.")
         mx_resampled = mx
