@@ -1004,31 +1004,35 @@ class NormalModeSimulation(Simulation):
 
     def run_ringdown(self, t_end, alpha, H_ext, reset_time=True, clear_schedule=True,
                      save_ndt_every=None, save_vtk_every=None, save_m_every=None,
-                     vtk_snapshots_filename=None, m_snapshots_filename=None):
+                     vtk_snapshots_filename=None, m_snapshots_filename=None,
+                     overwrite_existing_snapshots=True):
         """
-        Run the ringdown phase of a normal modes simulation, optionally
-        saving averages, vtk snapshots and magnetisation snapshots to the
-        respective.ndt, .pvd and .npy files.
+        Run the ringdown phase of a normal modes simulation, optionally saving
+        averages, vtk snapshots and magnetisation snapshots to the respective
+        .ndt, .pvd and .npy files. Note that by default existing snapshots will
+        be overwritten! Set `overwrite_existing_snapshots`=False to avoid this.
 
-        It essentially wraps up the re-setting of parameters such as
-        the damping value, the external field and the scheduled saving
-        of data into a single convenient function call, thus making it
-        less likely to forget any settings.
+        This function essentially wraps up the re-setting of parameters such as
+        the damping value, the external field and the scheduled saving of data
+        into a single convenient function call, thus making it less likely to
+        forget any settings.
 
-           ==>
-           sim.run_ringdown(t_end=10e-9, alpha=0.02, H_ext=[1e5, 0, 0],
-                            save_m_every=1e-11, m_snapshots_filename='sim_m.npy',
-                            save_ndt_every=1e-12)
-           <==
+        The following two code snippets are equivalent.
 
-           ==>
-           sim.clear_schedule()
-           sim.alpha = 0.02
-           sim.reset_time(0.0)
-           sim.schedule('save_ndt', every=save_ndt_every)
-           sim.schedule('save_vtk', every=save_vtk_every, filename=vtk_snapshots_filename)
-           sim.run_until(10e-9)
-           <==
+        ==>
+        sim.run_ringdown(t_end=10e-9, alpha=0.02, H_ext=[1e5, 0, 0],
+                         save_m_every=1e-11, m_snapshots_filename='sim_m.npy',
+                         save_ndt_every=1e-12)
+        <==
+
+        ==>
+        sim.clear_schedule()
+        sim.alpha = 0.02
+        sim.reset_time(0.0)
+        sim.schedule('save_ndt', every=save_ndt_every)
+        sim.schedule('save_vtk', every=save_vtk_every, filename=vtk_snapshots_filename)
+        sim.run_until(10e-9)
+        <==
         """
         if reset_time:
             self.reset_time(0.0)
@@ -1050,7 +1054,7 @@ class NormalModeSimulation(Simulation):
                 dirname = os.curdir
                 basename = self.name + default_suffix
             outfilename = os.path.join(dirname, basename)
-            self.schedule(which, every=every, filename=outfilename)
+            self.schedule(which, every=every, filename=outfilename, overwrite=overwrite_existing_snapshots)
 
             if which == 'save_m':
                 # Store the filename so that we can later compute normal modes more conveniently
