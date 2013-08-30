@@ -5,7 +5,7 @@ import pytest
 import os
 from glob import glob
 from distutils.version import StrictVersion
-from finmag import sim_with, Simulation, set_logging_level
+from finmag import sim_with, Simulation, set_logging_level, sim_for_normal_mode_simulation
 from finmag.example import barmini
 from math import sqrt, cos, sin, pi
 from finmag.util.helpers import assert_number_of_files, vector_valued_function, logging_status_str
@@ -917,3 +917,27 @@ def test_sim_relax_accepts_filename(tmpdir):
               stopping_dmdt=10.0)
     assert(os.path.exists('barmini_relaxed.npz'))
     assert(not os.path.exists('barmini_relaxed.pvd'))
+
+
+def test_NormalModeSimulation(tmpdir):
+    os.chdir(str(tmpdir))
+    nx = ny = nz = 2
+    mesh = df.UnitCubeMesh(nx, ny, nz)
+    sim = sim_for_normal_mode_simulation(mesh, Ms=8e5, A=13e-12, m_init=[1, 0, 0], alpha=1.0, unit_length=1e-9, H_ext=[1e5, 1e3, 0], name='sim')
+    sim.relax(stopping_dmdt=10.0)
+
+    #sim.schedule('save_vtk', every=6e-13)  # scheduling should work as with ordinary simulations
+    sim.run_ringdown(t_end=1e-12, alpha=0.01, H_ext=[1e5, 0, 0], reset_time=True, save_ndt_every=1e-13, save_m_every=1e-13, m_snapshots_filename='foobar/foo_m.npy')
+
+    # assert(os.path.exists('sim.pvd'))
+    # assert(len(glob('sim*.vtu')) == 2)
+    assert(len(glob('foobar/foo_m*.npy')) == 11)
+    f = Tablereader('sim.ndt')
+    #assert(np.allclose(f.timesteps(), np.linspace(0, 1e-12, 11)))
+    assert(np.allclose(f.timesteps(), np.linspace(0, 1e-12, 11), atol=0, rtol=1e-8))
+
+    sim.run_ringdown(t_end=1e-12, alpha=0.02, H_ext=[1e4, 0, 0], reset_time=True, save_ndt_every=1e-13, save_vtk_every=2e-13, vtk_snapshots_filename='baz/sim_m.pvd')
+    f.reload()
+    assert(os.path.exists('baz/sim_m.pvd'))
+    assert(len(glob('baz/sim_m*.vtu')) == 6)
+    assert(np.allclose(f.timesteps(), np.concatenate([np.linspace(0, 1e-12, 11), np.linspace(0, 1e-12, 11)]), atol=0, rtol=1e-8))

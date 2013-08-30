@@ -990,15 +990,91 @@ class Simulation(object):
         self.logging_handler = None
 
 
+class NormalModeSimulation(Simulation):
+    """
+    Thin wrapper around the Simulation class to make normal mode
+    computations using the ringdown method more convenient.
+
+    """
+    def __init__(self, *args, **kwargs):
+        super(NormalModeSimulation, self).__init__(*args, **kwargs)
+        self.m_snapshots_filename = None
+
+    def run_ringdown(self, t_end, alpha, H_ext, reset_time=True, clear_schedule=True,
+                     save_ndt_every=None, save_vtk_every=None, save_m_every=None,
+                     vtk_snapshots_filename=None, m_snapshots_filename=None):
+        """
+        Run the ringdown phase of a normal modes simulation, optionally
+        saving averages, vtk snapshots and magnetisation snapshots to the
+        respective.ndt, .pvd and .npy files.
+
+        It essentially wraps up the re-setting of parameters such as
+        the damping value, the external field and the scheduled saving
+        of data into a single convenient function call, thus making it
+        less likely to forget any settings.
+
+           ==>
+           sim.run_ringdown(t_end=10e-9, alpha=0.02, H_ext=[1e5, 0, 0],
+                            save_m_every=1e-11, m_snapshots_filename='sim_m.npy',
+                            save_ndt_every=1e-12)
+           <==
+
+           ==>
+           sim.clear_schedule()
+           sim.alpha = 0.02
+           sim.reset_time(0.0)
+           sim.schedule('save_ndt', every=save_ndt_every)
+           sim.schedule('save_vtk', every=save_vtk_every, filename=vtk_snapshots_filename)
+           sim.run_until(10e-9)
+           <==
+        """
+        if reset_time:
+            self.reset_time(0.0)
+        if clear_schedule:
+            self.clear_schedule()
+
+        self.alpha = alpha
+        self.set_H_ext(H_ext)
+        if save_ndt_every:
+            self.schedule('save_ndt', every=save_ndt_every)
+
+        def schedule_saving(which, every, filename, default_suffix):
+            try:
+                dirname, basename = os.path.split(filename)
+                if not os.path.exists(dirname):
+                    os.makedirs(dirname)
+            except AttributeError:
+                dirname = os.curdir
+                basename = self.name + default_suffix
+            outfilename = os.path.join(dirname, basename)
+            self.schedule(which, every=every, filename=outfilename)
+
+            if which == 'save_m':
+                # Store the filename so that we can later compute normal modes more conveniently
+                self.m_snapshots_filename = outfilename
+
+        if save_vtk_every:
+            schedule_saving('save_vtk', save_vtk_every, vtk_snapshots_filename, '_m.pvd')
+
+        if save_m_every:
+            schedule_saving('save_m', save_m_every, m_snapshots_filename, '_m.npy')
+
+        self.run_until(t_end)
+
+
 def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sundials",
              A=None, K1=None, K1_axis=None, H_ext=None, demag_solver='FK',
-             demag_solver_params={}, D=None, name="unnamed"):
+             demag_solver_params={}, D=None, name="unnamed", sim_class=Simulation):
     """
     Create a Simulation instance based on the given parameters.
 
     This is a convenience function which allows quick creation of a
     common simulation type where at most one exchange/anisotropy/demag
     interaction is present and the initial magnetisation is known.
+
+    By default, a generic Simulation object will be returned, but the
+    argument `sim_class` can be used to create a more
+    specialised type of simulation, e.g. a NormalModeSimulation.
 
     If a value for any of the optional arguments A, K1 (and K1_axis),
     or demag_solver are provided then the corresponding exchange /
@@ -1017,9 +1093,9 @@ def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sun
     See the docstring of the individual solver classes (e.g. finmag.energies.demag.FKDemag)
     for more information on possible parameters.
     """
-    sim = Simulation(mesh, Ms, unit_length=unit_length,
-                     integrator_backend=integrator_backend,
-                     name=name)
+    sim = sim_class(mesh, Ms, unit_length=unit_length,
+                    integrator_backend=integrator_backend,
+                    name=name)
 
     sim.set_m(m_init)
     sim.alpha = alpha
@@ -1048,3 +1124,19 @@ def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sun
         sim.add(demag)
 
     return sim
+
+
+def sim_for_normal_mode_simulation(mesh, Ms, m_init, **kwargs):
+    """
+    Same as `sim_with` (it accepts the same keyword arguments apart from
+    `sim_class`), but returns an instance of `NormalModeSimulation`
+    instead of `Simulation`.
+
+    """
+    try:
+        # Make sure we don't inadvertently create a different kind of simulation
+        kwargs.pop('sim_class')
+    except:
+        pass
+
+    return sim_with(mesh, Ms, m_init, sim_class=NormalModeSimulation, **kwargs)

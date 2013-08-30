@@ -8,7 +8,7 @@ from __future__ import division
 import logging
 logger = logging.getLogger("finmag")
 
-from finmag.sim.sim import Simulation, sim_with
+from finmag.sim.sim import Simulation, sim_with, sim_for_normal_mode_simulation
 from finmag.util.helpers import set_logging_level
 from __version__ import __version__
 import example
