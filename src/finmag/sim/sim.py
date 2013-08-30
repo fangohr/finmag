@@ -477,14 +477,21 @@ class Simulation(object):
 
         self.scheduler._remove(exit_at)
 
-    def relax(self, stopping_dmdt=1.0, dt_limit=1e-10,
-              dmdt_increased_counter_limit=10):
+    def relax(self, save_vtk_snapshot_as=None, save_restart_data_as=None, stopping_dmdt=1.0,
+              dt_limit=1e-10, dmdt_increased_counter_limit=10):
         """
         Run the simulation until the magnetisation has relaxed.
 
         This means the magnetisation reaches a state where its change over time
         at each node is smaller than the threshold `stopping_dm_dt` (which
         should be given in multiples of degree/nanosecond).
+
+        If `save_vtk_snapshot_as` and/or `restart_restart_data_as` are
+        specified, a vtk snapshot and/or restart data is saved to a
+        file with the given name. This can also be achieved using the
+        scheduler but provides a slightly more convenient mechanism.
+        Note that any previously existing files with the same name
+        will be automatically overwritten!
 
         """
         if not hasattr(self, "integrator"):
@@ -507,6 +514,12 @@ class Simulation(object):
 
         self.scheduler._remove(self.relaxation)
         del(self.relaxation.sim) # help the garbage collection by avoiding circular reference
+
+        # Save a vtk snapshot and/or restart data of the relaxed state.
+        if save_vtk_snapshot_as is not None:
+            self.save_vtk(save_vtk_snapshot_as, overwrite=True)
+        if save_restart_data_as is not None:
+            self.save_restart_data(save_restart_data_as)
 
     save_restart_data = sim_helpers.save_restart_data
 
