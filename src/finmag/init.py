@@ -10,6 +10,8 @@ logger = logging.getLogger("finmag")
 
 from finmag.sim.sim import Simulation, sim_with, sim_for_normal_mode_simulation
 from finmag.util.helpers import set_logging_level
+from finmag.util import configuration
+import util.versions
 from __version__ import __version__
 import example
 
@@ -30,26 +32,26 @@ def timings_report(n=10):
     return default_timer.report(n)
 
 logger.debug("%20s: %s" % ("Finmag", __version__))
-import util.versions
-logger.debug("%20s: %s" % ("Dolfin", util.versions.get_version_dolfin()))
-logger.debug("%20s: %s" % ("Matplotlib", util.versions.get_version_matplotlib()))
-logger.debug("%20s: %s" % ("Numpy", util.versions.get_version_numpy()))
-logger.debug("%20s: %s" % ("Scipy", util.versions.get_version_scipy()))
-logger.debug("%20s: %s" % ("IPython", util.versions.get_version_ipython()))
-logger.debug("%20s: %s" % ("Python", util.versions.get_version_python()))
-logger.debug("%20s: %s" % ("Paraview", util.versions.get_version_paraview()))
-try:
-    sundials_version = util.versions.get_version_sundials()
-except NotImplementedError:
-    sundials_version = '<cannot determine version>'
-logger.debug("%20s: %s" % ("Sundials", sundials_version))
-
-try:
-    boost_version = util.versions.get_version_boostpython()
-except NotImplementedError:
-    boost_version = '<cannot determine version>'
-logger.debug("%20s: %s" % ("Boost-Python", boost_version))
-logger.debug("%20s: %s" % ("Linux", util.versions.get_linux_issue()))
+display_module_versions = configuration.get_config_option("logging", "display_module_versions_at_startup", "True")
+if display_module_versions == "True":
+    logger.debug("%20s: %s" % ("Dolfin", util.versions.get_version_dolfin()))
+    logger.debug("%20s: %s" % ("Matplotlib", util.versions.get_version_matplotlib()))
+    logger.debug("%20s: %s" % ("Numpy", util.versions.get_version_numpy()))
+    logger.debug("%20s: %s" % ("Scipy", util.versions.get_version_scipy()))
+    logger.debug("%20s: %s" % ("IPython", util.versions.get_version_ipython()))
+    logger.debug("%20s: %s" % ("Python", util.versions.get_version_python()))
+    logger.debug("%20s: %s" % ("Paraview", util.versions.get_version_paraview()))
+    try:
+        sundials_version = util.versions.get_version_sundials()
+    except NotImplementedError:
+        sundials_version = '<cannot determine version>'
+    logger.debug("%20s: %s" % ("Sundials", sundials_version))
+    try:
+        boost_version = util.versions.get_version_boostpython()
+    except NotImplementedError:
+        boost_version = '<cannot determine version>'
+    logger.debug("%20s: %s" % ("Boost-Python", boost_version))
+    logger.debug("%20s: %s" % ("Linux", util.versions.get_linux_issue()))
 
 
 if util.versions.running_binary_distribution():
