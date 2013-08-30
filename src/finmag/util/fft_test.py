@@ -73,7 +73,7 @@ def test_FFT_m(tmpdir):
 
     # Compute Fourier transform of resampled time series using FFT_m
     fft_freqs_res, fft_mx_res, fft_my_res, fft_mz_res = \
-        FFT_m(ndt_filename, t_step_res, t_ini=t_ini_res, t_end=t_end_res)
+        FFT_m(ndt_filename, t_step_res, t_ini=t_ini_res, t_end=t_end_res, subtract_values=None)
 
     # Compare both results
     assert(np.allclose(fft_mx_res, fft_mx_res_expected, atol=0, rtol=RTOL))
