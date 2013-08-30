@@ -895,3 +895,25 @@ def test_sim_initialise_vortex(tmpdir, debug=True):
     sim = barmini()
     sim.initialise_vortex('simple', r=5, center=(2, 0, 0), right_handed=False)
     save_debugging_output(sim, 'barmini_with_vortex')
+
+
+def test_sim_relax_accepts_filename(tmpdir):
+    """
+    Check that if sim.relax() is given a filename, the relaxed state
+    is saved to this file.
+    """
+    sim = barmini()
+    sim.set_m([1, 0, 0])
+    sim.set_H_ext([1e6, 0, 0])
+    sim.relax(save_restart_data_as='barmini_relaxed.npz',
+              save_vtk_snapshot_as='barmini_relaxed.pvd',
+              stopping_dmdt=10.0)
+    assert(os.path.exists('barmini_relaxed.npz'))
+    assert(os.path.exists('barmini_relaxed.pvd'))
+
+    # Check that an existing file is  overwritten.
+    os.remove('barmini_relaxed.pvd')
+    sim.relax(save_restart_data_as='barmini_relaxed.npz',
+              stopping_dmdt=10.0)
+    assert(os.path.exists('barmini_relaxed.npz'))
+    assert(not os.path.exists('barmini_relaxed.pvd'))
