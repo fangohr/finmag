@@ -1201,9 +1201,8 @@ class NormalModeSimulation(Simulation):
         fig.gca().plot(self.fft_freqs[peak_idx] / 1e9, fft_cmpnt[peak_idx], 'bo')
         return fig
 
-    def export_normal_mode_animation(self, npy_files, peak_idx=None,
-                                     f_approx=None, component=None,
-                                     outfilename=None, directory='',
+    def export_normal_mode_animation(self, npy_files, f_approx=None, component=None,
+                                     peak_idx=None, outfilename=None, directory='',
                                      t_step=None, scaling=0.2, dm_only=False,
                                      num_cycles=5, num_frames_per_cycle=10):
         """
@@ -1225,6 +1224,17 @@ class NormalModeSimulation(Simulation):
 
         *Arguments:
 
+        f_approx:  float
+
+           Find and animate peak closest to this frequency. This is
+           ignored if 'peak_idx' is given.
+
+        component:  str
+
+           The component (one of 'x', 'y', 'z') of the FFT spectrum
+           which should be searched for a peak. This is ignored if
+           peak_idx is given.
+
         peak_idx:  int
 
            The index of the peak in the FFT spectrum. This can be
@@ -1233,15 +1243,6 @@ class NormalModeSimulation(Simulation):
            are given then this index is computed automatically. Note
            that if `peak_idx` is given the other two arguments are
            ignored.
-
-        f_approx:  float
-
-           Find and animate peak closest to this frequency.
-
-        component:  str
-
-           The component in which a peak should be searched. This is
-           ignored if peak_idx is given.
 
         """
         if self.fft_freqs == None or self.fft_mx == None or \
