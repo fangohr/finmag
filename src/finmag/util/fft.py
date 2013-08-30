@@ -14,7 +14,7 @@ from numpy import sin, cos, pi
 logger = logging.getLogger("finmag")
 
 
-def FFT_m(ndt_filename, t_step, t_ini=None, t_end=None, subtract_values=None):
+def FFT_m(ndt_filename, t_step, t_ini=None, t_end=None, subtract_values='average'):
     """
     Given a data file (e.g. in .ndt format), compute and return the
     frequencies and the (absolute values of the) Fourier transforms
@@ -123,7 +123,7 @@ def FFT_m(ndt_filename, t_step, t_ini=None, t_end=None, subtract_values=None):
     return rfft_freqs, fft_mx, fft_my, fft_mz
 
 
-def plot_FFT_m(ndt_filename, t_step, t_ini=None, t_end=None, subtract_values=None,
+def plot_FFT_m(ndt_filename, t_step, t_ini=None, t_end=None, subtract_values='average',
                components="xyz", xlim=None, ticks=5, figsize=None, outfilename=None):
     """
     Plot the frequency spectrum of the components of the magnetisation m.
