@@ -60,8 +60,8 @@ class TestSimulation(object):
         self.sim.compute_energy('Total')
         self.sim.compute_energy('total')
 
-        with pytest.raises(ValueError):
-            self.sim.compute_energy('foobar')
+        # A non-existing interaction should return zero energy
+        assert(self.sim.compute_energy('foobar') == 0.0)
 
         exch = Exchange(A=13e-12, name='foobar')
         self.sim.add(exch)
