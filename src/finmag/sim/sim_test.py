@@ -53,6 +53,20 @@ class TestSimulation(object):
         self.sim.add(exch)
         assert exch == self.sim.get_interaction('foobar')
 
+    def test_compute_energy(self):
+        # These should just work
+        self.sim.compute_energy('Exchange')
+        self.sim.compute_energy('Demag')
+        self.sim.compute_energy('Total')
+        self.sim.compute_energy('total')
+
+        with pytest.raises(ValueError):
+            self.sim.compute_energy('foobar')
+
+        exch = Exchange(A=13e-12, name='foobar')
+        self.sim.add(exch)
+        assert exch.compute_energy() == self.sim.compute_energy('foobar')
+
     def test_get_field_as_dolfin_function(self):
         """
         Convert the demag field into a dolfin function, evaluate it a all
