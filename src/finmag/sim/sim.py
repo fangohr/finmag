@@ -332,7 +332,9 @@ class Simulation(object):
     def compute_energy(self, name):
         """
         Compute and return the energy contribution from a specific
-        interaction (Exchange, Demag, Zeeman, etc.).
+        interaction (Exchange, Demag, Zeeman, etc.). If the simulation
+        does not contain an interaction with this name, a value of
+        zero is returned.
 
         *Arguments*
 
@@ -346,8 +348,11 @@ class Simulation(object):
         if name.lower() == 'total':
             res = self.total_energy()
         else:
-            interaction = self.get_interaction(name)
-            res = interaction.compute_energy()
+            try:
+                interaction = self.get_interaction(name)
+                res = interaction.compute_energy()
+            except ValueError:
+                res = 0.0
         return res
 
     def get_interaction(self, interaction_name):
