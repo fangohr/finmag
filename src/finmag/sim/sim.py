@@ -1336,7 +1336,7 @@ def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sun
     return sim
 
 
-def sim_for_normal_mode_simulation(mesh, Ms, m_init, **kwargs):
+def normal_mode_simulation(mesh, Ms, m_init, **kwargs):
     """
     Same as `sim_with` (it accepts the same keyword arguments apart from
     `sim_class`), but returns an instance of `NormalModeSimulation`
