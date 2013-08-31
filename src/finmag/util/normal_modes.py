@@ -1,3 +1,4 @@
+from __future__ import division
 import dolfin as df
 import numpy as np
 import logging
@@ -224,6 +225,115 @@ def compute_eigenproblem_matrix(sim, frequency_unit=1e9, filename=None):
     return D
 
 
+
+# We use the following class (which behaves like a function due to its
+# __call__ method) instead of a simple lambda expression because it is
+# pickleable, which is needed if we want to cache computation results.
+#
+# XXX TODO: lambda expresions can be pickled with the 'dill' module,
+# so we should probably get rid of this.
+class M_times_w(object):
+    def __init__(self, Mcross, n, alpha=0.):
+        self.Mcross = Mcross
+        self.n = n
+        self.alpha = alpha
+
+    def __call__(self, w):
+        w = w.view()
+        w.shape = (2, 1, self.n)
+        res = -1j * mf_mult(self.Mcross, w)
+        if self.alpha != 0.:
+            res += -1j * self.alpha * w
+        res.shape = (-1,)
+        return res
+
+
+class NotImplementedOp(object):
+    def __call__(self, w):
+        raise NotImplementedError("rmatvec is not implemented")
+
+
+def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9, filename_mat_A=None, filename_mat_M=None):
+    """
+    XXX TODO: write me
+
+    """
+    m_orig = sim.m
+
+    def effective_field_for_m(m):
+        if np.iscomplexobj(m):
+            raise NotImplementedError("XXX TODO: Implement the version for complex arrays!")
+        sim.set_m(m)
+        return sim.effective_field()
+
+    n = sim.mesh.num_vertices()
+    N = 3 * n  # number of degrees of freedom
+
+    m0_array = sim.m.copy()
+    m0_flat = m0_array.reshape(3, n)  # 'flat' is a slightly misleading terminology, but it's used in Simlib so we keep it here
+    m0_column_vector = m0_array.reshape(3, 1, n)
+    H0_array = effective_field_for_m(m0_array)
+    H0_flat = H0_array.reshape(3, n)
+    h0 = H0_flat[0]*m0_flat[0] + H0_flat[1]*m0_flat[1] + H0_flat[2]*m0_flat[2]
+
+    logger.debug("Computing basis of the tangent space and transition matrices.")
+    Q, R, S, Mcross = compute_tangential_space_basis(m0_column_vector)
+    Qt = mf_transpose(Q).copy()
+
+    def A_times_vector(v):
+        # A = H' v - h_0 v
+        assert v.shape == (3, 1, n)
+        v_array = v.view()
+        v_array.shape = (-1,)
+        # Compute H'v
+        res = differentiate_fd4(effective_field_for_m, m0_array, v_array)
+        res.shape = (3, n)
+        # Subtract h0 v
+        res[0] -= h0 * v[0, 0]
+        res[1] -= h0 * v[1, 0]
+        res[2] -= h0 * v[2, 0]
+        res.shape = (3, 1, n)
+        return res
+
+    df.tic()
+    logger.info("Assembling eigenproblem matrix.")
+    A = np.zeros((2*n, 2*n), dtype=complex)
+    # Compute A
+    for i, w in enumerate(np.eye(2*n)):
+        if i % 50 == 0:
+            logger.debug("Processing row {}/{}  (time taken so far: {:.2f} seconds)".format(i, 2*n, df.toc()))
+        w.shape = (2, 1, n)
+        Av = A_times_vector(mf_mult(Q, w))
+        A[:, i] = mf_mult(Qt, Av).reshape(-1)
+        # Multiply by (-gamma)/(2 pi U)
+        A[:, i] *= -gamma / (2 * math.pi * frequency_unit)
+
+    logger.debug("Eigenproblem matrix A occupies {:.2f} MB of memory.".format(A.nbytes / 1024.**2))
+
+    # # Compute B, which is -i Mcross 2 pi U / gamma
+    # B = np.zeros((2, n, 2, n), dtype=complex)
+    # for i in xrange(n):
+    #     B[:, i, :, i] = Mcross[:, :, i]
+    #     B[:, i, :, i] *= -1j
+    # B.shape = (2*n, 2*n)
+
+    M = scipy.sparse.linalg.LinearOperator((2 * n, 2 * n), M_times_w(Mcross, n, alpha), NotImplementedOp(), NotImplementedOp(), dtype=complex)
+
+    if filename_mat_A != None:
+        logger.info("Saving generalised eigenproblem matrix 'A' to file '{}'".format(filename_mat_A))
+        np.save(filename_mat_A, A)
+
+    if filename_mat_M != None:
+        logger.info("Saving generalised eigenproblem matrix 'M' to file '{}'".format(filename_mat_M))
+        np.save(filename_mat_M, M)
+
+    # Restore the original magnetisation.
+    # XXX TODO: Is this method safe, or does it leave any trace of the temporary changes we did above?
+    sim.set_m(m_orig)
+
+    return A, M
+
+
 def compute_normal_modes(D, n_values=10, sigma=0., tol=1e-8, which='LM'):
     logger.debug("Solving eigenproblem. This may take a while...".format(df.toc()))
     df.tic()
@@ -231,6 +341,17 @@ def compute_normal_modes(D, n_values=10, sigma=0., tol=1e-8, which='LM'):
     logger.debug("Computing the eigenvalues and eigenvectors took {:.2f} seconds".format(df.toc()))
 
     return omega, w
+
+
+def compute_normal_modes_generalised(A, M, n_values=10, sigma=0., tol=1e-8):
+    logger.debug("Solving eigenproblem. This may take a while...".format(df.toc()))
+    df.tic()
+    # Have to swap M and A since the M matrix has to be positive definite for eigsh!
+    omega, w = scipy.sparse.linalg.eigsh(M, n_values, A, which='LM', tol=tol, return_eigenvectors=True)
+    logger.debug("Computing the eigenvalues and eigenvectors took {:.2f} seconds".format(df.toc()))
+
+    # We need to return 1/omega because we swapped M and A above and thus computed the inverse eigenvalues.
+    return 1/omega, w
 
 
 def export_normal_mode_animation(sim, freq, w, filename, num_cycles=5, num_snapshots_per_cycle=10, scaling=0.2):
