@@ -5,7 +5,7 @@ import pytest
 import os
 from glob import glob
 from distutils.version import StrictVersion
-from finmag import sim_with, Simulation, set_logging_level, sim_for_normal_mode_simulation
+from finmag import sim_with, Simulation, set_logging_level, normal_mode_simulation
 from finmag.example import barmini
 from math import sqrt, cos, sin, pi
 from finmag.util.helpers import assert_number_of_files, vector_valued_function, logging_status_str
@@ -937,7 +937,7 @@ def test_NormalModeSimulation(tmpdir):
     os.chdir(str(tmpdir))
     nx = ny = nz = 2
     mesh = df.UnitCubeMesh(nx, ny, nz)
-    sim = sim_for_normal_mode_simulation(mesh, Ms=8e5, A=13e-12, m_init=[1, 0, 0], alpha=1.0, unit_length=1e-9, H_ext=[1e5, 1e3, 0], name='sim')
+    sim = normal_mode_simulation(mesh, Ms=8e5, A=13e-12, m_init=[1, 0, 0], alpha=1.0, unit_length=1e-9, H_ext=[1e5, 1e3, 0], name='sim')
     sim.relax(stopping_dmdt=10.0)
 
     t_step = 1e-13
@@ -979,7 +979,7 @@ def test_NormalModeSimulation(tmpdir):
         sim.export_normal_mode_animation('foobar/foo_m*.npy', component='x')
 
     # Check that by default snapshots are not overwritten
-    sim = sim_for_normal_mode_simulation(mesh, Ms=8e5, A=13e-12, m_init=[1, 0, 0], alpha=1.0, unit_length=1e-9, H_ext=[1e5, 1e3, 0], name='sim')
+    sim = normal_mode_simulation(mesh, Ms=8e5, A=13e-12, m_init=[1, 0, 0], alpha=1.0, unit_length=1e-9, H_ext=[1e5, 1e3, 0], name='sim')
     with pytest.raises(IOError):
         sim.run_ringdown(t_end=1e-12, alpha=0.02, H_ext=[1e4, 0, 0], save_vtk_every=2e-13, vtk_snapshots_filename='baz/sim_m.pvd')
     with pytest.raises(IOError):
