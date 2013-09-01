@@ -343,7 +343,7 @@ def compute_normal_modes(D, n_values=10, sigma=0., tol=1e-8, which='LM'):
     return omega, w
 
 
-def compute_normal_modes_generalised(A, M, n_values=10, sigma=0., tol=1e-8):
+def compute_normal_modes_generalised(A, M, n_values=10, tol=1e-8):
     logger.debug("Solving eigenproblem. This may take a while...".format(df.toc()))
     df.tic()
     # Have to swap M and A since the M matrix has to be positive definite for eigsh!
