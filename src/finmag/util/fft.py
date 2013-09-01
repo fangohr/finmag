@@ -450,7 +450,7 @@ def filter_frequency_component(signal, k, t_start, t_end, ts_sampling=None):
     return signal_filtered
 
 
-def export_normal_mode_animation(npy_files, outfilename, mesh, t_step, k, scaling=0.2, dm_only=False, num_cycles=5, num_frames_per_cycle=10):
+def export_normal_mode_animation_from_ringdown(npy_files, outfilename, mesh, t_step, k, scaling=0.2, dm_only=False, num_cycles=5, num_frames_per_cycle=10):
     """
     Read a bunch of .npy files (containing the magnetisation sampled
     at regular time steps) and export an animation of the normal mode

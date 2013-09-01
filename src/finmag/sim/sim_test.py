@@ -9,7 +9,7 @@ from finmag import sim_with, Simulation, set_logging_level, normal_mode_simulati
 from finmag.example import barmini
 from math import sqrt, cos, sin, pi
 from finmag.util.helpers import assert_number_of_files, vector_valued_function, logging_status_str
-from finmag.util.meshes import cylinder
+from finmag.util.meshes import nanodisk
 from finmag.sim import sim_helpers
 from finmag.energies import Zeeman, TimeZeeman, Exchange, UniaxialAnisotropy
 from finmag.util.fileio import Tablereader
@@ -886,7 +886,7 @@ def test_sim_initialise_vortex(tmpdir, debug=True):
     inspection.
     """
     os.chdir(str(tmpdir))
-    mesh = cylinder(r=30, h=5, maxh=3.0)
+    mesh = nanodisk(d=60, h=5, maxh=3.0)
     sim = sim_with(mesh, Ms=8e6, m_init=[1, 0, 0], unit_length=1e-9)
 
     def save_debugging_output(sim, basename):
@@ -964,19 +964,19 @@ def test_NormalModeSimulation(tmpdir):
 
     sim.find_peak_near_frequency(10e9, component='y')
 
-    sim.export_normal_mode_animation('foobar/foo_m*.npy', peak_idx=2,
-                                     outfilename='animations/foo_peak_idx_2.pvd',
-                                     num_cycles=1, num_frames_per_cycle=4)
-    sim.export_normal_mode_animation('foobar/foo_m*.npy', f_approx=0.0, component='y',
-                                     directory='animations', num_cycles=1, num_frames_per_cycle=4)
+    sim.export_normal_mode_animation_from_ringdown('foobar/foo_m*.npy', peak_idx=2,
+                                                   outfilename='animations/foo_peak_idx_2.pvd',
+                                                   num_cycles=1, num_frames_per_cycle=4)
+    sim.export_normal_mode_animation_from_ringdown('foobar/foo_m*.npy', f_approx=0.0, component='y',
+                                                   directory='animations', num_cycles=1, num_frames_per_cycle=4)
     assert(os.path.exists('animations/foo_peak_idx_2.pvd'))
     assert(len(glob('animations/foo_peak_idx_2*.vtu')) == 4)
 
     # Either 'peak_idx' or both 'f_approx' and 'component' must be given
     with pytest.raises(ValueError):
-        sim.export_normal_mode_animation('foobar/foo_m*.npy', f_approx=0)
+        sim.export_normal_mode_animation_from_ringdown('foobar/foo_m*.npy', f_approx=0)
     with pytest.raises(ValueError):
-        sim.export_normal_mode_animation('foobar/foo_m*.npy', component='x')
+        sim.export_normal_mode_animation_from_ringdown('foobar/foo_m*.npy', component='x')
 
     # Check that by default snapshots are not overwritten
     sim = normal_mode_simulation(mesh, Ms=8e5, A=13e-12, m_init=[1, 0, 0], alpha=1.0, unit_length=1e-9, H_ext=[1e5, 1e3, 0], name='sim')
@@ -984,3 +984,26 @@ def test_NormalModeSimulation(tmpdir):
         sim.run_ringdown(t_end=1e-12, alpha=0.02, H_ext=[1e4, 0, 0], save_vtk_every=2e-13, vtk_snapshots_filename='baz/sim_m.pvd')
     with pytest.raises(IOError):
         sim.run_ringdown(t_end=1e-12, alpha=0.02, H_ext=[1e4, 0, 0], save_m_every=2e-13, m_snapshots_filename='foobar/foo_m.npy')
+
+
+def test_compute_normal_modes(tmpdir):
+    os.chdir(str(tmpdir))
+
+    d = 100
+    h = 10
+    maxh = 10.0
+    alpha = 0.0
+    m_init = [1, 0, 0]
+    H_ext = [1e5, 0, 0]
+
+    mesh = nanodisk(d, h, maxh)
+    sim = normal_mode_simulation(mesh, Ms=8e6, m_init=m_init, alpha=alpha, unit_length=1e-9, A=13e-12, H_ext=H_ext, name='nanodisk')
+    omega, w = sim.compute_normal_modes(n_values=10, filename_mat_A='matrix_A.npy', filename_mat_M='matrix_M.npy')
+    print omega
+    sim.export_normal_mode_animation(2, filename='animation/mode_2.pvd', num_cycles=1, num_snapshots_per_cycle=10, scaling=0.1)
+    sim.export_normal_mode_animation(5, directory='animation', num_cycles=1, num_snapshots_per_cycle=10, scaling=0.1)
+
+    assert(os.path.exists('animation/mode_2.pvd'))
+    assert(len(glob('animation/mode_2*.vtu')) == 10)
+    assert(os.path.exists('animation/normal_mode_5__0.000_GHz.pvd'))
+    assert(len(glob('animation/normal_mode_5__*_GHz*.vtu')) == 10)

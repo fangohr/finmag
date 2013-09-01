@@ -15,7 +15,8 @@ from finmag.util.meshes import mesh_info, mesh_volume
 from finmag.util.fileio import Tablewriter, FieldSaver
 from finmag.util import helpers
 from finmag.util.vtk_saver import VTKSaver
-from finmag.util.fft import FFT_m, plot_FFT_m, find_peak_near_frequency, _plot_spectrum, export_normal_mode_animation
+from finmag.util.fft import FFT_m, plot_FFT_m, find_peak_near_frequency, _plot_spectrum, export_normal_mode_animation_from_ringdown
+from finmag.util.normal_modes import compute_generalised_eigenproblem_matrices, compute_normal_modes_generalised, export_normal_mode_animation
 from finmag.util.helpers import plot_dynamics
 from finmag.sim.hysteresis import hysteresis as hyst, hysteresis_loop as hyst_loop
 from finmag.sim import sim_helpers
@@ -1033,12 +1034,17 @@ class NormalModeSimulation(Simulation):
     """
     def __init__(self, *args, **kwargs):
         super(NormalModeSimulation, self).__init__(*args, **kwargs)
+        # Internal variables to store parameters/results of the ringdown method
         self.m_snapshots_filename = None
         self.t_step_ndt = None
         self.fft_freqs = None
         self.fft_mx = None
         self.fft_my = None
         self.fft_mz = None
+
+        # Internal variables to store parameters/results of the (generalised) eigenvalue method
+        self.eigenfreqs = None
+        self.eigenvecs = None
 
     def run_ringdown(self, t_end, alpha, H_ext, reset_time=True, clear_schedule=True,
                      save_ndt_every=None, save_vtk_every=None, save_m_every=None,
@@ -1201,10 +1207,10 @@ class NormalModeSimulation(Simulation):
         fig.gca().plot(self.fft_freqs[peak_idx] / 1e9, fft_cmpnt[peak_idx], 'bo')
         return fig
 
-    def export_normal_mode_animation(self, npy_files, f_approx=None, component=None,
-                                     peak_idx=None, outfilename=None, directory='',
-                                     t_step=None, scaling=0.2, dm_only=False,
-                                     num_cycles=5, num_frames_per_cycle=10):
+    def export_normal_mode_animation_from_ringdown(self, npy_files, f_approx=None, component=None,
+                                                   peak_idx=None, filename=None, directory='',
+                                                   t_step=None, scaling=0.2, dm_only=False,
+                                                   num_cycles=5, num_frames_per_cycle=10):
         """
         XXX TODO: Complete me!
 
@@ -1215,8 +1221,8 @@ class NormalModeSimulation(Simulation):
         are passed on to `sim.find_peak_near_frequency()` to determine
         the exact location of the peak.
 
-        The output filename can be specified via `outfilename`. If
-        this is None then a filename of the form
+        The output filename can be specified via `filename`. If this
+        is None then a filename of the form
         'normal_mode_N__xx.xxx_GHz.pvd' is generated automatically,
         where N is the peak index and xx.xx is the frequency of the
         peak (as returned by `sim.find_peak_near_frequency()`).
@@ -1260,16 +1266,59 @@ class NormalModeSimulation(Simulation):
                 log.warning("Ignoring argument 'component' because 'peak_idx' was specified.")
             peak_freq = self.fft_freqs[peak_idx]
 
-        if outfilename is None:
+        if filename is None:
             if directory is '':
-                raise ValueError("Please specify at least one of the arguments 'outfilename' or 'directory'")
-            outfilename = 'normal_mode_{}__{:.2f}_GHz.pvd'.format(peak_idx, peak_freq / 1e9)
-        outfilename = os.path.join(directory, outfilename)
+                raise ValueError("Please specify at least one of the arguments 'filename' or 'directory'")
+            filename = 'normal_mode_{}__{:.3f}_GHz.pvd'.format(peak_idx, peak_freq / 1e9)
+        filename = os.path.join(directory, filename)
 
         t_step = t_step or self.t_step_ndt
-        export_normal_mode_animation(npy_files, outfilename, self.mesh, t_step,
-                                     peak_idx, dm_only=dm_only, num_cycles=num_cycles,
-                                     num_frames_per_cycle=num_frames_per_cycle)
+        export_normal_mode_animation_from_ringdown(npy_files, filename, self.mesh, t_step,
+                                                   peak_idx, dm_only=dm_only, num_cycles=num_cycles,
+                                                   num_frames_per_cycle=num_frames_per_cycle)
+
+    def compute_normal_modes(self, n_values=10, tol=1e-8, filename_mat_A=None, filename_mat_M=None, use_generalised=True):
+        """
+        XXX TODO: Write me!
+
+        """
+        if use_generalised == False:
+            raise NotImplementedError("Only the generalised version is supported at the moment")
+
+        A, M = compute_generalised_eigenproblem_matrices( \
+            self, frequency_unit=1e9, filename_mat_A=filename_mat_A, filename_mat_M=filename_mat_M)
+
+        omega, w = compute_normal_modes_generalised(A, M, n_values=50)
+
+        self.eigenfreqs = omega
+        self.eigenvecs = w
+
+        return omega, w
+
+
+    def export_normal_mode_animation(self, k, filename=None, directory='', num_cycles=5, num_snapshots_per_cycle=10, scaling=0.2):
+        """
+        XXX TODO: Complete me!
+
+        Export an animation of the `k`-th eigenmode, where the value of `k` refers
+        to the index of the corresponding mode frequency and eigenvector in the
+        two arrays returnd by `sim.compute_normal_modes`.
+
+        """
+        if self.eigenfreqs is None or self.eigenvecs is None:
+            log.debug("Could not find any precomputed eigenmodes. Computing them now.")
+            self.compute_normal_modes(max(k, 10))
+
+        if filename is None:
+            if directory is '':
+                raise ValueError("Please specify at least one of the arguments 'outfilename' or 'directory'")
+            filename = 'normal_mode_{}__{:.3f}_GHz.pvd'.format(k, self.eigenfreqs[k] / 1e9)
+        filename = os.path.join(directory, filename)
+
+        export_normal_mode_animation(self, self.eigenfreqs[k], self.eigenvecs[:, k], filename, num_cycles=num_cycles,
+                                     num_snapshots_per_cycle=num_snapshots_per_cycle, scaling=scaling)
+
+
 
 
 def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sundials",
