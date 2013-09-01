@@ -354,6 +354,7 @@ class Simulation(object):
                 interaction = self.get_interaction(name)
                 res = interaction.compute_energy()
             except ValueError:
+                log.debug("Interaction not found. Returning zero energy.")
                 res = 0.0
         return res
 
