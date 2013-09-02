@@ -867,8 +867,6 @@ def test_removing_logger_handlers_allows_to_create_many_simulation_objects(tmpdi
     resource.setrlimit(resource.RLIMIT_NOFILE, (soft_limit, hard_limit))
 
 
-#@pytest.mark.slow
-@pytest.skip
 def test_schedule_render_scene(tmpdir):
     """
     Check that scheduling 'render_scene' will create incremental snapshots.
@@ -880,12 +878,11 @@ def test_schedule_render_scene(tmpdir):
 
     # Save the magnetisation using the default filename
     sim.schedule('render_scene', every=1e-11, filename='barmini_scene.png')
-    sim.run_until(3.5e-11)
+    sim.run_until(2.5e-11)
     assert(sorted(glob('barmini_scene_[0-9]*.png')) ==
            ['barmini_scene_000000.png',
             'barmini_scene_000001.png',
-            'barmini_scene_000002.png',
-            'barmini_scene_000003.png'])
+            'barmini_scene_000002.png'])
 
 
 def test_sim_initialise_vortex(tmpdir, debug=True):
