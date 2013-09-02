@@ -56,9 +56,9 @@ class Simulation(object):
           name : the Simulation name (used for writing data files, for examples)
 
           pbc : Periodic boundary type: None or '2d'
-          
+
           kernel : 'llg' or 'sllg'
-          
+
           average : take the cell averaged effective field, only for test, will delete it if doesn't work.
 
         """
@@ -105,16 +105,16 @@ class Simulation(object):
         self.integrator_backend = integrator_backend
         self.S1 = df.FunctionSpace(mesh, "Lagrange", 1, constrained_domain=self.pbc)
         self.S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3, constrained_domain=self.pbc)
-        
+
         if kernel=='llg':
             self.llg = LLG(self.S1, self.S3, average = average)
         elif kernel=='sllg':
             self.llg = SLLG(self.S1, self.S3, unit_length=unit_length)
         else:
             raise ValueError("kernel must be either llg or sllg.")
-        
+
         self.kernel = kernel
-        
+
         self.llg.Ms = Ms
         self.Volume = mesh_volume(mesh)
 
@@ -603,42 +603,34 @@ class Simulation(object):
         return self.llg.pins
 
     def __set_pins(self, nodes):
-        pinlist=[]
+        pinlist = []
         if hasattr(nodes, '__call__'):
             coords = self.mesh.coordinates()
-            for i,c in enumerate(coords):
+            for i, c in enumerate(coords):
                 if nodes(c):
                     pinlist.append(i)
-            pinlist=np.array(pinlist)
-            self.llg.pins=pinlist
+            pinlist = np.array(pinlist)
+            self.llg.pins = pinlist
         else:
             self.llg.pins = nodes
 
     pins = property(__get_pins, __set_pins)
 
-    def __get_alpha(self):
+    @property
+    def alpha(self):
+        """
+        The damping constant :math:`\\alpha`.
+
+        It is stored as a scalar valued df.Function. However, it can be set
+        using any type accepted by the function
+        :py:func:`finmag.util.helpers.scalar_valued_function`.
+
+        """
         return self.llg.alpha
 
-    def __set_alpha(self, value):
-        self.llg.alpha = value
-
-    alpha = property(__get_alpha, __set_alpha)
-
-    def spatial_alpha(self, alpha, multiplicator):
-        self.llg.spatially_varying_alpha(alpha, multiplicator)
-
-    def set_alpha(self, value):
-        """
-        Set the damping constant.
-
-        `value` can have any of the forms accepted by the function
-        'finmag.util.helpers.scalar_valued_function' (see its
-        docstring for details).
-
-        """
-        alpha = helpers.scalar_valued_function(value, self.S1)
-        self.llg.alpha_vec = alpha.vector().array()
-        # TODO: this should be the default behaviour for sim.alpha = ...
+    @alpha.setter
+    def alpha(self, value):
+        self.llg.set_alpha(value)
 
     def __get_gamma(self):
         return self.llg.gamma
@@ -647,21 +639,21 @@ class Simulation(object):
         self.llg.gamma = value
 
     gamma = property(__get_gamma, __set_gamma)
-    
+
     def __get_dt(self):
         return self.llg.dt
-    
+
     def __set_dt(self, value):
         self.llg.dt = value
-    
+
     dt = property(__get_dt, __set_dt)
-    
+
     def __get_T(self):
         return self.llg.T
-    
+
     def __set_T(self, value):
         self.llg.T = value
-    
+
     T = property(__get_T, __set_T)
 
     run_normal_modes_computation = sim_helpers.run_normal_modes_computation
@@ -1156,7 +1148,7 @@ class NormalModeSimulation(Simulation):
 
         """
         if not use_averaged_m:
-           raise NotImplementedError("Plotting the spectrum using the spatially resolved magnetisation is not supported yet.") 
+           raise NotImplementedError("Plotting the spectrum using the spatially resolved magnetisation is not supported yet.")
 
         self._compute_spectrum(t_step=t_step, t_ini=t_ini, t_end=t_end, subtract_values=subtract_values, use_averaged_m=use_averaged_m)
 

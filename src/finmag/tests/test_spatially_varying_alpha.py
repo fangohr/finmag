@@ -1,28 +1,41 @@
 import dolfin as df
 import numpy as np
+from finmag import Simulation
 from finmag.sim.llg import LLG
 
-def test_spatially_varying_alpha():
-    length = 20e-9 # m
+
+def test_spatially_varying_alpha_using_Simulation_class():
+    """
+    test that I can change the value of alpha through the property sim.alpha
+    and that I get an df.Function back.
+
+    """
+    length = 20
+    simplices = 10
+    mesh = df.IntervalMesh(simplices, 0, length)
+
+    sim = Simulation(mesh, Ms=1, unit_length=1e-9)
+    sim.alpha = 1
+    expected_alpha = np.ones(simplices + 1)
+    assert np.array_equal(sim.alpha.vector().array(), expected_alpha)
+
+
+def test_spatially_varying_alpha_using_LLG_class():
+    """
+    no property magic here - llg.alpha is a df.Function at heart and can be
+    set with any type using llg.set_alpha()
+
+    """
+    length = 20
     simplices = 10
     mesh = df.IntervalMesh(simplices, 0, length)
 
     S1 = df.FunctionSpace(mesh, "Lagrange", 1)
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
     llg = LLG(S1, S3)
-    
-    # one value of alpha on all nodes
-    llg.alpha = 0.5 # API hasn't changed.
-    expected_alphas = 0.5 * np.ones(simplices+1)
-    assert np.array_equal(llg.alpha_vec, expected_alphas) 
+    llg.set_alpha(1)
+    expected_alpha = np.ones(simplices + 1)
 
-    # spatially varying alpha
-    multiplicator = df.Function(llg.S1)
-    multiplicator.vector()[:] = np.linspace(0.5, 1.5, simplices+1)
-    llg.spatially_varying_alpha(0.4, multiplicator) # This is new.
-    expected_alphas = np.linspace(0.2, 0.6, simplices+1)
-    print "Got:\n", llg.alpha_vec
-    print "Expected:\n", expected_alphas
-    assert np.allclose(llg.alpha_vec, expected_alphas) 
-
-
+    print "Got:\n", llg.alpha.vector().array()
+    print "Expected:\n", expected_alpha
+    assert np.array_equal(llg.alpha.vector().array(), expected_alpha)

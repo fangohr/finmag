@@ -3,23 +3,20 @@ from finmag.sim.llg import LLG
 
 x0 = 0; x1 = 100e-9; xn = 50;
 y0 = 0; y1 = 10e-9; yn = 5;
-nanowire = df.Rectangle(x0, y0, x1, y1, xn, yn, "left/right")
+nanowire = df.RectangleMesh(x0, y0, x1, y1, xn, yn, "left/right")
 S1 = df.FunctionSpace(nanowire, "Lagrange", 1)
 S3 = df.VectorFunctionSpace(nanowire, "Lagrange", 1, dim=3)
 
 llg = LLG(S1, S3)
 
 """
-We want to increase the damping at the boundary of the object. While it would
-be possible to provide a vector of values for alpha directly with llg.alpha_vec,
-it is more convenient to channel the power of dolfin expressions for this
-task.
+We want to increase the damping at the boundary of the object.
+It is convenient to channel the power of dolfin expressions for this task.
 
 """
 
-mult = df.Function(llg.S1)
-mult.assign(df.Expression("(x[0]>x_limit) ? 2.0 : 1.0", x_limit=80e-9))
-llg.spatially_varying_alpha(0.5, mult)
+alpha_expression = df.Expression("(x[0] > x_limit) ? 1.0 : 0.5", x_limit=80e-9)
+llg.set_alpha(alpha_expression)
 
-print "baseline alpha: ", llg.alpha
-print "alpha vector:\n", llg.alpha_vec
+print "alpha vector:\n", llg.alpha.vector().array()
+df.plot(llg.alpha, interactive=True)

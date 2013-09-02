@@ -1,6 +1,6 @@
 """ Attempt to visualise some dynimacs using python's visual module.
 
-Visualisation probably okay, but some convergence problem in the time 
+Visualisation probably okay, but some convergence problem in the time
 integration means this does not look smooth at all, and is very slow.
 
 """
@@ -21,8 +21,8 @@ simplexes = 10
 mesh = dolfin.Interval(simplexes, 0, length)
 
 llg = LLG(mesh)
-llg.alpha=0.1
 llg.H_app=(0,0,llg.Ms)
+llg.set_alpha(0.1)
 llg.set_m(('1', '0', '0'))
 llg.setup()
 #llg.pins = [0, 10]
@@ -38,8 +38,8 @@ for i in range(y.shape[1]):
     pos = list(coordinates[i])
     thisM = y[:,i]
     while len(pos) < 3: #visual python needs 3d vector
-        pos.append(0.0) 
-    
+        pos.append(0.0)
+
     arrows.append(visual.arrow(pos=pos,axis=tuple(thisM)))
 
 ts = numpy.linspace(0, 1e-10, 200)
