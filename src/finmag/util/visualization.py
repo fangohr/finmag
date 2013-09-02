@@ -3,8 +3,9 @@ import textwrap
 import logging
 import tempfile
 import shutil
-import os
 import sys
+import os
+import re
 import IPython.core.display
 from visualization_impl import _axes
 
@@ -34,9 +35,10 @@ from visualization_impl import find_valid_X_display
 
 
 def render_paraview_scene(
-    vtu_file,
+    pvd_file,
     outfile=None,
     field_name='m',
+    timesteps=None,
     camera_position=[0, -200, +200],
     camera_focal_point=[0, 0, 0],
     camera_view_up=[0, 0, 1],
@@ -74,7 +76,7 @@ def render_paraview_scene(
 
     # Use absolute path for filenames because the script will be
     # written to a temporary directory in a different location.
-    vtu_file = os.path.abspath(vtu_file)
+    pvd_file = os.path.abspath(pvd_file)
     if outfile is None:
         _, outfile = tempfile.mkstemp(suffix='.png')
     outfile = os.path.abspath(outfile)
@@ -102,6 +104,7 @@ def render_paraview_scene(
     script_string = textwrap.dedent("""
               from visualization_impl import render_paraview_scene, find_valid_X_display
               from subprocess import Popen
+              from numpy import array
               import time
               import os
 
@@ -112,7 +115,7 @@ def render_paraview_scene(
                   else:
                       os.environ['DISPLAY'] = ':' + str(display)
               render_paraview_scene(
-                  '{}', '{}', {},
+                  '{}', '{}', {}, {},
                   {}, {}, {},
                   {}, {}, {}, {},
                   '{}', {}, {},
@@ -121,7 +124,7 @@ def render_paraview_scene(
                   {}, {},
                   {}, '{}', '{}', {}, {})
               """.format(
-            vtu_file, outfile, repr(field_name),
+            pvd_file, outfile, repr(field_name), re.sub('\n', '', repr(timesteps)),
             camera_position, camera_focal_point, camera_view_up,
             view_size, magnification, fit_view_to_scene, color_by_axis,
             colormap, rescale_colormap_to_data_range, show_colorbar,

@@ -975,10 +975,10 @@ class Simulation(object):
         """
         from finmag.util.visualization import render_paraview_scene
         tmpdir = tempfile.mkdtemp()
-        basename = os.path.join(tmpdir, 'paraview_scene_{}'.format(self.name))
-        self.save_vtk(filename=basename + '.pvd')
+        filename = os.path.join(tmpdir, 'paraview_scene_{}.pvd'.format(self.name))
+        self.save_vtk(filename=filename)
         try:
-            return render_paraview_scene(basename + '000000.vtu', **kwargs)
+            return render_paraview_scene(filename, **kwargs)
         finally:
             shutil.rmtree(tmpdir)
 
