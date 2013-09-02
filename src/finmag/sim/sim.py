@@ -1139,7 +1139,7 @@ class NormalModeSimulation(Simulation):
 
     def plot_spectrum(self, t_step=None, t_ini=None, t_end=None, subtract_values='average',
                       components="xyz", xlim=None, ticks=5, figsize=None, title="",
-                      outfilename=None, use_averaged_m=True):
+                      filename=None, use_averaged_m=True):
         """
         Plot the normal mode spectrum of the simulation.
 
@@ -1167,7 +1167,7 @@ class NormalModeSimulation(Simulation):
 
         fig = _plot_spectrum(self.fft_freqs, self.fft_mx, self.fft_my, self.fft_mz,
                              components=components, xlim=xlim, ticks=ticks,
-                             figsize=figsize, title=title, outfilename=outfilename)
+                             figsize=figsize, title=title, filename=filename)
         return fig
 
     def _get_fft_component(self, component):
@@ -1317,7 +1317,7 @@ class NormalModeSimulation(Simulation):
 
         if filename is None:
             if directory is '':
-                raise ValueError("Please specify at least one of the arguments 'outfilename' or 'directory'")
+                raise ValueError("Please specify at least one of the arguments 'filename' or 'directory'")
             filename = 'normal_mode_{}__{:.3f}_GHz.pvd'.format(k, self.eigenfreqs[k] / 1e9)
         filename = os.path.join(directory, filename)
 
