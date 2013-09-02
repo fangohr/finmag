@@ -1367,7 +1367,7 @@ def vec2str(a, fmt='{}', delims='()', sep=', '):
     delimiter is given (e.g. "|") then this is used both as left and right
     delimiter. If `delims` is empty, no delimiters will be used.
 
-    Examples:
+    Examples::
 
        a = numpy.array([1, 200, 30000])
        vec2str(a)  -->  (1, 200, 30000)
