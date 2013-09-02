@@ -42,30 +42,36 @@ class TestSimulation(object):
         cls.sim.relax()
 
     def test_get_interaction(self):
+        sim = sim_with(self.mesh, Ms=8.6e5, m_init=(1, 0, 0), alpha=1.0,
+                       unit_length=1e-9, A=13.0e-12, demag_solver='FK')
+
         # These should just work
-        self.sim.get_interaction('Exchange')
-        self.sim.get_interaction('Demag')
+        sim.get_interaction('Exchange')
+        sim.get_interaction('Demag')
 
         with pytest.raises(ValueError):
-            self.sim.get_interaction('foobar')
+            sim.get_interaction('foobar')
 
         exch = Exchange(A=13e-12, name='foobar')
-        self.sim.add(exch)
-        assert exch == self.sim.get_interaction('foobar')
+        sim.add(exch)
+        assert exch == sim.get_interaction('foobar')
 
     def test_compute_energy(self):
+        sim = sim_with(self.mesh, Ms=8.6e5, m_init=(1, 0, 0), alpha=1.0,
+                       unit_length=1e-9, A=13.0e-12, demag_solver='FK')
+
         # These should just work
-        self.sim.compute_energy('Exchange')
-        self.sim.compute_energy('Demag')
-        self.sim.compute_energy('Total')
-        self.sim.compute_energy('total')
+        sim.compute_energy('Exchange')
+        sim.compute_energy('Demag')
+        sim.compute_energy('Total')
+        sim.compute_energy('total')
 
         # A non-existing interaction should return zero energy
-        assert(self.sim.compute_energy('foobar') == 0.0)
+        assert(sim.compute_energy('foobar') == 0.0)
 
-        exch = Exchange(A=13e-12, name='foobar')
-        self.sim.add(exch)
-        assert exch.compute_energy() == self.sim.compute_energy('foobar')
+        new_exch = Exchange(A=13e-12, name='foo')
+        sim.add(new_exch)
+        assert new_exch.compute_energy() == sim.compute_energy('foo')
 
     def test_get_field_as_dolfin_function(self):
         """
@@ -955,17 +961,17 @@ def test_NormalModeSimulation(tmpdir):
     assert(np.allclose(f.timesteps(), np.linspace(0, 2e-12, 21), atol=0, rtol=1e-8))
 
     sim.plot_spectrum(use_averaged_m=True)
-    sim.plot_spectrum(use_averaged_m=True, t_step=1.5e-12, subtract_values='first', figsize=(16, 6), outfilename='fft_m.png')
+    sim.plot_spectrum(use_averaged_m=True, t_step=1.5e-12, subtract_values='first', figsize=(16, 6), filename='fft_m.png')
     # sim.plot_spectrum(use_averaged_m=False)
-    # sim.plot_spectrum(use_averaged_m=True, t_step=1.5e-12, subtract_values='first', figsize=(16, 6), outfilename='fft_m_spatially_resolved.png')
+    # sim.plot_spectrum(use_averaged_m=True, t_step=1.5e-12, subtract_values='first', figsize=(16, 6), filename='fft_m_spatially_resolved.png')
     assert(os.path.exists('fft_m.png'))
 
-    sim.plot_spectrum(t_step=t_step, outfilename='fft_m.png')
+    sim.plot_spectrum(t_step=t_step, filename='fft_m.png')
 
     sim.find_peak_near_frequency(10e9, component='y')
 
     sim.export_normal_mode_animation_from_ringdown('foobar/foo_m*.npy', peak_idx=2,
-                                                   outfilename='animations/foo_peak_idx_2.pvd',
+                                                   filename='animations/foo_peak_idx_2.pvd',
                                                    num_cycles=1, num_frames_per_cycle=4)
     sim.export_normal_mode_animation_from_ringdown('foobar/foo_m*.npy', f_approx=0.0, component='y',
                                                    directory='animations', num_cycles=1, num_frames_per_cycle=4)
