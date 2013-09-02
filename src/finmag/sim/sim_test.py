@@ -67,10 +67,8 @@ class TestSimulation(object):
         sim.compute_energy('total')
 
         # A non-existing interaction should return zero energy
-        print "[DDD] Line 1"
         assert(sim.compute_energy('foobar') == 0.0)
 
-        print "[DDD] Line 2"
         new_exch = Exchange(A=13e-12, name='foo')
         sim.add(new_exch)
         assert new_exch.compute_energy() == sim.compute_energy('foo')
