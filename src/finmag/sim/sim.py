@@ -347,7 +347,7 @@ class Simulation(object):
             simulation.
 
         """
-        print("[DDD] Entering compute_energy()")
+        print("[DDD] Entering compute_energy() (name='{}')".format(name))
         if name.lower() == 'total':
             print("[DDD] Computing total energy")
             res = self.total_energy()
