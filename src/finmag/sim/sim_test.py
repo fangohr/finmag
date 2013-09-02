@@ -672,7 +672,7 @@ class TestSimulation(object):
         sim.alpha = alpha
         sim.set_m((1, 0, 0))
         sim.T = 0
-    
+
 
         H0 = 1e5
         sim.add(Zeeman((0, 0, H0)))
@@ -681,7 +681,7 @@ class TestSimulation(object):
 
         precession_coeff = sim.gamma / (1 + alpha ** 2)
         mz_ref = []
-    
+
         mz = []
         real_ts=[]
         for t in ts:
@@ -689,14 +689,14 @@ class TestSimulation(object):
             real_ts.append(sim.t)
             mz_ref.append(np.tanh(precession_coeff * alpha * H0 * sim.t))
             mz.append(sim.m[-1]) # same as m_average for this macrospin problem
-    
+
         mz=np.array(mz)
 
         if do_plot:
             import matplotlib.pyplot as plt
             ts_ns = np.array(real_ts) * 1e9
-            plt.plot(ts_ns, mz, "b.", label="computed") 
-            plt.plot(ts_ns, mz_ref, "r-", label="analytical") 
+            plt.plot(ts_ns, mz, "b.", label="computed")
+            plt.plot(ts_ns, mz_ref, "r-", label="analytical")
             plt.xlabel("time (ns)")
             plt.ylabel("mz")
             plt.title("integrating a macrospin")
@@ -706,9 +706,9 @@ class TestSimulation(object):
         print("Deviation = {}, total value={}".format(
             np.max(np.abs(mz - mz_ref)),
             mz_ref))
-    
+
         assert np.max(np.abs(mz - mz_ref)) < 8e-7
-        
+
     def test_sim_sllg_time(self):
         mesh = df.BoxMesh(0, 0, 0, 5, 5, 5, 1, 1, 1)
         sim = Simulation(mesh, 8.6e5, unit_length=1e-9, kernel='sllg')
@@ -716,20 +716,20 @@ class TestSimulation(object):
         sim.set_m((1, 0, 0))
         sim.T = 10
         assert np.max(sim.T) == 10
-        
+
         ts = np.linspace(0, 1e-9, 1001)
-    
+
         H0 = 1e5
         sim.add(Zeeman((0, 0, H0)))
-    
+
         real_ts=[]
         for t in ts:
             sim.run_until(t)
             real_ts.append(sim.t)
-    
+
         print("Max Deviation = {}".format(
             np.max(np.abs(ts - real_ts))))
-    
+
         assert np.max(np.abs(ts - real_ts)) < 1e-24
 
 
@@ -1011,5 +1011,5 @@ def test_compute_normal_modes(tmpdir):
 
     assert(os.path.exists('animation/mode_2.pvd'))
     assert(len(glob('animation/mode_2*.vtu')) == 10)
-    assert(os.path.exists('animation/normal_mode_5__0.000_GHz.pvd'))
+    assert(len(glob('animation/normal_mode_5__*_GHz*.pvd')) == 1)
     assert(len(glob('animation/normal_mode_5__*_GHz*.vtu')) == 10)
