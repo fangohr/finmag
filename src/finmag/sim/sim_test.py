@@ -63,9 +63,9 @@ class TestSimulation(object):
         # A non-existing interaction should return zero energy
         assert(self.sim.compute_energy('foobar') == 0.0)
 
-        exch = Exchange(A=13e-12, name='foobar')
-        self.sim.add(exch)
-        assert exch.compute_energy() == self.sim.compute_energy('foobar')
+        new_exch = Exchange(A=13e-12, name='foo')
+        self.sim.add(new_exch)
+        assert new_exch.compute_energy() == self.sim.compute_energy('foo')
 
     def test_get_field_as_dolfin_function(self):
         """
