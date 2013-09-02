@@ -42,7 +42,7 @@ class TestSimulation(object):
         cls.sim.relax()
 
     def test_get_interaction(self):
-        sim = sim_with(cls.mesh, Ms=8.6e5, m_init=(1, 0, 0), alpha=1.0,
+        sim = sim_with(self.mesh, Ms=8.6e5, m_init=(1, 0, 0), alpha=1.0,
                        unit_length=1e-9, A=13.0e-12, demag_solver='FK')
 
         # These should just work
@@ -57,7 +57,7 @@ class TestSimulation(object):
         assert exch == sim.get_interaction('foobar')
 
     def test_compute_energy(self):
-        sim = sim_with(cls.mesh, Ms=8.6e5, m_init=(1, 0, 0), alpha=1.0,
+        sim = sim_with(self.mesh, Ms=8.6e5, m_init=(1, 0, 0), alpha=1.0,
                        unit_length=1e-9, A=13.0e-12, demag_solver='FK')
 
         # These should just work
