@@ -38,7 +38,7 @@ class LLG(object):
         logger.debug("Creating LLG object.")
         self.S1 = S1
         self.S3 = S3
-        self.mesh=S1.mesh()
+        self.mesh = S1.mesh()
 
         self.set_default_values()
         self.do_precession = do_precession
@@ -46,13 +46,10 @@ class LLG(object):
         self.effective_field = EffectiveField(S3, average)
         self.Volume = None  # will be computed on demand, and carries volume of the mesh
 
-
-
     def set_default_values(self):
-        self._alpha_mult = df.Function(self.S1)
-        self._alpha_mult.assign(df.Constant(1))
+        self.alpha = df.Function(self.S1)
+        self.alpha.assign(df.Constant(0.5))
 
-        self.alpha = 0.5  # alpha for solve: alpha * _alpha_mult
         self.gamma = consts.gamma
         self.c = 1e11  # 1/s numerical scaling correction \
         #               0.1e12 1/s is the value used by default in nmag 0.2
@@ -63,8 +60,6 @@ class LLG(object):
         # exported VTK file.
         self._m.rename("m", "magnetisation")
         self.pins = []  # nodes where the magnetisation gets pinned
-
-
 
     def set_pins(self, nodes):
         """
@@ -85,36 +80,20 @@ class LLG(object):
         else:
             self._pins = np.array([], dtype="int")
 
-
     def pins(self):
         return self._pins
     pins = property(pins, set_pins)
 
-    def spatially_varying_alpha(self, baseline_alpha, multiplicator):
+    def set_alpha(self, value):
         """
-        Accepts a dolfin function over llg.S1 of values
-        with which to multiply the baseline alpha to get the spatially
-        varying alpha.
+        Set the damping constant :math:`\\alpha`.
+
+        The parameter `value` can have any of the types accepted by the
+        function :py:func:`finmag.util.helpers.scalar_valued_function` (see its
+        docstring for details).
 
         """
-        self._alpha_mult = multiplicator
-        self.alpha = baseline_alpha
-
-        # TODO: What I'd like to have is self.alpha be the df.Function.
-        # The attributes _alpha_mult, _alpha and alpha_vec could then be deleted.
-
-    @property
-    def alpha(self):
-        """The damping factor :math:`\\alpha`."""
-        return self._alpha
-
-    @alpha.setter
-    def alpha(self, value):
-        self._alpha = value
-        # need to update the alpha vector as well, which is
-        # why we have this property at all.
-        self.alpha_vec = self._alpha * self._alpha_mult.vector().array()
-
+        self.alpha = helpers.scalar_valued_function(value, self.S1)
 
     @property
     def Ms(self):
@@ -212,12 +191,12 @@ class LLG(object):
                 self.J[:] = J_new
             native_llg.calc_llg_slonczewski_dmdt(
                 m, H_eff, t, dmdt, self.pins,
-                self.gamma, self.alpha_vec,
+                self.gamma, self.alpha.vector().array(),
                 char_time,
                 self.J, self.P, self.d, self._Ms, self.p)
         else:
             native_llg.calc_llg_dmdt(m, H_eff, t, dmdt, self.pins,
-                                 self.gamma, self.alpha_vec,
+                                 self.gamma, self.alpha.vector().array(),
                                  char_time, self.do_precession)
         dmdt.shape = (-1,)
         H_eff.shape=(-1,)
@@ -346,7 +325,7 @@ class LLG(object):
         # Use the same characteristic time as defined by c
         char_time = 0.1 / self.c
         native_llg.calc_llg_jtimes(m, self.effective_field.H_eff.reshape((3, -1)), mp, Hp, t, J_mp, self.gamma,
-                                   self.alpha_vec, char_time, self.do_precession, self.pins)
+                                   self.alpha.vector().array(), char_time, self.do_precession, self.pins)
         J_mp.shape = (-1, )
         m.shape = (-1,)
         mp.shape = (-1,)

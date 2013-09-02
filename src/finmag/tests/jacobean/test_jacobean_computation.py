@@ -10,7 +10,7 @@ def setup_llg_params_near_one(node_count=5, A=3.6 * 4e-7 * np.pi, Ms=6.7e5, K1=4
     llg = setup_domain_wall_cobalt(node_count=node_count, A=A, Ms=Ms, K1=K1, length=1.3, do_precession=do_precession)
     llg.c = 1.23
     llg.gamma = 1.56
-    llg.alpha = 2.35
+    llg.set_alpha(2.35)
     llg.pins = []
     n = llg.m.size / 3
     # Generate a random (non-normalised) magnetisation vector with norm close to 1

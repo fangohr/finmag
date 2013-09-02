@@ -27,24 +27,24 @@ def relax_system():
     sim.alpha = 1
     sim.llg.do_precession = False
     sim.add(Exchange(A))
-    sim.add(Demag(solver="FK")) 
+    sim.add(Demag(solver="FK"))
     sim.relax()
-    np.save(initial_m_file, sim.m)  
-    
+    np.save(initial_m_file, sim.m)
+
 def excite_system():
     """
     Excite the relaxed system with the sinc pulse and save m_y to a file.
 
     """
     sim = Sim(mesh, Ms, unit_length=1e-9)
-    alpha_mult = df.interpolate(df.Expression(
-        "(x[0] < x_left || x[0] > x_right) ? 100.0 : 1.0",
-        x_left=x0+dx_high_alpha, x_right=x1-dx_high_alpha), sim.llg.S1)
-    sim.spatial_alpha(0.01, alpha_mult)
+    alpha_expression = df.Expression(
+        "(x[0] < x_left || x[0] > x_right) ? 1.0 : 0.01",
+        x_left=x0+dx_high_alpha, x_right=x1-dx_high_alpha)
+    sim.alpha = alpha_expression
     sim.set_m(np.load(initial_m_file))
     sim.add(Exchange(A))
     sim.add(Demag(solver="FK"))
-    
+
     GHz = 1e9
     omega = 50 * 2 * np.pi * GHz
     sinc = (
@@ -52,12 +52,12 @@ def excite_system():
         " * (t == 0 ? 1 : sin(omega * t)/(omega * t))"
         " * (x[0] == 0 ? 1 : sin(k_c * x[0])/(k_c * x[0]))")
     H = df.Expression(("0.0", sinc, "0.0"), H_0=1e5, k_c=1.0, omega=omega, t=0.0)
-    pulse = TimeZeeman(H) 
+    pulse = TimeZeeman(H)
     t_0 = 50e-12
     def update_pulse(t):
         pulse.update(t - t_0)
-    sim.add(pulse, with_time_update=update_pulse) 
-   
+    sim.add(pulse, with_time_update=update_pulse)
+
     xs = np.linspace(x0 + 1e-8, x1 - 1e-8, xn_probe)
     ts = np.linspace(0, 2e-9, 2001)
     my_along_x_axis_over_time = []
@@ -79,7 +79,7 @@ def compute_dispersion(dx, dt):
     transformed = np.log10(np.power(np.abs(fft.fftshift(fft.fft2(my))), 2))
     m, n = transformed.shape
     print m,n
-    
+
     freq = fft.fftshift(fft.fftfreq(m, dt))
     kx = fft.fftshift(fft.fftfreq(n, dx/(2.0*np.pi)))
 
@@ -94,15 +94,15 @@ if __name__ == '__main__':
     if not os.path.exists(initial_m_file):
         print "Creating initial magnetisation."
         relax_system()
-    
+
     if not os.path.exists(m_for_fourier_analysis_file):
         print "Running simulation with excitation."
         excite_system()
-    
+
     if not os.path.exists(dispersion_data_file):
         "Computing dispersion relation."
         compute_dispersion(2, 1e-3)
-    
+
     if not os.path.exists(dispersion_plot_file):
         print "Calling gnuplot to create dispersion plot."
         cmd = ('gnuplot', 'plot.gnu')
