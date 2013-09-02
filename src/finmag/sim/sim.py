@@ -1312,7 +1312,7 @@ class NormalModeSimulation(Simulation):
         if filename is None:
             if directory is '':
                 raise ValueError("Please specify at least one of the arguments 'filename' or 'directory'")
-            filename = 'normal_mode_{}__{:.3f}_GHz.pvd'.format(k, self.eigenfreqs[k] / 1e9)
+            filename = 'normal_mode_{}__{:.3f}_GHz.pvd'.format(k, self.eigenfreqs[k])
         filename = os.path.join(directory, filename)
 
         export_normal_mode_animation(self, self.eigenfreqs[k], self.eigenvecs[:, k], filename, num_cycles=num_cycles,
