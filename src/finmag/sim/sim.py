@@ -1220,7 +1220,7 @@ class NormalModeSimulation(Simulation):
         peak (as returned by `sim.find_peak_near_frequency()`).
 
 
-        *Arguments:
+        *Arguments*:
 
         f_approx:  float
 
