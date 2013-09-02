@@ -118,8 +118,8 @@ def run_simulation(stop_when_mx_eq_zero):
             return not stop_when_mx_eq_zero
 
     sim.schedule(check_if_crossed, every=1e-12)
-    sim.schedule(Simulation.save_averages, every=10e-12, at_end=True)
-    sim.schedule(Simulation.save_vtk, every=10e-12, at_end=True, overwrite=True)
+    sim.schedule('save_averages', every=10e-12, at_end=True)
+    sim.schedule('save_vtk', every=10e-12, at_end=True, overwrite=True)
     sim.run_until(2.0e-9)
     return sim.t
 
