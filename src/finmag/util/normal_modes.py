@@ -299,9 +299,16 @@ def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9
     logger.info("Assembling eigenproblem matrix.")
     A = np.zeros((2*n, 2*n), dtype=complex)
     # Compute A
-    for i, w in enumerate(np.eye(2*n)):
+    w = np.zeros(2*n)
+    for i in xrange(2*n):
         if i % 50 == 0:
             logger.debug("Processing row {}/{}  (time taken so far: {:.2f} seconds)".format(i, 2*n, df.toc()))
+
+        # Ensure that w is the i-th standard basis vector
+        w.shape = (2*n,)
+        w[i-1] = 0.0  # this will do no harm if i==0
+        w[i] = 1.0
+
         w.shape = (2, 1, n)
         Av = A_times_vector(mf_mult(Q, w))
         A[:, i] = mf_mult(Qt, Av).reshape(-1)
