@@ -1053,22 +1053,21 @@ class NormalModeSimulation(Simulation):
         into a single convenient function call, thus making it less likely to
         forget any settings.
 
-        The following two code snippets are equivalent.
+        The following snippet::
 
-        ==>
-        sim.run_ringdown(t_end=10e-9, alpha=0.02, H_ext=[1e5, 0, 0],
-                         save_m_every=1e-11, m_snapshots_filename='sim_m.npy',
-                         save_ndt_every=1e-12)
-        <==
+            sim.run_ringdown(t_end=10e-9, alpha=0.02, H_ext=[1e5, 0, 0],
+                            save_m_every=1e-11, m_snapshots_filename='sim_m.npy',
+                            save_ndt_every=1e-12)
 
-        ==>
-        sim.clear_schedule()
-        sim.alpha = 0.02
-        sim.reset_time(0.0)
-        sim.schedule('save_ndt', every=save_ndt_every)
-        sim.schedule('save_vtk', every=save_vtk_every, filename=vtk_snapshots_filename)
-        sim.run_until(10e-9)
-        <==
+        is equivalent to::
+
+            sim.clear_schedule()
+            sim.alpha = 0.02
+            sim.reset_time(0.0)
+            sim.schedule('save_ndt', every=save_ndt_every)
+            sim.schedule('save_vtk', every=save_vtk_every, filename=vtk_snapshots_filename)
+            sim.run_until(10e-9)
+
         """
         if reset_time:
             self.reset_time(0.0)
