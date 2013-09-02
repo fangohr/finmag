@@ -42,32 +42,38 @@ class TestSimulation(object):
         cls.sim.relax()
 
     def test_get_interaction(self):
+        sim = sim_with(cls.mesh, Ms=8.6e5, m_init=(1, 0, 0), alpha=1.0,
+                       unit_length=1e-9, A=13.0e-12, demag_solver='FK')
+
         # These should just work
-        self.sim.get_interaction('Exchange')
-        self.sim.get_interaction('Demag')
+        sim.get_interaction('Exchange')
+        sim.get_interaction('Demag')
 
         with pytest.raises(ValueError):
-            self.sim.get_interaction('foobar')
+            sim.get_interaction('foobar')
 
         exch = Exchange(A=13e-12, name='foobar')
-        self.sim.add(exch)
-        assert exch == self.sim.get_interaction('foobar')
+        sim.add(exch)
+        assert exch == sim.get_interaction('foobar')
 
     def test_compute_energy(self):
+        sim = sim_with(cls.mesh, Ms=8.6e5, m_init=(1, 0, 0), alpha=1.0,
+                       unit_length=1e-9, A=13.0e-12, demag_solver='FK')
+
         # These should just work
-        self.sim.compute_energy('Exchange')
-        self.sim.compute_energy('Demag')
-        self.sim.compute_energy('Total')
-        self.sim.compute_energy('total')
+        sim.compute_energy('Exchange')
+        sim.compute_energy('Demag')
+        sim.compute_energy('Total')
+        sim.compute_energy('total')
 
         # A non-existing interaction should return zero energy
         print "[DDD] Line 1"
-        assert(self.sim.compute_energy('foobar') == 0.0)
+        assert(sim.compute_energy('foobar') == 0.0)
 
         print "[DDD] Line 2"
         new_exch = Exchange(A=13e-12, name='foo')
-        self.sim.add(new_exch)
-        assert new_exch.compute_energy() == self.sim.compute_energy('foo')
+        sim.add(new_exch)
+        assert new_exch.compute_energy() == sim.compute_energy('foo')
 
     def test_get_field_as_dolfin_function(self):
         """
