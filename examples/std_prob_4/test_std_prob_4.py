@@ -109,7 +109,6 @@ def run_simulation(stop_when_mx_eq_zero):
 
     def check_if_crossed(sim):
         mx, _, _ = sim.m_average
-        print "The x-component of the averaged magnetisation is mx = {}.".format(mx)
         if mx <= 0:
             print "The x-component of the spatially averaged magnetisation first crossed zero at t = {}.".format(sim.t)
             np.save(m_at_crossing_file, sim.m)
