@@ -21,6 +21,7 @@ import subprocess
 import IPython.core.display
 import subprocess as sp
 import numpy as np
+import numbers
 
 logger = logging.getLogger("finmag")
 
@@ -118,9 +119,10 @@ _representations = ['3D Glyphs', 'Outline', 'Points', 'Surface',
 
 
 def render_paraview_scene(
-    vtu_file,
+    pvd_file,
     outfile,
     field_name='m',
+    timesteps=None,
     camera_position=[0, -200, +200],
     camera_focal_point=[0, 0, 0],
     camera_view_up=[0, 0, 1],
@@ -155,21 +157,32 @@ def render_paraview_scene(
 
     *Arguments*
 
-    vtu_file:
+    pvd_file:
 
-        Input filename (must be in *.vtu format).
+        Input filename (must be in *.pvd format).
 
     outfile:
 
         Name of the output image file (may be None, which is the
         default). The image type (e.g. PNG) is derived from the file
-        extension.
+        extension. If multiple timesteps are to be animated, the
+        output files will have additional suffixes of the form
+        '_N_TIMESTEP', where N represents the index of the timestep
+        (in the array passed as the argument `timesteps`) and TIMESTEP
+        is the actual timestep itself.
 
     field_name:
 
         The field to plot. Default: 'm' (= the normalised magnetisation).
         Note that this field must of course have been saved in the .vtu
         file.
+
+    timesteps:
+
+        The timesteps for which to render the scene. The default is
+        None, which means to animate all timesteps (and save them as a
+        sequence of images if `outfile` is specified). Other valid
+        values are either a single number or a list of numbers.
 
     camera_position:  3-vector
     camera_focal_point:  3-vector
@@ -315,13 +328,14 @@ def render_paraview_scene(
                        "integer value.".format(magnification))
         magnification = int(round(magnification))
 
-    if not os.path.exists(vtu_file):
-        raise IOError("vtu file '{}' does not exist.".format(vtu_file))
+    if not os.path.exists(pvd_file):
+        raise IOError("File does not exist: '{}'.".format(pvd_file))
 
     servermanager.Disconnect()
     servermanager.Connect()
-    reader = servermanager.sources.XMLUnstructuredGridReader(FileName=vtu_file)
+    reader = servermanager.sources.PVDReader(FileName=pvd_file)
     reader.UpdatePipeline()
+
     view = servermanager.CreateRenderView()
     repr = servermanager.CreateRepresentation(reader, view)
     repr.Representation = representation
@@ -497,25 +511,59 @@ def render_paraview_scene(
         _, outfile = tempfile.mkstemp(suffix='.png')
 
     view.ViewSize = view_size
-    view.WriteImage(outfile, "vtkPNGWriter", magnification)
-    servermanager.Disconnect()
-    if trim_border:
-        if palette == 'print':
-            bordercolor = '"rgb(255,255,255)"'
-        else:
-            bordercolor = '"rgb(82,87,110)"'
-        cmd = 'mogrify -bordercolor {} -border 1x1 -trim {}'.format(bordercolor, outfile)
-        try:
-            subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
-            logger.debug("Trimming border from rendered scene.")
-        except OSError:
-            logger.warning("Using the 'trim' argument requires ImageMagick to be installed.")
-        except subprocess.CalledProcessError as ex:
-            logger.warning("Could not trim border from image. "
-                           "The error message was: {}".format(ex.output))
 
-    image = IPython.core.display.Image(filename=outfile)
-    return image
+    def write_image(outfilename):
+        view.WriteImage(outfilename, "vtkPNGWriter", magnification)
+        if trim_border:
+            if palette == 'print':
+                bordercolor = '"rgb(255,255,255)"'
+            else:
+                bordercolor = '"rgb(82,87,110)"'
+            cmd = 'mogrify -bordercolor {} -border 1x1 -trim {}'.format(bordercolor, outfilename)
+            try:
+                subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
+                logger.debug("Trimming border from rendered scene.")
+            except OSError:
+                logger.warning("Using the 'trim' argument requires ImageMagick to be installed.")
+            except subprocess.CalledProcessError as ex:
+                logger.warning("Could not trim border from image. "
+                               "The error message was: {}".format(ex.output))
+
+    logger.debug("[DDD] Timesteps: {}".format(timesteps))
+    if timesteps is None:
+        timesteps = reader.TimestepValues
+    elif not isinstance(timesteps, (list, tuple, np.ndarray)):
+        if not isinstace(timesteps, numbers.Number):
+            raise TypeError("Argument 'timesteps' must be either None or a number or a list of numbers. Got: '{}'".format(timesteps))
+        timesteps = [timesteps]
+
+    if len(timesteps) == 1:
+        # If a single timestep is rendered, we return the resulting image.
+        view.ViewTime = timesteps[0]
+        write_image(outfile)
+        res = IPython.core.display.Image(filename=outfile)
+    else:
+        # Otherwise we export a bunch of images with sequentially
+        # numbered suffixes.
+        #
+        # TODO: What should we return? Just the image for the first
+        #       timestep as we currently do? Or can we somehow create
+        #       a video and return that?
+        outbasename, outsuffix = os.path.splitext(outfile)
+
+        def generate_outfilename(i, t):
+            return outbasename + '_{:04d}_'.format(i) + str(t) + outsuffix
+
+        for (i, t) in enumerate(timesteps):
+            view.ViewTime = t
+            cur_outfilename = generate_outfilename(i, t)
+            logger.debug("Saving timestep {} to file '{}'.".format(t, cur_outfilename))
+            write_image(cur_outfilename)
+        res = IPython.core.display.Image(filename=generate_outfilename(0, timesteps[0]))
+
+    servermanager.Disconnect()
+
+    return None
 
 # Automatically add supported colormaps and representations to the docstring:
 render_paraview_scene.__doc__ = \
