@@ -229,7 +229,7 @@ def for_dolfin(vs):
     Takes a list with the shape [[x0, y0, z0], ..., [xn, yn, zn]]
     and returns [x0, ..., xn, y0, ..., yn, z0, ..., zn].
     """
-    return rows_to_columns(vs).flatten() 
+    return rows_to_columns(vs).flatten()
 
 def norm(vs):
     """
@@ -267,7 +267,7 @@ def crossprod(v, w):
 def fnormalise(arr):
     """
     Returns a normalised copy of the vectors in arr.
-    
+
     Expects arr to be a numpy.ndarray in the form that dolfin
     provides: [x0, ..., xn, y0, ..., yn, z0, ..., zn].
 
@@ -309,7 +309,7 @@ def quiver(f, mesh, filename=None, title="", **kwargs):
     from mayavi import mlab
     from dolfin.cpp import Mesh as dolfin_mesh
     from finmag.util.oommf.mesh import Mesh as oommf_mesh
-    
+
     if isinstance(mesh, dolfin_mesh):
         coords = mesh.coordinates()
     elif isinstance(mesh, oommf_mesh):
@@ -334,7 +334,7 @@ def quiver(f, mesh, filename=None, title="", **kwargs):
         # dolfin provides a flat numpy array, but we would like
         # one with the x, y and z components as individual arrays.
         f = components(f)
-   
+
     figure = mlab.figure(bgcolor=(1, 1, 1), fgcolor=(0, 0, 0))
     q = mlab.quiver3d(*(tuple(r)+tuple(f)), figure=figure, **kwargs)
     q.scene.isometric_view()
@@ -473,7 +473,7 @@ def vector_valued_function(value, mesh_or_space, normalise=False, **kwargs):
             fun = df.Function(S3)
             vec = np.empty((fun.vector().size()/3, 3))
             vec[:] = value # using broadcasting
-            
+
             fun.vector().set_local(vec.transpose().reshape(-1))
     elif isinstance(value, np.ndarray):
         fun = df.Function(S3)
@@ -481,24 +481,24 @@ def vector_valued_function(value, mesh_or_space, normalise=False, **kwargs):
             assert value.shape[1] == 3
             value = value.reshape(value.size, order="F")
         fun.vector()[:] = value
-    
+
     #if it's a normal function, we wrapper it into a dolfin expression
     elif hasattr(value, '__call__'):
-        
+
         class HelperExpression(df.Expression):
             def __init__(self,value):
                 super(HelperExpression, self).__init__()
                 self.fun = value
-        
+
             def eval(self, value, x):
-                value[:] = self.fun(x)[:]                
-            
+                value[:] = self.fun(x)[:]
+
             def value_shape(self):
                 return (3,)
-            
+
         hexp = HelperExpression(value)
         fun = df.interpolate(hexp, S3)
-        
+
     else:
         raise TypeError("Cannot set value of vector-valued function from "
                         "argument of type '{}'".format(type(value)))
@@ -519,12 +519,12 @@ def scalar_valued_function(value, mesh_or_space):
     If mesh_or_space is a FunctionSpace, it should be of type "Lagrange"
     (for "DG" spaces use the function `scalar_valued_dg_function`
     instead). Returns an object of type 'df.Function'.
-    
+
     `value` can be any of the following (see `vector_valued_function`
     for more details):
 
         - a number
-        
+
         - numpy.ndarray or a common list
 
         - dolfin.Constant or dolfin.Expression
@@ -537,7 +537,7 @@ def scalar_valued_function(value, mesh_or_space):
     else:
         mesh = mesh_or_space
         S1 = df.FunctionSpace(mesh, "Lagrange", 1)
-    
+
     if isinstance(value, (df.Constant, df.Expression)):
         fun = df.interpolate(value, S1)
     elif isinstance(value, (np.ndarray,list)):
@@ -550,7 +550,7 @@ def scalar_valued_function(value, mesh_or_space):
     elif hasattr(value, '__call__'):
         coords=mesh.coordinates()
         fun = df.Function(S1)
-        for i in xrange(len(coords)):   
+        for i in xrange(len(coords)):
             fun.vector()[i] = value(coords[i])
     else:
         raise TypeError("Cannot set value of scalar-valued function from "
@@ -566,12 +566,12 @@ def scalar_valued_dg_function(value, mesh_or_space):
     If mesh_or_space is a FunctionSpace, it should be of type "DG"
     (for "Lagrange" spaces use the function `scalar_valued_function`
     instead). Returns an object of type 'df.Function'.
-    
+
     `value` can be any of the following (see `vector_valued_function`
     for more details):
 
         - a number
-        
+
         - numpy.ndarray or a common list
 
         - dolfin.Constant or dolfin.Expression
@@ -584,7 +584,7 @@ def scalar_valued_dg_function(value, mesh_or_space):
     else:
         mesh = mesh_or_space
         dg = df.FunctionSpace(mesh, "DG", 0)
-    
+
     if isinstance(value, (df.Constant, df.Expression)):
         fun = df.interpolate(value, dg)
     elif isinstance(value, (np.ndarray,list)):
@@ -603,14 +603,14 @@ def scalar_valued_dg_function(value, mesh_or_space):
             raise RuntimeError("Meshes are not compatible for given function.")
     elif hasattr(value, '__call__'):
         fun = df.Function(dg)
-        
+
         index=0
         for cell in df.cells(mesh):
             p = cell.midpoint()
             coord=np.array([p.x(),p.y(),p.z()])
             fun.vector()[index] = value(coord)
             index+=1
-            
+
     else:
         raise TypeError("Cannot set value of scalar-valued DG function from "
                         "argument of type '{}'".format(type(value)))
@@ -625,12 +625,12 @@ def vector_valued_dg_function(value, mesh_or_space, normalise=False):
     If mesh_or_space is a FunctionSpace, it should be of type "DG"
     (for "Lagrange" spaces use the function `scalar_valued_function`
     instead). Returns an object of type 'df.Function'.
-    
+
     `value` can be any of the following (see `vector_valued_function`
     for more details):
 
         - a number
-        
+
         - numpy.ndarray or a common list
 
         - dolfin.Constant or dolfin.Expression
@@ -643,7 +643,7 @@ def vector_valued_dg_function(value, mesh_or_space, normalise=False):
     else:
         mesh = mesh_or_space
         dg = df.VectorFunctionSpace(mesh, "DG", 0)
-    
+
     if isinstance(value, (df.Constant, df.Expression)):
         fun = df.interpolate(value, dg)
     elif isinstance(value, (tuple, list, np.ndarray)) and len(value) == 3:
@@ -655,7 +655,7 @@ def vector_valued_dg_function(value, mesh_or_space, normalise=False):
             fun = df.Function(dg)
             vec = np.empty((fun.vector().size()/3, 3))
             vec[:] = value # using broadcasting
-            
+
             fun.vector().set_local(vec.transpose().reshape(-1))
     elif isinstance(value, (np.ndarray,list)):
         fun = df.Function(dg)
@@ -672,25 +672,25 @@ def vector_valued_dg_function(value, mesh_or_space, normalise=False):
         else:
             raise RuntimeError("Meshes are not compatible for given function.")
     elif hasattr(value, '__call__'):
-        
+
         class HelperExpression(df.Expression):
             def __init__(self,value):
                 super(HelperExpression, self).__init__()
                 self.fun = value
-        
+
             def eval(self, value, x):
-                value[:] = self.fun(x)[:]                
-            
+                value[:] = self.fun(x)[:]
+
             def value_shape(self):
                 return (3,)
-            
+
         hexp = HelperExpression(value)
         fun = df.interpolate(hexp, dg)
-            
+
     else:
         raise TypeError("Cannot set value of vector-valued DG function from "
                         "argument of type '{}'".format(type(value)))
-        
+
     if normalise:
         fun.vector()[:] = fnormalise(fun.vector().array())
 
@@ -726,23 +726,23 @@ def value_for_region(mesh, value, region, default_value=0, project_to_CG=False):
 def mark_subdomain_by_function(fun,mesh_or_space,domain_index,subdomains):
     """
     Mark the subdomains with given index if user provide a region by function, such as
-    
+
     def region1(coords):
         if coords[2]<0.5:
             return 1
         else:
             return 0
-        
+
     """
     if isinstance(mesh_or_space, df.FunctionSpace):
         dg = mesh_or_space
         mesh = dg.mesh()
     else:
         mesh = mesh_or_space
-    
+
     if hasattr(fun, '__call__'):
         cds=mesh.coordinates()
-    
+
         index=0
         for cell in df.cells(mesh):
             p1,p2,p3,p4=cell.entities(0)
@@ -750,9 +750,9 @@ def mark_subdomain_by_function(fun,mesh_or_space,domain_index,subdomains):
             if fun(coord):
                 subdomains.array()[index] = domain_index
             index+=1
-            
+
     else:
-        raise AttributeError    
+        raise AttributeError
 
 def _create_nonexistent_directory_components(filename):
     """
@@ -933,7 +933,7 @@ def pointing_downwards((x, y, z)):
 
     """
     _, theta, _ = cartesian_to_spherical((x, y, z))
-    return abs(theta - np.pi) < (np.pi / 4) 
+    return abs(theta - np.pi) < (np.pi / 4)
 
 
 def mesh_functions_allclose(f1, f2, fun_mask=None, rtol=1e-05, atol=1e-08):
@@ -1218,63 +1218,63 @@ def average_field(field_vals):
 
 def save_dg_fun(fun, name='unnamed.vtk', dataname='m', binary=False):
     """
-    Seems that saving DG function to vtk doesn't work properly. 
-    Ooops, seems that paraview don't like cell data. 
+    Seems that saving DG function to vtk doesn't work properly.
+    Ooops, seems that paraview don't like cell data.
     """
     import pyvtk
-    
+
     funspace = fun.function_space()
     mesh = funspace.mesh()
-    
+
     points = mesh.coordinates()
     tetras = np.array(mesh.cells(),dtype=np.int)
-    
+
     grid = pyvtk.UnstructuredGrid(points,
                                   tetra = tetras)
-    
+
     m = fun.vector().array()
 
     m.shape=(3,-1)
     print m
     data=pyvtk.CellData(pyvtk.Vectors(np.transpose(m)))
     m.shape=(-1,)
-    
+
     vtk = pyvtk.VtkData(grid,data,dataname)
-    
+
     if binary:
         vtk.tofile(name,'binary')
     else:
         vtk.tofile(name)
-        
-        
+
+
 def save_dg_fun_points(fun, name='unnamed.vtk', dataname='m', binary=False):
     """
-    Seems that saving DG function to vtk doesn't work properly.  
+    Seems that saving DG function to vtk doesn't work properly.
     """
     import pyvtk
-    
+
     V = fun.function_space()
     mesh = V.mesh()
-    
+
     points = []
     for cell in df.cells(mesh):
         points.append(V.dofmap().tabulate_coordinates(cell)[0])
 
-    
+
     verts = [i for i in range(len(points))]
-    
+
     grid = pyvtk.UnstructuredGrid(points,
                                   vertex=verts)
-    
+
     m = fun.vector().array()
 
     m.shape=(3,-1)
     data=pyvtk.PointData(pyvtk.Vectors(np.transpose(m),dataname))
     m.shape=(-1,)
-    
-    
+
+
     vtk = pyvtk.VtkData(grid,data, 'Generated by Finmag')
-    
+
     if binary:
         vtk.tofile(name,'binary')
     else:
@@ -1452,7 +1452,7 @@ def apply_vertexwise(f, *args):
 
         The function that is to be applied to the vertex values.
 
-    *args :  collection of dolfin.Functions
+    \*args:  collection of dolfin.Functions
 
         The fields
 
