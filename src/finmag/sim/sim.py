@@ -347,20 +347,14 @@ class Simulation(object):
             simulation.
 
         """
-        print("[DDD] Entering compute_energy() (name='{}')".format(name))
         if name.lower() == 'total':
-            print("[DDD] Computing total energy")
             res = self.total_energy()
         else:
-            print("[DDD] Computing other energy type")
             try:
                 interaction = self.get_interaction(name)
-                print("[DDD] Interaction found. Computing energy...")
                 res = interaction.compute_energy()
             except ValueError:
-                print("[DDD] Interaction not found. Returning zero energy.")
                 res = 0.0
-        print("[DDD] Result: {}".format(res))
         return res
 
     def get_interaction(self, interaction_name):
