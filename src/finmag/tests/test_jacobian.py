@@ -12,6 +12,7 @@ class MyLLG(LLG):
     """
     def __init__(self, S1, S3):
         LLG.__init__(self, S1, S3)
+        self.alpha = 0.5
         self.p = Constant(self.gamma/(1 + self.alpha**2))
 
     def M(self):
