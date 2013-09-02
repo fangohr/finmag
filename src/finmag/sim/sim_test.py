@@ -868,7 +868,8 @@ def test_removing_logger_handlers_allows_to_create_many_simulation_objects(tmpdi
 
 
 #@pytest.mark.slow
-def _test_schedule_render_scene(tmpdir):
+@pytest.skip
+def test_schedule_render_scene(tmpdir):
     """
     Check that scheduling 'render_scene' will create incremental snapshots.
 
