@@ -1056,8 +1056,8 @@ class NormalModeSimulation(Simulation):
         The following two code snippets are equivalent.
 
         ==>
-        sim.run_ringdown(t_end=10e-9, alpha=0.02, H_ext=[1e5, 0, 0],
-                         save_m_every=1e-11, m_snapshots_filename='sim_m.npy',
+        sim.run_ringdown(t_end=10e-9, alpha=0.02, H_ext=[1e5, 0, 0], \
+                         save_m_every=1e-11, m_snapshots_filename='sim_m.npy', \
                          save_ndt_every=1e-12)
         <==
 
