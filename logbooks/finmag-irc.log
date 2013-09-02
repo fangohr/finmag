@@ -6789,3 +6789,7 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-08-14 09:07:07 fangohr-adium: Good Morning. I understand that most people are going to the complexity conference later today - safe trip, and enjoy the meeting if you can.
 2013-08-14 10:01:03 mb4e10: Thanks
 2013-08-16 17:38:42 fangohr-adium: Off until early September — wishing everybody a productive time and/or good break.
+2013-09-02 14:24:18 mb8g11_: finmag_slow_tests on aleph0 hang on src/finmag/sim/sim_test.py. Runs fine on my machine. Investigating why.
+2013-09-02 14:25:38 fangohr-adium: Hello and greetings. I will be back in the office on Wednesday (officially). Today, I am just visiting (and not in tomorrow).
+2013-09-02 14:26:06 fangohr-adium: Slowly working through email and various commits: thanks for making Marvin_Bot more stable, the new Eigenvector method, and various other improvements.
+2013-09-02 15:41:11 mb8g11_: No worries, that's just me.
