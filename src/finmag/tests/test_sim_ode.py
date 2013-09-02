@@ -7,12 +7,13 @@ import matplotlib.pyplot as plt
 from finmag import Simulation as Sim
 from finmag.energies import Zeeman
 
+alpha = 0.1
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def test_sim_ode(do_plot=False):
     mesh = df.BoxMesh(0, 0, 0, 2, 2, 2, 1, 1, 1)
     sim = Sim(mesh, 8.6e5, unit_length=1e-9, pbc='2d')
-    sim.alpha = 0.1
+    sim.alpha = alpha
     sim.set_m((1, 0, 0))
 
     H0 = 1e5
@@ -21,8 +22,8 @@ def test_sim_ode(do_plot=False):
 
     dt = 1e-12; ts = np.linspace(0, 500 * dt, 100)
 
-    precession_coeff = sim.gamma / (1 + sim.alpha ** 2)
-    mz_ref = np.tanh(precession_coeff * sim.alpha * H0 * ts)
+    precession_coeff = sim.gamma / (1 + alpha ** 2)
+    mz_ref = np.tanh(precession_coeff * alpha * H0 * ts)
 
     mz = []
     for t in ts:
