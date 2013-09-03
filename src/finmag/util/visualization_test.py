@@ -10,7 +10,7 @@ from finmag.util.visualization_impl import find_unused_X_display
 
 # Skipping this test for now because it still doesn't work on aleph0
 # (although it works on my machine) -- Max, 7.6.2013
-@pytest.skip
+@pytest.mark.skipif("True")
 def test_render_paraview_scene(tmpdir):
     """
     This simply checks whether we can call the function. No check on
