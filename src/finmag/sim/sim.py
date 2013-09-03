@@ -1038,7 +1038,7 @@ class NormalModeSimulation(Simulation):
         self.eigenfreqs = None
         self.eigenvecs = None
 
-    def run_ringdown(self, t_end, alpha, H_ext, reset_time=True, clear_schedule=True,
+    def run_ringdown(self, t_end, alpha, H_ext=None, reset_time=True, clear_schedule=True,
                      save_ndt_every=None, save_vtk_every=None, save_m_every=None,
                      vtk_snapshots_filename=None, m_snapshots_filename=None,
                      overwrite=False):
@@ -1075,7 +1075,8 @@ class NormalModeSimulation(Simulation):
             self.clear_schedule()
 
         self.alpha = alpha
-        self.set_H_ext(H_ext)
+        if H_ext != None:
+            self.set_H_ext(H_ext)
         if save_ndt_every:
             self.schedule('save_ndt', every=save_ndt_every)
             log.debug("Setting self.t_step_ndt = {}".format(save_ndt_every))
