@@ -528,7 +528,7 @@ def render_paraview_scene(
     if timesteps is None:
         timesteps = reader.TimestepValues
     elif not isinstance(timesteps, (list, tuple, np.ndarray)):
-        if not isinstace(timesteps, numbers.Number):
+        if not isinstance(timesteps, numbers.Number):
             raise TypeError("Argument 'timesteps' must be either None or a number or a list of numbers. Got: '{}'".format(timesteps))
         timesteps = [timesteps]
 
