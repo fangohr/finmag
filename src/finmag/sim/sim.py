@@ -1220,7 +1220,7 @@ class NormalModeSimulation(Simulation):
     def export_normal_mode_animation_from_ringdown(self, npy_files, f_approx=None, component=None,
                                                    peak_idx=None, filename=None, directory='',
                                                    t_step=None, scaling=0.2, dm_only=False,
-                                                   num_cycles=5, num_frames_per_cycle=10):
+                                                   num_cycles=1, num_frames_per_cycle=20):
         """
         XXX TODO: Complete me!
 
@@ -1306,7 +1306,7 @@ class NormalModeSimulation(Simulation):
         return omega, w
 
 
-    def export_normal_mode_animation(self, k, filename=None, directory='', num_cycles=5, num_snapshots_per_cycle=10, scaling=0.2):
+    def export_normal_mode_animation(self, k, filename=None, directory='', num_cycles=1, num_snapshots_per_cycle=20, scaling=0.2, framerate=5, **kwargs):
         """
         XXX TODO: Complete me!
 
