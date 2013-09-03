@@ -52,14 +52,14 @@ def test_render_paraview_scene(tmpdir):
 
         # Render only selected snapshots captured during the relaxation
         render_paraview_scene('sim_relax.pvd', 'sim_relaxation_selected_snapshots.png', timesteps=[0.0, 3.0], color_by_axis='Z',
-                              rescale_colormap_to_data_range=False, debugging=True, use_display=display)
+                              rescale_colormap_to_data_range=False, debugging=False, use_display=display)
         assert(len(glob('sim_relaxation_selected_snapshots*.png')) == 2)
 
         # Here we test exporting timesteps that lie between the ones that are actually present in the .pvd file.
         # This works but isn't very useful, because Paraview does not interpolate the snapshots, it simply renders
         # the timesteps which are present in the .pvd file multiple times.
         render_paraview_scene('sim_relax.pvd', 'sim_relaxation_intermediate_snapshots.png', timesteps=np.linspace(0, 3.0, 10), color_by_axis='Z',
-                              rescale_colormap_to_data_range=False, debugging=True, use_display=display)
+                              rescale_colormap_to_data_range=False, debugging=False, use_display=display)
         assert(len(glob('sim_relaxation_intermediate_snapshots*.png')) == 10)
     finally:
         subprocess.check_call(['xpra', 'stop', ':{}'.format(display)])

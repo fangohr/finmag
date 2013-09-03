@@ -2,12 +2,13 @@ import subprocess as sp
 import textwrap
 import logging
 import tempfile
+import subprocess
 import shutil
 import sys
 import os
 import re
 import IPython.core.display
-from visualization_impl import _axes
+from visualization_impl import _axes, find_unused_X_display
 
 logger = logging.getLogger("finmag")
 
@@ -139,14 +140,34 @@ def render_paraview_scene(
 
     # Execute the script in a separate process
     curdir_bak = os.getcwd()
+    xpra_display = None
     try:
         display_bak = os.environ['DISPLAY']
     except KeyError:
         display_bak = None
     try:
         os.chdir(tmpdir)
+
+        if use_display is None:
+            # Try to create a display using 'xpra'
+            try:
+                # Check whether 'xpra' is installed
+                subprocess.check_call(['xpra', '--version'])
+                xpra_display = find_unused_X_display()
+                subprocess.check_call(['xpra', 'start', ':{}'.format(xpra_display)])
+                use_display = xpra_display
+                logger.debug("Rendering Paraview scene on display :{} using xpra.".format(xpra_display))
+            except OSError:
+                logger.warning(
+                    "Could not find the 'xpra' executable. You may want to "
+                    "install it to avoid annoying pop-up windows from "
+                    "Paraview. Under Debian/Ubuntu you can install it via "
+                    "'sudo apt-get install xpra'.")
+                xpra_display = None
+
         if use_display is not None:
             os.environ['DISPLAY'] = ':{}'.format(use_display)
+
         sp.check_output(['python', 'render_scene.py'], stderr=sp.STDOUT)
     except sp.CalledProcessError as ex:
         logger.error("Could not render Paraview scene. The error message was: {}".format(ex.output))
@@ -159,8 +180,20 @@ def render_paraview_scene(
         else:
             shutil.rmtree(tmpdir)
         os.chdir(curdir_bak)  # change back into the original directory
+
+        if xpra_display is not None:
+            # XXX TODO: It may be nice to keep the xpra display open
+            #           until Finmag exits, because we are likely to
+            #           render more than one snapshot.
+            subprocess.check_call(['xpra', 'stop', ':{}'.format(xpra_display)])
+
         if display_bak is not None:
             os.environ['DISPLAY'] = display_bak
+        else:
+            try:
+                os.environ.pop('DISPLAY')
+            except KeyError:
+                pass
 
     try:
         image = IPython.core.display.Image(filename=outfile)
