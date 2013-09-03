@@ -361,7 +361,7 @@ def compute_normal_modes_generalised(A, M, n_values=10, tol=1e-8):
     return 1/omega, w
 
 
-def export_normal_mode_animation(sim, freq, w, filename, num_cycles=5, num_snapshots_per_cycle=10, scaling=0.2):
+def export_normal_mode_animation(sim, freq, w, filename, num_cycles=1, num_snapshots_per_cycle=20, scaling=0.2):
     """
     Save a number of vtk files of different snapshots of a given normal mode.
     These can be imported and animated in Paraview.
