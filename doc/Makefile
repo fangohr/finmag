@@ -16,7 +16,6 @@ ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 
 # Variables used for converting .ipynb files (= IPython notebooks) to .rst files
-NBCONVERT ?= /usr/local/src/nbconvert/nbconvert.py
 IPYTHON_NOTEBOOK_SRC_DIR ?= ipython_notebooks_src
 IPYTHON_NOTEBOOK_DEST_DIR = ipython_notebooks_dest
 IPYTHON_NOTEBOOK_SRC_FILES = $(foreach file,$(wildcard ${IPYTHON_NOTEBOOK_SRC_DIR}/*.ipynb),$(notdir $(basename $(file))))
@@ -57,7 +56,7 @@ clean:
 htmlraw:
 	$(SPHINXBUILD) $(SPHINXWARNINGOPTS) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 
-html: generate-doc collect-ipython-notebooks htmlraw prettify-ipython-notebooks
+html: generate-doc collect-ipython-notebooks htmlraw
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
 dirhtml:
@@ -187,13 +186,12 @@ timing:
 # included in the documentation
 collect-ipython-notebooks: ${IPYTHON_NOTEBOOK_DEST_DIR}
 	@echo "IPYTHON_NOTEBOOK_SRC_DIR: ${IPYTHON_NOTEBOOK_DEST_DIR}"
-	@command -v ${NBCONVERT} >/dev/null 2>&1 || { echo >&2 "Not collecting ipython notebooks because the variable NBCONVERT does not point to a valid nbconvert.py script (value: ${NBCONVERT})"; exit 1; }
 	-rm -rf ${IPYTHON_NOTEBOOK_DEST_DIR}/*
 	@echo "Converting IPython notebooks in directory '${IPYTHON_NOTEBOOK_SRC_DIR}' to .rst format..."
 	@for FILE in ${IPYTHON_NOTEBOOK_SRC_FILES} ; do \
 	    echo "    Converting file: $$FILE"; \
-	    ${NBCONVERT} --format=rst ${IPYTHON_NOTEBOOK_SRC_DIR}/$$FILE.ipynb ${IPYTHON_NOTEBOOK_DEST_DIR}/$$FILE.rst && \
-	    python add_heading_if_needed.py ${IPYTHON_NOTEBOOK_DEST_DIR}/$$FILE.rst ${IPYTHON_NOTEBOOK_HEADER_LEVEL_THRESHOLD}; \
+	    ipython nbconvert --to=html ${IPYTHON_NOTEBOOK_SRC_DIR}/$$FILE.ipynb --output ${IPYTHON_NOTEBOOK_DEST_DIR}/$$FILE && \
+	    python create_wrapper_for_ipynb_html_file.py ${IPYTHON_NOTEBOOK_SRC_DIR}/$$FILE.ipynb ${IPYTHON_NOTEBOOK_DEST_DIR}/$$FILE.rst; \
 	done
 
 ${IPYTHON_NOTEBOOK_DEST_DIR}:
@@ -206,11 +204,17 @@ ${IPYTHON_NOTEBOOK_DEST_DIR}:
 # we rely on a lot of implicit assumptions and sphinx doesn't know that the files were
 # changed, but this should not cause any problems for now. We can revisit it in a bit
 # and clean it up.  -- Max, 14.12.2012
+#
+# Update: we don't use this currently, since the notebooks are now directly converted
+# to .html and included using the :raw: directive in sphinx (because if we convert them
+# to .rst first and then run sphinx on them there is an error). The only small drawback
+# with this is that we have a duplicate title, but that's only a very minor aesthetical
+# issue. Nevertheless, we keep the code here in case it can be useful.  -- Max, 3.9.2013
 prettify-ipython-notebooks:
 	@echo "Replacing notebook html files with nicer ones"
 	@for FILE in ${IPYTHON_NOTEBOOK_SRC_FILES} ; do \
 	    echo "Replacing file: $$FILE"; \
-	    ${NBCONVERT} --format=html ${IPYTHON_NOTEBOOK_SRC_DIR}/$$FILE.ipynb _build/html/${IPYTHON_NOTEBOOK_DEST_DIR}/$$FILE.html; \
+	    ipython nbconvert --to=html ${IPYTHON_NOTEBOOK_SRC_DIR}/$$FILE.ipynb _build/html/${IPYTHON_NOTEBOOK_DEST_DIR}/$$FILE; \
 	done
 
 #this target can be run to execute py.test ../examples to get figure
