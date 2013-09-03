@@ -1211,7 +1211,7 @@ class NormalModeSimulation(Simulation):
         supported by these two functions.
 
         """
-        peak_idx, peak_freq = self.find_peak_near_frequency(f_approx, component)
+        peak_freq, peak_idx = self.find_peak_near_frequency(f_approx, component)
         fft_cmpnt = self._get_fft_component(component)
         fig = self.plot_spectrum(**kwargs)
         fig.gca().plot(self.fft_freqs[peak_idx] / 1e9, fft_cmpnt[peak_idx], 'bo')
@@ -1268,7 +1268,7 @@ class NormalModeSimulation(Simulation):
         if peak_idx is None:
             if f_approx is None or component is None:
                 raise ValueError("Please specify either 'peak_idx' or both 'f_approx' and 'component'.")
-            peak_idx, peak_freq = self.find_peak_near_frequency(f_approx, component)
+            peak_freq, peak_idx = self.find_peak_near_frequency(f_approx, component)
         else:
             if f_approx != None:
                 log.warning("Ignoring argument 'f_approx' because 'peak_idx' was specified.")
