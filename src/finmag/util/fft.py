@@ -228,7 +228,7 @@ def find_peak_near_frequency(f_approx, fft_freqs, fft_m_xyz):
 
     *Returns*
 
-    A pair `(idx, freq)`, where `idx` is the index of the exact peak
+    A pair `(freq, idx)`, where `idx` is the index of the exact peak
     in the array fft_freqs and `freq` is the associated frequency,
     i.e. freq=fft_freqs[idx].
 
@@ -254,7 +254,9 @@ def find_peak_near_frequency(f_approx, fft_freqs, fft_m_xyz):
 
     closest_peak_idx = peak_indices[np.argmin(np.abs(fft_freqs[peak_indices] - f_approx))]
 
-    return closest_peak_idx, fft_freqs[closest_peak_idx]
+    logger.debug("Found peak at {:.3g} GHz (index: {})".format(fft_freqs[closest_peak_idx], closest_peak_idx))
+
+    return fft_freqs[closest_peak_idx], closest_peak_idx
 
 
 def fft_at_probing_points(dolfin_funcs, pts):
