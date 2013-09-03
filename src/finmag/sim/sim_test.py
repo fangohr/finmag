@@ -867,6 +867,7 @@ def test_removing_logger_handlers_allows_to_create_many_simulation_objects(tmpdi
     resource.setrlimit(resource.RLIMIT_NOFILE, (soft_limit, hard_limit))
 
 
+@pytest.skip
 def test_schedule_render_scene(tmpdir):
     """
     Check that scheduling 'render_scene' will create incremental snapshots.
