@@ -1287,7 +1287,7 @@ class NormalModeSimulation(Simulation):
                                                    peak_idx, dm_only=dm_only, num_cycles=num_cycles,
                                                    num_frames_per_cycle=num_frames_per_cycle)
 
-    def compute_normal_modes(self, n_values=10, tol=1e-8, filename_mat_A=None, filename_mat_M=None, use_generalised=True):
+    def compute_normal_modes(self, n_values=10, tol=1e-8, discard_negative_frequencies=True, filename_mat_A=None, filename_mat_M=None, use_generalised=True):
         """
         XXX TODO: Write me!
 
@@ -1295,10 +1295,23 @@ class NormalModeSimulation(Simulation):
         if use_generalised == False:
             raise NotImplementedError("Only the generalised version is supported at the moment")
 
+        if discard_negative_frequencies:
+            n_values *= 2
+
         A, M = compute_generalised_eigenproblem_matrices( \
             self, frequency_unit=1e9, filename_mat_A=filename_mat_A, filename_mat_M=filename_mat_M)
 
         omega, w = compute_normal_modes_generalised(A, M, n_values=50)
+
+        # Find the indices that sort the frequency by absolute value
+        sorted_indices = sorted(np.arange(len(omega)), key=lambda i: abs(omega[i]))
+
+        if discard_negative_frequencies:
+            # Discard indices corresponding to negative frequencies
+            sorted_indices = filter(lambda i: omega[i] >= 0.0, sorted_indices)
+
+        omega = omega[sorted_indices]
+        w = w[:, sorted_indices]  # XXX TODO: can we avoid copying the columns to save memory?!?
 
         self.eigenfreqs = omega
         self.eigenvecs = w
