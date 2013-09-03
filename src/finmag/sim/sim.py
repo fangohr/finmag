@@ -357,6 +357,24 @@ class Simulation(object):
                 res = 0.0
         return res
 
+    def has_interaction(self, interaction_name):
+        """
+        Returns True if an interaction with the given name exists, and False otherwise.
+
+        *Arguments*
+
+        interaction_name: string
+
+            Name of the interaction.
+
+        """
+        try:
+            self.llg.effective_field.get_interaction(interaction_name)
+            res = True
+        except ValueError:
+            res = False
+        return res
+
     def get_interaction(self, interaction_name):
         """
         Returns the interaction with the given name
