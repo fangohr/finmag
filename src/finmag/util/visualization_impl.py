@@ -41,9 +41,7 @@ def find_valid_X_display(displays_to_try=xrange(100)):
     # shell script which contains the loop and run that script using a
     # single subprocess call. However, since usually display :0 will be
     # available the loop below should terminate quite quickly.
-    logger.debug("Looking for valid X display.")
     for display in displays_to_try:
-        logger.debug("Trying display :{}".format(display))
         try:
             sp.check_output(['xdpyinfo', '-display', ':{}'.format(display)], stderr=sp.STDOUT)
             # This display is available since the command finished successfully
@@ -67,13 +65,10 @@ def find_unused_X_display(displays_to_try=xrange(100)):
     displays_to_try:  list of displays to search (default: [0, ..., 99])
 
     """
-    logger.debug("Looking for unused X display.")
     for display in displays_to_try:
-        logger.debug("Trying display :{}".format(display))
         try:
             sp.check_output(['xdpyinfo', '-display', ':{}'.format(display)], stderr=sp.STDOUT)
             # This display is already in used since the command finished successfully
-            logger.debug("Display :{} is already in use.".format(display))
         except sp.CalledProcessError:
             logger.debug("Found unused display :{}".format(display))
             return display
