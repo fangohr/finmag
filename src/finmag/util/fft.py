@@ -167,7 +167,7 @@ def _plot_spectrum(fft_freq, fft_mx, fft_my, fft_mz, components="xyz",
     return fig
 
 
-def plot_FFT_m(ndt_filename, t_step, t_ini=None, t_end=None, subtract_values='average',
+def plot_FFT_m(ndt_filename, t_step=None, t_ini=None, t_end=None, subtract_values='average',
                components="xyz", xlim=None, ticks=5, figsize=None, title="", outfilename=None):
     """
     Plot the frequency spectrum of the components of the magnetisation m.
