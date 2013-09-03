@@ -191,7 +191,7 @@ def plot_FFT_m(ndt_filename, t_step=None, t_ini=None, t_end=None, subtract_value
 
     fft_freq, fft_mx, fft_my, fft_mz = FFT_m(ndt_filename, t_step, t_ini=t_ini, t_end=t_end, subtract_values=subtract_values)
 
-    return _plot_spectrum(fft_freq, fft_mx, fft_my, fft_mz, components=components, xlim=xlim, ticks=ticks, figsize=figsize, title=title, outfilename=outfilename)
+    return _plot_spectrum(fft_freq, fft_mx, fft_my, fft_mz, components=components, xlim=xlim, ticks=ticks, figsize=figsize, title=title, filename=outfilename)
 
 
 def find_peak_near_frequency(f_approx, fft_freqs, fft_m_xyz):
