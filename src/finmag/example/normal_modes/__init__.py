@@ -4,6 +4,5 @@
 #
 # CONTACT: h.fangohr@soton.ac.uk
 #
-# AUTHOR(S) OF THIS FILE: Hans Fangohr
-from bar import bar, barmini
-import normal_modes
+# AUTHOR(S) OF THIS FILE: Maximilian Albert
+from disk import disk
