@@ -6,8 +6,10 @@ import shutil
 import inspect
 import logging
 import tempfile
+import subprocess as sp
 import dolfin as df
 import numpy as np
+from glob import glob
 from finmag.sim.llg import LLG
 from finmag.util.timings import mtimed
 from finmag.util.consts import exchange_length, bloch_parameter
@@ -985,7 +987,7 @@ class Simulation(object):
         `render_paraview_scene` to plot it. All keyword arguments
         are passed on to `render_paraview_scene`; see its docstring
         for details (one useful option is `outfile`, which can be used
-        to save the resulting image to a png file).
+        to save the resulting image to a png or jpg file).
 
         Returns the IPython.core.display.Image produced by
         `render_paraview_scene`.
@@ -1341,10 +1343,102 @@ class NormalModeSimulation(Simulation):
             filename = 'normal_mode_{}__{:.3f}_GHz.pvd'.format(k, self.eigenfreqs[k])
         filename = os.path.join(directory, filename)
 
-        export_normal_mode_animation(self, self.eigenfreqs[k], self.eigenvecs[:, k], filename, num_cycles=num_cycles,
-                                     num_snapshots_per_cycle=num_snapshots_per_cycle, scaling=scaling)
+        basename, suffix = os.path.splitext(filename)
+
+        # Export VTK animation
+        if suffix == '.pvd':
+            pvd_filename = filename
+        elif suffix in ['.jpg', '.avi']:
+            pvd_filename = basename + '.pvd'
+        else:
+            raise ValueError("Filename must end in one of the following suffixes: .pvd, .jpg, .avi.")
+
+        export_normal_mode_animation(self, self.eigenfreqs[k], self.eigenvecs[:, k],
+                                     pvd_filename, num_cycles=num_cycles,
+                                     num_snapshots_per_cycle=num_snapshots_per_cycle,
+                                     scaling=scaling)
+
+        # Export image files
+        if suffix == '.jpg':
+            jpg_filename = filename
+        elif suffix == '.avi':
+            jpg_filename = basename + '.jpg'
+        else:
+            jpg_filename = None
+
+        if jpg_filename != None:
+            from finmag.util.visualization import render_paraview_scene
+            render_paraview_scene(pvd_filename, outfile=jpg_filename, **kwargs)
+
+        # Convert image files to movie
+        if suffix == '.avi':
+            movie_filename = filename
+            try:
+                # Create symbolic links for use with avconv
+                tmpdir = tempfile.mkdtemp()
+                log.warning("Creating tmpdir={}".format(tmpdir))
+                for (i, image_file) in enumerate(sorted(glob(basename + '*.jpg'))):
+                    os.symlink(os.path.abspath(image_file), os.path.join(tmpdir, 'image_{:06d}.jpg'.format(i)))
+
+                #sp.check_call(['avconv', '-r', str(framerate), '-i', os.path.join(tmpdir, 'image_%06d.png'), movie_filename])
+
+                # sp.check_call(['avconv', '-r', str(framerate), '-i',
+                #                os.path.join(tmpdir, 'image_%06d.png'),
+                #                '-b', '1500k', '-vcodec', 'libtheora',
+                #                '-acodec', 'libvorbis', '-ab', '160000',
+                #                '-g', '30', movie_filename])
+
+                # sp.check_call(['avconv',
+                #                '-i', os.path.join(tmpdir, 'image_%06d.png'),
+                #                '-vcodec', 'libx264', '-pre', 'ipod640',
+                #                '-b', '250k', '-bt', '50k', '-acodec', 'libfaac',
+                #                '-ab', '56k', '-ac', '2', '-r', str(framerate),
+                #                basename + '.mp4'])
+                #sp.check_call(['ffmpeg2theora', '-o', basename + '.avi', basename + '.mp4'])
+
+                # sp.check_call(['mencoder', 'mf://{}*.png'.format(basename), '-mf',
+                #                'fps=5:type=png', '-ovc', 'lavc', '-lavcopts',
+                #                'vcodec=mpeg4:mbd=2:trell', '-oac', 'copy',
+                #                '-o', movie_filename])
+
+                ## http://trac.ffmpeg.org/wiki/Create%20a%20video%20slideshow%20from%20images
+                # sp.check_call(['avconv', '-r', str(framerate), '-i',
+                #                os.path.join(tmpdir, 'image_%06d.jpg'),
+                #                '-c:v', 'libx264',
+                #                #'-pix_fmt', 'yuv420p',
+                #                '-vf', 'scale="854:trunc(ow/a/2)*2"',
+                #                movie_filename])
+
+                sp.check_call(['avconv', '-r', str(framerate),
+                               '-i', os.path.join(tmpdir, 'image_%06d.jpg'),
+                               '-vcodec', 'mpeg4',
+                               movie_filename])
+
+            except OSError:
+                log.error("mencoder does not seem to be installed but is needed for "
+                          "movie creation. Please install it (e.g. on Debian/Ubuntu: "
+                          #"'sudo apt-get install libav-tools').")
+                          "'sudo apt-get install mencoder').")
+            finally:
+                shutil.rmtree(tmpdir)
 
 
+        # Return the movie if it was created
+        res = None
+        if suffix == '.avi':
+            from IPython.display import HTML
+            from base64 import b64encode
+            video = open(movie_filename, "rb").read()
+            video_encoded = b64encode(video)
+            #video_tag = '<video controls alt="test" src="data:video/x-m4v;base64,{0}">'.format(video_encoded)
+            #video_tag = '<a href="files/{0}">Link to video</a><br><br><video controls alt="test" src="data:video.mp4;base64,{1}">'.format(movie_filename, video_encoded)
+            #video_tag = '<a href="files/{0}" target="_blank">Link to video</a><br><br><embed src="files/{0}"/>'.format(movie_filename)  # --> kind of works
+            #video_tag = '<a href="files/{0}" target="_blank">Link to video</a><br><br><object data="files/{0}" type="video.mp4"/>'.format(movie_filename)  # --> kind of works
+            #video_tag = '<a href="files/{0}" target="_blank">Link to video</a><br><br><embed src="files/{0}"/>'.format(basename + '.avi')  # --> kind of works
+
+            # Display a link to the video
+            video_tag = '<a href="files/{0}" target="_blank">Link to video</a>'.format(basename + '.avi')
+            return HTML(data=video_tag)
 
 
 def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sundials",

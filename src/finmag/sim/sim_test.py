@@ -1014,3 +1014,31 @@ def test_compute_normal_modes(tmpdir):
     assert(len(glob('animation/mode_2*.vtu')) == 10)
     assert(len(glob('animation/normal_mode_5__*_GHz*.pvd')) == 1)
     assert(len(glob('animation/normal_mode_5__*_GHz*.vtu')) == 10)
+
+
+@pytest.mark.skipif("True")
+def test_output_formats_for_exporting_normal_mode_animations(tmpdir):
+    os.chdir(str(tmpdir))
+
+    d = 100
+    h = 10
+    maxh = 10.0
+    alpha = 0.0
+    m_init = [1, 0, 0]
+    H_ext = [1e5, 0, 0]
+
+    mesh = nanodisk(d, h, maxh)
+    sim = normal_mode_simulation(mesh, Ms=8e6, m_init=m_init, alpha=alpha, unit_length=1e-9, A=13e-12, H_ext=H_ext, name='nanodisk')
+    omega, _ = sim.compute_normal_modes(n_values=10, filename_mat_A='matrix_A.npy', filename_mat_M='matrix_M.npy')
+    logger.debug("Frequencies found: {}".format(omega))
+    sim.export_normal_mode_animation(0, filename='animation/mode_0.pvd', num_cycles=1, num_snapshots_per_cycle=5, color_by_axis='y')
+    sim.export_normal_mode_animation(0, filename='animation/mode_0.jpg', num_cycles=1, num_snapshots_per_cycle=5, color_by_axis='y')
+    sim.export_normal_mode_animation(0, filename='animation/mode_0.avi', num_cycles=1, num_snapshots_per_cycle=5, color_by_axis='y')
+
+    assert(os.path.exists('animation/mode_0.pvd'))
+    assert(len(glob('animation/mode_0*.vtu')) == 5)
+    assert(len(glob('animation/mode_0*.jpg')) == 5)
+    assert(os.path.exists('animation/mode_0.avi'))
+
+    with pytest.raises(ValueError):
+        sim.export_normal_mode_animation(0, filename='animation/mode_0.quux')
