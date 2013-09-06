@@ -82,19 +82,6 @@ def render_paraview_scene(
         _, outfile = tempfile.mkstemp(suffix='.png')
     outfile = os.path.abspath(outfile)
 
-    # Check that Xvfb is installed. We use it in case there is no X
-    # connection (e.g. via ssh etc.)
-    #
-    # XXX TODO: It would be nice if we could try without Xvfb first
-    #           and only rely on Xvfb if that fails.
-    try:
-        sp.check_output(['which', 'Xvfb'])
-    except sp.CalledProcessError:
-        logger.error("Xvfb is required for render_paraview_scene() to work, "
-                     "but it doesn't seem to be installed or is not working "
-                     "properly. Please check the installation  and try again.")
-        sys.exit(1)
-
     #
     # Create the temporary script. The string 'script_string' will
     # contain a call to the function in 'visualization_impl.py' which
