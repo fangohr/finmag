@@ -2,7 +2,6 @@ import subprocess as sp
 import textwrap
 import logging
 import tempfile
-import subprocess
 import shutil
 import sys
 import os
@@ -139,9 +138,9 @@ def render_paraview_scene(
             # Try to create a display using 'xpra'
             try:
                 # Check whether 'xpra' is installed
-                subprocess.check_call(['xpra', '--version'])
+                sp.check_call(['xpra', '--version'])
                 xpra_display = find_unused_X_display()
-                subprocess.check_call(['xpra', 'start', ':{}'.format(xpra_display)])
+                sp.check_call(['xpra', 'start', ':{}'.format(xpra_display)])
                 use_display = xpra_display
                 logger.debug("Rendering Paraview scene on display :{} using xpra.".format(xpra_display))
             except OSError:
@@ -172,7 +171,7 @@ def render_paraview_scene(
             # XXX TODO: It may be nice to keep the xpra display open
             #           until Finmag exits, because we are likely to
             #           render more than one snapshot.
-            subprocess.check_call(['xpra', 'stop', ':{}'.format(xpra_display)])
+            sp.check_call(['xpra', 'stop', ':{}'.format(xpra_display)])
 
         if display_bak is not None:
             os.environ['DISPLAY'] = display_bak
