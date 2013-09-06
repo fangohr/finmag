@@ -432,10 +432,10 @@ def export_normal_mode_animation(sim, freq, w, filename, num_cycles=1, num_snaps
     t0 = time()
     f = df.File(filename, 'compressed')
     for (i, t) in enumerate(timesteps):
-        print "Saving animation snapshot for timestep {} ({}/{})".format(t, i, num_cycles * num_snapshots_per_cycle)
+        logger.debug("Saving animation snapshot for timestep {} ({}/{})".format(t, i, num_cycles * num_snapshots_per_cycle))
         m_osc = (m0_array + scaling * a * np.cos(t * freq + phi)).reshape(-1)
         #save_vector_field(m_osc, os.path.join(dirname, basename + '_{:04d}.vtk'.format(i)))
         func.vector().set_local(m_osc)
         f << func
     t1 = time()
-    print("Saving the data to file '{}' took {} seconds".format(filename, t1 - t0))
+    logger.debug("Saving the data to file '{}' took {} seconds".format(filename, t1 - t0))
