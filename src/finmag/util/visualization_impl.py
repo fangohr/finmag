@@ -523,12 +523,21 @@ def render_paraview_scene(
     view.ViewSize = view_size
 
     def write_image(outfilename):
-        view.WriteImage(outfilename, "vtkPNGWriter", magnification)
+        _, suffix = os.path.splitext(outfilename)
+        if suffix == '.png':
+            view.WriteImage(outfilename, "vtkPNGWriter", magnification)
+        elif suffix in ['.jpg', '.jpeg']:
+            view.WriteImage(outfilename, "vtkJPEGWriter", magnification)
+        else:
+            raise ValueError("Output image must have extension '.png' or "
+                             "'.jpg'. Got: {}".format(suffix))
         if trim_border:
             if palette == 'print':
                 bordercolor = '"rgb(255,255,255)"'
             else:
-                bordercolor = '"rgb(82,87,110)"'
+                # Strangely, we get a slightly different background
+                # color for PNG than for JPG.
+                bordercolor = '"rgb(82,87,110)"' if (suffix == '.png') else '"rgb(82,87,109)"'
             cmd = 'mogrify -bordercolor {} -border 1x1 -trim {}'.format(bordercolor, outfilename)
             try:
                 subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
