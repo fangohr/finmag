@@ -1380,45 +1380,15 @@ class NormalModeSimulation(Simulation):
                 for (i, image_file) in enumerate(sorted(glob(basename + '*.jpg'))):
                     os.symlink(os.path.abspath(image_file), os.path.join(tmpdir, 'image_{:06d}.jpg'.format(i)))
 
-                #sp.check_call(['avconv', '-r', str(framerate), '-i', os.path.join(tmpdir, 'image_%06d.png'), movie_filename])
-
-                # sp.check_call(['avconv', '-r', str(framerate), '-i',
-                #                os.path.join(tmpdir, 'image_%06d.png'),
-                #                '-b', '1500k', '-vcodec', 'libtheora',
-                #                '-acodec', 'libvorbis', '-ab', '160000',
-                #                '-g', '30', movie_filename])
-
-                # sp.check_call(['avconv',
-                #                '-i', os.path.join(tmpdir, 'image_%06d.png'),
-                #                '-vcodec', 'libx264', '-pre', 'ipod640',
-                #                '-b', '250k', '-bt', '50k', '-acodec', 'libfaac',
-                #                '-ab', '56k', '-ac', '2', '-r', str(framerate),
-                #                basename + '.mp4'])
-                #sp.check_call(['ffmpeg2theora', '-o', basename + '.avi', basename + '.mp4'])
-
-                # sp.check_call(['mencoder', 'mf://{}*.png'.format(basename), '-mf',
-                #                'fps=5:type=png', '-ovc', 'lavc', '-lavcopts',
-                #                'vcodec=mpeg4:mbd=2:trell', '-oac', 'copy',
-                #                '-o', movie_filename])
-
-                ## http://trac.ffmpeg.org/wiki/Create%20a%20video%20slideshow%20from%20images
-                # sp.check_call(['avconv', '-r', str(framerate), '-i',
-                #                os.path.join(tmpdir, 'image_%06d.jpg'),
-                #                '-c:v', 'libx264',
-                #                #'-pix_fmt', 'yuv420p',
-                #                '-vf', 'scale="854:trunc(ow/a/2)*2"',
-                #                movie_filename])
-
+                # Convert images to a movie file
                 sp.check_call(['avconv', '-r', str(framerate),
                                '-i', os.path.join(tmpdir, 'image_%06d.jpg'),
                                '-vcodec', 'mpeg4',
                                movie_filename])
-
             except OSError:
                 log.error("mencoder does not seem to be installed but is needed for "
                           "movie creation. Please install it (e.g. on Debian/Ubuntu: "
-                          #"'sudo apt-get install libav-tools').")
-                          "'sudo apt-get install mencoder').")
+                          "'sudo apt-get install libav-tools').")
             finally:
                 shutil.rmtree(tmpdir)
 
