@@ -328,7 +328,7 @@ def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9
     M = scipy.sparse.linalg.LinearOperator((2 * n, 2 * n), M_times_w(Mcross, n, alpha), NotImplementedOp(), NotImplementedOp(), dtype=complex)
 
     if filename_mat_A != None:
-        dirname_mat_A = os.path.dirname(filename_mat_A)
+        dirname_mat_A = os.path.dirname(os.path.abspath(filename_mat_A))
         if not os.path.exists(dirname_mat_A):
             logger.debug("Creating directory '{}' as it does not exist.".format(dirname_mat_A))
             os.makedirs(dirname_mat_A)
@@ -336,7 +336,7 @@ def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9
         np.save(filename_mat_A, A)
 
     if filename_mat_M != None:
-        dirname_mat_M = os.path.dirname(filename_mat_M)
+        dirname_mat_M = os.path.dirname(os.path.abspath(filename_mat_M))
         if not os.path.exists(dirname_mat_M):
             logger.debug("Creating directory '{}' as it does not exist.".format(dirname_mat_M))
             os.makedirs(dirname_mat_M)
