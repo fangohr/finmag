@@ -1384,11 +1384,14 @@ class NormalModeSimulation(Simulation):
                 sp.check_call(['avconv', '-r', str(framerate),
                                '-i', os.path.join(tmpdir, 'image_%06d.jpg'),
                                '-vcodec', 'mpeg4',
-                               movie_filename])
+                               movie_filename],
+                              stderr=sp.STDOUT)
             except OSError:
                 log.error("mencoder does not seem to be installed but is needed for "
                           "movie creation. Please install it (e.g. on Debian/Ubuntu: "
                           "'sudo apt-get install libav-tools').")
+            except sp.CalledProcessError as exc:
+                log.warning("avconv had non-zero exit status: {} (output: '{}')".format(exc.returncode, exc.output))
             finally:
                 shutil.rmtree(tmpdir)
 
