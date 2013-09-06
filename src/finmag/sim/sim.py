@@ -1136,7 +1136,8 @@ class NormalModeSimulation(Simulation):
                 "No sensible default for 't_step' could be determined. "
                 "(It seems like 'run_ringdown()' was not run, or it was not "
                 "given a value for its argument 'save_ndt_every'). Please "
-                "provide the argument 't_step' explicitly.")
+                "call sim.run_ringdown() or provide the argument 't_step' "
+                "explicitly.")
 
         self.fft_freqs, self.fft_mx, self.fft_my, self.fft_mz = \
             FFT_m(self.ndtfilename, t_step=t_step, **kwargs)
