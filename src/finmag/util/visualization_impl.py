@@ -220,7 +220,8 @@ def render_paraview_scene(
 
         If False (default: True), the colormap corresponds to the data
         range [-1.0, +1.0]. If set to True, the colormap is rescaled
-        so that it corresponds to the minimum/maximum data values.
+        so that it corresponds to the minimum/maximum data values *over
+        all specified timesteps*.
 
     show_colorbar: True | False
 
@@ -375,13 +376,27 @@ def render_paraview_scene(
                              "Got: {}".format(color_by_axis))
     color_by_axis_name = _axes_names[color_by_axis]
 
+    if timesteps is None:
+        timesteps = reader.TimestepValues
+    elif not isinstance(timesteps, (list, tuple, np.ndarray)):
+        if not isinstance(timesteps, numbers.Number):
+            raise TypeError("Argument 'timesteps' must be either None or a number or a list of numbers. Got: '{}'".format(timesteps))
+        timesteps = [timesteps]
+
     data_range = (-1.0, 1.0)
     if rescale_colormap_to_data_range:
-        dataInfo = reader.GetDataInformation()
-        pointDataInfo = dataInfo.GetPointDataInformation()
-        arrayInfo = pointDataInfo.GetArrayInformation(field_name)
-        data_range = arrayInfo.GetComponentRange(color_by_axis)
+        dmin, dmax = np.infty, -np.infty
+        for t in timesteps:
+            view.ViewTime = t
+            dataInfo = reader.GetDataInformation()
+            pointDataInfo = dataInfo.GetPointDataInformation()
+            arrayInfo = pointDataInfo.GetArrayInformation(field_name)
+            cur_data_range = arrayInfo.GetComponentRange(color_by_axis)
+            dmin = min(cur_data_range[0], dmin)
+            dmax = max(cur_data_range[1], dmax)
+        data_range = (dmin, dmax)
         logger.debug("Rescaling colormap to data range: {}".format(data_range))
+
 
     # Set the correct colormap and rescale it if necessary.
     try:
@@ -523,14 +538,6 @@ def render_paraview_scene(
             except subprocess.CalledProcessError as ex:
                 logger.warning("Could not trim border from image. "
                                "The error message was: {}".format(ex.output))
-
-    logger.debug("[DDD] Timesteps: {}".format(timesteps))
-    if timesteps is None:
-        timesteps = reader.TimestepValues
-    elif not isinstance(timesteps, (list, tuple, np.ndarray)):
-        if not isinstance(timesteps, numbers.Number):
-            raise TypeError("Argument 'timesteps' must be either None or a number or a list of numbers. Got: '{}'".format(timesteps))
-        timesteps = [timesteps]
 
     if len(timesteps) == 1:
         # If a single timestep is rendered, we return the resulting image.
