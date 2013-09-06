@@ -8668,3 +8668,95 @@ http://www.soton.ac.uk/~fangohr
 -------------------------------------
 finmag-team mailing list.
 
+From marvin  Wed Sep  4 11:01:17 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Wed, 04 Sep 2013 11:01:17 +0100 (BST)
+Received: by 10.217.11.194 with SMTP id i44csp199634wet;
+        Wed, 4 Sep 2013 02:16:01 -0700 (PDT)
+X-Received: by 10.205.99.129 with SMTP id cs1mr620575bkc.35.1378286160892;
+        Wed, 04 Sep 2013 02:16:00 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk. [152.78.128.16])
+        by mx.google.com with ESMTP id ow6si2200186bkb.122.1969.12.31.16.00.00;
+        Wed, 04 Sep 2013 02:16:00 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) client-ip=152.78.128.16;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r849FRJu028183;
+	Wed, 4 Sep 2013 10:15:27 +0100
+Received: from UOS-MSG00036-VS.soton.ac.uk (uos-msg00036-vs.soton.ac.uk [152.78.119.38])
+	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk [152.78.128.16]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p83AFR0128637952wJ ret-id none; Wed, 04 Sep 2013 10:15:27 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.38) with Microsoft SMTP Server (TLS) id 14.2.342.3; Wed, 4 Sep
+ 2013 10:15:05 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r849F5kO009210;	Wed, 4 Sep 2013 10:15:05 +0100
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk
+ [152.78.128.11])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r849F5AL009195	for <finmag-team@lists.soton.ac.uk>; Wed, 4 Sep 2013 10:15:05
+ +0100
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r849EPaU012860	for
+ <finmag-team@lists.soton.ac.uk>; Wed, 4 Sep 2013 10:14:25 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk
+ [152.78.119.37])	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk
+ [152.78.128.11]) envelope-from <H.FANGOHR@soton.ac.uk> with ESMTP	id
+ p83AEP1250035132b2 ret-id none; Wed, 04 Sep 2013 10:14:25 +0100
+Received: from dhcp-163-110.wireless.soton.ac.uk (152.78.163.110) by
+ smtp.soton.ac.uk (152.78.119.37) with Microsoft SMTP Server (TLS) id
+ 14.2.342.3; Wed, 4 Sep 2013 10:14:25 +0100
+From: Hans Fangohr <h.fangohr@soton.ac.uk>
+Content-Type: text/plain; charset="us-ascii"
+Subject: [finmag-team] group meeting
+Date: Wed, 4 Sep 2013 10:14:25 +0100
+Message-ID: <FD807D33-6FB4-444D-AFC2-6F3291776AC4@soton.ac.uk>
+CC: Hans Fangohr <h.fangohr@soton.ac.uk>
+To: "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+MIME-Version: 1.0 (Mac OS X Mail 6.5 \(1508\))
+X-Mailer: Apple Mail (2.1508)
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<H.FANGOHR@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from quoted-printable to 8bit by maillists.sucs.soton.ac.uk id r849F5AL009196
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p83ADm012863795200; tid=p83AFR0128637952wJ; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=1
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.38; helo=<UOS-MSG00036-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.38; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r849FRJu028183
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi all,
+
+a quick update:
+
+- I am back from travelling, so come and ask me questions etc.
+
+- I am hoping we can schedule our group meeting Friday at 10:00, but it is =
+a university open day where I need to be present, and I don't know when yet=
+. If this turns out to be Friday morning, I will have to reschedule to Frid=
+ay pm. (I did say Thursday earlier as I know about the open day, but Max ca=
+n't make Thursday and he has made a number of steps forward that would be u=
+seful for all of us to know about.)
+
+I will also start to schedule one-to-one meetings with all of you on Friday=
+.
+
+If you are not in the country or otherwise unavailable on Friday, please le=
+t me know. I'll come through your lab space later to say hi.
+
+Thanks,
+
+Hans
+
+
+
+-------------------------------------
+finmag-team mailing list.
+

@@ -6793,3 +6793,26 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-09-02 14:25:38 fangohr-adium: Hello and greetings. I will be back in the office on Wednesday (officially). Today, I am just visiting (and not in tomorrow).
 2013-09-02 14:26:06 fangohr-adium: Slowly working through email and various commits: thanks for making Marvin_Bot more stable, the new Eigenvector method, and various other improvements.
 2013-09-02 15:41:11 mb8g11_: No worries, that's just me.
+2013-09-04 09:58:47 max_albert: Ok, I just stopped Dokosbot (for the record, the command is "sudo stop dokosbot") and now he was automatically restarted by the cronjob again.
+2013-09-04 09:58:52 fangohr-adium: I am not entirely sure how 'status' determines the status: maybe this is what the system thinks it told the job, and the job died or failed secretly? Hard to detect.
+2013-09-04 09:59:17 fangohr-adium: We could stop the DokosBot routinely once a day - it will then restart automatically, it we avoid loosing more than a day of chat.
+2013-09-04 10:00:28 max_albert: Yes, I was thinking that as well. Also, Marc-Antonio said yesterday that he added a few diagnostics so that should perhaps tell us more about why he quits every now and then. (Although I can't see where he added them, they don't seem to be in Marvin's Bitbucket directory.)
+2013-09-04 10:00:41 max_albert: Anyway, he will know more about how "status" etc. work.
+2013-09-04 10:04:19 max_albert: I just added a cronjob to stop him once a day at midnight. We can remove this again once we understand the problem better.
+2013-09-04 10:04:32 max_albert: And there will be a 'test quit' in a minute or so. :)
+2013-09-04 10:05:17 fangohr-adium: Great, thank you.
+2013-09-04 10:05:48 max_albert: Ok, that seems to have worked. Let's see how it works out.
+2013-09-04 10:38:43 mb8g11_: Is there IRC code in Marvin's Bitbucket repo? The IRC bot has its own git repository on github. Anyway, let me check what the logs say.
+2013-09-04 10:43:40 mb8g11_: I wrote some code to have Marvin detect a disconnect and reconnect on its own - that must not be working. What's worse, logs are empty.
+2013-09-04 10:45:54 mb8g11_: The core of the problem is the connection to the IRC server timing out every few days or so.
+2013-09-04 10:46:55 fangohr-adium: Hi MA, does IRC allow to check whether somebody else is logged in? I.e. can we detect the disconnect by checking in the forum whether the user is online?
+2013-09-04 10:49:07 mb8g11_: Yes (/whois Marvin_Bot), but the disconnect also triggers an exception which I didn't catch until yesterday. Now there is some error handling code, which seems to at fault.
+2013-09-04 10:49:16 mb8g11_: And, hi Hans.
+2013-09-04 10:50:23 mb8g11_: I'll have a go at it later today.
+2013-09-04 11:00:55 max_albert: Is the IRC code the one in /home/marvin/Dokos on aleph0?
+2013-09-04 13:07:34 mb8g11_: Yes.
+2013-09-04 15:29:37 fangohr-adium: Good, thank you.
+2013-09-04 15:29:45 fangohr-adium: Hi Dmitri, by the way :)
+2013-09-04 15:35:10 DChernyshenko: Hi
+2013-09-05 15:34:52 D_Chernyshenko: Hi Hans, is the group meeting at 10am tomorrow?
+2013-09-05 15:35:35 fangohr-adium: Yes, that's right.
