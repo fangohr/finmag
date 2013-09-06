@@ -1298,6 +1298,8 @@ class NormalModeSimulation(Simulation):
         if discard_negative_frequencies:
             n_values *= 2
 
+        # XXX TODO: If A and M were computed before, save them internally and don't recompute them!
+        #           (We may want a switch 'force_recompute' though.)
         A, M = compute_generalised_eigenproblem_matrices( \
             self, frequency_unit=1e9, filename_mat_A=filename_mat_A, filename_mat_M=filename_mat_M)
 
