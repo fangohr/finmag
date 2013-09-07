@@ -876,12 +876,17 @@ class Simulation(object):
     def _save_m_to_vtk(self, vtk_saver):
         vtk_saver.save_field(self.llg._m, self.t)
 
-    def save_vtk(self, filename=None, overwrite=False):
+    def _save_field_to_vtk(self, field_name, vtk_saver):
+        field_data = self.get_field_as_dolfin_function(field_name)
+        field_data.rename(field_name, field_name)
+        vtk_saver.save_field(field_data, self.t)
+
+    def save_vtk(self, field_name='m', filename=None, overwrite=False):
         """
         Save the magnetisation to a VTK file.
         """
         vtk_saver = self._get_vtk_saver(filename, overwrite)
-        self._save_m_to_vtk(vtk_saver)
+        self._save_field_to_vtk(field_name, vtk_saver)
 
     def _get_field_saver(self, field_name, filename=None, overwrite=False, incremental=False):
         if filename is None:
@@ -995,9 +1000,11 @@ class Simulation(object):
         """
         from finmag.util.visualization import render_paraview_scene
 
+        field_name = kwargs.get('field_name', 'm')
+
         with helpers.TemporaryDirectory() as tmpdir:
             filename = os.path.join(tmpdir, 'paraview_scene_{}.pvd'.format(self.name))
-            self.save_vtk(filename=filename)
+            self.save_vtk(field_name=field_name, filename=filename)
             return render_paraview_scene(filename, **kwargs)
 
     def _render_scene_incremental(self, filename, **kwargs):
