@@ -10,6 +10,7 @@ import unittest
 import math
 import numpy as np
 import finmag.native.sundials as sundials
+from finmag.util.helpers import ignored
 
 class OdeSundialsTests(unittest.TestCase):
     def test_errors(self):
@@ -86,11 +87,9 @@ class OdeSundialsTests(unittest.TestCase):
         integrator.set_linear_solver_sp_gmr(sundials.PREC_NONE)
         integrator.set_spils_jac_times_vec_fn(jtimes)
         yout = np.zeros(1)
-        try:
+        with ignored(MyException):
             integrator.advance_time(1, yout)
             self.fail("Exception was not raised")
-            pass
-        except MyException:
             pass
 
 if __name__ == '__main__':

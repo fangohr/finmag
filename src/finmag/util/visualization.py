@@ -176,10 +176,7 @@ def render_paraview_scene(
         if display_bak is not None:
             os.environ['DISPLAY'] = display_bak
         else:
-            try:
-                os.environ.pop('DISPLAY')
-            except KeyError:
-                pass
+            os.environ.pop('DISPLAY', None)
 
     try:
         image = IPython.core.display.Image(filename=outfile)
