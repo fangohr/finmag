@@ -1,6 +1,7 @@
 from __future__ import division
 from datetime import datetime
 from glob import glob
+from contextlib import contextmanager
 from finmag.util.fileio import Tablereader
 import matplotlib.pyplot as plt
 import subprocess as sp
@@ -1545,3 +1546,20 @@ class TemporaryDirectory(object):
             shutil.rmtree(self.tmpdir)
             print "Removed temporary directory '{}'".format(self.tmpdir)
             self.tmpdir = None
+
+
+@contextmanager
+def ignored(*exceptions):
+    """
+    Ignore the given exceptions within the scope of the context.
+
+    Example::
+
+       with ignored(OSError):
+           os.remove('non_existing_file.txt')
+
+    """
+    try:
+        yield
+    except exceptions:
+        pass
