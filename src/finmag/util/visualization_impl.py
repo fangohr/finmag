@@ -221,7 +221,7 @@ def render_paraview_scene(
         If False (default: True), the colormap corresponds to the data
         range [-1.0, +1.0]. If set to True, the colormap is rescaled
         so that it corresponds to the minimum/maximum data values *over
-        all specified timesteps* (FIXME: this doesn't work yet!).
+        all specified timesteps*.
 
     show_colorbar: True | False
 
@@ -386,11 +386,8 @@ def render_paraview_scene(
     data_range = (-1.0, 1.0)
     if rescale_colormap_to_data_range:
         dmin, dmax = np.infty, -np.infty
-        # XXX FIXME: Even though we seem to loop over the timesteps,
-        #            this only takes the data range from the first
-        #            timestep into account.
         for t in timesteps:
-            view.ViewTime = t
+            reader.UpdatePipeline(t)
             dataInfo = reader.GetDataInformation()
             pointDataInfo = dataInfo.GetPointDataInformation()
             arrayInfo = pointDataInfo.GetArrayInformation(field_name)
