@@ -1538,13 +1538,11 @@ class TemporaryDirectory(object):
 
     def __enter__(self):
         self.tmpdir = tempfile.mkdtemp()
-        print "Creating temporary directory '{}'".format(self.tmpdir)
         return self.tmpdir
 
     def __exit__(self, type, value, traceback):
         if not self.keep:
             shutil.rmtree(self.tmpdir)
-            print "Removed temporary directory '{}'".format(self.tmpdir)
             self.tmpdir = None
 
 
