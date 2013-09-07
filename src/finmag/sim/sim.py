@@ -994,13 +994,11 @@ class Simulation(object):
 
         """
         from finmag.util.visualization import render_paraview_scene
-        tmpdir = tempfile.mkdtemp()
-        filename = os.path.join(tmpdir, 'paraview_scene_{}.pvd'.format(self.name))
-        self.save_vtk(filename=filename)
-        try:
+
+        with helpers.TemporaryDirectory() as tmpdir:
+            filename = os.path.join(tmpdir, 'paraview_scene_{}.pvd'.format(self.name))
+            self.save_vtk(filename=filename)
             return render_paraview_scene(filename, **kwargs)
-        finally:
-            shutil.rmtree(tmpdir)
 
     def _render_scene_incremental(self, filename, **kwargs):
         # XXX TODO: This should be tidied up by somehow combining it
@@ -1373,28 +1371,26 @@ class NormalModeSimulation(Simulation):
         # Convert image files to movie
         if suffix == '.avi':
             movie_filename = filename
-            try:
-                # Create symbolic links for use with avconv
-                tmpdir = tempfile.mkdtemp()
-                log.warning("Creating tmpdir={}".format(tmpdir))
-                for (i, image_file) in enumerate(sorted(glob(basename + '*.jpg'))):
-                    os.symlink(os.path.abspath(image_file), os.path.join(tmpdir, 'image_{:06d}.jpg'.format(i)))
+            with helpers.TemporaryDirectory() as tmpdir:
+                try:
+                    # Create symbolic links for use with avconv
+                    tmpdir = tempfile.mkdtemp()
+                    log.warning("Creating tmpdir={}".format(tmpdir))
+                    for (i, image_file) in enumerate(sorted(glob(basename + '*.jpg'))):
+                        os.symlink(os.path.abspath(image_file), os.path.join(tmpdir, 'image_{:06d}.jpg'.format(i)))
 
-                # Convert images to a movie file
-                sp.check_call(['avconv', '-r', str(framerate),
-                               '-i', os.path.join(tmpdir, 'image_%06d.jpg'),
-                               '-vcodec', 'mpeg4',
-                               movie_filename],
-                              stderr=sp.STDOUT)
-            except OSError:
-                log.error("mencoder does not seem to be installed but is needed for "
-                          "movie creation. Please install it (e.g. on Debian/Ubuntu: "
-                          "'sudo apt-get install libav-tools').")
-            except sp.CalledProcessError as exc:
-                log.warning("avconv had non-zero exit status: {} (output: '{}')".format(exc.returncode, exc.output))
-            finally:
-                shutil.rmtree(tmpdir)
-
+                    # Convert images to a movie file
+                    sp.check_call(['avconv', '-r', str(framerate),
+                                   '-i', os.path.join(tmpdir, 'image_%06d.jpg'),
+                                   '-vcodec', 'mpeg4',
+                                   movie_filename],
+                                  stderr=sp.STDOUT)
+                except OSError:
+                    log.error("mencoder does not seem to be installed but is needed for "
+                              "movie creation. Please install it (e.g. on Debian/Ubuntu: "
+                              "'sudo apt-get install libav-tools').")
+                except sp.CalledProcessError as exc:
+                    log.warning("avconv had non-zero exit status: {} (output: '{}')".format(exc.returncode, exc.output))
 
         # Return the movie if it was created
         res = None
