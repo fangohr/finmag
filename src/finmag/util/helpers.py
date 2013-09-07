@@ -5,6 +5,8 @@ from finmag.util.fileio import Tablereader
 import matplotlib.pyplot as plt
 import subprocess as sp
 import itertools
+import tempfile
+import shutil
 import logging.handlers
 import numpy as np
 import dolfin as df
@@ -1527,3 +1529,19 @@ def vortex_feldtkeller(beta, center, right_handed=True):
         return (mx, my, mz)
 
     return f
+
+
+class TemporaryDirectory(object):
+    def __init__(self, keep=False):
+        self.keep = keep
+
+    def __enter__(self):
+        self.tmpdir = tempfile.mkdtemp()
+        print "Creating temporary directory '{}'".format(self.tmpdir)
+        return self.tmpdir
+
+    def __exit__(self, type, value, traceback):
+        if not self.keep:
+            shutil.rmtree(self.tmpdir)
+            print "Removed temporary directory '{}'".format(self.tmpdir)
+            self.tmpdir = None
