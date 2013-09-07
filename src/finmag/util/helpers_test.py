@@ -475,5 +475,21 @@ def test_apply_vertexwise():
     #assert(np.allclose(udotv.vector().array(), w2.vector().array()))
 
 
+def test_TemporaryDirectory(tmpdir):
+    # Check that the directory is created as expected and destroyed
+    # when leaving the with-block.
+    with TemporaryDirectory() as mytmpdir:
+        assert(os.path.exists(mytmpdir))
+    assert(not os.path.exists(mytmpdir))
+
+    # With 'keep=True' the directory should not be deleted.
+    with TemporaryDirectory(keep=True) as mytmpdir2:
+        assert(os.path.exists(mytmpdir2))
+    assert(os.path.exists(mytmpdir2))
+
+    # Tidy up
+    os.rmdir(mytmpdir2)
+
+
 if __name__ == '__main__':
     test_scalar_valued_dg_function()
