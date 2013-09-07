@@ -1301,8 +1301,13 @@ class NormalModeSimulation(Simulation):
 
         # XXX TODO: If A and M were computed before, save them internally and don't recompute them!
         #           (We may want a switch 'force_recompute' though.)
-        A, M = compute_generalised_eigenproblem_matrices( \
+        A, M, Q, Qt = compute_generalised_eigenproblem_matrices( \
             self, frequency_unit=1e9, filename_mat_A=filename_mat_A, filename_mat_M=filename_mat_M)
+
+        self.Q = Q  # transition matrix from 2N to 3N tangent vector space
+        self.Qt = Qt  # transition matrix from 3N to 2N tangent vector space
+        self.A = A
+        self.M = M
 
         omega, w = compute_normal_modes_generalised(A, M, n_values=50)
 

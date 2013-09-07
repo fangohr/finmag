@@ -281,6 +281,8 @@ def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9
     Q, R, S, Mcross = compute_tangential_space_basis(m0_column_vector)
     Qt = mf_transpose(Q).copy()
 
+    logger.warning("Q.shape: {} ({} MB)".format(Q.shape, Q.nbytes / 1024.**2))
+
     def A_times_vector(v):
         # A = H' v - h_0 v
         assert v.shape == (3, 1, n)
@@ -347,7 +349,7 @@ def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9
     # XXX TODO: Is this method safe, or does it leave any trace of the temporary changes we did above?
     sim.set_m(m_orig)
 
-    return A, M
+    return A, M, Q, Qt, R
 
 
 def compute_normal_modes(D, n_values=10, sigma=0., tol=1e-8, which='LM'):
