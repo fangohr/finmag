@@ -1,0 +1,40 @@
+#!/usr/bin/env python
+
+import sys
+import os
+import argparse
+
+usage = "{} INFILE.pvd [OUTFILE]".format(os.path.basename(__file__))
+
+parser = argparse.ArgumentParser(description='Convert a .pvd file into a (series of) .png or .jpg image(s).', usage=usage)
+parser.add_argument('infile', metavar='INFILE.pvd', type=str, help='The input .pvd file.')
+parser.add_argument('outfile', metavar='OUTFILE', type=str, default=None, nargs='?', help='The output file (must be .png or .jpg).')
+parser.add_argument('--colormap', type=str, default='coolwarm', help='Colormap to use. Allowed values: "coolwarm" (default), "heated_body", "rainbow".')
+parser.add_argument('--trim-border', action='store_true', default=False, help='Trim the borders of the output image.')
+parser.add_argument('--color-by-axis', type=str, default='x')
+
+args = parser.parse_args()
+
+infile = args.infile
+outfile = args.outfile
+if outfile is None:
+    basename, _ = os.path.splitext(infile)
+    outfile = basename + '.png'
+
+if not os.path.exists(infile):
+    if not infile.endswith('.pvd'):
+        if os.path.exists(infile + '.pvd'):
+            infile = infile + '.pvd'
+        else:
+            print("Error: could not find input file: {}".format(infile))
+            sys.exit(1)
+
+print "Input file: {}".format(infile)
+print "Output file: {}".format(outfile)
+
+from finmag.util.visualization import render_paraview_scene
+
+colormap = args.colormap
+if colormap == 'rainbow':
+    colormap = 'blue_to_red_rainbow'
+render_paraview_scene(infile, outfile=outfile, trim_border=args.trim_border, colormap=colormap, color_by_axis=args.color_by_axis)
