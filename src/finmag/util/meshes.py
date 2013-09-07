@@ -161,7 +161,7 @@ def run_netgen(geofile):
     """
     logger.debug("[DDD] NETGENDIR: {}".format(os.environ.get('NETGENDIR')))
     if not os.path.isfile(geofile):
-        raise ValueError("Can't find file {}.".format(geofile))
+        raise ValueError("Can't find file: '{}'".format(geofile))
 
     basename, extension = os.path.splitext(geofile)
     diffpackfile = basename + ".grid"
@@ -195,7 +195,7 @@ def convert_diffpack_to_xml(diffpackfile):
 
     """
     if not os.path.isfile(diffpackfile):
-        raise ValueError("Can't find file {}.".format(diffpackfile))
+        raise ValueError("Can't find file: '{}'".format(diffpackfile))
     logger.debug('Using dolfin-convert to convert {} to xml format.'.format(diffpackfile))
 
     basename = os.path.splitext(diffpackfile)[0]
