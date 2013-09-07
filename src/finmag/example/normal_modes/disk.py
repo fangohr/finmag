@@ -2,7 +2,7 @@ import finmag
 import dolfin as df
 import os
 
-MODULE_DIR = os.path.dirname(__file__)
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def disk(relaxed=True, name='normal_modes_nanodisk'):
     """
