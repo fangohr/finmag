@@ -475,20 +475,38 @@ def test_apply_vertexwise():
     #assert(np.allclose(udotv.vector().array(), w2.vector().array()))
 
 
-def test_TemporaryDirectory(tmpdir):
+def test_TemporaryDirectory():
     # Check that the directory is created as expected and destroyed
     # when leaving the with-block.
-    with TemporaryDirectory() as mytmpdir:
-        assert(os.path.exists(mytmpdir))
-    assert(not os.path.exists(mytmpdir))
+    with TemporaryDirectory() as tmpdir:
+        assert(os.path.exists(tmpdir))
+    assert(not os.path.exists(tmpdir))
 
     # With 'keep=True' the directory should not be deleted.
-    with TemporaryDirectory(keep=True) as mytmpdir2:
-        assert(os.path.exists(mytmpdir2))
-    assert(os.path.exists(mytmpdir2))
+    with TemporaryDirectory(keep=True) as tmpdir2:
+        assert(os.path.exists(tmpdir2))
+    assert(os.path.exists(tmpdir2))
 
     # Tidy up
-    os.rmdir(mytmpdir2)
+    os.rmdir(tmpdir2)
+
+
+def test_contextmanager_ignored(tmpdir):
+    d = {}  # dummy dictionary
+    s = 'foobar'
+
+    with pytest.raises(KeyError):
+        with ignored(OSError):
+            d.pop('non_existing_key')
+
+    # This should work because we are ignoring the right kind of error.
+    with ignored(KeyError):
+        d.pop('non_existing_key')
+
+    # Check that we can ignore multiple errors
+    with ignored(IndexError, KeyError):
+        d.pop('non_existing_key')
+        s[42]
 
 
 if __name__ == '__main__':
