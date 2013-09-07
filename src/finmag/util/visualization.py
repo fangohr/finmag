@@ -62,7 +62,7 @@ def render_paraview_scene(
     palette='screen',
     trim_border=True,
     diffuse_color=None,
-    debugging=False,
+    debug=False,
     use_display=None):
 
     # Convert color_by_axis to integer and store the name separately
@@ -159,7 +159,7 @@ def render_paraview_scene(
         logger.error("Could not render Paraview scene. The error message was: {}".format(ex.output))
         #raise
     finally:
-        if debugging == True:
+        if debug == True:
             logger.debug("Temporary directory '{}' kept for debugging. You "
                          "can try to run 'render_script.py' manually "
                          "there.".format(tmpdir))
