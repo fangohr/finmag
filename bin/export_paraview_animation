@@ -12,6 +12,7 @@ parser.add_argument('outfile', metavar='OUTFILE', type=str, default=None, nargs=
 parser.add_argument('--colormap', type=str, default='coolwarm', help='Colormap to use. Allowed values: "coolwarm" (default), "heated_body", "rainbow".')
 parser.add_argument('--trim-border', action='store_true', default=False, help='Trim the borders of the output image.')
 parser.add_argument('--color-by-axis', type=str, default='x')
+parser.add_argument('--use-display', type=int, default=0, help='The X display to use for rendering (default: 0). Use a value of 1 to render the scene invisibly (needs xpra to be installed).')
 
 args = parser.parse_args()
 
@@ -37,4 +38,4 @@ from finmag.util.visualization import render_paraview_scene
 colormap = args.colormap
 if colormap == 'rainbow':
     colormap = 'blue_to_red_rainbow'
-render_paraview_scene(infile, outfile=outfile, trim_border=args.trim_border, colormap=colormap, color_by_axis=args.color_by_axis)
+render_paraview_scene(infile, outfile=outfile, trim_border=args.trim_border, colormap=colormap, color_by_axis=args.color_by_axis, use_display=args.use_display)
