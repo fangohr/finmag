@@ -1486,10 +1486,7 @@ def normal_mode_simulation(mesh, Ms, m_init, **kwargs):
     instead of `Simulation`.
 
     """
-    try:
-        # Make sure we don't inadvertently create a different kind of simulation
-        kwargs.pop('sim_class')
-    except:
-        pass
+    # Make sure we don't inadvertently create a different kind of simulation
+    kwargs.pop('sim_class', None)
 
     return sim_with(mesh, Ms, m_init, sim_class=NormalModeSimulation, **kwargs)

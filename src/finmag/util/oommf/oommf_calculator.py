@@ -15,6 +15,7 @@ import cStringIO
 import sys
 import subprocess
 import shutil
+from finmag.util.helpers import ignored
 from finmag.util.oommf import ovf, lattice
 from finmag.util.oommf.mesh import MeshField, Mesh
 from subprocess import check_output, CalledProcessError
@@ -108,20 +109,16 @@ def calculate_oommf_fields(name, s0, Ms, spec=None, alpha=0., gamma_G=0., fields
 
     # Check if the result is already known
     cachedir = os.path.join(CACHE_DIR, basename)
-    try:
+    with ignored(OSError):
         os.makedirs(CACHE_DIR)
-    except OSError:
-        pass
 
     if not os.path.exists(cachedir):
         ## Run the simulation
         print "Running OOMMF simulation %s..." % basename,
         sys.stdout.flush()
         dir = os.path.join(RUN_DIR, basename)
-        try:
+        with ignored(OSError):
             os.makedirs(dir)
-        except OSError:
-            pass
         # Write the MIF file
         mif_file_name = basename + ".mif"
         mif_file = open(os.path.join(dir, mif_file_name), "w")
