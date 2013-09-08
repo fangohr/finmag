@@ -413,8 +413,10 @@ def pair_of_disks(d1, d2, h1, h2, sep, theta, maxh, save_result=True, filename='
     """
     Return a dolfin mesh representing a pair of disks. The first disk
     is always centered at the origin; the center of the second one is
-    at a distance `sep` from the origin, and the angle between the x-axis
-    and the line joining the disk centers is given by `theta`.
+    at a distance from the origin so that the edge-to-edge separation
+    of the two disks equals `sep` (i.e. this distance is equal to
+    0.5*d1 + sep + 0.5*d2), and the angle between the x-axis and the
+    line joining the disk centers is given by `theta`.
 
     *Arguments*
 
