@@ -61,6 +61,7 @@ def render_paraview_scene(
     representation="Surface With Edges",
     palette='screen',
     trim_border=True,
+    rescale=None,
     diffuse_color=None,
     debug=False,
     use_display=None):
@@ -109,7 +110,8 @@ def render_paraview_scene(
                   '{}', {}, '{}',
                   {}, {}, {},
                   {}, {},
-                  {}, '{}', '{}', {}, {})
+                  {}, '{}', '{}', {},
+                  {}, {})
               """.format(
             pvd_file, outfile, repr(field_name), re.sub('\n', '', repr(timesteps)),
             camera_position, camera_focal_point, camera_view_up,
@@ -119,7 +121,7 @@ def render_paraview_scene(
             glyph_scale_factor, glyph_random_mode, glyph_mask_points,
             glyph_max_number_of_points, show_orientation_axes,
             show_center_axes, representation, palette, trim_border,
-            diffuse_color))
+            rescale, diffuse_color))
     with open(scriptfile, 'w') as f:
         f.write(script_string)
     shutil.copy(os.path.join(os.path.dirname(__file__), './visualization_impl.py'), tmpdir)

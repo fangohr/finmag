@@ -140,6 +140,7 @@ def render_paraview_scene(
     representation="Surface With Edges",
     palette='screen',
     trim_border=True,
+    rescale=None,
     diffuse_color=None):
     """
     Load a *.vtu file, render the scene in it and save the result to an image file.
@@ -295,6 +296,11 @@ def render_paraview_scene(
         If True (the default), any superfluous space around the scene
         will be trimmed from the saved image. This requires imagemagick
         to be installed.
+
+    rescale: float | None
+
+        Factor by which the output image will be rescaled. For example,
+        using 'rescale=0.4' will rescale the image by 40%.
 
     diffuse_color: 3-tuple of RGB values
 
@@ -547,6 +553,17 @@ def render_paraview_scene(
             except subprocess.CalledProcessError as ex:
                 logger.warning("Could not trim border from image. "
                                "The error message was: {}".format(ex.output))
+
+        if rescale:
+            rescale_factor = int(rescale * 100.0)
+            cmd = 'mogrify -resize {:d}% {}'.format(rescale_factor, outfilename)
+            try:
+                subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
+                logger.debug("Resizing output image by {:d}%".format(rescale_factor))
+            except OSError:
+                logger.warning("Using the 'rescale' argument requires ImageMagick to be installed.")
+            except subprocess.CalledProcessError as ex:
+                logger.warning("Could not rescale image. The error message was: {}".format(ex.output))
 
     if len(timesteps) == 1:
         # If a single timestep is rendered, we return the resulting image.
