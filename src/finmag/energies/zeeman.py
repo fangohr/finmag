@@ -38,7 +38,7 @@ class Zeeman(object):
 
         """
         self.H = helpers.vector_valued_function(value, self.S3, **self.kwargs)
-        self.E = - mu0 * self.Ms * df.dot(self.m, self.H) * df.dx
+        self.E = - mu0 * self.Ms * df.dot(self.m, self.H)
     
     def average_field(self):
         """
@@ -49,8 +49,8 @@ class Zeeman(object):
     def compute_field(self):
         return self.H.vector().array()
 
-    def compute_energy(self):
-        E = df.assemble(self.E) * self.unit_length**3
+    def compute_energy(self, dx=df.dx):
+        E = df.assemble(self.E * dx) * self.unit_length**3
         return E
 
 
@@ -198,8 +198,9 @@ class TimeZeemanPython(TimeZeeman):
         self.m = m
         self.Ms = Ms
         self.unit_length = unit_length
+        self.dx = dx
         self.H0 = helpers.vector_valued_function(self.df_expression, self.S3)
-        self.E = - mu0 * self.Ms * df.dot(self.m, self.H0) * df.dx
+        self.E = - mu0 * self.Ms * df.dot(self.m, self.H0)
         
         self.H0 = self.H0.vector().array()
         self.H = self.H0.copy()
@@ -231,8 +232,8 @@ class TimeZeemanPython(TimeZeeman):
     def compute_field(self):
         return self.H
 
-    def compute_energy(self):
-        E = df.assemble(self.E) * self.unit_length**3
+    def compute_energy(self, dx=df.dx):
+        E = df.assemble(self.Ei * dx) * self.unit_length**3
         return E
 
 

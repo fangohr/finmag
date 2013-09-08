@@ -2,9 +2,12 @@ from __future__ import division
 import numpy as np
 import dolfin as df
 import pytest
+import os
+import finmag
 from finmag.energies import Zeeman, TimeZeeman, DiscreteTimeZeeman, OscillatingZeeman
 from finmag.util.consts import mu0
-from math import sqrt, pi, cos
+from finmag.util.meshes import pair_of_disks
+from math import sqrt, pi, cos, sin
 
 mesh = df.UnitCubeMesh(2, 2, 2)
 S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
@@ -50,7 +53,7 @@ def test_compute_energy():
                        # worse if we use a finer mesh?!?
     unit_length = 1e-9
     Ms = 8e5
-    h = 1e6
+    H = 1e6
 
     mesh = df.BoxMesh(0, 0, 0, lx, ly, lz, nx, ny, nz)
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
@@ -62,14 +65,14 @@ def test_compute_energy():
         """
         m_fun = df.Function(S3)
         m_fun.assign(df.Constant(m))
-        H_ext = Zeeman(h * np.array([1, 0, 0]))
+        H_ext = Zeeman(H * np.array([1, 0, 0]))
         H_ext.setup(S3, m_fun, Ms, unit_length=unit_length)
 
         E_computed = H_ext.compute_energy()
         assert np.allclose(E_computed, E_expected, atol=0, rtol=1e-12)
 
     volume = lx * ly * lz * unit_length**3
-    E_aligned = -mu0 * Ms * h * volume
+    E_aligned = -mu0 * Ms * H * volume
 
     check_energy_for_m((1, 0, 0), E_aligned)
     check_energy_for_m((-1, 0, 0), -E_aligned)
@@ -77,6 +80,99 @@ def test_compute_energy():
     check_energy_for_m((0, 0, 1), 0.0)
     check_energy_for_m((1/sqrt(2), 1/sqrt(2), 0), E_aligned * cos(pi * 45 / 180))
     check_energy_for_m((-0.5, 2/sqrt(3), 0), -E_aligned * cos(pi * 60 / 180))
+
+
+def test_compute_energy_in_regions(tmpdir):
+    os.chdir(str(tmpdir))
+    d = 30.0
+    h1 = 5.0
+    h2 = 10.0
+    sep = 10.0
+    maxh = 2.5
+    RTOL = 5e-3  # depends on maxh
+    unit_length = 1e-9
+
+    Ms = 8e5
+    H = 1e6
+
+    mesh = pair_of_disks(d, d, h1, h2, sep, theta=0, maxh=maxh)
+    S3 = df.VectorFunctionSpace(mesh, "CG", 1)
+
+    # Create a mesh function for the two domains (each representing one disk),
+    # where the regions are marked with '0' (first disk) and '1' (second disk).
+    class Disk1(df.SubDomain):
+        def inside(self, pt, on_boundary):
+            return np.linalg.norm(pt) < 0.5 * (d + sep)
+
+    class Disk2(df.SubDomain):
+        def inside(self, pt, on_boundary):
+            return np.linalg.norm(pt) > 0.5 * (d + sep)
+
+    disk1 = Disk1()
+    disk2 = Disk2()
+    domains = df.CellFunction("size_t", mesh)
+    domains.set_all(0)
+    disk1.mark(domains, 1)
+    disk2.mark(domains, 2)
+    dx = df.Measure("dx")[domains]
+    dx_disk_1 = dx(1)
+    dx_disk_2 = dx(2)
+
+    volume_1 = pi * (0.5 * d)**2 * h1 * unit_length**3  # volume of disk #1
+    volume_2 = pi * (0.5 * d)**2 * h2 * unit_length**3  # volume of disk #2
+    #E_aligned_1 = -mu0 * Ms * H * volume_1  # energy of disk #1 if m || H_ext
+    #E_aligned_2 = -mu0 * Ms * H * volume_2  # energy of disk #2 if m || H_ext
+
+    def check_energies(m=None, theta=None):
+        """
+        Helper function to compare the computed energy for a given
+        magnetisation with an expected analytical value. The argument
+        theta is the angle between the magnetisation vector and the
+        x-axis.
+
+        """
+        # Exactly one of m, theta must be given
+        assert((m is None or theta is None) and not (m is None and theta is None))
+        if m is None:
+            if theta is None:
+                raise ValueError("Exactly one of m, theta must be given.")
+            theta_rad = theta * pi / 180.
+            m = (cos(theta_rad), sin(theta_rad), 0)
+        else:
+            if theta != None:
+                raise ValueError("Exactly one of m, theta must be given.")
+        m = m / np.linalg.norm(m)
+        m_fun = df.Function(S3)
+        m_fun.assign(df.Constant(m))
+        H_ext = Zeeman(H * np.array([1, 0, 0]))
+        H_ext.setup(S3, m_fun, Ms, unit_length=unit_length)
+
+        #E_analytical_1 = -mu0 * Ms * H * volume_1 * cos(theta_rad)
+        E_analytical_1 = -mu0 * Ms * H * volume_1 * np.dot(m, [1, 0, 0])
+        E_analytical_2 = -mu0 * Ms * H * volume_2 * np.dot(m, [1, 0, 0])
+        E_analytical_total = E_analytical_1 + E_analytical_2
+
+        E_computed_1 = H_ext.compute_energy(dx=dx_disk_1)
+        E_computed_2 = H_ext.compute_energy(dx=dx_disk_2)
+        E_computed_total = H_ext.compute_energy(dx=df.dx)
+
+        # Check that the sum of the computed energies for disk #1 and #2 equals the total computed energy
+        assert np.allclose(E_computed_1 + E_computed_2, E_computed_total, atol=0, rtol=1e-12)
+
+        # Check that the computed energies are within the tolerance of the analytical expressions
+        assert np.allclose(E_computed_1, E_analytical_1, atol=0, rtol=RTOL)
+        assert np.allclose(E_computed_2, E_analytical_2, atol=0, rtol=RTOL)
+        assert np.allclose(E_computed_total, E_analytical_total, atol=0, rtol=RTOL)
+        #finmag.logger.debug("E_computed: {}".format(E_computed))
+        #finmag.logger.debug("E_expected: {}".format(E_expected))
+        #finmag.logger.debug("E_computed - E_expected: {}".format(E_computed - E_expected))
+
+    # Check a bunch of energies
+    for theta in [0, 20, 45, 60, 90, 144, 180]:
+        check_energies(theta=theta)
+        check_energies(theta=-theta)
+    check_energies(m=(0, 0, 1))
+    check_energies(m=(2, -3, -1))
 
 
 def test_time_zeeman_init():
