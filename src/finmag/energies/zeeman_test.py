@@ -102,11 +102,13 @@ def test_compute_energy_in_regions(tmpdir):
     # where the regions are marked with '0' (first disk) and '1' (second disk).
     class Disk1(df.SubDomain):
         def inside(self, pt, on_boundary):
-            return np.linalg.norm(pt) < 0.5 * (d + sep)
+            x, y, z = pt
+            return np.linalg.norm([x, y]) < 0.5 * (d + sep)
 
     class Disk2(df.SubDomain):
         def inside(self, pt, on_boundary):
-            return np.linalg.norm(pt) > 0.5 * (d + sep)
+            x, y, z = pt
+            return np.linalg.norm([x, y, z]) > 0.5 * (d + sep)
 
     disk1 = Disk1()
     disk2 = Disk2()
