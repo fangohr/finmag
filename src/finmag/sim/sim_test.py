@@ -732,6 +732,44 @@ class TestSimulation(object):
 
         assert np.max(np.abs(ts - real_ts)) < 1e-24
 
+    def test_mark_regions(self, tmpdir):
+        os.chdir(str(tmpdir))
+        sim = barmini()
+
+        def fun_regions(pt):
+            return 'bottom' if (pt[2] <=5.0) else 'top'
+
+        # Note that the return values of fun_regions can be anything,
+        # they only need to be valid keys (or values?) for a dictionary!
+        sim.mark_regions(fun_regions)
+
+        sim.save_field_to_vtk('Demag', region='bottom', filename='demag_bottom.pvd')
+        sim.save_field_to_vtk('Demag', region='top', filename='demag_top.pvd')
+        sim.save_field_to_vtk('Demag', filename='demag_full.pvd')
+        sim.save_field('Demag', region='bottom', filename='demag_bottom.npy')
+        sim.save_field('Demag', region='top', filename='demag_top.npy')
+        sim.save_field('Demag', filename='demag_full.npy')
+
+        demag_bottom = np.load('demag_bottom.npy')
+        demag_top = np.load('demag_top.npy')
+        demag_full = sim.get_field_as_dolfin_function('Demag').vector().array()
+        assert len(demag_bottom) < len(demag_full)
+        assert len(demag_top) < len(demag_full)
+
+        effective_field = sim.llg.effective_field  # alias
+
+        markers = effective_field.region_markers
+
+        id_top = effective_field.region_ids['top']
+        id_bottom = effective_field.region_ids['bottom']
+        submesh_top = df.SubMesh(sim.mesh, markers, id_top)
+        submesh_bottom = df.SubMesh(sim.mesh, markers, id_bottom)
+
+        # Check that the retrieved restricted demag field vectors have the expected sizes.
+        assert len(demag_top) == 3 * submesh_top.num_vertices()
+        assert len(demag_bottom) == 3 * submesh_bottom.num_vertices()
+        assert len(demag_full) == 3 * sim.mesh.num_vertices()
+
 
 def test_sim_with(tmpdir):
     """
