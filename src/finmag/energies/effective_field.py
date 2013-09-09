@@ -154,7 +154,12 @@ class EffectiveField(object):
         # TODO: Do we keep the field as a dolfin function somewhere?
         f = vector_valued_function(interaction.compute_field(), interaction.S3)
         if region:
-            V_region = self.region_spaces[region]
+            try:
+                V_region = self.region_spaces[region]
+            except AttributeError:
+                raise RuntimeError("No regions defined in mesh. Please call 'mark_regions' first to define some.")
+            except KeyError:
+                raise ValueError("Region not defined: '{}'. Allowed values: {}".format(region, self.region_ids.keys()))
             f = df.interpolate(f, V_region)
         return f
 
