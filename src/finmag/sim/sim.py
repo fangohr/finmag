@@ -440,7 +440,7 @@ class Simulation(object):
 
         log.debug("Switching off external field {}".format(dbg_str))
 
-    def get_field_as_dolfin_function(self, field_type):
+    def get_field_as_dolfin_function(self, field_type, region=None):
         """
         Returns the field of the interaction of the given type or of the
         magnetisation as a dolfin function.
@@ -453,6 +453,12 @@ class Simulation(object):
             example: 'Demag', 'Exchange', 'UniaxialAnisotropy', 'Zeeman',
             as well as 'm' which stands for the normalised magnetisation.
 
+        region:
+
+            Some identifier that uniquely identifies a mesh region. This required
+            that the method `mark_regions` has been called previously so that the
+            simulation knows about the regions and their IDs.
+
         *Returns*
 
         A dolfin.Function representing the given field. If no or more than one
@@ -461,7 +467,7 @@ class Simulation(object):
         """
         if field_type == 'm':
             return self.llg._m
-        return self.llg.effective_field.get_dolfin_function(field_type)
+        return self.llg.effective_field.get_dolfin_function(field_type, region=region)
 
     def probe_field(self, field_type, pts):
         """
@@ -876,17 +882,20 @@ class Simulation(object):
     def _save_m_to_vtk(self, vtk_saver):
         vtk_saver.save_field(self.llg._m, self.t)
 
-    def _save_field_to_vtk(self, field_name, vtk_saver):
-        field_data = self.get_field_as_dolfin_function(field_name)
+    def _save_field_to_vtk(self, field_name, vtk_saver, region=None):
+        field_data = self.get_field_as_dolfin_function(field_name, region=region)
         field_data.rename(field_name, field_name)
         vtk_saver.save_field(field_data, self.t)
 
-    def save_vtk(self, field_name='m', filename=None, overwrite=False):
+    def save_vtk(self, field_name='m', filename=None, overwrite=False, region=None):
         """
-        Save the magnetisation to a VTK file.
+        Save the magnetisation (or a different field) to a VTK file.
         """
         vtk_saver = self._get_vtk_saver(filename, overwrite)
-        self._save_field_to_vtk(field_name, vtk_saver)
+        self._save_field_to_vtk(field_name, vtk_saver, region=region)
+
+    # Alias
+    save_field_to_vtk = save_vtk
 
     def _get_field_saver(self, field_name, filename=None, overwrite=False, incremental=False):
         if filename is None:
@@ -904,7 +913,7 @@ class Simulation(object):
 
         return s
 
-    def save_field(self, field_name, filename=None, incremental=False, overwrite=False):
+    def save_field(self, field_name, filename=None, incremental=False, overwrite=False, region=None):
         """
         Save the given field data to a .npy file.
 
@@ -925,8 +934,14 @@ class Simulation(object):
 
         incremental : bool
 
+        region:
+
+            Some identifier that uniquely identifies a mesh region. This required
+            that the method `mark_regions` has been called previously so that the
+            simulation knows about the regions and their IDs.
+
         """
-        field_data = self.get_field_as_dolfin_function(field_name)
+        field_data = self.get_field_as_dolfin_function(field_name, region=region)
         field_saver = self._get_field_saver(field_name, filename, incremental=incremental, overwrite=overwrite)
         field_saver.save(field_data.vector().array())
 
@@ -1041,6 +1056,21 @@ class Simulation(object):
         if not os.path.exists(ndt_file):
             raise RuntimeError("File was not found: '{}'. Did you forget to schedule saving the averages to a .ndt file before running the simulation?".format(ndt_file))
         return plot_dynamics(ndt_file, components=components, **kwargs)
+
+    def mark_regions(self, fun_regions):
+        """
+        Mark certain subdomains of the mesh.
+
+        The argument `fun_regions` should be a callable of the form
+
+           (x, y, z)  -->  region_id
+
+        which takes the coordinates of a mesh point as input and returns
+        the region_id for this point. Here `region_id` can be anything
+        (it doesn't need to be an integer).
+
+        """
+        self.llg.effective_field.mark_regions(fun_regions)
 
 
 class NormalModeSimulation(Simulation):
