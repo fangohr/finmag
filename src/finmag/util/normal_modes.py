@@ -349,7 +349,7 @@ def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9
     # XXX TODO: Is this method safe, or does it leave any trace of the temporary changes we did above?
     sim.set_m(m_orig)
 
-    return A, M, Q, Qt, R
+    return A, M, Q, Qt
 
 
 def compute_normal_modes(D, n_values=10, sigma=0., tol=1e-8, which='LM'):

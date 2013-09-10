@@ -198,7 +198,6 @@ class TimeZeemanPython(TimeZeeman):
         self.m = m
         self.Ms = Ms
         self.unit_length = unit_length
-        self.dx = dx
         self.H0 = helpers.vector_valued_function(self.df_expression, self.S3)
         self.E = - mu0 * self.Ms * df.dot(self.m, self.H0)
         
