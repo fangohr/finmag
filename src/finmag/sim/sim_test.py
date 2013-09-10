@@ -4,7 +4,7 @@ import logging
 import pytest
 import os
 from glob import glob
-from distutils.version import StrictVersion
+from distutils.version import LooseVersion
 from finmag import sim_with, Simulation, set_logging_level, normal_mode_simulation
 from finmag.example import barmini
 from math import sqrt, cos, sin, pi
@@ -511,7 +511,7 @@ class TestSimulation(object):
         H = sim.probe_field('Zeeman', [0.5e-9, 0.5e-9, 0.5e-9])
         assert(np.allclose(H, [1, 2, 3]))
 
-    @pytest.mark.skipif("not StrictVersion(df.__version__) < StrictVersion('1.2.0')")
+    @pytest.mark.skipif("not LooseVersion(df.__version__) < LooseVersion('1.2.0')")
     def test_pbc2d_m_init(self):
 
         def m_init_fun(pos):

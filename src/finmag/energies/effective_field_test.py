@@ -1,6 +1,8 @@
 import numpy as np
 import dolfin as df
+import pytest
 from finmag.example import barmini
+from distutils.version import LooseVersion
 
 
 def test_effective_field_compute_returns_copy():
@@ -22,6 +24,7 @@ def test_effective_field_compute_returns_copy():
     assert not np.allclose(h0, h1, atol=0, rtol=1e-8)
 
 
+@pytest.mark.xfail("LooseVersion(df.__version__) <= LooseVersion('1.2.0')")
 def test_mark_regions():
     sim = barmini()
     effective_field = sim.llg.effective_field

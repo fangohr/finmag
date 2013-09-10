@@ -887,15 +887,18 @@ class Simulation(object):
         field_data.rename(field_name, field_name)
         vtk_saver.save_field(field_data, self.t)
 
-    def save_vtk(self, field_name='m', filename=None, overwrite=False, region=None):
+    def save_vtk(self, filename=None, overwrite=False, region=None):
         """
-        Save the magnetisation (or a different field) to a VTK file.
+        Save the magnetisation to a VTK file.
+        """
+        self.save_field_to_vtk('m', filename=filename, overwrite=overwrite, region=region)
+
+    def save_field_to_vtk(self, field_name, filename=None, overwrite=False, region=None):
+        """
+        Save the field with the given name to a VTK file.
         """
         vtk_saver = self._get_vtk_saver(filename, overwrite)
         self._save_field_to_vtk(field_name, vtk_saver, region=region)
-
-    # Alias
-    save_field_to_vtk = save_vtk
 
     def _get_field_saver(self, field_name, filename=None, overwrite=False, incremental=False):
         if filename is None:
@@ -1019,7 +1022,7 @@ class Simulation(object):
 
         with helpers.TemporaryDirectory() as tmpdir:
             filename = os.path.join(tmpdir, 'paraview_scene_{}.pvd'.format(self.name))
-            self.save_vtk(field_name=field_name, filename=filename, region=region)
+            self.save_field_to_vtk(field_name=field_name, filename=filename, region=region)
             return render_paraview_scene(filename, **kwargs)
 
     def _render_scene_incremental(self, filename, **kwargs):
