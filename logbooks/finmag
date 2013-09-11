@@ -8760,3 +8760,135 @@ Hans
 -------------------------------------
 finmag-team mailing list.
 
+From marvin  Wed Sep 11 12:03:26 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Wed, 11 Sep 2013 12:03:26 +0100 (BST)
+Received: by 10.216.151.135 with SMTP id b7csp31492wek;
+        Wed, 11 Sep 2013 03:52:22 -0700 (PDT)
+X-Received: by 10.204.123.199 with SMTP id q7mr842449bkr.10.1378896742048;
+        Wed, 11 Sep 2013 03:52:22 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk. [152.78.128.16])
+        by mx.google.com with ESMTP id pg9si2725105bkb.197.1969.12.31.16.00.00;
+        Wed, 11 Sep 2013 03:52:22 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) client-ip=152.78.128.16;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r8BApwVf016574;
+	Wed, 11 Sep 2013 11:51:58 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk [152.78.119.37])
+	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk [152.78.128.16]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p8ABpw0128619717yF ret-id none; Wed, 11 Sep 2013 11:51:58 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.37) with Microsoft SMTP Server (TLS) id 14.2.342.3; Wed, 11 Sep
+ 2013 11:51:41 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r8BApeJx003484;	Wed, 11 Sep 2013 11:51:40 +0100
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r8BApefu003481	for <finmag-team@lists.soton.ac.uk>; Wed, 11 Sep 2013 11:51:40
+ +0100
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r8BApAwX016072	for
+ <finmag-team@lists.soton.ac.uk>; Wed, 11 Sep 2013 11:51:10 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk
+ [152.78.119.37])	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16]) envelope-from <H.FANGOHR@soton.ac.uk> with ESMTP	id
+ p8ABpA0128619705Iz ret-id none; Wed, 11 Sep 2013 11:51:10 +0100
+Received: from dhcp-161-158.wireless.soton.ac.uk (152.78.161.158) by
+ smtp.soton.ac.uk (152.78.119.37) with Microsoft SMTP Server (TLS) id
+ 14.2.342.3; Wed, 11 Sep 2013 11:50:39 +0100
+From: Hans Fangohr <h.fangohr@soton.ac.uk>
+Content-Type: multipart/alternative;
+	boundary="Apple-Mail=_31B8DAC6-809F-4D6A-9488-5152D9477AB3"
+Subject: [finmag-team] micro magnetic calendar URLs
+Date: Wed, 11 Sep 2013 11:50:39 +0100
+Message-ID: <7911755B-499D-4CBC-92BA-34A04B013989@soton.ac.uk>
+CC: Hans Fangohr <h.fangohr@soton.ac.uk>
+To: "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+MIME-Version: 1.0 (Mac OS X Mail 6.5 \(1508\))
+X-Mailer: Apple Mail (2.1508)
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<H.FANGOHR@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p8ABpy012861971700; tid=p8ABpw0128619717yF; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r8BApwVf016574
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+--Apple-Mail=_31B8DAC6-809F-4D6A-9488-5152D9477AB3
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+
+Dear all,
+
+if you prefer not to use a google account, you can access the calendars =
+via these two URLs:
+
+XML:
+
+=
+https://www.google.com/calendar/feeds/80glk6anto3614jksgh5p6t09o%40group.c=
+alendar.google.com/private-d3126e09e4ccd0c0c3d3385e93921144/basic
+
+ICAL:
+
+=
+https://www.google.com/calendar/ical/80glk6anto3614jksgh5p6t09o%40group.ca=
+lendar.google.com/private-d3126e09e4ccd0c0c3d3385e93921144/basic.ics
+
+If you haven't got access to the calendar yet, and this doesn't fix the =
+issue, please let me know.
+
+Cheers,
+
+Hans
+
+
+
+--Apple-Mail=_31B8DAC6-809F-4D6A-9488-5152D9477AB3
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/html; charset="us-ascii"
+
+<html><head><meta http-equiv=3D"Content-Type" content=3D"text/html =
+charset=3Dus-ascii"></head><body style=3D"word-wrap: break-word; =
+-webkit-nbsp-mode: space; -webkit-line-break: after-white-space; ">Dear =
+all,<div><br></div><div>if you prefer not to use a google account, you =
+can access the calendars via these two URLs:</div><div><br></div><div><a =
+href=3D"https://www.google.com/calendar/feeds/80glk6anto3614jksgh5p6t09o@g=
+roup.calendar.google.com/private-d3126e09e4ccd0c0c3d3385e93921144/basic"><=
+/a>XML:</div><div><br></div><div><span style=3D"color: rgb(17, 85, 204); =
+font-family: Arial, sans-serif; font-size: small; background-color: =
+rgb(255, 255, 255); text-decoration: underline; "><a =
+href=3D"https://www.google.com/calendar/feeds/80glk6anto3614jksgh5p6t09o%4=
+0group.calendar.google.com/private-d3126e09e4ccd0c0c3d3385e93921144/basic"=
+>https://www.google.com/calendar/feeds/80glk6anto3614jksgh5p6t09o%40group.=
+calendar.google.com/private-d3126e09e4ccd0c0c3d3385e93921144/basic</a></sp=
+an></div><div><span style=3D"color: rgb(17, 85, 204); font-family: =
+Arial, sans-serif; font-size: small; background-color: rgb(255, 255, =
+255); text-decoration: underline; =
+"><br></span></div><div>ICAL:</div><div><span style=3D"color: rgb(17, =
+85, 204); font-family: Arial, sans-serif; font-size: small; =
+background-color: rgb(255, 255, 255); text-decoration: underline; =
+"><br></span></div><div><a =
+href=3D"https://www.google.com/calendar/ical/80glk6anto3614jksgh5p6t09o@gr=
+oup.calendar.google.com/private-d3126e09e4ccd0c0c3d3385e93921144/basic.ics=
+" target=3D"_blank" style=3D"color: rgb(17, 85, 204); font-family: =
+Arial, sans-serif; font-size: small; background-color: rgb(255, 255, =
+255); =
+">https://www.google.com/calendar/ical/80glk6anto3614jksgh5p6t09o%40group.=
+calendar.google.com/private-d3126e09e4ccd0c0c3d3385e93921144/basic.ics</a>=
+</div><div><br></div><div>If you haven't got access to the calendar yet, =
+and this doesn't fix the issue, please let me =
+know.</div><div><br></div><div>Cheers,</div><div><br></div><div>Hans</div>=
+<div><br></div><div><br></div></body></html>=
+
+--Apple-Mail=_31B8DAC6-809F-4D6A-9488-5152D9477AB3--
+
