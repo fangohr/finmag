@@ -8970,3 +8970,148 @@ Hans
 -------------------------------------
 finmag-team mailing list.
 
+From marvin  Sat Sep 14 14:04:24 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Sat, 14 Sep 2013 14:04:24 +0100 (BST)
+Received: by 10.216.151.135 with SMTP id b7csp8963wek;
+        Sat, 14 Sep 2013 05:48:02 -0700 (PDT)
+X-Received: by 10.204.168.197 with SMTP id v5mr15882547bky.24.1379162881828;
+        Sat, 14 Sep 2013 05:48:01 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id oe5si2095745bkb.171.1969.12.31.16.00.00;
+        Sat, 14 Sep 2013 05:48:01 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk;
+       dkim=neutral (bad format) header.i=@gmail.com;
+       dmarc=fail (p=NONE dis=NONE) header.from=gmail.com
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r8EClGKU003859;
+	Sat, 14 Sep 2013 13:47:16 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk [152.78.119.37])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p8DDlG1250035050JB ret-id none; Sat, 14 Sep 2013 13:47:16 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.37) with Microsoft SMTP Server (TLS) id 14.2.342.3; Sat, 14 Sep
+ 2013 13:46:13 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r8ECk7w8016696;	Sat, 14 Sep 2013 13:46:07 +0100
+Received: from mailgate1.iss.soton.ac.uk (mailgate1.iss.soton.ac.uk
+ [152.78.128.102])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r8ECk6NO016693	for <finmag-team@lists.soton.ac.uk>; Sat, 14 Sep 2013 13:46:06
+ +0100
+Received: from mailgate1.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate1.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r8ECjwVO010364	for
+ <finmag-team@lists.soton.ac.uk>; Sat, 14 Sep 2013 13:45:58 +0100
+Received: from mail-wi0-f179.google.com (mail-wi0-f179.google.com
+ [209.85.212.179])	by mailgate1.iss.soton.ac.uk (mailgate1.iss.soton.ac.uk
+ [152.78.128.102]) envelope-from <maximilian.albert@gmail.com> with ESMTP	id
+ p8DDjw0557853758Dg ret-id none; Sat, 14 Sep 2013 13:45:58 +0100
+Received: by mail-wi0-f179.google.com with SMTP id hm2so1834862wib.12
+        for <finmag-team@lists.soton.ac.uk>; Sat, 14 Sep 2013 05:45:58 -0700
+ (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :content-type;
+        bh=ORqYyNMuLvlj+IgvcqwYaHxQZGM4jSYbDlIyJ8+DuGU=;
+        b=Fh+3FRh2K/po0KL3xyGfeHYCU+6USxNnr3kd6azpMvTlcLnas8t++Nt1SKb+vCkdCP
+         uy76gKIjDzpuRhvJSO741FeRKpJ64FtMV3X3W6CsLJMJReuOVDkTxmUlAbGMSQneXgNi
+         J0XojO7A4WMwUL+H6FtyOz7XCJ/Lbxb3DfXwHt4nJ8U5JIyHga8paAO1xXkJu6nA5hhJ
+         dYvW5ksGs3YW5jeYh/GBkC6gwnb9pMYGjzp2iIMpWmllOtoonxNphql55yVSzXuvyVLX
+         PkZDH4gA0SfSbdr5Q6iTdlm4JPL45eXFXEcXaGgPG4LEy4Jvo/n48F9s3noql62f0WXR
+         IhVg==
+MIME-Version: 1.0
+X-Received: by 10.180.210.231 with SMTP id mx7mr6326936wic.5.1379162758649;
+ Sat, 14 Sep 2013 05:45:58 -0700 (PDT)
+Received: by 10.194.8.104 with HTTP; Sat, 14 Sep 2013 05:45:58 -0700 (PDT)
+In-Reply-To: <CAA4C66PKrrKMey0vSAwjC_9Kt9Jqa3W6hV6RWs4MOxjS9p-s0w@mail.gmail.com>
+References: <CAGA_dmj8RWt_MxpRLaymE5KinWEWJ80+Bghsxraam3H360M+dQ@mail.gmail.com>
+	<CAA4C66PKrrKMey0vSAwjC_9Kt9Jqa3W6hV6RWs4MOxjS9p-s0w@mail.gmail.com>
+Date: Sat, 14 Sep 2013 13:45:58 +0100
+Message-ID: <CAGA_dmj+Y9OiCTLk98A=abXGQ9ws5Z8MJjUvdmucjB4bhUi5Ag@mail.gmail.com>
+Subject: [finmag-team] Fwd: [FEniCS] Nightly snapshots safe for production code?
+From: Maximilian Albert <maximilian.albert@gmail.com>
+To: "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+Content-Type: text/plain; charset="ISO-8859-1"
+Received-SPF: None; receiver=mailgate1.iss.soton.ac.uk; client-ip=209.85.212.179; helo=<mail-wi0-f179.google.com>
+Received-SPF: Pass; receiver=mailgate1.iss.soton.ac.uk; client-ip=209.85.212.179; envelope-from=<maximilian.albert@gmail.com>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p8DDlG125003505000; tid=p8DDlG1250035050JB; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r8EClGKU003859
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi guys,
+
+below is the reply from the FEniCS folks regarding the stability of
+the nightly snapshots. Sounds like it might be suitable for us, since
+we don't rely that heavily on new features anyway and can usually
+easily fix any APIs that they may change (we even had to do this with
+stable release versions previously). But using the nightly snapshots
+this would still give us a chance to make use of new features and
+provide feedback. What do you think?
+
+Cheers,
+Max
+
+
+---------- Forwarded message ----------
+From: Garth N. Wells <gnw20@cam.ac.uk>
+Date: 2013/9/14
+Subject: Re: [FEniCS] Nightly snapshots safe for production code?
+To: Maximilian Albert <maximilian.albert@gmail.com>
+Cc: "fenics@fenicsproject.org" <fenics@fenicsproject.org>
+
+
+On 14 September 2013 12:58, Maximilian Albert
+<maximilian.albert@gmail.com> wrote:
+> Hi,
+>
+> I recently needed a dolfin feature that is only present in the
+> development version, so I upgraded my Ubuntu packages to use the
+> nightly snapshot releases (available at [1]).
+>
+> However, I was wondering whether it is advisable to use the nightly
+> snapshots on a daily basis for my work? Do I understand correctly that
+> the current git workflow is designed to make sure that 'master' (which
+> is the branch used for the snapshots, I presume) is always in a state
+> that makes it safe for production-type code to use it?
+>
+
+The master development branch is pretty stable in the sense that it
+should never (in practice, very rarely) be broken (i.e., all the test
+pass).
+
+However, there are no guarantees regarding interface changes or
+functionality being added or removed in the development branch.
+
+> Perhaps it's even recommended to use the nightly snapshots so that
+> users can give instantaneous feedback to the FEniCS developers for
+> bleeding-edge features, newly designed APIs, etc.?
+>
+
+I would recommend using snapshots if you want new features, provide
+feedback and detect very quickly any regressions that might affect
+your code.
+
+Garth
+
+> Thanks for any clarification,
+> Max
+>
+> [1] http://fenicsproject.org/download/snapshot_releases.html
+> _______________________________________________
+> fenics mailing list
+> fenics@fenicsproject.org
+> http://fenicsproject.org/mailman/listinfo/fenics
+-------------------------------------
+finmag-team mailing list.
+
