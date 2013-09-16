@@ -8760,3 +8760,358 @@ Hans
 -------------------------------------
 finmag-team mailing list.
 
+From marvin  Wed Sep 11 12:03:26 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Wed, 11 Sep 2013 12:03:26 +0100 (BST)
+Received: by 10.216.151.135 with SMTP id b7csp31492wek;
+        Wed, 11 Sep 2013 03:52:22 -0700 (PDT)
+X-Received: by 10.204.123.199 with SMTP id q7mr842449bkr.10.1378896742048;
+        Wed, 11 Sep 2013 03:52:22 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk. [152.78.128.16])
+        by mx.google.com with ESMTP id pg9si2725105bkb.197.1969.12.31.16.00.00;
+        Wed, 11 Sep 2013 03:52:22 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) client-ip=152.78.128.16;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r8BApwVf016574;
+	Wed, 11 Sep 2013 11:51:58 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk [152.78.119.37])
+	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk [152.78.128.16]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p8ABpw0128619717yF ret-id none; Wed, 11 Sep 2013 11:51:58 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.37) with Microsoft SMTP Server (TLS) id 14.2.342.3; Wed, 11 Sep
+ 2013 11:51:41 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r8BApeJx003484;	Wed, 11 Sep 2013 11:51:40 +0100
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r8BApefu003481	for <finmag-team@lists.soton.ac.uk>; Wed, 11 Sep 2013 11:51:40
+ +0100
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r8BApAwX016072	for
+ <finmag-team@lists.soton.ac.uk>; Wed, 11 Sep 2013 11:51:10 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk
+ [152.78.119.37])	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16]) envelope-from <H.FANGOHR@soton.ac.uk> with ESMTP	id
+ p8ABpA0128619705Iz ret-id none; Wed, 11 Sep 2013 11:51:10 +0100
+Received: from dhcp-161-158.wireless.soton.ac.uk (152.78.161.158) by
+ smtp.soton.ac.uk (152.78.119.37) with Microsoft SMTP Server (TLS) id
+ 14.2.342.3; Wed, 11 Sep 2013 11:50:39 +0100
+From: Hans Fangohr <h.fangohr@soton.ac.uk>
+Content-Type: multipart/alternative;
+	boundary="Apple-Mail=_31B8DAC6-809F-4D6A-9488-5152D9477AB3"
+Subject: [finmag-team] micro magnetic calendar URLs
+Date: Wed, 11 Sep 2013 11:50:39 +0100
+Message-ID: <7911755B-499D-4CBC-92BA-34A04B013989@soton.ac.uk>
+CC: Hans Fangohr <h.fangohr@soton.ac.uk>
+To: "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+MIME-Version: 1.0 (Mac OS X Mail 6.5 \(1508\))
+X-Mailer: Apple Mail (2.1508)
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<H.FANGOHR@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p8ABpy012861971700; tid=p8ABpw0128619717yF; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r8BApwVf016574
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+--Apple-Mail=_31B8DAC6-809F-4D6A-9488-5152D9477AB3
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+
+Dear all,
+
+if you prefer not to use a google account, you can access the calendars =
+via these two URLs:
+
+XML:
+
+=
+https://www.google.com/calendar/feeds/80glk6anto3614jksgh5p6t09o%40group.c=
+alendar.google.com/private-d3126e09e4ccd0c0c3d3385e93921144/basic
+
+ICAL:
+
+=
+https://www.google.com/calendar/ical/80glk6anto3614jksgh5p6t09o%40group.ca=
+lendar.google.com/private-d3126e09e4ccd0c0c3d3385e93921144/basic.ics
+
+If you haven't got access to the calendar yet, and this doesn't fix the =
+issue, please let me know.
+
+Cheers,
+
+Hans
+
+
+
+--Apple-Mail=_31B8DAC6-809F-4D6A-9488-5152D9477AB3
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/html; charset="us-ascii"
+
+<html><head><meta http-equiv=3D"Content-Type" content=3D"text/html =
+charset=3Dus-ascii"></head><body style=3D"word-wrap: break-word; =
+-webkit-nbsp-mode: space; -webkit-line-break: after-white-space; ">Dear =
+all,<div><br></div><div>if you prefer not to use a google account, you =
+can access the calendars via these two URLs:</div><div><br></div><div><a =
+href=3D"https://www.google.com/calendar/feeds/80glk6anto3614jksgh5p6t09o@g=
+roup.calendar.google.com/private-d3126e09e4ccd0c0c3d3385e93921144/basic"><=
+/a>XML:</div><div><br></div><div><span style=3D"color: rgb(17, 85, 204); =
+font-family: Arial, sans-serif; font-size: small; background-color: =
+rgb(255, 255, 255); text-decoration: underline; "><a =
+href=3D"https://www.google.com/calendar/feeds/80glk6anto3614jksgh5p6t09o%4=
+0group.calendar.google.com/private-d3126e09e4ccd0c0c3d3385e93921144/basic"=
+>https://www.google.com/calendar/feeds/80glk6anto3614jksgh5p6t09o%40group.=
+calendar.google.com/private-d3126e09e4ccd0c0c3d3385e93921144/basic</a></sp=
+an></div><div><span style=3D"color: rgb(17, 85, 204); font-family: =
+Arial, sans-serif; font-size: small; background-color: rgb(255, 255, =
+255); text-decoration: underline; =
+"><br></span></div><div>ICAL:</div><div><span style=3D"color: rgb(17, =
+85, 204); font-family: Arial, sans-serif; font-size: small; =
+background-color: rgb(255, 255, 255); text-decoration: underline; =
+"><br></span></div><div><a =
+href=3D"https://www.google.com/calendar/ical/80glk6anto3614jksgh5p6t09o@gr=
+oup.calendar.google.com/private-d3126e09e4ccd0c0c3d3385e93921144/basic.ics=
+" target=3D"_blank" style=3D"color: rgb(17, 85, 204); font-family: =
+Arial, sans-serif; font-size: small; background-color: rgb(255, 255, =
+255); =
+">https://www.google.com/calendar/ical/80glk6anto3614jksgh5p6t09o%40group.=
+calendar.google.com/private-d3126e09e4ccd0c0c3d3385e93921144/basic.ics</a>=
+</div><div><br></div><div>If you haven't got access to the calendar yet, =
+and this doesn't fix the issue, please let me =
+know.</div><div><br></div><div>Cheers,</div><div><br></div><div>Hans</div>=
+<div><br></div><div><br></div></body></html>=
+
+--Apple-Mail=_31B8DAC6-809F-4D6A-9488-5152D9477AB3--
+
+From marvin  Thu Sep 12 00:03:37 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Thu, 12 Sep 2013 00:03:37 +0100 (BST)
+Received: by 10.216.151.135 with SMTP id b7csp57791wek;
+        Wed, 11 Sep 2013 15:29:35 -0700 (PDT)
+X-Received: by 10.204.224.142 with SMTP id io14mr3670657bkb.27.1378938574922;
+        Wed, 11 Sep 2013 15:29:34 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk. [152.78.128.16])
+        by mx.google.com with ESMTP id ec1si41039bkb.215.1969.12.31.16.00.00;
+        Wed, 11 Sep 2013 15:29:34 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) client-ip=152.78.128.16;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r8BMTC5u008087;
+	Wed, 11 Sep 2013 23:29:12 +0100
+Received: from UOS-MSG00036-VS.soton.ac.uk (uos-msg00036-vs.soton.ac.uk [152.78.119.38])
+	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk [152.78.128.16]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p8ANYC0128635922i0 ret-id none; Wed, 11 Sep 2013 23:29:12 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.38) with Microsoft SMTP Server (TLS) id 14.2.342.3; Wed, 11 Sep
+ 2013 23:29:11 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r8BMTABA009954;	Wed, 11 Sep 2013 23:29:10 +0100
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r8BMT9NN009951	for <finmag-team@lists.soton.ac.uk>; Wed, 11 Sep 2013 23:29:09
+ +0100
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r8BMSu3n006757	for
+ <finmag-team@lists.soton.ac.uk>; Wed, 11 Sep 2013 23:28:56 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk
+ [152.78.119.37])	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16]) envelope-from <H.FANGOHR@soton.ac.uk> with ESMTP	id
+ p8ANSu0128635918pU ret-id none; Wed, 11 Sep 2013 23:28:57 +0100
+Received: from [192.168.1.13] (78.86.255.245) by smtp.soton.ac.uk
+ (152.78.119.37) with Microsoft SMTP Server (TLS) id 14.2.342.3; Wed, 11 Sep
+ 2013 23:28:56 +0100
+From: Hans Fangohr <h.fangohr@soton.ac.uk>
+Content-Type: text/plain; charset="us-ascii"
+Subject: [finmag-team] Group meeting
+Date: Wed, 11 Sep 2013 23:28:54 +0100
+Message-ID: <E19CA30F-FECF-43C0-837F-410CFEA01DDE@soton.ac.uk>
+CC: Hans Fangohr <h.fangohr@soton.ac.uk>
+To: "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+MIME-Version: 1.0 (Mac OS X Mail 6.5 \(1508\))
+X-Mailer: Apple Mail (2.1508)
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<H.FANGOHR@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from quoted-printable to 8bit by maillists.sucs.soton.ac.uk id r8BMT9NN009952
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p8ANYC012863592200; tid=p8ANYC0128635922i0; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.38; helo=<UOS-MSG00036-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.38; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r8BMTC5u008087
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Dear all,
+
+just to confirm that we have our group meeting this week tomorrow (Thursday=
+) at 10:00, please (as in calendar).
+
+Best wishes,
+
+Hans
+
+
+
+-------------------------------------
+finmag-team mailing list.
+
+From marvin  Sat Sep 14 14:04:24 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Sat, 14 Sep 2013 14:04:24 +0100 (BST)
+Received: by 10.216.151.135 with SMTP id b7csp8963wek;
+        Sat, 14 Sep 2013 05:48:02 -0700 (PDT)
+X-Received: by 10.204.168.197 with SMTP id v5mr15882547bky.24.1379162881828;
+        Sat, 14 Sep 2013 05:48:01 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id oe5si2095745bkb.171.1969.12.31.16.00.00;
+        Sat, 14 Sep 2013 05:48:01 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk;
+       dkim=neutral (bad format) header.i=@gmail.com;
+       dmarc=fail (p=NONE dis=NONE) header.from=gmail.com
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r8EClGKU003859;
+	Sat, 14 Sep 2013 13:47:16 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk [152.78.119.37])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p8DDlG1250035050JB ret-id none; Sat, 14 Sep 2013 13:47:16 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.37) with Microsoft SMTP Server (TLS) id 14.2.342.3; Sat, 14 Sep
+ 2013 13:46:13 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r8ECk7w8016696;	Sat, 14 Sep 2013 13:46:07 +0100
+Received: from mailgate1.iss.soton.ac.uk (mailgate1.iss.soton.ac.uk
+ [152.78.128.102])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r8ECk6NO016693	for <finmag-team@lists.soton.ac.uk>; Sat, 14 Sep 2013 13:46:06
+ +0100
+Received: from mailgate1.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate1.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r8ECjwVO010364	for
+ <finmag-team@lists.soton.ac.uk>; Sat, 14 Sep 2013 13:45:58 +0100
+Received: from mail-wi0-f179.google.com (mail-wi0-f179.google.com
+ [209.85.212.179])	by mailgate1.iss.soton.ac.uk (mailgate1.iss.soton.ac.uk
+ [152.78.128.102]) envelope-from <maximilian.albert@gmail.com> with ESMTP	id
+ p8DDjw0557853758Dg ret-id none; Sat, 14 Sep 2013 13:45:58 +0100
+Received: by mail-wi0-f179.google.com with SMTP id hm2so1834862wib.12
+        for <finmag-team@lists.soton.ac.uk>; Sat, 14 Sep 2013 05:45:58 -0700
+ (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :content-type;
+        bh=ORqYyNMuLvlj+IgvcqwYaHxQZGM4jSYbDlIyJ8+DuGU=;
+        b=Fh+3FRh2K/po0KL3xyGfeHYCU+6USxNnr3kd6azpMvTlcLnas8t++Nt1SKb+vCkdCP
+         uy76gKIjDzpuRhvJSO741FeRKpJ64FtMV3X3W6CsLJMJReuOVDkTxmUlAbGMSQneXgNi
+         J0XojO7A4WMwUL+H6FtyOz7XCJ/Lbxb3DfXwHt4nJ8U5JIyHga8paAO1xXkJu6nA5hhJ
+         dYvW5ksGs3YW5jeYh/GBkC6gwnb9pMYGjzp2iIMpWmllOtoonxNphql55yVSzXuvyVLX
+         PkZDH4gA0SfSbdr5Q6iTdlm4JPL45eXFXEcXaGgPG4LEy4Jvo/n48F9s3noql62f0WXR
+         IhVg==
+MIME-Version: 1.0
+X-Received: by 10.180.210.231 with SMTP id mx7mr6326936wic.5.1379162758649;
+ Sat, 14 Sep 2013 05:45:58 -0700 (PDT)
+Received: by 10.194.8.104 with HTTP; Sat, 14 Sep 2013 05:45:58 -0700 (PDT)
+In-Reply-To: <CAA4C66PKrrKMey0vSAwjC_9Kt9Jqa3W6hV6RWs4MOxjS9p-s0w@mail.gmail.com>
+References: <CAGA_dmj8RWt_MxpRLaymE5KinWEWJ80+Bghsxraam3H360M+dQ@mail.gmail.com>
+	<CAA4C66PKrrKMey0vSAwjC_9Kt9Jqa3W6hV6RWs4MOxjS9p-s0w@mail.gmail.com>
+Date: Sat, 14 Sep 2013 13:45:58 +0100
+Message-ID: <CAGA_dmj+Y9OiCTLk98A=abXGQ9ws5Z8MJjUvdmucjB4bhUi5Ag@mail.gmail.com>
+Subject: [finmag-team] Fwd: [FEniCS] Nightly snapshots safe for production code?
+From: Maximilian Albert <maximilian.albert@gmail.com>
+To: "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+Content-Type: text/plain; charset="ISO-8859-1"
+Received-SPF: None; receiver=mailgate1.iss.soton.ac.uk; client-ip=209.85.212.179; helo=<mail-wi0-f179.google.com>
+Received-SPF: Pass; receiver=mailgate1.iss.soton.ac.uk; client-ip=209.85.212.179; envelope-from=<maximilian.albert@gmail.com>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p8DDlG125003505000; tid=p8DDlG1250035050JB; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r8EClGKU003859
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi guys,
+
+below is the reply from the FEniCS folks regarding the stability of
+the nightly snapshots. Sounds like it might be suitable for us, since
+we don't rely that heavily on new features anyway and can usually
+easily fix any APIs that they may change (we even had to do this with
+stable release versions previously). But using the nightly snapshots
+this would still give us a chance to make use of new features and
+provide feedback. What do you think?
+
+Cheers,
+Max
+
+
+---------- Forwarded message ----------
+From: Garth N. Wells <gnw20@cam.ac.uk>
+Date: 2013/9/14
+Subject: Re: [FEniCS] Nightly snapshots safe for production code?
+To: Maximilian Albert <maximilian.albert@gmail.com>
+Cc: "fenics@fenicsproject.org" <fenics@fenicsproject.org>
+
+
+On 14 September 2013 12:58, Maximilian Albert
+<maximilian.albert@gmail.com> wrote:
+> Hi,
+>
+> I recently needed a dolfin feature that is only present in the
+> development version, so I upgraded my Ubuntu packages to use the
+> nightly snapshot releases (available at [1]).
+>
+> However, I was wondering whether it is advisable to use the nightly
+> snapshots on a daily basis for my work? Do I understand correctly that
+> the current git workflow is designed to make sure that 'master' (which
+> is the branch used for the snapshots, I presume) is always in a state
+> that makes it safe for production-type code to use it?
+>
+
+The master development branch is pretty stable in the sense that it
+should never (in practice, very rarely) be broken (i.e., all the test
+pass).
+
+However, there are no guarantees regarding interface changes or
+functionality being added or removed in the development branch.
+
+> Perhaps it's even recommended to use the nightly snapshots so that
+> users can give instantaneous feedback to the FEniCS developers for
+> bleeding-edge features, newly designed APIs, etc.?
+>
+
+I would recommend using snapshots if you want new features, provide
+feedback and detect very quickly any regressions that might affect
+your code.
+
+Garth
+
+> Thanks for any clarification,
+> Max
+>
+> [1] http://fenicsproject.org/download/snapshot_releases.html
+> _______________________________________________
+> fenics mailing list
+> fenics@fenicsproject.org
+> http://fenicsproject.org/mailman/listinfo/fenics
+-------------------------------------
+finmag-team mailing list.
+
