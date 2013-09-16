@@ -1104,7 +1104,9 @@ class NormalModeSimulation(Simulation):
         Run the ringdown phase of a normal modes simulation, optionally saving
         averages, vtk snapshots and magnetisation snapshots to the respective
         .ndt, .pvd and .npy files. Note that by default existing snapshots will
-        not be overwritten. Use `overwrite=True` to achieve this.
+        not be overwritten. Use `overwrite=True` to achieve this. Also, if
+        `H_ext=None` then any existing external field will remain to be applied.
+        Use `H_ext=[0, 0, 0] to switch it off during the ringdown phase.
 
         This function essentially wraps up the re-setting of parameters such as
         the damping value, the external field and the scheduled saving of data
@@ -1122,6 +1124,7 @@ class NormalModeSimulation(Simulation):
             sim.clear_schedule()
             sim.alpha = 0.02
             sim.reset_time(0.0)
+            sim.set_H_ext([1e5, 0, 0])
             sim.schedule('save_ndt', every=save_ndt_every)
             sim.schedule('save_vtk', every=save_vtk_every, filename=vtk_snapshots_filename)
             sim.run_until(10e-9)
