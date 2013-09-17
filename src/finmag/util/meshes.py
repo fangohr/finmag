@@ -409,6 +409,15 @@ def nanodisk(d, h, maxh, save_result=True, filename='', directory=''):
     return cylinder(0.5 * d, h, maxh, save_result=save_result, filename=filename, directory=directory)
 
 
+def elliptical_nanodisk(d1, d2, h, maxh, save_result=True, filename='', directory=''):
+    """
+    Almost exactly the same as `elliptic_cylinder`, except that the dimension of the
+    axes are given by the *diameters*, not the radii.
+
+    """
+    return elliptic_cylinder(0.5 * d1, 0.5 * d2, h, maxh, save_result=save_result, filename=filename, directory=directory)
+
+
 def pair_of_disks(d1, d2, h1, h2, sep, theta, maxh, save_result=True, filename='', directory=''):
     """
     Return a dolfin mesh representing a pair of disks. The first disk
@@ -469,7 +478,7 @@ def pair_of_disks(d1, d2, h1, h2, sep, theta, maxh, save_result=True, filename='
 
 def elliptic_cylinder(r1, r2, h, maxh, save_result=True, filename='', directory=''):
     """
-    Return a dolfin mesh representing an ellipcit cylinder with semi-major
+    Return a dolfin mesh representing an elliptic cylinder with semi-major
     axis r1, semi-minor axis r2 and height `h`. The argument `maxh` controls
     the maximal element size in the mesh (see the Netgen manual 4.x, Chapter 2).
 
