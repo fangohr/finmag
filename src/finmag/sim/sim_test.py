@@ -757,12 +757,10 @@ class TestSimulation(object):
         assert len(demag_bottom) < len(demag_full)
         assert len(demag_top) < len(demag_full)
 
-        effective_field = sim.llg.effective_field  # alias
+        markers = sim.region_markers
 
-        markers = effective_field.region_markers
-
-        id_top = effective_field.region_ids['top']
-        id_bottom = effective_field.region_ids['bottom']
+        id_top =sim.region_ids['top']
+        id_bottom = sim.region_ids['bottom']
         submesh_top = df.SubMesh(sim.mesh, markers, id_top)
         submesh_bottom = df.SubMesh(sim.mesh, markers, id_bottom)
 

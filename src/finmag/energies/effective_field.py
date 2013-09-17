@@ -1,5 +1,4 @@
 import logging
-import itertools
 import dolfin as df
 import numpy as np
 from finmag.util.helpers import vector_valued_function
@@ -153,44 +152,4 @@ class EffectiveField(object):
         interaction = self.get_interaction(interaction_type)
         # TODO: Do we keep the field as a dolfin function somewhere?
         f = vector_valued_function(interaction.compute_field(), interaction.S3)
-        if region:
-            try:
-                V_region = self.region_spaces[region]
-            except AttributeError:
-                raise RuntimeError("No regions defined in mesh. Please call 'mark_regions' first to define some.")
-            except KeyError:
-                raise ValueError("Region not defined: '{}'. Allowed values: {}".format(region, self.region_ids.keys()))
-            f = df.interpolate(f, V_region)
         return f
-
-    def mark_regions(self, fun_regions):
-        mesh = self.S3.mesh()
-
-        # Determine all region identifiers and associate each of them with a unique integer.
-        # XXX TODO: This is probably quite inefficient since we loop over all mesh nodes.
-        #           Can this be improved?
-        all_ids = set([fun_regions(pt) for pt in mesh.coordinates()])
-        self.region_ids = dict(itertools.izip(all_ids, xrange(len(all_ids))))
-
-        # Create the CellFunction which marks the different mesh regions with integers
-        self.region_markers = df.CellFunction('size_t', mesh)
-        for region_id, i in self.region_ids.items():
-            class Domain(df.SubDomain):
-                def inside(self, pt, on_boundary):
-                        return fun_regions(pt) == region_id
-            subdomain = Domain()
-            subdomain.mark(self.region_markers, i)
-
-        def create_restricted_space(region_id):
-            i = self.region_ids[region_id]
-            restriction = df.Restriction(self.region_markers, i)
-            V_restr = df.VectorFunctionSpace(restriction, 'CG', 1, dim=3)
-            return V_restr
-
-        # Create a restricted VectorFunctionSpace for each region
-        try:
-            self.region_spaces = {region_id: create_restricted_space(region_id) for region_id in self.region_ids}
-        except AttributeError:
-            raise RuntimeError("Marking mesh regions is only supported for dolfin > 1.2.0. "
-                               "You may need to install a nightly snapshot (e.g. via an Ubuntu PPA). "
-                               "See http://fenicsproject.org/download/snapshot_releases.html for details.")
