@@ -472,15 +472,32 @@ class Simulation(object):
             field = self.llg.effective_field.get_dolfin_function(field_type)
 
         if region:
+            V_region = self._get_region_space(region)
+            field = df.interpolate(field, V_region)
+
+        return field
+
+    def _get_region_space(self, region=None):
+        if region:
             try:
                 V_region = self.region_spaces[region]
             except AttributeError:
                 raise RuntimeError("No regions defined in mesh. Please call 'mark_regions' first to define some.")
             except KeyError:
                 raise ValueError("Region not defined: '{}'. Allowed values: {}".format(region, self.region_ids.keys()))
-            field = df.interpolate(field, V_region)
+        else:
+            V_region = self.S3
+        return V_region
 
-        return field
+    def _get_region_id(self, region=None):
+        if region:
+            try:
+                region_id = self.region_ids[region]
+            except AttributeError:
+                raise RuntimeError("No regions defined in mesh. Please call 'mark_regions' first to define some.")
+            except KeyError:
+                raise ValueError("Region not defined: '{}'. Allowed values: {}".format(region, self.region_ids.keys()))
+        return region_id
 
     def probe_field(self, field_type, pts):
         """
@@ -1054,20 +1071,24 @@ class Simulation(object):
         self.render_scene(outfile=outfilename, **kwargs)
         self._render_scene_indices[filename] += 1
 
-    def plot_mesh(self, use_paraview=True, **kwargs):
+    def plot_mesh(self, region=None, use_paraview=True, **kwargs):
         """
-        Plot the mesh associated with the simulation. This is a convenience function
-        which internally calls `finmag.util.helpers.plot_mesh_with_paraview` (if
-        the argument `use_paraview` is True) or `finmag.util.hepers.plot_mesh`
-        (otherwise), where the latter uses Matplotlib to plot the mesh. All
-        keyword arguments are passed on to the respective helper function that is
-        called internally.
+        Plot the mesh associated with the given region (or the entire mesh
+        if `region` is `None`).
+
+        This is a convenience function which internally calls either
+        `finmag.util.helpers.plot_mesh_with_paraview` (if the argument
+        `use_paraview` is True) or `finmag.util.hepers.plot_mesh`
+        (otherwise), where the latter uses Matplotlib to plot the mesh.
+        All keyword arguments are passed on to the respective helper
+        function that is called internally.
 
         """
+        mesh = self.get_submesh(region)
         if use_paraview:
-            return plot_mesh_with_paraview(self.mesh, **kwargs)
+            return plot_mesh_with_paraview(mesh, **kwargs)
         else:
-            return plot_mesh(self.mesh, **kwargs)
+            return plot_mesh(mesh, **kwargs)
 
 
     def close_logfile(self):
@@ -1131,6 +1152,7 @@ class Simulation(object):
                                "You may need to install a nightly snapshot (e.g. via an Ubuntu PPA). "
                                "See http://fenicsproject.org/download/snapshot_releases.html for details.")
 
+    get_submesh = sim_helpers.get_submesh
 
 
 class NormalModeSimulation(Simulation):

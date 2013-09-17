@@ -3,6 +3,7 @@ import logging
 import shutil
 import os
 import types
+import dolfin as df
 import numpy as np
 from datetime import datetime
 
@@ -112,6 +113,19 @@ def load_restart_data(filename_or_simulation):
         else:
             data2[key] = data[key]
     return data2
+
+
+def get_submesh(sim, region=None):
+    """
+    Return the submesh associated with the given region.
+
+    """
+    if region == None:
+        submesh = sim.mesh
+    else:
+        region_id = sim._get_region_id(region)
+        submesh = df.SubMesh(sim.mesh, sim.region_markers, region_id)
+    return submesh
 
 
 def run_normal_modes_computation(sim, params_relax=None, params_precess=None):
