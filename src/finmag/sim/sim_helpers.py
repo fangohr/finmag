@@ -51,6 +51,17 @@ def canonical_restart_filename(sim):
     return sim.sanitized_name + "-restart.npz"
 
 
+def create_non_existing_parent_directories(filename):
+    """
+    Create parent directories of the given file if they do not already exist.
+
+    """
+    dirname = os.path.dirname(os.path.abspath(filename))
+    if not os.path.exists(dirname):
+        log.debug("Creating non-existing parent directory: '{}'".format(dirname))
+        os.makedirs(dirname)
+
+
 def save_restart_data(sim, filename=None):
     """Given a simulation object, this function saves the current
     magnetisation, and some integrator metadata into a file. """
@@ -65,6 +76,7 @@ def save_restart_data(sim, filename=None):
         filename = canonical_restart_filename(sim)
 
     create_backup_file_if_file_exists(filename)
+    create_non_existing_parent_directories(filename)
 
     np.savez_compressed(filename,
         m=sim.integrator.llg.m,

@@ -126,5 +126,26 @@ def test_run_normal_modes_computation(tmpdir):
     assert_number_of_files('*_precess*.npy', 6)
 
 
+def test_create_non_existing_parent_directories(tmpdir):
+    os.chdir(str(tmpdir))
+
+    dirs = ['foo1/bar',
+            os.path.join(str(tmpdir), 'foo2', 'bar', 'baz'),
+            '',
+            os.curdir]
+
+    for d in dirs:
+        sim_helpers.create_non_existing_parent_directories(os.path.join(d, 'filename.txt'))
+        assert(os.path.exists(os.path.abspath(d)))
+
+
+def test_save_restart_data_creates_non_existing_directories(tmpdir):
+    os.chdir(str(tmpdir))
+    sim = barmini()
+    sim.run_until(0.0)
+    sim.save_restart_data('foo/restart_data.npz')
+    assert(os.path.exists('foo'))
+
+
 if __name__ == '__main__':
     test_try_to_restart_a_simulation()
