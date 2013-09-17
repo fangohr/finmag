@@ -1,7 +1,10 @@
 import os
+import pytest
 import numpy as np
+import dolfin as df
 import sim_helpers
 from datetime import datetime, timedelta
+from distutils.version import LooseVersion
 from finmag.example import barmini
 from finmag.integrators.llg_integrator import llg_integrator
 from finmag.util.helpers import assert_number_of_files
@@ -145,6 +148,26 @@ def test_save_restart_data_creates_non_existing_directories(tmpdir):
     sim.run_until(0.0)
     sim.save_restart_data('foo/restart_data.npz')
     assert(os.path.exists('foo'))
+
+
+@pytest.mark.xfail("LooseVersion(df.__version__) <= LooseVersion('1.2.0')")
+def test_get_submesh(tmpdir):
+    os.chdir(str(tmpdir))
+    sim = barmini(mark_regions=True)
+    mesh_full = sim.get_submesh(None)
+    mesh_top = sim.get_submesh('top')
+    mesh_bottom = sim.get_submesh('bottom')
+    with pytest.raises(ValueError):
+        mesh_full = sim.get_submesh('foo')
+
+    id_top =sim.region_ids['top']
+    id_bottom = sim.region_ids['bottom']
+    submesh_top = df.SubMesh(sim.mesh, sim.region_markers, id_top)
+    submesh_bottom = df.SubMesh(sim.mesh, sim.region_markers, id_bottom)
+
+    assert(mesh_full.num_vertices() == sim.mesh.num_vertices())
+    assert(mesh_top.num_vertices() == submesh_top.num_vertices())
+    assert(mesh_bottom.num_vertices() == submesh_bottom.num_vertices())
 
 
 if __name__ == '__main__':

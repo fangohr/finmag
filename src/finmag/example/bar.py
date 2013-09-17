@@ -36,13 +36,16 @@ def bar(name='bar'):
     return sim
 
 
-def barmini(name='barmini'):
+def barmini(name='barmini', mark_regions=False):
     """Py bar with dimensions 3x3x10nm, initial field
     pointing in (1,0,1) direction.
 
     Same as example 2 in Nmag manual, but much smaller (and faster).
 
     This function returns a simulation object that is 'ready to go'.
+
+    If `mark_regions` is True, the mesh will be subdivided vertically
+    into two regions which are markes as 'top' and 'bottom'.
 
     Useful commands to run this for a couple of seconds:
 
@@ -59,5 +62,10 @@ def barmini(name='barmini'):
 
     sim = finmag.sim_with(mesh, Ms=0.86e6, alpha=0.5, unit_length=1e-9,
                 A=13e-12, m_init=(1, 0, 1), name=name)
+
+    if mark_regions:
+        def fun_regions(pt):
+            return 'bottom' if (pt[2] <=5.0) else 'top'
+        sim.mark_regions(fun_regions)
 
     return sim

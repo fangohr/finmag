@@ -735,14 +735,7 @@ class TestSimulation(object):
     @pytest.mark.xfail("LooseVersion(df.__version__) <= LooseVersion('1.2.0')")
     def test_mark_regions(self, tmpdir):
         os.chdir(str(tmpdir))
-        sim = barmini()
-
-        def fun_regions(pt):
-            return 'bottom' if (pt[2] <=5.0) else 'top'
-
-        # Note that the return values of fun_regions can be anything,
-        # they only need to be valid keys (or values?) for a dictionary!
-        sim.mark_regions(fun_regions)
+        sim = barmini(mark_regions=True)
 
         sim.save_field_to_vtk('Demag', region='bottom', filename='demag_bottom.pvd')
         sim.save_field_to_vtk('Demag', region='top', filename='demag_top.pvd')
@@ -757,12 +750,10 @@ class TestSimulation(object):
         assert len(demag_bottom) < len(demag_full)
         assert len(demag_top) < len(demag_full)
 
-        markers = sim.region_markers
-
         id_top =sim.region_ids['top']
         id_bottom = sim.region_ids['bottom']
-        submesh_top = df.SubMesh(sim.mesh, markers, id_top)
-        submesh_bottom = df.SubMesh(sim.mesh, markers, id_bottom)
+        submesh_top = df.SubMesh(sim.mesh, sim.region_markers, id_top)
+        submesh_bottom = df.SubMesh(sim.mesh, sim.region_markers, id_bottom)
 
         # Check that the retrieved restricted demag field vectors have the expected sizes.
         assert len(demag_top) == 3 * submesh_top.num_vertices()
