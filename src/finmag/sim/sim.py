@@ -6,6 +6,7 @@ import shutil
 import inspect
 import logging
 import tempfile
+import itertools
 import subprocess as sp
 import dolfin as df
 import numpy as np
@@ -466,8 +467,20 @@ class Simulation(object):
 
         """
         if field_type == 'm':
-            return self.llg._m
-        return self.llg.effective_field.get_dolfin_function(field_type, region=region)
+            field = self.llg._m
+        else:
+            field = self.llg.effective_field.get_dolfin_function(field_type)
+
+        if region:
+            try:
+                V_region = self.region_spaces[region]
+            except AttributeError:
+                raise RuntimeError("No regions defined in mesh. Please call 'mark_regions' first to define some.")
+            except KeyError:
+                raise ValueError("Region not defined: '{}'. Allowed values: {}".format(region, self.region_ids.keys()))
+            field = df.interpolate(field, V_region)
+
+        return field
 
     def probe_field(self, field_type, pts):
         """
@@ -1089,7 +1102,35 @@ class Simulation(object):
         (it doesn't need to be an integer).
 
         """
-        self.llg.effective_field.mark_regions(fun_regions)
+        # Determine all region identifiers and associate each of them with a unique integer.
+        # XXX TODO: This is probably quite inefficient since we loop over all mesh nodes.
+        #           Can this be improved?
+        all_ids = set([fun_regions(pt) for pt in self.mesh.coordinates()])
+        self.region_ids = dict(itertools.izip(all_ids, xrange(len(all_ids))))
+
+        # Create the CellFunction which marks the different mesh regions with integers
+        self.region_markers = df.CellFunction('size_t', self.mesh)
+        for region_id, i in self.region_ids.items():
+            class Domain(df.SubDomain):
+                def inside(self, pt, on_boundary):
+                        return fun_regions(pt) == region_id
+            subdomain = Domain()
+            subdomain.mark(self.region_markers, i)
+
+        def create_restricted_space(region_id):
+            i = self.region_ids[region_id]
+            restriction = df.Restriction(self.region_markers, i)
+            V_restr = df.VectorFunctionSpace(restriction, 'CG', 1, dim=3)
+            return V_restr
+
+        # Create a restricted VectorFunctionSpace for each region
+        try:
+            self.region_spaces = {region_id: create_restricted_space(region_id) for region_id in self.region_ids}
+        except AttributeError:
+            raise RuntimeError("Marking mesh regions is only supported for dolfin > 1.2.0. "
+                               "You may need to install a nightly snapshot (e.g. via an Ubuntu PPA). "
+                               "See http://fenicsproject.org/download/snapshot_releases.html for details.")
+
 
 
 class NormalModeSimulation(Simulation):
