@@ -13,7 +13,7 @@ from glob import glob
 from finmag.sim.llg import LLG
 from finmag.util.timings import mtimed
 from finmag.util.consts import exchange_length, bloch_parameter
-from finmag.util.meshes import mesh_info, mesh_volume
+from finmag.util.meshes import mesh_info, mesh_volume, plot_mesh, plot_mesh_with_paraview
 from finmag.util.fileio import Tablewriter, FieldSaver
 from finmag.util import helpers
 from finmag.util.vtk_saver import VTKSaver
@@ -1040,6 +1040,22 @@ class Simulation(object):
         outfilename = basename + '_{:06d}'.format(cur_index) + ext
         self.render_scene(outfile=outfilename, **kwargs)
         self._render_scene_indices[filename] += 1
+
+    def plot_mesh(self, use_paraview=True, **kwargs):
+        """
+        Plot the mesh associated with the simulation. This is a convenience function
+        which internally calls `finmag.util.helpers.plot_mesh_with_paraview` (if
+        the argument `use_paraview` is True) or `finmag.util.hepers.plot_mesh`
+        (otherwise), where the latter uses Matplotlib to plot the mesh. All
+        keyword arguments are passed on to the respective helper function that is
+        called internally.
+
+        """
+        if use_paraview:
+            return plot_mesh_with_paraview(self.mesh, **kwargs)
+        else:
+            return plot_mesh(self.mesh, **kwargs)
+
 
     def close_logfile(self):
         """
