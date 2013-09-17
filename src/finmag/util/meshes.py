@@ -418,6 +418,77 @@ def elliptical_nanodisk(d1, d2, h, maxh, save_result=True, filename='', director
     return elliptic_cylinder(0.5 * d1, 0.5 * d2, h, maxh, save_result=save_result, filename=filename, directory=directory)
 
 
+def elliptical_nanodisk_with_cuboid_shell(d1, d2, h, maxh_disk, lx, ly, lz, maxh_shell, valign='center', sep=1.0, save_result=True, filename='', directory=''):
+    """
+    Return a dolfin mesh representing an elliptical nanodisk surrounded by a cuboid 'shell'.
+
+    This is useful to compute the stray field of a nanodisk using the 'airbox' method.
+
+    The vertical alignment of the cuboid shell with the nanodisk can be controlled using
+    the argument `valign` (valid values are: 'center', 'bottom', 'top').
+
+
+    *Arguments*
+
+    d1, d2:  major and minor diameter of the elliptical nanodisk
+
+    h:  disk height
+
+    maxh_disk:  mesh discretisation of the nanodisk
+
+    lx, ly, lz:  edge length of the cuboid shell
+
+    maxh_shell:  mesh discretisation of the cuboid shell
+
+    valign:  'center' | 'bottom' | 'top'
+
+    sep:  width of the gap between the nanodisk and the shell (default: 1.0)
+
+    """
+    r1 = 0.5 * d1
+    r2 = 0.5 * d2
+
+    snegx = -0.5 * lx
+    snegy = -0.5 * ly
+    snegz = 0.0
+    sx = 0.5 * lx
+    sy = 0.5 * ly
+    sz = lz
+
+    EPS = 0.0  # We may have to use a very small non-zero value here if vertices
+               # are missing from the inner mesh due to rounding errors.
+    if valign == 'bottom':
+        vdiff = EPS
+    elif valign == 'top':
+        vdiff = (lz - h) - EPS
+    elif valign == 'center':
+        vdiff = 0.5 * (lz - h)
+    else:
+        raise ValueError("Argument 'valign' must be one of 'center', 'top', 'bottom'. Got: '{}'.".format(valign))
+
+    snegz = snegz - vdiff
+    sz = sz - vdiff
+
+    csg_string = textwrap.dedent("""\
+        algebraic3d
+        solid disk = ellipticcylinder (0, 0, 0; {r1}, 0, 0; 0, {r2}, 0 )
+                     and plane (0, 0, 0; 0, 0, -1)
+                     and plane (0, 0, {h}; 0, 0, 1) -maxh = {maxh_disk};
+        solid shell = ellipticcylinder (0, 0, 0; {r1_shell}, 0, 0; 0, {r2_shell}, 0 )
+                      and plane (0, 0, {negsep}; 0, 0, -1)
+                      and plane (0, 0, {h_shell}; 0, 0, 1) -maxh = {maxh_disk};
+        solid box = orthobrick ( {snegx}, {snegy}, {snegz}; {sx}, {sy}, {sz} ) -maxh = {maxh_shell};
+        solid air = box and not shell;
+        tlo disk;
+        tlo air -transparent;
+        """).format(r1=r1, r2=r2, h=h, r1_shell=r1 + sep, r2_shell = r2 + sep, negsep=-sep, h_shell=h + sep,
+                    snegx=snegx, snegy=snegy, snegz=snegz, sx=sx, sy=sy, sz=sz,
+                    maxh_disk=maxh_disk, maxh_shell=maxh_shell)
+    if save_result == True and filename == '':
+        filename = "ellcyl-with-shell-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{}".format(r1, r2, h, lx, ly, lz, maxh_disk, maxh_shell, sep, valign).replace(".", "_")
+    return from_csg(csg_string, save_result=save_result, filename=filename, directory=directory)
+
+
 def pair_of_disks(d1, d2, h1, h2, sep, theta, maxh, save_result=True, filename='', directory=''):
     """
     Return a dolfin mesh representing a pair of disks. The first disk
