@@ -1185,7 +1185,7 @@ class NormalModeSimulation(Simulation):
         .ndt, .pvd and .npy files. Note that by default existing snapshots will
         not be overwritten. Use `overwrite=True` to achieve this. Also, if
         `H_ext=None` then any existing external field will remain to be applied.
-        Use `H_ext=[0, 0, 0] to switch it off during the ringdown phase.
+        Use `H_ext=[0, 0, 0]` to switch it off during the ringdown phase.
 
         This function essentially wraps up the re-setting of parameters such as
         the damping value, the external field and the scheduled saving of data
