@@ -11,6 +11,7 @@ set the desired length scale when reading the mesh into Finmag!
 """
 
 import os
+import re
 import sys
 import copy
 import shutil
@@ -128,6 +129,7 @@ def from_csg(csg, save_result=True, filename="", directory=""):
             # double-check that.
             directory = os.curdir
 
+        filename = re.sub('\.xml\.gz$', '', filename)  # strip '.xml.gz' extension if present
         geofile = os.path.abspath(os.path.join(directory, filename) + ".geo")
 
         # Make sure that 'directory' actually contains all the
