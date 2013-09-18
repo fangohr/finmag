@@ -90,3 +90,46 @@ class Sphere(MeshPrimitive):
         maxh = self._get_maxh(maxh, **kwargs)
         return "sphere__center_{}__r_{:.1f}__maxh_{:.1f}".format(
             vec2str(self.center, fmt='{:.1f}', delims='', sep='_'), self.r, maxh).replace(".", "_")
+
+
+class EllipticalNanodisk(MeshPrimitive):
+    def __init__(self, d1, d2, h, center=(0, 0, 0), valign='bottom', name='EllipticalNanodisk'):
+        self.d1 = d1
+        self.d2 = d2
+        self.h = h
+        self.center = center
+        self.valign = valign
+        self.name = name
+
+        r1 = 0.5 * d1
+        r2 = 0.5 * d2
+        try:
+            h_bottom = {'bottom': center[2],
+                        'center': center[2] - 0.5 * h,
+                        'top': center[2] - h,
+                       }[valign]
+        except KeyError:
+            raise ValueError("Argument 'valign' must be one of 'center', 'top', 'bottom'. Got: '{}'".format(valign))
+        h_top = h_bottom + h
+
+        self._csg_stub = textwrap.dedent("""\
+            solid {name} = ellipticcylinder ({center}; {r1}, 0, 0; 0, {r2}, 0 )
+              and plane (0, 0, {h_bottom}; 0, 0, -1)
+              and plane (0, 0, {h_top}; 0, 0, 1) -maxh = {{maxh_{name}}};
+            tlo {name};
+            """.format(center=vec2str(self.center, delims=''), r1=r1, r2=r2, h_bottom=h_bottom, h_top=h_top, name=name))
+
+    def generic_filename(self, maxh, **kwargs):
+        maxh = self._get_maxh(maxh, **kwargs)
+        return "elliptical_nanodisk__d1_{:.1f}__d2_{:.1f}__h_{:.1f}__center_{}__valign_{}__maxh_{:.1f}".format(
+            self.d1, self.d2, self.h, vec2str(self.center, fmt='{:.1f}', delims='', sep='_'), self.valign, maxh).replace(".", "_")
+
+
+class Nanodisk(EllipticalNanodisk):
+    def __init__(self, d, h, center=(0, 0, 0), valign='bottom', name='Nanodisk'):
+        super(Nanodisk, self).__init__(d, d, h, center=center, valign=valign, name=name)
+
+    def generic_filename(self, maxh, **kwargs):
+        maxh = self._get_maxh(maxh, **kwargs)
+        return "nanodisk__d_{:.1f}__h_{:.1f}__center_{}__valign_{}__maxh_{:.1f}".format(
+            self.d1, self.h, vec2str(self.center, fmt='{:.1f}', delims='', sep='_'), self.valign, maxh).replace(".", "_")
