@@ -1431,7 +1431,7 @@ class NormalModeSimulation(Simulation):
         self.A = A
         self.M = M
 
-        omega, w = compute_normal_modes_generalised(A, M, n_values=50)
+        omega, w = compute_normal_modes_generalised(A, M, n_values=n_values)
 
         # Find the indices that sort the frequency by absolute value
         sorted_indices = sorted(np.arange(len(omega)), key=lambda i: abs(omega[i]))
