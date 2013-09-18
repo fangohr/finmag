@@ -36,6 +36,39 @@ def test_sphere(tmpdir):
     check_mesh_volume(mesh, 4./3 * pi * r**3)
 
 
+def test_elliptical_nanodisk(tmpdir):
+    os.chdir(str(tmpdir))
+    d1 = 30.0
+    d2 = 20.0
+    h = 5.0
+
+    nanodisk1 = EllipticalNanodisk(d1, d2, h, center=(2, 3, -4), valign='bottom')
+    nanodisk2 = EllipticalNanodisk(d1, d2, h, center=(2, 3, -4), valign='center')
+    nanodisk3 = EllipticalNanodisk(d1, d2, h, center=(2, 3, -4), valign='top')
+    with pytest.raises(ValueError):
+        EllipticalNanodisk(d1, d2, h, center=(2, 3, -4), valign='foo')
+
+    mesh = nanodisk1.create_mesh(maxh=2.5)
+    assert(os.path.exists('elliptical_nanodisk__d1_30_0__d2_20_0__h_5_0__center_2_0_3_0_-4_0__valign_bottom__maxh_2_5.xml.gz'))
+    check_mesh_volume(mesh, pi * (0.5 * d1) * (0.5 * d2) * h)
+
+
+def test_nanodisk(tmpdir):
+    os.chdir(str(tmpdir))
+    d = 20.0
+    h = 5.0
+
+    nanodisk1 = Nanodisk(d, h, center=(2, 3, -4), valign='bottom')
+    nanodisk2 = Nanodisk(d, h, center=(2, 3, -4), valign='center')
+    nanodisk3 = Nanodisk(d, h, center=(2, 3, -4), valign='top')
+    with pytest.raises(ValueError):
+        Nanodisk(d, h, center=(2, 3, -4), valign='foo')
+
+    mesh = nanodisk1.create_mesh(maxh=2.5)
+    assert(os.path.exists('nanodisk__d_20_0__h_5_0__center_2_0_3_0_-4_0__valign_bottom__maxh_2_5.xml.gz'))
+    check_mesh_volume(mesh, pi * (0.5 * d)**2 * h)
+
+
 def test_combining_meshes(tmpdir):
     os.chdir(str(tmpdir))
     r1 = 10.0
@@ -73,19 +106,19 @@ def test_maxh_with_mesh_primitive(tmpdir):
     with pytest.raises(ValueError):
         prim._get_maxh(random_arg=42)
 
-    # We use non-valid CSG strings here because we only want to test the maxh functionality
+    # We don't use full CSG strings here because we only want to test the maxh functionality
     prim = MeshPrimitive(name='foo', csg_string='-maxh = {maxh_foo}')
-    assert(prim.csg_string(maxh=2.0) == '-maxh = 2.0')
-    assert(prim.csg_string(maxh_foo=3.0) == '-maxh = 3.0')
-    assert(prim.csg_string(maxh=2.0, maxh_foo=3.0) == '-maxh = 3.0')  # 'personal' value of maxh should take precedence over generic one
+    assert(prim.csg_stub(maxh=2.0) == '-maxh = 2.0')
+    assert(prim.csg_stub(maxh_foo=3.0) == '-maxh = 3.0')
+    assert(prim.csg_stub(maxh=2.0, maxh_foo=3.0) == '-maxh = 3.0')  # 'personal' value of maxh should take precedence over generic one
     with pytest.raises(ValueError):
-        prim.csg_string(maxh_bar=4.0)
+        prim.csg_stub(maxh_bar=4.0)
 
     s = Sphere(r=10.0)
-    s.csg_string(maxh=2.0)
+    s.csg_stub(maxh=2.0)
 
     s = Sphere(r=5.0, name='my_sphere')
-    s.csg_string(maxh_my_sphere=3.0)
+    s.csg_stub(maxh_my_sphere=3.0)
 
 
 def test_mesh_specific_maxh(tmpdir):
