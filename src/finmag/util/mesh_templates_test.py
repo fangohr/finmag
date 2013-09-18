@@ -5,7 +5,7 @@ import os
 import numpy as np
 from math import pi
 from meshes import mesh_volume
-from mesh_prototypes import *
+from mesh_templates import *
 
 TOL = 1e-2  # relative tolerance for mesh volumes
 
@@ -14,9 +14,9 @@ def check_mesh_volume(mesh, vol, atol=0.0, rtol=TOL):
     assert(np.allclose(mesh_volume(mesh), vol, atol=atol, rtol=rtol))
 
 
-def test_mesh_prototypes(tmpdir):
+def test_mesh_templates(tmpdir):
     os.chdir(str(tmpdir))
-    proto = MeshPrototype()
+    proto = MeshTemplate()
     with pytest.raises(NotImplementedError):
         proto.create_mesh('generic_mesh.xml.gz')
 
@@ -125,7 +125,7 @@ def test_mesh_specific_maxh(tmpdir):
     """
     Check that we can pass in mesh-specific values of maxh by
     providing a keyword argument of the form 'maxh_NAME', where
-    NAME is the name of the MeshPrototype.
+    NAME is the name of the MeshTemplate.
     """
     os.chdir(str(tmpdir))
     sphere = Sphere(r=10.0, name='foobar')

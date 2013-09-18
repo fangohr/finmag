@@ -5,7 +5,7 @@ from finmag.util.meshes import from_csg
 from finmag.util.helpers import vec2str
 
 
-class MeshPrototype(object):
+class MeshTemplate(object):
     def __init__(self, name=None, csg_string=None):
         self.name = name
         self._csg_stub = csg_string
@@ -31,11 +31,11 @@ class MeshPrototype(object):
         return from_csg(csg_string, save_result=save_result, filename=filename, directory=directory)
 
 
-class MeshSum(MeshPrototype):
+class MeshSum(MeshTemplate):
     def __init__(self, mesh1, mesh2, name=None):
         if mesh1.name == mesh2.name:
             raise ValueError(
-                "Cannot add mesh prototypes with the same name ('{}'). Please explicitly "
+                "Cannot combine mesh templates with the same name ('{}'). Please explicitly "
                 "rename one or both of them (either by using the 'name' argument in the "
                 "constructor or by setting their 'name' attribute).".format(mesh1.name))
         if name is None:
@@ -53,7 +53,7 @@ class MeshSum(MeshPrototype):
         return filename
 
 
-class MeshPrimitive(MeshPrototype):
+class MeshPrimitive(MeshTemplate):
     def _get_maxh(self, maxh=None, **kwargs):
         """
         If `kwargs` contains an item with key 'maxh_NAME' (where NAME
