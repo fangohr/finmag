@@ -1266,14 +1266,13 @@ class NormalModeSimulation(Simulation):
 
     def plot_spectrum(self, t_step=None, t_ini=None, t_end=None, subtract_values='average',
                       components="xyz", xlim=None, ticks=5, figsize=None, title="",
-                      filename=None, use_averaged_m=True):
+                      outfilename=None, use_averaged_m=True):
         """
         Plot the normal mode spectrum of the simulation.
 
         This is a convenience wrapper around finmag.util.fft.plot_FFT_m
         and accepts the same keyword arguments, but provides sensible
         defaults for some of them so that it is more convenient to use.
-
         For example, `ndt_filename` will be the simulation's .ndt file
         by default, and t_step will be taken from the value of the
         argument `save_ndt_every` when sim.run_ringdown() was run.
@@ -1294,7 +1293,7 @@ class NormalModeSimulation(Simulation):
 
         fig = _plot_spectrum(self.fft_freqs, self.fft_mx, self.fft_my, self.fft_mz,
                              components=components, xlim=xlim, ticks=ticks,
-                             figsize=figsize, title=title, filename=filename)
+                             figsize=figsize, title=title, outfilename=outfilename)
         return fig
 
     def _get_fft_component(self, component):
