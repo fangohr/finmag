@@ -9,7 +9,8 @@ from finmag import sim_with, Simulation, set_logging_level, normal_mode_simulati
 from finmag.example import barmini
 from math import sqrt, cos, sin, pi
 from finmag.util.helpers import assert_number_of_files, vector_valued_function, logging_status_str
-from finmag.util.meshes import nanodisk
+from finmag.util.meshes import nanodisk, plot_mesh_with_paraview
+from finmag.util.mesh_templates import EllipticalNanodisk, Sphere
 from finmag.sim import sim_helpers
 from finmag.energies import Zeeman, TimeZeeman, Exchange, UniaxialAnisotropy
 from finmag.util.fileio import Tablereader
@@ -1074,3 +1075,127 @@ def test_output_formats_for_exporting_normal_mode_animations(tmpdir):
 
     with pytest.raises(ValueError):
         sim.export_normal_mode_animation(0, filename='animation/mode_0.quux')
+
+
+@pytest.mark.xfail
+def test_setting_different_material_parameters_in_different_regions(tmpdir):
+    """
+    In this test we create a simulation with two different regions where the
+    material parameters and initial magnetistaion are different for each of the
+    regions.
+
+    The goal is to check whether the initialisation of sucha  simulation works.
+    However, currently we construct the dolfin Functions representing the material
+    parameters by hand. Ideally, there would be a simpler way, e.g. by simply
+    saying:
+
+        sim.set_field('Ms', 8.6e5, region='nanodisk')
+
+    This will (hopefully) eventually be implemented, but in order to do this
+    lot of refactoring needs to be done so that fields can be treated in a unified
+    way even though some of them may be defined within the mesh cells (such as
+    Ms, A, etc.) and some of them on the nodes. Once this goal has been reached,
+    this test will be a proper test of that functionality, too. For now, it
+    mainly documents how to set varying parameters in different regions.
+
+    """
+    os.chdir(str(tmpdir))
+
+    # Create a mesh consisting of a nanodisk with a spherical article on top.
+    d1_disk = 50
+    d2_disk = 30
+    h_disk = 5
+    r_sphere = 5
+    center_sphere = (0, 0, 20)
+
+    nanodisk = EllipticalNanodisk(d1=d1_disk, d2=d2_disk, h=h_disk, name='Nanodisk')
+    sphere = Sphere(r=r_sphere, center=center_sphere, name='Sphere')
+    disk_with_sphere = nanodisk + sphere
+
+    mesh = disk_with_sphere.create_mesh(maxh=10.0, filename=os.path.join(MODULE_DIR, 'nanodisk_with_spherical_particle.xml.gz'))
+    logger.debug(mesh)
+
+    def is_inside_nanodisk(pt):
+        x, y, z = pt
+        return z <= h_disk + df.DOLFIN_EPS
+
+    m_init_nanodisk = [1, 0, 0]
+    m_init_sphere = [0, 0, 1]
+    alpha_nanodisk = 0.2
+    alpha_sphere = 0.08
+    A_nanodisk = 13e-12
+    A_sphere = 23.0
+    Ms_nanodisk = 8.6e5
+    Ms_sphere = 42.0
+    K1_nanodisk = 0.1
+    K1_sphere = 7.4e5
+    K1_axis_nanodisk = [1, 0, 0]
+    K1_axis_sphere = [0, 1, 0]
+    D_nanodisk = 1.0
+    D_sphere = 2.0
+
+    # Define the material parameters, where each of them takes a different value in each of the regions
+    def m_init(pt):
+        return m_init_nanodisk if is_inside_nanodisk(pt) else m_init_sphere
+
+    def alpha(pt):
+        return alpha_nanodisk if is_inside_nanodisk(pt) else alpha_sphere
+
+    def A(pt):
+        return A_nanodisk if is_inside_nanodisk(pt) else A_sphere
+
+    def Ms(pt):
+        return Ms_nanodisk if is_inside_nanodisk(pt) else Ms_sphere
+
+    def K1(pt):
+        return K1_nanodisk if is_inside_nanodisk(pt) else K1_sphere
+
+    def K1_axis(pt):
+        return K1_axis_nanodisk if is_inside_nanodisk(pt) else K1_axis_sphere
+
+    def D(pt):
+        return D_nanodisk if is_inside_nanodisk(pt) else D_sphere
+
+    # Create a simulation object with the mesh above
+    sim = sim_with(mesh, Ms=Ms, m_init=m_init, alpha=alpha, unit_length=1e-9,
+                   A=A, K1=K1, K1_axis=K1_axis, D=D, name='nanodisk_with_particle')
+
+    # Construct a CellFunction representing the subdomains. Unfortunately,
+    # dolfin doesn't seem to provide an easy way of getting this from
+    # mesh.domains() directly, so we construct it manually.
+    cell_markers = mesh.domains().markers(3)  # 3 represents the dimension of the mesh cells
+    fun_subdomains = df.CellFunction('size_t', mesh)
+    for (cell_no, marker) in cell_markers.iteritems():
+        fun_subdomains[cell_no] = marker
+
+    submesh_nanodisk = df.SubMesh(mesh, fun_subdomains, 0)
+    submesh_sphere = df.SubMesh(mesh, fun_subdomains, 1)
+    plot_mesh_with_paraview(submesh_nanodisk, camera_position=[0, -200, 100], outfile='submesh_nanodisk.png')
+    plot_mesh_with_paraview(submesh_sphere, camera_position=[0, -200, 100], outfile='submesh_sphere.png')
+
+    f = df.File("m.pvd")
+    f << sim.llg._m
+
+    f = df.File("alpha.pvd")
+    f << sim.alpha
+
+    f = df.File("A.pvd")
+    f << sim.get_interaction('Exchange').A
+
+    f = df.File("Ms.pvd")
+    f << sim.llg.Ms
+
+    f = df.File("K1.pvd")
+    f << sim.get_interaction('Anisotropy').K1
+
+    f = df.File("K1_axis.pvd")
+    f << sim.get_interaction('Anisotropy').axis
+
+    f = df.File("D.pvd")
+    f << sim.get_interaction('DMI').D_on_mesh
+
+    # TODO: Extract all the values of m_init, Ms, ... on each of the submeshes.
+    # This should give numpy arrays of dolfin.Function vectors which are constant
+    # and whose length matches the number of nodes in the submesh. Both of these
+    # properties should be checked for each field.
+    raise NotImplementedError
