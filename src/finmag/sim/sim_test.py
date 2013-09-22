@@ -990,20 +990,24 @@ def test_NormalModeSimulation(tmpdir):
     assert(np.allclose(f.timesteps(), np.linspace(0, 2e-12, 21), atol=0, rtol=1e-8))
 
     sim.plot_spectrum(use_averaged_m=True)
-    sim.plot_spectrum(use_averaged_m=True, t_step=1.5e-12, subtract_values='first', figsize=(16, 6), filename='fft_m.png')
-    # sim.plot_spectrum(use_averaged_m=False)
-    # sim.plot_spectrum(use_averaged_m=True, t_step=1.5e-12, subtract_values='first', figsize=(16, 6), filename='fft_m_spatially_resolved.png')
+    sim.plot_spectrum(use_averaged_m=True, t_step=1.5e-12, subtract_values='first', figsize=(16, 6), outfilename='fft_m.png')
+    #sim.plot_spectrum(use_averaged_m=False)
+    sim.plot_spectrum(use_averaged_m=False, t_ini=0.0, t_end=1e-12, t_step=1e-13, subtract_values='average', figsize=(16, 6), outfilename='fft_m_spatially_resolved.png')
     assert(os.path.exists('fft_m.png'))
+    assert(os.path.exists('fft_m_spatially_resolved.png'))
 
-    sim.plot_spectrum(t_step=t_step, filename='fft_m.png')
+    sim.plot_spectrum(t_step=t_step, use_averaged_m=True, outfilename='fft_m.png')
 
-    sim.find_peak_near_frequency(10e9, component='y')
+    sim.find_peak_near_frequency(10e9, component='y', use_averaged_m=True)
 
     sim.export_normal_mode_animation_from_ringdown('foobar/foo_m*.npy', peak_idx=2,
-                                                   filename='animations/foo_peak_idx_2.pvd',
-                                                   num_cycles=1, num_frames_per_cycle=4)
+                                                   outfilename='animations/foo_peak_idx_2.pvd',
+                                                   num_cycles=1, num_frames_per_cycle=4,
+                                                   use_averaged_m=True)
     sim.export_normal_mode_animation_from_ringdown('foobar/foo_m*.npy', f_approx=0.0, component='y',
-                                                   directory='animations', num_cycles=1, num_frames_per_cycle=4)
+                                                   outfilename=None, directory='animations',
+                                                   num_cycles=1, num_frames_per_cycle=4,
+                                                   use_averaged_m=False)
     assert(os.path.exists('animations/foo_peak_idx_2.pvd'))
     assert(len(glob('animations/foo_peak_idx_2*.vtu')) == 4)
 
