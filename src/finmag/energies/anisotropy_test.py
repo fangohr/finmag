@@ -47,7 +47,8 @@ def test_anisotropy_energy_simple_configurations(fixt, m, expected_E):
     E = fixt["anis"].compute_energy()
 
     print "With m = {}, expecting E = {}. Got E = {}.".format(m, expected_E, E)
-    assert abs(E - expected_E) < TOLERANCE
+    #assert abs(E - expected_E) < TOLERANCE
+    assert np.allclose(E, expected_E, atol=1e-14, rtol=TOLERANCE)
 
 
 def test_anisotropy_energy_analytical(fixt):
@@ -66,7 +67,8 @@ def test_anisotropy_energy_analytical(fixt):
     expected_E = float(2)/3
 
     print "With m = (0, sqrt(1-x^2), x), expecting E = {}. Got E = {}.".format(expected_E, E)
-    assert abs(E - expected_E) < TOLERANCE
+    #assert abs(E - expected_E) < TOLERANCE
+    assert np.allclose(E, expected_E, atol=1e-14, rtol=TOLERANCE)
 
 
 def test_anisotropy_field(fixt):
@@ -74,7 +76,7 @@ def test_anisotropy_field(fixt):
     Compute one anisotropy field by hand and compare with the UniaxialAnisotropy result.
 
     """
-    TOLERANCE = 1e-9
+    TOLERANCE = 1e-14
 
     fixt["m"].assign(df.Constant((1/np.sqrt(2), 0, 1/np.sqrt(2))))
     H = fixt["anis"].compute_field()
@@ -91,7 +93,7 @@ def test_anisotropy_field(fixt):
                   got:       H = {}.
               """.format(H.reshape((3, -1)).mean(axis=1),
                          dE_dm.reshape((3, -1)).mean(axis=1))))
-    assert np.max(np.abs(H - dE_dm)) < TOLERANCE
+    assert np.allclose(H, dE_dm, atol=0, rtol=TOLERANCE)
 
 
 def test_anisotropy_field_supported_methods(fixt):
@@ -99,12 +101,7 @@ def test_anisotropy_field_supported_methods(fixt):
     Check that all supported methods give the same results as the default method.
 
     """
-    # NB: I changed this tolerance to make test pass. Since we are
-    # comparing values on the order of 10^6, this tolerance should
-    # still be more than sufficient. The test passed recently,
-    # however, so it would be interesting to find out why it doesn't
-    # any more.  -- Max, 21.1.2013
-    TOLERANCE = 1.1e-8
+    TOLERANCE = 1e-13
 
     fixt["m"].assign(df.Constant((1/np.sqrt(2), 0, 1/np.sqrt(2))))
     H_default = fixt["anis"].compute_field()
@@ -124,4 +121,4 @@ def test_anisotropy_field_supported_methods(fixt):
                   """.format(method,
                              H_default.reshape((3, -1)).mean(axis=1),
                              H.reshape((3, -1)).mean(axis=1))))
-        assert np.max(np.abs(H - H_default)) < TOLERANCE
+        assert np.allclose(H, H_default, atol=0, rtol=TOLERANCE)
