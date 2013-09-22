@@ -5,6 +5,7 @@ import logging
 logger=logging.getLogger('finmag')
 from finmag.util.timings import mtimed
 from finmag.util.consts import mu0
+from finmag.util import helpers
 
 
 def dmi_term3d_dolfin(M,v,c):
@@ -251,10 +252,16 @@ class DMI(EnergyBase):
         # This might also solve the problem with the energy conservation we have
         # seen.
 
+        # The following two lines are duplicated again in EnergyBase.setup().
+        # I wonder why there is the distinction betwen the __init__() and the
+        # setup() methods anyway? It feels a bit artifial to me.  -- Max, 23.9.2013
+        dofmap = S3.dofmap()
+        S1 = df.FunctionSpace(S3.mesh(), "Lagrange", 1, constrained_domain=dofmap.constrained_domain)
         
         # Dzyaloshinsky-Moriya Constant
         # change unit_length**2 to unit_length since scaling effect DMI by Delta
-        self.DMIconstant = df.Constant(mu0 * self.D / unit_length ) * Ms
+        self.D_on_mesh = helpers.scalar_valued_function(self.D, S1)
+        self.DMIconstant = df.Constant(mu0 / unit_length ) * self.D_on_mesh  * Ms
 
         self.v = df.TestFunction(S3)
         #Equation is chosen from the folowing papers
