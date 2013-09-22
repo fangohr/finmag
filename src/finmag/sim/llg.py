@@ -49,6 +49,7 @@ class LLG(object):
     def set_default_values(self):
         self.alpha = df.Function(self.S1)
         self.alpha.assign(df.Constant(0.5))
+        self.alpha.rename('alpha', 'Gilbert damping constant')
 
         self.gamma = consts.gamma
         self.c = 1e11  # 1/s numerical scaling correction \
@@ -94,6 +95,7 @@ class LLG(object):
 
         """
         self.alpha = helpers.scalar_valued_function(value, self.S1)
+        self.alpha.rename('alpha', 'Gilbert damping constant')
 
     @property
     def Ms(self):
@@ -103,6 +105,7 @@ class LLG(object):
     def Ms(self, value):
         #self._Ms_dg=helpers.scalar_valued_dg_function(value, self.S1)
         self._Ms_dg=helpers.scalar_valued_function(value, self.S1)
+        self._Ms_dg.rename('Ms', 'Saturation magnetisation')
         self.volumes = df.assemble(df.TestFunction(self.S1) * df.dx)
         Ms = df.assemble(self._Ms_dg*df.TestFunction(self.S1)* df.dx).array()/self.volumes
         self._Ms = Ms.copy()
