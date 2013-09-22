@@ -10,6 +10,11 @@ import os
 from finmag.util.consts import gamma
 
 
+def test_wrong_file_suffix_for_FFT_m():
+    with pytest.raises(ValueError):
+        FFT_m('datafile.foo')
+
+
 def test_FFT_m(tmpdir):
     os.chdir(str(tmpdir))
     RTOL = 1e-10
@@ -34,7 +39,9 @@ def test_FFT_m(tmpdir):
     mx = exp(-ts * 1e8 / alpha) * sin(omega * ts)
     my = exp(-ts * 1e8 / alpha) * cos(omega * ts)
     mz = 1 - sqrt(mx**2 + my**2)
+    data = np.array([ts, mx, my, mz]).T
 
+    # Plot the dynamics for debugging purposes
     fig = plt.figure(figsize=(20, 5))
     ax = fig.gca()
     ax.plot(ts, mx)
@@ -42,10 +49,8 @@ def test_FFT_m(tmpdir):
     ax.plot(ts, mz)
     fig.savefig('m_vs_t.png')
 
-    data = np.array([ts, mx, my, mz]).T
-
-    # The sed commands add the two header lines which are expected
-    # in a .ndt file
+    # Save the data to a .ndt file. The sed commands add the two header lines
+    # which are required by the file format.
     ndt_filename = 'fake_relaxation.ndt'
     np.savetxt(ndt_filename, data)
     sp.check_call("sed -i '1 i # time  m_x  m_y  m_z' ./fake_relaxation.ndt", shell=True)
@@ -83,6 +88,95 @@ def test_FFT_m(tmpdir):
     # Also check that the frequency range is as expected
     fft_freqs_np = np.fft.fftfreq(len(ts_resampled), d=t_step_res)[:N]
     assert(np.allclose(fft_freqs_res, fft_freqs_np, atol=0, rtol=RTOL))
+
+
+def test_FFT_m_using_the_McMichael_Stiles_method(tmpdir):
+    """
+        First we write some 'forged' spatially resolved magnetisation dynamics
+        to a bunch of .npy files (representing the time series). The oscillation
+        is exactly the same at every location, so that we don't lose any information
+        in the averaging process and can compare with the analytical solution
+        as in the previous test.
+
+    """
+    os.chdir(str(tmpdir))
+    RTOL = 1e-10
+
+    #
+    # Construct a time series of artificial magnetisation data and
+    # save it to a bunch of .npy files.
+    #
+    H = 1e6  # external field in A/m
+    omega = gamma * H  # precession frequency
+    alpha = 0.5  # some sort of damping constant
+    print "Precessional frequency: {} GHz".format(omega / 1e9)
+
+    t_step = 1e-11
+    t_ini = 0
+    t_end = 10e-9
+
+    ts = np.arange(t_ini, t_end, t_step)
+    num_timesteps = len(ts)
+    print "Number of timesteps: {}".format(num_timesteps)
+
+    # Use damped harmonic oscillator to create fake magnetisation dynamics
+    mx = exp(-ts * 1e8 / alpha) * sin(omega * ts)
+    my = exp(-ts * 1e8 / alpha) * cos(omega * ts)
+    mz = 1 - sqrt(mx**2 + my**2)
+
+    # Write the data to a series of .npy files
+    num_vertices = 42 # in a real application this would be the number of mesh vertices
+    a = np.zeros((3, num_vertices))
+    for i in xrange(num_timesteps):
+        a[0, :] = mx[i]
+        a[1, :] = my[i]
+        a[2, :] = mz[i]
+        filename = 'm_ringdown_{:06d}.npy'.format(i)
+        np.save(filename, a.ravel())
+
+    #
+    # Now compute the FFT of a resampled time series, both by hand and using FFT_m.
+    # XXX TODO: Resampling timesteps is not supported when using .npy files. Simplify this code!!
+    #
+    t_step_res = t_step
+    t_ini_res = t_ini
+    t_end_res = t_end
+    ts_resampled = np.arange(t_ini_res, t_end_res, t_step_res)
+
+    # Compute time series based on resampled timesteps
+    mx_res = exp(-ts_resampled * 1e8 / alpha) * sin(omega * ts_resampled)
+    my_res = exp(-ts_resampled * 1e8 / alpha) * cos(omega * ts_resampled)
+    mz_res = 1 - sqrt(mx_res**2 + my_res**2)
+
+    # Compute 'analytical' Fourier transform of resampled time series and
+    # determine the power of the spectrum for each component. We also need
+    # to multiply by the number of mesh nodes because the numerical algorithm
+    # sums up all contributions at the individual nodes (but we can just
+    # multiply because they are all identical by construction).
+    fft_mx_power_expected = num_vertices * np.absolute(np.fft.rfft(mx_res))**2
+    fft_my_power_expected = num_vertices * np.absolute(np.fft.rfft(my_res))**2
+    fft_mz_power_expected = num_vertices * np.absolute(np.fft.rfft(mz_res))**2
+
+    # Compute Fourier transform of resampled time series using FFT_m
+    fft_freqs_computed, fft_mx_power_computed, fft_my_power_computed, fft_mz_power_computed = \
+        FFT_m('m_ringdown*.npy', t_step_res, t_ini=t_ini_res, t_end=t_end_res, subtract_values=None)
+
+    # Check that the analytically determined power spectra are the same as the computed ones.
+    assert(np.allclose(fft_mx_power_expected, fft_mx_power_computed, atol=0, rtol=RTOL))
+    assert(np.allclose(fft_my_power_expected, fft_my_power_computed, atol=0, rtol=RTOL))
+    assert(np.allclose(fft_mz_power_expected, fft_mz_power_computed, atol=0, rtol=RTOL))
+
+    # Plot the spectra for debugging
+    fig = plt.figure(figsize=(20, 5))
+    ax = fig.gca()
+    ax.plot(fft_freqs_computed, fft_mx_power_expected, label='fft_mx_power_expected')
+    ax.plot(fft_freqs_computed, fft_my_power_expected, label='fft_my_power_expected')
+    ax.plot(fft_freqs_computed, fft_mz_power_expected, label='fft_mz_power_expected')
+    ax.plot(fft_freqs_computed, fft_mx_power_computed, label='fft_mx_power_computed')
+    ax.plot(fft_freqs_computed, fft_my_power_computed, label='fft_my_power_computed')
+    ax.plot(fft_freqs_computed, fft_mz_power_computed, label='fft_mz_power_computed')
+    ax.legend(loc='best')
+    fig.savefig('fft_m_McMichaelStiles.png')
 
 
 def test_analytical_inverse_DFT():

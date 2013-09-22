@@ -1,5 +1,6 @@
 from __future__ import division
 import os
+import re
 import math
 import types
 import shutil
@@ -1245,13 +1246,26 @@ class NormalModeSimulation(Simulation):
 
         self.run_until(t_end)
 
-    def _compute_spectrum(self, use_averaged_m=True, **kwargs):
-        if not use_averaged_m:
-           raise NotImplementedError("Plotting the spectrum using the spatially resolved magnetisation is not supported yet.")
+    def _compute_spectrum(self, use_averaged_m=False, **kwargs):
+        if use_averaged_m:
+            log.warning("Using the averaged magnetisation to compute the spectrum is not recommended "
+                        "because certain symmetric modes are likely to be missed.")
+            filename = self.ndtfilename
+        else:
+            if self.m_snapshots_filename is None:
+                log.warning("The spatially averaged magnetisation was not saved during run_ringdown, "
+                            "thus it cannot be used to compute the spectrum. Falling back to using the  "
+                            "averaged magnetisation (which is not recommended because it is likely to "
+                            "miss normal modes which have certain symmetries!).")
+                filename = self.ndtfilename
+            else:
+                # Create a wildcard pattern so that we can read the files using 'glob'.
+                filename = re.sub('\.npy$', '*.npy', self.m_snapshots_filename)
+        log.debug("Computing normal mode spectrum from file(s) '{}'.".format(filename))
 
-        # Derive a sensible value of t_step: uses the value in **kwargs
-        # if one was provided, or the one specified during a previous
-        # call of run_ringdown() otherwise.
+        # Derive a sensible value of t_step. Use the value in **kwargs
+        # if one was provided, or else the one specified during a previous
+        # call of run_ringdown().
         t_step = kwargs.pop('t_step', None) or self.t_step_ndt
         if t_step == None:
             raise ValueError(
@@ -1262,11 +1276,11 @@ class NormalModeSimulation(Simulation):
                 "explicitly.")
 
         self.fft_freqs, self.fft_mx, self.fft_my, self.fft_mz = \
-            FFT_m(self.ndtfilename, t_step=t_step, **kwargs)
+            FFT_m(filename, t_step=t_step, **kwargs)
 
     def plot_spectrum(self, t_step=None, t_ini=None, t_end=None, subtract_values='average',
                       components="xyz", xlim=None, ticks=5, figsize=None, title="",
-                      outfilename=None, use_averaged_m=True):
+                      outfilename=None, use_averaged_m=False):
         """
         Plot the normal mode spectrum of the simulation.
 
@@ -1277,18 +1291,26 @@ class NormalModeSimulation(Simulation):
         by default, and t_step will be taken from the value of the
         argument `save_ndt_every` when sim.run_ringdown() was run.
 
-        XXX TODO: currently only plotting the spectrum from the
-        averaged magnetisation is supported (which is used if
-        `use_averaged_m` is True). In the near future, the method by
-        McMichael and Stiles [1] which uses the spatially resolved
-        magnetisation will be the default.
+        The default method to compute the spectrum is the one described
+        in [1], which uses a spatially resolved Fourier transform
+        to compute the local power spectra and then integrates these over
+        the sample (which yields the total power over the sample at each
+        frequency). This is the recommended way to compute the spectrum,
+        but it requires the spatially resolved magnetisation to be saved
+        during the ringdown (provide the arguments `save_m_every` and
+        `m_snapshots_filename` to `sim.run_ringdown()` to achieve this).
+
+        An alternative method (used when `use_averaged_m` is True) simply
+        computes the Fourier transform of the spatially averaged magnetisation
+        and plots that. However, modes with certain symmetries (which are
+        quite common) will not be detected by this method, so it is not
+        recommended to use it. It will be used as a fallback, however,
+        if the spatially resolved magnetisation was not saved during the
+        ringdown phase.
 
         [1] McMichael, Stiles, "Magnetic normal modes of nanoelements", J Appl Phys 97 (10), 10J901, 2005.
 
         """
-        if not use_averaged_m:
-           raise NotImplementedError("Plotting the spectrum using the spatially resolved magnetisation is not supported yet.")
-
         self._compute_spectrum(t_step=t_step, t_ini=t_ini, t_end=t_end, subtract_values=subtract_values, use_averaged_m=use_averaged_m)
 
         fig = _plot_spectrum(self.fft_freqs, self.fft_mx, self.fft_my, self.fft_mz,
@@ -1306,9 +1328,12 @@ class NormalModeSimulation(Simulation):
             raise ValueError("Argument `component` must be exactly one of 'x', 'y', 'z'.")
         return res
 
-    def find_peak_near_frequency(self, f_approx, component):
+    def find_peak_near_frequency(self, f_approx, component, use_averaged_m=False):
         """
         XXX TODO: Write me!
+
+        The argument `use_averaged_m` has the same meaning as in the `plot_spectrum`
+        method. See its documentation for details.
         """
         if f_approx is None:
             raise TypeError("Argument 'f_approx' must not be None.")
@@ -1318,7 +1343,7 @@ class NormalModeSimulation(Simulation):
         fft_cmpnt = self._get_fft_component(component)
         if self.fft_freqs == None or self.fft_mx == None or \
                 self.fft_my ==None or self.fft_mz == None:
-            self._compute_spectrum(self, use_averaged_m=True)
+            self._compute_spectrum(self, use_averaged_m=use_averaged_m)
 
         return find_peak_near_frequency(f_approx, self.fft_freqs, fft_cmpnt)
 
@@ -1340,9 +1365,10 @@ class NormalModeSimulation(Simulation):
         return fig
 
     def export_normal_mode_animation_from_ringdown(self, npy_files, f_approx=None, component=None,
-                                                   peak_idx=None, filename=None, directory='',
+                                                   peak_idx=None, outfilename=None, directory='',
                                                    t_step=None, scaling=0.2, dm_only=False,
-                                                   num_cycles=1, num_frames_per_cycle=20):
+                                                   num_cycles=1, num_frames_per_cycle=20,
+                                                   use_averaged_m=False):
         """
         XXX TODO: Complete me!
 
@@ -1353,11 +1379,11 @@ class NormalModeSimulation(Simulation):
         are passed on to `sim.find_peak_near_frequency()` to determine
         the exact location of the peak.
 
-        The output filename can be specified via `filename`. If this
-        is None then a filename of the form
-        'normal_mode_N__xx.xxx_GHz.pvd' is generated automatically,
-        where N is the peak index and xx.xx is the frequency of the
-        peak (as returned by `sim.find_peak_near_frequency()`).
+        The output filename can be specified via `outfilename`. If this
+        is None then a filename of the form 'normal_mode_N__xx.xxx_GHz.pvd'
+        is generated automatically, where N is the peak index and xx.xx
+        is the frequency of the peak (as returned by the function
+        `sim.find_peak_near_frequency()`).
 
 
         *Arguments*:
@@ -1382,10 +1408,15 @@ class NormalModeSimulation(Simulation):
            that if `peak_idx` is given the other two arguments are
            ignored.
 
+        use_averaged_m:  bool
+
+           Determines the method used to compute the spectrum. See
+           the method `plot_spectrum()` for details.
+
         """
         if self.fft_freqs == None or self.fft_mx == None or \
                 self.fft_my ==None or self.fft_mz == None:
-            self._compute_spectrum(self, use_averaged_m=True)
+            self._compute_spectrum(self, use_averaged_m=use_averaged_m)
 
         if peak_idx is None:
             if f_approx is None or component is None:
@@ -1398,14 +1429,14 @@ class NormalModeSimulation(Simulation):
                 log.warning("Ignoring argument 'component' because 'peak_idx' was specified.")
             peak_freq = self.fft_freqs[peak_idx]
 
-        if filename is None:
+        if outfilename is None:
             if directory is '':
-                raise ValueError("Please specify at least one of the arguments 'filename' or 'directory'")
-            filename = 'normal_mode_{}__{:.3f}_GHz.pvd'.format(peak_idx, peak_freq / 1e9)
-        filename = os.path.join(directory, filename)
+                raise ValueError("Please specify at least one of the arguments 'outfilename' or 'directory'")
+            outfilename = 'normal_mode_{}__{:.3f}_GHz.pvd'.format(peak_idx, peak_freq / 1e9)
+        outfilename = os.path.join(directory, outfilename)
 
         t_step = t_step or self.t_step_ndt
-        export_normal_mode_animation_from_ringdown(npy_files, filename, self.mesh, t_step,
+        export_normal_mode_animation_from_ringdown(npy_files, outfilename, self.mesh, t_step,
                                                    peak_idx, dm_only=dm_only, num_cycles=num_cycles,
                                                    num_frames_per_cycle=num_frames_per_cycle)
 
