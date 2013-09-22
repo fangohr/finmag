@@ -2,8 +2,10 @@ import logging
 import dolfin as df
 from energy_base import EnergyBase
 from finmag.util.timings import mtimed
+from finmag.util import helpers
 
 logger = logging.getLogger('finmag')
+
 
 class UniaxialAnisotropy(EnergyBase):
     """
@@ -62,27 +64,25 @@ class UniaxialAnisotropy(EnergyBase):
         varying anisotropy by using df.Functions.
 
         """
-        if isinstance(K1, (df.Function, df.Constant)):
-            self.K1 = K1
-        else:
-            self.K1 = df.Constant(K1)
-
-        if isinstance(axis, (df.Function, df.Constant)):
-            logger.debug("Found anisotropy axis of type '{}'.".format(axis.__class__))
-            self.axis = axis
-        else:
-            logger.debug("Will create anisotropy axis from '{}'.".format(axis))
-            self.axis = df.Constant(axis)
-
+        self.K1_waiting_for_mesh = K1
+        self.axis_waiting_for_mesh = axis
         self.name = name
         super(UniaxialAnisotropy, self).__init__(method, in_jacobian=True)
 
     @mtimed
     def setup(self, S3, m, Ms, unit_length=1):
+        # The following two lines are duplicated again in EnergyBase.setup().
+        # I wonder why there is the distinction betwen the __init__() and the
+        # setup() methods anyway? It feels a bit artifial to me.  -- Max, 23.9.2013
+        dofmap = S3.dofmap()
+        S1 = df.FunctionSpace(S3.mesh(), "Lagrange", 1, constrained_domain=dofmap.constrained_domain)
+
         # Anisotropy energy
         # HF's version inline with nmag, breaks comparison with analytical
         # solution in the energy density test for anisotropy, as this uses
         # the Scholz-Magpar method. Should anyway be a an easy fix when we
         # decide on method.
+        self.K1 = helpers.scalar_valued_function(self.K1_waiting_for_mesh, S1)
+        self.axis = helpers.vector_valued_function(self.axis_waiting_for_mesh, S3)
         E_integrand = self.K1 * (df.Constant(1) - (df.dot(self.axis, m)) ** 2)
         super(UniaxialAnisotropy, self).setup(E_integrand, S3, m, Ms, unit_length)
