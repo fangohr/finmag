@@ -92,6 +92,26 @@ class Sphere(MeshPrimitive):
             vec2str(self.center, fmt='{:.1f}', delims='', sep='_'), self.r, maxh).replace(".", "_")
 
 
+class Box(MeshPrimitive):
+    def __init__(self, x0, y0, z0, x1, y1, z1, name='Box'):
+        self.x0 = x0
+        self.y0 = y0
+        self.z0 = z0
+        self.x1 = x1
+        self.y1 = y1
+        self.z1 = z1
+        self.name = name
+        self._csg_stub = textwrap.dedent("""\
+            solid {name} = orthobrick ( {x0}, {y0}, {z0}; {x1}, {y1}, {z1} ) -maxh = {{maxh_{name}}};
+            tlo {name};
+            """.format(name=name, x0=x0, y0=y0, z0=z0, x1=x1, y1=y1, z1=z1))
+
+    def generic_filename(self, maxh, **kwargs):
+        maxh = self._get_maxh(maxh, **kwargs)
+        return "box__{:.1f}__{:.1f}__{:.1f}__{:.1f}__{:.1f}__{:.1f}__maxh_{:.1f}".format(
+            self.x0, self.y0, self.z0, self.x1, self.y1, self.z1, maxh).replace(".", "_")
+
+
 class EllipticalNanodisk(MeshPrimitive):
     def __init__(self, d1, d2, h, center=(0, 0, 0), valign='bottom', name='EllipticalNanodisk'):
         self.d1 = d1
