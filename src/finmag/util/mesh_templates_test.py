@@ -3,15 +3,21 @@
 import pytest
 import os
 import numpy as np
+import dolfin as df
 from math import pi
 from meshes import mesh_volume
 from mesh_templates import *
+import logging
 
 TOL = 1e-2  # relative tolerance for mesh volumes
+logger = logging.getLogger("finmag")
 
 
-def check_mesh_volume(mesh, vol, atol=0.0, rtol=TOL):
-    assert(np.allclose(mesh_volume(mesh), vol, atol=atol, rtol=rtol))
+def check_mesh_volume(mesh, vol_expected, atol=0.0, rtol=TOL):
+    vol_mesh = mesh_volume(mesh)
+    logger.debug("Checking mesh volume. Expected: {}, got: {} (relative error: {})".format(
+                 vol_expected, vol_mesh, abs((vol_expected - vol_mesh) / vol_expected)))
+    assert(np.allclose(vol_mesh, vol_expected, atol=atol, rtol=rtol))
 
 
 def test_mesh_templates(tmpdir):
@@ -157,3 +163,19 @@ def test_different_mesh_discretisations_for_combined_meshes(tmpdir):
     mesh1 = two_spheres.create_mesh(maxh=5.0, maxh_sphere2=8.0, save_result=True, directory=str(tmpdir))
     mesh2 = two_spheres.create_mesh(maxh=5.0, maxh_sphere2=10.0, save_result=True, directory=str(tmpdir))
     assert(mesh1.num_vertices() > mesh2.num_vertices())
+
+
+def test_box(tmpdir):
+    os.chdir(str(tmpdir))
+    x0, y0, z0 = 0, 0, 0
+    x1, y1, z1 = 10, 20, 30
+
+    box = Box(x0, y0, z0, x1, y1, z1)
+
+    box.create_mesh(maxh=8.0, save_result=True, directory='foo')
+    box.create_mesh(maxh=10.0, save_result=True, filename='bar/box.xml.gz')
+    assert(os.path.exists('foo/box__0_0__0_0__0_0__10_0__20_0__30_0__maxh_8_0.xml.gz'))
+    assert(os.path.exists('bar/box.xml.gz'))
+
+    mesh = df.Mesh('bar/box.xml.gz')
+    check_mesh_volume(mesh, (x1 - x0) * (y1 - y0) * (z1 - z0))
