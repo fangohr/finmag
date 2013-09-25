@@ -139,6 +139,7 @@ def render_paraview_scene(
     show_center_axes=False,
     representation="Surface With Edges",
     palette='screen',
+    use_parallel_projection=False,
     trim_border=True,
     rescale=None,
     diffuse_color=None):
@@ -291,6 +292,11 @@ def render_paraview_scene(
         'print' uses white as the background color whereas 'screen'
         uses dark grey.
 
+    use_parallel_projection: True | False
+
+        If False (the default), perspective projection is used to
+        render the scene. Otherwise parallel projection is used.
+
     trim_border: True | False
 
         If True (the default), any superfluous space around the scene
@@ -371,6 +377,7 @@ def render_paraview_scene(
         raise ValueError("Palette argument must be either 'print' "
                          "or 'screen'. Got: {}".format(palette))
 
+    view.CameraParallelProjection = 1 if use_parallel_projection else 0
 
     # Convert color_by_axis to integer and store the name separately
     try:
