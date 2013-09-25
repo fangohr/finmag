@@ -9346,3 +9346,110 @@ Hans
 -------------------------------------
 finmag-team mailing list.
 
+From marvin  Wed Sep 25 15:07:57 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Wed, 25 Sep 2013 15:07:57 +0100 (BST)
+Received: by 10.227.121.137 with SMTP id h9csp91677wbr;
+        Wed, 25 Sep 2013 06:51:40 -0700 (PDT)
+X-Received: by 10.204.60.66 with SMTP id o2mr28220839bkh.22.1380117100069;
+        Wed, 25 Sep 2013 06:51:40 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk. [152.78.128.16])
+        by mx.google.com with ESMTP id lk6si11575402bkb.213.1969.12.31.16.00.00;
+        Wed, 25 Sep 2013 06:51:40 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) client-ip=152.78.128.16;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r8PDoqKV013260;
+	Wed, 25 Sep 2013 14:50:52 +0100
+Received: from UOS-MSG00036-VS.soton.ac.uk (uos-msg00036-vs.soton.ac.uk [152.78.119.38])
+	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk [152.78.128.16]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p8OEoq0862240213yn ret-id none; Wed, 25 Sep 2013 14:50:53 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.38) with Microsoft SMTP Server (TLS) id 14.2.342.3; Wed, 25 Sep
+ 2013 14:50:52 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r8PDoqDG031723;	Wed, 25 Sep 2013 14:50:52 +0100
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk
+ [152.78.128.11])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r8PDoqlE031720	for <finmag-team@lists.soton.ac.uk>; Wed, 25 Sep 2013 14:50:52
+ +0100
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r8PDnt7K020892	for
+ <finmag-team@lists.soton.ac.uk>; Wed, 25 Sep 2013 14:49:55 +0100
+Received: from UOS-MSG00037-VS.soton.ac.uk (uos-msg00037-vs.soton.ac.uk
+ [152.78.119.39])	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk
+ [152.78.128.11]) envelope-from <H.FANGOHR@soton.ac.uk> with ESMTP	id
+ p8OEny0774641607Df ret-id none; Wed, 25 Sep 2013 14:49:55 +0100
+Received: from dhcp-163-135.wireless.soton.ac.uk (152.78.163.135) by
+ smtp.soton.ac.uk (152.78.119.39) with Microsoft SMTP Server (TLS) id
+ 14.2.342.3; Wed, 25 Sep 2013 14:49:54 +0100
+From: Hans Fangohr <h.fangohr@soton.ac.uk>
+Content-Type: text/plain; charset="us-ascii"
+Subject: [finmag-team] animations and pictures
+Date: Wed, 25 Sep 2013 14:49:55 +0100
+Message-ID: <59E0A5A8-33ED-4EC1-9F75-2C739B91712D@soton.ac.uk>
+CC: Hans Fangohr <h.fangohr@soton.ac.uk>,
+        "vousden m."
+	<mark.vousden@soton.ac.uk>
+To: "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+MIME-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
+X-Mailer: Apple Mail (2.1510)
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.39; helo=<UOS-MSG00037-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.39; envelope-from=<H.FANGOHR@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from quoted-printable to 8bit by maillists.sucs.soton.ac.uk id r8PDoqlE031721
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p8OEoq086224021300; tid=p8OEoq0862240213yn; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.38; helo=<UOS-MSG00036-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.38; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r8PDoqKV013260
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi folks,
+
+I am unashamedly asking for any 'cool' pictures and in particular animation=
+s.
+
+I am thinking of stuff like this:
+
+https://dl.dropboxusercontent.com/u/357850/animations/pyramid.avi
+
+https://dl.dropboxusercontent.com/u/357850/animations/singularity.avi
+
+and
+
+https://dl.dropboxusercontent.com/u/357850/animations/stt.avi
+
+
+If you have anything remotely similar hanging around, please get it to me a=
+s soon as possible.
+
+The background is that I am meeting a TV crew tomorrow that is trying to pu=
+t together a video about Computational work at Southampton, and they often =
+like animations like these to show in the background, or foreground while s=
+omebody talks about it.
+
+In particular, I could imagine that motion of domain walls, normal modes et=
+c is something where you may have videos.
+
+
+So this is a chance for your simulation to feature on a professionally prod=
+uced video clip; likely to be uploaded to You tube etc.
+
+Cheers,
+
+Hans
+
+
+
+
+-------------------------------------
+finmag-team mailing list.
+
