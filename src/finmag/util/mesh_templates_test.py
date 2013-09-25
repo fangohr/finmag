@@ -49,9 +49,13 @@ def test_elliptical_nanodisk(tmpdir):
     h = 5.0
 
     nanodisk1 = EllipticalNanodisk(d1, d2, h, center=(2, 3, -4), valign='bottom')
+    assert(nanodisk1.valign == 'bottom')
     nanodisk2 = EllipticalNanodisk(d1, d2, h, center=(2, 3, -4), valign='center')
+    assert(nanodisk2.valign == 'center')
     nanodisk3 = EllipticalNanodisk(d1, d2, h, center=(2, 3, -4), valign='top')
+    assert(nanodisk3.valign == 'top')
     with pytest.raises(ValueError):
+        # 'valign' must be one of 'top', 'bottom', 'center'
         EllipticalNanodisk(d1, d2, h, center=(2, 3, -4), valign='foo')
 
     mesh = nanodisk1.create_mesh(maxh=2.5)
@@ -65,8 +69,11 @@ def test_nanodisk(tmpdir):
     h = 5.0
 
     nanodisk1 = Nanodisk(d, h, center=(2, 3, -4), valign='bottom')
+    assert(nanodisk1.valign == 'bottom')
     nanodisk2 = Nanodisk(d, h, center=(2, 3, -4), valign='center')
+    assert(nanodisk2.valign == 'center')
     nanodisk3 = Nanodisk(d, h, center=(2, 3, -4), valign='top')
+    assert(nanodisk3.valign == 'top')
     with pytest.raises(ValueError):
         Nanodisk(d, h, center=(2, 3, -4), valign='foo')
 
