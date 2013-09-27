@@ -9453,3 +9453,318 @@ Hans
 -------------------------------------
 finmag-team mailing list.
 
+From marvin  Fri Sep 27 14:08:35 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Fri, 27 Sep 2013 14:08:35 +0100 (BST)
+Received: by 10.227.121.137 with SMTP id h9csp146741wbr;
+        Fri, 27 Sep 2013 05:57:36 -0700 (PDT)
+X-Received: by 10.14.208.194 with SMTP id q42mr10214024eeo.31.1380286656299;
+        Fri, 27 Sep 2013 05:57:36 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id t3si5746792eeh.243.1969.12.31.16.00.00;
+        Fri, 27 Sep 2013 05:57:36 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r8RCuYiC029228;
+	Fri, 27 Sep 2013 13:56:34 +0100
+Received: from UOS-MSG00037-VS.soton.ac.uk (uos-msg00037-vs.soton.ac.uk [152.78.119.39])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p8QDuY0774637130oc ret-id none; Fri, 27 Sep 2013 13:56:34 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.39) with Microsoft SMTP Server (TLS) id 14.2.342.3; Fri, 27 Sep
+ 2013 13:56:33 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r8RCuVN7025076;	Fri, 27 Sep 2013 13:56:31 +0100
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk
+ [152.78.128.11])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r8RCuVZI025072	for <finmag-team@lists.soton.ac.uk>; Fri, 27 Sep 2013 13:56:31
+ +0100
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r8RCtp3e027117	for
+ <finmag-team@lists.soton.ac.uk>; Fri, 27 Sep 2013 13:55:51 +0100
+Received: from UOS-MSG00036-VS.soton.ac.uk (uos-msg00036-vs.soton.ac.uk
+ [152.78.119.38])	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk
+ [152.78.128.11]) envelope-from <H.FANGOHR@soton.ac.uk> with ESMTP	id
+ p8QDyp0774637103yU ret-id none; Fri, 27 Sep 2013 13:55:51 +0100
+Received: from dhcp-161-228.wireless.soton.ac.uk (152.78.161.228) by
+ smtp.soton.ac.uk (152.78.119.38) with Microsoft SMTP Server (TLS) id
+ 14.2.342.3; Fri, 27 Sep 2013 13:55:50 +0100
+From: Hans Fangohr <h.fangohr@soton.ac.uk>
+Content-Type: multipart/alternative;
+	boundary="Apple-Mail=_9F6AD8F2-7C7E-43DF-AF15-8AAD6D52ED93"
+Message-ID: <1103B52F-4692-4324-AEBD-1EC0998F25BA@soton.ac.uk>
+MIME-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
+Subject: [finmag-team] request from Max
+Date: Fri, 27 Sep 2013 13:55:50 +0100
+References: <201309271214.r8RCEElb026233@maillists.sucs.soton.ac.uk>
+CC: Hans Fangohr <h.fangohr@soton.ac.uk>
+To: "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+X-Mailer: Apple Mail (2.1510)
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.38; helo=<UOS-MSG00036-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.38; envelope-from=<H.FANGOHR@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p8QDuY077463713000; tid=p8QDuY0774637130oc; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.39; helo=<UOS-MSG00037-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.39; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r8RCuYiC029228
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+--Apple-Mail=_9F6AD8F2-7C7E-43DF-AF15-8AAD6D52ED93
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+
+Hi all,
+Max' request below bumped because it came from the wrong email address. =
+Can anybody help him?
+
+Thanks,
+
+Hans
+
+Begin forwarded message:
+
+> From: <owner-finmag-team@lists.soton.ac.uk>
+> Subject: BOUNCE finmag-team@lists.soton.ac.uk: Non-member submission =
+from ["Albert M.H." <maximilian.albert@soton.ac.uk>]=20
+> Date: 27 September 2013 13:14:14 BST
+> To: <finmag-team-approval@lists.soton.ac.uk>
+>=20
+> =46rom owner-finmag-team@lists.soton.ac.uk Fri Sep 27 13:14:13 2013
+> Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk =
+[152.78.128.11])
+> 	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id =
+r8RCED8F026214
+> 	for <finmag-team@lists.soton.ac.uk>; Fri, 27 Sep 2013 13:14:13 =
++0100
+> Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain =
+[127.0.0.1])
+> 	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id =
+r8RCDTcq030485
+> 	for <finmag-team@lists.soton.ac.uk>; Fri, 27 Sep 2013 13:13:29 =
++0100
+> Received: from UOS-MSG00035-VS.soton.ac.uk =
+(uos-msg00035-vs.soton.ac.uk [152.78.119.37])
+> 	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk =
+[152.78.128.11]) envelope-from <maximilian.albert@soton.ac.uk> with =
+ESMTP
+> 	id p8QDDY0774635632Cl ret-id none; Fri, 27 Sep 2013 13:13:29 =
++0100
+> Received: from SRV00358.soton.ac.uk ([169.254.8.248]) by
+> UOS-MSG00035-VS.soton.ac.uk ([152.78.119.37]) with mapi id =
+14.02.0342.003;
+> Fri, 27 Sep 2013 13:13:29 +0100
+> From: "Albert M.H." <maximilian.albert@soton.ac.uk>
+> To: "finmag-team@lists.soton.ac.uk" <finmag-team@lists.soton.ac.uk>
+> Subject: Favour?
+> Thread-Topic: Favour?
+> Thread-Index: AQHOu3r5jt3amaNIzEicuxQXKmqn9A=3D=3D
+> Date: Fri, 27 Sep 2013 12:13:28 +0000
+> Message-ID: =
+<3E5C944D6AE8BA44BC93272D53A6F86024C089CD@SRV00358.soton.ac.uk>
+> Accept-Language: en-GB, en-US
+> Content-Language: en-GB
+> X-MS-Has-Attach:=20
+> X-MS-TNEF-Correlator:=20
+> x-originating-ip: [152.78.54.126]
+> Content-Type: text/plain; charset=3D"iso-8859-1"
+> MIME-Version: 1.0
+> X-smtpf-Report: sid=3Dp8QDDY077463563200; tid=3Dp8QDDY0774635632Cl; =
+client=3Drelay,white,ipv6; mail=3D; rcpt=3D; nrcpt=3D1:0; fails=3D0
+> Received-SPF: None; receiver=3Dmailgate6.iss.soton.ac.uk; =
+client-ip=3D152.78.119.37; helo=3D<UOS-MSG00035-VS.soton.ac.uk>
+> Received-SPF: None; receiver=3Dmailgate6.iss.soton.ac.uk; =
+client-ip=3D152.78.119.37; envelope-from=3D<maximilian.albert@soton.ac.uk>=
+
+> X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk =
+for more information
+> X-UOS-MailScanner-ID: r8RCDTcq030485
+> X-UOS-MailScanner: Found to be clean
+> X-UOS-MailScanner-From: maximilian.albert@soton.ac.uk
+> Content-Transfer-Encoding: 8bit
+> X-MIME-Autoconverted: from quoted-printable to 8bit by =
+maillists.sucs.soton.ac.uk id r8RCED8F026219
+>=20
+> Hi guys,
+>=20
+> I saw the email below from Neil Bresloff and would like to pick up one =
+of the monitors that they are giving away. But obviously I can't get it =
+myself at the moment. Would one of you guys do me the favour and drop by =
+his office to pick it up on my behalf? (He said that his office is in =
+room 2033, opposite 2027.) If you could stow it away somewhere in our =
+office corner so that I can pick it up when I get back that would be =
+most awesome.
+>=20
+> Many thanks!
+> Max
+>=20
+>=20
+> ________________________________
+> From: Bressloff N.W.
+> Sent: 26 September 2013 14:41
+> To: FEEdCED
+> Subject: Old kit
+>=20
+> Dear all, we need to clear out a pile of old kit (mainly monitors) in =
+and around the desks just inside R2027. If you would like to claim any =
+of this kit, please do so by the end of tomorrow and check it with me =
+first.
+>=20
+> Thanks
+>=20
+> Neil
+>=20
+> ----------------------------------------------------------------------
+> Prof. Neil W. Bressloff
+> Professor of Biomedical Engineering & Design
+> Faculty of Engineering and the Environment
+> University of Southampton
+> Highfield, Southampton SO17 1BJ, UK.
+>=20
+> B25/R2033
+>=20
+> Web http://www.soton.ac.uk/~nwb
+>=20
+> Tel. +44(0)2380 595473
+> Fax. +44(0)2380 594813
+> ----------------------------------------------------------------------
+>=20
+>=20
+
+
+--Apple-Mail=_9F6AD8F2-7C7E-43DF-AF15-8AAD6D52ED93
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/html; charset="us-ascii"
+
+<html><head><meta http-equiv=3D"Content-Type" content=3D"text/html =
+charset=3Dus-ascii"></head><body style=3D"word-wrap: break-word; =
+-webkit-nbsp-mode: space; -webkit-line-break: after-white-space; ">Hi =
+all,<div>Max' request below bumped because it came from the wrong email =
+address. Can anybody help =
+him?</div><div><br></div><div>Thanks,</div><div><br></div><div>Hans<br><di=
+v><br><div>Begin forwarded message:</div><br =
+class=3D"Apple-interchange-newline"><blockquote type=3D"cite"><div =
+style=3D"margin-top: 0px; margin-right: 0px; margin-bottom: 0px; =
+margin-left: 0px;"><span style=3D"font-family:'Helvetica'; =
+font-size:medium; color:rgba(0, 0, 0, 1.0);"><b>From: </b></span><span =
+style=3D"font-family:'Helvetica'; font-size:medium;">&lt;<a =
+href=3D"mailto:owner-finmag-team@lists.soton.ac.uk">owner-finmag-team@list=
+s.soton.ac.uk</a>&gt;<br></span></div><div style=3D"margin-top: 0px; =
+margin-right: 0px; margin-bottom: 0px; margin-left: 0px;"><span =
+style=3D"font-family:'Helvetica'; font-size:medium; color:rgba(0, 0, 0, =
+1.0);"><b>Subject: </b></span><span style=3D"font-family:'Helvetica'; =
+font-size:medium;"><b>BOUNCE <a =
+href=3D"mailto:finmag-team@lists.soton.ac.uk">finmag-team@lists.soton.ac.u=
+k</a>:    Non-member submission from ["Albert M.H." &lt;<a =
+href=3D"mailto:maximilian.albert@soton.ac.uk">maximilian.albert@soton.ac.u=
+k</a>&gt;]   </b><br></span></div><div style=3D"margin-top: 0px; =
+margin-right: 0px; margin-bottom: 0px; margin-left: 0px;"><span =
+style=3D"font-family:'Helvetica'; font-size:medium; color:rgba(0, 0, 0, =
+1.0);"><b>Date: </b></span><span style=3D"font-family:'Helvetica'; =
+font-size:medium;">27 September 2013 13:14:14 BST<br></span></div><div =
+style=3D"margin-top: 0px; margin-right: 0px; margin-bottom: 0px; =
+margin-left: 0px;"><span style=3D"font-family:'Helvetica'; =
+font-size:medium; color:rgba(0, 0, 0, 1.0);"><b>To: </b></span><span =
+style=3D"font-family:'Helvetica'; font-size:medium;">&lt;<a =
+href=3D"mailto:finmag-team-approval@lists.soton.ac.uk">finmag-team-approva=
+l@lists.soton.ac.uk</a>&gt;<br></span></div><br><div>=46rom <a =
+href=3D"mailto:owner-finmag-team@lists.soton.ac.uk">owner-finmag-team@list=
+s.soton.ac.uk</a> Fri Sep 27 13:14:13 2013<br>Received: from =
+mailgate6.<a href=3D"http://iss.soton.ac.uk">iss.soton.ac.uk</a> =
+(mailgate6.<a href=3D"http://iss.soton.ac.uk">iss.soton.ac.uk</a> =
+[152.78.128.11])<br><span class=3D"Apple-tab-span" =
+style=3D"white-space:pre">	</span>by maillists.sucs.soton.ac.uk =
+(8.13.4/8.12.9) with ESMTP id r8RCED8F026214<br><span =
+class=3D"Apple-tab-span" style=3D"white-space:pre">	</span>for =
+&lt;<a =
+href=3D"mailto:finmag-team@lists.soton.ac.uk">finmag-team@lists.soton.ac.u=
+k</a>&gt;; Fri, 27 Sep 2013 13:14:13 +0100<br>Received: from =
+mailgate6.<a href=3D"http://iss.soton.ac.uk">iss.soton.ac.uk</a> =
+(localhost.localdomain [127.0.0.1])<br><span class=3D"Apple-tab-span" =
+style=3D"white-space:pre">	</span>by mailgate6.<a =
+href=3D"http://iss.soton.ac.uk">iss.soton.ac.uk</a> (8.13.8/8.13.4) with =
+ESMTP id r8RCDTcq030485<br><span class=3D"Apple-tab-span" =
+style=3D"white-space:pre">	</span>for &lt;<a =
+href=3D"mailto:finmag-team@lists.soton.ac.uk">finmag-team@lists.soton.ac.u=
+k</a>&gt;; Fri, 27 Sep 2013 13:13:29 +0100<br>Received: from <a =
+href=3D"http://UOS-MSG00035-VS.soton.ac.uk">UOS-MSG00035-VS.soton.ac.uk</a=
+> (<a =
+href=3D"http://uos-msg00035-vs.soton.ac.uk">uos-msg00035-vs.soton.ac.uk</a=
+> [152.78.119.37])<br><span class=3D"Apple-tab-span" =
+style=3D"white-space:pre">	</span>by mailgate6.<a =
+href=3D"http://iss.soton.ac.uk">iss.soton.ac.uk</a> (mailgate6.<a =
+href=3D"http://iss.soton.ac.uk">iss.soton.ac.uk</a> [152.78.128.11]) =
+envelope-from &lt;<a =
+href=3D"mailto:maximilian.albert@soton.ac.uk">maximilian.albert@soton.ac.u=
+k</a>&gt; with ESMTP<br><span class=3D"Apple-tab-span" =
+style=3D"white-space:pre">	</span>id p8QDDY0774635632Cl ret-id =
+none; Fri, 27 Sep 2013 13:13:29 +0100<br>Received: from <a =
+href=3D"http://SRV00358.soton.ac.uk">SRV00358.soton.ac.uk</a> =
+([169.254.8.248]) by<br> <a =
+href=3D"http://UOS-MSG00035-VS.soton.ac.uk">UOS-MSG00035-VS.soton.ac.uk</a=
+> ([152.78.119.37]) with mapi id 14.02.0342.003;<br> Fri, 27 Sep 2013 =
+13:13:29 +0100<br>From: "Albert M.H." &lt;<a =
+href=3D"mailto:maximilian.albert@soton.ac.uk">maximilian.albert@soton.ac.u=
+k</a>&gt;<br>To: "<a =
+href=3D"mailto:finmag-team@lists.soton.ac.uk">finmag-team@lists.soton.ac.u=
+k</a>" &lt;<a =
+href=3D"mailto:finmag-team@lists.soton.ac.uk">finmag-team@lists.soton.ac.u=
+k</a>&gt;<br>Subject: Favour?<br>Thread-Topic: Favour?<br>Thread-Index: =
+AQHOu3r5jt3amaNIzEicuxQXKmqn9A=3D=3D<br>Date: Fri, 27 Sep 2013 12:13:28 =
++0000<br>Message-ID: &lt;3E5C944D6AE8BA44BC93272D53A6F86024C089CD@<a =
+href=3D"http://SRV00358.soton.ac.uk">SRV00358.soton.ac.uk</a>&gt;<br>Accep=
+t-Language: en-GB, en-US<br>Content-Language: en-GB<br>X-MS-Has-Attach: =
+<br>X-MS-TNEF-Correlator: <br>x-originating-ip: =
+[152.78.54.126]<br>Content-Type: text/plain; =
+charset=3D"iso-8859-1"<br>MIME-Version: 1.0<br>X-smtpf-Report: =
+sid=3Dp8QDDY077463563200; tid=3Dp8QDDY0774635632Cl; =
+client=3Drelay,white,ipv6; mail=3D; rcpt=3D; nrcpt=3D1:0; =
+fails=3D0<br>Received-SPF: None; receiver=3Dmailgate6.<a =
+href=3D"http://iss.soton.ac.uk">iss.soton.ac.uk</a>; =
+client-ip=3D152.78.119.37; helo=3D&lt;<a =
+href=3D"http://UOS-MSG00035-VS.soton.ac.uk">UOS-MSG00035-VS.soton.ac.uk</a=
+>&gt;<br>Received-SPF: None; receiver=3Dmailgate6.<a =
+href=3D"http://iss.soton.ac.uk">iss.soton.ac.uk</a>; =
+client-ip=3D152.78.119.37; envelope-from=3D&lt;<a =
+href=3D"mailto:maximilian.albert@soton.ac.uk">maximilian.albert@soton.ac.u=
+k</a>&gt;<br>X-UOS-MailScanner-Information: Please contact <a =
+href=3D"mailto:Serviceline@soton.ac.uk">Serviceline@soton.ac.uk</a> for =
+more information<br>X-UOS-MailScanner-ID: =
+r8RCDTcq030485<br>X-UOS-MailScanner: Found to be =
+clean<br>X-UOS-MailScanner-From: <a =
+href=3D"mailto:maximilian.albert@soton.ac.uk">maximilian.albert@soton.ac.u=
+k</a><br>Content-Transfer-Encoding: 8bit<br>X-MIME-Autoconverted: from =
+quoted-printable to 8bit by maillists.sucs.soton.ac.uk id =
+r8RCED8F026219<br><br>Hi guys,<br><br>I saw the email below from Neil =
+Bresloff and would like to pick up one of the monitors that they are =
+giving away. But obviously I can't get it myself at the moment. Would =
+one of you guys do me the favour and drop by his office to pick it up on =
+my behalf? (He said that his office is in room 2033, opposite 2027.) If =
+you could stow it away somewhere in our office corner so that I can pick =
+it up when I get back that would be most awesome.<br><br>Many =
+thanks!<br>Max<br><br><br>________________________________<br>From: =
+Bressloff N.W.<br>Sent: 26 September 2013 14:41<br>To: =
+FEEdCED<br>Subject: Old kit<br><br>Dear all, we need to clear out a pile =
+of old kit (mainly monitors) in and around the desks just inside R2027. =
+If you would like to claim any of this kit, please do so by the end of =
+tomorrow and check it with me =
+first.<br><br>Thanks<br><br>Neil<br><br>----------------------------------=
+------------------------------------<br>Prof. Neil W. =
+Bressloff<br>Professor of Biomedical Engineering &amp; Design<br>Faculty =
+of Engineering and the Environment<br>University of =
+Southampton<br>Highfield, Southampton SO17 1BJ, =
+UK.<br><br>B25/R2033<br><br>Web <a =
+href=3D"http://www.soton.ac.uk/~nwb">http://www.soton.ac.uk/~nwb</a><br><b=
+r>Tel. +44(0)2380 595473<br>Fax. +44(0)2380 =
+594813<br>----------------------------------------------------------------=
+------<br><br><br></div></blockquote></div><br></div></body></html>=
+
+--Apple-Mail=_9F6AD8F2-7C7E-43DF-AF15-8AAD6D52ED93--
+
