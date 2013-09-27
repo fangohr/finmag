@@ -38,6 +38,7 @@ class Zeeman(object):
 
         """
         self.H = helpers.vector_valued_function(value, self.S3, **self.kwargs)
+        self.H.rename('H_ext', 'H_ext')
         self.E = - mu0 * self.Ms * df.dot(self.m, self.H)
     
     def average_field(self):
@@ -106,6 +107,7 @@ class TimeZeeman(Zeeman):
                 return
             self.value.t = t
             self.H = df.interpolate(self.value, self.S3)
+            self.H.rename('H_ext', 'H_ext')
 
     def switch_off(self):
         # It might be nice to provide the option to remove the Zeeman
@@ -151,6 +153,7 @@ class DiscreteTimeZeeman(TimeZeeman):
                 if dt_since_last_update >= self.dt_update:
                     self.value.t = t
                     self.H = df.interpolate(self.value, self.S3)
+                    self.H.rename('H_ext', 'H_ext')
                     log.debug("At t={}, after dt={}, update external field again.".format(
                         t, dt_since_last_update))
 
