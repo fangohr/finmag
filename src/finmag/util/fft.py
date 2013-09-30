@@ -174,7 +174,7 @@ def FFT_m(filename, t_step=None, t_ini=None, t_end=None, subtract_values='averag
 
 
 def _plot_spectrum(fft_freq, fft_mx, fft_my, fft_mz, components="xyz",
-                  xlim=None, ticks=5, figsize=None, title="", outfilename=None):
+                  xlim=None, ticks=21, figsize=None, title="", outfilename=None):
     """
     Internal helper function to plot certain components of the
     spectrum. This is only separated out from plot_FFT_m so that it
@@ -189,14 +189,10 @@ def _plot_spectrum(fft_freq, fft_mx, fft_my, fft_mz, components="xyz",
     if 'z' in components: ax.plot(fft_freq_GHz, fft_mz, '.-', label=r'FFT of $m_z$')
     ax.set_xlabel('Frequency (GHz)')
     ax.set_ylabel('Amplitude')
-    fmin = int(min(fft_freq) / 1e9)
-    fmax = int(max(fft_freq) / 1e9)
 
-    if xlim != None:
-        fmax = xlim[1]
-
-    ax.set_xticks(np.linspace(fmin, fmax, ticks))
     ax.set_xlim(xlim)
+    xmin, xmax = ax.get_xlim()
+    ax.set_xticks(np.linspace(xmin, xmax, ticks))
     plt.legend()
     ax.grid()
 
@@ -210,7 +206,7 @@ def _plot_spectrum(fft_freq, fft_mx, fft_my, fft_mz, components="xyz",
 
 
 def plot_FFT_m(ndt_filename, t_step=None, t_ini=None, t_end=None, subtract_values='average',
-               components="xyz", xlim=None, ticks=5, figsize=None, title="", outfilename=None):
+               components="xyz", xlim=None, ticks=21, figsize=None, title="", outfilename=None):
     """
     Plot the frequency spectrum of the components of the magnetisation m.
 
