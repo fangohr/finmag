@@ -1627,6 +1627,7 @@ def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sun
             for (k, v) in demag_solver_params.items():
                 log.debug("Setting demag solver parameter {}='{}' for simulation '{}'".format(k, v, sim.name))
         sim.add(demag)
+    log.debug("Successfuly created simulation '{}'".format(sim.name))
 
     return sim
 

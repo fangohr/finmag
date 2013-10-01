@@ -100,4 +100,13 @@ console_logging_level = DEBUG
 # Set this to False to suppress the initial debugging messages
 # reporting the versions of various modules.
 display_module_versions_at_startup = True
+
+[visualization]
+# When using Paraview for visualization, it usually uses the default
+# X display :0, which leads to an annoying pop-up window. If 'xpra'
+# is installed, this can be used instead to render the scene off-screen.
+# However, sometimes this leads to errors and/or broken images.
+# Therefore we provide this configuration option to turn the use of
+# xpra off. If xpra is not installed then this setting has no effect.
+use_xpra = True
 """
