@@ -9855,3 +9855,1222 @@ Hans
 -------------------------------------
 finmag-team mailing list.
 
+From marvin  Tue Oct  1 11:10:05 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Tue, 01 Oct 2013 11:10:05 +0100 (BST)
+Received: by 10.227.121.137 with SMTP id h9csp2801wbr;
+        Tue, 1 Oct 2013 02:27:10 -0700 (PDT)
+X-Received: by 10.14.29.67 with SMTP id h43mr44815712eea.7.1380619630147;
+        Tue, 01 Oct 2013 02:27:10 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id k49si3998442een.22.1969.12.31.16.00.00;
+        Tue, 01 Oct 2013 02:27:10 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk;
+       dkim=neutral (bad format) header.i=@gmail.com;
+       dmarc=fail (p=NONE dis=NONE) header.from=gmail.com
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r919PB0L027762;
+	Tue, 1 Oct 2013 10:25:11 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk [152.78.119.37])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p90APB0774603618RQ ret-id none; Tue, 01 Oct 2013 10:25:11 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.37) with Microsoft SMTP Server (TLS) id 14.2.342.3; Tue, 1 Oct
+ 2013 10:24:21 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r919OKT3018341;	Tue, 1 Oct 2013 10:24:20 +0100
+Received: from mailgate2.iss.soton.ac.uk (mailgate2.iss.soton.ac.uk
+ [152.78.128.103])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r919OKfP018332	for <finmag-team@lists.soton.ac.uk>; Tue, 1 Oct 2013 10:24:20
+ +0100
+Received: from mailgate2.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate2.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r919MY0v011845	for
+ <finmag-team@lists.soton.ac.uk>; Tue, 1 Oct 2013 10:22:34 +0100
+Received: from mail-qc0-f176.google.com (mail-qc0-f176.google.com
+ [209.85.216.176])	by mailgate2.iss.soton.ac.uk (mailgate2.iss.soton.ac.uk
+ [152.78.128.103]) envelope-from <maximilian.albert@gmail.com> with ESMTP	id
+ p90AMY0619127012on ret-id none; Tue, 01 Oct 2013 10:22:34 +0100
+Received: by mail-qc0-f176.google.com with SMTP id t7so4438243qcv.21
+        for <finmag-team@lists.soton.ac.uk>; Tue, 01 Oct 2013 02:22:33 -0700
+ (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:date:message-id:subject:from:to:content-type;
+        bh=z0BaxY9IaiVUfKp+SKDSAWcJI7nUaNwFfzRNhQxRlpI=;
+        b=dcfP7M8k+ygHUbM7NBueTPBVs7Kek29QUA3zatf6fUyuGeB4t6I8d0XhLA2XPvBdpf
+         0sGjOqV+WpVThTs+NmbK75+x2BHERP/aZUQU86crfKglpYADbTJt5VeHzOpJCxRA4nAm
+         QUIjV7flOADDap/SGh0ncfllupn9Q+enisSy0SjohLqmTC4yyCmUUmdSzpQNFn872Qfa
+         vRlJKBl5rPEgzXXfYeQxEC8+g8jxzLF0tnboTJEI/D4FyD3pgeRUBKvOATgNbjpSzmTD
+         35K3Qghg5fVy7zN3MVIhjukU2GRaTvpBKGAIt39jaymg2Wg6f11AK1++pzs1byG//Prj
+         dgGQ==
+MIME-Version: 1.0
+X-Received: by 10.49.3.101 with SMTP id b5mr34346774qeb.7.1380619353788; Tue,
+ 01 Oct 2013 02:22:33 -0700 (PDT)
+Received: by 10.224.75.131 with HTTP; Tue, 1 Oct 2013 02:22:33 -0700 (PDT)
+Date: Tue, 1 Oct 2013 17:22:33 +0800
+Message-ID: <CAGA_dmgTuB4Nzju4g4ah=BcULxNnWi2jj1jTwxNcEiL2SVmDDQ@mail.gmail.com>
+Subject: [finmag-team] Another quick favour? (Book needs returning)
+From: Maximilian Albert <maximilian.albert@gmail.com>
+To: "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+Content-Type: text/plain; charset="ISO-8859-1"
+Received-SPF: None; receiver=mailgate2.iss.soton.ac.uk; client-ip=209.85.216.176; helo=<mail-qc0-f176.google.com>
+Received-SPF: Pass; receiver=mailgate2.iss.soton.ac.uk; client-ip=209.85.216.176; envelope-from=<maximilian.albert@gmail.com>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p90ANy077460361800; tid=p90APB0774603618RQ; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r919PB0L027762
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi all,
+
+apologies for the spamming, but  may I ask you for another favour?
+I'll try to find a way to make up for it when I get back. :)
+
+I received a notification from the library saying that one of the
+books I borrowed has been recalled. It's this one:
+
+  1  call number:QC 20 SCH                                 ID:81047732
+     Geometrical methods of mathematical physics / Bernard F. Schutz.
+     Schutz, Bernard F.
+     original date due:6/6/2014,23:59
+       recall date due:8/10/2013,23:59
+
+Would someone mind stopping by the library on the way home to return
+it? It should be in the shelf in our office (or perhaps on my desk
+somewhere).
+
+Many thanks!
+Max
+
+P.S.: Also many thanks to whoever picked up the monitor from Neil
+Bressloff! (He told me in an email that someone dropped by.) Much
+appreciated!
+-------------------------------------
+finmag-team mailing list.
+
+From marvin  Tue Oct  1 12:10:07 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Tue, 01 Oct 2013 12:10:07 +0100 (BST)
+Received: by 10.227.121.137 with SMTP id h9csp3995wbr;
+        Tue, 1 Oct 2013 03:14:36 -0700 (PDT)
+X-Received: by 10.14.219.198 with SMTP id m46mr44404511eep.41.1380622476577;
+        Tue, 01 Oct 2013 03:14:36 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk. [152.78.128.16])
+        by mx.google.com with ESMTP id b42si4151266eem.42.1969.12.31.16.00.00;
+        Tue, 01 Oct 2013 03:14:36 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) client-ip=152.78.128.16;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r91ADvTr006401;
+	Tue, 1 Oct 2013 11:13:57 +0100
+Received: from UOS-MSG00037-VS.soton.ac.uk (uos-msg00037-vs.soton.ac.uk [152.78.119.39])
+	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk [152.78.128.16]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p90BDv0862265400K5 ret-id none; Tue, 01 Oct 2013 11:13:58 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.39) with Microsoft SMTP Server (TLS) id 14.2.342.3; Tue, 1 Oct
+ 2013 11:13:57 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r91ADvVD032740;	Tue, 1 Oct 2013 11:13:57 +0100
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r91ADvJU032737	for <finmag-team@lists.soton.ac.uk>; Tue, 1 Oct 2013 11:13:57
+ +0100
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r91ADC5T004530	for
+ <finmag-team@lists.soton.ac.uk>; Tue, 1 Oct 2013 11:13:12 +0100
+Received: from UOS-MSG00037-VS.soton.ac.uk (uos-msg00037-vs.soton.ac.uk
+ [152.78.119.39])	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16]) envelope-from <mb4e10@ecs.soton.ac.uk> with ESMTP	id
+ p90BDC08622653801S ret-id none; Tue, 01 Oct 2013 11:13:12 +0100
+Received: from dhcp-152-78-97-134.clients.soton.ac.uk (152.78.97.134) by
+ smtp.soton.ac.uk (152.78.119.39) with Microsoft SMTP Server (TLS) id
+ 14.2.342.3; Tue, 1 Oct 2013 11:13:11 +0100
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
+Subject: Re: [finmag-team] Another quick favour? (Book needs returning)
+From: Marijan Beg <mb4e10@ecs.soton.ac.uk>
+In-Reply-To: <CAGA_dmgTuB4Nzju4g4ah=BcULxNnWi2jj1jTwxNcEiL2SVmDDQ@mail.gmail.com>
+Date: Tue, 1 Oct 2013 11:13:23 +0100
+Message-ID: <B62BF7AC-0037-49F8-8FD6-5215FE690697@soton.ac.uk>
+References: <CAGA_dmgTuB4Nzju4g4ah=BcULxNnWi2jj1jTwxNcEiL2SVmDDQ@mail.gmail.com>
+To: <finmag-team@lists.soton.ac.uk>
+X-Mailer: Apple Mail (2.1510)
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.39; helo=<UOS-MSG00037-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.39; envelope-from=<mb4e10@ecs.soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from quoted-printable to 8bit by maillists.sucs.soton.ac.uk id r91ADvJU032738
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p90BDv086226540000; tid=p90BDv0862265400K5; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.39; helo=<UOS-MSG00037-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.39; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r91ADvTr006401
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi Max,
+
+Weiwei and I found it and we will return it to the library.
+
+Cheers,
+Marijan
+
+On 1 Oct 2013, at 10:22, Maximilian Albert <maximilian.albert@gmail.com> wr=
+ote:
+
+> Hi all,
+>=20
+> apologies for the spamming, but  may I ask you for another favour?
+> I'll try to find a way to make up for it when I get back. :)
+>=20
+> I received a notification from the library saying that one of the
+> books I borrowed has been recalled. It's this one:
+>=20
+>  1  call number:QC 20 SCH                                 ID:81047732
+>     Geometrical methods of mathematical physics / Bernard F. Schutz.
+>     Schutz, Bernard F.
+>     original date due:6/6/2014,23:59
+>       recall date due:8/10/2013,23:59
+>=20
+> Would someone mind stopping by the library on the way home to return
+> it? It should be in the shelf in our office (or perhaps on my desk
+> somewhere).
+>=20
+> Many thanks!
+> Max
+>=20
+> P.S.: Also many thanks to whoever picked up the monitor from Neil
+> Bressloff! (He told me in an email that someone dropped by.) Much
+> appreciated!
+> -------------------------------------
+> finmag-team mailing list.
+
+
+-------------------------------------
+finmag-team mailing list.
+
+From marvin  Tue Oct  1 14:10:13 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Tue, 01 Oct 2013 14:10:13 +0100 (BST)
+Received: by 10.227.121.137 with SMTP id h9csp8797wbr;
+        Tue, 1 Oct 2013 05:44:33 -0700 (PDT)
+X-Received: by 10.14.210.8 with SMTP id t8mr45347625eeo.39.1380631472868;
+        Tue, 01 Oct 2013 05:44:32 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id x7si4598513eeo.187.1969.12.31.16.00.00;
+        Tue, 01 Oct 2013 05:44:32 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk;
+       dkim=neutral (bad format) header.i=@gmail.com;
+       dmarc=fail (p=NONE dis=NONE) header.from=gmail.com
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r91CheU6012982;
+	Tue, 1 Oct 2013 13:43:40 +0100
+Received: from UOS-MSG00037-VS.soton.ac.uk (uos-msg00037-vs.soton.ac.uk [152.78.119.39])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p90Dhe0774610338nM ret-id none; Tue, 01 Oct 2013 13:43:40 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.39) with Microsoft SMTP Server (TLS) id 14.2.342.3; Tue, 1 Oct
+ 2013 13:43:39 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r91ChdNr012951;	Tue, 1 Oct 2013 13:43:39 +0100
+Received: from mailgate5.iss.soton.ac.uk (mailgate5.iss.soton.ac.uk
+ [152.78.128.106])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r91Chdi3012948	for <finmag-team@lists.soton.ac.uk>; Tue, 1 Oct 2013 13:43:39
+ +0100
+Received: from mailgate5.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate5.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r91CWN1c004243	for
+ <finmag-team@lists.soton.ac.uk>; Tue, 1 Oct 2013 13:32:23 +0100
+Received: from mail-qa0-f41.google.com (mail-qa0-f41.google.com
+ [209.85.216.41])	by mailgate5.iss.soton.ac.uk (mailgate5.iss.soton.ac.uk
+ [152.78.128.106]) envelope-from <maximilian.albert@gmail.com> with ESMTP	id
+ p90DWN1148951408y4 ret-id none; Tue, 01 Oct 2013 13:32:23 +0100
+Received: by mail-qa0-f41.google.com with SMTP id ii20so3264524qab.7
+        for <finmag-team@lists.soton.ac.uk>; Tue, 01 Oct 2013 05:32:22 -0700
+ (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:date:message-id:subject:from:to:content-type;
+        bh=yn0Gu7rVLyzy13Ipm0SsZiX0NJTU1stjd/Y/xznYSCE=;
+        b=bJovpo7Be+OJKXIHn/gnZXQRlm1nRPogW8I7hOlCQ+dCjbIrWL6S/UuYuVvuM93jTO
+         RltZDmnN+eRVQ5B4jYoZFBSlg5NroMrtUmwbiov0/cV+A+3fO+fMIOj/wIv/qAc0KXMJ
+         SvQM80WnqobqrU8TaI2U4NYf27Z5s5Nj+eRpWFtKTEe4a5QDt5vhoQvI9bl0xID/xm8m
+         xQuQPeUa8DtoWkHUg/2TboQ1gZT3toxSKCKn7OZqeIVcrFy3NTzOZrhpY4E6+EY2lMhE
+         f/01Y3YvNGlC8mefFJ06rCBcM8tNop1eWlNISRKNGm47jOeKKVfiwQPkYhTHnNueAtd8
+         m9nA==
+MIME-Version: 1.0
+X-Received: by 10.49.99.98 with SMTP id ep2mr35532255qeb.9.1380630742492; Tue,
+ 01 Oct 2013 05:32:22 -0700 (PDT)
+Received: by 10.224.75.131 with HTTP; Tue, 1 Oct 2013 05:32:22 -0700 (PDT)
+Date: Tue, 1 Oct 2013 20:32:22 +0800
+Message-ID: <CAGA_dmjh5o-hYFea1S-uhrB1rQMjUw5O9+zO6arejH7CqRRw9g@mail.gmail.com>
+Subject: [finmag-team] Code review request: change in definition of anisotropy energy
+From: Maximilian Albert <maximilian.albert@gmail.com>
+To: "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+Content-Type: text/plain; charset="ISO-8859-1"
+Received-SPF: None; receiver=mailgate5.iss.soton.ac.uk; client-ip=209.85.216.41; helo=<mail-qa0-f41.google.com>
+Received-SPF: Pass; receiver=mailgate5.iss.soton.ac.uk; client-ip=209.85.216.41; envelope-from=<maximilian.albert@gmail.com>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p90Dhe077461033800; tid=p90Dhe0774610338nM; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.39; helo=<UOS-MSG00037-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.39; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r91CheU6012982
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi all,
+
+does anyone have any objections changing the definition of the
+anisotropy energy density from the current version:
+
+   E_integrand = self.K1 * (df.Constant(1) - (df.dot(self.axis, m)) ** 2)
+
+to the following simpler one?
+
+   E_integrand = - self.K1 * (df.dot(self.axis, m)) ** 2)
+
+(You can find the definition at the end of the file
+src/finmag/energies/anisotropy.py)
+
+Physically, this change shouldn't make any difference, since the two
+values only differ by a constant. However, it would simplify the
+definition a bit, might make it run (marginally) faster, might avoid
+rounding errors in some cases, and at least one test which I am just
+writing would be considerably simplified. Also, I just had a quick
+(admittedly non-representative) look in the literature and found
+predominantly the second form (presumably because it's simpler).
+
+Can anybody think of any negative consequences of this change? If not,
+I'll go ahead with it (and will adapt the tests accordingly).
+
+Thanks,
+Max
+-------------------------------------
+finmag-team mailing list.
+
+From marvin  Tue Oct  1 15:10:14 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Tue, 01 Oct 2013 15:10:14 +0100 (BST)
+Received: by 10.227.121.137 with SMTP id h9csp9035wbr;
+        Tue, 1 Oct 2013 05:52:07 -0700 (PDT)
+X-Received: by 10.14.210.195 with SMTP id u43mr106062eeo.80.1380631927461;
+        Tue, 01 Oct 2013 05:52:07 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id 47si4627134eea.181.1969.12.31.16.00.00;
+        Tue, 01 Oct 2013 05:52:07 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r91CoGRo030095;
+	Tue, 1 Oct 2013 13:50:16 +0100
+Received: from UOS-MSG00037-VS.soton.ac.uk (uos-msg00037-vs.soton.ac.uk [152.78.119.39])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p90DoG0774610462oN ret-id none; Tue, 01 Oct 2013 13:50:16 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.39) with Microsoft SMTP Server (TLS) id 14.2.342.3; Tue, 1 Oct
+ 2013 13:50:02 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r91Co2Qj018000;	Tue, 1 Oct 2013 13:50:02 +0100
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r91Co1ax017997	for <finmag-team@lists.soton.ac.uk>; Tue, 1 Oct 2013 13:50:01
+ +0100
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r91Cm1c1009152;
+	Tue, 1 Oct 2013 13:48:01 +0100
+Received: from UOS-MSG00037-VS.soton.ac.uk (uos-msg00037-vs.soton.ac.uk
+ [152.78.119.39])	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16]) envelope-from <H.FANGOHR@soton.ac.uk> with ESMTP	id
+ p90Dm10862203880s4 ret-id none; Tue, 01 Oct 2013 13:48:01 +0100
+Received: from dhcp-162-123.wireless.soton.ac.uk (152.78.162.123) by
+ smtp.soton.ac.uk (152.78.119.39) with Microsoft SMTP Server (TLS) id
+ 14.2.342.3; Tue, 1 Oct 2013 13:47:58 +0100
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
+Subject: Re: [finmag-team] Code review request: change in definition of anisotropy energy
+From: Hans Fangohr <h.fangohr@soton.ac.uk>
+In-Reply-To: <CAGA_dmjh5o-hYFea1S-uhrB1rQMjUw5O9+zO6arejH7CqRRw9g@mail.gmail.com>
+Date: Tue, 1 Oct 2013 13:48:02 +0100
+CC: Hans Fangohr <h.fangohr@soton.ac.uk>,
+        "<finmag-team@lists.soton.ac.uk>"
+	<finmag-team@lists.soton.ac.uk>
+Message-ID: <34966080-8416-4E8B-8BDA-CA82FA406EB0@soton.ac.uk>
+References: <CAGA_dmjh5o-hYFea1S-uhrB1rQMjUw5O9+zO6arejH7CqRRw9g@mail.gmail.com>
+To: Maximilian Albert <maximilian.albert@gmail.com>
+X-Mailer: Apple Mail (2.1510)
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.39; helo=<UOS-MSG00037-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.39; envelope-from=<H.FANGOHR@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from quoted-printable to 8bit by maillists.sucs.soton.ac.uk id r91Co1ax017998
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p90DnO077461046200; tid=p90DoG0774610462oN; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.39; helo=<UOS-MSG00037-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.39; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r91CoGRo030095
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi Max,
+
+On 1 Oct 2013, at 13:32, Maximilian Albert <maximilian.albert@gmail.com>
+ wrote:
+
+> Hi all,
+>=20
+> does anyone have any objections changing the definition of the
+> anisotropy energy density from the current version:
+>=20
+>   E_integrand =3D self.K1 * (df.Constant(1) - (df.dot(self.axis, m)) ** 2=
+)
+>=20
+> to the following simpler one?
+>=20
+>   E_integrand =3D - self.K1 * (df.dot(self.axis, m)) ** 2)
+>=20
+> (You can find the definition at the end of the file
+> src/finmag/energies/anisotropy.py)
+>=20
+> Physically, this change shouldn't make any difference, since the two
+> values only differ by a constant. However, it would simplify the
+> definition a bit, might make it run (marginally) faster, might avoid
+> rounding errors in some cases, and at least one test which I am just
+> writing would be considerably simplified. Also, I just had a quick
+> (admittedly non-representative) look in the literature and found
+> predominantly the second form (presumably because it's simpler).
+>=20
+
+As you say, in terms of physics it doesn't matter which term we use. You ma=
+y find that some tests fail that compare the energy with the energy from Nm=
+ag or OMMFF, which may use the other convention. But we should be able to c=
+ompensate for that by adding a constant value (1 if energy per volume, \int=
+ 1 dV if total energy).
+
+No objections from me.
+
+Cheers,
+
+Hans
+
+
+> Can anybody think of any negative consequences of this change? If not,
+> I'll go ahead with it (and will adapt the tests accordingly).
+>=20
+> Thanks,
+> Max
+> -------------------------------------
+> finmag-team mailing list.
+
+
+-------------------------------------
+finmag-team mailing list.
+
+From marvin  Tue Oct  1 17:10:16 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Tue, 01 Oct 2013 17:10:16 +0100 (BST)
+Received: by 10.227.121.137 with SMTP id h9csp16689wbr;
+        Tue, 1 Oct 2013 08:54:49 -0700 (PDT)
+X-Received: by 10.14.122.132 with SMTP id t4mr47477907eeh.20.1380642889154;
+        Tue, 01 Oct 2013 08:54:49 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk. [152.78.128.16])
+        by mx.google.com with ESMTP id h5si5232033eeg.260.1969.12.31.16.00.00;
+        Tue, 01 Oct 2013 08:54:49 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) client-ip=152.78.128.16;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r91Fru6O025854;
+	Tue, 1 Oct 2013 16:53:56 +0100
+Received: from UOS-MSG00037-VS.soton.ac.uk (uos-msg00037-vs.soton.ac.uk [152.78.119.39])
+	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk [152.78.128.16]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p90Gru0862208769j5 ret-id none; Tue, 01 Oct 2013 16:53:56 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.39) with Microsoft SMTP Server (TLS) id 14.2.342.3; Tue, 1 Oct
+ 2013 16:52:47 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r91FqlsU028225;	Tue, 1 Oct 2013 16:52:47 +0100
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r91Fql1M028222	for <finmag-team@lists.soton.ac.uk>; Tue, 1 Oct 2013 16:52:47
+ +0100
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r91FpaRk020930	for
+ <finmag-team@lists.soton.ac.uk>; Tue, 1 Oct 2013 16:51:36 +0100
+Received: from UOS-MSG00037-VS.soton.ac.uk (uos-msg00037-vs.soton.ac.uk
+ [152.78.119.39])	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16]) envelope-from <H.FANGOHR@soton.ac.uk> with ESMTP	id
+ p90Gpa0862208701Le ret-id none; Tue, 01 Oct 2013 16:51:37 +0100
+Received: from dhcp-161-149.wireless.soton.ac.uk (152.78.161.149) by
+ smtp.soton.ac.uk (152.78.119.39) with Microsoft SMTP Server (TLS) id
+ 14.2.342.3; Tue, 1 Oct 2013 16:51:35 +0100
+From: Hans Fangohr <h.fangohr@soton.ac.uk>
+Content-Type: multipart/alternative;
+	boundary="Apple-Mail=_294056B3-3BCB-4E03-BDD2-4B4C605E89FC"
+Message-ID: <A152BA62-4ECE-4279-84F5-3728FF2B9965@soton.ac.uk>
+MIME-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
+Subject: [finmag-team] Fwd: [muMAG] Mailing list operations during US Government shutdwn
+Date: Tue, 1 Oct 2013 16:51:36 +0100
+References: <effe803a0d054d70ace2484d25a4ae98@BY2PR09MB014.namprd09.prod.outlook.com>
+CC: Hans Fangohr <h.fangohr@soton.ac.uk>
+To: "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+X-Mailer: Apple Mail (2.1510)
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.39; helo=<UOS-MSG00037-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.39; envelope-from=<H.FANGOHR@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p90Grp086220876900; tid=p90Gru0862208769j5; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.39; helo=<UOS-MSG00037-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.39; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r91Fru6O025854
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+--Apple-Mail=_294056B3-3BCB-4E03-BDD2-4B4C605E89FC
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+
+Hi all,
+
+I just got the message below. This is quite outrageous - if I read this =
+correctly, then there is a real chance that the webpages =
+http://www.ctcms.nist.gov/~rdm/mumag.org.html with the micro magnetic =
+standard problems will go down.
+
+I would suggest that we grab a copy of this site, and host it =
+temporarily at Southampton (I'll check with McMichael whether that is =
+okay).
+
+Max, Weiwei, Marc-Antonio, or somebody who known how to use 'wget': =
+could you download the relevant files from =
+http://www.ctcms.nist.gov/~rdm/mumag.org.html and put it somewhere in =
+Dropbox, and let me know once done so?
+
+We could in principle also host the OOMMF pages during downtime, but =
+that would be a lot more to download, so let's not consider that for =
+now.
+
+Thanks,
+
+Hans
+
+
+
+
+Begin forwarded message:
+
+> From: "Porter, Don" <donald.porter@nist.gov>
+> Subject: [muMAG] Mailing list operations during US Government shutdwn
+> Date: 1 October 2013 14:50:10 BST
+> To: MUMAG <MUMAG@nist.gov>
+>=20
+>=20
+> muMAG subscribers:
+>=20
+> The muMAG mailing list is hosted by the National Institute of =
+Standards and Technology (NIST), an agency of the U.S. Federal =
+Government.
+>=20
+> Due to a lapse of authorized funding, NIST is shutting down many =
+operations until funding authorization is restored.  Many systems will =
+be shut down completely.  Others will continue in unmonitored =
+operations, beyond the access of any staff to perform any service or =
+maintenance.
+>=20
+> The impact on the functions of the muMAG mailing list is not =
+completely known with confidence.  It is possible the service will =
+completely fail to operate during this time.
+>=20
+> We think it is more likely that the basic functioning of the service =
+will continue, with messages accepted from subscribers and delivered to =
+subscribers.  The system is configured so that such operations normally =
+take place without human intervention.
+>=20
+> We think it is also likely that e-mail commands to the service address =
+mumag-request@nist.gov will continue to operate, permitting subscribe, =
+unsubscribe, and other configuration tasks.
+>=20
+> Moderation tasks will not take place.  When messages are mistakenly =
+sent from an address not subscribed to the list, normally moderators are =
+able to recognize their relevance to the muMAG topics and approve it for =
+distribution anyway.  That will not be happening while systems are shut =
+down.  Take care to use your subscribed address when posting a message =
+to the mailing list.
+>=20
+> It seems likely that access to the mailing list archives will be =
+disabled by the service shutdowns.  Other muMAG web pages and other NIST =
+web pages are expected to be unavailable.
+>=20
+> We have no estimate on when operating conditions might return to =
+normal.
+>=20
+> We regret the inconvenience imposed by these events.
+>=20
+> Don Porter
+>=20
+> _______________________________________________
+> Mumag mailing list
+> Mumag@nist.gov
+> https://email.nist.gov/mailman/listinfo/mumag
+
+
+--Apple-Mail=_294056B3-3BCB-4E03-BDD2-4B4C605E89FC
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/html; charset="us-ascii"
+
+<html><head><meta http-equiv=3D"Content-Type" content=3D"text/html =
+charset=3Dus-ascii"><base href=3D"x-msg://931/"></head><body =
+style=3D"word-wrap: break-word; -webkit-nbsp-mode: space; =
+-webkit-line-break: after-white-space; ">Hi all,<div><br></div><div>I =
+just got the message below. This is quite outrageous - if I read this =
+correctly, then there is a real chance that the webpages&nbsp;<a =
+href=3D"http://www.ctcms.nist.gov/~rdm/mumag.org.html">http://www.ctcms.ni=
+st.gov/~rdm/mumag.org.html</a> with the micro magnetic standard problems =
+will go down.</div><div><br></div><div>I would suggest that we grab a =
+copy of this site, and host it temporarily at Southampton (I'll check =
+with McMichael whether that is okay).</div><div><br></div><div>Max, =
+Weiwei, Marc-Antonio, or somebody who known how to use 'wget': could you =
+download the relevant files from&nbsp;<a =
+href=3D"http://www.ctcms.nist.gov/~rdm/mumag.org.html">http://www.ctcms.ni=
+st.gov/~rdm/mumag.org.html</a> and put it somewhere in Dropbox, and let =
+me know once done so?</div><div><br></div><div>We could in principle =
+also host the OOMMF pages during downtime, but that would be a lot more =
+to download, so let's not consider that for =
+now.</div><div><br></div><div>Thanks,</div><div><br></div><div>Hans</div><=
+div><br></div><div><br></div><div><br><div><div><br><div>Begin forwarded =
+message:</div><br class=3D"Apple-interchange-newline"><blockquote =
+type=3D"cite"><div style=3D"margin-top: 0px; margin-right: 0px; =
+margin-bottom: 0px; margin-left: 0px;"><span =
+style=3D"font-family:'Helvetica'; font-size:medium; color:rgba(0, 0, 0, =
+1.0);"><b>From: </b></span><span style=3D"font-family:'Helvetica'; =
+font-size:medium;">"Porter, Don" &lt;<a =
+href=3D"mailto:donald.porter@nist.gov">donald.porter@nist.gov</a>&gt;<br><=
+/span></div><div style=3D"margin-top: 0px; margin-right: 0px; =
+margin-bottom: 0px; margin-left: 0px;"><span =
+style=3D"font-family:'Helvetica'; font-size:medium; color:rgba(0, 0, 0, =
+1.0);"><b>Subject: </b></span><span style=3D"font-family:'Helvetica'; =
+font-size:medium;"><b>[muMAG] Mailing list operations during US =
+Government shutdwn</b><br></span></div><div style=3D"margin-top: 0px; =
+margin-right: 0px; margin-bottom: 0px; margin-left: 0px;"><span =
+style=3D"font-family:'Helvetica'; font-size:medium; color:rgba(0, 0, 0, =
+1.0);"><b>Date: </b></span><span style=3D"font-family:'Helvetica'; =
+font-size:medium;">1 October 2013 14:50:10 BST<br></span></div><div =
+style=3D"margin-top: 0px; margin-right: 0px; margin-bottom: 0px; =
+margin-left: 0px;"><span style=3D"font-family:'Helvetica'; =
+font-size:medium; color:rgba(0, 0, 0, 1.0);"><b>To: </b></span><span =
+style=3D"font-family:'Helvetica'; font-size:medium;">MUMAG &lt;<a =
+href=3D"mailto:MUMAG@nist.gov">MUMAG@nist.gov</a>&gt;<br></span></div><br>=
+<div aria-label=3D"Message body" fpstyle=3D"1" tabindex=3D"0" dir=3D"ltr" =
+style=3D"font-family: Helvetica; font-size: medium; font-style: normal; =
+font-variant: normal; font-weight: normal; letter-spacing: normal; =
+line-height: normal; orphans: 2; text-align: -webkit-auto; text-indent: =
+0px; text-transform: none; white-space: normal; widows: 2; word-spacing: =
+0px; -webkit-text-size-adjust: auto; -webkit-text-stroke-width: 0px; =
+"><div name=3D"divtagdefaultwrapper" id=3D"divtagdefaultwrapper" =
+style=3D"font-family: Calibri, Arial, Helvetica, sans-serif; font-size: =
+12pt; margin: 0px; "><br>muMAG subscribers:<br><br>The muMAG mailing =
+list is hosted by the National Institute of Standards and Technology =
+(NIST), an agency of the U.S. Federal Government.<br><br>Due to a lapse =
+of authorized funding, NIST is shutting down many operations until =
+funding authorization is restored.&nbsp; Many systems will be shut down =
+completely.&nbsp; Others will continue in unmonitored operations, beyond =
+the access of any staff to perform any service or =
+maintenance.<br><br>The impact on the functions of the muMAG mailing =
+list is not completely known with confidence.&nbsp; It is possible the =
+service will completely fail to operate during this time.<br><br>We =
+think it is more likely that the basic functioning of the service will =
+continue, with messages accepted from subscribers and delivered to =
+subscribers.&nbsp; The system is configured so that such operations =
+normally take place without human intervention.<br><br>We think it is =
+also likely that e-mail commands to the service address<span =
+class=3D"Apple-converted-space">&nbsp;</span><a =
+href=3D"mailto:mumag-request@nist.gov">mumag-request@nist.gov</a><span =
+class=3D"Apple-converted-space">&nbsp;</span>will continue to operate, =
+permitting subscribe, unsubscribe, and other configuration =
+tasks.<br><br>Moderation tasks will not take place.&nbsp; When messages =
+are mistakenly sent from an address not subscribed to the list, normally =
+moderators are able to recognize their relevance to the muMAG topics and =
+approve it for distribution anyway.&nbsp; That will not be happening =
+while systems are shut down.&nbsp; Take care to use your subscribed =
+address when posting a message to the mailing list.<br><br>It seems =
+likely that access to the mailing list archives will be disabled by the =
+service shutdowns.&nbsp; Other muMAG web pages and other NIST web pages =
+are expected to be unavailable.<br><br>We have no estimate on when =
+operating conditions might return to normal.<br><br>We regret the =
+inconvenience imposed by these events.<br><br>Don =
+Porter<br><br></div>_______________________________________________<br>Mum=
+ag mailing list<br><a =
+href=3D"mailto:Mumag@nist.gov">Mumag@nist.gov</a><br><a =
+href=3D"https://email.nist.gov/mailman/listinfo/mumag">https://email.nist.=
+gov/mailman/listinfo/mumag</a><br></div></blockquote></div><br></div></div=
+></body></html>=
+
+--Apple-Mail=_294056B3-3BCB-4E03-BDD2-4B4C605E89FC--
+
+From marvin  Tue Oct  1 18:10:17 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Tue, 01 Oct 2013 18:10:17 +0100 (BST)
+Received: by 10.227.121.137 with SMTP id h9csp19105wbr;
+        Tue, 1 Oct 2013 09:56:13 -0700 (PDT)
+X-Received: by 10.14.100.138 with SMTP id z10mr4183766eef.74.1380646573165;
+        Tue, 01 Oct 2013 09:56:13 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id x43si5551711eep.10.1969.12.31.16.00.00;
+        Tue, 01 Oct 2013 09:56:13 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk;
+       dkim=neutral (bad format) header.i=@gmail.com;
+       dmarc=fail (p=NONE dis=NONE) header.from=gmail.com
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r91Gsoog030557;
+	Tue, 1 Oct 2013 17:54:50 +0100
+Received: from UOS-MSG00037-VS.soton.ac.uk (uos-msg00037-vs.soton.ac.uk [152.78.119.39])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p90Hso07746182365F ret-id none; Tue, 01 Oct 2013 17:54:50 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.39) with Microsoft SMTP Server (TLS) id 14.2.342.3; Tue, 1 Oct
+ 2013 17:54:49 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r91GslAw012589;	Tue, 1 Oct 2013 17:54:47 +0100
+Received: from mailgate5.iss.soton.ac.uk (mailgate5.iss.soton.ac.uk
+ [152.78.128.106])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r91GskLe012586	for <finmag-team@lists.soton.ac.uk>; Tue, 1 Oct 2013 17:54:47
+ +0100
+Received: from mailgate5.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate5.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r91GrL8R018939	for
+ <finmag-team@lists.soton.ac.uk>; Tue, 1 Oct 2013 17:53:21 +0100
+Received: from mail-qe0-f42.google.com (mail-qe0-f42.google.com
+ [209.85.128.42])	by mailgate5.iss.soton.ac.uk (mailgate5.iss.soton.ac.uk
+ [152.78.128.106]) envelope-from <maximilian.albert@gmail.com> with ESMTP	id
+ p90HrL1148918238yb ret-id none; Tue, 01 Oct 2013 17:53:21 +0100
+Received: by mail-qe0-f42.google.com with SMTP id 1so5251526qec.29        for
+ <finmag-team@lists.soton.ac.uk>; Tue, 01 Oct 2013 09:53:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=ipXhOQs9CmnrnQnIXKULwiVwVqNNm+r+IxEaHzhXyL8=;
+        b=AFkR0V5mqd/74sPjqqbvbjbLiB/GcE+SBhh1PSQS00JKrtwV6rx5y+qBplDkKJn59P
+         /R2jz7rdX0/4ccOrjKS7Tj3qvsPw0AhP9BwSGFy2dp1cObTtluHqrKf7ZFcjCsdATitK
+         RuD+xu/0YP3y7b6td7iTxzdqzstRAou5X32TRiQF9f/ndZGkjk+mw3vJGLA7A18YiLDb
+         S1O1W8cOw2uYDDrnOP+Jy1esxQ5P3T7/cYGU1kFOh2BbP2Mj6xgkjA+B2/XWp8k+nZkr
+         IQHsNl0K8OQMN78YzBcUjcX6jEf5ZTrkowCQjI+yYACnT8T0/eutr2lnFkaqkkN731eJ
+         o4Kw==
+MIME-Version: 1.0
+X-Received: by 10.224.147.208 with SMTP id m16mr40412642qav.3.1380646400303;
+ Tue, 01 Oct 2013 09:53:20 -0700 (PDT)
+Received: by 10.224.75.131 with HTTP; Tue, 1 Oct 2013 09:53:20 -0700 (PDT)
+In-Reply-To: <A152BA62-4ECE-4279-84F5-3728FF2B9965@soton.ac.uk>
+References: <effe803a0d054d70ace2484d25a4ae98@BY2PR09MB014.namprd09.prod.outlook.com>
+	<A152BA62-4ECE-4279-84F5-3728FF2B9965@soton.ac.uk>
+Date: Wed, 2 Oct 2013 00:53:20 +0800
+Message-ID: <CAGA_dmiCMK+otp69X4EDDEzFs7Yc_oA_ab8VNrQesfSQAExCxg@mail.gmail.com>
+Subject: Re: [finmag-team] Fwd: [muMAG] Mailing list operations during US
+ Government shutdwn
+From: Maximilian Albert <maximilian.albert@gmail.com>
+To: Hans Fangohr <h.fangohr@soton.ac.uk>
+CC: "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+Content-Type: text/plain; charset="ISO-8859-1"
+Received-SPF: None; receiver=mailgate5.iss.soton.ac.uk; client-ip=209.85.128.42; helo=<mail-qe0-f42.google.com>
+Received-SPF: Pass; receiver=mailgate5.iss.soton.ac.uk; client-ip=209.85.128.42; envelope-from=<maximilian.albert@gmail.com>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p90Hsh077461823600; tid=p90Hso07746182365F; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.39; helo=<UOS-MSG00037-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.39; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r91Gsoog030557
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi Hans,
+
+I just tried to download the site using wget and put a copy in the
+~/Dropbox/Group folder. I think it has worked (not sure if everything
+was grabbed, but at first glance it looks ok), but despite using the
+option '--convert-links' somehow wget didn't convert the external
+links to local ones, so the links in the downloaded pages still point
+to the the NIST website. However, it should (!) just be a matter of a
+clever sed command to replace those external links with local ones so
+that the downloaded pages are self-contained.
+
+Interestingly, the main NIST page (http://www.ctcms.nist.gov/) says
+that most websites are shut down, but at least at the moment the Mumag
+pages (http://www.ctcms.nist.gov/~rdm/mumag.org.html) are still
+reachable.
+
+Cheers,
+Max
+
+
+2013/10/1 Hans Fangohr <h.fangohr@soton.ac.uk>:
+> Hi all,
+>
+> I just got the message below. This is quite outrageous - if I read this
+> correctly, then there is a real chance that the webpages
+> http://www.ctcms.nist.gov/~rdm/mumag.org.html with the micro magnetic
+> standard problems will go down.
+>
+> I would suggest that we grab a copy of this site, and host it temporarily at
+> Southampton (I'll check with McMichael whether that is okay).
+>
+> Max, Weiwei, Marc-Antonio, or somebody who known how to use 'wget': could
+> you download the relevant files from
+> http://www.ctcms.nist.gov/~rdm/mumag.org.html and put it somewhere in
+> Dropbox, and let me know once done so?
+>
+> We could in principle also host the OOMMF pages during downtime, but that
+> would be a lot more to download, so let's not consider that for now.
+>
+> Thanks,
+>
+> Hans
+>
+>
+>
+>
+> Begin forwarded message:
+>
+> From: "Porter, Don" <donald.porter@nist.gov>
+> Subject: [muMAG] Mailing list operations during US Government shutdwn
+> Date: 1 October 2013 14:50:10 BST
+> To: MUMAG <MUMAG@nist.gov>
+>
+>
+> muMAG subscribers:
+>
+> The muMAG mailing list is hosted by the National Institute of Standards and
+> Technology (NIST), an agency of the U.S. Federal Government.
+>
+> Due to a lapse of authorized funding, NIST is shutting down many operations
+> until funding authorization is restored.  Many systems will be shut down
+> completely.  Others will continue in unmonitored operations, beyond the
+> access of any staff to perform any service or maintenance.
+>
+> The impact on the functions of the muMAG mailing list is not completely
+> known with confidence.  It is possible the service will completely fail to
+> operate during this time.
+>
+> We think it is more likely that the basic functioning of the service will
+> continue, with messages accepted from subscribers and delivered to
+> subscribers.  The system is configured so that such operations normally take
+> place without human intervention.
+>
+> We think it is also likely that e-mail commands to the service address
+> mumag-request@nist.gov will continue to operate, permitting subscribe,
+> unsubscribe, and other configuration tasks.
+>
+> Moderation tasks will not take place.  When messages are mistakenly sent
+> from an address not subscribed to the list, normally moderators are able to
+> recognize their relevance to the muMAG topics and approve it for
+> distribution anyway.  That will not be happening while systems are shut
+> down.  Take care to use your subscribed address when posting a message to
+> the mailing list.
+>
+> It seems likely that access to the mailing list archives will be disabled by
+> the service shutdowns.  Other muMAG web pages and other NIST web pages are
+> expected to be unavailable.
+>
+> We have no estimate on when operating conditions might return to normal.
+>
+> We regret the inconvenience imposed by these events.
+>
+> Don Porter
+>
+> _______________________________________________
+> Mumag mailing list
+> Mumag@nist.gov
+> https://email.nist.gov/mailman/listinfo/mumag
+>
+>
+-------------------------------------
+finmag-team mailing list.
+
+From marvin  Tue Oct  1 20:10:19 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Tue, 01 Oct 2013 20:10:19 +0100 (BST)
+Received: by 10.227.121.137 with SMTP id h9csp23599wbr;
+        Tue, 1 Oct 2013 11:57:12 -0700 (PDT)
+X-Received: by 10.14.223.1 with SMTP id u1mr48496679eep.10.1380653832183;
+        Tue, 01 Oct 2013 11:57:12 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id w44si5934154eef.225.1969.12.31.16.00.00;
+        Tue, 01 Oct 2013 11:57:12 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r91IuvYQ008069;
+	Tue, 1 Oct 2013 19:56:57 +0100
+Received: from UOS-MSG00036-VS.soton.ac.uk (uos-msg00036-vs.soton.ac.uk [152.78.119.38])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p90Juv0774621536kA ret-id none; Tue, 01 Oct 2013 19:56:57 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.38) with Microsoft SMTP Server (TLS) id 14.2.342.3; Tue, 1 Oct
+ 2013 19:56:56 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r91IusOH014252;	Tue, 1 Oct 2013 19:56:54 +0100
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk
+ [152.78.128.11])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r91IusFu014243	for <finmag-team@lists.soton.ac.uk>; Tue, 1 Oct 2013 19:56:54
+ +0100
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r91IuV9G006492;
+	Tue, 1 Oct 2013 19:56:31 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk
+ [152.78.119.37])	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk
+ [152.78.128.11]) envelope-from <H.FANGOHR@soton.ac.uk> with ESMTP	id
+ p90JuV0774621519ZP ret-id none; Tue, 01 Oct 2013 19:56:31 +0100
+Received: from [192.168.1.13] (78.86.255.202) by smtp.soton.ac.uk
+ (152.78.119.37) with Microsoft SMTP Server (TLS) id 14.2.342.3; Tue, 1 Oct
+ 2013 19:55:48 +0100
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
+Subject: Re: [finmag-team] [muMAG] Mailing list operations during US Government shutdwn
+From: Hans Fangohr <h.fangohr@soton.ac.uk>
+In-Reply-To: <CAGA_dmiCMK+otp69X4EDDEzFs7Yc_oA_ab8VNrQesfSQAExCxg@mail.gmail.com>
+Date: Tue, 1 Oct 2013 19:55:47 +0100
+CC: Hans Fangohr <h.fangohr@soton.ac.uk>,
+        Hans Fangohr
+	<h.fangohr@soton.ac.uk>,
+        "<finmag-team@lists.soton.ac.uk>"
+	<finmag-team@lists.soton.ac.uk>
+Message-ID: <8DD2F640-4053-4CBC-B5ED-598F6BC6FBE0@soton.ac.uk>
+References: <effe803a0d054d70ace2484d25a4ae98@BY2PR09MB014.namprd09.prod.outlook.com> <A152BA62-4ECE-4279-84F5-3728FF2B9965@soton.ac.uk> <CAGA_dmiCMK+otp69X4EDDEzFs7Yc_oA_ab8VNrQesfSQAExCxg@mail.gmail.com>
+To: Maximilian Albert <maximilian.albert@gmail.com>
+X-Mailer: Apple Mail (2.1510)
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<H.FANGOHR@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from quoted-printable to 8bit by maillists.sucs.soton.ac.uk id r91IusFu014244
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p90Juv077462153600; tid=p90Juv0774621536kA; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.38; helo=<UOS-MSG00036-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.38; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r91IuvYQ008069
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi Max,
+
+
+On 1 Oct 2013, at 17:53, Maximilian Albert <maximilian.albert@gmail.com> wr=
+ote:
+
+> Hi Hans,
+>=20
+> I just tried to download the site using wget and put a copy in the
+> ~/Dropbox/Group folder.
+
+Good job: the site is now gone at http://www.ctcms.nist.gov/~rdm/mumag.org.=
+html
+
+Thank you,
+
+Hans
+
+> I think it has worked (not sure if everything
+> was grabbed, but at first glance it looks ok), but despite using the
+> option '--convert-links' somehow wget didn't convert the external
+> links to local ones, so the links in the downloaded pages still point
+> to the the NIST website. However, it should (!) just be a matter of a
+> clever sed command to replace those external links with local ones so
+> that the downloaded pages are self-contained.
+>=20
+> Interestingly, the main NIST page (http://www.ctcms.nist.gov/) says
+> that most websites are shut down, but at least at the moment the Mumag
+> pages (http://www.ctcms.nist.gov/~rdm/mumag.org.html) are still
+> reachable.
+>=20
+> Cheers,
+> Max
+>=20
+>=20
+> 2013/10/1 Hans Fangohr <h.fangohr@soton.ac.uk>:
+>> Hi all,
+>>=20
+>> I just got the message below. This is quite outrageous - if I read this
+>> correctly, then there is a real chance that the webpages
+>> http://www.ctcms.nist.gov/~rdm/mumag.org.html with the micro magnetic
+>> standard problems will go down.
+>>=20
+>> I would suggest that we grab a copy of this site, and host it temporaril=
+y at
+>> Southampton (I'll check with McMichael whether that is okay).
+>>=20
+>> Max, Weiwei, Marc-Antonio, or somebody who known how to use 'wget': coul=
+d
+>> you download the relevant files from
+>> http://www.ctcms.nist.gov/~rdm/mumag.org.html and put it somewhere in
+>> Dropbox, and let me know once done so?
+>>=20
+>> We could in principle also host the OOMMF pages during downtime, but tha=
+t
+>> would be a lot more to download, so let's not consider that for now.
+>>=20
+>> Thanks,
+>>=20
+>> Hans
+>>=20
+>>=20
+>>=20
+>>=20
+>> Begin forwarded message:
+>>=20
+>> From: "Porter, Don" <donald.porter@nist.gov>
+>> Subject: [muMAG] Mailing list operations during US Government shutdwn
+>> Date: 1 October 2013 14:50:10 BST
+>> To: MUMAG <MUMAG@nist.gov>
+>>=20
+>>=20
+>> muMAG subscribers:
+>>=20
+>> The muMAG mailing list is hosted by the National Institute of Standards =
+and
+>> Technology (NIST), an agency of the U.S. Federal Government.
+>>=20
+>> Due to a lapse of authorized funding, NIST is shutting down many operati=
+ons
+>> until funding authorization is restored.  Many systems will be shut down
+>> completely.  Others will continue in unmonitored operations, beyond the
+>> access of any staff to perform any service or maintenance.
+>>=20
+>> The impact on the functions of the muMAG mailing list is not completely
+>> known with confidence.  It is possible the service will completely fail =
+to
+>> operate during this time.
+>>=20
+>> We think it is more likely that the basic functioning of the service wil=
+l
+>> continue, with messages accepted from subscribers and delivered to
+>> subscribers.  The system is configured so that such operations normally =
+take
+>> place without human intervention.
+>>=20
+>> We think it is also likely that e-mail commands to the service address
+>> mumag-request@nist.gov will continue to operate, permitting subscribe,
+>> unsubscribe, and other configuration tasks.
+>>=20
+>> Moderation tasks will not take place.  When messages are mistakenly sent
+>> from an address not subscribed to the list, normally moderators are able=
+ to
+>> recognize their relevance to the muMAG topics and approve it for
+>> distribution anyway.  That will not be happening while systems are shut
+>> down.  Take care to use your subscribed address when posting a message t=
+o
+>> the mailing list.
+>>=20
+>> It seems likely that access to the mailing list archives will be disable=
+d by
+>> the service shutdowns.  Other muMAG web pages and other NIST web pages a=
+re
+>> expected to be unavailable.
+>>=20
+>> We have no estimate on when operating conditions might return to normal.
+>>=20
+>> We regret the inconvenience imposed by these events.
+>>=20
+>> Don Porter
+>>=20
+>> _______________________________________________
+>> Mumag mailing list
+>> Mumag@nist.gov
+>> https://email.nist.gov/mailman/listinfo/mumag
+>>=20
+>>=20
+
+
+-------------------------------------
+finmag-team mailing list.
+
+From marvin  Tue Oct  1 21:10:20 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Tue, 01 Oct 2013 21:10:20 +0100 (BST)
+Received: by 10.227.121.137 with SMTP id h9csp24375wbr;
+        Tue, 1 Oct 2013 12:18:06 -0700 (PDT)
+X-Received: by 10.14.5.133 with SMTP id 5mr5440988eel.56.1380655086691;
+        Tue, 01 Oct 2013 12:18:06 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk. [152.78.128.16])
+        by mx.google.com with ESMTP id h5si6022654eeg.140.1969.12.31.16.00.00;
+        Tue, 01 Oct 2013 12:18:06 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) client-ip=152.78.128.16;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r91JHmwU010506;
+	Tue, 1 Oct 2013 20:17:48 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk [152.78.119.37])
+	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk [152.78.128.16]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p90KHm0862213505JH ret-id none; Tue, 01 Oct 2013 20:17:48 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.37) with Microsoft SMTP Server (TLS) id 14.2.342.3; Tue, 1 Oct
+ 2013 20:17:48 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r91JHmgQ030607;	Tue, 1 Oct 2013 20:17:48 +0100
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r91JHlSC030604	for <finmag-team@lists.soton.ac.uk>; Tue, 1 Oct 2013 20:17:47
+ +0100
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r91JHJgP009560	for
+ <finmag-team@lists.soton.ac.uk>; Tue, 1 Oct 2013 20:17:19 +0100
+Received: from UOS-MSG00037-VS.soton.ac.uk (uos-msg00037-vs.soton.ac.uk
+ [152.78.119.39])	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16]) envelope-from <H.FANGOHR@soton.ac.uk> with ESMTP	id
+ p90KHJ0862213497C8 ret-id none; Tue, 01 Oct 2013 20:17:19 +0100
+Received: from [192.168.1.13] (78.86.255.202) by smtp.soton.ac.uk
+ (152.78.119.39) with Microsoft SMTP Server (TLS) id 14.2.342.3; Tue, 1 Oct
+ 2013 20:17:18 +0100
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
+Subject: Re: [finmag-team] Code review request: change in definition of anisotropy energy
+From: Hans Fangohr <h.fangohr@soton.ac.uk>
+In-Reply-To: <87C4A0F7B8D7D94EB55C4A95BD3960AD36BCE099@SRV00358.soton.ac.uk>
+Date: Tue, 1 Oct 2013 20:16:18 +0100
+CC: Hans Fangohr <h.fangohr@soton.ac.uk>,
+        "<finmag-team@lists.soton.ac.uk>"
+	<finmag-team@lists.soton.ac.uk>
+Message-ID: <7B722562-36D5-449F-87D4-E0F8DF1375A0@soton.ac.uk>
+References: <CAGA_dmjh5o-hYFea1S-uhrB1rQMjUw5O9+zO6arejH7CqRRw9g@mail.gmail.com>,<34966080-8416-4E8B-8BDA-CA82FA406EB0@soton.ac.uk> <87C4A0F7B8D7D94EB55C4A95BD3960AD36BCE099@SRV00358.soton.ac.uk>
+To: "Bisotti M." <mb8g11@soton.ac.uk>
+X-Mailer: Apple Mail (2.1510)
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.39; helo=<UOS-MSG00037-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.39; envelope-from=<H.FANGOHR@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from quoted-printable to 8bit by maillists.sucs.soton.ac.uk id r91JHlSC030605
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p90KHm086221350500; tid=p90KHm0862213505JH; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r91JHmwU010506
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Thanks, Marc-Antonio, the details of the process are now coming back to me =
+;)
+
+Cheers,
+
+Hans
+
+
+On 1 Oct 2013, at 17:24, Bisotti M. <mb8g11@soton.ac.uk> wrote:
+
+> Hi Max
+>=20
+> Hans said the important stuff, just wanted to add that Anders and I mainl=
+y decided on this one, because it's the one used in the magpar paper and th=
+at's the paper Hans gave us to copy ;-)
+>=20
+> Kind regards
+> MA
+> ________________________________________
+> From: owner-finmag-team@lists.soton.ac.uk [owner-finmag-team@lists.soton.=
+ac.uk] on behalf of Hans Fangohr [h.fangohr@soton.ac.uk]
+> Sent: 01 October 2013 13:48
+> To: Maximilian Albert
+> Cc: Fangohr H.; <finmag-team@lists.soton.ac.uk>
+> Subject: Re: [finmag-team] Code review request: change in definition of a=
+nisotropy energy
+>=20
+> Hi Max,
+>=20
+> On 1 Oct 2013, at 13:32, Maximilian Albert <maximilian.albert@gmail.com>
+> wrote:
+>=20
+>> Hi all,
+>>=20
+>> does anyone have any objections changing the definition of the
+>> anisotropy energy density from the current version:
+>>=20
+>>  E_integrand =3D self.K1 * (df.Constant(1) - (df.dot(self.axis, m)) ** 2=
+)
+>>=20
+>> to the following simpler one?
+>>=20
+>>  E_integrand =3D - self.K1 * (df.dot(self.axis, m)) ** 2)
+>>=20
+>> (You can find the definition at the end of the file
+>> src/finmag/energies/anisotropy.py)
+>>=20
+>> Physically, this change shouldn't make any difference, since the two
+>> values only differ by a constant. However, it would simplify the
+>> definition a bit, might make it run (marginally) faster, might avoid
+>> rounding errors in some cases, and at least one test which I am just
+>> writing would be considerably simplified. Also, I just had a quick
+>> (admittedly non-representative) look in the literature and found
+>> predominantly the second form (presumably because it's simpler).
+>>=20
+>=20
+> As you say, in terms of physics it doesn't matter which term we use. You =
+may find that some tests fail that compare the energy with the energy from =
+Nmag or OMMFF, which may use the other convention. But we should be able to=
+ compensate for that by adding a constant value (1 if energy per volume, \i=
+nt 1 dV if total energy).
+>=20
+> No objections from me.
+>=20
+> Cheers,
+>=20
+> Hans
+>=20
+>=20
+>> Can anybody think of any negative consequences of this change? If not,
+>> I'll go ahead with it (and will adapt the tests accordingly).
+>>=20
+>> Thanks,
+>> Max
+>> -------------------------------------
+>> finmag-team mailing list.
+>=20
+>=20
+> -------------------------------------
+> finmag-team mailing list.
+>=20
+
+
+-------------------------------------
+finmag-team mailing list.
+
