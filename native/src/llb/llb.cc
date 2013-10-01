@@ -32,8 +32,8 @@ namespace finmag { namespace llb {
 			const np_array<double> &dmdt,
 			const np_array<double> &T_arr,
 			const np_array<long> &pins_arr,
+			const np_array<double> &lambda_arr,
 			double gamma_LL,
-			double lambda,
 			double Tc,
 			bool do_precession) {
 
@@ -43,6 +43,7 @@ namespace finmag { namespace llb {
 		double *h=H.data();
 		double *dm_dt=dmdt.data();
 		double *T = T_arr.data();
+		double *lambda = lambda_arr.data();
 
 		long int *pins = pins_arr.data();
 		int len_pin=pins_arr.size();
@@ -73,8 +74,8 @@ namespace finmag { namespace llb {
 			double mh = m[i] * h[i] + m[j] * h[j] + m[k] * h[k];
 			double mm = m[i] * m[i] + m[j] * m[j] + m[k] * m[k];
 
-			double a1 = alpha_perp(T[i], Tc, lambda);
-			double a2 = alpha_par(T[i], Tc, lambda);
+			double a1 = alpha_perp(T[i], Tc, lambda[i]);
+			double a2 = alpha_par(T[i], Tc, lambda[i]);
 			double damp1 = (a2 - a1) * damping_coeff / mm * mh;
 			double damp2 =  a1 * damping_coeff;
 			dm_dt[i] += m[i] * damp1 + h[i] * damp2;
@@ -465,8 +466,8 @@ namespace finmag { namespace llb {
     	            arg("dmdt"),
     	            arg("T"),
     	            arg("pins"),
-    	            arg("gamma_LL"),
     	            arg("lambda"),
+    	            arg("gamma_LL"),
     	            arg("Tc"),
     	            arg("do_precession")
     	        ));
