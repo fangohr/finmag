@@ -32,6 +32,7 @@ logger = logging.getLogger("finmag")
 # errors due to not keeping the two in sync, we only define it in
 # visualization_impl.py and import it here.
 from visualization_impl import find_valid_X_display
+from finmag.util import configuration
 
 
 def render_paraview_scene(
@@ -129,6 +130,7 @@ def render_paraview_scene(
     # Execute the script in a separate process
     curdir_bak = os.getcwd()
     xpra_display = None
+    use_xpra = configuration.get_config_option("visualization", "use_xpra", "True")
     try:
         display_bak = os.environ['DISPLAY']
     except KeyError:
@@ -136,7 +138,7 @@ def render_paraview_scene(
     try:
         os.chdir(tmpdir)
 
-        if use_display is None:
+        if use_display is None and use_xpra.lower() != "false":
             # Try to create a display using 'xpra'
             try:
                 # Check whether 'xpra' is installed
