@@ -21,6 +21,7 @@ namespace finmag { namespace llg {
         double const e = 1.602176565e-19; // elementary charge in As
         double const h_bar = 1.054571726e-34; // reduced Plank constant in Js
         double const pi = 4 * atan(1);
+        double const mu_B = 9.27400968e-24; //Bohr magneton
         double const mu_0 = pi * 4e-7; // Vacuum permeability in Vs/(Am)
 
         // Components of the cross product
@@ -394,6 +395,89 @@ namespace finmag { namespace llg {
             return ss.str();
         }
 
+
+        void calc_llg_zhang_li_dmdt(
+                const np_array<double> &m,
+                const np_array<double> &H,
+                const np_array<double> &H_gradm,
+                double t,
+                const np_array<double> &dmdt,
+                const np_array<long> &pins,
+                double gamma,
+                const np_array<double> &alpha_arr,
+                double const beta,
+                double const P,
+                const np_array<double> &Ms) {
+
+            int const nodes = check_dimensions(alpha_arr, m, H, dmdt);
+            double *m0 = m(0), *m1 = m(1), *m2 = m(2);
+            double *h0 = H(0), *h1 = H(1), *h2 = H(2);
+            double *dm0 = dmdt(0), *dm1 = dmdt(1), *dm2 = dmdt(2);
+
+            H_gradm.check_shape(3, nodes, "calc_llg_zhang_li_dmdt: H_gradm");
+            double *hg0 = H_gradm(0), *hg1 = H_gradm(1), *hg2 = H_gradm(2);
+
+            double *alpha = alpha_arr.data();
+
+            Ms.check_ndim(1, "calc_llg_zhang_li_dmdt: Ms");
+            Ms.check_shape(nodes, "calc_llg_zhang_li_dmdt: Ms");
+
+            finmag::util::scoped_gil_release release_gil;
+
+            double u0 = P*mu_B/e; // P g mu_B/(2 e Ms) and g=2 for electrons
+
+            // calculate dmdt
+            //#pragma omp parallel for schedule(guided)
+            for (int i=0; i < nodes; i++) {
+
+            	double coeff = -gamma/(1+alpha[i]*alpha[i]);
+
+            	double mh = m0[i]*h0[i] + m1[i]*h1[i] + m2[i]*h2[i];
+
+            	//we use the same trick as llg does that drops the mm
+            	double hpi = h0[i] - mh*m0[i];
+            	double hpj = h1[i] - mh*m1[i];
+            	double hpk = h2[i] - mh*m2[i];
+
+            	double mth0 = (m1[i] * hpk - m2[i] * hpj);
+            	double mth1 = (m2[i] * hpi - m0[i] * hpk);
+            	double mth2 = (m0[i] * hpj - m1[i] * hpi);
+
+            	dm0[i] = coeff*(mth0 - hpi * alpha[i]);
+            	dm1[i] = coeff*(mth1 - hpj * alpha[i]);
+            	dm2[i] = coeff*(mth2 - hpk * alpha[i]);
+
+            	//the above part is standard LLG equation.
+
+            	double coeff_stt = u0/(1+alpha[i]*alpha[i]);
+
+            	if ((*Ms[i])==0){
+            		coeff_stt = 0;
+            	}else{
+            		coeff_stt/=(*Ms[i]);
+            	}
+
+            	double mht = m0[i]*hg0[i] + m1[i]*hg1[i] + m2[i]*hg2[i];
+
+            	hpi = hg0[i] - mht*m0[i];
+            	hpj = hg1[i] - mht*m1[i];
+            	hpk = hg2[i] - mht*m2[i];
+
+            	mth0 = (m1[i] * hpk - m2[i] * hpj);
+            	mth1 = (m2[i] * hpi - m0[i] * hpk);
+            	mth2 = (m0[i] * hpj - m1[i] * hpi);
+
+            	dm0[i] += coeff_stt*((1 + alpha[i]*beta)*hpi - (beta - alpha[i])*mth0);
+            	dm1[i] += coeff_stt*((1 + alpha[i]*beta)*hpj - (beta - alpha[i])*mth1);
+            	dm2[i] += coeff_stt*((1 + alpha[i]*beta)*hpk - (beta - alpha[i])*mth2);
+
+
+            }
+            pin(dmdt, pins);
+        }
+
+
+
         /*
         Compute the Baryakhtar term for cubic crystal anisotropy
         and uniaxial crystal anisotropy, suppose nx=(1,0,0),
@@ -632,7 +716,22 @@ namespace finmag { namespace llg {
                 arg("name")
                     ));
 
-	def("calc_baryakhtar_dmdt", &calc_baryakhtar_dmdt, (
+        def("calc_llg_zhang_li_dmdt", &calc_llg_zhang_li_dmdt, (
+        		arg("m"),
+        		arg("H"),
+        		arg("H_gradm"),
+        		arg("t"),
+        		arg("dmdt"),
+        		arg("pins"),
+        		arg("gamma"),
+        		arg("alpha_arr"),
+        		arg("beta"),
+        		arg("P"),
+        		arg("Ms")
+         ));
+
+
+	   def("calc_baryakhtar_dmdt", &calc_baryakhtar_dmdt, (
             arg("M"),
             arg("H"),
 	        arg("delta_H"),

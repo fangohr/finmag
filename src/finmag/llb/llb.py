@@ -86,6 +86,8 @@ class LLB(object):
                                       df.Constant([1, 1, 1])) * df.dx).array()
         self.real_vol = self.vol*self.material.unit_length**3
         
+        self.nxyz = self.mesh.num_vertices()
+        self._alpha = np.zeros(self.nxyz)
         
         self.pins=[]
         self._pre_rhs_callables = []
@@ -177,6 +179,10 @@ class LLB(object):
         return self._pins
     pins = property(pins, set_pins)
     
+    
+    def set_spatial_alpha(self, value):
+        self._alpha[:]=helpers.scalar_valued_function(value,self.S1).vector().array()[:]
+    
             
     def setup_parameters(self):
         self.integrator.set_parameters(self.dt,
@@ -245,8 +251,8 @@ class LLB(object):
                                  self.dm_dt,
                                  self.material.T,
                                  self.pins,
+                                 self._alpha,
                                  self.gamma_LL,
-                                 self.alpha,
                                  self.material.Tc,
                                  self.do_precession)
 
