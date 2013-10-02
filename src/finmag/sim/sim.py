@@ -1184,9 +1184,11 @@ class NormalModeSimulation(Simulation):
         Run the ringdown phase of a normal modes simulation, optionally saving
         averages, vtk snapshots and magnetisation snapshots to the respective
         .ndt, .pvd and .npy files. Note that by default existing snapshots will
-        not be overwritten. Use `overwrite=True` to achieve this. Also, if
-        `H_ext=None` then any existing external field will remain to be applied.
-        Use `H_ext=[0, 0, 0]` to switch it off during the ringdown phase.
+        not be overwritten. Use `overwrite=True` to achieve this.
+        Also note that `H_ext=None` has the same effect as `H_ext=[0, 0, 0]`, i.e.
+        any existing external field will be switched off during the ringdown phase.
+        If you would like to have a field applied during the ringdown, you need to
+        explicitly provide it.
 
         This function essentially wraps up the re-setting of parameters such as
         the damping value, the external field and the scheduled saving of data
@@ -1216,7 +1218,10 @@ class NormalModeSimulation(Simulation):
             self.clear_schedule()
 
         self.alpha = alpha
-        if H_ext != None:
+        if H_ext == None:
+            if self.has_interaction('Zeeman'):
+                self.set_H_ext([0, 0, 0])
+        else:
             self.set_H_ext(H_ext)
         if save_ndt_every:
             self.schedule('save_ndt', every=save_ndt_every)
@@ -1267,6 +1272,7 @@ class NormalModeSimulation(Simulation):
         # if one was provided, or else the one specified during a previous
         # call of run_ringdown().
         t_step = kwargs.pop('t_step', None) or self.t_step_ndt
+        # XXX TODO: Use t_step_npy if computing the spectrum from .npy files.
         if t_step == None:
             raise ValueError(
                 "No sensible default for 't_step' could be determined. "
