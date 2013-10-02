@@ -208,6 +208,7 @@ class LLG(object):
             native_llg.calc_llg_zhang_li_dmdt(
                 m, H_eff, H_gradm, t, dmdt, self.pins,
                 self.gamma, self.alpha.vector().array(),
+                char_time,
                 self.beta, self.P, self._Ms)
             H_gradm.shape=(-1,)
         else:
@@ -413,7 +414,7 @@ class LLG(object):
         
         self.nodal_volume_S3 = nodal_volume(self.S3)*self.unit_length
         
-        self.gradM = df.assemble(df.dot(self._J,df.dot(df.grad(tau),sigma))*df.dx)
+        self.gradM = df.assemble(df.dot(df.dot(self._J, df.nabla_grad(tau)),sigma)*df.dx)
     
     def compute_gradient_field(self):
         """

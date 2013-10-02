@@ -405,6 +405,7 @@ namespace finmag { namespace llg {
                 const np_array<long> &pins,
                 double gamma,
                 const np_array<double> &alpha_arr,
+                double char_time,
                 double const beta,
                 double const P,
                 const np_array<double> &Ms) {
@@ -427,27 +428,8 @@ namespace finmag { namespace llg {
             double u0 = P*mu_B/e; // P g mu_B/(2 e Ms) and g=2 for electrons
 
             // calculate dmdt
-            //#pragma omp parallel for schedule(guided)
+            #pragma omp parallel for schedule(guided)
             for (int i=0; i < nodes; i++) {
-
-            	double coeff = -gamma/(1+alpha[i]*alpha[i]);
-
-            	double mh = m0[i]*h0[i] + m1[i]*h1[i] + m2[i]*h2[i];
-
-            	//we use the same trick as llg does that drops the mm
-            	double hpi = h0[i] - mh*m0[i];
-            	double hpj = h1[i] - mh*m1[i];
-            	double hpk = h2[i] - mh*m2[i];
-
-            	double mth0 = (m1[i] * hpk - m2[i] * hpj);
-            	double mth1 = (m2[i] * hpi - m0[i] * hpk);
-            	double mth2 = (m0[i] * hpj - m1[i] * hpi);
-
-            	dm0[i] = coeff*(mth0 - hpi * alpha[i]);
-            	dm1[i] = coeff*(mth1 - hpj * alpha[i]);
-            	dm2[i] = coeff*(mth2 - hpk * alpha[i]);
-
-            	//the above part is standard LLG equation.
 
             	double coeff_stt = u0/(1+alpha[i]*alpha[i]);
 
@@ -459,17 +441,22 @@ namespace finmag { namespace llg {
 
             	double mht = m0[i]*hg0[i] + m1[i]*hg1[i] + m2[i]*hg2[i];
 
-            	hpi = hg0[i] - mht*m0[i];
-            	hpj = hg1[i] - mht*m1[i];
-            	hpk = hg2[i] - mht*m2[i];
+            	double hp0 = hg0[i] - mht*m0[i];
+            	double hp1 = hg1[i] - mht*m1[i];
+            	double hp2 = hg2[i] - mht*m2[i];
 
-            	mth0 = (m1[i] * hpk - m2[i] * hpj);
-            	mth1 = (m2[i] * hpi - m0[i] * hpk);
-            	mth2 = (m0[i] * hpj - m1[i] * hpi);
+            	double mth0 = cross0(m0[i],m1[i],m2[i],hp0,hp1,hp2);
+            	double mth1 = cross1(m0[i],m1[i],m2[i],hp0,hp1,hp2);
+            	double mth2 = cross2(m0[i],m1[i],m2[i],hp0,hp1,hp2);
 
-            	dm0[i] += coeff_stt*((1 + alpha[i]*beta)*hpi - (beta - alpha[i])*mth0);
-            	dm1[i] += coeff_stt*((1 + alpha[i]*beta)*hpj - (beta - alpha[i])*mth1);
-            	dm2[i] += coeff_stt*((1 + alpha[i]*beta)*hpk - (beta - alpha[i])*mth2);
+            	dm0[i] = coeff_stt*((1 + alpha[i]*beta)*hp0 - (beta - alpha[i])*mth0);
+            	dm1[i] = coeff_stt*((1 + alpha[i]*beta)*hp1 - (beta - alpha[i])*mth1);
+            	dm2[i] = coeff_stt*((1 + alpha[i]*beta)*hp2 - (beta - alpha[i])*mth2);
+
+
+            	damping_i(alpha[i], gamma, m0[i], m1[i], m2[i], h0[i], h1[i], h2[i], dm0[i], dm1[i], dm2[i]);
+            	relaxation_i(0.1/char_time, m0[i], m1[i], m2[i], dm0[i], dm1[i], dm2[i]);
+            	precession_i(alpha[i], gamma, m0[i], m1[i], m2[i], h0[i], h1[i], h2[i], dm0[i], dm1[i], dm2[i]);
 
 
             }
@@ -725,6 +712,7 @@ namespace finmag { namespace llg {
         		arg("pins"),
         		arg("gamma"),
         		arg("alpha_arr"),
+        		arg("char_time"),
         		arg("beta"),
         		arg("P"),
         		arg("Ms")
