@@ -84,7 +84,7 @@ class UniaxialAnisotropy(EnergyBase):
         # decide on method.
         self.K1 = helpers.scalar_valued_function(self.K1_waiting_for_mesh, S1)
         self.K1.rename('K1', 'uniaxial anisotropy constant')
-        self.axis = helpers.vector_valued_function(self.axis_waiting_for_mesh, S3)
+        self.axis = helpers.vector_valued_function(self.axis_waiting_for_mesh, S3, normalise=True)
         self.axis.rename('K1_axis', 'anisotropy axis')
         E_integrand = self.K1 * (df.Constant(1) - (df.dot(self.axis, m)) ** 2)
         super(UniaxialAnisotropy, self).setup(E_integrand, S3, m, Ms, unit_length)
