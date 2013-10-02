@@ -156,9 +156,10 @@ class LLG(object):
     m_average=property(m_average_fun)
 
 
-    def set_m(self, value, **kwargs):
+    def set_m(self, value, normalise=True, **kwargs):
         """
-        Set the magnetisation (it is automatically normalised to unit length).
+        Set the magnetisation (if `normalise` is True, it is automatically
+        normalised to unit length).
 
         `value` can have any of the forms accepted by the function
         'finmag.util.helpers.vector_valued_function' (see its
@@ -170,7 +171,7 @@ class LLG(object):
         reasons and because the attribute m doesn't normalise the vector.
 
         """
-        self.m = helpers.vector_valued_function(value, self.S3, normalise=True, **kwargs).vector().array()
+        self.m = helpers.vector_valued_function(value, self.S3, normalise=normalise, **kwargs).vector().array()
 
 
     def solve_for(self, m, t):

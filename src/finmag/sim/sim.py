@@ -213,9 +213,10 @@ class Simulation(object):
 
         self.set_m(fun_m_init)
 
-    def set_m(self, value, **kwargs):
+    def set_m(self, value, normalise=True, **kwargs):
         """
-        Set the magnetisation (it is automatically normalised to unit length).
+        Set the magnetisation (if `normalise` is True, it is automatically
+        normalised to unit length).
 
         `value` can have any of the forms accepted by the function
         'finmag.util.helpers.vector_valued_function' (see its
@@ -227,7 +228,7 @@ class Simulation(object):
         reasons and because the attribute m doesn't normalise the vector.
 
         """
-        self.llg.set_m(value, **kwargs)
+        self.llg.set_m(value, normalise=normalise, **kwargs)
 
     m = property(__get_m, set_m)
     
