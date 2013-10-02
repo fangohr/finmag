@@ -1026,6 +1026,29 @@ def test_NormalModeSimulation(tmpdir):
         sim.run_ringdown(t_end=1e-12, alpha=0.02, H_ext=[1e4, 0, 0], save_m_every=2e-13, m_snapshots_filename='foobar/foo_m.npy')
 
 
+def test_H_ext_is_set_correcy_in_normal_mode_simulation(tmpdir):
+    os.chdir(str(tmpdir))
+    nx = ny = nz = 2
+    mesh = df.UnitCubeMesh(nx, ny, nz)
+
+    def check_H_ext(sim, value):
+        if value == None:
+            assert not sim.has_interaction('Zeeman')
+        else:
+            zeeman = sim.get_interaction('Zeeman')
+            assert np.allclose(zeeman.compute_field().reshape(3, -1).T, value)
+
+    def run_check(H_ext_1, H_ext_1_check_value, H_ext_2, H_ext_2_check_value):
+        sim = normal_mode_simulation(mesh, Ms=8e5, A=13e-12, m_init=[1, 0, 0], alpha=1.0, unit_length=1e-9, H_ext=H_ext_1, name='sim')
+        check_H_ext(sim, H_ext_1)
+        sim.run_ringdown(t_end=0.0, alpha=0.01, H_ext=H_ext_2)
+        check_H_ext(sim, H_ext_2_check_value)
+
+    # Check that H_ext=None switches any existing field off during ringdown
+    run_check([1e5, 1e3, 0], [1e5, 1e3, 0], None, [0, 0, 0])
+    run_check(None, None, None, None)
+
+
 def test_compute_normal_modes(tmpdir):
     os.chdir(str(tmpdir))
 
