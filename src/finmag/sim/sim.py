@@ -230,6 +230,8 @@ class Simulation(object):
         self.llg.set_m(value, **kwargs)
 
     m = property(__get_m, set_m)
+    
+    
 
     @property
     def m_average(self):
@@ -1154,6 +1156,20 @@ class Simulation(object):
                                "See http://fenicsproject.org/download/snapshot_releases.html for details.")
 
     get_submesh = sim_helpers.get_submesh
+    
+    
+    def set_zhangli(self, current_density, polarisation, beta):
+        """
+        Activates the computation of the Slonczewski spin-torque term in the LLG.
+
+        *Arguments*
+        
+            `current_density` can have any of the forms accepted by the function
+            'finmag.util.helpers.vector_valued_function' (see its
+            docstring for details).
+            
+        """
+        self.llg.use_zhangli(current_density, polarisation, beta, self.unit_length)
 
 
 class NormalModeSimulation(Simulation):
@@ -1633,6 +1649,7 @@ def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sun
             for (k, v) in demag_solver_params.items():
                 log.debug("Setting demag solver parameter {}='{}' for simulation '{}'".format(k, v, sim.name))
         sim.add(demag)
+    log.debug("Successfuly created simulation '{}'".format(sim.name))
 
     return sim
 
