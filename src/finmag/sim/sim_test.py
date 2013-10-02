@@ -1,5 +1,6 @@
 import dolfin as df
 import numpy as np
+import finmag
 import logging
 import pytest
 import os
@@ -9,7 +10,7 @@ from finmag import sim_with, Simulation, set_logging_level, normal_mode_simulati
 from finmag.example import barmini
 from math import sqrt, cos, sin, pi
 from finmag.util.helpers import assert_number_of_files, vector_valued_function, logging_status_str
-from finmag.util.meshes import nanodisk, plot_mesh_with_paraview
+from finmag.util.meshes import nanodisk, plot_mesh_with_paraview, mesh_volume
 from finmag.util.mesh_templates import EllipticalNanodisk, Sphere
 from finmag.sim import sim_helpers
 from finmag.energies import Zeeman, TimeZeeman, Exchange, UniaxialAnisotropy
@@ -1222,3 +1223,47 @@ def test_setting_different_material_parameters_in_different_regions(tmpdir):
     # and whose length matches the number of nodes in the submesh. Both of these
     # properties should be checked for each field.
     raise NotImplementedError
+
+
+def test_compute_energies_with_non_normalised_m(tmpdir):
+    """
+    Check that we can set the magnetisation to non-normalised values, and that the
+    energy terms scale either linearly or quadratically with the magnetisation.
+
+    XXX TODO: Should this be broken up into separate unit tests for the individual energies?
+
+    """
+    # Create a simulation with non-uniform magnetisation and a bunch of energy terms
+    sim = finmag.example.normal_modes.disk()
+    K1 = 7.4e5
+    anis = UniaxialAnisotropy(K1=K1, axis=[1, 1, 1])
+    sim.add(anis)
+
+    # Compute and store the energy values for the normalised magnetisation
+    m0 = sim.m
+    energies = {}
+    scaling_exponents = {'Exchange': 2, 'Anisotropy': 2, 'Demag': 2, 'Zeeman': 1}
+    for name in scaling_exponents.keys():
+        energies[name] = sim.compute_energy(name)
+
+    # Scale the magnetisation and check whether the energy terms scale accordingly
+    vol_mesh = mesh_volume(sim.mesh) * sim.unit_length**3
+    for a in np.linspace(0.0, 1.0, 20):
+        sim.set_m(a * m0, normalise=False)
+
+        # Check that m was indeed scaled down
+        m_norms = [np.linalg.norm(x) for x in sim.m.reshape(3, -1).T]
+        assert np.allclose(m_norms, a, atol=1e-12, rtol=1e-12)
+
+        # Check that the energy terms scale correctly
+        for (name, exponent) in scaling_exponents.iteritems():
+            if name == 'Anisotropy':
+                # We need a separate case for the anisotropy due to the constant that
+                # we're adding in the definition of the anisotropy energy.
+                #
+                # Note that in the assert statement we need a tiny value of 'atol'
+                # for the case a=0 because the test will fail otherwise due to small
+                # rounding errors when subtracting the mesh volume.
+                assert(np.allclose((sim.compute_energy(name) - K1*vol_mesh), a**exponent * (energies[name] - K1*vol_mesh), atol=1e-31, rtol=1e-12))
+            else:
+                assert(np.allclose(sim.compute_energy(name), a**exponent * energies[name], atol=0, rtol=1e-12))
