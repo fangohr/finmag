@@ -15,6 +15,8 @@ import util.versions
 from __version__ import __version__
 import example
 
+# Convenience access to physics object Q
+from finmag.util.physics import Q
 
 def timings_report(n=10):
     """
