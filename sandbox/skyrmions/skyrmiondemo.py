@@ -1,11 +1,11 @@
 import numpy as np
 import dolfin as df
 from finmag import Simulation
-from finmag.energies import Exchange, DMI_Old, DMI, Demag, Zeeman
+from finmag.energies import Exchange, DMI, Demag, Zeeman
 from finmag.util.meshes import cylinder
 
 #mesh = df.BoxMesh(0,0,0,30,30,3,10,10,1)
-mesh =cylinder(200,3,3)
+mesh = cylinder(200,3,3)
 
 
 Ms = 8.6e5
