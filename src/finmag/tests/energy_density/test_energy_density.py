@@ -4,7 +4,7 @@ import commands
 import numpy as np
 import dolfin as df
 #from finmag.energies import UniaxialAnisotropy, Exchange, Demag, DMI
-from finmag.energies import UniaxialAnisotropy, Exchange, Demag, DMI, DMI_Old
+from finmag.energies import UniaxialAnisotropy, Exchange, Demag, DMI
 from finmag.util.consts import mu0
 from finmag.util.meshes import sphere
 
@@ -117,7 +117,7 @@ def test_anisotropy_energy_density():
         "Max deviation %g, should be zero." % np.max(deviation)
 
 
-def test_DMI_Old_energy_density_2D():
+def test_DMI_energy_density_2D():
     """
     For a vector field (x, y, z) = 0.5 * (-y, x, c),
     the curl is exactly 1.0. (HF)
@@ -128,7 +128,7 @@ def test_DMI_Old_energy_density_2D():
     M = df.interpolate(df.Expression(("-0.5*x[1]", "0.5*x[0]", "1")), V)
     Ms = 1
     D = 1
-    dmi = DMI_Old(D)
+    dmi = DMI(D)
     dmi.setup(V, M, Ms)
     density = dmi.energy_density()
     deviation = np.abs(density - 1.0)
@@ -147,27 +147,8 @@ def test_DMI_energy_density_3D():
     V = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
     M = df.interpolate(df.Expression(("-0.5*x[1]", "0.5*x[0]", "1")), V)
     Ms = 10
-    D = 1 / (mu0 * Ms)
-    dmi = DMI(D)
-    dmi.setup(V, M, Ms)
-    density = dmi.energy_density()
-    deviation = np.abs(density - 1.0)
-
-    print "3D energy density (expect array of 1):"
-    print density
-    print "Max deviation: %g" % np.max(deviation)
-
-    assert np.all(deviation < TOL), \
-        "Max deviation %g, should be zero." % np.max(deviation)
-
-def test_DMI_Old_energy_density_3D():
-    """Same as above, on a 3D mesh."""
-    mesh = df.UnitCubeMesh(4, 4, 4)
-    V = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
-    M = df.interpolate(df.Expression(("-0.5*x[1]", "0.5*x[0]", "1")), V)
-    Ms = 10
     D = 1
-    dmi = DMI_Old(D)
+    dmi = DMI(D)
     dmi.setup(V, M, Ms)
     density = dmi.energy_density()
     deviation = np.abs(density - 1.0)
