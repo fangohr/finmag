@@ -115,8 +115,9 @@ class SLLG(object):
         log.info("gamma=%g."%self.gamma)
         #log.info("checking_length: "+str(self.checking_length))
 
-    def set_m(self,value):
-        self._m.vector().set_local(helpers.vector_valued_function(value, self.S3, normalise=True).vector().array())
+    def set_m(self,value,normalise=True):
+        m_tmp = helpers.vector_valued_function(value, self.S3, normalise=normalise).vector().array()
+        self._m.vector().set_local(m_tmp)
         self.m[:]=self._m.vector().array()[:]
 
 
