@@ -1,6 +1,6 @@
 import numpy as np
 import dolfin as df
-from finmag.energies import DMI, DMI_Old, Exchange
+from finmag.energies import DMI, Exchange
 from finmag import Simulation
 from finmag.util.helpers import vector_valued_function
 from finmag.util.pbc2d import PeriodicBoundary2D
@@ -11,9 +11,7 @@ def test_interaction_accepts_name():
     Check that the interaction accepts a 'name' argument and has a 'name' attribute.
     """
     dmi = DMI(1)
-    dmi_old = DMI_Old(1)
     assert hasattr(dmi, 'name')
-    assert hasattr(dmi_old, 'name')
 
 
 def test_dmi_pbc2d():
@@ -35,6 +33,7 @@ def test_dmi_pbc2d():
 def test_dmi_pbc2d_1D(plot=False):
 
     def m_init_fun(p):
+        print p[0]
         if p[0]<10:
             return [0.5,0,1]
         else:
@@ -48,19 +47,18 @@ def test_dmi_pbc2d_1D(plot=False):
     sim.set_m(m_init_fun)
 
     A = 1.3e-11
-    D = 4e-3
+    D = 5e-3
     sim.add(Exchange(A))
     sim.add(DMI(D))
 
-    #have no idea why we need so small stopping_dmdt
-    sim.relax(stopping_dmdt=0.0005)
+    sim.relax(stopping_dmdt=0.001)
 
     if plot:
         df.plot(sim.llg._m)
         df.interactive()
 
     mx=[sim.llg._m(x+0.5,1)[0] for x in range(20)]
-
+    
     assert np.max(np.abs(mx)) < 1e-6
 
 
