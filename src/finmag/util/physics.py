@@ -27,15 +27,18 @@ try:
     from uncertainties import ufloat, Variable, AffineScalarFunc
     import uncertainties.umath as unp
     uncertain = (Variable, AffineScalarFunc)
-    def valuetype((v, u)):
+    #def valuetype((v,u)):   # Cython does not like tuple as argument
+    def valuetype(tuple_):
+        v, u = tuple_               # extra line for cython
         if isinstance(v, uncertain):
             return v
         return ufloat((v, u))
 except ImportError:
     uncertain = ()
-    valuetype = lambda (v, u): v
+    #valuetype = lambda (v, u): v    # cython doesn't like this line
+    valuetype = lambda v_u_tuple: v_u_tuple[0]
     unp = np
-
+                
 
 class UnitError(ValueError):
     pass
@@ -44,6 +47,11 @@ class UnitError(ValueError):
 # Written by Konrad Hinsen <hinsen@cnrs-orleans.fr>
 # with contributions from Greg Ward
 # last revision: 2007-5-25
+
+# Minor changes Hans Fangohr when integrating into
+# finmag to allow compilation with 
+# cython. 5 Oct 2013
+
 
 class NumberDict(dict):
     """Dictionary storing numerical values.
