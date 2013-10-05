@@ -65,10 +65,10 @@ def test_pbc2d_3dmesh2():
     
     expr = df.Expression(('cos(x[0]+x[2])','sin(x[0]+x[2])','0'))
     M = df.interpolate(expr, S)
-    file = df.File('poisson.pvd')
-    file << M
-    df.plot(M)
-    df.interactive()
+    #file = df.File('poisson.pvd')
+    #file << M
+    #df.plot(M)
+    #df.interactive()
     
     print abs(M(0,0,1)-M(0.5,0.5,1))
     
