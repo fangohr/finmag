@@ -14906,3 +14906,1674 @@ style=3D"font-family: Verdana, Helvetica, 'sans serif'; font-size: 11px; =
 
 --Apple-Mail=_59EAF250-B194-4C9A-B568-B77CE5729945--
 
+From marvin  Sat Oct  5 00:10:58 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Sat, 05 Oct 2013 00:10:58 +0100 (BST)
+Received: by 10.227.121.137 with SMTP id h9csp35864wbr;
+        Fri, 4 Oct 2013 12:35:14 -0700 (PDT)
+X-Received: by 10.14.88.65 with SMTP id z41mr23907520eee.38.1380915314003;
+        Fri, 04 Oct 2013 12:35:14 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id z8si11942952eee.113.1969.12.31.16.00.00;
+        Fri, 04 Oct 2013 12:35:13 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r94JYXGV008506;
+	Fri, 4 Oct 2013 20:34:33 +0100
+Received: from UOS-MSG00037-VS.soton.ac.uk (uos-msg00037-vs.soton.ac.uk [152.78.119.39])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p93KYX07746597910N ret-id none; Fri, 04 Oct 2013 20:34:33 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.39) with Microsoft SMTP Server (TLS) id 14.2.342.3; Fri, 4 Oct
+ 2013 20:34:33 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r94JYXNf023936;	Fri, 4 Oct 2013 20:34:33 +0100
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk
+ [152.78.128.11])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r94JYW84023933	for <finmag-team@lists.soton.ac.uk>; Fri, 4 Oct 2013 20:34:32
+ +0100
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r94JXp6Y005927	for
+ <finmag-team@lists.soton.ac.uk>; Fri, 4 Oct 2013 20:33:51 +0100
+Received: from UOS-MSG00037-VS.soton.ac.uk (uos-msg00037-vs.soton.ac.uk
+ [152.78.119.39])	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk
+ [152.78.128.11]) envelope-from <H.FANGOHR@soton.ac.uk> with ESMTP	id
+ p93KXp0774659775Om ret-id none; Fri, 04 Oct 2013 20:33:51 +0100
+Received: from [192.168.1.13] (78.105.144.118) by smtp.soton.ac.uk
+ (152.78.119.39) with Microsoft SMTP Server (TLS) id 14.2.342.3; Fri, 4 Oct
+ 2013 20:33:50 +0100
+Content-Type: multipart/alternative;
+	boundary="Apple-Mail=_7AC144FB-68F9-4EDB-9917-55AA91E21F64"
+MIME-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
+Subject: Re: [finmag-team] build problems
+From: Hans Fangohr <h.fangohr@soton.ac.uk>
+In-Reply-To: <A556B110-210C-4258-97B7-B1E914E832A0@soton.ac.uk>
+Date: Fri, 4 Oct 2013 20:33:48 +0100
+CC: Hans Fangohr <h.fangohr@soton.ac.uk>, "Fangohr H." <h.fangohr@soton.ac.uk>,
+        "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+Message-ID: <AB7B511A-7EE6-47D2-8C37-7E639069D754@soton.ac.uk>
+References: <1009100535.519.1380904605970.JavaMail.jenkins@aleph0.kk.soton.ac.uk>,<19ABDA44-5F45-4D48-B414-A7AAD6684557@soton.ac.uk> <69EF17E243EA164D9E5800FBC995493D405C7491@SRV00358.soton.ac.uk> <A556B110-210C-4258-97B7-B1E914E832A0@soton.ac.uk>
+To: "Wang W." <ww1g11@soton.ac.uk>
+X-Mailer: Apple Mail (2.1510)
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.39; helo=<UOS-MSG00037-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.39; envelope-from=<H.FANGOHR@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p93KYX077465979100; tid=p93KYX07746597910N; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.39; helo=<UOS-MSG00037-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.39; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r94JYXGV008506
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+--Apple-Mail=_7AC144FB-68F9-4EDB-9917-55AA91E21F64
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="windows-1252"
+
+Hi again,
+
+correction to my correction: the documentation should build (!), what =
+was always failing are the ipython-based tests. I mixed them up, sorry. =
+And the binary build it broken because of my new code.
+
+Cheers,
+
+Hans
+On 4 Oct 2013, at 20:32, Hans Fangohr <fangohr@soton.ac.uk>
+ wrote:
+
+> Hi Weiwei,
+>=20
+> On 4 Oct 2013, at 20:28, Wang W. <ww1g11@soton.ac.uk>
+>  wrote:
+>=20
+>> Hi Hans,
+>>=20
+>> I aborted this job when I noticed that all the tests failed to past =
+(the fast tests just got stuck), I have fixed them so now the fast tests =
+and the slow tests works, but it seems that the documentation still =
+fails, I  will try to see what happens.
+>=20
+> Great, thank you. (My email wasn't delivered for some hours, so it is =
+a bit behind the real events =85)
+>=20
+> The IPython documentation always failed - we need to sort this out =
+together at some point; it is too big a job for one person. Not hard, =
+but takes some time.
+>=20
+> What seems new now is the Cython failure for the new physics code that =
+I have added. I'll look into in when I can, sorry about that.
+>=20
+> Cheers,
+>=20
+> Hans
+>=20
+>>=20
+>> Cheers,
+>> Weiwei
+>> From: owner-finmag-team@lists.soton.ac.uk =
+[owner-finmag-team@lists.soton.ac.uk] on behalf of Hans Fangohr =
+[h.fangohr@soton.ac.uk]
+>> Sent: 04 October 2013 18:02
+>> To: <finmag-team@lists.soton.ac.uk>
+>> Cc: Fangohr H.
+>> Subject: [finmag-team] build problems
+>>=20
+>> Hi all,
+>>=20
+>> something seems broken with jenkins or the code. I guess somebody has =
+aborted these jobs?
+>>=20
+>> On Osiris, one of the PBC tests fails to terminate, and looking at =
+the message below, I am guessing the same happens on Jenkins?
+>>=20
+>> Weiwei, this might originate from your last commit. Can you check =
+whether the tests run fine or your machine? (I mean py.test in =
+finmag/src)?
+>>=20
+>> Thanks,
+>>=20
+>> Hans
+>>=20
+>>=20
+>>=20
+>> Begin forwarded message:
+>>=20
+>>> From: Jenkins CI <fangohr@soton.ac.uk>
+>>> Subject: [build] finmag_sphinx_documentation - Build # 327 - =
+Aborted!
+>>> Date: 4 October 2013 17:36:45 BST
+>>> To: <fangohr@soton.ac.uk>, <maximilian.albert@soton.ac.uk>, =
+<marvin@bisotti.de>
+>>> Reply-To: <fangohr@soton.ac.uk>, <maximilian.albert@soton.ac.uk>
+>>>=20
+>>> 	BUILD ABORTED
+>>> Build URL	=
+http://aleph0.kk.soton.ac.uk:8080/job/finmag_sphinx_documentation/327/
+>>> Project:	finmag_sphinx_documentation
+>>> Date of build:	Thu, 26 Sep 2013 00:09:55 +0100
+>>> Build duration:	8 days 17 hr
+>>>=20
+>>> CHANGES
+>>>   Revision ade527e768567e21ee136aa40e6eaecfac42393b by =
+Marvin:(#finmag IRC chat (25 September 2013))
+>>>   edit	logbooks/finmag
+>=20
+
+
+--Apple-Mail=_7AC144FB-68F9-4EDB-9917-55AA91E21F64
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/html; charset="windows-1252"
+
+<html><head><meta http-equiv=3D"Content-Type" content=3D"text/html =
+charset=3Dwindows-1252"></head><body style=3D"word-wrap: break-word; =
+-webkit-nbsp-mode: space; -webkit-line-break: after-white-space; ">Hi =
+again,<div><br></div><div>correction to my correction: the documentation =
+should build (!), what was always failing are the ipython-based tests. I =
+mixed them up, sorry. And the binary build it broken because of my new =
+code.</div><div><br></div><div>Cheers,</div><div><br></div><div>Hans</div>=
+<div><div><div>On 4 Oct 2013, at 20:32, Hans Fangohr &lt;<a =
+href=3D"mailto:fangohr@soton.ac.uk">fangohr@soton.ac.uk</a>&gt;</div><div>=
+&nbsp;wrote:</div><br class=3D"Apple-interchange-newline"><blockquote =
+type=3D"cite">
+<meta http-equiv=3D"Content-Type" content=3D"text/html; =
+charset=3DWindows-1252"><base href=3D"x-msg://10/"><div =
+style=3D"word-wrap: break-word; -webkit-nbsp-mode: space; =
+-webkit-line-break: after-white-space; ">Hi Weiwei,<div><br><div><div>On =
+4 Oct 2013, at 20:28, Wang W. &lt;<a =
+href=3D"mailto:ww1g11@soton.ac.uk">ww1g11@soton.ac.uk</a>&gt;</div><div>&n=
+bsp;wrote:</div><br class=3D"Apple-interchange-newline"><blockquote =
+type=3D"cite"><div ocsi=3D"0" fpstyle=3D"1" style=3D"font-family: =
+Helvetica; font-size: medium; font-style: normal; font-variant: normal; =
+font-weight: normal; letter-spacing: normal; line-height: normal; =
+orphans: 2; text-align: -webkit-auto; text-indent: 0px; text-transform: =
+none; white-space: normal; widows: 2; word-spacing: 0px; =
+-webkit-text-size-adjust: auto; -webkit-text-stroke-width: 0px; =
+word-wrap: break-word; "><div style=3D"direction: ltr; font-family: =
+Tahoma; font-size: 10pt; ">Hi Hans,<br><br>I aborted this job when I =
+noticed that all the tests failed to past (the fast tests just got =
+stuck), I have fixed them so now the fast tests and the slow tests =
+works, but it seems that the documentation still fails, I&nbsp; will try =
+to see what =
+happens.<br></div></div></blockquote><div><br></div><div>Great, thank =
+you. (My email wasn't delivered for some hours, so it is a bit behind =
+the real events =85)</div><div><br></div><div>The IPython documentation =
+always failed - we need to sort this out together at some point; it is =
+too big a job for one person. Not hard, but takes some =
+time.</div><div><br></div><div>What seems new now is the Cython failure =
+for the new physics code that I have added. I'll look into in when I =
+can, sorry about =
+that.</div><div><br></div><div>Cheers,</div><div><br></div><div>Hans</div>=
+<br><blockquote type=3D"cite"><div ocsi=3D"0" fpstyle=3D"1" =
+style=3D"font-family: Helvetica; font-size: medium; font-style: normal; =
+font-variant: normal; font-weight: normal; letter-spacing: normal; =
+line-height: normal; orphans: 2; text-align: -webkit-auto; text-indent: =
+0px; text-transform: none; white-space: normal; widows: 2; word-spacing: =
+0px; -webkit-text-size-adjust: auto; -webkit-text-stroke-width: 0px; =
+word-wrap: break-word; "><div style=3D"direction: ltr; font-family: =
+Tahoma; font-size: 10pt; "><br>Cheers,<br>Weiwei<br><div =
+style=3D"font-family: 'Times New Roman'; font-size: 16px; "><hr =
+tabindex=3D"-1"><div id=3D"divRpF465988" style=3D"direction: ltr; =
+"><font face=3D"Tahoma" size=3D"2"><b>From:</b><span =
+class=3D"Apple-converted-space">&nbsp;</span><a =
+href=3D"mailto:owner-finmag-team@lists.soton.ac.uk">owner-finmag-team@list=
+s.soton.ac.uk</a><span class=3D"Apple-converted-space">&nbsp;</span>[<a =
+href=3D"mailto:owner-finmag-team@lists.soton.ac.uk">owner-finmag-team@list=
+s.soton.ac.uk</a>] on behalf of Hans Fangohr [<a =
+href=3D"mailto:h.fangohr@soton.ac.uk">h.fangohr@soton.ac.uk</a>]<br><b>Sen=
+t:</b><span class=3D"Apple-converted-space">&nbsp;</span>04 October 2013 =
+18:02<br><b>To:</b><span =
+class=3D"Apple-converted-space">&nbsp;</span>&lt;<a =
+href=3D"mailto:finmag-team@lists.soton.ac.uk">finmag-team@lists.soton.ac.u=
+k</a>&gt;<br><b>Cc:</b><span =
+class=3D"Apple-converted-space">&nbsp;</span>Fangohr =
+H.<br><b>Subject:</b><span =
+class=3D"Apple-converted-space">&nbsp;</span>[finmag-team] build =
+problems<br></font><br></div><div></div><div>Hi =
+all,<div><br></div><div>something seems broken with jenkins or the code. =
+I guess somebody has aborted these jobs?</div><div><br></div><div>On =
+Osiris, one of the PBC tests fails to terminate, and looking at the =
+message below, I am guessing the same happens on =
+Jenkins?</div><div><br></div><div>Weiwei, this might originate from your =
+last commit. Can you check whether the tests run fine or your machine? =
+(I mean py.test in =
+finmag/src)?</div><div><br></div><div>Thanks,</div><div><br></div><div>Han=
+s</div><div><br></div><div><br><div><br><div>Begin forwarded =
+message:</div><br class=3D"Apple-interchange-newline"><blockquote =
+type=3D"cite"><div style=3D"margin: 0px; "><span style=3D"font-family: =
+Helvetica; font-size: medium; "><b>From:<span =
+class=3D"Apple-converted-space">&nbsp;</span></b></span><span =
+style=3D"font-family: Helvetica; font-size: medium; ">Jenkins CI &lt;<a =
+href=3D"mailto:fangohr@soton.ac.uk" =
+target=3D"_blank">fangohr@soton.ac.uk</a>&gt;<br></span></div><div =
+style=3D"margin: 0px; "><span style=3D"font-family: Helvetica; =
+font-size: medium; "><b>Subject:<span =
+class=3D"Apple-converted-space">&nbsp;</span></b></span><span =
+style=3D"font-family: Helvetica; font-size: medium; "><b>[build] =
+finmag_sphinx_documentation - Build # 327 - =
+Aborted!</b><br></span></div><div style=3D"margin: 0px; "><span =
+style=3D"font-family: Helvetica; font-size: medium; "><b>Date:<span =
+class=3D"Apple-converted-space">&nbsp;</span></b></span><span =
+style=3D"font-family: Helvetica; font-size: medium; ">4 October 2013 =
+17:36:45 BST<br></span></div><div style=3D"margin: 0px; "><span =
+style=3D"font-family: Helvetica; font-size: medium; "><b>To:<span =
+class=3D"Apple-converted-space">&nbsp;</span></b></span><span =
+style=3D"font-family: Helvetica; font-size: medium; ">&lt;<a =
+href=3D"mailto:fangohr@soton.ac.uk" =
+target=3D"_blank">fangohr@soton.ac.uk</a>&gt;, &lt;<a =
+href=3D"mailto:maximilian.albert@soton.ac.uk" =
+target=3D"_blank">maximilian.albert@soton.ac.uk</a>&gt;, &lt;<a =
+href=3D"mailto:marvin@bisotti.de" =
+target=3D"_blank">marvin@bisotti.de</a>&gt;<br></span></div><div =
+style=3D"margin: 0px; "><span style=3D"font-family: Helvetica; =
+font-size: medium; "><b>Reply-To:<span =
+class=3D"Apple-converted-space">&nbsp;</span></b></span><span =
+style=3D"font-family: Helvetica; font-size: medium; ">&lt;<a =
+href=3D"mailto:fangohr@soton.ac.uk" =
+target=3D"_blank">fangohr@soton.ac.uk</a>&gt;, &lt;<a =
+href=3D"mailto:maximilian.albert@soton.ac.uk" =
+target=3D"_blank">maximilian.albert@soton.ac.uk</a>&gt;<br></span></div><b=
+r><div style=3D"font-family: Verdana, Helvetica, 'sans serif'; =
+font-size: 11px; font-style: normal; font-variant: normal; font-weight: =
+normal; letter-spacing: normal; line-height: normal; orphans: 2; =
+text-indent: 0px; text-transform: none; white-space: normal; widows: 2; =
+word-spacing: 0px; "><table style=3D"font-family: Verdana, Helvetica, =
+'sans serif'; font-size: 11px; "><tbody><tr><td align=3D"right" =
+style=3D"font-family: Verdana, Helvetica, 'sans serif'; font-size: 11px; =
+"><img></td><td valign=3D"center" style=3D"font-family: Verdana, =
+Helvetica, 'sans serif'; font-size: 11px; "><b style=3D"font-size: 22px; =
+">BUILD ABORTED</b></td></tr><tr><td style=3D"font-family: Verdana, =
+Helvetica, 'sans serif'; font-size: 11px; ">Build URL</td><td =
+style=3D"font-family: Verdana, Helvetica, 'sans serif'; font-size: 11px; =
+"><a =
+href=3D"http://aleph0.kk.soton.ac.uk:8080/job/finmag_sphinx_documentation/=
+327/" =
+target=3D"_blank">http://aleph0.kk.soton.ac.uk:8080/job/finmag_sphinx_docu=
+mentation/327/</a></td></tr><tr><td style=3D"font-family: Verdana, =
+Helvetica, 'sans serif'; font-size: 11px; ">Project:</td><td =
+style=3D"font-family: Verdana, Helvetica, 'sans serif'; font-size: 11px; =
+">finmag_sphinx_documentation</td></tr><tr><td style=3D"font-family: =
+Verdana, Helvetica, 'sans serif'; font-size: 11px; ">Date of =
+build:</td><td style=3D"font-family: Verdana, Helvetica, 'sans serif'; =
+font-size: 11px; ">Thu, 26 Sep 2013 00:09:55 +0100</td></tr><tr><td =
+style=3D"font-family: Verdana, Helvetica, 'sans serif'; font-size: 11px; =
+">Build duration:</td><td style=3D"font-family: Verdana, Helvetica, =
+'sans serif'; font-size: 11px; ">8 days 17 =
+hr</td></tr></tbody></table><br><table width=3D"100%" =
+style=3D"font-family: Verdana, Helvetica, 'sans serif'; font-size: 11px; =
+"><tbody><tr><td colspan=3D"2" class=3D"bg1" style=3D"font-family: =
+Verdana, Helvetica, 'sans serif'; font-size: 13px; color: white; =
+background-color: rgb(0, 0, 192); "><b>CHANGES</b></td></tr><tr><td =
+colspan=3D"2" class=3D"bg2" style=3D"font-family: Verdana, Helvetica, =
+'sans serif'; font-size: 12px; color: white; background-color: rgb(64, =
+64, 255); ">&nbsp;&nbsp;Revision<span =
+class=3D"Apple-converted-space">&nbsp;</span><b>ade527e768567e21ee136aa40e=
+6eaecfac42393b</b><span =
+class=3D"Apple-converted-space">&nbsp;</span>by<span =
+class=3D"Apple-converted-space">&nbsp;</span><b>Marvin:</b><b>(#finmag =
+IRC chat (25 September 2013))</b></td></tr><tr><td width=3D"10%" =
+style=3D"font-family: Verdana, Helvetica, 'sans serif'; font-size: 11px; =
+">&nbsp;&nbsp;edit</td><td style=3D"font-family: Verdana, Helvetica, =
+'sans serif'; font-size: 11px; =
+">logbooks/finmag</td></tr></tbody></table></div></blockquote></div></div>=
+</div></div></div></div></blockquote></div><br></div></div></blockquote></=
+div><br></div></body></html>=
+
+--Apple-Mail=_7AC144FB-68F9-4EDB-9917-55AA91E21F64--
+
+From marvin  Sat Oct  5 01:10:59 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Sat, 05 Oct 2013 01:10:59 +0100 (BST)
+Received: by 10.227.121.137 with SMTP id h9csp36479wbr;
+        Fri, 4 Oct 2013 12:50:30 -0700 (PDT)
+X-Received: by 10.14.88.65 with SMTP id z41mr24010579eee.38.1380916230371;
+        Fri, 04 Oct 2013 12:50:30 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id l45si12019958eep.4.1969.12.31.16.00.00;
+        Fri, 04 Oct 2013 12:50:30 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r94JoEUQ028271;
+	Fri, 4 Oct 2013 20:50:14 +0100
+Received: from UOS-MSG00036-VS.soton.ac.uk (uos-msg00036-vs.soton.ac.uk [152.78.119.38])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p93KoE0774660030Cf ret-id none; Fri, 04 Oct 2013 20:50:14 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.38) with Microsoft SMTP Server (TLS) id 14.2.342.3; Fri, 4 Oct
+ 2013 20:50:14 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r94Jo88Z004144;	Fri, 4 Oct 2013 20:50:08 +0100
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r94Jo7lc004141	for <finmag-team@lists.soton.ac.uk>; Fri, 4 Oct 2013 20:50:07
+ +0100
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r94JmWBr029409	for
+ <finmag-team@lists.soton.ac.uk>; Fri, 4 Oct 2013 20:48:32 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk
+ [152.78.119.37])	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16]) envelope-from <ww1g11@soton.ac.uk> with ESMTP	id
+ p93KmW08622531164i ret-id none; Fri, 04 Oct 2013 20:48:32 +0100
+Received: from SRV00358.soton.ac.uk ([169.254.8.248]) by
+ UOS-MSG00035-VS.soton.ac.uk ([152.78.119.37]) with mapi id 14.02.0342.003;
+ Fri, 4 Oct 2013 20:47:27 +0100
+From: "Wang W." <ww1g11@soton.ac.uk>
+To: "Fangohr H." <h.fangohr@soton.ac.uk>
+CC: "Fangohr H." <h.fangohr@soton.ac.uk>,
+        "<finmag-team@lists.soton.ac.uk>"
+	<finmag-team@lists.soton.ac.uk>
+Subject: RE: [finmag-team] build problems
+Thread-Topic: [finmag-team] build problems
+Thread-Index: AQHOwTY9sqcEGFeMz0+8qQzmaEIt15nk6z13///ygoCAAABcAIAAEVXW
+Date: Fri, 4 Oct 2013 19:47:25 +0000
+Message-ID: <69EF17E243EA164D9E5800FBC995493D405C74EF@SRV00358.soton.ac.uk>
+References: <1009100535.519.1380904605970.JavaMail.jenkins@aleph0.kk.soton.ac.uk>,<19ABDA44-5F45-4D48-B414-A7AAD6684557@soton.ac.uk>
+ <69EF17E243EA164D9E5800FBC995493D405C7491@SRV00358.soton.ac.uk>
+ <A556B110-210C-4258-97B7-B1E914E832A0@soton.ac.uk>,<AB7B511A-7EE6-47D2-8C37-7E639069D754@soton.ac.uk>
+In-Reply-To: <AB7B511A-7EE6-47D2-8C37-7E639069D754@soton.ac.uk>
+Accept-Language: en-GB, en-US
+Content-Language: en-GB
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [152.78.54.126]
+Content-Type: text/plain; charset="Windows-1252"
+MIME-Version: 1.0
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<ww1g11@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from quoted-printable to 8bit by maillists.sucs.soton.ac.uk id r94Jo7lc004142
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p93KoE077466003000; tid=p93KoE0774660030Cf; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.38; helo=<UOS-MSG00036-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.38; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r94JoEUQ028271
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi Hans,
+
+I got the email with the error tips says that there are some unexpected ind=
+entations in LLG class (I added for zhang-li equation), a quick question, a=
+ simple command "make doc" should start the documentation building in my co=
+mputer?
+
+Best wishes,
+Weiwei
+________________________________
+From: Hans Fangohr [fangohr@soton.ac.uk]
+Sent: 04 October 2013 20:33
+To: Wang W.
+Cc: Fangohr H.; Fangohr H.; <finmag-team@lists.soton.ac.uk>
+Subject: Re: [finmag-team] build problems
+
+Hi again,
+
+correction to my correction: the documentation should build (!), what was a=
+lways failing are the ipython-based tests. I mixed them up, sorry. And the =
+binary build it broken because of my new code.
+
+Cheers,
+
+Hans
+On 4 Oct 2013, at 20:32, Hans Fangohr <fangohr@soton.ac.uk<mailto:fangohr@s=
+oton.ac.uk>>
+ wrote:
+
+Hi Weiwei,
+
+On 4 Oct 2013, at 20:28, Wang W. <ww1g11@soton.ac.uk<mailto:ww1g11@soton.ac=
+.uk>>
+ wrote:
+
+Hi Hans,
+
+I aborted this job when I noticed that all the tests failed to past (the fa=
+st tests just got stuck), I have fixed them so now the fast tests and the s=
+low tests works, but it seems that the documentation still fails, I  will t=
+ry to see what happens.
+
+Great, thank you. (My email wasn't delivered for some hours, so it is a bit=
+ behind the real events =85)
+
+The IPython documentation always failed - we need to sort this out together=
+ at some point; it is too big a job for one person. Not hard, but takes som=
+e time.
+
+What seems new now is the Cython failure for the new physics code that I ha=
+ve added. I'll look into in when I can, sorry about that.
+
+Cheers,
+
+Hans
+
+
+Cheers,
+Weiwei
+________________________________
+From: owner-finmag-team@lists.soton.ac.uk<mailto:owner-finmag-team@lists.so=
+ton.ac.uk> [owner-finmag-team@lists.soton.ac.uk<mailto:owner-finmag-team@li=
+sts.soton.ac.uk>] on behalf of Hans Fangohr [h.fangohr@soton.ac.uk<mailto:h=
+.fangohr@soton.ac.uk>]
+Sent: 04 October 2013 18:02
+To: <finmag-team@lists.soton.ac.uk<mailto:finmag-team@lists.soton.ac.uk>>
+Cc: Fangohr H.
+Subject: [finmag-team] build problems
+
+Hi all,
+
+something seems broken with jenkins or the code. I guess somebody has abort=
+ed these jobs?
+
+On Osiris, one of the PBC tests fails to terminate, and looking at the mess=
+age below, I am guessing the same happens on Jenkins?
+
+Weiwei, this might originate from your last commit. Can you check whether t=
+he tests run fine or your machine? (I mean py.test in finmag/src)?
+
+Thanks,
+
+Hans
+
+
+
+Begin forwarded message:
+
+From: Jenkins CI <fangohr@soton.ac.uk<mailto:fangohr@soton.ac.uk>>
+Subject: [build] finmag_sphinx_documentation - Build # 327 - Aborted!
+Date: 4 October 2013 17:36:45 BST
+To: <fangohr@soton.ac.uk<mailto:fangohr@soton.ac.uk>>, <maximilian.albert@s=
+oton.ac.uk<mailto:maximilian.albert@soton.ac.uk>>, <marvin@bisotti.de<mailt=
+o:marvin@bisotti.de>>
+Reply-To: <fangohr@soton.ac.uk<mailto:fangohr@soton.ac.uk>>, <maximilian.al=
+bert@soton.ac.uk<mailto:maximilian.albert@soton.ac.uk>>
+
+[X]     BUILD ABORTED
+Build URL       http://aleph0.kk.soton.ac.uk:8080/job/finmag_sphinx_documen=
+tation/327/
+Project:        finmag_sphinx_documentation
+Date of build:  Thu, 26 Sep 2013 00:09:55 +0100
+Build duration: 8 days 17 hr
+
+CHANGES
+  Revision ade527e768567e21ee136aa40e6eaecfac42393b by Marvin:(#finmag IRC =
+chat (25 September 2013))
+  edit  logbooks/finmag
+
+
+
+-------------------------------------
+finmag-team mailing list.
+
+From marvin  Sat Oct  5 02:11:00 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Sat, 05 Oct 2013 02:11:00 +0100 (BST)
+Received: by 10.227.121.137 with SMTP id h9csp36503wbr;
+        Fri, 4 Oct 2013 12:51:16 -0700 (PDT)
+X-Received: by 10.14.9.72 with SMTP id 48mr23951994ees.42.1380916276728;
+        Fri, 04 Oct 2013 12:51:16 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id i5si11959591eeg.265.1969.12.31.16.00.00;
+        Fri, 04 Oct 2013 12:51:16 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r94Jp4vd031053;
+	Fri, 4 Oct 2013 20:51:04 +0100
+Received: from UOS-MSG00036-VS.soton.ac.uk (uos-msg00036-vs.soton.ac.uk [152.78.119.38])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p93Kp40774660041Df ret-id none; Fri, 04 Oct 2013 20:51:04 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.38) with Microsoft SMTP Server (TLS) id 14.2.342.3; Fri, 4 Oct
+ 2013 20:51:03 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r94Jp3Fd004964;	Fri, 4 Oct 2013 20:51:03 +0100
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r94Jp3Sb004961	for <finmag-team@lists.soton.ac.uk>; Fri, 4 Oct 2013 20:51:03
+ +0100
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r94JoHxF002710	for
+ <finmag-team@lists.soton.ac.uk>; Fri, 4 Oct 2013 20:50:17 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk
+ [152.78.119.37])	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16]) envelope-from <H.FANGOHR@soton.ac.uk> with ESMTP	id
+ p93KoH08622531763F ret-id none; Fri, 04 Oct 2013 20:50:17 +0100
+Received: from [192.168.1.13] (78.105.144.118) by smtp.soton.ac.uk
+ (152.78.119.37) with Microsoft SMTP Server (TLS) id 14.2.342.3; Fri, 4 Oct
+ 2013 20:49:13 +0100
+Content-Type: multipart/alternative;
+	boundary="Apple-Mail=_8A1D9D46-029A-4011-84DB-664324C4C164"
+MIME-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
+Subject: Re: [finmag-team] build problems
+From: Hans Fangohr <h.fangohr@soton.ac.uk>
+In-Reply-To: <69EF17E243EA164D9E5800FBC995493D405C74EF@SRV00358.soton.ac.uk>
+Date: Fri, 4 Oct 2013 20:49:10 +0100
+CC: Hans Fangohr <h.fangohr@soton.ac.uk>, "Fangohr H." <h.fangohr@soton.ac.uk>,
+        "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+Message-ID: <97CF2249-EF86-4AB7-B51C-1B282A1F9C3C@soton.ac.uk>
+References: <1009100535.519.1380904605970.JavaMail.jenkins@aleph0.kk.soton.ac.uk>,<19ABDA44-5F45-4D48-B414-A7AAD6684557@soton.ac.uk> <69EF17E243EA164D9E5800FBC995493D405C7491@SRV00358.soton.ac.uk> <A556B110-210C-4258-97B7-B1E914E832A0@soton.ac.uk>,<AB7B511A-7EE6-47D2-8C37-7E639069D754@soton.ac.uk> <69EF17E243EA164D9E5800FBC995493D405C74EF@SRV00358.soton.ac.uk>
+To: "Wang W." <ww1g11@soton.ac.uk>
+X-Mailer: Apple Mail (2.1510)
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<H.FANGOHR@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p93Kp4077466004100; tid=p93Kp40774660041Df; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.38; helo=<UOS-MSG00036-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.38; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r94Jp4vd031053
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+--Apple-Mail=_8A1D9D46-029A-4011-84DB-664324C4C164
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="windows-1252"
+
+Hi Weiwei,
+
+On 4 Oct 2013, at 20:47, Wang W. <ww1g11@soton.ac.uk>
+ wrote:
+
+> Hi Hans,
+>=20
+> I got the email with the error tips says that there are some =
+unexpected indentations in LLG class (I added for zhang-li equation), a =
+quick question, a simple command "make doc" should start the =
+documentation building in my computer?=20
+I think so. Or it could be 'make html' or 'make pdf' or so. You need to =
+navigate to the 'doc' directory first, though. Does that help?
+
+Thanks,
+
+Hans
+
+>=20
+> Best wishes,
+> Weiwei
+> From: Hans Fangohr [fangohr@soton.ac.uk]
+> Sent: 04 October 2013 20:33
+> To: Wang W.
+> Cc: Fangohr H.; Fangohr H.; <finmag-team@lists.soton.ac.uk>
+> Subject: Re: [finmag-team] build problems
+>=20
+> Hi again,
+>=20
+> correction to my correction: the documentation should build (!), what =
+was always failing are the ipython-based tests. I mixed them up, sorry. =
+And the binary build it broken because of my new code.
+>=20
+> Cheers,
+>=20
+> Hans
+> On 4 Oct 2013, at 20:32, Hans Fangohr <fangohr@soton.ac.uk>
+>  wrote:
+>=20
+>> Hi Weiwei,
+>>=20
+>> On 4 Oct 2013, at 20:28, Wang W. <ww1g11@soton.ac.uk>
+>>  wrote:
+>>=20
+>>> Hi Hans,
+>>>=20
+>>> I aborted this job when I noticed that all the tests failed to past =
+(the fast tests just got stuck), I have fixed them so now the fast tests =
+and the slow tests works, but it seems that the documentation still =
+fails, I  will try to see what happens.
+>>=20
+>> Great, thank you. (My email wasn't delivered for some hours, so it is =
+a bit behind the real events =85)
+>>=20
+>> The IPython documentation always failed - we need to sort this out =
+together at some point; it is too big a job for one person. Not hard, =
+but takes some time.
+>>=20
+>> What seems new now is the Cython failure for the new physics code =
+that I have added. I'll look into in when I can, sorry about that.
+>>=20
+>> Cheers,
+>>=20
+>> Hans
+>>=20
+>>>=20
+>>> Cheers,
+>>> Weiwei
+>>> From: owner-finmag-team@lists.soton.ac.uk =
+[owner-finmag-team@lists.soton.ac.uk] on behalf of Hans Fangohr =
+[h.fangohr@soton.ac.uk]
+>>> Sent: 04 October 2013 18:02
+>>> To: <finmag-team@lists.soton.ac.uk>
+>>> Cc: Fangohr H.
+>>> Subject: [finmag-team] build problems
+>>>=20
+>>> Hi all,
+>>>=20
+>>> something seems broken with jenkins or the code. I guess somebody =
+has aborted these jobs?
+>>>=20
+>>> On Osiris, one of the PBC tests fails to terminate, and looking at =
+the message below, I am guessing the same happens on Jenkins?
+>>>=20
+>>> Weiwei, this might originate from your last commit. Can you check =
+whether the tests run fine or your machine? (I mean py.test in =
+finmag/src)?
+>>>=20
+>>> Thanks,
+>>>=20
+>>> Hans
+>>>=20
+>>>=20
+>>>=20
+>>> Begin forwarded message:
+>>>=20
+>>>> From: Jenkins CI <fangohr@soton.ac.uk>
+>>>> Subject: [build] finmag_sphinx_documentation - Build # 327 - =
+Aborted!
+>>>> Date: 4 October 2013 17:36:45 BST
+>>>> To: <fangohr@soton.ac.uk>, <maximilian.albert@soton.ac.uk>, =
+<marvin@bisotti.de>
+>>>> Reply-To: <fangohr@soton.ac.uk>, <maximilian.albert@soton.ac.uk>
+>>>>=20
+>>>> 	BUILD ABORTED
+>>>> Build URL	=
+http://aleph0.kk.soton.ac.uk:8080/job/finmag_sphinx_documentation/327/
+>>>> Project:	finmag_sphinx_documentation
+>>>> Date of build:	Thu, 26 Sep 2013 00:09:55 +0100
+>>>> Build duration:	8 days 17 hr
+>>>>=20
+>>>> CHANGES
+>>>>   Revision ade527e768567e21ee136aa40e6eaecfac42393b by =
+Marvin:(#finmag IRC chat (25 September 2013))
+>>>>   edit	logbooks/finmag
+
+
+--Apple-Mail=_8A1D9D46-029A-4011-84DB-664324C4C164
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/html; charset="windows-1252"
+
+<html><head><meta http-equiv=3D"Content-Type" content=3D"text/html =
+charset=3Dwindows-1252"><base href=3D"x-msg://40/"></head><body =
+style=3D"word-wrap: break-word; -webkit-nbsp-mode: space; =
+-webkit-line-break: after-white-space; ">Hi Weiwei,<div><br><div><div>On =
+4 Oct 2013, at 20:47, Wang W. &lt;<a =
+href=3D"mailto:ww1g11@soton.ac.uk">ww1g11@soton.ac.uk</a>&gt;</div><div>&n=
+bsp;wrote:</div><br class=3D"Apple-interchange-newline"><blockquote =
+type=3D"cite"><div ocsi=3D"0" fpstyle=3D"1" style=3D"font-family: =
+Helvetica; font-size: medium; font-style: normal; font-variant: normal; =
+font-weight: normal; letter-spacing: normal; line-height: normal; =
+orphans: 2; text-align: -webkit-auto; text-indent: 0px; text-transform: =
+none; white-space: normal; widows: 2; word-spacing: 0px; =
+-webkit-text-size-adjust: auto; -webkit-text-stroke-width: 0px; =
+word-wrap: break-word; "><div style=3D"direction: ltr; font-family: =
+Tahoma; font-size: 10pt; ">Hi Hans,<br><br>I got the email with the =
+error tips says that there are some unexpected indentations in LLG class =
+(I added for zhang-li equation), a quick question, a simple command =
+"make doc" should start the documentation building in my computer?<span =
+class=3D"Apple-converted-space">&nbsp;</span><br></div></div></blockquote>=
+<div>I think so. Or it could be 'make html' or 'make pdf' or so. You =
+need to navigate to the 'doc' directory first, though. Does that =
+help?</div><div><br></div><div>Thanks,</div><div><br></div><div>Hans</div>=
+<br><blockquote type=3D"cite"><div ocsi=3D"0" fpstyle=3D"1" =
+style=3D"font-family: Helvetica; font-size: medium; font-style: normal; =
+font-variant: normal; font-weight: normal; letter-spacing: normal; =
+line-height: normal; orphans: 2; text-align: -webkit-auto; text-indent: =
+0px; text-transform: none; white-space: normal; widows: 2; word-spacing: =
+0px; -webkit-text-size-adjust: auto; -webkit-text-stroke-width: 0px; =
+word-wrap: break-word; "><div style=3D"direction: ltr; font-family: =
+Tahoma; font-size: 10pt; "><br>Best wishes,<br>Weiwei<br><div =
+style=3D"font-family: 'Times New Roman'; font-size: 16px; "><hr =
+tabindex=3D"-1"><div id=3D"divRpF758350" style=3D"direction: ltr; =
+"><font face=3D"Tahoma" size=3D"2"><b>From:</b><span =
+class=3D"Apple-converted-space">&nbsp;</span>Hans Fangohr [<a =
+href=3D"mailto:fangohr@soton.ac.uk">fangohr@soton.ac.uk</a>]<br><b>Sent:</=
+b><span class=3D"Apple-converted-space">&nbsp;</span>04 October 2013 =
+20:33<br><b>To:</b><span class=3D"Apple-converted-space">&nbsp;</span>Wang=
+ W.<br><b>Cc:</b><span =
+class=3D"Apple-converted-space">&nbsp;</span>Fangohr H.; Fangohr H.; =
+&lt;<a =
+href=3D"mailto:finmag-team@lists.soton.ac.uk">finmag-team@lists.soton.ac.u=
+k</a>&gt;<br><b>Subject:</b><span =
+class=3D"Apple-converted-space">&nbsp;</span>Re: [finmag-team] build =
+problems<br></font><br></div><div></div><div>Hi =
+again,<div><br></div><div>correction to my correction: the documentation =
+should build (!), what was always failing are the ipython-based tests. I =
+mixed them up, sorry. And the binary build it broken because of my new =
+code.</div><div><br></div><div>Cheers,</div><div><br></div><div>Hans</div>=
+<div><div>On 4 Oct 2013, at 20:32, Hans Fangohr &lt;<a =
+href=3D"mailto:fangohr@soton.ac.uk" =
+target=3D"_blank">fangohr@soton.ac.uk</a>&gt;</div><div>&nbsp;wrote:</div>=
+<br class=3D"Apple-interchange-newline"><blockquote type=3D"cite"><div =
+style=3D"word-wrap: break-word; ">Hi Weiwei,<div><br><div><div>On 4 Oct =
+2013, at 20:28, Wang W. &lt;<a href=3D"mailto:ww1g11@soton.ac.uk" =
+target=3D"_blank">ww1g11@soton.ac.uk</a>&gt;</div><div>&nbsp;wrote:</div><=
+br class=3D"Apple-interchange-newline"><blockquote type=3D"cite"><div =
+style=3D"font-family: Helvetica; font-size: medium; font-style: normal; =
+font-variant: normal; font-weight: normal; letter-spacing: normal; =
+line-height: normal; orphans: 2; text-indent: 0px; text-transform: none; =
+white-space: normal; widows: 2; word-spacing: 0px; word-wrap: =
+break-word; "><div style=3D"direction: ltr; font-family: Tahoma; =
+font-size: 10pt; ">Hi Hans,<br><br>I aborted this job when I noticed =
+that all the tests failed to past (the fast tests just got stuck), I =
+have fixed them so now the fast tests and the slow tests works, but it =
+seems that the documentation still fails, I&nbsp; will try to see what =
+happens.<br></div></div></blockquote><div><br></div><div>Great, thank =
+you. (My email wasn't delivered for some hours, so it is a bit behind =
+the real events =85)</div><div><br></div><div>The IPython documentation =
+always failed - we need to sort this out together at some point; it is =
+too big a job for one person. Not hard, but takes some =
+time.</div><div><br></div><div>What seems new now is the Cython failure =
+for the new physics code that I have added. I'll look into in when I =
+can, sorry about =
+that.</div><div><br></div><div>Cheers,</div><div><br></div><div>Hans</div>=
+<br><blockquote type=3D"cite"><div style=3D"font-family: Helvetica; =
+font-size: medium; font-style: normal; font-variant: normal; =
+font-weight: normal; letter-spacing: normal; line-height: normal; =
+orphans: 2; text-indent: 0px; text-transform: none; white-space: normal; =
+widows: 2; word-spacing: 0px; word-wrap: break-word; "><div =
+style=3D"direction: ltr; font-family: Tahoma; font-size: 10pt; =
+"><br>Cheers,<br>Weiwei<br><div style=3D"font-family: 'Times New Roman'; =
+font-size: 16px; "><hr tabindex=3D"-1"><div id=3D"divRpF465988" =
+style=3D"direction: ltr; "><font face=3D"Tahoma" =
+size=3D"2"><b>From:</b><span =
+class=3D"Apple-converted-space">&nbsp;</span><a =
+href=3D"mailto:owner-finmag-team@lists.soton.ac.uk" =
+target=3D"_blank">owner-finmag-team@lists.soton.ac.uk</a><span =
+class=3D"Apple-converted-space">&nbsp;</span>[<a =
+href=3D"mailto:owner-finmag-team@lists.soton.ac.uk" =
+target=3D"_blank">owner-finmag-team@lists.soton.ac.uk</a>] on behalf of =
+Hans Fangohr [<a href=3D"mailto:h.fangohr@soton.ac.uk" =
+target=3D"_blank">h.fangohr@soton.ac.uk</a>]<br><b>Sent:</b><span =
+class=3D"Apple-converted-space">&nbsp;</span>04 October 2013 =
+18:02<br><b>To:</b><span =
+class=3D"Apple-converted-space">&nbsp;</span>&lt;<a =
+href=3D"mailto:finmag-team@lists.soton.ac.uk" =
+target=3D"_blank">finmag-team@lists.soton.ac.uk</a>&gt;<br><b>Cc:</b><span=
+ class=3D"Apple-converted-space">&nbsp;</span>Fangohr =
+H.<br><b>Subject:</b><span =
+class=3D"Apple-converted-space">&nbsp;</span>[finmag-team] build =
+problems<br></font><br></div><div></div><div>Hi =
+all,<div><br></div><div>something seems broken with jenkins or the code. =
+I guess somebody has aborted these jobs?</div><div><br></div><div>On =
+Osiris, one of the PBC tests fails to terminate, and looking at the =
+message below, I am guessing the same happens on =
+Jenkins?</div><div><br></div><div>Weiwei, this might originate from your =
+last commit. Can you check whether the tests run fine or your machine? =
+(I mean py.test in =
+finmag/src)?</div><div><br></div><div>Thanks,</div><div><br></div><div>Han=
+s</div><div><br></div><div><br><div><br><div>Begin forwarded =
+message:</div><br class=3D"Apple-interchange-newline"><blockquote =
+type=3D"cite"><div style=3D"margin: 0px; "><span style=3D"font-family: =
+Helvetica; font-size: medium; "><b>From:<span =
+class=3D"Apple-converted-space">&nbsp;</span></b></span><span =
+style=3D"font-family: Helvetica; font-size: medium; ">Jenkins CI &lt;<a =
+href=3D"mailto:fangohr@soton.ac.uk" =
+target=3D"_blank">fangohr@soton.ac.uk</a>&gt;<br></span></div><div =
+style=3D"margin: 0px; "><span style=3D"font-family: Helvetica; =
+font-size: medium; "><b>Subject:<span =
+class=3D"Apple-converted-space">&nbsp;</span></b></span><span =
+style=3D"font-family: Helvetica; font-size: medium; "><b>[build] =
+finmag_sphinx_documentation - Build # 327 - =
+Aborted!</b><br></span></div><div style=3D"margin: 0px; "><span =
+style=3D"font-family: Helvetica; font-size: medium; "><b>Date:<span =
+class=3D"Apple-converted-space">&nbsp;</span></b></span><span =
+style=3D"font-family: Helvetica; font-size: medium; ">4 October 2013 =
+17:36:45 BST<br></span></div><div style=3D"margin: 0px; "><span =
+style=3D"font-family: Helvetica; font-size: medium; "><b>To:<span =
+class=3D"Apple-converted-space">&nbsp;</span></b></span><span =
+style=3D"font-family: Helvetica; font-size: medium; ">&lt;<a =
+href=3D"mailto:fangohr@soton.ac.uk" =
+target=3D"_blank">fangohr@soton.ac.uk</a>&gt;, &lt;<a =
+href=3D"mailto:maximilian.albert@soton.ac.uk" =
+target=3D"_blank">maximilian.albert@soton.ac.uk</a>&gt;, &lt;<a =
+href=3D"mailto:marvin@bisotti.de" =
+target=3D"_blank">marvin@bisotti.de</a>&gt;<br></span></div><div =
+style=3D"margin: 0px; "><span style=3D"font-family: Helvetica; =
+font-size: medium; "><b>Reply-To:<span =
+class=3D"Apple-converted-space">&nbsp;</span></b></span><span =
+style=3D"font-family: Helvetica; font-size: medium; ">&lt;<a =
+href=3D"mailto:fangohr@soton.ac.uk" =
+target=3D"_blank">fangohr@soton.ac.uk</a>&gt;, &lt;<a =
+href=3D"mailto:maximilian.albert@soton.ac.uk" =
+target=3D"_blank">maximilian.albert@soton.ac.uk</a>&gt;<br></span></div><b=
+r><div style=3D"font-family: Verdana, Helvetica, 'sans serif'; =
+font-size: 11px; font-style: normal; font-variant: normal; font-weight: =
+normal; letter-spacing: normal; line-height: normal; orphans: 2; =
+text-indent: 0px; text-transform: none; white-space: normal; widows: 2; =
+word-spacing: 0px; "><table style=3D"font-family: Verdana, Helvetica, =
+'sans serif'; font-size: 11px; "><tbody><tr><td align=3D"right" =
+style=3D"font-family: Verdana, Helvetica, 'sans serif'; font-size: 11px; =
+"><img></td><td valign=3D"center" style=3D"font-family: Verdana, =
+Helvetica, 'sans serif'; font-size: 11px; "><b style=3D"font-size: 22px; =
+">BUILD ABORTED</b></td></tr><tr><td style=3D"font-family: Verdana, =
+Helvetica, 'sans serif'; font-size: 11px; ">Build URL</td><td =
+style=3D"font-family: Verdana, Helvetica, 'sans serif'; font-size: 11px; =
+"><a =
+href=3D"http://aleph0.kk.soton.ac.uk:8080/job/finmag_sphinx_documentation/=
+327/" =
+target=3D"_blank">http://aleph0.kk.soton.ac.uk:8080/job/finmag_sphinx_docu=
+mentation/327/</a></td></tr><tr><td style=3D"font-family: Verdana, =
+Helvetica, 'sans serif'; font-size: 11px; ">Project:</td><td =
+style=3D"font-family: Verdana, Helvetica, 'sans serif'; font-size: 11px; =
+">finmag_sphinx_documentation</td></tr><tr><td style=3D"font-family: =
+Verdana, Helvetica, 'sans serif'; font-size: 11px; ">Date of =
+build:</td><td style=3D"font-family: Verdana, Helvetica, 'sans serif'; =
+font-size: 11px; ">Thu, 26 Sep 2013 00:09:55 +0100</td></tr><tr><td =
+style=3D"font-family: Verdana, Helvetica, 'sans serif'; font-size: 11px; =
+">Build duration:</td><td style=3D"font-family: Verdana, Helvetica, =
+'sans serif'; font-size: 11px; ">8 days 17 =
+hr</td></tr></tbody></table><br><table width=3D"100%" =
+style=3D"font-family: Verdana, Helvetica, 'sans serif'; font-size: 11px; =
+"><tbody><tr><td colspan=3D"2" class=3D"bg1" style=3D"font-family: =
+Verdana, Helvetica, 'sans serif'; font-size: 13px; color: white; =
+background-color: rgb(0, 0, 192); "><b>CHANGES</b></td></tr><tr><td =
+colspan=3D"2" class=3D"bg2" style=3D"font-family: Verdana, Helvetica, =
+'sans serif'; font-size: 12px; color: white; background-color: rgb(64, =
+64, 255); ">&nbsp;&nbsp;Revision<span =
+class=3D"Apple-converted-space">&nbsp;</span><b>ade527e768567e21ee136aa40e=
+6eaecfac42393b</b><span =
+class=3D"Apple-converted-space">&nbsp;</span>by<span =
+class=3D"Apple-converted-space">&nbsp;</span><b>Marvin:</b><b>(#finmag =
+IRC chat (25 September 2013))</b></td></tr><tr><td width=3D"10%" =
+style=3D"font-family: Verdana, Helvetica, 'sans serif'; font-size: 11px; =
+">&nbsp;&nbsp;edit</td><td style=3D"font-family: Verdana, Helvetica, =
+'sans serif'; font-size: 11px; =
+">logbooks/finmag</td></tr></tbody></table></div></blockquote></div></div>=
+</div></div></div></div></blockquote></div></div></div></blockquote></div>=
+</div></div></div></div></blockquote></div><br></div></body></html>=
+
+--Apple-Mail=_8A1D9D46-029A-4011-84DB-664324C4C164--
+
+From marvin  Sat Oct  5 03:11:01 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Sat, 05 Oct 2013 03:11:01 +0100 (BST)
+Received: by 10.227.121.137 with SMTP id h9csp44994wbr;
+        Fri, 4 Oct 2013 17:22:00 -0700 (PDT)
+X-Received: by 10.15.75.73 with SMTP id k49mr25671812eey.36.1380932519735;
+        Fri, 04 Oct 2013 17:21:59 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id q8si12658235eem.270.1969.12.31.16.00.00;
+        Fri, 04 Oct 2013 17:21:59 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk;
+       dkim=neutral (bad format) header.i=@gmail.com;
+       dmarc=fail (p=NONE dis=NONE) header.from=gmail.com
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r950LhUW023049;
+	Sat, 5 Oct 2013 01:21:43 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk [152.78.119.37])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p941Lh0774663840he ret-id none; Sat, 05 Oct 2013 01:21:44 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.37) with Microsoft SMTP Server (TLS) id 14.2.342.3; Sat, 5 Oct
+ 2013 01:21:35 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r950LWAU003259;	Sat, 5 Oct 2013 01:21:33 +0100
+Received: from mailgate5.iss.soton.ac.uk (mailgate5.iss.soton.ac.uk
+ [152.78.128.106])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r950LWCj003256	for <finmag-team@lists.soton.ac.uk>; Sat, 5 Oct 2013 01:21:32
+ +0100
+Received: from mailgate5.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate5.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r950L7xV015127	for
+ <finmag-team@lists.soton.ac.uk>; Sat, 5 Oct 2013 01:21:07 +0100
+Received: from mail-qe0-f48.google.com (mail-qe0-f48.google.com
+ [209.85.128.48])	by mailgate5.iss.soton.ac.uk (mailgate5.iss.soton.ac.uk
+ [152.78.128.106]) envelope-from <maximilian.albert@gmail.com> with ESMTP	id
+ p941L71148963751dH ret-id none; Sat, 05 Oct 2013 01:21:07 +0100
+Received: by mail-qe0-f48.google.com with SMTP id nd7so3571142qeb.7        for
+ <finmag-team@lists.soton.ac.uk>; Fri, 04 Oct 2013 17:21:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=ZgX3jQD4HIKymYXBzHyh6b0TjvxrNjwb9t8sLUnP5Yo=;
+        b=tJspIjY3p9l26PizqsiFOyJpTYoSofJ6x0CNPO5L4ZxEX9eeX2L2/6j+busBciWI9A
+         KmING6lEr+Sx1x61yCz/Dth5c3ExKv6vij5jRJ7cWpbYyV4MZcJf+6fdVXsrM3Jshx33
+         XPj9qxFc4rQ7m6ccx/BqS7xkHW7EnKxb6Bgdv5nS14xocAAZi4B/kNRH6yyAJmAoZ+MH
+         tH/rwenF/8u1aAN7iqd950TJXywTmf+MQiex1PpzJsivMAaStdfc4WCH3MUSyIQ/g+mi
+         g/J1e1QeJ/60d5ZTEgRvxJzAAj8L4Q7CWKu3CTY6Q44EPeSIFWTXT3a4EiB4PCq/MkZY
+         fxhQ==
+MIME-Version: 1.0
+X-Received: by 10.224.130.129 with SMTP id t1mr22106667qas.35.1380932466083;
+ Fri, 04 Oct 2013 17:21:06 -0700 (PDT)
+Received: by 10.224.75.131 with HTTP; Fri, 4 Oct 2013 17:21:05 -0700 (PDT)
+In-Reply-To: <AB7B511A-7EE6-47D2-8C37-7E639069D754@soton.ac.uk>
+References: <1009100535.519.1380904605970.JavaMail.jenkins@aleph0.kk.soton.ac.uk>
+	<19ABDA44-5F45-4D48-B414-A7AAD6684557@soton.ac.uk>
+	<69EF17E243EA164D9E5800FBC995493D405C7491@SRV00358.soton.ac.uk>
+	<A556B110-210C-4258-97B7-B1E914E832A0@soton.ac.uk>
+	<AB7B511A-7EE6-47D2-8C37-7E639069D754@soton.ac.uk>
+Date: Sat, 5 Oct 2013 08:21:05 +0800
+Message-ID: <CAGA_dmidKgKdR0n5fr2Okrv4D8kq1S=nt2UWLAo7MeA0DE=tEA@mail.gmail.com>
+Subject: Re: [finmag-team] build problems
+From: Maximilian Albert <maximilian.albert@gmail.com>
+To: Hans Fangohr <h.fangohr@soton.ac.uk>
+CC: "Wang W." <ww1g11@soton.ac.uk>,
+        "<finmag-team@lists.soton.ac.uk>"
+	<finmag-team@lists.soton.ac.uk>
+Content-Type: multipart/alternative; boundary="001a1132ecf2198acb04e7f365e0"
+Received-SPF: None; receiver=mailgate5.iss.soton.ac.uk; client-ip=209.85.128.48; helo=<mail-qe0-f48.google.com>
+Received-SPF: Pass; receiver=mailgate5.iss.soton.ac.uk; client-ip=209.85.128.48; envelope-from=<maximilian.albert@gmail.com>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p941LX077466384000; tid=p941Lh0774663840he; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r950LhUW023049
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+--001a1132ecf2198acb04e7f365e0
+Content-Type: text/plain; charset="ISO-8859-1"
+
+Hi Hans,
+
+>  And the binary build it broken because of my new code.
+
+Your new code may be part of the reason, but the binary builds have
+definitely been broken for a while. I think the initial error was even
+caused by one of my own commits. I just looked up the error, and the
+original failure was due to the use of "__file__" in
+src/finmag/example/normal_modes/disk.py (for the exact error message see
+here: http://aleph0.kk.soton.ac.uk:8080/job/finmag_binary_build/155/console).
+This is a bit strange, though, because we use "__file__" in other places
+without problems and Cython never complained.
+
+I remember that I couldn't figure out quickly what was causing it at the
+time, and it got buried under all the other recent commitments. If someone
+knows a fix that would be much appreciated.
+
+Cheers,
+Max
+
+--001a1132ecf2198acb04e7f365e0
+Content-Type: text/html; charset="ISO-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><div><div>Hi Hans,<br><br>&gt;=A0 And the binary build it =
+broken because of my new code.<br><br></div>Your new code may be part of th=
+e reason, but the binary builds have definitely been broken for a while. I =
+think the initial error was even caused by one of my own commits. I just lo=
+oked up the error, and the original failure was due to the use of &quot;__f=
+ile__&quot; in src/finmag/example/normal_modes/disk.py (for the exact error=
+ message see here: <a href=3D"http://aleph0.kk.soton.ac.uk:8080/job/finmag_=
+binary_build/155/console">http://aleph0.kk.soton.ac.uk:8080/job/finmag_bina=
+ry_build/155/console</a>). This is a bit strange, though, because we use &q=
+uot;__file__&quot; in other places without problems and Cython never compla=
+ined.<br>
+<br>I remember that I couldn&#39;t figure out quickly what was causing it a=
+t the time, and it got buried under all the other recent commitments. If so=
+meone knows a fix that would be much appreciated.<br><br>Cheers,<br></div>
+Max<br><div><br></div></div>
+
+--001a1132ecf2198acb04e7f365e0--
+
+From marvin  Sat Oct  5 07:11:02 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Sat, 05 Oct 2013 07:11:02 +0100 (BST)
+Received: by 10.227.121.137 with SMTP id h9csp53335wbr;
+        Fri, 4 Oct 2013 23:03:35 -0700 (PDT)
+X-Received: by 10.14.3.9 with SMTP id 9mr14871eeg.72.1380953014868;
+        Fri, 04 Oct 2013 23:03:34 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id x45si13380513eey.216.1969.12.31.16.00.00;
+        Fri, 04 Oct 2013 23:03:34 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r9561BVO022961;
+	Sat, 5 Oct 2013 07:01:11 +0100
+Received: from UOS-MSG00037-VS.soton.ac.uk (uos-msg00037-vs.soton.ac.uk [152.78.119.39])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p9471B07746022429q ret-id none; Sat, 05 Oct 2013 07:01:11 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.39) with Microsoft SMTP Server (TLS) id 14.2.342.3; Sat, 5 Oct
+ 2013 07:01:10 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r95618bN009588;	Sat, 5 Oct 2013 07:01:08 +0100
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk
+ [152.78.128.11])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r95617M8009579	for <finmag-team@lists.soton.ac.uk>; Sat, 5 Oct 2013 07:01:07
+ +0100
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r9560kPH021219;
+	Sat, 5 Oct 2013 07:00:46 +0100
+Received: from UOS-MSG00037-VS.soton.ac.uk (uos-msg00037-vs.soton.ac.uk
+ [152.78.119.39])	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk
+ [152.78.128.11]) envelope-from <H.FANGOHR@soton.ac.uk> with ESMTP	id
+ p9470k0774602233Re ret-id none; Sat, 05 Oct 2013 07:00:46 +0100
+Received: from [192.168.1.13] (78.105.144.118) by smtp.soton.ac.uk
+ (152.78.119.39) with Microsoft SMTP Server (TLS) id 14.2.342.3; Sat, 5 Oct
+ 2013 07:00:45 +0100
+Content-Type: multipart/alternative;
+	boundary="Apple-Mail=_91AD2EFF-8957-4F65-BB1A-8A684D282846"
+MIME-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
+Subject: Re: [finmag-team] build problems
+From: Hans Fangohr <h.fangohr@soton.ac.uk>
+In-Reply-To: <CAGA_dmidKgKdR0n5fr2Okrv4D8kq1S=nt2UWLAo7MeA0DE=tEA@mail.gmail.com>
+Date: Sat, 5 Oct 2013 07:00:44 +0100
+CC: Hans Fangohr <h.fangohr@soton.ac.uk>,
+        Hans Fangohr
+	<h.fangohr@soton.ac.uk>, "Wang W." <ww1g11@soton.ac.uk>,
+        "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+Message-ID: <9C32E7C3-5C65-4A7F-9621-E6F9C2DE2902@soton.ac.uk>
+References: <1009100535.519.1380904605970.JavaMail.jenkins@aleph0.kk.soton.ac.uk> <19ABDA44-5F45-4D48-B414-A7AAD6684557@soton.ac.uk> <69EF17E243EA164D9E5800FBC995493D405C7491@SRV00358.soton.ac.uk> <A556B110-210C-4258-97B7-B1E914E832A0@soton.ac.uk> <AB7B511A-7EE6-47D2-8C37-7E639069D754@soton.ac.uk> <CAGA_dmidKgKdR0n5fr2Okrv4D8kq1S=nt2UWLAo7MeA0DE=tEA@mail.gmail.com>
+To: Maximilian Albert <maximilian.albert@gmail.com>
+X-Mailer: Apple Mail (2.1510)
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.39; helo=<UOS-MSG00037-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.39; envelope-from=<H.FANGOHR@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p9471B077460224200; tid=p9471B07746022429q; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.39; helo=<UOS-MSG00037-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.39; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r9561BVO022961
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+--Apple-Mail=_91AD2EFF-8957-4F65-BB1A-8A684D282846
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="iso-8859-1"
+
+Hi Max,
+
+On 5 Oct 2013, at 01:21, Maximilian Albert <maximilian.albert@gmail.com>
+ wrote:
+
+> Hi Hans,
+>=20
+> >  And the binary build it broken because of my new code.
+>=20
+
+I think I have just fixed that.
+
+> Your new code may be part of the reason, but the binary builds have =
+definitely been broken for a while I think the initial error was even =
+caused by one of my own commits. I just looked up the error, and the =
+original failure was due to the use of "__file__" in =
+src/finmag/example/normal_modes/disk.py (for the exact error message see =
+here: =
+http://aleph0.kk.soton.ac.uk:8080/job/finmag_binary_build/155/console). =
+This is a bit strange, though, because we use "__file__" in other places =
+without problems and Cython never complained.
+
+I'll have a look. Is there a better way of provoking this error than =
+running the python diet-wrapper.py in the finmag-dist repository?
+
+Cheers,
+
+Hans
+
+>=20
+> I remember that I couldn't figure out quickly what was causing it at =
+the time, and it got buried under all the other recent commitments. If =
+someone knows a fix that would be much appreciated.
+>=20
+> Cheers,
+> Max
+>=20
+
+
+--Apple-Mail=_91AD2EFF-8957-4F65-BB1A-8A684D282846
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/html; charset="iso-8859-1"
+
+<html><head><meta http-equiv=3D"Content-Type" content=3D"text/html =
+charset=3Diso-8859-1"></head><body style=3D"word-wrap: break-word; =
+-webkit-nbsp-mode: space; -webkit-line-break: after-white-space; ">Hi =
+Max,<div><br><div><div>On 5 Oct 2013, at 01:21, Maximilian Albert &lt;<a =
+href=3D"mailto:maximilian.albert@gmail.com">maximilian.albert@gmail.com</a=
+>&gt;</div><div>&nbsp;wrote:</div><br =
+class=3D"Apple-interchange-newline"><blockquote type=3D"cite"><meta =
+http-equiv=3D"Content-Type" content=3D"text/html; =
+charset=3Diso-8859-1"><div dir=3D"ltr"><div><div>Hi =
+Hans,<br><br>&gt;&nbsp; And the binary build it broken because of my new =
+code.<br><br></div></div></div></blockquote><div><br></div><div>I think =
+I have just fixed that.</div><br><blockquote type=3D"cite"><div =
+dir=3D"ltr"><div>Your new code may be part of the reason, but the binary =
+builds have definitely been broken for a while&nbsp;I think the initial =
+error was even caused by one of my own commits. I just looked up the =
+error, and the original failure was due to the use of "__file__" in =
+src/finmag/example/normal_modes/disk.py (for the exact error message see =
+here: <a =
+href=3D"http://aleph0.kk.soton.ac.uk:8080/job/finmag_binary_build/155/cons=
+ole">http://aleph0.kk.soton.ac.uk:8080/job/finmag_binary_build/155/console=
+</a>). This is a bit strange, though, because we use "__file__" in other =
+places without problems and Cython never =
+complained.</div></div></blockquote><div><br></div><div>I'll have a =
+look. Is there a better way of provoking this error than running the =
+python diet-wrapper.py in the finmag-dist =
+repository?</div><div><br></div><div>Cheers,</div><div><br></div><div>Hans=
+</div><br><blockquote type=3D"cite"><div dir=3D"ltr"><div>
+<br>I remember that I couldn't figure out quickly what was causing it at =
+the time, and it got buried under all the other recent commitments. If =
+someone knows a fix that would be much =
+appreciated.<br><br>Cheers,<br></div>
+Max<br><div><br></div></div>
+</blockquote></div><br></div></body></html>=
+
+--Apple-Mail=_91AD2EFF-8957-4F65-BB1A-8A684D282846--
+
+From marvin  Sat Oct  5 08:11:03 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Sat, 05 Oct 2013 08:11:03 +0100 (BST)
+Received: by 10.227.121.137 with SMTP id h9csp54451wbr;
+        Fri, 4 Oct 2013 23:50:03 -0700 (PDT)
+X-Received: by 10.15.36.9 with SMTP id h9mr28612391eev.30.1380955803289;
+        Fri, 04 Oct 2013 23:50:03 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk. [152.78.128.16])
+        by mx.google.com with ESMTP id b1si13510775eep.197.1969.12.31.16.00.00;
+        Fri, 04 Oct 2013 23:50:03 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) client-ip=152.78.128.16;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r956np7j015565;
+	Sat, 5 Oct 2013 07:49:51 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk [152.78.119.37])
+	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk [152.78.128.16]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p947np0862260513Ax ret-id none; Sat, 05 Oct 2013 07:49:51 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.37) with Microsoft SMTP Server (TLS) id 14.2.342.3; Sat, 5 Oct
+ 2013 07:49:50 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r956nmsn017384;	Sat, 5 Oct 2013 07:49:48 +0100
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r956nmGD017381	for <finmag-team@lists.soton.ac.uk>; Sat, 5 Oct 2013 07:49:48
+ +0100
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r956nbJq014060;
+	Sat, 5 Oct 2013 07:49:37 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk
+ [152.78.119.37])	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16]) envelope-from <H.FANGOHR@soton.ac.uk> with ESMTP	id
+ p947nb0862260511a1 ret-id none; Sat, 05 Oct 2013 07:49:37 +0100
+Received: from [192.168.1.13] (78.105.144.118) by smtp.soton.ac.uk
+ (152.78.119.37) with Microsoft SMTP Server (TLS) id 14.2.342.3; Sat, 5 Oct
+ 2013 07:49:36 +0100
+Content-Type: multipart/alternative;
+	boundary="Apple-Mail=_99EFCDC0-EE60-4173-AA6F-9A6EC89EF165"
+MIME-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
+Subject: Re: [finmag-team] build problems
+From: Hans Fangohr <h.fangohr@soton.ac.uk>
+In-Reply-To: <9C32E7C3-5C65-4A7F-9621-E6F9C2DE2902@soton.ac.uk>
+Date: Sat, 5 Oct 2013 07:49:35 +0100
+CC: Hans Fangohr <h.fangohr@soton.ac.uk>,
+        Hans Fangohr
+	<h.fangohr@soton.ac.uk>, "Wang W." <ww1g11@soton.ac.uk>,
+        "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+Message-ID: <B2C261F1-9C1E-4ED7-8C31-C9A3BF59ABC5@soton.ac.uk>
+References: <1009100535.519.1380904605970.JavaMail.jenkins@aleph0.kk.soton.ac.uk> <19ABDA44-5F45-4D48-B414-A7AAD6684557@soton.ac.uk> <69EF17E243EA164D9E5800FBC995493D405C7491@SRV00358.soton.ac.uk> <A556B110-210C-4258-97B7-B1E914E832A0@soton.ac.uk> <AB7B511A-7EE6-47D2-8C37-7E639069D754@soton.ac.uk> <CAGA_dmidKgKdR0n5fr2Okrv4D8kq1S=nt2UWLAo7MeA0DE=tEA@mail.gmail.com> <9C32E7C3-5C65-4A7F-9621-E6F9C2DE2902@soton.ac.uk>
+To: Maximilian Albert <maximilian.albert@gmail.com>
+X-Mailer: Apple Mail (2.1510)
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<H.FANGOHR@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p947np086226051300; tid=p947np0862260513Ax; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r956np7j015565
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+--Apple-Mail=_99EFCDC0-EE60-4173-AA6F-9A6EC89EF165
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="iso-8859-1"
+
+>> error message see here: =
+http://aleph0.kk.soton.ac.uk:8080/job/finmag_binary_build/155/console). =
+This is a bit strange, though, because we use "__file__" in other places =
+without problems and Cython never complained.
+>=20
+> I'll have a look.
+
+> Is there a better way of provoking this error than running the python =
+diet-wrapper.py in the finmag-dist repository?
+>=20
+
+Just to answer my own question: if cython fails on a file x.py, then we =
+can just run
+
+cython x.py
+
+to get the same error. Whether this works for package compilation errors =
+(like the __init__.py problem Max mentioned) we will see when I get =
+there ;)
+
+
+
+For my own reference: there are also the various useful settings for =
+dist-wrapper, in particular to build from a local repository, i.e.=20
+
+hg/finmag-dist $ python dist-wrapper.py --keep-workdir --skip-tests =
+--finmag-repo=3D../finmag
+
+
+
+Thanks,
+
+Hans
+
+
+
+--Apple-Mail=_99EFCDC0-EE60-4173-AA6F-9A6EC89EF165
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/html; charset="iso-8859-1"
+
+<html><head><meta http-equiv=3D"Content-Type" content=3D"text/html =
+charset=3Diso-8859-1"></head><body style=3D"word-wrap: break-word; =
+-webkit-nbsp-mode: space; -webkit-line-break: after-white-space; =
+"><div><blockquote type=3D"cite"><div style=3D"word-wrap: break-word; =
+-webkit-nbsp-mode: space; -webkit-line-break: after-white-space; =
+"><div><div><blockquote type=3D"cite"><div dir=3D"ltr">error message see =
+here: <a =
+href=3D"http://aleph0.kk.soton.ac.uk:8080/job/finmag_binary_build/155/cons=
+ole">http://aleph0.kk.soton.ac.uk:8080/job/finmag_binary_build/155/console=
+</a>). This is a bit strange, though, because we use "__file__" in other =
+places without problems and Cython never =
+complained.</div></blockquote><div><br></div><div>I'll have a look. =
+</div></div></div></div></blockquote><br><blockquote type=3D"cite"><div =
+style=3D"word-wrap: break-word; -webkit-nbsp-mode: space; =
+-webkit-line-break: after-white-space; "><div><div><div>Is there a =
+better way of provoking this error than running the python =
+diet-wrapper.py in the finmag-dist =
+repository?</div><div><br></div></div></div></div></blockquote><div><br></=
+div><div>Just to answer my own question: if cython fails on a file x.py, =
+then we can just run</div><div><br></div><div>cython =
+x.py</div><div><br></div><div>to get the same error. Whether this works =
+for package compilation errors (like the __init__.py problem Max =
+mentioned) we will see when I get there =
+;)</div><div><br></div><div><br></div><div><br></div><div>For my own =
+reference: there are also the various useful settings for dist-wrapper, =
+in particular to build from a local repository, =
+i.e.&nbsp;</div><div><br></div><div><div>hg/finmag-dist $ python =
+dist-wrapper.py --keep-workdir --skip-tests =
+--finmag-repo=3D../finmag</div><div><br></div><div><br></div><div><br></di=
+v><div>Thanks,</div><div><br></div><div>Hans</div><div><br></div><div><br>=
+</div></div></div></body></html>=
+
+--Apple-Mail=_99EFCDC0-EE60-4173-AA6F-9A6EC89EF165--
+
+From marvin  Sat Oct  5 09:11:03 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Sat, 05 Oct 2013 09:11:03 +0100 (BST)
+Received: by 10.227.121.137 with SMTP id h9csp55089wbr;
+        Sat, 5 Oct 2013 00:15:01 -0700 (PDT)
+X-Received: by 10.15.43.13 with SMTP id w13mr28240371eev.37.1380957301145;
+        Sat, 05 Oct 2013 00:15:01 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk. [152.78.128.16])
+        by mx.google.com with ESMTP id x42si13617153eel.56.1969.12.31.16.00.00;
+        Sat, 05 Oct 2013 00:15:01 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) client-ip=152.78.128.16;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r957EidL030221;
+	Sat, 5 Oct 2013 08:14:44 +0100
+Received: from UOS-MSG00037-VS.soton.ac.uk (uos-msg00037-vs.soton.ac.uk [152.78.119.39])
+	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk [152.78.128.16]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p948Ei08622608286m ret-id none; Sat, 05 Oct 2013 08:14:45 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.39) with Microsoft SMTP Server (TLS) id 14.2.342.3; Sat, 5 Oct
+ 2013 08:14:44 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r957EihV005570;	Sat, 5 Oct 2013 08:14:44 +0100
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk
+ [152.78.128.11])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r957EimC005560	for <finmag-team@lists.soton.ac.uk>; Sat, 5 Oct 2013 08:14:44
+ +0100
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r957EW51024405;
+	Sat, 5 Oct 2013 08:14:32 +0100
+Received: from UOS-MSG00036-VS.soton.ac.uk (uos-msg00036-vs.soton.ac.uk
+ [152.78.119.38])	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk
+ [152.78.128.11]) envelope-from <H.FANGOHR@soton.ac.uk> with ESMTP	id
+ p948EW0774603229ik ret-id none; Sat, 05 Oct 2013 08:14:32 +0100
+Received: from [192.168.1.13] (78.105.144.118) by smtp.soton.ac.uk
+ (152.78.119.38) with Microsoft SMTP Server (TLS) id 14.2.342.3; Sat, 5 Oct
+ 2013 08:14:31 +0100
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
+Subject: [finmag-team] cython problem
+From: Hans Fangohr <h.fangohr@soton.ac.uk>
+Date: Sat, 5 Oct 2013 08:14:30 +0100
+CC: Hans Fangohr <h.fangohr@soton.ac.uk>,
+        "<finmag-team@lists.soton.ac.uk>"
+	<finmag-team@lists.soton.ac.uk>
+Message-ID: <73C626E0-A199-44A6-A599-BAB0F64FEDA7@soton.ac.uk>
+References: <20131005071011.32511.79613@app09.ash-private.bitbucket.org>
+To: Maximilian Albert <maximilian.albert@gmail.com>
+X-Mailer: Apple Mail (2.1510)
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.38; helo=<UOS-MSG00036-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.38; envelope-from=<H.FANGOHR@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from quoted-printable to 8bit by maillists.sucs.soton.ac.uk id r957EimC005568
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p948Ei086226082800; tid=p948Ei08622608286m; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.39; helo=<UOS-MSG00037-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.39; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r957EidL030221
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi Max,
+
+I have removed a few trivial errors (below), and now the system reports the=
+ problem you mentioned (see copy below).
+
+The problem arises when we start testing the cythonised version.
+
+I may have to stop here for now, but will get back to it later.
+
+Cheers,
+
+Hans
+
+-------------------------------------
+
+=3D=3D=3D=3D=3D=3D=3D=3D=3D End output of 'make cp' =3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D
+Done running 'make cp'.
+Running tests...
+Running 'make test' ...
+=3D=3D=3D=3D=3D=3D=3D=3D=3D Output of 'make test': =3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D
+current /tmp/tmpuMHHZK/finmag-dist-co/src
+Running target 'test' using PYTHONPATH=3D/tmp/tmpuMHHZK/finmag
+cd /tmp/tmpuMHHZK/finmag && PYTHONPATH=3D/tmp/tmpuMHHZK/finmag py.test --ve=
+rbose -x
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D test =
+session starts =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D
+platform linux2 -- Python 2.7.3 -- pytest-2.3.4 -- /usr/bin/python
+collected 0 items / 1 errors=20
+
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D ERRORS =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+__________________________________________________________________________ =
+ERROR collecting . ________________________________________________________=
+__________________
+/usr/local/lib/python2.7/dist-packages/py/_path/common.py:315: in visit
+>       for x in Visitor(fil, rec, ignore, bf, sort).gen(self):
+/usr/local/lib/python2.7/dist-packages/py/_path/common.py:361: in gen
+>               for p in self.gen(subdir):
+/usr/local/lib/python2.7/dist-packages/py/_path/common.py:361: in gen
+>               for p in self.gen(subdir):
+/usr/local/lib/python2.7/dist-packages/py/_path/common.py:361: in gen
+>               for p in self.gen(subdir):
+/usr/local/lib/python2.7/dist-packages/py/_path/common.py:351: in gen
+>                   if p.check(dir=3D1) and (rec is None or rec(p))])
+/usr/local/lib/python2.7/dist-packages/_pytest/main.py:546: in _recurse
+>       ihook.pytest_collect_directory(path=3Dpath, parent=3Dself)
+/usr/local/lib/python2.7/dist-packages/_pytest/main.py:156: in call_matchin=
+g_hooks
+>       plugins =3D self.config._getmatchingplugins(self.fspath)
+/usr/local/lib/python2.7/dist-packages/_pytest/config.py:319: in _getmatchi=
+ngplugins
+>       plugins +=3D self._conftest.getconftestmodules(fspath)
+/usr/local/lib/python2.7/dist-packages/_pytest/config.py:214: in getconftes=
+tmodules
+>                       clist.append(self.importconftest(conftestpath))
+/usr/local/lib/python2.7/dist-packages/_pytest/config.py:243: in importconf=
+test
+>           self._conftestpath2mod[conftestpath] =3D mod =3D conftestpath.p=
+yimport()
+/usr/local/lib/python2.7/dist-packages/py/_path/local.py:532: in pyimport
+>           __import__(modname)
+finmag/tests/comparison/anisotropy/conftest.py:4: in <module>
+>   from finmag.util.meshes import from_geofile
+finmag/__init__.py:7: in <module>
+>   from init import *
+init.py:16: in init finmag.init (finmag/init.c:1402)
+>   ???
+finmag/example/__init__.py:9: in <module>
+>   import normal_modes
+finmag/example/normal_modes/__init__.py:8: in <module>
+>   from disk import disk
+disk.py:5: in init finmag.example.normal_modes.disk (finmag/example/normal_=
+modes/disk.c:2094)
+>   ???
+E   NameError: __file__
+---------------------------------------------------------------------------=
+ Captured stderr ----------------------------------------------------------=
+------------------
+[2013-10-05 08:00:38] INFO: Finmag logging output will be appended to file:=
+ '/home/fangohr/.finmag/global.log'
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D 1 error in =
+1.73 seconds =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D
+make: *** [test] Error 1
+=3D=3D=3D=3D=3D=3D=3D=3D=3D End output of 'make test' =3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D
+Cleanup: removing temporary working directory '/tmp/tmpuMHHZK' as well as t=
+est license files.
+Traceback (most recent call last):
+  File "dist-wrapper.py", line 172, in <module>
+    deb=3Dargs['build_deb'])
+  File "dist-wrapper.py", line 97, in create_binary_distribution
+    run_makefile_target('test')
+  File "/home/fangohr/hg/finmag-dist/dist_helpers.py", line 70, in run_make=
+file_target
+    raise InstallationError("'make {}' failed with exit status: {}".format(=
+target, e.returncode))
+dist_helpers.InstallationError: 'make test' failed with exit status: 2
+fangohr@fangohr-VirtualBox-Mint ~/hg/finmag-dist $=20
+
+
+
+Begin forwarded message:
+
+> From: <commits-noreply@bitbucket.org>
+> Subject: commit/finmag: 2 new changesets
+> Date: 5 October 2013 08:10:11 BST
+> To: <h.fangohr@soton.ac.uk>, <ww1g11@soton.ac.uk>, <maximilian.albert@gma=
+il.com>, <mb4e10@ecs.soton.ac.uk>, <mb8g11@soton.ac.uk>, <d.chernyshenko@so=
+ton.ac.uk>, <r.carey@soton.ac.uk>, <mark.vousden@soton.ac.uk>
+>=20
+> 2 new commits in finmag:
+>=20
+> https://bitbucket.org/fangohr/finmag/commits/259045458e54/
+> Changeset:   259045458e54
+> User:        fangohr
+> Date:        2013-10-05 08:46:03
+> Summary:     Attempt fixing Cython errors. Max, can you check
+> I have not changed the meaning of this test, please?
+> (finmag/energies/test_energies_in_regions.py:test_energies_in_touching_su=
+bdomains)
+> Affected #:  1 file
+>=20
+> diff -r 49c4bdf51cfe32ac3924a52a9e21ee7c0cc454ee -r 259045458e54c176f79f3=
+476b8f965b79d88f1b8 src/finmag/energies/test_energies_in_regions.py
+> --- a/src/finmag/energies/test_energies_in_regions.py
+> +++ b/src/finmag/energies/test_energies_in_regions.py
+> @@ -107,9 +107,22 @@
+> # XXX TODO: need to investigate this.
+> @pytest.mark.xfail
+> def test_energies_in_touching_subdomains():
+> +
+> +    # Max, I fixed some things in here (missing m_vals, Ms, Zeeman and u=
+nit_length.)
+> +    # Also changed 'get_domain_id' to 'get_domain_id2' in the MultiDomai=
+nTest
+> +    # call below. Could you check this is what you meant? (Maybe the=20
+> +    # test even passes now?) XXX TODO, 5 Oct 2013, Hans
+> +    zeeman =3D Zeeman(1e6 * np.array([1, 0, 0]))
+> +
+> +    m_vals =3D {1: [1, 0, 0],
+> +              2: [0.5, -0.8, 0]}
+>     box_mesh =3D df.BoxMesh(-50, -20, 0, 50, 20, 5, 30, 10, 2)
+> +
+> +    Ms =3D 8.6e5
+> +    unit_length =3D 1e-9
+> +
+>     def get_domain_id2(pt):
+>         return 1 if (pt[0] < 0) else 2
+> -    multi_domain_test =3D MultiDomainTest(box_mesh, get_domain_id, m_val=
+s, Ms, unit_length=3Dunit_length)
+> +    multi_domain_test =3D MultiDomainTest(box_mesh, get_domain_id2, m_va=
+ls, Ms, unit_length=3Dunit_length)
+>     # The next line fails for touching subdomains. Need to investigate th=
+is.
+>     multi_domain_test.check_energy_consistency(zeeman)
+>=20
+
+
+-------------------------------------
+finmag-team mailing list.
+
+From marvin  Sat Oct  5 18:11:10 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Sat, 05 Oct 2013 18:11:10 +0100 (BST)
+Received: by 10.227.121.137 with SMTP id h9csp5085wbr;
+        Sat, 5 Oct 2013 09:22:18 -0700 (PDT)
+X-Received: by 10.14.126.69 with SMTP id a45mr151862eei.65.1380990138205;
+        Sat, 05 Oct 2013 09:22:18 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id b1si15497301eep.287.1969.12.31.16.00.00;
+        Sat, 05 Oct 2013 09:22:18 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r95GM5u5013911;
+	Sat, 5 Oct 2013 17:22:05 +0100
+Received: from UOS-MSG00037-VS.soton.ac.uk (uos-msg00037-vs.soton.ac.uk [152.78.119.39])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p94HM50774611826CK ret-id none; Sat, 05 Oct 2013 17:22:06 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.39) with Microsoft SMTP Server (TLS) id 14.2.342.3; Sat, 5 Oct
+ 2013 17:22:05 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r95GLv67005086;	Sat, 5 Oct 2013 17:21:57 +0100
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r95GLuNq005077	for <finmag-team@lists.soton.ac.uk>; Sat, 5 Oct 2013 17:21:56
+ +0100
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r95GLd9a011948	for
+ <finmag-team@lists.soton.ac.uk>; Sat, 5 Oct 2013 17:21:39 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk
+ [152.78.119.37])	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16]) envelope-from <H.FANGOHR@soton.ac.uk> with ESMTP	id
+ p94HLd0862203217rr ret-id none; Sat, 05 Oct 2013 17:21:39 +0100
+Received: from [192.168.0.45] (92.25.163.64) by smtp.soton.ac.uk
+ (152.78.119.37) with Microsoft SMTP Server (TLS) id 14.2.342.3; Sat, 5 Oct
+ 2013 17:21:39 +0100
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
+Subject: [finmag-team] Re: Finmag installation script for OOMMF is broken.
+From: Hans Fangohr <h.fangohr@soton.ac.uk>
+In-Reply-To: <3692ADA8EC38D540B0E0B4DF59578701291E692B@SRV00359.soton.ac.uk>
+Date: Sat, 5 Oct 2013 17:21:38 +0100
+CC: Hans Fangohr <h.fangohr@soton.ac.uk>, "Fangohr H." <h.fangohr@soton.ac.uk>,
+        "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+Message-ID: <E42B8D21-FDD6-4EBC-AB78-00AF8D152B4C@soton.ac.uk>
+References: <3692ADA8EC38D540B0E0B4DF59578701291E692B@SRV00359.soton.ac.uk>
+To: "vousden m. (mv3g08)" <mark.vousden@soton.ac.uk>
+X-Mailer: Apple Mail (2.1510)
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<H.FANGOHR@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from quoted-printable to 8bit by maillists.sucs.soton.ac.uk id r95GLuNq005078
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p94HM5077461182600; tid=p94HM50774611826CK; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.39; helo=<UOS-MSG00037-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.39; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r95GM5u5013911
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi Mark,
+
+the OOMMF installation should proceed fine if the website was up.
+
+Can anybody put the required OOMMF tar ball into Dropbox or post to Mark, p=
+lease?
+
+Thanks,
+
+Hans
+
+
+On 5 Oct 2013, at 17:10, "vousden m. (mv3g08)" <mark.vousden@soton.ac.uk>
+ wrote:
+
+> Hi Hans,
+>=20
+> In trying to install finmag, I have encountered a problem with the OOMMF =
+script (finmag/install/oomff.sh). Naturally the website where the tarball w=
+ould be is no longer. I would raise this as an issue in the repository, but=
+ I wasn't sure that it was being used (since I see no issues raised there).
+>=20
+> As a somewhat temporary fix, could you send me the tarball (oommf12a4pre-=
+20100719bis.tar.gz) so that I can install this? Alternatively, is this file=
+ hosted somewhere else?
+>=20
+> Sorry to bother you.
+>=20
+> Mark Vousden
+> Research Postgraduate
+> Building 25, Room 2051
+> Faculty of Engineering and the Environment (FEE)
+> Institute of Complex Systems Simulation (ICSS)
+> University of Southampton, UK
+
+
+-------------------------------------
+finmag-team mailing list.
+
