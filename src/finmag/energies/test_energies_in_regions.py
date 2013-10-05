@@ -107,9 +107,22 @@ def test_energies_in_separated_subdomains(tmpdir):
 # XXX TODO: need to investigate this.
 @pytest.mark.xfail
 def test_energies_in_touching_subdomains():
+
+    # Max, I fixed some things in here (missing m_vals, Ms, Zeeman and unit_length.)
+    # Also changed 'get_domain_id' to 'get_domain_id2' in the MultiDomainTest
+    # call below. Could you check this is what you meant? (Maybe the 
+    # test even passes now?) XXX TODO, 5 Oct 2013, Hans
+    zeeman = Zeeman(1e6 * np.array([1, 0, 0]))
+
+    m_vals = {1: [1, 0, 0],
+              2: [0.5, -0.8, 0]}
     box_mesh = df.BoxMesh(-50, -20, 0, 50, 20, 5, 30, 10, 2)
+
+    Ms = 8.6e5
+    unit_length = 1e-9
+
     def get_domain_id2(pt):
         return 1 if (pt[0] < 0) else 2
-    multi_domain_test = MultiDomainTest(box_mesh, get_domain_id, m_vals, Ms, unit_length=unit_length)
+    multi_domain_test = MultiDomainTest(box_mesh, get_domain_id2, m_vals, Ms, unit_length=unit_length)
     # The next line fails for touching subdomains. Need to investigate this.
     multi_domain_test.check_energy_consistency(zeeman)
