@@ -129,7 +129,7 @@ def FFT_m(filename, t_step=None, t_ini=None, t_end=None, subtract_values='averag
         if not(np.allclose(t_step, np.diff(ts))):
             raise ValueError("A value for t_step must be explicitly provided "
                              "since timesteps in the file '{}' are not "
-                             "equidistantly spaced.".format(ndt_filename))
+                             "equidistantly spaced.".format(filename))
     f_sample = 1. / t_step  # sampling frequency
     if t_ini is None: t_ini = ts[0]
     if t_end is None: t_end = ts[-1]
