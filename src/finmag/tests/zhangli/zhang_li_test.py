@@ -89,9 +89,6 @@ def compare_gradient_field1():
     df.plot(v)
     df.plot(v2)
     
-    
-    
-    
     df.interactive()
     print field
 
@@ -159,6 +156,7 @@ def compare_gradient_field2():
 
 if __name__ == "__main__":
     #test_zhangli()
-    compare_gradient_field2()
+    compare_gradient_field1()
+    #compare_gradient_field2()
 
 

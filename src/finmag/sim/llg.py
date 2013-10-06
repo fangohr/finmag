@@ -412,9 +412,23 @@ class LLG(object):
         sigma = df.TestFunction(self.S3)
         
         self.nodal_volume_S3 = nodal_volume(self.S3)*self.unit_length
+        
+        dim = self.S3.mesh().topology().dim()
+        
+        ty = tz = 0
+        
+        tx = self._J[0]*df.dot(df.grad(tau)[:,0],sigma)
+        
+        if dim >= 2:
+            ty = self._J[1]*df.dot(df.grad(tau)[:,1],sigma)
+        
+        if dim >= 3:
+            tz = self._J[2]*df.dot(df.grad(tau)[:,2],sigma)
+        
+        self.gradM = df.assemble((tx+ty+tz)*df.dx)
 
-        #TODO: check the following method works for 2d mesh or not.
-        self.gradM = df.assemble(df.dot(df.dot(self._J, df.nabla_grad(tau)),sigma)*df.dx)
+        #self.gradM = df.assemble(df.dot(df.dot(self._J, df.nabla_grad(tau)),sigma)*df.dx)
+        
     
     def compute_gradient_field(self):
 
