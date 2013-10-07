@@ -16577,3 +16577,142 @@ ould be is no longer. I would raise this as an issue in the repository, but=
 -------------------------------------
 finmag-team mailing list.
 
+From marvin  Mon Oct  7 03:11:22 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Mon, 07 Oct 2013 03:11:22 +0100 (BST)
+Received: by 10.227.121.137 with SMTP id h9csp54807wbr;
+        Sun, 6 Oct 2013 18:54:26 -0700 (PDT)
+X-Received: by 10.15.53.70 with SMTP id q46mr318316eew.48.1381110865575;
+        Sun, 06 Oct 2013 18:54:25 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk. [152.78.128.16])
+        by mx.google.com with ESMTP id k49si21044041een.22.1969.12.31.16.00.00;
+        Sun, 06 Oct 2013 18:54:25 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) client-ip=152.78.128.16;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk;
+       dkim=neutral (bad format) header.i=@gmail.com;
+       dmarc=fail (p=NONE dis=NONE) header.from=gmail.com
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r971sCXk030270;
+	Mon, 7 Oct 2013 02:54:12 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk [152.78.119.37])
+	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk [152.78.128.16]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p962sC08622298048Z ret-id none; Mon, 07 Oct 2013 02:54:12 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.37) with Microsoft SMTP Server (TLS) id 14.2.342.3; Mon, 7 Oct
+ 2013 02:54:12 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r971sBMm012924;	Mon, 7 Oct 2013 02:54:11 +0100
+Received: from mailgate2.iss.soton.ac.uk (mailgate2.iss.soton.ac.uk
+ [152.78.128.103])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r971sBMb012921	for <finmag-team@lists.soton.ac.uk>; Mon, 7 Oct 2013 02:54:11
+ +0100
+Received: from mailgate2.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate2.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r971rs9u024633	for
+ <finmag-team@lists.soton.ac.uk>; Mon, 7 Oct 2013 02:53:54 +0100
+Received: from mail-qa0-f41.google.com (mail-qa0-f41.google.com
+ [209.85.216.41])	by mailgate2.iss.soton.ac.uk (mailgate2.iss.soton.ac.uk
+ [152.78.128.103]) envelope-from <maximilian.albert@gmail.com> with ESMTP	id
+ p962rs0619100602ou ret-id none; Mon, 07 Oct 2013 02:53:54 +0100
+Received: by mail-qa0-f41.google.com with SMTP id ii20so2621581qab.0
+        for <finmag-team@lists.soton.ac.uk>; Sun, 06 Oct 2013 18:53:53 -0700
+ (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type:content-transfer-encoding;
+        bh=6rfHJy+WQUNeug+SgbSwLSRDFxz5QuPS1RW0f5w1RTY=;
+        b=uOQPy7HmdvKwcX2vgUCc+23N6f8X0fo+dK8RgCwYEbhkYOcQ3ysX8id80wuOCQZURT
+         2XGMUxq6jf8ghMpANkERTMoCZpMKo8QyBcjdPUKfcG0DSlQ2rQzBnHAjh33dhUn2N7AU
+         0XnzKB6pPxzKLYIJ/LOgIC+NG02uQnXCyzHsLOLav3G04300afRmbr7cyQSV2Qo9caoN
+         9lstX15uUu7adEXNiWE80P4bs2rDvgBK24+oGm6H5JCl4ax25EqN480wNsy1QfmyNiJi
+         po4tGIYOMrSqy47jinzbSilUQ1MF3YAIqNQWya3DzB5Q7bxIkc3ixHsOGyHzq0LSF93m
+         rOAQ==
+MIME-Version: 1.0
+X-Received: by 10.229.73.6 with SMTP id o6mr33300886qcj.2.1381110833797; Sun,
+ 06 Oct 2013 18:53:53 -0700 (PDT)
+Received: by 10.224.75.131 with HTTP; Sun, 6 Oct 2013 18:53:53 -0700 (PDT)
+In-Reply-To: <E42B8D21-FDD6-4EBC-AB78-00AF8D152B4C@soton.ac.uk>
+References: <3692ADA8EC38D540B0E0B4DF59578701291E692B@SRV00359.soton.ac.uk>
+	<E42B8D21-FDD6-4EBC-AB78-00AF8D152B4C@soton.ac.uk>
+Date: Mon, 7 Oct 2013 09:53:53 +0800
+Message-ID: <CAGA_dmi9-6yV6MApAFJm7-MA3BmX4yc009rd-qJA=B_To2MGnA@mail.gmail.com>
+Subject: Re: [finmag-team] Re: Finmag installation script for OOMMF is broken.
+From: Maximilian Albert <maximilian.albert@gmail.com>
+To: Hans Fangohr <h.fangohr@soton.ac.uk>
+CC: "vousden m. (mv3g08)" <mark.vousden@soton.ac.uk>,
+        "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+Content-Type: text/plain; charset="ISO-8859-1"
+Received-SPF: None; receiver=mailgate2.iss.soton.ac.uk; client-ip=209.85.216.41; helo=<mail-qa0-f41.google.com>
+Received-SPF: Pass; receiver=mailgate2.iss.soton.ac.uk; client-ip=209.85.216.41; envelope-from=<maximilian.albert@gmail.com>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from quoted-printable to 8bit by maillists.sucs.soton.ac.uk id r971sBMb012922
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p962sC086222980400; tid=p962sC08622298048Z; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r971sCXk030270
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi Mark,
+
+not sure if you have received a copy of the OOMMF tarball in the
+meantime, but if not I just put one in Dropbox/Group/software (do you
+have access to the Dropbox/Group folder?). Looking at the script
+oommf.sh, if you put the tarball into the directory finmag/install/
+then the script should pick it up automatically.
+
+Cheers,
+Max
+
+
+2013/10/6 Hans Fangohr <h.fangohr@soton.ac.uk>:
+> Hi Mark,
+>
+> the OOMMF installation should proceed fine if the website was up.
+>
+> Can anybody put the required OOMMF tar ball into Dropbox or post to Mark,=
+ please?
+>
+> Thanks,
+>
+> Hans
+>
+>
+> On 5 Oct 2013, at 17:10, "vousden m. (mv3g08)" <mark.vousden@soton.ac.uk>
+>  wrote:
+>
+>> Hi Hans,
+>>
+>> In trying to install finmag, I have encountered a problem with the OOMMF=
+ script (finmag/install/oomff.sh). Naturally the website where the tarball =
+would be is no longer. I would raise this as an issue in the repository, bu=
+t I wasn't sure that it was being used (since I see no issues raised there)=
+.
+>>
+>> As a somewhat temporary fix, could you send me the tarball (oommf12a4pre=
+-20100719bis.tar.gz) so that I can install this? Alternatively, is this fil=
+e hosted somewhere else?
+>>
+>> Sorry to bother you.
+>>
+>> Mark Vousden
+>> Research Postgraduate
+>> Building 25, Room 2051
+>> Faculty of Engineering and the Environment (FEE)
+>> Institute of Complex Systems Simulation (ICSS)
+>> University of Southampton, UK
+>
+>
+> -------------------------------------
+> finmag-team mailing list.
+
+-------------------------------------
+finmag-team mailing list.
+
