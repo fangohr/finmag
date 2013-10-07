@@ -372,7 +372,7 @@ def compute_normal_modes_generalised(A, M, n_values=10, tol=1e-8):
     return 1/omega, w
 
 
-def export_normal_mode_animation(sim, freq, w, filename, num_cycles=1, num_snapshots_per_cycle=20, scaling=0.2):
+def export_normal_mode_animation(sim, freq, w, filename, num_cycles=1, num_snapshots_per_cycle=20, scaling=0.2, dm_only=False):
     """
     Save a number of vtk files of different snapshots of a given normal mode.
     These can be imported and animated in Paraview.
@@ -405,10 +405,18 @@ def export_normal_mode_animation(sim, freq, w, filename, num_cycles=1, num_snaps
         The number of snapshot per cycle to be exported. Thus the total number of
         exported frames is num_cycles * num_snapshots_per_cycle.
 
-    scaling :  double
+    scaling : float
 
-        Determines the size of the oscillation amplitudes in the animation (relative
-        to the lengths of the magnetic moments).
+        If `dm_only` is False, this determines the maximum size of the
+        oscillation (relative to the magnetisation vector) in the
+        visualisation. If `dm_only` is True, this has no effect.
+
+    dm_only :  bool (optional)
+
+        If False (the default), plots `m0 + scaling*dm(t)`, where m0 is the
+        average magnetisation and dm(t) the (spatially varying)
+        oscillation corresponding to the frequency of the normal mode.
+        If True, only `dm(t)` is plotted.
 
     """
     if not freq.imag == 0:
@@ -444,7 +452,10 @@ def export_normal_mode_animation(sim, freq, w, filename, num_cycles=1, num_snaps
     f = df.File(filename, 'compressed')
     for (i, t) in enumerate(timesteps):
         logger.debug("Saving animation snapshot for timestep {} ({}/{})".format(t, i, num_cycles * num_snapshots_per_cycle))
-        m_osc = (m0_array + scaling * a * np.cos(t * freq + phi)).reshape(-1)
+        if dm_only is False:
+            m_osc = (m0_array + scaling * a * np.cos(t * freq + phi)).reshape(-1)
+        else:
+            m_osc = (scaling * a * np.cos(t * freq + phi)).reshape(-1)
         #save_vector_field(m_osc, os.path.join(dirname, basename + '_{:04d}.vtk'.format(i)))
         func.vector().set_local(m_osc)
         f << func
