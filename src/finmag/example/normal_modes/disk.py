@@ -2,8 +2,6 @@ import finmag
 import dolfin as df
 import os
 
-MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
-
 def disk(relaxed=True, name='normal_modes_nanodisk'):
     """
     Permalloy nanodisk with diameter d=60 nm, height h=10 nm and mesh
@@ -15,7 +13,11 @@ def disk(relaxed=True, name='normal_modes_nanodisk'):
     d = 60
     h = 10
     maxh = 5.0
-
+    
+    #I don't know it's suitable to move the global definition to local one
+    #just try to make the cython happy? 
+    MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
+    
     mesh = df.Mesh(os.path.join(MODULE_DIR, 'disk__d_60__h_10__maxh_5.xml.gz'))
 
     # Material parameters for Permalloy
