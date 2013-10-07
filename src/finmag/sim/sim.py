@@ -1471,9 +1471,6 @@ class NormalModeSimulation(Simulation):
         if use_generalised == False:
             raise NotImplementedError("Only the generalised version is supported at the moment")
 
-        if discard_negative_frequencies:
-            n_values *= 2
-
         # XXX TODO: If A and M were computed before, save them internally and don't recompute them!
         #           (We may want a switch 'force_recompute' though.)
         A, M, Q, Qt = compute_generalised_eigenproblem_matrices( \
@@ -1484,17 +1481,7 @@ class NormalModeSimulation(Simulation):
         self.A = A
         self.M = M
 
-        omega, w = compute_normal_modes_generalised(A, M, n_values=n_values)
-
-        # Find the indices that sort the frequency by absolute value
-        sorted_indices = sorted(np.arange(len(omega)), key=lambda i: abs(omega[i]))
-
-        if discard_negative_frequencies:
-            # Discard indices corresponding to negative frequencies
-            sorted_indices = filter(lambda i: omega[i] >= 0.0, sorted_indices)
-
-        omega = omega[sorted_indices]
-        w = w[:, sorted_indices]  # XXX TODO: can we avoid copying the columns to save memory?!?
+        omega, w = compute_normal_modes_generalised(A, M, n_values=n_values, discard_negative_frequencies=discard_negative_frequencies)
 
         self.eigenfreqs = omega
         self.eigenvecs = w

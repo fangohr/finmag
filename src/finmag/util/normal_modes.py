@@ -361,15 +361,33 @@ def compute_normal_modes(D, n_values=10, sigma=0., tol=1e-8, which='LM'):
     return omega, w
 
 
-def compute_normal_modes_generalised(A, M, n_values=10, tol=1e-8):
+def compute_normal_modes_generalised(A, M, n_values=10, tol=1e-8, discard_negative_frequencies=False):
     logger.debug("Solving eigenproblem. This may take a while...".format(df.toc()))
     df.tic()
+
+    if discard_negative_frequencies:
+        n_values *= 2
+
     # Have to swap M and A since the M matrix has to be positive definite for eigsh!
-    omega, w = scipy.sparse.linalg.eigsh(M, n_values, A, which='LM', tol=tol, return_eigenvectors=True)
+    omega_inv, w = scipy.sparse.linalg.eigsh(M, n_values, A, which='LM', tol=tol, return_eigenvectors=True)
     logger.debug("Computing the eigenvalues and eigenvectors took {:.2f} seconds".format(df.toc()))
 
-    # We need to return 1/omega because we swapped M and A above and thus computed the inverse eigenvalues.
-    return 1/omega, w
+    # The true eigenfrequencies are given by 1/omega_inv because we swapped M and A above and thus computed the inverse eigenvalues.
+    omega = 1. / omega_inv
+
+    # Find the indices that sort the frequency by absolute value,
+    # with the positive frequencies occurring before the negative ones (where.
+    sorted_indices = sorted(np.arange(len(omega)),
+                            key=lambda i: (np.round(abs(omega[i]), decimals=4), -np.sign(omega[i]), abs(omega[i])))
+
+    if discard_negative_frequencies:
+        # Discard indices corresponding to negative frequencies
+        sorted_indices = filter(lambda i: omega[i] >= 0.0, sorted_indices)
+
+    omega = omega[sorted_indices]
+    w = w[:, sorted_indices]  # XXX TODO: can we somehow avoid copying the columns to save memory?!?
+
+    return omega, w
 
 
 def export_normal_mode_animation(sim, freq, w, filename, num_cycles=1, num_snapshots_per_cycle=20, scaling=0.2, dm_only=False):
