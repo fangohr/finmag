@@ -18,20 +18,13 @@ def relax(mesh):
     sim.add(DMI(D = 4e-3))
     sim.add(Zeeman((0,0,0.45*Ms)))
 
-    ts = np.linspace(0, 1e-9, 101)
-    for t in ts:
-        sim.run_until(t)
-        #sim.save_vtk()
-        p = df.plot(sim.llg._m)
-        
-    df.plot(sim.llg._m).write_png("vortex")
-    df.interactive()
+    sim.relax()
     
     np.save('m0.npy',sim.m)
 
 
 def init_J(pos):
-    return (1e12,0,0)
+    return (1e11,0,0)
     
 def move_skyrmion(mesh):
     Ms = 8.6e5
@@ -44,7 +37,7 @@ def move_skyrmion(mesh):
     
     sim.alpha=0.01
     
-    sim.set_zhangli(init_J, 1.0,0.05)
+    sim.set_zhangli(init_J, 1.0,0.01)
     
     ts = np.linspace(0, 1e-9, 101)
     for t in ts:
@@ -58,7 +51,7 @@ def move_skyrmion(mesh):
 if __name__=='__main__':
     mesh = df.RectangleMesh(0,0,100,100,40,40)
     #mesh = df.BoxMesh(0, 0, 0, 100, 100, 2, 40, 40, 1)
-    relax(mesh)
+    #relax(mesh)
     move_skyrmion(mesh)
     
 
