@@ -20,7 +20,6 @@ def test_compute_generalised_eigenproblem_matrices_single_sphere(tmpdir):
 
     H_z = 1.42e5  # slightly odd value to make the test a bit more reliable
     frequency_unit = 1e9
-    freq_expected = gamma * H_z / (2*pi*frequency_unit)
 
     sim = sim_with(mesh, Ms=1e6, m_init=[0, 0, 1], A=13e-12, H_ext=[0, 0, H_z], unit_length=1e-9, demag_solver='FK')
     sim.relax()
@@ -38,8 +37,9 @@ def test_compute_generalised_eigenproblem_matrices_single_sphere(tmpdir):
     #
     #    omega_0 = gamma * B_0
     #
-    # XXX TODO: Should we divide by 2*pi here, or should the factor 2*pi actually be included in the frequency?!?!??!
-    logger.warning("XXX TODO: Should we divide by 2*pi in this test, or should the factor 2*pi actually be included in the frequency?!?!??!")
+    # The frequency is equal to omega_0 / (2*pi).
+    #
+    freq_expected = gamma * H_z / (2*pi*frequency_unit)
     assert(np.allclose(omega[0], +freq_expected, atol=0, rtol=1e-2))
     assert(np.allclose(omega[1], -freq_expected, atol=0, rtol=1e-2))
 
