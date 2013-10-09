@@ -4,6 +4,7 @@ import finmag
 import logging
 import pytest
 import os
+from aeon import default_timer
 from glob import glob
 from distutils.version import LooseVersion
 from finmag import sim_with, Simulation, set_logging_level, normal_mode_simulation
@@ -15,7 +16,6 @@ from finmag.util.mesh_templates import EllipticalNanodisk, Sphere
 from finmag.sim import sim_helpers
 from finmag.energies import Zeeman, TimeZeeman, Exchange, UniaxialAnisotropy
 from finmag.util.fileio import Tablereader
-from finmag.util.timings import default_timer
 from finmag.util.ansistrm import ColorizingStreamHandler
 
 logger = logging.getLogger("finmag")

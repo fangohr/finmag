@@ -4,7 +4,7 @@ import glob
 import time
 import logging
 import dolfin as df
-from finmag.util.timings import mtimed
+from aeon import mtimed
 
 log = logging.getLogger(name="finmag")
 
@@ -23,8 +23,8 @@ class VTK(object):
     2. To save a series of snapshots.
 
     In that case, don't pass in a ``filename``, but only a ``prefix``. The
-    filename will then be built using the ``prefix``, the current number of
-    the snapshot, and the simulation time at which is was taken.
+    filename will then be built using the ``prefix`` and the current number of
+    the snapshot.
 
     """
     def __init__(self, filename="", directory="", force_overwrite=False, prefix=""):
@@ -32,10 +32,9 @@ class VTK(object):
         Force the object into one of the two modes described in the class documentation.
 
         If `filename` is empty, a default filename will be generated
-        based on a sequentially increasing counter and the current
-        time of the simulation. A user-defined string can be
-        inserted into the generated filename by passing `prefix`. The prefix
-        will be ignored if a filename is passed.
+        based on a sequentially increasing counter.
+        A user-defined string can be inserted into the generated filename by
+        passing `prefix`. The prefix will be ignored if a filename is passed.
 
         Note that `filename` is also allowed to contain directory
         components (for example filename='snapshots/foo.pvd'), which
@@ -61,9 +60,7 @@ class VTK(object):
 
         if filename == "":
             prefix_insert = "" if self.prefix == "" else self.prefix + "_"
-            raise NotImplementedError("Here is a bug: the next line wants to use t but we don't know what it is yet. The author of this code needs to review it. MA?")
-            filename = "{}{}_{:.3f}ns.pvd".format(prefix_insert,
-                self.vtk_snapshot_no, t * 1e9)
+            filename = "{}.pvd".format(prefix_insert, self.counter)
 
         ext = os.path.splitext(filename)[1]
         if ext != '.pvd':

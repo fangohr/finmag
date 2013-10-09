@@ -1,7 +1,7 @@
+from aeon import default_timer
 from finmag import Simulation
 from finmag.integrators.llg_integrator import llg_integrator
 from finmag.energies import Exchange, Demag
-from finmag.util.timings import default_timer
 from finmag.util.meshes import from_geofile
 import dolfin as df
 

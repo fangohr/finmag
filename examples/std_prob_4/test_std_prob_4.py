@@ -3,12 +3,12 @@ import pytest
 import numpy as np
 import dolfin as df
 import matplotlib.pyplot as plt
+from aeon import default_timer
 from math import sqrt
 from finmag.util.meshes import from_geofile
 from finmag.util.consts import mu0
 from finmag import Simulation
 from finmag.energies import Zeeman, Demag, Exchange
-from finmag.util.timings import default_timer
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 m_0_file = os.path.join(MODULE_DIR, "m_0.npy")

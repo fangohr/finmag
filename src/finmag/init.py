@@ -30,7 +30,7 @@ def timings_report(n=10):
         print finmag.timings_report()
 
     """
-    from finmag.util.timings import default_timer
+    from aeon import default_timer
     return default_timer.report(n)
 
 logger.debug("%20s: %s" % ("Finmag", __version__))

@@ -1,6 +1,6 @@
 import logging
 import dolfin as df
-from finmag.util.timings import mtimed
+from aeon import mtimed
 from finmag.energies.energy_base import EnergyBase
 from finmag.util.consts import mu0
 from finmag.llb.material import Material
@@ -11,10 +11,10 @@ logger = logging.getLogger('finmag')
 class ExchangeStd(EnergyBase):
     """
     Compute the exchange field for LLB case.
-    
-    Notes: This class just works for one material which means even 
-    the magnetisation is not normalised, but a constant value m_e 
-    everywhere is expected. 
+
+    Notes: This class just works for one material which means even
+    the magnetisation is not normalised, but a constant value m_e
+    everywhere is expected.
 
     .. math::
 
@@ -31,7 +31,7 @@ class ExchangeStd(EnergyBase):
                 * 'box-assemble'
                 * 'box-matrix-numpy'
                 * 'box-matrix-petsc' [Default]
-                * 'project'        
+                * 'project'
 
             See documentation of EnergyBase class for details.
 
@@ -79,7 +79,7 @@ class ExchangeStd(EnergyBase):
         self.exchange_factor = exchange_factor  # XXX
 
         E = exchange_factor * mu0 * Ms \
-            * df.inner(df.grad(m), df.grad(m)) 
+            * df.inner(df.grad(m), df.grad(m))
         # Needed for energy density
         S1 = df.FunctionSpace(S3.mesh(), "CG", 1)
         w = df.TestFunction(S1)
@@ -93,7 +93,7 @@ class ExchangeStd(EnergyBase):
                 m=m,
                 Ms=Ms,
                 unit_length=unit_length)
-    
+
     def compute_field(self):
         """
         Compute the field associated with the energy.
@@ -104,9 +104,9 @@ class ExchangeStd(EnergyBase):
 
         """
 
-        
+
         Hex = super(ExchangeStd, self).compute_field()
-        
+
         return Hex / self.Me ** 2
 
 
@@ -115,9 +115,9 @@ class Exchange(object):
         self.C = mat._A_dg
         self.me= mat._m_e
         self.in_jacobian=in_jacobian
-   
+
     @mtimed
-    def setup(self, S3, m, Ms0, unit_length=1.0): 
+    def setup(self, S3, m, Ms0, unit_length=1.0):
         self.S3 = S3
         self.m = m
         self.Ms0=Ms0
@@ -131,15 +131,15 @@ class Exchange(object):
         self.K = df.PETScMatrix()
         df.assemble(self.C*df.inner(df.grad(u3),df.grad(v3))*df.dx, tensor=self.K)
         self.H = df.PETScVector()
-        
+
         self.vol = df.assemble(df.dot(v3, df.Constant([1, 1, 1])) * df.dx).array()
-        
+
         self.coeff=-self.exchange_factor/(self.vol*self.me**2)
-    
+
     def compute_field(self):
-        
+
         self.K.mult(self.m.vector(), self.H)
-         
+
         return  self.coeff*self.H.array()
 
 
@@ -153,21 +153,21 @@ if __name__ == "__main__":
     C = 1.3e-11  # J/m exchange constant
     expr = df.Expression(('4.0*sin(x[0])', '4*cos(x[0])','0'))
     m0 = df.interpolate(expr, S3)
-    
+
     from finmag.llb.material import Material
     mat = Material(mesh, name='FePt')
     mat.set_m(expr)
     mat.T = 1
     mat.alpha=0.01
-    
+
     exch = Exchange(mat)
     exch.setup(mat.S3, mat._m, mat.Ms0, unit_length=1e-9)
-    
+
     #exch2 = ExchangeStd(mat)
     #exch2.setup(mat.S3, mat._m, mat.Ms0, unit_length=1e-9)
-    
+
     #print max(exch2.compute_field()-exch.compute_field())
-    
+
     print exch.compute_field()
-    
+
     #print timings.report()

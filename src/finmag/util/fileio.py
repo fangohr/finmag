@@ -3,7 +3,7 @@ import logging
 import numpy as np
 from glob import glob
 from types import TupleType, StringType
-from finmag.util.timings import mtimed
+from aeon import mtimed
 logger = logging.getLogger(name='finmag')
 
 
@@ -64,7 +64,7 @@ class Tablewriter(object):
         if os.path.exists(filename) and not override:
             msg = "File %s exists already; cowardly stopping" % filename
             raise RuntimeError(msg)
-        
+
         self.save_head=False
 
     def default_entity_order(self):
@@ -72,7 +72,7 @@ class Tablewriter(object):
         # time needs to go first
         keys.remove('time')
         return ['time'] + sorted(keys)
-    
+
     def update_entity_order(self):
         self.entity_order = self.default_entity_order()
 
@@ -95,14 +95,14 @@ class Tablewriter(object):
     @mtimed
     def save(self):
         """Append data (spatial averages of fields) for current configuration"""
-        
+
         if not self.save_head:
             f = open(self.filename, 'w')
             # Write header
             f.write(self.headers())
             f.close()
             self.save_head=True
-        
+
         # open file
         with open(self.filename, 'a') as f:
             f.write(' ' * len(self.comment_symbol))  # account for comment symbol width
@@ -159,7 +159,7 @@ class Tablereader(object):
 
         # some consistency checks: must have as many columns as
         # headers (disregarding the comment symbol)
-        # for the case that only one line data 
+        # for the case that only one line data
         if len(self.data) == self.data.size:
             assert self.data.size == len(headers) - 1
             self.data.shape=(1, self.data.size)
