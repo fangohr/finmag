@@ -1,6 +1,6 @@
 import dolfin as df
 import numpy as np
-from finmag.util.timings import Timings
+from aeon import Timer
 from finmag.util import helpers
 import finmag.util.solver_benchmark as bench
 
@@ -15,7 +15,7 @@ laplace.add("preconditioner", "default")
 default_parameters.add(poisson)
 default_parameters.add(laplace)
 
-demag_timings = Timings()
+demag_timings = Timer()
 
 
 class FemBemDeMagSolver(object):

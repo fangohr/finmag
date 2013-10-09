@@ -10,10 +10,10 @@ a template for other techniques like the GCR.
 """
 import numpy as np
 import dolfin as df
+from aeon import timed, mtimed, Timer, default_timer
 from finmag.util.consts import mu0
 from finmag.native.llg import compute_bem_fk
 from finmag.util.meshes import nodal_volume
-from finmag.util.timings import Timings, default_timer, timed, mtimed
 from finmag.util import helpers
 
 
@@ -22,7 +22,7 @@ def prepared_timed(measurement_group, timer_to_use):
         return timed(measurement_name, measurement_group, timer_to_use)
     return new_timed
 
-fk_timer = Timings()
+fk_timer = Timer()
 fk_timed = prepared_timed("FKDemag", fk_timer)
 
 

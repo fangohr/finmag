@@ -2,7 +2,7 @@ import logging
 import numpy as np
 import dolfin as df
 import solver_base as sb
-from finmag.util.timings import default_timer
+from aeon import default_timer
 import finmag.util.solver_benchmark as bench
 from finmag.native.treecode_bem import FastSum
 from finmag.native.treecode_bem import compute_solid_angle_single
@@ -209,7 +209,7 @@ if __name__ == "__main__":
     """
     print stop-start,stop2-start2
 
-    from finmag.util.timings import default_timer
+    from aeon import default_timer
     print default_timer.report(20)
     """
 
