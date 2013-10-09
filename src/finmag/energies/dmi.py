@@ -1,7 +1,7 @@
 import dolfin as df
 import numpy as np
 import logging
-from finmag.util.timings import mtimed
+from aeon import mtimed
 from energy_base import EnergyBase
 from finmag.util.consts import mu0
 from finmag.util import helpers
@@ -32,7 +32,7 @@ def dmi_manual_curl(m, D, dim):
          E = D * (mx*curlx + my*curly + mz*curlz) * df.dx
 
        Derivatives along the z direction are set to be zero for both 1d and 2d mesh,
-       and derivatives along the y direction are zero for 1d mesh since the physics 
+       and derivatives along the y direction are zero for 1d mesh since the physics
        does not change as a function of these coordinates.
     """
 
@@ -67,7 +67,7 @@ class DMI(EnergyBase):
 
         E_{\\text{DMI}} = \\int_\\Omega D \\vec{M} \\cdot (\\nabla \\times \\vec{M})  dx
 
-    
+
 
     *Arguments*
 
@@ -123,7 +123,7 @@ class DMI(EnergyBase):
         self.D.rename('D', 'DMI_constant')
         self.D_av = np.average(self.D.vector().array())
         del(self.D_waiting_for_mesh)
-        
+
         meshdim = S3.mesh().topology().dim()
         if meshdim == 1:
             E_integrand = dmi_manual_curl(m, self.DMI_factor * self.D, dim=1)

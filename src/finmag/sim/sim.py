@@ -11,9 +11,9 @@ import itertools
 import subprocess as sp
 import dolfin as df
 import numpy as np
+from aeon import mtimed
 from glob import glob
 from finmag.sim.llg import LLG
-from finmag.util.timings import mtimed
 from finmag.util.consts import exchange_length, bloch_parameter
 from finmag.util.meshes import mesh_info, mesh_volume, plot_mesh, plot_mesh_with_paraview
 from finmag.util.fileio import Tablewriter, FieldSaver
@@ -231,8 +231,8 @@ class Simulation(object):
         self.llg.set_m(value, normalise=normalise, **kwargs)
 
     m = property(__get_m, set_m)
-    
-    
+
+
 
     @property
     def m_average(self):
@@ -1157,18 +1157,18 @@ class Simulation(object):
                                "See http://fenicsproject.org/download/snapshot_releases.html for details.")
 
     get_submesh = sim_helpers.get_submesh
-    
-    
+
+
     def set_zhangli(self, current_density, polarisation, beta):
         """
         Activates the computation of the Slonczewski spin-torque term in the LLG.
 
         *Arguments*
-        
+
             `current_density` can have any of the forms accepted by the function
             'finmag.util.helpers.vector_valued_function' (see its
             docstring for details).
-            
+
         """
         self.llg.use_zhangli(current_density, polarisation, beta, self.unit_length)
 

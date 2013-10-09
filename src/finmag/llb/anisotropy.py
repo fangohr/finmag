@@ -1,6 +1,6 @@
 import dolfin as df
 import logging
-from finmag.util.timings import mtimed
+from aeon import mtimed
 from finmag.energies.energy_base import EnergyBase
 from material import Material
 logger = logging.getLogger('finmag')

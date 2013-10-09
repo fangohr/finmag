@@ -1,7 +1,7 @@
 import dolfin as df
 import numpy as np
 import logging
-from finmag.util.timings import mtimed
+from aeon import mtimed
 from energy_base import EnergyBase
 from finmag.util.consts import exchange_length
 from finmag.util import helpers

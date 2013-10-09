@@ -1,7 +1,7 @@
 import logging
 import dolfin as df
 import numpy as np
-from finmag.util.timings import mtimed
+from aeon import mtimed
 from finmag.util.consts import mu0
 from finmag.util.meshes import nodal_volume
 from finmag.util import helpers
@@ -101,13 +101,13 @@ class EnergyBase(object):
         self.dE_dm = df.Constant(-1.0 / mu0) \
                 * df.derivative(E_integrand / self.Ms * df.dx, self.m)
 
-        
+
         self.dim = S3.mesh().topology().dim()
         self.nodal_volume_S1 = nodal_volume(self.S1, self.unit_length)
         # same as nodal_volume_S1, just three times in an array to have the same
         # number of elements in the array as the field to be able to divide it.
         self.nodal_volume_S3 = nodal_volume(self.S3)
-        
+
 
         if self.method == 'box-assemble':
             self.__compute_field = self.__compute_field_assemble
@@ -125,7 +125,7 @@ class EnergyBase(object):
                 self.__class__.__name__, self.method, self._supported_methods))
             raise ValueError("Unsupported method '{}' should be one of {}.".format(
                 self.method, self._supported_methods))
-        
+
     @mtimed
     def compute_energy(self):
         """
@@ -187,7 +187,7 @@ class EnergyBase(object):
         """
 
         Hex = self.__compute_field()
-            
+
         return Hex
 
     def average_field(self):
@@ -225,7 +225,7 @@ class EnergyBase(object):
 
         """
         g_form = df.derivative(self.dE_dm, self.m)
-        self.g = df.assemble(g_form).array() 
+        self.g = df.assemble(g_form).array()
 
     def __compute_field_numpy(self):
         Mvec = self.m.vector().array()
