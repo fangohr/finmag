@@ -128,7 +128,7 @@ class TreecodeBEM(sb.FemBemDeMagSolver):
 
         self.phi1_b = self.phi1.vector()[self.b2g_map]
 
-        default_timer.start_next("Compute phi2 at boundary", self.__class__.__name__)
+        default_timer.start("Compute phi2 at boundary", self.__class__.__name__)
         self.fast_sum.fastsum(self.phi2_b, self.phi1_b.array())
 
         #print 'phi2 at boundary',self.res
