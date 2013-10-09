@@ -1,7 +1,7 @@
 import logging
 import dolfin as df
+from aeon import mtimed
 from energy_base import EnergyBase
-from finmag.util.timings import mtimed
 from finmag.util import helpers
 
 logger = logging.getLogger('finmag')
@@ -52,7 +52,7 @@ class UniaxialAnisotropy(EnergyBase):
             H_ani = anisotropy.compute_field()
 
     """
-    
+
     def __init__(self, K1, axis, method="box-matrix-petsc", name='Anisotropy'):
         """
         Define a uniaxial anisotropy with (first) anisotropy constant `K1`

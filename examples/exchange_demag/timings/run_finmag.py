@@ -3,7 +3,7 @@ import os
 import time
 import pprint
 import dolfin as df
-from finmag.util.timings import default_timer
+from aeon import default_timer
 from finmag.util.meshes import from_geofile
 
 from finmag import Simulation

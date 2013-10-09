@@ -2,7 +2,7 @@ import numpy as np
 import dolfin as df
 from finmag import Simulation as Sim
 from finmag.energies import Exchange, UniaxialAnisotropy
-from finmag.util.timings import default_timer
+from aeon import default_timer
 import pylab
 
 K1=520e3  #J/m^3
@@ -12,7 +12,7 @@ Ms=1400e3 #A/m
 
 def Mz_exact(x,x0=x0,A=A,Ms=Ms):
     """Analytical solution.
-    
+
     """
     return Ms*np.cos(np.pi/2 + np.arctan(np.sinh((x - x0)/np.sqrt(A/K1))))
 
@@ -22,7 +22,7 @@ def M0(r):
     length = 500e-9
     x = r[:,0]
     relative_position = -2*(x - offset)/length + 1
-    
+
     # The following two lines are the vectorized version of this:
     # mz = min(1.0, max(-1.0, relative_position))
     max1r = np.where(relative_position < -1.0, -1.0, relative_position)
@@ -38,7 +38,7 @@ def test_domain_wall_profile(do_plot=False):
     mesh = df.IntervalMesh(simplices, 0, L)
     V = df.VectorFunctionSpace(mesh, "CG", 1, dim=dim)
 
-    m0 = df.Function(V)        
+    m0 = df.Function(V)
     coor = mesh.coordinates()
     n = len(m0.vector().array())
 
