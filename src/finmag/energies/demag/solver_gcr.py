@@ -238,12 +238,11 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver,PEQBuilder):
 
         #Solve for phia using FEM
         logger.debug("GCR: Solving for phi_a")
-        gcr_timings.start_next("Solve phia", self.__class__.__name__)
         self.phia = self.solve_phia(self.phia)
 
         #Assemble the vector q.
         logger.debug("GCR: Solving for phi_b on the boundary")
-        gcr_timings.start_next("Build q vector", self.__class__.__name__)
+        gcr_timings.start("Build q vector", self.__class__.__name__)
         if self.qvector_method == "pe":
             q = self.build_vector_q_pe(self.m,self.Ms,self.phia)
         elif self.qvector_method == "box":
@@ -258,16 +257,16 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver,PEQBuilder):
         #Insert the boundary data into the function phib.
         gcr_timings.start_next("Inserting bem data into a dolfin function", self.__class__.__name__)
         self.phib.vector()[self.b2g] = phib_boundary
+        gcr_timings.stop_last()
 
         #Solve for phib on the inside of the mesh with Fem, eq. (3)
         logger.debug("GCR: Solve for phi_b (laplace on the inside)")
-        gcr_timings.start_next("Compute phi_b on the inside", self.__class__.__name__)
         self.phib = self.solve_laplace_inside(self.phib)
 
         #Add together the two potentials
-        gcr_timings.start_next("Add phi1 and phi2", self.__class__.__name__)
+        gcr_timings.start("Add phi1 and phi2", self.__class__.__name__)
         self.phi.vector()[:] = self.phia.vector() + self.phib.vector()
-        gcr_timings.stop("Add phi1 and phi2", self.__class__.__name__)
+        gcr_timings.stop_last()
 
         return self.phi
 
@@ -287,7 +286,7 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver,PEQBuilder):
         if self.bench:
             bench.solve(self.poisson_matrix_dirichlet,phia.vector(),F, benchmark = True)
         else:
-            gcr_timings.start_next("1st linear solve", self.__class__.__name__)
+            gcr_timings.start("1st linear solve", self.__class__.__name__)
             self.poisson_iter = self.poisson_solver.solve(phia.vector(),F)
             gcr_timings.stop("1st linear solve", self.__class__.__name__)
         return phia
