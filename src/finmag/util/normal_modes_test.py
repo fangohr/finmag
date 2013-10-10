@@ -18,7 +18,7 @@ def test_compute_generalised_eigenproblem_matrices_single_sphere(tmpdir):
     print mesh_info(mesh)
     plot_mesh_with_paraview(mesh, outfile='mesh_sphere.png')
 
-    H_z = 1.42e5  # slightly odd value to make the test a bit more reliable
+    H_z = 4.42e5  # slightly odd value to make the test a bit more reliable
     frequency_unit = 1e9
 
     sim = sim_with(mesh, Ms=1e6, m_init=[0, 0, 1], A=13e-12, H_ext=[0, 0, H_z], unit_length=1e-9, demag_solver='FK')
