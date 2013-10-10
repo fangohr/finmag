@@ -113,14 +113,14 @@ def get_debian_package_version(pkg_name):
         with open(os.devnull, 'w') as devnull:
             output = subprocess.check_output(['dpkg', '-s', pkg_name], stderr=devnull)
     except subprocess.CalledProcessError as e:
-        logger.error("Could not determine version of {} using dpkg.".format(pkg_name))
+        logger.warning("Could not determine version of {} using dpkg.".format(pkg_name))
         if e.returncode == 1:
-            logger.error("The package {} is probably not installed.".format(pkg_name))
+            logger.warning("The package {} is probably not installed.".format(pkg_name))
         elif e.returncode == 127:
-            logger.error("This does not seem to be a debian-derived Linux distribution.")
+            logger.warning("This does not seem to be a debian-derived Linux distribution.")
         else:
-            logger.error("Can't determine cause of error.")
-        raise
+            logger.warning("Can't determine cause of error.")
+        return None
 
     lines = output.split('\n')
     version_str = filter(lambda s: s.startswith('Version'), lines)[0]
