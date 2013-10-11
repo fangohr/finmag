@@ -1,6 +1,8 @@
 import logging
 import argparse
 import dolfin as df
+import ufl
+import ffc
 from finmag.util import configuration, ansistrm
 from finmag.util.helpers import start_logging_to_file
 
@@ -52,6 +54,13 @@ if args.colour:
 df.set_log_level(dolfin_level) # use root logger
 logger = logging.getLogger(name='finmag') # to control level separately from dolfin
 logger.setLevel(logging.DEBUG)
+
+# We set messages from UFL and FFC to 'WARNING' level.
+# Maybe these should also be controlled by dolfin_level?
+ufl_logger = logging.getLogger(name='UFL')
+ffc_logger = logging.getLogger(name='FFC')
+ufl_logger.setLevel('WARNING')
+ffc_logger.setLevel('WARNING')
 
 ch = ansistrm.ColorizingStreamHandler()
 ch.setLevel(finmag_level)
