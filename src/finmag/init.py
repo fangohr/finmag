@@ -72,7 +72,7 @@ if util.versions.running_binary_distribution():
         logger.debug("Build Linux and host linux versions agree.")
     else:
         if util.versions.loose_compare_ubuntu_version(vb,vr):
-            logger.warn("Build Linux and host linux versions agree approximately.")
+            logger.warn("Build Linux and host linux versions only agree approximately.")
         else:
             logger.error("Build Linux = %s" % util.binary.buildlinux)
             logger.error("Host Linux = %s" % util.versions.get_linux_issue())
