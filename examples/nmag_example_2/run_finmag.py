@@ -21,9 +21,9 @@ def run_simulation():
     sim.run_until(3e-10)
 
     print default_timer
-    print "The RHS was evaluated {} times, while the Jacobian was computed {} times.".format(
-            sim.integrator.stats()['nfevals'],
-            default_timer._timings['LLG::sundials_jtimes'].calls)
+    #print "The RHS was evaluated {} times, while the Jacobian was computed {} times.".format(
+    #        sim.integrator.stats()['nfevals'],
+    #        default_timer._timings['LLG::sundials_jtimes'].calls)
 
 if __name__ == "__main__":
     run_simulation()
