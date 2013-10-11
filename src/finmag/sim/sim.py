@@ -1521,7 +1521,7 @@ class NormalModeSimulation(Simulation):
         export_normal_mode_animation(self, self.eigenfreqs[k], self.eigenvecs[:, k],
                                      pvd_filename, num_cycles=num_cycles,
                                      num_snapshots_per_cycle=num_snapshots_per_cycle,
-                                     scaling=scaling)
+                                     scaling=scaling, **kwargs)
 
         # Export image files
         if suffix == '.jpg':
