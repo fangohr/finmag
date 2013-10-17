@@ -89,7 +89,6 @@ then
         exit 0
     fi
     cp local.cfg $DORSAL_PREFIX/dorsal  # copy our custom dorsal config
-    cp raring.platform $DORSAL_PREFIX/dorsal  # copy our custom platform file
 else
     echo -e "\n${bold}(step 2/5)${normal} Skipping configuration of Dorsal."
 fi
