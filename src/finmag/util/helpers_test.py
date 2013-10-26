@@ -497,15 +497,16 @@ def test_contextmanager_ignored(tmpdir):
 
 def test_run_cmd_with_timeout():
     # A successfully run command should have exit code 0
-    returncode = run_cmd_with_timeout('echo hello', timeout_sec=100)
+    returncode, stdout, _ = run_cmd_with_timeout('echo hello', timeout_sec=100)
     assert(returncode == 0)
+    assert stdout == 'hello\n'
 
     # A non-existing command should raise OSError
     with pytest.raises(OSError):
-        returncode = run_cmd_with_timeout('foo', timeout_sec=1)
+        returncode, _, _ = run_cmd_with_timeout('foo', timeout_sec=1)
 
     # This command should be killed due to the timeout, resulting in a return code of -9.
-    returncode = run_cmd_with_timeout('sleep 10', timeout_sec=0)
+    returncode, _, _ = run_cmd_with_timeout('sleep 10', timeout_sec=0)
     assert(returncode == -9)
 
 

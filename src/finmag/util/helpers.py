@@ -1576,11 +1576,12 @@ def run_cmd_with_timeout(cmd, timeout_sec):
     process is killed, the return code is -9.
 
     """
+    print "[DDD] {}".format(shlex.split(cmd))
     proc = sp.Popen(shlex.split(cmd), stdout=sp.PIPE, stderr=sp.PIPE)
     kill_proc = lambda p: p.kill()
     timer = Timer(timeout_sec, kill_proc, [proc])
     timer.start()
     stdout, stderr = proc.communicate()
     timer.cancel()
-    return proc.returncode
+    return proc.returncode, stdout, stderr
 
