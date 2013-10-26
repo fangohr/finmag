@@ -28,6 +28,26 @@ from threading import Timer
 
 logger = logging.getLogger("finmag")
 
+# This is a copy of the function in finmag.util.helpers, but we can't import finmag
+# in this file without throwing a crash so we define the function here separately.
+def run_cmd_with_timeout(cmd, timeout_sec):
+    """
+    Runs the given shell command but kills the spawned subprocess
+    if the timeout is reached.
+
+    Returns the exit code of the shell command. Raises OSError if
+    the command does not exist. If the timeout is reached and the
+    process is killed, the return code is -9.
+
+    """
+    proc = sp.Popen(shlex.split(cmd), stdout=sp.PIPE, stderr=sp.PIPE)
+    kill_proc = lambda p: p.kill()
+    timer = Timer(timeout_sec, kill_proc, [proc])
+    timer.start()
+    stdout, stderr = proc.communicate()
+    timer.cancel()
+    return proc.returncode
+
 
 def find_valid_X_display(displays_to_try=xrange(100)):
     """
@@ -79,22 +99,13 @@ def find_unused_X_display(displays_to_try=xrange(100)):
     return None
 
 
-def has_passwordless_ssh_login(hostname, timeout_sec=5):
+def has_passwordless_ssh_login(hostname, timeout_sec=20):
     """
     Check whether it is possible to login to the given host without specifying a password.
     Will give up after `timeout_sec` seconds.
 
     """
-    def run_cmd(cmd, timeout_sec):
-        proc = sp.Popen(shlex.split(cmd), stdout=sp.PIPE, stderr=sp.PIPE)
-        kill_proc = lambda p: p.kill()
-        timer = Timer(timeout_sec, kill_proc, [proc])
-        timer.start()
-        stdout, stderr = proc.communicate()
-        timer.cancel()
-        return proc.returncode
-
-    returncode= run_cmd('ssh -oNumberOfPasswordPrompts=0 {} "echo hello"'.format(hostname), timeout_sec=timeout_sec)
+    returncode= run_cmd_with_timeout('ssh -oNumberOfPasswordPrompts=0 {} "echo hello"'.format(hostname), timeout_sec=timeout_sec)
     return (returncode == 0)
 
 
