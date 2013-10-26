@@ -4,7 +4,7 @@ set -o errexit
 if [ "$1" == "--help" -o "$1" == "-h" ]
 then
     echo "
-This script will attemtp to install required libraries to run 
+This script will attempt to install required libraries to run 
 the finmag user code."
 
     exit
