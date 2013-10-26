@@ -3,8 +3,10 @@ from datetime import datetime
 from glob import glob
 from contextlib import contextmanager
 from finmag.util.fileio import Tablereader
+from threading import Timer
 import matplotlib.pyplot as plt
 import subprocess as sp
+import shlex
 import itertools
 import tempfile
 import shutil
@@ -1562,3 +1564,23 @@ def ignored(*exceptions):
         yield
     except exceptions:
         pass
+
+
+def run_cmd_with_timeout(cmd, timeout_sec):
+    """
+    Runs the given shell command but kills the spawned subprocess
+    if the timeout is reached.
+
+    Returns the exit code of the shell command. Raises OSError if
+    the command does not exist. If the timeout is reached and the
+    process is killed, the return code is -9.
+
+    """
+    proc = sp.Popen(shlex.split(cmd), stdout=sp.PIPE, stderr=sp.PIPE)
+    kill_proc = lambda p: p.kill()
+    timer = Timer(timeout_sec, kill_proc, [proc])
+    timer.start()
+    stdout, stderr = proc.communicate()
+    timer.cancel()
+    return proc.returncode
+
