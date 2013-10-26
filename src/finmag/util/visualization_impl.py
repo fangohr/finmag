@@ -14,14 +14,17 @@
 from __future__ import division
 
 import os
+import sh
 import textwrap
 import tempfile
 import logging
-import subprocess
 import IPython.core.display
 import subprocess as sp
 import numpy as np
 import numbers
+import shlex
+from threading import Timer
+
 
 logger = logging.getLogger("finmag")
 
@@ -74,6 +77,25 @@ def find_unused_X_display(displays_to_try=xrange(100)):
             return display
     logger.debug("No unused display found.")
     return None
+
+
+def has_passwordless_ssh_login(hostname, timeout_sec=5):
+    """
+    Check whether it is possible to login to the given host without specifying a password.
+    Will give up after `timeout_sec` seconds.
+
+    """
+    def run_cmd(cmd, timeout_sec):
+        proc = sp.Popen(shlex.split(cmd), stdout=sp.PIPE, stderr=sp.PIPE)
+        kill_proc = lambda p: p.kill()
+        timer = Timer(timeout_sec, kill_proc, [proc])
+        timer.start()
+        stdout, stderr = proc.communicate()
+        timer.cancel()
+        return proc.returncode
+
+    returncode= run_cmd('ssh -oNumberOfPasswordPrompts=0 {} "echo hello"'.format(hostname), timeout_sec=timeout_sec)
+    return (returncode == 0)
 
 
 class ColorMap(object):
@@ -553,11 +575,11 @@ def render_paraview_scene(
                 bordercolor = '"rgb(82,87,110)"' if (suffix == '.png') else '"rgb(82,87,109)"'
             cmd = 'mogrify -bordercolor {} -border 1x1 -trim {}'.format(bordercolor, outfilename)
             try:
-                subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
+                sp.check_output(cmd, stderr=sp.STDOUT, shell=True)
                 logger.debug("Trimming border from rendered scene.")
             except OSError:
                 logger.warning("Using the 'trim' argument requires ImageMagick to be installed.")
-            except subprocess.CalledProcessError as ex:
+            except sp.CalledProcessError as ex:
                 logger.warning("Could not trim border from image. "
                                "The error message was: {}".format(ex.output))
 
@@ -565,11 +587,11 @@ def render_paraview_scene(
             rescale_factor = int(rescale * 100.0)
             cmd = 'mogrify -resize {:d}% {}'.format(rescale_factor, outfilename)
             try:
-                subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
+                sp.check_output(cmd, stderr=sp.STDOUT, shell=True)
                 logger.debug("Resizing output image by {:d}%".format(rescale_factor))
             except OSError:
                 logger.warning("Using the 'rescale' argument requires ImageMagick to be installed.")
-            except subprocess.CalledProcessError as ex:
+            except sp.CalledProcessError as ex:
                 logger.warning("Could not rescale image. The error message was: {}".format(ex.output))
 
     if len(timesteps) == 1:
