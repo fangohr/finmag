@@ -46,7 +46,7 @@ def run_cmd_with_timeout(cmd, timeout_sec):
     timer.start()
     stdout, stderr = proc.communicate()
     timer.cancel()
-    return proc.returncode
+    return proc.returncode, stdout, stderr
 
 
 def find_valid_X_display(displays_to_try=xrange(100)):
@@ -105,7 +105,7 @@ def has_passwordless_ssh_login(hostname, timeout_sec=20):
     Will give up after `timeout_sec` seconds.
 
     """
-    returncode= run_cmd_with_timeout('ssh -oNumberOfPasswordPrompts=0 {} "echo hello"'.format(hostname), timeout_sec=timeout_sec)
+    returncode, _, _ = run_cmd_with_timeout('ssh -oNumberOfPasswordPrompts=0 {} "echo hello"'.format(hostname), timeout_sec=timeout_sec)
     return (returncode == 0)
 
 
