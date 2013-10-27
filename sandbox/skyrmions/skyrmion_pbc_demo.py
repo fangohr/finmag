@@ -24,9 +24,11 @@ def relax(mesh):
     for t in ts:
         sim.run_until(t)
         p = df.plot(sim.llg._m)
+    sim.save_vtk()
         
     df.plot(sim.llg._m).write_png("vortex")
     df.interactive()
+    
     
     
 if __name__=='__main__':
