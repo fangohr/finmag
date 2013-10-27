@@ -84,6 +84,12 @@ def render_paraview_scene(
         _, outfile = tempfile.mkstemp(suffix='.png')
     outfile = os.path.abspath(outfile)
 
+    outdir = os.path.dirname(outfile)
+    if not os.path.exists(outdir):
+        logger.debug("Creating non-existing directory component '{}' of output filename.".format(outdir))
+        os.makedirs(outdir)
+        logger.debug("Done.")
+
     #
     # Create the temporary script. The string 'script_string' will
     # contain a call to the function in 'visualization_impl.py' which
