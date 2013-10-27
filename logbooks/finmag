@@ -21548,3 +21548,181 @@ Hans
 -------------------------------------
 finmag-team mailing list.
 
+From marvin  Sun Oct 27 18:15:41 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Sun, 27 Oct 2013 18:15:41 +0000 (GMT)
+Received: by 10.227.121.137 with SMTP id h9csp19052wbr;
+        Sun, 27 Oct 2013 11:00:01 -0700 (PDT)
+X-Received: by 10.14.107.68 with SMTP id n44mr17976351eeg.26.1382896801284;
+        Sun, 27 Oct 2013 11:00:01 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk. [152.78.128.16])
+        by mx.google.com with ESMTP id k49si12085719een.322.2013.10.27.11.00.00
+        for <multiple recipients>;
+        Sun, 27 Oct 2013 11:00:01 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) client-ip=152.78.128.16;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r9RHxga1004935;
+	Sun, 27 Oct 2013 17:59:42 GMT
+Received: from UOS-MSG00036-VS.soton.ac.uk (uos-msg00036-vs.soton.ac.uk [152.78.119.38])
+	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk [152.78.128.16]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p9QHxg0862250836My ret-id none; Sun, 27 Oct 2013 17:59:42 +0000
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.38) with Microsoft SMTP Server (TLS) id 14.3.158.1; Sun, 27 Oct
+ 2013 17:59:41 +0000
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r9RHxfGP006035;	Sun, 27 Oct 2013 17:59:41 GMT
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r9RHxfcr006032	for <finmag-team@lists.soton.ac.uk>; Sun, 27 Oct 2013 17:59:41
+ GMT
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r9RHxUc4004835;
+	Sun, 27 Oct 2013 17:59:30 GMT
+Received: from UOS-MSG00036-VS.soton.ac.uk (uos-msg00036-vs.soton.ac.uk
+ [152.78.119.38])	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16]) envelope-from <H.FANGOHR@soton.ac.uk> with ESMTP	id
+ p9QHxU0862250832I0 ret-id none; Sun, 27 Oct 2013 17:59:30 +0000
+Received: from ip-036-161.vpn.soton.ac.uk (152.78.36.161) by smtp.soton.ac.uk
+ (152.78.119.38) with Microsoft SMTP Server (TLS) id 14.3.158.1; Sun, 27 Oct
+ 2013 17:59:29 +0000
+From: Hans Fangohr <h.fangohr@soton.ac.uk>
+Content-Type: multipart/alternative;
+	boundary="Apple-Mail=_627F22E7-178F-4DDC-94F0-1E5FB1DB8B4E"
+Subject: [finmag-team] monthly reports, and stuff this week
+Date: Sun, 27 Oct 2013 17:59:26 +0000
+Message-ID: <1945BA36-7923-4EB0-BCC0-2095AD3B649E@soton.ac.uk>
+CC: Hans Fangohr <h.fangohr@soton.ac.uk>, "Hovorka O." <o.hovorka@soton.ac.uk>,
+        David Cortes <david.cortes.o@gmail.com>
+To: "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+MIME-Version: 1.0 (Mac OS X Mail 7.0 \(1816\))
+X-Mailer: Apple Mail (2.1816)
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.38; helo=<UOS-MSG00036-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.38; envelope-from=<H.FANGOHR@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p9QHxg086225083600; tid=p9QHxg0862250836My; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.38; helo=<UOS-MSG00036-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.38; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r9RHxga1004935
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+--Apple-Mail=_627F22E7-178F-4DDC-94F0-1E5FB1DB8B4E
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="windows-1252"
+
+Dear all,
+
+for information for the new students (Mark, Beckie), I like you to write =
+a monthly summary of what you have done at the end of each month, and =
+deposit this into our shared Dropbox folder =
+(Group/reports/monthly/2013-10 for this month). If you haven=92t got =
+access to this, let me know and I=92ll arrange it.
+
+The idea is that you document what you have done (or a part of it). This =
+should at least be a few pages of notes: ideally these are something you =
+have created anyway (so that this doesn=92t take extra effort). For =
+example:
+
+- ipython notebooks document something
+- parts of or a complete literature review
+- paper drafts
+- reports of any kind
+
+These reports have multiple functions:
+
+- force you to review what you have done
+- remind you what you have done (in case you feel you haven=92t achieved =
+anything this month)
+- provide a base for future reports (be it for milestones such as =
+9month, PhD transfer, etc, or funding body reporting)
+- give others in the group a chance to learn what you are up to.
+
+If you could put the report for this month in there by the end of =
+October, that would be useful. PDF is generally best (although you =
+should keep the sources of each of those reports of course [in some =
+repository that you use for your whole PhD, for example], be it an =
+ipython notebook, tex document or anything else).
+
+Any questions, get in touch.
+
+Many thanks,
+
+Hans
+
+
+PS Weiwei, Dmitri, Max, Beckie, could you also please update your notes =
+from our last supervision meeting and push so I can see them.
+
+PPS Meetings this week: gatherings Mon, Wed and Friday at 14:00.=20
+Thursday Skype session with Leeds (10:00, my office), with Mark, =
+Marijan, Weiwei
+Friday: I=92ll schedule individual supervision =97 who would like to see =
+me?
+
+
+
+--Apple-Mail=_627F22E7-178F-4DDC-94F0-1E5FB1DB8B4E
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/html; charset="windows-1252"
+
+<html><head><meta http-equiv=3D"Content-Type" content=3D"text/html =
+charset=3Dwindows-1252"></head><body style=3D"word-wrap: break-word; =
+-webkit-nbsp-mode: space; -webkit-line-break: after-white-space;">Dear =
+all,<div><br></div><div>for information for the new students (Mark, =
+Beckie), I like you to write a monthly summary of what you have done at =
+the end of each month, and deposit this into our shared Dropbox folder =
+(<font face=3D"Menlo">Group/reports/monthly/2013-10 for this month). If =
+you haven=92t got access to this, let me know and I=92ll arrange =
+it.</font></div><div><font face=3D"Menlo"><br></font></div><div><font =
+face=3D"Menlo">The idea is that you document what you have done (or a =
+part of it). This should at least be a few pages of notes: ideally these =
+are something you have created anyway (so that this doesn=92t take extra =
+effort). For example:</font></div><div><font =
+face=3D"Menlo"><br></font></div><div><font face=3D"Menlo">- ipython =
+notebooks document something</font></div><div><font face=3D"Menlo">- =
+parts of or a complete literature review</font></div><div><font =
+face=3D"Menlo">- paper drafts</font></div><div><font face=3D"Menlo">- =
+reports of any kind</font></div><div><font =
+face=3D"Menlo"><br></font></div><div><font face=3D"Menlo">These reports =
+have multiple&nbsp;functions:</font></div><div><font =
+face=3D"Menlo"><br></font></div><div><font face=3D"Menlo">- force you to =
+review what you have done</font></div><div><font face=3D"Menlo">- remind =
+you what you have done (in case you feel you haven=92t achieved anything =
+this month)</font></div><div><font face=3D"Menlo">- provide a base for =
+future&nbsp;reports (be it&nbsp;for milestones such as 9month, PhD =
+transfer, etc, or funding body reporting)</font></div><div><font =
+face=3D"Menlo">- give others in the&nbsp;group a chance to learn what =
+you are up to.</font></div><div><font =
+face=3D"Menlo"><br></font></div><div><font face=3D"Menlo">If you could =
+put the report for this month in there by the end of October, that would =
+be useful. PDF is generally best (although you should keep the sources =
+of each of those reports of course [in some repository that you use for =
+your whole PhD, for example], be it an ipython notebook, tex document or =
+anything else).</font></div><div><font =
+face=3D"Menlo"><br></font></div><div><font face=3D"Menlo">Any questions, =
+get in touch.</font></div><div><font =
+face=3D"Menlo"><br></font></div><div><font face=3D"Menlo">Many =
+thanks,</font></div><div><font face=3D"Menlo"><br></font></div><div><font =
+face=3D"Menlo">Hans</font></div><div><font =
+face=3D"Menlo"><br></font></div><div><font =
+face=3D"Menlo"><br></font></div><div><font face=3D"Menlo">PS Weiwei, =
+Dmitri, Max, Beckie, could you also please update your notes from our =
+last supervision meeting and push so I can see =
+them.</font></div><div><font face=3D"Menlo"><br></font></div><div><font =
+face=3D"Menlo">PPS Meetings this week: gatherings Mon, Wed and Friday at =
+14:00.&nbsp;</font></div><div><font face=3D"Menlo">Thursday Skype =
+session with Leeds (10:00, my office), with Mark, Marijan, =
+Weiwei</font></div><div><font face=3D"Menlo">Friday: I=92ll schedule =
+individual supervision&nbsp;=97 who would like to see =
+me?</font></div><div><font face=3D"Menlo"><br></font></div><div><font =
+face=3D"Menlo"><br></font></div></body></html>=
+
+--Apple-Mail=_627F22E7-178F-4DDC-94F0-1E5FB1DB8B4E--
+
