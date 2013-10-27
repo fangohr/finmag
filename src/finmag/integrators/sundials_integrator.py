@@ -120,7 +120,6 @@ class SundialsIntegrator(object):
         # back into llg object
         # Weiwei: change the default m to sundials_m since sometimes we need to extend the default equation.
         self.llg.sundials_m = self.m
-        print self.llg.sundials_m
         return reached_tout
 
     def reinit(self):
