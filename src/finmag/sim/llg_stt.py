@@ -68,7 +68,7 @@ class LLG_STT(object):
         self._post_rhs_callables = []
         self.interactions = []
 
-    def set_parameters(self, J_profile=(1e10,0,0), P=0.5, D=2.5e-4, lambda_sf=5e-9, lambda_J=1e-9):
+    def set_parameters(self, J_profile=(1e10,0,0), P=0.5, D=2.5e-4, lambda_sf=5e-9, lambda_J=1e-9, speedup=1):
         
         self._J = helpers.vector_valued_function(J_profile, self.S3)
         self.J = self._J.vector().array()
@@ -77,12 +77,12 @@ class LLG_STT(object):
         
         self.P = P
 
-        self.D = D
+        self.D = D/speedup
         self.lambda_sf = lambda_sf
         self.lambda_J = lambda_J
         
-        self.tau_sf = lambda_sf**2/D
-        self.tau_sd = lambda_J**2/D
+        self.tau_sf = lambda_sf**2/D*speedup
+        self.tau_sd = lambda_J**2/D*speedup
         
         self.compute_laplace_matrix()
         self.H_laplace = df.PETScVector()

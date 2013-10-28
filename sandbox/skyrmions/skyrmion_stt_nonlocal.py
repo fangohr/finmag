@@ -37,7 +37,7 @@ def init_J(pos):
     
 def move_skyrmion(mesh):
     Ms = 8.6e5
-    sim = Simulation(mesh, Ms, pbc='2d',unit_length=1e-9)
+    sim = Simulation(mesh, Ms, pbc='2d',unit_length=1e-9, kernel='llg_stt')
     sim.set_m(np.load('m0.npy'))
 
     sim.add(Exchange(1.3e-11))
@@ -46,14 +46,14 @@ def move_skyrmion(mesh):
     
     sim.alpha=0.01
     
-    sim.set_zhangli(init_J, 1.0,0.01)
+    sim.llg.set_parameters(J_profile=init_J, speedup=50)
     
-    ts = np.linspace(0, 10e-9, 101)
+    ts = np.linspace(0, 2e-9, 101)
     for t in ts:
         sim.run_until(t)
         print t
         #p = df.plot(sim.llg._m)
-        sim.save_vtk(filename='vtks/v1e8_.pvd')
+        sim.save_vtk(filename='nonlocal/v1e8_.pvd')
         
     df.plot(sim.llg._m).write_png("vortex")
     #df.interactive()
