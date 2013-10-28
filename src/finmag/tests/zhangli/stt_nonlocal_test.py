@@ -38,7 +38,7 @@ def test_zhangli():
     sim.add(Exchange(A=13e-12))
     sim.alpha = 0.01
     
-    sim.llg.set_parameters(J_profile=init_J)
+    sim.llg.set_parameters(J_profile=init_J, speedup=50)
     
     p0=sim.m_average
     
