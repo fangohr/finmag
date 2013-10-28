@@ -257,7 +257,7 @@ class LLG_STT(object):
 
         self.laplace_M.mult(self._delta_m.vector(), self.H_laplace)
 
-        return self.H_laplace.array()/self.nodal_volume_S3
+        return -1.0*self.H_laplace.array()/self.nodal_volume_S3
 
 
     def sundials_rhs(self, t, y, ydot):
