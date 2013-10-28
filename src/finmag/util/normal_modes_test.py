@@ -28,7 +28,7 @@ def test_compute_generalised_eigenproblem_matrices_single_sphere(tmpdir):
 
     n_values = 6
     n_values_export = 0
-    omega, w = compute_normal_modes_generalised(A, M, n_values=n_values, tol=1e-8, discard_negative_frequencies=False)
+    omega, w = compute_normal_modes_generalised(A, M, n_values=n_values, discard_negative_frequencies=False)
     assert(len(omega) == n_values)
     print "[DDD] omega: {}".format(omega)
 
@@ -43,7 +43,7 @@ def test_compute_generalised_eigenproblem_matrices_single_sphere(tmpdir):
     assert(np.allclose(omega[0], +freq_expected, atol=0, rtol=1e-2))
     assert(np.allclose(omega[1], -freq_expected, atol=0, rtol=1e-2))
 
-    omega_positive, _ = compute_normal_modes_generalised(A, M, n_values=n_values, tol=1e-8, discard_negative_frequencies=True)
+    omega_positive, _ = compute_normal_modes_generalised(A, M, n_values=n_values, discard_negative_frequencies=True)
     logger.debug("[DDD] omega_positive: {}".format(omega_positive))
     assert(len(omega_positive) == n_values)
 
@@ -62,3 +62,15 @@ def test_compute_generalised_eigenproblem_matrices_single_sphere(tmpdir):
     for i in xrange(n_values_export):
         freq = omega_positive[i]
         export_normal_mode_animation(sim, freq, w[:, i], filename='normal_mode_{:02d}__{:.3f}_GHz.pvd'.format(i, freq))
+
+
+def test_passing_scipy_eigsh_parameters(tmpdir):
+    os.chdir(str(tmpdir))
+    from finmag.example.normal_modes import disk
+    sim = disk()
+
+    omega1, _ = sim.compute_normal_modes(n_values=4, tol=0)
+    omega2, _ = sim.compute_normal_modes(n_values=4, tol=0, ncv=20, maxiter=2000, sigma=0.0, which='SM')
+    logger.debug("Note: the following results are not meant to coincide! Their purpose is just to test passing arguments to scipy.sparse.linalg.eigsh")
+    logger.debug("Computed eigenfrequencies #1: {}".format(omega1))
+    logger.debug("Computed eigenfrequencies #2: {}".format(omega2))
