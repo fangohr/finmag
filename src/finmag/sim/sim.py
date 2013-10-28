@@ -1481,7 +1481,7 @@ class NormalModeSimulation(Simulation):
         self.A = A
         self.M = M
 
-        omega, w = compute_normal_modes_generalised(A, M, n_values=n_values, discard_negative_frequencies=discard_negative_frequencies)
+        omega, w = compute_normal_modes_generalised(A, M, n_values=n_values, tol=tol, discard_negative_frequencies=discard_negative_frequencies)
 
         self.eigenfreqs = omega
         self.eigenvecs = w
