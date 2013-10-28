@@ -33,7 +33,7 @@ def relax(mesh):
 
 
 def init_J(pos):
-    return (1e8,0,0)
+    return (1e7,0,0)
     
 def move_skyrmion(mesh):
     Ms = 8.6e5
@@ -53,7 +53,7 @@ def move_skyrmion(mesh):
         sim.run_until(t)
         print t
         #p = df.plot(sim.llg._m)
-        sim.save_vtk(filename='vtks/v1e8_.pvd')
+        sim.save_vtk(filename='vtks/v1e7_.pvd')
         
     df.plot(sim.llg._m).write_png("vortex")
     #df.interactive()
