@@ -177,7 +177,7 @@ class LLB(object):
  
     def compute_laplace_effective_field(self):
         self.K.mult(self.H_eff_vec, self.H_laplace)
-        return self.H_laplace.array()
+        return -1.0*self.H_laplace.array()/self.vol
        
             
     def run_until(self, t):

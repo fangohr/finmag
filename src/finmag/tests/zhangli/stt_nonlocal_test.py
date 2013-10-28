@@ -44,6 +44,18 @@ def test_zhangli():
     
     sim.run_until(5e-12)
     p1=sim.m_average
+    print sim.integrator.stats()
+    print p0,p1
+    sim.run_until(1e-11)
+    p1=sim.m_average
+    print sim.integrator.stats()
+    print p0,p1
+    
+    sim.run_until(2e-11)
+    p1=sim.m_average
+    print sim.integrator.stats()
+    print p0,p1
+    
 
     assert p1[0] < p0[0]
     assert abs(p0[0])<1e-15
