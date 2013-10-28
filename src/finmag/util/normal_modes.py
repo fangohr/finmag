@@ -361,15 +361,17 @@ def compute_normal_modes(D, n_values=10, sigma=0., tol=1e-8, which='LM'):
     return omega, w
 
 
-def compute_normal_modes_generalised(A, M, n_values=10, tol=1e-8, discard_negative_frequencies=False):
+def compute_normal_modes_generalised(A, M, n_values=10, tol=1e-8, discard_negative_frequencies=False, sigma=None, which='LM',
+                                     v0=None, ncv=None, maxiter=None, Minv=None, OPinv=None, mode='normal'):
     logger.debug("Solving eigenproblem. This may take a while...".format(df.toc()))
     df.tic()
 
     if discard_negative_frequencies:
         n_values *= 2
 
-    # Have to swap M and A since the M matrix has to be positive definite for eigsh!
-    omega_inv, w = scipy.sparse.linalg.eigsh(M, n_values, A, which='LM', tol=tol, return_eigenvectors=True)
+    # We have to swap M and A when passing them to eigsh since the M matrix has to be positive definite for eigsh!
+    omega_inv, w = scipy.sparse.linalg.eigsh(M, k=n_values, M=A, which=which, tol=tol, return_eigenvectors=True, sigma=sigma,
+                                             v0=v0, ncv=ncv, maxiter=maxiter, Minv=Minv, OPinv=OPinv, mode=mode)
     logger.debug("Computing the eigenvalues and eigenvectors took {:.2f} seconds".format(df.toc()))
 
     # The true eigenfrequencies are given by 1/omega_inv because we swapped M and A above and thus computed the inverse eigenvalues.
