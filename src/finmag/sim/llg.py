@@ -133,12 +133,24 @@ class LLG(object):
     def m(self):
         """The unit magnetisation."""
         return self._m.vector().array()
-
+    
     @m.setter
     def m(self, value):
         # Not enforcing unit length here, as that is better done
         # once at the initialisation of m.
         self._m.vector()[:] = value
+        
+    @property
+    def sundials_m(self):
+        """The unit magnetisation."""
+        return self._m.vector().array()
+    
+    @sundials_m.setter
+    def sundials_m(self, value):
+        # used to copy back from sundials cvode
+        self._m.vector()[:] = value
+        
+    
 
     def m_average_fun(self,dx=df.dx):
         """

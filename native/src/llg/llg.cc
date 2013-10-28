@@ -464,6 +464,106 @@ namespace finmag { namespace llg {
         }
 
 
+        void calc_llg_nonlocal_stt_dmdt(
+                const np_array<double> &m,
+                const np_array<double> &mt,
+                const np_array<double> &H,
+                const np_array<double> &H_diff,
+                const np_array<double> &H_gradm,
+                const np_array<double> &dmdt,
+                const np_array<long> &pins,
+                double const gamma,
+                const np_array<double> &alpha_arr,
+                double const char_time,
+                double const P,
+                double const tau_sd,
+                double const tau_sf,
+                const np_array<double> &Ms) {
+
+
+            m.check_ndim(2, "check_dimensions: m");
+            int const nodes = m.dim()[1];
+
+            m.check_shape(3, nodes, "check_dimensions: m");
+            mt.check_shape(3, nodes, "check_dimensions: m");
+            H.check_shape(3, nodes, "check_dimensions: H");
+            dmdt.check_shape(6, nodes, "check_dimensions: dmdt");
+            H_gradm.check_shape(3, nodes, "check_dimensions: H_gradm");
+            H_diff.check_shape(3, nodes, "check_dimensions: H_gradm");
+
+            alpha_arr.check_ndim(1, "check_dimensions: alpha");
+            alpha_arr.check_shape(nodes, "check_dimensions: alpha");
+
+
+            double *m0 = m(0), *m1 = m(1), *m2 = m(2);
+            double *mt0 = mt(0), *mt1 = mt(1), *mt2 = mt(2);
+            double *h0 = H(0), *h1 = H(1), *h2 = H(2);
+            double *dm0 = dmdt(0), *dm1 = dmdt(1), *dm2 = dmdt(2);
+            double *dmt0 = dmdt(3), *dmt1 = dmdt(4), *dmt2 = dmdt(5);
+
+
+            double *hg0 = H_gradm(0), *hg1 = H_gradm(1), *hg2 = H_gradm(2);
+            double *hd0 = H_diff(0), *hd1 = H_diff(1), *hd2 = H_diff(2);
+
+            double *alpha = alpha_arr.data();
+
+            Ms.check_ndim(1, "calc_llg_zhang_li_dmdt: Ms");
+            Ms.check_shape(nodes, "calc_llg_zhang_li_dmdt: Ms");
+
+            finmag::util::scoped_gil_release release_gil;
+
+            double u0 = P*mu_B/e; // P g mu_B/(2 e Ms) and g=2 for electrons
+
+            // calculate dmdt
+            #pragma omp parallel for schedule(guided)
+            for (int i=0; i < nodes; i++) {
+
+            	double coeff_stt =0 ;
+            	double coeff = 1/(1+alpha[i]*alpha[i]) ;
+
+            	if ((*Ms[i])>0){
+            		coeff_stt=u0/(*Ms[i]);
+            	}
+
+            	double mmt = m0[i]*mt0[i] + m1[i]*mt1[i] + m2[i]*mt2[i];
+            	double mtp0 = mt0[i]-mmt*m0[i];
+            	double mtp1 = mt1[i]-mmt*m1[i];
+            	double mtp2 = mt2[i]-mmt*m2[i];
+
+
+            	double mmt0 = cross0(m0[i],m1[i],m2[i],mt0[i],mt1[i],mt2[i])/tau_sd;
+            	double mmt1 = cross1(m0[i],m1[i],m2[i],mt0[i],mt1[i],mt2[i])/tau_sd;
+            	double mmt2 = cross2(m0[i],m1[i],m2[i],mt0[i],mt1[i],mt2[i])/tau_sd;
+
+            	//printf("%g  %g  %g\n",mt0[i],mt1[i],mt2[i]);
+            	dm0[i] = (alpha[i]/tau_sd*mtp0-mmt0)*coeff;
+            	dm1[i] = (alpha[i]/tau_sd*mtp1-mmt1)*coeff;
+                dm2[i] = (alpha[i]/tau_sd*mtp2-mmt2)*coeff;
+
+            	damping_i(alpha[i], gamma, m0[i], m1[i], m2[i], h0[i], h1[i], h2[i], dm0[i], dm1[i], dm2[i]);
+            	relaxation_i(0.1/char_time, m0[i], m1[i], m2[i], dm0[i], dm1[i], dm2[i]);
+            	precession_i(alpha[i], gamma, m0[i], m1[i], m2[i], h0[i], h1[i], h2[i], dm0[i], dm1[i], dm2[i]);
+
+            	double mht = m0[i]*hg0[i] + m1[i]*hg1[i] + m2[i]*hg2[i];
+
+            	double hp0 = hg0[i] - mht*m0[i];
+            	double hp1 = hg1[i] - mht*m1[i];
+            	double hp2 = hg2[i] - mht*m2[i];
+
+            	dmt0[i] = hd0[i]+mmt0-mtp0/tau_sf+coeff_stt*hp0;
+            	dmt1[i] = hd1[i]+mmt1-mtp1/tau_sf+coeff_stt*hp1;
+            	dmt2[i] = hd2[i]+mmt2-mtp2/tau_sf+coeff_stt*hp2;
+
+            	//dmt0[i]=0;
+            	//dmt1[i]=0;
+            	//dmt2[i]=0;
+
+            }
+            //Todo: fix the pin function here
+            //pin(dmdt, pins);
+        }
+
+
 
         /*
         Compute the Baryakhtar term for cubic crystal anisotropy
@@ -715,6 +815,24 @@ namespace finmag { namespace llg {
         		arg("char_time"),
         		arg("beta"),
         		arg("P"),
+        		arg("Ms")
+         ));
+
+
+        def("calc_llg_nonlocal_stt_dmdt", &calc_llg_nonlocal_stt_dmdt, (
+        		arg("m"),
+        		arg("mt"),
+        		arg("H"),
+        		arg("H_diff"),
+        		arg("H_gradm"),
+        		arg("dmdt"),
+        		arg("pins"),
+        		arg("gamma"),
+        		arg("alpha_arr"),
+        		arg("char_time"),
+        		arg("P"),
+        		arg("tau_sd"),
+        		arg("tau_sf"),
         		arg("Ms")
          ));
 

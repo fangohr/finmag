@@ -118,8 +118,8 @@ class SundialsIntegrator(object):
 
         # in any case: put integrated degrees of freedom from cvode object
         # back into llg object
-        self.llg.m = self.m
-
+        # Weiwei: change the default m to sundials_m since sometimes we need to extend the default equation.
+        self.llg.sundials_m = self.m
         return reached_tout
 
     def reinit(self):
