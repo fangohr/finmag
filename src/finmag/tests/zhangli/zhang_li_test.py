@@ -155,8 +155,8 @@ def compare_gradient_field2():
     df.interactive()
 
 if __name__ == "__main__":
-    #test_zhangli()
-    compare_gradient_field1()
+    test_zhangli()
+    #compare_gradient_field1()
     #compare_gradient_field2()
 
 

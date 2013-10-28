@@ -14,6 +14,7 @@ import numpy as np
 from aeon import mtimed
 from glob import glob
 from finmag.sim.llg import LLG
+from finmag.sim.llg_stt import LLG_STT
 from finmag.util.consts import exchange_length, bloch_parameter
 from finmag.util.meshes import mesh_info, mesh_volume, plot_mesh, plot_mesh_with_paraview
 from finmag.util.fileio import Tablewriter, FieldSaver
@@ -26,9 +27,11 @@ from finmag.sim.hysteresis import hysteresis as hyst, hysteresis_loop as hyst_lo
 from finmag.sim import sim_helpers
 from finmag.energies import Exchange, Zeeman, TimeZeeman, Demag, UniaxialAnisotropy, DMI
 from finmag.integrators.llg_integrator import llg_integrator
+from finmag.integrators.sundials_integrator import SundialsIntegrator
 from finmag.integrators import scheduler, events
 from finmag.integrators.common import run_with_schedule
 from finmag.util.pbc2d import PeriodicBoundary1D, PeriodicBoundary2D
+
 from finmag.llb.sllg import SLLG
 
 ONE_DEGREE_PER_NS = 17453292.5  # in rad/s
@@ -61,7 +64,7 @@ class Simulation(object):
 
           pbc : Periodic boundary type: None or '2d'
 
-          kernel : 'llg' or 'sllg'
+          kernel : 'llg', 'sllg' or 'llg_stt' 
 
           average : take the cell averaged effective field, only for test, will delete it if doesn't work.
 
@@ -114,8 +117,10 @@ class Simulation(object):
             self.llg = LLG(self.S1, self.S3, average = average)
         elif kernel=='sllg':
             self.llg = SLLG(self.S1, self.S3, unit_length=unit_length)
+        elif kernel=='llg_stt':
+            self.llg = LLG_STT(self.S1, self.S3, unit_length=unit_length)
         else:
-            raise ValueError("kernel must be either llg or sllg.")
+            raise ValueError("kernel must be one of llg, sllg or llg_stt.")
 
         self.kernel = kernel
 
@@ -523,7 +528,9 @@ class Simulation(object):
             if backend == None:
                 backend = self.integrator_backend
             log.info("Create integrator {} with kwargs={}".format(backend, kwargs))
-            if self.kernel == 'sllg':
+            if self.kernel == 'llg_stt':
+                self.integrator = SundialsIntegrator(self.llg, self.llg.dy_m, method="bdf_diag", **kwargs)
+            elif self.kernel == 'sllg':
                 self.integrator = self.llg
             else:
                 self.integrator = llg_integrator(self.llg, self.llg.m, backend=backend, **kwargs)
