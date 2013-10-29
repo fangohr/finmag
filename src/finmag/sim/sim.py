@@ -1513,8 +1513,8 @@ class NormalModeSimulation(Simulation):
         *Returns*
 
         A pair (omega, eigenvectors), where omega is a list of the `n_values`
-        smallest eigenfrequencies and EV is a list of the corresponding eigenvectors
-        (in the same order).
+        smallest eigenfrequencies and `eigenvectors` is a rectangular matrix
+        whose columns are the corresponding eigenvectors (in the same order).
 
         """
         if use_generalised == False:
