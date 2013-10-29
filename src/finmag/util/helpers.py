@@ -553,10 +553,19 @@ def scalar_valued_function(value, mesh_or_space):
         fun = df.Function(S1)
         fun.vector()[:]=value
     elif hasattr(value, '__call__'):
-        coords=mesh.coordinates()
-        fun = df.Function(S1)
-        for i in xrange(len(coords)):
-            fun.vector()[i] = value(coords[i])
+            
+        #if it's a normal function, we wrapper it into a dolfin expression
+        class HelperExpression(df.Expression):
+            def __init__(self,value):
+                super(HelperExpression, self).__init__()
+                self.fun = value
+
+            def eval(self, value, x):
+                value[0] = self.fun(x)
+
+        hexp = HelperExpression(value)
+        fun = df.interpolate(hexp, S1)
+        
     else:
         raise TypeError("Cannot set value of scalar-valued function from "
                         "argument of type '{}'".format(type(value)))

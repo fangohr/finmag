@@ -21726,3 +21726,92 @@ face=3D"Menlo"><br></font></div></body></html>=
 
 --Apple-Mail=_627F22E7-178F-4DDC-94F0-1E5FB1DB8B4E--
 
+From marvin  Mon Oct 28 18:15:51 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Mon, 28 Oct 2013 18:15:51 +0000 (GMT)
+Received: by 10.227.121.137 with SMTP id h9csp65950wbr;
+        Mon, 28 Oct 2013 10:44:06 -0700 (PDT)
+X-Received: by 10.14.7.131 with SMTP id 3mr29422eep.151.1382982246608;
+        Mon, 28 Oct 2013 10:44:06 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id t9si15509447eeo.305.2013.10.28.10.44.06
+        for <multiple recipients>;
+        Mon, 28 Oct 2013 10:44:06 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk;
+       dkim=neutral (bad format) header.i=@gmail.com;
+       dmarc=fail (p=NONE dis=NONE) header.from=gmail.com
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r9SHh3MN007571;
+	Mon, 28 Oct 2013 17:43:03 GMT
+Received: from UOS-MSG00036-VS.soton.ac.uk (uos-msg00036-vs.soton.ac.uk [152.78.119.38])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p9RHh30774635721JY ret-id none; Mon, 28 Oct 2013 17:43:04 +0000
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.38) with Microsoft SMTP Server (TLS) id 14.3.158.1; Mon, 28 Oct
+ 2013 17:43:03 +0000
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r9SHh3Er020558;	Mon, 28 Oct 2013 17:43:03 GMT
+Received: from mailgate3.iss.soton.ac.uk (mailgate3.iss.soton.ac.uk
+ [152.78.128.104])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r9SHh3kk020555	for <finmag-team@lists.soton.ac.uk>; Mon, 28 Oct 2013 17:43:03
+ GMT
+Received: from mailgate3.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate3.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r9SHgReh021222	for
+ <finmag-team@lists.soton.ac.uk>; Mon, 28 Oct 2013 17:42:27 GMT
+Received: from mail-qc0-f181.google.com (mail-qc0-f181.google.com
+ [209.85.216.181])	by mailgate3.iss.soton.ac.uk (mailgate3.iss.soton.ac.uk
+ [152.78.128.104]) envelope-from <maximilian.albert@gmail.com> with ESMTP	id
+ p9RHgR2851726381l9 ret-id none; Mon, 28 Oct 2013 17:42:28 +0000
+Received: by mail-qc0-f181.google.com with SMTP id w4so4013283qcr.12
+        for <finmag-team@lists.soton.ac.uk>; Mon, 28 Oct 2013 10:42:27 -0700
+ (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:date:message-id:subject:from:to:content-type;
+        bh=/anV3/jGw+rHnnNQnVEG41oTYdXEA1IvG6OQ5ME7ris=;
+        b=utbuG6PLwGMVc4S7/pNxznVZ9bSqHG+HgM/4YkCXYuEVmc9ZisjAPg5kFr0zEXpk4Z
+         4n+Yq8RqrGoHH5221iuGudhkVb3QPI84T/5AbeMtHfps8l3+Mlk1qBsSHxzZUbtrE1OP
+         b7tHHM4dsOUfoZf1DYhKjribFd8EcAgX2CYSWn6cE0FkIEp0jKIjW86E5Q0Il6ikiV3g
+         QaFdQygos4RGgwUjPCD9rL5JwCMU/jmzihSGrSzvKr+QDYc4eqKIq1m2bMb9BTRzd7n/
+         hoKFIxPUk224ejIAJYO71t5WfvXnGujyWWlFUT18DmeWUey2RRFQ7L1Tuyyc/W8uRavB
+         4A1A==
+MIME-Version: 1.0
+X-Received: by 10.49.29.130 with SMTP id k2mr30182902qeh.20.1382982147011;
+ Mon, 28 Oct 2013 10:42:27 -0700 (PDT)
+Received: by 10.96.223.65 with HTTP; Mon, 28 Oct 2013 10:42:26 -0700 (PDT)
+Date: Mon, 28 Oct 2013 17:42:26 +0000
+Message-ID: <CAGA_dmhToApbWazk3+T8C+G0pBth4vFPJoZek5ewM0mVxEe9LA@mail.gmail.com>
+Subject: [finmag-team] Sinc pulse example
+From: Maximilian Albert <maximilian.albert@gmail.com>
+To: "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+Content-Type: text/plain; charset="ISO-8859-1"
+Received-SPF: None; receiver=mailgate3.iss.soton.ac.uk; client-ip=209.85.216.181; helo=<mail-qc0-f181.google.com>
+Received-SPF: Pass; receiver=mailgate3.iss.soton.ac.uk; client-ip=209.85.216.181; envelope-from=<maximilian.albert@gmail.com>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p9RHh3077463572100; tid=p9RHh30774635721JY; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.38; helo=<UOS-MSG00036-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.38; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r9SHh3MN007571
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi guys,
+
+does anyone have an example of a sinc pulse excitation lying around? I
+seem to remember that some of you did something like that to compute
+normal modes but can't find an example in the repository. If someone
+has a sample script that I could take a look at that would be much
+appreciated.
+
+Many thanks!
+Max
+-------------------------------------
+finmag-team mailing list.
+
