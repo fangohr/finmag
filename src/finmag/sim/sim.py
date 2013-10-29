@@ -1473,7 +1473,6 @@ class NormalModeSimulation(Simulation):
     def compute_normal_modes(self, n_values=10, discard_negative_frequencies=True, filename_mat_A=None, filename_mat_M=None, use_generalised=True,
                              tol=1e-8, sigma=None, which='LM', v0=None, ncv=None, maxiter=None, Minv=None, OPinv=None, mode='normal'):
         """
-================================================================================
         Compute the eigenmodes of the simulation by solving a generalised
         eigenvalue problem and return the computed eigenfrequencies and
         eigenvectors.  The simulation must be relaxed for this to yield
