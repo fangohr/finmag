@@ -367,16 +367,25 @@ def test_probe():
     assert(np.ma.allclose(res2, res2_expected))
 
 
-def test_binary_tarball_name(tmpdir):
+def test_get_hg_revision_info(tmpdir):
     finmag_repo = MODULE_DIR
     os.chdir(str(tmpdir))
     os.mkdir('invalid_repo')
     with pytest.raises(ValueError):
-        binary_tarball_name('nonexisting_directory')
+        get_hg_revision_info('nonexisting_directory')
     with pytest.raises(ValueError):
-        binary_tarball_name('invalid_repo')
+        get_hg_revision_info('invalid_repo')
     with pytest.raises(ValueError):
-        binary_tarball_name(finmag_repo, revision='invalid_revision')
+        get_hg_revision_info(finmag_repo, revision='invalid_revision')
+    id_string = 'd330c151a7ce'
+    rev_nr, rev_id, rev_date = get_hg_revision_info(finmag_repo, revision=id_string)
+    assert(rev_nr == 4)
+    assert(rev_id == id_string)
+    assert(rev_date == '2012-02-02')
+
+
+def test_binary_tarball_name(tmpdir):
+    finmag_repo = MODULE_DIR
     expected_tarball_name = 'FinMag-dist__2012-02-02__rev4_d330c151a7ce_foobar.tar.bz2'
     assert(binary_tarball_name(finmag_repo, revision='d330c151a7ce', suffix='_foobar') == expected_tarball_name)
 

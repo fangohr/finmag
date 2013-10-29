@@ -139,6 +139,34 @@ def start_logging_to_file(filename, formatter=None, mode='a', level=logging.DEBU
     logger.addHandler(h)
     return h
 
+
+def get_hg_revision_info(repo_dir, revision='tip'):
+    """
+    Returns the revision number, revision ID and date of a revision in
+    the given Mercurial repository. For example, the information
+    returned might be:
+
+        (3486, '18e7def5e18a', '2013-04-25')
+
+    """
+    cwd_bak = os.getcwd()
+    try:
+        os.chdir(os.path.expanduser(repo_dir))
+    except OSError:
+        raise ValueError("Expected a valid repository, but directory does not exist: '{}'".format(repo_dir))
+
+    try:
+        rev_nr = int(sp.check_output(['hg', 'id', '-n', '-r', revision]).strip())
+        rev_id = sp.check_output(['hg', 'id', '-i', '-r', revision]).strip()
+        #rev_log = sp.check_output(['hg', 'log', '-r', revision]).strip()
+        rev_date = sp.check_output(['hg', 'log', '-r', revision, '--template', '{date|isodate}']).split()[0]
+    except sp.CalledProcessError:
+        raise ValueError("Invalid revision '{}', or invalid Mercurial repository: '{}'".format(revision, repo_dir))
+
+    os.chdir(cwd_bak)
+    return rev_nr, rev_id, rev_date
+
+
 def binary_tarball_name(repo_dir, revision='tip', suffix=''):
     """
     Returns the name of the Finmag binary tarball if built from the
@@ -158,26 +186,11 @@ def binary_tarball_name(repo_dir, revision='tip', suffix=''):
     revision :  the revision to be bundled in the tarball.
 
     suffix :  string to be appended to the tarball
+
     """
-    cwd_bak = os.getcwd()
-    try:
-        os.chdir(os.path.expanduser(repo_dir))
-    except OSError:
-        raise ValueError("Expected a valid repository, but directory does not exist: '{}'".format(repo_dir))
-
-    try:
-        rev_nr = sp.check_output(['hg', 'id', '-n', '-r', revision]).strip()
-        rev_id = sp.check_output(['hg', 'id', '-i', '-r', revision]).strip()
-        #rev_log = sp.check_output(['hg', 'log', '-r', revision]).strip()
-        rev_date = sp.check_output(['hg', 'log', '-r', revision, '--template', '{date|isodate}']).split()[0]
-    except sp.CalledProcessError:
-        raise ValueError("Invalid revision '{}', or invalid Mercurial repository: '{}'".format(revision, repo_dir))
-
     # XXX TODO: Should we also check whether the repo is actually a Finmag repository?!?
-
+    rev_nr, rev_id, rev_date = get_hg_revision_info(repo_dir, revision)
     tarball_name = "FinMag-dist__{}__rev{}_{}{}.tar.bz2".format(rev_date, rev_nr, rev_id, suffix)
-    os.chdir(cwd_bak)
-
     return tarball_name
 
 
