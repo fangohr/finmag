@@ -369,6 +369,8 @@ def compute_normal_modes_generalised(A, M, n_values=10, tol=1e-8, discard_negati
     if discard_negative_frequencies:
         n_values *= 2
 
+    # XXX TODO: The following call seems to increase memory consumption quite a bit. Why?!?
+    #
     # We have to swap M and A when passing them to eigsh since the M matrix has to be positive definite for eigsh!
     omega_inv, w = scipy.sparse.linalg.eigsh(M, k=n_values, M=A, which=which, tol=tol, return_eigenvectors=True, sigma=sigma,
                                              v0=v0, ncv=ncv, maxiter=maxiter, Minv=Minv, OPinv=OPinv, mode=mode)
