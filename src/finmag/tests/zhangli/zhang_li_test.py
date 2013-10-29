@@ -35,7 +35,7 @@ def field_at(pos):
 
 def init_J(pos):
     
-    return (1e8,0,0)
+    return (1e12,0,0)
 
 def test_zhangli():
     
@@ -52,27 +52,12 @@ def test_zhangli():
     
     p0=sim.m_average
     
-    sim.run_until(5e-12)
+    sim.run_until(1e-11)
     p1=sim.m_average
-    
-    print p0,p1
-
-    sim.run_until(2e-9)
-    p1=sim.m_average
-    print p0,p1
-    
-    sim.run_until(5e-9)
-    p1=sim.m_average
-    print p0,p1
-    
-    sim.run_until(10e-9)
-    p1=sim.m_average
-    
-    print p0,p1
 
     assert p1[0] < p0[0]
-    #assert abs(p0[0])<1e-15
-    #assert abs(p1[0])>1e-3
+    assert abs(p0[0])<1e-15
+    assert abs(p1[0])>1e-3
 
 def init_J_x(pos):
     return (1,0,0)
