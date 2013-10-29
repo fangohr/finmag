@@ -554,10 +554,6 @@ namespace finmag { namespace llg {
             	dmt1[i] = hd1[i]+mmt1-mtp1/tau_sf+coeff_stt*hp1;
             	dmt2[i] = hd2[i]+mmt2-mtp2/tau_sf+coeff_stt*hp2;
 
-            	//dmt0[i]=0;
-            	//dmt1[i]=0;
-            	//dmt2[i]=0;
-
             }
             //Todo: fix the pin function here
             //pin(dmdt, pins);

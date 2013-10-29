@@ -9,7 +9,10 @@
 
 namespace finmag { namespace llb {
 
-    class StochasticSLLGIntegrator {
+	double const const_e = 1.602176565e-19; // elementary charge in As
+	double const mu_B = 9.27400968e-24; //Bohr magneton
+
+    class StochasticLLGIntegratorSTT {
 
         double theta;
         double theta1;
@@ -18,39 +21,38 @@ namespace finmag { namespace llb {
     	private:
         	int length;
         	np_array<double> M,M_pred,Ms_arr,T_arr,V_arr,alpha_arr;
-        	double dt,gamma,Q;
-        	double *dm1, *dm2, *dm3, *eta;
+        	double P, beta;
+        	double dt,gamma,Q, u0;
+        	double *dm1, *dm2, *eta;
         	bp::object rhs_func;
         	unsigned int seed;
         	RandomMT19937 mt_random;
         	bool check_magnetisation_length;
 
-        	void (StochasticSLLGIntegrator::*run_step_fun)(const np_array<double> &H);
-
-        	void calc_llg_adt_bdw(double *m,double *h,double *dm);
-        	void run_step_rk2(const np_array<double> &H);
-        	void run_step_rk3(const np_array<double> &H);
+        	void calc_llg_adt_bdw(double *m,double *h,double *gh, double *dm);
         	void check_normalise();
 
     	public:
-        	StochasticSLLGIntegrator(
+        	StochasticLLGIntegratorSTT(
         			const np_array<double> &M,
         			const np_array<double> &M_pred,
         			const np_array<double> &Ms,
         			const np_array<double> &T,
         			const np_array<double> &V,
 					const np_array<double> &alpha,
+					const double P,
+					const double beta,
 					const bp::object _rhs_func,
 					const std::string method_name);
 
-        	~StochasticSLLGIntegrator();
+        	~StochasticLLGIntegratorSTT();
 
         	void set_parameters(double dt,double gamma,unsigned int seed, bool checking);
-        	void run_step(const np_array<double> &H);
+        	void run_step(const np_array<double> &H, const np_array<double> &grad_H);
     };
 
 
-    StochasticSLLGIntegrator::~StochasticSLLGIntegrator(){
+    StochasticLLGIntegratorSTT::~StochasticLLGIntegratorSTT(){
 
     	if (dm1!=0){
     		delete[] dm1;
@@ -60,8 +62,6 @@ namespace finmag { namespace llb {
     		delete[] dm2;
     	}
 
-    	//delete[] dm3;
-
     	if (eta!=0){
     	    delete[] eta;
     	}
@@ -69,14 +69,15 @@ namespace finmag { namespace llb {
     }
 
 
-
-    StochasticSLLGIntegrator::StochasticSLLGIntegrator(
+    StochasticLLGIntegratorSTT::StochasticLLGIntegratorSTT(
     							const np_array<double> &M,
     							const np_array<double> &M_pred,
     							const np_array<double> &Ms,
     							const np_array<double> &T,
     							const np_array<double> &V,
     							const np_array<double> &alpha,
+    							const double P,
+    							const double beta,
     					        bp::object _rhs_func,
     							std::string method_name):
     							M(M),
@@ -85,6 +86,7 @@ namespace finmag { namespace llb {
     							T_arr(T),
     							V_arr(V),
     							alpha_arr(alpha),
+    							P(P),beta(beta),
     							rhs_func(_rhs_func){
 
         							assert(M.size()==3*T.size());
@@ -97,56 +99,44 @@ namespace finmag { namespace llb {
         							eta= new double[length];
 
         							if (_rhs_func.is_none())
-        								throw std::invalid_argument("StochasticSLLGIntegrator: _rhs_func is None");
+        								throw std::invalid_argument("StochasticLLGIntegratorSTT: _rhs_func is None");
 
         							if (method_name=="RK2a"){
-        								run_step_fun=&StochasticSLLGIntegrator::run_step_rk2;
         								theta=1.0;
         						        theta1=0.5;
         						        theta2=0.5;
         							}else if(method_name=="RK2b"){
-        								run_step_fun=&StochasticSLLGIntegrator::run_step_rk2;
         								theta=2.0/3.0;
         								theta1=0.25;
         								theta2=0.75;
         							}else if(method_name=="RK2c"){
-        								run_step_fun=&StochasticSLLGIntegrator::run_step_rk2;
         								theta=0.5;
         								theta1=0;
         								theta2=1.0;
-        							}else if(method_name=="RK3"){
-        								run_step_fun=&StochasticSLLGIntegrator::run_step_rk3;
-        								dm3= new double[length];
         							}else{
-        								throw std::invalid_argument("StochasticSLLGIntegrator:Only RK2a, RK2b, RK2c and RK3 are implemented!");
+        								throw std::invalid_argument("StochasticLLGIntegratorSTT:Only RK2a, RK2b and RK2c are implemented!");
         							}
 
+        			this->u0 = P*mu_B/const_e; // P g mu_B/(2 e Ms) and g=2 for electrons
+
+        			printf("P=%g  beta=%g  u0=%g\n", P, beta, u0);
+
+        			printf("hahah, I am okay!\n");
 
         }
 
-
-    void StochasticSLLGIntegrator::run_step(const np_array<double> &H) {
-
-    	(this->*run_step_fun)(H);
-
-    }
-
-    void StochasticSLLGIntegrator::check_normalise(){
+    void StochasticLLGIntegratorSTT::check_normalise(){
     	double *m = M.data();
     	int len=length/3;
 
     	int i,j,k;
 
-    	double max_m=0;
     	double mm;
 
     	for (i = 0; i < len; i++) {
     		j = i + len;
     		k = j + len;
     		mm = sqrt(m[i] * m[i] + m[j] * m[j] + m[k] * m[k]);
-    		if (mm>max_m){
-    			max_m=mm;
-    		}
 
     		mm=1.0/mm;
     		m[i] *= mm;
@@ -154,28 +144,19 @@ namespace finmag { namespace llb {
     		m[k] *= mm;
     	}
 
-    	if (check_magnetisation_length){
-
-    		if (max_m>1.05 || max_m<0.95){
-    			std::ostringstream ostr;
-    			ostr << "maxm=" << max_m <<", so dt="<< dt << " is probably too large!";
-    			throw std::invalid_argument(ostr.str());
-    		}
-    	}
-
-
     }
 
-    void StochasticSLLGIntegrator::run_step_rk2(const np_array<double> &H) {
+    void StochasticLLGIntegratorSTT::run_step(const np_array<double> &H, const np_array<double> &grad_H) {
 
     		double *h = H.data();
+    		double *hg = grad_H.data();
     		double *m = M.data();
     		double *m_pred=M_pred.data();
 
     		bp::call<void>(rhs_func.ptr(),M);
 
     		mt_random.gaussian_random_vec(eta,length,sqrt(dt));
-    		calc_llg_adt_bdw(m,h,dm1);
+    		calc_llg_adt_bdw(m,h,hg,dm1);
 
     		for (int i = 0; i < length; i++){
     			m_pred[i] = m[i] + theta*dm1[i];
@@ -183,7 +164,7 @@ namespace finmag { namespace llb {
 
     		bp::call<void>(rhs_func.ptr(),M_pred);
 
-    		calc_llg_adt_bdw(m_pred,h,dm2);
+    		calc_llg_adt_bdw(m_pred,h,hg,dm2);
 
     		for (int i = 0; i < length; i++){
     			m[i] += theta1*dm1[i] + theta2*dm2[i];
@@ -193,70 +174,42 @@ namespace finmag { namespace llb {
 
     }
 
-    void StochasticSLLGIntegrator::run_step_rk3(const np_array<double> &H) {
-    		double *h = H.data();
-    		double *m = M.data();
-    		double *m_pred=M_pred.data();
-    		double two_three=2.0/3.0;
-
-    		mt_random.gaussian_random_vec(eta,length,sqrt(dt));
-
-    		bp::call<void>(rhs_func.ptr(),M);
-    		calc_llg_adt_bdw(m,h,dm1);
-    		for (int i = 0; i < length; i++){
-    			m_pred[i] = m[i] + two_three*dm1[i];
-    		}
-
-    		bp::call<void>(rhs_func.ptr(),M_pred);
-    		calc_llg_adt_bdw(m_pred,h,dm2);
-    		for (int i = 0; i < length; i++){
-    			m_pred[i] = m[i] - dm1[i]+ dm2[i];
-    		}
-
-    		bp::call<void>(rhs_func.ptr(),M_pred);
-    		calc_llg_adt_bdw(m_pred,h,dm3);
-    		for (int i = 0; i < length; i++){
-    			m[i] += 0.75*dm2[i] + 0.25*dm3[i];
-    		}
-
-    		check_normalise();
-
-    }
-
-    void StochasticSLLGIntegrator::set_parameters(double dt,double gamma,unsigned int seed,bool checking){
+    void StochasticLLGIntegratorSTT::set_parameters(double dt,double gamma,unsigned int seed,bool checking){
     	double k_B = 1.3806505e-23;
     	double mu_0 = 4 * M_PI * 1e-7;
+
     	this->dt=dt;
     	this->gamma=gamma;
     	this->Q = k_B / (gamma * mu_0);
     	this->seed=seed;
     	this->check_magnetisation_length=checking;
+
     	mt_random.initial_random(seed);
     }
 
 
-    void StochasticSLLGIntegrator::calc_llg_adt_bdw(double *m,double *h,double *dm){
+    void StochasticLLGIntegratorSTT::calc_llg_adt_bdw(double *m, double *h, double *hg, double *dm){
 
         int i,j,k;
     	double *T = T_arr.data();
         double *V = V_arr.data();
         double *Ms = Ms_arr.data();
-        double *alpha=alpha_arr.data();
-        double alpha_inv,q,coeff;
-        double mth0,mth1,mth2;
-        int len=length/3;
+        double *alpha = alpha_arr.data();
+        double alpha_inv, q, coeff;
+        int len = length/3;
+
 
     	for (i = 0; i < len; i++) {
     		j = i + len;
     		k = j + len;
 
     		alpha_inv= 1.0/ (1.0 + alpha[i] * alpha[i]);
-    		coeff = -gamma*alpha_inv ;
+    		coeff = -gamma * alpha_inv ;
     		q = sqrt(2 * Q * alpha[i] *alpha_inv * T[i] / (Ms[i]* V[i]));
 
-    		mth0 = coeff * (m[j] * h[k] - m[k] * h[j]) * dt;
-    		mth1 = coeff * (m[k] * h[i] - m[i] * h[k]) * dt;
-    		mth2 = coeff * (m[i] * h[j] - m[j] * h[i]) * dt;
+    		double mth0 = coeff * (m[j] * h[k] - m[k] * h[j]) * dt;
+    		double mth1 = coeff * (m[k] * h[i] - m[i] * h[k]) * dt;
+    		double mth2 = coeff * (m[i] * h[j] - m[j] * h[i]) * dt;
 
     		mth0 += coeff * (m[j] * eta[k] - m[k] * eta[j]) * q;
     		mth1 += coeff * (m[k] * eta[i] - m[i] * eta[k]) * q;
@@ -266,26 +219,52 @@ namespace finmag { namespace llb {
     		dm[j] = mth1 + alpha[i] * (m[k] * mth0 - m[i] * mth2);
     		dm[k] = mth2 + alpha[i] * (m[i] * mth1 - m[j] * mth0);
 
+    		// the above is the normal LLG equation
+
+    		double coeff_stt = u0 * alpha_inv * dt;
+
+    		if (Ms[i]==0){
+    			coeff_stt = 0;
+    		}else{
+    			coeff_stt/=Ms[i];
+    		}
+
+    		double mht = m[i]*hg[i] + m[j]*hg[j] + m[k]*hg[k];
+
+    		double hpi = hg[i] - mht*m[i];
+    		double hpj = hg[j] - mht*m[j];
+    		double hpk = hg[k] - mht*m[k];
+
+    		mth0 = (m[j] * hpk - m[k] * hpj);
+    		mth1 = (m[k] * hpi - m[i] * hpk);
+    		mth2 = (m[i] * hpj - m[j] * hpi);
+
+    		dm[i] += coeff_stt*((1 + alpha[i]*beta)*hpi - (beta - alpha[i])*mth0);
+    		dm[j] += coeff_stt*((1 + alpha[i]*beta)*hpj - (beta - alpha[i])*mth1);
+    		dm[k] += coeff_stt*((1 + alpha[i]*beta)*hpk - (beta - alpha[i])*mth2);
+
     	}
 
     }
 
 
+    void register_sllg_stt() {
 
-    void register_sllg() {
     	using namespace bp;
 
-    	class_<StochasticSLLGIntegrator>("StochasticSLLGIntegrator", init<
+    	class_<StochasticLLGIntegratorSTT>("StochasticLLGIntegratorSTT", init<
     			 	np_array<double>,
     			 	np_array<double>,
     			    np_array<double>,
     			    np_array<double>,
     			    np_array<double>,
     			    np_array<double>,
+    			    double,
+    			    double,
     			    bp::object,
     			    std::string>())
-    	        	.def("run_step", &StochasticSLLGIntegrator::run_step)
-    	        	.def("set_parameters", &StochasticSLLGIntegrator::set_parameters);
+    	        	.def("run_step", &StochasticLLGIntegratorSTT::run_step)
+    	        	.def("set_parameters", &StochasticLLGIntegratorSTT::set_parameters);
     }
 
 
