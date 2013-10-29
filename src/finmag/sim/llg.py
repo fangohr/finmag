@@ -29,7 +29,7 @@ class LLG(object):
 
     """
     @mtimed
-    def __init__(self, S1, S3, do_precession=True, average=False):
+    def __init__(self, S1, S3, do_precession=True, average=False, unit_length=1):
         """
         S1 and S3 are df.FunctionSpace and df.VectorFunctionSpace objects,
         and the boolean do_precession controls whether the precession of the
@@ -43,6 +43,7 @@ class LLG(object):
 
         self.set_default_values()
         self.do_precession = do_precession
+        self.unit_length = unit_length
         self.do_slonczewski = False
         self.do_zhangli = False
         self.effective_field = EffectiveField(S3, average)
@@ -450,14 +451,13 @@ class LLG(object):
     
         
         
-    def use_zhangli(self, J, P, beta, unit_length):
+    def use_zhangli(self, J_profile=(1e10,0,0), P=0.5, beta=0.01):
         """
         Delete the equations since it always failed to build. 
         """
         
         self.do_zhangli = True
-        self.unit_length = unit_length
-        self._J = helpers.vector_valued_function(J, self.S3)
+        self._J = helpers.vector_valued_function(J_profile, self.S3)
         self.J = self._J.vector().array()
         self.compute_gradient_matrix()
         self.H_gradm = df.PETScVector()

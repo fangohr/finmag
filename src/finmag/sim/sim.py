@@ -114,7 +114,7 @@ class Simulation(object):
         self.S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3, constrained_domain=self.pbc)
 
         if kernel=='llg':
-            self.llg = LLG(self.S1, self.S3, average = average)
+            self.llg = LLG(self.S1, self.S3, average = average, unit_length=unit_length)
         elif kernel=='sllg':
             self.llg = SLLG(self.S1, self.S3, unit_length=unit_length)
         elif kernel=='llg_stt':
@@ -1166,18 +1166,18 @@ class Simulation(object):
     get_submesh = sim_helpers.get_submesh
 
 
-    def set_zhangli(self, current_density, polarisation, beta):
+    def set_zhangli(self, J_profile=(1e10,0,0), P=0.5, beta=0.01):
         """
-        Activates the computation of the Slonczewski spin-torque term in the LLG.
+        Activates the computation of the zhang-li spin-torque term in the LLG.
 
         *Arguments*
 
-            `current_density` can have any of the forms accepted by the function
+            `J_profile` can have any of the forms accepted by the function
             'finmag.util.helpers.vector_valued_function' (see its
             docstring for details).
 
         """
-        self.llg.use_zhangli(current_density, polarisation, beta, self.unit_length)
+        self.llg.use_zhangli(J_profile=J_profile, P=P, beta=beta)
 
 
 class NormalModeSimulation(Simulation):

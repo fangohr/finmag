@@ -18,6 +18,8 @@ namespace finmag { namespace llb {
 
     void register_sllg();
 
+    void register_sllg_stt();
+
     void register_random();
 
 }}

@@ -2,6 +2,7 @@ import time
 import numpy as np
 import dolfin as df
 import finmag.util.consts as consts
+from finmag.util.meshes import nodal_volume
 
 import finmag.native.llb as native_llb
 from finmag.util import helpers
@@ -18,7 +19,7 @@ import logging
 log = logging.getLogger(name="finmag")
 
 class SLLG(object):
-    def __init__(self, S1, S3, method='RK2b',checking_length=False, unit_length=1):
+    def __init__(self, S1, S3, method='RK2b', checking_length=False, unit_length=1):
 
         self.S1 = S1
         self.S3 = S3
@@ -35,6 +36,7 @@ class SLLG(object):
         self._alpha = np.zeros(self.nxyz)
         self.m=np.zeros(3*self.nxyz)
         self.field=np.zeros(3*self.nxyz)
+        self.grad_m=np.zeros(3*self.nxyz)
         self.dm_dt=np.zeros(3*self.nxyz)
         self._Ms = np.zeros(3*self.nxyz) #Note: nxyz for Ms length is more suitable?
         self.effective_field = EffectiveField(self.S3)
@@ -43,6 +45,8 @@ class SLLG(object):
         self.method = method
         self.checking_length = checking_length
         self.unit_length = unit_length
+        
+        self.zhangli_stt=False
 
         self.set_default_values()
 
@@ -53,21 +57,21 @@ class SLLG(object):
         self.Volume = mesh_volume(self.mesh)
         self.real_volumes=self.volumes*self.unit_length**3
 
-        M_pred=np.zeros(self.m.shape)
-
+        self.m_pred = np.zeros(self.m.shape)
+        
         self.integrator = native_llb.StochasticSLLGIntegrator(
                                     self.m,
-                                    M_pred,
+                                    self.m_pred,
                                     self._Ms,
                                     self._T,
                                     self.real_volumes,
                                     self._alpha,
                                     self.stochastic_update_field,
                                     self.method)
-
-        self.alpha = 0.5
+        
+        self.alpha = 0.1
         self._gamma = consts.gamma
-        self._seed=np.random.random_integers(4294967295)
+        self._seed = np.random.random_integers(4294967295)
         self.dt = 1e-13
         self.T = 0
 
@@ -128,10 +132,15 @@ class SLLG(object):
             return
         try:
             while tp-self._t>1e-12:
-                self.integrator.run_step(self.field)
+                if self.zhangli_stt:
+                    self.integrator.run_step(self.field, self.grad_m)
+                else:
+                    self.integrator.run_step(self.field)
+                    
                 self._m.vector().set_local(self.m)
 
                 self._t+=self._dt
+                
         except Exception,error:
             log.info(error)
             raise Exception(error)
@@ -144,8 +153,10 @@ class SLLG(object):
         self._m.vector().set_local(y)
 
         self.field[:] = self.effective_field.compute(self.cur_t)[:]
-
-
+        
+        if self.zhangli_stt:
+            self.grad_m[:] = self.compute_gradient_field()[:]
+        
     @property
     def T(self):
         return self._T
@@ -176,7 +187,7 @@ class SLLG(object):
         self._Ms_dg=helpers.scalar_valued_dg_function(value,self.mesh)
 
         tmp = df.assemble(self._Ms_dg*df.dot(df.TestFunction(self.S3), df.Constant([1, 1, 1])) * df.dx)
-        tmp=tmp/self.volumes
+        tmp = tmp/self.volumes
         self._Ms[:]=tmp[:]
 
     def m_average_fun(self,dx=df.dx):
@@ -193,6 +204,67 @@ class SLLG(object):
 
         return np.array([mx, my, mz]) / volume
     m_average=property(m_average_fun)
+    
+    
+    def compute_gradient_matrix(self):
+        """
+        compute (J nabla) m , we hope we can use a matrix M such that M*m = (J nabla)m.
+
+        """
+        tau = df.TrialFunction(self.S3)
+        sigma = df.TestFunction(self.S3)
+        
+        self.nodal_volume_S3 = nodal_volume(self.S3)*self.unit_length
+        
+        dim = self.S3.mesh().topology().dim()
+        
+        ty = tz = 0
+        
+        tx = self._J[0]*df.dot(df.grad(tau)[:,0],sigma)
+        
+        if dim >= 2:
+            ty = self._J[1]*df.dot(df.grad(tau)[:,1],sigma)
+        
+        if dim >= 3:
+            tz = self._J[2]*df.dot(df.grad(tau)[:,2],sigma)
+        
+        self.gradM = df.assemble((tx+ty+tz)*df.dx)
+
+        #self.gradM = df.assemble(df.dot(df.dot(self._J, df.nabla_grad(tau)),sigma)*df.dx)
+        
+    
+    def compute_gradient_field(self):
+
+        self.gradM.mult(self._m.vector(), self.H_gradm)
+        
+        return self.H_gradm.array()/self.nodal_volume_S3
+    
+    
+    def use_zhangli(self, J_profile=(1e10,0,0), P=0.5, beta=0.01):
+        
+        self.zhangli_stt = True
+        
+        self.P = P
+        self.beta = beta
+        
+        self._J = helpers.vector_valued_function(J_profile, self.S3)
+        self.J = self._J.vector().array()
+        self.compute_gradient_matrix()
+        self.H_gradm = df.PETScVector()
+        
+        self.integrator = native_llb.StochasticLLGIntegratorSTT(
+                                    self.m,
+                                    self.m_pred,
+                                    self._Ms,
+                                    self._T,
+                                    self.real_volumes,
+                                    self._alpha,
+                                    self.P,
+                                    self.beta,
+                                    self.stochastic_update_field,
+                                    self.method)
+        self.dt = 1e-14
+        
 
 
 if __name__ == "__main__":
