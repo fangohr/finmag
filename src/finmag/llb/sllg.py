@@ -2,12 +2,11 @@ import time
 import numpy as np
 import dolfin as df
 import finmag.util.consts as consts
-from finmag.util.meshes import nodal_volume
 
 import finmag.native.llb as native_llb
 from finmag.util import helpers
 from finmag.energies.effective_field import EffectiveField
-from finmag.util.meshes import mesh_volume
+from finmag.util.meshes import mesh_volume, nodal_volume
 from finmag.util.fileio import Tablewriter
 
 from finmag.energies import Zeeman
@@ -55,7 +54,7 @@ class SLLG(object):
         self._pins = np.array([], dtype="int")
         self.volumes = df.assemble(df.dot(df.TestFunction(self.S3), df.Constant([1, 1, 1])) * df.dx).array()
         self.Volume = mesh_volume(self.mesh)
-        self.real_volumes=self.volumes*self.unit_length**3
+        self.real_volumes = self.volumes*self.unit_length**3
 
         self.m_pred = np.zeros(self.m.shape)
         
@@ -263,6 +262,8 @@ class SLLG(object):
                                     self.beta,
                                     self.stochastic_update_field,
                                     self.method)
+        
+        #seems that in the presence of current, the time step have to very small
         self.dt = 1e-14
         
 

@@ -6,6 +6,8 @@
 
 #include "llb.h"
 
+#include "util/python_threading.h"
+
 
 namespace finmag { namespace llb {
 
@@ -119,9 +121,8 @@ namespace finmag { namespace llb {
 
         			this->u0 = P*mu_B/const_e; // P g mu_B/(2 e Ms) and g=2 for electrons
 
-        			printf("P=%g  beta=%g  u0=%g\n", P, beta, u0);
+        			//printf("P=%g  beta=%g  u0=%g\n", P, beta, u0);
 
-        			printf("hahah, I am okay!\n");
 
         }
 
@@ -195,17 +196,18 @@ namespace finmag { namespace llb {
         double *V = V_arr.data();
         double *Ms = Ms_arr.data();
         double *alpha = alpha_arr.data();
-        double alpha_inv, q, coeff;
         int len = length/3;
 
+        finmag::util::scoped_gil_release release_gil;
 
+		#pragma omp parallel for schedule(guided)
     	for (i = 0; i < len; i++) {
     		j = i + len;
     		k = j + len;
 
-    		alpha_inv= 1.0/ (1.0 + alpha[i] * alpha[i]);
-    		coeff = -gamma * alpha_inv ;
-    		q = sqrt(2 * Q * alpha[i] *alpha_inv * T[i] / (Ms[i]* V[i]));
+    		double alpha_inv= 1.0/ (1.0 + alpha[i] * alpha[i]);
+    		double coeff = -gamma * alpha_inv ;
+    		double q = sqrt(2 * Q * alpha[i] *alpha_inv * T[i] / (Ms[i]* V[i]));
 
     		double mth0 = coeff * (m[j] * h[k] - m[k] * h[j]) * dt;
     		double mth1 = coeff * (m[k] * h[i] - m[i] * h[k]) * dt;
