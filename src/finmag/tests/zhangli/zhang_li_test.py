@@ -39,7 +39,8 @@ def init_J(pos):
 
 def test_zhangli():
     
-    mesh = df.BoxMesh(0, 0, 0, 100, 1, 1, 50, 1, 1)
+    #mesh = df.BoxMesh(0, 0, 0, 100, 1, 1, 50, 1, 1)
+    mesh = df.IntervalMesh(50,0,100)
     
     sim = Sim(mesh, Ms=8.6e5, unit_length=1e-9)
     sim.set_m(init_m)
@@ -48,11 +49,11 @@ def test_zhangli():
     sim.add(Exchange(A=13e-12))
     sim.alpha = 0.01
     
-    sim.set_zhangli(init_J, 0.5,0.01)
+    sim.set_zhangli(init_J, 0.5,0.02)
     
     p0=sim.m_average
     
-    sim.run_until(1e-11)
+    sim.run_until(2e-12)
     p1=sim.m_average
     
     #print p0,p1
@@ -63,7 +64,8 @@ def test_zhangli():
     
 def test_zhangli_sllg():
     
-    mesh = df.BoxMesh(0, 0, 0, 100, 1, 1, 50, 1, 1)
+    #mesh = df.BoxMesh(0, 0, 0, 100, 1, 1, 50, 1, 1)
+    mesh = df.IntervalMesh(50,0,100)
     
     sim = Sim(mesh, Ms=8.6e5, unit_length=1e-9, kernel='sllg')
     sim.set_m(init_m)
@@ -72,11 +74,11 @@ def test_zhangli_sllg():
     sim.add(Exchange(A=13e-12))
     sim.alpha = 0.01
     
-    sim.set_zhangli(init_J, 0.5,0.01)
+    sim.set_zhangli(init_J, 0.5,0.02)
     
     p0=sim.m_average
     
-    sim.run_until(1e-11)
+    sim.run_until(2e-12)
     p1=sim.m_average
     
     #print p0,p1
@@ -84,8 +86,8 @@ def test_zhangli_sllg():
     assert p1[0] < p0[0]
     assert abs(p0[0])<1e-15
     assert abs(p1[0])>1e-3
-    # the result got by llg is 6.5513e-3
-    assert abs(p1[0]+6.5513e-3)<1e-8
+    # the result got by llg is -1.310956e-3
+    assert abs(p1[0]+1.310956e-3)<1e-8
 
 def init_J_x(pos):
     return (1,0,0)

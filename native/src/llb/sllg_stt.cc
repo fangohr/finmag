@@ -191,7 +191,6 @@ namespace finmag { namespace llb {
 
     void StochasticLLGIntegratorSTT::calc_llg_adt_bdw(double *m, double *h, double *hg, double *dm){
 
-        int i,j,k;
     	double *T = T_arr.data();
         double *V = V_arr.data();
         double *Ms = Ms_arr.data();
@@ -201,9 +200,9 @@ namespace finmag { namespace llb {
         finmag::util::scoped_gil_release release_gil;
 
 		#pragma omp parallel for schedule(guided)
-    	for (i = 0; i < len; i++) {
-    		j = i + len;
-    		k = j + len;
+    	for (int i = 0; i < len; i++) {
+    		int j = i + len;
+    		int k = j + len;
 
     		double alpha_inv= 1.0/ (1.0 + alpha[i] * alpha[i]);
     		double coeff = -gamma * alpha_inv ;
