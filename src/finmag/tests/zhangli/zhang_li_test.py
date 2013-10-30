@@ -54,6 +54,8 @@ def test_zhangli():
     
     sim.run_until(1e-11)
     p1=sim.m_average
+    
+    #print p0,p1
 
     assert p1[0] < p0[0]
     assert abs(p0[0])<1e-15
@@ -77,11 +79,13 @@ def test_zhangli_sllg():
     sim.run_until(1e-11)
     p1=sim.m_average
     
-    print p0, p1
+    #print p0,p1
 
     assert p1[0] < p0[0]
     assert abs(p0[0])<1e-15
     assert abs(p1[0])>1e-3
+    # the result got by llg is 6.5513e-3
+    assert abs(p1[0]+6.5513e-3)<1e-8
 
 def init_J_x(pos):
     return (1,0,0)
