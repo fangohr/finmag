@@ -1073,7 +1073,16 @@ def test_compute_normal_modes(tmpdir):
     assert(len(glob('animation/normal_mode_5__*_GHz*.pvd')) == 1)
     assert(len(glob('animation/normal_mode_5__*_GHz*.vtu')) == 10)
 
-    # Test plotting of spatially resolved normal mode profiles
+@pytest.mark.xfail("LooseVersion(df.__version__) <= LooseVersion('1.2.0')")
+def test_plot_spatially_resolved_normal_modes(tmpdir):
+    """
+    Test plotting of spatially resolved normal mode profiles
+
+    """
+    os.chdir(str(tmpdir))
+    from finmag.example.normal_modes import disk
+    sim = disk()
+    sim.compute_normal_modes()
     fig = sim.plot_spatially_resolved_normal_mode(k=0)
     assert(isinstance(fig, plt.Figure))
 
