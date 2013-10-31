@@ -11,7 +11,18 @@ logger = logging.getLogger("finmag")
 
 
 def test_compute_generalised_eigenproblem_matrices_single_sphere(tmpdir):
-    #(sim, alpha=0.0, frequency_unit=1e9, filename_mat_A=None, filename_mat_M=None):
+    """
+    Compute the eigenmodes of a perfect sphere and check that the
+    frequency of the base mode equals the analytical value from the
+    Kittel equation (see Charles Kittel, "Introduction to solid state
+    physics", 7th edition, Ch. 16, p.505):
+
+       omega_0 = gamma * B_0
+
+    Here omega_0 is the angular frequency, so the actual frequency is
+    equal to omega_0 / (2*pi).
+
+    """
     os.chdir(str(tmpdir))
 
     sphere = Sphere(r=11)
@@ -35,7 +46,7 @@ def test_compute_generalised_eigenproblem_matrices_single_sphere(tmpdir):
     print "[DDD] omega: {}".format(omega)
 
     # Check that the frequency of the base mode equals the analytical value from the Kittel equation
-    # (see Charles Kittel, "ntroduction to solid state physics", 7th edition, Ch. 16, p.505):
+    # (see Charles Kittel, "Introduction to solid state physics", 7th edition, Ch. 16, p.505):
     #
     #    omega_0 = gamma * B_0
     #
@@ -45,11 +56,10 @@ def test_compute_generalised_eigenproblem_matrices_single_sphere(tmpdir):
     assert(np.allclose(omega[0], +freq_expected, atol=0, rtol=1e-2))
     assert(np.allclose(omega[1], -freq_expected, atol=0, rtol=1e-2))
 
+    # Perform the same test when negative frequencies are discarded
     omega_positive, _ = compute_normal_modes_generalised(A, M, n_values=n_values, discard_negative_frequencies=True)
     logger.debug("[DDD] omega_positive: {}".format(omega_positive))
     assert(len(omega_positive) == n_values)
-
-    # Check that the base frequency is as expected
     assert(np.allclose(omega_positive[0], freq_expected, atol=0, rtol=1e-2))
 
     # Ensure that the frequencies are all positive and sorted by absolute value
