@@ -5,6 +5,7 @@ from finmag import example
 from finmag import sim_with, normal_mode_simulation
 from math import pi
 import logging
+import pytest
 
 logger = logging.getLogger("finmag")
 
@@ -80,7 +81,7 @@ def test_plot_spatially_resolved_normal_mode(tmpdir):
     os.chdir(str(tmpdir))
     d = 60
     h = 2
-    maxh = 10.0
+    maxh = 4.0
 
     nanodisk = Nanodisk(d, h)
     mesh = nanodisk.create_mesh(maxh, directory='meshes')
@@ -94,15 +95,25 @@ def test_plot_spatially_resolved_normal_mode(tmpdir):
 
     sim = normal_mode_simulation(mesh, Ms, m_init, alpha=alpha_relax, unit_length=1e-9, A=A, H_ext=H_ext_relax)
 
-    N = 1
+    N = 3
     omega, eigenvecs = sim.compute_normal_modes(n_values=N)
     logger.debug("[DDD] Computed {} eigenvalues and {} eigenvectors.".format(len(omega), len(eigenvecs[0])))
     for i in xrange(N):
         #sim.export_normal_mode_animation(i, filename='animations/normal_mode_{:02d}/normal_mode_{:02d}.pvd'.format(i, i))
-
         w = eigenvecs[:, i]
+
         fig = plot_spatially_resolved_normal_mode(sim, w, slice_z='z_max', components='xyz',
-                                                  plot_amplitudes=True, plot_phases=False,
-                                                  show_axis_labels=False, show_colorbars=True, figsize=(14, 8))
-        for ext in ['pdf', 'png']:
-            fig.savefig('normal_mode_profile_{:02d}.{}'.format(i, ext))
+                                                  plot_powers=True, plot_phases=True,
+                                                  show_axis_labels=True, show_colorbars=True,
+                                                  show_axis_frames=True, figsize=(14, 8))
+        fig.savefig('normal_mode_profile_{:02d}_v1.png'.format(i))
+
+        # Different combination of parameters
+        fig = plot_spatially_resolved_normal_mode(sim, w, slice_z='z_min', components='xz',
+                                                  plot_powers=True, plot_phases=False,
+                                                  show_axis_frames=False, show_axis_labels=False,
+                                                  show_colorbars=False, figsize=(14, 8))
+        fig.savefig('normal_mode_profile_{:02d}_v2.png'.format(i))
+
+        with pytest.raises(ValueError):
+            plot_spatially_resolved_normal_mode(sim, w, plot_powers=False, plot_phases=False)
