@@ -1662,6 +1662,7 @@ class NormalModeSimulation(Simulation):
             show_colorbars=show_colorbars, figsize=figsize)
         return fig
 
+
 def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sundials",
              A=None, K1=None, K1_axis=None, H_ext=None, demag_solver='FK',
              demag_solver_params={}, D=None, name="unnamed", sim_class=Simulation):
