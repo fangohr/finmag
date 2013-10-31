@@ -177,7 +177,7 @@ def render_paraview_scene(
     rescale=None,
     diffuse_color=None):
     """
-    Load a *.vtu file, render the scene in it and save the result to an image file.
+    Load a *.pvd file, render the scene in it and save the result to an image file.
 
 
     *Returns*
@@ -204,7 +204,7 @@ def render_paraview_scene(
     field_name:
 
         The field to plot. Default: 'm' (= the normalised magnetisation).
-        Note that this field must of course have been saved in the .vtu
+        Note that this field must of course have been saved in the .pvd
         file.
 
     timesteps:
