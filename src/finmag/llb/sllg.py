@@ -239,7 +239,7 @@ class SLLG(object):
         return self.H_gradm.array()/self.nodal_volume_S3
     
     
-    def use_zhangli(self, J_profile=(1e10,0,0), P=0.5, beta=0.01):
+    def use_zhangli(self, J_profile=(1e10,0,0), P=0.5, beta=0.01, using_u0=False):
         
         self.zhangli_stt = True
         
@@ -265,6 +265,8 @@ class SLLG(object):
         
         #seems that in the presence of current, the time step have to very small
         self.dt = 1e-14
+        
+        #TODO: fix the using_u0 here.
         
 
 

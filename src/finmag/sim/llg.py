@@ -222,7 +222,7 @@ class LLG(object):
                 m, H_eff, H_gradm, t, dmdt, self.pins,
                 self.gamma, self.alpha.vector().array(),
                 char_time,
-                self.beta, self.P, self._Ms)
+                self.u0, self.beta, self._Ms)
             H_gradm.shape=(-1,)
         else:
             native_llg.calc_llg_dmdt(m, H_eff, t, dmdt, self.pins,
@@ -451,9 +451,9 @@ class LLG(object):
     
         
         
-    def use_zhangli(self, J_profile=(1e10,0,0), P=0.5, beta=0.01):
+    def use_zhangli(self, J_profile=(1e10,0,0), P=0.5, beta=0.01, using_u0=False):
         """
-        Delete the equations since it always failed to build. 
+        if using_u0 = True, the factor of 1/(1+beta^2) will be dropped.
         """
         
         self.do_zhangli = True
@@ -462,7 +462,16 @@ class LLG(object):
         self.compute_gradient_matrix()
         self.H_gradm = df.PETScVector()
         
+        const_e = 1.602176565e-19; #elementary charge in As
+        mu_B = 9.27400968e-24; #Bohr magneton
+        
         self.P = P
         self.beta = beta
         
+        u0 = P*mu_B/const_e #P g mu_B/(2 e Ms) and g=2 for electrons
+        
+        if using_u0:
+            self.u0 = u0
+        else:
+            self.u0 = u0/(1+beta**2)
         

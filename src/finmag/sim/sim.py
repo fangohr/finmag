@@ -1179,7 +1179,7 @@ class Simulation(object):
     get_submesh = sim_helpers.get_submesh
 
 
-    def set_zhangli(self, J_profile=(1e10,0,0), P=0.5, beta=0.01):
+    def set_zhangli(self, J_profile=(1e10,0,0), P=0.5, beta=0.01, using_u0=False):
         """
         Activates the computation of the zhang-li spin-torque term in the LLG.
 
@@ -1188,9 +1188,11 @@ class Simulation(object):
             `J_profile` can have any of the forms accepted by the function
             'finmag.util.helpers.vector_valued_function' (see its
             docstring for details).
+            
+            if using_u0 = True, the factor of 1/(1+beta^2) will be dropped.
 
         """
-        self.llg.use_zhangli(J_profile=J_profile, P=P, beta=beta)
+        self.llg.use_zhangli(J_profile=J_profile, P=P, beta=beta, using_u0=using_u0)
 
 
 class NormalModeSimulation(Simulation):
