@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from finmag import Simulation as Sim
 from finmag.energies import Exchange, Demag
 from finmag.util.fileio import Tablereader
+from finmag.util.meshes import from_geofile, mesh_info
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -44,7 +45,7 @@ def relax_system(mesh):
     sim.relax(stopping_dmdt=0.01)
     np.save('m0.npy',sim.m)
     df.plot(sim.llg._m)
-    df.interactive()
+    #df.interactive()
 
 def spin_length(sim):
     spin=sim.m
@@ -65,13 +66,13 @@ def with_current(mesh):
     
     sim.set_zhangli(init_J, 1.0,0.05)
     
-    sim.schedule('save_ndt', every=1e-11)
-    sim.schedule('save_vtk', every=5e-11)
-    sim.schedule(spin_length, every=1e-11)
+    sim.schedule('save_ndt', every=5e-11)
+    #sim.schedule('save_vtk', every=5e-11)
+    sim.schedule(spin_length, every=5e-11)
     
-    sim.run_until(5e-9)
+    sim.run_until(8e-9)
     df.plot(sim.llg._m)
-    df.interactive()
+    #df.interactive()
     
 def plot_data():
     data = Tablereader('stt.ndt')
@@ -94,8 +95,10 @@ def plot_data():
         
 
 if __name__ == "__main__":
-    mesh = df.BoxMesh(0, 0, 0, 100, 100, 10, 40, 40, 4)
+    #mesh = df.BoxMesh(0, 0, 0, 100, 100, 10, 40, 40, 2)
+    mesh = from_geofile('thinfilm100.geo')
+    print mesh_info(mesh)
     #relax_system(mesh)
-    #with_current(mesh)
+    with_current(mesh)
     plot_data()
 

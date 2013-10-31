@@ -406,8 +406,8 @@ namespace finmag { namespace llg {
                 double gamma,
                 const np_array<double> &alpha_arr,
                 double char_time,
+                double const u0,
                 double const beta,
-                double const P,
                 const np_array<double> &Ms) {
 
             int const nodes = check_dimensions(alpha_arr, m, H, dmdt);
@@ -424,8 +424,6 @@ namespace finmag { namespace llg {
             Ms.check_shape(nodes, "calc_llg_zhang_li_dmdt: Ms");
 
             finmag::util::scoped_gil_release release_gil;
-
-            double u0 = P*mu_B/e; // P g mu_B/(2 e Ms) and g=2 for electrons
 
             // calculate dmdt
             #pragma omp parallel for schedule(guided)
@@ -801,8 +799,8 @@ namespace finmag { namespace llg {
         		arg("gamma"),
         		arg("alpha_arr"),
         		arg("char_time"),
+        		arg("u0"),
         		arg("beta"),
-        		arg("P"),
         		arg("Ms")
          ));
 
