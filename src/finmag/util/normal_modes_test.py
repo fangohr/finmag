@@ -1,9 +1,11 @@
-from finmag.util.mesh_templates import Box, Sphere
+from finmag.util.mesh_templates import Box, Sphere, Nanodisk
 from finmag.util.meshes import mesh_info, plot_mesh_with_paraview
 from finmag.util.normal_modes import *
-from finmag import sim_with
+from finmag import example
+from finmag import sim_with, normal_mode_simulation
 from math import pi
 import logging
+import pytest
 
 logger = logging.getLogger("finmag")
 
@@ -66,11 +68,52 @@ def test_compute_generalised_eigenproblem_matrices_single_sphere(tmpdir):
 
 def test_passing_scipy_eigsh_parameters(tmpdir):
     os.chdir(str(tmpdir))
-    from finmag.example.normal_modes import disk
-    sim = disk()
+    sim = example.normal_modes.disk()
 
     omega1, _ = sim.compute_normal_modes(n_values=4, tol=0)
     omega2, _ = sim.compute_normal_modes(n_values=4, tol=0, ncv=20, maxiter=2000, sigma=0.0, which='SM')
     logger.debug("Note: the following results are not meant to coincide! Their purpose is just to test passing arguments to scipy.sparse.linalg.eigsh")
     logger.debug("Computed eigenfrequencies #1: {}".format(omega1))
     logger.debug("Computed eigenfrequencies #2: {}".format(omega2))
+
+
+def test_plot_spatially_resolved_normal_mode(tmpdir):
+    os.chdir(str(tmpdir))
+    d = 60
+    h = 2
+    maxh = 4.0
+
+    nanodisk = Nanodisk(d, h)
+    mesh = nanodisk.create_mesh(maxh, directory='meshes')
+
+    # Material parameters for Permalloy
+    Ms = 8e5
+    A=13e-12
+    m_init = [1, 0, 0]
+    alpha_relax = 1.0
+    H_ext_relax = [1e4, 0, 0]
+
+    sim = normal_mode_simulation(mesh, Ms, m_init, alpha=alpha_relax, unit_length=1e-9, A=A, H_ext=H_ext_relax)
+
+    N = 3
+    omega, eigenvecs = sim.compute_normal_modes(n_values=N)
+    logger.debug("[DDD] Computed {} eigenvalues and {} eigenvectors.".format(len(omega), len(eigenvecs[0])))
+    for i in xrange(N):
+        #sim.export_normal_mode_animation(i, filename='animations/normal_mode_{:02d}/normal_mode_{:02d}.pvd'.format(i, i))
+        w = eigenvecs[:, i]
+
+        fig = plot_spatially_resolved_normal_mode(sim, w, slice_z='z_max', components='xyz',
+                                                  plot_powers=True, plot_phases=True,
+                                                  show_axis_labels=True, show_colorbars=True,
+                                                  show_axis_frames=True, figsize=(14, 8))
+        fig.savefig('normal_mode_profile_{:02d}_v1.png'.format(i))
+
+        # Different combination of parameters
+        fig = plot_spatially_resolved_normal_mode(sim, w, slice_z='z_min', components='xz',
+                                                  plot_powers=True, plot_phases=False,
+                                                  show_axis_frames=False, show_axis_labels=False,
+                                                  show_colorbars=False, figsize=(14, 8))
+        fig.savefig('normal_mode_profile_{:02d}_v2.png'.format(i))
+
+        with pytest.raises(ValueError):
+            plot_spatially_resolved_normal_mode(sim, w, plot_powers=False, plot_phases=False)
