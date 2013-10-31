@@ -4,6 +4,7 @@ import finmag
 import logging
 import pytest
 import os
+import matplotlib.pyplot as plt
 from aeon import default_timer
 from glob import glob
 from distutils.version import LooseVersion
@@ -1071,6 +1072,10 @@ def test_compute_normal_modes(tmpdir):
     assert(len(glob('animation/mode_2*.vtu')) == 10)
     assert(len(glob('animation/normal_mode_5__*_GHz*.pvd')) == 1)
     assert(len(glob('animation/normal_mode_5__*_GHz*.vtu')) == 10)
+
+    # Test plotting of spatially resolved normal mode profiles
+    fig = sim.plot_spatially_resolved_normal_mode(k=0)
+    assert(isinstance(fig, plt.Figure))
 
 
 @pytest.mark.skipif("True")
