@@ -21,7 +21,7 @@ from finmag.util.fileio import Tablewriter, FieldSaver
 from finmag.util import helpers
 from finmag.util.vtk_saver import VTKSaver
 from finmag.util.fft import FFT_m, plot_FFT_m, find_peak_near_frequency, _plot_spectrum, export_normal_mode_animation_from_ringdown
-from finmag.util.normal_modes import compute_generalised_eigenproblem_matrices, compute_normal_modes_generalised, export_normal_mode_animation
+from finmag.util.normal_modes import compute_generalised_eigenproblem_matrices, compute_normal_modes_generalised, export_normal_mode_animation, plot_spatially_resolved_normal_mode
 from finmag.util.helpers import plot_dynamics
 from finmag.sim.hysteresis import hysteresis as hyst, hysteresis_loop as hyst_loop
 from finmag.sim import sim_helpers
@@ -1621,6 +1621,31 @@ class NormalModeSimulation(Simulation):
             video_tag = '<a href="files/{0}" target="_blank">Link to video</a>'.format(basename + '.avi')
             return HTML(data=video_tag)
 
+    def plot_spatially_resolved_normal_mode(self, k, slice_z='z_max', components='xyz', plot_powers=True, plot_phases=True, show_axis_labels=True, show_axis_frames=True, show_colorbars=True, figsize=None):
+        """
+        Plot a spatially resolved profile of the k-th normal mode as
+        computed by `sim.compute_normal_modes()`.
+
+        *Returns*
+
+        A `matplotlib.Figure` containing the plot.
+
+
+        See the docstring of the function
+        `finmag.util.normal_modes.plot_spatially_resolved_normal_mode`
+        for details about the meaning of the arguments.
+
+        """
+        if self.eigenvecs == None:
+            log.warning("No eigenvectors have been computed. Please call "
+                        "`sim.compute_normal_modes()` to do so.")
+
+        fig = plot_spatially_resolved_normal_mode(
+            self, self.eigenvecs[:, k], slice_z=slice_z, components=components,
+            plot_powers=plot_powers, plot_phases=plot_phases,
+            show_axis_labels=show_axis_labels, show_axis_frames=show_axis_frames,
+            show_colorbars=show_colorbars, figsize=figsize)
+        return fig
 
 def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sundials",
              A=None, K1=None, K1_axis=None, H_ext=None, demag_solver='FK',
