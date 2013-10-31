@@ -598,29 +598,27 @@ namespace finmag { namespace llg {
             assert(M.size()%3==0);
             
             int length=M.size()/3;         
-            int i1,i2,i3;
    
             #pragma omp parallel for schedule(guided)
             for (int i = 0; i < length; i++) {
-                i1=i;
-                i2=length+i1;
-                i3=length+i2;
+                int j=length+i;
+                int k=length+j;
                
                 if(pin[i]>0){
-        		  dm_dt[i1]=0;
-        		  dm_dt[i2]=0;
-        		  dm_dt[i3]=0;
+        		  dm_dt[i]=0;
+        		  dm_dt[j]=0;
+        		  dm_dt[k]=0;
                 }{
 
-                	dm_dt[i1]=damping_coeff*(a[i]*h[i1]*type - b[i]*delta_h[i1]);
-                	dm_dt[i2]=damping_coeff*(a[i]*h[i2] - b[i]*delta_h[i2]);
-                	dm_dt[i3]=damping_coeff*(a[i]*h[i3] - b[i]*delta_h[i3]);
+                	dm_dt[i]=damping_coeff*(a[i]*h[i]*type - b[i]*delta_h[i]);
+                	dm_dt[j]=damping_coeff*(a[i]*h[j] - b[i]*delta_h[j]);
+                	dm_dt[k]=damping_coeff*(a[i]*h[k] - b[i]*delta_h[k]);
                 
                 	// add precession: m x H, multiplied by -gamma
                 	if (do_precession) {
-                		dm_dt[i1] += precession_coeff*(m[i2]*h[i3]-m[i3]*h[i2]);
-                		dm_dt[i2] += precession_coeff*(m[i3]*h[i1]-m[i1]*h[i3]);
-                		dm_dt[i3] += precession_coeff*(m[i1]*h[i2]-m[i2]*h[i1]);
+                		dm_dt[i] += precession_coeff*(m[j]*h[k]-m[k]*h[j]);
+                		dm_dt[j] += precession_coeff*(m[k]*h[i]-m[i]*h[k]);
+                		dm_dt[k] += precession_coeff*(m[i]*h[j]-m[j]*h[i]);
                 } 
 
         	  }
@@ -639,18 +637,16 @@ namespace finmag { namespace llg {
             assert(M.size()%3==0);
             
             int length=M.size()/3;         
-            int i1,i2,i3;
-   
-            double tmp;
+
             for (int i = 0; i < length; i++) {
-                i1=i;
-                i2=length+i1;
-                i3=length+i2;
+                int j=length+i;
+                int k=length+j;
                 
-                tmp=m[i1]*m[i1]+m[i2]*m[i2]+m[i3]*m[i3];
-                ms[i1]=tmp;
-                ms[i2]=tmp;
-                ms[i3]=tmp;
+                double tmp=m[i]*m[i]+m[j]*m[j]+m[k]*m[k];
+
+                ms[i]=tmp;
+                ms[j]=tmp;
+                ms[k]=tmp;
             }
         
         }
@@ -682,10 +678,6 @@ namespace finmag { namespace llg {
             
             int length=H.size()/3;
             int i1,i2,i3;
-
-            
-            finmag::util::scoped_gil_release release_gil;
-
 
            if (!do_precession) {
         	   for (int i = 0; i < 3*length; i++) {

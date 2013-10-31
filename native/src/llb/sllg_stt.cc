@@ -199,7 +199,7 @@ namespace finmag { namespace llb {
 
         finmag::util::scoped_gil_release release_gil;
 
-		#pragma omp parallel for schedule(guided)
+		#pragma omp parallel for
     	for (int i = 0; i < len; i++) {
     		int j = i + len;
     		int k = j + len;

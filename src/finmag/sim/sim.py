@@ -534,6 +534,19 @@ class Simulation(object):
                 self.integrator = self.llg
             else:
                 self.integrator = llg_integrator(self.llg, self.llg.m, backend=backend, **kwargs)
+                
+            self.tablewriter.entities['steps'] = {
+                'unit': '<1>',
+                'get': lambda sim: sim.integrator.stats()['nsteps'],
+                'header': 'steps'}
+            
+            self.tablewriter.entities['last_step_dt'] = {
+                'unit': '<1>',
+                'get': lambda sim: sim.integrator.stats()['hlast'],
+                'header': 'last_step_dt'}
+            
+            self.tablewriter.update_entity_order()
+        
         else:
             log.warning("Cannot create integrator - exists already: {}".format(self.integrator))
         return self.integrator
