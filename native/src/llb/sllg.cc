@@ -6,6 +6,7 @@
 
 #include "llb.h"
 
+#include "util/python_threading.h"
 
 namespace finmag { namespace llb {
 
@@ -237,26 +238,26 @@ namespace finmag { namespace llb {
 
     void StochasticSLLGIntegrator::calc_llg_adt_bdw(double *m,double *h,double *dm){
 
-        int i,j,k;
     	double *T = T_arr.data();
         double *V = V_arr.data();
         double *Ms = Ms_arr.data();
         double *alpha=alpha_arr.data();
-        double alpha_inv,q,coeff;
-        double mth0,mth1,mth2;
         int len=length/3;
 
-    	for (i = 0; i < len; i++) {
-    		j = i + len;
-    		k = j + len;
+        finmag::util::scoped_gil_release release_gil;
 
-    		alpha_inv= 1.0/ (1.0 + alpha[i] * alpha[i]);
-    		coeff = -gamma*alpha_inv ;
-    		q = sqrt(2 * Q * alpha[i] *alpha_inv * T[i] / (Ms[i]* V[i]));
+		#pragma omp parallel for
+    	for (int i = 0; i < len; i++) {
+    		int j = i + len;
+    		int k = j + len;
 
-    		mth0 = coeff * (m[j] * h[k] - m[k] * h[j]) * dt;
-    		mth1 = coeff * (m[k] * h[i] - m[i] * h[k]) * dt;
-    		mth2 = coeff * (m[i] * h[j] - m[j] * h[i]) * dt;
+    		double alpha_inv= 1.0/ (1.0 + alpha[i] * alpha[i]);
+    		double coeff = -gamma*alpha_inv ;
+    		double q = sqrt(2 * Q * alpha[i] *alpha_inv * T[i] / (Ms[i]* V[i]));
+
+    		double mth0 = coeff * (m[j] * h[k] - m[k] * h[j]) * dt;
+    		double mth1 = coeff * (m[k] * h[i] - m[i] * h[k]) * dt;
+    		double mth2 = coeff * (m[i] * h[j] - m[j] * h[i]) * dt;
 
     		mth0 += coeff * (m[j] * eta[k] - m[k] * eta[j]) * q;
     		mth1 += coeff * (m[k] * eta[i] - m[i] * eta[k]) * q;
