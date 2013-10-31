@@ -487,9 +487,9 @@ def export_normal_mode_animation(sim, freq, w, filename, num_cycles=1, num_snaps
     logger.debug("Saving the data to file '{}' took {} seconds".format(filename, t1 - t0))
 
 
-def plot_spatially_resolved_normal_mode(sim, w, slice_z, components='xyz', plot_amplitudes=True, plot_phases=True, show_axis_labels=True, show_colorbars=True, figsize=None):
+def plot_spatially_resolved_normal_mode(sim, w, slice_z='z_max', components='xyz', plot_powers=True, plot_phases=True, show_axis_labels=True, show_axis_frames=True, show_colorbars=True, figsize=None):
     """
-    Plot the normal mode profile through a slice.
+    Plot the normal mode profile across a slice of the sample.
 
     *Arguments*
 
@@ -551,12 +551,17 @@ def plot_spatially_resolved_normal_mode(sim, w, slice_z, components='xyz', plot_
     n = sim.mesh.num_vertices()
     w_3d = mf_mult(Q, w.reshape((2, 1, n)))
 
-    # Export amplitudes and phases for m_x
     w_x = w_3d[0, 0, :]
     w_y = w_3d[1, 0, :]
     w_z = w_3d[2, 0, :]
+    ######################################################################
 
-    # phi = np.angle(w_flat)  # relative phases of the oscillations
+    powers = {'x': np.absolute(w_x) ** 2,
+              'y': np.absolute(w_y) ** 2,
+              'z': np.absolute(w_z) ** 2}
+    phases = {'x': np.angle(w_x),
+              'y': np.angle(w_y),
+              'z': np.angle(w_z)}
 
     V = df.FunctionSpace(sim.mesh, 'CG', 1)
     f = df.Function(V)
@@ -578,34 +583,18 @@ def plot_spatially_resolved_normal_mode(sim, w, slice_z, components='xyz', plot_
         f_array = f.vector().array()
         return f_array[:, [entity_map[i] for i in parent_vertex_indices]]
 
-    ampl_x = np.absolute(w_x)
-    ampl_y = np.absolute(w_y)
-    ampl_z = np.absolute(w_z)
-    power_x = ampl_x**2
-    power_y = ampl_y**2
-    power_z = ampl_z**2
-    # a_x /= max(a_x)
-    # a_y /= max(a_y)
-    # a_z /= max(a_z)
-
-    phase_x = np.angle(w_x)
-    phase_y = np.angle(w_y)
-    phase_z = np.angle(w_z)
-
     surface_coords = surface_layer.coordinates()
     xvals = surface_coords[:, 0]
     yvals = surface_coords[:, 1]
 
-    fig = plt.figure(figsize=figsize)
-
     # Determine the number of rows (<=2) and columns (<=3) in the plot
     num_rows = 0
-    if plot_amplitudes:
+    if plot_powers:
         num_rows +=1
     if plot_phases:
         num_rows +=1
     if num_rows == 0:
-        raise ValueError("At least one of the arguments `plot_amplitudes`, `plot_phases` must be True.")
+        raise ValueError("At least one of the arguments `plot_powers`, `plot_phases` must be True.")
     num_columns = len(components)
 
 
@@ -623,27 +612,20 @@ def plot_spatially_resolved_normal_mode(sim, w, slice_z, components='xyz', plot_
                 vmax = max(vals)
             trimesh.set_clim(vmin=vmin, vmax=vmax)
             plt.colorbar(trimesh, cax=cax)
-        if show_axis_labels == False:
+        if not show_axis_labels:
             ax.set_xticks([])
             ax.set_yticks([])
+        if not show_axis_frames:
             ax.axis('off')
 
  
-    amplitudes = {'x': ampl_x,
-                  'y': ampl_y,
-                  'z': ampl_z}
-    powers = {'x': power_x,
-              'y': power_y,
-              'z': power_z}
-    phases = {'x': phase_x,
-              'y': phase_y,
-              'z': phase_z}
+    fig = plt.figure(figsize=figsize)
 
     cnt = 1
-    if plot_amplitudes:
+    if plot_powers:
         for comp in components:
             ax = fig.add_subplot(num_rows, num_columns, cnt)
-            plot_mode_profile(ax, powers[comp], title='Power m_{}'.format(comp))
+            plot_mode_profile(ax, powers[comp], title='Power m_{}'.format(comp), vmin=0)
             cnt += 1
 
     if plot_phases:
