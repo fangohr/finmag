@@ -1,0 +1,43 @@
+These are some instructions detailing how MVousden installed finmag on his machine at the University, and how it passed the test suite in finmag as of 31/10/13.
+
+Firstly, navigate to the installation directory finmag/install. At this point, one will need to execute a shell script using the command detailed below. This shell script will install packages required to use most features of finmag.
+
+    sudo ./on_ubuntu_13.04.sh
+
+Once this has been completed, netgen 4.9.13 can be installed since 5.0 is not currently compatible with all finmag code.
+
+    sudo apt-get install netgen
+
+OOMMF can be installed by executing the script in the finmag/install directory, but at the time of writing the website containing the required file (a tarball) is not available. The file can be obtained upon contacting Mark Vousden (or shooting an E-Mail through the finmag mailing list). Once this file has been obtained, it should be placed in the ~/ directory. <OPTIONAL: It is also possible to install oommf to another directory by modifying the script, in which case the environment variables explained at the end of this document will be changed as well.> To install OOMMF in your ~/ directory, ensure the appropriate tarball is in the ~/ directory also, and use:
+
+    sudo ./oommf.sh
+    (y to the prompting question)
+
+Magpar and nmag can be installed in much the same way:
+
+    sudo ./magpar.sh
+    sudo ./nmag.sh
+
+Now everything has been installed, it is advised to append some paths to some environment variables. Add the following lines to your .bashrc (or similar), where "*user*" is the user account that you are logged in with.
+
+    #Include directory for finmag in the pythonpath:
+    export PYTHONPATH="$PYTHONPATH:/home/*user*/finmag/src/"
+
+    #Netgen directory:
+    export NETGENDIR="/usr/share/netgen"
+
+    #OOMMF:
+    export OOMMF_TK_CONFIG="/usr/lib/tk8.6/tkConfig.sh"
+    export OOMMF_TCL_CONFIG="/usr/lib/tcl8.6/tclConfig.sh"
+
+    #Magpar Path:
+    export PATH="$PATH:/home/*user*/magpar-0.9/src/"
+    
+    #NMag Path:
+    export PATH="$PATH:/home/*user*/nmag-0.2.1/nsim/bin/"
+
+Some of these paths will have changed if you changed the environment variables for nmag and magpar, but these should work by default. To test your installation, navigate to finmag/ and use:
+
+     py.test -v
+
+This should run the test scripts in the finmag directory, and (hopefully) they should all pass using this method.
