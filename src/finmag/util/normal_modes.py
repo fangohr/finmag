@@ -7,6 +7,8 @@ import os
 import scipy.sparse.linalg
 from time import time
 from finmag.util.consts import gamma
+import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 logger = logging.getLogger('finmag')
 
@@ -483,3 +485,173 @@ def export_normal_mode_animation(sim, freq, w, filename, num_cycles=1, num_snaps
         f << func
     t1 = time()
     logger.debug("Saving the data to file '{}' took {} seconds".format(filename, t1 - t0))
+
+
+def plot_spatially_resolved_normal_mode(sim, w, slice_z, components='xyz', plot_amplitudes=True, plot_phases=True, show_axis_labels=True, show_colorbars=True, figsize=None):
+    """
+    Plot the normal mode profile through a slice.
+
+    *Arguments*
+
+    sim:
+
+        The simulation object for which the eigenmode was computed.
+
+    w:
+
+        The eigenvector representing the normal mode (for example,
+        one of the columns of the second return value of
+        `compute_normal_modes_generalised`).
+
+    slice_z:
+
+        Currently only the values 'z_min' and 'z_max' are supported
+        (which correspond to the bottom/top layer of the mesh).
+        Hopefully in the future `slice_z` will be allowed to have any
+        numerical value.
+
+    """
+    coords = sim.mesh.coordinates()
+
+    if slice_z == 'z_min':
+        slice_z = min(coords[:, 2])
+    elif slice_z == 'z_max':
+        slice_z = max(coords[:, 2])
+    else:
+        raise ValueError("Currently slice_z must have one of the values 'z_min' or 'z_max' (which correspond to the bottom/top layer of the mesh, respectively).")
+
+    # Extract the boundary mesh from the full mesh (which is a 2D mesh
+    # consisting only of the triangles on the boundary).
+    mesh = sim.mesh
+    boundary_mesh = df.BoundaryMesh(mesh, 'exterior')
+    entity_map = boundary_mesh.entity_map(0).array()
+
+    # Extract the submesh of the boundary mesh corresponding to the
+    # bottom or top layer (whichever slice_z corresponds to).
+    class Surface(df.SubDomain):
+        def inside(self, pt, on_boundary):
+            x, y, z = pt
+            return (z >= slice_z - df.DOLFIN_EPS) and (z <= slice_z + df.DOLFIN_EPS)
+    sub_domains = df.MeshFunction("size_t", boundary_mesh, 2)
+    sub_domains.set_all(0)
+    surface = Surface()
+    surface.mark(sub_domains, 1)
+    surface_layer = df.SubMesh(boundary_mesh, sub_domains, 1)
+    parent_vertex_indices = surface_layer.data().array("parent_vertex_indices", 0)
+
+    ######################################################################
+    # XXX TODO: This function should probably not need access to the
+    #           simulation object. Instead, the following calculations
+    #           should be done externally, and w_3d should be passed
+    #           as an argument directly to this function.
+    m0_array = sim.m.copy()  # we assume that sim is relaxed!!
+    Q, R, S, Mcross = compute_tangential_space_basis(m0_array.reshape(3, 1, -1))
+    Qt = mf_transpose(Q).copy()
+
+    n = sim.mesh.num_vertices()
+    w_3d = mf_mult(Q, w.reshape((2, 1, n)))
+
+    # Export amplitudes and phases for m_x
+    w_x = w_3d[0, 0, :]
+    w_y = w_3d[1, 0, :]
+    w_z = w_3d[2, 0, :]
+
+    # phi = np.angle(w_flat)  # relative phases of the oscillations
+
+    V = df.FunctionSpace(sim.mesh, 'CG', 1)
+    f = df.Function(V)
+    V_surface = df.FunctionSpace(surface_layer, 'CG', 1)
+    f_surface = df.Function(V_surface)
+
+    def restrict_to_submesh(a):
+        # Remark: We can't use df.interpolate here to interpolate the
+        # function values from the full mesh on the submesh because it
+        # sometimes crashes (probably due to rounding errors), even if we
+        # set df.parameters["allow_extrapolation"]=True as they recommend
+        # in the error message.
+        #
+        # Therefore we manually interpolate the function values here using
+        # the vertex mappings determined above. This works fine if the
+        # dofs are not re-ordered, but will probably cause problems in
+        # parallel (or with dof reordering enabled).
+        f.vector().set_local(a)
+        f_array = f.vector().array()
+        return f_array[:, [entity_map[i] for i in parent_vertex_indices]]
+
+    ampl_x = np.absolute(w_x)
+    ampl_y = np.absolute(w_y)
+    ampl_z = np.absolute(w_z)
+    power_x = ampl_x**2
+    power_y = ampl_y**2
+    power_z = ampl_z**2
+    # a_x /= max(a_x)
+    # a_y /= max(a_y)
+    # a_z /= max(a_z)
+
+    phase_x = np.angle(w_x)
+    phase_y = np.angle(w_y)
+    phase_z = np.angle(w_z)
+
+    surface_coords = surface_layer.coordinates()
+    xvals = surface_coords[:, 0]
+    yvals = surface_coords[:, 1]
+
+    fig = plt.figure(figsize=figsize)
+
+    # Determine the number of rows (<=2) and columns (<=3) in the plot
+    num_rows = 0
+    if plot_amplitudes:
+        num_rows +=1
+    if plot_phases:
+        num_rows +=1
+    if num_rows == 0:
+        raise ValueError("At least one of the arguments `plot_amplitudes`, `plot_phases` must be True.")
+    num_columns = len(components)
+
+
+    def plot_mode_profile(ax, a, title=None, vmin=None, vmax=None):
+        ax.set_aspect('equal')
+        vals = restrict_to_submesh(a)
+        trimesh = ax.tripcolor(xvals, yvals, vals, shading='gouraud')
+        ax.set_title(title)
+        if show_colorbars:
+            divider = make_axes_locatable(ax)
+            cax = divider.append_axes("right", "5%", pad="3%")
+            if vmin == None:
+                vmin = min(vals)
+            if vmax == None:
+                vmax = max(vals)
+            trimesh.set_clim(vmin=vmin, vmax=vmax)
+            plt.colorbar(trimesh, cax=cax)
+        if show_axis_labels == False:
+            ax.set_xticks([])
+            ax.set_yticks([])
+            ax.axis('off')
+
+ 
+    amplitudes = {'x': ampl_x,
+                  'y': ampl_y,
+                  'z': ampl_z}
+    powers = {'x': power_x,
+              'y': power_y,
+              'z': power_z}
+    phases = {'x': phase_x,
+              'y': phase_y,
+              'z': phase_z}
+
+    cnt = 1
+    if plot_amplitudes:
+        for comp in components:
+            ax = fig.add_subplot(num_rows, num_columns, cnt)
+            plot_mode_profile(ax, powers[comp], title='Power m_{}'.format(comp))
+            cnt += 1
+
+    if plot_phases:
+        for comp in components:
+            ax = fig.add_subplot(num_rows, num_columns, cnt)
+            plot_mode_profile(ax, phases[comp], title='Phase m_{}'.format(comp), vmin=-math.pi, vmax=+math.pi)
+            cnt += 1
+
+    plt.tight_layout()
+
+    return fig
