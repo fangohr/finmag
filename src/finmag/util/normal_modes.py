@@ -2,7 +2,6 @@ from __future__ import division
 import dolfin as df
 import numpy as np
 import logging
-import math
 import os
 import scipy.sparse.linalg
 from time import time
@@ -10,6 +9,7 @@ from finmag.util.consts import gamma
 import matplotlib.pyplot as plt
 import matplotlib.tri as tri
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from math import pi
 
 logger = logging.getLogger('finmag')
 
@@ -204,7 +204,7 @@ def compute_eigenproblem_matrix(sim, frequency_unit=1e9, filename=None):
         res = np.empty(w.shape, dtype=complex)
         res[:] = mf_mult(Qt, L)
         # Multiply by -i/(2*pi*U) so that we get frequencies as the real part of eigenvalues
-        res *= -1j / (2 * math.pi * frequency_unit)
+        res *= -1j / (2 * pi * frequency_unit)
         res.shape = (-1,)
         return res
 
@@ -319,7 +319,7 @@ def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9
         Av = A_times_vector(mf_mult(Q, w))
         A[:, i] = mf_mult(Qt, Av).reshape(-1)
         # Multiply by (-gamma)/(2 pi U)
-        A[:, i] *= -gamma / (2 * math.pi * frequency_unit)
+        A[:, i] *= -gamma / (2 * pi * frequency_unit)
 
     logger.debug("Eigenproblem matrix A occupies {:.2f} MB of memory.".format(A.nbytes / 1024.**2))
 
@@ -470,7 +470,7 @@ def export_normal_mode_animation(sim, freq, w, filename, num_cycles=1, num_snaps
     a = np.absolute(w_flat)
     a = a / a.max()  # normalised amplitudes of the oscillations
 
-    t_end = num_cycles * 2 * math.pi / freq
+    t_end = num_cycles * 2 * pi / freq
     timesteps = np.linspace(0, t_end, num_cycles * num_snapshots_per_cycle, endpoint=False)
     m_osc = np.zeros(3*n)
     t0 = time()
@@ -488,7 +488,8 @@ def export_normal_mode_animation(sim, freq, w, filename, num_cycles=1, num_snaps
     logger.debug("Saving the data to file '{}' took {} seconds".format(filename, t1 - t0))
 
 
-def plot_spatially_resolved_normal_mode(sim, w, slice_z='z_max', components='xyz', plot_powers=True, plot_phases=True,
+def plot_spatially_resolved_normal_mode(sim, w, slice_z='z_max', components='xyz',
+                                        plot_powers=True, plot_phases=True, num_phase_colorbar_ticks=5,
                                         cmap_powers=plt.cm.jet, cmap_phases=plt.cm.hsv, vmin_powers=None,
                                         show_axis_labels=True, show_axis_frames=True, show_colorbars=True, figsize=None):
     """
@@ -512,6 +513,11 @@ def plot_spatially_resolved_normal_mode(sim, w, slice_z='z_max', components='xyz
         (which correspond to the bottom/top layer of the mesh).
         Hopefully in the future `slice_z` will be allowed to have any
         numerical value.
+
+    num_phase_colorbar_ticks:
+
+        The number of tick labels for the phase colorbars. Currently
+        this must be either 3 or 5 (default: 5).
 
     """
     coords = sim.mesh.coordinates()
@@ -606,7 +612,7 @@ def plot_spatially_resolved_normal_mode(sim, w, slice_z='z_max', components='xyz
     num_columns = len(components)
 
 
-    def plot_mode_profile(ax, a, title=None, vmin=None, vmax=None, cmap=None):
+    def plot_mode_profile(ax, a, title=None, vmin=None, vmax=None, cmap=None, ticks=None, ticklabels=None):
         ax.set_aspect('equal')
         vals = restrict_to_submesh(a)
         trimesh = ax.tripcolor(mesh_triang, vals, shading='gouraud', cmap=cmap)
@@ -619,7 +625,9 @@ def plot_spatially_resolved_normal_mode(sim, w, slice_z='z_max', components='xyz
             if vmax == None:
                 vmax = max(vals)
             trimesh.set_clim(vmin=vmin, vmax=vmax)
-            plt.colorbar(trimesh, cax=cax)
+            cbar = plt.colorbar(trimesh, cax=cax, ticks=ticks)
+            if ticklabels != None:
+                cbar.ax.set_yticklabels(ticklabels)
         if not show_axis_labels:
             ax.set_xticks([])
             ax.set_yticks([])
@@ -637,9 +645,21 @@ def plot_spatially_resolved_normal_mode(sim, w, slice_z='z_max', components='xyz
             cnt += 1
 
     if plot_phases:
+        if num_phase_colorbar_ticks == 3:
+            ticks=[-pi, 0, pi]
+            ticklabels=[u'-\u03C0', u'0', u'\u03C0']
+        elif num_phase_colorbar_ticks == 5:
+            ticks=[-pi, -pi/2, 0, pi/2, pi]
+            ticklabels=[u'-\u03C0', u'-\u03C0/2', u'0', u'\u03C0/2', u'\u03C0']
+        else:
+            raise ValueError("'num_phase_colorbar_ticks' must be either 3 or 5. Got: {}".format(num_phase_colorbar_ticks))
+
         for comp in components:
             ax = fig.add_subplot(num_rows, num_columns, cnt)
-            plot_mode_profile(ax, phases[comp], title='Phase m_{}'.format(comp), vmin=-math.pi, vmax=+math.pi, cmap=cmap_phases)
+            plot_mode_profile(ax, phases[comp], title='Phase m_{}'.format(comp),
+                              ticks=ticks, ticklabels=ticklabels,
+                              vmin=-pi, vmax=+pi,
+                              cmap=cmap_phases)
             cnt += 1
 
     plt.tight_layout()

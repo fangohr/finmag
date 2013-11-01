@@ -1638,7 +1638,7 @@ class NormalModeSimulation(Simulation):
             return HTML(data=video_tag)
 
     def plot_spatially_resolved_normal_mode(self, k, slice_z='z_max', components='xyz',
-                                            plot_powers=True, plot_phases=True,
+                                            plot_powers=True, plot_phases=True, num_phase_colorbar_ticks=3,
                                             cmap_powers=plt.cm.jet, cmap_phases=plt.cm.hsv, vmin_powers=None,
                                             show_axis_labels=True, show_axis_frames=True,
                                             show_colorbars=True, figsize=None):
