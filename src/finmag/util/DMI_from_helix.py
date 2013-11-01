@@ -7,38 +7,43 @@ import scipy.optimize
 
 """
 
-This file contains three functions that use finmag simulations on a 1D mesh to obtain certain material characteristics. It also contains an example showing usage of two of the functions. These function "declarations" are:
+This file contains three functions that use finmag simulations on a 1D mesh
+to obtain certain material characteristics. It also contains an example
+showing usage of two of the functions. These function "declarations" are:
 
 Find_Helix_Length( d, a, ms, h, tol=1e-9 )
 Find_DMI( a, ms, l, h, d0=None, tol=1e-6 )
 
 """
 
-def Find_Helix_Length( d, a, ms, h ):
-    """Function that takes some material parameters and returns the estimated helix length.
+
+def Find_Helix_Length(D, A, Ms, H):
+    """Function that takes some material parameters and returns the
+    estimated helix length.
 
     @parameters
-    a   : Isotropic exchange energy constant (Jm-1)
-    d   : Dzyaloshinskii-Moriya exchange energy constant (Jm-2) 
-    ms  : Saturation magnetisation (Am-1)
-    h   : External magnetic field strength (a three-dimensional array) (Am-1)
+    A   : Isotropic exchange energy constant (J/m)
+    D   : Dzyaloshinskii-Moriya exchange energy constant (J/m^2)
+    Ms  : Saturation magnetisation (A/m)
+    H   : External magnetic field strength (a three-dimensional array) (A/m)
     """
 
     #Make a mesh, with lengths measured in unitLength.
     unitLength = 1e-9
-    meshX = 1000 #Length of mesh (nm). Would prefer this to be an even number for the preceeding calculation.
-    meshXHalf = meshX/2
-    meshN = 1000 #Number of points in the desired mesh.
-    mesh = df.IntervalMesh( meshN-1, -meshXHalf, meshXHalf )
+    meshX = 1000  # Length of mesh (nm). Would prefer this to be an even
+                  # number for the preceeding calculation.
+    meshXHalf = meshX / 2
+    meshN = 1000  # Number of points in the desired mesh.
+    mesh = df.IntervalMesh(meshN - 1, -meshXHalf, meshXHalf)
 
     #Creating simulation object.
     simName = "Finding_Helix_Length"
-    sim = finmag.Simulation( mesh, ms, name = simName, unit_length = unitLength )
+    sim = finmag.Simulation(mesh, Ms, name=simName, unit_length=unitLength)
 
     #Create energy objects and add them to the simulation.
-    eA = finmag.energies.Exchange( a ) #Isotropic exchange interaction energy object to use in the simulation.
-    eD = finmag.energies.DMI( d )      #Dzyaloshinskii-Moriya exchange interaction energy object to use in the simulation.
-    eH = finmag.energies.Zeeman( h )   #Zeeman energy object to use in the simulation.
+    eA = finmag.energies.Exchange( A ) #Isotropic exchange interaction energy object to use in the simulation.
+    eD = finmag.energies.DMI( D )      #Dzyaloshinskii-Moriya exchange interaction energy object to use in the simulation.
+    eH = finmag.energies.Zeeman( H )   #Zeeman energy object to use in the simulation.
     sim.add( eA ); sim.add( eD ); sim.add( eH )
 
     #Define initial magnetisation and set it.
@@ -84,8 +89,12 @@ def Find_Helix_Length( d, a, ms, h ):
                     break
 
     if ferromagnetic == True:
-        raise ValueError( "Ferromagnetic relaxed state encountered. This suggests that the external magnetic field is too strong for these material parameters (D = {:.2e} Jm-2, A = {:.2e} Jm-1, Ms = {:.2e} Am-1, h = ({:.2e}, {:.2e}, {:.2e}) Am-1.".format( d, a, ms, h[0], h[1], h[2] ) )
-
+        msg = "Ferromagnetic relaxed state encountered. This suggests"+\
+            "that the external magnetic field is too strong for these "+\
+            "material parameters (D = {:.2e} J/m^2, A = {:.2e} J/m, Ms"+\
+            " = {:.2e} A/m, h = ({:.2e}, {:.2e}, {:.2e}) A/m.".format(
+            D, A, Ms, H[0], H[1], H[2] )
+        raise ValueError(msg)
     #Find the fourier transform of the two magnetisation vector components.
     finmag.logger.info( "Calculating the fourier transform of magnetisation data." )
     ffty = np.fft.fft( ys )
@@ -126,18 +135,18 @@ def Find_Helix_Length( d, a, ms, h ):
     out = 1/fOut
 
     #Cleanup and return
-    #print( "D = {:.4e} Jm-2. Helix length = {:.4e} m.".format( d, out ) )
+    #print( "D = {:.4e} J/m^2. Helix length = {:.4e} m.".format( d, out ) )
     return out
 
-def Find_DMI( a, ms, l, h, d0=None, tol=1e-6, verbose=False ):
+def Find_DMI( A, Ms, l, H, D0=None, tol=1e-6, verbose=False ):
     """Function that takes some material parameters and returns the estimated DMI constant correct to a given tolerance.
 
     @parameters
-    a       : Isotropic exchange energy constant (Jm-1)
-    ms      : Saturation magnetisation (Am-1)
+    A       : Isotropic exchange energy constant (J/m)
+    Ms      : Saturation magnetisation (A/m)
     l       : Helix length (m)
-    h       : External magnetic field strength (a three-dimensional array) (Am-1)
-    d0      : Estimated Dzyaloshinskii-Moriya exchange energy constant (Jm-2), if any.
+    H       : External magnetic field strength (a three-dimensional array) (A/m)
+    D0      : Estimated Dzyaloshinskii-Moriya exchange energy constant (J/m^2), if any.
     tol     : Tolerance to which the DMI constant should be found, if any.
     verbose : Boolean to dictate whether or not simulation output is provided.
     """
@@ -146,15 +155,15 @@ def Find_DMI( a, ms, l, h, d0=None, tol=1e-6, verbose=False ):
         logLevel = finmag.logger.level
         finmag.logger.setLevel( finmag.logging.ERROR )
 
-    def Find_DMI_Signchange( a, ms, l, h, d0, tol ):
+    def Find_DMI_Signchange( A, Ms, l, H, D0, tol ):
         """Function that takes some material parameters and returns a range in which the DMI value can exist.
 
         @parameters
-        a   : Isotropic exchange energy constant (Jm-1)
-        ms  : Saturation magnetisation (Am-1)
+        A   : Isotropic exchange energy constant (J/m)
+        Ms  : Saturation magnetisation (A/m)
         l   : Helix length (m)
-        h   : External magnetic field strength (a three-dimensional array) (Am-1)
-        d0  : Estimated Dzyaloshinskii-Moriya exchange energy constant (Jm-2).
+        H   : External magnetic field strength (a three-dimensional array) (A/m)
+        H0  : Estimated Dzyaloshinskii-Moriya exchange energy constant (J/m^2).
         tol : Tolerance to which the DMI constant should be found.
         """
 
@@ -217,7 +226,7 @@ def Find_DMI( a, ms, l, h, d0=None, tol=1e-6, verbose=False ):
     #Check for non-zero, non-negative helix length
     if l <= 0:
         raise ValueError( "Positive helix length required for DMI estimation if an initial DMI guess is not provided." )
-    
+
     #Suggest an initial guess for d0 if one is not already there. This guess comes from the ipython notebook "ref-dmi-constant" without reference, but it is used here because it performs well in most examples.
     if d0 == None:
         d0 = 4 * np.pi * a / l
@@ -239,22 +248,22 @@ def Find_DMI( a, ms, l, h, d0=None, tol=1e-6, verbose=False ):
 if __name__ == "__main__":
 
     # #Example material properties that work. This is expected to return d = 0.0002465, but gives 0.000242, which is pretty damn close.
-    a = 3.53e-13                              #Isotropic exchange energy constant (Jm-1)
-    ms = 1.56e5                               #Magnetisation Saturaton (Am-1)
+    A = 3.53e-13                              #Isotropic exchange energy constant (J/m)
+    Ms = 1.56e5                               #Magnetisation Saturaton (A/m)
     l = 22e-9                                 #Observed helix length (m)
-    h = np.array( [ 1., 0., 0. ] ) * ms * 0.  #External magnetic field strength (Am-1)
-    d0 = 4 * np.pi * a / l                    #Dzyaloshinkii-Moriya exchange energy constant (Jm-2)
+    H = np.array( [ 1., 0., 0. ] ) * ms * 0.  #External magnetic field strength (A/m)
+    D0 = 4 * np.pi * a / l                    #Dzyaloshinkii-Moriya exchange energy constant (J/m^2)
 
-    lFound = Find_Helix_Length( d0, a, ms, h )
+    lFound = Find_Helix_Length( D0, A, Ms, H )
     print( "Helix length given DMI: {:.2e} m.".format( lFound ) )
-    
+
     #Material properties from the Leeds group.
-    # a = 9.74e-14                   #Isotropic exchange energy constant (Jm-1)
-    # ms = 9.5e4                     #Magnetisation Saturation (Am-1)
+    # A = 9.74e-14                   #Isotropic exchange energy constant (J/m)
+    # Ms = 9.5e4                     #Magnetisation Saturation (A/m)
     # l = 11e-9                      #Observed helix length (m)
-    # h = np.array( [ 0., 0., 0. ] ) #External magnetic field strength (Am-1)
+    # H = np.array( [ 0., 0., 0. ] ) #External magnetic field strength (A/m)
 
-    #dFound = Find_DMI( a, ms, l, h ) #Yields D = 1.18e-4 Jm-2
-    #print( "DMI given Helix length: {:.2e} Jm-2.".format( dFound ) )
+    #dFound = Find_DMI( a, ms, l, h ) #Yields D = 1.18e-4 J/m^2
+    #print( "DMI given Helix length: {:.2e} J/m^2.".format( dFound ) )
 
-    
+

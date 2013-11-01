@@ -21917,3 +21917,257 @@ finmag-team mailing list.
 -------------------------------------
 finmag-team mailing list.
 
+From marvin  Thu Oct 31 13:16:19 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Thu, 31 Oct 2013 13:16:18 +0000 (GMT)
+Received: by 10.227.95.5 with SMTP id b5csp113793wbn;
+        Thu, 31 Oct 2013 05:26:00 -0700 (PDT)
+X-Received: by 10.15.24.68 with SMTP id i44mr102227eeu.87.1383222359879;
+        Thu, 31 Oct 2013 05:25:59 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id k49si2504656een.82.2013.10.31.05.25.59
+        for <multiple recipients>;
+        Thu, 31 Oct 2013 05:25:59 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.11 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r9VCPBcO016881;
+	Thu, 31 Oct 2013 12:25:11 GMT
+Received: from UOS-MSG00036-VS.soton.ac.uk (uos-msg00036-vs.soton.ac.uk [152.78.119.38])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p9UCPB0774665376xL ret-id none; Thu, 31 Oct 2013 12:25:11 +0000
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.38) with Microsoft SMTP Server (TLS) id 14.3.158.1; Thu, 31 Oct
+ 2013 12:25:09 +0000
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r9VCPB3i009211;	Thu, 31 Oct 2013 12:25:11 GMT
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r9VCPAWl009208	for <finmag-team@lists.soton.ac.uk>; Thu, 31 Oct 2013 12:25:10
+ GMT
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r9VCOWL4007480;
+	Thu, 31 Oct 2013 12:24:32 GMT
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk
+ [152.78.119.37])	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16]) envelope-from <R.Carey@soton.ac.uk> with ESMTP	id
+ p9UCOW0862246209GW ret-id none; Thu, 31 Oct 2013 12:24:32 +0000
+Received: from SRV00358.soton.ac.uk ([169.254.8.77]) by
+ UOS-MSG00035-VS.soton.ac.uk ([152.78.119.37]) with mapi id 14.03.0158.001;
+ Thu, 31 Oct 2013 12:24:32 +0000
+From: "carey r.l. (rlc2v07)" <R.Carey@soton.ac.uk>
+To: "Fangohr H." <h.fangohr@soton.ac.uk>,
+        "<finmag-team@lists.soton.ac.uk>"
+	<finmag-team@lists.soton.ac.uk>
+CC: "Fangohr H." <h.fangohr@soton.ac.uk>, "Hovorka O." <o.hovorka@soton.ac.uk>,
+        David Cortes <david.cortes.o@gmail.com>
+Subject: [finmag-team] Turning off Aleph0 and GPU machines
+Thread-Topic: Turning off Aleph0 and GPU machines
+Thread-Index: AQHO1jPiXqoDF+UkFkaBJ+qNWEcFRQ==
+Date: Thu, 31 Oct 2013 12:24:31 +0000
+Message-ID: <DA56949ACC05AE469058F2B2E8C4687626E1DBE4@SRV00358.soton.ac.uk>
+Accept-Language: en-GB, en-US
+Content-Language: en-GB
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [152.78.54.126]
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<R.Carey@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from quoted-printable to 8bit by maillists.sucs.soton.ac.uk id r9VCPBWl009209
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p9UCPB077466537600; tid=p9UCPB0774665376xL; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.38; helo=<UOS-MSG00036-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.38; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r9VCPBcO016881
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi Guys,
+
+My desk has just arrived. It's replacing the desk between Marijan and Dimit=
+ri, where the Aleph0 and GPU computers are. To do so, I will need to turn t=
+hese computers off. Could you all let me know if this is an issue?
+
+Cheers,
+
+Beckie
+
+-------------------------------------
+finmag-team mailing list.
+
+From marvin  Thu Oct 31 14:16:22 2013
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.21)
+	for <marvin@localhost> (single-drop); Thu, 31 Oct 2013 14:16:22 +0000 (GMT)
+Received: by 10.227.95.5 with SMTP id b5csp114849wbn;
+        Thu, 31 Oct 2013 05:48:59 -0700 (PDT)
+X-Received: by 10.15.100.198 with SMTP id bn46mr2949749eeb.11.1383223739170;
+        Thu, 31 Oct 2013 05:48:59 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk. [152.78.128.16])
+        by mx.google.com with ESMTP id h46si2565429eex.163.2013.10.31.05.48.58
+        for <multiple recipients>;
+        Thu, 31 Oct 2013 05:48:59 -0700 (PDT)
+Received-SPF: pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) client-ip=152.78.128.16;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of owner-finmag-team@maillists.sucs.soton.ac.uk designates 152.78.128.16 as permitted sender) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r9VCmRNR024814;
+	Thu, 31 Oct 2013 12:48:27 GMT
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk [152.78.119.37])
+	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk [152.78.128.16]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id p9UCmR0862246865OJ ret-id none; Thu, 31 Oct 2013 12:48:27 +0000
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.37) with Microsoft SMTP Server (TLS) id 14.3.158.1; Thu, 31 Oct
+ 2013 12:48:27 +0000
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id r9VCmRfK013996;	Thu, 31 Oct 2013 12:48:27 GMT
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk
+ [152.78.128.11])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ r9VCmRN5013993	for <finmag-team@lists.soton.ac.uk>; Thu, 31 Oct 2013 12:48:27
+ GMT
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id r9VCj9am019784;
+	Thu, 31 Oct 2013 12:45:09 GMT
+Received: from UOS-MSG00036-VS.soton.ac.uk (uos-msg00036-vs.soton.ac.uk
+ [152.78.119.38])	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk
+ [152.78.128.11]) envelope-from <H.FANGOHR@soton.ac.uk> with ESMTP	id
+ p9UCj90774600359Nf ret-id none; Thu, 31 Oct 2013 12:45:09 +0000
+Received: from dhcp-206-90.wireless.soton.ac.uk (152.78.206.90) by
+ smtp.soton.ac.uk (152.78.119.38) with Microsoft SMTP Server (TLS) id
+ 14.3.158.1; Thu, 31 Oct 2013 12:45:07 +0000
+Content-Type: multipart/alternative;
+	boundary="Apple-Mail=_4316909B-8D64-4005-939D-94E0826B2F67"
+MIME-Version: 1.0 (Mac OS X Mail 7.0 \(1816\))
+Subject: [finmag-team] Re: Turning off Aleph0 and GPU machines
+From: Hans Fangohr <h.fangohr@soton.ac.uk>
+In-Reply-To: <DA56949ACC05AE469058F2B2E8C4687626E1DBE4@SRV00358.soton.ac.uk>
+Date: Thu, 31 Oct 2013 12:45:07 +0000
+CC: "Fangohr H." <h.fangohr@soton.ac.uk>,
+        "<finmag-team@lists.soton.ac.uk>"
+	<finmag-team@lists.soton.ac.uk>,
+        "Hovorka O." <o.hovorka@soton.ac.uk>,
+        "David
+ Cortes" <david.cortes.o@gmail.com>
+Message-ID: <2813D7DE-1BFB-48FC-B440-3850EBB7FFD4@soton.ac.uk>
+References: <DA56949ACC05AE469058F2B2E8C4687626E1DBE4@SRV00358.soton.ac.uk>
+To: "carey r.l. (rlc2v07)" <r.carey@soton.ac.uk>
+X-Mailer: Apple Mail (2.1816)
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.38; helo=<UOS-MSG00036-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.38; envelope-from=<H.FANGOHR@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=p9UCmR086224686500; tid=p9UCmR0862246865OJ; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: r9VCmRNR024814
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+--Apple-Mail=_4316909B-8D64-4005-939D-94E0826B2F67
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="windows-1252"
+
+Hi Beckie,
+
+On 31 Oct 2013, at 12:24, carey r.l. (rlc2v07) <R.Carey@soton.ac.uk> =
+wrote:
+
+> Hi Guys,
+>=20
+> My desk has just arrived. It's replacing the desk between Marijan and =
+Dimitri, where the Aleph0 and GPU computers are. To do so, I will need =
+to turn these computers off. Could you all let me know if this is an =
+issue?
+
+Excellent news we have got your desk.
+
+Switching off aleph0 is an issue:
+
+(i) we need to shut it down (not just pulling the cable ;-))
+
+(ii) it needs to come up again soon as we use it to run the regression =
+testing.
+
+So we need to find a new place for it where it can stay when your desk =
+is in place. Maybe at =91your' old desk somewhere?
+
+Can I suggest you look around and delevop a plan? We can then finalise =
+this as part of the group meeting today.
+
+I don=92t know about the other machine - feedback from anybody else?
+
+Cheers,
+
+Hans
+
+
+
+>=20
+> Cheers,
+>=20
+> Beckie
+
+
+--Apple-Mail=_4316909B-8D64-4005-939D-94E0826B2F67
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/html; charset="windows-1252"
+
+<html><head><meta http-equiv=3D"Content-Type" content=3D"text/html =
+charset=3Dwindows-1252"></head><body style=3D"word-wrap: break-word; =
+-webkit-nbsp-mode: space; -webkit-line-break: after-white-space;">Hi =
+Beckie,<div><br><div><div>On 31 Oct 2013, at 12:24, carey r.l. (rlc2v07) =
+&lt;<a href=3D"mailto:R.Carey@soton.ac.uk">R.Carey@soton.ac.uk</a>&gt; =
+wrote:</div><br class=3D"Apple-interchange-newline"><blockquote =
+type=3D"cite">
+
+<meta http-equiv=3D"Content-Type" content=3D"text/html; =
+charset=3Diso-8859-1">
+<style id=3D"owaParaStyle" type=3D"text/css">P =
+{margin-top:0;margin-bottom:0;}</style>
+
+<div ocsi=3D"0" fpstyle=3D"1" style=3D"word-wrap:break-word">
+<div style=3D"direction: ltr; font-family: Tahoma; font-size: =
+10pt;"><font face=3D"Menlo">Hi Guys,<br>
+<br>
+My desk has just arrived. It's replacing the desk between Marijan and =
+Dimitri, where the Aleph0 and GPU computers are. To do so, I will need =
+to turn these computers off. Could you all let me know if this is an =
+issue?<br></font></div></div></blockquote><div><br></div><div>Excellent =
+news we have got your desk.</div><div><br></div><div>Switching off =
+aleph0 is an issue:</div><div><br></div><div>(i) we need to shut it down =
+(not just pulling the cable ;-))</div><div><br></div><div>(ii) it needs =
+to come up again soon as we use it to run the regression =
+testing.</div><div><br></div><div>So we need to find a new place for it =
+where it can stay when your desk is in place. Maybe at =91your' old desk =
+somewhere?</div><div><br></div><div>Can I suggest you look around and =
+delevop a plan? We can then finalise this as part of the group meeting =
+today.</div><div><br></div><div>I don=92t know about the other machine - =
+feedback from anybody =
+else?</div><div><br></div><div>Cheers,</div><div><br></div><div>Hans</div>=
+<div><br></div><div><br></div><br><blockquote type=3D"cite"><div =
+ocsi=3D"0" fpstyle=3D"1" style=3D"word-wrap:break-word"><div =
+style=3D"direction: ltr; font-family: Tahoma; font-size: 10pt;"><font =
+face=3D"Menlo">
+<br>
+Cheers,<br>
+<br>
+Beckie<br>
+</font></div>
+</div>
+
+</blockquote></div><br></div></body></html>=
+
+--Apple-Mail=_4316909B-8D64-4005-939D-94E0826B2F67--
+

@@ -6830,3 +6830,5 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-10-17 17:20:01 fangohr: Okay: installed all dependencies, cloned the fenics repository (I think). Now compiling trilinos -- could be some time. Will check in again tomorrow ...
 2013-10-28 07:50:44 mb8g11: Hi all.
 2013-10-29 08:27:58 mb8g11: Hiya!
+2013-10-31 15:40:23 cilix: Hi Hans, we just rebooted aleph0 and it works, but the IP address seems to have changed. Did it not have a static IP?
+2013-10-31 15:42:53 cilix: It's a bit annoying because the host lookup doesn't seem to work because of this. Can you currently login to aleph0.kk.soton.ac.uk?
