@@ -110,7 +110,7 @@ def Find_Helix_Length(D, A, Ms, H):
         raise ValueError(msg)
 
     #Find the fourier transform of the two magnetisation vector components.
-    finmag.logger.info("Calculating the fourier transform" +
+    finmag.logger.info("Calculating the fourier transform " +
                        "of the magnetisation data.")
     ffty = np.fft.fft(ys)
     ffty = abs(ffty[:len(ffty) / 2])
@@ -192,11 +192,11 @@ def Find_DMI(A, Ms, l, H, D0=None, tol=1e-6, verbose=False):
         #Initialise two arrays to hold d and l values,
         ds = []
         ls = []
-        ds.append(d0)
+        ds.append(D0)
 
-        #Find the sign of the evaluated helix length for the d0 guess,\
+        #Find the sign of the evaluated helix length for the D0 guess,\
         # subtracted from the actual helix length.
-        ls.append(Find_Helix_Length(ds[0], a, ms, h) - l)
+        ls.append(Find_Helix_Length(ds[0], A, Ms, H) - l)
 
         #Find an increment size bigger than the desired tolerance to search\
         # for these lengths. The increment should be positive if the\
@@ -210,13 +210,13 @@ def Find_DMI(A, Ms, l, H, D0=None, tol=1e-6, verbose=False):
         #Find the sign of the evaluated helix length for another guess that's\
         # a bit far out from the desired tolerance, subtracted from the actual\
         # helix length.
-        ds.append(d0 + dIncrement)
-        ls.append(Find_Helix_Length(ds[1], a, ms, h) - l)
+        ds.append(D0 + dIncrement)
+        ls.append(Find_Helix_Length(ds[1], A, Ms, H) - l)
 
         #Keep doing this until two different values have been found.
         while ls[-1] == ls[-2]:
             ds.append(ds[-1] + dIncrement)
-            ls.append(Find_Helix_Length(ds[-1], a, ms, h) - l)
+            ls.append(Find_Helix_Length(ds[-1], A, Ms, H) - l)
 
         #Once the second value has been found, see if the sign change is\
         # different. If it is, then use those two as the interval. If not,\
@@ -236,13 +236,13 @@ def Find_DMI(A, Ms, l, H, D0=None, tol=1e-6, verbose=False):
             #Find the sign of the evaluated helix length for another guess\
             # that's a bit far out from the desired tolerance, subtracted\
             # from the actual helix length.
-            ds.append(d0 + dIncrement)
-            ls.append(Find_Helix_Length(ds[1], a, ms, h) - l)
+            ds.append(D0 + dIncrement)
+            ls.append(Find_Helix_Length(ds[1], A, Ms, H) - l)
 
             #Keep doing this until two different values have been found.
             while ls[-1] == ls[-2]:
                 ds.append(ds[-1] + dIncrement)
-                ls.append(Find_Helix_Length(ds[-1], a, ms, h) - l)
+                ls.append(Find_Helix_Length(ds[-1], A, Ms, H) - l)
 
             #Pray that a sign change has been found this time.
             if ls[-1] * ls[-2] >= 0:
@@ -262,26 +262,26 @@ def Find_DMI(A, Ms, l, H, D0=None, tol=1e-6, verbose=False):
         raise ValueError("Positive helix length required for DMI estimation" +
                          " if an initial DMI guess is not provided.")
 
-    #Suggest an initial guess for d0 if one is not already there. This guess\
+    #Suggest an initial guess for D0 if one is not already there. This guess\
     # comes from the ipython notebook "ref-dmi-constant" without reference,\
     # but it is used here because it performs well in most examples.
-    if d0 is None:
-        d0 = 4 * np.pi * a / l
+    if D0 is None:
+        D0 = 4 * np.pi * A / l
 
     #Find the range that d can exist in.
-    dRange = Find_DMI_Signchange(a, ms, l, h, d0, tol * 1e2)
+    dRange = Find_DMI_Signchange(A, Ms, l, H, D0, tol * 1e2)
 
     #Use an optimization routine to find d.
-    def Helix_Length_Difference(d, a, ms, l, h):
-        return Find_Helix_Length(d, a, ms, h) - l
+    def Helix_Length_Difference(D, A, Ms, l, H):
+        return Find_Helix_Length(D, A, Ms, H) - l
 
-    d = scipy.optimize.brentq(Helix_Length_Difference, dRange[0], dRange[1],
-                              args=(a, ms, l, h), xtol=tol)
+    D = scipy.optimize.brentq(Helix_Length_Difference, dRange[0], dRange[1],
+                              args=(A, Ms, l, H), xtol=tol)
 
     #Cleanup and return
     if verbose is False:
         finmag.logger.setLevel(logLevel)
-    return d
+    return D
 
 if __name__ == "__main__":
 
