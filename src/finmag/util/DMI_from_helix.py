@@ -7,15 +7,19 @@ import scipy.optimize
 
 """
 
-This file contains three functions that use finmag simulations on a 1D mesh to obtain certain material characteristics. It also contains an example showing usage of two of the functions. These function "declarations" are:
+This file contains three functions that use finmag simulations on a 1D mesh
+to obtain certain material characteristics. It also contains an example
+showing usage of two of the functions. These function "declarations" are:
 
 Find_Helix_Length( d, a, ms, h, tol=1e-9 )
 Find_DMI( a, ms, l, h, d0=None, tol=1e-6 )
 
 """
 
-def Find_Helix_Length( D, A, Ms, H ):
-    """Function that takes some material parameters and returns the estimated helix length.
+
+def Find_Helix_Length(D, A, Ms, H):
+    """Function that takes some material parameters and returns the
+    estimated helix length.
 
     @parameters
     A   : Isotropic exchange energy constant (J/m)
@@ -26,14 +30,15 @@ def Find_Helix_Length( D, A, Ms, H ):
 
     #Make a mesh, with lengths measured in unitLength.
     unitLength = 1e-9
-    meshX = 1000 #Length of mesh (nm). Would prefer this to be an even number for the preceeding calculation.
-    meshXHalf = meshX/2
-    meshN = 1000 #Number of points in the desired mesh.
-    mesh = df.IntervalMesh( meshN-1, -meshXHalf, meshXHalf )
+    meshX = 1000  # Length of mesh (nm). Would prefer this to be an even
+                  # number for the preceeding calculation.
+    meshXHalf = meshX / 2
+    meshN = 1000  # Number of points in the desired mesh.
+    mesh = df.IntervalMesh(meshN - 1, -meshXHalf, meshXHalf)
 
     #Creating simulation object.
     simName = "Finding_Helix_Length"
-    sim = finmag.Simulation( mesh, Ms, name = simName, unit_length = unitLength )
+    sim = finmag.Simulation(mesh, Ms, name=simName, unit_length=unitLength)
 
     #Create energy objects and add them to the simulation.
     eA = finmag.energies.Exchange( A ) #Isotropic exchange interaction energy object to use in the simulation.
