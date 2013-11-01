@@ -91,10 +91,18 @@ def test_plot_spatially_resolved_normal_mode(tmpdir):
     os.chdir(str(tmpdir))
     d = 60
     h = 2
-    maxh = 4.0
+    sep = 5
+    maxh = 10.0
 
-    nanodisk = Nanodisk(d, h)
-    mesh = nanodisk.create_mesh(maxh, directory='meshes')
+    # Create a mesh consisting of two separate regions to check
+    # whether matplotlib can handle the space in between them
+    # correctly (previously it would connect the regions).
+    center1 = (-0.5 * (d + sep), 0, 0)
+    center2 = (+0.5 * (d + sep), 0, 0)
+    nanodisk1 = Nanodisk(d, h, center=center1, name='nanodisk1')
+    nanodisk2 = Nanodisk(d, h, center=center2, name='nanodisk2')
+    nanodisks = nanodisk1 + nanodisk2
+    mesh = nanodisks.create_mesh(maxh, directory='meshes')
 
     # Material parameters for Permalloy
     Ms = 8e5

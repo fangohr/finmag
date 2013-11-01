@@ -8,6 +8,7 @@ import scipy.sparse.linalg
 from time import time
 from finmag.util.consts import gamma
 import matplotlib.pyplot as plt
+import matplotlib.tri as tri
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 logger = logging.getLogger('finmag')
@@ -589,6 +590,11 @@ def plot_spatially_resolved_normal_mode(sim, w, slice_z='z_max', components='xyz
     xvals = surface_coords[:, 0]
     yvals = surface_coords[:, 1]
 
+    # We use the mesh triangulation provided by dolfin in case the
+    # mesh has multiple disconnected regions (in which case matplotlib
+    # would connect them).
+    mesh_triang = tri.Triangulation(xvals, yvals, surface_layer.cells())
+
     # Determine the number of rows (<=2) and columns (<=3) in the plot
     num_rows = 0
     if plot_powers:
@@ -603,7 +609,7 @@ def plot_spatially_resolved_normal_mode(sim, w, slice_z='z_max', components='xyz
     def plot_mode_profile(ax, a, title=None, vmin=None, vmax=None, cmap=None):
         ax.set_aspect('equal')
         vals = restrict_to_submesh(a)
-        trimesh = ax.tripcolor(xvals, yvals, vals, shading='gouraud', cmap=cmap)
+        trimesh = ax.tripcolor(mesh_triang, vals, shading='gouraud', cmap=cmap)
         ax.set_title(title)
         if show_colorbars:
             divider = make_axes_locatable(ax)
