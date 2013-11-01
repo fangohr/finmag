@@ -487,7 +487,9 @@ def export_normal_mode_animation(sim, freq, w, filename, num_cycles=1, num_snaps
     logger.debug("Saving the data to file '{}' took {} seconds".format(filename, t1 - t0))
 
 
-def plot_spatially_resolved_normal_mode(sim, w, slice_z='z_max', components='xyz', plot_powers=True, plot_phases=True, show_axis_labels=True, show_axis_frames=True, show_colorbars=True, figsize=None):
+def plot_spatially_resolved_normal_mode(sim, w, slice_z='z_max', components='xyz', plot_powers=True, plot_phases=True,
+                                        cmap_powers=plt.cm.jet, cmap_phases=plt.cm.hsv, vmin_powers=None,
+                                        show_axis_labels=True, show_axis_frames=True, show_colorbars=True, figsize=None):
     """
     Plot the normal mode profile across a slice of the sample.
 
@@ -598,10 +600,10 @@ def plot_spatially_resolved_normal_mode(sim, w, slice_z='z_max', components='xyz
     num_columns = len(components)
 
 
-    def plot_mode_profile(ax, a, title=None, vmin=None, vmax=None):
+    def plot_mode_profile(ax, a, title=None, vmin=None, vmax=None, cmap=None):
         ax.set_aspect('equal')
         vals = restrict_to_submesh(a)
-        trimesh = ax.tripcolor(xvals, yvals, vals, shading='gouraud')
+        trimesh = ax.tripcolor(xvals, yvals, vals, shading='gouraud', cmap=cmap)
         ax.set_title(title)
         if show_colorbars:
             divider = make_axes_locatable(ax)
@@ -625,13 +627,13 @@ def plot_spatially_resolved_normal_mode(sim, w, slice_z='z_max', components='xyz
     if plot_powers:
         for comp in components:
             ax = fig.add_subplot(num_rows, num_columns, cnt)
-            plot_mode_profile(ax, powers[comp], title='Power m_{}'.format(comp), vmin=0)
+            plot_mode_profile(ax, powers[comp], title='Power m_{}'.format(comp), vmin=vmin_powers, cmap=cmap_powers)
             cnt += 1
 
     if plot_phases:
         for comp in components:
             ax = fig.add_subplot(num_rows, num_columns, cnt)
-            plot_mode_profile(ax, phases[comp], title='Phase m_{}'.format(comp), vmin=-math.pi, vmax=+math.pi)
+            plot_mode_profile(ax, phases[comp], title='Phase m_{}'.format(comp), vmin=-math.pi, vmax=+math.pi, cmap=cmap_phases)
             cnt += 1
 
     plt.tight_layout()
