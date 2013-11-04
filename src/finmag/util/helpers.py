@@ -3,6 +3,7 @@ from datetime import datetime
 from glob import glob
 from contextlib import contextmanager
 from finmag.util.fileio import Tablereader
+from finmag.util.visualization import render_paraview_scene
 from threading import Timer
 import matplotlib.pyplot as plt
 import subprocess as sp
@@ -18,6 +19,7 @@ import types
 import sys
 import os
 import re
+import sh
 
 logger = logging.getLogger("finmag")
 
@@ -1606,3 +1608,110 @@ def run_cmd_with_timeout(cmd, timeout_sec):
     timer.cancel()
     return proc.returncode, stdout, stderr
 
+
+def jpg2avi(jpg_filename, outfilename=None, duration=2, fps=25):
+    """
+    Convert a series of .jpg files into an animation file in .avi format.
+
+    *Arguments*
+
+    jpg_filename:
+
+        The 'basename' of the series of image files. For example, if
+        the image files are called 'foo_0000.jpg', 'foo_0001.jpg', etc.
+        then `jpg_filename` should be 'foo.jpg'. Internally, the image
+        files are found via a wildcard expression by replacing the suffix
+        '.jpg' with '*.jpg', so the basename could also have been 'foo_.jpg'
+        or even 'f.jpg'. (However, it should be restrictive enough so that
+        only the desired images are found.)
+
+    outfilename:
+
+        The filename of the resulting .avi file. If None (the default),
+        uses the basename of the .jpg file.
+
+    duration:
+
+        Duration of the created animation (in seconds).
+
+    fps:
+
+        Framerate (in frames per second) of the created animation.
+
+    """
+    if not jpg_filename.endswith('.jpg'):
+        raise ValueError("jpg_filename must end in '.jpg'. Got: '{}'".format(jpg_filename))
+
+    pattern = re.sub('\.jpg$', '*.jpg', jpg_filename)
+    pattern_escaped = re.sub('\.jpg$', '\*.jpg', jpg_filename)
+    jpg_files = sorted(glob(pattern))
+    logger.debug('Found {} jpg files.'.format(len(jpg_files)))
+
+    if outfilename is None:
+        outfilename = re.sub('\.jpg$', '.avi', jpg_filename)
+    logger.debug("Using outfilename='{}'".format(outfilename))
+
+    # Use mencoder with two-pass encoding to convert the files.
+    # See http://mariovalle.name/mencoder/mencoder.html
+    try:
+        mencoder_options = "vbitrate=2160000:mbd=2:keyint=132:v4mv:vqmin=3:lumi_mask=0.07:dark_mask=0.2:mpeg_quant:scplx_mask=0.1:tcplx_mask=0.1:naq"
+        sh.mencoder('-ovc', 'lavc', '-lavcopts',
+                    'vcodec=mpeg4:vpass=1:' + mencoder_options,
+                    '-mf', 'type=jpg:fps={}'.format(fps), '-nosound',
+                    '-o', '/dev/null', 'mf://' + pattern)
+        sh.mencoder('-ovc', 'lavc', '-lavcopts',
+                    'vcodec=mpeg4:vpass=2:' + mencoder_options,
+                    '-mf', 'type=jpg:fps={}'.format(fps), '-nosound',
+                    '-o', outfilename, 'mf://' + pattern)
+        os.remove('divx2pass.log')  # tidy up output from the two-pass enoding
+    except sh.CommandNotFound:
+        logger.error("mencoder does not seem to be installed but is needed for "
+                  "movie creation. Please install it (e.g. on Debian/Ubuntu: "
+                  "'sudo apt-get install mencoder').")
+    except sh.ErrorReturnCode as exc:
+        logger.warning("mencoder had non-zero exit status: {} (diagnostic message: '{}')".format(exc.exit_code, exc.message))
+
+
+
+def pvd2avi(pvd_filename, outfilename=None, duration=2, fps=25, **kwargs):
+    """
+    Export a .pvd animation to a movie file in .avi format.
+
+    *Arguments*
+
+    pvd_filename:
+
+        The name of the .pvd file to be converted.
+
+    outfilename:
+
+        The filename of the resulting .avi file. If None (the default),
+        the basename of the .pvd file is used.
+
+    duration:
+
+        Duration of the created animation (in seconds).
+
+    fps:
+
+        Framerate (in frames per second) of the created animation.
+
+    All other keyword arguments are passed on to the function
+    `finmag.util.visualization.render_paraview_scene` and can
+    be used to tweak the appearance of the animation.
+
+    """
+    if not pvd_filename.endswith('.pvd'):
+        raise ValueError("pvd_filename must end in '.pvd'. Got: '{}'".format(pvd_filename))
+
+    if outfilename == None:
+        outfilename = re.sub('\.pvd$', '.avi', pvd_filename)
+
+    if kwargs.has_key('trim_border') and kwargs['trim_border'] ==True:
+        logger.warning("Cannot use 'trim_border=True' when converting a .pvd time series to .avi; using 'trim_border=False'.")
+    kwargs['trim_border'] = False
+
+    with TemporaryDirectory() as tmpdir:
+        jpg_tmpfilename = os.path.join(tmpdir, 'animation.jpg')
+        render_paraview_scene(pvd_filename, outfile=jpg_tmpfilename, **kwargs)
+        jpg2avi(jpg_tmpfilename, outfilename=outfilename, duration=duration, fps=fps)
