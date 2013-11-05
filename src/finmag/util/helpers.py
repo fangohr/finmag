@@ -1423,7 +1423,7 @@ def vec2str(a, fmt='{}', delims='()', sep=', '):
     return res
 
 
-def vortex_simple(r, center, right_handed=True):
+def vortex_simple(r, center, right_handed=True, polarity=+1):
     """
     Returns a function f: (x,y,z) -> m representing a vortex magnetisation pattern
     where the vortex lies in the x/y-plane (i.e. the magnetisation is constant along
@@ -1456,6 +1456,8 @@ def vortex_simple(r, center, right_handed=True):
         if not right_handed:
             mx = -mx
             my = -my
+        if polarity < 0:
+            mz = -mz
         return (mx, my, mz)
 
     return f
@@ -1521,7 +1523,7 @@ def apply_vertexwise(f, *args):
     return res
 
 
-def vortex_feldtkeller(beta, center, right_handed=True):
+def vortex_feldtkeller(beta, center, right_handed=True, polarity=+1):
     """
     Returns a function f: (x,y,z) -> m representing a vortex
     magnetisation pattern where the vortex lies in the x/y-plane (i.e.
@@ -1554,6 +1556,8 @@ def vortex_feldtkeller(beta, center, right_handed=True):
         if not right_handed:
             mx = -mx
             my = -my
+        if polarity < 0:
+            mz = -mz
         return (mx, my, mz)
 
     return f
