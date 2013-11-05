@@ -173,7 +173,7 @@ def FFT_m(filename, t_step=None, t_ini=None, t_end=None, subtract_values='averag
     return rfft_freqs, fft_mx, fft_my, fft_mz
 
 
-def _plot_spectrum(fft_freq, fft_mx, fft_my, fft_mz, components="xyz",
+def _plot_spectrum(fft_freq, fft_mx, fft_my, fft_mz, components="xyz", log=True,
                   xlim=None, ticks=21, figsize=None, title="", outfilename=None):
     """
     Internal helper function to plot certain components of the
@@ -182,6 +182,10 @@ def _plot_spectrum(fft_freq, fft_mx, fft_my, fft_mz, components="xyz",
 
     """
     fft_freq_GHz = fft_freq / 1e9
+    if log:
+        fft_mx = np.log(fft_mx)
+        fft_my = np.log(fft_my)
+        fft_mz = np.log(fft_mz)
     fig = plt.figure(figsize=figsize)
     ax = fig.gca()
     if 'x' in components: ax.plot(fft_freq_GHz, fft_mx, '.-', label=r'FFT of $m_x$')
@@ -205,8 +209,8 @@ def _plot_spectrum(fft_freq, fft_mx, fft_my, fft_mz, components="xyz",
     return fig
 
 
-def plot_FFT_m(ndt_filename, t_step=None, t_ini=None, t_end=None, subtract_values='average',
-               components="xyz", xlim=None, ticks=21, figsize=None, title="", outfilename=None):
+def plot_FFT_m(ndt_filename, t_step=None, t_ini=None, t_end=None, subtract_values='average', components="xyz",
+               log=True, xlim=None, ticks=21, figsize=None, title="", outfilename=None):
     """
     Plot the frequency spectrum of the components of the magnetisation m.
 
@@ -215,6 +219,8 @@ def plot_FFT_m(ndt_filename, t_step=None, t_ini=None, t_end=None, subtract_value
 
     `components` can be a string or a list containing the components
     to plot. Default: 'xyz'.
+
+    If `log` is True (the default), sets the y-axis to be log scale.
 
     The arguments `figsize` and `title` control the figure size and
     plot title.
@@ -229,7 +235,7 @@ def plot_FFT_m(ndt_filename, t_step=None, t_ini=None, t_end=None, subtract_value
 
     fft_freq, fft_mx, fft_my, fft_mz = FFT_m(ndt_filename, t_step, t_ini=t_ini, t_end=t_end, subtract_values=subtract_values)
 
-    return _plot_spectrum(fft_freq, fft_mx, fft_my, fft_mz, components=components, xlim=xlim, ticks=ticks, figsize=figsize, title=title, outfilename=outfilename)
+    return _plot_spectrum(fft_freq, fft_mx, fft_my, fft_mz, components=components, log=log, xlim=xlim, ticks=ticks, figsize=figsize, title=title, outfilename=outfilename)
 
 
 def find_peak_near_frequency(f_approx, fft_freqs, fft_m_xyz):
