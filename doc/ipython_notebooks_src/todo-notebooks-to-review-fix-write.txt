@@ -1,0 +1,11 @@
+* tutorial-NormalModeSimulation
+
+- <2013-11-06 Wed> error in cell [10] (calling sim.plot_spectrum)
+
+
+* Is tutorial-normal-modes.ipynb obsolete 
+
+- <2013-11-06 Wed> it doesn't execute, and
+  tutorial-NormalModeSimulation looks nicer and includes the ringdown?
+
+
