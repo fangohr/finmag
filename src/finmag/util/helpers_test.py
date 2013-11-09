@@ -5,7 +5,9 @@ import pytest
 import os
 from finmag.util.helpers import *
 from finmag.util.meshes import box, cylinder
+from finmag.util.visualization import render_paraview_scene
 from finmag.example import barmini
+import finmag
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -517,6 +519,45 @@ def test_run_cmd_with_timeout():
     # This command should be killed due to the timeout, resulting in a return code of -9.
     returncode, _, _ = run_cmd_with_timeout('sleep 10', timeout_sec=0)
     assert(returncode == -9)
+
+
+def test_jpg2avi(tmpdir):
+    """
+    Test whether we can create an animation from a series of .jpg images.
+
+    """
+    os.chdir(str(tmpdir))
+    sim = finmag.example.normal_modes.disk()
+    sim.compute_normal_modes(n_values=3)
+    sim.export_normal_mode_animation(k=0, filename='foo/bar.pvd')
+    render_paraview_scene('foo/bar.pvd', outfile='foo/quux.jpg', trim_border=False)  # note that we must not trim the border because otherwise the resulting .jpg files will have different sizes, which confused mencoder
+
+    # Test the bare-bones export
+    jpg2avi('foo/quux.jpg')
+    assert(os.path.exists('foo/quux.avi'))
+
+    # Test a few keywords
+    jpg2avi('foo/quux.jpg', outfilename='animation.avi', duration=10, fps=10)
+    assert(os.path.exists('animation.avi'))
+
+
+def test_pvd2avi(tmpdir):
+    """
+    Test whether we can create an animation from the timesteps in a .pvd file.
+
+    """
+    os.chdir(str(tmpdir))
+    sim = finmag.example.normal_modes.disk()
+    sim.compute_normal_modes(n_values=3)
+    sim.export_normal_mode_animation(k=0, filename='foo/bar.pvd')
+
+    # Test the bare-bones export
+    pvd2avi('foo/bar.pvd')
+    assert(os.path.exists('foo/bar.avi'))
+
+    # Test a few keywords
+    pvd2avi('foo/bar.pvd', outfilename='animation.avi', duration=10, fps=10, add_glyphs=False, colormap='heated_body')
+    assert(os.path.exists('animation.avi'))
 
 
 if __name__ == '__main__':
