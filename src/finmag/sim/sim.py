@@ -23,7 +23,7 @@ from finmag.util import helpers
 from finmag.util.vtk_saver import VTKSaver
 from finmag.util.fft import FFT_m, plot_FFT_m, find_peak_near_frequency, _plot_spectrum, export_normal_mode_animation_from_ringdown
 from finmag.util.normal_modes import compute_generalised_eigenproblem_matrices, compute_normal_modes_generalised, export_normal_mode_animation, plot_spatially_resolved_normal_mode
-from finmag.util.helpers import plot_dynamics
+from finmag.util.helpers import plot_dynamics, pvd2avi
 from finmag.sim.hysteresis import hysteresis as hyst, hysteresis_loop as hyst_loop
 from finmag.sim import sim_helpers
 from finmag.energies import Exchange, Zeeman, TimeZeeman, Demag, UniaxialAnisotropy, DMI
@@ -1599,26 +1599,7 @@ class NormalModeSimulation(Simulation):
         # Convert image files to movie
         if suffix == '.avi':
             movie_filename = filename
-            with helpers.TemporaryDirectory() as tmpdir:
-                try:
-                    # Create symbolic links for use with avconv
-                    tmpdir = tempfile.mkdtemp()
-                    log.warning("Creating tmpdir={}".format(tmpdir))
-                    for (i, image_file) in enumerate(sorted(glob(basename + '*.jpg'))):
-                        os.symlink(os.path.abspath(image_file), os.path.join(tmpdir, 'image_{:06d}.jpg'.format(i)))
-
-                    # Convert images to a movie file
-                    sp.check_call(['avconv', '-r', str(framerate),
-                                   '-i', os.path.join(tmpdir, 'image_%06d.jpg'),
-                                   '-vcodec', 'mpeg4',
-                                   movie_filename],
-                                  stderr=sp.STDOUT)
-                except OSError:
-                    log.error("mencoder does not seem to be installed but is needed for "
-                              "movie creation. Please install it (e.g. on Debian/Ubuntu: "
-                              "'sudo apt-get install libav-tools').")
-                except sp.CalledProcessError as exc:
-                    log.warning("avconv had non-zero exit status: {} (output: '{}')".format(exc.returncode, exc.output))
+            pvd2avi(pvd_filename, outfile=movie_filename)
 
         # Return the movie if it was created
         res = None
@@ -1638,7 +1619,7 @@ class NormalModeSimulation(Simulation):
             return HTML(data=video_tag)
 
     def plot_spatially_resolved_normal_mode(self, k, slice_z='z_max', components='xyz',
-                                            plot_powers=True, plot_phases=True,
+                                            plot_powers=True, plot_phases=True, num_phase_colorbar_ticks=3,
                                             cmap_powers=plt.cm.jet, cmap_phases=plt.cm.hsv, vmin_powers=None,
                                             show_axis_labels=True, show_axis_frames=True,
                                             show_colorbars=True, figsize=None):
