@@ -1619,10 +1619,12 @@ class NormalModeSimulation(Simulation):
             return HTML(data=video_tag)
 
     def plot_spatially_resolved_normal_mode(self, k, slice_z='z_max', components='xyz',
+                                            figure_title=None, yshift_title=0.0,
                                             plot_powers=True, plot_phases=True, num_phase_colorbar_ticks=3,
                                             cmap_powers=plt.cm.jet, cmap_phases=plt.cm.hsv, vmin_powers=None,
                                             show_axis_labels=True, show_axis_frames=True,
-                                            show_colorbars=True, figsize=None):
+                                            show_colorbars=True, figsize=None,
+                                            outfilename=None, dpi=None):
         """
         Plot a spatially resolved profile of the k-th normal mode as
         computed by `sim.compute_normal_modes()`.
@@ -1643,10 +1645,12 @@ class NormalModeSimulation(Simulation):
 
         fig = plot_spatially_resolved_normal_mode(
             self, self.eigenvecs[:, k], slice_z=slice_z, components=components,
+            figure_title=figure_title, yshift_title=yshift_title,
             plot_powers=plot_powers, plot_phases=plot_phases,
             cmap_powers=cmap_powers, cmap_phases=cmap_phases, vmin_powers=vmin_powers,
             show_axis_labels=show_axis_labels, show_axis_frames=show_axis_frames,
-            show_colorbars=show_colorbars, figsize=figsize)
+            show_colorbars=show_colorbars, figsize=figsize,
+            outfilename=outfilename, dpi=dpi)
         return fig
 
 
