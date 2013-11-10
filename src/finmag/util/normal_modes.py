@@ -8,8 +8,11 @@ from time import time
 from finmag.util.consts import gamma
 import matplotlib.pyplot as plt
 import matplotlib.tri as tri
+from matplotlib.ticker import FormatStrFormatter
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from math import pi
+from matplotlib import rcParams
+rcParams.update({'figure.autolayout': True})
 
 logger = logging.getLogger('finmag')
 
@@ -489,11 +492,23 @@ def export_normal_mode_animation(sim, freq, w, filename, num_cycles=1, num_snaps
 
 
 def plot_spatially_resolved_normal_mode(sim, w, slice_z='z_max', components='xyz',
+                                        figure_title=None, yshift_title=0.0,
                                         plot_powers=True, plot_phases=True, num_phase_colorbar_ticks=5,
                                         cmap_powers=plt.cm.jet, cmap_phases=plt.cm.hsv, vmin_powers=None,
-                                        show_axis_labels=True, show_axis_frames=True, show_colorbars=True, figsize=None):
+                                        show_axis_labels=True, show_axis_frames=True, show_colorbars=True, figsize=None,
+                                        outfilename=None, dpi=None):
     """
     Plot the normal mode profile across a slice of the sample.
+
+    Remark: Due to a bug in matplotlib (see [1]), when saving the
+    `matplotlib.Figure` object returned from this function the title
+    and left annotations will likely be cut off. Therefore it is
+    recommended to save the plot by specifying the argument
+    `outfilename`.
+
+    [1] http://stackoverflow.com/questions/10101700/moving-matplotlib-legend-outside-of-the-axis-makes-it-cutoff-by-the-figure-box
+
+
 
     *Arguments*
 
@@ -518,6 +533,20 @@ def plot_spatially_resolved_normal_mode(sim, w, slice_z='z_max', components='xyz
 
         The number of tick labels for the phase colorbars. Currently
         this must be either 3 or 5 (default: 5).
+
+    outfilename:
+
+        If given, the plot will be saved to a file with this name
+        (default: None).
+
+    dpi:
+
+        The resolution of the saved plot (ignored if `outfilename` is None).
+
+
+    *Returns*
+
+    The `matplotlib.Figure` containing the plot.
 
     """
     coords = sim.mesh.coordinates()
@@ -625,7 +654,8 @@ def plot_spatially_resolved_normal_mode(sim, w, slice_z='z_max', components='xyz
             if vmax == None:
                 vmax = max(vals)
             trimesh.set_clim(vmin=vmin, vmax=vmax)
-            cbar = plt.colorbar(trimesh, cax=cax, ticks=ticks)
+            cbar = plt.colorbar(trimesh, cax=cax, format=FormatStrFormatter('%g'),
+                                ticks=ticks)
             if ticklabels != None:
                 cbar.ax.set_yticklabels(ticklabels)
         if not show_axis_labels:
@@ -641,7 +671,7 @@ def plot_spatially_resolved_normal_mode(sim, w, slice_z='z_max', components='xyz
     if plot_powers:
         for comp in components:
             ax = fig.add_subplot(num_rows, num_columns, cnt)
-            plot_mode_profile(ax, powers[comp], title='Power m_{}'.format(comp), vmin=vmin_powers, cmap=cmap_powers)
+            plot_mode_profile(ax, powers[comp], title='m_{}'.format(comp), vmin=vmin_powers, cmap=cmap_powers)
             cnt += 1
 
     if plot_phases:
@@ -656,12 +686,57 @@ def plot_spatially_resolved_normal_mode(sim, w, slice_z='z_max', components='xyz
 
         for comp in components:
             ax = fig.add_subplot(num_rows, num_columns, cnt)
-            plot_mode_profile(ax, phases[comp], title='Phase m_{}'.format(comp),
+            plot_mode_profile(ax, phases[comp], title='m_{}'.format(comp),
                               ticks=ticks, ticklabels=ticklabels,
                               vmin=-pi, vmax=+pi,
                               cmap=cmap_phases)
             cnt += 1
 
-    plt.tight_layout()
+    bbox_extra_artists = []
+    if figure_title != None:
+        txt = plt.text(0.5, 1.0 + yshift_title, figure_title,
+                        horizontalalignment='center',
+                        fontsize=20,
+                        transform = fig.transFigure)
+        bbox_extra_artists.append(txt)
+    num_axes = len(fig.axes)
+    ax_annotate_powers = fig.axes[0]
+    ax_annotate_phases= fig.axes[(num_axes // 2) if plot_powers else 0]
+    if plot_powers:
+        txt_power = plt.text(-0.1, 0.5, 'Power',
+                             fontsize=16,
+                             horizontalalignment='right',
+                             verticalalignment='center',
+                             rotation='vertical',
+                             #transform=fig.transFigure)
+                             transform=ax_annotate_powers.transAxes)
+        bbox_extra_artists.append(txt_power)
+    #
+    #ax_topleft.text(0, 0, 'Power', ha='left', va='center', rotation=90)
+    #
+    #from matplotlib.offsetbox import AnchoredOffsetbox, TextArea
+    #box = TextArea("Power", textprops=dict(color="k", fontsize=20))
+    #anchored_box = AnchoredOffsetbox(loc=3,
+    #                                 child=box, pad=0.,
+    #                                 frameon=False,
+    #                                 bbox_to_anchor=(-0.1, 0.5),
+    #                                 bbox_transform=ax.transAxes,
+    #                                 borderpad=0.,
+    #                                 )
+    #ax_topleft.add_artist(anchored_box)
+    #bbox_extra_artists.append(anchored_box)
+
+    if plot_phases:
+        txt_phase = plt.text(-0.1, 0.5, 'Phase',
+                             fontsize=16,
+                             horizontalalignment='right',
+                             verticalalignment='center',
+                             rotation='vertical',
+                             #transform=fig.transFigure)
+                             transform=ax_annotate_phases.transAxes)
+        bbox_extra_artists.append(txt_phase)
+
+    if outfilename != None:
+        fig.savefig(outfilename, bbox_extra_artists=bbox_extra_artists, bbox_inches='tight', dpi=dpi)
 
     return fig

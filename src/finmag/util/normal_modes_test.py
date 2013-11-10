@@ -121,17 +121,19 @@ def test_plot_spatially_resolved_normal_mode(tmpdir):
         w = eigenvecs[:, i]
 
         fig = plot_spatially_resolved_normal_mode(sim, w, slice_z='z_max', components='xyz',
+                                                  figure_title='Eigenmodes', yshift_title=0.0,
                                                   plot_powers=True, plot_phases=True,
                                                   show_axis_labels=True, show_colorbars=True,
-                                                  show_axis_frames=True, figsize=(14, 8))
-        fig.savefig('normal_mode_profile_{:02d}_v1.png'.format(i))
+                                                  show_axis_frames=True, figsize=(12, 4),
+                                                  outfilename='normal_mode_profile_{:02d}_v1.png'.format(i),
+                                                  dpi=300)
 
         # Different combination of parameters
         fig = plot_spatially_resolved_normal_mode(sim, w, slice_z='z_min', components='xz',
                                                   plot_powers=True, plot_phases=False,
                                                   show_axis_frames=False, show_axis_labels=False,
-                                                  show_colorbars=False, figsize=(14, 8))
-        fig.savefig('normal_mode_profile_{:02d}_v2.png'.format(i))
+                                                  show_colorbars=False, figsize=(12, 4),
+                                                  outfilename='normal_mode_profile_{:02d}_v2.png'.format(i))
 
         with pytest.raises(ValueError):
             plot_spatially_resolved_normal_mode(sim, w, plot_powers=False, plot_phases=False)
