@@ -575,7 +575,15 @@ def plot_spatially_resolved_normal_mode(sim, w, slice_z='z_max', components='xyz
     surface = Surface()
     surface.mark(sub_domains, 1)
     surface_layer = df.SubMesh(boundary_mesh, sub_domains, 1)
+  
+    # Original line that fails
     parent_vertex_indices = surface_layer.data().array("parent_vertex_indices", 0)
+
+    ## Hans' attempt to fix (only guessing)
+    #parent_vertex_indices = surface_layer.data().array("parent_vertex_indices")
+
+    #import IPython
+    #IPython.embed()
 
     ######################################################################
     # XXX TODO: This function should probably not need access to the
