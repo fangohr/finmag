@@ -385,7 +385,8 @@ class TestSimulation(object):
         a = np.concatenate([a[:5, :], a[6:, :]])
 
         # Check that the magnetisation dynamics of sim1 and sim2 are the same.
-        assert(np.allclose(a[:, 1:], b[:, 1:], atol=1e-4, rtol=1e-8))
+        # skip the last one which is the steps in cvode. 
+        assert(np.allclose(a[:, 1:-1], b[:, 1:-1], atol=1e-4, rtol=1e-8))
 
     def test_save_vtk(self, tmpdir):
         os.chdir(str(tmpdir))
