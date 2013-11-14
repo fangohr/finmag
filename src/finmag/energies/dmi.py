@@ -3,10 +3,10 @@ import numpy as np
 import logging
 from aeon import mtimed
 from energy_base import EnergyBase
-from finmag.util.consts import mu0
 from finmag.util import helpers
 
-logger=logging.getLogger('finmag')
+logger = logging.getLogger('finmag')
+
 
 def dmi_manual_curl(m, D, dim):
     """Input arguments:
@@ -45,10 +45,14 @@ def dmi_manual_curl(m, D, dim):
         dmxdy = gradm[0, 1]
         dmydy = gradm[1, 1]
         dmzdy = gradm[2, 1]
-    else:
+    elif dim == 1:
         dmxdy = 0
         dmydy = 0
         dmzdy = 0
+    else:
+        msg = "This function should only be used for " +\
+              "1 d or 2d meshes, not {}d".format(dim)
+        raise NotImplementedError(msg)
     dmxdz = 0
     dmydz = 0
     dmzdz = 0
@@ -58,6 +62,7 @@ def dmi_manual_curl(m, D, dim):
     curlz = dmydx - dmxdy
 
     return D * (m[0] * curlx + m[1] * curly + m[2] * curlz)
+
 
 class DMI(EnergyBase):
     """
@@ -119,7 +124,8 @@ class DMI(EnergyBase):
     def setup(self, S3, m, Ms, unit_length=1):
         self.DMI_factor = df.Constant(1.0 / unit_length)
         self.S3 = S3
-        self.D = helpers.scalar_valued_dg_function(self.D_waiting_for_mesh, self.S3.mesh())
+        self.D = helpers.scalar_valued_dg_function(self.D_waiting_for_mesh,
+                                                   self.S3.mesh())
         self.D.rename('D', 'DMI_constant')
         self.D_av = np.average(self.D.vector().array())
         del(self.D_waiting_for_mesh)
