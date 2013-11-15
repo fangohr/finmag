@@ -5,6 +5,10 @@ from contextlib import contextmanager
 from finmag.util.fileio import Tablereader
 from finmag.util.visualization import render_paraview_scene
 from threading import Timer
+import matplotlib as mpl
+#try to use 'Agg' as backend, we can remove it if something wrong.
+mpl.use("Agg")
+#this is the first place to import pyplot in finmag
 import matplotlib.pyplot as plt
 import subprocess as sp
 import shlex
