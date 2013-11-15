@@ -1,7 +1,9 @@
 import os
 import time
 import numpy as np
-import multiprocessing as mp
+from multiprocessing import Process, Queue, Lock
+
+lock = Lock()
 
 class TaskState(object):
     def __init__(self,taskname):
@@ -18,23 +20,29 @@ class TaskState(object):
         
         for line in data.splitlines():
             k,v=line.split(':')
-            self.state[k.strip()]=v
+            self.state[k.strip()]=v.strip()
     
     def save_state(self):
         f=open(self.taskname,'w')
-        for k in self.state:
-            f.write('%s : %s\n'%(k,self.state[k]))
+        for (k,v) in self.state.items():
+            f.write(u'%s : %s\n'%(k,v))
         f.close()
+
         
     def update_state(self,k,v,save=True):
         key=self.dict2str(k)
+        
+        if save:
+            self.load()
+        
         if v:
             self.state[key]='Done!'
         else:
             self.state[key]='Waiting!'
-            
+        
         if save:
             self.save_state()
+            
         
     def dict2str(self,d):
         res=[]
@@ -53,42 +61,24 @@ class TaskState(object):
             self.update_state(k,False,False)
         return False
     
-    
-def wrapper_function(fun,task,parameters,cwd):
-    """
-    something related to pickle (solution: copy_reg ?) 
-    """
-    
-    dirname=str(cwd)
-    for name in parameters:
-        dirname=os.path.join(dirname,name+'_'+str(task[name]))
-    
-    if not os.path.exists(dirname):
-        os.makedirs(dirname)
-    os.chdir(dirname)
-    
-    fun(**task)
-            
-    os.chdir(cwd)
-    return
-    
 
 class BatchTasks(object):
-    def __init__(self,fun,processes=None,taskname='task',waiting_time=1):
+    def __init__(self,fun,processes=4,taskname='task',waiting_time=1):
         self.fun=fun
         self.tasks=[{}]
         self.parameters=[]
         self.current_directory=os.getcwd()
-        if processes:
-            self.pool=mp.Pool(processes)
-        else:
-            self.pool=mp.Pool()
-            
+        
+       
         self.ts=TaskState(taskname+'.txt')
         self.waiting_time=waiting_time
         self.dims=[]
         
+        self.processes = processes
+        
         self.process_res=[]
+        
+
         
     def add_parameters(self,name,values):
         new_tasks=[]
@@ -102,6 +92,8 @@ class BatchTasks(object):
                 new_tasks.append(t)
             
         self.tasks=list(new_tasks)
+        
+
     
     def generate_directory(self,task):
         base=self.current_directory
@@ -110,35 +102,57 @@ class BatchTasks(object):
         
         return base
     
-    def run_single(self,task):
-            
-        def call_back(res):
-            self.ts.update_state(task, True)
-            
-        self.pool.apply_async(wrapper_function,args=(self.fun,task,self.parameters,self.current_directory),callback=call_back)
+    def run_single(self):
         
+        while not self.task_q.empty():
+            task = self.task_q.get()
+            
+            dirname=self.generate_directory(task)
+            if not os.path.exists(dirname):
+                os.makedirs(dirname)
+            
+            os.chdir(dirname)
+            self.fun(**task)
+            os.chdir(self.current_directory)
+           
+            lock.acquire()
+            self.ts.update_state(task, True)
+            lock.release()
+            
+            time.sleep(self.waiting_time)
+            
             
     def start(self):
         
-        self.utasks=[]
+        self.task_q = Queue()
         for task in self.tasks:
             if not self.ts.done(task):
-                self.utasks.append(task)
+                self.task_q.put(task)
+                
         self.ts.save_state()
-        
-        for task in self.utasks:
-            self.run_single(task)
+
+        self.threads=[]
+
+        for _ in range(self.processes):
+            t = Process(target=self.run_single)
+            t.start()
+            self.threads.append(t)
             time.sleep(self.waiting_time)
         
-        self.pool.close()
-        self.pool.join()
+        for t in self.threads:
+            t.join()
+
     
     def post_process(self,fun):
         for task in self.tasks:
             dirname=self.generate_directory(task)
             os.chdir(dirname)
-            self.process_res.append(fun(**task))
+            try:
+                self.process_res.append(fun(**task))
+            except:
+                print 'error:',task
             os.chdir(self.current_directory)
+            
     
     def get_res(self,key=None,value=None):
         res=[]
@@ -165,14 +179,14 @@ class BatchTasks(object):
 def task(p1,p2):
     print 'current directory:',os.getcwd()
     res='p1='+str(p1)+'  p2='+str(p2)
-    res= 1/0
+    #res= 1/0
     with open('res.txt','w') as f:
         f.write(res)
-    time.sleep(3)
+    time.sleep(1)
 
 
 if __name__=="__main__":
-    tasks=BatchTasks(task,4)
+    tasks=BatchTasks(task,2)
     tasks.add_parameters('p1',['a','b','c'])
     tasks.add_parameters('p2',range(1,5))
     tasks.start()
