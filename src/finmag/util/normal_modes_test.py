@@ -137,3 +137,6 @@ def test_plot_spatially_resolved_normal_mode(tmpdir):
 
         with pytest.raises(ValueError):
             plot_spatially_resolved_normal_mode(sim, w, plot_powers=False, plot_phases=False)
+            
+if __name__ == '__main__':
+    test_compute_generalised_eigenproblem_matrices_single_sphere('.')
