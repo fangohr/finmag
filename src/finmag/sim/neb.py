@@ -9,10 +9,9 @@ from finmag.energies.effective_field import EffectiveField
 from finmag.util.meshes import nodal_volume
 from finmag.native import llg as native_llg
 from finmag.util.vtk_saver import VTKSaver
-#from finmag.native import sundials
-from scipy.integrate import ode as scipy_ode
+from finmag import Simulation
 
-from finmag.util.pbc2d import PeriodicBoundary1D, PeriodicBoundary2D
+from finmag.util.fileio import Tablewriter, FieldSaver
 
 import logging
 log = logging.getLogger(name="finmag")
@@ -20,6 +19,127 @@ log = logging.getLogger(name="finmag")
 ONE_DEGREE_PER_NS = 17453292.5  # in rad/s
 
 
+def normalise(a):
+    """
+    normalise the array a.
+    """
+    a.shape=(3, -1)
+    lengths = np.sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2])
+    a[:] /= lengths
+    a.shape=(-1, )
+    
+def compute_dm(m0, m1):
+    dm = (m0-m1).reshape((3, -1))
+    return np.sqrt(np.sum(dm**2, axis=0))
+
+class NEB_Image(object):
+    """
+    An Image is an object that has its coordinate (magnetisation), and 
+    the object moves in the presence of the force (effective field),
+    Given a short time dt, the new coordinate coord_new is computed by,
+        
+        coord_new = coord_old + F * dt
+    
+    where F is the force.
+    
+    """
+    def __init__(self, sim, spring=5e4, left_image=None, right_image=None):
+        self._m = sim.llg._m
+        self.effective_field = sim.llg.effective_field
+        
+        self.coordinate = np.zeros(self._m.vector().size())
+        self.force = np.zeros(self._m.vector().size())
+        
+        self.energy = 0
+        self.left_image = left_image
+        self.right_image = right_image
+        self.spring = spring
+    
+    
+    def update_effective_field(self):
+        self._m.vector().set_local(self.coordinate)
+        self.effective_field.update()
+        
+        self.H_eff = self.effective_field.H_eff
+        self.energy = self.effective_field.total_energy()
+    
+    def _compute_tangent(self):
+        if self.left_image is None or self.right_image is None:
+            return 
+        
+        img_a = self.left_image
+        img_b = self.right_image
+        energy = self.energy
+        
+        t1 = self.coordinate - img_a.coordinate
+        t2 = img_b.coordinate - self.coordinate
+        
+        if img_a.energy < energy and energy < img_b.energy:
+            self.tangent = t2
+        elif img_a.energy > energy and energy > img_b.energy:
+            self.tangent = t1
+        else:
+            normalise(t1)
+            normalise(t2)
+            self.tangent = t1 + t2
+        
+        normalise(self.tangent)        
+    
+            
+    def compute_force(self):
+        if self.left_image is None or self.right_image is None:
+            return 
+        
+        self._compute_tangent()
+        
+        h = self.H_eff
+        t = self.tangent
+        
+        h.shape=(3,-1)
+        t.shape=(3,-1)
+        self.force.shape=(3,-1)
+                
+        ht = h[0]*t[0] + h[1]*t[1] + h[2]*t[2]
+        self.force[0] = h[0] - ht*t[0]
+        self.force[1] = h[1] - ht*t[1]
+        self.force[2] = h[2] - ht*t[2]
+        
+        if self.spring!=0:
+            m_a = self.left_image.coordinate
+            m_b = self.coordinate
+            m_c = self.right_image.coordinate
+        
+            dm1 = compute_dm(m_a, m_b)
+            dm2 = compute_dm(m_b, m_c)
+
+            dm = self.spring*(dm2-dm1)
+ 
+            self.force[0] += dm*t[0]
+            self.force[1] += dm*t[1]
+            self.force[2] += dm*t[2]
+
+        self.force.shape=(-1,)
+        h.shape=(-1,)
+        t.shape=(-1,)
+        
+    
+    def move(self, dt):
+        if self.left_image is None or self.right_image is None:
+            return 0
+        
+        self.coordinate += self.force*dt
+        
+        normalise(self.coordinate)
+        
+        self.update_effective_field()
+        
+        dm = (self.force*dt).reshape((3, -1))
+        max_dm = np.max(np.sqrt(np.sum(dm**2, axis=0))) # max of L2-norm
+        max_dmdt = max_dm / dt
+        
+        return max_dmdt
+        
+    
 class NEB(object):
     """
     Nudged elastic band methods.
@@ -31,109 +151,128 @@ class NEB(object):
     
     """
     
-    def __init__(self, mesh, images_num=10, Ms=8e5, unit_length=1, pbc=None, name='unnamed'):
+    def __init__(self, sim, initial_images, interpolations, spring=5e4, name='unnamed'):
         """
           *Arguments*
           
-              mesh: a dolfin mesh
+              sim: the Simulation class
               
-              images_num: images number used in the NEB method (initial and final states are not included)
+              initial_images: a list contain the initial value, which can have 
+              any of the forms accepted by the function 'finmag.util.helpers.
+              vector_valued_function', for example, 
               
-              Ms: Saturation magnetisation  (in A/m)
+                  initial_images = [(0,0,1), (0,0,-1)]
+                  
+              or with given defined function 
+                  
+                  def init_m(pos):
+                      x=pos[0]
+                      if x<10:
+                          return (0,1,1)
+                      return (-1,0,0)
+            
+                  initial_images = [(0,0,1), (0,0,-1), init_m ]
+                
+              are accepted forms.
+              
+              interpolations : a list only contain integers and the length of 
+              this list should equal to the length of the initial_images minus 1,
+              i.e., len(interpolations) = len(initial_images) - 1
           
         """
         
-        self.mesh = mesh
-        self.unit_length = unit_length
-        self.images_num = images_num
-        
-        self.Ms = Ms
-        
-        self.pbc = pbc
-        if pbc == '2d':
-            self.pbc = PeriodicBoundary2D(mesh)
-        elif pbc == '1d':
-            self.pbc = PeriodicBoundary1D(mesh)
-            
+        self.sim = sim
         self.name = name
         
-        self.m_init = None
-        self.m_final = None
-        self.integrator = None
-        self.generate_images = False 
+        self._m = sim.llg._m
         
-        self.S1 = df.FunctionSpace(mesh, "Lagrange", 1, constrained_domain=self.pbc)
-        self.S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3, constrained_domain=self.pbc)
+        self.initial_images = initial_images
+        self.interpolations = interpolations
         
-        self._m = df.Function(self.S3)
-        self.effective_field = EffectiveField(self.S3)
+        if len(interpolations)!=len(initial_images)-1:
+            raise RuntimeError("""the length of interpolations should equal to 
+                the length of the initial_images minus 1, i.e., 
+                len(interpolations) = len(initial_images) -1""")
         
-        self.nxyz = len(self._m.vector())
+        self.image_num = len(initial_images) + sum(interpolations)
+        self.image_list=[]
         
-        self.all_m = np.zeros(self.nxyz*images_num)
-        self.Heff = np.zeros(self.all_m.shape)
-        self.tangents = np.zeros(self.all_m.shape)
-        self.images_energy = np.zeros(images_num)
+        for i in range(self.image_num):
+            self.image_list.append(NEB_Image(sim, spring=spring))
         
-        #print self.all_m
         
-        #self.set_default_values()
-
-        self.step = 1
-        self.t = 0
-        self.ode_count=1
+        for i,image in enumerate(self.image_list):
+            if i>0 and i<self.image_num-1:
+                image.left_image=self.image_list[i-1]
+                image.right_image=self.image_list[i+1]
+            
+        self.initial_image_coordinates()
+        
+        self.step = 0
+        
+        self.tablewriter = Tablewriter('%s_energy.ndt'%name, self, override=True)
+        
+        self.tablewriter.entities = {
+            'step': {'unit': '<1>',
+                     'get': lambda sim: sim.step,
+                     'header': 'steps'},
+            'energy': {'unit': '<J>',
+                       'get': lambda sim: sim.energy,
+                       'header': ['image_%d'%i for i in range(self.image_num)]}
+            }
+        
+        keys = self.tablewriter.entities.keys()
+        keys.remove('step')
+        
+        self.tablewriter.entity_order = ['step'] + sorted(keys)
+        
         
     
-    def add(self, interaction):
+    def linear_interpolation_two(self, m0, m1, n):
+        theta0, phi0 = self.cartesian2spherical(m0)
+        theta1, phi1 = self.cartesian2spherical(m1)
+        dtheta = (theta1-theta0)/(n+1)
+        dphi = (phi1-phi0)/(n+1)
         
-        if interaction.name in [i.name for i in self.effective_field.interactions]:
-            raise ValueError("Interaction names must be unique, but an "
-                             "interaction with the same name already "
-                             "exists: {}".format(interaction.name))
-
-        log.debug("Adding interaction %s to simulation '%s'" % (str(interaction),self.name))
-        interaction.setup(self.S3, self._m, self.Ms, self.unit_length)
-        self.effective_field.add(interaction)
+        coords=[]
+        for i in range(n):
+            theta = theta0+(i+1)*dtheta
+            phi = phi0+(i+1)*dphi
+            coords.append(self.spherical2cartesian(theta,phi))
+        
+        return coords
+            
     
+    def initial_image_coordinates(self):
         
-    def set_m_init(self, value):
-        """
-        Set the initial magnetisation.
-
-        `value` can have any of the forms accepted by the function
-        'finmag.util.helpers.vector_valued_function' (see its
-        docstring for details).
-
-        """
-        self.m_init = helpers.vector_valued_function(value, self.S3, normalise=True).vector().array()
-        self._m.vector().set_local(self.m_init)
-        self.effective_field.update()
-        self.init_energy = self.effective_field.total_energy()
+        image_id = 0
         
+        for i in range(len(self.interpolations)):
+            
+            n = self.interpolations[i]
+            
+            self.sim.set_m(self.initial_images[i])
+            m0 = self.sim.m
+            
+            self.image_list[image_id].coordinate[:]=m0[:]
+            image_id = image_id + 1
+            
+            self.sim.set_m(self.initial_images[i+1])
+            m1 = self.sim.m
+            
+            coords = self.linear_interpolation_two(m0,m1,n)
+            
+            for coord in coords:
+                self.image_list[image_id].coordinate[:]=coord[:]
+                image_id = image_id + 1
+                
+            if image_id == len(self.image_list)-1:
+                self.image_list[image_id].coordinate[:]=m1[:]
         
-    def set_m_final(self, value):
-        """
-        Set the final magnetisation.
-
-        `value` can have any of the forms accepted by the function
-        'finmag.util.helpers.vector_valued_function' (see its
-        docstring for details).
-
-        """
-        self.m_final = helpers.vector_valued_function(value, self.S3, normalise=True).vector().array()
-        self._m.vector().set_local(self.m_final)
-        self.effective_field.update()
-        self.final_energy = self.effective_field.total_energy()
-        
-    def normalise(self, a):
-        """
-        normalise the array a.
-        """
-        a.shape=(3, -1)
-        lengths = np.sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2])
-        a[:] /= lengths
-        a.shape=(-1, )
-    
+        for image in self.image_list:
+            image.update_effective_field()        
+            
+                        
     def cartesian2spherical(self, xyz):
         """
         suppose magnetisation length is normalised
@@ -147,209 +286,84 @@ class NEB(object):
     
     
     def spherical2cartesian(self, theta, phi):
-        mxyz = np.zeros(self.nxyz)
+        mxyz = np.zeros(3*len(theta))
         mxyz.shape=(3,-1)
         mxyz[0,:] = np.sin(theta)*np.cos(phi)
         mxyz[1,:] = np.sin(theta)*np.sin(phi)
         mxyz[2,:] = np.cos(theta)
         mxyz.shape=(-1,)
         return mxyz
-        
     
-    def generate_init_images(self):
-        if self.m_init is None: 
-            raise RuntimeError("Please set the initial magnetisation!")
-        if self.m_final is None: 
-            raise RuntimeError("Please set the final magnetisation!")
-        
-        theta0, phi0 = self.cartesian2spherical(self.m_init)
-        theta1, phi1 = self.cartesian2spherical(self.m_final)
-        dtheta = (theta1-theta0)/(self.images_num+1)
-        dphi = (phi1-phi0)/(self.images_num+1)
-        
-        self.all_m.shape=(self.images_num,-1)
-        for i in range(self.images_num):
-            theta = theta0+(i+1)*dtheta
-            phi = phi0+(i+1)*dphi
-            self.all_m[i, :] = self.spherical2cartesian(theta,phi)
-        
-        self.all_m.shape=(-1,)
+    def compute_distance(self):
+        self.distance = []
+        for i,image in enumerate(self.image_list):
+            if i<self.image_num-1:
+                m_a = image.coordinate
+                m_b = self.image_list[i+1].coordinate
+                dm = compute_dm(m_a, m_b)
+                self.distance.append(dm)
 
     def save_vtks(self):
+        
         vtk_saver = VTKSaver('vtk/%s_%d.pvd'%(self.name, self.step), overwrite=True)
         
-        self.all_m.shape=(self.images_num,-1)
-        
-        self._m.vector().set_local(self.m_init)
-        vtk_saver.save_field(self._m, 0)
-        
-        for i in range(self.images_num):
-            self._m.vector().set_local(self.all_m[i, :])
-            # set t =0, it seems that the parameter time is only for the interface? 
+        for image in self.image_list:
+            
+            self._m.vector().set_local(image.coordinate)
+            
             vtk_saver.save_field(self._m, 0)
             
-        self._m.vector().set_local(self.m_final)
-        vtk_saver.save_field(self._m, 0)
-        self.all_m.shape=(-1,)
     
-    def create_integrator(self, reltol=1e-6, abstol=1e-6, nsteps=10000):
-
-        integrator = scipy_ode(self.rhs_callback)
-        # the normalise doesn't have any effect if 'vode' is used
-        integrator.set_integrator('dopri5') 
-        integrator.set_initial_value(self.all_m, 0)
+    def step_relax(self, dt):
         
-        self.integrator = integrator
-    
-    
-    def compute_effective_field(self, y):
-        y.shape=(self.images_num, -1)
-        self.Heff.shape = (self.images_num,-1)
-        
-        for i in range(self.images_num):
-            # normalise y first
-            self.normalise(y[i])
-            self._m.vector().set_local(y[i])
-            self.effective_field.update()
-            self.Heff[i,:] = self.effective_field.H_eff
-            self.images_energy[i] = self.effective_field.total_energy()
-        
-        y.shape=(-1,)
-        #self.Heff.shape=(-1,)
-        
-    def compute_tangents(self, y):
-        y.shape=(self.images_num, -1)
-        self.tangents.shape = (self.images_num,-1)
-                
-        for i in range(self.images_num):
+        dm_dts=[]
+        energy = []
+        for image in self.image_list:
+            image.update_effective_field()
+            image.compute_force()
             
-            if i==0:
-                energy_a = self.init_energy
-                m_a = self.m_init
-            else:
-                energy_a = self.images_energy[i-1]
-                m_a = y[i-1]
-                
-            if i==self.images_num-1:
-                energy_b = self.final_energy
-                m_b = self.m_final
-            else:
-                energy_b = self.images_energy[i+1]
-                m_b = y[i+1]
+            energy.append(image.energy)
             
-            energy=self.images_energy[i]
-            if energy_a<energy and energy<energy_b:
-                tangent = m_b-y[i]
-            elif energy_a>energy and energy>energy_b:
-                tangent = m_a-y[i]
-            else:
-                tangent = m_b - m_a
+            dm_dt=image.move(dt)
+            
+            dm_dts.append(dm_dt)
+            
+        self.energy=np.array(energy)
         
-            self.tangents[i,:]=helpers.fnormalise(tangent)
-        
-        y.shape=(-1,)
+        self.step += 1
+        return np.max(dm_dts)
         
     
-    def rhs_callback(self, t, y):
-        
-        self.ode_count+=1
+    def relax(self, dt=1e-7, save_ndt_steps=10, save_vtk_steps=100, max_steps=500):
 
-        default_timer.start("sundials_rhs", self.__class__.__name__)
-        self.compute_effective_field(y)
-        self.compute_tangents(y)
-
-        self.Heff.shape = (self.images_num,-1)
-
-        for i in range(self.images_num):
-            h = self.Heff[i]
-            t = self.tangents[i]
-            h.shape=(3,-1)
-            t.shape=(3,-1)
-            ht = h[0]*t[0] + h[1]*t[1] + h[2]*t[2]
-            h[0] = h[0] - ht*t[0]
-            h[1] = h[1] - ht*t[0]
-            h[2] = h[2] - ht*t[0]
-
-            h.shape=(-1,)
-            t.shape=(-1,)
-            
-        self.Heff.shape=(-1,)
-
-        default_timer.stop("sundials_rhs", self.__class__.__name__)
-        
-        return self.Heff
-    
-    def run_until(self, t):
-        r = self.integrator
-        
-        while r.successful() and r.t < t:
-            r.integrate(t)
-            
-        m = self.all_m
-        y = r.y
-        
-        m.shape=(self.images_num,-1)
-        y.shape=(self.images_num,-1)
-        max_dmdt=0
-        for i in range(self.images_num):
-            dmdt=helpers.compute_dmdt(self.t,m[i],t,y[i])
-            if dmdt>max_dmdt:
-                max_dmdt = dmdt
-        
-        m.shape=(-1,)
-        y.shape=(-1,)
-        
-        self.all_m[:] = r.y[:]
-        self.t=t
-        
-        log.info("max_dmdt at t={} s is {:.3g}.".format(self.t,max_dmdt))
-        
-        return max_dmdt
-        
-    
-    def relax(self, dt=1e-7, stopping_dmdt=1e4, max_steps=1000):
-        if not self.generate_images:
-            self.generate_init_images()
-            self.generate_images=True
-            
-        if self.integrator is None:
-            self.create_integrator()
-            
-        log.debug("Relaxation parameters: stopping_dmdt={} (degrees per nanosecond), "
-                  "time_step={} s, max_steps={}.".format(stopping_dmdt, dt, max_steps))
+        log.debug("Relaxation parameters "
+                  "time_step={} s, max_steps={}.".format(dt, max_steps))
          
         for i in range(max_steps):
-            dmdt=self.run_until((i+1)*dt)
-            if dmdt<stopping_dmdt:
-                break
-            self.step+=1
+            max_dmdt=self.step_relax(dt)
+            if i%save_ndt_steps==0:
+                self.tablewriter.save()
+            if i%save_vtk_steps==0:
+                self.save_vtks()
+            log.info("max_dmdt at t={} s is {:.3g}.".format(dt*self.step,max_dmdt))
         
-        log.info("Relaxation finished at time t = {:.2g}, steps={}.".format(self.t, self.step))
-        
+        #log.info("Relaxation finished at time t = {:.2g}, ".format(self.t, self.step, self.ode_count))
         self.save_vtks()
         
         
-
-
+        
 
 if __name__ == '__main__':
-    from finmag.energies import Exchange, DMI, Demag, Zeeman, UniaxialAnisotropy
-    mesh = df.RectangleMesh(0,0,10,10,1,1)
     
+    import finmag
     
-    neb = NEB(mesh, Ms=8.6e5, images_num=15, unit_length=1e-9)
+    sim = finmag.example.barmini()
     
-    neb.set_m_init((-1,0,0))
-    neb.set_m_final((1,0,0))
+    init_images=[(0,0,-1),(1,1,0),(0,0,1)]
+    interpolations = [5,4]
     
-    neb.add(UniaxialAnisotropy(-1e5, (0, 1, 1), name='Kp'))
-    neb.add(UniaxialAnisotropy(1e4, (1, 0, 0), name='Kx'))
-    #neb.add(UniaxialAnisotropy(1e4, (0, 1, 0), name='Ky'))
+    neb = NEB(sim, init_images, interpolations)
     
-    #neb.save_vtks()
-
+    neb.save_vtks()
     neb.relax()
-    
-    #df.plot(mesh)
-    #df.interactive()
     
