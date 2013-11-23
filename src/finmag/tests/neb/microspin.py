@@ -32,14 +32,11 @@ def create_simulation(mesh):
 def relax_system(sim):
     
     init_images=[(-1,0,0),(0,1,1),(1,0,0)]
-    interpolations = [8,8]
+    interpolations = [10,8]
     
     neb = NEB(sim, init_images, interpolations, name='neb')
 
-    neb.relax(max_steps=500)
-    
-    #neb.relax(max_steps=100,dt=1e-7)
-
+    neb.relax(max_steps=500, save_ndt_steps=50, dt=1e-7)
 
     
 def plot_data():
@@ -66,7 +63,6 @@ def plot_data():
     
     ax.add_collection3d(poly,zs=data[:,0], zdir='x')
     
-    
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
@@ -88,7 +84,6 @@ def plot_data_2d():
     plt.grid()
     
     fig.savefig('last_energy.pdf')
-    
         
 
 if __name__ == "__main__":
