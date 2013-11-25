@@ -39,7 +39,7 @@ def test_compute_generalised_eigenproblem_matrices_single_sphere(tmpdir):
 
     A, M, _, _ = compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9)
 
-    n_values = 6
+    n_values = 2
     n_values_export = 0
     omega, w = compute_normal_modes_generalised(A, M, n_values=n_values, discard_negative_frequencies=False)
     assert(len(omega) == n_values)
