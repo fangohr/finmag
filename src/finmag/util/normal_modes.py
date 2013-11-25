@@ -583,7 +583,14 @@ def plot_spatially_resolved_normal_mode(sim, w, slice_z='z_max', components='xyz
     #parent_vertex_indices = surface_layer.data().array("parent_vertex_indices")
     
     
-    parent_vertex_indices = surface_layer.data().mesh_function('parent_vertex_indices').array()
+    try:
+        # Legacy syntax (for dolfin <= 1.2 or so).
+        # TODO: This should be removed in the future once dolfin 1.3 is released!
+        parent_vertex_indices = surface_layer.data().mesh_function('parent_vertex_indices').array()
+    except RuntimeError:
+        # This is the correct syntax now, see:
+        # http://fenicsproject.org/qa/185/entity-mapping-between-a-submesh-and-the-parent-mesh
+        parent_vertex_indices = surface_layer.data().array('parent_vertex_indices', 0)
 
     #import IPython
     #IPython.embed()
