@@ -109,12 +109,10 @@ class Tablewriter(object):
             for entityname in self.entity_order:
                 value = self.entities[entityname]['get'](self.sim)
                 if isinstance(value, np.ndarray):
-                    if len(value) == 3:  # 3d vector
-                        for i in range(3):
-                            f.write(self.float_format % value[i])
-                    else:
-                        msg = "Can only deal with 3d-numpy arrays so far, but shape is %s" % value.shape
-                        raise NotImplementedError(msg)
+                    
+                    for v in value:
+                        f.write(self.float_format % v)
+                    
                 elif isinstance(value, float) or isinstance(value, int):
                     f.write(self.float_format % value)
                 else:
