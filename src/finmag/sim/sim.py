@@ -1215,6 +1215,10 @@ class NormalModeSimulation(Simulation):
         self.eigenfreqs = None
         self.eigenvecs = None
 
+        # Internal variables to store the matrices which define the generalised eigenvalue problem
+        self.A = None
+        self.M = None
+
     def run_ringdown(self, t_end, alpha, H_ext=None, reset_time=True, clear_schedule=True,
                      save_ndt_every=None, save_vtk_every=None, save_m_every=None,
                      vtk_snapshots_filename=None, m_snapshots_filename=None,
@@ -1486,7 +1490,8 @@ class NormalModeSimulation(Simulation):
                                                    num_frames_per_cycle=num_frames_per_cycle)
 
     def compute_normal_modes(self, n_values=10, discard_negative_frequencies=True, filename_mat_A=None, filename_mat_M=None, use_generalised=True,
-                             tol=1e-8, sigma=None, which='LM', v0=None, ncv=None, maxiter=None, Minv=None, OPinv=None, mode='normal'):
+                             tol=1e-8, sigma=None, which='LM', v0=None, ncv=None, maxiter=None, Minv=None, OPinv=None, mode='normal',
+                             force_recompute_matrices=False):
         """
         Compute the eigenmodes of the simulation by solving a generalised
         eigenvalue problem and return the computed eigenfrequencies and
@@ -1502,27 +1507,37 @@ class NormalModeSimulation(Simulation):
 
         n_values:
 
-            The number of eigenmodes to compute (returns the `n_values` smallest ones).
+            The number of eigenmodes to compute (returns the
+            `n_values` smallest ones).
 
         discard_negative_frequencies:
 
             For every eigenmode there is a corresponding mode with the
-            negative frequency which otherwise looks exactly the same. If
-            `discard_negative_frequencies` is True (the default) then these
-            are discarded.
+            negative frequency which otherwise looks exactly the same.
+            If `discard_negative_frequencies` is True (the default)
+            then these are discarded.
 
         filename_mat_A:
         filename_mat_M:
 
-            If given (default: None), the matrices A and M which define the
-            generalised eigenvalue problem are saved to files with the specified
-            names. This can be useful for debugging or later post-processing to
-            avoid having to recompute these matrices.
+            If given (default: None), the matrices A and M which
+            define the generalised eigenvalue problem are saved to
+            files with the specified names. This can be useful for
+            debugging or later post-processing to avoid having to
+            recompute these matrices.
 
         use_generalised:
 
-            If True (the default), solve a generalised eigenvalue problem. This
-            is the only supported method at the moment.
+            If True (the default), solve a generalised eigenvalue
+            problem. This is the only supported method at the moment.
+
+        force_recompute_matrices:
+
+            If False (the default), the matrices defining the
+            generalised eigenvalue problem are not recomputed if they
+            have been computed before (this dramatically speeds up
+            repeated computation of eigenmodes). Set to True to
+            force recomputation.
 
 
         *Returns*
@@ -1535,10 +1550,11 @@ class NormalModeSimulation(Simulation):
         if use_generalised == False:
             raise NotImplementedError("Only the generalised version is supported at the moment")
 
-        # XXX TODO: If A and M were computed before, save them internally and don't recompute them!
-        #           (We may want a switch 'force_recompute' though.)
-        self.A, self.M, _, _ = compute_generalised_eigenproblem_matrices( \
-            self, frequency_unit=1e9, filename_mat_A=filename_mat_A, filename_mat_M=filename_mat_M)
+        if (self.A == None or self.M == None) or force_recompute_matrices:
+            self.A, self.M, _, _ = compute_generalised_eigenproblem_matrices( \
+                self, frequency_unit=1e9, filename_mat_A=filename_mat_A, filename_mat_M=filename_mat_M)
+        else:
+            log.debug('Re-using previously computed eigenproblem matrices.')
 
         omega, w = compute_normal_modes_generalised(self.A, self.M, n_values=n_values, discard_negative_frequencies=discard_negative_frequencies,
                                                     tol=tol, sigma=sigma, which=which, v0=v0, ncv=ncv, maxiter=maxiter, Minv=Minv, OPinv=OPinv, mode=mode)
