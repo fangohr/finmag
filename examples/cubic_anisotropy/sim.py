@@ -4,7 +4,7 @@ from finmag import Simulation
 from finmag.energies import Exchange, CubicAnisotropy
 from finmag.util.consts import mu0
 
-mesh = df.UnitCubeMesh(0, 0, 0, 1, 1, 40, 1, 1, 40)
+mesh = df.BoxMesh(0, 0, 0, 1, 1, 40, 1, 1, 40)
 
 Ms = 876626  # A/m
 A = 1.46e-11  # J/m
@@ -30,6 +30,9 @@ sim.set_m((0, 0, 1))
 sim.add(Exchange(A))
 sim.add(CubicAnisotropy(K1, u1, K2, u2, K3, u3))
 
-mxs = sim.hysteresis(fields, lambda sim: sim.m_average[0])
-np.savetxt("mxs", mxs)
-
+# this is not a hysteresis loop, but just a one-way swipe
+mzs = sim.hysteresis(fields, lambda sim: sim.m_average[2])
+result = np.zeros((250, 2))
+result[:, 0] = fields[:, 2]
+result[:, 1] = mzs
+np.savetxt("hysteresis.txt", result, header="field in A/m and corresponding unit magnetisation in z-direction")
