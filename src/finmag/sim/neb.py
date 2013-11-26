@@ -1,3 +1,4 @@
+import os
 import dolfin as df
 import numpy as np
 import inspect
@@ -6,12 +7,15 @@ import finmag.util.consts as consts
 
 from finmag.util import helpers
 from finmag.energies.effective_field import EffectiveField
-from finmag.util.meshes import nodal_volume
-from finmag.native import llg as native_llg
 from finmag.util.vtk_saver import VTKSaver
 from finmag import Simulation
 
-from finmag.util.fileio import Tablewriter
+from finmag.util.fileio import Tablewriter, Tablereader
+
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.colors import colorConverter
+from matplotlib.collections import PolyCollection, LineCollection
 
 import logging
 log = logging.getLogger(name="finmag")
@@ -21,13 +25,19 @@ ONE_DEGREE_PER_NS = 17453292.5  # in rad/s
 
 def normalise(a):
     """
-    normalise the array a.
+    normalise the n dimensional vector a
+    """
+    length = 1.0/np.linalg.norm(a)
+    a[:] *= length
+
+def normalise_m(a):
+    """
+    normalise the magnetisation length.
     """
     a.shape=(3, -1)
     lengths = np.sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2])
     a[:] /= lengths
     a.shape=(-1, )
-
 
 def cartesian2spherical(xyz):
     """
@@ -60,38 +70,58 @@ def linear_interpolation_two(m0, m1, n):
         theta = theta0+(i+1)*dtheta
         phi = phi0+(i+1)*dphi
         coords.append(spherical2cartesian(theta,phi))
-        
+    
     return coords
 
 
 def compute_dm(m0, m1):
-    dm = (m0-m1).reshape((3, -1))
-    return np.sqrt(np.sum(dm**2, axis=0))
+    dm = m0-m1
+    length = len(dm)
+    dm = np.sqrt(np.sum(dm**2))/length
+    return dm
 
 
 class NEB_Image(object):
     """
     An Image is an object that has its coordinate (magnetisation), and 
-    the object moves in the presence of the force (effective field),
-    Given a short time dt, the new coordinate coord_new is computed by,
+    the object moves in the presence of the force (effective field).
+    
+    For Steepest descents (SD), given a short time dt, the new coordinate 
+    coord_new is computed by,
         
         coord_new = coord_old + F * dt
     
     where F is the force.
     
+    
+    For Quick-min, 
+    
+        coord_new = coord_old + V_old * dt
+        V_new = V_old + F * dt
+    
+    where V is the velocity in the direction of the force (u_F),
+    
+        V = (V * u_F) u_F
+
+    and V = 0 if V * u_F < 0.
+    
     """
-    def __init__(self, sim, spring=5e4, left_image=None, right_image=None):
+    def __init__(self, sim, spring=5e5, left_image=None, right_image=None, disable_tangent=False):
         self._m = sim.llg._m
         self.effective_field = sim.llg.effective_field
         
         self.coordinate = np.zeros(self._m.vector().size())
         self.force = np.zeros(self._m.vector().size())
+        #self.velocity = self.force.copy()
+        #self.force_unit = self.force.copy()
+        self.tangent = self.force.copy()
         self.H_eff = self.force.copy()
         
         self.energy = 0
         self.left_image = left_image
         self.right_image = right_image
         self.spring = spring
+        self.disable_tangent=disable_tangent
     
     def update_effective_field(self):
         self._m.vector().set_local(self.coordinate)
@@ -104,6 +134,9 @@ class NEB_Image(object):
         if self.left_image is None or self.right_image is None:
             return 
         
+        if self.disable_tangent:
+            self.tangent[:] = 0
+            return
         img_a = self.left_image
         img_b = self.right_image
         energy = self.energy
@@ -112,9 +145,9 @@ class NEB_Image(object):
         t2 = img_b.coordinate - self.coordinate
         
         if img_a.energy < energy and energy < img_b.energy:
-            self.tangent = t2
+            self.tangent[:] = t2
         elif img_a.energy > energy and energy > img_b.energy:
-            self.tangent = t1
+            self.tangent[:] = t1
         else:
             e1 = img_a.energy - self.energy
             e2 = img_b.energy - self.energy
@@ -125,13 +158,13 @@ class NEB_Image(object):
             normalise(t2)
             
             if img_b.energy > img_a.energy:
-                self.tangent = t1*min_e + t2*max_e
+                self.tangent[:] = t1*min_e + t2*max_e
             else:
-                self.tangent = t1*max_e + t2*min_e
+                self.tangent[:] = t1*max_e + t2*min_e
         
-        normalise(self.tangent)        
-    
+        normalise(self.tangent)
             
+        
     def compute_force(self):
         if self.left_image is None or self.right_image is None:
             return 
@@ -140,44 +173,28 @@ class NEB_Image(object):
         
         h = self.H_eff
         t = self.tangent
-        
-        h.shape=(3,-1)
-        t.shape=(3,-1)
-        self.force.shape=(3,-1)
                 
-        ht = h[0]*t[0] + h[1]*t[1] + h[2]*t[2]
-        self.force[0] = h[0] - ht*t[0]
-        self.force[1] = h[1] - ht*t[1]
-        self.force[2] = h[2] - ht*t[2]
+        self.force = self.H_eff-np.dot(h,t)*t
+        
         
         if self.spring!=0:
             m_a = self.left_image.coordinate
             m_b = self.coordinate
             m_c = self.right_image.coordinate
-        
-            dm1 = compute_dm(m_a, m_b)
-            dm2 = compute_dm(m_b, m_c)
+                        
+            R = self.spring*(m_c+m_a-2*m_b)
             
-            dm = self.spring*(dm2-dm1)
- 
-            self.force[0] += dm*t[0]
-            self.force[1] += dm*t[1]
-            self.force[2] += dm*t[2]
+            self.force += np.dot(R,t)*t
             
-
-        self.force.shape=(-1,)
-        h.shape=(-1,)
-        t.shape=(-1,)
-        
     def move(self, dt):
         if self.left_image is None or self.right_image is None:
             return 0
         
-        # Actually, what we used here is Euler method
-        # But Euler method is a good method here.
+        # Actually, what we used here something like Euler method
+        # also called Steepest descents (SD), converge slowly in stiff systems
         self.coordinate += self.force*dt
-        
-        normalise(self.coordinate)
+
+        normalise_m(self.coordinate)
         
         self.update_effective_field()
         
@@ -185,15 +202,15 @@ class NEB_Image(object):
         max_dm = np.max(np.sqrt(np.sum(dm**2, axis=0))) # max of L2-norm
         max_dmdt = max_dm/dt
         return max_dmdt
-        
-        
+
+
     
 class NEB(object):
     """
     Nudged elastic band methods.
     """
     
-    def __init__(self, sim, initial_images, interpolations, spring=5e4, name='unnamed'):
+    def __init__(self, sim, initial_images, interpolations=None, spring=5e5, disable_tangent=False, name='unnamed'):
         """
           *Arguments*
           
@@ -220,12 +237,21 @@ class NEB(object):
               interpolations : a list only contain integers and the length of 
               this list should equal to the length of the initial_images minus 1,
               i.e., len(interpolations) = len(initial_images) - 1
+              
+              spring: the spring constant, a float value
+              
+              disable_tangent: this is an experimental option, by disabling the 
+              tangent, we can get a rough feeling about the local energy minima quickly.
+                  
         """
         
         self.sim = sim
         self.name = name
         
         self._m = sim.llg._m
+                
+        if interpolations is None:
+            interpolations=[0 for i in range(len(initial_images)-1)]
         
         self.initial_images = initial_images
         self.interpolations = interpolations
@@ -234,12 +260,15 @@ class NEB(object):
             raise RuntimeError("""the length of interpolations should equal to 
                 the length of the initial_images minus 1, i.e., 
                 len(interpolations) = len(initial_images) -1""")
+            
+        if len(initial_images)<2:
+            raise RuntimeError("""At least two images are needed to be provided.""")
         
         self.image_num = len(initial_images) + sum(interpolations)
         self.image_list=[]
         
         for i in range(self.image_num):
-            self.image_list.append(NEB_Image(sim, spring=spring))
+            self.image_list.append(NEB_Image(sim, spring=spring, disable_tangent=disable_tangent))
         
         
         for i,image in enumerate(self.image_list):
@@ -305,8 +334,12 @@ class NEB(object):
             if image_id == len(self.image_list)-1:
                 self.image_list[image_id].coordinate[:]=m1[:]
         
+        energy=[]
         for image in self.image_list:
-            image.update_effective_field()        
+            image.update_effective_field()
+            energy.append(image.energy)
+            
+        self.energy = np.array(energy)      
             
     def compute_distance(self):
         distance = []
@@ -315,20 +348,27 @@ class NEB(object):
                 m_a = image.coordinate
                 m_b = self.image_list[i+1].coordinate
                 dm = compute_dm(m_a, m_b)
-                distance.append(np.sum(dm)/len(dm))
+                distance.append(dm)
         
         self.distances=np.array(distance)
 
     def save_vtks(self):
         
-        vtk_saver = VTKSaver('vtks/%s_%d.pvd'%(self.name, self.step), overwrite=True)
+        vtk_saver = VTKSaver('vtks_%s/step_%d.pvd'%(self.name, self.step), overwrite=True)
         
         for image in self.image_list:
             
             self._m.vector().set_local(image.coordinate)
             
             vtk_saver.save_field(self._m, 0)
-            
+    
+    def save_npys(self):
+        directory='npys_%s_%d'%(self.name,self.step)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        for i,image in enumerate(self.image_list):
+            name=os.path.join(directory,'image_%d.npy'%i)
+            np.save(name,image.coordinate)
     
     def step_relax(self, dt):
         
@@ -355,8 +395,10 @@ class NEB(object):
 
         log.debug("Relaxation parameters "
                   "time_step={} s, max_steps={}.".format(dt, max_steps))
-         
+        
+                
         for i in range(max_steps):
+                
             max_dmdt=self.step_relax(dt)
             
             if i%save_ndt_steps==0:
@@ -366,13 +408,59 @@ class NEB(object):
                 
             if i%save_vtk_steps==0:
                 self.save_vtks()
-            log.info("max_dmdt at t={} s is {:.3g}.".format(dt*self.step,max_dmdt))
+            log.info("step: {:.3g}, max_dmdt: {:.3g}.".format(self.step,max_dmdt))
         
         #log.info("Relaxation finished at time t = {:.2g}, ".format(self.t, self.step, self.ode_count))
+        self.save_npys()
         self.save_vtks()
         
 
+def plot_energy_3d(ndt_name, key_steps=50):
+    
+    data = np.loadtxt(ndt_name)
+    
+    fig=plt.figure()
+    ax = fig.gca(projection='3d')
+    
+    #image index
+    xs = range(1, len(data[0,:]))
+    
+    steps = data[:,0]
+    
+    if key_steps>len(steps)-1:
+        key_steps = len(steps)-1
+    
+    each_n_step=int(len(steps)/key_steps)
+    
+    if each_n_step<1:
+        each_n_step = 1
+    
+    cc = lambda arg: colorConverter.to_rgba(arg, alpha=0.6)
+    colors = [cc('r'), cc('g'), cc('b'),cc('y')]
+    facecolors = []
+    line_data = []
+    energy_min=np.min(data[:,1:])
+    
+    for i in range(0,len(steps),each_n_step):
+        line_data.append(list(zip(xs, data[i,1:]-energy_min)))
+        facecolors.append(colors[i%4])
         
+    poly = PolyCollection(line_data, facecolors=facecolors)
+    poly.set_alpha(0.7)
+    
+    ax.add_collection3d(poly,zs=data[:,0], zdir='x')
+    
+    
+    ax.set_xlabel('Steps')
+    ax.set_ylabel('images')
+    ax.set_zlabel('Energy (J)')
+    
+    ax.set_ylim3d(0, len(xs)+1)
+    ax.set_xlim3d(0, steps[key_steps])
+    ax.set_zlim3d(0, np.max(data[:,1:]-energy_min))
+    
+    fig.savefig('%s_energy_3d.pdf'%ndt_name[:-4])
+
 
 if __name__ == '__main__':
     
