@@ -9,11 +9,7 @@ logger = logging.getLogger('finmag')
 
 class CubicAnisotropy(EnergyBase):
     """
-    Compute the uniaxial anisotropy field.
-
-    .. math::
-
-        E_{\\text{anis}} = \\int_\\Omega K_1 - (1 - a \\cdot m)^2  dx
+    Compute the cubic anisotropy field.
 
     *Arguments*
         K1, K2, K3
