@@ -1,8 +1,10 @@
 import finmag
 import dolfin as df
 import os
+from finmag.util.mesh_templates import Nanodisk
 
-def disk(relaxed=True, name='normal_modes_nanodisk'):
+
+def disk(d=60, h=10, maxh=5.0, relaxed=True, name='normal_modes_nanodisk'):
     """
     Permalloy nanodisk with diameter d=60 nm, height h=10 nm and mesh
     discretisation maxh=5.0. An external field of strength 100 kA/m is
@@ -10,15 +12,16 @@ def disk(relaxed=True, name='normal_modes_nanodisk'):
     the relaxation which is then removed for the ringdown phase.
 
     """
-    d = 60
-    h = 10
-    maxh = 5.0
-    
     #I don't know it's suitable to move the global definition to local one
     #just try to make the cython happy? 
     MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
-    
-    mesh = df.Mesh(os.path.join(MODULE_DIR, 'disk__d_60__h_10__maxh_5.xml.gz'))
+
+    if d == 60 and h == 10 and maxh == 5.0:
+        # Use precomputed standard mesh
+        mesh = df.Mesh(os.path.join(MODULE_DIR, 'disk__d_60__h_10__maxh_5.xml.gz'))
+    else:
+        mesh = Nanodisk(d=d, h=h).create_mesh(maxh=maxh)
+
 
     # Material parameters for Permalloy
     Ms = 8e5
@@ -30,7 +33,10 @@ def disk(relaxed=True, name='normal_modes_nanodisk'):
     sim = finmag.normal_mode_simulation(mesh, Ms, m_init, alpha=alpha_relax, unit_length=1e-9, A=A, H_ext=H_ext_relax)
 
     if relaxed:
-        sim.restart(os.path.join(MODULE_DIR, 'disk_relaxed.npz'))
+        if d == 60 and h == 10 and maxh == 5.0:
+            sim.restart(os.path.join(MODULE_DIR, 'disk_relaxed.npz'))
+        else:
+            sim.relax()
 
     alpha_ringdown = 0.01
     H_ext_ringdown = [1e5, 0, 0]
