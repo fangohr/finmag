@@ -3,6 +3,7 @@ from demag import Demag
 from energy_base import EnergyBase
 from exchange import Exchange
 from anisotropy import UniaxialAnisotropy
+from cubic_anisotropy import CubicAnisotropy
 from zeeman import Zeeman, TimeZeeman, DiscreteTimeZeeman, OscillatingZeeman
 from dmi import DMI
 from thin_film_demag import ThinFilmDemag
