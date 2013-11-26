@@ -174,7 +174,7 @@ def FFT_m(filename, t_step=None, t_ini=None, t_end=None, subtract_values='averag
 
 
 def _plot_spectrum(fft_freq, fft_mx, fft_my, fft_mz, components="xyz", log=True,
-                  xlim=None, ticks=21, figsize=None, title="", outfilename=None):
+                  xlim=None, ylim=None, ticks=21, figsize=None, title="", outfilename=None):
     """
     Internal helper function to plot certain components of the
     spectrum. This is only separated out from plot_FFT_m so that it
@@ -195,6 +195,7 @@ def _plot_spectrum(fft_freq, fft_mx, fft_my, fft_mz, components="xyz", log=True,
     ax.set_ylabel('Amplitude')
 
     ax.set_xlim(xlim)
+    ax.set_ylim(ylim)
     xmin, xmax = ax.get_xlim()
     ax.set_xticks(np.linspace(xmin, xmax, ticks))
     plt.legend()
@@ -210,7 +211,7 @@ def _plot_spectrum(fft_freq, fft_mx, fft_my, fft_mz, components="xyz", log=True,
 
 
 def plot_FFT_m(ndt_filename, t_step=None, t_ini=None, t_end=None, subtract_values='average', components="xyz",
-               log=True, xlim=None, ticks=21, figsize=None, title="", outfilename=None):
+               log=True, xlim=None, ylim=None, ticks=21, figsize=None, title="", outfilename=None):
     """
     Plot the frequency spectrum of the components of the magnetisation m.
 
@@ -235,7 +236,7 @@ def plot_FFT_m(ndt_filename, t_step=None, t_ini=None, t_end=None, subtract_value
 
     fft_freq, fft_mx, fft_my, fft_mz = FFT_m(ndt_filename, t_step, t_ini=t_ini, t_end=t_end, subtract_values=subtract_values)
 
-    return _plot_spectrum(fft_freq, fft_mx, fft_my, fft_mz, components=components, log=log, xlim=xlim, ticks=ticks, figsize=figsize, title=title, outfilename=outfilename)
+    return _plot_spectrum(fft_freq, fft_mx, fft_my, fft_mz, components=components, log=log, xlim=xlim, ylim=ylim, ticks=ticks, figsize=figsize, title=title, outfilename=outfilename)
 
 
 def find_peak_near_frequency(f_approx, fft_freqs, fft_m_xyz):
