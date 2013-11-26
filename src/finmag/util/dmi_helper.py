@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def find_skyrmion_center_2d(fun, point_up=False):
     """
     Find the centre the skyrmion, suppose only one skyrmion
@@ -46,10 +47,3 @@ def find_skyrmion_center_2d(fun, point_up=False):
     center = coods_refine[min_id]
     
     return center[0],center[1]
-    
-    
-    
-if __name__ == '__main__':
-    mesh = df.RectangleMesh(0,0,140,140,70,70)
-    
-
