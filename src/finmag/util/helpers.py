@@ -1629,9 +1629,9 @@ def jpg2avi(jpg_filename, outfilename=None, duration=2, fps=25):
         the image files are called 'foo_0000.jpg', 'foo_0001.jpg', etc.
         then `jpg_filename` should be 'foo.jpg'. Internally, the image
         files are found via a wildcard expression by replacing the suffix
-        '.jpg' with '*.jpg', so the basename could also have been 'foo_.jpg'
-        or even 'f.jpg'. (However, it should be restrictive enough so that
-        only the desired images are found.)
+        ``.jpg`` with ``*.jpg``, so the basename could also have been
+        ``foo_.jpg`` or even ``f.jpg``. (However, it should be restrictive
+        enough so that only the desired images are found.)
 
     outfilename:
 
