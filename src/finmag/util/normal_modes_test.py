@@ -39,7 +39,7 @@ def test_compute_generalised_eigenproblem_matrices_single_sphere(tmpdir):
 
     A, M, _, _ = compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9)
 
-    n_values = 6
+    n_values = 2
     n_values_export = 0
     omega, w = compute_normal_modes_generalised(A, M, n_values=n_values, discard_negative_frequencies=False)
     assert(len(omega) == n_values)
@@ -137,6 +137,24 @@ def test_plot_spatially_resolved_normal_mode(tmpdir):
 
         with pytest.raises(ValueError):
             plot_spatially_resolved_normal_mode(sim, w, plot_powers=False, plot_phases=False)
-            
+
+
+def test_plot_spatially_resolved_normal_mode(tmpdir):
+    os.chdir(str(tmpdir))
+    sim = example.normal_modes.disk()
+    sim.compute_normal_modes(n_values=2)
+
+    sim.plot_spatially_resolved_normal_mode(0, outfilename='normal_mode_00.png')
+    sim.plot_spatially_resolved_normal_mode(1, slice_z='z_min', components='xz',
+                                            figure_title='Title', yshift_title=0.05,
+                                            plot_powers=True, plot_phases=False, num_phase_colorbar_ticks=3,
+                                            cmap_powers=plt.cm.jet, cmap_phases=plt.cm.hsv, vmin_powers=None,
+                                            show_axis_labels=True, show_axis_frames=True, show_colorbars=True, figsize=(5, 3),
+                                            outfilename='normal_mode_01.png', dpi=200)
+
+    assert(os.path.exists('normal_mode_00.png'))
+    assert(os.path.exists('normal_mode_01.png'))
+
+
 if __name__ == '__main__':
     test_compute_generalised_eigenproblem_matrices_single_sphere('.')

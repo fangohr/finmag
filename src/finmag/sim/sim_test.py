@@ -109,7 +109,7 @@ class TestSimulation(object):
         # Probe field at all mesh vertices and at the first vertex;
         # also convert a 1d version of the probed vector following
         # dolfin's coordinate convention.
-        v_probed = self.sim.probe_field("Demag", coords * self.sim.unit_length)
+        v_probed = self.sim.probe_field("Demag", coords)
         v_probed_1d = np.concatenate([v_probed[:, 0],
                                       v_probed[:, 1],
                                       v_probed[:, 2]])
@@ -137,8 +137,8 @@ class TestSimulation(object):
             # point because this used to lead to a very subtle bug.
             [0, 0, 0],
             [0.0, 0.0, 0.0],  # same point again but with float coordinates
-            [1e-9, 1e-9, -0.5e-9],
-            [-1.3e-9, 0.02e-9, 0.3e-9]]
+            [1, 1, -0.5],
+            [-1.3, 0.02, 0.3]]
 
         # Probe the magnetisation at the given points
         m_probed_vals = [sim.probe_field("m", pt) for pt in probing_pts]
@@ -148,7 +148,7 @@ class TestSimulation(object):
             assert(np.allclose(v, m_init))
 
         # Probe at point outside the mesh
-        m_probed_outside = sim.probe_field("m", [5e-9, -6e-9,  1e-9])
+        m_probed_outside = sim.probe_field("m", [5, -6,  1])
         assert((np.ma.getmask(m_probed_outside) == True).all())
 
     def test_probe_nonconstant_m_at_individual_points(self):
@@ -165,10 +165,10 @@ class TestSimulation(object):
         # Probe the magnetisation along two lines parallel to the x-axis.
         # We choose the limits just inside the mesh boundaries to prevent
         # problems with rounding issues.
-        xmin = 0.01 * unit_length
-        xmax = 0.99 * unit_length
-        y0 = 0.2 * unit_length
-        z0 = 0.4 * unit_length
+        xmin = 0.01
+        xmax = 0.99
+        y0 = 0.2
+        z0 = 0.4
         pts1 = [[x, 0, 0] for x in np.linspace(xmin, xmax, 20)]
         pts2 = [[x, y0, z0] for x in np.linspace(xmin, xmax, 20)]
         probing_pts = np.concatenate([pts1, pts2])
@@ -181,8 +181,8 @@ class TestSimulation(object):
             m = m_probed_vals[i]
             pt = probing_pts[i]
             x = pt[0]
-            m_expected = np.array([cos((x / unit_length)*pi),
-                                   sin((x / unit_length)*pi),
+            m_expected = np.array([cos(x*pi),
+                                   sin(x*pi),
                                    0.0])
             assert(np.linalg.norm(m - m_expected) < TOL)
 
@@ -203,7 +203,7 @@ class TestSimulation(object):
         pts = np.array([[(X[i, j], Y[i,j], z) for j in xrange(ny)] for i in xrange(nx)])
 
         # Probe the field
-        res = sim.probe_field('m', pts * sim.unit_length)
+        res = sim.probe_field('m', pts)
 
         # Check that 'res' has the right shape and values (the field vectors
         # should be constant and equal to [1/sqrt(2), 0, 1/sqrt(2)].
