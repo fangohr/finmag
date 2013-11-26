@@ -173,7 +173,7 @@ def FFT_m(filename, t_step=None, t_ini=None, t_end=None, subtract_values='averag
     return rfft_freqs, fft_mx, fft_my, fft_mz
 
 
-def _plot_spectrum(fft_freq, fft_mx, fft_my, fft_mz, components="xyz", log=True,
+def _plot_spectrum(fft_freq, fft_mx, fft_my, fft_mz, components="xyz", log=False,
                   xlim=None, ylim=None, ticks=21, figsize=None, title="", outfilename=None):
     """
     Internal helper function to plot certain components of the
@@ -211,7 +211,7 @@ def _plot_spectrum(fft_freq, fft_mx, fft_my, fft_mz, components="xyz", log=True,
 
 
 def plot_FFT_m(ndt_filename, t_step=None, t_ini=None, t_end=None, subtract_values='average', components="xyz",
-               log=True, xlim=None, ylim=None, ticks=21, figsize=None, title="", outfilename=None):
+               log=False, xlim=None, ylim=None, ticks=21, figsize=None, title="", outfilename=None):
     """
     Plot the frequency spectrum of the components of the magnetisation m.
 
