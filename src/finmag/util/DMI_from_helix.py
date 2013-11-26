@@ -292,9 +292,9 @@ if __name__ == "__main__":
                                           # (J/m)
     Ms = 1.56e5                           # Magnetisation Saturaton (A/m)
     l = 22e-9                             # Observed helix length (m)
-    H = np.array([1., 0., 0.]) * ms * 0.  # External magnetic field strength\
+    H = np.array([1., 0., 0.]) * Ms * 0.  # External magnetic field strength\
                                           # (A/m)
-    D0 = 4 * np.pi * a / l                # Dzyaloshinkii-Moriya exchange\
+    D0 = 4 * np.pi * A / l                # Dzyaloshinkii-Moriya exchange\
                                           # energy constant (J/m^2)
 
     lFound = Find_Helix_Length(D0, A, Ms, H)
