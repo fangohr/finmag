@@ -21,7 +21,8 @@ from finmag.util.meshes import mesh_info, mesh_volume, plot_mesh, plot_mesh_with
 from finmag.util.fileio import Tablewriter, FieldSaver
 from finmag.util import helpers
 from finmag.util.vtk_saver import VTKSaver
-from finmag.util.fft import FFT_m, plot_FFT_m, find_peak_near_frequency, _plot_spectrum, export_normal_mode_animation_from_ringdown
+from finmag.util.fft import power_spectral_density
+#from finmag.util.fft import power_spectral_density, plot_FFT_m, find_peak_near_frequency, _plot_spectrum, export_normal_mode_animation_from_ringdown
 from finmag.util.normal_modes import compute_generalised_eigenproblem_matrices, compute_normal_modes_generalised, export_normal_mode_animation, plot_spatially_resolved_normal_mode
 from finmag.util.helpers import plot_dynamics, pvd2avi
 from finmag.sim.hysteresis import hysteresis as hyst, hysteresis_loop as hyst_loop
