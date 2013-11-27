@@ -21,8 +21,7 @@ from finmag.util.meshes import mesh_info, mesh_volume, plot_mesh, plot_mesh_with
 from finmag.util.fileio import Tablewriter, FieldSaver
 from finmag.util import helpers
 from finmag.util.vtk_saver import VTKSaver
-from finmag.util.fft import power_spectral_density
-#from finmag.util.fft import power_spectral_density, plot_FFT_m, find_peak_near_frequency, _plot_spectrum, export_normal_mode_animation_from_ringdown
+from finmag.util.fft import power_spectral_density, plot_power_spectral_density, find_peak_near_frequency, _plot_spectrum, export_normal_mode_animation_from_ringdown
 from finmag.util.normal_modes import compute_generalised_eigenproblem_matrices, compute_normal_modes_generalised, export_normal_mode_animation, plot_spatially_resolved_normal_mode
 from finmag.util.helpers import plot_dynamics, pvd2avi
 from finmag.sim.hysteresis import hysteresis as hyst, hysteresis_loop as hyst_loop
@@ -1325,8 +1324,8 @@ class NormalModeSimulation(Simulation):
                 "call sim.run_ringdown() or provide the argument 't_step' "
                 "explicitly.")
 
-        self.fft_freqs, self.fft_mx, self.fft_my, self.fft_mz = \
-            FFT_m(filename, t_step=t_step, **kwargs)
+        self.psd_freqs, self.psd_mx, self.psd_my, self.psd_mz = \
+            power_spectral_density(filename, t_step=t_step, **kwargs)
 
     def plot_spectrum(self, t_step=None, t_ini=None, t_end=None, subtract_values='average',
                       components="xyz", xlim=None, ticks=5, figsize=None, title="",
@@ -1334,11 +1333,12 @@ class NormalModeSimulation(Simulation):
         """
         Plot the normal mode spectrum of the simulation.
 
-        This is a convenience wrapper around finmag.util.fft.plot_FFT_m
-        and accepts the same keyword arguments, but provides sensible
-        defaults for some of them so that it is more convenient to use.
-        For example, `ndt_filename` will be the simulation's .ndt file
-        by default, and t_step will be taken from the value of the
+        This is a convenience wrapper around the function
+        finmag.util.fft.plot_power_spectral_density. It accepts the
+        same keyword arguments, but provides sensible defaults for
+        some of them so that it is more convenient to use. For
+        example, `ndt_filename` will be the simulation's .ndt file by
+        default, and t_step will be taken from the value of the
         argument `save_ndt_every` when sim.run_ringdown() was run.
 
         The default method to compute the spectrum is the one described
@@ -1363,16 +1363,16 @@ class NormalModeSimulation(Simulation):
         """
         self._compute_spectrum(t_step=t_step, t_ini=t_ini, t_end=t_end, subtract_values=subtract_values, use_averaged_m=use_averaged_m)
 
-        fig = _plot_spectrum(self.fft_freqs, self.fft_mx, self.fft_my, self.fft_mz,
+        fig = _plot_spectrum(self.psd_freqs, self.psd_mx, self.psd_my, self.psd_mz,
                              components=components, xlim=xlim, ticks=ticks,
                              figsize=figsize, title=title, outfilename=outfilename)
         return fig
 
-    def _get_fft_component(self, component):
+    def _get_psd_component(self, component):
         try:
-            res = {'x': self.fft_mx,
-                   'y': self.fft_my,
-                   'z': self.fft_mz
+            res = {'x': self.psd_mx,
+                   'y': self.psd_my,
+                   'z': self.psd_mz
                    }[component]
         except KeyError:
             raise ValueError("Argument `component` must be exactly one of 'x', 'y', 'z'.")
@@ -1390,12 +1390,12 @@ class NormalModeSimulation(Simulation):
         if not isinstance(component, types.StringTypes):
             raise TypeError("Argument 'component' must be of type string.")
 
-        fft_cmpnt = self._get_fft_component(component)
-        if self.fft_freqs == None or self.fft_mx == None or \
-                self.fft_my ==None or self.fft_mz == None:
+        psd_cmpnt = self._get_psd_component(component)
+        if self.psd_freqs == None or self.psd_mx == None or \
+                self.psd_my ==None or self.psd_mz == None:
             self._compute_spectrum(self, use_averaged_m=use_averaged_m)
 
-        return find_peak_near_frequency(f_approx, self.fft_freqs, fft_cmpnt)
+        return find_peak_near_frequency(f_approx, self.psd_freqs, psd_cmpnt)
 
     def plot_peak_near_frequency(self, f_approx, component, **kwargs):
         """
@@ -1409,9 +1409,9 @@ class NormalModeSimulation(Simulation):
 
         """
         peak_freq, peak_idx = self.find_peak_near_frequency(f_approx, component)
-        fft_cmpnt = self._get_fft_component(component)
+        psd_cmpnt = self._get_psd_component(component)
         fig = self.plot_spectrum(**kwargs)
-        fig.gca().plot(self.fft_freqs[peak_idx] / 1e9, fft_cmpnt[peak_idx], 'bo')
+        fig.gca().plot(self.psd_freqs[peak_idx] / 1e9, psd_cmpnt[peak_idx], 'bo')
         return fig
 
     def export_normal_mode_animation_from_ringdown(self, npy_files, f_approx=None, component=None,
@@ -1464,8 +1464,8 @@ class NormalModeSimulation(Simulation):
            the method `plot_spectrum()` for details.
 
         """
-        if self.fft_freqs == None or self.fft_mx == None or \
-                self.fft_my ==None or self.fft_mz == None:
+        if self.psd_freqs == None or self.psd_mx == None or \
+                self.psd_my ==None or self.psd_mz == None:
             self._compute_spectrum(self, use_averaged_m=use_averaged_m)
 
         if peak_idx is None:
@@ -1477,7 +1477,7 @@ class NormalModeSimulation(Simulation):
                 log.warning("Ignoring argument 'f_approx' because 'peak_idx' was specified.")
             if component != None:
                 log.warning("Ignoring argument 'component' because 'peak_idx' was specified.")
-            peak_freq = self.fft_freqs[peak_idx]
+            peak_freq = self.psd_freqs[peak_idx]
 
         if outfilename is None:
             if directory is '':
