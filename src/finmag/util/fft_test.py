@@ -1,13 +1,12 @@
 from __future__ import division
 from fft import *
-import numpy as np
 from numpy import sqrt, sin, cos, pi, exp, real, conj
-import matplotlib.pyplot as plt
-import subprocess as sp
-import pytest
-import os
-
 from finmag.util.consts import gamma
+import numpy as np
+import os
+import pytest
+import matplotlib.pyplot as plt
+import fft_test_helpers
 
 
 def test_analytical_inverse_DFT():
@@ -107,42 +106,18 @@ def test_power_spectral_density_from_averaged_magnetisation(tmpdir):
     os.chdir(str(tmpdir))
     RTOL = 1e-10
 
-    ##
-    ## Step 1: Construct a time series of artificial magnetisation data and
-    ## save it to a .ndt file.
-    ##
     H = 1e6  # external field in A/m
     omega = gamma * H  # precession frequency
     alpha = 0.5  # some sort of damping constant
-    print "Precessional frequency: {} GHz".format(omega / 1e9)
 
+    ##
+    ## Step 1: Construct a time series of artificial magnetisation
+    ## data and save it to a .ndt file.
+    ##
     t_step = 1e-11
     t_ini = 0
     t_end = 10e-9
-
-    ts = np.arange(t_ini, t_end, t_step)
-    print len(ts)
-
-    # Use damped harmonic oscillator to create fake magnetisation dynamics
-    mx = exp(-ts * 1e8 / alpha) * sin(omega * ts)
-    my = exp(-ts * 1e8 / alpha) * cos(omega * ts)
-    mz = 1 - sqrt(mx**2 + my**2)
-    data = np.array([ts, mx, my, mz]).T
-
-    # Plot the dynamics for debugging purposes
-    fig = plt.figure(figsize=(20, 5))
-    ax = fig.gca()
-    ax.plot(ts, mx)
-    ax.plot(ts, my)
-    ax.plot(ts, mz)
-    fig.savefig('m_vs_t.png')
-
-    # Save the data to a .ndt file. The sed commands add the two header lines
-    # which are required by the file format.
-    ndt_filename = 'fake_relaxation.ndt'
-    np.savetxt(ndt_filename, data)
-    sp.check_call("sed -i '1 i # time  m_x  m_y  m_z' ./fake_relaxation.ndt", shell=True)
-    sp.check_call("sed -i '2 i # <s>   <>   <>   <>' ./fake_relaxation.ndt", shell=True)
+    ndt_filename = fft_test_helpers.create_test_ndt_file(str(tmpdir), omega, alpha, t_step, t_ini, t_end)
 
     ##
     ## Step 2: compute the PSDs of a resampled time series, both by
@@ -191,37 +166,20 @@ def test_power_spectral_density_from_spatially_resolved_magnetisation(tmpdir):
     os.chdir(str(tmpdir))
     RTOL = 1e-10
 
+    H = 1e6  # external field in A/m
+    alpha = 0.5  # some sort of damping constant
+    omega = gamma * H  # precession frequency
+
     ##
     ## Step 1: Construct a time series of artificial magnetisation
     ## data and save it to a bunch of .npy files.
     ##
-    H = 1e6  # external field in A/m
-    omega = gamma * H  # precession frequency
-    alpha = 0.5  # some sort of damping constant
-    print "Precessional frequency: {} GHz".format(omega / 1e9)
-
     t_step = 1e-11
     t_ini = 0
     t_end = 10e-9
 
-    ts = np.arange(t_ini, t_end, t_step)
-    num_timesteps = len(ts)
-    print "Number of timesteps: {}".format(num_timesteps)
-
-    # Use damped harmonic oscillator to create fake magnetisation dynamics
-    mx = exp(-ts * 1e8 / alpha) * sin(omega * ts)
-    my = exp(-ts * 1e8 / alpha) * cos(omega * ts)
-    mz = 1 - sqrt(mx**2 + my**2)
-
-    # Write the data to a series of .npy files
     num_vertices = 42 # in a real application this would be the number of mesh vertices
-    a = np.zeros((3, num_vertices))
-    for i in xrange(num_timesteps):
-        a[0, :] = mx[i]
-        a[1, :] = my[i]
-        a[2, :] = mz[i]
-        filename = 'm_ringdown_{:06d}.npy'.format(i)
-        np.save(filename, a.ravel())
+    fft_test_helpers.create_test_npy_files(str(tmpdir), omega, alpha, t_step, t_ini, t_end, num_vertices)
 
     ##
     ## Step 2: compute the FFT of a resampled time series, both by
@@ -321,3 +279,40 @@ def test_find_peak_near_frequency(tmpdir, debug=False):
         # An error should be raised if fft_vals doesn't have the same
         # length as fft_freqs.
         find_peak_near_frequency(2.5e9, fft_freqs, fft_vals=[0, 1])
+
+
+def test_plot_power_spectral_density(tmpdir):
+    os.chdir(str(tmpdir))
+
+    H = 1e6  # external field in A/m
+    omega = gamma * H  # precession frequency
+    alpha = 0.5  # some sort of damping constant
+
+    t_step = 1e-11
+    t_ini = 0
+    t_end = 10e-9
+    num_vertices = 42 # in a real application this would be the number of mesh vertices
+
+    # Write a sample .ndt file with some artifical magnetisation data
+    ndt_filename = fft_test_helpers.create_test_ndt_file(str(tmpdir), omega, alpha, t_step, t_ini, t_end)
+
+    # Write a sample .ndt file with some artifical magnetisation data
+    npy_filenames = fft_test_helpers.create_test_npy_files(str(tmpdir), omega, alpha, t_step, t_ini, t_end, num_vertices)
+
+    kwargs = dict(t_step=t_step, t_ini=t_ini, t_end=t_end,
+                  subtract_values=None, components="xy", figsize=(5, 4),
+                  ticks=5, title="Power spectral densities")
+
+    fig1 = plot_power_spectral_density(ndt_filename, log=False, outfilename='psd_ndt_nolog.png', **kwargs)
+    fig2 = plot_power_spectral_density(ndt_filename, log=True, outfilename='psd_ndt_log.png', **kwargs)
+    fig3 = plot_power_spectral_density(npy_filenames, log=False, outfilename='psd_npy_nolog.png', **kwargs)
+    fig4 = plot_power_spectral_density(npy_filenames, log=True, outfilename='psd_npy_log.png', **kwargs)
+
+    assert(isinstance(fig1, plt.Figure))
+    assert(isinstance(fig2, plt.Figure))
+    assert(isinstance(fig3, plt.Figure))
+    assert(isinstance(fig4, plt.Figure))
+    assert(os.path.exists('psd_ndt_nolog.png'))
+    assert(os.path.exists('psd_ndt_log.png'))
+    assert(os.path.exists('psd_npy_nolog.png'))
+    assert(os.path.exists('psd_npy_log.png'))
