@@ -122,6 +122,65 @@ def _aux_fft_m(filename, t_step=None, t_ini=None, t_end=None, subtract_values='a
     return freqs, fft_mx, fft_my, fft_mz
 
 
+def filter_frequency_component(signal, k, t_start, t_end, ts_sampling=None):
+    """
+    Filter the given signal by only keeping the frequency component
+    corresponding to the k-th Fourier coefficient.
+
+    XXX TODO: This is probably not the best interface. We should require
+              a frequency as the input and compute the index automatically.
+
+    *Arguments*
+
+    signal : numpy array
+
+        Must be a 2d array, where the first index represents time and
+        the second index the data. Thus `signal[i, :]` is the signal
+        at time `i`.
+
+    k : int
+
+        The index of the Fourier coefficient which should be used for
+        filtering.
+
+    t_start, t_end : float
+
+        First and last time step of the signal. Note that this function
+        assumes that the time steps are evenly spaced.
+
+    ts_sampling : numpy array
+
+        The time steps at which the filtered signal should be evaluated.
+
+    """
+    n = len(signal)
+
+    # Fourier transform the signal
+    t0 = time()
+    rfft_vals = np.fft.rfft(signal, axis=0)
+    t1 = time()
+    logger.debug("Computing the Fourier transform took {:.2g} seconds".format(t1-t0))
+    #rfft_freqs = np.arange(n // 2 + 1) / (dt*n)
+
+    # Only keep the Fourier coefficients for the given frequency component
+    A_k = rfft_vals[k]
+
+    # Since the DFT formula know nothing about the true timesteps at which the
+    # signal is given, we need to rescale the sampling timesteps so that they
+    # lie in the interval [0, 2*pi*k]
+    if ts_sampling is None:
+        ts_rescaled = (2 * pi * k * np.arange(n) / n)
+    else:
+        ts_rescaled = (ts_sampling - t_start) / (t_end - t_start) * 2 * pi * k * (n - 1) / n
+
+    # 'Transpose' the 1D vector so that the linear combination below
+    # produces the correct 2D output format.
+    ts_rescaled = ts_rescaled[:, np.newaxis]
+
+    signal_filtered = 2.0/n * (A_k.real * cos(ts_rescaled) - A_k.imag * sin(ts_rescaled))
+    return signal_filtered
+
+
 def power_spectral_density(filename, t_step=None, t_ini=None, t_end=None, subtract_values='average'):
     """
     Compute the power spectral densities (= squares of the absolute
