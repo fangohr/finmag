@@ -261,3 +261,67 @@ def power_spectral_density(filename, t_step=None, t_ini=None, t_end=None, subtra
         psd_mz = psd_mz.sum(axis=-1)
 
     return freqs, psd_mx, psd_my, psd_mz
+
+
+def find_peak_near_frequency(f_approx, fft_freqs, fft_vals):
+    """
+    Given the Fourier spectrum of one or multiple magnetisation
+    components, find the peak closest to the given frequency.
+
+    This is a helper function for interactive use that allows to
+    quickly determine the exact location of a peak for which an
+    approximate location is known (e.g from a plot).
+
+
+    *Example*
+
+    >>> fft_freqs, fft_mx, fft_my, fft_mz = FFT_m('simulation.ndt', t_step=1e-11)
+    >>> # Let's say that we have identified a peak near 5.4 GHz in fft_my (e.g. from a plot)
+    >>> idx = find_peak_near_frequency(5.4e9, fft_freqs, fft_my)
+
+
+    *Arguments*
+
+    f_approx :  float
+
+        The frequency near which a peak is to be found.
+
+    fft_freqs :  array
+
+        An array of frequencies (as returned by FFT_m, for example).
+        The values are assumed to be ordered from smallest to largest.
+
+    fft_vals :  array or list of arrays
+
+        The Fourier transform of one magnetisation component (m_x, m_y or m_z).
+
+    *Returns*
+
+    A pair `(freq, idx)`, where `idx` is the index of the exact peak
+    in the array fft_freqs and `freq` is the associated frequency,
+    i.e. freq=fft_freqs[idx].
+
+    """
+    try:
+        from scipy.signal import argrelmax
+    except ImportError:
+        raise NotImplementedError("Need scipy >= 0.11, please install the latest version via: 'sudo pip install -U scipy'")
+
+    if not len(fft_freqs) == len(fft_vals):
+        raise ValueError("The arrays `fft_freqs` and `fft_vals` "
+                         "must have the same length, "
+                         "but {} != {}".format(len(fft_freqs), len(fft_vals)))
+
+    fft_freqs = np.asarray(fft_freqs)
+    fft_vals = np.asarray(fft_vals)
+    N = len(fft_freqs) - 1  # last valid index
+
+    peak_indices = list(argrelmax(fft_vals)[0])
+
+    # Check boundary extrema
+    if fft_vals[0] > fft_vals[1]: peak_indices.insert(0, 0)
+    if fft_vals[N-1] < fft_vals[N]: peak_indices.append(N)
+
+    closest_peak_idx = peak_indices[np.argmin(np.abs(fft_freqs[peak_indices] - f_approx))]
+    logger.debug("Found peak at {:.3f} GHz (index: {})".format(fft_freqs[closest_peak_idx] / 1e9, closest_peak_idx))
+    return fft_freqs[closest_peak_idx], closest_peak_idx

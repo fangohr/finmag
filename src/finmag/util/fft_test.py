@@ -271,3 +271,53 @@ def test_power_spectral_density_from_spatially_resolved_magnetisation(tmpdir):
     ax.plot(freqs_computed, psd_mz_computed, label='psd_mz_computed')
     ax.legend(loc='best')
     fig.savefig('psd_m_McMichaelStiles.png')
+
+
+def test_find_peak_near_frequency(tmpdir, debug=False):
+    """
+    Check that `find_peak_near_frequency` works as expected, including
+    special cases, boundary cases etc.
+
+    """
+
+    fft_freqs = [0, 1e9, 2e9, 3e9, 4e9, 5e9, 6e9, 7e9, 8e9]
+    fft_mx = [1, 4, 3, 2, 1.5, 1.3, 2.5, 1.1, 1.0]
+    fft_my = [1, 4, 3, 2, 1.5, 1.3, 1.1, 1.7, 1.0]
+    fft_mz = [2, 1, 1, 1, 1, 1, 1, 1, 1.5]
+
+    if debug == True:
+        # Plot the arrays for debugging
+        os.chdir(str(tmpdir))
+        fig = plt.figure()
+        ax = fig.gca()
+        ax.plot(fft_freqs, fft_mx, label='fft_mx')
+        ax.plot(fft_freqs, fft_my, label='fft_my')
+        ax.plot(fft_freqs, fft_mz, label='fft_mz')
+        ax.legend()
+        fig.savefig('fft_vals.png')
+
+    assert find_peak_near_frequency(1.5e9, fft_freqs, fft_mx) == (1e9, 1)
+    #assert find_peak_near_frequency(1.5e9, fft_freqs, [fft_mx, fft_my]) == (1, 1e9)
+    assert find_peak_near_frequency(5e9, fft_freqs, fft_mx) == (6e9, 6)
+    assert find_peak_near_frequency(5e9, fft_freqs, fft_my) == (7e9, 7)
+    assert find_peak_near_frequency(3.7e9, fft_freqs, fft_mx) == (6e9, 6)
+    #assert find_peak_near_frequency(4e9, fft_freqs, [fft_mx, fft_my]) == None  # no simultaneous peak
+
+    # Just to check special cases, boundary cases etc.
+    assert find_peak_near_frequency(1e9, fft_freqs, fft_mx) == (1e9, 1)
+    assert find_peak_near_frequency(0.9e9, fft_freqs, fft_mx) == (1e9, 1)
+    assert find_peak_near_frequency(1.1e9, fft_freqs, fft_mx) == (1e9, 1)
+    assert find_peak_near_frequency(-0.1e9, fft_freqs, fft_mx) == (1e9, 1)
+    assert find_peak_near_frequency(20e9, fft_freqs, fft_mx) == (6e9, 6)
+
+    assert find_peak_near_frequency(-0.5e9, fft_freqs, fft_mz) == (0e9, 0)
+    assert find_peak_near_frequency(0.5e9, fft_freqs, fft_mz) == (0e9, 0)
+    assert find_peak_near_frequency(1e9, fft_freqs, fft_mz) == (0e9, 0)
+    assert find_peak_near_frequency(6e9, fft_freqs, fft_mz) == (8e9, 8)
+    assert find_peak_near_frequency(8e9, fft_freqs, fft_mz) == (8e9, 8)
+    assert find_peak_near_frequency(9e9, fft_freqs, fft_mz) == (8e9, 8)
+
+    with pytest.raises(ValueError):
+        # An error should be raised if fft_vals doesn't have the same
+        # length as fft_freqs.
+        find_peak_near_frequency(2.5e9, fft_freqs, fft_vals=[0, 1])
