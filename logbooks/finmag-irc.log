@@ -6834,3 +6834,25 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-10-31 15:42:53 cilix: It's a bit annoying because the host lookup doesn't seem to work because of this. Can you currently login to aleph0.kk.soton.ac.uk?
 2013-11-03 00:23:44 mb8g11: Whoops.
 2013-11-26 12:33:57 mb8g11: Hiya :)
+2013-11-27 09:49:49 max_albert: Good morning all!
+2013-11-27 09:50:11 max_albert: Looks like it has been a little dead here recently?
+2013-11-27 09:51:04 max_albert: I thought I'd revive the chat room with a question:
+2013-11-27 09:51:09 max_albert: Does anyone know what the best way is to plot normal mode spectra?
+2013-11-27 09:51:53 max_albert: In particular, should we plot the amplitude (=absolute value of the Fourier coefficients) or the power (=square of the amplitude)?
+2013-11-27 09:52:02 max_albert: And also, should we plot it on a log scale?
+2013-11-27 09:52:33 max_albert: I presume that 'plot the power on a log scale' is the correct answer, but it would be good to have it confirmed, and to know why (especially about the log).
+2013-11-27 09:53:30 max_albert: Also, if you plot the log of the power, do you still subtract the average of the data before computing the FFT?
+2013-11-27 11:16:49 mb8g11: Hi Max!
+2013-11-27 11:18:02 mb8g11: The log is probably to see more details on the plot - else the peaks would overshadow the rest of the plot.
+2013-11-27 11:19:35 mb8g11: It also is a separate concern from subtracting the averages first if I'm not mistaken.
+2013-11-27 11:19:43 fangohr-adium1: Morning Max. Yes, it has been a little dead — partly my fault for not even logging in. Unforgivable that ;-)
+2013-11-27 11:20:06 mb8g11: No idea if the amplitude or power is better though!
+2013-11-27 11:20:44 fangohr-adium1: I agree with MA's replies above regarding the plot: log for more information on what happens between the peaks. Power is probably better — I'd go with whatever McMichael and Stiles did in their paper. Also ask Marijan about this — the electrical engineers should know why power is the right choice.
+2013-11-27 11:27:20 max_albert: Thanks both! This agrees with my intuition. I just asked Marijan, and he confirmed that using the power and logarithmic plot should be the way to go.
+2013-11-27 11:27:49 max_albert: Regarding the log, I was just wondering whether using it actually enhances the information or whether we are artificially amplifying small peaks that should in fact be neglected.
+2013-11-27 11:29:01 max_albert: Also, I'm just looking at the code in an attempt to tidy it up. Do you think there is any value in keeping the version which uses the spatially averaged magnetisation for the Fourier transform? It sounds like it would give misleading results, so would it be better to scrap that?
+2013-11-27 11:33:05 max_albert: And am I interpreting your comment right, Hans, that we should never use the pure amplitudes and always compute the powers (= amplitudes squared), both for the spatially averaged and spatially resolved magnetisation? McMichael and Stiles used the powers combined with the spatially resolved Fourier transform, but I guess it also makes sense with the spatially averaged one. But there is no true physical meaning for the amplitudes, is this correct?
+2013-11-27 11:51:12 fangohr-adium1: Does the log emphasis smaller peaks that are or could be numerical noise? Yes. So we should keep the option plotting a linear plot if that looks better. Even though the default might be a log plot.
+2013-11-27 11:52:15 fangohr-adium1: Keeping the Fourier transform of spatially average magnetisation — does that make sense? Yes, it does: this is something that is easily done in any package (from the simulation side) and in some experimental techniques one can also only measure the effect of the average magnetisation.
+2013-11-27 11:52:52 fangohr-adium1: Last question: you mean the amplitude in Fourier space has no meaning? Not sure I know the answer. Let's leave this one open.
+2013-11-27 14:03:49 fangohr-adium1: Be warned, I am on my way for the coffee meeting.
