@@ -408,3 +408,273 @@ def plot_power_spectral_density(ndt_filename, t_step=None, t_ini=None, t_end=Non
     return _plot_spectrum(freqs, psd_mx, psd_my, psd_mz, components=components,
                           log=log, xlim=xlim, ylim=ylim, ticks=ticks,
                           figsize=figsize, title=title, outfilename=outfilename)
+
+
+def fft_at_probing_points(dolfin_funcs, pts):
+    """
+    Given a list of dolfin Functions (on the same mesh) representing
+    field values at different time steps, as well as the x-, y- and
+    z-coordinates of some probing points, compute and return the
+    discrete Fourier transforms (over time) of these functions at each
+    point.
+
+
+    *Arguments*
+
+    dolfin_funcs:  list of dolfin.Function
+
+        List of functions representing (say) the field values at
+        different time steps.
+
+    pts:     points: numpy.array
+
+        An array of points where the FFT should be computed. Can
+        have arbitrary shape, except that the last axis must have
+        dimension 3. For example, if pts.shape == (10,20,5,3) then
+        the FFT is computeed at all points on a regular grid of
+        size 10 x 20 x 5.
+
+
+    *Returns*
+
+    A numpy.array `res` of the same shape as X, Y and Z, but with an
+    additional first axis which contains the coefficients if the Fourier
+    transform. For example, res[:, ...] represents the Fourier transform
+    over time as probed at the point (X[...], Y[...], Z[...]).
+
+    """
+    vals_probed = np.ma.masked_array([probe(f, pts) for f in dolfin_funcs])
+    #vals_fft = np.ma.masked_array(np.fft.fft(vals_probed, axis=0),
+    #                              mask=np.ma.getmask(vals_probed))
+    #freqs = np.fft.fftfreq(
+    n = (len(dolfin_funcs) // 2) + 1
+    vals_fft = np.ma.masked_array(np.fft.rfft(vals_probed, axis=0),
+                                  mask=np.ma.getmask(vals_probed[:n, ...]))
+
+    return vals_fft
+
+
+def plot_spatially_resolved_normal_modes(m_vals_on_grid, idx_fourier_coeff,
+                                         t_step=None, figsize=None, yshift_title=1.5,
+                                         show_colorbars=True, cmap=cm.jet):
+    """
+    XXX Warning: The interface for this function hasn't matured yet,
+                 so be prepared for it to change in the future.
+
+    Given the time evolution of the magnetisation (probed on a regular
+    grid), compute and plot the normal mode shapes corresponding to a
+    certain frequency. More precisely, this plots the absolute values
+    and the phase of the Fourier coefficients at each probing point
+    for each of m_x, m_y and m_z.
+
+    m_vals_on_grid : numpy.array of shape (nt, nx, ny, nz, 3)
+        Array containing the magnetisation values probed at regular
+        time steps on a regular grid. Here `nt` is the number of time
+        steps and `nx`, `ny`, `nz` determine the size of the probing
+        grid. Thus The 3-vector m_vals_on_grid[t0, x0, y0, z0]
+        contains the magnetisation at time `t0` probed at the grid
+        point with coordinates (x0, y0, z0).
+
+    idx_fourier_coeff : int
+
+        Index of the Fourier coefficient for which to compute the normal
+        modes. This should be between 0 and (number of files - 1).
+
+    t_step : float (optional)
+
+        The interval between subsequent time steps of the probed
+        magnetisation values. This is only relevant to print the
+        frequency of the normal mode in the figure title.
+
+    figsize : pair of float
+
+        The size of the resulting figure.
+
+    yshift_title : float
+
+        Amount by which the title should be shifted up (this can be
+        used to tweak the figure if the title overlaps with one of the
+        colorbars, say).
+
+    show_colorbars : bool
+
+        Whether to show a colorbar in each subplot (default: True).
+
+    cmap :
+
+        The colormap to use.
+
+    *Returns*
+
+    The matplotlib figure containing.
+    """
+    n = (m_vals_on_grid.shape[0] // 2) + 1
+    fft_vals = np.ma.masked_array(np.fft.rfft(m_vals_on_grid, axis=0),
+                                  mask=np.ma.getmask(m_vals_on_grid[:n, ...]))
+    fig = plt.figure(figsize=figsize)
+    axes = []
+    for k in [0, 1, 2]:
+        ax = fig.add_subplot(2, 3, k+1)
+        ax.set_title('m_{}'.format('xyz'[k]))
+        im = ax.imshow(abs(fft_vals[idx_fourier_coeff, :, :, 0, k]), origin='lower', cmap=cmap)
+        if show_colorbars:
+            fig.colorbar(im)
+        axes.append(ax)
+
+        ax = fig.add_subplot(2, 3, k+3+1)
+        axes.append(ax)
+        ax.set_title('m_{} (phase)'.format('xyz'[k]))
+        im = ax.imshow(np.angle(fft_vals[idx_fourier_coeff, :, :, 0, k], deg=True), origin='lower', cmap=cmap)
+        if show_colorbars:
+            fig.colorbar(im)
+    if t_step != None:
+        # XXX TODO: Which value of nn is the correct one?
+        #nn = n
+        nn = len(m_vals_on_grid)
+        fft_freqs = np.fft.fftfreq(nn, t_step)[:nn]
+        figure_title = "Mode shapes for frequency f={:.2f} GHz".format(fft_freqs[idx_fourier_coeff] / 1e9)
+        plt.text(0.5, yshift_title, figure_title,
+             horizontalalignment='center',
+             fontsize=20,
+             transform = axes[2].transAxes)
+    else:
+        logger.warning("Omitting figure title because no t_step argument was specified.")
+    plt.tight_layout()
+
+    return fig
+
+
+def export_normal_mode_animation_from_ringdown(npy_files, outfilename, mesh, t_step, k, scaling=0.2, dm_only=False, num_cycles=1, num_frames_per_cycle=20):
+    """
+    Read a bunch of .npy files (containing the magnetisation sampled
+    at regular time steps) and export an animation of the normal mode
+    corresponding to a specific frequency.
+
+    npy_files :  string (including shell wildcards) or list of filenames
+
+        The list of files containing the magnetisation values sampled
+        at the mesh vertices. There should be one file per stime step.
+
+    outfilename :  string
+
+        Name of the .pvd file to which the animation is exported.
+
+    mesh :  dolfin.Mesh or string
+
+        The mesh (or name of the .xml.gz file containing the mesh) on
+        which the magnetisation was sampled.
+
+    t_step :  float
+
+        The interval between subsequent time steps.
+
+    k:  int
+
+        Index of the frequency for which the normal mode is to be plotted.
+
+    scaling : float
+
+        If `dm_only` is False, this determines the maximum size of the
+        oscillation (relative to the magnetisation vector) in the
+        visualisation. If `dm_only` is True, this has no effect.
+
+    dm_only :  bool (optional)
+
+        If False (the default), plots `m0 + scaling*dm(t)`, where m0 is the
+        average magnetisation and dm(t) the (spatially varying)
+        oscillation corresponding to the frequency of the normal mode.
+        If True, only `dm(t)` is plotted.
+
+    num_cycles :  int
+
+        The number of cycles to be animated (default: 1).
+
+    num_frames_per_cycle :  int
+
+        The number of snapshot per cycle to be exported (default: 20). Thus the
+        total number of exported frames is (num_frames_per_cycle * num_cycles).
+
+    """
+    files = sorted(glob(npy_files)) if isinstance(npy_files, str) else list(npy_files)
+    if len(files) == 0:
+        logger.error("Cannot produce normal mode animation. No input .npy "
+                     "files found matching '{}'".format(npy_files))
+        return
+
+    if isinstance(mesh, str):
+        mesh = df.Mesh(mesh)
+
+    N = len(files)  # number of timesteps
+    num_nodes = mesh.num_vertices()
+
+    # Read in the magnetisation dynamics from each .npy file and store
+    # it as successive time steps in the array 'signal'.
+    signal = np.empty([N, 3*num_nodes])
+    for (i, filename) in enumerate(files):
+        signal[i, :] = np.load(filename)
+    logger.debug("Array with magnetisation dynamics occupies "
+                 "{} MB of memory".format(signal.nbytes / 1024**2))
+
+    # Fourier transform the signal
+    t0 = time()
+    fft_vals = np.fft.rfft(signal, axis=0)
+    t1 = time()
+    logger.debug("Computing the Fourier transform took {:.2g} seconds".format(t1-t0))
+    fft_freqs = np.fft.fftfreq(N, d=t_step)[:len(fft_vals)]
+
+    # Only keep the k-th Fourier coefficient at each mesh node
+    # (combined in the array A_k).
+    A_k = fft_vals[k]
+    abs_k = np.abs(A_k)[np.newaxis, :]
+    theta_k = np.angle(A_k)[np.newaxis, :]
+
+    num_frames = num_frames_per_cycle * num_cycles
+    signal_filtered = np.empty([num_frames, 3*num_nodes])
+
+    omega = fft_freqs[k]  # frequency associated with the k-th Fourier coefficient
+    cycle_length = 1.0 / omega
+    timesteps = np.linspace(0, num_cycles * cycle_length, num_frames, endpoint=False)[:, np.newaxis]
+    t_end = (N - 1) * t_step
+
+    # Compute 'snapshots' of the oscillation and store them in signal_filtered
+    #
+    # TODO: Write a unit test for this formula, just to be 100% sure
+    #       that it is correct!
+    signal_filtered = 2.0/N * abs_k * cos(k*2*pi * timesteps / t_end + theta_k)
+
+    # Determine a sensible scaling factor so that the oscillations are
+    # visible but not too large. (Note that, even though it looks
+    # convoluted, computing the maximum value in this iterated way is
+    # actually much faster than doing it directly.)
+    maxval = max(np.max(signal_filtered, axis=0))
+    logger.debug("Maximum value of the signal: {}".format(maxval))
+
+    V = df.VectorFunctionSpace(mesh, 'CG', 1, dim=3)
+    func = df.Function(V)
+    func.rename('m', 'magnetisation')
+    if dm_only == True:
+        signal_normal_mode = 1 / maxval * signal_filtered
+    else:
+        signal_normal_mode = signal.mean(axis=0).T + scaling / maxval * signal_filtered
+
+    # XXX TODO: Should check for an existing file and ask for confirmation whether it should be overwritten!
+    logger.debug("Saving normal mode animation to file '{}'.".format(outfilename))
+    t0 = time()
+    f = df.File(outfilename, 'compressed')
+    # XXX TODO: We need the strange temporary array 'aaa' here because
+    #           if we write the values directly into func.vector()
+    #           then they end up being different (as illustrated in
+    #           the code that is commented out)!!!
+    aaa = np.empty(3*num_nodes)
+    #for i in xrange(len(ts)):
+    #for i in xrange(20):
+    for i in xrange(num_frames):
+        #if i % 20 == 0:
+        #    print "i={} ".format(i),
+        #    import sys
+        #    sys.stdout.flush()
+        aaa[:] = signal_normal_mode[i][:]
+        func.vector()[:] = aaa
+        f << func
+    t1 = time()
+    logger.debug("Saving the data took {} seconds".format(t1 - t0))
