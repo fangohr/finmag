@@ -14,69 +14,13 @@ from numpy import sin, cos, pi
 logger = logging.getLogger("finmag")
 
 
-def power_spectral_density(filename, t_step=None, t_ini=None, t_end=None, subtract_values='average'):
+def _aux_fft_m(filename, t_step=None, t_ini=None, t_end=None, subtract_values='average'):
     """
-    Compute the power spectral densities (= squares of the absolute
-    values of the Fourier coefficients) of the x, y and z components
-    of the magnetisation m, where the magnetisation data is either
-    read from a .ndt file (for spatially averages magnetisation; not
-    recommended, see below) or from a series of data files in .npy
-    format (recommended). If necessary, the data is first resampled at
-    regularly spaced time intervals.
-
-    Note that this performs a real-valued Fourier transform (i.e. it
-    uses np.fft.rfft internally) and thus does not return Fourier
-    coefficients belonging to negative frequencies.
-
-    If `filename` is the name of a single .ndt file then the Fourier
-    transform of the average magneisation is computed. Note that this
-    is *not* recommended since it may not detect modes that have
-    certain symmetries which are averaged out by this method. A better
-    way is to pass in a series of .npy files, which takes the
-    spatially resolved magnetisation into account.
-
-
-    *Arguments*
-
-    filename:
-
-        The .ndt file or .npy files containing the magnetisation values.
-        In the second case a pattern should be given (e.g. 'm_ringdown*.npy').
-
-    t_step:
-
-        Interval between consecutive time steps in the resampled data.
-        If the timesteps in the .ndt file are equidistantly spaced,
-        this distance is used as the default value.
-
-    t_ini:
-
-        Initial time for the resampled data (all input data before
-        this time is discarded). Defaults to the first time step saved
-        in the .ndt data file.
-
-    t_end:
-
-        Last time step for the resampled data (all input data after
-        this time is discarded). Defaults to the last time step saved
-        in the .ndt data file.
-
-    subtract_values:  None | 3-tuple of floats | 'first' | 'average'
-
-        If specified, the given values are subtracted from the data
-        before computing the Fourier transform. This can be used to
-        avoid potentially large peaks at zero frequency. If a 3-tuple
-        is given then it is interpreted as the three values to
-        subtract from mx, my and mz, respectively. If 'first' or
-        'average' is given, the first/average values of mx, my, mz are
-        determined and subtracted.
-
-
-    *Returns*
-
-    Returns a tuple (freqs, psd_mx, psd_my, psd_mz), where psd_mx,
-    psd_my, psd_mz are the power spectral densities of the x/y/z-component
-    of the magnetisation and freqs are the corresponding frequencies.
+    Helper function to compute the Fourier transform of magnetisation
+    data, which is either read from a single .ndt file (for spatially
+    averaged magnetisation) or from a series of .npy files (for
+    spatially resolved data). If necessary, the data is first
+    resampled at regularly spaced time intervals.
 
     """
     # Load the data; extract time steps and magnetisation
@@ -166,19 +110,95 @@ def power_spectral_density(filename, t_step=None, t_ini=None, t_end=None, subtra
         my_resampled = np.array([f_my(t) for t in ts_resampled])
         mz_resampled = np.array([f_mz(t) for t in ts_resampled])
 
-    psd_mx = np.absolute(np.fft.rfft(mx_resampled, axis=0))**2
-    psd_my = np.absolute(np.fft.rfft(my_resampled, axis=0))**2
-    psd_mz = np.absolute(np.fft.rfft(mz_resampled, axis=0))**2
-    n = len(psd_mx)
+    fft_mx = np.fft.rfft(mx_resampled, axis=0)
+    fft_my = np.fft.rfft(my_resampled, axis=0)
+    fft_mz = np.fft.rfft(mz_resampled, axis=0)
+
+    # When using np.fft.fftfreq, the last frequency sometimes becomes
+    # negative; to avoid this we compute the frequencies by hand.
+    n = len(fft_mx)
+    freqs = np.arange(n) / (t_step*len(ts_resampled))
+
+    return freqs, fft_mx, fft_my, fft_mz
+
+
+def power_spectral_density(filename, t_step=None, t_ini=None, t_end=None, subtract_values='average'):
+    """
+    Compute the power spectral densities (= squares of the absolute
+    values of the Fourier coefficients) of the x, y and z components
+    of the magnetisation m, where the magnetisation data is either
+    read from a .ndt file (for spatially averages magnetisation; not
+    recommended, see below) or from a series of data files in .npy
+    format (recommended). If necessary, the data is first resampled at
+    regularly spaced time intervals.
+
+    Note that this performs a real-valued Fourier transform (i.e. it
+    uses np.fft.rfft internally) and thus does not return Fourier
+    coefficients belonging to negative frequencies.
+
+    If `filename` is the name of a single .ndt file then the Fourier
+    transform of the average magneisation is computed. Note that this
+    is *not* recommended since it may not detect modes that have
+    certain symmetries which are averaged out by this method. A better
+    way is to pass in a series of .npy files, which takes the
+    spatially resolved magnetisation into account.
+
+
+    *Arguments*
+
+    filename:
+
+        The .ndt file or .npy files containing the magnetisation values.
+        In the second case a pattern should be given (e.g. 'm_ringdown*.npy').
+
+    t_step:
+
+        Interval between consecutive time steps in the resampled data.
+        If the timesteps in the .ndt file are equidistantly spaced,
+        this distance is used as the default value.
+
+    t_ini:
+
+        Initial time for the resampled data (all input data before
+        this time is discarded). Defaults to the first time step saved
+        in the .ndt data file.
+
+    t_end:
+
+        Last time step for the resampled data (all input data after
+        this time is discarded). Defaults to the last time step saved
+        in the .ndt data file.
+
+    subtract_values:  None | 3-tuple of floats | 'first' | 'average'
+
+        If specified, the given values are subtracted from the data
+        before computing the Fourier transform. This can be used to
+        avoid potentially large peaks at zero frequency. If a 3-tuple
+        is given then it is interpreted as the three values to
+        subtract from mx, my and mz, respectively. If 'first' or
+        'average' is given, the first/average values of mx, my, mz are
+        determined and subtracted.
+
+
+    *Returns*
+
+    Returns a tuple (freqs, psd_mx, psd_my, psd_mz), where psd_mx,
+    psd_my, psd_mz are the power spectral densities of the x/y/z-component
+    of the magnetisation and freqs are the corresponding frequencies.
+
+    """
+
+    freqs, fft_mx, fft_my, fft_mz = \
+        _aux_fft_m(filename, t_step=t_step, t_ini=t_ini, t_end=t_end, subtract_values=subtract_values)
+
+    psd_mx = np.absolute(fft_mx)**2
+    psd_my = np.absolute(fft_my)**2
+    psd_mz = np.absolute(fft_mz)**2
 
     if filename.endswith('.npy'):
         # Compute the power spectra and then do the spatial average
         psd_mx = psd_mx.sum(axis=-1)
         psd_my = psd_my.sum(axis=-1)
         psd_mz = psd_mz.sum(axis=-1)
-
-    # When using np.fft.fftfreq, the last frequency sometimes becomes
-    # negative; to avoid this we compute the frequencies by hand.
-    freqs = np.arange(n) / (t_step*len(ts_resampled))
 
     return freqs, psd_mx, psd_my, psd_mz
