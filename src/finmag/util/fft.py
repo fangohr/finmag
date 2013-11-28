@@ -14,7 +14,7 @@ from numpy import sin, cos, pi
 logger = logging.getLogger("finmag")
 
 
-def _aux_fft_m(filename, t_step=None, t_ini=None, t_end=None, subtract_values='first'):
+def _aux_fft_m(filename, t_step=None, t_ini=None, t_end=None, subtract_values='first', vertex_indices=None):
     """
     Helper function to compute the Fourier transform of magnetisation
     data, which is either read from a single .ndt file (for spatially
@@ -41,7 +41,11 @@ def _aux_fft_m(filename, t_step=None, t_ini=None, t_end=None, subtract_values='f
             raise RuntimeError("Number of timesteps (= {}) does not match number of .npy files found ({}). Aborting.".format(len(ts), N))
         logger.debug("Found {} .npy files.".format(N))
 
-        num_vertices = len(np.load(npy_files[0])) // 3
+        if vertex_indices != None:
+            num_vertices = len(vertex_indices)
+        else:
+            num_vertices = len(np.load(npy_files[0])) // 3
+            vertex_indices = arange(num_vertices)
         mx = np.zeros((N, num_vertices))
         my = np.zeros((N, num_vertices))
         mz = np.zeros((N, num_vertices))
@@ -49,9 +53,9 @@ def _aux_fft_m(filename, t_step=None, t_ini=None, t_end=None, subtract_values='f
         for (i, npyfile) in enumerate(npy_files):
             a = np.load(npyfile)
             aa = a.reshape(3, -1)
-            mx[i, :] = aa[0]
-            my[i, :] = aa[1]
-            mz[i, :] = aa[2]
+            mx[i, :] = aa[0, vertex_indices]
+            my[i, :] = aa[1, vertex_indices]
+            mz[i, :] = aa[2, vertex_indices]
     else:
         raise ValueError("Expected a single .ndt file or a wildcard pattern referring to a series of .npy files. Got: {}.".format(filename))
 
@@ -181,7 +185,7 @@ def filter_frequency_component(signal, k, t_start, t_end, ts_sampling=None):
     return signal_filtered
 
 
-def power_spectral_density(filename, t_step=None, t_ini=None, t_end=None, subtract_values='first'):
+def power_spectral_density(filename, t_step=None, t_ini=None, t_end=None, subtract_values='first', restrict_to_vertices=None):
     """
     Compute the power spectral densities (= squares of the absolute
     values of the Fourier coefficients) of the x, y and z components
@@ -238,6 +242,16 @@ def power_spectral_density(filename, t_step=None, t_ini=None, t_end=None, subtra
         'average' is given, the first/average values of mx, my, mz are
         determined and subtracted.
 
+    restrict_to_vertices:
+
+        This argument only has an effect when computing the spectrum
+        from spatially resolved magnetisation data (i.e., from a
+        series of .npy files). If `restrict_to_vertices` is `None`
+        (the default), all mesh vertices are taken into account.
+        Otherwise `restrict_to_vertices` should be a list of vertex
+        indices. The spectrum then is then computed for the
+        magnetisation dynamics at these particular vertices only.
+
 
     *Returns*
 
@@ -248,7 +262,7 @@ def power_spectral_density(filename, t_step=None, t_ini=None, t_end=None, subtra
     """
 
     freqs, fft_mx, fft_my, fft_mz = \
-        _aux_fft_m(filename, t_step=t_step, t_ini=t_ini, t_end=t_end, subtract_values=subtract_values)
+        _aux_fft_m(filename, t_step=t_step, t_ini=t_ini, t_end=t_end, subtract_values=subtract_values, vertex_indices=restrict_to_vertices)
 
     psd_mx = np.absolute(fft_mx)**2
     psd_my = np.absolute(fft_my)**2
