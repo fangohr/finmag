@@ -41,10 +41,10 @@ def _aux_fft_m(filename, t_step=None, t_ini=None, t_end=None, subtract_values='f
             raise RuntimeError("Number of timesteps (= {}) does not match number of .npy files found ({}). Aborting.".format(len(ts), N))
         logger.debug("Found {} .npy files.".format(N))
 
-        num_timesteps = len(np.load(npy_files[0])) // 3
-        mx = np.zeros((N, num_timesteps))
-        my = np.zeros((N, num_timesteps))
-        mz = np.zeros((N, num_timesteps))
+        num_vertices = len(np.load(npy_files[0])) // 3
+        mx = np.zeros((N, num_vertices))
+        my = np.zeros((N, num_vertices))
+        mz = np.zeros((N, num_vertices))
 
         for (i, npyfile) in enumerate(npy_files):
             a = np.load(npyfile)
