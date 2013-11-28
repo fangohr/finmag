@@ -14,7 +14,7 @@ from numpy import sin, cos, pi
 logger = logging.getLogger("finmag")
 
 
-def _aux_fft_m(filename, t_step=None, t_ini=None, t_end=None, subtract_values='average'):
+def _aux_fft_m(filename, t_step=None, t_ini=None, t_end=None, subtract_values='first'):
     """
     Helper function to compute the Fourier transform of magnetisation
     data, which is either read from a single .ndt file (for spatially
@@ -181,7 +181,7 @@ def filter_frequency_component(signal, k, t_start, t_end, ts_sampling=None):
     return signal_filtered
 
 
-def power_spectral_density(filename, t_step=None, t_ini=None, t_end=None, subtract_values='average'):
+def power_spectral_density(filename, t_step=None, t_ini=None, t_end=None, subtract_values='first'):
     """
     Compute the power spectral densities (= squares of the absolute
     values of the Fourier coefficients) of the x, y and z components
@@ -346,7 +346,7 @@ def _plot_spectrum(freqs, psd_mx, psd_my, psd_mz, components="xyz", log=False,
     if 'y' in components: ax.plot(freqs_GHz, psd_my, '.-', label=r'$m_y$')
     if 'z' in components: ax.plot(freqs_GHz, psd_mz, '.-', label=r'$m_z$')
     ax.set_xlabel('Frequency (GHz)')
-    ax.set_ylabel('Power spectral density')
+    ax.set_ylabel('Power spectral density{}'.format(' (log)' if log else ''))
 
     ax.set_xlim(xlim)
     ax.set_ylim(ylim)
@@ -364,7 +364,7 @@ def _plot_spectrum(freqs, psd_mx, psd_my, psd_mz, components="xyz", log=False,
     return fig
 
 
-def plot_power_spectral_density(ndt_filename, t_step=None, t_ini=None, t_end=None, subtract_values='average', components="xyz",
+def plot_power_spectral_density(ndt_filename, t_step=None, t_ini=None, t_end=None, subtract_values='first', components="xyz",
                                 log=False, xlim=None, ylim=None, ticks=21, figsize=None, title="", outfilename=None):
     """
     Plot the power spectral density of the components of the magnetisation m.
@@ -678,3 +678,8 @@ def export_normal_mode_animation_from_ringdown(npy_files, outfilename, mesh, t_s
         f << func
     t1 = time()
     logger.debug("Saving the data took {} seconds".format(t1 - t0))
+
+
+# Shorter aliases that are easier to type
+psd = power_spectral_density
+plot_psd = plot_power_spectral_density
