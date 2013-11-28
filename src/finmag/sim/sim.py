@@ -1206,6 +1206,7 @@ class NormalModeSimulation(Simulation):
         # Internal variables to store parameters/results of the ringdown method
         self.m_snapshots_filename = None
         self.t_step_ndt = None
+        self.t_step_m = None
         self.fft_freqs = None
         self.fft_mx = None
         self.fft_my = None
@@ -1274,7 +1275,7 @@ class NormalModeSimulation(Simulation):
         def schedule_saving(which, every, filename, default_suffix):
             try:
                 dirname, basename = os.path.split(filename)
-                if not os.path.exists(dirname):
+                if dirname != '' and not os.path.exists(dirname):
                     os.makedirs(dirname)
             except AttributeError:
                 dirname = os.curdir
@@ -1291,10 +1292,12 @@ class NormalModeSimulation(Simulation):
 
         if save_m_every:
             schedule_saving('save_m', save_m_every, m_snapshots_filename, '_m.npy')
+            log.debug("Setting self.t_step_m = {}".format(save_m_every))
+            self.t_step_m = save_m_every
 
         self.run_until(t_end)
 
-    def _compute_spectrum(self, use_averaged_m=False, **kwargs):
+    def _compute_spectrum(self, use_averaged_m=False, mesh_region=None, **kwargs):
         if use_averaged_m:
             log.warning("Using the averaged magnetisation to compute the spectrum is not recommended "
                         "because certain symmetric modes are likely to be missed.")
@@ -1314,7 +1317,12 @@ class NormalModeSimulation(Simulation):
         # Derive a sensible value of t_step. Use the value in **kwargs
         # if one was provided, or else the one specified during a previous
         # call of run_ringdown().
-        t_step = kwargs.pop('t_step', None) or self.t_step_ndt
+        t_step = kwargs.pop('t_step', None)#
+        if t_step == None:
+            if use_averaged_m:
+                t_step = self.t_step_ndt
+            else:
+                t_step = self.t_step_m
         # XXX TODO: Use t_step_npy if computing the spectrum from .npy files.
         if t_step == None:
             raise ValueError(
@@ -1324,14 +1332,31 @@ class NormalModeSimulation(Simulation):
                 "call sim.run_ringdown() or provide the argument 't_step' "
                 "explicitly.")
 
+        if mesh_region != None:
+            # If a mesh region is specified, restrict computation of the
+            # spectrum to the corresponding mesh vertices.
+            submesh = self.get_submesh(mesh_region)
+            try:
+                # Legacy syntax (for dolfin <= 1.2 or so).
+                # TODO: This should be removed in the future once dolfin 1.3 is released!
+                parent_vertex_indices = submesh.data().mesh_function('parent_vertex_indices').array()
+            except RuntimeError:
+                # This is the correct syntax now, see:
+                # http://fenicsproject.org/qa/185/entity-mapping-between-a-submesh-and-the-parent-mesh
+                parent_vertex_indices = submesh.data().array('parent_vertex_indices', 0)
+            kwargs['restrict_to_vertices'] = parent_vertex_indices
+
         self.psd_freqs, self.psd_mx, self.psd_my, self.psd_mz = \
             power_spectral_density(filename, t_step=t_step, **kwargs)
 
     def plot_spectrum(self, t_step=None, t_ini=None, t_end=None, subtract_values='average',
                       components="xyz", xlim=None, ticks=5, figsize=None, title="",
-                      outfilename=None, use_averaged_m=False):
+                      outfilename=None, use_averaged_m=False, mesh_region=None):
         """
-        Plot the normal mode spectrum of the simulation.
+        Plot the normal mode spectrum of the simulation. If
+        `mesh_region` is not None, restricts the computation to mesh
+        vertices in that region (which must have been specified with
+        `sim.mark_regions` before).
 
         This is a convenience wrapper around the function
         finmag.util.fft.plot_power_spectral_density. It accepts the
@@ -1361,7 +1386,7 @@ class NormalModeSimulation(Simulation):
         [1] McMichael, Stiles, "Magnetic normal modes of nanoelements", J Appl Phys 97 (10), 10J901, 2005.
 
         """
-        self._compute_spectrum(t_step=t_step, t_ini=t_ini, t_end=t_end, subtract_values=subtract_values, use_averaged_m=use_averaged_m)
+        self._compute_spectrum(t_step=t_step, t_ini=t_ini, t_end=t_end, subtract_values=subtract_values, use_averaged_m=use_averaged_m, mesh_region=mesh_region)
 
         fig = _plot_spectrum(self.psd_freqs, self.psd_mx, self.psd_my, self.psd_mz,
                              components=components, xlim=xlim, ticks=ticks,
@@ -1485,6 +1510,10 @@ class NormalModeSimulation(Simulation):
             outfilename = 'normal_mode_{}__{:.3f}_GHz.pvd'.format(peak_idx, peak_freq / 1e9)
         outfilename = os.path.join(directory, outfilename)
 
+        if t_step == None:
+            if (self.t_step_ndt != None) and (self.t_step_m != None) and \
+                    (self.t_step_ndt != self.t_step_m):
+                log.warning("Values of t_step for previously saved .ndt and .npy data differ! ({} != {}). Using t_step_ndt, but please double-check this is what you want.".format(self.t_step_ndt, self.t_step_m))
         t_step = t_step or self.t_step_ndt
         export_normal_mode_animation_from_ringdown(npy_files, outfilename, self.mesh, t_step,
                                                    peak_idx, dm_only=dm_only, num_cycles=num_cycles,
