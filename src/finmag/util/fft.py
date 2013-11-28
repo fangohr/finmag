@@ -45,7 +45,7 @@ def _aux_fft_m(filename, t_step=None, t_ini=None, t_end=None, subtract_values='f
             num_vertices = len(vertex_indices)
         else:
             num_vertices = len(np.load(npy_files[0])) // 3
-            vertex_indices = arange(num_vertices)
+            vertex_indices = np.arange(num_vertices)
         mx = np.zeros((N, num_vertices))
         my = np.zeros((N, num_vertices))
         mz = np.zeros((N, num_vertices))

@@ -209,7 +209,7 @@ def test_power_spectral_density_from_spatially_resolved_magnetisation(tmpdir):
     psd_my_expected = num_vertices * np.absolute(np.fft.rfft(my_res))**2
     psd_mz_expected = num_vertices * np.absolute(np.fft.rfft(mz_res))**2
 
-    # Compute Fourier transform of resampled time series using FFT_m
+    # Compute Fourier transform of resampled time series using power_spectral_density
     freqs_computed, psd_mx_computed, psd_my_computed, psd_mz_computed = \
         power_spectral_density('m_ringdown*.npy', t_step_res, t_ini=t_ini_res, t_end=t_end_res, subtract_values=None)
 

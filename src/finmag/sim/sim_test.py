@@ -18,6 +18,8 @@ from finmag.sim import sim_helpers
 from finmag.energies import Zeeman, TimeZeeman, Exchange, UniaxialAnisotropy
 from finmag.util.fileio import Tablereader
 from finmag.util.ansistrm import ColorizingStreamHandler
+from finmag.util.macrospin import make_analytic_solution
+from finmag.util.consts import gamma
 
 logger = logging.getLogger("finmag")
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -1282,3 +1284,82 @@ def test_compute_energies_with_non_normalised_m(tmpdir):
                 assert(np.allclose((sim.compute_energy(name) - K1*vol_mesh), a**exponent * (energies[name] - K1*vol_mesh), atol=1e-31, rtol=1e-12))
             else:
                 assert(np.allclose(sim.compute_energy(name), a**exponent * energies[name], atol=0, rtol=1e-12))
+
+
+def test_compute_and_plot_power_spectral_density_in_mesh_region(tmpdir):
+    """
+    Create a simulation with two mesh regions, where the magnetisation
+    is uniform in each region and external fields of different
+    strengths are applied in each one. Record the precession for a
+    certain time and then compute the spectrume in the first region
+    only.
+
+    """
+    os.chdir(str(tmpdir))
+
+    sphere1 = Sphere(r=10, center=(-20, 0, 0), name='sphere1')
+    sphere2 = Sphere(r=10, center=(+20, 0, 0), name='sphere2')
+    mesh = (sphere1 + sphere2).create_mesh(maxh=10.0)
+
+    alpha1 = 0.05
+    alpha2 = 0.03
+
+    H_ext_1 = [0, 0, 1e7]
+    H_ext_2 = [0, 0, 3.8e7]
+
+    omega1 = gamma * H_ext_1[2]
+    omega2 = gamma * H_ext_2[2]
+
+    def fun_alpha(pt):
+        return alpha1 if (pt[0] < 0) else alpha2
+
+    def fun_H_ext(pt):
+        return H_ext_1 if (pt[0] < 0) else H_ext_2
+
+    def fun_regions(pt):
+        return 'left' if (pt[0] < 0) else 'right'
+
+    sim = normal_mode_simulation(mesh, Ms=8.6e5, m_init=[1, 0, 0], alpha=fun_alpha, H_ext=fun_H_ext, A=13e-12, unit_length=1e-9, demag_solver=None)
+    sim.mark_regions(fun_regions)
+
+    t_ini = 0.0
+    t_end = 1e-11
+    t_step = 1e-13
+
+    ts = np.arange(t_ini, t_end, t_step)
+
+    sim.run_ringdown(t_end, alpha=fun_alpha, H_ext=fun_H_ext,
+                     save_m_every=t_step, m_snapshots_filename='m_precession.npy')
+
+    # Create an analytic solution for the precession in region #1 with
+    # which we can compare.
+    H = H_ext_1[2]
+    m_analytic = make_analytic_solution(H, alpha1)
+
+    m_dynamics = np.array([m_analytic(t) for t in ts])
+    mx = m_dynamics[:, 0]
+    my = m_dynamics[:, 1]
+    mz = m_dynamics[:, 2]
+
+    num_vertices = mesh.num_vertices()
+    psd_mx_expected = num_vertices * np.absolute(np.fft.rfft(mx))**2
+    psd_my_expected = num_vertices * np.absolute(np.fft.rfft(my))**2
+    psd_mz_expected = num_vertices * np.absolute(np.fft.rfft(mz))**2
+
+    sim._compute_spectrum(use_averaged_m=False, mesh_region='left', t_step=t_step, t_ini=t_ini, t_end=t_end)
+
+    # XXX TODO: The following check doesn't work yet - I'm not even
+    #           sure it's correct. Double-check this, or find a better
+    #           check (perhaps check the location of the peaks?!?)
+    #
+    # # Check that the analytically determined power spectra are the same as the computed ones.
+    # RTOL = 1e-10
+    # assert(np.allclose(psd_mx_expected, sim.psd_mx, atol=0, rtol=RTOL))
+    # assert(np.allclose(psd_my_expected, sim.psd_my, atol=0, rtol=RTOL))
+    # assert(np.allclose(psd_mz_expected, sim.psd_mz, atol=0, rtol=RTOL))
+
+    sim.plot_spectrum(t_step=t_step, t_ini=t_ini, t_end=t_end, mesh_region='left', ticks=11, outfilename='spectrum_left.png')
+    sim.plot_spectrum(t_step=t_step, t_ini=t_ini, t_end=t_end, mesh_region='right', ticks=11, outfilename='spectrum_right.png')
+
+    logger.debug("Precession frequency 1: {} GHz".format(omega1 / 1e9))
+    logger.debug("Precession frequency 2: {} GHz".format(omega2 / 1e9))
