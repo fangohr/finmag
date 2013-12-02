@@ -1286,6 +1286,7 @@ def test_compute_energies_with_non_normalised_m(tmpdir):
                 assert(np.allclose(sim.compute_energy(name), a**exponent * energies[name], atol=0, rtol=1e-12))
 
 
+@pytest.mark.skipif("LooseVersion(df.__version__) <= LooseVersion('1.2.0')")
 def test_compute_and_plot_power_spectral_density_in_mesh_region(tmpdir):
     """
     Create a simulation with two mesh regions, where the magnetisation
