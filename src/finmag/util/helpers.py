@@ -1450,6 +1450,8 @@ def vortex_simple(r, center, right_handed=True, polarity=+1):
         yc = y - center[1]
         phi = math.atan2(yc, xc)
         rho = math.sqrt(xc**2 + yc**2)
+
+        # To start with, create a right-handed vortex with polarity 1.
         if rho < r:
             theta = 2 * math.atan(rho / r)
             mz = math.cos(theta)
@@ -1459,11 +1461,16 @@ def vortex_simple(r, center, right_handed=True, polarity=+1):
             mz = 0
             mx = -math.sin(phi)
             my = math.cos(phi)
-        if not right_handed:
-            mx = -mx
-            my = -my
+
+        # If we actually want a different polarity, flip the z-coordinates
         if polarity < 0:
             mz = -mz
+
+        # Adapt the chirality accordingly
+        if ((polarity > 0) and (not right_handed)) or ((polarity < 0) and right_handed):
+            mx = -mx
+            my = -my
+
         return (mx, my, mz)
 
     return f
@@ -1552,6 +1559,7 @@ def vortex_feldtkeller(beta, center, right_handed=True, polarity=+1):
     beta_sq = beta**2
 
     def f((x, y, z)):
+        # To start with, create a right-handed vortex with polarity 1.
         xc = x - center[0]
         yc = y - center[1]
         phi = math.atan2(yc, xc)
@@ -1559,11 +1567,16 @@ def vortex_feldtkeller(beta, center, right_handed=True, polarity=+1):
         mz = math.exp(-2.0 * r_sq / beta_sq)
         mx = -math.sqrt(1 - mz*mz) * math.sin(phi)
         my = math.sqrt(1 - mz*mz) * math.cos(phi)
-        if not right_handed:
-            mx = -mx
-            my = -my
+
+        # If we actually want a different polarity, flip the z-coordinates
         if polarity < 0:
             mz = -mz
+
+        # Adapt the chirality accordingly
+       	if ((polarity > 0) and (not right_handed)) or ((polarity < 0) and right_handed):
+            mx = -mx
+            my = -my
+
         return (mx, my, mz)
 
     return f
