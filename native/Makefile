@@ -75,8 +75,9 @@ CFLAGS_USE_PCH = -include $(PRECOMPILED_HEADER_DIR)/finmag_includes.h
 #       the machine where it is going to be used). We have this
 #       setting in the finmag-dist repository, so this comment is just
 #       to document these flags.
+EIGEN_INCLUDE_DIR ?= /usr/include/eigen3
 CFLAGS_OPT ?= -O3 -funroll-loops -mfpmath=sse -march=native
-CFLAGS_PYTHON=-I/usr/include/python2.7 -fPIC -lboost_python -lpython2.7
+CFLAGS_PYTHON=-I/usr/include/python2.7 -I$(EIGEN_INCLUDE_DIR) -fPIC -lboost_python -lpython2.7
 # -rdynamic keeps private symbols in .so files, providing more detailed stack traces
 # -MMD -MP generates .d dependency files
 CFLAGS_OTHER=-g -rdynamic -fopenmp -MMD -MP -std=c++0x
