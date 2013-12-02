@@ -4,7 +4,9 @@ from glob import glob
 from contextlib import contextmanager
 from finmag.util.fileio import Tablereader
 from finmag.util.visualization import render_paraview_scene
+from finmag.util.versions import get_version_dolfin
 from threading import Timer
+from distutils.version import LooseVersion
 import matplotlib as mpl
 #try to use 'Agg' as backend, we can remove it if something wrong.
 #mpl.use("Agg")
@@ -1723,3 +1725,18 @@ def pvd2avi(pvd_filename, outfilename=None, duration=2, fps=25, **kwargs):
         jpg_tmpfilename = os.path.join(tmpdir, 'animation.jpg')
         render_paraview_scene(pvd_filename, outfile=jpg_tmpfilename, **kwargs)
         jpg2avi(jpg_tmpfilename, outfilename=outfilename, duration=duration, fps=fps)
+
+
+def warn_about_outdated_code(min_dolfin_version, msg):
+    """
+    If the current dolfin version is >= min_dolfin_version, print the
+    given warning message. This is useful to warn about outdated code
+    which is temporarily kept for backwards compatibility but should
+    eventually be removed. Remember that the call to this function
+    should of course occur from the new code that will be executed in
+    later dolfin versions (otherwise the warning will never get
+    printed when it's relevant).
+
+    """
+    if LooseVersion(get_version_dolfin()) >= LooseVersion(min_dolfin_version):
+        logger.warning(msg)
