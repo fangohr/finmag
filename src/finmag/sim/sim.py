@@ -1519,7 +1519,7 @@ class NormalModeSimulation(Simulation):
                                                    peak_idx, dm_only=dm_only, num_cycles=num_cycles,
                                                    num_frames_per_cycle=num_frames_per_cycle)
 
-    def compute_normal_modes(self, n_values=10, discard_negative_frequencies=True, filename_mat_A=None, filename_mat_M=None, use_generalised=True,
+    def compute_normal_modes(self, n_values=10, discard_negative_frequencies=False, filename_mat_A=None, filename_mat_M=None, use_generalised=True,
                              tol=1e-8, sigma=None, which='LM', v0=None, ncv=None, maxiter=None, Minv=None, OPinv=None, mode='normal',
                              force_recompute_matrices=False):
         """
@@ -1542,10 +1542,13 @@ class NormalModeSimulation(Simulation):
 
         discard_negative_frequencies:
 
-            For every eigenmode there is a corresponding mode with the
-            negative frequency which otherwise looks exactly the same.
-            If `discard_negative_frequencies` is True (the default)
-            then these are discarded.
+            For every eigenmode there is usually a corresponding mode
+            with the negative frequency which otherwise looks exactly
+            the same (at least in sufficiently symmetric situations).
+            If `discard_negative_frequencies` is True then these are
+            discarded. Use this at your own risk, however, since you
+            might miss genuinely different eigenmodes. Default is
+            False.
 
         filename_mat_A:
         filename_mat_M:
