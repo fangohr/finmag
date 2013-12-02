@@ -128,7 +128,21 @@ class FKDemag(object):
         self._laplace_solver = df.KrylovSolver(
                 self.parameters['phi_2_solver'], self.parameters['phi_2_preconditioner'])
         self._laplace_solver.parameters.update(self.parameters['phi_2'])
-        self._laplace_solver.parameters["preconditioner"]["same_nonzero_pattern"] = True
+        # We're setting 'same_nonzero_pattern=True' to enforce the
+        # same matrix sparsity pattern across different demag solves,
+        # which should speed up things.
+        try:
+            # Old syntax (dolfin version <= 1.2)
+            self._laplace_solver.parameters["preconditioner"]["same_nonzero_pattern"] = True
+        except KeyError:
+            # New syntax (dolfin version >= 1.2.0+)
+            self._laplace_solver.parameters["preconditioner"]["structure"] = "same_nonzero_pattern"
+            from finmag.util.helpers import warn_about_outdated_code
+            warn_about_outdated_code(
+                min_dolfin_version='1.3.0',
+                msg='There is outdated code in FKDemag.__init__() setting the '
+                    '"same_nonzero_pattern" parameter which might be good to '
+                    'remove since the syntax has changed in recent dolfin versions.')
         with fk_timed('compute BEM'):
             if not hasattr(self, "_bem"):
                 self._bem, self._b2g_map = compute_bem_fk(df.BoundaryMesh(mesh, 'exterior', False))
