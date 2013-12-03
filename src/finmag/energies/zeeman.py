@@ -37,10 +37,11 @@ class Zeeman(object):
         docstring for details).
 
         """
+        self.value = value
         self.H = helpers.vector_valued_function(value, self.S3, **self.kwargs)
         self.H.rename('H_ext', 'H_ext')
         self.E = - mu0 * self.Ms * df.dot(self.m, self.H)
-    
+
     def average_field(self):
         """
         Compute the average applied field.
@@ -59,9 +60,9 @@ class TimeZeeman(Zeeman):
     def __init__(self, field_expression, t_off=None, name='TimeZeeman'):
         """
         Specify a time dependent external field (in A/m), which gets updated as continuously as possible.
-        
+
         Pass in a dolfin expression that depends on time. Make sure the time
-        variable is called t. It will get refreshed by calls to update. 
+        variable is called t. It will get refreshed by calls to update.
         The argument t_off can specify a time at which the field will
         get switched off.
 
@@ -125,7 +126,7 @@ class DiscreteTimeZeeman(TimeZeeman):
         """
         Specify a time dependent external field which gets updated in
         discrete time intervals.
-        
+
         Pass in a dolfin expression that depends on time. Make sure
         the time variable is called t. It will get refreshed by calls
         to update, if more than dt_update time has passed since the
@@ -203,7 +204,7 @@ class TimeZeemanPython(TimeZeeman):
         self.unit_length = unit_length
         self.H0 = helpers.vector_valued_function(self.df_expression, self.S3)
         self.E = - mu0 * self.Ms * df.dot(self.m, self.H0)
-        
+
         self.H0 = self.H0.vector().array()
         self.H = self.H0.copy()
 
