@@ -176,6 +176,21 @@ def test_compute_energy_in_regions(tmpdir):
     check_energies(m=(0, 0, 1))
     check_energies(m=(2, -3, -1))
 
+def test_value_set_update():
+    """
+    Test to check that the value member variable updates when set_value is
+    called.
+    """
+    init_value = [1., 2., 3.]
+    second_value = [100., 200., 400.]
+
+    zeeman = Zeeman(init_value)
+    mesh = df.RectangleMesh(0, 0, 1, 1, 10, 10)
+    sim = finmag.Simulation(mesh, 1e5)
+    sim.add(zeeman)
+    zeeman.set_value(second_value)
+
+    assert zeeman.value == second_value
 
 def test_time_zeeman_init():
     field_expr = df.Expression(("0", "t", "0"), t=0)
