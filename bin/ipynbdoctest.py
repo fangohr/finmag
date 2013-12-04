@@ -1,24 +1,40 @@
 #!/usr/bin/env python
+
+# IPython notebook testing script. This is based on the gist [1] (revision 5).
+#
+# Each cell is submitted to the kernel, and the outputs are compared
+# with those stored in the notebook. If the output is an image this is
+# currently ignored.
+#
+# https://gist.github.com/minrk/2620735
+
+
 """
-simple example script for running and testing notebooks.
+IPython notebook testing script.
 
 Usage: `ipnbdoctest.py foo.ipynb [bar.ipynb [...]]`
 
-Each cell is submitted to the kernel, and the outputs are compared
-with those stored in the notebook.
 """
 
 import os
+import re
 import sys
 import time
 import base64
-import re
 
 from collections import defaultdict
 from Queue import Empty
 
-from IPython.zmq.blockingkernelmanager import BlockingKernelManager
+try:
+    from IPython.kernel import KernelManager
+except ImportError:
+    from IPython.zmq.blockingkernelmanager \
+        import BlockingKernelManager as KernelManager
+
 from IPython.nbformat.current import reads, NotebookNode
+
+
+CELL_EXECUTION_TIMEOUT = 200  # abort cell execution after this time (seconds)
 
 
 class IPythonNotebookDoctestError(Exception):
@@ -26,7 +42,10 @@ class IPythonNotebookDoctestError(Exception):
 
 
 def compare_png(a64, b64):
-    """compare two b64 PNGs (incomplete)"""
+    """
+    Compare two b64 PNGs (incomplete).
+
+    """
     try:
         import Image
     except ImportError:
@@ -41,7 +60,7 @@ def sanitize(s):
     Sanitize a string for comparison.
 
     Fix universal newlines, strip trailing newlines, and normalize
-    likely random values (memory addresses and UUIDs).
+    likely random values (date stamps, memory addresses, UUIDs, etc.).
     """
     # normalize newline:
     s = s.replace('\r\n', '\n')
@@ -55,48 +74,53 @@ def sanitize(s):
     # normalize UUIDs:
     s = re.sub(r'[a-f0-9]{8}(\-[a-f0-9]{4}){3}\-[a-f0-9]{12}', 'U-U-I-D', s)
 
-    # remove timestamps in Finmag logging output
+    #
+    # Finmag-related stuff follows below
+    #
+
+    # Remove timestamps in logging output
     s = re.sub(r'\[201\d-\d\d-\d\d \d\d:\d\d:\d\d\]', 'LOGGING_TIMESTAMP', s)
 
-    # ignore version information of external dependencies
+    # Ignore version information of external dependencies
     s = re.sub('^paraview version .*$', 'PARAVIEW_VERSION', s)
     for dep in ['Finmag', 'Dolfin', 'Matplotlib', 'Numpy', 'Scipy', 'IPython',
                 'Python', 'Paraview', 'Sundials', 'Boost-Python', 'Linux']:
         s = re.sub('DEBUG: %20s: .*' % dep, 'VERSION_%s' % dep, s)
 
-    # ignore specific location of logging output file
+    # Ignore specific location of logging output file
     s = re.sub("Finmag logging output will be.*", "FINMAG_LOGGING_OUTPUT", s)
 
-    # ignore datetime objects
+    # Ignore datetime objects
     s = re.sub(r'datetime.datetime\([0-9, ]*\)', 'DATETIME_OBJECT', s)
 
     return s
 
 
-def consolidate_outputs(outputs):
-    """consolidate outputs into a summary dict (incomplete)"""
-    data = defaultdict(list)
-    data['stdout'] = ''
-    data['stderr'] = ''
-
-    for out in outputs:
-        if out.type == 'stream':
-            data[out.stream] += out.text
-        elif out.type == 'pyerr':
-            data['pyerr'] = dict(ename=out.ename, evalue=out.evalue)
-        else:
-            for key in ('png', 'svg', 'latex', 'html',
-                        'javascript', 'text', 'jpeg'):
-                if key in out:
-                    data[key].append(out[key])
-    return data
+# def consolidate_outputs(outputs):
+#     """consolidate outputs into a summary dict (incomplete)"""
+#     data = defaultdict(list)
+#     data['stdout'] = ''
+#     data['stderr'] = ''
+#
+#     for out in outputs:
+#         if out.type == 'stream':
+#             data[out.stream] += out.text
+#         elif out.type == 'pyerr':
+#             data['pyerr'] = dict(ename=out.ename, evalue=out.evalue)
+#         else:
+#             for key in ('png', 'svg', 'latex', 'html',
+#                         'javascript', 'text', 'jpeg'):
+#                 if key in out:
+#                     data[key].append(out[key])
+#     return data
 
 
 def compare_outputs(test, ref, skip_compare=('png', 'traceback',
-                                             'latex', 'prompt_number')):
+                                             'latex', 'prompt_number',
+                                             'metadata')):
     for key in ref:
         if key not in test:
-            print "missing key: %s != %s" % (test.keys(), ref.keys())
+            print "Missing key: %s != %s" % (test.keys(), ref.keys())
             return False
         elif (key not in skip_compare) and \
                 (sanitize(test[key]) != sanitize(ref[key])):
@@ -105,18 +129,26 @@ def compare_outputs(test, ref, skip_compare=('png', 'traceback',
             print "----------   !=   ----------"
             print ref[key]
             print "--------------------------------------------------------------------------------"
-            return False
-    return True
+            try:
+                import diff_match_patch
+                dmp = diff_match_patch.diff_match_patch()
+                diffs = dmp.diff_main(sanitize(ref[key]), sanitize(test[key]))
+                dmp.diff_cleanupSemantic(diffs)
+                htmlSnippet = dmp.diff_prettyHtml(diffs)
+            except ImportError:
+                print("The library 'diff-match-patch' is not installed, thus "
+                      "no diagnostic HTML output of the failed test could be "
+                      "produced. Please consider installing it by saying "
+                      "'sudo pip install diff-match-patch'")
+            return False, htmlSnippet
+    return True, ""
 
 
-def run_cell(km, cell):
-    shell = km.shell_channel
-    iopub = km.sub_channel
-    # print "\n\ntesting:"
+def run_cell(shell, iopub, cell):
     # print cell.input
     shell.execute(cell.input)
-    # wait for finish, maximum 20s
-    shell.get_msg(timeout=20)
+    # wait for finish, abort if timeout is reached
+    shell.get_msg(timeout=CELL_EXECUTION_TIMEOUT)
     outs = []
 
     while True:
@@ -139,6 +171,7 @@ def run_cell(km, cell):
             out.stream = content['name']
             out.text = content['data']
         elif msg_type in ('display_data', 'pyout'):
+            out['metadata'] = content['metadata']
             for mime, data in content['data'].iteritems():
                 attr = mime.split('/')[-1].lower()
                 # this gets most right, but fix svg+html, plain
@@ -158,13 +191,21 @@ def run_cell(km, cell):
 
 
 def merge_streams(outputs):
+    """
+    Since the Finmag logger uses streams, output that logically
+    belongs together may be split up in the notebook source. Thus we
+    merge it here to be able to compare streamed output robustly.
+
+    """
     if outputs == []:
         return []
 
     res = outputs[:1]
     for out in outputs[1:]:
         prev_out = res[-1]
-        if (prev_out['output_type'] == 'stream' and out['output_type'] == 'stream' and prev_out['stream'] == out['stream']):
+        if (prev_out['output_type'] == 'stream' and
+            out['output_type'] == 'stream' and
+            prev_out['stream'] == out['stream']):
             prev_out['text'] += out['text']
         else:
             res.append(out)
@@ -173,29 +214,45 @@ def merge_streams(outputs):
 
 
 def test_notebook(nb):
-    km = BlockingKernelManager()
-    km.start_kernel(extra_arguments=['--pylab=inline'],
-                    stderr=open(os.devnull, 'w'))
-    km.start_channels()
+    km = KernelManager()
+    km.start_kernel(extra_arguments=['--pylab=inline'], stderr=open(os.devnull, 'w'))
+    try:
+        kc = km.client()
+        kc.start_channels()
+        iopub = kc.iopub_channel
+    except AttributeError:
+        # IPython 0.13
+        kc = km
+        kc.start_channels()
+        iopub = kc.sub_channel
+    shell = kc.shell_channel
+
     # run %pylab inline, because some notebooks assume this
     # even though they shouldn't
-    km.shell_channel.execute("pass")
-    km.shell_channel.get_msg()
+    shell.execute("pass")
+    shell.get_msg()
     while True:
         try:
-            km.sub_channel.get_msg(timeout=1)
+            iopub.get_msg(timeout=1)
         except Empty:
             break
 
     successes = 0
     failures = 0
     errors = 0
+    html_diffs_all = ""
     for ws in nb.worksheets:
         for cell in ws.cells:
             if cell.cell_type != 'code':
                 continue
             try:
-                outs = run_cell(km, cell)
+                # Ignore output from cells whose input starts
+                # with the string '# IPYTHON_TEST_IGNORE_OUTPUT'.
+                first_line = cell['input'].splitlines()[0] if (cell['input'] != '') else ''
+                if first_line.startswith('# IPYTHON_TEST_IGNORE_OUTPUT'):
+                    outs = []
+                else:
+                    outs = run_cell(shell, iopub, cell)
             except Exception as e:
                 print "failed to run cell:", repr(e)
                 print cell.input
@@ -206,7 +263,9 @@ def test_notebook(nb):
             outs_merged = merge_streams(outs)
             cell_outputs_merged = merge_streams(cell.outputs)
             for out, ref in zip(outs_merged, cell_outputs_merged):
-                if not compare_outputs(out, ref):
+                cmp_result, html_diff = compare_outputs(out, ref)
+                html_diffs_all += html_diff
+                if not cmp_result:
                     failed = True
             if failed:
                 print "Failed to replicate cell with the following input: "
@@ -218,20 +277,27 @@ def test_notebook(nb):
                 successes += 1
             sys.stdout.write('.')
 
-    print
+    if failures >= 1:
+        outfilename = 'ipynbtest_failed_test_differences.html'
+        with open(outfilename, 'w') as f:
+            f.write(html_diffs_all)
+        print("Diagnostic HTML output of the failed test has been "
+              "written to '{}'".format(outfilename))
+
+    print ""
     print "tested notebook %s" % nb.metadata.name
     print "    %3i cells successfully replicated" % successes
     if failures:
         print "    %3i cells mismatched output" % failures
     if errors:
         print "    %3i cells failed to complete" % errors
+    kc.stop_channels()
     km.shutdown_kernel()
     del km
     if failures or errors:
         raise IPythonNotebookDoctestError(
             "The notebook {} failed to replicate successfully.".format(
                 nb.metadata['name']))
-
 
 if __name__ == '__main__':
     for ipynb in sys.argv[1:]:
