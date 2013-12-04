@@ -30,7 +30,8 @@
 - [ ] tutorial-running-simulations-with-dmi.ipynb
 - [ ] tutorial-sampling-m-at-arbitrary-positions.ipynb
 - [ ] tutorial-saving-averages-demo.ipynb
-- [ ] tutorial-scheduling-events.ipynb
+- [X] tutorial-scheduling-events.ipynb
+      Done, 4 December 2013, Max.
 - [ ] tutorial-use-of-logging.ipynb
 - [ ] tutorial-using-ipython-notebook.ipynb
 - [ ] tutorial-using-the-physics-units-object.ipynb
