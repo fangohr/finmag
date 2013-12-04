@@ -36,6 +36,13 @@ from IPython.nbformat.current import reads, NotebookNode
 
 CELL_EXECUTION_TIMEOUT = 200  # abort cell execution after this time (seconds)
 
+# If any of the following patterns occurs in the output, the line
+# containing it will be discarded. Note that sometimes you don't
+# want to discard the entire line but only bits of it. In this
+# case don't use "discard_patterns" but rather add an explicit
+# replacement rule below.
+DISCARD_PATTERNS = []
+
 
 class IPythonNotebookDoctestError(Exception):
     pass
@@ -53,6 +60,29 @@ def compare_png(a64, b64):
     adata = base64.decodestring(a64)
     bdata = base64.decodestring(b64)
     return True
+
+
+def does_not_match_any_discard_pattern(s):
+    """
+    Helper function to check whether any of the patterns in
+    DISCARD_PATTERNS occurs in the string.
+
+    """
+    for pat in DISCARD_PATTERNS:
+        if re.search(pat, s):
+            return False
+    return True
+
+
+def strip_lines_to_discard(s):
+    """
+    Strip lines from the output which match any of the patterns
+    in DISCARD_PATTERNS.
+
+    """
+    lines = s.splitlines(True)
+    lines_stripped = filter(does_not_match_any_discard_pattern, lines)
+    return "".join(lines_stripped)
 
 
 def sanitize(s):
@@ -74,9 +104,14 @@ def sanitize(s):
     # normalize UUIDs:
     s = re.sub(r'[a-f0-9]{8}(\-[a-f0-9]{4}){3}\-[a-f0-9]{12}', 'U-U-I-D', s)
 
-    #
-    # Finmag-related stuff follows below
-    #
+    ##
+    ## Finmag-related stuff follows below
+    ##
+
+    import ipdb; ipdb.set_trace()
+
+    # Strip any lines which match a pattern in DISCARD_PATTERNS
+    s = strip_lines_to_discard(s)
 
     # Remove timestamps in logging output
     s = re.sub(r'\[201\d-\d\d-\d\d \d\d:\d\d:\d\d\]', 'LOGGING_TIMESTAMP', s)
