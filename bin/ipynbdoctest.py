@@ -90,7 +90,7 @@ def sanitize(s):
     # Ignore specific location of logging output file
     s = re.sub("Finmag logging output will be.*", "FINMAG_LOGGING_OUTPUT", s)
 
-    # Ignore datetime objects
+z    # Ignore datetime objects
     s = re.sub(r'datetime.datetime\([0-9, ]*\)', 'DATETIME_OBJECT', s)
 
     return s
@@ -134,18 +134,13 @@ def compare_outputs(test, ref, skip_compare=('png', 'traceback',
                 diffs = dmp.diff_main(sanitize(ref[key]), sanitize(test[key]))
                 dmp.diff_cleanupSemantic(diffs)
                 htmlSnippet = dmp.diff_prettyHtml(diffs)
-                outfilename = 'ipynbtest_failed_test_differences.html'
-                with open(outfilename, 'w') as f:
-                    f.write(htmlSnippet)
-                print("Diagnostic HTML output of the failed test has been "
-                      "written to '{}'".format(outfilename))
             except ImportError:
                 print("The library 'diff-match-patch' is not installed, thus "
                       "no diagnostic HTML output of the failed test could be "
                       "produced. Please consider installing it by saying "
                       "'sudo pip install diff-match-patch'")
-            return False
-    return True
+            return False, htmlSnippet
+    return True, ""
 
 
 def run_cell(shell, iopub, cell):
@@ -244,6 +239,7 @@ def test_notebook(nb):
     successes = 0
     failures = 0
     errors = 0
+    html_diffs_all = ""
     for ws in nb.worksheets:
         for cell in ws.cells:
             if cell.cell_type != 'code':
@@ -266,7 +262,9 @@ def test_notebook(nb):
             outs_merged = merge_streams(outs)
             cell_outputs_merged = merge_streams(cell.outputs)
             for out, ref in zip(outs_merged, cell_outputs_merged):
-                if not compare_outputs(out, ref):
+                cmp_result, html_diff = compare_outputs(out, ref)
+                html_diffs_all += html_diff
+                if not cmp_result:
                     failed = True
             if failed:
                 print "Failed to replicate cell with the following input: "
@@ -277,6 +275,13 @@ def test_notebook(nb):
             else:
                 successes += 1
             sys.stdout.write('.')
+
+    if failures >= 1:
+        outfilename = 'ipynbtest_failed_test_differences.html'
+        with open(outfilename, 'w') as f:
+            f.write(html_diffs_all)
+        print("Diagnostic HTML output of the failed test has been "
+              "written to '{}'".format(outfilename))
 
     print ""
     print "tested notebook %s" % nb.metadata.name
