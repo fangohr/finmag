@@ -1,16 +1,18 @@
 #!/usr/bin/env python
 
-# This script is based on the gist [1] (revision 5)
+# IPython notebook testing script. This is based on the gist [1] (revision 5).
+#
+# Each cell is submitted to the kernel, and the outputs are compared
+# with those stored in the notebook.
 #
 # https://gist.github.com/minrk/2620735
 
 
 """
-simple example script for running and testing notebooks.
+IPython notebook testing script.
 
 Usage: `ipnbdoctest.py foo.ipynb [bar.ipynb [...]]`
 
-Each cell is submitted to the kernel, and the outputs are compared with those stored in the notebook.
 """
 
 import os,sys,time
