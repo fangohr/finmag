@@ -33,6 +33,10 @@ from IPython.nbformat.current import reads, NotebookNode
 CELL_EXECUTION_TIMEOUT = 200  # abort cell execution after this time (seconds)
 
 
+class IPythonNotebookDoctestError(Exception):
+    pass
+
+
 def compare_png(a64, b64):
     """
     Compare two b64 PNGs (incomplete).
@@ -257,6 +261,10 @@ def test_notebook(nb):
     kc.stop_channels()
     km.shutdown_kernel()
     del km
+    if failures or errors:
+        raise IPythonNotebookDoctestError(
+            "The notebook {} failed to replicate successfully.".format(
+                nb.metadata['name']))
 
 if __name__ == '__main__':
     for ipynb in sys.argv[1:]:
