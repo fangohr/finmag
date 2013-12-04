@@ -128,6 +128,21 @@ def compare_outputs(test, ref, skip_compare=('png', 'traceback',
             print "----------   !=   ----------"
             print ref[key]
             print "--------------------------------------------------------------------------------"
+            try:
+                import diff_match_patch
+                dmp = diff_match_patch.diff_match_patch()
+                diffs = dmp.diff_main(sanitize(ref[key]), sanitize(test[key]))
+                htmlSnippet = dmp.diff_prettyHtml(diffs)
+                outfilename = 'ipynbtest_failed_test_differences.html'
+                with open(outfilename, 'w') as f:
+                    f.write(htmlSnippet)
+                print("Diagnostic HTML output of the failed test has been "
+                      "written to '{}'".format(outfilename))
+            except ImportError:
+                print("The library 'diff-match-patch' is not installed, thus "
+                      "no diagnostic HTML output of the failed test could be "
+                      "produced. Please consider installing it by saying "
+                      "'sudo pip install diff-match-patch'")
             return False
     return True
 
