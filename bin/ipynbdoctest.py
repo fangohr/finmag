@@ -30,6 +30,9 @@ except ImportError:
 from IPython.nbformat.current import reads, NotebookNode
 
 
+CELL_EXECUTION_TIMEOUT = 200  # abort cell execution after this time (seconds)
+
+
 def compare_png(a64, b64):
     """
     Compare two b64 PNGs (incomplete).
@@ -124,8 +127,8 @@ def compare_outputs(test, ref, skip_compare=('png', 'traceback',
 def run_cell(shell, iopub, cell):
     # print cell.input
     shell.execute(cell.input)
-    # wait for finish, maximum 20s
-    shell.get_msg(timeout=20)
+    # wait for finish, abort if timeout is reached
+    shell.get_msg(timeout=CELL_EXECUTION_TIMEOUT)
     outs = []
     
     while True:
