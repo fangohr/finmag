@@ -116,7 +116,8 @@ z    # Ignore datetime objects
 
 
 def compare_outputs(test, ref, skip_compare=('png', 'traceback',
-                                             'latex', 'prompt_number')):
+                                             'latex', 'prompt_number',
+                                             'metadata')):
     for key in ref:
         if key not in test:
             print "Missing key: %s != %s" % (test.keys(), ref.keys())
