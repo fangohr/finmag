@@ -16,9 +16,11 @@ Usage: `ipnbdoctest.py foo.ipynb [bar.ipynb [...]]`
 
 """
 
-import os,sys,time
-import base64
+import os
 import re
+import sys
+import time
+import base64
 
 from collections import defaultdict
 from Queue import Empty
@@ -26,7 +28,8 @@ from Queue import Empty
 try:
     from IPython.kernel import KernelManager
 except ImportError:
-    from IPython.zmq.blockingkernelmanager import BlockingKernelManager as KernelManager
+    from IPython.zmq.blockingkernelmanager \
+        import BlockingKernelManager as KernelManager
 
 from IPython.nbformat.current import reads, NotebookNode
 
@@ -98,7 +101,7 @@ def sanitize(s):
 #     data = defaultdict(list)
 #     data['stdout'] = ''
 #     data['stderr'] = ''
-#     
+#
 #     for out in outputs:
 #         if out.type == 'stream':
 #             data[out.stream] += out.text
@@ -135,7 +138,7 @@ def run_cell(shell, iopub, cell):
     # wait for finish, abort if timeout is reached
     shell.get_msg(timeout=CELL_EXECUTION_TIMEOUT)
     outs = []
-    
+
     while True:
         try:
             msg = iopub.get_msg(timeout=0.2)
@@ -147,11 +150,11 @@ def run_cell(shell, iopub, cell):
         elif msg_type == 'clear_output':
             outs = []
             continue
-        
+
         content = msg['content']
         # print msg_type, content
         out = NotebookNode(output_type=msg_type)
-        
+
         if msg_type == 'stream':
             out.stream = content['name']
             out.text = content['data']
@@ -170,7 +173,7 @@ def run_cell(shell, iopub, cell):
             out.traceback = content['traceback']
         else:
             print "unhandled iopub msg:", msg_type
-        
+
         outs.append(out)
     return outs
 
@@ -188,13 +191,15 @@ def merge_streams(outputs):
     res = outputs[:1]
     for out in outputs[1:]:
         prev_out = res[-1]
-        if (prev_out['output_type'] == 'stream' and out['output_type'] == 'stream' and prev_out['stream'] == out['stream']):
+        if (prev_out['output_type'] == 'stream' and
+            out['output_type'] == 'stream' and
+            prev_out['stream'] == out['stream']):
             prev_out['text'] += out['text']
         else:
             res.append(out)
 
     return res
-    
+
 
 def test_notebook(nb):
     km = KernelManager()
@@ -209,7 +214,7 @@ def test_notebook(nb):
         kc.start_channels()
         iopub = kc.sub_channel
     shell = kc.shell_channel
-    
+
     # run %pylab inline, because some notebooks assume this
     # even though they shouldn't
     shell.execute("pass")
@@ -219,7 +224,7 @@ def test_notebook(nb):
             iopub.get_msg(timeout=1)
         except Empty:
             break
-    
+
     successes = 0
     failures = 0
     errors = 0
@@ -234,7 +239,7 @@ def test_notebook(nb):
                 print cell.input
                 errors += 1
                 continue
-            
+
             failed = False
             outs_merged = merge_streams(outs)
             cell_outputs_merged = merge_streams(cell.outputs)
@@ -251,8 +256,7 @@ def test_notebook(nb):
                 successes += 1
             sys.stdout.write('.')
 
-
-    print
+    print ""
     print "tested notebook %s" % nb.metadata.name
     print "    %3i cells successfully replicated" % successes
     if failures:
