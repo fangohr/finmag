@@ -3,7 +3,8 @@
 # IPython notebook testing script. This is based on the gist [1] (revision 5).
 #
 # Each cell is submitted to the kernel, and the outputs are compared
-# with those stored in the notebook.
+# with those stored in the notebook. If the output is an image this is
+# currently ignored.
 #
 # https://gist.github.com/minrk/2620735
 
