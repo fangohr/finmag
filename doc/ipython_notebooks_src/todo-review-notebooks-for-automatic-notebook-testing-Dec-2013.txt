@@ -1,0 +1,51 @@
+* Notebooks to review (December 2013)
+
+- [ ] dev-assemble-question.ipynb
+- [ ] dev-cvode.ipynb
+- [ ] dev-cvode-nsteps-only.ipynb
+- [X] dev-papers-Rohart-and-Thiaville-2013.ipynb
+      Done, 4 December 2013, Hans.
+- [ ] dev-restricting-a-dolfin-function-to-a-submesh.ipynb
+- [ ] other-sample-notebook.ipynb
+- [ ] ref-assembling-dmi-simulations.ipynb
+- [ ] ref-creating-custom-data-table-files.ipynb
+- [ ] ref-domain-wall-energy-class.ipynb
+- [ ] ref-magnetic-spectrum-skymion.ipynb
+- [ ] ref-restarting-simulations.ipynb
+- [ ] ref-saving-averages-regions.ipynb
+- [ ] ref-spatially-varying-anisotropy.ipynb
+- [ ] ref-using-timings.ipynb
+- [ ] ref-varying-damping.ipynb
+- [ ] ref-varying-Ms.ipynb
+- [ ] ref-zhang-li-example.ipynb
+- [ ] test-flag-to-ignore-cell-output.ipynb
+- [ ] tutorial-coupled-relaxation-of-two-nanodisks.ipynb
+- [ ] tutorial-example2.ipynb
+- [ ] tutorial-finding-dmi-from-helix-length.ipynb
+- [ ] tutorial_fourier_transform.ipynb
+- [ ] tutorial_mesh_templates.ipynb
+- [ ] tutorial-NormalModeSimulation.ipynb
+- [ ] tutorial-normal-modes.ipynb
+- [ ] tutorial-relaxations-of-a-single-nanodisk.ipynb
+- [ ] tutorial-running-simulations-with-dmi.ipynb
+- [ ] tutorial-sampling-m-at-arbitrary-positions.ipynb
+- [ ] tutorial-saving-averages-demo.ipynb
+- [ ] tutorial-scheduling-events.ipynb
+- [ ] tutorial-use-of-logging.ipynb
+- [ ] tutorial-using-ipython-notebook.ipynb
+- [ ] tutorial-using-the-physics-units-object.ipynb
+- [ ] tutorial-visualising-the-stray-field-with-the-airbox-method.ipynb
+
+
+* To run the tests for notebook "tutorial-use-of-logging.ipynb", we can do this:
+
+   $> hg root
+   /home/fangohr/hg/finmag
+   $> cd doc/ipython_notebooks_src
+   $> python  ../../bin/ipynbdoctest.py tutorial-use-of-logging.ipynb 
+
+
+
+
+
+
