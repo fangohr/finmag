@@ -38,25 +38,45 @@ def compare_png(a64, b64):
     bdata = base64.decodestring(b64)
     return True
 
+
 def sanitize(s):
-    """sanitize a string for comparison.
-    
-    fix universal newlines, strip trailing newlines, and normalize likely random values (memory addresses and UUIDs)
     """
-    if not isinstance(s, basestring):
-        return s
+    Sanitize a string for comparison.
+
+    Fix universal newlines, strip trailing newlines, and normalize
+    likely random values (memory addresses and UUIDs).
+    """
     # normalize newline:
     s = s.replace('\r\n', '\n')
-    
+
     # ignore trailing newlines (but not space)
     s = s.rstrip('\n')
-    
+
     # normalize hex addresses:
     s = re.sub(r'0x[a-f0-9]+', '0xFFFFFFFF', s)
-    
+
     # normalize UUIDs:
     s = re.sub(r'[a-f0-9]{8}(\-[a-f0-9]{4}){3}\-[a-f0-9]{12}', 'U-U-I-D', s)
-    
+
+    #
+    # Finmag-related stuff follows below
+    #
+
+    # Remove timestamps in logging output
+    s = re.sub(r'\[201\d-\d\d-\d\d \d\d:\d\d:\d\d\]', 'LOGGING_TIMESTAMP', s)
+
+    # Ignore version information of external dependencies
+    s = re.sub('^paraview version .*$', 'PARAVIEW_VERSION', s)
+    for dep in ['Finmag', 'Dolfin', 'Matplotlib', 'Numpy', 'Scipy', 'IPython',
+                'Python', 'Paraview', 'Sundials', 'Boost-Python', 'Linux']:
+        s = re.sub('DEBUG: %20s: .*' % dep, 'VERSION_%s' % dep, s)
+
+    # Ignore specific location of logging output file
+    s = re.sub("Finmag logging output will be.*", "FINMAG_LOGGING_OUTPUT", s)
+
+    # Ignore datetime objects
+    s = re.sub(r'datetime.datetime\([0-9, ]*\)', 'DATETIME_OBJECT', s)
+
     return s
 
 
