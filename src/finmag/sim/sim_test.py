@@ -19,6 +19,7 @@ from finmag.energies import Zeeman, TimeZeeman, Exchange, UniaxialAnisotropy
 from finmag.util.fileio import Tablereader
 from finmag.util.ansistrm import ColorizingStreamHandler
 from finmag.util.macrospin import make_analytic_solution
+from finmag.example.macrospin import macrospin
 from finmag.util.consts import gamma
 
 logger = logging.getLogger("finmag")
@@ -1364,3 +1365,25 @@ def test_compute_and_plot_power_spectral_density_in_mesh_region(tmpdir):
 
     logger.debug("Precession frequency 1: {} GHz".format(omega1 / 1e9))
     logger.debug("Precession frequency 2: {} GHz".format(omega2 / 1e9))
+
+
+@pytest.mark.xfail
+def test_regression_schedule_switch_off_field(tmpdir):
+    """
+    This is a test to remind myself to attempt a bugfix for this issue.
+
+    Due to the way the Tablewriter works at the moment, there is an
+    error if an interaction (e.g. the Zeeman interaction) is removed
+    from the simulation after some of its data has been written to a
+    file.
+
+    Once this works, the default value for the keyword argument
+    'remove_interaction' in the function 'sim.switch_off_H_ext()'
+    should perhaps be set to True again (because it is more
+    efficient).
+
+    """
+    sim = macrospin()
+    sim.schedule('save_ndt', every=1e-12)
+    sim.schedule('switch_off_H_ext', at=3e-12, remove_interaction=True)
+    sim.run_until(5e-12)

@@ -432,7 +432,7 @@ class Simulation(object):
             H = Zeeman(H_ext)
             self.add(H)
 
-    def switch_off_H_ext(self, remove_interaction=True):
+    def switch_off_H_ext(self, remove_interaction=False):
         """
         Convenience function to switch off the external field.
 
