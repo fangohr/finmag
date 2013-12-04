@@ -6,7 +6,6 @@
 - [X] dev-papers-Rohart-and-Thiaville-2013.ipynb
       Done, 4 December 2013, Hans.
 - [ ] dev-restricting-a-dolfin-function-to-a-submesh.ipynb
-- [ ] other-sample-notebook.ipynb
 - [ ] ref-assembling-dmi-simulations.ipynb
 - [ ] ref-creating-custom-data-table-files.ipynb
 - [ ] ref-domain-wall-energy-class.ipynb
