@@ -18,7 +18,8 @@
 - [ ] ref-varying-damping.ipynb
 - [ ] ref-varying-Ms.ipynb
 - [ ] ref-zhang-li-example.ipynb
-- [ ] test-flag-to-ignore-cell-output.ipynb
+- [X] test-flag-to-ignore-cell-output.ipynb
+      Done, 4 December 2013, Max.
 - [ ] tutorial-coupled-relaxation-of-two-nanodisks.ipynb
 - [ ] tutorial-example2.ipynb
 - [ ] tutorial-finding-dmi-from-helix-length.ipynb
