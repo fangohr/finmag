@@ -90,7 +90,7 @@ def sanitize(s):
     # Ignore specific location of logging output file
     s = re.sub("Finmag logging output will be.*", "FINMAG_LOGGING_OUTPUT", s)
 
-z    # Ignore datetime objects
+    # Ignore datetime objects
     s = re.sub(r'datetime.datetime\([0-9, ]*\)', 'DATETIME_OBJECT', s)
 
     return s
