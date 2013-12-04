@@ -132,6 +132,7 @@ def compare_outputs(test, ref, skip_compare=('png', 'traceback',
                 import diff_match_patch
                 dmp = diff_match_patch.diff_match_patch()
                 diffs = dmp.diff_main(sanitize(ref[key]), sanitize(test[key]))
+                dmp.diff_cleanupSemantic(diffs)
                 htmlSnippet = dmp.diff_prettyHtml(diffs)
                 outfilename = 'ipynbtest_failed_test_differences.html'
                 with open(outfilename, 'w') as f:
@@ -248,7 +249,13 @@ def test_notebook(nb):
             if cell.cell_type != 'code':
                 continue
             try:
-                outs = run_cell(shell, iopub, cell)
+                # Ignore output from cells whose input starts
+                # with the string '# IPYTHON_TEST_IGNORE_OUTPUT'.
+                first_line = cell['input'].splitlines()[0] if (cell['input'] != '') else ''
+                if first_line.startswith('# IPYTHON_TEST_IGNORE_OUTPUT'):
+                    outs = []
+                else:
+                    outs = run_cell(shell, iopub, cell)
             except Exception as e:
                 print "failed to run cell:", repr(e)
                 print cell.input
