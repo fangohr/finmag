@@ -254,7 +254,7 @@ def test_notebook(nb):
                 # Ignore output from cells whose input starts
                 # with the string '# IPYTHON_TEST_IGNORE_OUTPUT'.
                 first_line = cell['input'].splitlines()[0] if (cell['input'] != '') else ''
-                if first_line.startswith('# IPYTHON_TEST_IGNORE_OUTPUT'):
+                if re.search('^#\s*IPYTHON_TEST_IGNORE_OUTPUT', first_line):
                     outs = []
                 else:
                     outs = run_cell(shell, iopub, cell)
