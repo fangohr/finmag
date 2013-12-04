@@ -31,7 +31,10 @@ from IPython.nbformat.current import reads, NotebookNode
 
 
 def compare_png(a64, b64):
-    """compare two b64 PNGs (incomplete)"""
+    """
+    Compare two b64 PNGs (incomplete).
+
+    """
     try:
         import Image
     except ImportError:
@@ -46,7 +49,7 @@ def sanitize(s):
     Sanitize a string for comparison.
 
     Fix universal newlines, strip trailing newlines, and normalize
-    likely random values (memory addresses and UUIDs).
+    likely random values (date stamps, memory addresses, UUIDs, etc.).
     """
     # normalize newline:
     s = s.replace('\r\n', '\n')
@@ -82,34 +85,38 @@ def sanitize(s):
     return s
 
 
-def consolidate_outputs(outputs):
-    """consolidate outputs into a summary dict (incomplete)"""
-    data = defaultdict(list)
-    data['stdout'] = ''
-    data['stderr'] = ''
-    
-    for out in outputs:
-        if out.type == 'stream':
-            data[out.stream] += out.text
-        elif out.type == 'pyerr':
-            data['pyerr'] = dict(ename=out.ename, evalue=out.evalue)
-        else:
-            for key in ('png', 'svg', 'latex', 'html', 'javascript', 'text', 'jpeg',):
-                if key in out:
-                    data[key].append(out[key])
-    return data
+# def consolidate_outputs(outputs):
+#     """consolidate outputs into a summary dict (incomplete)"""
+#     data = defaultdict(list)
+#     data['stdout'] = ''
+#     data['stderr'] = ''
+#     
+#     for out in outputs:
+#         if out.type == 'stream':
+#             data[out.stream] += out.text
+#         elif out.type == 'pyerr':
+#             data['pyerr'] = dict(ename=out.ename, evalue=out.evalue)
+#         else:
+#             for key in ('png', 'svg', 'latex', 'html',
+#                         'javascript', 'text', 'jpeg'):
+#                 if key in out:
+#                     data[key].append(out[key])
+#     return data
 
 
-def compare_outputs(test, ref, skip_compare=('png', 'traceback', 'latex', 'prompt_number')):
+def compare_outputs(test, ref, skip_compare=('png', 'traceback',
+                                             'latex', 'prompt_number')):
     for key in ref:
         if key not in test:
-            print "missing key: %s != %s" % (test.keys(), ref.keys())
+            print "Missing key: %s != %s" % (test.keys(), ref.keys())
             return False
-        elif key not in skip_compare and sanitize(test[key]) != sanitize(ref[key]):
-            print "mismatch %s:" % key
+        elif (key not in skip_compare) and \
+                (sanitize(test[key]) != sanitize(ref[key])):
+            print "----- Mismatch {}: --------------------------------------------------------".format(key)
             print test[key]
-            print '  !=  '
+            print "----------   !=   ----------"
             print ref[key]
+            print "--------------------------------------------------------------------------------"
             return False
     return True
 
