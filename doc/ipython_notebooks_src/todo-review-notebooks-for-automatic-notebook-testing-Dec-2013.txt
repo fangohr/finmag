@@ -28,7 +28,8 @@
 - [ ] tutorial-normal-modes.ipynb
 - [ ] tutorial-relaxations-of-a-single-nanodisk.ipynb
 - [ ] tutorial-running-simulations-with-dmi.ipynb
-- [ ] tutorial-sampling-m-at-arbitrary-positions.ipynb
+- [] tutorial-sampling-m-at-arbitrary-positions.ipynb
+      Modified, 4 December 2013, Mark. To do: Inconsistent m values between runs past 4d.p.
 - [ ] tutorial-saving-averages-demo.ipynb
 - [X] tutorial-scheduling-events.ipynb
       Done, 4 December 2013, Max.
@@ -43,7 +44,7 @@
    $> hg root
    /home/fangohr/hg/finmag
    $> cd doc/ipython_notebooks_src
-   $> python  ../../bin/ipynbdoctest.py tutorial-use-of-logging.ipynb 
+   $> python  ../../bin/ipynbdoctest.py tutorial-use-of-logging.ipynb
 
 
 
