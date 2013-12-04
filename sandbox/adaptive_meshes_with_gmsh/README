@@ -1,0 +1,7 @@
+This is an exploration of gmesh's capabilities of producing meshes
+with varying element sizes. For example, we can produce a cylindrical
+mesh where the element size is small in the center and large near the
+boundaries, which is useful for the simulation of vortex structures.
+
+Type 'make mesh' in this directory to generate the mesh and have it
+displayed by dolfin.
