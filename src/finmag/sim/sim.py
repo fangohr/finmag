@@ -22,7 +22,7 @@ from finmag.util.fileio import Tablewriter, FieldSaver
 from finmag.util import helpers
 from finmag.util.vtk_saver import VTKSaver
 from finmag.util.fft import power_spectral_density, plot_power_spectral_density, find_peak_near_frequency, _plot_spectrum, export_normal_mode_animation_from_ringdown
-from finmag.util.normal_modes import compute_generalised_eigenproblem_matrices, compute_normal_modes_generalised, export_normal_mode_animation, plot_spatially_resolved_normal_mode
+from finmag.util.normal_modes import compute_eigenproblem_matrix, compute_generalised_eigenproblem_matrices, compute_normal_modes, compute_normal_modes_generalised, export_normal_mode_animation, plot_spatially_resolved_normal_mode
 from finmag.util.helpers import plot_dynamics, pvd2avi
 from finmag.sim.hysteresis import hysteresis as hyst, hysteresis_loop as hyst_loop
 from finmag.sim import sim_helpers
@@ -1219,6 +1219,7 @@ class NormalModeSimulation(Simulation):
         # Internal variables to store the matrices which define the generalised eigenvalue problem
         self.A = None
         self.M = None
+        self.D = None
 
     def run_ringdown(self, t_end, alpha, H_ext=None, reset_time=True, clear_schedule=True,
                      save_ndt_every=None, save_vtk_every=None, save_m_every=None,
@@ -1519,7 +1520,7 @@ class NormalModeSimulation(Simulation):
                                                    peak_idx, dm_only=dm_only, num_cycles=num_cycles,
                                                    num_frames_per_cycle=num_frames_per_cycle)
 
-    def compute_normal_modes(self, n_values=10, discard_negative_frequencies=False, filename_mat_A=None, filename_mat_M=None, use_generalised=True,
+    def compute_normal_modes(self, n_values=10, discard_negative_frequencies=False, filename_mat_A=None, filename_mat_M=None, use_generalized=True,
                              tol=1e-8, sigma=None, which='LM', v0=None, ncv=None, maxiter=None, Minv=None, OPinv=None, mode='normal',
                              force_recompute_matrices=False):
         """
@@ -1559,10 +1560,10 @@ class NormalModeSimulation(Simulation):
             debugging or later post-processing to avoid having to
             recompute these matrices.
 
-        use_generalised:
+        use_generalized:
 
             If True (the default), solve a generalised eigenvalue
-            problem. This is the only supported method at the moment.
+            problem.
 
         force_recompute_matrices:
 
@@ -1580,17 +1581,23 @@ class NormalModeSimulation(Simulation):
         whose columns are the corresponding eigenvectors (in the same order).
 
         """
-        if use_generalised == False:
-            raise NotImplementedError("Only the generalised version is supported at the moment")
+        if use_generalized:
+            if (self.A == None or self.M == None) or force_recompute_matrices:
+                self.A, self.M, _, _ = compute_generalised_eigenproblem_matrices( \
+                    self, frequency_unit=1e9, filename_mat_A=filename_mat_A, filename_mat_M=filename_mat_M)
+            else:
+                log.debug('Re-using previously computed eigenproblem matrices.')
 
-        if (self.A == None or self.M == None) or force_recompute_matrices:
-            self.A, self.M, _, _ = compute_generalised_eigenproblem_matrices( \
-                self, frequency_unit=1e9, filename_mat_A=filename_mat_A, filename_mat_M=filename_mat_M)
+            omega, w = compute_normal_modes_generalised(self.A, self.M, n_values=n_values, discard_negative_frequencies=discard_negative_frequencies,
+                                                        tol=tol, sigma=sigma, which=which, v0=v0, ncv=ncv, maxiter=maxiter, Minv=Minv, OPinv=OPinv, mode=mode)
         else:
-            log.debug('Re-using previously computed eigenproblem matrices.')
+            if self.D == None or force_recompute_matrices:
+                self.D = compute_eigenproblem_matrix(self, frequency_unit=1e9)
+            else:
+                log.debug('Re-using previously computed eigenproblem matrix.')
 
-        omega, w = compute_normal_modes_generalised(self.A, self.M, n_values=n_values, discard_negative_frequencies=discard_negative_frequencies,
-                                                    tol=tol, sigma=sigma, which=which, v0=v0, ncv=ncv, maxiter=maxiter, Minv=Minv, OPinv=OPinv, mode=mode)
+            omega, w = compute_normal_modes(self.D, n_values, sigma=0.0, tol=tol, which='LM')
+            omega = np.real(omega)  # any imaginary part is due to numerical inaccuracies so we ignore them
 
         self.eigenfreqs = omega
         self.eigenvecs = w
@@ -1602,9 +1609,10 @@ class NormalModeSimulation(Simulation):
         """
         XXX TODO: Complete me!
 
-        Export an animation of the `k`-th eigenmode, where the value of `k` refers
-        to the index of the corresponding mode frequency and eigenvector in the
-        two arrays returnd by `sim.compute_normal_modes`.
+        Export an animation of the `k`-th eigenmode, where the value of `k`
+        refers to the index of the corresponding mode frequency and eigenvector
+        in the two arrays returnd by `sim.compute_normal_modes`. If that method
+        was called multiple times the results of the latest call are used.
 
         """
         if self.eigenfreqs is None or self.eigenvecs is None:
