@@ -318,7 +318,7 @@ def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9
     Q, R, S, Mcross = compute_tangential_space_basis(m0_column_vector)
     Qt = mf_transpose(Q).copy()
 
-    logger.warning("Q.shape: {} ({} MB)".format(Q.shape, Q.nbytes / 1024.**2))
+    logger.debug("Q.shape: {} ({} MB)".format(Q.shape, Q.nbytes / 1024.**2))
 
     def A_times_vector(v):
         # A = H' v - h_0 v
