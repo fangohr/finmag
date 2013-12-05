@@ -261,6 +261,18 @@ class NotImplementedOp(object):
         raise NotImplementedError("rmatvec is not implemented")
 
 
+def is_hermitian(A, atol=1e-8, rtol=1e-12):
+    """
+    Returns True if the matrix `A` is Hermitian (up to the given
+    tolerance) and False otherwise.
+
+    The arguments `atol` and `rtol` have the same meaning as in
+    `numpy.allclose`.
+
+    """
+    return np.allclose(A, np.conj(A.T), atol=atol, rtol=rtol)
+
+
 def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9, filename_mat_A=None, filename_mat_M=None):
     """
     XXX TODO: write me
