@@ -8,6 +8,7 @@ from time import time
 from finmag.util.consts import gamma
 import matplotlib.pyplot as plt
 import matplotlib.tri as tri
+from itertools import izip
 from matplotlib.ticker import FormatStrFormatter
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from math import pi
@@ -384,6 +385,18 @@ def compute_normal_modes_generalised(A, M, n_values=10, tol=1e-8, discard_negati
 
     # The true eigenfrequencies are given by 1/omega_inv because we swapped M and A above and thus computed the inverse eigenvalues.
     omega = 1. / omega_inv
+
+    # Sanity check: the eigenfrequencies should occur in +/- pairs.
+    TOL = 1e-3
+    positive_freqs = filter(lambda x: x >0, omega)
+    negative_freqs = filter(lambda x: x <0, omega)
+    freq_pairs = izip(positive_freqs, negative_freqs)
+    if (n_values % 2 == 0 and len(positive_freqs) != len(negative_freqs)) or \
+            (n_values % 2 == 0 and len(positive_freqs) - len(negative_freqs) not in [0, 1]) or \
+            any([abs(x + y) > TOL for (x, y) in freq_pairs]):
+        logger.warning("The eigenfrequencies should occur in +/- pairs, but this "
+                       "does not seem to be the case (with TOL={})! Please "
+                       "double-check that the results make sense!".format(TOL))
 
     # Find the indices that sort the frequency by absolute value,
     # with the positive frequencies occurring before the negative ones (where.
