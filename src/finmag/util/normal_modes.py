@@ -286,8 +286,8 @@ def check_is_hermitian(A, matrix_name, atol=1e-8, rtol=1e-12):
 
     """
     if not is_hermitian(A):
-        logger.warning("Matrix {} is not Hermitian. Maximum difference "
-                       "between A and conj(A^tr): {}".format(
+        logger.critical("Matrix {} is not Hermitian. Maximum difference "
+                        "between A and conj(A^tr): {}".format(
                 matrix_name, np.absolute(A - np.conj(A.T)).max()))
 
 
