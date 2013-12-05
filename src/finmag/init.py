@@ -14,9 +14,11 @@ from finmag.util import configuration
 import util.versions
 from __version__ import __version__
 import example
+import signal
 
 # Convenience access to physics object Q
 from finmag.util.physics import Q
+
 
 def timings_report(n=10):
     """
@@ -32,6 +34,7 @@ def timings_report(n=10):
     """
     from aeon import default_timer
     return default_timer.report(n)
+
 
 logger.debug("%20s: %s" % ("Finmag", __version__))
 display_module_versions = configuration.get_config_option("logging", "display_module_versions_at_startup", "True")
@@ -84,3 +87,18 @@ logging.addLevelName(logging.EXTREMEDEBUG, 'EXTREMEDEBUG')
 
 # and register a function function for this for our logger
 logger.extremedebug = lambda msg: logger.log(logging.EXTREMEDEBUG, msg)
+
+# Register a function which starts the debugger when the program
+# receives the 'SIGQUIT' signal (keyboard shortcut: "Ctrl-\").
+def receive_quit_signal(signum, stack):
+    print("Starting debugger. Type 'c' to resume execution and 'q' to quit.")
+    try:
+        # Try 'ipdb' first because it's nicer to use
+        import ipdb; ipdb.set_trace()
+    except ImportError:
+        # Otherwise fall back to the regular 'pdb'.
+        import pdb; pdb.set_trace()
+
+logger.debug("Registering debug signal handler. Press Ctrl-Z at any time "
+             "to stop execution and jump into the debugger.")
+signal.signal(signal.SIGTSTP, receive_quit_signal)
