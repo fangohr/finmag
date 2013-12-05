@@ -270,7 +270,25 @@ def is_hermitian(A, atol=1e-8, rtol=1e-12):
     `numpy.allclose`.
 
     """
-    return np.allclose(A, np.conj(A.T), atol=atol, rtol=rtol)
+    if isinstance(A, np.ndarray):
+        return np.allclose(A, np.conj(A.T), atol=atol, rtol=rtol)
+    elif isinstance(A, scipy.sparse.linalg.LinearOperator):
+        raise NotImplementedError
+    else:
+        raise NotImplementedError
+
+
+def check_is_hermitian(A, matrix_name, atol=1e-8, rtol=1e-12):
+    """
+    Check if `A` is hermitian and print a warning if this is not the case.
+
+    The argument `matrix_name` is only used for printing the warning.
+
+    """
+    if not is_hermitian(A):
+        logger.warning("Matrix {} is not Hermitian. Maximum difference "
+                       "between A and conj(A^tr): {}".format(
+                matrix_name, np.absolute(A - np.conj(A.T)).max()))
 
 
 def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9, filename_mat_A=None, filename_mat_M=None):
@@ -347,6 +365,10 @@ def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9
     # B.shape = (2*n, 2*n)
 
     M = scipy.sparse.linalg.LinearOperator((2 * n, 2 * n), M_times_w(Mcross, n, alpha), NotImplementedOp(), NotImplementedOp(), dtype=complex)
+
+    # Sanity check: A and M should be Hermitian matrices
+    check_is_hermitian(A, "A")
+    #check_is_hermitian(M, "M")
 
     if filename_mat_A != None:
         dirname_mat_A = os.path.dirname(os.path.abspath(filename_mat_A))
