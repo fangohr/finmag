@@ -156,5 +156,14 @@ def test_plot_spatially_resolved_normal_mode(tmpdir):
     assert(os.path.exists('normal_mode_01.png'))
 
 
+def test_is_hermitian():
+    A = np.array([[1, 2j, 3+4j], [-2j, 1.3, 5-6j], [3-4j, 5+6j, 1.7]])
+    B = np.array([[1, 2j, 3+4.0001j], [-2j, 1.3, 5-6j], [3-4j, 5+6j, 1.7]])
+
+    assert(is_hermitian(A))
+    assert(not is_hermitian(B))
+    assert(is_hermitian(B, atol=1e-2))
+
+
 if __name__ == '__main__':
     test_compute_generalised_eigenproblem_matrices_single_sphere('.')
