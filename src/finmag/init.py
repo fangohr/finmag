@@ -88,16 +88,33 @@ logging.addLevelName(logging.EXTREMEDEBUG, 'EXTREMEDEBUG')
 # and register a function function for this for our logger
 logger.extremedebug = lambda msg: logger.log(logging.EXTREMEDEBUG, msg)
 
+
 # Register a function which starts the debugger when the program
-# receives the 'SIGQUIT' signal (keyboard shortcut: "Ctrl-\").
-def receive_quit_signal(signum, stack):
+# receives the 'SIGTSTP' signal (keyboard shortcut: "Ctrl-Z").
+def receive_quit_signal(signum, frame):
     print("Starting debugger. Type 'c' to resume execution and 'q' to quit.")
+
     try:
         # Try 'ipdb' first because it's nicer to use
-        import ipdb; ipdb.set_trace()
+        import ipdb as pdb
     except ImportError:
         # Otherwise fall back to the regular 'pdb'.
-        import pdb; pdb.set_trace()
+        import pdb
+
+    pdb.set_trace()
+
+    # XXX TODO: It would be nice to be able to automatically jump up
+    # to the first frame that's not inside the Finmag (or dolfin)
+    # module any more because this should be the lowest frame that
+    # lives in the user script, which is probably what the user
+    # expects to see if he presses Ctrl-Z.
+    #
+    # The following command should help us to check whether we're
+    # still inside Finmag, but we still need to figure out how to jump
+    # to the correct frame.  -- Max, 5.12.2013
+    #
+    # inspect.getmodule(cur_frame.f_locals['self']).__name__.startswith('finmag')
+
 
 logger.debug("Registering debug signal handler. Press Ctrl-Z at any time "
              "to stop execution and jump into the debugger.")
