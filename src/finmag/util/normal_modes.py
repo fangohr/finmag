@@ -165,11 +165,11 @@ def compute_eigenproblem_matrix(sim, frequency_unit=1e9, filename=None):
     N = 3 * n  # number of degrees of freedom
 
     m0_array = sim.m.copy()
-    m0_flat = m0_array.reshape(3, n)  # 'flat' is a slightly misleading terminology, but it's used in Simlib so we keep it here
+    m0_3xn = m0_array.reshape(3, n)  # this corresponds to the vector 'm0_flat' in Simlib
     m0_column_vector = m0_array.reshape(3, 1, n)
     H0_array = effective_field_for_m(m0_array)
-    H0_flat = H0_array.reshape(3, n)
-    h0 = H0_flat[0]*m0_flat[0] + H0_flat[1]*m0_flat[1] + H0_flat[2]*m0_flat[2]
+    H0_3xn = H0_array.reshape(3, n)
+    h0 = H0_3xn[0]*m0_3xn[0] + H0_3xn[1]*m0_3xn[1] + H0_3xn[2]*m0_3xn[2]
 
     logger.debug("Computing basis of the tangent space and transition matrices.")
     Q, R, S, Mcross = compute_tangential_space_basis(m0_column_vector)
@@ -308,11 +308,11 @@ def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9
     N = 3 * n  # number of degrees of freedom
 
     m0_array = sim.m.copy()
-    m0_flat = m0_array.reshape(3, n)  # 'flat' is a slightly misleading terminology, but it's used in Simlib so we keep it here
+    m0_3xn = m0_array.reshape(3, n)  # this corresponds to the vector 'm0_flat' in Simlib
     m0_column_vector = m0_array.reshape(3, 1, n)
     H0_array = effective_field_for_m(m0_array)
-    H0_flat = H0_array.reshape(3, n)
-    h0 = H0_flat[0]*m0_flat[0] + H0_flat[1]*m0_flat[1] + H0_flat[2]*m0_flat[2]
+    H0_3xn = H0_array.reshape(3, n)
+    h0 = H0_3xn[0]*m0_3xn[0] + H0_3xn[1]*m0_3xn[1] + H0_3xn[2]*m0_3xn[2]
 
     logger.debug("Computing basis of the tangent space and transition matrices.")
     Q, R, S, Mcross = compute_tangential_space_basis(m0_column_vector)
