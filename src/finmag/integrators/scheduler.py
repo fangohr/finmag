@@ -72,9 +72,7 @@ class Scheduler(object):
             if at_end:
                 at_end_item = SingleEvent(None, True).call(callback)
                 self._add(at_end_item)
-                return at_end_item
-            else:
-                raise NotImplementedError("Realtime scheduling at regular intervals is not supported at the moment.")
+            return at_end_item
 
         if at or (at_end and not every):
             at_item = SingleEvent(at, at_end).call(callback)
