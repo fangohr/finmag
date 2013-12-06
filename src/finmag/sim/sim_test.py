@@ -1087,7 +1087,7 @@ def test_plot_spatially_resolved_normal_modes(tmpdir):
     from finmag.example.normal_modes import disk
     sim = disk()
     sim.compute_normal_modes()
-    fig = sim.plot_spatially_resolved_normal_mode(k=0)
+    fig = sim.plot_spatially_resolved_normal_mode(k=0, outfilename='mode_00.png')
     assert(isinstance(fig, plt.Figure))
 
 
