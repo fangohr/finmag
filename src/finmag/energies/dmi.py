@@ -31,9 +31,10 @@ def dmi_manual_curl(m, D, dim):
 
          E = D * (mx*curlx + my*curly + mz*curlz) * df.dx
 
-       Derivatives along the z direction are set to be zero for both 1d and 2d mesh,
-       and derivatives along the y direction are zero for 1d mesh since the physics
-       does not change as a function of these coordinates.
+       Derivatives along the z direction are set to be zero for both 1d
+       and 2d mesh, and derivatives along the y direction are zero for 1d
+       mesh since the physics does not change as a function of these
+       coordinates.
     """
 
     gradm = df.grad(m)
@@ -139,3 +140,39 @@ class DMI(EnergyBase):
             E_integrand = self.DMI_factor * self.D * df.inner(m, df.curl(m))
 
         super(DMI, self).setup(E_integrand, S3, m, Ms, unit_length)
+
+
+def DMI_ultra_thin_film(m, D, dim):
+    """Input arguments:
+
+       m a dolfin 3d-vector function on a 1d or 2d space,
+       D is the DMI constant
+       dim is the mesh dimension.
+
+       Returns the form to compute the DMI energy:
+
+         D (m_x * dm_z/dx - m_z * dm_x/dx) +
+         D (m_y * dm_z/dy - m_z * dm_y/dy * df.dx                      (1)
+
+    Equation is equation (2) from the Oct 2013 paper by Rohart
+    and Thiaville (http://arxiv.org/abs/1310.0666)
+
+    """
+
+    assert dim == 2, "Only implemented for 2d mesh"
+
+    gradm = df.grad(m)
+
+    dmxdx = gradm[0, 0]
+    dmydx = gradm[1, 0]
+    dmzdx = gradm[2, 0]
+
+    dmxdy = gradm[0, 1]
+    dmydy = gradm[1, 1]
+    dmzdy = gradm[2, 1]
+
+    mx = m[0]
+    my = m[1]
+    mz = m[2]
+
+    return D * (mx * dmzdx - mz * dmxdx) + D * (my * dmzdy - mz * dmydy)
