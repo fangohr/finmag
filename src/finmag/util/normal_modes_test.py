@@ -139,7 +139,7 @@ def test_plot_spatially_resolved_normal_mode(tmpdir):
             plot_spatially_resolved_normal_mode(sim, w, plot_powers=False, plot_phases=False)
 
 
-def test_plot_spatially_resolved_normal_mode(tmpdir):
+def test_plot_spatially_resolved_normal_mode2(tmpdir):
     os.chdir(str(tmpdir))
     sim = example.normal_modes.disk()
     sim.compute_normal_modes(n_values=2)
