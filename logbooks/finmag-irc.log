@@ -6858,3 +6858,21 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-11-27 14:03:49 fangohr-adium1: Be warned, I am on my way for the coffee meeting.
 2013-11-29 10:49:48 max_albert: Good morning!
 2013-11-29 10:49:54 max_albert: Hans, are you there by any chance?
+2013-12-06 09:21:41 fangohr-adium: Good morning, folks.
+2013-12-06 09:21:58 fangohr-adium: Back in my office. Trying to arrange computers so that I can be online with IRC more routinely. Let's see how this works.
+2013-12-06 12:31:05 max_albert: Hi Hans, glad you are back in the office. Hopefully it'll be safe!
+2013-12-06 12:54:53 fangohr-adium: Hi Max, thanks. All stable so far in the room. (Apart from the computers, who need gentle encouragement to boot again …)
+2013-12-06 12:55:21 max_albert: Whooops... I hope nothing is broken?!?
+2013-12-06 12:55:37 fangohr-adium: Probably not. Will keep you posted. (Need to reboot this machine now.)
+2013-12-06 12:55:48 max_albert: Ok, good luck!
+2013-12-06 14:08:42 max_albert: Hi Hans, do we have a coffee meeting today?
+2013-12-06 15:24:39 fangohr-adium: Max, here is the ultimate recipe for the Heisenbug. in finmag/src/finmag, I can run "py.test -vx test tests/test_writing_data.py" and it passes.
+2013-12-06 15:26:52 fangohr-adium: If I run from the same place "py.test -vx .", I need to wait about 2 minutes, and then the same test fails.
+2013-12-06 15:27:19 fangohr-adium: hg tip reports 4169:8bb0bf946d1f
+2013-12-06 15:30:02 max_albert: Thanks, Hans! I'm just trying to fix another bug (which doesn't show up in Jenkins because the test relies on dolfin >= 1.2.0+ (i.e. the development version) and so the test is skipped there), but will investigate that one afterwards.
+2013-12-06 15:31:51 fangohr-adium: Don't feel you have to — you have other things to do as well. I just wanted to document this here, so somebody else can look into it if they want. Or if I want to do it later :)
+2013-12-06 15:41:19 fangohr-adium: Random question: has anybody a linux rescue CD ready burnt, ideally for a 32bit system (I know — that's quite out of date).
+2013-12-06 15:42:40 max_albert: I might have a Linux live distribution on a USB stick, and there might even be a rescue CD floating around. Will check...
+2013-12-06 15:47:06 max_albert: Nope, sorry. Have already overwritten the live USB sticks, and there doesn't seem to be a rescue CD here either.
+2013-12-06 15:47:11 max_albert: Would you like me to burn one?
+2013-12-06 15:50:22 fangohr-adium: Hi Max, no don't worry. I am in the process of burning already — it failed on the last CD because it was so old … etc, so I thought I'll check wether we have one around already.
