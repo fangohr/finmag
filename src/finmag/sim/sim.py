@@ -550,6 +550,15 @@ class Simulation(object):
         else:
             log.warning("Cannot create integrator - exists already: {}".format(self.integrator))
         return self.integrator
+    
+    def set_tol(self, reltol=1e-6, abstol=1e-6):
+        """
+        Set the tolerences of the default integrator.
+        """
+        if not hasattr(self, "integrator"):
+            self.create_integrator()
+        
+        self.integrator.integrator.set_scalar_tolerances(reltol, abstol)
 
     def advance_time(self, t):
         """
