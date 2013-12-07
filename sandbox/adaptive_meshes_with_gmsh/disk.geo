@@ -4,15 +4,17 @@
 r = 50;
 h = 0.001;
 
-maxh_edge = 10.0;
-maxh_center = 10.0;
+# XXX TODO: These should be used in the definition of Field[1] below.
+#           How can we pass them to the mathematical expression?!?
+maxh_edge = 42.0;
+maxh_center = 23.0;
 
-Point(1) = {0,  0, 0, maxh_center};
+Point(1) = {0,  0, 0};
 
-Point(2) = {r, 0, 0, 2.0};
-Point(3) = {0, r, 0, 2.0};
-Point(4) = {-r, 0, 0, maxh_edge};
-Point(5) = {0, -r, 0, maxh_edge};
+Point(2) = {r, 0, 0};
+Point(3) = {0, r, 0};
+Point(4) = {-r, 0, 0};
+Point(5) = {0, -r, 0};
 
 c1 = newreg; Circle(c1) = {2, 1, 3};
 c2 = newreg; Circle(c2) = {3, 1, 4};
@@ -27,8 +29,11 @@ Extrude {0, 0, h} {
   Surface{6}; Layers{1};
 }
 
+# XXX TODO: Instead of the hard-coded values "42.0", "23.0" and "50"
+#           We should use the variables maxh_edge, maxh_center and r
+#           defined above. How to pass them to the mathematical expression?
 Field[1] = MathEval;
-Field[1].F = "10 * Sqrt(x*x+y*y)/90 + 1 * (1 - Sqrt(x*x+y*y)/90)";
+Field[1].F = "42.0 * Sqrt(x*x+y*y)/50 + 1 * (23.0 - Sqrt(x*x+y*y)/50)";
 
 Background Field = 1;
 
