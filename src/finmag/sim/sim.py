@@ -1531,7 +1531,7 @@ class NormalModeSimulation(Simulation):
 
     def compute_normal_modes(self, n_values=10, discard_negative_frequencies=False, filename_mat_A=None, filename_mat_M=None, use_generalized=True,
                              tol=1e-8, sigma=None, which='LM', v0=None, ncv=None, maxiter=None, Minv=None, OPinv=None, mode='normal',
-                             force_recompute_matrices=False):
+                             force_recompute_matrices=False, check_hermitian=False):
         """
         Compute the eigenmodes of the simulation by solving a generalised
         eigenvalue problem and return the computed eigenfrequencies and
@@ -1582,6 +1582,13 @@ class NormalModeSimulation(Simulation):
             repeated computation of eigenmodes). Set to True to
             force recomputation.
 
+        check_hermitian:
+
+            If True, check whether the matrix A used in the generalised
+            eigenproblem is Hermitian and print a warning if this is not
+            the case. This is a temporary debugging flag which is likely
+            to be removed again in the future. Default value: False.
+
 
         *Returns*
 
@@ -1593,7 +1600,7 @@ class NormalModeSimulation(Simulation):
         if use_generalized:
             if (self.A == None or self.M == None) or force_recompute_matrices:
                 self.A, self.M, _, _ = compute_generalised_eigenproblem_matrices( \
-                    self, frequency_unit=1e9, filename_mat_A=filename_mat_A, filename_mat_M=filename_mat_M)
+                    self, frequency_unit=1e9, filename_mat_A=filename_mat_A, filename_mat_M=filename_mat_M, check_hermitian=check_hermitian)
             else:
                 log.debug('Re-using previously computed eigenproblem matrices.')
 

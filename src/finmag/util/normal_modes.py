@@ -271,6 +271,9 @@ def is_hermitian(A, atol=1e-8, rtol=1e-12):
 
     """
     if isinstance(A, np.ndarray):
+        # Note: just using an absolute tolerance and checking for
+        # the maximum difference is about twice as efficient, so
+        # maybe we should avoid the relative tolerance in the future.
         return np.allclose(A, np.conj(A.T), atol=atol, rtol=rtol)
     elif isinstance(A, scipy.sparse.linalg.LinearOperator):
         raise NotImplementedError
@@ -291,7 +294,7 @@ def check_is_hermitian(A, matrix_name, atol=1e-8, rtol=1e-12):
                 matrix_name, np.absolute(A - np.conj(A.T)).max()))
 
 
-def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9, filename_mat_A=None, filename_mat_M=None):
+def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9, filename_mat_A=None, filename_mat_M=None, check_hermitian=False):
     """
     XXX TODO: write me
 
@@ -366,9 +369,10 @@ def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9
 
     M = scipy.sparse.linalg.LinearOperator((2 * n, 2 * n), M_times_w(Mcross, n, alpha), NotImplementedOp(), NotImplementedOp(), dtype=complex)
 
-    # Sanity check: A and M should be Hermitian matrices
-    check_is_hermitian(A, "A")
-    #check_is_hermitian(M, "M")
+    if check_hermitian:
+        # Sanity check: A and M should be Hermitian matrices
+        check_is_hermitian(A, "A")
+        #check_is_hermitian(M, "M")
 
     if filename_mat_A != None:
         dirname_mat_A = os.path.dirname(os.path.abspath(filename_mat_A))
