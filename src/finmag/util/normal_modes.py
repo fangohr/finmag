@@ -289,9 +289,13 @@ def check_is_hermitian(A, matrix_name, atol=1e-8, rtol=1e-12):
 
     """
     if not is_hermitian(A):
+        mat_diff = np.absolute(A - np.conj(A.T))
         logger.critical("Matrix {} is not Hermitian. Maximum difference "
-                        "between A and conj(A^tr): {}".format(
-                matrix_name, np.absolute(A - np.conj(A.T)).max()))
+                        "between A and conj(A^tr): {}, median difference: {}, "
+                        "mean difference: {} (maximum entry of A: {}, "
+                        "median entry: {}, mean entry: {})".format(
+                matrix_name, mat_diff.max(), np.median(mat_diff), np.mean(mat_diff),
+                np.max(np.absolute(A)), np.median(np.absolute(A)), np.mean(np.absolute(A))))
 
 
 def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9, filename_mat_A=None, filename_mat_M=None, check_hermitian=False):
