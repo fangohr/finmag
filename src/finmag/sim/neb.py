@@ -497,7 +497,7 @@ class NEB_Sundials(object):
             self.sim.set_m(self.initial_images[i])
             m0 = self.sim.m
             
-            if image_id!=0:
+            if i!=0:
                 self.all_m[image_id][:]=m0[:]
                 image_id = image_id + 1
             
@@ -509,7 +509,6 @@ class NEB_Sundials(object):
             for coord in coords:
                 self.all_m[image_id][:]=coord[:]
                 image_id = image_id + 1
-                
         
         self.sim.set_m(self.initial_images[0])
         self.m_init = self.sim.m.copy()
@@ -525,7 +524,6 @@ class NEB_Sundials(object):
             self._m.vector().set_local(self.all_m[i])
             self.effective_field.update()
             self.images_energy[i+1]=self.effective_field.total_energy()
-            
             
         self.all_m.shape=(-1,)
 
