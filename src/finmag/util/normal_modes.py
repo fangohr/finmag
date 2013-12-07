@@ -687,7 +687,7 @@ def plot_spatially_resolved_normal_mode(sim, w, slice_z='z_max', components='xyz
         # parallel (or with dof reordering enabled).
         f.vector().set_local(a)
         f_array = f.vector().array()
-        return f_array[:, [entity_map[i] for i in parent_vertex_indices]]
+        return f_array[[entity_map[i] for i in parent_vertex_indices]]
 
     surface_coords = surface_layer.coordinates()
     xvals = surface_coords[:, 0]
