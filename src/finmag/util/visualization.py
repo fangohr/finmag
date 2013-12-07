@@ -150,7 +150,7 @@ def render_paraview_scene(
             try:
                 # Check whether 'xpra' is installed
                 sp.check_call(['xpra', '--version'])
-                xpra_display = find_unused_X_display()
+                xpra_display = find_unused_X_display(xrange(1, 100))
                 sp.check_call(['xpra', 'start', ':{}'.format(xpra_display)])
                 use_display = xpra_display
                 logger.debug("Rendering Paraview scene on display :{} using xpra.".format(xpra_display))
