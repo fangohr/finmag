@@ -10,7 +10,7 @@ import pytest
 logger = logging.getLogger("finmag")
 
 
-def test_compute_generalised_eigenproblem_matrices_single_sphere(tmpdir):
+def test_check_Kittel_mode_for_single_sphere(tmpdir):
     """
     Compute the eigenmodes of a perfect sphere and check that the
     frequency of the base mode equals the analytical value from the
