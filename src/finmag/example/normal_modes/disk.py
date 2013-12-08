@@ -4,7 +4,7 @@ import os
 from finmag.util.mesh_templates import Nanodisk
 
 
-def disk(d=60, h=10, maxh=5.0, relaxed=True, name='normal_modes_nanodisk'):
+def disk(d=60, h=10, maxh=5.0, relaxed=True, name='normal_modes_nanodisk', A=13e-12, H_ext_relax=[1e5, 1e3, 0], H_ext_ringdown=[1e5, 0, 0], demag_solver='FK'):
     """
     Permalloy nanodisk with diameter d=60 nm, height h=10 nm and mesh
     discretisation maxh=5.0. An external field of strength 100 kA/m is
@@ -25,12 +25,9 @@ def disk(d=60, h=10, maxh=5.0, relaxed=True, name='normal_modes_nanodisk'):
 
     # Material parameters for Permalloy
     Ms = 8e5
-    A=13e-12
     m_init = [1, 0, 0]
     alpha_relax = 1.0
-    H_ext_relax = [1e5, 1e3, 0]
-
-    sim = finmag.normal_mode_simulation(mesh, Ms, m_init, alpha=alpha_relax, unit_length=1e-9, A=A, H_ext=H_ext_relax)
+    sim = finmag.normal_mode_simulation(mesh, Ms, m_init, alpha=alpha_relax, unit_length=1e-9, A=A, H_ext=H_ext_relax, demag_solver=demag_solver)
 
     if relaxed:
         if d == 60 and h == 10 and maxh == 5.0:
@@ -39,7 +36,6 @@ def disk(d=60, h=10, maxh=5.0, relaxed=True, name='normal_modes_nanodisk'):
             sim.relax()
 
     alpha_ringdown = 0.01
-    H_ext_ringdown = [1e5, 0, 0]
     t_end = 1e-9
     save_ndt_every = 1e-11
     save_m_every = 1e-11
