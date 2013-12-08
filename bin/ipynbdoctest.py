@@ -108,8 +108,6 @@ def sanitize(s):
     ## Finmag-related stuff follows below
     ##
 
-    import ipdb; ipdb.set_trace()
-
     # Strip any lines which match a pattern in DISCARD_PATTERNS
     s = strip_lines_to_discard(s)
 
