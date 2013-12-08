@@ -131,8 +131,8 @@ def sanitize(s):
     # thus results in a failed comparison. Replace with empty string.
     s = re.sub(r'.*UserWarning: This figure includes Axes that are not compatible with tight_layout, so its results might be incorrect.', '', s)
 
-    return s
-
+    # If a mesh exists already, we get a different message from generation of the mesh.
+    s = re.sub(r'.*The mesh.*already exists and is automatically returned.', '', s)
 
 # def consolidate_outputs(outputs):
 #     """consolidate outputs into a summary dict (incomplete)"""
