@@ -1,6 +1,7 @@
 * Notebooks to review (December 2013)
 
-- [ ] dev-assemble-question.ipynb
+- [X] dev-assemble-question.ipynb
+       Done, 7 Dec 2012, Hans
 - [ ] dev-cvode.ipynb
 - [ ] dev-cvode-nsteps-only.ipynb
 - [X] dev-papers-Rohart-and-Thiaville-2013.ipynb
