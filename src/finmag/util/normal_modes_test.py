@@ -39,6 +39,7 @@ def test_check_Kittel_mode_for_single_sphere(tmpdir):
 
     A, M, _, _ = compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9)
 
+    RTOL = 1e-2
     n_values = 2
     n_values_export = 0
     omega, w = compute_normal_modes_generalised(A, M, n_values=n_values, discard_negative_frequencies=False)
@@ -53,14 +54,14 @@ def test_check_Kittel_mode_for_single_sphere(tmpdir):
     # The frequency is equal to omega_0 / (2*pi).
     #
     freq_expected = gamma * H_z / (2*pi*frequency_unit)
-    assert(np.allclose(omega[0], +freq_expected, atol=0, rtol=1e-2))
-    assert(np.allclose(omega[1], -freq_expected, atol=0, rtol=1e-2))
+    assert(np.allclose(omega[0], +freq_expected, atol=0, rtol=RTOL))
+    assert(np.allclose(omega[1], -freq_expected, atol=0, rtol=RTOL))
 
     # Perform the same test when negative frequencies are discarded
     omega_positive, _ = compute_normal_modes_generalised(A, M, n_values=n_values, discard_negative_frequencies=True)
     logger.debug("[DDD] omega_positive: {}".format(omega_positive))
     assert(len(omega_positive) == n_values)
-    assert(np.allclose(omega_positive[0], freq_expected, atol=0, rtol=1e-2))
+    assert(np.allclose(omega_positive[0], freq_expected, atol=0, rtol=RTOL))
 
     # Ensure that the frequencies are all positive and sorted by absolute value
     assert((np.array(omega_positive) > 0).all())
