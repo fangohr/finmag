@@ -236,7 +236,7 @@ class TimeZeemanPython(TimeZeeman):
         return self.H
 
     def compute_energy(self, dx=df.dx):
-        E = df.assemble(self.Ei * dx) * self.unit_length**3
+        E = df.assemble(self.E * dx) * self.unit_length**3
         return E
 
 
