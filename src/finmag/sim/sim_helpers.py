@@ -22,7 +22,10 @@ def save_ndt(sim):
                   "(sim.name={}).".format(sim.t, sim.name))
     else:
         raise NotImplementedError("Only cvode driver known.")
-    sim.tablewriter.save()
+    try:
+        sim.tablewriter.save()
+    except:
+        import ipdb; ipdb.set_trace()
 
 
 def save_m(sim, filename=None, incremental=False, overwrite=False):
