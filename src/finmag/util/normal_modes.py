@@ -345,6 +345,8 @@ def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9
     df.tic()
     logger.info("Assembling eigenproblem matrix.")
     A = np.zeros((2*n, 2*n), dtype=complex)
+    logger.debug("Eigenproblem matrix A occupies {:.2f} MB of memory.".format(A.nbytes / 1024.**2))
+
     # Compute A
     w = np.zeros(2*n)
     for i in xrange(2*n):
@@ -361,8 +363,6 @@ def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9
         A[:, i] = mf_mult(Qt, Av).reshape(-1)
         # Multiply by (-gamma)/(2 pi U)
         A[:, i] *= -gamma / (2 * pi * frequency_unit)
-
-    logger.debug("Eigenproblem matrix A occupies {:.2f} MB of memory.".format(A.nbytes / 1024.**2))
 
     # # Compute B, which is -i Mcross 2 pi U / gamma
     # B = np.zeros((2, n, 2, n), dtype=complex)
