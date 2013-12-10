@@ -39,12 +39,11 @@ def test_check_Kittel_mode_for_single_sphere(tmpdir):
 
     A, M, _, _ = compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9)
 
-    RTOL = 1e-2
+    RTOL = 1e-3
     n_values = 2
     n_values_export = 0
     omega, w = compute_normal_modes_generalised(A, M, n_values=n_values, discard_negative_frequencies=False)
     assert(len(omega) == n_values)
-    print "[DDD] omega: {}".format(omega)
 
     # Check that the frequency of the base mode equals the analytical value from the Kittel equation
     # (see Charles Kittel, "Introduction to solid state physics", 7th edition, Ch. 16, p.505):
@@ -56,6 +55,8 @@ def test_check_Kittel_mode_for_single_sphere(tmpdir):
     freq_expected = gamma * H_z / (2*pi*frequency_unit)
     assert(np.allclose(omega[0], +freq_expected, atol=0, rtol=RTOL))
     assert(np.allclose(omega[1], -freq_expected, atol=0, rtol=RTOL))
+    logger.debug("Computed eigenfrequencies: {}".format(omega))
+    logger.debug("Expected frequency of the Kittel mode: {}".format(freq_expected))
 
     # Perform the same test when negative frequencies are discarded
     omega_positive, _ = compute_normal_modes_generalised(A, M, n_values=n_values, discard_negative_frequencies=True)
@@ -75,6 +76,22 @@ def test_check_Kittel_mode_for_single_sphere(tmpdir):
     for i in xrange(n_values_export):
         freq = omega_positive[i]
         export_normal_mode_animation(sim, freq, w[:, i], filename='normal_mode_{:02d}__{:.3f}_GHz.pvd'.format(i, freq))
+
+
+    ##
+    ## Perform the same test as above but without demag, wich should improve the accuracy.
+    ##
+    sim = sim_with(mesh, Ms=1e6, m_init=[0, 0, 1], A=13e-12, H_ext=[0, 0, H_z], unit_length=1e-9, demag_solver=None)
+    sim.relax()
+
+    A, M, _, _ = compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9)
+
+    RTOL = 1e-9
+    omega, _ = compute_normal_modes_generalised(A, M, n_values=1, discard_negative_frequencies=True)
+
+    logger.debug("Computed eigenfrequencies (without demag): {}".format(omega))
+    logger.debug("Expected frequency of the Kittel mode: {}".format(freq_expected))
+    assert(np.allclose(omega[0], freq_expected, atol=0, rtol=RTOL))
 
 
 def test_passing_scipy_eigsh_parameters(tmpdir):
