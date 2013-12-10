@@ -175,6 +175,11 @@ def test_plot_spatially_resolved_normal_mode2(tmpdir):
 
 
 def test_is_hermitian():
+    """
+    Simple test to check if the helper function `is_hermitian` tests
+    correctly whether a matrix is Hermitian.
+
+    """
     A = np.array([[1, 2j, 3+4j], [-2j, 1.3, 5-6j], [3-4j, 5+6j, 1.7]])
     B = np.array([[1, 2j, 3+4.0001j], [-2j, 1.3, 5-6j], [3-4j, 5+6j, 1.7]])
 
