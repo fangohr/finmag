@@ -1315,6 +1315,12 @@ class NormalModeSimulation(Simulation):
         if use_averaged_m:
             log.warning("Using the averaged magnetisation to compute the spectrum is not recommended "
                         "because certain symmetric modes are likely to be missed.")
+            if mesh_region != None:
+                # TODO: we might still be able to compute this if the
+                # user saved the averaged magnetisation in the
+                # specified region to the .ndt file. We should check that.
+                log.warning("Ignoring argument 'mesh_region' because "
+                            "'use_averaged_m' was set to True.")
             filename = self.ndtfilename
         else:
             if self.m_snapshots_filename is None:
@@ -1322,6 +1328,10 @@ class NormalModeSimulation(Simulation):
                             "thus it cannot be used to compute the spectrum. Falling back to using the  "
                             "averaged magnetisation (which is not recommended because it is likely to "
                             "miss normal modes which have certain symmetries!).")
+                if mesh_region != None:
+                    log.warning("Ignoring argument 'mesh_region' because the "
+                                "spatially resolved magnetisation was not saved "
+                                "during the ringdown.")
                 filename = self.ndtfilename
             else:
                 # Create a wildcard pattern so that we can read the files using 'glob'.
