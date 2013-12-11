@@ -1387,3 +1387,65 @@ def test_regression_schedule_switch_off_field(tmpdir):
     sim.schedule('save_ndt', every=1e-12)
     sim.schedule('switch_off_H_ext', at=3e-12, remove_interaction=True)
     sim.run_until(5e-12)
+
+
+def test_document_intended_behaviour_for_H_ext(tmpdir):
+    """
+    The purpose of this test is simply to document how the argument
+    H_ext is interpreted in the run_ringdown method of the
+    NormalModeSimulation class. Namely, if a field was applied during
+    the relaxation stage then using 'run_ringdown(..., H_ext=None)'
+    will switch that field off!
+
+    """
+    os.chdir(str(tmpdir))
+    mesh = df.UnitCubeMesh(3, 3, 3)
+
+    # Create a simulation with an external field
+    sim = normal_mode_simulation(mesh, Ms=8.6e5, alpha=0.0, m_init=[1, 0, 0],
+                                 unit_length=1e-9, A=None, H_ext=[0, 0, 1e6],
+                                 demag_solver=None, name='precession')
+
+    # Call 'run_ringdown' with no external field
+    sim.run_ringdown(t_end=1e-11, alpha=0.0, save_ndt_every=2e-13, H_ext=None)
+
+    # Extract the dynamics from the .ndt file
+    f = Tablereader('precession.ndt')
+    ts, m_x, m_y, m_z = f['time', 'm_x', 'm_y', 'm_z']
+
+    # Check that the magnetisation didn't change over the course of
+    # the simulation (since the external field was automatically
+    # switched off for the ringdown).
+    assert(len(ts) == 51)
+    assert(np.allclose(m_x, 1))
+    assert(np.allclose(m_y, 0))
+    assert(np.allclose(m_z, 0))
+
+
+    #
+    # Repeat the test above, but this time specify an external field
+    # in 'run_ringdown'. This should result in a sinusoidal
+    # precession.
+    #
+    H = 4.2e7  # external field strength (A/m)
+    sim = normal_mode_simulation(mesh, Ms=8.6e5, alpha=0.0, m_init=[1, 0, 0],
+                                 unit_length=1e-9, A=None, H_ext=[0, 0, H],
+                                 demag_solver=None, name='precession2')
+    sim.run_ringdown(t_end=1e-11, alpha=0.0, save_ndt_every=1e-13, H_ext=[0, 0, H])
+
+    freq = gamma*H/(2*pi)  # expected frequency
+
+    f = Tablereader('precession2.ndt')
+    ts, m_x, m_y, m_z = f['time', 'm_x', 'm_y', 'm_z']
+
+    fig = plt.figure()
+    ax = fig.gca()
+    ax.plot(ts, m_x)
+    ax.plot(ts, np.cos(2.*pi*freq*ts))
+    fig.savefig('dynamics2.png')
+
+    # Check that we get sinusoidal dynamics of the correct frequency
+    TOL = 1e-3
+    assert(len(ts) == 101)
+    assert(np.allclose(m_x, np.cos(2*pi*freq*ts), atol=TOL))
+    assert(np.allclose(m_y, np.sin(2*pi*freq*ts), atol=TOL))
