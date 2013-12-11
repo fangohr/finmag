@@ -1427,13 +1427,19 @@ class NormalModeSimulation(Simulation):
             raise ValueError("Argument `component` must be exactly one of 'x', 'y', 'z'.")
         return res
 
-    def find_peak_near_frequency(self, f_approx, component, use_averaged_m=False):
+    def find_peak_near_frequency(self, f_approx, component=None, use_averaged_m=False):
         """
         XXX TODO: Write me!
 
         The argument `use_averaged_m` has the same meaning as in the `plot_spectrum`
         method. See its documentation for details.
         """
+        if component is None:
+            log.warning("Please specify the 'component' argument (which "
+                        "determines the magnetization component in which "
+                        "to search for a peak.")
+            return
+
         if f_approx is None:
             raise TypeError("Argument 'f_approx' must not be None.")
         if not isinstance(component, types.StringTypes):
