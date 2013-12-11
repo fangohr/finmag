@@ -1274,6 +1274,10 @@ class NormalModeSimulation(Simulation):
         self.alpha = alpha
         if H_ext == None:
             if self.has_interaction('Zeeman'):
+                log.warning("Found existing Zeeman field (for the relaxation "
+                            "stage). Switching it off for the ringdown. "
+                            "If you would like to keep it, please specify the "
+                            "argument 'H_ext' explicitly.")
                 self.set_H_ext([0, 0, 0])
         else:
             self.set_H_ext(H_ext)
