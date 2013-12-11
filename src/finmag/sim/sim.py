@@ -1216,10 +1216,10 @@ class NormalModeSimulation(Simulation):
         self.m_snapshots_filename = None
         self.t_step_ndt = None
         self.t_step_m = None
-        self.fft_freqs = None
-        self.fft_mx = None
-        self.fft_my = None
-        self.fft_mz = None
+        self.psd_freqs = None
+        self.psd_mx = None
+        self.psd_my = None
+        self.psd_mz = None
 
         # Internal variables to store parameters/results of the (generalised) eigenvalue method
         self.eigenfreqs = None
