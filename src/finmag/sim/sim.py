@@ -1216,10 +1216,12 @@ class NormalModeSimulation(Simulation):
         self.m_snapshots_filename = None
         self.t_step_ndt = None
         self.t_step_m = None
-        self.psd_freqs = None
-        self.psd_mx = None
-        self.psd_my = None
-        self.psd_mz = None
+
+        # The following are used to cache computed spectra (potentially for various mesh regions)
+        self.psd_freqs = {}
+        self.psd_mx = {}
+        self.psd_my = {}
+        self.psd_mz = {}
 
         # Internal variables to store parameters/results of the (generalised) eigenvalue method
         self.eigenfreqs = None
@@ -1308,13 +1310,29 @@ class NormalModeSimulation(Simulation):
             schedule_saving('save_m', save_m_every, m_snapshots_filename, '_m.npy')
             log.debug("Setting self.t_step_m = {}".format(save_m_every))
             self.t_step_m = save_m_every
+            self.t_ini_m = self.t
+            self.t_end_m = t_end
 
         self.run_until(t_end)
 
     def _compute_spectrum(self, use_averaged_m=False, mesh_region=None, **kwargs):
+        try:
+            if self.psd_freqs[mesh_region, use_averaged_m] != None and \
+                    self.psd_mx[mesh_region, use_averaged_m] != None and \
+                    self.psd_my[mesh_region, use_averaged_m] != None and \
+                    self.psd_mz[mesh_region, use_averaged_m] != None:
+                # We can use the cached results since the spectrum was computed before.
+                return
+        except KeyError:
+            # No computations for these values of (mesh_region,
+            # use_averaged_m) have been performed before. We're going
+            # to do them below.
+            pass
+
         if use_averaged_m:
-            log.warning("Using the averaged magnetisation to compute the spectrum is not recommended "
-                        "because certain symmetric modes are likely to be missed.")
+            log.warning("Using the averaged magnetisation to compute the "
+                        "spectrum is not recommended because this is likely "
+                        "to miss certain symmetric modes.")
             if mesh_region != None:
                 # TODO: we might still be able to compute this if the
                 # user saved the averaged magnetisation in the
@@ -1324,29 +1342,38 @@ class NormalModeSimulation(Simulation):
             filename = self.ndtfilename
         else:
             if self.m_snapshots_filename is None:
-                log.warning("The spatially averaged magnetisation was not saved during run_ringdown, "
-                            "thus it cannot be used to compute the spectrum. Falling back to using the  "
-                            "averaged magnetisation (which is not recommended because it is likely to "
-                            "miss normal modes which have certain symmetries!).")
+                log.warning(
+                    "The spatially averaged magnetisation was not saved "
+                    "during run_ringdown, thus it cannot be used to compute "
+                    "the spectrum. Falling back to using the averaged "
+                    "magnetisation (which is not recommended because it "
+                    "is likely to miss normal modes which have certain "
+                    "symmetries!).")
                 if mesh_region != None:
                     log.warning("Ignoring argument 'mesh_region' because the "
-                                "spatially resolved magnetisation was not saved "
-                                "during the ringdown.")
+                                "spatially resolved magnetisation was not "
+                                "saved during the ringdown.")
                 filename = self.ndtfilename
             else:
                 # Create a wildcard pattern so that we can read the files using 'glob'.
                 filename = re.sub('\.npy$', '*.npy', self.m_snapshots_filename)
         log.debug("Computing normal mode spectrum from file(s) '{}'.".format(filename))
 
-        # Derive a sensible value of t_step. Use the value in **kwargs
-        # if one was provided, or else the one specified during a previous
-        # call of run_ringdown().
+        # Derive a sensible value of t_step, t_ini and t_end. Use the value
+        # in **kwargs if one was provided, or else the one specified (or
+        # derived) during a previous call of run_ringdown().
         t_step = kwargs.pop('t_step', None)#
+        t_ini = kwargs.pop('t_ini', None)#
+        t_end = kwargs.pop('t_end', None)#
         if t_step == None:
             if use_averaged_m:
                 t_step = self.t_step_ndt
             else:
                 t_step = self.t_step_m
+        if t_ini == None and not use_averaged_m:
+                t_ini = self.t_ini_m
+        if t_end == None and not use_averaged_m:
+                t_end = self.t_end_m
         # XXX TODO: Use t_step_npy if computing the spectrum from .npy files.
         if t_step == None:
             raise ValueError(
@@ -1370,8 +1397,13 @@ class NormalModeSimulation(Simulation):
                 parent_vertex_indices = submesh.data().array('parent_vertex_indices', 0)
             kwargs['restrict_to_vertices'] = parent_vertex_indices
 
-        self.psd_freqs, self.psd_mx, self.psd_my, self.psd_mz = \
-            power_spectral_density(filename, t_step=t_step, **kwargs)
+        psd_freqs, psd_mx, psd_my, psd_mz = \
+            power_spectral_density(filename, t_step=t_step, t_ini=t_ini, t_end=t_end, **kwargs)
+
+        self.psd_freqs[mesh_region, use_averaged_m] = psd_freqs
+        self.psd_mx[mesh_region, use_averaged_m] = psd_mx
+        self.psd_my[mesh_region, use_averaged_m] = psd_my
+        self.psd_mz[mesh_region, use_averaged_m] = psd_mz
 
     def plot_spectrum(self, t_step=None, t_ini=None, t_end=None, subtract_values='average',
                       components="xyz", xlim=None, ticks=5, figsize=None, title="",
@@ -1412,22 +1444,25 @@ class NormalModeSimulation(Simulation):
         """
         self._compute_spectrum(t_step=t_step, t_ini=t_ini, t_end=t_end, subtract_values=subtract_values, use_averaged_m=use_averaged_m, mesh_region=mesh_region)
 
-        fig = _plot_spectrum(self.psd_freqs, self.psd_mx, self.psd_my, self.psd_mz,
+        fig = _plot_spectrum(self.psd_freqs[mesh_region, use_averaged_m],
+                             self.psd_mx[mesh_region, use_averaged_m],
+                             self.psd_my[mesh_region, use_averaged_m],
+                             self.psd_mz[mesh_region, use_averaged_m],
                              components=components, xlim=xlim, ticks=ticks,
                              figsize=figsize, title=title, outfilename=outfilename)
         return fig
 
-    def _get_psd_component(self, component):
+    def _get_psd_component(self, component, mesh_region, use_averaged_m):
         try:
-            res = {'x': self.psd_mx,
-                   'y': self.psd_my,
-                   'z': self.psd_mz
+            res = {'x': self.psd_mx[mesh_region, use_averaged_m],
+                   'y': self.psd_my[mesh_region, use_averaged_m],
+                   'z': self.psd_mz[mesh_region, use_averaged_m]
                    }[component]
         except KeyError:
             raise ValueError("Argument `component` must be exactly one of 'x', 'y', 'z'.")
         return res
 
-    def find_peak_near_frequency(self, f_approx, component=None, use_averaged_m=False):
+    def find_peak_near_frequency(self, f_approx, component=None, use_averaged_m=False, mesh_region=None):
         """
         XXX TODO: Write me!
 
@@ -1445,14 +1480,22 @@ class NormalModeSimulation(Simulation):
         if not isinstance(component, types.StringTypes):
             raise TypeError("Argument 'component' must be of type string.")
 
-        psd_cmpnt = self._get_psd_component(component)
-        if self.psd_freqs == None or self.psd_mx == None or \
-                self.psd_my ==None or self.psd_mz == None:
-            self._compute_spectrum(self, use_averaged_m=use_averaged_m)
+        self._compute_spectrum(use_averaged_m=use_averaged_m, mesh_region=mesh_region)
+        psd_cmpnt = self._get_psd_component(component, mesh_region, use_averaged_m)
 
-        return find_peak_near_frequency(f_approx, self.psd_freqs, psd_cmpnt)
+        return find_peak_near_frequency(f_approx, self.psd_freqs[mesh_region, use_averaged_m], psd_cmpnt)
 
-    def plot_peak_near_frequency(self, f_approx, component, **kwargs):
+    def find_all_peaks(self, component, use_averaged_m=False, mesh_region=None):
+        """
+        Return a list all peaks in the spectrum of the given magnetization component.
+
+        """
+        self._compute_spectrum(use_averaged_m=use_averaged_m, mesh_region=mesh_region)
+        freqs = self.psd_freqs[mesh_region, use_averaged_m]
+        all_peaks = sorted(list(set([self.find_peak_near_frequency(x, component=component, use_averaged_m=use_averaged_m, mesh_region=mesh_region) for x in freqs])))
+        return all_peaks
+
+    def plot_peak_near_frequency(self, f_approx, component, mesh_region=None, use_averaged_m=False, **kwargs):
         """
         Convenience function for debugging which first finds a peak
         near the given frequency and then plots the spectrum together
@@ -1463,10 +1506,10 @@ class NormalModeSimulation(Simulation):
         supported by these two functions.
 
         """
-        peak_freq, peak_idx = self.find_peak_near_frequency(f_approx, component)
-        psd_cmpnt = self._get_psd_component(component)
-        fig = self.plot_spectrum(**kwargs)
-        fig.gca().plot(self.psd_freqs[peak_idx] / 1e9, psd_cmpnt[peak_idx], 'bo')
+        peak_freq, peak_idx = self.find_peak_near_frequency(f_approx, component, mesh_region=mesh_region)
+        psd_cmpnt = self._get_psd_component(component, mesh_region, use_averaged_m)
+        fig = self.plot_spectrum(use_averaged_m=use_averaged_m, **kwargs)
+        fig.gca().plot(self.psd_freqs[mesh_region, use_averaged_m][peak_idx] / 1e9, psd_cmpnt[peak_idx], 'bo')
         return fig
 
     def export_normal_mode_animation_from_ringdown(self, npy_files, f_approx=None, component=None,
@@ -1519,9 +1562,7 @@ class NormalModeSimulation(Simulation):
            the method `plot_spectrum()` for details.
 
         """
-        if self.psd_freqs == None or self.psd_mx == None or \
-                self.psd_my ==None or self.psd_mz == None:
-            self._compute_spectrum(self, use_averaged_m=use_averaged_m)
+        self._compute_spectrum(use_averaged_m=use_averaged_m)
 
         if peak_idx is None:
             if f_approx is None or component is None:
@@ -1532,7 +1573,7 @@ class NormalModeSimulation(Simulation):
                 log.warning("Ignoring argument 'f_approx' because 'peak_idx' was specified.")
             if component != None:
                 log.warning("Ignoring argument 'component' because 'peak_idx' was specified.")
-            peak_freq = self.psd_freqs[peak_idx]
+            peak_freq = self.psd_freqs[None, use_averaged_m][peak_idx]  # XXX TODO: Currently mesh regions are not supported, so we must use None here. Can we fix this?!?
 
         if outfilename is None:
             if directory is '':
