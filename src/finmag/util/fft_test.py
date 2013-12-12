@@ -92,7 +92,7 @@ def test_analytical_inverse_DFT():
 
 def test_wrong_file_suffix_for_power_spectral_density():
     with pytest.raises(ValueError):
-        power_spectral_density('datafile.foo')
+        compute_power_spectral_density('datafile.foo')
 
 
 def test_power_spectral_density_from_averaged_magnetisation(tmpdir):
@@ -121,8 +121,8 @@ def test_power_spectral_density_from_averaged_magnetisation(tmpdir):
 
     ##
     ## Step 2: compute the PSDs of a resampled time series, both by
-    ## hand and using power_spectral_density() and check that the
-    ## results are the same.
+    ## hand and using compute_power_spectral_density() and check that
+    ## the results are the same.
     ##
     t_step_res = 2e-11
     t_ini_res = 1e-10
@@ -142,7 +142,7 @@ def test_power_spectral_density_from_averaged_magnetisation(tmpdir):
 
     # Compute Fourier transform of resampled time series using FFT_m
     freqs_res, psd_mx_res, psd_my_res, psd_mz_res = \
-        power_spectral_density(ndt_filename, t_step_res, t_ini=t_ini_res, t_end=t_end_res, subtract_values=None)
+        compute_power_spectral_density(ndt_filename, t_step_res, t_ini=t_ini_res, t_end=t_end_res, subtract_values=None)
 
     # Compare both results
     assert(np.allclose(psd_mx_res, psd_mx_res_expected, atol=0, rtol=RTOL))
@@ -209,9 +209,10 @@ def test_power_spectral_density_from_spatially_resolved_magnetisation(tmpdir):
     psd_my_expected = num_vertices * np.absolute(np.fft.rfft(my_res))**2
     psd_mz_expected = num_vertices * np.absolute(np.fft.rfft(mz_res))**2
 
-    # Compute Fourier transform of resampled time series using power_spectral_density
+    # Compute Fourier transform of resampled time series using
+    # compute_power_spectral_density.
     freqs_computed, psd_mx_computed, psd_my_computed, psd_mz_computed = \
-        power_spectral_density('m_ringdown*.npy', t_step_res, t_ini=t_ini_res, t_end=t_end_res, subtract_values=None)
+        compute_power_spectral_density('m_ringdown*.npy', t_step_res, t_ini=t_ini_res, t_end=t_end_res, subtract_values=None)
 
     # Check that the analytically determined power spectra are the same as the computed ones.
     assert(np.allclose(psd_mx_expected, psd_mx_computed, atol=0, rtol=RTOL))
@@ -294,7 +295,7 @@ def test_power_spectral_density_from_spatially_resolved_magnetisation_confined_t
 
     # Compute Fourier transform of resampled time series using FFT_m
     freqs_computed, psd_mx_computed, psd_my_computed, psd_mz_computed = \
-        power_spectral_density('m_ringdown*.npy', t_step_res, t_ini=t_ini_res, t_end=t_end_res, subtract_values=None, restrict_to_vertices=xrange(N1))
+        compute_power_spectral_density('m_ringdown*.npy', t_step_res, t_ini=t_ini_res, t_end=t_end_res, subtract_values=None, restrict_to_vertices=xrange(N1))
 
     # Check that the analytically determined power spectra are the same as the computed ones.
     assert(np.allclose(psd_mx_expected, psd_mx_computed, atol=0, rtol=RTOL))
