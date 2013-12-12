@@ -1,9 +1,11 @@
 import dolfin as df
 import numpy as np
 import finmag
+import textwrap
 import logging
 import pytest
 import os
+import sh
 import matplotlib.pyplot as plt
 from aeon import default_timer
 from glob import glob
@@ -1449,3 +1451,78 @@ def test_document_intended_behaviour_for_H_ext(tmpdir):
     assert(len(ts) == 101)
     assert(np.allclose(m_x, np.cos(2*pi*freq*ts), atol=TOL))
     assert(np.allclose(m_y, np.sin(2*pi*freq*ts), atol=TOL))
+
+
+def test_m_average_is_robust_with_respect_to_mesh_discretization(tmpdir, debug=True):
+    """
+    This test checks that the average magnetisation takes the
+    different cell volumes in the mesh correctly into account, i.e. it
+    gives a bigger contribution to cells with a large volume than
+    those with a small volume.
+
+    We create a mesh representing a long strip which is coarse at the
+    left and and fine at the right end. Then we initialise a
+    magnetisation pattern which does a full turn, so that the average
+    magnetisation is zero and check that the computed average is close
+    to that.
+
+    """
+    os.chdir(str(tmpdir))
+
+    lx = 50
+    ly = 5
+    lz = 3
+
+    geofile_string = textwrap.dedent("""
+        nz = 1;  // number of z-layers
+
+        lc_left = 2.0;
+        lc_right = 0.1;
+
+        Point(1) = {0, 0, 0, lc_left};
+        Point(2) = {lx, 0, 0, lc_right};
+        Point(3) = {lx, ly, 0, lc_right};
+        Point(4) = {0, ly, 0, lc_left};
+
+        l1 = newreg; Line(l1) = {1, 2};
+        l2 = newreg; Line(l2) = {2, 3};
+        l3 = newreg; Line(l3) = {3, 4};
+        l4 = newreg; Line(l4) = {4, 1};
+
+        ll1 = newreg; Line Loop(ll1) = {l1, l2, l3, l4};
+
+        s1 = newreg; Plane Surface(s1) = {ll1};
+
+        Extrude {0, 0, lz} {
+            Surface{s1}; Layers{nz};
+        }
+        """)
+
+    with open('nanostrip.geo', 'w') as f:
+        f.write(geofile_string)
+
+    sh.gmsh('-3', '-optimize', '-optimize_netgen', '-string', 'lx={}; ly={}; lz={};'.format(lx, ly, lz), '-o', 'nanostrip.msh', 'nanostrip.geo')
+    sh.dolfin_convert('nanostrip.msh', 'nanostrip.xml')
+    mesh = df.Mesh('nanostrip.xml')
+
+    # Define magnetisation that performs a full rotation from the left
+    # end to the right end of the strip.
+    def m_init(pt):
+        x, y, z = pt
+        return [0, sin(2*pi*x/lx), cos(2*pi*x/lx)]
+
+    sim = sim_with(mesh, Ms=8.6e5, m_init=m_init, unit_length=1e-9)
+
+    # Check that the average magnetisation is close to zero
+    m_avg = sim.m_average
+    assert(np.allclose(m_avg, [0, 0, 0], atol=1e-3))
+    logger.debug("m_avg: {}".format(m_avg))
+
+    # Check that simply adding up the magnetization values at the vertices
+    m_avg_wrong = sim.m.reshape(3, -1).sum(axis=-1)
+    assert(not np.allclose(m_avg_wrong, [0, 0, 0], atol=10.0))
+    logger.debug("m_avg_wrong: {}".format(m_avg_wrong))
+
+    if debug:
+        plot_mesh_with_paraview(mesh, outfile='mesh.png')
+        sim.render_scene(color_by_axis='y', glyph_scale_factor=2, outfile='nanostrip.png')
