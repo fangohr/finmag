@@ -1410,7 +1410,7 @@ class NormalModeSimulation(Simulation):
         self.psd_my[mesh_region, use_averaged_m] = psd_my
         self.psd_mz[mesh_region, use_averaged_m] = psd_mz
 
-    def plot_spectrum(self, t_step=None, t_ini=None, t_end=None, subtract_values='average',
+    def plot_spectrum(self, t_step=None, t_ini=None, t_end=None, subtract_values='first',
                       components="xyz", log=False, xlim=None, ticks=5, figsize=None, title="",
                       outfilename=None, use_averaged_m=False, mesh_region=None):
         """
