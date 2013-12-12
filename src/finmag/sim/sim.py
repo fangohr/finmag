@@ -21,8 +21,13 @@ from finmag.util.meshes import mesh_info, mesh_volume, plot_mesh, plot_mesh_with
 from finmag.util.fileio import Tablewriter, FieldSaver
 from finmag.util import helpers
 from finmag.util.vtk_saver import VTKSaver
-from finmag.util.fft import power_spectral_density, plot_power_spectral_density, find_peak_near_frequency, _plot_spectrum, export_normal_mode_animation_from_ringdown
-from finmag.util.normal_modes import compute_eigenproblem_matrix, compute_generalised_eigenproblem_matrices, compute_normal_modes, compute_normal_modes_generalised, export_normal_mode_animation, plot_spatially_resolved_normal_mode
+from finmag.util.fft import compute_power_spectral_density, \
+    plot_power_spectral_density, find_peak_near_frequency, \
+    _plot_spectrum, export_normal_mode_animation_from_ringdown
+from finmag.util.normal_modes import compute_eigenproblem_matrix, \
+    compute_generalised_eigenproblem_matrices, compute_normal_modes, \
+    compute_normal_modes_generalised, export_normal_mode_animation, \
+    plot_spatially_resolved_normal_mode
 from finmag.util.helpers import plot_dynamics, pvd2avi
 from finmag.sim.hysteresis import hysteresis as hyst, hysteresis_loop as hyst_loop
 from finmag.sim import sim_helpers
@@ -1398,7 +1403,7 @@ class NormalModeSimulation(Simulation):
             kwargs['restrict_to_vertices'] = parent_vertex_indices
 
         psd_freqs, psd_mx, psd_my, psd_mz = \
-            power_spectral_density(filename, t_step=t_step, t_ini=t_ini, t_end=t_end, **kwargs)
+            compute_power_spectral_density(filename, t_step=t_step, t_ini=t_ini, t_end=t_end, **kwargs)
 
         self.psd_freqs[mesh_region, use_averaged_m] = psd_freqs
         self.psd_mx[mesh_region, use_averaged_m] = psd_mx
