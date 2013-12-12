@@ -1473,6 +1473,9 @@ def test_m_average_is_robust_with_respect_to_mesh_discretization(tmpdir, debug=T
     ly = 5
     lz = 3
 
+    # We create the mesh of the nanostrip using gmsh, by writing the
+    # following string to a file and converting it using gmsh and
+    # dolfin-convert.
     geofile_string = textwrap.dedent("""
         nz = 1;  // number of z-layers
 
@@ -1501,8 +1504,11 @@ def test_m_average_is_robust_with_respect_to_mesh_discretization(tmpdir, debug=T
     with open('nanostrip.geo', 'w') as f:
         f.write(geofile_string)
 
+    # Call gmsh and dolfin-convert to bring the mesh defined above
+    # into a form that's readable by dolfin.
     sh.gmsh('-3', '-optimize', '-optimize_netgen', '-string', 'lx={}; ly={}; lz={};'.format(lx, ly, lz), '-o', 'nanostrip.msh', 'nanostrip.geo')
     sh.dolfin_convert('nanostrip.msh', 'nanostrip.xml')
+
     mesh = df.Mesh('nanostrip.xml')
 
     # Define magnetisation that performs a full rotation from the left
