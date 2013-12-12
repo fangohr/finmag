@@ -999,9 +999,9 @@ def test_NormalModeSimulation(tmpdir):
     assert(np.allclose(f.timesteps(), np.linspace(0, 2e-12, 21), atol=0, rtol=1e-8))
 
     sim.plot_spectrum(use_averaged_m=True)
-    sim.plot_spectrum(use_averaged_m=True, t_step=1.5e-12, subtract_values='first', figsize=(16, 6), outfilename='fft_m.png')
+    sim.plot_spectrum(use_averaged_m=True, log=True, t_step=1.5e-12, subtract_values='first', figsize=(16, 6), outfilename='fft_m.png')
     #sim.plot_spectrum(use_averaged_m=False)
-    sim.plot_spectrum(use_averaged_m=False, t_ini=0.0, t_end=1e-12, t_step=1e-13, subtract_values='average', figsize=(16, 6), outfilename='fft_m_spatially_resolved.png')
+    sim.plot_spectrum(use_averaged_m=False, t_ini=0.0, t_end=1e-12, subtract_values='average', figsize=(16, 6), outfilename='fft_m_spatially_resolved.png')
     assert(os.path.exists('fft_m.png'))
     assert(os.path.exists('fft_m_spatially_resolved.png'))
 
