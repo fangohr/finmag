@@ -260,6 +260,10 @@ def power_spectral_density(filename, t_step=None, t_ini=None, t_end=None, subtra
     of the magnetisation and freqs are the corresponding frequencies.
 
     """
+    if not filename.endswith('.npy') and restrict_to_vertices != None:
+        logger.warning("Ignoring argument 'restrict_to_vertices' because it "
+                       "can only be used when reading the spatially resolved "
+                       "magnetisation from a list of .npy files.")
 
     freqs, fft_mx, fft_my, fft_mz = \
         _aux_fft_m(filename, t_step=t_step, t_ini=t_ini, t_end=t_end, subtract_values=subtract_values, vertex_indices=restrict_to_vertices)
@@ -378,8 +382,8 @@ def _plot_spectrum(freqs, psd_mx, psd_my, psd_mz, components="xyz", log=False,
     return fig
 
 
-def plot_power_spectral_density(ndt_filename, t_step=None, t_ini=None, t_end=None, subtract_values='first', components="xyz",
-                                log=False, xlim=None, ylim=None, ticks=21, figsize=None, title="", outfilename=None):
+def plot_power_spectral_density(filename, t_step=None, t_ini=None, t_end=None, subtract_values='first', components="xyz",
+                                log=False, xlim=None, ylim=None, ticks=21, figsize=None, title="", outfilename=None, restrict_to_vertices=None):
     """
     Plot the power spectral density of the components of the magnetisation m.
 
@@ -417,7 +421,7 @@ def plot_power_spectral_density(ndt_filename, t_step=None, t_ini=None, t_end=Non
                          "Got: {}".format(components))
 
     freqs, psd_mx, psd_my, psd_mz = \
-        power_spectral_density(ndt_filename, t_step, t_ini=t_ini, t_end=t_end, subtract_values=subtract_values)
+        power_spectral_density(filename, t_step, t_ini=t_ini, t_end=t_end, subtract_values=subtract_values, restrict_to_vertices=restrict_to_vertices)
 
     return _plot_spectrum(freqs, psd_mx, psd_my, psd_mz, components=components,
                           log=log, xlim=xlim, ylim=ylim, ticks=ticks,
