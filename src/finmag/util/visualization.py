@@ -82,6 +82,9 @@ def render_paraview_scene(
     pvd_file = os.path.abspath(pvd_file)
     if outfile is None:
         _, outfile = tempfile.mkstemp(suffix='.png')
+        outfile_is_temporary = True
+    else:
+        outfile_is_temporary = False
     outfile = os.path.abspath(outfile)
 
     outdir = os.path.dirname(outfile)
@@ -194,6 +197,11 @@ def render_paraview_scene(
     except IOError:
         # Something went wrong (missing X display?); let's not choke but return None instead.
         image = None
+
+    if outfile_is_temporary:
+        # Clean up temporary file
+        os.remove(outfile)
+
     return image
 
 
