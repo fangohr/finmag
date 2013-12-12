@@ -1411,7 +1411,7 @@ class NormalModeSimulation(Simulation):
         self.psd_mz[mesh_region, use_averaged_m] = psd_mz
 
     def plot_spectrum(self, t_step=None, t_ini=None, t_end=None, subtract_values='average',
-                      components="xyz", xlim=None, ticks=5, figsize=None, title="",
+                      components="xyz", log=False, xlim=None, ticks=5, figsize=None, title="",
                       outfilename=None, use_averaged_m=False, mesh_region=None):
         """
         Plot the normal mode spectrum of the simulation. If
@@ -1453,8 +1453,9 @@ class NormalModeSimulation(Simulation):
                              self.psd_mx[mesh_region, use_averaged_m],
                              self.psd_my[mesh_region, use_averaged_m],
                              self.psd_mz[mesh_region, use_averaged_m],
-                             components=components, xlim=xlim, ticks=ticks,
-                             figsize=figsize, title=title, outfilename=outfilename)
+                             components=components, log=log, xlim=xlim,
+                             ticks=ticks, figsize=figsize, title=title,
+                             outfilename=outfilename)
         return fig
 
     def _get_psd_component(self, component, mesh_region, use_averaged_m):
