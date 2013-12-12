@@ -185,7 +185,7 @@ def filter_frequency_component(signal, k, t_start, t_end, ts_sampling=None):
     return signal_filtered
 
 
-def power_spectral_density(filename, t_step=None, t_ini=None, t_end=None, subtract_values='first', restrict_to_vertices=None):
+def compute_power_spectral_density(filename, t_step=None, t_ini=None, t_end=None, subtract_values='first', restrict_to_vertices=None):
     """
     Compute the power spectral densities (= squares of the absolute
     values of the Fourier coefficients) of the x, y and z components
@@ -421,7 +421,7 @@ def plot_power_spectral_density(filename, t_step=None, t_ini=None, t_end=None, s
                          "Got: {}".format(components))
 
     freqs, psd_mx, psd_my, psd_mz = \
-        power_spectral_density(filename, t_step, t_ini=t_ini, t_end=t_end, subtract_values=subtract_values, restrict_to_vertices=restrict_to_vertices)
+        compute_power_spectral_density(filename, t_step, t_ini=t_ini, t_end=t_end, subtract_values=subtract_values, restrict_to_vertices=restrict_to_vertices)
 
     return _plot_spectrum(freqs, psd_mx, psd_my, psd_mz, components=components,
                           log=log, xlim=xlim, ylim=ylim, ticks=ticks,
@@ -699,5 +699,5 @@ def export_normal_mode_animation_from_ringdown(npy_files, outfilename, mesh, t_s
 
 
 # Shorter aliases that are easier to type
-psd = power_spectral_density
+compute_psd = compute_power_spectral_density
 plot_psd = plot_power_spectral_density
