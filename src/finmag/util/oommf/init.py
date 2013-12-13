@@ -68,6 +68,24 @@ def oommf_uniaxial_anisotropy(m0, Ms, K1, axis):
 
     return uniaxial_anisotropy_field
 
+def oommf_cubic_anisotropy(m0, Ms, u1, u2, K1, K2=0, K3=0):
+    assert type(m0) is MeshField and m0.dims == (3,)
+
+    res = calculate_oommf_fields("cubic_anisotropy", m0, Ms, mesh_spec(m0.mesh) + """\nSpecify Southampton_CubicAnisotropy8 { 
+                                K1 %25.15e K2 %25.15e K3 %25.15e axis1 { %25.15e %25.15e %25.15e } 
+                                axis2 { %25.15e %25.15e %25.15e } }""" % (K1, K2, K3,  u1[0], u1[1], u1[2], u2[0], u2[1], u2[2]),
+                                 fields=["Southampton_CubicAnisotropy8::Field", "Oxs_TimeDriver::Spin"])
+    cubic_anisotropy_field = res['Southampton_CubicAnisotropy8-Field']
+    m_field = res['Oxs_TimeDriver-Spin']
+
+    assert cubic_anisotropy_field.dims == (3,)
+    if not (np.max(np.abs(m_field.flat - m0.flat)) < 1e-14):
+        print m_field.flat
+        print m0.flat
+    assert np.max(np.abs(m_field.flat - m0.flat)) < 1e-14
+
+    return cubic_anisotropy_field
+
 def oommf_fixed_zeeman(s0, Ms, H):
     assert type(s0) is MeshField and s0.dims == (3,)
 

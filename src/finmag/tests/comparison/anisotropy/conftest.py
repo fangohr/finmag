@@ -2,7 +2,7 @@ import os
 import numpy as np
 import dolfin as df
 from finmag.util.meshes import from_geofile
-from finmag.energies import UniaxialAnisotropy
+from finmag.energies import UniaxialAnisotropy, CubicAnisotropy
 from finmag.util.helpers import sphinx_sci as s
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -12,7 +12,8 @@ def pytest_funcarg__finmag(request):
             teardown=teardown, scope="session")
     return finmag
 
-Ms = 0.86e6; K1 = 520e3; a = (1, 0, 0);
+Ms = 0.86e6; K1 = 520e3; K2=0;
+u1 = (1, 0, 0);  u2 = (0,1,0)
 x1 = y1 = z1 = 20; # same as in bar.geo file
 
 def m_gen(r):
@@ -33,7 +34,23 @@ def setup():
     m = df.Function(S3)
     m.vector()[:] = m_gen(coords).flatten()
 
-    anisotropy = UniaxialAnisotropy(K1, a) 
+    anisotropy = UniaxialAnisotropy(K1, u1) 
+    anisotropy.setup(S3, m, Ms, unit_length=1e-9)
+
+    H_anis = df.Function(S3)
+    H_anis.vector()[:] = anisotropy.compute_field()
+    return dict(m=m, H=H_anis, S3=S3, table=start_table())
+
+def setup_cubic():
+    print "Running finmag..."
+    mesh = from_geofile(os.path.join(MODULE_DIR, "bar.geo"))
+    coords = np.array(zip(* mesh.coordinates()))
+
+    S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
+    m = df.Function(S3)
+    m.vector()[:] = m_gen(coords).flatten()
+
+    anisotropy = CubicAnisotropy(u1=u1,u2=u2,K1=K1,K2=K2) 
     anisotropy.setup(S3, m, Ms, unit_length=1e-9)
 
     H_anis = df.Function(S3)

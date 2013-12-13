@@ -1,4 +1,5 @@
 import logging
+import numpy as np
 import dolfin as df
 from aeon import mtimed
 from energy_base import EnergyBase
@@ -22,7 +23,7 @@ class CubicAnisotropy(EnergyBase):
 
     """
 
-    def __init__(self, K1, u1, K2, u2, K3, u3, name='CubicAnisotropy'):
+    def __init__(self, u1, u2, K1, K2=0, K3=0, name='CubicAnisotropy'):
         """
         Define a cubic anisotropy with (fourth/six/eigth order) anisotropy
         constants `K1`, `K2`, `K3` (in J/m^3) and corresponding axes
@@ -34,6 +35,7 @@ class CubicAnisotropy(EnergyBase):
         varying anisotropy by using df.Functions.
 
         """
+        u3 = np.cross(u1,u2)
         self.constants = (K1, K2, K3)
         self.axes = (u1, u2, u3)
         self.name = name
@@ -62,10 +64,17 @@ class CubicAnisotropy(EnergyBase):
         u2msq = df.dot(self.u2, m) ** 2
         u3msq = df.dot(self.u3, m) ** 2
 
-        E_integrand = self.K1 * (u1msq * u2msq + u2msq * u3msq + u3msq * u1msq) \
-                    + self.K2 * (u1msq * u2msq * u3msq) \
-                    + self.K3 * (
-                           u1msq ** 2 * u2msq ** 2
-                         + u2msq ** 2 * u3msq ** 2
-                         + u3msq ** 2 * u1msq ** 2)
+        E_term1 = self.K1 * (u1msq * u2msq + u2msq * u3msq + u3msq * u1msq)
+        E_term2 = self.K2 * (u1msq * u2msq * u3msq)
+        E_term3 = self.K3 * (u1msq ** 2 * u2msq ** 2 + u2msq ** 2 * u3msq ** 2 + u3msq ** 2 * u1msq ** 2)
+
+        E_integrand = E_term1
+        
+        if self.constants[1]!=0:
+            E_integrand += E_term2 
+        
+        #FIXME: have no idea why this term is extremely slow and term2 is quite slow
+        if self.constants[2]!=0:
+            E_integrand += E_term3
+
         super(CubicAnisotropy, self).setup(E_integrand, S3, m, Ms, unit_length)

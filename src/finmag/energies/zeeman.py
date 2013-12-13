@@ -214,8 +214,9 @@ class TimeZeemanPython(TimeZeeman):
         self.Ms = Ms
         self.unit_length = unit_length
         if self.scalar_df_expression:
-            #FIXME: we need to construct a function space if the pbc is applied
-            self.h0 = helpers.scalar_valued_function(self.df_expression,S3.mesh()).vector().array()
+            dofmap = S3.dofmap()
+            self.S1 = df.FunctionSpace(S3.mesh(), "Lagrange", 1, constrained_domain=dofmap.constrained_domain)
+            self.h0 = helpers.scalar_valued_function(self.df_expression,self.S1).vector().array()
             self.H0 = df.Function(self.S3)
         else:
             self.H0 = helpers.vector_valued_function(self.df_expression, self.S3)
