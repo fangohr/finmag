@@ -5,7 +5,7 @@ import os
 import sys
 import numpy as np
 from glob import glob
-from finmag.util.visualization import render_paraview_scene
+from finmag.util.visualization import *
 from finmag.util.visualization_impl import find_unused_X_display
 
 # Skipping this test for now because it still doesn't work on aleph0
@@ -63,3 +63,29 @@ def test_render_paraview_scene(tmpdir):
         assert(len(glob('sim_relaxation_intermediate_snapshots*.png')) == 10)
     finally:
         subprocess.check_call(['xpra', 'stop', ':{}'.format(display)])
+
+
+def test_flight_path_rotation():
+    # Random starting position and axis
+    p0 = [-1, 3, 2]
+    axis = [2.4, 5.2, 8.0]
+
+    f = flight_path_rotation(start_pos=p0, axis=axis, angle=360)
+
+    # A few sanity checks:
+
+    # For a full rotation, the inital and end points should coincide with p0.
+    assert(np.allclose(f(0), p0))
+    assert(np.allclose(f(1), p0))
+
+    # All connecting vectors between the initial position and any
+    # other should be orthogonal to the rotation axis.
+    for t in np.linspace(0, 1, 100):
+        v = f(t) - f(0)
+        assert(abs(np.dot(v, axis)) < 1e-8)
+
+    # If the starting position lies on the axis then all points on the
+    # flight path should coincide.
+    f = flight_path_rotation(start_pos=p0, axis=p0, angle=42.0)
+    for t in np.linspace(0, 1, 100):
+        assert(np.allclose(f(t), p0))

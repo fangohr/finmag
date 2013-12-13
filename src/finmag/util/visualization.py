@@ -1,4 +1,6 @@
+from __future__ import division
 import subprocess as sp
+import numpy as np
 import textwrap
 import logging
 import tempfile
@@ -8,6 +10,7 @@ import os
 import re
 import IPython.core.display
 from visualization_impl import _axes, find_unused_X_display
+from math import sin, cos, pi
 
 logger = logging.getLogger("finmag")
 
@@ -33,6 +36,52 @@ logger = logging.getLogger("finmag")
 # visualization_impl.py and import it here.
 from visualization_impl import find_valid_X_display
 from finmag.util import configuration
+
+
+def flight_path_rotation(start_pos, axis=[0, 0, 1], angle=360):
+    """
+    Return a function `f(t)` which defines a 'flight path' of a
+    rotating camera at time `t` (where `t` runs from 0 to 1).
+
+    *Arguments*
+
+    start_pos:
+
+        Starting position of the camera at time t=0.
+
+    axis:
+
+        Rotation axis. Default: [0, 0, 1] (i.e., the z-axis)
+
+    angle:
+
+        The angle (in degrees) of the entire rotating motion.
+        Default: 360 (= one full rotation).
+    """
+    start_pos = np.asarray(start_pos)
+    axis_normalised = np.asarray(axis / np.linalg.norm(axis))
+    angle_rad = angle * pi / 180.
+
+    # Find the radial component of the starting position vector
+    r1 = start_pos - np.dot(start_pos, axis_normalised) * axis_normalised
+
+    # P0 is the 'anchor point' on the rotation axis
+    P0 = start_pos - r1
+
+    # Find another vector orthogonal to both the axis and to r1 (of
+    # the same length as r1). Together, r1 and r2 define the rotation
+    # plane.
+    r2 = np.cross(axis_normalised, r1)
+
+    print "P0: {}".format(P0)
+    print "r1: {}".format(r1)
+    print "r2: {}".format(r2)
+
+    def flight_path(t):
+        pos = P0 + cos(t*angle_rad) * r1 + sin(t*angle_rad) * r2
+        return pos
+
+    return flight_path
 
 
 def render_paraview_scene(
