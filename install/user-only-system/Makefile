@@ -10,4 +10,4 @@ package: instructions.html
 	ls -lh finmag-installation-instructions.tar.gz
 
 instructions.html: instructions.txt
-	rst2html instructions.txt instructions.html	
+	rst2html.py instructions.txt instructions.html	

@@ -30,7 +30,13 @@ def bloch_parameter(A, K1):
     """
     return sqrt(A / K1)
 
-
+def helical_period(A,D):
+    """
+    Computes the Helical period of a Skyrmion, when given exchange
+    constant, A and the DMI strength,D. 
+    """
+    return 4*pi*A/abs(D)
+    
 def flux_density_to_field_strength(B):
     """
     Converts the magnetic flux density to the magnetic field strength.
