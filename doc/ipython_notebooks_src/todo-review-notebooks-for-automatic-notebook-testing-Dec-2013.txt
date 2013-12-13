@@ -13,7 +13,10 @@
       Done, 8 December 2013, Hans
 - [X] ref-assembling-dmi-simulations.ipynb
       Done, 8 December 2013, Hans
-- [ ] ref-creating-custom-data-table-files.ipynb
+- [X] ref-creating-custom-data-table-files.ipynb
+      Done, 13 December 2013, Hans
+      Something funny in there (see comment last box)
+      but is reproducable now.
 - [ ] ref-domain-wall-energy-class.ipynb
 - [ ] ref-magnetic-spectrum-skymion.ipynb
 - [ ] ref-restarting-simulations.ipynb
@@ -34,7 +37,7 @@
 - [ ] tutorial-normal-modes.ipynb
 - [ ] tutorial-relaxations-of-a-single-nanodisk.ipynb
 - [ ] tutorial-running-simulations-with-dmi.ipynb
-- [] tutorial-sampling-m-at-arbitrary-positions.ipynb
+- [ ] tutorial-sampling-m-at-arbitrary-positions.ipynb
       Modified, 4 December 2013, Mark. To do: Inconsistent m values between runs past 4d.p.
 - [ ] tutorial-saving-averages-demo.ipynb
 - [X] tutorial-scheduling-events.ipynb
