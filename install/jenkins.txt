@@ -1,0 +1,68 @@
+On the machine running jenkins, we may need extra software.
+
+At the moment, it appears using 
+
+py.test --boxed
+
+instead of 
+
+py.test 
+
+removes an error relating to the aeon package:
+
+This error:
+
+/home/fangohr2/hg/finmag/src/finmag/tests/test_writing_data.py:18: in test_write_ndt_file
+>           sim.save_averages()
+/home/fangohr2/hg/finmag/src/finmag/sim/sim_helpers.py:25: in save_ndt
+>       sim.tablewriter.save()
+/usr/local/lib/python2.7/dist-packages/aeon/helpers.py:72: in decorated_method
+>       timer.start(name, group)
+/usr/local/lib/python2.7/dist-packages/aeon/series.py:86: in start
+>           measurement.start()
+/usr/local/lib/python2.7/dist-packages/aeon/measurement.py:35: in start
+>               self.name, self.group))
+E           MeasurementStateError: Measurement 'save[Tablewriter]' is already running. Needs to be stopped first
+------------------------------------- Captured stdout --------------------------------------
+i=0, time=0.0, marker 1.
+
+
+disappears when we run 
+
+py.test --boxed
+
+instead of 
+
+py.test
+
+Will thus try this on jenkins, although it does suggest that maybe something isn't as cleanly encapsulated as we thought it might be.
+
+To reproduce the error, we need to run 
+
+
+fangohr2@osiris:~/hg/finmag/src$ py.test -v 
+
+where hg/finmag is the root of the finmag repository.
+
+The actual error is reported from 
+
+src/finmag/tests/test_writing_data.py
+
+but only occurs if we run all the tests. This passes:
+
+fangohr2@osiris:~/hg/finmag/src$ py.test -v finmag/tests/test_writing_data.py
+=================================== test session starts ====================================
+platform linux2 -- Python 2.7.4 -- pytest-2.4.2 -- /usr/bin/python
+plugins: xdist
+collected 1 items 
+
+finmag/tests/test_writing_data.py:10: test_write_ndt_file PASSED
+
+================================= 1 passed in 2.72 seconds =================================
+
+
+Anyway, to install the '--boxed' plugin, we need to use pytest-xdist. Currently we use pip to install pytest, so we should use
+
+sudo pip install pytest-xdist
+
+on the Jenkins server (have done this already).
