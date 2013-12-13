@@ -163,7 +163,7 @@ class TimeZeemanPython(TimeZeeman):
     def __init__(self, df_expression, time_fun, t_off=None, name='TimeZeemanPython'):
         """
         Faster version of the TimeZeeman class for the special case
-        that only the amplitude (but not the direction) of the field
+        that only the amplitude (or the direction) of the field
         varies over time. That is, if `H_0` denotes the field at time
         t=0 then the field value at some point `x` at time `t` is
         assumed to be of the form:
@@ -173,7 +173,7 @@ class TimeZeemanPython(TimeZeeman):
         In this situation, the dolfin.interpolate method only needs to
         be evaluated once at the beginning for the spatial expression,
         which saves a lot of computational effort.
-
+        
         *Arguments*
 
         df_expression :  dolfin.Expression
@@ -183,7 +183,14 @@ class TimeZeemanPython(TimeZeeman):
 
         time_fun :  callable
 
-            Function representing the scaling factor for the amplitude at time
+            Function representing the scaling factor for the amplitude at time.
+            
+            Note that if the given dolfin expression is a scalar,
+            then the time_fun have to return a 3d vector, for example,
+            a spatial rotational field around x-axis could be expressed as,
+            
+                Hy = h0(x,y,z)*cos(wt)
+                Hz = h0(x,y,z)*sin(wt)
 
         t_off :  float
 
@@ -196,25 +203,44 @@ class TimeZeemanPython(TimeZeeman):
         self.switched_off = False
         self.name = name
         self.in_jacobian = False
+        
+        self.scalar_df_expression = False
+        if df_expression.value_size()==1:
+            self.scalar_df_expression = True
 
     def setup(self, S3, m, Ms, unit_length=1):
         self.S3 = S3
         self.m = m
         self.Ms = Ms
         self.unit_length = unit_length
-        self.H0 = helpers.vector_valued_function(self.df_expression, self.S3)
+        if self.scalar_df_expression:
+            #FIXME: we need to construct a function space if the pbc is applied
+            self.h0 = helpers.scalar_valued_function(self.df_expression,S3.mesh()).vector().array()
+            self.H0 = df.Function(self.S3)
+        else:
+            self.H0 = helpers.vector_valued_function(self.df_expression, self.S3)
+        
         self.E = - mu0 * self.Ms * df.dot(self.m, self.H0)
 
-        self.H0 = self.H0.vector().array()
-        self.H = self.H0.copy()
+        self.H_init = self.H0.vector().array()
+        self.H = self.H_init.copy()
 
     def update(self, t):
         if not self.switched_off:
             if self.t_off and t >= self.t_off:
                 self.switch_off()
                 return
-
-            self.H[:] = self.H0[:]*self.time_fun(t)
+            
+            if self.scalar_df_expression:
+                tx,ty,tz=self.time_fun(t)
+                
+                self.H.shape=(3,-1)
+                self.H[0,:]=self.h0*tx
+                self.H[1,:]=self.h0*ty
+                self.H[2,:]=self.h0*tz
+                self.H.shape=(-1,)
+            else:
+                self.H[:] = self.H_init[:]*self.time_fun(t)
 
     def switch_off(self):
         # It might be nice to provide the option to remove the Zeeman
@@ -236,6 +262,7 @@ class TimeZeemanPython(TimeZeeman):
         return self.H
 
     def compute_energy(self, dx=df.dx):
+        self.H0.vector().set_local(self.H)
         E = df.assemble(self.E * dx) * self.unit_length**3
         return E
 
@@ -277,3 +304,4 @@ class OscillatingZeeman(TimeZeemanPython):
             return cos(2 * pi * freq * t + phase)
 
         super(OscillatingZeeman, self).__init__(H0_expr, amplitude, t_off=t_off, name=name)
+
