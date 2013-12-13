@@ -1,10 +1,6 @@
 import finmag
 import os
 
-# XXX TODO: This test was adapted from an IPython notebook, and some
-# of the commands (e.g. debugging print statements) don't make sense
-# in an automated test. These should be cleaned up.
-
 
 def test_restart_same_simulation(tmpdir):
     os.chdir(str(tmpdir))
