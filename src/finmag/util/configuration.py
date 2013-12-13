@@ -92,7 +92,7 @@ logfiles =
 maxBytes = 52428800
 
 # Number of backups for logfiles when they exceed the size limit
-maxBytes = 1
+backupCount = 1
 
 # Useful logging level choices: [DEBUG, INFO, WARNING]
 console_logging_level = DEBUG
