@@ -16,7 +16,7 @@ from aeon import mtimed
 from glob import glob
 from finmag.sim.llg import LLG
 from finmag.sim.llg_stt import LLG_STT
-from finmag.util.consts import exchange_length, bloch_parameter
+from finmag.util.consts import exchange_length, bloch_parameter, helical_period
 from finmag.util.meshes import mesh_info, mesh_volume, plot_mesh, plot_mesh_with_paraview
 from finmag.util.fileio import Tablewriter, FieldSaver
 from finmag.util import helpers
@@ -1026,12 +1026,12 @@ class Simulation(object):
         vertices, etc.).
 
         Also print a distribution of edge lengths present in the mesh
-        and how they compare to the exchange length and the Bloch
-        parameter (if these can be computed, which requires an
-        exchange interaction (plus anisotropy for the Bloch
-        parameter); note that for spatially varying exchange strength
-        and anisotropy constant the average values are used). This
-        information is relevant to estimate whether the mesh
+        and how they compare to the exchange length, the Bloch
+        parameter and the Helical period (if these can be computed, which 
+        requires an exchange interaction (plus anisotropy for the Bloch
+        parameter and DMI value for the Helical period)); note that for 
+        spatially varying material parameters the average values are used). 
+        This information is relevant to estimate whether the mesh
         discretisation is too coarse and might result in numerical
         artefacts (see W. Rave, K. Fabian, A. Hubert, "Magnetic states
         ofsmall cubic particles with uniaxial anisotropy", J. Magn.
@@ -1053,15 +1053,28 @@ class Simulation(object):
             info = "{} than the {} {} = {:.2f} nm{}.\n".format(msg, name, abbrev, L * 1e9, msg2)
             return info
 
-        if hasattr(self.llg.effective_field, "exchange"):
-            A = self.llg.effective_field.exchange.A.vector().array().mean()
-            Ms = self.llg.Ms.vector().array().mean()
+        if not (self.has_interaction('Exchange')):
+            info_string += "Warning: Simulation object has no exchange. Cannot compute exchange length(s).\n"
+        else:
+            A = self.get_interaction('Exchange').A_av
+            Ms = self.Ms
             l_ex = exchange_length(A, Ms)
-            info_string += added_info(l_ex, 'exchange length', 'l_ex')
-            if hasattr(self.llg.effective_field, "anisotropy"):
-                K1 = float(self.llg.effective_field.anisotropy.K1)
+            info_string += added_info(l_ex, 'Exchange length', 'l_ex')
+            lengths = {'Exchange length':l_ex}
+
+            if (self.has_interaction('Anisotropy')):
+                K1 = self.get_interaction('Anisotropy').K1.vector().array().mean()
                 l_bloch = bloch_parameter(A, K1)
                 info_string += added_info(l_bloch, 'Bloch parameter', 'l_bloch')
+                lengths['Bloch parameter'] = l_bloch
+
+            if (self.has_interaction('DMI')):
+                D = self.get_interaction('DMI').D_av
+                l_h_period = helical_period(A,D)
+                info_string += added_info(l_h_period, 'Helical period', 'l_h_period')
+                lengths['Helical period'] = l_h_period
+
+            info_string += "\nThe minimum length is the {} = {:.2f}nm".format(min(lengths,key=lengths.get),min(lengths.values())*1e9)
 
         return info_string
 
