@@ -11,9 +11,12 @@ def test_write_ndt_file(tmpdir):
     os.chdir(str(tmpdir))
 
     sim = finmag.example.barmini(name="barmini_test")
-    for time in np.linspace(0, 1e-10, 21):
+    for i, time in enumerate(np.linspace(0, 1e-10, 21)):
+        print("i={}, time={}, marker 1.".format(i, time))
         sim.advance_time(time)
+        print("i={}, time={}, marker 2.".format(i, time))
         sim.save_averages()
+        print("i={}, time={}, marker 3.".format(i, time))
     print("Done.")
 
     # We used to do a file comparison here, but we had to fall back on
