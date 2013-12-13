@@ -89,3 +89,22 @@ def test_flight_path_rotation():
     f = flight_path_rotation(start_pos=p0, axis=p0, angle=42.0)
     for t in np.linspace(0, 1, 100):
         assert(np.allclose(f(t), p0))
+
+
+def test_flight_path_straight_line():
+    # Random starting position and axis
+    P0 = np.array([-1, 3, 2])
+    P1 = np.array([2.4, 5.2, 8.0])
+
+    f = flight_path_straight_line(P0, P1)
+
+    # The start and end point should coincide with P0 and P1
+    assert(np.allclose(f(0), P0))
+    assert(np.allclose(f(1), P1))
+
+    # Compare f(t) with an explicit linear interpolation between P0 and P1
+    t_vals = np.linspace(0, 1, 200)
+
+    for t in t_vals:
+        pt_expected = (1 - t) * P0 + t * P1
+        assert(np.allclose(f(t), pt_expected))

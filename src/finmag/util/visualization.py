@@ -84,6 +84,22 @@ def flight_path_rotation(start_pos, axis=[0, 0, 1], angle=360):
     return flight_path
 
 
+def flight_path_straight_line(start_pos, end_pos):
+    """
+    Return a function `f(t)` which defines a 'flight path' of a camera
+    moving along a straight line between `start_pos` and `end_pos`
+    (where `t` runs from 0 to 1).
+
+    """
+    start_pos = np.asarray(start_pos)
+    end_pos = np.asarray(end_pos)
+
+    def flight_path(t):
+        return (1 - t) * start_pos + t * end_pos
+
+    return flight_path
+
+
 def render_paraview_scene(
     pvd_file,
     outfile=None,
