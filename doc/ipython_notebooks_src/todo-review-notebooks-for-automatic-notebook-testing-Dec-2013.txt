@@ -16,7 +16,8 @@
 - [X] ref-creating-custom-data-table-files.ipynb
       Done, 13 December 2013, Hans
 - [ ] ref-domain-wall-energy-class.ipynb
-- [ ] ref-magnetic-spectrum-skymion.ipynb
+- [X] ref-magnetic-spectrum-skymion.ipynb
+      Done, 14 Decemeber 2013, Hans
 - [ ] ref-restarting-simulations.ipynb
 - [ ] ref-saving-averages-regions.ipynb
 - [ ] ref-spatially-varying-anisotropy.ipynb
