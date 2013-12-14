@@ -18,7 +18,8 @@
 - [ ] ref-domain-wall-energy-class.ipynb
 - [X] ref-magnetic-spectrum-skymion.ipynb
       Done, 14 Decemeber 2013, Hans
-- [ ] ref-restarting-simulations.ipynb
+- [X] ref-restarting-simulations.ipynb
+      Done, 14 December 2013, Hans
 - [ ] ref-saving-averages-regions.ipynb
 - [ ] ref-spatially-varying-anisotropy.ipynb
 - [ ] ref-using-timings.ipynb
