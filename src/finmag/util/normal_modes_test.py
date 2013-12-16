@@ -130,6 +130,9 @@ def test_plot_spatially_resolved_normal_mode(tmpdir):
     H_ext_relax = [1e4, 0, 0]
 
     sim = normal_mode_simulation(mesh, Ms, m_init, alpha=alpha_relax, unit_length=1e-9, A=A, H_ext=H_ext_relax)
+    sim.relax()
+    mesh = sim.mesh
+    m0 = sim.m
 
     N = 3
     omega, eigenvecs = sim.compute_normal_modes(n_values=N)
@@ -138,7 +141,7 @@ def test_plot_spatially_resolved_normal_mode(tmpdir):
         #sim.export_normal_mode_animation(i, filename='animations/normal_mode_{:02d}/normal_mode_{:02d}.pvd'.format(i, i))
         w = eigenvecs[:, i]
 
-        fig = plot_spatially_resolved_normal_mode(sim, w, slice_z='z_max', components='xyz',
+        fig = plot_spatially_resolved_normal_mode(mesh, m0, w, slice_z='z_max', components='xyz',
                                                   figure_title='Eigenmodes', yshift_title=0.0,
                                                   plot_powers=True, plot_phases=True,
                                                   show_axis_labels=True, show_colorbars=True,
@@ -147,19 +150,19 @@ def test_plot_spatially_resolved_normal_mode(tmpdir):
                                                   dpi=300)
 
         # Different combination of parameters
-        fig = plot_spatially_resolved_normal_mode(sim, w, slice_z='z_min', components='xz',
+        fig = plot_spatially_resolved_normal_mode(mesh, m0, w, slice_z='z_min', components='xz',
                                                   plot_powers=True, plot_phases=False,
                                                   show_axis_frames=False, show_axis_labels=False,
                                                   show_colorbars=False, figsize=(12, 4),
                                                   outfilename='normal_mode_profile_{:02d}_v2.png'.format(i))
 
         with pytest.raises(ValueError):
-            plot_spatially_resolved_normal_mode(sim, w, plot_powers=False, plot_phases=False)
+            plot_spatially_resolved_normal_mode(mesh, m0, w, plot_powers=False, plot_phases=False)
 
 
 def test_plot_spatially_resolved_normal_mode2(tmpdir):
     os.chdir(str(tmpdir))
-    sim = example.normal_modes.disk()
+    sim = example.normal_modes.disk(relaxed=True)
     sim.compute_normal_modes(n_values=2)
 
     sim.plot_spatially_resolved_normal_mode(0, outfilename='normal_mode_00.png')
