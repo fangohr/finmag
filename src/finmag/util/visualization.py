@@ -8,6 +8,7 @@ import shutil
 import sys
 import os
 import re
+import dolfin as df
 import IPython.core.display
 from visualization_impl import _axes, find_unused_X_display
 from math import sin, cos, pi
@@ -268,6 +269,36 @@ def render_paraview_scene(
         os.remove(outfile)
 
     return image
+
+
+def plot_dolfin_function(f, **kwargs):
+    """
+    Uses Paraview to plot the given dolfin Function (currently this
+    only works for a dolfin.Function representing a 3D vector field).
+    Returns an IPython.display.Image object containing the rendered
+    scene. All keyword arguments are passed on to the function
+    `finmag.util.visualization.render_paraview_scene`, which is used
+    internally.
+
+    """
+    # Check that f represents a 3D vector field defined on a 3D mesh.
+    if not f.element().value_shape() == (3,):
+        raise TypeError("The function to be plotted must represent a 3D vector field.")
+    if not (f.domain().topological_dimension() == 3 and f.domain().geometric_dimension() == 3):
+        raise TypeError("The function to be plotted must be defined on a 3D mesh.")
+
+    f.rename('f', 'f')
+    tmpdir = tempfile.mkdtemp()
+    tmpfilename = os.path.join(tmpdir, 'dolfin_function.pvd')
+    try:
+        # Save the function to a temporary file
+        funcfile = df.File(tmpfilename)
+        funcfile << f
+        kwargs.pop('field_name', None)  # ignore this argument as we are using our own field_name
+        return render_paraview_scene(tmpfilename, field_name='f', **kwargs)
+    finally:
+        shutil.rmtree(tmpdir)
+
 
 
 # Set the docstring of the wrapped function so that it reflects the
