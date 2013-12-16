@@ -1731,7 +1731,7 @@ class NormalModeSimulation(Simulation):
         else:
             raise ValueError("Filename must end in one of the following suffixes: .pvd, .jpg, .avi.")
 
-        export_normal_mode_animation(self, self.eigenfreqs[k], self.eigenvecs[:, k],
+        export_normal_mode_animation(self.mesh, self.m, self.eigenfreqs[k], self.eigenvecs[:, k],
                                      pvd_filename, num_cycles=num_cycles,
                                      num_snapshots_per_cycle=num_snapshots_per_cycle,
                                      scaling=scaling, dm_only=dm_only)
@@ -1796,7 +1796,7 @@ class NormalModeSimulation(Simulation):
                         "`sim.compute_normal_modes()` to do so.")
 
         fig = plot_spatially_resolved_normal_mode(
-            self, self.eigenvecs[:, k], slice_z=slice_z, components=components,
+            self.mesh, self.m, self.eigenvecs[:, k], slice_z=slice_z, components=components,
             figure_title=figure_title, yshift_title=yshift_title,
             plot_powers=plot_powers, plot_phases=plot_phases,
             cmap_powers=cmap_powers, cmap_phases=cmap_phases, vmin_powers=vmin_powers,

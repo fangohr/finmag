@@ -455,14 +455,21 @@ def compute_normal_modes_generalised(A, M, n_values=10, tol=1e-8, discard_negati
     return omega, w
 
 
-def export_normal_mode_animation(sim, freq, w, filename, num_cycles=1, num_snapshots_per_cycle=20, scaling=0.2, dm_only=False):
+def export_normal_mode_animation(mesh, m0, freq, w, filename, num_cycles=1, num_snapshots_per_cycle=20, scaling=0.2, dm_only=False):
     """
     Save a number of vtk files of different snapshots of a given normal mode.
     These can be imported and animated in Paraview.
 
     *Arguments*
 
-    comp :  NormalModesComputation
+    mesh :  dolfin.Mesh
+
+        The mesh on which the magnetisation is defined.
+
+    m0 :  numpy.array
+
+        The ground state of the magnetisation for which the normal mode was computed.
+        The size must be so that the array can be reshaped to size 3xN.
 
     freq :  float
 
@@ -514,12 +521,12 @@ def export_normal_mode_animation(sim, freq, w, filename, num_cycles=1, num_snaps
     #    os.makedirs(dirname)
     #mesh = comp.mesh
     #mesh_shape = mesh.mesh_size
-    m0_array = sim.m.copy()  # we assume that sim is relaxed!!
+    m0_array = m0.copy()  # we assume that sim is relaxed!!
     Q, R, S, Mcross = compute_tangential_space_basis(m0_array.reshape(3, 1, -1))
     Qt = mf_transpose(Q).copy()
 
-    n = sim.mesh.num_vertices()
-    V = df.VectorFunctionSpace(sim.mesh, 'CG', 1, dim=3)
+    n = mesh.num_vertices()
+    V = df.VectorFunctionSpace(mesh, 'CG', 1, dim=3)
     func = df.Function(V)
     func.rename('m', 'magnetisation')
     w_3d = mf_mult(Q, w.reshape((2, 1, n)))
@@ -546,7 +553,7 @@ def export_normal_mode_animation(sim, freq, w, filename, num_cycles=1, num_snaps
     logger.debug("Saving the data to file '{}' took {} seconds".format(filename, t1 - t0))
 
 
-def plot_spatially_resolved_normal_mode(sim, w, slice_z='z_max', components='xyz',
+def plot_spatially_resolved_normal_mode(mesh, m0, w, slice_z='z_max', components='xyz',
                                         figure_title=None, yshift_title=0.0,
                                         plot_powers=True, plot_phases=True, num_phase_colorbar_ticks=5,
                                         cmap_powers=plt.cm.jet, cmap_phases=plt.cm.hsv, vmin_powers=None,
@@ -567,9 +574,14 @@ def plot_spatially_resolved_normal_mode(sim, w, slice_z='z_max', components='xyz
 
     *Arguments*
 
-    sim:
+    mesh:
 
-        The simulation object for which the eigenmode was computed.
+        The mesh of the simulation object for which the eigenmode was computed.
+
+    m0 :  numpy.array
+
+        The ground state of the magnetisation for which the normal mode was computed.
+        The size must be so that the array can be reshaped to size 3xN.
 
     w:
 
@@ -604,7 +616,7 @@ def plot_spatially_resolved_normal_mode(sim, w, slice_z='z_max', components='xyz
     The `matplotlib.Figure` containing the plot.
 
     """
-    coords = sim.mesh.coordinates()
+    coords = mesh.coordinates()
 
     if slice_z == 'z_min':
         slice_z = min(coords[:, 2])
@@ -615,7 +627,7 @@ def plot_spatially_resolved_normal_mode(sim, w, slice_z='z_max', components='xyz
 
     # Extract the boundary mesh from the full mesh (which is a 2D mesh
     # consisting only of the triangles on the boundary).
-    mesh = sim.mesh
+    mesh = mesh
     boundary_mesh = df.BoundaryMesh(mesh, 'exterior')
     entity_map = boundary_mesh.entity_map(0).array()
 
@@ -631,13 +643,6 @@ def plot_spatially_resolved_normal_mode(sim, w, slice_z='z_max', components='xyz
     surface.mark(sub_domains, 1)
     surface_layer = df.SubMesh(boundary_mesh, sub_domains, 1)
   
-    # Original line that fails
-    #parent_vertex_indices = surface_layer.data().array("parent_vertex_indices", 0)
-
-    ## Hans' attempt to fix (only guessing)
-    #parent_vertex_indices = surface_layer.data().array("parent_vertex_indices")
-    
-    
     try:
         # Legacy syntax (for dolfin <= 1.2 or so).
         # TODO: This should be removed in the future once dolfin 1.3 is released!
@@ -647,20 +652,12 @@ def plot_spatially_resolved_normal_mode(sim, w, slice_z='z_max', components='xyz
         # http://fenicsproject.org/qa/185/entity-mapping-between-a-submesh-and-the-parent-mesh
         parent_vertex_indices = surface_layer.data().array('parent_vertex_indices', 0)
 
-    #import IPython
-    #IPython.embed()
-
-    ######################################################################
-    # XXX TODO: This function should probably not need access to the
-    #           simulation object. Instead, the following calculations
-    #           should be done externally, and w_3d should be passed
-    #           as an argument directly to this function.
-    m0_array = sim.m.copy()  # we assume that sim is relaxed!!
+    m0_array = m0.copy()
     Q, R, S, Mcross = compute_tangential_space_basis(m0_array.reshape(3, 1, -1))
     Qt = mf_transpose(Q).copy()
     
 
-    n = sim.mesh.num_vertices()
+    n = mesh.num_vertices()
     w_3d = mf_mult(Q, w.reshape((2, 1, n)))
     
     w_x = w_3d[0, 0, :]
@@ -675,7 +672,7 @@ def plot_spatially_resolved_normal_mode(sim, w, slice_z='z_max', components='xyz
               'y': np.angle(w_y),
               'z': np.angle(w_z)}
 
-    V = df.FunctionSpace(sim.mesh, 'CG', 1)
+    V = df.FunctionSpace(mesh, 'CG', 1)
     f = df.Function(V)
     
     ##FIXME: Weiwei: comment this two lines first, just to pass through the test
