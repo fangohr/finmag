@@ -1,7 +1,11 @@
 import finmag
 
-def test_integrator_get_set_max_steps():
-    """Tests setting and getting of nsteps"""
+def test_integrator_get_set_max_steps(tmpdir):
+    """
+    Tests setting and getting of nsteps
+
+    """
+    os.chdir(str(tmpdir))
     sim = finmag.example.barmini()
     sim.run_until(0) # create integrator object
     steps = sim.integrator.get_max_steps()
@@ -13,8 +17,12 @@ def test_integrator_get_set_max_steps():
     assert steps == sim.integrator.get_max_steps()
 
 
-def test_integrator_stats():
-    """Tests the stats"""
+def test_integrator_stats(tmpdir):
+    """
+    Tests the stats
+
+    """
+    os.chdir(str(tmpdir))
     sim = finmag.example.barmini()
     sim.run_until(0)  # create integrator object
     stats = sim.integrator.stats()
@@ -23,8 +31,12 @@ def test_integrator_stats():
         assert stats[key] == 0.0
 
 
-def test_integrator_n_steps_only():
-    """Test integration for a few steps only"""
+def test_integrator_n_steps_only(tmpdir):
+    """
+    Test integration for a few steps only
+
+    """
+    os.chdir(str(tmpdir))
     sim = finmag.example.barmini()
     sim.run_until(0)  # create integrator object
     assert sim.integrator.stats()['nsteps'] == 0
@@ -51,7 +63,8 @@ def test_integrator_n_steps_only():
     assert sim.integrator.cur_t == sim.integrator.stats()['tcur']
 
 
-def test_integrator_run_until_return_value():
+def test_integrator_run_until_return_value(tmpdir):
+    os.chdir(str(tmpdir))
     sim = finmag.example.barmini()
     sim.run_until(0) # to create integrator object
     assert sim.integrator.stats()['nsteps'] == 0

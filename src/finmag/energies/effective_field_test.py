@@ -1,10 +1,11 @@
 import numpy as np
 import dolfin as df
 import pytest
+import os
 from finmag.example import barmini
 
 
-def test_effective_field_compute_returns_copy():
+def test_effective_field_compute_returns_copy(tmpdir):
     """
     Regression test to ensure that the value returned by
     EffectiveField.compute() does not change as a simulation
@@ -13,6 +14,7 @@ def test_effective_field_compute_returns_copy():
     Here we check that this is fixed.
 
     """
+    os.chdir(str(tmpdir))
     sim = barmini()
     h0 = sim.llg.effective_field.compute()
     h0_copy = h0.copy()

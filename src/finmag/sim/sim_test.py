@@ -191,13 +191,15 @@ class TestSimulation(object):
                                    0.0])
             assert(np.linalg.norm(m - m_expected) < TOL)
 
-    def test_probe_m_on_regular_grid(self):
+    def test_probe_m_on_regular_grid(self, tmpdir):
         """
         Another sanity check using the barmini example; probe the
         magnetisation on a regular 2D grid inside a plane parallel to the
         x/y-plane (with different numbers of probing points in x- and
         y-direction).
+
         """
+        os.chdir(str(tmpdir))
 
         # Set up the simulation
         sim = barmini()
@@ -791,6 +793,7 @@ def test_timezeeman_is_updated_automatically(tmpdir):
     each time step.
 
     """
+    os.chdir(str(tmpdir))
     def check_field_value(val):
         assert(np.allclose(H_ext.compute_field().reshape(3, -1).T, val, atol=0, rtol=1e-8))
 
@@ -960,6 +963,7 @@ def test_sim_relax_accepts_filename(tmpdir):
     Check that if sim.relax() is given a filename, the relaxed state
     is saved to this file.
     """
+    os.chdir(str(tmpdir))
     sim = barmini()
     sim.set_m([1, 0, 0])
     sim.set_H_ext([1e6, 0, 0])

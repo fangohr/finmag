@@ -11,7 +11,8 @@ from finmag.util.helpers import assert_number_of_files
 from finmag.util.fileio import Tablereader
 
 
-def test_can_read_restart_file():
+def test_can_read_restart_file(tmpdir):
+    os.chdir(str(tmpdir))
     sim = barmini()
     sim.run_until(1e-21)  # create integrator
     sim_helpers.save_restart_data(sim)
@@ -25,7 +26,8 @@ def test_can_read_restart_file():
     assert datetime.now() - data['datetime'] < timedelta(0, 10)
 
 
-def test_try_to_restart_a_simulation():
+def test_try_to_restart_a_simulation(tmpdir):
+    os.chdir(str(tmpdir))
     t0 = 10e-12
     t1 = 20e-12
 
