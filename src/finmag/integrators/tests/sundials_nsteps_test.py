@@ -1,4 +1,6 @@
 import finmag
+import os
+
 
 def test_integrator_get_set_max_steps(tmpdir):
     """
