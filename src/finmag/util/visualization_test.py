@@ -4,6 +4,7 @@ import subprocess
 import os
 import sys
 import numpy as np
+import dolfin as df
 from glob import glob
 from finmag.util.visualization import *
 from finmag.util.visualization_impl import find_unused_X_display
@@ -108,3 +109,30 @@ def test_flight_path_straight_line():
     for t in t_vals:
         pt_expected = (1 - t) * P0 + t * P1
         assert(np.allclose(f(t), pt_expected))
+
+
+def test_plot_dolfin_function(tmpdir):
+    os.chdir(str(tmpdir))
+    interval_mesh = df.UnitIntervalMesh(2)
+    square_mesh = df.UnitSquareMesh(2, 2)
+    cube_mesh = df.UnitCubeMesh(2, 2, 2)
+
+    S = df.FunctionSpace(cube_mesh, 'CG', 1)
+    V2 = df.VectorFunctionSpace(square_mesh, 'CG', 1, dim=3)
+    V3 = df.VectorFunctionSpace(cube_mesh, 'CG', 1, dim=3)
+
+    s = df.Function(S)
+    v2 = df.Function(V2)
+    v3 = df.Function(V3); v3.vector()[:] = 1.0
+
+    # Wrong mesh dimension
+    with pytest.raises(TypeError):
+        plot_dolfin_function(v2, outfile='buggy.png')
+
+    # Wrong function space dimension
+    with pytest.raises(TypeError):
+        plot_dolfin_function(v2, outfile='buggy.png')
+
+    # Plotting a 3D function on a 3D mesh should work
+    plot_dolfin_function(v3, outfile='plot.png')
+    assert(os.path.exists('plot.png'))
