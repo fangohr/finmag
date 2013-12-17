@@ -1,0 +1,45 @@
+Notes from Max (Dec 2013) on how to create animated scenes (camera
+moving around) within Paraview:
+
+<snip>
+
+However, it's actually not too hard to export a movie directly from
+Paraview, which would be the easiest workaround. Once you have saved
+the .pvd file from within Finmag (via sim.save_vtk(filename)), open it
+in Paraview [1] and enable the animation view by clicking View ->
+Animation View. In the "Mode" dropdown box at the top of that panel
+select "Real Time" (it probably defaults to "Sequence") and enter the
+duration. If there is a TimeKeeper object in the animation view you
+may want to deselect that unless you explicitly want to show multiple
+timesteps.
+
+There should be a big plus sign in the animation view, and next to it
+two dropdown boxes (the first of which probably contains the filename
+and the second of which might say "Visibility"). From the first one
+select "Camera" and from the second one you probably want "Orbit".
+Once you click the plus sign, you can enter the orbit parameters. I
+think "Center" is the center of rotation, "Normal" is the "view up"
+direction and "Origin" is the origin of your motion. Once you click
+"OK", there will be a new line in the animation view panel reflecting
+the camera path.
+
+If you now hit the "play" button it *may* already work. However,
+confusingly quite often I get a very weird camera path (feels like a
+bug). To correct that, double click anywhere in the "Camera" line of
+the animation view panel, which opens a small window named "Animation
+Keyframes", and double-click on "Path...". It's probably the "Up
+Direction" which is wrong, so click on that and set it to [0, 0, 1]
+(or whatever you want). The click "OK" twice, which should fix things.
+
+Once you are happy with it you can export the animation via File ->
+Save Animation.
+
+I hope this works for you. Let me know if you run into trouble and
+I'll try to help if I can.
+
+Cheers,
+Max
+
+
+[1] If you are using Paraview 3.98 then it might help to start it with
+the option --use-old-panels
