@@ -12,7 +12,7 @@ def pytest_funcarg__finmag(request):
             teardown=teardown, scope="session")
     return finmag
 
-Ms = 0.86e6; K1 = 520e3; K2=0;
+Ms = 0.86e6; K1 = 520e3; K2=230e3; K3=123e3;
 u1 = (1, 0, 0);  u2 = (0,1,0)
 x1 = y1 = z1 = 20; # same as in bar.geo file
 
@@ -49,9 +49,13 @@ def setup_cubic():
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
     m = df.Function(S3)
     m.vector()[:] = m_gen(coords).flatten()
+    
+    S1 = df.FunctionSpace(mesh, "Lagrange", 1)
+    Ms_cg = df.Function(S1)
+    Ms_cg.vector()[:] = Ms
 
-    anisotropy = CubicAnisotropy(u1=u1,u2=u2,K1=K1,K2=K2) 
-    anisotropy.setup(S3, m, Ms, unit_length=1e-9)
+    anisotropy = CubicAnisotropy(u1=u1,u2=u2,K1=K1,K2=K2, K3=K3) 
+    anisotropy.setup(S3, m, Ms_cg, unit_length=1e-9)
 
     H_anis = df.Function(S3)
     H_anis.vector()[:] = anisotropy.compute_field()

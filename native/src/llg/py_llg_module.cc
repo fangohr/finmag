@@ -15,6 +15,7 @@
 #include "llg.h"
 #include "bem.h"
 #include "heun.h"
+#include "energy.h"
 
 #include "util/swig_dolfin.h"
 
@@ -28,4 +29,5 @@ BOOST_PYTHON_MODULE(llg)
     finmag::llg::register_llg();
     finmag::llg::register_bem();
     finmag::llg::register_heun();
+    finmag::llg::register_energy();
 }
