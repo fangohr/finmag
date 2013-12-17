@@ -107,6 +107,7 @@ class LLG(object):
     @Ms.setter
     def Ms(self, value):
         #self._Ms_dg=helpers.scalar_valued_dg_function(value, self.S1)
+        #FIXME: change back to DG space.
         self._Ms_dg=helpers.scalar_valued_function(value, self.S1)
         self._Ms_dg.rename('Ms', 'Saturation magnetisation')
         self.volumes = df.assemble(df.TestFunction(self.S1) * df.dx)

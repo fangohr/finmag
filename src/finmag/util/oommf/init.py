@@ -73,7 +73,7 @@ def oommf_cubic_anisotropy(m0, Ms, u1, u2, K1, K2=0, K3=0):
 
     res = calculate_oommf_fields("cubic_anisotropy", m0, Ms, mesh_spec(m0.mesh) + """\nSpecify Southampton_CubicAnisotropy8 { 
                                 K1 %25.15e K2 %25.15e K3 %25.15e axis1 { %25.15e %25.15e %25.15e } 
-                                axis2 { %25.15e %25.15e %25.15e } }""" % (K1, K2, K3,  u1[0], u1[1], u1[2], u2[0], u2[1], u2[2]),
+                                axis2 { %25.15e %25.15e %25.15e } }""" % (K1, K2, K3, u1[0], u1[1], u1[2], u2[0], u2[1], u2[2]),
                                  fields=["Southampton_CubicAnisotropy8::Field", "Oxs_TimeDriver::Spin"])
     cubic_anisotropy_field = res['Southampton_CubicAnisotropy8-Field']
     m_field = res['Oxs_TimeDriver-Spin']
