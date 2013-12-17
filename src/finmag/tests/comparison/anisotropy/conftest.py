@@ -25,7 +25,7 @@ def m_gen(r):
     my = np.sqrt(1 - mx**2 - mz**2)
     return np.array([mx, my, mz])
 
-def setup():
+def setup(K2=K2):
     print "Running finmag..."
     mesh = from_geofile(os.path.join(MODULE_DIR, "bar.geo"))
     coords = np.array(zip(* mesh.coordinates()))
@@ -33,9 +33,13 @@ def setup():
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
     m = df.Function(S3)
     m.vector()[:] = m_gen(coords).flatten()
+    
+    S1 = df.FunctionSpace(mesh, "Lagrange", 1)
+    Ms_cg = df.Function(S1)
+    Ms_cg.vector()[:] = Ms
 
-    anisotropy = UniaxialAnisotropy(K1, u1) 
-    anisotropy.setup(S3, m, Ms, unit_length=1e-9)
+    anisotropy = UniaxialAnisotropy(K1, u1, K2=K2) 
+    anisotropy.setup(S3, m, Ms_cg, unit_length=1e-9)
 
     H_anis = df.Function(S3)
     H_anis.vector()[:] = anisotropy.compute_field()
