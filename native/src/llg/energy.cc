@@ -9,6 +9,48 @@ namespace finmag { namespace llg {
     	double const const_pi = 3.1415926535897932384626433832795;
     	double const const_mu_0 = const_pi * 4e-7;
 
+    	void compute_anisotropy_field(const np_array<double> &m,
+    	    						const np_array<double> &Ms_arr,
+    	            				const np_array<double> &H,
+    	            				const np_array<double> &u,
+    	            				const np_array<double> &K1_arr,
+    	            				const np_array<double> &K2_arr){
+
+    	                    m.check_ndim(2, "compute_cubic_field: m");
+    	                    int const nodes = m.dim()[1];
+
+    	                    m.check_shape(3, nodes, "compute_cubic_field: m");
+    	                    H.check_shape(3, nodes, "compute_cubic_field: H");
+    	                    u.check_shape(3, nodes, "compute_cubic_field: u");
+
+    	                    Ms_arr.check_shape(nodes, "compute_cubic_field: Ms");
+
+    	                    double *mx = m(0), *my = m(1), *mz = m(2);
+    	                    double *hx = H(0), *hy = H(1), *hz = H(2);
+    	                    double *ux = u(0), *uy = u(1), *uz = u(2);
+
+    	                    double *Ms = Ms_arr.data();
+    	                    double *K1 = K1_arr.data();
+    	                    double *K2 = K2_arr.data();
+
+    						#pragma omp parallel for schedule(guided)
+    	                    for (int i=0; i < nodes; i++) {
+
+    	                    	double u_m=mx[i]*ux[i]+my[i]*uy[i]+mz[i]*uz[i];
+    	                    	double coeff=0;
+
+    	                    	if (Ms[i]!=0){
+    	                    		coeff=2.0/(const_mu_0*Ms[i])*(K1[i]+2*K2[i]*u_m*u_m);
+    	                    	}
+
+    	                    	hx[i] = coeff*u_m*ux[i];
+    	                    	hy[i] = coeff*u_m*uy[i];
+    	                    	hz[i] = coeff*u_m*uz[i];
+
+    	                    }
+    	}
+
+
     	void compute_cubic_field(const np_array<double> &m,
     						const np_array<double> &Ms_arr,
             				const np_array<double> &H,
@@ -38,7 +80,8 @@ namespace finmag { namespace llg {
                     double *K2 = K2_arr.data();
                     double *K3 = K3_arr.data();
 
-					//#pragma omp parallel for schedule(guided)
+
+					#pragma omp parallel for schedule(guided)
                     for (int i=0; i < nodes; i++) {
                     	double u1m=mx[i]*u1_x+my[i]*u1_y+mz[i]*u1_z;
                     	double u2m=mx[i]*u2_x+my[i]*u2_y+mz[i]*u2_z;
@@ -99,8 +142,6 @@ namespace finmag { namespace llg {
 
     	}
 
-
-
     }
 
     void register_energy() {
@@ -116,6 +157,14 @@ namespace finmag { namespace llg {
             arg("K3_arr")
         ));
 
+        def("compute_anisotropy_field", &compute_anisotropy_field, (
+            arg("m"),
+            arg("Ms_arr"),
+            arg("H"),
+            arg("u"),
+            arg("K1_arr"),
+            arg("K2_arr")
+        ));
     }
 
 }}

@@ -3,7 +3,7 @@ import conftest
 import finmag.util.magpar as magpar
 from finmag.util.helpers import stats
 
-def test_against_magpar(finmag):
+def test_against_magpar(finmag=conftest.setup(K2=0)):
 
     REL_TOLERANCE = 5e-7
 
@@ -20,6 +20,6 @@ def test_against_magpar(finmag):
     assert np.max(rel_diff) < REL_TOLERANCE
 
 if __name__ == "__main__":
-    finmag = conftest.setup()
+    finmag = conftest.setup(K2=0)
     test_against_magpar(finmag)
     conftest.teardown(finmag)

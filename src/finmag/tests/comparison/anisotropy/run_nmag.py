@@ -38,7 +38,7 @@ def generate_anisotropy_data(anis,name='anis'):
 
 if __name__ == "__main__":
     #define uniaxial_anisotropy
-    anis=nmag.uniaxial_anisotropy(axis=[1, 0, 0], K1=SI(520e3, "J/m^3"))
+    anis=nmag.uniaxial_anisotropy(axis=[1, 0, 0], K1=SI(520e3, "J/m^3"), K2=SI(230e3, "J/m^3"))
     generate_anisotropy_data(anis)
     
     cubic=nmag.cubic_anisotropy(axis1=[1, 0, 0], axis2=[0, 1, 0], 

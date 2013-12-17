@@ -99,6 +99,7 @@ class CubicAnisotropy(EnergyBase):
             self.H = self.m.vector().array()
             self.Ms = self.Ms.vector().array()
             self.compute_field = self.__compute_field_directly
+            self.compute_energy = self.__compute_energy
         
     def __compute_field_directly(self):
         
@@ -112,7 +113,13 @@ class CubicAnisotropy(EnergyBase):
         
         return self.H
     
-    
+    def __compute_energy(self):
+        m = self.m.vector().array()
+        mh = m*self.H
+        mh.shape=(3,-1)
+        Ei = np.sum(mh, axis=0)*mu0*self.Ms*self.volumes
+        E = -0.5*np.sum(Ei) * self.unit_length ** self.dim
+        return E
         
         
         

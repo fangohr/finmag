@@ -4,7 +4,7 @@ from finmag.util.oommf.comparison import oommf_m0, finmag_to_oommf
 from finmag.util.oommf import mesh, oommf_uniaxial_anisotropy
 from finmag.util.helpers import stats
 
-def test_against_oommf(finmag):
+def test_against_oommf(finmag=conftest.setup(K2=0)):
 
     REL_TOLERANCE = 7e-2
 
@@ -24,6 +24,6 @@ def test_against_oommf(finmag):
     assert np.max(rel_diff) < REL_TOLERANCE
 
 if __name__ == "__main__":
-    finmag = conftest.setup()
+    finmag = conftest.setup(K2=0)
     test_against_oommf(finmag)
     conftest.teardown(finmag)
