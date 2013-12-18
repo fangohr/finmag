@@ -18,7 +18,7 @@ def test_cubic_anisotropy_energy():
     m = df.Function(S3)
     m.assign(df.Constant((0, 0, 1)))
 
-    ca = CubicAnisotropy(K1, u1, K2, u2, K3, u3)
+    ca = CubicAnisotropy(u1, u2, K1, K2, K3)
     ca.setup(S3, m, Ms, unit_length=1e-9)
 
     energy = ca.compute_energy()
