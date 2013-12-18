@@ -97,7 +97,8 @@ class UniaxialAnisotropy(EnergyBase):
         self.axis = helpers.vector_valued_function(self.axis_waiting_for_mesh, S3, normalise=True)
         self.axis.rename('K1_axis', 'anisotropy axis')
         E_integrand = self.K1 * ( df.Constant(1) - (df.dot(self.axis, m)) ** 2)
-        #FIXME: need to re-write the energy density function since the second energy term is not included
+        if self.K2_input!=0:
+            E_integrand -= self.K2 * df.dot(self.axis, m) ** 4
             
         super(UniaxialAnisotropy, self).setup(E_integrand, S3, m, Ms, unit_length)
         
@@ -109,7 +110,6 @@ class UniaxialAnisotropy(EnergyBase):
             self.K2_arr = self.K2.vector().array()
             self.volumes = df.assemble(df.TestFunction(S1) * df.dx)
             self.compute_field = self.__compute_field_directly
-            self.compute_energy = self.__compute_energy
     
     def __compute_field_directly(self):
         
@@ -124,12 +124,4 @@ class UniaxialAnisotropy(EnergyBase):
         self.u.shape=(-1,)
         
         return self.H
-    
-    def __compute_energy(self):
-        m = self.m.vector().array()
-        mh = m*self.H
-        mh.shape=(3,-1)
-        Ei = np.sum(mh, axis=0)*mu0*self.Ms*self.volumes
-        E = -0.5*np.sum(Ei) * self.unit_length ** self.dim
-        return E
         
