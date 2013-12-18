@@ -4,6 +4,7 @@ import dolfin as df
 from aeon import mtimed
 from energy_base import EnergyBase
 from finmag.util import helpers
+from finmag.util.consts import mu0
 from finmag.native import llg as native_llg
 
 logger = logging.getLogger('finmag')
