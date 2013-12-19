@@ -1,13 +1,15 @@
 import math
+import numpy as np
 from finmag import Simulation
 from finmag.energies import CubicAnisotropy, Demag, Exchange, Zeeman
-from finmag.util.meshes import from_geofile
+from finmag.util.consts import flux_density_to_field_strength
+from finmag.util.meshes import cylinder
 
 ps = 1e-12
 
 # Mesh
 
-mesh = from_geofile("disc.geo")
+mesh = cylinder(r=10, h=2.5, maxh=3.0, filename='disk')
 unit_length = 1e-9
 
 # Material Definition
@@ -23,9 +25,9 @@ K1 = -1e4  # anisotropy constant in J/m^3
 # External Field
 
 # the field will be zero, is this intended?
-H_app_dir = np.array((0, 0, 0))  
+H_app_dir = np.array((0, 0, 0))
 # converts Tesla to A/m (divides by mu0)
-H_app_strength = flux_density_to_field_strength(1e-3)  
+H_app_strength = flux_density_to_field_strength(1e-3)
 
 # Spin-Polarised Current
 
@@ -41,7 +43,7 @@ direction = (math.sin(theta) * math.cos(phi),
 
 # Create Simulation
 
-sim = Simulation(mesh, Ms, unit_length)
+sim = Simulation(mesh, Ms, unit_length, name='disksim')
 sim.alpha = alpha
 sim.gamma = gamma
 sim.set_m((0.01, 0.01, 1.0))
