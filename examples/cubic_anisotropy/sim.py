@@ -1,38 +1,57 @@
-import numpy as np
-import dolfin as df
+import math
 from finmag import Simulation
-from finmag.energies import Exchange, CubicAnisotropy
-from finmag.util.consts import mu0
+from finmag.energies import CubicAnisotropy, Demag, Exchange, Zeeman
+from finmag.util.meshes import from_geofile
 
-mesh = df.BoxMesh(0, 0, 0, 1, 1, 40, 1, 1, 40)
+ps = 1e-12
 
-Ms = 876626  # A/m
-A = 1.46e-11  # J/m
+# Mesh
 
-K1 = -8608726
-K2 = -13744132
-K3 =  1100269
-u1 = (0, -0.7071, 0.7071)
-u2 = (0,  0.7071, 0.7071)
-u3 = (-1, 0, 0)  # perpendicular to u1 and u2
+mesh = from_geofile("disc.geo")
+unit_length = 1e-9
 
-# specification of fields close to oommf reference cubicEight_100pc.mif
-# on http://www.southampton.ac.uk/~fangohr/software/oxs_cubic8.html
+# Material Definition
 
-fields = np.zeros((250, 3))
-fields[:, 0] = 5
-fields[:, 1] = 5
-fields[:, 2] = np.linspace(20000, -20000, 250)
-fields = fields * 0.001 / mu0  # mT to A/m
+Ms = 9.0e5  # saturation magnetisation in A/m
+A = 2.0e-11  # exchange constant in J/m
+alpha = 0.01  # damping constant no unit
+gamma = 2.3245e5  # m / (As)
+u1 = (1, 0, 0)  # cubic anisotropy axes
+u2 = (0, 1, 0)
+K1 = -1e4  # anisotropy constant in J/m^3
 
-sim = Simulation(mesh, Ms, unit_length=1e-9)
-sim.set_m((0, 0, 1))
+# External Field
+
+# the field will be zero, is this intended?
+H_app_dir = np.array((0, 0, 0))  
+# converts Tesla to A/m (divides by mu0)
+H_app_strength = flux_density_to_field_strength(1e-3)  
+
+# Spin-Polarised Current
+
+current_density = 100e10  # in A/m^2
+polarisation = 0.76
+thickness = 2.5e-9  # in m
+
+theta = math.pi
+phi = math.pi / 2
+direction = (math.sin(theta) * math.cos(phi),
+             math.sin(theta) * math.sin(phi),
+             math.cos(theta))
+
+# Create Simulation
+
+sim = Simulation(mesh, Ms, unit_length)
+sim.alpha = alpha
+sim.gamma = gamma
+sim.set_m((0.01, 0.01, 1.0))
+sim.set_stt(current_density, polarisation, thickness, direction)
+sim.add(Demag())
+sim.add(Zeeman(H_app_strength * H_app_dir))
 sim.add(Exchange(A))
-sim.add(CubicAnisotropy(K1, u1, K2, u2, K3, u3))
+sim.add(CubicAnisotropy(u1, u2, K1))
+sim.set_tol(reltol=1e-8, abstol=1e-8)  # timestepper tolerances
 
-# this is not a hysteresis loop, but just a one-way swipe
-mzs = sim.hysteresis(fields, lambda sim: sim.m_average[2])
-result = np.zeros((250, 2))
-result[:, 0] = fields[:, 2]
-result[:, 1] = mzs
-np.savetxt("hysteresis.txt", result, header="field in A/m and corresponding unit magnetisation in z-direction")
+sim.schedule('save_m', every=10*ps)
+sim.schedule('save_averages', every=100*ps)
+sim.run_until(2000 * ps)
