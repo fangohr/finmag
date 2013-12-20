@@ -116,10 +116,11 @@ class DMI(EnergyBase):
             H_dmi_np = dmi_np.compute_field()
     """
 
-    def __init__(self, D, method="box-matrix-petsc", name='DMI'):
+    def __init__(self, D, method="box-matrix-petsc", name='DMI', interfacial=False):
         self.D_waiting_for_mesh = D
         self.name = name
         super(DMI, self).__init__(method, in_jacobian=True)
+        self.interfacial = interfacial
 
     @mtimed
     def setup(self, S3, m, Ms, unit_length=1):
@@ -138,6 +139,10 @@ class DMI(EnergyBase):
             E_integrand = dmi_manual_curl(m, self.DMI_factor * self.D, dim=2)
         elif meshdim == 3:
             E_integrand = self.DMI_factor * self.D * df.inner(m, df.curl(m))
+            
+            
+        if self.interfacial:
+            E_integrand = DMI_ultra_thin_film(m, self.DMI_factor * self.D, dim=meshdim)
 
         super(DMI, self).setup(E_integrand, S3, m, Ms, unit_length)
 
@@ -152,14 +157,14 @@ def DMI_ultra_thin_film(m, D, dim):
        Returns the form to compute the DMI energy:
 
          D (m_x * dm_z/dx - m_z * dm_x/dx) +
-         D (m_y * dm_z/dy - m_z * dm_y/dy * df.dx                      (1)
+         D (m_y * dm_z/dy - m_z * dm_y/dy) * df.dx                      (1)
 
     Equation is equation (2) from the Oct 2013 paper by Rohart
     and Thiaville (http://arxiv.org/abs/1310.0666)
 
     """
 
-    assert dim == 2, "Only implemented for 2d mesh"
+    assert dim <= 2, "Only implemented for 2d mesh"
 
     gradm = df.grad(m)
 
@@ -167,9 +172,18 @@ def DMI_ultra_thin_film(m, D, dim):
     dmydx = gradm[1, 0]
     dmzdx = gradm[2, 0]
 
-    dmxdy = gradm[0, 1]
-    dmydy = gradm[1, 1]
-    dmzdy = gradm[2, 1]
+    if dim == 1:
+        dmxdy = 0
+        dmydy = 0
+        dmzdy = 0
+    elif dim == 2:
+        dmxdy = gradm[0, 1]
+        dmydy = gradm[1, 1]
+        dmzdy = gradm[2, 1]
+    else:
+        msg = "This function should only be used for " +\
+              "1 d or 2d meshes, not {}d".format(dim)
+        raise NotImplementedError(msg)
 
     mx = m[0]
     my = m[1]
