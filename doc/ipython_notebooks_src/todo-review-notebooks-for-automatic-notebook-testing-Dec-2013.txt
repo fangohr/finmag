@@ -20,7 +20,8 @@
       Done, 14 Decemeber 2013, Hans
 - [X] ref-restarting-simulations.ipynb
       Done, 14 December 2013, Hans
-- [ ] ref-saving-averages-regions.ipynb
+- [X] ref-saving-averages-regions.ipynb
+      Done, 22 December 2013, Hans
 - [ ] ref-spatially-varying-anisotropy.ipynb
 - [ ] ref-using-timings.ipynb
 - [ ] ref-varying-damping.ipynb
@@ -42,7 +43,7 @@
 - [ ] tutorial-saving-averages-demo.ipynb
 - [X] tutorial-scheduling-events.ipynb
       Done, 4 December 2013, Max.
-- [ ] tutorial-use-of-logging.ipynb
+- [X] tutorial-use-of-logging.ipynb
 - [ ] tutorial-using-ipython-notebook.ipynb
 - [ ] tutorial-using-the-physics-units-object.ipynb
 - [ ] tutorial-visualising-the-stray-field-with-the-airbox-method.ipynb
