@@ -6882,3 +6882,8 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-12-16 09:16:25 fangohr-adium: Good Morning. Who is left in Southampton? Marijan, Weiwei, Max, Mark?
 2013-12-16 15:51:36 fangohr-adium1: Hello - is it Marc-Antonio? :)
 2013-12-18 17:02:49 max_albert: Hi Hans, looks like rebooting aleph0 didn't help. The tests still hang. :(
+2013-12-20 09:36:00 mb8g11_: Hi all! Do we have a manual/how-to get binary and license of finmag?
+2013-12-20 09:41:29 fangohr-adium: Hm, yes-ish. The binary is created by running 'python dist-wrapper.py' in the finmag-dist repository.
+2013-12-20 09:43:18 fangohr-adium: The license is created using some of the files in that repository. The basic workflow is that: The user (who needs the license) needs to be given the 'gather_info.py' script to run. This produces some output that they should return. With this output, we can use the 'make_license.py' script to create the license file for them, which we then need to return. I guess we should write this up properly, and add to the finmag-dist repository.
+2013-12-20 13:26:33 mb8g11_: Thanks.
+2013-12-20 17:11:51 fangohr-adium: Bye Marvin, I intend not to come back to the office before 6 Jan. Merry Christmas to all robots and people on here.
