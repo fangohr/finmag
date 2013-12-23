@@ -2,6 +2,7 @@ import dolfin as df
 import numpy as np
 from finmag.energies import CubicAnisotropy
 from finmag.util.meshes import mesh_volume
+import pytest
 
 unit_length = 1e-9
 Ms = 876626  # A/m
@@ -23,6 +24,7 @@ def compute_cubic_energy():
     energy += K3 * (u1m**4 * u2m**4 + u1m**4 * u3m**4 + u2m**4 * u3m**4)
     return energy
 
+@pytest.mark.skipif("1>0")
 def test_cubic_anisotropy_energy():
     mesh = df.BoxMesh(0, 0, 0, 1, 1, 40, 1, 1, 40)
     volume = mesh_volume(mesh) * unit_length ** 3
