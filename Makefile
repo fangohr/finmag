@@ -116,7 +116,7 @@ run-pytest-reproduce-ipython-notebooks : create-dirs
 
 # Will not run tests marked as slow.
 pytest-fast: create-dirs make-modules
-	PYTHONPATH=$(PYTHON_ROOTS) py.test --boxed \
+	PYTHONPATH=$(PYTHON_ROOTS) py.test \
 			   $(TEST_OPTIONS) -m "not slow" \
 			   --junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
 
