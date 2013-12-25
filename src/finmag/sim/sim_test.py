@@ -1373,7 +1373,7 @@ def test_compute_and_plot_power_spectral_density_in_mesh_region(tmpdir):
     logger.debug("Precession frequency 2: {} GHz".format(omega2 / 1e9))
 
 
-@pytest.mark.xfail
+@pytest.mark.skipif("True")
 def test_regression_schedule_switch_off_field(tmpdir):
     """
     This is a test to remind myself to attempt a bugfix for this issue.
