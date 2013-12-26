@@ -22,7 +22,8 @@
       Done, 14 December 2013, Hans
 - [X] ref-saving-averages-regions.ipynb
       Done, 22 December 2013, Hans
-- [ ] ref-spatially-varying-anisotropy.ipynb
+- [X] ref-spatially-varying-anisotropy.ipynb
+      Done, 26 December 2013, Hans
 - [ ] ref-using-timings.ipynb
 - [ ] ref-varying-damping.ipynb
 - [ ] ref-varying-Ms.ipynb
