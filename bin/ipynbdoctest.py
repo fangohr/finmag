@@ -158,8 +158,25 @@ def compare_outputs(test, ref, skip_compare=('png', 'traceback',
                                              'metadata')):
     for key in ref:
         if key not in test:
-            print "Missing key: %s != %s" % (test.keys(), ref.keys())
-            return False
+            # Note:                                                                         # One possibility for this branch is if
+            # an exception is raised in the notebook. Typical            
+            # keys in the test notebook are ['evalue', 'traceback', 'ename']. 
+            # Let's report some more detail in this case
+            output = "\n"
+            output += "Something went wrong.\nTest output:\n"
+            for k, v in test.items():
+                output += "\tTest output:       {:10} -> {}\n".format(k, v)
+            output += "Something went wrong. Reference output:\n"
+            for k, v in ref.items():
+                output += "\tReference output:  {:10} -> {}\n".format(k, v)
+            output += "- " * 35 + "\n"
+            output += "Returning False now.\n\n"
+            print(output)
+            # Now we have printed the failure. We should create a nice
+            # html snippet, the following is a hack to get going 
+            # quickly (HF, Dec 2013) 
+            htmlSnippet = "Not HTML, just tracking error:<br><br>\n\n" + output
+            return False, htmlSnippet
         elif (key not in skip_compare) and \
                 (sanitize(test[key]) != sanitize(ref[key])):
             print "----- Mismatch {}: --------------------------------------------------------".format(key)
