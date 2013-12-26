@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from IPython.nbformat.current import reads
-from ipnbdoctest import test_notebook as reproduce_notebook
+from ipynbdoctest import test_notebook as reproduce_notebook
 from glob import glob
 import os
 import pytest
