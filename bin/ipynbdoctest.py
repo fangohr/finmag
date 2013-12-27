@@ -153,24 +153,67 @@ def sanitize(s):
 #     return data
 
 
-def compare_outputs(test, ref, skip_compare=('png', 'traceback',
+def report_mismatch(key, test, ref, cell, message):
+    """See compare_outputs - this is just a helper function
+    to avoid re-writing code twice."""
+
+    
+    output = "\n"
+    output += "{}\n".format(message)
+    output += "We were processing the cell.input:\n"
+    output += "--- Cell input start\n"
+    output += "{}\n".format(cell.input)
+    output += "--- Cell input end\n"
+
+    if key in test and key in ref:
+        output += "----- Mismatch {}: --------------------------------------------------------\n".format(key)
+        output += "{}\n".format(test[key]) 
+        output += "----------   !=   ----------"
+        output += "{}\n".format(ref[key]) 
+        output += "--------------------------------------------------------------------------------\n"
+    else:
+        output += "Failure with key={}\n".format(key)
+        if not key in test:
+            output += "key not in test output\n"
+        if not key in ref:
+            output += "key not in ref output\n"
+            assert False, "I think this should be impossible - is it? HF, Dec 2013"
+
+    output += "--- Test output, with keys -> values:\n"
+    for k, v in test.items():
+        output += "\tTest output:       {:10} -> {}\n".format(k, v)
+    output += "--- Reference output, with keys -> values:\n"
+    for k, v in ref.items():
+        output += "\tReference output:  {:10} -> {}\n".format(k, v)
+    output += "- " * 35 + "\n"
+    return output
+
+def compare_outputs(test, ref, cell, skip_compare=('png', 'traceback',
                                              'latex', 'prompt_number',
                                              'metadata')):
+
+
+    """
+    **Parameters**
+    
+     ``test`` is the output we got from executing the cell
+
+     ``ref`` is the reference output we expected from the saved
+             notebook
+
+     ``cell`` is the cell we are working on - useful to display the input
+             in case of a fail
+
+     ``skip_compare`` a list of cell types we ignore
+    """
+
     for key in ref:
         if key not in test:
             # Note:                                                                         # One possibility for this branch is if
             # an exception is raised in the notebook. Typical            
             # keys in the test notebook are ['evalue', 'traceback', 'ename']. 
             # Let's report some more detail in this case
-            output = "\n"
-            output += "Something went wrong.\nTest output:\n"
-            for k, v in test.items():
-                output += "\tTest output:       {:10} -> {}\n".format(k, v)
-            output += "Something went wrong. Reference output:\n"
-            for k, v in ref.items():
-                output += "\tReference output:  {:10} -> {}\n".format(k, v)
-            output += "- " * 35 + "\n"
-            output += "Returning False now.\n\n"
+            output = report_mismatch(key, test, ref, cell, "Something went wrong")
             print(output)
             # Now we have printed the failure. We should create a nice
             # html snippet, the following is a hack to get going 
@@ -179,11 +222,8 @@ def compare_outputs(test, ref, skip_compare=('png', 'traceback',
             return False, htmlSnippet
         elif (key not in skip_compare) and \
                 (sanitize(test[key]) != sanitize(ref[key])):
-            print "----- Mismatch {}: --------------------------------------------------------".format(key)
-            print test[key]
-            print "----------   !=   ----------"
-            print ref[key]
-            print "--------------------------------------------------------------------------------"
+            output = report_mismatch(key, test, ref, cell, "In more detail:")
+            print(output)
             try:
                 import diff_match_patch
                 dmp = diff_match_patch.diff_match_patch()
@@ -318,7 +358,7 @@ def test_notebook(nb):
             outs_merged = merge_streams(outs)
             cell_outputs_merged = merge_streams(cell.outputs)
             for out, ref in zip(outs_merged, cell_outputs_merged):
-                cmp_result, html_diff = compare_outputs(out, ref)
+                cmp_result, html_diff = compare_outputs(out, ref, cell)
                 html_diffs_all += html_diff
                 if not cmp_result:
                     failed = True
