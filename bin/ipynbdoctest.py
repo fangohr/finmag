@@ -154,25 +154,26 @@ def sanitize(s):
 
 
 def report_mismatch(key, test, ref, cell, message):
-    """See compare_outputs - this is just a helper function
-    to avoid re-writing code twice."""
-
+    """
+    See compare_outputs - this is just a helper function
+    to avoid re-writing code twice.
+    """
     
     output = "\n"
     output += "{}\n".format(message)
-    output += "We were processing the cell.input:\n"
+    output += "We were processing the following cell.input:\n"
     output += "--- Cell input start\n"
     output += "{}\n".format(cell.input)
     output += "--- Cell input end\n"
 
     if key in test and key in ref:
-        output += "----- Mismatch {}: --------------------------------------------------------\n".format(key)
+        output += "----- Mismatch for key='{}': ---------------------------------------------------\n".format(key)
         output += "{}\n".format(test[key]) 
         output += "----------   !=   ----------"
         output += "{}\n".format(ref[key]) 
         output += "--------------------------------------------------------------------------------\n"
     else:
-        output += "Failure with key={}\n".format(key)
+        output += "Failure with key='{}'\n".format(key)
         if not key in test:
             output += "key not in test output\n"
         if not key in ref:
