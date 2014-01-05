@@ -18,6 +18,9 @@ print "Found {} .ipynb files:".format(len(ipynb_files))
 print "\n".join(ipynb_files)
 print "============================================================"
 
+# This parameterization checks each .ipynb file in a
+# separate test, which is nicer for debugging from
+# within Jenkins.
 @pytest.mark.parametrize("ipynb", ipynb_files)
 def test_reproduce_ipython_notebook(ipynb):
     print "testing %s" % ipynb
