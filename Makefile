@@ -111,11 +111,10 @@ test: clean make-modules pytest-tests native-tests
 print-debugging-info:
 	@echo "[DDD] Makefile PROJECT_DIR: ${PROJECT_DIR}"
 	@echo "[DDD] Makefile PYTHON_ROOTS: ${PYTHON_ROOTS}"
-	@echo "[DDD] Makefile PYTHONPATH: ${PYTHONPATH}"
 	@echo "[DDD] Makefile NETGENDIR: ${NETGENDIR}"
 
 run-pytest-reproduce-ipython-notebooks : create-dirs print-debugging-info
-	PYTHONPATH=$(PYTHON_ROOTS) py.test $(TEST_OPTIONS) bin/reproduce_ipython_notebooks.py --junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
+	NETGENDIR=$(NETGENDIR) PYTHONPATH=$(PYTHON_ROOTS) echo "[DDD] PYTHNPATH now: ${PYTHONPATH}" && py.test $(TEST_OPTIONS) bin/reproduce_ipython_notebooks.py --junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
 
 # Will not run tests marked as slow.
 pytest-fast: create-dirs make-modules
