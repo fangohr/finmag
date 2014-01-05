@@ -5,6 +5,7 @@ from contextlib import contextmanager
 from finmag.util.fileio import Tablereader
 from finmag.util.visualization import render_paraview_scene
 from finmag.util.versions import get_version_dolfin
+from finmag.util import ansistrm
 from threading import Timer
 from distutils.version import LooseVersion
 import matplotlib as mpl
@@ -74,6 +75,31 @@ def set_logging_level(level):
         raise ValueError("Logging level must be one of: 'DEBUG', 'INFO', "
                          "'WARNING', 'ERROR', 'CRITICAL'")
     logger.setLevel(level)
+
+
+supported_color_schemes = ansistrm.level_maps.keys()
+supported_color_schemes_str = ", ".join(["'{}'".format(s) for s in supported_color_schemes])
+
+def set_color_scheme(color_scheme):
+    """
+    Set the color scheme for finmag log messages in the terminal.
+
+    *Arguments*
+
+    color_scheme: string
+
+       One of the color schemes supported by Python's `logging` module.
+       Supported values: {}.
+
+    """
+    if color_scheme not in supported_color_schemes:
+        raise ValueError("Color scheme must be one of: {}".format(supported_color_schemes_str))
+    for h in logger.handlers:
+        if not isinstance(h, ansistrm.ColorizingStreamHandler):
+            continue
+        h.level_map = ansistrm.level_maps[color_scheme]
+# Insert supported color schemes into docstring
+set_color_scheme.__doc__ = set_color_scheme.__doc__.format(supported_color_schemes_str)
 
 
 def start_logging_to_file(filename, formatter=None, mode='a', level=logging.DEBUG, rotating=False, maxBytes=0, backupCount=1):
