@@ -593,6 +593,19 @@ def test_pvd2avi(tmpdir):
     assert(os.path.exists('animation.avi'))
 
 
+def test_set_color_scheme():
+    """
+    Just check that we can call 'set_color_scheme' with allowed values.
+    We don't check that the color scheme is actually changed, since it's
+    not obvious how to do that.
+
+    """
+    set_color_scheme('light_bg')
+    set_color_scheme('dark_bg')
+    set_color_scheme('none')
+    with pytest.raises(ValueError):
+        set_color_scheme('foobar')
+
 if __name__ == '__main__':
     pass
     #test_scalar_valued_dg_function()
