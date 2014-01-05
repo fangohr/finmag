@@ -21,6 +21,7 @@ import re
 import sys
 import time
 import base64
+import string
 
 from collections import defaultdict
 from Queue import Empty
@@ -48,6 +49,17 @@ DISCARD_PATTERNS = []
 ANSI_COLOR_REGEX = "\x1b\[(\d+)?(;\d+)*;?m"
 def decolorize(string):
     return re.sub(ANSI_COLOR_REGEX, "", string)
+
+
+def indent(s, numSpaces):
+    """
+    Indent all lines except the first one with numSpaces spaces.
+    """
+    s = string.split(s, '\n')
+    s = s[:1] + [(numSpaces * ' ') + line for line in s[1:]]
+    s = string.join(s, '\n')
+    return s
+
 
 class IPythonNotebookDoctestError(Exception):
     pass
@@ -192,7 +204,7 @@ def report_mismatch(key, test, ref, cell, message):
     output += "--- Test output, with keys -> values:\n"
     for k, v in test.items():
         if k == 'traceback':
-            v = map(decolorize, v)
+            v = indent('\n'.join(map(decolorize, v)), 41)
         output += "\tTest output:       {:10} -> {}\n".format(k, v)
     output += "--- Reference output, with keys -> values:\n"
     for k, v in ref.items():
