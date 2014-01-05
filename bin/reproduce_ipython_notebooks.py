@@ -26,7 +26,7 @@ print "============================================================"
 # within Jenkins.
 @pytest.mark.parametrize("ipynb", ipynb_files)
 def test_reproduce_ipython_notebook(ipynb):
-    print "=====   =====   =====   =====   =====   =====   =====   ====="
+    print "\n=====   =====   =====   =====   =====   =====   =====   ====="
     print "Testing notebook: '{}'".format(ipynb)
     with open(ipynb) as f:
         nb = reads(f.read(), 'json')
