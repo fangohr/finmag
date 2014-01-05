@@ -129,10 +129,14 @@ def sanitize(s):
     # Warning coming from Matplotlib occasionally. The warning comes
     # from a different line in different versions of matplotlib and
     # thus results in a failed comparison. Replace with empty string.
-    s = re.sub(r'.*UserWarning: This figure includes Axes that are not compatible with tight_layout, so its results might be incorrect.', '', s)
+    s = re.sub(r'.*UserWarning: This figure includes Axes that are not '
+                'compatible with tight_layout, so its results might be '
+                'incorrect.', '', s)
 
-    # If a mesh exists already, we get a different message from generation of the mesh.
-    s = re.sub(r'.*The mesh.*already exists and is automatically returned.', '', s)
+    # If a mesh exists already, we get a different message from
+    # generation of the mesh.
+    s = re.sub(r'.*The mesh.*already exists and is automatically '
+                'returned.', '', s)
 
 # def consolidate_outputs(outputs):
 #     """consolidate outputs into a summary dict (incomplete)"""
@@ -158,7 +162,7 @@ def report_mismatch(key, test, ref, cell, message):
     See compare_outputs - this is just a helper function
     to avoid re-writing code twice.
     """
-    
+
     output = "\n"
     output += "{}\n".format(message)
     output += "We were processing the following cell.input:\n"
@@ -168,9 +172,9 @@ def report_mismatch(key, test, ref, cell, message):
 
     if key in test and key in ref:
         output += "----- Mismatch for key='{}': ---------------------------------------------------\n".format(key)
-        output += "{}\n".format(test[key]) 
+        output += "{}\n".format(test[key])
         output += "----------   !=   ----------"
-        output += "{}\n".format(ref[key]) 
+        output += "{}\n".format(ref[key])
         output += "--------------------------------------------------------------------------------\n"
     else:
         output += "Failure with key='{}'\n".format(key)
@@ -189,14 +193,13 @@ def report_mismatch(key, test, ref, cell, message):
     output += "- " * 35 + "\n"
     return output
 
+
 def compare_outputs(test, ref, cell, skip_compare=('png', 'traceback',
                                              'latex', 'prompt_number',
                                              'metadata')):
-
-
     """
     **Parameters**
-    
+
      ``test`` is the output we got from executing the cell
 
      ``ref`` is the reference output we expected from the saved
@@ -210,15 +213,15 @@ def compare_outputs(test, ref, cell, skip_compare=('png', 'traceback',
 
     for key in ref:
         if key not in test:
-            # Note:                                                                         # One possibility for this branch is if
-            # an exception is raised in the notebook. Typical            
-            # keys in the test notebook are ['evalue', 'traceback', 'ename']. 
-            # Let's report some more detail in this case
+            # Note: One possibility for this branch is if an exception
+            # is raised in the notebook. Typical keys in the test notebook
+            # are ['evalue', 'traceback', 'ename']. Let's report some more
+            # detail in this case.
             output = report_mismatch(key, test, ref, cell, "Something went wrong")
             print(output)
             # Now we have printed the failure. We should create a nice
-            # html snippet, the following is a hack to get going 
-            # quickly (HF, Dec 2013) 
+            # html snippet, the following is a hack to get going quickly.
+            # (HF, Dec 2013)
             htmlSnippet = "Not HTML, just tracking error:<br><br>\n\n" + output
             return False, htmlSnippet
         elif (key not in skip_compare) and \
