@@ -111,6 +111,7 @@ test: clean make-modules pytest-tests native-tests
 print-debugging-info:
 	@echo "[DDD] Makefile PROJECT_DIR: ${PROJECT_DIR}"
 	@echo "[DDD] Makefile PYTHON_ROOTS: ${PYTHON_ROOTS}"
+	@echo "[DDD] Makefile PYTHONPATH: ${PYTHONPATH}"
 	@echo "[DDD] Makefile NETGENDIR: ${NETGENDIR}"
 
 run-pytest-reproduce-ipython-notebooks : create-dirs print-debugging-info
