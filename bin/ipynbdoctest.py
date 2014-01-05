@@ -44,6 +44,11 @@ CELL_EXECUTION_TIMEOUT = 200  # abort cell execution after this time (seconds)
 DISCARD_PATTERNS = []
 
 
+# This is used to remove coloring from error strings (which makes them unreadable in Jenkins)
+ANSI_COLOR_REGEX = "\x1b\[(\d+)?(;\d+)*;?m"
+def decolorize(string):
+    return re.sub(ANSI_COLOR_REGEX, "", string)
+
 class IPythonNotebookDoctestError(Exception):
     pass
 
@@ -186,6 +191,8 @@ def report_mismatch(key, test, ref, cell, message):
 
     output += "--- Test output, with keys -> values:\n"
     for k, v in test.items():
+        if k == 'traceback':
+            v = map(decolorize, v)
         output += "\tTest output:       {:10} -> {}\n".format(k, v)
     output += "--- Reference output, with keys -> values:\n"
     for k, v in ref.items():
