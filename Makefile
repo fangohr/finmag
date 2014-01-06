@@ -113,7 +113,7 @@ print-debugging-info:
 	@echo "[DDD] Makefile PYTHON_ROOTS: ${PYTHON_ROOTS}"
 	@echo "[DDD] Makefile NETGENDIR: ${NETGENDIR}"
 
-run-pytest-reproduce-ipython-notebooks : create-dirs print-debugging-info
+run-pytest-reproduce-ipython-notebooks : create-dirs make-modules print-debugging-info
 	PYTHONPATH=$(PYTHON_ROOTS) echo "[DDD] PYTHONPATH now: ${PYTHONPATH}" && py.test $(TEST_OPTIONS) bin/reproduce_ipython_notebooks.py --junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
 
 # Will not run tests marked as slow.
