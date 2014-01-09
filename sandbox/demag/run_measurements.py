@@ -2,7 +2,7 @@ import pickle
 import numpy as np
 import finmag.energies.demag.fk_demag as fk
 import matplotlib.pyplot as plt
-from finmag.util.timings import default_timer
+from aeon import default_timer
 
 
 def _table_header(labels):
@@ -94,7 +94,7 @@ def create_measurement_runner(S3, m, Ms, unit_length, H_expected=None, tol=1e-3,
                     for j in xrange(repeats):  # Repeat to average out little fluctuations.
                         H = demag.compute_field()  # This can fail with some method/preconditioner combinations.
                 except RuntimeError as e:
-                    default_timer.stop_last()
+                    default_timer.get("compute_field", "FKDemag").stop()
                     _row_entry("x", columns[i + 1])
                     failed.append({'solver': solver, 'preconditioner': prec, 'message': e.message})
                 else:
@@ -108,6 +108,7 @@ def create_measurement_runner(S3, m, Ms, unit_length, H_expected=None, tol=1e-3,
                         results_for_this_solver[prec] = measured_time
                 log.write("\nTimings for {} with {}.\n".format(solver, prec))
                 log.write(fk.fk_timer.report() + "\n")
+                default_timer.reset()
                 fk.fk_timer.reset()
                 del(demag)
             results[solver] = results_for_this_solver
