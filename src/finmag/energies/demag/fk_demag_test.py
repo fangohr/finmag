@@ -1,7 +1,8 @@
+import time
 import dolfin as df
 import numpy as np
 from math import pi
-from finmag.util.meshes import sphere
+from finmag.util.meshes import sphere, box
 from finmag.energies.demag.fk_demag import FKDemag
 from finmag.util.consts import mu0
 
@@ -45,6 +46,34 @@ def test_demag_field_for_uniformly_magnetised_sphere():
     spread = np.abs(H.max(axis=1) - H.min(axis=1))
     print "The values spread {} per axis. Comparing to limit {}.".format(spread, TOL)
     assert np.max(spread) < TOL
+
+
+def test_thin_film_argument_saves_time_on_thin_film():
+    Ms = 8e5
+    mesh = box(0, 0, 0, 500, 50, 1, maxh=2.0, directory="meshes")
+    unit_length = 1e-9
+    S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
+    m = df.Function(S3)
+    m.assign(df.Constant((0, 0, 1)))
+
+    demag = FKDemag()
+    demag.setup(S3, m, Ms, unit_length)
+    now = time.time()
+    H = demag.compute_field()
+    elapsed = time.time() - now
+    del(demag)
+
+    demag = FKDemag(thin_film=True)
+    demag.setup(S3, m, Ms, unit_length)
+    now = time.time()
+    H = demag.compute_field()
+    elapsed_thin_film = time.time() - now
+
+    # not checking for correctness here
+    assert elapsed_thin_film < elapsed
+    print elapsed
+    print elapsed_thin_film
+    print "SAAAAAAAAAAAVING TIME"
 
 
 def test_demag_energy_for_uniformly_magnetised_sphere():

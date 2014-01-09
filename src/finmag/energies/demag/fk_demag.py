@@ -36,7 +36,7 @@ class FKDemag(object):
     .. _Hybrid method for computing demagnetizing fields: http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=106342
 
     """
-    def __init__(self, name='Demag'):
+    def __init__(self, name='Demag', thin_film=False):
         """
         Create a new FKDemag instance.
 
@@ -50,6 +50,9 @@ class FKDemag(object):
         Setting the preconditioners:
         Change the entries `phi_1_preconditioner` and `phi_2_preconditioner` to
         a value from `df.list_krylov_solver_preconditioners()`. Default is dolfin's default.
+        There is a set of parameters optimised for thin films (cg/ilu followed by default
+        without preconditioner) that can be used by passing in the argument
+        `thin_film` set to True.
 
         Setting the tolerances:
         Change the existing entries inside `phi_1` and `phi_2` which are themselves dicts.
@@ -65,13 +68,18 @@ class FKDemag(object):
             'maximum_iterations': int(1e4)
         }
         self.parameters = {
-                'phi_1_solver': 'default',
-                'phi_1_preconditioner': 'default',
-                'phi_1': default_parameters,
-                'phi_2_solver': 'default',
-                'phi_2_preconditioner': 'default',
-                'phi_2': default_parameters.copy()
+            'phi_1_solver': 'default',
+            'phi_1_preconditioner': 'default',
+            'phi_1': default_parameters,
+            'phi_2_solver': 'default',
+            'phi_2_preconditioner': 'default',
+            'phi_2': default_parameters.copy()
         }
+
+        if thin_film:
+            self.parameters["phi_1_solver"] = "cg"
+            self.parameters["phi_1_preconditioner"] = "ilu"
+            self.parameters["phi_3_preconditioner"] = "none"
 
     @mtimed(default_timer)
     def setup(self, S3, m, Ms, unit_length=1):
