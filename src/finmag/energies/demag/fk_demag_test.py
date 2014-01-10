@@ -1,4 +1,5 @@
 import time
+import pytest
 import dolfin as df
 import numpy as np
 from math import pi
@@ -48,6 +49,7 @@ def test_demag_field_for_uniformly_magnetised_sphere():
     assert np.max(spread) < TOL
 
 
+@pytest.mark.slow  # this test needs a minute to complete
 def test_thin_film_argument_saves_time_on_thin_film():
     Ms = 8e5
     mesh = box(0, 0, 0, 500, 50, 1, maxh=2.0, directory="meshes")
@@ -69,11 +71,10 @@ def test_thin_film_argument_saves_time_on_thin_film():
     H = demag.compute_field()
     elapsed_thin_film = time.time() - now
 
-    # not checking for correctness here
+    saved_relative = (elapsed - elapsed_thin_film) / elapsed
+    print "FKDemag thin film settings saved {:.1%} of time.".format(saved_relative)
     assert elapsed_thin_film < elapsed
-    print elapsed
-    print elapsed_thin_film
-    print "SAAAAAAAAAAAVING TIME"
+    assert saved_relative > 0.25  # at least a 25% decrease
 
 
 def test_demag_energy_for_uniformly_magnetised_sphere():
@@ -122,6 +123,7 @@ def test_energy_density_for_uniformly_magnetised_sphere_as_function():
     print "Maximum relative difference = {:.3g}%. Comparing to limit {:.3g}%.".format(
         100 * rel_diff, 100 * REL_TOL)
     assert rel_diff < REL_TOL
+
 
 def test_regression_Ms_numpy_type():
     mesh = sphere(r=radius, maxh=maxh)
