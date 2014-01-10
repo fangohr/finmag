@@ -1,11 +1,19 @@
+* ref-using-timings.ipynb
+
+- <2014-01-10 Fri> Almost all output in this notebook was timing related so it was flagged with "IPYTHON_TEST_IGNORE_OUTPUT". Is there a test we can do with the timings module that would be consistent for testing across machines? -- Mark V.
+
+
 * tutorial-NormalModeSimulation
 
 - <2013-11-06 Wed> error in cell [10] (calling sim.plot_spectrum)
 
 
-* Is tutorial-normal-modes.ipynb obsolete 
+* Is tutorial-normal-modes.ipynb obsolete
 
 - <2013-11-06 Wed> it doesn't execute, and
   tutorial-NormalModeSimulation looks nicer and includes the ringdown?
 
 
+* tutorial-sampling-m-at-arbitrary-positions.ipynb
+
+- <2013-04-12 Wed> Inconsistent m values between runs, past 4d.p.

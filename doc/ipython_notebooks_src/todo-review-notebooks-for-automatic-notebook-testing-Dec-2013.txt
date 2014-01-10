@@ -24,7 +24,8 @@
       Done, 22 December 2013, Hans
 - [X] ref-spatially-varying-anisotropy.ipynb
       Done, 26 December 2013, Hans
-- [ ] ref-using-timings.ipynb
+- [X] ref-using-timings.ipynb
+      Done, 10 January 2014, Mark V.
 - [ ] ref-varying-damping.ipynb
 - [ ] ref-varying-Ms.ipynb
 - [ ] ref-zhang-li-example.ipynb
@@ -40,7 +41,7 @@
 - [ ] tutorial-relaxations-of-a-single-nanodisk.ipynb
 - [ ] tutorial-running-simulations-with-dmi.ipynb
 - [ ] tutorial-sampling-m-at-arbitrary-positions.ipynb
-      Modified, 4 December 2013, Mark. To do: Inconsistent m values between runs past 4d.p.
+      Modified, 4 December 2013, Mark V. (see other to-do document)
 - [ ] tutorial-saving-averages-demo.ipynb
 - [X] tutorial-scheduling-events.ipynb
       Done, 4 December 2013, Max.
