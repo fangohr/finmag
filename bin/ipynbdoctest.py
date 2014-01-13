@@ -42,7 +42,8 @@ CELL_EXECUTION_TIMEOUT = 200  # abort cell execution after this time (seconds)
 # want to discard the entire line but only bits of it. In this
 # case don't use "discard_patterns" but rather add an explicit
 # replacement rule below.
-DISCARD_PATTERNS = []
+DISCARD_PATTERNS = ["Warning: Ignoring netgen's output status of 34304",
+                    ]
 
 
 # This is used to remove coloring from error strings (which makes them unreadable in Jenkins)
