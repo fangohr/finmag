@@ -69,22 +69,27 @@ def create_measurement_runner(S3, m, Ms, unit_length, H_expected=None, tol=1e-3,
                     table.new_entry("s")
                     continue
                 demag = _prepare_demag_object(S3, m, Ms, unit_length, s_param, solver, p_param, prec, bem, boundary_to_global)
+                checked_result = False
                 try:
                     for _ in xrange(repeats):  # Repeat to average out little fluctuations.
                         H = demag.compute_field()  # This can fail with some method/preconditioner combinations.
+                        if not checked_result:
+                            # By checking here, we can avoid computing the
+                            # field ten times if it's wrong.
+                            checked_result = True
+                            max_diff = np.max(np.abs(H - H_expected))
+                            if max_diff > tol:
+                                table.new_entry("x")
+                                failed.append({'solver': solver, 'preconditioner': prec, 'message': "error {:.3} higher than allowed {:.3}"})
+                                break
                 except RuntimeError as e:
                     default_timer.get("compute_field", "FKDemag").stop()
                     table.new_entry("x")
                     failed.append({'solver': solver, 'preconditioner': prec, 'message': e.message})
                 else:
-                    max_diff = np.max(np.abs(H - H_expected))
-                    if max_diff > tol:
-                        table.new_entry("x")
-                        failed.append({'solver': solver, 'preconditioner': prec, 'message': "error {:.3} higher than allowed {:.3}"})
-                    else:
-                        measured_time = fk.fk_timer.time_per_call(timed_method_name, "FKDemag")
-                        table.new_entry(measured_time)
-                        results_for_this_solver[prec] = measured_time
+                    measured_time = fk.fk_timer.time_per_call(timed_method_name, "FKDemag")
+                    table.new_entry(measured_time)
+                    results_for_this_solver[prec] = measured_time
                 log.write("\nTimings for {} with {}.\n".format(solver, prec))
                 log.write(fk.fk_timer.report() + "\n")
                 default_timer.reset()
@@ -116,7 +121,8 @@ def run_measurements(m, mesh, unit_length, tol, repetitions=10, H_expected=None,
     bem, boundary_to_global = compute_bem_fk(df.BoundaryMesh(mesh, 'exterior', False))
 
     if H_expected is not None:
-        H_expected = vector_valued_function(H_expected, S3)
+        H = vector_valued_function(H_expected, S3)
+        H_expected = H.vector().array()
     else:
         # use default/default as reference then.
         demag = fk.FKDemag()
