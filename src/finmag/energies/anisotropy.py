@@ -79,6 +79,24 @@ class UniaxialAnisotropy(EnergyBase):
 
     @mtimed
     def setup(self, S3, m, Ms, unit_length=1):
+        """
+        Function to be called after the energy object has been constructed.
+
+        *Arguments*
+
+            S3
+                Dolfin 3d VectorFunctionSpace on which m is defined
+
+            m
+                magnetisation field (usually normalised)
+
+            Ms
+                Saturation magnetisation (scalar, or scalar dolfin function)
+
+            unit_length
+                real length of 1 unit in the mesh
+
+        """
         # The following two lines are duplicated again in EnergyBase.setup().
         # I wonder why there is the distinction betwen the __init__() and the
         # setup() methods anyway? It feels a bit artifial to me.  -- Max, 23.9.2013

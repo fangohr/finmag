@@ -89,6 +89,24 @@ class Exchange(EnergyBase):
 
     @mtimed
     def setup(self, S3, m, Ms, unit_length=1):
+        """
+        Function to be called after the energy object has been constructed.
+
+        *Arguments*
+
+            S3
+                Dolfin 3d VectorFunctionSpace on which m is defined
+
+            m
+                magnetisation field (usually normalised)
+
+            Ms
+                Saturation magnetisation (scalar, or scalar dolfin function)
+
+            unit_length
+                real length of 1 unit in the mesh
+
+        """
         self.exchange_factor = df.Constant(1.0 / unit_length ** 2)
         self.S3 = S3
         self.A = helpers.scalar_valued_dg_function(self.A_waiting_for_mesh, self.S3.mesh())
