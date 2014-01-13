@@ -390,6 +390,12 @@ def test_notebook(nb):
                 print "=== BEGIN INPUT ==================================="
                 print cell.input
                 print "=== END INPUT ====================================="
+                if failures == 0:
+                    # This is the first cell that failed to replicate.
+                    # Let's store its output for debugging.
+                    first_failed_input = cell.input
+                    first_failed_output_expected = outs_merged
+                    first_failed_output = cell_outputs_merged
                 failures += 1
             else:
                 successes += 1
@@ -413,9 +419,20 @@ def test_notebook(nb):
     km.shutdown_kernel()
     del km
     if failures or errors:
-        raise IPythonNotebookDoctestError(
-            "The notebook {} failed to replicate successfully.".format(
-                nb.metadata['name']))
+        errmsg = ("The notebook {} failed to replicate successfully.\n"
+                  "Input and output from first failed cell:\n"
+                  "=== BEGIN INPUT ==================================\n"
+                  "{}\n"
+                  "=== BEGIN EXPECTED OUTPUT ========================\n"
+                  "{}\n"
+                  "=== BEGIN COMPUTED OUTPUT ========================\n"
+                  "{}\n"
+                  "==================================================\n"
+                  "".format(nb.metadata['name'],
+                            first_failed_input,
+                            first_failed_output,
+                            first_failed_output_expected))
+        raise IPythonNotebookDoctestError(errmsg)
 
 if __name__ == '__main__':
     for ipynb in sys.argv[1:]:
