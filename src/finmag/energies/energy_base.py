@@ -80,7 +80,7 @@ class EnergyBase(object):
                 magnetisation field (usually normalised)
 
             Ms
-                Saturation magnetitsation (scalar, or scalar dolfin function)
+                Saturation magnetisation (scalar, or scalar dolfin function)
 
             unit_length
                 real length of 1 unit in the mesh
