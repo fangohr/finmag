@@ -22,6 +22,24 @@ class Zeeman(object):
         self.in_jacobian = False
 
     def setup(self, S3, m, Ms, unit_length=1):
+        """
+        Function to be called after the energy object has been constructed.
+
+        *Arguments*
+
+            S3
+                Dolfin 3d VectorFunctionSpace on which m is defined
+
+            m
+                magnetisation field (usually normalised)
+
+            Ms
+                Saturation magnetisation (scalar, or scalar dolfin function)
+
+            unit_length
+                real length of 1 unit in the mesh
+
+        """
         self.S3 = S3
         self.m = m
         self.Ms = Ms
