@@ -215,8 +215,8 @@ def report_mismatch(key, test, ref, cell, message):
 
 
 def compare_outputs(test, ref, cell, skip_compare=('png', 'traceback',
-                                             'latex', 'prompt_number',
-                                             'metadata')):
+                                                   'latex', 'prompt_number',
+                                                   'metadata')):
     """
     **Parameters**
 
