@@ -392,13 +392,6 @@ def test_notebook(nb):
                 print "=== END INPUT ====================================="
                 failures += 1
             else:
-                print "Successfully replicated cell with the following input and output: "
-                print "=== BEGIN INPUT =================================="
-                print cell.input
-                print "==================================================="
-                print "=== BEGIN OUTPUT =================================="
-                print outs_merged
-                print "=== END OUTPUT ===================================="
                 successes += 1
             sys.stdout.write('.')
 
