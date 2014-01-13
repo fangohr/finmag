@@ -1,28 +1,12 @@
+import dolfin as df
 import pickle
 import numpy as np
 import finmag.energies.demag.fk_demag as fk
 import matplotlib.pyplot as plt
+from table_printer import TablePrinter
+from finmag.util.helpers import vector_valued_function
+from finmag.native.llg import compute_bem_fk
 from aeon import default_timer
-
-
-def _table_header(labels):
-    # Print the table header.
-    columns = [15]
-    print " " * columns[0] + "|",
-    for label in labels:
-        width = max(10, len(label))
-        columns.append(width)
-        print "{:>{w}}".format(label, w=width),
-    print "\n" + "-" * columns[0] + "|" + "-" * (len(columns) + sum(columns[1:]))
-    return columns
-
-
-def _row_start(label, width):
-    print "{:<{w}}|".format(label, w=width),
-
-
-def _row_entry(entry, width):
-    print "{:>{w}.3}".format(entry, w=width),
 
 
 def _prepare_demag_object(S3, m, Ms, unit_length, s_param, solver, p_param, preconditioner, bem, boundary_to_global):
@@ -36,31 +20,26 @@ def _prepare_demag_object(S3, m, Ms, unit_length, s_param, solver, p_param, prec
     return demag
 
 
-def _row_stop():
-    print ""
-
-
 def _loaded_results_table(timed_method_name, results, solvers, preconditioners):
-    print "Results loaded from file."
-    print "Time shown for {} in s.\n".format(timed_method_name)
+    print "Time shown for {} in s.".format(timed_method_name)
+    print "Results loaded from file.\n"
 
-    columns = _table_header(preconditioners)
-    for i, solver in enumerate(solvers):
-        _row_start(solver, columns[0])
-        for j, prec in enumerate(preconditioners):
+    table = TablePrinter(preconditioners, xlabels_width_min=10)
+    for solver in solvers:
+        table.new_row(solver)
+        for prec in preconditioners:
             try:
                 time = results[solver][prec]
             except KeyError:
                 time = "-"
-            _row_entry(time, columns[j + 1])
-        _row_stop()
+            table.new_entry(time)
 
     default = results['default']['default']
     fastest = fastest_run(results, solvers)
 
-    print "\nDefault combination ran in {:.3} s.".format(default)
+    print "\n\nDefault combination ran in {:.3} s.".format(default)
     print "Fastest combination {}/{} ran in {:.3} s.".format(fastest[0], fastest[1], fastest[2])
-    print "That is an {:.1%} improvement.".format(1 - fastest[2] / default)
+    print "That is an {:.1%} improvement.\n".format(1 - fastest[2] / default)
 
 
 def create_measurement_runner(S3, m, Ms, unit_length, H_expected=None, tol=1e-3, repeats=10, bem=None, boundary_to_global=None):
@@ -80,31 +59,31 @@ def create_measurement_runner(S3, m, Ms, unit_length, H_expected=None, tol=1e-3,
             timer.reset()
         log = open(full_timings_log, "w")
 
-        columns = _table_header(preconditioners)
+        table = TablePrinter(preconditioners)
         for solver in solvers:
-            _row_start(solver, columns[0])
+            table.new_row(solver)
             results_for_this_solver = {}
             # Compute the demagnetising field with the current solver and each of the preconditioners.
-            for i, prec in enumerate(preconditioners):
+            for prec in preconditioners:
                 if (solver, prec) in skip:
-                    _row_entry("s", columns[i + 1])
+                    table.new_entry("s")
                     continue
                 demag = _prepare_demag_object(S3, m, Ms, unit_length, s_param, solver, p_param, prec, bem, boundary_to_global)
                 try:
-                    for j in xrange(repeats):  # Repeat to average out little fluctuations.
+                    for _ in xrange(repeats):  # Repeat to average out little fluctuations.
                         H = demag.compute_field()  # This can fail with some method/preconditioner combinations.
                 except RuntimeError as e:
                     default_timer.get("compute_field", "FKDemag").stop()
-                    _row_entry("x", columns[i + 1])
+                    table.new_entry("x")
                     failed.append({'solver': solver, 'preconditioner': prec, 'message': e.message})
                 else:
                     max_diff = np.max(np.abs(H - H_expected))
                     if max_diff > tol:
-                        _row_entry("x", columns[i + 1])
+                        table.new_entry("x")
                         failed.append({'solver': solver, 'preconditioner': prec, 'message': "error {:.3} higher than allowed {:.3}"})
                     else:
                         measured_time = fk.fk_timer.time_per_call(timed_method_name, "FKDemag")
-                        _row_entry(measured_time, columns[i + 1])
+                        table.new_entry(measured_time)
                         results_for_this_solver[prec] = measured_time
                 log.write("\nTimings for {} with {}.\n".format(solver, prec))
                 log.write(fk.fk_timer.report() + "\n")
@@ -112,7 +91,6 @@ def create_measurement_runner(S3, m, Ms, unit_length, H_expected=None, tol=1e-3,
                 fk.fk_timer.reset()
                 del(demag)
             results[solver] = results_for_this_solver
-            _row_stop()
 
         if results_cache is not None:
             with open(results_cache, "w") as f:
@@ -129,6 +107,49 @@ def create_measurement_runner(S3, m, Ms, unit_length, H_expected=None, tol=1e-3,
 
         return results, failed
     return runner
+
+
+def run_measurements(m, mesh, unit_length, tol, repetitions=10, H_expected=None, name=""):
+    S3 = df.VectorFunctionSpace(mesh, "CG", 1)
+    m = vector_valued_function(m, S3)
+    Ms = 1
+    bem, boundary_to_global = compute_bem_fk(df.BoundaryMesh(mesh, 'exterior', False))
+
+    if H_expected is not None:
+        H_expected = vector_valued_function(H_expected, S3)
+    else:
+        # use default/default as reference then.
+        demag = fk.FKDemag()
+        demag.precomputed_bem(bem, boundary_to_global)
+        demag.setup(S3, m, Ms, unit_length)
+        H_expected = demag.compute_field()
+        del(demag)
+
+    if name == "":
+        pass
+    else:
+        name = name + "_"
+
+    runner = create_measurement_runner(S3, m, Ms, unit_length,
+                                       H_expected, tol, repetitions,
+                                       bem, boundary_to_global)
+
+    solvers = [s[0] for s in df.krylov_solver_methods()]
+    preconditioners = [p[0] for p in df.krylov_solver_preconditioners()]
+
+    results_1, failed_1 = runner("first linear solve",
+                                 "phi_1_solver", solvers,
+                                 "phi_1_preconditioner", preconditioners,
+                                 [],
+                                 "{}timings_log_1.txt".format(name), "{}results_1.pickled".format(name))
+
+    results_2, failed_2 = runner("second linear solve",
+                                 "phi_2_solver", solvers,
+                                 "phi_2_preconditioner", preconditioners,
+                                 [],
+                                 "{}timings_log_2.txt".format(name), "{}results_2.pickled".format(name))
+
+    return solvers, preconditioners, results_1, failed_1, results_2, failed_2
 
 
 def fastest_run(results, solvers):
