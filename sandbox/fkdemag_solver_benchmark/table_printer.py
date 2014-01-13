@@ -44,7 +44,7 @@ def table_header(xlabels, xlabels_width_min=10, ylabels_width=15):
     return columns
 
 
-def row_start(ylabel, width):
+def table_new_row(ylabel, width):
     """
     Start a new table row with the label `ylabel` of width `width`.
     The label will be right-aligned to fit `width`.
@@ -53,7 +53,7 @@ def row_start(ylabel, width):
     print "\n{:<{w}}|".format(ylabel, w=width),
 
 
-def row_entry(entry, width, fmt="{:>{w}.3}"):
+def table_new_entry(entry, width, fmt="{:>{w}.3}"):
     """
     Print the table entry `entry` of width `width`.
 
@@ -67,6 +67,26 @@ def row_entry(entry, width, fmt="{:>{w}.3}"):
     print fmt.format(entry, w=width),
 
 
+class TablePrinter(object):
+    """
+    Wrapper around the `table_header`, `table_new_row` and `table_new_entry`
+    functions in this module to avoid having to keep track of
+    the columns widths.
+
+    """
+    def __init__(self, xlabels, xlabels_width_min=10, ylabels_width=10):
+        self.widths = table_header(xlabels, xlabels_width_min, ylabels_width)
+        self.entry_counter = 0
+
+    def new_row(self, ylabel):
+        table_new_row(ylabel, self.widths[0])
+        self.entry_counter = 0
+
+    def new_entry(self, entry, fmt="{:>{w}.3}"):
+        table_new_entry(entry, self.widths[self.entry_counter + 1], fmt)
+        self.entry_counter += 1
+
+
 def test_usage_example():
     xlabels = ["True", "False"]
     ylabels = ["True", "False"]
@@ -74,9 +94,23 @@ def test_usage_example():
     print "Conjunction.\n"
     widths = table_header(xlabels, xlabels_width_min=6, ylabels_width=6)
     for i, bv1 in enumerate(ylabels):
-        row_start(bv1, widths[0])
+        table_new_row(bv1, widths[0])
         for j, bv2 in enumerate(xlabels):
-            row_entry(bv1 and bv2, widths[j + 1], "{:>{w}}")
+            table_new_entry(bv1 == "True" and bv2 == "True", widths[j + 1], "{:>{w}}")
+
+
+def test_usage_example_wrapper():
+    xlabels = ["True", "False"]
+    ylabels = ["True", "False"]
+
+    print "Disjunction.\n"
+    table = TablePrinter(xlabels, xlabels_width_min=6, ylabels_width=6)
+    for i, bv1 in enumerate(ylabels):
+        table.new_row(bv1)
+        for j, bv2 in enumerate(xlabels):
+            table.new_entry(bv1 == "True" or bv2 == "True", "{:>{w}}")
 
 if __name__ == "__main__":
     test_usage_example()
+    print "\n"
+    test_usage_example_wrapper()
