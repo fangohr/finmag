@@ -48,7 +48,7 @@ $(MODULE_DIR)/treecode_bem.so: src/treecode_bem/treecode_bem_I.c  src/treecode_b
 	install src/treecode_bem/treecode_bem.so ../src/finmag/native
 
 $(UNIT_TEST_BINARY) : tests/run_ci_tests.o src/util/np_array.o src/sundials/tests/sundials_tests.o src/sundials/numpy_malloc.o 
-run_ci_tests_LDFLAGS=-lboost_prg_exec_monitor -lboost_unit_test_framework $(SUNDIALS_NVECTOR_SO) -L$(HOME)/Work/FEniCS/lib -ldolfin
+run_ci_tests_LDFLAGS=-lboost_prg_exec_monitor -lboost_system -lboost_unit_test_framework $(SUNDIALS_NVECTOR_SO) -L$(HOME)/Work/FEniCS/lib -ldolfin
 
 #######################################
 # Other variables
