@@ -145,7 +145,6 @@ namespace finmag {
 
         template<class BaseClass, class DerivedClassesList>
         void register_swig_boost_shared_ptr_hierarchy()  {
-            typedef boost::shared_ptr<BaseClass> object_type;
             // wrap derived classes to avoid invoking the default constuctor when iterating using for_each
             typedef typename boost::mpl::transform<DerivedClassesList, wrap_type>::type wrapped_derived_classes;
 
