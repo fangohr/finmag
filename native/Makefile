@@ -101,7 +101,7 @@ REVISION_ID = $(shell hg --debug id -i -r ${FINMAGDIST_REVISION})
 #       native code is compiled, so we are always up to date.
 add_version:
 	@echo "FINMAG_VERSION: ${REVISION_NR}:${REVISION_ID}"
-	echo '__version__ = "${REVISION_NR}:${REVISION_ID}"' > ../src/finmag/__version__.py
+	@echo '__version__ = "${REVISION_NR}:${REVISION_ID}"' > ../src/finmag/__version__.py
 
 # Builds the whole project
 parallel:
