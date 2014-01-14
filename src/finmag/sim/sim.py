@@ -1083,7 +1083,7 @@ class Simulation(object):
 
         return info_string
 
-    def render_scene(self, region=None, **kwargs):
+    def render_scene(self, outfile=None, region=None, **kwargs):
         """
         This is a convenience wrapper around the helper function
         `finmag.util.visualization.render_paraview_scene`. It saves
@@ -1104,7 +1104,7 @@ class Simulation(object):
         with helpers.TemporaryDirectory() as tmpdir:
             filename = os.path.join(tmpdir, 'paraview_scene_{}.pvd'.format(self.name))
             self.save_field_to_vtk(field_name=field_name, filename=filename, region=region)
-            return render_paraview_scene(filename, **kwargs)
+            return render_paraview_scene(filename, outfile=outfile, **kwargs)
 
     def _render_scene_incremental(self, filename, **kwargs):
         # XXX TODO: This should be tidied up by somehow combining it
