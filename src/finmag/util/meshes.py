@@ -649,7 +649,7 @@ def ring(r1,r2, h, maxh, save_result=True, filename='', directory='',with_middle
               and plane (0, 0, 0; 0, 0, -1)
               and plane (0, 0, {h}; 0, 0, 1);
 
-	solid ring = (fincyl2 or fincyl3) and not fincyl -maxh = {maxh};
+        solid ring = (fincyl2 or fincyl3) and not fincyl -maxh = {maxh};
         tlo ring;
         """).format(r1=r1,r2=r2, h=h/2.0, maxh=maxh)
 
