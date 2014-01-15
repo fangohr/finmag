@@ -6,6 +6,7 @@ import os
 import scipy.sparse.linalg
 from time import time
 from finmag.util.consts import gamma
+from finmag.util import helpers
 import matplotlib.pyplot as plt
 import matplotlib.tri as tri
 from itertools import izip
@@ -603,8 +604,8 @@ def plot_spatially_resolved_normal_mode(mesh, m0, w, slice_z='z_max', components
 
     outfilename:
 
-        If given, the plot will be saved to a file with this name
-        (default: None).
+        If given, the plot will be saved to a file with this name. Any
+        missing directory components will be created first. Default: None.
 
     dpi:
 
@@ -810,6 +811,7 @@ def plot_spatially_resolved_normal_mode(mesh, m0, w, slice_z='z_max', components
         bbox_extra_artists.append(txt_phase)
 
     if outfilename != None:
+        helpers.create_missing_directory_components(outfilename)
         fig.savefig(outfilename, bbox_extra_artists=bbox_extra_artists, bbox_inches='tight', dpi=dpi)
 
     return fig
