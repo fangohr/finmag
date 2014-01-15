@@ -420,19 +420,22 @@ def test_notebook(nb):
     km.shutdown_kernel()
     del km
     if failures or errors:
-        errmsg = ("The notebook {} failed to replicate successfully.\n"
-                  "Input and output from first failed cell:\n"
-                  "=== BEGIN INPUT ==================================\n"
-                  "{}\n"
-                  "=== BEGIN EXPECTED OUTPUT ========================\n"
-                  "{}\n"
-                  "=== BEGIN COMPUTED OUTPUT ========================\n"
-                  "{}\n"
-                  "==================================================\n"
-                  "".format(nb.metadata['name'],
-                            first_failed_input,
-                            first_failed_output,
-                            first_failed_output_expected))
+        errmsg = ("The notebook {} failed to replicate successfully."
+                  "".format(nb.metadata['name']))
+        if failures:
+            errmsg += \
+                ("Input and output from first failed cell:\n"
+                 "=== BEGIN INPUT ==================================\n"
+                 "{}\n"
+                 "=== BEGIN EXPECTED OUTPUT ========================\n"
+                 "{}\n"
+                 "=== BEGIN COMPUTED OUTPUT ========================\n"
+                 "{}\n"
+                 "==================================================\n"
+                 "".format(nb.metadata['name'],
+                           first_failed_input,
+                           first_failed_output,
+                           first_failed_output_expected))
         raise IPythonNotebookDoctestError(errmsg)
 
 if __name__ == '__main__':
