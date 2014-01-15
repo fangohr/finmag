@@ -10,6 +10,7 @@
 
 #include "finmag_includes.h"
 
+#define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE finmag_native
 #include "boost/test/unit_test.hpp"
 #include "boost/test/unit_test_monitor.hpp"

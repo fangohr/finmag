@@ -47,8 +47,8 @@ $(MODULE_DIR)/treecode_bem.so: src/treecode_bem/treecode_bem_I.c  src/treecode_b
 	cd src/treecode_bem && python setup.py build_ext --inplace
 	install src/treecode_bem/treecode_bem.so ../src/finmag/native
 
-$(UNIT_TEST_BINARY) : tests/run_ci_tests.o src/util/np_array.o src/sundials/tests/sundials_tests.o src/sundials/numpy_malloc.o 
-run_ci_tests_LDFLAGS=-lboost_prg_exec_monitor /usr/lib/libboost_unit_test_framework.a $(SUNDIALS_NVECTOR_SO) -L$(HOME)/Work/FEniCS/lib -ldolfin
+$(UNIT_TEST_BINARY): tests/run_ci_tests.o src/util/np_array.o src/sundials/tests/sundials_tests.o src/sundials/numpy_malloc.o 
+run_ci_tests_LDFLAGS=-lboost_prg_exec_monitor -lboost_system -lboost_unit_test_framework $(SUNDIALS_NVECTOR_SO) -L$(HOME)/Work/FEniCS/lib -ldolfin
 
 #######################################
 # Other variables
@@ -101,7 +101,7 @@ REVISION_ID = $(shell hg --debug id -i -r ${FINMAGDIST_REVISION})
 #       native code is compiled, so we are always up to date.
 add_version:
 	@echo "FINMAG_VERSION: ${REVISION_NR}:${REVISION_ID}"
-	echo '__version__ = "${REVISION_NR}:${REVISION_ID}"' > ../src/finmag/__version__.py
+	@echo '__version__ = "${REVISION_NR}:${REVISION_ID}"' > ../src/finmag/__version__.py
 
 # Builds the whole project
 parallel:
