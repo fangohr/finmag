@@ -815,7 +815,7 @@ def mark_subdomain_by_function(fun,mesh_or_space,domain_index,subdomains):
     else:
         raise AttributeError
 
-def _create_nonexistent_directory_components(filename):
+def create_missing_directory_components(filename):
     """
     Creates any directory components in 'filename' which don't exist yet.
     For example, if filename='/foo/bar/baz.txt' then the directory /foo/bar
@@ -923,7 +923,7 @@ def plot_hysteresis_loop(H_vals, m_vals, style='x-', add_point_labels=False, poi
         filenames = [filename] if isinstance(filename, basestring) else filename
 
         for name in filenames:
-            _create_nonexistent_directory_components(name)
+            create_missing_directory_components(name)
             fig.savefig(name)
 
 def duplicate_output_to_file(filename, add_timestamp=False, timestamp_fmt='__%Y-%m-%d_%H.%M.%S'):
@@ -938,7 +938,7 @@ def duplicate_output_to_file(filename, add_timestamp=False, timestamp_fmt='__%Y-
     format can be controlled via `timestamp_fmt`, which should be a
     formatting string as accepted by `datetime.strftime`.
     """
-    _create_nonexistent_directory_components(filename)
+    create_missing_directory_components(filename)
     if add_timestamp:
         name, ext = os.path.splitext(filename)
         filename = '{}{}{}'.format(name, datetime.strftime(datetime.now(), timestamp_fmt), ext)
