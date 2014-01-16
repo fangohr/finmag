@@ -6,11 +6,12 @@ from demag import Demag
 
 
 class FixedEnergyDW(object):
-    def __init__(self, left=(1, 0, 0), right=(-1, 0, 0), repeat_time=5):
+    def __init__(self, left=(1, 0, 0), right=(-1, 0, 0), repeat_time=5, name='FixedEnergyDW'):
         self.left = left
         self.right = right
         self.repeat_time = repeat_time
         self.in_jacobian = False
+        self.name = name
 
     def write_xml(self, filename, coordinates, cells):
         f = open(filename, 'w')
