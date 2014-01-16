@@ -11,8 +11,10 @@
       Done, 4 December 2013, Hans.
 - [X] dev-restricting-a-dolfin-function-to-a-submesh.ipynb
       Done, 8 December 2013, Hans
+      Done again, 16 January 2014, Max
 - [X] ref-assembling-dmi-simulations.ipynb
       Done, 8 December 2013, Hans
+      Done again, 16 January 2014, Max
 - [X] ref-creating-custom-data-table-files.ipynb
       Done, 13 December 2013, Hans
 - [ ] ref-domain-wall-energy-class.ipynb
@@ -25,26 +27,31 @@
 - [X] ref-spatially-varying-anisotropy.ipynb
       Done, 26 December 2013, Hans
 - [X] ref-using-timings.ipynb
+      Done (but fails, needs reviewing), 16 January 2014, Max
+- [X] ref-using-timings.ipynb
       Done, 10 January 2014, Mark V.
-- [ ] ref-varying-damping.ipynb
+- [X] ref-varying-damping.ipynb
+      Done, 16 January 2014, Max
 - [ ] ref-varying-Ms.ipynb
 - [ ] ref-zhang-li-example.ipynb
 - [X] test-flag-to-ignore-cell-output.ipynb
-      Done, 4 December 2013, Max.
+      Done, 4 December 2013, Max
 - [ ] tutorial-coupled-relaxation-of-two-nanodisks.ipynb
 - [ ] tutorial-example2.ipynb
 - [ ] tutorial-finding-dmi-from-helix-length.ipynb
 - [ ] tutorial_fourier_transform.ipynb
-- [ ] tutorial_mesh_templates.ipynb
+- [X] tutorial_mesh_templates.ipynb
+      Done, 16 January 2014, Max
 - [ ] tutorial-NormalModeSimulation.ipynb
-- [ ] tutorial-normal-modes.ipynb
+- [X] tutorial-normal-modes.ipynb
+      Done, 16 January 2014, Max
 - [ ] tutorial-relaxations-of-a-single-nanodisk.ipynb
 - [ ] tutorial-running-simulations-with-dmi.ipynb
 - [ ] tutorial-sampling-m-at-arbitrary-positions.ipynb
       Modified, 4 December 2013, Mark V. (see other to-do document)
 - [ ] tutorial-saving-averages-demo.ipynb
 - [X] tutorial-scheduling-events.ipynb
-      Done, 4 December 2013, Max.
+      Done, 4 December 2013, Max
 - [X] tutorial-use-of-logging.ipynb
 - [ ] tutorial-using-ipython-notebook.ipynb
 - [ ] tutorial-using-the-physics-units-object.ipynb

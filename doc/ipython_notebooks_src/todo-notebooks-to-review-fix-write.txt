@@ -17,3 +17,21 @@
 * tutorial-sampling-m-at-arbitrary-positions.ipynb
 
 - <2013-04-12 Wed> Inconsistent m values between runs, past 4d.p.
+
+* tutorial-normal-modes.ipynb
+
+- [2014-01-16 Thu] This notebook passes the test, but it uses a very
+  low-level approach and a lot of the functionality has been wrapped
+  up in convenience function. It would be good to merge this with the
+  other normal mode tutorials (or even remove it?). -- Max
+
+* ref-using-timings.ipynb
+
+- [2014-01-16 Thu] Execution of the NEB-computing function fails. This
+  needs reviewing in the NEB code (-> Weiwei). -- Max
+
+* tutorial_mesh_templates.ipynb
+
+- [2014-01-16 Thu] The functionality in this notebook is probably
+  obsolete because dolfin already has a CSG module. We should turn
+  this notebook into a tutorial about that dolfin module. -- Max
