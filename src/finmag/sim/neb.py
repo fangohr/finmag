@@ -46,28 +46,65 @@ def cartesian2spherical(xyz):
     theta =  np.arctan2(r_xy, xyz[2,:])
     phi = np.arctan2(xyz[1,:], xyz[0,:])
     xyz.shape=(-1,)
-    return theta,phi
+    
+    theta_phi = np.concatenate((theta, phi))
+    
+    return theta_phi
 
-def spherical2cartesian(theta, phi):
+def spherical2cartesian(theta_phi):
+    theta_phi.shape=(2,-1)
+    theta=theta_phi[0]
+    phi = theta_phi[1]
     mxyz = np.zeros(3*len(theta))
     mxyz.shape=(3,-1)
     mxyz[0,:] = np.sin(theta)*np.cos(phi)
     mxyz[1,:] = np.sin(theta)*np.sin(phi)
     mxyz[2,:] = np.cos(theta)
     mxyz.shape=(-1,)
+    theta_phi.shape=(-1,)
     return mxyz
 
+
+def cartesian2spherical_field(field_c,theta_phi):
+    
+    theta_phi.shape=(2,-1)
+    theta = theta_phi[0]
+    phi = theta_phi[0]
+    
+    field_s = np.zeros(theta_phi.shape)
+    
+    field_c.shape = (3,-1)
+    field_s.shape = (2,-1)
+    
+    hx = field_c[0]
+    hy = field_c[1]
+    hz = field_c[2]
+    
+    sin_t = np.sin(theta)
+    cos_t = np.cos(theta)
+    
+    sin_p = np.sin(phi)
+    cos_p = np.cos(phi)
+    
+    field_s[0] = (hx*cos_p + hy*sin_p)*cos_t - hz*sin_t
+    field_s[1] = (-hx*sin_p + hy*cos_p)*sin_t
+    
+    field_c.shape=(-1,)
+    field_s.shape=(-1,)
+    theta_phi.shape=(-1,)
+    
+    return field_s
+
 def linear_interpolation_two(m0, m1, n):
-    theta0, phi0 = cartesian2spherical(m0)
-    theta1, phi1 = cartesian2spherical(m1)
-    dtheta = (theta1-theta0)/(n+1)
-    dphi = (phi1-phi0)/(n+1)
-        
+    theta_phi0 = cartesian2spherical(m0)
+    theta_phi1 = cartesian2spherical(m1)
+    
+    dtheta = (theta_phi1-theta_phi0)/(n+1)
+    
     coords=[]
     for i in range(n):
-        theta = theta0+(i+1)*dtheta
-        phi = phi0+(i+1)*dphi
-        coords.append(spherical2cartesian(theta,phi))
+        theta = theta_phi0+(i+1)*dtheta
+        coords.append(theta)
     
     return coords
 
@@ -355,7 +392,7 @@ class NEB(object):
         
         for image in self.image_list:
             
-            self._m.vector().set_local(image.coordinate)
+            self._m.vector().set_local(spherical2cartesian(image.coordinate))
             
             vtk_saver.save_field(self._m, 0)
     
@@ -442,14 +479,14 @@ class NEB_Sundials(object):
         
         self.image_num = len(initial_images) + sum(interpolations) - 2
         
-        self.nxyz = len(self._m.vector())
+        self.nxyz = len(self._m.vector())/3
         
-        self.all_m = np.zeros(self.nxyz*self.image_num)
+        self.all_m = np.zeros(2*self.nxyz*self.image_num)
         self.Heff = np.zeros(self.all_m.shape)
         self.tangents = np.zeros(self.all_m.shape)
-        self.images_energy = np.zeros(self.image_num+2)
+        self.energy = np.zeros(self.image_num+2)
         self.last_m = np.zeros(self.all_m.shape)
-        self.spring_force = np.zeros(self.all_m.shape)
+        self.spring_force = np.zeros(self.image_num)
         
         self.t = 0
         self.step = 1
@@ -464,7 +501,7 @@ class NEB_Sundials(object):
                      'get': lambda sim: sim.step,
                      'header': 'steps'},
             'energy': {'unit': '<J>',
-                       'get': lambda sim: sim.images_energy,
+                       'get': lambda sim: sim.energy,
                        'header': ['image_%d'%i for i in range(self.image_num+2)]}
             }
         keys = self.tablewriter.entities.keys()
@@ -511,19 +548,21 @@ class NEB_Sundials(object):
                 image_id = image_id + 1
         
         self.sim.set_m(self.initial_images[0])
-        self.m_init = self.sim.m.copy()
+        self.m_init = cartesian2spherical(self.sim.m)
+        print self.m_init
         self.effective_field.update()
-        self.images_energy[0]=self.effective_field.total_energy()
+        self.energy[0]=self.effective_field.total_energy()
         
         self.sim.set_m(self.initial_images[-1])
-        self.m_final = self.sim.m.copy()
+        self.m_final = cartesian2spherical(self.sim.m)
+        print self.m_final
         self.effective_field.update()
-        self.images_energy[-1]=self.effective_field.total_energy()
+        self.energy[-1]=self.effective_field.total_energy()
         
         for i in range(self.image_num):
-            self._m.vector().set_local(self.all_m[i])
+            self._m.vector().set_local(spherical2cartesian(self.all_m[i]))
             self.effective_field.update()
-            self.images_energy[i+1]=self.effective_field.total_energy()
+            self.energy[i+1]=self.effective_field.total_energy()
             
         self.all_m.shape=(-1,)
 
@@ -533,15 +572,15 @@ class NEB_Sundials(object):
         
         self.all_m.shape=(self.image_num,-1)
         
-        self._m.vector().set_local(self.m_init)
+        self._m.vector().set_local(spherical2cartesian(self.m_init))
         vtk_saver.save_field(self._m, 0)
         
         for i in range(self.image_num):
-            self._m.vector().set_local(self.all_m[i, :])
+            self._m.vector().set_local(spherical2cartesian(self.all_m[i, :]))
             # set t =0, it seems that the parameter time is only for the interface? 
             vtk_saver.save_field(self._m, 0)
             
-        self._m.vector().set_local(self.m_final)
+        self._m.vector().set_local(spherical2cartesian(self.m_final))
         vtk_saver.save_field(self._m, 0)
         self.all_m.shape=(-1,)
         
@@ -564,7 +603,7 @@ class NEB_Sundials(object):
         np.save(name,self.m_final)
         
     
-    def create_integrator(self, reltol=1e-6, abstol=1e-6, nsteps=10000):
+    def create_integrator(self, reltol=1e-4, abstol=1e-4, nsteps=10000):
 
         integrator = sundials.cvode(sundials.CV_BDF, sundials.CV_NEWTON)
         integrator.init(self.sundials_rhs, 0, self.all_m)
@@ -581,12 +620,11 @@ class NEB_Sundials(object):
         self.Heff.shape = (self.image_num,-1)
         
         for i in range(self.image_num):
-            # normalise y first
-            normalise_m(y[i])
-            self._m.vector().set_local(y[i])
+            self._m.vector().set_local(spherical2cartesian(y[i]))
             self.effective_field.update()
-            self.Heff[i,:] = self.effective_field.H_eff[:]
-            self.images_energy[i+1] = self.effective_field.total_energy()
+            h = self.effective_field.H_eff.copy()
+            self.Heff[i,:] = cartesian2spherical_field(h,y[i])
+            self.energy[i+1] = self.effective_field.total_energy()
         
         y.shape=(-1,)
         self.Heff.shape=(-1,)
@@ -605,31 +643,25 @@ class NEB_Sundials(object):
             else:
                 m_a = y[i-1]
                 
-            if i==self.image_num-1:
+            if i == self.image_num-1:
                 m_b = self.m_final
             else:
                 m_b = y[i+1]
             
-            energy_a = self.images_energy[i]
-            energy = self.images_energy[i+1]
-            energy_b = self.images_energy[i+2]
+            energy_a = self.energy[i]
+            energy = self.energy[i+1]
+            energy_b = self.energy[i+2]
             
             t1 = y[i] - m_a
             t2 = m_b - y[i]
-            normalise(t1)
-            normalise(t2)
-            
-            # actually this method quite stable
-            tangent = t1 + t2
-            
-            """
-            tangent = m_b - m_a
-            
+                        
             if energy_a<energy and energy<energy_b:
                 tangent = t2
             elif energy_a>energy and energy>energy_b:
                 tangent = t1
             else:
+                #tangent = t2 + t1
+                
                 
                 e1 = energy_a - energy
                 e2 = energy_b - energy
@@ -648,14 +680,18 @@ class NEB_Sundials(object):
                     tangent = t1*min_e + t2*max_e
                 else:
                     tangent = t1*max_e + t2*min_e
-            """
+                
             normalise(tangent)
             
             self.tangents[i,:]=tangent[:]
             
             # this 'old' method is much better than the improved method,
             # i.e., eq (5) is better than eq.(12) in J. Chem. Phys.,Vol. 113, 9978 
-            self.spring_force[i][:]=self.spring*(m_a+m_b-2*y[i])
+            #self.spring_force[i][:]=self.spring*(m_a+m_b-2*y[i])
+            dm1 = compute_dm(m_a, y[i])
+            dm2 = compute_dm(m_b, y[i])
+            self.spring_force[i] = self.spring*(dm2-dm1)
+            
             
         y.shape=(-1,)
         
@@ -678,9 +714,11 @@ class NEB_Sundials(object):
             sf = self.spring_force[i]
             
             # BUG: h = h - np.dot(h,t)*t is not safe???
-            h2 = h - np.dot(h-sf,t)*t
+            #h2 = h - np.dot(h-sf,t)*t
+            h2 = np.dot(h,t)*t 
+            h3 = h - h2 + sf*t
             
-            self.Heff[i][:] = h2
+            self.Heff[i][:] = h3[:]
 
         y.shape = (-1,)
         self.Heff.shape=(-1,)
@@ -725,7 +763,7 @@ class NEB_Sundials(object):
         y.shape=(self.image_num,-1)
         max_dmdt=0
         for i in range(self.image_num):
-            dmdt=helpers.compute_dmdt(self.t,y[i],t,m[i])
+            dmdt = compute_dm(y[i],m[i])/(t-self.t)
             if dmdt>max_dmdt:
                 max_dmdt = dmdt
         
