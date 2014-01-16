@@ -158,7 +158,7 @@ def test_plot_mesh_regions():
 
     # Write csg string to a temporary file
     mesh = from_geofile(os.path.join(MODULE_DIR, "sphere_in_cube.geo"))
-    mesh_regions = df.MeshFunction("uint", mesh, os.path.join(MODULE_DIR, "sphere_in_cube_mat.xml"))
+    mesh_regions = df.MeshFunction('size_t', mesh, os.path.join(MODULE_DIR, "sphere_in_cube_mat.xml"))
 
     # Call plot_mesh_regions with a variety of different arguments
     ax = plot_mesh_regions(mesh_regions, regions=1)
