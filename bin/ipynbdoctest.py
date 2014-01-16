@@ -401,6 +401,7 @@ def test_notebook(nb):
             else:
                 successes += 1
             sys.stdout.write('.')
+            sys.stdout.flush()
 
     if failures >= 1:
         outfilename = 'ipynbtest_failed_test_differences.html'
