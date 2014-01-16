@@ -46,7 +46,7 @@ def cartesian2spherical_field(field_c,theta_phi):
     
     theta_phi.shape=(2,-1)
     theta = theta_phi[0]
-    phi = theta_phi[0]
+    phi = theta_phi[1]
     
     field_s = np.zeros(theta_phi.shape)
     

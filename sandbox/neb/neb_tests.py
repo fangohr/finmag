@@ -32,8 +32,10 @@ def plot_data_2d():
     
     fig.savefig('last_energy.pdf')
 
-class Sim(object):
-        
+class Sim1(object):
+    """
+    Two independent spins with different anisotropies. 
+    """
     def energy(self,xs):
         x = xs[0]
         y = xs[1]
@@ -47,8 +49,23 @@ class Sim(object):
         
         return np.array([gx, gy])
     
+def Sim1Test():
+    init_images=[(0,0),(np.pi,np.pi)]
+    interpolations = [31]
+    
+    sim = Sim1()
+    
+    neb = NEB_Sundials(sim, init_images, interpolations, name='neb', spring=0.01)
+    
+    neb.relax(max_steps=500, stopping_dmdt=1e-6)
+    
+    plot_data_2d()
+    plot_energy_3d('neb_energy.ndt')
+    
 class Sim2(object):
-        
+    """
+    Two independent spins with different anisotropies but with four parameters
+    """
     def energy(self,xs):
         x = xs[0]
         y = xs[2]
@@ -64,7 +81,9 @@ class Sim2(object):
     
     
 class Sim3(object):
-        
+    """
+    One spin with two anisotropies
+    """
     def energy(self,xs):
         x = xs[0]
         y = xs[1]
@@ -79,7 +98,9 @@ class Sim3(object):
         return np.array([gx, gy])
     
 class SimTwoSpins(object):
-        
+    """
+    Two spins but using Cartesian coordinates
+    """
     def energy(self,xs):
         x = xs[0]
         y = xs[3]
@@ -93,22 +114,52 @@ class SimTwoSpins(object):
         
         return np.array([gx,0,0, gy,0,0])
     
+    
+class OneSpin(object):
+    """
+    One spin with jump coordinate, for example, [3*pi/2, pi/2]
+    E = - K my^2 + Kp mz^2 
+    """
+    
+    def energy(self,xs):
+        x = xs[0]
+        y = xs[1]
+        return -np.sin(x)**2*np.sin(y)**2 + 2*np.cos(x)**2
 
-if __name__ == '__main__1':
+    def gradient(self, xs):
+        x = xs[0]
+        y = xs[1]
+        gx = 2*np.sin(x)*np.cos(x)*(np.sin(y)**2 + 2)
+        gy = 2*np.sin(y)*np.cos(y)*np.sin(x)**2
+        
+        return np.array([gx, gy])
+
+def OneSpinTest():
+    xs1 = np.linspace(np.pi*3/2, 2*np.pi, 15, endpoint=False)
+    #xs1 = np.linspace(-np.pi/2, 0, 15, endpoint=False)
+    xs2 = np.linspace(0, np.pi/2, 15)
     
-    init_images=[(0,0),(np.pi,np.pi)]
-    interpolations = [31]
+    init_images = []
     
-    sim = Sim()
+    for i in range(len(xs1)):
+        init_images.append([np.pi/2-i*0.05, xs1[i]])
+        
+    for i in range(len(xs2)):
+        init_images.append([np.pi/2-(len(xs2)-i-1)*0.05, xs2[i]])
+            
+    sim = OneSpin()
     
-    neb = NEB_Sundials(sim, init_images, interpolations, name='neb', spring=0.5)
+    neb = NEB_Sundials(sim, init_images, interpolations=None, name='neb', spring=0.01)
     
-    neb.relax(max_steps=500, stopping_dmdt=1e-6)
+    neb.relax(max_steps=5000, stopping_dmdt=1e-4)
     
     plot_data_2d()
     plot_energy_3d('neb_energy.ndt')
+
+if __name__ == '__main__':
+    OneSpinTest()
     
-        
+
 if __name__ == '__main__3':
     
     init_images=[(0,0,0,0),(np.pi,0,np.pi,0)]
@@ -123,22 +174,22 @@ if __name__ == '__main__3':
     plot_data_2d()
     plot_energy_3d('neb_energy.ndt')
     
-if __name__ == '__main__':
+if __name__ == '__main__5':
     
     init_images=[(0,0),(np.pi/2,np.pi/2-0.1),(np.pi,0)]
     interpolations = [12,9]
     
     sim = Sim3()
     
-    neb = NEB_Sundials(sim, init_images, interpolations, name='neb', spring=0.1)
+    neb = NEB_Sundials(sim, init_images, interpolations, name='neb', spring=0.5)
     
-    neb.relax(max_steps=1000, stopping_dmdt=1e-6)
+    neb.relax(max_steps=2000, stopping_dmdt=1e-6)
     
     plot_data_2d()
     plot_energy_3d('neb_energy.ndt')
     
     
-if __name__ == '__main__5':
+if __name__ == '__main__4':
     
     init_images=[(-1,0,0,-1,0,0),(1,0,0,1,0,0)]
     interpolations = [31]
@@ -147,7 +198,7 @@ if __name__ == '__main__5':
     
     neb = NEB_Sundials(sim, init_images, interpolations, name='neb', spring=0.5, normalise=True)
     
-    neb.relax(max_steps=500, stopping_dmdt=1e-6)
+    neb.relax(max_steps=1000, stopping_dmdt=1e-8)
     
     plot_data_2d()
     plot_energy_3d('neb_energy.ndt')
