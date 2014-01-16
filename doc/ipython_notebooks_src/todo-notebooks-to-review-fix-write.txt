@@ -35,3 +35,9 @@
 - [2014-01-16 Thu] The functionality in this notebook is probably
   obsolete because dolfin already has a CSG module. We should turn
   this notebook into a tutorial about that dolfin module. -- Max
+
+* dev-restricting-a-dolfin-function-to-a-submesh.ipynb
+
+- [2014-01-16 Thu] This notebook requires dolfin > 1.2.0, but we are
+  still running version 1.2 on Jenkins. Thus this will only pass the
+  test once we have upgraded dolfin to version 1.3 on aleph0.
