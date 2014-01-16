@@ -209,6 +209,8 @@ def report_mismatch(key, test, ref, cell, message):
         output += "\tTest output:       {:10} -> {}\n".format(k, v)
     output += "--- Reference output, with keys -> values:\n"
     for k, v in ref.items():
+        if k == 'png':
+            v = '<PNG IMAGE>'
         output += "\tReference output:  {:10} -> {}\n".format(k, v)
     output += "- " * 35 + "\n"
     return output
