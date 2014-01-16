@@ -17,7 +17,8 @@
       Done again, 16 January 2014, Max
 - [X] ref-creating-custom-data-table-files.ipynb
       Done, 13 December 2013, Hans
-- [ ] ref-domain-wall-energy-class.ipynb
+- [X] ref-domain-wall-energy-class.ipynb
+      Done, 16 January 2014, Max
 - [X] ref-magnetic-spectrum-skymion.ipynb
       Done, 14 Decemeber 2013, Hans
 - [X] ref-restarting-simulations.ipynb

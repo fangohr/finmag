@@ -41,3 +41,8 @@
 - [2014-01-16 Thu] This notebook requires dolfin > 1.2.0, but we are
   still running version 1.2 on Jenkins. Thus this will only pass the
   test once we have upgraded dolfin to version 1.3 on aleph0.
+
+* ref-domain-wall-energy-class.ipynb
+
+- [2014-01-16 Thu] The computation with the FixedEnergyDW class is broken.
+  Also, a purpose needs to be added in the summary section (--> Weiwei).
