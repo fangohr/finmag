@@ -14,6 +14,16 @@ class FixedEnergyDW(object):
         self.name = name
 
     def write_xml(self, filename, coordinates, cells):
+        """
+        XXX TODO: According to Weiwei, this function is broken at the
+                  moment. Its purpose is to duplicate a given mesh
+                  (what for, though?). We should either fix it or
+                  remove it. Probably also move it to a more
+                  appropriate location (since it doesn't seem to have
+                  to do much with the FixedEnergyDW class?).
+                  -- Max, 16 Jan 2014
+
+        """
         f = open(filename, 'w')
         f.write("""<?xml version="1.0"?>\n""")
         f.write("""<dolfin xmlns:dolfin="http://fenicsproject.org">\n""")
