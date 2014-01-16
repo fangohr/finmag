@@ -38,7 +38,8 @@
       Done, 4 December 2013, Max
 - [ ] tutorial-coupled-relaxation-of-two-nanodisks.ipynb
 - [ ] tutorial-example2.ipynb
-- [ ] tutorial-finding-dmi-from-helix-length.ipynb
+- [X] tutorial-finding-dmi-from-helix-length.ipynb
+      Done, 16 January 2014, Max
 - [ ] tutorial_fourier_transform.ipynb
 - [X] tutorial_mesh_templates.ipynb
       Done, 16 January 2014, Max
