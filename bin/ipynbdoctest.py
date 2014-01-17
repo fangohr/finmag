@@ -38,11 +38,18 @@ from IPython.nbformat.current import reads, NotebookNode
 CELL_EXECUTION_TIMEOUT = 200  # abort cell execution after this time (seconds)
 
 # If any of the following patterns occurs in the output, the line
-# containing it will be discarded. Note that sometimes you don't
-# want to discard the entire line but only bits of it. In this
-# case don't use "discard_patterns" but rather add an explicit
-# replacement rule below.
+# containing it will be discarded. If you don't want to discard the
+# entire line but only bits of it, don't use "discard_patterns" but
+# rather add an explicit replacement rule in the function 'sanitize()'
+# below.
+#
+# On the other hand, if a line may only occur in the output under
+# certain circumstances (such as the matplotlib user warning), it must
+# be added here instead of in sanitize(), because otherwise there may
+# still be an empty line in the reference output which is not matched
+# in the computed output, or vice versa.
 DISCARD_PATTERNS = ["Warning: Ignoring netgen's output status of 34304",
+                    "UserWarning: This figure includes Axes that are not compatible with tight_layout, so its results might be incorrect",
                     ]
 
 
@@ -144,12 +151,12 @@ def sanitize(s):
     # Ignore datetime objects
     s = re.sub(r'datetime.datetime\([0-9, ]*\)', 'DATETIME_OBJECT', s)
 
-    # Warning coming from Matplotlib occasionally. The warning comes
-    # from a different line in different versions of matplotlib and
-    # thus results in a failed comparison. Replace with empty string.
-    s = re.sub(r'.*UserWarning: This figure includes Axes that are not '
-                'compatible with tight_layout, so its results might be '
-                'incorrect.', '', s)
+    # # Warning coming from Matplotlib occasionally. The warning comes
+    # # from a different line in different versions of matplotlib and
+    # # thus results in a failed comparison. Replace with empty string.
+    # s = re.sub(r'.*UserWarning: This figure includes Axes that are not '
+    #             'compatible with tight_layout, so its results might be '
+    #             'incorrect.', '', s)
 
     # If a mesh exists already, we get a different message from
     # generation of the mesh.
