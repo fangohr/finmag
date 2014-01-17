@@ -55,6 +55,7 @@
 - [ ] tutorial-saving-averages-demo.ipynb
 - [X] tutorial-scheduling-events.ipynb
       Done, 4 December 2013, Max
+      Done again, 17 January 2014, Max
 - [X] tutorial-use-of-logging.ipynb
 - [ ] tutorial-using-ipython-notebook.ipynb
 - [ ] tutorial-using-the-physics-units-object.ipynb
