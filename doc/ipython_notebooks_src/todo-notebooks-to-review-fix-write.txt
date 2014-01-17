@@ -1,3 +1,11 @@
+* Generally:
+
+- Plotting with Paraview does not work on aleph0 (this doesn't seem to
+  have anything to do with Jenkins itself, though, since it also
+  doesn't work outside of Jenkins). Currently the easiest way to avoid
+  errors is to flag all occurrences of Paraview rendering with
+  IPYTHON_TEST_IGNORE_OUTPUT, but maybe we can think of a better way.
+
 * ref-using-timings.ipynb
 
 - <2014-01-10 Fri> Almost all output in this notebook was timing related so it was flagged with "IPYTHON_TEST_IGNORE_OUTPUT". Is there a test we can do with the timings module that would be consistent for testing across machines? -- Mark V.
