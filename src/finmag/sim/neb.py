@@ -44,8 +44,6 @@ def normalise_m(a):
     lengths = np.sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2])
     a[:] /= lengths
     a.shape=(-1, )
-    
-
 
 def cartesian2spherical(xyz):
     xyz.shape=(3,-1)
@@ -76,8 +74,8 @@ def check_boundary(theta_phi):
     theta = theta_phi[0]
     phi = theta_phi[1]
     
-    theta[theta > np.pi] -= np.pi
-    theta[theta < 0] += np.pi
+    theta[theta > np.pi] = np.pi
+    theta[theta < 0] = 0
     
     phi[phi>np.pi] -= 2*np.pi
     phi[phi<-np.pi] += 2*np.pi

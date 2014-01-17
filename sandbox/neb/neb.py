@@ -332,10 +332,15 @@ class NEB_Sundials(object):
             sf = self.spring_force[i]
             
             # BUG: h = h - np.dot(h,t)*t is not safe???
-            h2 = np.dot(h,t)*t 
-            h3 = h - h2 + sf*t
+            #h2 = np.dot(h,t)*t 
+            #h4 = h - h2 + sf*t
+            h3 = h - np.dot(h,t)*t + sf*t
+            
+            #if max(abs(h3-h4))>0:
+                #print max(abs(h3-h4))
             
             self.Heff[i][:] = h3[:]
+            #self.Heff[i][:] = h4[:]
 
         y.shape = (-1,)
         self.Heff.shape=(-1,)
