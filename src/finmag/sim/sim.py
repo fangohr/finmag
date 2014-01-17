@@ -70,7 +70,7 @@ class Simulation(object):
 
           pbc : Periodic boundary type: None or '2d'
 
-          kernel : 'llg', 'sllg' or 'llg_stt' 
+          kernel : 'llg', 'sllg' or 'llg_stt'
 
           average : take the cell averaged effective field, only for test, will delete it if doesn't work.
 
@@ -163,7 +163,6 @@ class Simulation(object):
         # point (the driver would be an optimiser), or something else.
         self.driver = 'cvode'
 
-
     def __str__(self):
         """String briefly describing simulation object"""
         return "finmag.Simulation(name='%s') with %s" % (self.name, self.mesh)
@@ -171,6 +170,154 @@ class Simulation(object):
     def __get_m(self):
         """The unit magnetisation"""
         return self.llg.m
+
+    def initialise_skyrmion_hexlattice_2D(self, meshX, meshY, tileScaleX=1,
+                                          skyrmionRadiusScale=0.2):
+        """
+        Initialise the magnetisation to a pattern resembling a hexagonal
+        lattice of 2D skyrmions which should be relaxed to obtain the most
+        natural lattice possible. The most stable of lattices will exist on
+        meshes whose horizontal dimension is equal to the vertical tile
+        dimension / sqrt(3); if the mesh does not (approximately) conform to
+        these dimensions, a warning will be raised (because this will result in
+        elliptical skyrmions being created).
+
+        *Assumptions*: It is assumed that the mesh is a rectangular 2D mesh. If
+                       it is not, the 2D hexagonal lattice will be projected in
+                       higher dimensions.
+
+        *Arguments*:
+
+        meshX
+            The length of the rectangular mesh in the first dimension (the 'X'
+            direction).
+
+        meshY
+            As above, but for the second dimension (the 'Y' direction).
+
+        tileScaleX=1
+            The fraction of the size of the tile in the first dimension (the
+            'X' direction) to the size of the mesh. For example, if this
+            quantity is equal to 0.5, there will be two tiles in the first
+            dimension.
+
+        skyrmionRadiusScale=0.3
+            The radius of the skyrmion defined as a fraction of the tile in the
+            first dimension ('X' direction).
+
+        This function returns nothing.
+        """
+
+        # Ensure the mesh is of the dimensions stated above, and raise a
+        # warning if it isn't.
+        if abs(meshX / float(meshY) - math.sqrt(3)) > 0.05 and \
+           abs(meshY / float(meshX) - math.sqrt(3)) > 0.05:
+            log.warning("Mesh dimensions do not accurately support hexagonal" +
+                        " lattice formation! (One should be a factor of sqrt" +
+                        "(3) greater than the other.)")
+
+        # Calculate lengths of tiles and the skyrmion radius in mesh
+        # co-ordinates.
+        tileLengthX = meshX * tileScaleX
+        tileLengthY = meshY * tileScaleX
+        skyrmionRadius = tileLengthX * skyrmionRadiusScale
+
+        # Build the function.
+        def m_skyrmion_hexlattice(pos):
+            """
+            Function that takes a position vector of a point in a vector field
+            and returns a vector such that the vector field forms a hexagonal
+            lattice of skyrmions of the field is toroidal. This only works for
+            rectangular meshes whos horizontal tile dimension is equal to the
+            vertical tile dimension / sqrt(3)."""
+
+            # Convert position into tiled co-ordinates.
+            cx = pos[0] % tileLengthX - tileLengthX / 2.
+            cy = pos[1] % tileLengthY - tileLengthY / 2.
+
+            # ==== Define first skyrmion quart ====#
+            # Define temporary cartesian co-ordinates (tcx, tcy) that can be
+            # used to define a polar co-ordinate system.
+            tcx = cx - tileLengthX / 2.
+            tcy = cy
+
+            r = pow(pow(tcx, 2) + pow(tcy, 2), 0.5)
+            t = math.atan2(tcy, tcx)
+
+            tcx_flip = cx + tileLengthX / 2.
+            r_flip = pow(pow(tcx_flip, 2) + pow(tcy, 2), 0.5)
+            t_flip = math.atan2(tcy, tcx_flip)
+
+            # Populate vector field:
+            mz = -1 + 2 * r / skyrmionRadius
+            mz_flip = -1 + 2 * r_flip / skyrmionRadius
+
+            # Replicate to other half-plane of the vector field and convert to
+            # cartesian form.
+            if(mz <= 1):
+                mt = math.sin(math.pi * r / skyrmionRadius)
+                mx_1 = -math.sin(t) * mt
+                my_1 = math.cos(t) * mt
+                mz_1 = mz
+
+            elif(mz_flip < 1):
+                mt = -math.sin(math.pi * r_flip / skyrmionRadius)
+                mz_1 = mz_flip
+                mx_1 = math.sin(t_flip) * mt
+                my_1 = -math.cos(t_flip) * mt
+
+            elif(mz > 1):
+                mx_1 = 0
+                my_1 = 0
+                mz_1 = 1
+
+            # ==== Define second skyrmion quart ====#
+            # Define temporary cartesian co-ordinates (tcx, tcy) that can be
+            # used to define polar co-ordinate system.
+            tcx = cx
+            tcy = cy - tileLengthY / 2.
+
+            r = pow(pow(tcx, 2) + pow(tcy, 2), 0.5)
+            t = math.atan2(tcy, tcx)
+
+            tcy_flip = cy + tileLengthY / 2.
+            r_flip = pow(pow(tcx, 2) + pow(tcy_flip, 2), 0.5)
+            t_flip = math.atan2(tcy_flip, tcx)
+
+            # Populate vector field:
+            mz = -1 + 2 * r / skyrmionRadius
+            mz_flip = -1 + 2 * r_flip / skyrmionRadius
+
+            # Replicate to other half-plane of the vector field and convert to
+            # cartesian form.
+            if(mz <= 1):
+                mt = math.sin(math.pi * r / skyrmionRadius)
+                mx_2 = -math.sin(t) * mt
+                my_2 = math.cos(t) * mt
+                mz_2 = mz
+
+            elif(mz_flip < 1):
+                mt = -math.sin(math.pi * r_flip / skyrmionRadius)
+                mz_2 = mz_flip
+                mx_2 = math.sin(t_flip) * mt
+                my_2 = -math.cos(t_flip) * mt
+
+            elif(mz > 1):
+                mx_2 = 0
+                my_2 = 0
+                mz_2 = 1
+
+            #==== Combine and normalize. ====#
+            mx = mx_1 + mx_2
+            my = my_1 + my_2
+            mz = mz_1 + mz_2 - 1
+
+            out = np.array([mx, my, mz], dtype="float64")
+
+            return out / np.linalg.norm(out)
+
+        # Use the above function to initialise the magnetisation.
+        self.set_m(m_skyrmion_hexlattice)
 
     def initialise_vortex(self, type, center=None, **kwargs):
         """
@@ -524,7 +671,7 @@ class Simulation(object):
         shape of ``pts``.
 
         """
-       
+
         return helpers.probe(self.get_field_as_dolfin_function(field_type), pts)
 
     def create_integrator(self, backend=None, **kwargs):
@@ -539,30 +686,30 @@ class Simulation(object):
                 self.integrator = self.llg
             else:
                 self.integrator = llg_integrator(self.llg, self.llg.m, backend=backend, **kwargs)
-                
+
             self.tablewriter.entities['steps'] = {
                 'unit': '<1>',
                 'get': lambda sim: sim.integrator.stats()['nsteps'],
                 'header': 'steps'}
-            
+
             self.tablewriter.entities['last_step_dt'] = {
                 'unit': '<1>',
                 'get': lambda sim: sim.integrator.stats()['hlast'],
                 'header': 'last_step_dt'}
-            
+
             self.tablewriter.update_entity_order()
-        
+
         else:
             log.warning("Cannot create integrator - exists already: {}".format(self.integrator))
         return self.integrator
-    
+
     def set_tol(self, reltol=1e-6, abstol=1e-6):
         """
         Set the tolerences of the default integrator.
         """
         if not hasattr(self, "integrator"):
             self.create_integrator()
-        
+
         self.integrator.integrator.set_scalar_tolerances(reltol, abstol)
 
     def advance_time(self, t):
@@ -1032,10 +1179,10 @@ class Simulation(object):
 
         Also print a distribution of edge lengths present in the mesh
         and how they compare to the exchange length, the Bloch
-        parameter and the Helical period (if these can be computed, which 
+        parameter and the Helical period (if these can be computed, which
         requires an exchange interaction (plus anisotropy for the Bloch
-        parameter and DMI value for the Helical period)); note that for 
-        spatially varying material parameters the average values are used). 
+        parameter and DMI value for the Helical period)); note that for
+        spatially varying material parameters the average values are used).
         This information is relevant to estimate whether the mesh
         discretisation is too coarse and might result in numerical
         artefacts (see W. Rave, K. Fabian, A. Hubert, "Magnetic states
@@ -1215,7 +1362,7 @@ class Simulation(object):
             `J_profile` can have any of the forms accepted by the function
             'finmag.util.helpers.vector_valued_function' (see its
             docstring for details).
-            
+
             if using_u0 = True, the factor of 1/(1+beta^2) will be dropped.
 
         """
