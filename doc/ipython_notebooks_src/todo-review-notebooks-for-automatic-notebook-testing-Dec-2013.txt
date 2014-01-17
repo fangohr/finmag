@@ -37,7 +37,8 @@
 - [ ] ref-zhang-li-example.ipynb
 - [X] test-flag-to-ignore-cell-output.ipynb
       Done, 4 December 2013, Max
-- [ ] tutorial-coupled-relaxation-of-two-nanodisks.ipynb
+- [X] tutorial-coupled-relaxation-of-two-nanodisks.ipynb
+      Done, 17 January 2014, Max
 - [ ] tutorial-example2.ipynb
 - [X] tutorial-finding-dmi-from-helix-length.ipynb
       Done, 16 January 2014, Max
