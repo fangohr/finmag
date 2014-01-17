@@ -79,6 +79,20 @@ class Sim2(object):
         
         return np.array([gx,0,gy,0])
     
+def Sim2Test():
+    
+    init_images=[(0,0,0,0),(np.pi,0,np.pi,0)]
+    interpolations = [31]
+    
+    sim = Sim2()
+    
+    neb = NEB_Sundials(sim, init_images, interpolations, name='neb', spring=0.5)
+    
+    neb.relax(max_steps=500, stopping_dmdt=1e-6)
+    
+    plot_data_2d()
+    plot_energy_3d('neb_energy.ndt')
+    
     
 class Sim3(object):
     """
@@ -97,6 +111,20 @@ class Sim3(object):
         
         return np.array([gx, gy])
     
+def Sim3Test():
+    
+    init_images=[(0,0),(np.pi/2,np.pi/2-0.1),(np.pi,0)]
+    interpolations = [12,9]
+    
+    sim = Sim3()
+    
+    neb = NEB_Sundials(sim, init_images, interpolations, name='neb', spring=0.2)
+    
+    neb.relax(max_steps=1000, stopping_dmdt=1e-6)
+    
+    plot_data_2d()
+    plot_energy_3d('neb_energy.ndt')
+    
 class SimTwoSpins(object):
     """
     Two spins but using Cartesian coordinates
@@ -113,6 +141,20 @@ class SimTwoSpins(object):
         gy = 4*y
         
         return np.array([gx,0,0, gy,0,0])
+    
+def SimTwoSpinsTest():
+    
+    init_images=[(-1,0,0,-1,0,0),(1,0,0,1,0,0)]
+    interpolations = [31]
+    
+    sim = SimTwoSpins()
+    
+    neb = NEB_Sundials(sim, init_images, interpolations, name='neb', spring=0.5, normalise=True)
+    
+    neb.relax(max_steps=1000, stopping_dmdt=1e-8)
+    
+    plot_data_2d()
+    plot_energy_3d('neb_energy.ndt')
     
     
 class OneSpin(object):
@@ -156,50 +198,16 @@ def OneSpinTest():
     plot_data_2d()
     plot_energy_3d('neb_energy.ndt')
 
+
+
 if __name__ == '__main__':
-    OneSpinTest()
+    #OneSpinTest()
+    Sim3Test()
+
+
     
 
-if __name__ == '__main__3':
-    
-    init_images=[(0,0,0,0),(np.pi,0,np.pi,0)]
-    interpolations = [31]
-    
-    sim = Sim2()
-    
-    neb = NEB_Sundials(sim, init_images, interpolations, name='neb', spring=0.5)
-    
-    neb.relax(max_steps=500, stopping_dmdt=1e-6)
-    
-    plot_data_2d()
-    plot_energy_3d('neb_energy.ndt')
-    
-if __name__ == '__main__5':
-    
-    init_images=[(0,0),(np.pi/2,np.pi/2-0.1),(np.pi,0)]
-    interpolations = [12,9]
-    
-    sim = Sim3()
-    
-    neb = NEB_Sundials(sim, init_images, interpolations, name='neb', spring=0.5)
-    
-    neb.relax(max_steps=2000, stopping_dmdt=1e-6)
-    
-    plot_data_2d()
-    plot_energy_3d('neb_energy.ndt')
     
     
-if __name__ == '__main__4':
-    
-    init_images=[(-1,0,0,-1,0,0),(1,0,0,1,0,0)]
-    interpolations = [31]
-    
-    sim = SimTwoSpins()
-    
-    neb = NEB_Sundials(sim, init_images, interpolations, name='neb', spring=0.5, normalise=True)
-    
-    neb.relax(max_steps=1000, stopping_dmdt=1e-8)
-    
-    plot_data_2d()
-    plot_energy_3d('neb_energy.ndt')
+
     
