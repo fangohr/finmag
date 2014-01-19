@@ -28,7 +28,16 @@ def normalise(a):
     """
     normalise the n dimensional vector a
     """
-    length = 1.0/np.linalg.norm(a)
+    x = a>np.pi
+    a[x] = 2*np.pi-a[x]
+    x = a<-np.pi
+    a[x] += 2*np.pi
+    
+    length = np.linalg.norm(a)
+    
+    if length>0:
+        length=1.0/length
+        
     a[:] *= length
     
 def linear_interpolation_two_direct(m0, m1, n):
@@ -201,7 +210,6 @@ class NEB_Sundials(object):
             self.images_energy[i+1]=self.sim.energy(self.all_m[i])
             
         self.all_m.shape=(-1,)
-        print self.all_m
 
     def save_npys(self):
         directory='npys_%s_%d'%(self.name,self.step)
@@ -278,9 +286,7 @@ class NEB_Sundials(object):
             elif energy_a>energy and energy>energy_b:
                 tangent = t1
             else:
-                #tangent = t2 + t1
-                
-                
+
                 e1 = energy_a - energy
                 e2 = energy_b - energy
                 
@@ -303,9 +309,7 @@ class NEB_Sundials(object):
             
             self.tangents[i,:]=tangent[:]
             
-            # this 'old' method is much better than the improved method,
             # i.e., eq (5) is better than eq.(12) in J. Chem. Phys.,Vol. 113, 9978 
-            #self.spring_force[i][:]=self.spring*(m_a+m_b-2*y[i])
             dm1 = compute_dm(m_a, y[i])
             dm2 = compute_dm(m_b, y[i])
             self.spring_force[i] = self.spring*(dm2-dm1)
@@ -326,21 +330,15 @@ class NEB_Sundials(object):
         self.Heff.shape = (self.image_num,-1)
         
         for i in range(self.image_num):
-            m = y[i]
+            
             h = self.Heff[i]
             t = self.tangents[i]
             sf = self.spring_force[i]
             
-            # BUG: h = h - np.dot(h,t)*t is not safe???
-            #h2 = np.dot(h,t)*t 
-            #h4 = h - h2 + sf*t
             h3 = h - np.dot(h,t)*t + sf*t
             
-            #if max(abs(h3-h4))>0:
-                #print max(abs(h3-h4))
-            
             self.Heff[i][:] = h3[:]
-            #self.Heff[i][:] = h4[:]
+          
 
         y.shape = (-1,)
         self.Heff.shape=(-1,)
@@ -388,6 +386,9 @@ class NEB_Sundials(object):
             dmdt = compute_dm(y[i],m[i])/(t-self.t)
             if dmdt>max_dmdt:
                 max_dmdt = dmdt
+        
+        m.shape=(-1,)
+        y.shape=(-1,)
         
         self.last_m[:] = m[:]
         self.t=t

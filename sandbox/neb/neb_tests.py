@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import inspect
 from neb import NEB_Sundials
-from finmag.sim.neb import plot_energy_3d
+#from finmag.sim.neb import plot_energy_3d
 
 def plot_data_2d():
     
@@ -98,14 +98,36 @@ class Sim3(object):
     """
     One spin with two anisotropies
     """
-    def energy(self,xs):
+    def check(self,xs):
         x = xs[0]
         y = xs[1]
+        if x > np.pi:
+            xs[0] = np.pi
+        elif x<0:
+            xs[0]=0
+            
+        if y > np.pi:
+            xs[1] -= 2*np.pi
+        elif y < -np.pi:
+            xs[1] += 2*np.pi
+    
+    def energy(self,xs):
+        
+        self.check(xs)
+        
+        x = xs[0]
+        y = xs[1]
+        
+        
         return np.sin(x)**2+2*np.sin(x)**2*np.sin(y)**2
 
     def gradient(self, xs):
+        
+        self.check(xs)
+        
         x = xs[0]
         y = xs[1]
+    
         gx = -2*np.sin(x)*np.cos(x)*(1+2*np.sin(y)**2)
         gy = -4*np.sin(y)*np.cos(y)*np.sin(x)**2
         
@@ -113,17 +135,17 @@ class Sim3(object):
     
 def Sim3Test():
     
-    init_images=[(0,0),(np.pi/2,np.pi/2-0.1),(np.pi,0)]
+    init_images=[(0,0),(np.pi/2,np.pi/2-1.0),(np.pi,0)]
     interpolations = [12,9]
     
     sim = Sim3()
     
     neb = NEB_Sundials(sim, init_images, interpolations, name='neb', spring=0.2)
     
-    neb.relax(max_steps=1000, stopping_dmdt=1e-6)
+    neb.relax(max_steps=1000, stopping_dmdt=1e-6, dt=0.1)
     
     plot_data_2d()
-    plot_energy_3d('neb_energy.ndt')
+    #plot_energy_3d('neb_energy.ndt')
     
 class SimTwoSpins(object):
     """
