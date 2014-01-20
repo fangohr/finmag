@@ -406,6 +406,14 @@ def test_notebook(nb):
                     first_failed_input = cell.input
                     first_failed_output_expected = outs_merged
                     first_failed_output = cell_outputs_merged
+                    # For easier debugging, replace the (usually huge) binary
+                    # data of any pngs appearing in the expected or computed
+                    # output with a short string representing the image.
+                    for node in first_failed_output_expected + first_failed_output:
+                        try:
+                            node['png'] = '<PNG IMAGE>'
+                        except KeyError:
+                            pass
                 failures += 1
             else:
                 successes += 1
