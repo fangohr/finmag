@@ -13,32 +13,13 @@ from finmag import Simulation
 from finmag.native import sundials
 from finmag.util.fileio import Tablewriter, Tablereader
 
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib.colors import colorConverter
-from matplotlib.collections import PolyCollection, LineCollection
+import finmag.native.neb as native_neb
 
 import logging
 log = logging.getLogger(name="finmag")
 
 ONE_DEGREE_PER_NS = 17453292.5  # in rad/s
 
-
-def normalise(a):
-    """
-    normalise the n dimensional vector a
-    """
-    x = a>np.pi
-    a[x] = 2*np.pi-a[x]
-    x = a<-np.pi
-    a[x] += 2*np.pi
-    
-    length = np.linalg.norm(a)
-    
-    if length>0:
-        length=1.0/length
-        
-    a[:] *= length
     
 def linear_interpolation_two_direct(m0, m1, n):
     m0 = np.array(m0)
@@ -129,16 +110,20 @@ class NEB_Sundials(object):
         if len(initial_images)<2:
             raise RuntimeError("""At least two images are needed to be provided.""")
         
-        self.image_num = len(initial_images) + sum(interpolations) - 2
+        self.image_num = len(initial_images) + sum(interpolations) 
         
         self.nxyz = len(initial_images[0])
         
         self.all_m = np.zeros(self.nxyz*self.image_num)
-        self.Heff = np.zeros(self.all_m.shape)
-        self.tangents = np.zeros(self.all_m.shape)
-        self.images_energy = np.zeros(self.image_num+2)
+        self.Heff = np.zeros(self.nxyz*(self.image_num-2))
+        self.Heff.shape=(self.image_num-2, -1)
+        
+        self.tangents = np.zeros(self.Heff.shape)
+        self.images_energy = np.zeros(self.image_num)
         self.last_m = np.zeros(self.all_m.shape)
-        self.spring_force = np.zeros(self.image_num)
+        self.spring_force = np.zeros(self.image_num-2)
+        
+        
         
         self.t = 0
         self.step = 1
@@ -183,10 +168,9 @@ class NEB_Sundials(object):
             
             n = self.interpolations[i]
             m0 = self.initial_images[i]
-            
-            if i!=0:
-                self.all_m[image_id][:]=m0[:]
-                image_id = image_id + 1
+
+            self.all_m[image_id][:]=m0[:]
+            image_id = image_id + 1
                 
             m1 = self.initial_images[i+1]
             
@@ -199,26 +183,22 @@ class NEB_Sundials(object):
                 self.all_m[image_id][:]=coord[:]
                 image_id = image_id + 1
         
-
-        self.m_init = self.initial_images[0]
-        self.images_energy[0] = self.sim.energy(self.m_init)
-        
-        self.m_final = self.initial_images[-1]
-        self.images_energy[-1] = self.sim.energy(self.m_final)
+        m2 = self.initial_images[-1]
+        self.all_m[image_id][:] = m2[:]
         
         for i in range(self.image_num):
-            self.images_energy[i+1]=self.sim.energy(self.all_m[i])
-            
+            self.images_energy[i]=self.sim.energy(self.all_m[i])
+        
         self.all_m.shape=(-1,)
+        print self.all_m
+        
+        self.create_integrator()
 
     def save_npys(self):
         directory='npys_%s_%d'%(self.name,self.step)
         if not os.path.exists(directory):
             os.makedirs(directory)
 
-        name=os.path.join(directory,'image_0.npy')
-        np.save(name,self.m_init)
-        
         img_id = 1
         self.all_m.shape=(self.image_num,-1)
         for i in range(self.image_num):
@@ -226,8 +206,7 @@ class NEB_Sundials(object):
             np.save(name,self.all_m[i, :])
             img_id += 1
 
-        name=os.path.join(directory,'image_%d.npy'%img_id)
-        np.save(name,self.m_final)
+        self.all_m.shape=(-1,)
         
     
     def create_integrator(self, reltol=1e-6, abstol=1e-6, nsteps=10000):
@@ -244,106 +223,60 @@ class NEB_Sundials(object):
     def compute_effective_field(self, y):
         
         y.shape=(self.image_num, -1)
-        self.Heff.shape = (self.image_num,-1)
         
-        for i in range(self.image_num):
+        for i in range(1,self.image_num-1):
             if self.normalise:
                 normalise_m(y[i])
-            self.Heff[i,:] = self.sim.gradient(y[i])
-            self.images_energy[i+1] = self.sim.energy(y[i])
+            self.Heff[i-1,:] = self.sim.gradient(y[i])
+            self.images_energy[i] = self.sim.energy(y[i])
         
         y.shape=(-1,)
-        self.Heff.shape=(-1,)
     
     
-    def compute_tangents(self, y):
-        
-        y.shape=(self.image_num, -1)
-        self.tangents.shape = (self.image_num,-1)
-        self.spring_force.shape = (self.image_num,-1)
-        
-        for i in range(self.image_num):
-            
-            if i==0:
-                m_a = self.m_init
-            else:
-                m_a = y[i-1]
-                
-            if i == self.image_num-1:
-                m_b = self.m_final
-            else:
-                m_b = y[i+1]
-            
-            energy_a = self.images_energy[i]
-            energy = self.images_energy[i+1]
-            energy_b = self.images_energy[i+2]
-            
-            t1 = y[i] - m_a
-            t2 = m_b - y[i]
-                        
-            if energy_a<energy and energy<energy_b:
-                tangent = t2
-            elif energy_a>energy and energy>energy_b:
-                tangent = t1
-            else:
+    def compute_tangents(self, ys):
+        ys.shape=(self.image_num, -1)
+        native_neb.compute_tangents(ys,self.images_energy, self.tangents)
 
-                e1 = energy_a - energy
-                e2 = energy_b - energy
-                
-                if abs(e1)>abs(e2):
-                    max_e=abs(e1)
-                    min_e=abs(e2)
-                else:
-                    max_e=abs(e2)
-                    min_e=abs(e1)
-            
-                normalise(t1)
-                normalise(t2)
-            
-                if energy_b > energy_a:
-                    tangent = t1*min_e + t2*max_e
-                else:
-                    tangent = t1*max_e + t2*min_e
-                
-            normalise(tangent)
-            
-            self.tangents[i,:]=tangent[:]
-            
-            # i.e., eq (5) is better than eq.(12) in J. Chem. Phys.,Vol. 113, 9978 
-            dm1 = compute_dm(m_a, y[i])
-            dm2 = compute_dm(m_b, y[i])
-            self.spring_force[i] = self.spring*(dm2-dm1)
-            
-            
-        y.shape=(-1,)
+        for i in range(1, self.image_num-1):
+            dm1 = compute_dm(ys[i-1], ys[i])
+            dm2 = compute_dm(ys[i+1], ys[i])
+            self.spring_force[i-1] = self.spring*(dm2-dm1)
+
+        ys.shape=(-1, )
+        
         
     
-    def sundials_rhs(self, t, y, ydot):
+    def sundials_rhs(self, time, y, ydot):
         
         self.ode_count+=1
+        
         default_timer.start("sundials_rhs", self.__class__.__name__)
         
         self.compute_effective_field(y)
         self.compute_tangents(y)
 
         y.shape=(self.image_num, -1)
-        self.Heff.shape = (self.image_num,-1)
         
-        for i in range(self.image_num):
+        ydot.shape=(self.image_num, -1)
+        
+        for i in range(1, self.image_num-1):
             
-            h = self.Heff[i]
-            t = self.tangents[i]
-            sf = self.spring_force[i]
+            h = self.Heff[i-1]
+            t = self.tangents[i-1]
+            sf = self.spring_force[i-1]
             
             h3 = h - np.dot(h,t)*t + sf*t
+            #h4 = h - np.dot(h,t)*t + sf*t
             
-            self.Heff[i][:] = h3[:]
-          
-
-        y.shape = (-1,)
-        self.Heff.shape=(-1,)
+            ydot[i,:] = h3[:]
         
-        ydot[:]=self.Heff[:]
+        #it turns out that the following two lines are very important
+        ydot[0,:] = 0
+        ydot[-1,:] = 0
+        
+        y.shape = (-1,)
+        ydot.shape=(-1,)
+        
 
         default_timer.stop("sundials_rhs", self.__class__.__name__)
         
@@ -354,17 +287,11 @@ class NEB_Sundials(object):
         
         y = self.all_m
         y.shape=(self.image_num, -1)
-        for i in range(self.image_num):
-            if i==0:
-                m_a = self.m_init
-            else:
-                m_a = y[i-1]
-                
-            dm = compute_dm(y[i], m_a)
+        for i in range(self.image_num-1):                
+            dm = compute_dm(y[i], y[i+1])
             distance.append(dm)
         
-        dm = compute_dm(y[-1], self.m_final)
-        distance.append(dm)
+        y.shape =(-1, )
         
         self.distances=np.array(distance)
     
@@ -386,7 +313,7 @@ class NEB_Sundials(object):
             dmdt = compute_dm(y[i],m[i])/(t-self.t)
             if dmdt>max_dmdt:
                 max_dmdt = dmdt
-        
+                        
         m.shape=(-1,)
         y.shape=(-1,)
         
@@ -418,7 +345,6 @@ class NEB_Sundials(object):
                 self.compute_distance()
                 self.tablewriter.save()
                 self.tablewriter_dm.save()
-                
             log.debug("step: {:.3g}, step_size: {:.3g} and max_dmdt: {:.3g}.".format(self.step,increment_dt,dmdt))
             
             if dmdt<stopping_dmdt:
@@ -429,18 +355,5 @@ class NEB_Sundials(object):
         
         self.save_npys()
         print self.all_m
-
-
-if __name__ == '__main__':
-    
-    import finmag
-    
-    sim = finmag.example.barmini()
-    
-    init_images=[(0,0,-1),(1,1,0),(0,0,1)]
-    interpolations = [5,4]
-    
-    neb = NEB(sim, init_images, interpolations)
-    
-    neb.relax()
+        
     

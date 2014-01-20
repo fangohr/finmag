@@ -3,15 +3,14 @@ import dolfin as df
 import numpy as np
 import inspect
 from aeon import default_timer
-import finmag.util.consts as consts
+
 
 from finmag.native import sundials
-from finmag.util.fileio import Tablewriter, Tablereader
+
 
 import logging
 log = logging.getLogger(name="finmag")
 
-ONE_DEGREE_PER_NS = 17453292.5  # in rad/s
 
 
 def normalise(a):
@@ -215,6 +214,9 @@ class NEB_Sundials(object):
 
         
     def sundials_rhs(self, t, y, ydot):
+        
+        if self.ode_count<3:
+            print '%0.20g'%t,y
         
         self.ode_count+=1
         default_timer.start("sundials_rhs", self.__class__.__name__)

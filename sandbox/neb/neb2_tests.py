@@ -5,7 +5,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 
-from neb2 import NEB_Sundials
+from neb import NEB_Sundials
 
     
 class Sim3(object):

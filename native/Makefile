@@ -20,7 +20,7 @@ all : parallel
 # The directory where to place the extension modules
 MODULE_DIR = ../src/finmag/native
 # The list of extension modules to build
-MODULES = sundials.so llg.so llb.so fast_sum_lib.so treecode_bem.so
+MODULES = sundials.so llg.so llb.so fast_sum_lib.so treecode_bem.so neb.so
 # The directory to store the precompiled header file.
 PRECOMPILED_HEADER_DIR ?= /tmp/$(USER)/finmag-pch/$(abspath .)
 # Name of the binary that runs all unit tests
@@ -38,6 +38,8 @@ $(MODULE_DIR)/llg.so : src/llg/py_llg_module.o src/util/np_array.o src/util/swig
 llg_LDFLAGS = -L$(HOME)/Work/FEniCS/lib -ldolfin
 
 $(MODULE_DIR)/llb.so : src/llb/py_llb_module.o src/util/np_array.o src/llb/material.o src/llb/llb.o src/llb/sllg.o src/llb/sllg_stt.o src/llb/mt19937.o 
+
+$(MODULE_DIR)/neb.so : src/neb/py_neb_module.o src/util/np_array.o src/neb/helper.o
 
 $(MODULE_DIR)/fast_sum_lib.so:
 	cd src/fast_sum_lib && python setup.py build_ext --inplace
