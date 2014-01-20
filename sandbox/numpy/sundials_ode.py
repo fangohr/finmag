@@ -4,7 +4,7 @@ from finmag.native import sundials
 
 
 def call_back(t, y):
-    return y[0]**2-y[0]**3
+    return y**2-y**3
     
 class Test_Sundials(object):
     
@@ -17,7 +17,7 @@ class Test_Sundials(object):
         
         self.create_integrator()
     
-    def create_integrator(self, reltol=1e-6, abstol=1e-6, nsteps=10000):
+    def create_integrator(self, reltol=1e-2, abstol=1e-2, nsteps=10000):
 
         integrator = sundials.cvode(sundials.CV_BDF, sundials.CV_NEWTON)
         integrator.init(self.sundials_rhs, 0, self.x0)
@@ -34,7 +34,7 @@ class Test_Sundials(object):
                 
         #The following line is very important!!!
         ydot[:] = 0
-        ydot[0] = self.sim(t, y)
+        ydot[:] = self.sim(t, y)
         
         return 0
     
@@ -58,7 +58,7 @@ class Test_Sundials(object):
     
     def print_info(self):
         print 'sim t=%0.15g'%self.t
-        print 'x=%0.15g'%self.x[0]
+        print 'x=',self.x
         print 'rhs=%d'%self.ode_count
 
 
