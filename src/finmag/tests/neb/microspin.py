@@ -14,7 +14,7 @@ from finmag import Simulation as Sim
 from finmag.energies import Exchange, DMI, UniaxialAnisotropy
 from finmag.util.fileio import Tablereader
 
-from finmag.sim.neb import NEB, plot_energy_3d, NEB_Sundials
+from finmag.sim.neb import NEB_Sundials, plot_energy_3d, NEB_Sundials
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -35,9 +35,9 @@ def relax_system(sim):
     init_images=[(-1,0,0),(0,1,1),(1,0,0)]
     interpolations = [10,8]
     
-    neb = NEB_Sundials(sim, init_images, interpolations, spring=1e5, name='neb')
+    neb = NEB_Sundials(sim, init_images, interpolations, spring=1e6, name='neb')
 
-    neb.relax(max_steps=500, save_ndt_steps=20, stopping_dmdt=1e4)
+    neb.relax(max_steps=500, save_ndt_steps=1, stopping_dmdt=1e2)
     
 
 def plot_data_2d():
