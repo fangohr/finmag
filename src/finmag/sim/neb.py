@@ -103,6 +103,25 @@ def linear_interpolation_two(m0, m1, n):
     
     return coords
 
+def normalise_m(a):
+    """
+    normalise the magnetisation length.
+    """
+    a.shape=(3, -1)
+    lengths = np.sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2])
+    a[:] /= lengths
+    a.shape=(-1, )
+    
+def linear_interpolation(theta_phi0, theta_phi1):
+    m0 = spherical2cartesian(theta_phi0)
+    m1 = spherical2cartesian(theta_phi1)
+    
+    # suppose m0 and m1 is quite close
+    m2 = (m0 + m1)/2.0
+    normalise_m(m2)
+    
+    return cartesian2spherical(m2)
+
 
 def compute_dm(m0, m1):
 
@@ -197,13 +216,16 @@ class NEB_Sundials(object):
         self.springs = np.zeros(self.image_num)
         
         self.t = 0
-        self.step = 1
+        self.step = 0
+        self.ode_count = 1
         self.integrator = None
-        self.ode_count=1
         
         self.initial_image_coordinates()
+        self.create_tablewriter()
+
         
-        self.tablewriter = Tablewriter('%s_energy.ndt'%name, self, override=True)
+    def create_tablewriter(self):
+        self.tablewriter = Tablewriter('%s_energy.ndt'%(self.name), self, override=True)
         self.tablewriter.entities = {
             'step': {'unit': '<1>',
                      'get': lambda sim: sim.step,
@@ -217,7 +239,7 @@ class NEB_Sundials(object):
         self.tablewriter.entity_order = ['step'] + sorted(keys)
         
         
-        self.tablewriter_dm = Tablewriter('%s_dms.ndt'%name, self, override=True)
+        self.tablewriter_dm = Tablewriter('%s_dms.ndt'%(self.name), self, override=True)
         self.tablewriter_dm.entities = {
             'step': {'unit': '<1>',
                      'get': lambda sim: sim.step,
@@ -230,8 +252,12 @@ class NEB_Sundials(object):
         keys.remove('step')
         self.tablewriter_dm.entity_order = ['step'] + sorted(keys)
         
-        
+    
+    
     def initial_image_coordinates(self):
+        """
+        generate the coordinates linearly. 
+        """
         
         image_id = 0
         self.coords.shape=(self.total_image_num,-1)
@@ -279,7 +305,9 @@ class NEB_Sundials(object):
         self.coords.shape=(-1,)
         
     def save_npys(self):
-        directory='npys_%s_%d'%(self.name,self.step)
+        
+        directory='npys/%s_%d'%(self.name, self.step)
+        
         if not os.path.exists(directory):
             os.makedirs(directory)
 
@@ -299,7 +327,6 @@ class NEB_Sundials(object):
         integrator.set_max_num_steps(nsteps)
         
         self.integrator = integrator
-    
     
     def compute_effective_field(self, y):
         
@@ -360,9 +387,10 @@ class NEB_Sundials(object):
         for i in range(self.total_image_num-1):   
             dm = compute_dm(ys[i], ys[i+1])
             distance.append(dm)
-        
+            
+        ys.shape=(-1, )
         self.distances = np.array(distance)
-    
+        
     
     def run_until(self, t):
         
@@ -389,7 +417,7 @@ class NEB_Sundials(object):
         
         return max_dmdt
     
-    def relax(self, dt=1e-8, stopping_dmdt=1e4, max_steps=1000, save_ndt_steps=1, save_vtk_steps=100):
+    def relax(self, dt=1e-8, stopping_dmdt=1e4, max_steps=1000, save_npy_steps=100, save_vtk_steps=100):
         
         if self.integrator is None:
             self.create_integrator()
@@ -398,6 +426,8 @@ class NEB_Sundials(object):
                   "time_step={} s, max_steps={}.".format(stopping_dmdt, dt, max_steps))
          
         for i in range(max_steps):
+            
+            self.step += 1
             
             cvode_dt = self.integrator.get_current_step()
             
@@ -408,23 +438,126 @@ class NEB_Sundials(object):
 
             dmdt = self.run_until(self.t+increment_dt)
             
-            if i%save_ndt_steps==0:
-                self.compute_distance()
-                self.tablewriter.save()
-                self.tablewriter_dm.save()
+            self.compute_distance()
+            self.tablewriter.save()
+            self.tablewriter_dm.save()
                 
             if i%save_vtk_steps==0:
                 self.save_vtks()
+                
+            if i%save_npy_steps==0:
+                self.save_npys()
+            
             log.debug("step: {:.3g}, step_size: {:.3g} and max_dmdt: {:.3g}.".format(self.step,increment_dt,dmdt))
             
             if dmdt<stopping_dmdt:
                 break
-            self.step+=1
         
         log.info("Relaxation finished at time step = {:.4g}, t = {:.2g}, call rhs = {:.4g} and max_dmdt = {:.3g}".format(self.step, self.t, self.ode_count, dmdt))
         
         self.save_vtks()
         self.save_npys()
+        
+    def __adjust_coords_once(self):
+        
+        self.compute_effective_field(self.coords)
+        self.compute_distance()
+        
+        average_dm = np.mean(self.distances)
+        energy_barrier = np.max(self.energy) - np.min(self.energy)
+        
+        dm_threshold = average_dm/5.0
+        energy_threshold = energy_barrier/5.0
+        to_be_remove_id = -1
+        for i in range(self.image_num):
+            e1 = self.energy[i+1] - self.energy[i]
+            e2 = self.energy[i+2] - self.energy[i+1]
+            if self.distances[i]< dm_threshold and \
+                self.distances[i+1]< dm_threshold and e1*e2>0 \
+                and abs(e1)<energy_threshold and abs(e2)<energy_threshold:
+                to_be_remove_id = i+1
+                break
+            
+        if to_be_remove_id < 0:
+            return -1
+        
+        
+        self.coords.shape = (self.total_image_num, -1)
+        
+        coords_list = []
+        for i in range(self.total_image_num):
+            coords_list.append(self.coords[i].copy())
+
+        energy_diff = []
+        for i in range(self.total_image_num-1):
+            de = abs(self.energy[i]-self.energy[i+1])
+            energy_diff.append(de)
+        
+        #if there is a saddle point, increase the weight 
+        #of the energy difference
+        factor1 = 2.0
+        for i in range(1,self.total_image_num-1):
+            de1 = self.energy[i]-self.energy[i-1]
+            de2 = self.energy[i+1]-self.energy[i]
+            if de1*de2<0:
+                energy_diff[i-1] *= factor1
+                energy_diff[i] *= factor1
+        
+        factor2 = 2.0
+        for i in range(2, self.total_image_num-2):
+            de1 = self.energy[i-1]-self.energy[i-2]
+            de2 = self.energy[i]-self.energy[i-1]
+            de3 = self.energy[i+1]-self.energy[i]
+            de4 = self.energy[i+2]-self.energy[i+1]
+            if de1*de2>0 and de3*de4>0 and de2*de3<0:
+                energy_diff[i-1] *= factor2
+                energy_diff[i] *= factor2
+
+        max_i = np.argmax(energy_diff)
+        theta_phi = linear_interpolation(coords_list[max_i], coords_list[max_i+1])
+
+        if to_be_remove_id < max_i:
+            coords_list.insert(max_i+1, theta_phi)
+            coords_list.pop(to_be_remove_id)
+        else:
+            coords_list.pop(to_be_remove_id)
+            coords_list.insert(max_i+1, theta_phi)
+        
+        
+        for i in range(self.total_image_num):
+            m = coords_list[i]
+            self.coords[i,:] = m[:]
+            
+        #print to_be_remove_id, max_i
+    
+        self.coords.shape = (-1, )
+        
+        return 0
+        
+    def adjust_coordinates(self):
+        """
+        Adjust the coordinates automatically. 
+        """
+        
+        for i in range(self.total_image_num/2):
+            if self.__adjust_coords_once()<0:
+                break
+            
+        """
+        self.compute_effective_field(self.coords)
+        self.compute_distance()
+        self.tablewriter.save()
+        self.tablewriter_dm.save()
+        
+        self.step += 1
+        self.tablewriter.save()
+        self.tablewriter_dm.save()
+        """
+        
+        log.info("Adjust the coordinates at step = {:.4g}, t = {:.6g},".format(self.step, self.t))
+        
+        
+        
 
 
 def plot_energy_3d(ndt_name, key_steps=50, filename=None):
