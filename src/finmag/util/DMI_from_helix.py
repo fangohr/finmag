@@ -37,7 +37,7 @@ def Find_Helix_Length(D, A, Ms, H=[0, 0, 0], K1=0, KAxis=[0, 0, 0],
     meshX = 1000  # Length of mesh (nm). Would prefer this to be an even
                   # number for the preceeding calculation.
     meshXHalf = meshX / 2
-    meshN = 2000  # Number of points in the desired mesh. Increasing this
+    meshN = 1000  # Number of points in the desired mesh. Increasing this
                   # improves the accuracy of the output, but also increases the
                   # execution time. TODO: Optional parameter? <!>
     mesh = df.IntervalMesh(meshN - 1, -meshXHalf, meshXHalf)
@@ -305,31 +305,20 @@ def Find_DMI(A, Ms, l, H=[0, 0, 0], K1=0, KAxis=[0, 0, 0], D0=None, tol=1e-6,
 if __name__ == "__main__":
 
     #Example material properties that work. This is expected to print
-    #d = 2.02e-4 and l = 22e-9.
+    #d = 2.21e-4 and l = 2.50e-8, though the process is somewhat stochastic due
+    #to the random initialisation of the magnetisation each iteration.
 
-    # A = 3.53e-13                          # Isotropic exchange energy constant
-    #                                       # (J/m)
-    # Ms = 1.56e5                           # Magnetisation Saturaton (A/m)
-    # l = 22e-9                             # Observed helix length (m)
-    # H = np.array([1., 0., 0.]) * Ms * 0.  # External magnetic field strength
-    #                                       # (A/m)
-    # D0 = 4 * np.pi * A / l                # Dzyaloshinkii-Moriya exchange
-    #                                       # energy constant (J/m^2)
+    A = 3.53e-13                          # Isotropic exchange energy constant
+                                          # (J/m)
+    Ms = 1.56e5                           # Magnetisation Saturaton (A/m)
+    l = 22e-9                             # Observed helix length (m)
+    H = np.array([1., 0., 0.]) * Ms * 0.  # External magnetic field strength
+                                          # (A/m)
+    D0 = 4 * np.pi * A / l                # Dzyaloshinkii-Moriya exchange
+                                          # energy constant (J/m^2)
 
-    #Material properties from the Leeds group.
-    #A = 9.74e-14                   # Isotropic exchange energy constant (J/m)
-    Ms = 9.5e4                     # Magnetisation Saturation (A/m)
-    #l = 11e-9                      # Observed helix length (m)
-    K1 = -3e4                      # Anisotropy strength (J/m^3)
-    KAxis = [0, 0, 1]              # Anisotropy axis (unitless)
-
-    A = 9.9e-14
-    l = 9.3e-9
-
-    dFound = Find_DMI(A, Ms, l, K1=K1, KAxis=KAxis, verbose=True)
+    dFound = Find_DMI(A, Ms, l, H=H, D0=D0, verbose=True)
     print("DMI given Helix length: {:.2e} J/m^2.".format(dFound))
 
-    lFound = Find_Helix_Length(dFound, A, Ms, K1=K1, KAxis=KAxis, plot=True)
+    lFound = Find_Helix_Length(D0, A, Ms, H=H)
     print("Helix length given DMI: {:.2e} m.".format(lFound))
-
-#N=3000, D=1.30e-4, L=9.26e-9
