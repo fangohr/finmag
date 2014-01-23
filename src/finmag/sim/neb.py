@@ -618,9 +618,10 @@ if __name__ == '__main__':
     sim = finmag.example.barmini()
     
     init_images=[(0,0,-1),(1,1,0),(0,0,1)]
-    interpolations = [5,4]
+    interpolations = [15,14]
     
-    neb = NEB(sim, init_images, interpolations)
+    neb = NEB_Sundials(sim, init_images, interpolations)
     
-    neb.relax()
+    neb.relax(stopping_dmdt=1e2)
+    plot_energy_3d('unnamed_energy.ndt')
     
