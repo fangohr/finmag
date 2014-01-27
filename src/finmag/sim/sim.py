@@ -520,7 +520,7 @@ class Simulation(object):
                 res = interaction.compute_energy()
             except ValueError:
                 log.warning("No interaction of type '{}' found in simulation. "
-                            "Returning zero for the corresponding energy.")
+                            "Returning zero for the corresponding energy.".format(name))
                 res = 0.0
         return res
 
