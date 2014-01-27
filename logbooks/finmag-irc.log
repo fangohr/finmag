@@ -6887,3 +6887,17 @@ DokosBot [~DokosBot@uos-app00297-vs.soton.ac.uk] entered the room.
 2013-12-20 09:43:18 fangohr-adium: The license is created using some of the files in that repository. The basic workflow is that: The user (who needs the license) needs to be given the 'gather_info.py' script to run. This produces some output that they should return. With this output, we can use the 'make_license.py' script to create the license file for them, which we then need to return. I guess we should write this up properly, and add to the finmag-dist repository.
 2013-12-20 13:26:33 mb8g11_: Thanks.
 2013-12-20 17:11:51 fangohr-adium: Bye Marvin, I intend not to come back to the office before 6 Jan. Merry Christmas to all robots and people on here.
+2014-01-27 15:42:37 mb8g11: Hi Marijan. Just pushed the damping example https://bitbucket.org/fangohr/finmag/commits/d555531239ca507b1f7649ef20a1280edf0bc1f3
+2014-01-27 15:43:07 mb4e10: Thanks
+2014-01-27 15:43:25 mb8g11: You will have to adapt the expression in line 22-24 to work with the radius instead of the x-position if you use a disk.
+2014-01-27 15:46:40 mb8g11: Something like sqrt(pow(x[0], 2), pow(x[1], 2)) >= cutoff_radius
+2014-01-27 15:47:29 mb8g11: I can walk you through the code if you need me to.
+2014-01-27 15:48:10 mb4e10: Thanks, I will try myself and ask you what I do not understand.
+2014-01-27 15:49:34 mb8g11: Cool.
+2014-01-27 15:51:26 fangohr-adium: Greetings :). Hi Marijan, Max, Marc-Antonio, Marvin. Beckie? Mark?
+2014-01-27 15:51:48 max_albert: I guess they can't hear you if they are offline. ;-)
+2014-01-27 15:52:48 fangohr-adium: Good point. Can you show them my message then? ;-)
+2014-01-27 15:53:11 max_albert: Marc-Antonio is just prodding them. :)
+2014-01-27 16:23:24 fangohr-adium: Nice.
+2014-01-27 16:23:27 fangohr-adium: Hi Beckie.
+2014-01-27 16:36:59 Beckie: Hello!
