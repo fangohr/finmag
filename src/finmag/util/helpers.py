@@ -1791,7 +1791,9 @@ def line_mesh(vertices):
     either represent a 1D interval, a line/curve in a 2D plane, or
     even a line/curve in 3D space.
 
-    Examples:
+    *Examples*
+
+    .. code-block:: python
 
         # 1D interval with 5 sub-intervals and 6 nodes
         line_mesh([0.0, 0.1, 0.3, 0.4, 0.8, 1.0])
