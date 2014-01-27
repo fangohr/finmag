@@ -2,10 +2,7 @@
 
 This file contains three functions that use finmag simulations on a 1D mesh
 to obtain certain material characteristics. It also contains an example
-showing usage of two of the functions. These function "declarations" are:
-
-Find_Helix_Length( d, a, ms, h, tol=1e-9 )
-Find_DMI( a, ms, l, h, d0=None, tol=1e-6 )
+showing usage of two of the functions.
 
 """
 
@@ -13,23 +10,35 @@ import dolfin as df
 import finmag
 
 import numpy as np
-import pylab
+import matplotlib.pyplot as plt
 import scipy.optimize
 
 
 def Find_Helix_Length(D, A, Ms, H=[0, 0, 0], K1=0, KAxis=[0, 0, 0],
-                      plot=False):
+                      plot=False, plotFactor=0.1, plotFileOut="Helix_Length",
+                      pvPath=None):
     """Function that takes some material parameters and returns the
     estimated helix length.
 
     @parameters
-    A     : Isotropic exchange energy constant (J/m)
-    D     : Dzyaloshinskii-Moriya exchange energy constant (J/m^2)
-    Ms    : Saturation magnetisation (A/m)
-    H     : External magnetic field strength (a three-dimensional array) (A/m)
-    K1    : Eazy-axis anisotropy strength (negative yields hard axis) (J/m^3)
-    KAxis : Uniaxial anisotropy axis (a three-dimensional array) (Unitless)
-    plot  : Boolean to decide whether or not a plot should be displayed.
+    A           : Isotropic exchange energy constant
+                  (J/m)
+    D           : Dzyaloshinskii-Moriya exchange energy constant
+                  (J/m^2)
+    Ms          : Saturation magnetisation
+                  (A/m)
+    H           : External magnetic field strength (a three-dimensional array)
+                  (A/m)
+    K1          : Eazy-axis anisotropy strength (negative yields hard axis)
+                  (J/m^3)
+    KAxis       : Uniaxial anisotropy axis (a three-dimensional array)
+                  (Unitless)
+    plot        : Boolean to decide whether or not a plot should be displayed.
+    plotFactor  : Float showing what fraction of the dataset to show in the
+                  plot.
+    plotFileOut : String denoting filepath to write plots to.
+    pvPath      : String denoting the path to save paraview files of the
+                  magnetisation to.
     """
 
     #Make a mesh, with lengths measured in unitLength.
@@ -37,7 +46,7 @@ def Find_Helix_Length(D, A, Ms, H=[0, 0, 0], K1=0, KAxis=[0, 0, 0],
     meshX = 1000  # Length of mesh (nm). Would prefer this to be an even
                   # number for the preceeding calculation.
     meshXHalf = meshX / 2
-    meshN = 1000  # Number of points in the desired mesh. Increasing this
+    meshN = 3000  # Number of points in the desired mesh. Increasing this
                   # improves the accuracy of the output, but also increases the
                   # execution time. TODO: Optional parameter? <!>
     mesh = df.IntervalMesh(meshN - 1, -meshXHalf, meshXHalf)
@@ -79,7 +88,11 @@ def Find_Helix_Length(D, A, Ms, H=[0, 0, 0], K1=0, KAxis=[0, 0, 0],
     sim.set_m(m_rand)
 
     #Run the simulation.
-    tEnd = 5e-9  # Time the simulation will take (s)
+    if pvPath is not None:
+        sim.schedule('save_vtk', at_end=True, overwrite=True,
+                     filename=pvPath)
+
+    tEnd = 1e-8  # Time the simulation will take (s)
     sim.run_until(tEnd)
 
     #Extract the magnetisation vectors of the relaxed mesh.
@@ -97,29 +110,50 @@ def Find_Helix_Length(D, A, Ms, H=[0, 0, 0], K1=0, KAxis=[0, 0, 0],
     #helix in the direction of the external field. If the ferromagnetic state
     #has been encountered, an exception should be raised.
     ferromagnetic = True
-    for zI in xs:
-        if abs(zI) < 0.3:
+    for x in xs:
+        if abs(x) < 0.3:
             ferromagnetic = False
             break
-    if ferromagnetic is False:
-        ferromagnetic = True
-        for zI in ys:
-            if abs(zI) < 0.3:
+
+    #Also check to see if all values have the same sign (so that they point in
+    #the same direction.
+    if ferromagnetic is True:
+        for zI in xrange(len(xs) - 1):
+            if xs[zI] * xs[zI + 1] < 0:
                 ferromagnetic = False
                 break
-        if ferromagnetic is False:
-            ferromagnetic = True
-            for zI in zs:
-                if abs(zI) < 0.3:
+
+    #Do the same for Y and Z directions.
+    if ferromagnetic is False:
+        ferromagnetic = True
+        for y in ys:
+            if abs(y) < 0.3:
+                ferromagnetic = False
+                break
+
+        if ferromagnetic is True:
+            for zI in xrange(len(ys) - 1):
+                if ys[zI] * ys[zI + 1] < 0:
                     ferromagnetic = False
                     break
+
+        if ferromagnetic is False:
+            ferromagnetic = True
+            for z in zs:
+                if abs(z) < 0.3:
+                    ferromagnetic = False
+                    break
+
+            if ferromagnetic is True:
+                for zI in xrange(len(zs) - 1):
+                    if zs[zI] * zs[zI + 1] < 0:
+                        ferromagnetic = False
+                        break
 
     if ferromagnetic is True:
         msg = "Ferromagnetic relaxed state encountered. This suggests " + \
             "that the external magnetic field is too strong for these " + \
-            "material parameters (D = {:.2e} J/m^2, A = {:.2e} J/m, Ms" + \
-            " = {:.2e} A/m, h = ({:.2e}, {:.2e}, {:.2e}) A/m.".format(
-            D, A, Ms, H[0], H[1], H[2])
+            "material parameters."
         raise ValueError(msg)
 
     #Find the fourier transform of the two magnetisation vector components.
@@ -143,22 +177,54 @@ def Find_Helix_Length(D, A, Ms, H=[0, 0, 0], K1=0, KAxis=[0, 0, 0],
 
     #Do some plotting.
     if plot is True:
-        meshXs = np.linspace(-meshXHalf, meshXHalf, meshN)
+        meshXs = np.linspace(-meshXHalf * plotFactor, meshXHalf * plotFactor,
+                             meshN * plotFactor)
 
-        pylab.figure(1)
-        pylab.plot(meshXs * unitLength, ys, 'x-')
-        pylab.plot(meshXs * unitLength, zs, 'x-')
-        pylab.xlabel("Distance from centre of mesh (m)")
-        pylab.ylabel("Magnetisation component")
-        pylab.axis("tight")
-        pylab.savefig("DMI_from_helix_magnetization_components.png")
+        ys = ys[len(ys) / 2. - len(ys) * (plotFactor / 2):
+                len(ys) / 2. + len(ys) * (plotFactor / 2)]
+        zs = zs[len(zs) / 2. - len(zs) * (plotFactor / 2):
+                len(zs) / 2. + len(zs) * (plotFactor / 2)]
 
-        pylab.figure(2)
-        pylab.semilogy(fs, ffty, 'x-')
-        pylab.xlabel("Wavenumber (m-1)")
-        pylab.ylabel("Discrete fourier transform of the magnetisation data.")
-        pylab.axis("tight")
-        pylab.savefig("DMI_from_helix_fourier_transform.png")
+        #Plot it and make it look good (subjectively).
+        plt.rc('font', family='serif')
+
+        plt.figure()
+        (fig, ax) = plt.subplots(1)
+
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.xaxis.set_ticks_position('none')
+        ax.yaxis.set_ticks_position('none')
+        ax.spines['left'].set_linewidth(0.5)
+        ax.spines['left'].set_color('#262626')
+        ax.spines['bottom'].set_linewidth(0.5)
+        ax.spines['bottom'].set_color('#262626')
+
+        plt.plot(meshXs * unitLength, ys, 'x-', label="Y")
+        plt.plot(meshXs * unitLength, zs, 'x-', label="Z")
+        plt.xlabel("Distance from centre of mesh $(\mathrm{m})$")
+        plt.ylabel("Magnetisation component")
+        plt.axis("tight")
+        plt.legend(loc=1)
+        plt.savefig(plotFileOut + "_magnetization_components.png".format(K1))
+
+        plt.figure()
+        (fig, ax) = plt.subplots(1)
+
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.xaxis.set_ticks_position('none')
+        ax.yaxis.set_ticks_position('none')
+        ax.spines['left'].set_linewidth(0.5)
+        ax.spines['left'].set_color('#262626')
+        ax.spines['bottom'].set_linewidth(0.5)
+        ax.spines['bottom'].set_color('#262626')
+
+        plt.semilogy(fs, ffty, 'x-')
+        plt.xlabel("Wavenumber $(\mathrm{m}^{-1})$")
+        plt.ylabel("Discrete fourier transform of the magnetisation data.")
+        plt.axis("tight")
+        plt.savefig(plotFileOut + "_fourier_transform.png")
 
     #Calculate the wavenumber that matches the waveform, as well as the helix
     # length (analogous to the period).
