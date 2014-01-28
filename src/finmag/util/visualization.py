@@ -284,8 +284,6 @@ def plot_dolfin_function(f, **kwargs):
     # Check that f represents a 3D vector field defined on a 3D mesh.
     if not f.element().value_shape() == (3,):
         raise TypeError("The function to be plotted must represent a 3D vector field.")
-    if not (f.domain().topological_dimension() == 3 and f.domain().geometric_dimension() == 3):
-        raise TypeError("The function to be plotted must be defined on a 3D mesh.")
 
     f.rename('f', 'f')
     tmpdir = tempfile.mkdtemp()
