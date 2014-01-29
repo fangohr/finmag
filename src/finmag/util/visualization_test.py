@@ -1,5 +1,6 @@
 import finmag
 import pytest
+import textwrap
 import subprocess
 import os
 import sys
@@ -7,7 +8,7 @@ import numpy as np
 import dolfin as df
 from glob import glob
 from finmag.util.visualization import *
-from finmag.util.visualization_impl import find_unused_X_display
+from finmag.util.visualization_impl import *
 
 # Skipping this test for now because it still doesn't work on aleph0
 # (although it works on my machine) -- Max, 7.6.2013
@@ -137,3 +138,32 @@ def test_plot_dolfin_function(tmpdir):
     # Try 2-dimensional mesh as well
     plot_dolfin_function(v2, outfile='plot_2d_mesh.png')
     assert(os.path.exists('plot_2d_mesh.png'))
+
+
+def test_write_file_on_host(tmpdir):
+    tmpdir = str(tmpdir)
+
+    script_string = textwrap.dedent("""
+        print "Foobar. Hello world!"
+        """)
+
+    # XXX TODO: we only test this for localhost for now
+    for hostname in [None, 'localhost']:
+        tmpfilename = os.path.join(tmpdir, 'dummy.py')
+        write_file_on_host(None, tmpfilename, script_string)
+        assert(os.path.exists(tmpfilename))
+
+        stdout, stderr = run_command_on_host(hostname, 'python', tmpfilename)
+        assert(stdout == 'Foobar. Hello world!\n')
+        assert(stderr == '')
+
+
+def test_create_and_remove_tmpdir_on_host(tmpdir):
+    tmpdir = str(tmpdir)
+
+    # XXX TODO: we only test this for localhost for now
+    for hostname in [None, 'localhost']:
+        tmpdir = create_tmpdir_on_host(hostname)
+        assert(os.path.exists(tmpdir))  # TODO: change this check to work on arbitray hosts
+        remove_tmpdir_on_host(hostname, tmpdir)
+        assert(not os.path.exists(tmpdir))  # TODO: change this check to work on arbitray hosts
