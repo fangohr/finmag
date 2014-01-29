@@ -101,8 +101,8 @@ def get_debian_package_version(pkg_name):
     the version number.
 
     If the package is installed, returns a string with the version
-    number, otherwise returns None. Raises NotImplementedError if
-    the version cannot be determined due to an unsupported system.
+    number, otherwise returns None. Warns if the version cannot be
+    determined due to an unsupported system.
     """
     import subprocess
     import re
