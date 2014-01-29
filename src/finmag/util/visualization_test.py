@@ -111,7 +111,7 @@ def test_flight_path_straight_line():
         assert(np.allclose(f(t), pt_expected))
 
 
-@pytest.mark.xfail
+@pytest.mark.skipif("True")
 def test_plot_dolfin_function(tmpdir):
     os.chdir(str(tmpdir))
     interval_mesh = df.UnitIntervalMesh(2)
@@ -126,14 +126,14 @@ def test_plot_dolfin_function(tmpdir):
     v2 = df.Function(V2)
     v3 = df.Function(V3); v3.vector()[:] = 1.0
 
-    # Wrong mesh dimension
-    with pytest.raises(TypeError):
-        plot_dolfin_function(v2, outfile='buggy.png')
-
     # Wrong function space dimension
     with pytest.raises(TypeError):
-        plot_dolfin_function(v2, outfile='buggy.png')
+        plot_dolfin_function(s, outfile='buggy.png')
 
     # Plotting a 3D function on a 3D mesh should work
     plot_dolfin_function(v3, outfile='plot.png')
     assert(os.path.exists('plot.png'))
+
+    # Try 2-dimensional mesh as well
+    plot_dolfin_function(v2, outfile='plot_2d_mesh.png')
+    assert(os.path.exists('plot_2d_mesh.png'))
