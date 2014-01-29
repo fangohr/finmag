@@ -36,27 +36,32 @@ def timings_report(n=10):
     return default_timer.report(n)
 
 
-logger.debug("%20s: %s" % ("Finmag", __version__))
+logger.debug("{:15} {:<20}".format("FinMag", __version__))
 display_module_versions = configuration.get_config_option("logging", "display_module_versions_at_startup", "True")
 if display_module_versions == "True":
-    logger.debug("%20s: %s" % ("Dolfin", util.versions.get_version_dolfin()))
-    logger.debug("%20s: %s" % ("Matplotlib", util.versions.get_version_matplotlib()))
-    logger.debug("%20s: %s" % ("Numpy", util.versions.get_version_numpy()))
-    logger.debug("%20s: %s" % ("Scipy", util.versions.get_version_scipy()))
-    logger.debug("%20s: %s" % ("IPython", util.versions.get_version_ipython()))
-    logger.debug("%20s: %s" % ("Python", util.versions.get_version_python()))
-    logger.debug("%20s: %s" % ("Paraview", util.versions.get_version_paraview()))
+    double_column = "{:<15} {:<15} {:<15} {:15}"
+    logger.debug(double_column.format(
+        "Dolfin", util.versions.get_version_dolfin(),
+        "Matplotlib", util.versions.get_version_matplotlib()))
+    logger.debug(double_column.format(
+        "Numpy", util.versions.get_version_numpy(),
+        "Scipy", util.versions.get_version_scipy()))
+    logger.debug(double_column.format(
+        "IPython", util.versions.get_version_ipython(),
+        "Python", util.versions.get_version_python()))
     try:
         sundials_version = util.versions.get_version_sundials()
     except NotImplementedError:
-        sundials_version = '<cannot determine version>'
-    logger.debug("%20s: %s" % ("Sundials", sundials_version))
+        sundials_version = '<unknown>'
+    logger.debug(double_column.format(
+        "Paraview", util.versions.get_version_paraview(),
+        "Sundials", sundials_version))
     try:
         boost_version = util.versions.get_version_boostpython()
     except NotImplementedError:
-        boost_version = '<cannot determine version>'
-    logger.debug("%20s: %s" % ("Boost-Python", boost_version))
-    logger.debug("%20s: %s" % ("Linux", util.versions.get_linux_issue()))
+        boost_version = '<unknown>'
+    logger.debug(double_column.format(
+        "Boost-Python", boost_version, "Linux", util.versions.get_linux_issue()))
 
 
 if util.versions.running_binary_distribution():
