@@ -46,7 +46,7 @@ def Find_Helix_Length(D, A, Ms, H=[0, 0, 0], K1=0, KAxis=[0, 0, 0],
     meshX = 1000  # Length of mesh (nm). Would prefer this to be an even
                   # number for the preceeding calculation.
     meshXHalf = meshX / 2
-    meshN = 3000  # Number of points in the desired mesh. Increasing this
+    meshN = 1000  # Number of points in the desired mesh. Increasing this
                   # improves the accuracy of the output, but also increases the
                   # execution time. TODO: Optional parameter? <!>
     mesh = df.IntervalMesh(meshN - 1, -meshXHalf, meshXHalf)
