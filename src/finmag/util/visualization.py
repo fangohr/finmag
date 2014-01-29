@@ -10,7 +10,9 @@ import os
 import re
 import dolfin as df
 import IPython.core.display
-from visualization_impl import _axes, find_unused_X_display
+from glob import glob
+from visualization_impl import *
+from visualization_impl import _axes
 from math import sin, cos, pi
 
 logger = logging.getLogger("finmag")
@@ -132,7 +134,8 @@ def render_paraview_scene(
     rescale=None,
     diffuse_color=None,
     debug=False,
-    use_display=None):
+    use_display=None,
+    hostname=None):
 
     # Convert color_by_axis to integer and store the name separately
     try:
@@ -164,8 +167,14 @@ def render_paraview_scene(
     # contain a call to the function in 'visualization_impl.py' which
     # has all the parameter values filled in correctly.
     #
-    tmpdir = tempfile.mkdtemp()
+    tmpdir = create_tmpdir_on_host(hostname)
     scriptfile = os.path.join(tmpdir, 'render_scene.py')
+    pvd_basename = os.path.basename(pvd_file)
+    tmp_pvdfile = os.path.join(tmpdir, pvd_basename)
+    tmp_outfile = os.path.join(tmpdir, 'tmp_outfile' + os.path.splitext(outfile)[1])
+    copy_file_to_host(None, pvd_file, hostname, tmpdir)
+    for vtu_file in glob(os.path.splitext(pvd_file)[0] + '*.vtu'):
+        copy_file_to_host(None, vtu_file, hostname, tmpdir)
     script_string = textwrap.dedent("""
               from visualization_impl import render_paraview_scene, find_valid_X_display
               from subprocess import Popen
@@ -190,7 +199,7 @@ def render_paraview_scene(
                   {}, '{}', '{}', {},
                   {}, {}, {})
               """.format(
-            pvd_file, outfile, repr(field_name), re.sub('\n', '', repr(timesteps)),
+            tmp_pvdfile, tmp_outfile, repr(field_name), re.sub('\n', '', repr(timesteps)),
             camera_position, camera_focal_point, camera_view_up,
             view_size, magnification, fit_view_to_scene, color_by_axis,
             colormap, rescale_colormap_to_data_range, show_colorbar,
@@ -199,9 +208,9 @@ def render_paraview_scene(
             glyph_max_number_of_points, show_orientation_axes,
             show_center_axes, representation, palette, use_parallel_projection,
             trim_border, rescale, diffuse_color))
-    with open(scriptfile, 'w') as f:
-        f.write(script_string)
-    shutil.copy(os.path.join(os.path.dirname(__file__), './visualization_impl.py'), tmpdir)
+    write_file_on_host(hostname, scriptfile, script_string)
+    copy_file_to_host(None, os.path.join(os.path.dirname(__file__), './visualization_impl.py'),
+                      hostname, tmpdir)
 
     # Execute the script in a separate process
     curdir_bak = os.getcwd()
@@ -212,15 +221,15 @@ def render_paraview_scene(
     except KeyError:
         display_bak = None
     try:
-        os.chdir(tmpdir)
+        #os.chdir(tmpdir)
 
         if use_display is None and use_xpra.lower() != "false":
             # Try to create a display using 'xpra'
             try:
                 # Check whether 'xpra' is installed
-                sh.xpra('--version')
-                xpra_display = find_unused_X_display(xrange(1, 100))
-                sh.xpra('start', ':{}'.format(xpra_display))
+                run_command_on_host(hostname, 'xpra', '--version')
+                xpra_display = find_unused_X_display(xrange(1, 100), hostname=hostname)
+                run_command_on_host(hostname, 'xpra', 'start', ':{}'.format(xpra_display))
                 use_display = xpra_display
                 logger.debug("Rendering Paraview scene on display :{} using xpra.".format(xpra_display))
             except sh.CommandNotFound:
@@ -234,7 +243,8 @@ def render_paraview_scene(
         if use_display is not None:
             os.environ['DISPLAY'] = ':{}'.format(use_display)
 
-        sh.python('render_scene.py')
+        run_command_on_host(hostname, 'python', scriptfile)
+        copy_file_to_host(hostname, tmp_outfile, None, outfile)
     except sh.ErrorReturnCode as ex:
         logger.error("Could not render Paraview scene. The error message was: {}".format(ex.message))
         #raise
@@ -244,14 +254,15 @@ def render_paraview_scene(
                          "can try to run 'render_script.py' manually "
                          "there.".format(tmpdir))
         else:
-            shutil.rmtree(tmpdir)
+            #shutil.rmtree(tmpdir)
+            remove_tmpdir_on_host(hostname, tmpdir)
         os.chdir(curdir_bak)  # change back into the original directory
 
         if xpra_display is not None:
             # XXX TODO: It may be nice to keep the xpra display open
             #           until Finmag exits, because we are likely to
             #           render more than one snapshot.
-            sh.xpra('stop', ':{}'.format(xpra_display))
+            run_command_on_host(hostname, 'xpra', 'stop', ':{}'.format(xpra_display))
 
         if display_bak is not None:
             os.environ['DISPLAY'] = display_bak
