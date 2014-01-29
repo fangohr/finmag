@@ -1,5 +1,5 @@
 from __future__ import division
-import subprocess as sp
+import sh
 import numpy as np
 import textwrap
 import logging
@@ -218,12 +218,12 @@ def render_paraview_scene(
             # Try to create a display using 'xpra'
             try:
                 # Check whether 'xpra' is installed
-                sp.check_call(['xpra', '--version'])
+                sh.xpra('--version')
                 xpra_display = find_unused_X_display(xrange(1, 100))
-                sp.check_call(['xpra', 'start', ':{}'.format(xpra_display)])
+                sh.xpra('start', ':{}'.format(xpra_display))
                 use_display = xpra_display
                 logger.debug("Rendering Paraview scene on display :{} using xpra.".format(xpra_display))
-            except OSError:
+            except sh.CommandNotFound:
                 logger.warning(
                     "Could not find the 'xpra' executable. You may want to "
                     "install it to avoid annoying pop-up windows from "
@@ -234,9 +234,9 @@ def render_paraview_scene(
         if use_display is not None:
             os.environ['DISPLAY'] = ':{}'.format(use_display)
 
-        sp.check_output(['python', 'render_scene.py'], stderr=sp.STDOUT)
-    except sp.CalledProcessError as ex:
-        logger.error("Could not render Paraview scene. The error message was: {}".format(ex.output))
+        sh.python('render_scene.py')
+    except sh.ErrorReturnCode as ex:
+        logger.error("Could not render Paraview scene. The error message was: {}".format(ex.message))
         #raise
     finally:
         if debug == True:
@@ -251,7 +251,7 @@ def render_paraview_scene(
             # XXX TODO: It may be nice to keep the xpra display open
             #           until Finmag exits, because we are likely to
             #           render more than one snapshot.
-            sp.check_call(['xpra', 'stop', ':{}'.format(xpra_display)])
+            sh.xpra('stop', ':{}'.format(xpra_display))
 
         if display_bak is not None:
             os.environ['DISPLAY'] = display_bak
