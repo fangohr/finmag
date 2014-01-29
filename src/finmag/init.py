@@ -39,7 +39,7 @@ def timings_report(n=10):
 logger.debug("{:15} {:<20}".format("FinMag", __version__))
 display_module_versions = configuration.get_config_option("logging", "display_module_versions_at_startup", "True")
 if display_module_versions == "True":
-    double_column = "{:<15} {:<15} {:<15} {:15}"
+    double_column = "{:<15} {:<20} {:<15} {:20}"
     logger.debug(double_column.format(
         "Dolfin", util.versions.get_version_dolfin(),
         "Matplotlib", util.versions.get_version_matplotlib()))
