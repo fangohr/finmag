@@ -13,12 +13,16 @@ set -o errexit
 TCLTKVERSION=${TCLTKVERSION:-8.6}  # use 8.6 as the default value if TCLTKVERSION wasn't already set by the user
 echo "Using TCLTKVERSION=${TCLTKVERSION}"
 
+# The user can say 'export APT_GET_INSTALL=-y' to avoid apt-get
+# asking for confirmation.
+APT_GET_OPTIONS=${APT_GET_OPTIONS:-}
+
 # Install prerequisites if needed
 PKGS="tk$TCLTKVERSION-dev tcl$TCLTKVERSION-dev"
 for pkg in $PKGS; do
     if ! dpkg -s $pkg > /dev/null 2>&1; then
 	echo "OOMMF needs the package $pkg. Trying to install it..."
-	sudo apt-get install $pkg
+	sudo apt-get ${APT_GET_OPTIONS} install $pkg
     fi
 done
 
