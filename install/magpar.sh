@@ -2,6 +2,8 @@
 
 set -o errexit
 
+ROOTDIR=$(dirname $(readlink -f ${BASH_SOURCE[0]}))
+
 # The user can say 'export APT_GET_INSTALL=-y' to avoid apt-get
 # asking for confirmation.
 APT_GET_OPTIONS=${APT_GET_OPTIONS:-}
@@ -30,8 +32,6 @@ if ! [ -e ${MAGPAR_PREFIX} ]; then
    install -d ${MAGPAR_PREFIX};
    echo "Creating directory $MAGPAR_PREFIX";
 fi
-cp magpar.patch $MAGPAR_PREFIX
-cp magpar_code.patch $MAGPAR_PREFIX
 cd $MAGPAR_PREFIX
 if [ ! -e $source.tar.gz ]
 then
@@ -43,12 +43,9 @@ then
     tar xzvf $source.tar.gz
 fi
 
-mv magpar.patch $source/src
-mv magpar_code.patch $source/src
-
 cd $source/src
-patch -p1 < magpar.patch
-patch -p1 < magpar_code.patch
+patch -p1 < ${ROOTDIR}/magpar.patch
+patch -p1 < ${ROOTDIR}/magpar_code.patch
 
 sed -i -e "s|MAGPAR_HOME = \$(HOME)/magpar-0.9|MAGPAR_HOME = ${MAGPAR_PREFIX}/magpar-0.9|" Makefile.in.defaults
 
