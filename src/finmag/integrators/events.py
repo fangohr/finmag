@@ -294,8 +294,8 @@ class RelaxationEvent(object):
                     self.dmdt_increased_counter_limit))
 
         if self.dmdt_increased_counter >= self.dmdt_increased_counter_limit:
-            log.warning("Stopping time integration after dmdt increased {} times.".format(
-                self.dmdt_increased_counter_limit))
+            log.warning("Stopping time integration after dmdt increased {} times without a decrease in energy "
+                        "(which indicates that something might be wrong).".format(self.dmdt_increased_counter_limit))
             self.state = EV_REQUESTS_STOP_INTEGRATION
 
     def reset(self, time):
