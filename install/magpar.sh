@@ -2,10 +2,14 @@
 
 set -o errexit
 
+# The user can say 'export APT_GET_INSTALL=-y' to avoid apt-get
+# asking for confirmation.
+APT_GET_OPTIONS=${APT_GET_OPTIONS:-}
+
 # Check for required package 'gfortran'
 if ! dpkg -s gfortran > /dev/null 2>&1; then
     echo "Magpar needs the package gfortran. Trying to install it..."
-    sudo apt-get install gfortran
+    sudo apt-get ${APT_GET_OPTIONS} install gfortran
 fi
 
 # The default installation location is $HOME. Set

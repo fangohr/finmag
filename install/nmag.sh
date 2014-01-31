@@ -2,12 +2,16 @@
 
 set -o errexit
 
+# The user can say 'export APT_GET_INSTALL=-y' to avoid apt-get
+# asking for confirmation.
+APT_GET_OPTIONS=${APT_GET_OPTIONS:-}
+
 # Check for required packages
 PKGS="g++ libblas-dev libreadline-dev make m4 gawk zlib1g-dev readline-common liblapack-dev"
 for pkg in $PKGS; do
     if ! dpkg -s $pkg > /dev/null 2>&1; then
 	echo "Nmag needs the package $pkg. Trying to install it..."
-	sudo apt-get install $pkg
+	sudo apt-get ${APT_GET_OPTIONS} install $pkg
     fi
 done
 
