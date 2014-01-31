@@ -10,10 +10,11 @@
 
 set -o errexit
 
-TKTCLVERSION=8.6
+TCLTKVERSION=${TCLTKVERSION:-8.6}  # use 8.6 as the default value if TCLTKVERSION wasn't already set by the user
+echo "Using TCLTKVERSION=${TCLTKVERSION}"
 
 # Install prerequisites if needed
-PKGS="tk$TKTCLVERSION-dev tcl$TKTCLVERSION-dev"
+PKGS="tk$TCLTKVERSION-dev tcl$TCLTKVERSION-dev"
 for pkg in $PKGS; do
     if ! dpkg -s $pkg > /dev/null 2>&1; then
 	echo "OOMMF needs the package $pkg. Trying to install it..."
@@ -52,12 +53,12 @@ cd oommf
 # install oommf
 #OOMMF_TCL_INCLUDE_DIR=/usr/include/tcl8.5/; export OOMMF_TCL_INCLUDE_DIR
 #OOMMF_TK_INCLUDE_DIR=/usr/include/tcl8.5/; export OOMMF_TK_INCLUDE_DIR
-export OOMMF_TCL_CONFIG=/usr/lib/tcl$TKTCLVERSION/tclConfig.sh
-export OOMMF_TK_CONFIG=/usr/lib/tk$TKTCLVERSION/tkConfig.sh
-tclsh$TKTCLVERSION oommf.tcl pimake distclean
-tclsh$TKTCLVERSION oommf.tcl pimake upgrade
-tclsh$TKTCLVERSION oommf.tcl pimake
-tclsh$TKTCLVERSION oommf.tcl +platform
+export OOMMF_TCL_CONFIG=/usr/lib/tcl$TCLTKVERSION/tclConfig.sh
+export OOMMF_TK_CONFIG=/usr/lib/tk$TCLTKVERSION/tkConfig.sh
+tclsh$TCLTKVERSION oommf.tcl pimake distclean
+tclsh$TCLTKVERSION oommf.tcl pimake upgrade
+tclsh$TCLTKVERSION oommf.tcl pimake
+tclsh$TCLTKVERSION oommf.tcl +platform
 
 # create an executable called 'oommf' to call oommf in /usr/local/bin
 oommf_command=$(cat <<EOF
