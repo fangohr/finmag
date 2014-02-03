@@ -83,9 +83,8 @@ if util.versions.running_binary_distribution():
         if util.versions.loose_compare_ubuntu_version(vb,vr):
             logger.warn("Build Linux and host linux versions only agree approximately.")
         else:
-            logger.error("Build Linux = %s" % util.binary.buildlinux)
-            logger.error("Host Linux = %s" % util.versions.get_linux_issue())
-            raise RuntimeError("Build and Host linux must be identical, otherwise sundials may produce wrong results / crash")
+            logger.warn("Build Linux = %s" % util.binary.buildlinux)
+            logger.warn("Host Linux = %s" % util.versions.get_linux_issue())
 
 # create extreme debugging logging level, which has numerical value 5
 logging.EXTREMEDEBUG = 5
