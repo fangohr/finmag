@@ -30,6 +30,7 @@ from math import sin, cos, pi
 
 logger = logging.getLogger(name='finmag')
 
+
 def from_geofile(geofile, save_result=True):
     """
     Using netgen, returns a dolfin mesh object built from the given geofile.
@@ -92,6 +93,7 @@ def from_geofile(geofile, save_result=True):
         os.remove(result_filename)
         logger.debug("Removing file '%s' because mesh is created on the fly." % result_filename)
     return mesh
+
 
 def from_csg(csg, save_result=True, filename="", directory=""):
     """
@@ -156,6 +158,7 @@ def from_csg(csg, save_result=True, filename="", directory=""):
         logger.debug("Removing file '%s' because mesh is created on the fly." % tmp.name)
     return mesh
 
+
 def run_netgen(geofile):
     """
     Runs netgen on the geofile and returns a file in DIFFPACK format.
@@ -217,6 +220,7 @@ def convert_diffpack_to_xml(diffpackfile):
 
     return xmlfile
 
+
 def change_xml_marker_starts_with_zero(xmlfile):
     """
     the xml file also contains mesh_value_collection in dolfin 1.1 (not in dolfin 1.0) and
@@ -276,6 +280,7 @@ def change_xml_marker_starts_with_zero(xmlfile):
 
     f.close()
 
+
 def compress(filename):
     """
     Compress file using gzip.
@@ -289,6 +294,7 @@ def compress(filename):
         print "gzip failed with exit code", status
         sys.exit(4)
     return filename + ".gz"
+
 
 def box(x0, x1, x2, y0, y1, y2, maxh, save_result=True, filename='', directory=''):
     """
@@ -329,6 +335,7 @@ def box(x0, x1, x2, y0, y1, y2, maxh, save_result=True, filename='', directory='
         filename = "box-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}".format(x0, x1, x2, y0, y1, y2, maxh).replace(".", "_")
     return from_csg(csg, save_result=save_result, filename=filename, directory=directory)
 
+
 def sphere(r, maxh, save_result=True, filename='', directory=''):
     """
     Returns a dolfin mesh object describing a sphere with radius `r`
@@ -355,6 +362,7 @@ def sphere(r, maxh, save_result=True, filename='', directory=''):
     if save_result == True and filename == '':
         filename = "sphere-{:g}-{:g}".format(r, maxh).replace(".", "_")
     return from_csg(csg, save_result=save_result, filename=filename, directory=directory)
+
 
 def cylinder(r, h, maxh, save_result=True, filename='', directory=''):
     """
@@ -577,6 +585,7 @@ def elliptic_cylinder(r1, r2, h, maxh, save_result=True, filename='', directory=
         filename = "ellcyl-{:.1f}-{:.1f}-{:.1f}-{:.1f}".format(r1, r2, h, maxh).replace(".", "_")
     return from_csg(csg_string, save_result=save_result, filename=filename, directory=directory)
 
+
 def ellipsoid(r1, r2, r3, maxh, save_result=True, filename='', directory=''):
     """
     Return a dolfin mesh representing an ellipsoid with main axes lengths
@@ -602,6 +611,7 @@ def ellipsoid(r1, r2, r3, maxh, save_result=True, filename='', directory=''):
     if save_result == True and filename == '':
         filename = "ellipsoid-{:.1f}-{:.1f}-{:.1f}-{:.1f}".format(r1, r2, r3, maxh).replace(".", "_")
     return from_csg(csg_string, save_result=save_result, filename=filename, directory=directory)
+
 
 def ring(r1,r2, h, maxh, save_result=True, filename='', directory='',with_middle_plane=False):
     """
@@ -1084,3 +1094,69 @@ def plot_mesh_regions(fun_mesh_regions, regions, colors=None, alphas=None,
         ax.set_zlim3d(min(zs), max(zs))
 
     return ax
+
+
+def line_mesh(vertices):
+    """
+    Construct a mesh representing a (potentially curved) line. The
+    resulting mesh simply consists of an (ordered) list of nodes in
+    which adjacent ones are connected by an edge.
+
+    The geometrical dimension can be arbitrary, i.e. the mesh can
+    either represent a 1D interval, a line/curve in a 2D plane, or
+    even a line/curve in 3D space.
+
+    *Examples*
+
+    .. code-block:: python
+
+        # 1D interval with 5 sub-intervals and 6 nodes
+        line_mesh([0.0, 0.1, 0.3, 0.4, 0.8, 1.0])
+
+        # Line in 2D plane consisting of three points
+        line_mesh([[0.0, 0.0],
+                   [1.0, 2.4],
+                   [3.0, 7.2]])
+
+        # Spiral in 3D space
+        vertices = [(cos(t), sin(t), t) for t in linspace(0, 2*pi, 20)]
+        line_mesh(vertices)
+
+
+    *Arguments*
+
+    vertices:
+
+        List of coordinates (for 1D meshes only) or list of mesh nodes.
+
+
+    *Returns*
+
+    A dolfin.Mesh of topological dimension 1 and geometrical dimension
+    equal to the dimension of the space containing the mesh nodes.
+
+    """
+    n = len(vertices)
+    vertices = np.array(vertices, dtype=float)
+    if vertices.ndim == 1:
+        vertices = vertices[:, np.newaxis]
+    if vertices.ndim != 2:
+        raise ValueError(
+            "Argument 'vertices' must either be a list of mesh coordinates "
+            "(for 1D meshes) or a list of mesh nodes. Got: {}".format(vertices))
+    dim = vertices.shape[-1]
+
+    mesh = df.Mesh()
+    editor = df.MeshEditor()
+    editor.open(mesh, 1, dim)
+    editor.init_vertices(n)
+    editor.init_cells(n-1)
+
+    for i, pt in enumerate(vertices):
+        editor.add_vertex(i, pt)
+
+    for i in xrange(n-1):
+        editor.add_cell(i, np.array([i, i+1], dtype='uintp'))
+
+    editor.close()
+    return mesh
