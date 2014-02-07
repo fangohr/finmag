@@ -17,7 +17,7 @@ from finmag.util.helpers import assert_number_of_files, vector_valued_function, 
 from finmag.util.meshes import nanodisk, plot_mesh_with_paraview, mesh_volume
 from finmag.util.mesh_templates import EllipticalNanodisk, Sphere
 from finmag.sim import sim_helpers
-from finmag.energies import Zeeman, TimeZeeman, Exchange, UniaxialAnisotropy
+from finmag.energies import Zeeman, TimeZeeman, Exchange, UniaxialAnisotropy, DMI
 from finmag.util.fileio import Tablereader
 from finmag.util.ansistrm import ColorizingStreamHandler
 from finmag.util.macrospin import make_analytic_solution
@@ -579,26 +579,27 @@ class TestSimulation(object):
         Ms = 8.6e5
         unit_length = 1e-9
 
-        # Simulation without exchange/anisotropy
+        # Simulations without exchange
         sim1 = Simulation(mesh, Ms, unit_length)
-        print sim1.mesh_info()
+        assert("Simulation object has no exchange" in sim1.mesh_info())
+        sim1.add(UniaxialAnisotropy(K1=520e3, axis=[0, 0, 1]))
+        assert(("Simulation object has no exchange") and not("the Bloch parameter = ") in sim1.mesh_info())
+        sim1.add(DMI(D=1.0e-3))
+        assert("Simulation object has no exchange" and not("the Helical period = ") in sim1.mesh_info())
 
-        # Simulation with exchange but without anisotropy
+        # Simulations with exchange
         sim2 = Simulation(mesh, Ms, unit_length)
         sim2.add(Exchange(A=13e-12))
-        print sim2.mesh_info()
+        assert("the Exchange length =" in sim2.mesh_info())
+        sim2.add(UniaxialAnisotropy(K1=520e3, axis=[0, 0, 1]))
+        assert(("the Exchange length =") and ("the Bloch parameter = ") in sim2.mesh_info())
 
-        # Simulation with anisotropy but without exchange
         sim3 = Simulation(mesh, Ms, unit_length)
+        sim3.add(Exchange(A=13e-12))
+        sim3.add(DMI(D=1.0e-3))
+        assert(("the Exchange length =") and ("the Helical period = ") in sim3.mesh_info())
         sim3.add(UniaxialAnisotropy(K1=520e3, axis=[0, 0, 1]))
-        print sim3.mesh_info()
-
-        # Simulation with both exchange and anisotropy
-        sim4 = Simulation(mesh, Ms, unit_length)
-        sim4.add(Exchange(A=13e-12))
-        sim4.add(UniaxialAnisotropy(K1=520e3, axis=[0, 0, 1]))
-        pytest.xfail("print sim4.mesh_info()")
-
+        assert(("the Exchange length =") and ("the Helical period = ") and ("the Bloch parameter = ") in sim3.mesh_info())
 
     def test_save_field(self, tmpdir):
         os.chdir(str(tmpdir))
