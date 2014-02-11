@@ -37,8 +37,10 @@ def demag_2d():
     demag.setup(S3, m, Ms)
     print demag.compute_field()
     
-    demag.short_m.vector().set_local(demag.compute_field())
-    df.plot(demag.short_m)
+    f0= demag.compute_field()
+    m.vector().set_local(f0)
+    df.plot(m)
+
     print demag.m(0,0,0)
     print demag.m(1.0,0,0)
     print demag.m(0,1.0,0)
