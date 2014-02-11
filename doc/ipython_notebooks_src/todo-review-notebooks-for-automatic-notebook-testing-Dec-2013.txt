@@ -42,7 +42,8 @@
 - [ ] tutorial-example2.ipynb
 - [X] tutorial-finding-dmi-from-helix-length.ipynb
       Done, 16 January 2014, Max
-- [ ] tutorial_fourier_transform.ipynb
+- [X] tutorial_fourier_transform.ipynb
+      Done, 10 February 2014, Hans
 - [X] tutorial_mesh_templates.ipynb
       Done, 16 January 2014, Max
 - [ ] tutorial-NormalModeSimulation.ipynb
