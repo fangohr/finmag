@@ -7,6 +7,61 @@ import numpy as np
 
 log = logging.getLogger("finmag")
 
+def initialise_skyrmion_centre_2D(sim, skyrmionRadius):
+    """
+    Initialise the magnetisation to a pattern resembling a skyrmion in the
+    centre of the mesh which should be relaxed to obtain the most natural
+    skyrmion possible.
+
+    *Assumptions*: It is assumed that the mesh is a 2D mesh. If it is not, the
+                   skyrmion will be projected in higher dimensions.
+
+    *Arguments*:
+
+    skyrmionRadius
+        The radius of the skyrmion in mesh co-ordinates
+
+    This function returns nothing.
+    """
+
+    # Build the function
+    def m_skyrmion(pos):
+        """This function returns a vector corresponding to a skyrmion at the
+        origin."""
+
+        # Convert position vector into cylindrical form; "r" being the distance
+        # of the point from the origin and "t" being the argument.
+        r = pow(pow(pos[0], 2) + pow(pos[1], 2), 0.5)
+
+        if abs(pos[0]) < 1e-6:
+            if abs(pos[1]) < 1e-6:
+                t = 0
+            elif pos[1] > 0:
+                t = np.pi / 2.
+            else:
+                t = -np.pi / 2.
+        else:
+            t = np.arctan2(pos[1], pos[0])
+
+        # Define vector components outside of the skyrmion:
+        if r >= skyrmionRadius:
+            mz = 1
+            mt = 0
+
+        # Define vector components inside the skyrmion:
+        else:
+            mz = -np.cos(np.pi * r / skyrmionRadius)
+            mt = np.sin(np.pi * r / skyrmionRadius)
+
+        # Convert to cartesian form and normalize.
+        mx = -np.sin(t) * mt
+        my = np.cos(t) * mt
+        out = np.array([mx, my, mz], dtype="float64")
+        return out / np.linalg.norm(out)
+
+    # Use the above function to initialise the magnetisation.
+    sim.set_m(m_skyrmion)
+
 
 def initialise_skyrmion_hexlattice_2D(sim, meshX, meshY, tileScaleX=1,
                                       skyrmionRadiusScale=0.2):
