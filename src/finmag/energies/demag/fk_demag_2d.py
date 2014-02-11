@@ -65,17 +65,20 @@ class Demag2D(FKDemag):
         vert_to_dof3 = df.vertex_to_dof_map(V3)
         dof_to_vert3 = df.dof_to_vertex_map(V3)
 
-        map_2d_to_3d = np.zeros(S3.dim(), dtype=np.int32)
+        map_2d_to_3d = np.zeros(V3.dim(), dtype=np.int32)
 
-        for i in range(S3.dim()):
+        n2d  = S3.dim()
+        for i in range(n2d):
             map_2d_to_3d[i] = vert_to_dof3[dof_to_vert2[i]]
+            map_2d_to_3d[i+n2d] = vert_to_dof3[dof_to_vert2[i]+n2d]
 
         self.map_2d_to_3d = map_2d_to_3d
         #print map_2d_to_3d
 
+        n3d = V3.dim()
         map_3d_to_2d = np.zeros(V3.dim(), dtype=np.int32)
         for i in range(V3.dim()):
-            map_3d_to_2d[i] =  vert_to_dof2[dof_to_vert3[i]%S3.dim()]
+            map_3d_to_2d[i] =  vert_to_dof2[dof_to_vert3[i]%n2d]
 
         self.map_3d_to_2d = map_3d_to_2d
         #print map_3d_to_2d 
@@ -133,4 +136,8 @@ class Demag2D(FKDemag):
         self.m.vector().set_local(self.short_m.vector().array()[self.map_3d_to_2d])
         self._compute_magnetic_potential()
 
-        return self._compute_gradient()[self.map_2d_to_3d]
+        f = self._compute_gradient()[self.map_2d_to_3d]
+        f.shape = (2,-1)
+        f_avg = (f[0]+f[1])/2.0
+        f.shape=(-1,)
+        return f_avg
