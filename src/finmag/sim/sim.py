@@ -428,6 +428,33 @@ class Simulation(object):
             return self.integrator.cur_t  # the real thing
         return 0.0
 
+    @property
+    def dmdt_max(self):
+        """
+        Gets dmdt values for each mesh node. Finds the max of
+        the L2 Norms. Returns (x,y,z) components of dmdt, where 
+        this max occurs. 
+        """
+        #FIXME:error here
+        dmdts = self.llg.dmdt.reshape((3,-1))
+        norms = np.sqrt(np.sum(dmdts**2,axis=0))
+        index = norms.argmax()
+        dmdt_x = dmdts[0][index]
+        dmdt_y = dmdts[1][index]
+        dmdt_z = dmdts[2][index]
+        return np.array([dmdt_x, dmdt_y, dmdt_z])
+
+    @property
+    def dmdt(self):
+        """
+        Returns dmdt for all mesh nodes.
+
+        *** What is the best format (e.g. numpy of dolfin) for this? ***
+
+        """
+        return self.llg.dmdt
+ 
+
     def add(self, interaction, with_time_update=None):
         """
         Add an interaction (such as Exchange, Anisotropy, Demag).

@@ -65,6 +65,8 @@ class LLG(object):
         self._m.rename("m", "magnetisation")
         self.pins = []  # nodes where the magnetisation gets pinned
 
+        self._dmdt = df.Function(self.S3)
+
     def set_pins(self, nodes):
         """
         Hold the magnetisation constant for certain nodes in the mesh.
@@ -106,9 +108,9 @@ class LLG(object):
 
     @Ms.setter
     def Ms(self, value):
-        #self._Ms_dg=helpers.scalar_valued_dg_function(value, self.S1)
+        self._Ms_dg = helpers.scalar_valued_dg_function(value, self.S1)
         #FIXME: change back to DG space.
-        self._Ms_dg=helpers.scalar_valued_function(value, self.S1)
+        #self._Ms_dg=helpers.scalar_valued_function(value, self.S1)
         self._Ms_dg.rename('Ms', 'Saturation magnetisation')
         self.volumes = df.assemble(df.TestFunction(self.S1) * df.dx)
         Ms = df.assemble(self._Ms_dg*df.TestFunction(self.S1)* df.dx).array()/self.volumes
@@ -141,6 +143,11 @@ class LLG(object):
         # Not enforcing unit length here, as that is better done
         # once at the initialisation of m.
         self._m.vector()[:] = value
+
+    @property
+    def dmdt(self):
+        """ dmdt values for all mesh nodes """
+        return self._dmdt.vector().array()
         
     @property
     def sundials_m(self):
@@ -204,6 +211,7 @@ class LLG(object):
         # Prepare the arrays in the correct shape
         m = self.m
         m.shape = (3, -1)
+
         dmdt = np.zeros(m.shape)
         
         # Calculate dm/dt
@@ -233,6 +241,8 @@ class LLG(object):
         H_eff.shape=(-1,)
 
         default_timer.stop("solve", self.__class__.__name__)
+
+        self._dmdt.vector()[:] = dmdt
 
         return dmdt
 
