@@ -663,14 +663,17 @@ def scalar_valued_dg_function(value, mesh_or_space):
         else:
             raise RuntimeError("Meshes are not compatible for given function.")
     elif hasattr(value, '__call__'):
-        fun = df.Function(dg)
 
-        index=0
-        for cell in df.cells(mesh):
-            p = cell.midpoint()
-            coord=np.array([p.x(),p.y(),p.z()])
-            fun.vector()[index] = value(coord)
-            index+=1
+        class HelperExpression(df.Expression):
+            def __init__(self,value):
+                super(HelperExpression, self).__init__()
+                self.fun = value
+
+            def eval(self, value, x):
+                value[0] = self.fun(x)
+
+        hexp = HelperExpression(value)
+        fun = df.interpolate(hexp, dg)
 
     else:
         raise TypeError("Cannot set value of scalar-valued DG function from "
