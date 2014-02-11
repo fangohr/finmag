@@ -663,6 +663,7 @@ class Simulation(object):
         assert self.t == t0  # self.t is read from integrator
 
     # Include magnetisation initialisation functions.
+    initialise_skyrmion_centre_2D = sim_m_inits.initialise_skyrmion_centre_2D
     initialise_skyrmion_hexlattice_2D = sim_m_inits.initialise_skyrmion_hexlattice_2D
     initialise_vortex = sim_m_inits.initialise_vortex
 
