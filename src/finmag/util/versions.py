@@ -1,6 +1,7 @@
 import os
 import sys
 import logging
+import finmag
 logger = logging.getLogger('finmag')
 
 def get_linux_issue():
@@ -94,15 +95,14 @@ def get_version_boostpython():
 
 def get_debian_package_version(pkg_name):
     """
-    Determine and return the version of the given Debian package.
+    Determine and return the version of the given Debian package (as a string).
 
-    This only works on Debian-derived systems (such as Debian
-    or Ubuntu) as it internally calls 'dpkg -s' to determine
-    the version number.
+    This only works on Debian-derived systems (such as Debian or Ubuntu) as
+    it internally calls 'dpkg -s' to determine the version number.
 
-    If the package is installed, returns a string with the version
-    number, otherwise returns None. Warns if the version cannot be
-    determined due to an unsupported system.
+    If the package is installed, returns a string with the version number,
+    otherwise returns None. Warns if the version cannot be determined due to
+    an unsupported system.
     """
     import subprocess
     import re
@@ -129,7 +129,7 @@ def get_debian_package_version(pkg_name):
 
 
 def get_version_sundials():
-    return get_debian_package_version('libsundials-serial')
+    return finmag.native.sundials.get_sundials_version()
 
 
 def get_version_paraview():
