@@ -37,7 +37,7 @@ namespace finmag { namespace llg {
                 double &m0, double &m1, double &m2,
                 double &h0, double &h1, double &h2,
                 double &dm0, double &dm1, double &dm2) {
-            double const damping_coeff = - gamma * alpha / (1 + pow(alpha, 2));
+            double const damping_coeff = - gamma * alpha / (1 + alpha*alpha);
             double const mh = m0 * h0 + m1 * h1 + m2 * h2;
             double const mm = m0 * m0 + m1 * m1 + m2 * m2;
             dm0 += damping_coeff * (m0 * mh - h0 * mm); 
@@ -57,7 +57,7 @@ namespace finmag { namespace llg {
                 double const &h0, double const &h1, double const &h2,
                 double const &hp0, double const &hp1, double const &hp2,
                 double &jtimes0, double &jtimes1, double &jtimes2) {
-            double const damping_coeff = - gamma * alpha / (1 + pow(alpha, 2));
+            double const damping_coeff = - gamma * alpha / (1 + alpha*alpha);
             double const mph_mhp = mp0 * h0 + mp1 * h1 + mp2 * h2 + m0 * hp0 + m1 * hp1 + m2 * hp2;
             double const mh = m0 * h0 + m1 * h1 + m2 * h2;
             double const mm = m0 * m0 + m1 * m1 + m2 * m2;
@@ -75,7 +75,7 @@ namespace finmag { namespace llg {
                 double &m0, double &m1, double &m2,
                 double &h0, double &h1, double &h2,
                 double &dm0, double &dm1, double &dm2) {
-            double const precession_coeff = - gamma / (1 + (pow(alpha, 2)));
+            double const precession_coeff = - gamma / (1 + (alpha*alpha));
             dm0 += precession_coeff * cross0(m0, m1, m2, h0, h1, h2);
             dm1 += precession_coeff * cross1(m0, m1, m2, h0, h1, h2);
             dm2 += precession_coeff * cross2(m0, m1, m2, h0, h1, h2);
@@ -92,7 +92,7 @@ namespace finmag { namespace llg {
                 double const &h0, double const &h1, double const &h2,
                 double const &hp0, double const &hp1, double const &hp2,
                 double &jtimes0, double &jtimes1, double &jtimes2) {
-            double const precession_coeff = - gamma / (1 + (pow(alpha, 2)));
+            double const precession_coeff = - gamma / (1 + (alpha*alpha));
             jtimes0 += precession_coeff * (cross0(mp0, mp1, mp2, h0, h1, h2) + cross0(m0, m1, m2, hp0, hp1, hp2));
             jtimes1 += precession_coeff * (cross1(mp0, mp1, mp2, h0, h1, h2) + cross1(m0, m1, m2, hp0, hp1, hp2));
             jtimes2 += precession_coeff * (cross2(mp0, mp1, mp2, h0, h1, h2) + cross2(m0, m1, m2, hp0, hp1, hp2));
@@ -209,8 +209,9 @@ namespace finmag { namespace llg {
                 double const &m0, double const &m1, double const &m2,
                 double const &p0, double const &p1, double const &p2,
                 double &dm0, double &dm1, double &dm2) {
-            double const gamma_LL = gamma / (1 + pow(alpha, 2));
-            double const epsilon = P * pow(lambda, 2) / (pow(lambda, 2) + 1 + (pow(lambda, 2) - 1) * (m0*p0 + m1*p1 + m2*p2));
+            double const gamma_LL = gamma / (1 + alpha*alpha);
+            double lambda_sq = lambda * lambda;
+            double const epsilon = P * lambda_sq / (lambda_sq + 1 + (lambda_sq - 1) * (m0*p0 + m1*p1 + m2*p2));
             double const stt_coeff = gamma_LL * J * h_bar / (mu_0 * Ms * e * d) * epsilon;
 
             double const mm = m0 * m0 + m1 * m1 + m2 * m2; /* for the triple product expansion */
@@ -232,7 +233,7 @@ namespace finmag { namespace llg {
                 double const &p0, double const &p1, double const &p2,
                 double &dm0, double &dm1, double &dm2) {
 
-            double const gamma_LL = gamma / (1 + pow(alpha, 2));
+            double const gamma_LL = gamma / (1 + alpha*alpha);
             double const mm = m0 * m0 + m1 * m1 + m2 * m2;
             double const mp = m0 * p0 + m1 * p1 + m2 * p2;
 
