@@ -100,6 +100,16 @@ namespace finmag { namespace sundials {
         static boost::thread_specific_ptr<std::string> cvode_error;
     };
 
+    /* Note that there is also a function called get_sundials_version_number()
+       defined above, but this doesn't seem to be used anywhere at the moment.
+       Also, that function returns an integer (e.g. 240 for version 2.4.0)
+       whereas here we return a string (such as "2.4.0").
+       -- Max, 12.2.2014
+     */
+    std::string get_sundials_version() {
+      return SUNDIALS_PACKAGE_VERSION;
+    }
+
     class cvode {
     public:
         cvode(int lmm, int iter);
@@ -757,6 +767,8 @@ namespace finmag { namespace sundials {
 
     void register_sundials_cvode() {
         using namespace bp;
+
+        def("get_sundials_version", &get_sundials_version);
 
         class_<cvode> cv("cvode", init<int, int>(args("lmm", "iter")));
 
