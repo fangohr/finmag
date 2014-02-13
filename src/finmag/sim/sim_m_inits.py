@@ -1,66 +1,105 @@
 import finmag
 from finmag.util import helpers
 
+from copy import copy
 import logging
 import math
 import numpy as np
+from numpy.linalg import norm
 
 log = logging.getLogger("finmag")
 
-def initialise_skyrmion_centre_2D(sim, skyrmionRadius):
+def initialise_skyrmions(sim, skyrmionRadius, centres=[[0,0]]):
     """
-    Initialise the magnetisation to a pattern resembling a skyrmion in the
-    centre of the mesh which should be relaxed to obtain the most natural
-    skyrmion possible.
+    Initialise the magnetisation to a pattern resembling skyrmions with defined
+    centres. By default, a single skyrmion at (0, 0) will be created. The
+    resulting magnetisation should be relaxed to obtain the most natural
+    skyrmion possible. If skyrmions are found to overlap, a ValueError will be
+    raised. If centres is empty, the ferromagnetic state will be initialised.
 
     *Assumptions*: It is assumed that the mesh is a 2D mesh. If it is not, the
                    skyrmion will be projected in higher dimensions.
 
     *Arguments*:
 
+    centres
+        Numpy array containing co-ordinates stored by a numpy array.
+
     skyrmionRadius
-        The radius of the skyrmion in mesh co-ordinates
+        The radius of the skyrmion in mesh co-ordinates (single value for all
+        skyrmions).
 
     This function returns nothing.
     """
 
+    numCentres = len(centres)
+
+    # Initialise ferromagnetic state if there are no centres.
+    if numCentres == 0:
+        def m_ferromagnetic(pos):
+            return np.array([0, 0, 1], dtype="float64")
+        sim.set_m(m_ferromagnetic)
+        return
+
+    # Determine whether there is skyrmion overlap.
+    if numCentres > 1:
+        for zI in xrange(numCentres):
+            for zJ in xrange(zI + 1, numCentres):
+                if norm(centres[zI] - centres[zJ]) <2 * skyrmionRadius:
+                    raise ValueError("Skyrmions at centres {} and {} overlap."
+                                     .format(centres[zI], centres[zJ]))
+
     # Build the function
-    def m_skyrmion(pos):
-        """This function returns a vector corresponding to a skyrmion at the
-        origin."""
+    def m_skyrmions(pos):
 
-        # Convert position vector into cylindrical form; "r" being the distance
-        # of the point from the origin and "t" being the argument.
-        r = pow(pow(pos[0], 2) + pow(pos[1], 2), 0.5)
+        # For each skyrmion, check if the position vector exists within it.
+        # Will pass until one is obtained.
+        for zI in xrange(numCentres):
 
-        if abs(pos[0]) < 1e-6:
-            if abs(pos[1]) < 1e-6:
-                t = 0
-            elif pos[1] > 0:
-                t = np.pi / 2.
+            loc = copy(pos)  # Assignment means the original will change if "="
+                             # operator is used.
+
+            # Convert the position vector into relative vector with respect to
+            # this centre.
+            loc = loc - centres[zI]
+
+            # Find the radius component in cylindrical form.
+            r = norm(loc)
+
+            # Check to see if this vector is within this circle. If it isn't,
+            # check the next centre by skipping the rest of this iteration.
+            if r > skyrmionRadius:
+                continue
+
+            # Convert position into cylindrical form, using r defined
+            # previously, and "t" as the argument.
+            if abs(loc[0]) < 1e-6:
+                if abs(loc[1]) < 1e-6:
+                    t = 0
+                elif loc[1] > 0:
+                    t = np.pi / 2.
+                else:
+                    t = -np.pi / 2.
             else:
-                t = -np.pi / 2.
-        else:
-            t = np.arctan2(pos[1], pos[0])
+                t = np.arctan2(loc[1], loc[0])
 
-        # Define vector components outside of the skyrmion:
-        if r >= skyrmionRadius:
-            mz = 1
-            mt = 0
-
-        # Define vector components inside the skyrmion:
-        else:
+            # Define vector components inside the skyrmion:
             mz = -np.cos(np.pi * r / skyrmionRadius)
             mt = np.sin(np.pi * r / skyrmionRadius)
 
-        # Convert to cartesian form and normalize.
-        mx = -np.sin(t) * mt
-        my = np.cos(t) * mt
-        out = np.array([mx, my, mz], dtype="float64")
-        return out / np.linalg.norm(out)
+            # Convert to cartesian form and normalize.
+            mx = -np.sin(t) * mt
+            my = np.cos(t) * mt
+            out = np.array([mx, my, mz], dtype="float64")
+            return out / norm(out)
+
+        # If control reaches here, it means that the vector is not in any
+        # circle. As such, return the corresponding ferromagnetic-state-like
+        # vector.
+        return np.array([0., 0., 1.], dtype="float64")
 
     # Use the above function to initialise the magnetisation.
-    sim.set_m(m_skyrmion)
+    sim.set_m(m_skyrmions)
 
 
 def initialise_skyrmion_hexlattice_2D(sim, meshX, meshY, tileScaleX=1,
@@ -206,7 +245,7 @@ def initialise_skyrmion_hexlattice_2D(sim, meshX, meshY, tileScaleX=1,
 
         out = np.array([mx, my, mz], dtype="float64")
 
-        return out / np.linalg.norm(out)
+        return out / norm(out)
 
     # Use the above function to initialise the magnetisation.
     sim.set_m(m_skyrmion_hexlattice)
