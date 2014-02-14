@@ -9,7 +9,8 @@ from numpy.linalg import norm
 
 log = logging.getLogger("finmag")
 
-def initialise_skyrmions(sim, skyrmionRadius, centres=[[0,0]]):
+
+def initialise_skyrmions(sim, skyrmionRadius, centres=[[0, 0]]):
     """
     Initialise the magnetisation to a pattern resembling skyrmions with defined
     centres. By default, a single skyrmion at (0, 0) will be created. The
@@ -45,7 +46,7 @@ def initialise_skyrmions(sim, skyrmionRadius, centres=[[0,0]]):
     if numCentres > 1:
         for zI in xrange(numCentres):
             for zJ in xrange(zI + 1, numCentres):
-                if norm(centres[zI] - centres[zJ]) <2 * skyrmionRadius:
+                if norm(centres[zI] - centres[zJ]) < 2 * skyrmionRadius:
                     raise ValueError("Skyrmions at centres {} and {} overlap."
                                      .format(centres[zI], centres[zJ]))
 
@@ -141,8 +142,9 @@ def initialise_skyrmion_hexlattice_2D(sim, meshX, meshY, tileScaleX=1,
 
     # Ensure the mesh is of the dimensions stated above, and raise a
     # warning if it isn't.
-    if abs(meshX / float(meshY) - np.sqrt(3)) > 0.05 and \
-       abs(meshY / float(meshX) - np.sqrt(3)) > 0.05:
+    ratioX = abs(meshX / float(meshY) - np.sqrt(3))
+    ratioY = abs(meshY / float(meshX) - np.sqrt(3))
+    if ratioX > 0.05 and ratioY > 0.05:
         log.warning("Mesh dimensions do not accurately support hexagonal" +
                     " lattice formation! (One should be a factor of sqrt" +
                     "(3) greater than the other.)")
@@ -253,11 +255,11 @@ def initialise_skyrmion_hexlattice_2D(sim, meshX, meshY, tileScaleX=1,
 
 def vortex_simple(r, center, right_handed=True, polarity=+1):
     """
-    Returns a function f: (x,y,z) -> m representing a vortex magnetisation pattern
-    where the vortex lies in the x/y-plane (i.e. the magnetisation is constant
-    along the z-direction), the vortex core is centered around the point
-    `center` and the vortex core has radius `r`. More precisely, m_z=1 at the
-    vortex core center and m_z falls off in a radially symmetric way until
+    Returns a function f: (x,y,z) -> m representing a vortex magnetisation
+    pattern where the vortex lies in the x/y-plane (i.e. the magnetisation is
+    constant along the z-direction), the vortex core is centered around the
+    point `center` and the vortex core has radius `r`. More precisely, m_z=1 at
+    the vortex core center and m_z falls off in a radially symmetric way until
     m_z=0 at a distance `r` from the center. If `right_handed` is True then the
     vortex curls counterclockwise around the z-axis, otherwise clockwise. It
     should be noted that the returned function `f` only represents an
@@ -272,7 +274,7 @@ def vortex_simple(r, center, right_handed=True, polarity=+1):
         xc = x - center[0]
         yc = y - center[1]
         phi = math.atan2(yc, xc)
-        rho = math.sqrt(xc**2 + yc**2)
+        rho = math.sqrt(xc ** 2 + yc ** 2)
 
         # To start with, create a right-handed vortex with polarity 1.
         if rho < r:
@@ -290,7 +292,8 @@ def vortex_simple(r, center, right_handed=True, polarity=+1):
             mz = -mz
 
         # Adapt the chirality accordingly
-        if ((polarity > 0) and (not right_handed)) or ((polarity < 0) and right_handed):
+        if ((polarity > 0) and (not right_handed)) or\
+           ((polarity < 0) and right_handed):
             mx = -mx
             my = -my
 
@@ -319,24 +322,25 @@ def vortex_feldtkeller(beta, center, right_handed=True, polarity=+1):
         Kondens. Materie 8, 8 (1965).
 
     """
-    beta_sq = beta**2
+    beta_sq = beta ** 2
 
     def f((x, y, z)):
         # To start with, create a right-handed vortex with polarity 1.
         xc = x - center[0]
         yc = y - center[1]
         phi = math.atan2(yc, xc)
-        r_sq = xc**2 + yc**2
+        r_sq = xc ** 2 + yc ** 2
         mz = math.exp(-2.0 * r_sq / beta_sq)
-        mx = -math.sqrt(1 - mz*mz) * math.sin(phi)
-        my = math.sqrt(1 - mz*mz) * math.cos(phi)
+        mx = -math.sqrt(1 - mz * mz) * math.sin(phi)
+        my = math.sqrt(1 - mz * mz) * math.cos(phi)
 
         # If we actually want a different polarity, flip the z-coordinates
         if polarity < 0:
             mz = -mz
 
         # Adapt the chirality accordingly
-       	if ((polarity > 0) and (not right_handed)) or ((polarity < 0) and right_handed):
+        if ((polarity > 0) and (not right_handed)) or\
+           ((polarity < 0) and right_handed):
             mx = -mx
             my = -my
 
@@ -353,11 +357,11 @@ def initialise_vortex(sim, type, center=None, **kwargs):
     energetically stable).
 
     If `center` is None, the vortex core centre is placed at the sample centre
-    (which is the point where each coordinate lies exactly in the middle between
-    the minimum and maximum coordinate for each component). The vortex lies in
-    the x/y-plane (i.e. the magnetisation is constant in z-direction). The
-    magnetisation pattern is such that m_z=1 in the vortex core centre, and it
-    falls off in a radially symmetric way.
+    (which is the point where each coordinate lies exactly in the middle
+    between the minimum and maximum coordinate for each component). The vortex
+    lies in the x/y-plane (i.e. the magnetisation is constant in z-direction).
+    The magnetisation pattern is such that m_z=1 in the vortex core centre, and
+    it falls off in a radially symmetric way.
 
     The exact vortex profile depends on the argument `type`. Currently the
     following types are supported:
@@ -378,20 +382,20 @@ def initialise_vortex(sim, type, center=None, **kwargs):
 
     """
     coords = np.array(sim.mesh.coordinates())
-    if center == None:
+    if center is None:
         center = 0.5 * (coords.min(axis=0) + coords.max(axis=0))
 
-    vortex_funcs = {
-        'simple': vortex_simple,
-        'feldtkeller': vortex_feldtkeller,
-        }
+    vortex_funcs = {'simple': vortex_simple,
+                    'feldtkeller': vortex_feldtkeller}
 
     kwargs['center'] = center
 
     try:
         fun_m_init = vortex_funcs[type](**kwargs)
-        log.debug("Initialising vortex of type '{}' with arguments: {}".format(type, kwargs))
+        log.debug("Initialising vortex of type '{}' with arguments: {}".
+                  format(type, kwargs))
     except KeyError:
-        raise ValueError("Vortex type must be one of {}. Got: {}".format(vortex_funcs.keys(), type))
+        raise ValueError("Vortex type must be one of {}. Got: {}".
+                         format(vortex_funcs.keys(), type))
 
     sim.set_m(fun_m_init)
