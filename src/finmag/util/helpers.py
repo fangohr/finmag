@@ -600,7 +600,7 @@ def scalar_valued_function(value, mesh_or_space):
         fun = df.Function(S1)
         fun.vector()[:]=value
     elif hasattr(value, '__call__'):
-            
+
         #if it's a normal function, we wrapper it into a dolfin expression
         class HelperExpression(df.Expression):
             def __init__(self,value):
@@ -612,7 +612,7 @@ def scalar_valued_function(value, mesh_or_space):
 
         hexp = HelperExpression(value)
         fun = df.interpolate(hexp, S1)
-        
+
     else:
         raise TypeError("Cannot set value of scalar-valued function from "
                         "argument of type '{}'".format(type(value)))
@@ -1458,53 +1458,6 @@ def vec2str(a, fmt='{}', delims='()', sep=', '):
     return res
 
 
-def vortex_simple(r, center, right_handed=True, polarity=+1):
-    """
-    Returns a function f: (x,y,z) -> m representing a vortex magnetisation pattern
-    where the vortex lies in the x/y-plane (i.e. the magnetisation is constant along
-    the z-direction), the vortex core is centered around the point `center` and the
-    vortex core has radius `r`. More precisely, m_z=1 at the vortex core center and
-    m_z falls off in a radially symmetric way until m_z=0 at a distance `r` from the
-    center. If `right_handed` is True then the vortex curls counterclockwise around
-    the z-axis, otherwise clockwise. It should be noted that the returned function `f`
-    only represents an approximation to a true vortex state, so this can be used to
-    initialise the magnetisation in a simulation which is then relaxed.
-
-    Note that both `r` and the coordinates of `center` should be given in mesh
-    coordinates, not in metres.
-
-    """
-    def f((x, y, z)):
-        xc = x - center[0]
-        yc = y - center[1]
-        phi = math.atan2(yc, xc)
-        rho = math.sqrt(xc**2 + yc**2)
-
-        # To start with, create a right-handed vortex with polarity 1.
-        if rho < r:
-            theta = 2 * math.atan(rho / r)
-            mz = math.cos(theta)
-            mx = -math.sin(theta) * math.sin(phi)
-            my = math.sin(theta) * math.cos(phi)
-        else:
-            mz = 0
-            mx = -math.sin(phi)
-            my = math.cos(phi)
-
-        # If we actually want a different polarity, flip the z-coordinates
-        if polarity < 0:
-            mz = -mz
-
-        # Adapt the chirality accordingly
-        if ((polarity > 0) and (not right_handed)) or ((polarity < 0) and right_handed):
-            mx = -mx
-            my = -my
-
-        return (mx, my, mz)
-
-    return f
-
-
 def pairwise(iterable):
     """
     s -> (s0,s1), (s1,s2), (s2, s3), ...
@@ -1563,52 +1516,6 @@ def apply_vertexwise(f, *args):
     res = df.Function(W)
     res.vector().set_local(np.array(aa_evaluated).T.reshape(-1))
     return res
-
-
-def vortex_feldtkeller(beta, center, right_handed=True, polarity=+1):
-    """
-    Returns a function f: (x,y,z) -> m representing a vortex
-    magnetisation pattern where the vortex lies in the x/y-plane (i.e.
-    the magnetisation is constant along the z-direction), the vortex
-    core is centered around the point `center` and the m_z component
-    falls off exponentially as given by the following formula, which
-    is a result by Feldtkeller and Thomas [1].:
-
-        m_z = exp(-2*r^2/beta^2).
-
-    Here `r` is the distance from the vortex core centre and `beta` is
-    a parameter, whose value is taken from the first argument to this
-    function.
-
-    [1] E. Feldtkeller and H. Thomas, "Struktur und Energie von
-        Blochlinien in Duennen Ferromagnetischen Schichten", Phys.
-        Kondens. Materie 8, 8 (1965).
-
-    """
-    beta_sq = beta**2
-
-    def f((x, y, z)):
-        # To start with, create a right-handed vortex with polarity 1.
-        xc = x - center[0]
-        yc = y - center[1]
-        phi = math.atan2(yc, xc)
-        r_sq = xc**2 + yc**2
-        mz = math.exp(-2.0 * r_sq / beta_sq)
-        mx = -math.sqrt(1 - mz*mz) * math.sin(phi)
-        my = math.sqrt(1 - mz*mz) * math.cos(phi)
-
-        # If we actually want a different polarity, flip the z-coordinates
-        if polarity < 0:
-            mz = -mz
-
-        # Adapt the chirality accordingly
-       	if ((polarity > 0) and (not right_handed)) or ((polarity < 0) and right_handed):
-            mx = -mx
-            my = -my
-
-        return (mx, my, mz)
-
-    return f
 
 
 class TemporaryDirectory(object):
