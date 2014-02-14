@@ -251,6 +251,100 @@ def initialise_skyrmion_hexlattice_2D(sim, meshX, meshY, tileScaleX=1,
     sim.set_m(m_skyrmion_hexlattice)
 
 
+def vortex_simple(r, center, right_handed=True, polarity=+1):
+    """
+    Returns a function f: (x,y,z) -> m representing a vortex magnetisation pattern
+    where the vortex lies in the x/y-plane (i.e. the magnetisation is constant
+    along the z-direction), the vortex core is centered around the point
+    `center` and the vortex core has radius `r`. More precisely, m_z=1 at the
+    vortex core center and m_z falls off in a radially symmetric way until
+    m_z=0 at a distance `r` from the center. If `right_handed` is True then the
+    vortex curls counterclockwise around the z-axis, otherwise clockwise. It
+    should be noted that the returned function `f` only represents an
+    approximation to a true vortex state, so this can be used to initialise the
+    magnetisation in a simulation which is then relaxed.
+
+    Note that both `r` and the coordinates of `center` should be given in mesh
+    coordinates, not in metres.
+
+    """
+    def f((x, y, z)):
+        xc = x - center[0]
+        yc = y - center[1]
+        phi = math.atan2(yc, xc)
+        rho = math.sqrt(xc**2 + yc**2)
+
+        # To start with, create a right-handed vortex with polarity 1.
+        if rho < r:
+            theta = 2 * math.atan(rho / r)
+            mz = math.cos(theta)
+            mx = -math.sin(theta) * math.sin(phi)
+            my = math.sin(theta) * math.cos(phi)
+        else:
+            mz = 0
+            mx = -math.sin(phi)
+            my = math.cos(phi)
+
+        # If we actually want a different polarity, flip the z-coordinates
+        if polarity < 0:
+            mz = -mz
+
+        # Adapt the chirality accordingly
+        if ((polarity > 0) and (not right_handed)) or ((polarity < 0) and right_handed):
+            mx = -mx
+            my = -my
+
+        return (mx, my, mz)
+
+    return f
+
+
+def vortex_feldtkeller(beta, center, right_handed=True, polarity=+1):
+    """
+    Returns a function f: (x,y,z) -> m representing a vortex
+    magnetisation pattern where the vortex lies in the x/y-plane (i.e.
+    the magnetisation is constant along the z-direction), the vortex
+    core is centered around the point `center` and the m_z component
+    falls off exponentially as given by the following formula, which
+    is a result by Feldtkeller and Thomas [1].:
+
+        m_z = exp(-2*r^2/beta^2).
+
+    Here `r` is the distance from the vortex core centre and `beta` is
+    a parameter, whose value is taken from the first argument to this
+    function.
+
+    [1] E. Feldtkeller and H. Thomas, "Struktur und Energie von
+        Blochlinien in Duennen Ferromagnetischen Schichten", Phys.
+        Kondens. Materie 8, 8 (1965).
+
+    """
+    beta_sq = beta**2
+
+    def f((x, y, z)):
+        # To start with, create a right-handed vortex with polarity 1.
+        xc = x - center[0]
+        yc = y - center[1]
+        phi = math.atan2(yc, xc)
+        r_sq = xc**2 + yc**2
+        mz = math.exp(-2.0 * r_sq / beta_sq)
+        mx = -math.sqrt(1 - mz*mz) * math.sin(phi)
+        my = math.sqrt(1 - mz*mz) * math.cos(phi)
+
+        # If we actually want a different polarity, flip the z-coordinates
+        if polarity < 0:
+            mz = -mz
+
+        # Adapt the chirality accordingly
+       	if ((polarity > 0) and (not right_handed)) or ((polarity < 0) and right_handed):
+            mx = -mx
+            my = -my
+
+        return (mx, my, mz)
+
+    return f
+
+
 def initialise_vortex(sim, type, center=None, **kwargs):
     """
     Initialise the magnetisation to a pattern that resembles a vortex state.
@@ -278,10 +372,9 @@ def initialise_vortex(sim, type, center=None, **kwargs):
            m_z follows the profile m_z = exp(-2*r^2/beta^2), where `beta`
            is a user-specified parameter.
 
-    All provided keyword arguments are passed on to the helper functions which
-    implement the vortex profiles (e.g., finmag.util.helpers.vortex_simple or
-    finmag.util.helpers.vortex_feldtkeller). See their documentation for details
-    and other allowed arguments.
+    All provided keyword arguments are passed on to functions which implement
+    the vortex profiles. See their documentation for details and other allowed
+    arguments.
 
     """
     coords = np.array(sim.mesh.coordinates())
@@ -289,8 +382,8 @@ def initialise_vortex(sim, type, center=None, **kwargs):
         center = 0.5 * (coords.min(axis=0) + coords.max(axis=0))
 
     vortex_funcs = {
-        'simple': helpers.vortex_simple,
-        'feldtkeller': helpers.vortex_feldtkeller,
+        'simple': vortex_simple,
+        'feldtkeller': vortex_feldtkeller,
         }
 
     kwargs['center'] = center
