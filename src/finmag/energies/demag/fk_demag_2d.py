@@ -83,6 +83,22 @@ class Demag2D(FKDemag):
         self.map_3d_to_2d = map_3d_to_2d
         #print map_3d_to_2d 
 
+    def create_dg3_from_dg2(self, mesh, dg2):
+
+        dg3 = df.FunctionSpace(mesh,'DG',0)
+
+        class HelperExpression(df.Expression):
+            def __init__(self,value):
+                super(HelperExpression, self).__init__()
+                self.fun = value
+
+            def eval(self, value, x):
+                value[0] = self.fun((x[0],x[1]))
+
+        hexp = HelperExpression(dg2)
+        fun = df.interpolate(hexp, dg3)
+
+        return fun
 
     def setup(self, S3, m, Ms, unit_length=1):
         """
@@ -108,7 +124,6 @@ class Demag2D(FKDemag):
 
         """
         self.short_m = m
-        self.Ms = Ms
         self.unit_length = unit_length
 
         mesh = S3.mesh()
@@ -121,7 +136,50 @@ class Demag2D(FKDemag):
 
         self.build_mapping(S3,V3)
 
-        super(Demag2D, self).setup(V3, mm, Ms, unit_length)
+        Ms_dg3 = self.create_dg3_from_dg2(mesh3, Ms)
+
+        super(Demag2D, self).setup(V3, mm, Ms_dg3, unit_length)
+
+    def compute_energy(self):
+        """
+        Compute the total energy of the field.
+
+        .. math::
+
+            E_\\mathrm{d} = -\\frac12 \\mu_0 \\int_\\Omega
+            H_\\mathrm{d} \\cdot \\vec M \\mathrm{d}x
+
+        *Returns*
+            Float
+                The energy of the demagnetising field.
+
+        """
+        self._H_func.vector()[:] = self.__compute_field()
+        return df.assemble(self._E) * self.unit_length ** self.dim
+
+    @mtimed(default_timer)
+    def energy_density(self):
+        """
+        Compute the energy density in the field.
+
+        .. math::
+            \\rho = \\frac{E_{\\mathrm{d}, i}}{V_i},
+
+        where V_i is the volume associated with the node i.
+
+        *Returns*
+            numpy.ndarray
+                The energy density of the demagnetising field.
+
+        """
+        self._H_func.vector()[:] = self.__compute_field()
+        nodal_E = df.assemble(self._nodal_E).array() * self.unit_length ** self.dim
+        return nodal_E / self._nodal_volumes
+
+    def __compute_field(self):
+        self.m.vector().set_local(self.short_m.vector().array()[self.map_3d_to_2d])
+        self._compute_magnetic_potential()
+        return self._compute_gradient()
 
     
     def compute_field(self):
@@ -133,10 +191,7 @@ class Demag2D(FKDemag):
                 The demagnetising field.
 
         """
-        self.m.vector().set_local(self.short_m.vector().array()[self.map_3d_to_2d])
-        self._compute_magnetic_potential()
-
-        f = self._compute_gradient()[self.map_2d_to_3d]
+        f = self.__compute_field()[self.map_2d_to_3d]
         f.shape = (2,-1)
         f_avg = (f[0]+f[1])/2.0
         f.shape=(-1,)
