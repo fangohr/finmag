@@ -1,6 +1,6 @@
 import numpy as np
 import finmag
-from finmag.sim.sim_m_inits import *
+from finmag.sim.magnetisation_patterns import *
 from finmag.util.meshes import cylinder
 
 
