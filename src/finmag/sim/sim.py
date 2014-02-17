@@ -29,7 +29,7 @@ from finmag.util.normal_modes import compute_eigenproblem_matrix, \
     plot_spatially_resolved_normal_mode
 from finmag.util.helpers import plot_dynamics, pvd2avi
 from finmag.sim.hysteresis import hysteresis as hyst, hysteresis_loop as hyst_loop
-from finmag.sim import sim_helpers, sim_m_inits
+from finmag.sim import sim_helpers, magnetisation_patterns
 from finmag.energies import Exchange, Zeeman, TimeZeeman, Demag, UniaxialAnisotropy, DMI
 from finmag.integrators.llg_integrator import llg_integrator
 from finmag.integrators.sundials_integrator import SundialsIntegrator
@@ -663,9 +663,9 @@ class Simulation(object):
         assert self.t == t0  # self.t is read from integrator
 
     # Include magnetisation initialisation functions.
-    initialise_skyrmions = sim_m_inits.initialise_skyrmions
-    initialise_skyrmion_hexlattice_2D = sim_m_inits.initialise_skyrmion_hexlattice_2D
-    initialise_vortex = sim_m_inits.initialise_vortex
+    initialise_skyrmions = magnetisation_patterns.initialise_skyrmions
+    initialise_skyrmion_hexlattice_2D = magnetisation_patterns.initialise_skyrmion_hexlattice_2D
+    initialise_vortex = magnetisation_patterns.initialise_vortex
 
     save_averages = sim_helpers.save_ndt
     save_ndt = sim_helpers.save_ndt
