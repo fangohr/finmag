@@ -270,7 +270,8 @@ def vortex_simple(r, center, right_handed=True, polarity=+1):
     coordinates, not in metres.
 
     """
-    def f((x, y, z)):
+    def f(pt):
+        x, y, z = pt
         xc = x - center[0]
         yc = y - center[1]
         phi = math.atan2(yc, xc)
@@ -324,7 +325,8 @@ def vortex_feldtkeller(beta, center, right_handed=True, polarity=+1):
     """
     beta_sq = beta ** 2
 
-    def f((x, y, z)):
+    def f(pt):
+        x, y, z = pt
         # To start with, create a right-handed vortex with polarity 1.
         xc = x - center[0]
         yc = y - center[1]
