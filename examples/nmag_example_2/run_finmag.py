@@ -4,7 +4,7 @@ from finmag.energies import Exchange, Demag
 from finmag.util.meshes import from_geofile
 
 
-def run_simulation():
+def run_simulation(verbose=False):
     mesh = from_geofile('bar.geo')
 
     sim = Simulation(mesh, Ms=0.86e6, unit_length=1e-9, name="finmag_bar")
@@ -19,9 +19,10 @@ def run_simulation():
     sim.run_until(3e-10)
 
     print default_timer
-    print "The RHS was evaluated {} times, while the Jacobian was computed {} times.".format(
-            sim.integrator.stats()['nfevals'],
-            default_timer.get("sundials_jtimes", "LLG").calls)
+    if verbose:
+        print "The RHS was evaluated {} times, while the Jacobian was computed {} times.".format(
+                sim.integrator.stats()['nfevals'],
+                default_timer.get("sundials_jtimes", "LLG").calls)
 
 if __name__ == "__main__":
-    run_simulation()
+    run_simulation(verbose=False)
