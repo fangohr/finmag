@@ -10,7 +10,74 @@ from numpy.linalg import norm
 log = logging.getLogger("finmag")
 
 
-def initialise_skyrmions(sim, skyrmionRadius, centres=[[0, 0]]):
+def initialise_helix_2D(sim, period, axis=np.array([1, 0])):
+    """
+    Initialise the magnetisation to a pattern resembling a helix along a given
+    direction. By default, helices along the first dimension will be created.
+    The resulting magnetisation should be relaxed to obtain the most natural
+    helical state possible.
+
+    *Assumptions*: It is assumed that the mesh is a 2D mesh. If it is not, the
+                   skyrmion will be projected in higher dimensions.
+
+    *Arguments*:
+
+    period
+        Float representing the period of the helix in mesh co-ordinates.
+
+    axis
+        Numpy array containing direction of helix.
+
+    This function returns nothing.
+    """
+
+    # Check for sane values.
+    if np.linalg.norm(axis) == 0:
+        raise ValueError("Axis ({}) norm is zero.".format(axis))
+
+    if period <= 0:
+        raise ValueError("Helix period ({}) cannot be zero or less."
+                         .format(period))
+
+    # Normalise the axis.
+    axis = axis / np.linalg.norm(axis)
+
+    # Create rotation matrix to convert mesh co-ordinates to co-ordinates of
+    # the axis and it's right-handed perpendicular. In this new system, the
+    # second dimension corresponds to the axis direction.
+    cos_theta = axis[0]
+    theta = np.arccos(cos_theta)
+    sin_theta = np.sin(theta)
+
+    R = np.matrix(([cos_theta, sin_theta],
+                   [-sin_theta, cos_theta]))
+
+    # Build the function.
+    def m_helical(pos):
+
+        # Convert to rotated co-ordinate system.
+        pos_rot_matrix = R * np.transpose(np.matrix(pos))
+        pos_rot = np.array((pos_rot_matrix.item(0), pos_rot_matrix.item(1)))
+
+        # Find magnetisation components.
+        mx_r = np.cos((1 - (pos_rot[1] / period)) * 2 * np.pi)
+        my_r = 0
+        mz = np.sin((1 - (pos_rot[1] / period)) * 2 * np.pi)
+
+        # Rotate magnetisation back into mesh co-ordinates.
+        m = R * np.matrix(([mx_r], [my_r]))
+        mx = m.item(0)
+        my = m.item(1)
+
+        # Normalise and return.
+        out = np.array([mx, my, mz], dtype="float64")
+        return out / np.linalg.norm(out)
+
+    # Use the above function to initialise the magnetisation.
+    sim.set_m(m_helical)
+
+
+def initialise_skyrmions(sim, skyrmionRadius, centres=np.array([[0, 0]])):
     """
     Initialise the magnetisation to a pattern resembling skyrmions with defined
     centres. By default, a single skyrmion at (0, 0) will be created. The
@@ -24,7 +91,7 @@ def initialise_skyrmions(sim, skyrmionRadius, centres=[[0, 0]]):
     *Arguments*:
 
     centres
-        Numpy array containing co-ordinates stored by a numpy array.
+        Numpy array containing co-ordinates stored by numpy arrays.
 
     skyrmionRadius
         The radius of the skyrmion in mesh co-ordinates (single value for all
