@@ -189,7 +189,13 @@ class Simulation(object):
 
     m = property(__get_m, set_m)
 
+    def skyrmion_number(self):
+        """
+        This function returns the skyrmion number calculated from the spin
+        texture in this simulation instance.
+        """
 
+        return 1 / (4 * np.pi) * df.assemble(df.dot(self.llg._m, df.cross(df.Dx(self.llg._m, 0), df.Dx(self.llg._m, 1))) * df.dx)
 
     @property
     def m_average(self):
