@@ -2,6 +2,7 @@ import logging
 import dolfin as df
 import numpy as np
 from finmag.util.consts import mu0
+from finmag.util.meshes import nodal_volume
 from finmag.util import helpers
 from math import pi, cos
 
@@ -44,6 +45,12 @@ class Zeeman(object):
         self.m = m
         self.Ms = Ms
         self.unit_length = unit_length
+
+        dofmap = S3.dofmap()
+        self.S1 = df.FunctionSpace(S3.mesh(), "Lagrange", 1, constrained_domain=dofmap.constrained_domain)
+        # self.dim = S3.mesh().topology().dim()
+        # self.nodal_volume_S1 = nodal_volume(self.S1, self.unit_length)
+
         self.set_value(self.value, **self.kwargs)
 
     def set_value(self, value, **kwargs):
@@ -58,7 +65,7 @@ class Zeeman(object):
         self.value = value
         self.H = helpers.vector_valued_function(value, self.S3, **self.kwargs)
         self.H.rename('H_ext', 'H_ext')
-        self.E = - mu0 * self.Ms * df.dot(self.m, self.H)
+        self.E = - mu0 * self.Ms * df.dot(self.m, self.H)  # Energy density.
 
     def average_field(self):
         """
@@ -72,6 +79,15 @@ class Zeeman(object):
     def compute_energy(self, dx=df.dx):
         E = df.assemble(self.E * dx) * self.unit_length**3
         return E
+
+    def energy_density(self):
+        return df.project(df.dot(self.m, self.H) * self.Ms * -mu0, self.S1).vector().array()
+
+    def energy_density_function(self):
+        if not hasattr(self, "E_density_function"):
+            self.E_density_function = df.Function(self.S1)
+        self.E_density_function.vector()[:] = self.energy_density()
+        return self.E_density_function
 
 
 class TimeZeeman(Zeeman):
@@ -191,7 +207,7 @@ class TimeZeemanPython(TimeZeeman):
         In this situation, the dolfin.interpolate method only needs to
         be evaluated once at the beginning for the spatial expression,
         which saves a lot of computational effort.
-        
+
         *Arguments*
 
         df_expression :  dolfin.Expression
@@ -202,11 +218,11 @@ class TimeZeemanPython(TimeZeeman):
         time_fun :  callable
 
             Function representing the scaling factor for the amplitude at time.
-            
+
             Note that if the given dolfin expression is a scalar,
             then the time_fun have to return a 3d vector, for example,
             a spatial rotational field around x-axis could be expressed as,
-            
+
                 Hy = h0(x,y,z)*cos(wt)
                 Hz = h0(x,y,z)*sin(wt)
 
@@ -221,7 +237,7 @@ class TimeZeemanPython(TimeZeeman):
         self.switched_off = False
         self.name = name
         self.in_jacobian = False
-        
+
         self.scalar_df_expression = False
         if df_expression.value_size()==1:
             self.scalar_df_expression = True
@@ -238,7 +254,7 @@ class TimeZeemanPython(TimeZeeman):
             self.H0 = df.Function(self.S3)
         else:
             self.H0 = helpers.vector_valued_function(self.df_expression, self.S3)
-        
+
         self.E = - mu0 * self.Ms * df.dot(self.m, self.H0)
 
         self.H_init = self.H0.vector().array()
@@ -249,10 +265,10 @@ class TimeZeemanPython(TimeZeeman):
             if self.t_off and t >= self.t_off:
                 self.switch_off()
                 return
-            
+
             if self.scalar_df_expression:
                 tx,ty,tz=self.time_fun(t)
-                
+
                 self.H.shape=(3,-1)
                 self.H[0,:]=self.h0*tx
                 self.H[1,:]=self.h0*ty
