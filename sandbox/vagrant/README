@@ -1,0 +1,80 @@
+Quick getting-started guide
+===========================
+
+To get started quickly, run the following commands in a terminal
+
+   1) cd ubuntu_13.10
+
+   2) make download-base-box
+
+      This is not strictly necessary but makes things faster if you
+      want to run 'vagrant up' repeatedly, e.g during debugging.
+
+   3) vagrant up
+
+      This command will download the box (either from the internet or
+      copy it from your downloads/ folder if you ran set 2) above)
+
+
+Note that by default, Vagrant will store the box images in the
+subfolder ~/.vagrant.d of your home directory. If you want them in a
+different place (e.g. because disk space is limited), set the
+VAGRANT_HOME environment variable to the desired location. For
+example, you can put this in your ~/.bashrc file:
+
+   export VAGRANT_HOME=/path/to/desired/location/
+
+
+Background information
+======================
+
+This directory contains a first attempt to set up Vagrant [1] for use
+with Finmag. The purpose of Vagrant is to install a virtual machine
+(in our case a VirtualBox image, but Vagrant supports others as well)
+in a precisely defined state, for example with additional software
+installed. For our purposes this is useful for two things:
+
+  - In order to build a binary distribution of Finmag, ideally we need
+    to compile the code on the same operating system as the one that
+    the Finmag binary is going to run on. With a virtual machine, this
+    can be easily done and even automised so that it could be part of
+    the regular Jenkins test runs.
+
+  - We use a bash script to set up the virtual machine in the
+    pre-configured state that is necessary to run Finmag on it. Among
+    other things, this script installs the FEniCS PPA, installs the
+    necessary dependencies for Finmag, installs OOMMF/Magpar/Nmag,
+    etc. This script is also useful for people who already have an
+    Ubuntu installation (e.g. independently of a virtual machine) and
+    just want to install all the necessary prerequisites to run Finmag
+    on their system. By having this script as part of the Vagrant
+    setup and hopefully integrated into Jenkins we could be sure that
+    it is always up-to-date (and tested).
+
+
+Vagrant uses a so-called Vagrantfile to choose the right 'base box'
+for the virtual machine which it should set up. This Vagrantfile
+contains some configuration items about the desired operating system
+(e.g. Ubuntu 12.04 or 13.10), how much memory the virtual box should
+use, etc. Currently we keep the Vagrantfiles for different operating
+systems in separate subfolders to keep things tidy (in fact, at the
+moment we only have one for Ubuntu 13.10), but there is probably a
+command-line switch or some other configuaration option which which
+would allow us to merge them.
+
+A list of available base boxes for different operating systems is
+available at [2]. Note that the base box is downloaded from the
+correct location each time you say 'vagrant up' to set up a new
+virtual machine from scratch. To avoid this, you can download the file
+once by saying 'make download-base-box' in the directory which
+contains the Vagrantfile.
+
+After installing the 'bare box' (which only installs a base Ubuntu
+operating system, for example), Vagrant will run the script
+'provision.sh'. This is just a shell script which contains the
+necessary commands to install all Finmag prerequisites as well as
+Finmag itself and to run the tests.
+
+
+[1] http://www.vagrantup.com/
+[2] http://www.vagrantbox.es/
