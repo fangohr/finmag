@@ -21,7 +21,7 @@ def plot_data(ts,ys):
 
 
 def test1():
-    y0 = np.array([0.1**i for i in range(10)])
+    y0 = np.array([0.9**i for i in range(100)])
     #y0 = np.array([1e-4,100,0,0,0,0,0,0,0,0])
     ts = Test_Sundials(call_back, y0)
     ts.run_step(50, min_dt=1e-5)
