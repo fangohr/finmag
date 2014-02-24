@@ -1,9 +1,49 @@
 import numpy as np
 import dolfin as df
+from math import pi
 from finmag.energies import DMI, Exchange
 from finmag import Simulation
 from finmag.util.helpers import vector_valued_function
 from finmag.util.pbc2d import PeriodicBoundary2D
+
+
+def test_dmi_uses_unit_length():
+    """
+    Set up a helical state in two meshes (one expressed in SI units
+    the other expressed in nanometers) and compute energies and fields.
+
+    """
+    A = 8.78e-12  # J/m
+    D = 1.58e-3  # J/m^2
+    Ms = 3.84e5  # A/m
+
+    energies = []
+    
+    for unit_length in (1, 1e-9):
+        radius = 200e-9 / unit_length
+        maxh = 5e-9 / unit_length
+        helical_period = (4 * pi * A / D) / unit_length
+        k = 2 * pi / helical_period
+        mesh = df.CircleMesh(df.Point(0, 0), radius, maxh)
+        S3 = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
+        m_expr = df.Expression(("0", "cos(k * x[0])", "sin(k * x[0])"), k=k)
+        m = df.interpolate(m_expr, S3)
+        dmi = DMI(D)
+        dmi.setup(S3, m, Ms, unit_length=unit_length)
+        energies.append(dmi.compute_energy())
+
+        H = df.Function(S3)
+        H.vector()[:] = dmi.compute_field()
+        print H(0.0, 0.0)
+
+        print "Mesh with radius {} and maxh {} and {} vertices.".format(radius, maxh, mesh.num_vertices())
+        print "Using unit_length = {}.".format(unit_length)
+        print "Helical period {}.".format(helical_period)
+        print "Energy {}.".format(dmi.compute_energy())
+
+    rel_diff_energies = abs(energies[0] - energies[1]) / abs(energies[1])
+    print "Relative difference of energy {}.".format(rel_diff_energies)
+    assert rel_diff_energies < 5e-4
 
 
 def test_interaction_accepts_name():
