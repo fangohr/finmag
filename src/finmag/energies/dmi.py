@@ -8,52 +8,55 @@ from finmag.util import helpers
 logger = logging.getLogger('finmag')
 
 
-def dmi_manual_curl(m, D, dim):
-    """Input arguments:
-
-       m a dolfin 3d-vector function on a 1d or 2d space,
-       D is the DMI constant
-       dim is the mesh dimension.
-
-       Returns the form to compute the DMI energy:
-
-         D * df.inner(M, df.curl(M)) * df.dx                      (1)
-
-       However, curl(M) cannot be computed on a 2d and 1d mesh.
-
-       Instead of equation (1), curl(m) can be computed as:
-
-         curlx = dmzdy - dmydz
-         curly = dmxdz - dmzdx
-         curlz = dmydx - dmxdy
-
-       and the scalar product with m is:
-
-         E = D * (mx*curlx + my*curly + mz*curlz) * df.dx
-
-       Derivatives along the z direction are set to be zero for both 1d
-       and 2d mesh, and derivatives along the y direction are zero for 1d
-       mesh since the physics does not change as a function of these
-       coordinates.
+def manual_times_curl(m, dim):
     """
+    Returns m times curl of m on 1-dimensional and 2-dimensional meshes.
+
+    Arguments:
+
+        - m is a dolfin function on a 1d or 2d vector function space
+        - dim is the mesh dimension
+   
+    On 3-dimensional meshes, dolfin supports computing the integrand
+    of the DMI energy using
+
+         df.inner(m, df.curl(m))        eq.1
+
+    However, the curl operator is not implemented on 1d and 2d meshes.
+    With the expansion of the curl in cartesian coordinates
+
+        curlx = dmzdy - dmydz
+        curly = dmxdz - dmzdx
+        curlz = dmydx - dmxdy
+
+    we can compute eq. 1 with
+
+        (mx * curlx + my * curly + mz * curlz).
+
+    """
+    if not dim in (1, 2):
+        raise ValueError("dim must be 1 or 2, "
+            "don't use this on higher-dimensional meshes")
 
     gradm = df.grad(m)
 
     dmxdx = gradm[0, 0]
     dmydx = gradm[1, 0]
     dmzdx = gradm[2, 0]
-    if dim == 2:
-        dmxdy = gradm[0, 1]
-        dmydy = gradm[1, 1]
-        dmzdy = gradm[2, 1]
-    elif dim == 1:
+
+    if dim == 1:
+        # there are no derivatives in y-direction on a 1d
+        # mesh so we can set them to zero
         dmxdy = 0
         dmydy = 0
         dmzdy = 0
-    else:
-        msg = "This function should only be used for " +\
-              "1 d or 2d meshes, not {}d".format(dim)
-        raise NotImplementedError(msg)
+    elif dim == 2:
+        dmxdy = gradm[0, 1]
+        dmydy = gradm[1, 1]
+        dmzdy = gradm[2, 1]
+
+    # there are no derivatives along z on either 1d or 2d
+    # meshes, so we can set them to zero
     dmxdz = 0
     dmydz = 0
     dmzdz = 0
@@ -61,8 +64,7 @@ def dmi_manual_curl(m, D, dim):
     curlx = dmzdy - dmydz
     curly = dmxdz - dmzdx
     curlz = dmydx - dmxdy
-
-    return D * (m[0] * curlx + m[1] * curly + m[2] * curlz)
+    return (m[0] * curlx + m[1] * curly + m[2] * curlz)
 
 
 class DMI(EnergyBase):
@@ -133,13 +135,10 @@ class DMI(EnergyBase):
         del(self.D_waiting_for_mesh)
 
         meshdim = S3.mesh().topology().dim()
-        if meshdim == 1:
-            E_integrand = dmi_manual_curl(m, self.DMI_factor * self.D, dim=1)
-        elif meshdim == 2:
-            E_integrand = dmi_manual_curl(m, self.DMI_factor * self.D, dim=2)
-        elif meshdim == 3:
+        if meshdim == 3:
             E_integrand = self.DMI_factor * self.D * df.inner(m, df.curl(m))
-            
+        else:
+            E_integrand = self.DMI_factor * self.D * manual_times_curl(m, meshdim)
             
         if self.interfacial:
             E_integrand = DMI_ultra_thin_film(m, self.DMI_factor * self.D, dim=meshdim)
