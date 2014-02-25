@@ -16,7 +16,8 @@ from glob import glob
 from finmag.sim.llg import LLG
 from finmag.sim.llg_stt import LLG_STT
 from finmag.util.consts import exchange_length, bloch_parameter, helical_period
-from finmag.util.meshes import mesh_info, mesh_volume, plot_mesh, plot_mesh_with_paraview
+from finmag.util.meshes import mesh_info, mesh_volume, mesh_size_plausible, \
+    describe_mesh_size, plot_mesh, plot_mesh_with_paraview
 from finmag.util.fileio import Tablewriter, FieldSaver
 from finmag.util import helpers
 from finmag.util.vtk_saver import VTKSaver
@@ -110,6 +111,9 @@ class Simulation(object):
         elif pbc == '1d':
             self.pbc = PeriodicBoundary1D(mesh)
 
+        if not mesh_size_plausible(mesh, unit_length):
+            log.warning("The mesh is {}.".format(describe_mesh_size(mesh, unit_length)))
+            log.warning("unit_length is set to {}. Are you sure this is correct?".format(unit_length))
 
         self.mesh = mesh
         self.Ms = Ms
