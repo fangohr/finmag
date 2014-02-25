@@ -27,7 +27,7 @@ def disk(d=60, h=10, maxh=5.0, relaxed=True, name='normal_modes_nanodisk', A=13e
     Ms = 8e5
     m_init = [1, 0, 0]
     alpha_relax = 1.0
-    sim = finmag.normal_mode_simulation(mesh, Ms, m_init, alpha=alpha_relax, unit_length=1e-9, A=A, H_ext=H_ext_relax, demag_solver=demag_solver)
+    sim = finmag.normal_mode_simulation(mesh, Ms, m_init, alpha=alpha_relax, unit_length=1e-9, A=A, H_ext=H_ext_relax, demag_solver=demag_solver, name=name)
 
     if relaxed:
         if d == 60 and h == 10 and maxh == 5.0:
