@@ -1,3 +1,4 @@
+import time
 import finmag
 import logging
 import shutil
@@ -5,7 +6,7 @@ import os
 import types
 import dolfin as df
 import numpy as np
-from datetime import datetime
+from datetime import datetime, timedelta
 
 log = logging.getLogger("finmag")
 
@@ -192,3 +193,18 @@ def run_normal_modes_computation(sim, params_relax=None, params_precess=None):
         params.update(params_precess)
     set_simulation_parameters_and_schedule(sim, params, suffix='_precess')
     sim.run_until(params['t_end'])
+
+
+def eta(sim, when_started):
+    """
+    Estimated time of simulation completion.
+    Only works in conjunction with run_until.
+
+    """
+    elapsed_real_time = time.time() - when_started
+    simulation_speed = sim.t / elapsed_real_time
+    if simulation_speed > 0:
+        remaining_simulation_time = sim.t_max - sim.t
+        remaining_real_time = remaining_simulation_time / simulation_speed
+        log.info("Integrated up to t = {:.4} ns. Predicted end in {}.".format(
+            sim.t * 1e9, str(timedelta(seconds=remaining_real_time))))
