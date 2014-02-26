@@ -1,6 +1,7 @@
 from __future__ import division
 import os
 import re
+import time
 import types
 import shutil
 import inspect
@@ -151,6 +152,7 @@ class Simulation(object):
         self._render_scene_indices = {}
 
         self.scheduler_shortcuts = {
+            'eta': sim_helpers.eta,
             'save_restart_data': sim_helpers.save_restart_data,
             'save_ndt': sim_helpers.save_ndt,
             'save_m': Simulation._save_m_incremental,
@@ -576,6 +578,7 @@ class Simulation(object):
         log.info("Simulation will run until t = {:.2g} s.".format(t))
         exit_at = events.StopIntegrationEvent(t)
         self.scheduler._add(exit_at)
+        self.t_max = t
 
         run_with_schedule(self.integrator, self.scheduler, self.callbacks_at_scheduler_events)
         # The following line is necessary because the time integrator may
@@ -872,6 +875,10 @@ class Simulation(object):
 
                     func = aux_save
                     func = lambda sim: sim._save_m_to_vtk(vtk_saver)
+                elif func == "eta":
+                    eta = self.scheduler_shortcuts[func]
+                    started = time.time()
+                    func = lambda sim: eta(sim, when_started=started)
                 else:
                     func = self.scheduler_shortcuts[func]
             else:
