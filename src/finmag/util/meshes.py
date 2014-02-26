@@ -765,10 +765,12 @@ def order_of_magnitude(value):
 
 def mesh_size(mesh, unit_length):
     """
-    A crude way to determine mesh size.
+    Return the maximum extent of the mesh along any of the x/y/z axes.
 
     """
-    return mesh.coordinates().max() * unit_length
+    coords = mesh.coordinates()
+    max_extent = max(coords.max(axis=0) - coords.min(axis=0))
+    return max_extent * unit_length
 
 
 def mesh_size_plausible(mesh, unit_length):
