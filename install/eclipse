@@ -1,0 +1,57 @@
+Eclipse
+=======
+
+Install Eclipse
+----------------
+
+Method 1. Install from ubuntu repositories.
+    Installs version 3.8.
+    sudo apt-get install eclipse
+
+Method 2. Download from eclipse website.
+    Installs version 4.3.
+    You'll need the Java environment OpenJDK so
+    sudo apt-get install openjdk-7-jre
+    Note that GNU-Java (gcr-jre) won't work.
+
+    Then download eclipse from 
+    https://www.eclipse.org/downloads/
+
+Alternative if you prefer to pay money:
+    Install LiClipse instead of eclipse from
+    http://brainwy.github.io/liclipse
+    which has python support built-in
+
+Install Python Support
+----------------------
+
+Click Help -> Install New Software... -> Add...
+Enter PyDev as name and http://pydev.org/updates as Location.
+Then check the box named "PyDev" and click Next.
+Finish the installation.
+
+Add finmag project
+------------------
+
+Add a new PyDev project
+    File -> New -> Project -> PyDev -> PyDev Project
+Don't use the default project contents but select your finmag directory.
+Set don't configure PYTHONPATH (you will probably have done that already).
+
+
+First Steps
+-----------
+
+I like adding an Outline window, which will list variables and functions
+in the opened file. Add it by clicking Window -> Show View -> Outline.
+
+Jump to Definition is F3.
+
+Troubleshooting
+---------------
+
+I'm running eclipse 4.3.1. and the menus don't show!
+See http://askubuntu.com/questions/361040/eclipse-menus-are-cut-off-or-dont-show
+
+
+    
