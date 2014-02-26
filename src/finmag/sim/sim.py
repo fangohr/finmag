@@ -1,6 +1,7 @@
 from __future__ import division
 import os
 import re
+import time
 import types
 import shutil
 import inspect
@@ -16,7 +17,8 @@ from glob import glob
 from finmag.sim.llg import LLG
 from finmag.sim.llg_stt import LLG_STT
 from finmag.util.consts import exchange_length, bloch_parameter, helical_period
-from finmag.util.meshes import mesh_info, mesh_volume, plot_mesh, plot_mesh_with_paraview
+from finmag.util.meshes import mesh_info, mesh_volume, mesh_size_plausible, \
+    describe_mesh_size, plot_mesh, plot_mesh_with_paraview
 from finmag.util.fileio import Tablewriter, FieldSaver
 from finmag.util import helpers
 from finmag.util.vtk_saver import VTKSaver
@@ -110,6 +112,9 @@ class Simulation(object):
         elif pbc == '1d':
             self.pbc = PeriodicBoundary1D(mesh)
 
+        if not mesh_size_plausible(mesh, unit_length):
+            log.warning("The mesh is {}.".format(describe_mesh_size(mesh, unit_length)))
+            log.warning("unit_length is set to {}. Are you sure this is correct?".format(unit_length))
 
         self.mesh = mesh
         self.Ms = Ms
@@ -147,6 +152,7 @@ class Simulation(object):
         self._render_scene_indices = {}
 
         self.scheduler_shortcuts = {
+            'eta': sim_helpers.eta,
             'save_restart_data': sim_helpers.save_restart_data,
             'save_ndt': sim_helpers.save_ndt,
             'save_m': Simulation._save_m_incremental,
@@ -572,6 +578,7 @@ class Simulation(object):
         log.info("Simulation will run until t = {:.2g} s.".format(t))
         exit_at = events.StopIntegrationEvent(t)
         self.scheduler._add(exit_at)
+        self.t_max = t
 
         run_with_schedule(self.integrator, self.scheduler, self.callbacks_at_scheduler_events)
         # The following line is necessary because the time integrator may
@@ -868,6 +875,10 @@ class Simulation(object):
 
                     func = aux_save
                     func = lambda sim: sim._save_m_to_vtk(vtk_saver)
+                elif func == "eta":
+                    eta = self.scheduler_shortcuts[func]
+                    started = time.time()
+                    func = lambda sim: eta(sim, when_started=started)
                 else:
                     func = self.scheduler_shortcuts[func]
             else:

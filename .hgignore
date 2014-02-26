@@ -25,4 +25,5 @@ _build
 doc/modules/
 doc/ipython_notebooks_dest
 tmp
-
+.pydevproject
+.project

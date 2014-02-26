@@ -14,6 +14,7 @@ import os
 import re
 import sys
 import copy
+import math
 import shutil
 import commands
 import logging
@@ -756,6 +757,62 @@ def mesh_info(mesh):
 
 def print_mesh_info(mesh):
     print mesh_info(mesh)
+
+
+def order_of_magnitude(value):
+    return int(math.floor(math.log10(value)))
+
+
+def mesh_size(mesh, unit_length):
+    """
+    A crude way to determine mesh size.
+
+    """
+    return mesh.coordinates().max() * unit_length
+
+
+def mesh_size_plausible(mesh, unit_length):
+    """
+    Try to detect if unit_length fits to the mesh.
+
+    """
+    mesh_size_magnitude = order_of_magnitude(mesh_size(mesh, unit_length))
+    # we expect mesh sizes inbetween a nanometer and tens of microns
+    plausible = (mesh_size_magnitude >= -9) and (mesh_size_magnitude <= -5)
+    return plausible
+
+
+def describe_mesh_size(mesh, unit_length):
+    """
+    Describe the size of the mesh in words.
+    Returns string which could be read after `Your mesh is...`.
+
+    """
+    magn = order_of_magnitude(mesh_size(mesh, unit_length))
+    if magn <= -15:
+        # happens when mesh expressed in meters and unit_length=1e-9 nevertheless
+        return "smaller than a femtometer"
+    if magn < -9:
+        return "smaller than a nanometer"
+    if magn == -9:
+        return "a few nanometers large"
+    if magn == -8:
+        return "tens of nanometers large"
+    if magn == -7:
+        return "hundreds of nanometers large"
+    if magn == -6:
+        return "a micrometer large or more"
+    if magn == -5:
+        return "tens of micrometers large"
+    if magn < 0:
+        return "so large! Such wow. Very mesh."
+    # the following happens when mesh expressed in nanometers and unit_length=1
+    if magn == 0:
+        return "a few meters large"
+    if magn == 1:
+        return "dozens of meters large"
+    if magn >= 2:
+        return "hundreds of meters large"
 
 
 def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, dg_fun=None,**kwargs):

@@ -16,6 +16,7 @@ def run_simulation(verbose=False):
     sim.add(Demag())
 
     sim.schedule('save_averages', every=5e-12)
+    sim.schedule("eta", every=10e-12)
     sim.run_until(3e-10)
 
     print default_timer
