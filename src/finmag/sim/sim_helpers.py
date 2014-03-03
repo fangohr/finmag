@@ -7,6 +7,7 @@ import types
 import dolfin as df
 import numpy as np
 from datetime import datetime, timedelta
+from finmag.util.consts import ONE_DEGREE_PER_NS
 
 log = logging.getLogger("finmag")
 
@@ -208,3 +209,21 @@ def eta(sim, when_started):
         remaining_real_time = remaining_simulation_time / simulation_speed
         log.info("Integrated up to t = {:.4} ns. Predicted end in {}.".format(
             sim.t * 1e9, str(timedelta(seconds=remaining_real_time))))
+
+
+def plot_relaxation(sim, filename="relaxation.png"):
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    t, max_dmdt_norms = np.array(zip(* sim.relaxation.dmdts))
+    ax.semilogy(t * 1e9, max_dmdt_norms/ONE_DEGREE_PER_NS, "ro")
+    ax.set_xlabel("time (ns)")
+    ax.set_ylabel("maximum dm/dt (1/ns)")
+    threshold = sim.relaxation.stopping_dmdt/ONE_DEGREE_PER_NS
+    ax.axhline(y=threshold, xmin=0.5, color="red", linestyle="--")
+    ax.annotate("threshold", xy=(0.6, 1.1 * threshold), color="r")
+    plt.savefig(filename)
+    plt.close()
