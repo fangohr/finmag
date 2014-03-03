@@ -153,13 +153,14 @@ class Simulation(object):
 
         self.scheduler_shortcuts = {
             'eta': sim_helpers.eta,
-            'save_restart_data': sim_helpers.save_restart_data,
-            'save_ndt': sim_helpers.save_ndt,
-            'save_m': Simulation._save_m_incremental,
-            'save_averages': sim_helpers.save_ndt,
-            'save_vtk': self.save_vtk,
-            'save_field': Simulation._save_field_incremental,
+            'plot_relaxation': sim_helpers.plot_relaxation,
             'render_scene': Simulation._render_scene_incremental,
+            'save_averages': sim_helpers.save_ndt,
+            'save_field': Simulation._save_field_incremental,
+            'save_m': Simulation._save_m_incremental,
+            'save_ndt': sim_helpers.save_ndt,
+            'save_restart_data': sim_helpers.save_restart_data,
+            'save_vtk': self.save_vtk,
             'switch_off_H_ext': Simulation.switch_off_H_ext,
         }
 
