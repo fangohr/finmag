@@ -1,0 +1,24 @@
+Started to put together a script to put together 'generic'
+documentation for finmag. We can use this (emacs orgmode) document 
+to track completion of this.
+
+The idea is to bundle those (ipython notebook) docs that explain the
+basic use that is likely to be relevant to all finmag users.
+
+This might include DMI, dispersion relation calculations and normal
+mode computations as this is a somewhat specialised application.
+
+It should include basic capabilities to
+
+- [ ] set up a micromagnetic problem
+- [ ] with and without anisotropy
+- [ ] with and without applied field
+- [ ] save data
+  - [ ] averages
+  - [ ] fields
+  this would be natural place to explain the whole 'schedule' capabilities
+
+- [ ] restart from a saved configuration
+- [ ] sampling data at arbitrary positions 
+- [ ] plotting (or saving vtk files) of configurations 
+- [ ] and saving vtk files of animated sequences.
