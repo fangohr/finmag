@@ -471,6 +471,8 @@ class Simulation(object):
         """
         if field_type == 'm':
             field = self.llg._m
+        # elif field_type = 'dmdt':
+        #     field = 
         else:
             field = self.llg.effective_field.get_dolfin_function(field_type)
 
@@ -537,6 +539,10 @@ class Simulation(object):
                 'unit': '<1>',
                 'get': lambda sim: sim.integrator.stats()['hlast'],
                 'header': 'last_step_dt'}
+            self.tablewriter.entities['dmdt'] = {
+                'unit': '<A/ms>',
+                'get': lambda sim: sim.dmdt_max,
+                'header': ('dmdt_x', 'dmdt_y', 'dmdt_z')}
 
             self.tablewriter.update_entity_order()
 
