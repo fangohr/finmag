@@ -10,15 +10,23 @@ mode computations as this is a somewhat specialised application.
 
 It should include basic capabilities to
 
-- [ ] set up a micromagnetic problem
-- [ ] with and without anisotropy
-- [ ] with and without applied field
-- [ ] save data
-  - [ ] averages
-  - [ ] fields
-  this would be natural place to explain the whole 'schedule' capabilities
+- [X] set up a micromagnetic problem
+  kind of done in example2. Lot's of extra stuff done in example 2 
+  that is now outdated (scheduler and table reader would be better)
 
-- [ ] restart from a saved configuration
-- [ ] sampling data at arbitrary positions 
+- [ ] with and without anisotropy
+
+- [ ] with and without applied field
+
+- [-] save data
+  - [X] averages
+    Done in scheduler example
+  - [ ] fields (in what  format?)
+
+- [X] restart from a saved configuration
+
+- [X] sampling data at arbitrary positions 
+
 - [ ] plotting (or saving vtk files) of configurations 
+
 - [ ] and saving vtk files of animated sequences.
