@@ -590,7 +590,7 @@ def plot_energy_2d(name, step=-1):
         
     plt.legend()
     plt.grid()
-    plt.ylabel('Energy')
+    plt.ylabel('Energy (J)')
     plt.xlabel('Position in path (a.u.)')
     
     fig.savefig('energy_%d.pdf'%step)
