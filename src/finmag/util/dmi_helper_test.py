@@ -14,7 +14,7 @@ def init_skx_down(pos):
         return (0,0,1)
 
 
-def test0_compute_skyrmion_number_2d():
+def compute_skyrmion_number_2d_example():
 
     mesh = df.CircleMesh(df.Point(0,0),20,4)
     
@@ -64,5 +64,5 @@ def test_compute_skyrmion_number_2d_pbc():
     assert sky_num < -0.95 and sky_num > -1.0
 
 if __name__ == "__main__":
-    #test0_compute_skyrmion_number_2d()
+    compute_skyrmion_number_2d_example()
     test_compute_skyrmion_number_2d_pbc()
