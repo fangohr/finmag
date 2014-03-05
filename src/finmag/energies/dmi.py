@@ -162,8 +162,8 @@ def DMI_ultra_thin_film(m, D, dim):
     and Thiaville (http://arxiv.org/abs/1310.0666)
 
     """
-
-    assert dim <= 2, "Only implemented for 2d mesh"
+    #in principle, this class also works for 3d mesh? 
+    #assert dim <= 2, "Only implemented for 2d mesh"
 
     gradm = df.grad(m)
 
