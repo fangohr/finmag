@@ -209,8 +209,12 @@ def render_paraview_scene(
             show_center_axes, representation, palette, use_parallel_projection,
             trim_border, rescale, diffuse_color))
     write_file_on_host(hostname, scriptfile, script_string)
-    copy_file_to_host(None, os.path.join(os.path.dirname(__file__), './visualization_impl.py'),
-                      hostname, tmpdir)
+    vis_impl_script = os.path.join(os.path.dirname(__file__), './visualization_impl.py')
+    if not os.path.exists(vis_impl_script):
+        vis_impl_script = os.path.join(os.path.dirname(__file__), './visualization_impl.so')
+    if not os.path.exists(vis_impl_script):
+        raise RuntimeError("Cannot use Paraview visualisation. This should not happen.")
+    copy_file_to_host(None, vis_impl_script, hostname, tmpdir)
 
     # Execute the script in a separate process
     curdir_bak = os.getcwd()
