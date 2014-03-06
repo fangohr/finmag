@@ -1,8 +1,10 @@
 import numpy as np
 import dolfin as df
 import tempfile
+import logging
 import pytest
 import os
+import re
 from finmag.util.helpers import *
 from finmag.util.meshes import box, cylinder
 from finmag.util.visualization import render_paraview_scene
@@ -12,6 +14,26 @@ import finmag
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 TOLERANCE = 1e-15
+
+
+def test_logging_handler_str():
+    """
+    """
+    hdlr = logging.NullHandler()
+    hdlr_str = logging_handler_str(hdlr)
+    print hdlr_str
+    assert(re.match("^<logging.NullHandler object at .*>$", hdlr_str) != None)
+
+
+def test_logging_status_str():
+    """
+    Test that we can call the function `logging_status_str()` and it returns a
+    non-empty string.
+    """
+    status_str = logging_status_str()
+    print status_str
+    assert(isinstance(status_str, str) and (status_str != ""))
+
 
 def test_components():
     x = np.array([1, 1, 1, 2, 2, 2, 3, 3, 3])

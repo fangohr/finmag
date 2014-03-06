@@ -74,8 +74,6 @@ def save_plot(ts, ys, ts_ref, m_ref, alpha):
     my_exact = m_exact[1,:]
     mz_exact = m_exact[2,:]
 
-    import matplotlib as mpl
-    mpl.use("Agg")
     import matplotlib.pyplot as plt
 
     plt.plot(ts, mx, 'o', label='mx')

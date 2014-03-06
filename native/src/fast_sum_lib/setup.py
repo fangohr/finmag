@@ -12,8 +12,8 @@ ext_modules = [
     Extension("fast_sum_lib",
               sources = ['fast_sum.c','fast_sum_lib.pyx'],
               include_dirs = [numpy.get_include()],
-              libraries=['m','gomp'],
-              extra_compile_args=["-fopenmp"],
+              libraries=['m'],
+              #extra_compile_args=["-fopenmp"],
               #extra_link_args=["-g"],
         )
     ]

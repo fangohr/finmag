@@ -1,4 +1,5 @@
 import numpy as np
+import dolfin as df
 
 
 def find_skyrmion_center_2d(fun, point_up=False):
@@ -47,3 +48,30 @@ def find_skyrmion_center_2d(fun, point_up=False):
     center = coods_refine[min_id]
     
     return center[0],center[1]
+
+
+def compute_skyrmion_number_2d(m):
+    
+    gradm = df.grad(m)
+
+    dmx_dx = gradm[0, 0]
+    dmy_dx = gradm[1, 0]
+    dmz_dx = gradm[2, 0]
+    
+    dmx_dy = gradm[0, 1]
+    dmy_dy = gradm[1, 1]
+    dmz_dy = gradm[2, 1]
+    
+    mx = m[0]
+    my = m[1]
+    mz = m[2]
+    
+    tx = mx*(-dmy_dy*dmz_dx + dmy_dx*dmz_dy)
+    ty = my*(dmx_dy*dmz_dx - dmx_dx*dmz_dy)
+    tz = mz*(-dmx_dy*dmy_dx + dmx_dx*dmy_dy) 
+    
+    total = (tx + ty + tz) * df.dx
+    
+    sky_num = df.assemble(total)/(4*np.pi)
+
+    return sky_num

@@ -31,28 +31,35 @@ import sh
 logger = logging.getLogger("finmag")
 
 
-def logging_status_str():
-    """Return a string that shows all known loggers and their current levels
+def logging_handler_str(handler):
+    """
+    Return a string describing the given logging handler.
 
+    """
+    if handler.__class__ == logging.StreamHandler:
+        handlerstr = str(handler.stream)
+    elif handler.__class__ in [logging.FileHandler, logging.handlers.RotatingFileHandler]:
+        handlerstr = str(handler.baseFilename)
+    else:
+        handlerstr = str(handler)
+    return handlerstr
+
+
+def logging_status_str():
+    """
+    Return a string that shows all known loggers and their current levels.
     This is useful for debugging of the logging module.
+
     """
     rootlog = logging.getLogger('')
     msg = ("Current logging status: "
            "rootLogger level=%2d\n" % rootlog.level)
 
-    # This keeeps the loggers (with the exception of root)
+    # This keeps the loggers (with the exception of root)
     loggers = logging.Logger.manager.loggerDict
     for loggername, logger in [('root', rootlog)] + loggers.items():
-        for i in range(len(logger.handlers)):
-            handler = logger.handlers[i]
-            #add output depending on handler class
-            if handler.__class__ == logging.StreamHandler:
-                handlerstr = str(handler.stream)
-            elif handler.__class__ in [logging.FileHandler, logging.handlers.RotatingFileHandler]:
-                handlerstr = str(handler.baseFilename)
-            else:
-                handlerstr = str(handler)
-
+        for i, handler in enumerate(logger.handlers):
+            handlerstr = logging_handler_str(handler)
             msg += (" %15s (lev=%2d, eff.lev=%2d) -> handler %d: lev=%2d %s\n"
                     % (loggername, logger.level, logger.getEffectiveLevel(),
                        i, handler.level, handlerstr))

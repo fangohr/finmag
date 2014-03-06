@@ -15,8 +15,7 @@ required="fenics libboost-python-dev libboost-thread-dev libsundials-serial-dev
     libboost-test-dev python-matplotlib python-visual python-scipy python-pip
     python-setuptools python-progressbar paraview-python cython netgen netgen-doc"
 
-building_doc="texlive-latex-extra texlive-latex-recommended python-pygments
-    texlive-fonts-recommended"
+building_doc="texlive-latex-extra texlive-latex-recommended texlive-fonts-recommended python-pygments"
 
 suggested="mercurial ipython ipython-notebook grace gnuplot gmsh"
 
