@@ -81,6 +81,35 @@ def test_compute_energy():
     check_energy_for_m((1/sqrt(2), 1/sqrt(2), 0), E_aligned * cos(pi * 45 / 180))
     check_energy_for_m((-0.5, 2/sqrt(3), 0), -E_aligned * cos(pi * 60 / 180))
 
+def test_energy_density_function():
+    """
+    Compute the Zeeman energy density over the entire mesh, integrate it, and
+    compare it to the expected result.
+    """
+
+    mesh = df.RectangleMesh(-50, -50, 50, 50, 10, 10)
+    unit_length = 1e-9
+    H = 1e6
+
+    # Create simulation object.
+    sim = finmag.Simulation(mesh, 1e5, unit_length=unit_length)
+
+    # Set uniform magnetisation.
+    def m_ferromagnetic(pos):
+        return np.array([0., 0., 1.])
+
+    sim.set_m(m_ferromagnetic)
+
+    # Assign zeeman object to simulation
+    sim.add(Zeeman(H * np.array([0., 0., 1.])))
+
+    # Get energy density function
+    edf = sim.get_interaction('Zeeman').energy_density_function()
+
+    # Integrate it over the mesh and compare to expected result.
+    total_energy = df.assemble(edf * df.dx) * unit_length
+    expected_energy = -mu0 * H
+    assert (total_energy + expected_energy) < 1e-6
 
 def test_compute_energy_in_regions(tmpdir):
     os.chdir(str(tmpdir))
