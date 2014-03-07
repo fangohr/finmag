@@ -47,7 +47,7 @@ def test_compute_skyrmion_number_2d_pbc():
     sim.set_m(init_skx_down)
 
     sim.add(Exchange(1.3e-11))
-    sim.add(DMI(D = 4e-3, interfacial=False))
+    sim.add(DMI(D = 4e-3))
     sim.add(Zeeman((0,0,0.45*Ms)))
     
     sim.llg.do_precession = False
