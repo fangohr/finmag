@@ -15,7 +15,7 @@ def manual_times_curl(m, dim):
     Arguments:
 
         - m is a dolfin function on a 1d or 2d vector function space
-        - dim is the mesh dimension
+        - dim is the dimension of the dmi
    
     On 3-dimensional meshes, dolfin supports computing the integrand
     of the DMI energy using
@@ -67,6 +67,7 @@ def manual_times_curl(m, dim):
     return (m[0] * curlx + m[1] * curly + m[2] * curlz)
 
 
+
 class DMI(EnergyBase):
     """
     Compute the Dzyaloshinskii-Moriya interaction (DMI) field.
@@ -84,6 +85,11 @@ class DMI(EnergyBase):
 
         method
             See documentation of EnergyBase class for details.
+            
+            
+        dmi_type
+            options are 'auto', '1d', '2d', '3d' and 'interfacial', default is 'auto' 
+            which means the dmi is auto selected according to the mesh dimension.
 
 
     *Example of Usage*
@@ -118,11 +124,11 @@ class DMI(EnergyBase):
             H_dmi_np = dmi_np.compute_field()
     """
 
-    def __init__(self, D, method="box-matrix-petsc", name='DMI', interfacial=False):
+    def __init__(self, D, method="box-matrix-petsc", name='DMI', dmi_type='auto'):
         self.D_waiting_for_mesh = D
         self.name = name
         super(DMI, self).__init__(method, in_jacobian=True)
-        self.interfacial = interfacial
+        self.dmi_type = dmi_type
 
     @mtimed
     def setup(self, S3, m, Ms, unit_length=1):
@@ -135,13 +141,23 @@ class DMI(EnergyBase):
         del(self.D_waiting_for_mesh)
 
         meshdim = S3.mesh().topology().dim()
-        if meshdim == 3:
+        
+        dmi_dim  = meshdim
+        
+        if self.dmi_type is '1d':
+            dmi_dim = 1
+        elif self.dmi_type is '2d':
+            dmi_dim = 2
+        elif self.dmi_type is '3d':
+            dmi_dim = 3
+        
+        if dmi_dim == 3:
             E_integrand = self.DMI_factor * self.D * df.inner(m, df.curl(m))
         else:
-            E_integrand = self.DMI_factor * self.D * manual_times_curl(m, meshdim)
+            E_integrand = self.DMI_factor * self.D * manual_times_curl(m, dmi_dim)
             
-        if self.interfacial:
-            E_integrand = DMI_ultra_thin_film(m, self.DMI_factor * self.D, dim=meshdim)
+        if self.dmi_type is 'interfacial':
+            E_integrand = DMI_ultra_thin_film(m, self.DMI_factor * self.D, dim=dmi_dim)
 
         super(DMI, self).setup(E_integrand, S3, m, Ms, unit_length)
 
@@ -175,14 +191,11 @@ def DMI_ultra_thin_film(m, D, dim):
         dmxdy = 0
         dmydy = 0
         dmzdy = 0
-    elif dim == 2:
+    else: # works for 2d mesh or 3d mesh
         dmxdy = gradm[0, 1]
         dmydy = gradm[1, 1]
         dmzdy = gradm[2, 1]
-    else:
-        msg = "This function should only be used for " +\
-              "1 d or 2d meshes, not {}d".format(dim)
-        raise NotImplementedError(msg)
+
 
     mx = m[0]
     my = m[1]
