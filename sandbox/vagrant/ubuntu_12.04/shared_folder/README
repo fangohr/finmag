@@ -1,0 +1,4 @@
+This folder is currently only used to contain the SSH keys for
+passwordless Bitbucket access (which need to be placed here by
+the user). We should probably rename it to something more
+meaningful.

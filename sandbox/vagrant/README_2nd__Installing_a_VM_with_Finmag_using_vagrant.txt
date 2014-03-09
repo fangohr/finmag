@@ -1,22 +1,46 @@
+Preparatory steps
+=================
+
+1) Getting a base box
+
+   In order to use vagrant you will need a 'base box' which provides
+   a bare-bones Ubuntu installation. You can follow the steps in the
+   file 'README_1st' to build one from scratch. This is the recommended
+   way (it may take a little while but you only need to do it once).
+
+   Alternatively, you can use one of the pre-packaged boxes available
+   on the web (e.g. at http://www.vagrantbox.es/). If you specify the
+   URL of the .box file in the file 'ubuntu_12.04/Vagrantfile' (see
+   configuration option 'config.vm.box_url') then the .box image will
+   be downloaded automatically. However, be aware that most of these
+   box images are not 100% suited for our purpose (e.g. they might not
+   have the correct version of the VirtualBox Guest Additions installed).
+   Therefore it is highly recommended to build your own base box as
+   described in the README_1st file.
+
+2) SSH keys for passwordless access to Bitbucket
+
+   In order to clone the finmag and finmag-dist repositories, vagrant
+   needs passwordless access to Bitbucket. In order to enable this,
+   place suitable SSH keys (e.g. the ones from Marvin on aleph0, which
+   are called 'jenkins_id_rsa' and 'jenkins_id_rsa.pub') into the folder
+   './ubuntu_12.04/shared_folder/'
+
+
 Quick getting-started guide
 ===========================
 
-To get started quickly, run the following commands in a terminal
+After building or obtaining a base box (which should be put in the
+directory ubuntu_12.04/downloads), all you need to do is:
 
-   1) cd ubuntu_13.10
+   cd ubuntu_12.40 && vagrant up
 
-   2) make download-base-box
+The 'vagrant up' command command will import the base box (potentially
+after downloading it, in case you specified a base box URL from the web)
+and install Finmag along with all necessary prerequisites (including
+FEniCS, OOMMF, Magpar and Nmag).
 
-      This is not strictly necessary but makes things faster if you
-      want to run 'vagrant up' repeatedly, e.g during debugging.
-
-   3) vagrant up
-
-      This command will download the box (either from the internet or
-      copy it from your downloads/ folder if you ran set 2) above)
-
-
-Note that by default, Vagrant will store the box images in the
+Note that by default, Vagrant will store the imported box image in the
 subfolder ~/.vagrant.d of your home directory. If you want them in a
 different place (e.g. because disk space is limited), set the
 VAGRANT_HOME environment variable to the desired location. For
