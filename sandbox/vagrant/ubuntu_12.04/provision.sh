@@ -36,7 +36,9 @@ dpkg -i ${VAGRANT_HOME}/finmag-dist/finmag_ubuntu_12_04*.deb
 # TODO:
 #
 # - [ ] Copy documentation IPython notebooks into /home/vagrant/finmag_docs
-# - [ ] Create new user 'finmag' (with password 'finmag')
+# - [ ] Create new user 'finmag' (with password 'finmag'); make sure that a basic .bashrc file is created
 # - [ ] Run python -c "import finmag" (to create the .finmagrc file)
 # - [ ] Adapt .finmagrc so that xpra=False by default
+# - [ ] Add line to ~/.bash_aliases (until we migrate to a newer version of Paraview):
+#          alias paraview='paraview --use-old-panels'
 # - [ ] Remove ~/finmag and ~/finmag-dist.
