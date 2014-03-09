@@ -1,0 +1,63 @@
+Only in src-new/: .DS_Store
+Only in src: COPYING
+Only in src: Doxyfile
+Only in src: Makefile
+Only in src: Makefile.devel
+Only in src: Makefile.files
+diff -u src/Makefile.in.defaults src-new/Makefile.in.defaults
+--- src/Makefile.in.defaults	2010-03-27 15:53:58.000000000 +0000
++++ src-new/Makefile.in.defaults	2012-03-27 00:22:40.000000000 +0100
+@@ -5,7 +5,7 @@
+ # default settings ##########################################################
+ 
+ # magpar home directory
+-MAGPAR_HOME = $(HOME)/work/magpar
++MAGPAR_HOME = $(HOME)/magpar-0.9
+ 
+ # directory where the manually compiled libraries are installed
+ PD = $(MAGPAR_HOME)/libs
+Only in src: Makefile.in.host_debian
+Only in src: Makefile.in.host_oldlibs
+diff -u src/Makefile.libs src-new/Makefile.libs
+--- src/Makefile.libs	2010-04-09 21:32:38.000000000 +0100
++++ src-new/Makefile.libs	2012-03-27 00:22:30.000000000 +0100
+@@ -329,13 +329,12 @@
+ ############################
+ # ParMETIS
+ ############################
+-
+ parmetislib = $(PD)/ParMetis-3.1.1/libmetis.a
+ parmetis: $(parmetislib)
+ $(parmetislib):
+ 	cd $(PD); \
+ 	lib=ParMetis-3.1.1; \
+-	if [ ! -e $$lib.tar.gz ]; then wget -N http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/$$lib.tar.gz; fi; \
++	if [ ! -e $$lib.tar.gz ]; then wget -N http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/OLD/$$lib.tar.gz; fi; \
+ 	if [ ! -d $$lib ] ; then gunzip -c $$lib.tar.gz|tar xv ; fi ; \
+ 	cd $$lib/METISLib; \
+ 	$(MAKE) "CC=$(MPI_DIR)/bin/mpicc" "LD=$(MPI_DIR)/bin/mpicc" 2>&1 | tee make.log
+@@ -553,7 +552,7 @@
+ $(zliblib):
+ 	cd $(PD); \
+ 	lib=`basename $(ZLIB_DIR)`; \
+-	if [ ! -e $$lib.tar.gz ]; then wget -N http://www.zlib.net/$$lib.tar.gz; fi; \
++	if [ ! -e $$lib.tar.gz ]; then wget -N http://sourceforge.net/projects/libpng/files/zlib/1.2.4/$$lib.tar.gz; fi; \
+ 	if [ ! -d $$lib ] ; then gunzip -c $$lib.tar.gz|tar xv ; fi ; \
+ 	ln -s $$lib zlib; \
+ 	cd $$lib; \
+Only in src: PETSc-config-magpar.py
+Only in src: README
+Only in src: doc
+Only in src: emini
+Only in src: field
+Only in src: griddata.h
+Only in src: init
+Only in src: io
+Only in src: llg
+Only in src: magpar_revision.h
+Only in src: magpar_version.h
+Only in src: main.c
+Only in src: png
+Only in src: pytools
+Only in src: tools
+Only in src: util

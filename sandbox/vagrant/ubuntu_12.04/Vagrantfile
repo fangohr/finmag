@@ -10,11 +10,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # please see the online documentation at vagrantup.com.
 
   # Every Vagrant virtual environment requires a box to build off of.
-  config.vm.box = "precise64"
+  config.vm.box = "finmag_ubuntu-12.04-amd64"
 
   # The url from where the 'config.vm.box' box will be fetched if it
   # doesn't already exist on the user's system.
-  config.vm.box_url = ["downloads/saucy64_vmware_fusion.box", "http://brennovich.s3.amazonaws.com/saucy64_vmware_fusion.box"]
+  config.vm.box_url = ["downloads/opscode_ubuntu-12.04_chef-provisionerless.box"]
+  #config.vm.box_url = ["downloads/precise64.box", "http://dl.dropbox.com/u/1537815/precise64.box"]
 
   # Create a forwarded port mapping which allows access to a specific port
   # within the machine from a port on the host machine. In the example below,
@@ -38,26 +39,26 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # the path on the host to the actual folder. The second argument is
   # the path on the guest to mount the folder. And the optional third
   # argument is a set of non-required options.
-  config.vm.synced_folder "shared_folder", "/vagrant_shared"
+  #config.vm.synced_folder "shared_folder", "/vagrant_shared"
 
   # Provider-specific configuration so you can fine-tune various
   # backing providers for Vagrant. These expose provider-specific options.
   # Example for VirtualBox:
   #
-  # config.vm.provider :virtualbox do |vb|
-  #   # Don't boot with headless mode
-  #   vb.gui = true
+  #config.vm.provider :virtualbox do |vb|
+  #  # Don't boot with headless mode
+  #  vb.gui = true
   #
   #   # Use VBoxManage to customize the VM. For example to change memory:
   #   vb.customize ["modifyvm", :id, "--memory", "1024"]
-  # end
+  #end
   #
   # View the documentation for the provider you're using for more
   # information on available options.
 
   config.vm.provider :virtualbox do |vb|
     # Use VBoxManage to customize the VM. For example to change memory:
-    vb.customize ["modifyvm", :id, "--memory", "2048"]
+    vb.customize ["modifyvm", :id, "--memory", "6144"]
   end
 
   # Enable provisioning with Puppet stand alone.  Puppet manifests
@@ -83,7 +84,14 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   #   puppet.manifest_file  = "site.pp"
   # end
 
+  #config.vm.provision "shell", inline: "apt-get install xinit ubuntu-desktop"
+  #config.vm.provision "shell", inline: "apt-get install xfce4"
+  #config.vm.provision "shell", inline: "apt-get install gdm"
+  #config.vm.provision "shell", inline: "dpkg-reconfigure gdm"
   config.vm.provision "shell", path: "provision.sh"
+  #config.vm.provision "shell", path: "provisioning/install_prerequisites.sh"
+  #config.vm.provision "shell", path: "provisioning/install_oommf.sh"
+  #config.vm.provision "shell", path: "provisioning/install_magpar.sh"
 
   # Enable provisioning with chef solo, specifying a cookbooks path, roles
   # path, and data_bags path (all relative to this Vagrantfile), and adding

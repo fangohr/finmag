@@ -1,3 +1,0 @@
-This folder will be shared between the host operating system and the
-virtual machine that is set up by Vagrant, so that files can be copied
-back and forth.

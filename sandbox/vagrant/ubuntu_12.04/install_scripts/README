@@ -1,0 +1,4 @@
+This directory contains installation scripts which are independent
+of vagrant. In principlce, they should be able to run on any Ubuntu
+installation and will install the required Finmag dependencies, such
+as FEniCS, OOMMF, Magpar and Nmag.
