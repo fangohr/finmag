@@ -19,7 +19,7 @@ apt-get -y install paraview
 apt-get install -y mercurial python-setuptools libsundials-serial-dev libboost-python-dev libboost-test-dev netgen gmsh python-m2crypto python-netifaces xserver-xorg xpra vim emacs23 git gitk
 easy_install -U pip
 pip install -U distribute
-pip install -U cython aeon sh matplotlib ipython pytest progressbar numpy scipy sumatra parameters
+pip install -U cython aeon sh matplotlib ipython pyzmq jinja2 pytest progressbar numpy scipy sumatra parameters
 
 # Tidy up packages that are no longer needed because newer versions have been installed
 apt-get -y autoremove
