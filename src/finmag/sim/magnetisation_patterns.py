@@ -102,6 +102,8 @@ def initialise_skyrmions(sim, skyrmionRadius, centres=np.array([[0, 0]])):
 
     numCentres = len(centres)
 
+    print numCentres
+
     # Initialise ferromagnetic state if there are no centres.
     if numCentres == 0:
         def m_ferromagnetic(pos):
