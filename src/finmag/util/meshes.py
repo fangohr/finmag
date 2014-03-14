@@ -754,6 +754,30 @@ def mesh_info(mesh):
 
     return info_string
 
+def mesh_quality(mesh):
+    """
+    Returns a histogram string about the quality of the cells a mesh.
+    The cell quality is measured by
+
+        cell_dimension * inradius / circumradius
+
+    which can take values between 0 and 1, where 1 is the best quality
+    (e.g. a triangular/tetrahedral cell would be equilateral/regular).
+
+    """
+
+    ratios = df.MeshQuality.radius_ratios(mesh).array()
+    vals, bins = np.histogram(ratios, bins=20)
+    vals = np.insert(vals, 0, 0)  # to ensure that 'vals' and 'bins' have the same number of elements
+    vals_normalised = 70.0/max(vals)*vals
+
+    info_string = "======== Mesh quality info: ========\n"
+
+    for (b, v) in zip(bins, vals_normalised):
+        info_string += "{:.3f} {}\n".format(b, int(round(v))*'*')
+
+    return info_string
+
 
 def print_mesh_info(mesh):
     print mesh_info(mesh)
