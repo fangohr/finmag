@@ -88,12 +88,12 @@ class AbstractEigensolver(object):
         #           compute_relative_error() anyway, so by doing it
         #           here we avoid doing it multiple times.
         if not isinstance(A, np.ndarray):
-            logging.warning(
+            logger.warning(
                 "Converting sparse matrix A to dense array to check whether it is "
                 "Hermitian. This might consume a lot of memory if A is big!.")
             A = as_dense_array(A)
         if not isinstance(M, (np.ndarray, NoneType)):
-            logging.warning(
+            logger.warning(
                 "Converting sparse matrix M to dense array to check whether it is "
                 "Hermitian. This might consume a lot of memory if M is big!.")
             M = as_dense_array(M)

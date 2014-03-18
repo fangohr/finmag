@@ -11,6 +11,8 @@ from scipy.optimize import minimize_scalar
 from custom_exceptions import EigenproblemVerifyError
 from types import NoneType
 
+logger = logging.getLogger("finmag")
+
 
 def iseven(n):
     """
@@ -21,7 +23,7 @@ def iseven(n):
 
 def is_hermitian(A, rtol=1e-5, atol=1e-8):
     if not isinstance(A, np.ndarray):
-        logging.warning(
+        logger.warning(
             "Converting sparse matrix A to dense array to check whether it is "
             "Hermitian. This might consume a lot of memory if A is big!.")
         A = as_dense_array(A)
@@ -30,7 +32,7 @@ def is_hermitian(A, rtol=1e-5, atol=1e-8):
 
 def compute_relative_error(A, M, omega, w):
     if not isinstance(A, np.ndarray) or not isinstance(M, (np.ndarray, NoneType)):
-        logging.warning(
+        logger.warning(
             "Converting sparse matrix to numpy.array as this is the only "
             "supported matrix type at the moment for computing relative errors.")
         A = as_dense_array(A)
@@ -191,7 +193,7 @@ def best_linear_combination(v, basis_vecs):
     # XXX TODO: Figure out why it can happen that residuals.shape == (0,)!!
     #assert(residuals.shape == (1,))
     if residuals.shape == (0,):
-        logging.warning("[DDD] Something went wrong! Assuming the residuals are zero!")
+        logger.warning("[DDD] Something went wrong! Assuming the residuals are zero!")
         residuals = np.array([0.0])
     w = np.dot(basis_vecs.T, coeffs).ravel()
     assert(w.shape == v.shape)
