@@ -10,7 +10,7 @@ import pytest
 logger = logging.getLogger("finmag")
 
 
-def test_check_Kittel_mode_for_single_sphere(tmpdir):
+def test_check_Kittel_mode_for_single_sphere(tmpdir, debug=False):
     """
     Compute the eigenmodes of a perfect sphere and check that the
     frequency of the base mode equals the analytical value from the
@@ -29,7 +29,8 @@ def test_check_Kittel_mode_for_single_sphere(tmpdir):
     mesh = sphere.create_mesh(maxh=2.0)
     print "[DDD] mesh: {}".format(mesh)
     print mesh_info(mesh)
-    plot_mesh_with_paraview(mesh, outfile='mesh_sphere.png')
+    if debug:
+        plot_mesh_with_paraview(mesh, outfile='mesh_sphere.png')
 
     H_z = 4.42e5  # slightly odd value to make the test a bit more reliable
     frequency_unit = 1e9
