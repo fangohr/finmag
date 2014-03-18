@@ -25,6 +25,7 @@ from finmag.util.vtk_saver import VTKSaver
 from finmag.util.fft import compute_power_spectral_density, \
     plot_power_spectral_density, find_peak_near_frequency, \
     _plot_spectrum, export_normal_mode_animation_from_ringdown
+from finmag.normal_modes.eigenmodes import eigensolvers
 from finmag.normal_modes.deprecated.normal_modes_deprecated import compute_eigenproblem_matrix, \
     compute_generalised_eigenproblem_matrices, compute_normal_modes, \
     compute_normal_modes_generalised, export_normal_mode_animation, \
@@ -1294,6 +1295,15 @@ class NormalModeSimulation(Simulation):
         self.M = None
         self.D = None
 
+        # Define a few eigensolvers which can be conveniently accesses using strings
+        self.predefined_eigensolvers = {
+            'scipy_dense': eigensolvers.ScipyLinalgEig(),
+            'scipy_sparse': eigensolvers.ScipySparseLinalgEigs(sigma=0.0, which='LM'),
+            'slepc_krylovschur': eigensolvers.SLEPcEigensolver(
+                problem_type='GNHEP', method_type='KRYLOVSCHUR', which='SMALLEST_MAGNITUDE')
+            }
+
+
     def run_ringdown(self, t_end, alpha, H_ext=None, reset_time=True, clear_schedule=True,
                      save_ndt_every=None, save_vtk_every=None, save_m_every=None,
                      vtk_snapshots_filename=None, m_snapshots_filename=None,
@@ -1653,9 +1663,11 @@ class NormalModeSimulation(Simulation):
                                                    peak_idx, dm_only=dm_only, num_cycles=num_cycles,
                                                    num_frames_per_cycle=num_frames_per_cycle)
 
-    def compute_normal_modes(self, n_values=10, discard_negative_frequencies=False, filename_mat_A=None, filename_mat_M=None, use_generalized=True,
-                             tol=1e-8, sigma=None, which='LM', v0=None, ncv=None, maxiter=None, Minv=None, OPinv=None, mode='normal',
-                             force_recompute_matrices=False, check_hermitian=False):
+    def compute_normal_modes(self, n_values=10, solver='scipy_dense',
+                             discard_negative_frequencies=False,
+                             filename_mat_A=None, filename_mat_M=None,
+                             use_generalized=True, force_recompute_matrices=False,
+                             check_hermitian=False):
         """
         Compute the eigenmodes of the simulation by solving a generalised
         eigenvalue problem and return the computed eigenfrequencies and
@@ -1673,6 +1685,21 @@ class NormalModeSimulation(Simulation):
 
             The number of eigenmodes to compute (returns the
             `n_values` smallest ones).
+
+        solver:
+
+            The type of eigensolver to use. This should be an instance of
+            one of the Eigensolver classes defined in the module
+            `finmag.normal_modes.eigenmodes.eigensolvers`. For convenience,
+            there are also some predefined options which can be accessed
+            using the strings "scipy_dense", "scipy_sparse" and
+            "slepc_krylovschur".
+
+            Examples:
+
+                ScipyLinalgEig()
+                ScipySparseLinalgEigs(sigma=0.0, which='LM', tol=1e-8)
+                SLEPcEigensolver(problem_type='GNHEP', method_type='KRYLOVSCHUR', which='SMALLEST_MAGNITUDE', tol=1e-8, maxit=400)
 
         discard_negative_frequencies:
 
@@ -1716,33 +1743,52 @@ class NormalModeSimulation(Simulation):
 
         *Returns*
 
-        A pair (omega, eigenvectors), where omega is a list of the `n_values`
-        smallest eigenfrequencies and `eigenvectors` is a rectangular matrix
-        whose columns are the corresponding eigenvectors (in the same order).
+        A triple (omega, eigenvectors, rel_errors), where omega is a list of
+        the `n_values` smallest eigenfrequencies, `eigenvectors` is a rectangular
+        array whose rows are the corresponding eigenvectors (in the same order),
+        and rel_errors are the relative errors of each eigenpair, defined as
+        follows:
+
+            rel_err = ||A*v - omega*M*v||_2 / ||omega*v||_2
+
+        NOTE: Previously, the eigenvectors would be returned in the *columns*
+              of `w`, but this has changed in the interface!
 
         """
+        if isinstance(solver, str):
+            try:
+                solver = self.predefined_eigensolvers[solver]
+            except KeyError:
+                raise ValueError("Unknown eigensolver: '{}'".format(solver))
+
         if use_generalized:
+            if isinstance(solver, eigensolvers.SLEPcEigensolver):
+                raise TypeError("Using the SLEPcEigensolver with a generalised "
+                                "eigenvalue problemis not currently implemented.")
             if (self.A == None or self.M == None) or force_recompute_matrices:
                 self.A, self.M, _, _ = compute_generalised_eigenproblem_matrices( \
                     self, frequency_unit=1e9, filename_mat_A=filename_mat_A, filename_mat_M=filename_mat_M, check_hermitian=check_hermitian)
             else:
                 log.debug('Re-using previously computed eigenproblem matrices.')
 
-            omega, w = compute_normal_modes_generalised(self.A, self.M, n_values=n_values, discard_negative_frequencies=discard_negative_frequencies,
-                                                        tol=tol, sigma=sigma, which=which, v0=v0, ncv=ncv, maxiter=maxiter, Minv=Minv, OPinv=OPinv, mode=mode)
+            # omega, w = compute_normal_modes_generalised(self.A, self.M, n_values=n_values, discard_negative_frequencies=discard_negative_frequencies,
+            #                                             tol=tol, sigma=sigma, which=which, v0=v0, ncv=ncv, maxiter=maxiter, Minv=Minv, OPinv=OPinv, mode=mode)
+            omega, w, rel_errors = solver.solve_eigenproblem(self.A, self.M, num=n_values)
         else:
             if self.D == None or force_recompute_matrices:
                 self.D = compute_eigenproblem_matrix(self, frequency_unit=1e9)
             else:
                 log.debug('Re-using previously computed eigenproblem matrix.')
 
-            omega, w = compute_normal_modes(self.D, n_values, sigma=0.0, tol=tol, which='LM')
-            omega = np.real(omega)  # any imaginary part is due to numerical inaccuracies so we ignore them
+            # omega, w = compute_normal_modes(self.D, n_values, sigma=0.0, tol=tol, which='LM')
+            # omega = np.real(omega)  # any imaginary part is due to numerical inaccuracies so we ignore them
+            omega, w, rel_errors = solver.solve_eigenproblem(self.D, None, num=n_values)
 
         self.eigenfreqs = omega
         self.eigenvecs = w
+        self.rel_errors = rel_errors
 
-        return omega, w
+        return omega, w, rel_errors
 
 
     def export_normal_mode_animation(self, k, filename=None, directory='', dm_only=False, num_cycles=1, num_snapshots_per_cycle=20, scaling=0.2, framerate=5, **kwargs):
@@ -1775,7 +1821,7 @@ class NormalModeSimulation(Simulation):
         else:
             raise ValueError("Filename must end in one of the following suffixes: .pvd, .jpg, .avi.")
 
-        export_normal_mode_animation(self.mesh, self.m, self.eigenfreqs[k], self.eigenvecs[:, k],
+        export_normal_mode_animation(self.mesh, self.m, self.eigenfreqs[k], self.eigenvecs[k],
                                      pvd_filename, num_cycles=num_cycles,
                                      num_snapshots_per_cycle=num_snapshots_per_cycle,
                                      scaling=scaling, dm_only=dm_only)
@@ -1840,7 +1886,7 @@ class NormalModeSimulation(Simulation):
                         "`sim.compute_normal_modes()` to do so.")
 
         fig = plot_spatially_resolved_normal_mode(
-            self.mesh, self.m, self.eigenvecs[:, k], slice_z=slice_z, components=components,
+            self.mesh, self.m, self.eigenvecs[k], slice_z=slice_z, components=components,
             figure_title=figure_title, yshift_title=yshift_title,
             plot_powers=plot_powers, plot_phases=plot_phases,
             cmap_powers=cmap_powers, cmap_phases=cmap_phases, vmin_powers=vmin_powers,

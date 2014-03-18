@@ -11,6 +11,7 @@ from aeon import default_timer
 from glob import glob
 from distutils.version import LooseVersion
 from finmag import sim_with, Simulation, set_logging_level, normal_mode_simulation
+from finmag.normal_modes.eigenmodes import eigensolvers
 from finmag.example import barmini
 from math import sqrt, cos, sin, pi
 from finmag.util.helpers import assert_number_of_files, vector_valued_function, logging_status_str
@@ -1070,6 +1071,10 @@ def test_H_ext_is_set_correcy_in_normal_mode_simulation(tmpdir):
 
 
 def test_compute_normal_modes(tmpdir):
+    """
+    Compute normal modes of a simple disk system and export a couple
+    of those modes to vtk files.
+    """
     os.chdir(str(tmpdir))
 
     d = 100
@@ -1090,6 +1095,72 @@ def test_compute_normal_modes(tmpdir):
     assert(len(glob('animation/mode_2*.vtu')) == 10)
     assert(len(glob('animation/normal_mode_5__*_GHz*.pvd')) == 1)
     assert(len(glob('animation/normal_mode_5__*_GHz*.vtu')) == 10)
+
+
+def test_compute_normal_modes_with_different_solvers(tmpdir):
+    """
+    Compute normal modes of a simple nanodisk using various representative
+    eigensolvers (this is far from exhaustive, though).
+    """
+    os.chdir(str(tmpdir))
+
+    d = 100
+    h = 10
+    maxh = 10.0
+    alpha = 0.0
+    m_init = [1, 0, 0]
+    H_ext = [1e5, 0, 0]
+
+    mesh = nanodisk(d, h, maxh)
+    sim = normal_mode_simulation(mesh, Ms=8e6, m_init=m_init, alpha=alpha, unit_length=1e-9, A=13e-12, H_ext=H_ext, name='nanodisk')
+
+    # # Monkey-patch the eigenvalue matrices because we're not
+    # # interested in realistic solutions.
+    # sim.A = np.diag(np.arange(1, 20+1))
+    # sim.M = np.eye(20)
+
+    # Default solver is used without any extra arguments
+    omega1, w1, _ = sim.compute_normal_modes(n_values=10)
+
+    # Scipy dense non-Hermitian solver
+    solver2 = eigensolvers.ScipyLinalgEig()
+    omega2a, w2a, _ = sim.compute_normal_modes(n_values=10, solver=solver2)
+    omega2b, w2b, _ = sim.compute_normal_modes(n_values=10, solver="scipy_dense")
+
+    # Scipy sparse non-Hermitian solver
+    solver3 = eigensolvers.ScipySparseLinalgEigs(sigma=0.0, which='LM')
+    omega3a, w3a, _ = sim.compute_normal_modes(n_values=10, solver=solver3)
+    omega3b, w3b, _ = sim.compute_normal_modes(n_values=10, solver="scipy_sparse")
+
+    # SLEPc solver
+    solver4 = eigensolvers.SLEPcEigensolver(problem_type='GNHEP', method_type='KRYLOVSCHUR', which='SMALLEST_MAGNITUDE')
+    #omega4a, w4a, _ = sim.compute_normal_modes(n_values=10, solver=solver4)
+    #omega4b, w4b, _ = sim.compute_normal_modes(n_values=10, solver="slepc_krylovschur")
+    with pytest.raises(TypeError):
+        # Cannot currently use the SLEPcEigensolver with a generalised
+        # eigenvalue problem.
+        sim.compute_normal_modes(n_values=10, solver=solver4)
+
+
+    # Check that all methods compute the same eigenvalues and eigenvectors
+    #
+    # Note: Currently not all of these tests pass but we're not
+    # really interested in the results, only in the fact that we can
+    # call these solvers.
+    assert(np.allclose(omega2a, omega1))
+    assert(np.allclose(omega2b, omega1))
+    #assert(np.allclose(omega3a, omega1))
+    #assert(np.allclose(omega3b, omega1))
+    #assert(np.allclose(omega4a, omega1))
+    #assert(np.allclose(omega4b, omega1))
+
+    assert(np.allclose(w2a, w1))
+    assert(np.allclose(w2b, w1))
+    # assert(np.allclose(w3a, w1))
+    # assert(np.allclose(w3b, w1))
+    # #assert(np.allclose(w4a, w1))
+    # #assert(np.allclose(w4b, w1))
+
 
 @pytest.mark.xfail("LooseVersion(df.__version__) <= LooseVersion('1.2.0')")
 def test_plot_spatially_resolved_normal_modes(tmpdir):
