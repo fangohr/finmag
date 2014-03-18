@@ -1,7 +1,9 @@
 NOTE: Before proceeding make sure that you have the latest version of
       VirtualBox installed (at the time of this writing this is 4.3.8).
       You can get it from: https://www.virtualbox.org/wiki/Downloads
-
+      
+      Vagrant version 1.5.1 is current at time of writing and can be downloaded
+      from http://www.vagrantup.com/downloads.html     
 
 The way Vagrant works is that it uses a so-called 'base box' [1] to
 set up a minimal working operating system and then (optionally) runs
