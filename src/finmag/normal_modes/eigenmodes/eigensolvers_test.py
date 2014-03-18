@@ -304,7 +304,7 @@ def test_document_failures():
     solver = SLEPcEigensolver(problem_type='GNHEP', method_type='KRYLOVSCHUR',
                               which='SMALLEST_MAGNITUDE')
     eigenproblem = Nanostrip1dEigenproblemFinmag(13e-12, 8e5, 0, 100)
-    N = 200
+    N = 300
     num = 40
     for dtype in [float, complex]:
         with pytest.raises(RuntimeError):
