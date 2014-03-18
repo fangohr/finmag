@@ -1,10 +1,15 @@
 from __future__ import division
 import numpy as np
+import dolfin as df
 import scipy.linalg
 import scipy.sparse.linalg
+import logging
 from petsc4py import PETSc
 from slepc4py import SLEPc
 from helpers import sort_eigensolutions, as_petsc_matrix, is_hermitian, compute_relative_error, as_dense_array
+from types import NoneType
+
+logger = logging.getLogger("finmag")
 
 
 class AbstractEigensolver(object):
@@ -72,7 +77,27 @@ class AbstractEigensolver(object):
         if self.is_hermitian() and not eigenproblem_is_hermitian:
             raise ValueError("Eigenproblem matrices are non-Hermitian but solver "
                              "assumes Hermitian matrices. Aborting.")
+        logger.debug("Solving eigenproblem. This may take a while...")
+        df.tic()
         omegas, ws = self._solve_eigenproblem(A, M=M, num=num, tol=tol)
+        logger.debug("Computing the eigenvalues and eigenvectors took {:.2f} seconds".format(df.toc()))
+
+        # XXX TODO: Remove this conversion to numpy.arrays once we
+        #           have better support for different kinds of
+        #           matrices (but the conversion would happen in
+        #           compute_relative_error() anyway, so by doing it
+        #           here we avoid doing it multiple times.
+        if not isinstance(A, np.ndarray):
+            logging.warning(
+                "Converting sparse matrix A to dense array to check whether it is "
+                "Hermitian. This might consume a lot of memory if A is big!.")
+            A = as_dense_array(A)
+        if not isinstance(M, (np.ndarray, NoneType)):
+            logging.warning(
+                "Converting sparse matrix M to dense array to check whether it is "
+                "Hermitian. This might consume a lot of memory if M is big!.")
+            M = as_dense_array(M)
+
         rel_errors = [compute_relative_error(A, M, omega, w) for omega, w in zip(omegas, ws)]
         return omegas, ws, rel_errors
 
