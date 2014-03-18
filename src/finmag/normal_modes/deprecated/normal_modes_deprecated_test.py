@@ -95,6 +95,10 @@ def test_check_Kittel_mode_for_single_sphere(tmpdir, debug=False):
     assert(np.allclose(omega[0], freq_expected, atol=0, rtol=RTOL))
 
 
+# The following test doesn't make sense any more with the new
+# interface. I'm only keeping it here to remind me that we should
+# perhaps have a similar test in the new code. -- Max, 18.3.2014
+@pytest.mark.skipif("True")
 def test_passing_scipy_eigsh_parameters(tmpdir):
     os.chdir(str(tmpdir))
     sim = example.normal_modes.disk()
@@ -136,7 +140,7 @@ def test_plot_spatially_resolved_normal_mode(tmpdir):
     m0 = sim.m
 
     N = 3
-    omega, eigenvecs = sim.compute_normal_modes(n_values=N)
+    omega, eigenvecs, rel_errors = sim.compute_normal_modes(n_values=N)
     logger.debug("[DDD] Computed {} eigenvalues and {} eigenvectors.".format(len(omega), len(eigenvecs[0])))
     for i in xrange(N):
         #sim.export_normal_mode_animation(i, filename='animations/normal_mode_{:02d}/normal_mode_{:02d}.pvd'.format(i, i))
