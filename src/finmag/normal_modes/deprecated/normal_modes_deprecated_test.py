@@ -1,6 +1,6 @@
 from finmag.util.mesh_templates import Box, Sphere, Nanodisk
 from finmag.util.meshes import mesh_info, plot_mesh_with_paraview
-from finmag.util.normal_modes import *
+from finmag.normal_modes.deprecated.normal_modes_deprecated import *
 from finmag import example
 from finmag import sim_with, normal_mode_simulation
 from math import pi
