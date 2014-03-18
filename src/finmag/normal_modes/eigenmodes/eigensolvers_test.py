@@ -147,6 +147,24 @@ def test_compute_eigenvalues_of_diagonal_matrix(dtype, solver):
     assert(np.allclose(abs(normalise_rows(w)), w_ref))
 
 
+@pytest.mark.parametrize("solver", [ScipyLinalgEig(), ScipyLinalgEigh()])
+def test_scipy_dense_solvers_accept_sparse_argument(solver):
+    N = 10
+    A, _ = DiagonalEigenproblem().instantiate(N=N, dtype=float)
+
+    A_LinearOperator = LinearOperator((N, N), matvec=lambda v: np.dot(A, v))
+    A_petsc = as_petsc_matrix(A)
+
+    omega1, w1, _ = solver.solve_eigenproblem(A)
+    omega2, w2, _ = solver.solve_eigenproblem(A_LinearOperator)
+    omega3, w3, _ = solver.solve_eigenproblem(A_petsc)
+
+    assert(np.allclose(omega1, omega2))
+    assert(np.allclose(omega1, omega3))
+    assert(np.allclose(w1, w2))
+    assert(np.allclose(w1, w3))
+
+
 # # The following test illustrates a strange failure of the scipy
 # # sparse solver to compute the correct eigenvalues for a diagonal
 # # matrix. The largest computed eigenvalue is 11 instead of the

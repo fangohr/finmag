@@ -226,6 +226,57 @@ def scipy_sparse_linear_operator_to_dense_array():
         assert(np.allclose(A, A_dense))
 
 
+def test_as_dense_array():
+    """
+    Define a dense tridiagonal matrix (with 'periodic boundary
+    conditions') and its equivalents as LinearOperator, PETSc.Mat and
+    dolfin.PETScMatrix. Then check that as_dense_array() returns the
+    same array for all of them.
+
+    """
+    N = 50
+
+    # Define dense matrix
+    A = np.zeros((N, N))
+    for i in xrange(N):
+        A[i, i] = 2.4
+        A[i, i-1] = 5.5
+        A[i, (i+1)%N] = 3.7
+
+    # Define equivalent LinearOperator
+    def A_matvec(v):
+        # Note that the vectors end up as column vectors, thus the
+        # direction we need to roll the arrays might seem
+        # counterintuitive.
+        return 2.4 * v + 5.5 * np.roll(v, +1) + 3.7 * np.roll(v, -1)
+    A_LinearOperator = LinearOperator((N, N), matvec=A_matvec)
+
+    # Define equivalent PETSc.Mat()
+    A_petsc = as_petsc_matrix(A)
+
+    # Define equivalent dolfin.PETScMatrix
+    #
+    # TODO: This only works in the development version of dolfin,
+    #       which is not released yet. Reactivate this test once it's
+    #       available!
+    #
+    # A_petsc_dolfin = df.PETScMatrix(A_petsc)
+
+
+    # For numpy.arrays the exact same object should be returned (if
+    # the dtype is the same)
+    assert(id(A) == id(as_dense_array(A)))
+    A_complex = np.asarray(A, dtype=complex)
+    assert(id(A_complex) == id(as_dense_array(A_complex)))
+
+    # Check that the conversion works correctly
+    assert(as_dense_array(None) == None)
+    assert(np.allclose(A, as_dense_array(A, dtype=complex)))
+    assert(np.allclose(A, as_dense_array(A_LinearOperator)))
+    assert(np.allclose(A, as_dense_array(A_petsc)))
+    #assert(np.allclose(A, as_dense_array(A_petsc_dolfin)))
+
+
 def test_as_petsc_matrix():
     N = 20
 
@@ -263,3 +314,9 @@ def test_as_petsc_matrix():
     assert(D.dtype == complex)  # check that we created a complex array
     with pytest.raises(TypeError):
         as_petsc_matrix(D)
+
+    # Check that we can also convert a LinearOperator to a PETScMatrix
+    A_LinearOperator = LinearOperator(shape=(N, N), matvec=lambda v: np.dot(A, v))
+    A_petsc2 = as_petsc_matrix(A_LinearOperator)
+    A_roundtrip = as_dense_array(A_petsc2)
+    assert(np.allclose(A, A_roundtrip))
