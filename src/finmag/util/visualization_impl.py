@@ -52,7 +52,7 @@ def run_cmd_with_timeout(cmd, timeout_sec):
     return proc.returncode, stdout, stderr
 
 
-def find_valid_X_display(displays_to_try=xrange(100), hostname=None):
+def find_valid_X_display(displays_to_try=xrange(10, 100), hostname=None):
     """
     Sequentially checks all X displays in the given list (default: 0 through 99)
     and returns the number of the first valid display that is found. Returns None
@@ -85,7 +85,7 @@ def find_valid_X_display(displays_to_try=xrange(100), hostname=None):
     return None
 
 
-def find_unused_X_display(displays_to_try=xrange(100), hostname=None):
+def find_unused_X_display(displays_to_try=xrange(10, 100), hostname=None):
     """
     Sequentially checks all X displays in the given list (default: 0 through 99)
     and returns the number of the first unused display that is found. Returns None

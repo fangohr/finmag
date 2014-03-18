@@ -232,7 +232,7 @@ def render_paraview_scene(
             try:
                 # Check whether 'xpra' is installed
                 run_command_on_host(hostname, 'xpra', '--version')
-                xpra_display = find_unused_X_display(xrange(1, 100), hostname=hostname)
+                xpra_display = find_unused_X_display(xrange(10, 100), hostname=hostname)
                 run_command_on_host(hostname, 'xpra', 'start', ':{}'.format(xpra_display))
                 use_display = xpra_display
                 logger.debug("Rendering Paraview scene on display :{} using xpra.".format(xpra_display))
