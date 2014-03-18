@@ -1,0 +1,2 @@
+class EigenproblemVerifyError(Exception):
+    pass
