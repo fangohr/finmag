@@ -1,0 +1,6 @@
+# This file defines the parameters used by your simulation.
+# Examples:
+Msat = 5.8e6  # A/m
+H_ext = [0, 0, 1e6]
+m_init = [0, 0, 1]
+t_end = 20e-9

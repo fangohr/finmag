@@ -1,0 +1,29 @@
+The two files in this directory illustrate my template for a simple
+simulation setup with Sumatra (whenever I need to set up a new
+simulation that uses Sumatra I essentially just copy and paste them
+and then adapt them accordingly). Maybe this is helpful to others,
+which is why I'm committing them here. Note that there is a lot of
+freedom in how to use Sumatra, so your mileage my vary. For example,
+I like to store all the output from each simulation run in a separate
+subdirectory of the Data/ directory (which is why I cd into that
+directory after reading the parameters), but your needs may be
+different.
+
+Once I have tweaked these two files to my needs, I run the following
+two commands to initialise the Sumatra repository and configure it.
+
+    smt init MyProjectName
+    smt configure --addlabel=parameters -e python -m main.py --labelgenerator=timestamp --timestamp_format "%Y-%m-%d__%H_%M_%S"
+
+Again, you may want to use different options, but this is what I
+have found useful for my workflow. Make sure that the filename
+given after the -m argument matches the name of your main simulation
+script (the one that should be invoked by Sumatra during each run).
+
+Once this is done, you can run simulations like this:
+
+   smt run -r "A short message describing this particular run" defaults.param [[PARAM=value] ...]
+
+See the Sumatra webpage for details: http://pythonhosted.org/Sumatra/
+
+  -- Max, 18.3.2014
