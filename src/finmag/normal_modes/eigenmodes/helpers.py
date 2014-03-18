@@ -9,6 +9,7 @@ from scipy.sparse.linalg import LinearOperator
 from scipy.sparse import csr_matrix
 from scipy.optimize import minimize_scalar
 from custom_exceptions import EigenproblemVerifyError
+from types import NoneType
 
 
 def iseven(n):
@@ -19,10 +20,21 @@ def iseven(n):
 
 
 def is_hermitian(A, rtol=1e-5, atol=1e-8):
+    if not isinstance(A, np.ndarray):
+        logging.warning(
+            "Converting sparse matrix A to dense array to check whether it is "
+            "Hermitian. This might consume a lot of memory if A is big!.")
+        A = as_dense_array(A)
     return np.allclose(A, np.conj(A.T), rtol=rtol, atol=atol)
 
 
 def compute_relative_error(A, M, omega, w):
+    if not isinstance(A, np.ndarray) or not isinstance(M, (np.ndarray, NoneType)):
+        logging.warning(
+            "Converting sparse matrix to numpy.array as this is the only "
+            "supported matrix type at the moment for computing relative errors.")
+        A = as_dense_array(A)
+        M = as_dense_array(M)
     a = np.dot(A, w)
     b = omega*w if (M == None) else omega*np.dot(M, w)
     rel_err = np.linalg.norm(a - b) / np.linalg.norm(omega*w)
@@ -218,7 +230,17 @@ def petsc_matrix_to_numpy_array(A, dtype=float):
     return A_csr.todense()
 
 
-def as_dense_array(A, dtype=complex):
+def as_dense_array(A, dtype=None):
+    if A == None:
+        return None
+
+    if isinstance(A, np.ndarray):
+        return np.asarray(A, dtype=dtype)
+
+    if dtype == None:
+        # TODO: Do we have a better option than using 'complex' by default?
+        dtype = complex
+
     if isinstance(A, LinearOperator):
         return scipy_sparse_linear_operator_to_dense_array(A, dtype=dtype)
     elif isinstance(A, PETSc.Mat):
@@ -241,25 +263,41 @@ def as_petsc_matrix(A):
     will be set).
 
     """
-    assert(isinstance(A, np.ndarray))
-    if A.dtype == complex:
-        if np.allclose(A.imag, 0.0):
-            A = A.real
-        else:
-            raise TypeError("Array with complex entries cannot be converted "
-                            "to a PETSc matrix.")
+    if isinstance(A, PETSc.Mat):
+        return A
+
     m, n = A.shape
+
+    if isinstance(A, np.ndarray):
+        def get_jth_column(j):
+            return A[:, j]
+    elif isinstance(A, LinearOperator):
+        def get_jth_column(j):
+            e_j = np.zeros(m)
+            e_j[j] = 1.0
+            return A.matvec(e_j)
+    else:
+        raise TypeError("Unkown matrix type: {}".format(type(A)))
+
     A_petsc = PETSc.Mat().create()
     A_petsc.setSizes([m, n])
     A_petsc.setType('aij')  # sparse
     A_petsc.setUp()
 
-    for i in xrange(0, m):
-        for j in xrange(0, n):
-            if A[i, j] != 0.0:
-                # We try to keep A_petsc as sparse as possible by
-                # only setting nonzero entries.
-                A_petsc[i, j] = A[i, j]
+    for j in xrange(0, n):
+        col = get_jth_column(j)
+        if col.dtype == complex:
+            if np.allclose(col.imag, 0.0):
+                col = col.real
+            else:
+                raise TypeError("Array with complex entries cannot be converted "
+                                "to a PETSc matrix.")
+
+        for i in xrange(0, m):
+            # We try to keep A_petsc as sparse as possible by only
+            # setting nonzero entries.
+            if col[i] != 0.0:
+                A_petsc[i, j] = col[i]
     A_petsc.assemble()
     return A_petsc
 

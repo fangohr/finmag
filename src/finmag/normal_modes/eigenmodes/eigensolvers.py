@@ -4,7 +4,7 @@ import scipy.linalg
 import scipy.sparse.linalg
 from petsc4py import PETSc
 from slepc4py import SLEPc
-from helpers import sort_eigensolutions, as_petsc_matrix, is_hermitian, compute_relative_error
+from helpers import sort_eigensolutions, as_petsc_matrix, is_hermitian, compute_relative_error, as_dense_array
 
 
 class AbstractEigensolver(object):
@@ -84,6 +84,8 @@ class ScipyDenseSolver(AbstractEigensolver):
     _solver_func = None   # needs to be instantiated by derived classes
 
     def _solve_eigenproblem(self, A, M=None, num=None, tol=None):
+        A = as_dense_array(A)  # does nothing if A is already a numpy.array
+        M = as_dense_array(M)  # does nothing if M is already a numpy.array
         omega, w = self._solver_func(A, M)
         w = w.T  # make sure that eigenvectors are stored in rows, not columns
         omega, w = sort_eigensolutions(omega, w)
