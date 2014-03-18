@@ -403,7 +403,7 @@ def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9
 
 
 def compute_normal_modes(D, n_values=10, sigma=0., tol=1e-8, which='LM'):
-    logger.debug("Solving eigenproblem. This may take a while...".format(df.toc()))
+    logger.debug("Solving eigenproblem. This may take a while...")
     df.tic()
     omega, w = scipy.sparse.linalg.eigs(D, n_values, which=which, sigma=0., tol=tol, return_eigenvectors=True)
     logger.debug("Computing the eigenvalues and eigenvectors took {:.2f} seconds".format(df.toc()))
@@ -413,7 +413,7 @@ def compute_normal_modes(D, n_values=10, sigma=0., tol=1e-8, which='LM'):
 
 def compute_normal_modes_generalised(A, M, n_values=10, tol=1e-8, discard_negative_frequencies=False, sigma=None, which='LM',
                                      v0=None, ncv=None, maxiter=None, Minv=None, OPinv=None, mode='normal'):
-    logger.debug("Solving eigenproblem. This may take a while...".format(df.toc()))
+    logger.debug("Solving eigenproblem. This may take a while...")
     df.tic()
 
     if discard_negative_frequencies:
