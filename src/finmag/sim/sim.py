@@ -25,7 +25,7 @@ from finmag.util.vtk_saver import VTKSaver
 from finmag.util.fft import compute_power_spectral_density, \
     plot_power_spectral_density, find_peak_near_frequency, \
     _plot_spectrum, export_normal_mode_animation_from_ringdown
-from finmag.util.normal_modes import compute_eigenproblem_matrix, \
+from finmag.normal_modes.deprecated.normal_modes_deprecated import compute_eigenproblem_matrix, \
     compute_generalised_eigenproblem_matrices, compute_normal_modes, \
     compute_normal_modes_generalised, export_normal_mode_animation, \
     plot_spatially_resolved_normal_mode
@@ -1831,7 +1831,7 @@ class NormalModeSimulation(Simulation):
 
 
         See the docstring of the function
-        `finmag.util.normal_modes.plot_spatially_resolved_normal_mode`
+        `finmag.normal_modes.deprecated.normal_modes.plot_spatially_resolved_normal_mode`
         for details about the meaning of the arguments.
 
         """
