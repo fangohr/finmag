@@ -20,6 +20,8 @@ apt-get install -y mercurial python-setuptools libsundials-serial-dev libboost-p
 easy_install -U pip
 pip install -U distribute
 pip install -U cython aeon sh matplotlib ipython pyzmq jinja2 pytest progressbar numpy scipy sumatra parameters
+# XXX TODO: Check whether the following need any special variables to be set! (E.g. PETSC_DIR, PETSC_ARCH and SLEPC_DIR)
+#pip install -U petsc4py slepc4py
 
 # Tidy up packages that are no longer needed because newer versions have been installed
 apt-get -y autoremove
