@@ -98,7 +98,7 @@ class AbstractEigensolver(object):
                 "Hermitian. This might consume a lot of memory if M is big!.")
             M = as_dense_array(M)
 
-        rel_errors = [compute_relative_error(A, M, omega, w) for omega, w in zip(omegas, ws)]
+        rel_errors = np.array([compute_relative_error(A, M, omega, w) for omega, w in zip(omegas, ws)])
         return omegas, ws, rel_errors
 
 
