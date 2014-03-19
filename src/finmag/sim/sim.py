@@ -1663,6 +1663,27 @@ class NormalModeSimulation(Simulation):
                                                    peak_idx, dm_only=dm_only, num_cycles=num_cycles,
                                                    num_frames_per_cycle=num_frames_per_cycle)
 
+    def assemble_eigenproblem_matrices(self, filename_mat_A=None, filename_mat_M=None,  use_generalized=False,
+                                       force_recompute_matrices=False, differentiate_H_numerically=False):
+        if use_generalized:
+            if (self.A == None or self.M == None) or force_recompute_matrices:
+                df.tic()
+                self.A, self.M, _, _ = compute_generalised_eigenproblem_matrices( \
+                    self, frequency_unit=1e9, filename_mat_A=filename_mat_A, filename_mat_M=filename_mat_M,
+                    check_hermitian=check_hermitian, differentiate_H_numerically=differentiate_H_numerically)
+                log.debug("Assembling the eigenproblem matrices took {:.2f} seconds".format(df.toc()))
+            else:
+                log.debug('Re-using previously computed eigenproblem matrices.')
+        else:
+            if self.D == None or force_recompute_matrices:
+                df.tic()
+                # XXX TODO: Once we have verified that things work as expected, we should create
+                #           a matrix with real entries directly and store it in self.D (to save memory).
+                self.D = compute_eigenproblem_matrix(self, frequency_unit=1e9, differentiate_H_numerically=differentiate_H_numerically)
+                log.debug("Assembling the eigenproblem matrix took {:.2f} seconds".format(df.toc()))
+            else:
+                log.debug('Re-using previously computed eigenproblem matrix.')
+
     def compute_normal_modes(self, n_values=10, solver='scipy_dense',
                              discard_negative_frequencies=False,
                              filename_mat_A=None, filename_mat_M=None,
@@ -1780,42 +1801,29 @@ class NormalModeSimulation(Simulation):
             except KeyError:
                 raise ValueError("Unknown eigensolver: '{}'".format(solver))
 
-        if use_generalized:
-            if isinstance(solver, eigensolvers.SLEPcEigensolver):
-                raise TypeError("Using the SLEPcEigensolver with a generalised "
-                                "eigenvalue problemis not currently implemented.")
-            if (self.A == None or self.M == None) or force_recompute_matrices:
-                df.tic()
-                self.A, self.M, _, _ = compute_generalised_eigenproblem_matrices( \
-                    self, frequency_unit=1e9, filename_mat_A=filename_mat_A, filename_mat_M=filename_mat_M,
-                    check_hermitian=check_hermitian, differentiate_H_numerically=differentiate_H_numerically)
-                log.debug("Assembling the eigenproblem matrices took {:.2f} seconds".format(df.toc()))
-            else:
-                log.debug('Re-using previously computed eigenproblem matrices.')
+        if use_generalized and isinstance(solver, eigensolvers.SLEPcEigensolver):
+            raise TypeError("Using the SLEPcEigensolver with a generalised "
+                            "eigenvalue problemis not currently implemented.")
 
+        self.assemble_eigenproblem_matrices(filename_mat_A=filename_mat_A, filename_mat_M=filename_mat_M,
+                                            use_generalized=use_generalized, force_recompute_matrices=force_recompute_matrices,
+                                            differentiate_H_numerically=differentiate_H_numerically)
+
+        if use_generalized:
             # omega, w = compute_normal_modes_generalised(self.A, self.M, n_values=n_values, discard_negative_frequencies=discard_negative_frequencies,
             #                                             tol=tol, sigma=sigma, which=which, v0=v0, ncv=ncv, maxiter=maxiter, Minv=Minv, OPinv=OPinv, mode=mode)
             omega, w, rel_errors = solver.solve_eigenproblem(self.A, self.M, num=n_values)
         else:
-            if self.D == None or force_recompute_matrices:
-                df.tic()
-                # XXX TODO: Once we have verified that things work as expected, we should create
-                #           a matrix with real entries directly and store it in self.D (to save memory).
-                self.D = compute_eigenproblem_matrix(self, frequency_unit=1e9, differentiate_H_numerically=differentiate_H_numerically)
-                log.debug("Assembling the eigenproblem matrix took {:.2f} seconds".format(df.toc()))
-            else:
-                log.debug('Re-using previously computed eigenproblem matrix.')
-
+            # omega, w = compute_normal_modes(self.D, n_values, sigma=0.0, tol=tol, which='LM')
+            # omega = np.real(omega)  # any imaginary part is due to numerical inaccuracies so we ignore them
             if use_real_matrix:
                 assert((self.D.real == 0).all())
                 D = self.D.imag
             else:
                 D = self.D
-            # omega, w = compute_normal_modes(self.D, n_values, sigma=0.0, tol=tol, which='LM')
-            # omega = np.real(omega)  # any imaginary part is due to numerical inaccuracies so we ignore them
             omega, w, rel_errors = solver.solve_eigenproblem(D, None, num=n_values)
             if use_real_matrix:
-                # Eigenvalues are complex due to the missing factor of 1j. Here we correct for this
+                # Eigenvalues are complex due to the missing factor of 1j in the matrix with real entries. Here we correct for this.
                 omega = 1j*omega
 
         self.eigenfreqs = omega
