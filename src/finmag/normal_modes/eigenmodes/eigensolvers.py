@@ -428,6 +428,7 @@ class SLEPcEigensolver(AbstractEigensolver):
                 ws.append(vr_arr + 1j*vi_arr)
         omegas = np.array(omegas)
         ws = np.array(ws)
+        logger.warning("TODO: Check that the eigensolutions returned by SLEPc are sorted.")
         return omegas[:num], ws[:num]
 
 
