@@ -1766,8 +1766,10 @@ class NormalModeSimulation(Simulation):
                 raise TypeError("Using the SLEPcEigensolver with a generalised "
                                 "eigenvalue problemis not currently implemented.")
             if (self.A == None or self.M == None) or force_recompute_matrices:
+                df.tic()
                 self.A, self.M, _, _ = compute_generalised_eigenproblem_matrices( \
                     self, frequency_unit=1e9, filename_mat_A=filename_mat_A, filename_mat_M=filename_mat_M, check_hermitian=check_hermitian)
+                log.debug("Assembling the eigenproblem matrices took {:.2f} seconds".format(df.toc()))
             else:
                 log.debug('Re-using previously computed eigenproblem matrices.')
 
@@ -1776,7 +1778,9 @@ class NormalModeSimulation(Simulation):
             omega, w, rel_errors = solver.solve_eigenproblem(self.A, self.M, num=n_values)
         else:
             if self.D == None or force_recompute_matrices:
+                df.tic()
                 self.D = compute_eigenproblem_matrix(self, frequency_unit=1e9)
+                log.debug("Assembling the eigenproblem matrix took {:.2f} seconds".format(df.toc()))
             else:
                 log.debug('Re-using previously computed eigenproblem matrix.')
 
