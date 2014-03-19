@@ -132,7 +132,7 @@ def differentiate_fd4(f, x, dx):
     return res
 
 
-def compute_eigenproblem_matrix(sim, frequency_unit=1e9, filename=None):
+def compute_eigenproblem_matrix(sim, frequency_unit=1e9, filename=None, differentiate_H_numerically=False):
     """
     Compute and return the square matrix `D` defining the eigenproblem which
     has the normal mode frequencies and oscillation patterns as its solution.
@@ -156,10 +156,10 @@ def compute_eigenproblem_matrix(sim, frequency_unit=1e9, filename=None):
     # to many different values. Thus we store a backup so that we can restore it later.
     m_orig = sim.m
 
-    def effective_field_for_m(m):
+    def effective_field_for_m(m, normalise=True):
         if np.iscomplexobj(m):
             raise NotImplementedError("XXX TODO: Implement the version for complex arrays!")
-        sim.set_m(m)
+        sim.set_m(m, normalise=normalise)
         return sim.effective_field()
 
     n = sim.mesh.num_vertices()
@@ -183,8 +183,14 @@ def compute_eigenproblem_matrix(sim, frequency_unit=1e9, filename=None):
         # dv/dt = - gamma m0 x (H' v - h_0 v)
         v_array = v.view()
         v_array.shape = (-1,)
-        # Compute H'v
-        res = differentiate_fd4(effective_field_for_m, m0_array, v_array)
+        # Compute H'(m_0)*v, i.e. the "directional derivative" of H at
+        # m_0 in the direction of v. Since H is linear in m (at least
+        # theoretically, although this is not quite true in the case
+        # of our demag computation), this is the same as H(v)!
+        if differentiate_H_numerically:
+            res = differentiate_fd4(effective_field_for_m, m0_array, v_array)
+        else:
+            res = effective_field_for_m(v_array, normalise=False)
         res.shape = (3, -1)
         # Subtract h0 v
         res[0] -= h0 * v[0,0]
@@ -299,17 +305,19 @@ def check_is_hermitian(A, matrix_name, atol=1e-8, rtol=1e-12):
                 np.max(np.absolute(A)), np.median(np.absolute(A)), np.mean(np.absolute(A))))
 
 
-def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9, filename_mat_A=None, filename_mat_M=None, check_hermitian=False):
+def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9,
+                                              filename_mat_A=None, filename_mat_M=None,
+                                              check_hermitian=False, differentiate_H_numerically=False):
     """
     XXX TODO: write me
 
     """
     m_orig = sim.m
 
-    def effective_field_for_m(m):
+    def effective_field_for_m(m, normalise=True):
         if np.iscomplexobj(m):
             raise NotImplementedError("XXX TODO: Implement the version for complex arrays!")
-        sim.set_m(m)
+        sim.set_m(m, normalise=normalise)
         return sim.effective_field()
 
     n = sim.mesh.num_vertices()
@@ -333,8 +341,14 @@ def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9
         assert v.shape == (3, 1, n)
         v_array = v.view()
         v_array.shape = (-1,)
-        # Compute H'v
-        res = differentiate_fd4(effective_field_for_m, m0_array, v_array)
+        # Compute H'(m_0)*v, i.e. the "directional derivative" of H at
+        # m_0 in the direction of v. Since H is linear in m (at least
+        # theoretically, although this is not quite true in the case
+        # of our demag computation), this is the same as H(v)!
+        if differentiate_H_numerically:
+            res = differentiate_fd4(effective_field_for_m, m0_array, v_array)
+        else:
+            res = effective_field_for_m(v_array, normalise=False)
         res.shape = (3, n)
         # Subtract h0 v
         res[0] -= h0 * v[0, 0]

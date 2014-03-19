@@ -1667,7 +1667,7 @@ class NormalModeSimulation(Simulation):
                              discard_negative_frequencies=False,
                              filename_mat_A=None, filename_mat_M=None,
                              use_generalized=False, force_recompute_matrices=False,
-                             check_hermitian=False):
+                             check_hermitian=False, differentiate_H_numerically=False):
         """
         Compute the eigenmodes of the simulation by solving a generalised
         eigenvalue problem and return the computed eigenfrequencies and
@@ -1741,6 +1741,14 @@ class NormalModeSimulation(Simulation):
             the case. This is a temporary debugging flag which is likely
             to be removed again in the future. Default value: False.
 
+        differentiate_H_numerically:
+
+            If True, compute the derivative of the effective field
+            numerically. If False (the default), use a more efficient
+            method. The latter is highly recommended, this option only
+            exists for testing and reproducing older results. It will be
+            removed at some point in the future.
+
 
         *Returns*
 
@@ -1769,7 +1777,8 @@ class NormalModeSimulation(Simulation):
             if (self.A == None or self.M == None) or force_recompute_matrices:
                 df.tic()
                 self.A, self.M, _, _ = compute_generalised_eigenproblem_matrices( \
-                    self, frequency_unit=1e9, filename_mat_A=filename_mat_A, filename_mat_M=filename_mat_M, check_hermitian=check_hermitian)
+                    self, frequency_unit=1e9, filename_mat_A=filename_mat_A, filename_mat_M=filename_mat_M,
+                    check_hermitian=check_hermitian, differentiate_H_numerically=differentiate_H_numerically)
                 log.debug("Assembling the eigenproblem matrices took {:.2f} seconds".format(df.toc()))
             else:
                 log.debug('Re-using previously computed eigenproblem matrices.')
@@ -1780,7 +1789,7 @@ class NormalModeSimulation(Simulation):
         else:
             if self.D == None or force_recompute_matrices:
                 df.tic()
-                self.D = compute_eigenproblem_matrix(self, frequency_unit=1e9)
+                self.D = compute_eigenproblem_matrix(self, frequency_unit=1e9, differentiate_H_numerically=differentiate_H_numerically)
                 log.debug("Assembling the eigenproblem matrix took {:.2f} seconds".format(df.toc()))
             else:
                 log.debug('Re-using previously computed eigenproblem matrix.')
