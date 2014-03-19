@@ -1667,7 +1667,8 @@ class NormalModeSimulation(Simulation):
                              discard_negative_frequencies=False,
                              filename_mat_A=None, filename_mat_M=None,
                              use_generalized=False, force_recompute_matrices=False,
-                             check_hermitian=False, differentiate_H_numerically=False):
+                             check_hermitian=False, differentiate_H_numerically=False,
+                             use_real_matrix=True):
         """
         Compute the eigenmodes of the simulation by solving a generalised
         eigenvalue problem and return the computed eigenfrequencies and
@@ -1749,6 +1750,15 @@ class NormalModeSimulation(Simulation):
             exists for testing and reproducing older results. It will be
             removed at some point in the future.
 
+        use_real_matrix:
+
+            This argument only applies if `use_generalised` is False. In this
+            case, if `use_real_matrix` is True (the default), passes a matrix
+            with real instead of complex entries to the solver. This is
+            recommended as it reduces the computation time considerably.
+            This option is for testing purposes only and will be removed in
+            the future.
+
 
         *Returns*
 
@@ -1789,14 +1799,24 @@ class NormalModeSimulation(Simulation):
         else:
             if self.D == None or force_recompute_matrices:
                 df.tic()
+                # XXX TODO: Once we have verified that things work as expected, we should create
+                #           a matrix with real entries directly and store it in self.D (to save memory).
                 self.D = compute_eigenproblem_matrix(self, frequency_unit=1e9, differentiate_H_numerically=differentiate_H_numerically)
                 log.debug("Assembling the eigenproblem matrix took {:.2f} seconds".format(df.toc()))
             else:
                 log.debug('Re-using previously computed eigenproblem matrix.')
 
+            if use_real_matrix:
+                assert((self.D.real == 0).all())
+                D = self.D.imag
+            else:
+                D = self.D
             # omega, w = compute_normal_modes(self.D, n_values, sigma=0.0, tol=tol, which='LM')
             # omega = np.real(omega)  # any imaginary part is due to numerical inaccuracies so we ignore them
-            omega, w, rel_errors = solver.solve_eigenproblem(self.D, None, num=n_values)
+            omega, w, rel_errors = solver.solve_eigenproblem(D, None, num=n_values)
+            if use_real_matrix:
+                # Eigenvalues are complex due to the missing factor of 1j. Here we correct for this
+                omega = 1j*omega
 
         self.eigenfreqs = omega
         self.eigenvecs = w
