@@ -1666,7 +1666,7 @@ class NormalModeSimulation(Simulation):
     def compute_normal_modes(self, n_values=10, solver='scipy_dense',
                              discard_negative_frequencies=False,
                              filename_mat_A=None, filename_mat_M=None,
-                             use_generalized=True, force_recompute_matrices=False,
+                             use_generalized=False, force_recompute_matrices=False,
                              check_hermitian=False):
         """
         Compute the eigenmodes of the simulation by solving a generalised
@@ -1722,8 +1722,9 @@ class NormalModeSimulation(Simulation):
 
         use_generalized:
 
-            If True (the default), solve a generalised eigenvalue
-            problem.
+            If True (default: False), compute the eigenmodes using the
+            formulation as a generalised eigenvalue problem instead of
+            an ordinary one.
 
         force_recompute_matrices:
 
