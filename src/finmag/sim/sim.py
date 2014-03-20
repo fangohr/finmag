@@ -1294,6 +1294,8 @@ class NormalModeSimulation(Simulation):
         self.A = None
         self.M = None
         self.D = None
+        self.use_real_matrix = None  # XXX TODO: Remove me once we get rid of the option 'use_real_matrix'
+                                     #           in the method 'compute_normal_modes()' below.
 
         # Define a few eigensolvers which can be conveniently accesses using strings
         self.predefined_eigensolvers = {
@@ -1664,7 +1666,8 @@ class NormalModeSimulation(Simulation):
                                                    num_frames_per_cycle=num_frames_per_cycle)
 
     def assemble_eigenproblem_matrices(self, filename_mat_A=None, filename_mat_M=None,  use_generalized=False,
-                                       force_recompute_matrices=False, differentiate_H_numerically=False):
+                                       force_recompute_matrices=False, check_hermitian=False,
+                                       differentiate_H_numerically=False, use_real_matrix=True):
         if use_generalized:
             if (self.A == None or self.M == None) or force_recompute_matrices:
                 df.tic()
@@ -1675,11 +1678,12 @@ class NormalModeSimulation(Simulation):
             else:
                 log.debug('Re-using previously computed eigenproblem matrices.')
         else:
-            if self.D == None or force_recompute_matrices:
+            if self.D == None or (self.use_real_matrix != use_real_matrix) or force_recompute_matrices:
                 df.tic()
-                # XXX TODO: Once we have verified that things work as expected, we should create
-                #           a matrix with real entries directly and store it in self.D (to save memory).
-                self.D = compute_eigenproblem_matrix(self, frequency_unit=1e9, differentiate_H_numerically=differentiate_H_numerically)
+                self.D = compute_eigenproblem_matrix(
+                             self, frequency_unit=1e9, differentiate_H_numerically=differentiate_H_numerically,
+                             dtype=(float if use_real_matrix else complex))
+                self.use_real_matrix = use_real_matrix
                 log.debug("Assembling the eigenproblem matrix took {:.2f} seconds".format(df.toc()))
             else:
                 log.debug('Re-using previously computed eigenproblem matrix.')
@@ -1805,9 +1809,10 @@ class NormalModeSimulation(Simulation):
             raise TypeError("Using the SLEPcEigensolver with a generalised "
                             "eigenvalue problemis not currently implemented.")
 
-        self.assemble_eigenproblem_matrices(filename_mat_A=filename_mat_A, filename_mat_M=filename_mat_M,
-                                            use_generalized=use_generalized, force_recompute_matrices=force_recompute_matrices,
-                                            differentiate_H_numerically=differentiate_H_numerically)
+        self.assemble_eigenproblem_matrices(
+            filename_mat_A=filename_mat_A, filename_mat_M=filename_mat_M, use_generalized=use_generalized,
+            force_recompute_matrices=force_recompute_matrices, check_hermitian=check_hermitian,
+            differentiate_H_numerically=differentiate_H_numerically, use_real_matrix=use_real_matrix)
 
         if use_generalized:
             # omega, w = compute_normal_modes_generalised(self.A, self.M, n_values=n_values, discard_negative_frequencies=discard_negative_frequencies,
@@ -1816,12 +1821,7 @@ class NormalModeSimulation(Simulation):
         else:
             # omega, w = compute_normal_modes(self.D, n_values, sigma=0.0, tol=tol, which='LM')
             # omega = np.real(omega)  # any imaginary part is due to numerical inaccuracies so we ignore them
-            if use_real_matrix:
-                assert((self.D.real == 0).all())
-                D = self.D.imag
-            else:
-                D = self.D
-            omega, w, rel_errors = solver.solve_eigenproblem(D, None, num=n_values)
+            omega, w, rel_errors = solver.solve_eigenproblem(self.D, None, num=n_values)
             if use_real_matrix:
                 # Eigenvalues are complex due to the missing factor of 1j in the matrix with real entries. Here we correct for this.
                 omega = 1j*omega
