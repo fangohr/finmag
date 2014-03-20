@@ -4,8 +4,6 @@ import dolfin as df
 import scipy.linalg
 import scipy.sparse.linalg
 import logging
-from petsc4py import PETSc
-from slepc4py import SLEPc
 from helpers import sort_eigensolutions, as_petsc_matrix, is_hermitian, compute_relative_error, as_dense_array
 from types import NoneType
 
@@ -326,6 +324,13 @@ class SLEPcEigensolver(AbstractEigensolver):
         """
         Create a SLEPc eigenproblem solver with the operator
         """
+        # XXX TODO: This import should actually happen at the top, but on some
+        #           systems it seems to be slightly non-trivial to install
+        #           slepc4py, and since we don't use it for the default eigen-
+        #           value methods, it's better to avoid raising an ImportError
+        #           which forces users to try and install it.  -- Max, 20.3.2014
+        from slepc4py import SLEPc
+
         E = SLEPc.EPS()
         E.create()
         E.setOperators(A, M)
