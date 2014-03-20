@@ -1667,7 +1667,7 @@ class NormalModeSimulation(Simulation):
 
     def assemble_eigenproblem_matrices(self, filename_mat_A=None, filename_mat_M=None,  use_generalized=False,
                                        force_recompute_matrices=False, check_hermitian=False,
-                                       differentiate_H_numerically=False, use_real_matrix=True):
+                                       differentiate_H_numerically=True, use_real_matrix=True):
         if use_generalized:
             if (self.A == None or self.M == None) or force_recompute_matrices:
                 df.tic()
@@ -1692,7 +1692,7 @@ class NormalModeSimulation(Simulation):
                              discard_negative_frequencies=False,
                              filename_mat_A=None, filename_mat_M=None,
                              use_generalized=False, force_recompute_matrices=False,
-                             check_hermitian=False, differentiate_H_numerically=False,
+                             check_hermitian=False, differentiate_H_numerically=True,
                              use_real_matrix=True):
         """
         Compute the eigenmodes of the simulation by solving a generalised
@@ -1769,11 +1769,10 @@ class NormalModeSimulation(Simulation):
 
         differentiate_H_numerically:
 
-            If True, compute the derivative of the effective field
-            numerically. If False (the default), use a more efficient
-            method. The latter is highly recommended, this option only
-            exists for testing and reproducing older results. It will be
-            removed at some point in the future.
+            If True (the default), compute the derivative of the effective
+            field numerically. If False, use a more efficient method. The
+            latter is much faster, but leads to numerical inaccuracies so
+            it is only recommended for testing large systems.
 
         use_real_matrix:
 
