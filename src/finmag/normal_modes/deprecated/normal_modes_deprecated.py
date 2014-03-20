@@ -132,7 +132,7 @@ def differentiate_fd4(f, x, dx):
     return res
 
 
-def compute_eigenproblem_matrix(sim, frequency_unit=1e9, filename=None, differentiate_H_numerically=False):
+def compute_eigenproblem_matrix(sim, frequency_unit=1e9, filename=None, differentiate_H_numerically=False, dtype=complex):
     """
     Compute and return the square matrix `D` defining the eigenproblem which
     has the normal mode frequencies and oscillation patterns as its solution.
@@ -212,16 +212,20 @@ def compute_eigenproblem_matrix(sim, frequency_unit=1e9, filename=None, differen
         # Compute the linearised llg
         L = linearised_llg_times_vector(v)
         # Go back to 2d space
-        res = np.empty(w.shape, dtype=complex)
+        res = np.empty(w.shape, dtype=dtype)
         res[:] = mf_mult(Qt, L)
-        # Multiply by -i/(2*pi*U) so that we get frequencies as the real part of eigenvalues
-        res *= -1j / (2 * pi * frequency_unit)
+        if dtype == complex:
+            # Multiply by -i/(2*pi*U) so that we get frequencies as the real part of eigenvalues
+            res *= -1j / (2 * pi * frequency_unit)
+        else:
+            # This will yield imaginary eigenvalues, but we divide by 1j in the calling routine.
+            res *= 1. / (2 * pi * frequency_unit)
         res.shape = (-1,)
         return res
 
     df.tic()
     logger.info("Assembling eigenproblem matrix.")
-    D = np.zeros((2*n, 2*n), dtype=complex)
+    D = np.zeros((2*n, 2*n), dtype=dtype)
     logger.debug("Eigenproblem matrix D will occupy {:.2f} MB of memory.".format(D.nbytes / 1024.**2))
     for i, w in enumerate(np.eye(2*n)):
         if i % 50 == 0:
