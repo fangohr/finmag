@@ -76,7 +76,7 @@ def test_check_Kittel_mode_for_single_sphere(tmpdir, debug=False):
     # Export normal mode animations for debugging
     for i in xrange(n_values_export):
         freq = omega_positive[i]
-        export_normal_mode_animation(sim, freq, w[:, i], filename='normal_mode_{:02d}__{:.3f}_GHz.pvd'.format(i, freq))
+        export_normal_mode_animation(sim, freq, w[i], filename='normal_mode_{:02d}__{:.3f}_GHz.pvd'.format(i, freq))
 
 
     ##
@@ -144,7 +144,7 @@ def test_plot_spatially_resolved_normal_mode(tmpdir):
     logger.debug("[DDD] Computed {} eigenvalues and {} eigenvectors.".format(len(omega), len(eigenvecs[0])))
     for i in xrange(N):
         #sim.export_normal_mode_animation(i, filename='animations/normal_mode_{:02d}/normal_mode_{:02d}.pvd'.format(i, i))
-        w = eigenvecs[:, i]
+        w = eigenvecs[i]
 
         fig = plot_spatially_resolved_normal_mode(mesh, m0, w, slice_z='z_max', components='xyz',
                                                   figure_title='Eigenmodes', yshift_title=0.0,
