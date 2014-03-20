@@ -132,7 +132,7 @@ def differentiate_fd4(f, x, dx):
     return res
 
 
-def compute_eigenproblem_matrix(sim, frequency_unit=1e9, filename=None, differentiate_H_numerically=False, dtype=complex):
+def compute_eigenproblem_matrix(sim, frequency_unit=1e9, filename=None, differentiate_H_numerically=True, dtype=complex):
     """
     Compute and return the square matrix `D` defining the eigenproblem which
     has the normal mode frequencies and oscillation patterns as its solution.
@@ -311,7 +311,7 @@ def check_is_hermitian(A, matrix_name, atol=1e-8, rtol=1e-12):
 
 def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9,
                                               filename_mat_A=None, filename_mat_M=None,
-                                              check_hermitian=False, differentiate_H_numerically=False):
+                                              check_hermitian=False, differentiate_H_numerically=True):
     """
     XXX TODO: write me
 
