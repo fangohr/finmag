@@ -1139,7 +1139,7 @@ def test_compute_normal_modes_with_different_solvers(tmpdir):
     with pytest.raises(TypeError):
         # Cannot currently use the SLEPcEigensolver with a generalised
         # eigenvalue problem.
-        sim.compute_normal_modes(n_values=10, solver=solver4)
+        sim.compute_normal_modes(n_values=10, solver=solver4, use_generalised=True)
 
 
     # Check that all methods compute the same eigenvalues and eigenvectors
