@@ -4,7 +4,6 @@ import hashlib
 import logging
 import numpy as np
 import dolfin as df
-from petsc4py import PETSc
 from scipy.sparse.linalg import LinearOperator
 from scipy.sparse import csr_matrix
 from scipy.optimize import minimize_scalar
@@ -223,6 +222,11 @@ def scipy_sparse_linear_operator_to_dense_array(A, dtype=complex):
 
 
 def petsc_matrix_to_numpy_array(A, dtype=float):
+    # XXX TODO: Move this import to the top once we have found an easy
+    #           and reliable (semi-)automatic way for users to install
+    #           petsc4py.  -- Max, 20.3.2014
+    from petsc4py import PETSc
+
     if not isinstance(A, PETSc.Mat):
         raise TypeError("Matrix must be of type petsc4py.PETSc.Mat, "
                         "but got: {}".format(type(A)))
@@ -233,6 +237,11 @@ def petsc_matrix_to_numpy_array(A, dtype=float):
 
 
 def as_dense_array(A, dtype=None):
+    # XXX TODO: Move this import to the top once we have found an easy
+    #           and reliable (semi-)automatic way for users to install
+    #           petsc4py.  -- Max, 20.3.2014
+    from petsc4py import PETSc
+
     if A == None:
         return None
 
@@ -265,6 +274,11 @@ def as_petsc_matrix(A):
     will be set).
 
     """
+    # XXX TODO: Move this import to the top once we have found an easy
+    #           and reliable (semi-)automatic way for users to install
+    #           petsc4py.  -- Max, 20.3.2014
+    from petsc4py import PETSc
+
     if isinstance(A, PETSc.Mat):
         return A
 
