@@ -1825,6 +1825,8 @@ class NormalModeSimulation(Simulation):
                 # Eigenvalues are complex due to the missing factor of 1j in the matrix with real entries. Here we correct for this.
                 omega = 1j*omega
 
+        log.debug("Relative errors of computed eigensolutions: {}".format(rel_errors))
+
         self.eigenfreqs = omega
         self.eigenvecs = w
         self.rel_errors = rel_errors
