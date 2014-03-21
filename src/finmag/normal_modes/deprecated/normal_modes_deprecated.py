@@ -232,6 +232,7 @@ def compute_eigenproblem_matrix(sim, frequency_unit=1e9, filename=None, differen
             logger.debug("Processing row {}/{}  (time taken so far: {:.2f} seconds)".format(i, 2*n, df.toc()))
         D[:,i] = linearised_llg_times_tangential_vector(w)
     logger.debug("Eigenproblem matrix D occupies {:.2f} MB of memory.".format(D.nbytes / 1024.**2))
+    logger.info("Finished assembling eigenproblem matrix.")
 
     if filename != None:
         logger.info("Saving eigenproblem matrix to file '{}'".format(filename))
