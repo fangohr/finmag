@@ -528,11 +528,10 @@ def export_normal_mode_animation(mesh, m0, freq, w, filename, num_cycles=1, num_
         If True, only `dm(t)` is plotted.
 
     """
-    if not freq.imag == 0:
-        if abs(freq.imag) < 1e-8:
-            freq = freq.real
-        else:
-            raise ValueError("Frequency must be (at least approximately) real. Got: {}".format(freq))
+    if freq.imag != 0 and abs(freq.imag) > 1e-8:
+        logger.warning("Frequency expected to be a real number. "
+                       "Got: {}. This may lead to unexpected behaviour".format(freq))
+    freq = freq.real
     #basename = os.path.basename(re.sub('\.vtk$', '', filename))
     #dirname = os.path.dirname(filename)
     #if not os.path.exists(dirname):
