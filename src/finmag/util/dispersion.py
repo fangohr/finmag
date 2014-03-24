@@ -6,6 +6,10 @@ import fenicstools as tls
 from joblib import Memory
 from tempfile import mkdtemp
 
+__all__ = ['points_on_line', 'points_on_axis', 'probe',
+           'magnetisation_deviation', 'spinwaves', 'dispersion_relation',
+           'spinwaves_to_vtk']
+
 # important, since we manipulate the np.array directly
 df.parameters.reorder_dofs_serial = False
 
