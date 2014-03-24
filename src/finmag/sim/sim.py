@@ -1843,7 +1843,9 @@ class NormalModeSimulation(Simulation):
                 log.warning('Frequencies should be approximately real, but computed: {:f}'.format(freq))
 
         if discard_negative_frequencies:
-            omega = filter(lambda x: x >= 0, omega)
+            pos_freq_indices = [i for (i, freq) in enumerate(omega) if freq >= 0]
+            omega = omega[pos_freq_indices]
+            w = w[pos_freq_indices]
 
         log.debug("Relative errors of computed eigensolutions: {}".format(rel_errors))
 
