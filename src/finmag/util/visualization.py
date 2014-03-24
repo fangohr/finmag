@@ -227,6 +227,7 @@ def render_paraview_scene(
     try:
         #os.chdir(tmpdir)
 
+        use_display = configuration.get_config_option("visualization", "use_display", None)
         if use_display is None and use_xpra.lower() != "false":
             # Try to create a display using 'xpra'
             try:

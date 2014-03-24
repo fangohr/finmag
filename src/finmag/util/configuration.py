@@ -109,4 +109,8 @@ display_module_versions_at_startup = True
 # Therefore we provide this configuration option to turn the use of
 # xpra off. If xpra is not installed then this setting has no effect.
 use_xpra = True
+
+# Tell xpra which display to use ('None' means try to find any available
+# unused X display). This setting has no effect if xpra is disabled.
+use_display = None
 """
