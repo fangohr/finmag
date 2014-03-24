@@ -1689,7 +1689,7 @@ class NormalModeSimulation(Simulation):
                 log.debug('Re-using previously computed eigenproblem matrix.')
 
     def compute_normal_modes(self, n_values=10, solver='scipy_dense',
-                             discard_negative_frequencies=False,
+                             discard_negative_frequencies=True,
                              filename_mat_A=None, filename_mat_M=None,
                              use_generalized=False, force_recompute_matrices=False,
                              check_hermitian=False, differentiate_H_numerically=True,
@@ -1813,6 +1813,10 @@ class NormalModeSimulation(Simulation):
             force_recompute_matrices=force_recompute_matrices, check_hermitian=check_hermitian,
             differentiate_H_numerically=differentiate_H_numerically, use_real_matrix=use_real_matrix)
 
+        if discard_negative_frequencies:
+            # If negative frequencies should be discarded, we need to compute twice as many as the user requested
+            n_values *= 2
+
         if use_generalized:
             # omega, w = compute_normal_modes_generalised(self.A, self.M, n_values=n_values, discard_negative_frequencies=discard_negative_frequencies,
             #                                             tol=tol, sigma=sigma, which=which, v0=v0, ncv=ncv, maxiter=maxiter, Minv=Minv, OPinv=OPinv, mode=mode)
@@ -1824,6 +1828,22 @@ class NormalModeSimulation(Simulation):
             if use_real_matrix:
                 # Eigenvalues are complex due to the missing factor of 1j in the matrix with real entries. Here we correct for this.
                 omega = 1j*omega
+
+        # Sanity check: frequencies should occur in +/- pairs
+        pos_freqs = filter(lambda x: x >= 0, omega)
+        neg_freqs = filter(lambda x: x <= 0, omega)
+        #kk = min(len(pos_freqs), len(neg_freqs))
+        for (freq1, freq2) in zip(pos_freqs, neg_freqs):
+            if not np.isclose(freq1.real, -freq2.real, rtol=1e-8):
+                log.error("Frequencies should occur in +/- pairs, but computed: {:f} / {:f}".format(freq1, freq2))
+
+        # Another sanity check: frequencies should be approximately real
+        for freq in omega:
+            if not abs(freq.imag / freq) < 1e-4:
+                log.warning('Frequencies should be approximately real, but computed: {:f}'.format(freq))
+
+        if discard_negative_frequencies:
+            omega = filter(lambda x: x >= 0, omega)
 
         log.debug("Relative errors of computed eigensolutions: {}".format(rel_errors))
 
