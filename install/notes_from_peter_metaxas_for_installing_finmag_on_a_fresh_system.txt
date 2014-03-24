@@ -1,0 +1,73 @@
+These are some notes which were kindly provided by Peter Metaxas to help
+us identify steps and potential issues when installing Finmag on a fresh
+Ubuntu 12.04 system. Received: 24.3.2013
+
+===========================================================================
+
+-Unzip and go into: finmag-installation-instructions
+
+-Install libraries
+sudo install-libraries.sh
+
+-Check this has worked:
+python test_libraries.py
+All the modules listed should have a version number displayed, for example:
+python test_libraries.py
+      Python -> 2.7.3
+     IPython -> 0.13.1
+       numpy -> 1.6.1
+  matplotlib -> 1.2.0
+       scipy -> 0.9.0
+      dolfin -> 1.0.0
+
+- Install cython
+
+- Install deb package
+
+- point system to python stuff
+sudo gedit ~/.bashrc
+append line: export PYTHONPATH=/usr/local/lib/python2.7/dist-packages:$PYTHONPATH
+
+- Test:
+ipython
+import finmag
+
+- If aeon error:
+sudo pip install aeon
+
+- If TreecodeBEM error:
+sudo gedit /usr/lib/python2.7/dist-packages/finmag/energies/demag/__init__.py file
+comment out: 'from treecode_bem import TreecodeBEM'
+remove Treecode from knownsolvers
+
+- may need to upgrade scipy for newer finmag
+sudo pip install --upgrade scipy
+
+FOR SUMATRA STUFF WITH MAX
+
+-Install git
+sudo apt-get install git
+
+-Install python-git from software centre (required for sumatra-git comms)
+use 'sudo pip install --upgrade gitpython' if a newer version is required
+
+- setup repository
+cd /path/to/your/simulation/directory/
+git init
+git config --global user.name "Your Name"
+git config --global user.email you@example.com
+git add FILES
+git commit -a -m 'description'
+
+- setup sumatra project
+smt init PROJECTNAME
+smt configure --addlabel=parameters -e python -m dw-eigenmodes.py --labelgenerator=timestamp --timestamp_format "%Y-%m-%d__%H_%M_%S"
+
+- Will probably have errors regarding 'setup_environ' when running the simulation. 
+This is likely to do with Django:
+https://neuralensemble.org/trac/sumatra/ticket/191
+
+To fix: downgrade to v1.5: sudo pip install django==1.5.5
+
+All should work now....if licence file is in the right spot
+
