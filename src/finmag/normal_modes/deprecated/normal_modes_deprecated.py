@@ -610,10 +610,10 @@ def plot_spatially_resolved_normal_mode(mesh, m0, w, slice_z='z_max', components
 
     slice_z:
 
-        Currently only the values 'z_min' and 'z_max' are supported
-        (which correspond to the bottom/top layer of the mesh).
-        Hopefully in the future `slice_z` will be allowed to have any
-        numerical value.
+        The z-value of the mesh slice which will be plotted. This can be either
+        'z_min' or 'z_max' (which correspond to the bottom/top layer of the mesh)
+        or a numerical value. Note that the mesh must have a layer of nodes with
+        this z-coordinate, otherwise the plotting routine will fail.
 
     num_phase_colorbar_ticks:
 
@@ -641,8 +641,6 @@ def plot_spatially_resolved_normal_mode(mesh, m0, w, slice_z='z_max', components
         slice_z = min(coords[:, 2])
     elif slice_z == 'z_max':
         slice_z = max(coords[:, 2])
-    else:
-        raise ValueError("Currently slice_z must have one of the values 'z_min' or 'z_max' (which correspond to the bottom/top layer of the mesh, respectively).")
 
     # Extract the boundary mesh from the full mesh (which is a 2D mesh
     # consisting only of the triangles on the boundary).
@@ -661,6 +659,8 @@ def plot_spatially_resolved_normal_mode(mesh, m0, w, slice_z='z_max', components
     surface = Surface()
     surface.mark(sub_domains, 1)
     surface_layer = df.SubMesh(boundary_mesh, sub_domains, 1)
+    # XXX TODO: Issue a warning of the mesh defined by 'surface_layer' does not have
+    #           enough vertices (or is not contiguous, etc.)
   
     try:
         # Legacy syntax (for dolfin <= 1.2 or so).
