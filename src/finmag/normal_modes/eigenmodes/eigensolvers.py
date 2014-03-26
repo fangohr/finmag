@@ -75,7 +75,7 @@ class AbstractEigensolver(object):
         if self.is_hermitian() and not eigenproblem_is_hermitian:
             raise ValueError("Eigenproblem matrices are non-Hermitian but solver "
                              "assumes Hermitian matrices. Aborting.")
-        logger.debug("Solving eigenproblem. This may take a while...")
+        logger.info("Solving eigenproblem. This may take a while...")
         df.tic()
         omegas, ws = self._solve_eigenproblem(A, M=M, num=num, tol=tol)
         logger.debug("Computing the eigenvalues and eigenvectors took {:.2f} seconds".format(df.toc()))
