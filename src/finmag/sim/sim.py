@@ -1856,7 +1856,7 @@ class NormalModeSimulation(Simulation):
         return omega, w, rel_errors
 
 
-    def export_normal_mode_animation(self, k, filename=None, directory='', dm_only=False, num_cycles=1, num_snapshots_per_cycle=20, scaling=0.2, framerate=5, **kwargs):
+    def export_normal_mode_animation(self, k, filename=None, directory='', dm_only=False, num_cycles=1, num_snapshots_per_cycle=20, scaling=0.2, **kwargs):
         """
         XXX TODO: Complete me!
 
