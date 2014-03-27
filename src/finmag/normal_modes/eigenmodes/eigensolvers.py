@@ -71,8 +71,10 @@ class AbstractEigensolver(object):
         sorted in in ascending order of the eigenvalues.
 
         """
-        eigenproblem_is_hermitian = is_hermitian(A) and (M == None or is_hermitian(M))
-        if self.is_hermitian() and not eigenproblem_is_hermitian:
+        def eigenproblem_is_hermitian():
+            return is_hermitian(A) and (M == None or is_hermitian(M))
+
+        if self.is_hermitian() and not eigenproblem_is_hermitian():
             raise ValueError("Eigenproblem matrices are non-Hermitian but solver "
                              "assumes Hermitian matrices. Aborting.")
         logger.info("Solving eigenproblem. This may take a while...")
