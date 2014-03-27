@@ -8,6 +8,7 @@ import dolfin as df
 import numpy as np
 from datetime import datetime, timedelta
 from finmag.util.consts import ONE_DEGREE_PER_NS
+from finmag.util.meshes import nodal_volume
 
 log = logging.getLogger("finmag")
 
@@ -227,3 +228,45 @@ def plot_relaxation(sim, filename="relaxation.png"):
     ax.annotate("threshold", xy=(0.6, 1.1 * threshold), color="r")
     plt.savefig(filename)
     plt.close()
+
+def skyrmion_number(self):
+    """
+    This function returns the skyrmion number calculated from the spin
+    texture in this simulation instance.
+    """
+
+    integrand = -0.25 / np.pi * df.dot(self.llg._m,
+                                       df.cross(df.Dx(self.llg._m, 0),
+                                                df.Dx(self.llg._m, 1)))
+
+    # Integrate over the mesh.
+    return df.assemble(integrand * df.dx)
+
+def skyrmion_number_density_function(self):
+    """
+    This function returns the skyrmion number density function calculated
+    from the spin texture in this simulation instance. This function can be
+    probed to determine the local nature of the skyrmion number.
+    """
+
+    integrand = -0.25 / np.pi * df.dot(self.llg._m,
+                                       df.cross(df.Dx(self.llg._m, 0),
+                                                df.Dx(self.llg._m, 1)))
+
+    # Build the function space of the mesh nodes.
+    dofmap = self.S3.dofmap()
+    S1 = df.FunctionSpace(self.S3.mesh(), "Lagrange", 1,
+                          constrained_domain=dofmap.constrained_domain)
+
+    # Find the skyrmion density at the mesh nodes using the above function
+    # space.
+    nodalSkx = df.dot(integrand, df.TestFunction(S1)) * df.dx
+    nodalVolumeS1 = nodal_volume(S1, self.unit_length)
+    skDensity = df.assemble(nodalSkx).array() * self.unit_length\
+                ** self.S3.mesh().topology().dim() / nodalVolumeS1
+
+    # Build the skyrmion number density dolfin function from the skDensity
+    # array.
+    skDensityFunc = df.Function(S1)
+    skDensityFunc.vector()[:] = skDensity
+    return skDensityFunc

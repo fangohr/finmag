@@ -5,6 +5,7 @@ import dolfin as df
 import sim_helpers
 from datetime import datetime, timedelta
 from distutils.version import LooseVersion
+from finmag import Simulation
 from finmag.example import barmini
 from finmag.integrators.llg_integrator import llg_integrator
 from finmag.util.helpers import assert_number_of_files
@@ -172,5 +173,23 @@ def test_get_submesh(tmpdir):
     assert(mesh_bottom.num_vertices() == submesh_bottom.num_vertices())
 
 
-if __name__ == '__main__':
-    test_try_to_restart_a_simulation()
+def test_skyrmion_number():
+    """
+    Test to see if the skyrmion number density function helper integrated over
+    a mesh yields the same result as the skyrmion number function itself. Also
+    test that they both give sane values by testing on a system with a finite
+    number of skyrmions.
+    """
+    # Create simulation object with four skyrmions in it.
+    mesh = df.RectangleMesh(-100, -100, 100, 100, 50, 50)
+    sim = Simulation(mesh, 1e5, unit_length=1e-9)
+    skCentres = np.array([[0, 0], [-50, 70], [40, -80], [70, 70]])
+    sim.initialise_skyrmions(skyrmionRadius=30, centres=skCentres)
+
+    # Obtain skyrmion number and skyrmion number density, and test them.
+    skX = sim.skyrmion_number()
+    skX_density_function = sim.skyrmion_number_density_function()
+    skX_integral = df.assemble(skX_density_function * df.dx)
+
+    assert(abs(skX - skX_integral) < 1e-10)
+    assert(abs(skX - 4) < 3e-1)  # There are four skyrmions here...
