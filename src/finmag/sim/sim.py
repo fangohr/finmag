@@ -197,14 +197,6 @@ class Simulation(object):
 
     m = property(__get_m, set_m)
 
-    def skyrmion_number(self):
-        """
-        This function returns the skyrmion number calculated from the spin
-        texture in this simulation instance.
-        """
-
-        return 1 / (4 * np.pi) * df.assemble(df.dot(self.llg._m, df.cross(df.Dx(self.llg._m, 0), df.Dx(self.llg._m, 1))) * df.dx)
-
     @property
     def m_average(self):
         """
@@ -473,7 +465,7 @@ class Simulation(object):
         if field_type == 'm':
             field = self.llg._m
         # elif field_type = 'dmdt':
-        #     field = 
+        #     field =
         else:
             field = self.llg.effective_field.get_dolfin_function(field_type)
 
@@ -693,6 +685,9 @@ class Simulation(object):
     save_ndt = sim_helpers.save_ndt
     hysteresis = hyst
     hysteresis_loop = hyst_loop
+
+    skyrmion_number = sim_helpers.skyrmion_number
+    skyrmion_number_density_function = sim_helpers.skyrmion_number_density_function
 
     def __get_pins(self):
         return self.llg.pins
