@@ -77,7 +77,8 @@ class Zeeman(object):
         return self.H.vector().array()
 
     def compute_energy(self, dx=df.dx):
-        E = df.assemble(self.E * dx) * self.unit_length**3
+        dim = self.S3.mesh().topology().dim()
+        E = df.assemble(self.E * dx) * self.unit_length**dim
         return E
 
     def energy_density(self):

@@ -464,8 +464,6 @@ class Simulation(object):
         """
         if field_type == 'm':
             field = self.llg._m
-        # elif field_type = 'dmdt':
-        #     field =
         else:
             field = self.llg.effective_field.get_dolfin_function(field_type)
 
