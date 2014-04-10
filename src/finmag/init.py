@@ -5,6 +5,8 @@
 # CONTACT: h.fangohr@soton.ac.uk
 
 from __future__ import division
+import matplotlib
+matplotlib.use('Agg')
 import logging
 logger = logging.getLogger("finmag")
 logger.propagate = False  # no need to propagate up to root handler, since we define our own later
