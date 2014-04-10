@@ -251,7 +251,11 @@ def render_paraview_scene(
         run_command_on_host(hostname, 'python', scriptfile)
         copy_file_to_host(hostname, tmp_outfile, None, outfile)
     except sh.ErrorReturnCode as ex:
-        logger.error("Could not render Paraview scene. The error message was: {}".format(ex.message))
+        def sanitize(s):
+            s = s.replace(u'\u2018', "\'")
+            s = s.replace(u'\u2019', "\'")
+            return s
+        logger.error("Could not render Paraview scene. The error message was: {}".format(sanitize(ex.message)))
         #raise
     finally:
         if debug == True:
