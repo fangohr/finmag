@@ -42,16 +42,16 @@ def make_human_readable(nbytes):
     return res
 
 
-def print_eigenproblem_memory_usage(mesh, generalised=False):
+def print_eigenproblem_memory_usage(num_mesh_nodes, generalised=False):
     """
-    Given a mesh, print the amount of memory that the eigenproblem
-    matrix or matrices (in case of a generalised eigenproblem) will
-    occupy in memory. This is useful when treating very big problems
-    in order to "interactively" adjust a mesh until the matrix fits
-    in memory.
+    Given the number of nodes in a mesh, print the amount of memory
+    that the eigenproblem matrix or matrices (in case of a generalised
+    eigenproblem) will occupy in memory. This is useful when treating
+    very big problems in order to "interactively" adjust a mesh until
+    the matrix fits in memory.
 
     """
-    N = mesh.num_vertices()
+    N = num_mesh_nodes
     if generalised == False:
         byte_size_float = np.zeros(1, dtype=float).nbytes
         memory_usage = (2*N)**2 * byte_size_float
