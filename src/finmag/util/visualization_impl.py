@@ -52,7 +52,7 @@ def run_cmd_with_timeout(cmd, timeout_sec):
     return proc.returncode, stdout, stderr
 
 
-def find_valid_X_display(displays_to_try=xrange(10, 100), hostname=None):
+def find_valid_X_display(displays_to_try=xrange(10, 100)):
     """
     Sequentially checks all X displays in the given list (default: 0 through 99)
     and returns the number of the first valid display that is found. Returns None
@@ -63,18 +63,13 @@ def find_valid_X_display(displays_to_try=xrange(10, 100), hostname=None):
     displays_to_try:  list of displays to search (default: [0, ..., 99])
 
     """
-    if hostname != None:
-        msg_str = " on host '{}'".format(hostname)
-    else:
-        msg_str = ""
-
     # A (probably faster) alternative way would be to write a temporary
     # shell script which contains the loop and run that script using a
     # single subprocess call. However, since usually display :0 will be
     # available the loop below should terminate quite quickly.
     for display in displays_to_try:
         try:
-            run_command_on_host(hostname, 'xdpyinfo', '-display', ':{}'.format(display))
+            sh.xdpyinfo('-display', ':{}'.format(display))
             # This display is available since the command finished successfully
             logger.debug("Found valid display :{}".format(display))
             return display
@@ -85,7 +80,7 @@ def find_valid_X_display(displays_to_try=xrange(10, 100), hostname=None):
     return None
 
 
-def find_unused_X_display(displays_to_try=xrange(10, 100), hostname=None):
+def find_unused_X_display(displays_to_try=xrange(10, 100)):
     """
     Sequentially checks all X displays in the given list (default: 0 through 99)
     and returns the number of the first unused display that is found. Returns None
@@ -96,20 +91,14 @@ def find_unused_X_display(displays_to_try=xrange(10, 100), hostname=None):
     displays_to_try:  list of displays to search (default: [0, ..., 99])
 
     """
-    if hostname != None:
-        msg_str = " on host '{}'".format(hostname)
-    else:
-        msg_str = ""
-
     for display in displays_to_try:
         try:
-            run_command_on_host(hostname, 'xdpyinfo', '-display', ':{}'.format(display))
-            #sp.check_output(['xdpyinfo', '-display', ':{}'.format(display)], stderr=sp.STDOUT)
-            # This display is already in used since the command finished successfully
+            sh.xdpyinfo('-display', ':{}'.format(display))
+            # If the command finished successfully, this display is already in use.
         except sh.ErrorReturnCode:
-            logger.debug("Found unused display :{}{}".format(display, msg_str))
+            logger.debug("Found unused display :{}".format(display))
             return display
-    logger.debug("No unused display found{}.".format(msg_str))
+    logger.debug("No unused display found.")
     return None
 
 
