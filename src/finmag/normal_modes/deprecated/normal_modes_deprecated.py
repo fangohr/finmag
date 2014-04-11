@@ -229,7 +229,9 @@ def compute_eigenproblem_matrix(sim, frequency_unit=1e9, filename=None, differen
     logger.debug("Eigenproblem matrix D will occupy {:.2f} MB of memory.".format(D.nbytes / 1024.**2))
     for i, w in enumerate(np.eye(2*n)):
         if i % 50 == 0:
-            logger.debug("Processing row {}/{}  (time taken so far: {:.2f} seconds)".format(i, 2*n, df.toc()))
+            t_cur = df.toc()
+            completion_info = '' if (i == 0) else ', estimated remaining time: {:.2f} seconds'.format(t_cur * (2*n/i - 1))
+            logger.debug("Processing row {}/{}  (time taken so far: {:.2f} seconds{})".format(i, 2*n, t_cur, completion_info))
         D[:,i] = linearised_llg_times_tangential_vector(w)
     logger.debug("Eigenproblem matrix D occupies {:.2f} MB of memory.".format(D.nbytes / 1024.**2))
     logger.info("Finished assembling eigenproblem matrix.")
