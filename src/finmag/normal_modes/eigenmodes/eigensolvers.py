@@ -111,6 +111,9 @@ class ScipyDenseSolver(AbstractEigensolver):
     def _solve_eigenproblem(self, A, M=None, num=None, tol=None):
         A = as_dense_array(A)  # does nothing if A is already a numpy.array
         M = as_dense_array(M)  # does nothing if M is already a numpy.array
+        # XXX TODO: For very large eigenproblems it is not advisable to store *all* eigenvectors here
+        #           because this duplicates the size of the eigenproblem matrix. Instead, can we somehow
+        #           ensure that the returned values are sorted and immediately discard unneeded vectors?
         omega, w = self._solver_func(A, M)
         w = w.T  # make sure that eigenvectors are stored in rows, not columns
         omega, w = sort_eigensolutions(omega, w)
