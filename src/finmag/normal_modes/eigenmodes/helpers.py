@@ -74,9 +74,9 @@ def compute_relative_error(A, M, omega, w):
             "supported matrix type at the moment for computing relative errors.")
         A = as_dense_array(A)
         M = as_dense_array(M)
-    a = np.dot(A, w)
-    b = omega*w if (M == None) else omega*np.dot(M, w)
-    rel_err = np.linalg.norm(a - b) / np.linalg.norm(omega*w)
+    lhs = np.dot(A, w)
+    rhs = omega*w if (M == None) else omega*np.dot(M, w)
+    rel_err = np.linalg.norm(lhs - rhs) / np.linalg.norm(omega*w)
     return rel_err
 
 
