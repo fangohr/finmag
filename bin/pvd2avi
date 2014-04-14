@@ -12,7 +12,7 @@ parser.add_argument('--representation', type=str, default='Surface', help='Repre
 parser.add_argument('--add-glyphs', action='store_true', default=False, help='Add glyphs to indicate the magnetisation direction.')
 parser.add_argument('--trim-border', action='store_true', default=False, help='Trim the borders of the output image.')
 parser.add_argument('--color-by-axis', type=str, default='x')
-parser.add_argument('--use-display', type=float, default=0, help='The X display to use for rendering (default: 0). Use a value of 1 to render the scene invisibly (needs xpra to be installed).')
+parser.add_argument('--use-display', type=float, default=0, help='The X display to use for rendering (default: 0). Use a different value to render the scene invisibly (needs xpra to be installed).')
 
 args = parser.parse_args()
 
