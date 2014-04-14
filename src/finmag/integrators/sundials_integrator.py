@@ -46,6 +46,7 @@ class SundialsIntegrator(object):
         integrator.set_scalar_tolerances(reltol, abstol)
 
         self.set_max_steps(nsteps)
+        self.user_set_nsteps = False  # the init is not a user
 
     def set_max_steps(self, nsteps):
         """Sets the maximum number of steps that will be done for time integration."""
@@ -106,7 +107,7 @@ class SundialsIntegrator(object):
                            "You can increase the maximum number of steps if "
                            "you really need to with integrator.set_max_steps(n).").format(
                                 self.get_max_steps(), self.integrator.get_current_time(), t)
-                    reached_tout = False  # not used, but this would be the rigth value
+                    reached_tout = False  # not used, but this would be the right value
                     raise RuntimeError(msg)
                 else:
                     reached_tout = False
