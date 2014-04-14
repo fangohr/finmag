@@ -229,7 +229,9 @@ def compute_eigenproblem_matrix(sim, frequency_unit=1e9, filename=None, differen
     logger.debug("Eigenproblem matrix D will occupy {:.2f} MB of memory.".format(D.nbytes / 1024.**2))
     for i, w in enumerate(np.eye(2*n)):
         if i % 50 == 0:
-            logger.debug("Processing row {}/{}  (time taken so far: {:.2f} seconds)".format(i, 2*n, df.toc()))
+            t_cur = df.toc()
+            completion_info = '' if (i == 0) else ', estimated remaining time: {:.2f} seconds'.format(t_cur * (2*n/i - 1))
+            logger.debug("Processing row {}/{}  (time taken so far: {:.2f} seconds{})".format(i, 2*n, t_cur, completion_info))
         D[:,i] = linearised_llg_times_tangential_vector(w)
     logger.debug("Eigenproblem matrix D occupies {:.2f} MB of memory.".format(D.nbytes / 1024.**2))
     logger.info("Finished assembling eigenproblem matrix.")
@@ -572,10 +574,29 @@ def export_normal_mode_animation(mesh, m0, freq, w, filename, num_cycles=1, num_
     logger.debug("Saving the data to file '{}' took {} seconds".format(filename, t1 - t0))
 
 
+colormaps = {'coolwarm': plt.cm.coolwarm,
+             'cool': plt.cm.cool,
+             'hot': plt.cm.hot,
+             'rainbow': plt.cm.jet,
+             'hsv': plt.cm.hsv,
+            }
+
+def get_colormap_from_name(cmap_name):
+    try:
+        if cmap_name == 'rainbow':
+            logger.warning('The rainbow colormap is strongly discouraged for scientific visualizations, it is '
+                           'highly recommended to choose a different colormap. See for example '
+                           'http://medvis.org/2012/08/21/rainbow-colormaps-what-are-they-good-for-absolutely-nothing/ '
+                           'for more information.')
+        return colormaps[cmap_name]
+    except KeyError:
+        raise ValueError("Unknown colormap name: '{}'. Allowed values: {}".format(cmap_name, colormaps.keys()))
+
+
 def plot_spatially_resolved_normal_mode(mesh, m0, w, slice_z='z_max', components='xyz',
                                         figure_title=None, yshift_title=0.0,
                                         plot_powers=True, plot_phases=True, num_phase_colorbar_ticks=5,
-                                        cmap_powers=plt.cm.jet, cmap_phases=plt.cm.hsv, vmin_powers=None,
+                                        cmap_powers='coolwarm', cmap_phases='hsv', vmin_powers=None,
                                         show_axis_labels=True, show_axis_frames=True, show_colorbars=True, figsize=None,
                                         outfilename=None, dpi=None):
     """
@@ -758,6 +779,11 @@ def plot_spatially_resolved_normal_mode(mesh, m0, w, slice_z='z_max', components
 
  
     fig = plt.figure(figsize=figsize)
+
+    if isinstance(cmap_powers, str):
+        cmap_powers = get_colormap_from_name(cmap_powers)
+    if isinstance(cmap_phases, str):
+        cmap_phases = get_colormap_from_name(cmap_phases)
 
     cnt = 1
     if plot_powers:

@@ -52,7 +52,7 @@ def run_cmd_with_timeout(cmd, timeout_sec):
     return proc.returncode, stdout, stderr
 
 
-def find_valid_X_display(displays_to_try=xrange(10, 100), hostname=None):
+def find_valid_X_display(displays_to_try=xrange(10, 100)):
     """
     Sequentially checks all X displays in the given list (default: 0 through 99)
     and returns the number of the first valid display that is found. Returns None
@@ -63,18 +63,13 @@ def find_valid_X_display(displays_to_try=xrange(10, 100), hostname=None):
     displays_to_try:  list of displays to search (default: [0, ..., 99])
 
     """
-    if hostname != None:
-        msg_str = " on host '{}'".format(hostname)
-    else:
-        msg_str = ""
-
     # A (probably faster) alternative way would be to write a temporary
     # shell script which contains the loop and run that script using a
     # single subprocess call. However, since usually display :0 will be
     # available the loop below should terminate quite quickly.
     for display in displays_to_try:
         try:
-            run_command_on_host(hostname, 'xdpyinfo', '-display', ':{}'.format(display))
+            sh.xdpyinfo('-display', ':{}'.format(display))
             # This display is available since the command finished successfully
             logger.debug("Found valid display :{}".format(display))
             return display
@@ -85,7 +80,7 @@ def find_valid_X_display(displays_to_try=xrange(10, 100), hostname=None):
     return None
 
 
-def find_unused_X_display(displays_to_try=xrange(10, 100), hostname=None):
+def find_unused_X_display(displays_to_try=xrange(10, 100)):
     """
     Sequentially checks all X displays in the given list (default: 0 through 99)
     and returns the number of the first unused display that is found. Returns None
@@ -96,124 +91,15 @@ def find_unused_X_display(displays_to_try=xrange(10, 100), hostname=None):
     displays_to_try:  list of displays to search (default: [0, ..., 99])
 
     """
-    if hostname != None:
-        msg_str = " on host '{}'".format(hostname)
-    else:
-        msg_str = ""
-
     for display in displays_to_try:
         try:
-            run_command_on_host(hostname, 'xdpyinfo', '-display', ':{}'.format(display))
-            #sp.check_output(['xdpyinfo', '-display', ':{}'.format(display)], stderr=sp.STDOUT)
-            # This display is already in used since the command finished successfully
+            sh.xdpyinfo('-display', ':{}'.format(display))
+            # If the command finished successfully, this display is already in use.
         except sh.ErrorReturnCode:
-            logger.debug("Found unused display :{}{}".format(display, msg_str))
+            logger.debug("Found unused display :{}".format(display))
             return display
-    logger.debug("No unused display found{}.".format(msg_str))
+    logger.debug("No unused display found.")
     return None
-
-
-def has_passwordless_ssh_login(hostname, timeout_sec=20):
-    """
-    Check whether it is possible to login to the given host without specifying a password.
-    Will give up after `timeout_sec` seconds.
-
-    """
-    returncode, _, _ = run_cmd_with_timeout('ssh -oNumberOfPasswordPrompts=0 {} "echo hello"'.format(hostname), timeout_sec=timeout_sec)
-    return (returncode == 0)
-
-
-def check_has_passwordless_ssh_login(hostname, timeout_sec=20):
-    if hostname in [None, '']:
-        return True
-    if not has_passwordless_ssh_login(hostname, timeout_sec):
-        raise RuntimeError("Host '{}' does not have passwordless "
-                           "ssh login enabled.".format(hostname))
-
-def run_command_on_host(hostname, cmd, *args):
-    """
-    Run the command `cmd` on the host `hostname` with the specified
-    arguments. If `hostname` is `None` or `localhost`, it will be
-    executed the command locally. Otherwise it will use ssh to log
-    into the remote host and execute the command there.
-
-    Warning: Remote execution will fail unless passwordless login via
-             ssh has been set up for the remote host!
-
-    *Returns*
-
-    A pair of strings containing the STDOUT and STDERR of the executed command.
-
-    """
-    cmd_stdout = StringIO.StringIO()
-    cmd_stderr = StringIO.StringIO()
-    if hostname == None or hostname == 'localhost':
-        sh.env[cmd](*args, _out=cmd_stdout, _err=cmd_stderr)
-    else:
-        check_has_passwordless_ssh_login(hostname)
-        try:
-            sh.ssh(hostname, cmd, ' '.join(args), _out=cmd_stdout, _err=cmd_stderr)
-        except sh.ErrorReturnCode as ex:
-            # Since we captured stdout and stderr above, we need to
-            # re-raise the exception giving them as arguments so that
-            # they appear in the exception message.
-            raise ex.__class__(ex.full_cmd, cmd_stdout.getvalue(), cmd_stderr.getvalue())
-    return cmd_stdout.getvalue(), cmd_stderr.getvalue()
-
-
-def create_tmpdir_on_host(hostname):
-    if hostname == None or hostname == "localhost":
-        tmpdir = tempfile.mkdtemp()
-    else:
-        cmd_str = """'import tempfile; tmpdir = tempfile.mkdtemp(); print tmpdir'"""
-        tmpdir, _ = run_command_on_host(hostname, 'python', '-c', cmd_str)
-    return tmpdir.rstrip()
-
-
-def remove_tmpdir_on_host(hostname, tmpdir):
-    if hostname in [None, "localhost"]:
-        shutil.rmtree(tmpdir)
-    else:
-        cmd_str = """'import shutil; shutil.rmtree("{}")'""".format(tmpdir)
-        run_command_on_host(hostname, 'python', '-c', cmd_str)
-
-
-def copy_file_to_host(from_hostname, from_filename, remote_hostname, remote_file_or_dirname):
-    """
-    Copy a file between computers. Either or both of `from_hostname`
-    and `remote_hostname` can be None (which means 'localhost').
-
-    """
-    if from_hostname in [None, 'localhost']:
-        from_hostname = ''
-        sep1 = ''
-    else:
-        check_has_passwordless_ssh_login(from_hostname)
-        sep1 = ':'
-
-    if remote_hostname in [None, 'localhost']:
-        remote_hostname = ''
-        sep2 = ''
-    else:
-        check_has_passwordless_ssh_login(from_hostname)
-        sep2 = ':'
-
-    sh.scp('{}{}{}'.format(from_hostname, sep1, from_filename),
-           '{}{}{}'.format(remote_hostname, sep2, remote_file_or_dirname))
-
-
-def write_file_on_host(hostname, filename, file_string):
-    """
-    Write the string `file_string` to a file called `filename` on the
-    given host. If `hostname` is `None` or 'localhost', the file is
-    written on the local computer.
-
-    """
-    tmpdir = tempfile.mkdtemp()
-    local_filename = os.path.join(tmpdir, 'script.py')
-    with open(local_filename, 'w') as f:
-        f.write(file_string)
-    copy_file_to_host(None, local_filename, hostname, filename)
 
 
 class ColorMap(object):

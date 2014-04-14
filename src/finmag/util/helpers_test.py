@@ -285,7 +285,7 @@ def test_piecewise_on_subdomains():
     """
     mesh = df.UnitCubeMesh(1, 1, 1)
     fun_vals = (42, 23, -3.14)
-    g = df.MeshFunction('uint', mesh, 3)
+    g = df.MeshFunction('size_t', mesh, 3)
     g.array()[:] = [1, 1, 2, 3, 1, 3]
     p = piecewise_on_subdomains(mesh, g, fun_vals)
     assert(isinstance(p, df.Function))  # check that p is a proper Function, not a MeshFunction
