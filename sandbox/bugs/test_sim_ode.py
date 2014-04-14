@@ -25,7 +25,7 @@ def test_sim_ode(do_plot=False):
     dt = 1e-9; 
     ts = np.linspace(0, 50 * dt, 4)
     #uncomment the following line to pass through this test
-    ts = np.linspace(0, 50 * dt, 11)
+    #ts = np.linspace(0, 50 * dt, 11)
 
     precession_coeff = sim.gamma / (1 + alpha ** 2)
     mz_ref = np.tanh(precession_coeff * alpha * H0 * ts)
