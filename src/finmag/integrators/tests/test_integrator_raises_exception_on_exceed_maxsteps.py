@@ -18,10 +18,6 @@ def test_time_run_until():
     t = 1e-9;
     with pytest.raises(RuntimeError) as exc_info:
         sim.run_until(t)
-    # Check that the first line of the value of the exception is what we expect:
-    # (This test will need updating whenever we change the message.)
-    assert exc_info.value.message.split('\n')[0] \
-       == "The integrator has reached its maximum of {} steps.".format(steps)
     assert sim.t < t
 
 
@@ -32,8 +28,6 @@ def test_time_advance_time():
     t = 1e-9
     with pytest.raises(RuntimeError) as exc_info:
         sim.advance_time(t)
-    assert exc_info.value.message.split('\n')[0] \
-       == "The integrator has reached its maximum of {} steps.".format(steps)
     assert sim.t < t  # check that integration was aborted
 
 
@@ -43,9 +37,4 @@ def test_time_default_max_steps():
     t = 20e-9;
     with pytest.raises(RuntimeError) as exc_info:
         sim.advance_time(t)
-    # Check that the first line of the value of the exception is what we expect:
-    # (This test will need updating whenever we change the message.)
-    assert exc_info.value.message.split('\n')[0] \
-       == "The integrator has reached its maximum of {} steps.".format(
-               sim.integrator.max_steps)
     assert sim.t < t
