@@ -93,13 +93,13 @@ class SundialsIntegrator(object):
                 # we have integrated up to cvode's internal time
                 self.cur_t = self.integrator.get_current_time()
 
-                msg = ("The integrator has reached its maximum of {} steps.\n"
+                log.error("The integrator has reached its maximum of {} steps.\n"
                        "The time is t = {} whereas you requested t = {}.\n"
                        "You can increase the maximum number of steps if "
-                       "you really need to with integrator.max_steps = n.").format(
-                            self.max_steps, self.integrator.get_current_time(), t)
+                       "you really need to with integrator.max_steps = n.".format(
+                            self.max_steps, self.integrator.get_current_time(), t))
                 reached_tout = False  # not used, but this would be the right value
-                raise RuntimeError(msg)
+                raise
             else:
                 reached_tout = False
                 raise
@@ -112,6 +112,27 @@ class SundialsIntegrator(object):
         # Weiwei: change the default m to sundials_m since sometimes we need to extend the default equation.
         self.llg.sundials_m = self.m
         return reached_tout
+
+    def advance_steps(self, steps):
+        """
+        Run the integrator for `steps` internal steps.
+
+        """
+        old_max_steps = self.max_steps
+        self.max_steps = steps
+        try:
+            # we can't tell sundials to run a certain number of steps
+            # so we try integrating for a very long time but set it to
+            # stop after the specified number of steps
+            self.integrator.advance_time(self.cur_t + 1, self.m)
+        except RuntimeError, msg:
+            if "CV_TOO_MUCH_WORK" in msg.message:
+                pass # this is the error we expect
+            else:
+                raise
+        self.cur_t = self.integrator.get_current_time()
+        self.llg.sundials_m = self.m
+        self.max_steps = old_max_steps
 
     def reinit(self):
         """
