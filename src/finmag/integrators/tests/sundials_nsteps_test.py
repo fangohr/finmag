@@ -10,13 +10,13 @@ def test_integrator_get_set_max_steps(tmpdir):
     os.chdir(str(tmpdir))
     sim = finmag.example.barmini()
     sim.run_until(0) # create integrator object
-    steps = sim.integrator.get_max_steps()
+    steps = sim.integrator.max_steps
     assert steps != 42  # would be an odd default value
-    sim.integrator.set_max_steps(42)
-    steps2 = sim.integrator.get_max_steps()
+    sim.integrator.max_steps = 42
+    steps2 = sim.integrator.max_steps
     assert steps2 == 42
-    sim.integrator.set_max_steps(steps)
-    assert steps == sim.integrator.get_max_steps()
+    sim.integrator.max_steps = steps
+    assert steps == sim.integrator.max_steps
 
 
 def test_integrator_stats(tmpdir):
@@ -40,11 +40,9 @@ def test_integrator_n_steps_only(tmpdir):
     """
     os.chdir(str(tmpdir))
     sim = finmag.example.barmini()
-    sim.run_until(0)  # create integrator object
+    sim.create_integrator()
     assert sim.integrator.stats()['nsteps'] == 0
-    sim.integrator.set_max_steps(1)
-    ret_val = sim.integrator.advance_time(1e-12)
-    assert ret_val == False
+    sim.integrator.advance_steps(1)
     assert sim.integrator.stats()['nsteps'] == 1
     # check also value of cur_t is up-to-date
     assert sim.integrator.cur_t == sim.integrator.stats()['tcur']
@@ -53,37 +51,9 @@ def test_integrator_n_steps_only(tmpdir):
     # because we have only done one step
     assert sim.integrator.stats()['tcur'] == sim.integrator.stats()['hlast']
 
-    sim.integrator.set_max_steps(1)
-    ret_val = sim.integrator.advance_time(1e-12)
+    sim.integrator.advance_steps(1)
     assert sim.integrator.stats()['nsteps'] == 2
-    assert ret_val == False
-    sim.integrator.set_max_steps(2)
-    ret_val = sim.integrator.advance_time(1e-12)
+    sim.integrator.advance_steps(2)
     assert sim.integrator.stats()['nsteps'] == 4
-    assert ret_val == False
     # check also value of cur_t is up-to-date
     assert sim.integrator.cur_t == sim.integrator.stats()['tcur']
-
-
-def test_integrator_run_until_return_value(tmpdir):
-    os.chdir(str(tmpdir))
-    sim = finmag.example.barmini()
-    sim.run_until(0) # to create integrator object
-    assert sim.integrator.stats()['nsteps'] == 0
-    sim.integrator.set_max_steps(1)
-    ret_val = sim.integrator.advance_time(1e-15)
-    assert sim.integrator.stats()['nsteps'] == 1
-    assert ret_val == False
-    # check also value of cur_t is up-to-date
-    assert sim.integrator.cur_t == sim.integrator.stats()['tcur']
-
-    # if integration succeeds, we should get True back
-    sim.integrator.set_max_steps(500) # default value
-    ret_val = sim.integrator.advance_time(1e-15)
-    print("For information: nsteps = {nsteps}".format(**sim.integrator.stats()))  # about 6 steps
-    assert ret_val == True
-
-    # check also value of cur_t is up-to-date (which here means
-    # carries the desired value of 1e-15 as the integration
-    # succeeded)
-    assert sim.integrator.cur_t == 1e-15
