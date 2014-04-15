@@ -20,7 +20,6 @@ class SundialsIntegrator(object):
                           "bdf_gmres_no_prec", "bdf_gmres_prec_id")
         self.llg = llg
         self.cur_t = t0
-        self.nsteps = 500 # cvode default value
         self.m = m0.copy()
         self.tablewriter = tablewriter
 
@@ -43,16 +42,16 @@ class SundialsIntegrator(object):
             integrator.set_spils_preconditioner(llg.sundials_psetup, llg.sundials_psolve)
 
         integrator.set_scalar_tolerances(reltol, abstol)
-        self.set_max_steps(nsteps)
+        self.max_steps = nsteps
 
-    def set_max_steps(self, nsteps):
-        """Sets the maximum number of steps that will be done for time integration."""
-        self.nsteps = nsteps
-        self.integrator.set_max_num_steps(self.nsteps)
+    @property
+    def max_steps(self):
+        return self._max_steps
 
-    def get_max_steps(self):
-        """Sets the maximum number of steps that will be done for time integration."""
-        return self.nsteps
+    @max_steps.setter
+    def max_steps(self, value):
+        self._max_steps = value
+        self.integrator.set_max_num_steps(value)
 
     def advance_time(self, t):
         """
@@ -97,8 +96,8 @@ class SundialsIntegrator(object):
                 msg = ("The integrator has reached its maximum of {} steps.\n"
                        "The time is t = {} whereas you requested t = {}.\n"
                        "You can increase the maximum number of steps if "
-                       "you really need to with integrator.set_max_steps(n).").format(
-                            self.get_max_steps(), self.integrator.get_current_time(), t)
+                       "you really need to with integrator.max_steps = n.").format(
+                            self.max_steps, self.integrator.get_current_time(), t)
                 reached_tout = False  # not used, but this would be the right value
                 raise RuntimeError(msg)
             else:
