@@ -223,13 +223,18 @@ def compute_eigenproblem_matrix(sim, frequency_unit=1e9, filename=None, differen
         res.shape = (-1,)
         return res
 
-    def format_time(s):
-        if s > 60.0:
-            m = int(s / 60.0)
-            s = s - m * 60
-            return "{} min {:.2f} s".format(m, s)
-        else:
-            return "{:.2f} seconds".format(s)
+
+    def format_time(t):
+        hours = int(t / 3600.0)
+        r = t - 3600 * hours
+        minutes = int(r / 60.0)
+        seconds = r - 60 * minutes
+
+        res = "{} h ".format(hours) if (hours > 0) else ""
+        res += "{} min ".format(minutes) if (minutes > 0 or (minutes == 0 and hours > 0)) else ""
+        res += "{:.2f} seconds".format(seconds)
+        return res
+
 
     df.tic()
     logger.info("Assembling eigenproblem matrix.")
