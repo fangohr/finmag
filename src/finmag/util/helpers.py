@@ -1616,6 +1616,9 @@ def jpg2avi(jpg_filename, outfilename=None, duration=1, fps=25):
     if outfilename is None:
         outfilename = re.sub('\.jpg$', '.avi', jpg_filename)
     logger.debug("Using outfilename='{}'".format(outfilename))
+    outfile_dirname = os.path.dirname(outfilename)
+    if not os.path.exists(outfile_dirname):
+        os.makedirs(outfile_dirname)
 
     # Use mencoder with two-pass encoding to convert the files.
     # See http://mariovalle.name/mencoder/mencoder.html
