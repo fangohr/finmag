@@ -13,7 +13,7 @@ parser.add_argument('--add-glyphs', action='store_true', default=False, help='Ad
 parser.add_argument('--glyph-scale-factor', type=float, default=None, help='Factor by which to scale the glyphs (default: determine automatically).')
 parser.add_argument('--trim-border', action='store_true', default=False, help='Trim the borders of the output image.')
 parser.add_argument('--color-by-axis', type=str, default='x')
-parser.add_argument('--duration', type=float, default=2, help='Duration of the output video (default: 2 seconds).')
+parser.add_argument('--duration', type=float, default=1, help='Duration of the output video (default: 2 seconds).')
 parser.add_argument('--use-display', type=int, default=0, help='The X display to use for rendering (default: 0). Use a different value to render the scene invisibly (needs xpra to be installed).')
 
 args = parser.parse_args()
