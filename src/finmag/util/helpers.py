@@ -1575,7 +1575,7 @@ def run_cmd_with_timeout(cmd, timeout_sec):
     return proc.returncode, stdout, stderr
 
 
-def jpg2avi(jpg_filename, outfilename=None, duration=2, fps=25):
+def jpg2avi(jpg_filename, outfilename=None, duration=1, fps=25):
     """
     Convert a series of .jpg files into an animation file in .avi format.
 
@@ -1623,11 +1623,11 @@ def jpg2avi(jpg_filename, outfilename=None, duration=2, fps=25):
         mencoder_options = "vbitrate=2160000:mbd=2:keyint=132:v4mv:vqmin=3:lumi_mask=0.07:dark_mask=0.2:mpeg_quant:scplx_mask=0.1:tcplx_mask=0.1:naq"
         sh.mencoder('-ovc', 'lavc', '-lavcopts',
                     'vcodec=mpeg4:vpass=1:' + mencoder_options,
-                    '-mf', 'type=jpg:fps={}'.format(fps), '-nosound',
+                    '-mf', 'type=jpg:fps={}'.format(fps/duration), '-nosound',
                     '-o', '/dev/null', 'mf://' + pattern)
         sh.mencoder('-ovc', 'lavc', '-lavcopts',
                     'vcodec=mpeg4:vpass=2:' + mencoder_options,
-                    '-mf', 'type=jpg:fps={}'.format(fps), '-nosound',
+                    '-mf', 'type=jpg:fps={}'.format(fps/duration), '-nosound',
                     '-o', outfilename, 'mf://' + pattern)
         os.remove('divx2pass.log')  # tidy up output from the two-pass enoding
     except sh.CommandNotFound:
@@ -1639,7 +1639,7 @@ def jpg2avi(jpg_filename, outfilename=None, duration=2, fps=25):
 
 
 
-def pvd2avi(pvd_filename, outfilename=None, duration=2, fps=25, **kwargs):
+def pvd2avi(pvd_filename, outfilename=None, duration=1, fps=25, **kwargs):
     """
     Export a .pvd animation to a movie file in .avi format.
 
