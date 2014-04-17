@@ -31,6 +31,19 @@ import sh
 logger = logging.getLogger("finmag")
 
 
+def create_missing_directory_components(filename):
+    """
+    Creates any directory components in 'filename' which don't exist yet.
+    For example, if filename='/foo/bar/baz.txt' then the directory /foo/bar
+    will be created.
+    """
+    # Create directory part if it does not exist
+    dirname = os.path.dirname(filename)
+    if dirname != '':
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
+
+
 def logging_handler_str(handler):
     """
     Return a string describing the given logging handler.
@@ -825,18 +838,6 @@ def mark_subdomain_by_function(fun,mesh_or_space,domain_index,subdomains):
     else:
         raise AttributeError
 
-def create_missing_directory_components(filename):
-    """
-    Creates any directory components in 'filename' which don't exist yet.
-    For example, if filename='/foo/bar/baz.txt' then the directory /foo/bar
-    will be created.
-    """
-    # Create directory part if it does not exist
-    dirname = os.path.dirname(filename)
-    if dirname != '':
-        if not os.path.exists(dirname):
-            os.makedirs(dirname)
-
 
 def plot_hysteresis_loop(H_vals, m_vals, style='x-', add_point_labels=False, point_labels=None, infobox=[], infobox_loc='bottom right',
                          filename=None, title="Hysteresis loop", xlabel="H_ext (A/m)", ylabel="m_avg", figsize=(10, 7)):
@@ -1616,9 +1617,7 @@ def jpg2avi(jpg_filename, outfilename=None, duration=1, fps=25):
     if outfilename is None:
         outfilename = re.sub('\.jpg$', '.avi', jpg_filename)
     logger.debug("Using outfilename='{}'".format(outfilename))
-    outfile_dirname = os.path.dirname(outfilename)
-    if not os.path.exists(outfile_dirname):
-        os.makedirs(outfile_dirname)
+    create_missing_directory_components(outfilename)
 
     # Use mencoder with two-pass encoding to convert the files.
     # See http://mariovalle.name/mencoder/mencoder.html
