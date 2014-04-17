@@ -10,9 +10,11 @@ parser.add_argument('outfile', metavar='OUTFILE', type=str, default=None, nargs=
 parser.add_argument('--colormap', type=str, default='coolwarm', help='Colormap to use. Allowed values: "coolwarm" (default), "heated_body", "rainbow".')
 parser.add_argument('--representation', type=str, default='Surface', help='Representation to use. Usual values: "Surface", "Surface With Edges", "Wireframe", "Outline"')
 parser.add_argument('--add-glyphs', action='store_true', default=False, help='Add glyphs to indicate the magnetisation direction.')
+parser.add_argument('--glyph-scale-factor', type=float, default=None, help='Factor by which to scale the glyphs (default: determine automatically).')
 parser.add_argument('--trim-border', action='store_true', default=False, help='Trim the borders of the output image.')
 parser.add_argument('--color-by-axis', type=str, default='x')
-parser.add_argument('--use-display', type=float, default=0, help='The X display to use for rendering (default: 0). Use a different value to render the scene invisibly (needs xpra to be installed).')
+parser.add_argument('--duration', type=float, default=2, help='Duration of the output video (default: 2 seconds).')
+parser.add_argument('--use-display', type=int, default=0, help='The X display to use for rendering (default: 0). Use a different value to render the scene invisibly (needs xpra to be installed).')
 
 args = parser.parse_args()
 
@@ -38,4 +40,7 @@ from finmag.util.helpers import pvd2avi
 colormap = args.colormap
 if colormap == 'rainbow':
     colormap = 'blue_to_red_rainbow'
-pvd2avi(infile, outfilename=outfile, representation=args.representation, add_glyphs=args.add_glyphs, trim_border=args.trim_border, colormap=colormap, color_by_axis=args.color_by_axis, use_display=int(args.use_display))
+pvd2avi(infile, outfilename=outfile, representation=args.representation,
+        add_glyphs=args.add_glyphs, glyph_scale_factor=args.glyph_scale_factor,
+        duration=args.duration, trim_border=args.trim_border, colormap=colormap,
+        color_by_axis=args.color_by_axis, use_display=args.use_display)
