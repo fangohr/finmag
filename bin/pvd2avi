@@ -13,6 +13,10 @@ parser.add_argument('--add-glyphs', action='store_true', default=False, help='Ad
 parser.add_argument('--glyph-scale-factor', type=float, default=None, help='Factor by which to scale the glyphs (default: determine automatically).')
 parser.add_argument('--trim-border', action='store_true', default=False, help='Trim the borders of the output image.')
 parser.add_argument('--color-by-axis', type=str, default='x')
+parser.add_argument('--camera-position', type=str, default="[0,-200,200]", help='Controls the position of the camera. When using this, you may also want to set --fit-view-to-scene=False.')
+parser.add_argument('--camera-focal-point', type=str, default="[0,0,0]", help='Controls the camera orientation; the looking direction is along the axis from camera-position to camera-focal-point.')
+parser.add_argument('--camera-view-up', type=str, default="[0,0,1]", help='Controls the camera orientation by defining the "up" direction')
+parser.add_argument('--dont-fit-view-to-scene', action='store_true', default=False, help='By default, the view is adjusted to fit the scene. Specifying this flag turns this behaviour off.')
 parser.add_argument('--duration', type=float, default=1, help='Duration of the output video (default: 2 seconds).')
 parser.add_argument('--use-display', type=int, default=0, help='The X display to use for rendering (default: 0). Use a different value to render the scene invisibly (needs xpra to be installed).')
 
@@ -40,7 +44,19 @@ from finmag.util.helpers import pvd2avi
 colormap = args.colormap
 if colormap == 'rainbow':
     colormap = 'blue_to_red_rainbow'
+
+# Note: the following is a potential security issue (due to the use of 'eval'),
+#       but unfortunately ast.literal_eval doesn't seem to do the job...
+import ast
+camera_position = ast.literal_eval(args.camera_position)
+camera_focal_point = ast.literal_eval(args.camera_focal_point)
+camera_view_up = ast.literal_eval(args.camera_view_up)
+
+#print "[DDD] {}".format(args.fit_view_to_scene)
+
 pvd2avi(infile, outfilename=outfile, representation=args.representation,
         add_glyphs=args.add_glyphs, glyph_scale_factor=args.glyph_scale_factor,
         duration=args.duration, trim_border=args.trim_border, colormap=colormap,
-        color_by_axis=args.color_by_axis, use_display=args.use_display)
+        color_by_axis=args.color_by_axis, camera_position=camera_position,
+        camera_focal_point=camera_focal_point, camera_view_up=camera_view_up,
+        fit_view_to_scene=(not args.dont_fit_view_to_scene), use_display=args.use_display)
