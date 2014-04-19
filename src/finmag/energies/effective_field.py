@@ -121,6 +121,9 @@ class EffectiveField(object):
         Returns the interaction object with the given name. Raises a
         ValueError if no (or more than one) matching interaction is
         found.
+        
+        Use get_interaction_list() to obtain list of names of available
+        interactions.
 
         """
         matching_interactions = filter(lambda x: x.name == interaction_name,
@@ -136,6 +139,12 @@ class EffectiveField(object):
                              "'{}'.".format(interaction_name))
 
         return matching_interactions[0]
+
+    def get_interaction_list(self):
+        """Returns list of interactions names (as list of strings).
+        """
+        return ["{}".format(interaction.name) for interaction in self.interactions]
+
 
     def remove_interaction(self, interaction_type):
         """

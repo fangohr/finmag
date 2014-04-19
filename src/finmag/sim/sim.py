@@ -392,6 +392,18 @@ class Simulation(object):
         """
         return self.llg.effective_field.get_interaction(interaction_name)
 
+
+    def get_interaction_list(self):
+        """
+        Returns a list of interaction names. 
+
+        *Returns*
+
+        A list of strings, each string corresponding to the name of one interaction.
+        """
+        return self.llg.effective_field.get_interaction_list()
+
+
     def remove_interaction(self, interaction_type):
         """
         Remove the interaction of the given type.
