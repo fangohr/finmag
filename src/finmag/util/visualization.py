@@ -119,7 +119,7 @@ def render_paraview_scene(
     colorbar_label_format='%-#5.2g',
     add_glyphs=True,
     glyph_type='cones',
-    glyph_scale_factor=None,
+    glyph_scale_factor=1.0,
     glyph_random_mode=True,
     glyph_mask_points=True,
     glyph_max_number_of_points=10000,

@@ -157,7 +157,7 @@ def render_paraview_scene(
     colorbar_label_format='%-#5.2g',
     add_glyphs=True,
     glyph_type='cones',
-    glyph_scale_factor=None,
+    glyph_scale_factor=1.0,
     glyph_random_mode=True,
     glyph_mask_points=True,
     glyph_max_number_of_points=10000,
@@ -272,12 +272,15 @@ def render_paraview_scene(
         Type of glyphs to use. The only currently supported glyph type
         is 'cones'.
 
-    glyph_scale_factor: float | None
+    glyph_scale_factor: float
 
-        Controls the glyph size. If None is given (the default), the function
-        tries to determine an appropriate scale factor automatically (based
-        on the maximum field values and the mesh spacing. This may not be
-        perfect, however, and may need manual adjusting.
+        Controls the glyph size. The default value of 1.0 corresponds
+        to a value automatically determined by the plotting function
+        which makes the glyphs visible but keeps them small enough so
+        that glyphs at different vertices don't overlap. This argument
+        can be used to tweak that size (e.g. '0.5' means to use half
+        the automatically determined size, and '3.0' three times that
+        size, etc.).
 
     glyph_mask_points: True | False
 
@@ -486,30 +489,30 @@ def render_paraview_scene(
     if add_glyphs:
         logger.debug("Adding cone glyphs.")
         glyph = pv.servermanager.filters.Glyph(Input=reader)
-        if glyph_scale_factor == None:
-            # Try to determine an appropriate scale_factor automatically
-            import vtk.util.numpy_support as VN
-            grid = servermanager.Fetch(reader)
 
-            # Determine approximate mesh spacing
-            cell = grid.GetCell(0)  # let's hope that the first cell is a good
-                                    # representative of all mesh cells
-            cell_bounds = np.array(cell.GetBounds()).reshape((3,2))
-            mesh_spacing = float(min(cell_bounds[:, 1] - cell_bounds[:, 0]))
+        # Try to determine an appropriate scale_factor automatically
+        import vtk.util.numpy_support as VN
+        grid = servermanager.Fetch(reader)
 
-            # Determine maximum field magnitude
-            m = VN.vtk_to_numpy(grid.GetPointData().GetArray(field_name))
-            max_field_magnitude = float(max(map(np.linalg.norm, m)))
+        # Determine approximate mesh spacing
+        cell = grid.GetCell(0)  # let's hope that the first cell is a good
+                                # representative of all mesh cells
+        cell_bounds = np.array(cell.GetBounds()).reshape((3,2))
+        mesh_spacing = float(min(cell_bounds[:, 1] - cell_bounds[:, 0]))
 
-            glyph_scale_factor = mesh_spacing / max_field_magnitude
-            logger.debug(
-                "Using automatically determined glyph_scale_factor = {:.2g} "
-                "(determined from approximate mesh spacing {:.2g} and maximum "
-                "field magnitude {:.2g}). This may need manual tweaking in case "
-                "glyphs appear very large or very small.".format(
-                        glyph_scale_factor, mesh_spacing, max_field_magnitude))
+        # Determine maximum field magnitude
+        m = VN.vtk_to_numpy(grid.GetPointData().GetArray(field_name))
+        max_field_magnitude = float(max(map(np.linalg.norm, m)))
 
-        glyph.SetScaleFactor = glyph_scale_factor
+        glyph_scale_factor_internal = mesh_spacing / max_field_magnitude
+        logger.debug(
+            "Using automatically determined glyph_scale_factor_internal = {:.2g} "
+            "(determined from approximate mesh spacing {:.2g} and maximum "
+            "field magnitude {:.2g}). This may need manual tweaking in case "
+            "glyphs appear very large or very small.".format(
+                    glyph_scale_factor_internal, mesh_spacing, max_field_magnitude))
+
+        glyph.SetScaleFactor = glyph_scale_factor * glyph_scale_factor_internal
         glyph.ScaleMode = 'vector'
         glyph.Vectors = ['POINTS', field_name]
         try:
