@@ -177,7 +177,7 @@ def test_plot_spatially_resolved_normal_mode2(tmpdir):
                                             cmap_powers=plt.cm.jet, cmap_phases=plt.cm.hsv, vmin_powers=None,
                                             show_axis_labels=True, show_axis_frames=True, show_colorbars=True, figsize=(5, 3),
                                             outfilename='normal_mode_01.png', dpi=200)
-    sim.plot_spatially_resolved_normal_mode(2, outfilename='normal_mode_02.png', use_fenicstools=True)
+    sim.plot_spatially_resolved_normal_mode(0, outfilename='normal_mode_02.png', use_fenicstools=True)
 
     assert(os.path.exists('normal_mode_00.png'))
     assert(os.path.exists('normal_mode_01.png'))
