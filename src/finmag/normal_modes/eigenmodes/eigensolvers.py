@@ -4,6 +4,7 @@ import dolfin as df
 import scipy.linalg
 import scipy.sparse.linalg
 import logging
+from finmag.util.helpers import format_time
 from helpers import sort_eigensolutions, as_petsc_matrix, is_hermitian, compute_relative_error, as_dense_array
 from types import NoneType
 
@@ -80,7 +81,8 @@ class AbstractEigensolver(object):
         logger.info("Solving eigenproblem. This may take a while...")
         df.tic()
         omegas, ws = self._solve_eigenproblem(A, M=M, num=num, tol=tol)
-        logger.debug("Computing the eigenvalues and eigenvectors took {:.2f} seconds".format(df.toc()))
+        logger.debug("Computing the eigenvalues and eigenvectors "
+                     "took {}".format(format_time(df.toc())))
 
         # XXX TODO: Remove this conversion to numpy.arrays once we
         #           have better support for different kinds of
