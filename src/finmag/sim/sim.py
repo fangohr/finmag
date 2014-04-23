@@ -1993,7 +1993,7 @@ class NormalModeSimulation(Simulation):
             video_tag = '<a href="files/{0}" target="_blank">Link to video</a>'.format(basename + '.avi')
             return HTML(data=video_tag)
 
-    def plot_spatially_resolved_normal_mode(self, k, slice_z='z_max', components='xyz',
+    def plot_spatially_resolved_normal_mode(self, k, slice_z='z_max', components='xyz', region=None,
                                             figure_title=None, yshift_title=0.0,
                                             plot_powers=True, plot_phases=True, num_phase_colorbar_ticks=3,
                                             cmap_powers=plt.cm.jet, cmap_phases=plt.cm.hsv, vmin_powers=None,
@@ -2018,8 +2018,23 @@ class NormalModeSimulation(Simulation):
             log.warning("No eigenvectors have been computed. Please call "
                         "`sim.compute_normal_modes()` to do so.")
 
+        if region == None:
+            mesh = self.mesh
+            w = self.eigenvecs[k]
+            m = self.m
+        else:
+            # Restrict m and the eigenvector array to the submesh
+            # TODO: This is messy and should be factored out into helper routines.
+            mesh = self.get_submesh(region)
+            restr = helpers.restriction(self.mesh, mesh)
+            m = restr(self.m.reshape(3, -1)).ravel()
+            w1, w2 = self.eigenvecs[k].reshape(2, -1)
+            w1_restr = restr(w1)
+            w2_restr = restr(w2)
+            w = np.concatenate([w1_restr, w2_restr]).reshape(2, -1)
+
         fig = plot_spatially_resolved_normal_mode(
-            self.mesh, self.m, self.eigenvecs[k], slice_z=slice_z, components=components,
+            mesh, m, w, slice_z=slice_z, components=components,
             figure_title=figure_title, yshift_title=yshift_title,
             plot_powers=plot_powers, plot_phases=plot_phases,
             cmap_powers=cmap_powers, cmap_phases=cmap_phases, vmin_powers=vmin_powers,
