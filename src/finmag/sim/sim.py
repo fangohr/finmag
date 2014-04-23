@@ -30,7 +30,7 @@ from finmag.normal_modes.deprecated.normal_modes_deprecated import compute_eigen
     compute_generalised_eigenproblem_matrices, compute_normal_modes, \
     compute_normal_modes_generalised, export_normal_mode_animation, \
     plot_spatially_resolved_normal_mode
-from finmag.util.helpers import plot_dynamics, pvd2avi
+from finmag.util.helpers import plot_dynamics, pvd2avi, format_time
 from finmag.sim.hysteresis import hysteresis as hyst, hysteresis_loop as hyst_loop
 from finmag.sim import sim_helpers, magnetisation_patterns
 from finmag.energies import Exchange, Zeeman, TimeZeeman, Demag, UniaxialAnisotropy, DMI
@@ -1679,7 +1679,7 @@ class NormalModeSimulation(Simulation):
                 self.A, self.M, _, _ = compute_generalised_eigenproblem_matrices( \
                     self, frequency_unit=1e9, filename_mat_A=filename_mat_A, filename_mat_M=filename_mat_M,
                     check_hermitian=check_hermitian, differentiate_H_numerically=differentiate_H_numerically)
-                log.debug("Assembling the eigenproblem matrices took {:.2f} seconds".format(df.toc()))
+                log.debug("Assembling the eigenproblem matrices took {}".format(format_time(df.toc())))
             else:
                 log.debug('Re-using previously computed eigenproblem matrices.')
         else:
@@ -1689,7 +1689,7 @@ class NormalModeSimulation(Simulation):
                              self, frequency_unit=1e9, differentiate_H_numerically=differentiate_H_numerically,
                              dtype=(float if use_real_matrix else complex))
                 self.use_real_matrix = use_real_matrix
-                log.debug("Assembling the eigenproblem matrix took {:.2f} seconds".format(df.toc()))
+                log.debug("Assembling the eigenproblem matrix took {}".format(format_time(df.toc())))
             else:
                 log.debug('Re-using previously computed eigenproblem matrix.')
 
