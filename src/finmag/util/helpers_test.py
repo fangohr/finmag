@@ -7,6 +7,7 @@ import os
 import re
 from finmag.util.helpers import *
 from finmag.util.meshes import box, cylinder
+from finmag.util.mesh_templates import Sphere
 from finmag.util.visualization import render_paraview_scene
 from finmag.example import barmini
 import finmag
@@ -576,6 +577,69 @@ def test_set_color_scheme():
     set_color_scheme('none')
     with pytest.raises(ValueError):
         set_color_scheme('foobar')
+
+
+def test_restriction(tmpdir):
+    """
+    Create a mesh consisting of two separate regions and define a
+    dolfin Function on it which is constant in either region.
+    Then extract the two subfunctions corresponding to these regions
+    and check that they are constant and their function vectors
+    have the correct lengths.
+
+    """
+    os.chdir(str(tmpdir))
+    sphere1 = Sphere(10, center=(-20, 0, 0), name="sphere1")
+    sphere2 = Sphere(20, center=(+30, 0, 0), name="sphere2")
+
+    mesh = (sphere1 + sphere2).create_mesh(maxh=5.0)
+
+    class Sphere1(df.SubDomain):
+        def inside(self, pt, on_boundary):
+                return pt[0] < 0
+    class Sphere2(df.SubDomain):
+        def inside(self, pt, on_boundary):
+                return pt[0] > 0
+    region_markers = df.CellFunction('size_t', mesh)
+    subdomain1 = Sphere1()
+    subdomain2 = Sphere2()
+    subdomain1.mark(region_markers, 1)
+    subdomain2.mark(region_markers, 2)
+
+    submesh1 = df.SubMesh(mesh, region_markers, 1)
+    submesh2 = df.SubMesh(mesh, region_markers, 2)
+
+    r1 = restriction(mesh, submesh1)
+    r2 = restriction(mesh, submesh2)
+
+    # Define a Python function which is constant in either subregion
+    def fun(pt):
+        if pt[0] < 0:
+            return 42.0
+        else:
+            return 23.0
+
+    # Convert the Python function to a dolfin.Function
+    f = scalar_valued_function(fun, mesh)
+
+    # Restrict the function to each of the subregions
+    f1 = r1(f)
+    f2 = r2(f)
+
+    assert(np.allclose(f1.vector().array(), 42.0))
+    assert(np.allclose(f2.vector().array(), 23.0))
+    assert(len(f1.vector().array()) == submesh1.num_vertices())
+    assert(len(f2.vector().array()) == submesh2.num_vertices())
+
+    a = f.vector().array()
+    a1 = r1(a)
+    a2 = r2(a)
+    assert(set(a) == set([23.0, 42.0]))
+    assert(np.allclose(a1, 42.0))
+    assert(np.allclose(a2, 23.0))
+    assert(len(a1) == submesh1.num_vertices())
+    assert(len(a2) == submesh2.num_vertices())
+
 
 if __name__ == '__main__':
     pass

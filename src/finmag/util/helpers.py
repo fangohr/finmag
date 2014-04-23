@@ -808,6 +808,60 @@ def value_for_region(mesh, value, region_no, default_value=0, project_to_CG=Fals
     return f
 
 
+def restriction(mesh, submesh):
+    """
+    Return a Python function `r` of the form
+
+       r: f -> f_submesh
+
+    whose first argument `f` is either a `dolfin.Function` or a
+    `numpy.array` and which returns another `dolfin.Function` or
+    `numpy.array` which has the same values as `f` but is only
+    defined on `submesh`.
+
+    `submesh` must be of type `dolfin.SubMesh` and be a proper
+    submesh of `mesh`.
+    """
+    if not isinstance(submesh, df.SubMesh):
+        raise TypeError("Argument 'submesh' must be of type `dolfin.SubMesh`. "
+                        "Got: {}".format(type(submesh)))
+
+    try:
+        # This is the correct syntax now, see:
+        # http://fenicsproject.org/qa/185/entity-mapping-between-a-submesh-and-the-parent-mesh
+        parent_vertex_indices = submesh.data().array('parent_vertex_indices', 0)
+    except RuntimeError:
+        # Legacy syntax (for dolfin <= 1.2 or so).
+        # TODO: This should be removed in the future once dolfin 1.3 is released!
+        parent_vertex_indices = submesh.data().mesh_function('parent_vertex_indices').array()
+
+    V = df.FunctionSpace(mesh, 'CG', 1)
+    V_submesh = df.FunctionSpace(submesh, 'CG', 1)
+
+    def restrict_to_submesh(f):
+        # Remark: We can't use df.interpolate here to interpolate the
+        # function values from the full mesh on the submesh because it
+        # sometimes crashes (probably due to rounding errors), even if we
+        # set df.parameters["allow_extrapolation"]=True as they recommend
+        # in the error message.
+        #
+        # Therefore we manually interpolate the function values here using
+        # the vertex mappings determined above. This works fine if the
+        # dofs are not re-ordered, but will probably cause problems in
+        # parallel (or with dof reordering enabled).
+        if isinstance(f, np.ndarray):
+            f_arr = f
+            return f_arr[parent_vertex_indices]
+        else:
+            assert(isinstance(f, df.Function))
+            f_arr = f.vector().array()
+            f_submesh = df.Function(V_submesh)
+            f_submesh.vector()[:] = f_arr[parent_vertex_indices]
+            return f_submesh
+
+    return restrict_to_submesh
+
+
 def mark_subdomain_by_function(fun,mesh_or_space,domain_index,subdomains):
     """
     Mark the subdomains with given index if user provide a region by function, such as
