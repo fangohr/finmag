@@ -850,8 +850,12 @@ def restriction(mesh, submesh):
         # dofs are not re-ordered, but will probably cause problems in
         # parallel (or with dof reordering enabled).
         if isinstance(f, np.ndarray):
-            f_arr = f
-            return f_arr[parent_vertex_indices]
+            if f.ndim == 1:
+                return f[parent_vertex_indices]
+            elif f.ndim == 2:
+                return f[:, parent_vertex_indices]
+            else:
+                raise TypeError("Array must be 1- or 2-dimensional. Got: dim={}".format(f.ndim))
         else:
             assert(isinstance(f, df.Function))
             f_arr = f.vector().array()

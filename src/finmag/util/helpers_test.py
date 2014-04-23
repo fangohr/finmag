@@ -613,14 +613,11 @@ def test_restriction(tmpdir):
     r2 = restriction(mesh, submesh2)
 
     # Define a Python function which is constant in either subregion
-    def fun(pt):
-        if pt[0] < 0:
-            return 42.0
-        else:
-            return 23.0
+    def fun_f(pt):
+        return 42.0 if (pt[0] < 0) else 23.0
 
     # Convert the Python function to a dolfin.Function
-    f = scalar_valued_function(fun, mesh)
+    f = scalar_valued_function(fun_f, mesh)
 
     # Restrict the function to each of the subregions
     f1 = r1(f)
@@ -639,6 +636,17 @@ def test_restriction(tmpdir):
     assert(np.allclose(a2, 23.0))
     assert(len(a1) == submesh1.num_vertices())
     assert(len(a2) == submesh2.num_vertices())
+
+    # Check a multi-dimensional array, too
+    b = np.concatenate([a, a])
+    b.shape = (2, -1)
+    b1 = r1(b)
+    b2 = r2(b)
+    assert(set(b.ravel()) == set([23.0, 42.0]))
+    assert(np.allclose(b1, 42.0))
+    assert(np.allclose(b2, 23.0))
+    assert(b1.shape == (2, submesh1.num_vertices()))
+    assert(b2.shape == (2, submesh2.num_vertices()))
 
 
 if __name__ == '__main__':
