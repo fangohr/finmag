@@ -781,11 +781,12 @@ def vector_valued_dg_function(value, mesh_or_space, normalise=False):
     return fun
 
 
-def value_for_region(mesh, value, region, default_value=0, project_to_CG=False):
+def value_for_region(mesh, value, region_no, default_value=0, project_to_CG=False):
     """
-    Returns a df.Function where `value` has been set for cells which correspond
-    to the region number given in `region`. The value for other cells will
-    be set to `default_value`.
+    Returns a dolfin.Function `f` (which by default is defined on the cells)
+    such that the value of `f` on any cell whose region number (as stored in
+    the mesh file, e.g. when produced by Netgen) is equal to `region_no`.
+    The value of `f` for all other cells will be set to `default_value`.
 
     The returned function will be defined on the cells unless project_to_CG
     has been set to True (then it will be defined on the nodes).
