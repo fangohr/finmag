@@ -1,4 +1,4 @@
-from finmag.util.mesh_templates import Box, Sphere, Nanodisk
+from finmag.util.mesh_templates import Box, Sphere, Nanodisk, EllipticalNanodisk
 from finmag.util.meshes import mesh_info, plot_mesh_with_paraview
 from finmag.normal_modes.deprecated.normal_modes_deprecated import *
 from finmag import example
@@ -182,6 +182,32 @@ def test_plot_spatially_resolved_normal_mode2(tmpdir):
     assert(os.path.exists('normal_mode_00.png'))
     assert(os.path.exists('normal_mode_01.png'))
     assert(os.path.exists('normal_mode_02.png'))
+
+
+def test_plot_spatially_resolved_normal_mode_in_region(tmpdir):
+    os.chdir(str(tmpdir))
+    disk1 = Nanodisk(d=60, h=5, center=(-70, 0, 0), name="sphere1")
+    disk2 = EllipticalNanodisk(d1=80, d2=40, h=5, center=(+90, 0, 0), name="sphere2")
+    mesh = (disk1 + disk2).create_mesh(maxh=10.0)
+
+    def region_fun(pt):
+        if pt[0] < 0:
+            return "disk1"
+        else:
+            return "disk2"
+
+    sim = normal_mode_simulation(mesh, Ms=8e5, m_init=[1, 0, 0], unit_length=1e-9, A=13e-12, H_ext=[1e4, 0, 0])
+    sim.mark_regions(region_fun)
+    sim.relax()
+    sim.compute_normal_modes(n_values=3)
+
+    sim.plot_spatially_resolved_normal_mode(0, outfilename='normal_mode_00.png', use_fenicstools=False)
+    sim.plot_spatially_resolved_normal_mode(0, outfilename='normal_mode_00_disk1.png', region="disk1", use_fenicstools=False)
+    sim.plot_spatially_resolved_normal_mode(0, outfilename='normal_mode_00_disk2.png', region="disk2", use_fenicstools=False)
+
+    assert(os.path.exists('normal_mode_00.png'))
+    assert(os.path.exists('normal_mode_00_disk1.png'))
+    assert(os.path.exists('normal_mode_00_disk2.png'))
 
 
 def test_is_hermitian():
