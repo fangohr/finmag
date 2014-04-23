@@ -769,7 +769,7 @@ def plot_spatially_resolved_normal_mode(mesh, m0, w, slice_z='z_max', components
             import fenicstools
             slice_mesh, restrict_to_submesh = extract_mesh_slice(mesh, slice_z)
         except ImportError:
-            log.warning("Could not import Fenicstools. Falling back to standard method for extracting submeshes.")
+            logger.warning("Could not import Fenicstools. Falling back to standard method for extracting submeshes.")
             use_fenicstools = False
 
     if not use_fenicstools:
