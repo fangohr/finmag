@@ -1757,3 +1757,21 @@ def warn_about_outdated_code(min_dolfin_version, msg):
     """
     if LooseVersion(get_version_dolfin()) >= LooseVersion(min_dolfin_version):
         logger.warning(msg)
+
+
+def format_time(num_seconds):
+    """
+    Given a number of seconds, return a string with `num_seconds`
+    converted into a more readable format (including minutes and
+    hours if appropriate).
+
+    """
+    hours = int(num_seconds / 3600.0)
+    r = num_seconds - 3600 * hours
+    minutes = int(r / 60.0)
+    seconds = r - 60 * minutes
+
+    res = "{} h ".format(hours) if (hours > 0) else ""
+    res += "{} min ".format(minutes) if (minutes > 0 or (minutes == 0 and hours > 0)) else ""
+    res += "{:.2f} seconds".format(seconds)
+    return res
