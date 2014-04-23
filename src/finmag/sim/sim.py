@@ -1999,7 +1999,7 @@ class NormalModeSimulation(Simulation):
                                             cmap_powers=plt.cm.jet, cmap_phases=plt.cm.hsv, vmin_powers=None,
                                             show_axis_labels=True, show_axis_frames=True,
                                             show_colorbars=True, figsize=None,
-                                            outfilename=None, dpi=None):
+                                            outfilename=None, dpi=None, use_fenicstools=False):
         """
         Plot a spatially resolved profile of the k-th normal mode as
         computed by `sim.compute_normal_modes()`.
@@ -2025,7 +2025,7 @@ class NormalModeSimulation(Simulation):
             cmap_powers=cmap_powers, cmap_phases=cmap_phases, vmin_powers=vmin_powers,
             show_axis_labels=show_axis_labels, show_axis_frames=show_axis_frames,
             show_colorbars=show_colorbars, figsize=figsize,
-            outfilename=outfilename, dpi=dpi)
+            outfilename=outfilename, dpi=dpi, use_fenicstools=use_fenicstools)
         return fig
 
 

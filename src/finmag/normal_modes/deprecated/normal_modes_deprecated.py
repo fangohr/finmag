@@ -7,6 +7,7 @@ import scipy.sparse.linalg
 from time import time
 from finmag.util.consts import gamma
 from finmag.util import helpers
+from finmag.util.meshes import embed3d
 import matplotlib.pyplot as plt
 import matplotlib.tri as tri
 from itertools import izip
@@ -665,6 +666,31 @@ def extract_mesh_slice_via_boundary_mesh__deprecated(mesh, slice_z):
     return surface_layer, restrict_to_submesh
 
 
+def extract_mesh_slice(mesh, slice_z):
+    import fenicstools
+
+    coords = mesh.coordinates()
+    xmin = min(coords[:, 0])
+    xmax = max(coords[:, 0])
+    ymin = min(coords[:, 1])
+    ymax = max(coords[:, 1])
+    nx = int(1*(xmax - xmin))
+    ny = int(1*(ymax - ymin))
+    slice_mesh = embed3d(df.RectangleMesh(xmin, ymin, xmax, ymax, nx, ny), z_embed=slice_z)
+
+    V = df.FunctionSpace(mesh, 'CG', 1)
+    f = df.Function(V)
+    V_slice = df.FunctionSpace(slice_mesh, 'CG', 1)
+    #f_slice = df.Function(V_slice)
+
+    def restrict_to_slice_mesh(a):
+        f.vector().set_local(a)
+        f_slice = fenicstools.interpolate_nonmatching_mesh(f, V_slice)
+        return f_slice.vector().array()
+
+    return slice_mesh, restrict_to_slice_mesh
+
+
 def get_phaseplot_ticks_and_labels(num_ticks):
     """
     Helper function to define nice ticks for phase plots which are
@@ -686,7 +712,7 @@ def plot_spatially_resolved_normal_mode(mesh, m0, w, slice_z='z_max', components
                                         plot_powers=True, plot_phases=True, num_phase_colorbar_ticks=5,
                                         cmap_powers='coolwarm', cmap_phases='hsv', vmin_powers=None,
                                         show_axis_labels=True, show_axis_frames=True, show_colorbars=True, figsize=None,
-                                        outfilename=None, dpi=None):
+                                        outfilename=None, dpi=None, use_fenicstools=False):
     """
     Plot the normal mode profile across a slice of the sample.
 
@@ -751,7 +777,22 @@ def plot_spatially_resolved_normal_mode(mesh, m0, w, slice_z='z_max', components
     elif slice_z == 'z_max':
         slice_z = max(coords[:, 2])
 
-    surface_layer, restrict_to_submesh = extract_mesh_slice_via_boundary_mesh__deprecated(mesh, slice_z)
+    if use_fenicstools:
+        try:
+            import fenicstools
+            slice_mesh, restrict_to_submesh = extract_mesh_slice(mesh, slice_z)
+        except ImportError:
+            log.warning("Could not import Fenicstools. Falling back to standard method for extracting submeshes.")
+            use_fenicstools = False
+
+    if not use_fenicstools:
+        # Deprecated fallback solution in case we can't use Fenicstools
+        # for any reason.
+        #
+        # TODO: This should eventually be removed once we know it works
+        #       and have checked that installing Fenicstools is easy and
+        #       painless for users.
+        slice_mesh, restrict_to_submesh = extract_mesh_slice_via_boundary_mesh__deprecated(mesh, slice_z)
   
     m0_array = m0.copy()
     Q, R, S, Mcross = compute_tangential_space_basis(m0_array.reshape(3, 1, -1))
@@ -766,21 +807,14 @@ def plot_spatially_resolved_normal_mode(mesh, m0, w, slice_z='z_max', components
     w_z = w_3d[2, 0, :]
     ######################################################################
 
-    powers = {'x': np.absolute(w_x) ** 2,
-              'y': np.absolute(w_y) ** 2,
-              'z': np.absolute(w_z) ** 2}
-    phases = {'x': np.angle(w_x),
-              'y': np.angle(w_y),
-              'z': np.angle(w_z)}
-
-    surface_coords = surface_layer.coordinates()
-    xvals = surface_coords[:, 0]
-    yvals = surface_coords[:, 1]
+    slice_coords = slice_mesh.coordinates()
+    xvals = slice_coords[:, 0]
+    yvals = slice_coords[:, 1]
 
     # We use the mesh triangulation provided by dolfin in case the
     # mesh has multiple disconnected regions (in which case matplotlib
     # would connect them).
-    mesh_triang = tri.Triangulation(xvals, yvals, surface_layer.cells())
+    mesh_triang = tri.Triangulation(xvals, yvals, slice_mesh.cells())
 
     # Determine the number of rows (<=2) and columns (<=3) in the plot
     num_rows = 0
@@ -823,6 +857,13 @@ def plot_spatially_resolved_normal_mode(mesh, m0, w, slice_z='z_max', components
         cmap_powers = get_colormap_from_name(cmap_powers)
     if isinstance(cmap_phases, str):
         cmap_phases = get_colormap_from_name(cmap_phases)
+
+    powers = {'x': np.absolute(w_x) ** 2,
+              'y': np.absolute(w_y) ** 2,
+              'z': np.absolute(w_z) ** 2}
+    phases = {'x': np.angle(w_x),
+              'y': np.angle(w_y),
+              'z': np.angle(w_z)}
 
     cnt = 1
     if plot_powers:
