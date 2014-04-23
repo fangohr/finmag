@@ -665,6 +665,22 @@ def extract_mesh_slice_via_boundary_mesh__deprecated(mesh, slice_z):
     return surface_layer, restrict_to_submesh
 
 
+def get_phaseplot_ticks_and_labels(num_ticks):
+    """
+    Helper function to define nice ticks for phase plots which are
+    multiples of pi/2. Currently `num_ticks` must be either 3 or 5.
+    """
+    if num_ticks == 3:
+        ticks=[-pi, 0, pi]
+        ticklabels=[u'-\u03C0', u'0', u'\u03C0']
+    elif num_ticks == 5:
+        ticks=[-pi, -pi/2, 0, pi/2, pi]
+        ticklabels=[u'-\u03C0', u'-\u03C0/2', u'0', u'\u03C0/2', u'\u03C0']
+    else:
+        raise ValueError("Number of phase plot ticks must be either 3 or 5. Got: {}".format(num_ticks))
+    return ticks, ticklabels
+
+
 def plot_spatially_resolved_normal_mode(mesh, m0, w, slice_z='z_max', components='xyz',
                                         figure_title=None, yshift_title=0.0,
                                         plot_powers=True, plot_phases=True, num_phase_colorbar_ticks=5,
@@ -816,14 +832,7 @@ def plot_spatially_resolved_normal_mode(mesh, m0, w, slice_z='z_max', components
             cnt += 1
 
     if plot_phases:
-        if num_phase_colorbar_ticks == 3:
-            ticks=[-pi, 0, pi]
-            ticklabels=[u'-\u03C0', u'0', u'\u03C0']
-        elif num_phase_colorbar_ticks == 5:
-            ticks=[-pi, -pi/2, 0, pi/2, pi]
-            ticklabels=[u'-\u03C0', u'-\u03C0/2', u'0', u'\u03C0/2', u'\u03C0']
-        else:
-            raise ValueError("'num_phase_colorbar_ticks' must be either 3 or 5. Got: {}".format(num_phase_colorbar_ticks))
+        ticks, ticklabels = get_phaseplot_ticks_and_labels(num_phase_colorbar_ticks)
 
         for comp in components:
             ax = fig.add_subplot(num_rows, num_columns, cnt)
