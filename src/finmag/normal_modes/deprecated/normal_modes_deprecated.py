@@ -728,10 +728,6 @@ def plot_spatially_resolved_normal_mode(mesh, m0, w, slice_z='z_max', components
     V = df.FunctionSpace(mesh, 'CG', 1)
     f = df.Function(V)
     
-    ##FIXME: Weiwei: comment this two lines first, just to pass through the test
-    #V_surface = df.FunctionSpace(surface_layer, 'CG', 1)
-    #f_surface = df.Function(V_surface)
-
     def restrict_to_submesh(a):
         # Remark: We can't use df.interpolate here to interpolate the
         # function values from the full mesh on the submesh because it
