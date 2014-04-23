@@ -1,3 +1,4 @@
+import dolfin as df
 from meshes import *
 from mesh_templates import *
 
@@ -17,3 +18,21 @@ def test_mesh_size():
     sphere_mesh = s.create_mesh(maxh=3.0, save_result=False)
     assert(np.isclose(mesh_size(sphere_mesh, unit_length=1.0), 24.0, rtol=RTOL))
     assert(np.isclose(mesh_size(sphere_mesh, unit_length=2e4), 48e4, rtol=RTOL))
+
+
+def test_embed3d():
+    # Create a 2D mesh which is to be embedded in 3D space
+    mesh_2d = df.RectangleMesh(0, 0, 20, 10, 10, 5)
+    coords_2d = mesh_2d.coordinates()
+    z_embed = 4.2
+
+    # Create array containing the expected 3D coordinates
+    coords_3d_expected = z_embed * np.ones((len(coords_2d), 3))
+    coords_3d_expected[:, :2] = coords_2d
+
+    # Create the embedded 3D mesh
+    mesh_3d = embed3d(mesh_2d, z_embed)
+    coords_3d = mesh_3d.coordinates()
+
+    # Check that the coordinates coincide
+    assert(np.allclose(coords_3d, coords_3d_expected))

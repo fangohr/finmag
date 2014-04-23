@@ -1243,3 +1243,36 @@ def line_mesh(vertices):
 
     editor.close()
     return mesh
+
+
+def embed3d(mesh, z_embed):
+    """
+    Given a mesh of geometrical dimension 2, create a 3D mesh
+    via the following embedding of the 2d vertex coordinates:
+
+        (x, y) --> (x, y, z_embed)
+
+    Here, `z_embed` is the value passed in by the user.
+
+    """
+    geom_dim = mesh.geometry().dim()
+    if geom_dim != 2:
+        raise TypeError("Mesh must have geometrical dimension 2. Got: {}".format(geom_dim))
+
+    vertices = mesh.coordinates()
+    cells = mesh.cells()
+
+    mesh = df.Mesh()
+    editor = df.MeshEditor()
+    editor.open(mesh, 2, 3)
+    editor.init_vertices(len(vertices))
+    editor.init_cells(len(cells))
+
+    for i, (x, y) in enumerate(vertices):
+        editor.add_vertex(i, np.array([x, y, z_embed], dtype=float))
+
+    for i, c in enumerate(cells):
+        editor.add_cell(i, np.array(c, dtype='uintp'))
+
+    editor.close()
+    return mesh
