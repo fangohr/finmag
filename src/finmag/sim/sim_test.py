@@ -1097,6 +1097,50 @@ def test_compute_normal_modes(tmpdir):
     assert(len(glob('animation/normal_mode_5__*_GHz*.vtu')) == 10)
 
 
+@pytest.mark.slow
+@pytest.mark.skipif("True")
+def test_compute_eigenmode_animations(tmpdir):
+    """
+    Compute normal modes of a simple disk system and export a couple
+    of those modes to vtk files.
+    """
+    os.chdir(str(tmpdir))
+
+    d = 100
+    h = 10
+    maxh = 10.0
+    alpha = 0.0
+    m_init = [1, 0, 0]
+    H_ext = [1e5, 0, 0]
+
+    mesh = nanodisk(d, h, maxh)
+    sim = normal_mode_simulation(mesh, Ms=8e6, m_init=m_init, alpha=alpha, unit_length=1e-9, A=13e-12, H_ext=H_ext, name='nanodisk')
+    omega, w, rel_errors = sim.compute_normal_modes(n_values=10, filename_mat_A='matrix_A.npy', filename_mat_M='matrix_M.npy')
+    logger.debug("Frequencies found: {}".format(omega))
+
+    # Export first 4 eigenmodes without movies
+    sim.export_eigenmode_animations(4, directory='animation_01', create_movies=False, num_cycles=1, num_snapshots_per_cycle=10, scaling=0.1)
+    assert(len(glob('animation_01/*')) == 4)
+    assert(len(glob('animation_01/*/*.pvd')) == 4)
+    assert(len(glob('animation_01/*/*.vtu')) == 40)
+
+    # Export first 3 eigenmodes with movies
+    sim.export_eigenmode_animations(3, directory='animation_02', create_movies=True,
+                                    num_cycles=1, num_snapshots_per_cycle=3, scaling=0.1)
+    assert(len(glob('animation_02/*')) == 6)  # 3+3 (3 folders for the eigenmodes and 3 movie files)
+    assert(len(glob('animation_02/*/*.pvd')) == 3)
+    assert(len(glob('animation_02/*/*.vtu')) == 9)
+    assert(len(glob('animation_02/*.avi')) == 3)
+
+    # Export 2 specific modes with movies
+    sim.export_eigenmode_animations([5, 8], directory='animation_03', create_movies=True, directory_movies='movies_03/',
+                                    num_cycles=1, num_snapshots_per_cycle=3, scaling=0.1)
+    assert(len(glob('animation_03/*')) == 2)
+    assert(len(glob('animation_03/*/*.pvd')) == 2)
+    assert(len(glob('animation_03/*/*.vtu')) == 6)
+    assert(len(glob('movies_03/*.avi')) == 2)
+
+
 def test_compute_normal_modes_with_different_solvers(tmpdir):
     """
     Compute normal modes of a simple nanodisk using various representative

@@ -1860,6 +1860,69 @@ class NormalModeSimulation(Simulation):
 
         return omega, w, rel_errors
 
+    def export_eigenmode_animations(self, modes, dm_only=False, directory='', create_movies=True, directory_movies=None, num_cycles=1, num_snapshots_per_cycle=20, scaling=0.2, **kwargs):
+        """
+        Export animations for multiple eigenmodes.
+
+        The first argument `modes` can be either an integer (to export
+        the first N modes) or a list of integers (to export precisely
+        specified modes).
+
+        If `dm_only` is `False` (the default) then the "full" eigenmode
+        of the form m0+dm(t) will be exported (where m0 is the relaxed
+        equilibrium state and dm(t) is the small time-varying eigenmode
+        excitation). If `dm_only` is `True` then only the part dm(t)
+        will be exported.
+
+        The animations will be saved in VTK format (as .pvd files) and
+        stored in separate subfolders of the given `directory` (one
+        subfolder for each eigenmode).
+
+        If `create_movies` is `True` (the default) then each animation
+        will in addition be automatically converted to a movie file
+        in .avi format and stored in the directory `dirname_movies`.
+        (If the latter is `None` (the default), then the movies will
+        be stored in `directory` as well).
+
+        This function accepts all keyword arguments understood by
+        `finmag.util.visualization.render_paraview_scene()`, which
+        can be used to control aspects such as the camera position
+        or whether to add glyphs etc. in the exported movie files.
+
+        """
+        # Make sure that `modes` is a list of integers
+        if not hasattr(modes, '__len__'):
+            modes = range(modes)
+
+        # Export eigenmode animations
+        for k in modes:
+            try:
+                freq = self.eigenfreqs[k]
+            except IndexError:
+                log.error("Could not export eingenmode animation for mode "
+                          "#{}. Index exceeds range of comptued modes.".format(k))
+                continue
+
+            mode_descr = 'normal_mode_{:02d}__{:.3f}_GHz'.format(k, freq)
+            vtk_filename = os.path.join(directory, mode_descr, mode_descr + '.pvd')
+
+            self.export_normal_mode_animation(
+                k, filename=vtk_filename, dm_only=dm_only, num_cycles=num_cycles,
+                num_snapshots_per_cycle=num_snapshots_per_cycle, scaling=scaling, **kwargs)
+
+            # Some good default values for movie files
+            default_kwargs = {
+                'representation': 'Surface',
+                'add_glyphs': True,
+                'trim_border': False,
+                'colormap': 'coolwarm',
+                }
+            # Update default values with the kwargs explicitly given by the user
+            default_kwargs.update(kwargs)
+
+            if create_movies:
+                directory_movies = directory_movies or directory
+                pvd2avi(vtk_filename, os.path.join(directory_movies, mode_descr + '.avi'), **default_kwargs)
 
     def export_normal_mode_animation(self, k, filename=None, directory='', dm_only=False, num_cycles=1, num_snapshots_per_cycle=20, scaling=0.2, **kwargs):
         """
