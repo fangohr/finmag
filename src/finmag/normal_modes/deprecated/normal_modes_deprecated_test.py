@@ -168,18 +168,20 @@ def test_plot_spatially_resolved_normal_mode(tmpdir):
 def test_plot_spatially_resolved_normal_mode2(tmpdir):
     os.chdir(str(tmpdir))
     sim = example.normal_modes.disk(relaxed=True)
-    sim.compute_normal_modes(n_values=2)
+    sim.compute_normal_modes(n_values=3)
 
-    sim.plot_spatially_resolved_normal_mode(0, outfilename='normal_mode_00.png')
+    sim.plot_spatially_resolved_normal_mode(0, outfilename='normal_mode_00.png', use_fenicstools=False)
     sim.plot_spatially_resolved_normal_mode(1, slice_z='z_min', components='xz',
                                             figure_title='Title', yshift_title=0.05,
                                             plot_powers=True, plot_phases=False, num_phase_colorbar_ticks=3,
                                             cmap_powers=plt.cm.jet, cmap_phases=plt.cm.hsv, vmin_powers=None,
                                             show_axis_labels=True, show_axis_frames=True, show_colorbars=True, figsize=(5, 3),
                                             outfilename='normal_mode_01.png', dpi=200)
+    sim.plot_spatially_resolved_normal_mode(2, outfilename='normal_mode_02.png', use_fenicstools=True)
 
     assert(os.path.exists('normal_mode_00.png'))
     assert(os.path.exists('normal_mode_01.png'))
+    assert(os.path.exists('normal_mode_02.png'))
 
 
 def test_is_hermitian():
