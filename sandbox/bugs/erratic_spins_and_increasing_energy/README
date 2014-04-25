@@ -1,0 +1,12 @@
+When running a ringdown of a domain wall in a nanowire with
+notches I noticed some weird behaviour with an isolated spin
+that started flipping erratically after some time. Also, at
+the same time both the exchange and the total energy increase
+dramatically. We managed to track down the timestep at which
+this seems to begin to happen (after ca. 4.4 ns). The file
+m_000088.npy is a snapshot of the magnetisation at that time
+(it was saved every 0.05 ns). Thogether with the mesh this
+should be enough to recreate the simulation and continue it
+running from there.
+
+  -- Max, 25.4.2014
