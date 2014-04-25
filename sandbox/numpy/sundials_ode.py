@@ -4,6 +4,7 @@ from finmag.native import sundials
 
 
 def call_back(t, y):
+    
     return y**2-y**3
     
 class Test_Sundials(object):
