@@ -15,11 +15,13 @@ fi
 
 required="fenics libboost-python-dev libboost-thread-dev libsundials-serial-dev
     libboost-test-dev python-matplotlib python-visual python-scipy python-pip
-    python-setuptools python-progressbar paraview-python cython netgen netgen-doc"
+    python-setuptools python-progressbar paraview-python cython netgen netgen-doc python-zmq python-tornado"
+
+#Python-zmq and python-tornado are requirements for the ipython notebook.
 
 building_doc="texlive-latex-extra texlive-latex-recommended texlive-fonts-recommended python-pygments"
 
-suggested="mercurial ipython ipython-notebook grace gnuplot gmsh"
+suggested="mercurial grace gnuplot gmsh"
 
 packages="$required"
 if [ "$1" == "--all" ]
@@ -33,3 +35,9 @@ sudo apt-get upgrade
 sudo apt-get install $packages
 sudo pip install -U sphinx pytest aeon sh diff-match-patch
 
+# the debian 1404 package for ipython is 1.2, i.e. too old.
+sudo pip install -U ipython
+sudo pip install -U pymzq
+
+# [Observation: We need IPython installed to be able to import finmag. So
+# we need to make sure to also install ipython.]
