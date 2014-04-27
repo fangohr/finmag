@@ -7,7 +7,7 @@ from finmag.util.helpers import vector_valued_function
 from finmag.util.pbc2d import PeriodicBoundary2D
 
 
-def test_dmi_uses_unit_length():
+def test_dmi_uses_unit_length_2dmesh():
     """
     Set up a helical state in two meshes (one expressed in SI units
     the other expressed in nanometers) and compute energies and fields.
@@ -18,13 +18,22 @@ def test_dmi_uses_unit_length():
     Ms = 3.84e5  # A/m
 
     energies = []
-    
-    for unit_length in (1, 1e-9):
+
+    # unit_lengths 1e-9 and 1 are common, let's through in an intermediate
+    # length just to challenge the system a little:
+    for unit_length in (1, 1e-4, 1e-9):
         radius = 200e-9 / unit_length
         maxh = 5e-9 / unit_length
         helical_period = (4 * pi * A / D) / unit_length
         k = 2 * pi / helical_period
-        mesh = df.CircleMesh(df.Point(0, 0), radius, maxh)
+        #HF 27 April 2014: The next command fails in dolfin 1.3
+        #mesh = df.CircleMesh(df.Point(0, 0), radius, maxh)
+        #The actual shape of the domain shouldn't matter for the test,
+        #so let's use a Rectangular mesh which should work the same:
+
+        nx = ny = int(round(radius/maxh))
+        mesh = df.RectangleMesh(0, 0 ,  radius, radius, nx, ny)
+
         S3 = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
         m_expr = df.Expression(("0", "cos(k * x[0])", "sin(k * x[0])"), k=k)
         m = df.interpolate(m_expr, S3)
@@ -43,7 +52,11 @@ def test_dmi_uses_unit_length():
 
     rel_diff_energies = abs(energies[0] - energies[1]) / abs(energies[1])
     print "Relative difference of energy {}.".format(rel_diff_energies)
-    assert rel_diff_energies < 5e-4
+    assert rel_diff_energies < 1e-13
+
+    rel_diff_energies2 = abs(energies[0] - energies[2]) / abs(energies[2])
+    print "Relative difference2 of energy {}.".format(rel_diff_energies2)
+    assert rel_diff_energies2 < 1e-13
 
 
 def test_interaction_accepts_name():
