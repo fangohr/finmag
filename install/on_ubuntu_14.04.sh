@@ -1,3 +1,5 @@
+# Need to run this with bash, not sh. 
+
 set -o errexit
 
 if [ "$1" == "--help" -o "$1" == "-h" ]
