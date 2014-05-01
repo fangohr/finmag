@@ -54,7 +54,7 @@ make-modules:
 # BUILDING THE DOCUMENTATION #
 ##############################
 
-doc: make-modules doc-html doc-pdf doc-singlehtml
+doc: make-modules doc-html doc-latexpdf doc-singlehtml
 
 doc-clean:
 	make -C doc clean
