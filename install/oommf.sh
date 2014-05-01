@@ -55,8 +55,9 @@ mv $OOMMF_EXTRACTED_DIR oommf
 cd oommf
 
 # install oommf
-export OOMMF_TCL_CONFIG=/usr/lib/tcl$TCLTKVERSION/tclConfig.sh
-export OOMMF_TK_CONFIG=/usr/lib/tk$TCLTKVERSION/tkConfig.sh
+ARCH=$(dpkg-architecture -qDEB_HOST_MULTIARCH)
+export OOMMF_TCL_CONFIG=/usr/lib/${ARCH}/tcl${TCLTKVERSION}/tclConfig.sh
+export OOMMF_TK_CONFIG=/usr/lib/${ARCH}/tk${TCLTKVERSION}/tkConfig.sh
 tclsh$TCLTKVERSION oommf.tcl pimake distclean
 tclsh$TCLTKVERSION oommf.tcl pimake upgrade
 tclsh$TCLTKVERSION oommf.tcl pimake
