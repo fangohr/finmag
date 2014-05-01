@@ -1,139 +1,108 @@
-# FinMag - a thin layer on top of FEniCS to enable micromagnetic multi-physics simulations
-# Copyright (C) 2012 University of Southampton
-# Do not distribute
+# FinMag - Copyright (C) 2012, 2013, 2014 University of Southampton
+# Contact: Hans Fangohr <h.fangohr@soton.ac.uk>
+# Do not distribute.
 #
-# CONTACT: h.fangohr@soton.ac.uk
+# This Makefile is used by our continuous-integration server
+# to run the tests and to build the documentation 
 #
-# Jenkins will call the 'ci' (for Continuous Integration) target.
-
-# This target can be used to print Makefile variables (such as PROJECT_DIR)
-# from the command line, for example by saying 'make print-PROJECT_DIR'.
-print-%:
-	@echo $($*)
-
-NETGENDIR ?= /usr/share/netgen/  # The directory containing ng.tcl
-PYTHON ?= python
-
-# The command to purge all untracked files in the repository.
-# If you use hg-git to inter-operate with the hg repository,
-# you may want to use:
-#
-#    PURGE_REPO_CMD = git clean -f -d
-#
-PURGE_REPO_CMD ?= hg purge --all
-
-# The absolute path for the project directory
-PROJECT_DIR = $(abspath .)
-
-######### Project-specific variables
-# Paths that have to be added to PYTHONPATH prior to running the tests
-PYTHON_ROOTS = $(PROJECT_DIR)/src
-# The directory that contains native code
-NATIVE_DIR = native
-# Set TEST_OPTIONS to e.g. '-sxv' to disable capturing of standard output,
-# exit instantly on the first error, and increase verbosity.
-TEST_OPTIONS ?=
-
-######### Other variables
-# Directory where precompiled header files are placed during compilation
-export PRECOMPILED_HEADER_DIR = $(PROJECT_DIR)/tmp/$(notdir $(abspath .))-$(BUILD_TAG)-$(BUILD_ID)
-# Make sure we do not try to compile native modules when they're imported in python
-export DISABLE_PYTHON_MAKE = 1
-# Where the tarball containing the binary version of the latest succesful build should be placed and extracted
-FINMAG_BINARY_DEST ?= $(HOME)/finmag_binary_version_of_last_successful_build
-# The repo to clone when building the binary tarball
-FINMAG_REPO ?= ssh://hg@bitbucket.org/fangohr/finmag
-FINMAG_BINARY_LICENSE_FILE ?= $(HOME)/License-LicenseRequest_FinmagJenkins
-# The directory where the script dist-wrapper.py lives
-DIST_WRAPPER_DIR ?= $(HOME)/finmag-dist
-# Command line options passed to dist-wrapper.py
-DIST_WRAPPER_OPTIONS ?= --skip-tests --finmag-repo=$(FINMAG_REPO) --destdir=$(FINMAG_BINARY_DEST)
 
 default:
 	@echo 'This makefile is used for CI only; do not use directly.' 
 
-ci: purge test doc
+PYTHON ?= python
+PURGE_REPO_CMD ?= hg purge --all
+NETGENDIR ?= /usr/share/netgen/
+PROJECT_DIR = $(abspath .)
+NATIVE_DIR = native
+PYTHON_ROOTS = $(PROJECT_DIR)/src
+FINMAG_REPO ?= ssh://hg@bitbucket.org/fangohr/finmag
+FINMAG_BINARY_DEST ?= $(HOME)/finmag_binary_version_of_last_successful_build
+FINMAG_BINARY_LICENSE_FILE ?= $(HOME)/License-LicenseRequest_FinmagJenkins
+DIST_WRAPPER_DIR ?= $(HOME)/finmag-dist
+DIST_WRAPPER_OPTIONS ?= --skip-tests --finmag-repo=$(FINMAG_REPO) --destdir=$(FINMAG_BINARY_DEST)
 
-doc: make-modules doc-html doc-pdf doc-singlehtml
+export PRECOMPILED_HEADER_DIR = $(PROJECT_DIR)/tmp/$(notdir $(abspath .))-$(BUILD_TAG)-$(BUILD_ID)
+export DISABLE_PYTHON_MAKE = 1  # to only build native modules once per session
 
-doc-html:
-	make -C doc generate-doc html
+print-debugging-info: print-PROJECT_DIR print-PYTHON_ROOTS print-NETGENDIR
+	@echo
 
-doc-singlehtml:
-	make -C doc generate-doc singlehtml
+# display variables defined in this Makefile
+# example: `make print-PROJECT_DIR`
+print-%:
+	@echo [DDD] Makefile $*=\`$($*)\`
 
-doc-pdf:
-	make -C doc generate-doc latexpdf
-
-doc-clean:
-	make -C doc clean
-
-# The following is useful for quick debugging as it doesn't rebuild the examples.
-# However, currently it will only work if a complete run of 'make doc-html' was
-# successfully performed beforehand.
-doc-html-nobuildexamples:
-	SPHINXWARNINGOPTS= make -C doc htmlraw
-
-make-modules:
-	make -C $(NATIVE_DIR) all
-
-update-jenkins-binary-version:
-ifeq "$(shell hostname)" "summer"
-	@echo "Removing existing binary installation and tarball(s) in directory ${FINMAG_BINARY_DEST}"
-#	-rm -f ${FINMAG_BINARY_DEST}/FinMag*.tar.bz2
-	-rm -rf ${FINMAG_BINARY_DEST}/finmag
-	@echo "Installing latest binary version in directory ${FINMAG_BINARY_DEST}"
-	cd $(DIST_WRAPPER_DIR) && $(PYTHON) dist-wrapper.py $(DIST_WRAPPER_OPTIONS)
-	tar -C ${FINMAG_BINARY_DEST} -xjf ${FINMAG_BINARY_DEST}/FinMag*.tar.bz2
-	install ${FINMAG_BINARY_LICENSE_FILE} ${FINMAG_BINARY_DEST}/finmag
-else
-	@echo "The Makefile target $@ only makes sense"
-	@echo "to execute on summer.kk.soton.ac.uk as part of the CI process."
-	@echo "Quitting since we appear to be on a different machine."
-endif
+purge: clean
+	@echo "Removing all untracked files from repository."
+	$(PURGE_REPO_CMD)
 
 clean:
 	make -C src/ cleansrc
 	make -C $(NATIVE_DIR) clean
 	rm -rf test-reports
 
-purge: clean
-	@echo "Removing all untracked files from repository."
-	$(PURGE_REPO_CMD)
+##################################
+# BUILDING THE NATIVE EXTENSIONS #
+##################################
+
+make-modules:
+	make -C $(NATIVE_DIR) all
 
 % : %.c
+
+##############################
+# BUILDING THE DOCUMENTATION #
+##############################
+
+doc: make-modules doc-html doc-pdf doc-singlehtml
+
+doc-clean:
+	make -C doc clean
+
+# generate documentation in html format without re-building the examples
+# good for debugging but needs to the examples to have been built before
+doc-html-nobuildexamples:
+	SPHINXWARNINGOPTS= make -C doc htmlraw
+
+# generate documentation in any of the supported formats in doc/Makefile
+# examples: `make doc-html`, `make doc-singlehtml`, `make doc-pdf` 
+doc-%:
+	make -C doc generate-doc $*
+
+#####################
+# RUNNING THE TESTS #
+#####################
+
+# py.test options
+# example: `-sx` to disable capturing of STDOUT and exit on first error
+TEST_OPTIONS ?=
 
 create-dirs:
 	mkdir -p test-reports/junit
 
-test: clean make-modules pytest-tests native-tests
+test: clean create-dirs make-modules tests tests-native tests-notebooks
 
-print-debugging-info:
-	@echo "[DDD] Makefile PROJECT_DIR: ${PROJECT_DIR}"
-	@echo "[DDD] Makefile PYTHON_ROOTS: ${PYTHON_ROOTS}"
-	@echo "[DDD] Makefile NETGENDIR: ${NETGENDIR}"
+# run all Python tests
+test-python: create-dirs make-modules
+	PYTHONPATH=$(PYTHON_ROOTS) py.test $(TEST_OPTIONS) \
+		--junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
 
-run-pytest-reproduce-ipython-notebooks : create-dirs make-modules print-debugging-info
-	PYTHONPATH=$(PYTHON_ROOTS) echo "[DDD] PYTHONPATH now: ${PYTHONPATH}" && py.test $(TEST_OPTIONS) bin/reproduce_ipython_notebooks.py --junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
+# exclude tests marked as slow
+test-fast: create-dirs make-modules
+	PYTHONPATH=$(PYTHON_ROOTS) py.test $(TEST_OPTIONS) -m "not slow" \
+		--junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
 
-# Will not run tests marked as slow.
-pytest-fast: create-dirs make-modules
-	PYTHONPATH=$(PYTHON_ROOTS) py.test \
-			   $(TEST_OPTIONS) -m "not slow" \
-			   --junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
-
-# Will only run tests marked as slow.
-pytest-slow: create-dirs make-modules
+# only run tests marked as slow
+test-slow: create-dirs make-modules
 	PYTHONPATH=$(PYTHON_ROOTS) py.test $(TEST_OPTIONS) -m "slow" \
-			   --junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
+		--junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
 
-pytest-tests: pytest-fast pytest-slow
-
-native-tests: make-modules
+# run tests on the native extensions
+test-native: make-modules
 	make -C $(NATIVE_DIR) run-ci-tests
 
-# Will run the fast py.test tests as well as the native tests
-tests-fast: pytest-fast native-tests
+# try to reproduce the ipython notebooks
+test-notebooks: create-dirs make-modules print-debugging-info
+	PYTHONPATH=$(PYTHON_ROOTS) echo "[DDD] PYTHONPATH now: ${PYTHONPATH}" && py.test $(TEST_OPTIONS) bin/reproduce_ipython_notebooks.py --junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
 
-
-.PHONY: ci default make-modules test pytest-tests pytest-fast pytest-slow
+.PHONY: default make-modules create-dirs doc test test-python test-fast test-slow test-native test-notebooks
