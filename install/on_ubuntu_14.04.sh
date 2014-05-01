@@ -37,7 +37,7 @@ sudo pip install -U sphinx pytest aeon sh diff-match-patch
 
 # the debian 1404 package for ipython is 1.2, i.e. too old.
 sudo pip install -U ipython
-sudo pip install -U pymzq
+sudo pip install -U pyzmq
 
 # [Observation: We need IPython installed to be able to import finmag. So
 # we need to make sure to also install ipython.]
