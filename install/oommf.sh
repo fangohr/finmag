@@ -1,36 +1,33 @@
 #!/bin/bash
 
-#
-# This script will download and install oommf into a directory
-# called oommf under $OOMMF_PREFIX, which is your user's home per default. It will
-# then create a command called "oommf" in your /usr/local/bin directory.
-#
-# It will also install the needed ubuntu packages.
-#
+# downloads and installs oommf (and prerequisites)
+# installs into user's home by default (can be changed with $OOMMF_PREFIX)
+# places an oommf command in /usr/local/bin
 
 set -o errexit
 
-TCLTKVERSION=${TCLTKVERSION:-8.6}  # use 8.6 as the default value if TCLTKVERSION wasn't already set by the user
-echo "Using TCLTKVERSION=${TCLTKVERSION}"
+OOMMF_VERSION=oommf12a5bis_20120928
+OOMMF_TARBALL=${OOMMF_VERSION}.tar.gz
+OOMMF_URL=http://math.nist.gov/oommf/dist/${OOMMF_TARBALL}
 
-# The user can say 'export APT_GET_INSTALL=-y' to avoid apt-get
-# asking for confirmation.
+TCLTKVERSION=${TCLTKVERSION:-8.6}
+
+# use OOMMF_PREFIX to change installation location (default is $HOME)
+OOMMF_PREFIX=${OOMMF_PREFIX:-$HOME}
+
+# use APT_GET_INSTALL=-y to avoid apt-get asking for confirmation
 APT_GET_OPTIONS=${APT_GET_OPTIONS:-}
 
-# Install prerequisites if needed
+# install prerequisites if needed
 PKGS="tk$TCLTKVERSION-dev tcl$TCLTKVERSION-dev"
+echo "Using TCLTKVERSION=${TCLTKVERSION}."
 for pkg in $PKGS; do
     if ! dpkg -s $pkg > /dev/null 2>&1; then
 	echo "OOMMF needs the package $pkg. Trying to install it..."
 	sudo apt-get ${APT_GET_OPTIONS} install $pkg
     fi
 done
-
-# The default installation location is $HOME. Set
-# the OOMMF_PREFIX environment variable to change this.
-OOMMF_PREFIX=${OOMMF_PREFIX:-$HOME}
-
-read -p "OOMMF will be installed in '$OOMMF_PREFIX' (this can be changed by setting the environment variable OOMMF_PREFIX). Is this correct? (y/n)" -r
+read -p "OOMMF will be installed in $OOMMF_PREFIX (this can be changed by setting the environment variable OOMMF_PREFIX). Is this correct? (y/n)" -r
 echo
 
 if ! [[ $REPLY =~ ^[Yy]$ ]]; then
@@ -40,23 +37,24 @@ fi
 
 # create installation directory if it doesn't exist
 if ! [ -e ${OOMMF_PREFIX} ]; then
+   echo "Creating directory $OOMMF_PREFIX.";
    install -d ${OOMMF_PREFIX};
-   echo "Creating directory $OOMMF_PREFIX";
 fi
 
-# download and extract oommf
+# download oommf
 cd $OOMMF_PREFIX
-if [ ! -e "oommf12a4pre-20100719bis.tar.gz" ]
+if [ ! -e "$OOMMF_TARBALL" ]
 then
-    wget http://math.nist.gov/oommf/snapshot/oommf12a4pre-20100719bis.tar.gz
+    wget $OOMMF_URL
 fi
-tar -xzf oommf12a4pre-20100719bis.tar.gz
-mv oommf12a4pre-20100719bis oommf
+
+# extract oommf
+tar -xzf $OOMMF_TARBALL
+OOMMF_EXTRACTED_DIR=$(echo $OOMMF_VERSION | sed -r 's/oommf([0-9])([^_]*).*/oommf-\1\.\2/')
+mv $OOMMF_EXTRACTED_DIR oommf
 cd oommf
 
 # install oommf
-#OOMMF_TCL_INCLUDE_DIR=/usr/include/tcl8.5/; export OOMMF_TCL_INCLUDE_DIR
-#OOMMF_TK_INCLUDE_DIR=/usr/include/tcl8.5/; export OOMMF_TK_INCLUDE_DIR
 export OOMMF_TCL_CONFIG=/usr/lib/tcl$TCLTKVERSION/tclConfig.sh
 export OOMMF_TK_CONFIG=/usr/lib/tk$TCLTKVERSION/tkConfig.sh
 tclsh$TCLTKVERSION oommf.tcl pimake distclean
