@@ -77,10 +77,7 @@ def test_anisotropy_field(fixt):
 
     """
     TOLERANCE = 1e-14
-    print fixt["m"]
-    print fixt["m"].vector().array()
     fixt["m"].assign(df.Constant((1/np.sqrt(2), 0, 1/np.sqrt(2))))
-    print "fails before this"
     H = fixt["anis"].compute_field()
 
     v = df.TestFunction(fixt["S3"])
