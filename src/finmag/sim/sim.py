@@ -169,6 +169,10 @@ class Simulation(object):
         # time development of a system. We may have energy minimisation at some
         # point (the driver would be an optimiser), or something else.
         self.driver = 'cvode'
+        
+        # let's use 1e-8 as default and we can change it back if necessary
+        self.reltol = 1e-8
+        self.abstol = 1e-8
 
     def __str__(self):
         """String briefly describing simulation object"""
@@ -532,6 +536,7 @@ class Simulation(object):
                 self.integrator = self.llg
             else:
                 self.integrator = llg_integrator(self.llg, self.llg.m, backend=backend, **kwargs)
+                self.integrator.integrator.set_scalar_tolerances(self.reltol, self.abstol)
 
             self.tablewriter.entities['steps'] = {
                 'unit': '<1>',
@@ -557,10 +562,12 @@ class Simulation(object):
         """
         Set the tolerences of the default integrator.
         """
-        if not hasattr(self, "integrator"):
-            self.create_integrator()
-
-        self.integrator.integrator.set_scalar_tolerances(reltol, abstol)
+        self.reltol = reltol
+        self.abstol = abstol
+        
+        if hasattr(self, "integrator"):
+            self.integrator.integrator.set_scalar_tolerances(reltol, abstol)
+    
 
     def advance_time(self, t):
         """
