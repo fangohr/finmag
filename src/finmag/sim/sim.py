@@ -170,9 +170,9 @@ class Simulation(object):
         # point (the driver would be an optimiser), or something else.
         self.driver = 'cvode'
         
-        # let's use 1e-8 as default and we can change it back if necessary
-        self.reltol = 1e-8
-        self.abstol = 1e-8
+        # let's use 1e-6 as default and we can change it later
+        self.reltol = 1e-6
+        self.abstol = 1e-6
 
     def __str__(self):
         """String briefly describing simulation object"""
