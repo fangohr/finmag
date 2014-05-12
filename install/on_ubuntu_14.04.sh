@@ -43,4 +43,9 @@ sudo pip install -U sphinx pytest aeon sh diff-match-patch
 sudo pip install -U ipython
 sudo pip install -U pyzmq
 
+# The next step is important but not working yet (HF 12 May 2014)
 
+# Eigenmodes need petsc4py
+export PETSC_DIR=/usr/lib/petsc
+export PETSC_ARCH=linux-gnu-c-opt
+sudo pip install https://bitbucket.org/petsc/petsc4py/downloads/petsc4py-3.4.tar.gz
