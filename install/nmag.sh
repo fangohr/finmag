@@ -37,6 +37,9 @@ source="nmag-0.2.1"
 TARBALLNAME="$source.tar.gz"
 TARBALLURL="http://nmag.soton.ac.uk/nmag/0.2/download/all/$TARBALLNAME"
 
+# Nmag patch location
+NMAGPATCHPATH=`pwd`/nmag-patch-cpp-comment-2014-05-12.patch
+
 echo "Installing $source from $TARBALLURL"
 
 echo "Changing directory to $NMAG_PREFIX"
@@ -52,9 +55,20 @@ fi
 if [ ! -e $source ]
 then
     tar xzvf $TARBALLNAME
+
 fi
 
 cd $source
+
+# With more recent version of gcc (for examlpe gcc4.8), an error is 
+# raised when compiling Nmag's version of hdf5. It is just a C++ comment
+# in a C file. (in nmag-0.2.1/hdf5/tools/lib/h5diff.c) 
+# This patch converts it to a C comment.
+# If it looks as if the patch has been applied already, we carry on without
+# further user confirmation (-N)
+pushd hdf5/tools/lib && patch -N < $NMAGPATCHPATH
+popd
+
 
 make
 
