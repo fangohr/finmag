@@ -46,6 +46,13 @@ sudo pip install -U pyzmq
 # The next step is important but not working yet (HF 12 May 2014)
 
 # Eigenmodes need petsc4py
+sudo apt-get install python-petsc4py
+
+
+# the following seems to have worked on osiris with ubunt14.04 but not on 
+# Hans virtual machine with Ubuntu 14.04.
 export PETSC_DIR=/usr/lib/petsc
-export PETSC_ARCH=linux-gnu-c-opt
-sudo pip install https://bitbucket.org/petsc/petsc4py/downloads/petsc4py-3.4.tar.gz
+export SLEPC_DIR=/usr/lib/slepc
+PETSC_DIR=/usr/lib/petsc SLEPC_DIR=/usr/lib/slepc sudo pip install https://bitbucket.org/slepc/slepc4py/downloads/slepc4py-3.4.tar.gz
+
+
