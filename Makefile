@@ -97,6 +97,9 @@ test-slow: create-dirs make-modules
 	PYTHONPATH=$(PYTHON_ROOTS) py.test $(TEST_OPTIONS) -m "slow" \
 		--junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
 
+# run both fast and slow tests
+tests: test-fast test-slow
+
 # run tests on the native extensions
 test-native: make-modules
 	make -C $(NATIVE_DIR) run-ci-tests
