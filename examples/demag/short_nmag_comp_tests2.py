@@ -10,7 +10,7 @@ from finmag.energies import Demag
 from finmag.energies.demag.solver_gcr import FemBemGCRSolver
 import pylab as p
 import finmag.energies.demag.solver_base as sb
-from finmag.sim.llg import LLG
+from finmag.physics.llg import LLG
 import copy
 
 import finmag

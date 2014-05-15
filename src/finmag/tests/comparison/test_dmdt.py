@@ -2,7 +2,7 @@ import pytest
 import subprocess
 import dolfin as df
 import numpy as np
-from finmag.sim.llg import LLG
+from finmag.physics.llg import LLG
 from finmag.energies import Zeeman
 from finmag.util.oommf import mesh, oommf_dmdt
 from finmag.util.helpers import stats

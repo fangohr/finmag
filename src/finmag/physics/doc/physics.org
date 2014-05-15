@@ -5,14 +5,15 @@ questions. Given a magnetisation, time and primary
 fields like current density and Zeeman:
 
 - what is dm/dt? (this will be used by the time integrator)
-- what is the total energy of the system?
+- what is the total energy o1f the system?
 - what is the exchange field?
 
 * Tasks
 
 Note: A task is not completed until the tests run.
 
-** TODO move the llg.py file to physics
+** DONE move the llg.py file to physics
+   CLOSED: [2014-05-15 Thu 17:56]
 ** TODO move the sllg.py file to physics
 ** TODO move the llb directory to physics
 ** TODO move the effective_field.py file to physics
