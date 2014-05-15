@@ -14,7 +14,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from aeon import mtimed
 from glob import glob
-from finmag.sim.llg import LLG
+from finmag.physics.llg import LLG
 from finmag.sim.llg_stt import LLG_STT
 from finmag.util.consts import exchange_length, bloch_parameter, helical_period
 from finmag.util.meshes import mesh_info, mesh_volume, mesh_size_plausible, \
