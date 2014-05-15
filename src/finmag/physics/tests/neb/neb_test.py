@@ -13,7 +13,7 @@ MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def test_compute_dm():
-    from finmag.sim.neb import compute_dm
+    from finmag.physics.neb import compute_dm
     
     a1 = np.array([0,0,1])
     a2 = np.array([0,1,0])
@@ -22,7 +22,7 @@ def test_compute_dm():
     
     
 def test_cartesian2spherical_field():
-    from finmag.sim.neb import cartesian2spherical_field
+    from finmag.physics.neb import cartesian2spherical_field
     
     Kx=1e5
     Kp=6e4
