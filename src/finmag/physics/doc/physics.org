@@ -7,7 +7,7 @@ fields like current density and Zeeman:
 - what is dm/dt? (this will be used by the time integrator)
 - what is the total energy o1f the system?
 - what is the exchange field?
-
+  
 * Tasks
 
 Note: A task is not completed until the tests run.
@@ -16,6 +16,8 @@ Note: A task is not completed until the tests run.
    CLOSED: [2014-05-15 Thu 17:56]
 ** DONE move the sllg.py file to physics
    CLOSED: [2014-05-15 Thu 18:30]
+** DONE move neb.py to physics
+   CLOSED: [2014-05-15 Thu 18:37]
 ** TODO move the llb directory to physics
 ** TODO move the effective_field.py file to physics
 ** TODO create physics.py file
