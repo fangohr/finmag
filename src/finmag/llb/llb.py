@@ -11,7 +11,7 @@ from finmag.llb.material import Material
 from finmag.util import helpers
 from finmag.util.vtk_saver import VTKSaver
 from finmag.util.fileio import Tablewriter
-from finmag.integrators import scheduler, events
+from finmag.scheduler import scheduler, events
 from finmag.util.pbc2d import PeriodicBoundary2D
 
 import logging

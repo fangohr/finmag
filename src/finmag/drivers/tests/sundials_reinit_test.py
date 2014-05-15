@@ -35,7 +35,7 @@ Hans, 30 June 2012
 
 from finmag.tests.jacobean.domain_wall_cobalt import setup_domain_wall_cobalt, \
                                                      domain_wall_error
-from finmag.integrators.llg_integrator import llg_integrator
+from finmag.drivers.llg_integrator import llg_integrator
 from datetime import datetime
 
 NODE_COUNT = 100

@@ -2,7 +2,7 @@ import numpy as np
 import pylab as p
 from dolfin import Mesh
 from finmag.sim.llg import LLG
-from finmag.integrators.llg_integrator import llg_integrator
+from finmag.drivers.llg_integrator import llg_integrator
 
 # Create mesh
 mu = 1e-9

@@ -3,7 +3,7 @@ import logging
 import functools
 from numbers import Number
 from datetime import datetime, timedelta
-from finmag.integrators.events import SingleEvent, RepeatingEvent, same, EV_DONE, EV_REQUESTS_STOP_INTEGRATION
+from finmag.scheduler.events import SingleEvent, RepeatingEvent, same, EV_DONE, EV_REQUESTS_STOP_INTEGRATION
 # This module will try to import the package apscheduler when a realtime event
 # is added. Install with "pip install apscheduler".
 # See http://pypi.python.org/pypi/APScheduler for documentation.

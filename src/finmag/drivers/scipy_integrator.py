@@ -1,5 +1,5 @@
 from scipy.integrate import ode
-from finmag.integrators.common import run_with_schedule
+from finmag.drivers.common import run_with_schedule
 
 class ScipyIntegrator(object):
     def __init__(self, llg, m0, reltol=1e-8, abstol=1e-8, nsteps=10000, method="bdf", tablewriter=None, **kwargs):

@@ -34,10 +34,10 @@ from finmag.util.helpers import plot_dynamics, pvd2avi, format_time
 from finmag.sim.hysteresis import hysteresis as hyst, hysteresis_loop as hyst_loop
 from finmag.sim import sim_helpers, magnetisation_patterns
 from finmag.energies import Exchange, Zeeman, TimeZeeman, Demag, UniaxialAnisotropy, DMI
-from finmag.integrators.llg_integrator import llg_integrator
-from finmag.integrators.sundials_integrator import SundialsIntegrator
-from finmag.integrators import scheduler, events
-from finmag.integrators.common import run_with_schedule
+from finmag.drivers.llg_integrator import llg_integrator
+from finmag.drivers.sundials_integrator import SundialsIntegrator
+from finmag.scheduler import scheduler, events
+from finmag.drivers.common import run_with_schedule
 from finmag.util.pbc2d import PeriodicBoundary1D, PeriodicBoundary2D
 
 from finmag.llb.sllg import SLLG
@@ -169,7 +169,7 @@ class Simulation(object):
         # time development of a system. We may have energy minimisation at some
         # point (the driver would be an optimiser), or something else.
         self.driver = 'cvode'
-        
+
         # let's use 1e-6 as default and we can change it later
         self.reltol = 1e-6
         self.abstol = 1e-6
@@ -399,7 +399,7 @@ class Simulation(object):
 
     def get_interaction_list(self):
         """
-        Returns a list of interaction names. 
+        Returns a list of interaction names.
 
         *Returns*
 
@@ -564,10 +564,10 @@ class Simulation(object):
         """
         self.reltol = reltol
         self.abstol = abstol
-        
+
         if hasattr(self, "integrator"):
             self.integrator.integrator.set_scalar_tolerances(reltol, abstol)
-    
+
 
     def advance_time(self, t):
         """
