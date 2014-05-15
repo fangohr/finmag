@@ -14,7 +14,8 @@ Note: A task is not completed until the tests run.
 
 ** DONE move the llg.py file to physics
    CLOSED: [2014-05-15 Thu 17:56]
-** TODO move the sllg.py file to physics
+** DONE move the sllg.py file to physics
+   CLOSED: [2014-05-15 Thu 18:30]
 ** TODO move the llb directory to physics
 ** TODO move the effective_field.py file to physics
 ** TODO create physics.py file
