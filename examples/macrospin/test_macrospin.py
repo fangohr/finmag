@@ -3,7 +3,7 @@ import os
 import py
 import numpy
 from finmag import Simulation
-from finmag.integrators.llg_integrator import llg_integrator
+from finmag.drivers.llg_integrator import llg_integrator
 from finmag.energies import Zeeman
 from finmag.util.macrospin import make_analytic_solution
 

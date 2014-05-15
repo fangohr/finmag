@@ -4,7 +4,7 @@ import pylab
 import dolfin as df
 from finmag.sim.llg import LLG
 from finmag.energies import TimeZeeman
-from finmag.integrators.llg_integrator import llg_integrator
+from finmag.drivers.llg_integrator import llg_integrator
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 

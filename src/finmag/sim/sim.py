@@ -34,10 +34,10 @@ from finmag.util.helpers import plot_dynamics, pvd2avi, format_time
 from finmag.sim.hysteresis import hysteresis as hyst, hysteresis_loop as hyst_loop
 from finmag.sim import sim_helpers, magnetisation_patterns
 from finmag.energies import Exchange, Zeeman, TimeZeeman, Demag, UniaxialAnisotropy, DMI
-from finmag.integrators.llg_integrator import llg_integrator
-from finmag.integrators.sundials_integrator import SundialsIntegrator
+from finmag.drivers.llg_integrator import llg_integrator
+from finmag.drivers.sundials_integrator import SundialsIntegrator
 from finmag.scheduler import scheduler, events
-from finmag.integrators.common import run_with_schedule
+from finmag.drivers.common import run_with_schedule
 from finmag.util.pbc2d import PeriodicBoundary1D, PeriodicBoundary2D
 
 from finmag.llb.sllg import SLLG

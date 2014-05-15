@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from distutils.version import LooseVersion
 from finmag import Simulation
 from finmag.example import barmini
-from finmag.integrators.llg_integrator import llg_integrator
+from finmag.drivers.llg_integrator import llg_integrator
 from finmag.util.helpers import assert_number_of_files
 from finmag.util.fileio import Tablereader
 
