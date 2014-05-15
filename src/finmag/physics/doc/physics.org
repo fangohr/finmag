@@ -20,7 +20,8 @@ Note: A task is not completed until the tests run.
    CLOSED: [2014-05-15 Thu 18:37]
 ** DONE move the llb directory to physics
    CLOSED: [2014-05-15 Thu 20:11]
-** TODO move the effective_field.py file to physics
+** DONE move the effective_field.py file to physics
+   CLOSED: [2014-05-15 Thu 20:43]
 ** TODO create physics.py file
 ** TODO hook up effective field computation to the physics.py
 ** TODO hook up the LLG equation to the physics.py
