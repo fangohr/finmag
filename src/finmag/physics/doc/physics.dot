@@ -1,0 +1,21 @@
+digraph physics {
+    graph [bgcolor=black];
+    node [color=white fontcolor=white fillcolor=black style=filled];
+    edge [color=white fontcolor=white];
+
+    subgraph cluster_physics {
+        color = yellow;
+        fontcolor = white;
+        label = "Composition of Physics Class"
+  
+        llg [label="LLG"]; 
+        stochastic [label="stochastic LLG"];
+        stt [label="LLG + STT"];
+        equation -> stochastic;
+        equation -> stt;
+        equation -> llg [label="one of"];
+        llg -> stochastic [style=invis];
+        stochastic -> stt [style=invis];
+        {rank=same llg stochastic stt};
+    }
+}
