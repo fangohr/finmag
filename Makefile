@@ -80,7 +80,7 @@ TEST_OPTIONS ?=
 create-dirs:
 	mkdir -p test-reports/junit
 
-test: clean create-dirs make-modules tests tests-native tests-notebooks
+test: clean create-dirs make-modules tests test-native test-notebooks
 
 # run all Python tests
 test-python: create-dirs make-modules
