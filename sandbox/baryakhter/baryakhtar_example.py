@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 import time
 
-from finmag.integrators.llg_integrator import llg_integrator
+from finmag.drivers.llg_integrator import llg_integrator
 from llb import LLB
 from finmag.energies import Zeeman
 from test_exchange import BaryakhtarExchange
@@ -56,26 +56,26 @@ def ode45_solve_llg():
 
             B[i+1,i]=Happ[i+2]
             B[i+1,i+1]=0
-            B[i+1,i+2]=-Happ[i]            
-            
+            B[i+1,i+2]=-Happ[i]
+
             B[i+2,i]=-Happ[i+1]
             B[i+2,i+1]=Happ[i]
             B[i+2,i+2]=0
-        
+
         return B
-        
+
 
     ode45=scipy_ode(ode_rhs)
     ode45.set_integrator('vode', method='bdf')
-    
+
     ode45.set_initial_value(M0,0)
 
-    
-    
+
+
     max_time=2*np.pi/(gamma*Hz)*5
     dt=max_time/100
     ts=np.arange(0,max_time,dt)
-    
+
     while ode45.successful() and ode45.t+dt<=ts[-1]:
         ode45.integrate(ode45.t+dt)
         print ode45.t,ode45.y,len(count),len(count_jac)
@@ -91,7 +91,7 @@ def example1(Ms=8.6e5):
     x1 = y1 = z1 = 10
     nx = ny = nz = 1
     mesh = df.Box(x0, x1, y0, y1, z0, z1, nx, ny, nz)
-    
+
     S1 = df.FunctionSpace(mesh, "Lagrange", 1)
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1,dim=3)
     vis = df.Function(S3)
@@ -128,7 +128,7 @@ def example1_sundials(Ms):
     x1 = y1 = z1 = 10
     nx = ny = nz = 1
     mesh = df.Box(x0, x1, y0, y1, z0, z1, nx, ny, nz)
-    
+
     S1 = df.FunctionSpace(mesh, "Lagrange", 1)
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1,dim=3)
     vis = df.Function(S3)

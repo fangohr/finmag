@@ -1,6 +1,6 @@
 import logging
 from finmag.native import sundials
-from finmag.integrators.common import run_with_schedule
+from finmag.drivers.common import run_with_schedule
 
 EPSILON = 1e-15
 
