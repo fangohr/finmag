@@ -1,0 +1,32 @@
+Re-organising finmag by creating a physics submodule.
+
+It needs to be able to answer the following type of
+questions. Given a magnetisation, time and primary
+fields like current density and Zeeman:
+
+- what is dm/dt? (this will be used by the time integrator)
+- what is the total energy of the system?
+- what is the exchange field?
+
+* Tasks
+
+Note: A task is not completed until the tests run.
+
+** TODO move the llg.py file to physics
+** TODO move the sllg.py file to physics
+** TODO move the llb directory to physics
+** TODO move the effective_field.py file to physics
+** TODO create physics.py file
+** TODO hook up effective field computation to the physics.py
+** TODO hook up the LLG equation to the physics.py
+	Make sure communication to outside goes through
+	Physics class. There needs to be infrastructure
+	in place to chose the equation.
+** TODO create dm/dt in Physics, how does an equation
+	connect to it?
+** TODO make slonczewski accessible through Physics class
+** TODO check state of sllg.py, maybe refactor so
+	it can be hooked up to the Physics class along
+	the llg.py
+** TODO check state of llb, probably need to refactor
+	a lot so it fits into the mold
