@@ -358,7 +358,7 @@ class TestSimulation(object):
         # First simulation: run for 50 ps, reset the time to 30 ps and run
         # again for 50 ps.
         mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 1, 1, 1)
-        sim1 = Simulation(mesh, Ms=1, name='test_save_ndt', unit_length=1)
+        sim1 = Simulation(mesh, Ms=1, name='test_save_ndt', unit_length=1e-9)
         sim1.alpha = 0.05
         sim1.set_m((1, 0, 0))
         sim1.add(Zeeman((0, 0, 1e6)))
@@ -370,7 +370,7 @@ class TestSimulation(object):
 
         # Run a second simulation for 100 ps continuously, without
         # resetting the time in between.
-        sim2 = Simulation(mesh, Ms=1, name='test_save_ndt2', unit_length=1)
+        sim2 = Simulation(mesh, Ms=1, name='test_save_ndt2', unit_length=1e-9)
         sim2.alpha = 0.05
         sim2.set_m((1, 0, 0))
         sim2.add(Zeeman((0, 0, 1e6)))
