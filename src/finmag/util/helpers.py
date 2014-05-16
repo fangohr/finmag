@@ -462,6 +462,7 @@ def sphinx_sci(x, p=2):
     """
     return ":math:`{}`".format(tex_sci(x, p))
 
+
 def mesh_and_space(mesh_or_space):
     """
     Return a (df.Mesh, df.VectorFuntionspace) tuple where one of the two items
@@ -475,6 +476,49 @@ def mesh_and_space(mesh_or_space):
         mesh = mesh_or_space
         S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
     return mesh, S3
+
+
+def verify_function_space_type(function_space, family, degree, dim):
+    """
+    Check that `function_space` is a dolfin FunctionSpace or VectorFunctionSpace
+    of the correct type. It checks for:
+
+       - the finite element family (e.g. 'CG' for a CG1 space)
+
+       - the finite element degree (e.g. 1 for a CG1 space
+
+       - the dimension `dim` of the function values of elements of that function space;
+         this would be `None` if `function_space` is a FunctionSpace and a single number
+         if `function_space` is a VectorFunctionSpace.
+
+    """
+    ufl_element = function_space.ufl_element()
+    mesh = function_space.mesh()
+
+    # Allow abbreviations 'DG' and 'CG'
+    if family == 'DG':
+        family = 'Discontinuous Lagrange'
+    elif family == 'CG':
+        family = 'Lagrange'
+
+    family_and_degree_are_correct = \
+        (family == ufl_element.family() and
+         degree == ufl_element.degree())
+
+    if dim == None:
+        # `function_space` should be a dolfin.FunctionSpace
+        return (isinstance(function_space, df.FunctionSpace) and
+                family_and_degree_are_correct)
+    else:
+        # `function_space` should be a dolfin.VectorFunctionSpace
+        value_shape = ufl_element.value_shape()  # for VectorFunctionSpace this should be a 1-tuple of the form (dim,)
+        if len(value_shape) != 1:
+            return False
+        else:
+            return (isinstance(function_space, df.VectorFunctionSpace) and
+                    family_and_degree_are_correct and
+                    dim == value_shape[0])
+
 
 def mesh_equal(mesh1,mesh2):
     cds1=mesh1.coordinates()
@@ -533,6 +577,8 @@ def vector_valued_function(value, mesh_or_space, normalise=False, **kwargs):
 
     """
     mesh, S3 = mesh_and_space(mesh_or_space)
+    assert(S3.ufl_element().family() == 'Lagrange')
+    assert(S3.ufl_element().degree() == 1)
 
     if isinstance(value, (df.Constant, df.Expression)):
         fun = df.interpolate(value, S3)
