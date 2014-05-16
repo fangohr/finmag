@@ -1,7 +1,7 @@
 """
 Defines different types of events for use with the scheduler.
 
-They are expected to share the following attributes
+They are expected to share the following attributes:
 
     next: the next time the event should be triggered or None
 
@@ -10,9 +10,10 @@ They are expected to share the following attributes
 
     state: either EV_ACTIVE - default, nothing special should happen
                   EV_DONE - this event can be removed, its task is accomplished
-                  EV_REQUESTS_STOP_INTEGRATION - notify scheduler that time integration should be stopped
+                  EV_REQUESTS_STOP_INTEGRATION - notify scheduler that time
+                                                 integration should be stopped
 
-as well as the method
+as well as the method:
 
     trigger(self, time, is_stop): Where `time` should be equal to the `next`
     requested time, but can used for additional safety checks, and `is_stop`
@@ -34,7 +35,8 @@ def same(t0, t1):
 
 class SingleEvent(object):
     """
-    An event which will trigger once and optionally at the end of time integration.
+    An event which will trigger once and optionally at the end of time
+    integration.
 
     """
     def __init__(self, time=None, trigger_on_stop=False):
@@ -93,7 +95,8 @@ class SingleEvent(object):
 
     def _compute_next(self):
         """
-        Return the next target time. Will get called after the event is triggered.
+        Return the next target time. Will get called after the event is
+        triggered.
 
         """
         return None  # since this is a single event, there is no next step
@@ -133,7 +136,8 @@ class SingleEvent(object):
 
 class RepeatingEvent(SingleEvent):
     """
-    An event which will trigger in regular intervals and optionally at the end of time integration.
+    An event which will trigger in regular intervals and optionally at the end
+    of time integration.
 
     """
     def __init__(self, interval, delay=None, trigger_on_stop=False):
@@ -168,7 +172,8 @@ class RepeatingEvent(SingleEvent):
 
 class StopIntegrationEvent(object):
     """
-    Store the information that the simulation should be stopped at a defined time.
+    Store the information that the simulation should be stopped at a defined
+    time.
 
     """
     def __init__(self, time):
@@ -220,7 +225,8 @@ class RelaxationEvent(object):
     Monitors the relaxation of the magnetisation over time.
 
     """
-    def __init__(self, sim, stopping_dmdt=ONE_DEGREE_PER_NS, dmdt_increased_counter_limit=500, dt_limit=1e-10):
+    def __init__(self, sim, stopping_dmdt=ONE_DEGREE_PER_NS,
+                 dmdt_increased_counter_limit=500, dt_limit=1e-10):
         """
         Initialise the relaxation with a Simulation object and stopping parameters.
 
