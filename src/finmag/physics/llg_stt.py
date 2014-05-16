@@ -36,8 +36,6 @@ class LLG_STT(object):
         
         self._delta_m = df.Function(self.S3)
         
-        self.effective_field = EffectiveField(self.S3, average)
-        
         self.nxyz = len(self.m)
         self._alpha = np.zeros(self.nxyz/3)
         self.delta_m = np.zeros(self.nxyz)
@@ -46,6 +44,7 @@ class LLG_STT(object):
         self.dm_dt = np.zeros(2*self.nxyz) #magnetisation and delta_m
         
         self.set_default_values()
+        self.effective_field = EffectiveField(self.S3, self._m, self.Ms, self.unit_length)
 
         self._t = 0
         

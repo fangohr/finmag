@@ -65,11 +65,11 @@ class CubicAnisotropy(EnergyBase):
         dofmap = S3.dofmap()
         S1 = df.FunctionSpace(S3.mesh(), "Lagrange", 1, constrained_domain=dofmap.constrained_domain)
         
-        self.K1_dg = helpers.scalar_valued_dg_function(self.K1_input, S1)
+        self.K1_dg = helpers.scalar_valued_function(self.K1_input, S1)
         self.K1_dg.rename('K1', 'fourth order anisotropy constant')
-        self.K2_dg = helpers.scalar_valued_dg_function(self.K2_input, S1)
+        self.K2_dg = helpers.scalar_valued_function(self.K2_input, S1)
         self.K2_dg.rename('K2', 'sixth order anisotropy constant')
-        self.K3_dg = helpers.scalar_valued_dg_function(self.K3_input, S1)
+        self.K3_dg = helpers.scalar_valued_function(self.K3_input, S1)
         self.K3_dg.rename('K3', 'eigth order anisotropy constant')
         
         self.volumes = df.assemble(df.TestFunction(S1) * df.dx)

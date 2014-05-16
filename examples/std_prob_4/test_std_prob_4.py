@@ -55,7 +55,7 @@ def create_initial_s_state():
                 sim.t, H_mult)
             H.set_value(H_mult * H_initial)
         except IndexError:
-            sim.llg.effective_field.interactions.remove(H)
+            sim.llg.effective_field.remove(H.name)
             print "External field is off."
             return True
 

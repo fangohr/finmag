@@ -46,7 +46,7 @@ class LLG(object):
         self.unit_length = unit_length
         self.do_slonczewski = False
         self.do_zhangli = False
-        self.effective_field = EffectiveField(S3, average)
+        self.effective_field = EffectiveField(S3, self._m, self.Ms, self.unit_length)
         self.Volume = None  # will be computed on demand, and carries volume of the mesh
 
     def set_default_values(self):

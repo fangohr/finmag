@@ -281,30 +281,14 @@ class Simulation(object):
              `t` as its only single parameter and updates the internal
              state of the interaction accordingly.
         """
-        # Make sure that interaction names are unique
-        if interaction.name in [i.name for i in self.llg.effective_field.interactions]:
-            raise ValueError("Interaction names must be unique, but an "
-                             "interaction with the same name already "
-                             "exists: {}".format(interaction.name))
+        self.llg.effective_field.add(interaction, with_time_update)
 
-        log.debug("Adding interaction %s to simulation '%s'" % (str(interaction),self.name))
-        interaction.setup(self.S3, self.llg._m, self.llg._Ms_dg, self.unit_length)
-        # TODO: The following feels somewhat hack-ish because we
-        #       explicitly check for TimeZeeman and it's likely that
-        #       there will be other classes in the future that also
-        #       come with time updates which would then also have to
-        #       be added here by hand. Is there a more elegant and
-        #       automatic solution?
         if isinstance(interaction, TimeZeeman):
-            # The following line ensures that the time integrator is notified
-            # about the correct field values at the time steps it chooses.
-            with_time_update = interaction.update
             # The following line ensures that the field value is updated
             # correctly whenever the time integration reaches a scheduler
             # "checkpoint" (i.e. whenever integrator.advance_time(t) finishes
             # successfully).
             self.callbacks_at_scheduler_events.append(interaction.update)
-        self.llg.effective_field.add(interaction, with_time_update)
 
         energy_name = 'E_{}'.format(interaction.name)
         field_name = 'H_{}'.format(interaction.name)
@@ -373,7 +357,7 @@ class Simulation(object):
 
         """
         try:
-            self.llg.effective_field.get_interaction(interaction_name)
+            self.llg.effective_field.get(interaction_name)
             res = True
         except ValueError:
             res = False
@@ -395,7 +379,7 @@ class Simulation(object):
         interaction is found, a ValueError is raised.
 
         """
-        return self.llg.effective_field.get_interaction(interaction_name)
+        return self.llg.effective_field.get(interaction_name)
 
 
     def get_interaction_list(self):
@@ -406,7 +390,7 @@ class Simulation(object):
 
         A list of strings, each string corresponding to the name of one interaction.
         """
-        return self.llg.effective_field.get_interaction_list()
+        return self.llg.effective_field.all()
 
 
     def remove_interaction(self, interaction_type):
@@ -422,7 +406,7 @@ class Simulation(object):
         """
         log.debug("Removing interaction '{}' from simulation '{}'".format(
                 interaction_type, self.name))
-        return self.llg.effective_field.remove_interaction(interaction_type)
+        return self.llg.effective_field.remove(interaction_type)
 
     def set_H_ext(self, H_ext):
         """

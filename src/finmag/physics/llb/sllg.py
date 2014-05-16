@@ -38,12 +38,12 @@ class SLLG(object):
         self.grad_m=np.zeros(3*self.nxyz)
         self.dm_dt=np.zeros(3*self.nxyz)
         self._Ms = np.zeros(3*self.nxyz) #Note: nxyz for Ms length is more suitable?
-        self.effective_field = EffectiveField(self.S3)
 
         self.pin_fun=None
         self.method = method
         self.checking_length = checking_length
         self.unit_length = unit_length
+        self.effective_field = EffectiveField(self.S3, self._m, self.Ms, self.unit_length)
         
         self.zhangli_stt=False
 

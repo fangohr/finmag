@@ -2,31 +2,31 @@ import logging
 import dolfin as df
 import numpy as np
 from finmag.util.helpers import vector_valued_function
-from finmag.energies import Exchange, UniaxialAnisotropy
+from finmag.energies import TimeZeeman
 
 logger = logging.getLogger(name="finmag")
 
 
 class EffectiveField(object):
-    def __init__(self, S3, average=False):
+    def __init__(self, S3, m, Ms, unit_length):
         self.S3 = S3
-        fun = df.Function(S3)
-        self._output_shape = fun.vector().size()
-        self.H_eff = fun.vector().array()
+        self.m = m
+        self.Ms = Ms
+        self.unit_length = unit_length
 
-        self.interactions = []
-        self._callables = []  # functions for time update of interactions
-        
-        self.cell_average = average
-        
-        if self.cell_average:
-            self.fun = fun
-            self.dg_v = df.VectorFunctionSpace(S3.mesh(), "DG", 0)
-            self.v3 = df.TestFunction(S3)
-            self.volumes = df.assemble(df.dot(self.v3, df.Constant([1, 1, 1])) * df.dx).array()
-            
+        self.output_size = self.m.vector().size()
+        self.H_eff = np.zeros(self.output_size)
 
-    def add(self, field, with_time_update=None):
+        self.interactions = {}
+
+        # TODO: Get rid of self._callables.
+        # At the moment, we keep track of which functions need
+        # to be updated with simulation time. We want to move to a
+        # model where we pass the simulation state (m and t at the moment)
+        # explicitly to compute_field/compute_energy.
+        self.need_time_update = []
+
+    def add(self, interaction, with_time_update=None):
         """
         Add an interaction (such as Exchange, Anisotropy, Demag).
 
@@ -42,17 +42,21 @@ class EffectiveField(object):
              `t` as its only single parameter and updates the internal
              state of the interaction accordingly.
         """
-        self.interactions.append(field)
+        if interaction.name in self.interactions:
+            raise ValueError("Interaction names must be unique, but an "
+                "interaction with the same name already "
+                "exists: {}.".format(interaction.name))
 
-        if isinstance(field, Exchange):
-            self.exchange = field
-        if isinstance(field, UniaxialAnisotropy):
-            if hasattr(self, "anisotropy"):
-                logger.warning("Overwriting the effective_field.anisotropy attribute.")
-            self.anisotropy = field
+        logger.debug("Adding interaction {} to simulation.".format(interaction.name))
+        interaction.setup(self.S3, self.m, self.Ms, self.unit_length)
+        self.interactions[interaction.name] = interaction
+
+        # automatic connection of TimeZeeman to with_time_update
+        if isinstance(interaction, TimeZeeman) and with_time_update is None:
+            with_time_update = interaction.update
 
         if with_time_update:
-            self._callables.append(with_time_update)
+            self.need_time_update.append(with_time_update)
 
     def update(self, t=None):
         """
@@ -63,21 +67,15 @@ class EffectiveField(object):
         time update.
 
         """
-        if t is not None:
-            for func in self._callables:
-                func(t)
-        else:
-            if self._callables != []:
-                raise ValueError("Some interactions require a time update, but no time step was given.")
+        if t is None and self.need_time_update:
+            raise ValueError("Some interactions require a time update, but no time step was given.")
+
+        for update in self.need_time_update:
+            update(t)
 
         self.H_eff[:] = 0
-        for interaction in self.interactions:
+        for interaction in self.interactions.itervalues():
             self.H_eff += interaction.compute_field()
-
-        if self.cell_average:
-            self.fun.vector().set_local(self.H_eff)
-            H_eff_dg = df.interpolate(self.fun, self.dg_v)
-            self.H_eff[:] = df.assemble(df.dot(H_eff_dg, self.v3) * df.dx)/self.volumes
 
     def compute(self, t=None):
         """
@@ -88,11 +86,6 @@ class EffectiveField(object):
 
         """
         self.update(t)
-        # Note that we need to return a copy in order to prevent a subtle bug/issue
-        # where dolfin might otherwise invalidate the array values. See the regression
-        # test for this function and the following bug report:
-        #
-        #   https://bitbucket.org/fenics-project/dolfin/issue/172/entries-of-array-parent_vertex_indices
         return self.H_eff.copy()
 
     def compute_jacobian_only(self, t):
@@ -101,11 +94,11 @@ class EffectiveField(object):
         that are included in the Jacobian.
 
         """
-        for func in self._callables:
-            func(t)
+        for update in self.need_time_update:
+            update(t)
 
-        H_eff = np.zeros(self._output_shape)
-        for interaction in self.interactions:
+        H_eff = np.zeros(self.output_size)
+        for interaction in self.interactions.itervalues():
             if interaction.in_jacobian:
                 H_eff += interaction.compute_field()
         return H_eff
@@ -117,53 +110,45 @@ class EffectiveField(object):
 
         """
         energy = 0.
-        for interaction in self.interactions:
+        for interaction in self.interactions.itervalues():
             energy += interaction.compute_energy()
         return energy
 
-    def get_interaction(self, interaction_name):
+    def get(self, interaction_name):
         """
         Returns the interaction object with the given name. Raises a
         ValueError if no (or more than one) matching interaction is
         found.
-        
-        Use get_interaction_list() to obtain list of names of available
-        interactions.
+
+        Use all() to obtain list of names of available interactions.
 
         """
-        matching_interactions = filter(lambda x: x.name == interaction_name,
-                                      self.interactions)
+        try:
+            interaction = self.interactions[interaction_name]
+        except KeyError as e:
+            logger.error("Couldn't find interaction with name '{}'. "
+                "Did you mean one of {}?".format(self.interactions.keys()))
+            raise
+        return interaction
 
-        if len(matching_interactions) == 0:
-            raise ValueError("Couldn't find interaction of type '{}'. "
-                             "Did you mean one of {}?".format(
-                    interaction_name, [x.name for x in self.interactions]))
+    def all(self):
+        """ Returns list of interactions names (as list of strings). """
+        return self.interactions.keys()
 
-        if len(matching_interactions) > 1:
-            raise ValueError("Found more than one interaction with name "
-                             "'{}'.".format(interaction_name))
-
-        return matching_interactions[0]
-
-    def get_interaction_list(self):
-        """Returns list of interactions names (as list of strings).
+    def remove(self, interaction_name):
         """
-        return ["{}".format(interaction.name) for interaction in self.interactions]
-
-
-    def remove_interaction(self, interaction_type):
-        """
-        Removes the interaction object of the given type. Raises a
+        Removes the interaction object of the given name. Raises a
         ValueError if no (or more than one) matching interaction is
         found.
 
         """
-        interaction = self.get_interaction(interaction_type)
-        if interaction is not None:
-            self.interactions.remove(interaction)
+        try:
+            del self.interactions[interaction_name]
+        except KeyError as e:
+            logger.error("Couldn't find interaction with name '{}'. "
+                "Did you mean one of {}?".format(self.interactions.keys()))
+            raise
 
-    def get_dolfin_function(self, interaction_type, region=None):
-        interaction = self.get_interaction(interaction_type)
-        # TODO: Do we keep the field as a dolfin function somewhere?
-        f = vector_valued_function(interaction.compute_field(), interaction.S3)
-        return f
+    def get_dolfin_function(self, interaction_name, region=None):
+        interaction = self.get(interaction_name)
+        return vector_valued_function(interaction.compute_field(), self.S3)

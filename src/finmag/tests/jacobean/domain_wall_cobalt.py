@@ -31,10 +31,8 @@ def setup_domain_wall_cobalt(node_count=NODE_COUNT, A=A_Co, Ms=Ms_Co, K1=K1_Co, 
     llg.set_m(np.array([initial_m(xi, node_count) for xi in xrange(node_count)]).T.reshape((-1,)))
 
     exchange = Exchange(A)
-    exchange.setup(S3, llg._m, Ms)
     llg.effective_field.add(exchange)
     anis = UniaxialAnisotropy(K1, (0, 0, 1))
-    anis.setup(S3, llg._m, Ms)
     llg.effective_field.add(anis)
     llg.pins = [0, node_count - 1]
     return llg
