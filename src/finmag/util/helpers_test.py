@@ -649,6 +649,37 @@ def test_restriction(tmpdir):
     assert(b2.shape == (2, submesh2.num_vertices()))
 
 
+def test_verify_function_space_type():
+    N = 10
+    mesh1d = df.UnitIntervalMesh(N)
+    mesh2d = df.UnitSquareMesh(N, N)
+    mesh3d = df.UnitCubeMesh(N, N, N)
+
+    V1 = df.FunctionSpace(mesh3d, 'DG', 0)
+    V2 = df.VectorFunctionSpace(mesh1d, 'DG', 0, dim=1)
+    V3 = df.VectorFunctionSpace(mesh2d, 'CG', 1, dim=3)
+
+    # Check that verifying the known function space types works as expected
+    assert(verify_function_space_type(V1, 'DG', 0, dim=None))
+    assert(verify_function_space_type(V2, 'DG', 0, dim=1))
+    assert(verify_function_space_type(V3, 'CG', 1, dim=3))
+
+    # Check that the verification function returns 'False' if we pass in a
+    # non-matching function space type.
+    assert(not verify_function_space_type(V1, 'DG', 0, dim=1))  # wrong 'dim' (should be None)
+    assert(not verify_function_space_type(V1, 'DG', 1, dim=None))  # wrong degree
+    assert(not verify_function_space_type(V1, 'CG', 0, dim=None))  # wrong family
+
+    assert(not verify_function_space_type(V2, 'DG', 0, dim=None))  # wrong 'dim' (should be 1)
+    assert(not verify_function_space_type(V2, 'DG', 0, dim=42))  # wrong 'dim' (should be 1)
+    assert(not verify_function_space_type(V2, 'DG', 42, dim=1))  # wrong degree
+    assert(not verify_function_space_type(V2, 'CG', 0, dim=1))  # wrong family
+
+    assert(not verify_function_space_type(V3, 'CG', 1, dim=42))  # wrong dimension
+    assert(not verify_function_space_type(V3, 'CG', 42, dim=1))  # wrong degree
+    assert(not verify_function_space_type(V3, 'DG', 1, dim=3))  # wrong family
+
+
 if __name__ == '__main__':
     pass
     #test_scalar_valued_dg_function()
