@@ -661,6 +661,7 @@ def scalar_valued_dg_function(value, mesh_or_space):
     """
     if isinstance(mesh_or_space, df.FunctionSpace):
         dg = mesh_or_space
+        assert(dg.ufl_element().family() == 'Discontinuous Lagrange')
         mesh = dg.mesh()
     else:
         mesh = mesh_or_space
