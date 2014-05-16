@@ -88,6 +88,11 @@ class EffectiveField(object):
 
         """
         self.update(t)
+        # Note that we need to return a copy in order to prevent a subtle bug/issue
+        # where dolfin might otherwise invalidate the array values. See the regression
+        # test for this function and the following bug report:
+        #
+        #   https://bitbucket.org/fenics-project/dolfin/issue/172/entries-of-array-parent_vertex_indices
         return self.H_eff.copy()
 
     def compute_jacobian_only(self, t):
