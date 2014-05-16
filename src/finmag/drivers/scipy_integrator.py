@@ -1,5 +1,4 @@
 from scipy.integrate import ode
-from finmag.drivers.common import run_with_schedule
 
 class ScipyIntegrator(object):
     def __init__(self, llg, m0, reltol=1e-8, abstol=1e-8, nsteps=10000, method="bdf", tablewriter=None, **kwargs):
@@ -26,5 +25,3 @@ class ScipyIntegrator(object):
 
     def reinit(self):
         raise NotImplementedError("{}: This integrator doesn't support the reinit method.".format(self.__class__.__name__))
-
-    run_with_schedule = run_with_schedule
