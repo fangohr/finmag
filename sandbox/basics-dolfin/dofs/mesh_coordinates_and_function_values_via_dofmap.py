@@ -83,7 +83,7 @@ for i, dum in enumerate(coor):
     except IndexError:
         print("[Process {}/{}] IndexError for i={}, dum={}".format(rank, size, i, dum))
 
-pl.quiver(x,y,vx,vy)
-pl.axis([0, 1.3, 0, 1.3])
-pl.show()
+#pl.quiver(x,y,vx,vy)
+#pl.axis([0, 1.3, 0, 1.3])
+#pl.show()
 plot(u, axes=True, interactive=True)
