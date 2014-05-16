@@ -104,20 +104,19 @@ class Field(object):
 
         This function should only be used for debugging!
         """
-        raise NotImplementedError
         if self.family != 'CG':
             raise NotImplementedError(
                 "This function is only implemented for finite element families where "
                 "the degrees of freedoms are not defined at the mesh vertices.")
 
-        a = self.u.vector().array()
-        coords = self.mesh.coordinates()
-        vtd = df.vertex_to_dof_map(self.V)
+        f_array = self.f.vector().array()
+        coords = self.functionspace.mesh().coordinates()
+        vtd_map = df.vertex_to_dof_map(self.functionspace)
 
         values = list()
-        for i, dum in enumerate(coords):
+        for i, coord in enumerate(coords):
             try:
-                values.append([a[vtd[self.dim*i+k]] for k in xrange(self.dim)])
+                values.append(f_array[vtd_map[i]])
             except IndexError:
                 # This only occurs in parallel and is probably related
                 # to ghost nodes. I thought we could ignore those, but
