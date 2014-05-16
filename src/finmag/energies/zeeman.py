@@ -143,7 +143,7 @@ class TimeZeeman(Zeeman):
                 return
             self.value.t = t
             self.H = df.interpolate(self.value, self.S3)
-            self.H.rename('H_ext', 'H_ext')
+            self.H.rename('H_ext', 'H_ext')  # set short and long name
 
     def switch_off(self):
         # It might be nice to provide the option to remove the Zeeman
