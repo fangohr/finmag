@@ -6,8 +6,8 @@ from finmag.native import sundials
 import finmag.native.llb as native_llb
 from finmag.energies import Zeeman
 from finmag.energies import Demag
-from finmag.llb.exchange import Exchange
-from finmag.llb.material import Material
+from finmag.physics.llb.exchange import Exchange
+from finmag.physics.llb.material import Material
 from finmag.util import helpers
 from finmag.util.vtk_saver import VTKSaver
 from finmag.util.fileio import Tablewriter

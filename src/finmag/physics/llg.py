@@ -3,7 +3,7 @@ import numpy as np
 import dolfin as df
 import finmag.util.consts as consts
 from aeon import default_timer, mtimed
-from finmag.energies.effective_field import EffectiveField
+from finmag.physics.effective_field import EffectiveField
 from finmag.native import llg as native_llg
 from finmag.util import helpers
 from finmag.util.meshes import nodal_volume
@@ -108,7 +108,8 @@ class LLG(object):
 
     @Ms.setter
     def Ms(self, value):
-        self._Ms_dg = helpers.scalar_valued_dg_function(value, self.S1)
+        # XXX TODO: Rename _Ms_dg to _Ms because it is not a DG0 function!!!
+        self._Ms_dg = helpers.scalar_valued_function(value, self.S1)
         #FIXME: change back to DG space.
         #self._Ms_dg=helpers.scalar_valued_function(value, self.S1)
         self._Ms_dg.rename('Ms', 'Saturation magnetisation')

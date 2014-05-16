@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib as mpl
 mpl.use("Agg")
 import matplotlib.pyplot as plt
-from finmag.llb.sllg import SLLG
+from finmag.physics.llb.sllg import SLLG
 from finmag.energies import Zeeman
 from finmag.energies import Demag
 

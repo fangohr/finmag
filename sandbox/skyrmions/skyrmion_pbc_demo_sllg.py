@@ -3,7 +3,7 @@ import dolfin as df
 from finmag import Simulation
 from finmag.energies import Exchange, DMI, Demag, Zeeman
 from finmag.util.helpers import vector_valued_function
-from finmag.llb.sllg import SLLG
+from finmag.physics.llb.sllg import SLLG
 
 
 R=150

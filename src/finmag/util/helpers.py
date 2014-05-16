@@ -605,6 +605,8 @@ def scalar_valued_function(value, mesh_or_space):
     """
     if isinstance(mesh_or_space, df.FunctionSpace):
         S1 = mesh_or_space
+        assert(S1.ufl_element().family() == 'Lagrange')
+        assert(S1.ufl_element().degree() == 1)
         mesh = S1.mesh()
     else:
         mesh = mesh_or_space
@@ -661,6 +663,8 @@ def scalar_valued_dg_function(value, mesh_or_space):
     """
     if isinstance(mesh_or_space, df.FunctionSpace):
         dg = mesh_or_space
+        assert(dg.ufl_element().family() == 'Discontinuous Lagrange')
+        assert(S1.ufl_element().degree() == 0)
         mesh = dg.mesh()
     else:
         mesh = mesh_or_space

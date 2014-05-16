@@ -4,7 +4,7 @@ import numpy as np
 
 
 from finmag.util import helpers
-from finmag.energies.effective_field import EffectiveField
+from finmag.physics.effective_field import EffectiveField
 from finmag.energies import Exchange, DMI, UniaxialAnisotropy
 
 from finmag import Simulation as Sim
