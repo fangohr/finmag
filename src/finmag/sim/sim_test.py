@@ -34,7 +34,7 @@ def num_interactions(sim):
     Helper function to determine the number of interactions present in
     the Simulation.
     """
-    return len(sim.llg.effective_field.interactions)
+    return len(sim.llg.effective_field.all())
 
 
 class TestSimulation(object):

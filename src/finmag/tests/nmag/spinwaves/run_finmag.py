@@ -27,7 +27,6 @@ def run_simulation():
     llg.set_alpha(0.02)
 
     exchange = Exchange(1.3e-11)
-    exchange.setup(S3, llg._m, llg.Ms)
     llg.effective_field.add(exchange)
 
     llg.set_m(("1",
