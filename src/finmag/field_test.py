@@ -21,14 +21,14 @@ class TestField(object):
         self.fs_2d_vector = df.VectorFunctionSpace(self.mesh2d, family="CG", degree=1, dim=3)
         self.fs_3d_vector = df.VectorFunctionSpace(self.mesh2d, family="CG", degree=1, dim=3)
 
-    def test_init_constant(self):
-        # sequence of funtion spaces, all scalar fields but on 1d, 2d and 3d mesh
+    def test_init_scalar_constant(self):
+        # sequence of function spaces, all scalar fields but on 1d, 2d and 3d mesh
         functionspaces = (self.fs_1d_scalar, self.fs_2d_scalar, self.fs_3d_scalar)
 
         for functionspace in functionspaces:
 
             # for each function space, test varies ways to express the constant 42
-            for value in [df.Constant("42"), df.Constant("42.0"), df.Constant(42), "42", 42]:
+            for value in [df.Constant("42"), df.Constant("42.0"), df.Constant(42), "42", 42, 42.0]:
                 f = Field(functionspace, value)
 
                 # check values in vector, should be exact
@@ -46,10 +46,7 @@ class TestField(object):
                 assert np.all(values == 42)
 
 
-        # The code above should work, although debugging with out the field class is hard...
-
-        # The next lines are original from Max and may need updating after we changed the field class.
-
+    # The next lines are original from Max and may need updating after we changed the field class.
     def test_get_coords_and_values(self):
         mesh = self.mesh3d
         f = Field(self.fs_3d_vector)
