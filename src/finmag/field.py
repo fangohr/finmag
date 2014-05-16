@@ -64,33 +64,6 @@ class Field(object):
     def save_hdf5(self, filename):
         """Save to hdf5 file using dolfin code"""
         raise NotImplementedError
-
-    def load_hdf5(self, filename):
-
-        # attribute f for Function
-        self.f = df.Function(self.functionspace)
-
-        if value:
-            self.set(value)
-
-        self.name = name
-
-        self.units = units  
-
-        if name:
-            self.f.rename(name, name)
-
-    def save(self, filename):
-        """Dispatches to specialists"""
-        raise NotImplementedError
-
-    def save_pvd(self, filename):
-        """Save to pvd file using dolfin code"""
-        raise NotImplementedError
-
-    def save_hdf5(self, filename):
-        """Save to hdf5 file using dolfin code"""
-        raise NotImplementedError
         
     def load_hdf5(self, filename):
         """Load field from hdf5 file using dolfin code"""
