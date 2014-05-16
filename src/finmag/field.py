@@ -114,7 +114,7 @@ class Field(object):
         vtd_map = df.vertex_to_dof_map(self.functionspace)
 
         values = list()
-        for i, coord in enumerate(coords):
+        for i in xrange(len(coords)):
             try:
                 values.append(f_array[vtd_map[i]])
             except IndexError:
