@@ -1,6 +1,6 @@
 import os
 from scipy.integrate import ode
-from finmag.sim.llg import LLG
+from finmag.physics.llg import LLG
 from finmag.energies import Exchange
 import dolfin as df
 

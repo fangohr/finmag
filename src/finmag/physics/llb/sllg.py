@@ -5,7 +5,7 @@ import finmag.util.consts as consts
 
 import finmag.native.llb as native_llb
 from finmag.util import helpers
-from finmag.energies.effective_field import EffectiveField
+from finmag.physics.effective_field import EffectiveField
 from finmag.util.meshes import mesh_volume, nodal_volume
 from finmag.util.fileio import Tablewriter
 

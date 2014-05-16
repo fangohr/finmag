@@ -1,6 +1,6 @@
 import numpy as np
 import dolfin as df
-from finmag.sim.llg import LLG
+from finmag.physics.llg import LLG
 from finmag.util.helpers import components
 
 def test_method_of_computing_the_average_matters():

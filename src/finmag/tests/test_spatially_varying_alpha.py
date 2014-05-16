@@ -1,7 +1,7 @@
 import dolfin as df
 import numpy as np
 from finmag import Simulation
-from finmag.sim.llg import LLG
+from finmag.physics.llg import LLG
 
 
 def test_spatially_varying_alpha_using_Simulation_class():

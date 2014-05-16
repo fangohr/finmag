@@ -4,11 +4,11 @@ import numpy as np
 import matplotlib as mpl
 mpl.use("Agg")
 import matplotlib.pyplot as plt
-from finmag.llb.llb import LLB
-from finmag.llb.exchange import Exchange
+from finmag.physics.llb.llb import LLB
+from finmag.physics.llb.exchange import Exchange
 from finmag.energies import Zeeman
 from finmag.energies import Demag
-from finmag.llb.material import Material
+from finmag.physics.llb.material import Material
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 

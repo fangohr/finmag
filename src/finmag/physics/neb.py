@@ -6,7 +6,7 @@ from aeon import default_timer
 import finmag.util.consts as consts
 
 from finmag.util import helpers
-from finmag.energies.effective_field import EffectiveField
+from finmag.physics.effective_field import EffectiveField
 from finmag.util.vtk_saver import VTKSaver
 from finmag import Simulation
 

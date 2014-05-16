@@ -1,7 +1,7 @@
 import numpy as np
 import dolfin as df
 import math
-from finmag.sim.llg import LLG
+from finmag.physics.llg import LLG
 from finmag.drivers.llg_integrator import llg_integrator
 from finmag.energies import Exchange, UniaxialAnisotropy
 
