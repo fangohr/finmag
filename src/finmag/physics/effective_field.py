@@ -127,7 +127,7 @@ class EffectiveField(object):
             interaction = self.interactions[interaction_name]
         except KeyError as e:
             logger.error("Couldn't find interaction with name '{}'. "
-                "Did you mean one of {}?".format(self.interactions.keys()))
+                "Did you mean one of {}?".format(interaction_name, self.interactions.keys()))
             raise
         return interaction
 
@@ -146,7 +146,7 @@ class EffectiveField(object):
             del self.interactions[interaction_name]
         except KeyError as e:
             logger.error("Couldn't find interaction with name '{}'. "
-                "Did you mean one of {}?".format(self.interactions.keys()))
+                "Did you mean one of {}?".format(interaction_name, self.interactions.keys()))
             raise
 
     def get_dolfin_function(self, interaction_name, region=None):
