@@ -50,7 +50,7 @@ def run_simulation():
     xs = np.linspace(0,Lx,200)
     for x in xs:
         pos = (x,)
-        Mx.append(sim.llg._m(pos)[0])
+        Mx.append(sim._m(pos)[0])
         ax.append(a(pos)[0])
 
     pylab.plot(xs,Mx,'-o',label='Mx')
@@ -78,7 +78,7 @@ def test_spatially_varying_anisotropy_direction_a():
     if __name__ == "__main__":
 
         f=df.File('test.pvd')
-        f << sim.llg._m
+        f << sim._m
 
 if __name__ == "__main__":
     test_spatially_varying_anisotropy_direction_a()

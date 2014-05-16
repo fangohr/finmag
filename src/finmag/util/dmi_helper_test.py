@@ -23,7 +23,7 @@ def compute_skyrmion_number_2d_example():
     Hz = 0.2
     
     sim = Simulation(mesh, Ms, unit_length=1e-9, name='sim')
-    sim.llg.do_precession = False
+    sim.do_precession = False
     
     sim.set_m(init_skx_down)
     
@@ -33,10 +33,10 @@ def compute_skyrmion_number_2d_example():
     
     sim.relax(stopping_dmdt=1, dt_limit=1e-9)
     
-    df.plot(sim.llg._m)
+    df.plot(sim._m)
     df.interactive()
     
-    print compute_skyrmion_number_2d(sim.llg._m)
+    print compute_skyrmion_number_2d(sim._m)
     
 def test_compute_skyrmion_number_2d_pbc():
 
@@ -50,14 +50,14 @@ def test_compute_skyrmion_number_2d_pbc():
     sim.add(DMI(D = 4e-3))
     sim.add(Zeeman((0,0,0.45*Ms)))
     
-    sim.llg.do_precession = False
+    sim.do_precession = False
         
     sim.relax(stopping_dmdt=1, dt_limit=1e-9)
     
-    #df.plot(sim.llg._m)
+    #df.plot(sim._m)
     #df.interactive()
     
-    sky_num = compute_skyrmion_number_2d(sim.llg._m)
+    sky_num = compute_skyrmion_number_2d(sim._m)
     
     print 'sky_num = %g'%sky_num
     

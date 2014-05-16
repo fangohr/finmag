@@ -34,7 +34,7 @@ def num_interactions(sim):
     Helper function to determine the number of interactions present in
     the Simulation.
     """
-    return len(sim.llg.effective_field.all())
+    return len(sim.interactions())
 
 
 class TestSimulation(object):
@@ -1346,7 +1346,7 @@ def test_setting_different_material_parameters_in_different_regions(tmpdir):
     plot_mesh_with_paraview(submesh_sphere, camera_position=[0, -200, 100], outfile='submesh_sphere.png')
 
     f = df.File("m.pvd")
-    f << sim.llg._m
+    f << sim._m
 
     f = df.File("alpha.pvd")
     f << sim.alpha
