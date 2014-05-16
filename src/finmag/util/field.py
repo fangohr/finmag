@@ -16,7 +16,7 @@
 #
 #   - from constant
 #   - from dolfin expression
-#   - from python function (ideally)
+#   - from python function
 #   - from files
 #
 # - Retrieve field values
@@ -36,27 +36,67 @@ import numpy as np
 
 
 class Field(object):
-    def __init__(self, mesh, family, degree, dim):
-        """
-        Create a discretized field on the given mesh
-        """
-        self.mesh = mesh
-        self.family = family
-        self.degree = degree
-        self.dim = dim
-        self.u = None
-        if self.dim == 1:
-            #raise NotImplementedError()
-            print("Warning: should we create a df.FunctionSpace for dim=1 instead of a df.VectorFunctionSpace?")
-        else:
-            self.V = df.VectorFunctionSpace(mesh, family, degree, dim=dim)
+    def __init__(self, functionspace, value=None, name=None, units=None): 
+        
+        self.functionspace = functionspace
 
-    def set(self, value):
-        if not isinstance(value, (df.Constant, df.Expression)):
-            raise NotImplementedError("Currently `value` must be a dolfin Constant or Expression.")
-        self.u = df.interpolate(value, self.V)
+        # attribute f for Function
+        self.f = df.Function(self.functionspace)
 
-    def get_coords_and_values(self):
+        if value:
+            self.set(value)
+
+        self.name = name
+
+        self.units = units  
+
+        if name:
+            self.f.rename(name, name)
+
+    def save(self, filename):
+        """Dispatches to specialists"""
+        raise NotImplementedError
+
+    def save_pvd(self, filename):
+        """Save to pvd file using dolfin code"""
+        raise NotImplementedError
+
+    def save_hdf5(self, filename):
+        """Save to hdf5 file using dolfin code"""
+        raise NotImplementedError
+
+    def load_hdf5(self, filename):
+
+        # attribute f for Function
+        self.f = df.Function(self.functionspace)
+
+        if value:
+            self.set(value)
+
+        self.name = name
+
+        self.units = units  
+
+        if name:
+            self.f.rename(name, name)
+
+    def save(self, filename):
+        """Dispatches to specialists"""
+        raise NotImplementedError
+
+    def save_pvd(self, filename):
+        """Save to pvd file using dolfin code"""
+        raise NotImplementedError
+
+    def save_hdf5(self, filename):
+        """Save to hdf5 file using dolfin code"""
+        raise NotImplementedError
+        
+    def load_hdf5(self, filename):
+        """Load field from hdf5 file using dolfin code"""
+        raise NotImplementedError
+
+    def get_coords_and_values(self, t=None):
         """
         Return a list of mesh vertex coordinates and associated field values.
         In parallel, this only returns the coordinates and values owned by
@@ -64,6 +104,7 @@ class Field(object):
 
         This function should only be used for debugging!
         """
+        raise NotImplementedError
         if self.family != 'CG':
             raise NotImplementedError(
                 "This function is only implemented for finite element families where "
@@ -87,3 +128,13 @@ class Field(object):
         values = np.array(values)
 
         return coords, values
+
+
+
+
+# Maybe to be added later
+#
+#
+#def nodal_volume(self):
+#
+#    return nodal_volume
