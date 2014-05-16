@@ -9,6 +9,7 @@ import numpy as np
 from datetime import datetime, timedelta
 from finmag.util.consts import ONE_DEGREE_PER_NS
 from finmag.util.meshes import nodal_volume
+from finmag.sim import sim_savers
 
 log = logging.getLogger("finmag")
 
