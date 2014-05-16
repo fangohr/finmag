@@ -3,7 +3,7 @@ import dolfin as df
 from aeon import mtimed
 from finmag.energies.energy_base import EnergyBase
 from finmag.util.consts import mu0
-from finmag.llb.material import Material
+from finmag.physics.llb.material import Material
 
 logger = logging.getLogger('finmag')
 
@@ -154,7 +154,7 @@ if __name__ == "__main__":
     expr = df.Expression(('4.0*sin(x[0])', '4*cos(x[0])','0'))
     m0 = df.interpolate(expr, S3)
 
-    from finmag.llb.material import Material
+    from finmag.physics.llb.material import Material
     mat = Material(mesh, name='FePt')
     mat.set_m(expr)
     mat.T = 1

@@ -8,7 +8,7 @@ integration means this does not look smooth at all, and is very slow.
 import dolfin
 import numpy
 from scipy.integrate import odeint
-from finmag.sim.llg import LLG
+from finmag.physics.llg import LLG
 
 """
 Compute the behaviour of a one-dimensional strip of magnetic material,

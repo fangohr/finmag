@@ -4,10 +4,10 @@ import matplotlib.pyplot as plt
 
 from finmag.energies import Zeeman
 from finmag.energies import Demag
-from finmag.llb.exchange import Exchange
-from finmag.llb.anisotropy import LLBAnisotropy
-from finmag.llb.material import Material
-from finmag.llb.llb import LLB
+from finmag.physics.llb.exchange import Exchange
+from finmag.physics.llb.anisotropy import LLBAnisotropy
+from finmag.physics.llb.material import Material
+from finmag.physics.llb.llb import LLB
 
 
 def average(m):

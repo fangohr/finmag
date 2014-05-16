@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import inspect
 from neb import NEB_Sundials
-#from finmag.sim.neb import plot_energy_3d
+#from finmag.physics.neb import plot_energy_3d
 
 def plot_data_2d():
     
