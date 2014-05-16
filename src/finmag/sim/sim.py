@@ -211,6 +211,10 @@ class Simulation(object):
         """
         return self.llg.m_average
 
+    @property
+    def _m(self):
+        return self.llg._m
+
     def save_m_in_region(self,region,name='unnamed'):
 
         self.region_id += 1
@@ -351,12 +355,11 @@ class Simulation(object):
             Name of the interaction.
 
         """
-        try:
-            self.llg.effective_field.get(interaction_name)
-            res = True
-        except KeyError:
-            res = False
-        return res
+        return self.llg.effective_field.exists(interaction_name)
+
+    def interactions(self):
+        """ Return the names of the known interactions. """
+        return self.llg.effective_field.all()
 
     def get_interaction(self, interaction_name):
         """
@@ -635,7 +638,7 @@ class Simulation(object):
     def restart(self, filename=None, t0=None):
         """If called, we look for a filename of type sim.name + '-restart.npz',
         and load it. The magnetisation in the restart file will be assigned to
-        sim.llg._m. If this is from a cvode time integration run, it will also
+        self._m. If this is from a cvode time integration run, it will also
         initialise (create) the integrator with that m, and the time at which the
         restart data was saved.
 
@@ -702,6 +705,14 @@ class Simulation(object):
             self.llg.pins = nodes
 
     pins = property(__get_pins, __set_pins)
+
+    @property
+    def do_precession(self):
+        return self.llg.do_precession
+
+    @do_precession.setter
+    def do_precession(self, value):
+        self.llg.do_precession = value
 
     @property
     def alpha(self):

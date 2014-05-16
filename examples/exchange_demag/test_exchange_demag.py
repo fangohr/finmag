@@ -45,7 +45,7 @@ def run_finmag():
         sim.run_until(t)
 
         # Save averages to file
-        mx, my, mz = sim.llg.m_average
+        mx, my, mz = sim.m_average
         fh.write(str(t) + " " + str(mx) + " " + str(my) + " " + str(mz) + "\n")
 
         # Energies

@@ -33,7 +33,7 @@ def init_J(pos):
 
 def relax_system(mesh):
     sim = Sim(mesh, Ms=8.0e5, unit_length=1e-9)
-    sim.llg.gamma = 2.211e5
+    sim.gamma = 2.211e5
     
     sim.alpha = 1
     
@@ -44,7 +44,7 @@ def relax_system(mesh):
     
     sim.relax(stopping_dmdt=0.01)
     np.save('m0.npy',sim.m)
-    df.plot(sim.llg._m)
+    df.plot(sim._m)
     #df.interactive()
 
 def spin_length(sim):
@@ -56,7 +56,7 @@ def spin_length(sim):
     
 def with_current(mesh):
     sim = Sim(mesh, Ms=8.0e5, unit_length=1e-9,name='stt')
-    sim.llg.gamma = 2.211e5
+    sim.gamma = 2.211e5
     
     sim.alpha = 0.1
     sim.set_m(np.load('m0.npy'))
@@ -71,7 +71,7 @@ def with_current(mesh):
     sim.schedule(spin_length, every=5e-11)
     
     sim.run_until(8e-9)
-    df.plot(sim.llg._m)
+    df.plot(sim._m)
     #df.interactive()
     
 def plot_data():

@@ -181,7 +181,7 @@ class NEB_Sundials(object):
         self.name = name
         self.spring = spring
         
-        self._m = sim.llg._m
+        self._m = sim._m
         self.effective_field = sim.llg.effective_field
                 
         if interpolations is None:

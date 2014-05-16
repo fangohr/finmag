@@ -94,7 +94,7 @@ def hysteresis(sim, H_ext_list, fun=None, **kwargs):
         log.info("Hysteresis is finished.")
 
     log.info("Removing the applied field used for hysteresis.")
-    sim.llg.effective_field.remove(H.name)
+    sim.remove_interaction(H.name)
 
     return res or None
 
