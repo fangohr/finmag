@@ -22,9 +22,11 @@ class TestField(object):
         self.fs_3d_vector = df.VectorFunctionSpace(self.mesh2d, family="CG", degree=1, dim=3)
 
     def test_init_constant(self):
-
         # sequence of funtion spaces, all scalar fields but on 1d, 2d and 3d mesh
-        functionspaces = (self.fs_1d_scalar, self.fs_2d_vector, self.fs_3d_vector)
+        functionspaces = (self.fs_1d_scalar, self.fs_2d_scalar, self.fs_3d_scalar)#,
+                          # self.fs_1d_vector, self.fs_2d_vector, self.fs_3d_vector)
+                          # vector fields cannot be set to constant (dim=3), so these
+                          # tests are expected to fail.
 
         for functionspace in functionspaces:
 
@@ -37,10 +39,15 @@ class TestField(object):
 
                 # check values that are interpolated, dolfin is fairly
                 # inaccurate here, see field_test.ipynb
+<<<<<<< local
+                mesh_dim = f.functionspace.mesh().topology().dim()
+                assert abs(f.f((0.5,)*mesh_dim) - 42) < 1e-13
+=======
                 probe_point = f.f.geometric_dimension() * (0.5,)
                 print("Probing at {}".format(probe_point))
 
                 assert abs(f.f(probe_point) - 42) < 1e-13
+>>>>>>> other
 
                 coords, vals = f.get_coords_and_values()
 
@@ -52,13 +59,12 @@ class TestField(object):
 
         # The next lines are original from Max and may need updating after we changed the field class.
 
-        def xxxtest_get_coords_and_values(self):
-            raise NotImplementedError
-            mesh = self.mesh3d
-            f = Field(mesh, 'CG', 1, dim=3)
-            f.set(df.Expression(['x[0]', '2.3*x[1]', '-4.2*x[2]']))
-            coords, values = f.get_coords_and_values()
-            assert(np.allclose(coords, mesh.coordinates()))
-            assert(np.allclose(values, mesh.coordinates() * np.array([1, 2.3, -4.2])))
-
-
+    def test_get_coords_and_values(self):
+        mesh = self.mesh3d
+        f = Field(self.fs_3d_vector)
+        f.set(df.Expression(['x[0]', '2.3*x[1]', '-4.2*x[2]']))
+        coords, values = f.get_coords_and_values()
+        print coords
+        print mesh.coordinates()
+        #assert(np.allclose(coords, mesh.coordinates()))
+        assert(np.allclose(values, mesh.coordinates() * np.array([1, 2.3, -4.2])))

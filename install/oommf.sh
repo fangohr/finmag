@@ -10,7 +10,7 @@ OOMMF_VERSION=oommf12a5bis_20120928
 OOMMF_TARBALL=${OOMMF_VERSION}.tar.gz
 OOMMF_URL=http://math.nist.gov/oommf/dist/${OOMMF_TARBALL}
 
-TCLTKVERSION=${TCLTKVERSION:-8.6}
+TCLTKVERSION=${TCLTKVERSION:-8.5}
 
 # use OOMMF_PREFIX to change installation location (default is $HOME)
 OOMMF_PREFIX=${OOMMF_PREFIX:-$HOME}
@@ -56,8 +56,8 @@ cd oommf
 
 # install oommf
 ARCH=$(dpkg-architecture -qDEB_HOST_MULTIARCH)
-export OOMMF_TCL_CONFIG=/usr/lib/${ARCH}/tcl${TCLTKVERSION}/tclConfig.sh
-export OOMMF_TK_CONFIG=/usr/lib/${ARCH}/tk${TCLTKVERSION}/tkConfig.sh
+export OOMMF_TCL_CONFIG=/usr/lib/tcl${TCLTKVERSION}/tclConfig.sh
+export OOMMF_TK_CONFIG=/usr/lib/tk${TCLTKVERSION}/tkConfig.sh
 tclsh$TCLTKVERSION oommf.tcl pimake distclean
 tclsh$TCLTKVERSION oommf.tcl pimake upgrade
 tclsh$TCLTKVERSION oommf.tcl pimake

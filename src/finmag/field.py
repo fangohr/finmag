@@ -43,7 +43,7 @@ class Field(object):
         # attribute f for Function
         self.f = df.Function(self.functionspace)
 
-        if value:
+        if value is not None:
             self.set(value)
 
         self.name = name
@@ -53,6 +53,16 @@ class Field(object):
         if name:
             self.f.rename(name, name)
 
+    def set(self, value):
+        """
+        Set the field to value.
+        Value can be constant, dolfin expression, python function, file.
+        """
+        if isinstance(value, (df.Constant, df.Expression)):
+            self.f = df.interpolate(value, self.functionspace)
+        elif isinstance(value, (basestring, int, float)):
+            self.f = df.interpolate(df.Constant(value), self.functionspace)
+    
     def save(self, filename):
         """Dispatches to specialists"""
         raise NotImplementedError
@@ -77,7 +87,7 @@ class Field(object):
 
         This function should only be used for debugging!
         """
-        if self.family != 'CG':
+        if self.f.ufl_element().family() != 'Lagrange':
             raise NotImplementedError(
                 "This function is only implemented for finite element families where "
                 "the degrees of freedoms are not defined at the mesh vertices.")
