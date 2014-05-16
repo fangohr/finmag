@@ -39,7 +39,7 @@ def test_deviations_over_alpha_and_tol(number_of_alphas=5, do_plot=False):
         for alpha in alphas:
             print "Solving for alpha={0}.".format(alpha)
 
-            sim = Simulation(mesh, 1)
+            sim = Simulation(mesh, 1, unit_length=1e-9)
             sim.alpha = alpha
             sim.set_m((1, 0, 0))
             sim.add(Zeeman((0, 0, 1e5)))
