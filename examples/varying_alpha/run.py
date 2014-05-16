@@ -1,5 +1,5 @@
 import dolfin as df
-from finmag.sim.llg import LLG
+from finmag.physics.llg import LLG
 
 x0 = 0; x1 = 100e-9; xn = 50;
 y0 = 0; y1 = 10e-9; yn = 5;

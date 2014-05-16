@@ -1,7 +1,7 @@
 import dolfin
 import numpy
 from scipy.integrate import odeint
-from finmag.sim.llg import LLG
+from finmag.physics.llg import LLG
 from finmag.energies import Exchange
 
 """

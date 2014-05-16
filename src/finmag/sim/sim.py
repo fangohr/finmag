@@ -14,8 +14,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from aeon import mtimed
 from glob import glob
-from finmag.sim.llg import LLG
-from finmag.sim.llg_stt import LLG_STT
+from finmag.physics.llg import LLG
+from finmag.physics.llg_stt import LLG_STT
+from finmag.physics.llb.sllg import SLLG
 from finmag.util.consts import exchange_length, bloch_parameter, helical_period
 from finmag.util.meshes import mesh_info, mesh_volume, mesh_size_plausible, \
     describe_mesh_size, plot_mesh, plot_mesh_with_paraview
@@ -39,7 +40,6 @@ from finmag.drivers.sundials_integrator import SundialsIntegrator
 from finmag.scheduler import scheduler, events
 from finmag.util.pbc2d import PeriodicBoundary1D, PeriodicBoundary2D
 
-from finmag.llb.sllg import SLLG
 
 ONE_DEGREE_PER_NS = 17453292.5  # in rad/s
 
