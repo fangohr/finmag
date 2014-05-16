@@ -37,7 +37,6 @@ from finmag.energies import Exchange, Zeeman, TimeZeeman, Demag, UniaxialAnisotr
 from finmag.drivers.llg_integrator import llg_integrator
 from finmag.drivers.sundials_integrator import SundialsIntegrator
 from finmag.scheduler import scheduler, events
-from finmag.drivers.common import run_with_schedule
 from finmag.util.pbc2d import PeriodicBoundary1D, PeriodicBoundary2D
 
 from finmag.llb.sllg import SLLG
@@ -597,7 +596,7 @@ class Simulation(object):
         self.scheduler._add(exit_at)
         self.t_max = t
 
-        run_with_schedule(self.integrator, self.scheduler, self.callbacks_at_scheduler_events)
+        self.scheduler.run(self.integrator, self.callbacks_at_scheduler_events)
         # The following line is necessary because the time integrator may
         # slightly overshoot the requested end time, so here we make sure
         # that the field values represent that requested time exactly.
@@ -636,7 +635,7 @@ class Simulation(object):
         self.relaxation = events.RelaxationEvent(self, stopping_dmdt*ONE_DEGREE_PER_NS, dmdt_increased_counter_limit, dt_limit)
         self.scheduler._add(self.relaxation)
 
-        run_with_schedule(self.integrator, self.scheduler, self.callbacks_at_scheduler_events)
+        self.scheduler.run(self.integrator, self.callbacks_at_scheduler_events)
         self.integrator.reinit()
         self.set_m(self.m)
         log.info("Relaxation finished at time t = {:.2g}.".format(self.t))
