@@ -111,7 +111,7 @@ class Field(object):
 
         return coords, values
 
-    def probe_value(self, coord):
+    def probe_field(self, coord):
         """
         Probe and return the value of a field at point with coordinates coord.
         Coord can be a tuple, list or numpy array.
