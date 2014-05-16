@@ -336,13 +336,8 @@ class Simulation(object):
         if name.lower() == 'total':
             res = self.total_energy()
         else:
-            try:
-                interaction = self.get_interaction(name)
-                res = interaction.compute_energy()
-            except ValueError:
-                log.warning("No interaction of type '{}' found in simulation. "
-                            "Returning zero for the corresponding energy.".format(name))
-                res = 0.0
+            interaction = self.get_interaction(name)
+            res = interaction.compute_energy()
         return res
 
     def has_interaction(self, interaction_name):
@@ -359,7 +354,7 @@ class Simulation(object):
         try:
             self.llg.effective_field.get(interaction_name)
             res = True
-        except ValueError:
+        except KeyError:
             res = False
         return res
 
@@ -415,7 +410,7 @@ class Simulation(object):
         try:
             H = self.get_interaction("Zeeman")
             H.set_value(H_ext)
-        except ValueError:
+        except KeyError:
             H = Zeeman(H_ext)
             self.add(H)
 

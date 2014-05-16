@@ -58,7 +58,7 @@ class TestSimulation(object):
         sim.get_interaction('Exchange')
         sim.get_interaction('Demag')
 
-        with pytest.raises(ValueError):
+        with pytest.raises(KeyError):
             sim.get_interaction('foobar')
 
         exch = Exchange(A=13e-12, name='foobar')
@@ -75,8 +75,9 @@ class TestSimulation(object):
         sim.compute_energy('Total')
         sim.compute_energy('total')
 
-        # A non-existing interaction should return zero energy
-        assert(sim.compute_energy('foobar') == 0.0)
+        # A non-existing interaction should throw an error
+        with pytest.raises(KeyError):
+            sim.compute_energy('foobar')
 
         new_exch = Exchange(A=13e-12, name='foo')
         sim.add(new_exch)
@@ -357,7 +358,7 @@ class TestSimulation(object):
         # First simulation: run for 50 ps, reset the time to 30 ps and run
         # again for 50 ps.
         mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 1, 1, 1)
-        sim1 = Simulation(mesh, Ms=1, name='test_save_ndt')
+        sim1 = Simulation(mesh, Ms=1, name='test_save_ndt', unit_length=1)
         sim1.alpha = 0.05
         sim1.set_m((1, 0, 0))
         sim1.add(Zeeman((0, 0, 1e6)))
@@ -486,7 +487,7 @@ class TestSimulation(object):
         assert(num_interactions(sim) == 0)
 
         # No Zeeman interaction present any more
-        with pytest.raises(ValueError):
+        with pytest.raises(KeyError):
             sim.remove_interaction("Zeeman")
 
         # Two different Zeeman interactions present
