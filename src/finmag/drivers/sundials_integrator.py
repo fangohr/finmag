@@ -1,6 +1,5 @@
 import logging
 from finmag.native import sundials
-from finmag.drivers.common import run_with_schedule
 
 EPSILON = 1e-15
 
@@ -181,5 +180,3 @@ class SundialsIntegrator(object):
              'tcur': tcur
              }
         return d
-
-    run_with_schedule = run_with_schedule
