@@ -37,7 +37,10 @@ class TestField(object):
 
                 # check values that are interpolated, dolfin is fairly
                 # inaccurate here, see field_test.ipynb
-                assert abs(f.f(0.5) - 42) < 1e-13
+                probe_point = f.f.geometric_dimension() * (0.5,)
+                print("Probing at {}".format(probe_point))
+
+                assert abs(f.f(probe_point) - 42) < 1e-13
 
                 coords, vals = f.get_coords_and_values()
 
