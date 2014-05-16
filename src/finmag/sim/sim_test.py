@@ -370,7 +370,7 @@ class TestSimulation(object):
 
         # Run a second simulation for 100 ps continuously, without
         # resetting the time in between.
-        sim2 = Simulation(mesh, Ms=1, name='test_save_ndt2')
+        sim2 = Simulation(mesh, Ms=1, name='test_save_ndt2', unit_length=1)
         sim2.alpha = 0.05
         sim2.set_m((1, 0, 0))
         sim2.add(Zeeman((0, 0, 1e6)))
