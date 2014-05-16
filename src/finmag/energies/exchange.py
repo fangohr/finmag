@@ -109,7 +109,7 @@ class Exchange(EnergyBase):
         """
         self.exchange_factor = df.Constant(1.0 / unit_length ** 2)
         self.S3 = S3
-        self.A = helpers.scalar_valued_dg_function(self.A_waiting_for_mesh, self.S3.mesh())
+        self.A = helpers.scalar_valued_function(self.A_waiting_for_mesh, self.S3.mesh())
         self.A.rename('A', 'exchange_constant')
         self.A_av = np.average(self.A.vector().array())
         del(self.A_waiting_for_mesh)
