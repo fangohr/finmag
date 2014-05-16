@@ -1,12 +1,12 @@
 // Cylindrical mesh with a fine discretization in the center
 // and coarser discretization near the edge
 
-r = 50.0; // radius
-h = 5.0; // thickness
-num_layers = 1; // number of layers in z-direction
+r = 200.0; // radius
+h = 20.0; // thickness
+num_layers = 5; // number of layers in z-direction
 
-lc_center = 1.0; // mesh discretization at the center
-lc_edge = 5.0; // mesh discretization at the boundary
+lc_center = 1; // mesh discretization at the center
+lc_edge = 15.0; // mesh discretization at the boundary
 
 
 // Defint the center of the cylinder
@@ -69,7 +69,7 @@ Field[2].IField = 1;
 Field[2].LcMin = lc_center;
 Field[2].LcMax = lc_edge;
 Field[2].DistMin = 0.0;
-Field[2].DistMax = r;
+Field[2].DistMax = r/4;
 
 // Then we use this Threshold field as the 'background field', which
 // specifies the mesh discretization.
