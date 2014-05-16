@@ -1,8 +1,8 @@
 import logging
-import dolfin as df
 import numpy as np
 from finmag.util.helpers import vector_valued_function
 from finmag.energies import TimeZeeman
+from finmag.physics.errors import UnknownInteraction
 
 logger = logging.getLogger(name="finmag")
 
@@ -114,6 +114,13 @@ class EffectiveField(object):
             energy += interaction.compute_energy()
         return energy
 
+    def exists(self, interaction_name):
+        """
+        Returns true if an interaction by that name is known to the system.
+
+        """
+        return interaction_name in self.interactions.keys()
+
     def get(self, interaction_name):
         """
         Returns the interaction object with the given name. Raises a
@@ -123,13 +130,9 @@ class EffectiveField(object):
         Use all() to obtain list of names of available interactions.
 
         """
-        try:
-            interaction = self.interactions[interaction_name]
-        except KeyError as e:
-            logger.error("Couldn't find interaction with name '{}'. "
-                "Did you mean one of {}?".format(interaction_name, self.interactions.keys()))
-            raise
-        return interaction
+        if not self.exists(interaction_name):
+            raise UnknownInteraction(interaction_name, self.all())
+        return self.interactions[interaction_name]
 
     def all(self):
         """ Returns list of interactions names (as list of strings). """
@@ -142,12 +145,9 @@ class EffectiveField(object):
         found.
 
         """
-        try:
-            del self.interactions[interaction_name]
-        except KeyError as e:
-            logger.error("Couldn't find interaction with name '{}'. "
-                "Did you mean one of {}?".format(interaction_name, self.interactions.keys()))
-            raise
+        if not self.exists(interaction_name):
+            raise UnknownInteraction(interaction_name, self.all())
+        del self.interactions[interaction_name]
 
     def get_dolfin_function(self, interaction_name, region=None):
         interaction = self.get(interaction_name)
