@@ -142,6 +142,8 @@ class Scheduler(object):
         """
         Returns the time for the next action to be performed.
 
+        Automatically called upon iteration of scheduler instance.
+
         """
         next_step = None
 
@@ -241,4 +243,3 @@ class Scheduler(object):
 
         self.finalise(t)
         self.stop_realtime_jobs()
-
