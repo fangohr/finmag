@@ -3,7 +3,7 @@ Defines different types of events for use with the scheduler.
 
 They are expected to share the following attributes
 
-    next: the next time the event should be triggered or None
+    next_time: the next time the event should be triggered or None
 
     trigger_on_stop: whether the event should be triggered again at the
     end, when time integration stops
@@ -14,7 +14,7 @@ They are expected to share the following attributes
 
 as well as the method
 
-    trigger(self, time, is_stop): Where `time` should be equal to the `next`
+    trigger(self, time, is_stop): Where `time` should be equal to the `next_time`
     requested time, but can used for additional safety checks, and `is_stop`
     is False when time integration will continue after this step.
 
@@ -48,7 +48,7 @@ class SingleEvent(object):
             raise ValueError("{}.init: Needs either a time, or trigger_on_stop set to True.".format(self.__class__.__name__))
         self._time = time
         self.last = None
-        self.next = time
+        self.next_time = time
         self.trigger_on_stop = trigger_on_stop
         self._callback = None
         self.state = EV_ACTIVE
@@ -81,9 +81,9 @@ class SingleEvent(object):
 
         """
         if not same(time, self.last) and (
-                (same(time, self.next)) or (is_stop and self.trigger_on_stop)):
+                (same(time, self.next_time)) or (is_stop and self.trigger_on_stop)):
             self.last = time
-            self.next = self._compute_next()
+            self.next_time = self._compute_next()
             if self._callback is not None:
                 ret = self._callback()
                 if ret is True:
@@ -105,11 +105,11 @@ class SingleEvent(object):
         """
         if time < self._time:
             self.last = None
-            self.next = self._time
+            self.next_time = self._time
             self.state = EV_ACTIVE
         else:  # if we had to, assume we triggered for `time` already
             self.last = self._time
-            self.next = None
+            self.next_time = None
             self.state = EV_DONE
 
     def __str__(self):
@@ -126,7 +126,7 @@ class SingleEvent(object):
                     callback_name = self._callback.func.__name__
             callback_msg = " | callback: {}".format(callback_name)
         msg = "<{} | last = {} | next = {} | triggering on stop: {}{}>".format(
-            self.__class__.__name__, self.last, self.next, self.trigger_on_stop,
+            self.__class__.__name__, self.last, self.next_time, self.trigger_on_stop,
             callback_msg)
         return msg
 
@@ -160,10 +160,10 @@ class RepeatingEvent(SingleEvent):
 
         """
         self.last = None
-        self.next = self._time
-        while self.next < time:  # if we had to, assume we triggered for `time`
-            self.last = self.next
-            self.next = self._compute_next()
+        self.next_time = self._time
+        while self.next_time < time:  # if we had to, assume we triggered for `time`
+            self.last = self.next_time
+            self.next_time = self._compute_next()
 
 
 class StopIntegrationEvent(object):
@@ -178,7 +178,7 @@ class StopIntegrationEvent(object):
         """
         self._time = time
         self.last = None
-        self.next = self._time
+        self.next_time = self._time
         self.state = EV_ACTIVE
         self.trigger_on_stop = False
 
@@ -187,9 +187,9 @@ class StopIntegrationEvent(object):
         If `time` is equal to the pre-defined time, request to stop time integration.
 
         """
-        if same(time, self.next):
+        if same(time, self.next_time):
             self.last = time
-            self.next = None
+            self.next_time = None
             self.state = EV_REQUESTS_STOP_INTEGRATION
 
     def reset(self, time):
@@ -199,11 +199,11 @@ class StopIntegrationEvent(object):
         """
         if time < self._time:
             self.last = None
-            self.next = self._time
+            self.next_time = self._time
             self.state = EV_ACTIVE
         else:
             self.last = self._time
-            self.next = None
+            self.next_time = None
             self.state = EV_REQUESTS_STOP_INTEGRATION
 
     def __str__(self):
@@ -212,7 +212,7 @@ class StopIntegrationEvent(object):
 
         """
         return "<{} will stop time integration at t = {}>".format(
-            self.__class__.__name__, self._next)
+            self.__class__.__name__, self.next_time)
 
 
 class RelaxationEvent(object):
@@ -240,7 +240,7 @@ class RelaxationEvent(object):
         self.last_m = sim.m.copy()
 
         # to communicate with scheduler
-        self.next = self.last_t + self.dt
+        self.next_time = self.last_t + self.dt
         self.state = EV_ACTIVE
         self.trigger_on_stop = False
 
@@ -277,7 +277,7 @@ class RelaxationEvent(object):
 
         self.last_t = t
         self.last_m = m
-        self.next += self.dt
+        self.next_time += self.dt
 
     def _check_interrupt_relaxation(self):
         """
@@ -307,4 +307,4 @@ class RelaxationEvent(object):
 
         """
         return "<{} | last t = {} | last dmdt = {} * stopping_dmdt | next t = {}>".format(
-            self.__class__.__name__, self.last_t, self.dmdts[-1][1] / self.stopping_dmdt, self.next)
+            self.__class__.__name__, self.last_t, self.dmdts[-1][1] / self.stopping_dmdt, self.next_time)
