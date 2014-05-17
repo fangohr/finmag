@@ -9,7 +9,8 @@ import logging
 logger = logging.getLogger("finmag")
 logger.propagate = False  # no need to propagate up to root handler, since we define our own later
 
-from finmag.sim.sim import Simulation, sim_with, normal_mode_simulation
+from finmag.sim.sim import Simulation, sim_with
+from finmag.sim.normal_mode_sim import normal_mode_simulation
 from finmag.util.helpers import set_logging_level
 from finmag.util import configuration
 import util.versions
