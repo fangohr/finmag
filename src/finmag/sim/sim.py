@@ -557,18 +557,16 @@ class Simulation(object):
             self.create_integrator()
 
         log.info("Simulation will run until t = {:.2g} s.".format(t))
-        exit_at = derivedevents.StopIntegrationEvent(t)
-        self.scheduler._add(exit_at)
         self.t_max = t
 
-        self.scheduler.run(self.integrator, self.callbacks_at_scheduler_events)
+        self.scheduler.run_until(t, self.integrator,
+                                 self.callbacks_at_scheduler_events)
         # The following line is necessary because the time integrator may
         # slightly overshoot the requested end time, so here we make sure
         # that the field values represent that requested time exactly.
-        self.llg.effective_field.update(t)
-        log.info("Simulation has reached time t = {:.2g} s.".format(self.t))
 
-        self.scheduler._remove(exit_at)
+        self.llg.effective_field.update(t)  # MV: Move to scheduler? <!>
+        log.info("Simulation has reached time t = {:.2g} s.".format(self.t))
 
     relax = sim_relax.relax
 

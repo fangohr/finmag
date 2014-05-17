@@ -3,7 +3,7 @@ import logging
 import functools
 from numbers import Number
 from datetime import datetime, timedelta
-from finmag.scheduler.derivedevents import SingleEvent, RepeatingEvent
+from finmag.scheduler.derivedevents import SingleEvent, RepeatingEvent, StopIntegrationEvent
 from finmag.scheduler.timeevent import same_time
 from finmag.scheduler.event import EV_DONE, EV_REQUESTS_STOP_INTEGRATION
 # This module will try to import the package apscheduler when a realtime event
@@ -246,3 +246,15 @@ class Scheduler(object):
 
         self.finalise(t)
         self.stop_realtime_jobs()
+
+    def run_until(self, t_end, integrator, callbacks_at_scheduler_events=[]):
+        """
+        Integrate up to a certain value of time.
+
+        This method creates an event to stop the integration.
+
+        """
+        exitEvent = StopIntegrationEvent(t_end))
+        self._add(exitEvent)
+        self.run(integrator, callbacks_at_scheduler_events)
+        self._remove(exitEvent)
