@@ -19,20 +19,20 @@ class Counter(object):
 
 def test_first_every_at_start():
     e = RepeatingEvent(100)
-    assert e.next == 0.0
+    assert e.next_time == 0.0
 
-    e = RepeatingEvent(100, delay=5)
-    assert e.next == 5
+    e = RepeatingEvent(100, 5)
+    assert e.next_time == 5
 
 
 def test_update_next_stop_according_to_interval():
     e = RepeatingEvent(100)
-    assert e.next == 0
-    e.trigger(0)
-    assert e.next == 100
-    t0 = e.next
-    e.trigger(100)
-    t1 = e.next
+    assert e.next_time == 0
+    e.check_and_trigger(0)
+    assert e.next_time == 100
+    t0 = e.next_time
+    e.check_and_trigger(100)
+    t1 = e.next_time
     assert abs(t1 - t0) == 100
 
 
@@ -42,16 +42,16 @@ def test_can_attach_callback():
     assert c.cnt_every == 0
     e = RepeatingEvent(100)
     e.attach(c.inc_every)
-    e.trigger(0)
+    e.check_and_trigger(0)
     assert c.cnt_every == 1
 
     # alternative syntax
 
     c.reset()
 
-    e = RepeatingEvent(100).call(c.inc_every)
+    e = RepeatingEvent(100, callback=c.inc_every)
     assert c.cnt_every == 0
-    e.trigger(0)
+    e.check_and_trigger(0)
     assert c.cnt_every == 1
 
 
@@ -60,11 +60,11 @@ def test_at_with_single_value():
 
     assert c.cnt_at == 0
     a = SingleEvent(100)
-    assert a.next == 100
+    assert a.next_time == 100
     a.attach(c.inc_at)
-    a.trigger(0)
+    a.check_and_trigger(0)
     assert c.cnt_at == 0
-    a.trigger(100)
+    a.check_and_trigger(100)
     assert c.cnt_at == 1
 
 
@@ -206,7 +206,7 @@ def test_regression_not_more_than_once_per_time():
     assert x == [1, 0, 1, 0]
     s.reached(2)
     assert x == [1, 1, 2, 0]
-    s.finalise(2) 
+    s.finalise(2)
     assert x == [2, 1, 2, 1]
 
 

@@ -1,6 +1,10 @@
-import finmag.scheduler.event  # Import the possible states of events.
-import finmag.scheduler.timeevent
+import logging
+from finmag.scheduler.timeevent import TimeEvent, same_time
 
+# Import the possible states of events.
+from finmag.scheduler.event import EV_ACTIVE, EV_DONE, EV_REQUESTS_STOP_INTEGRATION
+
+log = logging.getLogger(name="finmag")
 
 class SingleTimeEvent(TimeEvent):
     """
@@ -8,10 +12,13 @@ class SingleTimeEvent(TimeEvent):
     time integration.
     """
 
-    def __init__(self, **kwargs):
-        super(SingleTimeEvent, self).__init__(**kwargs)
+    def __init__(self, init_time=None, trigger_on_stop=False, callback=None):
+        # These arguments are not passed as kwargs because single-line syntax
+        # is encouraged for tidyness in the scheduler.
+        super(SingleTimeEvent, self).__init__(init_time, trigger_on_stop,
+                                              callback)
 
-    def trigger(self, time, is_stop):
+    def trigger(self, time, is_stop=False):
         """
         This calls the callback function now, and does not check whether it is
         correct to do so (this is the job of check_trigger).
@@ -23,13 +30,13 @@ class SingleTimeEvent(TimeEvent):
         self.next_time = None
 
         if self.callback is None:
-            raise ValueError("{}.trigger: No callback function has been
-                             specified for this event."
-                             .format(self.__class__.__name__))
-
-        returnValue = self.callback()
-        self.state = EV_DONE if returnValue is True\
-                     else EV_REQUESTS_STOP_INTEGRATION
+            log.warning("Event triggered with no callback function.")
+        else:
+            returnValue = self.callback()
+            if returnValue is True:
+                self.state = EV_DONE
+            if returnValue is False:
+                self.state = EV_REQUESTS_STOP_INTEGRATION
 
     def reset(self, time):
         """
@@ -58,16 +65,25 @@ class RepeatingTimeEvent(SingleTimeEvent):
     integration.
     """
 
-    def __init__(self, interval, **kwargs):
+    def __init__(self, interval, init_time=None, trigger_on_stop=False,
+                 callback=None):
+        super(RepeatingTimeEvent, self).__init__(init_time or 0.,
+                                                 trigger_on_stop, callback)
         self.interval = interval
-        super(RepeatingTimeEvent, self).__init__(**kwargs)
 
-    def trigger(self, time, is_stop):
-        super(RepeatingTimeEvent, self).__init__(time=time, is_stop=is_stop)
+    def trigger(self, time, is_stop=False):
+        super(RepeatingTimeEvent, self).trigger(time=time, is_stop=is_stop)
         self.next_time = self.last + self.interval
 
     def reset(self, time):
+        """
+        As with base classes, though it is important to note that if this event
+        is reset to a time that is precisely when the event would trigger,
+        then it should trigger again.
+        """
         self.last = time - time % self.interval
+        if time % self.interval == 0:
+              self.last -= self.interval
         self.next_time = self.last + self.interval
 
 
@@ -76,7 +92,7 @@ class StopIntegrationTimeEvent(SingleTimeEvent):
     A time-based event that stops time integration at a given time value.
     """
 
-    def __init__(self, init_time)
+    def __init__(self, init_time):
         def callback():
             return False
         super(StopIntegrationTimeEvent, self).__init__(init_time=init_time,
@@ -85,6 +101,9 @@ class StopIntegrationTimeEvent(SingleTimeEvent):
 
 # MV: This class is from the good old days, where the simulation object has a
 # bit of a god complex. Be sure to change this to fit the new paradigm. <!>
+
+from finmag.util.consts import ONE_DEGREE_PER_NS
+from finmag.util.helpers import compute_dmdt
 
 class RelaxationEvent(object):
     """
@@ -115,9 +134,9 @@ class RelaxationEvent(object):
         self.state = EV_ACTIVE
         self.trigger_on_stop = False
 
-    def trigger(self, t, is_stop=False):
-        assert same(t, self.sim.t)
-        if same(self.last_t, t):
+    def check_and_trigger(self, t, is_stop=False):
+        assert same_time(t, self.sim.t)
+        if same_time(self.last_t, t):
             return
         if self.state == EV_REQUESTS_STOP_INTEGRATION:
             log.error("Time integration continued even though relaxation has been reached.")
