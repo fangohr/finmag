@@ -69,6 +69,10 @@ class RepeatingTimeEvent(SingleTimeEvent):
     A time-based event that triggers regularly, and/or at the end of time
     integration.
 
+    If a variant time progression is desired, a callable object can be passed
+    instead of constant interval, which will be evaluated by the trigger. The
+    callable object accepts only "self" as an argument, and so can operate
+    on properties defined in this event.
     """
 
     def __init__(self, interval, init_time=None, trigger_on_stop=False,
@@ -79,7 +83,12 @@ class RepeatingTimeEvent(SingleTimeEvent):
 
     def trigger(self, time, is_stop=False):
         super(RepeatingTimeEvent, self).trigger(time=time, is_stop=is_stop)
-        self.next_time = self.last + self.interval
+
+        # Calculate next time to trigger.
+        if not hasattr(self.interval, "__call__"):
+            self.next_time = self.last + self.interval
+        else:
+            self.next_time = self.last + self.interval()
 
     def reset(self, time):
         """
@@ -87,10 +96,16 @@ class RepeatingTimeEvent(SingleTimeEvent):
         is reset to a time that is precisely when the event would trigger,
         then it should trigger again.
         """
-        self.last = time - time % self.interval
-        if time % self.interval == 0:
-            self.last -= self.interval
-        self.next_time = self.last + self.interval
+        if not hasattr(self.interval, "__call__"):
+            self.last = time - time % self.interval
+            if time % self.interval == 0:
+                self.last -= self.interval
+            self.next_time = self.last + self.interval
+
+        else:
+            msg = "Resetting in time is not well defined for repeated " +\
+                  "events with non-constant interval."
+            raise NotImplementedError(msg)
 
 
 class StopIntegrationTimeEvent(SingleTimeEvent):

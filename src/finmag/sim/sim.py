@@ -22,7 +22,7 @@ from finmag.sim.hysteresis import hysteresis as hyst, hysteresis_loop as hyst_lo
 from finmag.sim import sim_helpers, magnetisation_patterns
 from finmag.drivers.llg_integrator import llg_integrator
 from finmag.drivers.sundials_integrator import SundialsIntegrator
-from finmag.scheduler import scheduler, derivedevents
+from finmag.scheduler import scheduler
 from finmag.util.pbc2d import PeriodicBoundary1D, PeriodicBoundary2D
 from finmag.energies import Exchange, Zeeman, TimeZeeman, Demag, UniaxialAnisotropy, DMI
 
