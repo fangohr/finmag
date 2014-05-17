@@ -62,7 +62,7 @@ def run_simulation(lfactor, m_init, m_init_name=""):
     sim.relax()
 
     # Save average magnetisation.
-    mx, my, mz = sim.llg.m_average
+    mx, my, mz = sim.m_average
     with open(os.path.join(MODULE_DIR, "data_m.txt"), "a") as f:
         t = time.asctime()
         f.write("{} {} {} {} {} {}\n".format(m_init_name, lfactor, mx, my, mz, t))

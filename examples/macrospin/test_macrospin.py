@@ -3,7 +3,6 @@ import os
 import py
 import numpy
 from finmag import Simulation
-from finmag.drivers.llg_integrator import llg_integrator
 from finmag.energies import Zeeman
 from finmag.util.macrospin import make_analytic_solution
 
@@ -35,7 +34,7 @@ def compare_with_analytic_solution(alpha=0.5, max_t=1e-9):
     sim.add(Zeeman((0, 0, 1e6)))
 
     # plug in an integrator with lower tolerances
-    sim.integrator = llg_integrator(sim.llg, sim.llg.m, abstol=1e-12, reltol=1e-12)
+    sim.set_tol(abstol=1e-12, reltol=1e-12)
 
     ts = numpy.linspace(0, max_t, num=100)
     ys = numpy.array([(sim.advance_time(t), sim.m.copy())[1] for t in ts])

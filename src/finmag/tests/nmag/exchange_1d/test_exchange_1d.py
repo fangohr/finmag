@@ -47,7 +47,7 @@ def setup_module(module=None):
     third_node = []
 
     while t <= t1:
-        mx, my, mz = sim.llg.m_average
+        mx, my, mz = sim.m_average
         averages.append([t, mx, my, mz])
         av_f.write(str(t) + " " + str(mx) + " " + str(my) + " " + str(mz) + "\n")
 

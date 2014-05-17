@@ -107,10 +107,10 @@ def test_dmi_pbc2d_1D(plot=False):
     sim.relax(stopping_dmdt=0.001)
 
     if plot:
-        df.plot(sim.llg._m)
+        df.plot(sim._m)
         df.interactive()
 
-    mx=[sim.llg._m(x+0.5,1)[0] for x in range(20)]
+    mx=[sim._m(x+0.5,1)[0] for x in range(20)]
     
     assert np.max(np.abs(mx)) < 1e-6
 

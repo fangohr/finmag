@@ -8,7 +8,7 @@
  * AUTHOR(S) OF THIS FILE: Dmitri Chernyshenko (d.chernyshenko@soton.ac.uk)
  */
 
-#include "finmag_includes.h"
+#include "../finmag_includes.h"
 
 #include "swig_python_impl.h"
 
@@ -35,5 +35,7 @@ namespace finmag {
             register_swig_boost_shared_ptr_hierarchy<dolfin::Mesh, derived_classes>();
 
             register_swig_boost_shared_ptr<dolfin::BoundaryMesh>();
+	  
+	    register_swig_boost_shared_ptr<dolfin::GenericVector>();
         }
 }}

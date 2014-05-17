@@ -34,7 +34,7 @@ def num_interactions(sim):
     Helper function to determine the number of interactions present in
     the Simulation.
     """
-    return len(sim.llg.effective_field.all())
+    return len(sim.interactions())
 
 
 class TestSimulation(object):
@@ -358,7 +358,7 @@ class TestSimulation(object):
         # First simulation: run for 50 ps, reset the time to 30 ps and run
         # again for 50 ps.
         mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 1, 1, 1)
-        sim1 = Simulation(mesh, Ms=1, name='test_save_ndt', unit_length=1)
+        sim1 = Simulation(mesh, Ms=1, name='test_save_ndt', unit_length=1e-9)
         sim1.alpha = 0.05
         sim1.set_m((1, 0, 0))
         sim1.add(Zeeman((0, 0, 1e6)))
@@ -370,7 +370,7 @@ class TestSimulation(object):
 
         # Run a second simulation for 100 ps continuously, without
         # resetting the time in between.
-        sim2 = Simulation(mesh, Ms=1, name='test_save_ndt2', unit_length=1)
+        sim2 = Simulation(mesh, Ms=1, name='test_save_ndt2', unit_length=1e-9)
         sim2.alpha = 0.05
         sim2.set_m((1, 0, 0))
         sim2.add(Zeeman((0, 0, 1e6)))
@@ -1346,7 +1346,7 @@ def test_setting_different_material_parameters_in_different_regions(tmpdir):
     plot_mesh_with_paraview(submesh_sphere, camera_position=[0, -200, 100], outfile='submesh_sphere.png')
 
     f = df.File("m.pvd")
-    f << sim.llg._m
+    f << sim._m
 
     f = df.File("alpha.pvd")
     f << sim.alpha

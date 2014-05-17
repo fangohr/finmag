@@ -25,7 +25,7 @@ def relax_system():
     sim = Sim(mesh, Ms, unit_length=1e-9)
     sim.set_m((1, 0, 0))
     sim.alpha = 1
-    sim.llg.do_precession = False
+    sim.do_precession = False
     sim.add(Exchange(A))
     sim.add(Demag(solver="FK"))
     sim.relax()
@@ -63,7 +63,7 @@ def excite_system():
     my_along_x_axis_over_time = []
     for t in ts:
         sim.run_until(t)
-        my = np.array([sim.llg._m(x, 0, 0)[1] for x in xs])
+        my = np.array([sim._m(x, 0, 0)[1] for x in xs])
         my_along_x_axis_over_time.append(my)
         print "Simulation t = {:.2}.".format(t)
     np.save(m_for_fourier_analysis_file, np.array(my_along_x_axis_over_time))

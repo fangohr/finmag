@@ -78,7 +78,7 @@ def test_domain_wall_profile(do_plot=False):
     mz = []
     x = np.linspace(0, L, simplices+1)
     for xpos in x:
-        mz.append(sim.llg._m(xpos)[2])
+        mz.append(sim._m(xpos)[2])
     mz = np.array(mz)*Ms
 
     if do_plot:
