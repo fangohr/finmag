@@ -3,7 +3,9 @@ import logging
 import functools
 from numbers import Number
 from datetime import datetime, timedelta
-from finmag.scheduler.events import SingleEvent, RepeatingEvent, same, EV_DONE, EV_REQUESTS_STOP_INTEGRATION
+from finmag.scheduler.events import SingleEvent, RepeatingEvent
+from finmag.scheduler.timeevent import same_time as same
+from finmag.scheduler.event import EV_DONE, EV_REQUESTS_STOP_INTEGRATION
 # This module will try to import the package apscheduler when a realtime event
 # is added. Install with "pip install apscheduler".
 # See http://pypi.python.org/pypi/APScheduler for documentation.
@@ -70,17 +72,17 @@ class Scheduler(object):
 
         if realtime:
             if at_end:
-                at_end_item = SingleEvent(None, True).call(callback)
+                at_end_item = SingleEvent(None, True, callback)
                 self._add(at_end_item)
             return at_end_item
 
         if at or (at_end and not every):
-            at_item = SingleEvent(at, at_end).call(callback)
+            at_item = SingleEvent(at, at_end, callback)
             self._add(at_item)
             return at_item
 
         if every:
-            every_item = RepeatingEvent(every, after, at_end).call(callback)
+            every_item = RepeatingEvent(every, after, at_end, callback)
             self._add(every_item)
             return every_item
 
@@ -150,8 +152,8 @@ class Scheduler(object):
         for item in self.items:
             if item.state == EV_REQUESTS_STOP_INTEGRATION:
                 raise StopIteration
-            if item.next is not None and (next_step is None or next_step > item.next):
-                next_step = item.next
+            if item.next_time is not None and (next_step is None or next_step > item.next_time):
+                next_step = item.next_time
 
         if next_step is None:
             raise StopIteration
@@ -169,8 +171,8 @@ class Scheduler(object):
 
         """
         for item in self.items:
-            if same(item.next, time):
-                item.trigger(time)
+            if same(item.next_time, time):
+                item.check_and_trigger(time)
                 if item.state == EV_DONE:
                     self._remove(item)
         self.last = time
@@ -182,7 +184,7 @@ class Scheduler(object):
         """
         for item in self.items:
             if item.trigger_on_stop:
-                item.trigger(time, is_stop=True)
+                item.check_and_trigger(time, is_stop=True)
 
     def reset(self, time):
         """

@@ -44,8 +44,10 @@ class Event(object):
 
         if callback is not None:
             self.attach(callback)
+        else:
+            self.callback = None
 
-    def attach(self, callback)
+    def attach(self, callback):
         """
         This function stores the function 'callback', which takes no arguments,
         and which will be called when this event is triggered.

@@ -45,10 +45,10 @@ class TimeEvent(Event):
         callback_msg = ""
         callback_name = "unknown"
         if self.callback is not None:
-            if hasattr(self._callback, "__name__"):
-                    callback_name = self._callback.__name__
-            if hasattr(self._callback, "func"):
-                    callback_name = self._callback.func.__name__
+            if hasattr(self.callback, "__name__"):
+                    callback_name = self.callback.__name__
+            if hasattr(self.callback, "func"):
+                    callback_name = self.callback.func.__name__
             callback_msg = " | callback: {}".format(callback_name)
 
         msg = "<{} | last = {} | next = {} | triggering on stop: {}{}>"\
@@ -56,13 +56,13 @@ class TimeEvent(Event):
                       self.trigger_on_stop, callback_msg)
         return msg
 
-    def check_trigger(self, time, is_stop=False):
+    def check_and_trigger(self, time, is_stop=False):
         """
         This identifies whether or not this event should trigger given a time
         value, or given the integration has stopped (is_stop == True).
         """
         if not same_time(time, self.last):
-            if same_time(time, self.next_time) or
+            if same_time(time, self.next_time) or\
                (is_stop and self.trigger_on_stop):
 
                 self.trigger(time, is_stop)
