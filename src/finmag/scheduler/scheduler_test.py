@@ -1,5 +1,5 @@
 import pytest
-from events import SingleEvent, RepeatingEvent
+from derivedevents import SingleEvent, RepeatingEvent
 from scheduler import Scheduler
 
 class Counter(object):

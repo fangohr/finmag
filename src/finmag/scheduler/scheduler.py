@@ -254,7 +254,7 @@ class Scheduler(object):
         This method creates an event to stop the integration.
 
         """
-        exitEvent = StopIntegrationEvent(t_end))
+        exitEvent = StopIntegrationEvent(t_end)
         self._add(exitEvent)
         self.run(integrator, callbacks_at_scheduler_events)
         self._remove(exitEvent)
