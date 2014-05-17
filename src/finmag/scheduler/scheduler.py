@@ -4,7 +4,7 @@ import functools
 from numbers import Number
 from datetime import datetime, timedelta
 from finmag.scheduler.derivedevents import SingleEvent, RepeatingEvent
-from finmag.scheduler.timeevent import same_time as same
+from finmag.scheduler.timeevent import same_time
 from finmag.scheduler.event import EV_DONE, EV_REQUESTS_STOP_INTEGRATION
 # This module will try to import the package apscheduler when a realtime event
 # is added. Install with "pip install apscheduler".
@@ -50,7 +50,8 @@ class Scheduler(object):
     def __iter__(self):
         return self
 
-    def add(self, func, args=None, kwargs=None, at=None, at_end=False, every=None, after=None, realtime=False):
+    def add(self, func, args=None, kwargs=None, at=None, at_end=False,
+            every=None, after=None, realtime=False):
         """
         Register a function with the scheduler.
 
@@ -171,7 +172,7 @@ class Scheduler(object):
 
         """
         for item in self.items:
-            if same(item.next_time, time):
+            if same_time(item.next_time, time):
                 item.check_and_trigger(time)
                 if item.state == EV_DONE:
                     self._remove(item)
