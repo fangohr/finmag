@@ -2,14 +2,17 @@ import logging
 from finmag.scheduler.timeevent import TimeEvent, same_time
 
 # Import the possible states of events.
-from finmag.scheduler.event import EV_ACTIVE, EV_DONE, EV_REQUESTS_STOP_INTEGRATION
+from finmag.scheduler.event import EV_ACTIVE, EV_DONE
+from finmag.scheduler.event import EV_REQUESTS_STOP_INTEGRATION
 
 log = logging.getLogger(name="finmag")
+
 
 class SingleTimeEvent(TimeEvent):
     """
     A time-based event that triggers at a certain time, and/or at the end of
     time integration.
+
     """
 
     def __init__(self, init_time=None, trigger_on_stop=False, callback=None):
@@ -25,6 +28,7 @@ class SingleTimeEvent(TimeEvent):
 
         This method updates time values, executes the callback function, and
         may alter the state of this event.
+
         """
         self.last = time
         self.next_time = None
@@ -44,25 +48,27 @@ class SingleTimeEvent(TimeEvent):
         the specified time.
 
         This does not re/set the callback function.
+
         """
 
         # Reset to initial if specified time is prior to initial time.
         if time < self.init_time:
             self.last = None
             self.next_time = self.init_time
-            self.state=EV_ACTIVE
+            self.state = EV_ACTIVE
 
         # Otherwise, we have already triggered.
         else:
             self.last = self.init_time
             self.next_time = None
-            self.state=EV_DONE
+            self.state = EV_DONE
 
 
 class RepeatingTimeEvent(SingleTimeEvent):
     """
     A time-based event that triggers regularly, and/or at the end of time
     integration.
+
     """
 
     def __init__(self, interval, init_time=None, trigger_on_stop=False,
@@ -83,13 +89,14 @@ class RepeatingTimeEvent(SingleTimeEvent):
         """
         self.last = time - time % self.interval
         if time % self.interval == 0:
-              self.last -= self.interval
+            self.last -= self.interval
         self.next_time = self.last + self.interval
 
 
 class StopIntegrationTimeEvent(SingleTimeEvent):
     """
     A time-based event that stops time integration at a given time value.
+
     """
 
     def __init__(self, init_time):
@@ -105,14 +112,17 @@ class StopIntegrationTimeEvent(SingleTimeEvent):
 from finmag.util.consts import ONE_DEGREE_PER_NS
 from finmag.util.helpers import compute_dmdt
 
+
 class RelaxationEvent(object):
     """
     Monitors the relaxation of the magnetisation over time.
 
     """
-    def __init__(self, sim, stopping_dmdt=ONE_DEGREE_PER_NS, dmdt_increased_counter_limit=500, dt_limit=1e-10):
+    def __init__(self, sim, stopping_dmdt=ONE_DEGREE_PER_NS,
+                 dmdt_increased_counter_limit=500, dt_limit=1e-10):
         """
-        Initialise the relaxation with a Simulation object and stopping parameters.
+        Initialise the relaxation with a Simulation object and stopping
+        parameters.
 
         """
         self.dt = 1e-14
@@ -139,7 +149,8 @@ class RelaxationEvent(object):
         if same_time(self.last_t, t):
             return
         if self.state == EV_REQUESTS_STOP_INTEGRATION:
-            log.error("Time integration continued even though relaxation has been reached.")
+            log.error("Time integration continued even though relaxation has "
+                      "been reached.")
 
         t = self.sim.t
         m = self.sim.m.copy()
@@ -157,13 +168,16 @@ class RelaxationEvent(object):
                 else:
                     self.dt = self.dt_limit
 
-                log.debug("At t={:.3g}, last_dmdt={:.3g} * stopping_dmdt, next dt={:.3g}.".format(
-                    t, dmdt / self.stopping_dmdt, self.dt))
+                log.debug("At t={:.3g}, last_dmdt={:.3g} * stopping_dmdt, "
+                          "next dt={:.3g}."
+                          .format(t, dmdt / self.stopping_dmdt, self.dt))
                 self._check_interrupt_relaxation()
             else:
-                log.debug("Stopping integration at t={:.3g}, with dmdt={:.3g}, smaller than threshold={:.3g}.".format(
-                    t, dmdt, float(self.stopping_dmdt)))
-                self.state = EV_REQUESTS_STOP_INTEGRATION  # hoping this gets noticed by the Scheduler
+                log.debug("Stopping integration at t={:.3g}, with dmdt={:.3g},"
+                          " smaller than threshold={:.3g}."
+                          .format(t, dmdt, float(self.stopping_dmdt)))
+                # hoping this gets noticed by the Scheduler
+                self.state = EV_REQUESTS_STOP_INTEGRATION
 
         self.last_t = t
         self.last_m = m
@@ -171,21 +185,28 @@ class RelaxationEvent(object):
 
     def _check_interrupt_relaxation(self):
         """
-        This is a backup plan in case relaxation can't be reached by normal means.
+        This is a backup plan in case relaxation can't be reached by normal
+        means.
+
         Monitors if dmdt increases too ofen.
 
         """
         if len(self.dmdts) >= 2:
-            if self.dmdts[-1][1] > self.dmdts[-2][1] and self.energies[-1] > self.energies[-2]:
+            if (self.dmdts[-1][1] > self.dmdts[-2][1] and
+                self.energies[-1] > self.energies[-2]):
+
                 self.dmdt_increased_counter += 1
-                log.debug("dmdt {} times larger than last time (counting {}/{}).".format(
-                    self.dmdts[-1][1] / self.dmdts[-2][1],
-                    self.dmdt_increased_counter,
-                    self.dmdt_increased_counter_limit))
+                log.debug("dmdt {} times larger than last time "
+                          "(counting {}/{})."
+                          .format(self.dmdts[-1][1] / self.dmdts[-2][1],
+                                  self.dmdt_increased_counter,
+                                  self.dmdt_increased_counter_limit))
 
         if self.dmdt_increased_counter >= self.dmdt_increased_counter_limit:
-            log.warning("Stopping time integration after dmdt increased {} times without a decrease in energy "
-                        "(which indicates that something might be wrong).".format(self.dmdt_increased_counter_limit))
+            log.warning("Stopping time integration after dmdt increased {} "
+                        "times without a decrease in energy "
+                        "(which indicates that something might be wrong)."
+                        .format(self.dmdt_increased_counter_limit))
             self.state = EV_REQUESTS_STOP_INTEGRATION
 
     def reset(self, time):

@@ -2,10 +2,12 @@ from finmag.scheduler.event import Event
 
 EPSILON = 1e-15  # Time precision, used to compare two time values.
 
+
 def same_time(t0, t1):
     """
     This function compares time values and returns True or False to denote
     comparison.
+
     """
     return (t0 is not None) and (t1 is not None) and abs(t0 - t1) < EPSILON
 
@@ -26,12 +28,14 @@ class TimeEvent(Event):
         __str__(self): Sensible string representation of this object.
 
     This base class is derived from Event.
+
     """
 
     def __init__(self, init_time=None, trigger_on_stop=False, callback=None):
         """
         This defines the init_time at which (if any) this event should
         trigger.
+
         """
         if init_time is None and trigger_on_stop is False:
             raise ValueError("{}.init: Needs either a time, or \
@@ -60,10 +64,11 @@ class TimeEvent(Event):
         """
         This identifies whether or not this event should trigger given a time
         value, or given the integration has stopped (is_stop == True).
+
         """
         if not same_time(time, self.last):
-            if same_time(time, self.next_time) or\
-               (is_stop and self.trigger_on_stop):
+            if (same_time(time, self.next_time) or
+                (is_stop and self.trigger_on_stop)):
 
                 self.trigger(time, is_stop)
 
@@ -72,6 +77,7 @@ class TimeEvent(Event):
         This abstract method should be implemented by a higher level object.
 
         Calling this function on this level should raise a NotImplementedError.
+
         """
         raise NotImplementedError("{0}.trigger: Abstract method of base class \
                                   {0} should be called only by child class."

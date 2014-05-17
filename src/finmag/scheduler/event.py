@@ -7,6 +7,7 @@
 
 EV_ACTIVE, EV_DONE, EV_REQUESTS_STOP_INTEGRATION = range(3)
 
+
 class Event(object):
     """
     This base class defines generic event objects from which all other
@@ -29,6 +30,7 @@ class Event(object):
            have been, as defined by the arguments.
 
         __str__(self): Sensible string representation of this object.
+
     """
 
     def __init__(self, trigger_on_stop=False, callback=None):
@@ -36,6 +38,7 @@ class Event(object):
         This function defines whether or not this event will trigger at the end
         of the integration, and can also be passed a function to call upon
         the event triggering.
+
         """
         self.state = EV_ACTIVE  # The state of this event.
         self.trigger_on_stop = trigger_on_stop
@@ -51,6 +54,7 @@ class Event(object):
         """
         This function stores the function 'callback', which takes no arguments,
         and which will be called when this event is triggered.
+
         """
         if not hasattr(callback, "__call__"):
             raise ValueError("{}.attach: Argument should be callable."
