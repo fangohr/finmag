@@ -425,7 +425,7 @@ class NormalModeSimulation(Simulation):
                 self.A, self.M, _, _ = compute_generalised_eigenproblem_matrices( \
                     self, frequency_unit=1e9, filename_mat_A=filename_mat_A, filename_mat_M=filename_mat_M,
                     check_hermitian=check_hermitian, differentiate_H_numerically=differentiate_H_numerically)
-                log.debug("Assembling the eigenproblem matrices took {}".format(h.format_time(df.toc())))
+                log.debug("Assembling the eigenproblem matrices took {}".format(helpers.format_time(df.toc())))
             else:
                 log.debug('Re-using previously computed eigenproblem matrices.')
         else:
@@ -435,7 +435,7 @@ class NormalModeSimulation(Simulation):
                              self, frequency_unit=1e9, differentiate_H_numerically=differentiate_H_numerically,
                              dtype=(float if use_real_matrix else complex))
                 self.use_real_matrix = use_real_matrix
-                log.debug("Assembling the eigenproblem matrix took {}".format(h.format_time(df.toc())))
+                log.debug("Assembling the eigenproblem matrix took {}".format(helpers.format_time(df.toc())))
             else:
                 log.debug('Re-using previously computed eigenproblem matrix.')
 
