@@ -1,219 +1,90 @@
-"""
-Defines different types of events for use with the scheduler.
-
-They are expected to share the following attributes
-
-    next_time: the next time the event should be triggered or None
-
-    trigger_on_stop: whether the event should be triggered again at the
-    end, when time integration stops
-
-    state: either EV_ACTIVE - default, nothing special should happen
-                  EV_DONE - this event can be removed, its task is accomplished
-                  EV_REQUESTS_STOP_INTEGRATION - notify scheduler that time integration should be stopped
-
-as well as the method
-
-    trigger(self, time, is_stop): Where `time` should be equal to the `next_time`
-    requested time, but can used for additional safety checks, and `is_stop`
-    is False when time integration will continue after this step.
-
-"""
-import logging
-from finmag.util.consts import ONE_DEGREE_PER_NS
-from finmag.util.helpers import compute_dmdt
-
-log = logging.getLogger(name="finmag")
-EPSILON = 1e-15  # femtosecond precision for scheduling.
-EV_ACTIVE, EV_DONE, EV_REQUESTS_STOP_INTEGRATION = range(3)
+import finmag.scheduler.event  # Import the possible states of events.
+import finmag.scheduler.timeevent
 
 
-def same(t0, t1):
-    return (t0 is not None) and (t1 is not None) and abs(t0 - t1) < EPSILON
-
-
-class SingleEvent(object):
+class SingleTimeEvent(TimeEvent):
     """
-    An event which will trigger once and optionally at the end of time integration.
-
+    A time-based event that triggers at a certain time, and/or at the end of
+    time integration.
     """
-    def __init__(self, time=None, trigger_on_stop=False):
+
+    def __init__(self, **kwargs):
+        super(SingleTimeEvent, self).__init__(**kwargs)
+
+    def trigger(self, time, is_stop):
         """
-        Define the time for which to trigger with the float `time` and/or
-        specify if the event triggers at the end of time integration by
-        setting `trigger_on_stop` to True or False.
+        This calls the callback function now, and does not check whether it is
+        correct to do so (this is the job of check_trigger).
 
+        This method updates time values, executes the callback function, and
+        may alter the state of this event.
         """
-        if time is None and trigger_on_stop is False:
-            raise ValueError("{}.init: Needs either a time, or trigger_on_stop set to True.".format(self.__class__.__name__))
-        self._time = time
-        self.last = None
-        self.next_time = time
-        self.trigger_on_stop = trigger_on_stop
-        self._callback = None
-        self.state = EV_ACTIVE
+        self.last = time
+        self.next_time = None
 
-    def attach(self, callback):
-        """
-        Save the function `callback` which should be callable without arguments.
+        if self.callback is None:
+            raise ValueError("{}.trigger: No callback function has been
+                             specified for this event."
+                             .format(self.__class__.__name__))
 
-        """
-        if not hasattr(callback, "__call__"):
-            raise ValueError("{}.attach: Argument should be callable.".format(self.__class__.__name__))
-        self._callback = callback
-        return self  # so that object can be initialised and a function attached in one line
-    call = attach  # nicer name if assignment and init is indeed done in one line
-
-    def trigger(self, time, is_stop=False):
-        """
-        Call the callback if the `time` is right.
-
-        Will trigger if `time` is equal to the saved time, or if `is_stop` is
-        True and trigger_on_stop was set to True as well. Won't trigger more
-        than once per `time`, no matter what.
-
-        If the callback returns True, this means the event's task is completed
-        and the event can be removed from the scheduler.
-        If the callback returns False, the event will notify the scheduler
-        to stop time integration.
-        If the callback returns anything else, nothing will happen and time
-        integration will just go on as usual.
-
-        """
-        if not same(time, self.last) and (
-                (same(time, self.next_time)) or (is_stop and self.trigger_on_stop)):
-            self.last = time
-            self.next_time = self._compute_next()
-            if self._callback is not None:
-                ret = self._callback()
-                if ret is True:
-                    self.state = EV_DONE  # This event can be deleted.
-                if ret is False:
-                    self.state = EV_REQUESTS_STOP_INTEGRATION
-
-    def _compute_next(self):
-        """
-        Return the next target time. Will get called after the event is triggered.
-
-        """
-        return None  # since this is a single event, there is no next step
+        returnValue = self.callback()
+        self.state = EV_DONE if returnValue is True\
+                     else EV_REQUESTS_STOP_INTEGRATION
 
     def reset(self, time):
         """
-        Modify the internal state to what we would expect at `time`.
+        This changes the state of this event to what it should have been at
+        the specified time.
 
+        This does not re/set the callback function.
         """
-        if time < self._time:
+
+        # Reset to initial if specified time is prior to initial time.
+        if time < self.init_time:
             self.last = None
-            self.next_time = self._time
-            self.state = EV_ACTIVE
-        else:  # if we had to, assume we triggered for `time` already
-            self.last = self._time
-            self.next_time = None
-            self.state = EV_DONE
+            self.next_time = self.init_time
+            self.state=EV_ACTIVE
 
-    def __str__(self):
-        """
-        Return the informal string representation of this object.
-
-        """
-        callback_msg = ""
-        callback_name = "unknown"
-        if self._callback is not None:
-            if hasattr(self._callback, "__name__"):
-                    callback_name = self._callback.__name__
-            if hasattr(self._callback, "func"):
-                    callback_name = self._callback.func.__name__
-            callback_msg = " | callback: {}".format(callback_name)
-        msg = "<{} | last = {} | next = {} | triggering on stop: {}{}>".format(
-            self.__class__.__name__, self.last, self.next_time, self.trigger_on_stop,
-            callback_msg)
-        return msg
-
-
-class RepeatingEvent(SingleEvent):
-    """
-    An event which will trigger in regular intervals and optionally at the end of time integration.
-
-    """
-    def __init__(self, interval, delay=None, trigger_on_stop=False):
-        """
-        Define the interval between two times for which to trigger with the
-        float `interval`. The first execution can be set with the float `delay`.
-        Specify if the event triggers at the end of time integration by
-        setting `trigger_on_stop` to True or False.
-
-        """
-        super(RepeatingEvent, self).__init__(delay or 0.0, trigger_on_stop)
-        self._interval = interval
-
-    def _compute_next(self):
-        """
-        Return the next target time. Will get called after the event is triggered.
-
-        """
-        return self.last + self._interval
-
-    def reset(self, time):
-        """
-        Modify the internal state to what we would expect at `time`.
-
-        """
-        self.last = None
-        self.next_time = self._time
-        while self.next_time < time:  # if we had to, assume we triggered for `time`
-            self.last = self.next_time
-            self.next_time = self._compute_next()
-
-
-class StopIntegrationEvent(object):
-    """
-    Store the information that the simulation should be stopped at a defined time.
-
-    """
-    def __init__(self, time):
-        """
-        Define the `time` at which the simulation should be stopped.
-
-        """
-        self._time = time
-        self.last = None
-        self.next_time = self._time
-        self.state = EV_ACTIVE
-        self.trigger_on_stop = False
-
-    def trigger(self, time, is_stop=False):
-        """
-        If `time` is equal to the pre-defined time, request to stop time integration.
-
-        """
-        if same(time, self.next_time):
-            self.last = time
-            self.next_time = None
-            self.state = EV_REQUESTS_STOP_INTEGRATION
-
-    def reset(self, time):
-        """
-        Modify the internal state to what we would expect at `time`.
-
-        """
-        if time < self._time:
-            self.last = None
-            self.next_time = self._time
-            self.state = EV_ACTIVE
+        # Otherwise, we have already triggered.
         else:
-            self.last = self._time
+            self.last = self.init_time
             self.next_time = None
-            self.state = EV_REQUESTS_STOP_INTEGRATION
+            self.state=EV_DONE
 
-    def __str__(self):
-        """
-        Return the informal string representation of this object.
 
-        """
-        return "<{} will stop time integration at t = {}>".format(
-            self.__class__.__name__, self.next_time)
+class RepeatingTimeEvent(SingleTimeEvent):
+    """
+    A time-based event that triggers regularly, and/or at the end of time
+    integration.
+    """
 
+    def __init__(self, interval, **kwargs):
+        self.interval = interval
+        super(RepeatingTimeEvent, self).__init__(**kwargs)
+
+    def trigger(self, time, is_stop):
+        super(RepeatingTimeEvent, self).__init__(time=time, is_stop=is_stop)
+        self.next_time = self.last + self.interval
+
+    def reset(self, time):
+        self.last = time - time % self.interval
+        self.next_time = self.last + self.interval
+
+
+class StopIntegrationTimeEvent(SingleTimeEvent):
+    """
+    A time-based event that stops time integration at a given time value.
+    """
+
+    def __init__(self, init_time)
+        def callback():
+            return False
+        super(StopIntegrationTimeEvent, self).__init__(init_time=init_time,
+                                                       callback=callback)
+
+
+# MV: This class is from the good old days, where the simulation object has a
+# bit of a god complex. Be sure to change this to fit the new paradigm. <!>
 
 class RelaxationEvent(object):
     """
@@ -308,3 +179,8 @@ class RelaxationEvent(object):
         """
         return "<{} | last t = {} | last dmdt = {} * stopping_dmdt | next t = {}>".format(
             self.__class__.__name__, self.last_t, self.dmdts[-1][1] / self.stopping_dmdt, self.next_time)
+
+# Renaming for easy testing.
+SingleEvent = SingleTimeEvent
+RepeatingEvent = RepeatingTimeEvent
+StopIntegrationEvent = StopIntegrationTimeEvent
