@@ -5,9 +5,9 @@ import logging
 import numpy as np
 import dolfin as df
 import matplotlib.pyplot as plt
-import finmag.util.helpers as h
 from finmag.sim.sim import Simulation, sim_with
 from finmag.normal_modes.eigenmodes import eigensolvers
+from finmag.util import helpers
 from finmag.util.fft import \
     compute_power_spectral_density, find_peak_near_frequency, _plot_spectrum, \
     export_normal_mode_animation_from_ringdown
@@ -668,7 +668,7 @@ class NormalModeSimulation(Simulation):
 
             if create_movies:
                 directory_movies = directory_movies or directory
-                h.pvd2avi(vtk_filename, os.path.join(directory_movies, mode_descr + '.avi'), **default_kwargs)
+                helpers.pvd2avi(vtk_filename, os.path.join(directory_movies, mode_descr + '.avi'), **default_kwargs)
 
     def export_normal_mode_animation(self, k, filename=None, directory='', dm_only=False, num_cycles=1, num_snapshots_per_cycle=20, scaling=0.2, **kwargs):
         """
@@ -720,7 +720,7 @@ class NormalModeSimulation(Simulation):
         # Convert image files to movie
         if suffix == '.avi':
             movie_filename = filename
-            h.pvd2avi(pvd_filename, outfile=movie_filename)
+            helpers.pvd2avi(pvd_filename, outfile=movie_filename)
 
         # Return the movie if it was created
         res = None
