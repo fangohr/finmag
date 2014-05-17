@@ -40,7 +40,7 @@ from finmag.sim import sim_helpers, magnetisation_patterns
 from finmag.energies import Exchange, Zeeman, TimeZeeman, Demag, UniaxialAnisotropy, DMI
 from finmag.drivers.llg_integrator import llg_integrator
 from finmag.drivers.sundials_integrator import SundialsIntegrator
-from finmag.scheduler import scheduler, events
+from finmag.scheduler import scheduler, derivedevents
 from finmag.util.pbc2d import PeriodicBoundary1D, PeriodicBoundary2D
 
 
@@ -577,7 +577,7 @@ class Simulation(object):
             self.create_integrator()
 
         log.info("Simulation will run until t = {:.2g} s.".format(t))
-        exit_at = events.StopIntegrationEvent(t)
+        exit_at = derivedevents.StopIntegrationEvent(t)
         self.scheduler._add(exit_at)
         self.t_max = t
 

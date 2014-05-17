@@ -1,6 +1,6 @@
 
 import logging
-from finmag.scheduler import events
+from finmag.scheduler import derivedevents
 
 log = logging.getLogger(name="finmag")
 
@@ -33,7 +33,7 @@ def relax(sim, save_vtk_snapshot_as=None, save_restart_data_as=None, stopping_dm
     if hasattr(sim, "relaxation"):
         del(sim.relaxation)
 
-    sim.relaxation = events.RelaxationEvent(sim, stopping_dmdt*ONE_DEGREE_PER_NS, dmdt_increased_counter_limit, dt_limit)
+    sim.relaxation = derivedevents.RelaxationEvent(sim, stopping_dmdt*ONE_DEGREE_PER_NS, dmdt_increased_counter_limit, dt_limit)
     sim.scheduler._add(sim.relaxation)
 
     sim.scheduler.run(sim.integrator, sim.callbacks_at_scheduler_events)
