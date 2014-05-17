@@ -3,7 +3,7 @@ import logging
 import functools
 from numbers import Number
 from datetime import datetime, timedelta
-from finmag.scheduler.events import SingleEvent, RepeatingEvent
+from finmag.scheduler.derivedevents import SingleEvent, RepeatingEvent
 from finmag.scheduler.timeevent import same_time as same
 from finmag.scheduler.event import EV_DONE, EV_REQUESTS_STOP_INTEGRATION
 # This module will try to import the package apscheduler when a realtime event
