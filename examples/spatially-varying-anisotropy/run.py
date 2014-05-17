@@ -73,8 +73,8 @@ def run_simulation():
     zs = np.linspace(0,Lz,200)
     for z in zs:
         pos = (Lx/2., Ly/2., z )
-        Mx.append(sim.llg._m(pos)[0])
-        Mz.append(sim.llg._m(pos)[2])
+        Mx.append(sim._m(pos)[0])
+        Mz.append(sim._m(pos)[2])
         ax.append(a(pos)[0])
         az.append(a(pos)[2])
         
@@ -88,19 +88,19 @@ def run_simulation():
     #pylab.show()
 
     ##this only works with an X-display, so comment out for jenkins
-    #v = df.plot(sim.llg._m, 
+    #v = df.plot(sim._m, 
     #            title='exchange spring across layers with different anisotropy directions',
     #            axes=True)
     #
     #v.elevate(-90) 
-    #v.update(sim.llg._m)    # bring settings above into action
+    #v.update(sim._m)    # bring settings above into action
     ##v.write_png(os.path.join(MODULE_DIR,'exchangespring.png')) #this is broken in my dolfin, HF
     #                                                            #the bitmap looks random  
     #v.write_ps(os.path.join(MODULE_DIR,'exchangespring'))       #will write exchangespring.eps
     #os.system("ps2png exchangespring.eps exchangespring.png")   #create the png file for documentation
 
     f=df.File(os.path.join(MODULE_DIR,'exchangespring.pvd'))    #same more data for paraview
-    f << sim.llg._m
+    f << sim._m
 
     print("Written plots and data to %s" % (os.path.join(MODULE_DIR,'exchangespring.*')))
         

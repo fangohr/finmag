@@ -16,10 +16,10 @@ def test_effective_field_compute_returns_copy(tmpdir):
     """
     os.chdir(str(tmpdir))
     sim = barmini()
-    h0 = sim.llg.effective_field.compute()
+    h0 = sim.effective_field()
     h0_copy = h0.copy()
     sim.run_until(1e-12)
-    h1 = sim.llg.effective_field.compute()
+    h1 = sim.effective_field()
 
     assert np.allclose(h0, h0_copy, atol=0, rtol=1e-8)
     assert not np.allclose(h0, h1, atol=0, rtol=1e-8)

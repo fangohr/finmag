@@ -16,7 +16,7 @@ def run_simulation(do_precession):
     mesh = df.BoxMesh(0, 0, 0, 30e-9, 30e-9, 100e-9, 6, 6, 20)
     sim = Simulation(mesh, Ms)
     sim.set_m((1, 0, 1))
-    sim.llg.do_precession = do_precession
+    sim.do_precession = do_precession
     sim.add(Demag())
     sim.add(Exchange(13.0e-12))
 

@@ -18,6 +18,7 @@ from finmag.physics.llg import LLG
 from finmag.physics.llg_stt import LLG_STT
 from finmag.physics.llb.sllg import SLLG
 from finmag.sim import sim_details
+from finmag.sim import sim_relax
 from finmag.util.consts import exchange_length, bloch_parameter, helical_period
 
 from finmag.util.meshes import mesh_info, mesh_volume, mesh_size_plausible, \
@@ -211,6 +212,10 @@ class Simulation(object):
         """
         return self.llg.m_average
 
+    @property
+    def _m(self):
+        return self.llg._m
+
     def save_m_in_region(self,region,name='unnamed'):
 
         self.region_id += 1
@@ -351,12 +356,11 @@ class Simulation(object):
             Name of the interaction.
 
         """
-        try:
-            self.llg.effective_field.get(interaction_name)
-            res = True
-        except KeyError:
-            res = False
-        return res
+        return self.llg.effective_field.exists(interaction_name)
+
+    def interactions(self):
+        """ Return the names of the known interactions. """
+        return self.llg.effective_field.all()
 
     def get_interaction(self, interaction_name):
         """
@@ -586,56 +590,14 @@ class Simulation(object):
 
         self.scheduler._remove(exit_at)
 
-    def relax(self, save_vtk_snapshot_as=None, save_restart_data_as=None, stopping_dmdt=1.0,
-              dt_limit=1e-10, dmdt_increased_counter_limit=10):
-        """
-        Run the simulation until the magnetisation has relaxed.
-
-        This means the magnetisation reaches a state where its change over time
-        at each node is smaller than the threshold `stopping_dm_dt` (which
-        should be given in multiples of degree/nanosecond).
-
-        If `save_vtk_snapshot_as` and/or `restart_restart_data_as` are
-        specified, a vtk snapshot and/or restart data is saved to a
-        file with the given name. This can also be achieved using the
-        scheduler but provides a slightly more convenient mechanism.
-        Note that any previously existing files with the same name
-        will be automatically overwritten!
-
-        """
-        if not hasattr(self, "integrator"):
-            self.create_integrator()
-        log.info("Simulation will run until relaxation of the magnetisation.")
-        log.debug("Relaxation parameters: stopping_dmdt={} (degrees per nanosecond), "
-                  "dt_limit={}, dmdt_increased_counter_limit={}".format(
-                              stopping_dmdt, dt_limit, dmdt_increased_counter_limit))
-
-        if hasattr(self, "relaxation"):
-            del(self.relaxation)
-
-        self.relaxation = events.RelaxationEvent(self, stopping_dmdt*ONE_DEGREE_PER_NS, dmdt_increased_counter_limit, dt_limit)
-        self.scheduler._add(self.relaxation)
-
-        self.scheduler.run(self.integrator, self.callbacks_at_scheduler_events)
-        self.integrator.reinit()
-        self.set_m(self.m)
-        log.info("Relaxation finished at time t = {:.2g}.".format(self.t))
-
-        self.scheduler._remove(self.relaxation)
-        del(self.relaxation.sim) # help the garbage collection by avoiding circular reference
-
-        # Save a vtk snapshot and/or restart data of the relaxed state.
-        if save_vtk_snapshot_as is not None:
-            self.save_vtk(save_vtk_snapshot_as, overwrite=True)
-        if save_restart_data_as is not None:
-            self.save_restart_data(save_restart_data_as)
+    relax = sim_relax.relax
 
     save_restart_data = sim_helpers.save_restart_data
 
     def restart(self, filename=None, t0=None):
         """If called, we look for a filename of type sim.name + '-restart.npz',
         and load it. The magnetisation in the restart file will be assigned to
-        sim.llg._m. If this is from a cvode time integration run, it will also
+        self._m. If this is from a cvode time integration run, it will also
         initialise (create) the integrator with that m, and the time at which the
         restart data was saved.
 
@@ -702,6 +664,14 @@ class Simulation(object):
             self.llg.pins = nodes
 
     pins = property(__get_pins, __set_pins)
+
+    @property
+    def do_precession(self):
+        return self.llg.do_precession
+
+    @do_precession.setter
+    def do_precession(self, value):
+        self.llg.do_precession = value
 
     @property
     def alpha(self):
