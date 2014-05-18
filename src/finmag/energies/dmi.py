@@ -8,66 +8,6 @@ from finmag.util import helpers
 logger = logging.getLogger('finmag')
 
 
-def manual_times_curl(m, dim):
-    """
-    Returns m times curl of m on 1-dimensional and 2-dimensional meshes.
-
-    Arguments:
-
-        - m is a dolfin function on a 1d or 2d vector function space
-        - dim is the dimension of the dmi
-   
-    On 3-dimensional meshes, dolfin supports computing the integrand
-    of the DMI energy using
-
-         df.inner(m, df.curl(m))        eq.1
-
-    However, the curl operator is not implemented on 1d and 2d meshes.
-    With the expansion of the curl in cartesian coordinates
-
-        curlx = dmzdy - dmydz
-        curly = dmxdz - dmzdx
-        curlz = dmydx - dmxdy
-
-    we can compute eq. 1 with
-
-        (mx * curlx + my * curly + mz * curlz).
-
-    """
-    if not dim in (1, 2):
-        raise ValueError("dim must be 1 or 2, "
-            "don't use this on higher-dimensional meshes")
-
-    gradm = df.grad(m)
-
-    dmxdx = gradm[0, 0]
-    dmydx = gradm[1, 0]
-    dmzdx = gradm[2, 0]
-
-    if dim == 1:
-        # there are no derivatives in y-direction on a 1d
-        # mesh so we can set them to zero
-        dmxdy = 0
-        dmydy = 0
-        dmzdy = 0
-    elif dim == 2:
-        dmxdy = gradm[0, 1]
-        dmydy = gradm[1, 1]
-        dmzdy = gradm[2, 1]
-
-    # there are no derivatives along z on either 1d or 2d
-    # meshes, so we can set them to zero
-    dmxdz = 0
-    dmydz = 0
-    dmzdz = 0
-
-    curlx = dmzdy - dmydz
-    curly = dmxdz - dmzdx
-    curlz = dmydx - dmxdy
-    return (m[0] * curlx + m[1] * curly + m[2] * curlz)
-
-
-
 class DMI(EnergyBase):
     """
     Compute the Dzyaloshinskii-Moriya interaction (DMI) field.
@@ -141,7 +81,6 @@ class DMI(EnergyBase):
         del(self.D_waiting_for_mesh)
 
         meshdim = S3.mesh().topology().dim()
-        
         dmi_dim  = meshdim
         
         if self.dmi_type is '1d':
@@ -151,10 +90,7 @@ class DMI(EnergyBase):
         elif self.dmi_type is '3d':
             dmi_dim = 3
         
-        if dmi_dim == 3:
-            E_integrand = self.DMI_factor * self.D * df.inner(m, df.curl(m))
-        else:
-            E_integrand = self.DMI_factor * self.D * manual_times_curl(m, dmi_dim)
+        E_integrand = self.DMI_factor * self.D * helpers.times_curl(m, dmi_dim)
             
         if self.dmi_type is 'interfacial':
             E_integrand = DMI_ultra_thin_film(m, self.DMI_factor * self.D, dim=dmi_dim)
