@@ -11,7 +11,7 @@ from finmag.physics.llb.material import Material
 from finmag.util import helpers
 from finmag.util.vtk_saver import VTKSaver
 from finmag.util.fileio import Tablewriter
-from finmag.scheduler import scheduler, events
+from finmag.scheduler import scheduler, derivedevents
 from finmag.util.pbc2d import PeriodicBoundary2D
 
 import logging
@@ -275,7 +275,7 @@ class LLB(object):
 
     def run_until(self,time):
 
-        exit_at = events.StopIntegrationEvent(time)
+        exit_at = derivedevents.StopIntegrationEvent(time)
         self.scheduler._add(exit_at)
 
         self.run_with_scheduler()
@@ -403,7 +403,7 @@ class LLB(object):
 
         """
 
-        relax = events.RelaxationEvent(self, stopping_dmdt, dmdt_increased_counter_limit, dt_limit)
+        relax = derivedevents.RelaxationEvent(self, stopping_dmdt, dmdt_increased_counter_limit, dt_limit)
         self.scheduler._add(relax)
 
         self.run_with_scheduler()
