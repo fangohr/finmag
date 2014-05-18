@@ -22,7 +22,7 @@ from finmag.sim.hysteresis import hysteresis as hyst, hysteresis_loop as hyst_lo
 from finmag.sim import sim_helpers, magnetisation_patterns
 from finmag.drivers.llg_integrator import llg_integrator
 from finmag.drivers.sundials_integrator import SundialsIntegrator
-from finmag.scheduler import scheduler, events
+from finmag.scheduler import scheduler
 from finmag.util.pbc2d import PeriodicBoundary1D, PeriodicBoundary2D
 from finmag.energies import Exchange, Zeeman, TimeZeeman, Demag, UniaxialAnisotropy, DMI
 
@@ -557,18 +557,16 @@ class Simulation(object):
             self.create_integrator()
 
         log.info("Simulation will run until t = {:.2g} s.".format(t))
-        exit_at = events.StopIntegrationEvent(t)
-        self.scheduler._add(exit_at)
         self.t_max = t
 
-        self.scheduler.run(self.integrator, self.callbacks_at_scheduler_events)
+        self.scheduler.run_until(t, self.integrator,
+                                 self.callbacks_at_scheduler_events)
         # The following line is necessary because the time integrator may
         # slightly overshoot the requested end time, so here we make sure
         # that the field values represent that requested time exactly.
-        self.llg.effective_field.update(t)
-        log.info("Simulation has reached time t = {:.2g} s.".format(self.t))
 
-        self.scheduler._remove(exit_at)
+        self.llg.effective_field.update(t)  # MV: Move to scheduler? <!>
+        log.info("Simulation has reached time t = {:.2g} s.".format(self.t))
 
     relax = sim_relax.relax
 
