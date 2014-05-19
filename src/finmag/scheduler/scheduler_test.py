@@ -1,5 +1,5 @@
 import pytest
-from derivedevents import SingleEvent, RepeatingEvent
+from derivedevents import SingleTimeEvent, RepeatingTimeEvent
 from scheduler import Scheduler
 
 class Counter(object):
@@ -18,15 +18,15 @@ class Counter(object):
 
 
 def test_first_every_at_start():
-    e = RepeatingEvent(100)
+    e = RepeatingTimeEvent(100)
     assert e.next_time == 0.0
 
-    e = RepeatingEvent(100, 5)
+    e = RepeatingTimeEvent(100, 5)
     assert e.next_time == 5
 
 
 def test_update_next_stop_according_to_interval():
-    e = RepeatingEvent(100)
+    e = RepeatingTimeEvent(100)
     assert e.next_time == 0
     e.check_and_trigger(0)
     assert e.next_time == 100
@@ -40,7 +40,7 @@ def test_can_attach_callback():
     c = Counter()
 
     assert c.cnt_every == 0
-    e = RepeatingEvent(100)
+    e = RepeatingTimeEvent(100)
     e.attach(c.inc_every)
     e.check_and_trigger(0)
     assert c.cnt_every == 1
@@ -49,7 +49,7 @@ def test_can_attach_callback():
 
     c.reset()
 
-    e = RepeatingEvent(100, callback=c.inc_every)
+    e = RepeatingTimeEvent(100, callback=c.inc_every)
     assert c.cnt_every == 0
     e.check_and_trigger(0)
     assert c.cnt_every == 1
@@ -59,7 +59,7 @@ def test_at_with_single_value():
     c = Counter()
 
     assert c.cnt_at == 0
-    a = SingleEvent(100)
+    a = SingleTimeEvent(100)
     assert a.next_time == 100
     a.attach(c.inc_at)
     a.check_and_trigger(0)
@@ -137,8 +137,8 @@ def test_reached():
 
     # It is not an error to call reached() with a time step in the
     # past. However, this won't trigger any events here because the
-    # RepeatingEvent knows about its next time step, and the
-    # SingleEvent was already triggered above (and no event is
+    # RepeatingTimeEvent knows about its next time step, and the
+    # SingleTimeEvent was already triggered above (and no event is
     # triggered twice for the same time step, unless a reset()
     # happens).
     s.reached(10); assert c.cnt_every == 4; assert c.cnt_at == 1
