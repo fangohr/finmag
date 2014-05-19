@@ -15,12 +15,6 @@ class SingleTimeEvent(TimeEvent):
 
     """
 
-    def __init__(self, init_time=None, trigger_on_stop=False, callback=None):
-        # These arguments are not passed as kwargs because single-line syntax
-        # is encouraged for tidyness in the scheduler.
-        super(SingleTimeEvent, self).__init__(init_time, trigger_on_stop,
-                                              callback)
-
     def trigger(self, time, is_stop=False):
         """
         This calls the callback function now, and does not check whether it is
