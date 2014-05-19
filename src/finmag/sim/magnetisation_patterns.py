@@ -468,3 +468,44 @@ def initialise_vortex(sim, type, center=None, **kwargs):
                          format(vortex_funcs.keys(), type))
 
     sim.set_m(fun_m_init)
+
+def initialise_target_state(diskRadius, centre, rings):
+    """
+    Function to initialise target state (as seen in [1]).
+
+    'diskRadius' is the radial length from the centre of the target to
+    the outer edge (this function will work on non cylindrical objects)
+
+    'centre' is the centre of the target state. If 'centre' in None, the
+    target centre will automatically be set at (0,0,0). Note that the centre
+    of the target has a positive magnetisation.
+
+    'rings' is the number of positively magnetised rings around the 
+    (positively magnetised) central target. 'rings' can also take non-integer
+    values. It cannot be zero though.
+
+    """
+    if rings == 0:
+        raise ValueError("Number of rings cannot be zero")
+    
+    ringRadius = diskRadius / float(rings)
+
+    def f(pt):
+        x,y,z = pt 
+        xc = x - centre[0]
+        yc = y - centre[1]
+        rho = math.sqrt(xc ** 2 + yc **2)
+        theta = 2 * math.atan(rho / ringRadius)
+        phi = math.atan2(yc,xc)
+
+        mz = math.cos(2*np.pi * rho / ringRadius)
+        mx = -math.sin(theta) * math.sin(phi)
+        my = math.sin(theta) * math.cos(phi)
+            
+        if (mz < 0):
+            mx = -mx
+            my = -my
+        
+        return (mx,my,mz)
+
+    return f
