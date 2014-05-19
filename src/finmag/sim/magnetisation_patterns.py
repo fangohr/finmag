@@ -469,7 +469,7 @@ def initialise_vortex(sim, type, center=None, **kwargs):
 
     sim.set_m(fun_m_init)
 
-def initialise_target_state(diskRadius, centre, rings):
+def initialise_target_state(diskRadius, centre, rings, right_handed=False):
     """
     Function to initialise target state (as seen in [1]).
 
@@ -483,6 +483,12 @@ def initialise_target_state(diskRadius, centre, rings):
     'rings' is the number of positively magnetised rings around the 
     (positively magnetised) central target. 'rings' can also take non-integer
     values. It cannot be zero though.
+
+    Note that handedness is preserved throughout the system, thus as mz changes
+    from positive to negative, the 'vortex' direction will flip accordingly.
+
+    [1] A.B. Butenko et al. Theory of ortex states in magnetic nanodisks with
+    induced Dzyaloshinskii-Moriya interactions. Phys. Rev. B 80, 134410 (2009)
 
     """
     if rings == 0:
@@ -498,11 +504,20 @@ def initialise_target_state(diskRadius, centre, rings):
         theta = 2 * math.atan(rho / ringRadius)
         phi = math.atan2(yc,xc)
 
+        # first create a (right handed) vortex structure but with modulating mz,
+        # as seen in target state.
         mz = math.cos(2*np.pi * rho / ringRadius)
         mx = -math.sin(theta) * math.sin(phi)
         my = math.sin(theta) * math.cos(phi)
-            
+        
+        # if the mz is negative, flip the direction of the vortex direction, to 
+        # preserve the chirality/handedness.   
         if (mz < 0):
+            mx = -mx
+            my = -my
+
+        # change to left handedness if required.
+        if not right_handed:
             mx = -mx
             my = -my
         
