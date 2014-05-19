@@ -1,5 +1,5 @@
 import logging
-from finmag.scheduler.timeevent import TimeEvent, same_time
+from finmag.scheduler.timeevent import TimeEvent, same_time, EPSILON
 
 # Import the possible states of events.
 from finmag.scheduler.event import EV_ACTIVE, EV_DONE
@@ -79,6 +79,12 @@ class RepeatingTimeEvent(SingleTimeEvent):
                  callback=None):
         super(RepeatingTimeEvent, self).__init__(init_time or 0.,
                                                  trigger_on_stop, callback)
+
+        # Negative intervals make us sad.
+        if interval < 0:
+            raise ValueError("{}.init: Proposed interval is negative; events "
+                             "cannot occur in the past without the use of "
+                             "reset.".format(self.__class__.__name__))
         self.interval = interval
 
     def trigger(self, time, is_stop=False):
@@ -98,7 +104,7 @@ class RepeatingTimeEvent(SingleTimeEvent):
         """
         if not hasattr(self.interval, "__call__"):
             self.last = time - time % self.interval
-            if time % self.interval == 0:
+            if time % self.interval < EPSILON:
                 self.last -= self.interval
             self.next_time = self.last + self.interval
 
