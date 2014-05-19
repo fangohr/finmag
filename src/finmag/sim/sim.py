@@ -562,9 +562,9 @@ class Simulation(object):
         # Define function that stops integration and add it to scheduler. The
         # at_end parameter is required because t can be zero, which is
         # considered as False for comparison purposes in scheduler.add.
-        def StopIntegration():
+        def call_to_end_integration():
             return False
-        self.scheduler.add(StopIntegration, at=t, at_end=True)
+        self.scheduler.add(call_to_end_integration, at=t, at_end=True)
 
         self.scheduler.run(self.integrator, self.callbacks_at_scheduler_events)
 
