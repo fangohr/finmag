@@ -209,7 +209,7 @@ class Scheduler(object):
 
     def print_scheduled_items(self, func_print=log.info):
         for item in self.items:
-            print item  # this will call __str__ on the item, which should be defned for all events
+            print item  # this will call __str__ on the item, which should be defined for all events
         for item in self.realtime_items:
             self._print_realtime_item(item, func_print)
 
