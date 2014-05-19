@@ -38368,3 +38368,210 @@ Hans
 -------------------------------------
 finmag-team mailing list.
 
+From marvin  Mon May 19 18:19:34 2014
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.26)
+	for <marvin@localhost> (single-drop); Mon, 19 May 2014 18:19:34 +0100 (BST)
+Received: by 10.217.69.130 with SMTP id z2csp246026wex;
+        Mon, 19 May 2014 10:18:14 -0700 (PDT)
+X-Received: by 10.112.54.228 with SMTP id m4mr2166809lbp.96.1400519894476;
+        Mon, 19 May 2014 10:18:14 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id xg10si14288702lac.88.2014.05.19.10.18.13
+        for <multiple recipients>;
+        Mon, 19 May 2014 10:18:14 -0700 (PDT)
+Received-SPF: none (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=neutral (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk;
+       dkim=neutral (body hash did not verify) header.i=@;
+       dmarc=fail (p=NONE dis=NONE) header.from=gmail.com
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s4JHIAST031514;
+	Mon, 19 May 2014 18:18:10 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk [152.78.119.37])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id q4IIIA0832354179NU ret-id none; Mon, 19 May 2014 18:18:10 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.37) with Microsoft SMTP Server (TLS) id 14.3.181.6; Mon, 19 May
+ 2014 18:18:09 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id s4JHI98N006714;	Mon, 19 May 2014 18:18:09 +0100
+Received: from mailgate3.iss.soton.ac.uk (mailgate3.iss.soton.ac.uk
+ [152.78.128.104])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ s4JHI9kW006711	for <finmag-team@lists.soton.ac.uk>; Mon, 19 May 2014 18:18:09
+ +0100
+Received: from mailgate3.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate3.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s4JHHxi4008948	for
+ <finmag-team@lists.soton.ac.uk>; Mon, 19 May 2014 18:17:59 +0100
+Received: from mail-qc0-f182.google.com (mail-qc0-f182.google.com
+ [209.85.216.182])	by mailgate3.iss.soton.ac.uk (mailgate3.iss.soton.ac.uk
+ [152.78.128.104]) envelope-from <maximilian.albert@gmail.com> with ESMTP	id
+ q4IIHw1013653285DD ret-id none; Mon, 19 May 2014 18:17:59 +0100
+Received: by mail-qc0-f182.google.com with SMTP id e16so9571233qcx.13
+        for <finmag-team@lists.soton.ac.uk>; Mon, 19 May 2014 10:17:58 -0700
+ (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:date:message-id:subject:from:to:content-type;
+        bh=onIlxKpiv3BHf64HOSu83mTeTAwMq30YFsopAZk+AXc=;
+        b=ar3KTsRAywtux4kqsZWkk0CTOV95Mdvkz+gLfb0PbnlMo9aB4AT5aLgpblzn/c760u
+         qxgWvcZ4/+uZvPnW5reCiwbI2CKIMAX+bVraMI3c6zcWekSrApSVNaFaJ6iK919NV4oI
+         c7K8joVnQiYe7Rg0HfzqLUsNfQL9GxlrEFbUR3FPYGWCicP0Nw1+X0t4DHVZOpRQK8k3
+         GUq+ODQvJm4p6vGUzay4RYtRzvGiewcLzp31xC01RaKyZBqrFtPvyrf7RRsW4v5qaZs7
+         OcMnQHxvzC0A6sfkr5AngCG7EHHJ6uyPcQ9AnmucwpS0nsvX5bGt1W/p7mjhfsR1bD7/
+         b61w==
+MIME-Version: 1.0
+X-Received: by 10.140.92.54 with SMTP id a51mr49352639qge.23.1400519878246;
+ Mon, 19 May 2014 10:17:58 -0700 (PDT)
+Received: by 10.96.122.41 with HTTP; Mon, 19 May 2014 10:17:58 -0700 (PDT)
+Date: Mon, 19 May 2014 18:17:58 +0100
+Message-ID: <CAGA_dmgHqfen9OMC1B9k5NmeFcsh5WwqZM7F3BE46O3tQCspkw@mail.gmail.com>
+Subject: [finmag-team] {Disarmed} Synology disk station: how to connect
+From: Maximilian Albert <maximilian.albert@gmail.com>
+To: "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+Content-Type: multipart/alternative; boundary="001a113ab97ad807d204f9c3f1a5"
+Received-SPF: Pass (UOS-MSG00035-VS.soton.ac.uk: domain of
+ owner-finmag-team@lists.soton.ac.uk designates 152.78.128.58 as permitted
+ sender) receiver=UOS-MSG00035-VS.soton.ac.uk; client-ip=152.78.128.58;
+ helo=maillists.sucs.soton.ac.uk;
+Received-SPF: None; receiver=mailgate3.iss.soton.ac.uk; client-ip=209.85.216.182; helo=<mail-qc0-f182.google.com>
+Received-SPF: Pass; receiver=mailgate3.iss.soton.ac.uk; client-ip=209.85.216.182; envelope-from=<maximilian.albert@gmail.com>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=q4IIIA083235417900; tid=q4IIIA0832354179NU; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: s4JHIAST031514
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+--001a113ab97ad807d204f9c3f1a5
+Content-Type: text/plain; charset="UTF-8"
+
+Hi all,
+
+I think we still don't know what the admin password for the disk station is
+(although Hans sent around some instructions on how to set it: [1]).
+
+But I just managed to at least connect to it and mount it. The problem was
+that I didn't know the IP address (which changed after the move to
+Boldrewood). But when I installed the SynologyAssistant software (which can
+be downloaded from [2]) and ran it, it did an automatic scan of the network
+and simply detected the disk station, which is quite impressive.
+
+The new IP address is 10.15.41.103 (I suspect that it's not static, but it
+should remain valid as long as the disk station is running, and if it
+changes we can find it again by using the SynologyAssistant).
+
+If you want to mount the disk station on your computer, you can do this via
+by adding the following line to your fstab file:
+
+   //10.15.41.103/home /mnt/synology cifs
+user,uid=USERNAME,gid=GROUPNAME,rw,suid,credentials=/etc/cifspwd,noperm 0 0
+
+Here, USERNAME and GROUPNAME should be replaced with your username and
+groupname. For me these are both "albert". You will also need to store the
+username and password for the disk station in the file called /etc/cifspwd
+on your computer. It should have the following format:
+
+   username=albert
+   password=MYSUPERSECRETPASSWORD
+
+Make sure that the file is only readable by yourself!
+
+   sudo chmod 600 /etc/cifspwd
+
+On my system, the file has the following ownership (although it may not be
+necessary to change this):
+
+   sudo chown root:samba /etc/cifspwd
+
+Now you can mount the disk station by saying:
+
+   sudo mount /mnt/synology
+
+(Make sure that the folder /mnt/synology exists before trying to mount it.)
+
+One last note: I found the relevant settings for the /etc/fstab file by
+reading around and trial & error. They seem to mostly work, but I seem to
+remember that there was still a minor problem with file permissions at some
+point. So they may need tweaking a bit if you encounter any problems.
+
+Cheers,
+Max
+
+P.S.: Some other helpful resources are [3-5].
+
+
+[1] http://www.synology.com/en-uk/support/tutorials/493#t2
+[2] http://www.synology.com/en-us/support/download/DS112
+[3]
+http://forum.synology.com/wiki/index.php/Mapping_a_Network_Drive#How_to_map_a_drive_using_a_Linux.2FUnix_Environment
+[4]
+http://jaystile.wordpress.com/2013/04/26/mounting-a-synology-drive-on-ubuntu-linux/
+[5] https://help.ubuntu.com/community/MountWindowsSharesPermanently
+
+--001a113ab97ad807d204f9c3f1a5
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr">Hi all,<div><br></div><div>I think we still don&#39;t know=
+ what the admin password for the disk station is (although Hans sent around=
+ some instructions on how to set it: [1]).</div><div><br></div><div>But I j=
+ust managed to at least connect to it and mount it. The problem was that I =
+didn&#39;t know the IP address (which changed after the move to Boldrewood)=
+. But when I installed the SynologyAssistant software (which can be downloa=
+ded from [2]) and ran it, it did an automatic scan of the network and simpl=
+y detected the disk station, which is quite impressive.</div>
+<div><br></div><div>The new IP address is 10.15.41.103 (I suspect that it&#=
+39;s not static, but it should remain valid as long as the disk station is =
+running, and if it changes we can find it again by using the SynologyAssist=
+ant).</div>
+<div><br></div><div>If you want to mount the disk station on your computer,=
+ you can do this via by adding the following line to your fstab file:</div>=
+<div><br></div><div>=C2=A0 =C2=A0//<a href=3D"http://10.15.41.103/home"><fo=
+nt color=3D"red"><b>MailScanner warning: numerical links are often maliciou=
+s:</b></font> 10.15.41.103/home</a> /mnt/synology cifs user,uid=3DUSERNAME,=
+gid=3DGROUPNAME,rw,suid,credentials=3D/etc/cifspwd,noperm 0 0<br>
+</div><div><br></div><div>Here, USERNAME and GROUPNAME should be replaced w=
+ith your username and groupname. For me these are both &quot;albert&quot;. =
+You will also need to store the username and password for the disk station =
+in the file called /etc/cifspwd on your computer. It should have the follow=
+ing format:</div>
+<div><br></div><div><div>=C2=A0 =C2=A0username=3Dalbert</div><div>=C2=A0 =
+=C2=A0password=3DMYSUPERSECRETPASSWORD</div></div><div><br></div><div>Make =
+sure that the file is only readable by yourself!</div><div><br></div><div>=
+=C2=A0 =C2=A0sudo chmod 600 /etc/cifspwd</div>
+<div><br></div><div>On my system, the file has the following ownership (alt=
+hough it may not be necessary to change this):</div><div><br></div><div>=C2=
+=A0 =C2=A0sudo chown root:samba /etc/cifspwd</div><div><br></div><div>Now y=
+ou can mount the disk station by saying:</div>
+<div><br></div><div>=C2=A0 =C2=A0sudo mount /mnt/synology</div><div><br></d=
+iv><div>(Make sure that the folder /mnt/synology exists before trying to mo=
+unt it.)<br></div><div><br></div><div>One last note: I found the relevant s=
+ettings for the /etc/fstab file by reading around and trial &amp; error. Th=
+ey seem to mostly work, but I seem to remember that there was still a minor=
+ problem with file permissions at some point. So they may need tweaking a b=
+it if you encounter any problems.</div>
+<div><br></div><div>Cheers,<br></div><div>Max</div><div><br></div><div>P.S.=
+: Some other helpful resources are [3-5].</div><div><br></div><div><br></di=
+v><div>[1] <a href=3D"http://www.synology.com/en-uk/support/tutorials/493#t=
+2">http://www.synology.com/en-uk/support/tutorials/493#t2</a></div>
+<div>[2]=C2=A0<a href=3D"http://www.synology.com/en-us/support/download/DS1=
+12">http://www.synology.com/en-us/support/download/DS112</a></div><div>[3]=
+=C2=A0<a href=3D"http://forum.synology.com/wiki/index.php/Mapping_a_Network=
+_Drive#How_to_map_a_drive_using_a_Linux.2FUnix_Environment">http://forum.sy=
+nology.com/wiki/index.php/Mapping_a_Network_Drive#How_to_map_a_drive_using_=
+a_Linux.2FUnix_Environment</a></div>
+<div>[4]=C2=A0<a href=3D"http://jaystile.wordpress.com/2013/04/26/mounting-=
+a-synology-drive-on-ubuntu-linux/">http://jaystile.wordpress.com/2013/04/26=
+/mounting-a-synology-drive-on-ubuntu-linux/</a><br></div><div>[5] <a href=
+=3D"https://help.ubuntu.com/community/MountWindowsSharesPermanently">https:=
+//help.ubuntu.com/community/MountWindowsSharesPermanently</a><br>
+</div></div>
+
+--001a113ab97ad807d204f9c3f1a5--
+
