@@ -12,6 +12,7 @@ from finmag.physics.llg_stt import LLG_STT
 from finmag.physics.llb.sllg import SLLG
 from finmag.sim import sim_details
 from finmag.sim import sim_relax
+from finmag.sim import sim_savers
 from finmag.util.meshes import mesh_volume, mesh_size_plausible, \
     describe_mesh_size, plot_mesh, plot_mesh_with_paraview
 from finmag.util.fileio import Tablewriter, FieldSaver
@@ -139,8 +140,8 @@ class Simulation(object):
             'plot_relaxation': sim_helpers.plot_relaxation,
             'render_scene': Simulation._render_scene_incremental,
             'save_averages': sim_helpers.save_ndt,
-            'save_field': Simulation._save_field_incremental,
-            'save_m': Simulation._save_m_incremental,
+            'save_field': sim_savers._save_field_incremental,
+            'save_m': sim_savers._save_m_incremental,
             'save_ndt': sim_helpers.save_ndt,
             'save_restart_data': sim_helpers.save_restart_data,
             'save_vtk': self.save_vtk,
@@ -921,62 +922,9 @@ class Simulation(object):
         vtk_saver = self._get_vtk_saver(filename, overwrite)
         self._save_field_to_vtk(field_name, vtk_saver, region=region)
 
-    def _get_field_saver(self, field_name, filename=None, overwrite=False, incremental=False):
-        if filename is None:
-            filename = '{}_{}.npy'.format(self.sanitized_name, field_name.lower())
-        if not filename.endswith('.npy'):
-            filename += '.npy'
-
-        s = None
-        if self.field_savers.has_key(filename) and self.field_savers[filename].incremental == incremental:
-            s = self.field_savers[filename]
-
-        if s is None:
-            s = FieldSaver(filename, overwrite=overwrite, incremental=incremental)
-            self.field_savers[filename] = s
-
-        return s
-
-    def save_field(self, field_name, filename=None, incremental=False, overwrite=False, region=None):
-        """
-        Save the given field data to a .npy file.
-
-        *Arguments*
-
-        field_name : string
-
-            The name of the field to be saved. This should be either 'm'
-            or the name of one of the interactions present in the
-            simulation (e.g. Demag, Zeeman, Exchange, UniaxialAnisotropy).
-
-        filename : string
-
-            Output filename. If not specified, a default name will be
-            generated automatically based on the simulation name and the
-            name of the field to be saved. If a file with the same name
-            already exists, an exception of type IOError will be raised.
-
-        incremental : bool
-
-        region:
-
-            Some identifier that uniquely identifies a mesh region. This required
-            that the method `mark_regions` has been called previously so that the
-            simulation knows about the regions and their IDs.
-
-        """
-        field_data = self.get_field_as_dolfin_function(field_name, region=region)
-        field_saver = self._get_field_saver(field_name, filename, incremental=incremental, overwrite=overwrite)
-        field_saver.save(field_data.vector().array())
-
     save_m = sim_helpers.save_m
 
-    def _save_field_incremental(self, field_name, filename=None, overwrite=False):
-        self.save_field(field_name, filename, incremental=True, overwrite=overwrite)
-
-    def _save_m_incremental(self, filename=None, overwrite=False):
-        self.save_field('m', filename, incremental=True, overwrite=overwrite)
-
+    save_field = sim_savers.save_field
 
     length_scales = sim_details.length_scales
     mesh_info = sim_details.mesh_info
