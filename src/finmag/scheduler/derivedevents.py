@@ -108,19 +108,6 @@ class RepeatingTimeEvent(SingleTimeEvent):
             raise NotImplementedError(msg)
 
 
-class StopIntegrationTimeEvent(SingleTimeEvent):
-    """
-    A time-based event that stops time integration at a given time value.
-
-    """
-
-    def __init__(self, init_time):
-        def callback():
-            return False
-        super(StopIntegrationTimeEvent, self).__init__(init_time=init_time,
-                                                       callback=callback)
-
-
 # MV: This class is from the good old days, where the simulation object has a
 # bit of a god complex. Be sure to change this to fit the new paradigm. <!>
 
