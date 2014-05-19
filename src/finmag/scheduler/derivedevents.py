@@ -240,8 +240,3 @@ class RelaxationEvent(object):
         """
         return "<{} | last t = {} | last dmdt = {} * stopping_dmdt | next t = {}>".format(
             self.__class__.__name__, self.last_t, self.dmdts[-1][1] / self.stopping_dmdt, self.next_time)
-
-# Renaming for easy testing.
-SingleEvent = SingleTimeEvent
-RepeatingEvent = RepeatingTimeEvent
-StopIntegrationEvent = StopIntegrationTimeEvent

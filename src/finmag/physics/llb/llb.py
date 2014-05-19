@@ -275,7 +275,7 @@ class LLB(object):
 
     def run_until(self,time):
 
-        exit_at = derivedevents.StopIntegrationEvent(time)
+        exit_at = derivedevents.StopIntegrationTimeEvent(time)
         self.scheduler._add(exit_at)
 
         self.run_with_scheduler()
@@ -403,7 +403,7 @@ class LLB(object):
 
         """
 
-        relax = derivedevents.RelaxationEvent(self, stopping_dmdt, dmdt_increased_counter_limit, dt_limit)
+        relax = derivedevents.RelaxationTimeEvent(self, stopping_dmdt, dmdt_increased_counter_limit, dt_limit)
         self.scheduler._add(relax)
 
         self.run_with_scheduler()
