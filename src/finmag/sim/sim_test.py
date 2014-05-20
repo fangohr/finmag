@@ -154,7 +154,8 @@ class TestSimulation(object):
         for v in m_probed_vals:
             assert(np.allclose(v, m_init))
 
-        # Probe at point outside the mesh
+        # Probe at point outside the mesh and check
+        # that the resulting vector is masked.
         m_probed_outside = sim.probe_field("m", [5, -6,  1])
         assert((np.ma.getmask(m_probed_outside) == True).all())
 
@@ -182,16 +183,22 @@ class TestSimulation(object):
 
         # Probe the magnetisation at the given points
         m_probed_vals = [sim.probe_field("m", pt) for pt in probing_pts]
+        # Alternative method using 'probe_field_along_line()'
+        m_probed_vals2 = np.concatenate(
+            [sim.probe_field_along_line("m", [xmin, 0, 0], [xmax, 0, 0], N=20),
+             sim.probe_field_along_line("m", [xmin, y0, z0], [xmax, y0, z0], N=20)])
 
         # Check that we get m_init everywhere.
         for i in xrange(len(probing_pts)):
             m = m_probed_vals[i]
+            m2 = m_probed_vals2[i]
             pt = probing_pts[i]
             x = pt[0]
             m_expected = np.array([cos(x*pi),
                                    sin(x*pi),
                                    0.0])
             assert(np.linalg.norm(m - m_expected) < TOL)
+            assert(np.linalg.norm(m2 - m_expected) < TOL)
 
     def test_probe_m_on_regular_grid(self, tmpdir):
         """
