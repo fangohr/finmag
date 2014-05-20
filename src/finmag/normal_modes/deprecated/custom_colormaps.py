@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.colors as mcolors
+import husl
 from colormath.color_conversions import convert_color
 from colormath.color_objects import LabColor, sRGBColor
 from math import pi, cos, sin
@@ -82,8 +83,24 @@ def linear_colormap(rgb1, rgb2):
     return cmap
 
 
+def husl_colormap(saturation, lightness):
+    """
+    Generate a colormap of linearly varying hue while keeping saturation and lightness fixed.
+    See here for the HUSL color space: http://www.boronine.com/husl/
+
+    """
+    hvals = np.linspace(0, 360, 256, endpoint=False)
+    cmap_vals = np.array([husl.husl_to_rgb(h, saturation, lightness) for h in hvals])
+    cmap = mcolors.ListedColormap(cmap_vals)
+    return cmap
+
+
 # Define a few colormaps with increasingly lighter colors
 circular1 = circular_colormap(center=[50, 25, 5], radius=52)
 circular2 = circular_colormap(center=[60, 15, 13], radius=51)
 circular3 = circular_colormap(center=[65, 5, 18], radius=49)
 circular4 = circular_colormap(center=[60, 6, 24], radius=51, normal_vector=[3, 1, -1])
+
+husl_99_75 = husl_colormap(saturation=99, lightness=75)
+husl_99_70 = husl_colormap(saturation=99, lightness=70)
+husl_99_65 = husl_colormap(saturation=99, lightness=65)
