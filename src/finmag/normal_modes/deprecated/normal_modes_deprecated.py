@@ -706,7 +706,7 @@ def get_phaseplot_ticks_and_labels(num_ticks):
 def plot_spatially_resolved_normal_mode(mesh, m0, w, slice_z='z_max', components='xyz',
                                         figure_title=None, yshift_title=0.0,
                                         plot_powers=True, plot_phases=True, num_phase_colorbar_ticks=5,
-                                        cmap_powers='coolwarm', cmap_phases='husl_99_65', vmin_powers=None,
+                                        cmap_powers='coolwarm', cmap_phases='circular4', vmin_powers=None,
                                         show_axis_labels=True, show_axis_frames=True, show_colorbars=True, figsize=None,
                                         outfilename=None, dpi=None, use_fenicstools=False):
     """
