@@ -103,8 +103,8 @@ def test_passing_scipy_eigsh_parameters(tmpdir):
     os.chdir(str(tmpdir))
     sim = example.normal_modes.disk()
 
-    omega1, _ = sim.compute_normal_modes(n_values=4, tol=0)
-    omega2, _ = sim.compute_normal_modes(n_values=4, tol=0, ncv=20, maxiter=2000, sigma=0.0, which='SM')
+    omega1, _, _, _ = sim.compute_normal_modes(n_values=4, tol=0)
+    omega2, _, _, _ = sim.compute_normal_modes(n_values=4, tol=0, ncv=20, maxiter=2000, sigma=0.0, which='SM')
     logger.debug("Note: the following results are not meant to coincide! Their purpose is just to test passing arguments to scipy.sparse.linalg.eigsh")
     logger.debug("Computed eigenfrequencies #1: {}".format(omega1))
     logger.debug("Computed eigenfrequencies #2: {}".format(omega2))
@@ -140,7 +140,7 @@ def test_plot_spatially_resolved_normal_mode(tmpdir):
     m0 = sim.m
 
     N = 3
-    omega, eigenvecs, rel_errors = sim.compute_normal_modes(n_values=N)
+    omega, eigenvecs, rel_errors, mode_powers = sim.compute_normal_modes(n_values=N)
     logger.debug("[DDD] Computed {} eigenvalues and {} eigenvectors.".format(len(omega), len(eigenvecs[0])))
     for i in xrange(N):
         #sim.export_normal_mode_animation(i, filename='animations/normal_mode_{:02d}/normal_mode_{:02d}.pvd'.format(i, i))
