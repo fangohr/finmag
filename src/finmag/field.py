@@ -42,36 +42,30 @@
 #   - for visualisation (use dolfin tools)
 #   - for data storage (use dolfin tools)
 
-from __future__ import division
 import dolfin as df
 import numpy as np
 
 
 class Field(object):
-    def __init__(self, functionspace, value=None, name=None, units=None): 
-        
+    def __init__(self, functionspace, value=None, name=None, unit=None): 
         self.functionspace = functionspace
-
-        # attribute f for Function
         self.f = df.Function(self.functionspace)
-
         if value is not None:
             self.set(value)
-
         self.name = name
-
-        self.units = units  
-
-        if name:
+        if name is not None:
             self.f.rename(name, name)
+        self.unit = unit
 
     def set(self, value):
         """
         Set the field to value.
         Value can be constant, dolfin expression, python function, file.
         """
+        # works for both scalar and vector
         if isinstance(value, (df.Constant, df.Expression)):
             self.f = df.interpolate(value, self.functionspace)
+        # works only for scalar
         elif isinstance(value, (basestring, int, float)):
             self.f = df.interpolate(df.Constant(value), self.functionspace)
     
