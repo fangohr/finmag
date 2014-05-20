@@ -1,9 +1,25 @@
 import numpy as np
 import matplotlib.colors as mcolors
-import husl
-from colormath.color_conversions import convert_color
-from colormath.color_objects import LabColor, sRGBColor
+import logging
+import sys
 from math import pi, cos, sin
+
+logger = logging.getLogger('finmag')
+
+
+try:
+    import husl
+except:
+    logger.error("Missing python package: 'husl'. Please install it using 'sudo pip install husl'.")
+    sys.exit()
+
+try:
+    from colormath.color_conversions import convert_color
+    from colormath.color_objects import LabColor, sRGBColor
+except:
+    logger.error("Missing python package: 'colormath'. Please install it using 'sudo pip install colormath'.")
+    sys.exit()
+
 
 # The following values are derived from a circular path in the CIELab [1]
 # color space. The path is defined as follows:
