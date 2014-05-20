@@ -569,13 +569,13 @@ class NormalModeSimulation(Simulation):
             n_values *= 2
 
         if use_generalized:
-            # omega, w = compute_normal_modes_generalised(self.A, self.M, n_values=n_values, discard_negative_frequencies=discard_negative_frequencies,
+            # omega, eigenvecs = compute_normal_modes_generalised(self.A, self.M, n_values=n_values, discard_negative_frequencies=discard_negative_frequencies,
             #                                             tol=tol, sigma=sigma, which=which, v0=v0, ncv=ncv, maxiter=maxiter, Minv=Minv, OPinv=OPinv, mode=mode)
-            omega, w, rel_errors = solver.solve_eigenproblem(self.A, self.M, num=n_values)
+            omega, eigenvecs, rel_errors = solver.solve_eigenproblem(self.A, self.M, num=n_values)
         else:
-            # omega, w = compute_normal_modes(self.D, n_values, sigma=0.0, tol=tol, which='LM')
+            # omega, eigenvecs = compute_normal_modes(self.D, n_values, sigma=0.0, tol=tol, which='LM')
             # omega = np.real(omega)  # any imaginary part is due to numerical inaccuracies so we ignore them
-            omega, w, rel_errors = solver.solve_eigenproblem(self.D, None, num=n_values)
+            omega, eigenvecs, rel_errors = solver.solve_eigenproblem(self.D, None, num=n_values)
             if use_real_matrix:
                 # Eigenvalues are complex due to the missing factor of 1j in the matrix with real entries. Here we correct for this.
                 omega = 1j*omega
@@ -596,15 +596,15 @@ class NormalModeSimulation(Simulation):
         if discard_negative_frequencies:
             pos_freq_indices = [i for (i, freq) in enumerate(omega) if freq >= 0]
             omega = omega[pos_freq_indices]
-            w = w[pos_freq_indices]
+            eigenvecs = eigenvecs[pos_freq_indices]
 
         log.debug("Relative errors of computed eigensolutions: {}".format(rel_errors))
 
         self.eigenfreqs = omega
-        self.eigenvecs = w
+        self.eigenvecs = eigenvecs
         self.rel_errors = rel_errors
 
-        return omega, w, rel_errors
+        return omega, eigenvecs, rel_errors
 
     def export_eigenmode_animations(self, modes, dm_only=False, directory='', create_movies=True, directory_movies=None, num_cycles=1, num_snapshots_per_cycle=20, scaling=0.2, **kwargs):
         """
