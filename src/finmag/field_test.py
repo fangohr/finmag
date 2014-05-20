@@ -166,25 +166,6 @@ class TestField(object):
         assert(np.allclose(coords, mesh.coordinates()))
         assert(values, 15.3*coords[:, 0] - 2.3*coords[:, 1] + 96.1*coords[:, 2])
 
-    def test_probe_field_scalar(self):
-        functionspaces = (self.fs_1d_scalar,
-                          self.fs_2d_scalar,
-                          self.fs_3d_scalar)
-        for functionspace in functionspaces:
-            f = Field(functionspace)
-            dim = f.f.geometric_dimension()
-            probe_point = dim * (0.5,)
-            if dim == 1:
-                f.set(df.Expression('15.3*x[0]'))
-                exact_result = 15.3*0.5
-            elif dim == 2:
-                f.set(df.Expression('15.3*x[0] - 2.3*x[1]'))
-                exact_result = 15.3*0.5 - 2.3*0.5
-            else:
-                f.set(df.Expression('15.3*x[0] - 2.3*x[1] + 96.1*x[2]'))
-                exact_result = 15.3*0.5 - 2.3*0.5 + 96.1*0.5
-            assert abs(f.probe_field(probe_point) - exact_result) < 1e-13
-
     def test_get_coords_and_values_vector_field(self):
         functionspaces2d = [self.fs_1d_vector2d,
                             self.fs_2d_vector2d,
@@ -215,3 +196,22 @@ class TestField(object):
             coords, values = field.get_coords_and_values()
             assert np.allclose(coords, expected_coords)
             assert abs(np.sum(values) - expected_checksum) < self.tol
+
+    def test_probe_field_scalar(self):
+        functionspaces = (self.fs_1d_scalar,
+                          self.fs_2d_scalar,
+                          self.fs_3d_scalar)
+        for functionspace in functionspaces:
+            f = Field(functionspace)
+            dim = f.f.geometric_dimension()
+            probe_point = dim * (0.5,)
+            if dim == 1:
+                f.set(df.Expression('15.3*x[0]'))
+                exact_result = 15.3*0.5
+            elif dim == 2:
+                f.set(df.Expression('15.3*x[0] - 2.3*x[1]'))
+                exact_result = 15.3*0.5 - 2.3*0.5
+            else:
+                f.set(df.Expression('15.3*x[0] - 2.3*x[1] + 96.1*x[2]'))
+                exact_result = 15.3*0.5 - 2.3*0.5 + 96.1*0.5
+            assert abs(f.probe_field(probe_point) - exact_result) < 1e-13
