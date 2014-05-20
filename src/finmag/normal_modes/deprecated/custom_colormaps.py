@@ -44,7 +44,7 @@ center4 = np.array([65, 0, 0])
 radius4 = 36
 
 
-def circular_colormap(center, radius, offset=0):
+def circular_colormap(center, radius, normal_vector=[1, 0, 0], offset=0):
     """
     Define a perceptually linear, circular colormap defined through a
     circular path in the CIELab [1] color space. The path is defined
@@ -63,9 +63,17 @@ def circular_colormap(center, radius, offset=0):
 
     """
     center = np.asarray(center)
+    n = np.asarray(normal_vector)
+    n = n / np.linalg.norm(n)
+
+    arbitrary_direction = np.array([0.28, 0.33, 0.71])  # arbitrary vector to make sure that e1 below is unlikely to be zero
+
+    # Define two orthogonal vectors e1, e2 lying in the plane orthogonal to `normal_vector`.
+    e1 = np.cross(n, arbitrary_direction)
+    e2 = np.cross(n, e1)
 
     tvals = np.linspace(0, 2 * pi, 256, endpoint=False)
-    path_vals = [center + radius * np.array([0, cos(t+offset), sin(t+offset)]) for t in tvals]
+    path_vals = [center + radius * cos(t+offset) * e1 + radius * sin(t+offset) * e2 for t in tvals]
 
     cmap_vals = np.array([lab2rgb(pt) for pt in path_vals])
     cmap = mcolors.ListedColormap(cmap_vals)
@@ -94,3 +102,4 @@ def linear_colormap(rgb1, rgb2):
 circular1 = circular_colormap(center=[50, 25, 5], radius=52)
 circular2 = circular_colormap(center=[60, 15, 13], radius=51)
 circular3 = circular_colormap(center=[65, 5, 18], radius=49)
+circular4 = circular_colormap(center=[60, 6, 24], radius=51, normal_vector=[3, 1, -1])
