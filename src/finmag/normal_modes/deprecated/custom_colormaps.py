@@ -27,22 +27,6 @@ def rgb2lab(pt):
 def lab2rgb(pt):
     return convert_color(LabColor(pt[0], pt[1], pt[2]), sRGBColor).get_value_tuple()
 
-# L=50 (halfway between black and white)
-center1 = np.array([50, 25, 5])
-radius1 = 52
-
-# L=60 (somewhat lighter than the previous one)
-center2 = np.array([60, 15, 13])
-radius2 = 51
-
-# L=65 (even lighter)
-center3 = np.array([65, 5, 18])
-radius3 = 49
-
-# L=65, but path is centered around the L=0 axis
-center4 = np.array([65, 0, 0])
-radius4 = 36
-
 
 def circular_colormap(center, radius, normal_vector=[1, 0, 0], offset=0):
     """
