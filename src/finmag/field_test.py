@@ -164,7 +164,8 @@ class TestField(object):
         f.set(df.Expression('15.3*x[0] - 2.3*x[1] + 96.1*x[2]'))
         coords, values = f.get_coords_and_values()
         assert(np.allclose(coords, mesh.coordinates()))
-        assert(values, 15.3*coords[:, 0] - 2.3*coords[:, 1] + 96.1*coords[:, 2])
+        assert(values,
+               15.3*coords[:, 0] - 2.3*coords[:, 1] + 96.1*coords[:, 2])
 
     def test_get_coords_and_values_vector_field(self):
         functionspaces2d = [self.fs_1d_vector2d,
