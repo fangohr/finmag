@@ -120,25 +120,14 @@ class Field(object):
                 try:
                     values[i, :] = f_array[vtd_map[value_dim*i:value_dim*(i+1)]]
                 except IndexError:
-                    raise NotImplementedError
+                    # This only occurs in parallel and is probably related
+                    # to ghost nodes. I thought we could ignore those, but
+                    # this doesn't seem to be true since the resulting
+                    # array of function values has the wrong size. Need to
+                    # investigate.  (Max, 15.5.2014)
+                    raise NotImplementedError("XXX TODO: How to deal with this? What does it even mean?!?")
 
         return coords, values
-
-        #field_value_dim = self.functionspace.ufl_element().value_shape()[0]
-        
-       # values = np.empty((num_nodes, field_value_dim))
-       # for i in xrange(num_nodes):
-        #    try:
-          #      values[i] = f_array[vtd_map[i]]
-          #  except IndexError:
-                # This only occurs in parallel and is probably related
-                # to ghost nodes. I thought we could ignore those, but
-                # this doesn't seem to be true since the resulting
-                # array of function values has the wrong size. Need to
-                # investigate.  (Max, 15.5.2014)
-               # raise NotImplementedError("XXX TODO: How to deal with this? What does it even mean?!?")
-
-       # return coords, values
 
     def probe_field(self, coord):
         """
