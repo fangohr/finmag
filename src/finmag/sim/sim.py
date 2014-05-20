@@ -137,6 +137,7 @@ class Simulation(object):
 
         self.scheduler_shortcuts = {
             'eta': sim_helpers.eta,
+            'ETA': sim_helpers.eta,
             'plot_relaxation': sim_helpers.plot_relaxation,
             'render_scene': Simulation._render_scene_incremental,
             'save_averages': sim_helpers.save_ndt,
@@ -838,7 +839,7 @@ class Simulation(object):
 
                     func = aux_save
                     func = lambda sim: sim._save_m_to_vtk(vtk_saver)
-                elif func == "eta":
+                elif func == "eta" or func == "ETA":
                     eta = self.scheduler_shortcuts[func]
                     started = time.time()
                     func = lambda sim: eta(sim, when_started=started)
