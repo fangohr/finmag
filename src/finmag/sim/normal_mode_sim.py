@@ -13,7 +13,8 @@ from finmag.util.fft import \
     export_normal_mode_animation_from_ringdown
 from finmag.normal_modes.deprecated.normal_modes_deprecated import \
     compute_eigenproblem_matrix, compute_generalised_eigenproblem_matrices, \
-    export_normal_mode_animation, plot_spatially_resolved_normal_mode
+    export_normal_mode_animation, plot_spatially_resolved_normal_mode, \
+    compute_tangential_space_basis, mf_mult
 
 log = logging.getLogger(name="finmag")
 
@@ -604,7 +605,25 @@ class NormalModeSimulation(Simulation):
         self.eigenvecs = eigenvecs
         self.rel_errors = rel_errors
 
-        return omega, eigenvecs, rel_errors
+        # For each eigenmode, report the powers in the m_x, m_y, m_z components
+        # (obtained by integrating the power spectral density over the mesh).
+        #
+        # XXX FIXME: This is horrible code duplication with stuff in finmag.normal_modes.deprecated.normal_modes_deprecated
+        #            Once we have the field class, this should be tidied up!
+        m0_column_vector = self.m.copy().reshape(3, 1, -1)
+        Q, R, S, Mcross = compute_tangential_space_basis(m0_column_vector)
+        mode_powers = np.zeros((len(self.eigenvecs), 3))
+        for (k, u) in enumerate(self.eigenvecs):
+            # Go to the 3d space
+            v = mf_mult(Q, u.reshape(2, 1, -1))
+            v_func = df.Function(self.S1) # XXX TODO
+            for i in [0, 1, 2]:
+                v_func.vector()[:] = np.absolute(v[i].ravel())
+                mode_powers[k, i] = df.assemble(v_func * df.dx)
+            log.debug("Powers of eigenmode {}:  m_x: {:.2f}, m_y: {:.2f}, m_z: {:.2f}".format(k, mode_powers[k][0], mode_powers[k][1], mode_powers[k][2]))
+        self.mode_powers = mode_powers
+
+        return omega, eigenvecs, rel_errors, mode_powers
 
     def export_eigenmode_animations(self, modes, dm_only=False, directory='', create_movies=True, directory_movies=None, num_cycles=1, num_snapshots_per_cycle=20, scaling=0.2, **kwargs):
         """
