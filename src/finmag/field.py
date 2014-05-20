@@ -95,27 +95,50 @@ class Field(object):
         """
         if self.f.ufl_element().family() != 'Lagrange':
             raise NotImplementedError(
-                "This function is only implemented for finite element families where "
-                "the degrees of freedoms are not defined at the mesh vertices.")
+                "This function is only implemented for finite element families"
+                "where the degrees of freedom are not defined at the mesh vertices.")
 
-        f_array = self.f.vector().array()
         coords = self.functionspace.mesh().coordinates()
+        f_array = self.f.vector().array()
         vtd_map = df.vertex_to_dof_map(self.functionspace)
+        num_nodes = len(coords)
 
-        values = list()
-        for i in xrange(len(coords)):
-            try:
-                values.append(f_array[vtd_map[i]])
-            except IndexError:
+        # scalar field
+        if isinstance(self.functionspace, df.FunctionSpace):
+            values = np.empty(num_nodes)
+            for i in xrange(num_nodes):
+                try:
+                    values[i] = f_array[vtd_map[i]]
+                except IndexError:
+                    raise NotImplementedError
+
+        # vector field
+        elif isinstance(self.functionspace, df.VectorFunctionSpace):
+            value_dim = self.functionspace.ufl_element().value_shape()[0]
+            values = np.empty((num_nodes, value_dim))
+            for i in xrange(num_nodes):
+                try:
+                    values[i, :] = f_array[vtd_map[value_dim*i:value_dim*(i+1)]]
+                except IndexError:
+                    raise NotImplementedError
+
+        return coords, values
+
+        #field_value_dim = self.functionspace.ufl_element().value_shape()[0]
+        
+       # values = np.empty((num_nodes, field_value_dim))
+       # for i in xrange(num_nodes):
+        #    try:
+          #      values[i] = f_array[vtd_map[i]]
+          #  except IndexError:
                 # This only occurs in parallel and is probably related
                 # to ghost nodes. I thought we could ignore those, but
                 # this doesn't seem to be true since the resulting
                 # array of function values has the wrong size. Need to
                 # investigate.  (Max, 15.5.2014)
-                raise NotImplementedError("XXX TODO: How to deal with this? What does it even mean?!?")
-        values = np.array(values)
+               # raise NotImplementedError("XXX TODO: How to deal with this? What does it even mean?!?")
 
-        return coords, values
+       # return coords, values
 
     def probe_field(self, coord):
         """
