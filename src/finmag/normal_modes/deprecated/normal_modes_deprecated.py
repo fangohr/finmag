@@ -585,6 +585,7 @@ colormaps = {'coolwarm': plt.cm.coolwarm,
              'circular1': custom_colormaps.circular1,
              'circular2': custom_colormaps.circular2,
              'circular3': custom_colormaps.circular3,
+             'circular4': custom_colormaps.circular4,
             }
 
 def get_colormap_from_name(cmap_name):
