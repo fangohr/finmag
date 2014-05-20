@@ -16,6 +16,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from math import pi
 from matplotlib import rcParams
 rcParams.update({'figure.autolayout': True})
+import custom_colormaps
 
 logger = logging.getLogger('finmag')
 
@@ -578,8 +579,12 @@ def export_normal_mode_animation(mesh, m0, freq, w, filename, num_cycles=1, num_
 colormaps = {'coolwarm': plt.cm.coolwarm,
              'cool': plt.cm.cool,
              'hot': plt.cm.hot,
+             'afmhot': plt.cm.afmhot,
              'rainbow': plt.cm.jet,
              'hsv': plt.cm.hsv,
+             'circular1': custom_colormaps.circular1,
+             'circular2': custom_colormaps.circular2,
+             'circular3': custom_colormaps.circular3,
             }
 
 def get_colormap_from_name(cmap_name):
@@ -697,7 +702,7 @@ def get_phaseplot_ticks_and_labels(num_ticks):
 def plot_spatially_resolved_normal_mode(mesh, m0, w, slice_z='z_max', components='xyz',
                                         figure_title=None, yshift_title=0.0,
                                         plot_powers=True, plot_phases=True, num_phase_colorbar_ticks=5,
-                                        cmap_powers='coolwarm', cmap_phases='hsv', vmin_powers=None,
+                                        cmap_powers='coolwarm', cmap_phases='circular2', vmin_powers=None,
                                         show_axis_labels=True, show_axis_frames=True, show_colorbars=True, figsize=None,
                                         outfilename=None, dpi=None, use_fenicstools=False):
     """
