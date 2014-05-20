@@ -68,6 +68,9 @@ class Field(object):
         # works only for scalar
         elif isinstance(value, (basestring, int, float)):
             self.f = df.interpolate(df.Constant(value), self.functionspace)
+        # works only for vectors
+        elif isinstance(value, (tuple, list, np.ndarray)):
+            self.f = df.interpolate(df.Constant(value), self.functionspace)
     
     def save(self, filename):
         """Dispatches to specialists"""
