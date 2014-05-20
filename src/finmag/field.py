@@ -1,5 +1,17 @@
 # Field class: a thin wrapper around the dolfin functions for unified and convent access to them.
 #
+# There are two reasons this exists at all:
+#
+#    - Certain things are awkward (or currently impossible) when using
+#      dolfin.Functions directly (for example, per-node operations on
+#      vector fields or storing a dolfin.Function in a format convenient
+#      for use in Finmag).
+#
+#    - Even if things are possible, sometimes they are non-trivial to
+#      get right, especially in parallel. Therefore this class acts as
+#      a "single point of contact" to that we don't duplicate functionality
+#      all over the Finmag code base.
+#
 # The `Field` class represents all scalar and vector fields we need to
 # represent as dolfin functions (i.e. discretized fields on a
 # mesh). It is always tied to a specific mesh and choice of function
