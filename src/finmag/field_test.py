@@ -185,7 +185,7 @@ class TestField(object):
                 expected_checksum = 3*np.sum(expected_coords[:, 0])
             elif mesh_dim == 2:
                 expression = expressions[1]
-                expected_checksum = 3*np.sum(expected_coords[:, 1])
+                expected_checksum = 3*np.sum(expected_coords[:, 0])
             elif mesh_dim == 3:
                 expression = expressions[2]
                 expected_checksum = np.sum(expected_coords[:, 0]) + \
@@ -196,6 +196,8 @@ class TestField(object):
             coords, values = field.get_coords_and_values()
             assert np.allclose(coords, expected_coords)
             assert abs(np.sum(values) - expected_checksum) < self.tol
+            for i in xrange(len(coords)):
+                assert np.allclose(values[i, :], field.probe_field(coords[i]))
 
     def test_probe_field_scalar(self):
         functionspaces = (self.fs_1d_scalar,
