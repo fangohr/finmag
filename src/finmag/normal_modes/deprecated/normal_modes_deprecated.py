@@ -586,6 +586,9 @@ colormaps = {'coolwarm': plt.cm.coolwarm,
              'circular2': custom_colormaps.circular2,
              'circular3': custom_colormaps.circular3,
              'circular4': custom_colormaps.circular4,
+             'husl_99_75': custom_colormaps.husl_99_75,
+             'husl_99_70': custom_colormaps.husl_99_70,
+             'husl_99_65': custom_colormaps.husl_99_65,
             }
 
 def get_colormap_from_name(cmap_name):
@@ -703,7 +706,7 @@ def get_phaseplot_ticks_and_labels(num_ticks):
 def plot_spatially_resolved_normal_mode(mesh, m0, w, slice_z='z_max', components='xyz',
                                         figure_title=None, yshift_title=0.0,
                                         plot_powers=True, plot_phases=True, num_phase_colorbar_ticks=5,
-                                        cmap_powers='coolwarm', cmap_phases='circular2', vmin_powers=None,
+                                        cmap_powers='coolwarm', cmap_phases='husl_99_65', vmin_powers=None,
                                         show_axis_labels=True, show_axis_frames=True, show_colorbars=True, figsize=None,
                                         outfilename=None, dpi=None, use_fenicstools=False):
     """
