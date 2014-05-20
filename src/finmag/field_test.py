@@ -118,6 +118,46 @@ class TestField(object):
             probed_value = field.probe_field(mesh_dim*(0.5,))
             assert abs(probed_value - expected_probed_value) < self.tol
 
+    def test_init_vector_constant(self):
+        # 2d and 3d vector function spaces on 1d, 2d and 3d mesh
+        functionspaces2d = [self.fs_1d_vector2d,
+                            self.fs_2d_vector2d,
+                            self.fs_3d_vector2d]
+        functionspaces3d = [self.fs_1d_vector3d,
+                            self.fs_2d_vector3d,
+                            self.fs_3d_vector3d]
+
+        # different constant expressions for 2d and 3d vector fields
+        constants2d = [df.Constant((0.1, 2.3)),
+                       df.Constant([0.1, 2.3]),
+                       df.Constant(np.array([0.1, 2.3])),
+                       (0.1, 2.3),
+                       [0.1, 2.3],
+                       np.array([0.1, 2.3])]
+
+        constants3d = [df.Constant((0.1, 2.3, -6.4)),
+                       df.Constant([0.1, 2.3, -6.4]),
+                       df.Constant(np.array([0.1, 2.3, -6.4])),
+                       (0.1, 2.3, -6.4),
+                       [0.1, 2.3, -6.4],
+                       np.array([0.1, 2.3, -6.4])]
+                     
+        for functionspace in functionspaces2d:
+            for constant in constants2d:
+                field = Field(functionspace, constant)
+
+                # check values in vector, should be exact
+                #assert np.all(field.f.vector().array() == 42)
+
+                # check the result of get_coords_and_values, should be exact
+                coords, field_values = field.get_coords_and_values()
+                #assert np.all(field_values == 42)
+
+                # check values that are interpolated
+                # dolfin is fairly inaccurate here, see field_test.ipynb
+                probe_point = field.f.geometric_dimension() * (0.5,)
+                #assert abs(field.f(probe_point) - 42) < self.tol
+
     def test_get_coords_and_values_scalar_field(self):
         mesh = self.mesh3d
         f = Field(self.fs_3d_scalar)
@@ -143,12 +183,12 @@ class TestField(object):
                 exact_result = 15.3*0.5 - 2.3*0.5 + 96.1*0.5
             assert abs(f.probe_field(probe_point) - exact_result) < 1e-13
 
-    """
+    
     def test_get_coords_and_values_vector_field(self):
         mesh = self.mesh3d
-        f = Field(self.fs_3d_vector)
+        f = Field(self.fs_3d_vector3d)
         f.set(df.Expression(['x[0]', '2.3*x[1]', '-4.2*x[2]']))
         coords, values = f.get_coords_and_values()
         assert(np.allclose(coords, mesh.coordinates()))
         assert(np.allclose(values, np.array(mesh.coordinates()) * np.array([1, 2.3, -4.2])))
-    """
+    
