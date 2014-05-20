@@ -181,7 +181,7 @@ class TestField(object):
                          df.Expression(['x[0]', 'x[1]', 'x[0]+x[1]']),
                          df.Expression(['x[0]', '2*x[1]', 'x[2]'])]
 
-        # TODO: Expand for 2d vactors.
+        # TODO: Expand for 2d vectors.
         for functionspace in functionspaces3d:
             mesh_dim = functionspace.mesh().topology().dim()
             expected_coords = functionspace.mesh().coordinates()
