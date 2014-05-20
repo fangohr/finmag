@@ -142,8 +142,8 @@ class TestField(object):
                        [0.1, 2.3, -6.4],
                        np.array([0.1, 2.3, -6.4])]
 
-        for functionspace in functionspaces2d:
-            for constant in constants2d:
+        for functionspace in functionspaces3d:
+            for constant in constants3d:
                 field = Field(functionspace, constant)
 
                 # check values in vector, should be exact
@@ -173,31 +173,30 @@ class TestField(object):
         functionspaces3d = [self.fs_1d_vector3d,
                             self.fs_2d_vector3d,
                             self.fs_3d_vector3d]
-        expressions = [df.Expression(['x[0]', 'x[0]', 'x[0]']),
-                       df.Expression(['x[1]', 'x[1]', 'x[1]']),
-                       df.Expression(['x[0]', 'x[1]', 'x[2]'])]
+        expressions2d = [df.Expression(['x[0]', 'x[0]']),
+                         df.Expression(['x[0]', 'x[1]']),
+                         df.Expression(['x[0] + x[1]', 'x[1]'])]
+        expressions3d = [df.Expression(['x[0]', 'x[0]', 'x[0]']),
+                         df.Expression(['x[0]', 'x[1]', 'x[0]+x[1]']),
+                         df.Expression(['x[0]', '2*x[1]', 'x[2]'])]
 
+        # TODO: Expand for 2d vactors.
         for functionspace in functionspaces3d:
             mesh_dim = functionspace.mesh().topology().dim()
             expected_coords = functionspace.mesh().coordinates()
             if mesh_dim == 1:
-                expression = expressions[0]
-                expected_checksum = 3*np.sum(expected_coords[:, 0])
+                expression = expressions3d[0]
             elif mesh_dim == 2:
-                expression = expressions[1]
-                expected_checksum = 3*np.sum(expected_coords[:, 0])
+                expression = expressions3d[1]
             elif mesh_dim == 3:
-                expression = expressions[2]
-                expected_checksum = np.sum(expected_coords[:, 0]) + \
-                    np.sum(expected_coords[:, 1]) + \
-                    np.sum(expected_coords[:, 2])
+                expression = expressions3d[2]
 
-            field = Field(functionspace, expressions[0])
+            field = Field(functionspace, expression)
             coords, values = field.get_coords_and_values()
             assert np.allclose(coords, expected_coords)
-            assert abs(np.sum(values) - expected_checksum) < self.tol
             for i in xrange(len(coords)):
-                assert np.allclose(values[i, :], field.probe_field(coords[i]))
+                assert np.allclose(values[i, :],
+                                   field.probe_field(expected_coords[i]))
 
     def test_probe_field_scalar(self):
         functionspaces = (self.fs_1d_scalar,
