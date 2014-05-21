@@ -13,7 +13,8 @@ from finmag.util.fft import \
     export_normal_mode_animation_from_ringdown
 from finmag.normal_modes.deprecated.normal_modes_deprecated import \
     compute_eigenproblem_matrix, compute_generalised_eigenproblem_matrices, \
-    export_normal_mode_animation, plot_spatially_resolved_normal_mode
+    export_normal_mode_animation, plot_spatially_resolved_normal_mode, \
+    compute_tangential_space_basis, mf_mult
 
 log = logging.getLogger(name="finmag")
 
@@ -569,13 +570,13 @@ class NormalModeSimulation(Simulation):
             n_values *= 2
 
         if use_generalized:
-            # omega, w = compute_normal_modes_generalised(self.A, self.M, n_values=n_values, discard_negative_frequencies=discard_negative_frequencies,
+            # omega, eigenvecs = compute_normal_modes_generalised(self.A, self.M, n_values=n_values, discard_negative_frequencies=discard_negative_frequencies,
             #                                             tol=tol, sigma=sigma, which=which, v0=v0, ncv=ncv, maxiter=maxiter, Minv=Minv, OPinv=OPinv, mode=mode)
-            omega, w, rel_errors = solver.solve_eigenproblem(self.A, self.M, num=n_values)
+            omega, eigenvecs, rel_errors = solver.solve_eigenproblem(self.A, self.M, num=n_values)
         else:
-            # omega, w = compute_normal_modes(self.D, n_values, sigma=0.0, tol=tol, which='LM')
+            # omega, eigenvecs = compute_normal_modes(self.D, n_values, sigma=0.0, tol=tol, which='LM')
             # omega = np.real(omega)  # any imaginary part is due to numerical inaccuracies so we ignore them
-            omega, w, rel_errors = solver.solve_eigenproblem(self.D, None, num=n_values)
+            omega, eigenvecs, rel_errors = solver.solve_eigenproblem(self.D, None, num=n_values)
             if use_real_matrix:
                 # Eigenvalues are complex due to the missing factor of 1j in the matrix with real entries. Here we correct for this.
                 omega = 1j*omega
@@ -596,15 +597,33 @@ class NormalModeSimulation(Simulation):
         if discard_negative_frequencies:
             pos_freq_indices = [i for (i, freq) in enumerate(omega) if freq >= 0]
             omega = omega[pos_freq_indices]
-            w = w[pos_freq_indices]
+            eigenvecs = eigenvecs[pos_freq_indices]
 
         log.debug("Relative errors of computed eigensolutions: {}".format(rel_errors))
 
         self.eigenfreqs = omega
-        self.eigenvecs = w
+        self.eigenvecs = eigenvecs
         self.rel_errors = rel_errors
 
-        return omega, w, rel_errors
+        # For each eigenmode, report the powers in the m_x, m_y, m_z components
+        # (obtained by integrating the power spectral density over the mesh).
+        #
+        # XXX FIXME: This is horrible code duplication with stuff in finmag.normal_modes.deprecated.normal_modes_deprecated
+        #            Once we have the field class, this should be tidied up!
+        m0_column_vector = self.m.copy().reshape(3, 1, -1)
+        Q, R, S, Mcross = compute_tangential_space_basis(m0_column_vector)
+        mode_powers = np.zeros((len(self.eigenvecs), 3))
+        for (k, u) in enumerate(self.eigenvecs):
+            # Go to the 3d space
+            v = mf_mult(Q, u.reshape(2, 1, -1))
+            v_func = df.Function(self.S1) # XXX TODO
+            for i in [0, 1, 2]:
+                v_func.vector()[:] = np.absolute(v[i].ravel())
+                mode_powers[k, i] = df.assemble(v_func * df.dx)
+            log.debug("Powers of eigenmode {}:  m_x: {:.2f}, m_y: {:.2f}, m_z: {:.2f}".format(k, mode_powers[k][0], mode_powers[k][1], mode_powers[k][2]))
+        self.mode_powers = mode_powers
+
+        return omega, eigenvecs, rel_errors, mode_powers
 
     def export_eigenmode_animations(self, modes, dm_only=False, directory='', create_movies=True, directory_movies=None, num_cycles=1, num_snapshots_per_cycle=20, scaling=0.2, **kwargs):
         """

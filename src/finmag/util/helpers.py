@@ -1356,8 +1356,8 @@ def probe(dolfin_function, points, apply_func=None):
     A numpy.ma.masked_array of the same shape as `pts`, where the last
     axis contains the field values instead of the point locations (or
     `apply_func` applied to the field values in case it is provided.).
-    Positions in the output array corresponding to probing point which
-    lie outside the mesh are masked out.
+    Elements in the output array corresponding to probing point outside
+    the mesh are masked out.
 
     """
     points = np.array(points)
@@ -1399,6 +1399,44 @@ def probe(dolfin_function, points, apply_func=None):
             res.mask[idx] = True
 
     return res
+
+
+def probe_along_line(dolfin_function, pt_start, pt_end, N, apply_func=None):
+    """
+    Probe the dolfin function at the `N` equidistant points along a straight
+    line connecting `pt_start` and `pt_end`.
+
+    *Arguments*
+
+    dolfin_function: dolfin.Function
+
+        A dolfin function.
+
+    pt_start, pt_end:
+
+       Start and end point of the straight line along which to point.
+
+    N: int
+
+       Number of probing points.
+
+    apply_func: any callable
+
+        Optional function to be applied to the returned values. If not
+        provided, the values are returned unchanged.
+
+    *Returns*
+
+    A numpy.ma.masked_array of shape `(N, 3)` containing the field values
+    at the probed points (or `apply_func` applied to the field values
+    in case it is provided.). Elements in the output array corresponding
+    to probing point outside the mesh are masked out.
+
+    """
+    pt_start = np.asarray(pt_start)
+    pt_end = np.asarray(pt_end)
+    pts = np.array([(1 - t) *  pt_start + t * pt_end for t in np.linspace(0, 1, N)])
+    return probe(dolfin_function, pts, apply_func=apply_func)
 
 
 def compute_dmdt(t0, m0, t1, m1):

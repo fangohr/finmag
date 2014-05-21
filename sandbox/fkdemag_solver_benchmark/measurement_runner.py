@@ -44,6 +44,7 @@ def _loaded_results_table(timed_method_name, results, solvers, preconditioners):
 
 def create_measurement_runner(S3, m, Ms, unit_length, H_expected=None, tol=1e-3, repeats=10, bem=None, boundary_to_global=None):
     def runner(timed_method_name, s_param, solvers, p_param, preconditioners, skip=[], full_timings_log="timings.txt", results_cache=None):
+        r = np.ma.zeros((len(solvers), len(preconditioners)))
         results, failed = {}, []
 
         try:
@@ -62,9 +63,11 @@ def create_measurement_runner(S3, m, Ms, unit_length, H_expected=None, tol=1e-3,
         table = TablePrinter(preconditioners)
         for solver in solvers:
             table.new_row(solver)
+            #print "\nsolving with {}\n".format(solver)
             results_for_this_solver = {}
             # Compute the demagnetising field with the current solver and each of the preconditioners.
             for prec in preconditioners:
+                #print "\nprec {} entry {}\n".format(prec, table.entry_counter)
                 if (solver, prec) in skip:
                     table.new_entry("s")
                     continue
