@@ -45,7 +45,6 @@
 import dolfin as df
 import numpy as np
 
-
 class Field(object):
     def __init__(self, functionspace, value=None, name=None, unit=None): 
         self.functionspace = functionspace
@@ -83,6 +82,24 @@ class Field(object):
                     raise ValueError('Function space and value dimensions are different.')
             else:
                 raise ValueError('Value inappropriate for scalar field.')
+        
+        # Python function suitable for both scalar and vector fields.
+        elif hasattr(value, '__call__'):
+            class WrappedExpression(df.Expression):
+                def __init__(self, value, fs):
+                    self.python_function = value
+
+                def eval(self, value, x):
+                    value[:] = self.python_function(x)
+
+                def value_shape(self):
+                    return ()
+
+            wrappedexpr = WrappedExpression(value, self.functionspace)
+            self.f = df.interpolate(wrappedexpr, self.functionspace)
+        else:
+            raise TypeError('Value type {} not known.'.format(type(value)))
+            
     
     def save(self, filename):
         """Dispatches to specialists"""
