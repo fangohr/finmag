@@ -139,6 +139,12 @@ class Field(object):
         """
         return self.f(coord)
 
+    def mesh_dim(self):
+        """
+        Returns the dimension of the mesh (1d, 2d, or 3d)
+        """
+        return self.f.geometric_dimension()
+
 
 # Maybe to be added later
 #

@@ -10,7 +10,8 @@ class TestField(object):
         self.mesh2d = df.UnitSquareMesh(7, 10)
         self.mesh3d = df.UnitCubeMesh(5, 7, 10)
 
-        # All function spaces are CG, degree=1 unless named explicitly.
+        # All function spaces are CG (Lagrange)
+        # with degree=1 unless named explicitly.
 
         # Create scalar function spaces.
         self.fs_1d_scalar = df.FunctionSpace(self.mesh1d,
@@ -42,16 +43,17 @@ class TestField(object):
                                                      family="CG",
                                                      degree=1, dim=3)
 
-        # Set the tolerance used throughout all tests.
-        self.tol = 1e-11
+        # Set the tolerance used throughout all tests
+        # mainly due to interpolation errors.
+        self.tol = 1e-12
 
     def test_init_scalar_constant(self):
-        # scalar function spaces on 1d, 2d and 3d mesh
+        # Scalar function spaces on 1d, 2d and 3d meshes.
         functionspaces = [self.fs_1d_scalar,
                           self.fs_2d_scalar,
                           self.fs_3d_scalar]
 
-        # scalar field different expressions for constant value 42
+        # Scalar field different expressions for constant value 42
         values = [df.Constant("42"),
                   df.Constant("42.0"),
                   df.Constant(42),
@@ -59,21 +61,23 @@ class TestField(object):
                   42,
                   42.0]
 
+        # Test initialisation for all functionspaces and
+        # all different expressions of constant 42.
         for functionspace in functionspaces:
             for value in values:
                 field = Field(functionspace, value)
 
-                # check values in vector, should be exact
+                # Check values in vector (numpy array) - should be exact.
                 assert np.all(field.f.vector().array() == 42)
 
-                # check the result of get_coords_and_values, should be exact
+                # Check the result of get_coords_and_values - should be exact.
                 coords, field_values = field.get_coords_and_values()
                 assert np.all(field_values == 42)
 
-                # check values that are interpolated
-                # dolfin is fairly inaccurate here, see field_test.ipynb
-                probe_point = field.f.geometric_dimension() * (0.5,)
-                assert abs(field.f(probe_point) - 42) < self.tol
+                # Check values that are interpolated,
+                # dolfin is fairly inaccurate here, see field_test.ipynb.
+                probing_point = field.mesh_dim() * (0.5,)
+                assert abs(field.probe_field(probing_point) - 42) < self.tol
 
     def test_init_scalar_expression(self):
         # scalar function spaces on 1d, 2d and 3d mesh
@@ -217,3 +221,22 @@ class TestField(object):
                 f.set(df.Expression('15.3*x[0] - 2.3*x[1] + 96.1*x[2]'))
                 exact_result = 15.3*0.5 - 2.3*0.5 + 96.1*0.5
             assert abs(f.probe_field(probe_point) - exact_result) < 1e-13
+
+    def test_mesh_dimension(self):
+        functionspaces = [self.fs_1d_scalar,
+                          self.fs_2d_scalar,
+                          self.fs_3d_scalar,
+                          self.fs_1d_vector2d,
+                          self.fs_2d_vector2d,
+                          self.fs_3d_vector2d,
+                          self.fs_1d_vector3d,
+                          self.fs_2d_vector3d,
+                          self.fs_3d_vector3d]
+
+        mesh_dim = []
+        for functionspace in functionspaces:
+            field = Field(functionspace)
+            mesh_dim.append(field.mesh_dim())
+        
+        expected_result = 3*[1, 2, 3]
+        assert mesh_dim == expected_result
