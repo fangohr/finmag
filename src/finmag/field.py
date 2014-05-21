@@ -62,15 +62,27 @@ class Field(object):
         Set the field to value.
         Value can be constant, dolfin expression, python function, file.
         """
-        # works for both scalar and vector
+        # Dolfin constant and expression values
+        # suitable for both scalar and vector fields.
         if isinstance(value, (df.Constant, df.Expression)):
             self.f = df.interpolate(value, self.functionspace)
-        # works only for scalar
+
+        # Int, float, and string values suitable only for scalar fields.
         elif isinstance(value, (basestring, int, float)):
-            self.f = df.interpolate(df.Constant(value), self.functionspace)
-        # works only for vectors
+            if isinstance(self.functionspace, df.FunctionSpace):
+                self.f = df.interpolate(df.Constant(value), self.functionspace)
+            else:
+                raise ValueError('Value inappropriate for vector field.')
+
+        # Tuple, list, and numpy array suitable only for vector fields.
         elif isinstance(value, (tuple, list, np.ndarray)):
-            self.f = df.interpolate(df.Constant(value), self.functionspace)
+            if isinstance(self.functionspace, df.VectorFunctionSpace):
+                if len(value) == self.value_dim():
+                    self.f = df.interpolate(df.Constant(value), self.functionspace)
+                else:
+                    raise ValueError('Function space and value dimensions are different.')
+            else:
+                raise ValueError('Value inappropriate for scalar field.')
     
     def save(self, filename):
         """Dispatches to specialists"""
@@ -88,7 +100,7 @@ class Field(object):
         """Load field from hdf5 file using dolfin code"""
         raise NotImplementedError
 
-    def get_coords_and_values(self, t=None):
+    def coords_and_values(self, t=None):
         """
         Return a list of mesh vertex coordinates and associated field values.
         In parallel, this only returns the coordinates and values owned by
@@ -139,6 +151,22 @@ class Field(object):
         """
         return self.f(coord)
 
+    def mesh_dim(self):
+        """
+        Returns the dimension of the mesh (1, 2, or 3)
+        """
+        return self.f.geometric_dimension()
+
+    def value_dim(self):
+        """
+        Returns the dimension of field value.
+        For scalar field 1, for vector fields 1, 2, 3, ...
+        """
+        if isinstance(self.functionspace, df.FunctionSpace):
+            return 1
+        else:
+            # value_shape() returns a tuple (N,) and int is required
+            return self.functionspace.ufl_element().value_shape()[0]
 
 # Maybe to be added later
 #
