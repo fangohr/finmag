@@ -67,11 +67,11 @@ class TestField(object):
             for value in values:
                 field = Field(functionspace, value)
 
-                # Check values in vector (numpy array) - should be exact.
+                # Check values in vector (numpy array) (should be exact).
                 assert np.all(field.f.vector().array() == 42)
 
-                # Check the result of get_coords_and_values - should be exact.
-                coords, field_values = field.get_coords_and_values()
+                # Check the result of coords_and_values (should be exact).
+                coords, field_values = field.coords_and_values()
                 assert np.all(field_values == 42)
 
                 # Check values that are interpolated,
@@ -115,7 +115,7 @@ class TestField(object):
             field = Field(functionspace, expression)
 
             # Check the field value at all nodes (should be exact).
-            field_values = field.get_coords_and_values()[1]
+            field_values = field.coords_and_values()[1]
             assert np.all(field_values == expected_values)
 
             # Check the probed field value (not exact - interpolation).
@@ -153,8 +153,8 @@ class TestField(object):
                 # check values in vector, should be exact
                 #assert np.all(field.f.vector().array() == 42)
 
-                # check the result of get_coords_and_values, should be exact
-                #coords, field_values = field.get_coords_and_values()
+                # check the result of coords_and_values, should be exact
+                #coords, field_values = field.coords_and_values()
                 #assert np.all(field_values == 42)
 
                 # check values that are interpolated
@@ -162,16 +162,16 @@ class TestField(object):
                 probe_point = field.f.geometric_dimension() * (0.5,)
                 #assert abs(field.f(probe_point) - 42) < self.tol
 
-    def test_get_coords_and_values_scalar_field(self):
+    def test_coords_and_values_scalar_field(self):
         mesh = self.mesh3d
         f = Field(self.fs_3d_scalar)
         f.set(df.Expression('15.3*x[0] - 2.3*x[1] + 96.1*x[2]'))
-        coords, values = f.get_coords_and_values()
+        coords, values = f.coords_and_values()
         assert(np.allclose(coords, mesh.coordinates()))
         assert(values,
                15.3*coords[:, 0] - 2.3*coords[:, 1] + 96.1*coords[:, 2])
 
-    def test_get_coords_and_values_vector_field(self):
+    def test_coords_and_values_vector_field(self):
         functionspaces2d = [self.fs_1d_vector2d,
                             self.fs_2d_vector2d,
                             self.fs_3d_vector2d]
@@ -197,7 +197,7 @@ class TestField(object):
                 expression = expressions3d[2]
 
             field = Field(functionspace, expression)
-            coords, values = field.get_coords_and_values()
+            coords, values = field.coords_and_values()
             assert np.allclose(coords, expected_coords)
             for i in xrange(len(coords)):
                 assert np.allclose(values[i, :],
