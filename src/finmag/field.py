@@ -85,21 +85,42 @@ class Field(object):
         
         # Python function suitable for both scalar and vector fields.
         elif hasattr(value, '__call__'):
-            class WrappedExpression(df.Expression):
-                def __init__(self, value, fs):
-                    self.python_function = value
+            if isinstance(self.functionspace, df.FunctionSpace):
+                class WrappedExpression(df.Expression):
+                    def __init__(self, value, fs):
+                        self.python_function = value
 
-                def eval(self, value, x):
-                    value[:] = self.python_function(x)
+                    def eval(self, value, x):
+                        value[:] = self.python_function(x)
 
-                def value_shape(self):
-                    return ()
+                    def value_shape(self):
+                        return ()
+            elif isinstance(self.functionspace, df.VectorFunctionSpace):
+                if self.value_dim() == 2:
+                    class WrappedExpression(df.Expression):
+                        def __init__(self, value, fs):
+                            self.python_function = value
+
+                        def eval(self, value, x):
+                            value[:] = self.python_function(x)[:]
+
+                        def value_shape(self):
+                            return (2,)
+                elif self.value_dim() == 3:
+                    class WrappedExpression(df.Expression):
+                        def __init__(self, value, fs):
+                            self.python_function = value
+
+                        def eval(self, value, x):
+                            value[:] = self.python_function(x)[:]
+
+                        def value_shape(self):
+                            return (3,)
 
             wrappedexpr = WrappedExpression(value, self.functionspace)
             self.f = df.interpolate(wrappedexpr, self.functionspace)
         else:
             raise TypeError('Value type {} not known.'.format(type(value)))
-            
     
     def save(self, filename):
         """Dispatches to specialists"""
