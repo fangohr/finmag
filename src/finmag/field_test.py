@@ -455,7 +455,7 @@ class TestField(object):
                 assert abs(probed_value[2] -
                            expected_probed_value[2]) < self.tol2
 
-    def test_coords_and_values_scalar_field(self):
+    def test_coords_and_values_scalar(self):
         mesh = self.mesh3d
         f = Field(self.fs_3d_scalar)
         f.set(df.Expression('15.3*x[0] - 2.3*x[1] + 96.1*x[2]'))
@@ -464,7 +464,7 @@ class TestField(object):
         assert(values,
                15.3*coords[:, 0] - 2.3*coords[:, 1] + 96.1*coords[:, 2])
 
-    def test_coords_and_values_vector_field(self):
+    def test_coords_and_values_vector(self):
         functionspaces2d = [self.fs_1d_vector2d,
                             self.fs_2d_vector2d,
                             self.fs_3d_vector2d]
