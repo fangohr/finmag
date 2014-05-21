@@ -238,6 +238,6 @@ class TestField(object):
         for functionspace in functionspaces:
             field = Field(functionspace)
             mesh_dim.append(field.mesh_dim())
-        
+
         expected_result = 3*[1, 2, 3]
         assert mesh_dim == expected_result
