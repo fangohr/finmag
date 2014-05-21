@@ -38368,3 +38368,614 @@ Hans
 -------------------------------------
 finmag-team mailing list.
 
+From marvin  Mon May 19 18:19:34 2014
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.26)
+	for <marvin@localhost> (single-drop); Mon, 19 May 2014 18:19:34 +0100 (BST)
+Received: by 10.217.69.130 with SMTP id z2csp246026wex;
+        Mon, 19 May 2014 10:18:14 -0700 (PDT)
+X-Received: by 10.112.54.228 with SMTP id m4mr2166809lbp.96.1400519894476;
+        Mon, 19 May 2014 10:18:14 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id xg10si14288702lac.88.2014.05.19.10.18.13
+        for <multiple recipients>;
+        Mon, 19 May 2014 10:18:14 -0700 (PDT)
+Received-SPF: none (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=neutral (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk;
+       dkim=neutral (body hash did not verify) header.i=@;
+       dmarc=fail (p=NONE dis=NONE) header.from=gmail.com
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s4JHIAST031514;
+	Mon, 19 May 2014 18:18:10 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk [152.78.119.37])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id q4IIIA0832354179NU ret-id none; Mon, 19 May 2014 18:18:10 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.37) with Microsoft SMTP Server (TLS) id 14.3.181.6; Mon, 19 May
+ 2014 18:18:09 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id s4JHI98N006714;	Mon, 19 May 2014 18:18:09 +0100
+Received: from mailgate3.iss.soton.ac.uk (mailgate3.iss.soton.ac.uk
+ [152.78.128.104])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ s4JHI9kW006711	for <finmag-team@lists.soton.ac.uk>; Mon, 19 May 2014 18:18:09
+ +0100
+Received: from mailgate3.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate3.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s4JHHxi4008948	for
+ <finmag-team@lists.soton.ac.uk>; Mon, 19 May 2014 18:17:59 +0100
+Received: from mail-qc0-f182.google.com (mail-qc0-f182.google.com
+ [209.85.216.182])	by mailgate3.iss.soton.ac.uk (mailgate3.iss.soton.ac.uk
+ [152.78.128.104]) envelope-from <maximilian.albert@gmail.com> with ESMTP	id
+ q4IIHw1013653285DD ret-id none; Mon, 19 May 2014 18:17:59 +0100
+Received: by mail-qc0-f182.google.com with SMTP id e16so9571233qcx.13
+        for <finmag-team@lists.soton.ac.uk>; Mon, 19 May 2014 10:17:58 -0700
+ (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:date:message-id:subject:from:to:content-type;
+        bh=onIlxKpiv3BHf64HOSu83mTeTAwMq30YFsopAZk+AXc=;
+        b=ar3KTsRAywtux4kqsZWkk0CTOV95Mdvkz+gLfb0PbnlMo9aB4AT5aLgpblzn/c760u
+         qxgWvcZ4/+uZvPnW5reCiwbI2CKIMAX+bVraMI3c6zcWekSrApSVNaFaJ6iK919NV4oI
+         c7K8joVnQiYe7Rg0HfzqLUsNfQL9GxlrEFbUR3FPYGWCicP0Nw1+X0t4DHVZOpRQK8k3
+         GUq+ODQvJm4p6vGUzay4RYtRzvGiewcLzp31xC01RaKyZBqrFtPvyrf7RRsW4v5qaZs7
+         OcMnQHxvzC0A6sfkr5AngCG7EHHJ6uyPcQ9AnmucwpS0nsvX5bGt1W/p7mjhfsR1bD7/
+         b61w==
+MIME-Version: 1.0
+X-Received: by 10.140.92.54 with SMTP id a51mr49352639qge.23.1400519878246;
+ Mon, 19 May 2014 10:17:58 -0700 (PDT)
+Received: by 10.96.122.41 with HTTP; Mon, 19 May 2014 10:17:58 -0700 (PDT)
+Date: Mon, 19 May 2014 18:17:58 +0100
+Message-ID: <CAGA_dmgHqfen9OMC1B9k5NmeFcsh5WwqZM7F3BE46O3tQCspkw@mail.gmail.com>
+Subject: [finmag-team] {Disarmed} Synology disk station: how to connect
+From: Maximilian Albert <maximilian.albert@gmail.com>
+To: "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+Content-Type: multipart/alternative; boundary="001a113ab97ad807d204f9c3f1a5"
+Received-SPF: Pass (UOS-MSG00035-VS.soton.ac.uk: domain of
+ owner-finmag-team@lists.soton.ac.uk designates 152.78.128.58 as permitted
+ sender) receiver=UOS-MSG00035-VS.soton.ac.uk; client-ip=152.78.128.58;
+ helo=maillists.sucs.soton.ac.uk;
+Received-SPF: None; receiver=mailgate3.iss.soton.ac.uk; client-ip=209.85.216.182; helo=<mail-qc0-f182.google.com>
+Received-SPF: Pass; receiver=mailgate3.iss.soton.ac.uk; client-ip=209.85.216.182; envelope-from=<maximilian.albert@gmail.com>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=q4IIIA083235417900; tid=q4IIIA0832354179NU; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: s4JHIAST031514
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+--001a113ab97ad807d204f9c3f1a5
+Content-Type: text/plain; charset="UTF-8"
+
+Hi all,
+
+I think we still don't know what the admin password for the disk station is
+(although Hans sent around some instructions on how to set it: [1]).
+
+But I just managed to at least connect to it and mount it. The problem was
+that I didn't know the IP address (which changed after the move to
+Boldrewood). But when I installed the SynologyAssistant software (which can
+be downloaded from [2]) and ran it, it did an automatic scan of the network
+and simply detected the disk station, which is quite impressive.
+
+The new IP address is 10.15.41.103 (I suspect that it's not static, but it
+should remain valid as long as the disk station is running, and if it
+changes we can find it again by using the SynologyAssistant).
+
+If you want to mount the disk station on your computer, you can do this via
+by adding the following line to your fstab file:
+
+   //10.15.41.103/home /mnt/synology cifs
+user,uid=USERNAME,gid=GROUPNAME,rw,suid,credentials=/etc/cifspwd,noperm 0 0
+
+Here, USERNAME and GROUPNAME should be replaced with your username and
+groupname. For me these are both "albert". You will also need to store the
+username and password for the disk station in the file called /etc/cifspwd
+on your computer. It should have the following format:
+
+   username=albert
+   password=MYSUPERSECRETPASSWORD
+
+Make sure that the file is only readable by yourself!
+
+   sudo chmod 600 /etc/cifspwd
+
+On my system, the file has the following ownership (although it may not be
+necessary to change this):
+
+   sudo chown root:samba /etc/cifspwd
+
+Now you can mount the disk station by saying:
+
+   sudo mount /mnt/synology
+
+(Make sure that the folder /mnt/synology exists before trying to mount it.)
+
+One last note: I found the relevant settings for the /etc/fstab file by
+reading around and trial & error. They seem to mostly work, but I seem to
+remember that there was still a minor problem with file permissions at some
+point. So they may need tweaking a bit if you encounter any problems.
+
+Cheers,
+Max
+
+P.S.: Some other helpful resources are [3-5].
+
+
+[1] http://www.synology.com/en-uk/support/tutorials/493#t2
+[2] http://www.synology.com/en-us/support/download/DS112
+[3]
+http://forum.synology.com/wiki/index.php/Mapping_a_Network_Drive#How_to_map_a_drive_using_a_Linux.2FUnix_Environment
+[4]
+http://jaystile.wordpress.com/2013/04/26/mounting-a-synology-drive-on-ubuntu-linux/
+[5] https://help.ubuntu.com/community/MountWindowsSharesPermanently
+
+--001a113ab97ad807d204f9c3f1a5
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr">Hi all,<div><br></div><div>I think we still don&#39;t know=
+ what the admin password for the disk station is (although Hans sent around=
+ some instructions on how to set it: [1]).</div><div><br></div><div>But I j=
+ust managed to at least connect to it and mount it. The problem was that I =
+didn&#39;t know the IP address (which changed after the move to Boldrewood)=
+. But when I installed the SynologyAssistant software (which can be downloa=
+ded from [2]) and ran it, it did an automatic scan of the network and simpl=
+y detected the disk station, which is quite impressive.</div>
+<div><br></div><div>The new IP address is 10.15.41.103 (I suspect that it&#=
+39;s not static, but it should remain valid as long as the disk station is =
+running, and if it changes we can find it again by using the SynologyAssist=
+ant).</div>
+<div><br></div><div>If you want to mount the disk station on your computer,=
+ you can do this via by adding the following line to your fstab file:</div>=
+<div><br></div><div>=C2=A0 =C2=A0//<a href=3D"http://10.15.41.103/home"><fo=
+nt color=3D"red"><b>MailScanner warning: numerical links are often maliciou=
+s:</b></font> 10.15.41.103/home</a> /mnt/synology cifs user,uid=3DUSERNAME,=
+gid=3DGROUPNAME,rw,suid,credentials=3D/etc/cifspwd,noperm 0 0<br>
+</div><div><br></div><div>Here, USERNAME and GROUPNAME should be replaced w=
+ith your username and groupname. For me these are both &quot;albert&quot;. =
+You will also need to store the username and password for the disk station =
+in the file called /etc/cifspwd on your computer. It should have the follow=
+ing format:</div>
+<div><br></div><div><div>=C2=A0 =C2=A0username=3Dalbert</div><div>=C2=A0 =
+=C2=A0password=3DMYSUPERSECRETPASSWORD</div></div><div><br></div><div>Make =
+sure that the file is only readable by yourself!</div><div><br></div><div>=
+=C2=A0 =C2=A0sudo chmod 600 /etc/cifspwd</div>
+<div><br></div><div>On my system, the file has the following ownership (alt=
+hough it may not be necessary to change this):</div><div><br></div><div>=C2=
+=A0 =C2=A0sudo chown root:samba /etc/cifspwd</div><div><br></div><div>Now y=
+ou can mount the disk station by saying:</div>
+<div><br></div><div>=C2=A0 =C2=A0sudo mount /mnt/synology</div><div><br></d=
+iv><div>(Make sure that the folder /mnt/synology exists before trying to mo=
+unt it.)<br></div><div><br></div><div>One last note: I found the relevant s=
+ettings for the /etc/fstab file by reading around and trial &amp; error. Th=
+ey seem to mostly work, but I seem to remember that there was still a minor=
+ problem with file permissions at some point. So they may need tweaking a b=
+it if you encounter any problems.</div>
+<div><br></div><div>Cheers,<br></div><div>Max</div><div><br></div><div>P.S.=
+: Some other helpful resources are [3-5].</div><div><br></div><div><br></di=
+v><div>[1] <a href=3D"http://www.synology.com/en-uk/support/tutorials/493#t=
+2">http://www.synology.com/en-uk/support/tutorials/493#t2</a></div>
+<div>[2]=C2=A0<a href=3D"http://www.synology.com/en-us/support/download/DS1=
+12">http://www.synology.com/en-us/support/download/DS112</a></div><div>[3]=
+=C2=A0<a href=3D"http://forum.synology.com/wiki/index.php/Mapping_a_Network=
+_Drive#How_to_map_a_drive_using_a_Linux.2FUnix_Environment">http://forum.sy=
+nology.com/wiki/index.php/Mapping_a_Network_Drive#How_to_map_a_drive_using_=
+a_Linux.2FUnix_Environment</a></div>
+<div>[4]=C2=A0<a href=3D"http://jaystile.wordpress.com/2013/04/26/mounting-=
+a-synology-drive-on-ubuntu-linux/">http://jaystile.wordpress.com/2013/04/26=
+/mounting-a-synology-drive-on-ubuntu-linux/</a><br></div><div>[5] <a href=
+=3D"https://help.ubuntu.com/community/MountWindowsSharesPermanently">https:=
+//help.ubuntu.com/community/MountWindowsSharesPermanently</a><br>
+</div></div>
+
+--001a113ab97ad807d204f9c3f1a5--
+
+From marvin  Tue May 20 16:19:46 2014
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.26)
+	for <marvin@localhost> (single-drop); Tue, 20 May 2014 16:19:46 +0100 (BST)
+Received: by 10.217.69.130 with SMTP id z2csp26017wex;
+        Tue, 20 May 2014 08:11:11 -0700 (PDT)
+X-Received: by 10.152.18.133 with SMTP id w5mr2779316lad.60.1400598671493;
+        Tue, 20 May 2014 08:11:11 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id bd6si8500325lbc.152.2014.05.20.08.11.10
+        for <multiple recipients>;
+        Tue, 20 May 2014 08:11:11 -0700 (PDT)
+Received-SPF: none (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=neutral (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s4KFB7WS001883;
+	Tue, 20 May 2014 16:11:07 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk [152.78.119.37])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id q4JGB70832318552Ui ret-id none; Tue, 20 May 2014 16:11:07 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.37) with Microsoft SMTP Server (TLS) id 14.3.181.6; Tue, 20 May
+ 2014 16:11:06 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id s4KFB6MD020583;	Tue, 20 May 2014 16:11:06 +0100
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk
+ [152.78.128.11])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ s4KFB645020580	for <finmag-team@lists.soton.ac.uk>; Tue, 20 May 2014 16:11:06
+ +0100
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s4KFB6WY000969	for
+ <finmag-team@lists.soton.ac.uk>; Tue, 20 May 2014 16:11:06 +0100
+Received: from SRV00045.soton.ac.uk (srv00045.soton.ac.uk [152.78.119.41])	by
+ mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11])
+ envelope-from <H.FANGOHR@soton.ac.uk> with ESMTP	id q4JGB608323185362B ret-id
+ none; Tue, 20 May 2014 16:11:06 +0100
+Received: from SRV00046.soton.ac.uk ([169.254.9.100]) by SRV00045.soton.ac.uk
+ ([152.78.119.41]) with mapi id 14.03.0181.006; Tue, 20 May 2014 16:10:59
+ +0100
+From: "Fangohr H." <H.FANGOHR@soton.ac.uk>
+To: "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+CC: "Fangohr H." <h.fangohr@soton.ac.uk>
+Subject: [finmag-team] Fwd: Sending emails from our servers (now in B176)
+Thread-Topic: Sending emails from our servers (now in B176)
+Thread-Index: AQHPdC+bws84rf5A+kCuJQdZwq4aSg==
+Date: Tue, 20 May 2014 15:10:58 +0000
+Message-ID: <F7FE5435-B7C4-4E76-BAFF-B03E5CE81031@soton.ac.uk>
+References: <4672CD8D-5223-4322-8265-1EBA89A957E9@soton.ac.uk>
+Accept-Language: en-GB, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [152.78.54.126]
+Content-Type: text/plain; charset="Windows-1252"
+Content-ID: <7DB75AC54759E24184074F4277502B58@exchange.soton.ac.uk>
+MIME-Version: 1.0
+Received-SPF: Pass (UOS-MSG00035-VS.soton.ac.uk: domain of
+ owner-finmag-team@lists.soton.ac.uk designates 152.78.128.58 as permitted
+ sender) receiver=UOS-MSG00035-VS.soton.ac.uk; client-ip=152.78.128.58;
+ helo=maillists.sucs.soton.ac.uk;
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.41; helo=<SRV00045.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.41; envelope-from=<H.FANGOHR@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from quoted-printable to 8bit by maillists.sucs.soton.ac.uk id s4KFB645020581
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=q4JGB7083231855200; tid=q4JGB70832318552Ui; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: s4KFB7WS001883
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Resending to finmag-team so we have an archive in the repository.
+
+Hans
+
+
+Begin forwarded message:
+
+From: Fangohr H. <H.FANGOHR@soton.ac.uk<mailto:H.FANGOHR@soton.ac.uk>>
+Subject: Sending emails from our servers (now in B176)
+Date: 20 May 2014 14:30:03 BST
+To: "fangohr-group@lists.soton.ac.uk<mailto:fangohr-group@lists.soton.ac.uk=
+>" <fangohr-group@lists.soton.ac.uk<mailto:fangohr-group@lists.soton.ac.uk>=
+>
+Cc: Fangohr H. <H.FANGOHR@soton.ac.uk<mailto:H.FANGOHR@soton.ac.uk>>, O' Br=
+ien N.S. <N.S.O'Brien@soton.ac.uk<mailto:N.S.O'Brien@soton.ac.uk>>
+
+Hi team,
+
+I think I have just enabled email sending on aleph0 (using the instructions=
+ below).
+
+So hopefully, Jenkins will start to send emails again, now.
+
+Thanks Neil, in making this happen.
+
+Cheers,
+
+Hans
+
+
+=97=97=97=97=97=97=97=97=97=97=97=97=97-
+
+
+
+
+
+
+
+
+Hi all,
+
+for Ubuntu-based linux machines we seem to have a solution how to send emai=
+l now.
+
+This email contains first Neil=92s original instructions. Then below (part =
+2) contains the idea to change from mailutils to bsd-mailx, which solve the=
+ issue for osiris.
+
+
+
+
+Part 1
+#############
+
+Hi Hans, Sam, Ondrej,
+
+As below, I have been able to send emails from my new Ubuntu VM, which
+has not been registered in any special way with iSolutions.
+
+Technical details are below; the significance is that we will be able to
+build virtual machines of our own, on our workstations, which can send
+email, and so we can test out the TeTePy code locally, end-to-end (we'll
+still need accounts on which to receive our ersatz "student
+submissions", but last time I worked on this it was easy to create a
+gmail account for the purpose).
+
+It seems the key to this working is to set the email to look like it
+came from <account>@soton.ac.uk<http://soton.ac.uk> as the relay rejects em=
+ail addresses of
+the form <account>@<somemachine.>soton.ac.uk<http://soton.ac.uk>.
+
+It appears that <account> need not be a valid user account, since I had
+success with e.g. email-test-account-nonesuch32432@soton.ac.uk<mailto:email=
+-test-account-nonesuch32432@soton.ac.uk> and
+email-test-account-nonesuch@soton.ac.uk<mailto:email-test-account-nonesuch@=
+soton.ac.uk>.
+
+It may also be significant that I have set my hostname to something
+hopefully-unique, registered the machine on the network.soton.ac.uk<http://=
+network.soton.ac.uk>
+site, and checked that its dynamic DNS entry has been created.
+
+The approach I took was:
+
+1) Install Ubuntu 14.04 x64 server (plus do the updates, etc).  Register
+the machine on the network, check it can be pinged at
+<hostname>.clients.soton.ac.uk<http://clients.soton.ac.uk>
+
+2) Run sudo dpkg-reconfigure postfix
+
+3) Pick the following options:
+
+General type of mail configuration: Internet with smarthost
+
+System mail name: soton.ac.uk<http://soton.ac.uk>
+
+SMTP relay host (blank for none): relay.soton.ac.uk<http://relay.soton.ac.u=
+k>
+
+Root and postmaster mail recipient: nsob1c12 # edit to use your login name
+
+Other destinations to accept mail for (blank for none): (accept the
+defaults)
+
+Force synchronous updates on mail queue? Yes #sacrifice some performance
+for better data integrity
+
+Local networks: (accept defaults)
+
+Use procmail for local delivery? Yes
+
+Mailbox size limit (bytes): 0 # unlimited
+
+Local address extension character: +
+
+Internet protocols to use: all
+
+4) Test it (I added a user with unlikely user name, then sent mail from
+it using the command line mail utility).
+
+The emails will appear to come from
+<the-account-you-made-up>@soton.ac.uk<http://soton.ac.uk>, as below.
+
+
+Regards,
+
+Neil
+
+
+-------- Original Message --------
+Subject: Test subject
+Date: Mon, 19 May 2014 17:42:25 +0100
+From: <email-test-account-nonesuch@soton.ac.uk<mailto:email-test-account-no=
+nesuch@soton.ac.uk>>
+To: <n.s.o'brien@soton.ac.uk<mailto:n.s.o'brien@soton.ac.uk>>
+
+hello
+
+
+####
+Part 2
+
+Begin forwarded message:
+
+From: Neil O'Brien <nsob1c12@soton.ac.uk<mailto:nsob1c12@soton.ac.uk>>
+Subject: Re: Sending emails from non-static IP addresses (was: Fwd: Test su=
+bject)
+Date: 20 May 2014 13:38:30 BST
+To: Fangohr H. <H.FANGOHR@soton.ac.uk<mailto:H.FANGOHR@soton.ac.uk>>, O' Br=
+ien N.S. <N.S.O'Brien@soton.ac.uk<mailto:N.S.O'Brien@soton.ac.uk>>
+Cc: Hovorka O. <O.Hovorka@soton.ac.uk<mailto:O.Hovorka@soton.ac.uk>>, Sinay=
+oko S. <S.Sinayoko@soton.ac.uk<mailto:S.Sinayoko@soton.ac.uk>>
+
+Hi All,
+
+We just resolved this issue: the "system mail name" was correct, but the
+>From address was still of the form fangohr@osiris.soton.ac.uk<mailto:fangoh=
+r@osiris.soton.ac.uk>, which
+iSolutions will not relay (they will relay for addresses of the form
+someone@soto.ac.uk<mailto:someone@soto.ac.uk> only).
+
+After we checked the Postfix config carefully, I saw that the "mail"
+command on Hans' machine was from mailutils, while I was using
+bsd-mailx.  Removing mailutils and installing bsd-mailx resulted in a
+>From address of fangohr@soton.ac.uk<mailto:fangohr@soton.ac.uk>, and the re=
+lay succeeded.
+
+I expect that the GNU Mailutils could instead have been configured, if
+required, to use a valid From address.
+
+
+Best regards,
+
+Neil
+
+On 20/05/14 12:35, Fangohr H. wrote:
+Hi Neil,
+
+On 20 May 2014, at 11:01, Neil O'Brien <nsob1c12@soton.ac.uk<mailto:nsob1c1=
+2@soton.ac.uk>> wrote:
+
+Hi Hans,
+
+I=92d tentatively suggest that the issue here could be that =93System
+mail name" was not set to soton.ac.uk<http://soton.ac.uk> but to osiris.sot=
+on.ac.uk<http://osiris.soton.ac.uk>
+instead.
+
+I was thinking the same. Thanks for sending your log. I followed
+your instructions (I think!) and didn=92t get soton.ac.uk<http://soton.ac.u=
+k> as the
+sending host name in the log; so I wanted to check whether I should
+have.
+
+Will try again to follow your instructions. If anybody else gets
+this to work (or doesn=92t), please share: maybe we can spot a pattern
+(or what I got wrong).
+
+Cheers,
+
+Hans
+
+
+
+
+-------------------------------------
+finmag-team mailing list.
+
+From fetchmail  Tue May 20 19:37:18 2014
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.26)
+	for <marvin@localhost> (single-drop); Tue, 20 May 2014 19:37:18 +0100 (BST)
+Received: by 10.217.69.130 with SMTP id z2csp39584wex;
+        Tue, 20 May 2014 11:24:27 -0700 (PDT)
+X-Received: by 10.152.29.168 with SMTP id l8mr33715824lah.35.1400610266963;
+        Tue, 20 May 2014 11:24:26 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id yp3si9800548lbb.16.2014.05.20.11.24.26
+        for <multiple recipients>;
+        Tue, 20 May 2014 11:24:26 -0700 (PDT)
+Received-SPF: none (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=neutral (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk;
+       dkim=neutral (body hash did not verify) header.i=@;
+       dmarc=fail (p=NONE dis=NONE) header.from=gmail.com
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s4KIOLQZ001540;
+	Tue, 20 May 2014 19:24:21 +0100
+Received: from UOS-MSG00036-VS.soton.ac.uk (uos-msg00036-vs.soton.ac.uk [152.78.119.38])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id q4JJOL0832324399b0 ret-id none; Tue, 20 May 2014 19:24:21 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.38) with Microsoft SMTP Server (TLS) id 14.3.181.6; Tue, 20 May
+ 2014 19:24:20 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id s4KIOKv8026342;	Tue, 20 May 2014 19:24:20 +0100
+Received: from mailgate3.iss.soton.ac.uk (mailgate3.iss.soton.ac.uk
+ [152.78.128.104])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ s4KIOKvu026339	for <finmag-team@lists.soton.ac.uk>; Tue, 20 May 2014 19:24:20
+ +0100
+Received: from mailgate3.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate3.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s4KIODaC016624	for
+ <finmag-team@lists.soton.ac.uk>; Tue, 20 May 2014 19:24:13 +0100
+Received: from mail-qc0-f175.google.com (mail-qc0-f175.google.com
+ [209.85.216.175])	by mailgate3.iss.soton.ac.uk (mailgate3.iss.soton.ac.uk
+ [152.78.128.104]) envelope-from <maximilian.albert@gmail.com> with ESMTP	id
+ q4JJOD10136298980d ret-id none; Tue, 20 May 2014 19:24:13 +0100
+Received: by mail-qc0-f175.google.com with SMTP id w7so1389974qcr.34
+        for <finmag-team@lists.soton.ac.uk>; Tue, 20 May 2014 11:24:12 -0700
+ (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:date:message-id:subject:from:to:content-type;
+        bh=PBr6Y0J4Emu8mgGOfFGc3rYvzOmc3Gka77RAGm/UZb8=;
+        b=h9UjAIkQELeJsvC6ba6VKWZkvIsprMoDNoaQyC5ukzjdWiUPXGZoM+WV7WRSF0vaUk
+         Bx21+x8iMwIZcB7oMeZfD7g1D7VxjfhHSieCXcsEIheEFdGxqvUpqbiF5fgn8nXzpFDd
+         kZVlRlIMuhEK+1+5MC+X+GWuuHTW0mcY279ntMWRrR/F5wCVAibgDKwGv0frsVgxn8DL
+         R12bVrB3UiC8/nX1EqptM/iCo6D5LEoRBzauadfmNTFEW/EsKWpUaz/FuSwozLpIjGZi
+         Moa7LROv0YgZjBpHPWxSCgZk9azE06UPud2WR2Le8Colg3x3kquWkaw97XymRmAH1VxG
+         EnDQ==
+MIME-Version: 1.0
+X-Received: by 10.229.79.2 with SMTP id n2mr62458237qck.11.1400610252559; Tue,
+ 20 May 2014 11:24:12 -0700 (PDT)
+Received: by 10.96.122.41 with HTTP; Tue, 20 May 2014 11:23:56 -0700 (PDT)
+Date: Tue, 20 May 2014 19:23:56 +0100
+Message-ID: <CAGA_dmjnxZoLMisAmh5G0q0Bt1Ocyq4Cqn7ZLu0ZE77XHLC9Nw@mail.gmail.com>
+Subject: [finmag-team] How to setup MFD printers on Linux
+From: Maximilian Albert <maximilian.albert@gmail.com>
+To: "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+Content-Type: multipart/alternative; boundary="001a1133a1a0929bd604f9d8fcbe"
+Received-SPF: Pass (UOS-MSG00036-VS.soton.ac.uk: domain of
+ owner-finmag-team@lists.soton.ac.uk designates 152.78.128.58 as permitted
+ sender) receiver=UOS-MSG00036-VS.soton.ac.uk; client-ip=152.78.128.58;
+ helo=maillists.sucs.soton.ac.uk;
+Received-SPF: None; receiver=mailgate3.iss.soton.ac.uk; client-ip=209.85.216.175; helo=<mail-qc0-f175.google.com>
+Received-SPF: Pass; receiver=mailgate3.iss.soton.ac.uk; client-ip=209.85.216.175; envelope-from=<maximilian.albert@gmail.com>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=q4JJOL083232439900; tid=q4JJOL0832324399b0; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.38; helo=<UOS-MSG00036-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.38; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: s4KIOLQZ001540
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+--001a1133a1a0929bd604f9d8fcbe
+Content-Type: text/plain; charset="UTF-8"
+
+Hi all,
+
+Marc-Antonio just pointed me to the correct document which explains how to
+setup the MFD printers on a Linux system:
+
+
+https://www.secureapps.soton.ac.uk/PublicProxy/files.aspx?f=https://intranet.soton.ac.uk/sites/iSolutions/user-services/How%20to/ubuntu-mfd-setup.pdf
+
+Previously I had used an older document which allowed me to use the
+printer, but the grayscale printing would have very bad quality. With the
+above instructions this is now fixed.
+
+This is probably useful for others as well, so I thought I'd share it.
+
+Cheers,
+Max
+
+--001a1133a1a0929bd604f9d8fcbe
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><div><div>Hi all,<br><br>Marc-Antonio just pointed me to t=
+he correct document which explains how to setup the MFD printers on a Linux=
+ system:<br><br>=C2=A0=C2=A0 <a href=3D"https://www.secureapps.soton.ac.uk/=
+PublicProxy/files.aspx?f=3Dhttps://intranet.soton.ac.uk/sites/iSolutions/us=
+er-services/How%20to/ubuntu-mfd-setup.pdf" target=3D"_blank">https://www.se=
+cureapps.soton.ac.uk/PublicProxy/files.aspx?f=3Dhttps://intranet.soton.ac.u=
+k/sites/iSolutions/user-services/How%20to/ubuntu-mfd-setup.pdf</a><br>
+<br></div>Previously I had used an older document which allowed me to use t=
+he printer, but the grayscale printing would have very bad quality. With th=
+e above instructions this is now fixed.<br><br>This is probably useful for =
+others as well, so I thought I&#39;d share it.<br>
+<br></div>Cheers,<br>Max<br></div>
+
+--001a1133a1a0929bd604f9d8fcbe--
+

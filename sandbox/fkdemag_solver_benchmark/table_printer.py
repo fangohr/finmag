@@ -83,7 +83,7 @@ class TablePrinter(object):
         self.entry_counter = 0
 
     def new_entry(self, entry, fmt="{:>{w}.3}"):
-        table_new_entry(entry, self.widths[self.entry_counter + 1], fmt)
+        table_new_entry(entry, self.widths[self.entry_counter+1], fmt)
         self.entry_counter += 1
 
 
