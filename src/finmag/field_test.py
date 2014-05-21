@@ -54,7 +54,7 @@ class TestField(object):
                           self.fs_2d_scalar,
                           self.fs_3d_scalar]
 
-        # Scalar field different expressions for constant value 42
+        # Scalar field different expressions for constant value 42.
         values = [df.Constant("42"),
                   df.Constant("42.0"),
                   df.Constant(42),
@@ -77,7 +77,8 @@ class TestField(object):
 
                 # Check values that are interpolated,
                 # dolfin is fairly inaccurate here, see field_test.ipynb.
-                # Probing is not at mesh node.
+                # Probing is not at mesh node, but self.tol1 is used since
+                # the field is constant and big discrepancy is not expected.
                 probing_point = field.mesh_dim() * (0.55,)
                 assert abs(field.probe_field(probing_point) - 42) < self.tol1
 
@@ -94,7 +95,7 @@ class TestField(object):
                        df.Expression("11.2*x[0] - 3.1*x[1] + 2.7*x[2]*x[2]")]
 
         # Test initialisation for all functionspaces and
-        # an appropriate expression for that functionspace. 
+        # an appropriate expression for that functionspace.
         for functionspace in functionspaces:
             # Get the mesh dimension (1, 2, or 3).
             mesh_dim = functionspace.mesh().topology().dim()
@@ -124,7 +125,7 @@ class TestField(object):
             assert np.all(field_values == expected_values)
 
             # Check the probed field value (not exact - interpolation).
-            probing_point = field.mesh_dim() * (0.55,) 
+            probing_point = field.mesh_dim() * (0.55,)
             probed_value = field.probe_field(probing_point)
             assert abs(probed_value - expected_probed_value) < self.tol2
 
