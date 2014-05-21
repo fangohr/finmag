@@ -199,6 +199,84 @@ class TestField(object):
                 if field.value_dim() == 3:  # only for 3d vectors
                     assert abs(probed_value[2] - expected_value[2]) < self.tol1
 
+    def test_init_vector_expression(self):
+        # 2d and 3d vector function spaces on 1d, 2d and 3d meshes.
+        functionspaces = [self.fs_1d_vector2d,
+                          self.fs_2d_vector2d,
+                          self.fs_3d_vector2d]#,
+                          #self.fs_1d_vector3d,
+                          #self.fs_2d_vector3d,
+                          #self.fs_3d_vector3d]
+
+        # Different constant expressions for 2d vector fields.
+        expressions2d = [df.Expression(['x[0]', '2*x[0]']),
+                         df.Expression(['x[0]', '2*x[1]']),
+                         df.Expression(['x[0]', '2*x[1]*x[2]'])]
+
+        # Different constant expressions for 3d vector fields.
+        expressions3d = [df.Expression(['x[0]', '2*x[0]', '3*x[0]']),
+                         df.Expression(['x[0]', '2*x[1]', '3*x[1]']),
+                         df.Expression(['x[0]', '2*x[1]', '3*x[2]'])]
+
+        # Test initialisation for all functionspaces and
+        # an appropriate expression for that functionspace.
+        for functionspace in functionspaces:
+            field = Field(functionspace)
+
+            # Choose an appropriate expression and expected values
+            coords = field.functionspace.mesh().coordinates()
+            n_nodes = field.functionspace.mesh().num_vertices()
+            expected_values = np.empty((n_nodes, field.value_dim()))
+            if field.value_dim() == 2:  # 2d vector
+                mesh_dim = field.mesh_dim()
+                if mesh_dim == 1:
+                    expression = expressions2d[0]
+                    expected_values[:, 0] = coords[:, 0]
+                    expected_values[:, 1] = 2*coords[:, 0]
+                    expected_probed_value = (0.55, 2*0.55)
+                elif mesh_dim == 2:
+                    expression = expressions2d[1]
+                    expected_values[:, 0] = coords[:, 0]
+                    expected_values[:, 1] = 2*coords[:, 1]
+                    expected_probed_value = (0.55, 2*0.55)
+                elif mesh_dim == 3:
+                    expression = expressions2d[2]
+                    expected_values[:, 0] = coords[:, 0]
+                    expected_values[:, 1] = 2*coords[:, 1]*coords[:, 2]
+                    expected_probed_value = (0.55, 2*0.55**2)
+
+            field.set(expression)
+
+            # Check values in vector (numpy array) (should be exact).
+            f_array = field.f.vector().array()
+            assert np.all(f_array[0:n_nodes] == expected_values[:, 0])
+            assert np.all(f_array[n_nodes:2*n_nodes] ==
+                          expected_values[:, 1])
+            if field.value_dim() == 3:  # only for 3d vectors
+                assert np.all(f_array[2*n_nodes:3*n_nodes] ==
+                              expected_values[:, 2])
+
+               
+            # Check the result of coords_and_values (should be exact).
+            coords, field_values = field.coords_and_values()
+            assert np.all(field_values[:, 0] == expected_values[:, 0])
+            assert np.all(field_values[:, 1] == expected_values[:, 1])
+            if field.value_dim() == 3:  # only for 3d vectors
+                assert np.all(field_values[:, 2] == expected_values[:, 2])
+        
+            
+            # Check values that are interpolated,
+            # dolfin is fairly inaccurate here, see field_test.ipynb.
+            # Probing is not at mesh node, but self.tol1 is used since
+            # the field is constant and big discrepancy is not expected.
+            probing_point = field.mesh_dim() * (0.55,)
+            probed_value = field.probe_field(probing_point)
+            assert abs(probed_value[0] - expected_probed_value[0]) < self.tol2
+            assert abs(probed_value[1] - expected_probed_value[1]) < self.tol2
+            if field.value_dim() == 3:  # only for 3d vectors
+                assert abs(probed_value[2] - expected_probed_value[2]) < self.tol2
+            
+
     def test_coords_and_values_scalar_field(self):
         mesh = self.mesh3d
         f = Field(self.fs_3d_scalar)
