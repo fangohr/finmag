@@ -88,7 +88,7 @@ class Field(object):
         """Load field from hdf5 file using dolfin code"""
         raise NotImplementedError
 
-    def get_coords_and_values(self, t=None):
+    def coords_and_values(self, t=None):
         """
         Return a list of mesh vertex coordinates and associated field values.
         In parallel, this only returns the coordinates and values owned by
@@ -141,7 +141,7 @@ class Field(object):
 
     def mesh_dim(self):
         """
-        Returns the dimension of the mesh (1d, 2d, or 3d)
+        Returns the dimension of the mesh (1, 2, or 3)
         """
         return self.f.geometric_dimension()
 
