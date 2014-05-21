@@ -41,6 +41,14 @@
 #
 #   - for visualisation (use dolfin tools)
 #   - for data storage (use dolfin tools)
+#
+#
+# Maybe to be added later
+#
+#def nodal_volume(self):
+#
+#    return nodal_volume
+
 
 import dolfin as df
 import numpy as np
@@ -205,10 +213,3 @@ class Field(object):
         else:
             # value_shape() returns a tuple (N,) and int is required
             return self.functionspace.ufl_element().value_shape()[0]
-
-# Maybe to be added later
-#
-#
-#def nodal_volume(self):
-#
-#    return nodal_volume
