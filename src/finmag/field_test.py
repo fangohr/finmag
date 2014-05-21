@@ -93,6 +93,8 @@ class TestField(object):
                        df.Expression("11.2*x[0] - 3.1*x[1]"),
                        df.Expression("11.2*x[0] - 3.1*x[1] + 2.7*x[2]*x[2]")]
 
+        # Test initialisation for all functionspaces and
+        # an appropriate expression for that functionspace. 
         for functionspace in functionspaces:
             # Get the mesh dimension (1, 2, or 3).
             mesh_dim = functionspace.mesh().topology().dim()
@@ -104,25 +106,26 @@ class TestField(object):
                 # Compute expected values at all mesh nodes.
                 expected_values = 11.2*coords[:, 0]
                 # Compute expected probed value (not at mesh node).
-                expected_probed_value = 11.2*0.505
+                expected_probed_value = 11.2*0.55
             elif mesh_dim == 2:
                 # Initialise the field using the second expression for 2d mesh.
                 field = Field(functionspace, expressions[1])
                 expected_values = 11.2*coords[:, 0] - 3.1*coords[:, 1]
-                expected_probed_value = 11.2*0.505 - 3.1*0.505
+                expected_probed_value = 11.2*0.55 - 3.1*0.55
             elif mesh_dim == 3:
                 # Initialise the field using the third expression for 3d mesh.
                 field = Field(functionspace, expressions[2])
                 expected_values = 11.2*coords[:, 0] - 3.1*coords[:, 1] + \
                     2.7*coords[:, 2]*coords[:, 2]
-                expected_probed_value = 11.2*0.505 - 3.1*0.505 + 2.7*0.505**2
+                expected_probed_value = 11.2*0.55 - 3.1*0.55 + 2.7*0.55**2
 
             # Check the field value at all nodes (should be exact).
-            field_values = field.coords_and_values()[1] # ignore coordinates
+            field_values = field.coords_and_values()[1]  # ignore coordinates
             assert np.all(field_values == expected_values)
 
             # Check the probed field value (not exact - interpolation).
-            probed_value = field.probe_field(mesh_dim*(0.505,))
+            probing_point = field.mesh_dim() * (0.55,) 
+            probed_value = field.probe_field(probing_point)
             assert abs(probed_value - expected_probed_value) < self.tol2
 
     def test_init_vector_constant(self):
