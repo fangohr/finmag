@@ -76,7 +76,8 @@ class TestField(object):
 
                 # Check values that are interpolated,
                 # dolfin is fairly inaccurate here, see field_test.ipynb.
-                probing_point = field.mesh_dim() * (0.5,)
+                # Probing is not at mesh node.
+                probing_point = field.mesh_dim() * (0.55,)
                 assert abs(field.probe_field(probing_point) - 42) < self.tol
 
     def test_init_scalar_expression(self):
