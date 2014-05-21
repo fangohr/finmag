@@ -38979,3 +38979,2232 @@ others as well, so I thought I&#39;d share it.<br>
 
 --001a1133a1a0929bd604f9d8fcbe--
 
+From fetchmail  Wed May 21 10:41:02 2014
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.26)
+	for <marvin@localhost> (single-drop); Wed, 21 May 2014 10:41:02 +0100 (BST)
+Received: by 10.217.69.130 with SMTP id z2csp79444wex;
+        Wed, 21 May 2014 01:42:23 -0700 (PDT)
+X-Received: by 10.152.115.232 with SMTP id jr8mr15541800lab.6.1400661743314;
+        Wed, 21 May 2014 01:42:23 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk. [152.78.128.16])
+        by mx.google.com with ESMTP id xb4si4751635lbb.4.2014.05.21.01.42.22
+        for <multiple recipients>;
+        Wed, 21 May 2014 01:42:23 -0700 (PDT)
+Received-SPF: none (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) client-ip=152.78.128.16;
+Authentication-Results: mx.google.com;
+       spf=neutral (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s4L8gF2G016554;
+	Wed, 21 May 2014 09:42:15 +0100
+Received: from SRV00045.soton.ac.uk (srv00045.soton.ac.uk [152.78.119.41])
+	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk [152.78.128.16]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id q4K9gF15068474207N ret-id none; Wed, 21 May 2014 09:42:15 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.41) with Microsoft SMTP Server (TLS) id 14.3.181.6; Wed, 21 May
+ 2014 09:42:14 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id s4L8gDZp029372;	Wed, 21 May 2014 09:42:13 +0100
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk
+ [152.78.128.11])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ s4L8gDlH029369	for <finmag-team@lists.soton.ac.uk>; Wed, 21 May 2014 09:42:13
+ +0100
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s4L8gAJj026025	for
+ <finmag-team@lists.soton.ac.uk>; Wed, 21 May 2014 09:42:10 +0100
+Received: from UOS-MSG00037-VS.soton.ac.uk (uos-msg00037-vs.soton.ac.uk
+ [152.78.119.39])	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk
+ [152.78.128.11]) envelope-from <H.FANGOHR@soton.ac.uk> with ESMTP	id
+ q4K9gA0832340637zz ret-id none; Wed, 21 May 2014 09:42:10 +0100
+Received: from SRV00046.soton.ac.uk ([169.254.9.100]) by
+ UOS-MSG00037-VS.soton.ac.uk ([152.78.119.39]) with mapi id 14.03.0181.006;
+ Wed, 21 May 2014 09:42:10 +0100
+From: "Fangohr H." <H.FANGOHR@soton.ac.uk>
+To: "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+CC: "Fangohr H." <h.fangohr@soton.ac.uk>
+Subject: [finmag-team] Jenkins - too many open files
+Thread-Topic: Jenkins - too many open files
+Thread-Index: AQHPdNCNKnJTeR9Ql0S/vvv+bXR8Rg==
+Date: Wed, 21 May 2014 08:42:09 +0000
+Message-ID: <AAD57842-631F-4633-92C5-4624DA3D393D@soton.ac.uk>
+References: <2137329674.371.1400631962320.JavaMail.jenkins@aleph0.kk.soton.ac.uk>
+Accept-Language: en-GB, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [152.78.54.126]
+Content-Type: text/plain; charset="Windows-1252"
+Content-ID: <D8D53F0C8640984A819C00174AEA872D@exchange.soton.ac.uk>
+MIME-Version: 1.0
+Received-SPF: Pass (SRV00045.soton.ac.uk: domain of
+ owner-finmag-team@lists.soton.ac.uk designates 152.78.128.58 as permitted
+ sender) receiver=SRV00045.soton.ac.uk; client-ip=152.78.128.58;
+ helo=maillists.sucs.soton.ac.uk;
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.39; helo=<UOS-MSG00037-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.39; envelope-from=<H.FANGOHR@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from quoted-printable to 8bit by maillists.sucs.soton.ac.uk id s4L8gDlH029370
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=q4K9gE150684742000; tid=q4K9gF15068474207N; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.41; helo=<SRV00045.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.41; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: s4L8gF2G016554
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi all,
+
+Jenkins is now failing complaining about =92too many open files=92 (in erro=
+r below). There seems to be a jenkins bug for this (https://wiki.jenkins-ci=
+.org/display/JENKINS/I'm+getting+too+many+open+files+error),
+but often (?) it can be solved by increasing the number of allowed open fil=
+es that jenkins has (=91ulimit -n=92 should show it). By default, this is 1=
+024.
+
+As a first measure, I am just now rebooting aleph0 - who knows, it may sort=
+ it out.
+
+If it doesn=92t, I suggest we increase the number of allowed open files for=
+ jenkins (or all users). Google should be able to help in doing this.
+
+I am stuck in meetings all day, so may not be able to pursue this further, =
+but wanted at least to share what I have found out so far.
+
+Cheers,
+
+Hans
+
+PS If anybody needs admin rights, please let me or Max or Marc-Antonio know=
+, and we can add you to the sudo group if you are not in there yet.
+
+Begin forwarded message:
+
+From: Jenkins CI <h.fangohr@soton.ac.uk<mailto:h.fangohr@soton.ac.uk>>
+Subject: [build] finmag_fast_tests - Build # 889 - Still Failing!
+Date: 21 May 2014 01:26:02 BST
+To: <h.fangohr@soton.ac.uk<mailto:h.fangohr@soton.ac.uk>>, <maximilian.albe=
+rt@soton.ac.uk<mailto:maximilian.albert@soton.ac.uk>>, <cilix@soton.ac.uk<m=
+ailto:cilix@soton.ac.uk>>
+Reply-To: <h.fangohr@soton.ac.uk<mailto:h.fangohr@soton.ac.uk>>, <maximilia=
+n.albert@soton.ac.uk<mailto:maximilian.albert@soton.ac.uk>>
+
+[http://aleph0.kk.soton.ac.uk:8080/static/e59dfe28/images/32x32/red.gif]   =
+     BUILD FAILURE
+Build URL       http://aleph0.kk.soton.ac.uk:8080/job/finmag_fast_tests/889=
+/
+Project:        finmag_fast_tests
+Date of build:  Wed, 21 May 2014 01:11:47 +0100
+Build duration: 14 min
+
+CHANGES
+No Changes
+
+CONSOLE OUTPUT
+[...truncated 4630 lines...]
+src/finmag/util/helpers_test.py:233: test_pointing_upwards PASSED
+src/finmag/util/helpers_test.py:241: test_pointing_downwards PASSED
+src/finmag/util/helpers_test.py:250: test_mesh_functions_allclose FAILED
+src/finmag/util/helpers_test.py:281: test_piecewise_on_subdomains PASSED
+src/finmag/util/helpers_test.py:296: test_vector_field_from_dolfin_function=
+ FAILED
+src/finmag/util/helpers_test.py:342: test_probe FAILED
+src/finmag/util/helpers_test.py:395: test_get_hg_revision_info ERROR
+src/finmag/util/helpers_test.py:412: test_binary_tarball_name ERROR
+src/finmag/util/helpers_test.py:418: test_plot_ndt_columns_and_plot_dynamic=
+s ERROR
+src/finmag/util/helpers_test.py:436: test_crossprod FAILED
+src/finmag/util/helpers_test.py:460: test_apply_vertexwise FAILED
+src/finmag/util/helpers_test.py:479: test_TemporaryDirectory FAILED
+src/finmag/util/helpers_test.py:495: test_contextmanager_ignored ERROR
+src/finmag/util/helpers_test.py:513: test_run_cmd_with_timeout FAILED
+src/finmag/util/helpers_test.py:528: test_jpg2avi SKIPPED
+src/finmag/util/helpers_test.py:548: test_pvd2avi SKIPPED
+src/finmag/util/helpers_test.py:568: test_set_color_scheme PASSED
+src/finmag/util/helpers_test.py:582: test_restriction ERROR
+src/finmag/util/helpers_test.py:652: test_verify_function_space_type FAILED
+src/finmag/util/mesh_templates_test.py:23: test_mesh_templates ERROR
+src/finmag/util/mesh_templates_test.py:30: test_sphere ERROR
+src/finmag/util/mesh_templates_test.py:45: test_elliptical_nanodisk ERROR
+src/finmag/util/mesh_templates_test.py:66: test_nanodisk ERROR
+src/finmag/util/mesh_templates_test.py:85: test_combining_meshes ERROR
+src/finmag/util/mesh_templates_test.py:113: test_maxh_with_mesh_primitive E=
+RROR
+src/finmag/util/mesh_templates_test.py:137: test_mesh_specific_maxh ERROR
+src/finmag/util/mesh_templates_test.py:151: test_different_mesh_discretisat=
+ions_for_combined_meshes ERROR
+src/finmag/util/mesh_templates_test.py:175: test_box ERROR
+src/finmag/util/meshes_test.py:6: test_mesh_size FAILED
+src/finmag/util/meshes_test.py:23: test_embed3d PASSED
+src/finmag/util/pbc_test.py:5: test_pbc1d_2dmesh FAILED
+src/finmag/util/pbc_test.py:21: test_pbc2d_2dmesh FAILED
+src/finmag/util/pbc_test.py:38: test_pbc2d_3dmesh FAILED
+src/finmag/util/pbc_test.py:57: test_pbc2d_3dmesh2 FAILED
+src/finmag/util/test_dmi_from_helix.py:14: test_dmi_from_helix_solution FAI=
+LED
+src/finmag/util/test_dmi_from_helix.py:25: test_helix_strong_field FAILED
+src/finmag/util/test_dmi_from_helix.py:44: test_zero_helix PASSED
+src/finmag/util/visualization_test.py:15: test_render_paraview_scene SKIPPE=
+D
+src/finmag/util/visualization_test.py:70: test_flight_path_rotation P0: [ 0=
+.724 1.569 2.413]
+r1: [-1.724 1.431 -0.413]
+r2: [-1.382 -1.301 1.26 ]
+P0: [-1. 3. 2.]
+r1: [ 0. 0. 0.]
+r2: [ 0. 0. -0.]
+PASSED
+src/finmag/util/visualization_test.py:96: test_flight_path_straight_line PA=
+SSED
+src/finmag/util/visualization_test.py:115: test_plot_dolfin_function SKIPPE=
+D
+src/finmag/util/vtk_saver_test.py:22: TestVTKSaver.test_constructor ERROR
+src/finmag/util/vtk_saver_test.py:30: TestVTKSaver.test_file_extension_is_c=
+orrect ERROR
+src/finmag/util/vtk_saver_test.py:40: TestVTKSaver.test_existing_files_are_=
+deleted_if_requested ERROR
+src/finmag/util/vtk_saver_test.py:64: TestVTKSaver.test_save_field ERROR
+src/finmag/util/vtk_saver_test.py:86: TestVTKSaver.test_saving_to_file_with=
+_different_name ERROR
+src/finmag/util/ode/tests/test_sundials_ode.py:16: OdeSundialsTests.test_er=
+rors Error in CVODE:CVode (CV_NO_MALLOC): Attempt to call before CVodeInit.
+PASSED
+src/finmag/util/ode/tests/test_sundials_ode.py:79: OdeSundialsTests.test_jt=
+imes_ex PASSED
+src/finmag/util/ode/tests/test_sundials_ode.py:37: OdeSundialsTests.test_si=
+mple_1d PASSED
+src/finmag/util/ode/tests/test_sundials_ode.py:45: OdeSundialsTests.test_si=
+mple_1d_diag PASSED
+src/finmag/util/ode/tests/test_sundials_ode.py:26: OdeSundialsTests.test_si=
+mple_1d_scipy PASSED
+src/finmag/util/ode/tests/test_sundials_ode.py:70: OdeSundialsTests.test_st=
+iff_sp_gmr PASSED
+src/finmag/util/ode/tests/test_sundials_stiff_ode.py:19: SundialsStiffOdeTe=
+sts.test_robertson_scipy Integration of the Robertson ODE until t=3D1e8 wit=
+h scipy VODE, BDF method: 1268 steps
+PASSED
+src/finmag/util/ode/tests/test_sundials_stiff_ode.py:30: SundialsStiffOdeTe=
+sts.test_robertson_scipy_transposed DVODE-- At current T (=3DR1), MXSTEP (=
+=3DI1) steps
+taken on this call before reaching TOUT
+In above message, I1 =3D 5000
+In above message, R1 =3D 0.8000369437165D+00
+/usr/local/lib/python2.7/dist-packages/scipy/integrate/_ode.py:696: UserWar=
+ning: vode: Excess work done on this call. (Perhaps wrong MF.)
+PASSED
+src/finmag/util/ode/tests/test_sundials_stiff_ode.py:41: SundialsStiffOdeTe=
+sts.test_robertson_sundials Integration of the Robertson ODE until t=3D1e8 =
+with CVODE, BDF method: 789 steps
+PASSED
+src/finmag/util/ode/tests/test_sundials_stiff_ode.py:54: SundialsStiffOdeTe=
+sts.test_robertson_sundials_transposed PASSED
+src/finmag/util/oommf/test_mesh.py:22: TestIterCoordsInt.test_xyz_ordering =
+PASSED
+src/finmag/util/oommf/test_mesh.py:6: TestIterCoordsInt.test_zyx_ordering P=
+ASSED
+src/finmag/util/oommf/test_mesh.py:39: TestIterCoords.test_zyx_ordering PAS=
+SED
+src/finmag/util/tests/test_arraytools.py:6: test_flat PASSED
+src/finmag/util/tests/test_arraytools.py:20: test_unflat PASSED
+src/finmag/util/tests/test_arraytools.py:40: test_magnitude PASSED
+src/finmag/util/tests/test_arraytools.py:44: test_dolfinvectordatalayout FA=
+ILEDTraceback (most recent call last):
+File "/usr/local/bin/py.test", line 9, in
+File "/usr/local/lib/python2.7/dist-packages/_pytest/config.py", line 19, i=
+n main
+File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 376, in=
+ __call__
+File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 387, in=
+ _docall
+File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 288, in=
+ execute
+File "/usr/local/lib/python2.7/dist-packages/_pytest/main.py", line 111, in=
+ pytest_cmdline_main
+File "/usr/local/lib/python2.7/dist-packages/_pytest/main.py", line 104, in=
+ wrap_session
+File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 376, in=
+ __call__
+File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 387, in=
+ _docall
+File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 288, in=
+ execute
+File "/usr/local/lib/python2.7/dist-packages/_pytest/terminal.py", line 332=
+, in pytest_sessionfinish
+File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 288, in=
+ execute
+File "/usr/local/lib/python2.7/dist-packages/_pytest/junitxml.py", line 208=
+, in pytest_sessionfinish
+File "/usr/lib/python2.7/codecs.py", line 881, in open
+IOError: [Errno 24] Too many open files: '/var/lib/jenkins/jobs/finmag_fast=
+_tests/workspace/test-reports/junit/TEST_pytest.xml'
+make: *** [test-fast] Error 1
+Build step 'Execute shell' marked build as failure
+Recording test results
+Email was triggered for: Failure
+Email was triggered for: Still Failing
+Trigger Failure was overridden by another trigger and will not send an emai=
+l.
+Sending email for trigger: Still Failing
+
+
+
+-------------------------------------
+finmag-team mailing list.
+
+From fetchmail  Wed May 21 10:41:02 2014
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.26)
+	for <marvin@localhost> (single-drop); Wed, 21 May 2014 10:41:02 +0100 (BST)
+Received: by 10.217.69.130 with SMTP id z2csp80597wex;
+        Wed, 21 May 2014 02:02:29 -0700 (PDT)
+X-Received: by 10.180.94.37 with SMTP id cz5mr9123578wib.19.1400662949744;
+        Wed, 21 May 2014 02:02:29 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id gp3si449336wib.76.2014.05.21.02.02.29
+        for <multiple recipients>;
+        Wed, 21 May 2014 02:02:29 -0700 (PDT)
+Received-SPF: none (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=neutral (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s4L929ZH009152;
+	Wed, 21 May 2014 10:02:09 +0100
+Received: from SRV00045.soton.ac.uk (srv00045.soton.ac.uk [152.78.119.41])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id q4KA290832341680iF ret-id none; Wed, 21 May 2014 10:02:09 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.41) with Microsoft SMTP Server (TLS) id 14.3.181.6; Wed, 21 May
+ 2014 10:02:07 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id s4L927VQ029744;	Wed, 21 May 2014 10:02:07 +0100
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk
+ [152.78.128.11])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ s4L926bd029741	for <finmag-team@lists.soton.ac.uk>; Wed, 21 May 2014 10:02:06
+ +0100
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s4L920eI008934	for
+ <finmag-team@lists.soton.ac.uk>; Wed, 21 May 2014 10:02:00 +0100
+Received: from SRV00045.soton.ac.uk (srv00045.soton.ac.uk [152.78.119.41])	by
+ mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11])
+ envelope-from <H.FANGOHR@soton.ac.uk> with ESMTP	id q4KA200832341645xy ret-id
+ none; Wed, 21 May 2014 10:02:00 +0100
+Received: from SRV00046.soton.ac.uk ([169.254.9.100]) by SRV00045.soton.ac.uk
+ ([152.78.119.41]) with mapi id 14.03.0181.006; Wed, 21 May 2014 10:01:31
+ +0100
+From: "Fangohr H." <H.FANGOHR@soton.ac.uk>
+To: "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+CC: "Fangohr H." <h.fangohr@soton.ac.uk>
+Subject: [finmag-team] Fwd: [build] finmag_fast_tests - Build # 890 - Still Failing!
+Thread-Topic: [build] finmag_fast_tests - Build # 890 - Still Failing!
+Thread-Index: AQHPdNIFI32F1eag20a7/y0naEeOlw==
+Date: Wed, 21 May 2014 09:01:31 +0000
+Message-ID: <FFA11EE3-3B05-477C-A8D0-5EA3FBC0354E@soton.ac.uk>
+References: <681348495.1.1400662353321.JavaMail.jenkins@aleph0.kk.soton.ac.uk>
+Accept-Language: en-GB, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [152.78.54.126]
+Content-Type: text/plain; charset="Windows-1252"
+Content-ID: <70380577CBDE564AB05272126A2C6FFA@exchange.soton.ac.uk>
+MIME-Version: 1.0
+Received-SPF: Pass (SRV00045.soton.ac.uk: domain of
+ owner-finmag-team@lists.soton.ac.uk designates 152.78.128.58 as permitted
+ sender) receiver=SRV00045.soton.ac.uk; client-ip=152.78.128.58;
+ helo=maillists.sucs.soton.ac.uk;
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.41; helo=<SRV00045.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.41; envelope-from=<H.FANGOHR@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from quoted-printable to 8bit by maillists.sucs.soton.ac.uk id s4L927bd029742
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=q4KA25083234168000; tid=q4KA290832341680iF; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.41; helo=<SRV00045.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.41; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: s4L929ZH009152
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+=85 so the reboot didn=92t help.
+
+Hans
+
+Begin forwarded message:
+
+From: Jenkins CI <h.fangohr@soton.ac.uk<mailto:h.fangohr@soton.ac.uk>>
+Subject: [build] finmag_fast_tests - Build # 890 - Still Failing!
+Date: 21 May 2014 09:52:32 BST
+To: <h.fangohr@soton.ac.uk<mailto:h.fangohr@soton.ac.uk>>, <maximilian.albe=
+rt@soton.ac.uk<mailto:maximilian.albert@soton.ac.uk>>, <h.fangohr@soton.ac.=
+uk<mailto:h.fangohr@soton.ac.uk>>
+Reply-To: <h.fangohr@soton.ac.uk<mailto:h.fangohr@soton.ac.uk>>, <maximilia=
+n.albert@soton.ac.uk<mailto:maximilian.albert@soton.ac.uk>>
+
+[http://aleph0.kk.soton.ac.uk:8080/static/e59dfe28/images/32x32/red.gif]   =
+     BUILD FAILURE
+Build URL       http://aleph0.kk.soton.ac.uk:8080/job/finmag_fast_tests/890=
+/
+Project:        finmag_fast_tests
+Date of build:  Wed, 21 May 2014 09:44:17 +0100
+Build duration: 8 min 15 sec
+
+CHANGES
+No Changes
+
+CONSOLE OUTPUT
+[...truncated 4621 lines...]
+src/finmag/util/helpers_test.py:233: test_pointing_upwards PASSED
+src/finmag/util/helpers_test.py:241: test_pointing_downwards PASSED
+src/finmag/util/helpers_test.py:250: test_mesh_functions_allclose FAILED
+src/finmag/util/helpers_test.py:281: test_piecewise_on_subdomains PASSED
+src/finmag/util/helpers_test.py:296: test_vector_field_from_dolfin_function=
+ FAILED
+src/finmag/util/helpers_test.py:342: test_probe FAILED
+src/finmag/util/helpers_test.py:395: test_get_hg_revision_info ERROR
+src/finmag/util/helpers_test.py:412: test_binary_tarball_name ERROR
+src/finmag/util/helpers_test.py:418: test_plot_ndt_columns_and_plot_dynamic=
+s ERROR
+src/finmag/util/helpers_test.py:436: test_crossprod FAILED
+src/finmag/util/helpers_test.py:460: test_apply_vertexwise FAILED
+src/finmag/util/helpers_test.py:479: test_TemporaryDirectory FAILED
+src/finmag/util/helpers_test.py:495: test_contextmanager_ignored ERROR
+src/finmag/util/helpers_test.py:513: test_run_cmd_with_timeout FAILED
+src/finmag/util/helpers_test.py:528: test_jpg2avi SKIPPED
+src/finmag/util/helpers_test.py:548: test_pvd2avi SKIPPED
+src/finmag/util/helpers_test.py:568: test_set_color_scheme PASSED
+src/finmag/util/helpers_test.py:582: test_restriction ERROR
+src/finmag/util/helpers_test.py:652: test_verify_function_space_type FAILED
+src/finmag/util/mesh_templates_test.py:23: test_mesh_templates ERROR
+src/finmag/util/mesh_templates_test.py:30: test_sphere ERROR
+src/finmag/util/mesh_templates_test.py:45: test_elliptical_nanodisk ERROR
+src/finmag/util/mesh_templates_test.py:66: test_nanodisk ERROR
+src/finmag/util/mesh_templates_test.py:85: test_combining_meshes ERROR
+src/finmag/util/mesh_templates_test.py:113: test_maxh_with_mesh_primitive E=
+RROR
+src/finmag/util/mesh_templates_test.py:137: test_mesh_specific_maxh ERROR
+src/finmag/util/mesh_templates_test.py:151: test_different_mesh_discretisat=
+ions_for_combined_meshes ERROR
+src/finmag/util/mesh_templates_test.py:175: test_box ERROR
+src/finmag/util/meshes_test.py:6: test_mesh_size FAILED
+src/finmag/util/meshes_test.py:23: test_embed3d PASSED
+src/finmag/util/pbc_test.py:5: test_pbc1d_2dmesh FAILED
+src/finmag/util/pbc_test.py:21: test_pbc2d_2dmesh FAILED
+src/finmag/util/pbc_test.py:38: test_pbc2d_3dmesh FAILED
+src/finmag/util/pbc_test.py:57: test_pbc2d_3dmesh2 FAILED
+src/finmag/util/test_dmi_from_helix.py:14: test_dmi_from_helix_solution FAI=
+LED
+src/finmag/util/test_dmi_from_helix.py:25: test_helix_strong_field FAILED
+src/finmag/util/test_dmi_from_helix.py:44: test_zero_helix PASSED
+src/finmag/util/visualization_test.py:15: test_render_paraview_scene SKIPPE=
+D
+src/finmag/util/visualization_test.py:70: test_flight_path_rotation P0: [ 0=
+.724 1.569 2.413]
+r1: [-1.724 1.431 -0.413]
+r2: [-1.382 -1.301 1.26 ]
+P0: [-1. 3. 2.]
+r1: [ 0. 0. 0.]
+r2: [ 0. 0. -0.]
+PASSED
+src/finmag/util/visualization_test.py:96: test_flight_path_straight_line PA=
+SSED
+src/finmag/util/visualization_test.py:115: test_plot_dolfin_function SKIPPE=
+D
+src/finmag/util/vtk_saver_test.py:22: TestVTKSaver.test_constructor ERROR
+src/finmag/util/vtk_saver_test.py:30: TestVTKSaver.test_file_extension_is_c=
+orrect ERROR
+src/finmag/util/vtk_saver_test.py:40: TestVTKSaver.test_existing_files_are_=
+deleted_if_requested ERROR
+src/finmag/util/vtk_saver_test.py:64: TestVTKSaver.test_save_field ERROR
+src/finmag/util/vtk_saver_test.py:86: TestVTKSaver.test_saving_to_file_with=
+_different_name ERROR
+src/finmag/util/ode/tests/test_sundials_ode.py:16: OdeSundialsTests.test_er=
+rors Error in CVODE:CVode (CV_NO_MALLOC): Attempt to call before CVodeInit.
+PASSED
+src/finmag/util/ode/tests/test_sundials_ode.py:79: OdeSundialsTests.test_jt=
+imes_ex PASSED
+src/finmag/util/ode/tests/test_sundials_ode.py:37: OdeSundialsTests.test_si=
+mple_1d PASSED
+src/finmag/util/ode/tests/test_sundials_ode.py:45: OdeSundialsTests.test_si=
+mple_1d_diag PASSED
+src/finmag/util/ode/tests/test_sundials_ode.py:26: OdeSundialsTests.test_si=
+mple_1d_scipy PASSED
+src/finmag/util/ode/tests/test_sundials_ode.py:70: OdeSundialsTests.test_st=
+iff_sp_gmr PASSED
+src/finmag/util/ode/tests/test_sundials_stiff_ode.py:19: SundialsStiffOdeTe=
+sts.test_robertson_scipy Integration of the Robertson ODE until t=3D1e8 wit=
+h scipy VODE, BDF method: 1268 steps
+PASSED
+src/finmag/util/ode/tests/test_sundials_stiff_ode.py:30: SundialsStiffOdeTe=
+sts.test_robertson_scipy_transposed DVODE-- At current T (=3DR1), MXSTEP (=
+=3DI1) steps
+taken on this call before reaching TOUT
+In above message, I1 =3D 5000
+In above message, R1 =3D 0.8000369437165D+00
+/usr/local/lib/python2.7/dist-packages/scipy/integrate/_ode.py:696: UserWar=
+ning: vode: Excess work done on this call. (Perhaps wrong MF.)
+PASSED
+src/finmag/util/ode/tests/test_sundials_stiff_ode.py:41: SundialsStiffOdeTe=
+sts.test_robertson_sundials Integration of the Robertson ODE until t=3D1e8 =
+with CVODE, BDF method: 789 steps
+PASSED
+src/finmag/util/ode/tests/test_sundials_stiff_ode.py:54: SundialsStiffOdeTe=
+sts.test_robertson_sundials_transposed PASSED
+src/finmag/util/oommf/test_mesh.py:22: TestIterCoordsInt.test_xyz_ordering =
+PASSED
+src/finmag/util/oommf/test_mesh.py:6: TestIterCoordsInt.test_zyx_ordering P=
+ASSED
+src/finmag/util/oommf/test_mesh.py:39: TestIterCoords.test_zyx_ordering PAS=
+SED
+src/finmag/util/tests/test_arraytools.py:6: test_flat PASSED
+src/finmag/util/tests/test_arraytools.py:20: test_unflat PASSED
+src/finmag/util/tests/test_arraytools.py:40: test_magnitude PASSED
+src/finmag/util/tests/test_arraytools.py:44: test_dolfinvectordatalayout FA=
+ILEDTraceback (most recent call last):
+File "/usr/local/bin/py.test", line 9, in
+File "/usr/local/lib/python2.7/dist-packages/_pytest/config.py", line 19, i=
+n main
+File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 376, in=
+ __call__
+File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 387, in=
+ _docall
+File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 288, in=
+ execute
+File "/usr/local/lib/python2.7/dist-packages/_pytest/main.py", line 111, in=
+ pytest_cmdline_main
+File "/usr/local/lib/python2.7/dist-packages/_pytest/main.py", line 104, in=
+ wrap_session
+File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 376, in=
+ __call__
+File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 387, in=
+ _docall
+File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 288, in=
+ execute
+File "/usr/local/lib/python2.7/dist-packages/_pytest/terminal.py", line 332=
+, in pytest_sessionfinish
+File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 288, in=
+ execute
+File "/usr/local/lib/python2.7/dist-packages/_pytest/junitxml.py", line 208=
+, in pytest_sessionfinish
+File "/usr/lib/python2.7/codecs.py", line 881, in open
+IOError: [Errno 24] Too many open files: '/var/lib/jenkins/jobs/finmag_fast=
+_tests/workspace/test-reports/junit/TEST_pytest.xml'
+make: *** [test-fast] Error 1
+Build step 'Execute shell' marked build as failure
+Recording test results
+Email was triggered for: Failure
+Email was triggered for: Still Failing
+Trigger Failure was overridden by another trigger and will not send an emai=
+l.
+Sending email for trigger: Still Failing
+
+
+
+-------------------------------------
+finmag-team mailing list.
+
+From fetchmail  Wed May 21 10:41:03 2014
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.26)
+	for <marvin@localhost> (single-drop); Wed, 21 May 2014 10:41:03 +0100 (BST)
+Received: by 10.217.69.130 with SMTP id z2csp81429wex;
+        Wed, 21 May 2014 02:15:54 -0700 (PDT)
+X-Received: by 10.112.149.36 with SMTP id tx4mr11583460lbb.59.1400663754033;
+        Wed, 21 May 2014 02:15:54 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id s8si4930259lbb.16.2014.05.21.02.15.53
+        for <multiple recipients>;
+        Wed, 21 May 2014 02:15:53 -0700 (PDT)
+Received-SPF: none (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=neutral (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk;
+       dkim=neutral (body hash did not verify) header.i=@;
+       dmarc=fail (p=NONE dis=NONE) header.from=gmail.com
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s4L9FkIK027436;
+	Wed, 21 May 2014 10:15:46 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk [152.78.119.37])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id q4KAFk08323424071u ret-id none; Wed, 21 May 2014 10:15:46 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.37) with Microsoft SMTP Server (TLS) id 14.3.181.6; Wed, 21 May
+ 2014 10:15:45 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id s4L9FeYI030061;	Wed, 21 May 2014 10:15:40 +0100
+Received: from mailgate4.iss.soton.ac.uk (mailgate4.iss.soton.ac.uk
+ [152.78.128.105])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ s4L9FeAV030058	for <finmag-team@lists.soton.ac.uk>; Wed, 21 May 2014 10:15:40
+ +0100
+Received: from mailgate4.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate4.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s4L9FQuI017194	for
+ <finmag-team@lists.soton.ac.uk>; Wed, 21 May 2014 10:15:26 +0100
+Received: from mail-qg0-f45.google.com (mail-qg0-f45.google.com
+ [209.85.192.45])	by mailgate4.iss.soton.ac.uk (mailgate4.iss.soton.ac.uk
+ [152.78.128.105]) envelope-from <maximilian.albert@gmail.com> with ESMTP	id
+ q4KAFQ0438008107Cz ret-id none; Wed, 21 May 2014 10:15:27 +0100
+Received: by mail-qg0-f45.google.com with SMTP id z60so2630487qgd.4        for
+ <finmag-team@lists.soton.ac.uk>; Wed, 21 May 2014 02:15:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=upBFzGk2azPtm+J2Gcx1adptcGnrpo4AWDTNJHKH/uE=;
+        b=kI8jg1QZbwoW77YRzCVsuCpLCBILH9N1b+e9O8/+zl9LKwsaYIcW+HNv6OcFmc1OzY
+         rrWZ7cdd5DREplzbG0oxMId9FyvvwsjtP306QIWWSSGRWk4d/D9JTZU/4NV7LK5myGNg
+         q8fKmsq2qy6OME4QaYMsB7XUsMQHZC9vaPpOQcRZNI0CprQlN1+gs0zX1NP67pDPxMT2
+         RLTF7oI9f7CeyCZuSaCtbdkwyXtOwKleNnQo/7t3nSUCKire/SGWAk0+H6nHEydMhEgQ
+         kuzY5joF+ZiOyVVRUG9jB9uD9BLb6Hutgk6ybMz7SqT9PzFCuVYk0HelNeM1hx5G/TCx
+         Arig==
+MIME-Version: 1.0
+X-Received: by 10.224.166.9 with SMTP id k9mr66591117qay.25.1400663725808;
+ Wed, 21 May 2014 02:15:25 -0700 (PDT)
+Received: by 10.96.122.41 with HTTP; Wed, 21 May 2014 02:15:25 -0700 (PDT)
+In-Reply-To: <FFA11EE3-3B05-477C-A8D0-5EA3FBC0354E@soton.ac.uk>
+References: <681348495.1.1400662353321.JavaMail.jenkins@aleph0.kk.soton.ac.uk>
+	<FFA11EE3-3B05-477C-A8D0-5EA3FBC0354E@soton.ac.uk>
+Date: Wed, 21 May 2014 10:15:25 +0100
+Message-ID: <CAGA_dmj+Sfnmb2h2L9HBfGETqhwXEJXXvH9zNiLzS_-U9ytytA@mail.gmail.com>
+Subject: Re: [finmag-team] Fwd: [build] finmag_fast_tests - Build # 890 -
+ Still Failing!
+From: Maximilian Albert <maximilian.albert@gmail.com>
+To: "Fangohr H." <h.fangohr@soton.ac.uk>
+CC: "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+Content-Type: multipart/alternative; boundary="001a11c246dcd3a29604f9e56f99"
+Received-SPF: Pass (UOS-MSG00035-VS.soton.ac.uk: domain of
+ owner-finmag-team@lists.soton.ac.uk designates 152.78.128.58 as permitted
+ sender) receiver=UOS-MSG00035-VS.soton.ac.uk; client-ip=152.78.128.58;
+ helo=maillists.sucs.soton.ac.uk;
+Received-SPF: None; receiver=mailgate4.iss.soton.ac.uk; client-ip=209.85.192.45; helo=<mail-qg0-f45.google.com>
+Received-SPF: Pass; receiver=mailgate4.iss.soton.ac.uk; client-ip=209.85.192.45; envelope-from=<maximilian.albert@gmail.com>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=q4KAFk083234240700; tid=q4KAFk08323424071u; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: s4L9FkIK027436
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+--001a11c246dcd3a29604f9e56f99
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+Hi Hans,
+
+thanks for looking into this. I saw this as well last night but was a bit
+puzzled as to what could be causing this. Why would Jenkins suddenly
+complain about too many open files when it worked fine before? Have we
+suddenly crossed a critical number of tests? On the other hand, why would
+it try to open them all at once? Odd...
+
+Cheers,
+Max
+
+
+2014-05-21 10:01 GMT+01:00 Fangohr H. <H.FANGOHR@soton.ac.uk>:
+
+> =E2=80=A6 so the reboot didn=E2=80=99t help.
+>
+> Hans
+>
+> Begin forwarded message:
+>
+> From: Jenkins CI <h.fangohr@soton.ac.uk<mailto:h.fangohr@soton.ac.uk>>
+> Subject: [build] finmag_fast_tests - Build # 890 - Still Failing!
+> Date: 21 May 2014 09:52:32 BST
+> To: <h.fangohr@soton.ac.uk<mailto:h.fangohr@soton.ac.uk>>, <
+> maximilian.albert@soton.ac.uk<mailto:maximilian.albert@soton.ac.uk>>, <
+> h.fangohr@soton.ac.uk<mailto:h.fangohr@soton.ac.uk>>
+> Reply-To: <h.fangohr@soton.ac.uk<mailto:h.fangohr@soton.ac.uk>>, <
+> maximilian.albert@soton.ac.uk<mailto:maximilian.albert@soton.ac.uk>>
+>
+> [http://aleph0.kk.soton.ac.uk:8080/static/e59dfe28/images/32x32/red.gif]
+>        BUILD FAILURE
+> Build URL
+> http://aleph0.kk.soton.ac.uk:8080/job/finmag_fast_tests/890/
+> Project:        finmag_fast_tests
+> Date of build:  Wed, 21 May 2014 09:44:17 +0100
+> Build duration: 8 min 15 sec
+>
+> CHANGES
+> No Changes
+>
+> CONSOLE OUTPUT
+> [...truncated 4621 lines...]
+> src/finmag/util/helpers_test.py:233: test_pointing_upwards PASSED
+> src/finmag/util/helpers_test.py:241: test_pointing_downwards PASSED
+> src/finmag/util/helpers_test.py:250: test_mesh_functions_allclose FAILED
+> src/finmag/util/helpers_test.py:281: test_piecewise_on_subdomains PASSED
+> src/finmag/util/helpers_test.py:296:
+> test_vector_field_from_dolfin_function FAILED
+> src/finmag/util/helpers_test.py:342: test_probe FAILED
+> src/finmag/util/helpers_test.py:395: test_get_hg_revision_info ERROR
+> src/finmag/util/helpers_test.py:412: test_binary_tarball_name ERROR
+> src/finmag/util/helpers_test.py:418:
+> test_plot_ndt_columns_and_plot_dynamics ERROR
+> src/finmag/util/helpers_test.py:436: test_crossprod FAILED
+> src/finmag/util/helpers_test.py:460: test_apply_vertexwise FAILED
+> src/finmag/util/helpers_test.py:479: test_TemporaryDirectory FAILED
+> src/finmag/util/helpers_test.py:495: test_contextmanager_ignored ERROR
+> src/finmag/util/helpers_test.py:513: test_run_cmd_with_timeout FAILED
+> src/finmag/util/helpers_test.py:528: test_jpg2avi SKIPPED
+> src/finmag/util/helpers_test.py:548: test_pvd2avi SKIPPED
+> src/finmag/util/helpers_test.py:568: test_set_color_scheme PASSED
+> src/finmag/util/helpers_test.py:582: test_restriction ERROR
+> src/finmag/util/helpers_test.py:652: test_verify_function_space_type FAIL=
+ED
+> src/finmag/util/mesh_templates_test.py:23: test_mesh_templates ERROR
+> src/finmag/util/mesh_templates_test.py:30: test_sphere ERROR
+> src/finmag/util/mesh_templates_test.py:45: test_elliptical_nanodisk ERROR
+> src/finmag/util/mesh_templates_test.py:66: test_nanodisk ERROR
+> src/finmag/util/mesh_templates_test.py:85: test_combining_meshes ERROR
+> src/finmag/util/mesh_templates_test.py:113: test_maxh_with_mesh_primitive
+> ERROR
+> src/finmag/util/mesh_templates_test.py:137: test_mesh_specific_maxh ERROR
+> src/finmag/util/mesh_templates_test.py:151:
+> test_different_mesh_discretisations_for_combined_meshes ERROR
+> src/finmag/util/mesh_templates_test.py:175: test_box ERROR
+> src/finmag/util/meshes_test.py:6: test_mesh_size FAILED
+> src/finmag/util/meshes_test.py:23: test_embed3d PASSED
+> src/finmag/util/pbc_test.py:5: test_pbc1d_2dmesh FAILED
+> src/finmag/util/pbc_test.py:21: test_pbc2d_2dmesh FAILED
+> src/finmag/util/pbc_test.py:38: test_pbc2d_3dmesh FAILED
+> src/finmag/util/pbc_test.py:57: test_pbc2d_3dmesh2 FAILED
+> src/finmag/util/test_dmi_from_helix.py:14: test_dmi_from_helix_solution
+> FAILED
+> src/finmag/util/test_dmi_from_helix.py:25: test_helix_strong_field FAILED
+> src/finmag/util/test_dmi_from_helix.py:44: test_zero_helix PASSED
+> src/finmag/util/visualization_test.py:15: test_render_paraview_scene
+> SKIPPED
+> src/finmag/util/visualization_test.py:70: test_flight_path_rotation P0: [
+> 0.724 1.569 2.413]
+> r1: [-1.724 1.431 -0.413]
+> r2: [-1.382 -1.301 1.26 ]
+> P0: [-1. 3. 2.]
+> r1: [ 0. 0. 0.]
+> r2: [ 0. 0. -0.]
+> PASSED
+> src/finmag/util/visualization_test.py:96: test_flight_path_straight_line
+> PASSED
+> src/finmag/util/visualization_test.py:115: test_plot_dolfin_function
+> SKIPPED
+> src/finmag/util/vtk_saver_test.py:22: TestVTKSaver.test_constructor ERROR
+> src/finmag/util/vtk_saver_test.py:30:
+> TestVTKSaver.test_file_extension_is_correct ERROR
+> src/finmag/util/vtk_saver_test.py:40:
+> TestVTKSaver.test_existing_files_are_deleted_if_requested ERROR
+> src/finmag/util/vtk_saver_test.py:64: TestVTKSaver.test_save_field ERROR
+> src/finmag/util/vtk_saver_test.py:86:
+> TestVTKSaver.test_saving_to_file_with_different_name ERROR
+> src/finmag/util/ode/tests/test_sundials_ode.py:16:
+> OdeSundialsTests.test_errors Error in CVODE:CVode (CV_NO_MALLOC): Attempt
+> to call before CVodeInit.
+> PASSED
+> src/finmag/util/ode/tests/test_sundials_ode.py:79:
+> OdeSundialsTests.test_jtimes_ex PASSED
+> src/finmag/util/ode/tests/test_sundials_ode.py:37:
+> OdeSundialsTests.test_simple_1d PASSED
+> src/finmag/util/ode/tests/test_sundials_ode.py:45:
+> OdeSundialsTests.test_simple_1d_diag PASSED
+> src/finmag/util/ode/tests/test_sundials_ode.py:26:
+> OdeSundialsTests.test_simple_1d_scipy PASSED
+> src/finmag/util/ode/tests/test_sundials_ode.py:70:
+> OdeSundialsTests.test_stiff_sp_gmr PASSED
+> src/finmag/util/ode/tests/test_sundials_stiff_ode.py:19:
+> SundialsStiffOdeTests.test_robertson_scipy Integration of the Robertson O=
+DE
+> until t=3D1e8 with scipy VODE, BDF method: 1268 steps
+> PASSED
+> src/finmag/util/ode/tests/test_sundials_stiff_ode.py:30:
+> SundialsStiffOdeTests.test_robertson_scipy_transposed DVODE-- At current =
+T
+> (=3DR1), MXSTEP (=3DI1) steps
+> taken on this call before reaching TOUT
+> In above message, I1 =3D 5000
+> In above message, R1 =3D 0.8000369437165D+00
+> /usr/local/lib/python2.7/dist-packages/scipy/integrate/_ode.py:696:
+> UserWarning: vode: Excess work done on this call. (Perhaps wrong MF.)
+> PASSED
+> src/finmag/util/ode/tests/test_sundials_stiff_ode.py:41:
+> SundialsStiffOdeTests.test_robertson_sundials Integration of the Robertso=
+n
+> ODE until t=3D1e8 with CVODE, BDF method: 789 steps
+> PASSED
+> src/finmag/util/ode/tests/test_sundials_stiff_ode.py:54:
+> SundialsStiffOdeTests.test_robertson_sundials_transposed PASSED
+> src/finmag/util/oommf/test_mesh.py:22: TestIterCoordsInt.test_xyz_orderin=
+g
+> PASSED
+> src/finmag/util/oommf/test_mesh.py:6: TestIterCoordsInt.test_zyx_ordering
+> PASSED
+> src/finmag/util/oommf/test_mesh.py:39: TestIterCoords.test_zyx_ordering
+> PASSED
+> src/finmag/util/tests/test_arraytools.py:6: test_flat PASSED
+> src/finmag/util/tests/test_arraytools.py:20: test_unflat PASSED
+> src/finmag/util/tests/test_arraytools.py:40: test_magnitude PASSED
+> src/finmag/util/tests/test_arraytools.py:44: test_dolfinvectordatalayout
+> FAILEDTraceback (most recent call last):
+> File "/usr/local/bin/py.test", line 9, in
+> File "/usr/local/lib/python2.7/dist-packages/_pytest/config.py", line 19,
+> in main
+> File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 376,
+> in __call__
+> File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 387,
+> in _docall
+> File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 288,
+> in execute
+> File "/usr/local/lib/python2.7/dist-packages/_pytest/main.py", line 111,
+> in pytest_cmdline_main
+> File "/usr/local/lib/python2.7/dist-packages/_pytest/main.py", line 104,
+> in wrap_session
+> File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 376,
+> in __call__
+> File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 387,
+> in _docall
+> File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 288,
+> in execute
+> File "/usr/local/lib/python2.7/dist-packages/_pytest/terminal.py", line
+> 332, in pytest_sessionfinish
+> File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 288,
+> in execute
+> File "/usr/local/lib/python2.7/dist-packages/_pytest/junitxml.py", line
+> 208, in pytest_sessionfinish
+> File "/usr/lib/python2.7/codecs.py", line 881, in open
+> IOError: [Errno 24] Too many open files:
+> '/var/lib/jenkins/jobs/finmag_fast_tests/workspace/test-reports/junit/TES=
+T_pytest.xml'
+> make: *** [test-fast] Error 1
+> Build step 'Execute shell' marked build as failure
+> Recording test results
+> Email was triggered for: Failure
+> Email was triggered for: Still Failing
+> Trigger Failure was overridden by another trigger and will not send an
+> email.
+> Sending email for trigger: Still Failing
+>
+>
+>
+> -------------------------------------
+> finmag-team mailing list.
+>
+
+--001a11c246dcd3a29604f9e56f99
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr">Hi Hans,<br><div class=3D"gmail_extra"><br>thanks for look=
+ing into this. I saw this as well last night but was a bit puzzled as to wh=
+at could be causing this. Why would Jenkins suddenly complain about too man=
+y open files when it worked fine before? Have we suddenly crossed a critica=
+l number of tests? On the other hand, why would it try to open them all at =
+once? Odd...<br>
+<br></div><div class=3D"gmail_extra">Cheers,<br>Max<br></div><div class=3D"=
+gmail_extra"><br><br><div class=3D"gmail_quote">2014-05-21 10:01 GMT+01:00 =
+Fangohr H. <span dir=3D"ltr">&lt;<a href=3D"mailto:H.FANGOHR@soton.ac.uk" t=
+arget=3D"_blank">H.FANGOHR@soton.ac.uk</a>&gt;</span>:<br>
+<blockquote class=3D"gmail_quote" style=3D"margin:0px 0px 0px 0.8ex;border-=
+left:1px solid rgb(204,204,204);padding-left:1ex">=E2=80=A6 so the reboot d=
+idn=E2=80=99t help.<br>
+<br>
+Hans<br>
+<br>
+Begin forwarded message:<br>
+<br>
+From: Jenkins CI &lt;<a href=3D"mailto:h.fangohr@soton.ac.uk">h.fangohr@sot=
+on.ac.uk</a>&lt;mailto:<a href=3D"mailto:h.fangohr@soton.ac.uk">h.fangohr@s=
+oton.ac.uk</a>&gt;&gt;<br>
+Subject: [build] finmag_fast_tests - Build # 890 - Still Failing!<br>
+Date: 21 May 2014 09:52:32 BST<br>
+To: &lt;<a href=3D"mailto:h.fangohr@soton.ac.uk">h.fangohr@soton.ac.uk</a>&=
+lt;mailto:<a href=3D"mailto:h.fangohr@soton.ac.uk">h.fangohr@soton.ac.uk</a=
+>&gt;&gt;, &lt;<a href=3D"mailto:maximilian.albert@soton.ac.uk">maximilian.=
+albert@soton.ac.uk</a>&lt;mailto:<a href=3D"mailto:maximilian.albert@soton.=
+ac.uk">maximilian.albert@soton.ac.uk</a>&gt;&gt;, &lt;<a href=3D"mailto:h.f=
+angohr@soton.ac.uk">h.fangohr@soton.ac.uk</a>&lt;mailto:<a href=3D"mailto:h=
+.fangohr@soton.ac.uk">h.fangohr@soton.ac.uk</a>&gt;&gt;<br>
+
+Reply-To: &lt;<a href=3D"mailto:h.fangohr@soton.ac.uk">h.fangohr@soton.ac.u=
+k</a>&lt;mailto:<a href=3D"mailto:h.fangohr@soton.ac.uk">h.fangohr@soton.ac=
+.uk</a>&gt;&gt;, &lt;<a href=3D"mailto:maximilian.albert@soton.ac.uk">maxim=
+ilian.albert@soton.ac.uk</a>&lt;mailto:<a href=3D"mailto:maximilian.albert@=
+soton.ac.uk">maximilian.albert@soton.ac.uk</a>&gt;&gt;<br>
+
+<br>
+[<a href=3D"http://aleph0.kk.soton.ac.uk:8080/static/e59dfe28/images/32x32/=
+red.gif" target=3D"_blank">http://aleph0.kk.soton.ac.uk:8080/static/e59dfe2=
+8/images/32x32/red.gif</a>] =C2=A0 =C2=A0 =C2=A0 =C2=A0BUILD FAILURE<br>
+Build URL =C2=A0 =C2=A0 =C2=A0 <a href=3D"http://aleph0.kk.soton.ac.uk:8080=
+/job/finmag_fast_tests/890/" target=3D"_blank">http://aleph0.kk.soton.ac.uk=
+:8080/job/finmag_fast_tests/890/</a><br>
+Project: =C2=A0 =C2=A0 =C2=A0 =C2=A0finmag_fast_tests<br>
+Date of build: =C2=A0Wed, 21 May 2014 09:44:17 +0100<br>
+Build duration: 8 min 15 sec<br>
+<br>
+CHANGES<br>
+No Changes<br>
+<br>
+CONSOLE OUTPUT<br>
+[...truncated 4621 lines...]<br>
+src/finmag/util/helpers_test.py:233: test_pointing_upwards PASSED<br>
+src/finmag/util/helpers_test.py:241: test_pointing_downwards PASSED<br>
+src/finmag/util/helpers_test.py:250: test_mesh_functions_allclose FAILED<br=
+>
+src/finmag/util/helpers_test.py:281: test_piecewise_on_subdomains PASSED<br=
+>
+src/finmag/util/helpers_test.py:296: test_vector_field_from_dolfin_function=
+ FAILED<br>
+src/finmag/util/helpers_test.py:342: test_probe FAILED<br>
+src/finmag/util/helpers_test.py:395: test_get_hg_revision_info ERROR<br>
+src/finmag/util/helpers_test.py:412: test_binary_tarball_name ERROR<br>
+src/finmag/util/helpers_test.py:418: test_plot_ndt_columns_and_plot_dynamic=
+s ERROR<br>
+src/finmag/util/helpers_test.py:436: test_crossprod FAILED<br>
+src/finmag/util/helpers_test.py:460: test_apply_vertexwise FAILED<br>
+src/finmag/util/helpers_test.py:479: test_TemporaryDirectory FAILED<br>
+src/finmag/util/helpers_test.py:495: test_contextmanager_ignored ERROR<br>
+src/finmag/util/helpers_test.py:513: test_run_cmd_with_timeout FAILED<br>
+src/finmag/util/helpers_test.py:528: test_jpg2avi SKIPPED<br>
+src/finmag/util/helpers_test.py:548: test_pvd2avi SKIPPED<br>
+src/finmag/util/helpers_test.py:568: test_set_color_scheme PASSED<br>
+src/finmag/util/helpers_test.py:582: test_restriction ERROR<br>
+src/finmag/util/helpers_test.py:652: test_verify_function_space_type FAILED=
+<br>
+src/finmag/util/mesh_templates_test.py:23: test_mesh_templates ERROR<br>
+src/finmag/util/mesh_templates_test.py:30: test_sphere ERROR<br>
+src/finmag/util/mesh_templates_test.py:45: test_elliptical_nanodisk ERROR<b=
+r>
+src/finmag/util/mesh_templates_test.py:66: test_nanodisk ERROR<br>
+src/finmag/util/mesh_templates_test.py:85: test_combining_meshes ERROR<br>
+src/finmag/util/mesh_templates_test.py:113: test_maxh_with_mesh_primitive E=
+RROR<br>
+src/finmag/util/mesh_templates_test.py:137: test_mesh_specific_maxh ERROR<b=
+r>
+src/finmag/util/mesh_templates_test.py:151: test_different_mesh_discretisat=
+ions_for_combined_meshes ERROR<br>
+src/finmag/util/mesh_templates_test.py:175: test_box ERROR<br>
+src/finmag/util/meshes_test.py:6: test_mesh_size FAILED<br>
+src/finmag/util/meshes_test.py:23: test_embed3d PASSED<br>
+src/finmag/util/pbc_test.py:5: test_pbc1d_2dmesh FAILED<br>
+src/finmag/util/pbc_test.py:21: test_pbc2d_2dmesh FAILED<br>
+src/finmag/util/pbc_test.py:38: test_pbc2d_3dmesh FAILED<br>
+src/finmag/util/pbc_test.py:57: test_pbc2d_3dmesh2 FAILED<br>
+src/finmag/util/test_dmi_from_helix.py:14: test_dmi_from_helix_solution FAI=
+LED<br>
+src/finmag/util/test_dmi_from_helix.py:25: test_helix_strong_field FAILED<b=
+r>
+src/finmag/util/test_dmi_from_helix.py:44: test_zero_helix PASSED<br>
+src/finmag/util/visualization_test.py:15: test_render_paraview_scene SKIPPE=
+D<br>
+src/finmag/util/visualization_test.py:70: test_flight_path_rotation P0: [ 0=
+.724 1.569 2.413]<br>
+r1: [-1.724 1.431 -0.413]<br>
+r2: [-1.382 -1.301 1.26 ]<br>
+P0: [-1. 3. 2.]<br>
+r1: [ 0. 0. 0.]<br>
+r2: [ 0. 0. -0.]<br>
+PASSED<br>
+src/finmag/util/visualization_test.py:96: test_flight_path_straight_line PA=
+SSED<br>
+src/finmag/util/visualization_test.py:115: test_plot_dolfin_function SKIPPE=
+D<br>
+src/finmag/util/vtk_saver_test.py:22: TestVTKSaver.test_constructor ERROR<b=
+r>
+src/finmag/util/vtk_saver_test.py:30: TestVTKSaver.test_file_extension_is_c=
+orrect ERROR<br>
+src/finmag/util/vtk_saver_test.py:40: TestVTKSaver.test_existing_files_are_=
+deleted_if_requested ERROR<br>
+src/finmag/util/vtk_saver_test.py:64: TestVTKSaver.test_save_field ERROR<br=
+>
+src/finmag/util/vtk_saver_test.py:86: TestVTKSaver.test_saving_to_file_with=
+_different_name ERROR<br>
+src/finmag/util/ode/tests/test_sundials_ode.py:16: OdeSundialsTests.test_er=
+rors Error in CVODE:CVode (CV_NO_MALLOC): Attempt to call before CVodeInit.=
+<br>
+PASSED<br>
+src/finmag/util/ode/tests/test_sundials_ode.py:79: OdeSundialsTests.test_jt=
+imes_ex PASSED<br>
+src/finmag/util/ode/tests/test_sundials_ode.py:37: OdeSundialsTests.test_si=
+mple_1d PASSED<br>
+src/finmag/util/ode/tests/test_sundials_ode.py:45: OdeSundialsTests.test_si=
+mple_1d_diag PASSED<br>
+src/finmag/util/ode/tests/test_sundials_ode.py:26: OdeSundialsTests.test_si=
+mple_1d_scipy PASSED<br>
+src/finmag/util/ode/tests/test_sundials_ode.py:70: OdeSundialsTests.test_st=
+iff_sp_gmr PASSED<br>
+src/finmag/util/ode/tests/test_sundials_stiff_ode.py:19: SundialsStiffOdeTe=
+sts.test_robertson_scipy Integration of the Robertson ODE until t=3D1e8 wit=
+h scipy VODE, BDF method: 1268 steps<br>
+PASSED<br>
+src/finmag/util/ode/tests/test_sundials_stiff_ode.py:30: SundialsStiffOdeTe=
+sts.test_robertson_scipy_transposed DVODE-- At current T (=3DR1), MXSTEP (=
+=3DI1) steps<br>
+taken on this call before reaching TOUT<br>
+In above message, I1 =3D 5000<br>
+In above message, R1 =3D 0.8000369437165D+00<br>
+/usr/local/lib/python2.7/dist-packages/scipy/integrate/_ode.py:696: UserWar=
+ning: vode: Excess work done on this call. (Perhaps wrong MF.)<br>
+PASSED<br>
+src/finmag/util/ode/tests/test_sundials_stiff_ode.py:41: SundialsStiffOdeTe=
+sts.test_robertson_sundials Integration of the Robertson ODE until t=3D1e8 =
+with CVODE, BDF method: 789 steps<br>
+PASSED<br>
+src/finmag/util/ode/tests/test_sundials_stiff_ode.py:54: SundialsStiffOdeTe=
+sts.test_robertson_sundials_transposed PASSED<br>
+src/finmag/util/oommf/test_mesh.py:22: TestIterCoordsInt.test_xyz_ordering =
+PASSED<br>
+src/finmag/util/oommf/test_mesh.py:6: TestIterCoordsInt.test_zyx_ordering P=
+ASSED<br>
+src/finmag/util/oommf/test_mesh.py:39: TestIterCoords.test_zyx_ordering PAS=
+SED<br>
+src/finmag/util/tests/test_arraytools.py:6: test_flat PASSED<br>
+src/finmag/util/tests/test_arraytools.py:20: test_unflat PASSED<br>
+src/finmag/util/tests/test_arraytools.py:40: test_magnitude PASSED<br>
+src/finmag/util/tests/test_arraytools.py:44: test_dolfinvectordatalayout FA=
+ILEDTraceback (most recent call last):<br>
+File &quot;/usr/local/bin/py.test&quot;, line 9, in<br>
+File &quot;/usr/local/lib/python2.7/dist-packages/_pytest/config.py&quot;, =
+line 19, in main<br>
+File &quot;/usr/local/lib/python2.7/dist-packages/_pytest/core.py&quot;, li=
+ne 376, in __call__<br>
+File &quot;/usr/local/lib/python2.7/dist-packages/_pytest/core.py&quot;, li=
+ne 387, in _docall<br>
+File &quot;/usr/local/lib/python2.7/dist-packages/_pytest/core.py&quot;, li=
+ne 288, in execute<br>
+File &quot;/usr/local/lib/python2.7/dist-packages/_pytest/main.py&quot;, li=
+ne 111, in pytest_cmdline_main<br>
+File &quot;/usr/local/lib/python2.7/dist-packages/_pytest/main.py&quot;, li=
+ne 104, in wrap_session<br>
+File &quot;/usr/local/lib/python2.7/dist-packages/_pytest/core.py&quot;, li=
+ne 376, in __call__<br>
+File &quot;/usr/local/lib/python2.7/dist-packages/_pytest/core.py&quot;, li=
+ne 387, in _docall<br>
+File &quot;/usr/local/lib/python2.7/dist-packages/_pytest/core.py&quot;, li=
+ne 288, in execute<br>
+File &quot;/usr/local/lib/python2.7/dist-packages/_pytest/terminal.py&quot;=
+, line 332, in pytest_sessionfinish<br>
+File &quot;/usr/local/lib/python2.7/dist-packages/_pytest/core.py&quot;, li=
+ne 288, in execute<br>
+File &quot;/usr/local/lib/python2.7/dist-packages/_pytest/junitxml.py&quot;=
+, line 208, in pytest_sessionfinish<br>
+File &quot;/usr/lib/python2.7/codecs.py&quot;, line 881, in open<br>
+IOError: [Errno 24] Too many open files: &#39;/var/lib/jenkins/jobs/finmag_=
+fast_tests/workspace/test-reports/junit/TEST_pytest.xml&#39;<br>
+make: *** [test-fast] Error 1<br>
+Build step &#39;Execute shell&#39; marked build as failure<br>
+Recording test results<br>
+Email was triggered for: Failure<br>
+Email was triggered for: Still Failing<br>
+Trigger Failure was overridden by another trigger and will not send an emai=
+l.<br>
+Sending email for trigger: Still Failing<br>
+<br>
+<br>
+<br>
+-------------------------------------<br>
+finmag-team mailing list.<br>
+</blockquote></div><br></div></div>
+
+--001a11c246dcd3a29604f9e56f99--
+
+From fetchmail  Wed May 21 10:41:03 2014
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.26)
+	for <marvin@localhost> (single-drop); Wed, 21 May 2014 10:41:03 +0100 (BST)
+Received: by 10.217.69.130 with SMTP id z2csp81690wex;
+        Wed, 21 May 2014 02:20:55 -0700 (PDT)
+X-Received: by 10.152.207.74 with SMTP id lu10mr36975866lac.28.1400664055638;
+        Wed, 21 May 2014 02:20:55 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk. [152.78.128.16])
+        by mx.google.com with ESMTP id ca12si19502185lad.95.2014.05.21.02.20.54
+        for <multiple recipients>;
+        Wed, 21 May 2014 02:20:55 -0700 (PDT)
+Received-SPF: none (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) client-ip=152.78.128.16;
+Authentication-Results: mx.google.com;
+       spf=neutral (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk;
+       dkim=neutral (body hash did not verify) header.i=@;
+       dmarc=fail (p=NONE dis=NONE) header.from=gmail.com
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s4L9Kmrs003587;
+	Wed, 21 May 2014 10:20:48 +0100
+Received: from UOS-MSG00037-VS.soton.ac.uk (uos-msg00037-vs.soton.ac.uk [152.78.119.39])
+	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk [152.78.128.16]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id q4KAKm1506848808G7 ret-id none; Wed, 21 May 2014 10:20:48 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.39) with Microsoft SMTP Server (TLS) id 14.3.181.6; Wed, 21 May
+ 2014 10:20:47 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id s4L9KlWb030176;	Wed, 21 May 2014 10:20:47 +0100
+Received: from mailgate4.iss.soton.ac.uk (mailgate4.iss.soton.ac.uk
+ [152.78.128.105])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ s4L9KlSL030173	for <finmag-team@lists.soton.ac.uk>; Wed, 21 May 2014 10:20:47
+ +0100
+Received: from mailgate4.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate4.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s4L9KRRW018956	for
+ <finmag-team@lists.soton.ac.uk>; Wed, 21 May 2014 10:20:27 +0100
+Received: from mail-qc0-f176.google.com (mail-qc0-f176.google.com
+ [209.85.216.176])	by mailgate4.iss.soton.ac.uk (mailgate4.iss.soton.ac.uk
+ [152.78.128.105]) envelope-from <maximilian.albert@gmail.com> with ESMTP	id
+ q4KAKR0438008678M3 ret-id none; Wed, 21 May 2014 10:20:27 +0100
+Received: by mail-qc0-f176.google.com with SMTP id r5so2705436qcx.7        for
+ <finmag-team@lists.soton.ac.uk>; Wed, 21 May 2014 02:20:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=53DQkMT6UtiAiAQFuN09tiTn1Nz5StZiwz9jn4713Q4=;
+        b=A1SSppyPUQiz6CGTZuyhDZLcGs07VSOUaoBXbV2f5JFGHgbGiBH4MmkMdVowUMFHYS
+         XL//ntLdRt6vG3QKdLOtSCdie5KBweoFRMWOmHxuKjKQd3iqjwqG7twssZX8rX8BBdjx
+         yj6h5jTpQ3lAKjtycIAqBo9LxnVAPQm991eLdHFM20FhdZUE0YSDfJeChfMr5CSCZbC7
+         Ntae+RwNE+VLEswH1NbM/VGGbIF5K39gu/bWvVVr6KmbjJjms51UMhZ5c29a1Nv4I8Pb
+         1gNXkOzlmT4SzXHloDYG4eLHHZ1bTpAx4yQnpXE+ebLDuaK4hgFIaHDMwXy7uWXmvV6o
+         9O2g==
+MIME-Version: 1.0
+X-Received: by 10.224.115.135 with SMTP id i7mr64790709qaq.50.1400664026546;
+ Wed, 21 May 2014 02:20:26 -0700 (PDT)
+Received: by 10.96.122.41 with HTTP; Wed, 21 May 2014 02:20:26 -0700 (PDT)
+In-Reply-To: <AAD57842-631F-4633-92C5-4624DA3D393D@soton.ac.uk>
+References: <2137329674.371.1400631962320.JavaMail.jenkins@aleph0.kk.soton.ac.uk>
+	<AAD57842-631F-4633-92C5-4624DA3D393D@soton.ac.uk>
+Date: Wed, 21 May 2014 10:20:26 +0100
+Message-ID: <CAGA_dmhif6wn0j15TwMdLKZVEz+RZkyxDLvq-NAgo1t3_N+zLg@mail.gmail.com>
+Subject: Re: [finmag-team] Jenkins - too many open files
+From: Maximilian Albert <maximilian.albert@gmail.com>
+To: "Fangohr H." <h.fangohr@soton.ac.uk>
+CC: "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+Content-Type: multipart/alternative; boundary="047d7bdcaa8cc084d904f9e5818f"
+Received-SPF: Pass (UOS-MSG00037-VS.soton.ac.uk: domain of
+ owner-finmag-team@lists.soton.ac.uk designates 152.78.128.58 as permitted
+ sender) receiver=UOS-MSG00037-VS.soton.ac.uk; client-ip=152.78.128.58;
+ helo=maillists.sucs.soton.ac.uk;
+Received-SPF: None; receiver=mailgate4.iss.soton.ac.uk; client-ip=209.85.216.176; helo=<mail-qc0-f176.google.com>
+Received-SPF: Pass; receiver=mailgate4.iss.soton.ac.uk; client-ip=209.85.216.176; envelope-from=<maximilian.albert@gmail.com>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=q4KAKm150684880800; tid=q4KAKm1506848808G7; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.39; helo=<UOS-MSG00037-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.39; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: s4L9Kmrs003587
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+--047d7bdcaa8cc084d904f9e5818f
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+Ok, I tried to increase the maximum number to 2048. Let's see if this fixes
+things.
+
+Cheers,
+Max
+
+
+2014-05-21 9:42 GMT+01:00 Fangohr H. <H.FANGOHR@soton.ac.uk>:
+
+> Hi all,
+>
+> Jenkins is now failing complaining about =E2=80=99too many open files=E2=
+=80=99 (in error
+> below). There seems to be a jenkins bug for this (
+> https://wiki.jenkins-ci.org/display/JENKINS/I'm+getting+too+many+open+fil=
+es+error
+> ),
+> but often (?) it can be solved by increasing the number of allowed open
+> files that jenkins has (=E2=80=98ulimit -n=E2=80=99 should show it). By d=
+efault, this is
+> 1024.
+>
+> As a first measure, I am just now rebooting aleph0 - who knows, it may
+> sort it out.
+>
+> If it doesn=E2=80=99t, I suggest we increase the number of allowed open f=
+iles for
+> jenkins (or all users). Google should be able to help in doing this.
+>
+> I am stuck in meetings all day, so may not be able to pursue this further=
+,
+> but wanted at least to share what I have found out so far.
+>
+> Cheers,
+>
+> Hans
+>
+> PS If anybody needs admin rights, please let me or Max or Marc-Antonio
+> know, and we can add you to the sudo group if you are not in there yet.
+>
+> Begin forwarded message:
+>
+> From: Jenkins CI <h.fangohr@soton.ac.uk<mailto:h.fangohr@soton.ac.uk>>
+> Subject: [build] finmag_fast_tests - Build # 889 - Still Failing!
+> Date: 21 May 2014 01:26:02 BST
+> To: <h.fangohr@soton.ac.uk<mailto:h.fangohr@soton.ac.uk>>, <
+> maximilian.albert@soton.ac.uk<mailto:maximilian.albert@soton.ac.uk>>, <
+> cilix@soton.ac.uk<mailto:cilix@soton.ac.uk>>
+> Reply-To: <h.fangohr@soton.ac.uk<mailto:h.fangohr@soton.ac.uk>>, <
+> maximilian.albert@soton.ac.uk<mailto:maximilian.albert@soton.ac.uk>>
+>
+> [http://aleph0.kk.soton.ac.uk:8080/static/e59dfe28/images/32x32/red.gif]
+>        BUILD FAILURE
+> Build URL
+> http://aleph0.kk.soton.ac.uk:8080/job/finmag_fast_tests/889/
+> Project:        finmag_fast_tests
+> Date of build:  Wed, 21 May 2014 01:11:47 +0100
+> Build duration: 14 min
+>
+> CHANGES
+> No Changes
+>
+> CONSOLE OUTPUT
+> [...truncated 4630 lines...]
+> src/finmag/util/helpers_test.py:233: test_pointing_upwards PASSED
+> src/finmag/util/helpers_test.py:241: test_pointing_downwards PASSED
+> src/finmag/util/helpers_test.py:250: test_mesh_functions_allclose FAILED
+> src/finmag/util/helpers_test.py:281: test_piecewise_on_subdomains PASSED
+> src/finmag/util/helpers_test.py:296:
+> test_vector_field_from_dolfin_function FAILED
+> src/finmag/util/helpers_test.py:342: test_probe FAILED
+> src/finmag/util/helpers_test.py:395: test_get_hg_revision_info ERROR
+> src/finmag/util/helpers_test.py:412: test_binary_tarball_name ERROR
+> src/finmag/util/helpers_test.py:418:
+> test_plot_ndt_columns_and_plot_dynamics ERROR
+> src/finmag/util/helpers_test.py:436: test_crossprod FAILED
+> src/finmag/util/helpers_test.py:460: test_apply_vertexwise FAILED
+> src/finmag/util/helpers_test.py:479: test_TemporaryDirectory FAILED
+> src/finmag/util/helpers_test.py:495: test_contextmanager_ignored ERROR
+> src/finmag/util/helpers_test.py:513: test_run_cmd_with_timeout FAILED
+> src/finmag/util/helpers_test.py:528: test_jpg2avi SKIPPED
+> src/finmag/util/helpers_test.py:548: test_pvd2avi SKIPPED
+> src/finmag/util/helpers_test.py:568: test_set_color_scheme PASSED
+> src/finmag/util/helpers_test.py:582: test_restriction ERROR
+> src/finmag/util/helpers_test.py:652: test_verify_function_space_type FAIL=
+ED
+> src/finmag/util/mesh_templates_test.py:23: test_mesh_templates ERROR
+> src/finmag/util/mesh_templates_test.py:30: test_sphere ERROR
+> src/finmag/util/mesh_templates_test.py:45: test_elliptical_nanodisk ERROR
+> src/finmag/util/mesh_templates_test.py:66: test_nanodisk ERROR
+> src/finmag/util/mesh_templates_test.py:85: test_combining_meshes ERROR
+> src/finmag/util/mesh_templates_test.py:113: test_maxh_with_mesh_primitive
+> ERROR
+> src/finmag/util/mesh_templates_test.py:137: test_mesh_specific_maxh ERROR
+> src/finmag/util/mesh_templates_test.py:151:
+> test_different_mesh_discretisations_for_combined_meshes ERROR
+> src/finmag/util/mesh_templates_test.py:175: test_box ERROR
+> src/finmag/util/meshes_test.py:6: test_mesh_size FAILED
+> src/finmag/util/meshes_test.py:23: test_embed3d PASSED
+> src/finmag/util/pbc_test.py:5: test_pbc1d_2dmesh FAILED
+> src/finmag/util/pbc_test.py:21: test_pbc2d_2dmesh FAILED
+> src/finmag/util/pbc_test.py:38: test_pbc2d_3dmesh FAILED
+> src/finmag/util/pbc_test.py:57: test_pbc2d_3dmesh2 FAILED
+> src/finmag/util/test_dmi_from_helix.py:14: test_dmi_from_helix_solution
+> FAILED
+> src/finmag/util/test_dmi_from_helix.py:25: test_helix_strong_field FAILED
+> src/finmag/util/test_dmi_from_helix.py:44: test_zero_helix PASSED
+> src/finmag/util/visualization_test.py:15: test_render_paraview_scene
+> SKIPPED
+> src/finmag/util/visualization_test.py:70: test_flight_path_rotation P0: [
+> 0.724 1.569 2.413]
+> r1: [-1.724 1.431 -0.413]
+> r2: [-1.382 -1.301 1.26 ]
+> P0: [-1. 3. 2.]
+> r1: [ 0. 0. 0.]
+> r2: [ 0. 0. -0.]
+> PASSED
+> src/finmag/util/visualization_test.py:96: test_flight_path_straight_line
+> PASSED
+> src/finmag/util/visualization_test.py:115: test_plot_dolfin_function
+> SKIPPED
+> src/finmag/util/vtk_saver_test.py:22: TestVTKSaver.test_constructor ERROR
+> src/finmag/util/vtk_saver_test.py:30:
+> TestVTKSaver.test_file_extension_is_correct ERROR
+> src/finmag/util/vtk_saver_test.py:40:
+> TestVTKSaver.test_existing_files_are_deleted_if_requested ERROR
+> src/finmag/util/vtk_saver_test.py:64: TestVTKSaver.test_save_field ERROR
+> src/finmag/util/vtk_saver_test.py:86:
+> TestVTKSaver.test_saving_to_file_with_different_name ERROR
+> src/finmag/util/ode/tests/test_sundials_ode.py:16:
+> OdeSundialsTests.test_errors Error in CVODE:CVode (CV_NO_MALLOC): Attempt
+> to call before CVodeInit.
+> PASSED
+> src/finmag/util/ode/tests/test_sundials_ode.py:79:
+> OdeSundialsTests.test_jtimes_ex PASSED
+> src/finmag/util/ode/tests/test_sundials_ode.py:37:
+> OdeSundialsTests.test_simple_1d PASSED
+> src/finmag/util/ode/tests/test_sundials_ode.py:45:
+> OdeSundialsTests.test_simple_1d_diag PASSED
+> src/finmag/util/ode/tests/test_sundials_ode.py:26:
+> OdeSundialsTests.test_simple_1d_scipy PASSED
+> src/finmag/util/ode/tests/test_sundials_ode.py:70:
+> OdeSundialsTests.test_stiff_sp_gmr PASSED
+> src/finmag/util/ode/tests/test_sundials_stiff_ode.py:19:
+> SundialsStiffOdeTests.test_robertson_scipy Integration of the Robertson O=
+DE
+> until t=3D1e8 with scipy VODE, BDF method: 1268 steps
+> PASSED
+> src/finmag/util/ode/tests/test_sundials_stiff_ode.py:30:
+> SundialsStiffOdeTests.test_robertson_scipy_transposed DVODE-- At current =
+T
+> (=3DR1), MXSTEP (=3DI1) steps
+> taken on this call before reaching TOUT
+> In above message, I1 =3D 5000
+> In above message, R1 =3D 0.8000369437165D+00
+> /usr/local/lib/python2.7/dist-packages/scipy/integrate/_ode.py:696:
+> UserWarning: vode: Excess work done on this call. (Perhaps wrong MF.)
+> PASSED
+> src/finmag/util/ode/tests/test_sundials_stiff_ode.py:41:
+> SundialsStiffOdeTests.test_robertson_sundials Integration of the Robertso=
+n
+> ODE until t=3D1e8 with CVODE, BDF method: 789 steps
+> PASSED
+> src/finmag/util/ode/tests/test_sundials_stiff_ode.py:54:
+> SundialsStiffOdeTests.test_robertson_sundials_transposed PASSED
+> src/finmag/util/oommf/test_mesh.py:22: TestIterCoordsInt.test_xyz_orderin=
+g
+> PASSED
+> src/finmag/util/oommf/test_mesh.py:6: TestIterCoordsInt.test_zyx_ordering
+> PASSED
+> src/finmag/util/oommf/test_mesh.py:39: TestIterCoords.test_zyx_ordering
+> PASSED
+> src/finmag/util/tests/test_arraytools.py:6: test_flat PASSED
+> src/finmag/util/tests/test_arraytools.py:20: test_unflat PASSED
+> src/finmag/util/tests/test_arraytools.py:40: test_magnitude PASSED
+> src/finmag/util/tests/test_arraytools.py:44: test_dolfinvectordatalayout
+> FAILEDTraceback (most recent call last):
+> File "/usr/local/bin/py.test", line 9, in
+> File "/usr/local/lib/python2.7/dist-packages/_pytest/config.py", line 19,
+> in main
+> File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 376,
+> in __call__
+> File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 387,
+> in _docall
+> File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 288,
+> in execute
+> File "/usr/local/lib/python2.7/dist-packages/_pytest/main.py", line 111,
+> in pytest_cmdline_main
+> File "/usr/local/lib/python2.7/dist-packages/_pytest/main.py", line 104,
+> in wrap_session
+> File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 376,
+> in __call__
+> File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 387,
+> in _docall
+> File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 288,
+> in execute
+> File "/usr/local/lib/python2.7/dist-packages/_pytest/terminal.py", line
+> 332, in pytest_sessionfinish
+> File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 288,
+> in execute
+> File "/usr/local/lib/python2.7/dist-packages/_pytest/junitxml.py", line
+> 208, in pytest_sessionfinish
+> File "/usr/lib/python2.7/codecs.py", line 881, in open
+> IOError: [Errno 24] Too many open files:
+> '/var/lib/jenkins/jobs/finmag_fast_tests/workspace/test-reports/junit/TES=
+T_pytest.xml'
+> make: *** [test-fast] Error 1
+> Build step 'Execute shell' marked build as failure
+> Recording test results
+> Email was triggered for: Failure
+> Email was triggered for: Still Failing
+> Trigger Failure was overridden by another trigger and will not send an
+> email.
+> Sending email for trigger: Still Failing
+>
+>
+>
+> -------------------------------------
+> finmag-team mailing list.
+>
+
+--047d7bdcaa8cc084d904f9e5818f
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr">Ok, I tried to increase the maximum number to 2048. Let&#3=
+9;s see if this fixes things.<br><br>Cheers,<br>Max<br></div><div class=3D"=
+gmail_extra"><br><br><div class=3D"gmail_quote">2014-05-21 9:42 GMT+01:00 F=
+angohr H. <span dir=3D"ltr">&lt;<a href=3D"mailto:H.FANGOHR@soton.ac.uk" ta=
+rget=3D"_blank">H.FANGOHR@soton.ac.uk</a>&gt;</span>:<br>
+<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
+x #ccc solid;padding-left:1ex">Hi all,<br>
+<br>
+Jenkins is now failing complaining about =E2=80=99too many open files=E2=80=
+=99 (in error below). There seems to be a jenkins bug for this (<a href=3D"=
+https://wiki.jenkins-ci.org/display/JENKINS/I&#39;m+getting+too+many+open+f=
+iles+error" target=3D"_blank">https://wiki.jenkins-ci.org/display/JENKINS/I=
+&#39;m+getting+too+many+open+files+error</a>),<br>
+
+but often (?) it can be solved by increasing the number of allowed open fil=
+es that jenkins has (=E2=80=98ulimit -n=E2=80=99 should show it). By defaul=
+t, this is 1024.<br>
+<br>
+As a first measure, I am just now rebooting aleph0 - who knows, it may sort=
+ it out.<br>
+<br>
+If it doesn=E2=80=99t, I suggest we increase the number of allowed open fil=
+es for jenkins (or all users). Google should be able to help in doing this.=
+<br>
+<br>
+I am stuck in meetings all day, so may not be able to pursue this further, =
+but wanted at least to share what I have found out so far.<br>
+<br>
+Cheers,<br>
+<br>
+Hans<br>
+<br>
+PS If anybody needs admin rights, please let me or Max or Marc-Antonio know=
+, and we can add you to the sudo group if you are not in there yet.<br>
+<br>
+Begin forwarded message:<br>
+<br>
+From: Jenkins CI &lt;<a href=3D"mailto:h.fangohr@soton.ac.uk">h.fangohr@sot=
+on.ac.uk</a>&lt;mailto:<a href=3D"mailto:h.fangohr@soton.ac.uk">h.fangohr@s=
+oton.ac.uk</a>&gt;&gt;<br>
+Subject: [build] finmag_fast_tests - Build # 889 - Still Failing!<br>
+Date: 21 May 2014 01:26:02 BST<br>
+To: &lt;<a href=3D"mailto:h.fangohr@soton.ac.uk">h.fangohr@soton.ac.uk</a>&=
+lt;mailto:<a href=3D"mailto:h.fangohr@soton.ac.uk">h.fangohr@soton.ac.uk</a=
+>&gt;&gt;, &lt;<a href=3D"mailto:maximilian.albert@soton.ac.uk">maximilian.=
+albert@soton.ac.uk</a>&lt;mailto:<a href=3D"mailto:maximilian.albert@soton.=
+ac.uk">maximilian.albert@soton.ac.uk</a>&gt;&gt;, &lt;<a href=3D"mailto:cil=
+ix@soton.ac.uk">cilix@soton.ac.uk</a>&lt;mailto:<a href=3D"mailto:cilix@sot=
+on.ac.uk">cilix@soton.ac.uk</a>&gt;&gt;<br>
+
+Reply-To: &lt;<a href=3D"mailto:h.fangohr@soton.ac.uk">h.fangohr@soton.ac.u=
+k</a>&lt;mailto:<a href=3D"mailto:h.fangohr@soton.ac.uk">h.fangohr@soton.ac=
+.uk</a>&gt;&gt;, &lt;<a href=3D"mailto:maximilian.albert@soton.ac.uk">maxim=
+ilian.albert@soton.ac.uk</a>&lt;mailto:<a href=3D"mailto:maximilian.albert@=
+soton.ac.uk">maximilian.albert@soton.ac.uk</a>&gt;&gt;<br>
+
+<br>
+[<a href=3D"http://aleph0.kk.soton.ac.uk:8080/static/e59dfe28/images/32x32/=
+red.gif" target=3D"_blank">http://aleph0.kk.soton.ac.uk:8080/static/e59dfe2=
+8/images/32x32/red.gif</a>] =C2=A0 =C2=A0 =C2=A0 =C2=A0BUILD FAILURE<br>
+Build URL =C2=A0 =C2=A0 =C2=A0 <a href=3D"http://aleph0.kk.soton.ac.uk:8080=
+/job/finmag_fast_tests/889/" target=3D"_blank">http://aleph0.kk.soton.ac.uk=
+:8080/job/finmag_fast_tests/889/</a><br>
+Project: =C2=A0 =C2=A0 =C2=A0 =C2=A0finmag_fast_tests<br>
+Date of build: =C2=A0Wed, 21 May 2014 01:11:47 +0100<br>
+Build duration: 14 min<br>
+<br>
+CHANGES<br>
+No Changes<br>
+<br>
+CONSOLE OUTPUT<br>
+[...truncated 4630 lines...]<br>
+src/finmag/util/helpers_test.py:233: test_pointing_upwards PASSED<br>
+src/finmag/util/helpers_test.py:241: test_pointing_downwards PASSED<br>
+src/finmag/util/helpers_test.py:250: test_mesh_functions_allclose FAILED<br=
+>
+src/finmag/util/helpers_test.py:281: test_piecewise_on_subdomains PASSED<br=
+>
+src/finmag/util/helpers_test.py:296: test_vector_field_from_dolfin_function=
+ FAILED<br>
+src/finmag/util/helpers_test.py:342: test_probe FAILED<br>
+src/finmag/util/helpers_test.py:395: test_get_hg_revision_info ERROR<br>
+src/finmag/util/helpers_test.py:412: test_binary_tarball_name ERROR<br>
+src/finmag/util/helpers_test.py:418: test_plot_ndt_columns_and_plot_dynamic=
+s ERROR<br>
+src/finmag/util/helpers_test.py:436: test_crossprod FAILED<br>
+src/finmag/util/helpers_test.py:460: test_apply_vertexwise FAILED<br>
+src/finmag/util/helpers_test.py:479: test_TemporaryDirectory FAILED<br>
+src/finmag/util/helpers_test.py:495: test_contextmanager_ignored ERROR<br>
+src/finmag/util/helpers_test.py:513: test_run_cmd_with_timeout FAILED<br>
+src/finmag/util/helpers_test.py:528: test_jpg2avi SKIPPED<br>
+src/finmag/util/helpers_test.py:548: test_pvd2avi SKIPPED<br>
+src/finmag/util/helpers_test.py:568: test_set_color_scheme PASSED<br>
+src/finmag/util/helpers_test.py:582: test_restriction ERROR<br>
+src/finmag/util/helpers_test.py:652: test_verify_function_space_type FAILED=
+<br>
+src/finmag/util/mesh_templates_test.py:23: test_mesh_templates ERROR<br>
+src/finmag/util/mesh_templates_test.py:30: test_sphere ERROR<br>
+src/finmag/util/mesh_templates_test.py:45: test_elliptical_nanodisk ERROR<b=
+r>
+src/finmag/util/mesh_templates_test.py:66: test_nanodisk ERROR<br>
+src/finmag/util/mesh_templates_test.py:85: test_combining_meshes ERROR<br>
+src/finmag/util/mesh_templates_test.py:113: test_maxh_with_mesh_primitive E=
+RROR<br>
+src/finmag/util/mesh_templates_test.py:137: test_mesh_specific_maxh ERROR<b=
+r>
+src/finmag/util/mesh_templates_test.py:151: test_different_mesh_discretisat=
+ions_for_combined_meshes ERROR<br>
+src/finmag/util/mesh_templates_test.py:175: test_box ERROR<br>
+src/finmag/util/meshes_test.py:6: test_mesh_size FAILED<br>
+src/finmag/util/meshes_test.py:23: test_embed3d PASSED<br>
+src/finmag/util/pbc_test.py:5: test_pbc1d_2dmesh FAILED<br>
+src/finmag/util/pbc_test.py:21: test_pbc2d_2dmesh FAILED<br>
+src/finmag/util/pbc_test.py:38: test_pbc2d_3dmesh FAILED<br>
+src/finmag/util/pbc_test.py:57: test_pbc2d_3dmesh2 FAILED<br>
+src/finmag/util/test_dmi_from_helix.py:14: test_dmi_from_helix_solution FAI=
+LED<br>
+src/finmag/util/test_dmi_from_helix.py:25: test_helix_strong_field FAILED<b=
+r>
+src/finmag/util/test_dmi_from_helix.py:44: test_zero_helix PASSED<br>
+src/finmag/util/visualization_test.py:15: test_render_paraview_scene SKIPPE=
+D<br>
+src/finmag/util/visualization_test.py:70: test_flight_path_rotation P0: [ 0=
+.724 1.569 2.413]<br>
+r1: [-1.724 1.431 -0.413]<br>
+r2: [-1.382 -1.301 1.26 ]<br>
+P0: [-1. 3. 2.]<br>
+r1: [ 0. 0. 0.]<br>
+r2: [ 0. 0. -0.]<br>
+PASSED<br>
+src/finmag/util/visualization_test.py:96: test_flight_path_straight_line PA=
+SSED<br>
+src/finmag/util/visualization_test.py:115: test_plot_dolfin_function SKIPPE=
+D<br>
+src/finmag/util/vtk_saver_test.py:22: TestVTKSaver.test_constructor ERROR<b=
+r>
+src/finmag/util/vtk_saver_test.py:30: TestVTKSaver.test_file_extension_is_c=
+orrect ERROR<br>
+src/finmag/util/vtk_saver_test.py:40: TestVTKSaver.test_existing_files_are_=
+deleted_if_requested ERROR<br>
+src/finmag/util/vtk_saver_test.py:64: TestVTKSaver.test_save_field ERROR<br=
+>
+src/finmag/util/vtk_saver_test.py:86: TestVTKSaver.test_saving_to_file_with=
+_different_name ERROR<br>
+src/finmag/util/ode/tests/test_sundials_ode.py:16: OdeSundialsTests.test_er=
+rors Error in CVODE:CVode (CV_NO_MALLOC): Attempt to call before CVodeInit.=
+<br>
+PASSED<br>
+src/finmag/util/ode/tests/test_sundials_ode.py:79: OdeSundialsTests.test_jt=
+imes_ex PASSED<br>
+src/finmag/util/ode/tests/test_sundials_ode.py:37: OdeSundialsTests.test_si=
+mple_1d PASSED<br>
+src/finmag/util/ode/tests/test_sundials_ode.py:45: OdeSundialsTests.test_si=
+mple_1d_diag PASSED<br>
+src/finmag/util/ode/tests/test_sundials_ode.py:26: OdeSundialsTests.test_si=
+mple_1d_scipy PASSED<br>
+src/finmag/util/ode/tests/test_sundials_ode.py:70: OdeSundialsTests.test_st=
+iff_sp_gmr PASSED<br>
+src/finmag/util/ode/tests/test_sundials_stiff_ode.py:19: SundialsStiffOdeTe=
+sts.test_robertson_scipy Integration of the Robertson ODE until t=3D1e8 wit=
+h scipy VODE, BDF method: 1268 steps<br>
+PASSED<br>
+src/finmag/util/ode/tests/test_sundials_stiff_ode.py:30: SundialsStiffOdeTe=
+sts.test_robertson_scipy_transposed DVODE-- At current T (=3DR1), MXSTEP (=
+=3DI1) steps<br>
+taken on this call before reaching TOUT<br>
+In above message, I1 =3D 5000<br>
+In above message, R1 =3D 0.8000369437165D+00<br>
+/usr/local/lib/python2.7/dist-packages/scipy/integrate/_ode.py:696: UserWar=
+ning: vode: Excess work done on this call. (Perhaps wrong MF.)<br>
+PASSED<br>
+src/finmag/util/ode/tests/test_sundials_stiff_ode.py:41: SundialsStiffOdeTe=
+sts.test_robertson_sundials Integration of the Robertson ODE until t=3D1e8 =
+with CVODE, BDF method: 789 steps<br>
+PASSED<br>
+src/finmag/util/ode/tests/test_sundials_stiff_ode.py:54: SundialsStiffOdeTe=
+sts.test_robertson_sundials_transposed PASSED<br>
+src/finmag/util/oommf/test_mesh.py:22: TestIterCoordsInt.test_xyz_ordering =
+PASSED<br>
+src/finmag/util/oommf/test_mesh.py:6: TestIterCoordsInt.test_zyx_ordering P=
+ASSED<br>
+src/finmag/util/oommf/test_mesh.py:39: TestIterCoords.test_zyx_ordering PAS=
+SED<br>
+src/finmag/util/tests/test_arraytools.py:6: test_flat PASSED<br>
+src/finmag/util/tests/test_arraytools.py:20: test_unflat PASSED<br>
+src/finmag/util/tests/test_arraytools.py:40: test_magnitude PASSED<br>
+src/finmag/util/tests/test_arraytools.py:44: test_dolfinvectordatalayout FA=
+ILEDTraceback (most recent call last):<br>
+File &quot;/usr/local/bin/py.test&quot;, line 9, in<br>
+File &quot;/usr/local/lib/python2.7/dist-packages/_pytest/config.py&quot;, =
+line 19, in main<br>
+File &quot;/usr/local/lib/python2.7/dist-packages/_pytest/core.py&quot;, li=
+ne 376, in __call__<br>
+File &quot;/usr/local/lib/python2.7/dist-packages/_pytest/core.py&quot;, li=
+ne 387, in _docall<br>
+File &quot;/usr/local/lib/python2.7/dist-packages/_pytest/core.py&quot;, li=
+ne 288, in execute<br>
+File &quot;/usr/local/lib/python2.7/dist-packages/_pytest/main.py&quot;, li=
+ne 111, in pytest_cmdline_main<br>
+File &quot;/usr/local/lib/python2.7/dist-packages/_pytest/main.py&quot;, li=
+ne 104, in wrap_session<br>
+File &quot;/usr/local/lib/python2.7/dist-packages/_pytest/core.py&quot;, li=
+ne 376, in __call__<br>
+File &quot;/usr/local/lib/python2.7/dist-packages/_pytest/core.py&quot;, li=
+ne 387, in _docall<br>
+File &quot;/usr/local/lib/python2.7/dist-packages/_pytest/core.py&quot;, li=
+ne 288, in execute<br>
+File &quot;/usr/local/lib/python2.7/dist-packages/_pytest/terminal.py&quot;=
+, line 332, in pytest_sessionfinish<br>
+File &quot;/usr/local/lib/python2.7/dist-packages/_pytest/core.py&quot;, li=
+ne 288, in execute<br>
+File &quot;/usr/local/lib/python2.7/dist-packages/_pytest/junitxml.py&quot;=
+, line 208, in pytest_sessionfinish<br>
+File &quot;/usr/lib/python2.7/codecs.py&quot;, line 881, in open<br>
+IOError: [Errno 24] Too many open files: &#39;/var/lib/jenkins/jobs/finmag_=
+fast_tests/workspace/test-reports/junit/TEST_pytest.xml&#39;<br>
+make: *** [test-fast] Error 1<br>
+Build step &#39;Execute shell&#39; marked build as failure<br>
+Recording test results<br>
+Email was triggered for: Failure<br>
+Email was triggered for: Still Failing<br>
+Trigger Failure was overridden by another trigger and will not send an emai=
+l.<br>
+Sending email for trigger: Still Failing<br>
+<br>
+<br>
+<br>
+-------------------------------------<br>
+finmag-team mailing list.<br>
+</blockquote></div><br></div>
+
+--047d7bdcaa8cc084d904f9e5818f--
+
+From fetchmail  Wed May 21 12:41:04 2014
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.26)
+	for <marvin@localhost> (single-drop); Wed, 21 May 2014 12:41:04 +0100 (BST)
+Received: by 10.217.69.130 with SMTP id z2csp86900wex;
+        Wed, 21 May 2014 03:55:03 -0700 (PDT)
+X-Received: by 10.112.139.166 with SMTP id qz6mr35210640lbb.13.1400669703537;
+        Wed, 21 May 2014 03:55:03 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id bd10si19766520lab.48.2014.05.21.03.55.02
+        for <multiple recipients>;
+        Wed, 21 May 2014 03:55:03 -0700 (PDT)
+Received-SPF: none (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=neutral (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk;
+       dkim=neutral (body hash did not verify) header.i=@;
+       dmarc=fail (p=NONE dis=NONE) header.from=gmail.com
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s4LAsxqN008563;
+	Wed, 21 May 2014 11:54:59 +0100
+Received: from SRV00045.soton.ac.uk (srv00045.soton.ac.uk [152.78.119.41])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id q4KBsx0832346497ur ret-id none; Wed, 21 May 2014 11:54:59 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.41) with Microsoft SMTP Server (TLS) id 14.3.181.6; Wed, 21 May
+ 2014 11:54:52 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id s4LAsqtf002789;	Wed, 21 May 2014 11:54:52 +0100
+Received: from mailgate4.iss.soton.ac.uk (mailgate4.iss.soton.ac.uk
+ [152.78.128.105])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ s4LAsq96002786	for <finmag-team@lists.soton.ac.uk>; Wed, 21 May 2014 11:54:52
+ +0100
+Received: from mailgate4.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate4.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s4LAschM031133	for
+ <finmag-team@lists.soton.ac.uk>; Wed, 21 May 2014 11:54:38 +0100
+Received: from mail-qc0-f175.google.com (mail-qc0-f175.google.com
+ [209.85.216.175])	by mailgate4.iss.soton.ac.uk (mailgate4.iss.soton.ac.uk
+ [152.78.128.105]) envelope-from <maximilian.albert@gmail.com> with ESMTP	id
+ q4KBsc0438020291s6 ret-id none; Wed, 21 May 2014 11:54:38 +0100
+Received: by mail-qc0-f175.google.com with SMTP id w7so2882533qcr.34
+        for <finmag-team@lists.soton.ac.uk>; Wed, 21 May 2014 03:54:37 -0700
+ (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=2u/nGz+nIvnkn8j4BscN//gAAebc6q2Kka1LP1Up63k=;
+        b=WF+cL5zDl1nmBStn08we/bBOm2gxaICSL25oTvZV0tB5/V8vJL4i2lkhRmIYnsuCIv
+         moo2y6zeeY6mhyH8Onbkuwb7ixGk0ZVbFgwXiD0IjC7HL+OjkEVgPDOzKbrkBmUi/QyJ
+         eZ/zNUwGgAom0s92Du254RgYRlfN0PfNLQjYrO5fJH1PW/GJgRNb9yTKqYZ3+Xzyx9az
+         GkEVYIDtcG0c5VdrIXm1qqoWtw9YhOxm4fBYv+sJtadhlfOFfZX/hrTsHERIa+ZrfyCz
+         6vZssw6aZtFNo6Bix9SpEOF3LkHVVcKNCnSYEe2mS1ZIgVliBqHjUJ3xeJgfTB5Dz7vK
+         4ojg==
+MIME-Version: 1.0
+X-Received: by 10.224.134.194 with SMTP id k2mr65705250qat.5.1400669677684;
+ Wed, 21 May 2014 03:54:37 -0700 (PDT)
+Received: by 10.96.122.41 with HTTP; Wed, 21 May 2014 03:54:37 -0700 (PDT)
+In-Reply-To: <3692ADA8EC38D540B0E0B4DF595787012E20A844@SRV00047.soton.ac.uk>
+References: <2137329674.371.1400631962320.JavaMail.jenkins@aleph0.kk.soton.ac.uk>
+	<AAD57842-631F-4633-92C5-4624DA3D393D@soton.ac.uk>
+	<CAGA_dmhif6wn0j15TwMdLKZVEz+RZkyxDLvq-NAgo1t3_N+zLg@mail.gmail.com>
+	<3692ADA8EC38D540B0E0B4DF595787012E20A844@SRV00047.soton.ac.uk>
+Date: Wed, 21 May 2014 11:54:37 +0100
+Message-ID: <CAGA_dmgg+0GVtZe3GxULhx9qAHaCrfMQfYuf8a73CoC1Qc4mOg@mail.gmail.com>
+Subject: Re: [finmag-team] Jenkins - too many open files
+From: Maximilian Albert <maximilian.albert@gmail.com>
+To: "vousden m. (mv3g08)" <mark.vousden@soton.ac.uk>
+CC: "Fangohr H." <h.fangohr@soton.ac.uk>,
+        "<finmag-team@lists.soton.ac.uk>"
+	<finmag-team@lists.soton.ac.uk>
+Content-Type: multipart/alternative; boundary="001a11c2c346960fd504f9e6d27d"
+Received-SPF: Pass (SRV00045.soton.ac.uk: domain of
+ owner-finmag-team@lists.soton.ac.uk designates 152.78.128.58 as permitted
+ sender) receiver=SRV00045.soton.ac.uk; client-ip=152.78.128.58;
+ helo=maillists.sucs.soton.ac.uk;
+Received-SPF: None; receiver=mailgate4.iss.soton.ac.uk; client-ip=209.85.216.175; helo=<mail-qc0-f175.google.com>
+Received-SPF: Pass; receiver=mailgate4.iss.soton.ac.uk; client-ip=209.85.216.175; envelope-from=<maximilian.albert@gmail.com>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=q4KBsg083234649700; tid=q4KBsx0832346497ur; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.41; helo=<SRV00045.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.41; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: s4LAsxqN008563
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+--001a11c2c346960fd504f9e6d27d
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+Hi Mark,
+
+that's one of my recent commits. Thanks for tracking that down! (Did you
+use hg bisect? ;-)) I'll take a look later today.
+
+Cheers,
+Max
+
+
+2014-05-21 10:44 GMT+01:00 vousden m. (mv3g08) <mark.vousden@soton.ac.uk>:
+
+> Hi all,
+>
+> I am getting this error when running tests on my machine, suggesting that
+> this isn't just a problem with Jenkins.
+>
+> Mark Vousden
+> Research Postgraduate
+> Faculty of Engineering and the Environment (FEE)
+> Institute of Complex Systems Simulation (ICSS)
+> Building 176, Room 5001
+> Engineering Centre of Excellence, Boldrewood Campus
+> University of Southampton, UK
+> SO16 7QF
+> ________________________________________
+> From: owner-finmag-team@lists.soton.ac.uk [
+> owner-finmag-team@lists.soton.ac.uk] on behalf of Maximilian Albert [
+> maximilian.albert@gmail.com]
+> Sent: 21 May 2014 10:20
+> To: Fangohr H.
+> Cc: <finmag-team@lists.soton.ac.uk>
+> Subject: Re: [finmag-team] Jenkins - too many open files
+>
+> Ok, I tried to increase the maximum number to 2048. Let's see if this
+> fixes things.
+>
+> Cheers,
+> Max
+>
+>
+> 2014-05-21 9:42 GMT+01:00 Fangohr H. <H.FANGOHR@soton.ac.uk<mailto:
+> H.FANGOHR@soton.ac.uk>>:
+> Hi all,
+>
+> Jenkins is now failing complaining about =E2=80=99too many open files=E2=
+=80=99 (in error
+> below). There seems to be a jenkins bug for this (
+> https://wiki.jenkins-ci.org/display/JENKINS/I'm+getting+too+many+open+fil=
+es+error
+> ),
+> but often (?) it can be solved by increasing the number of allowed open
+> files that jenkins has (=E2=80=98ulimit -n=E2=80=99 should show it). By d=
+efault, this is
+> 1024.
+>
+> As a first measure, I am just now rebooting aleph0 - who knows, it may
+> sort it out.
+>
+> If it doesn=E2=80=99t, I suggest we increase the number of allowed open f=
+iles for
+> jenkins (or all users). Google should be able to help in doing this.
+>
+> I am stuck in meetings all day, so may not be able to pursue this further=
+,
+> but wanted at least to share what I have found out so far.
+>
+> Cheers,
+>
+> Hans
+>
+> PS If anybody needs admin rights, please let me or Max or Marc-Antonio
+> know, and we can add you to the sudo group if you are not in there yet.
+>
+> Begin forwarded message:
+>
+> From: Jenkins CI <h.fangohr@soton.ac.uk<mailto:h.fangohr@soton.ac.uk
+> ><mailto:h.fangohr@soton.ac.uk<mailto:h.fangohr@soton.ac.uk>>>
+> Subject: [build] finmag_fast_tests - Build # 889 - Still Failing!
+> Date: 21 May 2014 01:26:02 BST
+> To: <h.fangohr@soton.ac.uk<mailto:h.fangohr@soton.ac.uk><mailto:
+> h.fangohr@soton.ac.uk<mailto:h.fangohr@soton.ac.uk>>>, <
+> maximilian.albert@soton.ac.uk<mailto:maximilian.albert@soton.ac.uk
+> ><mailto:maximilian.albert@soton.ac.uk<mailto:
+> maximilian.albert@soton.ac.uk>>>, <cilix@soton.ac.uk<mailto:
+> cilix@soton.ac.uk><mailto:cilix@soton.ac.uk<mailto:cilix@soton.ac.uk>>>
+> Reply-To: <h.fangohr@soton.ac.uk<mailto:h.fangohr@soton.ac.uk><mailto:
+> h.fangohr@soton.ac.uk<mailto:h.fangohr@soton.ac.uk>>>, <
+> maximilian.albert@soton.ac.uk<mailto:maximilian.albert@soton.ac.uk
+> ><mailto:maximilian.albert@soton.ac.uk<mailto:
+> maximilian.albert@soton.ac.uk>>>
+>
+> [http://aleph0.kk.soton.ac.uk:8080/static/e59dfe28/images/32x32/red.gif]
+>        BUILD FAILURE
+> Build URL
+> http://aleph0.kk.soton.ac.uk:8080/job/finmag_fast_tests/889/
+> Project:        finmag_fast_tests
+> Date of build:  Wed, 21 May 2014 01:11:47 +0100
+> Build duration: 14 min
+>
+> CHANGES
+> No Changes
+>
+> CONSOLE OUTPUT
+> [...truncated 4630 lines...]
+> src/finmag/util/helpers_test.py:233: test_pointing_upwards PASSED
+> src/finmag/util/helpers_test.py:241: test_pointing_downwards PASSED
+> src/finmag/util/helpers_test.py:250: test_mesh_functions_allclose FAILED
+> src/finmag/util/helpers_test.py:281: test_piecewise_on_subdomains PASSED
+> src/finmag/util/helpers_test.py:296:
+> test_vector_field_from_dolfin_function FAILED
+> src/finmag/util/helpers_test.py:342: test_probe FAILED
+> src/finmag/util/helpers_test.py:395: test_get_hg_revision_info ERROR
+> src/finmag/util/helpers_test.py:412: test_binary_tarball_name ERROR
+> src/finmag/util/helpers_test.py:418:
+> test_plot_ndt_columns_and_plot_dynamics ERROR
+> src/finmag/util/helpers_test.py:436: test_crossprod FAILED
+> src/finmag/util/helpers_test.py:460: test_apply_vertexwise FAILED
+> src/finmag/util/helpers_test.py:479: test_TemporaryDirectory FAILED
+> src/finmag/util/helpers_test.py:495: test_contextmanager_ignored ERROR
+> src/finmag/util/helpers_test.py:513: test_run_cmd_with_timeout FAILED
+> src/finmag/util/helpers_test.py:528: test_jpg2avi SKIPPED
+> src/finmag/util/helpers_test.py:548: test_pvd2avi SKIPPED
+> src/finmag/util/helpers_test.py:568: test_set_color_scheme PASSED
+> src/finmag/util/helpers_test.py:582: test_restriction ERROR
+> src/finmag/util/helpers_test.py:652: test_verify_function_space_type FAIL=
+ED
+> src/finmag/util/mesh_templates_test.py:23: test_mesh_templates ERROR
+> src/finmag/util/mesh_templates_test.py:30: test_sphere ERROR
+> src/finmag/util/mesh_templates_test.py:45: test_elliptical_nanodisk ERROR
+> src/finmag/util/mesh_templates_test.py:66: test_nanodisk ERROR
+> src/finmag/util/mesh_templates_test.py:85: test_combining_meshes ERROR
+> src/finmag/util/mesh_templates_test.py:113: test_maxh_with_mesh_primitive
+> ERROR
+> src/finmag/util/mesh_templates_test.py:137: test_mesh_specific_maxh ERROR
+> src/finmag/util/mesh_templates_test.py:151:
+> test_different_mesh_discretisations_for_combined_meshes ERROR
+> src/finmag/util/mesh_templates_test.py:175: test_box ERROR
+> src/finmag/util/meshes_test.py:6: test_mesh_size FAILED
+> src/finmag/util/meshes_test.py:23: test_embed3d PASSED
+> src/finmag/util/pbc_test.py:5: test_pbc1d_2dmesh FAILED
+> src/finmag/util/pbc_test.py:21: test_pbc2d_2dmesh FAILED
+> src/finmag/util/pbc_test.py:38: test_pbc2d_3dmesh FAILED
+> src/finmag/util/pbc_test.py:57: test_pbc2d_3dmesh2 FAILED
+> src/finmag/util/test_dmi_from_helix.py:14: test_dmi_from_helix_solution
+> FAILED
+> src/finmag/util/test_dmi_from_helix.py:25: test_helix_strong_field FAILED
+> src/finmag/util/test_dmi_from_helix.py:44: test_zero_helix PASSED
+> src/finmag/util/visualization_test.py:15: test_render_paraview_scene
+> SKIPPED
+> src/finmag/util/visualization_test.py:70: test_flight_path_rotation P0: [
+> 0.724 1.569 2.413]
+> r1: [-1.724 1.431 -0.413]
+> r2: [-1.382 -1.301 1.26 ]
+> P0: [-1. 3. 2.]
+> r1: [ 0. 0. 0.]
+> r2: [ 0. 0. -0.]
+> PASSED
+> src/finmag/util/visualization_test.py:96: test_flight_path_straight_line
+> PASSED
+> src/finmag/util/visualization_test.py:115: test_plot_dolfin_function
+> SKIPPED
+> src/finmag/util/vtk_saver_test.py:22: TestVTKSaver.test_constructor ERROR
+> src/finmag/util/vtk_saver_test.py:30:
+> TestVTKSaver.test_file_extension_is_correct ERROR
+> src/finmag/util/vtk_saver_test.py:40:
+> TestVTKSaver.test_existing_files_are_deleted_if_requested ERROR
+> src/finmag/util/vtk_saver_test.py:64: TestVTKSaver.test_save_field ERROR
+> src/finmag/util/vtk_saver_test.py:86:
+> TestVTKSaver.test_saving_to_file_with_different_name ERROR
+> src/finmag/util/ode/tests/test_sundials_ode.py:16:
+> OdeSundialsTests.test_errors Error in CVODE:CVode (CV_NO_MALLOC): Attempt
+> to call before CVodeInit.
+> PASSED
+> src/finmag/util/ode/tests/test_sundials_ode.py:79:
+> OdeSundialsTests.test_jtimes_ex PASSED
+> src/finmag/util/ode/tests/test_sundials_ode.py:37:
+> OdeSundialsTests.test_simple_1d PASSED
+> src/finmag/util/ode/tests/test_sundials_ode.py:45:
+> OdeSundialsTests.test_simple_1d_diag PASSED
+> src/finmag/util/ode/tests/test_sundials_ode.py:26:
+> OdeSundialsTests.test_simple_1d_scipy PASSED
+> src/finmag/util/ode/tests/test_sundials_ode.py:70:
+> OdeSundialsTests.test_stiff_sp_gmr PASSED
+> src/finmag/util/ode/tests/test_sundials_stiff_ode.py:19:
+> SundialsStiffOdeTests.test_robertson_scipy Integration of the Robertson O=
+DE
+> until t=3D1e8 with scipy VODE, BDF method: 1268 steps
+> PASSED
+> src/finmag/util/ode/tests/test_sundials_stiff_ode.py:30:
+> SundialsStiffOdeTests.test_robertson_scipy_transposed DVODE-- At current =
+T
+> (=3DR1), MXSTEP (=3DI1) steps
+> taken on this call before reaching TOUT
+> In above message, I1 =3D 5000
+> In above message, R1 =3D 0.8000369437165D+00
+> /usr/local/lib/python2.7/dist-packages/scipy/integrate/_ode.py:696:
+> UserWarning: vode: Excess work done on this call. (Perhaps wrong MF.)
+> PASSED
+> src/finmag/util/ode/tests/test_sundials_stiff_ode.py:41:
+> SundialsStiffOdeTests.test_robertson_sundials Integration of the Robertso=
+n
+> ODE until t=3D1e8 with CVODE, BDF method: 789 steps
+> PASSED
+> src/finmag/util/ode/tests/test_sundials_stiff_ode.py:54:
+> SundialsStiffOdeTests.test_robertson_sundials_transposed PASSED
+> src/finmag/util/oommf/test_mesh.py:22: TestIterCoordsInt.test_xyz_orderin=
+g
+> PASSED
+> src/finmag/util/oommf/test_mesh.py:6: TestIterCoordsInt.test_zyx_ordering
+> PASSED
+> src/finmag/util/oommf/test_mesh.py:39: TestIterCoords.test_zyx_ordering
+> PASSED
+> src/finmag/util/tests/test_arraytools.py:6: test_flat PASSED
+> src/finmag/util/tests/test_arraytools.py:20: test_unflat PASSED
+> src/finmag/util/tests/test_arraytools.py:40: test_magnitude PASSED
+> src/finmag/util/tests/test_arraytools.py:44: test_dolfinvectordatalayout
+> FAILEDTraceback (most recent call last):
+> File "/usr/local/bin/py.test", line 9, in
+> File "/usr/local/lib/python2.7/dist-packages/_pytest/config.py", line 19,
+> in main
+> File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 376,
+> in __call__
+> File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 387,
+> in _docall
+> File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 288,
+> in execute
+> File "/usr/local/lib/python2.7/dist-packages/_pytest/main.py", line 111,
+> in pytest_cmdline_main
+> File "/usr/local/lib/python2.7/dist-packages/_pytest/main.py", line 104,
+> in wrap_session
+> File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 376,
+> in __call__
+> File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 387,
+> in _docall
+> File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 288,
+> in execute
+> File "/usr/local/lib/python2.7/dist-packages/_pytest/terminal.py", line
+> 332, in pytest_sessionfinish
+> File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 288,
+> in execute
+> File "/usr/local/lib/python2.7/dist-packages/_pytest/junitxml.py", line
+> 208, in pytest_sessionfinish
+> File "/usr/lib/python2.7/codecs.py", line 881, in open
+> IOError: [Errno 24] Too many open files:
+> '/var/lib/jenkins/jobs/finmag_fast_tests/workspace/test-reports/junit/TES=
+T_pytest.xml'
+> make: *** [test-fast] Error 1
+> Build step 'Execute shell' marked build as failure
+> Recording test results
+> Email was triggered for: Failure
+> Email was triggered for: Still Failing
+> Trigger Failure was overridden by another trigger and will not send an
+> email.
+> Sending email for trigger: Still Failing
+>
+>
+>
+> -------------------------------------
+> finmag-team mailing list.
+>
+>
+
+--001a11c2c346960fd504f9e6d27d
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><div><div>Hi Mark,<br><br></div>that&#39;s one of my recen=
+t commits. Thanks for tracking that down! (Did you use hg bisect? ;-)) I&#3=
+9;ll take a look later today.<br><br></div>Cheers,<br>Max<br></div><div cla=
+ss=3D"gmail_extra">
+<br><br><div class=3D"gmail_quote">2014-05-21 10:44 GMT+01:00 vousden m. (m=
+v3g08) <span dir=3D"ltr">&lt;<a href=3D"mailto:mark.vousden@soton.ac.uk" ta=
+rget=3D"_blank">mark.vousden@soton.ac.uk</a>&gt;</span>:<br><blockquote cla=
+ss=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;pa=
+dding-left:1ex">
+Hi all,<br>
+<br>
+I am getting this error when running tests on my machine, suggesting that t=
+his isn&#39;t just a problem with Jenkins.<br>
+<br>
+Mark Vousden<br>
+Research Postgraduate<br>
+Faculty of Engineering and the Environment (FEE)<br>
+Institute of Complex Systems Simulation (ICSS)<br>
+Building 176, Room 5001<br>
+Engineering Centre of Excellence, Boldrewood Campus<br>
+University of Southampton, UK<br>
+SO16 7QF<br>
+________________________________________<br>
+From: <a href=3D"mailto:owner-finmag-team@lists.soton.ac.uk">owner-finmag-t=
+eam@lists.soton.ac.uk</a> [<a href=3D"mailto:owner-finmag-team@lists.soton.=
+ac.uk">owner-finmag-team@lists.soton.ac.uk</a>] on behalf of Maximilian Alb=
+ert [<a href=3D"mailto:maximilian.albert@gmail.com">maximilian.albert@gmail=
+.com</a>]<br>
+
+Sent: 21 May 2014 10:20<br>
+To: Fangohr H.<br>
+Cc: &lt;<a href=3D"mailto:finmag-team@lists.soton.ac.uk">finmag-team@lists.=
+soton.ac.uk</a>&gt;<br>
+Subject: Re: [finmag-team] Jenkins - too many open files<br>
+<div class=3D""><br>
+Ok, I tried to increase the maximum number to 2048. Let&#39;s see if this f=
+ixes things.<br>
+<br>
+Cheers,<br>
+Max<br>
+<br>
+<br>
+</div>2014-05-21 9:42 GMT+01:00 Fangohr H. &lt;<a href=3D"mailto:H.FANGOHR@=
+soton.ac.uk">H.FANGOHR@soton.ac.uk</a>&lt;mailto:<a href=3D"mailto:H.FANGOH=
+R@soton.ac.uk">H.FANGOHR@soton.ac.uk</a>&gt;&gt;:<br>
+<div class=3D"">Hi all,<br>
+<br>
+Jenkins is now failing complaining about =E2=80=99too many open files=E2=80=
+=99 (in error below). There seems to be a jenkins bug for this (<a href=3D"=
+https://wiki.jenkins-ci.org/display/JENKINS/I&#39;m+getting+too+many+open+f=
+iles+error" target=3D"_blank">https://wiki.jenkins-ci.org/display/JENKINS/I=
+&#39;m+getting+too+many+open+files+error</a>),<br>
+
+but often (?) it can be solved by increasing the number of allowed open fil=
+es that jenkins has (=E2=80=98ulimit -n=E2=80=99 should show it). By defaul=
+t, this is 1024.<br>
+<br>
+As a first measure, I am just now rebooting aleph0 - who knows, it may sort=
+ it out.<br>
+<br>
+If it doesn=E2=80=99t, I suggest we increase the number of allowed open fil=
+es for jenkins (or all users). Google should be able to help in doing this.=
+<br>
+<br>
+I am stuck in meetings all day, so may not be able to pursue this further, =
+but wanted at least to share what I have found out so far.<br>
+<br>
+Cheers,<br>
+<br>
+Hans<br>
+<br>
+PS If anybody needs admin rights, please let me or Max or Marc-Antonio know=
+, and we can add you to the sudo group if you are not in there yet.<br>
+<br>
+Begin forwarded message:<br>
+<br>
+</div>From: Jenkins CI &lt;<a href=3D"mailto:h.fangohr@soton.ac.uk">h.fango=
+hr@soton.ac.uk</a>&lt;mailto:<a href=3D"mailto:h.fangohr@soton.ac.uk">h.fan=
+gohr@soton.ac.uk</a>&gt;&lt;mailto:<a href=3D"mailto:h.fangohr@soton.ac.uk"=
+>h.fangohr@soton.ac.uk</a>&lt;mailto:<a href=3D"mailto:h.fangohr@soton.ac.u=
+k">h.fangohr@soton.ac.uk</a>&gt;&gt;&gt;<br>
+
+<div class=3D"">Subject: [build] finmag_fast_tests - Build # 889 - Still Fa=
+iling!<br>
+Date: 21 May 2014 01:26:02 BST<br>
+</div>To: &lt;<a href=3D"mailto:h.fangohr@soton.ac.uk">h.fangohr@soton.ac.u=
+k</a>&lt;mailto:<a href=3D"mailto:h.fangohr@soton.ac.uk">h.fangohr@soton.ac=
+.uk</a>&gt;&lt;mailto:<a href=3D"mailto:h.fangohr@soton.ac.uk">h.fangohr@so=
+ton.ac.uk</a>&lt;mailto:<a href=3D"mailto:h.fangohr@soton.ac.uk">h.fangohr@=
+soton.ac.uk</a>&gt;&gt;&gt;, &lt;<a href=3D"mailto:maximilian.albert@soton.=
+ac.uk">maximilian.albert@soton.ac.uk</a>&lt;mailto:<a href=3D"mailto:maximi=
+lian.albert@soton.ac.uk">maximilian.albert@soton.ac.uk</a>&gt;&lt;mailto:<a=
+ href=3D"mailto:maximilian.albert@soton.ac.uk">maximilian.albert@soton.ac.u=
+k</a>&lt;mailto:<a href=3D"mailto:maximilian.albert@soton.ac.uk">maximilian=
+.albert@soton.ac.uk</a>&gt;&gt;&gt;, &lt;<a href=3D"mailto:cilix@soton.ac.u=
+k">cilix@soton.ac.uk</a>&lt;mailto:<a href=3D"mailto:cilix@soton.ac.uk">cil=
+ix@soton.ac.uk</a>&gt;&lt;mailto:<a href=3D"mailto:cilix@soton.ac.uk">cilix=
+@soton.ac.uk</a>&lt;mailto:<a href=3D"mailto:cilix@soton.ac.uk">cilix@soton=
+.ac.uk</a>&gt;&gt;&gt;<br>
+
+Reply-To: &lt;<a href=3D"mailto:h.fangohr@soton.ac.uk">h.fangohr@soton.ac.u=
+k</a>&lt;mailto:<a href=3D"mailto:h.fangohr@soton.ac.uk">h.fangohr@soton.ac=
+.uk</a>&gt;&lt;mailto:<a href=3D"mailto:h.fangohr@soton.ac.uk">h.fangohr@so=
+ton.ac.uk</a>&lt;mailto:<a href=3D"mailto:h.fangohr@soton.ac.uk">h.fangohr@=
+soton.ac.uk</a>&gt;&gt;&gt;, &lt;<a href=3D"mailto:maximilian.albert@soton.=
+ac.uk">maximilian.albert@soton.ac.uk</a>&lt;mailto:<a href=3D"mailto:maximi=
+lian.albert@soton.ac.uk">maximilian.albert@soton.ac.uk</a>&gt;&lt;mailto:<a=
+ href=3D"mailto:maximilian.albert@soton.ac.uk">maximilian.albert@soton.ac.u=
+k</a>&lt;mailto:<a href=3D"mailto:maximilian.albert@soton.ac.uk">maximilian=
+.albert@soton.ac.uk</a>&gt;&gt;&gt;<br>
+
+<div class=3D"HOEnZb"><div class=3D"h5"><br>
+[<a href=3D"http://aleph0.kk.soton.ac.uk:8080/static/e59dfe28/images/32x32/=
+red.gif" target=3D"_blank">http://aleph0.kk.soton.ac.uk:8080/static/e59dfe2=
+8/images/32x32/red.gif</a>] =C2=A0 =C2=A0 =C2=A0 =C2=A0BUILD FAILURE<br>
+Build URL =C2=A0 =C2=A0 =C2=A0 <a href=3D"http://aleph0.kk.soton.ac.uk:8080=
+/job/finmag_fast_tests/889/" target=3D"_blank">http://aleph0.kk.soton.ac.uk=
+:8080/job/finmag_fast_tests/889/</a><br>
+Project: =C2=A0 =C2=A0 =C2=A0 =C2=A0finmag_fast_tests<br>
+Date of build: =C2=A0Wed, 21 May 2014 01:11:47 +0100<br>
+Build duration: 14 min<br>
+<br>
+CHANGES<br>
+No Changes<br>
+<br>
+CONSOLE OUTPUT<br>
+[...truncated 4630 lines...]<br>
+src/finmag/util/helpers_test.py:233: test_pointing_upwards PASSED<br>
+src/finmag/util/helpers_test.py:241: test_pointing_downwards PASSED<br>
+src/finmag/util/helpers_test.py:250: test_mesh_functions_allclose FAILED<br=
+>
+src/finmag/util/helpers_test.py:281: test_piecewise_on_subdomains PASSED<br=
+>
+src/finmag/util/helpers_test.py:296: test_vector_field_from_dolfin_function=
+ FAILED<br>
+src/finmag/util/helpers_test.py:342: test_probe FAILED<br>
+src/finmag/util/helpers_test.py:395: test_get_hg_revision_info ERROR<br>
+src/finmag/util/helpers_test.py:412: test_binary_tarball_name ERROR<br>
+src/finmag/util/helpers_test.py:418: test_plot_ndt_columns_and_plot_dynamic=
+s ERROR<br>
+src/finmag/util/helpers_test.py:436: test_crossprod FAILED<br>
+src/finmag/util/helpers_test.py:460: test_apply_vertexwise FAILED<br>
+src/finmag/util/helpers_test.py:479: test_TemporaryDirectory FAILED<br>
+src/finmag/util/helpers_test.py:495: test_contextmanager_ignored ERROR<br>
+src/finmag/util/helpers_test.py:513: test_run_cmd_with_timeout FAILED<br>
+src/finmag/util/helpers_test.py:528: test_jpg2avi SKIPPED<br>
+src/finmag/util/helpers_test.py:548: test_pvd2avi SKIPPED<br>
+src/finmag/util/helpers_test.py:568: test_set_color_scheme PASSED<br>
+src/finmag/util/helpers_test.py:582: test_restriction ERROR<br>
+src/finmag/util/helpers_test.py:652: test_verify_function_space_type FAILED=
+<br>
+src/finmag/util/mesh_templates_test.py:23: test_mesh_templates ERROR<br>
+src/finmag/util/mesh_templates_test.py:30: test_sphere ERROR<br>
+src/finmag/util/mesh_templates_test.py:45: test_elliptical_nanodisk ERROR<b=
+r>
+src/finmag/util/mesh_templates_test.py:66: test_nanodisk ERROR<br>
+src/finmag/util/mesh_templates_test.py:85: test_combining_meshes ERROR<br>
+src/finmag/util/mesh_templates_test.py:113: test_maxh_with_mesh_primitive E=
+RROR<br>
+src/finmag/util/mesh_templates_test.py:137: test_mesh_specific_maxh ERROR<b=
+r>
+src/finmag/util/mesh_templates_test.py:151: test_different_mesh_discretisat=
+ions_for_combined_meshes ERROR<br>
+src/finmag/util/mesh_templates_test.py:175: test_box ERROR<br>
+src/finmag/util/meshes_test.py:6: test_mesh_size FAILED<br>
+src/finmag/util/meshes_test.py:23: test_embed3d PASSED<br>
+src/finmag/util/pbc_test.py:5: test_pbc1d_2dmesh FAILED<br>
+src/finmag/util/pbc_test.py:21: test_pbc2d_2dmesh FAILED<br>
+src/finmag/util/pbc_test.py:38: test_pbc2d_3dmesh FAILED<br>
+src/finmag/util/pbc_test.py:57: test_pbc2d_3dmesh2 FAILED<br>
+src/finmag/util/test_dmi_from_helix.py:14: test_dmi_from_helix_solution FAI=
+LED<br>
+src/finmag/util/test_dmi_from_helix.py:25: test_helix_strong_field FAILED<b=
+r>
+src/finmag/util/test_dmi_from_helix.py:44: test_zero_helix PASSED<br>
+src/finmag/util/visualization_test.py:15: test_render_paraview_scene SKIPPE=
+D<br>
+src/finmag/util/visualization_test.py:70: test_flight_path_rotation P0: [ 0=
+.724 1.569 2.413]<br>
+r1: [-1.724 1.431 -0.413]<br>
+r2: [-1.382 -1.301 1.26 ]<br>
+P0: [-1. 3. 2.]<br>
+r1: [ 0. 0. 0.]<br>
+r2: [ 0. 0. -0.]<br>
+PASSED<br>
+src/finmag/util/visualization_test.py:96: test_flight_path_straight_line PA=
+SSED<br>
+src/finmag/util/visualization_test.py:115: test_plot_dolfin_function SKIPPE=
+D<br>
+src/finmag/util/vtk_saver_test.py:22: TestVTKSaver.test_constructor ERROR<b=
+r>
+src/finmag/util/vtk_saver_test.py:30: TestVTKSaver.test_file_extension_is_c=
+orrect ERROR<br>
+src/finmag/util/vtk_saver_test.py:40: TestVTKSaver.test_existing_files_are_=
+deleted_if_requested ERROR<br>
+src/finmag/util/vtk_saver_test.py:64: TestVTKSaver.test_save_field ERROR<br=
+>
+src/finmag/util/vtk_saver_test.py:86: TestVTKSaver.test_saving_to_file_with=
+_different_name ERROR<br>
+src/finmag/util/ode/tests/test_sundials_ode.py:16: OdeSundialsTests.test_er=
+rors Error in CVODE:CVode (CV_NO_MALLOC): Attempt to call before CVodeInit.=
+<br>
+PASSED<br>
+src/finmag/util/ode/tests/test_sundials_ode.py:79: OdeSundialsTests.test_jt=
+imes_ex PASSED<br>
+src/finmag/util/ode/tests/test_sundials_ode.py:37: OdeSundialsTests.test_si=
+mple_1d PASSED<br>
+src/finmag/util/ode/tests/test_sundials_ode.py:45: OdeSundialsTests.test_si=
+mple_1d_diag PASSED<br>
+src/finmag/util/ode/tests/test_sundials_ode.py:26: OdeSundialsTests.test_si=
+mple_1d_scipy PASSED<br>
+src/finmag/util/ode/tests/test_sundials_ode.py:70: OdeSundialsTests.test_st=
+iff_sp_gmr PASSED<br>
+src/finmag/util/ode/tests/test_sundials_stiff_ode.py:19: SundialsStiffOdeTe=
+sts.test_robertson_scipy Integration of the Robertson ODE until t=3D1e8 wit=
+h scipy VODE, BDF method: 1268 steps<br>
+PASSED<br>
+src/finmag/util/ode/tests/test_sundials_stiff_ode.py:30: SundialsStiffOdeTe=
+sts.test_robertson_scipy_transposed DVODE-- At current T (=3DR1), MXSTEP (=
+=3DI1) steps<br>
+taken on this call before reaching TOUT<br>
+In above message, I1 =3D 5000<br>
+In above message, R1 =3D 0.8000369437165D+00<br>
+/usr/local/lib/python2.7/dist-packages/scipy/integrate/_ode.py:696: UserWar=
+ning: vode: Excess work done on this call. (Perhaps wrong MF.)<br>
+PASSED<br>
+src/finmag/util/ode/tests/test_sundials_stiff_ode.py:41: SundialsStiffOdeTe=
+sts.test_robertson_sundials Integration of the Robertson ODE until t=3D1e8 =
+with CVODE, BDF method: 789 steps<br>
+PASSED<br>
+src/finmag/util/ode/tests/test_sundials_stiff_ode.py:54: SundialsStiffOdeTe=
+sts.test_robertson_sundials_transposed PASSED<br>
+src/finmag/util/oommf/test_mesh.py:22: TestIterCoordsInt.test_xyz_ordering =
+PASSED<br>
+src/finmag/util/oommf/test_mesh.py:6: TestIterCoordsInt.test_zyx_ordering P=
+ASSED<br>
+src/finmag/util/oommf/test_mesh.py:39: TestIterCoords.test_zyx_ordering PAS=
+SED<br>
+src/finmag/util/tests/test_arraytools.py:6: test_flat PASSED<br>
+src/finmag/util/tests/test_arraytools.py:20: test_unflat PASSED<br>
+src/finmag/util/tests/test_arraytools.py:40: test_magnitude PASSED<br>
+src/finmag/util/tests/test_arraytools.py:44: test_dolfinvectordatalayout FA=
+ILEDTraceback (most recent call last):<br>
+File &quot;/usr/local/bin/py.test&quot;, line 9, in<br>
+File &quot;/usr/local/lib/python2.7/dist-packages/_pytest/config.py&quot;, =
+line 19, in main<br>
+File &quot;/usr/local/lib/python2.7/dist-packages/_pytest/core.py&quot;, li=
+ne 376, in __call__<br>
+File &quot;/usr/local/lib/python2.7/dist-packages/_pytest/core.py&quot;, li=
+ne 387, in _docall<br>
+File &quot;/usr/local/lib/python2.7/dist-packages/_pytest/core.py&quot;, li=
+ne 288, in execute<br>
+File &quot;/usr/local/lib/python2.7/dist-packages/_pytest/main.py&quot;, li=
+ne 111, in pytest_cmdline_main<br>
+File &quot;/usr/local/lib/python2.7/dist-packages/_pytest/main.py&quot;, li=
+ne 104, in wrap_session<br>
+File &quot;/usr/local/lib/python2.7/dist-packages/_pytest/core.py&quot;, li=
+ne 376, in __call__<br>
+File &quot;/usr/local/lib/python2.7/dist-packages/_pytest/core.py&quot;, li=
+ne 387, in _docall<br>
+File &quot;/usr/local/lib/python2.7/dist-packages/_pytest/core.py&quot;, li=
+ne 288, in execute<br>
+File &quot;/usr/local/lib/python2.7/dist-packages/_pytest/terminal.py&quot;=
+, line 332, in pytest_sessionfinish<br>
+File &quot;/usr/local/lib/python2.7/dist-packages/_pytest/core.py&quot;, li=
+ne 288, in execute<br>
+File &quot;/usr/local/lib/python2.7/dist-packages/_pytest/junitxml.py&quot;=
+, line 208, in pytest_sessionfinish<br>
+File &quot;/usr/lib/python2.7/codecs.py&quot;, line 881, in open<br>
+IOError: [Errno 24] Too many open files: &#39;/var/lib/jenkins/jobs/finmag_=
+fast_tests/workspace/test-reports/junit/TEST_pytest.xml&#39;<br>
+make: *** [test-fast] Error 1<br>
+Build step &#39;Execute shell&#39; marked build as failure<br>
+Recording test results<br>
+Email was triggered for: Failure<br>
+Email was triggered for: Still Failing<br>
+Trigger Failure was overridden by another trigger and will not send an emai=
+l.<br>
+Sending email for trigger: Still Failing<br>
+<br>
+<br>
+<br>
+-------------------------------------<br>
+finmag-team mailing list.<br>
+<br>
+</div></div></blockquote></div><br></div>
+
+--001a11c2c346960fd504f9e6d27d--
+
