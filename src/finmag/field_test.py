@@ -359,7 +359,6 @@ class TestField(object):
         # TODO
 
         # Different python functions for initialisation of 3d vector fields.
-        
         def init_1d_vector2d(x):
             return (x[0], 2.4*x[0])
 
@@ -403,7 +402,7 @@ class TestField(object):
                 elif mesh_dim == 3:
                     expression = init_3d_vector2d
                     expected_values[:, 0] = coords[:, 0]
-                    expected_values[:, 1] = 2.4*coords[:, 1]*coords[:,2]
+                    expected_values[:, 1] = 2.4*coords[:, 1]*coords[:, 2]
                     expected_probed_value = (0.55, 2.4*0.55**2)
 
             elif field.value_dim() == 3:  # 3d vector
