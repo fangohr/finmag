@@ -346,6 +346,116 @@ class TestField(object):
                 assert abs(probed_value[2] -
                            expected_probed_value[2]) < self.tol2
 
+    def test_init_vector_python_function(self):
+        # 2d and 3d vector function spaces on 1d, 2d and 3d meshes.
+        functionspaces = [self.fs_1d_vector2d,
+                          self.fs_2d_vector2d,
+                          self.fs_3d_vector2d,
+                          self.fs_1d_vector3d,
+                          self.fs_2d_vector3d,
+                          self.fs_3d_vector3d]
+
+        # Different constant expressions for 2d vector fields.
+        # TODO
+
+        # Different python functions for initialisation of 3d vector fields.
+        
+        def init_1d_vector2d(x):
+            return (x[0], 2.4*x[0])
+
+        def init_2d_vector2d(x):
+            return (x[0], 2.4*x[1])
+
+        def init_3d_vector2d(x):
+            return (x[0], 2.4*x[1]*x[2])
+
+        def init_1d_vector3d(x):
+            return (x[0], 2.4*x[0], -3*x[0])
+
+        def init_2d_vector3d(x):
+            return (x[0], 2.4*x[1], -3*x[1])
+
+        def init_3d_vector3d(x):
+            return (x[0], 2.4*x[1], -3*x[2])
+
+        # Test initialisation for all functionspaces and
+        # an appropriate expression for that functionspace.
+        for functionspace in functionspaces:
+            field = Field(functionspace)
+
+            coords = field.functionspace.mesh().coordinates()
+            n_nodes = field.functionspace.mesh().num_vertices()
+            expected_values = np.empty((n_nodes, field.value_dim()))
+            # Choose an appropriate expression and expected values
+            if field.value_dim() == 2:  # 2d vector
+                mesh_dim = field.mesh_dim()
+                # Check the mesh dimension.
+                if mesh_dim == 1:
+                    expression = init_1d_vector2d
+                    expected_values[:, 0] = coords[:, 0]
+                    expected_values[:, 1] = 2.4*coords[:, 0]
+                    expected_probed_value = (0.55, 2.4*0.55)
+                elif mesh_dim == 2:
+                    expression = init_2d_vector2d
+                    expected_values[:, 0] = coords[:, 0]
+                    expected_values[:, 1] = 2.4*coords[:, 1]
+                    expected_probed_value = (0.55, 2.4*0.55)
+                elif mesh_dim == 3:
+                    expression = init_3d_vector2d
+                    expected_values[:, 0] = coords[:, 0]
+                    expected_values[:, 1] = 2.4*coords[:, 1]*coords[:,2]
+                    expected_probed_value = (0.55, 2.4*0.55**2)
+
+            elif field.value_dim() == 3:  # 3d vector
+                mesh_dim = field.mesh_dim()
+                # Check the mesh dimension.
+                if mesh_dim == 1:
+                    expression = init_1d_vector3d
+                    expected_values[:, 0] = coords[:, 0]
+                    expected_values[:, 1] = 2.4*coords[:, 0]
+                    expected_values[:, 2] = -3*coords[:, 0]
+                    expected_probed_value = (0.55, 2.4*0.55, -3*0.55)
+                elif mesh_dim == 2:
+                    expression = init_2d_vector3d
+                    expected_values[:, 0] = coords[:, 0]
+                    expected_values[:, 1] = 2.4*coords[:, 1]
+                    expected_values[:, 2] = -3*coords[:, 1]
+                    expected_probed_value = (0.55, 2.4*0.55, -3*0.55)
+                elif mesh_dim == 3:
+                    expression = init_3d_vector3d
+                    expected_values[:, 0] = coords[:, 0]
+                    expected_values[:, 1] = 2.4*coords[:, 1]
+                    expected_values[:, 2] = -3*coords[:, 2]
+                    expected_probed_value = (0.55, 2.4*0.55, -3*0.55)
+
+            field.set(expression)
+
+            # Check values in vector (numpy array) (should be exact).
+            f_array = field.f.vector().array()
+            assert np.all(f_array[0:n_nodes] == expected_values[:, 0])
+            assert np.all(f_array[n_nodes:2*n_nodes] ==
+                          expected_values[:, 1])
+            if field.value_dim() == 3:  # only for 3d vectors
+                assert np.all(f_array[2*n_nodes:3*n_nodes] ==
+                              expected_values[:, 2])
+
+            # Check the result of coords_and_values (should be exact).
+            coords, field_values = field.coords_and_values()
+            assert np.all(field_values[:, 0] == expected_values[:, 0])
+            assert np.all(field_values[:, 1] == expected_values[:, 1])
+            if field.value_dim() == 3:  # only for 3d vectors
+                assert np.all(field_values[:, 2] == expected_values[:, 2])
+
+            # Check values that are interpolated,
+            # dolfin is fairly inaccurate here, see field_test.ipynb.
+            probing_point = field.mesh_dim() * (0.55,)
+            probed_value = field.probe_field(probing_point)
+            assert abs(probed_value[0] - expected_probed_value[0]) < self.tol2
+            assert abs(probed_value[1] - expected_probed_value[1]) < self.tol2
+            if field.value_dim() == 3:  # only for 3d vectors
+                assert abs(probed_value[2] -
+                           expected_probed_value[2]) < self.tol2
+
     def test_coords_and_values_scalar_field(self):
         mesh = self.mesh3d
         f = Field(self.fs_3d_scalar)
