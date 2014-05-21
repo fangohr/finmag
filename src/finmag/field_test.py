@@ -45,7 +45,7 @@ class TestField(object):
 
         # Set the tolerance used throughout all tests
         # mainly due to interpolation errors.
-        self.tol = 1e-12
+        self.tol = 1e-13
 
     def test_init_scalar_constant(self):
         # Scalar function spaces on 1d, 2d and 3d meshes.
