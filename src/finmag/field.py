@@ -104,17 +104,21 @@ class Field(object):
                                 'the scalar field value.'.format(type(value)))
 
         elif hasattr(value, '__call__'):
-
-            fspace_wexp = self.functionspace
+            # Wrapped dolfin expression class which incorporates the python
+            # function. For the value_shape method, functionspace is required.
+            # However, it is impossible to pass it to __init__ method
+            # (Marijan, Max 22/05/2014) since value_shape is called first.
+            # Therefore, functionspace is made "global".
+            fspace_for_wexp = self.functionspace
             class WrappedExpression(df.Expression):
                 def __init__(self, value):
-                    self.python_function = value
+                    self.fun = value
 
                 def eval(self, value, x):
-                    value[:] = self.python_function(x)
+                    value[:] = self.fun(x)
 
                 def value_shape(self):
-                    return fspace_wexp.ufl_element().value_shape()
+                    return fspace_for_wexp.ufl_element().value_shape()
     
             wrappedexpr = WrappedExpression(value)
             self.f = df.interpolate(wrappedexpr, self.functionspace)
