@@ -72,32 +72,39 @@ class Field(object):
         self.unit = unit
 
     def set(self, value):
-        # Dolfin Constant and Expression type values
-        # suitable for both scalar and vector fields.
         if isinstance(value, (df.Constant, df.Expression)):
+            # Dolfin Constant and Expression type values
+            # suitable for both scalar and vector fields.
             self.f = df.interpolate(value, self.functionspace)
 
-        # Int, float, and string values suitable only for scalar fields.
         elif isinstance(value, (basestring, int, float)):
+            # Int, float, and basestring (str and unicode) values
+            # suitable only for scalar fields.
             if isinstance(self.functionspace, df.FunctionSpace):
                 self.f = df.interpolate(df.Constant(value), self.functionspace)
             else:
-                raise ValueError('Value inappropriate for vector field.')
+                raise TypeError('{} type inappropriate for setting '
+                                'the vector field value.'.format(type(value)))
 
-        # Tuple, list, and numpy array suitable only for vector fields.
         elif isinstance(value, (tuple, list, np.ndarray)):
+            # Tuple, list, and numpy array values
+            # suitable only for vector fields.
             if isinstance(self.functionspace, df.VectorFunctionSpace):
+                # The dimensions of value and vector field value must be equal.
                 if len(value) == self.value_dim():
                     self.f = df.interpolate(df.Constant(value),
                                             self.functionspace)
                 else:
-                    raise ValueError('Function space and value dimensions '
-                                     'are different.')
+                    raise ValueError('Vector function space value dimension '
+                                     '({}) and value dimension ({}) '
+                                     'are not equal.'.format(len(value),
+                                                             self.value_dim()))
             else:
-                raise ValueError('Value inappropriate for scalar field.')
+                raise TypeError('{} type inappropriate for setting '
+                                'the scalar field value.'.format(type(value)))
 
-        # Python function suitable for both scalar and vector fields.
         elif hasattr(value, '__call__'):
+            # Python function suitable for both scalar and vector fields.
             if isinstance(self.functionspace, df.FunctionSpace):
                 class WrappedExpression(df.Expression):
                     def __init__(self, value, fs):
