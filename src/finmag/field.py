@@ -27,10 +27,10 @@
 # - Set field values (initialisation, changes at some point during the
 #   simulation) for primary fields M, H_Zeeman, current, etc.
 #
-#   - from constant
-#   - from dolfin expression
-#   - from python function
-#   - from files
+#   - from constant DONE
+#   - from dolfin expression DONE
+#   - from python function DONE
+#   - from files TODO
 #
 # - Retrieve field values
 #
@@ -60,8 +60,8 @@ class Field(object):
     def __init__(self, functionspace, value=None, name=None, unit=None):
         self.functionspace = functionspace
 
-        self.f = df.Function(self.functionspace)  # Create an empty function.
-        # Set the value of function f is specified.
+        self.f = df.Function(self.functionspace)  # Create an "empty" function.
+        # Set the function value f if specified.
         if value is not None:
             self.set(value)
 
@@ -127,7 +127,8 @@ class Field(object):
             wrapped_expression = WrappedExpression(value)
             self.f = df.interpolate(wrapped_expression, self.functionspace)
         else:
-            raise TypeError('Value type {} not known.'.format(type(value)))
+            raise TypeError('Type {} inappropriate for setting '
+                            'the field value.'.format(type(value)))
 
     def save(self, filename):
         """Dispatches to specialists"""
