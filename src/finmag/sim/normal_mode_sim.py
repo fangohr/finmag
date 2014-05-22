@@ -760,8 +760,10 @@ class NormalModeSimulation(Simulation):
 
     def plot_spatially_resolved_normal_mode(self, k, slice_z='z_max', components='xyz', region=None,
                                             figure_title=None, yshift_title=0.0,
-                                            plot_powers=True, plot_phases=True, num_phase_colorbar_ticks=3,
-                                            cmap_powers=plt.cm.jet, cmap_phases=plt.cm.hsv, vmin_powers=None,
+                                            plot_powers=True, plot_phases=True, xticks=None, yticks=None,
+                                            num_power_colorbar_ticks=None, num_phase_colorbar_ticks=5,
+                                            colorbar_fmt='%.2e',
+                                            cmap_powers='coolwarm', cmap_phases='circular4', vmin_powers=0.0,
                                             show_axis_labels=True, show_axis_frames=True,
                                             show_colorbars=True, figsize=None,
                                             outfilename=None, dpi=None, use_fenicstools=False):
@@ -802,6 +804,10 @@ class NormalModeSimulation(Simulation):
             mesh, m, w, slice_z=slice_z, components=components,
             figure_title=figure_title, yshift_title=yshift_title,
             plot_powers=plot_powers, plot_phases=plot_phases,
+            xticks=xticks, yticks=yticks,
+            num_power_colorbar_ticks=num_power_colorbar_ticks,
+            num_phase_colorbar_ticks=num_phase_colorbar_ticks,
+            colorbar_fmt=colorbar_fmt,
             cmap_powers=cmap_powers, cmap_phases=cmap_phases, vmin_powers=vmin_powers,
             show_axis_labels=show_axis_labels, show_axis_frames=show_axis_frames,
             show_colorbars=show_colorbars, figsize=figsize,
