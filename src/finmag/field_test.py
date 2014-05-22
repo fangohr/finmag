@@ -602,13 +602,13 @@ class TestField(object):
 
     def test_value_dim(self):
         functionspaces = [self.fs_1d_scalar,
-                          self.fs_2d_scalar,
-                          self.fs_3d_scalar,
                           self.fs_1d_vector2d,
-                          self.fs_2d_vector2d,
-                          self.fs_3d_vector2d,
                           self.fs_1d_vector3d,
+                          self.fs_2d_scalar,
+                          self.fs_2d_vector2d,
                           self.fs_2d_vector3d,
+                          self.fs_3d_scalar,
+                          self.fs_3d_vector2d,
                           self.fs_3d_vector3d]
 
         value_dim = []
@@ -616,5 +616,5 @@ class TestField(object):
             field = Field(functionspace)
             value_dim.append(field.value_dim())
 
-        expected_result = [1, 1, 1, 2, 2, 2, 3, 3, 3]
+        expected_result = 3*[1, 2, 3]
         assert value_dim == expected_result
