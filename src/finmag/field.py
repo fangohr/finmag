@@ -152,12 +152,12 @@ class Field(object):
         elif functionspace_family == 'Lagrange':
             # Function values are defined at nodes.
             coords = self.functionspace.mesh().coordinates()
-            f_array = self.f.vector().array()
+            num_nodes = self.functionspace.mesh().num_vertices()
+            f_array = self.f.vector().array()  # numpy array
             vtd_map = df.vertex_to_dof_map(self.functionspace)
-            num_nodes = len(coords)
 
-            # scalar field
             if isinstance(self.functionspace, df.FunctionSpace):
+                # Scalar field.
                 values = np.empty(num_nodes)
                 for i in xrange(num_nodes):
                     try:
@@ -165,8 +165,8 @@ class Field(object):
                     except IndexError:
                         raise NotImplementedError
 
-            # vector field
             elif isinstance(self.functionspace, df.VectorFunctionSpace):
+                # Vector field.
                 value_dim = self.functionspace.ufl_element().value_shape()[0]
                 values = np.empty((num_nodes, value_dim))
                 for i in xrange(num_nodes):
