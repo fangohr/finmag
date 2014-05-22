@@ -704,7 +704,7 @@ def get_phaseplot_ticks_and_labels(num_ticks):
 
 
 def plot_spatially_resolved_normal_mode(
-    mesh, m0, w, slice_z='z_max', components='xyz', label_components=False,
+    mesh, m0, w, slice_z='z_max', components='xyz', label_components=True,
     figure_title=None, yshift_title=0.0, plot_powers=True, plot_phases=True,
     label_power='Power', label_phase='Phase',xticks=None, yticks=None,
     num_power_colorbar_ticks=5, num_phase_colorbar_ticks=5,
@@ -900,7 +900,10 @@ def plot_spatially_resolved_normal_mode(
 
         for comp in components:
             ax = fig.add_subplot(num_rows, num_columns, cnt)
-            comp_title = 'm_{}'.format(comp) if label_components else ''
+            if label_components and not plot_powers:
+                comp_title = 'm_{}'.format(comp)
+            else:
+                comp_title = ''
             plot_mode_profile(ax, phases[comp], title=comp_title,
                               cticks=cticks, cticklabels=cticklabels,
                               vmin=-pi, vmax=+pi,
