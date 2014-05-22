@@ -78,7 +78,7 @@ class Field(object):
             self.f = df.interpolate(value, self.functionspace)
 
         elif isinstance(value, (basestring, int, float)):
-            # Int, float, and basestring (str and unicode) values
+            # Int, float, and basestring (str and unicode) type values
             # suitable only for scalar fields.
             if isinstance(self.functionspace, df.FunctionSpace):
                 self.f = df.interpolate(df.Constant(value), self.functionspace)
@@ -87,7 +87,7 @@ class Field(object):
                                 'the vector field value.'.format(type(value)))
 
         elif isinstance(value, (tuple, list, np.ndarray)):
-            # Tuple, list, and numpy array values
+            # Tuple, list, and numpy array type values
             # suitable only for vector fields.
             if isinstance(self.functionspace, df.VectorFunctionSpace):
                 # The dimensions of value and vector field value must be equal.
@@ -104,12 +104,15 @@ class Field(object):
                                 'the scalar field value.'.format(type(value)))
 
         elif hasattr(value, '__call__'):
+            # Python function type values
+            # suitable for both vector and scalar fields.
+
             # Wrapped dolfin expression class which incorporates the python
             # function. For the value_shape method, functionspace is required.
             # However, it is impossible to pass it to __init__ method
             # (Marijan, Max 22/05/2014) since value_shape is called first.
             # Therefore, functionspace is made "global".
-            fspace_for_wexp = self.functionspace
+            fspace_for_wexp = self.functionspace  # functionspace made global
             class WrappedExpression(df.Expression):
                 def __init__(self, value):
                     self.fun = value
@@ -120,8 +123,8 @@ class Field(object):
                 def value_shape(self):
                     return fspace_for_wexp.ufl_element().value_shape()
     
-            wrappedexpr = WrappedExpression(value)
-            self.f = df.interpolate(wrappedexpr, self.functionspace)
+            wrapped_expression = WrappedExpression(value)
+            self.f = df.interpolate(wrapped_expression, self.functionspace)
         else:
             raise TypeError('Value type {} not known.'.format(type(value)))
 
