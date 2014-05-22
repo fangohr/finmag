@@ -104,40 +104,19 @@ class Field(object):
                                 'the scalar field value.'.format(type(value)))
 
         elif hasattr(value, '__call__'):
-            # Python function suitable for both scalar and vector fields.
-            if isinstance(self.functionspace, df.FunctionSpace):
-                class WrappedExpression(df.Expression):
-                    def __init__(self, value, fs):
-                        self.python_function = value
 
-                    def eval(self, value, x):
-                        value[:] = self.python_function(x)
+            fspace_wexp = self.functionspace
+            class WrappedExpression(df.Expression):
+                def __init__(self, value):
+                    self.python_function = value
 
-                    def value_shape(self):
-                        return ()
-            elif isinstance(self.functionspace, df.VectorFunctionSpace):
-                if self.value_dim() == 2:
-                    class WrappedExpression(df.Expression):
-                        def __init__(self, value, fs):
-                            self.python_function = value
+                def eval(self, value, x):
+                    value[:] = self.python_function(x)
 
-                        def eval(self, value, x):
-                            value[:] = self.python_function(x)[:]
-
-                        def value_shape(self):
-                            return (2,)
-                elif self.value_dim() == 3:
-                    class WrappedExpression(df.Expression):
-                        def __init__(self, value, fs):
-                            self.python_function = value
-
-                        def eval(self, value, x):
-                            value[:] = self.python_function(x)[:]
-
-                        def value_shape(self):
-                            return (3,)
-
-            wrappedexpr = WrappedExpression(value, self.functionspace)
+                def value_shape(self):
+                    return fspace_wexp.ufl_element().value_shape()
+    
+            wrappedexpr = WrappedExpression(value)
             self.f = df.interpolate(wrappedexpr, self.functionspace)
         else:
             raise TypeError('Value type {} not known.'.format(type(value)))
