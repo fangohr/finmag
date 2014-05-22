@@ -703,12 +703,15 @@ def get_phaseplot_ticks_and_labels(num_ticks):
     return ticks, ticklabels
 
 
-def plot_spatially_resolved_normal_mode(mesh, m0, w, slice_z='z_max', components='xyz',
-                                        figure_title=None, yshift_title=0.0,
-                                        plot_powers=True, plot_phases=True, num_phase_colorbar_ticks=5,
-                                        cmap_powers='coolwarm', cmap_phases='circular4', vmin_powers=None,
-                                        show_axis_labels=True, show_axis_frames=True, show_colorbars=True, figsize=None,
-                                        outfilename=None, dpi=None, use_fenicstools=False):
+def plot_spatially_resolved_normal_mode(
+    mesh, m0, w, slice_z='z_max', components='xyz', label_components=True,
+    figure_title=None, yshift_title=0.0, plot_powers=True, plot_phases=True,
+    label_power='Power', label_phase='Phase',xticks=None, yticks=None,
+    num_power_colorbar_ticks=5, num_phase_colorbar_ticks=5,
+    colorbar_fmt='%.2e', cmap_powers='coolwarm', cmap_phases='circular4',
+    vmin_powers=0.0, show_axis_labels=True, show_axis_frames=True,
+    show_colorbars=True, figsize=None, outfilename=None, dpi=None,
+    use_fenicstools=False):
     """
     Plot the normal mode profile across a slice of the sample.
 
@@ -745,6 +748,11 @@ def plot_spatially_resolved_normal_mode(mesh, m0, w, slice_z='z_max', components
         'z_min' or 'z_max' (which correspond to the bottom/top layer of the mesh)
         or a numerical value. Note that the mesh must have a layer of nodes with
         this z-coordinate, otherwise the plotting routine will fail.
+
+    num_power_colorbar_ticks:
+
+        The number of tick labels for the power colorbars. Currently
+        this must be either 3 or 5 (default: 5).
 
     num_phase_colorbar_ticks:
 
@@ -823,7 +831,7 @@ def plot_spatially_resolved_normal_mode(mesh, m0, w, slice_z='z_max', components
     num_columns = len(components)
 
 
-    def plot_mode_profile(ax, a, title=None, vmin=None, vmax=None, cmap=None, ticks=None, ticklabels=None):
+    def plot_mode_profile(ax, a, title=None, vmin=None, vmax=None, cmap=None, cticks=None, cticklabels=None):
         ax.set_aspect('equal')
         vals = restrict_to_submesh(a)
         trimesh = ax.tripcolor(mesh_triang, vals, shading='gouraud', cmap=cmap)
@@ -836,10 +844,10 @@ def plot_spatially_resolved_normal_mode(mesh, m0, w, slice_z='z_max', components
             if vmax == None:
                 vmax = max(vals)
             trimesh.set_clim(vmin=vmin, vmax=vmax)
-            cbar = plt.colorbar(trimesh, cax=cax, format=FormatStrFormatter('%g'),
-                                ticks=ticks)
-            if ticklabels != None:
-                cbar.ax.set_yticklabels(ticklabels)
+            cbar = plt.colorbar(trimesh, cax=cax, format=FormatStrFormatter(colorbar_fmt),
+                                ticks=cticks)
+            if cticklabels != None:
+                cbar.ax.set_yticklabels(cticklabels)
         if not show_axis_labels:
             ax.set_xticks([])
             ax.set_yticks([])
@@ -861,22 +869,46 @@ def plot_spatially_resolved_normal_mode(mesh, m0, w, slice_z='z_max', components
               'y': np.angle(w_y),
               'z': np.angle(w_z)}
 
+    def set_xyticks(ax):
+        if xticks != None:
+            ax.set_xticks(xticks)
+        if yticks != None:
+            ax.set_yticks(yticks)
+
     cnt = 1
     if plot_powers:
+        cticklabels = None
         for comp in components:
             ax = fig.add_subplot(num_rows, num_columns, cnt)
-            plot_mode_profile(ax, powers[comp], title='m_{}'.format(comp), vmin=vmin_powers, cmap=cmap_powers)
+            if num_power_colorbar_ticks != None:
+                if vmin_powers != None:
+                    minval = vmin_powers
+                else:
+                    minval = powers[comp].min()
+                cticks = np.linspace(minval, powers[comp].max(), num_power_colorbar_ticks)
+            else:
+                cticks = None
+            comp_title = 'm_{}'.format(comp) if label_components else ''
+            plot_mode_profile(ax, powers[comp], title=comp_title,
+                              cticks=cticks, cticklabels=cticklabels,
+                              vmin=vmin_powers, cmap=cmap_powers)
+            set_xyticks(ax)
             cnt += 1
 
     if plot_phases:
-        ticks, ticklabels = get_phaseplot_ticks_and_labels(num_phase_colorbar_ticks)
+        cticks, cticklabels = get_phaseplot_ticks_and_labels(num_phase_colorbar_ticks)
 
         for comp in components:
             ax = fig.add_subplot(num_rows, num_columns, cnt)
-            plot_mode_profile(ax, phases[comp], title='m_{}'.format(comp),
-                              ticks=ticks, ticklabels=ticklabels,
+            if label_components and not plot_powers:
+                comp_title = 'm_{}'.format(comp)
+            else:
+                comp_title = ''
+            plot_mode_profile(ax, phases[comp], title=comp_title,
+                              cticks=cticks, cticklabels=cticklabels,
                               vmin=-pi, vmax=+pi,
                               cmap=cmap_phases)
+            set_xyticks(ax)
             cnt += 1
 
     bbox_extra_artists = []
@@ -890,7 +922,7 @@ def plot_spatially_resolved_normal_mode(mesh, m0, w, slice_z='z_max', components
     ax_annotate_powers = fig.axes[0]
     ax_annotate_phases= fig.axes[(num_axes // 2) if plot_powers else 0]
     if plot_powers:
-        txt_power = plt.text(-0.1, 0.5, 'Power',
+        txt_power = plt.text(-0.2, 0.5, label_power,
                              fontsize=16,
                              horizontalalignment='right',
                              verticalalignment='center',
@@ -899,10 +931,10 @@ def plot_spatially_resolved_normal_mode(mesh, m0, w, slice_z='z_max', components
                              transform=ax_annotate_powers.transAxes)
         bbox_extra_artists.append(txt_power)
     #
-    #ax_topleft.text(0, 0, 'Power', ha='left', va='center', rotation=90)
+    #ax_topleft.text(0, 0, label_power, ha='left', va='center', rotation=90)
     #
     #from matplotlib.offsetbox import AnchoredOffsetbox, TextArea
-    #box = TextArea("Power", textprops=dict(color="k", fontsize=20))
+    #box = TextArea(label_power, textprops=dict(color="k", fontsize=20))
     #anchored_box = AnchoredOffsetbox(loc=3,
     #                                 child=box, pad=0.,
     #                                 frameon=False,
@@ -914,7 +946,7 @@ def plot_spatially_resolved_normal_mode(mesh, m0, w, slice_z='z_max', components
     #bbox_extra_artists.append(anchored_box)
 
     if plot_phases:
-        txt_phase = plt.text(-0.1, 0.5, 'Phase',
+        txt_phase = plt.text(-0.2, 0.5, label_phase,
                              fontsize=16,
                              horizontalalignment='right',
                              verticalalignment='center',
