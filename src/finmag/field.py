@@ -126,25 +126,11 @@ class Field(object):
 
             wrapped_expression = WrappedExpression(value)
             self.f = df.interpolate(wrapped_expression, self.functionspace)
+
         else:
+            # The value type is inappropriate.
             raise TypeError('Type {} inappropriate for setting '
                             'the field value.'.format(type(value)))
-
-    def save(self, filename):
-        """Dispatches to specialists"""
-        raise NotImplementedError
-
-    def save_pvd(self, filename):
-        """Save to pvd file using dolfin code"""
-        raise NotImplementedError
-
-    def save_hdf5(self, filename):
-        """Save to hdf5 file using dolfin code"""
-        raise NotImplementedError
-
-    def load_hdf5(self, filename):
-        """Load field from hdf5 file using dolfin code"""
-        raise NotImplementedError
 
     def coords_and_values(self, t=None):
         """
@@ -216,3 +202,19 @@ class Field(object):
         else:
             # value_shape() returns a tuple (N,) and int is required
             return self.functionspace.ufl_element().value_shape()[0]
+
+    def save(self, filename):
+        """Dispatches to specialists"""
+        raise NotImplementedError
+
+    def save_pvd(self, filename):
+        """Save to pvd file using dolfin code"""
+        raise NotImplementedError
+
+    def save_hdf5(self, filename):
+        """Save to hdf5 file using dolfin code"""
+        raise NotImplementedError
+
+    def load_hdf5(self, filename):
+        """Load field from hdf5 file using dolfin code"""
+        raise NotImplementedError
