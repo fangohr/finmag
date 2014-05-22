@@ -122,8 +122,8 @@ class Field(object):
 
                 def value_shape(self):
                     # Return the dimension of field value as a tuple.
-                    # For instance: 
-                    # () for scalar field and 
+                    # For instance:
+                    # () for scalar field and
                     # (N,) for N dimensional vector field
                     return fspace_for_wexp.ufl_element().value_shape()
 
@@ -138,8 +138,8 @@ class Field(object):
 
     def coords_and_values(self, t=None):
         # The function values are defined at mesh nodes only for
-        # specific function space families. In finmag, the only families 
-        # of interest are Lagrange (CG) and Discontinuous Lagrange (DG). 
+        # specific function space families. In finmag, the only families
+        # of interest are Lagrange (CG) and Discontinuous Lagrange (DG).
         # Therefore, if the function space is not CG-family-type,
         # values cannot be associated to mesh nodes.
         functionspace_family = self.f.ufl_element().family()
@@ -179,11 +179,10 @@ class Field(object):
                         # this doesn't seem to be true since the resulting
                         # array of function values has the wrong size. Need to
                         # investigate.  (Max, 15.5.2014)
-                        raise NotImplementedError("TODO: How to deal with this?"
-                                                  " What does it even mean?!?")
+                        raise NotImplementedError("TODO")
 
             return coords, values
-        
+
         else:
             raise NotImplementedError('This method is implemented only for '
                                       'Lagrange (CG) and Discontinuous '
