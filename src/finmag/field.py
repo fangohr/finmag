@@ -156,30 +156,19 @@ class Field(object):
             f_array = self.f.vector().array()  # numpy array
             vtd_map = df.vertex_to_dof_map(self.functionspace)
 
-            if isinstance(self.functionspace, df.FunctionSpace):
-                # Scalar field.
-                values = np.empty(num_nodes)
-                for i in xrange(num_nodes):
-                    try:
-                        values[i] = f_array[vtd_map[i]]
-                    except IndexError:
-                        raise NotImplementedError
-
-            elif isinstance(self.functionspace, df.VectorFunctionSpace):
-                # Vector field.
-                value_dim = self.functionspace.ufl_element().value_shape()[0]
-                values = np.empty((num_nodes, value_dim))
-                for i in xrange(num_nodes):
-                    try:
-                        values[i, :] = f_array[vtd_map[value_dim*i:
-                                                       value_dim*(i+1)]]
-                    except IndexError:
-                        # This only occurs in parallel and is probably related
-                        # to ghost nodes. I thought we could ignore those, but
-                        # this doesn't seem to be true since the resulting
-                        # array of function values has the wrong size. Need to
-                        # investigate.  (Max, 15.5.2014)
-                        raise NotImplementedError("TODO")
+            value_dim = self.value_dim()  # 1 (scalar); 2, 3,... (vector)
+            values = np.empty((num_nodes, value_dim))
+            for i in xrange(num_nodes):
+                try:
+                    values[i, :] = f_array[vtd_map[value_dim*i:
+                                                   value_dim*(i+1)]]
+                except IndexError:
+                    # This only occurs in parallel and is probably related
+                    # to ghost nodes. I thought we could ignore those, but
+                    # this doesn't seem to be true since the resulting
+                    # array of function values has the wrong size. Need to
+                    # investigate.  (Max, 15.5.2014)
+                    raise NotImplementedError("TODO")
 
             return coords, values
 
