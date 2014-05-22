@@ -113,6 +113,7 @@ class Field(object):
             # (Marijan, Max 22/05/2014) since value_shape is called first.
             # Therefore, functionspace is made "global".
             fspace_for_wexp = self.functionspace  # functionspace made global
+
             class WrappedExpression(df.Expression):
                 def __init__(self, value):
                     self.fun = value
@@ -122,7 +123,7 @@ class Field(object):
 
                 def value_shape(self):
                     return fspace_for_wexp.ufl_element().value_shape()
-    
+
             wrapped_expression = WrappedExpression(value)
             self.f = df.interpolate(wrapped_expression, self.functionspace)
         else:
