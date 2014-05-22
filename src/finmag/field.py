@@ -1,4 +1,5 @@
-# Field class: a thin wrapper around the dolfin functions for unified and convent access to them.
+# Field class: a thin wrapper around the dolfin functions
+# for unified and convent access to them.
 #
 # There are two reasons this exists at all:
 #
@@ -9,8 +10,8 @@
 #
 #    - Even if things are possible, sometimes they are non-trivial to
 #      get right, especially in parallel. Therefore this class acts as
-#      a "single point of contact" to that we don't duplicate functionality
-#      all over the Finmag code base.
+#      a "single point of contact" to that we don't duplicate
+#      functionality all over the Finmag code base.
 #
 # The `Field` class represents all scalar and vector fields we need to
 # represent as dolfin functions (i.e. discretized fields on a
@@ -33,9 +34,11 @@
 #
 # - Retrieve field values
 #
-#   - derived entities such as spatially averaged energy. Can express dolfin code -> quick
+#   - derived entities such as spatially averaged energy.
+#     Can express dolfin code -> quick
 #
-#   - raw access to field at some particular point or raw data for all nodes (debugging?)
+#   - raw access to field at some particular point or raw
+#     data for all nodes (debugging?)
 #
 # - output data
 #
@@ -53,8 +56,9 @@
 import dolfin as df
 import numpy as np
 
+
 class Field(object):
-    def __init__(self, functionspace, value=None, name=None, unit=None): 
+    def __init__(self, functionspace, value=None, name=None, unit=None):
         self.functionspace = functionspace
         self.f = df.Function(self.functionspace)
         if value is not None:
@@ -85,12 +89,14 @@ class Field(object):
         elif isinstance(value, (tuple, list, np.ndarray)):
             if isinstance(self.functionspace, df.VectorFunctionSpace):
                 if len(value) == self.value_dim():
-                    self.f = df.interpolate(df.Constant(value), self.functionspace)
+                    self.f = df.interpolate(df.Constant(value),
+                                            self.functionspace)
                 else:
-                    raise ValueError('Function space and value dimensions are different.')
+                    raise ValueError('Function space and value dimensions '
+                                     'are different.')
             else:
                 raise ValueError('Value inappropriate for scalar field.')
-        
+
         # Python function suitable for both scalar and vector fields.
         elif hasattr(value, '__call__'):
             if isinstance(self.functionspace, df.FunctionSpace):
@@ -129,7 +135,7 @@ class Field(object):
             self.f = df.interpolate(wrappedexpr, self.functionspace)
         else:
             raise TypeError('Value type {} not known.'.format(type(value)))
-    
+
     def save(self, filename):
         """Dispatches to specialists"""
         raise NotImplementedError
@@ -141,7 +147,7 @@ class Field(object):
     def save_hdf5(self, filename):
         """Save to hdf5 file using dolfin code"""
         raise NotImplementedError
-        
+
     def load_hdf5(self, filename):
         """Load field from hdf5 file using dolfin code"""
         raise NotImplementedError
@@ -157,7 +163,8 @@ class Field(object):
         if self.f.ufl_element().family() != 'Lagrange':
             raise NotImplementedError(
                 "This function is only implemented for finite element families"
-                "where the degrees of freedom are not defined at the mesh vertices.")
+                "where the degrees of freedom "
+                "are not defined at the mesh vertices.")
 
         coords = self.functionspace.mesh().coordinates()
         f_array = self.f.vector().array()
@@ -179,14 +186,16 @@ class Field(object):
             values = np.empty((num_nodes, value_dim))
             for i in xrange(num_nodes):
                 try:
-                    values[i, :] = f_array[vtd_map[value_dim*i:value_dim*(i+1)]]
+                    values[i, :] = f_array[vtd_map[value_dim*i:
+                                                   value_dim*(i+1)]]
                 except IndexError:
                     # This only occurs in parallel and is probably related
                     # to ghost nodes. I thought we could ignore those, but
                     # this doesn't seem to be true since the resulting
                     # array of function values has the wrong size. Need to
                     # investigate.  (Max, 15.5.2014)
-                    raise NotImplementedError("XXX TODO: How to deal with this? What does it even mean?!?")
+                    raise NotImplementedError("TODO: How to deal with this?"
+                                              " What does it even mean?!?")
 
         return coords, values
 
