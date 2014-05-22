@@ -173,9 +173,9 @@ class Field(object):
             return coords, values
 
         else:
-            raise NotImplementedError('This method is implemented only for '
-                                      'Lagrange (CG) and Discontinuous '
-                                      'Lagrange (DG) function space families.')
+            raise NotImplementedError('This method is not implemented '
+                                      'for {} family type function '
+                                      'spaces.'.format(functionspace_family))
 
     def probe_field(self, coord):
         return self.f(coord)
@@ -185,9 +185,10 @@ class Field(object):
 
     def value_dim(self):
         if isinstance(self.functionspace, df.FunctionSpace):
+            # Scalar field.
             return 1
         else:
-            # value_shape() returns a tuple (N,) and int is required
+            # value_shape() returns a tuple (N,) and int is required.
             return self.functionspace.ufl_element().value_shape()[0]
 
     def save(self, filename):

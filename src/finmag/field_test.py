@@ -70,7 +70,7 @@ class TestField(object):
 
         assert field.unit == unit
 
-    def test_set_scalar_constant(self):
+    def test_set_scalar_field_with_constant(self):
         # Scalar function spaces on 1d, 2d and 3d meshes.
         functionspaces = [self.fs_1d_scalar,
                           self.fs_2d_scalar,
@@ -105,7 +105,7 @@ class TestField(object):
                 probed_value = field.probe_field(probing_point)
                 assert abs(probed_value - 42) < self.tol1
 
-    def test_set_scalar_expression(self):
+    def test_set_scalar_field_with_expression(self):
         # Scalar function spaces on 1d, 2d and 3d meshes.
         functionspaces = [self.fs_1d_scalar,
                           self.fs_2d_scalar,
@@ -152,7 +152,7 @@ class TestField(object):
             probed_value = field.probe_field(probing_point)
             assert abs(probed_value - expected_probed_value) < self.tol2
 
-    def test_set_scalar_python_function(self):
+    def test_set_scalar_field_with_python_function(self):
         # Scalar function spaces on 1d, 2d and 3d meshes.
         functionspaces = [self.fs_1d_scalar,
                           self.fs_2d_scalar,
@@ -202,7 +202,7 @@ class TestField(object):
             probed_value = field.probe_field(probing_point)
             assert abs(probed_value - expected_probed_value) < self.tol2
 
-    def test_set_vector_constant(self):
+    def test_set_vector_field_with_constant(self):
         # 2d and 3d vector function spaces on 1d, 2d and 3d meshes.
         functionspaces = [self.fs_1d_vector2d,
                           self.fs_2d_vector2d,
@@ -271,7 +271,7 @@ class TestField(object):
                 if field.value_dim() == 3:  # only for 3d vectors
                     assert abs(probed_value[2] - expected_value[2]) < self.tol1
 
-    def test_set_vector_expression(self):
+    def test_set_vector_field_with_expression(self):
         # 2d and 3d vector function spaces on 1d, 2d and 3d meshes.
         functionspaces = [self.fs_1d_vector2d,
                           self.fs_2d_vector2d,
@@ -368,7 +368,7 @@ class TestField(object):
                 assert abs(probed_value[2] -
                            expected_probed_value[2]) < self.tol2
 
-    def test_set_vector_python_function(self):
+    def test_set_vector_field_with_python_function(self):
         # 2d and 3d vector function spaces on 1d, 2d and 3d meshes.
         functionspaces = [self.fs_1d_vector2d,
                           self.fs_2d_vector2d,
@@ -477,65 +477,109 @@ class TestField(object):
                 assert abs(probed_value[2] -
                            expected_probed_value[2]) < self.tol2
 
-    def test_coords_and_values_scalar(self):
-        mesh = self.mesh3d
-        f = Field(self.fs_3d_scalar)
-        f.set(df.Expression('15.3*x[0] - 2.3*x[1] + 96.1*x[2]'))
-        coords, values = f.coords_and_values()
-        assert(np.allclose(coords, mesh.coordinates()))
-        assert(values,
-               15.3*coords[:, 0] - 2.3*coords[:, 1] + 96.1*coords[:, 2])
+    def test_coords_and_values_scalar_field(self):
+        # Test for scalar fields on 1d, 2d, and 3d meshes,
+        # initialised with a dolfin expression.
+        functionspaces = [self.fs_1d_scalar,
+                          self.fs_2d_scalar,
+                          self.fs_3d_scalar]
+        expression = df.Expression('1.3*x[0]')
 
-    def test_coords_and_values_vector(self):
-        functionspaces2d = [self.fs_1d_vector2d,
-                            self.fs_2d_vector2d,
-                            self.fs_3d_vector2d]
-        functionspaces3d = [self.fs_1d_vector3d,
-                            self.fs_2d_vector3d,
-                            self.fs_3d_vector3d]
-        expressions2d = [df.Expression(['x[0]', 'x[0]']),
-                         df.Expression(['x[0]', 'x[1]']),
-                         df.Expression(['x[0] + x[1]', 'x[1]'])]
-        expressions3d = [df.Expression(['x[0]', 'x[0]', 'x[0]']),
-                         df.Expression(['x[0]', 'x[1]', 'x[0]+x[1]']),
-                         df.Expression(['x[0]', '2*x[1]', 'x[2]'])]
-
-        # TODO: Expand for 2d vectors.
-        for functionspace in functionspaces3d:
-            mesh_dim = functionspace.mesh().topology().dim()
+        for functionspace in functionspaces:
             expected_coords = functionspace.mesh().coordinates()
-            if mesh_dim == 1:
-                expression = expressions3d[0]
-            elif mesh_dim == 2:
-                expression = expressions3d[1]
-            elif mesh_dim == 3:
-                expression = expressions3d[2]
+            num_nodes = functionspace.mesh().num_vertices()
+            expected_values = 1.3*expected_coords[:, 0]
 
             field = Field(functionspace, expression)
             coords, values = field.coords_and_values()
-            assert np.allclose(coords, expected_coords)
-            for i in xrange(len(coords)):
-                assert np.allclose(values[i, :],
-                                   field.probe_field(expected_coords[i]))
 
-    def test_probe_field_scalar(self):
-        functionspaces = (self.fs_1d_scalar,
-                          self.fs_2d_scalar,
-                          self.fs_3d_scalar)
+            # Type of results must be numpy array.
+            assert isinstance(coords, np.ndarray)
+            assert isinstance(values, np.ndarray)
+
+            # Check the shape of results.
+            assert values.shape == (num_nodes, field.value_dim())
+            assert coords.shape == (num_nodes, field.mesh_dim())
+
+            # Check values of results.
+            assert np.all(coords == expected_coords)
+            assert np.all(values[:, 0] == expected_values)
+
+    def test_coords_and_values_vector_field(self):
+        # Test for 2d and 3d vector fields on 1d, 2d, and 3d meshes.
+        functionspaces = [self.fs_1d_vector2d,
+                          self.fs_2d_vector2d,
+                          self.fs_3d_vector2d,
+                          self.fs_1d_vector2d,
+                          self.fs_2d_vector2d,
+                          self.fs_3d_vector2d]
+        expression2d = df.Expression(['1.3*x[0]', '2.3*x[0]'])
+        expression3d = df.Expression(['1.3*x[0]', '2.3*x[0]', '-1*x[0]'])
+
         for functionspace in functionspaces:
-            f = Field(functionspace)
-            dim = f.f.geometric_dimension()
-            probe_point = dim * (0.5,)
-            if dim == 1:
-                f.set(df.Expression('15.3*x[0]'))
-                exact_result = 15.3*0.5
-            elif dim == 2:
-                f.set(df.Expression('15.3*x[0] - 2.3*x[1]'))
-                exact_result = 15.3*0.5 - 2.3*0.5
-            else:
-                f.set(df.Expression('15.3*x[0] - 2.3*x[1] + 96.1*x[2]'))
-                exact_result = 15.3*0.5 - 2.3*0.5 + 96.1*0.5
-            assert abs(f.probe_field(probe_point) - exact_result) < 1e-13
+            # Initialise the field with an appropriate expression for
+            # the function space and compute expected results.
+            expected_coords = functionspace.mesh().coordinates()
+            num_nodes = functionspace.mesh().num_vertices()
+
+            if functionspace.ufl_element().value_shape()[0] == 2:
+                field = Field(functionspace, expression2d)
+                expected_values = (1.3*expected_coords[:, 0],
+                                   2.3*expected_coords[:, 0])
+            elif functionspace.ufl_element().value_shape()[0] == 3:
+                field = Field(functionspace, expression3d)
+                expected_values = (1.3*expected_coords[:, 0],
+                                   2.3*expected_coords[:, 0],
+                                   -1*expected_coords[:, 0])
+
+            coords, values = field.coords_and_values()
+
+            # Type of results must be numpy array.
+            assert isinstance(coords, np.ndarray)
+            assert isinstance(values, np.ndarray)
+
+            # Check the shape of results.
+            assert values.shape == (num_nodes, field.value_dim())
+            assert coords.shape == (num_nodes, field.mesh_dim())
+
+            # Check values of results.
+            assert np.all(coords == expected_coords)
+            assert np.all(values[:, 0] == expected_values[0])
+            assert np.all(values[:, 1] == expected_values[1])
+            if field.value_dim() == 3:
+                assert np.all(values[:, 0] == expected_values[2])
+
+    def test_probe_field_scalar_field(self):
+        functionspaces = [self.fs_1d_scalar,
+                          self.fs_2d_scalar,
+                          self.fs_3d_scalar]
+
+        for functionspace in functionspaces:
+            field = Field(functionspace)
+            mesh_dim = field.mesh_dim()
+
+            if mesh_dim == 1:
+                field.set(df.Expression('15.3*x[0]'))
+                exact_result_at_node = 15.3*0.5
+                exact_result_outside_node = 15.3*0.55
+            elif mesh_dim == 2:
+                field.set(df.Expression('15.3*x[0] - 2.3*x[1]'))
+                exact_result_at_node = 15.3*0.5 - 2.3*0.5
+                exact_result_outside_node = 15.3*0.55 - 2.3*0.55
+            elif mesh_dim == 3:
+                field.set(df.Expression('15.3*x[0] - 2.3*x[1] + 96.1*x[2]'))
+                exact_result_at_node = 15.3*0.5 - 2.3*0.5 + 96.1*0.5
+                exact_result_outside_node = 15.3*0.55 - 2.3*0.55 + 96.1*0.55
+
+            # Probe and check the result at the mesh node.
+            probe_point = mesh_dim * (0.5,)
+            probed_value = field.probe_field(probe_point)
+            assert abs(probed_value - exact_result_at_node) < self.tol1
+
+            # Probe and check the result outside the mesh node.
+            probe_point = mesh_dim * (0.55,)
+            probed_value = field.probe_field(probe_point)
+            assert abs(probed_value - exact_result_outside_node) < self.tol1
 
     def test_mesh_dim(self):
         functionspaces = [self.fs_1d_scalar,
