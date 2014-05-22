@@ -137,44 +137,57 @@ class Field(object):
                             'the field value.'.format(type(value)))
 
     def coords_and_values(self, t=None):
-        if self.f.ufl_element().family() != 'Lagrange':
-            raise NotImplementedError(
-                "This function is only implemented for finite element families"
-                "where the degrees of freedom "
-                "are not defined at the mesh vertices.")
+        # The function values are defined at mesh nodes only for
+        # specific function space families. In finmag, the only families 
+        # of interest are Lagrange (CG) and Discontinuous Lagrange (DG). 
+        # Therefore, if the function space is not CG-family-type,
+        # values cannot be associated to mesh nodes.
+        functionspace_family = self.f.ufl_element().family()
+        if functionspace_family == 'Discontinuous Lagrange':
+            # Function values are not defined at nodes.
+            raise TypeError('The function space is Discontinuous Lagrange '
+                            '(DG) family type, for which the function values '
+                            'are not defined at mesh nodes.')
 
-        coords = self.functionspace.mesh().coordinates()
-        f_array = self.f.vector().array()
-        vtd_map = df.vertex_to_dof_map(self.functionspace)
-        num_nodes = len(coords)
+        elif functionspace_family == 'Lagrange':
+            # Function values are defined at nodes.
+            coords = self.functionspace.mesh().coordinates()
+            f_array = self.f.vector().array()
+            vtd_map = df.vertex_to_dof_map(self.functionspace)
+            num_nodes = len(coords)
 
-        # scalar field
-        if isinstance(self.functionspace, df.FunctionSpace):
-            values = np.empty(num_nodes)
-            for i in xrange(num_nodes):
-                try:
-                    values[i] = f_array[vtd_map[i]]
-                except IndexError:
-                    raise NotImplementedError
+            # scalar field
+            if isinstance(self.functionspace, df.FunctionSpace):
+                values = np.empty(num_nodes)
+                for i in xrange(num_nodes):
+                    try:
+                        values[i] = f_array[vtd_map[i]]
+                    except IndexError:
+                        raise NotImplementedError
 
-        # vector field
-        elif isinstance(self.functionspace, df.VectorFunctionSpace):
-            value_dim = self.functionspace.ufl_element().value_shape()[0]
-            values = np.empty((num_nodes, value_dim))
-            for i in xrange(num_nodes):
-                try:
-                    values[i, :] = f_array[vtd_map[value_dim*i:
-                                                   value_dim*(i+1)]]
-                except IndexError:
-                    # This only occurs in parallel and is probably related
-                    # to ghost nodes. I thought we could ignore those, but
-                    # this doesn't seem to be true since the resulting
-                    # array of function values has the wrong size. Need to
-                    # investigate.  (Max, 15.5.2014)
-                    raise NotImplementedError("TODO: How to deal with this?"
-                                              " What does it even mean?!?")
+            # vector field
+            elif isinstance(self.functionspace, df.VectorFunctionSpace):
+                value_dim = self.functionspace.ufl_element().value_shape()[0]
+                values = np.empty((num_nodes, value_dim))
+                for i in xrange(num_nodes):
+                    try:
+                        values[i, :] = f_array[vtd_map[value_dim*i:
+                                                       value_dim*(i+1)]]
+                    except IndexError:
+                        # This only occurs in parallel and is probably related
+                        # to ghost nodes. I thought we could ignore those, but
+                        # this doesn't seem to be true since the resulting
+                        # array of function values has the wrong size. Need to
+                        # investigate.  (Max, 15.5.2014)
+                        raise NotImplementedError("TODO: How to deal with this?"
+                                                  " What does it even mean?!?")
 
-        return coords, values
+            return coords, values
+        
+        else:
+            raise NotImplementedError('This method is implemented only for '
+                                      'Lagrange (CG) and Discontinuous '
+                                      'Lagrange (DG) function space families.')
 
     def probe_field(self, coord):
         return self.f(coord)
