@@ -52,7 +52,6 @@
 #
 #    return nodal_volume
 
-
 import dolfin as df
 import numpy as np
 
@@ -60,20 +59,20 @@ import numpy as np
 class Field(object):
     def __init__(self, functionspace, value=None, name=None, unit=None):
         self.functionspace = functionspace
-        self.f = df.Function(self.functionspace)
+
+        self.f = df.Function(self.functionspace)  # Create an empty function.
+        # Set the value of function f is specified.
         if value is not None:
             self.set(value)
+
         self.name = name
         if name is not None:
-            self.f.rename(name, name)
+            self.f.rename(name, name)  # Rename both function's name and label.
+
         self.unit = unit
 
     def set(self, value):
-        """
-        Set the field to value.
-        Value can be constant, dolfin expression, python function, file.
-        """
-        # Dolfin constant and expression values
+        # Dolfin Constant and Expression type values
         # suitable for both scalar and vector fields.
         if isinstance(value, (df.Constant, df.Expression)):
             self.f = df.interpolate(value, self.functionspace)

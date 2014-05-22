@@ -48,7 +48,22 @@ class TestField(object):
         self.tol1 = 1e-13  # at mesh node
         self.tol2 = 1e-2  # outside mesh node
 
-    def test_init_scalar_constant(self):
+    def test_init(self):
+        functionspace = self.fs_3d_vector3d
+        value = None
+        name = 'function'
+        unit = 'no_unit'
+
+        field = Field(functionspace, value, name, unit)
+
+        assert field.functionspace == functionspace
+        assert isinstance(field.f, df.Function)
+        assert field.name == name
+        assert field.f.name() == name
+        assert field.f.label() == name
+        assert field.unit == unit
+
+    def test_set_scalar_constant(self):
         # Scalar function spaces on 1d, 2d and 3d meshes.
         functionspaces = [self.fs_1d_scalar,
                           self.fs_2d_scalar,
@@ -83,7 +98,7 @@ class TestField(object):
                 probed_value = field.probe_field(probing_point)
                 assert abs(probed_value - 42) < self.tol1
 
-    def test_init_scalar_expression(self):
+    def test_set_scalar_expression(self):
         # Scalar function spaces on 1d, 2d and 3d meshes.
         functionspaces = [self.fs_1d_scalar,
                           self.fs_2d_scalar,
@@ -130,7 +145,7 @@ class TestField(object):
             probed_value = field.probe_field(probing_point)
             assert abs(probed_value - expected_probed_value) < self.tol2
 
-    def test_init_scalar_python_function(self):
+    def test_set_scalar_python_function(self):
         # Scalar function spaces on 1d, 2d and 3d meshes.
         functionspaces = [self.fs_1d_scalar,
                           self.fs_2d_scalar,
@@ -180,7 +195,7 @@ class TestField(object):
             probed_value = field.probe_field(probing_point)
             assert abs(probed_value - expected_probed_value) < self.tol2
 
-    def test_init_vector_constant(self):
+    def test_set_vector_constant(self):
         # 2d and 3d vector function spaces on 1d, 2d and 3d meshes.
         functionspaces = [self.fs_1d_vector2d,
                           self.fs_2d_vector2d,
@@ -249,7 +264,7 @@ class TestField(object):
                 if field.value_dim() == 3:  # only for 3d vectors
                     assert abs(probed_value[2] - expected_value[2]) < self.tol1
 
-    def test_init_vector_expression(self):
+    def test_set_vector_expression(self):
         # 2d and 3d vector function spaces on 1d, 2d and 3d meshes.
         functionspaces = [self.fs_1d_vector2d,
                           self.fs_2d_vector2d,
@@ -346,7 +361,7 @@ class TestField(object):
                 assert abs(probed_value[2] -
                            expected_probed_value[2]) < self.tol2
 
-    def test_init_vector_python_function(self):
+    def test_set_vector_python_function(self):
         # 2d and 3d vector function spaces on 1d, 2d and 3d meshes.
         functionspaces = [self.fs_1d_vector2d,
                           self.fs_2d_vector2d,
