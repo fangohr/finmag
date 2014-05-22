@@ -45,22 +45,29 @@ class TestField(object):
 
         # Set the tolerance used throughout all tests
         # mainly due to interpolation errors.
-        self.tol1 = 1e-13  # at mesh node
-        self.tol2 = 1e-2  # outside mesh node
+        self.tol1 = 1e-13  # at the mesh node
+        self.tol2 = 1e-2  # outside the mesh node
 
     def test_init(self):
+        # Initialisation arguments.
         functionspace = self.fs_3d_vector3d
-        value = None
-        name = 'function'
-        unit = 'no_unit'
+        value = None  # Not specified, an "empty" function is created.
+        name = 'function_test'
+        unit = 'unit_test'
 
         field = Field(functionspace, value, name, unit)
 
         assert field.functionspace == functionspace
+
+        # Assert that created field.f is an "empty" function.
         assert isinstance(field.f, df.Function)
+        assert np.all(field.f.vector().array() == 0)
+
+        # Assert that both function's name and label are changed.
         assert field.name == name
         assert field.f.name() == name
         assert field.f.label() == name
+
         assert field.unit == unit
 
     def test_set_scalar_constant(self):

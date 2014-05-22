@@ -45,12 +45,11 @@
 #   - for visualisation (use dolfin tools)
 #   - for data storage (use dolfin tools)
 #
+# Maybe to be added later:
 #
-# Maybe to be added later
+# def nodal_volume(self):
 #
-#def nodal_volume(self):
-#
-#    return nodal_volume
+#     return nodal_volume
 
 import dolfin as df
 import numpy as np
@@ -60,7 +59,7 @@ class Field(object):
     def __init__(self, functionspace, value=None, name=None, unit=None):
         self.functionspace = functionspace
 
-        self.f = df.Function(self.functionspace)  # Create an "empty" function.
+        self.f = df.Function(self.functionspace)  # Create a zero-function.
         # Set the function value f if specified.
         if value is not None:
             self.set(value)
@@ -118,28 +117,26 @@ class Field(object):
                 def __init__(self, value):
                     self.fun = value
 
-                def eval(self, value, x):
-                    value[:] = self.fun(x)
+                def eval(self, eval_result, x):
+                    eval_result[:] = self.fun(x)
 
                 def value_shape(self):
+                    # Return the dimension of field value as a tuple.
+                    # For instance: 
+                    # () for scalar field and 
+                    # (N,) for N dimensional vector field
                     return fspace_for_wexp.ufl_element().value_shape()
 
             wrapped_expression = WrappedExpression(value)
             self.f = df.interpolate(wrapped_expression, self.functionspace)
 
         else:
-            # The value type is inappropriate.
+            # The value type cannot be used for neither scalar
+            # nor vector field initialsiation.
             raise TypeError('Type {} inappropriate for setting '
                             'the field value.'.format(type(value)))
 
     def coords_and_values(self, t=None):
-        """
-        Return a list of mesh vertex coordinates and associated field values.
-        In parallel, this only returns the coordinates and values owned by
-        the current process.
-
-        This function should only be used for debugging!
-        """
         if self.f.ufl_element().family() != 'Lagrange':
             raise NotImplementedError(
                 "This function is only implemented for finite element families"
@@ -180,23 +177,12 @@ class Field(object):
         return coords, values
 
     def probe_field(self, coord):
-        """
-        Probe and return the value of a field at point with coordinates coord.
-        Coord can be a tuple, list or numpy array.
-        """
         return self.f(coord)
 
     def mesh_dim(self):
-        """
-        Returns the dimension of the mesh (1, 2, or 3)
-        """
         return self.f.geometric_dimension()
 
     def value_dim(self):
-        """
-        Returns the dimension of field value.
-        For scalar field 1, for vector fields 1, 2, 3, ...
-        """
         if isinstance(self.functionspace, df.FunctionSpace):
             return 1
         else:
