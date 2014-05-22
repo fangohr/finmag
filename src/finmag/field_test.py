@@ -145,7 +145,7 @@ class TestField(object):
 
             # Check the field value at all nodes (should be exact).
             field_values = field.coords_and_values()[1]  # ignore coordinates
-            assert np.all(field_values == expected_values)
+            assert np.all(field_values[:, 0] == expected_values)
 
             # Check the probed field value (not exact - interpolation).
             probing_point = field.mesh_dim() * (0.55,)
@@ -195,7 +195,7 @@ class TestField(object):
 
             # Check the field value at all nodes (should be exact).
             field_values = field.coords_and_values()[1]  # ignore coordinates
-            assert np.all(field_values == expected_values)
+            assert np.all(field_values[:, 0] == expected_values)
 
             # Check the probed field value (not exact - interpolation).
             probing_point = field.mesh_dim() * (0.55,)
