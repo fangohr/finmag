@@ -483,6 +483,14 @@ class TestField(object):
             assert np.all(coords == expected_coords)
             assert np.all(values[:, 0] == expected_values)
 
+    def test_normalise(self):
+        functionspace = self.fs_3d_vector3d
+        field = Field(functionspace, (1, 2, 3))
+        field.normalise()
+        coords, values = field.coords_and_values()
+        norm = values[:, 0]**2 + values[:, 1]**2 + values[:,2]**2
+        assert np.all(abs(norm - 1) < 1e-5)
+
     def test_coords_and_values_vector_field(self):
         # Different expressions for 2d and 3d vector fields.
         expression2d = df.Expression(['1.3*x[0]', '2.3*x[0]'])
