@@ -397,7 +397,7 @@ def crossprod(v, w):
 
 def fnormalise(arr):
     """
-    Returns a normalised copy of the vectors in arr.
+    Returns a normalised copy of vectors in arr.
 
     Expects arr to be a numpy.ndarray in the form that dolfin
     provides: [x0, ..., xn, y0, ..., yn, z0, ..., zn].

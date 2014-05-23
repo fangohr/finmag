@@ -1,5 +1,5 @@
 # Field class: a thin wrapper around the dolfin functions
-# for unified and convent access to them.
+# for unified and convenient access to them.
 #
 # There are two reasons this exists at all:
 #
@@ -136,6 +136,17 @@ class Field(object):
             raise TypeError('{} inappropriate for setting the field '
                             'value.'.format(type(value)))
 
+    def normalise(self):
+        if isinstance(self.functionspace, df.VectorFunctionSpace):
+            pass
+        else:
+            # Scalar field normalisation is not required. Normalisation
+            # can be implemented so that the whole field is divided by
+            # its maximum value. This might cause some problems if the 
+            # code needs to be run in parallel.
+            raise NotImplementedError('Scalar field values normalisation '
+                                      'is not implemented.')
+        
     def coords_and_values(self, t=None):
         # The function values are defined at mesh nodes only for
         # specific function space families. In finmag, the only families
