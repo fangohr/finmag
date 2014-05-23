@@ -99,8 +99,8 @@ class Field(object):
                                      'are not equal.'.format(len(value),
                                                              self.value_dim()))
             else:
-                raise TypeError('{} inappropriate for setting the scalar field '
-                                ' value.'.format(type(value)))
+                raise TypeError('{} inappropriate for setting the scalar '
+                                'field  value.'.format(type(value)))
 
         elif hasattr(value, '__call__'):
             # Python function type values
