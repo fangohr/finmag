@@ -138,7 +138,15 @@ class Field(object):
 
     def normalise(self):
         if isinstance(self.functionspace, df.VectorFunctionSpace):
-            pass
+            # Vector field is normalised so that 
+            # the vector value norm is 1 at all mesh nodes.
+            norm = 0
+            for i in xrange(self.value_dim()):
+                norm += self.f[i]**2
+            norm = norm**0.5
+            
+            self.f = df.project(self.f/norm, self.functionspace)
+            
         else:
             # Scalar field normalisation is not required. Normalisation
             # can be implemented so that the whole field is divided by
