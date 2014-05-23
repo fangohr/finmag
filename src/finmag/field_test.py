@@ -72,16 +72,19 @@ class TestField(object):
         # Initialisation arguments.
         functionspace = self.fs_3d_vector3d
         value = None  # Not specified, a zero-function is created.
+        normalised = True
         name = 'name_test'
         unit = 'unit_test'
 
-        field = Field(functionspace, value, name, unit)
+        field = Field(functionspace, value, normalised, name, unit)
 
         assert field.functionspace == functionspace
 
         # Assert that created field.f is an "empty" function.
         assert isinstance(field.f, df.Function)
         assert np.all(field.f.vector().array() == 0)
+
+        assert field.normalised is True
 
         # Assert that both function's name and label are changed.
         assert field.name == name
@@ -484,11 +487,20 @@ class TestField(object):
             assert np.all(values[:, 0] == expected_values)
 
     def test_normalise(self):
+        # 3d vector field
         functionspace = self.fs_3d_vector3d
         field = Field(functionspace, (1, 2, 3))
         field.normalise()
         coords, values = field.coords_and_values()
         norm = values[:, 0]**2 + values[:, 1]**2 + values[:,2]**2
+        assert np.all(abs(norm - 1) < 1e-5)
+
+        # 2d vector field
+        functionspace = self.fs_2d_vector2d
+        field = Field(functionspace, (1, 3))
+        field.normalise()
+        coords, values = field.coords_and_values()
+        norm = values[:, 0]**2 + values[:, 1.01]**2
         assert np.all(abs(norm - 1) < 1e-5)
 
     def test_coords_and_values_vector_field(self):

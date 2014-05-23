@@ -56,11 +56,13 @@ import numpy as np
 
 
 class Field(object):
-    def __init__(self, functionspace, value=None, name=None, unit=None):
+    def __init__(self, functionspace, value=None, normalised=False,
+                 name=None, unit=None):
         self.functionspace = functionspace
 
         self.f = df.Function(self.functionspace)  # Create a zero-function.
         # Set the function value f if specified.
+        self.normalised = normalised
         if value is not None:
             self.set(value)
 
@@ -135,6 +137,10 @@ class Field(object):
             # nor vector field initialsiation.
             raise TypeError('{} inappropriate for setting the field '
                             'value.'.format(type(value)))
+
+        # Normalise the function if required.
+        if self.normalised:
+            self.normalise()
 
     def normalise(self):
         if isinstance(self.functionspace, df.VectorFunctionSpace):
