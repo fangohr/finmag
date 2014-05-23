@@ -1,7 +1,7 @@
 Anisotropy finmag.energies.anisotropy
 Exchange finmag.energies.exchange
 EnergyBase finmag.energies.energy_base
-LLG finmag.sim.llg
+LLG finmag.physics.llg
 DMI finmag.energies.dmi
 FKDemag finmag.energies.demag.fk_demag
 GCRSolver finmag.energies.demag.solver_gcr
