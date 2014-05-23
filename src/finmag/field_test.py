@@ -72,7 +72,7 @@ class TestField(object):
         # Initialisation arguments.
         functionspace = self.fs_3d_vector3d
         value = None  # Not specified, a zero-function is created.
-        name = 'function_test'
+        name = 'name_test'
         unit = 'unit_test'
 
         field = Field(functionspace, value, name, unit)
@@ -91,18 +91,25 @@ class TestField(object):
         assert field.unit == unit
 
     def test_set_scalar_field_with_constant(self):
-        # Test setting the scalar field value for different scalar 
+        # Test setting the scalar field value for different scalar
         # function spaces and expressions of constant 42.
 
         # Different expressions for constant value 42.
-        values = [df.Constant("42"),
+        values = [df.Constant(42),
+                  df.Constant(42.0),
+                  df.Constant("42"),
                   df.Constant("42.0"),
-                  df.Constant(42),
-                  "42",
                   42,
-                  42.0]
-        
+                  42.0,
+                  "42",
+                  "42.0",
+                  u"42",
+                  u"42.0"]
+
         expected_value = 42
+
+        # x, y, or z coordinate value for probing the field.
+        probing_coord = (0.55,)  # Not at the mesh node.
 
         for functionspace in self.scalar_functionspaces:
             for value in values:
@@ -119,7 +126,7 @@ class TestField(object):
                 # dolfin is fairly inaccurate here, see field_test.ipynb.
                 # Probing is not at mesh node, but self.tol1 is used since
                 # the field is constant and big discrepancy is not expected.
-                probing_point = field.mesh_dim() * (0.55,)
+                probing_point = field.mesh_dim() * probing_coord
                 probed_value = field.probe_field(probing_point)
                 assert abs(probed_value - expected_value) < self.tol1
 
