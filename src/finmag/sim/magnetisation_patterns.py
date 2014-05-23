@@ -18,7 +18,7 @@ def initialise_helix_2D(sim, period, axis=np.array([1, 0])):
     helical state possible.
 
     *Assumptions*: It is assumed that the mesh is a 2D mesh. If it is not, the
-                   skyrmion will be projected in higher dimensions.
+                   helix will be projected in higher dimensions.
 
     *Arguments*:
 
@@ -56,7 +56,8 @@ def initialise_helix_2D(sim, period, axis=np.array([1, 0])):
     def m_helical(pos):
 
         # Convert to rotated co-ordinate system.
-        pos_rot_matrix = R * np.transpose(np.matrix(pos))
+        pos_xy = np.array([pos[0],pos[1]])
+        pos_rot_matrix = R * np.transpose(np.matrix(pos_xy))
         pos_rot = np.array((pos_rot_matrix.item(0), pos_rot_matrix.item(1)))
 
         # Find magnetisation components.
