@@ -1,0 +1,23 @@
+
+* Are we ready to move to Python 3 <2014-05-23 Fri>
+
+Hi Hans,
+
+My biggest concern are other libraries, such as scipy, py4petsc, etc, which may not be ready for python 3.
+
+That was my first thought as well, so I googled it and was surprised to see that numpy and scipy do support Python 3:
+
+   http://www.scipy.org/scipylib/faq.html#do-numpy-and-scipy-support-python-3-x
+
+I don't know about petsc4py, but a quick look at the source seems to suggest that it's essentially written in Cython, so maybe that's not a concern either? The PyPI page [1] also has the categories "Python 2" and "Python 3", so perhaps it would just work with Python 3, too.
+
+Regarding our code base, the link that Jan Blechta sent around may be helpful:
+
+   http://ondrejcertik.blogspot.cz/2013/08/how-to-support-both-python-2-and-3.html
+
+(Although I haven't read it yet.)
+
+Cheers,
+Max
+
+
