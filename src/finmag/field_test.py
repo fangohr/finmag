@@ -43,6 +43,26 @@ class TestField(object):
                                                      family="CG",
                                                      degree=1, dim=3)
 
+        # Create lists of meshes and functionspaces
+        # to avoid the repetition of code in tests.
+        self.meshes = [self.mesh1d,
+                       self.mesh2d,
+                       self.mesh3d]
+
+        self.scalar_functionspaces = [self.fs_1d_scalar,
+                                      self.fs_2d_scalar,
+                                      self.fs_3d_scalar]
+
+        self.vector_functionspaces = [self.fs_1d_vector2d,
+                                      self.fs_2d_vector2d,
+                                      self.fs_3d_vector2d,
+                                      self.fs_1d_vector3d,
+                                      self.fs_2d_vector3d,
+                                      self.fs_3d_vector3d]
+
+        self.all_functionspaces = self.scalar_functionspaces + \
+            self.vector_functionspaces
+
         # Set the tolerance used throughout all tests
         # mainly due to interpolation errors.
         self.tol1 = 1e-13  # at the mesh node
@@ -51,7 +71,7 @@ class TestField(object):
     def test_init(self):
         # Initialisation arguments.
         functionspace = self.fs_3d_vector3d
-        value = None  # Not specified, an "empty" function is created.
+        value = None  # Not specified, a zero-function is created.
         name = 'function_test'
         unit = 'unit_test'
 
@@ -71,31 +91,29 @@ class TestField(object):
         assert field.unit == unit
 
     def test_set_scalar_field_with_constant(self):
-        # Scalar function spaces on 1d, 2d and 3d meshes.
-        functionspaces = [self.fs_1d_scalar,
-                          self.fs_2d_scalar,
-                          self.fs_3d_scalar]
+        # Test setting the scalar field value for different scalar 
+        # function spaces and expressions of constant 42.
 
-        # Scalar field different expressions for constant value 42.
+        # Different expressions for constant value 42.
         values = [df.Constant("42"),
                   df.Constant("42.0"),
                   df.Constant(42),
                   "42",
                   42,
                   42.0]
+        
+        expected_value = 42
 
-        # Test initialisation for all functionspaces and
-        # all different expressions of constant 42.
-        for functionspace in functionspaces:
+        for functionspace in self.scalar_functionspaces:
             for value in values:
                 field = Field(functionspace, value)
 
-                # Check values in vector (numpy array) (should be exact).
-                assert np.all(field.f.vector().array() == 42)
+                # Check vector (numpy array) values (should be exact).
+                assert np.all(field.f.vector().array() == expected_value)
 
                 # Check the result of coords_and_values (should be exact).
                 coords, field_values = field.coords_and_values()
-                assert np.all(field_values == 42)
+                assert np.all(field_values == expected_value)
 
                 # Check values that are interpolated,
                 # dolfin is fairly inaccurate here, see field_test.ipynb.
@@ -103,7 +121,7 @@ class TestField(object):
                 # the field is constant and big discrepancy is not expected.
                 probing_point = field.mesh_dim() * (0.55,)
                 probed_value = field.probe_field(probing_point)
-                assert abs(probed_value - 42) < self.tol1
+                assert abs(probed_value - expected_value) < self.tol1
 
     def test_set_scalar_field_with_expression(self):
         # Scalar function spaces on 1d, 2d and 3d meshes.
