@@ -82,8 +82,8 @@ class Field(object):
             if isinstance(self.functionspace, df.FunctionSpace):
                 self.f = df.interpolate(df.Constant(value), self.functionspace)
             else:
-                raise TypeError('{} type inappropriate for setting '
-                                'the vector field value.'.format(type(value)))
+                raise TypeError('{} inappropriate for setting the vector '
+                                'field value.'.format(type(value)))
 
         elif isinstance(value, (tuple, list, np.ndarray)):
             # Tuple, list, and numpy array type values
@@ -99,8 +99,8 @@ class Field(object):
                                      'are not equal.'.format(len(value),
                                                              self.value_dim()))
             else:
-                raise TypeError('{} type inappropriate for setting '
-                                'the scalar field value.'.format(type(value)))
+                raise TypeError('{} inappropriate for setting the scalar field '
+                                ' value.'.format(type(value)))
 
         elif hasattr(value, '__call__'):
             # Python function type values
@@ -133,8 +133,8 @@ class Field(object):
         else:
             # The value type cannot be used for neither scalar
             # nor vector field initialsiation.
-            raise TypeError('Type {} inappropriate for setting '
-                            'the field value.'.format(type(value)))
+            raise TypeError('{} inappropriate for setting the field '
+                            'value.'.format(type(value)))
 
     def coords_and_values(self, t=None):
         # The function values are defined at mesh nodes only for
@@ -167,7 +167,7 @@ class Field(object):
                     # to ghost nodes. I thought we could ignore those, but
                     # this doesn't seem to be true since the resulting
                     # array of function values has the wrong size. Need to
-                    # investigate.  (Max, 15.5.2014)
+                    # investigate.  (Max, 15/05/2014)
                     raise NotImplementedError("TODO")
 
             return coords, values
