@@ -136,6 +136,7 @@ class TestField(object):
                        df.Expression("11.2*x[0] - 3.1*x[1]"),
                        df.Expression("11.2*x[0] - 3.1*x[1] + 2.7*x[2]")]
 
+        # x, y, or z coordinate value for probing the field.
         probing_coord = 0.55  # Not at the mesh node.
 
         # Test setting the scalar field value for
@@ -180,6 +181,7 @@ class TestField(object):
 
         python_functions = [python_fun1d, python_fun2d, python_fun3d]
 
+        # x, y, or z coordinate value for probing the field.
         probing_coord = 0.55  # Not at the mesh node.
 
         # Test setting the scalar field value for
@@ -212,72 +214,68 @@ class TestField(object):
             assert abs(probed_value - expected_probed_value) < self.tol2
 
     def test_set_vector_field_with_constant(self):
-        # 2d and 3d vector function spaces on 1d, 2d and 3d meshes.
-        functionspaces = [self.fs_1d_vector2d,
-                          self.fs_2d_vector2d,
-                          self.fs_3d_vector2d,
-                          self.fs_1d_vector3d,
-                          self.fs_2d_vector3d,
-                          self.fs_3d_vector3d]
-
         # Different constant expressions for 2d vector fields.
-        constants2d = [df.Constant((0.1, -2.3)),
-                       df.Constant([0.1, -2.3]),
-                       df.Constant(np.array([0.1, -2.3])),
-                       (0.1, -2.3),
-                       [0.1, -2.3],
-                       np.array([0.1, -2.3])]
+        constants2d = [df.Constant((0.15, -2.3)),
+                       df.Constant([0.15, -2.3]),
+                       df.Constant(np.array([0.15, -2.3])),
+                       (0.15, -2.3),
+                       [0.15, -2.3],
+                       np.array([0.15, -2.3])]
 
         # Different constant expressions for 3d vector fields.
-        constants3d = [df.Constant((0.15, 4.3, -6.41)),
-                       df.Constant([0.15, 4.3, -6.41]),
-                       df.Constant(np.array([0.15, 4.3, -6.41])),
-                       (0.15, 4.3, -6.41),
-                       [0.15, 4.3, -6.41],
-                       np.array([0.15, 4.3, -6.41])]
+        constants3d = [df.Constant((0.15, -2.3, -6.41)),
+                       df.Constant([0.15, -2.3, -6.41]),
+                       df.Constant(np.array([0.15, -2.3, -6.41])),
+                       (0.15, -2.3, -6.41),
+                       [0.15, -2.3, -6.41],
+                       np.array([0.15, -2.3, -6.41])]
 
-        # Test initialisation for all functionspaces and
-        # a whole set of constants appropriate for that functionspace.
-        for functionspace in functionspaces:
-            field = Field(functionspace)
+        # x, y, or z coordinate value for probing the field.
+        probing_coord = 0.55  # Not at the mesh node.
 
-            # Choose an appropriate set of constants and expected value
-            if field.value_dim() == 2:  # 2d vector
+        expected_value = (0.15, -2.3, -6.41)
+
+        # Test setting the vector field value for
+        # different vector function spaces and constants.
+        for functionspace in self.vector_functionspaces:
+            # Choose an appropriate set of constants
+            if functionspace.ufl_element().value_shape()[0] == 2:
+                # 2d vector
                 constants = constants2d
-                expected_value = (0.1, -2.3)
-            elif field.value_dim() == 3:  # 3d vector
+            elif functionspace.ufl_element().value_shape()[0] == 3:
+                # 3d vector
                 constants = constants3d
-                expected_value = (0.15, 4.3, -6.41)
 
-            n_nodes = functionspace.mesh().num_vertices()
             for constant in constants:
-                field.set(constant)
+                field = Field(functionspace, constant)
 
-                # Check values in vector (numpy array) (should be exact).
+                # Check vector (numpy array) values (should be exact).
                 f_array = field.f.vector().array()
-                assert np.all(f_array[0:n_nodes] == expected_value[0])
-                assert np.all(f_array[n_nodes:2*n_nodes] ==
-                              expected_value[1])
-                if field.value_dim() == 3:  # only for 3d vectors
-                    assert np.all(f_array[2*n_nodes:3*n_nodes] ==
-                                  expected_value[2])
+                f_array_split = np.split(f_array, field.value_dim())
+                assert np.all(f_array_split[0] == expected_value[0])
+                assert np.all(f_array_split[1] == expected_value[1])
+                if field.value_dim() == 3:
+                    # only for 3d vectors
+                    assert np.all(f_array_split[2] == expected_value[2])
 
                 # Check the result of coords_and_values (should be exact).
                 coords, field_values = field.coords_and_values()
                 assert np.all(field_values[:, 0] == expected_value[0])
                 assert np.all(field_values[:, 1] == expected_value[1])
-                if field.value_dim() == 3:  # only for 3d vectors
+                if field.value_dim() == 3:
+                    # only for 3d vectors
                     assert np.all(field_values[:, 2] == expected_value[2])
 
                 # Check values that are interpolated,
                 # dolfin is fairly inaccurate here, see field_test.ipynb.
                 # Probing is not at mesh node, but self.tol1 is used since
                 # the field is constant and big discrepancy is not expected.
-                probing_point = field.mesh_dim() * (0.55,)
+                probing_point = field.mesh_dim() * (probing_coord,)
                 probed_value = field.probe_field(probing_point)
                 assert abs(probed_value[0] - expected_value[0]) < self.tol1
                 assert abs(probed_value[1] - expected_value[1]) < self.tol1
-                if field.value_dim() == 3:  # only for 3d vectors
+                if field.value_dim() == 3:
+                    # only for 3d vectors
                     assert abs(probed_value[2] - expected_value[2]) < self.tol1
 
     def test_set_vector_field_with_expression(self):
