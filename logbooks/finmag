@@ -41208,3 +41208,514 @@ finmag-team mailing list.<br>
 
 --001a11c2c346960fd504f9e6d27d--
 
+From fetchmail  Sat May 24 22:42:24 2014
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.26)
+	for <marvin@localhost> (single-drop); Sat, 24 May 2014 22:42:24 +0100 (BST)
+Received: by 10.217.69.130 with SMTP id z2csp55551wex;
+        Sat, 24 May 2014 13:46:45 -0700 (PDT)
+X-Received: by 10.112.89.234 with SMTP id br10mr3157095lbb.60.1400964405571;
+        Sat, 24 May 2014 13:46:45 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id oa5si14562046lbb.16.2014.05.24.13.46.44
+        for <multiple recipients>;
+        Sat, 24 May 2014 13:46:45 -0700 (PDT)
+Received-SPF: none (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=neutral (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s4OKkhHI012002;
+	Sat, 24 May 2014 21:46:43 +0100
+Received: from UOS-MSG00036-VS.soton.ac.uk (uos-msg00036-vs.soton.ac.uk [152.78.119.38])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id q4NLkh0832328083gb ret-id none; Sat, 24 May 2014 21:46:43 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.38) with Microsoft SMTP Server (TLS) id 14.3.181.6; Sat, 24 May
+ 2014 21:46:42 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id s4OKkgXO011209;	Sat, 24 May 2014 21:46:42 +0100
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ s4OKkgg5011206	for <finmag-team@lists.soton.ac.uk>; Sat, 24 May 2014 21:46:42
+ +0100
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s4OKkcQN007416;
+	Sat, 24 May 2014 21:46:38 +0100
+Received: from SRV00045.soton.ac.uk (srv00045.soton.ac.uk [152.78.119.41])	by
+ mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk [152.78.128.16])
+ envelope-from <H.FANGOHR@soton.ac.uk> with ESMTP	id q4NLkc1506833299UY ret-id
+ none; Sat, 24 May 2014 21:46:39 +0100
+Received: from SRV00046.soton.ac.uk ([169.254.9.100]) by SRV00045.soton.ac.uk
+ ([152.78.119.41]) with mapi id 14.03.0181.006; Sat, 24 May 2014 21:46:38
+ +0100
+From: "Fangohr H." <H.FANGOHR@soton.ac.uk>
+To: Maximilian Albert <maximilian.albert@gmail.com>
+CC: "Fangohr H." <h.fangohr@soton.ac.uk>,
+        "<finmag-team@lists.soton.ac.uk>"
+	<finmag-team@lists.soton.ac.uk>
+Subject: Re: [finmag-team] [build] finmag_fast_tests - Build # 890 - Still
+ Failing!
+Thread-Topic: [finmag-team] [build] finmag_fast_tests - Build # 890 - Still
+ Failing!
+Thread-Index: AQHPd5FCm0tpAhT9u0CIYU65gxNN1A==
+Date: Sat, 24 May 2014 20:46:38 +0000
+Message-ID: <5D854A16-3EFC-4A32-A73F-5251F3A83217@soton.ac.uk>
+References: <681348495.1.1400662353321.JavaMail.jenkins@aleph0.kk.soton.ac.uk>
+ <FFA11EE3-3B05-477C-A8D0-5EA3FBC0354E@soton.ac.uk>
+ <CAGA_dmj+Sfnmb2h2L9HBfGETqhwXEJXXvH9zNiLzS_-U9ytytA@mail.gmail.com>
+In-Reply-To: <CAGA_dmj+Sfnmb2h2L9HBfGETqhwXEJXXvH9zNiLzS_-U9ytytA@mail.gmail.com>
+Accept-Language: en-GB, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [152.78.54.126]
+Content-Type: text/plain; charset="Windows-1252"
+Content-ID: <6EA6E11E96AA0448B86C9FD1B71C6EC8@exchange.soton.ac.uk>
+MIME-Version: 1.0
+Received-SPF: Pass (UOS-MSG00036-VS.soton.ac.uk: domain of
+ owner-finmag-team@lists.soton.ac.uk designates 152.78.128.58 as permitted
+ sender) receiver=UOS-MSG00036-VS.soton.ac.uk; client-ip=152.78.128.58;
+ helo=maillists.sucs.soton.ac.uk;
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.41; helo=<SRV00045.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.41; envelope-from=<H.FANGOHR@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from quoted-printable to 8bit by maillists.sucs.soton.ac.uk id s4OKkgg5011207
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=q4NLkh083232808300; tid=q4NLkh0832328083gb; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.38; helo=<UOS-MSG00036-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.38; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: s4OKkhHI012002
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi all,
+
+so it seems at least the fast tests (http://aleph0.clients.soton.ac.uk:8080=
+/job/finmag_fast_tests/) and the documentation are building corretly again.=
+ Has somebody increase the number of allowed open files to fix this?
+
+If so, it would be good to document this in https://bitbucket.org/fangohr/f=
+inmag-jenkins
+
+If we haven=92t got the other jenkins tests compile by finmag friday (6 Jun=
+e), I suggest we start the day (and may well use the whole day=85) to get t=
+hat sorted.
+
+Best wishes,
+
+Hans
+
+
+
+On 21 May 2014, at 10:15, Maximilian Albert <maximilian.albert@gmail.com<ma=
+ilto:maximilian.albert@gmail.com>> wrote:
+
+Hi Hans,
+
+thanks for looking into this. I saw this as well last night but was a bit p=
+uzzled as to what could be causing this. Why would Jenkins suddenly complai=
+n about too many open files when it worked fine before? Have we suddenly cr=
+ossed a critical number of tests? On the other hand, why would it try to op=
+en them all at once? Odd...
+
+Cheers,
+Max
+
+
+2014-05-21 10:01 GMT+01:00 Fangohr H. <H.FANGOHR@soton.ac.uk<mailto:H.FANGO=
+HR@soton.ac.uk>>:
+=85 so the reboot didn=92t help.
+
+Hans
+
+Begin forwarded message:
+
+From: Jenkins CI <h.fangohr@soton.ac.uk<mailto:h.fangohr@soton.ac.uk><mailt=
+o:h.fangohr@soton.ac.uk<mailto:h.fangohr@soton.ac.uk>>>
+Subject: [build] finmag_fast_tests - Build # 890 - Still Failing!
+Date: 21 May 2014 09:52:32 BST
+To: <h.fangohr@soton.ac.uk<mailto:h.fangohr@soton.ac.uk><mailto:h.fangohr@s=
+oton.ac.uk<mailto:h.fangohr@soton.ac.uk>>>, <maximilian.albert@soton.ac.uk<=
+mailto:maximilian.albert@soton.ac.uk><mailto:maximilian.albert@soton.ac.uk<=
+mailto:maximilian.albert@soton.ac.uk>>>, <h.fangohr@soton.ac.uk<mailto:h.fa=
+ngohr@soton.ac.uk><mailto:h.fangohr@soton.ac.uk<mailto:h.fangohr@soton.ac.u=
+k>>>
+Reply-To: <h.fangohr@soton.ac.uk<mailto:h.fangohr@soton.ac.uk><mailto:h.fan=
+gohr@soton.ac.uk<mailto:h.fangohr@soton.ac.uk>>>, <maximilian.albert@soton.=
+ac.uk<mailto:maximilian.albert@soton.ac.uk><mailto:maximilian.albert@soton.=
+ac.uk<mailto:maximilian.albert@soton.ac.uk>>>
+
+[http://aleph0.kk.soton.ac.uk:8080/static/e59dfe28/images/32x32/red.gif]   =
+     BUILD FAILURE
+Build URL       http://aleph0.kk.soton.ac.uk:8080/job/finmag_fast_tests/890=
+/
+Project:        finmag_fast_tests
+Date of build:  Wed, 21 May 2014 09:44:17 +0100
+Build duration: 8 min 15 sec
+
+CHANGES
+No Changes
+
+CONSOLE OUTPUT
+[...truncated 4621 lines...]
+src/finmag/util/helpers_test.py:233: test_pointing_upwards PASSED
+src/finmag/util/helpers_test.py:241: test_pointing_downwards PASSED
+src/finmag/util/helpers_test.py:250: test_mesh_functions_allclose FAILED
+src/finmag/util/helpers_test.py:281: test_piecewise_on_subdomains PASSED
+src/finmag/util/helpers_test.py:296: test_vector_field_from_dolfin_function=
+ FAILED
+src/finmag/util/helpers_test.py:342: test_probe FAILED
+src/finmag/util/helpers_test.py:395: test_get_hg_revision_info ERROR
+src/finmag/util/helpers_test.py:412: test_binary_tarball_name ERROR
+src/finmag/util/helpers_test.py:418: test_plot_ndt_columns_and_plot_dynamic=
+s ERROR
+src/finmag/util/helpers_test.py:436: test_crossprod FAILED
+src/finmag/util/helpers_test.py:460: test_apply_vertexwise FAILED
+src/finmag/util/helpers_test.py:479: test_TemporaryDirectory FAILED
+src/finmag/util/helpers_test.py:495: test_contextmanager_ignored ERROR
+src/finmag/util/helpers_test.py:513: test_run_cmd_with_timeout FAILED
+src/finmag/util/helpers_test.py:528: test_jpg2avi SKIPPED
+src/finmag/util/helpers_test.py:548: test_pvd2avi SKIPPED
+src/finmag/util/helpers_test.py:568: test_set_color_scheme PASSED
+src/finmag/util/helpers_test.py:582: test_restriction ERROR
+src/finmag/util/helpers_test.py:652: test_verify_function_space_type FAILED
+src/finmag/util/mesh_templates_test.py:23: test_mesh_templates ERROR
+src/finmag/util/mesh_templates_test.py:30: test_sphere ERROR
+src/finmag/util/mesh_templates_test.py:45: test_elliptical_nanodisk ERROR
+src/finmag/util/mesh_templates_test.py:66: test_nanodisk ERROR
+src/finmag/util/mesh_templates_test.py:85: test_combining_meshes ERROR
+src/finmag/util/mesh_templates_test.py:113: test_maxh_with_mesh_primitive E=
+RROR
+src/finmag/util/mesh_templates_test.py:137: test_mesh_specific_maxh ERROR
+src/finmag/util/mesh_templates_test.py:151: test_different_mesh_discretisat=
+ions_for_combined_meshes ERROR
+src/finmag/util/mesh_templates_test.py:175: test_box ERROR
+src/finmag/util/meshes_test.py:6: test_mesh_size FAILED
+src/finmag/util/meshes_test.py:23: test_embed3d PASSED
+src/finmag/util/pbc_test.py:5: test_pbc1d_2dmesh FAILED
+src/finmag/util/pbc_test.py:21: test_pbc2d_2dmesh FAILED
+src/finmag/util/pbc_test.py:38: test_pbc2d_3dmesh FAILED
+src/finmag/util/pbc_test.py:57: test_pbc2d_3dmesh2 FAILED
+src/finmag/util/test_dmi_from_helix.py:14: test_dmi_from_helix_solution FAI=
+LED
+src/finmag/util/test_dmi_from_helix.py:25: test_helix_strong_field FAILED
+src/finmag/util/test_dmi_from_helix.py:44: test_zero_helix PASSED
+src/finmag/util/visualization_test.py:15: test_render_paraview_scene SKIPPE=
+D
+src/finmag/util/visualization_test.py:70: test_flight_path_rotation P0: [ 0=
+.724 1.569 2.413]
+r1: [-1.724 1.431 -0.413]
+r2: [-1.382 -1.301 1.26 ]
+P0: [-1. 3. 2.]
+r1: [ 0. 0. 0.]
+r2: [ 0. 0. -0.]
+PASSED
+src/finmag/util/visualization_test.py:96: test_flight_path_straight_line PA=
+SSED
+src/finmag/util/visualization_test.py:115: test_plot_dolfin_function SKIPPE=
+D
+src/finmag/util/vtk_saver_test.py:22: TestVTKSaver.test_constructor ERROR
+src/finmag/util/vtk_saver_test.py:30: TestVTKSaver.test_file_extension_is_c=
+orrect ERROR
+src/finmag/util/vtk_saver_test.py:40: TestVTKSaver.test_existing_files_are_=
+deleted_if_requested ERROR
+src/finmag/util/vtk_saver_test.py:64: TestVTKSaver.test_save_field ERROR
+src/finmag/util/vtk_saver_test.py:86: TestVTKSaver.test_saving_to_file_with=
+_different_name ERROR
+src/finmag/util/ode/tests/test_sundials_ode.py:16: OdeSundialsTests.test_er=
+rors Error in CVODE:CVode (CV_NO_MALLOC): Attempt to call before CVodeInit.
+PASSED
+src/finmag/util/ode/tests/test_sundials_ode.py:79: OdeSundialsTests.test_jt=
+imes_ex PASSED
+src/finmag/util/ode/tests/test_sundials_ode.py:37: OdeSundialsTests.test_si=
+mple_1d PASSED
+src/finmag/util/ode/tests/test_sundials_ode.py:45: OdeSundialsTests.test_si=
+mple_1d_diag PASSED
+src/finmag/util/ode/tests/test_sundials_ode.py:26: OdeSundialsTests.test_si=
+mple_1d_scipy PASSED
+src/finmag/util/ode/tests/test_sundials_ode.py:70: OdeSundialsTests.test_st=
+iff_sp_gmr PASSED
+src/finmag/util/ode/tests/test_sundials_stiff_ode.py:19: SundialsStiffOdeTe=
+sts.test_robertson_scipy Integration of the Robertson ODE until t=3D1e8 wit=
+h scipy VODE, BDF method: 1268 steps
+PASSED
+src/finmag/util/ode/tests/test_sundials_stiff_ode.py:30: SundialsStiffOdeTe=
+sts.test_robertson_scipy_transposed DVODE-- At current T (=3DR1), MXSTEP (=
+=3DI1) steps
+taken on this call before reaching TOUT
+In above message, I1 =3D 5000
+In above message, R1 =3D 0.8000369437165D+00
+/usr/local/lib/python2.7/dist-packages/scipy/integrate/_ode.py:696: UserWar=
+ning: vode: Excess work done on this call. (Perhaps wrong MF.)
+PASSED
+src/finmag/util/ode/tests/test_sundials_stiff_ode.py:41: SundialsStiffOdeTe=
+sts.test_robertson_sundials Integration of the Robertson ODE until t=3D1e8 =
+with CVODE, BDF method: 789 steps
+PASSED
+src/finmag/util/ode/tests/test_sundials_stiff_ode.py:54: SundialsStiffOdeTe=
+sts.test_robertson_sundials_transposed PASSED
+src/finmag/util/oommf/test_mesh.py:22: TestIterCoordsInt.test_xyz_ordering =
+PASSED
+src/finmag/util/oommf/test_mesh.py:6: TestIterCoordsInt.test_zyx_ordering P=
+ASSED
+src/finmag/util/oommf/test_mesh.py:39: TestIterCoords.test_zyx_ordering PAS=
+SED
+src/finmag/util/tests/test_arraytools.py:6: test_flat PASSED
+src/finmag/util/tests/test_arraytools.py:20: test_unflat PASSED
+src/finmag/util/tests/test_arraytools.py:40: test_magnitude PASSED
+src/finmag/util/tests/test_arraytools.py:44: test_dolfinvectordatalayout FA=
+ILEDTraceback (most recent call last):
+File "/usr/local/bin/py.test", line 9, in
+File "/usr/local/lib/python2.7/dist-packages/_pytest/config.py", line 19, i=
+n main
+File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 376, in=
+ __call__
+File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 387, in=
+ _docall
+File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 288, in=
+ execute
+File "/usr/local/lib/python2.7/dist-packages/_pytest/main.py", line 111, in=
+ pytest_cmdline_main
+File "/usr/local/lib/python2.7/dist-packages/_pytest/main.py", line 104, in=
+ wrap_session
+File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 376, in=
+ __call__
+File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 387, in=
+ _docall
+File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 288, in=
+ execute
+File "/usr/local/lib/python2.7/dist-packages/_pytest/terminal.py", line 332=
+, in pytest_sessionfinish
+File "/usr/local/lib/python2.7/dist-packages/_pytest/core.py", line 288, in=
+ execute
+File "/usr/local/lib/python2.7/dist-packages/_pytest/junitxml.py", line 208=
+, in pytest_sessionfinish
+File "/usr/lib/python2.7/codecs.py", line 881, in open
+IOError: [Errno 24] Too many open files: '/var/lib/jenkins/jobs/finmag_fast=
+_tests/workspace/test-reports/junit/TEST_pytest.xml'
+make: *** [test-fast] Error 1
+Build step 'Execute shell' marked build as failure
+Recording test results
+Email was triggered for: Failure
+Email was triggered for: Still Failing
+Trigger Failure was overridden by another trigger and will not send an emai=
+l.
+Sending email for trigger: Still Failing
+
+
+
+-------------------------------------
+finmag-team mailing list.
+
+
+
+-------------------------------------
+finmag-team mailing list.
+
+From fetchmail  Sat May 24 23:42:25 2014
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.26)
+	for <marvin@localhost> (single-drop); Sat, 24 May 2014 23:42:25 +0100 (BST)
+Received: by 10.217.69.130 with SMTP id z2csp640wex;
+        Sat, 24 May 2014 15:13:33 -0700 (PDT)
+X-Received: by 10.112.132.233 with SMTP id ox9mr3157828lbb.35.1400969613515;
+        Sat, 24 May 2014 15:13:33 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk. [152.78.128.16])
+        by mx.google.com with ESMTP id m3si14851100lba.41.2014.05.24.15.13.32
+        for <multiple recipients>;
+        Sat, 24 May 2014 15:13:33 -0700 (PDT)
+Received-SPF: none (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) client-ip=152.78.128.16;
+Authentication-Results: mx.google.com;
+       spf=neutral (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk;
+       dkim=neutral (body hash did not verify) header.i=@;
+       dmarc=fail (p=NONE dis=NONE) header.from=gmail.com
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s4OMDPu8010727;
+	Sat, 24 May 2014 23:13:25 +0100
+Received: from UOS-MSG00036-VS.soton.ac.uk (uos-msg00036-vs.soton.ac.uk [152.78.119.38])
+	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk [152.78.128.16]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id q4NNDP1506834110vu ret-id none; Sat, 24 May 2014 23:13:25 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.38) with Microsoft SMTP Server (TLS) id 14.3.181.6; Sat, 24 May
+ 2014 23:13:24 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id s4OMDOxo014124;	Sat, 24 May 2014 23:13:24 +0100
+Received: from mailgate4.iss.soton.ac.uk (mailgate4.iss.soton.ac.uk
+ [152.78.128.105])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ s4OMDOIZ014121	for <finmag-team@lists.soton.ac.uk>; Sat, 24 May 2014 23:13:24
+ +0100
+Received: from mailgate4.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate4.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s4OMDGx2020721	for
+ <finmag-team@lists.soton.ac.uk>; Sat, 24 May 2014 23:13:16 +0100
+Received: from mail-qc0-f173.google.com (mail-qc0-f173.google.com
+ [209.85.216.173])	by mailgate4.iss.soton.ac.uk (mailgate4.iss.soton.ac.uk
+ [152.78.128.105]) envelope-from <maximilian.albert@gmail.com> with ESMTP	id
+ q4NNDG0438044319MM ret-id none; Sat, 24 May 2014 23:13:17 +0100
+Received: by mail-qc0-f173.google.com with SMTP id i8so10242038qcq.32
+        for <finmag-team@lists.soton.ac.uk>; Sat, 24 May 2014 15:13:16 -0700
+ (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=AbzTV/tux3Z3rpEhBYG4IYF4opCt+9poWbXoLlsjwjg=;
+        b=bpFEp57Cqhryl4vG+Ch+k6idBUnGQnBMqg5x/R9qGck0tkbUIwKtCfS24H6VRLSlwc
+         3/a993Ekh3iMy0lBGe+1oV2gDnMWPBAekvx74Vy1a7zeF0Qpvk9Q1iLe9v2vQ3wRzKYx
+         NJrqnKrXucJBLfAv3W1wQ/e2s46HSyePL7fz8sYfKuI/ig2HuhOMucDxX1tp3fs0K78m
+         DSN7OAcC2DV3DIGK4L9P4tRjFKGbMhh/v3sK0bYNbVkH/kNT38JGyLwl8RFawAFhOdh5
+         ctAgamNAwWebhEy/TBu+RG52yGZ57YzRrPSXEqKy7ObtVI6Rwq7aU3ZeJ6ObgdMKqWra
+         YHKg==
+MIME-Version: 1.0
+X-Received: by 10.140.98.116 with SMTP id n107mr18136982qge.93.1400969596002;
+ Sat, 24 May 2014 15:13:16 -0700 (PDT)
+Received: by 10.96.122.41 with HTTP; Sat, 24 May 2014 15:13:15 -0700 (PDT)
+In-Reply-To: <5D854A16-3EFC-4A32-A73F-5251F3A83217@soton.ac.uk>
+References: <681348495.1.1400662353321.JavaMail.jenkins@aleph0.kk.soton.ac.uk>
+	<FFA11EE3-3B05-477C-A8D0-5EA3FBC0354E@soton.ac.uk>
+	<CAGA_dmj+Sfnmb2h2L9HBfGETqhwXEJXXvH9zNiLzS_-U9ytytA@mail.gmail.com>
+	<5D854A16-3EFC-4A32-A73F-5251F3A83217@soton.ac.uk>
+Date: Sat, 24 May 2014 23:13:15 +0100
+Message-ID: <CAGA_dmimFtNstgHJcjZvg6UHu-vOfTiLyDxB-e6PE2uAWe=E-w@mail.gmail.com>
+Subject: Re: [finmag-team] [build] finmag_fast_tests - Build # 890 - Still Failing!
+From: Maximilian Albert <maximilian.albert@gmail.com>
+To: "Fangohr H." <h.fangohr@soton.ac.uk>
+CC: "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+Content-Type: multipart/alternative; boundary="001a113a92381c684904fa2ca746"
+Received-SPF: Pass (UOS-MSG00036-VS.soton.ac.uk: domain of
+ owner-finmag-team@lists.soton.ac.uk designates 152.78.128.58 as permitted
+ sender) receiver=UOS-MSG00036-VS.soton.ac.uk; client-ip=152.78.128.58;
+ helo=maillists.sucs.soton.ac.uk;
+Received-SPF: None; receiver=mailgate4.iss.soton.ac.uk; client-ip=209.85.216.173; helo=<mail-qc0-f173.google.com>
+Received-SPF: Pass; receiver=mailgate4.iss.soton.ac.uk; client-ip=209.85.216.173; envelope-from=<maximilian.albert@gmail.com>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=q4NNDP150683411000; tid=q4NNDP1506834110vu; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.38; helo=<UOS-MSG00036-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.38; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: s4OMDPu8010727
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+--001a113a92381c684904fa2ca746
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+Hi Hans,
+
+so it seems at least the fast tests (
+> http://aleph0.clients.soton.ac.uk:8080/job/finmag_fast_tests/) and the
+> documentation are building corretly again. Has somebody increase the numb=
+er
+> of allowed open files to fix this?
+>
+
+No. I don't actually know what the reason for the "too many open files"
+error was, but it turned out to be caused by a recent commit which I did in
+relation to better colormaps for eigenmode plots. I computed these
+colormaps on the fly using some new modules, and they seemed to cause a
+conflict with the Finmag logger, so I moved this code into a separate
+module which doesn't get imported by Finmag and am now only importing
+precomputed numerical data for the colormaps. This solved that conflict and
+also made the "too many open files" error go away.
+
+The documentation build failed because the llg module had been moved to the
+new physics module but this hadn't been changed in one of the doc files.
+
+> If we haven=E2=80=99t got the other jenkins tests compile by finmag frida=
+y (6
+June), I suggest we start the day (and may well use the whole day=E2=80=A6)=
+ to get
+that sorted.
+
+I think there is just one remaining failing test. It's the one which I
+mentioned during the last group meeting. It compares some time evolution
+with the same system computed by Nmag, and it is slightly above the
+tolerance. We could just increase that tolerance, but because it is one
+specific commit that introduced this failure and it worked before it makes
+me a bit uneasy to do such a "dirty" fix. It would at least be good to
+understand what the reason for the change in behaviour is. However, the
+commit is relatively big so I haven't had time to look at it in detail yet.
+If anybody else wants to do it that might be helpful (or we could do it on
+the Finmag Friday). This is the commit:
+
+
+https://bitbucket.org/fangohr/finmag/commits/65f6ee7fcea21c9e1a6d3ba4f13682=
+f8539d4abb
+
+It has quite a lot of changed files in it, but it can probably be broken
+down into more incremental changes so it might be a nice exercise. The
+failing test is
+"src.finmag.tests.nmag.spinwaves.test_spinwaves.test_compare_averages":
+
+
+http://aleph0.clients.soton.ac.uk:8080/job/finmag_slow_tests/587/testReport=
+/src.finmag.tests.nmag.spinwaves/test_spinwaves/test_compare_averages/
+
+I think once this test passes, all the builds (except for the IPython
+notebook tests) should go through again.
+
+Cheers,
+Max
+
+--001a113a92381c684904fa2ca746
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr">Hi Hans,<br><br><div class=3D"gmail_extra"><div class=3D"g=
+mail_quote"><blockquote class=3D"gmail_quote" style=3D"margin:0px 0px 0px 0=
+.8ex;border-left:1px solid rgb(204,204,204);padding-left:1ex">
+so it seems at least the fast tests (<a href=3D"http://aleph0.clients.soton=
+.ac.uk:8080/job/finmag_fast_tests/" target=3D"_blank">http://aleph0.clients=
+.soton.ac.uk:8080/job/finmag_fast_tests/</a>) and the documentation are bui=
+lding corretly again. Has somebody increase the number of allowed open file=
+s to fix this?<br>
+</blockquote><div><br></div><div>No. I don&#39;t actually know what the rea=
+son for the &quot;too many open files&quot; error was, but it turned out to=
+ be caused by a recent commit which I did in relation to better colormaps f=
+or eigenmode plots. I computed these colormaps on the fly using some new mo=
+dules, and they seemed to cause a conflict with the Finmag logger, so I mov=
+ed this code into a separate module which doesn&#39;t get imported by Finma=
+g and am now only importing precomputed numerical data for the colormaps. T=
+his solved that conflict and also made the &quot;too many open files&quot; =
+error go away.<br>
+</div><div><br></div><div>The documentation build failed because the llg mo=
+dule had been moved to the new physics module but this hadn&#39;t been chan=
+ged in one of the doc files.<br></div><div>=C2=A0<br>&gt; If we haven=E2=80=
+=99t got the other jenkins tests compile by finmag friday (6 June), I sugge=
+st we start the day (and may well use the whole day=E2=80=A6) to get that s=
+orted.<br>
+<br></div><div>I think there is just one remaining failing test. It&#39;s t=
+he one which I mentioned during the last group meeting. It compares some ti=
+me evolution with the same system computed by Nmag, and it is slightly abov=
+e the tolerance. We could just increase that tolerance, but because it is o=
+ne specific commit that introduced this failure and it worked before it mak=
+es me a bit uneasy to do such a &quot;dirty&quot; fix. It would at least be=
+ good to understand what the reason for the change in behaviour is. However=
+, the commit is relatively big so I haven&#39;t had time to look at it in d=
+etail yet. If anybody else wants to do it that might be helpful (or we coul=
+d do it on the Finmag Friday). This is the commit:<br>
+<br>=C2=A0=C2=A0 <a href=3D"https://bitbucket.org/fangohr/finmag/commits/65=
+f6ee7fcea21c9e1a6d3ba4f13682f8539d4abb">https://bitbucket.org/fangohr/finma=
+g/commits/65f6ee7fcea21c9e1a6d3ba4f13682f8539d4abb</a><br><br></div><div>It=
+ has quite a lot of changed files in it, but it can probably be broken down=
+ into more incremental changes so it might be a nice exercise. The failing =
+test <font>is &quot;src.finmag.tests.nmag.spinwaves.test_spinwaves.test_com=
+pare_averages&quot;:<br>
+<br>=C2=A0=C2=A0 <a href=3D"http://aleph0.clients.soton.ac.uk:8080/job/finm=
+ag_slow_tests/587/testReport/src.finmag.tests.nmag.spinwaves/test_spinwaves=
+/test_compare_averages/">http://aleph0.clients.soton.ac.uk:8080/job/finmag_=
+slow_tests/587/testReport/src.finmag.tests.nmag.spinwaves/test_spinwaves/te=
+st_compare_averages/</a><br>
+</font></div><div><br></div><div>I think once this test passes, all the bui=
+lds (except for the IPython notebook tests) should go through again.<br></d=
+iv><div><br></div><div>Cheers,<br>Max<br></div></div></div></div>
+
+--001a113a92381c684904fa2ca746--
+
