@@ -40,6 +40,7 @@ class LLG(object):
         self.S1 = S1
         self.S3 = S3
         self.mesh = S1.mesh()
+        self.DG = df.FunctionSpace(self.mesh, "DG", 0)
 
         self.set_default_values()
         self.do_precession = do_precession
@@ -57,6 +58,7 @@ class LLG(object):
         self.gamma = consts.gamma
         self.c = 1e11  # 1/s numerical scaling correction \
         #               0.1e12 1/s is the value used by default in nmag 0.2
+        self._Ms_dg = df.Function(self.DG)
         self.Ms = 8.6e5  # A/m saturation magnetisation
         self._m = df.Function(self.S3)
         # Arguments to _m.rename() below: (new_short_name, new_long_name).
@@ -109,7 +111,9 @@ class LLG(object):
     @Ms.setter
     def Ms(self, value):
         # XXX TODO: Rename _Ms_dg to _Ms because it is not a DG0 function!!!
-        self._Ms_dg = helpers.scalar_valued_function(value, self.S1)
+        # We need a DG function here, so we should use scalar_valued_dg_function
+        dg_fun = helpers.scalar_valued_dg_function(value, self.DG)
+        self._Ms_dg.vector().set_local(dg_fun.vector().get_local())
         #FIXME: change back to DG space.
         #self._Ms_dg=helpers.scalar_valued_function(value, self.S1)
         self._Ms_dg.rename('Ms', 'Saturation magnetisation')
