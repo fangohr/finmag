@@ -193,3 +193,13 @@ def test_skyrmion_number():
 
     assert(abs(skX - skX_integral) < 1e-10)
     assert(abs(skX - 4) < 3e-1)  # There are four skyrmions here...
+
+    # Repeat for a 3D mesh
+
+    mesh3D = df.BoxMesh(-100, -100, -5, 100, 100, 5, 50, 50, 5)
+    sim3D = Simulation(mesh3D, 1e5, unit_length=1e-9)
+    skCentres3D = np.array([[0, 0, 0], [-50, 70, 0], [40, -80, 0], [70, 70, 0]])
+    sim3D.initialise_skyrmions(skyrmionRadius=30, centres=skCentres3D)
+
+    skX_3D = sim3D.skyrmion_number()
+    assert(abs(skX_3D - 4) < 4e-1)  # There are four skyrmions here...

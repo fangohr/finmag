@@ -233,11 +233,19 @@ def skyrmion_number(self):
     """
     This function returns the skyrmion number calculated from the spin
     texture in this simulation instance.
+
+    If the sim object is 3D, the skyrmion number is calculated from the
+    magnetisation of the top surface (since the skyrmion number formula 
+    is only defined for 2D).
     """
 
-    integrand = -0.25 / np.pi * df.dot(self.llg._m,
-                                       df.cross(df.Dx(self.llg._m, 0),
-                                                df.Dx(self.llg._m, 1)))
+    if self.mesh.topology().dim() == 3:
+        m = get_function_on_top_surface(mesh=self.mesh, dfFunction=self.llg._m)
+    else:
+        m = self.llg._m
+
+    integrand = -0.25 / np.pi * df.dot(m, df.cross(df.Dx(m, 0),
+                                                df.Dx(m, 1)))
 
     # Integrate over the mesh.
     return df.assemble(integrand * df.dx)
@@ -270,3 +278,46 @@ def skyrmion_number_density_function(self):
     skDensityFunc = df.Function(S1)
     skDensityFunc.vector()[:] = skDensity
     return skDensityFunc
+
+
+def get_function_on_top_surface(mesh, dfFunction):
+    """
+    This function takes a 3D "mesh" and a dolfin function, "dfFunction" defined 
+    on that mesh.
+
+    It returns the dolfin function defined on the top surface of the mesh.
+
+    It can be used for extracting the magnetisation/a field from the top
+    suface of a simulation object.
+
+    """
+ 
+    # extract the boundary mesh
+    boundary_mesh = df.BoundaryMesh(mesh, 'exterior')
+
+    # extract the top surface as a sub-mesh of the boundary mesh.
+    # This is done by creating a MeshFunction which marks all triangles
+    # in the boundary mesh that belong to top surface, and then extract the
+    # SubMesh though that MeshFunction (Thanks Max for funding this out).
+    mesh_coords = mesh.coordinates()
+    z_max = max(mesh_coords[:, 2])
+
+    class Top(df.SubDomain):
+        def inside(self, pt, on_boundary):
+            x, y, z = pt
+            return (z >= z_max - df.DOLFIN_EPS) and (z <= z_max + df.DOLFIN_EPS)
+    
+    sub_domains = df.MeshFunction('size_t', boundary_mesh, 2)
+    sub_domains.set_all(0)
+    
+    top = Top()
+    top.mark(sub_domains, 1)
+    
+    top_layer = df.SubMesh(boundary_mesh, sub_domains, 1)
+
+    # create a new function space defined on the top surface and and interpolate
+    # the original field onto this new function space.
+    V_toplayer  = df.VectorFunctionSpace(top_layer, 'CG', 1, dim=3)
+    dfFunction_top = df.interpolate(dfFunction, V_toplayer)
+    
+    return dfFunction_top
