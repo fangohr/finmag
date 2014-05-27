@@ -275,13 +275,14 @@ class LLB(object):
 
     def run_until(self,time):
 
-        exit_at = derivedevents.StopIntegrationTimeEvent(time)
-        self.scheduler._add(exit_at)
+        # Define function that stops integration and add it to scheduler. The
+        # at_end parameter is required because t can be zero, which is
+        # considered as False for comparison purposes in scheduler.add.
+        def StopIntegration():
+            return False
+        self.scheduler.add(StopIntegration, at=time, at_end=True)
 
         self.run_with_scheduler()
-
-        self.scheduler._remove(exit_at)
-
 
     def run_until_sundial(self, t):
         if t <= self.t:

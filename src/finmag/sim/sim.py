@@ -575,13 +575,20 @@ class Simulation(object):
         log.info("Simulation will run until t = {:.2g} s.".format(t))
         self.t_max = t
 
-        self.scheduler.run_until(t, self.integrator,
-                                 self.callbacks_at_scheduler_events)
+        # Define function that stops integration and add it to scheduler. The
+        # at_end parameter is required because t can be zero, which is
+        # considered as False for comparison purposes in scheduler.add.
+        def call_to_end_integration():
+            return False
+        self.scheduler.add(call_to_end_integration, at=t, at_end=True)
+
+        self.scheduler.run(self.integrator, self.callbacks_at_scheduler_events)
+
         # The following line is necessary because the time integrator may
         # slightly overshoot the requested end time, so here we make sure
         # that the field values represent that requested time exactly.
+        self.llg.effective_field.update(t)
 
-        self.llg.effective_field.update(t)  # MV: Move to scheduler? <!>
         log.info("Simulation has reached time t = {:.2g} s.".format(self.t))
 
     relax = sim_relax.relax
