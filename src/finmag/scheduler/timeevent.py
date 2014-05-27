@@ -74,7 +74,7 @@ class TimeEvent(Event):
 
     def trigger(self, time, is_stop):
         """
-        This abstract method should be implemented by a higher level object.
+        This abstract method should be implemented by derived classes.
 
         Calling this function on this level should raise a NotImplementedError.
 

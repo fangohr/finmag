@@ -1,4 +1,5 @@
 import pytest
+from timeevent import TimeEvent
 from derivedevents import SingleTimeEvent, RepeatingTimeEvent
 from scheduler import Scheduler
 
@@ -15,6 +16,12 @@ class Counter(object):
     def reset(self):
         self.cnt_every = 0
         self.cnt_at = 0
+
+
+def test_calling_trigger_on_TimeEvent_raises_exception():
+    t = TimeEvent(42)
+    with pytest.raises(NotImplementedError):
+        t.trigger(0, False)
 
 
 def test_first_every_at_start():
