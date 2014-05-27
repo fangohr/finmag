@@ -448,12 +448,36 @@ class Simulation(object):
             field = self.llg._m
         else:
             field = self.llg.effective_field.get_dolfin_function(field_type)
+        res = field
 
         if region:
+            # XXX TODO: The function space V_region was created using a 'restriction'.
+            #           This means that the underlying mesh of the function space is
+            #           still the full mesh. However, dolfin functions in V_region will
+            #           only have degrees of freedom corresponding to the specific region.
+            #           Strangely, however, if we construct a function such as 'field' below
+            #           and ask for its vector, it seems to contain elements that don't make
+            #           sense. Need to debug this, but for now we go the route below and
+            #           explicitly construct a function space on the submesh for the region
+            #           and interpolate into that.
             V_region = self._get_region_space(region)
-            field = df.interpolate(field, V_region)
+            #field_restr = df.interpolate(field, V_region)
+            #res = field_restr
 
-        return field
+            # Define a new function space on the submesh belonging to the region and interpolate
+            # the field into it. I would have thought that this is precisely what the restricted
+            # function spaces are intended for in dolfin, but the previous lines don't seem to
+            # work as intended, so I'm using this intermediate fix for now.
+            submesh = self.get_submesh(region)
+            if (V_region.ufl_element().family() != 'Lagrange'):
+                raise NotImplementedError("XXX The following lines assume that we have a CG1 function space. Fix this!!")
+            if (V_region.ufl_element().value_shape() != (3,)):
+                raise NotImplementedError("This functioality is currently only implemented for 3-vector fields.")
+            V_submesh = df.VectorFunctionSpace(submesh, 'CG', 1, dim=3)
+            f_submesh = df.interpolate(field, V_submesh)
+            res = f_submesh
+
+        return res
 
     def _get_region_space(self, region=None):
         if region:
