@@ -669,6 +669,36 @@ def ring(r1,r2, h, maxh, save_result=True, filename='', directory='',with_middle
         filename = "ring-{:.1f}-{:.1f}-{:.1f}-{:.1f}".format(r1,r2, h, maxh).replace(".", "_")
     return from_csg(csg_string, save_result=save_result, filename=filename, directory=directory)
 
+
+def sphere_inside_box(r_sphere, r_shell, l_box, maxh_sphere, maxh_box, center_sphere=(0, 0, 0), save_result=True, filename='', directory=''):
+    """
+    Create a mesh representing a sphere inside a box. The sphere and box belong to two
+    different mesh regions and there is a small gap between the sphere and the outer
+    region. The box is centered at (0, 0, 0) and has edge length `l_box`. The sphere
+    is centered at `center_sphere` and has radius `r_sphere`. The gap between the sphere
+    and the mesh region belonging to the box outside the sphere is defined by the radius
+    `r_shell`, i.e. the width of the gap is `(r_shell - r_sphere)`.
+
+    """
+    x, y, z = center_sphere
+    mesh_descr = textwrap.dedent("""\
+        algebraic3d
+        solid ball = sphere ( {x}, {y}, {z}; {r_sphere} ) -maxh = {maxh_sphere};
+        solid shell = sphere ( {x}, {y}, {z}; {r_shell} ) -maxh = {maxh_sphere};
+        solid box = orthobrick ( {sneg}, {sneg}, {sneg}; {s}, {s}, {s} ) -maxh = {maxh_box};
+        solid air = box and not shell;
+        tlo ball;
+        tlo air -transparent;
+        """).format(x=x, y=y, z=z, r_sphere=r_sphere, r_shell=r_shell, sneg=-0.5*l_box, s=0.5*l_box,
+                    maxh_sphere=maxh_sphere, maxh_box=maxh_box)
+
+    if save_result == True and filename == '':
+        filename = 'sphere_inside_box__{:.1f}_{:.1f}_{:.1f}__{:.1f}__{:.1f}__{:.1f}__{:.1f}__{:.1f}'.format(x, y, z, r_sphere, r_shell, l_box, maxh_sphere, maxh_box)
+
+    mesh = from_csg(mesh_descr, save_result=save_result, filename=filename, directory=directory)
+    return mesh
+
+
 def mesh_volume(mesh):
     """
     Computes the total volume of all tetrahedral cells in the mesh.
