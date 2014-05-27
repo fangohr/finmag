@@ -72,7 +72,7 @@ class TimeEvent(Event):
 
                 self.trigger(time, is_stop)
 
-    def trigger(time, is_stop):
+    def trigger(self, time, is_stop):
         """
         This abstract method should be implemented by a higher level object.
 
