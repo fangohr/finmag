@@ -38,8 +38,8 @@ class TimeEvent(Event):
 
         """
         if init_time is None and trigger_on_stop is False:
-            raise ValueError("{}.init: Needs either a time, or \
-                             trigger_on_stop set to True."
+            raise ValueError("{}.init: Needs either a time, or "
+                             "trigger_on_stop set to True."
                              .format(self.__class__.__name__))
         self.init_time = init_time  # Store time passed at initialisation.
         self.next_time = init_time  # Store the next time to execute at.
@@ -79,6 +79,6 @@ class TimeEvent(Event):
         Calling this function on this level should raise a NotImplementedError.
 
         """
-        raise NotImplementedError("{0}.trigger: Abstract method of base class \
-                                  {0} should be called only by child class."
+        raise NotImplementedError("{0}.trigger: Abstract method of base class "
+                                  "{0} should be called only by child class."
                                   .format(self.__class__.__name__))
