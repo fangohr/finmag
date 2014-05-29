@@ -385,6 +385,8 @@ class TestField(object):
             return (1.1, -2.4)
 
         expressions = [df.Constant((1.1, -2.4)),
+                       (1.1, -2.4),
+                       [1.1, -2.4],
                        df.Expression(('1.1', '-2.4')),
                        python_fun2d]
 
@@ -422,6 +424,8 @@ class TestField(object):
             return (1.1, -2.4, 5.1, -9.2)
 
         expressions = [df.Constant((1.1, -2.4, 5.1, -9.2)),
+                       (1.1, -2.4, 5.1, -9.2),
+                       [1.1, -2.4, 5.1, -9.2],
                        df.Expression(('1.1', '-2.4', '5.1', '-9.2')),
                        python_fun4d]
 
