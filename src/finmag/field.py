@@ -61,8 +61,9 @@ class Field(object):
         self.functionspace = functionspace
 
         self.f = df.Function(self.functionspace)  # Create a zero-function.
-        # Set the function value f if specified.
         self.normalised = normalised
+        # Set the function value f if specified. Field is normalised
+        # in the set method if self.normalised == True.
         if value is not None:
             self.set(value)
 
