@@ -207,7 +207,7 @@ class Field(object):
         return self.f(coord)
 
     def mesh_dim(self):
-        return self.f.geometric_dimension()
+        return self.functionspace.mesh().topology().dim()
 
     def value_dim(self):
         if isinstance(self.functionspace, df.FunctionSpace):
