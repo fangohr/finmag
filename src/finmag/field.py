@@ -135,7 +135,7 @@ class Field(object):
 
         else:
             # The value type cannot be used for neither scalar
-            # nor vector field initialsiation.
+            # nor vector field setting.
             raise TypeError('{} inappropriate for setting the field '
                             'value.'.format(type(value)))
 
@@ -146,11 +146,11 @@ class Field(object):
     def normalise(self):
         if isinstance(self.functionspace, df.VectorFunctionSpace):
             # Vector field is normalised so that
-            # the vector value norm is 1 at all mesh nodes.
-            norm = 0
+            # the vector norm is 1 at all mesh nodes.
+            norm_squared = 0
             for i in xrange(self.value_dim()):
-                norm += self.f[i]**2
-            norm = norm**0.5
+                norm_squared += self.f[i]**2
+            norm = norm_squared**0.5
 
             self.f = df.project(self.f/norm, self.functionspace)
 
@@ -159,8 +159,8 @@ class Field(object):
             # can be implemented so that the whole field is divided by
             # its maximum value. This might cause some problems if the
             # code needs to be run in parallel.
-            raise NotImplementedError('Scalar field values normalisation '
-                                      'is not implemented.')
+            raise NotImplementedError('The normalisation of scalar field '
+                                      'values is not implemented.')
 
     def coords_and_values(self, t=None):
         # The function values are defined at mesh nodes only for
