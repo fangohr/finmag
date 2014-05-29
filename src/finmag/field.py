@@ -144,23 +144,23 @@ class Field(object):
 
     def normalise(self):
         if isinstance(self.functionspace, df.VectorFunctionSpace):
-            # Vector field is normalised so that 
+            # Vector field is normalised so that
             # the vector value norm is 1 at all mesh nodes.
             norm = 0
             for i in xrange(self.value_dim()):
                 norm += self.f[i]**2
             norm = norm**0.5
-            
+
             self.f = df.project(self.f/norm, self.functionspace)
-            
+
         else:
             # Scalar field normalisation is not required. Normalisation
             # can be implemented so that the whole field is divided by
-            # its maximum value. This might cause some problems if the 
+            # its maximum value. This might cause some problems if the
             # code needs to be run in parallel.
             raise NotImplementedError('Scalar field values normalisation '
                                       'is not implemented.')
-        
+
     def coords_and_values(self, t=None):
         # The function values are defined at mesh nodes only for
         # specific function space families. In finmag, the only families
