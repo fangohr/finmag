@@ -182,7 +182,7 @@ class Field(object):
             f_array = self.f.vector().array()  # numpy array
             vtd_map = df.vertex_to_dof_map(self.functionspace)
 
-            value_dim = self.value_dim()  # 1 (scalar); 2, 3,... (vector)
+            value_dim = self.value_dim()
             values = np.empty((num_nodes, value_dim))
             for i in xrange(num_nodes):
                 try:
@@ -217,13 +217,23 @@ class Field(object):
             # value_shape() returns a tuple (N,) and int is required.
             return self.functionspace.ufl_element().value_shape()[0]
 
+    def save_pvd(self, filename):
+        """Save to pvd file using dolfin code"""
+        if filename[-4:] != '.pvd':
+            filename += '.pvd'
+        pvd_file = df.File(filename)
+        pvd_file << self.f
+
     def save(self, filename):
         """Dispatches to specialists"""
         raise NotImplementedError
 
     def save_pvd(self, filename):
         """Save to pvd file using dolfin code"""
-        raise NotImplementedError
+        if filename[-4:] != '.pvd':
+            filename += '.pvd'
+        pvd_file = df.File(filename)
+        pvd_file << self.f
 
     def save_hdf5(self, filename):
         """Save to hdf5 file using dolfin code"""
