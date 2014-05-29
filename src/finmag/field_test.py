@@ -492,7 +492,7 @@ class TestField(object):
         field = Field(functionspace, (1, 2, 3))
         field.normalise()
         coords, values = field.coords_and_values()
-        norm = values[:, 0]**2 + values[:, 1]**2 + values[:,2]**2
+        norm = values[:, 0]**2 + values[:, 1]**2 + values[:, 2]**2
         assert np.all(abs(norm - 1) < 1e-5)
 
         # 2d vector field
