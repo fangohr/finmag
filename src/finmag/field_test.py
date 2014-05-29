@@ -379,6 +379,86 @@ class TestField(object):
             assert abs(probed_value[1] - expected_probed_value[1]) < self.tol1
             assert abs(probed_value[2] - expected_probed_value[2]) < self.tol1
 
+    def test_set_vector2d_field(self):
+        # Python function for setting the vector field values.
+        def python_fun2d(x):
+            return (1.1, -2.4)
+
+        expressions = [df.Constant((1.1, -2.4)),
+                       df.Expression(('1.1', '-2.4')),
+                       python_fun2d]
+
+        # Test setting the 2d vector field on 3d mesh value for
+        # different vector function spaces and python functions.
+        functionspace = self.fs_3d_vector2d
+        coords = functionspace.mesh().coordinates()
+
+        expected_value = (1.1, -2.4)
+
+        for expression in expressions:
+            field = Field(functionspace, expression)
+
+            # Check vector (numpy array) values (should be exact).
+            f_array = field.f.vector().array()
+            f_array_split = np.split(f_array, field.value_dim())
+            assert np.all(f_array_split[0] == expected_value[0])
+            assert np.all(f_array_split[1] == expected_value[1])
+
+            # Check the result of coords_and_values (should be exact).
+            coords, field_values = field.coords_and_values()
+            assert np.all(field_values[:, 0] == expected_value[0])
+            assert np.all(field_values[:, 1] == expected_value[1])
+
+            # Check values that are interpolated,
+            # dolfin is fairly inaccurate here, see field_test.ipynb.
+            probing_point = field.mesh_dim() * (self.probing_coord,)
+            probed_value = field.probe_field(probing_point)
+            assert abs(probed_value[0] - expected_value[0]) < self.tol1
+            assert abs(probed_value[1] - expected_value[1]) < self.tol1
+
+    def test_set_vector4d_field(self):
+        # Python function for setting the vector field values.
+        def python_fun4d(x):
+            return (1.1, -2.4, 5.1, -9.2)
+
+        expressions = [df.Constant((1.1, -2.4, 5.1, -9.2)),
+                       df.Expression(('1.1', '-2.4', '5.1', '-9.2')),
+                       python_fun4d]
+
+        # Test setting the 2d vector field on 3d mesh value for
+        # different vector function spaces and python functions.
+        functionspace = self.fs_3d_vector4d
+        coords = functionspace.mesh().coordinates()
+
+        expected_value = (1.1, -2.4, 5.1, -9.2)
+
+        for expression in expressions:
+            field = Field(functionspace, expression)
+
+            # Check vector (numpy array) values (should be exact).
+            f_array = field.f.vector().array()
+            f_array_split = np.split(f_array, field.value_dim())
+            assert np.all(f_array_split[0] == expected_value[0])
+            assert np.all(f_array_split[1] == expected_value[1])
+            assert np.all(f_array_split[2] == expected_value[2])
+            assert np.all(f_array_split[3] == expected_value[3])
+
+            # Check the result of coords_and_values (should be exact).
+            coords, field_values = field.coords_and_values()
+            assert np.all(field_values[:, 0] == expected_value[0])
+            assert np.all(field_values[:, 1] == expected_value[1])
+            assert np.all(field_values[:, 2] == expected_value[2])
+            assert np.all(field_values[:, 3] == expected_value[3])
+
+            # Check values that are interpolated,
+            # dolfin is fairly inaccurate here, see field_test.ipynb.
+            probing_point = field.mesh_dim() * (self.probing_coord,)
+            probed_value = field.probe_field(probing_point)
+            assert abs(probed_value[0] - expected_value[0]) < self.tol1
+            assert abs(probed_value[1] - expected_value[1]) < self.tol1
+            assert abs(probed_value[2] - expected_value[2]) < self.tol1
+            assert abs(probed_value[3] - expected_value[3]) < self.tol1
+
     def test_coords_and_values_scalar_field(self):
         # Test for scalar fields on 1d, 2d, and 3d meshes,
         # initialised with a dolfin expression.
@@ -513,19 +593,19 @@ class TestField(object):
             assert abs(probed_value - exact_result_outside_node) < self.tol1
 
     def test_mesh_dim(self):
-        mesh_dim = []
         for functionspace in self.all_fspaces:
             field = Field(functionspace)
-            mesh_dim.append(field.mesh_dim())
+            mesh_dim_expected = functionspace.mesh().topology().dim()
 
-        expected_result = 4*[1, 2, 3]
-        assert mesh_dim == expected_result
+            assert isinstance(field.mesh_dim(), int)
+            assert field.mesh_dim() == mesh_dim_expected
 
     def test_value_dim(self):
-        value_dim = []
         for functionspace in self.all_fspaces:
             field = Field(functionspace)
-            value_dim.append(field.value_dim())
-
-        expected_result = [1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4]
-        assert value_dim == expected_result
+            value_dim_expected = functionspace.ufl_element().value_shape()
+            assert isinstance(field.value_dim(), int)
+            if isinstance(functionspace, df.FunctionSpace):
+                assert field.value_dim() == 1
+            elif isinstance(functionspace, df.VectorFunctionSpace):
+                assert field.value_dim() == value_dim_expected[0]
