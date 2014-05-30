@@ -159,10 +159,8 @@ class TestField(object):
 
         # Test setting the scalar field value for different
         # scalar function spaces and appropriate expressions.
-        for functionspace in self.scalar_fspaces:
-            field = Field(functionspace)
-            mesh_dim = field.mesh_dim()
-            field.set(expressions[mesh_dim - 1])
+        for i in range(len(self.scalar_fspaces)):
+            field = Field(functionspace, epressions[i])
 
             # Compute expected values at all nodes and at the probing point.
             exp_vals = self._exp_vals(field, c=(11.2, -3.1, 2.7))
