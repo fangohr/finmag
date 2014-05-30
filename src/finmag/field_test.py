@@ -15,44 +15,44 @@ class TestField(object):
 
         # Create scalar function spaces.
         self.fs1d_scalar = df.FunctionSpace(self.mesh1d,
-                                             family="CG", degree=1)
+                                            family="CG", degree=1)
         self.fs2d_scalar = df.FunctionSpace(self.mesh2d,
-                                             family="CG", degree=1)
+                                            family="CG", degree=1)
         self.fs3d_scalar = df.FunctionSpace(self.mesh3d,
-                                             family="CG", degree=1)
+                                            family="CG", degree=1)
 
         # Create vector (2d) function spaces.
         self.fs1d_vector2d = df.VectorFunctionSpace(self.mesh1d,
-                                                     family="CG",
-                                                     degree=1, dim=2)
+                                                    family="CG",
+                                                    degree=1, dim=2)
         self.fs2d_vector2d = df.VectorFunctionSpace(self.mesh2d,
-                                                     family="CG",
-                                                     degree=1, dim=2)
+                                                    family="CG",
+                                                    degree=1, dim=2)
         self.fs3d_vector2d = df.VectorFunctionSpace(self.mesh3d,
-                                                     family="CG",
-                                                     degree=1, dim=2)
+                                                    family="CG",
+                                                    degree=1, dim=2)
 
         # Create vector (3d) function spaces.
         self.fs1d_vector3d = df.VectorFunctionSpace(self.mesh1d,
-                                                     family="CG",
-                                                     degree=1, dim=3)
+                                                    family="CG",
+                                                    degree=1, dim=3)
         self.fs2d_vector3d = df.VectorFunctionSpace(self.mesh2d,
-                                                     family="CG",
-                                                     degree=1, dim=3)
+                                                    family="CG",
+                                                    degree=1, dim=3)
         self.fs3d_vector3d = df.VectorFunctionSpace(self.mesh3d,
-                                                     family="CG",
-                                                     degree=1, dim=3)
+                                                    family="CG",
+                                                    degree=1, dim=3)
 
         # Create vector (4d) function spaces.
         self.fs1d_vector4d = df.VectorFunctionSpace(self.mesh1d,
-                                                     family="CG",
-                                                     degree=1, dim=4)
+                                                    family="CG",
+                                                    degree=1, dim=4)
         self.fs2d_vector4d = df.VectorFunctionSpace(self.mesh2d,
-                                                     family="CG",
-                                                     degree=1, dim=4)
+                                                    family="CG",
+                                                    degree=1, dim=4)
         self.fs3d_vector4d = df.VectorFunctionSpace(self.mesh3d,
-                                                     family="CG",
-                                                     degree=1, dim=4)
+                                                    family="CG",
+                                                    degree=1, dim=4)
 
         # Create lists of meshes and functionspaces
         # to avoid the repetition of code in tests.
