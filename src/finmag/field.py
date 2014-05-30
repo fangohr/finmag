@@ -91,16 +91,16 @@ class Field(object):
         elif isinstance(value, (tuple, list, np.ndarray)):
             # Tuple, list, and numpy array type values
             # suitable only for vector fields.
-            if isinstance(self.functionspace, df.VectorFunctionSpace):
+            if isinstance(self.functionspace, df.VectorFunctionSpace) and \
+                    len(value) == self.value_dim():
                 # The dimensions of value and vector field value must be equal.
-                if len(value) == self.value_dim():
-                    self.f = df.interpolate(df.Constant(value),
-                                            self.functionspace)
-                else:
-                    raise ValueError('Vector function space value dimension '
-                                     '({}) and value dimension ({}) '
-                                     'are not equal.'.format(len(value),
-                                                             self.value_dim()))
+                self.f = df.interpolate(df.Constant(value), self.functionspace)
+
+            elif len(value) != self.value_dim():
+                raise ValueError('Vector function space value dimension ({}) '
+                                 'and value dimension ({}) are not '
+                                 'equal.'.format(len(value), self.value_dim()))
+
             else:
                 raise TypeError('{} inappropriate for setting the scalar '
                                 'field  value.'.format(type(value)))
