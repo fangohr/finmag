@@ -14,43 +14,43 @@ class TestField(object):
         # with degree=1 unless named explicitly.
 
         # Create scalar function spaces.
-        self.fs_1d_scalar = df.FunctionSpace(self.mesh1d,
+        self.fs1d_scalar = df.FunctionSpace(self.mesh1d,
                                              family="CG", degree=1)
-        self.fs_2d_scalar = df.FunctionSpace(self.mesh2d,
+        self.fs2d_scalar = df.FunctionSpace(self.mesh2d,
                                              family="CG", degree=1)
-        self.fs_3d_scalar = df.FunctionSpace(self.mesh3d,
+        self.fs3d_scalar = df.FunctionSpace(self.mesh3d,
                                              family="CG", degree=1)
 
         # Create vector (2d) function spaces.
-        self.fs_1d_vector2d = df.VectorFunctionSpace(self.mesh1d,
+        self.fs1d_vector2d = df.VectorFunctionSpace(self.mesh1d,
                                                      family="CG",
                                                      degree=1, dim=2)
-        self.fs_2d_vector2d = df.VectorFunctionSpace(self.mesh2d,
+        self.fs2d_vector2d = df.VectorFunctionSpace(self.mesh2d,
                                                      family="CG",
                                                      degree=1, dim=2)
-        self.fs_3d_vector2d = df.VectorFunctionSpace(self.mesh3d,
+        self.fs3d_vector2d = df.VectorFunctionSpace(self.mesh3d,
                                                      family="CG",
                                                      degree=1, dim=2)
 
         # Create vector (3d) function spaces.
-        self.fs_1d_vector3d = df.VectorFunctionSpace(self.mesh1d,
+        self.fs1d_vector3d = df.VectorFunctionSpace(self.mesh1d,
                                                      family="CG",
                                                      degree=1, dim=3)
-        self.fs_2d_vector3d = df.VectorFunctionSpace(self.mesh2d,
+        self.fs2d_vector3d = df.VectorFunctionSpace(self.mesh2d,
                                                      family="CG",
                                                      degree=1, dim=3)
-        self.fs_3d_vector3d = df.VectorFunctionSpace(self.mesh3d,
+        self.fs3d_vector3d = df.VectorFunctionSpace(self.mesh3d,
                                                      family="CG",
                                                      degree=1, dim=3)
 
         # Create vector (4d) function spaces.
-        self.fs_1d_vector4d = df.VectorFunctionSpace(self.mesh1d,
+        self.fs1d_vector4d = df.VectorFunctionSpace(self.mesh1d,
                                                      family="CG",
                                                      degree=1, dim=4)
-        self.fs_2d_vector4d = df.VectorFunctionSpace(self.mesh2d,
+        self.fs2d_vector4d = df.VectorFunctionSpace(self.mesh2d,
                                                      family="CG",
                                                      degree=1, dim=4)
-        self.fs_3d_vector4d = df.VectorFunctionSpace(self.mesh3d,
+        self.fs3d_vector4d = df.VectorFunctionSpace(self.mesh3d,
                                                      family="CG",
                                                      degree=1, dim=4)
 
@@ -60,21 +60,21 @@ class TestField(object):
                        self.mesh2d,
                        self.mesh3d]
 
-        self.scalar_fspaces = [self.fs_1d_scalar,
-                               self.fs_2d_scalar,
-                               self.fs_3d_scalar]
+        self.scalar_fspaces = [self.fs1d_scalar,
+                               self.fs2d_scalar,
+                               self.fs3d_scalar]
 
-        self.vector2d_fspaces = [self.fs_1d_vector2d,
-                                 self.fs_2d_vector2d,
-                                 self.fs_3d_vector2d]
+        self.vector2d_fspaces = [self.fs1d_vector2d,
+                                 self.fs2d_vector2d,
+                                 self.fs3d_vector2d]
 
-        self.vector3d_fspaces = [self.fs_1d_vector3d,
-                                 self.fs_2d_vector3d,
-                                 self.fs_3d_vector3d]
+        self.vector3d_fspaces = [self.fs1d_vector3d,
+                                 self.fs2d_vector3d,
+                                 self.fs3d_vector3d]
 
-        self.vector4d_fspaces = [self.fs_1d_vector4d,
-                                 self.fs_2d_vector4d,
-                                 self.fs_3d_vector4d]
+        self.vector4d_fspaces = [self.fs1d_vector4d,
+                                 self.fs2d_vector4d,
+                                 self.fs3d_vector4d]
 
         self.all_fspaces = self.scalar_fspaces + self.vector2d_fspaces + \
             self.vector3d_fspaces + self.vector4d_fspaces
@@ -89,7 +89,7 @@ class TestField(object):
 
     def test_init(self):
         # Initialisation arguments.
-        functionspace = self.fs_3d_vector3d
+        functionspace = self.fs3d_vector3d
         value = None  # Not specified, a zero-function is created.
         normalised = True
         name = 'name_test'
@@ -392,7 +392,7 @@ class TestField(object):
 
         # Test setting the 2d vector field on 3d mesh value for
         # different vector function spaces and python functions.
-        functionspace = self.fs_3d_vector2d
+        functionspace = self.fs3d_vector2d
         coords = functionspace.mesh().coordinates()
 
         expected_value = (1.1, -2.4)
@@ -431,7 +431,7 @@ class TestField(object):
 
         # Test setting the 2d vector field on 3d mesh value for
         # different vector function spaces and python functions.
-        functionspace = self.fs_3d_vector4d
+        functionspace = self.fs3d_vector4d
         coords = functionspace.mesh().coordinates()
 
         expected_value = (1.1, -2.4, 5.1, -9.2)
@@ -521,7 +521,7 @@ class TestField(object):
 
     def test_normalise(self):
         # 3d vector field
-        functionspace = self.fs_3d_vector3d
+        functionspace = self.fs3d_vector3d
         field = Field(functionspace, (1, 2, 3))
         field.normalise()
         coords, values = field.coords_and_values()
@@ -529,7 +529,7 @@ class TestField(object):
         assert np.all(abs(norm - 1) < 1e-5)
 
         # 2d vector field
-        functionspace = self.fs_2d_vector2d
+        functionspace = self.fs2d_vector2d
         field = Field(functionspace, (1, 3))
         field.normalise()
         coords, values = field.coords_and_values()
