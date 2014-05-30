@@ -215,7 +215,7 @@ class TestField(object):
             # smaller tolerance value (tol1) is used.
             probing_point = field.mesh_dim() * (self.probing_coord,)
             probed_value = field.probe_field(probing_point)
-            assert abs(probed_value - expected_probed_value) < self.tol2
+            assert abs(probed_value - expected_probed_value) < self.tol1
 
     def test_set_vector_field_with_constant(self):
         # Different constant expressions for 3D vector fields.
@@ -247,8 +247,9 @@ class TestField(object):
                 assert np.all(field_values[:, 1] == expected_value[1])
                 assert np.all(field_values[:, 2] == expected_value[2])
 
-                # Check values that are interpolated,
-                # dolfin is fairly inaccurate here, see field_test.ipynb.
+                # Check the interpolated value outside the mesh node.
+                # The expected field is constant and, because of that,
+                # smaller tolerance value (tol1) is used.
                 probing_point = field.mesh_dim() * (self.probing_coord,)
                 probed_value = field.probe_field(probing_point)
                 assert abs(probed_value[0] - expected_value[0]) < self.tol1
@@ -256,13 +257,13 @@ class TestField(object):
                 assert abs(probed_value[2] - expected_value[2]) < self.tol1
 
     def test_set_vector_field_with_expression(self):
-        # Different expressions for 2d and 3d vector fields.
+        # Different expressions for 2D and 3D vector fields.
         expressions = [df.Expression(['1.1*x[0]', '-2.4*x[0]', '3*x[0]']),
                        df.Expression(['1.1*x[0]', '-2.4*x[1]', '3*x[1]']),
                        df.Expression(['1.1*x[0]', '-2.4*x[1]', '3*x[2]'])]
 
-        # Test setting the vector field value for
-        # different vector function spaces and expressions.
+        # Test setting the vector field value for different vector
+        # function spaces and appropriate expressions.
         for i in xrange(len(self.vector3d_fspaces)):
             functionspace = self.vector3d_fspaces[i]
             coords = functionspace.mesh().coordinates()
@@ -282,7 +283,7 @@ class TestField(object):
                                    -2.4*coords[:, 1],
                                    3*coords[:, 2])
 
-            # Compute expected probed value
+            # Compute expected probed value.
             expected_probed_value = (1.1*self.probing_coord,
                                      -2.4*self.probing_coord,
                                      3*self.probing_coord)
@@ -302,8 +303,9 @@ class TestField(object):
             assert np.all(field_values[:, 1] == expected_values[1])
             assert np.all(field_values[:, 2] == expected_values[2])
 
-            # Check values that are interpolated,
-            # dolfin is fairly inaccurate here, see field_test.ipynb.
+            # Check the interpolated value outside the mesh node.
+            # The expected field is constant and, because of that,
+            # smaller tolerance value (tol1) is used.
             probing_point = field.mesh_dim() * (self.probing_coord,)
             probed_value = field.probe_field(probing_point)
             assert abs(probed_value[0] - expected_probed_value[0]) < self.tol1
@@ -313,13 +315,13 @@ class TestField(object):
     def test_set_vector_field_with_python_function(self):
         # Different python functions for setting the vector field values.
         def python_fun1d(x):
-            return (1.1*x[0], -2.4*x[0], 3*x[0])
+            return (1.21*x[0], -2.47*x[0], 3*x[0])
 
         def python_fun2d(x):
-            return (1.1*x[0], -2.4*x[1], 3*x[1])
+            return (1.21*x[0], -2.47*x[1], 3*x[1])
 
         def python_fun3d(x):
-            return (1.1*x[0], -2.4*x[1], 3*x[2])
+            return (1.21*x[0], -2.47*x[1], 3*x[2])
 
         python_functions = [python_fun1d, python_fun2d, python_fun3d]
 
@@ -332,21 +334,21 @@ class TestField(object):
 
             # Compute expected values.
             if mesh_dim == 1:
-                expected_values = (1.1*coords[:, 0],
-                                   -2.4*coords[:, 0],
+                expected_values = (1.21*coords[:, 0],
+                                   -2.47*coords[:, 0],
                                    3*coords[:, 0])
             elif mesh_dim == 2:
-                expected_values = (1.1*coords[:, 0],
-                                   -2.4*coords[:, 1],
+                expected_values = (1.21*coords[:, 0],
+                                   -2.47*coords[:, 1],
                                    3*coords[:, 1])
             elif mesh_dim == 3:
-                expected_values = (1.1*coords[:, 0],
-                                   -2.4*coords[:, 1],
+                expected_values = (1.21*coords[:, 0],
+                                   -2.47*coords[:, 1],
                                    3*coords[:, 2])
 
             # Compute expected probed value
-            expected_probed_value = (1.1*self.probing_coord,
-                                     -2.4*self.probing_coord,
+            expected_probed_value = (1.21*self.probing_coord,
+                                     -2.47*self.probing_coord,
                                      3*self.probing_coord)
 
             field = Field(functionspace, python_functions[i])
@@ -373,7 +375,7 @@ class TestField(object):
             assert abs(probed_value[2] - expected_probed_value[2]) < self.tol1
 
     def test_set_vector2d_field(self):
-        # Python function for setting the vector field values.
+        # Python function for setting the 2D vector field values.
         def python_fun2d(x):
             return (1.1, -2.4)
 
@@ -412,7 +414,7 @@ class TestField(object):
             assert abs(probed_value[1] - expected_value[1]) < self.tol1
 
     def test_set_vector4d_field(self):
-        # Python function for setting the vector field values.
+        # Python function for setting the 4D vector field values.
         def python_fun4d(x):
             return (1.1, -2.4, 5.1, -9.2)
 
