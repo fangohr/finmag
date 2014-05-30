@@ -73,6 +73,23 @@ class Field(object):
 
         self.unit = unit
 
+    def average(self):
+        # Compute the mesh "volume". For 1d mesh the "volume" is length and
+        # for 2d mesh is area.
+        volume = df.assemble(df.Constant(1) * df.dx, mesh=self.mesh())
+
+        f_av = []
+        if isinstance(self.functionspace, df.FunctionSpace):
+            # Scalar field.
+            f_av.append(df.assemble(self.f * df.dx))
+        elif isinstance(self.functionspace, df.VectorFunctionSpace):
+            # Vector field.
+            for i in xrange(self.value_dim()):
+                # Compute the average for every vector component independently.
+                f_av.append(df.assemble(self.f[i] * df.dx))
+
+        return np.array(f_av) / volume
+
     def set(self, value):
         if isinstance(value, (df.Constant, df.Expression)):
             # Dolfin Constant and Expression type values
@@ -202,20 +219,6 @@ class Field(object):
             raise NotImplementedError('This method is not implemented '
                                       'for {} family type function '
                                       'spaces.'.format(functionspace_family))
-
-    def average(self):
-        # Mesh volume (length, area).
-        volume = df.assemble(df.Constant(1) * df.dx, mesh=self.mesh())
-        f_av = []
-        if isinstance(self.functionspace, df.FunctionSpace):
-            # Scalar field.
-            f_av.append(df.assemble(self.f * df.dx))
-        elif isinstance(self.functionspace, df.VectorFunctionSpace):
-            # Vector field.
-            for i in xrange(self.value_dim()):
-                f_av.append(df.assemble(self.f[i] * df.dx))
-
-        return np.array(f_av) / volume
 
     def probe_field(self, coord):
         return self.f(coord)
