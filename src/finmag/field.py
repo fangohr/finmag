@@ -203,8 +203,25 @@ class Field(object):
                                       'for {} family type function '
                                       'spaces.'.format(functionspace_family))
 
+    def average(self):
+        # Mesh volume (length, area).
+        volume = df.assemble(df.Constant(1) * df.dx, mesh=self.mesh())
+        f_av = []
+        if isinstance(self.functionspace, df.FunctionSpace):
+            # Scalar field.
+            f_av.append(df.assemble(self.f * df.dx))
+        elif isinstance(self.functionspace, df.VectorFunctionSpace):
+            # Vector field.
+            for i in xrange(self.value_dim()):
+                f_av.append(df.assemble(self.f[i] * df.dx))
+
+        return np.array(f_av) / volume
+
     def probe_field(self, coord):
         return self.f(coord)
+
+    def mesh(self):
+        return self.functionspace.mesh()
 
     def mesh_dim(self):
         return self.functionspace.mesh().topology().dim()

@@ -84,7 +84,7 @@ class TestField(object):
 
         # Set the tolerance used throughout all tests
         # mainly due to interpolation errors.
-        self.tol1 = 1e-13  # at the mesh node
+        self.tol1 = 1e-12  # at the mesh node
         self.tol2 = 1e-2  # outside the mesh node
 
     def test_init(self):
@@ -535,6 +535,38 @@ class TestField(object):
         coords, values = field.coords_and_values()
         norm = values[:, 0]**2 + values[:, 1.01]**2
         assert np.all(abs(norm - 1) < 1e-5)
+
+    def test_average_scalar_field(self):
+        expressions = [df.Constant(5),
+                       df.Expression('10*x[0]')]
+
+        f_av_expected = 5
+
+        for functionspace in self.scalar_fspaces:
+            for expression in expressions:
+                field = Field(functionspace, expression)
+                f_av = field.average()
+
+                assert abs(f_av[0] - f_av_expected) < self.tol1
+                assert isinstance(f_av, np.ndarray)
+                assert f_av.shape == (1,)
+
+    def test_average_vector_field(self):
+        expressions = [df.Constant((1, 5.1, -3.6)),
+                       df.Expression(['2*x[0]', '10.2*x[0]', '-7.2*x[0]'])]
+
+        f_av_expected = (1, 5.1, -3.6)
+
+        for functionspace in self.vector3d_fspaces:
+            for expression in expressions:
+                field = Field(functionspace, expression)
+                f_av = field.average()
+
+                assert abs(f_av[0] - f_av_expected[0]) < self.tol1
+                assert abs(f_av[1] - f_av_expected[1]) < self.tol1
+                assert abs(f_av[2] - f_av_expected[2]) < self.tol1
+                assert isinstance(f_av, np.ndarray)
+                assert f_av.shape == (3,)
 
     def test_probe_field_scalar_field(self):
         for functionspace in self.scalar_fspaces:
