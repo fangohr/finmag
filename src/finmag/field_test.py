@@ -204,7 +204,7 @@ class TestField(object):
             elif i == 2:
                 expected_values = 1.21*coords[:, 0] - 3.21*coords[:, 1] + \
                     2.47*coords[:, 2]
-                expected_probed_value = (1.21 -3.21 + 2.47)*self.probing_coord
+                expected_probed_value = (1.21 - 3.21 + 2.47)*self.probing_coord
 
             # Check the result of coords_and_values (should be exact).
             field_values = field.coords_and_values()[1]  # ignore coordinates
