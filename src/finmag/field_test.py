@@ -157,93 +157,53 @@ class TestField(object):
                        df.Expression("11.2*x[0] - 3.1*x[1]"),
                        df.Expression("11.2*x[0] - 3.1*x[1] + 2.7*x[2]")]
 
+        c = (11.2, -3.1, 2.7)  # Coefficients in expression.
+
         # Test setting the scalar field value for different
         # scalar function spaces and appropriate expressions.
         for i in range(len(self.scalar_fspaces)):
-            field = Field(functionspace, epressions[i])
-
-            # Compute expected values at all nodes and at the probing point.
-            exp_vals = self._exp_vals(field, c=(11.2, -3.1, 2.7))
-            exp_probed_val = self._exp_vals(field, c=(11.2, -3.1, 2.7),
-                                            point=3*(self.probing_coord,))
+            field = Field(self.scalar_fspaces[i], expressions[i])
 
             # Check the field value at all nodes (should be exact).
+            expected_values = self._exp_vals(field, c)
             field_values = field.coords_and_values()[1]  # ignore coordinates
-            assert np.all(field_values == exp_vals)
+            assert np.all(field_values == expected_values)
 
             # Check the probed field value (not exact - interpolation).
             probing_point = field.mesh_dim() * (self.probing_coord,)
+            expected_probed_value = self._exp_vals(field, c, probing_point)
             probed_value = field.probe_field(probing_point)
-            assert abs(probed_value - exp_probed_val) < self.tol1
-
-    def _exp_vals(self, field, c, point=None):
-        mesh_dim = field.mesh_dim()
-        value_dim = field.value_dim()
-        coords = field.functionspace.mesh().coordinates()
-        n_nodes = field.functionspace.mesh().num_vertices()
-
-        if point is None:
-            expected_values = np.zeros((n_nodes, value_dim))
-            if value_dim == 1:
-                # Scalar field.
-                for i in range(mesh_dim):
-                    expected_values[:, 0] += c[i] * coords[:, i]
-            else:
-                for i in range(value_dim):
-                    expected_values[:, i] += c[i] * coords[:, i]
-
-            return expected_values
-        else:
-            expected_value = np.zeros(value_dim)
-            if value_dim == 1:
-                # Scalar field.
-                for i in range(mesh_dim):
-                    expected_value[0] += c[i] * point[i]
-            else:
-                for i in range(value_dim):
-                    expected_value[i] += c[i] * point[i]
-
-            return expected_value
+            assert abs(probed_value - expected_probed_value) < self.tol1
 
     def test_set_scalar_field_with_python_function(self):
-        # Python functions for setting the scalar field value.
+        # Different python functions for scalar field value setting,
+        # depending on the mesh dimension (1D, 2D, or 3D).
         def python_fun1d(x):
-            return 11.2*x[0]
+            return 1.9*x[0]
 
         def python_fun2d(x):
-            return 11.2*x[0] - 3.1*x[1]
+            return 1.9*x[0] - 3.11*x[1]
 
         def python_fun3d(x):
-            return 11.2*x[0] - 3.1*x[1] + 2.7*x[2]
+            return 1.9*x[0] - 3.11*x[1] + 2.17*x[2]
+
+        c = (1.9, -3.11, 2.17)  # Coefficients in expression.
 
         python_functions = [python_fun1d, python_fun2d, python_fun3d]
 
-        # Test setting the scalar field value for
-        # different scalar function spaces and python functions.
+        # Test setting the scalar field value for different
+        # scalar function spaces and appropriate python functions.
         for i in range(len(self.scalar_fspaces)):
             field = Field(self.scalar_fspaces[i], python_functions[i])
 
-            # Compute expected values.
-            coords = self.scalar_fspaces[i].mesh().coordinates()
-            if i == 0:
-                # Compute expected values at all mesh nodes.
-                expected_values = 11.2*coords[:, 0]
-                # Compute expected probed value.
-                expected_probed_value = 11.2*self.probing_coord
-            elif i == 1:
-                expected_values = 11.2*coords[:, 0] - 3.1*coords[:, 1]
-                expected_probed_value = (11.2 - 3.1)*self.probing_coord
-            elif i == 2:
-                expected_values = 11.2*coords[:, 0] - 3.1*coords[:, 1] + \
-                    2.7*coords[:, 2]
-                expected_probed_value = (11.2 - 3.1 + 2.7)*self.probing_coord
-
             # Check the field value at all nodes (should be exact).
+            expected_values = self._exp_vals(field, c)
             field_values = field.coords_and_values()[1]  # ignore coordinates
-            assert np.all(field_values[:, 0] == expected_values)
+            assert np.all(field_values == expected_values)
 
             # Check the probed field value (not exact - interpolation).
             probing_point = field.mesh_dim() * (self.probing_coord,)
+            expected_probed_value = self._exp_vals(field, c, probing_point)
             probed_value = field.probe_field(probing_point)
             assert abs(probed_value - expected_probed_value) < self.tol1
 
@@ -668,3 +628,32 @@ class TestField(object):
                 assert field.value_dim() == 1
             elif isinstance(functionspace, df.VectorFunctionSpace):
                 assert field.value_dim() == value_dim_expected[0]
+
+    def _exp_vals(self, field, c, point=None):
+        mesh_dim = field.mesh_dim()
+        value_dim = field.value_dim()
+        coords = field.functionspace.mesh().coordinates()
+        n_nodes = field.functionspace.mesh().num_vertices()
+
+        if point is None:
+            expected_values = np.zeros((n_nodes, value_dim))
+            if value_dim == 1:
+                # Scalar field.
+                for i in range(mesh_dim):
+                    expected_values[:, 0] += c[i] * coords[:, i]
+            else:
+                for i in range(value_dim):
+                    expected_values[:, i] += c[i] * coords[:, i]
+
+            return expected_values
+        else:
+            expected_value = np.zeros(value_dim)
+            if value_dim == 1:
+                # Scalar field.
+                for i in range(mesh_dim):
+                    expected_value[0] += c[i] * point[i]
+            else:
+                for i in range(value_dim):
+                    expected_value[i] += c[i] * point[i]
+
+            return expected_value
