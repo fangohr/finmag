@@ -7,52 +7,52 @@ class TestField(object):
     def setup(self):
         # Create meshes of several dimensions.
         self.mesh1d = df.UnitIntervalMesh(10)
-        self.mesh2d = df.UnitSquareMesh(7, 10)
-        self.mesh3d = df.UnitCubeMesh(5, 7, 10)
+        self.mesh2d = df.UnitSquareMesh(11, 10)
+        self.mesh3d = df.UnitCubeMesh(9, 11, 10)
 
         # All function spaces are CG (Lagrange)
         # with degree=1 unless named explicitly.
 
         # Create scalar function spaces.
-        self.fs_1d_scalar = df.FunctionSpace(self.mesh1d,
-                                             family="CG", degree=1)
-        self.fs_2d_scalar = df.FunctionSpace(self.mesh2d,
-                                             family="CG", degree=1)
-        self.fs_3d_scalar = df.FunctionSpace(self.mesh3d,
-                                             family="CG", degree=1)
+        self.fs1d_scalar = df.FunctionSpace(self.mesh1d,
+                                            family="CG", degree=1)
+        self.fs2d_scalar = df.FunctionSpace(self.mesh2d,
+                                            family="CG", degree=1)
+        self.fs3d_scalar = df.FunctionSpace(self.mesh3d,
+                                            family="CG", degree=1)
 
-        # Create vector (2d) function spaces.
-        self.fs_1d_vector2d = df.VectorFunctionSpace(self.mesh1d,
-                                                     family="CG",
-                                                     degree=1, dim=2)
-        self.fs_2d_vector2d = df.VectorFunctionSpace(self.mesh2d,
-                                                     family="CG",
-                                                     degree=1, dim=2)
-        self.fs_3d_vector2d = df.VectorFunctionSpace(self.mesh3d,
-                                                     family="CG",
-                                                     degree=1, dim=2)
+        # Create 2D vector function spaces.
+        self.fs1d_vector2d = df.VectorFunctionSpace(self.mesh1d,
+                                                    family="CG",
+                                                    degree=1, dim=2)
+        self.fs2d_vector2d = df.VectorFunctionSpace(self.mesh2d,
+                                                    family="CG",
+                                                    degree=1, dim=2)
+        self.fs3d_vector2d = df.VectorFunctionSpace(self.mesh3d,
+                                                    family="CG",
+                                                    degree=1, dim=2)
 
-        # Create vector (3d) function spaces.
-        self.fs_1d_vector3d = df.VectorFunctionSpace(self.mesh1d,
-                                                     family="CG",
-                                                     degree=1, dim=3)
-        self.fs_2d_vector3d = df.VectorFunctionSpace(self.mesh2d,
-                                                     family="CG",
-                                                     degree=1, dim=3)
-        self.fs_3d_vector3d = df.VectorFunctionSpace(self.mesh3d,
-                                                     family="CG",
-                                                     degree=1, dim=3)
+        # Create 3D vector function spaces.
+        self.fs1d_vector3d = df.VectorFunctionSpace(self.mesh1d,
+                                                    family="CG",
+                                                    degree=1, dim=3)
+        self.fs2d_vector3d = df.VectorFunctionSpace(self.mesh2d,
+                                                    family="CG",
+                                                    degree=1, dim=3)
+        self.fs3d_vector3d = df.VectorFunctionSpace(self.mesh3d,
+                                                    family="CG",
+                                                    degree=1, dim=3)
 
-        # Create vector (4d) function spaces.
-        self.fs_1d_vector4d = df.VectorFunctionSpace(self.mesh1d,
-                                                     family="CG",
-                                                     degree=1, dim=4)
-        self.fs_2d_vector4d = df.VectorFunctionSpace(self.mesh2d,
-                                                     family="CG",
-                                                     degree=1, dim=4)
-        self.fs_3d_vector4d = df.VectorFunctionSpace(self.mesh3d,
-                                                     family="CG",
-                                                     degree=1, dim=4)
+        # Create 4D vector function spaces.
+        self.fs1d_vector4d = df.VectorFunctionSpace(self.mesh1d,
+                                                    family="CG",
+                                                    degree=1, dim=4)
+        self.fs2d_vector4d = df.VectorFunctionSpace(self.mesh2d,
+                                                    family="CG",
+                                                    degree=1, dim=4)
+        self.fs3d_vector4d = df.VectorFunctionSpace(self.mesh3d,
+                                                    family="CG",
+                                                    degree=1, dim=4)
 
         # Create lists of meshes and functionspaces
         # to avoid the repetition of code in tests.
@@ -60,37 +60,41 @@ class TestField(object):
                        self.mesh2d,
                        self.mesh3d]
 
-        self.scalar_fspaces = [self.fs_1d_scalar,
-                               self.fs_2d_scalar,
-                               self.fs_3d_scalar]
+        self.scalar_fspaces = [self.fs1d_scalar,
+                               self.fs2d_scalar,
+                               self.fs3d_scalar]
 
-        self.vector2d_fspaces = [self.fs_1d_vector2d,
-                                 self.fs_2d_vector2d,
-                                 self.fs_3d_vector2d]
+        self.vector2d_fspaces = [self.fs1d_vector2d,
+                                 self.fs2d_vector2d,
+                                 self.fs3d_vector2d]
 
-        self.vector3d_fspaces = [self.fs_1d_vector3d,
-                                 self.fs_2d_vector3d,
-                                 self.fs_3d_vector3d]
+        self.vector3d_fspaces = [self.fs1d_vector3d,
+                                 self.fs2d_vector3d,
+                                 self.fs3d_vector3d]
 
-        self.vector4d_fspaces = [self.fs_1d_vector4d,
-                                 self.fs_2d_vector4d,
-                                 self.fs_3d_vector4d]
+        self.vector4d_fspaces = [self.fs1d_vector4d,
+                                 self.fs2d_vector4d,
+                                 self.fs3d_vector4d]
 
-        self.all_fspaces = self.scalar_fspaces + self.vector2d_fspaces + \
+        self.fspaces = self.scalar_fspaces + self.vector2d_fspaces + \
             self.vector3d_fspaces + self.vector4d_fspaces
 
         # x, y, or z coordinate value for probing the field.
-        self.probing_coord = 0.55  # Not at the mesh node.
+        self.probing_coord = 0.531  # Outside the mesh node.
 
-        # Set the tolerance used throughout all tests
-        # mainly due to interpolation errors.
-        self.tol1 = 1e-12  # at the mesh node
-        self.tol2 = 1e-2  # outside the mesh node
+        # Set the tolerance values used in tests due to interpolation errors.
+
+        # Tolerance at the mesh node and
+        # outside the mesh nodes (for linear fields)
+        self.tol1 = 5e-13
+
+        # Tolerance outside the mesh node (for non-linear fields)
+        self.tol2 = 1e-3
 
     def test_init(self):
         # Initialisation arguments.
-        functionspace = self.fs_3d_vector3d
-        value = None  # Not specified, a zero-function is created.
+        functionspace = self.fs3d_vector3d
+        value = None  # Not specified, a zero-function is expected..
         normalised = True
         name = 'name_test'
         unit = 'unit_test'
@@ -137,50 +141,71 @@ class TestField(object):
                 assert np.all(field.f.vector().array() == expected_value)
 
                 # Check the result of coords_and_values (should be exact).
-                coords, field_values = field.coords_and_values()
+                field_values = field.coords_and_values()[1]
                 assert np.all(field_values == expected_value)
 
-                # Check values that are interpolated,
-                # dolfin is fairly inaccurate here, see field_test.ipynb.
+                # Check values that are interpolated. Constant field is
+                # expected so smaller tolerance (tol1) is used.
                 probing_point = field.mesh_dim() * (self.probing_coord,)
                 probed_value = field.probe_field(probing_point)
                 assert abs(probed_value - expected_value) < self.tol1
 
     def test_set_scalar_field_with_expression(self):
         # Different expressions for scalar field value setting,
-        # depending on the mesh dimension (1d, 2d, or 3d).
+        # depending on the mesh dimension (1D, 2D, or 3D).
         expressions = [df.Expression("11.2*x[0]"),
                        df.Expression("11.2*x[0] - 3.1*x[1]"),
                        df.Expression("11.2*x[0] - 3.1*x[1] + 2.7*x[2]")]
 
-        # Test setting the scalar field value for
-        # different scalar function spaces and expressions.
-        for i in range(len(self.scalar_fspaces)):
-            field = Field(self.scalar_fspaces[i], expressions[i])
+        # Test setting the scalar field value for different
+        # scalar function spaces and appropriate expressions.
+        for functionspace in self.scalar_fspaces:
+            field = Field(functionspace)
+            mesh_dim = field.mesh_dim()
+            field.set(expressions[mesh_dim - 1])
 
-            # Compute expected values.
-            coords = self.scalar_fspaces[i].mesh().coordinates()
-            if i == 0:
-                # Compute expected values at all mesh nodes.
-                expected_values = 11.2*coords[:, 0]
-                # Compute expected probed value.
-                expected_probed_value = 11.2*self.probing_coord
-            elif i == 1:
-                expected_values = 11.2*coords[:, 0] - 3.1*coords[:, 1]
-                expected_probed_value = (11.2 - 3.1)*self.probing_coord
-            elif i == 2:
-                expected_values = 11.2*coords[:, 0] - 3.1*coords[:, 1] + \
-                    2.7*coords[:, 2]
-                expected_probed_value = (11.2 - 3.1 + 2.7)*self.probing_coord
+            # Compute expected values at all nodes and at the probing point.
+            exp_vals = self._exp_vals(field, c=(11.2, -3.1, 2.7))
+            exp_probed_val = self._exp_vals(field, c=(11.2, -3.1, 2.7),
+                                            point=3*(self.probing_coord,))
 
             # Check the field value at all nodes (should be exact).
             field_values = field.coords_and_values()[1]  # ignore coordinates
-            assert np.all(field_values[:, 0] == expected_values)
+            assert np.all(field_values == exp_vals)
 
             # Check the probed field value (not exact - interpolation).
             probing_point = field.mesh_dim() * (self.probing_coord,)
             probed_value = field.probe_field(probing_point)
-            assert abs(probed_value - expected_probed_value) < self.tol1
+            assert abs(probed_value - exp_probed_val) < self.tol1
+
+    def _exp_vals(self, field, c, point=None):
+        mesh_dim = field.mesh_dim()
+        value_dim = field.value_dim()
+        coords = field.functionspace.mesh().coordinates()
+        n_nodes = field.functionspace.mesh().num_vertices()
+
+        if point is None:
+            expected_values = np.zeros((n_nodes, value_dim))
+            if value_dim == 1:
+                # Scalar field.
+                for i in range(mesh_dim):
+                    expected_values[:, 0] += c[i] * coords[:, i]
+            else:
+                for i in range(value_dim):
+                    expected_values[:, i] += c[i] * coords[:, i]
+
+            return expected_values
+        else:
+            expected_value = np.zeros(value_dim)
+            if value_dim == 1:
+                # Scalar field.
+                for i in range(mesh_dim):
+                    expected_value[0] += c[i] * point[i]
+            else:
+                for i in range(value_dim):
+                    expected_value[i] += c[i] * point[i]
+
+            return expected_value
 
     def test_set_scalar_field_with_python_function(self):
         # Python functions for setting the scalar field value.
@@ -392,7 +417,7 @@ class TestField(object):
 
         # Test setting the 2d vector field on 3d mesh value for
         # different vector function spaces and python functions.
-        functionspace = self.fs_3d_vector2d
+        functionspace = self.fs3d_vector2d
         coords = functionspace.mesh().coordinates()
 
         expected_value = (1.1, -2.4)
@@ -431,7 +456,7 @@ class TestField(object):
 
         # Test setting the 2d vector field on 3d mesh value for
         # different vector function spaces and python functions.
-        functionspace = self.fs_3d_vector4d
+        functionspace = self.fs3d_vector4d
         coords = functionspace.mesh().coordinates()
 
         expected_value = (1.1, -2.4, 5.1, -9.2)
@@ -521,7 +546,7 @@ class TestField(object):
 
     def test_normalise(self):
         # 3d vector field
-        functionspace = self.fs_3d_vector3d
+        functionspace = self.fs3d_vector3d
         field = Field(functionspace, (1, 2, 3))
         field.normalise()
         coords, values = field.coords_and_values()
@@ -529,7 +554,7 @@ class TestField(object):
         assert np.all(abs(norm - 1) < 1e-5)
 
         # 2d vector field
-        functionspace = self.fs_2d_vector2d
+        functionspace = self.fs2d_vector2d
         field = Field(functionspace, (1, 3))
         field.normalise()
         coords, values = field.coords_and_values()
@@ -629,7 +654,7 @@ class TestField(object):
             assert abs(probed_value - exact_result_outside_node) < self.tol1
 
     def test_mesh_dim(self):
-        for functionspace in self.all_fspaces:
+        for functionspace in self.fspaces:
             field = Field(functionspace)
             mesh_dim_expected = functionspace.mesh().topology().dim()
 
@@ -637,7 +662,7 @@ class TestField(object):
             assert field.mesh_dim() == mesh_dim_expected
 
     def test_value_dim(self):
-        for functionspace in self.all_fspaces:
+        for functionspace in self.fspaces:
             field = Field(functionspace)
             value_dim_expected = functionspace.ufl_element().value_shape()
             assert isinstance(field.value_dim(), int)
