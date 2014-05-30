@@ -7,8 +7,8 @@ class TestField(object):
     def setup(self):
         # Create meshes of several dimensions.
         self.mesh1d = df.UnitIntervalMesh(10)
-        self.mesh2d = df.UnitSquareMesh(7, 10)
-        self.mesh3d = df.UnitCubeMesh(5, 7, 10)
+        self.mesh2d = df.UnitSquareMesh(11, 10)
+        self.mesh3d = df.UnitCubeMesh(9, 11, 10)
 
         # All function spaces are CG (Lagrange)
         # with degree=1 unless named explicitly.
@@ -21,7 +21,7 @@ class TestField(object):
         self.fs3d_scalar = df.FunctionSpace(self.mesh3d,
                                             family="CG", degree=1)
 
-        # Create vector (2d) function spaces.
+        # Create 2D vector function spaces.
         self.fs1d_vector2d = df.VectorFunctionSpace(self.mesh1d,
                                                     family="CG",
                                                     degree=1, dim=2)
@@ -32,7 +32,7 @@ class TestField(object):
                                                     family="CG",
                                                     degree=1, dim=2)
 
-        # Create vector (3d) function spaces.
+        # Create 3D vector function spaces.
         self.fs1d_vector3d = df.VectorFunctionSpace(self.mesh1d,
                                                     family="CG",
                                                     degree=1, dim=3)
@@ -43,7 +43,7 @@ class TestField(object):
                                                     family="CG",
                                                     degree=1, dim=3)
 
-        # Create vector (4d) function spaces.
+        # Create 4D vector function spaces.
         self.fs1d_vector4d = df.VectorFunctionSpace(self.mesh1d,
                                                     family="CG",
                                                     degree=1, dim=4)
@@ -56,41 +56,36 @@ class TestField(object):
 
         # Create lists of meshes and functionspaces
         # to avoid the repetition of code in tests.
-        self.meshes = [self.mesh1d,
-                       self.mesh2d,
-                       self.mesh3d]
+        self.meshes = [self.mesh1d, self.mesh2d, self.mesh3d]
 
-        self.scalar_fspaces = [self.fs1d_scalar,
-                               self.fs2d_scalar,
+        self.scalar_fspaces = [self.fs1d_scalar, self.fs2d_scalar,
                                self.fs3d_scalar]
-
-        self.vector2d_fspaces = [self.fs1d_vector2d,
-                                 self.fs2d_vector2d,
+        self.vector2d_fspaces = [self.fs1d_vector2d, self.fs2d_vector2d,
                                  self.fs3d_vector2d]
-
-        self.vector3d_fspaces = [self.fs1d_vector3d,
-                                 self.fs2d_vector3d,
+        self.vector3d_fspaces = [self.fs1d_vector3d, self.fs2d_vector3d,
                                  self.fs3d_vector3d]
-
-        self.vector4d_fspaces = [self.fs1d_vector4d,
-                                 self.fs2d_vector4d,
+        self.vector4d_fspaces = [self.fs1d_vector4d, self.fs2d_vector4d,
                                  self.fs3d_vector4d]
-
         self.all_fspaces = self.scalar_fspaces + self.vector2d_fspaces + \
             self.vector3d_fspaces + self.vector4d_fspaces
 
         # x, y, or z coordinate value for probing the field.
-        self.probing_coord = 0.55  # Not at the mesh node.
+        self.probing_coord = 0.5351  # Not at the mesh node.
 
-        # Set the tolerance used throughout all tests
+        # Set the tolerances used throughout all tests
         # mainly due to interpolation errors.
-        self.tol1 = 1e-12  # at the mesh node
+
+        # Tolerance value at the mesh node and
+        # outside the mesh node for linear functions.
+        self.tol1 = 5e-13
+
+        # Tolerance value outside the mesh node for non-linear functions.
         self.tol2 = 1e-2  # outside the mesh node
 
     def test_init(self):
         # Initialisation arguments.
         functionspace = self.fs3d_vector3d
-        value = None  # Not specified, a zero-function is created.
+        value = None  # Not specified, a zero-function is expected.
         normalised = True
         name = 'name_test'
         unit = 'unit_test'
@@ -99,7 +94,7 @@ class TestField(object):
 
         assert field.functionspace == functionspace
 
-        # Assert that created field.f is an "empty" function.
+        # Assert that the created function is a zero-function.
         assert isinstance(field.f, df.Function)
         assert np.all(field.f.vector().array() == 0)
 
@@ -114,47 +109,41 @@ class TestField(object):
 
     def test_set_scalar_field_with_constant(self):
         # Different expressions for constant value 42.
-        values = [df.Constant(42),
-                  df.Constant(42.0),
-                  df.Constant("42"),
-                  df.Constant("42.0"),
-                  42,
-                  42.0,
-                  "42",
-                  "42.0",
-                  u"42",
-                  u"42.0"]
+        constants = [df.Constant(42), df.Constant(42.0), df.Constant("42"),
+                     df.Constant("42.0"), 42, 42.0, "42",
+                     "42.0", u"42", u"42.0"]
 
         expected_value = 42
 
         # Test setting the scalar field value for
         # different scalar function spaces and constants.
         for functionspace in self.scalar_fspaces:
-            for value in values:
-                field = Field(functionspace, value)
+            for constant in constants:
+                field = Field(functionspace, constant)
 
                 # Check vector (numpy array) values (should be exact).
                 assert np.all(field.f.vector().array() == expected_value)
 
                 # Check the result of coords_and_values (should be exact).
-                coords, field_values = field.coords_and_values()
+                field_values = field.coords_and_values()[1]  # coords ignored
                 assert np.all(field_values == expected_value)
 
-                # Check values that are interpolated,
-                # dolfin is fairly inaccurate here, see field_test.ipynb.
+                # Check the interpolated value outside the mesh node.
+                # The expected field is constant and, because of that,
+                # smaller tolerance value (tol1) is used.
                 probing_point = field.mesh_dim() * (self.probing_coord,)
                 probed_value = field.probe_field(probing_point)
                 assert abs(probed_value - expected_value) < self.tol1
 
     def test_set_scalar_field_with_expression(self):
         # Different expressions for scalar field value setting,
-        # depending on the mesh dimension (1d, 2d, or 3d).
+        # depending on the mesh dimension (1D, 2D, or 3D).
         expressions = [df.Expression("11.2*x[0]"),
                        df.Expression("11.2*x[0] - 3.1*x[1]"),
                        df.Expression("11.2*x[0] - 3.1*x[1] + 2.7*x[2]")]
 
-        # Test setting the scalar field value for
-        # different scalar function spaces and expressions.
+        # Test setting the scalar field value for different scalar
+        # function spaces and appropriate expressions.
         for i in range(len(self.scalar_fspaces)):
             field = Field(self.scalar_fspaces[i], expressions[i])
 
@@ -173,11 +162,13 @@ class TestField(object):
                     2.7*coords[:, 2]
                 expected_probed_value = (11.2 - 3.1 + 2.7)*self.probing_coord
 
-            # Check the field value at all nodes (should be exact).
+            # Check the result of coords_and_values (should be exact).
             field_values = field.coords_and_values()[1]  # ignore coordinates
             assert np.all(field_values[:, 0] == expected_values)
 
-            # Check the probed field value (not exact - interpolation).
+            # Check the interpolated value outside the mesh node.
+            # The expected field is linear and, because of that,
+            # smaller tolerance value (tol1) is used.
             probing_point = field.mesh_dim() * (self.probing_coord,)
             probed_value = field.probe_field(probing_point)
             assert abs(probed_value - expected_probed_value) < self.tol1
@@ -185,18 +176,18 @@ class TestField(object):
     def test_set_scalar_field_with_python_function(self):
         # Python functions for setting the scalar field value.
         def python_fun1d(x):
-            return 11.2*x[0]
+            return 1.21*x[0]
 
         def python_fun2d(x):
-            return 11.2*x[0] - 3.1*x[1]
+            return 1.21*x[0] - 3.21*x[1]
 
         def python_fun3d(x):
-            return 11.2*x[0] - 3.1*x[1] + 2.7*x[2]
+            return 1.21*x[0] - 3.21*x[1] + 2.47*x[2]
 
         python_functions = [python_fun1d, python_fun2d, python_fun3d]
 
-        # Test setting the scalar field value for
-        # different scalar function spaces and python functions.
+        # Test setting the scalar field value for different scalar
+        # function spaces and appropriate python functions.
         for i in range(len(self.scalar_fspaces)):
             field = Field(self.scalar_fspaces[i], python_functions[i])
 
@@ -204,28 +195,30 @@ class TestField(object):
             coords = self.scalar_fspaces[i].mesh().coordinates()
             if i == 0:
                 # Compute expected values at all mesh nodes.
-                expected_values = 11.2*coords[:, 0]
+                expected_values = 1.21*coords[:, 0]
                 # Compute expected probed value.
-                expected_probed_value = 11.2*self.probing_coord
+                expected_probed_value = 1.21*self.probing_coord
             elif i == 1:
-                expected_values = 11.2*coords[:, 0] - 3.1*coords[:, 1]
-                expected_probed_value = (11.2 - 3.1)*self.probing_coord
+                expected_values = 1.21*coords[:, 0] - 3.21*coords[:, 1]
+                expected_probed_value = (1.21 - 3.21)*self.probing_coord
             elif i == 2:
-                expected_values = 11.2*coords[:, 0] - 3.1*coords[:, 1] + \
-                    2.7*coords[:, 2]
-                expected_probed_value = (11.2 - 3.1 + 2.7)*self.probing_coord
+                expected_values = 1.21*coords[:, 0] - 3.21*coords[:, 1] + \
+                    2.47*coords[:, 2]
+                expected_probed_value = (1.21 -3.21 + 2.47)*self.probing_coord
 
-            # Check the field value at all nodes (should be exact).
+            # Check the result of coords_and_values (should be exact).
             field_values = field.coords_and_values()[1]  # ignore coordinates
             assert np.all(field_values[:, 0] == expected_values)
 
-            # Check the probed field value (not exact - interpolation).
+            # Check the interpolated value outside the mesh node.
+            # The expected field is linear and, because of that,
+            # smaller tolerance value (tol1) is used.
             probing_point = field.mesh_dim() * (self.probing_coord,)
             probed_value = field.probe_field(probing_point)
-            assert abs(probed_value - expected_probed_value) < self.tol1
+            assert abs(probed_value - expected_probed_value) < self.tol2
 
     def test_set_vector_field_with_constant(self):
-        # Different constant expressions for 3d vector fields.
+        # Different constant expressions for 3D vector fields.
         constants = [df.Constant((0.15, -2.3, -6.41)),
                      df.Constant([0.15, -2.3, -6.41]),
                      df.Constant(np.array([0.15, -2.3, -6.41])),
