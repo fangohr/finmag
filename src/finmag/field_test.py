@@ -613,7 +613,7 @@ class TestField(object):
 
                 # Check the average value.
                 assert abs(f_av - f_av_expected) < self.tol1
-                
+
                 # Check the type of average result.
                 assert isinstance(f_av, float)
 
