@@ -1,61 +1,46 @@
-# Field class: a thin wrapper around the dolfin functions
-# for unified and convenient access to them.
-#
-# There are two reasons this exists at all:
-#
-#    - Certain things are awkward (or currently impossible) when using
-#      dolfin.Functions directly (for example, per-node operations on
-#      vector fields or storing a dolfin.Function in a format convenient
-#      for use in Finmag).
-#
-#    - Even if things are possible, sometimes they are non-trivial to
-#      get right, especially in parallel. Therefore this class acts as
-#      a "single point of contact" to that we don't duplicate
-#      functionality all over the Finmag code base.
-#
-# The `Field` class represents all scalar and vector fields we need to
-# represent as dolfin functions (i.e. discretized fields on a
-# mesh). It is always tied to a specific mesh and choice of function
-# space (e.g. linear CG).
-#
-# It does *not* directly represent the abstract concept of a
-# (continuous) physical field.
-#
-#
-# What does the field class do?
-#
-# - Set field values (initialisation, changes at some point during the
-#   simulation) for primary fields M, H_Zeeman, current, etc.
-#
-#   - from constant DONE
-#   - from dolfin expression DONE
-#   - from python function DONE
-#   - from files TODO
-#
-# - Retrieve field values
-#
-#   - derived entities such as spatially averaged energy.
-#     Can express dolfin code -> quick
-#
-#   - raw access to field at some particular point or raw
-#     data for all nodes (debugging?)
-#
-# - output data
-#
-#   - for visualisation (use dolfin tools)
-#   - for data storage (use dolfin tools)
-#
-# Maybe to be added later:
-#
-# def nodal_volume(self):
-#
-#     return nodal_volume
-
 import dolfin as df
 import numpy as np
 
 
 class Field(object):
+    """
+    A thin wrapper around the dolfin function for unified and convenient
+    operations on scalar and vector fields.
+
+    The Field class represents all scalar and vector fields that need to
+    be represented as dolfin functions (i.e. discretized fields on a mesh).
+    It is always tied to a specific mesh and choice of function space.
+
+    There are two reasons Field class exists:
+
+      - Certain things are awkward (or currently impossible) when using
+        dolfin.Functions directly (for example, per-node operations on
+        vector fields or storing a dolfin.Function in a format convenient
+        for use in Finmag).
+
+      - Even if things are possible, sometimes they are non-trivial to
+        get right, especially in parallel. Therefore this class acts as
+        a "single point of contact" to that we don't duplicate
+        functionality all over the Finmag code base.
+
+    What does the field class do?
+
+      - Set field values:
+        - from constant (dolfin constant, tuple, list, int, float, basestring)
+        - from dolfin expression
+        - from python function
+        - from files (hdf5)
+
+      - Retrieve field values:
+        - derived entities such as spatially averaged energy.
+        - raw access to field at some particular point or raw data for
+          all nodes
+
+      - Output data:
+        - for visualisation
+        - for data storage
+
+    """
     def __init__(self, functionspace, value=None, normalised=False,
                  name=None, unit=None):
         self.functionspace = functionspace
