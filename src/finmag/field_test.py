@@ -588,7 +588,7 @@ class TestField(object):
                 assert f_av.shape == (3,)
 
     def test_coords_and_values_scalar_field(self):
-        # Test for scalar fields on 1d, 2d, and 3d meshes,
+        # Test for scalar fields on 1D, 2D, and 3D meshes,
         # initialised with a dolfin expression.
         expression = df.Expression('1.3*x[0]')
 
@@ -613,7 +613,7 @@ class TestField(object):
             assert np.all(values[:, 0] == expected_values)
 
     def test_coords_and_values_vector_field(self):
-        # Different expressions for 3d vector fields.
+        # Different expressions for 3D vector fields.
         expression = df.Expression(['1.03*x[0]', '2.31*x[0]', '-1*x[0]'])
 
         for functionspace in self.vector3d_fspaces:
@@ -644,22 +644,24 @@ class TestField(object):
             assert np.all(values[:, 2] == expected_values[2])
 
     def test_probe_field_scalar_field(self):
+        # Test probing field at and outside the mesh node for scalar field and
+        # an appropriate expression for setting the value.
         for functionspace in self.scalar_fspaces:
             field = Field(functionspace)
             mesh_dim = field.mesh_dim()
 
             if mesh_dim == 1:
                 field.set(df.Expression('1.3*x[0]'))
-                exact_result_at_node = 1.3 * 0.5
-                exact_result_outside_node = 1.3 * 0.55
+                exact_result_at_node = 1.3*0.5
+                exact_result_out_node = 1.3*self.probing_coord
             elif mesh_dim == 2:
                 field.set(df.Expression('1.3*x[0] - 2.3*x[1]'))
-                exact_result_at_node = 1.3 * 0.5 - 2.3*0.5
-                exact_result_outside_node = 1.3 * 0.55 - 2.3*0.55
+                exact_result_at_node = (1.3 - 2.3)*0.5
+                exact_result_out_node = (1.3 - 2.3)*self.probing_coord
             elif mesh_dim == 3:
                 field.set(df.Expression('1.3*x[0] - 2.3*x[1] + 6.1*x[2]'))
-                exact_result_at_node = 1.3 * 0.5 + (-2.3 + 6.1)*0.5
-                exact_result_outside_node = 1.3 * 0.55 + (-2.3 + 6.1)*0.55
+                exact_result_at_node = (1.3 - 2.3 + 6.1)*0.5
+                exact_result_out_node = (1.3 - 2.3 + 6.1)*self.probing_coord
 
             # Probe and check the result at the mesh node.
             probe_point = mesh_dim * (0.5,)
@@ -668,10 +670,10 @@ class TestField(object):
             assert abs(probed_value - exact_result_at_node) < self.tol1
 
             # Probe and check the result outside the mesh node.
-            probe_point = mesh_dim * (0.55,)
+            probe_point = mesh_dim * (self.probing_coord,)
             probed_value = field.probe_field(probe_point)
             assert isinstance(probed_value, float)
-            assert abs(probed_value - exact_result_outside_node) < self.tol1
+            assert abs(probed_value - exact_result_out_node) < self.tol1
 
     def test_probe_field_vector_field(self):
         for functionspace in self.scalar_fspaces:
