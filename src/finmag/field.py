@@ -20,7 +20,7 @@ class Field(object):
 
       - Even if things are possible, sometimes they are non-trivial to
         get right, especially in parallel. Therefore this class acts as
-        a "single point of contact" to that we don't duplicate
+        a "single point of contact" so that we don't duplicate
         functionality all over the Finmag code base.
 
     What does the field class do?
