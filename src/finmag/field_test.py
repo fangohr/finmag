@@ -542,9 +542,8 @@ class TestField(object):
                 field = Field(functionspace, expression)
                 f_av = field.average()
 
-                assert abs(f_av[0] - f_av_expected) < self.tol1
-                assert isinstance(f_av, np.ndarray)
-                assert f_av.shape == (1,)
+                assert abs(f_av - f_av_expected) < self.tol1
+                assert isinstance(f_av, float)
 
     def test_average_vector_field(self):
         expressions = [df.Constant((1, 5.1, -3.6)),
