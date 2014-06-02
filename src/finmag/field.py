@@ -59,6 +59,18 @@ class Field(object):
         self.unit = unit
 
     def set(self, value):
+        """
+        Set the field value f and normalise the field if specified in __init__.
+
+        Args:
+          value: The value for setting the field.
+                 The type of value argument can be:
+                   - Scalar field: int, float, basestring, df.Constant,
+                                   df.Expression, python function
+                   - Vector field: tuple, list, numpy array, df.Constant,
+                                   df.Expression, python function
+
+        """
         # Dolfin Constant and Expression type values
         # appropriate for both scalar and vector fields.
         if isinstance(value, (df.Constant, df.Expression)):
