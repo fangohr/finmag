@@ -148,7 +148,7 @@ class Field(object):
             # Vector field is normalised so that
             # the vector norm is 1 at all mesh nodes.
             norm_squared = 0
-            for i in xrange(self.value_dim()):
+            for i in range(self.value_dim()):
                 norm_squared += self.f[i]**2
             norm = norm_squared**0.5
 
@@ -158,24 +158,24 @@ class Field(object):
             # Scalar field normalisation is not required. Normalisation
             # can be implemented so that the whole field is divided by
             # its maximum value. This might cause some problems if the
-            # code needs to be run in parallel.
+            # code is run in parallel.
             raise NotImplementedError('The normalisation of scalar field '
                                       'values is not implemented.')
 
     def average(self):
         # Compute the mesh "volume". For 1D mesh "volume" is the length and
-        # for 2D mesh is the area.
+        # for 2D mesh is the area of the mesh.
         volume = df.assemble(df.Constant(1) * df.dx, mesh=self.mesh())
 
+        # Scalar field.
         if isinstance(self.functionspace, df.FunctionSpace):
-            # Scalar field.
             return df.assemble(self.f * df.dx) / volume
         
+        # Vector field.
         elif isinstance(self.functionspace, df.VectorFunctionSpace):
-            # Vector field.
             f_average = []
+            # Compute the average for every vector component independently.
             for i in xrange(self.value_dim()):
-                # Compute the average for every vector component independently.
                 f_average.append(df.assemble(self.f[i] * df.dx))
 
             return np.array(f_average) / volume
@@ -248,13 +248,6 @@ class Field(object):
     def save(self, filename):
         """Dispatches to specialists"""
         raise NotImplementedError
-
-    def save_pvd(self, filename):
-        """Save to pvd file using dolfin code"""
-        if filename[-4:] != '.pvd':
-            filename += '.pvd'
-        pvd_file = df.File(filename)
-        pvd_file << self.f
 
     def save_hdf5(self, filename):
         """Save to hdf5 file using dolfin code"""
