@@ -59,29 +59,29 @@ class Field(object):
     def __init__(self, functionspace, value=None, normalised=False,
                  name=None, unit=None):
         self.functionspace = functionspace
-
         self.f = df.Function(self.functionspace)  # Create a zero-function.
+
+        # Set the function (f) value if specified. Field is normalised
+        # in the set method if normalised=True.
         self.normalised = normalised
-        # Set the function value f if specified. Field is normalised
-        # in the set method if self.normalised=True.
         if value is not None:
             self.set(value)
 
         self.name = name
         if name is not None:
-            self.f.rename(name, name)  # Rename both function's name and label.
+            self.f.rename(name, name)  # Rename function's name and label.
 
         self.unit = unit
 
     def set(self, value):
         if isinstance(value, (df.Constant, df.Expression)):
             # Dolfin Constant and Expression type values
-            # suitable for both scalar and vector fields.
+            # appropriate for both scalar and vector fields.
             self.f = df.interpolate(value, self.functionspace)
 
-        elif isinstance(value, (basestring, int, float)):
+        elif isinstance(value, (int, float, basestring)):
             # Int, float, and basestring (str and unicode) type values
-            # suitable only for scalar fields.
+            # appropriate only for scalar fields.
             if isinstance(self.functionspace, df.FunctionSpace):
                 self.f = df.interpolate(df.Constant(value), self.functionspace)
             else:
@@ -90,10 +90,10 @@ class Field(object):
 
         elif isinstance(value, (tuple, list, np.ndarray)):
             # Tuple, list, and numpy array type values
-            # suitable only for vector fields.
+            # appropriate only for vector fields.
             if isinstance(self.functionspace, df.VectorFunctionSpace) and \
                     len(value) == self.value_dim():
-                # The dimensions of value and vector field value must be equal.
+                # Value and vector field dimensions must be equal.
                 self.f = df.interpolate(df.Constant(value), self.functionspace)
 
             elif len(value) != self.value_dim():
@@ -107,7 +107,7 @@ class Field(object):
 
         elif hasattr(value, '__call__'):
             # Python function type values
-            # suitable for both vector and scalar fields.
+            # appropriate for both vector and scalar fields.
 
             # Wrapped dolfin expression class which incorporates the python
             # function. For the value_shape method, functionspace is required.
@@ -163,21 +163,22 @@ class Field(object):
                                       'values is not implemented.')
 
     def average(self):
-        # Compute the mesh "volume". For 1d mesh the "volume" is length and
-        # for 2d mesh is area.
+        # Compute the mesh "volume". For 1D mesh "volume" is the length and
+        # for 2D mesh is the area.
         volume = df.assemble(df.Constant(1) * df.dx, mesh=self.mesh())
 
-        f_av = []
         if isinstance(self.functionspace, df.FunctionSpace):
             # Scalar field.
-            f_av.append(df.assemble(self.f * df.dx))
+            return df.assemble(self.f * df.dx) / volume
+        
         elif isinstance(self.functionspace, df.VectorFunctionSpace):
             # Vector field.
+            f_average = []
             for i in xrange(self.value_dim()):
                 # Compute the average for every vector component independently.
-                f_av.append(df.assemble(self.f[i] * df.dx))
+                f_average.append(df.assemble(self.f[i] * df.dx))
 
-        return np.array(f_av) / volume
+            return np.array(f_average) / volume
 
     def coords_and_values(self, t=None):
         # The function values are defined at mesh nodes only for
