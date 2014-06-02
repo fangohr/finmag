@@ -676,34 +676,35 @@ class TestField(object):
             assert abs(probed_value - exact_result_out_node) < self.tol1
 
     def test_probe_field_vector_field(self):
-        for functionspace in self.scalar_fspaces:
-            field = Field(functionspace)
+        # Test probing field at and outside the mesh node for vector field and
+        # an appropriate expression for setting the value.
+        for functionspace in self.vector3d_fspaces:
+            field = Field(functionspace,
+                          df.Expression(['1.3*x[0]', '0.3*x[0]', '-6.2*x[0]']))
             mesh_dim = field.mesh_dim()
 
-            if mesh_dim == 1:
-                field.set(df.Expression('1.3*x[0]'))
-                exact_result_at_node = 1.3 * 0.5
-                exact_result_outside_node = 1.3 * 0.55
-            elif mesh_dim == 2:
-                field.set(df.Expression('1.3*x[0] - 2.3*x[1]'))
-                exact_result_at_node = 1.3 * 0.5 - 2.3*0.5
-                exact_result_outside_node = 1.3 * 0.55 - 2.3*0.55
-            elif mesh_dim == 3:
-                field.set(df.Expression('1.3*x[0] - 2.3*x[1] + 6.1*x[2]'))
-                exact_result_at_node = 1.3 * 0.5 + (-2.3 + 6.1)*0.5
-                exact_result_outside_node = 1.3 * 0.55 + (-2.3 + 6.1)*0.55
+            exact_result_at_node = (1.3*0.5, 0.3*0.5, -6.2*0.5)
+            exact_result_out_node = (1.3*self.probing_coord,
+                                     0.3*self.probing_coord,
+                                     -6.2*self.probing_coord)
 
             # Probe and check the result at the mesh node.
             probe_point = mesh_dim * (0.5,)
             probed_value = field.probe_field(probe_point)
-            assert isinstance(probed_value, float)
-            assert abs(probed_value - exact_result_at_node) < self.tol1
+            assert isinstance(probed_value, np.ndarray)
+            assert len(probed_value) == 3
+            assert abs(probed_value[0] - exact_result_at_node[0]) < self.tol1
+            assert abs(probed_value[1] - exact_result_at_node[1]) < self.tol1
+            assert abs(probed_value[2] - exact_result_at_node[2]) < self.tol1
 
             # Probe and check the result outside the mesh node.
-            probe_point = mesh_dim * (0.55,)
+            probe_point = mesh_dim * (self.probing_coord,)
             probed_value = field.probe_field(probe_point)
-            assert isinstance(probed_value, float)
-            assert abs(probed_value - exact_result_outside_node) < self.tol1
+            assert isinstance(probed_value, np.ndarray)
+            assert len(probed_value) == 3
+            assert abs(probed_value[0] - exact_result_out_node[0]) < self.tol1
+            assert abs(probed_value[1] - exact_result_out_node[1]) < self.tol1
+            assert abs(probed_value[2] - exact_result_out_node[2]) < self.tol1
 
     def test_mesh_dim(self):
         for functionspace in self.all_fspaces:
