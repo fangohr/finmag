@@ -522,7 +522,7 @@ class TestField(object):
         value = (1.3, 3.6)
         for functionspace in self.vector2d_fspaces:
             field = Field(functionspace, value, normalised=True)
-            
+
             values = field.coords_and_values()[1]  # Ignore coordinates.
 
             # Check the comonents of vector field.
@@ -531,7 +531,7 @@ class TestField(object):
             normalised_c2 = value[1] / norm_exact
             assert np.all(abs(values[:, 0] - normalised_c1) < self.tol3)
             assert np.all(abs(values[:, 1] - normalised_c2) < self.tol3)
-            
+
             # Check the norm of normalised vector field.
             norm = (values[:, 0]**2 + values[:, 1]**2)**0.5
             assert np.all(abs(norm - 1) < self.tol3)
@@ -540,7 +540,7 @@ class TestField(object):
         value = (-1.3, 3.16, 0)
         for functionspace in self.vector3d_fspaces:
             field = Field(functionspace, value, normalised=True)
-            
+
             values = field.coords_and_values()[1]  # Ignore coordinates.
 
             # Check the comonents of vector field.
@@ -551,21 +551,21 @@ class TestField(object):
             assert np.all(abs(values[:, 0] - normalised_c1) < self.tol3)
             assert np.all(abs(values[:, 1] - normalised_c2) < self.tol3)
             assert np.all(abs(values[:, 2] - normalised_c3) < self.tol3)
-            
+
             # Check the norm of normalised vector field.
             norm = (values[:, 0]**2 + values[:, 1]**2 + values[:, 2]**2)**0.5
             assert np.all(abs(norm - 1) < self.tol3)
-        
+
         # 4D vector field
         value = (-1.23, -3.96, 0, 6.98)
         for functionspace in self.vector4d_fspaces:
             field = Field(functionspace, value, normalised=True)
-            
+
             values = field.coords_and_values()[1]  # Ignore coordinates.
 
             # Check the comonents of vector field.
-            norm_exact = (value[0]**2 + value[1]**2 + value[2]**2 + \
-                              value[3]**2)**0.5
+            norm_exact = (value[0]**2 + value[1]**2 + value[2]**2 +
+                          value[3]**2)**0.5
             normalised_c1 = value[0] / norm_exact
             normalised_c2 = value[1] / norm_exact
             normalised_c3 = value[2] / norm_exact
@@ -574,12 +574,12 @@ class TestField(object):
             assert np.all(abs(values[:, 1] - normalised_c2) < self.tol3)
             assert np.all(abs(values[:, 2] - normalised_c3) < self.tol3)
             assert np.all(abs(values[:, 3] - normalised_c4) < self.tol3)
-            
+
             # Check the norm of normalised vector field.
-            norm = (values[:, 0]**2 + values[:, 1]**2 + values[:, 2]**2 + \
-                        values[:, 3]**2)**0.5
+            norm = (values[:, 0]**2 + values[:, 1]**2 + values[:, 2]**2 +
+                    values[:, 3]**2)**0.5
             assert np.all(abs(norm - 1) < self.tol3)
-      
+
         # Test normalisation if field is set using
         # dolfin expression or python function.
         def python_fun3d(x):
