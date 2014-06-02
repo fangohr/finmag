@@ -140,6 +140,13 @@ class Field(object):
             self.normalise()
 
     def normalise(self):
+        """
+        Normalise the vector field so that the norm=1.
+
+        Note:
+          This method is not implemented for scalar fields.
+
+        """
         # Normalisation is implemented only for vector fields.
         if isinstance(self.functionspace, df.VectorFunctionSpace):
             # Vector field is normalised so that norm=1 at all mesh nodes.
@@ -159,6 +166,13 @@ class Field(object):
                                       'values is not implemented.')
 
     def average(self):
+        """
+        Return the spatial field average.
+
+        Returns:
+          f_average (float for scalar and np.ndarray for vector field)
+
+        """
         # Compute the mesh "volume". For 1D mesh "volume" is the length and
         # for 2D mesh is the area of the mesh.
         volume = df.assemble(df.Constant(1) * df.dx, mesh=self.mesh())
