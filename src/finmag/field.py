@@ -170,7 +170,7 @@ class Field(object):
         # Scalar field.
         if isinstance(self.functionspace, df.FunctionSpace):
             return df.assemble(self.f * df.dx) / volume
-        
+
         # Vector field.
         elif isinstance(self.functionspace, df.VectorFunctionSpace):
             f_average = []
