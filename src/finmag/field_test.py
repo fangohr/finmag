@@ -723,3 +723,9 @@ class TestField(object):
                 assert field.value_dim() == 1
             elif isinstance(functionspace, df.VectorFunctionSpace):
                 assert field.value_dim() == value_dim_expected[0]
+
+    def test_mesh(self):
+        for functionspace in self.all_fspaces:
+            field = Field(functionspace)
+
+            assert isinstance(field.mesh(), df.Mesh)
