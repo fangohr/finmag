@@ -461,62 +461,6 @@ class TestField(object):
             assert abs(probed_value[2] - expected_value[2]) < self.tol1
             assert abs(probed_value[3] - expected_value[3]) < self.tol1
 
-    def test_coords_and_values_scalar_field(self):
-        # Test for scalar fields on 1d, 2d, and 3d meshes,
-        # initialised with a dolfin expression.
-        expression = df.Expression('1.3*x[0]')
-
-        for functionspace in self.scalar_fspaces:
-            expected_coords = functionspace.mesh().coordinates()
-            num_nodes = functionspace.mesh().num_vertices()
-            expected_values = 1.3*expected_coords[:, 0]
-
-            field = Field(functionspace, expression)
-            coords, values = field.coords_and_values()
-
-            # Type of results must be numpy array.
-            assert isinstance(coords, np.ndarray)
-            assert isinstance(values, np.ndarray)
-
-            # Check the shape of results.
-            assert values.shape == (num_nodes, field.value_dim())
-            assert coords.shape == (num_nodes, field.mesh_dim())
-
-            # Check values of results.
-            assert np.all(coords == expected_coords)
-            assert np.all(values[:, 0] == expected_values)
-
-    def test_coords_and_values_vector_field(self):
-        # Different expressions for 3d vector fields.
-        expression = df.Expression(['1.03*x[0]', '2.31*x[0]', '-1*x[0]'])
-
-        for functionspace in self.vector3d_fspaces:
-            # Initialise the field with an appropriate expression for
-            # the function space and compute expected results.
-            expected_coords = functionspace.mesh().coordinates()
-            num_nodes = functionspace.mesh().num_vertices()
-
-            expected_values = (1.03*expected_coords[:, 0],
-                               2.31*expected_coords[:, 0],
-                               -1*expected_coords[:, 0])
-
-            field = Field(functionspace, expression)
-            coords, values = field.coords_and_values()
-
-            # Type of results must be numpy array.
-            assert isinstance(coords, np.ndarray)
-            assert isinstance(values, np.ndarray)
-
-            # Check the shape of results.
-            assert values.shape == (num_nodes, field.value_dim())
-            assert coords.shape == (num_nodes, field.mesh_dim())
-
-            # Check values of results.
-            assert np.all(coords == expected_coords)
-            assert np.all(values[:, 0] == expected_values[0])
-            assert np.all(values[:, 1] == expected_values[1])
-            assert np.all(values[:, 2] == expected_values[2])
-
     def test_normalise(self):
         # 2D vector field
         value = (1.3, 3.6)
@@ -642,6 +586,62 @@ class TestField(object):
                 # Check the type and shape of average result.
                 assert isinstance(f_av, np.ndarray)
                 assert f_av.shape == (3,)
+
+    def test_coords_and_values_scalar_field(self):
+        # Test for scalar fields on 1d, 2d, and 3d meshes,
+        # initialised with a dolfin expression.
+        expression = df.Expression('1.3*x[0]')
+
+        for functionspace in self.scalar_fspaces:
+            expected_coords = functionspace.mesh().coordinates()
+            num_nodes = functionspace.mesh().num_vertices()
+            expected_values = 1.3*expected_coords[:, 0]
+
+            field = Field(functionspace, expression)
+            coords, values = field.coords_and_values()
+
+            # Type of results must be numpy array.
+            assert isinstance(coords, np.ndarray)
+            assert isinstance(values, np.ndarray)
+
+            # Check the shape of results.
+            assert values.shape == (num_nodes, field.value_dim())
+            assert coords.shape == (num_nodes, field.mesh_dim())
+
+            # Check values of results.
+            assert np.all(coords == expected_coords)
+            assert np.all(values[:, 0] == expected_values)
+
+    def test_coords_and_values_vector_field(self):
+        # Different expressions for 3d vector fields.
+        expression = df.Expression(['1.03*x[0]', '2.31*x[0]', '-1*x[0]'])
+
+        for functionspace in self.vector3d_fspaces:
+            # Initialise the field with an appropriate expression for
+            # the function space and compute expected results.
+            expected_coords = functionspace.mesh().coordinates()
+            num_nodes = functionspace.mesh().num_vertices()
+
+            expected_values = (1.03*expected_coords[:, 0],
+                               2.31*expected_coords[:, 0],
+                               -1*expected_coords[:, 0])
+
+            field = Field(functionspace, expression)
+            coords, values = field.coords_and_values()
+
+            # Type of results must be numpy array.
+            assert isinstance(coords, np.ndarray)
+            assert isinstance(values, np.ndarray)
+
+            # Check the shape of results.
+            assert values.shape == (num_nodes, field.value_dim())
+            assert coords.shape == (num_nodes, field.mesh_dim())
+
+            # Check values of results.
+            assert np.all(coords == expected_coords)
+            assert np.all(values[:, 0] == expected_values[0])
+            assert np.all(values[:, 1] == expected_values[1])
+            assert np.all(values[:, 2] == expected_values[2])
 
     def test_probe_field_scalar_field(self):
         for functionspace in self.scalar_fspaces:
