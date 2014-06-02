@@ -74,26 +74,26 @@ class Field(object):
         self.unit = unit
 
     def set(self, value):
+        # Dolfin Constant and Expression type values
+        # appropriate for both scalar and vector fields.
         if isinstance(value, (df.Constant, df.Expression)):
-            # Dolfin Constant and Expression type values
-            # appropriate for both scalar and vector fields.
             self.f = df.interpolate(value, self.functionspace)
 
+        # Int, float, and basestring (str and unicode) type values
+        # appropriate only for scalar fields.
         elif isinstance(value, (int, float, basestring)):
-            # Int, float, and basestring (str and unicode) type values
-            # appropriate only for scalar fields.
             if isinstance(self.functionspace, df.FunctionSpace):
                 self.f = df.interpolate(df.Constant(value), self.functionspace)
             else:
                 raise TypeError('{} inappropriate for setting the vector '
                                 'field value.'.format(type(value)))
 
+        # Tuple, list, and numpy array type values
+        # appropriate only for vector fields.
         elif isinstance(value, (tuple, list, np.ndarray)):
-            # Tuple, list, and numpy array type values
-            # appropriate only for vector fields.
+            # Dimensions of value and vector field must be equal.
             if isinstance(self.functionspace, df.VectorFunctionSpace) and \
                     len(value) == self.value_dim():
-                # Value and vector field dimensions must be equal.
                 self.f = df.interpolate(df.Constant(value), self.functionspace)
 
             elif len(value) != self.value_dim():
@@ -105,10 +105,9 @@ class Field(object):
                 raise TypeError('{} inappropriate for setting the scalar '
                                 'field  value.'.format(type(value)))
 
+        # Python function type values
+        # appropriate for both vector and scalar fields.
         elif hasattr(value, '__call__'):
-            # Python function type values
-            # appropriate for both vector and scalar fields.
-
             # Wrapped dolfin expression class which incorporates the python
             # function. For the value_shape method, functionspace is required.
             # However, it is impossible to pass it to __init__ method
