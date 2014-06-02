@@ -580,6 +580,22 @@ class TestField(object):
                         values[:, 3]**2)**0.5
             assert np.all(abs(norm - 1) < self.tol3)
       
+        # Test normalisation if field is set using
+        # dolfin expression or python function.
+        def python_fun3d(x):
+            return (1.2*x[0], -1.6*x[1], 0.3*x[2])
+
+        values = [python_fun3d,
+                  df.Expression(['1.2*x[0]', '-1.6*x[1]', '0.3*x[2]'])]
+
+        for value in values:
+            field = Field(self.fs3d_vector3d, value, normalised=True)
+            values = field.coords_and_values()[1]  # Ignore coordinates.
+
+            # Check the norm of normalised vector field.
+            norm = (values[:, 0]**2 + values[:, 1]**2 + values[:, 2]**2)**0.5
+            assert np.all(abs(norm - 1) < 0.1)  # Too big error!!!!
+
     def test_average_scalar_field(self):
         expressions = [df.Constant(5),
                        df.Expression('10*x[0]')]
