@@ -143,7 +143,7 @@ class Field(object):
             self.normalise()
 
     def normalise(self):
-        # Normalisation is implemented only for vector fields. 
+        # Normalisation is implemented only for vector fields.
         if isinstance(self.functionspace, df.VectorFunctionSpace):
             # Vector field is normalised so that norm=1 at all mesh nodes.
             norm_squared = 0
