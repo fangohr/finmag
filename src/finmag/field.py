@@ -129,9 +129,9 @@ class Field(object):
             wrapped_expression = WrappedExpression(value)
             self.f = df.interpolate(wrapped_expression, self.functionspace)
 
+        # The value type cannot be used for neither scalar
+        # nor vector field setting.
         else:
-            # The value type cannot be used for neither scalar
-            # nor vector field setting.
             raise TypeError('{} inappropriate for setting the field '
                             'value.'.format(type(value)))
 
