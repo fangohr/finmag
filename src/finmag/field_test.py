@@ -582,14 +582,14 @@ class TestField(object):
 
         # Test normalisation if field is set using
         # dolfin expression or python function.
-        def python_fun3d(x):
+        def python_fun(x):
             return (1.2*x[0], -1.6*x[1], 0.3*x[2])
 
-        values = [python_fun3d,
-                  df.Expression(['1.2*x[0]', '-1.6*x[1]', '0.3*x[2]'])]
+        expressions = [python_fun,
+                       df.Expression(['1.2*x[0]', '-1.6*x[1]', '0.3*x[2]'])]
 
-        for value in values:
-            field = Field(self.fs3d_vector3d, value, normalised=True)
+        for expression in expressions:
+            field = Field(self.fs3d_vector3d, expression, normalised=True)
             values = field.coords_and_values()[1]  # Ignore coordinates.
 
             # Check the norm of normalised vector field.
@@ -597,8 +597,12 @@ class TestField(object):
             assert np.all(abs(norm - 1) < 0.1)  # Too big error!!!!
 
     def test_average_scalar_field(self):
-        expressions = [df.Constant(5),
-                       df.Expression('10*x[0]')]
+        # Different expressions for setting the 3D vector field.
+        # All expressions set the field with same average value.
+        def python_fun(x):
+            return 10*x[0]
+
+        expressions = [df.Constant(5), df.Expression('10*x[0]'), python_fun]
 
         f_av_expected = 5
 
@@ -607,12 +611,21 @@ class TestField(object):
                 field = Field(functionspace, expression)
                 f_av = field.average()
 
+                # Check the average value.
                 assert abs(f_av - f_av_expected) < self.tol1
+                
+                # Check the type of average result.
                 assert isinstance(f_av, float)
 
     def test_average_vector_field(self):
+        # Different expressions for setting the 3D vector field.
+        # All expressions set the field with same average value.
+        def python_fun(x):
+            return (2*x[0], 10.2*x[0], -7.2*x[0])
+
         expressions = [df.Constant((1, 5.1, -3.6)),
-                       df.Expression(['2*x[0]', '10.2*x[0]', '-7.2*x[0]'])]
+                       df.Expression(['2*x[0]', '10.2*x[0]', '-7.2*x[0]']),
+                       python_fun]
 
         f_av_expected = (1, 5.1, -3.6)
 
@@ -621,9 +634,12 @@ class TestField(object):
                 field = Field(functionspace, expression)
                 f_av = field.average()
 
+                # Check the average values for all components.
                 assert abs(f_av[0] - f_av_expected[0]) < self.tol1
                 assert abs(f_av[1] - f_av_expected[1]) < self.tol1
                 assert abs(f_av[2] - f_av_expected[2]) < self.tol1
+
+                # Check the type and shape of average result.
                 assert isinstance(f_av, np.ndarray)
                 assert f_av.shape == (3,)
 
