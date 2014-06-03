@@ -525,13 +525,12 @@ class TestField(object):
             assert np.all(abs(norm - 1) < 0.1)  # Too big error!!!!
 
     def test_average_scalar_field(self):
-        """Docstring."""
-        # Different expressions for setting the 3D vector field.
+        """Test computing the scalar field average."""
+        # Different expressions for setting the scalar field.
         # All expressions set the field with same average value.
-        def python_fun(x):
-            return 10*x[0]
-
-        expressions = [df.Constant(5), df.Expression('10*x[0]'), python_fun]
+        expressions = [df.Constant(5),
+                       df.Expression('10*x[0]'),
+                       lambda x:10*x[0]]
 
         f_av_expected = 5
 
@@ -547,15 +546,33 @@ class TestField(object):
                 assert isinstance(f_av, float)
 
     def test_average_vector_field(self):
-        """Docstring."""
+        """Test computing the vector field average."""
+        # Different expressions for setting the 2D vector field.
+        # All expressions set the field with same average value.
+        expressions = [df.Constant((1, 5.1)),
+                       df.Expression(['2*x[0]', '10.2*x[0]']),
+                       lambda x:(2*x[0], 10.2*x[0])]
+
+        f_av_expected = (1, 5.1)
+
+        for functionspace in self.vector2d_fspaces:
+            for expression in expressions:
+                field = Field(functionspace, expression)
+                f_av = field.average()
+
+                # Check the average values for all components.
+                assert abs(f_av[0] - f_av_expected[0]) < self.tol1
+                assert abs(f_av[1] - f_av_expected[1]) < self.tol1
+
+                # Check the type and shape of average result.
+                assert isinstance(f_av, np.ndarray)
+                assert f_av.shape == (field.value_dim(),)
+
         # Different expressions for setting the 3D vector field.
         # All expressions set the field with same average value.
-        def python_fun(x):
-            return (2*x[0], 10.2*x[0], -7.2*x[0])
-
         expressions = [df.Constant((1, 5.1, -3.6)),
                        df.Expression(['2*x[0]', '10.2*x[0]', '-7.2*x[0]']),
-                       python_fun]
+                       lambda x:(2*x[0], 10.2*x[0], -7.2*x[0])]
 
         f_av_expected = (1, 5.1, -3.6)
 
@@ -571,7 +588,30 @@ class TestField(object):
 
                 # Check the type and shape of average result.
                 assert isinstance(f_av, np.ndarray)
-                assert f_av.shape == (3,)
+                assert f_av.shape == (field.value_dim(),)
+        
+        # Different expressions for setting the 4D vector field.
+        # All expressions set the field with same average value.
+        expressions = [df.Constant((1, 5.1, -3.6, 0)),
+                       df.Expression(['2*x[0]', '10.2*x[0]', '-7.2*x[0]', '0']),
+                       lambda x:(2*x[0], 10.2*x[0], -7.2*x[0], 0)]
+
+        f_av_expected = (1, 5.1, -3.6, 0)
+
+        for functionspace in self.vector4d_fspaces:
+            for expression in expressions:
+                field = Field(functionspace, expression)
+                f_av = field.average()
+
+                # Check the average values for all components.
+                assert abs(f_av[0] - f_av_expected[0]) < self.tol1
+                assert abs(f_av[1] - f_av_expected[1]) < self.tol1
+                assert abs(f_av[2] - f_av_expected[2]) < self.tol1
+                assert abs(f_av[3] - f_av_expected[3]) < self.tol1
+
+                # Check the type and shape of average result.
+                assert isinstance(f_av, np.ndarray)
+                assert f_av.shape == (field.value_dim(),)
 
     def test_coords_and_values_scalar_field(self):
         """Docstring."""
