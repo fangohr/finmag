@@ -1,40 +1,66 @@
-from distutils.core import setup
-from distutils.extension import Extension
-from Cython.Distutils import build_ext
-from Cython.Build import cythonize
-import numpy
-import petsc4py
+#!/usr/bin/env python
 
-#python setup.py build_ext --inplace
+#$ python setup.py build_ext --inplace
 
-import fnmatch
-import os
-import glob
+from numpy.distutils.command import build_src
 
-#print __file__
-#print os.getcwd()
-realpath=os.path.realpath(__file__)
-par_path=os.path.split(realpath)[0]
+# a bit of monkeypatching ...
+import Cython.Compiler.Main
+build_src.Pyrex = Cython
+build_src.have_pyrex = True
+def have_pyrex():
+    import sys
+    try:
+        import Cython.Compiler.Main
+        sys.modules['Pyrex'] = Cython
+        sys.modules['Pyrex.Compiler'] = Cython.Compiler
+        sys.modules['Pyrex.Compiler.Main'] = Cython.Compiler.Main
+        return True
+    except ImportError:
+        return False
+build_src.have_pyrex = have_pyrex
 
-sundials_path = os.path.join(par_path,'sundials')
+def configuration(parent_package='',top_path=None):
+    INCLUDE_DIRS = []
+    LIBRARY_DIRS = []
+    LIBRARIES    = ['sundials_cvodes', 'sundials_nvecparallel', 'sundials_nvecserial']
 
-sources = []
-sources.append(os.path.join(sundials_path,'cvode2.pyx'))
+    # PETSc
+    import os
+    PETSC_DIR  = os.environ['PETSC_DIR']
+    PETSC_ARCH = os.environ.get('PETSC_ARCH', '')
+    from os.path import join, isdir
+    if PETSC_ARCH and isdir(join(PETSC_DIR, PETSC_ARCH)):
+        INCLUDE_DIRS += [join(PETSC_DIR, PETSC_ARCH, 'include'),
+                         join(PETSC_DIR, PETSC_ARCH, 'include/sundials'),
+                         join(PETSC_DIR, PETSC_ARCH, 'include/openmpi/ompi/mpi/cxx'),
+                         join(PETSC_DIR, 'include')]
+        LIBRARY_DIRS += [join(PETSC_DIR, PETSC_ARCH, 'lib')]
+    else:
+        raise Exception("where's your PETSC_ARCH?")
+        if PETSC_ARCH: pass # XXX should warn ...
+        INCLUDE_DIRS += [join(PETSC_DIR, 'include')]
+        LIBRARY_DIRS += [join(PETSC_DIR, 'lib')]
+    LIBRARIES += [#'petscts', 'petscsnes', 'petscksp',
+                  #'petscdm', 'petscmat',  'petscvec',
+                  'petsc']
 
+    # PETSc for Python
+    import petsc4py
+    INCLUDE_DIRS += [petsc4py.get_include()]
 
-ext_modules = [
-    Extension("cvode2",
-              sources = sources,
-              include_dirs = [numpy.get_include(),petsc4py.get_include(),'/usr/include/petsc', '/usr/include/mpi'],
-              libraries=['m','sundials_cvodes','sundials_nvecserial'],
-              extra_compile_args=["-fopenmp"],
-              extra_link_args=['-fopenmp'],
-              #extra_link_args=["-g"],
-        )
-    ]
-    
+    # Configuration
+    from numpy.distutils.misc_util import Configuration
+    config = Configuration('', parent_package, top_path)
+    config.add_extension('cvode2',
+                         sources = ['sundials/cvode2.pyx'],
+                         depends = [''],
+                         include_dirs=INCLUDE_DIRS + [os.curdir],
+                         libraries=LIBRARIES,
+                         library_dirs=LIBRARY_DIRS,
+                         runtime_library_dirs=LIBRARY_DIRS)
+    return config
 
-setup(
-    cmdclass = {'build_ext': build_ext},
-    ext_modules = ext_modules
-)
+if __name__ == "__main__":
+    from numpy.distutils.core import setup
+    setup(**configuration(top_path='').todict())

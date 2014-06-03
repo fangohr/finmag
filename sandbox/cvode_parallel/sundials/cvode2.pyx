@@ -5,7 +5,9 @@ import numpy as np
 
 # Import the C-level symbols of numpy
 cimport numpy as np
+from petsc4py import PETSc
 from petsc4py.PETSc cimport Vec,  PetscVec
+#from petsc4py.PETSc cimport Comm as MPI_Comm
 
 # Numpy must be initialized. When using numpy from C or Cython you must
 # _always_ do that, or you will have segfaults
@@ -17,6 +19,7 @@ cdef extern from "petsc/petscvec.h":
      PetscErrorCode VecRestoreArray(PetscVec, PetscReal *x)
      PetscErrorCode VecPlaceArray(PetscVec, PetscReal *x)
      PetscErrorCode VecResetArray(PetscVec)
+     PetscErrorCode VecCreateMPIWithArray(MPI_Comm comm, PetscInt bs,PetscInt n,PetscInt N,const PetscScalar array[],PetscVec)
      
 cdef struct cv_userdata:
     void *rhs_fun
@@ -24,18 +27,19 @@ cdef struct cv_userdata:
     void *dm_dt
 
 cdef inline  copy_arr2nv(np.ndarray[realtype, ndim=1,mode='c'] np_x, N_Vector v):
-    cdef long int n = (<N_VectorContent_Serial>v.content).length
+    cdef long int n = (<N_VectorContent_Parallel>v.content).local_length
     cdef void* data_ptr=<void *>np_x.data
-    memcpy((<N_VectorContent_Serial>v.content).data, data_ptr, n*sizeof(double))
+    memcpy((<N_VectorContent_Parallel>v.content).data, data_ptr, n*sizeof(double))
     
     return 0
-
+    
 cdef inline copy_nv2arr(N_Vector v, np.ndarray[realtype, ndim=1, mode='c'] np_x):
-    cdef long int n = (<N_VectorContent_Serial>v.content).length
-    cdef double* v_data = (<N_VectorContent_Serial>v.content).data
+    cdef long int n = (<N_VectorContent_Parallel>v.content).local_length
+    cdef double* v_data = (<N_VectorContent_Parallel>v.content).data
     
     memcpy(np_x.data, v_data, n*sizeof(realtype))
     return 0
+
 
 cdef int cv_rhs(realtype t, N_Vector yv, N_Vector yvdot, void* user_data) except -1:
 
@@ -47,8 +51,8 @@ cdef int cv_rhs(realtype t, N_Vector yv, N_Vector yvdot, void* user_data) except
     cdef Vec y = <Vec>ud.y
     cdef Vec ydot = <Vec>ud.dm_dt
     
-    VecPlaceArray(y.vec, (<N_VectorContent_Serial>yv.content).data)
-    VecPlaceArray(ydot.vec, (<N_VectorContent_Serial>yvdot.content).data)
+    VecPlaceArray(y.vec, (<N_VectorContent_Parallel>yv.content).data)
+    VecPlaceArray(ydot.vec, (<N_VectorContent_Parallel>yvdot.content).data)
     
     (<object>ud.rhs_fun)(t,y,ydot)
     
@@ -78,7 +82,7 @@ cdef class CvodeSolver(object):
     def __cinit__(self,Vec spin,rtol,atol,callback_fun):
 
         self.t = 0
-        self.spin = spin
+        self.spin = spin.duplicate()
         self.dm_dt = spin.duplicate()
         
         self.rtol = rtol
@@ -90,13 +94,19 @@ cdef class CvodeSolver(object):
         
         self.y = y
         
-        #cdef PetscVec v = <PetscVec>(spin.vec)
-        VecGetArray(self.spin.vec,&y[0])
+        #VecGetArray(self.spin.vec,&y[0])
         #self.u_y = N_VNew_Serial(self.y.getLocalSize())
         
-        #how can we use the orginal petsc array rather than the numpy array
-        self.u_y = N_VMake_Serial(spin.getLocalSize(),&y[0])
-        VecRestoreArray(self.spin.vec,&y[0])
+        cdef MPI_Comm comm_c = PETSC_COMM_WORLD
+        
+        #self.u_y = N_VNew_Parallel(comm_c, spin.getLocalSize(), spin.getSize())
+        
+        #VecGetArray(spin.vec,&y[0])
+        #how can we use the orginal petsc array rather than the numpy array?
+        #self.u_y = N_VMake_Serial(spin.getLocalSize(),&y[0])
+        self.u_y = N_VMake_Parallel(comm_c, spin.getLocalSize(), spin.getSize(), &y[0])
+        
+        #VecRestoreArray(spin.vec,&y[0])
         
         self.rhs_fun = <void *>cv_rhs
 
@@ -115,7 +125,8 @@ cdef class CvodeSolver(object):
 
     def set_initial_value(self,np.ndarray[double, ndim=1, mode="c"] spin, t):
         self.t = t
-        #self.y[:] = spin[:]
+        #
+        copy_arr2nv(spin, self.u_y)
 
         flag = CVodeSetUserData(self.cvode_mem, <void*>&self.user_data);
         self.check_flag(flag,"CVodeSetUserData")
@@ -159,10 +170,11 @@ cdef class CvodeSolver(object):
         return step
     
     def test_petsc(self, Vec x):
-        print x
         cdef PetscInt size
         VecGetLocalSize(x.vec, &size)
         print "length from cython = %d"%size
+        comm = PETSc.COMM_WORLD
+        print 'from cython, common:', comm, comm.Get_rank(),comm.Get_size()
 
     def __repr__(self):
         s = []

@@ -1,4 +1,44 @@
 # -*- coding: utf-8 -*-
+
+cdef extern from * nogil:
+     ctypedef int PetscErrorCode
+     ctypedef long  PetscInt
+     ctypedef double PetscReal
+     ctypedef double PetscScalar
+
+cdef extern from "petsc.h":
+
+    ctypedef struct _p_MPI_Comm
+    ctypedef _p_MPI_Comm* MPI_Comm
+
+cdef extern from * nogil:
+
+    MPI_Comm MPI_COMM_NULL
+    MPI_Comm MPI_COMM_SELF
+    MPI_Comm MPI_COMM_WORLD
+
+    enum: MPI_IDENT
+    enum: MPI_CONGRUENT
+    int MPI_Comm_compare(MPI_Comm,MPI_Comm,int*)
+
+    int MPI_Comm_size(MPI_Comm,int*)
+    int MPI_Comm_rank(MPI_Comm,int*)
+    int MPI_Barrier(MPI_Comm)
+
+    int MPI_Initialized(int*)
+    int MPI_Finalized(int*)
+
+    ctypedef int MPI_Fint
+    MPI_Fint MPI_Comm_c2f(MPI_Comm)
+
+cdef extern from * nogil:
+
+    MPI_Comm PETSC_COMM_SELF
+    MPI_Comm PETSC_COMM_WORLD
+
+    int PetscCommDuplicate(MPI_Comm,MPI_Comm*,int*)
+    int PetscCommDestroy(MPI_Comm*)
+
 cdef extern from "sundials/sundials_types.h":
     ctypedef double realtype
     ctypedef bint booleantype
@@ -20,8 +60,21 @@ cdef extern from "nvector/nvector_serial.h":
         realtype *data
         
     ctypedef _N_VectorContent_Serial *N_VectorContent_Serial
+    
+cdef extern from "nvector/nvector_parallel.h":
+    cdef N_Vector N_VMake_Parallel(MPI_Comm comm, long int local_length, long int global_length, realtype *v_data)
+    
+    cdef struct _N_VectorContent_Parallel:
+        long int local_length
+        long int global_length
+        booleantype own_data
+        realtype *data
+        
+    ctypedef _N_VectorContent_Parallel *N_VectorContent_Parallel
+    
+    cdef N_Vector N_VNew_Parallel(MPI_Comm, long int local_length, long int global_length)
 
-	
+
 
 cdef extern from "cvode/cvode.h":
     int CV_ADAMS
@@ -147,10 +200,7 @@ cdef extern from "sundials/sundials_iterative.h":
     int MODIFIED_GS
     int CLASSICAL_GS
 
-cdef extern from * nogil:
-     ctypedef int PetscErrorCode
-     ctypedef long   PetscInt
-     ctypedef double PetscReal     
+
 	 
 
 
