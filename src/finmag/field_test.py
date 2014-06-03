@@ -615,7 +615,7 @@ class TestField(object):
                 assert f_av.shape == (field.value_dim(),)
 
     def test_coords_and_values_scalar_field(self):
-        """Docstring."""
+        """Test coordinates and values for scalar field."""
         # Test for scalar fields on 1D, 2D, and 3D meshes,
         # initialised with a dolfin expression.
         expression = df.Expression('1.3*x[0]')
@@ -641,7 +641,7 @@ class TestField(object):
             assert np.all(values[:, 0] == expected_values)
 
     def test_coords_and_values_vector_field(self):
-        """Docstring."""
+        """Test coordinates and values for vector field."""
         # Different expressions for 3D vector fields.
         expression = df.Expression(['1.03*x[0]', '2.31*x[0]', '-1*x[0]'])
 
@@ -673,7 +673,7 @@ class TestField(object):
             assert np.all(values[:, 2] == expected_values[2])
 
     def test_probe_field_scalar_field(self):
-        """Docstring."""
+        """Test probing the scalar field."""
         # Test probing field at and outside the mesh node for scalar field and
         # an appropriate expression for setting the value.
         for functionspace in self.scalar_fspaces:
@@ -706,7 +706,7 @@ class TestField(object):
             assert abs(probed_value - exact_result_out_node) < self.tol1
 
     def test_probe_field_vector_field(self):
-        """Docstring."""
+        """Test probing the vector field."""
         # Test probing field at and outside the mesh node for vector field and
         # an appropriate expression for setting the value.
         for functionspace in self.vector3d_fspaces:
@@ -738,7 +738,7 @@ class TestField(object):
             assert abs(probed_value[2] - exact_result_out_node[2]) < self.tol1
 
     def test_mesh_dim(self):
-        """Docstring."""
+        """Test mesh_dim method."""
         for functionspace in self.all_fspaces:
             field = Field(functionspace)
             mesh_dim_expected = functionspace.mesh().topology().dim()
@@ -747,7 +747,7 @@ class TestField(object):
             assert field.mesh_dim() == mesh_dim_expected
 
     def test_value_dim(self):
-        """Docstring."""
+        """Test value_dim method."""
         for functionspace in self.all_fspaces:
             field = Field(functionspace)
             value_dim_expected = functionspace.ufl_element().value_shape()
@@ -758,7 +758,7 @@ class TestField(object):
                 assert field.value_dim() == value_dim_expected[0]
 
     def test_mesh(self):
-        """Docstring."""
+        """Test mesh method."""
         for functionspace in self.all_fspaces:
             field = Field(functionspace)
 
