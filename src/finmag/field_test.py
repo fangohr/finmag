@@ -86,29 +86,30 @@ class TestField(object):
         self.tol3 = 5e-6
 
     def test_init(self):
-        # Initialisation arguments.
-        functionspace = self.fs3d_vector3d
-        value = None  # Not specified, a zero-function is expected.
-        normalised = True
-        name = 'name_test'
-        unit = 'unit_test'
+        # Test initialisation for for different functionspaces.
+        for functionspace in self.all_fspaces:
+            # Initialisation arguments.
+            value = None  # Not specified, a zero-function is expected.
+            normalised = True
+            name = 'name_test'
+            unit = 'unit_test'
 
-        field = Field(functionspace, value, normalised, name, unit)
+            field = Field(functionspace, value, normalised, name, unit)
+            
+            assert field.functionspace == functionspace
+            
+            # Assert that the created function is a zero-function.
+            assert isinstance(field.f, df.Function)
+            assert np.all(field.f.vector().array() == 0)
 
-        assert field.functionspace == functionspace
+            assert field.normalised is True
 
-        # Assert that the created function is a zero-function.
-        assert isinstance(field.f, df.Function)
-        assert np.all(field.f.vector().array() == 0)
+            # Assert that both function's name and label are changed.
+            assert field.name == name
+            assert field.f.name() == name
+            assert field.f.label() == name
 
-        assert field.normalised is True
-
-        # Assert that both function's name and label are changed.
-        assert field.name == name
-        assert field.f.name() == name
-        assert field.f.label() == name
-
-        assert field.unit == unit
+            assert field.unit == unit
 
     def test_set_scalar_field_with_constant(self):
         # Different expressions for constant value 42.
