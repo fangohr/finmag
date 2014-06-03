@@ -764,6 +764,50 @@ class TestField(object):
 
             assert isinstance(field.mesh(), df.Mesh)
 
+    def test_set_scalar_field_with_python_function(self):
+        """Test setting nonlinear scalar field."""
+        # Python functions array for setting the scalar field.
+        python_functions = [lambda x:1.21*x[0]*x[0],
+                            lambda x:1.21*x[0]*x[0] - 3.21*x[1],
+                            lambda x:1.21*x[0]*x[0] - 3.21*x[1] + 2.47*x[2]]
+
+        # Setting the scalar field for different
+        # scalar function spaces and appropriate python functions.
+        for functionspace in self.scalar_fspaces:
+            field = Field(functionspace)
+
+            # Set the field and compute expected values
+            # depending on the mesh dimension.
+            coords = field.coords_and_values()[0]  # Values ignored.
+            if field.mesh_dim() == 1:
+                field.set(python_functions[0])
+                expected_values = 1.21*coords[:, 0]*coords[:, 0]
+                expected_probed_value = 1.21*self.probing_coord * \
+                    self.probing_coord
+            elif field.mesh_dim() == 2:
+                field.set(python_functions[1])
+                expected_values = 1.21*coords[:, 0]*coords[:, 0] - \
+                    3.21*coords[:, 1]
+                expected_probed_value = (1.21*self.probing_coord - 3.21) * \
+                    self.probing_coord
+            elif field.mesh_dim() == 3:
+                field.set(python_functions[2])
+                expected_values = 1.21*coords[:, 0]*coords[:, 0] - \
+                    3.21*coords[:, 1] + 2.47*coords[:, 2]
+                expected_probed_value = (1.21*self.probing_coord - 3.21 +
+                                         2.47)*self.probing_coord
+
+            # Check the result of coords_and_values (should be exact).
+            field_values = field.coords_and_values()[1]  # ignore coordinates
+            assert np.all(field_values[:, 0] == expected_values)
+
+            # Check the interpolated value outside the mesh node.
+            # The expected field is nonlinear and, because of that,
+            # greater tolerance value (tol1) is used.
+            probing_point = field.mesh_dim() * (self.probing_coord,)
+            probed_value = field.probe_field(probing_point)
+            assert abs(probed_value - expected_probed_value) < self.tol2
+
     def test_set_nonlinear_vector_field(self):
         """Test setting the vector field with a nonlinear expression."""
         # Different nonlinear expressions for 2D vector fields.
@@ -885,17 +929,17 @@ class TestField(object):
                 field.set(expressions[0])
                 expected_values = (1.1*coords[:, 0]*coords[:, 0],
                                    -2.4*coords[:, 0], 3*coords[:, 0],
-                                   coords[:,0])
+                                   coords[:, 0])
             elif field.mesh_dim() == 2:
                 field.set(expressions[1])
                 expected_values = (1.1*coords[:, 0]*coords[:, 0],
                                    -2.4*coords[:, 1], 3*coords[:, 1],
-                                   coords[:,0])
+                                   coords[:, 0])
             elif field.mesh_dim() == 3:
                 field.set(expressions[2])
                 expected_values = (1.1*coords[:, 0]*coords[:, 0],
                                    -2.4*coords[:, 1], 3*coords[:, 2],
-                                   coords[:,0])
+                                   coords[:, 0])
 
             # Compute expected probed value.
             expected_probed_value = (1.1*self.probing_coord*self.probing_coord,
