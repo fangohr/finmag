@@ -5,6 +5,13 @@ import dolfin as df
 import numpy as np
 import cvode2
 
+from mpi4py import MPI
+
+comm = MPI.COMM_WORLD
+rank = comm.Get_rank()
+size = comm.Get_size()
+
+
 """
     Solve equation du/dt = sin(t) based on dolfin vector and sundials/cvode in parallel.
 """
@@ -12,12 +19,21 @@ class Test(object):
     def __init__(self, mesh):
         self.mesh = mesh
         self.V = df.FunctionSpace(mesh, 'CG', 1)
-        zero = df.Expression('0')
+        zero = df.Expression('0.00')
         self.u = df.interpolate(zero, self.V)
         self.spin = self.u.vector().array()
         self.t = 0
         
         self.m_petsc = df.as_backend_type(self.u.vector()).vec()
+        
+        v = self.m_petsc.copy()
+        v.setArray(1)
+        
+        print self.m_petsc.getArray(), v.getArray()
+        
+        self.m_petsc.setArray(v)
+        
+        print self.m_petsc.getArray(), v.getArray()
         
 
     def set_up_solver(self, rtol=1e-8, atol=1e-8):
@@ -30,18 +46,12 @@ class Test(object):
         
         self.ode.set_initial_value(self.spin, self.t)
         
-        
-        
 
     def sundials_rhs(self, t, y, ydot):
         
-        #print 'from python', y, ydot
-        
-        npy = np.zeros(y.getLocalSize())
-        npy[:] = np.sin(t)
-        ydot[:] = npy[:]
-        ydot.assemble()
-        #print 'array',ydot.array
+        print 'from python', t, y.getLocalSize(), ydot.getLocalSize()
+
+        ydot.setArray(np.sin(t+np.pi/2*rank))
  
         return 0
 
@@ -57,14 +67,17 @@ class Test(object):
         if flag < 0:
             raise Exception("Run cython run_until failed!!!")
         
-        self.spin[:] = ode.y[:]
+        self.u.vector().set_local(ode.y)
+        self.spin = self.u.vector().array()
+        #print self.spin[0]
+        #self.spin[:] = ode.y[:]
     
 
 def plot_m(ts, m):
     plt.plot(ts, m, ".", label="m", color='DarkGreen')
     plt.xlabel('Time')
     plt.ylabel('m')
-    plt.savefig('m_t.pdf')
+    plt.savefig('m_rank_%d.pdf'%rank)
 
 
 if __name__ == '__main__':
@@ -74,9 +87,13 @@ if __name__ == '__main__':
     sim.set_up_solver()
     
     ts = np.linspace(0, 5, 101)
+    
+    
     us = []
+    
     for t in ts:
         sim.run_until(t)
+
         us.append(sim.spin[0])
         
     plot_m(ts,us)
