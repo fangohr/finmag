@@ -446,7 +446,7 @@ class TestField(object):
                 assert abs(probed_value[3] - expected_value[3]) < self.tol1
 
     def test_normalise(self):
-        """Docstring."""
+        """Test normalisation of vector fields."""
         # 2D vector field
         value = (1.3, 3.6)
         for functionspace in self.vector2d_fspaces:
@@ -511,14 +511,13 @@ class TestField(object):
 
         # Test normalisation if field is set using
         # dolfin expression or python function.
-        def python_fun(x):
-            return (1.2*x[0], -1.6*x[1], 0.3*x[2])
-
-        expressions = [python_fun,
-                       df.Expression(['1.2*x[0]', '-1.6*x[1]', '0.3*x[2]'])]
-
+        expressions = [lambda x:(11.2*x[0], -1.6*x[1], 0.3*x[2]),
+                       df.Expression(['11.2*x[0]', '-1.6*x[1]', '0.3*x[2]'])]
+        
+        functionspace = self.fs3d_vector3d
+        
         for expression in expressions:
-            field = Field(self.fs3d_vector3d, expression, normalised=True)
+            field = Field(functionspace, expression, normalised=True)
             values = field.coords_and_values()[1]  # Ignore coordinates.
 
             # Check the norm of normalised vector field.
