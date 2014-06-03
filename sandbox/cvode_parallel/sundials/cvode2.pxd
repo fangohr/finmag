@@ -146,3 +146,13 @@ cdef extern from "sundials/sundials_iterative.h":
     
     int MODIFIED_GS
     int CLASSICAL_GS
+
+cdef extern from * nogil:
+     ctypedef int PetscErrorCode
+     ctypedef long   PetscInt
+     ctypedef double PetscReal     
+	 
+
+
+
+	

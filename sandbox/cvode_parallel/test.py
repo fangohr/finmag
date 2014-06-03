@@ -16,20 +16,32 @@ class Test(object):
         self.u = df.interpolate(zero, self.V)
         self.spin = self.u.vector().array()
         self.t = 0
-                
+        
+        self.m_petsc = df.as_backend_type(self.u.vector()).vec()
+        
 
     def set_up_solver(self, rtol=1e-8, atol=1e-8):
         
-        self.ode = cvode2.CvodeSolver(self.spin,
+        self.ode = cvode2.CvodeSolver(self.m_petsc,
                                       rtol,atol,
                                       self.sundials_rhs)
         
+        self.ode.test_petsc(self.m_petsc)
+        
         self.ode.set_initial_value(self.spin, self.t)
+        
+        
         
 
     def sundials_rhs(self, t, y, ydot):
         
-        ydot[:] = np.sin(t)
+        #print 'from python', y, ydot
+        
+        npy = np.zeros(y.getLocalSize())
+        npy[:] = np.sin(t)
+        ydot[:] = npy[:]
+        ydot.assemble()
+        #print 'array',ydot.array
  
         return 0
 
