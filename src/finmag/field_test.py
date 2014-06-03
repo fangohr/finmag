@@ -70,7 +70,7 @@ class TestField(object):
             self.vector3d_fspaces + self.vector4d_fspaces
 
         # x, y, or z coordinate value for probing the field.
-        self.probing_coord = 0.5351  # Not at the mesh node.
+        self.probing_coord = 0.4351  # Not at the mesh node.
 
         # Set the tolerances used throughout all tests
         # mainly due to interpolation errors.
@@ -110,7 +110,7 @@ class TestField(object):
             assert np.all(field.coords_and_values()[1] == 0)
 
     def test_set_scalar_field_with_constant(self):
-        """Test setting the scalar field value with a constant."""
+        """Test setting the scalar field with a constant."""
         # Different expressions of constant value 42 for scalar field setting.
         constants = [df.Constant(42), df.Constant(42.0), df.Constant("42"),
                      df.Constant("42.0"), 42, 42.0, "42",
@@ -139,7 +139,7 @@ class TestField(object):
                 assert abs(probed_value - expected_value) < self.tol1
 
     def test_set_scalar_field_with_expression(self):
-        """Test setting the scalar field value with an expression."""
+        """Test setting the scalar field with an expression."""
         # Different expressions for setting the scalar field,
         # depending on the mesh dimension (1D, 2D, or 3D).
         expressions = [df.Expression("11.2*x[0]"),
@@ -180,7 +180,7 @@ class TestField(object):
             assert abs(probed_value - expected_probed_value) < self.tol1
 
     def test_set_scalar_field_with_python_function(self):
-        """Test setting the scalar field value with a python function."""
+        """Test setting the scalar field with a python function."""
         # Python functions array for setting the scalar field.
         python_functions = [lambda x:1.21*x[0],
                             lambda x:1.21*x[0] - 3.21*x[1],
@@ -220,8 +220,8 @@ class TestField(object):
             assert abs(probed_value - expected_probed_value) < self.tol1
 
     def test_set_vector_field_with_constant(self):
-        """Docstring."""
-        # Different constant expressions for 3D vector fields.
+        """Test setting the vector field with a constant."""
+        # Different expressions of constant for vector field setting.
         constants = [df.Constant((0.15, -2.3, -6.41)),
                      df.Constant([0.15, -2.3, -6.41]),
                      df.Constant(np.array([0.15, -2.3, -6.41])),
@@ -231,8 +231,8 @@ class TestField(object):
 
         expected_value = (0.15, -2.3, -6.41)
 
-        # Test setting the vector field value for
-        # different vector function spaces and constants.
+        # Test setting the vector field for different
+        # vector function spaces and constants.
         for functionspace in self.vector3d_fspaces:
             for constant in constants:
                 field = Field(functionspace, constant)
@@ -260,29 +260,31 @@ class TestField(object):
                 assert abs(probed_value[2] - expected_value[2]) < self.tol1
 
     def test_set_vector_field_with_expression(self):
-        """Docstring."""
-        # Different expressions for 2D and 3D vector fields.
+        """Test setting the vector field with an expression."""
+        # Different expressions for 3D vector fields.
         expressions = [df.Expression(['1.1*x[0]', '-2.4*x[0]', '3*x[0]']),
                        df.Expression(['1.1*x[0]', '-2.4*x[1]', '3*x[1]']),
                        df.Expression(['1.1*x[0]', '-2.4*x[1]', '3*x[2]'])]
 
-        # Test setting the vector field value for different vector
-        # function spaces and appropriate expressions.
-        for i in xrange(len(self.vector3d_fspaces)):
-            functionspace = self.vector3d_fspaces[i]
-            coords = functionspace.mesh().coordinates()
-            mesh_dim = functionspace.mesh().topology().dim()
+        # Test setting the vector field for different
+        # vector function spaces and appropriate expressions.
+        for functionspace in self.vector3d_fspaces:
+            field = Field(functionspace)
 
-            # Compute expected values.
-            if mesh_dim == 1:
+            # Set the vector field and compute expected values.
+            coords = field.coords_and_values()[0]  # Values ignored.
+            if field.mesh_dim() == 1:
+                field.set(expressions[0])
                 expected_values = (1.1*coords[:, 0],
                                    -2.4*coords[:, 0],
                                    3*coords[:, 0])
-            elif mesh_dim == 2:
+            elif field.mesh_dim() == 2:
+                field.set(expressions[0])
                 expected_values = (1.1*coords[:, 0],
                                    -2.4*coords[:, 1],
                                    3*coords[:, 1])
-            elif mesh_dim == 3:
+            elif field.mesh_dim() == 3:
+                field.set(expressions[0])
                 expected_values = (1.1*coords[:, 0],
                                    -2.4*coords[:, 1],
                                    3*coords[:, 2])
@@ -291,8 +293,6 @@ class TestField(object):
             expected_probed_value = (1.1*self.probing_coord,
                                      -2.4*self.probing_coord,
                                      3*self.probing_coord)
-
-            field = Field(functionspace, expressions[i])
 
             # Check vector (numpy array) values (should be exact).
             f_array = field.f.vector().array()
