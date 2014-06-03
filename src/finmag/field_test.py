@@ -86,7 +86,7 @@ class TestField(object):
         self.tol3 = 5e-6
 
     def test_init(self):
-        # Test initialisation for for different functionspaces.
+        """Test the initialisation of field parameters."""
         for functionspace in self.all_fspaces:
             # Initialisation arguments.
             value = None  # Not specified, a zero-function is expected.
@@ -97,30 +97,29 @@ class TestField(object):
             field = Field(functionspace, value, normalised, name, unit)
 
             assert field.functionspace == functionspace
-
-            # Assert that the created function is a zero-function.
-            assert isinstance(field.f, df.Function)
-            assert np.all(field.f.vector().array() == 0)
-
             assert field.normalised is True
-
-            # Assert that both function's name and label are changed.
             assert field.name == name
+            assert field.unit == unit
+
+            # Check that both function's name and label are changed.
             assert field.f.name() == name
             assert field.f.label() == name
 
-            assert field.unit == unit
+            # Check that the created function is a dolfin zero function.
+            assert isinstance(field.f, df.Function)
+            assert np.all(field.coords_and_values()[1] == 0)
 
     def test_set_scalar_field_with_constant(self):
-        # Different expressions for constant value 42.
+        """Test setting the scalar field value with a constant."""
+        # Different expressions of constant value 42 for scalar field setting.
         constants = [df.Constant(42), df.Constant(42.0), df.Constant("42"),
                      df.Constant("42.0"), 42, 42.0, "42",
                      "42.0", u"42", u"42.0"]
 
         expected_value = 42
 
-        # Test setting the scalar field value for
-        # different scalar function spaces and constants.
+        # Setting the scalar field for different
+        # scalar function spaces and constants.
         for functionspace in self.scalar_fspaces:
             for constant in constants:
                 field = Field(functionspace, constant)
@@ -140,31 +139,34 @@ class TestField(object):
                 assert abs(probed_value - expected_value) < self.tol1
 
     def test_set_scalar_field_with_expression(self):
-        # Different expressions for scalar field value setting,
+        """Test setting the scalar field value with an expression."""
+        # Different expressions for setting the scalar field,
         # depending on the mesh dimension (1D, 2D, or 3D).
         expressions = [df.Expression("11.2*x[0]"),
-                       df.Expression("11.2*x[0] - 3.1*x[1]"),
-                       df.Expression("11.2*x[0] - 3.1*x[1] + 2.7*x[2]")]
+                       df.Expression("11.2*x[0] - 3.01*x[1]"),
+                       df.Expression("11.2*x[0] - 3.01*x[1] + 2.7*x[2]")]
 
-        # Test setting the scalar field value for different scalar
-        # function spaces and appropriate expressions.
-        for i in range(len(self.scalar_fspaces)):
-            field = Field(self.scalar_fspaces[i], expressions[i])
+        # Setting the scalar field for different
+        # scalar function spaces and appropriate expressions.
+        for functionspace in self.scalar_fspaces:
+            field = Field(functionspace)
 
-            # Compute expected values.
-            coords = self.scalar_fspaces[i].mesh().coordinates()
-            if i == 0:
-                # Compute expected values at all mesh nodes.
+            # Set the field and compute expected values
+            # depending on the mesh dimension.
+            coords = field.coords_and_values()[0]
+            if field.mesh_dim() == 1:
+                field.set(expressions[0])
                 expected_values = 11.2*coords[:, 0]
-                # Compute expected probed value.
                 expected_probed_value = 11.2*self.probing_coord
-            elif i == 1:
-                expected_values = 11.2*coords[:, 0] - 3.1*coords[:, 1]
-                expected_probed_value = (11.2 - 3.1)*self.probing_coord
-            elif i == 2:
-                expected_values = 11.2*coords[:, 0] - 3.1*coords[:, 1] + \
+            elif field.mesh_dim() == 2:
+                field.set(expressions[1])
+                expected_values = 11.2*coords[:, 0] - 3.01*coords[:, 1]
+                expected_probed_value = (11.2 - 3.01)*self.probing_coord
+            elif field.mesh_dim() == 3:
+                field.set(expressions[2])
+                expected_values = 11.2*coords[:, 0] - 3.01*coords[:, 1] + \
                     2.7*coords[:, 2]
-                expected_probed_value = (11.2 - 3.1 + 2.7)*self.probing_coord
+                expected_probed_value = (11.2 - 3.01 + 2.7)*self.probing_coord
 
             # Check the result of coords_and_values (should be exact).
             field_values = field.coords_and_values()[1]  # ignore coordinates
@@ -178,6 +180,7 @@ class TestField(object):
             assert abs(probed_value - expected_probed_value) < self.tol1
 
     def test_set_scalar_field_with_python_function(self):
+        """Docstring."""
         # Python functions for setting the scalar field value.
         def python_fun1d(x):
             return 1.21*x[0]
@@ -222,6 +225,7 @@ class TestField(object):
             assert abs(probed_value - expected_probed_value) < self.tol1
 
     def test_set_vector_field_with_constant(self):
+        """Docstring."""
         # Different constant expressions for 3D vector fields.
         constants = [df.Constant((0.15, -2.3, -6.41)),
                      df.Constant([0.15, -2.3, -6.41]),
@@ -261,6 +265,7 @@ class TestField(object):
                 assert abs(probed_value[2] - expected_value[2]) < self.tol1
 
     def test_set_vector_field_with_expression(self):
+        """Docstring."""
         # Different expressions for 2D and 3D vector fields.
         expressions = [df.Expression(['1.1*x[0]', '-2.4*x[0]', '3*x[0]']),
                        df.Expression(['1.1*x[0]', '-2.4*x[1]', '3*x[1]']),
@@ -317,6 +322,7 @@ class TestField(object):
             assert abs(probed_value[2] - expected_probed_value[2]) < self.tol1
 
     def test_set_vector_field_with_python_function(self):
+        """Docstring."""
         # Different python functions for setting the vector field values.
         def python_fun1d(x):
             return (1.21*x[0], -2.47*x[0], 3*x[0])
@@ -379,6 +385,7 @@ class TestField(object):
             assert abs(probed_value[2] - expected_probed_value[2]) < self.tol1
 
     def test_set_vector2d_field(self):
+        """Docstring."""
         # Python function for setting the 2D vector field values.
         def python_fun2d(x):
             return (1.1, -2.4)
@@ -418,6 +425,7 @@ class TestField(object):
             assert abs(probed_value[1] - expected_value[1]) < self.tol1
 
     def test_set_vector4d_field(self):
+        """Docstring."""
         # Python function for setting the 4D vector field values.
         def python_fun4d(x):
             return (1.1, -2.4, 5.1, -9.2)
@@ -463,6 +471,7 @@ class TestField(object):
             assert abs(probed_value[3] - expected_value[3]) < self.tol1
 
     def test_normalise(self):
+        """Docstring."""
         # 2D vector field
         value = (1.3, 3.6)
         for functionspace in self.vector2d_fspaces:
@@ -542,6 +551,7 @@ class TestField(object):
             assert np.all(abs(norm - 1) < 0.1)  # Too big error!!!!
 
     def test_average_scalar_field(self):
+        """Docstring."""
         # Different expressions for setting the 3D vector field.
         # All expressions set the field with same average value.
         def python_fun(x):
@@ -563,6 +573,7 @@ class TestField(object):
                 assert isinstance(f_av, float)
 
     def test_average_vector_field(self):
+        """Docstring."""
         # Different expressions for setting the 3D vector field.
         # All expressions set the field with same average value.
         def python_fun(x):
@@ -589,6 +600,7 @@ class TestField(object):
                 assert f_av.shape == (3,)
 
     def test_coords_and_values_scalar_field(self):
+        """Docstring."""
         # Test for scalar fields on 1D, 2D, and 3D meshes,
         # initialised with a dolfin expression.
         expression = df.Expression('1.3*x[0]')
@@ -614,6 +626,7 @@ class TestField(object):
             assert np.all(values[:, 0] == expected_values)
 
     def test_coords_and_values_vector_field(self):
+        """Docstring."""
         # Different expressions for 3D vector fields.
         expression = df.Expression(['1.03*x[0]', '2.31*x[0]', '-1*x[0]'])
 
@@ -645,6 +658,7 @@ class TestField(object):
             assert np.all(values[:, 2] == expected_values[2])
 
     def test_probe_field_scalar_field(self):
+        """Docstring."""
         # Test probing field at and outside the mesh node for scalar field and
         # an appropriate expression for setting the value.
         for functionspace in self.scalar_fspaces:
@@ -677,6 +691,7 @@ class TestField(object):
             assert abs(probed_value - exact_result_out_node) < self.tol1
 
     def test_probe_field_vector_field(self):
+        """Docstring."""
         # Test probing field at and outside the mesh node for vector field and
         # an appropriate expression for setting the value.
         for functionspace in self.vector3d_fspaces:
@@ -708,6 +723,7 @@ class TestField(object):
             assert abs(probed_value[2] - exact_result_out_node[2]) < self.tol1
 
     def test_mesh_dim(self):
+        """Docstring."""
         for functionspace in self.all_fspaces:
             field = Field(functionspace)
             mesh_dim_expected = functionspace.mesh().topology().dim()
@@ -716,6 +732,7 @@ class TestField(object):
             assert field.mesh_dim() == mesh_dim_expected
 
     def test_value_dim(self):
+        """Docstring."""
         for functionspace in self.all_fspaces:
             field = Field(functionspace)
             value_dim_expected = functionspace.ufl_element().value_shape()
@@ -726,6 +743,7 @@ class TestField(object):
                 assert field.value_dim() == value_dim_expected[0]
 
     def test_mesh(self):
+        """Docstring."""
         for functionspace in self.all_fspaces:
             field = Field(functionspace)
 
