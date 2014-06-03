@@ -95,9 +95,9 @@ class TestField(object):
             unit = 'unit_test'
 
             field = Field(functionspace, value, normalised, name, unit)
-            
+
             assert field.functionspace == functionspace
-            
+
             # Assert that the created function is a zero-function.
             assert isinstance(field.f, df.Function)
             assert np.all(field.f.vector().array() == 0)
