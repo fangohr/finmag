@@ -319,16 +319,9 @@ class TestField(object):
     def test_set_vector_field_with_python_function(self):
         """Docstring."""
         # Different python functions for setting the vector field values.
-        def python_fun1d(x):
-            return (1.21*x[0], -2.47*x[0], 3*x[0])
-
-        def python_fun2d(x):
-            return (1.21*x[0], -2.47*x[1], 3*x[1])
-
-        def python_fun3d(x):
-            return (1.21*x[0], -2.47*x[1], 3*x[2])
-
-        python_functions = [python_fun1d, python_fun2d, python_fun3d]
+        python_functions = [lambda x:(1.21*x[0], -2.47*x[0], 3*x[0]),
+                            lambda x:(1.21*x[0], -2.47*x[1], 3*x[1]),
+                            lambda x:(1.21*x[0], -2.47*x[1], 3*x[2])]
 
         # Test setting the vector field value for
         # different vector function spaces and python functions.
