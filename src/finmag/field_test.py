@@ -153,7 +153,7 @@ class TestField(object):
 
             # Set the field and compute expected values
             # depending on the mesh dimension.
-            coords = field.coords_and_values()[0]
+            coords = field.coords_and_values()[0]  # Values ignored.
             if field.mesh_dim() == 1:
                 field.set(expressions[0])
                 expected_values = 11.2*coords[:, 0]
@@ -186,22 +186,24 @@ class TestField(object):
                             lambda x:1.21*x[0] - 3.21*x[1],
                             lambda x:1.21*x[0] - 3.21*x[1] + 2.47*x[2]]
 
-        # Test setting the scalar field value for different scalar
-        # function spaces and appropriate python functions.
-        for i in range(len(self.scalar_fspaces)):
-            field = Field(self.scalar_fspaces[i], python_functions[i])
+        # Setting the scalar field for different
+        # scalar function spaces and appropriate python functions.
+        for functionspace in self.scalar_fspaces:
+            field = Field(functionspace)
 
-            # Compute expected values.
-            coords = self.scalar_fspaces[i].mesh().coordinates()
-            if i == 0:
-                # Compute expected values at all mesh nodes.
+            # Set the field and compute expected values
+            # depending on the mesh dimension.
+            coords = field.coords_and_values()[0]  # Values ignored.
+            if field.mesh_dim() == 1:
+                field.set(python_functions[0])
                 expected_values = 1.21*coords[:, 0]
-                # Compute expected probed value.
                 expected_probed_value = 1.21*self.probing_coord
-            elif i == 1:
+            elif field.mesh_dim() == 2:
+                field.set(python_functions[1])
                 expected_values = 1.21*coords[:, 0] - 3.21*coords[:, 1]
                 expected_probed_value = (1.21 - 3.21)*self.probing_coord
-            elif i == 2:
+            elif field.mesh_dim() == 3:
+                field.set(python_functions[2])
                 expected_values = 1.21*coords[:, 0] - 3.21*coords[:, 1] + \
                     2.47*coords[:, 2]
                 expected_probed_value = (1.21 - 3.21 + 2.47)*self.probing_coord
