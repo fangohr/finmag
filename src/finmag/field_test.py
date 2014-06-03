@@ -513,9 +513,9 @@ class TestField(object):
         # dolfin expression or python function.
         expressions = [lambda x:(11.2*x[0], -1.6*x[1], 0.3*x[2]),
                        df.Expression(['11.2*x[0]', '-1.6*x[1]', '0.3*x[2]'])]
-        
+
         functionspace = self.fs3d_vector3d
-        
+
         for expression in expressions:
             field = Field(functionspace, expression, normalised=True)
             values = field.coords_and_values()[1]  # Ignore coordinates.
@@ -589,11 +589,12 @@ class TestField(object):
                 # Check the type and shape of average result.
                 assert isinstance(f_av, np.ndarray)
                 assert f_av.shape == (field.value_dim(),)
-        
+
         # Different expressions for setting the 4D vector field.
         # All expressions set the field with same average value.
         expressions = [df.Constant((1, 5.1, -3.6, 0)),
-                       df.Expression(['2*x[0]', '10.2*x[0]', '-7.2*x[0]', '0']),
+                       df.Expression(['2*x[0]', '10.2*x[0]',
+                                      '-7.2*x[0]', '0']),
                        lambda x:(2*x[0], 10.2*x[0], -7.2*x[0], 0)]
 
         f_av_expected = (1, 5.1, -3.6, 0)
