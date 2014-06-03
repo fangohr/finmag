@@ -763,3 +763,57 @@ class TestField(object):
             field = Field(functionspace)
 
             assert isinstance(field.mesh(), df.Mesh)
+
+    def test_set_nonlinear_vector_field(self):
+        """Test setting the 3D vector field with a nonlinear expression."""
+        # Different nonlinear expressions for 3D vector fields.
+        expressions = [df.Expression(['1.1*x[0]*x[0]', '-2.4*x[0]', '3*x[0]']),
+                       df.Expression(['1.1*x[0]*x[0]', '-2.4*x[1]', '3*x[1]']),
+                       df.Expression(['1.1*x[0]*x[0]', '-2.4*x[1]', '3*x[2]'])]
+
+        # Test setting the vector field for different
+        # vector function spaces and appropriate expressions.
+        for functionspace in self.vector3d_fspaces:
+            field = Field(functionspace)
+
+            # Set the vector field and compute expected values.
+            coords = field.coords_and_values()[0]  # Values ignored.
+            if field.mesh_dim() == 1:
+                field.set(expressions[0])
+                expected_values = (1.1*coords[:, 0]*coords[:, 0],
+                                   -2.4*coords[:, 0], 3*coords[:, 0])
+            elif field.mesh_dim() == 2:
+                field.set(expressions[1])
+                expected_values = (1.1*coords[:, 0]*coords[:, 0],
+                                   -2.4*coords[:, 1], 3*coords[:, 1])
+            elif field.mesh_dim() == 3:
+                field.set(expressions[2])
+                expected_values = (1.1*coords[:, 0]*coords[:, 0],
+                                   -2.4*coords[:, 1], 3*coords[:, 2])
+
+            # Compute expected probed value.
+            expected_probed_value = (1.1*self.probing_coord*self.probing_coord,
+                                     -2.4*self.probing_coord,
+                                     3*self.probing_coord)
+
+            # Check vector (numpy array) values (should be exact).
+            f_array = field.f.vector().array()
+            f_array_split = np.split(f_array, field.value_dim())
+            assert np.all(f_array_split[0] == expected_values[0])
+            assert np.all(f_array_split[1] == expected_values[1])
+            assert np.all(f_array_split[2] == expected_values[2])
+
+            # Check the result of coords_and_values (should be exact).
+            coords, field_values = field.coords_and_values()
+            assert np.all(field_values[:, 0] == expected_values[0])
+            assert np.all(field_values[:, 1] == expected_values[1])
+            assert np.all(field_values[:, 2] == expected_values[2])
+
+            # Check the interpolated value outside the mesh node.
+            # The expected field is nonlinear and, because of that,
+            # greater tolerance value (tol2) is used.
+            probing_point = field.mesh_dim() * (self.probing_coord,)
+            probed_value = field.probe_field(probing_point)
+            assert abs(probed_value[0] - expected_probed_value[0]) < self.tol2
+            assert abs(probed_value[1] - expected_probed_value[1]) < self.tol2
+            assert abs(probed_value[2] - expected_probed_value[2]) < self.tol2
