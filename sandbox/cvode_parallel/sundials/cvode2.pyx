@@ -5,11 +5,19 @@ import numpy as np
 
 # Import the C-level symbols of numpy
 cimport numpy as np
+from petsc4py.PETSc cimport Vec,  PetscVec
 
 # Numpy must be initialized. When using numpy from C or Cython you must
 # _always_ do that, or you will have segfaults
 np.import_array()
 
+cdef extern from "petsc/petscvec.h":
+     PetscErrorCode VecGetLocalSize(PetscVec,PetscInt*) #for testing
+     PetscErrorCode VecGetArray(PetscVec, PetscReal *x) #check the type later, petscreal or petscsalar?
+     PetscErrorCode VecRestoreArray(PetscVec, PetscReal *x)
+     PetscErrorCode VecPlaceArray(PetscVec, PetscReal *x)
+     PetscErrorCode VecResetArray(PetscVec)
+     
 cdef struct cv_userdata:
     void *rhs_fun
     void *y
@@ -33,25 +41,19 @@ cdef int cv_rhs(realtype t, N_Vector yv, N_Vector yvdot, void* user_data) except
 
     cdef cv_userdata *ud = <cv_userdata *>user_data
 
-    cdef int size = (<N_VectorContent_Serial>yvdot.content).length
-    cdef double *y = (<N_VectorContent_Serial>yv.content).data
+    #cdef int size = (<N_VectorContent_Serial>yvdot.content).length
+    #cdef double *y = (<N_VectorContent_Serial>yv.content).data
     
-    cdef np.ndarray[realtype, ndim=1, mode='c'] y_arr= <np.ndarray[realtype, ndim=1, mode='c']>ud.y
-    cdef np.ndarray ydot_arr= <np.ndarray[realtype, ndim=1, mode='c']>ud.dm_dt
+    cdef Vec y = <Vec>ud.y
+    cdef Vec ydot = <Vec>ud.dm_dt
     
-    #it's not suitable to call the normalise function here.
-    #normalise(&y[0], size/3)
+    VecPlaceArray(y.vec, (<N_VectorContent_Serial>yv.content).data)
+    VecPlaceArray(ydot.vec, (<N_VectorContent_Serial>yvdot.content).data)
     
-    copy_nv2arr(yv,y_arr)
+    (<object>ud.rhs_fun)(t,y,ydot)
     
-
-    #weird thing is cython gets error without this
-    #try:
-    (<object>ud.rhs_fun)(t,y_arr,ydot_arr)
-    #except:
-        #raise Exception('error while calling rhs_fun!')
-    
-    copy_arr2nv(ydot_arr,yvdot)
+    VecResetArray(y.vec)
+    VecResetArray(ydot.vec)
 
     return 0
 
@@ -60,8 +62,8 @@ cdef class CvodeSolver(object):
     cdef public double t
     cdef public np.ndarray y
     cdef double rtol, atol
-    cdef np.ndarray spin
-    cdef np.ndarray dm_dt
+    cdef Vec spin
+    cdef Vec dm_dt
     cdef N_Vector u_y
     
     cdef void *cvode_mem
@@ -73,21 +75,28 @@ cdef class CvodeSolver(object):
     
     cdef long int nsteps,nfevals,njevals
     
-    def __cinit__(self,spin,rtol,atol,callback_fun):
+    def __cinit__(self,Vec spin,rtol,atol,callback_fun):
 
         self.t = 0
         self.spin = spin
-        self.dm_dt = np.copy(spin)
-        self.y = np.copy(spin)
+        self.dm_dt = spin.duplicate()
         
         self.rtol = rtol
         self.atol = atol
         
         self.callback_fun = callback_fun
         
-        cdef np.ndarray[double, ndim=1, mode="c"] y=self.y
+        cdef np.ndarray[double, ndim=1, mode="c"] y=np.zeros(spin.getLocalSize())
         
-        self.u_y = N_VMake_Serial(y.size,&y[0])
+        self.y = y
+        
+        #cdef PetscVec v = <PetscVec>(spin.vec)
+        VecGetArray(self.spin.vec,&y[0])
+        #self.u_y = N_VNew_Serial(self.y.getLocalSize())
+        
+        #how can we use the orginal petsc array rather than the numpy array
+        self.u_y = N_VMake_Serial(spin.getLocalSize(),&y[0])
+        VecRestoreArray(self.spin.vec,&y[0])
         
         self.rhs_fun = <void *>cv_rhs
 
@@ -106,7 +115,7 @@ cdef class CvodeSolver(object):
 
     def set_initial_value(self,np.ndarray[double, ndim=1, mode="c"] spin, t):
         self.t = t
-        self.y[:] = spin[:]
+        #self.y[:] = spin[:]
 
         flag = CVodeSetUserData(self.cvode_mem, <void*>&self.user_data);
         self.check_flag(flag,"CVodeSetUserData")
@@ -148,7 +157,12 @@ cdef class CvodeSolver(object):
         cdef double step
         CVodeGetCurrentStep(self.cvode_mem, &step)
         return step
-        
+    
+    def test_petsc(self, Vec x):
+        print x
+        cdef PetscInt size
+        VecGetLocalSize(x.vec, &size)
+        print "length from cython = %d"%size
 
     def __repr__(self):
         s = []
