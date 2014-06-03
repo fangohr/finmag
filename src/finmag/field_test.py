@@ -180,18 +180,11 @@ class TestField(object):
             assert abs(probed_value - expected_probed_value) < self.tol1
 
     def test_set_scalar_field_with_python_function(self):
-        """Docstring."""
-        # Python functions for setting the scalar field value.
-        def python_fun1d(x):
-            return 1.21*x[0]
-
-        def python_fun2d(x):
-            return 1.21*x[0] - 3.21*x[1]
-
-        def python_fun3d(x):
-            return 1.21*x[0] - 3.21*x[1] + 2.47*x[2]
-
-        python_functions = [python_fun1d, python_fun2d, python_fun3d]
+        """Test setting the scalar field value with a python function."""
+        # Python functions array for setting the scalar field.
+        python_functions = [lambda x:1.21*x[0],
+                            lambda x:1.21*x[0] - 3.21*x[1],
+                            lambda x:1.21*x[0] - 3.21*x[1] + 2.47*x[2]]
 
         # Test setting the scalar field value for different scalar
         # function spaces and appropriate python functions.
