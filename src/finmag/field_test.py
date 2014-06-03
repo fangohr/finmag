@@ -279,12 +279,12 @@ class TestField(object):
                                    -2.4*coords[:, 0],
                                    3*coords[:, 0])
             elif field.mesh_dim() == 2:
-                field.set(expressions[0])
+                field.set(expressions[1])
                 expected_values = (1.1*coords[:, 0],
                                    -2.4*coords[:, 1],
                                    3*coords[:, 1])
             elif field.mesh_dim() == 3:
-                field.set(expressions[0])
+                field.set(expressions[2])
                 expected_values = (1.1*coords[:, 0],
                                    -2.4*coords[:, 1],
                                    3*coords[:, 2])
