@@ -4,9 +4,11 @@ import dolfin as df
 import pytest
 import os
 import finmag
+from finmag import sim_with
 from finmag.energies import Zeeman, TimeZeeman, DiscreteTimeZeeman, OscillatingZeeman
 from finmag.util.consts import mu0
-from finmag.util.meshes import pair_of_disks
+from finmag.util.meshes import pair_of_disks, sphere_inside_box
+from finmag.util.helpers import scalar_valued_function, scalar_valued_dg_function
 from math import sqrt, pi, cos, sin
 
 mesh = df.UnitCubeMesh(2, 2, 2)
@@ -356,3 +358,62 @@ def test_oscillating_zeeman():
     H_osc.setup(S3, m, Ms)
     for t in np.linspace(0, 20e-9, 100):
         check_field_at_time(t, H * cos(2 * pi * freq * t + phase))
+
+
+def test_compare_stray_field_of_sphere_with_dipolar_field(tmpdir):
+    os.chdir(str(tmpdir))
+    m_init = [1, 0, 0]
+    #m_init = [7, -1, 3]
+    center_sphere = [0, 0, 0]
+    r_sphere = 25
+    l_box = 70
+    maxh_sphere = 3.0
+    maxh_box = 10.0
+    Ms_sphere = 8.6e5
+
+    mesh = sphere_inside_box(r_sphere=r_sphere, r_shell=1.05*r_sphere, l_box=l_box, maxh_sphere=maxh_sphere, maxh_box=maxh_box, center_sphere=center_sphere)
+
+    def Ms_fun(pt):
+        if np.linalg.norm(pt) <= 1.01 * r_sphere:
+            return Ms_sphere
+        else:
+            return 1.
+    Ms = scalar_valued_dg_function(Ms_fun, mesh)
+
+    def fun_region_marker(pt):
+        #if np.linalg.norm(pt - center_sphere) <= 0.8 * r_sphere:
+        #    return "sphere_inner"
+        if np.linalg.norm(pt - center_sphere) <= 1.01 * r_sphere:
+            return "sphere"
+        else:
+            return "air"
+
+    sim = sim_with(mesh, Ms, m_init=m_init, A=13e-12, unit_length=1e-9, name='sphere_with_airbox')
+    sim.mark_regions(fun_region_marker)
+    sim.render_scene(field_name='Demag', region='air', representation='Outline', outfile='ddd_stray_field_sphere.png')
+    sim.render_scene(field_name='Demag', region='sphere', representation='Outline', outfile='ddd_demag_field_sphere.png')
+    #sim.render_scene(field_name='Demag', region='sphere_inner', representation='Outline', outfile='ddd_demag_field_sphere_inner.png')
+
+    # Extract the fields inside and outside the sphere
+    demag = sim.get_field_as_dolfin_function('Demag')
+    demag_sphere = sim.get_field_as_dolfin_function('Demag', region='sphere')
+    #demag_sphere_inner = sim.get_field_as_dolfin_function('Demag', region='sphere_inner')
+    stray_field_sphere = sim.get_field_as_dolfin_function('Demag', region='air')
+    f = df.File('ddd_demag_full.pvd')
+    f << demag
+    f1 = df.File('ddd_demag_sphere.pvd')
+    f1 << demag_sphere
+    #f1 = df.File('ddd_demag_sphere_inner.pvd')
+    #f1 << demag_sphere_inner
+    f2 = df.File('ddd_stray_field_sphere.pvd')
+    f2 << stray_field_sphere
+    del f1, f2
+    import ipdb; ipdb.set_trace()
+    submesh_sphere = sim.get_submesh('sphere')
+    v = demag_sphere.vector().array().reshape(3, -1)
+    v_norms = np.linalg.norm(v, axis=0)
+    assert np.allclose(v_norms, Ms_sphere / 3.0, rtol=1.1e-2)  # 1.1e-2 is the smallest rtol that makes this pass
+    # Determine indices where the demag field is *not* equal to -1/3*m
+    #indices_wrong = np.where(abs(abs(v_norms - 8.6e5/3) / (8.6e5/3) - 1.0) > 0.1)[0]
+
+    # TODO: Compare the demag field outside the sphere to the field of a point dipole
