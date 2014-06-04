@@ -91,25 +91,25 @@ class Zeeman(object):
         return self.E_density_function
 
 
-def DipolarField(Zeeman):
-    def __init__(self, pos, m, m_magnitude=None, name='DipolarField'):
+class DipolarField(Zeeman):
+    def __init__(self, pos, m, magnitude=None, name='DipolarField'):
         """
         Magnetostatic field of a point dipole at position `pos` with a fixed
         magnetic moment.
 
-        If `m_magnitude` is `None`, the magnetic moment is simply given by `m`.
+        If `magnitude` is `None`, the magnetic moment is simply given by `m`.
         Otherwise `m` is interpreted only as the *direction* of the magnetic
-        moment and `m_magnitude` as its magnitude, i.e. the magnetic moment is
+        moment and `magnitude` as its magnitude, i.e. the magnetic moment is
 
-           m_magnitude * (m / |m|)
+           magnitude * (m / |m|)
 
         """
         self.pos = np.asarray(pos)
 
-        if m_magnitude is None:
+        if magnitude is None:
             self.m = np.asarray(m)
         else:
-            self.m = m_magnitude * np.asarray(m) / np.linalg.norm(m)
+            self.m = magnitude * np.asarray(m) / np.linalg.norm(m)
 
         def H_fun(pt):
             v = self.pos - pt
