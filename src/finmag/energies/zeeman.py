@@ -104,6 +104,8 @@ class DipolarField(Zeeman):
            magnitude * (m / |m|)
 
         """
+        # XXX TODO: Check whether pos coincides with a mesh point and shift it by
+        #           an infinitesimal amount if so!
         self.pos = np.asarray(pos)
 
         if magnitude is None:
@@ -117,7 +119,13 @@ class DipolarField(Zeeman):
             #n = v / np.linalg.norm(v)
             return 1.0 / (4 * pi) * (3 * v * np.dot(self.m, v) / r**5 - self.m / r**3)
 
-        super(DipolarField, self).__init__(H_fun, name=name)
+        Hx_expr = '1/(4*pi) * (3*(mx*(x[0]-posx)+my*(x[1]-posy)+mz*(x[2]-posz)) / pow(sqrt((x[0]-posx)*(x[0]-posx)+(x[1]-posy)*(x[1]-posy)+(x[2]-posz)*(x[2]-posz)), 5) * (x[0]-posx) - mx / pow(sqrt((x[0]-posx)*(x[0]-posx)+(x[1]-posy)*(x[1]-posy)+(x[2]-posz)*(x[2]-posz)), 3))'
+        Hy_expr = '1/(4*pi) * (3*(mx*(x[0]-posx)+my*(x[1]-posy)+mz*(x[2]-posz)) / pow(sqrt((x[0]-posx)*(x[0]-posx)+(x[1]-posy)*(x[1]-posy)+(x[2]-posz)*(x[2]-posz)), 5) * (x[1]-posy) - my / pow(sqrt((x[0]-posx)*(x[0]-posx)+(x[1]-posy)*(x[1]-posy)+(x[2]-posz)*(x[2]-posz)), 3))'
+        Hz_expr = '1/(4*pi) * (3*(mx*(x[0]-posx)+my*(x[1]-posy)+mz*(x[2]-posz)) / pow(sqrt((x[0]-posx)*(x[0]-posx)+(x[1]-posy)*(x[1]-posy)+(x[2]-posz)*(x[2]-posz)), 5) * (x[2]-posz) - mz / pow(sqrt((x[0]-posx)*(x[0]-posx)+(x[1]-posy)*(x[1]-posy)+(x[2]-posz)*(x[2]-posz)), 3))'
+        H_expr = df.Expression([Hx_expr, Hy_expr, Hz_expr], mx=self.m[0], my=self.m[1], mz=self.m[2], posx=pos[0], posy=pos[1], posz=pos[2])
+
+        #super(DipolarField, self).__init__(H_fun, name=name)
+        super(DipolarField, self).__init__(H_expr, name=name)
 
 
 class TimeZeeman(Zeeman):
@@ -132,7 +140,7 @@ class TimeZeeman(Zeeman):
 
         Alternatively, `field_expression` can be a 3-array representing a
         constant field. In this case `t_off` must be specified, otherwise
-        a ValuError is raised (this is a safety measure because in this
+        a ValueError is raised (this is a safety measure because in this
         case there would be no time update at all, so it's likely that the
         user intended to do something else).
 
