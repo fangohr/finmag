@@ -764,7 +764,7 @@ class TestField(object):
 
             assert isinstance(field.mesh(), df.Mesh)
 
-    def test_set_scalar_field_with_python_function(self):
+    def test_set_nonlinear_scalar_field(self):
         """Test setting nonlinear scalar field."""
         # Python functions array for setting the scalar field.
         python_functions = [lambda x:1.21*x[0]*x[0],
