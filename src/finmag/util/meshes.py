@@ -670,7 +670,7 @@ def ring(r1,r2, h, maxh, save_result=True, filename='', directory='',with_middle
     return from_csg(csg_string, save_result=save_result, filename=filename, directory=directory)
 
 
-def sphere_inside_box(r_sphere, r_shell, l_box, maxh_sphere, maxh_box, center_sphere=(0, 0, 0), save_result=True, filename='', directory=''):
+def sphere_inside_box(r_sphere, r_shell, l_box, maxh_sphere, maxh_box, maxh_shell=None, center_sphere=(0, 0, 0), save_result=True, filename='', directory=''):
     """
     Create a mesh representing a sphere inside a box. The sphere and box belong to two
     different mesh regions and there is a small gap between the sphere and the outer
@@ -681,6 +681,9 @@ def sphere_inside_box(r_sphere, r_shell, l_box, maxh_sphere, maxh_box, center_sp
 
     """
     x, y, z = center_sphere
+    if maxh_shell is None:
+        maxh_shell = maxh_sphere
+
     mesh_descr = textwrap.dedent("""\
         algebraic3d
         solid ball = sphere ( {x}, {y}, {z}; {r_sphere} ) -maxh = {maxh_sphere};
