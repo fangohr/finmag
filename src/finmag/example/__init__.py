@@ -6,4 +6,5 @@
 #
 # AUTHOR(S) OF THIS FILE: Hans Fangohr
 from bar import bar, barmini
+from sphere_inside_airbox import sphere_inside_airbox
 import normal_modes

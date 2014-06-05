@@ -448,12 +448,36 @@ class Simulation(object):
             field = self.llg._m
         else:
             field = self.llg.effective_field.get_dolfin_function(field_type)
+        res = field
 
         if region:
+            # XXX TODO: The function space V_region was created using a 'restriction'.
+            #           This means that the underlying mesh of the function space is
+            #           still the full mesh. However, dolfin functions in V_region will
+            #           only have degrees of freedom corresponding to the specific region.
+            #           Strangely, however, if we construct a function such as 'field' below
+            #           and ask for its vector, it seems to contain elements that don't make
+            #           sense. Need to debug this, but for now we go the route below and
+            #           explicitly construct a function space on the submesh for the region
+            #           and interpolate into that.
             V_region = self._get_region_space(region)
-            field = df.interpolate(field, V_region)
+            #field_restr = df.interpolate(field, V_region)
+            #res = field_restr
 
-        return field
+            # Define a new function space on the submesh belonging to the region and interpolate
+            # the field into it. I would have thought that this is precisely what the restricted
+            # function spaces are intended for in dolfin, but the previous lines don't seem to
+            # work as intended, so I'm using this intermediate fix for now.
+            submesh = self.get_submesh(region)
+            if (V_region.ufl_element().family() != 'Lagrange'):
+                raise NotImplementedError("XXX The following lines assume that we have a CG1 function space. Fix this!!")
+            if (V_region.ufl_element().value_shape() != (3,)):
+                raise NotImplementedError("This functioality is currently only implemented for 3-vector fields.")
+            V_submesh = df.VectorFunctionSpace(submesh, 'CG', 1, dim=3)
+            f_submesh = df.interpolate(field, V_submesh)
+            res = f_submesh
+
+        return res
 
     def _get_region_space(self, region=None):
         if region:
@@ -477,7 +501,7 @@ class Simulation(object):
                 raise ValueError("Region not defined: '{}'. Allowed values: {}".format(region, self.region_ids.keys()))
         return region_id
 
-    def probe_field(self, field_type, pts):
+    def probe_field(self, field_type, pts, region=None):
         """
         Probe the field of type `field_type` at point(s) `pts`, where
         the point coordinates must be specified in mesh coordinates.
@@ -487,9 +511,9 @@ class Simulation(object):
         shape of ``pts``.
 
         """
-        return helpers.probe(self.get_field_as_dolfin_function(field_type), pts)
+        return helpers.probe(self.get_field_as_dolfin_function(field_type, region=region), pts)
 
-    def probe_field_along_line(self, field_type, pt_start, pt_end, N=100):
+    def probe_field_along_line(self, field_type, pt_start, pt_end, N=100, region=None):
         """
         Probe the field of type `field_type` at `N` equidistant points
         along a straight line connecting `pt_start` and `pt_end`.
@@ -502,7 +526,7 @@ class Simulation(object):
            probe_field_along_line('m', [-200, 0, 0], [200, 0, 0], N=200)
 
         """
-        return helpers.probe_along_line(self.get_field_as_dolfin_function(field_type), pt_start, pt_end, N)
+        return helpers.probe_along_line(self.get_field_as_dolfin_function(field_type, region=region), pt_start, pt_end, N)
 
     def create_integrator(self, backend=None, **kwargs):
 
@@ -630,8 +654,14 @@ class Simulation(object):
 
         This also adjusts the internal time of the scheduler and time integrator.
         """
+        #WW: Is it good to create a new integrator and with the name of reset_time? this
+        #is a bit confusing and dangerous because the user doesn't know a new integrator
+        #is created and the other setting that the user provided such as the tolerances
+        #actually doesn't have influence at all.
         self.integrator = llg_integrator(self.llg, self.llg.m,
                                          backend=self.integrator_backend, t0=t0)
+        
+        self.set_tol(self.reltol, self.abstol)
         self.scheduler.reset(t0)
         assert self.t == t0  # self.t is read from integrator
 
@@ -1139,9 +1169,10 @@ def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sun
     if demag_solver != None:
         demag = Demag(solver=demag_solver)
         if demag_solver_params != {}:
-            demag.parameters.update(demag_solver_params)
             for (k, v) in demag_solver_params.items():
                 log.debug("Setting demag solver parameter {}='{}' for simulation '{}'".format(k, v, sim.name))
+                demag.parameters[k] = v
+            log.debug("Demag parameters now: {}".format(demag.parameters))
         sim.add(demag)
     log.debug("Successfully created simulation '{}'".format(sim.name))
 
