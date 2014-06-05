@@ -7,8 +7,8 @@ import finmag
 from finmag import sim_with
 from finmag.energies import Zeeman, TimeZeeman, DiscreteTimeZeeman, OscillatingZeeman
 from finmag.util.consts import mu0
-from finmag.util.meshes import pair_of_disks, sphere_inside_box
-from finmag.util.helpers import scalar_valued_function, scalar_valued_dg_function
+from finmag.util.meshes import pair_of_disks
+from finmag.example import sphere_inside_airbox
 from math import sqrt, pi, cos, sin
 from zeeman import DipolarField
 
@@ -376,33 +376,15 @@ def test_compare_stray_field_of_sphere_with_dipolar_field(tmpdir):
     m_init = [1, 0, 0]
     #m_init = [7, -1, 3]
     center_sphere = [0, 0, 0]
-    r_sphere = 25
+    r_sphere = 5
+    r_shell = 25
     l_box = 70
-    maxh_sphere = 3.0
+    maxh_sphere = 2.0
     maxh_box = 10.0
     Ms_sphere = 8.6e5
 
-    mesh = sphere_inside_box(r_sphere=r_sphere, r_shell=1.05*r_sphere, l_box=l_box, maxh_sphere=maxh_sphere, maxh_box=maxh_box, center_sphere=center_sphere)
-
-    ## Create a Simulation object using this mesh with a tiny Ms in the "air" region
-    def Ms_fun(pt):
-        if np.linalg.norm(pt) <= 1.01 * r_sphere:
-            return Ms_sphere
-        else:
-            return 1.
-    Ms = scalar_valued_dg_function(Ms_fun, mesh)
-
-    def fun_region_marker(pt):
-        #if np.linalg.norm(pt - center_sphere) <= 0.8 * r_sphere:
-        #    return "sphere_inner"
-        if np.linalg.norm(pt - center_sphere) <= 1.01 * r_sphere:
-            return "sphere"
-        else:
-            return "air"
-
-    sim = sim_with(mesh, Ms, m_init=m_init, A=13e-12, unit_length=1e-9, name='sphere_with_airbox')
-    sim.mark_regions(fun_region_marker)
-    sim.render_scene(field_name='Demag', region='air', representation='Outline', outfile='ddd_stray_field_sphere.png')
+    sim = sphere_inside_airbox(r_sphere, r_shell, l_box, maxh_sphere, maxh_shell, maxh_box, center_sphere, m_init)
+    sim.render_scene(field_name='Demag', region='air', representation='Outline', outfile='ddd_demag_field_air.png')
     sim.render_scene(field_name='Demag', region='sphere', representation='Outline', outfile='ddd_demag_field_sphere.png')
     #sim.render_scene(field_name='Demag', region='sphere_inner', representation='Outline', outfile='ddd_demag_field_sphere_inner.png')
 
@@ -410,18 +392,18 @@ def test_compare_stray_field_of_sphere_with_dipolar_field(tmpdir):
     demag = sim.get_field_as_dolfin_function('Demag')
     demag_sphere = sim.get_field_as_dolfin_function('Demag', region='sphere')
     #demag_sphere_inner = sim.get_field_as_dolfin_function('Demag', region='sphere_inner')
-    stray_field_sphere = sim.get_field_as_dolfin_function('Demag', region='air')
+    demag_field_air = sim.get_field_as_dolfin_function('Demag', region='air')
     f = df.File('ddd_demag_full.pvd')
     f << demag
     f1 = df.File('ddd_demag_sphere.pvd')
     f1 << demag_sphere
     #f1 = df.File('ddd_demag_sphere_inner.pvd')
     #f1 << demag_sphere_inner
-    f2 = df.File('ddd_stray_field_sphere.pvd')
-    f2 << stray_field_sphere
+    f2 = df.File('ddd_demag_field_air.pvd')
+    f2 << demag_field_air
     del f1, f2
-    import ipdb; ipdb.set_trace()
     #submesh_sphere = sim.get_submesh('sphere')
+    submesh_air = sim.get_submesh('air')
     #v = demag_sphere.vector().array().reshape(3, -1)
     #v_norms = np.linalg.norm(v, axis=0)
     #assert np.allclose(v_norms, Ms_sphere / 3.0, rtol=1.1e-2)  # 1.1e-2 is the smallest rtol that makes this pass
@@ -440,12 +422,26 @@ def test_compare_stray_field_of_sphere_with_dipolar_field(tmpdir):
 
     # Comparison
     v1 = fld_dipole.vector().array().reshape(3, -1)
-    v2 = stray_field_sphere.vector().array().reshape(3, -1)
+    v2 = demag_field_air.vector().array().reshape(3, -1)
+    absdiff_vector = (v1 - v2)
+    absdiff_scalar = np.linalg.norm(v1 - v2, axis=0)
     reldiff_vector = (v1 - v2) / np.linalg.norm(v1, axis=0)
     reldiff_scalar = np.linalg.norm(v1 - v2, axis=0) / np.linalg.norm(v1, axis=0)
+    S3 = df.VectorFunctionSpace(submesh_air, 'CG', 1, dim=3)
+    S1 = df.FunctionSpace(submesh_air, 'CG', 1)
+    fv1 = df.Function(S3)
+    fv2 = df.Function(S1)
+    fv1.vector()[:] = reldiff_vector.ravel()[:]
+    fv2.vector()[:] = reldiff_scalar[:]
     f4 = df.File('ddd_reldiff_vector.pvd')
     f5 = df.File('ddd_reldiff_scalar.pvd')
-    f4 << reldiff_vector
-    f5 << reldiff_vector
+    f4 << fv1
+    f5 << fv2
+    fv1.vector()[:] = absdiff_vector.ravel()[:]
+    fv2.vector()[:] = absdiff_scalar[:]
+    f4 = df.File('ddd_absdiff_vector.pvd')
+    f5 = df.File('ddd_absdiff_scalar.pvd')
+    f4 << fv1
+    f5 << fv2
     del f4
     del f5
