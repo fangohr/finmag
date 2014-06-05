@@ -381,7 +381,7 @@ def compute_field_diffs(sim):
 
 
 @pytest.mark.slow
-def test_compare_stray_field_of_sphere_with_dipolar_field(tmpdir, debug=False):
+def test_compare_stray_field_of_sphere_with_dipolar_field(tmpdir, debug=True):
     """
     Check that the stray field of a sphere in an 'airbox'
     is close to the field of a point dipole with the same
@@ -391,8 +391,7 @@ def test_compare_stray_field_of_sphere_with_dipolar_field(tmpdir, debug=False):
     os.chdir(str(tmpdir))
 
     # Create a mesh of a sphere enclosed in an "airbox"
-    m_init = [1, 0, 0]
-    #m_init = [7, -1, 3]
+    m_init = [7, -4, 3]  # some random magnetisation direction
     center_sphere = [0, 0, 0]
     r_sphere = 3
     r_shell = 30
@@ -411,7 +410,7 @@ def test_compare_stray_field_of_sphere_with_dipolar_field(tmpdir, debug=False):
     # (with the same magnetic moment as the sphere).
     dipole_magnitude = Ms_sphere * 4/3 * pi * r_sphere**3
     logger.debug("dipole_magnitude = {}".format(dipole_magnitude))
-    H_dipole = DipolarField(pos=[0, 0, 0], m=[1, 0, 0], magnitude=dipole_magnitude)
+    H_dipole = DipolarField(pos=[0, 0, 0], m=m_init, magnitude=dipole_magnitude)
     sim.add(H_dipole)
 
     # Check that the absolute and relative difference between the
