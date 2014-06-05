@@ -501,7 +501,7 @@ class Simulation(object):
                 raise ValueError("Region not defined: '{}'. Allowed values: {}".format(region, self.region_ids.keys()))
         return region_id
 
-    def probe_field(self, field_type, pts):
+    def probe_field(self, field_type, pts, region=None):
         """
         Probe the field of type `field_type` at point(s) `pts`, where
         the point coordinates must be specified in mesh coordinates.
@@ -511,9 +511,9 @@ class Simulation(object):
         shape of ``pts``.
 
         """
-        return helpers.probe(self.get_field_as_dolfin_function(field_type), pts)
+        return helpers.probe(self.get_field_as_dolfin_function(field_type, region=region), pts)
 
-    def probe_field_along_line(self, field_type, pt_start, pt_end, N=100):
+    def probe_field_along_line(self, field_type, pt_start, pt_end, N=100, region=None):
         """
         Probe the field of type `field_type` at `N` equidistant points
         along a straight line connecting `pt_start` and `pt_end`.
@@ -526,7 +526,7 @@ class Simulation(object):
            probe_field_along_line('m', [-200, 0, 0], [200, 0, 0], N=200)
 
         """
-        return helpers.probe_along_line(self.get_field_as_dolfin_function(field_type), pt_start, pt_end, N)
+        return helpers.probe_along_line(self.get_field_as_dolfin_function(field_type, region=region), pt_start, pt_end, N)
 
     def create_integrator(self, backend=None, **kwargs):
 
