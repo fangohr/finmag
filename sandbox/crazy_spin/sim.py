@@ -38,6 +38,7 @@ mesh = nanodisk(d, thickness, hmax, save_result=False)
 
 sim = Sim(mesh, Ms, unit_length=1e-9)
 sim.set_m((0, 0, 1))
+sim.set_tol(reltol=1e-10, abstol=1e-10)
 
 sim.add(Exchange(A))
 sim.add(DMI(D))

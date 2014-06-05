@@ -12,6 +12,8 @@ rank = comm.Get_rank()
 size = comm.Get_size()
 
 
+#mpirun -n 2 python test.py
+
 """
     Solve equation du/dt = sin(t) based on dolfin vector and sundials/cvode in parallel.
 """
@@ -25,15 +27,6 @@ class Test(object):
         self.t = 0
         
         self.m_petsc = df.as_backend_type(self.u.vector()).vec()
-        
-        v = self.m_petsc.copy()
-        v.setArray(1)
-        
-        print self.m_petsc.getArray(), v.getArray()
-        
-        self.m_petsc.setArray(v)
-        
-        print self.m_petsc.getArray(), v.getArray()
         
 
     def set_up_solver(self, rtol=1e-8, atol=1e-8):
@@ -49,9 +42,9 @@ class Test(object):
 
     def sundials_rhs(self, t, y, ydot):
         
-        print 'from python', t, y.getLocalSize(), ydot.getLocalSize()
+        print 'rank=%d t=%g local=%d size=%d'%(rank, t, y.getLocalSize(), ydot.getSize())
 
-        ydot.setArray(np.sin(t+np.pi/2*rank))
+        ydot.setArray(np.sin(t+np.pi/4*rank))
  
         return 0
 
@@ -91,9 +84,11 @@ if __name__ == '__main__':
     
     us = []
     
+    file = df.File('u_time.pvd')
+    
     for t in ts:
         sim.run_until(t)
-
+        #file << sim.u
         us.append(sim.spin[0])
         
     plot_m(ts,us)
