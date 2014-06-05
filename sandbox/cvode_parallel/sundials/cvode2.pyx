@@ -82,7 +82,7 @@ cdef class CvodeSolver(object):
     def __cinit__(self,Vec spin,rtol,atol,callback_fun):
 
         self.t = 0
-        self.spin = spin.duplicate()
+        self.spin = spin
         self.dm_dt = spin.duplicate()
         
         self.rtol = rtol

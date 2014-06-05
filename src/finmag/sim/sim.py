@@ -654,8 +654,14 @@ class Simulation(object):
 
         This also adjusts the internal time of the scheduler and time integrator.
         """
+        #WW: Is it good to create a new integrator and with the name of reset_time? this
+        #is a bit confusing and dangerous because the user doesn't know a new integrator
+        #is created and the other setting that the user provided such as the tolerances
+        #actually doesn't have influence at all.
         self.integrator = llg_integrator(self.llg, self.llg.m,
                                          backend=self.integrator_backend, t0=t0)
+        
+        self.set_tol(self.reltol, self.abstol)
         self.scheduler.reset(t0)
         assert self.t == t0  # self.t is read from integrator
 
