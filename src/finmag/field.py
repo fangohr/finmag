@@ -115,7 +115,7 @@ class Field(object):
         # appropriate for both vector and scalar fields.
         elif hasattr(value, '__call__'):
             # Functionspace is made visible to WrappedExpression class.
-            fspace_for_wexp = self.functionspace  
+            fspace_for_wexp = self.functionspace
 
             class WrappedExpression(df.Expression):
                 def __init__(self, value):
