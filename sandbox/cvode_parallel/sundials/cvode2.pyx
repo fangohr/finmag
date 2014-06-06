@@ -108,7 +108,7 @@ cdef class CvodeSolver(object):
                                      <void *>self.y,<void *>self.y_dot)
 
         cdef MPI_Comm comm_c = PETSC_COMM_WORLD
-        cdef np.ndarray[double, ndim=1, mode="c"] y_np = np.zeros(self.y.getLocalSize())
+        cdef np.ndarray[double, ndim=1, mode="c"] y_np = y0.getArray()
         self.y_np = y_np
         self.y_nv = N_VMake_Parallel(comm_c, y0.getLocalSize(), y0.getSize(), &y_np[0])
         
@@ -133,10 +133,10 @@ cdef class CvodeSolver(object):
         flag = CVSpgmr(self.cvode_mem, PREC_NONE, 300);
         #flag = CVSpilsSetGSType(self.cvode_mem, 1);
 
-    def set_initial_value(self,np.ndarray[double, ndim=1, mode="c"] spin, t):
-        self.t = t
-        #
-        copy_arr2nv(spin, self.y_nv)
+    #def set_initial_value(self,np.ndarray[double, ndim=1, mode="c"] spin, t):
+    #    self.t = t
+    #    #
+    #    copy_arr2nv(spin, self.y_nv)
 
     cpdef int run_until(self, double tf) except -1:
         cdef int flag
