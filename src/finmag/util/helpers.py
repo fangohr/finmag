@@ -659,6 +659,8 @@ def vector_valued_function(value, mesh_or_space, normalise=False, **kwargs):
         if value.ndim == 2:
             assert value.shape[1] == 3
             value = value.reshape(value.size, order="F")
+        if not value.dtype == np.double:
+            value = value.astype(np.double)
         fun.vector().set_local(value)
 
     #if it's a normal function, we wrapper it into a dolfin expression
