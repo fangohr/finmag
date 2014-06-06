@@ -140,7 +140,7 @@ def test_plot_spatially_resolved_normal_mode(tmpdir):
     m0 = sim.m
 
     N = 3
-    omega, eigenvecs, rel_errors, mode_powers = sim.compute_normal_modes(n_values=N)
+    omega, eigenvecs, rel_errors = sim.compute_normal_modes(n_values=N)
     logger.debug("[DDD] Computed {} eigenvalues and {} eigenvectors.".format(len(omega), len(eigenvecs[0])))
     for i in xrange(N):
         #sim.export_normal_mode_animation(i, filename='animations/normal_mode_{:02d}/normal_mode_{:02d}.pvd'.format(i, i))
