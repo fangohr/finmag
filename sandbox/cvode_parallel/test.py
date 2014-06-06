@@ -21,7 +21,7 @@ class Test(object):
     def __init__(self, mesh):
         self.mesh = mesh
         self.V = df.FunctionSpace(mesh, 'CG', 1)
-        zero = df.Expression('0.00')
+        zero = df.Expression('0.3')
         self.u = df.interpolate(zero, self.V)
         self.spin = self.u.vector().array()
         self.t = 0
