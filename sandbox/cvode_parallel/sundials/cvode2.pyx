@@ -78,16 +78,28 @@ cdef class CvodeSolver(object):
 
     
     cdef long int nsteps,nfevals,njevals
+
+    def set_options(self, rtol, atol, max_num_steps):
+        self.rtol = rtol
+        self.atol = atol
+        self.max_num_steps = max_num_steps
+
+        # Set tolerances
+        flag = CVodeSStolerances(self.cvode_mem, self.rtol, self.atol)
+        
+        # Set maximum number of iteration steps (?)
+        flag = CVodeSetMaxNumSteps(self.cvode_mem, mxsteps)
+
+        # Set options for the CVODE scaled, preconditioned GMRES linear solver, CVSPGMR
+        flag = CVSpgmr(self.cvode_mem, PREC_NONE, 300);
+        #flag = CVSpilsSetGSType(self.cvode_mem, 1);
     
-    def __cinit__(self,Vec spin,rtol,atol,callback_fun):
+    def __cinit__(self, Vec spin, callback_fun, rtol=1e-8, atol=1e-8, max_num_steps=100000):
 
         self.t = 0
         self.spin = spin
         self.dm_dt = spin.duplicate()
-        
-        self.rtol = rtol
-        self.atol = atol
-        
+
         self.callback_fun = callback_fun
         
         cdef np.ndarray[double, ndim=1, mode="c"] y=np.zeros(spin.getLocalSize())
@@ -117,6 +129,9 @@ cdef class CvodeSolver(object):
         
         self.init_ode()
 
+        self.set_options(rtol, atol, max_num_steps)
+        
+
     def init_ode(self):
         self.cvode_mem = CVodeCreate(CV_BDF, CV_NEWTON);
         
@@ -134,13 +149,6 @@ cdef class CvodeSolver(object):
         flag = CVodeInit(self.cvode_mem, <CVRhsFn>self.rhs_fun, t, self.u_y)
         self.check_flag(flag,"CVodeInit")
 
-        flag = CVodeSStolerances(self.cvode_mem, self.rtol, self.atol)
-        
-        mxsteps = 100000
-        flag = CVodeSetMaxNumSteps(self.cvode_mem, mxsteps)
-
-        flag = CVSpgmr(self.cvode_mem, PREC_NONE, 300);
-        #flag = CVSpilsSetGSType(self.cvode_mem, 1);
 
     cpdef int run_until(self, double tf) except -1:
         cdef int flag
