@@ -13,6 +13,11 @@ comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
 
+def init_m(pos):
+    x=pos[0]
+    y=pos[1]
+    
+    return (x,0,100)
 
 #mpirun -n 2 python test.py
 
@@ -34,7 +39,7 @@ class Test(object):
         self.m_petsc = df.as_backend_type(self.m.vector()).vec()
         
         self.llg = LLG(self.S1, self.S3)
-        self.llg.set_m((1,0,0), normalise=False)
+        self.llg.set_m(init_m, normalise=False)
         print rank, self.llg.m
         #self.exchange = Exchange(13e-12)
 
