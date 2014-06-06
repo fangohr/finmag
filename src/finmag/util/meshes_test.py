@@ -1,4 +1,5 @@
 import dolfin as df
+import os
 from meshes import *
 from mesh_templates import *
 
@@ -36,3 +37,16 @@ def test_embed3d():
 
     # Check that the coordinates coincide
     assert(np.allclose(coords_3d, coords_3d_expected))
+
+
+def test_sphere_inside_box(tmpdir, debug=False):
+    """
+    TODO: Currently this test doesn't do much; it only checks whether we can execute the command `sphere_inside_box`.
+    """
+    os.chdir(str(tmpdir))
+    mesh = sphere_inside_box(r_sphere=10, r_shell=15, l_box=50, maxh_sphere=5.0, maxh_box=10.0, center_sphere=(10, -5, 8))
+    if debug:
+        plot_mesh_with_paraview(mesh, representation='Wireframe', outfile='mesh__sphere_inside_box.png')
+        f = df.File('mesh__sphere_inside_box.pvd')
+        f << mesh
+        del f

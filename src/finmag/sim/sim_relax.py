@@ -1,4 +1,3 @@
-
 import logging
 from finmag.scheduler import derivedevents
 
@@ -41,7 +40,6 @@ def relax(sim, save_vtk_snapshot_as=None, save_restart_data_as=None, stopping_dm
     sim.set_m(sim.m)
     log.info("Relaxation finished at time t = {:.2g}.".format(sim.t))
 
-    sim.scheduler._remove(sim.relaxation)
     del(sim.relaxation.sim) # help the garbage collection by avoiding circular reference
 
     # Save a vtk snapshot and/or restart data of the relaxed state.
