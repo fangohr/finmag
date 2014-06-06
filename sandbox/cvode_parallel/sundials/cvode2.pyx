@@ -24,7 +24,7 @@ cdef extern from "petsc/petscvec.h":
 cdef struct cv_userdata:
     void *rhs_fun
     void *y
-    void *dm_dt
+    void *y_dot
 
 cdef inline  copy_arr2nv(np.ndarray[realtype, ndim=1,mode='c'] np_x, N_Vector v):
     cdef long int n = (<N_VectorContent_Parallel>v.content).local_length
@@ -49,7 +49,7 @@ cdef int cv_rhs(realtype t, N_Vector yv, N_Vector yvdot, void* user_data) except
     #cdef double *y = (<N_VectorContent_Serial>yv.content).data
     
     cdef Vec y = <Vec>ud.y
-    cdef Vec ydot = <Vec>ud.dm_dt
+    cdef Vec ydot = <Vec>ud.y_dot
     
     VecPlaceArray(y.vec, (<N_VectorContent_Parallel>yv.content).data)
     VecPlaceArray(ydot.vec, (<N_VectorContent_Parallel>yvdot.content).data)
@@ -66,9 +66,9 @@ cdef class CvodeSolver(object):
     cdef public double t
     cdef public np.ndarray y
     cdef double rtol, atol
-    cdef Vec spin
-    cdef Vec dm_dt
-    cdef N_Vector u_y
+    cdef Vec _spin
+    cdef Vec y_dot  # time derivative of y
+    cdef N_Vector y_nv  # the N_Vector version of y
     
     cdef void *cvode_mem
     cdef void *rhs_fun
@@ -98,7 +98,7 @@ cdef class CvodeSolver(object):
 
         self.t = 0
         self._spin = spin
-        self.dm_dt = spin.duplicate()
+        self.y_dot = spin.duplicate()
 
         self.callback_fun = callback_fun
         
@@ -107,23 +107,23 @@ cdef class CvodeSolver(object):
         self.y = y
         
         #VecGetArray(self._spin.vec,&y[0])
-        #self.u_y = N_VNew_Serial(self.y.getLocalSize())
+        #self.y_nv = N_VNew_Serial(self.y.getLocalSize())
         
         cdef MPI_Comm comm_c = PETSC_COMM_WORLD
         
-        #self.u_y = N_VNew_Parallel(comm_c, spin.getLocalSize(), spin.getSize())
+        #self.y_nv = N_VNew_Parallel(comm_c, spin.getLocalSize(), spin.getSize())
         
         #VecGetArray(spin.vec,&y[0])
         #how can we use the orginal petsc array rather than the numpy array?
-        #self.u_y = N_VMake_Serial(spin.getLocalSize(),&y[0])
-        self.u_y = N_VMake_Parallel(comm_c, spin.getLocalSize(), spin.getSize(), &y[0])
+        #self.y_nv = N_VMake_Serial(spin.getLocalSize(),&y[0])
+        self.y_nv = N_VMake_Parallel(comm_c, spin.getLocalSize(), spin.getSize(), &y[0])
         
         #VecRestoreArray(spin.vec,&y[0])
         
         self.rhs_fun = <void *>cv_rhs
 
         self.user_data = cv_userdata(<void*>self.callback_fun,
-                                     <void *>self._spin,<void *>self.dm_dt)
+                                     <void *>self._spin,<void *>self.y_dot)
 
         self.MODIFIED_GS = 1
         
@@ -141,12 +141,12 @@ cdef class CvodeSolver(object):
     def set_initial_value(self,np.ndarray[double, ndim=1, mode="c"] spin, t):
         self.t = t
         #
-        copy_arr2nv(spin, self.u_y)
+        copy_arr2nv(spin, self.y_nv)
 
         flag = CVodeSetUserData(self.cvode_mem, <void*>&self.user_data);
         self.check_flag(flag,"CVodeSetUserData")
 
-        flag = CVodeInit(self.cvode_mem, <CVRhsFn>self.rhs_fun, t, self.u_y)
+        flag = CVodeInit(self.cvode_mem, <CVRhsFn>self.rhs_fun, t, self.y_nv)
         self.check_flag(flag,"CVodeInit")
 
 
@@ -154,7 +154,7 @@ cdef class CvodeSolver(object):
         cdef int flag
         cdef double tret
         
-        flag = CVodeStep(self.cvode_mem, tf, self.u_y, &tret, CV_NORMAL)
+        flag = CVodeStep(self.cvode_mem, tf, self.y_nv, &tret, CV_NORMAL)
         self.check_flag(flag,"CVodeStep")
         
         return 0
