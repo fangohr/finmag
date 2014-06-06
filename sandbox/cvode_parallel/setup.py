@@ -34,10 +34,9 @@ def configuration(parent_package='',top_path=None):
     PETSC_DIR  = os.environ.get('PETSC_DIR','/usr/lib/petsc')
     PETSC_ARCH = os.environ.get('PETSC_ARCH', 'linux-gnu-c-opt')
         
-    from os.path import join, isdir
-    if isdir(join(PETSC_DIR, PETSC_ARCH)):
-        INCLUDE_DIRS += [join(PETSC_DIR, 'include')],
-        LIBRARY_DIRS += [join(PETSC_DIR, PETSC_ARCH, 'lib')]
+    if os.path.isdir(os.path.join(PETSC_DIR, PETSC_ARCH)):
+        INCLUDE_DIRS += [os.path.join(PETSC_DIR, 'include')]
+        LIBRARY_DIRS += [os.path.join(PETSC_DIR, PETSC_ARCH, 'lib')]
     else:
         raise Exception('Seems PETSC_DIR or PETSC_ARCH are wrong!')
     LIBRARIES += [#'petscts', 'petscsnes', 'petscksp',
@@ -48,7 +47,7 @@ def configuration(parent_package='',top_path=None):
     import petsc4py
     INCLUDE_DIRS += [petsc4py.get_include()]
     
-    print INCLUDE_DIRS
+    print "INCLUDE_DIRS = {}".format(INCLUDE_DIRS)
     
     # Configuration
     from numpy.distutils.misc_util import Configuration
