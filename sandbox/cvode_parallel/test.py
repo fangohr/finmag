@@ -39,7 +39,7 @@ class Test(object):
         
         print 'rank=%d t=%g local=%d size=%d'%(rank, t, y.getLocalSize(), ydot.getSize())
 
-        ydot.setArray(np.sin(t+np.pi/4*rank))
+        ydot.setArray(np.sin(t))
  
         return 0
 

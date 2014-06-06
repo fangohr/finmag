@@ -34,11 +34,19 @@ class Test(object):
         self.m_petsc = df.as_backend_type(self.m.vector()).vec()
         
         self.llg = LLG(self.S1, self.S3)
-        self.llg.set_m(m_init)
-        self.exchange = Exchange(13e-12)
+        self.llg.set_m((1,0,0), normalise=False)
+        print rank, self.llg.m
+        #self.exchange = Exchange(13e-12)
+
         self.zeeman = Zeeman([0, 0, 1e5])
-        self.llg.effective_field.add(self.exchange)
+        print 'hahahah2',rank
+        
+        #self.llg.effective_field.add(self.exchange)
         self.llg.effective_field.add(self.zeeman)
+        print 'hahahah3',rank
+        self.llg.effective_field.update()
+        print rank, self.llg.effective_field.H_eff
+        #raise Exception('hhhh')
         #self.llg.alpha = 0.1
 
     def set_up_solver(self, rtol=1e-8, atol=1e-8):
@@ -54,11 +62,13 @@ class Test(object):
         ydot_np = self.llg.solve_for(y_np, t)
         ydot.setArray(ydot_np)
         
+        #if rank == 1:
+            #print t, ydot_np[0],y_np[0]
         #print 'rank=%d t=%g local=%d size=%d'%(rank, t, y.getLocalSize(), ydot.getSize())
         #print ydot.getArray()[0]
 
         #ydot.setArray(np.sin(t+np.pi/4*rank))
-        sim.field.vector().set_local(ydot_np)
+        #sim.field.vector().set_local(ydot_np)
         return 0
 
     def run_until(self,t):
@@ -96,7 +106,7 @@ if __name__ == '__main__':
     sim = Test(mesh)
     sim.set_up_solver()
     
-    ts = np.linspace(0, 2e-9, 101)
+    ts = np.linspace(0, 1e-9, 51)
     
     
     us = []
@@ -107,7 +117,7 @@ if __name__ == '__main__':
     for t in ts:
         sim.run_until(t)
         #sim.field.vector().set_local(sim.llg.effective_field.H_eff)
-        file << sim.field
+        #file << sim.field
         us.append(sim.spin[0])
         
     plot_m(ts,us)
