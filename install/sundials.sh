@@ -37,7 +37,7 @@ then
 fi
 
 cd $source
-./configure --prefix=${SUNDIALS_PREFIX}/$source/sundials --enable-shared
+./configure --prefix=${SUNDIALS_PREFIX}/$source/sundials --with-cflags=-fPIC --enable-shared --enable-lapack --enable-mpi
 #./configure
 make
 make install
