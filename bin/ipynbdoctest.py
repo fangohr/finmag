@@ -151,12 +151,12 @@ def sanitize(s):
     # Ignore datetime objects
     s = re.sub(r'datetime.datetime\([0-9, ]*\)', 'DATETIME_OBJECT', s)
 
-    # # Warning coming from Matplotlib occasionally. The warning comes
-    # # from a different line in different versions of matplotlib and
-    # # thus results in a failed comparison. Replace with empty string.
-    # s = re.sub(r'.*UserWarning: This figure includes Axes that are not '
-    #             'compatible with tight_layout, so its results might be '
-    #             'incorrect.', '', s)
+    # Warning coming from Matplotlib occasionally. The warning comes
+    # from a different line in different versions of matplotlib and
+    # thus results in a failed comparison. Replace with empty string.
+    s = re.sub(r'.*UserWarning: This figure includes Axes that are not '
+               'compatible with tight_layout, so its results might be '
+               'incorrect.*', '', s)
 
     # If a mesh exists already, we get a different message from
     # generation of the mesh.
