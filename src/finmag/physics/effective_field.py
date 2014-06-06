@@ -14,7 +14,7 @@ class EffectiveField(object):
         self.Ms = Ms
         self.unit_length = unit_length
 
-        self.output_size = self.m.vector().size()
+        self.output_size = self.m.vector().local_size()
         self.H_eff = np.zeros(self.output_size)
 
         self.interactions = {}

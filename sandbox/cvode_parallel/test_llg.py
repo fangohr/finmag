@@ -26,7 +26,8 @@ class Test(object):
         self.S3 = df.VectorFunctionSpace(mesh, 'CG', 1, dim=3)
         #zero = df.Expression('0.3')
         m_init = df.Constant([1, 0, 0])
-        self.m = df.interpolate(m_init, self.V)
+        self.m = df.interpolate(m_init, self.S3)
+        self.field = df.interpolate(m_init, self.S3)
         self.spin = self.m.vector().array()
         self.t = 0
 
@@ -38,6 +39,7 @@ class Test(object):
         self.zeeman = Zeeman([0, 0, 1e5])
         self.llg.effective_field.add(self.exchange)
         self.llg.effective_field.add(self.zeeman)
+        #self.llg.alpha = 0.1
 
     def set_up_solver(self, rtol=1e-8, atol=1e-8):
         
@@ -52,18 +54,22 @@ class Test(object):
         ydot_np = self.llg.solve_for(y_np, t)
         ydot.setArray(ydot_np)
         
-        print 'rank=%d t=%g local=%d size=%d'%(rank, t, y.getLocalSize(), ydot.getSize())
+        #print 'rank=%d t=%g local=%d size=%d'%(rank, t, y.getLocalSize(), ydot.getSize())
+        #print ydot.getArray()[0]
 
         #ydot.setArray(np.sin(t+np.pi/4*rank))
- 
+        sim.field.vector().set_local(ydot_np)
         return 0
 
     def run_until(self,t):
         
         if t <= self.t:
+            ode = self.ode
+            print ode.y_np[0]
             return
         
         ode = self.ode
+        print ode.y_np[0]
         
         flag = ode.run_until(t)
         
@@ -71,13 +77,14 @@ class Test(object):
             raise Exception("Run cython run_until failed!!!")
         
         self.m.vector().set_local(ode.y_np)
+        
         self.spin = self.m.vector().array()
         #print self.spin[0]
         #self.spin[:] = ode.y[:]
     
 
 def plot_m(ts, m):
-    plt.plot(ts, m, ".", label="m", color='DarkGreen')
+    plt.plot(ts, m, "-.", label="m", color='DarkGreen')
     plt.xlabel('Time')
     plt.ylabel('m')
     plt.savefig('m_rank_%d.pdf'%rank)
@@ -89,16 +96,18 @@ if __name__ == '__main__':
     sim = Test(mesh)
     sim.set_up_solver()
     
-    ts = np.linspace(0, 5, 101)
+    ts = np.linspace(0, 2e-9, 101)
     
     
     us = []
     
     file = df.File('u_time.pvd')
     
+    
     for t in ts:
         sim.run_until(t)
-        #file << sim.u
+        #sim.field.vector().set_local(sim.llg.effective_field.H_eff)
+        file << sim.field
         us.append(sim.spin[0])
         
     plot_m(ts,us)
