@@ -135,7 +135,7 @@ class TestField(object):
                 # The expected field is constant and, because of that,
                 # smaller tolerance value (tol1) is used.
                 probing_point = field.mesh_dim() * (self.probing_coord,)
-                probed_value = field.probe_field(probing_point)
+                probed_value = field.probe(probing_point)
                 assert abs(probed_value - expected_value) < self.tol1
 
     def test_set_scalar_field_with_expression(self):
@@ -176,7 +176,7 @@ class TestField(object):
             # The expected field is linear and, because of that,
             # smaller tolerance value (tol1) is used.
             probing_point = field.mesh_dim() * (self.probing_coord,)
-            probed_value = field.probe_field(probing_point)
+            probed_value = field.probe(probing_point)
             assert abs(probed_value - expected_probed_value) < self.tol1
 
     def test_set_scalar_field_with_python_function(self):
@@ -216,7 +216,7 @@ class TestField(object):
             # The expected field is linear and, because of that,
             # smaller tolerance value (tol1) is used.
             probing_point = field.mesh_dim() * (self.probing_coord,)
-            probed_value = field.probe_field(probing_point)
+            probed_value = field.probe(probing_point)
             assert abs(probed_value - expected_probed_value) < self.tol1
 
     def test_set_vector_field_with_constant(self):
@@ -254,7 +254,7 @@ class TestField(object):
                 # The expected field is constant and, because of that,
                 # smaller tolerance value (tol1) is used.
                 probing_point = field.mesh_dim() * (self.probing_coord,)
-                probed_value = field.probe_field(probing_point)
+                probed_value = field.probe(probing_point)
                 assert abs(probed_value[0] - expected_value[0]) < self.tol1
                 assert abs(probed_value[1] - expected_value[1]) < self.tol1
                 assert abs(probed_value[2] - expected_value[2]) < self.tol1
@@ -308,7 +308,7 @@ class TestField(object):
             # The expected field is constant and, because of that,
             # smaller tolerance value (tol1) is used.
             probing_point = field.mesh_dim() * (self.probing_coord,)
-            probed_value = field.probe_field(probing_point)
+            probed_value = field.probe(probing_point)
             assert abs(probed_value[0] - expected_probed_value[0]) < self.tol1
             assert abs(probed_value[1] - expected_probed_value[1]) < self.tol1
             assert abs(probed_value[2] - expected_probed_value[2]) < self.tol1
@@ -362,7 +362,7 @@ class TestField(object):
             # The expected field is constant and, because of that,
             # smaller tolerance value (tol1) is used.
             probing_point = field.mesh_dim() * (self.probing_coord,)
-            probed_value = field.probe_field(probing_point)
+            probed_value = field.probe(probing_point)
             assert abs(probed_value[0] - expected_probed_value[0]) < self.tol1
             assert abs(probed_value[1] - expected_probed_value[1]) < self.tol1
             assert abs(probed_value[2] - expected_probed_value[2]) < self.tol1
@@ -399,7 +399,7 @@ class TestField(object):
                 # The expected field is constant and, because of that,
                 # smaller tolerance value (tol1) is used.
                 probing_point = field.mesh_dim() * (self.probing_coord,)
-                probed_value = field.probe_field(probing_point)
+                probed_value = field.probe(probing_point)
                 assert abs(probed_value[0] - expected_value[0]) < self.tol1
                 assert abs(probed_value[1] - expected_value[1]) < self.tol1
 
@@ -439,7 +439,7 @@ class TestField(object):
                 # The expected field is constant and, because of that,
                 # smaller tolerance value (tol1) is used.
                 probing_point = field.mesh_dim() * (self.probing_coord,)
-                probed_value = field.probe_field(probing_point)
+                probed_value = field.probe(probing_point)
                 assert abs(probed_value[0] - expected_value[0]) < self.tol1
                 assert abs(probed_value[1] - expected_value[1]) < self.tol1
                 assert abs(probed_value[2] - expected_value[2]) < self.tol1
@@ -672,7 +672,7 @@ class TestField(object):
             assert np.all(values[:, 1] == expected_values[1])
             assert np.all(values[:, 2] == expected_values[2])
 
-    def test_probe_field_scalar_field(self):
+    def test_probe_scalar_field(self):
         """Test probing the scalar field."""
         # Test probing field at and outside the mesh node for scalar field and
         # an appropriate expression for setting the value.
@@ -695,17 +695,17 @@ class TestField(object):
 
             # Probe and check the result at the mesh node.
             probe_point = mesh_dim * (0.5,)
-            probed_value = field.probe_field(probe_point)
+            probed_value = field.probe(probe_point)
             assert isinstance(probed_value, float)
             assert abs(probed_value - exact_result_at_node) < self.tol1
 
             # Probe and check the result outside the mesh node.
             probe_point = mesh_dim * (self.probing_coord,)
-            probed_value = field.probe_field(probe_point)
+            probed_value = field.probe(probe_point)
             assert isinstance(probed_value, float)
             assert abs(probed_value - exact_result_out_node) < self.tol1
 
-    def test_probe_field_vector_field(self):
+    def test_probe_vector_field(self):
         """Test probing the vector field."""
         # Test probing field at and outside the mesh node for vector field and
         # an appropriate expression for setting the value.
@@ -721,7 +721,7 @@ class TestField(object):
 
             # Probe and check the result at the mesh node.
             probe_point = mesh_dim * (0.5,)
-            probed_value = field.probe_field(probe_point)
+            probed_value = field.probe(probe_point)
             assert isinstance(probed_value, np.ndarray)
             assert len(probed_value) == 3
             assert abs(probed_value[0] - exact_result_at_node[0]) < self.tol1
@@ -730,7 +730,7 @@ class TestField(object):
 
             # Probe and check the result outside the mesh node.
             probe_point = mesh_dim * (self.probing_coord,)
-            probed_value = field.probe_field(probe_point)
+            probed_value = field.probe(probe_point)
             assert isinstance(probed_value, np.ndarray)
             assert len(probed_value) == 3
             assert abs(probed_value[0] - exact_result_out_node[0]) < self.tol1
@@ -805,7 +805,7 @@ class TestField(object):
             # The expected field is nonlinear and, because of that,
             # greater tolerance value (tol1) is used.
             probing_point = field.mesh_dim() * (self.probing_coord,)
-            probed_value = field.probe_field(probing_point)
+            probed_value = field.probe(probing_point)
             assert abs(probed_value - expected_probed_value) < self.tol2
 
     def test_set_nonlinear_vector_field(self):
@@ -854,7 +854,7 @@ class TestField(object):
             # The expected field is nonlinear and, because of that,
             # greater tolerance value (tol2) is used.
             probing_point = field.mesh_dim() * (self.probing_coord,)
-            probed_value = field.probe_field(probing_point)
+            probed_value = field.probe(probing_point)
             assert abs(probed_value[0] - expected_probed_value[0]) < self.tol2
             assert abs(probed_value[1] - expected_probed_value[1]) < self.tol2
 
@@ -905,7 +905,7 @@ class TestField(object):
             # The expected field is nonlinear and, because of that,
             # greater tolerance value (tol2) is used.
             probing_point = field.mesh_dim() * (self.probing_coord,)
-            probed_value = field.probe_field(probing_point)
+            probed_value = field.probe(probing_point)
             assert abs(probed_value[0] - expected_probed_value[0]) < self.tol2
             assert abs(probed_value[1] - expected_probed_value[1]) < self.tol2
             assert abs(probed_value[2] - expected_probed_value[2]) < self.tol2
@@ -966,7 +966,7 @@ class TestField(object):
             # The expected field is nonlinear and, because of that,
             # greater tolerance value (tol2) is used.
             probing_point = field.mesh_dim() * (self.probing_coord,)
-            probed_value = field.probe_field(probing_point)
+            probed_value = field.probe(probing_point)
             assert abs(probed_value[0] - expected_probed_value[0]) < self.tol2
             assert abs(probed_value[1] - expected_probed_value[1]) < self.tol2
             assert abs(probed_value[2] - expected_probed_value[2]) < self.tol2
