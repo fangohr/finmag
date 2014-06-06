@@ -31,15 +31,10 @@ class Test(object):
 
     def set_up_solver(self, rtol=1e-8, atol=1e-8):
         
-        self.ode = cvode2.CvodeSolver(self.m_petsc,
-                                      rtol,atol,
-                                      self.sundials_rhs)
-        
-        self.ode.test_petsc(self.m_petsc)
-        
-        self.ode.set_initial_value(self.spin, self.t)
-        
+        self.ode = cvode2.CvodeSolver(self.sundials_rhs, 0, self.m_petsc, rtol, atol)
 
+        #self.ode.test_petsc(self.m_petsc)
+        
     def sundials_rhs(self, t, y, ydot):
         
         print 'rank=%d t=%g local=%d size=%d'%(rank, t, y.getLocalSize(), ydot.getSize())
@@ -60,7 +55,7 @@ class Test(object):
         if flag < 0:
             raise Exception("Run cython run_until failed!!!")
         
-        self.u.vector().set_local(ode.y)
+        self.u.vector().set_local(ode.y_np)
         self.spin = self.u.vector().array()
         #print self.spin[0]
         #self.spin[:] = ode.y[:]
@@ -92,7 +87,3 @@ if __name__ == '__main__':
         us.append(sim.spin[0])
         
     plot_m(ts,us)
-        
-    
-
-
