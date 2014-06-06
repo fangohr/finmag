@@ -3,8 +3,10 @@ import os
 
 #$ python setup.py build_ext --inplace
 
-#please add your sundials path to INCLUDE_DIRS and LIBRARY_DIRS
-SUNDIALS_PATH = '/home/ww1g11/sundials-2.5.0/sundials'
+# Set the environment variable SUNDIALS_PATH if sundials
+# is installed in a non-standard location.
+SUNDIALS_PATH = os.environ.get('SUNDIALS_PATH', '/usr')
+print "Using SUNDIALS_PATH={}".format(SUNDIALS_PATH)
 
 from numpy.distutils.command import build_src
 
