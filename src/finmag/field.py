@@ -76,6 +76,15 @@ class Field(object):
         if isinstance(value, (df.Constant, df.Expression)):
             self.f = df.interpolate(value, self.functionspace)
 
+        # Dolfin function type value
+        # appropriate for both scalar and vector field.
+        elif isinstance(value, df.Function):
+            if value.function_space() == self.functionspace:
+                self.f = value
+            else:
+                raise TypeError('Function and field functionspaces '
+                                'do not match')
+
         # Int, float, and basestring (str and unicode) type values
         # appropriate only for scalar fields.
         elif isinstance(value, (int, float, basestring)):
@@ -110,7 +119,7 @@ class Field(object):
             # However, it is impossible to pass it to __init__ method
             # (Marijan, Max 22/05/2014) since value_shape is called first.
             # Therefore, functionspace is made "global".
-            fspace_for_wexp = self.functionspace  # functionspace made global
+            fspace_for_wexp = self.functionspace  # functionspace made visible to WrappedExpression class
 
             class WrappedExpression(df.Expression):
                 def __init__(self, value):
@@ -231,7 +240,7 @@ class Field(object):
                                       'for {} family type function '
                                       'spaces.'.format(functionspace_family))
 
-    def probe_field(self, coord):
+    def probe_field(self, coord): # Just probe. List of coordinates.
         return self.f(coord)
 
     def mesh(self):
