@@ -1095,7 +1095,6 @@ def test_compute_normal_modes(tmpdir):
     mesh = nanodisk(d, h, maxh)
     sim = normal_mode_simulation(mesh, Ms=8e6, m_init=m_init, alpha=alpha, unit_length=1e-9, A=13e-12, H_ext=H_ext, name='nanodisk')
     omega, w, rel_errors = sim.compute_normal_modes(n_values=10, filename_mat_A='matrix_A.npy', filename_mat_M='matrix_M.npy')
-    assert(mode_powers.shape == (10, 3))
     logger.debug("Frequencies found: {}".format(omega))
     sim.export_normal_mode_animation(2, filename='animation/mode_2.pvd', num_cycles=1, num_snapshots_per_cycle=10, scaling=0.1)
     sim.export_normal_mode_animation(5, directory='animation', num_cycles=1, num_snapshots_per_cycle=10, scaling=0.1)
