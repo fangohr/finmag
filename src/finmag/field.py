@@ -114,12 +114,8 @@ class Field(object):
         # Python function type values
         # appropriate for both vector and scalar fields.
         elif hasattr(value, '__call__'):
-            # Wrapped dolfin expression class which incorporates the python
-            # function. For the value_shape method, functionspace is required.
-            # However, it is impossible to pass it to __init__ method
-            # (Marijan, Max 22/05/2014) since value_shape is called first.
-            # Therefore, functionspace is made "global".
-            fspace_for_wexp = self.functionspace  # functionspace made visible to WrappedExpression class
+            # Functionspace is made visible to WrappedExpression class.
+            fspace_for_wexp = self.functionspace  
 
             class WrappedExpression(df.Expression):
                 def __init__(self, value):
