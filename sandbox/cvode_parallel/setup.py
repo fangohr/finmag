@@ -1,13 +1,16 @@
 #!/usr/bin/env python
+import os
 
 #$ python setup.py build_ext --inplace
 
+#please add your sundials path to INCLUDE_DIRS and LIBRARY_DIRS
+SUNDIALS_PATH = '/home/ww1g11/sundials-2.5.0/sundials'
+
 from numpy.distutils.command import build_src
 
-# a bit of monkeypatching ...
 import Cython.Compiler.Main
 build_src.Pyrex = Cython
-build_src.have_pyrex = True
+build_src.have_pyrex = False
 def have_pyrex():
     import sys
     try:
@@ -21,26 +24,20 @@ def have_pyrex():
 build_src.have_pyrex = have_pyrex
 
 def configuration(parent_package='',top_path=None):
-    INCLUDE_DIRS = []
-    LIBRARY_DIRS = []
+    INCLUDE_DIRS = ['/usr/lib/openmpi/include/', os.path.join(SUNDIALS_PATH, 'include')]
+    LIBRARY_DIRS = [os.path.join(SUNDIALS_PATH, 'lib')]
     LIBRARIES    = ['sundials_cvodes', 'sundials_nvecparallel', 'sundials_nvecserial']
 
     # PETSc
-    import os
-    PETSC_DIR  = os.environ['PETSC_DIR']
-    PETSC_ARCH = os.environ.get('PETSC_ARCH', '')
+    PETSC_DIR  = os.environ.get('PETSC_DIR','/usr/lib/petsc')
+    PETSC_ARCH = os.environ.get('PETSC_ARCH', 'linux-gnu-c-opt')
+        
     from os.path import join, isdir
-    if PETSC_ARCH and isdir(join(PETSC_DIR, PETSC_ARCH)):
-        INCLUDE_DIRS += [join(PETSC_DIR, PETSC_ARCH, 'include'),
-                         join(PETSC_DIR, PETSC_ARCH, 'include/sundials'),
-                         join(PETSC_DIR, PETSC_ARCH, 'include/openmpi/ompi/mpi/cxx'),
-                         join(PETSC_DIR, 'include')]
+    if isdir(join(PETSC_DIR, PETSC_ARCH)):
+        INCLUDE_DIRS += [join(PETSC_DIR, 'include')],
         LIBRARY_DIRS += [join(PETSC_DIR, PETSC_ARCH, 'lib')]
     else:
-        raise Exception("where's your PETSC_ARCH?")
-        if PETSC_ARCH: pass # XXX should warn ...
-        INCLUDE_DIRS += [join(PETSC_DIR, 'include')]
-        LIBRARY_DIRS += [join(PETSC_DIR, 'lib')]
+        raise Exception('Seems PETSC_DIR or PETSC_ARCH are wrong!')
     LIBRARIES += [#'petscts', 'petscsnes', 'petscksp',
                   #'petscdm', 'petscmat',  'petscvec',
                   'petsc']
@@ -48,7 +45,9 @@ def configuration(parent_package='',top_path=None):
     # PETSc for Python
     import petsc4py
     INCLUDE_DIRS += [petsc4py.get_include()]
-
+    
+    print INCLUDE_DIRS
+    
     # Configuration
     from numpy.distutils.misc_util import Configuration
     config = Configuration('', parent_package, top_path)
