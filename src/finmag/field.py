@@ -236,7 +236,7 @@ class Field(object):
                                       'for {} family type function '
                                       'spaces.'.format(functionspace_family))
 
-    def probe_field(self, coord): # Just probe. List of coordinates.
+    def probe(self, coord):
         return self.f(coord)
 
     def mesh(self):
