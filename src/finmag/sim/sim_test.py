@@ -1094,8 +1094,7 @@ def test_compute_normal_modes(tmpdir):
 
     mesh = nanodisk(d, h, maxh)
     sim = normal_mode_simulation(mesh, Ms=8e6, m_init=m_init, alpha=alpha, unit_length=1e-9, A=13e-12, H_ext=H_ext, name='nanodisk')
-    omega, w, rel_errors, mode_powers = sim.compute_normal_modes(n_values=10, filename_mat_A='matrix_A.npy', filename_mat_M='matrix_M.npy')
-    assert(mode_powers.shape == (10, 3))
+    omega, w, rel_errors = sim.compute_normal_modes(n_values=10, filename_mat_A='matrix_A.npy', filename_mat_M='matrix_M.npy')
     logger.debug("Frequencies found: {}".format(omega))
     sim.export_normal_mode_animation(2, filename='animation/mode_2.pvd', num_cycles=1, num_snapshots_per_cycle=10, scaling=0.1)
     sim.export_normal_mode_animation(5, directory='animation', num_cycles=1, num_snapshots_per_cycle=10, scaling=0.1)
@@ -1124,7 +1123,7 @@ def test_compute_eigenmode_animations(tmpdir):
 
     mesh = nanodisk(d, h, maxh)
     sim = normal_mode_simulation(mesh, Ms=8e6, m_init=m_init, alpha=alpha, unit_length=1e-9, A=13e-12, H_ext=H_ext, name='nanodisk')
-    omega, w, rel_errors, mode_powers = sim.compute_normal_modes(n_values=10, filename_mat_A='matrix_A.npy', filename_mat_M='matrix_M.npy')
+    omega, w, rel_errors = sim.compute_normal_modes(n_values=10, filename_mat_A='matrix_A.npy', filename_mat_M='matrix_M.npy')
     logger.debug("Frequencies found: {}".format(omega))
 
     # Export first 4 eigenmodes without movies
@@ -1173,22 +1172,22 @@ def test_compute_normal_modes_with_different_solvers(tmpdir):
     # sim.M = np.eye(20)
 
     # Default solver is used without any extra arguments
-    omega1, w1, _, _ = sim.compute_normal_modes(n_values=10)
+    omega1, w1, _ = sim.compute_normal_modes(n_values=10)
 
     # Scipy dense non-Hermitian solver
     solver2 = eigensolvers.ScipyLinalgEig()
-    omega2a, w2a, _, _ = sim.compute_normal_modes(n_values=10, solver=solver2)
-    omega2b, w2b, _, _ = sim.compute_normal_modes(n_values=10, solver="scipy_dense")
+    omega2a, w2a, _ = sim.compute_normal_modes(n_values=10, solver=solver2)
+    omega2b, w2b, _ = sim.compute_normal_modes(n_values=10, solver="scipy_dense")
 
     # Scipy sparse non-Hermitian solver
     solver3 = eigensolvers.ScipySparseLinalgEigs(sigma=0.0, which='LM')
-    omega3a, w3a, _, _ = sim.compute_normal_modes(n_values=10, solver=solver3)
-    omega3b, w3b, _, _ = sim.compute_normal_modes(n_values=10, solver="scipy_sparse")
+    omega3a, w3a, _ = sim.compute_normal_modes(n_values=10, solver=solver3)
+    omega3b, w3b, _ = sim.compute_normal_modes(n_values=10, solver="scipy_sparse")
 
     # SLEPc solver
     solver4 = eigensolvers.SLEPcEigensolver(problem_type='GNHEP', method_type='KRYLOVSCHUR', which='SMALLEST_MAGNITUDE')
-    #omega4a, w4a, _, _ = sim.compute_normal_modes(n_values=10, solver=solver4)
-    #omega4b, w4b, _, _ = sim.compute_normal_modes(n_values=10, solver="slepc_krylovschur")
+    #omega4a, w4a, _ = sim.compute_normal_modes(n_values=10, solver=solver4)
+    #omega4b, w4b, _ = sim.compute_normal_modes(n_values=10, solver="slepc_krylovschur")
     with pytest.raises(TypeError):
         # Cannot currently use the SLEPcEigensolver with a generalised
         # eigenvalue problem.
@@ -1242,7 +1241,7 @@ def test_output_formats_for_exporting_normal_mode_animations(tmpdir):
 
     mesh = nanodisk(d, h, maxh)
     sim = normal_mode_simulation(mesh, Ms=8e6, m_init=m_init, alpha=alpha, unit_length=1e-9, A=13e-12, H_ext=H_ext, name='nanodisk')
-    omega, _, _, _ = sim.compute_normal_modes(n_values=10, filename_mat_A='matrix_A.npy', filename_mat_M='matrix_M.npy')
+    omega, _, _ = sim.compute_normal_modes(n_values=10, filename_mat_A='matrix_A.npy', filename_mat_M='matrix_M.npy')
     logger.debug("Frequencies found: {}".format(omega))
     sim.export_normal_mode_animation(0, filename='animation/mode_0.pvd', num_cycles=1, num_snapshots_per_cycle=5, color_by_axis='y')
     sim.export_normal_mode_animation(0, filename='animation/mode_0.jpg', num_cycles=1, num_snapshots_per_cycle=5, color_by_axis='y')
