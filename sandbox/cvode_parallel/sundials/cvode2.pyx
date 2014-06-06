@@ -97,16 +97,16 @@ cdef class CvodeSolver(object):
     def __cinit__(self, Vec spin, callback_fun, rtol=1e-8, atol=1e-8, max_num_steps=100000):
 
         self.t = 0
-        self.spin = spin
+        self._spin = spin
         self.dm_dt = spin.duplicate()
 
         self.callback_fun = callback_fun
         
-        cdef np.ndarray[double, ndim=1, mode="c"] y=np.zeros(spin.getLocalSize())
+        cdef np.ndarray[double, ndim=1, mode="c"] y = np.zeros(spin.getLocalSize())
         
         self.y = y
         
-        #VecGetArray(self.spin.vec,&y[0])
+        #VecGetArray(self._spin.vec,&y[0])
         #self.u_y = N_VNew_Serial(self.y.getLocalSize())
         
         cdef MPI_Comm comm_c = PETSC_COMM_WORLD
@@ -123,7 +123,7 @@ cdef class CvodeSolver(object):
         self.rhs_fun = <void *>cv_rhs
 
         self.user_data = cv_userdata(<void*>self.callback_fun,
-                                     <void *>self.spin,<void *>self.dm_dt)
+                                     <void *>self._spin,<void *>self.dm_dt)
 
         self.MODIFIED_GS = 1
         
