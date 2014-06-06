@@ -118,7 +118,8 @@ class LLG(object):
         #self._Ms_dg=helpers.scalar_valued_function(value, self.S1)
         self._Ms_dg.rename('Ms', 'Saturation magnetisation')
         self.volumes = df.assemble(df.TestFunction(self.S1) * df.dx)
-        Ms = df.assemble(self._Ms_dg*df.TestFunction(self.S1)* df.dx).array()/self.volumes
+        print self.volumes
+        Ms = df.assemble(self._Ms_dg*df.TestFunction(self.S1)* df.dx).array()/self.volumes.array()
         self._Ms = Ms.copy()
         self.Ms_av = np.average(self._Ms_dg.vector().array())
 
@@ -147,7 +148,7 @@ class LLG(object):
     def m(self, value):
         # Not enforcing unit length here, as that is better done
         # once at the initialisation of m.
-        self._m.vector()[:] = value
+        self._m.vector().set_local(value)
 
     @property
     def dmdt(self):
@@ -247,7 +248,7 @@ class LLG(object):
 
         default_timer.stop("solve", self.__class__.__name__)
 
-        self._dmdt.vector()[:] = dmdt
+        self._dmdt.vector().set_local(dmdt)
 
         return dmdt
 

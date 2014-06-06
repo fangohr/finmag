@@ -647,17 +647,21 @@ def vector_valued_function(value, mesh_or_space, normalise=False, **kwargs):
             expr = df.Expression(value, **kwargs)
             fun = df.interpolate(expr, S3)
         else:
-            fun = df.Function(S3)
-            vec = np.empty((fun.vector().size()/3, 3))
-            vec[:] = value # using broadcasting
+            #fun = df.Function(S3)
+            #vec = np.empty((fun.vector().size()/3, 3))
+            #vec[:] = value # using broadcasting
+            #fun.vector().set_local(vec.transpose().reshape(-1))
+            expr = df.Constant(list(value))
+            fun = df.interpolate(expr, S3)
 
-            fun.vector().set_local(vec.transpose().reshape(-1))
     elif isinstance(value, np.ndarray):
         fun = df.Function(S3)
         if value.ndim == 2:
             assert value.shape[1] == 3
             value = value.reshape(value.size, order="F")
-        fun.vector()[:] = value
+        if not value.dtype == np.double:
+            value = value.astype(np.double)
+        fun.vector().set_local(value)
 
     #if it's a normal function, we wrapper it into a dolfin expression
     elif hasattr(value, '__call__'):
@@ -681,7 +685,7 @@ def vector_valued_function(value, mesh_or_space, normalise=False, **kwargs):
                         "argument of type '{}'".format(type(value)))
 
     if normalise:
-        fun.vector()[:] = fnormalise(fun.vector().array())
+        fun.vector().set_local(fnormalise(fun.vector().array()))
 
     return fun
 

@@ -81,7 +81,7 @@ class AbstractEigensolver(object):
         logger.info("Solving eigenproblem. This may take a while...")
         df.tic()
         omegas, ws = self._solve_eigenproblem(A, M=M, num=num, tol=tol)
-        logger.debug("Computing the eigenvalues and eigenvectors "
+        logger.info("Computing the eigenvalues and eigenvectors "
                      "took {}".format(format_time(df.toc())))
 
         # XXX TODO: Remove this conversion to numpy.arrays once we
