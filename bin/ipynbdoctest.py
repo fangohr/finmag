@@ -404,8 +404,8 @@ def test_notebook(nb):
                     # This is the first cell that failed to replicate.
                     # Let's store its output for debugging.
                     first_failed_input = cell.input
-                    first_failed_output_expected = outs_merged
-                    first_failed_output = cell_outputs_merged
+                    first_failed_output = outs_merged
+                    first_failed_output_expected = cell_outputs_merged
                     # For easier debugging, replace the (usually huge) binary
                     # data of any pngs appearing in the expected or computed
                     # output with a short string representing the image.
@@ -451,8 +451,8 @@ def test_notebook(nb):
                  "{}\n"
                  "==================================================\n"
                  "".format(first_failed_input,
-                           first_failed_output,
-                           first_failed_output_expected))
+                           first_failed_output_expected,
+                           first_failed_output))
         raise IPythonNotebookDoctestError(errmsg)
 
 if __name__ == '__main__':
