@@ -78,10 +78,10 @@ def derivative_test(L, M, x, hs, J=None):
     errors = []
     for h in hs:
         H = Function(V)
-        H.vector()[:] = h*x.vector() # h*x
+        H.vector().set_local(h * x.vector().array())
 
         P = Function(V)
-        P.vector()[:] = M.vector() + H.vector()
+        P.vector().set_local(M.vector().array() + H.vector().array())
 
         L_P = assemble(replace(L, {M: P})) #Compute exact result
 
