@@ -124,23 +124,12 @@ class FemBemDeMagSolver(object):
             # We're setting 'same_nonzero_pattern=True' to enforce the
             # same matrix sparsity pattern across different demag solves,
             # which should speed up things.
-            try:
-                # Old syntax (dolfin version <= 1.2)
-                self.laplace_solver.parameters["preconditioner"]["same_nonzero_pattern"] = True
-            except KeyError:
-                # New syntax (dolfin version >= 1.2.0+)
-                self.laplace_solver.parameters["preconditioner"]["structure"] = "same_nonzero_pattern"
-                from finmag.util.helpers import warn_about_outdated_code
-                warn_about_outdated_code(
-                    min_dolfin_version='1.3.0',
-                    msg='There is outdated code in FKDemag.__init__() setting the '
-                        '"same_nonzero_pattern" parameter which might be good to '
-                        'remove since the syntax has changed in recent dolfin versions.')
+            self.laplace_solver.parameters["preconditioner"]["structure"] = "same_nonzero_pattern"
         else:
             raise ValueError("Wrong solver type specified: '{}' (allowed values: 'Krylov', 'LU')".format(solver_type))
 
         #Objects needed for energy density computation
-        self.nodal_vol = df.assemble(self.v*df.dx, mesh=self.mesh).array()
+        self.nodal_vol = df.assemble(self.v*df.dx).array()
         self.ED = df.Function(self.V)
 
         #Method to calculate the Demag field from the potential
@@ -198,8 +187,7 @@ class FemBemDeMagSolver(object):
         """
         self.H_demag.vector()[:] = self.compute_field()
         E = -0.5*self.mu0*df.dot(self.H_demag, self.m*self.Ms)*df.dx
-        return df.assemble(E, mesh=self.mesh)*\
-                self.unit_length**self.mesh.topology().dim()
+        return df.assemble(E) * self.unit_length**self.mesh.topology().dim()
 
     def energy_density(self):
         """

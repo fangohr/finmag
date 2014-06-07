@@ -94,7 +94,7 @@ namespace finmag {
         struct swig_shared_ptr_type_string { static std::string value; };
         template<class SwigDataType>
         std::string swig_shared_ptr_type_string<SwigDataType>::value =
-                std::string("boost::shared_ptr< ") + get_type_name<SwigDataType>() + " > *";
+                std::string("std::shared_ptr< ") + get_type_name<SwigDataType>() + " > *";
 
         // With a large class hierarchy the use of multiple converters may be inefficient as convertible_from_python
         // has to be executed for each derived class
@@ -102,8 +102,8 @@ namespace finmag {
         template<class BaseClass, class DerivedClass>
         class swig_shared_ptr_derived_class_converter {
         private:
-            typedef boost::shared_ptr<BaseClass> boost_python_type;
-            typedef boost::shared_ptr<DerivedClass> swig_type;
+            typedef std::shared_ptr<BaseClass> boost_python_type;
+            typedef std::shared_ptr<DerivedClass> swig_type;
 
         public:
 
@@ -116,9 +116,9 @@ namespace finmag {
                 // unwrap the swig object
                 std::pair<void*, const char*> swig_obj = unwrap_swig_object(obj_ptr);
                 // get the derived class shared_ptr pointer
-                boost::shared_ptr<DerivedClass> &derived_class_ptr = *(boost::shared_ptr<DerivedClass> *) swig_obj.first;
+                std::shared_ptr<DerivedClass> &derived_class_ptr = *(std::shared_ptr<DerivedClass> *) swig_obj.first;
                 // cast the derived class shared_ptr pointer to a base class shared_ptr pointer
-                boost::shared_ptr<BaseClass> base_ptr = boost::dynamic_pointer_cast<BaseClass>(derived_class_ptr);
+                std::shared_ptr<BaseClass> base_ptr = std::dynamic_pointer_cast<BaseClass>(derived_class_ptr);
 
                 swig_converter_algorithms<boost_python_type>::construct_from_python(base_ptr, data);
             }

@@ -15,7 +15,7 @@ MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 def test_llb_sundials(do_plot=False):
     mesh = df.BoxMesh(0, 0, 0, 2, 2, 2, 1, 1, 1)
     
-    mat = Material(mesh, name='FePt',unit_length=1e-9)
+    mat = Material(mesh, name='FePt', unit_length=1e-9)
     mat.set_m((1, 0, 0))
     mat.T = 10
     mat.alpha=0.1
