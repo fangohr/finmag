@@ -87,7 +87,7 @@ def compare_png(a64, b64):
     return True
 
 
-def does_not_match_any_discard_pattern(s):
+def matches_some_discard_pattern(s):
     """
     Helper function to check whether any of the patterns in
     DISCARD_PATTERNS occurs in the string.
@@ -95,19 +95,12 @@ def does_not_match_any_discard_pattern(s):
     """
     for pat in DISCARD_PATTERNS:
         if re.search(pat, s):
-            return False
-    return True
+            return True
+    return False
 
 
-def strip_lines_to_discard(s):
-    """
-    Strip lines from the output which match any of the patterns
-    in DISCARD_PATTERNS.
-
-    """
-    lines = s.splitlines(True)
-    lines_stripped = filter(does_not_match_any_discard_pattern, lines)
-    return "".join(lines_stripped)
+def keep_cell_output(out):
+    return (out['output_type'] == 'stream' and matches_some_discard_pattern(out['text']))
 
 
 def sanitize(s):
@@ -132,9 +125,6 @@ def sanitize(s):
     ##
     ## Finmag-related stuff follows below
     ##
-
-    # Strip any lines which match a pattern in DISCARD_PATTERNS
-    s = strip_lines_to_discard(s)
 
     # Remove timestamps in logging output
     s = re.sub(r'\[201\d-\d\d-\d\d \d\d:\d\d:\d\d\]', 'LOGGING_TIMESTAMP', s)
@@ -325,6 +315,8 @@ def merge_streams(outputs):
     merge it here to be able to compare streamed output robustly.
 
     """
+    outputs = filter(keep_cell_output, outputs)
+
     if outputs == []:
         return []
 
