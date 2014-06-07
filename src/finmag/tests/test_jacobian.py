@@ -117,7 +117,8 @@ s = 0.25 #some random number
 x.vector()[:] = s
 hs = [2.0/n for n in (1, 2, 4, 8, 16, 32)]
 
-TOL = 1e-11
+CONV_TOL = 1.5e-12
+DERIV_TOL = 1.3e-13
 
 def test_convergence_linear():
     """All convergence rates should be 1 as the differences
@@ -127,7 +128,7 @@ def test_convergence_linear():
     rates = convergence_rates(hs, errors)
     for h,rate in zip(hs,rates):
         print "h= %g, rate=%g, rate-1=%g " % (h,rate,rate-1)
-        assert abs(rate - 1) < TOL
+        assert abs(rate - 1) < h * CONV_TOL
 
 def test_derivative_linear():
     """This should be zero because the rhs of LLG is linear in M."""
@@ -135,7 +136,7 @@ def test_derivative_linear():
     errors = derivative_test(L, M, x, hs, J=J)
     for h,err in zip(hs,errors):
         print "h= %g, error=%g" % (h,err)
-        assert abs(err) < TOL
+        assert abs(err) < h**2 * DERIV_TOL
 
 if __name__ == '__main__':
     # L is linear
