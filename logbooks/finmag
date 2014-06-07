@@ -50432,3 +50432,138 @@ Max
 -------------------------------------
 finmag-team mailing list.
 
+From fetchmail  Sat Jun  7 15:45:41 2014
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.26)
+	for <marvin@localhost> (single-drop); Sat, 07 Jun 2014 15:45:41 +0100 (BST)
+Received: by 10.216.61.75 with SMTP id v53csp12965wec;
+        Sat, 7 Jun 2014 07:00:04 -0700 (PDT)
+X-Received: by 10.112.171.101 with SMTP id at5mr7574lbc.83.1402149604094;
+        Sat, 07 Jun 2014 07:00:04 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id v9si13767659lae.30.2014.06.07.07.00.03
+        for <multiple recipients>;
+        Sat, 07 Jun 2014 07:00:03 -0700 (PDT)
+Received-SPF: none (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=neutral (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s57DxSTD005503;
+	Sat, 7 Jun 2014 14:59:28 +0100
+Received: from SRV00045.soton.ac.uk (srv00045.soton.ac.uk [152.78.119.41])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id q56ExS0832355652Ef ret-id none; Sat, 07 Jun 2014 14:59:28 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.41) with Microsoft SMTP Server (TLS) id 14.3.181.6; Sat, 7 Jun
+ 2014 14:59:10 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id s57Dx9dx006824;	Sat, 7 Jun 2014 14:59:09 +0100
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk
+ [152.78.128.11])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ s57Dx9Ih006821	for <finmag-team@lists.soton.ac.uk>; Sat, 7 Jun 2014 14:59:09
+ +0100
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s57Dx7PJ004263;
+	Sat, 7 Jun 2014 14:59:07 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk
+ [152.78.119.37])	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk
+ [152.78.128.11]) envelope-from <H.FANGOHR@soton.ac.uk> with ESMTP	id
+ q56Ex70832355716Gm ret-id none; Sat, 07 Jun 2014 14:59:07 +0100
+Received: from SRV00046.soton.ac.uk ([169.254.9.100]) by
+ UOS-MSG00035-VS.soton.ac.uk ([152.78.119.37]) with mapi id 14.03.0181.006;
+ Sat, 7 Jun 2014 14:56:19 +0100
+From: "Fangohr H." <H.FANGOHR@soton.ac.uk>
+To: Maximilian Albert <maximilian.albert@gmail.com>
+CC: "Fangohr H." <h.fangohr@soton.ac.uk>, "Wang W." <ww1g11@soton.ac.uk>,
+        "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+Subject: [finmag-team] Re: cool
+Thread-Topic: cool
+Thread-Index: AQHPgb5HmGYtwFbzYUqdAXLrFWzvHZtkgkuAgAAhwYCAAG9ggIAAUlYAgAAGyICAAEB9aw==
+Date: Sat, 7 Jun 2014 13:56:18 +0000
+Message-ID: <79D1FBF5-BE52-4C5C-82AE-4A4A8F115879@soton.ac.uk>
+References: <20140606165751.27726.10179@app08.ash-private.bitbucket.org>
+	<35C8EC06-5EDD-42A6-A23D-4469C5C8D289@soton.ac.uk>
+	<69EF17E243EA164D9E5800FBC995493D4AB1AF91@SRV00046.soton.ac.uk>
+	<CAGA_dmgSVq-nNciFzyQoQyf1OMgEuLuuR78L-hn86oZ03V73Tw@mail.gmail.com>
+	<15BFD03E-448F-4CF0-A901-34898CE4C185@soton.ac.uk>
+	<CAGA_dmh=iDOYg5-Ww9HzOc9rZTdEh+gkkBHspxJFd-2NuY1OfQ@mail.gmail.com>,<CAGA_dmiwnzGm22uzfehjfWYXMT7W7+HV+p8+cXdiq29z=jMLew@mail.gmail.com>
+In-Reply-To: <CAGA_dmiwnzGm22uzfehjfWYXMT7W7+HV+p8+cXdiq29z=jMLew@mail.gmail.com>
+Accept-Language: en-GB, en-US
+Content-Language: en-GB
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Received-SPF: Pass (SRV00045.soton.ac.uk: domain of
+ owner-finmag-team@lists.soton.ac.uk designates 152.78.128.58 as permitted
+ sender) receiver=SRV00045.soton.ac.uk; client-ip=152.78.128.58;
+ helo=maillists.sucs.soton.ac.uk;
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<H.FANGOHR@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from quoted-printable to 8bit by maillists.sucs.soton.ac.uk id s57Dx9Ih006822
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=q56Eqh083235565200; tid=q56ExS0832355652Ef; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=4
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.41; helo=<SRV00045.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.41; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: s57DxSTD005503
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+
+Hi Max,
+
+I'd be happy for you to commit and we all have to upgrade to dolfin 1.4.  T=
+hose who want to delay upgrading would need to stop pulling from the finmag=
+ repository, but we should aim to stay at the latest dolfin version I think=
+.
+
+Hope that's okay with everybody.
+
+Cheers
+
+Hans
+
+----
+
+Sent from mobile device
+
+----
+
+Hans Fangohr
+University of Southampton
+http://www.soton.ac.uk/~fangohr
+
+On 7 Jun 2014, at 12:05, "Maximilian Albert" <maximilian.albert@gmail.com<m=
+ailto:maximilian.albert@gmail.com>> wrote:
+
+Hi again,
+
+Also, it seems dolfin1.4 is out? Has anybody tried that?
+
+The most prominent change is that they replaced their use of boost::shared_=
+ptr with std::shared_ptr througout the code base. This breaks one of our na=
+tive C++ files (native/src/llg/bem.cc<http://bem.cc>) due to the type of th=
+e argument for compute_bem(), but oddly it didn't help to simply replace bo=
+ost::shared_ptr with std::shared_ptr in the function definition.
+
+I just managed to fix this (I had overlooked a few more instances of boost:=
+:shared_ptr in our codebase which didn't trigger a compile error but result=
+ed in a runtime failure.
+
+I'm just running the tests. Once they pass, should I commit these changes s=
+traight away to the main branch? This would mean that people will have to u=
+pgrade their dolfin installation to 1.4 but I can't see much harm in that. =
+Alternatively I could commit the changes to a separate branch, but it doesn=
+'t really seem worth it. Any opinions?
+
+Cheers,
+Max
+
+-------------------------------------
+finmag-team mailing list.
+
