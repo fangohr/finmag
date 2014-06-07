@@ -199,7 +199,7 @@ class SLLG(object):
         mx = df.assemble(self._Ms_dg*df.dot(self._m, df.Constant([1, 0, 0])) * dx)
         my = df.assemble(self._Ms_dg*df.dot(self._m, df.Constant([0, 1, 0])) * dx)
         mz = df.assemble(self._Ms_dg*df.dot(self._m, df.Constant([0, 0, 1])) * dx)
-        volume = df.assemble(self._Ms_dg*dx, mesh=self.mesh)
+        volume = df.assemble(self._Ms_dg*dx)
 
         return np.array([mx, my, mz]) / volume
     m_average=property(m_average_fun)

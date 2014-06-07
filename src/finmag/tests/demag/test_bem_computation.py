@@ -38,7 +38,7 @@ def compute_belement_magpar(r1, r2, r3):
 
 def normalise_phi(phi, mesh):
     volume = mesh_volume(mesh)
-    average = df.assemble(phi * df.dx, mesh=mesh)
+    average = df.assemble(phi * df.dx)
     phi.vector()[:] = phi.vector().array() - average / volume
 
 def compute_scalar_potential_llg(mesh, m_expr=df.Constant([1, 0, 0]), Ms=1.):
@@ -254,7 +254,7 @@ class BemComputationTests(unittest.TestCase):
         field = df.Expression(["x[0]", "x[1]", "x[2]"])
         n = df.FacetNormal(mesh)
         # Divergence of R is 3, the volume of the unit cube is 1 so we divide by 3
-        print "Normal: +1=outward, -1=inward:", df.assemble(df.dot(field, n) * df.ds, mesh=mesh) / 3.
+        print "Normal: +1=outward, -1=inward:", df.assemble(df.dot(field, n) * df.ds) / 3.
 
 if __name__ == "__main__":
     unittest.main()

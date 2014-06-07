@@ -129,7 +129,7 @@ class FemBemDeMagSolver(object):
             raise ValueError("Wrong solver type specified: '{}' (allowed values: 'Krylov', 'LU')".format(solver_type))
 
         #Objects needed for energy density computation
-        self.nodal_vol = df.assemble(self.v*df.dx, mesh=self.mesh).array()
+        self.nodal_vol = df.assemble(self.v*df.dx).array()
         self.ED = df.Function(self.V)
 
         #Method to calculate the Demag field from the potential
@@ -187,8 +187,7 @@ class FemBemDeMagSolver(object):
         """
         self.H_demag.vector()[:] = self.compute_field()
         E = -0.5*self.mu0*df.dot(self.H_demag, self.m*self.Ms)*df.dx
-        return df.assemble(E, mesh=self.mesh)*\
-                self.unit_length**self.mesh.topology().dim()
+        return df.assemble(E) * self.unit_length**self.mesh.topology().dim()
 
     def energy_density(self):
         """

@@ -1,6 +1,6 @@
 from dolfin import *
 import instant
-from finmag.sim.exchange import Exchange
+from finmag.energies import Exchange
 from scipy.integrate import ode
 import finmag.util.helpers as h
 import finmag.util.consts as consts
@@ -29,10 +29,10 @@ def m_average(y, V, vol):
 x0 = 0; x1 = 15e-9; nx = 30;
 y0 = -4.5e-9; y1 = 4.5e-9; ny = 18;
 z0 = -0.1e-9; z1 = 0.1e-9; nz = 1;
-mesh = Box(x0, y0, z0, x1, y1, z1, nx, ny, nz) 
+mesh = BoxMesh(x0, y0, z0, x1, y1, z1, nx, ny, nz) 
 nb_nodes = len(mesh.coordinates())
 V = VectorFunctionSpace(mesh, 'Lagrange', 1, dim=3)
-Volume = assemble(Constant(1)*dx, mesh=mesh)
+Volume = assemble(Constant(1)*dx(mesh))
 
 # Defaults from LLG
 alpha = 0.5
@@ -70,7 +70,8 @@ for i in xrange(nb_nodes):
 M.vector()[:] = m_arr
 
 # LLG setup
-exchange = Exchange(V, M, C, Ms)
+exchange = Exchange(C)
+exchange.setup(V, M, Ms)
 
 H_eff = Function(V)
 H_eff.vector()[:] = exchange.compute_field()
