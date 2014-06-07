@@ -223,7 +223,7 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver,PEQBuilder):
 
         if self.qvector_method == "box":
             #Buffer Surface Node Areas for the box method
-            self.surface_node_areas = df.assemble(self.v*df.ds, mesh=self.mesh).array()+1e-300
+            self.surface_node_areas = df.assemble(self.v*df.ds).array()+1e-300
         elif self.qvector_method == "pe":
             #Build boundary data for the point evaluation q method
             self.build_boundary_data()
@@ -297,8 +297,7 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver,PEQBuilder):
            afterwards the global to boundary mapping is used to extract
            the relevant data"""
 
-        q_dot_v = df.assemble(Ms*df.dot(self.n, -m + df.grad(phi1))*self.v*df.ds,
-                              mesh=self.mesh).array()
+        q_dot_v = df.assemble(Ms*df.dot(self.n, -m + df.grad(phi1))*self.v*df.ds).array()
 
         q = q_dot_v/self.surface_node_areas
         return q
