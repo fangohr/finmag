@@ -20,10 +20,10 @@ namespace finmag {
             // TODO: not use MPL here
             typedef boost::mpl::list<
                 dolfin::BoxMesh,
+                dolfin::CircleMesh,
                 dolfin::IntervalMesh,
                 dolfin::RectangleMesh,
                 dolfin::SubMesh,
-                dolfin::UnitCircleMesh,
                 dolfin::UnitCubeMesh,
                 dolfin::UnitIntervalMesh,
                 dolfin::UnitSquareMesh,
