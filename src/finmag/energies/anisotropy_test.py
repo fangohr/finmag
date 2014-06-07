@@ -8,7 +8,7 @@ from finmag.util.consts import mu0
 TOLERANCE = 1e-12
 
 
-@pytest.fixture(scope = "module")
+@pytest.fixture(scope="module")
 def fixt():
     """
     Create an UniaxialAnisotropy object that will be re-used during testing.
@@ -77,7 +77,8 @@ def test_anisotropy_field(fixt):
 
     """
     TOLERANCE = 1e-14
-    fixt["m"].assign(df.Constant((1/np.sqrt(2), 0, 1/np.sqrt(2))))
+    c = df.Constant((1/np.sqrt(2), 0, 1/np.sqrt(2)))
+    fixt["m"].assign(df.interpolate(c, fixt["S3"]))
     H = fixt["anis"].compute_field()
 
     v = df.TestFunction(fixt["S3"])
