@@ -6,7 +6,7 @@ import os
 # Set the environment variable SUNDIALS_PATH if sundials
 # is installed in a non-standard location.
 SUNDIALS_PATH = os.environ.get('SUNDIALS_PATH', '/usr')
-print "Using SUNDIALS_PATH={}".format(SUNDIALS_PATH)
+print "[DDD] Using SUNDIALS_PATH='{}'".format(SUNDIALS_PATH)
 
 from numpy.distutils.command import build_src
 
@@ -47,7 +47,7 @@ def configuration(parent_package='',top_path=None):
     import petsc4py
     INCLUDE_DIRS += [petsc4py.get_include()]
     
-    print "INCLUDE_DIRS = {}".format(INCLUDE_DIRS)
+    print "[DDD] INCLUDE_DIRS = {}".format(INCLUDE_DIRS)
     
     # Configuration
     from numpy.distutils.misc_util import Configuration
