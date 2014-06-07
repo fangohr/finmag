@@ -51,7 +51,7 @@ namespace finmag { namespace sundials {
             }
 
         private:
-            boost::shared_ptr<void> ptr;
+            std::shared_ptr<void> ptr;
         };
 
         PyObject *get_malloc_payload(void *ptr) {
