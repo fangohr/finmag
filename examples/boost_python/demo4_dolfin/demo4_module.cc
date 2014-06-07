@@ -1,7 +1,7 @@
 #include "finmag_includes.h"
 #include "../../../native/src/util/swig_dolfin.h"
 
-int get_num_vertices(const boost::shared_ptr<dolfin::Mesh> &mesh_ptr) {
+int get_num_vertices(const std::shared_ptr<dolfin::Mesh> &mesh_ptr) {
     dolfin::Mesh &mesh = *mesh_ptr;
 
     return mesh.num_vertices();

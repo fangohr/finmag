@@ -705,7 +705,7 @@ def sphere_inside_box(r_sphere, r_shell, l_box, maxh_sphere, maxh_box, maxh_shel
 def mesh_volume(mesh):
     """
     Computes the total volume of all tetrahedral cells in the mesh.
-    alternatively,  volume = assemble(Constant(1)*dx, mesh=mesh)
+    alternatively,  volume = assemble(Constant(1)*dx(mesh))
     """
     return sum([c.volume() for c in df.cells(mesh)])
 

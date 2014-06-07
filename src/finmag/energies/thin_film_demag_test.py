@@ -15,7 +15,7 @@ def test_interaction_accepts_name():
 
 
 def compare_with_demag_from_initial_m(H_gen, m_init, atol=0, rtol=0):
-    sim = Sim(df.UnitCubeMesh(2, 2, 2), Ms)
+    sim = Sim(df.UnitCubeMesh(2, 2, 2), Ms, unit_length=1e-9)
     sim.set_m(m_init)
 
     demag = ThinFilmDemag()

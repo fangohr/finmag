@@ -180,7 +180,7 @@ class Field(object):
         """
         # Compute the mesh "volume". For 1D mesh "volume" is the length and
         # for 2D mesh is the area of the mesh.
-        volume = df.assemble(df.Constant(1) * df.dx, mesh=self.mesh())
+        volume = df.assemble(df.Constant(1) * df.dx(self.mesh()))
 
         # Scalar field.
         if isinstance(self.functionspace, df.FunctionSpace):

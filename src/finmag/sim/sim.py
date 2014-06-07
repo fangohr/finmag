@@ -87,7 +87,7 @@ class Simulation(object):
         self.tablewriter.update_entity_order()
 
         log.info("Creating Sim object '{}' (rank={}/{}).".format(
-            self.name, df.MPI.process_number(), df.MPI.num_processes()))
+            self.name, df.MPI.rank(df.mpi_comm_world()), df.MPI.size(df.mpi_comm_world())))
         log.info(mesh)
 
         self.pbc = pbc

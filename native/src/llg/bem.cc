@@ -120,7 +120,7 @@ namespace finmag { namespace llg {
     // If ComputeDoubleLayerPotential == true, computes the FK BEM
      // If ComputeDoubleLayerPotential == false, computes the GCR BEM
     template<bool ComputeDoubleLayerPotential>
-    bp::object compute_bem(const boost::shared_ptr<df::BoundaryMesh> bm_ptr) {
+    bp::object compute_bem(const std::shared_ptr<df::BoundaryMesh> bm_ptr) {
         df::BoundaryMesh &bm = *bm_ptr;
         ASSERT(bm.geometry().dim() == 3);
         ASSERT(bm.topology().dim() == 2);
