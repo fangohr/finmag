@@ -1,17 +1,13 @@
 from libc.string cimport memcpy
 
-# Import the Python-level symbols of numpy
-import numpy as np
-
 # Import the C-level symbols of numpy
-cimport numpy as np
+cimport numpy as np_c
 from petsc4py import PETSc
 from petsc4py.PETSc cimport Vec,  PetscVec
-#from petsc4py.PETSc cimport Comm as MPI_Comm
 
 # Numpy must be initialized. When using numpy from C or Cython you must
 # _always_ do that, or you will have segfaults
-np.import_array()
+np_c.import_array()
 
 cdef extern from "petsc/petscvec.h":
      PetscErrorCode VecGetLocalSize(PetscVec,PetscInt*) #for testing
@@ -26,14 +22,14 @@ cdef struct cv_userdata:
     void *y
     void *y_dot
 
-cdef inline  copy_arr2nv(np.ndarray[realtype, ndim=1,mode='c'] np_x, N_Vector v):
+cdef inline  copy_arr2nv(np_c.ndarray[realtype, ndim=1,mode='c'] np_x, N_Vector v):
     cdef long int n = (<N_VectorContent_Parallel>v.content).local_length
     cdef void* data_ptr=<void *>np_x.data
     memcpy((<N_VectorContent_Parallel>v.content).data, data_ptr, n*sizeof(double))
     
     return 0
     
-cdef inline copy_nv2arr(N_Vector v, np.ndarray[realtype, ndim=1, mode='c'] np_x):
+cdef inline copy_nv2arr(N_Vector v, np_c.ndarray[realtype, ndim=1, mode='c'] np_x):
     cdef long int n = (<N_VectorContent_Parallel>v.content).local_length
     cdef double* v_data = (<N_VectorContent_Parallel>v.content).data
     
@@ -64,7 +60,7 @@ cdef int cv_rhs(realtype t, N_Vector yv, N_Vector yvdot, void* user_data) except
 cdef class CvodeSolver(object):
     
     cdef public double t
-    cdef public np.ndarray y_np
+    cdef public np_c.ndarray y_np
     cdef double rtol, atol
     cdef int max_num_steps
     cdef Vec y
@@ -75,16 +71,10 @@ cdef class CvodeSolver(object):
     cdef void *cv_rhs
     cdef callback_fun
     cdef cv_userdata user_data
-    cdef int MODIFIED_GS
-
     
     cdef long int nsteps,nfevals,njevals
 
     def __cinit__(self, callback_fun, t0, y0, rtol=1e-8, atol=1e-8, max_num_steps=100000):
-        #VecGetArray(self._spin.vec,&y[0])
-        #self.y_nv = N_VNew_Serial(self.y.getLocalSize())
-        
-        #self.MODIFIED_GS = 1
         
         # Create the CVODE memory block and to specify the solution method (linear multistep method and nonlinear solver iteration type)
         self.cvode_mem = CVodeCreate(CV_BDF, CV_NEWTON);
@@ -108,7 +98,7 @@ cdef class CvodeSolver(object):
                                      <void *>self.y,<void *>self.y_dot)
 
         cdef MPI_Comm comm_c = PETSC_COMM_WORLD
-        cdef np.ndarray[double, ndim=1, mode="c"] y_np = y0.getArray()
+        cdef np_c.ndarray[double, ndim=1, mode="c"] y_np = y0.getArray()
         self.y_np = y_np
         self.y_nv = N_VMake_Parallel(comm_c, y0.getLocalSize(), y0.getSize(), &y_np[0])
         
@@ -164,13 +154,6 @@ cdef class CvodeSolver(object):
         cdef double step
         CVodeGetCurrentStep(self.cvode_mem, &step)
         return step
-    
-    def test_petsc(self, Vec x):
-        cdef PetscInt size
-        VecGetLocalSize(x.vec, &size)
-        print "length from cython = %d"%size
-        comm = PETSc.COMM_WORLD
-        print 'from cython, common:', comm, comm.Get_rank(),comm.Get_size()
 
     def __repr__(self):
         s = []
