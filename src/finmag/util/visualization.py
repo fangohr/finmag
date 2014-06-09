@@ -1,4 +1,5 @@
 from __future__ import division
+import StringIO
 import sh
 import numpy as np
 import textwrap
@@ -238,13 +239,12 @@ def render_paraview_scene(
         if use_display is not None:
             os.environ['DISPLAY'] = ':{}'.format(use_display)
 
-        sh.python('render_scene.py')
+        script_stdout = StringIO.StringIO()
+        script_stderr = StringIO.StringIO()
+        sh.python('render_scene.py', _out=script_stdout, _err=script_stderr)
     except sh.ErrorReturnCode as ex:
-        def sanitize(s):
-            s = s.replace(u'\u2018', "\'")
-            s = s.replace(u'\u2019', "\'")
-            return s
-        logger.error("Could not render Paraview scene. The error message was: {}".format(sanitize(ex.message)))
+        logger.error("Could not render Paraview scene. Stdout and stderr of the script: "
+                     "'{}', '{}'".format(script_stdout.getvalue(), script_stderr.getvalue()))
         #raise
     finally:
         if debug == True:
