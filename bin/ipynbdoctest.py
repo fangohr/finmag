@@ -55,6 +55,7 @@ DISCARD_PATTERNS_EXACT = \
      #('stream', "DEBUG: Found unused display :[0-9]+"),
      #('stream', "DEBUG: Rendering Paraview scene on display :[0-9]+ using xpra."),
      ('stream', '(/[^/ ]+)+/matplotlib/figure.py:[0-9]+: UserWarning: This figure includes Axes that are not compatible with tight_layout, so its results might be incorrect.\n  warnings.warn\("This figure includes Axes that are not "\n'),
+     ('stream', "LOGGING_TIMESTAMP WARNING: Removing file '.*' and all associated .vtu files \(because overwrite=True\).\n"),
      #('display_data', "<matplotlib.figure.Figure at 0x[0-9A-F]+>"),
     ]
 DISCARD_PATTERNS_CONTAINED = []
@@ -119,7 +120,7 @@ def sanitize(s):
     s = s.replace('\r\n', '\n')
 
     # ignore trailing newlines (but not space)
-    s = s.rstrip('\n')
+    #s = s.rstrip('\n')
 
     # normalize hex addresses:
     s = re.sub(r'0x[a-f0-9]+', '0xFFFFFFFF', s)
@@ -142,6 +143,9 @@ def sanitize(s):
 
     # Ignore specific location of logging output file
     s = re.sub("Finmag logging output will be.*", "FINMAG_LOGGING_OUTPUT", s)
+
+    # Ignore exact timing information
+    s = re.sub("saving took [0-9]+\.[0-9]+ seconds", "saving took XXX seconds", s)
 
     # Ignore datetime objects
     s = re.sub(r'datetime.datetime\([0-9, ]*\)', 'DATETIME_OBJECT', s)
@@ -324,12 +328,13 @@ def merge_streams(outputs):
     in DISCARD_PATTERNS.
 
     """
-    # Discard outputs that match any of the patterns in DISCARD_PATTERNS...
-    outputs = filter(keep_cell_output, outputs)
-
-    # Sanitize all remaining outputs of the cell
+    # Sanitize all outputs of the cell
     for out in outputs:
         out['text'] = sanitize(out['text'])
+
+    # Discard outputs that match any of the patterns in DISCARD_PATTERNS...
+    #import ipdb; ipdb.set_trace()
+    outputs = filter(keep_cell_output, outputs)
 
     if outputs == []:
         return []
