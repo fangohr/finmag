@@ -100,7 +100,7 @@ def matches_some_discard_pattern(s):
 
 
 def keep_cell_output(out):
-    return (out['output_type'] == 'stream' and matches_some_discard_pattern(out['text']))
+    return not (out['output_type'] == 'stream' and matches_some_discard_pattern(out['text']))
 
 
 def sanitize(s):
