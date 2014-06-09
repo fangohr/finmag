@@ -51,10 +51,8 @@ CELL_EXECUTION_TIMEOUT = 200  # abort cell execution after this time (seconds)
 # still be an empty line in the reference output which is not matched
 # in the computed output, or vice versa.
 DISCARD_PATTERNS_EXACT = \
-    [#('stream', "Warning: Ignoring netgen's output status of 34304"),
-     #('stream', "UserWarning: This figure includes Axes that are not compatible with tight_layout, so its results might be incorrect"),
-     #('stream', "DEBUG: Found unused display :[0-9]+"),
-     #('stream', "DEBUG: Rendering Paraview scene on display :[0-9]+ using xpra."),
+    [('stream', "LOGGING_TIMESTAMP DEBUG: Found unused display :[0-9]+"),
+     ('stream', "LOGGING_TIMESTAMP DEBUG: Rendering Paraview scene on display :[0-9]+ using xpra."),
      ('stream', '(/[^/ ]+)+/matplotlib/figure.py:[0-9]+: UserWarning: This figure includes Axes that are not compatible with tight_layout, so its results might be incorrect.\n  warnings.warn\("This figure includes Axes that are not "\n'),
      ('stream', '\n  warnings.warn\("This figure includes Axes that are not "\n'),
      ('stream', "LOGGING_TIMESTAMP WARNING: Removing file '.*' and all associated .vtu files \(because overwrite=True\).\n"),
