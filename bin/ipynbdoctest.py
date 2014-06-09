@@ -54,6 +54,7 @@ DISCARD_PATTERNS_EXACT = \
      #('stream', "DEBUG: Found unused display :[0-9]+"),
      #('stream', "DEBUG: Rendering Paraview scene on display :[0-9]+ using xpra."),
      ('stream', '(/[^/ ]+)+/matplotlib/figure.py:[0-9]+: UserWarning: This figure includes Axes that are not compatible with tight_layout, so its results might be incorrect.\n  warnings.warn\("This figure includes Axes that are not "\n'),
+     ('stream', '\n  warnings.warn\("This figure includes Axes that are not "\n'),
      ('stream', "LOGGING_TIMESTAMP WARNING: Removing file '.*' and all associated .vtu files \(because overwrite=True\).\n"),
      ('stream', "LOGGING_TIMESTAMP WARNING: Warning: Ignoring netgen's output status of 34304."),
      #('display_data', "<matplotlib.figure.Figure at 0x[0-9A-F]+>"),
