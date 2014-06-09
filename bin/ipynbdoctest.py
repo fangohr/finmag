@@ -399,13 +399,12 @@ def test_notebook(nb):
             if cell.cell_type != 'code':
                 continue
             try:
-                # Ignore output from cells whose input starts
-                # with the string '# IPYTHON_TEST_IGNORE_OUTPUT'.
+                outs = run_cell(shell, iopub, cell)
+
+                # Ignore output from cells whose input starts with the string '# IPYTHON_TEST_IGNORE_OUTPUT'.
                 first_line = cell['input'].splitlines()[0] if (cell['input'] != '') else ''
                 if re.search('^#\s*IPYTHON_TEST_IGNORE_OUTPUT', first_line):
                     outs = []
-                else:
-                    outs = run_cell(shell, iopub, cell)
             except Exception as e:
                 print "failed to run cell:", repr(e)
                 print cell.input
