@@ -158,6 +158,13 @@ class Simulation(object):
         self.reltol = 1e-6
         self.abstol = 1e-6
 
+        # We used to only create the integrator when needed. However, this can
+        # lead to a bug when the user saves information to an .ndt file before
+        # a time integrator exists because some columns will be missing (as the
+        # time integrator creates additional columns in the .ndt file). Therefore
+        # we play it safe and create the time integrator here at the beginning.
+        self.create_integrator()
+
     def __str__(self):
         """String briefly describing simulation object"""
         return "finmag.Simulation(name='%s') with %s" % (self.name, self.mesh)
