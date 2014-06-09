@@ -251,14 +251,13 @@ def compare_outputs(test, ref, cell, skip_compare=('png', 'traceback',
             # (HF, Dec 2013)
             htmlSnippet = "Not HTML, just tracking error:<br><br>\n\n" + output
             return False, htmlSnippet
-        elif (key not in skip_compare) and \
-                (sanitize(test[key]) != sanitize(ref[key])):
+        elif (key not in skip_compare) and (test[key] != ref[key]):
             output = report_mismatch(key, test, ref, cell, "In more detail:")
             print(output)
             try:
                 import diff_match_patch
                 dmp = diff_match_patch.diff_match_patch()
-                diffs = dmp.diff_main(sanitize(ref[key]), sanitize(test[key]))
+                diffs = dmp.diff_main(ref[key], test[key])
                 dmp.diff_cleanupSemantic(diffs)
                 htmlSnippet = dmp.diff_prettyHtml(diffs)
             except ImportError:
@@ -325,10 +324,12 @@ def merge_streams(outputs):
     in DISCARD_PATTERNS.
 
     """
-    # Sanitize all outputs of the cell
-    #for out in outputs:
-    #    out['text'] = sanitize(out['text'])
+    # Discard outputs that match any of the patterns in DISCARD_PATTERNS...
     outputs = filter(keep_cell_output, outputs)
+
+    # Sanitize all remaining outputs of the cell
+    for out in outputs:
+        out['text'] = sanitize(out['text'])
 
     if outputs == []:
         return []
