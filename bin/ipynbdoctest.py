@@ -157,7 +157,8 @@ def sanitize(s):
     s = re.sub("Finmag logging output will be.*", "FINMAG_LOGGING_OUTPUT", s)
 
     # Ignore exact timing information
-    s = re.sub("saving took [0-9]+\.[0-9]+ seconds", "saving took XXX seconds", s)
+    s = re.sub("saving took \d+\.\d+ seconds", "saving took XXX seconds", s)
+    s = re.sub("Saving the data took \d+\.\d+ seconds", "Saving the data took XXX seconds", s)
 
     # Ignore datetime objects
     s = re.sub(r'datetime.datetime\([0-9, ]*\)', 'DATETIME_OBJECT', s)
