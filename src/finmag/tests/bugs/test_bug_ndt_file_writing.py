@@ -30,6 +30,7 @@
 # Note that there is an additional Ipython notebook file for this bug
 # that is convenient for experimentation.
 
+
 def test_ndt_writing_pretest():
 
     import finmag
@@ -47,7 +48,7 @@ def test_ndt_writing_pretest():
 
     import math
     m = sim.get_field_as_dolfin_function('m')
-    points = [[0, 0, 0], [1, 0, 0], [2, 0,0 ], [0, 0, 5], [1, 1, 2], 
+    points = [[0, 0, 0], [1, 0, 0], [2, 0,0 ], [0, 0, 5], [1, 1, 2],
               [3, 3, 10]]
     for point in points:
         print("m({}) = {}".format(point, m(point)))
