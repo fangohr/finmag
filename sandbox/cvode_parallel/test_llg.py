@@ -4,20 +4,17 @@ import matplotlib.pyplot as plt
 import dolfin as df
 import numpy as np
 import cvode2
+import llg_petsc
 from finmag.physics.llg import LLG
 from finmag.energies import Exchange, Zeeman
 
+df.parameters.reorder_dofs_serial = True
 from mpi4py import MPI
+
 
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
-
-def init_m(pos):
-    x=pos[0]
-    y=pos[1]
-    
-    return (x,0,100)
 
 #mpirun -n 2 python test.py
 
@@ -35,56 +32,54 @@ class Test(object):
         self.field = df.interpolate(m_init, self.S3)
         self.spin = self.m.vector().array()
         self.t = 0
-
-        self.m_petsc = df.as_backend_type(self.m.vector()).vec()
+        
+        #It seems it's not safe to specify rank in df.interpolate???
+        self._alpha = df.interpolate(df.Constant("0.1"), self.S1)
+        self._alpha.vector().set_local(self._alpha.vector().array()*(1+rank))
+        print 'dolfin',self._alpha.vector().array()
         
         self.llg = LLG(self.S1, self.S3)
-        self.llg.set_m(init_m, normalise=False)
-        print rank, self.llg.m
-        #self.exchange = Exchange(13e-12)
-
-        self.zeeman = Zeeman([0, 0, 1e5])
-        print 'hahahah2',rank
+        #normalise doesn't work due to the wrong order
+        self.llg.set_m(m_init, normalise=False)
         
-        #self.llg.effective_field.add(self.exchange)
+        self.exchange = Exchange(13e-12)
+        self.zeeman = Zeeman([0, 0, 1e5])
+        
+        self.llg.effective_field.add(self.exchange)
         self.llg.effective_field.add(self.zeeman)
-        print 'hahahah3',rank
-        self.llg.effective_field.update()
-        print rank, self.llg.effective_field.H_eff
-        #raise Exception('hhhh')
-        #self.llg.alpha = 0.1
+        
+        self.m_petsc = df.as_backend_type(self.llg._m.vector()).vec()
+        self.h_petsc = df.as_backend_type(self.field.vector()).vec()
+        self.alpha_petsc = df.as_backend_type(self._alpha.vector()).vec()
+
 
     def set_up_solver(self, rtol=1e-8, atol=1e-8):
         
         self.ode = cvode2.CvodeSolver(self.sundials_rhs, 0, self.m_petsc, rtol, atol)
 
-        #self.ode.test_petsc(self.m_petsc)
         
     def sundials_rhs(self, t, y, ydot):
-        y_np = y.getArray()
-
-        #self.llg._m.vector().set_local(y_np)
-        ydot_np = self.llg.solve_for(y_np, t)
-        ydot.setArray(ydot_np)
         
-        #if rank == 1:
-            #print t, ydot_np[0],y_np[0]
-        #print 'rank=%d t=%g local=%d size=%d'%(rank, t, y.getLocalSize(), ydot.getSize())
-        #print ydot.getArray()[0]
+        self.llg.effective_field.update(t)
+        self.field.vector().set_local(self.llg.effective_field.H_eff)
 
-        #ydot.setArray(np.sin(t+np.pi/4*rank))
-        #sim.field.vector().set_local(ydot_np)
+        llg_petsc.compute_dm_dt(y,
+                                self.h_petsc,
+                                ydot,
+                                self.alpha_petsc,
+                                self.llg.gamma,
+                                self.llg.do_precession,
+                                self.llg.c)
+
         return 0
 
     def run_until(self,t):
         
         if t <= self.t:
             ode = self.ode
-            print ode.y_np[0]
             return
         
         ode = self.ode
-        print ode.y_np[0]
         
         flag = ode.run_until(t)
         
@@ -106,8 +101,7 @@ def plot_m(ts, m):
 
 
 if __name__ == '__main__':
-    nx = ny = 10
-    mesh = df.UnitSquareMesh(nx, ny)
+    mesh = df.RectangleMesh(0,0,100.0,20.0,25,5)
     sim = Test(mesh)
     sim.set_up_solver()
     
@@ -121,8 +115,9 @@ if __name__ == '__main__':
     
     for t in ts:
         sim.run_until(t)
+        print t, sim.spin[0]
         #sim.field.vector().set_local(sim.llg.effective_field.H_eff)
-        #file << sim.field
+        file << sim.m
         us.append(sim.spin[0])
         
     plot_m(ts,us)

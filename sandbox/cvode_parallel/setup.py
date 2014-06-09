@@ -59,6 +59,14 @@ def configuration(parent_package='',top_path=None):
                          libraries=LIBRARIES,
                          library_dirs=LIBRARY_DIRS,
                          runtime_library_dirs=LIBRARY_DIRS)
+    
+    config.add_extension('llg_petsc',
+                         sources = ['llg/llg_petsc.pyx', 'llg/llg.c'],
+                         depends = [''],
+                         include_dirs=INCLUDE_DIRS + [os.curdir],
+                         libraries=LIBRARIES,
+                         library_dirs=LIBRARY_DIRS,
+                         runtime_library_dirs=LIBRARY_DIRS)
     return config
 
 if __name__ == "__main__":
