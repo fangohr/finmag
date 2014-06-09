@@ -50,6 +50,8 @@ CELL_EXECUTION_TIMEOUT = 200  # abort cell execution after this time (seconds)
 # in the computed output, or vice versa.
 DISCARD_PATTERNS = ["Warning: Ignoring netgen's output status of 34304",
                     "UserWarning: This figure includes Axes that are not compatible with tight_layout, so its results might be incorrect",
+                    "DEBUG: Found unused display :[0-9]+",
+                    "DEBUG: Rendering Paraview scene on display :[0-9]+ using xpra.",
                     ]
 
 
@@ -152,6 +154,7 @@ def sanitize(s):
     # generation of the mesh.
     s = re.sub(r'.*The mesh.*already exists and is automatically '
                 'returned.', '', s)
+
 
 # def consolidate_outputs(outputs):
 #     """consolidate outputs into a summary dict (incomplete)"""
