@@ -134,7 +134,13 @@ def sanitize(s):
     ##
 
     # Remove timestamps in logging output
-    s = re.sub(r'\[201\d-\d\d-\d\d \d\d:\d\d:\d\d\]', 'LOGGING_TIMESTAMP', s)
+    s = re.sub(r'\[\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d\]', 'LOGGING_TIMESTAMP', s)
+
+    # Different kind of timestamp
+    s = re.sub('(Mon|Tue|Wed|Thu|Fri|Sat|Sun) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [ \d]\d \d\d:\d\d:\d\d \d\d\d\d', 'TIMESTAMP', s)
+
+    # Deal with temporary filenames
+    s = re.sub('/tmp/tmp\w{6}/', '/tmp/tmpXXXXXX/', s)
 
     # Ignore version information of external dependencies
     #s = re.sub('^paraview version .*$', 'PARAVIEW_VERSION', s)
