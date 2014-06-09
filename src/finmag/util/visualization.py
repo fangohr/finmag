@@ -168,9 +168,6 @@ def render_paraview_scene(
     scriptfile = os.path.join(tmpdir, 'render_scene.py')
     script_string = textwrap.dedent("""
               from visualization_impl import render_paraview_scene, find_valid_X_display
-              from subprocess import Popen
-              from numpy import array
-              import time
               import os
 
               if not os.environ.has_key('DISPLAY'):

@@ -118,7 +118,6 @@ class LLG(object):
         #self._Ms_dg=helpers.scalar_valued_function(value, self.S1)
         self._Ms_dg.rename('Ms', 'Saturation magnetisation')
         self.volumes = df.assemble(df.TestFunction(self.S1) * df.dx)
-        print self.volumes
         Ms = df.assemble(self._Ms_dg*df.TestFunction(self.S1)* df.dx).array()/self.volumes.array()
         self._Ms = Ms.copy()
         self.Ms_av = np.average(self._Ms_dg.vector().array())
