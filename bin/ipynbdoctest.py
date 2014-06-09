@@ -37,22 +37,30 @@ from IPython.nbformat.current import reads, NotebookNode
 
 CELL_EXECUTION_TIMEOUT = 200  # abort cell execution after this time (seconds)
 
-# If any of the following patterns occurs in the output, the line
-# containing it will be discarded. If you don't want to discard the
-# entire line but only bits of it, don't use "discard_patterns" but
-# rather add an explicit replacement rule in the function 'sanitize()'
-# below.
+# If any of the following patterns matches the output, the output will
+# be discarded. If you don't want to discard the entire line but only
+# bits of it, don't use "discard_patterns" but rather add an explicit
+# replacement rule in the function 'sanitize()' below. Note that the
+# pattern must match the output exactly (from start to finish).
 #
 # On the other hand, if a line may only occur in the output under
 # certain circumstances (such as the matplotlib user warning), it must
 # be added here instead of in sanitize(), because otherwise there may
 # still be an empty line in the reference output which is not matched
 # in the computed output, or vice versa.
-DISCARD_PATTERNS = ["Warning: Ignoring netgen's output status of 34304",
-                    "UserWarning: This figure includes Axes that are not compatible with tight_layout, so its results might be incorrect",
-                    "DEBUG: Found unused display :[0-9]+",
-                    "DEBUG: Rendering Paraview scene on display :[0-9]+ using xpra.",
-                    ]
+DISCARD_PATTERNS_EXACT = \
+    [#('stream', "Warning: Ignoring netgen's output status of 34304"),
+     #('stream', "DATETIME_OBJECT WARNING: Warning: Ignoring netgen's output status of 34304."),
+     #('stream', "UserWarning: This figure includes Axes that are not compatible with tight_layout, so its results might be incorrect"),
+     #('stream', "DEBUG: Found unused display :[0-9]+"),
+     #('stream', "DEBUG: Rendering Paraview scene on display :[0-9]+ using xpra."),
+     ('stream', '(/[^/ ]+)+/matplotlib/figure.py:[0-9]+: UserWarning: This figure includes Axes that are not compatible with tight_layout, so its results might be incorrect.\n  warnings.warn\("This figure includes Axes that are not "\n'),
+     #('display_data', "<matplotlib.figure.Figure at 0x[0-9A-F]+>"),
+    ]
+DISCARD_PATTERNS_CONTAINED = []
+for dep in ['Finmag', 'FinMag', 'Dolfin', 'Matplotlib', 'Numpy', 'Scipy', 'IPython',
+            'Python', 'Paraview', 'Sundials', 'Boost-Python', 'Linux']:
+    DISCARD_PATTERNS_CONTAINED.append(('stream', 'DEBUG: *{} *([0-9a-z:+-]+|<unknown>)'.format(dep)))
 
 
 # This is used to remove coloring from error strings (which makes them unreadable in Jenkins)
@@ -89,25 +97,20 @@ def compare_png(a64, b64):
     return True
 
 
-def matches_some_discard_pattern(s):
-    """
-    Helper function to check whether any of the patterns in
-    DISCARD_PATTERNS occurs in the string.
-
-    """
-    for pat in DISCARD_PATTERNS:
-        if re.search(pat, s):
-            return True
-    return False
-
-
 def keep_cell_output(out):
-    return not (out['output_type'] == 'stream' and matches_some_discard_pattern(out['text']))
+    for output_type, pattern in DISCARD_PATTERNS_EXACT:
+        pattern = '^' + pattern + '$'  # make sure we compare the whole string with the pattern
+        if out['output_type'] == output_type and re.match(pattern, out['text']):
+            return False
+    for output_type, pattern in DISCARD_PATTERNS_CONTAINED:
+        if out['output_type'] == output_type and re.search(pattern, out['text']):
+            return False
+    return True
 
 
 def sanitize(s):
     """
-    Sanitize a string for comparison.
+    Sanitize a string for comparison and return the sanitized string.
 
     Fix universal newlines, strip trailing newlines, and normalize
     likely random values (date stamps, memory addresses, UUIDs, etc.).
@@ -132,10 +135,10 @@ def sanitize(s):
     s = re.sub(r'\[201\d-\d\d-\d\d \d\d:\d\d:\d\d\]', 'LOGGING_TIMESTAMP', s)
 
     # Ignore version information of external dependencies
-    s = re.sub('^paraview version .*$', 'PARAVIEW_VERSION', s)
-    for dep in ['Finmag', 'Dolfin', 'Matplotlib', 'Numpy', 'Scipy', 'IPython',
-                'Python', 'Paraview', 'Sundials', 'Boost-Python', 'Linux']:
-        s = re.sub('DEBUG: %20s: .*' % dep, 'VERSION_%s' % dep, s)
+    #s = re.sub('^paraview version .*$', 'PARAVIEW_VERSION', s)
+    #for dep in ['Finmag', 'Dolfin', 'Matplotlib', 'Numpy', 'Scipy', 'IPython',
+    #            'Python', 'Paraview', 'Sundials', 'Boost-Python', 'Linux']:
+    #    s = re.sub('DEBUG: *{}: .*'.format(dep), 'VERSION_{}'.format(dep), s)
 
     # Ignore specific location of logging output file
     s = re.sub("Finmag logging output will be.*", "FINMAG_LOGGING_OUTPUT", s)
@@ -154,6 +157,8 @@ def sanitize(s):
     # generation of the mesh.
     s = re.sub(r'.*The mesh.*already exists and is automatically '
                 'returned.', '', s)
+
+    return s
 
 
 # def consolidate_outputs(outputs):
@@ -316,8 +321,13 @@ def merge_streams(outputs):
     Since the Finmag logger uses streams, output that logically
     belongs together may be split up in the notebook source. Thus we
     merge it here to be able to compare streamed output robustly.
+    This function also discards outputs matching any of the patterns
+    in DISCARD_PATTERNS.
 
     """
+    # Sanitize all outputs of the cell
+    #for out in outputs:
+    #    out['text'] = sanitize(out['text'])
     outputs = filter(keep_cell_output, outputs)
 
     if outputs == []:
@@ -332,6 +342,8 @@ def merge_streams(outputs):
             prev_out['text'] += out['text']
         else:
             res.append(out)
+
+    # XXX TODO: Remove outputs that are now empty!!!
 
     return res
 
@@ -382,6 +394,7 @@ def test_notebook(nb):
                 errors += 1
                 continue
 
+            #import ipdb; ipdb.set_trace()
             failed = False
             outs_merged = merge_streams(outs)
             cell_outputs_merged = merge_streams(cell.outputs)
@@ -389,6 +402,7 @@ def test_notebook(nb):
                 cmp_result, html_diff = compare_outputs(out, ref, cell)
                 html_diffs_all += html_diff
                 if not cmp_result:
+                    #import ipdb; ipdb.set_trace()
                     failed = True
             if failed:
                 print "Failed to replicate cell with the following input: "
