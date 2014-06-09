@@ -136,7 +136,7 @@ class EffectiveField(object):
 
     def all(self):
         """ Returns list of interactions names (as list of strings). """
-        return self.interactions.keys()
+        return sorted(self.interactions.keys())
 
     def remove(self, interaction_name):
         """
