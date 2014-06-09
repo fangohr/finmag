@@ -144,6 +144,9 @@ def sanitize(s):
 
     s = re.sub('Computing the eigenvalues and eigenvectors took [0-9]+\.[0-9]+ seconds', 'Computing the eigenvalues and eigenvectors took XXXX seconds', s)
 
+    # Ignore timings in Gmsh debugging messages
+    s = re.sub('Done meshing ([123])D \(\d+\.\d+ s\)', 'Done meshing \1D (XXXXXX s)', s)
+
     # Ignore version information of external dependencies
     #s = re.sub('^paraview version .*$', 'PARAVIEW_VERSION', s)
     #for dep in ['Finmag', 'Dolfin', 'Matplotlib', 'Numpy', 'Scipy', 'IPython',
