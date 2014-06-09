@@ -65,9 +65,13 @@ class Tablewriter(object):
             msg = "File %s exists already; cowardly stopping" % filename
             raise RuntimeError(msg)
 
-        # save_head recordes whether the headings (name and units)
+        # save_head records whether the headings (name and units)
         # have been saved already
         self.save_head = False
+        ## also record how many column headings we have written to the file
+        #self.ncolumn_headings_written = None
+        ## ^ this is so we can catch attempts to write more or less data
+        ## in subsequent writes, and raise an error.
 
     def default_entity_order(self):
         keys = self.entities.keys()
@@ -96,18 +100,36 @@ class Tablewriter(object):
 
     @mtimed
     def save(self):
-        """Append data (spatial averages of fields) for current configuration"""
+        """Append data (spatial averages of fields) for current
+        configuration"""
 
         if not self.save_head:
             f = open(self.filename, 'w')
             # Write header
             f.write(self.headers())
             f.close()
-            self.save_head=True
+            self.save_head = True
+            #self.ncolumn_headings_written = len(self.headers()[1:].split())
 
         # open file
         with open(self.filename, 'a') as f:
-            f.write(' ' * len(self.comment_symbol))  # account for comment symbol width
+            f.write(' ' * len(self.comment_symbol))  # account for comment
+                                                     # symbol width
+## The commented lines below are Hans' initial attempt to catch when the
+## number of columns to be written changes
+## but this seems to never happen. So it's not quite right.
+## Also, if this was the right place to catch it, i.e. if watching
+## self.entities is the critical object that shouldn't change after
+## the header has been written, then we should convert this into a
+## 'property' which raises an error if called for writing once the
+## header lines have been written. HF, 9 June 2014.
+#            if len(self.entities) == self.ncolumn_headings_written:
+#                msg = "It seems number of columns to be written" + \
+#                    "to {} has changed".format(self.filename)
+#                msg += "from {} to {}. This is not supported.".format(
+#                    self.ncolumn_headings_written, len(self.entity_order))
+#                logger.error(msg)
+#                raise ValueError(msg)
             for entityname in self.entity_order:
                 value = self.entities[entityname]['get'](self.sim)
                 if isinstance(value, np.ndarray):
@@ -118,7 +140,8 @@ class Tablewriter(object):
                 elif isinstance(value, float) or isinstance(value, int):
                     f.write(self.float_format % value)
                 else:
-                    msg = "Can only deal with numpy arrays, float and int so far, but type is %s" % type(value)
+                    msg = "Can only deal with numpy arrays, float and int " + \
+                        "so far, but type is %s" % type(value)
                     raise NotImplementedError(msg)
 
             f.write('\n')
@@ -154,7 +177,9 @@ class Tablereader(object):
         try:
             self.data = np.loadtxt(self.f)
         except ValueError:
-            raise RuntimeError("Cannot load data from file '{}'. Maybe the file was incompletely written?".format(self.f))
+            raise RuntimeError("Cannot load data from file '{}'." +
+                               "Maybe the file was incompletely written?".
+                               format(self.f))
         self.f.close()
 
         # some consistency checks: must have as many columns as
@@ -267,8 +292,8 @@ def demo2():
     sim.save_averages()
 
     # and write some more data
-    #sim.schedule("save_ndt", every=10e-12)
-    #sim.run_until(0.1e-9)
+    sim.schedule("save_ndt", every=10e-12)
+    sim.run_until(0.1e-9)
 
     # read the data
 
