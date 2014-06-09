@@ -65,7 +65,9 @@ class Tablewriter(object):
             msg = "File %s exists already; cowardly stopping" % filename
             raise RuntimeError(msg)
 
-        self.save_head=False
+        # save_head recordes whether the headings (name and units)
+        # have been saved already
+        self.save_head = False
 
     def default_entity_order(self):
         keys = self.entities.keys()
