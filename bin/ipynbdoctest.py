@@ -453,3 +453,4 @@ if __name__ == '__main__':
         with open(ipynb) as f:
             nb = reads(f.read(), 'json')
         test_notebook(nb)
+        sys.stdout.flush()
