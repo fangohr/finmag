@@ -109,10 +109,10 @@ class Tablewriter(object):
             for entityname in self.entity_order:
                 value = self.entities[entityname]['get'](self.sim)
                 if isinstance(value, np.ndarray):
-                    
+
                     for v in value:
                         f.write(self.float_format % v)
-                    
+
                 elif isinstance(value, float) or isinstance(value, int):
                     f.write(self.float_format % value)
                 else:
@@ -157,10 +157,11 @@ class Tablereader(object):
 
         # some consistency checks: must have as many columns as
         # headers (disregarding the comment symbol)
-        # for the case that only one line data
-        if len(self.data) == self.data.size:
+        if len(self.data) == self.data.size:  # only true for one line of data
             assert self.data.size == len(headers) - 1
-            self.data.shape=(1, self.data.size)
+            # also need to change numpy array vector into matrix with
+            # one row
+            self.data.shape = (1, len(headers) - 1)
         else:
             assert self.data.shape[1] == len(headers) - 1
 
@@ -256,7 +257,25 @@ class FieldSaver(object):
         self.counter += 1
 
 
-if __name__ == "__main__":
+def demo2():
+
+    import finmag
+    sim = finmag.example.barmini(name='demo2-fileio')
+
+    sim.save_averages()
+
+    # and write some more data
+    #sim.schedule("save_ndt", every=10e-12)
+    #sim.run_until(0.1e-9)
+
+    # read the data
+
+    data = Tablereader('demo2_fileio.ndt')
+    for t, mx, my, mz in zip(data['time'], data['m_x'], data['m_y'], data['m_z']):
+        print("t={:10g}, m = {:12}, {:12}, {:12}".format(t, mx, my, mz))
+
+
+def demo1():
     #create example simulation
     import finmag
     import dolfin as df
@@ -267,7 +286,7 @@ if __name__ == "__main__":
     # standard Py parameters
     sim = finmag.sim_with(mesh, Ms=0.86e6, alpha=0.5, unit_length=1e-9, A=13e-12, m_init=(1, 0, 1))
     filename = 'data.txt'
-    ndt = Tablewriter(filename, sim)
+    ndt = Tablewriter(filename, sim, override=True)
     times = np.linspace(0, 3.0e-11, 6 + 1)
     for i, time in enumerate(times):
         print("In iteration {}, computing up to time {}".format(i, time))
@@ -278,3 +297,12 @@ if __name__ == "__main__":
     f = Tablereader(filename)
     print f.timesteps()
     print f['m_x']
+
+if __name__ == "__main__":
+    print("Demo 1")
+    demo1()
+    print("Demo 2")
+    demo2()
+
+
+
