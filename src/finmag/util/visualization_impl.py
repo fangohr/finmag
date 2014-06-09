@@ -495,10 +495,10 @@ def render_paraview_scene(
         grid = servermanager.Fetch(reader)
 
         # Determine approximate mesh spacing
-        cell = grid.GetCell(0)  # let's hope that the first cell is a good
-                                # representative of all mesh cells
-        cell_bounds = np.array(cell.GetBounds()).reshape((3,2))
-        mesh_spacing = float(min(cell_bounds[:, 1] - cell_bounds[:, 0]))
+        def mesh_spacing_for_cell(cell):
+            cell_bounds = np.array(cell.GetBounds()).reshape((3,2))
+            return float(min(filter(lambda x: x != 0.0, cell_bounds[:, 1] - cell_bounds[:, 0])))
+        mesh_spacing = np.average([mesh_spacing_for_cell(grid.GetCell(i)) for i in range(grid.GetNumberOfCells())])
 
         # Determine maximum field magnitude
         m = VN.vtk_to_numpy(grid.GetPointData().GetArray(field_name))
