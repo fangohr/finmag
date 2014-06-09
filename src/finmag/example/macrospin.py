@@ -23,7 +23,7 @@ def macrospin(Ms=0.86e6, m_init=(1, 0, 0), H_ext=(0, 0, 1e6), alpha=0.1,
         alpha = 0.1  (Gilbert damping coefficient)
 
     """
-    mesh = df.UnitIntervalMesh()
+    mesh = df.UnitIntervalMesh(1)
 
     sim = Simulation(mesh, Ms=Ms, unit_length=1e-9, name=name)
     sim.alpha = alpha
