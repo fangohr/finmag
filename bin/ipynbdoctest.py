@@ -395,15 +395,26 @@ def test_notebook(nb):
     failures = 0
     errors = 0
     html_diffs_all = ""
+    skip_remainder = False
     for ws in nb.worksheets:
         for cell in ws.cells:
+            if skip_remainder:
+                continue
+
             if cell.cell_type != 'code':
                 continue
+
+            # Extract the first line so that we can check for special tags such as IPYTHON_TEST_IGNORE_OUTPUT
+            first_line = cell['input'].splitlines()[0] if (cell['input'] != '') else ''
+
+            if re.search('^#\s*IPYTHON_TEST_SKIP_REMAINDER', first_line):
+                skip_remainder = True
+                continue
+
             try:
                 outs = run_cell(shell, iopub, cell)
 
-                # Ignore output from cells whose input starts with the string '# IPYTHON_TEST_IGNORE_OUTPUT'.
-                first_line = cell['input'].splitlines()[0] if (cell['input'] != '') else ''
+                # Ignore output from cells tagged with IPYTHON_TEST_IGNORE_OUTPUT
                 if re.search('^#\s*IPYTHON_TEST_IGNORE_OUTPUT', first_line):
                     outs = []
             except Exception as e:
