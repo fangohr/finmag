@@ -102,10 +102,11 @@ def plot_m(ts, m):
 
 if __name__ == '__main__':
     mesh = df.RectangleMesh(0,0,100.0,20.0,25,5)
+    #mesh = df.IntervalMesh(10,0,10)
     sim = Test(mesh)
     sim.set_up_solver()
     
-    ts = np.linspace(0, 1e-9, 51)
+    ts = np.linspace(0, 5e-9, 51)
     
     
     us = []
@@ -117,7 +118,8 @@ if __name__ == '__main__':
         sim.run_until(t)
         print t, sim.spin[0]
         #sim.field.vector().set_local(sim.llg.effective_field.H_eff)
-        file << sim.m
+        #file << sim.m
         us.append(sim.spin[0])
         
     plot_m(ts,us)
+    print 'last spin:',us[-1]

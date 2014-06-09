@@ -57077,3 +57077,923 @@ eT4NCjwvaHRtbD4NCg==
 
 --_002_3A7F6250CEEF4FCC926967F20335C1E6sotonacuk_--
 
+From fetchmail  Mon Jun  9 02:46:03 2014
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.26)
+	for <marvin@localhost> (single-drop); Mon, 09 Jun 2014 02:46:03 +0100 (BST)
+Received: by 10.216.61.75 with SMTP id v53csp85908wec;
+        Sun, 8 Jun 2014 18:25:39 -0700 (PDT)
+X-Received: by 10.152.10.40 with SMTP id f8mr43913lab.75.1402277138646;
+        Sun, 08 Jun 2014 18:25:38 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id mn5si34239199lbb.55.2014.06.08.18.25.37
+        for <multiple recipients>;
+        Sun, 08 Jun 2014 18:25:38 -0700 (PDT)
+Received-SPF: none (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=neutral (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk;
+       dkim=neutral (body hash did not verify) header.i=@;
+       dmarc=fail (p=NONE dis=NONE) header.from=gmail.com
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s591PLSl023045;
+	Mon, 9 Jun 2014 02:25:21 +0100
+Received: from SRV00045.soton.ac.uk (srv00045.soton.ac.uk [152.78.119.41])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id q582PL08323122513p ret-id none; Mon, 09 Jun 2014 02:25:21 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.41) with Microsoft SMTP Server (TLS) id 14.3.181.6; Mon, 9 Jun
+ 2014 02:21:10 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id s591L9xj029838;	Mon, 9 Jun 2014 02:21:09 +0100
+Received: from mailgate3.iss.soton.ac.uk (mailgate3.iss.soton.ac.uk
+ [152.78.128.104])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ s591L9ws029835	for <finmag-team@lists.soton.ac.uk>; Mon, 9 Jun 2014 02:21:09
+ +0100
+Received: from mailgate3.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate3.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s591Kxue011050	for
+ <finmag-team@lists.soton.ac.uk>; Mon, 9 Jun 2014 02:20:59 +0100
+Received: from mail-qg0-f47.google.com (mail-qg0-f47.google.com
+ [209.85.192.47])	by mailgate3.iss.soton.ac.uk (mailgate3.iss.soton.ac.uk
+ [152.78.128.104]) envelope-from <maximilian.albert@gmail.com> with ESMTP	id
+ q582Kx1013631174AU ret-id none; Mon, 09 Jun 2014 02:20:59 +0100
+Received: by mail-qg0-f47.google.com with SMTP id j107so8275130qga.34
+        for <finmag-team@lists.soton.ac.uk>; Sun, 08 Jun 2014 18:20:58 -0700
+ (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=x/YS9aSbICEA95XfKjvJmd4dzhss+6nQlP+EYgnSwwc=;
+        b=fdUqnYxM+ATQVokSdiCH/ACPQDnkgeDIcb9bfIPhffQNY29uQxq4LNf4dXd4qfvpFl
+         brx4EWoUTYsh60XMj6N9br7BMFQ5cYSCaFtFch7wrw7d5/ox1P292tTS11OITQF6jhAC
+         69R14KaVduyZwsF2+/SHt81LiAXesr4liqNXJhg5tuofzkY7TGDCen6hvy6W65rTrPbR
+         8jiCRowcfoU0UPcYvqNx/QL4Je4J/okFUOnRG0pTohpvyZUKoX2hM9cOTBzMUfHHZndP
+         uBAyRVrBgqti/q22LTHx+Bs4tR5dsuCSwonkrmIcVRymJA3rIWw/LYN4iMxBYFSAlnKS
+         8Klw==
+MIME-Version: 1.0
+X-Received: by 10.140.98.116 with SMTP id n107mr26701454qge.93.1402276858544;
+ Sun, 08 Jun 2014 18:20:58 -0700 (PDT)
+Received: by 10.96.122.41 with HTTP; Sun, 8 Jun 2014 18:20:58 -0700 (PDT)
+In-Reply-To: <3A7F6250-CEEF-4FCC-9269-67F20335C1E6@soton.ac.uk>
+References: <20140606165751.27726.10179@app08.ash-private.bitbucket.org>
+	<35C8EC06-5EDD-42A6-A23D-4469C5C8D289@soton.ac.uk>
+	<69EF17E243EA164D9E5800FBC995493D4AB1AF91@SRV00046.soton.ac.uk>
+	<CAGA_dmgSVq-nNciFzyQoQyf1OMgEuLuuR78L-hn86oZ03V73Tw@mail.gmail.com>
+	<15BFD03E-448F-4CF0-A901-34898CE4C185@soton.ac.uk>
+	<CAGA_dmh=iDOYg5-Ww9HzOc9rZTdEh+gkkBHspxJFd-2NuY1OfQ@mail.gmail.com>
+	<CAGA_dmiwnzGm22uzfehjfWYXMT7W7+HV+p8+cXdiq29z=jMLew@mail.gmail.com>
+	<79D1FBF5-BE52-4C5C-82AE-4A4A8F115879@soton.ac.uk>
+	<CAGA_dmgc+B3ksmzmt3RbGh4U=1vxWzaZK7iZpv6wNjBCQH1x-g@mail.gmail.com>
+	<CAGA_dmhXyZwmXUV6eLA-VeUqVmkbkUim1ds=rHn=bA4jnVubgg@mail.gmail.com>
+	<C75AFAA7-CDDD-451B-8E81-F12F37BBF0ED@soton.ac.uk>
+	<CAGA_dmiSXwkui6yKAdevOdgPap+2XtCbwsmqZ0ngBTtD3wJKJw@mail.gmail.com>
+	<3A7F6250-CEEF-4FCC-9269-67F20335C1E6@soton.ac.uk>
+Date: Mon, 9 Jun 2014 02:20:58 +0100
+Message-ID: <CAGA_dmg-waYp9LFLZ+Xjr1NFD+xv5QLKDLNO59R+eHLm9G8bTw@mail.gmail.com>
+Subject: [finmag-team] Re: cool
+From: Maximilian Albert <maximilian.albert@gmail.com>
+To: "Fangohr H." <h.fangohr@soton.ac.uk>
+CC: "Wang W." <ww1g11@soton.ac.uk>,
+        "<finmag-team@lists.soton.ac.uk>"
+	<finmag-team@lists.soton.ac.uk>
+Content-Type: multipart/alternative; boundary="001a113a92380803e104fb5d0697"
+Received-SPF: Pass (SRV00045.soton.ac.uk: domain of
+ owner-finmag-team@lists.soton.ac.uk designates 152.78.128.58 as permitted
+ sender) receiver=SRV00045.soton.ac.uk; client-ip=152.78.128.58;
+ helo=maillists.sucs.soton.ac.uk;
+Received-SPF: None; receiver=mailgate3.iss.soton.ac.uk; client-ip=209.85.192.47; helo=<mail-qg0-f47.google.com>
+Received-SPF: Pass; receiver=mailgate3.iss.soton.ac.uk; client-ip=209.85.192.47; envelope-from=<maximilian.albert@gmail.com>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=q582IX083231225100; tid=q582PL08323122513p; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=4
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.41; helo=<SRV00045.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.41; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: s591PLSl023045
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+--001a113a92380803e104fb5d0697
+Content-Type: text/plain; charset="UTF-8"
+
+Hi Hans,
+
+
+Regarding the tutorial-saving-averages-demo.ipynb bug - I am not sure I can
+> see it! I have run the notebook and attach the result, and don't see the
+> 'kink', do I? Also, running this through ipynbtest passes fine.
+>
+
+I just checked the notebook you sent (thanks for the html version, although
+it didn't work as the images were not included). Your are right that it
+doesn't show the error. Which computer did you run this? I just checked on
+aleph0 and osiris, and I see the failure on both of them. Odd...
+
+
+Sure, wasn't sure there there was sowing failing as you said you used
+> 'bisect' and I thought you would need something failing for that.
+>
+
+You need something failing indeed, but for me this was the wrong behaviour
+in the notebook (which you didn't see). I couldn't automate the bisection
+since the notebook didn't have a return value indicating whether the
+failure occurred or not. But mercurial allows you to do a manual bisection
+by marking two different versions of the source code as 'good' and 'bad',
+and then it will automatically check out a version in the middle which you
+can manually check and again mark via 'hg bisect --good' or 'hg bisect
+--bad', and so on.
+
+Cheers,
+Max
+
+--001a113a92380803e104fb5d0697
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr">Hi Hans,<br><br><div class=3D"gmail_extra"><br><div class=
+=3D"gmail_quote"><blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8=
+ex;border-left:1px #ccc solid;padding-left:1ex"><div><div class=3D"h5">
+Regarding the tutorial-saving-averages-demo.ipynb bug - I am not sure I can=
+ see it! I have run the notebook and attach the result, and don&#39;t see t=
+he &#39;kink&#39;, do I? Also, running this through ipynbtest passes fine.<=
+br>
+</div></div></blockquote><div><br></div><div>I just checked the notebook yo=
+u sent (thanks for the html version, although it didn&#39;t work as the ima=
+ges were not included). Your are right that it doesn&#39;t show the error. =
+Which computer did you run this? I just checked on aleph0 and osiris, and I=
+ see the failure on both of them. Odd...<br>
+</div><div>=C2=A0<br><br></div><blockquote class=3D"gmail_quote" style=3D"m=
+argin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex"><div><div cla=
+ss=3D"h5">
+Sure, wasn&#39;t sure there there was sowing failing as you said you used &=
+#39;bisect&#39; and I thought you would need something failing for that.<br=
+></div></div></blockquote><div><br></div>You need something failing indeed,=
+ but for me this was the wrong behaviour in the notebook (which you didn&#3=
+9;t see). I couldn&#39;t automate the bisection since the notebook didn&#39=
+;t have a return value indicating whether the failure occurred or not. But =
+mercurial allows you to do a manual bisection by marking two different vers=
+ions of the source code as &#39;good&#39; and &#39;bad&#39;, and then it wi=
+ll automatically check out a version in the middle which you can manually c=
+heck and again mark via &#39;hg bisect --good&#39; or &#39;hg bisect --bad&=
+#39;, and so on.<br>
+<br>Cheers,<br>Max<br></div></div></div>
+
+--001a113a92380803e104fb5d0697--
+
+From fetchmail  Mon Jun  9 12:46:10 2014
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.26)
+	for <marvin@localhost> (single-drop); Mon, 09 Jun 2014 12:46:10 +0100 (BST)
+Received: by 10.216.61.75 with SMTP id v53csp110380wec;
+        Mon, 9 Jun 2014 04:14:24 -0700 (PDT)
+X-Received: by 10.112.149.71 with SMTP id ty7mr16661185lbb.34.1402312463803;
+        Mon, 09 Jun 2014 04:14:23 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk. [152.78.128.16])
+        by mx.google.com with ESMTP id uf9si36428742lbc.44.2014.06.09.04.14.22
+        for <multiple recipients>;
+        Mon, 09 Jun 2014 04:14:23 -0700 (PDT)
+Received-SPF: none (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) client-ip=152.78.128.16;
+Authentication-Results: mx.google.com;
+       spf=neutral (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s59BEFR4012481;
+	Mon, 9 Jun 2014 12:14:15 +0100
+Received: from SRV00045.soton.ac.uk (srv00045.soton.ac.uk [152.78.119.41])
+	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk [152.78.128.16]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id q58CEF150683607705 ret-id none; Mon, 09 Jun 2014 12:14:15 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.41) with Microsoft SMTP Server (TLS) id 14.3.181.6; Mon, 9 Jun
+ 2014 12:14:13 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id s59BECil030133;	Mon, 9 Jun 2014 12:14:12 +0100
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk
+ [152.78.128.11])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ s59BECG1030130	for <finmag-team@lists.soton.ac.uk>; Mon, 9 Jun 2014 12:14:12
+ +0100
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s59BEBcS016786;
+	Mon, 9 Jun 2014 12:14:11 +0100
+Received: from UOS-MSG00037-VS.soton.ac.uk (uos-msg00037-vs.soton.ac.uk
+ [152.78.119.39])	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk
+ [152.78.128.11]) envelope-from <H.FANGOHR@soton.ac.uk> with ESMTP	id
+ q58CEB0832323968eC ret-id none; Mon, 09 Jun 2014 12:14:11 +0100
+Received: from SRV00046.soton.ac.uk ([169.254.9.100]) by
+ UOS-MSG00037-VS.soton.ac.uk ([152.78.119.39]) with mapi id 14.03.0181.006;
+ Mon, 9 Jun 2014 12:14:10 +0100
+From: "Fangohr H." <H.FANGOHR@soton.ac.uk>
+To: Maximilian Albert <maximilian.albert@gmail.com>
+CC: "Fangohr H." <h.fangohr@soton.ac.uk>, "Wang W." <ww1g11@soton.ac.uk>,
+        "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+Subject: [finmag-team] Re: cool
+Thread-Topic: cool
+Thread-Index: AQHPgb5HmGYtwFbzYUqdAXLrFWzvHZtkgkuAgAAhwYCAAG9ggIAAUlYAgAAGyICAAEB9a4AAjF8AgAAbZYCAAFUjAIAAD20AgAAFTwCAAS84AIAApcOA
+Date: Mon, 9 Jun 2014 11:14:09 +0000
+Message-ID: <2A88CED1-B861-45ED-85EC-F5B49D21FB68@soton.ac.uk>
+References: <20140606165751.27726.10179@app08.ash-private.bitbucket.org>
+ <35C8EC06-5EDD-42A6-A23D-4469C5C8D289@soton.ac.uk>
+ <69EF17E243EA164D9E5800FBC995493D4AB1AF91@SRV00046.soton.ac.uk>
+ <CAGA_dmgSVq-nNciFzyQoQyf1OMgEuLuuR78L-hn86oZ03V73Tw@mail.gmail.com>
+ <15BFD03E-448F-4CF0-A901-34898CE4C185@soton.ac.uk>
+ <CAGA_dmh=iDOYg5-Ww9HzOc9rZTdEh+gkkBHspxJFd-2NuY1OfQ@mail.gmail.com>
+ <CAGA_dmiwnzGm22uzfehjfWYXMT7W7+HV+p8+cXdiq29z=jMLew@mail.gmail.com>
+ <79D1FBF5-BE52-4C5C-82AE-4A4A8F115879@soton.ac.uk>
+ <CAGA_dmgc+B3ksmzmt3RbGh4U=1vxWzaZK7iZpv6wNjBCQH1x-g@mail.gmail.com>
+ <CAGA_dmhXyZwmXUV6eLA-VeUqVmkbkUim1ds=rHn=bA4jnVubgg@mail.gmail.com>
+ <C75AFAA7-CDDD-451B-8E81-F12F37BBF0ED@soton.ac.uk>
+ <CAGA_dmiSXwkui6yKAdevOdgPap+2XtCbwsmqZ0ngBTtD3wJKJw@mail.gmail.com>
+ <3A7F6250-CEEF-4FCC-9269-67F20335C1E6@soton.ac.uk>
+ <CAGA_dmg-waYp9LFLZ+Xjr1NFD+xv5QLKDLNO59R+eHLm9G8bTw@mail.gmail.com>
+In-Reply-To: <CAGA_dmg-waYp9LFLZ+Xjr1NFD+xv5QLKDLNO59R+eHLm9G8bTw@mail.gmail.com>
+Accept-Language: en-GB, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [152.78.54.126]
+Content-Type: text/plain; charset="Windows-1252"
+Content-ID: <30E2CFF550C09F4C9480795BC9BBAAD4@exchange.soton.ac.uk>
+MIME-Version: 1.0
+Received-SPF: Pass (SRV00045.soton.ac.uk: domain of
+ owner-finmag-team@lists.soton.ac.uk designates 152.78.128.58 as permitted
+ sender) receiver=SRV00045.soton.ac.uk; client-ip=152.78.128.58;
+ helo=maillists.sucs.soton.ac.uk;
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.39; helo=<UOS-MSG00037-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.39; envelope-from=<H.FANGOHR@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from quoted-printable to 8bit by maillists.sucs.soton.ac.uk id s59BECG1030131
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=q58CEB150683607700; tid=q58CEF150683607705; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.41; helo=<SRV00045.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.41; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: s59BEFR4012481
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi Max,
+
+> I just checked the notebook you sent (thanks for the html version, althou=
+gh it didn't work as the images were not included). Your are right that it =
+doesn't show the error. Which computer did you run this?
+This was on an Lubuntu 14.04 (light ubuntu?) on a virtual machine on my lap=
+top.=20
+> I just checked on aleph0 and osiris, and I see the failure on both of the=
+m. Odd=85
+
+I can see it, too, on osiris.
+
+I have created a script in tests/bugs/test_bug_ndt_file_writing.py that pro=
+vides 5 tests, of which 2 fail.
+
+I also looked around why this is happening. My current theory is that we wr=
+ite the first lines of the ndt file before carrying out time integration. W=
+hen then run the relax command. This creates the time stepper, and at that =
+point (in the lines below, taken from sim.py) we create additional =91entit=
+ies=92 to be stored in the ndt file. We then save more columns of data (inc=
+luding the additional =92steps=92) in the ndt file than we have header file=
+s. This is not noticed, and when we read the data back, we read the wrong c=
+olumns.
+
+There are multiple weak points, two of which are
+
+(i) we don=92t check for a change in what data is to be written to the ndt =
+file AFTER having written the header lines. I think if this happens it shou=
+ld raise an Error. (there some comments on how to do this from me in util/f=
+ileio.py, but I may be wrong.)
+
+(ii) we use numpy.loadtxt to read the ndt file back in. This function does =
+not complain if we have different numbers of columns in different rows, and=
+ thus we don=92t notice the issue.
+
+I can=92t pursue this further today - is anybody willing to have a look at =
+this? We issues (i) and (ii) can be dealt with separately.
+
+The two items above would be good to have to catch future errors of this ty=
+pe in the future.
+
+We also need to=20
+
+(iii) change code so that the new tests that I have added pass. One option =
+is to always create columns for steps, dm/dt and to accept that these stay =
+empty if we haven=92t got a time integrator.=20
+
+What I don=92t understand is why this does not fail on my virtual machine -=
+ it should. Maybe that will become clear later.
+
+Next, I will merge my changes with the repository and upgrade to dolfin 1.4=
+.=20
+
+Cheers,
+
+Hans
+
+ def create_integrator(self, backend=3DNone, **kwargs):
+
+        if not hasattr(self, "integrator"):
+            if backend =3D=3D None:
+                backend =3D self.integrator_backend
+            log.info("Create integrator {} with kwargs=3D{}".format(backend=
+, kwargs))
+            if self.kernel =3D=3D 'llg_stt':
+                self.integrator =3D SundialsIntegrator(self.llg, self.llg.d=
+y_m, method=3D"bdf_diag", **kwargs)
+            elif self.kernel =3D=3D 'sllg':
+                self.integrator =3D self.llg
+            else:
+                self.integrator =3D llg_integrator(self.llg, self.llg.m, ba=
+ckend=3Dbackend, **kwargs)
+                self.integrator.integrator.set_scalar_tolerances(self.relto=
+l, self.abstol)
+
+            self.tablewriter.entities['steps'] =3D {
+                'unit': '<1>',
+                'get': lambda sim: sim.integrator.stats()['nsteps'],
+                'header': 'steps'}
+
+            self.tablewriter.entities['last_step_dt'] =3D {
+                'unit': '<1>',
+                'get': lambda sim: sim.integrator.stats()['hlast'],
+                'header': 'last_step_dt'}
+            self.tablewriter.entities['dmdt'] =3D {
+                'unit': '<A/ms>',
+                'get': lambda sim: sim.dmdt_max,
+                'header': ('dmdt_x', 'dmdt_y', 'dmdt_z')}
+
+            self.tablewriter.update_entity_order()
+
+
+
+> Sure, wasn't sure there there was sowing failing as you said you used 'bi=
+sect' and I thought you would need something failing for that.
+>=20
+> You need something failing indeed, but for me this was the wrong behaviou=
+r in the notebook (which you didn't see). I couldn't automate the bisection=
+ since the notebook didn't have a return value indicating whether the failu=
+re occurred or not. But mercurial allows you to do a manual bisection by ma=
+rking two different versions of the source code as 'good' and 'bad', and th=
+en it will automatically check out a version in the middle which you can ma=
+nually check and again mark via 'hg bisect --good' or 'hg bisect --bad', an=
+d so on.
+>=20
+> Cheers,
+> Max
+
+
+-------------------------------------
+finmag-team mailing list.
+
+From fetchmail  Mon Jun  9 16:46:13 2014
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.26)
+	for <marvin@localhost> (single-drop); Mon, 09 Jun 2014 16:46:13 +0100 (BST)
+Received: by 10.216.61.75 with SMTP id v53csp125791wec;
+        Mon, 9 Jun 2014 08:04:52 -0700 (PDT)
+X-Received: by 10.152.43.98 with SMTP id v2mr1467118lal.83.1402326292465;
+        Mon, 09 Jun 2014 08:04:52 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk. [152.78.128.16])
+        by mx.google.com with ESMTP id uf9si37609397lbc.44.2014.06.09.08.04.51
+        for <multiple recipients>;
+        Mon, 09 Jun 2014 08:04:52 -0700 (PDT)
+Received-SPF: none (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) client-ip=152.78.128.16;
+Authentication-Results: mx.google.com;
+       spf=neutral (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s59F4nEX001337;
+	Mon, 9 Jun 2014 16:04:49 +0100
+Received: from SRV00045.soton.ac.uk (srv00045.soton.ac.uk [152.78.119.41])
+	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk [152.78.128.16]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id q58G4n1506844504r5 ret-id none; Mon, 09 Jun 2014 16:04:50 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.41) with Microsoft SMTP Server (TLS) id 14.3.181.6; Mon, 9 Jun
+ 2014 16:04:49 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id s59F4nEm005825;	Mon, 9 Jun 2014 16:04:49 +0100
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ s59F4nNj005822	for <finmag-team@lists.soton.ac.uk>; Mon, 9 Jun 2014 16:04:49
+ +0100
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s59F4hEO001245;
+	Mon, 9 Jun 2014 16:04:43 +0100
+Received: from SRV00045.soton.ac.uk (srv00045.soton.ac.uk [152.78.119.41])	by
+ mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk [152.78.128.16])
+ envelope-from <R.Carey@soton.ac.uk> with ESMTP	id q58G4h1506844502NC ret-id
+ none; Mon, 09 Jun 2014 16:04:43 +0100
+Received: from SRV00046.soton.ac.uk ([169.254.9.100]) by SRV00045.soton.ac.uk
+ ([152.78.119.41]) with mapi id 14.03.0181.006; Mon, 9 Jun 2014 16:04:43 +0100
+From: "carey r.l. (rlc2v07)" <R.Carey@soton.ac.uk>
+To: "Fangohr H." <h.fangohr@soton.ac.uk>,
+        Maximilian Albert
+	<maximilian.albert@gmail.com>
+CC: "Fangohr H." <h.fangohr@soton.ac.uk>, "Wang W." <ww1g11@soton.ac.uk>,
+        "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+Subject: [finmag-team] RE: cool
+Thread-Topic: cool
+Thread-Index: AQHPg9Pz0GPERW6N70SFaLvvEMpr0Zto2pDB
+Date: Mon, 9 Jun 2014 15:04:42 +0000
+Message-ID: <DA56949ACC05AE469058F2B2E8C46876312EA46C@SRV00046.soton.ac.uk>
+References: <20140606165751.27726.10179@app08.ash-private.bitbucket.org>
+ <35C8EC06-5EDD-42A6-A23D-4469C5C8D289@soton.ac.uk>
+ <69EF17E243EA164D9E5800FBC995493D4AB1AF91@SRV00046.soton.ac.uk>
+ <CAGA_dmgSVq-nNciFzyQoQyf1OMgEuLuuR78L-hn86oZ03V73Tw@mail.gmail.com>
+ <15BFD03E-448F-4CF0-A901-34898CE4C185@soton.ac.uk>
+ <CAGA_dmh=iDOYg5-Ww9HzOc9rZTdEh+gkkBHspxJFd-2NuY1OfQ@mail.gmail.com>
+ <CAGA_dmiwnzGm22uzfehjfWYXMT7W7+HV+p8+cXdiq29z=jMLew@mail.gmail.com>
+ <79D1FBF5-BE52-4C5C-82AE-4A4A8F115879@soton.ac.uk>
+ <CAGA_dmgc+B3ksmzmt3RbGh4U=1vxWzaZK7iZpv6wNjBCQH1x-g@mail.gmail.com>
+ <CAGA_dmhXyZwmXUV6eLA-VeUqVmkbkUim1ds=rHn=bA4jnVubgg@mail.gmail.com>
+ <C75AFAA7-CDDD-451B-8E81-F12F37BBF0ED@soton.ac.uk>
+ <CAGA_dmiSXwkui6yKAdevOdgPap+2XtCbwsmqZ0ngBTtD3wJKJw@mail.gmail.com>
+ <3A7F6250-CEEF-4FCC-9269-67F20335C1E6@soton.ac.uk>
+ <CAGA_dmg-waYp9LFLZ+Xjr1NFD+xv5QLKDLNO59R+eHLm9G8bTw@mail.gmail.com>,<2A88CED1-B861-45ED-85EC-F5B49D21FB68@soton.ac.uk>
+In-Reply-To: <2A88CED1-B861-45ED-85EC-F5B49D21FB68@soton.ac.uk>
+Accept-Language: en-GB, en-US
+Content-Language: en-GB
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [152.78.54.126]
+Content-Type: text/plain; charset="Windows-1252"
+MIME-Version: 1.0
+Received-SPF: Pass (SRV00045.soton.ac.uk: domain of
+ owner-finmag-team@lists.soton.ac.uk designates 152.78.128.58 as permitted
+ sender) receiver=SRV00045.soton.ac.uk; client-ip=152.78.128.58;
+ helo=maillists.sucs.soton.ac.uk;
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.41; helo=<SRV00045.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.41; envelope-from=<R.Carey@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from quoted-printable to 8bit by maillists.sucs.soton.ac.uk id s59F4nNj005823
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=q58G4n150684450400; tid=q58G4n1506844504r5; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.41; helo=<SRV00045.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.41; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: s59F4nEX001337
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi Hans,
+
+I've had a quick look into the ndt files. You are correct - once a file has=
+ been created and then additional 'entities' are added the corresponding he=
+aders are not added to the ndt file. So more columns of data are saved comp=
+ared to the number of headers.=20
+
+If a new 'entity' is added which changes the entities order (e.g. m_z chang=
+es from the 5th entity to the 6th), the data is saved in the columns w.r.t =
+this new entities order (so in the example, m_z will be saved in the 6th co=
+lumn, whereas before the addition of the new entity it was being saved in t=
+he 5th column). Thus the data is now gets saved into the wrong column w.r.t=
+. the column header.
+
+When sim.relax is called after the ndt file has been created, the following=
+ entities are added:
+
+steps
+last_step_dt
+dmdt_x, dmdt_y, dmdt_x
+
+ANOTHER THING:
+
+The same problem happens when an extra energy term is added part way throug=
+h a simulation (as new energy and field entities are created).
+
+I hope that made sense!
+
+I will look into fixing this problem.
+
+Beckie
+
+
+
+
+=20
+________________________________________
+From: owner-finmag-team@lists.soton.ac.uk [owner-finmag-team@lists.soton.ac=
+.uk] on behalf of Fangohr H. [H.FANGOHR@soton.ac.uk]
+Sent: 09 June 2014 12:14
+To: Maximilian Albert
+Cc: Fangohr H.; Wang W.; <finmag-team@lists.soton.ac.uk>
+Subject: [finmag-team] Re: cool
+
+Hi Max,
+
+> I just checked the notebook you sent (thanks for the html version, althou=
+gh it didn't work as the images were not included). Your are right that it =
+doesn't show the error. Which computer did you run this?
+This was on an Lubuntu 14.04 (light ubuntu?) on a virtual machine on my lap=
+top.
+> I just checked on aleph0 and osiris, and I see the failure on both of the=
+m. Odd=85
+
+I can see it, too, on osiris.
+
+I have created a script in tests/bugs/test_bug_ndt_file_writing.py that pro=
+vides 5 tests, of which 2 fail.
+
+I also looked around why this is happening. My current theory is that we wr=
+ite the first lines of the ndt file before carrying out time integration. W=
+hen then run the relax command. This creates the time stepper, and at that =
+point (in the lines below, taken from sim.py) we create additional =91entit=
+ies=92 to be stored in the ndt file. We then save more columns of data (inc=
+luding the additional =92steps=92) in the ndt file than we have header file=
+s. This is not noticed, and when we read the data back, we read the wrong c=
+olumns.
+
+There are multiple weak points, two of which are
+
+(i) we don=92t check for a change in what data is to be written to the ndt =
+file AFTER having written the header lines. I think if this happens it shou=
+ld raise an Error. (there some comments on how to do this from me in util/f=
+ileio.py, but I may be wrong.)
+
+(ii) we use numpy.loadtxt to read the ndt file back in. This function does =
+not complain if we have different numbers of columns in different rows, and=
+ thus we don=92t notice the issue.
+
+I can=92t pursue this further today - is anybody willing to have a look at =
+this? We issues (i) and (ii) can be dealt with separately.
+
+The two items above would be good to have to catch future errors of this ty=
+pe in the future.
+
+We also need to
+
+(iii) change code so that the new tests that I have added pass. One option =
+is to always create columns for steps, dm/dt and to accept that these stay =
+empty if we haven=92t got a time integrator.
+
+What I don=92t understand is why this does not fail on my virtual machine -=
+ it should. Maybe that will become clear later.
+
+Next, I will merge my changes with the repository and upgrade to dolfin 1.4=
+.
+
+Cheers,
+
+Hans
+
+ def create_integrator(self, backend=3DNone, **kwargs):
+
+        if not hasattr(self, "integrator"):
+            if backend =3D=3D None:
+                backend =3D self.integrator_backend
+            log.info("Create integrator {} with kwargs=3D{}".format(backend=
+, kwargs))
+            if self.kernel =3D=3D 'llg_stt':
+                self.integrator =3D SundialsIntegrator(self.llg, self.llg.d=
+y_m, method=3D"bdf_diag", **kwargs)
+            elif self.kernel =3D=3D 'sllg':
+                self.integrator =3D self.llg
+            else:
+                self.integrator =3D llg_integrator(self.llg, self.llg.m, ba=
+ckend=3Dbackend, **kwargs)
+                self.integrator.integrator.set_scalar_tolerances(self.relto=
+l, self.abstol)
+
+            self.tablewriter.entities['steps'] =3D {
+                'unit': '<1>',
+                'get': lambda sim: sim.integrator.stats()['nsteps'],
+                'header': 'steps'}
+
+            self.tablewriter.entities['last_step_dt'] =3D {
+                'unit': '<1>',
+                'get': lambda sim: sim.integrator.stats()['hlast'],
+                'header': 'last_step_dt'}
+            self.tablewriter.entities['dmdt'] =3D {
+                'unit': '<A/ms>',
+                'get': lambda sim: sim.dmdt_max,
+                'header': ('dmdt_x', 'dmdt_y', 'dmdt_z')}
+
+            self.tablewriter.update_entity_order()
+
+
+
+> Sure, wasn't sure there there was sowing failing as you said you used 'bi=
+sect' and I thought you would need something failing for that.
+>
+> You need something failing indeed, but for me this was the wrong behaviou=
+r in the notebook (which you didn't see). I couldn't automate the bisection=
+ since the notebook didn't have a return value indicating whether the failu=
+re occurred or not. But mercurial allows you to do a manual bisection by ma=
+rking two different versions of the source code as 'good' and 'bad', and th=
+en it will automatically check out a version in the middle which you can ma=
+nually check and again mark via 'hg bisect --good' or 'hg bisect --bad', an=
+d so on.
+>
+> Cheers,
+> Max
+
+
+-------------------------------------
+finmag-team mailing list.
+
+-------------------------------------
+finmag-team mailing list.
+
+From fetchmail  Mon Jun  9 16:46:13 2014
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.26)
+	for <marvin@localhost> (single-drop); Mon, 09 Jun 2014 16:46:13 +0100 (BST)
+Received: by 10.216.61.75 with SMTP id v53csp127057wec;
+        Mon, 9 Jun 2014 08:19:21 -0700 (PDT)
+X-Received: by 10.152.36.38 with SMTP id n6mr18339309laj.0.1402327161576;
+        Mon, 09 Jun 2014 08:19:21 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id k4si18973235lam.63.2014.06.09.08.19.20
+        for <multiple recipients>;
+        Mon, 09 Jun 2014 08:19:21 -0700 (PDT)
+Received-SPF: none (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=neutral (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s59FJ6je008656;
+	Mon, 9 Jun 2014 16:19:06 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk [152.78.119.37])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id q58GJ60832332520jv ret-id none; Mon, 09 Jun 2014 16:19:06 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.37) with Microsoft SMTP Server (TLS) id 14.3.181.6; Mon, 9 Jun
+ 2014 16:19:06 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id s59FJ6H9006209;	Mon, 9 Jun 2014 16:19:06 +0100
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ s59FJ5aR006206	for <finmag-team@lists.soton.ac.uk>; Mon, 9 Jun 2014 16:19:05
+ +0100
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s59FJ5EH006757;
+	Mon, 9 Jun 2014 16:19:05 +0100
+Received: from UOS-MSG00036-VS.soton.ac.uk (uos-msg00036-vs.soton.ac.uk
+ [152.78.119.38])	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16]) envelope-from <H.FANGOHR@soton.ac.uk> with ESMTP	id
+ q58GJ51506845014cJ ret-id none; Mon, 09 Jun 2014 16:19:05 +0100
+Received: from SRV00046.soton.ac.uk ([169.254.9.100]) by
+ UOS-MSG00036-VS.soton.ac.uk ([152.78.119.38]) with mapi id 14.03.0181.006;
+ Mon, 9 Jun 2014 16:19:05 +0100
+From: "Fangohr H." <H.FANGOHR@soton.ac.uk>
+To: "carey r.l. (rlc2v07)" <r.carey@soton.ac.uk>
+CC: "Fangohr H." <h.fangohr@soton.ac.uk>,
+        Maximilian Albert
+	<maximilian.albert@gmail.com>,
+        "Wang W." <ww1g11@soton.ac.uk>,
+        "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+Subject: [finmag-team] Re: cool
+Thread-Topic: cool
+Thread-Index: AQHPgb5HmGYtwFbzYUqdAXLrFWzvHZtkgkuAgAAhwYCAAG9ggIAAUlYAgAAGyICAAEB9a4AAjF8AgAAbZYCAAFUjAIAAD20AgAAFTwCAAS84AIAApcOAgABAYwCAAAQJgA==
+Date: Mon, 9 Jun 2014 15:19:04 +0000
+Message-ID: <DD717146-8757-4AA0-BD0C-61B3E9FD9D9F@soton.ac.uk>
+References: <20140606165751.27726.10179@app08.ash-private.bitbucket.org>
+ <35C8EC06-5EDD-42A6-A23D-4469C5C8D289@soton.ac.uk>
+ <69EF17E243EA164D9E5800FBC995493D4AB1AF91@SRV00046.soton.ac.uk>
+ <CAGA_dmgSVq-nNciFzyQoQyf1OMgEuLuuR78L-hn86oZ03V73Tw@mail.gmail.com>
+ <15BFD03E-448F-4CF0-A901-34898CE4C185@soton.ac.uk>
+ <CAGA_dmh=iDOYg5-Ww9HzOc9rZTdEh+gkkBHspxJFd-2NuY1OfQ@mail.gmail.com>
+ <CAGA_dmiwnzGm22uzfehjfWYXMT7W7+HV+p8+cXdiq29z=jMLew@mail.gmail.com>
+ <79D1FBF5-BE52-4C5C-82AE-4A4A8F115879@soton.ac.uk>
+ <CAGA_dmgc+B3ksmzmt3RbGh4U=1vxWzaZK7iZpv6wNjBCQH1x-g@mail.gmail.com>
+ <CAGA_dmhXyZwmXUV6eLA-VeUqVmkbkUim1ds=rHn=bA4jnVubgg@mail.gmail.com>
+ <C75AFAA7-CDDD-451B-8E81-F12F37BBF0ED@soton.ac.uk>
+ <CAGA_dmiSXwkui6yKAdevOdgPap+2XtCbwsmqZ0ngBTtD3wJKJw@mail.gmail.com>
+ <3A7F6250-CEEF-4FCC-9269-67F20335C1E6@soton.ac.uk>
+ <CAGA_dmg-waYp9LFLZ+Xjr1NFD+xv5QLKDLNO59R+eHLm9G8bTw@mail.gmail.com>,<2A88CED1-B861-45ED-85EC-F5B49D21FB68@soton.ac.uk>
+ <DA56949ACC05AE469058F2B2E8C46876312EA46C@SRV00046.soton.ac.uk>
+In-Reply-To: <DA56949ACC05AE469058F2B2E8C46876312EA46C@SRV00046.soton.ac.uk>
+Accept-Language: en-GB, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [152.78.54.126]
+Content-Type: text/plain; charset="Windows-1252"
+Content-ID: <B69A654BBECEF842BF84BBB0AF36213C@exchange.soton.ac.uk>
+MIME-Version: 1.0
+Received-SPF: Pass (UOS-MSG00035-VS.soton.ac.uk: domain of
+ owner-finmag-team@lists.soton.ac.uk designates 152.78.128.58 as permitted
+ sender) receiver=UOS-MSG00035-VS.soton.ac.uk; client-ip=152.78.128.58;
+ helo=maillists.sucs.soton.ac.uk;
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.38; helo=<UOS-MSG00036-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.38; envelope-from=<H.FANGOHR@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from quoted-printable to 8bit by maillists.sucs.soton.ac.uk id s59FJ5aR006207
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=q58GJ6083233252000; tid=q58GJ60832332520jv; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: s59FJ6je008656
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi Beckie,
+
+> I've had a quick look into the ndt files. You are correct - once a file h=
+as been created and then additional 'entities' are added the corresponding =
+headers are not added to the ndt file. So more columns of data are saved co=
+mpared to the number of headers.=20
+>=20
+thanks for looking into this.
+
+> If a new 'entity' is added which changes the entities order (e.g. m_z cha=
+nges from the 5th entity to the 6th), the data is saved in the columns w.r.=
+t this new entities order (so in the example, m_z will be saved in the 6th =
+column, whereas before the addition of the new entity it was being saved in=
+ the 5th column). Thus the data is now gets saved into the wrong column w.r=
+.t. the column header.
+>=20
+> When sim.relax is called after the ndt file has been created, the followi=
+ng entities are added:
+>=20
+> steps
+> last_step_dt
+> dmdt_x, dmdt_y, dmdt_x
+>=20
+> ANOTHER THING:
+>=20
+> The same problem happens when an extra energy term is added part way thro=
+ugh a simulation (as new energy and field entities are created).
+>=20
+
+Yes, makes perfect sense.=20
+
+The simplicity of the text file doesn=92t allow to change the order or numb=
+er of fields to be saved partly through the simulation. However, the flexib=
+ility of Python and finmag does allow this.
+
+The choices that come to mind are:
+
+(i) not allow changing of items to be saved in the ndt file after the file =
+has been started (and to raise an error if the user attempts this).
+
+(ii) to use a different file format, that does allow this.
+
+
+Discussion: an issue with (i) is that a user may want to add a field later =
+(through the simulation) and may not even be interested in saving data  for=
+ that field, but that saving to the ndt file may raise an error because it =
+appears we attempt to change the fields to save.
+
+Issue with two (ii) include: (a) the file format is more complex, and (b) i=
+t would mean we have data stored where some fields will only have data for =
+particular moments in time: how do we analyse this? The analysis could woul=
+d be a lot more complicated if it had to consider all the possible options =
+of data missing.
+
+
+My gut feeling at this point is that we should go with (i), and create empt=
+y columns for the parameters from the time integration to fix the tests tha=
+t I have added. This would follow the =91keep it simple stupid=92 philosoph=
+y.
+
+Any views on this?
+
+Cheers,
+
+Hans
+
+
+
+
+
+> I hope that made sense!
+>=20
+> I will look into fixing this problem.
+>=20
+> Beckie
+>=20
+>=20
+>=20
+>=20
+>=20
+> ________________________________________
+> From: owner-finmag-team@lists.soton.ac.uk [owner-finmag-team@lists.soton.=
+ac.uk] on behalf of Fangohr H. [H.FANGOHR@soton.ac.uk]
+> Sent: 09 June 2014 12:14
+> To: Maximilian Albert
+> Cc: Fangohr H.; Wang W.; <finmag-team@lists.soton.ac.uk>
+> Subject: [finmag-team] Re: cool
+>=20
+> Hi Max,
+>=20
+>> I just checked the notebook you sent (thanks for the html version, altho=
+ugh it didn't work as the images were not included). Your are right that it=
+ doesn't show the error. Which computer did you run this?
+> This was on an Lubuntu 14.04 (light ubuntu?) on a virtual machine on my l=
+aptop.
+>> I just checked on aleph0 and osiris, and I see the failure on both of th=
+em. Odd=85
+>=20
+> I can see it, too, on osiris.
+>=20
+> I have created a script in tests/bugs/test_bug_ndt_file_writing.py that p=
+rovides 5 tests, of which 2 fail.
+>=20
+> I also looked around why this is happening. My current theory is that we =
+write the first lines of the ndt file before carrying out time integration.=
+ When then run the relax command. This creates the time stepper, and at tha=
+t point (in the lines below, taken from sim.py) we create additional =91ent=
+ities=92 to be stored in the ndt file. We then save more columns of data (i=
+ncluding the additional =92steps=92) in the ndt file than we have header fi=
+les. This is not noticed, and when we read the data back, we read the wrong=
+ columns.
+>=20
+> There are multiple weak points, two of which are
+>=20
+> (i) we don=92t check for a change in what data is to be written to the nd=
+t file AFTER having written the header lines. I think if this happens it sh=
+ould raise an Error. (there some comments on how to do this from me in util=
+/fileio.py, but I may be wrong.)
+>=20
+> (ii) we use numpy.loadtxt to read the ndt file back in. This function doe=
+s not complain if we have different numbers of columns in different rows, a=
+nd thus we don=92t notice the issue.
+>=20
+> I can=92t pursue this further today - is anybody willing to have a look a=
+t this? We issues (i) and (ii) can be dealt with separately.
+>=20
+> The two items above would be good to have to catch future errors of this =
+type in the future.
+>=20
+> We also need to
+>=20
+> (iii) change code so that the new tests that I have added pass. One optio=
+n is to always create columns for steps, dm/dt and to accept that these sta=
+y empty if we haven=92t got a time integrator.
+>=20
+> What I don=92t understand is why this does not fail on my virtual machine=
+ - it should. Maybe that will become clear later.
+>=20
+> Next, I will merge my changes with the repository and upgrade to dolfin 1=
+.4.
+>=20
+> Cheers,
+>=20
+> Hans
+>=20
+> def create_integrator(self, backend=3DNone, **kwargs):
+>=20
+>        if not hasattr(self, "integrator"):
+>            if backend =3D=3D None:
+>                backend =3D self.integrator_backend
+>            log.info("Create integrator {} with kwargs=3D{}".format(backen=
+d, kwargs))
+>            if self.kernel =3D=3D 'llg_stt':
+>                self.integrator =3D SundialsIntegrator(self.llg, self.llg.=
+dy_m, method=3D"bdf_diag", **kwargs)
+>            elif self.kernel =3D=3D 'sllg':
+>                self.integrator =3D self.llg
+>            else:
+>                self.integrator =3D llg_integrator(self.llg, self.llg.m, b=
+ackend=3Dbackend, **kwargs)
+>                self.integrator.integrator.set_scalar_tolerances(self.relt=
+ol, self.abstol)
+>=20
+>            self.tablewriter.entities['steps'] =3D {
+>                'unit': '<1>',
+>                'get': lambda sim: sim.integrator.stats()['nsteps'],
+>                'header': 'steps'}
+>=20
+>            self.tablewriter.entities['last_step_dt'] =3D {
+>                'unit': '<1>',
+>                'get': lambda sim: sim.integrator.stats()['hlast'],
+>                'header': 'last_step_dt'}
+>            self.tablewriter.entities['dmdt'] =3D {
+>                'unit': '<A/ms>',
+>                'get': lambda sim: sim.dmdt_max,
+>                'header': ('dmdt_x', 'dmdt_y', 'dmdt_z')}
+>=20
+>            self.tablewriter.update_entity_order()
+>=20
+>=20
+>=20
+>> Sure, wasn't sure there there was sowing failing as you said you used 'b=
+isect' and I thought you would need something failing for that.
+>>=20
+>> You need something failing indeed, but for me this was the wrong behavio=
+ur in the notebook (which you didn't see). I couldn't automate the bisectio=
+n since the notebook didn't have a return value indicating whether the fail=
+ure occurred or not. But mercurial allows you to do a manual bisection by m=
+arking two different versions of the source code as 'good' and 'bad', and t=
+hen it will automatically check out a version in the middle which you can m=
+anually check and again mark via 'hg bisect --good' or 'hg bisect --bad', a=
+nd so on.
+>>=20
+>> Cheers,
+>> Max
+>=20
+>=20
+> -------------------------------------
+> finmag-team mailing list.
+
+
+-------------------------------------
+finmag-team mailing list.
+
