@@ -22,6 +22,8 @@ import sys
 import time
 import base64
 import string
+import argparse
+import textwrap
 
 from collections import defaultdict
 from Queue import Empty
@@ -367,7 +369,7 @@ def merge_streams(outputs):
     return res
 
 
-def test_notebook(nb):
+def test_notebook(nb, debug_failures=False):
     km = KernelManager()
     km.start_kernel(extra_arguments=['--pylab=inline'], stderr=open(os.devnull, 'w'))
     try:
@@ -431,7 +433,20 @@ def test_notebook(nb):
                 cmp_result, html_diff = compare_outputs(out, ref, cell)
                 html_diffs_all += html_diff
                 if not cmp_result:
-                    #import ipdb; ipdb.set_trace()
+                    if debug_failures:
+                        print(textwrap.dedent("""
+                            ==========================================================================
+                            Entering debugger. You can print the reference output and computed output
+                            with "print ref['text']" and "print out['text']", respectively.
+                            ==========================================================================
+                            """))
+                        try:
+                            import ipdb; ipdb.set_trace()
+                        except ImportError:
+                            try:
+                                import pdb; pdb.set_trace()
+                            except ImportError:
+                                raise RuntimeError("Cannot start debugger. Please install pdb or ipdb.")
                     failed = True
             if failed:
                 print "Failed to replicate cell with the following input: "
@@ -494,9 +509,17 @@ def test_notebook(nb):
         raise IPythonNotebookDoctestError(errmsg)
 
 if __name__ == '__main__':
-    for ipynb in sys.argv[1:]:
-        print "testing %s" % ipynb
+    parser = argparse.ArgumentParser(description='Execute one (or multiple) IPython notebooks cell-by-cell and compare the results of each computed result with the stored reference output..')
+    parser.add_argument('filenames', metavar='FILENAME', type=str, nargs='+',
+                       help='filenames of the notebooks to be executed')
+    parser.add_argument('--debug-failures', action='store_true',
+                       help='if a failure occurs, jump into an interactive debugging session (requires ipdb to be installed)')
+
+    args = parser.parse_args()
+
+    for ipynb in args.filenames:
+        print("Testing notebook '{}'".format(ipynb))
         with open(ipynb) as f:
             nb = reads(f.read(), 'json')
-        test_notebook(nb)
+        test_notebook(nb, debug_failures=args.debug_failures)
         sys.stdout.flush()
