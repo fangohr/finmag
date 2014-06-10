@@ -52,6 +52,7 @@ CELL_EXECUTION_TIMEOUT = 200  # abort cell execution after this time (seconds)
 # in the computed output, or vice versa.
 DISCARD_PATTERNS_EXACT = \
     [('stream', "LOGGING_TIMESTAMP DEBUG: Found unused display :[0-9]+"),
+     ('stream', "LOGGING_TIMESTAMP DEBUG: The mesh '.*' already exists and is automatically returned."),
      ('stream', "LOGGING_TIMESTAMP DEBUG: Rendering Paraview scene on display :[0-9]+ using xpra."),
      ('stream', '(/[^/ ]+)+/matplotlib/figure.py:[0-9]+: UserWarning: This figure includes Axes that are not compatible with tight_layout, so its results might be incorrect.\n  warnings.warn\("This figure includes Axes that are not "\n'),
      ('stream', '\n  warnings.warn\("This figure includes Axes that are not "\n'),
@@ -162,18 +163,6 @@ def sanitize(s):
 
     # Ignore datetime objects
     s = re.sub(r'datetime.datetime\([0-9, ]*\)', 'DATETIME_OBJECT', s)
-
-    # Warning coming from Matplotlib occasionally. The warning comes
-    # from a different line in different versions of matplotlib and
-    # thus results in a failed comparison. Replace with empty string.
-    s = re.sub(r'.*UserWarning: This figure includes Axes that are not '
-               'compatible with tight_layout, so its results might be '
-               'incorrect.*', '', s)
-
-    # If a mesh exists already, we get a different message from
-    # generation of the mesh.
-    s = re.sub(r'.*The mesh.*already exists and is automatically '
-                'returned.', '', s)
 
     return s
 
