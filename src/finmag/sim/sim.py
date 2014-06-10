@@ -163,7 +163,7 @@ class Simulation(object):
         # a time integrator exists because some columns will be missing (as the
         # time integrator creates additional columns in the .ndt file). Therefore
         # we play it safe and create the time integrator here at the beginning.
-        self.create_integrator()
+        #self.create_integrator()
 
     def __str__(self):
         """String briefly describing simulation object"""
