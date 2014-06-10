@@ -164,6 +164,14 @@ def sanitize(s):
     # Ignore datetime objects
     s = re.sub(r'datetime.datetime\([0-9, ]*\)', 'DATETIME_OBJECT', s)
 
+    # Ignore filenames in Finmag debugging messages
+    s = re.sub('LOGGING_TIMESTAMP DEBUG: Loading restart data from (.*).',
+               'LOGGING_TIMESTAMP DEBUG: Loading restart data from FILENAME.',
+               s)
+    s = re.sub('LOGGING_TIMESTAMP INFO: Reloaded and set m (.*) and time=(.*) from .*\.',
+               'LOGGING_TIMESTAMP INFO: Reloaded and set m \g<1> and time=\g<2> from FILENAME.',
+               s)
+
     return s
 
 
