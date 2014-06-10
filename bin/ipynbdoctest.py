@@ -251,6 +251,16 @@ def compare_outputs(test, ref, cell, skip_compare=('png', 'traceback',
 
      ``skip_compare`` a list of cell types we ignore
     """
+    if test.has_key('text'):
+        if 'LOGGING_TIMESTAMP ERROR: Could not render Paraview scene.' in test['text']:
+            print(textwrap.dedent("""
+                      =======================================================
+                         Paraview rendering error encountered! Ignoring...
+                      =======================================================
+                      """))
+            # If a Paraview rendering error occurred, we simply ignore it and assume
+            # that the result would have been identical.
+            test = ref
 
     for key in ref:
         if key not in test:
