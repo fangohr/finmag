@@ -57997,3 +57997,330 @@ nd so on.
 -------------------------------------
 finmag-team mailing list.
 
+From fetchmail  Tue Jun 10 14:46:27 2014
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.26)
+	for <marvin@localhost> (single-drop); Tue, 10 Jun 2014 14:46:27 +0100 (BST)
+Received: by 10.216.61.75 with SMTP id v53csp189706wec;
+        Tue, 10 Jun 2014 06:05:00 -0700 (PDT)
+X-Received: by 10.195.13.79 with SMTP id ew15mr41339103wjd.19.1402405500356;
+        Tue, 10 Jun 2014 06:05:00 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk. [152.78.128.16])
+        by mx.google.com with ESMTP id gd5si16709824wib.63.2014.06.10.06.04.59
+        for <multiple recipients>;
+        Tue, 10 Jun 2014 06:05:00 -0700 (PDT)
+Received-SPF: none (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) client-ip=152.78.128.16;
+Authentication-Results: mx.google.com;
+       spf=neutral (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s5AD4wR9003109;
+	Tue, 10 Jun 2014 14:04:58 +0100
+Received: from UOS-MSG00037-VS.soton.ac.uk (uos-msg00037-vs.soton.ac.uk [152.78.119.39])
+	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk [152.78.128.16]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id q59E4w150680838921 ret-id none; Tue, 10 Jun 2014 14:04:58 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.39) with Microsoft SMTP Server (TLS) id 14.3.181.6; Tue, 10 Jun
+ 2014 14:04:57 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id s5AD4qgd030267;	Tue, 10 Jun 2014 14:04:52 +0100
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ s5AD4qJH030264	for <finmag-team@lists.soton.ac.uk>; Tue, 10 Jun 2014 14:04:52
+ +0100
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s5AD4pHB002860;
+	Tue, 10 Jun 2014 14:04:51 +0100
+Received: from UOS-MSG00037-VS.soton.ac.uk (uos-msg00037-vs.soton.ac.uk
+ [152.78.119.39])	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk
+ [152.78.128.16]) envelope-from <H.FANGOHR@soton.ac.uk> with ESMTP	id
+ q59E4p1506808385jK ret-id none; Tue, 10 Jun 2014 14:04:51 +0100
+Received: from SRV00046.soton.ac.uk ([169.254.9.100]) by
+ UOS-MSG00037-VS.soton.ac.uk ([152.78.119.39]) with mapi id 14.03.0181.006;
+ Tue, 10 Jun 2014 14:04:51 +0100
+From: "Fangohr H." <H.FANGOHR@soton.ac.uk>
+To: Maximilian Albert <maximilian.albert@gmail.com>
+CC: "Fangohr H." <h.fangohr@soton.ac.uk>,
+        "<finmag-team@lists.soton.ac.uk>"
+	<finmag-team@lists.soton.ac.uk>
+Subject: Re: [finmag-team] [build] finmag_fast_tests - Build # 890 - Still
+ Failing!
+Thread-Topic: [finmag-team] [build] finmag_fast_tests - Build # 890 - Still
+ Failing!
+Thread-Index: AQHPd5FCm0tpAhT9u0CIYU65gxNN1JtQOtGAgAG/ngCAGF7UAA==
+Date: Tue, 10 Jun 2014 13:04:50 +0000
+Message-ID: <BDBDB678-1DA8-497E-9A2A-20DC0CCF111A@soton.ac.uk>
+References: <681348495.1.1400662353321.JavaMail.jenkins@aleph0.kk.soton.ac.uk>
+ <FFA11EE3-3B05-477C-A8D0-5EA3FBC0354E@soton.ac.uk>
+ <CAGA_dmj+Sfnmb2h2L9HBfGETqhwXEJXXvH9zNiLzS_-U9ytytA@mail.gmail.com>
+ <5D854A16-3EFC-4A32-A73F-5251F3A83217@soton.ac.uk>
+ <CAGA_dmimFtNstgHJcjZvg6UHu-vOfTiLyDxB-e6PE2uAWe=E-w@mail.gmail.com>
+ <CAGA_dmhJJ0sCpYrEtD16zEypYGZ3+jzd0QCvFEzFVu8f413dbA@mail.gmail.com>
+In-Reply-To: <CAGA_dmhJJ0sCpYrEtD16zEypYGZ3+jzd0QCvFEzFVu8f413dbA@mail.gmail.com>
+Accept-Language: en-GB, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [152.78.54.126]
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <A43E43C41067D546B99DFA3E3AF6055A@exchange.soton.ac.uk>
+MIME-Version: 1.0
+Received-SPF: Pass (UOS-MSG00037-VS.soton.ac.uk: domain of
+ owner-finmag-team@lists.soton.ac.uk designates 152.78.128.58 as permitted
+ sender) receiver=UOS-MSG00037-VS.soton.ac.uk; client-ip=152.78.128.58;
+ helo=maillists.sucs.soton.ac.uk;
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.39; helo=<UOS-MSG00037-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.39; envelope-from=<H.FANGOHR@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from quoted-printable to 8bit by maillists.sucs.soton.ac.uk id s5AD4qJH030265
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=q59E4v150680838900; tid=q59E4w150680838921; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.39; helo=<UOS-MSG00037-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.39; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: s5AD4wR9003109
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Dear all,
+
+Has this bug been dealt with by anybody?=20
+
+Thanks,
+
+Hans
+
+
+On 26 May 2014, at 01:55, Maximilian Albert <maximilian.albert@gmail.com> w=
+rote:
+
+> Hi all,
+>=20
+> quick update on the last remaining failing test:
+>=20
+> > The failing test is "src.finmag.tests.nmag.spinwaves.test_spinwaves.tes=
+t_compare_averages":
+> >   http://aleph0.clients.soton.ac.uk:8080/job/finmag_slow_tests/587/test=
+Report/src.finmag.tests.nmag.spinwaves/test_spinwaves/test_compare_averages=
+/
+>=20
+> I could isolate the cause of the failure but I don't understand the reaso=
+n yet so haven't fixed it. Below is a diff which makes the test pass again =
+- it basically calls the exchange.setup() function from outside the Effecti=
+veField class (as it was before) rather than from inside (as it is now and =
+ideally should be). But I don't understand why this would make any differen=
+ce, since the setup() function should do exactly the same things in both ca=
+ses. Does anybody have any ideas?
+>=20
+> Cheers,
+> Max
+>=20
+>=20
+>=20
+> diff --git a/src/finmag/physics/effective_field.py b/src/finmag/physics/e=
+ffective_field.py
+> --- a/src/finmag/physics/effective_field.py
+> +++ b/src/finmag/physics/effective_field.py
+> @@ -48,7 +48,7 @@
+>                  "exists: {}.".format(interaction.name))
+> =20
+>          logger.debug("Adding interaction {} to simulation.".format(inter=
+action.name))
+> -        interaction.setup(self.S3, self.m, self.Ms, self.unit_length)
+> +        #interaction.setup(self.S3, self.m, self.Ms, self.unit_length)
+>          self.interactions[interaction.name] =3D interaction
+> =20
+>          # automatic connection of TimeZeeman to with_time_update
+> diff --git a/src/finmag/tests/nmag/spinwaves/run_finmag.py b/src/finmag/t=
+ests/nmag/spinwaves/run_finmag.py
+> --- a/src/finmag/tests/nmag/spinwaves/run_finmag.py
+> +++ b/src/finmag/tests/nmag/spinwaves/run_finmag.py
+> @@ -27,6 +27,7 @@
+>      llg.set_alpha(0.02)
+> =20
+>      exchange =3D Exchange(1.3e-11)
+> +    exchange.setup(S3, llg._m, llg.Ms)
+>      llg.effective_field.add(exchange)
+> =20
+>      llg.set_m(("1",
+>=20
+
+
+-------------------------------------
+finmag-team mailing list.
+
+From fetchmail  Tue Jun 10 14:46:27 2014
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.26)
+	for <marvin@localhost> (single-drop); Tue, 10 Jun 2014 14:46:27 +0100 (BST)
+Received: by 10.216.61.75 with SMTP id v53csp191365wec;
+        Tue, 10 Jun 2014 06:26:56 -0700 (PDT)
+X-Received: by 10.112.143.132 with SMTP id se4mr1909510lbb.53.1402406815896;
+        Tue, 10 Jun 2014 06:26:55 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk. [152.78.128.16])
+        by mx.google.com with ESMTP id 9si21481374lar.1.2014.06.10.06.26.55
+        for <multiple recipients>;
+        Tue, 10 Jun 2014 06:26:55 -0700 (PDT)
+Received-SPF: none (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) client-ip=152.78.128.16;
+Authentication-Results: mx.google.com;
+       spf=neutral (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk
+Received: from mailgate7.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate7.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s5ADQgd0023007;
+	Tue, 10 Jun 2014 14:26:42 +0100
+Received: from UOS-MSG00037-VS.soton.ac.uk (uos-msg00037-vs.soton.ac.uk [152.78.119.39])
+	by mailgate7.iss.soton.ac.uk (mailgate7.iss.soton.ac.uk [152.78.128.16]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id q59EQg1506809212GH ret-id none; Tue, 10 Jun 2014 14:26:43 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.39) with Microsoft SMTP Server (TLS) id 14.3.181.6; Tue, 10 Jun
+ 2014 14:26:42 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id s5ADQgPA031663;	Tue, 10 Jun 2014 14:26:42 +0100
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk
+ [152.78.128.11])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ s5ADQgBE031660	for <finmag-team@lists.soton.ac.uk>; Tue, 10 Jun 2014 14:26:42
+ +0100
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s5ADQVv1008551;
+	Tue, 10 Jun 2014 14:26:31 +0100
+Received: from SRV00045.soton.ac.uk (srv00045.soton.ac.uk [152.78.119.41])	by
+ mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11])
+ envelope-from <ww1g11@soton.ac.uk> with ESMTP	id q59EQV083236251017 ret-id
+ none; Tue, 10 Jun 2014 14:26:31 +0100
+Received: from SRV00046.soton.ac.uk ([169.254.9.100]) by SRV00045.soton.ac.uk
+ ([152.78.119.41]) with mapi id 14.03.0181.006; Tue, 10 Jun 2014 14:26:30
+ +0100
+From: "Wang W." <ww1g11@soton.ac.uk>
+To: "Fangohr H." <h.fangohr@soton.ac.uk>,
+        Maximilian Albert
+	<maximilian.albert@gmail.com>
+CC: "Fangohr H." <h.fangohr@soton.ac.uk>,
+        "<finmag-team@lists.soton.ac.uk>"
+	<finmag-team@lists.soton.ac.uk>
+Subject: RE: [finmag-team] [build] finmag_fast_tests - Build # 890 - Still
+ Failing!
+Thread-Topic: [finmag-team] [build] finmag_fast_tests - Build # 890 - Still
+ Failing!
+Thread-Index: AQHPd5FFHx/cA4ZkjkCj413w16eMi5tQOtGAgAG/ngCAGF7KAIAAFqjx
+Date: Tue, 10 Jun 2014 13:26:29 +0000
+Message-ID: <69EF17E243EA164D9E5800FBC995493D4AB1DB6E@SRV00046.soton.ac.uk>
+References: <681348495.1.1400662353321.JavaMail.jenkins@aleph0.kk.soton.ac.uk>
+ <FFA11EE3-3B05-477C-A8D0-5EA3FBC0354E@soton.ac.uk>
+ <CAGA_dmj+Sfnmb2h2L9HBfGETqhwXEJXXvH9zNiLzS_-U9ytytA@mail.gmail.com>
+ <5D854A16-3EFC-4A32-A73F-5251F3A83217@soton.ac.uk>
+ <CAGA_dmimFtNstgHJcjZvg6UHu-vOfTiLyDxB-e6PE2uAWe=E-w@mail.gmail.com>
+ <CAGA_dmhJJ0sCpYrEtD16zEypYGZ3+jzd0QCvFEzFVu8f413dbA@mail.gmail.com>,<BDBDB678-1DA8-497E-9A2A-20DC0CCF111A@soton.ac.uk>
+In-Reply-To: <BDBDB678-1DA8-497E-9A2A-20DC0CCF111A@soton.ac.uk>
+Accept-Language: en-GB, en-US
+Content-Language: en-GB
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [152.78.54.126]
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Received-SPF: Pass (UOS-MSG00037-VS.soton.ac.uk: domain of
+ owner-finmag-team@lists.soton.ac.uk designates 152.78.128.58 as permitted
+ sender) receiver=UOS-MSG00037-VS.soton.ac.uk; client-ip=152.78.128.58;
+ helo=maillists.sucs.soton.ac.uk;
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.41; helo=<SRV00045.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.41; envelope-from=<ww1g11@soton.ac.uk>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from quoted-printable to 8bit by maillists.sucs.soton.ac.uk id s5ADQgBE031661
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=q59EQg150680921200; tid=q59EQg1506809212GH; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.39; helo=<UOS-MSG00037-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate7.iss.soton.ac.uk; client-ip=152.78.119.39; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: s5ADQgd0023007
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+Hi Hans,
+
+Yeah, I think this bug is fixed.
+
+Cheers,
+Weiwei
+________________________________________
+From: owner-finmag-team@lists.soton.ac.uk [owner-finmag-team@lists.soton.ac=
+.uk] on behalf of Fangohr H. [H.FANGOHR@soton.ac.uk]
+Sent: 10 June 2014 14:04
+To: Maximilian Albert
+Cc: Fangohr H.; <finmag-team@lists.soton.ac.uk>
+Subject: Re: [finmag-team] [build] finmag_fast_tests - Build # 890 - Still =
+Failing!
+
+Dear all,
+
+Has this bug been dealt with by anybody?
+
+Thanks,
+
+Hans
+
+
+On 26 May 2014, at 01:55, Maximilian Albert <maximilian.albert@gmail.com> w=
+rote:
+
+> Hi all,
+>
+> quick update on the last remaining failing test:
+>
+> > The failing test is "src.finmag.tests.nmag.spinwaves.test_spinwaves.tes=
+t_compare_averages":
+> >   http://aleph0.clients.soton.ac.uk:8080/job/finmag_slow_tests/587/test=
+Report/src.finmag.tests.nmag.spinwaves/test_spinwaves/test_compare_averages=
+/
+>
+> I could isolate the cause of the failure but I don't understand the reaso=
+n yet so haven't fixed it. Below is a diff which makes the test pass again =
+- it basically calls the exchange.setup() function from outside the Effecti=
+veField class (as it was before) rather than from inside (as it is now and =
+ideally should be). But I don't understand why this would make any differen=
+ce, since the setup() function should do exactly the same things in both ca=
+ses. Does anybody have any ideas?
+>
+> Cheers,
+> Max
+>
+>
+>
+> diff --git a/src/finmag/physics/effective_field.py b/src/finmag/physics/e=
+ffective_field.py
+> --- a/src/finmag/physics/effective_field.py
+> +++ b/src/finmag/physics/effective_field.py
+> @@ -48,7 +48,7 @@
+>                  "exists: {}.".format(interaction.name))
+>
+>          logger.debug("Adding interaction {} to simulation.".format(inter=
+action.name))
+> -        interaction.setup(self.S3, self.m, self.Ms, self.unit_length)
+> +        #interaction.setup(self.S3, self.m, self.Ms, self.unit_length)
+>          self.interactions[interaction.name] =3D interaction
+>
+>          # automatic connection of TimeZeeman to with_time_update
+> diff --git a/src/finmag/tests/nmag/spinwaves/run_finmag.py b/src/finmag/t=
+ests/nmag/spinwaves/run_finmag.py
+> --- a/src/finmag/tests/nmag/spinwaves/run_finmag.py
+> +++ b/src/finmag/tests/nmag/spinwaves/run_finmag.py
+> @@ -27,6 +27,7 @@
+>      llg.set_alpha(0.02)
+>
+>      exchange =3D Exchange(1.3e-11)
+> +    exchange.setup(S3, llg._m, llg.Ms)
+>      llg.effective_field.add(exchange)
+>
+>      llg.set_m(("1",
+>
+
+
+-------------------------------------
+finmag-team mailing list.
+
+-------------------------------------
+finmag-team mailing list.
+
