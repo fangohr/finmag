@@ -78,7 +78,7 @@ def initialise_helix_2D(sim, period, axis=np.array([1, 0])):
     sim.set_m(m_helical)
 
 
-def initialise_skyrmions(sim, skyrmionRadius, centres=np.array([[0, 0]])):
+def initialise_skyrmions(sim, skyrmionRadius, centres="singleCentres"):
     """
     Initialise the magnetisation to a pattern resembling skyrmions with defined
     centres. By default, a single skyrmion at (0, 0) will be created. The
@@ -100,6 +100,10 @@ def initialise_skyrmions(sim, skyrmionRadius, centres=np.array([[0, 0]])):
 
     This function returns nothing.
     """
+
+    if centres=="singleCentre":
+        dim = sim.mesh.topology().dim()
+        centres = np.array([np.zeros(dim)])
 
     numCentres = len(centres)
 
@@ -339,7 +343,8 @@ def vortex_simple(r, center, right_handed=True, polarity=+1):
 
     """
     def f(pt):
-        x, y, z = pt
+        x = pt[0]
+        y = pt[1]
         xc = x - center[0]
         yc = y - center[1]
         phi = math.atan2(yc, xc)
@@ -394,7 +399,8 @@ def vortex_feldtkeller(beta, center, right_handed=True, polarity=+1):
     beta_sq = beta ** 2
 
     def f(pt):
-        x, y, z = pt
+        x = pt[0]
+        y = pt[1]
         # To start with, create a right-handed vortex with polarity 1.
         xc = x - center[0]
         yc = y - center[1]
@@ -498,7 +504,8 @@ def initialise_target_state(diskRadius, centre, rings, right_handed=False):
     ringRadius = diskRadius / float(rings)
 
     def f(pt):
-        x,y,z = pt 
+        x = pt[0]
+        y = pt[1]
         xc = x - centre[0]
         yc = y - centre[1]
         rho = math.sqrt(xc ** 2 + yc **2)
