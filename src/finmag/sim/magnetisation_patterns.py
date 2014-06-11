@@ -78,7 +78,7 @@ def initialise_helix_2D(sim, period, axis=np.array([1, 0])):
     sim.set_m(m_helical)
 
 
-def initialise_skyrmions(sim, skyrmionRadius, centres="singleCentres"):
+def initialise_skyrmions(sim, skyrmionRadius, centres="singleCentre"):
     """
     Initialise the magnetisation to a pattern resembling skyrmions with defined
     centres. By default, a single skyrmion at (0, 0) will be created. The
@@ -487,7 +487,7 @@ def initialise_target_state(diskRadius, centre, rings, right_handed=False):
     target centre will automatically be set at (0,0,0). Note that the centre
     of the target has a positive magnetisation.
 
-    'rings' is the number of positively magnetised rings around the 
+    'rings' is the number of positively magnetised rings around the
     (positively magnetised) central target. 'rings' can also take non-integer
     values. It cannot be zero though.
 
@@ -500,7 +500,7 @@ def initialise_target_state(diskRadius, centre, rings, right_handed=False):
     """
     if rings == 0:
         raise ValueError("Number of rings cannot be zero")
-    
+
     ringRadius = diskRadius / float(rings)
 
     def f(pt):
@@ -517,9 +517,9 @@ def initialise_target_state(diskRadius, centre, rings, right_handed=False):
         mz = math.cos(2*np.pi * rho / ringRadius)
         mx = -math.sin(theta) * math.sin(phi)
         my = math.sin(theta) * math.cos(phi)
-        
-        # if the mz is negative, flip the direction of the vortex direction, to 
-        # preserve the chirality/handedness.   
+
+        # if the mz is negative, flip the direction of the vortex direction, to
+        # preserve the chirality/handedness.
         if (mz < 0):
             mx = -mx
             my = -my
@@ -528,7 +528,7 @@ def initialise_target_state(diskRadius, centre, rings, right_handed=False):
         if not right_handed:
             mx = -mx
             my = -my
-        
+
         return (mx,my,mz)
 
     return f
