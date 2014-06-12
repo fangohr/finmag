@@ -92,8 +92,10 @@ class Simulation(object):
 
         self.pbc = pbc
         if pbc == '2d':
+            log.debug('Setting 2d periodic boundary conditions (in the xy-plane).')
             self.pbc = PeriodicBoundary2D(mesh)
         elif pbc == '1d':
+            log.debug('Setting 1d periodic boundary conditions (along the x-axis)')
             self.pbc = PeriodicBoundary1D(mesh)
 
         if not mesh_size_plausible(mesh, unit_length):
