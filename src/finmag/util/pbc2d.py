@@ -14,11 +14,10 @@ class PeriodicBoundary1D(df.SubDomain):
         self.find_mesh_info()
 
     def inside(self, x, on_boundary):
-        on_x = bool(df.near(x[0],self.xmin) and on_boundary)
+        on_x = bool(df.near(x[0], self.xmin) and on_boundary)
         return on_x 
 
     def map(self, x, y):
-        
         y[0] = x[0] - self.width
         
         if self.dim > 1:
@@ -27,17 +26,17 @@ class PeriodicBoundary1D(df.SubDomain):
             y[2] = x[2]
 
     def find_mesh_info(self):
-        xt=self.mesh.coordinates()
-        self.length=len(xt)
-        max_v=xt.max(axis=0)
-        min_v=xt.min(axis=0)
+        coords = self.mesh.coordinates()
+        self.length = len(coords)
+        max_v = coords.max(axis=0)
+        min_v = coords.min(axis=0)
 
-        self.xmin=min_v[0]
-        self.xmax=max_v[0]
+        self.xmin = min_v[0]
+        self.xmax = max_v[0]
        
-        self.width=self.xmax-self.xmin
+        self.width = self.xmax - self.xmin
         
-        self.dim=self.mesh.topology().dim()
+        self.dim = self.mesh.topology().dim()
 
 
 class PeriodicBoundary2D(df.SubDomain):
@@ -52,8 +51,8 @@ class PeriodicBoundary2D(df.SubDomain):
         self.find_mesh_info()
 
     def inside(self, x, on_boundary):
-        on_x = bool(df.near(x[0],self.xmin) and x[1]<self.ymax and on_boundary)
-        on_y = bool(df.near(x[1],self.ymin) and x[0]<self.xmax and on_boundary)
+        on_x = bool(df.near(x[0], self.xmin) and x[1] < self.ymax and on_boundary)
+        on_y = bool(df.near(x[1], self.ymin) and x[0] < self.xmax and on_boundary)
         return on_x or on_y
 
     def map(self, x, y):
@@ -70,51 +69,51 @@ class PeriodicBoundary2D(df.SubDomain):
             y[0] = x[0]
 
     def find_mesh_info(self):
-        xt=self.mesh.coordinates()
-        self.length=len(xt)
-        max_v=xt.max(axis=0)
-        min_v=xt.min(axis=0)
+        coords = self.mesh.coordinates()
+        self.length = len(coords)
+        max_v = coords.max(axis=0)
+        min_v = coords.min(axis=0)
 
-        self.xmin=min_v[0]
-        self.xmax=max_v[0]
-        self.ymin=min_v[1]
-        self.ymax=max_v[1]
+        self.xmin = min_v[0]
+        self.xmax = max_v[0]
+        self.ymin = min_v[1]
+        self.ymax = max_v[1]
 
-        self.width=self.xmax-self.xmin
-        self.height=self.ymax-self.ymin
+        self.width = self.xmax - self.xmin
+        self.height = self.ymax - self.ymin
 
-        self.dim=self.mesh.topology().dim()
+        self.dim = self.mesh.topology().dim()
 
-        px_mins=[]
-        px_maxs=[]
-        py_mins=[]
-        py_maxs=[]
-        mesh=self.mesh
+        px_mins = []
+        px_maxs = []
+        py_mins = []
+        py_maxs = []
+        mesh = self.mesh
         for vertex in df.vertices(mesh):
-            if vertex.point().x()==self.xmin:
-                px_mins.append(df.Vertex(mesh,vertex.index()))
-            elif vertex.point().x()==self.xmax:
-                px_maxs.append(df.Vertex(mesh,vertex.index()))
+            if vertex.point().x() == self.xmin:
+                px_mins.append(df.Vertex(mesh, vertex.index()))
+            elif vertex.point().x() == self.xmax:
+                px_maxs.append(df.Vertex(mesh, vertex.index()))
 
-            if vertex.point().y()==self.ymin:
-                py_mins.append(df.Vertex(mesh,vertex.index()))
-            elif vertex.point().y()==self.ymax:
-                py_maxs.append(df.Vertex(mesh,vertex.index()))
+            if vertex.point().y() == self.ymin:
+                py_mins.append(df.Vertex(mesh, vertex.index()))
+            elif vertex.point().y() == self.ymax:
+                py_maxs.append(df.Vertex(mesh, vertex.index()))
 
-        indics=[]
-        indics_pbc=[]
+        indics = []
+        indics_pbc = []
 
         for v1 in px_mins:
             indics.append(v1.index())
             for v2 in px_maxs:
-                if v1.point().y()==v2.point().y() and v1.point().z()==v2.point().z() :
+                if v1.point().y() == v2.point().y() and v1.point().z() == v2.point().z() :
                     indics_pbc.append(v2.index())
                     px_maxs.remove(v2)
 
         for v1 in py_mins:
             indics.append(v1.index())
             for v2 in py_maxs:
-                if v1.point().x()==v2.point().x() and v1.point().z()==v2.point().z() :
+                if v1.point().x() == v2.point().x() and v1.point().z() == v2.point().z() :
                     indics_pbc.append(v2.index())
                     py_maxs.remove(v2)
         """
@@ -122,16 +121,16 @@ class PeriodicBoundary2D(df.SubDomain):
         print '='*100
         print indics,indics_pbc
         """
-        ids=np.array(indics,dtype=np.int32)
-        ids_pbc=np.array(indics_pbc,dtype=np.int32)
+        ids = np.array(indics,dtype=np.int32)
+        ids_pbc = np.array(indics_pbc,dtype=np.int32)
 
-        assert len(indics)==len(indics_pbc)
+        assert len(indics) == len(indics_pbc)
 
-        self.ids=np.array([ids[:],ids[:]+self.length,ids[:]+self.length*2],dtype=np.int32)
-        self.ids_pbc=np.array([ids_pbc[:],ids_pbc[:]+self.length,ids_pbc[:]+self.length*2],dtype=np.int32)
+        self.ids = np.array([ids[:], ids[:] + self.length, ids[:] + self.length*2], dtype=np.int32)
+        self.ids_pbc = np.array([ids_pbc[:], ids_pbc[:] + self.length,ids_pbc[:] + self.length*2], dtype=np.int32)
 
-        self.ids.shape=(-1,)
-        self.ids_pbc.shape=(-1,)
+        self.ids.shape = (-1,)
+        self.ids_pbc.shape = (-1,)
 
 
     def modify_m(self,m):
@@ -139,16 +138,16 @@ class PeriodicBoundary2D(df.SubDomain):
         This method might be not necessary ...
         """
         for i in range(len(self.ids_pbc)):
-            j=self.ids_pbc[i]
-            k=self.ids[i]
-            m[j]=m[k]
+            j = self.ids_pbc[i]
+            k = self.ids[i]
+            m[j] = m[k]
 
-    def modify_field(self,v):
+    def modify_field(self, v):
         """
         modifiy the corresponding fields, magnetisation m or the volumes of nodes.
         """
         for i in range(len(self.ids_pbc)):
-            v[self.ids_pbc[i]]=v[self.ids[i]]
+            v[self.ids_pbc[i]] = v[self.ids[i]]
 
 
 
