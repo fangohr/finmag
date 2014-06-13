@@ -84,6 +84,8 @@ class PeriodicBoundary2D(df.SubDomain):
 
         self.dim = self.mesh.topology().dim()
 
+        # Collect all vertices that lie on one of the periodic
+        # boundaries of the mesh.
         px_mins = []
         px_maxs = []
         py_mins = []
@@ -100,6 +102,9 @@ class PeriodicBoundary2D(df.SubDomain):
             elif vertex.point().y() == self.ymax:
                 py_maxs.append(df.Vertex(mesh, vertex.index()))
 
+        # Collect the indices of vertices on the 'min' boundary
+        # and find all vertices on the 'max' boundary which match
+        # one of those 'min' vertices.
         indics = []
         indics_pbc = []
 
