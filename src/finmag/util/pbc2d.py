@@ -129,7 +129,7 @@ class PeriodicBoundary2D(df.SubDomain):
         ids = np.array(indics,dtype=np.int32)
         ids_pbc = np.array(indics_pbc,dtype=np.int32)
 
-        assert len(indics) == len(indics_pbc)
+        #assert len(indics) == len(indics_pbc)
 
         self.ids = np.array([ids[:], ids[:] + self.length, ids[:] + self.length*2], dtype=np.int32)
         self.ids_pbc = np.array([ids_pbc[:], ids_pbc[:] + self.length,ids_pbc[:] + self.length*2], dtype=np.int32)
