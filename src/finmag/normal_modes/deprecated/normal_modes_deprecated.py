@@ -632,8 +632,8 @@ def extract_mesh_slice_via_boundary_mesh__deprecated(mesh, slice_z):
     # XXX TODO: Issue a warning of the mesh defined by 'surface_layer' does not have
     #           enough vertices (or is not contiguous, etc.)
 
-    # This syntax was changed in dolfin version ca. 1.3 and is now the correct one.
-    # See: http://fenicsproject.org/qa/185/entity-mapping-between-a-submesh-and-the-parent-mesh
+    # Mapping from the vertex indices in 'surface_layer' to the vertex indices
+    # in the full mesh.
     parent_vertex_indices = surface_layer.data().array('parent_vertex_indices', 0)
 
     V = df.FunctionSpace(mesh, 'CG', 1)
