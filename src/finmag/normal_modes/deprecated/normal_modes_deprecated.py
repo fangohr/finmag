@@ -164,8 +164,12 @@ def compute_eigenproblem_matrix(sim, frequency_unit=1e9, filename=None, differen
         sim.set_m(m, normalise=normalise)
         return sim.effective_field()
 
-    n = sim.mesh.num_vertices()
-    N = 3 * n  # number of degrees of freedom
+    # N is the number of degrees of freedom of the magnetisation vector.
+    # It may be smaller than the number of mesh nodes if we are using
+    # periodic boundary conditions.
+    N = sim.llg.S3.dim()
+    n = N // 3
+    assert (N == 3 * n)
 
     m0_array = sim.m.copy()
     m0_3xn = m0_array.reshape(3, n)  # this corresponds to the vector 'm0_flat' in Simlib
