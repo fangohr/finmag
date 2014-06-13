@@ -768,14 +768,18 @@ class NormalModeSimulation(Simulation):
                         "`sim.compute_normal_modes()` to do so.")
 
         if region == None:
-            mesh = self.mesh
+            submesh = self.mesh
             w = self.eigenvecs[k]
             m = self.m
         else:
             # Restrict m and the eigenvector array to the submesh
             # TODO: This is messy and should be factored out into helper routines.
-            mesh = self.get_submesh(region)
-            restr = helpers.restriction(self.mesh, mesh)
+            #
+            # XXX TODO: If we are using PBCs then we need to extend the vectors w1, w2
+            #           to 'full' vectors on the whole mesh (currently they are missing
+            #           the dofs that are identified).
+            submesh = self.get_submesh(region)
+            restr = helpers.restriction(self.mesh, submesh)
             m = restr(self.m.reshape(3, -1)).ravel()
             w1, w2 = self.eigenvecs[k].reshape(2, -1)
             w1_restr = restr(w1)
@@ -783,7 +787,7 @@ class NormalModeSimulation(Simulation):
             w = np.concatenate([w1_restr, w2_restr]).reshape(2, -1)
 
         fig = plot_spatially_resolved_normal_mode(
-            mesh, m, w, slice_z=slice_z, components=components,
+            submesh, m, w, slice_z=slice_z, components=components,
             figure_title=figure_title, yshift_title=yshift_title,
             plot_powers=plot_powers, plot_phases=plot_phases,
             xticks=xticks, yticks=yticks,
