@@ -97,6 +97,8 @@ class Simulation(object):
         elif pbc == '1d':
             log.debug('Setting 1d periodic boundary conditions (along the x-axis)')
             self.pbc = PeriodicBoundary1D(mesh)
+        elif pbc != None:
+            raise ValueError("Argument 'pbc' must be one of None, '1d', '2d'.")
 
         if not mesh_size_plausible(mesh, unit_length):
             log.warning("The mesh is {}.".format(describe_mesh_size(mesh, unit_length)))
