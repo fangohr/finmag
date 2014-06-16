@@ -58,5 +58,6 @@ PETSC_DIR=/usr/lib/petsc SLEPC_DIR=/usr/lib/slepc sudo pip install https://bitbu
 
 
 # fenicstools
-sudo apt-get install python-pyvtk         # fenics tools relies on pyvtk
+# fenics tools relies on pyvtk and h5py
+sudo apt-get install python-pyvtk python-h5py
 sudo pip install git+https://github.com/mikaem/fenicstools.git
