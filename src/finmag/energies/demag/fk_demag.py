@@ -15,6 +15,7 @@ from finmag.util.consts import mu0
 from finmag.native.llg import compute_bem_fk
 from finmag.util.meshes import nodal_volume
 from finmag.util import helpers
+from fk_demag_pbc import BMatrixPBC
 
 
 def prepared_timed(measurement_group, timer_to_use):
@@ -36,7 +37,7 @@ class FKDemag(object):
     .. _Hybrid method for computing demagnetizing fields: http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=106342
 
     """
-    def __init__(self, name='Demag', thin_film=False):
+    def __init__(self, name='Demag', thin_film=False, Ts=None):
         """
         Create a new FKDemag instance.
 
@@ -80,6 +81,8 @@ class FKDemag(object):
             self.parameters["phi_1_solver"] = "cg"
             self.parameters["phi_1_preconditioner"] = "ilu"
             self.parameters["phi_3_preconditioner"] = "none"
+            
+        self.Ts = Ts
 
     @mtimed(default_timer)
     def setup(self, S3, m, Ms, unit_length=1):
@@ -142,7 +145,12 @@ class FKDemag(object):
         self._laplace_solver.parameters["preconditioner"]["structure"] = "same_nonzero_pattern"
         with fk_timed('compute BEM'):
             if not hasattr(self, "_bem"):
-                self._bem, self._b2g_map = compute_bem_fk(df.BoundaryMesh(mesh, 'exterior', False))
+                if self.Ts is not None:
+                    pbc = BMatrixPBC(mesh,self.Ts)
+                    self._b2g_map=np.array(pbc.b2g_map,dtype=np.int)
+                    self._bem = pbc.bm
+                else:
+                    self._bem, self._b2g_map = compute_bem_fk(df.BoundaryMesh(mesh, 'exterior', False))
         self._phi_1 = df.Function(self.S1)  # solution of inhomogeneous Neumann problem
         self._phi_2 = df.Function(self.S1)  # solution of Laplace equation inside domain
         self._phi = df.Function(self.S1)  # magnetic potential phi_1 + phi_2
