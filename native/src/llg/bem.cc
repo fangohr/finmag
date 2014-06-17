@@ -72,6 +72,7 @@ namespace finmag { namespace llg {
 
             // P is an auxiliary variable
             double r1_len = r1.length(), r2_len = r2.length(), r3_len = r3.length();
+            printf("r1_len=%f, r2_len=%f, r3_len=%f, s1=%f, s2=%f, s3=%f\n", r1_len, r2_len, r3_len, s_1, s_2, s_3);
             vector3 P(
                 log((r1_len + r2_len + s_1) / (r1_len + r2_len - s_1 + 1e-300)),
                 log((r2_len + r3_len + s_2) / (r2_len + r3_len - s_2 + 1e-300)),

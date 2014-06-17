@@ -54,7 +54,11 @@ class BMatrixPBC(object):
         
         be = np.array([0.,0.,0.])
         
-        for p in range(len(cds)):
+        dof_indices = self.llg.S1.dofmap().dofs()
+        d2v = df.dof_to_vertex_map(self.llg.S1)
+        v2d = df.vertex_to_dof_map(self.llg.S1)
+        vertex_indices_reduced = [d2v[i] for i in dof_indices] 
+        for p in vertex_indices:
             for c in face_nodes:
                 i,j,k = c
                 compute_boundary_element(cds[p], cds[i]+T, cds[j]+T, cds[k]+T, be)
