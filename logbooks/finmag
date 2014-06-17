@@ -58324,3 +58324,135 @@ finmag-team mailing list.
 -------------------------------------
 finmag-team mailing list.
 
+From fetchmail  Thu Jun 12 20:46:59 2014
+Delivered-To: marvinbotfinmag@gmail.com
+Received: from pop.gmail.com
+	by aleph0.kk.soton.ac.uk with POP3 (fetchmail-6.3.26)
+	for <marvin@localhost> (single-drop); Thu, 12 Jun 2014 20:46:59 +0100 (BST)
+Received: by 10.216.61.75 with SMTP id v53csp371131wec;
+        Thu, 12 Jun 2014 12:05:38 -0700 (PDT)
+X-Received: by 10.152.203.168 with SMTP id kr8mr33858232lac.17.1402599938139;
+        Thu, 12 Jun 2014 12:05:38 -0700 (PDT)
+Return-Path: <owner-finmag-team@maillists.sucs.soton.ac.uk>
+Received: from mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk. [152.78.128.11])
+        by mx.google.com with ESMTP id no1si55388281lbb.27.2014.06.12.12.05.37
+        for <multiple recipients>;
+        Thu, 12 Jun 2014 12:05:38 -0700 (PDT)
+Received-SPF: none (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) client-ip=152.78.128.11;
+Authentication-Results: mx.google.com;
+       spf=neutral (google.com: owner-finmag-team@maillists.sucs.soton.ac.uk does not designate permitted sender hosts) smtp.mail=owner-finmag-team@maillists.sucs.soton.ac.uk;
+       dkim=neutral (body hash did not verify) header.i=@;
+       dmarc=fail (p=NONE dis=NONE) header.from=gmail.com
+Received: from mailgate6.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate6.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s5CJ5Z3h027725;
+	Thu, 12 Jun 2014 20:05:35 +0100
+Received: from UOS-MSG00035-VS.soton.ac.uk (uos-msg00035-vs.soton.ac.uk [152.78.119.37])
+	by mailgate6.iss.soton.ac.uk (mailgate6.iss.soton.ac.uk [152.78.128.11]) envelope-from <owner-finmag-team@maillists.sucs.soton.ac.uk> with ESMTP
+	id q5BK5Z0832321883Fd ret-id none; Thu, 12 Jun 2014 20:05:35 +0100
+Received: from maillists.sucs.soton.ac.uk (152.78.128.58) by smtp.soton.ac.uk
+ (152.78.119.37) with Microsoft SMTP Server (TLS) id 14.3.181.6; Thu, 12 Jun
+ 2014 20:05:35 +0100
+Received: (from listmgr@localhost)	by maillists.sucs.soton.ac.uk
+ (8.13.4/8.12.9) id s5CJ5Y10009731;	Thu, 12 Jun 2014 20:05:34 +0100
+Received: from mailgate3.iss.soton.ac.uk (mailgate3.iss.soton.ac.uk
+ [152.78.128.104])	by maillists.sucs.soton.ac.uk (8.13.4/8.12.9) with ESMTP id
+ s5CJ5YGC009728	for <finmag-team@lists.soton.ac.uk>; Thu, 12 Jun 2014 20:05:34
+ +0100
+Received: from mailgate3.iss.soton.ac.uk (localhost.localdomain [127.0.0.1])
+	by mailgate3.iss.soton.ac.uk (8.13.8/8.13.4) with ESMTP id s5CJ5Rrr015841	for
+ <finmag-team@lists.soton.ac.uk>; Thu, 12 Jun 2014 20:05:27 +0100
+Received: from mail-qa0-f46.google.com (mail-qa0-f46.google.com
+ [209.85.216.46])	by mailgate3.iss.soton.ac.uk (mailgate3.iss.soton.ac.uk
+ [152.78.128.104]) envelope-from <maximilian.albert@gmail.com> with ESMTP	id
+ q5BK5R1013641348q7 ret-id none; Thu, 12 Jun 2014 20:05:27 +0100
+Received: by mail-qa0-f46.google.com with SMTP id i13so2228041qae.33
+        for <finmag-team@lists.soton.ac.uk>; Thu, 12 Jun 2014 12:05:26 -0700
+ (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:date:message-id:subject:from:to:content-type;
+        bh=zhLMgrUHB//ngFp3s5MJLd77yyHxj7Nk6uR6d7EOZAA=;
+        b=Z/8/CqIPP9RY1Hw5s5vZeIWWIm6Cbjw0nnddWlG4jiqSzAqcpEUcldw5knmvYJZiYJ
+         3M5KeiYFTlNS0BPhwpmF2R6oy+PQNUcCZE5W9wmc+SKfUgPVT7xG8GRzTREbF+wtcNiQ
+         eLFNVFPSycbKj2dCH8Gsyy1iDGOPRUqR38cVN2kKKmdTwzudjroPyqan3/3RfWVi//ys
+         TSe9zh1Wl/BZ2hASwE01GhVyVI+6Wy48ZuSLd522b2Rb9MJ2SUlz+tvzVPe/7/jQOE4i
+         pxcc/gkDK9EI3Hl2y7Hfotq8qUefMygVZbEBsUpguLO2bU4sSrcnx4Q4DUQVpxT/PdCw
+         u5Aw==
+MIME-Version: 1.0
+X-Received: by 10.140.98.116 with SMTP id n107mr59715932qge.93.1402599926251;
+ Thu, 12 Jun 2014 12:05:26 -0700 (PDT)
+Received: by 10.96.152.65 with HTTP; Thu, 12 Jun 2014 12:05:26 -0700 (PDT)
+Date: Thu, 12 Jun 2014 20:05:26 +0100
+Message-ID: <CAGA_dmjb31Tymr6W6KAUDY2tE6+4+fZMBdKWfn3pwzRT9tL2ow@mail.gmail.com>
+Subject: [finmag-team] Dofmap-plotter in Fenicstools (and other goodies)
+From: Maximilian Albert <maximilian.albert@gmail.com>
+To: "<finmag-team@lists.soton.ac.uk>" <finmag-team@lists.soton.ac.uk>
+Content-Type: multipart/alternative; boundary="001a113a92385de1ea04fba83efb"
+Received-SPF: Pass (UOS-MSG00035-VS.soton.ac.uk: domain of
+ owner-finmag-team@lists.soton.ac.uk designates 152.78.128.58 as permitted
+ sender) receiver=UOS-MSG00035-VS.soton.ac.uk; client-ip=152.78.128.58;
+ helo=maillists.sucs.soton.ac.uk;
+Received-SPF: None; receiver=mailgate3.iss.soton.ac.uk; client-ip=209.85.216.46; helo=<mail-qa0-f46.google.com>
+Received-SPF: Pass; receiver=mailgate3.iss.soton.ac.uk; client-ip=209.85.216.46; envelope-from=<maximilian.albert@gmail.com>
+X-UOS-MailScanner: Found to be clean, Found to be clean
+Sender: <owner-finmag-team@lists.soton.ac.uk>
+Precedence: bulk
+X-smtpf-Report: sid=q5BK5Z083232188300; tid=q5BK5Z0832321883Fd; client=relay,white,ipv6; mail=; rcpt=; nrcpt=4:0; fails=0
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.37; helo=<UOS-MSG00035-VS.soton.ac.uk>
+Received-SPF: None; receiver=mailgate6.iss.soton.ac.uk; client-ip=152.78.119.37; envelope-from=<owner-finmag-team@maillists.sucs.soton.ac.uk>
+X-UOS-MailScanner-Information: Please contact Serviceline@soton.ac.uk for more information
+X-UOS-MailScanner-ID: s5CJ5Z3h027725
+X-UOS-MailScanner-From: owner-finmag-team@maillists.sucs.soton.ac.uk
+
+--001a113a92385de1ea04fba83efb
+Content-Type: text/plain; charset="UTF-8"
+
+Hi all,
+
+I just had a look at the Fenicstools documentation again and stumbled upon
+this useful functionality which may shed some more light on the dofmap
+business in case we need it (which will hopefully only be relevant in the
+Field class, but it may be good to understand it anyway):
+
+   https://github.com/mikaem/fenicstools/wiki/DofMap-plotter
+
+Also, Fenicstools provides alternative methods to compute the gradient and
+divergence (which may be more efficient than the standard method in FEniCS):
+
+(i) https://github.com/mikaem/fenicstools/wiki/Weighted-gradient-matrix
+
+As far as I understand this pre-computes a "gradient matrix" which only
+depends on the mesh geometry, and then you can compute the gradient of an
+actual function by multiplying the function vector with that matrix.
+
+(ii) https://github.com/mikaem/fenicstools/wiki/Gauss-divergence
+
+Cheers,
+Max
+
+--001a113a92385de1ea04fba83efb
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><div>Hi all,<br><br></div>I just had a look at the Fenicst=
+ools documentation again and stumbled upon this useful functionality which =
+may shed some more light on the dofmap business in case we need it (which w=
+ill hopefully only be relevant in the Field class, but it may be good to un=
+derstand it anyway):<br>
+<div><div><br>=C2=A0=C2=A0 <a href=3D"https://github.com/mikaem/fenicstools=
+/wiki/DofMap-plotter">https://github.com/mikaem/fenicstools/wiki/DofMap-plo=
+tter</a><br><br></div><div>Also, Fenicstools provides alternative methods t=
+o compute the gradient and divergence (which may be more efficient than the=
+ standard method in FEniCS):<br>
+<br>(i) <a href=3D"https://github.com/mikaem/fenicstools/wiki/Weighted-grad=
+ient-matrix">https://github.com/mikaem/fenicstools/wiki/Weighted-gradient-m=
+atrix</a><br><br></div><div>As far as I understand this pre-computes a &quo=
+t;gradient matrix&quot; which only depends on the mesh geometry, and then y=
+ou can compute the gradient of an actual function by multiplying the functi=
+on vector with that matrix.<br>
+<br></div><div>(ii) <a href=3D"https://github.com/mikaem/fenicstools/wiki/G=
+auss-divergence">https://github.com/mikaem/fenicstools/wiki/Gauss-divergenc=
+e</a><br><br></div><div>Cheers,<br>Max<br></div></div></div>
+
+--001a113a92385de1ea04fba83efb--
+
