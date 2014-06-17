@@ -10,13 +10,14 @@ import matplotlib.pyplot as plt
 from finmag.util.fileio import Tablereader
 
 mesh = df.BoxMesh(0, 0, 0, 10, 10, 10, 2, 2, 2)
+#mesh = df.BoxMesh(0, 0, 0, 30, 30, 100, 6, 6, 20)
 #df.plot(mesh, interactive=True)
 def relax_system():
     Ms = 8.6e5
-    sim = Simulation(mesh, Ms, unit_length=1e-9, name = 'dy')
+    sim = Simulation(mesh, Ms, unit_length=1e-9, name = 'dy', pbc='1d')
     
     sim.alpha = 0.01
-    sim.set_m((0.8,0.6,0))
+    sim.set_m((0.8,0.6,1))
     
     sim.set_tol(1e-8, 1e-8)
 
@@ -34,7 +35,7 @@ def relax_system():
     for i in range(-9,10):
         Ts.append((10*i,0,0))
     
-    demag = Demag(Ts=Ts)
+    demag = Demag(solver='Treecode')
     
     demag.parameters['phi_1'] = parameters
     demag.parameters['phi_2'] = parameters
@@ -45,10 +46,10 @@ def relax_system():
     demag.compute_field()
     
     sim.schedule('save_ndt', every=2e-12)
-    sim.schedule('save_vtk', every=2e-12, filename='vtks/m.pvd')
+    #sim.schedule('save_vtk', every=2e-12, filename='vtks/m.pvd')
     #sim.schedule('save_m', every=2e-12, filename='npys/m.pvd')
     
-    sim.run_until(1e-9)
+    sim.run_until(0.2e-9)
 
 
 def plot_mx(filename='dy.ndt'):
@@ -58,7 +59,7 @@ def plot_mx(filename='dy.ndt'):
     ts=data['time']/1e-9
     
     fig=plt.figure()
-    plt.plot(ts, data['m_y'], label='Total')
+    plt.plot(ts, data['E_total'], label='Total')
     #plt.plot(ts, data['E_Demag'], label='Demag')
     #plt.plot(ts, data['E_Exchange'], label='Exchange')
     plt.xlabel('time (ns)')
