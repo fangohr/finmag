@@ -1,60 +1,89 @@
 import logging
 import numpy as np
 import dolfin as df
-import solver_base as sb
 from aeon import default_timer
-import finmag.util.solver_benchmark as bench
+from finmag.util.consts import mu0
+from finmag.util.meshes import nodal_volume
 from finmag.native.treecode_bem import FastSum
 from finmag.native.treecode_bem import compute_solid_angle_single
+from finmag.util import helpers
+
+from fk_demag import FKDemag
 
 logger = logging.getLogger(name='finmag')
 
-
-class TreecodeBEM(sb.FemBemDeMagSolver):
-    def __init__(self, parameters=sb.default_parameters, degree=1, element="CG",
-                 project_method='magpar', bench=False,
-                 mac=0.3, p=3, num_limit=100, correct_factor=10, type_I=True, solver_type=None):
-        self.parameters = parameters
-        self.degree = degree
-        self.element = element
-        self.project_method = project_method
-        self.bench = bench
+class TreecodeBEM(FKDemag):
+    def __init__(self, mac=0.3, p=3, num_limit=100, correct_factor=10, 
+                 type_I=True, name='Demag', Ts=None, thin_film=False):
+        super(TreecodeBEM, self).__init__(name=name, Ts=Ts, thin_film=thin_film)
+        
         self.mac = mac
         self.p = p
         self.num_limit = num_limit
         self.correct_factor = correct_factor
         self.type_I = type_I
-        self.solver_type = solver_type
+
 
     def setup(self, S3, m, Ms, unit_length=1):
-        sb.FemBemDeMagSolver.__init__(self,
-                                      S3.mesh(), m,
-                                      self.parameters,
-                                      self.degree, self.element,
-                                      self.project_method,
-                                      unit_length,
-                                      Ms,
-                                      self.bench,
-                                      True)
+        
+        self.m = m
+        self.Ms = Ms
+        self.unit_length = unit_length
 
-        #Linear Solver parameters
-        method = self.parameters["poisson_solver"]["method"]
-        pc = self.parameters["poisson_solver"]["preconditioner"]
+        mesh = S3.mesh()
+        self.S1 = df.FunctionSpace(mesh, "Lagrange", 1)
+        self.S3 = S3
+        self.dim = mesh.topology().dim()
 
-        self.poisson_solver = df.KrylovSolver(self.poisson_matrix, method, pc)
+        self._test1 = df.TestFunction(self.S1)
+        self._trial1 = df.TrialFunction(self.S1)
+        self._test3 = df.TestFunction(self.S3)
+        self._trial3 = df.TrialFunction(self.S3)
 
-        self.phi1 = df.Function(self.V)
-        self.phi2 = df.Function(self.V)
+        # for computation of energy
+        self._nodal_volumes = nodal_volume(self.S1, unit_length)
+        self._H_func = df.Function(S3)  # we will copy field into this when we need the energy
+        self._E_integrand = -0.5 * mu0 * df.dot(self._H_func, self.m * self.Ms)
+        self._E = self._E_integrand * df.dx
+        self._nodal_E = df.dot(self._E_integrand, self._test1) * df.dx
+        self._nodal_E_func = df.Function(self.S1)
 
-        # Eq (1) and code-block 2 - two first lines.
-        b = self.Ms*df.inner(self.w, df.grad(self.v))*df.dx
-        self.D = df.assemble(b)
+        # for computation of field and scalar magnetic potential
+        self._poisson_matrix = self._poisson_matrix()
+        self._poisson_solver = df.KrylovSolver(self._poisson_matrix.copy(),
+            self.parameters['phi_1_solver'], self.parameters['phi_1_preconditioner'])
+        self._poisson_solver.parameters.update(self.parameters['phi_1'])
+        self._laplace_zeros = df.Function(self.S1).vector()
+        self._laplace_solver = df.KrylovSolver(
+                self.parameters['phi_2_solver'], self.parameters['phi_2_preconditioner'])
+        self._laplace_solver.parameters.update(self.parameters['phi_2'])
+        # We're setting 'same_nonzero_pattern=True' to enforce the
+        # same matrix sparsity pattern across different demag solves,
+        # which should speed up things.
+        self._laplace_solver.parameters["preconditioner"]["structure"] = "same_nonzero_pattern"
+        
+        
+        self._phi_1 = df.Function(self.S1)  # solution of inhomogeneous Neumann problem
+        self._phi_2 = df.Function(self.S1)  # solution of Laplace equation inside domain
+        self._phi = df.Function(self.S1)  # magnetic potential phi_1 + phi_2
+
+        # To be applied to the vector field m as first step of computation of _phi_1.
+        # This gives us div(M), which is equal to Laplace(_phi_1), equation
+        # which is then solved using _poisson_solver.
+        self._Ms_times_divergence = df.assemble(self.Ms * df.inner(self._trial3, df.grad(self._test1)) * df.dx)
+        
+        #we move the bounday condition here to avoid create a instance each time when compute the 
+        #magnetic potential 
+        self.boundary_condition = df.DirichletBC(self.S1, self._phi_2, df.DomainBoundary())
+        self.boundary_condition.apply(self._poisson_matrix)
+
+        self._setup_gradient_computation()
 
         self.mesh= S3.mesh()
 
         self.bmesh = df.BoundaryMesh(self.mesh, 'exterior', False)
         #self.b2g_map = self.bmesh.vertex_map().array()
-        self.b2g_map = self.bmesh.entity_map(0).array()
+        self._b2g_map = self.bmesh.entity_map(0).array()
 
         self.compute_triangle_normal()
 
@@ -90,7 +119,7 @@ class TreecodeBEM(sb.FemBemDeMagSolver):
 
         vert_bsa=vert_bsa/(4*np.pi)-1
 
-        self.vert_bsa=vert_bsa[self.b2g_map]
+        self.vert_bsa=vert_bsa[self._b2g_map]
 
 
     def compute_triangle_normal(self):
@@ -104,48 +133,32 @@ class TreecodeBEM(sb.FemBemDeMagSolver):
                 self.t_normals.append([t.x(),t.y(),t.z()])
 
         self.t_normals=np.array(self.t_normals)
+    
+    def _compute_magnetic_potential(self):
+        # compute _phi_1 on the whole domain
+        g_1 = self._Ms_times_divergence * self.m.vector()
+        
+        self._poisson_solver.solve(self._phi_1.vector(), g_1)
 
+        # compute _phi_2 on the boundary using the Dirichlet boundary
+        # conditions we get from BEM * _phi_1 on the boundary.
+        
+        phi_1 = self._phi_1.vector()[self._b2g_map]
+        
+        self.fast_sum.fastsum(self.phi2_b, phi_1.array())
+        
+        self._phi_2.vector()[self._b2g_map[:]] = self.phi2_b
 
-    #used for debug
-    def get_B_length(self):
-        return self.fast_sum.get_B_length(),self.bnd_nodes_number**2
+        A = self._poisson_matrix
+        b = self._laplace_zeros
+        self.boundary_condition.set_value(self._phi_2)
+        self.boundary_condition.apply(A,b)
 
+        # compute _phi_2 on the whole domain
+        self._laplace_solver.solve(A, self._phi_2.vector(), b)
+        # add _phi_1 and _phi_2 to obtain magnetic potential
+        self._phi.vector()[:] = self._phi_1.vector() + self._phi_2.vector()
 
-    def solve(self):
-
-        # Compute phi1 on the whole domain (code-block 1, last line)
-        default_timer.start("phi1 - matrix product", self.__class__.__name__)
-        g1 = self.D*self.m.vector()
-
-        default_timer.start_next("phi1 - solve", self.__class__.__name__)
-        if self.bench:
-            bench.solve(self.poisson_matrix,self.phi1.vector(),g1, benchmark = True)
-        else:
-            default_timer.start_next("1st linear solve", self.__class__.__name__)
-            self.poisson_iter = self.poisson_solver.solve(self.phi1.vector(), g1)
-            default_timer.stop("1st linear solve", self.__class__.__name__)
-        # Restrict phi1 to the boundary
-
-        self.phi1_b = self.phi1.vector()[self.b2g_map]
-
-        default_timer.start("Compute phi2 at boundary", self.__class__.__name__)
-        self.fast_sum.fastsum(self.phi2_b, self.phi1_b.array())
-
-        #print 'phi2 at boundary',self.res
-        default_timer.start_next("phi2 <- Phi2", self.__class__.__name__)
-        self.phi2.vector()[self.b2g_map[:]] = self.phi2_b
-
-        # Compute Laplace's equation inside the domain,
-        # eq. (2) and last code-block
-        default_timer.start_next("Compute phi2 inside", self.__class__.__name__)
-        self.phi2 = self.solve_laplace_inside(self.phi2)
-
-        # phi = phi1 + phi2, eq. (5)
-        default_timer.start_next("Add phi1 and phi2", self.__class__.__name__)
-        self.phi.vector()[:] = self.phi1.vector() \
-                             + self.phi2.vector()
-        default_timer.stop("Add phi1 and phi2", self.__class__.__name__)
-        return self.phi
 
 
 def compare_field(f1,f2):
@@ -195,7 +208,8 @@ if __name__ == "__main__":
     stop=time.time()
 
 
-    demag=TreecodeBEM(mesh,m,mac=0.4,p=5,num_limit=1,correct_factor=10,Ms=Ms,type_I=False)
+    demag=TreecodeBEM(mac=0.4,p=5,num_limit=1,correct_factor=10,type_I=False)
+    demag.setup(Vv, m, Ms, unit_length=1e-9)
     start2=time.time()
     f2=demag.compute_field()
     stop2=time.time()
