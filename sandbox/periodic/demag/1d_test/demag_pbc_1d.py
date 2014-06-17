@@ -30,7 +30,7 @@ def compute_field(n=1, m0=(1,0,0), pbc=None):
     
     Ts = []
     for i in range(-n/2+1,n/2+1):
-        Ts.append((10.00001*i,0,0))
+        Ts.append((10.000*i,0,0))
     
     demag = Demag(Ts=Ts)
     
