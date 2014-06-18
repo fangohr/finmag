@@ -97,7 +97,7 @@ void compute_source_nodes_weights(fastsum_plan *plan);
 void direct_sum_I(fastsum_plan *plan, double *phi, double *u1);
 
 double solid_angle_single(double *p, double *x1, double *x2, double *x3);
-void boundary_element(double *xp, double *x1, double *x2, double *x3, double *res);
+void boundary_element(double *xp, double *x1, double *x2, double *x3, double *res, double *T);
 int get_total_length(fastsum_plan *plan);
 
 
