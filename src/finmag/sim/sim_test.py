@@ -15,7 +15,7 @@ from finmag.normal_modes.eigenmodes import eigensolvers
 from finmag.example import barmini
 from math import sqrt, cos, sin, pi
 from finmag.util.helpers import assert_number_of_files, vector_valued_function, logging_status_str
-from finmag.util.meshes import nanodisk, plot_mesh_with_paraview, mesh_volume
+from finmag.util.meshes import nanodisk, plot_mesh_with_paraview, mesh_volume, from_csg
 from finmag.util.mesh_templates import EllipticalNanodisk, Sphere
 from finmag.sim import sim_helpers
 from finmag.energies import Zeeman, TimeZeeman, Exchange, UniaxialAnisotropy, DMI
@@ -1053,6 +1053,54 @@ def test_NormalModeSimulation(tmpdir):
         sim.run_ringdown(t_end=1e-12, alpha=0.02, H_ext=[1e4, 0, 0], save_vtk_every=2e-13, vtk_snapshots_filename='baz/sim_m.pvd')
     with pytest.raises(IOError):
         sim.run_ringdown(t_end=1e-12, alpha=0.02, H_ext=[1e4, 0, 0], save_m_every=2e-13, m_snapshots_filename='foobar/foo_m.npy')
+
+
+def test_normal_mode_simulation_with_periodic_boundary_conditions(tmpdir):
+    os.chdir(str(tmpdir))
+    csg_string = textwrap.dedent("""
+        algebraic3d
+        solid cube = orthobrick (0, 0, 0; 50, 50, 3) -maxh = 3.0;
+        solid cyl = cylinder (25, 25, 0; 25, 25, 1; 20);
+        solid crystal = cube and not cyl;
+        tlo crystal;
+        """)
+    mesh = from_csg(csg_string)
+    sim = normal_mode_simulation(mesh, Ms=8e5, m_init=[1, 1, 0], A=13e-12, H_ext=None, unit_length=1e-9, pbc='1d')
+    sim.relax()
+    sim.save_vtk('m_relaxed.pvd')
+    omega, w, relerr = sim.compute_normal_modes(solver='scipy_sparse')
+    sim.plot_spatially_resolved_normal_mode(0, outfilename='mode_0.png')
+    sim.plot_spatially_resolved_normal_mode(1, outfilename='mode_1.png')
+    sim.plot_spatially_resolved_normal_mode(2, outfilename='mode_2.png')
+    sim.export_eigenmode_animations([0, 1, 2], directory='animations', create_movies=False)
+
+
+def test_normal_mode_simulation_with_periodic_boundary_conditions_9x9(tmpdir):
+    os.chdir(str(tmpdir))
+    csg_string = textwrap.dedent("""
+        algebraic3d
+        solid cube = orthobrick (0, 0, 0; 150, 150, 3) -maxh = 5.0;
+        solid cylA = cylinder (25,   25, 0; 25,   25, 1; 20);
+        solid cylB = cylinder (75,   25, 0; 75,   25, 1; 20);
+        solid cylC = cylinder (125,  25, 0; 125,  25, 1; 20);
+        solid cylD = cylinder (25,   75, 0; 25,   75, 1; 20);
+        solid cylE = cylinder (75,   75, 0; 75,   75, 1; 20);
+        solid cylF = cylinder (125,  75, 0; 125,  75, 1; 20);
+        solid cylG = cylinder (25,  125, 0; 25,  125, 1; 20);
+        solid cylH = cylinder (75,  125, 0; 75,  125, 1; 20);
+        solid cylI = cylinder (125, 125, 0; 125, 125, 1; 20);
+        solid crystal = cube and not cylA and not cylB and not cylC and not cylD and not cylE and not cylF and not cylG and not cylH and not cylI;
+        tlo crystal;
+        """)
+    mesh = from_csg(csg_string)
+    sim = normal_mode_simulation(mesh, Ms=8e5, m_init=[1, 0, 0], A=13e-12, H_ext=None, unit_length=1e-9, pbc='1d')
+    sim.relax()
+    sim.save_vtk('m_relaxed.pvd')
+    omega, w, relerr = sim.compute_normal_modes(solver='scipy_sparse')
+    sim.plot_spatially_resolved_normal_mode(0, outfilename='mode_0.png')
+    sim.plot_spatially_resolved_normal_mode(1, outfilename='mode_1.png')
+    sim.plot_spatially_resolved_normal_mode(2, outfilename='mode_2.png')
+    sim.export_eigenmode_animations([0, 1, 2], directory='animations', create_movies=False)
 
 
 def test_H_ext_is_set_correcy_in_normal_mode_simulation(tmpdir):
