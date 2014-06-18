@@ -146,7 +146,7 @@ class FKDemag(object):
         with fk_timed('compute BEM'):
             if not hasattr(self, "_bem"):
                 if self.Ts is not None:
-                    pbc = BMatrixPBC(S3,self.Ts)
+                    pbc = BMatrixPBC(mesh,self.Ts)
                     self._b2g_map=np.array(pbc.b2g_map,dtype=np.int)
                     self._bem = pbc.bm
                 else:
