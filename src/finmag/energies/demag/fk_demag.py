@@ -15,6 +15,7 @@ from finmag.util.consts import mu0
 from finmag.native.llg import compute_bem_fk
 from finmag.util.meshes import nodal_volume
 from finmag.util import helpers
+from fk_demag_pbc import BMatrixPBC
 
 
 def prepared_timed(measurement_group, timer_to_use):
@@ -36,7 +37,7 @@ class FKDemag(object):
     .. _Hybrid method for computing demagnetizing fields: http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=106342
 
     """
-    def __init__(self, name='Demag', thin_film=False):
+    def __init__(self, name='Demag', thin_film=False, Ts=None):
         """
         Create a new FKDemag instance.
 
@@ -80,6 +81,8 @@ class FKDemag(object):
             self.parameters["phi_1_solver"] = "cg"
             self.parameters["phi_1_preconditioner"] = "ilu"
             self.parameters["phi_3_preconditioner"] = "none"
+            
+        self.Ts = Ts
 
     @mtimed(default_timer)
     def setup(self, S3, m, Ms, unit_length=1):
@@ -129,7 +132,7 @@ class FKDemag(object):
 
         # for computation of field and scalar magnetic potential
         self._poisson_matrix = self._poisson_matrix()
-        self._poisson_solver = df.KrylovSolver(self._poisson_matrix,
+        self._poisson_solver = df.KrylovSolver(self._poisson_matrix.copy(),
             self.parameters['phi_1_solver'], self.parameters['phi_1_preconditioner'])
         self._poisson_solver.parameters.update(self.parameters['phi_1'])
         self._laplace_zeros = df.Function(self.S1).vector()
@@ -142,7 +145,12 @@ class FKDemag(object):
         self._laplace_solver.parameters["preconditioner"]["structure"] = "same_nonzero_pattern"
         with fk_timed('compute BEM'):
             if not hasattr(self, "_bem"):
-                self._bem, self._b2g_map = compute_bem_fk(df.BoundaryMesh(mesh, 'exterior', False))
+                if self.Ts is not None:
+                    pbc = BMatrixPBC(mesh,self.Ts)
+                    self._b2g_map=np.array(pbc.b2g_map,dtype=np.int)
+                    self._bem = pbc.bm
+                else:
+                    self._bem, self._b2g_map = compute_bem_fk(df.BoundaryMesh(mesh, 'exterior', False))
         self._phi_1 = df.Function(self.S1)  # solution of inhomogeneous Neumann problem
         self._phi_2 = df.Function(self.S1)  # solution of Laplace equation inside domain
         self._phi = df.Function(self.S1)  # magnetic potential phi_1 + phi_2
@@ -151,6 +159,11 @@ class FKDemag(object):
         # This gives us div(M), which is equal to Laplace(_phi_1), equation
         # which is then solved using _poisson_solver.
         self._Ms_times_divergence = df.assemble(self.Ms * df.inner(self._trial3, df.grad(self._test1)) * df.dx)
+        
+        #we move the bounday condition here to avoid create a instance each time when compute the 
+        #magnetic potential 
+        self.boundary_condition = df.DirichletBC(self.S1, self._phi_2, df.DomainBoundary())
+        self.boundary_condition.apply(self._poisson_matrix)
 
         self._setup_gradient_computation()
 
@@ -262,10 +275,16 @@ class FKDemag(object):
         with fk_timed("using boundary conditions"):
             phi_1 = self._phi_1.vector()[self._b2g_map]
             self._phi_2.vector()[self._b2g_map[:]] = np.dot(self._bem, phi_1.array())
-            boundary_condition = df.DirichletBC(self.S1, self._phi_2, df.DomainBoundary())
-            A = self._poisson_matrix.copy()
+            #boundary_condition = df.DirichletBC(self.S1, self._phi_2, df.DomainBoundary())
+            #A = self._poisson_matrix.copy()
+            #b = self._laplace_zeros
+            #boundary_condition.apply(A, b)
+            A = self._poisson_matrix
             b = self._laplace_zeros
-            boundary_condition.apply(A, b)
+            self.boundary_condition.set_value(self._phi_2)
+            self.boundary_condition.apply(A,b)
+            
+            
 
         # compute _phi_2 on the whole domain
         with fk_timed("second linear solve"):

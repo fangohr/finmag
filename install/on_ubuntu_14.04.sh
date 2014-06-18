@@ -56,5 +56,8 @@ export SLEPC_DIR=/usr/lib/slepc
 PETSC_DIR=/usr/lib/petsc SLEPC_DIR=/usr/lib/slepc sudo pip install https://bitbucket.org/slepc/slepc4py/downloads/slepc4py-3.4.tar.gz
 
 
+
 # fenicstools
+# fenics tools relies on pyvtk and h5py
+sudo apt-get install python-pyvtk python-h5py
 sudo pip install git+https://github.com/mikaem/fenicstools.git
