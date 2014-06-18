@@ -23,7 +23,7 @@ namespace finmag { namespace llg {
 
         // Computes the Lindholm formula as well as the solid angle for the specified points
         // If ComputeDoubleLayerPotential == true, computes the double layer potential
-         // If ComputeDoubleLayerPotential == false, computes the single layer potential
+        // If ComputeDoubleLayerPotential == false, computes the single layer potential
         template<bool ComputeDoubleLayerPotential>
         std::pair<vector::vector3, double>
         lindholm_formula(const vector::vector3 &R, const vector::vector3 &R1, const vector::vector3 &R2, const vector::vector3 &R3) {
@@ -119,7 +119,7 @@ namespace finmag { namespace llg {
 
     // Returns a tuple (BEM matrix, boundary-mesh-to-global-mesh vertex index mapping)
     // If ComputeDoubleLayerPotential == true, computes the FK BEM
-     // If ComputeDoubleLayerPotential == false, computes the GCR BEM
+    // If ComputeDoubleLayerPotential == false, computes the GCR BEM
     template<bool ComputeDoubleLayerPotential>
     bp::object compute_bem(const std::shared_ptr<df::BoundaryMesh> bm_ptr) {
         df::BoundaryMesh &bm = *bm_ptr;

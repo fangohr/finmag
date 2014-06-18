@@ -11,9 +11,7 @@ from finmag.util.fileio import Tablereader
 
 mesh = df.BoxMesh(-5, -5, -5, 5, 5, 5, 5, 5, 5)
 
-
-
-def compute_field(n=1, m0=(1,0,0), pbc='1d'):
+def compute_field(n=1, m0=(1,0,0), pbc=None):
     
     assert n>=1 and n%2==1
     
@@ -30,7 +28,7 @@ def compute_field(n=1, m0=(1,0,0), pbc='1d'):
     
     Ts = []
     for i in range(-n/2+1,n/2+1):
-        Ts.append((10.00000*i,0,0))
+        Ts.append((10.*i,0,0))
     
     demag = Demag(Ts=Ts)
     
@@ -39,66 +37,50 @@ def compute_field(n=1, m0=(1,0,0), pbc='1d'):
     
     sim.add(demag)
     
-    field = sim.llg.effective_field.get_dolfin_function('Demag')
+    sim.set_m((1,0,0))
+    field1 = sim.llg.effective_field.get_dolfin_function('Demag')
     
-    return field(0,0,0)
+    sim.set_m((0,0,1))
+    field2 = sim.llg.effective_field.get_dolfin_function('Demag')
+    
+    return (field1(0,0,0)/Ms, field2(0,0,0)/Ms)
 
 
-def plot_mx():
+def plot_field():
     
-    ns = [1, 3, 5, 7, 11]
-    field=[]
-    field_pbc=[]
+    ns = [1, 3, 5, 7, 11, 15, 21, 29, 59]
+    #ns = [1,3,5]
+    field1=[]
+    field2=[]
     for n in ns:
-        f=compute_field(n=n,m0=(1,0,0))
-        field.append(abs(f[0]))
+        f, g=compute_field(n=n)
+        field1.append(abs(f[0]))
+        field2.append(abs(g[2]))
         
         #f2 = compute_field(n=n,m0=(1,0,0),pbc='1d')
         #field_pbc.append(abs(f2[0]))
         
-    fig=plt.figure()
-    plt.plot(ns, field, '.-',label='field')
-    #plt.plot(ns, field_pbc, '.-',label='field2')
-    #plt.plot(ts, data['E_Demag'], label='Demag')
-    #plt.plot(ts, data['E_Exchange'], label='Exchange')
-    plt.xlabel('copies')
-    plt.ylabel('field')
+    fig=plt.figure(figsize=(5, 5))
+    plt.subplot(2, 1, 1)
+    plt.plot(ns, field1, '.-')
+    plt.xlabel('Copies')
+    plt.ylabel('Field (Ms)')
+    plt.title('m aligned along x')
     
-    plt.legend()
+    plt.subplot(2, 1, 2)
+    plt.plot(ns, field2, '.-')
     
-    fig.savefig('field_100.pdf')
+    plt.xlabel('Copies')
+    plt.ylabel('Field (Ms)')
+    plt.title('m aligned along z')
+    #plt.legend()
     
-def plot_mx_2():
+    fig.savefig('fields.pdf')
     
-    ns = [1,3,5,7,9,11]
-    field=[]
-    field_pbc=[]
-    for n in ns:
-        f=compute_field(n=n,m0=(0,0,1))
-        field.append(abs(f[2]))
-        
-        f2 = compute_field(n=n,m0=(0,0,1),pbc='1d')
-        field_pbc.append(abs(f2[2]))
-        
-    fig=plt.figure()
-    plt.plot(ns, field, '.-',label='field')
-    plt.plot(ns, field_pbc, '.-',label='field2')
-    #plt.plot(ts, data['E_Demag'], label='Demag')
-    #plt.plot(ts, data['E_Exchange'], label='Exchange')
-    plt.xlabel('copies')
-    plt.ylabel('field')
-    
-    plt.legend()
-    
-    fig.savefig('field_001.pdf')
+
     
     
 
 
 if __name__ == '__main__':
-    #relax()
-    #relax_system()
-    #plot_mx()
-    #compute_field()
-    plot_mx()
-    #plot_mx_2()
+    plot_field()
