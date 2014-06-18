@@ -1055,6 +1055,7 @@ def test_NormalModeSimulation(tmpdir):
         sim.run_ringdown(t_end=1e-12, alpha=0.02, H_ext=[1e4, 0, 0], save_m_every=2e-13, m_snapshots_filename='foobar/foo_m.npy')
 
 
+@pytest.mark.slow
 def test_normal_mode_simulation_with_periodic_boundary_conditions(tmpdir):
     os.chdir(str(tmpdir))
     csg_string = textwrap.dedent("""
@@ -1075,6 +1076,7 @@ def test_normal_mode_simulation_with_periodic_boundary_conditions(tmpdir):
     sim.export_eigenmode_animations([0, 1, 2], directory='animations', create_movies=False)
 
 
+@pytest.mark.slow
 def test_normal_mode_simulation_with_periodic_boundary_conditions_9x9(tmpdir):
     os.chdir(str(tmpdir))
     csg_string = textwrap.dedent("""
