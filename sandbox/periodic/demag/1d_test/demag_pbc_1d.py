@@ -9,7 +9,7 @@ from finmag.energies.zeeman import TimeZeemanPython
 import matplotlib.pyplot as plt
 from finmag.util.fileio import Tablereader
 
-mesh = df.BoxMesh(-5, -5, -5, 5, 5, 5, 5, 5, 5)
+mesh = df.BoxMesh(-20, -20, -20, 20, 20, 20, 20, 20, 20)
 
 def compute_field(n=1, m0=(1,0,0), pbc=None):
     
@@ -28,7 +28,7 @@ def compute_field(n=1, m0=(1,0,0), pbc=None):
     
     Ts = []
     for i in range(-n/2+1,n/2+1):
-        Ts.append((10.*i,0,0))
+        Ts.append((40.*i,0,0))
     
     demag = Demag(Ts=Ts)
     
@@ -49,7 +49,7 @@ def compute_field(n=1, m0=(1,0,0), pbc=None):
 def plot_field():
     
     ns = [1, 3, 5, 7, 11, 15, 21, 29, 59]
-    #ns = [1,3,5]
+    ns = [1,3,5,7, 29]
     field1=[]
     field2=[]
     for n in ns:

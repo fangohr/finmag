@@ -25,6 +25,8 @@ cdef extern from "common.h":
     void compute_source_nodes_weights(fastsum_plan *plan)
     double solid_angle_single(double *p, double *x1, double *x2, double *x3)
     void boundary_element(double *xp, double *x1, double *x2, double *x3, double *res, double *T)
+    void build_matrix_T(double *x_t, int *tri_nodes, double *bm, double *T, int n_node, int n_face)
+    
     int get_total_length(fastsum_plan *plan)
     void direct_sum_I(fastsum_plan *plan, double *phi, double *u1)
 
@@ -117,3 +119,18 @@ def compute_boundary_element(np.ndarray[double, ndim=1, mode="c"] xp,
                         np.ndarray[double, ndim=1, mode="c"] res,
 			np.ndarray[double, ndim=1, mode="c"] T):
     boundary_element(&xp[0], &x1[0], &x2[0], &x3[0], &res[0], &T[0])
+    
+def compute_boundary_element(np.ndarray[double, ndim=1, mode="c"] xp,
+                        np.ndarray[double, ndim=1, mode="c"] x1,
+                        np.ndarray[double, ndim=1, mode="c"] x2,
+                        np.ndarray[double, ndim=1, mode="c"] x3,
+                        np.ndarray[double, ndim=1, mode="c"] res,
+            np.ndarray[double, ndim=1, mode="c"] T):
+    boundary_element(&xp[0], &x1[0], &x2[0], &x3[0], &res[0], &T[0])
+    
+def build_boundary_matrix(np.ndarray[double, ndim=2, mode="c"] x_t,
+                        np.ndarray[int, ndim=2, mode="c"] face_nodes,
+                        np.ndarray[double, ndim=2, mode="c"] bm,
+                        np.ndarray[double, ndim=1, mode="c"] T,
+                        n_node, n_face):
+    build_matrix_T(&x_t[0,0], &face_nodes[0,0], &bm[0,0], &T[0], n_node, n_face)
