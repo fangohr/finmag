@@ -198,8 +198,8 @@ class RelaxationEvent(object):
                 self.energies[-1] > self.energies[-2]):
 
                 self.dmdt_increased_counter += 1
-                log.debug("dmdt {} times larger than last time "
-                          "(counting {}/{})."
+                log.debug("dmdt {} times larger than last time without a "
+                          "decrease in energy (counting {}/{})."
                           .format(self.dmdts[-1][1] / self.dmdts[-2][1],
                                   self.dmdt_increased_counter,
                                   self.dmdt_increased_counter_limit))
