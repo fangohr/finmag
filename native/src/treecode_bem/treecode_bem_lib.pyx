@@ -24,7 +24,7 @@ cdef extern from "common.h":
 
     void compute_source_nodes_weights(fastsum_plan *plan)
     double solid_angle_single(double *p, double *x1, double *x2, double *x3)
-    void boundary_element(double *xp, double *x1, double *x2, double *x3, double *res)
+    void boundary_element(double *xp, double *x1, double *x2, double *x3, double *res, double *T)
     int get_total_length(fastsum_plan *plan)
     void direct_sum_I(fastsum_plan *plan, double *phi, double *u1)
 
@@ -114,5 +114,6 @@ def compute_boundary_element(np.ndarray[double, ndim=1, mode="c"] xp,
                         np.ndarray[double, ndim=1, mode="c"] x1,
                         np.ndarray[double, ndim=1, mode="c"] x2,
                         np.ndarray[double, ndim=1, mode="c"] x3,
-                        np.ndarray[double, ndim=1, mode="c"] res):
-    boundary_element(&xp[0], &x1[0], &x2[0], &x3[0], &res[0])
+                        np.ndarray[double, ndim=1, mode="c"] res,
+			np.ndarray[double, ndim=1, mode="c"] T):
+    boundary_element(&xp[0], &x1[0], &x2[0], &x3[0], &res[0], &T[0])

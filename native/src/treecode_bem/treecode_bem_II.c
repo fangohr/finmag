@@ -9,6 +9,7 @@ void bulid_indices_single_II(fastsum_plan *plan, struct octree_node *tree,
     double *p0, *p1, *p2, *p3;
     double omega[3];
     int k1, k2, k3;
+    double T[3]={0,0,0};
 
     r = pow2(plan->x_t[3 * index] - tree->x)
             + pow2(plan->x_t[3 * index + 1] - tree->y)
@@ -57,7 +58,7 @@ void bulid_indices_single_II(fastsum_plan *plan, struct octree_node *tree,
                 in[k3] = 1;
 
                 if (compute_bm > 0) {
-                    boundary_element(p0, p1, p2, p3, omega);
+		  boundary_element(p0, p1, p2, p3, omega, T);
                     value[k1] += omega[0];
                     value[k2] += omega[1];
                     value[k3] += omega[2];
