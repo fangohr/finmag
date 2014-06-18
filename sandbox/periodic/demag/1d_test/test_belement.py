@@ -14,14 +14,14 @@ from finmag.native.llg import compute_lindholm_L
 
 
 def test_boundary_element(z=0.1):
-    p0 = np.array([0.,0.,0.])
-    p1 = np.array([1.999,0.,0.])
-    p2 = np.array([0.,10.222,0.])
-    p = np.array([2*z,z,z])
-    
+    p0 = np.array([ 5.,  3., -3.])
+    p1 = np.array([ 5.,  3., -5.])
+    p2 = np.array([ 5.,  5., -3.])
+    p = np.array( [ 5.,  3., -5.])
     be = np.array([0.,0.,0.])
+    T = np.array([0.,0.,0.])
     
-    compute_boundary_element(p,p0,p1,p2,be)
+    compute_boundary_element(p,p0,p1,p2,be,T)
     
     be2 = compute_lindholm_L(p,p0,p1,p2)
     
@@ -43,11 +43,11 @@ def test_boundary_element(z=0.1):
     
     print 'solid angle',vert_bsa/(4*np.pi)
     
-    return be2
+    return be
     
 def plot_mx():
     
-    zs=np.linspace(0,1e-2,101)
+    zs=np.linspace(0,-1e-2,21)
     bs = []
     for z in zs:
         r = test_boundary_element(z)
@@ -67,6 +67,6 @@ def plot_mx():
 
 
 if __name__ == '__main__':
-    print test_boundary_element(z=1e-100)
+    print test_boundary_element(z=.0)
     #plot_mx()
     

@@ -138,6 +138,7 @@ double solid_angle_single(double *p, double *x1, double *x2, double *x3) {
 
     div = a * b * c + dot(x, y) * c + dot(x, z) * b + dot(y, z) * a;
     omega = atan2(fabs(d), div);
+    
 
     if (omega < 0) {
         omega += M_PI;
@@ -146,10 +147,46 @@ double solid_angle_single(double *p, double *x1, double *x2, double *x3) {
     return (2 * omega);
 }
 
-void boundary_element(double *xp, double *x1, double *x2, double *x3, double *res) {
+//compute the solid angle if the given point p coincide one vertex of the triangle
+double solid_angle_single_reduced(double *p, double *x1, double *x2, double *x3, double *T, double *res) {
+
+  int i;
+  double x[3], y[3], z[3], v[3];
+  double  a, b, c, omega=0;
+
+  for (i = 0; i < 3; i++) {
+    x[i] = x1[i] - p[i];
+    y[i] = x2[i] - p[i];
+    z[i] = x3[i] - p[i];
+    v[i] = p[i] + T[i];
+    res[i] = 0;
+  }
+
+  a = norm(x);
+  b = norm(y);
+  c = norm(z);
+
+  if (a==0.0){
+    res[0] = solid_angle_single(p,v,x2,x3)/(4*M_PI);
+  }else if (b==0.0){
+	res[1] = solid_angle_single(p,x1,v,x3)/(4*M_PI);
+  }else if (c==0.0){
+	res[2] = solid_angle_single(p,x1,x2,v)/(4*M_PI);
+  }else{
+	  omega = solid_angle_single(p, x1, x2, x3);
+    //omega = 0;
+    //printf("a=%g b=%g c=%g d=%g\n",a,b,c,det(x,y,z));
+  }
+  
+  return omega;
+  
+}
+
+void boundary_element(double *xp, double *y1, double *y2, double *y3, double *res, double *T) {
 
     int i;
     double zetav[3], zeta;
+    double x1[3], x2[3], x3[3];
     double xi1[3], xi2[3], xi3[3];
     double sv1[3], sv2[3], sv3[3];
     double rhov1[3], rhov2[3], rhov3[3];
@@ -161,13 +198,20 @@ void boundary_element(double *xp, double *x1, double *x2, double *x3, double *re
 
     double omega, tmp[3];
 
+    for(i=0;i<3;i++){
+      x1[i]=y1[i]+T[i];
+      x2[i]=y2[i]+T[i];
+      x3[i]=y3[i]+T[i];
+      res[i]=0;
+    }
+
     omega = solid_angle_single(xp, x1, x2, x3);
 
-    if (omega == 0) {
-        res[0] = 0;
-        res[1] = 0;
-        res[2] = 0;
-        return;
+    if (omega == 0.0) {
+        if (norm(T)>0){
+        	omega = solid_angle_single_reduced(xp, x1, x2, x3, T, res);
+        }
+       return;
     }
 
     for (i = 0; i < 3; i++) {
@@ -219,11 +263,13 @@ void boundary_element(double *xp, double *x1, double *x2, double *x3, double *re
     rho1 = norm(rhov1);
     rho2 = norm(rhov2);
     rho3 = norm(rhov3);
-
-    p[0] = log((rho1 + rho2 + s1) / (rho1 + rho2 - s1));
-    p[1] = log((rho2 + rho3 + s2) / (rho2 + rho3 - s2));
-    p[2] = log((rho3 + rho1 + s3) / (rho3 + rho1 - s3));
-
+    //printf("rho1=%g rho2=%g  rho3=%g\n",rho1, rho2, rho3);
+    //printf("s1=%g s2=%g s3=%g\n",s1,s2,s3);
+    p[0] = log((rho1 + rho2 + s1) / (rho1 + rho2 - s1 + 1e-300));
+    p[1] = log((rho2 + rho3 + s2) / (rho2 + rho3 - s2 + 1e-300));
+    p[2] = log((rho3 + rho1 + s3) / (rho3 + rho1 - s3 + 1e-300));
+    //printf("p0=%g p1=%g p2=%g\n",p[0],p[1],p[2]);
+    
     for (i = 0; i < 3; i++) {
         tmp[i] = 0;
     }
@@ -241,10 +287,8 @@ void boundary_element(double *xp, double *x1, double *x2, double *x3, double *re
     res[0] = (eta2 * omega - zeta * tmp[0]) * s2 / (8.0 * M_PI * area);
     res[1] = (eta3 * omega - zeta * tmp[1]) * s3 / (8.0 * M_PI * area);
     res[2] = (eta1 * omega - zeta * tmp[2]) * s1 / (8.0 * M_PI * area);
-
     return;
 }
-
 
 
 double **alloc_2d_double(int ndim1, int ndim2) {

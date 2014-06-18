@@ -13,7 +13,7 @@ mesh = df.BoxMesh(-5, -5, -5, 5, 5, 5, 5, 5, 5)
 
 
 
-def compute_field(n=1, m0=(1,0,0), pbc=None):
+def compute_field(n=1, m0=(1,0,0), pbc='1d'):
     
     assert n>=1 and n%2==1
     
@@ -30,7 +30,7 @@ def compute_field(n=1, m0=(1,0,0), pbc=None):
     
     Ts = []
     for i in range(-n/2+1,n/2+1):
-        Ts.append((10.000*i,0,0))
+        Ts.append((10.00000*i,0,0))
     
     demag = Demag(Ts=Ts)
     
@@ -46,7 +46,7 @@ def compute_field(n=1, m0=(1,0,0), pbc=None):
 
 def plot_mx():
     
-    ns = [1,3,5,7,9,11]
+    ns = [1, 3, 5, 7, 11]
     field=[]
     field_pbc=[]
     for n in ns:
@@ -99,6 +99,6 @@ if __name__ == '__main__':
     #relax()
     #relax_system()
     #plot_mx()
-    compute_field()
+    #compute_field()
     plot_mx()
     #plot_mx_2()
