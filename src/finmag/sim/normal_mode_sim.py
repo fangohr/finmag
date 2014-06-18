@@ -440,6 +440,30 @@ class NormalModeSimulation(Simulation):
             else:
                 log.debug('Re-using previously computed eigenproblem matrix.')
 
+    def _extend_to_full_mesh(self, w):
+        """
+        The argument `w` should be a vector representing a dolfin Function
+        on the mesh belonging to the simulation class. If we are using
+        periodic boundary conditions then `w` may have fewer elements than
+        there are mesh nodes (because some nodes will be identified). This
+        helper function extends `w` to a 'full' vector which has one element
+        for each mesh node.
+        """
+        # XXX TODO: This is a mess; we should accept a dolfin Function instead of a numpy array w
+        #           and extract its function space and dofmap from that directly. Or even better,
+        #           this should all be handled in the Field class.
+        n = len(self.llg.S1.dofmap().dofs())
+        dim = len(w.ravel()) // n
+        assert(len(w.ravel()) == dim * n)
+        w.shape = (-1, n)
+        # XXX TODO: The following line assumes that a function with vector shape m x n has the
+        #           same dofmap as one with shape 1 x n, which is probably not true in general.
+        #           But hopefully this will be solved with the Field class.
+        v2d = df.vertex_to_dof_map(self.llg.S1)
+
+        w_extended = w[:, v2d[range(self.mesh.num_vertices())]]
+        return w_extended.ravel()
+
     def compute_normal_modes(self, n_values=10, solver='scipy_dense',
                              discard_negative_frequencies=True,
                              filename_mat_A=None, filename_mat_M=None,
@@ -581,6 +605,9 @@ class NormalModeSimulation(Simulation):
                 # Eigenvalues are complex due to the missing factor of 1j in the matrix with real entries. Here we correct for this.
                 omega = 1j*omega
 
+        eigenvecs_extended = np.array([self._extend_to_full_mesh(w) for w in eigenvecs])
+        eigenvecs = eigenvecs_extended
+
         # Sanity check: frequencies should occur in +/- pairs
         pos_freqs = filter(lambda x: x >= 0, omega)
         neg_freqs = filter(lambda x: x <= 0, omega)
@@ -701,7 +728,8 @@ class NormalModeSimulation(Simulation):
         else:
             raise ValueError("Filename must end in one of the following suffixes: .pvd, .jpg, .avi.")
 
-        export_normal_mode_animation(self.mesh, self.m, self.eigenfreqs[k], self.eigenvecs[k],
+        m = self._extend_to_full_mesh(self.m)
+        export_normal_mode_animation(self.mesh, m, self.eigenfreqs[k], self.eigenvecs[k],
                                      pvd_filename, num_cycles=num_cycles,
                                      num_snapshots_per_cycle=num_snapshots_per_cycle,
                                      scaling=scaling, dm_only=dm_only)
@@ -767,10 +795,10 @@ class NormalModeSimulation(Simulation):
             log.warning("No eigenvectors have been computed. Please call "
                         "`sim.compute_normal_modes()` to do so.")
 
+        m = self._extend_to_full_mesh(self.m)
         if region == None:
             submesh = self.mesh
             w = self.eigenvecs[k]
-            m = self.m
         else:
             # Restrict m and the eigenvector array to the submesh
             # TODO: This is messy and should be factored out into helper routines.
@@ -780,7 +808,7 @@ class NormalModeSimulation(Simulation):
             #           the dofs that are identified).
             submesh = self.get_submesh(region)
             restr = helpers.restriction(self.mesh, submesh)
-            m = restr(self.m.reshape(3, -1)).ravel()
+            m = restr(m.reshape(3, -1)).ravel()
             w1, w2 = self.eigenvecs[k].reshape(2, -1)
             w1_restr = restr(w1)
             w2_restr = restr(w2)
