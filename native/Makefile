@@ -45,7 +45,7 @@ $(MODULE_DIR)/neb.so : src/neb/py_neb_module.o src/util/np_array.o src/neb/helpe
 #	cd src/fast_sum_lib && python setup.py build_ext --inplace
 #	install src/fast_sum_lib/fast_sum_lib.so ../src/finmag/native
 
-$(MODULE_DIR)/treecode_bem.so: src/treecode_bem/treecode_bem_I.c  src/treecode_bem/treecode_bem_II.c src/treecode_bem/common.c src/treecode_bem/treecode_bem_lib.pyx
+$(MODULE_DIR)/treecode_bem.so: src/treecode_bem/treecode_bem_I.c  src/treecode_bem/treecode_bem_II.c src/treecode_bem/common.c src/treecode_bem/bem_pbc.c src/treecode_bem/treecode_bem_lib.pyx 
 	cd src/treecode_bem && python setup.py build_ext --inplace
 	install src/treecode_bem/treecode_bem.so ../src/finmag/native
 

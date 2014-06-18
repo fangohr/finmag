@@ -14,6 +14,7 @@ from finmag.native.llg import compute_lindholm_L
 from finmag.native.llg import compute_bem_fk
 from finmag.native.treecode_bem import compute_solid_angle_single
 from finmag.native.treecode_bem import compute_boundary_element
+from finmag.native.treecode_bem import build_boundary_matrix
 
 class BMatrixPBC(object):
     
@@ -73,11 +74,17 @@ class BMatrixPBC(object):
     
     def compute_bmatrix(self):
         
+        cds = self.bmesh.coordinates()
+        face_nodes = np.array(self.bmesh.cells(),dtype=np.int32)
+        
+        
         self.bm[:,:] = 0.0
         
         for T in self.Ts:
             #print T
-            self.__compute_bmatrix_T(T)
+            #self.__compute_bmatrix_T(T)
+            build_boundary_matrix(cds, face_nodes, self.bm, T, len(cds), len(face_nodes))
+            
 
         for p in range(self.bmesh.num_vertices()):
             self.bm[p][p] += self.vert_bsa[p] - 1
