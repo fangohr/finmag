@@ -10,6 +10,7 @@ a template for other techniques like the GCR.
 """
 import numpy as np
 import dolfin as df
+import logging
 from aeon import timed, mtimed, Timer, default_timer
 from finmag.util.consts import mu0
 from finmag.native.llg import compute_bem_fk
@@ -17,6 +18,8 @@ from finmag.util.meshes import nodal_volume
 from finmag.util import helpers
 from fk_demag_pbc import BMatrixPBC
 
+
+logger = logging.getLogger('finmag')
 
 def prepared_timed(measurement_group, timer_to_use):
     def new_timed(measurement_name):
@@ -37,7 +40,7 @@ class FKDemag(object):
     .. _Hybrid method for computing demagnetizing fields: http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=106342
 
     """
-    def __init__(self, name='Demag', thin_film=False, Ts=None):
+    def __init__(self, name='Demag', thin_film=False, nx=None, ny=None, spacing_x=None, spacing_y=None, Ts=None):
         """
         Create a new FKDemag instance.
 
@@ -82,6 +85,13 @@ class FKDemag(object):
             self.parameters["phi_1_preconditioner"] = "ilu"
             self.parameters["phi_3_preconditioner"] = "none"
             
+        if (nx != None or ny != None) and Ts != None:
+            logger.warning("Both 'Ts' specified and nx={}, ny={} set. Using explicit values in 'Ts'.".format(nx, ny))
+
+        self.nx = nx
+        self.ny = ny
+        self.spacing_x = spacing_x
+        self.spacing_y = spacing_y
         self.Ts = Ts
 
     @mtimed(default_timer)
@@ -143,6 +153,22 @@ class FKDemag(object):
         # same matrix sparsity pattern across different demag solves,
         # which should speed up things.
         self._laplace_solver.parameters["preconditioner"]["structure"] = "same_nonzero_pattern"
+
+        if self.Ts == None and (self.nx != None or self.ny != None):
+            self.nx = self.nx or 1
+            self.ny = self.ny or 1
+            coords = mesh.coordinates()
+            xmin, ymin, zmin = coords.min(axis=0)
+            xmax, ymax, zmax = coords.max(axis=0)
+            if self.spacing_x is None:
+                self.spacing_x = xmax - xmin
+            if self.spacing_y is None:
+                self.spacing_y = ymax - ymin
+            logger.debug("Creating macro-geometry with demag {} x {} tiles (spacing: {} x {})".format(self.nx, self.ny, self.spacing_x, self.spacing_y))
+            self.Ts = [(self.spacing_x * i, self.spacing_y * j, 0.0)
+                      for i in range(-(self.nx // 2), -(self.nx // 2) + self.nx)
+                      for j in range(-(self.ny // 2), -(self.ny // 2) + self.ny)]
+
         with fk_timed('compute BEM'):
             if not hasattr(self, "_bem"):
                 if self.Ts is not None:
