@@ -1125,8 +1125,9 @@ class Simulation(object):
         self.llg.use_zhangli(J_profile=J_profile, P=P, beta=beta, using_u0=using_u0)
 
 def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sundials",
-             A=None, K1=None, K1_axis=None, H_ext=None, demag_solver='FK',
-             demag_solver_params={}, D=None, name="unnamed", pbc=None, sim_class=Simulation):
+             A=None, K1=None, K1_axis=None, H_ext=None, demag_solver='FK', nx=None, ny=None,
+             spacing_x=None, spacing_y=None, demag_solver_params={}, D=None, name="unnamed",
+             pbc=None, sim_class=Simulation):
     """
     Create a Simulation instance based on the given parameters.
 
@@ -1146,6 +1147,14 @@ def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sun
 
        exchange = Exchange(A)
        sim.add(exchange)
+
+    The arguments `nx`, `ny`, `spacing_x`, `spacing_y` refer to the Demag
+    interaction. If specified, they allow to create a "macro-geometry"
+    where the demag field is computed as if there were repeated copies
+    of the mesh present on either side of the sample. The copies are
+    assumed to be arranged in a grid with `nx` tiles in x-direction and
+    `ny` tiles in y-direction. The spacing between neighbouring tiles is
+    specified by `spacing_x` and `spacing_y`.
 
     The argument `demag_solver_params` can be used to configure the demag solver
     (if the chosen solver class supports this). Example with the 'FK' solver:
@@ -1178,7 +1187,7 @@ def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sun
     if D != None:
         sim.add(DMI(D))
     if demag_solver != None:
-        demag = Demag(solver=demag_solver)
+        demag = Demag(solver=demag_solver, nx=nx, ny=ny, spacing_x=spacing_x, spacing_y=spacing_y)
         if demag_solver_params != {}:
             for (k, v) in demag_solver_params.items():
                 log.debug("Setting demag solver parameter {}='{}' for simulation '{}'".format(k, v, sim.name))
