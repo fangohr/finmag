@@ -551,19 +551,25 @@ class Simulation(object):
                 self.integrator = llg_integrator(self.llg, self.llg.m, backend=backend, **kwargs)
                 self.integrator.integrator.set_scalar_tolerances(self.reltol, self.abstol)
 
-            self.tablewriter.add_entity( 'steps',  {
-                'unit': '<1>',
-                'get': lambda sim: sim.integrator.stats()['nsteps'],
-                'header': 'steps'})
+            ## HF: the following code works only for sundials, i.e. not for scipy.integrate.vode.
 
-            self.tablewriter.add_entity('last_step_dt', {
-                'unit': '<1>',
-                'get': lambda sim: sim.integrator.stats()['hlast'],
-                'header': 'last_step_dt'})
-            self.tablewriter.add_entity('dmdt', {
-                'unit': '<A/ms>',
-                'get': lambda sim: sim.dmdt_max,
-                'header': ('dmdt_x', 'dmdt_y', 'dmdt_z')})
+            #self.tablewriter.add_entity( 'steps',  {
+            #    'unit': '<1>',
+            #    'get': lambda sim: sim.integrator.stats()['nsteps'],
+            #    'header': 'steps'})
+            self.tablewriter.modify_entity_get_method('steps', lambda sim: sim.integrator.stats()['nsteps'])
+
+            #self.tablewriter.add_entity('last_step_dt', {
+            #    'unit': '<1>',
+            #    'get': lambda sim: sim.integrator.stats()['hlast'],
+            #    'header': 'last_step_dt'})
+            self.tablewriter.modify_entity_get_method('last_step_dt', lambda sim: sim.integrator.stats()['hlast'])
+
+            #self.tablewriter.add_entity('dmdt', {
+            #    'unit': '<A/ms>',
+            #    'get': lambda sim: sim.dmdt_max,
+            #    'header': ('dmdt_x', 'dmdt_y', 'dmdt_z')})
+            self.tablewriter.modify_entity_get_method('dmdt', lambda sim: sim.dmdt_max)
         else:
             log.warning("Cannot create integrator - exists already: {}".format(self.integrator))
         return self.integrator
