@@ -54,11 +54,11 @@ class Test(object):
         demag.parameters['phi_2'] = parameters
         
         self.exchange = Exchange(13e-12)
-        #self.zeeman = Zeeman([0, 0, 1e5])
+        self.zeeman = Zeeman([0, 0, 1e5])
         
         self.llg.effective_field.add(self.exchange)
-        self.llg.effective_field.add(demag)
-        #self.llg.effective_field.add(self.zeeman)
+        #self.llg.effective_field.add(demag)
+        self.llg.effective_field.add(self.zeeman)
         
         self.m_petsc = df.as_backend_type(self.llg._m.vector()).vec()
         self.h_petsc = df.as_backend_type(self.field.vector()).vec()
@@ -134,7 +134,7 @@ if __name__ == '__main__':
         sim.run_until(t)
         print t, sim.spin[0]
         #sim.field.vector().set_local(sim.llg.effective_field.H_eff)
-        #file << sim.m
+        file << sim.m
         energy.append(sim.llg.effective_field.total_energy())
         
     plot_m(ts,energy)
