@@ -51,6 +51,53 @@ def test_Table_writer_and_reader(tmpdir):
         Tablereader(os.path.join(MODULE_DIR, 'test-incomplete-data.ndt'))
 
 
+
+
+
+def test_Tablewriter_complains_about_changing_entities():
+    import finmag
+    sim = finmag.example.barmini(name='tmp-test-fileio2')
+    # create ndt file
+    sim.save_averages()
+
+    import pytest
+    with pytest.raises(RuntimeError):
+        # add entity (should raise RuntimeError)
+        sim.tablewriter.add_entity('test', {'header':'test', 'unit':'<>', 'get': lambda s: -1})
+
+
+
+def test_Tablewriter_complains_about_incomplete_entities():
+    import pytest
+    import finmag
+    sim = finmag.example.barmini(name='tmp-test-fileio2')
+
+    # this should pass
+    sim.tablewriter.add_entity('test', {'header':'test', 'unit':'<>', 'get': lambda s: -1})
+
+    # this should fail because we add 'test' the second time
+    with pytest.raises(AssertionError):
+        sim.tablewriter.add_entity('test', {'header':'test', 'unit':'<>', 'get': lambda s: -1})
+
+    with pytest.raises(AssertionError):
+        # should fail because 'header' is missing
+        sim.tablewriter.add_entity('test2', {'unknown-keyword':'test', 'unit':'<>', 'get': lambda s: -1})
+
+    with pytest.raises(AssertionError):
+        # should fail because 'unit' is missing
+        sim.tablewriter.add_entity('test3', {'header':'test', 'unit-is-missing':'<>', 'get': lambda s: -1})
+
+    with pytest.raises(AssertionError):
+        # should fail because 'get' is missing
+        sim.tablewriter.add_entity('test4', {'header':'test', 'unit':'<>', 'get-is-missing': lambda s: -1})
+
+    with pytest.raises(AssertionError):
+        # should fail because dictionary is not complete
+        sim.tablewriter.add_entity('test4', {})
+
+
+
+
 def test_field_saver(tmpdir):
     os.chdir(str(tmpdir))
 

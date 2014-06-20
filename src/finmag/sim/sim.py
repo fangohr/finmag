@@ -76,15 +76,14 @@ class Simulation(object):
         # timesteps.
         self.tablewriter = Tablewriter(self.ndtfilename, self, override=True)
 
-        self.tablewriter.entities['E_total'] = {
+        self.tablewriter.add_entity('E_total', {
             'unit': '<J>',
             'get': lambda sim: sim.total_energy(),
-            'header': 'E_total'}
-        self.tablewriter.entities['H_total'] = {
+            'header': 'E_total'})
+        self.tablewriter.add_entity('H_total', {
             'unit': '<A/m>',
             'get': lambda sim: helpers.average_field(sim.effective_field()),
-            'header': ('H_total_x', 'H_total_y', 'H_total_z')}
-        self.tablewriter.update_entity_order()
+            'header': ('H_total_x', 'H_total_y', 'H_total_z')})
 
         log.info("Creating Sim object '{}' (rank={}/{}).".format(
             self.name, df.MPI.rank(df.mpi_comm_world()), df.MPI.size(df.mpi_comm_world())))
@@ -290,15 +289,14 @@ class Simulation(object):
 
         energy_name = 'E_{}'.format(interaction.name)
         field_name = 'H_{}'.format(interaction.name)
-        self.tablewriter.entities[energy_name] = {
+        self.tablewriter.add_entity(energy_name, {
             'unit': '<J>',
             'get': lambda sim: sim.get_interaction(interaction.name).compute_energy(),
-            'header': energy_name}
-        self.tablewriter.entities[field_name] = {
+            'header': energy_name})
+        self.tablewriter.add_entity(field_name, {
             'unit': '<A/m>',
             'get': lambda sim: sim.get_interaction(interaction.name).average_field(),
-            'header': (field_name + '_x', field_name + '_y', field_name + '_z')}
-        self.tablewriter.update_entity_order()
+            'header': (field_name + '_x', field_name + '_y', field_name + '_z')})
 
     def effective_field(self):
         """
@@ -398,6 +396,13 @@ class Simulation(object):
         """
         log.debug("Removing interaction '{}' from simulation '{}'".format(
                 interaction_type, self.name))
+
+        # remove this interaction from TableWriter entities
+        E_name = "E_{}".format(interaction_type)
+        H_name = "E_{}".format(interaction_type)
+        self.tablewriter.delete_entity_get_method(E_name)
+        self.tablewriter.delete_entity_get_method(H_name)
+
         return self.llg.effective_field.remove(interaction_type)
 
     def set_H_ext(self, H_ext):
@@ -553,22 +558,25 @@ class Simulation(object):
                 self.integrator = llg_integrator(self.llg, self.llg.m, backend=backend, **kwargs)
                 self.integrator.integrator.set_scalar_tolerances(self.reltol, self.abstol)
 
-            self.tablewriter.entities['steps'] = {
-                'unit': '<1>',
-                'get': lambda sim: sim.integrator.stats()['nsteps'],
-                'header': 'steps'}
+            ## HF: the following code works only for sundials, i.e. not for scipy.integrate.vode.
 
-            self.tablewriter.entities['last_step_dt'] = {
-                'unit': '<1>',
-                'get': lambda sim: sim.integrator.stats()['hlast'],
-                'header': 'last_step_dt'}
-            self.tablewriter.entities['dmdt'] = {
-                'unit': '<A/ms>',
-                'get': lambda sim: sim.dmdt_max,
-                'header': ('dmdt_x', 'dmdt_y', 'dmdt_z')}
+            #self.tablewriter.add_entity( 'steps',  {
+            #    'unit': '<1>',
+            #    'get': lambda sim: sim.integrator.stats()['nsteps'],
+            #    'header': 'steps'})
+            self.tablewriter.modify_entity_get_method('steps', lambda sim: sim.integrator.stats()['nsteps'])
 
-            self.tablewriter.update_entity_order()
+            #self.tablewriter.add_entity('last_step_dt', {
+            #    'unit': '<1>',
+            #    'get': lambda sim: sim.integrator.stats()['hlast'],
+            #    'header': 'last_step_dt'})
+            self.tablewriter.modify_entity_get_method('last_step_dt', lambda sim: sim.integrator.stats()['hlast'])
 
+            #self.tablewriter.add_entity('dmdt', {
+            #    'unit': '<A/ms>',
+            #    'get': lambda sim: sim.dmdt_max,
+            #    'header': ('dmdt_x', 'dmdt_y', 'dmdt_z')})
+            self.tablewriter.modify_entity_get_method('dmdt', lambda sim: sim.dmdt_max)
         else:
             log.warning("Cannot create integrator - exists already: {}".format(self.integrator))
         return self.integrator
