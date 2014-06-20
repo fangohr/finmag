@@ -101,11 +101,18 @@ class Tablewriter(object):
                   'header': ('m_x', 'm_y', 'm_z')}
         """
         if self.save_head:
-            raise RuntimeError("Attempt to add entity {} to ndt file {} -- this is impossible".\
-                               format(entity_dict, self.filename))
+            raise RuntimeError("Attempt to add entity '{}'->'{}' to ndt file {} -- this is impossible".\
+                               format(name, dic, self.filename))
         assert name not in self._entities.keys(), \
                               "Attempt to add a second '{}' to entities for {}".\
                               format(name, self.filename)
+
+        # check that right keywords are given
+        entity_descr = "entity '{}' -> '{}'".format(name, dic)
+        assert 'header' in dic, "Missing 'header' in " + entity_descr
+        assert 'unit' in dic, "Missing 'unit' in " + entity_descr
+        assert 'get' in dic, "Missing 'get' in " + entity_descr
+
         self._entities[name] = dic
         self.update_entity_order()
 
