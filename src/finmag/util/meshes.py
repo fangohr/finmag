@@ -1309,3 +1309,32 @@ def embed3d(mesh, z_embed):
 
     editor.close()
     return mesh
+
+
+def build_mesh(vertices, cells):
+    """
+    Helper function to create a mesh with the given
+    """
+    vertices = np.asarray(vertices, dtype='double')
+    cells = np.asarray(cells, dtype='uintp')
+
+    assert vertices.ndim == 2
+    assert cells.ndim == 2
+
+    geom_dim = vertices.shape[-1]
+    top_dim = cells.shape[-1] - 1
+
+    mesh = df.Mesh()
+    editor = df.MeshEditor()
+    editor.open(mesh, geom_dim, top_dim)
+    editor.init_vertices(len(vertices))
+    editor.init_cells(len(cells))
+
+    for i, pt in enumerate(vertices):
+        editor.add_vertex(i, pt)
+
+    for i, c in enumerate(cells):
+        editor.add_cell(i, c)
+
+    editor.close()
+    return mesh
