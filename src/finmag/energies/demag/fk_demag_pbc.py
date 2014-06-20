@@ -8,13 +8,66 @@ time with less code. Should be more conducive to further optimisation or as
 a template for other techniques like the GCR.
 
 """
+import logging
 import numpy as np
 import dolfin as df
-from finmag.native.llg import compute_lindholm_L
-from finmag.native.llg import compute_bem_fk
 from finmag.native.treecode_bem import compute_solid_angle_single
 from finmag.native.treecode_bem import compute_boundary_element
 from finmag.native.treecode_bem import build_boundary_matrix
+
+logger = logging.getLogger('finmag')
+
+class MacroGeometry(object):
+    def __init__(self, nx=1, ny=1, dx=None, dy=None, Ts=None):
+        """
+        If Ts is not None the other parameters will be ignored.
+        """
+        
+        self.nx = nx
+        self.ny = ny
+        self.dx = dx
+        self.dy = dy
+        self.Ts = Ts
+
+        if Ts != None:
+            logger.warning("'Ts' is not None, using explicit values in 'Ts'.")
+        else:
+            if nx < 1 or nx%2==0 or ny<1 or ny%2==0:
+                raise Exception('Both nx and ny should larger than 0 and must be odd.')
+
+
+    def compute_Ts(self, mesh):
+        if self.Ts is not None:
+            return self.Ts
+
+        dx, dy = self.find_mesh_info(mesh)
+        if self.dx is None:
+            self.dx = dx
+        if self.dy is None:
+            self.dy = dy
+        
+        Ts = []
+        for i in range(-self.nx//2+1,self.nx//2+1):
+            for j in range(-self.ny//2+1,self.ny//2+1):
+                Ts.append([self.dx*i*1.0,self.dy*j*1.0,0])
+        
+        logger.debug("Creating macro-geometry with demag {} x {} tiles (dxdy: {} x {})".format(self.nx, self.ny, self.dx, self.dy))
+           
+        self.Ts = Ts
+        
+        return self.Ts
+
+    def find_mesh_info(self, mesh):
+        
+        xt = mesh.coordinates()
+        
+        max_v = xt.max(axis=0)
+        min_v = xt.min(axis=0)
+        
+        sizes = max_v - min_v
+        return sizes[0], sizes[1]
+        
+        
 
 class BMatrixPBC(object):
     
@@ -26,8 +79,7 @@ class BMatrixPBC(object):
         #for (i, val) in enumerate(self.b2g_map):
             #self.g2b_map[val] = i
         self.__compute_bsa()
-        self.Ts = np.array(Ts)
-        #self.S3 = S3
+        self.Ts = np.array(Ts, dtype=np.float)
         
         n = self.bmesh.num_vertices()
         self.bm = np.zeros((n, n))
@@ -49,7 +101,7 @@ class BMatrixPBC(object):
 
                 vert_bsa[mc[i][j]]+=tmp_omega
 
-        vert_bsa = vert_bsa/(4*np.pi) 
+        vert_bsa = vert_bsa/(4*np.pi) - 1.0
 
         self.vert_bsa = vert_bsa[self.b2g_map]
     
@@ -77,57 +129,14 @@ class BMatrixPBC(object):
         cds = self.bmesh.coordinates()
         face_nodes = np.array(self.bmesh.cells(),dtype=np.int32)
         
-        
         self.bm[:,:] = 0.0
         
         for T in self.Ts:
-            #print T
-            #self.__compute_bmatrix_T(T)
             build_boundary_matrix(cds, face_nodes, self.bm, T, len(cds), len(face_nodes))
             
-
         for p in range(self.bmesh.num_vertices()):
-            self.bm[p][p] += self.vert_bsa[p] - 1
+            self.bm[p][p] += self.vert_bsa[p]
             
-        #To be cleaned later ...
-        
-        #bbt = df.BoundaryBoxTree()
-        #bbt.build(self.bmesh)
-        #bmesh_coords = self.bmesh.coordinates()
-        #def find_closest_mesh_point(idx):
-        #    pt = bmesh_coords[idx]
-        #    cell_idx, dist = bbt.compute_closest_entity(df.Point(pt[0], pt[1], pt[2]))
-        """
-        dofmap = self.S3.dofmap()
-        S1 = df.FunctionSpace(self.mesh, "Lagrange", 1, constrained_domain=dofmap.constrained_domain)
-        
-        d2v = df.dof_to_vertex_map(S1)
-        v2d = df.vertex_to_dof_map(S1)
-        
-        coords = self.bmesh.coordinates()
-        maxdist = np.linalg.norm(coords.max(axis=0) - coords.min(axis=0))
-        print maxdist
-        for T in self.Ts:
-            if np.linalg.norm(T) == 0 or np.linalg.norm(T) > maxdist:
-                continue
-            for p in range(self.bmesh.num_vertices()):
-                p_g = self.b2g_map[p]
-                p2_g = d2v[v2d[p_g]]
-                p2 = self.g2b_map[p2_g]
-                #print "[DDD] p={}, p2={}".format(p, p2)
-                #if np.allclose(coords[p2], coords[p] - T):
-                    #print "[DDD] Adding correction.", T, p, p2, self.vert_bsa[p], self.vert_bsa[p2]
-                    #self.bm[p2][p] += self.vert_bsa[p2]         
-    """
-    
-    def find_mesh_info(self):
-        
-        xt = self.mesh.coordinates()
-        
-        max_v = xt.max(axis=0)
-        min_v = xt.min(axis=0)
-        
-        self.sizes = max_v - min_v
 
 
         
