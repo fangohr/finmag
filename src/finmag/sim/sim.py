@@ -396,6 +396,13 @@ class Simulation(object):
         """
         log.debug("Removing interaction '{}' from simulation '{}'".format(
                 interaction_type, self.name))
+
+        # remove this interaction from TableWriter entities
+        E_name = "E_{}".format(interaction_type)
+        H_name = "E_{}".format(interaction_type)
+        self.tablewriter.delete_entity_get_method(E_name)
+        self.tablewriter.delete_entity_get_method(H_name)
+
         return self.llg.effective_field.remove(interaction_type)
 
     def set_H_ext(self, H_ext):

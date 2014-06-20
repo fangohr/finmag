@@ -479,7 +479,7 @@ class TestSimulation(object):
         assert_number_of_files('a.pvd', 1)
         assert_number_of_files('a*.vtu', 5)
 
-    def test_remove_interaction(self):
+    def test_remove_interaction1(self):
 
         mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 1, 1, 1)
         sim = Simulation(mesh, Ms=1, unit_length=1e-9)
@@ -497,11 +497,25 @@ class TestSimulation(object):
         with pytest.raises(KeyError):
             sim.remove_interaction("Zeeman")
 
+    def test_remove_interaction2(self):
+        mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 1, 1, 1)
+        sim = Simulation(mesh, Ms=1, unit_length=1e-9)
+
         # Two different Zeeman interactions present
         sim.add(Zeeman((0, 0, 1)))
         sim.add(Zeeman((0, 0, 2), name="Zeeman2"))
         sim.remove_interaction("Zeeman")
         sim.remove_interaction("Zeeman2")
+
+        # Adding Zeeman once more will trigger an error. HF would argue that this is okay:
+        # it seems odd to add and remove interactions like this.
+        # 
+        # We could in principle allow this (by checking whether currently the get method 
+        # returns NAN for this interaction, or defining a token for NAN to be returned), but
+        # it seems to increase complexity for a use case that shouldn't really exist.
+        with pytest.raises(AssertionError):
+            sim.add(Zeeman((0, 0, 1)))
+
 
     def test_switch_off_H_ext(self):
         """
