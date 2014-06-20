@@ -93,7 +93,8 @@ def test_ndt_writing_correct_number_of_columns_1line():
     number_of_columns_in_ndt_file_consistent('bug_saving_average_data_june_2014_a.ndt')
 
 
-@pytest.mark.xfail
+#@pytest.mark.xfail
+
 def test_ndt_writing_correct_number_of_columns_2_and_more_lines():
 
     # Here we write multiple lines to the ndt file
@@ -148,7 +149,7 @@ def test_ndt_writing_order_of_magnitude_m_1line():
     check_magnetisation_is_of_sensible_magnitude(
         'bug_saving_average_data_june_2014_c.ndt')
 
-@pytest.mark.xfail
+#@pytest.mark.xfail
 def test_ndt_writing_order_of_magnitude_m_2_and_more_lines():
 
     # Here we write multiple lines to the ndt file
