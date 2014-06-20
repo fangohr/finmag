@@ -1,5 +1,6 @@
 import os
 import logging
+import types
 import numpy as np
 from glob import glob
 from types import TupleType, StringType
@@ -24,6 +25,10 @@ class Tablewriter(object):
         self.float_format = "%" + str(charwidth)+'.'+str(precision)+ "g "
         self.string_format = "%" + str(charwidth) + "s "
 
+        # save_head records whether the headings (name and units)
+        # have been saved already
+        self.save_head = False
+
         # entities:
         # Idea is to have a dictionary of keys where the keys
         # are reference names for the entities and
@@ -42,14 +47,35 @@ class Tablewriter(object):
         # can provide when creating interactions which summarises what the
         # field is about, and which can be used as a useful column header
         # here for the ndt file.
-        self._entities = {
-            'time': {'unit': '<s>',
-                        'get': lambda sim: sim.t,
-                        'header': 'time'},
-            'm': {'unit': '<>',
-                  'get': lambda sim: sim.m_average,
-                  'header': ('m_x', 'm_y', 'm_z')}
-            }
+        self._entities = {}
+
+        self.add_entity('time', {'unit': '<s>',
+                                 'get': lambda sim: sim.t,
+                                 'header': 'time'})
+
+        self.add_entity('m', {'unit': '<>',
+                              'get': lambda sim: sim.m_average,
+                              'header': ('m_x', 'm_y', 'm_z')})
+
+        # add time integrator dummy tokens than return NAN as we haven't got 
+        # the integrator yet (or may never create one).
+        self.add_entity( 'steps',  {
+            'unit': '<1>',
+            #'get': lambda sim: sim.integrator.stats()['nsteps'],
+            'get': lambda sim: np.NAN,
+            'header': 'steps'})
+
+        self.add_entity('last_step_dt', {
+            'unit': '<1>',
+            #'get': lambda sim: sim.integrator.stats()['hlast'],
+            'get': lambda sim: np.NAN,
+            'header': 'last_step_dt'})
+
+        self.add_entity('dmdt', {
+            'unit': '<A/ms>',
+            #'get': lambda sim: sim.dmdt_max,
+            'get': lambda sim: np.array([np.NAN, np.NAN, np.NAN]),
+            'header': ('dmdt_x', 'dmdt_y', 'dmdt_z')})
 
         self.filename = filename
         self.sim = simulation
@@ -63,14 +89,6 @@ class Tablewriter(object):
         if os.path.exists(filename) and not override:
             msg = "File %s exists already; cowardly stopping" % filename
             raise RuntimeError(msg)
-
-        # save_head records whether the headings (name and units)
-        # have been saved already
-        self.save_head = False
-        ## also record how many column headings we have written to the file
-        #self.ncolumn_headings_written = None
-        ## ^ this is so we can catch attempts to write more or less data
-        ## in subsequent writes, and raise an error.
 
 
     def add_entity(self, name, dic):
@@ -101,8 +119,10 @@ class Tablewriter(object):
                   'header': ('m_x', 'm_y', 'm_z')}
         """
         if self.save_head:
-            raise RuntimeError("Attempt to add entity '{}'->'{}' to ndt file {} -- this is impossible".\
+            raise RuntimeError("Attempt to add entity '{}'->'{}' to ndt file {}" + \
+                               "after file has been created -- this is impossible".\
                                format(name, dic, self.filename))
+
         assert name not in self._entities.keys(), \
                               "Attempt to add a second '{}' to entities for {}".\
                               format(name, self.filename)
@@ -115,6 +135,34 @@ class Tablewriter(object):
 
         self._entities[name] = dic
         self.update_entity_order()
+
+
+    def modify_entity_get_method(self, name, new_get_method):
+        """Allows changing the get method. Is used for integrators at the moment: we register
+        dummy get methods when the tablewriter file is created, and then updated those if and
+        when an integrator has been created."""
+        assert name in self._entities, "Couldn't find '{}' in {}".format(name, self._entities.keys())
+
+        logger.debug("Updating get method for {} in TableWriter(name={})".format(
+            name, self.filename))
+        #logger.debug("Updating get method for {} in TableWriter(name={}) old method: {}, new method: {}".format(
+        #    name, self.filename, self._entities[name]['get'], new_get_method))
+
+        self._entities[name]['get'] = new_get_method
+
+
+    def delete_entity_get_method(self, name):
+        """We cannot delete entities once they are created (as this would change the number of columns in the
+        data file). Instead, we register a return function that returns numpy.NAN. 
+        """
+        assert name in self._entities, "Couldn't find '{}' in {}".format(name, self._entities.keys())
+
+        logger.debug("'Deleting' get method for {} in TableWriter(name={})".format(
+            name, self.filename))
+
+        self._entities[name]['get'] = lambda sim: np.NAN
+
+
 
     def default_entity_order(self):
         keys = self._entities.keys()
@@ -152,7 +200,6 @@ class Tablewriter(object):
             f.write(self.headers())
             f.close()
             self.save_head = True
-            #self.ncolumn_headings_written = len(self.headers()[1:].split())
 
         # open file
         with open(self.filename, 'a') as f:
@@ -182,6 +229,9 @@ class Tablewriter(object):
 
                 elif isinstance(value, float) or isinstance(value, int):
                     f.write(self.float_format % value)
+                elif isinstance(value, types.NoneType):
+                    #f.write(self.string_format % value)
+                    f.write(self.string_format % "nan")
                 else:
                     msg = "Can only deal with numpy arrays, float and int " + \
                         "so far, but type is %s" % type(value)
