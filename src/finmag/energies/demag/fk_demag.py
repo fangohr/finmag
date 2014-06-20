@@ -40,7 +40,7 @@ class FKDemag(object):
     .. _Hybrid method for computing demagnetizing fields: http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=106342
 
     """
-    def __init__(self, name='Demag', thin_film=False, nx=None, ny=None, spacing_x=None, spacing_y=None, Ts=None):
+    def __init__(self, name='Demag', thin_film=False,macrogeometry=None): 
         """
         Create a new FKDemag instance.
 
@@ -84,15 +84,8 @@ class FKDemag(object):
             self.parameters["phi_1_solver"] = "cg"
             self.parameters["phi_1_preconditioner"] = "ilu"
             self.parameters["phi_3_preconditioner"] = "none"
-            
-        if (nx != None or ny != None) and Ts != None:
-            logger.warning("Both 'Ts' specified and nx={}, ny={} set. Using explicit values in 'Ts'.".format(nx, ny))
 
-        self.nx = nx
-        self.ny = ny
-        self.spacing_x = spacing_x
-        self.spacing_y = spacing_y
-        self.Ts = Ts
+        self.macrogeometry = macrogeometry
 
     @mtimed(default_timer)
     def setup(self, S3, m, Ms, unit_length=1):
@@ -154,25 +147,11 @@ class FKDemag(object):
         # which should speed up things.
         self._laplace_solver.parameters["preconditioner"]["structure"] = "same_nonzero_pattern"
 
-        if self.Ts == None and (self.nx != None or self.ny != None):
-            self.nx = self.nx or 1
-            self.ny = self.ny or 1
-            coords = mesh.coordinates()
-            xmin, ymin, zmin = coords.min(axis=0)
-            xmax, ymax, zmax = coords.max(axis=0)
-            if self.spacing_x is None:
-                self.spacing_x = xmax - xmin
-            if self.spacing_y is None:
-                self.spacing_y = ymax - ymin
-            logger.debug("Creating macro-geometry with demag {} x {} tiles (spacing: {} x {})".format(self.nx, self.ny, self.spacing_x, self.spacing_y))
-            self.Ts = [(self.spacing_x * i, self.spacing_y * j, 0.0)
-                      for i in range(-(self.nx // 2), -(self.nx // 2) + self.nx)
-                      for j in range(-(self.ny // 2), -(self.ny // 2) + self.ny)]
-
         with fk_timed('compute BEM'):
             if not hasattr(self, "_bem"):
-                if self.Ts is not None:
-                    pbc = BMatrixPBC(mesh,self.Ts)
+                if self.macrogeometry is not None:
+                    Ts = self.macrogeometry.compute_Ts(mesh)
+                    pbc = BMatrixPBC(mesh,Ts)
                     self._b2g_map=np.array(pbc.b2g_map,dtype=np.int)
                     self._bem = pbc.bm
                 else:

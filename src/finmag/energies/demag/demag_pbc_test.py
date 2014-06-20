@@ -2,20 +2,14 @@ import numpy as np
 import dolfin as df
 from finmag import Simulation
 from finmag.energies import Exchange, DMI, Demag
-
-
-
-
+from finmag import MacroGeometry
 
 mesh_1 = df.BoxMesh(-10, -10, -10, 10, 10, 10, 10, 10, 10)
 mesh_3 = df.BoxMesh(-30, -10, -10, 30, 10, 10, 30, 10, 10)
 mesh_9 = df.BoxMesh(-30, -30, -10, 30, 30, 10, 30, 30, 10)
 
 def compute_field(mesh, nx=1, ny=1, m0=(1,0,0), pbc=None):
-    
-    assert nx>=1 and nx%2==1
-    assert ny>=1 and ny%2==1
-    
+        
     Ms = 1e6
     sim = Simulation(mesh, Ms, unit_length=1e-9, name = 'dy', pbc=pbc)
     
@@ -27,12 +21,7 @@ def compute_field(mesh, nx=1, ny=1, m0=(1,0,0), pbc=None):
             'maximum_iterations': int(1e5)
     }
     
-    Ts = []
-    for i in range(-nx/2+1,nx/2+1):
-        for j in range(-ny/2+1,ny/2+1):
-            Ts.append((20.0*i,20*j,0))
-    
-    demag = Demag(Ts=Ts)
+    demag = Demag(macrogeometry=MacroGeometry(nx=nx,ny=ny))
     
     demag.parameters['phi_1'] = parameters
     demag.parameters['phi_2'] = parameters

@@ -1,5 +1,5 @@
 import logging
-from demag import Demag, Demag2D
+from demag import Demag, Demag2D, MacroGeometry
 from energy_base import EnergyBase
 from exchange import Exchange
 from anisotropy import UniaxialAnisotropy
