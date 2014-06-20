@@ -147,7 +147,7 @@ if __name__ == '__main__':
     
     print b.b2g_map, b.g2b_map
     
-    bem, b2g_map = compute_bem_fk(df.BoundaryMesh(mesh, 'exterior', False))
+    #bem, b2g_map = compute_bem_fk(df.BoundaryMesh(mesh, 'exterior', False))
     
     #print bem
     #print b2g_map
