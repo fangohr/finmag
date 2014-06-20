@@ -1295,21 +1295,12 @@ def embed3d(mesh, z_embed=0.0):
     vertices = mesh.coordinates()
     cells = mesh.cells()
 
-    mesh = df.Mesh()
-    editor = df.MeshEditor()
-    editor.open(mesh, 2, 3)
-    editor.init_vertices(len(vertices))
-    editor.init_cells(len(cells))
+    # Create an array with the desired 3d coordinates
+    vertices_3d = np.zeros((len(vertices), 3))
+    vertices_3d[:, :2] = vertices
+    vertices_3d[:, 2] = z_embed
 
-    for i, (x, y) in enumerate(vertices):
-        editor.add_vertex(i, np.array([x, y, z_embed], dtype=float))
-
-    for i, c in enumerate(cells):
-        editor.add_cell(i, np.array(c, dtype='uintp'))
-
-    editor.close()
-    return mesh
-
+    return build_mesh(vertices_3d, cells)
 
 def build_mesh(vertices, cells):
     """
@@ -1326,7 +1317,7 @@ def build_mesh(vertices, cells):
 
     mesh = df.Mesh()
     editor = df.MeshEditor()
-    editor.open(mesh, geom_dim, top_dim)
+    editor.open(mesh, top_dim, geom_dim)
     editor.init_vertices(len(vertices))
     editor.init_cells(len(cells))
 
