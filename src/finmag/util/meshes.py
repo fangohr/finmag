@@ -1278,7 +1278,7 @@ def line_mesh(vertices):
     return mesh
 
 
-def embed3d(mesh, z_embed):
+def embed3d(mesh, z_embed=0.0):
     """
     Given a mesh of geometrical dimension 2, create a 3D mesh
     via the following embedding of the 2d vertex coordinates:
@@ -1290,7 +1290,7 @@ def embed3d(mesh, z_embed):
     """
     geom_dim = mesh.geometry().dim()
     if geom_dim != 2:
-        raise TypeError("Mesh must have geometrical dimension 2. Got: {}".format(geom_dim))
+        raise NotImplementedError("Mesh currently must have geometrical dimension 2. Got: {}".format(geom_dim))
 
     vertices = mesh.coordinates()
     cells = mesh.cells()
