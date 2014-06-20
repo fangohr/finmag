@@ -124,7 +124,7 @@ def create_measurement_runner(S3, m, Ms, unit_length, H_expected=None, tol=1e-3,
     return runner
 
 
-def run_measurements(m, mesh, unit_length, tol, repetitions=10, H_expected=None, name=""):
+def run_measurements(m, mesh, unit_length, tol, repetitions=10, H_expected=None, name="", skip=[]):
     S3 = df.VectorFunctionSpace(mesh, "CG", 1)
     m = vector_valued_function(m, S3)
     Ms = 1
@@ -156,14 +156,16 @@ def run_measurements(m, mesh, unit_length, tol, repetitions=10, H_expected=None,
     results_1, failed_1 = runner("first linear solve",
                                  "phi_1_solver", solvers,
                                  "phi_1_preconditioner", preconditioners,
-                                 [],
-                                 "{}timings_log_1.txt".format(name), "{}results_1.pickled".format(name))
+                                 skip,
+                                 "{}timings_log_1.txt".format(name),
+                                 "{}results_1.pickled".format(name))
 
     results_2, failed_2 = runner("second linear solve",
                                  "phi_2_solver", solvers,
                                  "phi_2_preconditioner", preconditioners,
-                                 [],
-                                 "{}timings_log_2.txt".format(name), "{}results_2.pickled".format(name))
+                                 skip,
+                                 "{}timings_log_2.txt".format(name),
+                                 "{}results_2.pickled".format(name))
 
     return solvers, preconditioners, results_1, failed_1, results_2, failed_2
 
