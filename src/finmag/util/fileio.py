@@ -19,18 +19,17 @@ class Tablewriter(object):
 
         # formatting for columns (could in principle be customized
         # through extra arguments here)
-        precision=12
+        precision = 12
         charwidth = 18
         self.float_format = "%" + str(charwidth)+'.'+str(precision)+ "g "
         self.string_format = "%" + str(charwidth) + "s "
 
         # entities:
         # Idea is to have a dictionary of keys where the keys
-        # are the column headers in the data file.
-        # the value is a tuple (a, b) where a shows the units
-        # of the data and b(sim) is a function that can be called
-        # with the simulation object and will retrieve the required
-        # data from the simulation object.
+        # are reference names for the entities and
+        # the value is another dictionary, which has keys 'unit', 'get' and 'header':
+        # 'get' is the a function that takes a simulation object as the argument
+        # and returns the data to be saved.
         #
         # No doubt this can be done neater, more general, etc.
         # For example, it would be desirable if we could get ALL
