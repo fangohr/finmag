@@ -42,7 +42,7 @@ class Tablewriter(object):
         # can provide when creating interactions which summarises what the
         # field is about, and which can be used as a useful column header
         # here for the ndt file.
-        self.entities = {
+        self._entities = {
             'time': {'unit': '<s>',
                         'get': lambda sim: sim.t,
                         'header': 'time'},
@@ -72,8 +72,45 @@ class Tablewriter(object):
         ## ^ this is so we can catch attempts to write more or less data
         ## in subsequent writes, and raise an error.
 
+
+    def add_entity(self, name, dic):
+        """
+        Add an entity to be saved to this ndt file at the next data saving instance. The
+        arguments are:
+
+           name  : a reference name for this entity (used to order the entities in the ndt file)
+
+           dic : a dictionary containing data for the header lines and a function to retrieve the data.
+
+        Examples:
+
+        For the time entity, we have
+
+            name = 'time'
+        
+            dic =  {'unit': '<s>',
+                     'get': lambda sim: sim.t,
+                     'header': 'time'},
+
+        For the magnetisation entity, we have
+
+            name = 'm'
+    
+            dic = {'unit': '<>',
+                  'get': lambda sim: sim.m_average,
+                  'header': ('m_x', 'm_y', 'm_z')}
+        """
+        if self.save_head:
+            raise RuntimeError("Attempt to add entity {} to ndt file {} -- this is impossible".\
+                               format(entity_dict, self.filename))
+        assert name not in self._entities.keys(), \
+                              "Attempt to add a second '{}' to entities for {}".\
+                              format(name, self.filename)
+        self._entities[name] = dic
+        self.update_entity_order()
+
     def default_entity_order(self):
-        keys = self.entities.keys()
+        keys = self._entities.keys()
         # time needs to go first
         keys.remove('time')
         return ['time'] + sorted(keys)
@@ -86,7 +123,7 @@ class Tablewriter(object):
         line1 = [self.comment_symbol]
         line2 = [self.comment_symbol]
         for entityname in self.entity_order:
-            colheaders = self.entities[entityname]['header']
+            colheaders = self._entities[entityname]['header']
             # colheaders can be a 3-tuple ('mx','my','mz'), say
             # or a string ('time'). Avoid iterating over string:
             if isinstance(colheaders, str):
@@ -94,7 +131,7 @@ class Tablewriter(object):
             for colhead in colheaders:
                 line1.append(self.string_format % colhead)
                 line2.append(self.string_format % \
-                    self.entities[entityname]['unit'])
+                    self._entities[entityname]['unit'])
         return "".join(line1) + "\n" + "".join(line2) + "\n"
 
     @mtimed
@@ -118,11 +155,11 @@ class Tablewriter(object):
 ## number of columns to be written changes
 ## but this seems to never happen. So it's not quite right.
 ## Also, if this was the right place to catch it, i.e. if watching
-## self.entities is the critical object that shouldn't change after
+## self._entities is the critical object that shouldn't change after
 ## the header has been written, then we should convert this into a
 ## 'property' which raises an error if called for writing once the
 ## header lines have been written. HF, 9 June 2014.
-#            if len(self.entities) == self.ncolumn_headings_written:
+#            if len(self._entities) == self.ncolumn_headings_written:
 #                msg = "It seems number of columns to be written" + \
 #                    "to {} has changed".format(self.filename)
 #                msg += "from {} to {}. This is not supported.".format(
@@ -130,7 +167,7 @@ class Tablewriter(object):
 #                logger.error(msg)
 #                raise ValueError(msg)
             for entityname in self.entity_order:
-                value = self.entities[entityname]['get'](self.sim)
+                value = self._entities[entityname]['get'](self.sim)
                 if isinstance(value, np.ndarray):
 
                     for v in value:

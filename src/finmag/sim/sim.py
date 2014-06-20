@@ -76,15 +76,14 @@ class Simulation(object):
         # timesteps.
         self.tablewriter = Tablewriter(self.ndtfilename, self, override=True)
 
-        self.tablewriter.entities['E_total'] = {
+        self.tablewriter.add_entity('E_total', {
             'unit': '<J>',
             'get': lambda sim: sim.total_energy(),
-            'header': 'E_total'}
-        self.tablewriter.entities['H_total'] = {
+            'header': 'E_total'})
+        self.tablewriter.add_entity('H_total', {
             'unit': '<A/m>',
             'get': lambda sim: helpers.average_field(sim.effective_field()),
-            'header': ('H_total_x', 'H_total_y', 'H_total_z')}
-        self.tablewriter.update_entity_order()
+            'header': ('H_total_x', 'H_total_y', 'H_total_z')})
 
         log.info("Creating Sim object '{}' (rank={}/{}).".format(
             self.name, df.MPI.rank(df.mpi_comm_world()), df.MPI.size(df.mpi_comm_world())))
@@ -290,15 +289,14 @@ class Simulation(object):
 
         energy_name = 'E_{}'.format(interaction.name)
         field_name = 'H_{}'.format(interaction.name)
-        self.tablewriter.entities[energy_name] = {
+        self.tablewriter.add_entity(energy_name, {
             'unit': '<J>',
             'get': lambda sim: sim.get_interaction(interaction.name).compute_energy(),
-            'header': energy_name}
-        self.tablewriter.entities[field_name] = {
+            'header': energy_name})
+        self.tablewriter.add_entity(field_name, {
             'unit': '<A/m>',
             'get': lambda sim: sim.get_interaction(interaction.name).average_field(),
-            'header': (field_name + '_x', field_name + '_y', field_name + '_z')}
-        self.tablewriter.update_entity_order()
+            'header': (field_name + '_x', field_name + '_y', field_name + '_z')})
 
     def effective_field(self):
         """
@@ -553,22 +551,19 @@ class Simulation(object):
                 self.integrator = llg_integrator(self.llg, self.llg.m, backend=backend, **kwargs)
                 self.integrator.integrator.set_scalar_tolerances(self.reltol, self.abstol)
 
-            self.tablewriter.entities['steps'] = {
+            self.tablewriter.add_entity( 'steps',  {
                 'unit': '<1>',
                 'get': lambda sim: sim.integrator.stats()['nsteps'],
-                'header': 'steps'}
+                'header': 'steps'})
 
-            self.tablewriter.entities['last_step_dt'] = {
+            self.tablewriter.add_entity('last_step_dt', {
                 'unit': '<1>',
                 'get': lambda sim: sim.integrator.stats()['hlast'],
-                'header': 'last_step_dt'}
-            self.tablewriter.entities['dmdt'] = {
+                'header': 'last_step_dt'})
+            self.tablewriter.add_entity('dmdt', {
                 'unit': '<A/ms>',
                 'get': lambda sim: sim.dmdt_max,
-                'header': ('dmdt_x', 'dmdt_y', 'dmdt_z')}
-
-            self.tablewriter.update_entity_order()
-
+                'header': ('dmdt_x', 'dmdt_y', 'dmdt_z')})
         else:
             log.warning("Cannot create integrator - exists already: {}".format(self.integrator))
         return self.integrator
