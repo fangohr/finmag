@@ -1262,23 +1262,13 @@ def line_mesh(vertices):
             "(for 1D meshes) or a list of mesh nodes. Got: {}".format(vertices))
     dim = vertices.shape[-1]
 
-    mesh = df.Mesh()
-    editor = df.MeshEditor()
-    editor.open(mesh, 1, dim)
-    editor.init_vertices(n)
-    editor.init_cells(n-1)
+    # The 'cells' of the mesh are simply the intervals connecting adjacent nodes
+    cells = [[i, i+1] for i in xrange(n-1)]
 
-    for i, pt in enumerate(vertices):
-        editor.add_vertex(i, pt)
-
-    for i in xrange(n-1):
-        editor.add_cell(i, np.array([i, i+1], dtype='uintp'))
-
-    editor.close()
-    return mesh
+    return build_mesh(vertices, cells)
 
 
-def embed3d(mesh, z_embed):
+def embed3d(mesh, z_embed=0.0):
     """
     Given a mesh of geometrical dimension 2, create a 3D mesh
     via the following embedding of the 2d vertex coordinates:
@@ -1290,22 +1280,120 @@ def embed3d(mesh, z_embed):
     """
     geom_dim = mesh.geometry().dim()
     if geom_dim != 2:
-        raise TypeError("Mesh must have geometrical dimension 2. Got: {}".format(geom_dim))
+        raise NotImplementedError("Mesh currently must have geometrical dimension 2. Got: {}".format(geom_dim))
 
     vertices = mesh.coordinates()
     cells = mesh.cells()
 
+    # Create an array with the desired 3d coordinates
+    vertices_3d = np.zeros((len(vertices), 3))
+    vertices_3d[:, :2] = vertices
+    vertices_3d[:, 2] = z_embed
+
+    return build_mesh(vertices_3d, cells)
+
+def build_mesh(vertices, cells):
+    """
+    Helper function to create a mesh with the given
+    """
+    vertices = np.asarray(vertices, dtype='double')
+    cells = np.asarray(cells, dtype='uintp')
+
+    assert vertices.ndim == 2
+    assert cells.ndim == 2
+
+    geom_dim = vertices.shape[-1]
+    top_dim = cells.shape[-1] - 1
+
     mesh = df.Mesh()
     editor = df.MeshEditor()
-    editor.open(mesh, 2, 3)
+    editor.open(mesh, top_dim, geom_dim)
     editor.init_vertices(len(vertices))
     editor.init_cells(len(cells))
 
-    for i, (x, y) in enumerate(vertices):
-        editor.add_vertex(i, np.array([x, y, z_embed], dtype=float))
+    for i, pt in enumerate(vertices):
+        editor.add_vertex(i, pt)
 
     for i, c in enumerate(cells):
-        editor.add_cell(i, np.array(c, dtype='uintp'))
+        editor.add_cell(i, c)
 
     editor.close()
     return mesh
+
+
+def mesh_is_periodic(mesh, axes):
+    """
+    Check that the given mesh is periodic. The argument `axes`
+    can be either 'x' or 'xy', indicating that axes of the
+    mesh should be checked in x-direction or both x- and y-direction.
+
+    """
+    coords = mesh.coordinates()
+    cells = mesh.cells()
+
+    # Convert 'axes' into a list of values between 0 and 2
+    try:
+        axes = map(lambda val: {'x': 0, 'y': 1, 'z': 2}[val], axes)
+    except KeyError:
+        raise ValueError("Argument 'axes' should be a string containing only 'x', 'y' and 'z'.")
+
+    min_coords = coords.min(axis=0)
+    max_coords = coords.max(axis=0)
+    # Generate dictionary which associates each axis direction with the indices
+    # of the minimal and maximal verices along that axis direction.
+    extremal_vertex_indices = {
+        # XXX TODO: Maybe avoid the repeated loops if speed becomes a problem for large meshes?
+        axis: {'min': [i for i in xrange(len(coords)) if coords[i][axis] == min_coords[axis]],
+               'max': [i for i in xrange(len(coords)) if coords[i][axis] == max_coords[axis]],
+              } for axis in axes}
+
+    mesh_extents = [b - a for (a, b) in zip(min_coords, max_coords)]
+
+    # Using dolfin's bounding box tree to speed things up
+    bbt = df.BoundingBoxTree()
+    bbt.build(mesh)
+
+
+    def find_matching_vertex_index(idx, axis, a):
+        """
+        Find index of the vertex which is identified with the vertex `idx`
+        on the other side of the mesh.
+        """
+        pt_coords = coords[idx].copy()  # need a copy because otherwise we edit the mesh coordinates in-place
+        pt_coords[axis] += a * mesh_extents[axis]  # move point to other edge
+        pt = df.Point(*pt_coords)
+        cell_idx, distance = bbt.compute_closest_entity(pt)
+        for v_idx in cells[cell_idx]:
+            if (np.linalg.norm(pt_coords - coords[v_idx]) < 1e-14):
+                return v_idx
+        return None
+
+
+    for axis in axes:
+        idcs_edge1 = extremal_vertex_indices[axis]['min']
+        idcs_edge2 = extremal_vertex_indices[axis]['max']
+
+        # If we don't have the same number of vertices on the two edges then the mesh is clearly not periodic
+        if len(idcs_edge1) != len(idcs_edge2):
+            return False
+
+        def all_matching_vertices_exist_on_other_edge(indices1, indices2, a):
+            """
+            Helper function to check whether all vertices with index in 'indices1' have
+            a corresponding vertex on the other side of the mesh with index in 'indices2'.
+            """
+            for idx1 in indices1:
+                idx2 = find_matching_vertex_index(idx1, axis, a)
+                if idx2 is None or idx2 not in indices2:
+                    # No matching vertex found on other edge, hence mesh is not periodic
+                    return False
+            return True
+
+        if not all_matching_vertices_exist_on_other_edge(idcs_edge1, idcs_edge2, +1):
+            return False
+
+        if not all_matching_vertices_exist_on_other_edge(idcs_edge2, idcs_edge1, -1):
+            return False
+
+    # No a-periodicity found, hence the mesh is periodic
+    return True
