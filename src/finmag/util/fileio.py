@@ -267,7 +267,7 @@ class Tablereader(object):
         assert len(headers) == len(units)
 
         # use numpy to read remaining data (genfromtxt will
-	# complain if there are rows with different sizes)
+        # complain if there are rows with different sizes)
         try:
             self.data = np.genfromtxt(self.f)
         except ValueError:
@@ -279,10 +279,10 @@ class Tablereader(object):
         # Make sure we have a 2d array even if the file only contains a single line (or none)
         if self.data.ndim == 1:
             self.data = self.data[np.newaxis, :]
-	
-	# Check if the number of data columns is equal to the number of headers
-	assert self.data.shape[1] == len(headers) - 1
-	
+
+        # Check if the number of data columns is equal to the number of headers
+        assert self.data.shape[1] == len(headers) - 1
+
         datadic = {}
         # now wrap up data conveniently
         for i, entity in enumerate(headers[1:]):
@@ -421,6 +421,3 @@ if __name__ == "__main__":
     demo1()
     print("Demo 2")
     demo2()
-
-
-
