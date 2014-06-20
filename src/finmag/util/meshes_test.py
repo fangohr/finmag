@@ -50,3 +50,29 @@ def test_sphere_inside_box(tmpdir, debug=False):
         f = df.File('mesh__sphere_inside_box.pvd')
         f << mesh
         del f
+
+
+def test_build_mesh():
+    """
+    Create a few meshes, extract the vertices and cells from them and pass them
+    to build_mesh() to rebuild the mesh. Then check that the result is the same
+    as the original.
+    """
+    def assert_mesh_builds_correctly(mesh):
+        coords = mesh.coordinates()
+        cells = mesh.cells()
+        mesh_new = build_mesh(coords, cells)
+        assert np.allclose(coords, mesh_new.coordinates())
+        assert np.allclose(cells, mesh_new.cells())
+
+    mesh1 = df.RectangleMesh(0, 0, 20, 10, 12, 8)
+    assert_mesh_builds_correctly(mesh1)
+
+    mesh2 = df.CircleMesh(df.Point(2.0, -3.0), 10.0, 3.0)
+    assert_mesh_builds_correctly(mesh2)
+
+    mesh3 = df.BoxMesh(0, 0, 0, 20, 10, 5, 12, 8, 3)
+    assert_mesh_builds_correctly(mesh3)
+
+    mesh4 = df.SphereMesh(df.Point(2.0, 3.0, -4.0), 10.0, 3.0)
+    assert_mesh_builds_correctly(mesh4)
