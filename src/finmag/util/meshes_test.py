@@ -1,4 +1,5 @@
 import dolfin as df
+import pytest
 import os
 from meshes import *
 from mesh_templates import *
@@ -22,7 +23,7 @@ def test_mesh_size():
 
 
 def test_embed3d():
-    # Create a 2D mesh which is to be embedded in 3D space
+    # Create a 2D mesh which we want to embed in 3D space
     mesh_2d = df.RectangleMesh(0, 0, 20, 10, 10, 5)
     coords_2d = mesh_2d.coordinates()
     z_embed = 4.2
@@ -37,6 +38,13 @@ def test_embed3d():
 
     # Check that the coordinates coincide
     assert(np.allclose(coords_3d, coords_3d_expected))
+
+    # Check that we can't embed a 1D or 3D mesh (TODO: we could make these
+    # work, but currently they are not implemented)
+    with pytest.raises(NotImplementedError):
+        embed3d(df.UnitIntervalMesh(4))
+    with pytest.raises(NotImplementedError):
+        embed3d(df.UnitCubeMesh(4, 4, 4))
 
 
 def test_sphere_inside_box(tmpdir, debug=False):
