@@ -8,8 +8,9 @@ log = logging.getLogger(name="finmag")
 
 ONE_DEGREE_PER_NS = 17453292.5  # in rad/s
 
-def relax(sim, save_vtk_snapshot_as=None, save_restart_data_as=None, stopping_dmdt=1.0,
-          dt_limit=1e-10, dmdt_increased_counter_limit=10):
+
+def relax(sim, save_vtk_snapshot_as=None, save_restart_data_as=None,
+          stopping_dmdt=1.0, dt_limit=1e-10, dmdt_increased_counter_limit=10):
     """
     Run the simulation until the magnetisation has relaxed.
 
@@ -28,9 +29,9 @@ def relax(sim, save_vtk_snapshot_as=None, save_restart_data_as=None, stopping_dm
     if not hasattr(sim, "integrator"):
         sim.create_integrator()
     log.info("Simulation will run until relaxation of the magnetisation.")
-    log.debug("Relaxation parameters: stopping_dmdt={} (degrees per nanosecond), "
-              "dt_limit={}, dmdt_increased_counter_limit={}".format(
-                          stopping_dmdt, dt_limit, dmdt_increased_counter_limit))
+    log.debug("Relaxation parameters: stopping_dmdt={} (degrees per "
+              "nanosecond), dt_limit={}, dmdt_increased_counter_limit={}"
+              .format(stopping_dmdt, dt_limit, dmdt_increased_counter_limit))
 
     dt0 = 1e-14  # Initial dt.
 
@@ -60,9 +61,13 @@ def relax(sim, save_vtk_snapshot_as=None, save_restart_data_as=None, stopping_dm
 
         # Otherwise, calculate new dt value.
         else:
-            if sim.relaxation['dt'] < sim.relaxation['dt_limit'] / sim.relaxation['dt_increment_multi']:
-                if len(sim.relaxation['dmdts']) >= 2 and sim.relaxation['dmdts'][-1][1] < sim.relaxation['dmdts'][-2][1]:
-                    sim.relaxation['dt'] *= sim.relaxation['dt_increment_multi']
+            if sim.relaxation['dt'] < sim.relaxation['dt_limit'] /\
+               sim.relaxation['dt_increment_multi']:
+                if len(sim.relaxation['dmdts']) >= 2 and\
+                   sim.relaxation['dmdts'][-1][1] <\
+                   sim.relaxation['dmdts'][-2][1]:
+                    sim.relaxation['dt'] *=\
+                        sim.relaxation['dt_increment_multi']
             else:
                 sim.relaxation['dt'] = sim.relaxation['dt_limit']
 
@@ -92,36 +97,44 @@ def relax(sim, save_vtk_snapshot_as=None, save_restart_data_as=None, stopping_dm
             sim.relaxation['energies'].append(sim.total_energy())
 
             # Continue iterating if dm/dt is not low enough.
-            if sim.relaxation['dmdts'][-1][1] > sim.relaxation['stopping_dmdt']:
+            if sim.relaxation['dmdts'][-1][1] >\
+               sim.relaxation['stopping_dmdt']:
                 log.debug("At t={:.3g}, last_dmdt={:.3g} * stopping_dmdt, "
                           "next dt={:.3g}."
-                          .format(sim.t, sim.relaxation['dmdts'][-1][1] / sim.relaxation['stopping_dmdt'],
+                          .format(sim.t, sim.relaxation['dmdts'][-1][1] /
+                                  sim.relaxation['stopping_dmdt'],
                                   sim.relaxation['dt']))
 
             # If dm/dt and energy have both increased, start checking for
             # non-convergence.
             if len(sim.relaxation['dmdts']) >= 2:
-                if (sim.relaxation['dmdts'][-1][1] > sim.relaxation['dmdts'][-2][1] and
-                    sim.relaxation['energies'][-1] > sim.relaxation['energies'][-2]):
+                if (sim.relaxation['dmdts'][-1][1] >
+                    sim.relaxation['dmdts'][-2][1] and
+                    sim.relaxation['energies'][-1] >
+                    sim.relaxation['energies'][-2]):
 
                     # Since dm/dt has increased, we increment the counter.
                     sim.relaxation['dmdt_increased_counter'] += 1
                     log.debug("dmdt {} times larger than last time "
                               "(counting {}/{})."
-                              .format(sim.relaxation['dmdts'][-1][1] / sim.relaxation['dmdts'][-2][1],
+                              .format(sim.relaxation['dmdts'][-1][1] /
+                                      sim.relaxation['dmdts'][-2][1],
                                       sim.relaxation['dmdt_increased_counter'],
                                       sim.relaxation['dmdt_increased_counter_limit']))
 
                     # The counter is too high, so we leave.
-                    if sim.relaxation['dmdt_increased_counter'] >= sim.relaxation['dmdt_increased_counter_limit']:
-                        log.warning("Stopping time integration after dmdt increased {}"
-                                    " times without a decrease in energy "
-                                    "(which indicates that something might be wrong)."
+                    if sim.relaxation['dmdt_increased_counter'] >=\
+                       sim.relaxation['dmdt_increased_counter_limit']:
+                        log.warning("Stopping time integration after dmdt "
+                                    "increased {} times without a decrease in "
+                                    "energy (which indicates that something "
+                                    "might be wrong)."
                                     .format(sim.relaxation['dmdt_increased_counter_limit']))
                         return False
 
             # Since dm/dt is low enough, stop the integration.
-            if sim.relaxation['dmdts'][-1][1] <= sim.relaxation['stopping_dmdt']:
+            if sim.relaxation['dmdts'][-1][1] <=\
+               sim.relaxation['stopping_dmdt']:
                 log.debug("Stopping integration at t={:.3g}, with dmdt={:.3g},"
                           " smaller than threshold={:.3g}."
                           .format(sim.t, sim.relaxation['dmdts'][-1][1],
@@ -133,7 +146,8 @@ def relax(sim, save_vtk_snapshot_as=None, save_restart_data_as=None, stopping_dm
         sim.relaxation['last_time'] = sim.t
 
     dt_interval = functools.partial(dt_interval, sim)
-    sim.scheduler.add(trigger, every=dt_interval, after=1e-14 if sim.t < 1e-14 else sim.t)
+    sim.scheduler.add(trigger, every=dt_interval,
+                      after=1e-14 if sim.t < 1e-14 else sim.t)
 
     sim.scheduler.run(sim.integrator, sim.callbacks_at_scheduler_events)
     sim.integrator.reinit()
