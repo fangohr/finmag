@@ -25,7 +25,8 @@ from finmag.drivers.llg_integrator import llg_integrator
 from finmag.drivers.sundials_integrator import SundialsIntegrator
 from finmag.scheduler import scheduler
 from finmag.util.pbc2d import PeriodicBoundary1D, PeriodicBoundary2D
-from finmag.energies import Exchange, Zeeman, TimeZeeman, Demag, UniaxialAnisotropy, DMI
+from finmag.energies import Exchange, Zeeman, TimeZeeman, Demag, UniaxialAnisotropy, DMI, MacroGeometry
+
 
 log = logging.getLogger(name="finmag")
 
@@ -1187,7 +1188,8 @@ def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sun
     if D != None:
         sim.add(DMI(D))
     if demag_solver != None:
-        demag = Demag(solver=demag_solver, nx=nx, ny=ny, spacing_x=spacing_x, spacing_y=spacing_y)
+        mg = MacroGeometry(nx=nx,ny=ny,dx=spacing_x, dy=spacing_y)
+        demag = Demag(solver=demag_solver,macrogeometry=mg)
         if demag_solver_params != {}:
             for (k, v) in demag_solver_params.items():
                 log.debug("Setting demag solver parameter {}='{}' for simulation '{}'".format(k, v, sim.name))
