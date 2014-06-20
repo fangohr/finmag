@@ -26,7 +26,7 @@ class BMatrixPBC(object):
         #for (i, val) in enumerate(self.b2g_map):
             #self.g2b_map[val] = i
         self.__compute_bsa()
-        self.Ts = np.array(Ts)
+        self.Ts = np.array(Ts, dtype=np.float)
         #self.S3 = S3
         
         n = self.bmesh.num_vertices()
@@ -49,7 +49,7 @@ class BMatrixPBC(object):
 
                 vert_bsa[mc[i][j]]+=tmp_omega
 
-        vert_bsa = vert_bsa/(4*np.pi) 
+        vert_bsa = vert_bsa/(4*np.pi) - 1.0
 
         self.vert_bsa = vert_bsa[self.b2g_map]
     
@@ -87,7 +87,7 @@ class BMatrixPBC(object):
             
 
         for p in range(self.bmesh.num_vertices()):
-            self.bm[p][p] += self.vert_bsa[p] - 1
+            self.bm[p][p] += self.vert_bsa[p]
             
         #To be cleaned later ...
         
