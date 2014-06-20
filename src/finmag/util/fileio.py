@@ -19,7 +19,7 @@ class Tablewriter(object):
 
         # formatting for columns (could in principle be customized
         # through extra arguments here)
-        precision=12
+        precision = 12
         charwidth = 18
         self.float_format = "%" + str(charwidth)+'.'+str(precision)+ "g "
         self.string_format = "%" + str(charwidth) + "s "
