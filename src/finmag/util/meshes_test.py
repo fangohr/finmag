@@ -1,8 +1,10 @@
 import dolfin as df
+import numpy as np
 import pytest
 import os
 from meshes import *
 from mesh_templates import *
+from math import sin, cos, pi
 
 
 def test_mesh_size():
@@ -20,6 +22,16 @@ def test_mesh_size():
     sphere_mesh = s.create_mesh(maxh=3.0, save_result=False)
     assert(np.isclose(mesh_size(sphere_mesh, unit_length=1.0), 24.0, rtol=RTOL))
     assert(np.isclose(mesh_size(sphere_mesh, unit_length=2e4), 48e4, rtol=RTOL))
+
+
+def test_line_mesh():
+    """
+    Create vertices lying on a spiral in 3D space, build a line-mesh from it
+    and check that it has the correct vertices.
+    """
+    vertices = [(sin(t), cos(t), t) for t in np.linspace(-2*pi, 4*pi, 100)]
+    mesh = line_mesh(vertices)
+    assert np.allclose(vertices, mesh.coordinates())
 
 
 def test_embed3d():
