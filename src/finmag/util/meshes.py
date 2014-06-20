@@ -1262,20 +1262,10 @@ def line_mesh(vertices):
             "(for 1D meshes) or a list of mesh nodes. Got: {}".format(vertices))
     dim = vertices.shape[-1]
 
-    mesh = df.Mesh()
-    editor = df.MeshEditor()
-    editor.open(mesh, 1, dim)
-    editor.init_vertices(n)
-    editor.init_cells(n-1)
+    # The 'cells' of the mesh are simply the intervals connecting adjacent nodes
+    cells = [[i, i+1] for i in xrange(n-1)]
 
-    for i, pt in enumerate(vertices):
-        editor.add_vertex(i, pt)
-
-    for i in xrange(n-1):
-        editor.add_cell(i, np.array([i, i+1], dtype='uintp'))
-
-    editor.close()
-    return mesh
+    return build_mesh(vertices, cells)
 
 
 def embed3d(mesh, z_embed=0.0):
