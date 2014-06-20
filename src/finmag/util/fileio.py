@@ -275,6 +275,10 @@ class Tablereader(object):
                                "Maybe the file was incompletely written?".
                                format(self.f))
         self.f.close()
+
+        # Make sure we have a 2d array even if the file only contains a single line (or none)
+        if self.data.ndim == 1:
+            self.data = self.data[np.newaxis, :]
 	
 	# Check if the number of data columns is equal to the number of headers
 	assert self.data.shape[1] == len(headers) - 1
