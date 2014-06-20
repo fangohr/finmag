@@ -266,25 +266,19 @@ class Tablereader(object):
 
         assert len(headers) == len(units)
 
-        # use numpy to read remaining data
+        # use numpy to read remaining data (genfromtxt will
+	# complain if there are rows with different sizes)
         try:
-            self.data = np.loadtxt(self.f)
+            self.data = np.genfromtxt(self.f)
         except ValueError:
             raise RuntimeError("Cannot load data from file '{}'." +
                                "Maybe the file was incompletely written?".
                                format(self.f))
         self.f.close()
-
-        # some consistency checks: must have as many columns as
-        # headers (disregarding the comment symbol)
-        if len(self.data) == self.data.size:  # only true for one line of data
-            assert self.data.size == len(headers) - 1
-            # also need to change numpy array vector into matrix with
-            # one row
-            self.data.shape = (1, len(headers) - 1)
-        else:
-            assert self.data.shape[1] == len(headers) - 1
-
+	
+	# Check if the number of data columns is equal to the number of headers
+	assert self.data.shape[1] == len(headers) - 1
+	
         datadic = {}
         # now wrap up data conveniently
         for i, entity in enumerate(headers[1:]):
