@@ -198,13 +198,10 @@ class LLB(object):
 
         if interaction.__class__.__name__=='Zeeman':
             self.zeeman_interation=interaction
-            self.tablewriter.entities['zeeman']={
-                        'unit': '<A/m>',
-                        'get': lambda sim: sim.zeeman_interation.average_field(),
-                        'header': ('h_x', 'h_y', 'h_z')}
-
-            self.tablewriter.update_entity_order()
-
+            self.tablewriter.add_entity('zeeman', {
+                'unit': '<A/m>',
+                'get': lambda sim: sim.zeeman_interation.average_field(),
+                'header': ('h_x', 'h_y', 'h_z')})
 
 
     def compute_effective_field(self):
@@ -340,12 +337,10 @@ class LLB(object):
             name='region_'+str(self.region_id)
 
         region_id=self.region_id
-        self.tablewriter.entities[name]={
-                        'unit': '<>',
-                        'get': lambda sim: sim.m_average_fun(dx=self.dx(region_id)),
-                        'header': (name+'_m_x', name+'_m_y', name+'_m_z')}
-
-        self.tablewriter.update_entity_order()
+        self.tablewriter.add_entity(name, {
+            'unit': '<>',
+            'get': lambda sim: sim.m_average_fun(dx=self.dx(region_id)),
+            'header': (name+'_m_x', name+'_m_y', name+'_m_z')})
 
     def save_ndt(self):
         #log.debug("Saving average field values for simulation '{}'.".format(self.name))
