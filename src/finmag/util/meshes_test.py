@@ -96,3 +96,111 @@ def test_build_mesh():
 
     mesh4 = df.SphereMesh(df.Point(2.0, 3.0, -4.0), 10.0, 3.0)
     assert_mesh_builds_correctly(mesh4)
+
+
+def create_periodic_mesh(periodicity='none', dim=3):
+    """
+    Helper function to create a mesh which is either non-periodic
+    (if periodicity='none'), periodic in one direction if
+    (periodicity='x' or periodicity='y') or periodic in both
+    directions (if periodicity='xy').
+
+    The argument `dim` specified the dimension of the mesh (allowed
+    values: dim=2 or dim=3).
+    """
+    if dim == 2 or dim == 3:
+        if periodicity == 'none':
+            # Unit square with added 'asymmetric' points on the four sides (to break periodicity)
+            #vertices = [(0, 0), (1, 0), (1, 1), (0.5, 1), (0, 1), (0, 0.5)]
+            #cells = [(0, 1, 5), (1, 2, 3), (3, 4, 5), (1, 3, 5)]
+            vertices = [(0, 0), (0.7, 0), (1, 0), (1, 0.8), (1, 1), (0.3, 1), (0, 1), (0, 0.2)]
+            cells = [(0, 1, 7), (1, 2, 3), (1, 3, 7), (3, 4, 5), (3, 5, 7), (5, 6, 7)]
+        elif periodicity == 'x':
+            # Unit square with added 'asymmetric' points on top/bottom side
+            #vertices = [(0, 0), (1, 0), (1, 1), (0.5, 1), (0, 1)]
+            #cells = [(0, 1, 3), (1, 2, 3), (0, 3, 4)]
+            vertices = [(0, 0), (0.2, 0), (1, 0), (1, 1), (0.7, 1), (0, 1)]
+            cells = [(0, 1, 5), (1, 2, 4), (2, 3, 4), (1, 4, 5)]
+        elif periodicity == 'y':
+            # Unit square with added point on left edge
+            vertices = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0.5)]
+            cells = [(0, 1, 4), (1, 2, 4), (2, 3, 4)]
+        elif periodicity == 'xy':
+            # Unit square
+            vertices = [(0, 0), (1, 0), (1, 1), (0, 1)]
+            cells = [(0, 1, 2), (0, 2, 3)]
+        else:
+            raise ValueError("Argument 'periodicity' must have one of the values 'none', 'x', 'y', 'z'")
+    else:
+        raise NotImplementedError('Can only create 2d and 3d meshes with predefined periodicity.')
+
+    mesh = build_mesh(vertices, cells)
+
+    if dim == 3:
+        # XXX TODO: It would be better to build a truly 3D mesh,
+        #           but this should suffice for now.
+        mesh = embed3d(mesh)
+
+    return mesh
+
+
+def test_mesh_is_periodic(tmpdir):
+    """
+
+    """
+    os.chdir(str(tmpdir))
+
+    # Create a bunch of 2D meshes with different periodicity
+    # and check that we detect this periodicity correctly.
+    mesh1 = create_periodic_mesh(periodicity='none', dim=2)
+    assert not mesh_is_periodic(mesh1, 'x')
+    #assert not mesh_is_periodic(mesh1, 'y')
+    assert not mesh_is_periodic(mesh1, 'xy')
+
+    mesh2 = create_periodic_mesh(periodicity='x', dim=2)
+    assert mesh_is_periodic(mesh2, 'x')
+    #assert not mesh_is_periodic(mesh2, 'y')
+    assert not mesh_is_periodic(mesh2, 'xy')
+
+    mesh3 = create_periodic_mesh(periodicity='y', dim=2)
+    assert not mesh_is_periodic(mesh3, 'x')
+    #assert mesh_is_periodic(mesh3, 'y')
+    assert not mesh_is_periodic(mesh3, 'xy')
+
+    mesh4 = create_periodic_mesh(periodicity='xy', dim=2)
+    assert mesh_is_periodic(mesh4, 'x')
+    #assert mesh_is_periodic(mesh4, 'y')
+    assert mesh_is_periodic(mesh4, 'xy')
+
+    mesh_rectangle = df.RectangleMesh(0, 0, 20, 10, 12, 8)
+    assert mesh_is_periodic(mesh_rectangle, 'x')
+    #assert mesh_is_periodic(mesh_rectangle, 'y')
+    assert mesh_is_periodic(mesh_rectangle, 'xy')
+
+
+    # Repeat this process for a bunch of 3D meshes with
+    # different periodicity.
+    mesh5 = create_periodic_mesh(periodicity='none', dim=3)
+    assert not mesh_is_periodic(mesh5, 'x')
+    #assert not mesh_is_periodic(mesh5, 'y')
+    assert not mesh_is_periodic(mesh5, 'xy')
+
+    mesh6 = create_periodic_mesh(periodicity='x', dim=3)
+    assert mesh_is_periodic(mesh6, 'x')
+    #assert not mesh_is_periodic(mesh6, 'y')
+    assert not mesh_is_periodic(mesh6, 'xy')
+
+    mesh7 = create_periodic_mesh(periodicity='y', dim=3)
+    assert not mesh_is_periodic(mesh7, 'x')
+    #assert mesh_is_periodic(mesh7, 'y')
+    assert not mesh_is_periodic(mesh7, 'xy')
+
+    mesh8 = create_periodic_mesh(periodicity='xy', dim=3)
+    assert mesh_is_periodic(mesh8, 'x')
+    #assert mesh_is_periodic(mesh8, 'y')
+    assert mesh_is_periodic(mesh8, 'xy')
+
+    mesh_box = df.BoxMesh(0, 0, 0, 20, 10, 5, 12, 8, 3)
+    assert mesh_is_periodic(mesh_box, 'x')
+    #assert mesh_is_periodic(mesh_box, 'y')
+    assert mesh_is_periodic(mesh_box, 'xy')
