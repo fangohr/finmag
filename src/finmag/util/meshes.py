@@ -1319,3 +1319,81 @@ def build_mesh(vertices, cells):
 
     editor.close()
     return mesh
+
+
+def mesh_is_periodic(mesh, axes):
+    """
+    Check that the given mesh is periodic. The argument `axes`
+    can be either 'x' or 'xy', indicating that axes of the
+    mesh should be checked in x-direction or both x- and y-direction.
+
+    """
+    coords = mesh.coordinates()
+    cells = mesh.cells()
+
+    # Convert 'axes' into a list of values between 0 and 2
+    try:
+        axes = map(lambda val: {'x': 0, 'y': 1, 'z': 2}[val], axes)
+    except KeyError:
+        raise ValueError("Argument 'axes' should be a string containing only 'x', 'y' and 'z'.")
+
+    min_coords = coords.min(axis=0)
+    max_coords = coords.max(axis=0)
+    # Generate dictionary which associates each axis direction with the indices
+    # of the minimal and maximal verices along that axis direction.
+    extremal_vertex_indices = {
+        # XXX TODO: Maybe avoid the repeated loops if speed becomes a problem for large meshes?
+        axis: {'min': [i for i in xrange(len(coords)) if coords[i][axis] == min_coords[axis]],
+               'max': [i for i in xrange(len(coords)) if coords[i][axis] == max_coords[axis]],
+              } for axis in axes}
+
+    mesh_extents = [b - a for (a, b) in zip(min_coords, max_coords)]
+
+    # Using dolfin's bounding box tree to speed things up
+    bbt = df.BoundingBoxTree()
+    bbt.build(mesh)
+
+
+    def find_matching_vertex_index(idx, axis, a):
+        """
+        Find index of the vertex which is identified with the vertex `idx`
+        on the other side of the mesh.
+        """
+        pt_coords = coords[idx].copy()  # need a copy because otherwise we edit the mesh coordinates in-place
+        pt_coords[axis] += a * mesh_extents[axis]  # move point to other edge
+        pt = df.Point(*pt_coords)
+        cell_idx, distance = bbt.compute_closest_entity(pt)
+        for v_idx in cells[cell_idx]:
+            if (np.linalg.norm(pt_coords - coords[v_idx]) < 1e-14):
+                return v_idx
+        return None
+
+
+    for axis in axes:
+        idcs_edge1 = extremal_vertex_indices[axis]['min']
+        idcs_edge2 = extremal_vertex_indices[axis]['max']
+
+        # If we don't have the same number of vertices on the two edges then the mesh is clearly not periodic
+        if len(idcs_edge1) != len(idcs_edge2):
+            return False
+
+        def all_matching_vertices_exist_on_other_edge(indices1, indices2, a):
+            """
+            Helper function to check whether all vertices with index in 'indices1' have
+            a corresponding vertex on the other side of the mesh with index in 'indices2'.
+            """
+            for idx1 in indices1:
+                idx2 = find_matching_vertex_index(idx1, axis, a)
+                if idx2 is None or idx2 not in indices2:
+                    # No matching vertex found on other edge, hence mesh is not periodic
+                    return False
+            return True
+
+        if not all_matching_vertices_exist_on_other_edge(idcs_edge1, idcs_edge2, +1):
+            return False
+
+        if not all_matching_vertices_exist_on_other_edge(idcs_edge2, idcs_edge1, -1):
+            return False
+
+    # No a-periodicity found, hence the mesh is periodic
+    return True
