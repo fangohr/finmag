@@ -1953,6 +1953,7 @@ def print_boundary_element_matrix_size(mesh, generalised=False):
     byte_size_float = np.zeros(1, dtype=float).nbytes
     memory_usage = N**2 * byte_size_float
 
-    logger.debug("Boundary element matrix for mesh with {} vertices will occupy {} "
-                 "in memory.".format(N, make_human_readable(memory_usage)))
+    logger.debug("Boundary element matrix for mesh with {} vertices and {} "
+                 "surface nodes will occupy {} in memory.".format(
+                 mesh.num_vertices(), N, make_human_readable(memory_usage)))
 
