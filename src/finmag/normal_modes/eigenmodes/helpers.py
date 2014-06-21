@@ -1,6 +1,5 @@
 from __future__ import division
 import copy
-import hashlib
 import logging
 import numpy as np
 import dolfin as df
