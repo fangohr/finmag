@@ -1941,7 +1941,7 @@ def make_human_readable(nbytes):
     return res
 
 
-def print_boundary_matrix_size(mesh, generalised=False):
+def print_boundary_element_matrix_size(mesh, generalised=False):
     """
     Given a 3D mesh, print the amount of memory that the boundary element matrix
     will occupy in memory. This is useful when treating very big problems in order
