@@ -156,6 +156,7 @@ class FKDemag(object):
                     self._bem = pbc.bm
                 else:
                     self._bem, self._b2g_map = compute_bem_fk(df.BoundaryMesh(mesh, 'exterior', False))
+        logger.debug("Boundary element matrix uses {:.2f} MB of memory.".format(self._bem.nbytes / 1024.**2))
         self._phi_1 = df.Function(self.S1)  # solution of inhomogeneous Neumann problem
         self._phi_2 = df.Function(self.S1)  # solution of Laplace equation inside domain
         self._phi = df.Function(self.S1)  # magnetic potential phi_1 + phi_2
