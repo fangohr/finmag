@@ -1926,3 +1926,34 @@ def format_time(num_seconds):
     res += "{} min ".format(minutes) if (minutes > 0 or (minutes == 0 and hours > 0)) else ""
     res += "{:.2f} seconds".format(seconds)
     return res
+
+
+def make_human_readable(nbytes):
+    """
+    Given a number of bytes, return a string of the form "12.2 MB" or "3.44 GB"
+    which makes the number more digestible by a human reader. Everything less
+    than 500 MB will be displayed in units of MB, everything above in units of GB.
+    """
+    if nbytes < 500*1024**2:
+        res = '{:.2f} MB'.format(nbytes / 1024**2)
+    else:
+        res = '{:.2f} GB'.format(nbytes / 1024**3)
+    return res
+
+
+def print_boundary_element_matrix_size(mesh, generalised=False):
+    """
+    Given a 3D mesh, print the amount of memory that the boundary element matrix
+    will occupy in memory. This is useful when treating very big problems in order
+    to "interactively" adjust a mesh until the matrix fits in memory.
+
+    """
+    bm = df.BoundaryMesh(mesh, 'exterior', False)
+    N = bm.num_vertices()
+    byte_size_float = np.zeros(1, dtype=float).nbytes
+    memory_usage = N**2 * byte_size_float
+
+    logger.debug("Boundary element matrix for mesh with {} vertices and {} "
+                 "surface nodes will occupy {} in memory.".format(
+                 mesh.num_vertices(), N, make_human_readable(memory_usage)))
+

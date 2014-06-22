@@ -1,5 +1,6 @@
 import os
 import logging
+import types
 import numpy as np
 from glob import glob
 from types import TupleType, StringType
@@ -24,6 +25,10 @@ class Tablewriter(object):
         self.float_format = "%" + str(charwidth)+'.'+str(precision)+ "g "
         self.string_format = "%" + str(charwidth) + "s "
 
+        # save_head records whether the headings (name and units)
+        # have been saved already
+        self.save_head = False
+
         # entities:
         # Idea is to have a dictionary of keys where the keys
         # are reference names for the entities and
@@ -42,14 +47,35 @@ class Tablewriter(object):
         # can provide when creating interactions which summarises what the
         # field is about, and which can be used as a useful column header
         # here for the ndt file.
-        self.entities = {
-            'time': {'unit': '<s>',
-                        'get': lambda sim: sim.t,
-                        'header': 'time'},
-            'm': {'unit': '<>',
-                  'get': lambda sim: sim.m_average,
-                  'header': ('m_x', 'm_y', 'm_z')}
-            }
+        self._entities = {}
+
+        self.add_entity('time', {'unit': '<s>',
+                                 'get': lambda sim: sim.t,
+                                 'header': 'time'})
+
+        self.add_entity('m', {'unit': '<>',
+                              'get': lambda sim: sim.m_average,
+                              'header': ('m_x', 'm_y', 'm_z')})
+
+        # add time integrator dummy tokens than return NAN as we haven't got 
+        # the integrator yet (or may never create one).
+        self.add_entity( 'steps',  {
+            'unit': '<1>',
+            #'get': lambda sim: sim.integrator.stats()['nsteps'],
+            'get': lambda sim: np.NAN,
+            'header': 'steps'})
+
+        self.add_entity('last_step_dt', {
+            'unit': '<1>',
+            #'get': lambda sim: sim.integrator.stats()['hlast'],
+            'get': lambda sim: np.NAN,
+            'header': 'last_step_dt'})
+
+        self.add_entity('dmdt', {
+            'unit': '<A/ms>',
+            #'get': lambda sim: sim.dmdt_max,
+            'get': lambda sim: np.array([np.NAN, np.NAN, np.NAN]),
+            'header': ('dmdt_x', 'dmdt_y', 'dmdt_z')})
 
         self.filename = filename
         self.sim = simulation
@@ -64,16 +90,82 @@ class Tablewriter(object):
             msg = "File %s exists already; cowardly stopping" % filename
             raise RuntimeError(msg)
 
-        # save_head records whether the headings (name and units)
-        # have been saved already
-        self.save_head = False
-        ## also record how many column headings we have written to the file
-        #self.ncolumn_headings_written = None
-        ## ^ this is so we can catch attempts to write more or less data
-        ## in subsequent writes, and raise an error.
+
+    def add_entity(self, name, dic):
+        """
+        Add an entity to be saved to this ndt file at the next data saving instance. The
+        arguments are:
+
+           name  : a reference name for this entity (used to order the entities in the ndt file)
+
+           dic : a dictionary containing data for the header lines and a function to retrieve the data.
+
+        Examples:
+
+        For the time entity, we have
+
+            name = 'time'
+        
+            dic =  {'unit': '<s>',
+                     'get': lambda sim: sim.t,
+                     'header': 'time'},
+
+        For the magnetisation entity, we have
+
+            name = 'm'
+    
+            dic = {'unit': '<>',
+                  'get': lambda sim: sim.m_average,
+                  'header': ('m_x', 'm_y', 'm_z')}
+        """
+        if self.save_head:
+            raise RuntimeError("Attempt to add entity '{}'->'{}' to ndt file {}" + \
+                               "after file has been created -- this is impossible".\
+                               format(name, dic, self.filename))
+
+        assert name not in self._entities.keys(), \
+                              "Attempt to add a second '{}' to entities for {}".\
+                              format(name, self.filename)
+
+        # check that right keywords are given
+        entity_descr = "entity '{}' -> '{}'".format(name, dic)
+        assert 'header' in dic, "Missing 'header' in " + entity_descr
+        assert 'unit' in dic, "Missing 'unit' in " + entity_descr
+        assert 'get' in dic, "Missing 'get' in " + entity_descr
+
+        self._entities[name] = dic
+        self.update_entity_order()
+
+
+    def modify_entity_get_method(self, name, new_get_method):
+        """Allows changing the get method. Is used for integrators at the moment: we register
+        dummy get methods when the tablewriter file is created, and then updated those if and
+        when an integrator has been created."""
+        assert name in self._entities, "Couldn't find '{}' in {}".format(name, self._entities.keys())
+
+        logger.debug("Updating get method for {} in TableWriter(name={})".format(
+            name, self.filename))
+        #logger.debug("Updating get method for {} in TableWriter(name={}) old method: {}, new method: {}".format(
+        #    name, self.filename, self._entities[name]['get'], new_get_method))
+
+        self._entities[name]['get'] = new_get_method
+
+
+    def delete_entity_get_method(self, name):
+        """We cannot delete entities once they are created (as this would change the number of columns in the
+        data file). Instead, we register a return function that returns numpy.NAN. 
+        """
+        assert name in self._entities, "Couldn't find '{}' in {}".format(name, self._entities.keys())
+
+        logger.debug("'Deleting' get method for {} in TableWriter(name={})".format(
+            name, self.filename))
+
+        self._entities[name]['get'] = lambda sim: np.NAN
+
+
 
     def default_entity_order(self):
-        keys = self.entities.keys()
+        keys = self._entities.keys()
         # time needs to go first
         keys.remove('time')
         return ['time'] + sorted(keys)
@@ -86,7 +178,7 @@ class Tablewriter(object):
         line1 = [self.comment_symbol]
         line2 = [self.comment_symbol]
         for entityname in self.entity_order:
-            colheaders = self.entities[entityname]['header']
+            colheaders = self._entities[entityname]['header']
             # colheaders can be a 3-tuple ('mx','my','mz'), say
             # or a string ('time'). Avoid iterating over string:
             if isinstance(colheaders, str):
@@ -94,7 +186,7 @@ class Tablewriter(object):
             for colhead in colheaders:
                 line1.append(self.string_format % colhead)
                 line2.append(self.string_format % \
-                    self.entities[entityname]['unit'])
+                    self._entities[entityname]['unit'])
         return "".join(line1) + "\n" + "".join(line2) + "\n"
 
     @mtimed
@@ -108,7 +200,6 @@ class Tablewriter(object):
             f.write(self.headers())
             f.close()
             self.save_head = True
-            #self.ncolumn_headings_written = len(self.headers()[1:].split())
 
         # open file
         with open(self.filename, 'a') as f:
@@ -118,11 +209,11 @@ class Tablewriter(object):
 ## number of columns to be written changes
 ## but this seems to never happen. So it's not quite right.
 ## Also, if this was the right place to catch it, i.e. if watching
-## self.entities is the critical object that shouldn't change after
+## self._entities is the critical object that shouldn't change after
 ## the header has been written, then we should convert this into a
 ## 'property' which raises an error if called for writing once the
 ## header lines have been written. HF, 9 June 2014.
-#            if len(self.entities) == self.ncolumn_headings_written:
+#            if len(self._entities) == self.ncolumn_headings_written:
 #                msg = "It seems number of columns to be written" + \
 #                    "to {} has changed".format(self.filename)
 #                msg += "from {} to {}. This is not supported.".format(
@@ -130,7 +221,7 @@ class Tablewriter(object):
 #                logger.error(msg)
 #                raise ValueError(msg)
             for entityname in self.entity_order:
-                value = self.entities[entityname]['get'](self.sim)
+                value = self._entities[entityname]['get'](self.sim)
                 if isinstance(value, np.ndarray):
 
                     for v in value:
@@ -138,6 +229,9 @@ class Tablewriter(object):
 
                 elif isinstance(value, float) or isinstance(value, int):
                     f.write(self.float_format % value)
+                elif isinstance(value, types.NoneType):
+                    #f.write(self.string_format % value)
+                    f.write(self.string_format % "nan")
                 else:
                     msg = "Can only deal with numpy arrays, float and int " + \
                         "so far, but type is %s" % type(value)
@@ -172,24 +266,22 @@ class Tablereader(object):
 
         assert len(headers) == len(units)
 
-        # use numpy to read remaining data
+        # use numpy to read remaining data (genfromtxt will
+        # complain if there are rows with different sizes)
         try:
-            self.data = np.loadtxt(self.f)
+            self.data = np.genfromtxt(self.f)
         except ValueError:
             raise RuntimeError("Cannot load data from file '{}'." +
                                "Maybe the file was incompletely written?".
                                format(self.f))
         self.f.close()
 
-        # some consistency checks: must have as many columns as
-        # headers (disregarding the comment symbol)
-        if len(self.data) == self.data.size:  # only true for one line of data
-            assert self.data.size == len(headers) - 1
-            # also need to change numpy array vector into matrix with
-            # one row
-            self.data.shape = (1, len(headers) - 1)
-        else:
-            assert self.data.shape[1] == len(headers) - 1
+        # Make sure we have a 2d array even if the file only contains a single line (or none)
+        if self.data.ndim == 1:
+            self.data = self.data[np.newaxis, :]
+
+        # Check if the number of data columns is equal to the number of headers
+        assert self.data.shape[1] == len(headers) - 1
 
         datadic = {}
         # now wrap up data conveniently
@@ -329,6 +421,3 @@ if __name__ == "__main__":
     demo1()
     print("Demo 2")
     demo2()
-
-
-

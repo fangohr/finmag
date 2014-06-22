@@ -14,8 +14,8 @@ logger = logging.getLogger(name='finmag')
 
 class TreecodeBEM(FKDemag):
     def __init__(self, mac=0.3, p=3, num_limit=100, correct_factor=10, 
-                 type_I=True, name='Demag', Ts=None, thin_film=False):
-        super(TreecodeBEM, self).__init__(name=name, Ts=Ts, thin_film=thin_film)
+                 type_I=True, name='Demag', macrogeometry=None, thin_film=False):
+        super(TreecodeBEM, self).__init__(name=name, macrogeometry=macrogeometry, thin_film=thin_film)
         
         self.mac = mac
         self.p = p

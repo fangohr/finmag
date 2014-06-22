@@ -18,13 +18,13 @@ from finmag.native.treecode_bem import build_boundary_matrix
 logger = logging.getLogger('finmag')
 
 class MacroGeometry(object):
-    def __init__(self, nx=1, ny=1, dx=None, dy=None, Ts=None):
+    def __init__(self, nx=None, ny=None, dx=None, dy=None, Ts=None):
         """
         If Ts is not None the other parameters will be ignored.
         """
         
-        self.nx = nx
-        self.ny = ny
+        self.nx = nx or 1
+        self.ny = ny or 1
         self.dx = dx
         self.dy = dy
         self.Ts = Ts
@@ -32,7 +32,7 @@ class MacroGeometry(object):
         if Ts != None:
             logger.warning("'Ts' is not None, using explicit values in 'Ts'.")
         else:
-            if nx < 1 or nx%2==0 or ny<1 or ny%2==0:
+            if self.nx < 1 or self.nx%2==0 or self.ny<1 or self.ny%2==0:
                 raise Exception('Both nx and ny should larger than 0 and must be odd.')
 
 
@@ -147,7 +147,7 @@ if __name__ == '__main__':
     
     print b.b2g_map, b.g2b_map
     
-    bem, b2g_map = compute_bem_fk(df.BoundaryMesh(mesh, 'exterior', False))
+    #bem, b2g_map = compute_bem_fk(df.BoundaryMesh(mesh, 'exterior', False))
     
     #print bem
     #print b2g_map

@@ -1,9 +1,9 @@
 from __future__ import division
 import copy
-import hashlib
 import logging
 import numpy as np
 import dolfin as df
+from finmag.util.helpers import make_human_readable
 from scipy.sparse.linalg import LinearOperator
 from scipy.sparse import csr_matrix
 from scipy.optimize import minimize_scalar
@@ -29,29 +29,16 @@ def is_hermitian(A, rtol=1e-5, atol=1e-8):
     return np.allclose(A, np.conj(A.T), rtol=rtol, atol=atol)
 
 
-def make_human_readable(nbytes):
+def print_eigenproblem_memory_usage(mesh, generalised=False):
     """
-    Given a number of bytes, return a string of the form "12.2 MB" or "3.44 GB"
-    which makes the number more digestible by a human reader. Everything less
-    than 500 MB will be displayed in units of MB, everything above in units of GB.
-    """
-    if nbytes < 500*1024**2:
-        res = '{:.2f} MB'.format(nbytes / 1024**2)
-    else:
-        res = '{:.2f} GB'.format(nbytes / 1024**3)
-    return res
-
-
-def print_eigenproblem_memory_usage(num_mesh_nodes, generalised=False):
-    """
-    Given the number of nodes in a mesh, print the amount of memory
-    that the eigenproblem matrix or matrices (in case of a generalised
-    eigenproblem) will occupy in memory. This is useful when treating
-    very big problems in order to "interactively" adjust a mesh until
-    the matrix fits in memory.
+    Given a mesh, print the amount of memory that the eigenproblem matrix
+    or matrices (in case of a generalised eigenproblem) for a normal mode
+    simulation on this mesh will occupy in memory. This is useful when
+    treating very big problems in order to "interactively" adjust a mesh
+    until the matrix fits in memory.
 
     """
-    N = num_mesh_nodes
+    N = mesh.num_vertices()
     if generalised == False:
         byte_size_float = np.zeros(1, dtype=float).nbytes
         memory_usage = (2*N)**2 * byte_size_float

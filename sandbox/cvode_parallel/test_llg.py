@@ -11,7 +11,6 @@ from finmag.energies import Exchange, Zeeman, Demag
 df.parameters.reorder_dofs_serial = True
 from mpi4py import MPI
 
-
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
@@ -123,18 +122,17 @@ if __name__ == '__main__':
     sim.set_up_solver()
     
     ts = np.linspace(0, 2e-10, 101)
-    
-    
+        
     energy = []
     
-    file = df.File('u_time.pvd')
-    
+    #file = df.File('u_time.pvd')
+    file = df.HDF5File(sim.m.vector().mpi_comm(),'test.h5','w')
     
     for t in ts:
         sim.run_until(t)
         print t, sim.spin[0]
         #sim.field.vector().set_local(sim.llg.effective_field.H_eff)
-        file << sim.m
+        file.write(sim.m,'/m_%g'%t)
         energy.append(sim.llg.effective_field.total_energy())
         
     plot_m(ts,energy)
