@@ -9,7 +9,7 @@ import dolfin as df
 import finmag
 
 
-def bar(name='bar'):
+def bar(name='bar', demag_solver_type=None):
     """Py bar with dimensions 30x30x100nm, initial field
     pointing in (1,0,1) direction.
 
@@ -31,12 +31,13 @@ def bar(name='bar'):
     mesh = df.BoxMesh(xmin, ymin, zmin, xmax, ymax, zmax, nx, ny, nz)
 
     sim = finmag.sim_with(mesh, Ms=0.86e6, alpha=0.5, unit_length=1e-9,
-                A=13e-12, m_init=(1, 0, 1), name=name)
+                A=13e-12, m_init=(1, 0, 1), name=name,
+                demag_solver_type=demag_solver_type)
 
     return sim
 
 
-def barmini(name='barmini', mark_regions=False):
+def barmini(name='barmini', mark_regions=False, demag_solver_type=None):
     """Py bar with dimensions 3x3x10nm, initial field
     pointing in (1,0,1) direction.
 
@@ -61,7 +62,8 @@ def barmini(name='barmini', mark_regions=False):
     mesh = df.BoxMesh(xmin, ymin, zmin, xmax, ymax, zmax, nx, ny, nz)
 
     sim = finmag.sim_with(mesh, Ms=0.86e6, alpha=0.5, unit_length=1e-9,
-                A=13e-12, m_init=(1, 0, 1), name=name)
+                A=13e-12, m_init=(1, 0, 1), name=name,
+                demag_solver_type=demag_solver_type)
 
     if mark_regions:
         def fun_regions(pt):
