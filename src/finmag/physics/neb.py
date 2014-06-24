@@ -226,7 +226,7 @@ class NEB_Sundials(object):
         
     def create_tablewriter(self):
         self.tablewriter = Tablewriter('%s_energy.ndt'%(self.name), self, override=True)
-        self.tablewriter.entities = {
+        self.tablewriter._entities = {
             'step': {'unit': '<1>',
                      'get': lambda sim: sim.step,
                      'header': 'steps'},
@@ -234,13 +234,13 @@ class NEB_Sundials(object):
                        'get': lambda sim: sim.energy,
                        'header': ['image_%d'%i for i in range(self.image_num+2)]}
             }
-        keys = self.tablewriter.entities.keys()
+        keys = self.tablewriter._entities.keys()
         keys.remove('step')
         self.tablewriter.entity_order = ['step'] + sorted(keys)
         
         
         self.tablewriter_dm = Tablewriter('%s_dms.ndt'%(self.name), self, override=True)
-        self.tablewriter_dm.entities = {
+        self.tablewriter_dm._entities = {
             'step': {'unit': '<1>',
                      'get': lambda sim: sim.step,
                      'header': 'steps'},
@@ -248,7 +248,7 @@ class NEB_Sundials(object):
                        'get': lambda sim: sim.distances,
                        'header': ['image_%d_%d'%(i, i+1) for i in range(self.image_num+1)]}
             }
-        keys = self.tablewriter_dm.entities.keys()
+        keys = self.tablewriter_dm._entities.keys()
         keys.remove('step')
         self.tablewriter_dm.entity_order = ['step'] + sorted(keys)
         
