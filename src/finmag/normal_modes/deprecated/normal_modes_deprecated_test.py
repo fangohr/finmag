@@ -53,7 +53,7 @@ def test_check_Kittel_mode_for_single_sphere(tmpdir, debug=False):
     #
     # The frequency is equal to omega_0 / (2*pi).
     #
-    freq_expected = gamma * H_z / (2*pi*frequency_unit)
+    freq_expected = sim.gamma * H_z / (2*pi*frequency_unit)
     assert(np.allclose(omega[0], +freq_expected, atol=0, rtol=RTOL))
     assert(np.allclose(omega[1], -freq_expected, atol=0, rtol=RTOL))
     logger.debug("Computed eigenfrequencies: {}".format(omega))
