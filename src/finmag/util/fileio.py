@@ -15,7 +15,7 @@ class Tablewriter(object):
     # being separated by some whitespace.
     comment_symbol = '# '
 
-    def __init__(self, filename, simulation, override=False, entity_order=None):
+    def __init__(self, filename, simulation, override=False, entity_order=None, entities=None):
         logger.debug("Creating DataWriter for file '%s'" % (filename))
 
         # formatting for columns (could in principle be customized
@@ -47,36 +47,41 @@ class Tablewriter(object):
         # can provide when creating interactions which summarises what the
         # field is about, and which can be used as a useful column header
         # here for the ndt file.
-        self._entities = {}
 
-        self.add_entity('time', {'unit': '<s>',
-                                 'get': lambda sim: sim.t,
-                                 'header': 'time'})
+        if entities is None:
+            
+            self._entities = {}
+            
+            self.add_entity('time', {'unit': '<s>',
+	                                 'get': lambda sim: sim.t,
+	                                 'header': 'time'})
+            self.add_entity('m', {'unit': '<>',
+	                              'get': lambda sim: sim.m_average,
+	                              'header': ('m_x', 'm_y', 'm_z')})
+	
+	        # add time integrator dummy tokens than return NAN as we haven't got 
+	        # the integrator yet (or may never create one).
+            self.add_entity( 'steps',  {
+	            'unit': '<1>',
+	            #'get': lambda sim: sim.integrator.stats()['nsteps'],
+	            'get': lambda sim: np.NAN,
+	            'header': 'steps'})
+            
+            self.add_entity('last_step_dt', {
+	            'unit': '<1>',
+	            #'get': lambda sim: sim.integrator.stats()['hlast'],
+	            'get': lambda sim: np.NAN,
+	            'header': 'last_step_dt'})
+            
+            self.add_entity('dmdt', {
+	            'unit': '<A/ms>',
+	            #'get': lambda sim: sim.dmdt_max,
+	            'get': lambda sim: np.array([np.NAN, np.NAN, np.NAN]),
+	            'header': ('dmdt_x', 'dmdt_y', 'dmdt_z')})
 
-        self.add_entity('m', {'unit': '<>',
-                              'get': lambda sim: sim.m_average,
-                              'header': ('m_x', 'm_y', 'm_z')})
-
-        # add time integrator dummy tokens than return NAN as we haven't got 
-        # the integrator yet (or may never create one).
-        self.add_entity( 'steps',  {
-            'unit': '<1>',
-            #'get': lambda sim: sim.integrator.stats()['nsteps'],
-            'get': lambda sim: np.NAN,
-            'header': 'steps'})
-
-        self.add_entity('last_step_dt', {
-            'unit': '<1>',
-            #'get': lambda sim: sim.integrator.stats()['hlast'],
-            'get': lambda sim: np.NAN,
-            'header': 'last_step_dt'})
-
-        self.add_entity('dmdt', {
-            'unit': '<A/ms>',
-            #'get': lambda sim: sim.dmdt_max,
-            'get': lambda sim: np.array([np.NAN, np.NAN, np.NAN]),
-            'header': ('dmdt_x', 'dmdt_y', 'dmdt_z')})
-
+        else:
+            self._entities = entities
+	
         self.filename = filename
         self.sim = simulation
         # in what order to write data
@@ -162,14 +167,18 @@ class Tablewriter(object):
 
         self._entities[name]['get'] = lambda sim: np.NAN
 
-
-
     def default_entity_order(self):
         keys = self._entities.keys()
         # time needs to go first
-        keys.remove('time')
-        return ['time'] + sorted(keys)
-
+        if 'time' in keys:
+            keys.remove('time')
+            return ['time'] + sorted(keys)
+        elif 'step' in keys:
+            keys.remove('step')
+            return ['step'] + sorted(keys)
+        else:
+            return keys
+        
     def update_entity_order(self):
         self.entity_order = self.default_entity_order()
 
