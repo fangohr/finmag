@@ -1134,9 +1134,9 @@ class Simulation(object):
         self.llg.use_zhangli(J_profile=J_profile, P=P, beta=beta, using_u0=using_u0)
 
 def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sundials",
-             A=None, K1=None, K1_axis=None, H_ext=None, demag_solver='FK', nx=None, ny=None,
-             spacing_x=None, spacing_y=None, demag_solver_params={}, D=None, name="unnamed",
-             pbc=None, sim_class=Simulation):
+             A=None, K1=None, K1_axis=None, H_ext=None, demag_solver='FK', demag_solver_type=None,
+             nx=None, ny=None, spacing_x=None, spacing_y=None, demag_solver_params={}, D=None,
+             name="unnamed", pbc=None, sim_class=Simulation):
     """
     Create a Simulation instance based on the given parameters.
 
@@ -1197,7 +1197,7 @@ def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sun
         sim.add(DMI(D))
     if demag_solver != None:
         mg = MacroGeometry(nx=nx,ny=ny,dx=spacing_x, dy=spacing_y)
-        demag = Demag(solver=demag_solver,macrogeometry=mg)
+        demag = Demag(solver=demag_solver, macrogeometry=mg, solver_type=demag_solver_type)
         if demag_solver_params != {}:
             for (k, v) in demag_solver_params.items():
                 log.debug("Setting demag solver parameter {}='{}' for simulation '{}'".format(k, v, sim.name))
