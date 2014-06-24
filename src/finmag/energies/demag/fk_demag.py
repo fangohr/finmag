@@ -141,12 +141,13 @@ class FKDemag(object):
         self._poisson_matrix = self._poisson_matrix()
         self._laplace_zeros = df.Function(self.S1).vector()
 
-        # determine the solver type to be used (Krylov or LU)
+        # determine the solver type to be used (Krylov or LU); if the kwarg 'solver_type' is not
+        # provided, try to read the setting form the .finmagrc file; use 'Krylov' if this fails.
         solver_type = self.solver_type
         if solver_type is None:
             solver_type = configuration.get_config_option('demag', 'solver_type', 'Krylov')
-        if solver_type == 'None':
-            # Just in case the user set "solver_type = None" in the .finmagrc file
+        if solver_type == 'None':  # if the user set 'solver_type = None' in the .finmagrc file,
+                                   # solver_type will be a string so we need to catch this here.
             solver_type = 'Krylov'
         logger.debug("Using {} solver for demag.".format(solver_type))
 
