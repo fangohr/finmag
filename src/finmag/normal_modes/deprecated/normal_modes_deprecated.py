@@ -389,7 +389,7 @@ def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9
         Av = A_times_vector(mf_mult(Q, w))
         A[:, i] = mf_mult(Qt, Av).reshape(-1)
         # Multiply by (-gamma)/(2 pi U)
-        A[:, i] *= -gamma / (2 * pi * frequency_unit)
+        A[:, i] *= -sim.gamma / (2 * pi * frequency_unit)
 
     # # Compute B, which is -i Mcross 2 pi U / gamma
     # B = np.zeros((2, n, 2, n), dtype=complex)
