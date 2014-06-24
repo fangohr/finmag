@@ -15,7 +15,7 @@ from aeon import timed, mtimed, Timer, default_timer
 from finmag.util.consts import mu0
 from finmag.native.llg import compute_bem_fk
 from finmag.util.meshes import nodal_volume
-from finmag.util import helpers
+from finmag.util import helpers, configuration
 from fk_demag_pbc import BMatrixPBC
 
 
@@ -40,7 +40,7 @@ class FKDemag(object):
     .. _Hybrid method for computing demagnetizing fields: http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=106342
 
     """
-    def __init__(self, name='Demag', thin_film=False,macrogeometry=None): 
+    def __init__(self, name='Demag', thin_film=False, macrogeometry=None, solver_type=None):
         """
         Create a new FKDemag instance.
 
@@ -63,6 +63,9 @@ class FKDemag(object):
         You can add new entries to these dicts as well. Everything which is
         understood by `df.KrylovSolver` is valid.
 
+        Allowed values for `solver_type` are 'Krylov','LU' and `None` (the latter uses the
+        value set in the .finmagrc file, defaulting to 'Krylov' is no value is provided there).
+
         """
         self.name = name
         self.in_jacobian = False
@@ -79,6 +82,7 @@ class FKDemag(object):
             'phi_2_preconditioner': 'default',
             'phi_2': default_parameters.copy()
         }
+        self.solver_type = solver_type
 
         if thin_film:
             self.parameters["phi_1_solver"] = "cg"
@@ -135,17 +139,36 @@ class FKDemag(object):
 
         # for computation of field and scalar magnetic potential
         self._poisson_matrix = self._poisson_matrix()
-        self._poisson_solver = df.KrylovSolver(self._poisson_matrix.copy(),
-            self.parameters['phi_1_solver'], self.parameters['phi_1_preconditioner'])
-        self._poisson_solver.parameters.update(self.parameters['phi_1'])
         self._laplace_zeros = df.Function(self.S1).vector()
-        self._laplace_solver = df.KrylovSolver(
-                self.parameters['phi_2_solver'], self.parameters['phi_2_preconditioner'])
-        self._laplace_solver.parameters.update(self.parameters['phi_2'])
-        # We're setting 'same_nonzero_pattern=True' to enforce the
-        # same matrix sparsity pattern across different demag solves,
-        # which should speed up things.
-        self._laplace_solver.parameters["preconditioner"]["structure"] = "same_nonzero_pattern"
+
+        # determine the solver type to be used (Krylov or LU)
+        solver_type = self.solver_type
+        if solver_type is None:
+            solver_type = configuration.get_config_option('demag', 'solver_type', 'Krylov')
+        if solver_type == 'None':
+            # Just in case the user set "solver_type = None" in the .finmagrc file
+            solver_type = 'Krylov'
+        logger.debug("Using {} solver for demag.".format(solver_type))
+
+        if solver_type == 'Krylov':
+            self._poisson_solver = df.KrylovSolver(self._poisson_matrix.copy(),
+                self.parameters['phi_1_solver'], self.parameters['phi_1_preconditioner'])
+            self._poisson_solver.parameters.update(self.parameters['phi_1'])
+            self._laplace_solver = df.KrylovSolver(
+                    self.parameters['phi_2_solver'], self.parameters['phi_2_preconditioner'])
+            self._laplace_solver.parameters.update(self.parameters['phi_2'])
+            # We're setting 'same_nonzero_pattern=True' to enforce the
+            # same matrix sparsity pattern across different demag solves,
+            # which should speed up things.
+            self._laplace_solver.parameters["preconditioner"]["structure"] = "same_nonzero_pattern"
+        elif solver_type == 'LU':
+            self._poisson_solver = df.LUSolver(self._poisson_matrix.copy())
+            self._laplace_solver = df.LUSolver()
+            self._poisson_solver.parameters["reuse_factorization"] = True
+            self._laplace_solver.parameters["reuse_factorization"] = True
+        else:
+            raise ValueError("Argument 'solver_type' must be either 'Krylov' or 'LU'. "
+                             "Got: '{}'".format(solver_type))
 
         with fk_timed('compute BEM'):
             if not hasattr(self, "_bem"):
