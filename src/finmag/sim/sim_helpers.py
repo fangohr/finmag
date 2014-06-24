@@ -219,11 +219,11 @@ def plot_relaxation(sim, filename="relaxation.png"):
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    t, max_dmdt_norms = np.array(zip(* sim.relaxation.dmdts))
+    t, max_dmdt_norms = np.array(zip(* sim.relaxation['dmdts']))
     ax.semilogy(t * 1e9, max_dmdt_norms/ONE_DEGREE_PER_NS, "ro")
     ax.set_xlabel("time (ns)")
     ax.set_ylabel("maximum dm/dt (1/ns)")
-    threshold = sim.relaxation.stopping_dmdt/ONE_DEGREE_PER_NS
+    threshold = sim.relaxation['stopping_dmdt'] / ONE_DEGREE_PER_NS
     ax.axhline(y=threshold, xmin=0.5, color="red", linestyle="--")
     ax.annotate("threshold", xy=(0.6, 1.1 * threshold), color="r")
     plt.savefig(filename)
@@ -235,7 +235,7 @@ def skyrmion_number(self):
     texture in this simulation instance.
 
     If the sim object is 3D, the skyrmion number is calculated from the
-    magnetisation of the top surface (since the skyrmion number formula 
+    magnetisation of the top surface (since the skyrmion number formula
     is only defined for 2D).
     """
 
@@ -282,7 +282,7 @@ def skyrmion_number_density_function(self):
 
 def get_function_on_top_surface(mesh, dfFunction):
     """
-    This function takes a 3D "mesh" and a dolfin function, "dfFunction" defined 
+    This function takes a 3D "mesh" and a dolfin function, "dfFunction" defined
     on that mesh.
 
     It returns the dolfin function defined on the top surface of the mesh.
@@ -291,7 +291,7 @@ def get_function_on_top_surface(mesh, dfFunction):
     suface of a simulation object.
 
     """
- 
+
     # extract the boundary mesh
     boundary_mesh = df.BoundaryMesh(mesh, 'exterior')
 
@@ -306,18 +306,18 @@ def get_function_on_top_surface(mesh, dfFunction):
         def inside(self, pt, on_boundary):
             x, y, z = pt
             return (z >= z_max - df.DOLFIN_EPS) and (z <= z_max + df.DOLFIN_EPS)
-    
+
     sub_domains = df.MeshFunction('size_t', boundary_mesh, 2)
     sub_domains.set_all(0)
-    
+
     top = Top()
     top.mark(sub_domains, 1)
-    
+
     top_layer = df.SubMesh(boundary_mesh, sub_domains, 1)
 
     # create a new function space defined on the top surface and and interpolate
     # the original field onto this new function space.
     V_toplayer  = df.VectorFunctionSpace(top_layer, 'CG', 1, dim=3)
     dfFunction_top = df.interpolate(dfFunction, V_toplayer)
-    
+
     return dfFunction_top
