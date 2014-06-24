@@ -1070,7 +1070,7 @@ def test_NormalModeSimulation(tmpdir):
 
 
 @pytest.mark.slow
-def test_normal_mode_simulation_with_periodic_boundary_conditions(tmpdir):
+def test_normal_mode_simulation_with_periodic_boundary_conditions_1x1(tmpdir):
     os.chdir(str(tmpdir))
     csg_string = textwrap.dedent("""
         algebraic3d
