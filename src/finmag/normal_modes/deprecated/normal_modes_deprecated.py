@@ -5,7 +5,6 @@ import logging
 import os
 import scipy.sparse.linalg
 from time import time
-from finmag.util.consts import gamma
 from finmag.util import helpers
 from finmag.util.meshes import embed3d
 import matplotlib.pyplot as plt
@@ -203,7 +202,7 @@ def compute_eigenproblem_matrix(sim, frequency_unit=1e9, filename=None, differen
         res[1] -= h0 * v[1,0]
         res[2] -= h0 * v[2,0]
         # Multiply by -gamma m0x
-        res *= gamma
+        res *= sim.gamma
         res.shape = (3, 1, -1)
         # Put res on the left in case v is complex
         res = mf_cross(res, m0_column_vector)
@@ -390,7 +389,7 @@ def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9
         Av = A_times_vector(mf_mult(Q, w))
         A[:, i] = mf_mult(Qt, Av).reshape(-1)
         # Multiply by (-gamma)/(2 pi U)
-        A[:, i] *= -gamma / (2 * pi * frequency_unit)
+        A[:, i] *= -sim.gamma / (2 * pi * frequency_unit)
 
     # # Compute B, which is -i Mcross 2 pi U / gamma
     # B = np.zeros((2, n, 2, n), dtype=complex)

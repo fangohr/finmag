@@ -1070,7 +1070,7 @@ def test_NormalModeSimulation(tmpdir):
 
 
 @pytest.mark.slow
-def test_normal_mode_simulation_with_periodic_boundary_conditions(tmpdir):
+def test_normal_mode_simulation_with_periodic_boundary_conditions_1x1(tmpdir):
     os.chdir(str(tmpdir))
     csg_string = textwrap.dedent("""
         algebraic3d
@@ -1731,3 +1731,23 @@ def test_m_average_is_robust_with_respect_to_mesh_discretization(tmpdir, debug=F
     if debug:
         plot_mesh_with_paraview(mesh, outfile='mesh.png')
         sim.render_scene(color_by_axis='y', glyph_scale_factor=2, outfile='nanostrip.png')
+
+
+def test_eigenfrequencies_scale_with_gyromagnetic_ratio(tmpdir):
+    """
+    The eigenfrequencies should scale linearly with the value of gamma in the simulation.
+    Here we check this for a few values of gamma.
+
+    """
+    os.chdir(str(tmpdir))
+
+    # Create a small test simulation and compute its eigenfrequencies
+    mesh = df.BoxMesh(0, 0, 0, 10, 20, 3, 3, 6, 1)
+    sim = normal_mode_simulation(mesh, m_init=[1, 0, 0], Ms=8e5, A=13e-12, unit_length=1e-9)
+    omega_ref, _, _ = sim.compute_normal_modes()
+
+    # Set gamma to some different values and check that the eigenfrequencies scale accordingly
+    for a in [0.7, 1.3, 2.445, 12.0]:
+        sim.gamma = a * gamma
+        omega, _, _ = sim.compute_normal_modes(force_recompute_matrices=True)
+        assert np.allclose(omega, a * omega_ref)
