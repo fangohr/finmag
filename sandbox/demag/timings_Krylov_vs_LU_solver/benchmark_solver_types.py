@@ -16,11 +16,13 @@ except IndexError:
     N = 3
 
 from finmag.example import barmini, bar
+from finmag.example.normal_modes import disk
 
 timings = []
 for i in xrange(N):
     print("[DDD] Starting run #{}".format(i))
-    sim = barmini(demag_solver_type=solver_type)
+    #sim = bar(demag_solver_type=solver_type)
+    sim = disk(d=100, h=10, maxh=3.0, relaxed=False, demag_solver_type=solver_type)
     df.tic()
     sim.relax()
     timings.append(df.toc())
