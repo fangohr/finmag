@@ -1639,6 +1639,74 @@ def plot_dynamics(ndt_file, components='xyz', **kwargs):
     return plot_ndt_columns(ndt_file, columns=columns, **kwargs)
 
 
+def plot_dynamics_3d(ndt_file, field='m', style='-', elev=None, azim=None,
+                     outfile=None, title=None, show_legend=True,
+                     legend_loc='best', figsize=None):
+    """
+    Plot the time evolution of a 3D vector field (default: 'm') as a 3D
+    trajectory and optionally save the output to a file.
+
+    *Arguments*
+
+    field :  string
+
+        The field to be plotted (default: 'm'). The .ndt file must
+        contain three columns corresponding to the x, y, z components
+        of this field (e.g., 'm_x', 'm_y', 'm_z').
+
+    style :  string
+
+        The plotting style. Default: '-'.
+
+    elev : float
+
+        The 'elevation' (= polar angle) of the camera position (in degrees).
+        Sensible values are between -90 and +90.
+
+    azim : float
+
+        The azimuthal angle of the camera position (in degrees).
+        Sensible values are between 0 and 360.
+
+    outfile :  None | string
+
+        If given, save the plot to a file with this name.
+
+    title :  None | string
+
+        Title text to use for the plot.
+
+    show_legend :  boolean
+
+        If True, a legend with the field names is displayed.
+
+    legend_loc :  string | integer
+
+        Optional location code for the legend (same as for pyplot's
+        legend() command).
+
+    figsize :  None | pair of float
+
+        Optional argument to set the figure size of the output plot.
+    """
+    f = Tablereader(ndt_file)
+    fig = plt.figure(figsize=figsize)
+    ax = fig.add_subplot('111', projection='3d')
+    ax.view_init(elev=elev, azim=azim)
+    fld_x = f[field + '_x']
+    fld_y = f[field + '_y']
+    fld_z = f[field + '_z']
+    ax.plot(fld_x, fld_y, fld_z, label=field if show_legend else '')
+    if title:
+        ax.set_title(title)
+    if show_legend:
+        ax.legend(loc=legend_loc)
+
+    if outfile:
+        fig.savefig(outfile)
+    return fig
+
+
 def vec2str(a, fmt='{}', delims='()', sep=', '):
     """
     Convert a 3-sequence (e.g. a numpy array) to a string, optionally

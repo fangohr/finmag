@@ -14,7 +14,7 @@ def pytest_funcarg__fixt(request):
 def setup():
     """
     Create a cuboid mesh representing a magnetic material and two
-    dolfin.Functions defined defined on this mesh:
+    dolfin.Functions defined on this mesh:
 
         m  -- unit magnetisation (linearly varying across the sample)
 
@@ -50,6 +50,8 @@ def test_can_create_energy_object(fixt, EnergyClass, init_args):
     """
     Create two instances of the same energy class, once with a
     constant number as Ms and once with a constant function.
+
+    Then check that the computed energies coincide.
     """
     S3, m, Ms_func = fixt
 
