@@ -39,14 +39,14 @@ def create_demag_params(atol, rtol, maxiter):
     return {'phi_1': demag_params, 'phi_2': demag_params}
 
 
-# All the interactions should be linear in the magnetisation.
-# However, for the demag field, this is only true if we use a LU solver
-# or a Krylov solver with sufficiently strict tolerances.
-# All the values of 'TOL' used in the tests below are the strictest that
-# still make the tests pass. It is interesting to see that the
-# various interactions have different accuracies (e.g. UniaxialAnisotropy
-# is essentially linear in m up to machine precision whereas the Exchange
-# and the demag are much less accurate).
+# All the interactions should be linear in the magnetisation. However,
+# for the demag field, this is only true if we use a LU solver or a
+# Krylov solver with sufficiently strict tolerances. All the values of
+# 'TOL' used in the tests below are the strictest that still make the
+# tests pass. It is interesting to see that the various interactions
+# have different accuracies (e.g. UniaxialAnisotropy is essentially
+# linear in m up to machine precision whereas the Exchange and the
+# demag are much less accurate).
 @pytest.mark.parametrize(("EnergyClass", "init_args", "TOL"), [
         (Exchange, {'A': 13e-12}, 1e-11),
         (UniaxialAnisotropy, {'K1': 1e5, 'axis': (0, 0, 1)}, 1e-15),
