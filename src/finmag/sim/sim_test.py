@@ -1751,3 +1751,17 @@ def test_eigenfrequencies_scale_with_gyromagnetic_ratio(tmpdir):
         sim.gamma = a * gamma
         omega, _, _ = sim.compute_normal_modes(force_recompute_matrices=True)
         assert np.allclose(omega, a * omega_ref)
+
+
+def test_plot_dynamics(tmpdir):
+    """
+    Check whether we can call the functions `sim.plot_dynamics`
+    and `sim.plot_dynamics_3d` without errors.
+    """
+    os.chdir(str(tmpdir))
+    mesh = df.UnitCubeMesh(1, 1, 1)
+    sim = sim_with(mesh, Ms=8e5, m_init=[1, 0, 0], A=13e-12, H_ext=[0, 0, 5e4], demag_solver=None)
+    sim.schedule('save_ndt', every=5e-12)
+    sim.run_until(5e-11)
+    sim.plot_dynamics(figsize=(16, 3), outfile='dynamics_2d.png')
+    sim.plot_dynamics_3d(figsize=(5, 5), outfile='dynamics_3d.png')
