@@ -40,7 +40,7 @@ class FKDemag(object):
     .. _Hybrid method for computing demagnetizing fields: http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=106342
 
     """
-    def __init__(self, name='Demag', thin_film=False, macrogeometry=None, solver_type=None):
+    def __init__(self, name='Demag', thin_film=False, macrogeometry=None, solver_type=None, parameters=None):
         """
         Create a new FKDemag instance.
 
@@ -82,6 +82,18 @@ class FKDemag(object):
             'phi_2_preconditioner': 'default',
             'phi_2': default_parameters.copy()
         }
+        if parameters is not None:
+            for (k, v) in parameters.items():
+                logger.debug("Setting demag solver parameter {}='{}'".format(k, v))
+                if k in ['phi_1', 'phi_2']:
+                    # Since self.parameters['phi_1'] is a dictionary itself, only
+                    # update the keys that are given (and similarly for 'phi_2').
+                    for (k2, v2) in v.items():
+                        self.parameters[k][k2] = v2
+                else:
+                    self.parameters[k] = v
+            logger.debug("Demag parameters now: {}".format(self.parameters))
+
         self.solver_type = solver_type
 
         if thin_film:
