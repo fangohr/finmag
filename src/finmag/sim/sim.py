@@ -18,7 +18,7 @@ from finmag.util.meshes import mesh_volume, mesh_size_plausible, \
 from finmag.util.fileio import Tablewriter, FieldSaver
 from finmag.util import helpers
 from finmag.util.vtk_saver import VTKSaver
-from finmag.util.helpers import plot_dynamics
+from finmag.util.helpers import plot_dynamics, plot_dynamics_3d
 from finmag.sim.hysteresis import hysteresis as hyst, hysteresis_loop as hyst_loop
 from finmag.sim import sim_helpers, magnetisation_patterns
 from finmag.drivers.llg_integrator import llg_integrator
@@ -1072,6 +1072,12 @@ class Simulation(object):
         if not os.path.exists(ndt_file):
             raise RuntimeError("File was not found: '{}'. Did you forget to schedule saving the averages to a .ndt file before running the simulation?".format(ndt_file))
         return plot_dynamics(ndt_file, components=components, **kwargs)
+
+    def plot_dynamics_3d(self, **kwargs):
+        ndt_file = kwargs.pop('ndt_file', self.ndtfilename)
+        if not os.path.exists(ndt_file):
+            raise RuntimeError("File was not found: '{}'. Did you forget to schedule saving the averages to a .ndt file before running the simulation?".format(ndt_file))
+        return plot_dynamics_3d(ndt_file, **kwargs)
 
     def mark_regions(self, fun_regions):
         """
