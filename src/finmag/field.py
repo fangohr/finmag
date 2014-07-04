@@ -170,6 +170,45 @@ class Field(object):
             raise NotImplementedError('The normalisation of scalar field '
                                       'values is not implemented.')
 
+
+    def compute_pointwise_norm(self, target=None, method=1):
+        """
+        Compute the norm of the function pointwise, i.e. for every vertex.
+
+        Arguments:
+
+        ``target`` is a scalar dolfin function to accommodate the norm
+
+        ``method`` is an integer to choose the method. We are not sure what method is best at the moment.
+
+        This method is not implemented only for vector fields with 3 compoents at every vertex.
+
+        """
+
+        if not target:
+            raise NotImplementedError("This is missing - could cerate a df.Function(V) here")
+
+        dim = value_dim(w)
+        assert dim in [3], "Only implemented for 3d vector field" 
+
+        if method == 1:
+            wx, wy, wz = w.split(deepcopy=True)
+            wnorm = np.sqrt(wx.vector() * wx.vector()  + wy.vector() * wy.vector() + wz.vector() * wz.vector()) 
+            target.vector().set_local(wnorm)
+
+        elif method == 2:
+            V_vec = w.function_space()
+            dofs0 = V_vec.sub(0).dofmap().dofs()    # indices of x-components
+            dofs1 = V_vec.sub(1).dofmap().dofs()    # indices of y-components
+            dofs2 = V_vec.sub(2).dofmap().dofs()    # indices of z-components
+
+            target.vector()[:] = np.sqrt(w.vector()[dofs0] * w.vector()[dofs0] +\
+                                         w.vector()[dofs1] * w.vector()[dofs1] +\
+                                         w.vector()[dofs2] * w.vector()[dofs2])
+        else:
+            raise NotImplementedError("method {} unknown".format(method))
+
+
     def average(self):
         """
         Return the spatial field average.
