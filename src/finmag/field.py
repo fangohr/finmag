@@ -192,12 +192,12 @@ class Field(object):
         assert dim in [3], "Only implemented for 3d vector field" 
 
         if method == 1:
-            wx, wy, wz = w.split(deepcopy=True)
+            wx, wy, wz = self.f.split(deepcopy=True)
             wnorm = np.sqrt(wx.vector() * wx.vector()  + wy.vector() * wy.vector() + wz.vector() * wz.vector()) 
             target.vector().set_local(wnorm)
 
         elif method == 2:
-            V_vec = w.function_space()
+            V_vec = self.f.function_space()
             dofs0 = V_vec.sub(0).dofmap().dofs()    # indices of x-components
             dofs1 = V_vec.sub(1).dofmap().dofs()    # indices of y-components
             dofs2 = V_vec.sub(2).dofmap().dofs()    # indices of z-components
@@ -205,6 +205,16 @@ class Field(object):
             target.vector()[:] = np.sqrt(w.vector()[dofs0] * w.vector()[dofs0] +\
                                          w.vector()[dofs1] * w.vector()[dofs1] +\
                                          w.vector()[dofs2] * w.vector()[dofs2])
+            
+        elif method == 3:
+            try:
+                import finmag.native.clib as clib
+            except ImportError:
+                print "please go to the finmag/native/src/clib and run 'make' to install clib"
+            f = df.as_backend_type(target.vector()).vec()
+            w = df.as_backend_type(self.f.vector()).vec()
+            clib.norm(w, f)
+            
         else:
             raise NotImplementedError("method {} unknown".format(method))
 
