@@ -14,11 +14,6 @@ m_0 = (1, 0, 0)
 Ms = 1
 H_ref = np.array((- Ms / 3.0, 0, 0))
 
-def setup_demag(S3, m, Ms, unit_length, method, *args, **kwargs):
-    demag = Demag(method, *args, **kwargs)
-    demag.setup(S3, m, Ms, unit_length)
-    return demag
-
 def benchmark(demag, H_ref):
     REPETITIONS = 10
     start = time.time()
@@ -51,14 +46,14 @@ for maxh in maxhs:
             parameters["phi_1_preconditioner"] = "default"
             parameters["phi_2_solver"] = "default"
             parameters["phi_2_preconditioner"] = "default"
-            demag = Demag("FK", solver_type="FK", parameters=parameters)
+            demag = Demag("FK", solver_type="Krylov", parameters=parameters)
         elif method == "FK opt.":
             parameters = {}
             parameters["phi_1_solver"] = "cg"
             parameters["phi_1_preconditioner"] = "ilu"
             parameters["phi_2_solver"] = "cg"
             parameters["phi_2_preconditioner"] = "ilu"
-            demag = Demag("FK", solver_type="FK", parameters=parameters)
+            demag = Demag("FK", solver_type="Krylov", parameters=parameters)
         elif method == "FK LU":
             demag = Demag("FK", solver_type="LU")
         elif method == "GCR":
@@ -70,6 +65,7 @@ for maxh in maxhs:
             print "What are you doing?"
             sys.exit(1)
 
+        demag.setup(S3, m, Ms, unit_length)
         results_for_this_mesh.append(benchmark(demag, H_ref))
     results.append(results_for_this_mesh)
 
@@ -79,7 +75,7 @@ ax = fig.add_subplot(211)
 for i, method in enumerate(methods):
     timings = [results_per_mesh[i][0] for results_per_mesh in results]
     ax.plot(vertices, timings, label=method)
-ax.legend(loc=2)
+ax.legend(loc="upper left", prop={'size': 8})
 ax.set_xlabel("vertices")
 ax.set_ylabel("time (s)")
 
@@ -87,7 +83,7 @@ ax = fig.add_subplot(212)
 for i, method in enumerate(methods):
     errors = [results_per_mesh[i][2] for results_per_mesh in results]
     ax.plot(vertices, errors, label=method)
-ax.legend(loc=2)
+ax.legend(loc="upper right", prop={'size': 8})
 ax.set_xlabel("vertices")
 ax.set_ylabel("relative error (%)")
 
