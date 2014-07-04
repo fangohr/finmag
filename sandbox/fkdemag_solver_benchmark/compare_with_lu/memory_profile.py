@@ -8,7 +8,7 @@ from finmag.energies import Demag
 from finmag.util.meshes import sphere
 
 radius = 5.0
-maxhs = [0.9, 1.0] #[0.2, 0.4, 0.5, 0.6, 0.7, 0.8, 0.85, 0.9, 0.95, 1.0]
+maxhs = [0.2, 0.4, 0.5, 0.6, 0.7, 0.8, 0.85, 0.9, 0.95, 1.0]
 unit_length = 1e-9
 m_0 = (1, 0, 0)
 Ms = 1
