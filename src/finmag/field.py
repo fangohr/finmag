@@ -197,14 +197,15 @@ class Field(object):
             target.vector().set_local(wnorm)
 
         elif method == 2:
-            V_vec = self.f.function_space()
-            dofs0 = V_vec.sub(0).dofmap().dofs()    # indices of x-components
-            dofs1 = V_vec.sub(1).dofmap().dofs()    # indices of y-components
-            dofs2 = V_vec.sub(2).dofmap().dofs()    # indices of z-components
+            raise NotImplementedError("this code doesn't compile in Cython - deactivate for now")
+            #V_vec = self.f.function_space()
+            #dofs0 = V_vec.sub(0).dofmap().dofs()    # indices of x-components
+            #dofs1 = V_vec.sub(1).dofmap().dofs()    # indices of y-components
+            #dofs2 = V_vec.sub(2).dofmap().dofs()    # indices of z-components
 
-            target.vector()[:] = np.sqrt(w.vector()[dofs0] * w.vector()[dofs0] +\
-                                         w.vector()[dofs1] * w.vector()[dofs1] +\
-                                         w.vector()[dofs2] * w.vector()[dofs2])
+            #target.vector()[:] = np.sqrt(w.vector()[dofs0] * w.vector()[dofs0] +\
+            #                            w.vector()[dofs1] * w.vector()[dofs1] +\
+            #                             w.vector()[dofs2] * w.vector()[dofs2])
             
         elif method == 3:
             try:
