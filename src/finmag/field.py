@@ -188,8 +188,7 @@ class Field(object):
         if not target:
             raise NotImplementedError("This is missing - could cerate a df.Function(V) here")
 
-        dim = self.value_dim(w)
-        assert dim in [3], "Only implemented for 3d vector field" 
+        assert self.value_dim() in [3], "Only implemented for 3d vector field" 
 
         if method == 1:
             wx, wy, wz = self.f.split(deepcopy=True)
