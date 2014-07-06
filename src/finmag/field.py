@@ -188,7 +188,7 @@ class Field(object):
         if not target:
             raise NotImplementedError("This is missing - could cerate a df.Function(V) here")
 
-        dim = value_dim(w)
+        dim = self.value_dim(w)
         assert dim in [3], "Only implemented for 3d vector field" 
 
         if method == 1:
