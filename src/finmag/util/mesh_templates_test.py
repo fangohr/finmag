@@ -45,6 +45,16 @@ def test_disallowed_names(tmpdir):
             _ = Sphere(r=10, name=name)
 
 
+def test_hash():
+    sphere = Sphere(r=10, name='MySphere')
+    h1 = sphere.hash(maxh=3.0)
+    h2 = sphere.hash(maxh_MySphere=3.0)
+    h3 = sphere.hash(maxh=4.0)
+    assert h1 == '50f3b55770e40ba7a5f8e62d7ff7d327'
+    assert h1 == h2
+    assert h3 == '1ee55186811cfc21f22e17fbad35bfed'
+
+
 def test_sphere(tmpdir):
     os.chdir(str(tmpdir))
     r = 20.0
