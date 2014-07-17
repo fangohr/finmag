@@ -87,7 +87,7 @@ class MeshSum(MeshTemplate):
         return csg_stub
 
     def generic_filename(self, maxh, **kwargs):
-        filename = "mesh_sum__{}__{}".format(self.mesh1.generic_filename(maxh, **kwargs), self.mesh2.generic_filename(maxh, **kwargs))
+        filename = "mesh_sum__{}".format(self.hash(maxh, **kwargs))
         return filename
 
 
@@ -116,7 +116,7 @@ class MeshDifference(MeshTemplate):
         return csg_stub
 
     def generic_filename(self, maxh, **kwargs):
-        filename = "mesh_difference__{}__{}".format(self.mesh1.generic_filename(maxh, **kwargs), self.mesh2.generic_filename(maxh, **kwargs))
+        filename = "mesh_difference__{}".format(self.mesh1.hash(maxh, **kwargs))
         return filename
 
 
