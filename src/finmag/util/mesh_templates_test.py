@@ -130,7 +130,7 @@ def test_mesh_sum(tmpdir):
     three_spheres = sphere1 + sphere2 + sphere3
 
     mesh = three_spheres.create_mesh(maxh=maxh, save_result=True, directory=str(tmpdir))
-    meshfilename = "mesh_sum__mesh_sum__sphere__center_-30_0_0_0_0_0__r_10_0__maxh_2_0__sphere__center_30_0_0_0_0_0__r_18_0__maxh_2_0__sphere__center_0_0_10_0_0_0__r_12_0__maxh_2_0.xml.gz"
+    meshfilename = "mesh_sum__dc3c0e05d5a4303b45570750d015c3f7.xml.gz"
     assert(os.path.exists(os.path.join(str(tmpdir), meshfilename)))
 
     vol1 = mesh_volume(sphere1.create_mesh(maxh=maxh))
@@ -160,7 +160,7 @@ def test_mesh_difference(tmpdir):
     box1_minus_box2 = box1 - box2
 
     mesh = box1_minus_box2.create_mesh(maxh=10.0, save_result=True, directory=str(tmpdir))
-    meshfilename = "mesh_difference__box__0_0__0_0__0_0__50_0__30_0__20_0__maxh_10_0__box__30_0__20_0__15_0__60_0__40_0__30_0__maxh_10_0.xml.gz"
+    meshfilename = "mesh_difference__dd77171c4364ace36c40e5f5fe94951f.xml.gz"
     assert(os.path.exists(os.path.join(str(tmpdir), meshfilename)))
 
     vol_box1_exact = x1 * y1 * z1
