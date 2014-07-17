@@ -209,7 +209,7 @@ namespace finmag { namespace llg {
                 double const &m0, double const &m1, double const &m2,
                 double const &p0, double const &p1, double const &p2,
                 double &dm0, double &dm1, double &dm2) {
-            double const gamma_LL = gamma / (1 + alpha*alpha);
+            double const gamma_LL = gamma / (1 + alpha * alpha);
             double lambda_sq = lambda * lambda;
             double const epsilon = P * lambda_sq / (lambda_sq + 1 + (lambda_sq - 1) * (m0*p0 + m1*p1 + m2*p2));
             double const stt_coeff = gamma_LL * J * h_bar / (mu_0 * Ms * e * d) * epsilon;
@@ -218,9 +218,9 @@ namespace finmag { namespace llg {
             double const mp = m0 * p0 + m1 * p1 + m2 * p2;
 
             /* stt_coeff * (alpha * m x p - m x (m x p)) */
-            dm0 += stt_coeff * (alpha * cross0(m0,m1,m2, p0,p1,p2) - (mp * m0 - mm * p0));
-            dm1 += stt_coeff * (alpha * cross1(m0,m1,m2, p0,p1,p2) - (mp * m1 - mm * p1));
-            dm2 += stt_coeff * (alpha * cross2(m0,m1,m2, p0,p1,p2) - (mp * m2 - mm * p2));
+            dm0 += stt_coeff * (alpha * cross0(m0, m1, m2, p0, p1, p2) - (mp * m0 - mm * p0));
+            dm1 += stt_coeff * (alpha * cross1(m0, m1, m2, p0, p1, p2) - (mp * m1 - mm * p1));
+            dm2 += stt_coeff * (alpha * cross2(m0, m1, m2, p0, p1, p2) - (mp * m2 - mm * p2));
         }
 
         /*
@@ -233,7 +233,7 @@ namespace finmag { namespace llg {
                 double const &p0, double const &p1, double const &p2,
                 double &dm0, double &dm1, double &dm2) {
 
-            double const gamma_LL = gamma / (1 + alpha*alpha);
+            double const gamma_LL = gamma / (1 + alpha * alpha);
             double const mm = m0 * m0 + m1 * m1 + m2 * m2;
             double const mp = m0 * p0 + m1 * p1 + m2 * p2;
 
