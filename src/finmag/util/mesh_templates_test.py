@@ -10,7 +10,10 @@ from mesh_templates import *
 import logging
 
 TOL1 = 1e-2   # loose tolerance for bad approximations (e.g. for a spherical mesh)
-TOL2 = 1e-8  # strict tolerance where we expect almost exact values (e.g. for a box mesh or for the sum of two meshes)
+TOL2 = 1e-7   # intermediate tolerance (used e.g. for the sum of two meshes;
+              # the strict tolerance won't work here because Netgen seems to
+              # mesh combined meshes slightly differently than their components)
+TOL3 = 1e-14  # strict tolerance where we expect almost exact values (e.g. for a box mesh)
 logger = logging.getLogger("finmag")
 
 
@@ -86,12 +89,12 @@ def test_nanodisk(tmpdir):
     check_mesh_volume(mesh, pi * (0.5 * d)**2 * h, TOL1)
 
 
-def test_combining_meshes(tmpdir):
+def test_mesh_sum(tmpdir):
     os.chdir(str(tmpdir))
     r1 = 10.0
     r2 = 18.0
     r3 = 12.0
-    maxh = 3.0
+    maxh = 2.0
 
     # This should raise an error because the two spheres have the same name (which is given automatically)
     sphere1 = Sphere(r1, center=(-30, 0, 0))
@@ -106,13 +109,15 @@ def test_combining_meshes(tmpdir):
     three_spheres = sphere1 + sphere2 + sphere3
 
     mesh = three_spheres.create_mesh(maxh=maxh, save_result=True, directory=str(tmpdir))
-    meshfilename = "mesh_sum__mesh_sum__sphere__center_-30_0_0_0_0_0__r_10_0__maxh_3_0__sphere__center_30_0_0_0_0_0__r_18_0__maxh_3_0__sphere__center_0_0_10_0_0_0__r_12_0__maxh_3_0.xml.gz"
+    meshfilename = "mesh_sum__mesh_sum__sphere__center_-30_0_0_0_0_0__r_10_0__maxh_2_0__sphere__center_30_0_0_0_0_0__r_18_0__maxh_2_0__sphere__center_0_0_10_0_0_0__r_12_0__maxh_2_0.xml.gz"
     assert(os.path.exists(os.path.join(str(tmpdir), meshfilename)))
 
     vol1 = mesh_volume(sphere1.create_mesh(maxh=maxh))
     vol2 = mesh_volume(sphere2.create_mesh(maxh=maxh))
     vol3 = mesh_volume(sphere3.create_mesh(maxh=maxh))
+    vol_exact = sum([4./3 * pi * r**3  for r in [r1, r2, r3]])
 
+    check_mesh_volume(mesh, vol_exact, TOL1)
     check_mesh_volume(mesh, vol1 + vol2 + vol3, TOL2)
 
 
@@ -191,4 +196,4 @@ def test_box(tmpdir):
     assert(os.path.exists('bar/box.xml.gz'))
 
     mesh = df.Mesh('bar/box.xml.gz')
-    check_mesh_volume(mesh, (x1 - x0) * (y1 - y0) * (z1 - z0), TOL2)
+    check_mesh_volume(mesh, (x1 - x0) * (y1 - y0) * (z1 - z0), TOL3)
