@@ -34,6 +34,17 @@ def test_mesh_templates(tmpdir):
         proto.create_mesh('generic_mesh.xml.gz')
 
 
+def test_disallowed_names(tmpdir):
+    """
+    Check that a ValueError is raised if the user tried to use a name
+    for the mesh template that coincides with a Netgen primitive.
+
+    """
+    for name in netgen_primitives:
+        with pytest.raises(ValueError):
+            _ = Sphere(r=10, name=name)
+
+
 def test_sphere(tmpdir):
     os.chdir(str(tmpdir))
     r = 20.0
