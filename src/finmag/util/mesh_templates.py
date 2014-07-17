@@ -6,6 +6,9 @@ from finmag.util.meshes import from_csg
 from finmag.util.helpers import vec2str
 
 
+netgen_primitives = ['plane', 'cylinder', 'sphere', 'ellipticcylinder', 'ellipsoid', 'cone', 'orthobrick', 'polyhedron']
+
+
 class MeshTemplate(object):
     # Internal counter to create unique names
     # for combined objects (e.g. created via
@@ -15,6 +18,19 @@ class MeshTemplate(object):
     def __init__(self, name=None, csg_string=None):
         self.name = name
         self._csg_stub = csg_string
+
+    def _get_name(self):
+        return self._name
+
+    def _set_name(self, value):
+        if value in netgen_primitives:
+            raise ValueError(
+                "Cannot use name '{}' for mesh template as it coincides "
+                "with one of Netgen's primitives. Please choose a different "
+                "name (or use the uppercase version.")
+        self._name = value
+
+    name = property(_get_name, _set_name)
 
     def __add__(self, other):
         return MeshSum(self, other)
