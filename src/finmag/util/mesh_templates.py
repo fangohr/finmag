@@ -2,6 +2,7 @@
 
 import textwrap
 import itertools
+import hashlib
 from finmag.util.meshes import from_csg
 from finmag.util.helpers import vec2str
 
@@ -37,6 +38,10 @@ class MeshTemplate(object):
 
     def __sub__(self, other):
         return MeshDifference(self, other)
+
+    def hash(self, maxh=None, **kwargs):
+        csg = self.csg_string(maxh=maxh, **kwargs)
+        return hashlib.md5(csg).hexdigest()
 
     def generic_filename(self, maxh, **kwargs):
         raise NotImplementedError("Generic mesh prototyp does not provide a filename. Please build a mesh by combining mesh primitives.")
