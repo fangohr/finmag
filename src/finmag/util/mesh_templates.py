@@ -1,17 +1,47 @@
 #!/usr/bin/env python
 
 import textwrap
+import itertools
+import hashlib
 from finmag.util.meshes import from_csg
 from finmag.util.helpers import vec2str
 
 
+netgen_primitives = ['plane', 'cylinder', 'sphere', 'ellipticcylinder', 'ellipsoid', 'cone', 'orthobrick', 'polyhedron']
+
+
 class MeshTemplate(object):
+    # Internal counter to create unique names
+    # for combined objects (e.g. created via
+    # MeshSum).
+    counter = itertools.count()
+
     def __init__(self, name=None, csg_string=None):
         self.name = name
         self._csg_stub = csg_string
 
+    def _get_name(self):
+        return self._name
+
+    def _set_name(self, value):
+        if value in netgen_primitives:
+            raise ValueError(
+                "Cannot use name '{}' for mesh template as it coincides "
+                "with one of Netgen's primitives. Please choose a different "
+                "name (or use the uppercase version.")
+        self._name = value
+
+    name = property(_get_name, _set_name)
+
     def __add__(self, other):
         return MeshSum(self, other)
+
+    def __sub__(self, other):
+        return MeshDifference(self, other)
+
+    def hash(self, maxh=None, **kwargs):
+        csg = self.csg_string(maxh=maxh, **kwargs)
+        return hashlib.md5(csg).hexdigest()
 
     def generic_filename(self, maxh, **kwargs):
         raise NotImplementedError("Generic mesh prototyp does not provide a filename. Please build a mesh by combining mesh primitives.")
@@ -19,8 +49,9 @@ class MeshTemplate(object):
     def csg_string(self, maxh=None, **kwargs):
         csg_string = textwrap.dedent("""\
             algebraic3d
-            {}
-            """).format(self.csg_stub(maxh, **kwargs))
+            {csg_stub}
+            tlo {name};
+            """).format(csg_stub=self.csg_stub(maxh, **kwargs), name=self.name)
         return csg_string
 
     def create_mesh(self, maxh=None, save_result=True, filename='', directory='', **kwargs):
@@ -39,17 +70,53 @@ class MeshSum(MeshTemplate):
                 "rename one or both of them (either by using the 'name' argument in the "
                 "constructor or by setting their 'name' attribute).".format(mesh1.name))
         if name is None:
-            name = 'mesh_sum__{}__{}'.format(mesh1.name, mesh2.name)
+            #name = 'mesh_sum__{}__{}'.format(mesh1.name, mesh2.name)
+            # create a unique name for this combined domain
+            name = 'dom_' + str(self.counter.next())
         self.name = name
         self.mesh1 = mesh1
         self.mesh2 = mesh2
 
     def csg_stub(self, maxh=None, **kwargs):
-        csg_stub = self.mesh1.csg_stub(maxh, **kwargs) + self.mesh2.csg_stub(maxh, **kwargs)
+        csg_stub = (self.mesh1.csg_stub(maxh, **kwargs) +
+                    self.mesh2.csg_stub(maxh, **kwargs) +
+                    "solid {name} = {name1} or {name2};\n".format(
+                        name=self.name,
+                        name1=self.mesh1.name,
+                        name2=self.mesh2.name))
         return csg_stub
 
     def generic_filename(self, maxh, **kwargs):
-        filename = "mesh_sum__{}__{}".format(self.mesh1.generic_filename(maxh, **kwargs), self.mesh2.generic_filename(maxh, **kwargs))
+        filename = "mesh_sum__{}".format(self.hash(maxh, **kwargs))
+        return filename
+
+
+class MeshDifference(MeshTemplate):
+    def __init__(self, mesh1, mesh2, name=None):
+        if mesh1.name == mesh2.name:
+            raise ValueError(
+                "Cannot combine mesh templates with the same name ('{}'). Please explicitly "
+                "rename one or both of them (either by using the 'name' argument in the "
+                "constructor or by setting their 'name' attribute).".format(mesh1.name))
+        if name is None:
+            #name = 'mesh_sum__{}__{}'.format(mesh1.name, mesh2.name)
+            # create a unique name for this combined domain
+            name = 'dom_' + str(self.counter.next())
+        self.name = name
+        self.mesh1 = mesh1
+        self.mesh2 = mesh2
+
+    def csg_stub(self, maxh=None, **kwargs):
+        csg_stub = (self.mesh1.csg_stub(maxh, **kwargs) +
+                    self.mesh2.csg_stub(maxh, **kwargs) +
+                    "solid {name} = {name1} and not {name2};\n".format(
+                        name=self.name,
+                        name1=self.mesh1.name,
+                        name2=self.mesh2.name))
+        return csg_stub
+
+    def generic_filename(self, maxh, **kwargs):
+        filename = "mesh_difference__{}".format(self.mesh1.hash(maxh, **kwargs))
         return filename
 
 
@@ -66,7 +133,7 @@ class MeshPrimitive(MeshTemplate):
             maxh = kwargs[key]
         except KeyError:
             if maxh == None:
-                raise ValueError("Please provide a valid value for 'maxh' (got: None).")
+                raise ValueError("Please provide a valid value for 'maxh' (or maxh_... for each of the components of the mesh template).")
         return maxh
 
     def csg_stub(self, maxh=None, **kwargs):
@@ -83,7 +150,6 @@ class Sphere(MeshPrimitive):
         self.name = name
         self._csg_stub = textwrap.dedent("""\
             solid {name} = sphere ( {center}; {r} ) -maxh = {{maxh_{name}}};
-            tlo {name};
             """.format(name=name, center=vec2str(center, delims=''), r=r))
 
     def generic_filename(self, maxh, **kwargs):
@@ -103,7 +169,6 @@ class Box(MeshPrimitive):
         self.name = name
         self._csg_stub = textwrap.dedent("""\
             solid {name} = orthobrick ( {x0}, {y0}, {z0}; {x1}, {y1}, {z1} ) -maxh = {{maxh_{name}}};
-            tlo {name};
             """.format(name=name, x0=x0, y0=y0, z0=z0, x1=x1, y1=y1, z1=z1))
 
     def generic_filename(self, maxh, **kwargs):
@@ -136,8 +201,7 @@ class EllipticalNanodisk(MeshPrimitive):
             solid {name} = ellipticcylinder ({center}; {r1}, 0, 0; 0, {r2}, 0 )
               and plane (0, 0, {h_bottom}; 0, 0, -1)
               and plane (0, 0, {h_top}; 0, 0, 1) -maxh = {{maxh_{name}}};
-            tlo {name};
-            """.format(center=vec2str(self.center, delims=''), r1=r1, r2=r2, h_bottom=h_bottom, h_top=h_top, name=name))
+            """.format(name=name, center=vec2str(self.center, delims=''), r1=r1, r2=r2, h_bottom=h_bottom, h_top=h_top))
 
     def generic_filename(self, maxh, **kwargs):
         maxh = self._get_maxh(maxh, **kwargs)
