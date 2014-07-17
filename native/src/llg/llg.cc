@@ -37,7 +37,8 @@ namespace finmag { namespace llg {
                 double &m0, double &m1, double &m2,
                 double &h0, double &h1, double &h2,
                 double &dm0, double &dm1, double &dm2) {
-            double const damping_coeff = - gamma * alpha / (1 + alpha*alpha);
+            double const gamma_LL = gamma / (1 + alpha * alpha);
+            double const damping_coeff = - alpha * gamma_LL;
             double const mh = m0 * h0 + m1 * h1 + m2 * h2;
             double const mm = m0 * m0 + m1 * m1 + m2 * m2;
             dm0 += damping_coeff * (m0 * mh - h0 * mm); 
@@ -57,14 +58,14 @@ namespace finmag { namespace llg {
                 double const &h0, double const &h1, double const &h2,
                 double const &hp0, double const &hp1, double const &hp2,
                 double &jtimes0, double &jtimes1, double &jtimes2) {
-            double const damping_coeff = - gamma * alpha / (1 + alpha*alpha);
+            double const gamma_LL = gamma / (1 + alpha * alpha);
             double const mph_mhp = mp0 * h0 + mp1 * h1 + mp2 * h2 + m0 * hp0 + m1 * hp1 + m2 * hp2;
             double const mh = m0 * h0 + m1 * h1 + m2 * h2;
             double const mm = m0 * m0 + m1 * m1 + m2 * m2;
             double const mmp = m0 * mp0 + m1 * mp1 + m2 * mp2;
-            jtimes0 += damping_coeff * (mph_mhp * m0 + mh * mp0 - 2 * mmp * h0 - mm * hp0);
-            jtimes1 += damping_coeff * (mph_mhp * m1 + mh * mp1 - 2 * mmp * h1 - mm * hp1);
-            jtimes2 += damping_coeff * (mph_mhp * m2 + mh * mp2 - 2 * mmp * h2 - mm * hp2);
+            jtimes0 += - alpha * gamma_LL * (mph_mhp * m0 + mh * mp0 - 2 * mmp * h0 - mm * hp0);
+            jtimes1 += - alpha * gamma_LL * (mph_mhp * m1 + mh * mp1 - 2 * mmp * h1 - mm * hp1);
+            jtimes2 += - alpha * gamma_LL * (mph_mhp * m2 + mh * mp2 - 2 * mmp * h2 - mm * hp2);
         }
 
         /*
@@ -75,10 +76,10 @@ namespace finmag { namespace llg {
                 double &m0, double &m1, double &m2,
                 double &h0, double &h1, double &h2,
                 double &dm0, double &dm1, double &dm2) {
-            double const precession_coeff = - gamma / (1 + (alpha*alpha));
-            dm0 += precession_coeff * cross0(m0, m1, m2, h0, h1, h2);
-            dm1 += precession_coeff * cross1(m0, m1, m2, h0, h1, h2);
-            dm2 += precession_coeff * cross2(m0, m1, m2, h0, h1, h2);
+            double const gamma_LL = gamma / (1 + alpha * alpha);
+            dm0 += - gamma_LL * cross0(m0, m1, m2, h0, h1, h2);
+            dm1 += - gamma_LL * cross1(m0, m1, m2, h0, h1, h2);
+            dm2 += - gamma_LL * cross2(m0, m1, m2, h0, h1, h2);
         }
 
         /*
@@ -92,10 +93,10 @@ namespace finmag { namespace llg {
                 double const &h0, double const &h1, double const &h2,
                 double const &hp0, double const &hp1, double const &hp2,
                 double &jtimes0, double &jtimes1, double &jtimes2) {
-            double const precession_coeff = - gamma / (1 + (alpha*alpha));
-            jtimes0 += precession_coeff * (cross0(mp0, mp1, mp2, h0, h1, h2) + cross0(m0, m1, m2, hp0, hp1, hp2));
-            jtimes1 += precession_coeff * (cross1(mp0, mp1, mp2, h0, h1, h2) + cross1(m0, m1, m2, hp0, hp1, hp2));
-            jtimes2 += precession_coeff * (cross2(mp0, mp1, mp2, h0, h1, h2) + cross2(m0, m1, m2, hp0, hp1, hp2));
+            double const gamma_LL = gamma / (1 + alpha * alpha);
+            jtimes0 += - gamma_LL * (cross0(mp0, mp1, mp2, h0, h1, h2) + cross0(m0, m1, m2, hp0, hp1, hp2));
+            jtimes1 += - gamma_LL * (cross1(mp0, mp1, mp2, h0, h1, h2) + cross1(m0, m1, m2, hp0, hp1, hp2));
+            jtimes2 += - gamma_LL * (cross2(mp0, mp1, mp2, h0, h1, h2) + cross2(m0, m1, m2, hp0, hp1, hp2));
         }
 
         /*
@@ -211,13 +212,14 @@ namespace finmag { namespace llg {
                 double &dm0, double &dm1, double &dm2) {
             double const gamma_LL = gamma / (1 + alpha * alpha);
             double lambda_sq = lambda * lambda;
+            double const beta = J * h_bar / (mu_0 * Ms * e * d);
             double const epsilon = P * lambda_sq / (lambda_sq + 1 + (lambda_sq - 1) * (m0*p0 + m1*p1 + m2*p2));
-            double const stt_coeff = gamma_LL * J * h_bar / (mu_0 * Ms * e * d) * epsilon;
+            double const stt_coeff = gamma_LL * beta * epsilon;
 
-            double const mm = m0 * m0 + m1 * m1 + m2 * m2; /* for the triple product expansion */
-            double const mp = m0 * p0 + m1 * p1 + m2 * p2;
+            double const mm = m0 * m0 + m1 * m1 + m2 * m2; /* for the vector triple product expansion */
+            double const mp = m0 * p0 + m1 * p1 + m2 * p2; /* also known as Lagrange's formula */
 
-            /* stt_coeff * (alpha * m x p - m x (m x p)) */
+            /* gamma_LL * beta * epsilon * (alpha * m x p - m x (m x p)) */
             dm0 += stt_coeff * (alpha * cross0(m0, m1, m2, p0, p1, p2) - (mp * m0 - mm * p0));
             dm1 += stt_coeff * (alpha * cross1(m0, m1, m2, p0, p1, p2) - (mp * m1 - mm * p1));
             dm2 += stt_coeff * (alpha * cross2(m0, m1, m2, p0, p1, p2) - (mp * m2 - mm * p2));
