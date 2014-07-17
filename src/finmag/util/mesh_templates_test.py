@@ -198,6 +198,23 @@ def test_mesh_specific_maxh(tmpdir):
         sphere.create_mesh(maxh_quux=5.0)
 
 
+def test_global_maxh_can_be_omitted_if_specific_maxh_is_provided(tmpdir):
+    os.chdir(str(tmpdir))
+
+    # Providing a global value for maxh or only the value specific to the
+    # sphere should both work.
+    sphere = Sphere(r=10.0, name='foobar')
+    mesh1 = sphere.create_mesh(maxh=3.0)
+    mesh2 = sphere.create_mesh(maxh_foobar=3.0)
+
+    # Same with a combined mesh: if all specific values for maxh are
+    # given then the global maxh can be omitted.
+    sphere1 = Sphere(r=10, name='sphere1')
+    sphere2 = Sphere(r=10, center=(20, 0, 0), name='sphere2')
+    two_spheres = sphere1 + sphere2
+    mesh = two_spheres.create_mesh(maxh_sphere1=4.0, maxh_sphere2=5.0)
+
+
 def test_different_mesh_discretisations_for_combined_meshes(tmpdir):
     """
     Check that we can create a mesh consisting of two spheres for which
