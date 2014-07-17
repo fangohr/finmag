@@ -121,6 +121,34 @@ def test_mesh_sum(tmpdir):
     check_mesh_volume(mesh, vol1 + vol2 + vol3, TOL2)
 
 
+def test_mesh_difference(tmpdir):
+    """
+    Create two boxes with some overlap and subtract the second from the first.
+    Then check that the volume of the remaining part is as expected.
+    """
+    os.chdir(str(tmpdir))
+
+    # Coordinates of the top-right-rear corner of box1 and
+    # the bottom-left-front corner of box2.
+    x1, y1, z1 = 50.0, 30.0, 20.0
+    x2, y2, z2 = 30.0, 20.0, 15.0
+
+    # Create the overlapping boxes
+    box1 = Box(0, 0, 0, x1, y1, z1, name='box1')
+    box2 = Box(x2, y2, z2, x1 + 10, y1 + 10, z1 + 10, name='box2')
+    box1_minus_box2 = box1 - box2
+
+    mesh = box1_minus_box2.create_mesh(maxh=10.0, save_result=True, directory=str(tmpdir))
+    meshfilename = "mesh_difference__box__0_0__0_0__0_0__50_0__30_0__20_0__maxh_10_0__box__30_0__20_0__15_0__60_0__40_0__30_0__maxh_10_0.xml.gz"
+    assert(os.path.exists(os.path.join(str(tmpdir), meshfilename)))
+
+    vol_box1_exact = x1 * y1 * z1
+    vol_overlap_exact = (x1 - x2) * (y1 - y2) * (z1 - z2)
+    vol_exact = vol_box1_exact - vol_overlap_exact
+
+    check_mesh_volume(mesh, vol_exact, TOL3)
+
+
 def test_maxh_with_mesh_primitive(tmpdir):
     os.chdir(str(tmpdir))
 

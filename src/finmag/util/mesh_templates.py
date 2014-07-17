@@ -19,6 +19,9 @@ class MeshTemplate(object):
     def __add__(self, other):
         return MeshSum(self, other)
 
+    def __sub__(self, other):
+        return MeshDifference(self, other)
+
     def generic_filename(self, maxh, **kwargs):
         raise NotImplementedError("Generic mesh prototyp does not provide a filename. Please build a mesh by combining mesh primitives.")
 
@@ -64,6 +67,35 @@ class MeshSum(MeshTemplate):
 
     def generic_filename(self, maxh, **kwargs):
         filename = "mesh_sum__{}__{}".format(self.mesh1.generic_filename(maxh, **kwargs), self.mesh2.generic_filename(maxh, **kwargs))
+        return filename
+
+
+class MeshDifference(MeshTemplate):
+    def __init__(self, mesh1, mesh2, name=None):
+        if mesh1.name == mesh2.name:
+            raise ValueError(
+                "Cannot combine mesh templates with the same name ('{}'). Please explicitly "
+                "rename one or both of them (either by using the 'name' argument in the "
+                "constructor or by setting their 'name' attribute).".format(mesh1.name))
+        if name is None:
+            #name = 'mesh_sum__{}__{}'.format(mesh1.name, mesh2.name)
+            # create a unique name for this combined domain
+            name = 'dom_' + str(self.counter.next())
+        self.name = name
+        self.mesh1 = mesh1
+        self.mesh2 = mesh2
+
+    def csg_stub(self, maxh=None, **kwargs):
+        csg_stub = (self.mesh1.csg_stub(maxh, **kwargs) +
+                    self.mesh2.csg_stub(maxh, **kwargs) +
+                    "solid {name} = {name1} and not {name2};\n".format(
+                        name=self.name,
+                        name1=self.mesh1.name,
+                        name2=self.mesh2.name))
+        return csg_stub
+
+    def generic_filename(self, maxh, **kwargs):
+        filename = "mesh_difference__{}__{}".format(self.mesh1.generic_filename(maxh, **kwargs), self.mesh2.generic_filename(maxh, **kwargs))
         return filename
 
 
