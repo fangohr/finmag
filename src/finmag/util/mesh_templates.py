@@ -128,7 +128,7 @@ class MeshPrimitive(MeshTemplate):
             maxh = kwargs[key]
         except KeyError:
             if maxh == None:
-                raise ValueError("Please provide a valid value for 'maxh' (got: None).")
+                raise ValueError("Please provide a valid value for 'maxh' (or maxh_... for each of the components of the mesh template).")
         return maxh
 
     def csg_stub(self, maxh=None, **kwargs):
