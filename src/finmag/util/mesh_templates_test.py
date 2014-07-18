@@ -130,7 +130,7 @@ def test_mesh_sum(tmpdir):
     three_spheres = sphere1 + sphere2 + sphere3
 
     mesh = three_spheres.create_mesh(maxh=maxh, save_result=True, directory=str(tmpdir))
-    meshfilename = "mesh_sum__dc3c0e05d5a4303b45570750d015c3f7.xml.gz"
+    meshfilename = "mesh_sum__3c528b79a337a0ffa711746e7d346c81.xml.gz"
     import glob  # for debugging only; will be removed again soon
     print("[DDD] Potential mesh files found: {}".format(glob.glob('*.xml.gz')))
     assert(os.path.exists(os.path.join(str(tmpdir), meshfilename)))
