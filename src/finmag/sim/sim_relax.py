@@ -90,6 +90,7 @@ def relax(sim, save_vtk_snapshot_as=None, save_restart_data_as=None,
         if 'energies' not in sim.relaxation.keys():
             sim.relaxation['energies'] = []
             sim.relaxation['dmdt_increased_counter'] = 0
+            sim.relaxation['dmdt_increased_counter_limit'] = dmdt_increased_counter_limit
 
         # Otherwise, find dm/dt and energy and compare.
         else:
