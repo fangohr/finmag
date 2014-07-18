@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import textwrap
-import itertools
 import hashlib
 import sys
 from finmag.util.meshes import from_csg
@@ -12,10 +11,10 @@ netgen_primitives = ['plane', 'cylinder', 'sphere', 'ellipticcylinder', 'ellipso
 
 
 class MeshTemplate(object):
-    # Internal counter to create unique names
-    # for combined objects (e.g. created via
-    # MeshSum).
-    counter = itertools.count()
+    # Internal counter. It is 0 for mesh primitives but is
+    # increased for combined shapes (e.g. created via MeshSum
+    # to create unique names for those combined domains.
+    counter = 0
 
     def __init__(self, name=None, csg_string=None):
         self.name = name
@@ -42,7 +41,6 @@ class MeshTemplate(object):
 
     def hash(self, maxh=None, **kwargs):
         csg = self.csg_string(maxh=maxh, **kwargs)
-        print "============================================================"
         print "============================================================"
         print "Hashing string:"
         print "|{}|".format(csg)
@@ -76,10 +74,13 @@ class MeshSum(MeshTemplate):
                 "Cannot combine mesh templates with the same name ('{}'). Please explicitly "
                 "rename one or both of them (either by using the 'name' argument in the "
                 "constructor or by setting their 'name' attribute).".format(mesh1.name))
+
+        self.counter = max(mesh1.counter, mesh2.counter) + 1
+
         if name is None:
             #name = 'mesh_sum__{}__{}'.format(mesh1.name, mesh2.name)
             # create a unique name for this combined domain
-            name = 'dom_' + str(self.counter.next())
+            name = 'dom_' + str(self.counter)
         self.name = name
         self.mesh1 = mesh1
         self.mesh2 = mesh2
@@ -105,10 +106,11 @@ class MeshDifference(MeshTemplate):
                 "Cannot combine mesh templates with the same name ('{}'). Please explicitly "
                 "rename one or both of them (either by using the 'name' argument in the "
                 "constructor or by setting their 'name' attribute).".format(mesh1.name))
+        self.counter = max(mesh1.counter, mesh2.counter) + 1
         if name is None:
             #name = 'mesh_sum__{}__{}'.format(mesh1.name, mesh2.name)
             # create a unique name for this combined domain
-            name = 'dom_' + str(self.counter.next())
+            name = 'dom_' + str(self.counter)
         self.name = name
         self.mesh1 = mesh1
         self.mesh2 = mesh2
