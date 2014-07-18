@@ -3,6 +3,7 @@
 import textwrap
 import itertools
 import hashlib
+import sys
 from finmag.util.meshes import from_csg
 from finmag.util.helpers import vec2str
 
@@ -41,6 +42,12 @@ class MeshTemplate(object):
 
     def hash(self, maxh=None, **kwargs):
         csg = self.csg_string(maxh=maxh, **kwargs)
+        print "============================================================"
+        print "============================================================"
+        print "Hashing string:"
+        print "|{}|".format(csg)
+        print "============================================================"
+        sys.stdout.flush()
         return hashlib.md5(csg).hexdigest()
 
     def generic_filename(self, maxh, **kwargs):
