@@ -3,7 +3,7 @@
 import dolfin as df
 import numpy as np
 import pytest
-from finmag.energies import Exchange, UniaxialAnisotropy, Zeeman, Demag
+from finmag.energies import Exchange, UniaxialAnisotropy, Zeeman, Demag, DMI
 
 np.random.seed(0)
 
@@ -49,6 +49,7 @@ def create_demag_params(atol, rtol, maxiter):
 # demag are much less accurate).
 @pytest.mark.parametrize(("EnergyClass", "init_args", "TOL"), [
         (Exchange, {'A': 13e-12}, 1e-11),
+        (DMI, {'D': 1.58e-3}, 1e-12),
         (UniaxialAnisotropy, {'K1': 1e5, 'axis': (0, 0, 1)}, 1e-15),
         # Demag with LU solver should be linear in m
         (Demag, {'solver_type': 'LU'}, 1e-10),
