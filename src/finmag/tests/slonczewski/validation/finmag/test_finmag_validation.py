@@ -1,7 +1,7 @@
 import os
 import numpy as np
 from finmag.util.fileio import Tablereader
-from run import run_simulation
+from run_validation import run_simulation
 
 FINMAG_DYNAMICS_FILE = "finmag_validation_light.ndt"
 NMAG_FILE = "../nmag/averages_nmag5.txt"
