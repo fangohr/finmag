@@ -1,5 +1,4 @@
-all:
-	echo "Please call one of the makefile targets directly. For example: 'make averages_nmag5.txt'"
+all: averages_nmag5.txt
 
 averages_nmag5.txt:
 	nsim run_nmag5.py

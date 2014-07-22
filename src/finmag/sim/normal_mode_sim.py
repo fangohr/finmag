@@ -464,7 +464,7 @@ class NormalModeSimulation(Simulation):
         w_extended = w[:, v2d[range(self.mesh.num_vertices())]]
         return w_extended.ravel()
 
-    def compute_normal_modes(self, n_values=10, solver='scipy_dense',
+    def compute_normal_modes(self, n_values=10, solver='scipy_sparse',
                              discard_negative_frequencies=True,
                              filename_mat_A=None, filename_mat_M=None,
                              use_generalized=False, force_recompute_matrices=False,
