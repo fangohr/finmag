@@ -3,9 +3,10 @@ import numpy as np
 from finmag.util.fileio import Tablereader
 from run_validation import run_simulation
 
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 FINMAG_DYNAMICS_FILE = "finmag_validation_light.ndt"
-NMAG_FILE = "../nmag/averages_nmag5.txt"
-OOMMF_FILE = "../oommf/averages_oommf.txt"
+NMAG_FILE = os.path.join(MODULE_DIR, "../nmag/averages_nmag5.txt")
+OOMMF_FILE = os.path.join(MODULE_DIR, "../oommf/averages_oommf.txt")
 EPSILON = 1e-16
 TOLERANCE = 1e-4
 
