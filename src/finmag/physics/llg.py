@@ -228,7 +228,7 @@ class LLG(object):
                 m, H_eff, t, dmdt, self.pins,
                 self.gamma, self.alpha.vector().array(),
                 char_time,
-                self.Lambda, elf.epsilonprime,
+                self.Lambda, self.epsilonprime,
                 self.J, self.P, self.d, self._Ms, self.p)
         elif self.do_zhangli:
             H_gradm = self.compute_gradient_field()
