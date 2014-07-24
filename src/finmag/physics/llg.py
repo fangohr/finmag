@@ -228,6 +228,7 @@ class LLG(object):
                 m, H_eff, t, dmdt, self.pins,
                 self.gamma, self.alpha.vector().array(),
                 char_time,
+                self.Lambda, self.epsilonprime,
                 self.J, self.P, self.d, self._Ms, self.p)
         elif self.do_zhangli:
             H_gradm = self.compute_gradient_field()
@@ -380,7 +381,7 @@ class LLG(object):
         # Nonnegative exit code indicates success
         return 0
 
-    def use_slonczewski(self, J, P, d, p, with_time_update=None):
+    def use_slonczewski(self, J, P, d, p, Lambda=2, epsilonprime=0.0, with_time_update=None):
         """
         Activates the computation of the Slonczewski spin-torque term in the LLG.
 
@@ -403,6 +404,10 @@ class LLG(object):
 
         p is the direction of the polarisation as a triple (is automatically normalised to unit length).
 
+        - Lambda: the Lambda parameter in the Slonczewski/Xiao spin-torque term
+
+        - epsilonprime: the strength of the secondary spin transfer term
+
         - with_time_update:
 
              A function of the form J(t), which accepts a time step `t`
@@ -416,6 +421,8 @@ class LLG(object):
         self.do_slonczewski = True
         self.fun_slonczewski_time_update = with_time_update
 
+        self.Lambda = Lambda
+        self.epsilonprime = epsilonprime
         if isinstance(J, df.Expression):
             J = df.interpolate(J, self.S1)
         if not isinstance(J, df.Function):
