@@ -1202,7 +1202,7 @@ def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sun
     if D != None:
         sim.add(DMI(D))
     if demag_solver != None:
-        mg = MacroGeometry(nx=nx,ny=ny,dx=spacing_x, dy=spacing_y)
+        mg = MacroGeometry(nx=nx, ny=ny, dx=spacing_x, dy=spacing_y)
         demag = Demag(solver=demag_solver, macrogeometry=mg, solver_type=demag_solver_type, parameters=demag_solver_params)
         sim.add(demag)
     log.debug("Successfully created simulation '{}'".format(sim.name))

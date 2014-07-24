@@ -29,11 +29,11 @@ class MacroGeometry(object):
         self.dy = dy
         self.Ts = Ts
 
-        if Ts != None:
-            logger.warning("'Ts' is not None, using explicit values in 'Ts'.")
+        if Ts != None and (nx != None or ny != None or dx != None and dy != None):
+            logger.warning("Ignoring arguments 'nx', 'ny', 'dx', 'dy' because 'Ts' is explicitly provided.")
         else:
-            if self.nx < 1 or self.nx%2==0 or self.ny<1 or self.ny%2==0:
-                raise Exception('Both nx and ny should larger than 0 and must be odd.')
+            if self.nx < 1 or self.nx % 2 == 0 or self.ny < 1 or self.ny % 2 == 0:
+                raise Exception('Both nx and ny should be larger than 0 and must be odd.')
 
 
     def compute_Ts(self, mesh):
@@ -47,9 +47,9 @@ class MacroGeometry(object):
             self.dy = dy
         
         Ts = []
-        for i in range(-self.nx//2+1,self.nx//2+1):
-            for j in range(-self.ny//2+1,self.ny//2+1):
-                Ts.append([self.dx*i*1.0,self.dy*j*1.0,0])
+        for i in range(-self.nx//2+1, self.nx//2+1):
+            for j in range(-self.ny//2+1, self.ny//2+1):
+                Ts.append([self.dx*i*1.0, self.dy*j*1.0, 0])
         
         logger.debug("Creating macro-geometry with demag {} x {} tiles (dxdy: {} x {})".format(self.nx, self.ny, self.dx, self.dy))
            
