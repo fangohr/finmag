@@ -1,0 +1,88 @@
+# MIF 2.1
+
+set basename spinxfer-onespin
+
+set pi [expr 4*atan(1.0)]
+set mu0 [expr 4*$pi*1e-7]
+
+Parameter Ms  860e3
+
+Parameter theta 40                ;# Polarisation direction,
+Parameter phi   90                ;# in spherical coordinates
+Parameter Polarization 0.4
+Parameter Lambda 2.0
+Parameter I 5e-5                  ;# Current
+Parameter Happ 10.0               ;# Applied field in mT
+
+Parameter length [expr {12.5e-9}] ;# Size of the system
+Parameter width  [expr {12.5e-9}]
+Parameter thick  5e-9
+
+set current_density [expr {$I/($length*$width)}]
+
+Specify Oxs_BoxAtlas:atlas [subst {
+  xrange {0 $length}
+  yrange {0 $width}
+  zrange {0 $thick}
+}]
+
+Specify Oxs_RectangularMesh:mesh [subst {
+  cellsize {1.25e-9 1.25e-9 5.0e-9}
+  atlas :atlas
+}]
+
+# Applied field
+Specify Oxs_UZeeman [subst {
+  multiplier [expr {0.001/$mu0}]
+  Hrange {
+     { 0.2 0.2 $Happ  0.2 0.2 $Happ  2 }
+  }
+}]
+
+# Exchange
+Specify Oxs_UniformExchange {A 13e-12}
+
+# No Demag
+#Specify Oxs_Demag {}
+
+Specify Oxs_UniaxialAnisotropy {
+  axis { 0.0 0.0 1.0 }
+  K1   -0.1e6
+}
+
+# Evolver
+set theta [expr {$theta*$pi/180.}]
+set phi   [expr {$phi*$pi/180.}]
+
+#Specify Oxs_EulerEvolve:evolve [subst {
+Specify Oxs_SpinXferEvolve:evolve [subst {
+  gamma_G 0.221017e6
+  alpha 0.014
+  start_dm 0.0001
+  absolute_step_error 0.02
+  relative_step_error 0.02
+  max_timestep 5.0e-12
+  mp {[expr {sin($theta)*cos($phi)}]
+      [expr {sin($theta)*sin($phi)}]
+      [expr {cos($theta)}]}
+  J_direction "-z"
+  J $current_density
+  Lambda $Lambda
+  P $Polarization
+  eps_prime 0.0
+}]
+
+# Driver
+Specify Oxs_TimeDriver [subst {
+ basename $basename
+ evolver :evolve
+ stopping_dm_dt  1e-2
+ stopping_time   1.0
+ mesh :mesh
+ Ms $Ms
+ m0 { 1 0.01 0.01}
+}]
+
+Destination archive mmArchive
+Schedule    DataTable archive                     Step 1
+#Schedule    Oxs_TimeDriver::Magnetization archive Step 500

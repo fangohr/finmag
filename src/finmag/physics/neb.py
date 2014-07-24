@@ -419,6 +419,12 @@ class NEB_Sundials(object):
          
         for i in range(max_steps):
             
+            if i%save_vtk_steps==0:
+                self.save_vtks()
+                
+            if i%save_npy_steps==0:
+                self.save_npys()
+            
             self.step += 1
             
             cvode_dt = self.integrator.get_current_step()
@@ -434,11 +440,7 @@ class NEB_Sundials(object):
             self.tablewriter.save()
             self.tablewriter_dm.save()
                 
-            if i%save_vtk_steps==0:
-                self.save_vtks()
-                
-            if i%save_npy_steps==0:
-                self.save_npys()
+            
             
             log.debug("step: {:.3g}, step_size: {:.3g} and max_dmdt: {:.3g}.".format(self.step,increment_dt,dmdt))
             
