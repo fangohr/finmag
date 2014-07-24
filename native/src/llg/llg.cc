@@ -205,7 +205,8 @@ namespace finmag { namespace llg {
          * Compute the Slonczewski/Xiao spin-torque term.
          */
         void slonczewski_xiao_i(
-                double const alpha, double const gamma, double const lambda,
+                double const alpha, double const gamma,
+                double const lambda, double const epsilonprime,
                 double const J, double const P, double const d, double const Ms,
                 double const &m0, double const &m1, double const &m2,
                 double const &p0, double const &p1, double const &p2,
@@ -214,15 +215,16 @@ namespace finmag { namespace llg {
             double lambda_sq = lambda * lambda;
             double const beta = J * h_bar / (mu_0 * Ms * e * d);
             double const epsilon = P * lambda_sq / (lambda_sq + 1 + (lambda_sq - 1) * (m0*p0 + m1*p1 + m2*p2));
-            double const stt_coeff = gamma_LL * beta * epsilon;
 
             double const mm = m0 * m0 + m1 * m1 + m2 * m2; /* for the vector triple product expansion */
             double const mp = m0 * p0 + m1 * p1 + m2 * p2; /* also known as Lagrange's formula */
 
-            /* gamma_LL * beta * epsilon * (alpha * m x p - m x (m x p)) */
-            dm0 += stt_coeff * (alpha * cross0(m0, m1, m2, p0, p1, p2) - (mp * m0 - mm * p0));
-            dm1 += stt_coeff * (alpha * cross1(m0, m1, m2, p0, p1, p2) - (mp * m1 - mm * p1));
-            dm2 += stt_coeff * (alpha * cross2(m0, m1, m2, p0, p1, p2) - (mp * m2 - mm * p2));
+            /* gamma_LL * beta * {(alpha eps - eps') m x p - (eps - alpha eps') m x (m x p)} */
+            double const perpendicular = alpha * epsilon - epsilonprime;
+            double const parallel = epsilon - alpha * epsilonprime;
+            dm0 += gamma_LL * beta * (perpendicular * cross0(m0, m1, m2, p0, p1, p2) - parallel * (mp * m0 - mm * p0));
+            dm1 += gamma_LL * beta * (perpendicular * cross1(m0, m1, m2, p0, p1, p2) - parallel * (mp * m1 - mm * p1));
+            dm2 += gamma_LL * beta * (perpendicular * cross2(m0, m1, m2, p0, p1, p2) - parallel * (mp * m2 - mm * p2));
         }
 
         /*
@@ -256,6 +258,8 @@ namespace finmag { namespace llg {
                 double gamma,
                 const np_array<double> &alpha,
                 double char_time,
+                double const lambda,
+                double const epsilonprime,
                 const np_array<double> &J,
                 double const P,
                 double const d,
@@ -283,7 +287,7 @@ namespace finmag { namespace llg {
                 damping_i(*alpha[i], gamma, m0[i], m1[i], m2[i], h0[i], h1[i], h2[i], dm0[i], dm1[i], dm2[i]);
                 relaxation_i(0.1/char_time, m0[i], m1[i], m2[i], dm0[i], dm1[i], dm2[i]);
                 precession_i(*alpha[i], gamma, m0[i], m1[i], m2[i], h0[i], h1[i], h2[i], dm0[i], dm1[i], dm2[i]);
-                slonczewski_xiao_i(*alpha[i], gamma, 2, *J[i], P, d, *Ms[i], m0[i], m1[i], m2[i], p0[i], p1[i], p2[i], dm0[i], dm1[i], dm2[i]);
+                slonczewski_xiao_i(*alpha[i], gamma, lambda, epsilonprime, *J[i], P, d, *Ms[i], m0[i], m1[i], m2[i], p0[i], p1[i], p2[i], dm0[i], dm1[i], dm2[i]);
             }
             pin(dmdt, pins);
         }
@@ -763,6 +767,8 @@ namespace finmag { namespace llg {
             arg("gamma_LL"),
             arg("alpha"),
             arg("char_time"),
+            arg("lambda"),
+            arg("epsilonprime"),
             arg("J"),
             arg("P"),
             arg("d"),
