@@ -1,6 +1,7 @@
 import dolfin as df
 import numpy as np
 import finmag
+import itertools
 import textwrap
 import logging
 import pytest
@@ -1265,17 +1266,30 @@ def test_compute_normal_modes_with_different_solvers(tmpdir):
     # call these solvers.
     assert(np.allclose(omega2a, omega1))
     assert(np.allclose(omega2b, omega1))
-    #assert(np.allclose(omega3a, omega1))
-    #assert(np.allclose(omega3b, omega1))
+    assert(np.allclose(omega3a, omega1))
+    assert(np.allclose(omega3b, omega1))
     #assert(np.allclose(omega4a, omega1))
     #assert(np.allclose(omega4b, omega1))
 
-    assert(np.allclose(w2a, w1))
-    assert(np.allclose(w2b, w1))
-    # assert(np.allclose(w3a, w1))
-    # assert(np.allclose(w3b, w1))
-    # #assert(np.allclose(w4a, w1))
-    # #assert(np.allclose(w4b, w1))
+
+    def assert_define_same_eigenspaces(vs, ws):
+        """
+        Assert that each pair of vectors in vs and ws defines
+        is linearly dependent, which means that they define
+        the same eigenspace.
+        """
+        for v, w in itertools.izip(vs, ws):
+            # Check that v is a constant multiple of w
+            a = v / w
+            assert np.allclose(a, a[0])
+
+
+    assert_define_same_eigenspaces(w2a, w1)
+    assert_define_same_eigenspaces(w2b, w1)
+    assert_define_same_eigenspaces(w3a, w1)
+    assert_define_same_eigenspaces(w3b, w1)
+    #assert_define_same_eigenspace(w4a, w1)
+    #assert_define_same_eigenspace(w4b, w1)
 
 
 @pytest.mark.xfail("LooseVersion(df.__version__) <= LooseVersion('1.2.0')")
