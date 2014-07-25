@@ -73,8 +73,8 @@ def run_simulation():
     zs = np.linspace(0,Lz,200)
     for z in zs:
         pos = (Lx/2., Ly/2., z )
-        Mx.append(sim._m(pos)[0])
-        Mz.append(sim._m(pos)[2])
+        Mx.append(sim.m_field.probe(pos)[0])
+        Mz.append(sim.m_field.probe(pos)[2])
         ax.append(a(pos)[0])
         az.append(a(pos)[2])
         
@@ -99,11 +99,11 @@ def run_simulation():
     #v.write_ps(os.path.join(MODULE_DIR,'exchangespring'))       #will write exchangespring.eps
     #os.system("ps2png exchangespring.eps exchangespring.png")   #create the png file for documentation
 
-    f=df.File(os.path.join(MODULE_DIR,'exchangespring.pvd'))    #same more data for paraview
-    f << sim._m
+    sim.m_field.save_pvd(os.path.join(MODULE_DIR,'exchangespring.pvd'))    #same more data for paraview
 
     print("Written plots and data to %s" % (os.path.join(MODULE_DIR,'exchangespring.*')))
         
+
 if __name__ == "__main__":
     run_simulation()
 
