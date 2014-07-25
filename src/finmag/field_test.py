@@ -453,7 +453,7 @@ class TestField(object):
 
             values = field.coords_and_values()[1]  # Ignore coordinates.
 
-            # Check the comonents of vector field.
+            # Check the components of vector field.
             norm_exact = (value[0]**2 + value[1]**2)**0.5
             normalised_c1 = value[0] / norm_exact
             normalised_c2 = value[1] / norm_exact
@@ -471,7 +471,7 @@ class TestField(object):
 
             values = field.coords_and_values()[1]  # Ignore coordinates.
 
-            # Check the comonents of vector field.
+            # Check the components of vector field.
             norm_exact = (value[0]**2 + value[1]**2 + value[2]**2)**0.5
             normalised_c1 = value[0] / norm_exact
             normalised_c2 = value[1] / norm_exact
@@ -491,7 +491,7 @@ class TestField(object):
 
             values = field.coords_and_values()[1]  # Ignore coordinates.
 
-            # Check the comonents of vector field.
+            # Check the components of vector field.
             norm_exact = (value[0]**2 + value[1]**2 + value[2]**2 +
                           value[3]**2)**0.5
             normalised_c1 = value[0] / norm_exact
