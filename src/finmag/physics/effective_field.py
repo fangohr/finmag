@@ -9,12 +9,23 @@ logger = logging.getLogger(name="finmag")
 
 class EffectiveField(object):
     def __init__(self, S3, m, Ms, unit_length):
+        """
+        *Arguments*
+
+        S3:  dolfin.VectorFunctionSpace
+
+        m:  Field
+
+        Ms:  number (?)
+
+        unit_length:  float
+        """
         self.S3 = S3
-        self.m = m
+        self.m_field = m
         self.Ms = Ms
         self.unit_length = unit_length
 
-        self.output_size = self.m.vector().local_size()
+        self.output_size = self.m_field.f.vector().local_size()
         self.H_eff = np.zeros(self.output_size)
 
         self.interactions = {}
@@ -48,7 +59,7 @@ class EffectiveField(object):
                 "exists: {}.".format(interaction.name))
 
         logger.debug("Adding interaction {} to simulation.".format(interaction.name))
-        interaction.setup(self.S3, self.m, self.Ms, self.unit_length)
+        interaction.setup(self.S3, self.m_field.f, self.Ms, self.unit_length)
         self.interactions[interaction.name] = interaction
 
         # automatic connection of TimeZeeman to with_time_update

@@ -4,6 +4,7 @@ import dolfin as df
 import finmag.util.consts as consts
 
 import finmag.native.llb as native_llb
+from finmag.field import Field
 from finmag.util import helpers
 from finmag.physics.effective_field import EffectiveField
 from finmag.util.meshes import mesh_volume, nodal_volume
@@ -27,9 +28,8 @@ class SLLG(object):
         self._t=0
         self.time_scale=1e-9
 
-        self._m = df.Function(self.S3)
-        self._m.rename("m", "magnetisation")
-        self.nxyz = self._m.vector().size()/3
+        self._m_field = Field(self.S3, name='m')
+        self.nxyz = self._m_field.f.vector().size()/3
 
         self._T = np.zeros(self.nxyz)
         self._alpha = np.zeros(self.nxyz)
@@ -43,7 +43,9 @@ class SLLG(object):
         self.method = method
         self.checking_length = checking_length
         self.unit_length = unit_length
-        self.effective_field = EffectiveField(self.S3, self._m, self.Ms, self.unit_length)
+        self.DG = df.FunctionSpace(self.mesh, "DG", 0)
+        self._Ms_dg = df.Function(self.DG)
+        self.effective_field = EffectiveField(self.S3, self._m_field, self.Ms, self.unit_length)
         
         self.zhangli_stt=False
 
@@ -120,8 +122,8 @@ class SLLG(object):
 
     def set_m(self,value,normalise=True):
         m_tmp = helpers.vector_valued_function(value, self.S3, normalise=normalise).vector().array()
-        self._m.vector().set_local(m_tmp)
-        self.m[:]=self._m.vector().array()[:]
+        self._m_field.set_with_numpy_array_debug(m_tmp)
+        self.m[:] = self._m_field.get_numpy_array_debug()
 
 
     def advance_time(self,t):
@@ -136,7 +138,7 @@ class SLLG(object):
                 else:
                     self.integrator.run_step(self.field)
                     
-                self._m.vector().set_local(self.m)
+                self._m_field.set_with_numpy_array_debug(self.m)
 
                 self._t+=self._dt
                 
@@ -149,7 +151,7 @@ class SLLG(object):
 
     def stochastic_update_field(self,y):
 
-        self._m.vector().set_local(y)
+        self._m_field.set_with_numpy_array_debug(y)
 
         self.field[:] = self.effective_field.compute(self.cur_t)[:]
         
@@ -179,11 +181,11 @@ class SLLG(object):
 
     @property
     def Ms(self):
-        return self._Ms
+        return self._Ms_dg
 
     @Ms.setter
     def Ms(self, value):
-        self._Ms_dg=helpers.scalar_valued_dg_function(value,self.mesh)
+        self._Ms_dg.vector().set_local(helpers.scalar_valued_dg_function(value,self.mesh).vector().array())
 
         tmp = df.assemble(self._Ms_dg*df.dot(df.TestFunction(self.S3), df.Constant([1, 1, 1])) * df.dx)
         tmp = tmp/self.volumes
@@ -196,12 +198,13 @@ class SLLG(object):
 
         """
 
-        mx = df.assemble(self._Ms_dg*df.dot(self._m, df.Constant([1, 0, 0])) * dx)
-        my = df.assemble(self._Ms_dg*df.dot(self._m, df.Constant([0, 1, 0])) * dx)
-        mz = df.assemble(self._Ms_dg*df.dot(self._m, df.Constant([0, 0, 1])) * dx)
-        volume = df.assemble(self._Ms_dg*dx)
-
-        return np.array([mx, my, mz]) / volume
+        # mx = df.assemble(self._Ms_dg*df.dot(self._m, df.Constant([1, 0, 0])) * dx)
+        # my = df.assemble(self._Ms_dg*df.dot(self._m, df.Constant([0, 1, 0])) * dx)
+        # mz = df.assemble(self._Ms_dg*df.dot(self._m, df.Constant([0, 0, 1])) * dx)
+        # volume = df.assemble(self._Ms_dg*dx)
+        # 
+        # return np.array([mx, my, mz]) / volume
+        return self._m_field.average(dx=dx)
     m_average=property(m_average_fun)
     
     
@@ -234,7 +237,7 @@ class SLLG(object):
     
     def compute_gradient_field(self):
 
-        self.gradM.mult(self._m.vector(), self.H_gradm)
+        self.gradM.mult(self._m_field.f.vector(), self.H_gradm)
         
         return self.H_gradm.array()/self.nodal_volume_S3
     

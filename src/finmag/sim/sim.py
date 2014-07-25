@@ -175,7 +175,7 @@ class Simulation(object):
 
     def __get_m(self):
         """The unit magnetisation"""
-        return self.llg.m
+        return self.llg._m_field.get_numpy_array_debug()
 
     def set_m(self, value, normalise=True, **kwargs):
         """
@@ -462,7 +462,7 @@ class Simulation(object):
 
         """
         if field_type == 'm':
-            field = self.llg._m
+            field = self.llg._m_field.f
         else:
             field = self.llg.effective_field.get_dolfin_function(field_type)
         res = field
@@ -556,7 +556,7 @@ class Simulation(object):
             elif self.kernel == 'sllg':
                 self.integrator = self.llg
             else:
-                self.integrator = llg_integrator(self.llg, self.llg.m, backend=backend, **kwargs)
+                self.integrator = llg_integrator(self.llg, self.llg._m_field.get_numpy_array_debug(), backend=backend, **kwargs)
                 self.integrator.integrator.set_scalar_tolerances(self.reltol, self.abstol)
 
             ## HF: the following code works only for sundials, i.e. not for scipy.integrate.vode.
@@ -661,7 +661,7 @@ class Simulation(object):
             log.error("Requested unknown driver `{}` for restarting. Known: {}.".format(data["driver"], "cvode"))
             raise NotImplementedError("Unknown driver `{}` for restarting.".format(data["driver"]))
 
-        self.llg._m.vector()[:] = data['m']
+        self.llg._m_field.set_with_numpy_array_debug(data['m'])
 
         self.reset_time(data["simtime"] if (t0 == None) else t0)
 
@@ -678,7 +678,7 @@ class Simulation(object):
         #is a bit confusing and dangerous because the user doesn't know a new integrator
         #is created and the other setting that the user provided such as the tolerances
         #actually doesn't have influence at all.
-        self.integrator = llg_integrator(self.llg, self.llg.m,
+        self.integrator = llg_integrator(self.llg, self.llg._m_field.get_numpy_array_debug(),
                                          backend=self.integrator_backend, t0=t0)
         
         self.set_tol(self.reltol, self.abstol)
@@ -967,7 +967,7 @@ class Simulation(object):
         return s
 
     def _save_m_to_vtk(self, vtk_saver):
-        vtk_saver.save_field(self.llg._m, self.t)
+        vtk_saver.save_field(self.llg._m_field.f, self.t)
 
     def _save_field_to_vtk(self, field_name, vtk_saver, region=None):
         field_data = self.get_field_as_dolfin_function(field_name, region=region)
