@@ -22,7 +22,7 @@ def test_can_read_restart_file(tmpdir):
     assert data['simname'] == sim.name
     assert data['simtime'] == sim.t
     assert data['stats'] == sim.integrator.stats()
-    assert np.all(data['m'] == sim.integrator.llg.m)
+    assert np.all(data['m'] == sim.integrator.llg.m_numpy)
     #writing and reading the data should take less than 10 seconds
     assert datetime.now() - data['datetime'] < timedelta(0, 10)
 
