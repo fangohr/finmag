@@ -336,3 +336,6 @@ class Field(object):
     def load_hdf5(self, filename):
         """Load field from hdf5 file using dolfin code"""
         raise NotImplementedError
+
+    def plot_with_dolfin(self, interactive=True):
+        df.plot(self.f, interactive=True)
