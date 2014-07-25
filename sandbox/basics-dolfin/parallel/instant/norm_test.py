@@ -3,20 +3,19 @@ from dolfin import *
 import instant
 
 cpp_code = """
-    void dabla(dolfin::Vector& a, dolfin::Vector& b, double c, double d) {
-        for (unsigned int i=0; i < a.size(); i++) {
-    b.setitem(i, d*a[i] + c);
+void dabla(dolfin::Vector& a, dolfin::Vector& b, double c, double d) {
+    for (unsigned int i=0; i < a.size(); i++) {
+        b.setitem(i, d*a[i] + c); 
     }
 }
 """
 
-
-#include_dirs, flags, libs, libdirs = instant.header_and_libs_from_pkgconfig("dolfin")
+include_dirs, flags, libs, libdirs = instant.header_and_libs_from_pkgconfig("dolfin")
 
 headers= ["dolfin.h"]
 
-#func = instant.inline(cpp_code, system_headers=headers, include_dirs=include_dirs, libraries = libs, library_dirs = libdirs) 
-func = instant.inline(cpp_code, system_headers=headers)
+func = instant.inline(cpp_code, system_headers=headers, include_dirs=include_dirs, libraries = libs, library_dirs = libdirs) 
+#func = instant.inline(cpp_code, system_headers=headers)
 
 
 

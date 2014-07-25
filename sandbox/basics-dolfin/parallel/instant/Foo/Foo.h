@@ -2,6 +2,7 @@
 #define __FOO_H
 
 #include <dolfin/function/Function.h>
+#include <dolfin/la/GenericVector.h>
 
 namespace dolfin
 {
@@ -9,7 +10,8 @@ namespace dolfin
   {
   public:
     Foo();
-    void bar(const Function& u);
+    void foo(const Function& u);
+    void foo2(const GenericVector& v);
   };
 }
 #endif

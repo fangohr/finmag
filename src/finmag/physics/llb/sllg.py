@@ -43,6 +43,8 @@ class SLLG(object):
         self.method = method
         self.checking_length = checking_length
         self.unit_length = unit_length
+        self.DG = df.FunctionSpace(self.mesh, "DG", 0)
+        self._Ms_dg = df.Function(self.DG)
         self.effective_field = EffectiveField(self.S3, self._m_field.f, self.Ms, self.unit_length)
         
         self.zhangli_stt=False
@@ -179,11 +181,11 @@ class SLLG(object):
 
     @property
     def Ms(self):
-        return self._Ms
+        return self._Ms_dg
 
     @Ms.setter
     def Ms(self, value):
-        self._Ms_dg=helpers.scalar_valued_dg_function(value,self.mesh)
+        self._Ms_dg.vector().set_local(helpers.scalar_valued_dg_function(value,self.mesh).vector().array())
 
         tmp = df.assemble(self._Ms_dg*df.dot(df.TestFunction(self.S3), df.Constant([1, 1, 1])) * df.dx)
         tmp = tmp/self.volumes
