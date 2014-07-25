@@ -371,8 +371,8 @@ class LLG(object):
 
         if not hasattr(self, '_reuse_jacobean') or not self._reuse_jacobean:
         # If the field m has changed, recompute H_eff as well
-            if not np.array_equal(self.m, m):
-                self.m = m
+            if not np.array_equal(self.m_numpy, m):
+                self.m_field.set_with_numpy_array_debug(m)
                 self.effective_field.update(t)
             else:
                 pass
