@@ -23,14 +23,14 @@ class MyLLG(LLG):
         # Comment out these two lines if you don't want exchange.
         exch = Exchange(1.3e-11)
         print "About to cal setup"
-        exch.setup(self.S3, self._m, self.Ms)
+        exch.setup(self.S3, self._m_field.f, self.Ms)
         H_ex.vector().array()[:] = exch.compute_field()
 
         H_eff = H_ex + H_app
         return H_eff
 
     def compute_variational_forms(self):
-        M, H, Ms, p, c, alpha, V = self._m, self.H_eff(), \
+        M, H, Ms, p, c, alpha, V = self._m_field.f, self.H_eff(), \
                 self.Ms, self.p, self.c, self.alpha, self.S3
 
         u = TrialFunction(V)
@@ -48,7 +48,7 @@ class MyLLG(LLG):
         return self.a, self.L
 
     def compute_jacobian(self):
-        L, M = self.L, self._m
+        L, M = self.L, self._m_field.f
         return derivative(L, M)
 
 
@@ -106,7 +106,7 @@ S3 = VectorFunctionSpace(mesh, "Lagrange", 1)
 llg = MyLLG(S1, S3)
 llg.set_m((1,0,0))
 
-M, V = llg._m, llg.S3
+M, V = llg._m_field.f, llg.S3
 a, L = llg.variational_forms()
 
 x = Function(V)
