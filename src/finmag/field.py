@@ -81,6 +81,9 @@ class Field(object):
             else:
                 raise TypeError('Function and field functionspaces '
                                 'do not match')
+        
+        elif isinstance(value, df.GenericVector):
+            self.f.vector().set_local(value)
 
         # Int, float, and basestring (str and unicode) type values
         # appropriate only for scalar fields.
@@ -292,6 +295,11 @@ class Field(object):
             raise NotImplementedError('This method is not implemented '
                                       'for {} family type function '
                                       'spaces.'.format(functionspace_family))
+
+    def __add__(self, other):
+        result = Field(self.functionspace)
+        result.set(self.f.vector() + other.f.vector())
+        return
 
     def probe(self, coord):
         return self.f(coord)
