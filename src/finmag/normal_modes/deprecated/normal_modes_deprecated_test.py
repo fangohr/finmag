@@ -10,6 +10,7 @@ import pytest
 logger = logging.getLogger("finmag")
 
 
+@pytest.mark.slow
 def test_check_Kittel_mode_for_single_sphere(tmpdir, debug=False):
     """
     Compute the eigenmodes of a perfect sphere and check that the
@@ -110,6 +111,7 @@ def test_passing_scipy_eigsh_parameters(tmpdir):
     logger.debug("Computed eigenfrequencies #2: {}".format(omega2))
 
 
+@pytest.mark.slow
 def test_plot_spatially_resolved_normal_mode(tmpdir):
     os.chdir(str(tmpdir))
     d = 60
@@ -165,6 +167,7 @@ def test_plot_spatially_resolved_normal_mode(tmpdir):
             plot_spatially_resolved_normal_mode(mesh, m0, w, plot_powers=False, plot_phases=False)
 
 
+@pytest.mark.slow
 def test_plot_spatially_resolved_normal_mode2(tmpdir):
     os.chdir(str(tmpdir))
     sim = example.normal_modes.disk(relaxed=True)
@@ -184,6 +187,7 @@ def test_plot_spatially_resolved_normal_mode2(tmpdir):
     assert(os.path.exists('normal_mode_02.png'))
 
 
+@pytest.mark.slow
 def test_plot_spatially_resolved_normal_mode_in_region(tmpdir):
     os.chdir(str(tmpdir))
     disk1 = Nanodisk(d=60, h=5, center=(-70, 0, 0), name="sphere1")
