@@ -15,9 +15,6 @@ class MyLLG(LLG):
         self.alpha = 0.5
         self.p = Constant(self.gamma/(1 + self.alpha**2))
 
-    def M(self):
-        return self._m
-
     def H_eff(self):
         """Very temporary function to make things simple."""
         H_app = project((Constant((0, 1e5, 0))), self.S3)
