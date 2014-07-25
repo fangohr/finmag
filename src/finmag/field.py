@@ -83,7 +83,7 @@ class Field(object):
                                 'do not match')
         
         elif isinstance(value, df.GenericVector):
-            self.f.vector().set_local(value)
+            self.f.vector()[:] = value
 
         # Int, float, and basestring (str and unicode) type values
         # appropriate only for scalar fields.
@@ -299,7 +299,7 @@ class Field(object):
     def __add__(self, other):
         result = Field(self.functionspace)
         result.set(self.f.vector() + other.f.vector())
-        return
+        return result
 
     def probe(self, coord):
         return self.f(coord)
