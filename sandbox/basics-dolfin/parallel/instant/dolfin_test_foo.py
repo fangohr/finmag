@@ -22,6 +22,7 @@
 
 
 from dolfin import *
+import dolfin as df
 import numpy
 import os
 
@@ -37,3 +38,20 @@ V = FunctionSpace(mesh, 'CG', 1)
 f = Function(V)
 foo = foo_module.Foo()
 foo.bar(f)
+
+
+nx = ny = 1
+mesh = df.UnitSquareMesh(nx, ny)
+
+V = df.FunctionSpace(mesh, 'CG', 1)
+Vv = df.VectorFunctionSpace(mesh, 'CG', 1, dim=3)
+f = df.interpolate(df.Expression("0"),V)
+f1 = df.interpolate(df.Expression(("1","0","0")),Vv)
+f2 = df.interpolate(df.Expression(("0","1","0")),Vv)
+print 'a=',f1.vector().array()
+print 'b=',f2.vector().array()
+    
+foo.bar2(f1.vector(),f2,vector(),1.2,4.5)
+
+print 'a=',f1.vector().array()
+print 'b=',f2.vector().array()
