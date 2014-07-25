@@ -1,6 +1,8 @@
 import os
 import sys
+import pytest
 import commands
+import subprocess
 import numpy as np
 import dolfin as df
 #from finmag.energies import UniaxialAnisotropy, Exchange, Demag, DMI
@@ -10,7 +12,7 @@ from finmag.util.meshes import sphere
 
 TOL = 1e-14
 
-
+@pytest.mark.skipif('subprocess.call(["which", "nsim"]) != 0')
 def test_exchange_energy_density():
     """
     Compare solution with nmag for now. Should derive the
