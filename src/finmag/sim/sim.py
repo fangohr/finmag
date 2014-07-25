@@ -197,6 +197,10 @@ class Simulation(object):
     m = property(__get_m, set_m)
 
     @property
+    def m_field(self):
+        return self.llg.m_field
+
+    @property
     def m_average(self):
         """
         Compute and return the average magnetisation over the entire
@@ -205,9 +209,9 @@ class Simulation(object):
         """
         return self.llg.m_average
 
-    @property
-    def _m(self):
-        return self.llg._m
+    # @property
+    # def _m(self):
+    #     return self.llg._m
 
     def save_m_in_region(self,region,name='unnamed'):
 
