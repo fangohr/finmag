@@ -25,7 +25,7 @@ def test_external_field_depends_on_t():
     #This is the time dependent field
     H_app_expr = df.Expression(("0.0", "0.0","H0*sin(omega*t)"), H0=1e5, omega=omega, t=0.0)
     H_app = TimeZeeman(H_app_expr)
-    H_app.setup(S3, llg._m, Ms=8.6e5)
+    H_app.setup(S3, llg.m_field.f, Ms=8.6e5)
     #define function that updates that expression, and the field object
     def update_H_ext(t):
         print "update_H_ext being called for t=%g" % t
@@ -33,7 +33,7 @@ def test_external_field_depends_on_t():
     llg.effective_field.add(H_app, with_time_update=update_H_ext)
 
     #nothing special from here, just setting up time integration
-    integrator = llg_integrator(llg, llg.m)
+    integrator = llg_integrator(llg, llg.m_field)
 
     #to gather data for later analysis
     mlist = []

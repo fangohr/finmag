@@ -50,7 +50,7 @@ def run_simulation():
     xs = np.linspace(0,Lx,200)
     for x in xs:
         pos = (x,)
-        Mx.append(sim._m(pos)[0])
+        Mx.append(sim.m_field.probe(pos)[0])
         ax.append(a(pos)[0])
 
     pylab.plot(xs,Mx,'-o',label='Mx')
@@ -64,27 +64,19 @@ def run_simulation():
     return sim,a
 
 
-def test_spatially_varying_anisotropy_direction_a():
+def test_spatially_varying_anisotropy_direction_a(tmpdir, debug=False):
+    sim, a = run_simulation()
 
-    sim,a = run_simulation()
-
-    #interpolate a on mesh of M
+    # Interpolate a on mesh of M
     diff = (a.vector().array() - sim.m)
     maxdiff = max(abs(diff))
     print "maxdiff=",maxdiff
     print "The fairly large error seems to come from x=0. Why?"
     assert maxdiff < 0.018
 
-    if __name__ == "__main__":
-
-        f=df.File('test.pvd')
-        f << sim._m
+    if debug:
+        # Save field for debugging (will be stored in /tmp/pytest-USERNAME/)
+        sim.m_field.save_pvd(os.path.join(os.chdir(str(tmpdir), 'test.pvd')))
 
 if __name__ == "__main__":
     test_spatially_varying_anisotropy_direction_a()
-
-
-
-
-
-
