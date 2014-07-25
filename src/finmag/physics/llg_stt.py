@@ -29,11 +29,6 @@ class LLG_STT(object):
         
         self.mesh = S1.mesh()
         
-        self._m = df.Function(self.S3)
-        # Arguments to _m.rename() below: (new_short_name, new_long_name).
-        # These get displayed e.g. in Paraview when loading an
-        # exported VTK file.
-        self._m.rename("m", "magnetisation")
         self._m_field = Field(self.S3, name='m')
         
         self._delta_m = df.Function(self.S3)
@@ -152,7 +147,6 @@ class LLG_STT(object):
     def m(self, value):
         # Not enforcing unit length here, as that is better done
         # once at the initialisation of m.
-        self._m.vector()[:] = value
         self._m_field.set_with_numpy_array_debug(value)
         self.dy_m.shape=(2,-1)
         self.dy_m[0][:]=value
@@ -168,7 +162,6 @@ class LLG_STT(object):
         # used to copy back from sundials cvode
         self.dy_m[:] = value[:]
         self.dy_m.shape=(2,-1)
-        self._m.vector()[:]=self.dy_m[0][:]
         self._m_field.set_with_numpy_array_debug(self.dy_m[0][:])
         self.dy_m.shape=(-1,)
         
@@ -268,7 +261,6 @@ class LLG_STT(object):
         self.t = t
         
         y.shape=(2,-1)
-        self._m.vector().set_local(y[0])
         self._m_field.set_with_numpy_array_debug(y[0])
         self._delta_m.vector().set_local(y[1])
         y.shape=(-1,)
