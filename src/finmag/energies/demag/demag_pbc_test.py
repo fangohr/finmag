@@ -1,3 +1,4 @@
+import pytest
 import numpy as np
 import dolfin as df
 from finmag import Simulation
@@ -29,40 +30,43 @@ def compute_field(mesh, nx=1, ny=1, m0=(1,0,0), pbc=None):
     sim.add(demag)
     
     field = sim.llg.effective_field.get_dolfin_function('Demag')
-    
-    return field(0,0,0)/Ms
+
+    # XXX TODO: Would be good to compare all the field values, not
+    #           just the value at a single point!  (Max, 25.7.2014)
+    return field(0, 0, 0) / Ms
 
 
 def test_field_1d():
-    m0 = (1,0,0)
-    f1 = compute_field(mesh_1,nx=3,m0=m0)
-    f2 = compute_field(mesh_3,nx=1,m0=m0)
-    error = abs((f1 - f2)/f2)
-    print  f1,f2,error
-    assert max(error)<0.012
+    m0 = (1, 0, 0)
+    f1 = compute_field(mesh_1, nx=3, m0=m0)
+    f2 = compute_field(mesh_3, nx=1, m0=m0)
+    error = abs((f1 - f2) / f2)
+    print  f1, f2, error
+    assert max(error) < 0.012
 
-    m0 = (0,0,1)
-    f1 = compute_field(mesh_1,nx=3,m0=m0)
-    f2 = compute_field(mesh_3,nx=1,m0=m0)
-    error = abs((f1 - f2)/f2)
-    print  f1,f2,error
-    assert max(error)<0.02
+    m0 = (0, 0, 1)
+    f1 = compute_field(mesh_1, nx=3, m0=m0)
+    f2 = compute_field(mesh_3, nx=1, m0=m0)
+    error = abs((f1 - f2) / f2)
+    print  f1, f2, error
+    assert max(error) < 0.02
 
 
+@pytest.mark.slow
 def test_field_2d():
-    m0 = (1,0,0)
-    f1 = compute_field(mesh_1,nx=3,ny=3,m0=m0)
-    f2 = compute_field(mesh_9,m0=m0)
+    m0 = (1, 0, 0)
+    f1 = compute_field(mesh_1, nx=3, ny=3, m0=m0)
+    f2 = compute_field(mesh_9, m0=m0)
     error = abs((f1 - f2)/f2)
-    print  f1,f2,error
-    assert max(error)<0.01
+    print  f1, f2, error
+    assert max(error) < 0.01
 
-    m0 = (0,0,1)
-    f1 = compute_field(mesh_1,nx=3,ny=3,m0=m0)
-    f2 = compute_field(mesh_9,m0=m0)
-    error = abs((f1 - f2)/f2)
-    print  f1,f2,error
-    assert max(error)<0.004
+    m0 = (0, 0, 1)
+    f1 = compute_field(mesh_1, nx=3, ny=3, m0=m0)
+    f2 = compute_field(mesh_9, m0=m0)
+    error = abs((f1 - f2) / f2)
+    print  f1, f2, error
+    assert max(error) < 0.004
 
 if __name__ == '__main__':
     test_field_1d()
