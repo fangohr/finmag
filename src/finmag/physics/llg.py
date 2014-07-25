@@ -166,7 +166,7 @@ class LLG(object):
     def sundials_m(self, value):
         # used to copy back from sundials cvode
         self._m.vector()[:] = value
-        
+        self._m_field.set_with_numpy_array_debug(value)
     
 
     def m_average_fun(self,dx=df.dx):
@@ -201,10 +201,12 @@ class LLG(object):
 
         """
         self._m.vector().set_local(helpers.vector_valued_function(value, self.S3, normalise=normalise, **kwargs).vector().array())
+        self._m_field.set_with_numpy_array_debug(helpers.vector_valued_function(value, self.S3, normalise=normalise, **kwargs).vector().array())
 
 
     def solve_for(self, m, t):
         self._m.vector().set_local(m)
+        self._m_field.set_with_numpy_array_debug(m)
         value = self.solve(t)
         return value
 
@@ -266,6 +268,7 @@ class LLG(object):
         # when it is passed to set_spils_preconditioner() in the cvode class.
         if not jok:
             self._m.vector().set_local(m)
+            self._m_field.set_with_numpy_array_debug(m)
             self._reuse_jacobean = True
 
         return 0, not jok
@@ -355,6 +358,7 @@ class LLG(object):
 
         # First, compute the derivative H' = dH_eff/dt
         self._m.vector().set_local(mp)
+        self._m_field.set_with_numpy_array_debug(mp)
         Hp = tmp.view()
         Hp[:] = self.effective_field.compute_jacobian_only(t)
 
