@@ -61,12 +61,12 @@ class LLG(object):
         #               0.1e12 1/s is the value used by default in nmag 0.2
         self._Ms_dg = df.Function(self.DG)
         self.Ms = 8.6e5  # A/m saturation magnetisation
-        self._m = df.Function(self.S3)
+        #self._m = df.Function(self.S3)
         self._m_field = Field(self.S3, name='m')
-        # Arguments to _m.rename() below: (new_short_name, new_long_name).
-        # These get displayed e.g. in Paraview when loading an
-        # exported VTK file.
-        self._m.rename("m", "magnetisation")
+        # # Arguments to _m.rename() below: (new_short_name, new_long_name).
+        # # These get displayed e.g. in Paraview when loading an
+        # # exported VTK file.
+        # self._m.rename("m", "magnetisation")
         self.pins = []  # nodes where the magnetisation gets pinned
 
         self._dmdt = df.Function(self.S3)
@@ -165,7 +165,7 @@ class LLG(object):
     @sundials_m.setter
     def sundials_m(self, value):
         # used to copy back from sundials cvode
-        self._m.vector()[:] = value
+        #self._m.vector()[:] = value
         self._m_field.set_with_numpy_array_debug(value)
     
 
@@ -182,7 +182,7 @@ class LLG(object):
         # volume = df.assemble(self._Ms_dg * dx)
         # 
         # return np.array([mx, my, mz]) / volume
-        return self._m.average(dx=dx)
+        return self._m_field.average(dx=dx)
     m_average=property(m_average_fun)
 
 
@@ -201,12 +201,12 @@ class LLG(object):
         reasons and because the attribute m doesn't normalise the vector.
 
         """
-        self._m.vector().set_local(helpers.vector_valued_function(value, self.S3, normalise=normalise, **kwargs).vector().array())
+        #self._m.vector().set_local(helpers.vector_valued_function(value, self.S3, normalise=normalise, **kwargs).vector().array())
         self._m_field.set_with_numpy_array_debug(helpers.vector_valued_function(value, self.S3, normalise=normalise, **kwargs).vector().array())
 
 
     def solve_for(self, m, t):
-        self._m.vector().set_local(m)
+        #self._m.vector().set_local(m)
         self._m_field.set_with_numpy_array_debug(m)
         value = self.solve(t)
         return value
@@ -268,7 +268,7 @@ class LLG(object):
         # need to be present because the function must have the correct signature
         # when it is passed to set_spils_preconditioner() in the cvode class.
         if not jok:
-            self._m.vector().set_local(m)
+            #self._m.vector().set_local(m)
             self._m_field.set_with_numpy_array_debug(m)
             self._reuse_jacobean = True
 
@@ -358,7 +358,7 @@ class LLG(object):
         assert tmp.shape == m.shape
 
         # First, compute the derivative H' = dH_eff/dt
-        self._m.vector().set_local(mp)
+        #self._m.vector().set_local(mp)
         self._m_field.set_with_numpy_array_debug(mp)
         Hp = tmp.view()
         Hp[:] = self.effective_field.compute_jacobian_only(t)
