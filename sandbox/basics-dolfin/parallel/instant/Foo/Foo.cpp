@@ -15,8 +15,7 @@ void Foo::foo(const Function& u)
     bar();
 }
 
-void Foo::bar2(Vector& a, Vector& b, double c, double d) {
-  for (unsigned int i=0; i < a.size(); i++) {
-    b.setitem(i, d*a[i] + c); 
-  }
+void Foo::foo2(const GenericVector& v)
+{
+    std::cout << "I was successfully passed a vector." << std::endl;
 }
