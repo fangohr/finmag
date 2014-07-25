@@ -45,7 +45,7 @@ class SLLG(object):
         self.unit_length = unit_length
         self.DG = df.FunctionSpace(self.mesh, "DG", 0)
         self._Ms_dg = df.Function(self.DG)
-        self.effective_field = EffectiveField(self.S3, self._m_field.f, self.Ms, self.unit_length)
+        self.effective_field = EffectiveField(self.S3, self._m_field, self.Ms, self.unit_length)
         
         self.zhangli_stt=False
 
