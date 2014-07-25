@@ -1,5 +1,6 @@
 import dolfin as df
 import numpy as np
+import os
 from field import Field
 
 
@@ -975,3 +976,13 @@ class TestField(object):
             assert abs(probed_value[1] - expected_probed_value[1]) < self.tol2
             assert abs(probed_value[2] - expected_probed_value[2]) < self.tol2
             assert abs(probed_value[3] - expected_probed_value[3]) < self.tol2
+
+    def test_plot_with_dolfin(self):
+        """Test that we can call the plotting function of a Field object."""
+        # Set environment variable DOLFIN_NOPLOT to a non-zero value in
+        # order to suppress the actual plotting (because we have no way
+        # to close the window non-interactively from within the test).
+        os.environ['DOLFIN_NOPLOT'] = 'TRUE'
+
+        field = Field(self.fs3d_vector3d, value=[1, 0, 0])
+        field.plot_with_dolfin(interactive=False)
