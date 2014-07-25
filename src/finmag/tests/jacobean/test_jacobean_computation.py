@@ -12,7 +12,7 @@ def setup_llg_params_near_one(node_count=5, A=3.6 * 4e-7 * np.pi, Ms=6.7e5, K1=4
     llg.gamma = 1.56
     llg.set_alpha(2.35)
     llg.pins = []
-    n = llg.m.size / 3
+    n = llg.m_numpy.size / 3
     # Generate a random (non-normalised) magnetisation vector with norm close to 1
     np.random.seed(1)
     m = np.random.rand(3, n) * 2 - 1
@@ -24,7 +24,7 @@ class JacobeanComputationTests(unittest.TestCase):
     # Use 4th order FD scheme
     # Without demag, this scheme should produce an exact result hence set eps to 1
     def compute_jacobean_fd(self, m, eps=1):
-        n = self.llg.m.size / 3
+        n = self.llg.m_numpy.size / 3
         # Compute the jacobean using the finite difference approximation
         jac = np.zeros((3 * n, 3 * n))
         w = np.array([1./12., -2./3., 2./3., -1./12.])/eps
@@ -38,7 +38,7 @@ class JacobeanComputationTests(unittest.TestCase):
 
     # Use the jtimes function to compute the jacobean
     def compute_jacobean_jtimes(self, m):
-        n = self.llg.m.size / 3
+        n = self.llg.m_numpy.size / 3
         jac = np.zeros((3 * n, 3 * n))
         tmp = np.zeros(m.shape)
         jtimes = np.zeros(m.shape)

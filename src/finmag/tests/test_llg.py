@@ -17,6 +17,6 @@ def test_method_of_computing_the_average_matters():
             '0'), L=length)
 
     average1 = llg.m_average
-    average2 = np.mean(components(llg.m), axis=1)
+    average2 = np.mean(components(llg.m_numpy), axis=1)
     diff = np.abs(average1 - average2)
     assert diff.max() > 5e-2

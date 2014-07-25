@@ -33,10 +33,10 @@ def compute_skyrmion_number_2d_example():
     
     sim.relax(stopping_dmdt=1, dt_limit=1e-9)
     
-    df.plot(sim._m)
-    df.interactive()
+    sim.m_field.plot_with_dolfin(interactive=True)
     
-    print compute_skyrmion_number_2d(sim._m)
+    print compute_skyrmion_number_2d(sim.m_field.f)
+
     
 def test_compute_skyrmion_number_2d_pbc():
 
@@ -57,7 +57,7 @@ def test_compute_skyrmion_number_2d_pbc():
     #df.plot(sim._m)
     #df.interactive()
     
-    sky_num = compute_skyrmion_number_2d(sim._m)
+    sky_num = compute_skyrmion_number_2d(sim.m_field.f)
     
     print 'sky_num = %g'%sky_num
     
