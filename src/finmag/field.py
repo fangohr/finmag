@@ -46,11 +46,8 @@ class Field(object):
         self.functionspace = functionspace
         self.f = df.Function(self.functionspace)  # Create a zero-function.
 
-        # Set the function (f) value if specified. Field is normalised
-        # in the set method if normalised=True.
-        self.normalised = normalised
         if value is not None:
-            self.set(value)
+            self.set(value, normalised=normalised)
 
         self.name = name
         if name is not None:
@@ -58,7 +55,7 @@ class Field(object):
 
         self.unit = unit
 
-    def set(self, value):
+    def set(self, value, normalised=False):
         """
         Set the field value f and normalise the field if specified in __init__.
 
@@ -141,7 +138,13 @@ class Field(object):
                             'value.'.format(type(value)))
 
         # Normalise the function if required.
-        if self.normalised:
+        if normalised:
+            self.normalise()
+
+    def set_with_numpy_array(self, value, normalised=False):
+        self.f.vector().set_local(value)
+
+        if normalised:
             self.normalise()
 
     def normalise(self):
