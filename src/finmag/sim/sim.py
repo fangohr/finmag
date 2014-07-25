@@ -556,7 +556,7 @@ class Simulation(object):
             elif self.kernel == 'sllg':
                 self.integrator = self.llg
             else:
-                self.integrator = llg_integrator(self.llg, self.llg._m.vector().array(), backend=backend, **kwargs)
+                self.integrator = llg_integrator(self.llg, self.llg._m_field.get_numpy_array_debug(), backend=backend, **kwargs)
                 self.integrator.integrator.set_scalar_tolerances(self.reltol, self.abstol)
 
             ## HF: the following code works only for sundials, i.e. not for scipy.integrate.vode.
