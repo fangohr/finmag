@@ -141,6 +141,12 @@ class Field(object):
         if normalised:
             self.normalise()
 
+    def set_with_numpy_array(self, value, normalised=False):
+        self.f.vector().set_local(value)
+
+        if normalised:
+            self.normalise()
+
     def normalise(self):
         """
         Normalise the vector field so that the norm=1.
