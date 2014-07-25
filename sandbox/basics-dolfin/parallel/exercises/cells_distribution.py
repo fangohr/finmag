@@ -9,12 +9,10 @@ without the knowledge of the data details. To run this script,
 """
 
 import dolfin as df
-from mpi4py import MPI
 
-comm = MPI.COMM_WORLD
-rank = comm.Get_rank()
-size = comm.Get_size()
-
+mpi_world = df.mpi_comm_world()
+rank = df.MPI.rank(mpi_world)
+size = df.MPI.size(mpi_world)
 
 def fun(x):
     return rank 
