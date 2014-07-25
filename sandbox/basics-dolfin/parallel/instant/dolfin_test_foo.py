@@ -29,11 +29,12 @@ header_file = open("Foo/Foo.h", "r")
 code = header_file.read()
 header_file.close()
 foo_module = compile_extension_module(
-    code=code, source_directory="Foo", sources=["Foo.cpp"],
+    code=code, source_directory="Foo", sources=["Foo.cpp", "Bar.cpp"],
     include_dirs=[".", os.path.abspath("Foo")])
 
 mesh = UnitCubeMesh(10, 10, 10)
 V = FunctionSpace(mesh, 'CG', 1)
 f = Function(V)
 foo = foo_module.Foo()
-foo.bar(f)
+foo.foo(f)
+foo.foo2(f.vector())
