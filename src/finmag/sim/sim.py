@@ -556,7 +556,7 @@ class Simulation(object):
             elif self.kernel == 'sllg':
                 self.integrator = self.llg
             else:
-                self.integrator = llg_integrator(self.llg, self.llg._m_field.get_numpy_array_debug(), backend=backend, **kwargs)
+                self.integrator = llg_integrator(self.llg, self.llg._m_field, backend=backend, **kwargs)
                 self.integrator.integrator.set_scalar_tolerances(self.reltol, self.abstol)
 
             ## HF: the following code works only for sundials, i.e. not for scipy.integrate.vode.
@@ -678,7 +678,7 @@ class Simulation(object):
         #is a bit confusing and dangerous because the user doesn't know a new integrator
         #is created and the other setting that the user provided such as the tolerances
         #actually doesn't have influence at all.
-        self.integrator = llg_integrator(self.llg, self.llg._m_field.get_numpy_array_debug(),
+        self.integrator = llg_integrator(self.llg, self.llg._m_field,
                                          backend=self.integrator_backend, t0=t0)
         
         self.set_tol(self.reltol, self.abstol)

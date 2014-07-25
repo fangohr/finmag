@@ -17,7 +17,7 @@ END_TIME = 1e-10
 class IntegratorTests(unittest.TestCase):
     def run_test(self, backend, method, nsteps=40000):
         llg = setup_domain_wall_cobalt(node_count=NODE_COUNT)
-        integrator = llg_integrator(llg, llg.m, backend, method=method, nsteps=nsteps)
+        integrator = llg_integrator(llg, llg.m_field, backend, method=method, nsteps=nsteps)
         t = datetime.now()
         integrator.advance_time(END_TIME)
         dt = datetime.now() - t

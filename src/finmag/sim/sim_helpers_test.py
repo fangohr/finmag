@@ -46,7 +46,7 @@ def test_try_to_restart_a_simulation(tmpdir):
     data = sim_helpers.load_restart_data(sim1)
     sim2 = barmini()
     sim2.set_m(data['m'])
-    sim2.integrator = llg_integrator(sim2.llg, sim2.llg.m,
+    sim2.integrator = llg_integrator(sim2.llg, sim2.llg.m_field,
                                      backend=sim2.integrator_backend, t0=data['simtime'])
     # ... and integrate until t1.
     sim2.run_until(t1)
