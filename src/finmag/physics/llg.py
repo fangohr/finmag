@@ -141,6 +141,11 @@ class LLG(object):
         raise RuntimeError("DON'T USE llg.m UNTIL FURTHER NOTICE!!!!")
 
     @property
+    def m_field(self):
+        """The unit magnetisation."""
+        return self._m_field
+
+    @property
     def m_numpy(self):
         """
         Return the magnetisation as a numpy.array. This is not recommended and
