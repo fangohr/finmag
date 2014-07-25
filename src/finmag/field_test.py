@@ -97,7 +97,6 @@ class TestField(object):
             field = Field(functionspace, value, normalised, name, unit)
 
             assert field.functionspace == functionspace
-            assert field.normalised is True
             assert field.name == name
             assert field.unit == unit
 
