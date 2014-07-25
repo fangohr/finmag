@@ -101,7 +101,7 @@ class LLG_STT(object):
 
         """
         if len(nodes) > 0:
-            nb_nodes_mesh = len(self._m.vector().array()) / 3
+            nb_nodes_mesh = len(self._m_field.get_numpy_array_debug()) / 3
             if min(nodes) >= 0 and max(nodes) < nb_nodes_mesh:
                 self._pins = np.array(nodes, dtype="int")
             else:
@@ -146,7 +146,7 @@ class LLG_STT(object):
     @property
     def m(self):
         """The unit magnetisation."""
-        return self._m.vector().array()
+        return self._m_field.get_numpy_array_debug()
 
     @m.setter
     def m(self, value):
@@ -172,19 +172,20 @@ class LLG_STT(object):
         self._m_field.set_with_numpy_array_debug(self.dy_m[0][:])
         self.dy_m.shape=(-1,)
         
-    def m_average_fun(self,dx=df.dx):
+    def m_average_fun(self, dx=df.dx):
         """
         Compute and return the average polarisation according to the formula
         :math:`\\langle m \\rangle = \\frac{1}{V} \int m \: \mathrm{d}V`
 
         """
 
-        mx = df.assemble(self._Ms_dg*df.dot(self._m, df.Constant([1, 0, 0])) * dx)
-        my = df.assemble(self._Ms_dg*df.dot(self._m, df.Constant([0, 1, 0])) * dx)
-        mz = df.assemble(self._Ms_dg*df.dot(self._m, df.Constant([0, 0, 1])) * dx)
-        volume = df.assemble(self._Ms_dg*dx)
-
-        return np.array([mx, my, mz]) / volume
+        # mx = df.assemble(self._Ms_dg*df.dot(self._m, df.Constant([1, 0, 0])) * dx)
+        # my = df.assemble(self._Ms_dg*df.dot(self._m, df.Constant([0, 1, 0])) * dx)
+        # mz = df.assemble(self._Ms_dg*df.dot(self._m, df.Constant([0, 0, 1])) * dx)
+        # volume = df.assemble(self._Ms_dg*dx)
+        # 
+        # return np.array([mx, my, mz]) / volume
+        return self._m_field.average(dx=dx)
     m_average=property(m_average_fun)
     
     def set_m(self, value, normalise=True, **kwargs):
@@ -244,7 +245,7 @@ class LLG_STT(object):
         
     def compute_gradient_field(self):
 
-        self.gradM.mult(self._m.vector(), self.H_gradm)
+        self.gradM.mult(self._m_field.f.vector(), self.H_gradm)
         
         return self.H_gradm.array()/self.nodal_volume_S3
         
