@@ -71,6 +71,7 @@ class MultiDomainTest(object):
         assert np.allclose(sum(E_domains.values()), E_total, atol=0, rtol=1e-12)
 
 
+@pytest.mark.slow
 def test_energies_in_separated_subdomains(tmpdir):
     """
     Create a mesh with two subdomains. For each energy class compute the energy
