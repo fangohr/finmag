@@ -3,6 +3,7 @@ import numpy as np
 import dolfin as df
 import finmag.util.consts as consts
 from aeon import default_timer, mtimed
+from finmag.field import Field
 from finmag.physics.effective_field import EffectiveField
 from finmag.native import llg as native_llg
 from finmag.util import helpers
@@ -47,7 +48,7 @@ class LLG(object):
         self.unit_length = unit_length
         self.do_slonczewski = False
         self.do_zhangli = False
-        self.effective_field = EffectiveField(S3, self._m, self.Ms, self.unit_length)
+        self.effective_field = EffectiveField(S3, self._m_field, self.Ms, self.unit_length)
         self.Volume = None  # will be computed on demand, and carries volume of the mesh
 
     def set_default_values(self):
@@ -60,11 +61,7 @@ class LLG(object):
         #               0.1e12 1/s is the value used by default in nmag 0.2
         self._Ms_dg = df.Function(self.DG)
         self.Ms = 8.6e5  # A/m saturation magnetisation
-        self._m = df.Function(self.S3)
-        # Arguments to _m.rename() below: (new_short_name, new_long_name).
-        # These get displayed e.g. in Paraview when loading an
-        # exported VTK file.
-        self._m.rename("m", "magnetisation")
+        self._m_field = Field(self.S3, name='m')
         self.pins = []  # nodes where the magnetisation gets pinned
 
         self._dmdt = df.Function(self.S3)
@@ -80,7 +77,7 @@ class LLG(object):
 
         """
         if len(nodes) > 0:
-            nb_nodes_mesh = len(self._m.vector().array()) / 3
+            nb_nodes_mesh = len(self._m_field.get_numpy_array_debug()) / 3
             if min(nodes) >= 0 and max(nodes) < nb_nodes_mesh:
                 self._pins = np.array(nodes, dtype="int")
             else:
@@ -141,13 +138,13 @@ class LLG(object):
     @property
     def m(self):
         """The unit magnetisation."""
-        return self._m.vector().array()
+        raise RuntimeError("DON'T USE llg.m UNTIL FURTHER NOTICE!!!!")
     
-    @m.setter
-    def m(self, value):
-        # Not enforcing unit length here, as that is better done
-        # once at the initialisation of m.
-        self._m.vector().set_local(value)
+    # @m.setter
+    # def m(self, value):
+    #     # Not enforcing unit length here, as that is better done
+    #     # once at the initialisation of m.
+    #     self._m.vector().set_local(value)
 
     @property
     def dmdt(self):
@@ -157,14 +154,12 @@ class LLG(object):
     @property
     def sundials_m(self):
         """The unit magnetisation."""
-        return self._m.vector().array()
+        return self._m_field.get_numpy_array_debug()
     
     @sundials_m.setter
     def sundials_m(self, value):
         # used to copy back from sundials cvode
-        self._m.vector()[:] = value
-        
-    
+        self._m_field.set_with_numpy_array_debug(value)
 
     def m_average_fun(self,dx=df.dx):
         """
@@ -173,12 +168,13 @@ class LLG(object):
 
         """
 
-        mx = df.assemble(self._Ms_dg * df.dot(self._m, df.Constant([1, 0, 0])) * dx)
-        my = df.assemble(self._Ms_dg * df.dot(self._m, df.Constant([0, 1, 0])) * dx)
-        mz = df.assemble(self._Ms_dg * df.dot(self._m, df.Constant([0, 0, 1])) * dx)
-        volume = df.assemble(self._Ms_dg * dx)
-
-        return np.array([mx, my, mz]) / volume
+        # mx = df.assemble(self._Ms_dg * df.dot(self._m, df.Constant([1, 0, 0])) * dx)
+        # my = df.assemble(self._Ms_dg * df.dot(self._m, df.Constant([0, 1, 0])) * dx)
+        # mz = df.assemble(self._Ms_dg * df.dot(self._m, df.Constant([0, 0, 1])) * dx)
+        # volume = df.assemble(self._Ms_dg * dx)
+        # 
+        # return np.array([mx, my, mz]) / volume
+        return self._m_field.average(dx=dx)
     m_average=property(m_average_fun)
 
 
@@ -197,11 +193,11 @@ class LLG(object):
         reasons and because the attribute m doesn't normalise the vector.
 
         """
-        self.m = helpers.vector_valued_function(value, self.S3, normalise=normalise, **kwargs).vector().array()
+        self._m_field.set_with_numpy_array_debug(helpers.vector_valued_function(value, self.S3, normalise=normalise, **kwargs).vector().array())
 
 
     def solve_for(self, m, t):
-        self.m = m
+        self._m_field.set_with_numpy_array_debug(m)
         value = self.solve(t)
         return value
 
@@ -214,7 +210,7 @@ class LLG(object):
         # Use the same characteristic time as defined by c
         char_time = 0.1 / self.c
         # Prepare the arrays in the correct shape
-        m = self.m
+        m = self._m_field.get_numpy_array_debug()
         m.shape = (3, -1)
 
         dmdt = np.zeros(m.shape)
@@ -262,7 +258,7 @@ class LLG(object):
         # need to be present because the function must have the correct signature
         # when it is passed to set_spils_preconditioner() in the cvode class.
         if not jok:
-            self.m = m
+            self._m_field.set_with_numpy_array_debug(m)
             self._reuse_jacobean = True
 
         return 0, not jok
@@ -346,12 +342,12 @@ class LLG(object):
         The actual implementation of the jacobian-times-vector product is in src/llg/llg.cc,
         function calc_llg_jtimes(...), which in turn makes use of CVSpilsJacTimesVecFn in CVODE.
         """
-        assert m.shape == self.m.shape
+        assert m.shape == self._m_field.get_numpy_array_debug().shape
         assert mp.shape == m.shape
         assert tmp.shape == m.shape
 
         # First, compute the derivative H' = dH_eff/dt
-        self.m = mp
+        self._m_field.set_with_numpy_array_debug(mp)
         Hp = tmp.view()
         Hp[:] = self.effective_field.compute_jacobian_only(t)
 
@@ -468,7 +464,7 @@ class LLG(object):
     
     def compute_gradient_field(self):
 
-        self.gradM.mult(self._m.vector(), self.H_gradm)
+        self.gradM.mult(self._m_field.f.vector(), self.H_gradm)
         
         return self.H_gradm.array()/self.nodal_volume_S3
     

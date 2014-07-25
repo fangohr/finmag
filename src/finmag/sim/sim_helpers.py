@@ -83,7 +83,7 @@ def save_restart_data(sim, filename=None):
     create_non_existing_parent_directories(filename)
 
     np.savez_compressed(filename,
-        m=sim.integrator.llg.m,
+        m=sim.integrator.llg._m_field.get_numpy_array_debug(),
         stats=integrator_stats,
         simtime=simtime,
         datetime=datetimetuple,
