@@ -141,6 +141,17 @@ class Field(object):
         if normalised:
             self.normalise()
 
+    def set_with_numpy_array_debug(self, value, normalised=False):
+        """ONLY for debigging"""
+        self.f.vector().set_local(value)
+
+        if normalised:
+            self.normalise()
+
+    def get_numpy_array_debug(self):
+        """ONLY for debugging"""
+        return self.f.vector().array()
+
     def normalise(self):
         """
         Normalise the vector field so that the norm=1.
