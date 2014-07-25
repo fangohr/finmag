@@ -9,7 +9,7 @@ namespace dolfin
   {
   public:
     Foo();
-    void bar(const Function& u);
+    void foo(const Function& u);
   };
 }
 #endif
