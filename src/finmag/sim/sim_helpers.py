@@ -240,9 +240,9 @@ def skyrmion_number(self):
     """
 
     if self.mesh.topology().dim() == 3:
-        m = get_function_on_top_surface(mesh=self.mesh, dfFunction=self.llg._m)
+        m = get_function_on_top_surface(mesh=self.mesh, dfFunction=self.m_field.f)
     else:
-        m = self.llg._m
+        m = self.m_field.f
 
     integrand = -0.25 / np.pi * df.dot(m, df.cross(df.Dx(m, 0),
                                                 df.Dx(m, 1)))
@@ -257,9 +257,9 @@ def skyrmion_number_density_function(self):
     probed to determine the local nature of the skyrmion number.
     """
 
-    integrand = -0.25 / np.pi * df.dot(self.llg._m,
-                                       df.cross(df.Dx(self.llg._m, 0),
-                                                df.Dx(self.llg._m, 1)))
+    integrand = -0.25 / np.pi * df.dot(self.m_field.f,
+                                       df.cross(df.Dx(self.m_field.f, 0),
+                                                df.Dx(self.m_field.f, 1)))
 
     # Build the function space of the mesh nodes.
     dofmap = self.S3.dofmap()
