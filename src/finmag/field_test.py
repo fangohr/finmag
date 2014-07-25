@@ -97,7 +97,6 @@ class TestField(object):
             field = Field(functionspace, value, normalised, name, unit)
 
             assert field.functionspace == functionspace
-            assert field.normalised is True
             assert field.name == name
             assert field.unit == unit
 
@@ -454,7 +453,7 @@ class TestField(object):
 
             values = field.coords_and_values()[1]  # Ignore coordinates.
 
-            # Check the comonents of vector field.
+            # Check the components of vector field.
             norm_exact = (value[0]**2 + value[1]**2)**0.5
             normalised_c1 = value[0] / norm_exact
             normalised_c2 = value[1] / norm_exact
@@ -472,7 +471,7 @@ class TestField(object):
 
             values = field.coords_and_values()[1]  # Ignore coordinates.
 
-            # Check the comonents of vector field.
+            # Check the components of vector field.
             norm_exact = (value[0]**2 + value[1]**2 + value[2]**2)**0.5
             normalised_c1 = value[0] / norm_exact
             normalised_c2 = value[1] / norm_exact
@@ -492,7 +491,7 @@ class TestField(object):
 
             values = field.coords_and_values()[1]  # Ignore coordinates.
 
-            # Check the comonents of vector field.
+            # Check the components of vector field.
             norm_exact = (value[0]**2 + value[1]**2 + value[2]**2 +
                           value[3]**2)**0.5
             normalised_c1 = value[0] / norm_exact
@@ -528,6 +527,11 @@ class TestField(object):
         """Test computing the scalar field average."""
         # Different expressions for setting the scalar field.
         # All expressions set the field with same average value.
+
+
+        # TODO: Add test for computing average on different mesh regions.
+
+
         expressions = [df.Constant(5),
                        df.Expression('10*x[0]'),
                        lambda x:10*x[0]]

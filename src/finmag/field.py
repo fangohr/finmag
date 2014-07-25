@@ -141,11 +141,16 @@ class Field(object):
         if normalised:
             self.normalise()
 
-    def set_with_numpy_array(self, value, normalised=False):
+    def set_with_numpy_array_debug(self, value, normalised=False):
+        """ONLY for debigging"""
         self.f.vector().set_local(value)
 
         if normalised:
             self.normalise()
+
+    def get_numpy_array_debug(self):
+        """ONLY for debugging"""
+        return self.f.vector().array()
 
     def normalise(self):
         """
@@ -222,7 +227,7 @@ class Field(object):
             raise NotImplementedError("method {} unknown".format(method))
 
 
-    def average(self):
+    def average(self, dx=df.dx):
         """
         Return the spatial field average.
 
@@ -232,18 +237,18 @@ class Field(object):
         """
         # Compute the mesh "volume". For 1D mesh "volume" is the length and
         # for 2D mesh is the area of the mesh.
-        volume = df.assemble(df.Constant(1) * df.dx(self.mesh()))
+        volume = df.assemble(df.Constant(1) * dx(self.mesh()))
 
         # Scalar field.
         if isinstance(self.functionspace, df.FunctionSpace):
-            return df.assemble(self.f * df.dx) / volume
+            return df.assemble(self.f * dx) / volume
 
         # Vector field.
         elif isinstance(self.functionspace, df.VectorFunctionSpace):
             f_average = []
             # Compute the average for every vector component independently.
             for i in xrange(self.value_dim()):
-                f_average.append(df.assemble(self.f[i] * df.dx))
+                f_average.append(df.assemble(self.f[i] * dx))
 
             return np.array(f_average) / volume
 
