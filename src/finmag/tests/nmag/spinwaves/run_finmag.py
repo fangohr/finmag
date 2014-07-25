@@ -34,7 +34,7 @@ def run_simulation():
            * pow(cos(pi * x[1] * pow(10, 9) / 6), 3)",
         "0"))
 
-    m = llg.m
+    m = llg.m_numpy
     for i in xrange(nb_nodes):
         x, y, z = mesh.coordinates()[i]
         mx = 1; my = 0; mz = 0;
@@ -42,14 +42,14 @@ def run_simulation():
             pass
         else:
             m[i] = mx; m[i+nb_nodes] = my; m[i+2*nb_nodes] = mz;
-    llg.m = m
+    llg.m_field.set_with_numpy_array_debug(m)
 
     llg_wrap = lambda t, y: llg.solve_for(y, t)
     t0 = 0
     dt = 0.05e-12
     t1 = 10e-12
     r = ode(llg_wrap).set_integrator("vode", method="bdf", rtol=1e-5, atol=1e-5)
-    r.set_initial_value(llg.m, t0)
+    r.set_initial_value(llg.m_numpy, t0)
 
     fh = open(os.path.join(MODULE_DIR, "averages.txt"), "w")
     while r.successful() and r.t <= t1:
