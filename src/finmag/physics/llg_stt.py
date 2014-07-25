@@ -4,6 +4,7 @@ import inspect
 from aeon import default_timer
 import finmag.util.consts as consts
 
+from finmag.field import Field
 from finmag.util import helpers
 from finmag.physics.effective_field import EffectiveField
 from finmag.util.meshes import nodal_volume
@@ -33,6 +34,7 @@ class LLG_STT(object):
         # These get displayed e.g. in Paraview when loading an
         # exported VTK file.
         self._m.rename("m", "magnetisation")
+        self._m_field = Field(self.S3, name='m')
         
         self._delta_m = df.Function(self.S3)
         
@@ -44,7 +46,7 @@ class LLG_STT(object):
         self.dm_dt = np.zeros(2*self.nxyz) #magnetisation and delta_m
         
         self.set_default_values()
-        self.effective_field = EffectiveField(self.S3, self._m, self.Ms, self.unit_length)
+        self.effective_field = EffectiveField(self.S3, self._m_field, self.Ms, self.unit_length)
 
         self._t = 0
         
@@ -151,6 +153,7 @@ class LLG_STT(object):
         # Not enforcing unit length here, as that is better done
         # once at the initialisation of m.
         self._m.vector()[:] = value
+        self._m_field.set_with_numpy_array_debug(value)
         self.dy_m.shape=(2,-1)
         self.dy_m[0][:]=value
         self.dy_m.shape=(-1,)
@@ -166,6 +169,7 @@ class LLG_STT(object):
         self.dy_m[:] = value[:]
         self.dy_m.shape=(2,-1)
         self._m.vector()[:]=self.dy_m[0][:]
+        self._m_field.set_with_numpy_array_debug(self.dy_m[0][:])
         self.dy_m.shape=(-1,)
         
     def m_average_fun(self,dx=df.dx):
@@ -264,6 +268,7 @@ class LLG_STT(object):
         
         y.shape=(2,-1)
         self._m.vector().set_local(y[0])
+        self._m_field.set_with_numpy_array_debug(y[0])
         self._delta_m.vector().set_local(y[1])
         y.shape=(-1,)
 
