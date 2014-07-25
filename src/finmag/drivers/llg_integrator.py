@@ -1,4 +1,5 @@
 import logging
+from finmag.field import Field
 from finmag.drivers.sundials_integrator import SundialsIntegrator
 from finmag.drivers.scipy_integrator import ScipyIntegrator
 
@@ -16,12 +17,14 @@ def llg_integrator(llg, m0, backend="sundials", **kwargs):
     #           simulation class.
     #             -- Hans, 17/12/2012
     #
+    assert isinstance(m0, Field)
+
     log.debug("Creating integrator with backend {}.".format(backend))
     if kwargs != {}:
         log.debug("llg_integrator: kwds = %s" % kwargs)
     if backend == "scipy":
-        return ScipyIntegrator(llg, m0, **kwargs)
+        return ScipyIntegrator(llg, m0.get_numpy_array_debug(), **kwargs)
     elif backend == "sundials":
-        return SundialsIntegrator(llg, m0, **kwargs)
+        return SundialsIntegrator(llg, m0.get_numpy_array_debug(), **kwargs)
     else:
         raise ValueError("backend must be either scipy or sundials")
