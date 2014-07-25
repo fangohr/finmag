@@ -48,7 +48,7 @@ class LLG(object):
         self.unit_length = unit_length
         self.do_slonczewski = False
         self.do_zhangli = False
-        self.effective_field = EffectiveField(S3, self._m, self.Ms, self.unit_length)
+        self.effective_field = EffectiveField(S3, self._m_field.f, self.Ms, self.unit_length)
         self.Volume = None  # will be computed on demand, and carries volume of the mesh
 
     def set_default_values(self):
@@ -82,7 +82,7 @@ class LLG(object):
 
         """
         if len(nodes) > 0:
-            nb_nodes_mesh = len(self._m.vector().array()) / 3
+            nb_nodes_mesh = len(self._m_field.get_numpy_array_debug()) / 3
             if min(nodes) >= 0 and max(nodes) < nb_nodes_mesh:
                 self._pins = np.array(nodes, dtype="int")
             else:
@@ -160,7 +160,7 @@ class LLG(object):
     @property
     def sundials_m(self):
         """The unit magnetisation."""
-        return self._m.vector().array()
+        return self._m_field.get_numpy_array_debug()
     
     @sundials_m.setter
     def sundials_m(self, value):
@@ -176,12 +176,13 @@ class LLG(object):
 
         """
 
-        mx = df.assemble(self._Ms_dg * df.dot(self._m, df.Constant([1, 0, 0])) * dx)
-        my = df.assemble(self._Ms_dg * df.dot(self._m, df.Constant([0, 1, 0])) * dx)
-        mz = df.assemble(self._Ms_dg * df.dot(self._m, df.Constant([0, 0, 1])) * dx)
-        volume = df.assemble(self._Ms_dg * dx)
-
-        return np.array([mx, my, mz]) / volume
+        # mx = df.assemble(self._Ms_dg * df.dot(self._m, df.Constant([1, 0, 0])) * dx)
+        # my = df.assemble(self._Ms_dg * df.dot(self._m, df.Constant([0, 1, 0])) * dx)
+        # mz = df.assemble(self._Ms_dg * df.dot(self._m, df.Constant([0, 0, 1])) * dx)
+        # volume = df.assemble(self._Ms_dg * dx)
+        # 
+        # return np.array([mx, my, mz]) / volume
+        return self._m.average(dx=dx)
     m_average=property(m_average_fun)
 
 
@@ -219,7 +220,7 @@ class LLG(object):
         # Use the same characteristic time as defined by c
         char_time = 0.1 / self.c
         # Prepare the arrays in the correct shape
-        m = self._m.vector().array()
+        m = self._m_field.get_numpy_array_debug()
         m.shape = (3, -1)
 
         dmdt = np.zeros(m.shape)
@@ -352,7 +353,7 @@ class LLG(object):
         The actual implementation of the jacobian-times-vector product is in src/llg/llg.cc,
         function calc_llg_jtimes(...), which in turn makes use of CVSpilsJacTimesVecFn in CVODE.
         """
-        assert m.shape == self._m.vector().array().shape
+        assert m.shape == self._m_field.get_numpy_array_debug().shape
         assert mp.shape == m.shape
         assert tmp.shape == m.shape
 
@@ -475,7 +476,7 @@ class LLG(object):
     
     def compute_gradient_field(self):
 
-        self.gradM.mult(self._m.vector(), self.H_gradm)
+        self.gradM.mult(self._m_field.f.vector(), self.H_gradm)
         
         return self.H_gradm.array()/self.nodal_volume_S3
     
