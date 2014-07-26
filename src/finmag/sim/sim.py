@@ -6,6 +6,8 @@ import logging
 import itertools
 import dolfin as df
 import numpy as np
+import cProfile
+import pstats
 from aeon import mtimed
 from finmag.physics.llg import LLG
 from finmag.physics.llg_stt import LLG_STT
@@ -1142,6 +1144,35 @@ class Simulation(object):
 
         """
         self.llg.use_zhangli(J_profile=J_profile, P=P, beta=beta, using_u0=using_u0)
+
+    def profile(self, statement, filename=None, N=20, sort='cumulative'):
+        """
+        Profile execution of the given statement and display timing
+        results of the `N` slowest functions. The statement should
+        be in exactly the same form as if the function was called on
+        the simulation object directly. Examples:
+
+            sim.profile('relax()')
+
+            sim.profile('run_until(1e-9)')
+
+        The profiling results are saved to a file with name `filename`
+        (default: 'SIMULATION_NAME.prof'). You can call 'runsnake' on
+        the generated file to visualise the profiled results in a
+        graphical way.
+
+        """
+        if filename is None:
+            filename = self.name + '.prof'
+
+        cProfile.run('sim.' + statement, filename=filename, sort=sort)
+        p = pstats.Stats(filename)
+        p.sort_stats(sort).print_stats(N)
+
+        log.info("Saved profiling results to file '{filename}'. "
+                 "Call 'runsnake {filename}' to visualise the data "
+                 "in a graphical way.".format(filename=filename))
+
 
 def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sundials",
              A=None, K1=None, K1_axis=None, H_ext=None, demag_solver='FK', demag_solver_type=None,
