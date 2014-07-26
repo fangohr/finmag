@@ -1779,3 +1779,22 @@ def test_plot_dynamics(tmpdir):
     sim.run_until(5e-11)
     sim.plot_dynamics(figsize=(16, 3), outfile='dynamics_2d.png')
     sim.plot_dynamics_3d(figsize=(5, 5), outfile='dynamics_3d.png')
+
+
+# XXX TODO: Unfortunately, calling sim.profile from within a py.test
+# environment doesn't work because the namespace is not exposed to
+# cProfile in the usual way. Is there a way to work around this?
+@pytest.mark.xfail
+def test_profile(tmpdir):
+    """
+    Check whether we can call sim.profile() and whether it
+    saves profiling data to th expected files.
+
+    """
+    os.chdir(str(tmpdir))
+    sim = barmini()
+    sim.profile('run_until(1e-12)')
+    os.path.exists('barmini.prof')
+
+    sim.profile('relax()', filename='foobar.prof', sort=-1, N=5)
+    os.path.exists('foobar.prof')
