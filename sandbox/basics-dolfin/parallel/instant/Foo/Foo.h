@@ -12,7 +12,7 @@ namespace dolfin
     Foo();
     void foo(const Function& u);
     void foo2(const GenericVector& v);
-    void norm(const GenericVector& v, const GenericVector& norm);
+    void norm(const GenericVector& v, GenericVector& norm);
   };
 }
 #endif
