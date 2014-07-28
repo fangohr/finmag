@@ -20,12 +20,16 @@ void Foo::foo2(const GenericVector& v)
     std::cout << "I was successfully passed a vector." << std::endl;
 }
 
-void Foo::norm(const GenericVector& v, const GenericVector& norm)
+// write euclidean norm of `v` into `norm`
+void Foo::norm(const GenericVector& v, GenericVector& norm)
 {
-    std::vector<double> 
+    std::vector<double> local_v, local_norm;
+    v.get_local(local_v);
+    norm.get_local(local_norm);
 
-    for(size_t i=0; i < norm.size(); ++i) {
-        norm[i]
-        
-    }
+    //for(size_t i=0; i < norm.size(); ++i) {
+    // TODO: compute norm
+    //}
+
+    norm.set_local(local_norm);
 }
