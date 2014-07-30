@@ -30,6 +30,9 @@ then
     # Extract the zip file
     unzip -d ${PACKER_INSTALL_DIR} ${PACKER_INSTALL_DIR}/packer-${PACKER_VERSION}.zip
 
+    # Remove zip file
+    rm ${PACKER_INSTALL_DIR}/packer-${PACKER_VERSION}.zip
+
     echo
     echo "Successfully installed packer in the directory '${PACKER_INSTALL_DIR}'."
     echo "To use it, add this directory to your PATH variable by executing"
