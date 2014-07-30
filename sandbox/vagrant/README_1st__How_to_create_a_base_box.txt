@@ -22,6 +22,11 @@ Here are the steps:
 
        ./install_packer.sh
 
+   All the script does is download a zip file containing packer and extract
+   it into the subdirectory called ./packer of the current directory (the
+   installation location can be changed by setting the environment variable
+   PACKER_INSTALL_DIR).
+
 2) Download 'bento' [3] by running the following command:
 
        git clone https://github.com/opscode/bento.git
