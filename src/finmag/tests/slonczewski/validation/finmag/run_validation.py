@@ -29,7 +29,7 @@ def run_simulation():
     theta = 40.0 * pi/180  # polarisation direction
     phi = pi/2
     p = (sin(theta)*cos(phi), sin(theta)*sin(phi), cos(theta))
-    sim.set_stt(current_density=J, polarisation=0.4, thickness=H, direction=p, epsilonprime=1)
+    sim.set_stt(current_density=J, polarisation=0.4, thickness=H, direction=p)
 
     sim.schedule("save_averages", every=5e-12)
     sim.run_until(10e-9)
