@@ -4,14 +4,14 @@
 namespace dolfin { namespace finmag {
     class Equation {
         public:
-            Equation(const GenericVector& magnetisation,
-                     const GenericVector& effective_field,
-                     GenericVector& derivative);
+            Equation(GenericVector const& m,
+                     GenericVector const& H,
+                     GenericVector& dmdt);
             void solve();
 
         private:
-            const GenericVector& m;
-            const GenericVector& H;
-            GenericVector& dmdt;
+            GenericVector const& magnetisation;
+            GenericVector const& effective_field;
+            GenericVector& derivative;
     };
 }}

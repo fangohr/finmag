@@ -1,3 +1,5 @@
+#include "terms.h"
+
 /* Compute the damping for one node. */
 void damping(double const& alpha, double const& gamma,
              double const& m0, double const& m1, double const& m2,
