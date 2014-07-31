@@ -11,20 +11,29 @@ void check_size(const dolfin::GenericVector& v, const dolfin::GenericVector& w, 
 } 
 
 namespace dolfin { namespace finmag {
-    Equation::Equation(const GenericVector& magnetisation,
-                       const GenericVector& effective_field,
-                       GenericVector& derivative) :
-        m(magnetisation),
-        H(effective_field),
-        dmdt(derivative)
+    Equation::Equation(GenericVector const& m,
+                       GenericVector const& H,
+                       GenericVector& dmdt) :
+        magnetisation(m),
+        effective_field(H),
+        derivative(dmdt)
     {
-        check_size(m, H, "m and H");
-        check_size(m, dmdt, "m and dmdt");
+        check_size(magnetisation, effective_field, "m and H");
+        check_size(magnetisation, derivative, "m and dmdt");
     }
 
     /* Solve the equation for dm/dt, writing the solution into the vector
      * that was passed during initialisation of the class. */
     void Equation::solve() {
-        std::cout << "Soooolving." << std::endl;
+        std::vector<double> m, H, dmdt;
+        magnetisation.get_local(m);
+        effective_field.get_local(H);
+        derivative.get_local(dmdt);
+
+        for (std::vector<double>::size_type i=0; i < m.size(); i += 3) {
+            damping(1, 1, m[i], m[i+1], m[i+2], H[i], H[i+1], H[i+2], dmdt[i], dmdt[i+1], dmdt[i+2]);
+        }
+
+        derivative.set_local(dmdt);
     }
 }}

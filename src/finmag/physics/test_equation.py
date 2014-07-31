@@ -23,3 +23,17 @@ def test_new_equation_wrong_size():
     with pytest.raises(StandardError):
         equation = equation_module.Equation(m.vector(), Haha.vector(), dmdt.vector())
 
+
+def test_damping():
+    mesh = df.UnitIntervalMesh(2)
+    V = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
+    m = df.Function(V)
+    m.assign(df.Constant((1, 2, 3)))
+    H = df.Function(V)
+    H.assign(df.Constant((4, 5, 6)))
+    dmdt = df.Function(V)
+    equation = equation_module.Equation(m.vector(), H.vector(), dmdt.vector())
+    equation.solve()
+    print dmdt.vector().array()  # FIXME: all 0
+    assert False
+
