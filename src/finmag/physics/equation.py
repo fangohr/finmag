@@ -9,6 +9,7 @@ whatever, just straight up solving of the equation.
 
 """
 import os
+import dolfin as df
 
 with open("native/equation.h", "r") as header:
     code = header.read()
@@ -18,15 +19,3 @@ equation_module = df.compile_extension_module(
         source_directory="native",
         sources=["equation.cpp"],
         include_dirs=[".", os.path.abspath("native")],)
-
-# for testing purposes
-
-import numpy as np
-import dolfin as df
-
-mesh = df.UnitIntervalMesh(2)
-V = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
-m = df.Function(V)
-dmdt = df.Function(V)
-equation = equation_module.Equation(m.vector(), dmdt.vector())
-equation.solve()
