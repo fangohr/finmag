@@ -38,7 +38,17 @@ def test_new_equation_wrong_size(setup):
         equation = eq.Equation(m.vector(), H_W.vector(), dmdt.vector())
 
 
-def _test_damping(setup):
+def test_regression_vector_wrong_state(setup):
+    mesh, V, m, H, dmdt = setup
+    equation = eq.Equation(m.vector(), H.vector(), dmdt.vector())
+    equation.solve()
+    # the following operation would fail with PETSc error code 73
+    # saying the vector is in wrong state. An "apply" call in the C++
+    # code fixes this.
+    operation = dmdt.vector() - m.vector()
+
+
+def test_damping(setup):
     mesh, V, m, H, dmdt = setup
     equation = eq.Equation(m.vector(), H.vector(), dmdt.vector())
     equation.solve()

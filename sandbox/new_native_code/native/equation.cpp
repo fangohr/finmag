@@ -35,5 +35,6 @@ namespace dolfin { namespace finmag {
         }
 
         derivative.set_local(dmdt);
+        derivative.apply("");
     }
 }}
