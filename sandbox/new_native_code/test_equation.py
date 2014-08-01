@@ -44,6 +44,7 @@ def test_new_equation_wrong_size(setup):
 def test_regression_vector_wrong_state(setup):
     mesh, V, alpha, W, m, H, dmdt = setup
     equation = eq.Equation(m.vector(), H.vector(), dmdt.vector())
+    equation.set_alpha(alpha.vector())
     equation.solve()
     # the following operation would fail with PETSc error code 73
     # saying the vector is in wrong state. An "apply" call in the C++
@@ -54,16 +55,24 @@ def test_regression_vector_wrong_state(setup):
 def test_damping(setup):
     mesh, V, alpha, W, m, H, dmdt = setup
     equation = eq.Equation(m.vector(), H.vector(), dmdt.vector())
+    equation.set_alpha(alpha.vector())
     equation.solve()
     dmdt_expected = df.Function(W)
     dmdt_expected.assign(df.Constant((0, 1, 0)))
     assert same(dmdt.vector(), dmdt_expected.vector())
 
 
-def test_alpha(setup):
+def test_alpha_not_set(setup):
     mesh, V, alpha, W, m, H, dmdt = setup
     equation = eq.Equation(m.vector(), H.vector(), dmdt.vector())
-    assert equation.get_alpha() is None  # does not crash
+    assert equation.get_alpha() is None  # doesn't crash
+    with pytest.raises(RuntimeError):
+        equation.solve()
+
+
+def test_alpha_keeps_track_of_change(setup):
+    mesh, V, alpha, W, m, H, dmdt = setup
+    equation = eq.Equation(m.vector(), H.vector(), dmdt.vector())
     equation.set_alpha(alpha.vector())
     assert same(alpha.vector(), equation.get_alpha())
     # since alpha and Equation::alpha are fundamentally the same object
