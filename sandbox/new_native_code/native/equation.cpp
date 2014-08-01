@@ -20,7 +20,14 @@ namespace dolfin { namespace finmag {
     {
         check_size(magnetisation, effective_field, "m and H");
         check_size(magnetisation, derivative, "m and dmdt");
+
+        std::shared_ptr<GenericVector> alpha(nullptr);
     }
+
+    std::shared_ptr<GenericVector> Equation::get_alpha() const { return alpha; } 
+    void Equation::set_alpha(std::shared_ptr<GenericVector> const& value) { alpha = value; }
+    double Equation::get_gamma() const { return gamma; }
+    void Equation::set_gamma(double value) { gamma = value; }
 
     /* Solve the equation for dm/dt, writing the solution into the vector
      * that was passed during initialisation of the class. */
