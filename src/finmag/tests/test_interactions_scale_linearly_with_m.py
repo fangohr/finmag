@@ -2,6 +2,7 @@
 
 import dolfin as df
 import numpy as np
+from finmag.field import Field
 import pytest
 from finmag.energies import Exchange, UniaxialAnisotropy, Zeeman, Demag, DMI
 
@@ -17,10 +18,10 @@ randvec3 = np.random.random_sample(3*N)
 
 
 def compute_field_for_linear_combination(EnergyClass, init_args, a, b, c):
-    v = df.Function(V)
-    v.vector()[:] = a * randvec1 + b * randvec2 + c * randvec3
+    v = Field(V)
+    v.set_with_numpy_array_debug(a * randvec1 + b * randvec2 + c * randvec3)
     e = EnergyClass(**init_args)
-    e.setup(V, v, Ms=8e5, unit_length=1e-9)
+    e.setup(v, Ms=8e5, unit_length=1e-9)
     return e.compute_field()
 
 
