@@ -61,8 +61,8 @@ class CubicAnisotropy(EnergyBase):
         
 
     @mtimed
-    def setup(self, S3, m, Ms, unit_length=1):
-        dofmap = S3.dofmap()
+    def setup(self, m, Ms, unit_length=1):
+        dofmap = m.functionspace.dofmap()
         S1 = df.FunctionSpace(S3.mesh(), "Lagrange", 1, constrained_domain=dofmap.constrained_domain)
         
         self.K1_dg = helpers.scalar_valued_function(self.K1_input, S1)
