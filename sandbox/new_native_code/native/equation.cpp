@@ -34,14 +34,23 @@ namespace dolfin { namespace finmag {
      * that was passed during initialisation of the class. */
     void Equation::solve() {
         if (!alpha) throw std::runtime_error("alpha was not set");
+        if (gamma == 0) throw std::runtime_error("gamma was not set");
 
-        std::vector<double> m, H, dmdt;
+        std::vector<double> a, m, H, dmdt;
+        alpha->get_local(a);
         magnetisation.get_local(m);
         effective_field.get_local(H);
         derivative.get_local(dmdt);
 
-        for (std::vector<double>::size_type i=0; i < m.size(); i += 3) {
-            damping(1, 1, m[i], m[i+1], m[i+2], H[i], H[i+1], H[i+2], dmdt[i], dmdt[i+1], dmdt[i+2]);
+        std::vector<double>::size_type x=0, y=0, z=0;
+        /* When we iterate over the nodes the iteration counter can be used to
+         * access the value of scalar fields, since there is exactly one degree
+         * of freedom per node. Vector fields have 3 degrees of freedom per node
+         * and we thus multiply the iteration counter by 3 to get the first
+         * component of the vector fields (which is the x-component). */
+        for (std::vector<double>::size_type node=0; node < a.size(); ++node) {
+            x = 3 * node; y = x + 1; z = x + 2;
+            damping(a[node], gamma, m[x], m[y], m[z], H[x], H[y], H[z], dmdt[x], dmdt[y], dmdt[z]);
         }
 
         derivative.set_local(dmdt);

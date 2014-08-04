@@ -25,6 +25,7 @@ def same(v, w):
     """
     diff = v - w
     diff.abs()
+    print "v = {}\nw = {}\ndiff = {}".format(v.array(), w.array(), diff.array())
     return diff.sum() == 0
 
 
@@ -45,6 +46,7 @@ def test_regression_vector_wrong_state(setup):
     mesh, V, alpha, W, m, H, dmdt = setup
     equation = eq.Equation(m.vector(), H.vector(), dmdt.vector())
     equation.set_alpha(alpha.vector())
+    equation.set_gamma(1.0)
     equation.solve()
     # the following operation would fail with PETSc error code 73
     # saying the vector is in wrong state. An "apply" call in the C++
@@ -56,9 +58,10 @@ def test_damping(setup):
     mesh, V, alpha, W, m, H, dmdt = setup
     equation = eq.Equation(m.vector(), H.vector(), dmdt.vector())
     equation.set_alpha(alpha.vector())
+    equation.set_gamma(1.0)
     equation.solve()
     dmdt_expected = df.Function(W)
-    dmdt_expected.assign(df.Constant((0, 1, 0)))
+    dmdt_expected.assign(df.Constant((0, 0.5, 0)))
     assert same(dmdt.vector(), dmdt_expected.vector())
 
 
