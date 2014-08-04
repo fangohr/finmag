@@ -3,6 +3,7 @@ import dolfin as df
 from math import pi
 from finmag.energies import DMI, Exchange
 from finmag import Simulation
+from finmag.field import Field
 from finmag.util.helpers import vector_valued_function
 from finmag.util.pbc2d import PeriodicBoundary2D
 
@@ -19,8 +20,8 @@ def test_dmi_uses_unit_length_2dmesh():
 
     energies = []
 
-    # unit_lengths 1e-9 and 1 are common, let's through in an intermediate
-    # length just to challenge the system a little:
+    # unit_lengths 1e-9 and 1 are common, let's throw in an intermediate length
+    # just to challenge the system a little:
     for unit_length in (1, 1e-4, 1e-9):
         radius = 200e-9 / unit_length
         maxh = 5e-9 / unit_length
@@ -36,9 +37,9 @@ def test_dmi_uses_unit_length_2dmesh():
 
         S3 = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
         m_expr = df.Expression(("0", "cos(k * x[0])", "sin(k * x[0])"), k=k)
-        m = df.interpolate(m_expr, S3)
+        m = Field(S3, m_expr, name='m')
         dmi = DMI(D)
-        dmi.setup(S3, m, Ms, unit_length=unit_length)
+        dmi.setup(m, Ms, unit_length=unit_length)
         energies.append(dmi.compute_energy())
 
         H = df.Function(S3)
@@ -72,12 +73,11 @@ def test_dmi_pbc2d():
 
     pbc = PeriodicBoundary2D(mesh)
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, constrained_domain=pbc)
-    expr = df.Expression(("0", "0", "1"))
-
-    m = df.interpolate(expr, S3)
+    m_expr = df.Expression(("0", "0", "1"))
+    m = Field(S3, m_expr, name='m')
 
     dmi = DMI(1)
-    dmi.setup(S3, m, 1)
+    dmi.setup(m, 1)
     field = dmi.compute_field()
 
     assert np.max(field) < 1e-15
@@ -101,7 +101,8 @@ def test_dmi_pbc2d_1D(plot=False):
 
     A = 1.3e-11
     D = 5e-3
-    sim.add(Exchange(A))
+#    sim.add(Exchange(A)) # <!> Uncomment this addition after MB pushes his
+                          #    changes to exchange.
     sim.add(DMI(D))
 
     sim.relax(stopping_dmdt=0.001)
@@ -110,7 +111,7 @@ def test_dmi_pbc2d_1D(plot=False):
         sim.m_field.plot_with_dolfin()
 
     mx = [sim.m_field.probe([x + 0.5, 1])[0] for x in range(20)]
-    
+
     assert np.max(np.abs(mx)) < 1e-6
 
 

@@ -59,7 +59,7 @@ class EffectiveField(object):
                 "exists: {}.".format(interaction.name))
 
         logger.debug("Adding interaction {} to simulation.".format(interaction.name))
-        interaction.setup(self.S3, self.m_field.f, self.Ms, self.unit_length)
+        interaction.setup(self.m_field, self.Ms, self.unit_length)
         self.interactions[interaction.name] = interaction
 
         # automatic connection of TimeZeeman to with_time_update
