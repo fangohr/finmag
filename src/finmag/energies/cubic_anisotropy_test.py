@@ -1,5 +1,6 @@
 import dolfin as df
 import numpy as np
+from finmag.field import Field
 from finmag.energies import CubicAnisotropy
 from finmag.util.meshes import mesh_volume
 import pytest
@@ -30,14 +31,14 @@ def test_cubic_anisotropy_energy():
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
     S1 = df.FunctionSpace(mesh, "Lagrange", 1)
 
-    m = df.Function(S3)
-    m.assign(df.Constant((0, 0, 1)))
+    m = Field(S3)
+    m.set((0, 0, 1))
     
-    Ms_cg = df.Function(S1)
-    Ms_cg.assign(df.Constant(Ms))
+    Ms_cg = Field(S1)
+    Ms_cg.set(Ms)
 
     ca = CubicAnisotropy(u1, u2, K1, K2, K3)
-    ca.setup(S3, m, Ms_cg, unit_length)
+    ca.setup(m, Ms_cg, unit_length)
 
     energy = ca.compute_energy()
     #energy_expected = 8.3e-20  # oommf cubicEight_100pc.mif -> ErFe2.odt
