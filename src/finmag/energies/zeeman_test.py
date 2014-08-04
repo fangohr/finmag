@@ -5,6 +5,7 @@ import pytest
 import os
 import finmag
 import logging
+from finmag.field import Field
 from finmag import sim_with
 from finmag.energies import Zeeman, TimeZeeman, DiscreteTimeZeeman, OscillatingZeeman
 from finmag.util.consts import mu0
@@ -15,8 +16,8 @@ from zeeman import DipolarField
 
 mesh = df.UnitCubeMesh(2, 2, 2)
 S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
-m = df.Function(S3)
-m.assign(df.Constant((1, 0, 0)))
+m = Field(S3)
+m.set(df.Constant((1, 0, 0)))
 Ms = 1
 TOL = 1e-14
 
@@ -69,10 +70,10 @@ def test_compute_energy():
         Helper function to compare the computed energy for a given
         magnetisation with an expected analytical value.
         """
-        m_fun = df.Function(S3)
-        m_fun.assign(df.Constant(m))
+        m_field = Field(S3)
+        m_field.set(df.Constant(m))
         H_ext = Zeeman(H * np.array([1, 0, 0]))
-        H_ext.setup(S3, m_fun, Ms, unit_length=unit_length)
+        H_ext.setup(m_field, Ms, unit_length=unit_length)
 
         E_computed = H_ext.compute_energy()
         assert np.allclose(E_computed, E_expected, atol=0, rtol=1e-12)
@@ -179,10 +180,10 @@ def test_compute_energy_in_regions(tmpdir):
             if theta != None:
                 raise ValueError("Exactly one of m, theta must be given.")
         m = m / np.linalg.norm(m)
-        m_fun = df.Function(S3)
-        m_fun.assign(df.Constant(m))
+        m_field = Field(S3)
+        m_field.set(df.Constant(m))
         H_ext = Zeeman(H * np.array([1, 0, 0]))
-        H_ext.setup(S3, m_fun, Ms, unit_length=unit_length)
+        H_ext.setup(m_field, Ms, unit_length=unit_length)
 
         #E_analytical_1 = -mu0 * Ms * H * volume_1 * cos(theta_rad)
         E_analytical_1 = -mu0 * Ms * H * volume_1 * np.dot(m, [1, 0, 0])
@@ -251,7 +252,7 @@ def test_time_zeeman_init():
 def test_time_dependent_field_update():
     field_expr = df.Expression(("0", "t", "0"), t=0)
     H_ext = TimeZeeman(field_expr)
-    H_ext.setup(S3, m, Ms)
+    H_ext.setup(m, Ms)
 
     assert diff(H_ext, np.array([0, 0, 0])) < TOL
     H_ext.update(1)
@@ -262,7 +263,7 @@ def test_time_dependent_field_switched_off():
     # Check the time update (including switching off) with a varying field
     field_expr = df.Expression(("0", "t", "0"), t=0)
     H_ext = TimeZeeman(field_expr, t_off=1)
-    H_ext.setup(S3, m, Ms)
+    H_ext.setup(m, Ms)
     assert diff(H_ext, np.array([0, 0, 0])) < TOL
     assert(H_ext.switched_off == False)
     H_ext.update(0.9)
@@ -275,7 +276,7 @@ def test_time_dependent_field_switched_off():
     # The same again with a constant field
     a = [42, 0, 5]
     H_ext = TimeZeeman(a, t_off=1)
-    H_ext.setup(S3, m, Ms)
+    H_ext.setup(m, Ms)
     assert diff(H_ext, a) < TOL
     assert(H_ext.switched_off == False)
     H_ext.update(0.9)
@@ -290,7 +291,7 @@ def test_time_dependent_field_switched_off():
 def test_discrete_time_zeeman_updates_in_intervals():
     field_expr = df.Expression(("0", "t", "0"), t=0)
     H_ext = DiscreteTimeZeeman(field_expr, dt_update=2)
-    H_ext.setup(S3, m, Ms)
+    H_ext.setup(m, Ms)
     assert diff(H_ext, np.array([0, 0, 0])) < TOL
     H_ext.update(1)
     assert diff(H_ext, np.array([0, 0, 0])) < TOL  # not yet updating
@@ -315,7 +316,7 @@ def test_discrete_time_zeeman_switchoff_only():
     """
     field_expr = df.Expression(("1", "2", "3"))
     H_ext = DiscreteTimeZeeman(field_expr, dt_update=None, t_off=2)
-    H_ext.setup(S3, m, Ms)
+    H_ext.setup(m, Ms)
     assert diff(H_ext, np.array([1, 2, 3])) < TOL
     assert(H_ext.switched_off == False)
     H_ext.update(1)
@@ -339,7 +340,7 @@ def test_oscillating_zeeman():
     t_off = 10e-9
 
     H_osc = OscillatingZeeman(H0=H, freq=freq, phase=0, t_off=t_off)
-    H_osc.setup(S3, m, Ms)
+    H_osc.setup(m, Ms)
 
     # Check that the field has the original value at the end of the
     # first few cycles.
@@ -359,7 +360,7 @@ def test_oscillating_zeeman():
     # Check that the field values vary sinusoidally as expected
     phase = 0.1e-9
     H_osc = OscillatingZeeman(H0=H, freq=freq, phase=phase, t_off=None)
-    H_osc.setup(S3, m, Ms)
+    H_osc.setup(m, Ms)
     for t in np.linspace(0, 20e-9, 100):
         check_field_at_time(t, H * cos(2 * pi * freq * t + phase))
 
@@ -369,7 +370,8 @@ def test_dipolar_field_class(tmpdir):
     H_dipole = DipolarField(pos=[0, 0, 0], m=[1, 0, 0], magnitude=3e9)
     mesh = df.BoxMesh(-50, -50, -50, 50, 50, 50, 20, 20, 20)
     V = df.VectorFunctionSpace(mesh, 'CG', 1, dim=3)
-    H_dipole.setup(V, df.Constant([1, 0, 0]), Ms=8.6e5, unit_length=1e-9)
+    m_field = Field(V, value=df.Constant((1, 0, 0)))
+    H_dipole.setup(m_field, Ms=8.6e5, unit_length=1e-9)
 
 
 def compute_field_diffs(sim):
