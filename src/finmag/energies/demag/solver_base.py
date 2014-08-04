@@ -1,6 +1,7 @@
 import dolfin as df
 import numpy as np
 from aeon import Timer
+from finmag.field import Field
 from finmag.util import helpers
 import finmag.util.solver_benchmark as bench
 
@@ -19,15 +20,13 @@ demag_timings = Timer()
 
 
 class FemBemDeMagSolver(object):
-    """Base Class for FEM/BEM Demag Solvers containing shared methods
-        for a top level demag solver interface see
-        class Demag in finmag/energies/demag
+    """
+    Base Class for FEM/BEM Demag Solvers containing shared methods. For a top
+    level demag solver interface see class Demag in finmag/energies/demag.
 
         *Arguments*
-        mesh
-            dolfin Mesh object
         m
-            the Dolfin object representing the (unit) magnetisation
+            the finmag object representing the (unit) magnetisation field.
         Ms
             the saturation magnetisation
         parameters
@@ -37,7 +36,7 @@ class FemBemDeMagSolver(object):
         degree
             polynomial degree of the function space
         element
-            finite element type, default is "CG" or Lagrange polynomial.
+            finite element type, default is "CG" or LAgrange polynomial.
         unit_length
             the scale of the mesh, defaults to 1.
         project_method
@@ -50,31 +49,34 @@ class FemBemDeMagSolver(object):
 
     """
 
-    def __init__(self, mesh,m, parameters=None, degree=1, element="CG", project_method='magpar',
-                 unit_length=1, Ms=1.0, bench=False, normalize=True, solver_type=None):
+    def __init__(self, m, parameters=None, degree=1, element="CG",
+                 project_method='magpar', unit_length=1, Ms=1.0, bench=False,
+                 normalize=True, solver_type=None):
+
+        self.m = m
+
         #Problem objects and parameters
         self.name = "Demag"
         self.in_jacobian = False
-        self.mesh = mesh
         self.unit_length = unit_length
         self.degree = degree
         self.bench = bench
         self.parameters = parameters
 
         #This is used in energy density calculations
-        self.mu0 = np.pi*4e-7 # Vs/(Am)
+        self.mu0 = np.pi * 4e-7 # Vs/(Am)
 
         #Mesh Facet Normal
-        self.n = df.FacetNormal(self.mesh)
+        self.n = df.FacetNormal(self.m.mesh())
 
         #Spaces and functions for the Demag Potential
-        self.V = df.FunctionSpace(self.mesh,element,degree)
+        self.V = df.FunctionSpace(self.m.mesh(), element, degree)
         self.v = df.TestFunction(self.V)
         self.u = df.TrialFunction(self.V)
         self.phi = df.Function(self.V)
 
         #Space and functions for the Demag Field
-        self.W = df.VectorFunctionSpace(self.mesh, element, degree, dim=3)
+        self.W = df.VectorFunctionSpace(self.m.mesh(), element, degree, dim=3)
         self.w = df.TrialFunction(self.W)
         self.vv = df.TestFunction(self.W)
         self.H_demag = df.Function(self.W)
@@ -82,20 +84,20 @@ class FemBemDeMagSolver(object):
         #Interpolate the Unit Magentisation field if necessary
         #A try block was not used since it might lead to an unneccessary (and potentially bad)
         #interpolation
-        if isinstance(m, df.Expression) or isinstance(m, df.Constant):
-            self.m = df.interpolate(m,self.W)
+        # if isinstance(m, df.Expression) or isinstance(m, df.Constant):
+        #     self.m = df.interpolate(m,self.W)
 
-        elif isinstance(m,tuple):
-            self.m = df.interpolate(df.Expression(m),self.W)
+        # elif isinstance(m,tuple):
+        #     self.m = df.interpolate(df.Expression(m),self.W)
 
-        elif isinstance(m,list):
-            self.m = df.interpolate(df.Expression(tuple(m)),self.W)
+        # elif isinstance(m,list):
+        #     self.m = df.interpolate(df.Expression(tuple(m)),self.W)
 
-        else:
-            self.m = m
-        #Normalize m (should be normalized anyway).
-        if normalize:
-            self.m.vector()[:] = helpers.fnormalise(self.m.vector().array())
+        # else:
+        #     self.m = m
+        # #Normalize m (should be normalized anyway).
+        # if normalize:
+        #     self.m.vector()[:] = helpers.fnormalise(self.m.vector().array())
 
         self.Ms = Ms
 
@@ -129,7 +131,7 @@ class FemBemDeMagSolver(object):
             raise ValueError("Wrong solver type specified: '{}' (allowed values: 'Krylov', 'LU')".format(solver_type))
 
         #Objects needed for energy density computation
-        self.nodal_vol = df.assemble(self.v*df.dx).array()
+        self.nodal_vol = df.assemble(self.v * df.dx).array()
         self.ED = df.Function(self.V)
 
         #Method to calculate the Demag field from the potential
@@ -186,8 +188,8 @@ class FemBemDeMagSolver(object):
 
         """
         self.H_demag.vector()[:] = self.compute_field()
-        E = -0.5*self.mu0*df.dot(self.H_demag, self.m*self.Ms)*df.dx
-        return df.assemble(E) * self.unit_length**self.mesh.topology().dim()
+        E = -0.5 * self.mu0 * df.dot(self.H_demag, self.m.f * self.Ms) * df.dx
+        return df.assemble(E) * self.unit_length ** self.m.mesh_dim()
 
     def energy_density(self):
         """
@@ -205,9 +207,10 @@ class FemBemDeMagSolver(object):
 
         """
         self.H_demag.vector()[:] = self.compute_field()
-        E = df.dot(-0.5*self.mu0*df.dot(self.H_demag, self.m*self.Ms), self.v)*df.dx
+        E = df.dot(-0.5 * self.mu0 * df.dot(self.H_demag, self.m.f * self.Ms),
+                   self.v) * df.dx
         nodal_E = df.assemble(E).array()
-        return nodal_E/self.nodal_vol
+        return nodal_E / self.nodal_vol
 
     def energy_density_function(self):
         """
@@ -223,7 +226,7 @@ class FemBemDeMagSolver(object):
 
     def build_poisson_matrix(self):
         """assemble a poisson equation 'stiffness' matrix"""
-        a = df.dot(df.grad(self.u),df.grad(self.v))*df.dx
+        a = df.dot(df.grad(self.u), df.grad(self.v)) * df.dx
         return df.assemble(a)
 
     def solve_laplace_inside(self, function, solverparams=None):

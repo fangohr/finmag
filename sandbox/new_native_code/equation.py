@@ -17,5 +17,5 @@ with open("native/equation.h", "r") as header:
 equation_module = df.compile_extension_module(
         code=code,
         source_directory="native",
-        sources=["equation.cpp", "terms.cpp"],
+        sources=["equation.cpp", "terms.cpp", "derivatives.cpp"],
         include_dirs=[".", os.path.abspath("native")],)

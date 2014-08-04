@@ -3,9 +3,10 @@ import pytest
 import dolfin as df
 import numpy as np
 from math import pi
-from finmag.util.meshes import sphere, box
 from finmag.energies.demag.fk_demag import FKDemag
+from finmag.field import Field
 from finmag.util.consts import mu0
+from finmag.util.meshes import sphere, box
 
 radius = 1.0
 maxh = 0.2
@@ -16,10 +17,11 @@ volume = 4 * pi * (radius * unit_length) ** 3 / 3
 def setup_demag_sphere(Ms):
     mesh = sphere(r=radius, maxh=maxh)
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
-    m = df.Function(S3)
-    m.assign(df.Constant((1, 0, 0)))
+    m_function = df.Function(S3)
+    m_function.assign(df.Constant((1, 0, 0)))
+    m = Field(S3, m_function)
     demag = FKDemag()
-    demag.setup(S3, m, Ms, unit_length)
+    demag.setup(m, Ms, unit_length)
     return demag
 
 
@@ -55,18 +57,19 @@ def test_thin_film_argument_saves_time_on_thin_film():
     mesh = box(0, 0, 0, 500, 50, 1, maxh=2.0, directory="meshes")
     unit_length = 1e-9
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
-    m = df.Function(S3)
-    m.assign(df.Constant((0, 0, 1)))
+    m_function = df.Function(S3)
+    m_function.assign(df.Constant((0, 0, 1)))
+    m = Field(S3, m_function)
 
     demag = FKDemag()
-    demag.setup(S3, m, Ms, unit_length)
+    demag.setup(m, Ms, unit_length)
     now = time.time()
     H = demag.compute_field()
     elapsed = time.time() - now
     del(demag)
 
     demag = FKDemag(thin_film=True)
-    demag.setup(S3, m, Ms, unit_length)
+    demag.setup(m, Ms, unit_length)
     now = time.time()
     H = demag.compute_field()
     elapsed_thin_film = time.time() - now
@@ -129,9 +132,10 @@ def test_regression_Ms_numpy_type():
     mesh = sphere(r=radius, maxh=maxh)
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
 
-    m = df.Function(S3)
-    m.assign(df.Constant((1, 0, 0)))
+    m_function = df.Function(S3)
+    m_function.assign(df.Constant((1, 0, 0)))
+    m = Field(S3, m_function)
 
     Ms = np.sqrt(6.0 / mu0)  # math.sqrt(6.0 / mu0) would work
     demag = FKDemag()
-    demag.setup(S3, m, Ms, unit_length)  # this used to fail
+    demag.setup(m, Ms, unit_length)  # this used to fail
