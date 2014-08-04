@@ -5,6 +5,7 @@ import logging
 import dolfin as df
 from numpy import pi, sqrt
 from finmag.energies import Demag
+from finmag.field import Field
 from finmag.util.meshes import from_geofile
 from finmag.util.consts import mu0
 
@@ -33,10 +34,11 @@ def test_demag_energy_gcr():
 def demag_energy(solver):
     mesh = from_geofile(os.path.join(MODULE_DIR, "sphere_fine.geo"))
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
-    m = df.interpolate(df.Constant((1, 0, 0)), S3)
+    m_function = df.interpolate(df.Constant((1, 0, 0)), S3)
+    m = Field(S3, m_function)
 
     demag = Demag(solver)
-    demag.setup(S3, m, Ms, unit_length=1)
+    demag.setup(m, Ms, unit_length=1)
 
     E = demag.compute_energy()
     rel_error = abs(E - E_analytical) / abs(E_analytical)
