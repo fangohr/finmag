@@ -2,6 +2,7 @@ import time
 import numpy as np
 import dolfin as df
 from finmag.energies import Demag
+from finmag.field import Field
 from finmag.util.meshes import sphere
 import matplotlib.pyplot as plt
 
@@ -22,8 +23,9 @@ for maxh in maxhs:
     mesh = sphere(r=radius, maxh=maxh, directory="meshes")
     vertices.append(mesh.num_vertices())
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
-    m = df.Function(S3)
-    m.assign(df.Constant(m_0))
+    m_function = df.Function(S3)
+    m_function.assign(df.Constant(m_0))
+    m = Field(S3, m_function)
 
     for i, solver in enumerate(solvers):
         demag = Demag(solver)
@@ -38,7 +40,7 @@ for maxh in maxhs:
                 demag.parameters["phi_1_preconditioner"] = "ilu"
                 demag.parameters["phi_2_solver"] = "cg"
                 demag.parameters["phi_2_preconditioner"] = "ilu"
-        demag.setup(S3, m, Ms, unit_length)
+        demag.setup(m, Ms, unit_length)
 
         start = time.time()
         for j in xrange(10):
