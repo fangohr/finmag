@@ -23,7 +23,7 @@ class MyLLG(LLG):
         # Comment out these two lines if you don't want exchange.
         exch = Exchange(1.3e-11)
         print "About to cal setup"
-        exch.setup(self.S3, self._m_field.f, self.Ms)
+        exch.setup(self._m_field, self.Ms)
         H_ex.vector().array()[:] = exch.compute_field()
 
         H_eff = H_ex + H_app
