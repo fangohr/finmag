@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import dolfin as df
+from finmag.field import Field
 from finmag.energies import Exchange
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -11,13 +12,12 @@ REL_TOL = 1e-4
 
 def exchange(mesh, unit_length):
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
-    m_expr = df.Expression(("x[1]*u", "0", "sqrt(1-pow(x[1]*u, 2))"), u=unit_length)
-    m = df.interpolate(m_expr, S3)
+    m = Field(S3, value=df.Expression(("x[1]*u", "0", "sqrt(1-pow(x[1]*u, 2))"), u=unit_length))
     exch = Exchange(A)
-    exch.setup(S3, m, Ms, unit_length=unit_length)
+    exch.setup(m, Ms, unit_length=unit_length)
     H = exch.compute_field()
     E = exch.compute_energy()
-    return m.vector().array(), H, E
+    return m.get_numpy_array_debug(), H, E
 
 def test_compare_exchange_for_two_dolfin_meshes():
     """
