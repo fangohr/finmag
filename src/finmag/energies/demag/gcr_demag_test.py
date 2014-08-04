@@ -1,8 +1,9 @@
 import dolfin as df
 import numpy as np
 from math import pi
-from finmag.util.meshes import sphere
 from finmag.energies import Demag
+from finmag.field import Field
+from finmag.util.meshes import sphere
 from finmag.util.consts import mu0
 
 radius = 1.0
@@ -14,10 +15,11 @@ volume = 4 * pi * (radius * unit_length) ** 3 / 3
 def setup_demag_sphere(Ms):
     mesh = sphere(r=radius, maxh=maxh)
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
-    m = df.Function(S3)
-    m.assign(df.Constant((1, 0, 0)))
+    m_function = df.Function(S3)
+    m_function.assign(df.Constant((1, 0, 0)))
+    m = Field(S3, m_function)
     demag = Demag('GCR')
-    demag.setup(S3, m, Ms, unit_length)
+    demag.setup(m, Ms, unit_length)
     return demag
 
 
