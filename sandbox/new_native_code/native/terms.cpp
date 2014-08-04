@@ -15,10 +15,9 @@ namespace dolfin { namespace finmag {
         /* vector triple product: m x (m x H) = m(m*H) - H(m*m) */
         double const mH = m_x * H_x + m_y * H_y + m_z * H_z;
         double const mm = m_x * m_x + m_y * m_y + m_z * m_z;
-        /* overwrites dm_x, dm_y, dm_z and thus always needs to be computed first */
-        dm_x = prefactor * (m_x * mH - H_x * mm); 
-        dm_y = prefactor * (m_y * mH - H_y * mm); 
-        dm_z = prefactor * (m_z * mH - H_z * mm); 
+        dm_x += prefactor * (m_x * mH - H_x * mm); 
+        dm_y += prefactor * (m_y * mH - H_y * mm); 
+        dm_z += prefactor * (m_z * mH - H_z * mm); 
     }
 
     /* Compute the precession for one node. */
