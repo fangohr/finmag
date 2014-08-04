@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include "equation.h"
 #include "terms.h"
+#include "derivatives.h"
 
 void check_size(const dolfin::GenericVector& v, const dolfin::GenericVector& w, const std::string& msg) {
     if (v.size() != w.size()) {
