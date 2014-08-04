@@ -12,6 +12,8 @@ namespace dolfin { namespace finmag {
 
             void solve();
            
+            std::shared_ptr<GenericVector> get_pinned_nodes() const;
+            void set_pinned_nodes(std::shared_ptr<GenericVector> const& value);
             std::shared_ptr<GenericVector> get_alpha() const;
             void set_alpha(std::shared_ptr<GenericVector> const& value);
             double get_gamma() const;
@@ -26,6 +28,7 @@ namespace dolfin { namespace finmag {
             GenericVector const& effective_field;
             GenericVector& derivative;
             std::shared_ptr<GenericVector> alpha;
+            std::shared_ptr<GenericVector> pinned_nodes;
             double gamma;
             double parallel_relaxation_rate;
             bool do_precession;
