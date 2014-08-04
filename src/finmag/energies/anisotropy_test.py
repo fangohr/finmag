@@ -2,6 +2,7 @@ import pytest
 import textwrap
 import dolfin as df
 import numpy as np
+from finmag.field import Field
 from finmag.energies import UniaxialAnisotropy
 from finmag.util.consts import mu0
 
@@ -15,14 +16,14 @@ def fixt():
 
     """
     mesh = df.UnitCubeMesh(1, 1, 1)
-    S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
+    functionspace = df.VectorFunctionSpace(mesh, "Lagrange", 1)
     K1 = 1
     Ms = 1
     a = df.Constant((0, 0, 1))
-    m = df.Function(S3)
+    m = Field(functionspace)
     anis = UniaxialAnisotropy(K1, a)
-    anis.setup(S3, m, Ms)
-    return {"anis": anis, "m": m, "a": a, "S3": S3, "Ms": Ms, "K1": K1}
+    anis.setup(m, Ms)
+    return {"anis": anis, "m": m, "a": a, "Ms": Ms, "K1": K1}
 
 
 def test_interaction_accepts_name(fixt):
@@ -43,8 +44,17 @@ def test_anisotropy_energy_simple_configurations(fixt, m, expected_E):
     Test some parallel and orthogonal configurations of m and a.
 
     """
-    fixt["m"].assign(df.Constant(m))
-    E = fixt["anis"].compute_energy()
+    mesh = df.UnitCubeMesh(1, 1, 1)
+    functionspace = df.VectorFunctionSpace(mesh, "Lagrange", 1)
+    K1 = 1
+    Ms = 1
+    a = df.Constant((0, 0, 1))
+    m_field = Field(functionspace)
+    m_field.set(df.Constant(m))
+    anis = UniaxialAnisotropy(K1, a)
+    anis.setup(m_field, Ms)
+    
+    E = anis.compute_energy()
 
     print "With m = {}, expecting E = {}. Got E = {}.".format(m, expected_E, E)
     #assert abs(E - expected_E) < TOLERANCE
@@ -61,9 +71,17 @@ def test_anisotropy_energy_analytical(fixt):
     result with the constants we have chosen is 1 - 1/3 = 2/3.
 
     """
-    f = df.interpolate(df.Expression(("0", "sqrt(1 - pow(x[0], 2))", "x[0]")), fixt["S3"])
-    fixt["m"].vector().set_local(f.vector().array())
-    E = fixt["anis"].compute_energy()
+    mesh = df.UnitCubeMesh(1, 1, 1)
+    functionspace = df.VectorFunctionSpace(mesh, "Lagrange", 1)
+    K1 = 1
+    Ms = 1
+    a = df.Constant((0, 0, 1))
+    m = Field(functionspace)
+    m.set(df.Expression(("0", "sqrt(1 - pow(x[0], 2))", "x[0]")))
+    anis = UniaxialAnisotropy(K1, a)
+    anis.setup(m, Ms)
+
+    E = anis.compute_energy()
     expected_E = float(2)/3
 
     print "With m = (0, sqrt(1-x^2), x), expecting E = {}. Got E = {}.".format(expected_E, E)
@@ -78,12 +96,12 @@ def test_anisotropy_field(fixt):
     """
     TOLERANCE = 1e-14
     c = df.Constant((1/np.sqrt(2), 0, 1/np.sqrt(2)))
-    fixt["m"].assign(df.interpolate(c, fixt["S3"]))
+    fixt["m"].set(c)
     H = fixt["anis"].compute_field()
 
-    v = df.TestFunction(fixt["S3"])
+    v = df.TestFunction(fixt["m"].functionspace)
     g_ani = df.Constant(fixt["K1"]/(mu0 * fixt["Ms"])) * (
-            2 * df.dot(fixt["a"], fixt["m"]) * df.dot(fixt["a"], v)) * df.dx
+            2 * df.dot(fixt["a"], fixt["m"].f) * df.dot(fixt["a"], v)) * df.dx
     volume = df.assemble(df.dot(v, df.Constant((1, 1, 1))) * df.dx).array()
     dE_dm = df.assemble(g_ani).array() / volume
 
@@ -103,7 +121,7 @@ def test_anisotropy_field_supported_methods(fixt):
     """
     TOLERANCE = 1e-13
 
-    fixt["m"].assign(df.Constant((1/np.sqrt(2), 0, 1/np.sqrt(2))))
+    fixt["m"].set(df.Constant((1/np.sqrt(2), 0, 1/np.sqrt(2))))
     H_default = fixt["anis"].compute_field()
 
     supported_methods = list(UniaxialAnisotropy._supported_methods)
@@ -112,7 +130,7 @@ def test_anisotropy_field_supported_methods(fixt):
 
     for method in supported_methods:
         anis = UniaxialAnisotropy(fixt["K1"], fixt["a"], method=method)
-        anis.setup(fixt["S3"], fixt["m"], fixt["Ms"])
+        anis.setup(fixt["m"], fixt["Ms"])
         H = anis.compute_field()
         print(textwrap.dedent("""
                   With method '{}',

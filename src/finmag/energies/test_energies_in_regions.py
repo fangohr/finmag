@@ -4,6 +4,7 @@ import dolfin as df
 import pytest
 import os
 import finmag
+from finmag.field import Field
 #from finmag.energies import Zeeman, TimeZeeman, DiscreteTimeZeeman, OscillatingZeeman
 from finmag.energies import Zeeman
 #from finmag.util.consts import mu0
@@ -45,7 +46,8 @@ class MultiDomainTest(object):
             return m_vals[self.get_domain_id(pt)]
 
         self.V = df.VectorFunctionSpace(mesh, 'CG', 1, dim=3)
-        self.m = vector_valued_function(m_init, self.V, normalise=True)
+        self.m = Field(self.V)
+        self.m.set(m_init, normalised=True)
 
     def compute_energies_on_subdomains(self, interaction):
         """
@@ -60,7 +62,7 @@ class MultiDomainTest(object):
         energy of the interaction.
 
         """
-        interaction.setup(self.V, self.m, self.Ms, unit_length=self.unit_length)
+        interaction.setup(self.m, self.Ms, unit_length=self.unit_length)
         return {k: interaction.compute_energy(dx=self.dx(k)) for k in self.domain_ids},\
             interaction.compute_energy(df.dx)
 

@@ -74,7 +74,7 @@ class Exchange(EnergyBase):
                 # Function, or some other object which supports
                 # compute_vertex_values(). TODO: make sure that there
                 # are no other cases.
-                x_vec = x.compute_vertex_values(self.S3.mesh())
+                x_vec = x.compute_vertex_values(self.m.mesh())
                 if not np.allclose(x_vec, x_vec[0], atol=0):
                     raise ValueError(
                         "Exchange constant A and/or saturation magnetisation Ms "
@@ -88,14 +88,11 @@ class Exchange(EnergyBase):
         return exchange_length(A, Ms)
 
     @mtimed
-    def setup(self, S3, m, Ms, unit_length=1):
+    def setup(self, m, Ms, unit_length=1):
         """
         Function to be called after the energy object has been constructed.
 
         *Arguments*
-
-            S3
-                Dolfin 3d VectorFunctionSpace on which m is defined
 
             m
                 magnetisation field (usually normalised)
@@ -108,11 +105,10 @@ class Exchange(EnergyBase):
 
         """
         self.exchange_factor = df.Constant(1.0 / unit_length ** 2)
-        self.S3 = S3
-        self.A = helpers.scalar_valued_function(self.A_waiting_for_mesh, self.S3.mesh())
+        self.A = helpers.scalar_valued_function(self.A_waiting_for_mesh, m.mesh())
         self.A.rename('A', 'exchange_constant')
         self.A_av = np.average(self.A.vector().array())
         del(self.A_waiting_for_mesh)
-        E_integrand = self.exchange_factor * self.A * df.inner(df.grad(m), df.grad(m))
+        E_integrand = self.exchange_factor * self.A * df.inner(df.grad(m.f), df.grad(m.f))
 
-        super(Exchange, self).setup(E_integrand, S3, m, Ms, unit_length)
+        super(Exchange, self).setup(E_integrand, m, Ms, unit_length)

@@ -22,14 +22,11 @@ class Zeeman(object):
         self.kwargs = kwargs
         self.in_jacobian = False
 
-    def setup(self, S3, m, Ms, unit_length=1):
+    def setup(self, m, Ms, unit_length=1):
         """
         Function to be called after the energy object has been constructed.
 
         *Arguments*
-
-            S3
-                Dolfin 3d VectorFunctionSpace on which m is defined
 
             m
                 magnetisation field (usually normalised)
@@ -41,13 +38,12 @@ class Zeeman(object):
                 real length of 1 unit in the mesh
 
         """
-        self.S3 = S3
         self.m = m
         self.Ms = Ms
         self.unit_length = unit_length
 
-        dofmap = S3.dofmap()
-        self.S1 = df.FunctionSpace(S3.mesh(), "Lagrange", 1, constrained_domain=dofmap.constrained_domain)
+        dofmap = self.m.functionspace.dofmap()
+        self.S1 = df.FunctionSpace(m.mesh(), "Lagrange", 1, constrained_domain=dofmap.constrained_domain)
         # self.dim = S3.mesh().topology().dim()
         # self.nodal_volume_S1 = nodal_volume(self.S1, self.unit_length)
 
@@ -63,9 +59,9 @@ class Zeeman(object):
 
         """
         self.value = value
-        self.H = helpers.vector_valued_function(value, self.S3, **self.kwargs)
+        self.H = helpers.vector_valued_function(value, self.m.functionspace, **self.kwargs)
         self.H.rename('H_ext', 'H_ext')
-        self.E = - mu0 * self.Ms * df.dot(self.m, self.H)  # Energy density.
+        self.E = - mu0 * self.Ms * df.dot(self.m.f, self.H)  # Energy density.
 
     def average_field(self):
         """
@@ -77,12 +73,12 @@ class Zeeman(object):
         return self.H.vector().array()
 
     def compute_energy(self, dx=df.dx):
-        dim = self.S3.mesh().topology().dim()
+        dim = self.m.mesh_dim()
         E = df.assemble(self.E * dx) * self.unit_length**dim
         return E
 
     def energy_density(self):
-        return df.project(df.dot(self.m, self.H) * self.Ms * -mu0, self.S1).vector().array()
+        return df.project(df.dot(self.m.f, self.H) * self.Ms * -mu0, self.S1).vector().array()
 
     def energy_density_function(self):
         if not hasattr(self, "E_density_function"):
@@ -179,7 +175,7 @@ class TimeZeeman(Zeeman):
                 self.switch_off()
                 return
             self.value.t = t
-            self.H = df.interpolate(self.value, self.S3)
+            self.H = df.interpolate(self.value, self.m.functionspace)
             self.H.rename('H_ext', 'H_ext')  # set short and long name
 
     def switch_off(self):
@@ -225,7 +221,7 @@ class DiscreteTimeZeeman(TimeZeeman):
                 dt_since_last_update = t - self.t_last_update
                 if dt_since_last_update >= self.dt_update:
                     self.value.t = t
-                    self.H = df.interpolate(self.value, self.S3)
+                    self.H = df.interpolate(self.value, self.m.functionspace)
                     self.H.rename('H_ext', 'H_ext')
                     log.debug("At t={}, after dt={}, update external field again.".format(
                         t, dt_since_last_update))
@@ -280,20 +276,19 @@ class TimeZeemanPython(TimeZeeman):
         if df_expression.value_size()==1:
             self.scalar_df_expression = True
 
-    def setup(self, S3, m, Ms, unit_length=1):
-        self.S3 = S3
+    def setup(self, m, Ms, unit_length=1):
         self.m = m
         self.Ms = Ms
         self.unit_length = unit_length
         if self.scalar_df_expression:
             dofmap = S3.dofmap()
-            self.S1 = df.FunctionSpace(S3.mesh(), "Lagrange", 1, constrained_domain=dofmap.constrained_domain)
+            self.S1 = df.FunctionSpace(m.mesh(), "Lagrange", 1, constrained_domain=dofmap.constrained_domain)
             self.h0 = helpers.scalar_valued_function(self.df_expression,self.S1).vector().array()
-            self.H0 = df.Function(self.S3)
+            self.H0 = df.Function(m.functionspace)
         else:
-            self.H0 = helpers.vector_valued_function(self.df_expression, self.S3)
+            self.H0 = helpers.vector_valued_function(self.df_expression, self.m.functionspace)
 
-        self.E = - mu0 * self.Ms * df.dot(self.m, self.H0)
+        self.E = - mu0 * self.Ms * df.dot(self.m.f, self.H0)
 
         self.H_init = self.H0.vector().array()
         self.H = self.H_init.copy()
