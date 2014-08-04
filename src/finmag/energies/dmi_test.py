@@ -101,8 +101,7 @@ def test_dmi_pbc2d_1D(plot=False):
 
     A = 1.3e-11
     D = 5e-3
-#    sim.add(Exchange(A)) # <!> Uncomment this addition after MB pushes his
-                          #    changes to exchange.
+    sim.add(Exchange(A))
     sim.add(DMI(D))
 
     sim.relax(stopping_dmdt=0.001)
