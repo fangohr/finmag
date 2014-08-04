@@ -2,9 +2,9 @@ import logging
 import dolfin as df
 import numpy as np
 from aeon import mtimed
-from finmag.util.consts import mu0
 from finmag.util.meshes import nodal_volume
 from finmag.util import helpers
+from finmag.util.consts import mu0
 
 logger = logging.getLogger('finmag')
 
@@ -13,9 +13,9 @@ class EnergyBase(object):
     """
     Computes a field for a given energy functional.
 
-    Is a class that particular energies should derive from. The derived classes
-    should fill in the necessary details and call methods on the parent.
-    See Exchange and UniaxialAnisotropy for examples.
+    It is a class from which particular energies should derived from.
+    The derived classes should fill in the necessary details and call
+    methods on the parent. See e.g. Exchange and UniaxialAnisotropy for examples.
 
     *Arguments*
 
@@ -47,18 +47,23 @@ class EnergyBase(object):
       completeness but is potentially untested.
 
     """
-    _supported_methods = ['box-assemble', 'box-matrix-numpy', 'box-matrix-petsc', 'project']
+    _supported_methods = ['box-assemble', 'box-matrix-numpy',
+                          'box-matrix-petsc', 'project']
 
     def __init__(self, method="box-matrix-petsc", in_jacobian=False):
-
-        if not method in self._supported_methods:
-            logger.error("Can't create '{}' object with method '{}'. Possible choices are {}.".format(
-                self.__class__.__name__, method, self._supported_methods))
-            raise ValueError("Unsupported method '{}' should be one of {}.".format(
-                method, self._supported_methods))
+        if method not in self._supported_methods:
+            logger.error("Can't create '{}' object with method '{}'. "
+                         "Possible choices are {}.".format(
+                             self.__class__.__name__, method,
+                             self._supported_methods))
+            raise ValueError("Unsupported method '{}' should be "
+                             "one of {}.".format(method,
+                                                 self._supported_methods))
         else:
-            logger.debug("Creating {} object with method {}, {}in Jacobian.".format(
-                self.__class__.__name__, method, "not " if not in_jacobian else ""))
+            logger.debug("Creating {} object with method {}, {} in "
+                         "Jacobian.".format(self.__class__.__name__,
+                                            method,
+                                            "not " if not in_jacobian else ""))
 
         self.in_jacobian = in_jacobian
         self.method = method
@@ -87,24 +92,23 @@ class EnergyBase(object):
 
         self.E_integrand = E_integrand
         dofmap = m.mesh_dofmap()
-        self.S1 = df.FunctionSpace(m.mesh(), "Lagrange", 1,
+        self.S1 = df.FunctionSpace(m.mesh(), "CG", 1,
                                    constrained_domain=dofmap.constrained_domain)
-        self.m = m # keep reference to m
+        self.m = m
         self.Ms = Ms
         self.unit_length = unit_length
 
         self.E = E_integrand * df.dx
         self.nodal_E = df.dot(E_integrand, df.TestFunction(self.S1)) * df.dx
-        self.dE_dm = df.Constant(-1.0 / mu0) \
-                * df.derivative(E_integrand / self.Ms * df.dx, self.m.f)
-
+        self.dE_dm = df.Constant(-1.0 / mu0) * \
+                     df.derivative(E_integrand / self.Ms * df.dx, self.m.f)
 
         self.dim = m.mesh_dim()
         self.nodal_volume_S1 = nodal_volume(self.S1, self.unit_length)
-        # same as nodal_volume_S1, just three times in an array to have the same
-        # number of elements in the array as the field to be able to divide it.
+        # Same as nodal_volume_S1, just three times in an array
+        # to have the same number of elements in the array as the
+        # field to be able to divide it.
         self.nodal_volume_S3 = nodal_volume(self.m.functionspace)
-
 
         if self.method == 'box-assemble':
             self.__compute_field = self.__compute_field_assemble
@@ -118,10 +122,13 @@ class EnergyBase(object):
             self.__setup_field_project()
             self.__compute_field = self.__compute_field_project
         else:
-            logger.error("Can't create '{}' object with method '{}'. Possible choices are {}.".format(
-                self.__class__.__name__, self.method, self._supported_methods))
-            raise ValueError("Unsupported method '{}' should be one of {}.".format(
-                self.method, self._supported_methods))
+            logger.error("Can't create '{}' object with method '{}'. "
+                         "Possible choices are "
+                         "{}.".format(self.__class__.__name__,
+                                      self.method, self._supported_methods))
+            raise ValueError("Unsupported method '{}' should be one of "
+                             "{}.".format(self.method,
+                                          self._supported_methods))
 
     @mtimed
     def compute_energy(self):
@@ -134,7 +141,7 @@ class EnergyBase(object):
                 The energy.
 
         """
-        E = df.assemble(self.E) * self.unit_length ** self.dim
+        E = df.assemble(self.E) * self.unit_length**self.dim
         return E
 
     @mtimed
@@ -153,7 +160,8 @@ class EnergyBase(object):
                 Coefficients of dolfin vector of energy density.
 
         """
-        nodal_E = df.assemble(self.nodal_E).array() * self.unit_length ** self.dim
+        nodal_E = df.assemble(self.nodal_E).array() * \
+                  self.unit_length ** self.dim
         return nodal_E / self.nodal_volume_S1
 
     def energy_density_function(self):
@@ -212,12 +220,13 @@ class EnergyBase(object):
 
     def __setup_field_numpy(self):
         """
-        Linearise dE_dm with respect to m. As we know this is linear (at least
-        for exchange, and uniaxial anisotropy? Should add reference to Werner
-        Scholz paper and relevant equation for g), this creates the right matrix
-        to compute dE_dm later as dE_dm = g * m. We essentially compute a Taylor
-        series of the energy in m, and know that the first two terms (for
-        exchange: dE_dm = Hex, and ddE_dmdm = g) are the only finite ones as we
+        Linearise dE_dm with respect to m. As we know this is linear
+        (at least for exchange, and uniaxial anisotropy? Should add
+        reference to Werner Scholz paper and relevant equation for g),
+        this creates the right matrix to compute dE_dm later as
+        dE_dm = g * m. We essentially compute a Taylor series of the
+        energy in m, and know that the first two terms (for exchange:
+        dE_dm = Hex, and ddE_dmdm = g) are the only finite ones as we
         know the expression for the energy.
 
         """
@@ -230,10 +239,12 @@ class EnergyBase(object):
         return H_ex / self.nodal_volume_S3
 
     def __setup_field_project(self):
-        #Note that we could make this 'project' method faster by computing the matrices
-        #that represent a and L, and only to solve the matrix system in 'compute_field'().
-        #IF this method is actually useful, we can do that. HF 16 Feb 2012
-        self.a = df.dot(df.TrialFunction(self.m.functionspace), df.TestFunction(self.m.functionspace)) * df.dx
+        # Note that we could make this 'project' method faster by
+        # computing the matrices that represent a and L, and only to
+        # solve the matrix system in 'compute_field'().
+        # IF this method is actually useful, we can do that. HF 16 Feb 2012
+        self.a = df.dot(df.TrialFunction(self.m.functionspace),
+                        df.TestFunction(self.m.functionspace)) * df.dx
         self.L = self.dE_dm
         self.H_project = df.Function(self.m.functionspace)
 
