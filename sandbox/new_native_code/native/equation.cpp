@@ -54,21 +54,22 @@ namespace dolfin { namespace finmag {
         if (pinned_nodes) pinned_nodes->get_local(pinned);
 
         std::vector<double>::size_type x=0, y=0, z=0;
+        /* When we iterate over the nodes the iteration counter can be used to
+        * access the value of scalar fields, since there is exactly one degree
+        * of freedom per node. Vector fields have 3 degrees of freedom per node
+        * and we thus multiply the iteration counter by 3 to get the first
+        * component of the vector fields (which is the x-component). */
         for (std::vector<double>::size_type node=0; node < a.size(); ++node) {
-            /* When we iterate over the nodes the iteration counter can be used to
-            * access the value of scalar fields, since there is exactly one degree
-            * of freedom per node. Vector fields have 3 degrees of freedom per node
-            * and we thus multiply the iteration counter by 3 to get the first
-            * component of the vector fields (which is the x-component). */
             x = 3 * node; y = x + 1; z = x + 2;
             dmdt[x] = 0; dmdt[y] = 0; dmdt[z] = 0;
-            if (!pinned_nodes || pinned[node] == 1) {
-                damping(a[node], gamma, m[x], m[y], m[z], H[x], H[y], H[z], dmdt[x], dmdt[y], dmdt[z]);
-                if (do_precession) {
-                    precession(a[node], gamma, m[x], m[y], m[z], H[x], H[y], H[z], dmdt[x], dmdt[y], dmdt[z]);
-                }
-                relaxation(parallel_relaxation_rate, m[x], m[y], m[z], dmdt[x], dmdt[y], dmdt[z]);
+
+            if (pinned_nodes && pinned[node]) {
+                continue; /* dmdt=0 on pinned nodes, so skip computation of it */
             }
+
+            damping(a[node], gamma, m[x], m[y], m[z], H[x], H[y], H[z], dmdt[x], dmdt[y], dmdt[z]);
+            if (do_precession) precession(a[node], gamma, m[x], m[y], m[z], H[x], H[y], H[z], dmdt[x], dmdt[y], dmdt[z]);
+            relaxation(parallel_relaxation_rate, m[x], m[y], m[z], dmdt[x], dmdt[y], dmdt[z]);
         }
 
         derivative.set_local(dmdt);
