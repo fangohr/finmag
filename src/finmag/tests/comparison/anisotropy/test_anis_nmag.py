@@ -9,7 +9,7 @@ def test_against_nmag(finmag):
     REL_TOLERANCE = 7e-2
 
     m_ref = np.genfromtxt(os.path.join(conftest.MODULE_DIR, "m0_nmag.txt"))
-    m_computed = vectors(finmag["m"].vector().array())
+    m_computed = vectors(finmag["m"].get_numpy_array_debug())
     assert m_ref.shape == m_computed.shape
 
     H_ref = np.genfromtxt(os.path.join(conftest.MODULE_DIR, "H_anis_nmag.txt"))

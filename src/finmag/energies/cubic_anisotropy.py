@@ -94,7 +94,7 @@ class CubicAnisotropy(EnergyBase):
         if self.K3_input!=0:
             E_integrand += E_term3
 
-        super(CubicAnisotropy, self).setup(E_integrand, m, Ms.f, unit_length)
+        super(CubicAnisotropy, self).setup(E_integrand, m, Ms, unit_length)
         
         if not self.assemble:
             self.H = self.m.get_numpy_array_debug()
@@ -107,7 +107,7 @@ class CubicAnisotropy(EnergyBase):
         
         m.shape=(3,-1)
         self.H.shape=(3,-1)
-        native_llg.compute_cubic_field(m.f, self.Ms, self.H, self.uv, self.K1,self.K2,self.K3)
+        native_llg.compute_cubic_field(m, self.Ms, self.H, self.uv, self.K1,self.K2,self.K3)
         m.shape=(-1,)
         self.H.shape=(-1,)
         

@@ -113,12 +113,12 @@ class UniaxialAnisotropy(EnergyBase):
         self.axis.rename('K1_axis', 'anisotropy axis')
         E_integrand = self.K1 * (df.Constant(1) - (df.dot(self.axis, m.f)) ** 2)
         if self.K2_input!=0:
-            E_integrand -= self.K2 * df.dot(self.axis, m) ** 4
+            E_integrand -= self.K2 * df.dot(self.axis, m.f) ** 4
             
         super(UniaxialAnisotropy, self).setup(E_integrand, m, Ms, unit_length)
         
         if not self.assemble:
-            self.H = self.m.vector().array()
+            self.H = self.m.get_numpy_array_debug()
             self.Ms = self.Ms.vector().array()
             self.u = self.axis.vector().array()
             self.K1_arr = self.K1.vector().array()
@@ -128,7 +128,7 @@ class UniaxialAnisotropy(EnergyBase):
     
     def __compute_field_directly(self):
         
-        m = self.m.vector().array()
+        m = self.m.get_numpy_array_debug()
         
         m.shape=(3,-1)
         self.H.shape=(3,-1)

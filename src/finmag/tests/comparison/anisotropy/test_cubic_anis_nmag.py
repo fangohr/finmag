@@ -8,7 +8,7 @@ def test_cubic_against_nmag(finmag=conftest.setup_cubic()):
     REL_TOLERANCE = 1e-6
 
     m_ref = np.genfromtxt(os.path.join(conftest.MODULE_DIR, "m0_nmag.txt"))
-    m_computed = vectors(finmag["m"].vector().array())
+    m_computed = vectors(finmag["m"].get_numpy_array_debug())
     assert m_ref.shape == m_computed.shape
 
     H_ref = np.genfromtxt(os.path.join(conftest.MODULE_DIR, "H_cubic_anis_nmag.txt"))
