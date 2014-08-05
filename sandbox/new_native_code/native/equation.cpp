@@ -4,6 +4,7 @@
 #include "equation.h"
 #include "terms.h"
 #include "derivatives.h"
+#include <dolfin/function/Function.h>
 
 namespace dolfin { namespace finmag {
 
@@ -28,10 +29,16 @@ namespace dolfin { namespace finmag {
         double gamma {2.210173e5};
         double parallel_relaxation_rate {1e-12};
         bool do_precession {true};
+        bool do_slonczewski {false};
+        std::vector<double> slonczewski(7);
     }
 
     std::shared_ptr<GenericVector> Equation::get_pinned_nodes() const { return pinned_nodes; } 
     void Equation::set_pinned_nodes(std::shared_ptr<GenericVector> const& value) { pinned_nodes = value; }
+    std::shared_ptr<GenericVector> Equation::get_saturation_magnetisation() const { return saturation_magnetisation; } 
+    void Equation::set_saturation_magnetisation(std::shared_ptr<GenericVector> const& value) { saturation_magnetisation = value; }
+    std::shared_ptr<GenericVector> Equation::get_current_density() const { return current_density; } 
+    void Equation::set_current_density(std::shared_ptr<GenericVector> const& value) { current_density = value; }
     std::shared_ptr<GenericVector> Equation::get_alpha() const { return alpha; } 
     void Equation::set_alpha(std::shared_ptr<GenericVector> const& value) { alpha = value; }
     double Equation::get_gamma() const { return gamma; }
@@ -40,18 +47,32 @@ namespace dolfin { namespace finmag {
     void Equation::set_parallel_relaxation_rate(double value) { parallel_relaxation_rate = value; }
     bool Equation::get_do_precession() const { return do_precession; }
     void Equation::set_do_precession(bool value) { do_precession = value; }
+    bool Equation::get_do_slonczewski() const { return do_slonczewski; }
+    void Equation::unset_do_slonczewski() { do_slonczewski = false; }
+    void Equation::set_do_slonczewski(double lambda, double epsilonprime, double P, double d, Array<double> const& p) {
+        sl[0] = lambda;
+        sl[1] = epsilonprime;
+        sl[2] = P; /* degree of polarisation */
+        sl[3] = d; /* free layer thickness in SI units */
+        sl[4] = p[0]; /* polarisation direction */
+        sl[5] = p[1];
+        sl[6] = p[2];
+        do_slonczewski = true;
+    }
 
     /* Solve the equation for dm/dt, writing the solution into the vector
      * that was passed during initialisation of the class. */
     void Equation::solve() {
         if (!alpha) throw std::runtime_error("alpha was not set");
 
-        std::vector<double> a, m, H, dmdt, pinned;
+        std::vector<double> a, m, H, dmdt, pinned, Ms, J;
         alpha->get_local(a);
         magnetisation.get_local(m);
         effective_field.get_local(H);
         derivative.get_local(dmdt);
         if (pinned_nodes) pinned_nodes->get_local(pinned);
+        if (saturation_magnetisation) saturation_magnetisation->get_local(Ms);
+        if (current_density) current_density->get_local(J);
 
         std::vector<double>::size_type x=0, y=0, z=0;
         /* When we iterate over the nodes the iteration counter can be used to
@@ -59,6 +80,7 @@ namespace dolfin { namespace finmag {
         * of freedom per node. Vector fields have 3 degrees of freedom per node
         * and we thus multiply the iteration counter by 3 to get the first
         * component of the vector fields (which is the x-component). */
+        #pragma omp parallel for schedule(guided)
         for (std::vector<double>::size_type node=0; node < a.size(); ++node) {
             x = 3 * node; y = x + 1; z = x + 2;
             dmdt[x] = 0; dmdt[y] = 0; dmdt[z] = 0;
@@ -70,6 +92,7 @@ namespace dolfin { namespace finmag {
             damping(a[node], gamma, m[x], m[y], m[z], H[x], H[y], H[z], dmdt[x], dmdt[y], dmdt[z]);
             if (do_precession) precession(a[node], gamma, m[x], m[y], m[z], H[x], H[y], H[z], dmdt[x], dmdt[y], dmdt[z]);
             relaxation(parallel_relaxation_rate, m[x], m[y], m[z], dmdt[x], dmdt[y], dmdt[z]);
+            if (do_slonczewski) slonczewski(a[node], gamma, sl[0], sl[1], J[node], sl[2], sl[3], Ms[node], m[x], m[y], m[z], sl[4], sl[5], sl[6], dmdt[x], dmdt[y], dmdt[z]);
         }
 
         derivative.set_local(dmdt);
