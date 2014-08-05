@@ -7,6 +7,7 @@ import logging
 import sys
 import matplotlib.pyplot as plt
 from scipy.sparse.linalg import LinearOperator
+from finmag.field import Field
 from finmag.energies import Exchange
 from finmag.util.consts import gamma, mu0
 from math import pi
@@ -590,7 +591,7 @@ class Nanostrip1dEigenproblemFinmag(AbstractEigenproblem):
         (which should be a `numpy.array`).
 
         """
-        self.exch.m.vector()[:] = v
+        self.exch.m.set_with_numpy_array_debug(v)
         return self.exch.compute_field()
 
     def compute_action_rhs_linearised_LLG(self, m0, v):
@@ -653,9 +654,9 @@ class Nanostrip1dEigenproblemFinmag(AbstractEigenproblem):
             #raise NotImplementedError()
 
         V = df.VectorFunctionSpace(mesh, 'CG', 1, dim=3)
-        v = df.Function(V)
+        v = Field(V)
         self.exch = Exchange(A=self.A_ex)
-        self.exch.setup(V, v, Ms=self.Ms, unit_length=self.unit_length)
+        self.exch.setup(v, Ms=self.Ms, unit_length=self.unit_length)
 
         C_2Kx2K = LinearOperator(shape=(N, N), matvec=self.compute_action_rhs_linearised_LLG_2K, dtype=dtype)
         C_2Kx2K_dense = as_dense_array(C_2Kx2K)
