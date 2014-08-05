@@ -1,6 +1,7 @@
 import os
 import dolfin as df
 import numpy as np
+from finmag.field import Field
 from finmag.energies import Exchange
 from finmag.util.helpers import vectors, norm, stats, sphinx_sci as s
 
@@ -37,11 +38,11 @@ def setup_finmag():
     coords = np.array(zip(* mesh.coordinates()))
  
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
-    m = df.Function(S3)
-    m.vector()[:] = m_gen(coords).flatten()
+    m = Field(S3)
+    m.set_with_numpy_array_debug(m_gen(coords).flatten())
 
     exchange = Exchange(A)  
-    exchange.setup(S3, m, Ms)
+    exchange.setup(m, Ms)
 
     H_exc = df.Function(S3)
     H_exc.vector()[:] = exchange.compute_field()
@@ -61,7 +62,7 @@ def test_against_nmag(finmag):
     REL_TOLERANCE = 2e-14
 
     m_ref = np.genfromtxt(os.path.join(MODULE_DIR, "m0_nmag.txt"))
-    m_computed = vectors(finmag["m"].vector().array())
+    m_computed = vectors(finmag["m"].get_numpy_array_debug())
     assert m_ref.shape == m_computed.shape
 
     H_ref = np.genfromtxt(os.path.join(MODULE_DIR, "H_exc_nmag.txt"))
