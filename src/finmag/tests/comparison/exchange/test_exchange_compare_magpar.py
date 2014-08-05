@@ -56,7 +56,7 @@ def three_dimensional_problem():
             mesh.coordinates(),finmag_exch,\
             nodes, magpar_exch)
 
-    return dict( m0=m.vector().array(),
+    return dict( m0=m.get_numpy_array_debug(),
                  mesh=mesh,
                  exch=finmag_exch,
                  magpar_exch=magpar_exch,
