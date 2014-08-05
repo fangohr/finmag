@@ -1,5 +1,6 @@
 import dolfin as df
 import numpy as np
+from finmag.field import Field
 from finmag.energies import UniaxialAnisotropy, Exchange
 from finmag.util.oommf import oommf_uniform_exchange, oommf_uniaxial_anisotropy
 
@@ -26,11 +27,11 @@ def compute_finmag_anis(m_gen, Ms, K1, axis, dolfin_mesh):
     S3 = df.VectorFunctionSpace(dolfin_mesh, "Lagrange", 1, dim=3)
     coords = np.array(zip(* dolfin_mesh.coordinates()))
     m0 = m_gen(coords).flatten()
-    m = df.Function(S3)
-    m.vector()[:] = m0
+    m = Field(S3)
+    m.set_with_numpy_array_debug(m0)
 
     anis = UniaxialAnisotropy(K1, axis)
-    anis.setup(S3, m, Ms)
+    anis.setup(m, Ms)
 
     anis_field = df.Function(S3)
     anis_field.vector()[:] = anis.compute_field()
@@ -54,11 +55,11 @@ def compute_finmag_exc(dolfin_mesh, m_gen, Ms, A):
     S3 = df.VectorFunctionSpace(dolfin_mesh, "Lagrange", 1, dim=3)
     coords = np.array(zip(* dolfin_mesh.coordinates()))
     m0 = m_gen(coords).flatten()
-    m = df.Function(S3)
-    m.vector()[:] = m0
+    m = Field(S3)
+    m.set_with_numpy_array_debug(m0)
 
     exchange = Exchange(A)
-    exchange.setup(S3, m, Ms)
+    exchange.setup(m, Ms)
 
     finmag_exc_field = df.Function(S3)
     finmag_exc_field.vector()[:] = exchange.compute_field()
