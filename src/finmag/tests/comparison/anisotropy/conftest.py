@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import dolfin as df
+from finmag.field import Field
 from finmag.util.meshes import from_geofile
 from finmag.energies import UniaxialAnisotropy, CubicAnisotropy
 from finmag.util.helpers import sphinx_sci as s
@@ -31,15 +32,15 @@ def setup(K2=K2):
     coords = np.array(zip(* mesh.coordinates()))
 
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
-    m = df.Function(S3)
-    m.vector()[:] = m_gen(coords).flatten()
+    m = Field(S3)
+    m.set_with_numpy_array_debug(m_gen(coords).flatten())
     
     S1 = df.FunctionSpace(mesh, "Lagrange", 1)
     Ms_cg = df.Function(S1)
     Ms_cg.vector()[:] = Ms
 
     anisotropy = UniaxialAnisotropy(K1, u1, K2=K2) 
-    anisotropy.setup(S3, m, Ms_cg, unit_length=1e-9)
+    anisotropy.setup(m, Ms_cg, unit_length=1e-9)
 
     H_anis = df.Function(S3)
     H_anis.vector()[:] = anisotropy.compute_field()
@@ -51,19 +52,19 @@ def setup_cubic():
     coords = np.array(zip(* mesh.coordinates()))
 
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
-    m = df.Function(S3)
-    m.vector()[:] = m_gen(coords).flatten()
+    m = Field(S3)
+    m.set_with_numpy_array_debug(m_gen(coords).flatten())
     
     S1 = df.FunctionSpace(mesh, "Lagrange", 1)
     Ms_cg = df.Function(S1)
     Ms_cg.vector()[:] = Ms
 
     anisotropy = CubicAnisotropy(u1=u1,u2=u2,K1=K1,K2=K2, K3=K3) 
-    anisotropy.setup(S3, m, Ms_cg, unit_length=1e-9)
+    anisotropy.setup(m, Ms_cg, unit_length=1e-9)
 
-    H_anis = df.Function(S3)
-    H_anis.vector()[:] = anisotropy.compute_field()
-    return dict(m=m, H=H_anis, S3=S3, table=start_table())
+    H_anis = Field(S3)
+    H_anis.set_with_numpy_array_debug(anisotropy.compute_field())
+    return dict(m=m, H=H_anis.f, S3=S3, table=start_table())
 
 def teardown(finmag):
     write_table(finmag)

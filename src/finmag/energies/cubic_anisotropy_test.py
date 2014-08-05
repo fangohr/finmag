@@ -34,8 +34,8 @@ def test_cubic_anisotropy_energy():
     m = Field(S3)
     m.set((0, 0, 1))
     
-    Ms_cg = Field(S1)
-    Ms_cg.set(Ms)
+    Ms_cg = df.Function(S1)
+    Ms_cg.vector()[:] = Ms
 
     ca = CubicAnisotropy(u1, u2, K1, K2, K3)
     ca.setup(m, Ms_cg, unit_length)

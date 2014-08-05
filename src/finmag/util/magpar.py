@@ -115,7 +115,7 @@ def read_inp_gz(file_name):
     
 
 def save_inp_of_inital_m(m,file_name):
-    mesh=m.function_space().mesh()
+    mesh=m.mesh()
     data_type_number = 3
     f=open(file_name,"w")
     head="%d %d %d 0 0\n" % (
@@ -145,7 +145,7 @@ def save_inp_of_inital_m(m,file_name):
                   ce[3]+1))
     f.write("3 1 1 1\nM_x, none\nM_y, none\nM_z, none\n")
 
-    data=m.vector().array().reshape(3,-1)
+    data=m.get_numpy_array_debug().reshape(3,-1)
     for i in range(mesh.num_vertices()):
         f.write("%d %0.15e %0.15e %0.15e\n"
                 %(i+1,
