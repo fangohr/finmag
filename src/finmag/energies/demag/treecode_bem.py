@@ -2,6 +2,7 @@ import logging
 import numpy as np
 import dolfin as df
 from aeon import default_timer
+from finmag.field import Field
 from finmag.util.consts import mu0
 from finmag.util.meshes import nodal_volume
 from finmag.native.treecode_bem import FastSum
@@ -24,26 +25,25 @@ class TreecodeBEM(FKDemag):
         self.type_I = type_I
 
 
-    def setup(self, S3, m, Ms, unit_length=1):
+    def setup(self, m, Ms, unit_length=1):
         
         self.m = m
         self.Ms = Ms
         self.unit_length = unit_length
 
-        mesh = S3.mesh()
+        mesh = m.mesh()
         self.S1 = df.FunctionSpace(mesh, "Lagrange", 1)
-        self.S3 = S3
         self.dim = mesh.topology().dim()
 
         self._test1 = df.TestFunction(self.S1)
         self._trial1 = df.TrialFunction(self.S1)
-        self._test3 = df.TestFunction(self.S3)
-        self._trial3 = df.TrialFunction(self.S3)
+        self._test3 = df.TestFunction(self.m.functionspace)
+        self._trial3 = df.TrialFunction(self.m.functionspace)
 
         # for computation of energy
         self._nodal_volumes = nodal_volume(self.S1, unit_length)
-        self._H_func = df.Function(S3)  # we will copy field into this when we need the energy
-        self._E_integrand = -0.5 * mu0 * df.dot(self._H_func, self.m * self.Ms)
+        self._H_func = df.Function(self.m.functionspace)  # we will copy field into this when we need the energy
+        self._E_integrand = -0.5 * mu0 * df.dot(self._H_func, self.m.f * self.Ms)
         self._E = self._E_integrand * df.dx
         self._nodal_E = df.dot(self._E_integrand, self._test1) * df.dx
         self._nodal_E_func = df.Function(self.S1)
@@ -79,7 +79,7 @@ class TreecodeBEM(FKDemag):
 
         self._setup_gradient_computation()
 
-        self.mesh= S3.mesh()
+        self.mesh= self.m.mesh()
 
         self.bmesh = df.BoundaryMesh(self.mesh, 'exterior', False)
         #self.b2g_map = self.bmesh.vertex_map().array()
@@ -136,7 +136,7 @@ class TreecodeBEM(FKDemag):
     
     def _compute_magnetic_potential(self):
         # compute _phi_1 on the whole domain
-        g_1 = self._Ms_times_divergence * self.m.vector()
+        g_1 = self._Ms_times_divergence * self.m.f.vector()
         
         self._poisson_solver.solve(self._phi_1.vector(), g_1)
 
@@ -194,7 +194,7 @@ if __name__ == "__main__":
 
     Ms = 8.6e5
     expr = df.Expression(('cos(x[0])', 'sin(x[0])','0'))
-    m = df.interpolate(expr, Vv)
+    m = Field(Vv, value=expr)
     #m = df.interpolate(df.Constant((1, 0, 0)), Vv)
 
     from finmag.energies.demag.fk_demag import FKDemag
@@ -202,14 +202,14 @@ if __name__ == "__main__":
     import time
 
     fk = FKDemag()
-    fk.setup(Vv, m, Ms, unit_length=1e-9)
+    fk.setup(m, Ms, unit_length=1e-9)
     start=time.time()
     f1= fk.compute_field()
     stop=time.time()
 
 
     demag=TreecodeBEM(mac=0.4,p=5,num_limit=1,correct_factor=10,type_I=False)
-    demag.setup(Vv, m, Ms, unit_length=1e-9)
+    demag.setup(m, Ms, unit_length=1e-9)
     start2=time.time()
     f2=demag.compute_field()
     stop2=time.time()
