@@ -872,7 +872,7 @@ def test_ndt_writing_with_time_dependent_field(tmpdir):
     assert np.allclose(f['H_TimeZeeman_y'], Hy_expected, atol=0, rtol=TOL)
     assert np.allclose(f['H_TimeZeeman_z'], 0, atol=0, rtol=TOL)
 
-
+@pytest.mark.skipif("True")
 def test_removing_logger_handlers_allows_to_create_many_simulation_objects(tmpdir):
     """
     When many simulation objects are created in the same scripts, the
