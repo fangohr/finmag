@@ -83,4 +83,6 @@ def test_pinning(setup):
     equation.set_pinned_nodes(pins.vector())
     equation.solve()
     dmdt_node0 = dmdt.vector()[0:3]
+    dmdt_node_others = dmdt.vector()[3:]
     assert np.all(dmdt_node0.array() == np.array((0, 0, 0)))
+    assert not np.all(dmdt_node_others.array() == np.array((0, 0, 0, 0, 0, 0)))
