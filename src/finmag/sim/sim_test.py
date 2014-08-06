@@ -8,7 +8,6 @@ import pytest
 import os
 import sh
 import matplotlib.pyplot as plt
-from aeon import default_timer
 from glob import glob
 from distutils.version import LooseVersion
 from finmag import sim_with, Simulation, set_logging_level, normal_mode_simulation
@@ -872,7 +871,6 @@ def test_ndt_writing_with_time_dependent_field(tmpdir):
     assert np.allclose(f['H_TimeZeeman_y'], Hy_expected, atol=0, rtol=TOL)
     assert np.allclose(f['H_TimeZeeman_z'], 0, atol=0, rtol=TOL)
 
-@pytest.mark.skipif("True")
 def test_removing_logger_handlers_allows_to_create_many_simulation_objects(tmpdir):
     """
     When many simulation objects are created in the same scripts, the
@@ -913,10 +911,6 @@ def test_removing_logger_handlers_allows_to_create_many_simulation_objects(tmpdi
     # created without being deleted again.
     with pytest.raises(IOError):
         create_loads_of_simulations(N, close_logfiles=False)
-
-    # The next line is needed so that we can proceed after the error
-    # raised above.
-    default_timer.stop_last()
 
     # Remove all the file handlers created in the loop above
     hdls = list(logger.handlers)  # We need a copy of the list because we
