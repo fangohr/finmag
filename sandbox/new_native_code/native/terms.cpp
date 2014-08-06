@@ -80,4 +80,28 @@ namespace dolfin { namespace finmag {
         dm_y += gamma_LL * beta * (perp * cross_y(m_x, m_y, m_z, p_x, p_y, p_z) - para * (mp * m_y - mm * p_y));
         dm_z += gamma_LL * beta * (perp * cross_z(m_x, m_y, m_z, p_x, p_y, p_z) - para * (mp * m_z - mm * p_z));
     }
+
+    /* Compute the Zhang-Li spin-torque term for one node. */
+    ZhangLi::ZhangLi(double const u__0, double const beta) :
+            u_0(u_0),
+            beta(beta) {
+    }
+
+    void ZhangLi::compute(double const& alpha, double const& Ms,
+                          double const& m_x, double const& m_y, double const& m_z,
+                          double const& g_x, double const& g_y, double const& g_z,
+                          double& dm_x, double& dm_y, double& dm_z) {
+        double const coeff_stt = (Ms == 0) ? 0 : u_0 / (1 + alpha * alpha) / Ms;
+        double const mht = m_x * g_x + m_y * g_y + m_z * g_z;
+        double const p_x = g_x - mht * m_x;
+        double const p_y = g_y - mht * m_y;
+        double const p_z = g_z - mht * m_z;
+        double const mth_x = cross_x(m_x, m_y, m_z, p_x, p_y, p_z);
+        double const mth_y = cross_y(m_x, m_y, m_z, p_x, p_y, p_z);
+        double const mth_z = cross_z(m_x, m_y, m_z, p_x, p_y, p_z);
+        dm_x += coeff_stt * ((1 + alpha * beta) * p_x - (beta - alpha) * mth_x);
+        dm_y += coeff_stt * ((1 + alpha * beta) * p_y - (beta - alpha) * mth_y);
+        dm_z += coeff_stt * ((1 + alpha * beta) * p_z - (beta - alpha) * mth_z);
+    }
+
 }}

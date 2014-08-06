@@ -31,4 +31,16 @@ namespace dolfin { namespace finmag {
             double p_x, p_y, p_z; /* fixed layer magnetisation direction */
             double epsilonprime; /* secondary spin-transfer term */
     };
+
+    class ZhangLi {
+        public:
+            ZhangLi(double const u_0, double const beta);
+            void compute(double const& alpha, double const& Ms,
+                         double const& m_x, double const& m_y, double const& m_z,
+                         double const& g_x, double const& g_y, double const& g_z,
+                         double& dm_x, double& dm_y, double& dm_z);
+        private:
+            double u_0;
+            double beta;
+    };
 }}
