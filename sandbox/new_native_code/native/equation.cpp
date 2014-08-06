@@ -2,8 +2,6 @@
 #include <string>
 #include <stdexcept>
 #include "equation.h"
-#include "terms.h"
-#include "derivatives.h"
 #include <dolfin/function/Function.h>
 
 namespace dolfin { namespace finmag {
@@ -19,29 +17,27 @@ namespace dolfin { namespace finmag {
                        GenericVector& dmdt) :
         magnetisation(m),
         effective_field(H),
-        derivative(dmdt)
+        derivative(dmdt),
+        pinned_nodes(nullptr),
+        saturation_magnetisation(nullptr),
+        current_density(nullptr),
+        alpha(nullptr),
+        sl_stt(nullptr)
     {
         check_size(magnetisation, effective_field, "m and H");
         check_size(magnetisation, derivative, "m and dmdt");
-        std::shared_ptr<GenericVector> pinned_nodes(nullptr);
-        std::shared_ptr<GenericVector> saturation_magnetisation(nullptr);
-        std::shared_ptr<GenericVector> current_density(nullptr);
-        std::shared_ptr<GenericVector> alpha(nullptr);
         gamma = 2.210173e5;
         parallel_relaxation_rate = 1e-12;
         do_precession = true;
         do_slonczewski = false;
-        slonczewski_defined = false;
-        slonczewski_active = false;
-        sl.resize(7);
     }
 
     std::shared_ptr<GenericVector> Equation::get_pinned_nodes() const { return pinned_nodes; } 
     void Equation::set_pinned_nodes(std::shared_ptr<GenericVector> const& value) { pinned_nodes = value; }
     std::shared_ptr<GenericVector> Equation::get_saturation_magnetisation() const { return saturation_magnetisation; } 
-    void Equation::set_saturation_magnetisation(std::shared_ptr<GenericVector> const& value) { saturation_magnetisation = value; get_slonczewski_status(); }
+    void Equation::set_saturation_magnetisation(std::shared_ptr<GenericVector> const& value) { saturation_magnetisation = value; }
     std::shared_ptr<GenericVector> Equation::get_current_density() const { return current_density; } 
-    void Equation::set_current_density(std::shared_ptr<GenericVector> const& value) { current_density = value; get_slonczewski_status(); }
+    void Equation::set_current_density(std::shared_ptr<GenericVector> const& value) { current_density = value; }
     std::shared_ptr<GenericVector> Equation::get_alpha() const { return alpha; } 
     void Equation::set_alpha(std::shared_ptr<GenericVector> const& value) { alpha = value; }
     double Equation::get_gamma() const { return gamma; }
@@ -50,25 +46,12 @@ namespace dolfin { namespace finmag {
     void Equation::set_parallel_relaxation_rate(double value) { parallel_relaxation_rate = value; }
     bool Equation::get_do_precession() const { return do_precession; }
     void Equation::set_do_precession(bool value) { do_precession = value; }
-    bool Equation::get_do_slonczewski() const { return do_slonczewski; }
-    void Equation::set_do_slonczewski(bool value) { do_slonczewski = value; get_slonczewski_status(); }
-    void Equation::set_do_slonczewski(double lambda, double epsilonprime, double P, double d, Array<double> const& p) {
-        sl[0] = lambda;
-        sl[1] = epsilonprime;
-        sl[2] = P; /* degree of polarisation */
-        sl[3] = d; /* free layer thickness in SI units */
-        sl[4] = p[0]; /* polarisation direction */
-        sl[5] = p[1];
-        sl[6] = p[2];
+    void Equation::slonczewski(double d, double P, Array<double> const& p, double lambda, double epsilonprime) {
+        sl_stt.reset(new Slonczewski(d, P, p, lambda, epsilonprime));
         do_slonczewski = true;
-        slonczewski_defined = true;
-        get_slonczewski_status();
     }
-
-    bool Equation::get_slonczewski_status() {
-        slonczewski_active = do_slonczewski && slonczewski_defined && current_density && saturation_magnetisation;
-        return slonczewski_active;
-    }
+    void Equation::slonczewski_disable() { do_slonczewski = false; }
+    bool Equation::slonczewski_status() const { return do_slonczewski && current_density && saturation_magnetisation; }
 
     /* Solve the equation for dm/dt, writing the solution into the vector
      * that was passed during initialisation of the class. */
@@ -103,7 +86,7 @@ namespace dolfin { namespace finmag {
             damping(a[node], gamma, m[x], m[y], m[z], H[x], H[y], H[z], dmdt[x], dmdt[y], dmdt[z]);
             if (do_precession) precession(a[node], gamma, m[x], m[y], m[z], H[x], H[y], H[z], dmdt[x], dmdt[y], dmdt[z]);
             relaxation(parallel_relaxation_rate, m[x], m[y], m[z], dmdt[x], dmdt[y], dmdt[z]);
-            if (slonczewski_active) slonczewski(a[node], gamma, sl[0], sl[1], J[node], sl[2], sl[3], Ms[node], m[x], m[y], m[z], sl[4], sl[5], sl[6], dmdt[x], dmdt[y], dmdt[z]);
+            if (slonczewski_status()) sl_stt->compute(a[node], gamma, J[node], Ms[node], m[x], m[y], m[z], dmdt[x], dmdt[y], dmdt[z]);
         }
 
         derivative.set_local(dmdt);

@@ -1,6 +1,7 @@
 #include <memory>
 #include <vector>
 #include <dolfin/la/GenericVector.h>
+#include "terms.h"
 
 /* compile_extension_module needs code to be wrapped in the dolfin namespace */
 namespace dolfin { namespace finmag {
@@ -26,10 +27,10 @@ namespace dolfin { namespace finmag {
             void set_parallel_relaxation_rate(double value);
             bool get_do_precession() const;
             void set_do_precession(bool value);
-            bool get_do_slonczewski() const;
-            void set_do_slonczewski(bool value);
-            void set_do_slonczewski(double lambda, double epsilonprime, double P, double d, Array<double> const& p);
-            bool get_slonczewski_status();
+
+            void slonczewski(double d, double P, Array<double> const& p, double lambda, double epsilonprime);
+            void slonczewski_disable();
+            bool slonczewski_status() const;
 
         private:
             GenericVector const& magnetisation;
@@ -42,12 +43,7 @@ namespace dolfin { namespace finmag {
             double gamma;
             double parallel_relaxation_rate;
             bool do_precession;
-
-            /* Slonczewski spin-transfer torque */
-            bool do_slonczewski; /* user set */
-            bool slonczewski_defined; /* parameters were set from set_do_slonczewski(double ...) */
-            bool slonczewski_active; /* do_slonczewski + slonczewski_defined + J + Ms */
-            void slonczewski_check();
-            std::vector<double> sl;
+            bool do_slonczewski;
+            std::unique_ptr<Slonczewski> sl_stt;
     };
 }}
