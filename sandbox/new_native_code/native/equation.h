@@ -32,6 +32,11 @@ namespace dolfin { namespace finmag {
             void slonczewski_disable();
             bool slonczewski_status() const;
 
+            void zhangli(double u_0, double beta);
+            void zhangli_disable();
+            bool zhangli_status() const;
+
+
         private:
             GenericVector const& magnetisation;
             GenericVector const& effective_field;
@@ -44,6 +49,8 @@ namespace dolfin { namespace finmag {
             double parallel_relaxation_rate;
             bool do_precession;
             bool do_slonczewski;
-            std::unique_ptr<Slonczewski> sl_stt;
+            std::unique_ptr<Slonczewski> stt_slonczewski;
+            bool do_zhangli;
+            std::unique_ptr<ZhangLi> stt_zhangli;
     };
 }}

@@ -22,7 +22,8 @@ namespace dolfin { namespace finmag {
         saturation_magnetisation(nullptr),
         current_density(nullptr),
         alpha(nullptr),
-        sl_stt(nullptr)
+        stt_slonczewski(nullptr),
+        stt_zhangli(nullptr)
     {
         check_size(magnetisation, effective_field, "m and H");
         check_size(magnetisation, derivative, "m and dmdt");
@@ -30,6 +31,7 @@ namespace dolfin { namespace finmag {
         parallel_relaxation_rate = 1e-12;
         do_precession = true;
         do_slonczewski = false;
+        do_zhangli = false;
     }
 
     std::shared_ptr<GenericVector> Equation::get_pinned_nodes() const { return pinned_nodes; } 
@@ -47,11 +49,17 @@ namespace dolfin { namespace finmag {
     bool Equation::get_do_precession() const { return do_precession; }
     void Equation::set_do_precession(bool value) { do_precession = value; }
     void Equation::slonczewski(double d, double P, Array<double> const& p, double lambda, double epsilonprime) {
-        sl_stt.reset(new Slonczewski(d, P, p, lambda, epsilonprime));
+        stt_slonczewski.reset(new Slonczewski(d, P, p, lambda, epsilonprime));
         do_slonczewski = true;
     }
     void Equation::slonczewski_disable() { do_slonczewski = false; }
     bool Equation::slonczewski_status() const { return do_slonczewski && current_density && saturation_magnetisation; }
+    void Equation::zhangli(double u_0, double beta) {
+        stt_zhangli.reset(new ZhangLi(u_0, beta));
+        do_zhangli = true;
+    }
+    void Equation::zhangli_disable() { do_zhangli = false; }
+    bool Equation::zhangli_status() const { return do_zhangli && current_density && saturation_magnetisation; }
 
     /* Solve the equation for dm/dt, writing the solution into the vector
      * that was passed during initialisation of the class. */
@@ -86,7 +94,8 @@ namespace dolfin { namespace finmag {
             damping(a[node], gamma, m[x], m[y], m[z], H[x], H[y], H[z], dmdt[x], dmdt[y], dmdt[z]);
             if (do_precession) precession(a[node], gamma, m[x], m[y], m[z], H[x], H[y], H[z], dmdt[x], dmdt[y], dmdt[z]);
             relaxation(parallel_relaxation_rate, m[x], m[y], m[z], dmdt[x], dmdt[y], dmdt[z]);
-            if (slonczewski_status()) sl_stt->compute(a[node], gamma, J[node], Ms[node], m[x], m[y], m[z], dmdt[x], dmdt[y], dmdt[z]);
+            if (slonczewski_status()) stt_slonczewski->compute(a[node], gamma, J[node], Ms[node], m[x], m[y], m[z], dmdt[x], dmdt[y], dmdt[z]);
+            if (zhangli_status()) stt_zhangli->compute(a[node], Ms[node], m[x], m[y], m[z], J[x], J[y], J[z], dmdt[x], dmdt[y], dmdt[z]);
         }
 
         derivative.set_local(dmdt);
