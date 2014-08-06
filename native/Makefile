@@ -20,7 +20,7 @@ all : parallel
 # The directory where to place the extension modules
 MODULE_DIR = ../src/finmag/native
 # The list of extension modules to build
-MODULES = sundials.so llg.so llb.so fast_sum_lib.so treecode_bem.so neb.so #sundials_p.so
+MODULES = sundials.so llg.so llb.so fast_sum_lib.so treecode_bem.so neb.so sundials_p.so
 # The directory to store the precompiled header file.
 PRECOMPILED_HEADER_DIR ?= /tmp/$(USER)/finmag-pch/$(abspath .)
 # Name of the binary that runs all unit tests
@@ -34,9 +34,9 @@ SUNDIALS_NVECTOR_SO=-Wl,-rpath,\$$ORIGIN -L$(abspath ../src/finmag/native/) -lnv
 $(MODULE_DIR)/sundials.so : src/sundials/py_sundials_module.o src/util/np_array.o src/sundials/numpy_malloc.o
 sundials_LDFLAGS =-lsundials_cvode -llapack $(SUNDIALS_NVECTOR_SO) -lboost_thread 
 
-#SUNDIALS_CUSTOM=-I$(SUNDIALS_PATH)/include -Wl,-rpath, -Wl,-L$(SUNDIALS_PATH)/lib
-#$(MODULE_DIR)/sundials_p.so : src/sundials_p/py_cvode_module.o src/util/np_array.o src/util/swig_dolfin.o
-#sundials_p_LDFLAGS = $(SUNDIALS_CUSTOM) -lsundials_cvode -lsundials_nvecserial -lsundials_nvecparallel -llapack -ldolfin -lboost_thread
+SUNDIALS_CUSTOM=-I$(SUNDIALS_PATH)/include -Wl,-rpath, -Wl,-L$(SUNDIALS_PATH)/lib
+$(MODULE_DIR)/sundials_p.so : src/sundials_p/py_cvode_module.o src/util/np_array.o src/util/swig_dolfin.o
+sundials_p_LDFLAGS = $(SUNDIALS_CUSTOM) -lsundials_cvode -lsundials_nvecserial -lsundials_nvecparallel -llapack -ldolfin -lboost_thread
 
 $(MODULE_DIR)/llg.so : src/llg/py_llg_module.o src/util/np_array.o src/util/swig_dolfin.o src/llg/bem.o src/llg/llg.o src/llg/heun.o src/llg/energy.o
 llg_LDFLAGS = -L$(INSTALL_PATH)/lib -ldolfin

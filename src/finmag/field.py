@@ -320,6 +320,9 @@ class Field(object):
         else:
             # value_shape() returns a tuple (N,) and int is required.
             return self.functionspace.ufl_element().value_shape()[0]
+        
+    def vector(self):
+        return self.f.vector()
 
     def save_pvd(self, filename):
         """Save to pvd file using dolfin code"""
