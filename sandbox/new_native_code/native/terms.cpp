@@ -50,12 +50,19 @@ namespace dolfin { namespace finmag {
     }
 
     /* Compute the Slonczewski/Xiao spin-torque term for one node. */
-    void slonczewski(double const& alpha, double const& gamma,
-                     double const& lambda, double const& epsilonprime,
-                     double const& J, double const& P, double const& d, double const& Ms,
-                     double const& m_x, double const& m_y, double const& m_z,
-                     double const& p_x, double const& p_y, double const& p_z,
-                     double& dm_x, double& dm_y, double& dm_z) {
+    Slonczewski::Slonczewski(double const d, double const P, Array<double> const& p,
+                             double const lambda, double const epsilonprime) :
+            d(d),
+            P(P),
+            p_x(p[0]), p_y(p[1]), p_z(p[2]),
+            lambda(lambda),
+            epsilonprime(epsilonprime) {
+    }
+
+    void Slonczewski::compute(double const& alpha, double const& gamma,
+                            double const& J, double const& Ms,
+                            double const& m_x, double const& m_y, double const& m_z,
+                            double& dm_x, double& dm_y, double& dm_z) {
         double const mm = m_x * m_x + m_y * m_y + m_z * m_z; /* for the vector triple product expansion */
         double const mp = m_x * p_x + m_y * p_y + m_z * p_z; /* also known as Lagrange's formula */
 
