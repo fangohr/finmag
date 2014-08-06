@@ -104,4 +104,28 @@ namespace dolfin { namespace finmag {
         dm_z += coeff_stt * ((1 + alpha * beta) * p_z - (beta - alpha) * mth_z);
     }
 
+    NonlocalSTT::NonlocalSTT(double const P, double const tau_sd, double const tau_sf) :
+        P(P),
+        tau_sd(tau_sd),
+        tau_sf(tau_sf) {
+    }
+
+    void NonlocalSTT::compute(double const& alpha, double const& Ms,
+                              double const& m_x, double const& m_y, double const& m_z,
+                              double const& mt_x, double const& mt_y, double const& mt_z,
+                              double const& g_x, double const& g_y, double const& g_z,
+                              double const& d_x, double const& d_y, double const& d_z,
+                              double& dm_x, double& dm_y, double& dm_z) {
+        double const u_0 = P * mu_B / e;
+        double const coeff_stt = (Ms == 0) ? 0 : u_0 / Ms;
+        double const mmt = m_x * mt_x + m_y * mt_y + m_z * mt_z;
+        double const mtp_x = mt_x - mmt * m_x;
+        double const mtp_y = mt_y - mmt * m_y;
+        double const mtp_z = mt_z - mmt * m_z;
+        double const mmt_x = cross_x(m_x, m_y, m_z, mt_x, mt_y, mt_z) / tau_sd;
+        double const mmt_y = cross_y(m_x, m_y, m_z, mt_x, mt_y, mt_z) / tau_sd;
+        double const mmt_z = cross_z(m_x, m_y, m_z, mt_x, mt_y, mt_z) / tau_sd;
+
+
+    }
 }}
