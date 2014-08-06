@@ -27,8 +27,9 @@ namespace dolfin { namespace finmag {
             bool get_do_precession() const;
             void set_do_precession(bool value);
             bool get_do_slonczewski() const;
+            void set_do_slonczewski(bool value);
             void set_do_slonczewski(double lambda, double epsilonprime, double P, double d, Array<double> const& p);
-            void unset_do_slonczewski();
+            bool get_slonczewski_status();
 
         private:
             GenericVector const& magnetisation;
@@ -41,7 +42,12 @@ namespace dolfin { namespace finmag {
             double gamma;
             double parallel_relaxation_rate;
             bool do_precession;
-            bool do_slonczewski;
+
+            /* Slonczewski spin-transfer torque */
+            bool do_slonczewski; /* user set */
+            bool slonczewski_defined; /* parameters were set from set_do_slonczewski(double ...) */
+            bool slonczewski_active; /* do_slonczewski + slonczewski_defined + J + Ms */
+            void slonczewski_check();
             std::vector<double> sl;
     };
 }}
