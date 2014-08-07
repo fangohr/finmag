@@ -40,7 +40,7 @@ class FKDemag(object):
     pp.415-417, Mar 1990.
 
     .. _Hybrid method for computing demagnetizing fields:
-    http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=106342
+       http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=106342
 
     """
     def __init__(self, name='Demag', thin_film=False, macrogeometry=None,
