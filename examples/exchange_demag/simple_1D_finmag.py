@@ -1,4 +1,5 @@
 import dolfin as df
+from finmag.field import Field
 from finmag.energies import Exchange
 import numpy as np
 import matplotlib.pylab as plt
@@ -15,10 +16,10 @@ nd = np.load(os.path.join(MODULE_DIR, "nmag_hansconf.npy"))
 # run finmag
 mesh = df.IntervalMesh(100, 0, 10e-9)
 S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
-m = df.interpolate(df.Expression(("cos(x[0]*pi/10e-9)", "sin(x[0]*pi/10e-9)", "0")), S3)
+m = Field(S3, df.Expression(("cos(x[0]*pi/10e-9)", "sin(x[0]*pi/10e-9)", "0")))
 
 exchange = Exchange(1.3e-11)
-exchange.setup(S3, m, Ms=1)
+exchange.setup(m, Ms=1)
 
 fd = exchange.energy_density()
 
