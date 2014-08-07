@@ -190,8 +190,7 @@ class LLB(object):
                                        self.using_type_II)
 
     def add(self,interaction):
-        interaction.setup(self.material.S3,
-                          self.material._m,
+        interaction.setup(self.material._m,
                           self.material.Ms0,
                           unit_length=self.material.unit_length)
         self.interactions.append(interaction)

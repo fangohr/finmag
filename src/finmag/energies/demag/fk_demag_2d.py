@@ -1,30 +1,30 @@
 import numpy as np
 import dolfin as df
 from aeon import timed, mtimed, Timer, default_timer
-from finmag.util.consts import mu0
+from finmag.field import Field
 from finmag.native.llg import compute_bem_fk
+from finmag.util.consts import mu0
 from finmag.util.meshes import nodal_volume
 from finmag.util import helpers
 from fk_demag import FKDemag
 
 
-
 class Demag2D(FKDemag):
     """
-    To compute the demagnetisation field on a 2d mesh using the normal 
-    Fredkin-Koehler method, the idea is to construct a 3d mesh based on 
-    the given 2d mesh.
+    To compute the demagnetisation field on a 2d mesh using the normal
+    Fredkin-Koehler method, the idea is to construct a 3d mesh based on the
+    given 2d mesh.
     """
     def __init__(self, name='Demag2D', thickness=1, thin_film=False):
 
         self.name = name
-        
+
         self.thickness = thickness
 
         super(Demag2D, self).__init__(name=name, thin_film=thin_film)
 
     def create_3d_mesh(self, mesh):
-        
+
         nv = mesh.num_vertices()
         nc = mesh.num_cells()
         h = self.thickness
@@ -81,7 +81,7 @@ class Demag2D(FKDemag):
             map_3d_to_2d[i] =  vert_to_dof2[dof_to_vert3[i]%n2d]
 
         self.map_3d_to_2d = map_3d_to_2d
-        #print map_3d_to_2d 
+        #print map_3d_to_2d
 
     def create_dg3_from_dg2(self, mesh, dg2):
 
@@ -100,19 +100,16 @@ class Demag2D(FKDemag):
 
         return fun
 
-    def setup(self, S3, m, Ms, unit_length=1):
+    def setup(self, m, Ms, unit_length=1):
         """
-        Setup the FKDemag instance. Usually called automatically by the Simulation object.
+        Setup the FKDemag instance. Usually called automatically by the
+        Simulation object.
 
         *Arguments*
 
-        S3: dolfin.VectorFunctionSpace
+        m: finmag.Field
 
-            The finite element space the magnetisation is defined on.
-
-        m: dolfin.Function on S3
-
-            The unit magnetisation.
+            The unit magnetisation on a finite element space.
 
         Ms: float
 
@@ -123,22 +120,22 @@ class Demag2D(FKDemag):
             The length (in m) represented by one unit on the mesh. Default 1.
 
         """
-        self.short_m = m
+        self.m = m
         self.unit_length = unit_length
 
-        mesh = S3.mesh()
+        mesh = m.mesh()
         mesh3 = self.create_3d_mesh(mesh)
 
         V1 = df.FunctionSpace(mesh3, "Lagrange", 1)
         V3 = df.VectorFunctionSpace(mesh3, "Lagrange", 1)
 
-        mm  = df.Function(V3)
+        mm = Field(V3, df.Function(V3))
 
-        self.build_mapping(S3,V3)
+        self.build_mapping(S3, V3)
 
         Ms_dg3 = self.create_dg3_from_dg2(mesh3, Ms)
 
-        super(Demag2D, self).setup(V3, mm, Ms_dg3, unit_length)
+        super(Demag2D, self).setup(mm, Ms_dg3, unit_length)
 
     def compute_energy(self):
         """
@@ -155,7 +152,7 @@ class Demag2D(FKDemag):
 
         """
         self._H_func.vector()[:] = self.__compute_field()
-        return df.assemble(self._E) * self.unit_length ** self.dim
+        return df.assemble(self._E) * self.unit_length ** self.m.mesh_dim()
 
     @mtimed(default_timer)
     def energy_density(self):
@@ -173,15 +170,15 @@ class Demag2D(FKDemag):
 
         """
         self._H_func.vector()[:] = self.__compute_field()
-        nodal_E = df.assemble(self._nodal_E).array() * self.unit_length ** self.dim
+        nodal_E = df.assemble(self._nodal_E).array() * self.unit_length ** self.m.mesh_dim()
         return nodal_E / self._nodal_volumes
 
     def __compute_field(self):
-        self.m.vector().set_local(self.short_m.vector().array()[self.map_3d_to_2d])
+        self.m.set_with_numpy_array_debug(self.m.get_numpy_array_debug()[self.map_3d_to_2d])
         self._compute_magnetic_potential()
         return self._compute_gradient()
 
-    
+
     def compute_field(self):
         """
         Compute the demagnetising field.

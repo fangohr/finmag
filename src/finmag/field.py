@@ -81,7 +81,7 @@ class Field(object):
             else:
                 raise TypeError('Function and field functionspaces '
                                 'do not match')
-        
+
         elif isinstance(value, df.GenericVector):
             self.f.vector()[:] = value
 
@@ -199,11 +199,11 @@ class Field(object):
         if not target:
             raise NotImplementedError("This is missing - could cerate a df.Function(V) here")
 
-        assert self.value_dim() in [3], "Only implemented for 3d vector field" 
+        assert self.value_dim() in [3], "Only implemented for 3d vector field"
 
         if method == 1:
             wx, wy, wz = self.f.split(deepcopy=True)
-            wnorm = np.sqrt(wx.vector() * wx.vector()  + wy.vector() * wy.vector() + wz.vector() * wz.vector()) 
+            wnorm = np.sqrt(wx.vector() * wx.vector()  + wy.vector() * wy.vector() + wz.vector() * wz.vector())
             target.vector().set_local(wnorm)
 
         elif method == 2:
@@ -216,7 +216,7 @@ class Field(object):
             #target.vector()[:] = np.sqrt(w.vector()[dofs0] * w.vector()[dofs0] +\
             #                            w.vector()[dofs1] * w.vector()[dofs1] +\
             #                             w.vector()[dofs2] * w.vector()[dofs2])
-            
+
         elif method == 3:
             try:
                 import finmag.native.clib as clib
@@ -225,7 +225,7 @@ class Field(object):
             f = df.as_backend_type(target.vector()).vec()
             w = df.as_backend_type(self.f.vector()).vec()
             clib.norm(w, f)
-            
+
         else:
             raise NotImplementedError("method {} unknown".format(method))
 
@@ -310,6 +310,9 @@ class Field(object):
     def mesh_dim(self):
         return self.functionspace.mesh().topology().dim()
 
+    def mesh_dofmap(self):
+        return self.functionspace.dofmap()
+
     def value_dim(self):
         if isinstance(self.functionspace, df.FunctionSpace):
             # Scalar field.
@@ -317,6 +320,9 @@ class Field(object):
         else:
             # value_shape() returns a tuple (N,) and int is required.
             return self.functionspace.ufl_element().value_shape()[0]
+        
+    def vector(self):
+        return self.f.vector()
 
     def save_pvd(self, filename):
         """Save to pvd file using dolfin code"""

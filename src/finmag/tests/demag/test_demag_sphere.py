@@ -1,6 +1,7 @@
 import pytest
 import numpy as np
 import dolfin as df
+from finmag.field import Field
 from finmag.util.meshes import sphere
 from finmag.energies import Demag
 
@@ -13,13 +14,13 @@ def uniformly_magnetised_sphere():
     Ms = 1
     mesh = sphere(r=1, maxh=0.25)
     S3 = df.VectorFunctionSpace(mesh, "CG", 1)
-    m = df.Function(S3)
-    m.assign(df.Constant((1, 0, 0)))
+    m = Field(S3)
+    m.set(df.Constant((1, 0, 0)))
 
     solutions = []
     for solver in solvers:
         demag = Demag(solver)
-        demag.setup(S3, m, Ms, unit_length=1e-9)
+        demag.setup(m, Ms, unit_length=1e-9)
         demag.H = demag.compute_field()
         solutions.append(demag)
     return solutions

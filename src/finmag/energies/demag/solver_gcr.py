@@ -185,24 +185,18 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver,PEQBuilder):
         self.bench = bench
         self.qvector_method = qvector_method
 
-    def setup(self, S3, m, Ms, unit_length=1):
+    def setup(self, m, Ms, unit_length=1):
         #Initialize the base class
-        sb.FemBemDeMagSolver.__init__(self,
-                                      S3.mesh(), m,
-                                      self.parameters,
-                                      self.degree, self.element,
-                                      self.project_method,
-                                      unit_length,
-                                      Ms,
-                                      self.bench,
-                                      True)
+        sb.FemBemDeMagSolver.__init__(self, m, self.parameters, self.degree,
+                                      self.element, self.project_method,
+                                      unit_length, Ms, self.bench, True)
 
         #Define the potentials
         self.phia = df.Function(self.V)
         self.phib = df.Function(self.V)
 
         #Buffer a homogeneous Dirichlet Poisson Matrix as well as BC
-        self.phia_bc = df.DirichletBC(self.V,0,lambda x, on_boundary: on_boundary)
+        self.phia_bc = df.DirichletBC(self.V, 0, lambda x, on_boundary: on_boundary)
         self.poisson_matrix_dirichlet = self.poisson_matrix.copy()
         self.phia_bc.apply(self.poisson_matrix_dirichlet)
 
@@ -217,13 +211,13 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver,PEQBuilder):
 
         #Buffer the BEM
         gcr_timings.start("build BEM", self.__class__.__name__)
-        self.boundary_mesh = df.BoundaryMesh(self.mesh, 'exterior', False)
+        self.boundary_mesh = df.BoundaryMesh(self.m.mesh(), 'exterior', False)
         self.bem, self.b2g = compute_bem_gcr(self.boundary_mesh)
         gcr_timings.stop("build BEM", self.__class__.__name__)
 
         if self.qvector_method == "box":
             #Buffer Surface Node Areas for the box method
-            self.surface_node_areas = df.assemble(self.v*df.ds).array()+1e-300
+            self.surface_node_areas = df.assemble(self.v * df.ds).array() + 1e-300
         elif self.qvector_method == "pe":
             #Build boundary data for the point evaluation q method
             self.build_boundary_data()
@@ -244,9 +238,9 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver,PEQBuilder):
         logger.debug("GCR: Solving for phi_b on the boundary")
         gcr_timings.start("Build q vector", self.__class__.__name__)
         if self.qvector_method == "pe":
-            q = self.build_vector_q_pe(self.m,self.Ms,self.phia)
+            q = self.build_vector_q_pe(self.m.f, self.Ms, self.phia)
         elif self.qvector_method == "box":
-            q = self.build_vector_q(self.m,self.Ms,self.phia)
+            q = self.build_vector_q(self.m.f, self.Ms, self.phia)
         else:
             raise Exception("Only 'box' and 'pe' are possible qvector_method values")
 
@@ -278,16 +272,16 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver,PEQBuilder):
 
         #Source term depends on m (code-block 1 - second line)
         #So it should be recalculated at every time step.
-        f = -self.Ms*(df.div(self.m)*self.v)*df.dx  #Source term
+        f = -self.Ms * (df.div(self.m.f) * self.v) * df.dx  #Source term
         F = df.assemble(f)
         self.phia_bc.apply(F)
 
         #Solve for phia
         if self.bench:
-            bench.solve(self.poisson_matrix_dirichlet,phia.vector(),F, benchmark = True)
+            bench.solve(self.poisson_matrix_dirichlet,phia.vector(), F, benchmark=True)
         else:
             gcr_timings.start("1st linear solve", self.__class__.__name__)
-            self.poisson_iter = self.poisson_solver.solve(phia.vector(),F)
+            self.poisson_iter = self.poisson_solver.solve(phia.vector(), F)
             gcr_timings.stop("1st linear solve", self.__class__.__name__)
         return phia
 
@@ -297,7 +291,7 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver,PEQBuilder):
            afterwards the global to boundary mapping is used to extract
            the relevant data"""
 
-        q_dot_v = df.assemble(Ms*df.dot(self.n, -m + df.grad(phi1))*self.v*df.ds).array()
+        q_dot_v = df.assemble(Ms * df.dot(self.n, -m + df.grad(phi1)) * self.v * df.ds).array()
 
-        q = q_dot_v/self.surface_node_areas
+        q = q_dot_v / self.surface_node_areas
         return q

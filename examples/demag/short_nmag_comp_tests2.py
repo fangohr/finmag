@@ -5,6 +5,7 @@ import time
 import subprocess
 import numpy as np
 import dolfin as df
+from finmag.field import Field
 from finmag.util.meshes import from_geofile
 from finmag.energies import Demag
 from finmag.energies.demag.solver_gcr import FemBemGCRSolver
@@ -49,7 +50,7 @@ def printsolverparams(mesh, m):
     output = open(os.path.join(MODULE_DIR, "linsolveparams.rst"), "w")
     for name, DemagClass in finmagsolvers.items():
         demag = DemagClass()  # create a solver to read out its default linear solver data
-        demag.setup(df.VectorFunctionSpace(mesh, "CG", 1), m, 1, 1e-9)
+        demag.setup(m, 1, 1e-9)
         output.write("\nFinmag %s solver parameters:\n" % name)
         output.write("%s \n"%repr(demag.parameters.to_dict()))
         output.write("\nFinmag %s solver tolerances:" % name)
@@ -121,7 +122,7 @@ for i,maxh in enumerate(meshsizes):
     x, y, z = x.vector().array(), y.vector().array(), z.vector().array()
     """
 
-    m = df.interpolate(df.Constant((1,0,0)), V)
+    m = Field(V, [1, 0, 0])
 
     #print solver parameters to file on the first run
     if i == 0:
@@ -135,7 +136,7 @@ for i,maxh in enumerate(meshsizes):
         #Assemble the bem and get the time.
         starttime = time.time()
         solver = finmagsolvers[demagtype]()
-        solver.setup(V, m, 1, 1e-9)
+        solver.setup(m, 1, 1e-9)
         demag = solver.compute_field()
         endtime = time.time()
 

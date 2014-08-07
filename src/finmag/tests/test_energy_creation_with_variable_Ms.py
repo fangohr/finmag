@@ -1,5 +1,6 @@
 import pytest
 import dolfin as df
+from finmag.field import Field
 from finmag.util.helpers import fnormalise
 from finmag.energies import Exchange, UniaxialAnisotropy, Zeeman, Demag
 
@@ -31,8 +32,8 @@ def setup():
     mesh = df.BoxMesh(0, 0, 0, 10e-9, 10e-9, 10e-9, 5, 5, 5)
 
     m_space = df.VectorFunctionSpace(mesh, "CG", 1)
-    m = df.interpolate(df.Expression(("1e-9", "x[0]/10", "0")), m_space)
-    m.vector().set_local(fnormalise(m.vector().array()))
+    m = Field(m_space, value=df.Expression(("1e-9", "x[0]/10", "0")))
+    m.set_with_numpy_array_debug(fnormalise(m.get_numpy_array_debug()))
 
     Ms_space = df.FunctionSpace(mesh, "DG", 0)
     Ms_func = df.interpolate(df.Constant(Ms), Ms_space)
@@ -56,9 +57,9 @@ def test_can_create_energy_object(fixt, EnergyClass, init_args):
     S3, m, Ms_func = fixt
 
     E1 = EnergyClass(*init_args)
-    E1.setup(S3, m, Ms)
+    E1.setup(m, Ms)
 
     E2 = EnergyClass(*init_args)
-    E2.setup(S3, m, Ms_func)
+    E2.setup(m, Ms_func)
 
     assert(abs(E1.compute_energy() - E2.compute_energy()) < 1e-12)

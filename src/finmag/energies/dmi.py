@@ -25,10 +25,10 @@ class DMI(EnergyBase):
 
         method
             See documentation of EnergyBase class for details.
-            
-            
+
+
         dmi_type
-            options are 'auto', '1d', '2d', '3d' and 'interfacial', default is 'auto' 
+            options are 'auto', '1d', '2d', '3d' and 'interfacial', default is 'auto'
             which means the dmi is auto selected according to the mesh dimension.
 
 
@@ -62,7 +62,9 @@ class DMI(EnergyBase):
             dmi_np = DMI(D, method='box-matrix-numpy')
             dmi_np.setup(S3, m, Ms)
             H_dmi_np = dmi_np.compute_field()
-    """
+    """ # <!> Review this usage example; it doesn't seem appropriate
+        # currently. Specifically, m no longer is a dolfin function, but is
+        # instead a Field object.
 
     def __init__(self, D, method="box-matrix-petsc", name='DMI', dmi_type='auto'):
         self.D_waiting_for_mesh = D
@@ -71,37 +73,37 @@ class DMI(EnergyBase):
         self.dmi_type = dmi_type
 
     @mtimed
-    def setup(self, S3, m, Ms, unit_length=1):
+    def setup(self, m, Ms, unit_length=1):
         self.DMI_factor = df.Constant(1.0 / unit_length)
-        self.S3 = S3
         self.D = helpers.scalar_valued_dg_function(self.D_waiting_for_mesh,
-                                                   self.S3.mesh())
+                                                   m.mesh())
         self.D.rename('D', 'DMI_constant')
         self.D_av = np.average(self.D.vector().array())
         del(self.D_waiting_for_mesh)
 
-        meshdim = S3.mesh().topology().dim()
-        dmi_dim  = meshdim
-        
         if self.dmi_type is '1d':
             dmi_dim = 1
         elif self.dmi_type is '2d':
             dmi_dim = 2
         elif self.dmi_type is '3d':
             dmi_dim = 3
-        
-        E_integrand = self.DMI_factor * self.D * helpers.times_curl(m, dmi_dim)
-            
-        if self.dmi_type is 'interfacial':
-            E_integrand = DMI_ultra_thin_film(m, self.DMI_factor * self.D, dim=dmi_dim)
+        else:
+            dmi_dim = m.mesh_dim()
 
-        super(DMI, self).setup(E_integrand, S3, m, Ms, unit_length)
+        E_integrand = self.DMI_factor * self.D * helpers.times_curl(m.f,
+                                                                    dmi_dim)
+
+        if self.dmi_type is 'interfacial':
+            E_integrand = DMI_ultra_thin_film(m, self.DMI_factor * self.D,
+                                              dim=dmi_dim)
+
+        super(DMI, self).setup(E_integrand, m, Ms, unit_length)
 
 
 def DMI_ultra_thin_film(m, D, dim):
     """Input arguments:
 
-       m a dolfin 3d-vector function on a 1d or 2d space,
+       m is a Field object on a 1d or 2d space,
        D is the DMI constant
        dim is the mesh dimension.
 
@@ -114,10 +116,10 @@ def DMI_ultra_thin_film(m, D, dim):
     and Thiaville (http://arxiv.org/abs/1310.0666)
 
     """
-    #in principle, this class also works for 3d mesh? 
+    #in principle, this class also works for 3d mesh?
     #assert dim <= 2, "Only implemented for 2d mesh"
 
-    gradm = df.grad(m)
+    gradm = df.grad(m.f)
 
     dmxdx = gradm[0, 0]
     dmydx = gradm[1, 0]
@@ -133,8 +135,8 @@ def DMI_ultra_thin_film(m, D, dim):
         dmzdy = gradm[2, 1]
 
 
-    mx = m[0]
-    my = m[1]
-    mz = m[2]
+    mx = m.f[0]
+    my = m.f[1]
+    mz = m.f[2]
 
     return D * (mx * dmzdx - mz * dmxdx) + D * (my * dmzdy - mz * dmydy)

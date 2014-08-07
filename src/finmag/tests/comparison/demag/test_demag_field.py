@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import dolfin as df
+from finmag.field import Field
 from finmag.energies import Demag
 from finmag.util.meshes import from_geofile
 from finmag.util.helpers import stats, sphinx_sci as s
@@ -15,12 +16,12 @@ def setup_finmag():
     mesh = from_geofile(os.path.join(MODULE_DIR, "sphere.geo"))
 
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
-    m = df.Function(S3)
-    m.assign(df.Constant((1, 0, 0)))
+    m = Field(S3)
+    m.set(df.Constant((1, 0, 0)))
     Ms = 1
 
     demag = Demag()
-    demag.setup(S3, m, Ms, unit_length=1e-9)
+    demag.setup(m, Ms, unit_length=1e-9)
     H = demag.compute_field()
 
     return dict(m=m, H=H, Ms=Ms, S3=S3, table=start_table())

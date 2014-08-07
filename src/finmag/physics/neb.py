@@ -9,7 +9,8 @@ from finmag.util import helpers
 from finmag.physics.effective_field import EffectiveField
 from finmag.util.vtk_saver import VTKSaver
 from finmag import Simulation
-
+# from finmag.field import Field  # Change sim._m to new field class
+                                  # in line 184
 from finmag.native import sundials
 import finmag.native.neb as native_neb
 
@@ -181,7 +182,8 @@ class NEB_Sundials(object):
         self.name = name
         self.spring = spring
         
-        self._m = sim._m
+        # Dolfin function of the new _m_field (instead of _m)
+        self._m = sim.llg._m_field.f
         self.effective_field = sim.llg.effective_field
                 
         if interpolations is None:

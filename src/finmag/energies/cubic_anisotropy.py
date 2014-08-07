@@ -61,9 +61,9 @@ class CubicAnisotropy(EnergyBase):
         
 
     @mtimed
-    def setup(self, S3, m, Ms, unit_length=1):
-        dofmap = S3.dofmap()
-        S1 = df.FunctionSpace(S3.mesh(), "Lagrange", 1, constrained_domain=dofmap.constrained_domain)
+    def setup(self, m, Ms, unit_length=1):
+        dofmap = m.functionspace.dofmap()
+        S1 = df.FunctionSpace(m.mesh(), "Lagrange", 1, constrained_domain=dofmap.constrained_domain)
         
         self.K1_dg = helpers.scalar_valued_function(self.K1_input, S1)
         self.K1_dg.rename('K1', 'fourth order anisotropy constant')
@@ -78,9 +78,9 @@ class CubicAnisotropy(EnergyBase):
         self.K3 = df.assemble(self.K3_dg*df.TestFunction(S1)* df.dx).array()/self.volumes
         
 
-        u1msq = df.dot(self.u1, m) ** 2
-        u2msq = df.dot(self.u2, m) ** 2
-        u3msq = df.dot(self.u3, m) ** 2
+        u1msq = df.dot(self.u1, m.f) ** 2
+        u2msq = df.dot(self.u2, m.f) ** 2
+        u3msq = df.dot(self.u3, m.f) ** 2
 
         E_term1 = self.K1_dg * (u1msq * u2msq + u2msq * u3msq + u3msq * u1msq)
         E_term2 = self.K2_dg * (u1msq * u2msq * u3msq)
@@ -94,20 +94,20 @@ class CubicAnisotropy(EnergyBase):
         if self.K3_input!=0:
             E_integrand += E_term3
 
-        super(CubicAnisotropy, self).setup(E_integrand, S3, m, Ms, unit_length)
+        super(CubicAnisotropy, self).setup(E_integrand, m, Ms, unit_length)
         
         if not self.assemble:
-            self.H = self.m.vector().array()
+            self.H = self.m.get_numpy_array_debug()
             self.Ms = self.Ms.vector().array()
             self.compute_field = self.__compute_field_directly
         
     def __compute_field_directly(self):
         
-        m = self.m.vector().array()
+        m = self.m.get_numpy_array_debug()
         
         m.shape=(3,-1)
         self.H.shape=(3,-1)
-        native_llg.compute_cubic_field(m,self.Ms, self.H, self.uv, self.K1,self.K2,self.K3)
+        native_llg.compute_cubic_field(m, self.Ms, self.H, self.uv, self.K1,self.K2,self.K3)
         m.shape=(-1,)
         self.H.shape=(-1,)
         

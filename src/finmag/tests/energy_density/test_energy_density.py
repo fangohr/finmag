@@ -5,7 +5,7 @@ import commands
 import subprocess
 import numpy as np
 import dolfin as df
-#from finmag.energies import UniaxialAnisotropy, Exchange, Demag, DMI
+from finmag.field import Field
 from finmag.energies import UniaxialAnisotropy, Exchange, Demag, DMI
 from finmag.util.consts import mu0
 from finmag.util.meshes import sphere
@@ -40,10 +40,10 @@ def test_exchange_energy_density():
     mesh = df.IntervalMesh(100, 0, 10e-9)
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
     Ms = 42
-    m = df.interpolate(df.Expression(("cos(x[0]*pi/10e-9)", "sin(x[0]*pi/10e-9)", "0")), S3)
+    m = Field(S3, value=df.Expression(("cos(x[0]*pi/10e-9)", "sin(x[0]*pi/10e-9)", "0")))
 
     exch = Exchange(1.3e-11)
-    exch.setup(S3, m, Ms)
+    exch.setup(m, Ms)
 
     finmag_data = exch.energy_density()
     rel_err = np.abs(nmag_data - finmag_data) / np.linalg.norm(nmag_data)
@@ -97,7 +97,7 @@ def test_anisotropy_energy_density():
 
     # Initial magnetisation 45 degress between x- and z-axis.
     m_vec = df.Constant((1 / np.sqrt(2), 0, 1 / np.sqrt(2)))
-    m = df.interpolate(m_vec, V)
+    m = Field(V, value=m_vec)
 
     # Easy axis in z-direction.
     a = df.Constant((0, 0, 1))
@@ -107,7 +107,7 @@ def test_anisotropy_energy_density():
     Ms = 1
 
     anis = UniaxialAnisotropy(K, a)
-    anis.setup(V, m, Ms)
+    anis.setup(m, Ms)
     density = anis.energy_density()
     deviation = np.abs(density - 0.5)
 
@@ -127,11 +127,11 @@ def test_DMI_energy_density_2D():
     """
     mesh = df.UnitSquareMesh(4, 4)
     V = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
-    M = df.interpolate(df.Expression(("-0.5*x[1]", "0.5*x[0]", "1")), V)
+    M = Field(V, value=df.Expression(("-0.5*x[1]", "0.5*x[0]", "1")))
     Ms = 1
     D = 1
     dmi = DMI(D)
-    dmi.setup(V, M, Ms)
+    dmi.setup(M, Ms)
     density = dmi.energy_density()
     deviation = np.abs(density - 1.0)
 
@@ -147,11 +147,11 @@ def test_DMI_energy_density_3D():
     """Same as above, on a 3D mesh."""
     mesh = df.UnitCubeMesh(4, 4, 4)
     V = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
-    M = df.interpolate(df.Expression(("-0.5*x[1]", "0.5*x[0]", "1")), V)
+    M = Field(V, df.Expression(("-0.5*x[1]", "0.5*x[0]", "1")))
     Ms = 10
     D = 1
     dmi = DMI(D)
-    dmi.setup(V, M, Ms)
+    dmi.setup(M, Ms)
     density = dmi.energy_density()
     deviation = np.abs(density - 1.0)
 
@@ -189,9 +189,9 @@ def test_demag_energy_density():
     mu0 = 4 * np.pi * 1e-7
 
     demag = Demag()
-    m = df.interpolate(df.Constant((1, 0, 0)), S3)
+    m = Field(S3, value=(1, 0, 0))
     Ms = np.sqrt(6.0 / mu0)
-    demag.setup(S3, m, Ms, 1)
+    demag.setup(m, Ms, 1)
 
     density = demag.energy_density()
     deviation = np.abs(density - 1.0)

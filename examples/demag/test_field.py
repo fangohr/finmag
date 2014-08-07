@@ -2,6 +2,7 @@ import os
 import dolfin as df
 from numpy import average
 from finmag.energies import Demag
+from finmag.field import Field
 from finmag.util.meshes import from_geofile
 
 TOL = 1e-3
@@ -20,10 +21,11 @@ def test_field():
     # Using mesh with radius 10 nm (nmag ex. 1)
     mesh = from_geofile(os.path.join(MODULE_DIR, "sphere1.geo"))
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
-    m = df.interpolate(df.Constant((1, 0, 0)), S3)
+    m_function = df.interpolate(df.Constant((1, 0, 0)), S3)
+    m = Field(S3, m_function)
 
     demag = Demag()
-    demag.setup(S3, m, Ms, unit_length=1e-9)
+    demag.setup(m, Ms, unit_length=1e-9)
 
     # Compute demag field
     H_demag = demag.compute_field()
