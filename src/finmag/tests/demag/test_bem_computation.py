@@ -3,6 +3,7 @@ import pytest
 import unittest
 import numpy as np
 import dolfin as df
+from finmag.field import Field
 from finmag.util.versions import get_version_dolfin
 from finmag.native.llg import compute_lindholm_L, compute_lindholm_K, compute_bem_fk, compute_bem_gcr
 from finmag.util import time_counter
@@ -43,11 +44,11 @@ def normalise_phi(phi, mesh):
 
 def compute_scalar_potential_llg(mesh, m_expr=df.Constant([1, 0, 0]), Ms=1.):
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
-    m = df.interpolate(m_expr, S3)
-    m.vector()[:] = helpers.fnormalise(m.vector().array())
+    m = Field(S3, value=m_expr)
+    m.set_with_numpy_array_debug(helpers.fnormalise(m.get_numpy_array_debug()))
 
     demag = Demag()
-    demag.setup(S3, m, Ms=Ms, unit_length=1)
+    demag.setup(m, Ms=Ms, unit_length=1)
 
     phi = demag.compute_potential()
     normalise_phi(phi, mesh)
@@ -60,9 +61,9 @@ def differentiate_fd(f, x, eps=1e-4, offsets=(-2,-1,1,2), weights=(1./12.,-2./3.
 def compute_scalar_potential_native_fk(mesh, m_expr=df.Constant([1, 0, 0]), Ms=1.):
     fkdemag = Demag("FK")
     V = df.VectorFunctionSpace(mesh,"Lagrange",1)
-    m = df.interpolate(m_expr, V)
-    m.vector()[:] = helpers.fnormalise(m.vector().array())
-    fkdemag.setup(V,m,Ms,unit_length = 1)
+    m = Field(V, value=m_expr)
+    m.set_with_numpy_array_debug(helpers.fnormalise(m.get_numpy_array_debug()))
+    fkdemag.setup(m,Ms,unit_length = 1)
     phi1 = fkdemag.compute_potential()
     normalise_phi(phi1, mesh)
     return phi1
@@ -71,9 +72,9 @@ def compute_scalar_potential_native_fk(mesh, m_expr=df.Constant([1, 0, 0]), Ms=1
 def compute_scalar_potential_native_gcr(mesh, m_expr=df.Constant([1, 0, 0]), Ms=1.0):
     gcrdemag = Demag("GCR")
     V = df.VectorFunctionSpace(mesh,"Lagrange",1)
-    m = df.interpolate(m_expr, V)
-    m.vector()[:] = helpers.fnormalise(m.vector().array())
-    gcrdemag.setup(V,m,Ms,unit_length = 1)
+    m = Field(V, value=m_expr)
+    m.set_with_numpy_array_debug(helpers.fnormalise(m.get_numpy_array_debug()))
+    gcrdemag.setup(m,Ms,unit_length = 1)
     phi1 = gcrdemag.compute_potential()
     normalise_phi(phi1, mesh)
     return phi1

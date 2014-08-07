@@ -25,18 +25,18 @@ class ThinFilmDemag(object):
         logger.debug("Creating {} object, {}.".format(
             self.__class__.__name__, in_jacobian_msg))
 
-    def setup(self, S3, m, Ms, unit_length):
+    def setup(self, m, Ms, unit_length):
         self.m = m
-        self.H = np.zeros((3, S3.mesh().num_vertices()))
+        self.H = np.zeros((3, m.mesh().num_vertices()))
 
         if self.strength == None:
-            self.S1 = df.FunctionSpace(S3.mesh(), "Lagrange", 1)
+            self.S1 = df.FunctionSpace(m.mesh(), "Lagrange", 1)
             self.volumes = df.assemble(df.TestFunction(self.S1) * df.dx)
             Ms = df.assemble(Ms * df.TestFunction(self.S1) * df.dx).array() / self.volumes
             self.strength = Ms
 
     def compute_field(self):
-        m = self.m.vector().array().view().reshape((3, -1))
+        m = self.m.get_numpy_array_debug().view().reshape((3, -1))
         self.H[self.direction][:] = - self.strength * m[self.direction]
         return self.H.ravel()
 

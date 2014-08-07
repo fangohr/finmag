@@ -75,7 +75,7 @@ doc-%:
 
 # py.test options
 # example: `-sx` to disable capturing of STDOUT and exit on first error
-TEST_OPTIONS ?=
+TEST_OPTIONS ?= 
 
 create-dirs:
 	mkdir -p test-reports/junit

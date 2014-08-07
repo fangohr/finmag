@@ -1,4 +1,5 @@
 import os
+import pytest
 import dolfin as df
 import numpy as np
 import matplotlib as mpl
@@ -113,6 +114,7 @@ def sim_llb_100(do_plot=False):
         plt.savefig(os.path.join(MODULE_DIR, "test_llb_100K.png"))
 
 
+@pytest.mark.xfail
 def test_llb_save_data():
     mesh = df.BoxMesh(0, 0, 0, 10, 10, 5, 2, 2, 1)
     

@@ -6,8 +6,10 @@ import matplotlib as mpl
 mpl.use("Agg")
 import matplotlib.pyplot as plt
 from finmag.energies import Demag
-from finmag.util.meshes import box
+from finmag.field import Field
 from finmag.native.llg import compute_bem_fk
+from finmag.util.meshes import box
+
 
 now = time.time
 create_mesh = lambda maxh: box(0, 0, 0, 500, 25, 1, maxh, directory="meshes")
@@ -21,7 +23,7 @@ repetitions = 10
 results_file = "results_fk_benchmark.txt"
 
 
-def run_demag(repetitions, params, S3, m, Ms, unit_length, bem=None, b2g_map=None):
+def run_demag(repetitions, params, m, Ms, unit_length, bem=None, b2g_map=None):
     demag = Demag("FK")
     demag.parameters["phi_1_solver"] = params[0]
     demag.parameters["phi_1_preconditioner"] = params[1]
@@ -29,7 +31,7 @@ def run_demag(repetitions, params, S3, m, Ms, unit_length, bem=None, b2g_map=Non
     demag.parameters["phi_2_preconditioner"] = params[3]
     if bem is not None:
         demag.precomputed_bem(bem, b2g_map)
-    demag.setup(S3, m, Ms, unit_length)
+    demag.setup(m, Ms, unit_length)
     start = now()
     for j in xrange(repetitions):
         H = demag.compute_field()
@@ -44,19 +46,20 @@ except IOError:
         print "Mesh {}/{} with maxh = {:.3}.".format(i + 1, len(maxhs), maxh)
         mesh = create_mesh(maxh)
         S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
-        m = df.Function(S3)
-        m.assign(df.Constant(m_0))
+        m_function = df.Function(S3)
+        m_function.assign(df.Constant(m_0))
+        m = Field(S3, m_function)
 
         # Pre-compute BEM to save time.
         bem, b2g_map = compute_bem_fk(df.BoundaryMesh(mesh, 'exterior', False))
 
         print "Computing demagnetising field with default solver parameters..."
         H_default, runtime_default = run_demag(
-            repetitions, default_params, S3, m, Ms, unit_length, bem, b2g_map)
+            repetitions, default_params, m, Ms, unit_length, bem, b2g_map)
 
         print "Computing demagnetising field with optimised solver parameters..."
         H_opt, runtime_opt = run_demag(
-            repetitions, opt_params, S3, m, Ms, unit_length, bem, b2g_map)
+            repetitions, opt_params, m, Ms, unit_length, bem, b2g_map)
 
         results[i, 0] = mesh.num_vertices()
         results[i, 1] = runtime_default
