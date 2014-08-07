@@ -86,3 +86,21 @@ def test_pinning(setup):
     dmdt_node_others = dmdt.vector()[3:]
     assert np.all(dmdt_node0.array() == np.array((0, 0, 0)))
     assert not np.all(dmdt_node_others.array() == np.array((0, 0, 0, 0, 0, 0)))
+
+
+def test_slonczewski(setup):
+    mesh, V, alpha, W, m, H, dmdt = setup
+    equation = eq.Equation(m.vector(), H.vector(), dmdt.vector())
+    equation.set_alpha(alpha.vector())
+    equation.set_gamma(1.0)
+
+    Ms = df.Function(V)
+    Ms.assign(df.Constant(1))
+    J = df.Function(V)
+    J.assign(df.Constant(1))
+    equation.slonczewski(5e-9, 0.4, np.array((1.0, 0.0, 0.0)), 1, 0)
+    assert equation.slonczewski_status() is False  # missing J, Ms
+    equation.set_saturation_magnetisation(Ms.vector())
+    equation.set_current_density(J.vector())
+    assert equation.slonczewski_status() is True
+    equation.solve()

@@ -3,7 +3,6 @@ import numpy as np
 import inspect
 from aeon import default_timer
 from finmag.native import sundials
-from finmag.field import Field
 import finmag.native.llb as native_llb
 from finmag.energies import Zeeman
 from finmag.energies import Demag
@@ -28,8 +27,6 @@ class LLB(object):
         self.m = self._m.vector().array()
         self.S1 = mat.S1
         self.S3 = mat.S3
-        self.m_field = Field(self.S3)
-        self.m_field.set_with_numpy_array_debug(self.m)
         self.mesh=self.S1.mesh()
 
         self.dm_dt = np.zeros(self.m.shape)
@@ -193,9 +190,7 @@ class LLB(object):
                                        self.using_type_II)
 
     def add(self,interaction):
-        m_field_temp = Field(self.S3)
-        m_field_temp.set_with_numpy_array_debug(self.material.m)
-        interaction.setup(m_field_temp,
+        interaction.setup(self.material._m,
                           self.material.Ms0,
                           unit_length=self.material.unit_length)
         self.interactions.append(interaction)

@@ -4,7 +4,7 @@ import dolfin as df
 import finmag.util.consts as consts
 import finmag.native.llb as native_llb
 from finmag.util import helpers
-
+from finmag.field import Field
 
 logger = logging.getLogger(name='finmag')
 
@@ -39,7 +39,7 @@ class Material(object):
         self.S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
 
         self.nxyz=mesh.num_vertices()
-        self._m = df.Function(self.S3)
+        self._m = Field(self.S3, name='m')
 
         self._T = np.zeros(self.nxyz)
         self._Ms = np.zeros(3*self.nxyz)
@@ -168,7 +168,7 @@ class Material(object):
         reasons and because the attribute m doesn't normalise the vector.
 
         """
-        self._m = helpers.vector_valued_function(value, self.S3, normalise=False)
+        self._m.set(value)
 
 
 if __name__ == "__main__":
