@@ -88,7 +88,7 @@ class Demag2D(FKDemag):
         dg3 = df.FunctionSpace(mesh,'DG',0)
 
         class HelperExpression(df.Expression):
-            def __init__(self,value):
+            def __init__(self, value):
                 super(HelperExpression, self).__init__()
                 self.fun = value
 
@@ -128,6 +128,7 @@ class Demag2D(FKDemag):
 
         V1 = df.FunctionSpace(mesh3, "Lagrange", 1)
         V3 = df.VectorFunctionSpace(mesh3, "Lagrange", 1)
+        S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
 
         mm = Field(V3, df.Function(V3))
 
