@@ -812,6 +812,19 @@ def mesh_quality(mesh):
     return info_string
 
 
+def longest_edges(mesh):
+    """
+    Return a df.Function over the cells of `mesh` where the value
+    is equal to the length of the longest edge of the cell.
+
+    """
+    V = df.FunctionSpace(mesh, "DG", 0)
+    f = df.Function(V)
+    for c in df.cells(mesh):
+        f.vector()[c.global_index()] = max([e.length() for e in df.edges(c)])
+    return f
+
+
 def print_mesh_info(mesh):
     print mesh_info(mesh)
 
