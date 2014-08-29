@@ -89,43 +89,18 @@ namespace dolfin { namespace finmag {
 
     void ZhangLi::compute(double const& alpha, double const& Ms,
                           double const& m_x, double const& m_y, double const& m_z,
-                          double const& g_x, double const& g_y, double const& g_z,
+                          double const& tau_x, double const& tau_y, double const& tau_z,
                           double& dm_x, double& dm_y, double& dm_z) {
         double const coeff_stt = (Ms == 0) ? 0 : u_0 / (1 + alpha * alpha) / Ms;
-        double const mht = m_x * g_x + m_y * g_y + m_z * g_z;
-        double const p_x = g_x - mht * m_x;
-        double const p_y = g_y - mht * m_y;
-        double const p_z = g_z - mht * m_z;
-        double const mth_x = cross_x(m_x, m_y, m_z, p_x, p_y, p_z);
-        double const mth_y = cross_y(m_x, m_y, m_z, p_x, p_y, p_z);
-        double const mth_z = cross_z(m_x, m_y, m_z, p_x, p_y, p_z);
-        dm_x += coeff_stt * ((1 + alpha * beta) * p_x - (beta - alpha) * mth_x);
-        dm_y += coeff_stt * ((1 + alpha * beta) * p_y - (beta - alpha) * mth_y);
-        dm_z += coeff_stt * ((1 + alpha * beta) * p_z - (beta - alpha) * mth_z);
-    }
-
-    NonlocalSTT::NonlocalSTT(double const P, double const tau_sd, double const tau_sf) :
-        P(P),
-        tau_sd(tau_sd),
-        tau_sf(tau_sf) {
-    }
-
-    void NonlocalSTT::compute(double const& alpha, double const& Ms,
-                              double const& m_x, double const& m_y, double const& m_z,
-                              double const& mt_x, double const& mt_y, double const& mt_z,
-                              double const& g_x, double const& g_y, double const& g_z,
-                              double const& d_x, double const& d_y, double const& d_z,
-                              double& dm_x, double& dm_y, double& dm_z) {
-        double const u_0 = P * mu_B / e;
-        double const coeff_stt = (Ms == 0) ? 0 : u_0 / Ms;
-        double const mmt = m_x * mt_x + m_y * mt_y + m_z * mt_z;
-        double const mtp_x = mt_x - mmt * m_x;
-        double const mtp_y = mt_y - mmt * m_y;
-        double const mtp_z = mt_z - mmt * m_z;
-        double const mmt_x = cross_x(m_x, m_y, m_z, mt_x, mt_y, mt_z) / tau_sd;
-        double const mmt_y = cross_y(m_x, m_y, m_z, mt_x, mt_y, mt_z) / tau_sd;
-        double const mmt_z = cross_z(m_x, m_y, m_z, mt_x, mt_y, mt_z) / tau_sd;
-
-
+        double const mtau = m_x * tau_x + m_y * tau_y + m_z * tau_z;
+        double const tau_perp_x = tau_x - mtau * m_x;
+        double const tau_perp_y = tau_y - mtau * m_y;
+        double const tau_perp_z = tau_z - mtau * m_z;
+        double const mtp_x = cross_x(m_x, m_y, m_z, tau_perp_x, tau_perp_y, tau_perp_z);
+        double const mtp_y = cross_y(m_x, m_y, m_z, tau_perp_x, tau_perp_y, tau_perp_z);
+        double const mtp_z = cross_z(m_x, m_y, m_z, tau_perp_x, tau_perp_y, tau_perp_z);
+        dm_x += coeff_stt * ((1 + alpha * beta) * tau_perp_x - (beta - alpha) * mtp_x);
+        dm_y += coeff_stt * ((1 + alpha * beta) * tau_perp_y - (beta - alpha) * mtp_y);
+        dm_z += coeff_stt * ((1 + alpha * beta) * tau_perp_z - (beta - alpha) * mtp_z);
     }
 }}

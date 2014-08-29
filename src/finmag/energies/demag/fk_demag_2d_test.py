@@ -1,4 +1,5 @@
 import dolfin as df
+import pytest
 from finmag.field import Field
 from finmag.energies.demag.fk_demag_2d import Demag2D
 
@@ -22,8 +23,8 @@ def test_create_mesh():
         assert abs(coord1[i][1] - coord2[i+nv][1]) < eps
 
 
-def demag_2d():
-
+@pytest.mark.xfail
+def test_demag_2d(plot=False):
     mesh = df.UnitSquareMesh(4,4)
 
     Ms = 1.0
@@ -41,7 +42,6 @@ def demag_2d():
 
     f0 = demag.compute_field()
     m.set_with_numpy_array_debug(f0)
-    df.plot(m.f)
 
     print demag.m.probe(0., 0., 0)
     print demag.m.probe(1., 0., 0)
@@ -54,13 +54,11 @@ def demag_2d():
     print demag.m.probe(0., 1., h)
     print demag.m.probe(1., 1., h)
 
-    df.interactive()
+    if plot:
+        df.plot(m.f)
+        df.interactive()
 
 if __name__=="__main__":
 
     test_create_mesh()
-    demag_2d()
-
-
-
-
+    test_demag_2d(plot=True)
