@@ -153,9 +153,53 @@ namespace finmag { namespace neb {
             	dm2 = compute_dm(yb, yc, nodes);
 
             	spring[i-1] = spring_coeff*(dm2-dm1);
-            }
 
+            }
 	}
+
+      void compute_dmdt(double *m, double *h, double *dm_dt, int nodes){
+
+        		int n = nodes/3;
+
+        		for(int i=0;i<n;i++){
+        			int j=i+n;
+        			int k=j+n;
+
+        	        double mm = m[i]*m[i] + m[j]*m[j] + m[k]*m[k];
+        	        double mh = m[i]*h[i] + m[j]*h[j] + m[k]*h[k];
+        	        //mm.h-mh.m=-mx(mxh)
+        	        dm_dt[i] = mm*h[i] - mh*m[i];
+        	        dm_dt[j] = mm*h[j] - mh*m[j];
+        	        dm_dt[k] = mm*h[k] - mh*m[k];
+
+        		}
+
+
+       }
+
+      void compute_dm_dt(const np_array<double> &ys,
+        			const np_array<double> &heff,
+        			const np_array<double> &dm_dt) {
+
+        			ys.check_ndim(2, "check_dimensions: ys");
+        			heff.check_ndim(2, "check_dimensions: heff");
+        			dm_dt.check_ndim(2, "check_dimensions: dm_dt");
+
+                    int const image_num = ys.dim()[0];
+                    int const nodes = ys.dim()[1];
+
+                    for(int i=1; i<image_num-1; i++){
+                    	double *y = ys(i);
+                    	double *h = heff(i);
+                    	double *dmdt = dm_dt(i);
+
+                    	compute_dmdt(y, h, dmdt, nodes);
+
+                    }
+
+                   return;
+
+     }
 
     void register_neb() {
 
@@ -173,5 +217,10 @@ namespace finmag { namespace neb {
     	            arg("spring_coeff")
     	        ));
 
+    	def("compute_dm_dt", &compute_dm_dt, (
+    	            arg("ys"),
+    	            arg("heff"),
+    	            arg("dm_dt")
+    	        ));
     }
 }}
