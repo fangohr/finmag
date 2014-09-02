@@ -172,6 +172,11 @@ namespace finmag { namespace neb {
         	        dm_dt[j] = mm*h[j] - mh*m[j];
         	        dm_dt[k] = mm*h[k] - mh*m[k];
 
+        	        double c = 6*sqrt(dm_dt[i]*dm_dt[i]+dm_dt[j]*dm_dt[j]+dm_dt[k]*dm_dt[k]);
+
+        	        dm_dt[i] += c*(1-mm)*m[i];
+        	        dm_dt[j] += c*(1-mm)*m[j];
+        	        dm_dt[k] += c*(1-mm)*m[k];
         		}
 
 
