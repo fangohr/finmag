@@ -30,7 +30,7 @@ from finmag.util.pbc2d import PeriodicBoundary1D, PeriodicBoundary2D
 from finmag.energies import Exchange, Zeeman, TimeZeeman, Demag, UniaxialAnisotropy, DMI, MacroGeometry
 
 #used for parallel testing
-from finmag.native import cvode_petsc, llg_petsc
+#from finmag.native import cvode_petsc, llg_petsc
 
 log = logging.getLogger(name="finmag")
 

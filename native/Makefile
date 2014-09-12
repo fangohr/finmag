@@ -53,10 +53,10 @@ $(MODULE_DIR)/treecode_bem.so: src/treecode_bem/treecode_bem_I.c  src/treecode_b
 	cd src/treecode_bem && python setup.py build_ext --inplace
 	install src/treecode_bem/treecode_bem.so ../src/finmag/native
 
-$(MODULE_DIR)/cvode_petsc.so: src/cvode/cvode_petsc.pxd  src/cvode/cvode_petsc.pyx src/cvode/llg.c src/cvode/llg.h src/cvode/llg_petsc.pyx
-	cd src/cvode && python setup.py build_ext --inplace
-	install src/cvode/cvode_petsc.so ../src/finmag/native
-	install src/cvode/llg_petsc.so ../src/finmag/native
+#$(MODULE_DIR)/cvode_petsc.so: src/cvode/cvode_petsc.pxd  src/cvode/cvode_petsc.pyx src/cvode/llg.c src/cvode/llg.h src/cvode/llg_petsc.pyx
+#	cd src/cvode && python setup.py build_ext --inplace
+#	install src/cvode/cvode_petsc.so ../src/finmag/native
+#	install src/cvode/llg_petsc.so ../src/finmag/native
 
 $(UNIT_TEST_BINARY): tests/run_ci_tests.o src/util/np_array.o src/sundials/tests/sundials_tests.o src/sundials/numpy_malloc.o 
 run_ci_tests_LDFLAGS=-lboost_prg_exec_monitor -lboost_system -lboost_unit_test_framework $(SUNDIALS_NVECTOR_SO) -L$(INSTALL_PATH)/lib -ldolfin
