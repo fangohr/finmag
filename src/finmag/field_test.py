@@ -179,6 +179,51 @@ class TestField(object):
             probed_value = field.probe(probing_point)
             assert abs(probed_value - expected_probed_value) < self.tol1
 
+    def test_set_scalar_field_with_dolfin_function(self):
+        """Test setting the scalar field with a dolfin function."""
+        # Different expressions for defining the dolfin function,
+        # depending on the mesh dimension (1D, 2D, or 3D).
+        expressions = [df.Expression("11.2*x[0]"),
+                       df.Expression("11.2*x[0] - 3.01*x[1]"),
+                       df.Expression("11.2*x[0] - 3.01*x[1] + 2.7*x[2]")]
+
+        # Setting the scalar field for different
+        # scalar function spaces and appropriate expressions.
+        for functionspace in self.scalar_fspaces:
+            field = Field(functionspace)
+            dolfin_function = df.Function(functionspace)
+
+            # Set the field and compute expected values
+            # depending on the mesh dimension.
+            coords = field.coords_and_values()[0]  # Values ignored.
+            if field.mesh_dim() == 1:
+                dolfin_function = df.interpolate(expressions[0], functionspace)
+                field.set(dolfin_function)
+                expected_values = 11.2*coords[:, 0]
+                expected_probed_value = 11.2*self.probing_coord
+            elif field.mesh_dim() == 2:
+                dolfin_function = df.interpolate(expressions[1], functionspace)
+                field.set(dolfin_function)
+                expected_values = 11.2*coords[:, 0] - 3.01*coords[:, 1]
+                expected_probed_value = (11.2 - 3.01)*self.probing_coord
+            elif field.mesh_dim() == 3:
+                dolfin_function = df.interpolate(expressions[2], functionspace)
+                field.set(dolfin_function)
+                expected_values = 11.2*coords[:, 0] - 3.01*coords[:, 1] + \
+                    2.7*coords[:, 2]
+                expected_probed_value = (11.2 - 3.01 + 2.7)*self.probing_coord
+
+            # Check the result of coords_and_values (should be exact).
+            field_values = field.coords_and_values()[1]  # ignore coordinates
+            assert np.all(field_values[:, 0] == expected_values)
+
+            # Check the interpolated value outside the mesh node.
+            # The expected field is linear and, because of that,
+            # smaller tolerance value (tol1) is used.
+            probing_point = field.mesh_dim() * (self.probing_coord,)
+            probed_value = field.probe(probing_point)
+            assert abs(probed_value - expected_probed_value) < self.tol1
+
     def test_set_scalar_field_with_python_function(self):
         """Test setting the scalar field with a python function."""
         # Python functions array for setting the scalar field.

@@ -145,7 +145,7 @@ class Field(object):
             self.normalise()
 
     def set_with_numpy_array_debug(self, value, normalised=False):
-        """ONLY for debigging"""
+        """ONLY for debugging"""
         self.f.vector().set_local(value)
 
         if normalised:
