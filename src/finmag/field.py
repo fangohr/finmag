@@ -82,6 +82,8 @@ class Field(object):
                 raise TypeError('Function and field functionspaces '
                                 'do not match')
 
+        # Generic vector type value
+        # appropriate for both scalar and vector fields.
         elif isinstance(value, df.GenericVector):
             self.f.vector()[:] = value
 
