@@ -14,7 +14,7 @@ from finmag.util.meshes import nodal_volume
 logger = logging.getLogger(name='finmag')
 
 #used for parallel testing
-from finmag.native import cvode_petsc, llg_petsc
+#from finmag.native import cvode_petsc, llg_petsc
 
 class LLG(object):
     """
