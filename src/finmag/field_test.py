@@ -1211,4 +1211,3 @@ class TestField(object):
                 assert abs(field3.probe(coord)[0] - 6) < self.tol1
                 assert abs(field3.probe(coord)[1] - 4.1) < self.tol1
                 assert abs(field3.probe(coord)[2] - 9) < self.tol1
-            
