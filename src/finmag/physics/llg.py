@@ -13,6 +13,8 @@ from finmag.util.meshes import nodal_volume
 #getting access to logger here
 logger = logging.getLogger(name='finmag')
 
+#used for parallel testing
+from finmag.native import cvode_petsc, llg_petsc
 
 class LLG(object):
     """
@@ -65,6 +67,10 @@ class LLG(object):
         self.pins = []  # nodes where the magnetisation gets pinned
 
         self._dmdt = df.Function(self.S3)
+        
+        #used for parallel stuff.
+        self.field = df.Function(self.S3)
+        self.h_petsc = df.as_backend_type(self.field.vector()).vec()
 
     def set_pins(self, nodes):
         """
@@ -286,6 +292,25 @@ class LLG(object):
         # need to be present because the function must have the correct signature
         # when it is passed to set_spils_preconditioner() in the cvode class.
         z[:] = r
+        return 0
+    
+    def sundials_rhs_petsc(self, t, y, ydot):
+        #only for the testing of parallel stuff, will delete later.
+        
+        self.effective_field.update(t)
+        self.field.vector().set_local(self.effective_field.H_eff)
+        
+        #this is not ideal, will change it after we make use of Field class for damping.
+        alpha_petsc = df.as_backend_type(self.alpha.vector()).vec()
+        
+        llg_petsc.compute_dm_dt(y,
+                                self.h_petsc,
+                                ydot,
+                                alpha_petsc,
+                                self.gamma,
+                                self.do_precession,
+                                self.c)
+                                
         return 0
 
     # Computes the Jacobian-times-vector product, as used by SUNDIALS CVODE
