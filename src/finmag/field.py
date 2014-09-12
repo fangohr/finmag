@@ -183,55 +183,6 @@ class Field(object):
             raise NotImplementedError('The normalisation of scalar field '
                                       'values is not implemented.')
 
-
-    def compute_pointwise_norm(self, target=None, method=1):
-        """
-        Compute the norm of the function pointwise, i.e. for every vertex.
-
-        Arguments:
-
-        ``target`` is a scalar dolfin function to accommodate the norm
-
-        ``method`` is an integer to choose the method. We are not sure what method is best at the moment.
-
-        This method is not implemented only for vector fields with 3 compoents at every vertex.
-
-        """
-
-        if not target:
-            raise NotImplementedError("This is missing - could cerate a df.Function(V) here")
-
-        assert self.value_dim() in [3], "Only implemented for 3d vector field"
-
-        if method == 1:
-            wx, wy, wz = self.f.split(deepcopy=True)
-            wnorm = np.sqrt(wx.vector() * wx.vector()  + wy.vector() * wy.vector() + wz.vector() * wz.vector())
-            target.vector().set_local(wnorm)
-
-        elif method == 2:
-            raise NotImplementedError("this code doesn't compile in Cython - deactivate for now")
-            #V_vec = self.f.function_space()
-            #dofs0 = V_vec.sub(0).dofmap().dofs()    # indices of x-components
-            #dofs1 = V_vec.sub(1).dofmap().dofs()    # indices of y-components
-            #dofs2 = V_vec.sub(2).dofmap().dofs()    # indices of z-components
-
-            #target.vector()[:] = np.sqrt(w.vector()[dofs0] * w.vector()[dofs0] +\
-            #                            w.vector()[dofs1] * w.vector()[dofs1] +\
-            #                             w.vector()[dofs2] * w.vector()[dofs2])
-
-        elif method == 3:
-            try:
-                import finmag.native.clib as clib
-            except ImportError:
-                print "please go to the finmag/native/src/clib and run 'make' to install clib"
-            f = df.as_backend_type(target.vector()).vec()
-            w = df.as_backend_type(self.f.vector()).vec()
-            clib.norm(w, f)
-
-        else:
-            raise NotImplementedError("method {} unknown".format(method))
-
-
     def average(self, dx=df.dx):
         """
         Return the spatial field average.
@@ -347,3 +298,50 @@ class Field(object):
 
     def plot_with_dolfin(self, interactive=True):
         df.plot(self.f, interactive=True)
+
+    def compute_pointwise_norm(self, target=None, method=1):
+        """
+        Compute the norm of the function pointwise, i.e. for every vertex.
+
+        Arguments:
+
+        ``target`` is a scalar dolfin function to accommodate the norm
+
+        ``method`` is an integer to choose the method. We are not sure what method is best at the moment.
+
+        This method is not implemented only for vector fields with 3 compoents at every vertex.
+
+        """
+
+        if not target:
+            raise NotImplementedError("This is missing - could cerate a df.Function(V) here")
+
+        assert self.value_dim() in [3], "Only implemented for 3d vector field"
+
+        if method == 1:
+            wx, wy, wz = self.f.split(deepcopy=True)
+            wnorm = np.sqrt(wx.vector() * wx.vector()  + wy.vector() * wy.vector() + wz.vector() * wz.vector())
+            target.vector().set_local(wnorm)
+
+        elif method == 2:
+            raise NotImplementedError("this code doesn't compile in Cython - deactivate for now")
+            #V_vec = self.f.function_space()
+            #dofs0 = V_vec.sub(0).dofmap().dofs()    # indices of x-components
+            #dofs1 = V_vec.sub(1).dofmap().dofs()    # indices of y-components
+            #dofs2 = V_vec.sub(2).dofmap().dofs()    # indices of z-components
+
+            #target.vector()[:] = np.sqrt(w.vector()[dofs0] * w.vector()[dofs0] +\
+            #                            w.vector()[dofs1] * w.vector()[dofs1] +\
+            #                             w.vector()[dofs2] * w.vector()[dofs2])
+
+        elif method == 3:
+            try:
+                import finmag.native.clib as clib
+            except ImportError:
+                print "please go to the finmag/native/src/clib and run 'make' to install clib"
+            f = df.as_backend_type(target.vector()).vec()
+            w = df.as_backend_type(self.f.vector()).vec()
+            clib.norm(w, f)
+
+        else:
+            raise NotImplementedError("method {} unknown".format(method))
