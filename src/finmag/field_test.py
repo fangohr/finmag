@@ -735,10 +735,7 @@ class TestField(object):
         # Different expressions for setting the scalar field.
         # All expressions set the field with same average value.
 
-
         # TODO: Add test for computing average on different mesh regions.
-
-
         expressions = [df.Constant(5),
                        df.Expression('10*x[0]'),
                        lambda x:10*x[0]]
