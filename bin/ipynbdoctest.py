@@ -350,7 +350,8 @@ def merge_streams(outputs):
     """
     # Sanitize all outputs of the cell
     for out in outputs:
-        out['text'] = sanitize(out['text'])
+        if 'text' in out.keys():
+            out['text'] = sanitize(out['text'])
 
     # Discard outputs that match any of the patterns in DISCARD_PATTERNS...
     #import ipdb; ipdb.set_trace()
