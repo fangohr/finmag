@@ -31,7 +31,6 @@ def test_time_advance_time():
     assert sim.t < t  # check that integration was aborted
 
 
-@pytest.mark.slow
 def test_time_default_max_steps():
     """The idea for this test was to check the default max_steps, but 
     the simulation for this runs about 12 minutes. So I have changed 
