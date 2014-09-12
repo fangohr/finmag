@@ -29,6 +29,8 @@ from finmag.scheduler import scheduler
 from finmag.util.pbc2d import PeriodicBoundary1D, PeriodicBoundary2D
 from finmag.energies import Exchange, Zeeman, TimeZeeman, Demag, UniaxialAnisotropy, DMI, MacroGeometry
 
+#used for parallel testing
+from finmag.native import cvode_petsc, llg_petsc
 
 log = logging.getLogger(name="finmag")
 
@@ -42,7 +44,7 @@ class Simulation(object):
 
     """
     @mtimed
-    def __init__(self, mesh, Ms, unit_length=1, name='unnamed', kernel='llg' ,integrator_backend="sundials", pbc=None, average=False):
+    def __init__(self, mesh, Ms, unit_length=1, name='unnamed', kernel='llg' ,integrator_backend="sundials", pbc=None, average=False, parallel=False):
         """Simulation object.
 
         *Arguments*
@@ -163,7 +165,12 @@ class Simulation(object):
         # let's use 1e-6 as default and we can change it later
         self.reltol = 1e-6
         self.abstol = 1e-6
-
+    
+        self.parallel = parallel
+        if self.parallel:
+            self.m_petsc = self.llg._m_field.petsc_vector()
+            #df.parameters.reorder_dofs_serial = True
+            
         # We used to only create the integrator when needed. However, this can
         # lead to a bug when the user saves information to an .ndt file before
         # a time integrator exists because some columns will be missing (as the
@@ -557,7 +564,9 @@ class Simulation(object):
             if backend == None:
                 backend = self.integrator_backend
             log.info("Create integrator {} with kwargs={}".format(backend, kwargs))
-            if self.kernel == 'llg_stt':
+            if self.parallel:
+                self.integrator = cvode_petsc.CvodeSolver(self.llg.sundials_rhs_petsc, 0, self.m_petsc, self.reltol, self.abstol)
+            elif self.kernel == 'llg_stt':
                 self.integrator = SundialsIntegrator(self.llg, self.llg.dy_m, method="bdf_diag", **kwargs)
             elif self.kernel == 'sllg':
                 self.integrator = self.llg
@@ -596,7 +605,10 @@ class Simulation(object):
         self.abstol = abstol
 
         if hasattr(self, "integrator"):
-            self.integrator.integrator.set_scalar_tolerances(reltol, abstol)
+            if self.parallel:
+                self.integrator.set_options(reltol, abstol)
+            else:
+                self.integrator.integrator.set_scalar_tolerances(reltol, abstol)
 
 
     def advance_time(self, t):
@@ -633,11 +645,17 @@ class Simulation(object):
         self.scheduler.add(call_to_end_integration, at=t, at_end=True)
 
         self.scheduler.run(self.integrator, self.callbacks_at_scheduler_events)
+        
+        if self.parallel:
+            #print self.llg._m_field.f.vector().array()
+            #TODO: maybe this is not necessary, check it later.
+            self.llg._m_field.f.vector().set_local(self.integrator.y_np)
 
         # The following line is necessary because the time integrator may
         # slightly overshoot the requested end time, so here we make sure
         # that the field values represent that requested time exactly.
         self.llg.effective_field.update(t)
+        
 
         log.info("Simulation has reached time t = {:.2g} s.".format(self.t))
 
