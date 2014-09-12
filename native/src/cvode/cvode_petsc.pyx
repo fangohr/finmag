@@ -59,7 +59,7 @@ cdef int cv_rhs(realtype t, N_Vector yv, N_Vector yvdot, void* user_data) except
 
 cdef class CvodeSolver(object):
     
-    cdef public double t
+    cdef public double cur_t
     cdef public np_c.ndarray y_np
     cdef double rtol, atol
     cdef int max_num_steps
@@ -92,7 +92,7 @@ cdef class CvodeSolver(object):
 
         self.y = y0
         self.y_dot = self.y.duplicate()
-        self.t = t0
+        self.cur_t = t0
 
         self.user_data = cv_userdata(<void*>self.callback_fun,
                                      <void *>self.y,<void *>self.y_dot)
@@ -102,13 +102,13 @@ cdef class CvodeSolver(object):
         self.y_np = y_np
         self.y_nv = N_VMake_Parallel(comm_c, y0.getLocalSize(), y0.getSize(), &y_np[0])
         
-        flag = CVodeInit(self.cvode_mem, <CVRhsFn>self.cv_rhs, self.t, self.y_nv)
+        flag = CVodeInit(self.cvode_mem, <CVRhsFn>self.cv_rhs, t0, self.y_nv)
         self.check_flag(flag,"CVodeInit")
 
         flag = CVodeSetUserData(self.cvode_mem, <void*>&self.user_data);
         self.check_flag(flag,"CVodeSetUserData")
 
-    def set_options(self, rtol, atol, max_num_steps):
+    def set_options(self, rtol, atol, max_num_steps=100000):
         self.rtol = rtol
         self.atol = atol
         self.max_num_steps = max_num_steps
@@ -134,6 +134,13 @@ cdef class CvodeSolver(object):
         
         flag = CVodeStep(self.cvode_mem, tf, self.y_nv, &tret, CV_NORMAL)
         self.check_flag(flag,"CVodeStep")
+        self.cur_t = tf
+        
+        return 0
+
+    cpdef int advance_time(self, double tf) except -1:
+        
+        self.run_until(tf)
         
         return 0
 
