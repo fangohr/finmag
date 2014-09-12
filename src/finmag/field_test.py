@@ -1190,7 +1190,7 @@ class TestField(object):
         field = Field(self.fs3d_vector3d, value=[1, 0, 0])
         field.plot_with_dolfin(interactive=False)
 
-    def test_add(self):
+    def test_add_scalar_fields(self):
         for functionspace in self.scalar_fspaces:
             field1 = Field(functionspace, value=3.1)
             field2 = Field(functionspace, value=3.35)
@@ -1198,4 +1198,17 @@ class TestField(object):
             field3 = field1 + field2
 
             assert np.allclose(field3.f.vector().array(), 6.45)
+
+    def test_add_vector_fields(self):
+        for functionspace in self.vector3d_fspaces:
+            field1 = Field(functionspace, value=(1, 2, 3))
+            field2 = Field(functionspace, value=(5, 2.1, 6))
+
+            field3 = field1 + field2
+
+            coords = field3.coords_and_values()[0]
+            for coord in coords:
+                assert abs(field3.probe(coord)[0] - 6) < self.tol1
+                assert abs(field3.probe(coord)[1] - 4.1) < self.tol1
+                assert abs(field3.probe(coord)[2] - 9) < self.tol1
             
