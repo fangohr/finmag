@@ -276,6 +276,9 @@ class Field(object):
 
     def vector(self):
         return self.f.vector()
+    
+    def petsc_vector(self):
+        return df.as_backend_type(self.f.vector()).vec()
 
     def save_pvd(self, filename):
         """Save to pvd file using dolfin code"""
