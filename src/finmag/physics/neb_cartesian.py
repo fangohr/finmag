@@ -33,7 +33,7 @@ def linear_interpolation_two(m0, m1, n):
     done in the magnetic moments that constitute the
     magnetic system.
     """
-    
+
     dm = (m1 - m0)/(n+1)
     coords = []
     for i in range(n):
@@ -71,7 +71,7 @@ def compute_dm(m0, m1):
     length = len(dm)
     dm = np.sqrt(np.sum(dm**2))/length
     return dm
-    
+
 class NEB_Sundials(object):
     """
     Nudged elastic band method by solving the differential equation using Sundials.
@@ -149,9 +149,9 @@ class NEB_Sundials(object):
 
         self.tangents = np.zeros(3*self.nxyz*self.image_num)
         self.tangents.shape = (self.image_num, -1)
-        
+
         self.energy = np.zeros(self.total_image_num)
-        
+
         self.springs = np.zeros(self.image_num)
 
         self.t = 0
@@ -319,7 +319,7 @@ class NEB_Sundials(object):
         default_timer.start("sundials_rhs", self.__class__.__name__)
 
         self.compute_effective_field(y)
-        
+
         y.shape = (self.total_image_num, -1)
         ydot.shape = (self.total_image_num, -1)
 
@@ -329,16 +329,16 @@ class NEB_Sundials(object):
             sf = self.springs[i]
 
             h3 = h - np.dot(h, t)*t + sf*t
-            
+
             h[:] = h3[:]
 
             #ydot[i+1, :] = h3[:]
-        
+
         native_neb.compute_dm_dt(y, self.Heff, ydot)
-        
+
         ydot[0, :] = 0
         ydot[-1, :] = 0
-        
+
         y.shape = (-1,)
         ydot.shape = (-1,)
 
@@ -450,5 +450,4 @@ if __name__ == '__main__':
     neb = NEB_Sundials(sim, init_images, interpolations)
 
     neb.relax(stopping_dmdt=1e2)
-    plot_energy_3d('unnamed_energy.ndt')
-
+    native_neb.plot_energy_3d('unnamed_energy.ndt')
