@@ -31,10 +31,19 @@ def test_time_advance_time():
     assert sim.t < t  # check that integration was aborted
 
 
-@pytest.mark.slow
 def test_time_default_max_steps():
+    """The idea for this test was to check the default max_steps, but 
+    the simulation for this runs about 12 minutes. So I have changed 
+    the code below, to stop after 10 steps. HF, Sept 2014
+    """
     sim = finmag.example.barmini()
     t = 20e-9;
+    # create integrator
+    sim.create_integrator()
+    # set steps to a small number
+    sim.integrator.max_steps = 10
+
+    # now run until we exceed 10 steps
     with pytest.raises(RuntimeError) as exc_info:
         sim.advance_time(t)
     assert sim.t < t
