@@ -1189,3 +1189,13 @@ class TestField(object):
 
         field = Field(self.fs3d_vector3d, value=[1, 0, 0])
         field.plot_with_dolfin(interactive=False)
+
+    def test_add(self):
+        for functionspace in self.scalar_fspaces:
+            field1 = Field(functionspace, value=3.1)
+            field2 = Field(functionspace, value=3.35)
+
+            field3 = field1 + field2
+
+            assert np.allclose(field3.f.vector().array(), 6.45)
+            
