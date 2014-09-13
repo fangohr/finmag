@@ -436,18 +436,3 @@ class NEB_Sundials(object):
 
         self.save_vtks()
         self.save_npys()
-
-
-if __name__ == '__main__':
-
-    import finmag
-
-    sim = finmag.example.barmini()
-
-    init_images = [(0, 0, -1), (1, 1, 0), (0, 0, 1)]
-    interpolations = [15, 14]
-
-    neb = NEB_Sundials(sim, init_images, interpolations)
-
-    neb.relax(stopping_dmdt=1e2)
-    native_neb.plot_energy_3d('unnamed_energy.ndt')
