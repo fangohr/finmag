@@ -294,6 +294,7 @@ class LLG(object):
         z[:] = r
         return 0
     
+    """
     def sundials_rhs_petsc(self, t, y, ydot):
         #only for the testing of parallel stuff, will delete later.
         
@@ -312,7 +313,8 @@ class LLG(object):
                                 self.c)
                                 
         return 0
-
+    """
+    
     # Computes the Jacobian-times-vector product, as used by SUNDIALS CVODE
     @mtimed
     def sundials_jtimes(self, mp, J_mp, t, m, fy, tmp):
