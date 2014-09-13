@@ -565,7 +565,11 @@ class Simulation(object):
                 backend = self.integrator_backend
             log.info("Create integrator {} with kwargs={}".format(backend, kwargs))
             if self.parallel:
-                self.integrator = cvode_petsc.CvodeSolver(self.llg.sundials_rhs_petsc, 0, self.m_petsc, self.reltol, self.abstol)
+                #HF, the reason for commenting out the line below is that
+                #cython fails to compile the file otherwise. Will all be 
+                #fixed when the parallel sundials is completed. Sep 2014
+                raise("The next line has been deactivated - fix to proceed with parallel")
+                #self.integrator = cvode_petsc.CvodeSolver(self.llg.sundials_rhs_petsc, 0, self.m_petsc, self.reltol, self.abstol)
             elif self.kernel == 'llg_stt':
                 self.integrator = SundialsIntegrator(self.llg, self.llg.dy_m, method="bdf_diag", **kwargs)
             elif self.kernel == 'sllg':
