@@ -69,8 +69,8 @@ class LLG(object):
         self._dmdt = df.Function(self.S3)
         
         #used for parallel stuff.
-        self.field = df.Function(self.S3)
-        self.h_petsc = df.as_backend_type(self.field.vector()).vec()
+        #self.field = df.Function(self.S3)
+        #self.h_petsc = df.as_backend_type(self.field.vector()).vec()
 
     def set_pins(self, nodes):
         """
