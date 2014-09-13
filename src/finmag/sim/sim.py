@@ -610,7 +610,8 @@ class Simulation(object):
 
         if hasattr(self, "integrator"):
             if self.parallel:
-                self.integrator.set_options(reltol, abstol)
+                #self.integrator.set_options(reltol, abstol)
+                pass
             else:
                 self.integrator.integrator.set_scalar_tolerances(reltol, abstol)
 
@@ -650,11 +651,14 @@ class Simulation(object):
 
         self.scheduler.run(self.integrator, self.callbacks_at_scheduler_events)
         
+        
         if self.parallel:
             #print self.llg._m_field.f.vector().array()
             #TODO: maybe this is not necessary, check it later.
-            self.llg._m_field.f.vector().set_local(self.integrator.y_np)
-
+            pass
+            #self.llg._m_field.f.vector().set_local(self.integrator.y_np)
+        
+        
         # The following line is necessary because the time integrator may
         # slightly overshoot the requested end time, so here we make sure
         # that the field values represent that requested time exactly.
