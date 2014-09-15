@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from finmag import Simulation as Sim
 from finmag.energies import Zeeman
 
-df.parameters.reorder_dofs_serial = True
+#df.parameters.reorder_dofs_serial = True
 
 alpha = 0.1
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
