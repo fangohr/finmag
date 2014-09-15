@@ -174,7 +174,7 @@ def get_field(base_name,field="anis"):
         fy=fields["Hdemag_y"]
         fz=fields["Hdemag_z"]
     else:
-        raise NotImplementedError,"only exch and anis field can be extracted now"
+        raise NotImplementedError("only exch and anis field can be extracted now")
 
     field=np.array([fx,fy,fz]).reshape(1,-1,order='C')[0]
     field=field/(np.pi*4e-7)

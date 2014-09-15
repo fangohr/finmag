@@ -1083,7 +1083,7 @@ def plot_hysteresis_loop(H_vals, m_vals, style='x-', add_point_labels=False, poi
                     name, value = elt
                     box_text += "{} = {}\n".format(name, value)
                 except ValueError:
-                    raise ValueError, "All list elements in 'infobox' must be either strings or pairs of the form (name, value). Got: '{}'".format(elt)
+                    raise ValueError("All list elements in 'infobox' must be either strings or pairs of the form (name, value). Got: '{}'".format(elt))
         box_text = box_text.rstrip()
 
         if infobox_loc not in ["top left", "top right", "bottom left", "bottom right"]:
