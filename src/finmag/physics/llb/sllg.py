@@ -18,76 +18,80 @@ from finmag.util.pbc2d import PeriodicBoundary2D
 import logging
 log = logging.getLogger(name="finmag")
 
+
 class SLLG(object):
+
     def __init__(self, S1, S3, method='RK2b', checking_length=False, unit_length=1):
 
         self.S1 = S1
         self.S3 = S3
-        self.mesh=S1.mesh()
+        self.mesh = S1.mesh()
 
-        self._t=0
-        self.time_scale=1e-9
+        self._t = 0
+        self.time_scale = 1e-9
 
         self._m_field = Field(self.S3, name='m')
-        self.nxyz = self._m_field.f.vector().size()/3
+        self.nxyz = self._m_field.f.vector().size() / 3
 
         self._T = np.zeros(self.nxyz)
         self._alpha = np.zeros(self.nxyz)
-        self.m=np.zeros(3*self.nxyz)
-        self.field=np.zeros(3*self.nxyz)
-        self.grad_m=np.zeros(3*self.nxyz)
-        self.dm_dt=np.zeros(3*self.nxyz)
-        self._Ms = np.zeros(3*self.nxyz) #Note: nxyz for Ms length is more suitable?
+        self.m = np.zeros(3 * self.nxyz)
+        self.field = np.zeros(3 * self.nxyz)
+        self.grad_m = np.zeros(3 * self.nxyz)
+        self.dm_dt = np.zeros(3 * self.nxyz)
+        # Note: nxyz for Ms length is more suitable?
+        self._Ms = np.zeros(3 * self.nxyz)
 
-        self.pin_fun=None
+        self.pin_fun = None
         self.method = method
         self.checking_length = checking_length
         self.unit_length = unit_length
         self.DG = df.FunctionSpace(self.mesh, "DG", 0)
         self._Ms_dg = df.Function(self.DG)
-        self.effective_field = EffectiveField(self.S3, self._m_field, self.Ms, self.unit_length)
-        
-        self.zhangli_stt=False
+        self.effective_field = EffectiveField(
+            self.S3, self._m_field, self.Ms, self.unit_length)
+
+        self.zhangli_stt = False
 
         self.set_default_values()
 
     def set_default_values(self):
-        #self.Ms = 8.6e5  # A/m saturation magnetisation
+        # self.Ms = 8.6e5  # A/m saturation magnetisation
         self._pins = np.array([], dtype="int")
-        self.volumes = df.assemble(df.dot(df.TestFunction(self.S3), df.Constant([1, 1, 1])) * df.dx).array()
+        self.volumes = df.assemble(
+            df.dot(df.TestFunction(self.S3), df.Constant([1, 1, 1])) * df.dx).array()
         self.Volume = mesh_volume(self.mesh)
-        self.real_volumes = self.volumes*self.unit_length**3
+        self.real_volumes = self.volumes * self.unit_length ** 3
 
         self.m_pred = np.zeros(self.m.shape)
-        
+
         self.integrator = native_llb.StochasticSLLGIntegrator(
-                                    self.m,
-                                    self.m_pred,
-                                    self._Ms,
-                                    self._T,
-                                    self.real_volumes,
-                                    self._alpha,
-                                    self.stochastic_update_field,
-                                    self.method)
-        
+            self.m,
+            self.m_pred,
+            self._Ms,
+            self._T,
+            self.real_volumes,
+            self._alpha,
+            self.stochastic_update_field,
+            self.method)
+
         self.alpha = 0.1
         self._gamma = consts.gamma
         self._seed = np.random.random_integers(4294967295)
         self.dt = 1e-13
         self.T = 0
 
-
     @property
     def cur_t(self):
-        return self._t*self.time_scale
+        return self._t * self.time_scale
 
     @cur_t.setter
-    def cur_t(self,value):
-        self._t=value/self.time_scale
+    def cur_t(self, value):
+        self._t = value / self.time_scale
 
     @property
     def dt(self):
-        return self._dt*self.time_scale
+        return self._dt * self.time_scale
 
     @property
     def gamma(self):
@@ -99,73 +103,75 @@ class SLLG(object):
 
     @seed.setter
     def seed(self, value):
-        self._seed=value
+        self._seed = value
         self.setup_parameters()
 
     @gamma.setter
     def gamma(self, value):
-        self._gamma=value
+        self._gamma = value
         self.setup_parameters()
 
     @dt.setter
     def dt(self, value):
-        self._dt=value/self.time_scale
+        self._dt = value / self.time_scale
         self.setup_parameters()
 
     def setup_parameters(self):
-        #print 'seed:', self.seed
-        self.integrator.set_parameters(self.dt,self.gamma,self.seed,self.checking_length)
-        log.info("seed=%d."%self.seed)
-        log.info("dt=%g."%self.dt)
-        log.info("gamma=%g."%self.gamma)
+        # print 'seed:', self.seed
+        self.integrator.set_parameters(
+            self.dt, self.gamma, self.seed, self.checking_length)
+        log.info("seed=%d." % self.seed)
+        log.info("dt=%g." % self.dt)
+        log.info("gamma=%g." % self.gamma)
         #log.info("checking_length: "+str(self.checking_length))
 
-    def set_m(self,value,normalise=True):
-        m_tmp = helpers.vector_valued_function(value, self.S3, normalise=normalise).vector().array()
+    def set_m(self, value, normalise=True):
+        m_tmp = helpers.vector_valued_function(
+            value, self.S3, normalise=normalise).vector().array()
         self._m_field.set_with_numpy_array_debug(m_tmp)
         self.m[:] = self._m_field.get_numpy_array_debug()
 
-
-    def advance_time(self,t):
-        tp=t/self.time_scale
+    def advance_time(self, t):
+        tp = t / self.time_scale
 
         if tp <= self._t:
             return
         try:
-            while tp-self._t>1e-12:
+            while tp - self._t > 1e-12:
                 if self.zhangli_stt:
                     self.integrator.run_step(self.field, self.grad_m)
                 else:
                     self.integrator.run_step(self.field)
-                    
+
                 self._m_field.set_with_numpy_array_debug(self.m)
 
-                self._t+=self._dt
-                
-        except Exception,error:
+                self._t += self._dt
+
+        except Exception, error:
             log.info(error)
             raise Exception(error)
 
-        if abs(tp-self._t)<1e-12:
+        if abs(tp - self._t) < 1e-12:
             self._t = tp
 
-    def stochastic_update_field(self,y):
+    def stochastic_update_field(self, y):
 
         self._m_field.set_with_numpy_array_debug(y)
 
         self.field[:] = self.effective_field.compute(self.cur_t)[:]
-        
+
         if self.zhangli_stt:
             self.grad_m[:] = self.compute_gradient_field()[:]
-        
+
     @property
     def T(self):
         return self._T
 
     @T.setter
     def T(self, value):
-        self._T[:]=helpers.scalar_valued_function(value,self.S1).vector().array()[:]
-        log.info('Temperature  : %g',self._T[0])
+        self._T[:] = helpers.scalar_valued_function(
+            value, self.S1).vector().array()[:]
+        log.info('Temperature  : %g', self._T[0])
 
     @property
     def alpha(self):
@@ -173,7 +179,8 @@ class SLLG(object):
 
     @alpha.setter
     def alpha(self, value):
-        self._alpha[:]=helpers.scalar_valued_function(value,self.S1).vector().array()[:]
+        self._alpha[:] = helpers.scalar_valued_function(
+            value, self.S1).vector().array()[:]
 
     def set_alpha(self, value):
         """ for compability reasons with LLG """
@@ -185,13 +192,15 @@ class SLLG(object):
 
     @Ms.setter
     def Ms(self, value):
-        self._Ms_dg.vector().set_local(helpers.scalar_valued_dg_function(value,self.mesh).vector().array())
+        self._Ms_dg.vector().set_local(
+            helpers.scalar_valued_dg_function(value, self.mesh).vector().array())
 
-        tmp = df.assemble(self._Ms_dg*df.dot(df.TestFunction(self.S3), df.Constant([1, 1, 1])) * df.dx)
-        tmp = tmp/self.volumes
-        self._Ms[:]=tmp[:]
+        tmp = df.assemble(
+            self._Ms_dg * df.dot(df.TestFunction(self.S3), df.Constant([1, 1, 1])) * df.dx)
+        tmp = tmp / self.volumes
+        self._Ms[:] = tmp[:]
 
-    def m_average_fun(self,dx=df.dx):
+    def m_average_fun(self, dx=df.dx):
         """
         Compute and return the average polarisation according to the formula
         :math:`\\langle m \\rangle = \\frac{1}{V} \int m \: \mathrm{d}V`
@@ -202,12 +211,11 @@ class SLLG(object):
         # my = df.assemble(self._Ms_dg*df.dot(self._m, df.Constant([0, 1, 0])) * dx)
         # mz = df.assemble(self._Ms_dg*df.dot(self._m, df.Constant([0, 0, 1])) * dx)
         # volume = df.assemble(self._Ms_dg*dx)
-        # 
+        #
         # return np.array([mx, my, mz]) / volume
         return self._m_field.average(dx=dx)
-    m_average=property(m_average_fun)
-    
-    
+    m_average = property(m_average_fun)
+
     def compute_gradient_matrix(self):
         """
         compute (J nabla) m , we hope we can use a matrix M such that M*m = (J nabla)m.
@@ -215,62 +223,60 @@ class SLLG(object):
         """
         tau = df.TrialFunction(self.S3)
         sigma = df.TestFunction(self.S3)
-        
-        self.nodal_volume_S3 = nodal_volume(self.S3)*self.unit_length
-        
+
+        self.nodal_volume_S3 = nodal_volume(self.S3) * self.unit_length
+
         dim = self.S3.mesh().topology().dim()
-        
+
         ty = tz = 0
-        
-        tx = self._J[0]*df.dot(df.grad(tau)[:,0],sigma)
-        
+
+        tx = self._J[0] * df.dot(df.grad(tau)[:, 0], sigma)
+
         if dim >= 2:
-            ty = self._J[1]*df.dot(df.grad(tau)[:,1],sigma)
-        
+            ty = self._J[1] * df.dot(df.grad(tau)[:, 1], sigma)
+
         if dim >= 3:
-            tz = self._J[2]*df.dot(df.grad(tau)[:,2],sigma)
-        
-        self.gradM = df.assemble((tx+ty+tz)*df.dx)
+            tz = self._J[2] * df.dot(df.grad(tau)[:, 2], sigma)
+
+        self.gradM = df.assemble((tx + ty + tz) * df.dx)
 
         #self.gradM = df.assemble(df.dot(df.dot(self._J, df.nabla_grad(tau)),sigma)*df.dx)
-        
-    
+
     def compute_gradient_field(self):
 
         self.gradM.mult(self._m_field.f.vector(), self.H_gradm)
-        
-        return self.H_gradm.array()/self.nodal_volume_S3
-    
-    
-    def use_zhangli(self, J_profile=(1e10,0,0), P=0.5, beta=0.01, using_u0=False):
-        
+
+        return self.H_gradm.array() / self.nodal_volume_S3
+
+    def use_zhangli(self, J_profile=(1e10, 0, 0), P=0.5, beta=0.01, using_u0=False):
+
         self.zhangli_stt = True
-        
+
         self.P = P
         self.beta = beta
-        
+
         self._J = helpers.vector_valued_function(J_profile, self.S3)
         self.J = self._J.vector().array()
         self.compute_gradient_matrix()
         self.H_gradm = df.PETScVector()
-        
+
         self.integrator = native_llb.StochasticLLGIntegratorSTT(
-                                    self.m,
-                                    self.m_pred,
-                                    self._Ms,
-                                    self._T,
-                                    self.real_volumes,
-                                    self._alpha,
-                                    self.P,
-                                    self.beta,
-                                    self.stochastic_update_field,
-                                    self.method)
-        
-        #seems that in the presence of current, the time step have to very small
+            self.m,
+            self.m_pred,
+            self._Ms,
+            self._T,
+            self.real_volumes,
+            self._alpha,
+            self.P,
+            self.beta,
+            self.stochastic_update_field,
+            self.method)
+
+        # seems that in the presence of current, the time step have to very
+        # small
         self.dt = 1e-14
-        
-        #TODO: fix the using_u0 here.
-        
+
+        # TODO: fix the using_u0 here.
 
 
 if __name__ == "__main__":
@@ -280,17 +286,17 @@ if __name__ == "__main__":
     sim.set_m((1, 0, 0))
     ts = np.linspace(0, 1e-9, 11)
     print sim.Ms
-    sim.T=2000
-    sim.dt=1e-14
+    sim.T = 2000
+    sim.dt = 1e-14
 
     H0 = 1e6
     sim.add(Zeeman((0, 0, H0)))
 
-    A=helpers.scalar_valued_dg_function(13.0e-12,mesh)
+    A = helpers.scalar_valued_dg_function(13.0e-12, mesh)
     exchange = Exchange(A)
     sim.add(exchange)
 
-    demag=Demag(solver='FK')
+    demag = Demag(solver='FK')
     sim.add(demag)
 
     print exchange.Ms.vector().array()
@@ -298,4 +304,3 @@ if __name__ == "__main__":
     for t in ts:
         sim.run_until(t)
         print sim.m_average
-

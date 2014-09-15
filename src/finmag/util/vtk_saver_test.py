@@ -7,6 +7,7 @@ from finmag.util.helpers import assert_number_of_files
 
 
 class TestVTKSaver(object):
+
     def setup_class(self):
         """
         Create a dummy field in various formats (numpy arrays and
@@ -33,9 +34,12 @@ class TestVTKSaver(object):
         """
         os.chdir(str(tmpdir))
         VTKSaver("myfile.pvd")
-        with pytest.raises(ValueError): VTKSaver("myfile.vtk")
-        with pytest.raises(ValueError): VTKSaver("myfile.vtu")
-        with pytest.raises(ValueError): VTKSaver("myfile.txt")
+        with pytest.raises(ValueError):
+            VTKSaver("myfile.vtk")
+        with pytest.raises(ValueError):
+            VTKSaver("myfile.vtu")
+        with pytest.raises(ValueError):
+            VTKSaver("myfile.txt")
 
     def test_existing_files_are_deleted_if_requested(self, tmpdir):
         """
@@ -44,11 +48,16 @@ class TestVTKSaver(object):
         os.chdir(str(tmpdir))
 
         # Create a few (empty) dummy .pvd and .vtu files
-        with open("myfile.pvd", 'w'): pass
-        with open("myfile000001.vtu", 'w'): pass
-        with open("myfile000002.vtu", 'w'): pass
-        with open("myfile000003.vtu", 'w'): pass
-        with open("myfile000004.vtu", 'w'): pass
+        with open("myfile.pvd", 'w'):
+            pass
+        with open("myfile000001.vtu", 'w'):
+            pass
+        with open("myfile000002.vtu", 'w'):
+            pass
+        with open("myfile000003.vtu", 'w'):
+            pass
+        with open("myfile000004.vtu", 'w'):
+            pass
 
         # Trying to re-open an existing .pvd file should raise an error:
         with pytest.raises(IOError):
@@ -57,7 +66,8 @@ class TestVTKSaver(object):
         # Unless 'overwrite' is set to True, in which case the .vtu
         # files should be deleted:
         v = VTKSaver("myfile.pvd", overwrite=True)
-        v.save_field(self.field_data, t=0)  # just to create a single .pvd and .vtu file
+        # just to create a single .pvd and .vtu file
+        v.save_field(self.field_data, t=0)
         assert_number_of_files("myfile.pvd", 1)
         assert_number_of_files("myfile*.vtu", 1)
 

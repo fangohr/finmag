@@ -67,10 +67,10 @@ except IOError:
         results[i, 3] = np.max(np.abs(H_default - H_opt))
         np.savetxt(results_file, results)  # Save results after every step.
 
-vertices = results[:,0]
-runtimes_default = results[:,1]
-runtimes_opt = results[:,2]
-deviation = results[:,3]
+vertices = results[:, 0]
+runtimes_default = results[:, 1]
+runtimes_opt = results[:, 2]
+deviation = results[:, 3]
 
 fig = plt.figure()
 ax = fig.add_subplot(211)

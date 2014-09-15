@@ -6,7 +6,7 @@ from finmag import sim_with
 from finmag.example import barmini
 from finmag.util.helpers import plot_hysteresis_loop
 
-ONE_DEGREE_PER_NS = 17453292.5 # in rad/s
+ONE_DEGREE_PER_NS = 17453292.5  # in rad/s
 
 H = 0.2e6  # maximum external field strength in A/m
 initial_direction = np.array([1.0, 0.01, 0.0])
@@ -56,7 +56,7 @@ def test_hysteresis_loop_and_plotting(tmpdir):
 
     # Check that the magnetisation values are as trivial as we expect
     # them to be ;-)
-    assert(np.allclose(m_vals, [1.0 for _ in xrange(2*N)], atol=1e-4))
+    assert(np.allclose(m_vals, [1.0 for _ in xrange(2 * N)], atol=1e-4))
 
     # This only tests whether the plotting function works without
     # errors. It currently does *not* check that it produces
@@ -64,8 +64,9 @@ def test_hysteresis_loop_and_plotting(tmpdir):
     # above anyway).
     plot_hysteresis_loop(H_vals, m_vals, infobox=["param_A = 23", ("param_B", 42)],
                          title="Hysteresis plot test", xlabel="H_ext", ylabel="m_avg",
-                         figsize=(5,4), infobox_loc="bottom left",
+                         figsize=(5, 4), infobox_loc="bottom left",
                          filename='test_plot.pdf')
 
     # Test multiple filenames, too
-    plot_hysteresis_loop(H_vals, m_vals, filename=['test_plot.pdf', 'test_plot.png'])
+    plot_hysteresis_loop(
+        H_vals, m_vals, filename=['test_plot.pdf', 'test_plot.png'])

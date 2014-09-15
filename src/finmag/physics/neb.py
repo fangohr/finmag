@@ -10,7 +10,7 @@ from finmag.physics.effective_field import EffectiveField
 from finmag.util.vtk_saver import VTKSaver
 from finmag import Simulation
 # from finmag.field import Field  # Change sim._m to new field class
-                                  # in line 184
+# in line 184
 from finmag.native import sundials
 import finmag.native.neb as native_neb
 
@@ -100,8 +100,8 @@ def check_boundary(theta_phi):
     theta[theta > np.pi] = np.pi
     theta[theta < 0] = 0
 
-    phi[phi > np.pi] -= 2*np.pi
-    phi[phi < -np.pi] += 2*np.pi
+    phi[phi > np.pi] -= 2 * np.pi
+    phi[phi < -np.pi] += 2 * np.pi
     theta_phi.shape = (-1,)
 
 
@@ -139,8 +139,8 @@ def cartesian2spherical_field(field_c, theta_phi):
     sin_p = np.sin(phi)
     cos_p = np.cos(phi)
 
-    field_s[0] = (hx*cos_p + hy*sin_p)*cos_t - hz*sin_t
-    field_s[1] = (-hx*sin_p + hy*cos_p)*sin_t  # sin t ???
+    field_s[0] = (hx * cos_p + hy * sin_p) * cos_t - hz * sin_t
+    field_s[1] = (-hx * sin_p + hy * cos_p) * sin_t  # sin t ???
 
     field_c.shape = (-1,)
     field_s.shape = (-1,)
@@ -211,7 +211,7 @@ def normalise_m(a):
     # Transform to matrix
     a.shape = (3, -1)
     # Compute the array 'a' length
-    lengths = np.sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2])
+    lengths = np.sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2])
     # Normalise all the entries
     a[:] /= lengths
     # Return to original shape
@@ -237,19 +237,20 @@ def linear_interpolation(theta_phi0, theta_phi1):
 
 def compute_dm(m0, m1):
 
-    dm = m0-m1
+    dm = m0 - m1
     length = len(dm)
 
     x = dm > np.pi
-    dm[x] = 2*np.pi-dm[x]
+    dm[x] = 2 * np.pi - dm[x]
     x = dm < -np.pi
-    dm[x] += 2*np.pi
+    dm[x] += 2 * np.pi
 
-    dm = np.sqrt(np.sum(dm**2))/length
+    dm = np.sqrt(np.sum(dm ** 2)) / length
     return dm
 
 
 class NEB_Sundials(object):
+
     """
     Nudged elastic band method by solving the differential equation using Sundials.
     """
@@ -298,12 +299,12 @@ class NEB_Sundials(object):
         self.effective_field = sim.llg.effective_field
 
         if interpolations is None:
-            interpolations = [0 for i in range(len(initial_images)-1)]
+            interpolations = [0 for i in range(len(initial_images) - 1)]
 
         self.initial_images = initial_images
         self.interpolations = interpolations
 
-        if len(interpolations) != len(initial_images)-1:
+        if len(interpolations) != len(initial_images) - 1:
             raise RuntimeError("""The length of interpolations should be equal to
                 the length of the initial_images array minus 1, i.e.,
                 len(interpolations) = len(initial_images) - 1""")
@@ -316,12 +317,12 @@ class NEB_Sundials(object):
         self.total_image_num = len(initial_images) + sum(interpolations)
         self.image_num = self.total_image_num - 2
 
-        self.nxyz = len(self._m.vector())/3
+        self.nxyz = len(self._m.vector()) / 3
 
-        self.coords = np.zeros(2*self.nxyz*self.total_image_num)
+        self.coords = np.zeros(2 * self.nxyz * self.total_image_num)
         self.last_m = np.zeros(self.coords.shape)
 
-        self.Heff = np.zeros(2*self.nxyz*self.image_num)
+        self.Heff = np.zeros(2 * self.nxyz * self.image_num)
         self.Heff.shape = (self.image_num, -1)
 
         self.tangents = np.zeros(self.Heff.shape)
@@ -344,20 +345,22 @@ class NEB_Sundials(object):
                      'header': 'steps'},
             'energy': {'unit': '<J>',
                        'get': lambda sim: sim.energy,
-                       'header': ['image_%d'%i for i in range(self.image_num+2)]}
-            }
+                       'header': ['image_%d' % i for i in range(self.image_num + 2)]}
+        }
 
-        self.tablewriter = Tablewriter('%s_energy.ndt'%(self.name), self, override=True, entities=entities_energy)
+        self.tablewriter = Tablewriter(
+            '%s_energy.ndt' % (self.name), self, override=True, entities=entities_energy)
 
         entities_dm = {
             'step': {'unit': '<1>',
                      'get': lambda sim: sim.step,
                      'header': 'steps'},
             'dms': {'unit': '<1>',
-                       'get': lambda sim: sim.distances,
-                       'header': ['image_%d_%d'%(i, i+1) for i in range(self.image_num+1)]}
-            }
-        self.tablewriter_dm = Tablewriter('%s_dms.ndt'%(self.name), self, override=True, entities=entities_dm)
+                    'get': lambda sim: sim.distances,
+                    'header': ['image_%d_%d' % (i, i + 1) for i in range(self.image_num + 1)]}
+        }
+        self.tablewriter_dm = Tablewriter(
+            '%s_dms.ndt' % (self.name), self, override=True, entities=entities_dm)
 
     def initial_image_coordinates(self):
         """
@@ -376,7 +379,7 @@ class NEB_Sundials(object):
             self.coords[image_id][:] = cartesian2spherical(m0)
             image_id = image_id + 1
 
-            self.sim.set_m(self.initial_images[i+1])
+            self.sim.set_m(self.initial_images[i + 1])
             m1 = self.sim.m
 
             coords = linear_interpolation_two(m0, m1, n)
@@ -505,9 +508,9 @@ class NEB_Sundials(object):
             t = self.tangents[i]
             sf = self.springs[i]
 
-            h3 = h - np.dot(h, t)*t + sf*t
+            h3 = h - np.dot(h, t) * t + sf * t
 
-            ydot[i+1, :] = h3[:]
+            ydot[i + 1, :] = h3[:]
 
         ydot[0, :] = 0
         ydot[-1, :] = 0
@@ -524,8 +527,8 @@ class NEB_Sundials(object):
 
         ys = self.coords
         ys.shape = (self.total_image_num, -1)
-        for i in range(self.total_image_num-1):
-            dm = compute_dm(ys[i], ys[i+1])
+        for i in range(self.total_image_num - 1):
+            dm = compute_dm(ys[i], ys[i + 1])
             distance.append(dm)
 
         ys.shape = (-1, )
@@ -544,8 +547,8 @@ class NEB_Sundials(object):
         m.shape = (self.total_image_num, -1)
         y.shape = (self.total_image_num, -1)
         max_dmdt = 0
-        for i in range(1, self.image_num+1):
-            dmdt = compute_dm(y[i], m[i]) / (t-self.t)
+        for i in range(1, self.image_num + 1):
+            dmdt = compute_dm(y[i], m[i]) / (t - self.t)
             if dmdt > max_dmdt:
                 max_dmdt = dmdt
 
@@ -585,7 +588,7 @@ class NEB_Sundials(object):
             if cvode_dt > dt:
                 increment_dt = cvode_dt
 
-            dmdt = self.run_until(self.t+increment_dt)
+            dmdt = self.run_until(self.t + increment_dt)
 
             self.compute_distance()
             self.tablewriter.save()
@@ -622,14 +625,14 @@ class NEB_Sundials(object):
         energy_threshold = energy_barrier / 5.0
         to_be_remove_id = -1
         for i in range(self.image_num):
-            e1 = self.energy[i+1] - self.energy[i]
-            e2 = self.energy[i+2] - self.energy[i+1]
+            e1 = self.energy[i + 1] - self.energy[i]
+            e2 = self.energy[i + 2] - self.energy[i + 1]
             if self.distances[i] < dm_threshold and \
-                    self.distances[i+1] < dm_threshold \
-                    and e1*e2 > 0 \
+                    self.distances[i + 1] < dm_threshold \
+                    and e1 * e2 > 0 \
                     and abs(e1) < energy_threshold \
                     and abs(e2) < energy_threshold:
-                to_be_remove_id = i+1
+                to_be_remove_id = i + 1
                 break
 
         if to_be_remove_id < 0:
@@ -642,40 +645,40 @@ class NEB_Sundials(object):
             coords_list.append(self.coords[i].copy())
 
         energy_diff = []
-        for i in range(self.total_image_num-1):
-            de = abs(self.energy[i]-self.energy[i+1])
+        for i in range(self.total_image_num - 1):
+            de = abs(self.energy[i] - self.energy[i + 1])
             energy_diff.append(de)
 
         # if there is a saddle point, increase the weight
         # of the energy difference
         factor1 = 2.0
-        for i in range(1, self.total_image_num-1):
-            de1 = self.energy[i]-self.energy[i-1]
-            de2 = self.energy[i+1]-self.energy[i]
-            if de1*de2 < 0:
-                energy_diff[i-1] *= factor1
+        for i in range(1, self.total_image_num - 1):
+            de1 = self.energy[i] - self.energy[i - 1]
+            de2 = self.energy[i + 1] - self.energy[i]
+            if de1 * de2 < 0:
+                energy_diff[i - 1] *= factor1
                 energy_diff[i] *= factor1
 
         factor2 = 2.0
-        for i in range(2, self.total_image_num-2):
-            de1 = self.energy[i-1]-self.energy[i-2]
-            de2 = self.energy[i]-self.energy[i-1]
-            de3 = self.energy[i+1]-self.energy[i]
-            de4 = self.energy[i+2]-self.energy[i+1]
-            if de1*de2 > 0 and de3*de4 > 0 and de2*de3 < 0:
-                energy_diff[i-1] *= factor2
+        for i in range(2, self.total_image_num - 2):
+            de1 = self.energy[i - 1] - self.energy[i - 2]
+            de2 = self.energy[i] - self.energy[i - 1]
+            de3 = self.energy[i + 1] - self.energy[i]
+            de4 = self.energy[i + 2] - self.energy[i + 1]
+            if de1 * de2 > 0 and de3 * de4 > 0 and de2 * de3 < 0:
+                energy_diff[i - 1] *= factor2
                 energy_diff[i] *= factor2
 
         max_i = np.argmax(energy_diff)
         theta_phi = linear_interpolation(coords_list[max_i],
-                                         coords_list[max_i+1])
+                                         coords_list[max_i + 1])
 
         if to_be_remove_id < max_i:
-            coords_list.insert(max_i+1, theta_phi)
+            coords_list.insert(max_i + 1, theta_phi)
             coords_list.pop(to_be_remove_id)
         else:
             coords_list.pop(to_be_remove_id)
-            coords_list.insert(max_i+1, theta_phi)
+            coords_list.insert(max_i + 1, theta_phi)
 
         for i in range(self.total_image_num):
             m = coords_list[i]
@@ -692,7 +695,7 @@ class NEB_Sundials(object):
         Adjust the coordinates automatically.
         """
 
-        for i in range(self.total_image_num/2):
+        for i in range(self.total_image_num / 2):
             if self.__adjust_coords_once() < 0:
                 break
 
@@ -707,7 +710,8 @@ class NEB_Sundials(object):
         self.tablewriter_dm.save()
         """
 
-        log.info("Adjust the coordinates at step = {:.4g}, t = {:.6g},".format(self.step, self.t))
+        log.info("Adjust the coordinates at step = {:.4g}, t = {:.6g},".format(
+            self.step, self.t))
 
 
 def plot_energy_2d(name, step=-1):
@@ -736,7 +740,7 @@ def plot_energy_2d(name, step=-1):
     xs = range(1, len(data[0, :]))
 
     for i in range(len(xs)):
-        xs[i] = sum(dms[id, 1:i+1])
+        xs[i] = sum(dms[id, 1:i + 1])
 
     plt.plot(xs, data[id, 1:], '.-')
 
@@ -763,7 +767,7 @@ def plot_energy_3d(name, key_steps=50, filename=None):
 
     steps = data[:, 0]
 
-    each_n_step = int(len(steps)/key_steps)
+    each_n_step = int(len(steps) / key_steps)
 
     if each_n_step < 1:
         each_n_step = 1
@@ -777,7 +781,7 @@ def plot_energy_3d(name, key_steps=50, filename=None):
     zs = []
     index = 0
     for i in range(0, len(steps), each_n_step):
-        line_data.append(list(zip(xs, data[i, 1:]-energy_min)))
+        line_data.append(list(zip(xs, data[i, 1:] - energy_min)))
         facecolors.append(colors[index % 4])
         zs.append(data[i, 0])
         index += 1
@@ -791,9 +795,9 @@ def plot_energy_3d(name, key_steps=50, filename=None):
     ax.set_ylabel('images')
     ax.set_zlabel('Energy (J)')
 
-    ax.set_ylim3d(0, len(xs)+1)
-    ax.set_xlim3d(0, int(data[-1, 0])+1)
-    ax.set_zlim3d(0, np.max(data[:, 1:]-energy_min))
+    ax.set_ylim3d(0, len(xs) + 1)
+    ax.set_xlim3d(0, int(data[-1, 0]) + 1)
+    ax.set_zlim3d(0, np.max(data[:, 1:] - energy_min))
 
     if filename is None:
         filename = '%s_energy_3d.pdf' % name
@@ -813,4 +817,3 @@ if __name__ == '__main__':
 
     neb.relax(stopping_dmdt=1e2)
     plot_energy_3d('unnamed_energy.ndt')
-

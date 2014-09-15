@@ -8,6 +8,7 @@ logger = logging.getLogger(name="finmag")
 
 
 class EffectiveField(object):
+
     def __init__(self, S3, m, Ms, unit_length):
         """
         *Arguments*
@@ -55,10 +56,11 @@ class EffectiveField(object):
         """
         if interaction.name in self.interactions:
             raise ValueError("Interaction names must be unique, but an "
-                "interaction with the same name already "
-                "exists: {}.".format(interaction.name))
+                             "interaction with the same name already "
+                             "exists: {}.".format(interaction.name))
 
-        logger.debug("Adding interaction {} to simulation.".format(interaction.name))
+        logger.debug(
+            "Adding interaction {} to simulation.".format(interaction.name))
         interaction.setup(self.m_field, self.Ms, self.unit_length)
         self.interactions[interaction.name] = interaction
 
@@ -79,7 +81,8 @@ class EffectiveField(object):
 
         """
         if t is None and self.need_time_update:
-            raise ValueError("Some interactions require a time update, but no time step was given.")
+            raise ValueError(
+                "Some interactions require a time update, but no time step was given.")
 
         for update in self.need_time_update:
             update(t)

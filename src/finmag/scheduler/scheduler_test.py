@@ -3,6 +3,7 @@ from timeevent import TimeEvent
 from derivedevents import SingleTimeEvent, RepeatingTimeEvent
 from scheduler import Scheduler
 
+
 class Counter(object):
     cnt_every = 0
     cnt_at = 0
@@ -128,19 +129,31 @@ def test_reached():
     assert s.next() == 0.0
 
     # Trigger the first couple of events
-    s.reached(0); assert c.cnt_every == 1; assert c.cnt_at == 0
-    s.reached(10); assert c.cnt_every == 2; assert c.cnt_at == 0
+    s.reached(0)
+    assert c.cnt_every == 1
+    assert c.cnt_at == 0
+    s.reached(10)
+    assert c.cnt_every == 2
+    assert c.cnt_at == 0
 
     # Call reached() with a time step that skips the next scheduled
     # one; this should *not* trigger any events!
-    s.reached(30); assert c.cnt_every == 2; assert c.cnt_at == 0
+    s.reached(30)
+    assert c.cnt_every == 2
+    assert c.cnt_at == 0
 
     # Now call reached() with the next scheduled time step, assert
     # that it triggered the event. Then do a couple more steps for
     # sanity checks.
-    s.reached(20); assert c.cnt_every == 3; assert c.cnt_at == 1
-    s.reached(25); assert c.cnt_every == 3; assert c.cnt_at == 1
-    s.reached(30); assert c.cnt_every == 4; assert c.cnt_at == 1
+    s.reached(20)
+    assert c.cnt_every == 3
+    assert c.cnt_at == 1
+    s.reached(25)
+    assert c.cnt_every == 3
+    assert c.cnt_at == 1
+    s.reached(30)
+    assert c.cnt_every == 4
+    assert c.cnt_at == 1
 
     # It is not an error to call reached() with a time step in the
     # past. However, this won't trigger any events here because the
@@ -148,8 +161,12 @@ def test_reached():
     # SingleTimeEvent was already triggered above (and no event is
     # triggered twice for the same time step, unless a reset()
     # happens).
-    s.reached(10); assert c.cnt_every == 4; assert c.cnt_at == 1
-    s.reached(20); assert c.cnt_every == 4; assert c.cnt_at == 1
+    s.reached(10)
+    assert c.cnt_every == 4
+    assert c.cnt_at == 1
+    s.reached(20)
+    assert c.cnt_every == 4
+    assert c.cnt_at == 1
 
 
 def test_scheduler_every():
@@ -193,20 +210,25 @@ def test_scheduler_clear():
 
 def test_regression_not_more_than_once_per_time():
     x = [0, 0, 0, 0]
+
     def my_at_fun():
         x[0] += 1
+
     def my_at_fun_accident():
         x[1] += 1
+
     def my_every_fun():
         x[2] += 1
+
     def my_standalone_at_end_fun():
         x[3] += 1
 
     s = Scheduler()
-    s.add(my_at_fun, at=1, at_end=True) # can trigger twice
-    s.add(my_at_fun_accident, at=2, at_end=True) # 2 is also end, should trigger only once
-    s.add(my_every_fun, every=1, after=1, at_end=True) # twice
-    s.add(my_standalone_at_end_fun, at_end=True) # once anyways
+    s.add(my_at_fun, at=1, at_end=True)  # can trigger twice
+    # 2 is also end, should trigger only once
+    s.add(my_at_fun_accident, at=2, at_end=True)
+    s.add(my_every_fun, every=1, after=1, at_end=True)  # twice
+    s.add(my_standalone_at_end_fun, at_end=True)  # once anyways
 
     assert s.next() == 1
     s.reached(1)
@@ -235,32 +257,40 @@ def test_reset_with_every():
     assert c.cnt_every == 0
 
     # Trigger a few events at their scheduled times
-    s.reached(0); assert c.cnt_every == 1
-    s.reached(10); assert c.cnt_every == 2
-    s.reached(20); assert c.cnt_every == 3
-    s.reached(30); assert c.cnt_every == 4
+    s.reached(0)
+    assert c.cnt_every == 1
+    s.reached(10)
+    assert c.cnt_every == 2
+    s.reached(20)
+    assert c.cnt_every == 3
+    s.reached(30)
+    assert c.cnt_every == 4
 
     # Reset time from 30 to 15 (note: in between two scheduled time
     # steps); check that no additional events were triggered and that
     # the next time step is as expected
-    s.reset(15);
+    s.reset(15)
     assert c.cnt_every == 4
     assert s.next() == 20
 
     # Trigger a few more events
-    s.reached(20); assert c.cnt_every == 5
-    s.reached(30); assert c.cnt_every == 6
+    s.reached(20)
+    assert c.cnt_every == 5
+    s.reached(30)
+    assert c.cnt_every == 6
 
     # Reset time again, this time precisely to a scheduled time step
     # (namely, 20); again, no additional events should have been
     # triggered and the next scheduled time step should still be 20.
-    s.reset(20);
+    s.reset(20)
     assert c.cnt_every == 6
     assert s.next() == 20
 
     # Trigger a few more events
-    s.reached(20); assert c.cnt_every == 7
-    s.reached(30); assert c.cnt_every == 8
+    s.reached(20)
+    assert c.cnt_every == 7
+    s.reached(30)
+    assert c.cnt_every == 8
 
 
 def test_reset_with_at():
@@ -269,20 +299,27 @@ def test_reset_with_at():
     s.add(c.inc_at, at=10)
     assert c.cnt_at == 0
 
-    s.reached(0); assert c.cnt_at == 0
-    s.reached(10); assert c.cnt_at == 1
-    s.reached(20); assert c.cnt_at == 1
-    s.reached(30); assert c.cnt_at == 1
+    s.reached(0)
+    assert c.cnt_at == 0
+    s.reached(10)
+    assert c.cnt_at == 1
+    s.reached(20)
+    assert c.cnt_at == 1
+    s.reached(30)
+    assert c.cnt_at == 1
 
     # Events that already happened are not triggered again ...
-    s.reached(10); assert c.cnt_at == 1
+    s.reached(10)
+    assert c.cnt_at == 1
 
     # ... unless we reset the scheduler first
     s.reset(2)
-    s.reached(10); assert c.cnt_at == 2
+    s.reached(10)
+    assert c.cnt_at == 2
 
     # Resetting to a time *after* the scheduled time will result in
     # the event not being triggered again, even if we tell the
     # scheduler that the time step was reached.
     s.reset(30)
-    s.reached(10); assert c.cnt_at == 2
+    s.reached(10)
+    assert c.cnt_at == 2

@@ -9,14 +9,16 @@ from finmag.native import llg as native_llg
 from finmag.util import helpers
 from finmag.util.meshes import nodal_volume
 
-#default settings for logger 'finmag' set in __init__.py
-#getting access to logger here
+# default settings for logger 'finmag' set in __init__.py
+# getting access to logger here
 logger = logging.getLogger(name='finmag')
 
-#used for parallel testing
+# used for parallel testing
 #from finmag.native import cvode_petsc, llg_petsc
 
+
 class LLG(object):
+
     """
     Solves the Landau-Lifshitz-Gilbert equation.
 
@@ -50,8 +52,10 @@ class LLG(object):
         self.unit_length = unit_length
         self.do_slonczewski = False
         self.do_zhangli = False
-        self.effective_field = EffectiveField(S3, self._m_field, self.Ms, self.unit_length)
-        self.Volume = None  # will be computed on demand, and carries volume of the mesh
+        self.effective_field = EffectiveField(
+            S3, self._m_field, self.Ms, self.unit_length)
+        # will be computed on demand, and carries volume of the mesh
+        self.Volume = None
 
     def set_default_values(self):
         self.alpha = df.Function(self.S1)
@@ -67,8 +71,8 @@ class LLG(object):
         self.pins = []  # nodes where the magnetisation gets pinned
 
         self._dmdt = df.Function(self.S3)
-        
-        #used for parallel stuff.
+
+        # used for parallel stuff.
         #self.field = df.Function(self.S3)
         #self.h_petsc = df.as_backend_type(self.field.vector()).vec()
 
@@ -87,7 +91,8 @@ class LLG(object):
             if min(nodes) >= 0 and max(nodes) < nb_nodes_mesh:
                 self._pins = np.array(nodes, dtype="int")
             else:
-                logger.error("Indices of pinned nodes should be in [0, {}), were [{}, {}].".format(nb_nodes_mesh, min(nodes), max(nodes)))
+                logger.error("Indices of pinned nodes should be in [0, {}), were [{}, {}].".format(
+                    nb_nodes_mesh, min(nodes), max(nodes)))
         else:
             self._pins = np.array([], dtype="int")
 
@@ -114,23 +119,26 @@ class LLG(object):
     @Ms.setter
     def Ms(self, value):
         # XXX TODO: Rename _Ms_dg to _Ms because it is not a DG0 function!!!
-        # We need a DG function here, so we should use scalar_valued_dg_function
+        # We need a DG function here, so we should use
+        # scalar_valued_dg_function
         dg_fun = helpers.scalar_valued_dg_function(value, self.DG)
         self._Ms_dg.vector().set_local(dg_fun.vector().get_local())
-        #FIXME: change back to DG space.
+        # FIXME: change back to DG space.
         #self._Ms_dg=helpers.scalar_valued_function(value, self.S1)
         self._Ms_dg.rename('Ms', 'Saturation magnetisation')
         self.volumes = df.assemble(df.TestFunction(self.S1) * df.dx)
-        Ms = df.assemble(self._Ms_dg*df.TestFunction(self.S1)* df.dx).array()/self.volumes.array()
+        Ms = df.assemble(
+            self._Ms_dg * df.TestFunction(self.S1) * df.dx).array() / self.volumes.array()
         self._Ms = Ms.copy()
         self.Ms_av = np.average(self._Ms_dg.vector().array())
 
     @property
     def M(self):
         """The magnetisation, with length Ms."""
-        #FIXME:error here
+        # FIXME:error here
         m = self.m.view().reshape((3, -1))
-        Ms = self.Ms.vector().array() if isinstance(self.Ms, df.Function) else self.Ms
+        Ms = self.Ms.vector().array() if isinstance(
+            self.Ms, df.Function) else self.Ms
         M = Ms * m
         return M.ravel()
 
@@ -163,29 +171,29 @@ class LLG(object):
         logger.warning("XXX  If possible avoid using m as a numpy.array! XXX")
         logger.warning("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
         return self._m_field.get_numpy_array_debug()
-    
+
     # @m.setter
     # def m(self, value):
-    #     # Not enforcing unit length here, as that is better done
-    #     # once at the initialisation of m.
+    # Not enforcing unit length here, as that is better done
+    # once at the initialisation of m.
     #     self._m.vector().set_local(value)
 
     @property
     def dmdt(self):
         """ dmdt values for all mesh nodes """
         return self._dmdt.vector().array()
-        
+
     @property
     def sundials_m(self):
         """The unit magnetisation."""
         return self._m_field.get_numpy_array_debug()
-    
+
     @sundials_m.setter
     def sundials_m(self, value):
         # used to copy back from sundials cvode
         self._m_field.set_with_numpy_array_debug(value)
 
-    def m_average_fun(self,dx=df.dx):
+    def m_average_fun(self, dx=df.dx):
         """
         Compute and return the average polarisation according to the formula
         :math:`\\langle m \\rangle = \\frac{1}{V} \int m \: \mathrm{d}V`
@@ -196,11 +204,10 @@ class LLG(object):
         # my = df.assemble(self._Ms_dg * df.dot(self._m, df.Constant([0, 1, 0])) * dx)
         # mz = df.assemble(self._Ms_dg * df.dot(self._m, df.Constant([0, 0, 1])) * dx)
         # volume = df.assemble(self._Ms_dg * dx)
-        # 
+        #
         # return np.array([mx, my, mz]) / volume
         return self._m_field.average(dx=dx)
-    m_average=property(m_average_fun)
-
+    m_average = property(m_average_fun)
 
     def set_m(self, value, normalise=True, **kwargs):
         """
@@ -217,8 +224,8 @@ class LLG(object):
         reasons and because the attribute m doesn't normalise the vector.
 
         """
-        self._m_field.set_with_numpy_array_debug(helpers.vector_valued_function(value, self.S3, normalise=normalise, **kwargs).vector().array())
-
+        self._m_field.set_with_numpy_array_debug(helpers.vector_valued_function(
+            value, self.S3, normalise=normalise, **kwargs).vector().array())
 
     def solve_for(self, m, t):
         self._m_field.set_with_numpy_array_debug(m)
@@ -226,7 +233,8 @@ class LLG(object):
         return value
 
     def solve(self, t):
-        self.effective_field.update(t)  # we don't use self.effective_field.compute(t) for performance reasons
+        # we don't use self.effective_field.compute(t) for performance reasons
+        self.effective_field.update(t)
         H_eff = self.effective_field.H_eff  # alias (for readability)
         H_eff.shape = (3, -1)
 
@@ -238,7 +246,7 @@ class LLG(object):
         m.shape = (3, -1)
 
         dmdt = np.zeros(m.shape)
-        
+
         # Calculate dm/dt
         if self.do_slonczewski:
             if self.fun_slonczewski_time_update != None:
@@ -252,19 +260,19 @@ class LLG(object):
                 self.J, self.P, self.d, self._Ms, self.p)
         elif self.do_zhangli:
             H_gradm = self.compute_gradient_field()
-            H_gradm.shape=(3,-1)
+            H_gradm.shape = (3, -1)
             native_llg.calc_llg_zhang_li_dmdt(
                 m, H_eff, H_gradm, t, dmdt, self.pins,
                 self.gamma, self.alpha.vector().array(),
                 char_time,
                 self.u0, self.beta, self._Ms)
-            H_gradm.shape=(-1,)
+            H_gradm.shape = (-1,)
         else:
             native_llg.calc_llg_dmdt(m, H_eff, t, dmdt, self.pins,
-                                 self.gamma, self.alpha.vector().array(),
-                                 char_time, self.do_precession)
+                                     self.gamma, self.alpha.vector().array(),
+                                     char_time, self.do_precession)
         dmdt.shape = (-1,)
-        H_eff.shape=(-1,)
+        H_eff.shape = (-1,)
 
         default_timer.stop("solve", self.__class__.__name__)
 
@@ -293,7 +301,7 @@ class LLG(object):
         # when it is passed to set_spils_preconditioner() in the cvode class.
         z[:] = r
         return 0
-    
+
     """
     def sundials_rhs_petsc(self, t, y, ydot):
         #only for the testing of parallel stuff, will delete later.
@@ -314,7 +322,7 @@ class LLG(object):
                                 
         return 0
     """
-    
+
     # Computes the Jacobian-times-vector product, as used by SUNDIALS CVODE
     @mtimed
     def sundials_jtimes(self, mp, J_mp, t, m, fy, tmp):
@@ -397,13 +405,13 @@ class LLG(object):
         Hp[:] = self.effective_field.compute_jacobian_only(t)
 
         if not hasattr(self, '_reuse_jacobean') or not self._reuse_jacobean:
-        # If the field m has changed, recompute H_eff as well
+            # If the field m has changed, recompute H_eff as well
             if not np.array_equal(self.m_numpy, m):
                 self.m_field.set_with_numpy_array_debug(m)
                 self.effective_field.update(t)
             else:
                 pass
-                #print "This actually happened."
+                # print "This actually happened."
                 #import sys; sys.exit()
 
         m.shape = (3, -1)
@@ -477,9 +485,9 @@ class LLG(object):
         polarisation = df.Function(self.S3)
         polarisation.assign(df.Constant((p)))
         # we use fnormalise to ensure that p has unit length
-        self.p = helpers.fnormalise(polarisation.vector().array()).reshape((3, -1))
-        
-        
+        self.p = helpers.fnormalise(
+            polarisation.vector().array()).reshape((3, -1))
+
     def compute_gradient_matrix(self):
         """
         compute (J nabla) m , we hope we can use a matrix M such that M*m = (J nabla)m.
@@ -487,55 +495,53 @@ class LLG(object):
         """
         tau = df.TrialFunction(self.S3)
         sigma = df.TestFunction(self.S3)
-        
-        self.nodal_volume_S3 = nodal_volume(self.S3)*self.unit_length
-        
+
+        self.nodal_volume_S3 = nodal_volume(self.S3) * self.unit_length
+
         dim = self.S3.mesh().topology().dim()
-        
+
         ty = tz = 0
-        
-        tx = self._J[0]*df.dot(df.grad(tau)[:,0],sigma)
-        
+
+        tx = self._J[0] * df.dot(df.grad(tau)[:, 0], sigma)
+
         if dim >= 2:
-            ty = self._J[1]*df.dot(df.grad(tau)[:,1],sigma)
-        
+            ty = self._J[1] * df.dot(df.grad(tau)[:, 1], sigma)
+
         if dim >= 3:
-            tz = self._J[2]*df.dot(df.grad(tau)[:,2],sigma)
-        
-        self.gradM = df.assemble((tx+ty+tz)*df.dx)
+            tz = self._J[2] * df.dot(df.grad(tau)[:, 2], sigma)
+
+        self.gradM = df.assemble((tx + ty + tz) * df.dx)
 
         #self.gradM = df.assemble(df.dot(df.dot(self._J, df.nabla_grad(tau)),sigma)*df.dx)
-        
-    
+
     def compute_gradient_field(self):
 
         self.gradM.mult(self._m_field.f.vector(), self.H_gradm)
-        
-        return self.H_gradm.array()/self.nodal_volume_S3
-    
-        
-        
-    def use_zhangli(self, J_profile=(1e10,0,0), P=0.5, beta=0.01, using_u0=False):
+
+        return self.H_gradm.array() / self.nodal_volume_S3
+
+    def use_zhangli(self, J_profile=(1e10, 0, 0), P=0.5, beta=0.01, using_u0=False):
         """
         if using_u0 = True, the factor of 1/(1+beta^2) will be dropped.
         """
-        
+
         self.do_zhangli = True
         self._J = helpers.vector_valued_function(J_profile, self.S3)
         self.J = self._J.vector().array()
         self.compute_gradient_matrix()
         self.H_gradm = df.PETScVector()
-        
-        const_e = 1.602176565e-19; #elementary charge in As
-        mu_B = 9.27400968e-24; #Bohr magneton
-        
+
+        const_e = 1.602176565e-19
+        # elementary charge in As
+        mu_B = 9.27400968e-24
+        # Bohr magneton
+
         self.P = P
         self.beta = beta
-        
-        u0 = P*mu_B/const_e #P g mu_B/(2 e Ms) and g=2 for electrons
-        
+
+        u0 = P * mu_B / const_e  # P g mu_B/(2 e Ms) and g=2 for electrons
+
         if using_u0:
             self.u0 = u0
         else:
-            self.u0 = u0/(1+beta**2)
-        
+            self.u0 = u0 / (1 + beta ** 2)

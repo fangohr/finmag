@@ -8,6 +8,7 @@ from finmag.util.consts import ONE_DEGREE_PER_NS
 
 MODULE_DIR = os.path.abspath(os.path.dirname(__file__))
 
+
 def test_easy_relaxation(do_plot=False):
     """
     This is a simulation we expect to relax well, meant to catch some obvious
@@ -31,6 +32,7 @@ def test_easy_relaxation(do_plot=False):
 
     assert sim.t < 3e-10
 
+
 def plot_averages(sim):
     fig = plt.figure()
     ax1 = fig.add_subplot(111)
@@ -48,7 +50,7 @@ def plot_averages(sim):
 
     ax2 = ax1.twinx()
     t, max_dmdt_norms = np.array(zip(* sim.relaxation['dmdts']))
-    ax2.semilogy(t*1e9, max_dmdt_norms/ONE_DEGREE_PER_NS, "ro")
+    ax2.semilogy(t * 1e9, max_dmdt_norms / ONE_DEGREE_PER_NS, "ro")
     ax2.set_ylabel("maximum dm/dt (1/ns)", color="r")
     ax2.axhline(y=1, xmin=0.5, color="red", linestyle="--")
     ax2.annotate("threshold", xy=(0.15, 1.1), color="r")
@@ -58,4 +60,4 @@ def plot_averages(sim):
     plt.savefig(os.path.join(MODULE_DIR, "test_relaxation.png"))
 
 if __name__ == "__main__":
-   test_easy_relaxation(do_plot=True)
+    test_easy_relaxation(do_plot=True)

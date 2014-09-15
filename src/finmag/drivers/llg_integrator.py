@@ -5,6 +5,7 @@ from finmag.drivers.scipy_integrator import ScipyIntegrator
 
 log = logging.getLogger(name='finmag')
 
+
 def llg_integrator(llg, m0, backend="sundials", **kwargs):
     # XXX TODO: Passing the tablewriter argument on like this is a
     #           complete hack and this should be refactored. The same

@@ -10,11 +10,13 @@ from fk_demag import FKDemag
 
 
 class Demag2D(FKDemag):
+
     """
     To compute the demagnetisation field on a 2d mesh using the normal
     Fredkin-Koehler method, the idea is to construct a 3d mesh based on the
     given 2d mesh.
     """
+
     def __init__(self, name='Demag2D', thickness=1, thin_film=False):
 
         self.name = name
@@ -32,23 +34,23 @@ class Demag2D(FKDemag):
         mesh3 = df.Mesh()
         editor = df.MeshEditor()
         editor.open(mesh3, 3, 3)
-        editor.init_vertices(2*nv)
-        editor.init_cells(3*nc)
+        editor.init_vertices(2 * nv)
+        editor.init_cells(3 * nc)
 
         for v in df.vertices(mesh):
             i = v.index()
             p = v.point()
-            editor.add_vertex(i, p.x(),p.y(),0)
-            editor.add_vertex(i+nv, p.x(),p.y(),h)
+            editor.add_vertex(i, p.x(), p.y(), 0)
+            editor.add_vertex(i + nv, p.x(), p.y(), h)
 
         gid = 0
         for c in df.cells(mesh):
-            i,j,k = c.entities(0)
-            editor.add_cell(gid, i, j, k, i+nv)
+            i, j, k = c.entities(0)
+            editor.add_cell(gid, i, j, k, i + nv)
             gid = gid + 1
-            editor.add_cell(gid, j, j+nv, k, i+nv)
+            editor.add_cell(gid, j, j + nv, k, i + nv)
             gid = gid + 1
-            editor.add_cell(gid, k, k+nv, j+nv, i+nv)
+            editor.add_cell(gid, k, k + nv, j + nv, i + nv)
             gid = gid + 1
 
         editor.close()
@@ -67,33 +69,34 @@ class Demag2D(FKDemag):
 
         map_2d_to_3d = np.zeros(V3.dim(), dtype=np.int32)
 
-        n2d  = S3.dim()
+        n2d = S3.dim()
         for i in range(n2d):
             map_2d_to_3d[i] = vert_to_dof3[dof_to_vert2[i]]
-            map_2d_to_3d[i+n2d] = vert_to_dof3[dof_to_vert2[i]+n2d]
+            map_2d_to_3d[i + n2d] = vert_to_dof3[dof_to_vert2[i] + n2d]
 
         self.map_2d_to_3d = map_2d_to_3d
-        #print map_2d_to_3d
+        # print map_2d_to_3d
 
         n3d = V3.dim()
         map_3d_to_2d = np.zeros(V3.dim(), dtype=np.int32)
         for i in range(V3.dim()):
-            map_3d_to_2d[i] =  vert_to_dof2[dof_to_vert3[i]%n2d]
+            map_3d_to_2d[i] = vert_to_dof2[dof_to_vert3[i] % n2d]
 
         self.map_3d_to_2d = map_3d_to_2d
-        #print map_3d_to_2d
+        # print map_3d_to_2d
 
     def create_dg3_from_dg2(self, mesh, dg2):
 
-        dg3 = df.FunctionSpace(mesh,'DG',0)
+        dg3 = df.FunctionSpace(mesh, 'DG', 0)
 
         class HelperExpression(df.Expression):
+
             def __init__(self, value):
                 super(HelperExpression, self).__init__()
                 self.fun = value
 
             def eval(self, value, x):
-                value[0] = self.fun((x[0],x[1]))
+                value[0] = self.fun((x[0], x[1]))
 
         hexp = HelperExpression(dg2)
         fun = df.interpolate(hexp, dg3)
@@ -171,14 +174,15 @@ class Demag2D(FKDemag):
 
         """
         self._H_func.vector()[:] = self.__compute_field()
-        nodal_E = df.assemble(self._nodal_E).array() * self.unit_length ** self.m.mesh_dim()
+        nodal_E = df.assemble(self._nodal_E).array() * \
+            self.unit_length ** self.m.mesh_dim()
         return nodal_E / self._nodal_volumes
 
     def __compute_field(self):
-        self.m.set_with_numpy_array_debug(self.m.get_numpy_array_debug()[self.map_3d_to_2d])
+        self.m.set_with_numpy_array_debug(
+            self.m.get_numpy_array_debug()[self.map_3d_to_2d])
         self._compute_magnetic_potential()
         return self._compute_gradient()
-
 
     def compute_field(self):
         """
@@ -190,7 +194,7 @@ class Demag2D(FKDemag):
 
         """
         f = self.__compute_field()[self.map_2d_to_3d]
-        f.shape = (2,-1)
-        f_avg = (f[0]+f[1])/2.0
-        f.shape=(-1,)
+        f.shape = (2, -1)
+        f_avg = (f[0] + f[1]) / 2.0
+        f.shape = (-1,)
         return f_avg

@@ -39,11 +39,12 @@ def makeExtension(extName):
     return Extension(
         extName,
         [extPath],
-        include_dirs=[libincludedir, "."],   # adding the '.' to include_dirs is CRUCIAL!!
+        # adding the '.' to include_dirs is CRUCIAL!!
+        include_dirs=[libincludedir, "."],
         #extra_compile_args = ["-O3", "-Wall"],
         #extra_link_args = ['-g'],
         #libraries = ["dv",],
-        )
+    )
 
 # get the list of extensions
 extNames = scandir("sim")
@@ -56,8 +57,8 @@ print "extensions are\n", extensions
 
 # finally, we can pass all this to distutils
 setup(
-  name="dvedit",
-  packages=["sim", "sim.energies"],
-  ext_modules=extensions,
-  cmdclass={'build_ext': build_ext},
+    name="dvedit",
+    packages=["sim", "sim.energies"],
+    ext_modules=extensions,
+    cmdclass={'build_ext': build_ext},
 )

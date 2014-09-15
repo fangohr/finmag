@@ -3,6 +3,7 @@
 
 # you can have as many test functions per file as you want.
 
+
 def test_skyrmion():
     TOLERANCE = 1e-6
 
@@ -11,5 +12,3 @@ def test_skyrmion():
     expected_result = 1e-5
 
     assert abs(my_result - expected_result) < TOLERANCE
-
-

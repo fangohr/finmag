@@ -9,7 +9,7 @@ def test_integrator_get_set_max_steps(tmpdir):
     """
     os.chdir(str(tmpdir))
     sim = finmag.example.barmini()
-    sim.run_until(0) # create integrator object
+    sim.run_until(0)  # create integrator object
     steps = sim.integrator.max_steps
     assert steps != 42  # would be an odd default value
     sim.integrator.max_steps = 42

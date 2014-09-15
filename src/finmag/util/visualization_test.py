@@ -12,6 +12,8 @@ from finmag.util.visualization_impl import *
 
 # Skipping this test for now because it still doesn't work on aleph0
 # (although it works on my machine) -- Max, 7.6.2013
+
+
 @pytest.mark.skipif("True")
 def test_render_paraview_scene(tmpdir):
     """
@@ -36,11 +38,13 @@ def test_render_paraview_scene(tmpdir):
     sim.run_until(4.2e-10)
 
     display = find_unused_X_display()
-    finmag.logger.debug("Rendering Paraview scene on display :{} for test.".format(display))
+    finmag.logger.debug(
+        "Rendering Paraview scene on display :{} for test.".format(display))
     subprocess.check_call(['xpra', 'start', ':{}'.format(display)])
 
     try:
-        # XXX TODO: Maybe check various choices for all the individual arguments as well?
+        # XXX TODO: Maybe check various choices for all the individual
+        # arguments as well?
 
         # Render a single snapshots of the initial state
         render_paraview_scene('initial_state.pvd', 'initial_state.png', color_by_axis='Z',
@@ -125,7 +129,8 @@ def test_plot_dolfin_function(tmpdir):
 
     s = df.Function(S)
     v2 = df.Function(V2)
-    v3 = df.Function(V3); v3.vector()[:] = 1.0
+    v3 = df.Function(V3)
+    v3.vector()[:] = 1.0
 
     # Wrong function space dimension
     with pytest.raises(TypeError):

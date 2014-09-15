@@ -7,7 +7,8 @@
 from __future__ import division
 import logging
 logger = logging.getLogger("finmag")
-logger.propagate = False  # no need to propagate up to root handler, since we define our own later
+# no need to propagate up to root handler, since we define our own later
+logger.propagate = False
 
 from finmag.sim.sim import Simulation, sim_with
 from finmag.energies.demag import MacroGeometry
@@ -40,7 +41,8 @@ def timings_report(n=10):
 
 
 logger.debug("{:15} {:<20}".format("FinMag", __version__))
-display_module_versions = configuration.get_config_option("logging", "display_module_versions_at_startup", "True")
+display_module_versions = configuration.get_config_option(
+    "logging", "display_module_versions_at_startup", "True")
 if display_module_versions == "True":
     double_column = "{:<15} {:<20} {:<15} {:20}"
     logger.debug(double_column.format(
@@ -75,15 +77,16 @@ if util.versions.running_binary_distribution():
     #
     # We thus assume that we use the system's sundials, and thus we
     # should be able to check by comparing the linux distribution.
-    import util.binary # Where is this module?
+    import util.binary  # Where is this module?
     logger.debug("%20s: %s" % ("Build Linux", util.binary.buildlinux))
     vb = util.binary.buildlinux
     vr = util.versions.get_linux_issue()
-    if  vb == vr:
+    if vb == vr:
         logger.debug("Build Linux and host linux versions agree.")
     else:
-        if util.versions.loose_compare_ubuntu_version(vb,vr):
-            logger.warn("Build Linux and host linux versions only agree approximately.")
+        if util.versions.loose_compare_ubuntu_version(vb, vr):
+            logger.warn(
+                "Build Linux and host linux versions only agree approximately.")
         else:
             logger.warn("Build Linux = %s" % util.binary.buildlinux)
             logger.warn("Host Linux = %s" % util.versions.get_linux_issue())

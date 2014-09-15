@@ -4,20 +4,24 @@ from finmag.util.oommf.comparison import oommf_m0, finmag_to_oommf
 from finmag.util.oommf import mesh, oommf_cubic_anisotropy
 from finmag.util.helpers import stats
 
+
 def test_against_oommf(finmag=conftest.setup_cubic()):
 
     REL_TOLERANCE = 7e-2
 
-    oommf_mesh = mesh.Mesh((20, 20, 20), size=(conftest.x1, conftest.y1, conftest.z1))
-    #FIXME: why our result is three times of oommf's??
-    oommf_anis  = oommf_cubic_anisotropy(m0=oommf_m0(conftest.m_gen, oommf_mesh),
-            Ms=conftest.Ms, K1=conftest.K1, K2=conftest.K2, u1=conftest.u1, u2=conftest.u2).flat
+    oommf_mesh = mesh.Mesh(
+        (20, 20, 20), size=(conftest.x1, conftest.y1, conftest.z1))
+    # FIXME: why our result is three times of oommf's??
+    oommf_anis = oommf_cubic_anisotropy(m0=oommf_m0(conftest.m_gen, oommf_mesh),
+                                        Ms=conftest.Ms, K1=conftest.K1, K2=conftest.K2, u1=conftest.u1, u2=conftest.u2).flat
     finmag_anis = finmag_to_oommf(finmag["H"], oommf_mesh, dims=3)
 
     assert oommf_anis.shape == finmag_anis.shape
     diff = np.abs(oommf_anis - finmag_anis)
-    print 'diff',diff
-    rel_diff = diff / np.sqrt((np.max(oommf_anis[0]**2 + oommf_anis[1]**2 + oommf_anis[2]**2)))
+    print 'diff', diff
+    rel_diff = diff / \
+        np.sqrt(
+            (np.max(oommf_anis[0] ** 2 + oommf_anis[1] ** 2 + oommf_anis[2] ** 2)))
 
     print "comparison with oommf, H, relative_difference:"
     print stats(rel_diff)

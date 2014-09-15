@@ -10,8 +10,10 @@ MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 averages_file = os.path.join(MODULE_DIR, "averages.txt")
 mesh = from_geofile(os.path.join(MODULE_DIR, "mesh.geo"))
 
+
 def run_simulation():
-    L = W = 12.5e-9; H = 2.5e-9;
+    L = W = 12.5e-9
+    H = 2.5e-9
     sim = Sim(mesh, Ms=8.6e5, unit_length=1e-9)
     sim.set_m((1, 0.01, 0.01))
     sim.alpha = 0.014
@@ -23,14 +25,16 @@ def run_simulation():
 
     sim.add(Exchange(1.3e-11))
 
-    I = 5e-5 # current in A
-    J = I / (L * W) # current density in A/m^2
-    theta = 40.0 * pi/180; phi = pi/2 # polarisation direction
-    p = (sin(theta)*cos(phi), sin(theta)*sin(phi), cos(theta))
+    I = 5e-5  # current in A
+    J = I / (L * W)  # current density in A/m^2
+    theta = 40.0 * pi / 180
+    phi = pi / 2  # polarisation direction
+    p = (sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta))
     sim.llg.use_slonczewski(J=J, P=0.4, d=H, p=p)
 
     with open(averages_file, "w") as f:
-        dt = 10e-12; t_max = 10e-9;
+        dt = 10e-12
+        t_max = 10e-9
         for t in np.arange(0, t_max, dt):
             sim.run_until(t)
             f.write("{} {} {} {}\n".format(t, *sim.m_average))

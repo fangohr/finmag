@@ -19,21 +19,21 @@ def test_is_hermitian():
                    [4, -33, -8, 0.2]])
     assert(is_hermitian(A1))
 
-    A2 = np.array([[0.3, 4-5j, 0.2+3j],
-                   [4+5j, 2.0, -1+3.3j],
-                   [0.2-3j, -1-3.3j, -4]])
+    A2 = np.array([[0.3, 4 - 5j, 0.2 + 3j],
+                   [4 + 5j, 2.0, -1 + 3.3j],
+                   [0.2 - 3j, -1 - 3.3j, -4]])
     assert(is_hermitian(A2))
 
     A3 = np.array([[1, 2],
                    [4, 4]])
     assert(not is_hermitian(A3))
 
-    A4 = np.array([[1, 2+3j],
-                   [2+3j, 4]])
+    A4 = np.array([[1, 2 + 3j],
+                   [2 + 3j, 4]])
     assert(not is_hermitian(A4))
 
-    A5 = np.array([[1+1j, 2+3j],
-                   [2-3j, 4]])
+    A5 = np.array([[1 + 1j, 2 + 3j],
+                   [2 - 3j, 4]])
     assert(not is_hermitian(A5))
 
 
@@ -60,7 +60,7 @@ def test_normalise_rows():
                                  [0, -1, 0, 0, 0],
                                  [0, 0, 0, 0, 0],
                                  [0, 0, 0, 1e-16, 0],
-                                 [0, 3./5, 0, 0, 4./5]])
+                                 [0, 3. / 5, 0, 0, 4. / 5]])
     assert(np.allclose(A_normalised, A_normalised_ref))
 
 
@@ -123,14 +123,15 @@ def test_find_matching_eigenpair():
         (23.0, [4, 4, 4, -4, 6]),
         (12.4, [-1, -2, 3, 2, -1]),
         (23.0, [4, 4, 4, -4, 6])
-        ]
+    ]
 
     omega1, w1 = (12.4, [-1, -2, 3, 2, -1])             # matches 3rd eigenpair
     omega2, w2 = (12.4, [1.9, 3.8, -5.7, -3.8, 1.9])    # matched 3rd eigenpair
     omega3, w3 = (42.000000001, [-2, -4, -6, -8, -10])  # matches 1st eigenpair
     omega4, w4 = (42.0, [1, 3, 3, 4, 5])  # no match
     omega5, w5 = (42.3, [1, 2, 3, 4, 5])  # no match
-    omega6, w6 = (23.0, [4, 4, 4, -4, 6]) # duplicate match; should throw error
+    # duplicate match; should throw error
+    omega6, w6 = (23.0, [4, 4, 4, -4, 6])
 
     idx1 = find_matching_eigenpair((omega1, w1), eigenpairs_ref)
     idx2 = find_matching_eigenpair((omega2, w2), eigenpairs_ref)
@@ -204,7 +205,7 @@ def test_best_linear_combination():
     e2 = np.array([-2, 4, -6])
     a = 0.5
     b = 0.25
-    v0 =  np.array([-3, 0, 1])
+    v0 = np.array([-3, 0, 1])
     v = v0 + a * e1 + b * e2
     w, coeffs, res = best_linear_combination(v, [e1, e2])
     assert(np.allclose(w, a * e1 + b * e2))
@@ -240,8 +241,8 @@ def test_as_dense_array():
     A = np.zeros((N, N))
     for i in xrange(N):
         A[i, i] = 2.4
-        A[i, i-1] = 5.5
-        A[i, (i+1)%N] = 3.7
+        A[i, i - 1] = 5.5
+        A[i, (i + 1) % N] = 3.7
 
     # Define equivalent LinearOperator
     def A_matvec(v):
@@ -262,7 +263,6 @@ def test_as_dense_array():
     #
     # A_petsc_dolfin = df.PETScMatrix(A_petsc)
 
-
     # For numpy.arrays the exact same object should be returned (if
     # the dtype is the same)
     assert(id(A) == id(as_dense_array(A)))
@@ -282,9 +282,9 @@ def test_as_petsc_matrix():
 
     # Create a tridiagonal matrix with random entries
     A = np.zeros((N, N))
-    a = np.random.random_sample(N-1)
+    a = np.random.random_sample(N - 1)
     b = np.random.random_sample(N)
-    c = np.random.random_sample(N-1)
+    c = np.random.random_sample(N - 1)
     A += np.diag(a, k=-1)
     A += np.diag(b, k=0)
     A += np.diag(c, k=+1)
@@ -296,7 +296,7 @@ def test_as_petsc_matrix():
 
     # Check that the sparsity pattern is as expected
     indptr, _, data = A_petsc.getValuesCSR()
-    indptr_expected = [0] + range(2, 3*(N-1), 3) + [3*N-2]
+    indptr_expected = [0] + range(2, 3 * (N - 1), 3) + [3 * N - 2]
     assert(all(indptr == indptr_expected))
 
     # Convert back to numpy array
@@ -316,7 +316,8 @@ def test_as_petsc_matrix():
         as_petsc_matrix(D)
 
     # Check that we can also convert a LinearOperator to a PETScMatrix
-    A_LinearOperator = LinearOperator(shape=(N, N), matvec=lambda v: np.dot(A, v))
+    A_LinearOperator = LinearOperator(
+        shape=(N, N), matvec=lambda v: np.dot(A, v))
     A_petsc2 = as_petsc_matrix(A_LinearOperator)
     A_roundtrip = as_dense_array(A_petsc2)
     assert(np.allclose(A, A_roundtrip))

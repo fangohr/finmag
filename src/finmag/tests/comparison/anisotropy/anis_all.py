@@ -1,9 +1,6 @@
 import conftest as test
 
 
-
-
-
 if __name__ == "__main__":
     from test_anis_magpar import test_against_magpar
     from test_anis_nmag import test_against_nmag
@@ -17,4 +14,3 @@ if __name__ == "__main__":
     finmag = test.setup()
     test_against_nmag(finmag)
     test.teardown(finmag)
-

@@ -20,11 +20,13 @@ log = logging.getLogger(name="finmag")
 
 
 class NormalModeSimulation(Simulation):
+
     """
     Thin wrapper around the Simulation class to make normal mode
     computations using the ringdown method more convenient.
 
     """
+
     def __init__(self, *args, **kwargs):
         super(NormalModeSimulation, self).__init__(*args, **kwargs)
         # Internal variables to store parameters/results of the ringdown method
@@ -32,31 +34,35 @@ class NormalModeSimulation(Simulation):
         self.t_step_ndt = None
         self.t_step_m = None
 
-        # The following are used to cache computed spectra (potentially for various mesh regions)
+        # The following are used to cache computed spectra (potentially for
+        # various mesh regions)
         self.psd_freqs = {}
         self.psd_mx = {}
         self.psd_my = {}
         self.psd_mz = {}
 
-        # Internal variables to store parameters/results of the (generalised) eigenvalue method
+        # Internal variables to store parameters/results of the (generalised)
+        # eigenvalue method
         self.eigenfreqs = None
         self.eigenvecs = None
 
-        # Internal variables to store the matrices which define the generalised eigenvalue problem
+        # Internal variables to store the matrices which define the generalised
+        # eigenvalue problem
         self.A = None
         self.M = None
         self.D = None
-        self.use_real_matrix = None  # XXX TODO: Remove me once we get rid of the option 'use_real_matrix'
-                                     #           in the method 'compute_normal_modes()' below.
+        # XXX TODO: Remove me once we get rid of the option 'use_real_matrix'
+        self.use_real_matrix = None
+        #           in the method 'compute_normal_modes()' below.
 
-        # Define a few eigensolvers which can be conveniently accesses using strings
+        # Define a few eigensolvers which can be conveniently accesses using
+        # strings
         self.predefined_eigensolvers = {
             'scipy_dense': eigensolvers.ScipyLinalgEig(),
             'scipy_sparse': eigensolvers.ScipySparseLinalgEigs(sigma=0.0, which='LM'),
             'slepc_krylovschur': eigensolvers.SLEPcEigensolver(
                 problem_type='GNHEP', method_type='KRYLOVSCHUR', which='SMALLEST_MAGNITUDE')
-            }
-
+        }
 
     def run_ringdown(self, t_end, alpha, H_ext=None, reset_time=True, clear_schedule=True,
                      save_ndt_every=None, save_vtk_every=None, save_m_every=None,
@@ -123,17 +129,21 @@ class NormalModeSimulation(Simulation):
                 dirname = os.curdir
                 basename = self.name + default_suffix
             outfilename = os.path.join(dirname, basename)
-            self.schedule(which, every=every, filename=outfilename, overwrite=overwrite)
+            self.schedule(
+                which, every=every, filename=outfilename, overwrite=overwrite)
 
             if which == 'save_m':
-                # Store the filename so that we can later compute normal modes more conveniently
+                # Store the filename so that we can later compute normal modes
+                # more conveniently
                 self.m_snapshots_filename = outfilename
 
         if save_vtk_every:
-            schedule_saving('save_vtk', save_vtk_every, vtk_snapshots_filename, '_m.pvd')
+            schedule_saving(
+                'save_vtk', save_vtk_every, vtk_snapshots_filename, '_m.pvd')
 
         if save_m_every:
-            schedule_saving('save_m', save_m_every, m_snapshots_filename, '_m.npy')
+            schedule_saving(
+                'save_m', save_m_every, m_snapshots_filename, '_m.npy')
             log.debug("Setting self.t_step_m = {}".format(save_m_every))
             self.t_step_m = save_m_every
             self.t_ini_m = self.t
@@ -147,7 +157,8 @@ class NormalModeSimulation(Simulation):
                     self.psd_mx[mesh_region, use_averaged_m] != None and \
                     self.psd_my[mesh_region, use_averaged_m] != None and \
                     self.psd_mz[mesh_region, use_averaged_m] != None:
-                # We can use the cached results since the spectrum was computed before.
+                # We can use the cached results since the spectrum was computed
+                # before.
                 return
         except KeyError:
             # No computations for these values of (mesh_region,
@@ -181,25 +192,27 @@ class NormalModeSimulation(Simulation):
                                 "saved during the ringdown.")
                 filename = self.ndtfilename
             else:
-                # Create a wildcard pattern so that we can read the files using 'glob'.
+                # Create a wildcard pattern so that we can read the files using
+                # 'glob'.
                 filename = re.sub('\.npy$', '*.npy', self.m_snapshots_filename)
-        log.debug("Computing normal mode spectrum from file(s) '{}'.".format(filename))
+        log.debug(
+            "Computing normal mode spectrum from file(s) '{}'.".format(filename))
 
         # Derive a sensible value of t_step, t_ini and t_end. Use the value
         # in **kwargs if one was provided, or else the one specified (or
         # derived) during a previous call of run_ringdown().
-        t_step = kwargs.pop('t_step', None)#
-        t_ini = kwargs.pop('t_ini', None)#
-        t_end = kwargs.pop('t_end', None)#
+        t_step = kwargs.pop('t_step', None)
+        t_ini = kwargs.pop('t_ini', None)
+        t_end = kwargs.pop('t_end', None)
         if t_step == None:
             if use_averaged_m:
                 t_step = self.t_step_ndt
             else:
                 t_step = self.t_step_m
         if t_ini == None and not use_averaged_m:
-                t_ini = self.t_ini_m
+            t_ini = self.t_ini_m
         if t_end == None and not use_averaged_m:
-                t_end = self.t_end_m
+            t_end = self.t_end_m
         # XXX TODO: Use t_step_npy if computing the spectrum from .npy files.
         if t_step == None:
             raise ValueError(
@@ -215,16 +228,20 @@ class NormalModeSimulation(Simulation):
             submesh = self.get_submesh(mesh_region)
             try:
                 # Legacy syntax (for dolfin <= 1.2 or so).
-                # TODO: This should be removed in the future once dolfin 1.3 is released!
-                parent_vertex_indices = submesh.data().mesh_function('parent_vertex_indices').array()
+                # TODO: This should be removed in the future once dolfin 1.3 is
+                # released!
+                parent_vertex_indices = submesh.data().mesh_function(
+                    'parent_vertex_indices').array()
             except RuntimeError:
                 # This is the correct syntax now, see:
                 # http://fenicsproject.org/qa/185/entity-mapping-between-a-submesh-and-the-parent-mesh
-                parent_vertex_indices = submesh.data().array('parent_vertex_indices', 0)
+                parent_vertex_indices = submesh.data().array(
+                    'parent_vertex_indices', 0)
             kwargs['restrict_to_vertices'] = parent_vertex_indices
 
         psd_freqs, psd_mx, psd_my, psd_mz = \
-            compute_power_spectral_density(filename, t_step=t_step, t_ini=t_ini, t_end=t_end, **kwargs)
+            compute_power_spectral_density(
+                filename, t_step=t_step, t_ini=t_ini, t_end=t_end, **kwargs)
 
         self.psd_freqs[mesh_region, use_averaged_m] = psd_freqs
         self.psd_mx[mesh_region, use_averaged_m] = psd_mx
@@ -268,7 +285,8 @@ class NormalModeSimulation(Simulation):
         [1] McMichael, Stiles, "Magnetic normal modes of nanoelements", J Appl Phys 97 (10), 10J901, 2005.
 
         """
-        self._compute_spectrum(t_step=t_step, t_ini=t_ini, t_end=t_end, subtract_values=subtract_values, use_averaged_m=use_averaged_m, mesh_region=mesh_region)
+        self._compute_spectrum(t_step=t_step, t_ini=t_ini, t_end=t_end,
+                               subtract_values=subtract_values, use_averaged_m=use_averaged_m, mesh_region=mesh_region)
 
         fig = _plot_spectrum(self.psd_freqs[mesh_region, use_averaged_m],
                              self.psd_mx[mesh_region, use_averaged_m],
@@ -286,7 +304,8 @@ class NormalModeSimulation(Simulation):
                    'z': self.psd_mz[mesh_region, use_averaged_m]
                    }[component]
         except KeyError:
-            raise ValueError("Argument `component` must be exactly one of 'x', 'y', 'z'.")
+            raise ValueError(
+                "Argument `component` must be exactly one of 'x', 'y', 'z'.")
         return res
 
     def find_peak_near_frequency(self, f_approx, component=None, use_averaged_m=False, mesh_region=None):
@@ -307,8 +326,10 @@ class NormalModeSimulation(Simulation):
         if not isinstance(component, types.StringTypes):
             raise TypeError("Argument 'component' must be of type string.")
 
-        self._compute_spectrum(use_averaged_m=use_averaged_m, mesh_region=mesh_region)
-        psd_cmpnt = self._get_psd_component(component, mesh_region, use_averaged_m)
+        self._compute_spectrum(
+            use_averaged_m=use_averaged_m, mesh_region=mesh_region)
+        psd_cmpnt = self._get_psd_component(
+            component, mesh_region, use_averaged_m)
 
         return find_peak_near_frequency(f_approx, self.psd_freqs[mesh_region, use_averaged_m], psd_cmpnt)
 
@@ -317,9 +338,11 @@ class NormalModeSimulation(Simulation):
         Return a list all peaks in the spectrum of the given magnetization component.
 
         """
-        self._compute_spectrum(use_averaged_m=use_averaged_m, mesh_region=mesh_region)
+        self._compute_spectrum(
+            use_averaged_m=use_averaged_m, mesh_region=mesh_region)
         freqs = self.psd_freqs[mesh_region, use_averaged_m]
-        all_peaks = sorted(list(set([self.find_peak_near_frequency(x, component=component, use_averaged_m=use_averaged_m, mesh_region=mesh_region) for x in freqs])))
+        all_peaks = sorted(list(set([self.find_peak_near_frequency(
+            x, component=component, use_averaged_m=use_averaged_m, mesh_region=mesh_region) for x in freqs])))
         return all_peaks
 
     def plot_peak_near_frequency(self, f_approx, component, mesh_region=None, use_averaged_m=False, **kwargs):
@@ -333,10 +356,13 @@ class NormalModeSimulation(Simulation):
         supported by these two functions.
 
         """
-        peak_freq, peak_idx = self.find_peak_near_frequency(f_approx, component, mesh_region=mesh_region)
-        psd_cmpnt = self._get_psd_component(component, mesh_region, use_averaged_m)
+        peak_freq, peak_idx = self.find_peak_near_frequency(
+            f_approx, component, mesh_region=mesh_region)
+        psd_cmpnt = self._get_psd_component(
+            component, mesh_region, use_averaged_m)
         fig = self.plot_spectrum(use_averaged_m=use_averaged_m, **kwargs)
-        fig.gca().plot(self.psd_freqs[mesh_region, use_averaged_m][peak_idx] / 1e9, psd_cmpnt[peak_idx], 'bo')
+        fig.gca().plot(self.psd_freqs[mesh_region, use_averaged_m][
+            peak_idx] / 1e9, psd_cmpnt[peak_idx], 'bo')
         return fig
 
     def export_normal_mode_animation_from_ringdown(self, npy_files, f_approx=None, component=None,
@@ -393,25 +419,34 @@ class NormalModeSimulation(Simulation):
 
         if peak_idx is None:
             if f_approx is None or component is None:
-                raise ValueError("Please specify either 'peak_idx' or both 'f_approx' and 'component'.")
-            peak_freq, peak_idx = self.find_peak_near_frequency(f_approx, component)
+                raise ValueError(
+                    "Please specify either 'peak_idx' or both 'f_approx' and 'component'.")
+            peak_freq, peak_idx = self.find_peak_near_frequency(
+                f_approx, component)
         else:
             if f_approx != None:
-                log.warning("Ignoring argument 'f_approx' because 'peak_idx' was specified.")
+                log.warning(
+                    "Ignoring argument 'f_approx' because 'peak_idx' was specified.")
             if component != None:
-                log.warning("Ignoring argument 'component' because 'peak_idx' was specified.")
-            peak_freq = self.psd_freqs[None, use_averaged_m][peak_idx]  # XXX TODO: Currently mesh regions are not supported, so we must use None here. Can we fix this?!?
+                log.warning(
+                    "Ignoring argument 'component' because 'peak_idx' was specified.")
+            # XXX TODO: Currently mesh regions are not supported, so we must
+            # use None here. Can we fix this?!?
+            peak_freq = self.psd_freqs[None, use_averaged_m][peak_idx]
 
         if outfilename is None:
             if directory is '':
-                raise ValueError("Please specify at least one of the arguments 'outfilename' or 'directory'")
-            outfilename = 'normal_mode_{}__{:.3f}_GHz.pvd'.format(peak_idx, peak_freq / 1e9)
+                raise ValueError(
+                    "Please specify at least one of the arguments 'outfilename' or 'directory'")
+            outfilename = 'normal_mode_{}__{:.3f}_GHz.pvd'.format(
+                peak_idx, peak_freq / 1e9)
         outfilename = os.path.join(directory, outfilename)
 
         if t_step == None:
             if (self.t_step_ndt != None) and (self.t_step_m != None) and \
                     (self.t_step_ndt != self.t_step_m):
-                log.warning("Values of t_step for previously saved .ndt and .npy data differ! ({} != {}). Using t_step_ndt, but please double-check this is what you want.".format(self.t_step_ndt, self.t_step_m))
+                log.warning(
+                    "Values of t_step for previously saved .ndt and .npy data differ! ({} != {}). Using t_step_ndt, but please double-check this is what you want.".format(self.t_step_ndt, self.t_step_m))
         t_step = t_step or self.t_step_ndt
         export_normal_mode_animation_from_ringdown(npy_files, outfilename, self.mesh, t_step,
                                                    peak_idx, dm_only=dm_only, num_cycles=num_cycles,
@@ -423,20 +458,23 @@ class NormalModeSimulation(Simulation):
         if use_generalized:
             if (self.A == None or self.M == None) or force_recompute_matrices:
                 df.tic()
-                self.A, self.M, _, _ = compute_generalised_eigenproblem_matrices( \
+                self.A, self.M, _, _ = compute_generalised_eigenproblem_matrices(
                     self, frequency_unit=1e9, filename_mat_A=filename_mat_A, filename_mat_M=filename_mat_M,
                     check_hermitian=check_hermitian, differentiate_H_numerically=differentiate_H_numerically)
-                log.debug("Assembling the eigenproblem matrices took {}".format(helpers.format_time(df.toc())))
+                log.debug("Assembling the eigenproblem matrices took {}".format(
+                    helpers.format_time(df.toc())))
             else:
-                log.debug('Re-using previously computed eigenproblem matrices.')
+                log.debug(
+                    'Re-using previously computed eigenproblem matrices.')
         else:
             if self.D == None or (self.use_real_matrix != use_real_matrix) or force_recompute_matrices:
                 df.tic()
                 self.D = compute_eigenproblem_matrix(
-                             self, frequency_unit=1e9, differentiate_H_numerically=differentiate_H_numerically,
-                             dtype=(float if use_real_matrix else complex))
+                    self, frequency_unit=1e9, differentiate_H_numerically=differentiate_H_numerically,
+                    dtype=(float if use_real_matrix else complex))
                 self.use_real_matrix = use_real_matrix
-                log.debug("Assembling the eigenproblem matrix took {}".format(helpers.format_time(df.toc())))
+                log.debug("Assembling the eigenproblem matrix took {}".format(
+                    helpers.format_time(df.toc())))
             else:
                 log.debug('Re-using previously computed eigenproblem matrix.')
 
@@ -590,22 +628,29 @@ class NormalModeSimulation(Simulation):
             differentiate_H_numerically=differentiate_H_numerically, use_real_matrix=use_real_matrix)
 
         if discard_negative_frequencies:
-            # If negative frequencies should be discarded, we need to compute twice as many as the user requested
+            # If negative frequencies should be discarded, we need to compute
+            # twice as many as the user requested
             n_values *= 2
 
         if use_generalized:
             # omega, eigenvecs = compute_normal_modes_generalised(self.A, self.M, n_values=n_values, discard_negative_frequencies=discard_negative_frequencies,
-            #                                             tol=tol, sigma=sigma, which=which, v0=v0, ncv=ncv, maxiter=maxiter, Minv=Minv, OPinv=OPinv, mode=mode)
-            omega, eigenvecs, rel_errors = solver.solve_eigenproblem(self.A, self.M, num=n_values)
+            # tol=tol, sigma=sigma, which=which, v0=v0, ncv=ncv,
+            # maxiter=maxiter, Minv=Minv, OPinv=OPinv, mode=mode)
+            omega, eigenvecs, rel_errors = solver.solve_eigenproblem(
+                self.A, self.M, num=n_values)
         else:
             # omega, eigenvecs = compute_normal_modes(self.D, n_values, sigma=0.0, tol=tol, which='LM')
-            # omega = np.real(omega)  # any imaginary part is due to numerical inaccuracies so we ignore them
-            omega, eigenvecs, rel_errors = solver.solve_eigenproblem(self.D, None, num=n_values)
+            # omega = np.real(omega)  # any imaginary part is due to numerical
+            # inaccuracies so we ignore them
+            omega, eigenvecs, rel_errors = solver.solve_eigenproblem(
+                self.D, None, num=n_values)
             if use_real_matrix:
-                # Eigenvalues are complex due to the missing factor of 1j in the matrix with real entries. Here we correct for this.
-                omega = 1j*omega
+                # Eigenvalues are complex due to the missing factor of 1j in
+                # the matrix with real entries. Here we correct for this.
+                omega = 1j * omega
 
-        eigenvecs_extended = np.array([self._extend_to_full_mesh(w) for w in eigenvecs])
+        eigenvecs_extended = np.array(
+            [self._extend_to_full_mesh(w) for w in eigenvecs])
         eigenvecs = eigenvecs_extended
 
         # Sanity check: frequencies should occur in +/- pairs
@@ -614,19 +659,23 @@ class NormalModeSimulation(Simulation):
         #kk = min(len(pos_freqs), len(neg_freqs))
         for (freq1, freq2) in zip(pos_freqs, neg_freqs):
             if not np.isclose(freq1.real, -freq2.real, rtol=1e-8):
-                log.error("Frequencies should occur in +/- pairs, but computed: {:f} / {:f}".format(freq1, freq2))
+                log.error(
+                    "Frequencies should occur in +/- pairs, but computed: {:f} / {:f}".format(freq1, freq2))
 
         # Another sanity check: frequencies should be approximately real
         for freq in omega:
             if not abs(freq.imag / freq) < 1e-4:
-                log.warning('Frequencies should be approximately real, but computed: {:f}'.format(freq))
+                log.warning(
+                    'Frequencies should be approximately real, but computed: {:f}'.format(freq))
 
         if discard_negative_frequencies:
-            pos_freq_indices = [i for (i, freq) in enumerate(omega) if freq >= 0]
+            pos_freq_indices = [
+                i for (i, freq) in enumerate(omega) if freq >= 0]
             omega = omega[pos_freq_indices]
             eigenvecs = eigenvecs[pos_freq_indices]
 
-        log.debug("Relative errors of computed eigensolutions: {}".format(rel_errors))
+        log.debug(
+            "Relative errors of computed eigensolutions: {}".format(rel_errors))
 
         self.eigenfreqs = omega
         self.eigenvecs = eigenvecs
@@ -678,7 +727,8 @@ class NormalModeSimulation(Simulation):
                 continue
 
             mode_descr = 'normal_mode_{:02d}__{:.3f}_GHz'.format(k, freq)
-            vtk_filename = os.path.join(directory, mode_descr, mode_descr + '.pvd')
+            vtk_filename = os.path.join(
+                directory, mode_descr, mode_descr + '.pvd')
 
             self.export_normal_mode_animation(
                 k, filename=vtk_filename, dm_only=dm_only, num_cycles=num_cycles,
@@ -690,13 +740,15 @@ class NormalModeSimulation(Simulation):
                 'add_glyphs': True,
                 'trim_border': False,
                 'colormap': 'coolwarm',
-                }
-            # Update default values with the kwargs explicitly given by the user
+            }
+            # Update default values with the kwargs explicitly given by the
+            # user
             default_kwargs.update(kwargs)
 
             if create_movies:
                 directory_movies = directory_movies or directory
-                helpers.pvd2avi(vtk_filename, os.path.join(directory_movies, mode_descr + '.avi'), **default_kwargs)
+                helpers.pvd2avi(vtk_filename, os.path.join(
+                    directory_movies, mode_descr + '.avi'), **default_kwargs)
 
     def export_normal_mode_animation(self, k, filename=None, directory='', dm_only=False, num_cycles=1, num_snapshots_per_cycle=20, scaling=0.2, **kwargs):
         """
@@ -709,13 +761,16 @@ class NormalModeSimulation(Simulation):
 
         """
         if self.eigenfreqs is None or self.eigenvecs is None:
-            log.debug("Could not find any precomputed eigenmodes. Computing them now.")
+            log.debug(
+                "Could not find any precomputed eigenmodes. Computing them now.")
             self.compute_normal_modes(max(k, 10))
 
         if filename is None:
             if directory is '':
-                raise ValueError("Please specify at least one of the arguments 'filename' or 'directory'")
-            filename = 'normal_mode_{}__{:.3f}_GHz.pvd'.format(k, self.eigenfreqs[k])
+                raise ValueError(
+                    "Please specify at least one of the arguments 'filename' or 'directory'")
+            filename = 'normal_mode_{}__{:.3f}_GHz.pvd'.format(
+                k, self.eigenfreqs[k])
         filename = os.path.join(directory, filename)
 
         basename, suffix = os.path.splitext(filename)
@@ -726,7 +781,8 @@ class NormalModeSimulation(Simulation):
         elif suffix in ['.jpg', '.avi']:
             pvd_filename = basename + '.pvd'
         else:
-            raise ValueError("Filename must end in one of the following suffixes: .pvd, .jpg, .avi.")
+            raise ValueError(
+                "Filename must end in one of the following suffixes: .pvd, .jpg, .avi.")
 
         m = self._extend_to_full_mesh(self.m)
         export_normal_mode_animation(self.mesh, m, self.eigenfreqs[k], self.eigenvecs[k],
@@ -760,12 +816,15 @@ class NormalModeSimulation(Simulation):
             video_encoded = b64encode(video)
             #video_tag = '<video controls alt="test" src="data:video/x-m4v;base64,{0}">'.format(video_encoded)
             #video_tag = '<a href="files/{0}">Link to video</a><br><br><video controls alt="test" src="data:video.mp4;base64,{1}">'.format(movie_filename, video_encoded)
-            #video_tag = '<a href="files/{0}" target="_blank">Link to video</a><br><br><embed src="files/{0}"/>'.format(movie_filename)  # --> kind of works
-            #video_tag = '<a href="files/{0}" target="_blank">Link to video</a><br><br><object data="files/{0}" type="video.mp4"/>'.format(movie_filename)  # --> kind of works
-            #video_tag = '<a href="files/{0}" target="_blank">Link to video</a><br><br><embed src="files/{0}"/>'.format(basename + '.avi')  # --> kind of works
+            # video_tag = '<a href="files/{0}" target="_blank">Link to video</a><br><br><embed src="files/{0}"/>'.format(movie_filename)  # --> kind of works
+            # video_tag = '<a href="files/{0}" target="_blank">Link to video</a><br><br><object data="files/{0}" type="video.mp4"/>'.format(movie_filename)  # --> kind of works
+            # video_tag = '<a href="files/{0}" target="_blank">Link to
+            # video</a><br><br><embed src="files/{0}"/>'.format(basename +
+            # '.avi')  # --> kind of works
 
             # Display a link to the video
-            video_tag = '<a href="files/{0}" target="_blank">Link to video</a>'.format(basename + '.avi')
+            video_tag = '<a href="files/{0}" target="_blank">Link to video</a>'.format(
+                basename + '.avi')
             return HTML(data=video_tag)
 
     def plot_spatially_resolved_normal_mode(self, k, slice_z='z_max', components='xyz', region=None,

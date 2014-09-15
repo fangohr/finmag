@@ -14,6 +14,7 @@ log = logging.getLogger(name="finmag")
 
 
 class Scheduler(object):
+
     """
     Manages a list of actions that should be performed at specific times.
 
@@ -35,6 +36,7 @@ class Scheduler(object):
         s.reached(t)
 
     """
+
     def __init__(self):
         """
         Create a Scheduler.
@@ -43,8 +45,8 @@ class Scheduler(object):
         self.items = []
         self.realtime_items = {}
         self.realtime_jobs = []  # while the scheduler is running, the job
-                                 # associated with each realtime_item will be
-                                 # stored in this list (otherwise it is empty)
+        # associated with each realtime_item will be
+        # stored in this list (otherwise it is empty)
         self.last = None
 
     def __iter__(self):
@@ -63,9 +65,12 @@ class Scheduler(object):
         if not hasattr(func, "__call__"):
             raise TypeError("The function must be callable but object '%s' is of type '%s'" %
                             (str(func), type(func)))
-        assert at or every or at_end or (after and realtime), "Use either `at`, `every` or `at_end` if not in real time mode."
-        assert not (at is not None and every is not None), "Cannot mix `at` with `every`. Please schedule separately."
-        assert not (at is not None and after is not None), "Delays don't mix with `at`."
+        assert at or every or at_end or (
+            after and realtime), "Use either `at`, `every` or `at_end` if not in real time mode."
+        assert not (
+            at is not None and every is not None), "Cannot mix `at` with `every`. Please schedule separately."
+        assert not (
+            at is not None and after is not None), "Delays don't mix with `at`."
 
         args = args or []
         kwargs = kwargs or {}
@@ -126,13 +131,16 @@ class Scheduler(object):
                 job = self.apscheduler.add_date_job(func, at)
             elif every:
                 if after:
-                    job = self.apscheduler.add_interval_job(func, seconds=every, start_date=after)
+                    job = self.apscheduler.add_interval_job(
+                        func, seconds=every, start_date=after)
                 else:
-                    job = self.apscheduler.add_interval_job(func, seconds=every)
+                    job = self.apscheduler.add_interval_job(
+                        func, seconds=every)
             elif after:
                 job = self.apscheduler.add_date_job(func, after)
             else:
-                raise ValueError("Assertion violated. Use either `at`, `every` of `after`.")
+                raise ValueError(
+                    "Assertion violated. Use either `at`, `every` of `after`.")
 
             self.realtime_jobs.append(job)
 
@@ -150,7 +158,7 @@ class Scheduler(object):
         """
         next_step = None
         stop = False  # This flag determines whether or not iteration should be
-                      #stopped after all items are checked.
+        # stopped after all items are checked.
 
         for item in self.items:
             if item.next_time is not None and (next_step is None or next_step > item.next_time):
@@ -166,8 +174,10 @@ class Scheduler(object):
             raise StopIteration
 
         if next_step < self.last:
-            log.error("Scheduler computed the next time step should be t = {:.2g} s, but the last one was already t = {:.2g} s.".format(next_step, self.last))
-            raise ValueError("Scheduler is corrupted. Requested a time step in the past: dt = {:.2g}.".format(next_step - self.last))
+            log.error("Scheduler computed the next time step should be t = {:.2g} s, but the last one was already t = {:.2g} s.".format(
+                next_step, self.last))
+            raise ValueError("Scheduler is corrupted. Requested a time step in the past: dt = {:.2g}.".format(
+                next_step - self.last))
         return next_step
 
     def reached(self, time):
@@ -209,7 +219,9 @@ class Scheduler(object):
 
     def print_scheduled_items(self, func_print=log.info):
         for item in self.items:
-            print item  # this will call __str__ on the item, which should be defined for all events
+            # this will call __str__ on the item, which should be defined for
+            # all events
+            print item
         for item in self.realtime_items:
             self._print_realtime_item(item, func_print)
 

@@ -41,6 +41,7 @@ def test_components():
     y = np.array([[1, 1, 1], [2, 2, 2], [3, 3, 3]])
     assert np.array_equal(y, components(x))
 
+
 def test_vectors():
     x1 = np.array([1, 1, 2, 2, 3, 3])
     y1 = np.array([[1, 2, 3], [1, 2, 3]])
@@ -50,64 +51,68 @@ def test_vectors():
     y2 = np.array([[0, 2, 4], [1, 3, 5], [1, 3, 5], [0, 2, 4]])
     assert np.array_equal(y2, vectors(x2))
 
+
 def test_norms():
     v = [1, 1, 0]
     assert abs(norm(v) - np.sqrt(2)) < TOLERANCE
 
     v = np.array([[1, 1, 0], [1, -2, 3]])
-    assert np.allclose(norm(v), np.array([np.sqrt(2), np.sqrt(14)]), rtol=TOLERANCE)
+    assert np.allclose(
+        norm(v), np.array([np.sqrt(2), np.sqrt(14)]), rtol=TOLERANCE)
+
 
 def test_fnormalise():
     a = np.array([1., 1., 2., 2., 0., 0.])
-    norm = np.sqrt(1+2**2+0**2)
-    expected = a[:]/norm
+    norm = np.sqrt(1 + 2 ** 2 + 0 ** 2)
+    expected = a[:] / norm
     assert np.allclose(fnormalise(a), expected, rtol=TOLERANCE)
 
     a = np.array([1., 2., 0, 0., 1., 3.])
-    n1 = np.sqrt(1+0+1)
-    n2 = np.sqrt(2**2+0+3**2)
-    expected = a[:]/np.array([n1,n2,n1,n2,n1,n2])
+    n1 = np.sqrt(1 + 0 + 1)
+    n2 = np.sqrt(2 ** 2 + 0 + 3 ** 2)
+    expected = a[:] / np.array([n1, n2, n1, n2, n1, n2])
     assert np.allclose(fnormalise(a), expected, rtol=TOLERANCE)
 
-    a = np.array([5*[1.], 5*[0], 5*[0]])
+    a = np.array([5 * [1.], 5 * [0], 5 * [0]])
     expected = a.copy().ravel()
     assert np.allclose(fnormalise(a), expected, rtol=TOLERANCE)
 
-    a2 = np.array([5*[2.], 5*[0], 5*[0]])
+    a2 = np.array([5 * [2.], 5 * [0], 5 * [0]])
     assert np.allclose(fnormalise(a2), expected, rtol=TOLERANCE)
 
     #a3=np.array([0,0,3,4., 0,2,0,5, 1,0,0,0])
 
-    #this is 0   0   3   4
+    # this is 0   0   3   4
     #        0   2   0   5
     #        1   0   0   0
     #
-    #can also write as
+    # can also write as
 
-    a3=np.array([[0,0,1.],[0,2,0],[3,0,0],[4,5,0]]).transpose()
+    a3 = np.array([[0, 0, 1.], [0, 2, 0], [3, 0, 0], [4, 5, 0]]).transpose()
 
-    c=np.sqrt(4**2+5**2)
-    expected = np.array([0,0,1,4/c, 0,1,0,5/c,1,0,0,0])
-    print "a3=\n",a3
-    print "expected=\n",expected
-    print "fnormalise(a3)=\n",fnormalise(a3)
+    c = np.sqrt(4 ** 2 + 5 ** 2)
+    expected = np.array([0, 0, 1, 4 / c, 0, 1, 0, 5 / c, 1, 0, 0, 0])
+    print "a3=\n", a3
+    print "expected=\n", expected
+    print "fnormalise(a3)=\n", fnormalise(a3)
     assert np.allclose(fnormalise(a3), expected, rtol=TOLERANCE)
 
-    #check that normalisation also works if input vector happens to be an
-    #integer array
-    #first with floats
+    # check that normalisation also works if input vector happens to be an
+    # integer array
+    # first with floats
     a4 = np.array([0., 1., 1.])
-    c=np.sqrt(1**2+1**2) #sqrt(2)
-    expected = np.array([0,1/c,1/c])
-    print "a4=\n",a4
-    print "expected=\n",expected
-    print "fnormalise(a4)=\n",fnormalise(a4)
+    c = np.sqrt(1 ** 2 + 1 ** 2)  # sqrt(2)
+    expected = np.array([0, 1 / c, 1 / c])
+    print "a4=\n", a4
+    print "expected=\n", expected
+    print "fnormalise(a4)=\n", fnormalise(a4)
     assert np.allclose(fnormalise(a4), expected, rtol=TOLERANCE)
 
-    #the same test with ints (i.e.
+    # the same test with ints (i.e.
     a5 = np.array([0, 1, 1])
     expected = a5 / np.sqrt(2)
     assert np.allclose(fnormalise(a5), expected, rtol=TOLERANCE)
+
 
 def test_vector_valued_function():
     """
@@ -117,7 +122,8 @@ def test_vector_valued_function():
 
     """
     mesh = df.UnitCubeMesh(2, 2, 2)
-    mesh.coordinates()[:] = mesh.coordinates() + 1.0  # shift mesh coords to avoid dividing by zero when normalising below
+    # shift mesh coords to avoid dividing by zero when normalising below
+    mesh.coordinates()[:] = mesh.coordinates() + 1.0
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
     num_vertices = mesh.num_vertices()
 
@@ -133,32 +139,41 @@ def test_vector_valued_function():
     v_ref_normalised = fnormalise(v_ref[:])
 
     # Reference vector for f_expr and f_callable
-    v_ref_expr = (mesh.coordinates()*[a, b, c]).transpose().reshape((-1,))
+    v_ref_expr = (mesh.coordinates() * [a, b, c]).transpose().reshape((-1,))
     v_ref_expr_normalised = fnormalise(v_ref_expr)
 
     # Create functions using the various methods
-    f_tuple = vector_valued_function(tuple(vec), S3) # 3-tuple
-    f_list = vector_valued_function(list(vec), S3) # 3-list
-    f_array3 = vector_valued_function(np.array(vec), S3) # numpy array representing a 3-vector
-    f_dfconstant = vector_valued_function(df.Constant(vec), S3) # df. Constant representing a 3-vector
-    f_expr = vector_valued_function(('a*x[0]', 'b*x[1]', 'c*x[2]'), S3, a=a, b=b, c=c) # tuple of strings (will be cast to df.Expression)
-    f_array3xN = vector_valued_function(v_ref, S3) # numpy array of nodal values shape (3*n,)
-    f_arrayN3 = vector_valued_function(np.array([vec for r in mesh.coordinates()]), S3) # numpy array of shape (n, 3)
-    #f_callable = vector_valued_function(lambda coords: v_ref_expr, S3) # callable accepting mesh node coordinates and yielding the function values
+    f_tuple = vector_valued_function(tuple(vec), S3)  # 3-tuple
+    f_list = vector_valued_function(list(vec), S3)  # 3-list
+    # numpy array representing a 3-vector
+    f_array3 = vector_valued_function(np.array(vec), S3)
+    # df. Constant representing a 3-vector
+    f_dfconstant = vector_valued_function(df.Constant(vec), S3)
+    # tuple of strings (will be cast to df.Expression)
+    f_expr = vector_valued_function(
+        ('a*x[0]', 'b*x[1]', 'c*x[2]'), S3, a=a, b=b, c=c)
+    # numpy array of nodal values shape (3*n,)
+    f_array3xN = vector_valued_function(v_ref, S3)
+    f_arrayN3 = vector_valued_function(
+        np.array([vec for r in mesh.coordinates()]), S3)  # numpy array of shape (n, 3)
+    # f_callable = vector_valued_function(lambda coords: v_ref_expr, S3) # callable accepting mesh node coordinates and yielding the function values
     # Cython 0.17.1 does not like this
-    #f_callable = vector_valued_function(lambda (x,y,z): (a*x, b*y, c*z), S3) # callable accepting mesh node coordinates and yielding the function values
+    # f_callable = vector_valued_function(lambda (x,y,z): (a*x, b*y, c*z), S3) # callable accepting mesh node coordinates and yielding the function values
     # but this one is okay
-    f_callable = vector_valued_function(lambda t: (a * t[0], b * t[1], c * t[2]), S3) # callable accepting mesh node coordinates and yielding the function values
+    # callable accepting mesh node coordinates and yielding the function values
+    f_callable = vector_valued_function(
+        lambda t: (a * t[0], b * t[1], c * t[2]), S3)
 
     # A few normalised versions, too
     f_tuple_normalised = vector_valued_function(tuple(vec), S3, normalise=True)
-    f_expr_normalised = vector_valued_function(('a*x[0]', 'b*x[1]', 'c*x[2]'), S3, a=a, b=b, c=c, normalise=True)
+    f_expr_normalised = vector_valued_function(
+        ('a*x[0]', 'b*x[1]', 'c*x[2]'), S3, a=a, b=b, c=c, normalise=True)
 
     # Cython 0.17.1 does not like this
     #f_callable_normalised = vector_valued_function(lambda (x,y,z): (a*x, b*y, c*z), S3, normalise=True)
     # but accepts this rephrased version:
-    f_callable_normalised = vector_valued_function(lambda t: (a*t[0], b*t[1], c*t[2]), S3, normalise=True)
-
+    f_callable_normalised = vector_valued_function(
+        lambda t: (a * t[0], b * t[1], c * t[2]), S3, normalise=True)
 
     # Check that the function vectors are as expected
     assert(all(f_tuple.vector() == v_ref))
@@ -182,40 +197,41 @@ def test_scalar_valued_dg_function():
     mesh = df.UnitCubeMesh(2, 2, 2)
 
     def init_f(coord):
-        x,y,z=coord
-        if z<=0.5:
+        x, y, z = coord
+        if z <= 0.5:
             return 1
         else:
             return 10
 
-    f=scalar_valued_dg_function(init_f, mesh)
+    f = scalar_valued_dg_function(init_f, mesh)
 
-    assert f(0,0,0.51)==10.0
-    assert f(0.5,0.7,0.51)==10.0
-    assert f(0.4,0.3,0.96)==10.0
-    assert f(0,0,0.49)==1.0
-    fa=f.vector().array().reshape(2,-1)
+    assert f(0, 0, 0.51) == 10.0
+    assert f(0.5, 0.7, 0.51) == 10.0
+    assert f(0.4, 0.3, 0.96) == 10.0
+    assert f(0, 0, 0.49) == 1.0
+    fa = f.vector().array().reshape(2, -1)
 
-    assert np.min(fa[0])==np.max(fa[0])==1
-    assert np.min(fa[1])==np.max(fa[1])==10
-
+    assert np.min(fa[0]) == np.max(fa[0]) == 1
+    assert np.min(fa[1]) == np.max(fa[1]) == 10
 
     dg = df.FunctionSpace(mesh, "DG", 0)
-    dgf=df.Function(dg)
-    dgf.vector()[0]=9.9
-    f=scalar_valued_dg_function(dgf, mesh)
-    assert f.vector().array()[0]==9.9
+    dgf = df.Function(dg)
+    dgf.vector()[0] = 9.9
+    f = scalar_valued_dg_function(dgf, mesh)
+    assert f.vector().array()[0] == 9.9
 
 
 def test_angle():
-    assert abs(angle([1,0,0], [1,0,0]))           < TOLERANCE
-    assert abs(angle([1,0,0], [0,1,0]) - np.pi/2) < TOLERANCE
-    assert abs(angle([1,0,0], [1,1,0]) - np.pi/4) < TOLERANCE
+    assert abs(angle([1, 0, 0], [1, 0, 0])) < TOLERANCE
+    assert abs(angle([1, 0, 0], [0, 1, 0]) - np.pi / 2) < TOLERANCE
+    assert abs(angle([1, 0, 0], [1, 1, 0]) - np.pi / 4) < TOLERANCE
+
 
 def test_rows_to_columns():
     x = np.array([[1, 2, 3], [1, 2, 3], [1, 2, 3]])
     y = np.array([[1, 1, 1], [2, 2, 2], [3, 3, 3]])
     assert np.array_equal(y, rows_to_columns(x))
+
 
 def test_cartesian_to_spherical():
     hapi = np.pi / 2
@@ -230,6 +246,7 @@ def test_cartesian_to_spherical():
         print "Testing vector {}. Got {}. Expected {}.".format(v, v_spherical, expected[i])
         assert np.max(np.abs(v_spherical - expected[i])) < TOLERANCE
 
+
 def test_pointing_upwards():
     assert pointing_upwards((0, 0, 1))
     assert pointing_upwards((0.5, 0.5, 0.8))
@@ -237,6 +254,7 @@ def test_pointing_upwards():
     assert not pointing_upwards((0, 0, -1))
     assert not pointing_upwards((-0.5, 0.5, -0.8))
     assert not pointing_upwards((-0.5, 0.5, 0.4))
+
 
 def test_pointing_downwards():
     assert pointing_downwards((0, 0, -1))
@@ -271,11 +289,12 @@ def test_mesh_functions_allclose():
 
     def is_inside_unit_sphere(pt):
         (x, y, z) = pt
-        return (x*x + y*y + z*z) < 1.0
+        return (x * x + y * y + z * z) < 1.0
 
     f2 = df.interpolate(e2, CG1)
     assert mesh_functions_allclose(f1, f2, atol=1.0) == False
-    assert mesh_functions_allclose(f1, f2, fun_mask=is_inside_unit_sphere, atol=1.0) == True
+    assert mesh_functions_allclose(
+        f1, f2, fun_mask=is_inside_unit_sphere, atol=1.0) == True
 
 
 def test_piecewise_on_subdomains():
@@ -289,8 +308,10 @@ def test_piecewise_on_subdomains():
     g = df.MeshFunction('size_t', mesh, 3)
     g.array()[:] = [1, 1, 2, 3, 1, 3]
     p = piecewise_on_subdomains(mesh, g, fun_vals)
-    assert(isinstance(p, df.Function))  # check that p is a proper Function, not a MeshFunction
-    assert(np.allclose(p.vector().array(), np.array([42, 42, 23, -3.14, 42, -3.14])))
+    # check that p is a proper Function, not a MeshFunction
+    assert(isinstance(p, df.Function))
+    assert(
+        np.allclose(p.vector().array(), np.array([42, 42, 23, -3.14, 42, -3.14])))
 
 
 def test_vector_field_from_dolfin_function():
@@ -317,12 +338,12 @@ def test_vector_field_from_dolfin_function():
                        '0.3 - 0.8*x[0] - 5*x[1] + 0.2*x[2]'))
     f = df.interpolate(e, V)
 
-    X, Y, Z = np.mgrid[xmin:xmax:nx*1j, ymin:ymax:ny*1j, zmin:zmax:nz*1j]
+    X, Y, Z = np.mgrid[xmin:xmax:nx * 1j, ymin:ymax:ny * 1j, zmin:zmax:nz * 1j]
 
     # Evaluate the vector field on the grid to create the reference arrays.
-    U = -1.0 - 3*X + Y
-    V = +1.0 + 4*Y - Z
-    W = 0.3 - 0.8*X - 5*Y + 0.2*Z
+    U = -1.0 - 3 * X + Y
+    V = +1.0 + 4 * Y - Z
+    W = 0.3 - 0.8 * X - 5 * Y + 0.2 * Z
 
     # Now convert the dolfin.Function to a vector field and compare to
     # the reference arrays.
@@ -357,7 +378,7 @@ def test_probe():
     pts = [[x, 0, 0] for x in xs]
 
     def square_x_coord(pt):
-        return pt[0]**2
+        return pt[0] ** 2
 
     # Probe the field (once normally and once with an additional
     # function applied to the result). Note that the results have
@@ -368,7 +389,7 @@ def test_probe():
 
     # Check that we get the expected results.
     res1_expected = [[x, 0, 0] for x in xs]
-    res2_expected = xs**2
+    res2_expected = xs ** 2
     assert(np.allclose(res1, res1_expected))
     assert(np.allclose(res2, res2_expected))
 
@@ -403,7 +424,8 @@ def test_get_hg_revision_info(tmpdir):
     with pytest.raises(ValueError):
         get_hg_revision_info(finmag_repo, revision='invalid_revision')
     id_string = 'd330c151a7ce'
-    rev_nr, rev_id, rev_date = get_hg_revision_info(finmag_repo, revision=id_string)
+    rev_nr, rev_id, rev_date = get_hg_revision_info(
+        finmag_repo, revision=id_string)
     assert(rev_nr == 4)
     assert(rev_id == id_string)
     assert(rev_date == '2012-02-02')
@@ -412,7 +434,8 @@ def test_get_hg_revision_info(tmpdir):
 def test_binary_tarball_name(tmpdir):
     finmag_repo = MODULE_DIR
     expected_tarball_name = 'FinMag-dist__2012-02-02__rev4_d330c151a7ce_foobar.tar.bz2'
-    assert(binary_tarball_name(finmag_repo, revision='d330c151a7ce', suffix='_foobar') == expected_tarball_name)
+    assert(binary_tarball_name(finmag_repo, revision='d330c151a7ce',
+                               suffix='_foobar') == expected_tarball_name)
 
 
 def test_plot_ndt_columns_and_plot_dynamics(tmpdir):
@@ -427,7 +450,8 @@ def test_plot_ndt_columns_and_plot_dynamics(tmpdir):
                      outfile='barmini.png', title="Some awesome title",
                      show_legend=True, legend_loc='center', figsize=(10, 4))
 
-    plot_dynamics('barmini.ndt', components='xz', outfile='barmini2.png', xlim=(0, 0.8e-11), ylim=(-1, 1))
+    plot_dynamics('barmini.ndt', components='xz',
+                  outfile='barmini2.png', xlim=(0, 0.8e-11), ylim=(-1, 1))
 
     assert(os.path.exists('barmini.png'))
     assert(os.path.exists('barmini2.png'))
@@ -447,7 +471,8 @@ def test_crossprod():
     V = df.VectorFunctionSpace(mesh, 'CG', 1, dim=3)
     u = df.interpolate(df.Expression(['x[0]', 'x[1]', '0']), V)
     v = df.interpolate(df.Expression(['-x[1]', 'x[0]', 'x[2]']), V)
-    w = df.interpolate(df.Expression(['x[1]*x[2]', '-x[0]*x[2]', 'x[0]*x[0]+x[1]*x[1]']), V)
+    w = df.interpolate(
+        df.Expression(['x[1]*x[2]', '-x[0]*x[2]', 'x[0]*x[0]+x[1]*x[1]']), V)
 
     a = u.vector().array()
     b = v.vector().array()
@@ -465,7 +490,8 @@ def test_apply_vertexwise():
     V = df.VectorFunctionSpace(mesh, 'CG', 1, dim=3)
     u = df.interpolate(df.Expression(['x[0]', 'x[1]', '0']), V)
     v = df.interpolate(df.Expression(['-x[1]', 'x[0]', 'x[2]']), V)
-    w = df.interpolate(df.Expression(['x[1]*x[2]', '-x[0]*x[2]', 'x[0]*x[0]+x[1]*x[1]']), V)
+    w = df.interpolate(
+        df.Expression(['x[1]*x[2]', '-x[0]*x[2]', 'x[0]*x[0]+x[1]*x[1]']), V)
     #W = df.VectorFunctionSpace(mesh, 'CG', 1)
     #w2 = df.interpolate(df.Expression(['-x[0]*x[1]', 'x[1]*x[0]', '0']), W)
 
@@ -520,7 +546,8 @@ def test_run_cmd_with_timeout():
     with pytest.raises(OSError):
         returncode, _, _ = run_cmd_with_timeout('foo', timeout_sec=1)
 
-    # This command should be killed due to the timeout, resulting in a return code of -9.
+    # This command should be killed due to the timeout, resulting in a return
+    # code of -9.
     returncode, _, _ = run_cmd_with_timeout('sleep 10', timeout_sec=0)
     assert(returncode == -9)
 
@@ -535,7 +562,10 @@ def test_jpg2avi(tmpdir):
     sim = finmag.example.normal_modes.disk()
     sim.compute_normal_modes(n_values=3)
     sim.export_normal_mode_animation(k=0, filename='foo/bar.pvd')
-    render_paraview_scene('foo/bar.pvd', outfile='foo/quux.jpg', trim_border=False)  # note that we must not trim the border because otherwise the resulting .jpg files will have different sizes, which confused mencoder
+    # note that we must not trim the border because otherwise the resulting
+    # .jpg files will have different sizes, which confused mencoder
+    render_paraview_scene(
+        'foo/bar.pvd', outfile='foo/quux.jpg', trim_border=False)
 
     # Test the bare-bones export
     jpg2avi('foo/quux.jpg')
@@ -544,6 +574,7 @@ def test_jpg2avi(tmpdir):
     # Test a few keywords
     jpg2avi('foo/quux.jpg', outfilename='animation.avi', duration=10, fps=10)
     assert(os.path.exists('animation.avi'))
+
 
 @pytest.mark.skipif("True")
 def test_pvd2avi(tmpdir):
@@ -561,7 +592,8 @@ def test_pvd2avi(tmpdir):
     assert(os.path.exists('foo/bar.avi'))
 
     # Test a few keywords
-    pvd2avi('foo/bar.pvd', outfilename='animation.avi', duration=10, fps=10, add_glyphs=False, colormap='heated_body')
+    pvd2avi('foo/bar.pvd', outfilename='animation.avi', duration=10,
+            fps=10, add_glyphs=False, colormap='heated_body')
     assert(os.path.exists('animation.avi'))
 
 
@@ -595,11 +627,14 @@ def test_restriction(tmpdir):
     mesh = (sphere1 + sphere2).create_mesh(maxh=5.0)
 
     class Sphere1(df.SubDomain):
+
         def inside(self, pt, on_boundary):
-                return pt[0] < 0
+            return pt[0] < 0
+
     class Sphere2(df.SubDomain):
+
         def inside(self, pt, on_boundary):
-                return pt[0] > 0
+            return pt[0] > 0
     region_markers = df.CellFunction('size_t', mesh)
     subdomain1 = Sphere1()
     subdomain2 = Sphere2()
@@ -666,21 +701,27 @@ def test_verify_function_space_type():
 
     # Check that the verification function returns 'False' if we pass in a
     # non-matching function space type.
-    assert(not verify_function_space_type(V1, 'DG', 0, dim=1))  # wrong 'dim' (should be None)
-    assert(not verify_function_space_type(V1, 'DG', 1, dim=None))  # wrong degree
-    assert(not verify_function_space_type(V1, 'CG', 0, dim=None))  # wrong family
+    # wrong 'dim' (should be None)
+    assert(not verify_function_space_type(V1, 'DG', 0, dim=1))
+    # wrong degree
+    assert(not verify_function_space_type(V1, 'DG', 1, dim=None))
+    # wrong family
+    assert(not verify_function_space_type(V1, 'CG', 0, dim=None))
 
-    assert(not verify_function_space_type(V2, 'DG', 0, dim=None))  # wrong 'dim' (should be 1)
-    assert(not verify_function_space_type(V2, 'DG', 0, dim=42))  # wrong 'dim' (should be 1)
+    # wrong 'dim' (should be 1)
+    assert(not verify_function_space_type(V2, 'DG', 0, dim=None))
+    # wrong 'dim' (should be 1)
+    assert(not verify_function_space_type(V2, 'DG', 0, dim=42))
     assert(not verify_function_space_type(V2, 'DG', 42, dim=1))  # wrong degree
     assert(not verify_function_space_type(V2, 'CG', 0, dim=1))  # wrong family
 
-    assert(not verify_function_space_type(V3, 'CG', 1, dim=42))  # wrong dimension
+    # wrong dimension
+    assert(not verify_function_space_type(V3, 'CG', 1, dim=42))
     assert(not verify_function_space_type(V3, 'CG', 42, dim=1))  # wrong degree
     assert(not verify_function_space_type(V3, 'DG', 1, dim=3))  # wrong family
 
 
 if __name__ == '__main__':
     pass
-    #test_scalar_valued_dg_function()
-    #test_pvd2avi('.')
+    # test_scalar_valued_dg_function()
+    # test_pvd2avi('.')

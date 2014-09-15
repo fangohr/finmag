@@ -77,14 +77,17 @@ def test_thin_film_argument_saves_time_on_thin_film():
     saved_relative = (elapsed - elapsed_thin_film) / elapsed
     print "FKDemag thin film settings saved {:.1%} of time.".format(saved_relative)
     assert elapsed_thin_film < elapsed
-    assert saved_relative > 0.05  # This was 20% initially, but in order to make tests more robust this value is reduced to 5%
+    # This was 20% initially, but in order to make tests more robust this
+    # value is reduced to 5%
+    assert saved_relative > 0.05
 
 
 def test_demag_energy_for_uniformly_magnetised_sphere():
     Ms = 800e3
     demag = setup_demag_sphere(Ms)
     E = demag.compute_energy()
-    E_expected = (1.0 / 6.0) * mu0 * Ms ** 2 * volume  # -mu0/2 Integral H * M with H = - M / 3
+    # -mu0/2 Integral H * M with H = - M / 3
+    E_expected = (1.0 / 6.0) * mu0 * Ms ** 2 * volume
     print "Got E = {}. Expected E = {}.".format(E, E_expected)
 
     REL_TOL = 3e-2
@@ -99,7 +102,8 @@ def test_energy_density_for_uniformly_magnetised_sphere():
     demag = setup_demag_sphere(Ms)
     rho = demag.energy_density()
 
-    E_expected = (1.0 / 6.0) * mu0 * Ms**2 * volume  # -mu0/2 Integral H * M with H = - M / 3
+    # -mu0/2 Integral H * M with H = - M / 3
+    E_expected = (1.0 / 6.0) * mu0 * Ms ** 2 * volume
     rho_expected = E_expected / volume
     print "Got mean rho = {:.3e}. Expected rho = {:.3e}.".format(np.mean(rho), rho_expected)
 
@@ -117,7 +121,8 @@ def test_energy_density_for_uniformly_magnetised_sphere_as_function():
     print "Probing the energy density at the center of the sphere."
     rho_center = rho([0.0, 0.0, 0.0])
 
-    E_expected = (1.0 / 6.0) * mu0 * Ms**2 * volume  # -mu0/2 Integral H * M with H = - M / 3
+    # -mu0/2 Integral H * M with H = - M / 3
+    E_expected = (1.0 / 6.0) * mu0 * Ms ** 2 * volume
     rho_expected = E_expected / volume
     print "Got rho = {:.3e}. Expected rho = {:.3e}.".format(rho_center, rho_expected)
 

@@ -3,6 +3,7 @@ import numpy as np
 
 
 class Field(object):
+
     """
     A thin wrapper around the dolfin function for unified and convenient
     operations on scalar and vector fields.
@@ -41,6 +42,7 @@ class Field(object):
         - for data storage
 
     """
+
     def __init__(self, functionspace, value=None, normalised=False,
                  name=None, unit=None):
         self.functionspace = functionspace
@@ -120,6 +122,7 @@ class Field(object):
             fspace_for_wexp = self.functionspace
 
             class WrappedExpression(df.Expression):
+
                 def __init__(self, value):
                     self.fun = value
 
@@ -170,10 +173,10 @@ class Field(object):
             # Vector field is normalised so that norm=1 at all mesh nodes.
             norm_squared = 0
             for i in range(self.value_dim()):
-                norm_squared += self.f[i]**2
-            norm = norm_squared**0.5
+                norm_squared += self.f[i] ** 2
+            norm = norm_squared ** 0.5
 
-            self.f = df.project(self.f/norm, self.functionspace)
+            self.f = df.project(self.f / norm, self.functionspace)
 
         else:
             # Scalar field normalisation is not required. Normalisation
@@ -232,8 +235,8 @@ class Field(object):
             values = np.empty((num_nodes, value_dim))
             for i in xrange(num_nodes):
                 try:
-                    values[i, :] = f_array[vtd_map[value_dim*i:
-                                                   value_dim*(i+1)]]
+                    values[i, :] = f_array[vtd_map[value_dim * i:
+                                                   value_dim * (i + 1)]]
                 except IndexError:
                     # This only occurs in parallel and is probably related
                     # to ghost nodes. I thought we could ignore those, but
@@ -276,7 +279,7 @@ class Field(object):
 
     def vector(self):
         return self.f.vector()
-    
+
     def petsc_vector(self):
         return df.as_backend_type(self.f.vector()).vec()
 
@@ -326,9 +329,9 @@ class Field(object):
 
         if method == 1:
             wx, wy, wz = self.f.split(deepcopy=True)
-            wnorm = np.sqrt(wx.vector()*wx.vector() +
-                            wy.vector()*wy.vector() +
-                            wz.vector()*wz.vector())
+            wnorm = np.sqrt(wx.vector() * wx.vector() +
+                            wy.vector() * wy.vector() +
+                            wz.vector() * wz.vector())
             target.vector().set_local(wnorm)
 
         elif method == 2:

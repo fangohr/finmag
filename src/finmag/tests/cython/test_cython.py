@@ -9,7 +9,7 @@ import subprocess
 import os
 
 
-#Cython complains about this:
+# Cython complains about this:
 #  f_callable_normalised = vector_valued_function(lambda (x,y,z): (a*x, b*y, c*z), S3, normalise=True)
 
 # try to reproduce with a simple example
