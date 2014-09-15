@@ -12,7 +12,7 @@ df.parameters.reorder_dofs_serial = True
 alpha = 0.1
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-def test0_sim_ode_parallel(do_plot=False):
+def t_test_sim_ode_parallel(do_plot=False):
     mesh = df.BoxMesh(0, 0, 0, 2, 2, 2, 1, 1, 1)
     sim = Sim(mesh, 8.6e5, unit_length=1e-9, pbc='2d', parallel=True)
     sim.alpha = alpha
