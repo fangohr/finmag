@@ -14,6 +14,7 @@ from finmag.util.helpers import vector_valued_function
 
 
 class MultiDomainTest(object):
+
     def __init__(self, mesh, get_domain_id, m_vals, Ms, unit_length=1e-9):
         """
         `get_domain_id` is a function of the form (x, y, z) -> id which maps
@@ -31,6 +32,7 @@ class MultiDomainTest(object):
         domain_classes = {}
         for k in self.domain_ids:
             class DomainK(df.SubDomain):
+
                 def inside(self, pt, on_boundary):
                     return get_domain_id(pt) == k
             domain_classes[k] = DomainK()
@@ -39,7 +41,8 @@ class MultiDomainTest(object):
         for k, d in domain_classes.items():
             d.mark(domains, k)
 
-        self.submeshes = [df.SubMesh(mesh, domains, i) for i in self.domain_ids]
+        self.submeshes = [df.SubMesh(mesh, domains, i)
+                          for i in self.domain_ids]
         self.dx = df.Measure("dx")[domains]
 
         def m_init(pt):
@@ -69,8 +72,10 @@ class MultiDomainTest(object):
     def check_energy_consistency(self, interaction):
         E_domains, E_total = self.compute_energies_on_subdomains(interaction)
         finmag.logger.debug("Energies on subdomains: {}".format(E_domains))
-        finmag.logger.debug("Sum of energies on subdomains: {}; total energy: {}".format(sum(E_domains.values()), E_total))
-        assert np.allclose(sum(E_domains.values()), E_total, atol=0, rtol=1e-12)
+        finmag.logger.debug("Sum of energies on subdomains: {}; total energy: {}".format(
+            sum(E_domains.values()), E_total))
+        assert np.allclose(
+            sum(E_domains.values()), E_total, atol=0, rtol=1e-12)
 
 
 @pytest.mark.slow
@@ -96,13 +101,15 @@ def test_energies_in_separated_subdomains(tmpdir):
     zeeman = Zeeman(1e6 * np.array([1, 0, 0]))
 
     mesh = pair_of_disks(d, d, h1, h2, sep, theta=0, maxh=maxh)
+
     def get_domain_id(pt):
         x, y, z = pt
         return 1 if (np.linalg.norm([x, y]) < 0.5 * (d + sep)) else 2
 
     m_vals = {1: [1, 0, 0],
               2: [0.5, -0.8, 0]}
-    multi_domain_test = MultiDomainTest(mesh, get_domain_id, m_vals, Ms, unit_length=unit_length)
+    multi_domain_test = MultiDomainTest(
+        mesh, get_domain_id, m_vals, Ms, unit_length=unit_length)
     multi_domain_test.check_energy_consistency(zeeman)
 
 
@@ -113,7 +120,7 @@ def test_energies_in_touching_subdomains():
 
     # Max, I fixed some things in here (missing m_vals, Ms, Zeeman and unit_length.)
     # Also changed 'get_domain_id' to 'get_domain_id2' in the MultiDomainTest
-    # call below. Could you check this is what you meant? (Maybe the 
+    # call below. Could you check this is what you meant? (Maybe the
     # test even passes now?) XXX TODO, 5 Oct 2013, Hans
     zeeman = Zeeman(1e6 * np.array([1, 0, 0]))
 
@@ -126,6 +133,7 @@ def test_energies_in_touching_subdomains():
 
     def get_domain_id2(pt):
         return 1 if (pt[0] < 0) else 2
-    multi_domain_test = MultiDomainTest(box_mesh, get_domain_id2, m_vals, Ms, unit_length=unit_length)
+    multi_domain_test = MultiDomainTest(
+        box_mesh, get_domain_id2, m_vals, Ms, unit_length=unit_length)
     # The next line fails for touching subdomains. Need to investigate this.
     multi_domain_test.check_energy_consistency(zeeman)

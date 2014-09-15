@@ -8,10 +8,12 @@ logger = logging.getLogger(name="finmag")
 
 
 class Physics(object):
+
     def __init__(self, S1, S3, m, Ms, unit_length, equation="llg"):
         if equation == "llg":
             from finmag.physics.llg import LLG
-            self._eq = LLG(S1, S3, do_precession=True, average=False, unit_length=unit_length)
+            self._eq = LLG(
+                S1, S3, do_precession=True, average=False, unit_length=unit_length)
         elif equation == "sllg":
             from finmag.physics.llb.sllg import SLLG
             self._eq = SLLG(S1, S3, unit_length=unit_length)
@@ -51,5 +53,3 @@ class Physics(object):
     @do_precession.setter
     def do_precession(self, value):
         self._eq.do_precession = value
-
-

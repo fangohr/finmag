@@ -20,6 +20,7 @@ demag_timings = Timer()
 
 
 class FemBemDeMagSolver(object):
+
     """
     Base Class for FEM/BEM Demag Solvers containing shared methods. For a top
     level demag solver interface see class Demag in finmag/energies/demag.
@@ -55,7 +56,7 @@ class FemBemDeMagSolver(object):
 
         self.m = m
 
-        #Problem objects and parameters
+        # Problem objects and parameters
         self.name = "Demag"
         self.in_jacobian = False
         self.unit_length = unit_length
@@ -63,27 +64,27 @@ class FemBemDeMagSolver(object):
         self.bench = bench
         self.parameters = parameters
 
-        #This is used in energy density calculations
-        self.mu0 = np.pi * 4e-7 # Vs/(Am)
+        # This is used in energy density calculations
+        self.mu0 = np.pi * 4e-7  # Vs/(Am)
 
-        #Mesh Facet Normal
+        # Mesh Facet Normal
         self.n = df.FacetNormal(self.m.mesh())
 
-        #Spaces and functions for the Demag Potential
+        # Spaces and functions for the Demag Potential
         self.V = df.FunctionSpace(self.m.mesh(), element, degree)
         self.v = df.TestFunction(self.V)
         self.u = df.TrialFunction(self.V)
         self.phi = df.Function(self.V)
 
-        #Space and functions for the Demag Field
+        # Space and functions for the Demag Field
         self.W = df.VectorFunctionSpace(self.m.mesh(), element, degree, dim=3)
         self.w = df.TrialFunction(self.W)
         self.vv = df.TestFunction(self.W)
         self.H_demag = df.Function(self.W)
 
-        #Interpolate the Unit Magentisation field if necessary
-        #A try block was not used since it might lead to an unneccessary (and potentially bad)
-        #interpolation
+        # Interpolate the Unit Magentisation field if necessary
+        # A try block was not used since it might lead to an unneccessary (and potentially bad)
+        # interpolation
         # if isinstance(m, df.Expression) or isinstance(m, df.Constant):
         #     self.m = df.interpolate(m,self.W)
 
@@ -95,7 +96,7 @@ class FemBemDeMagSolver(object):
 
         # else:
         #     self.m = m
-        # #Normalize m (should be normalized anyway).
+        # Normalize m (should be normalized anyway).
         # if normalize:
         #     self.m.vector()[:] = helpers.fnormalise(self.m.vector().array())
 
@@ -104,11 +105,11 @@ class FemBemDeMagSolver(object):
         # Initilize the boundary element matrix variable
         self.bem = None
 
-        #Objects that are needed frequently for linear solves.
+        # Objects that are needed frequently for linear solves.
         self.poisson_matrix = self.build_poisson_matrix()
         self.laplace_zeros = df.Function(self.V).vector()
 
-        #2nd FEM.
+        # 2nd FEM.
         if parameters:
             method = parameters["laplace_solver"]["method"]
             pc = parameters["laplace_solver"]["preconditioner"]
@@ -126,15 +127,17 @@ class FemBemDeMagSolver(object):
             # We're setting 'same_nonzero_pattern=True' to enforce the
             # same matrix sparsity pattern across different demag solves,
             # which should speed up things.
-            self.laplace_solver.parameters["preconditioner"]["structure"] = "same_nonzero_pattern"
+            self.laplace_solver.parameters["preconditioner"][
+                "structure"] = "same_nonzero_pattern"
         else:
-            raise ValueError("Wrong solver type specified: '{}' (allowed values: 'Krylov', 'LU')".format(solver_type))
+            raise ValueError(
+                "Wrong solver type specified: '{}' (allowed values: 'Krylov', 'LU')".format(solver_type))
 
-        #Objects needed for energy density computation
+        # Objects needed for energy density computation
         self.nodal_vol = df.assemble(self.v * df.dx).array()
         self.ED = df.Function(self.V)
 
-        #Method to calculate the Demag field from the potential
+        # Method to calculate the Demag field from the potential
         self.project_method = project_method
         if self.project_method == 'magpar':
             self.__setup_field_magpar()
@@ -145,6 +148,7 @@ class FemBemDeMagSolver(object):
             raise NotImplementedError("""Only methods currently implemented are
                                     * 'magpar',
                                     * 'project'""")
+
     def solve():
         return
 
@@ -234,14 +238,15 @@ class FemBemDeMagSolver(object):
             a laplace equation"""
         bc = df.DirichletBC(self.V, function, df.DomainBoundary())
         A = self.poisson_matrix.copy()
-        b = self.laplace_zeros#.copy()
+        b = self.laplace_zeros  # .copy()
         bc.apply(A, b)
 
         if self.bench:
-            bench.solve(A,function.vector(),b,benchmark = True)
+            bench.solve(A, function.vector(), b, benchmark=True)
         else:
             demag_timings.start("2nd linear solve", self.__class__.__name__)
-            self.laplace_iter = self.laplace_solver.solve(A, function.vector(), b)
+            self.laplace_iter = self.laplace_solver.solve(
+                A, function.vector(), b)
             demag_timings.stop("2nd linear solve", self.__class__.__name__)
         return function
 
@@ -255,20 +260,20 @@ class FemBemDeMagSolver(object):
 
     def __setup_field_magpar(self):
         """Needed by the magpar method we may use instead of project."""
-        #FIXME: Someone with a bit more insight in this method should
+        # FIXME: Someone with a bit more insight in this method should
         # write something about it in the documentation.
-        a = df.inner(df.grad(self.u), self.vv)*df.dx
-        b = df.dot(self.vv, df.Constant([-1, -1, -1]))*df.dx
+        a = df.inner(df.grad(self.u), self.vv) * df.dx
+        b = df.dot(self.vv, df.Constant([-1, -1, -1])) * df.dx
         self.G = df.assemble(a)
         self.L = df.assemble(b).array()
 
     def __compute_field_magpar(self):
         """Magpar method used by Weiwei."""
-        Hd = self.G*self.phi.vector()
-        Hd = Hd.array()/self.L
+        Hd = self.G * self.phi.vector()
+        Hd = Hd.array() / self.L
         return Hd
 
-    def get_demagfield(self,phi = None,use_default_function_space = True):
+    def get_demagfield(self, phi=None, use_default_function_space=True):
         """
         Returns the projection of the negative gradient of
         phi onto a DG0 space defined on the same mesh
@@ -284,11 +289,12 @@ class FemBemDeMagSolver(object):
 
         Hdemag = -df.grad(phi)
         if use_default_function_space == True:
-            Hdemag = df.project(Hdemag,self.W)
+            Hdemag = df.project(Hdemag, self.W)
         else:
             if self.D == 1:
-                Hspace = df.FunctionSpace(phi.function_space().mesh(),"DG",0)
+                Hspace = df.FunctionSpace(phi.function_space().mesh(), "DG", 0)
             else:
-                Hspace = df.VectorFunctionSpace(phi.function_space().mesh(),"DG",0)
-            Hdemag = df.project(Hdemag,Hspace)
+                Hspace = df.VectorFunctionSpace(
+                    phi.function_space().mesh(), "DG", 0)
+            Hdemag = df.project(Hdemag, Hspace)
         return Hdemag

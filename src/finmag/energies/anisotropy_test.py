@@ -53,7 +53,7 @@ def test_anisotropy_energy_simple_configurations(fixt, m, expected_E):
     m_field.set(df.Constant(m))
     anis = UniaxialAnisotropy(K1, a)
     anis.setup(m_field, Ms)
-    
+
     E = anis.compute_energy()
 
     print "With m = {}, expecting E = {}. Got E = {}.".format(m, expected_E, E)
@@ -82,7 +82,7 @@ def test_anisotropy_energy_analytical(fixt):
     anis.setup(m, Ms)
 
     E = anis.compute_energy()
-    expected_E = float(2)/3
+    expected_E = float(2) / 3
 
     print "With m = (0, sqrt(1-x^2), x), expecting E = {}. Got E = {}.".format(expected_E, E)
     #assert abs(E - expected_E) < TOLERANCE
@@ -95,13 +95,13 @@ def test_anisotropy_field(fixt):
 
     """
     TOLERANCE = 1e-14
-    c = df.Constant((1/np.sqrt(2), 0, 1/np.sqrt(2)))
+    c = df.Constant((1 / np.sqrt(2), 0, 1 / np.sqrt(2)))
     fixt["m"].set(c)
     H = fixt["anis"].compute_field()
 
     v = df.TestFunction(fixt["m"].functionspace)
-    g_ani = df.Constant(fixt["K1"]/(mu0 * fixt["Ms"])) * (
-            2 * df.dot(fixt["a"], fixt["m"].f) * df.dot(fixt["a"], v)) * df.dx
+    g_ani = df.Constant(fixt["K1"] / (mu0 * fixt["Ms"])) * (
+        2 * df.dot(fixt["a"], fixt["m"].f) * df.dot(fixt["a"], v)) * df.dx
     volume = df.assemble(df.dot(v, df.Constant((1, 1, 1))) * df.dx).array()
     dE_dm = df.assemble(g_ani).array() / volume
 
@@ -121,7 +121,7 @@ def test_anisotropy_field_supported_methods(fixt):
     """
     TOLERANCE = 1e-13
 
-    fixt["m"].set(df.Constant((1/np.sqrt(2), 0, 1/np.sqrt(2))))
+    fixt["m"].set(df.Constant((1 / np.sqrt(2), 0, 1 / np.sqrt(2))))
     H_default = fixt["anis"].compute_field()
 
     supported_methods = list(UniaxialAnisotropy._supported_methods)

@@ -18,6 +18,7 @@ import numpy
 
 import collections
 
+
 def first_difference(la, lb, reverse=False):
     """Given two lists 'la' and 'lb', returns the index at which the two lists
     differ or len(la) if the first entries in 'lb' match with all the entries
@@ -42,6 +43,7 @@ def first_difference(la, lb, reverse=False):
                 return i
         return len(a)
 
+
 def parse_lattice_spec(s):
     """The lattice specification should be a string such as "-5,10,5/0.5,2,2",
     which defines a two dimensional lattice where the x coordinate goes
@@ -60,11 +62,13 @@ def parse_lattice_spec(s):
                 x_min, x_max, num_steps = nums
         except:
             raise ValueError('Error in lattice specification: '
-                                + parse_lattice_spec.__doc__)
+                             + parse_lattice_spec.__doc__)
         return [float(x_min), float(x_max), int(num_steps)]
     return [parse_dim_spec(spec) for spec in s.split('/')]
 
+
 class Lattice(object):
+
     """This class allows to define a n-dimensional square lattice and perform
     various operations on it. In particular it allows to iterate over the
     points of the lattice. No storage is needed for this (a Lattice of one
@@ -116,18 +120,18 @@ class Lattice(object):
         slices = []
         for xstart, xend, num_xs in self.min_max_num_list:
             if num_xs > 1:
-                dx = (xend - xstart)/float(num_xs - 1)
-                s = slice(xstart, xend + 0.5*dx, dx)
+                dx = (xend - xstart) / float(num_xs - 1)
+                s = slice(xstart, xend + 0.5 * dx, dx)
             else:
                 s = slice(xstart, xend + 1.0, xstart + 0.5)
             slices.append(s)
         ps = numpy.lib.index_tricks.mgrid.__getitem__(slices)
         if flat:
-          ps.shape = (ps.shape[0], -1)
+            ps.shape = (ps.shape[0], -1)
         return ps.swapaxes(0, -1)
 
     def _get_stepsizes(self, scale=1.0):
-        return [(scale*(mx - mn)/(ns - 1) if ns > 1 else (mx - mn))
+        return [(scale * (mx - mn) / (ns - 1) if ns > 1 else (mx - mn))
                 for mn, mx, ns in self.min_max_num_list]
 
     stepsizes = property(_get_stepsizes)
@@ -143,7 +147,7 @@ class Lattice(object):
 
     def get_num_points(self):
         """Returns the total number of points in the lattice."""
-        return reduce(lambda x, y: x*y, self.get_shape())
+        return reduce(lambda x, y: x * y, self.get_shape())
 
     def get_closest(self, position):
         """Given a position in space, returns the point in the lattice which
@@ -152,7 +156,7 @@ class Lattice(object):
         def get_closest_i(x, i, min_max_num_list):
             x_min, x_max, x_num = min_max_num_list
             if x_min < x_max:
-                return int(round((x_num - 1) * (x - x_min)/(x_max - x_min)))
+                return int(round((x_num - 1) * (x - x_min) / (x_max - x_min)))
             else:
                 return 0
         return [get_closest_i(position[i], i, min_max_num_list_i)
@@ -165,8 +169,8 @@ class Lattice(object):
         for nr, i in enumerate(idx):
             x_min, x_max, x_num = self.min_max_num_list[nr]
             if x_num > 1:
-                delta_x = (x_max - x_min)/(x_num - 1)
-                pos.append(x_min + delta_x*i)
+                delta_x = (x_max - x_min) / (x_num - 1)
+                pos.append(x_min + delta_x * i)
             else:
                 pos.append(x_min)
         return pos
@@ -179,14 +183,14 @@ class Lattice(object):
         if isinstance(factors, collections.Sequence):
             for i, f in enumerate(factors):
                 mn, mx, nm = self.min_max_num_list[i]
-                self.min_max_num_list[i] = (mn*f, mx*f, nm)
+                self.min_max_num_list[i] = (mn * f, mx * f, nm)
 
         else:
             n = len(self.min_max_num_list)
             f = factors
             for i in range(n):
                 mn, mx, nm = self.min_max_num_list[i]
-                self.min_max_num_list[i] = (mn*f, mx*f, nm)
+                self.min_max_num_list[i] = (mn * f, mx * f, nm)
 
     def _foreach(self, nr_idx, idx, pos, fn, fastest_idx, idx_order):
         if nr_idx == fastest_idx:
@@ -202,7 +206,7 @@ class Lattice(object):
             if num_steps == 1:
                 delta_xi = 0.0
             else:
-                delta_xi = (x_max - x_min)/(num_steps - 1)
+                delta_xi = (x_max - x_min) / (num_steps - 1)
 
             for i in range(num_steps):
                 pos[nr_idx] = xi
@@ -216,14 +220,16 @@ class Lattice(object):
         call 'fn(idx, pos)' where 'idx' is the index of the current point,
         while 'pos' is its position as given by the method 'get_pos_from_idx'.
         """
-        idx = [0]*self.dim
-        pos = [0.0]*self.dim
+        idx = [0] * self.dim
+        pos = [0.0] * self.dim
         if self.order == "C":
             self._foreach(0, idx, pos, fn, self.dim, 1)
         else:
             self._foreach(self.dim - 1, idx, pos, fn, -1, -1)
 
+
 class FieldLattice(object):
+
     def __init__(self, lattice, dim=3, order="F",
                  data=None, reduction=0.0, scale=None):
         if isinstance(lattice, Lattice):
@@ -239,7 +245,7 @@ class FieldLattice(object):
             self.field_data = data
         else:
             self.field_data = \
-              numpy.ndarray(dtype=float, shape=shape, order=order)
+                numpy.ndarray(dtype=float, shape=shape, order=order)
 
     def set(self, setter):
         all_components = [slice(None)]
@@ -251,4 +257,3 @@ class FieldLattice(object):
                 self.field_data[all_components + idx] = setter(pos)
 
         self.lattice.foreach(fn)
-

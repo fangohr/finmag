@@ -9,11 +9,13 @@
 from datetime import datetime, timedelta
 import math
 
+
 def td_seconds(td):
     return td.microseconds * 1e-6 + td.seconds + td.days * 24 * 3600
 
 # Note to self: using Student's t distribution here makes no sense since subsequent
-# time measurements are not independent. Need to find a better way to produce confidence intervals...
+# time measurements are not independent. Need to find a better way to
+# produce confidence intervals...
 STUDENT_T_095 = [1e100,
                  6.31375, 2.91999, 2.35336, 2.13185, 2.01505, 1.94318, 1.89458,
                  1.85955, 1.83311, 1.81246, 1.79588, 1.78229, 1.77093, 1.76131,
@@ -29,10 +31,12 @@ STUDENT_T_095 = [1e100,
                  1.66412, 1.66388, 1.66365, 1.66342, 1.6632, 1.66298, 1.66277,
                  1.66256, 1.66235, 1.66216, 1.66196, 1.66177, 1.66159, 1.6614,
                  1.66123, 1.66105, 1.66088, 1.66071, 1.66055, 1.66039, 1.66023
-]
+                 ]
+
 
 class counter:
-    def __init__(self, max_time_sec=1., min_time_sec=0.3, min_error=0.01, min_groups = 3, max_groups = 10, flops_per_iter=None, bytes_per_iter=None):
+
+    def __init__(self, max_time_sec=1., min_time_sec=0.3, min_error=0.01, min_groups=3, max_groups=10, flops_per_iter=None, bytes_per_iter=None):
         self.min_time_sec = min_time_sec
         self.max_time_sec = max_time_sec
         self.min_error_ratio = min_error
@@ -53,7 +57,7 @@ class counter:
 
     def next(self):
         self.rep_curr += 1
-        if  self.rep_curr < self.rep_count:
+        if self.rep_curr < self.rep_count:
             return True
         return self.advance_rep()
 
@@ -62,7 +66,8 @@ class counter:
 
         diff = td_seconds(self.rep_end_time - self.rep_start_time)
         if not self.group_count:
-            # still need to find how many times to run the test until it takes at least max_time_sec/MAX_GROUPS seconds
+            # still need to find how many times to run the test until it takes
+            # at least max_time_sec/MAX_GROUPS seconds
             if diff < self.min_time_sec / self.max_groups:
                 self.rep_count *= 2
                 self.rep_curr = 0
@@ -90,39 +95,41 @@ class counter:
         return self.sum_times / self.group_size / self.group_count
 
     def calls_per_sec(self, factor):
-        return 1.*factor/self.mean_time_sec()
+        return 1. * factor / self.mean_time_sec()
 
     def confidence_time_sec(self):
         if self.group_count < len(STUDENT_T_095):
-            cutoff =  STUDENT_T_095[self.group_count]
+            cutoff = STUDENT_T_095[self.group_count]
         else:
             cutoff = 1.64485
-        s2 = (self.sum_times_sq - self.sum_times**2/ self.group_count) / (self.group_count - 1)
+        s2 = (self.sum_times_sq - self.sum_times **
+              2 / self.group_count) / (self.group_count - 1)
         conf = cutoff * math.sqrt(s2 / self.group_count)
         return conf / self.group_size
 
     def group_times_str(self, fmt, mult):
-        return " ".join(fmt % (mult*x/self.group_size) for x in self.group_times)
+        return " ".join(fmt % (mult * x / self.group_size) for x in self.group_times)
 
     def flops_str(self):
         if not self.flops_per_iter:
             return ""
         mean = self.mean_time_sec()
-        return ", %.2f Gflops" % (self.flops_per_iter/mean/1e9)
+        return ", %.2f Gflops" % (self.flops_per_iter / mean / 1e9)
 
     def bytes_str(self):
         if not self.bytes_per_iter:
             return ""
         mean = self.mean_time_sec()
-        return ", %.2f GB/sec" % (self.bytes_per_iter/mean/1e9)
+        return ", %.2f GB/sec" % (self.bytes_per_iter / mean / 1e9)
 
     def __str__(self):
         mean = self.mean_time_sec()
         conf = self.confidence_time_sec()
         if mean > 1e-3:
-            return "%.1f calls/sec, %.1f ms/call%s%s (%.1f%% error), [%s] (%d per group)" % (1/mean, mean*1e3, self.flops_str(), self.bytes_str(), conf/mean*100, self.group_times_str("%.1f", 1e3), self.group_size)
+            return "%.1f calls/sec, %.1f ms/call%s%s (%.1f%% error), [%s] (%d per group)" % (1 / mean, mean * 1e3, self.flops_str(), self.bytes_str(), conf / mean * 100, self.group_times_str("%.1f", 1e3), self.group_size)
         else:
-            return "%.0f calls/sec, %.1f us/call%s%s (%.1f%% error), [%s] (%d per group)" % (1/mean, mean*1e6, self.flops_str(), self.bytes_str(), conf/mean*100, self.group_times_str("%.1f", 1e6), self.group_size)
+            return "%.0f calls/sec, %.1f us/call%s%s (%.1f%% error), [%s] (%d per group)" % (1 / mean, mean * 1e6, self.flops_str(), self.bytes_str(), conf / mean * 100, self.group_times_str("%.1f", 1e6), self.group_size)
+
 
 def time_str(time_sec):
     if type(time_sec) is timedelta:
@@ -130,8 +137,8 @@ def time_str(time_sec):
     if time_sec >= 1.:
         return "%.1f s" % (time_sec,)
     if time_sec >= 1e-3:
-        return "%.0fms" % (time_sec*1e3,)
-    return "%.0fus" % (time_sec*1e6,)
+        return "%.0fms" % (time_sec * 1e3,)
+    return "%.0fus" % (time_sec * 1e6,)
 
 if __name__ == "__main__":
     c = counter()

@@ -34,7 +34,7 @@ Hans, 30 June 2012
 """
 
 from finmag.tests.jacobean.domain_wall_cobalt import setup_domain_wall_cobalt, \
-                                                     domain_wall_error
+    domain_wall_error
 from finmag.drivers.llg_integrator import llg_integrator
 from datetime import datetime
 
@@ -45,7 +45,8 @@ END_TIME2 = END_TIME1 + 0.1e-10
 
 def run_test(backend, method, mode='onego', nsteps=40000):
     llg = setup_domain_wall_cobalt(node_count=NODE_COUNT)
-    integrator = llg_integrator(llg, llg.m_field, backend, method=method, nsteps=nsteps)
+    integrator = llg_integrator(
+        llg, llg.m_field, backend, method=method, nsteps=nsteps)
     t = datetime.now()
 
     if mode == 'onego':
@@ -53,21 +54,22 @@ def run_test(backend, method, mode='onego', nsteps=40000):
     elif mode == 'twogoes' or mode == 'twogoesreinit':
         END_TIME = END_TIME1
     else:
-        raise ValueError("Can only understand 'onego', 'twogoes', twogoesreinit'.")
+        raise ValueError(
+            "Can only understand 'onego', 'twogoes', twogoesreinit'.")
 
     integrator.advance_time(END_TIME)
     dt = datetime.now() - t
     print "backend=%s, method=%s: elapsed time=%s, n_rhs_evals=%s, error=%g" % (
-            backend,
-            method,
-            dt,
-            integrator.n_rhs_evals,
-            domain_wall_error(integrator.m, NODE_COUNT))
+        backend,
+        method,
+        dt,
+        integrator.n_rhs_evals,
+        domain_wall_error(integrator.m, NODE_COUNT))
     if mode == 'onego':
         return integrator
 
     if mode == 'twogoesreinit':
-        #check that rhs counter goes back to zero
+        # check that rhs counter goes back to zero
         print "re-initialising"
         integrator.reinit()
         assert integrator.n_rhs_evals == 0
@@ -76,14 +78,14 @@ def run_test(backend, method, mode='onego', nsteps=40000):
 
     integrator.advance_time(END_TIME2)
     print "backend=%s, method=%s: elapsed time=%s, n_rhs_evals=%s, error=%g" % (
-            backend,
-            method,
-            dt,
-            integrator.n_rhs_evals,
-            domain_wall_error(integrator.m, NODE_COUNT))
-    print("second call to integrator.n_rhs_evals ={}".format(integrator.n_rhs_evals))
+        backend,
+        method,
+        dt,
+        integrator.n_rhs_evals,
+        domain_wall_error(integrator.m, NODE_COUNT))
+    print("second call to integrator.n_rhs_evals ={}".format(
+        integrator.n_rhs_evals))
     return integrator
-
 
 
 def test_reinit_resets_num_rhs_eval_counter():
@@ -93,7 +95,7 @@ def test_reinit_resets_num_rhs_eval_counter():
     return
 
 if __name__ == '__main__':
-    #the actual test
+    # the actual test
     test_reinit_resets_num_rhs_eval_counter()
 
     print "Demo how nhs_rhs_evals changes with and without reinit"
@@ -102,7 +104,7 @@ if __name__ == '__main__':
     int = run_test("sundials", "adams", mode='onego')
 
 
-#def not_used_here_test_scipy():
+# def not_used_here_test_scipy():
 #    return run_test("scipy", "bdf")
 
 # def test_scipy_bdf(self):

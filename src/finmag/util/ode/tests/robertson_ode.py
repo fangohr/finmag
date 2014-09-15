@@ -12,18 +12,20 @@ import scipy.integrate
 n_rhs_evals = 0
 n_jac_evals = 0
 
+
 def robertson_reset_n_evals():
     global n_rhs_evals, n_jac_evals
     n_rhs_evals = 0
     n_jac_evals = 0
 
+
 def robertson_rhs(t, y):
     global n_rhs_evals
     n_rhs_evals += 1
     return np.array([
-            -0.04 * y[0] + 1e4 * y[1] * y[2],
-            0.04 * y[0] - 1e4 * y[1] * y[2] - 3e7 * y[1] * y[1],
-            3e7 * y[1] * y[1]
+        -0.04 * y[0] + 1e4 * y[1] * y[2],
+        0.04 * y[0] - 1e4 * y[1] * y[2] - 3e7 * y[1] * y[1],
+        3e7 * y[1] * y[1]
     ])
 
 
@@ -45,7 +47,7 @@ def robertson_jacobean(t, y):
 
 ROBERTSON_Y0 = np.array([1., 0., 0])
 
-if __name__=="__main__":
+if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
     ts = np.logspace(-8, 8, base=10, num=200)
@@ -67,4 +69,3 @@ if __name__=="__main__":
     plt.semilogx(*vals)
     plt.legend(["$y_1$", "$10^4 y_2$", "$y_3$"])
     plt.show()
-

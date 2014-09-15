@@ -3,22 +3,25 @@ from finmag.physics.llg import LLG
 from finmag.energies import Exchange
 from math import log
 
+
 class MyLLG(LLG):
+
     """
     Temporary extension of LLG because the current version
     does its computations externally in C++, and doesn't
     compute the variational forms, and thus makes it
     impossible to compute the jacobian.
     """
+
     def __init__(self, S1, S3):
         LLG.__init__(self, S1, S3)
         self.alpha = 0.5
-        self.p = Constant(self.gamma/(1 + self.alpha**2))
+        self.p = Constant(self.gamma / (1 + self.alpha ** 2))
 
     def H_eff(self):
         """Very temporary function to make things simple."""
         H_app = project((Constant((0, 1e5, 0))), self.S3)
-        H_ex  = Function(self.S3)
+        H_ex = Function(self.S3)
 
         # Comment out these two lines if you don't want exchange.
         exch = Exchange(1.3e-11)
@@ -31,15 +34,15 @@ class MyLLG(LLG):
 
     def compute_variational_forms(self):
         M, H, Ms, p, c, alpha, V = self._m_field.f, self.H_eff(), \
-                self.Ms, self.p, self.c, self.alpha, self.S3
+            self.Ms, self.p, self.c, self.alpha, self.S3
 
         u = TrialFunction(V)
         v = TestFunction(V)
 
-        a = inner(u, v)*dx
-        L = inner((-p*cross(M,H)
-                   -p*alpha/Ms*cross(M,cross(M,H))
-                   -c*(inner(M,M) - Ms**2)*M/Ms**2), v)*dx
+        a = inner(u, v) * dx
+        L = inner((-p * cross(M, H)
+                   - p * alpha / Ms * cross(M, cross(M, H))
+                   - c * (inner(M, M) - Ms ** 2) * M / Ms ** 2), v) * dx
 
         self.a, self.L = a, L
 
@@ -80,7 +83,7 @@ def derivative_test(L, M, x, hs, J=None):
         P = Function(V)
         P.vector().set_local(M.vector().array() + H.vector().array())
 
-        L_P = assemble(replace(L, {M: P})) #Compute exact result
+        L_P = assemble(replace(L, {M: P}))  # Compute exact result
 
         # Without Jacobian information
         if J is None:
@@ -92,30 +95,32 @@ def derivative_test(L, M, x, hs, J=None):
 
     return errors
 
+
 def convergence_rates(hs, ys):
     assert(len(hs) == len(ys))
-    rates = [(log(ys[i]) - log(ys[i-1]))/(log(hs[i]) - log(hs[i-1]))
+    rates = [(log(ys[i]) - log(ys[i - 1])) / (log(hs[i]) - log(hs[i - 1]))
              for i in range(1, len(hs))]
     return rates
 
 
 m = 1e-5
-mesh = BoxMesh(0,0,0,m,m,m,5,5,5)
+mesh = BoxMesh(0, 0, 0, m, m, m, 5, 5, 5)
 S1 = FunctionSpace(mesh, "Lagrange", 1)
 S3 = VectorFunctionSpace(mesh, "Lagrange", 1)
 llg = MyLLG(S1, S3)
-llg.set_m((1,0,0))
+llg.set_m((1, 0, 0))
 
 M, V = llg._m_field.f, llg.S3
 a, L = llg.variational_forms()
 
 x = Function(V)
-s = 0.25 #some random number
+s = 0.25  # some random number
 x.vector()[:] = s
-hs = [2.0/n for n in (1, 2, 4, 8, 16, 32)]
+hs = [2.0 / n for n in (1, 2, 4, 8, 16, 32)]
 
 CONV_TOL = 1.5e-12
 DERIV_TOL = 1.3e-13
+
 
 def test_convergence_linear():
     """All convergence rates should be 1 as the differences
@@ -123,17 +128,18 @@ def test_convergence_linear():
 
     errors = derivative_test(L, M, x, hs)
     rates = convergence_rates(hs, errors)
-    for h,rate in zip(hs,rates):
-        print "h= %g, rate=%g, rate-1=%g " % (h,rate,rate-1)
+    for h, rate in zip(hs, rates):
+        print "h= %g, rate=%g, rate-1=%g " % (h, rate, rate - 1)
         assert abs(rate - 1) < h * CONV_TOL
+
 
 def test_derivative_linear():
     """This should be zero because the rhs of LLG is linear in M."""
     J = llg.compute_jacobian()
     errors = derivative_test(L, M, x, hs, J=J)
-    for h,err in zip(hs,errors):
-        print "h= %g, error=%g" % (h,err)
-        assert abs(err) < h**2 * DERIV_TOL
+    for h, err in zip(hs, errors):
+        print "h= %g, error=%g" % (h, err)
+        assert abs(err) < h ** 2 * DERIV_TOL
 
 if __name__ == '__main__':
     # L is linear

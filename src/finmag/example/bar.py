@@ -27,12 +27,13 @@ def bar(name='bar', demag_solver_type=None):
 
     xmin, ymin, zmin = 0, 0, 0      # one corner of cuboid
     xmax, ymax, zmax = 30, 30, 100  # other corner of cuboid
-    nx, ny, nz = 15, 15, 50         # number of subdivisions (use ~2nm edgelength)
+    # number of subdivisions (use ~2nm edgelength)
+    nx, ny, nz = 15, 15, 50
     mesh = df.BoxMesh(xmin, ymin, zmin, xmax, ymax, zmax, nx, ny, nz)
 
     sim = finmag.sim_with(mesh, Ms=0.86e6, alpha=0.5, unit_length=1e-9,
-                A=13e-12, m_init=(1, 0, 1), name=name,
-                demag_solver_type=demag_solver_type)
+                          A=13e-12, m_init=(1, 0, 1), name=name,
+                          demag_solver_type=demag_solver_type)
 
     return sim
 
@@ -58,16 +59,17 @@ def barmini(name='barmini', mark_regions=False, demag_solver_type=None):
 
     xmin, ymin, zmin = 0, 0, 0      # one corner of cuboid
     xmax, ymax, zmax = 3, 3, 10     # other corner of cuboid
-    nx, ny, nz = 2, 2, 4            # number of subdivisions (use ~2nm edgelength)
+    # number of subdivisions (use ~2nm edgelength)
+    nx, ny, nz = 2, 2, 4
     mesh = df.BoxMesh(xmin, ymin, zmin, xmax, ymax, zmax, nx, ny, nz)
 
     sim = finmag.sim_with(mesh, Ms=0.86e6, alpha=0.5, unit_length=1e-9,
-                A=13e-12, m_init=(1, 0, 1), name=name,
-                demag_solver_type=demag_solver_type)
+                          A=13e-12, m_init=(1, 0, 1), name=name,
+                          demag_solver_type=demag_solver_type)
 
     if mark_regions:
         def fun_regions(pt):
-            return 'bottom' if (pt[2] <=5.0) else 'top'
+            return 'bottom' if (pt[2] <= 5.0) else 'top'
         sim.mark_regions(fun_regions)
 
     return sim

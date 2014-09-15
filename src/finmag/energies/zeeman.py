@@ -8,7 +8,9 @@ from math import pi, cos
 
 log = logging.getLogger("finmag")
 
+
 class Zeeman(object):
+
     def __init__(self, H, name='Zeeman', **kwargs):
         """
         Specify an external field (in A/m).
@@ -43,7 +45,8 @@ class Zeeman(object):
         self.unit_length = unit_length
 
         dofmap = self.m.functionspace.dofmap()
-        self.S1 = df.FunctionSpace(m.mesh(), "Lagrange", 1, constrained_domain=dofmap.constrained_domain)
+        self.S1 = df.FunctionSpace(
+            m.mesh(), "Lagrange", 1, constrained_domain=dofmap.constrained_domain)
         # self.dim = S3.mesh().topology().dim()
         # self.nodal_volume_S1 = nodal_volume(self.S1, self.unit_length)
 
@@ -59,7 +62,8 @@ class Zeeman(object):
 
         """
         self.value = value
-        self.H = helpers.vector_valued_function(value, self.m.functionspace, **self.kwargs)
+        self.H = helpers.vector_valued_function(
+            value, self.m.functionspace, **self.kwargs)
         self.H.rename('H_ext', 'H_ext')
         self.E = - mu0 * self.Ms * df.dot(self.m.f, self.H)  # Energy density.
 
@@ -74,7 +78,7 @@ class Zeeman(object):
 
     def compute_energy(self, dx=df.dx):
         dim = self.m.mesh_dim()
-        E = df.assemble(self.E * dx) * self.unit_length**dim
+        E = df.assemble(self.E * dx) * self.unit_length ** dim
         return E
 
     def energy_density(self):
@@ -88,6 +92,7 @@ class Zeeman(object):
 
 
 class DipolarField(Zeeman):
+
     def __init__(self, pos, m, magnitude=None, name='DipolarField'):
         """
         Magnetostatic field of a point dipole at position `pos` with a fixed
@@ -113,18 +118,20 @@ class DipolarField(Zeeman):
             v = self.pos - pt
             r = np.linalg.norm(v)
             #n = v / np.linalg.norm(v)
-            return 1.0 / (4 * pi) * (3 * v * np.dot(self.m, v) / r**5 - self.m / r**3)
+            return 1.0 / (4 * pi) * (3 * v * np.dot(self.m, v) / r ** 5 - self.m / r ** 3)
 
         Hx_expr = '1/(4*pi) * (3*(mx*(x[0]-posx)+my*(x[1]-posy)+mz*(x[2]-posz)) / pow(sqrt((x[0]-posx)*(x[0]-posx)+(x[1]-posy)*(x[1]-posy)+(x[2]-posz)*(x[2]-posz)), 5) * (x[0]-posx) - mx / pow(sqrt((x[0]-posx)*(x[0]-posx)+(x[1]-posy)*(x[1]-posy)+(x[2]-posz)*(x[2]-posz)), 3))'
         Hy_expr = '1/(4*pi) * (3*(mx*(x[0]-posx)+my*(x[1]-posy)+mz*(x[2]-posz)) / pow(sqrt((x[0]-posx)*(x[0]-posx)+(x[1]-posy)*(x[1]-posy)+(x[2]-posz)*(x[2]-posz)), 5) * (x[1]-posy) - my / pow(sqrt((x[0]-posx)*(x[0]-posx)+(x[1]-posy)*(x[1]-posy)+(x[2]-posz)*(x[2]-posz)), 3))'
         Hz_expr = '1/(4*pi) * (3*(mx*(x[0]-posx)+my*(x[1]-posy)+mz*(x[2]-posz)) / pow(sqrt((x[0]-posx)*(x[0]-posx)+(x[1]-posy)*(x[1]-posy)+(x[2]-posz)*(x[2]-posz)), 5) * (x[2]-posz) - mz / pow(sqrt((x[0]-posx)*(x[0]-posx)+(x[1]-posy)*(x[1]-posy)+(x[2]-posz)*(x[2]-posz)), 3))'
-        H_expr = df.Expression([Hx_expr, Hy_expr, Hz_expr], mx=self.m[0], my=self.m[1], mz=self.m[2], posx=pos[0], posy=pos[1], posz=pos[2])
+        H_expr = df.Expression([Hx_expr, Hy_expr, Hz_expr], mx=self.m[0], my=self.m[
+                               1], mz=self.m[2], posx=pos[0], posy=pos[1], posz=pos[2])
 
         #super(DipolarField, self).__init__(H_fun, name=name)
         super(DipolarField, self).__init__(H_expr, name=name)
 
 
 class TimeZeeman(Zeeman):
+
     def __init__(self, field_expression, t_off=None, name='TimeZeeman'):
         """
         Specify a time dependent external field (in A/m), which gets updated as continuously as possible.
@@ -153,7 +160,8 @@ class TimeZeeman(Zeeman):
                     "t_off was not specified so there will be no time update "
                     "at all. Use the Zeeman class instead of TimeZeeman if "
                     "this is what you really want.")
-            # Convert the array to a dolfin constant so that we can proceed as normal
+            # Convert the array to a dolfin constant so that we can proceed as
+            # normal
             field_expression = df.Constant(map(str, field_expression))
 
         assert isinstance(field_expression, (df.Expression, df.Constant))
@@ -190,6 +198,7 @@ class TimeZeeman(Zeeman):
 
 
 class DiscreteTimeZeeman(TimeZeeman):
+
     def __init__(self, field_expression, dt_update=None, t_off=None, name='DiscreteTimeZeeman'):
         """
         Specify a time dependent external field which gets updated in
@@ -207,7 +216,8 @@ class DiscreteTimeZeeman(TimeZeeman):
         if dt_update is None and t_off is None:
             raise ValueError("At least one of the arguments 'dt_update' and "
                              "'t_off' must be given.")
-        super(DiscreteTimeZeeman, self).__init__(field_expression, t_off, name=name)
+        super(DiscreteTimeZeeman, self).__init__(
+            field_expression, t_off, name=name)
         self.dt_update = dt_update
         self.t_last_update = 0.0
 
@@ -228,6 +238,7 @@ class DiscreteTimeZeeman(TimeZeeman):
 
 
 class TimeZeemanPython(TimeZeeman):
+
     def __init__(self, df_expression, time_fun, t_off=None, name='TimeZeemanPython'):
         """
         Faster version of the TimeZeeman class for the special case
@@ -273,7 +284,7 @@ class TimeZeemanPython(TimeZeeman):
         self.in_jacobian = False
 
         self.scalar_df_expression = False
-        if df_expression.value_size()==1:
+        if df_expression.value_size() == 1:
             self.scalar_df_expression = True
 
     def setup(self, m, Ms, unit_length=1):
@@ -282,11 +293,14 @@ class TimeZeemanPython(TimeZeeman):
         self.unit_length = unit_length
         if self.scalar_df_expression:
             dofmap = m.functionspace.dofmap()
-            self.S1 = df.FunctionSpace(m.mesh(), "Lagrange", 1, constrained_domain=dofmap.constrained_domain)
-            self.h0 = helpers.scalar_valued_function(self.df_expression,self.S1).vector().array()
+            self.S1 = df.FunctionSpace(
+                m.mesh(), "Lagrange", 1, constrained_domain=dofmap.constrained_domain)
+            self.h0 = helpers.scalar_valued_function(
+                self.df_expression, self.S1).vector().array()
             self.H0 = df.Function(m.functionspace)
         else:
-            self.H0 = helpers.vector_valued_function(self.df_expression, self.m.functionspace)
+            self.H0 = helpers.vector_valued_function(
+                self.df_expression, self.m.functionspace)
 
         self.E = - mu0 * self.Ms * df.dot(self.m.f, self.H0)
 
@@ -300,15 +314,15 @@ class TimeZeemanPython(TimeZeeman):
                 return
 
             if self.scalar_df_expression:
-                tx,ty,tz=self.time_fun(t)
+                tx, ty, tz = self.time_fun(t)
 
-                self.H.shape=(3,-1)
-                self.H[0,:]=self.h0*tx
-                self.H[1,:]=self.h0*ty
-                self.H[2,:]=self.h0*tz
-                self.H.shape=(-1,)
+                self.H.shape = (3, -1)
+                self.H[0, :] = self.h0 * tx
+                self.H[1, :] = self.h0 * ty
+                self.H[2, :] = self.h0 * tz
+                self.H.shape = (-1,)
             else:
-                self.H[:] = self.H_init[:]*self.time_fun(t)
+                self.H[:] = self.H_init[:] * self.time_fun(t)
 
     def switch_off(self):
         # It might be nice to provide the option to remove the Zeeman
@@ -331,11 +345,12 @@ class TimeZeemanPython(TimeZeeman):
 
     def compute_energy(self, dx=df.dx):
         self.H0.vector().set_local(self.H)
-        E = df.assemble(self.E * dx) * self.unit_length**3
+        E = df.assemble(self.E * dx) * self.unit_length ** 3
         return E
 
 
 class OscillatingZeeman(TimeZeemanPython):
+
     def __init__(self, H0, freq, phase=0, t_off=None, name='OscillatingZeeman'):
         """
         Create a field which is constant in space but whose amplitude
@@ -371,5 +386,5 @@ class OscillatingZeeman(TimeZeemanPython):
         def amplitude(t):
             return cos(2 * pi * freq * t + phase)
 
-        super(OscillatingZeeman, self).__init__(H0_expr, amplitude, t_off=t_off, name=name)
-
+        super(OscillatingZeeman, self).__init__(
+            H0_expr, amplitude, t_off=t_off, name=name)

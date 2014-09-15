@@ -1,4 +1,4 @@
-# FinMag 
+# FinMag
 # Copyright (C) 2012 University of Southampton
 # Do not distribute
 #

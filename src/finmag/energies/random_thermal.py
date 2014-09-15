@@ -3,7 +3,9 @@ import dolfin as df
 from finmag.util.consts import mu0, k_B
 from finmag.util.meshes import mesh_volume
 
+
 class RandomThermal(object):
+
     """
     Thermal field from Simone, 
 
@@ -21,6 +23,7 @@ class RandomThermal(object):
     correct statistical properties of the noise.
 
     """
+
     def __init__(self, alpha, gamma):
         """
         alpha could be a numpy array or a number
@@ -35,7 +38,7 @@ class RandomThermal(object):
     def setup(self, S3, m, Ms, unit_length=1):
         mesh = S3.mesh()
         n_dim = mesh.topology().dim()
-        self.V = mesh_volume(mesh=mesh) * unit_length**n_dim
+        self.V = mesh_volume(mesh=mesh) * unit_length ** n_dim
         self.Ms = Ms
         self.output_shape = df.Function(S3).vector().array().shape
 
@@ -46,8 +49,9 @@ class RandomThermal(object):
 
     def compute_field(self):
         rnd = np.random.normal(loc=0.0, scale=1.0, shape=self.output_shape)
-        amplitude = np.sqrt((10 * 2 * self.alpha * k_B * self.T) / (self.gamma * mu0 * self.Ms * self.V * self.dt))
+        amplitude = np.sqrt(
+            (10 * 2 * self.alpha * k_B * self.T) / (self.gamma * mu0 * self.Ms * self.V * self.dt))
         return amplitude * rnd
 
     def compute_energy(self):
-        return 0 
+        return 0

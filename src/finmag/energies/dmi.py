@@ -9,6 +9,7 @@ logger = logging.getLogger('finmag')
 
 
 class DMI(EnergyBase):
+
     """
     Compute the Dzyaloshinskii-Moriya interaction (DMI) field.
 
@@ -62,9 +63,9 @@ class DMI(EnergyBase):
             dmi_np = DMI(D, method='box-matrix-numpy')
             dmi_np.setup(S3, m, Ms)
             H_dmi_np = dmi_np.compute_field()
-    """ # <!> Review this usage example; it doesn't seem appropriate
-        # currently. Specifically, m no longer is a dolfin function, but is
-        # instead a Field object.
+    """  # <!> Review this usage example; it doesn't seem appropriate
+    # currently. Specifically, m no longer is a dolfin function, but is
+    # instead a Field object.
 
     def __init__(self, D, method="box-matrix-petsc", name='DMI', dmi_type='auto'):
         self.D_waiting_for_mesh = D
@@ -116,7 +117,7 @@ def DMI_ultra_thin_film(m, D, dim):
     and Thiaville (http://arxiv.org/abs/1310.0666)
 
     """
-    #in principle, this class also works for 3d mesh?
+    # in principle, this class also works for 3d mesh?
     #assert dim <= 2, "Only implemented for 2d mesh"
 
     gradm = df.grad(m.f)
@@ -129,11 +130,10 @@ def DMI_ultra_thin_film(m, D, dim):
         dmxdy = 0
         dmydy = 0
         dmzdy = 0
-    else: # works for 2d mesh or 3d mesh
+    else:  # works for 2d mesh or 3d mesh
         dmxdy = gradm[0, 1]
         dmydy = gradm[1, 1]
         dmzdy = gradm[2, 1]
-
 
     mx = m.f[0]
     my = m.f[1]

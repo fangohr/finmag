@@ -22,7 +22,7 @@ class Tablewriter(object):
         # through extra arguments here)
         precision = 12
         charwidth = 18
-        self.float_format = "%" + str(charwidth)+'.'+str(precision)+ "g "
+        self.float_format = "%" + str(charwidth) + '.' + str(precision) + "g "
         self.string_format = "%" + str(charwidth) + "s "
 
         # save_head records whether the headings (name and units)
@@ -49,39 +49,39 @@ class Tablewriter(object):
         # here for the ndt file.
 
         if entities is None:
-            
+
             self._entities = {}
-            
+
             self.add_entity('time', {'unit': '<s>',
-	                                 'get': lambda sim: sim.t,
-	                                 'header': 'time'})
+                                     'get': lambda sim: sim.t,
+                                     'header': 'time'})
             self.add_entity('m', {'unit': '<>',
-	                              'get': lambda sim: sim.m_average,
-	                              'header': ('m_x', 'm_y', 'm_z')})
-	
-	        # add time integrator dummy tokens than return NAN as we haven't got 
-	        # the integrator yet (or may never create one).
-            self.add_entity( 'steps',  {
-	            'unit': '<1>',
-	            #'get': lambda sim: sim.integrator.stats()['nsteps'],
-	            'get': lambda sim: np.NAN,
-	            'header': 'steps'})
-            
+                                  'get': lambda sim: sim.m_average,
+                                  'header': ('m_x', 'm_y', 'm_z')})
+
+            # add time integrator dummy tokens than return NAN as we haven't got
+            # the integrator yet (or may never create one).
+            self.add_entity('steps',  {
+                'unit': '<1>',
+                #'get': lambda sim: sim.integrator.stats()['nsteps'],
+                'get': lambda sim: np.NAN,
+                'header': 'steps'})
+
             self.add_entity('last_step_dt', {
-	            'unit': '<1>',
-	            #'get': lambda sim: sim.integrator.stats()['hlast'],
-	            'get': lambda sim: np.NAN,
-	            'header': 'last_step_dt'})
-            
+                'unit': '<1>',
+                #'get': lambda sim: sim.integrator.stats()['hlast'],
+                'get': lambda sim: np.NAN,
+                'header': 'last_step_dt'})
+
             self.add_entity('dmdt', {
-	            'unit': '<A/ms>',
-	            #'get': lambda sim: sim.dmdt_max,
-	            'get': lambda sim: np.array([np.NAN, np.NAN, np.NAN]),
-	            'header': ('dmdt_x', 'dmdt_y', 'dmdt_z')})
+                'unit': '<A/ms>',
+                #'get': lambda sim: sim.dmdt_max,
+                'get': lambda sim: np.array([np.NAN, np.NAN, np.NAN]),
+                'header': ('dmdt_x', 'dmdt_y', 'dmdt_z')})
 
         else:
             self._entities = entities
-	
+
         self.filename = filename
         self.sim = simulation
         # in what order to write data
@@ -94,7 +94,6 @@ class Tablewriter(object):
         if os.path.exists(filename) and not override:
             msg = "File %s exists already; cowardly stopping" % filename
             raise RuntimeError(msg)
-
 
     def add_entity(self, name, dic):
         """
@@ -110,7 +109,7 @@ class Tablewriter(object):
         For the time entity, we have
 
             name = 'time'
-        
+
             dic =  {'unit': '<s>',
                      'get': lambda sim: sim.t,
                      'header': 'time'},
@@ -118,19 +117,19 @@ class Tablewriter(object):
         For the magnetisation entity, we have
 
             name = 'm'
-    
+
             dic = {'unit': '<>',
                   'get': lambda sim: sim.m_average,
                   'header': ('m_x', 'm_y', 'm_z')}
         """
         if self.save_head:
-            raise RuntimeError("Attempt to add entity '{}'->'{}' to ndt file {}" + \
-                               "after file has been created -- this is impossible".\
+            raise RuntimeError("Attempt to add entity '{}'->'{}' to ndt file {}" +
+                               "after file has been created -- this is impossible".
                                format(name, dic, self.filename))
 
         assert name not in self._entities.keys(), \
-                              "Attempt to add a second '{}' to entities for {}".\
-                              format(name, self.filename)
+            "Attempt to add a second '{}' to entities for {}".\
+            format(name, self.filename)
 
         # check that right keywords are given
         entity_descr = "entity '{}' -> '{}'".format(name, dic)
@@ -141,26 +140,26 @@ class Tablewriter(object):
         self._entities[name] = dic
         self.update_entity_order()
 
-
     def modify_entity_get_method(self, name, new_get_method):
         """Allows changing the get method. Is used for integrators at the moment: we register
         dummy get methods when the tablewriter file is created, and then updated those if and
         when an integrator has been created."""
-        assert name in self._entities, "Couldn't find '{}' in {}".format(name, self._entities.keys())
+        assert name in self._entities, "Couldn't find '{}' in {}".format(
+            name, self._entities.keys())
 
         logger.debug("Updating get method for {} in TableWriter(name={})".format(
             name, self.filename))
-        #logger.debug("Updating get method for {} in TableWriter(name={}) old method: {}, new method: {}".format(
+        # logger.debug("Updating get method for {} in TableWriter(name={}) old method: {}, new method: {}".format(
         #    name, self.filename, self._entities[name]['get'], new_get_method))
 
         self._entities[name]['get'] = new_get_method
-
 
     def delete_entity_get_method(self, name):
         """We cannot delete entities once they are created (as this would change the number of columns in the
         data file). Instead, we register a return function that returns numpy.NAN. 
         """
-        assert name in self._entities, "Couldn't find '{}' in {}".format(name, self._entities.keys())
+        assert name in self._entities, "Couldn't find '{}' in {}".format(
+            name, self._entities.keys())
 
         logger.debug("'Deleting' get method for {} in TableWriter(name={})".format(
             name, self.filename))
@@ -178,7 +177,7 @@ class Tablewriter(object):
             return ['step'] + sorted(keys)
         else:
             return keys
-        
+
     def update_entity_order(self):
         self.entity_order = self.default_entity_order()
 
@@ -194,8 +193,8 @@ class Tablewriter(object):
                 colheaders = [colheaders]
             for colhead in colheaders:
                 line1.append(self.string_format % colhead)
-                line2.append(self.string_format % \
-                    self._entities[entityname]['unit'])
+                line2.append(self.string_format %
+                             self._entities[entityname]['unit'])
         return "".join(line1) + "\n" + "".join(line2) + "\n"
 
     @mtimed
@@ -213,15 +212,15 @@ class Tablewriter(object):
         # open file
         with open(self.filename, 'a') as f:
             f.write(' ' * len(self.comment_symbol))  # account for comment
-                                                     # symbol width
-## The commented lines below are Hans' initial attempt to catch when the
-## number of columns to be written changes
-## but this seems to never happen. So it's not quite right.
-## Also, if this was the right place to catch it, i.e. if watching
-## self._entities is the critical object that shouldn't change after
-## the header has been written, then we should convert this into a
-## 'property' which raises an error if called for writing once the
-## header lines have been written. HF, 9 June 2014.
+            # symbol width
+# The commented lines below are Hans' initial attempt to catch when the
+# number of columns to be written changes
+# but this seems to never happen. So it's not quite right.
+# Also, if this was the right place to catch it, i.e. if watching
+# self._entities is the critical object that shouldn't change after
+# the header has been written, then we should convert this into a
+# 'property' which raises an error if called for writing once the
+# header lines have been written. HF, 9 June 2014.
 #            if len(self._entities) == self.ncolumn_headings_written:
 #                msg = "It seems number of columns to be written" + \
 #                    "to {} has changed".format(self.filename)
@@ -285,7 +284,8 @@ class Tablereader(object):
                                format(self.f))
         self.f.close()
 
-        # Make sure we have a 2d array even if the file only contains a single line (or none)
+        # Make sure we have a 2d array even if the file only contains a single
+        # line (or none)
         if self.data.ndim == 1:
             self.data = self.data[np.newaxis, :]
 
@@ -325,6 +325,7 @@ class Tablereader(object):
 
 
 class FieldSaver(object):
+
     """
     Wrapper class which can incrementally save data to one file or
     multiple files (depending on the file type). Internally, this
@@ -375,7 +376,8 @@ class FieldSaver(object):
 
         """
         if self.incremental:
-            cur_filename = self.basename + self.cnt_pattern.format(self.counter) + self.ext
+            cur_filename = self.basename + \
+                self.cnt_pattern.format(self.counter) + self.ext
         else:
             cur_filename = self.filename
 
@@ -403,7 +405,7 @@ def demo2():
 
 
 def demo1():
-    #create example simulation
+    # create example simulation
     import finmag
     import dolfin as df
     xmin, ymin, zmin = 0, 0, 0    # one corner of cuboid
@@ -411,7 +413,8 @@ def demo1():
     nx, ny, nz = 3, 3, 6         # number of subdivisions (use ~2nm edgelength)
     mesh = df.BoxMesh(xmin, ymin, zmin, xmax, ymax, zmax, nx, ny, nz)
     # standard Py parameters
-    sim = finmag.sim_with(mesh, Ms=0.86e6, alpha=0.5, unit_length=1e-9, A=13e-12, m_init=(1, 0, 1))
+    sim = finmag.sim_with(
+        mesh, Ms=0.86e6, alpha=0.5, unit_length=1e-9, A=13e-12, m_init=(1, 0, 1))
     filename = 'data.txt'
     ndt = Tablewriter(filename, sim, override=True)
     times = np.linspace(0, 3.0e-11, 6 + 1)

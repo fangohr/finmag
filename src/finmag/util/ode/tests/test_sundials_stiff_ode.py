@@ -15,7 +15,9 @@ from robertson_ode import robertson_jacobean, robertson_rhs, robertson_reset_n_e
 
 ROBERTSON_Y0 = np.array([1., 0., 0.])
 
+
 class SundialsStiffOdeTests(unittest.TestCase):
+
     def test_robertson_scipy(self):
         import scipy.integrate
         y_tmp = ROBERTSON_Y0.copy()
@@ -32,7 +34,8 @@ class SundialsStiffOdeTests(unittest.TestCase):
 
         y_tmp = ROBERTSON_Y0.copy()
         robertson_reset_n_evals()
-        integrator = scipy.integrate.ode(robertson_rhs, jac=lambda t, y: robertson_jacobean(t,y).T)
+        integrator = scipy.integrate.ode(
+            robertson_rhs, jac=lambda t, y: robertson_jacobean(t, y).T)
         integrator.set_initial_value(ROBERTSON_Y0)
         integrator.set_integrator("vode", method="bdf", nsteps=5000)
         integrator.integrate(1e8)
@@ -41,10 +44,12 @@ class SundialsStiffOdeTests(unittest.TestCase):
     def test_robertson_sundials(self):
         robertson_reset_n_evals()
         integrator = sundials.cvode(sundials.CV_BDF, sundials.CV_NEWTON)
-        integrator.init(scipy_to_cvode_rhs(robertson_rhs), 0, ROBERTSON_Y0.copy())
+        integrator.init(
+            scipy_to_cvode_rhs(robertson_rhs), 0, ROBERTSON_Y0.copy())
 
         integrator.set_linear_solver_sp_gmr(sundials.PREC_NONE)
-        integrator.set_spils_jac_times_vec_fn(scipy_to_cvode_jtimes(robertson_jacobean))
+        integrator.set_spils_jac_times_vec_fn(
+            scipy_to_cvode_jtimes(robertson_jacobean))
         integrator.set_scalar_tolerances(1e-8, 1e-8)
         integrator.set_max_num_steps(5000)
         yout = np.zeros(3)
@@ -54,10 +59,12 @@ class SundialsStiffOdeTests(unittest.TestCase):
     def test_robertson_sundials_transposed(self):
         robertson_reset_n_evals()
         integrator = sundials.cvode(sundials.CV_BDF, sundials.CV_NEWTON)
-        integrator.init(scipy_to_cvode_rhs(robertson_rhs), 0, ROBERTSON_Y0.copy())
+        integrator.init(
+            scipy_to_cvode_rhs(robertson_rhs), 0, ROBERTSON_Y0.copy())
 
         integrator.set_linear_solver_sp_gmr(sundials.PREC_NONE)
-        integrator.set_spils_jac_times_vec_fn(scipy_to_cvode_jtimes(lambda t, y: robertson_jacobean(t, y).T))
+        integrator.set_spils_jac_times_vec_fn(
+            scipy_to_cvode_jtimes(lambda t, y: robertson_jacobean(t, y).T))
         integrator.set_scalar_tolerances(1e-8, 1e-8)
         integrator.set_max_num_steps(5000)
         yout = np.zeros(3)

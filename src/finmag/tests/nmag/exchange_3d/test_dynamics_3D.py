@@ -7,9 +7,11 @@ import numpy as np
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 TOLERANCE = 8e-3
 
+
 def setup_module(module):
     import run_dolfin as s
     s.run_simulation()
+
 
 @pytest.mark.slow
 def test_compare_averages():

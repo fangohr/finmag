@@ -10,7 +10,7 @@ from finmag.physics.effective_field import EffectiveField
 from finmag.util.vtk_saver import VTKSaver
 from finmag import Simulation
 # from finmag.field import Field  # Change sim._m to new field class
-                                  # in line 184
+# in line 184
 from finmag.native import sundials
 import finmag.native.neb as native_neb
 
@@ -34,10 +34,10 @@ def linear_interpolation_two(m0, m1, n):
     magnetic system.
     """
 
-    dm = (m1 - m0)/(n+1)
+    dm = (m1 - m0) / (n + 1)
     coords = []
     for i in range(n):
-        m = m0 + dm*(i+1)
+        m = m0 + dm * (i + 1)
         coords.append(m)
     return coords
 
@@ -58,7 +58,7 @@ def normalise_m(a):
     # Transform to matrix
     a.shape = (3, -1)
     # Compute the array 'a' length
-    lengths = np.sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2])
+    lengths = np.sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2])
     # Normalise all the entries
     a[:] /= lengths
     # Return to original shape
@@ -67,12 +67,14 @@ def normalise_m(a):
 
 def compute_dm(m0, m1):
 
-    dm = m0-m1
+    dm = m0 - m1
     length = len(dm)
-    dm = np.sqrt(np.sum(dm**2))/length
+    dm = np.sqrt(np.sum(dm ** 2)) / length
     return dm
 
+
 class NEB_Sundials(object):
+
     """
     Nudged elastic band method by solving the differential equation using Sundials.
     """
@@ -121,12 +123,12 @@ class NEB_Sundials(object):
         self.effective_field = sim.llg.effective_field
 
         if interpolations is None:
-            interpolations = [0 for i in range(len(initial_images)-1)]
+            interpolations = [0 for i in range(len(initial_images) - 1)]
 
         self.initial_images = initial_images
         self.interpolations = interpolations
 
-        if len(interpolations) != len(initial_images)-1:
+        if len(interpolations) != len(initial_images) - 1:
             raise RuntimeError("""The length of interpolations should be equal to
                 the length of the initial_images array minus 1, i.e.,
                 len(interpolations) = len(initial_images) - 1""")
@@ -139,15 +141,15 @@ class NEB_Sundials(object):
         self.total_image_num = len(initial_images) + sum(interpolations)
         self.image_num = self.total_image_num - 2
 
-        self.nxyz = len(self._m.vector())/3
+        self.nxyz = len(self._m.vector()) / 3
 
-        self.coords = np.zeros(3*self.nxyz*self.total_image_num)
+        self.coords = np.zeros(3 * self.nxyz * self.total_image_num)
         self.last_m = np.zeros(self.coords.shape)
 
         self.Heff = np.zeros(self.coords.shape)
         self.Heff.shape = (self.total_image_num, -1)
 
-        self.tangents = np.zeros(3*self.nxyz*self.image_num)
+        self.tangents = np.zeros(3 * self.nxyz * self.image_num)
         self.tangents.shape = (self.image_num, -1)
 
         self.energy = np.zeros(self.total_image_num)
@@ -169,20 +171,22 @@ class NEB_Sundials(object):
                      'header': 'steps'},
             'energy': {'unit': '<J>',
                        'get': lambda sim: sim.energy,
-                       'header': ['image_%d'%i for i in range(self.image_num+2)]}
-            }
+                       'header': ['image_%d' % i for i in range(self.image_num + 2)]}
+        }
 
-        self.tablewriter = Tablewriter('%s_energy.ndt'%(self.name), self, override=True, entities=entities_energy)
+        self.tablewriter = Tablewriter(
+            '%s_energy.ndt' % (self.name), self, override=True, entities=entities_energy)
 
         entities_dm = {
             'step': {'unit': '<1>',
                      'get': lambda sim: sim.step,
                      'header': 'steps'},
             'dms': {'unit': '<1>',
-                       'get': lambda sim: sim.distances,
-                       'header': ['image_%d_%d'%(i, i+1) for i in range(self.image_num+1)]}
-            }
-        self.tablewriter_dm = Tablewriter('%s_dms.ndt'%(self.name), self, override=True, entities=entities_dm)
+                    'get': lambda sim: sim.distances,
+                    'header': ['image_%d_%d' % (i, i + 1) for i in range(self.image_num + 1)]}
+        }
+        self.tablewriter_dm = Tablewriter(
+            '%s_dms.ndt' % (self.name), self, override=True, entities=entities_dm)
 
     def initial_image_coordinates(self):
         """
@@ -201,7 +205,7 @@ class NEB_Sundials(object):
             self.coords[image_id][:] = m0[:]
             image_id = image_id + 1
 
-            self.sim.set_m(self.initial_images[i+1])
+            self.sim.set_m(self.initial_images[i + 1])
             m1 = self.sim.m
 
             coords = linear_interpolation_two(m0, m1, n)
@@ -294,7 +298,7 @@ class NEB_Sundials(object):
             # the generalised coordinates)
             h = self.effective_field.H_eff
             # Transform to spherical coordinates
-            self.Heff[i+1, :] = h[:]
+            self.Heff[i + 1, :] = h[:]
             # Compute the total energy
             self.energy[i + 1] = self.effective_field.total_energy()
 
@@ -324,11 +328,11 @@ class NEB_Sundials(object):
         ydot.shape = (self.total_image_num, -1)
 
         for i in range(self.image_num):
-            h = self.Heff[i+1]
+            h = self.Heff[i + 1]
             t = self.tangents[i]
             sf = self.springs[i]
 
-            h3 = h - np.dot(h, t)*t + sf*t
+            h3 = h - np.dot(h, t) * t + sf * t
 
             h[:] = h3[:]
 
@@ -352,8 +356,8 @@ class NEB_Sundials(object):
 
         ys = self.coords
         ys.shape = (self.total_image_num, -1)
-        for i in range(self.total_image_num-1):
-            dm = compute_dm(ys[i], ys[i+1])
+        for i in range(self.total_image_num - 1):
+            dm = compute_dm(ys[i], ys[i + 1])
             distance.append(dm)
 
         ys.shape = (-1, )
@@ -372,8 +376,8 @@ class NEB_Sundials(object):
         m.shape = (self.total_image_num, -1)
         y.shape = (self.total_image_num, -1)
         max_dmdt = 0
-        for i in range(1, self.image_num+1):
-            dmdt = compute_dm(y[i], m[i]) / (t-self.t)
+        for i in range(1, self.image_num + 1):
+            dmdt = compute_dm(y[i], m[i]) / (t - self.t)
             if dmdt > max_dmdt:
                 max_dmdt = dmdt
 
@@ -413,7 +417,7 @@ class NEB_Sundials(object):
             if cvode_dt > dt:
                 increment_dt = cvode_dt
 
-            dmdt = self.run_until(self.t+increment_dt)
+            dmdt = self.run_until(self.t + increment_dt)
 
             self.compute_distance()
             self.tablewriter.save()

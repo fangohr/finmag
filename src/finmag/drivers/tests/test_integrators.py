@@ -14,19 +14,22 @@ from datetime import datetime
 NODE_COUNT = 100
 END_TIME = 1e-10
 
+
 class IntegratorTests(unittest.TestCase):
+
     def run_test(self, backend, method, nsteps=40000):
         llg = setup_domain_wall_cobalt(node_count=NODE_COUNT)
-        integrator = llg_integrator(llg, llg.m_field, backend, method=method, nsteps=nsteps)
+        integrator = llg_integrator(
+            llg, llg.m_field, backend, method=method, nsteps=nsteps)
         t = datetime.now()
         integrator.advance_time(END_TIME)
         dt = datetime.now() - t
         print "backend=%s, method=%s: elapsed time=%s, n_rhs_evals=%s, error=%g" % (
-                backend,
-                method,
-                dt,
-                integrator.n_rhs_evals,
-                domain_wall_error(integrator.m, NODE_COUNT))
+            backend,
+            method,
+            dt,
+            integrator.n_rhs_evals,
+            domain_wall_error(integrator.m, NODE_COUNT))
 
     def test_scipy_bdf(self):
         self.run_test("scipy", "bdf")

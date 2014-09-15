@@ -9,6 +9,7 @@ from finmag.util.consts import mu0
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 averages_file = os.path.join(MODULE_DIR, "averages.txt")
 
+
 def run_simulation():
     L = W = 12.5e-9
     H = 5e-9
@@ -26,9 +27,9 @@ def run_simulation():
 
     I = 5e-5  # current in A
     J = I / (L * W)  # current density in A/m^2
-    theta = 40.0 * pi/180  # polarisation direction
-    phi = pi/2
-    p = (sin(theta)*cos(phi), sin(theta)*sin(phi), cos(theta))
+    theta = 40.0 * pi / 180  # polarisation direction
+    phi = pi / 2
+    p = (sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta))
     sim.set_stt(current_density=J, polarisation=0.4, thickness=H, direction=p)
 
     sim.schedule("save_averages", every=5e-12)

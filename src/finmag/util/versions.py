@@ -4,6 +4,7 @@ import logging
 import finmag
 logger = logging.getLogger('finmag')
 
+
 def get_linux_issue():
     try:
         f = open("/etc/issue")
@@ -11,10 +12,10 @@ def get_linux_issue():
         logger.error("Can't read /etc/issue -- this is odd?")
         raise RuntimeError("Cannot establish linux version")
     issue = f.readline()  # only return first line
-    issue = issue.replace('\\l','')
-    issue = issue.replace('\\n','')
+    issue = issue.replace('\\l', '')
+    issue = issue.replace('\\n', '')
     #logger.debug("Linux OS = '%s'" % issue)
-    return issue.strip() # get rid of white space left and right
+    return issue.strip()  # get rid of white space left and right
 
 
 def get_version_python():
@@ -77,8 +78,7 @@ def get_version_boostpython():
     # get version number as string
     maj, min_, rev = get_version_python().split('.')
 
-
-    # libfile = /usr/lib/libboost_python-py27.so' or similar 
+    # libfile = /usr/lib/libboost_python-py27.so' or similar
     libfile = '/usr/lib/libboost_python-py%s%s.so' % (maj, min_)
 
     try:
@@ -89,7 +89,7 @@ def get_version_boostpython():
 
     # expect filename to be something like 'libboost_python-py27.so.1.49.0'
     version = filename.split(".so.")[1]
-    
+
     return version
 
 
@@ -111,13 +111,17 @@ def get_debian_package_version(pkg_name):
 
     try:
         with open(os.devnull, 'w') as devnull:
-            output = subprocess.check_output(['dpkg', '-s', pkg_name], stderr=devnull)
+            output = subprocess.check_output(
+                ['dpkg', '-s', pkg_name], stderr=devnull)
     except subprocess.CalledProcessError as e:
-        logger.warning("Could not determine version of {} using dpkg.".format(pkg_name))
+        logger.warning(
+            "Could not determine version of {} using dpkg.".format(pkg_name))
         if e.returncode == 1:
-            logger.warning("The package {} is probably not installed.".format(pkg_name))
+            logger.warning(
+                "The package {} is probably not installed.".format(pkg_name))
         elif e.returncode == 127:
-            logger.warning("This does not seem to be a debian-derived Linux distribution.")
+            logger.warning(
+                "This does not seem to be a debian-derived Linux distribution.")
         else:
             logger.warning("Can't determine cause of error.")
         return None
@@ -161,28 +165,28 @@ def running_binary_distribution():
         logger.error("thefile=%s" % thefile)
     raise RuntimeError("Checking running_binary_distribution failed!")
 
-def loose_compare_ubuntu_version(v1,v2):
-    
+
+def loose_compare_ubuntu_version(v1, v2):
+
     if not v1.startswith('Ubuntu') or not v2.startswith('Ubuntu'):
         return False
 
     from distutils.version import LooseVersion
     t1 = LooseVersion(v1).version
     t2 = LooseVersion(v2).version
-    
+
     if t1[3] == t2[3] and t1[4] == t2[4]:
         return True
-    
+
     return False
-    
 
 
 if __name__ == "__main__":
     linux_issue = get_linux_issue()
-    
+
     print("__file__ = %s" % __file__)
     print("Linux issue: %s" % linux_issue)
     print("Binary distribution: %s" % running_binary_distribution())
     print("Sundials version: %s" % get_version_sundials())
-    
+
     print loose_compare_ubuntu_version('Ubuntu 12.04.1 LTS', "Ubuntu 12.04.2 LTS")

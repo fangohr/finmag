@@ -24,11 +24,11 @@ CACHE_DIR = os.environ['HOME'] + "/.oommf_calculator"
 RUN_DIR = tempfile.mkdtemp(suffix='_oommf_calculator')
 
 if os.environ.has_key('OOMMF_COMMAND'):
-    OOMMF_COMMAND=os.environ['OOMMF_COMMAND']
+    OOMMF_COMMAND = os.environ['OOMMF_COMMAND']
 else:
-    OOMMF_COMMAND='oommf'
+    OOMMF_COMMAND = 'oommf'
 
-MIF_TEMPLATE="""# MIF 2.1
+MIF_TEMPLATE = """# MIF 2.1
 
 %(spec)s
 
@@ -57,6 +57,7 @@ Destination archive mmArchive:oommf_calculator
 
 SOURCE = open(os.path.abspath(__file__)).read()
 
+
 def run_oommf(dir, args, **kwargs):
     try:
         cmd = [OOMMF_COMMAND]
@@ -66,18 +67,22 @@ def run_oommf(dir, args, **kwargs):
         sys.stderr.write(ex.output)
         raise Exception("OOMMF invocation failed: " + " ".join(cmd))
     except OSError, ex:
-        sys.stderr.write(ex.strerror+".\n")
-        raise Exception("Command '{0}' failed. Parameters: '{1}'.".format(cmd[0],  " ".join(cmd[1:])))
+        sys.stderr.write(ex.strerror + ".\n")
+        raise Exception(
+            "Command '{0}' failed. Parameters: '{1}'.".format(cmd[0],  " ".join(cmd[1:])))
 
 # Runs an OOMMF mif file contained in str
-# Returns a hashtable of field names mapped to arrays compatible with the given mesh
+# Returns a hashtable of field names mapped to arrays compatible with the
+# given mesh
+
+
 def calculate_oommf_fields(name, s0, Ms, spec=None, alpha=0., gamma_G=0., fields=[]):
     assert type(Ms) is float
     assert type(s0) is MeshField and s0.dims == (3,)
 
-    ## Calculate the checksum corresponding to the parameters
+    # Calculate the checksum corresponding to the parameters
     m = hashlib.new('md5')
-    delim="\n---\n"
+    delim = "\n---\n"
     m.update(SOURCE + delim)
     m.update(name + delim)
     m.update("%25.19e%s" % (Ms, delim))
@@ -90,7 +95,7 @@ def calculate_oommf_fields(name, s0, Ms, spec=None, alpha=0., gamma_G=0., fields
     m.update(s.getvalue())
     checksum = m.hexdigest()
 
-    ## Format the simulation script
+    # Format the simulation script
     basename = "%s_%s" % (name, checksum)
     tag = basename.lower()
     params = {
@@ -105,7 +110,7 @@ def calculate_oommf_fields(name, s0, Ms, spec=None, alpha=0., gamma_G=0., fields
 
     mif = MIF_TEMPLATE % params
 
-    #print mif
+    # print mif
 
     # Check if the result is already known
     cachedir = os.path.join(CACHE_DIR, basename)
@@ -113,7 +118,7 @@ def calculate_oommf_fields(name, s0, Ms, spec=None, alpha=0., gamma_G=0., fields
         os.makedirs(CACHE_DIR)
 
     if not os.path.exists(cachedir):
-        ## Run the simulation
+        # Run the simulation
         print "Running OOMMF simulation %s..." % basename,
         sys.stdout.flush()
         dir = os.path.join(RUN_DIR, basename)
@@ -127,7 +132,7 @@ def calculate_oommf_fields(name, s0, Ms, spec=None, alpha=0., gamma_G=0., fields
         # Write the starting OMF file
         fl = lattice.FieldLattice(s0.mesh.get_lattice_spec())
         fl.field_data = s0.flat
-       
+
         # Save it to file
         m0_file = ovf.OVFFile()
         m0_file.new(fl, version=ovf.OVF10, data_type="binary8")
@@ -148,7 +153,7 @@ def calculate_oommf_fields(name, s0, Ms, spec=None, alpha=0., gamma_G=0., fields
 
     return fields
 
-if __name__=="__main__":
+if __name__ == "__main__":
     spec = """set pi [expr 4*atan(1.0)]
 set mu0 [expr 4*$pi*1e-7]
 

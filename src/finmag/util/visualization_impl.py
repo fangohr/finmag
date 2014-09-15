@@ -32,7 +32,10 @@ from threading import Timer
 logger = logging.getLogger("finmag")
 
 # This is a copy of the function in finmag.util.helpers, but we can't import finmag
-# in this file without throwing a crash so we define the function here separately.
+# in this file without throwing a crash so we define the function here
+# separately.
+
+
 def run_cmd_with_timeout(cmd, timeout_sec):
     """
     Runs the given shell command but kills the spawned subprocess
@@ -94,7 +97,8 @@ def find_unused_X_display(displays_to_try=xrange(10, 100)):
     for display in displays_to_try:
         try:
             sh.xdpyinfo('-display', ':{}'.format(display))
-            # If the command finished successfully, this display is already in use.
+            # If the command finished successfully, this display is already in
+            # use.
         except sh.ErrorReturnCode:
             logger.debug("Found unused display :{}".format(display))
             return display
@@ -103,6 +107,7 @@ def find_unused_X_display(displays_to_try=xrange(10, 100)):
 
 
 class ColorMap(object):
+
     def __init__(self, color_space, rgb_points, nan_color):
         self.color_space = color_space
         self.rgb_points = rgb_points
@@ -129,7 +134,7 @@ _color_maps = {
                  [0.0, 0, 0, 1,
                   1.0, 1, 0, 0],
                  [0.498039, 0.498039, 0.498039]),
-    }
+}
 
 
 _axes = {'x': 0, 'y': 1, 'z': 2, 'magnitude': -1}
@@ -140,35 +145,35 @@ _representations = ['3D Glyphs', 'Outline', 'Points', 'Surface',
 
 
 def render_paraview_scene(
-    pvd_file,
-    outfile,
-    field_name='m',
-    timesteps=None,
-    camera_position=[0, -200, +200],
-    camera_focal_point=[0, 0, 0],
-    camera_view_up=[0, 0, 1],
-    view_size=(800, 600),
-    magnification=1,
-    fit_view_to_scene=True,
-    color_by_axis=0,
-    colormap='coolwarm',
-    rescale_colormap_to_data_range=True,
-    show_colorbar=True,
-    colorbar_label_format='%-#5.2g',
-    add_glyphs=True,
-    glyph_type='cones',
-    glyph_scale_factor=1.0,
-    glyph_random_mode=True,
-    glyph_mask_points=True,
-    glyph_max_number_of_points=10000,
-    show_orientation_axes=False,
-    show_center_axes=False,
-    representation="Surface With Edges",
-    palette='screen',
-    use_parallel_projection=False,
-    trim_border=True,
-    rescale=None,
-    diffuse_color=None):
+        pvd_file,
+        outfile,
+        field_name='m',
+        timesteps=None,
+        camera_position=[0, -200, +200],
+        camera_focal_point=[0, 0, 0],
+        camera_view_up=[0, 0, 1],
+        view_size=(800, 600),
+        magnification=1,
+        fit_view_to_scene=True,
+        color_by_axis=0,
+        colormap='coolwarm',
+        rescale_colormap_to_data_range=True,
+        show_colorbar=True,
+        colorbar_label_format='%-#5.2g',
+        add_glyphs=True,
+        glyph_type='cones',
+        glyph_scale_factor=1.0,
+        glyph_random_mode=True,
+        glyph_mask_points=True,
+        glyph_max_number_of_points=10000,
+        show_orientation_axes=False,
+        show_center_axes=False,
+        representation="Surface With Edges",
+        palette='screen',
+        use_parallel_projection=False,
+        trim_border=True,
+        rescale=None,
+        diffuse_color=None):
     """
     Load a *.pvd file, render the scene in it and save the result to an image file.
 
@@ -422,7 +427,8 @@ def render_paraview_scene(
         timesteps = reader.TimestepValues
     elif not isinstance(timesteps, (list, tuple, np.ndarray)):
         if not isinstance(timesteps, numbers.Number):
-            raise TypeError("Argument 'timesteps' must be either None or a number or a list of numbers. Got: '{}'".format(timesteps))
+            raise TypeError(
+                "Argument 'timesteps' must be either None or a number or a list of numbers. Got: '{}'".format(timesteps))
         timesteps = [timesteps]
 
     data_range = (-1.0, 1.0)
@@ -438,7 +444,6 @@ def render_paraview_scene(
             dmax = max(cur_data_range[1], dmax)
         data_range = (dmin, dmax)
         logger.debug("Rescaling colormap to data range: {}".format(data_range))
-
 
     # Set the correct colormap and rescale it if necessary.
     try:
@@ -467,7 +472,8 @@ def render_paraview_scene(
         # contains a single value
         cmax += 1e-8
     for i in xrange(0, len(rgb_points), 4):
-        rgb_points[i] = (rgb_points[i] - cmin) / (cmax - cmin) * (dmax - dmin) + dmin
+        rgb_points[i] = (rgb_points[i] - cmin) / \
+            (cmax - cmin) * (dmax - dmin) + dmin
     lut.RGBPoints = rgb_points
     lut.NanColor = cmap.nan_color
 
@@ -496,9 +502,10 @@ def render_paraview_scene(
 
         # Determine approximate mesh spacing
         def mesh_spacing_for_cell(cell):
-            cell_bounds = np.array(cell.GetBounds()).reshape((3,2))
+            cell_bounds = np.array(cell.GetBounds()).reshape((3, 2))
             return float(min(filter(lambda x: x != 0.0, cell_bounds[:, 1] - cell_bounds[:, 0])))
-        mesh_spacing = np.average([mesh_spacing_for_cell(grid.GetCell(i)) for i in range(grid.GetNumberOfCells())])
+        mesh_spacing = np.average(
+            [mesh_spacing_for_cell(grid.GetCell(i)) for i in range(grid.GetNumberOfCells())])
 
         # Determine maximum field magnitude
         m = VN.vtk_to_numpy(grid.GetPointData().GetArray(field_name))
@@ -510,15 +517,17 @@ def render_paraview_scene(
             "(determined from approximate mesh spacing {:.2g} and maximum "
             "field magnitude {:.2g}). This may need manual tweaking in case "
             "glyphs appear very large or very small.".format(
-                    glyph_scale_factor_internal, mesh_spacing, max_field_magnitude))
+                glyph_scale_factor_internal, mesh_spacing, max_field_magnitude))
 
         glyph.SetScaleFactor = glyph_scale_factor * glyph_scale_factor_internal
         glyph.ScaleMode = 'vector'
         glyph.Vectors = ['POINTS', field_name]
         try:
-            glyph.KeepRandomPoints = 1  # only relevant for animation IIUC, but can't hurt setting it
+            # only relevant for animation IIUC, but can't hurt setting it
+            glyph.KeepRandomPoints = 1
         except AttributeError:
-            # Older version of Paraview which doesn't support this setting. Ignoring for now.
+            # Older version of Paraview which doesn't support this setting.
+            # Ignoring for now.
             pass
         glyph.RandomMode = glyph_random_mode
         glyph.MaskPoints = glyph_mask_points
@@ -527,7 +536,7 @@ def render_paraview_scene(
         if glyph_type != 'cones':
             glyph_type = 'cones'
             logger.warning("Unsupported glyph type: '{}'. "
-                          "Falling back to 'cones'.".format(glyph_type))
+                           "Falling back to 'cones'.".format(glyph_type))
 
         if glyph_type == 'cones':
             cone = servermanager.sources.Cone()
@@ -579,27 +588,34 @@ def render_paraview_scene(
             else:
                 # Strangely, we get a slightly different background
                 # color for PNG than for JPG.
-                bordercolor = '"rgb(82,87,110)"' if (suffix == '.png') else '"rgb(82,87,109)"'
-            cmd = 'mogrify -bordercolor {} -border 1x1 -trim {}'.format(bordercolor, outfilename)
+                bordercolor = '"rgb(82,87,110)"' if (
+                    suffix == '.png') else '"rgb(82,87,109)"'
+            cmd = 'mogrify -bordercolor {} -border 1x1 -trim {}'.format(
+                bordercolor, outfilename)
             try:
                 sp.check_output(cmd, stderr=sp.STDOUT, shell=True)
                 logger.debug("Trimming border from rendered scene.")
             except OSError:
-                logger.warning("Using the 'trim' argument requires ImageMagick to be installed.")
+                logger.warning(
+                    "Using the 'trim' argument requires ImageMagick to be installed.")
             except sp.CalledProcessError as ex:
                 logger.warning("Could not trim border from image. "
                                "The error message was: {}".format(ex.output))
 
         if rescale:
             rescale_factor = int(rescale * 100.0)
-            cmd = 'mogrify -resize {:d}% {}'.format(rescale_factor, outfilename)
+            cmd = 'mogrify -resize {:d}% {}'.format(
+                rescale_factor, outfilename)
             try:
                 sp.check_output(cmd, stderr=sp.STDOUT, shell=True)
-                logger.debug("Resizing output image by {:d}%".format(rescale_factor))
+                logger.debug(
+                    "Resizing output image by {:d}%".format(rescale_factor))
             except OSError:
-                logger.warning("Using the 'rescale' argument requires ImageMagick to be installed.")
+                logger.warning(
+                    "Using the 'rescale' argument requires ImageMagick to be installed.")
             except sp.CalledProcessError as ex:
-                logger.warning("Could not rescale image. The error message was: {}".format(ex.output))
+                logger.warning(
+                    "Could not rescale image. The error message was: {}".format(ex.output))
 
     if len(timesteps) == 1:
         # If a single timestep is rendered, we return the resulting image.
@@ -621,9 +637,11 @@ def render_paraview_scene(
         for (i, t) in enumerate(timesteps):
             view.ViewTime = t
             cur_outfilename = generate_outfilename(i, t)
-            logger.debug("Saving timestep {} to file '{}'.".format(t, cur_outfilename))
+            logger.debug(
+                "Saving timestep {} to file '{}'.".format(t, cur_outfilename))
             write_image(cur_outfilename)
-        res = IPython.core.display.Image(filename=generate_outfilename(0, timesteps[0]))
+        res = IPython.core.display.Image(
+            filename=generate_outfilename(0, timesteps[0]))
 
     servermanager.Disconnect()
 

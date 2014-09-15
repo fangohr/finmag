@@ -27,7 +27,8 @@ try:
     from uncertainties import ufloat, Variable, AffineScalarFunc
     import uncertainties.umath as unp
     uncertain = (Variable, AffineScalarFunc)
-    #def valuetype((v,u)):   # Cython does not like tuple as argument
+    # def valuetype((v,u)):   # Cython does not like tuple as argument
+
     def valuetype(tuple_):
         v, u = tuple_               # extra line for cython
         if isinstance(v, uncertain):
@@ -35,10 +36,10 @@ try:
         return ufloat((v, u))
 except ImportError:
     uncertain = ()
-    #valuetype = lambda (v, u): v    # cython doesn't like this line
+    # valuetype = lambda (v, u): v    # cython doesn't like this line
     valuetype = lambda v_u_tuple: v_u_tuple[0]
     unp = np
-                
+
 
 class UnitError(ValueError):
     pass
@@ -49,11 +50,12 @@ class UnitError(ValueError):
 # last revision: 2007-5-25
 
 # Minor changes Hans Fangohr when integrating into
-# finmag to allow compilation with 
+# finmag to allow compilation with
 # cython. 5 Oct 2013
 
 
 class NumberDict(dict):
+
     """Dictionary storing numerical values.
 
     An instance of this class acts like an array of number with generalized
@@ -92,14 +94,14 @@ class NumberDict(dict):
     def __mul__(self, other):
         new = NumberDict()
         for key in self.keys():
-            new[key] = other*self[key]
+            new[key] = other * self[key]
         return new
     __rmul__ = __mul__
 
     def __div__(self, other):
         new = NumberDict()
         for key in self.keys():
-            new[key] = self[key]/other
+            new[key] = self[key] / other
         return new
 
 
@@ -108,11 +110,13 @@ class NumberDict(dict):
 def isPhysicalUnit(x):
     return hasattr(x, 'factor') and hasattr(x, 'powers')
 
+
 def isPhysicalQuantity(x):
     return hasattr(x, 'value') and hasattr(x, 'unit')
 
 
 class PhysicalUnit(object):
+
     """Physical unit.
 
     A physical unit is defined by a name (possibly composite), a scaling factor,
@@ -170,7 +174,7 @@ class PhysicalUnit(object):
     @property
     def is_angle(self):
         return self.powers[7] == 1 and \
-               reduce(lambda a, b: a + b, self.powers) == 1
+            reduce(lambda a, b: a + b, self.powers) == 1
 
     def __str__(self):
         return self.name()
@@ -189,7 +193,7 @@ class PhysicalUnit(object):
         if isPhysicalUnit(other):
             return PhysicalUnit(self.names + other.names,
                                 self.factor * other.factor,
-                                map(lambda a,b: a+b, self.powers, other.powers))
+                                map(lambda a, b: a + b, self.powers, other.powers))
         else:
             return PhysicalUnit(self.names + {str(other): 1},
                                 self.factor * other, self.powers,
@@ -203,18 +207,18 @@ class PhysicalUnit(object):
         if isPhysicalUnit(other):
             return PhysicalUnit(self.names - other.names,
                                 self.factor / other.factor,
-                                map(lambda a, b: a-b, self.powers, other.powers))
+                                map(lambda a, b: a - b, self.powers, other.powers))
         else:
-            return PhysicalUnit(self.names+{str(other): -1},
-                                self.factor/other, self.powers)
+            return PhysicalUnit(self.names + {str(other): -1},
+                                self.factor / other, self.powers)
 
     def __rdiv__(self, other):
         if self.offset != 0 or (isPhysicalUnit(other) and other.offset != 0):
             raise UnitError('Cannot divide units with non-zero offset')
         if isPhysicalUnit(other):
             return PhysicalUnit(other.names - self.names,
-                                other.factor/self.factor,
-                                map(lambda a,b: a-b, other.powers, self.powers))
+                                other.factor / self.factor,
+                                map(lambda a, b: a - b, other.powers, self.powers))
         else:
             return PhysicalUnit({str(other): 1} - self.names,
                                 other / self.factor,
@@ -224,20 +228,20 @@ class PhysicalUnit(object):
         if self.offset != 0:
             raise UnitError('Cannot exponentiate units with non-zero offset')
         if isinstance(other, int):
-            return PhysicalUnit(other*self.names, pow(self.factor, other),
-                                map(lambda x,p=other: x*p, self.powers))
+            return PhysicalUnit(other * self.names, pow(self.factor, other),
+                                map(lambda x, p=other: x * p, self.powers))
         if isinstance(other, float):
-            inv_exp = 1./other
+            inv_exp = 1. / other
             rounded = int(np.floor(inv_exp + 0.5))
-            if abs(inv_exp-rounded) < 1.e-10:
+            if abs(inv_exp - rounded) < 1.e-10:
                 if reduce(lambda a, b: a and b,
-                          map(lambda x, e=rounded: x%e == 0, self.powers)):
+                          map(lambda x, e=rounded: x % e == 0, self.powers)):
                     f = pow(self.factor, other)
-                    p = map(lambda x,p=rounded: x/p, self.powers)
+                    p = map(lambda x, p=rounded: x / p, self.powers)
                     if reduce(lambda a, b: a and b,
-                              map(lambda x, e=rounded: x%e == 0,
+                              map(lambda x, e=rounded: x % e == 0,
                                   self.names.values())):
-                        names = self.names/rounded
+                        names = self.names / rounded
                     else:
                         names = NumberDict()
                         if f != 1.:
@@ -256,8 +260,8 @@ class PhysicalUnit(object):
         if self.offset != other.offset and self.factor != other.factor:
             raise UnitError(('Unit conversion (%s to %s) cannot be expressed ' +
                              'as a simple multiplicative factor') %
-                             (self.name(), other.name()))
-        return self.factor/other.factor
+                            (self.name(), other.name()))
+        return self.factor / other.factor
 
     def conversion_tuple_to(self, other):
         """Return conversion factor and offset to another unit."""
@@ -288,14 +292,17 @@ class PhysicalUnit(object):
 
 def _findUnit(unit):
     if isinstance(unit, basestring):
-        name = unit.strip().replace('^', '**').replace('µ', 'mu').replace('°', 'deg')
+        name = unit.strip().replace(
+            '^', '**').replace('µ', 'mu').replace('°', 'deg')
         try:
             unit = eval(name, _unit_table)
         except NameError:
             raise UnitError('Invalid or unknown unit in %r' % unit)
         for cruft in ['__builtins__', '__args__']:
-            try: del _unit_table[cruft]
-            except: pass
+            try:
+                del _unit_table[cruft]
+            except:
+                pass
     if not isPhysicalUnit(unit):
         raise UnitError(str(unit) + ' is not a unit')
     return unit
@@ -307,6 +314,7 @@ def _convertValue(value, src_unit, target_unit):
 
 
 class PhysicalQuantity(object):
+
     """Physical quantity with units.
 
     PhysicalQuantity instances allow addition, subtraction, multiplication, and
@@ -436,8 +444,8 @@ class PhysicalQuantity(object):
         return self.value != 0
 
     def __format__(self, *args, **kw):
-        return "{1:{0}} {2}".format(args[0],self.value, self.unit)
-    
+        return "{1:{0}} {2}".format(args[0], self.value, self.unit)
+
     def convert(self, unit):
         """Change the unit and adjust the value such that the combination is
         equivalent to the original one. The new unit must be compatible with the
@@ -472,8 +480,8 @@ class PhysicalQuantity(object):
             result = []
             value = self.value
             unit = self.unit
-            for i in range(len(units)-1,-1,-1):
-                value = value*unit.conversion_factor_to(units[i])
+            for i in range(len(units) - 1, -1, -1):
+                value = value * unit.conversion_factor_to(units[i])
                 if i == 0:
                     rounded = value
                 else:
@@ -524,8 +532,8 @@ class PhysicalQuantity(object):
             cgs_name = _cgs_names[i]
             power = self.unit.powers[i]
 
-            conversion_factor = Q('1 '+unit_name).to(cgs_name).value
-            new_value *= conversion_factor**power
+            conversion_factor = Q('1 ' + unit_name).to(cgs_name).value
+            new_value *= conversion_factor ** power
 
             if power < 0:
                 denom += '/' + cgs_name
@@ -577,15 +585,15 @@ Q = PhysicalQuantity
 _base_names = ['m', 'kg', 's', 'A', 'K', 'mol', 'cd', 'rad', 'sr']
 
 _base_units = [
-    ('m',   PhysicalUnit('m',   1.,    [1,0,0,0,0,0,0,0,0])),
-    ('g',   PhysicalUnit('g',   0.001, [0,1,0,0,0,0,0,0,0])),
-    ('s',   PhysicalUnit('s',   1.,    [0,0,1,0,0,0,0,0,0])),
-    ('A',   PhysicalUnit('A',   1.,    [0,0,0,1,0,0,0,0,0])),
-    ('K',   PhysicalUnit('K',   1.,    [0,0,0,0,1,0,0,0,0])),
-    ('mol', PhysicalUnit('mol', 1.,    [0,0,0,0,0,1,0,0,0])),
-    ('cd',  PhysicalUnit('cd',  1.,    [0,0,0,0,0,0,1,0,0])),
-    ('rad', PhysicalUnit('rad', 1.,    [0,0,0,0,0,0,0,1,0])),
-    ('sr',  PhysicalUnit('sr',  1.,    [0,0,0,0,0,0,0,0,1])),
+    ('m',   PhysicalUnit('m',   1.,    [1, 0, 0, 0, 0, 0, 0, 0, 0])),
+    ('g',   PhysicalUnit('g',   0.001, [0, 1, 0, 0, 0, 0, 0, 0, 0])),
+    ('s',   PhysicalUnit('s',   1.,    [0, 0, 1, 0, 0, 0, 0, 0, 0])),
+    ('A',   PhysicalUnit('A',   1.,    [0, 0, 0, 1, 0, 0, 0, 0, 0])),
+    ('K',   PhysicalUnit('K',   1.,    [0, 0, 0, 0, 1, 0, 0, 0, 0])),
+    ('mol', PhysicalUnit('mol', 1.,    [0, 0, 0, 0, 0, 1, 0, 0, 0])),
+    ('cd',  PhysicalUnit('cd',  1.,    [0, 0, 0, 0, 0, 0, 1, 0, 0])),
+    ('rad', PhysicalUnit('rad', 1.,    [0, 0, 0, 0, 0, 0, 0, 1, 0])),
+    ('sr',  PhysicalUnit('sr',  1.,    [0, 0, 0, 0, 0, 0, 0, 0, 1])),
 ]
 
 _cgs_names = ['cm', 'g', 's', 'abA', 'K', 'mol', 'cd', 'rad', 'sr']
@@ -604,27 +612,31 @@ _unit_table = {}
 for unit in _base_units:
     _unit_table[unit[0]] = unit[1]
 
+
 def _addUnit(name, unit, comment=''):
     if _unit_table.has_key(name):
         raise KeyError('Unit ' + name + ' already defined')
     if type(unit) == type(''):
         unit = eval(unit, _unit_table)
         for cruft in ['__builtins__', '__args__']:
-            try: del _unit_table[cruft]
-            except: pass
+            try:
+                del _unit_table[cruft]
+            except:
+                pass
     unit.set_name(name)
     _unit_table[name] = unit
+
 
 def _addPrefixed(unit):
     _prefixed_names = []
     for prefix in _prefixes:
         name = prefix[0] + unit
-        _addUnit(name, prefix[1]*_unit_table[unit])
+        _addUnit(name, prefix[1] * _unit_table[unit])
         _prefixed_names.append(name)
 
 
 # SI derived units; these automatically get prefixes
-_unit_table['kg'] = PhysicalUnit('kg',   1., [0,1,0,0,0,0,0,0,0])
+_unit_table['kg'] = PhysicalUnit('kg',   1., [0, 1, 0, 0, 0, 0, 0, 0, 0])
 
 _addUnit('Hz', '1/s', 'Hertz')
 _addUnit('N', 'm*kg/s**2', 'Newton')
@@ -720,7 +732,8 @@ _addUnit('dyn', '1.e-5*N', 'dyne (cgs unit)')
 # Energy units
 _addUnit('erg', '1.e-7*J', 'erg (cgs unit)')
 _addUnit('eV', 'e0*V', 'electron volt')
-_addUnit('Hartree', 'me*e0**4/16/pi**2/eps0**2/hbar**2', 'Wavenumbers/inverse cm')
+_addUnit('Hartree', 'me*e0**4/16/pi**2/eps0**2/hbar**2',
+         'Wavenumbers/inverse cm')
 _addUnit('Ken', 'kb*K', 'Kelvin as energy unit')
 _addUnit('cal', '4.184*J', 'thermochemical calorie')
 _addUnit('kcal', '1000*cal', 'thermochemical kilocalorie')
@@ -752,7 +765,7 @@ _addUnit('psi', '6894.75729317*Pa', 'pounds per square inch')
 _addUnit('deg', 'pi*rad/180', 'degrees')
 _addUnit('arcmin', 'pi*rad/180/60', 'minutes of arc')
 _addUnit('arcsec', 'pi*rad/180/3600', 'seconds of arc')
-_unit_table['cycles'] = 2*np.pi
+_unit_table['cycles'] = 2 * np.pi
 
 # Temperature units -- can't use the 'eval' trick that _addUnit provides
 # for degC and degF because you can't add units
@@ -760,7 +773,7 @@ kelvin = _findUnit('K')
 _addUnit('degR', '(5./9.)*K', 'degrees Rankine')
 _addUnit('degC', PhysicalUnit(None, 1.0, kelvin.powers, 273.15),
          'degrees Celcius')
-_addUnit('degF', PhysicalUnit(None, 5./9., kelvin.powers, 459.67),
+_addUnit('degF', PhysicalUnit(None, 5. / 9., kelvin.powers, 459.67),
          'degree Fahrenheit')
 del kelvin
 
@@ -786,7 +799,7 @@ _constants = [
     ('eps0', Q('1 1/mu0/c0**2').base),
     ('Grav', Q('6.67384e-11 m**3/kg/s**2')),
     ('hpl', Q('6.62606957e-34 J*s')),
-    ('hbar', Q('6.62606957e-34 J*s')/(2*pi)),
+    ('hbar', Q('6.62606957e-34 J*s') / (2 * pi)),
     ('e0', Q('1.602176565e-19 C')),
     ('me', Q('9.10938291e-31 kg')),
     ('mp', Q('1.672621777e-27 kg')),
@@ -816,11 +829,13 @@ nice_assign_re = re.compile(r'^%s\s*=\s*(%s)$' % (name, quantity))
 quantity_re = re.compile(quantity)
 subst_re = re.compile(r'\?' + name)
 
+
 def replace_inline(match):
     """Replace an inline unit expression, e.g. ``(1 m)``, by valid Python code
     using a Quantity call.
     """
     return '(Quantity(\'' + match.group(1) + '\'))'
+
 
 def replace_slash(match):
     """Replace a double-slash unit conversion, e.g. ``c // km/s``, by valid
@@ -841,6 +856,7 @@ def replace_slash(match):
     else:
         return 'Quantity.any_to(%s, %r)' % (expr, unit)
 
+
 def replace_assign(match):
     """Replace a pretty assignment, e.g. ``B = 1 T``, by valid Python code using
     a Quantity call.
@@ -849,6 +865,7 @@ def replace_assign(match):
 
 
 class QTransformer(object):
+
     """IPython command line transformer that recognizes and replaces unit
     expressions.
     """
@@ -856,6 +873,7 @@ class QTransformer(object):
     # but apparently is not needed after all
     priority = 99
     enabled = True
+
     def transform(self, line, continue_prompt):
         line = inline_unit_re.sub(replace_inline, line)
         if not continue_prompt:
@@ -923,6 +941,7 @@ def load_ipython_extension(ip):
         ip.user_ns[const] = value
 
     print 'Unit calculation and physics extensions activated.'
+
 
 def unload_ipython_extension(ip):
     ip.prefilter_manager.unregister_transformer(q_transformer)

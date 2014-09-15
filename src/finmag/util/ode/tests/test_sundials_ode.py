@@ -12,7 +12,9 @@ import numpy as np
 import finmag.native.sundials as sundials
 from finmag.util.helpers import ignored
 
+
 class OdeSundialsTests(unittest.TestCase):
+
     def test_errors(self):
         integrator = sundials.cvode(sundials.CV_ADAMS, sundials.CV_FUNCTIONAL)
         y = np.zeros((5,))
@@ -28,10 +30,10 @@ class OdeSundialsTests(unittest.TestCase):
         integrator = scipy.integrate.ode(lambda t, y: 0.5 * y)
         integrator.set_integrator('vode', rtol=1e-8, atol=1e-8)
         integrator.set_initial_value(np.array([1.]), 0)
-        reference = lambda t: [math.exp(0.5*t)]
+        reference = lambda t: [math.exp(0.5 * t)]
         ts = np.linspace(0.001, 3, 100)
         ys = np.array([integrator.integrate(t) for t in ts])
-        ref_ys = np.array([reference(t)  for t in ts])
+        ref_ys = np.array([reference(t) for t in ts])
         assert np.max(np.abs(ys - ref_ys)) < 1e-6
 
     def test_simple_1d(self):
@@ -64,12 +66,13 @@ class OdeSundialsTests(unittest.TestCase):
         for i, t in enumerate(ts):
             integrator.advance_time(t, yout)
             ys[i] = yout.copy()
-        ref_ys = np.array([reference(t)  for t in ts])
+        ref_ys = np.array([reference(t) for t in ts])
         assert np.max(np.abs(ys - ref_ys)) < 1e-6
 
     def test_stiff_sp_gmr(self):
         integrator = sundials.cvode(sundials.CV_BDF, sundials.CV_NEWTON)
         self.init_simple_test(integrator)
+
         def jtimes(v, Jv, t, y, fy, tmp):
             return 0
         integrator.set_linear_solver_sp_gmr(sundials.PREC_NONE)
@@ -82,6 +85,7 @@ class OdeSundialsTests(unittest.TestCase):
 
         integrator = sundials.cvode(sundials.CV_BDF, sundials.CV_NEWTON)
         self.init_simple_test(integrator)
+
         def jtimes(v, Jv, t, y, fy, tmp):
             raise MyException()
         integrator.set_linear_solver_sp_gmr(sundials.PREC_NONE)

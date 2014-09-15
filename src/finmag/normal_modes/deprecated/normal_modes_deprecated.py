@@ -32,7 +32,8 @@ def _mult_one(a, b):
 
     # One of the arrays might be complex, so we determine the type
     # of the resulting array by adding two elements of the argument arrays
-    res = np.zeros((a.shape[0], b.shape[1], a.shape[2]), dtype=type(a[0, 0, 0] + b[0, 0, 0]))
+    res = np.zeros(
+        (a.shape[0], b.shape[1], a.shape[2]), dtype=type(a[0, 0, 0] + b[0, 0, 0]))
     for i in xrange(res.shape[0]):
         for j in xrange(res.shape[1]):
             for k in xrange(a.shape[1]):
@@ -73,10 +74,11 @@ def mf_cross(a, b):
 # Normalises the 3d vector m
 def mf_normalise(m):
     assert m.shape == (3, 1, m.shape[2])
-    return m / np.sqrt(m[0] * m[0] + m[1] * m[1] + m[2] *m[2])
+    return m / np.sqrt(m[0] * m[0] + m[1] * m[1] + m[2] * m[2])
 
 
-# Set up the basis for the tangential space and the corresponding projection operator
+# Set up the basis for the tangential space and the corresponding
+# projection operator
 def compute_tangential_space_basis(m0):
     assert m0.ndim == 3
     n = m0.shape[2]
@@ -126,10 +128,10 @@ def differentiate_fd4(f, x, dx):
     h = 0.001 * np.sqrt(x_sq + dx_sq) / np.sqrt(dx_sq + 1e-50)
     # weights: 1. / 12., -2. / 3., 2. / 3., -1. / 12.
     # coefficients: -2., -1., 1., 2.
-    res = (1./12./h)*f(x - 2*h*dx)
-    res += (-2./3./h)*f(x - h*dx)
-    res += (2./3./h)*f(x + h*dx)
-    res += (-1./12./h)*f(x + 2*h*dx)
+    res = (1. / 12. / h) * f(x - 2 * h * dx)
+    res += (-2. / 3. / h) * f(x - h * dx)
+    res += (2. / 3. / h) * f(x + h * dx)
+    res += (-1. / 12. / h) * f(x + 2 * h * dx)
     return res
 
 
@@ -140,26 +142,28 @@ def compute_eigenproblem_matrix(sim, frequency_unit=1e9, filename=None, differen
 
     Note that `sim` needs to be in a relaxed state, otherwise the results will
     be wrong.
-    
+
     """
-    ## Create the helper simulation which we use to compute
-    ## the effective field for various values of m.
+    # Create the helper simulation which we use to compute
+    # the effective field for various values of m.
     #Ms = sim.Ms
     #A = sim.get_interaction('Exchange').A
     #unit_length = sim.unit_length
-    #try:
+    # try:
     #    sim.get_interaction('Demag')
     #    demag_solver = 'FK'
-    #except ValueError:
+    # except ValueError:
     #    demag_solver = None
     #sim_aux = sim_with(sim.mesh, Ms=Ms, m_init=[1, 0, 0], A=A, unit_length=unit_length, demag_solver=demag_solver)
     # In order to compute the derivative of the effective field, the magnetisation needs to be set
-    # to many different values. Thus we store a backup so that we can restore it later.
+    # to many different values. Thus we store a backup so that we can restore
+    # it later.
     m_orig = sim.m
 
     def effective_field_for_m(m, normalise=True):
         if np.iscomplexobj(m):
-            raise NotImplementedError("XXX TODO: Implement the version for complex arrays!")
+            raise NotImplementedError(
+                "XXX TODO: Implement the version for complex arrays!")
         sim.set_m(m, normalise=normalise)
         return sim.effective_field()
 
@@ -171,13 +175,15 @@ def compute_eigenproblem_matrix(sim, frequency_unit=1e9, filename=None, differen
     assert (N == 3 * n)
 
     m0_array = sim.m.copy()
-    m0_3xn = m0_array.reshape(3, n)  # this corresponds to the vector 'm0_flat' in Simlib
+    # this corresponds to the vector 'm0_flat' in Simlib
+    m0_3xn = m0_array.reshape(3, n)
     m0_column_vector = m0_array.reshape(3, 1, n)
     H0_array = effective_field_for_m(m0_array)
     H0_3xn = H0_array.reshape(3, n)
-    h0 = H0_3xn[0]*m0_3xn[0] + H0_3xn[1]*m0_3xn[1] + H0_3xn[2]*m0_3xn[2]
+    h0 = H0_3xn[0] * m0_3xn[0] + H0_3xn[1] * m0_3xn[1] + H0_3xn[2] * m0_3xn[2]
 
-    logger.debug("Computing basis of the tangent space and transition matrices.")
+    logger.debug(
+        "Computing basis of the tangent space and transition matrices.")
     Q, R, S, Mcross = compute_tangential_space_basis(m0_column_vector)
     Qt = mf_transpose(Q).copy()
 
@@ -198,9 +204,9 @@ def compute_eigenproblem_matrix(sim, frequency_unit=1e9, filename=None, differen
             res = effective_field_for_m(v_array, normalise=False)
         res.shape = (3, -1)
         # Subtract h0 v
-        res[0] -= h0 * v[0,0]
-        res[1] -= h0 * v[1,0]
-        res[2] -= h0 * v[2,0]
+        res[0] -= h0 * v[0, 0]
+        res[1] -= h0 * v[1, 0]
+        res[2] -= h0 * v[2, 0]
         # Multiply by -gamma m0x
         res *= sim.gamma
         res.shape = (3, 1, -1)
@@ -208,7 +214,7 @@ def compute_eigenproblem_matrix(sim, frequency_unit=1e9, filename=None, differen
         res = mf_cross(res, m0_column_vector)
         return res
 
-    #The linearised equation in the tangential basis
+    # The linearised equation in the tangential basis
     def linearised_llg_times_tangential_vector(w):
         w = w.view()
         w.shape = (2, 1, n)
@@ -220,25 +226,31 @@ def compute_eigenproblem_matrix(sim, frequency_unit=1e9, filename=None, differen
         res = np.empty(w.shape, dtype=dtype)
         res[:] = mf_mult(Qt, L)
         if dtype == complex:
-            # Multiply by -i/(2*pi*U) so that we get frequencies as the real part of eigenvalues
+            # Multiply by -i/(2*pi*U) so that we get frequencies as the real
+            # part of eigenvalues
             res *= -1j / (2 * pi * frequency_unit)
         else:
-            # This will yield imaginary eigenvalues, but we divide by 1j in the calling routine.
+            # This will yield imaginary eigenvalues, but we divide by 1j in the
+            # calling routine.
             res *= 1. / (2 * pi * frequency_unit)
         res.shape = (-1,)
         return res
 
     df.tic()
     logger.info("Assembling eigenproblem matrix.")
-    D = np.zeros((2*n, 2*n), dtype=dtype)
-    logger.debug("Eigenproblem matrix D will occupy {:.2f} MB of memory.".format(D.nbytes / 1024.**2))
-    for i, w in enumerate(np.eye(2*n)):
+    D = np.zeros((2 * n, 2 * n), dtype=dtype)
+    logger.debug("Eigenproblem matrix D will occupy {:.2f} MB of memory.".format(
+        D.nbytes / 1024. ** 2))
+    for i, w in enumerate(np.eye(2 * n)):
         if i % 50 == 0:
             t_cur = df.toc()
-            completion_info = '' if (i == 0) else ', estimated remaining time: {}'.format(helpers.format_time(t_cur * (2*n/i - 1)))
-            logger.debug("Processing row {}/{}  (time elapsed: {}{})".format(i, 2*n, helpers.format_time(t_cur), completion_info))
-        D[:,i] = linearised_llg_times_tangential_vector(w)
-    logger.debug("Eigenproblem matrix D occupies {:.2f} MB of memory.".format(D.nbytes / 1024.**2))
+            completion_info = '' if (i == 0) else ', estimated remaining time: {}'.format(
+                helpers.format_time(t_cur * (2 * n / i - 1)))
+            logger.debug("Processing row {}/{}  (time elapsed: {}{})".format(i,
+                                                                             2 * n, helpers.format_time(t_cur), completion_info))
+        D[:, i] = linearised_llg_times_tangential_vector(w)
+    logger.debug("Eigenproblem matrix D occupies {:.2f} MB of memory.".format(
+        D.nbytes / 1024. ** 2))
     logger.info("Finished assembling eigenproblem matrix.")
 
     if filename != None:
@@ -246,11 +258,11 @@ def compute_eigenproblem_matrix(sim, frequency_unit=1e9, filename=None, differen
         np.save(filename, D)
 
     # Restore the original magnetisation.
-    # XXX TODO: Is this method safe, or does it leave any trace of the temporary changes we did above?
+    # XXX TODO: Is this method safe, or does it leave any trace of the
+    # temporary changes we did above?
     sim.set_m(m_orig)
 
     return D
-
 
 
 # We use the following class (which behaves like a function due to its
@@ -260,6 +272,7 @@ def compute_eigenproblem_matrix(sim, frequency_unit=1e9, filename=None, differen
 # XXX TODO: lambda expresions can be pickled with the 'dill' module,
 # so we should probably get rid of this.
 class M_times_w(object):
+
     def __init__(self, Mcross, n, alpha=0.):
         self.Mcross = Mcross
         self.n = n
@@ -276,6 +289,7 @@ class M_times_w(object):
 
 
 class NotImplementedOp(object):
+
     def __call__(self, w):
         raise NotImplementedError("rmatvec is not implemented")
 
@@ -313,8 +327,9 @@ def check_is_hermitian(A, matrix_name, atol=1e-8, rtol=1e-12):
                         "between A and conj(A^tr): {}, median difference: {}, "
                         "mean difference: {} (maximum entry of A: {}, "
                         "median entry: {}, mean entry: {})".format(
-                matrix_name, mat_diff.max(), np.median(mat_diff), np.mean(mat_diff),
-                np.max(np.absolute(A)), np.median(np.absolute(A)), np.mean(np.absolute(A))))
+                            matrix_name, mat_diff.max(), np.median(
+                                mat_diff), np.mean(mat_diff),
+                            np.max(np.absolute(A)), np.median(np.absolute(A)), np.mean(np.absolute(A))))
 
 
 def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9,
@@ -328,7 +343,8 @@ def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9
 
     def effective_field_for_m(m, normalise=True):
         if np.iscomplexobj(m):
-            raise NotImplementedError("XXX TODO: Implement the version for complex arrays!")
+            raise NotImplementedError(
+                "XXX TODO: Implement the version for complex arrays!")
         sim.set_m(m, normalise=normalise)
         return sim.effective_field()
 
@@ -336,17 +352,19 @@ def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9
     N = 3 * n  # number of degrees of freedom
 
     m0_array = sim.m.copy()
-    m0_3xn = m0_array.reshape(3, n)  # this corresponds to the vector 'm0_flat' in Simlib
+    # this corresponds to the vector 'm0_flat' in Simlib
+    m0_3xn = m0_array.reshape(3, n)
     m0_column_vector = m0_array.reshape(3, 1, n)
     H0_array = effective_field_for_m(m0_array)
     H0_3xn = H0_array.reshape(3, n)
-    h0 = H0_3xn[0]*m0_3xn[0] + H0_3xn[1]*m0_3xn[1] + H0_3xn[2]*m0_3xn[2]
+    h0 = H0_3xn[0] * m0_3xn[0] + H0_3xn[1] * m0_3xn[1] + H0_3xn[2] * m0_3xn[2]
 
-    logger.debug("Computing basis of the tangent space and transition matrices.")
+    logger.debug(
+        "Computing basis of the tangent space and transition matrices.")
     Q, R, S, Mcross = compute_tangential_space_basis(m0_column_vector)
     Qt = mf_transpose(Q).copy()
 
-    logger.debug("Q.shape: {} ({} MB)".format(Q.shape, Q.nbytes / 1024.**2))
+    logger.debug("Q.shape: {} ({} MB)".format(Q.shape, Q.nbytes / 1024. ** 2))
 
     def A_times_vector(v):
         # A = H' v - h_0 v
@@ -371,18 +389,20 @@ def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9
 
     df.tic()
     logger.info("Assembling eigenproblem matrix.")
-    A = np.zeros((2*n, 2*n), dtype=complex)
-    logger.debug("Eigenproblem matrix A occupies {:.2f} MB of memory.".format(A.nbytes / 1024.**2))
+    A = np.zeros((2 * n, 2 * n), dtype=complex)
+    logger.debug("Eigenproblem matrix A occupies {:.2f} MB of memory.".format(
+        A.nbytes / 1024. ** 2))
 
     # Compute A
-    w = np.zeros(2*n)
-    for i in xrange(2*n):
+    w = np.zeros(2 * n)
+    for i in xrange(2 * n):
         if i % 50 == 0:
-            logger.debug("Processing row {}/{}  (time taken so far: {:.2f} seconds)".format(i, 2*n, df.toc()))
+            logger.debug(
+                "Processing row {}/{}  (time taken so far: {:.2f} seconds)".format(i, 2 * n, df.toc()))
 
         # Ensure that w is the i-th standard basis vector
-        w.shape = (2*n,)
-        w[i-1] = 0.0  # this will do no harm if i==0
+        w.shape = (2 * n,)
+        w[i - 1] = 0.0  # this will do no harm if i==0
         w[i] = 1.0
 
         w.shape = (2, 1, n)
@@ -391,14 +411,15 @@ def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9
         # Multiply by (-gamma)/(2 pi U)
         A[:, i] *= -sim.gamma / (2 * pi * frequency_unit)
 
-    # # Compute B, which is -i Mcross 2 pi U / gamma
+    # Compute B, which is -i Mcross 2 pi U / gamma
     # B = np.zeros((2, n, 2, n), dtype=complex)
     # for i in xrange(n):
     #     B[:, i, :, i] = Mcross[:, :, i]
     #     B[:, i, :, i] *= -1j
     # B.shape = (2*n, 2*n)
 
-    M = scipy.sparse.linalg.LinearOperator((2 * n, 2 * n), M_times_w(Mcross, n, alpha), NotImplementedOp(), NotImplementedOp(), dtype=complex)
+    M = scipy.sparse.linalg.LinearOperator(
+        (2 * n, 2 * n), M_times_w(Mcross, n, alpha), NotImplementedOp(), NotImplementedOp(), dtype=complex)
 
     if check_hermitian:
         # Sanity check: A and M should be Hermitian matrices
@@ -408,21 +429,26 @@ def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9
     if filename_mat_A != None:
         dirname_mat_A = os.path.dirname(os.path.abspath(filename_mat_A))
         if not os.path.exists(dirname_mat_A):
-            logger.debug("Creating directory '{}' as it does not exist.".format(dirname_mat_A))
+            logger.debug(
+                "Creating directory '{}' as it does not exist.".format(dirname_mat_A))
             os.makedirs(dirname_mat_A)
-        logger.info("Saving generalised eigenproblem matrix 'A' to file '{}'".format(filename_mat_A))
+        logger.info(
+            "Saving generalised eigenproblem matrix 'A' to file '{}'".format(filename_mat_A))
         np.save(filename_mat_A, A)
 
     if filename_mat_M != None:
         dirname_mat_M = os.path.dirname(os.path.abspath(filename_mat_M))
         if not os.path.exists(dirname_mat_M):
-            logger.debug("Creating directory '{}' as it does not exist.".format(dirname_mat_M))
+            logger.debug(
+                "Creating directory '{}' as it does not exist.".format(dirname_mat_M))
             os.makedirs(dirname_mat_M)
-        logger.info("Saving generalised eigenproblem matrix 'M' to file '{}'".format(filename_mat_M))
+        logger.info(
+            "Saving generalised eigenproblem matrix 'M' to file '{}'".format(filename_mat_M))
         np.save(filename_mat_M, M)
 
     # Restore the original magnetisation.
-    # XXX TODO: Is this method safe, or does it leave any trace of the temporary changes we did above?
+    # XXX TODO: Is this method safe, or does it leave any trace of the
+    # temporary changes we did above?
     sim.set_m(m_orig)
 
     return A, M, Q, Qt
@@ -431,8 +457,10 @@ def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9
 def compute_normal_modes(D, n_values=10, sigma=0., tol=1e-8, which='LM'):
     logger.debug("Solving eigenproblem. This may take a while...")
     df.tic()
-    omega, w = scipy.sparse.linalg.eigs(D, n_values, which=which, sigma=0., tol=tol, return_eigenvectors=True)
-    logger.debug("Computing the eigenvalues and eigenvectors took {:.2f} seconds".format(df.toc()))
+    omega, w = scipy.sparse.linalg.eigs(
+        D, n_values, which=which, sigma=0., tol=tol, return_eigenvectors=True)
+    logger.debug(
+        "Computing the eigenvalues and eigenvectors took {:.2f} seconds".format(df.toc()))
 
     return omega, w
 
@@ -447,18 +475,21 @@ def compute_normal_modes_generalised(A, M, n_values=10, tol=1e-8, discard_negati
 
     # XXX TODO: The following call seems to increase memory consumption quite a bit. Why?!?
     #
-    # We have to swap M and A when passing them to eigsh since the M matrix has to be positive definite for eigsh!
+    # We have to swap M and A when passing them to eigsh since the M matrix
+    # has to be positive definite for eigsh!
     omega_inv, w = scipy.sparse.linalg.eigsh(M, k=n_values, M=A, which=which, tol=tol, return_eigenvectors=True, sigma=sigma,
                                              v0=v0, ncv=ncv, maxiter=maxiter, Minv=Minv, OPinv=OPinv, mode=mode)
-    logger.debug("Computing the eigenvalues and eigenvectors took {:.2f} seconds".format(df.toc()))
+    logger.debug(
+        "Computing the eigenvalues and eigenvectors took {:.2f} seconds".format(df.toc()))
 
-    # The true eigenfrequencies are given by 1/omega_inv because we swapped M and A above and thus computed the inverse eigenvalues.
+    # The true eigenfrequencies are given by 1/omega_inv because we swapped M
+    # and A above and thus computed the inverse eigenvalues.
     omega = 1. / omega_inv
 
     # Sanity check: the eigenfrequencies should occur in +/- pairs.
     TOL = 1e-3
-    positive_freqs = filter(lambda x: x >0, omega)
-    negative_freqs = filter(lambda x: x <0, omega)
+    positive_freqs = filter(lambda x: x > 0, omega)
+    negative_freqs = filter(lambda x: x < 0, omega)
     freq_pairs = izip(positive_freqs, negative_freqs)
     if (n_values % 2 == 0 and len(positive_freqs) != len(negative_freqs)) or \
             (n_values % 2 == 0 and len(positive_freqs) - len(negative_freqs) not in [0, 1]) or \
@@ -477,7 +508,8 @@ def compute_normal_modes_generalised(A, M, n_values=10, tol=1e-8, discard_negati
         sorted_indices = filter(lambda i: omega[i] >= 0.0, sorted_indices)
 
     omega = omega[sorted_indices]
-    w = w[:, sorted_indices]  # XXX TODO: can we somehow avoid copying the columns to save memory?!?
+    # XXX TODO: can we somehow avoid copying the columns to save memory?!?
+    w = w[:, sorted_indices]
 
     return omega, w
 
@@ -542,13 +574,14 @@ def export_normal_mode_animation(mesh, m0, freq, w, filename, num_cycles=1, num_
     freq = freq.real
     #basename = os.path.basename(re.sub('\.vtk$', '', filename))
     #dirname = os.path.dirname(filename)
-    #if not os.path.exists(dirname):
+    # if not os.path.exists(dirname):
     #    print "Creating directory '{}' as it doesn't exist.".format(dirname)
     #    os.makedirs(dirname)
     #mesh = comp.mesh
     #mesh_shape = mesh.mesh_size
     m0_array = m0.copy()  # we assume that sim is relaxed!!
-    Q, R, S, Mcross = compute_tangential_space_basis(m0_array.reshape(3, 1, -1))
+    Q, R, S, Mcross = compute_tangential_space_basis(
+        m0_array.reshape(3, 1, -1))
     Qt = mf_transpose(Q).copy()
 
     n = mesh.num_vertices()
@@ -562,21 +595,25 @@ def export_normal_mode_animation(mesh, m0, freq, w, filename, num_cycles=1, num_
     a = a / a.max()  # normalised amplitudes of the oscillations
 
     t_end = num_cycles * 2 * pi / freq
-    timesteps = np.linspace(0, t_end, num_cycles * num_snapshots_per_cycle, endpoint=False)
-    m_osc = np.zeros(3*n)
+    timesteps = np.linspace(
+        0, t_end, num_cycles * num_snapshots_per_cycle, endpoint=False)
+    m_osc = np.zeros(3 * n)
     t0 = time()
     f = df.File(filename, 'compressed')
     for (i, t) in enumerate(timesteps):
-        logger.debug("Saving animation snapshot for timestep {} ({}/{})".format(t, i, num_cycles * num_snapshots_per_cycle))
+        logger.debug("Saving animation snapshot for timestep {} ({}/{})".format(t,
+                                                                                i, num_cycles * num_snapshots_per_cycle))
         if dm_only is False:
-            m_osc = (m0_array + scaling * a * np.cos(t * freq + phi)).reshape(-1)
+            m_osc = (
+                m0_array + scaling * a * np.cos(t * freq + phi)).reshape(-1)
         else:
             m_osc = (scaling * a * np.cos(t * freq + phi)).reshape(-1)
         #save_vector_field(m_osc, os.path.join(dirname, basename + '_{:04d}.vtk'.format(i)))
         func.vector().set_local(m_osc)
         f << func
     t1 = time()
-    logger.debug("Saving the data to file '{}' took {} seconds".format(filename, t1 - t0))
+    logger.debug(
+        "Saving the data to file '{}' took {} seconds".format(filename, t1 - t0))
 
 
 colormaps = {'coolwarm': plt.cm.coolwarm,
@@ -592,7 +629,8 @@ colormaps = {'coolwarm': plt.cm.coolwarm,
              'husl_99_75': custom_colormaps.husl_99_75,
              'husl_99_70': custom_colormaps.husl_99_70,
              'husl_99_65': custom_colormaps.husl_99_65,
-            }
+             }
+
 
 def get_colormap_from_name(cmap_name):
     try:
@@ -603,7 +641,8 @@ def get_colormap_from_name(cmap_name):
                            'for more information.')
         return colormaps[cmap_name]
     except KeyError:
-        raise ValueError("Unknown colormap name: '{}'. Allowed values: {}".format(cmap_name, colormaps.keys()))
+        raise ValueError("Unknown colormap name: '{}'. Allowed values: {}".format(
+            cmap_name, colormaps.keys()))
 
 
 def extract_mesh_slice_via_boundary_mesh__deprecated(mesh, slice_z):
@@ -624,6 +663,7 @@ def extract_mesh_slice_via_boundary_mesh__deprecated(mesh, slice_z):
     # Extract the submesh of the boundary mesh corresponding to the
     # bottom or top layer (whichever slice_z corresponds to).
     class Surface(df.SubDomain):
+
         def inside(self, pt, on_boundary):
             x, y, z = pt
             return (z >= slice_z - df.DOLFIN_EPS) and (z <= slice_z + df.DOLFIN_EPS)
@@ -637,7 +677,8 @@ def extract_mesh_slice_via_boundary_mesh__deprecated(mesh, slice_z):
 
     # Mapping from the vertex indices in 'surface_layer' to the vertex indices
     # in the full mesh.
-    parent_vertex_indices = surface_layer.data().array('parent_vertex_indices', 0)
+    parent_vertex_indices = surface_layer.data().array(
+        'parent_vertex_indices', 0)
 
     V = df.FunctionSpace(mesh, 'CG', 1)
     f = df.Function(V)
@@ -668,9 +709,10 @@ def extract_mesh_slice(mesh, slice_z):
     xmax = max(coords[:, 0])
     ymin = min(coords[:, 1])
     ymax = max(coords[:, 1])
-    nx = int(1*(xmax - xmin))
-    ny = int(1*(ymax - ymin))
-    slice_mesh = embed3d(df.RectangleMesh(xmin, ymin, xmax, ymax, nx, ny), z_embed=slice_z)
+    nx = int(1 * (xmax - xmin))
+    ny = int(1 * (ymax - ymin))
+    slice_mesh = embed3d(
+        df.RectangleMesh(xmin, ymin, xmax, ymax, nx, ny), z_embed=slice_z)
 
     V = df.FunctionSpace(mesh, 'CG', 1)
     f = df.Function(V)
@@ -691,25 +733,26 @@ def get_phaseplot_ticks_and_labels(num_ticks):
     multiples of pi/2. Currently `num_ticks` must be either 3 or 5.
     """
     if num_ticks == 3:
-        ticks=[-pi, 0, pi]
-        ticklabels=[u'-\u03C0', u'0', u'\u03C0']
+        ticks = [-pi, 0, pi]
+        ticklabels = [u'-\u03C0', u'0', u'\u03C0']
     elif num_ticks == 5:
-        ticks=[-pi, -pi/2, 0, pi/2, pi]
-        ticklabels=[u'-\u03C0', u'-\u03C0/2', u'0', u'\u03C0/2', u'\u03C0']
+        ticks = [-pi, -pi / 2, 0, pi / 2, pi]
+        ticklabels = [u'-\u03C0', u'-\u03C0/2', u'0', u'\u03C0/2', u'\u03C0']
     else:
-        raise ValueError("Number of phase plot ticks must be either 3 or 5. Got: {}".format(num_ticks))
+        raise ValueError(
+            "Number of phase plot ticks must be either 3 or 5. Got: {}".format(num_ticks))
     return ticks, ticklabels
 
 
 def plot_spatially_resolved_normal_mode(
-    mesh, m0, w, slice_z='z_max', components='xyz', label_components=True,
-    figure_title=None, yshift_title=0.0, plot_powers=True, plot_phases=True,
-    label_power='Power', label_phase='Phase',xticks=None, yticks=None,
-    num_power_colorbar_ticks=5, num_phase_colorbar_ticks=5,
-    colorbar_fmt='%.2e', cmap_powers='coolwarm', cmap_phases='circular4',
-    vmin_powers=0.0, show_axis_labels=True, show_axis_frames=True,
-    show_colorbars=True, figsize=None, outfilename=None, dpi=None,
-    use_fenicstools=False):
+        mesh, m0, w, slice_z='z_max', components='xyz', label_components=True,
+        figure_title=None, yshift_title=0.0, plot_powers=True, plot_phases=True,
+        label_power='Power', label_phase='Phase', xticks=None, yticks=None,
+        num_power_colorbar_ticks=5, num_phase_colorbar_ticks=5,
+        colorbar_fmt='%.2e', cmap_powers='coolwarm', cmap_phases='circular4',
+        vmin_powers=0.0, show_axis_labels=True, show_axis_frames=True,
+        show_colorbars=True, figsize=None, outfilename=None, dpi=None,
+        use_fenicstools=False):
     """
     Plot the normal mode profile across a slice of the sample.
 
@@ -784,7 +827,8 @@ def plot_spatially_resolved_normal_mode(
             import fenicstools
             slice_mesh, restrict_to_submesh = extract_mesh_slice(mesh, slice_z)
         except ImportError:
-            logger.warning("Could not import Fenicstools. Falling back to standard method for extracting submeshes.")
+            logger.warning(
+                "Could not import Fenicstools. Falling back to standard method for extracting submeshes.")
             use_fenicstools = False
 
     if not use_fenicstools:
@@ -794,16 +838,17 @@ def plot_spatially_resolved_normal_mode(
         # TODO: This should eventually be removed once we know it works
         #       and have checked that installing Fenicstools is easy and
         #       painless for users.
-        slice_mesh, restrict_to_submesh = extract_mesh_slice_via_boundary_mesh__deprecated(mesh, slice_z)
-  
+        slice_mesh, restrict_to_submesh = extract_mesh_slice_via_boundary_mesh__deprecated(
+            mesh, slice_z)
+
     m0_array = m0.copy()
-    Q, R, S, Mcross = compute_tangential_space_basis(m0_array.reshape(3, 1, -1))
+    Q, R, S, Mcross = compute_tangential_space_basis(
+        m0_array.reshape(3, 1, -1))
     Qt = mf_transpose(Q).copy()
-    
 
     n = mesh.num_vertices()
     w_3d = mf_mult(Q, w.reshape((2, 1, n)))
-    
+
     w_x = w_3d[0, 0, :]
     w_y = w_3d[1, 0, :]
     w_z = w_3d[2, 0, :]
@@ -821,13 +866,13 @@ def plot_spatially_resolved_normal_mode(
     # Determine the number of rows (<=2) and columns (<=3) in the plot
     num_rows = 0
     if plot_powers:
-        num_rows +=1
+        num_rows += 1
     if plot_phases:
-        num_rows +=1
+        num_rows += 1
     if num_rows == 0:
-        raise ValueError("At least one of the arguments `plot_powers`, `plot_phases` must be True.")
+        raise ValueError(
+            "At least one of the arguments `plot_powers`, `plot_phases` must be True.")
     num_columns = len(components)
-
 
     def plot_mode_profile(ax, a, title=None, vmin=None, vmax=None, cmap=None, cticks=None, cticklabels=None):
         ax.set_aspect('equal')
@@ -852,7 +897,6 @@ def plot_spatially_resolved_normal_mode(
         if not show_axis_frames:
             ax.axis('off')
 
- 
     fig = plt.figure(figsize=figsize)
 
     if isinstance(cmap_powers, str):
@@ -883,7 +927,8 @@ def plot_spatially_resolved_normal_mode(
                     minval = vmin_powers
                 else:
                     minval = powers[comp].min()
-                cticks = np.linspace(minval, powers[comp].max(), num_power_colorbar_ticks)
+                cticks = np.linspace(
+                    minval, powers[comp].max(), num_power_colorbar_ticks)
             else:
                 cticks = None
             comp_title = 'm_{}'.format(comp) if label_components else ''
@@ -894,7 +939,8 @@ def plot_spatially_resolved_normal_mode(
             cnt += 1
 
     if plot_phases:
-        cticks, cticklabels = get_phaseplot_ticks_and_labels(num_phase_colorbar_ticks)
+        cticks, cticklabels = get_phaseplot_ticks_and_labels(
+            num_phase_colorbar_ticks)
 
         for comp in components:
             ax = fig.add_subplot(num_rows, num_columns, cnt)
@@ -912,20 +958,20 @@ def plot_spatially_resolved_normal_mode(
     bbox_extra_artists = []
     if figure_title != None:
         txt = plt.text(0.5, 1.0 + yshift_title, figure_title,
-                        horizontalalignment='center',
-                        fontsize=20,
-                        transform = fig.transFigure)
+                       horizontalalignment='center',
+                       fontsize=20,
+                       transform=fig.transFigure)
         bbox_extra_artists.append(txt)
     num_axes = len(fig.axes)
     ax_annotate_powers = fig.axes[0]
-    ax_annotate_phases= fig.axes[(num_axes // 2) if plot_powers else 0]
+    ax_annotate_phases = fig.axes[(num_axes // 2) if plot_powers else 0]
     if plot_powers:
         txt_power = plt.text(-0.2, 0.5, label_power,
                              fontsize=16,
                              horizontalalignment='right',
                              verticalalignment='center',
                              rotation='vertical',
-                             #transform=fig.transFigure)
+                             # transform=fig.transFigure)
                              transform=ax_annotate_powers.transAxes)
         bbox_extra_artists.append(txt_power)
     #
@@ -933,15 +979,15 @@ def plot_spatially_resolved_normal_mode(
     #
     #from matplotlib.offsetbox import AnchoredOffsetbox, TextArea
     #box = TextArea(label_power, textprops=dict(color="k", fontsize=20))
-    #anchored_box = AnchoredOffsetbox(loc=3,
+    # anchored_box = AnchoredOffsetbox(loc=3,
     #                                 child=box, pad=0.,
     #                                 frameon=False,
     #                                 bbox_to_anchor=(-0.1, 0.5),
     #                                 bbox_transform=ax.transAxes,
     #                                 borderpad=0.,
     #                                 )
-    #ax_topleft.add_artist(anchored_box)
-    #bbox_extra_artists.append(anchored_box)
+    # ax_topleft.add_artist(anchored_box)
+    # bbox_extra_artists.append(anchored_box)
 
     if plot_phases:
         txt_phase = plt.text(-0.2, 0.5, label_phase,
@@ -949,12 +995,13 @@ def plot_spatially_resolved_normal_mode(
                              horizontalalignment='right',
                              verticalalignment='center',
                              rotation='vertical',
-                             #transform=fig.transFigure)
+                             # transform=fig.transFigure)
                              transform=ax_annotate_phases.transAxes)
         bbox_extra_artists.append(txt_phase)
 
     if outfilename != None:
         helpers.create_missing_directory_components(outfilename)
-        fig.savefig(outfilename, bbox_extra_artists=bbox_extra_artists, bbox_inches='tight', dpi=dpi)
+        fig.savefig(
+            outfilename, bbox_extra_artists=bbox_extra_artists, bbox_inches='tight', dpi=dpi)
 
     return fig

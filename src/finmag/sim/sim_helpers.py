@@ -41,14 +41,16 @@ def save_m(sim, filename=None, incremental=False, overwrite=False):
     the arguments.
 
     """
-    sim.save_field('m', filename=filename, incremental=incremental, overwrite=overwrite)
+    sim.save_field(
+        'm', filename=filename, incremental=incremental, overwrite=overwrite)
 
 
 def create_backup_file_if_file_exists(filename, backupextension='.backup'):
     if os.path.exists(filename):
         backup_file_name = filename + backupextension
         shutil.copy(filename, backup_file_name)
-        log.extremedebug("Creating backup %s of %s" % (backup_file_name, filename))
+        log.extremedebug("Creating backup %s of %s" %
+                         (backup_file_name, filename))
 
 
 def canonical_restart_filename(sim):
@@ -62,7 +64,8 @@ def create_non_existing_parent_directories(filename):
     """
     dirname = os.path.dirname(os.path.abspath(filename))
     if not os.path.exists(dirname):
-        log.debug("Creating non-existing parent directory: '{}'".format(dirname))
+        log.debug(
+            "Creating non-existing parent directory: '{}'".format(dirname))
         os.makedirs(dirname)
 
 
@@ -70,7 +73,7 @@ def save_restart_data(sim, filename=None):
     """Given a simulation object, this function saves the current
     magnetisation, and some integrator metadata into a file. """
 
-    #create metadata
+    # create metadata
     integrator_stats = sim.integrator.stats()
     datetimetuple = datetime.now()
     drivertype = 'cvode'  # we should deduce this from sim object XXX
@@ -83,12 +86,12 @@ def save_restart_data(sim, filename=None):
     create_non_existing_parent_directories(filename)
 
     np.savez_compressed(filename,
-        m=sim.integrator.llg._m_field.get_numpy_array_debug(),
-        stats=integrator_stats,
-        simtime=simtime,
-        datetime=datetimetuple,
-        simname=sim.name,
-        driver=drivertype)
+                        m=sim.integrator.llg._m_field.get_numpy_array_debug(),
+                        stats=integrator_stats,
+                        simtime=simtime,
+                        datetime=datetimetuple,
+                        simname=sim.name,
+                        driver=drivertype)
     log.debug("Have saved restart data at t=%g to %s "
               "(sim.name=%s)" % (sim.t, filename, sim.name))
 
@@ -152,7 +155,7 @@ def run_normal_modes_computation(sim, params_relax=None, params_precess=None):
         'save_relaxed_vtk': True,
         'save_relaxed_npy': True,
         'filename': None
-        }
+    }
 
     default_params_precess = {
         'alpha': 0.0,
@@ -162,19 +165,24 @@ def run_normal_modes_computation(sim, params_relax=None, params_precess=None):
         'save_npy_every': None,
         't_end': 10e-9,
         'filename': None
-        }
+    }
 
-    #if params_precess == None:
+    # if params_precess == None:
     #    raise ValueError("No precession parameters given. Expected params_precess != None.")
 
     def set_simulation_parameters_and_schedule(sim, params, suffix=''):
         sim.alpha = params['alpha']
         sim.set_H_ext = params['H_ext']
         #if params['save_ndt_every'] != None: sim.schedule('save_ndt', filename=sim.name + '_precess.ndt', every=params['save_ndt_every'])
-        if params['save_ndt_every'] != None: sim.schedule('save_ndt', every=params['save_ndt_every'])
+        if params['save_ndt_every'] != None:
+            sim.schedule('save_ndt', every=params['save_ndt_every'])
         #if params['save_ndt_every'] != None: raise NotImplementedError("XXX FIXME: This is currently not implemented because we need a different .ndt filename but it cannot be changed at present.")
-        if params['save_vtk_every'] != None: sim.schedule('save_vtk', filename=sim.name + suffix + '.pvd', every=params['save_vtk_every'])
-        if params['save_npy_every'] != None: sim.schedule('save_field', 'm', filename=sim.name + suffix + '.npy', every=params['save_npy_every'])
+        if params['save_vtk_every'] != None:
+            sim.schedule('save_vtk', filename=sim.name +
+                         suffix + '.pvd', every=params['save_vtk_every'])
+        if params['save_npy_every'] != None:
+            sim.schedule('save_field', 'm', filename=sim.name +
+                         suffix + '.npy', every=params['save_npy_every'])
 
     if params_relax == None:
         pass  # skip the relaxation phase
@@ -220,7 +228,7 @@ def plot_relaxation(sim, filename="relaxation.png"):
     fig = plt.figure()
     ax = fig.add_subplot(111)
     t, max_dmdt_norms = np.array(zip(* sim.relaxation['dmdts']))
-    ax.semilogy(t * 1e9, max_dmdt_norms/ONE_DEGREE_PER_NS, "ro")
+    ax.semilogy(t * 1e9, max_dmdt_norms / ONE_DEGREE_PER_NS, "ro")
     ax.set_xlabel("time (ns)")
     ax.set_ylabel("maximum dm/dt (1/ns)")
     threshold = sim.relaxation['stopping_dmdt'] / ONE_DEGREE_PER_NS
@@ -228,6 +236,7 @@ def plot_relaxation(sim, filename="relaxation.png"):
     ax.annotate("threshold", xy=(0.6, 1.1 * threshold), color="r")
     plt.savefig(filename)
     plt.close()
+
 
 def skyrmion_number(self):
     """
@@ -240,15 +249,17 @@ def skyrmion_number(self):
     """
 
     if self.mesh.topology().dim() == 3:
-        m = get_function_on_top_surface(mesh=self.mesh, dfFunction=self.m_field.f)
+        m = get_function_on_top_surface(
+            mesh=self.mesh, dfFunction=self.m_field.f)
     else:
         m = self.m_field.f
 
     integrand = -0.25 / np.pi * df.dot(m, df.cross(df.Dx(m, 0),
-                                                df.Dx(m, 1)))
+                                                   df.Dx(m, 1)))
 
     # Integrate over the mesh.
     return df.assemble(integrand * df.dx)
+
 
 def skyrmion_number_density_function(self):
     """
@@ -271,7 +282,7 @@ def skyrmion_number_density_function(self):
     nodalSkx = df.dot(integrand, df.TestFunction(S1)) * df.dx
     nodalVolumeS1 = nodal_volume(S1, self.unit_length)
     skDensity = df.assemble(nodalSkx).array() * self.unit_length\
-                ** self.S3.mesh().topology().dim() / nodalVolumeS1
+        ** self.S3.mesh().topology().dim() / nodalVolumeS1
 
     # Build the skyrmion number density dolfin function from the skDensity
     # array.
@@ -303,6 +314,7 @@ def get_function_on_top_surface(mesh, dfFunction):
     z_max = max(mesh_coords[:, 2])
 
     class Top(df.SubDomain):
+
         def inside(self, pt, on_boundary):
             x, y, z = pt
             return (z >= z_max - df.DOLFIN_EPS) and (z <= z_max + df.DOLFIN_EPS)
@@ -317,7 +329,7 @@ def get_function_on_top_surface(mesh, dfFunction):
 
     # create a new function space defined on the top surface and and interpolate
     # the original field onto this new function space.
-    V_toplayer  = df.VectorFunctionSpace(top_layer, 'CG', 1, dim=3)
+    V_toplayer = df.VectorFunctionSpace(top_layer, 'CG', 1, dim=3)
     dfFunction_top = df.interpolate(dfFunction, V_toplayer)
 
     return dfFunction_top

@@ -3,15 +3,19 @@ import finmag
 from finmag.util.vtk_saver import VTKSaver
 from finmag.util.fileio import FieldSaver
 
-#-----------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 # npy savers
-#-----------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+
 
 def _save_field_incremental(sim, field_name, filename=None, overwrite=False):
-    save_field(sim,field_name, filename, incremental=True, overwrite=overwrite)
+    save_field(
+        sim, field_name, filename, incremental=True, overwrite=overwrite)
+
 
 def _save_m_incremental(sim, filename=None, overwrite=False):
-    save_field(sim,'m', filename, incremental=True, overwrite=overwrite)
+    save_field(sim, 'm', filename, incremental=True, overwrite=overwrite)
+
 
 def _get_field_saver(sim, field_name, filename=None, overwrite=False, incremental=False):
     if filename is None:
@@ -28,6 +32,7 @@ def _get_field_saver(sim, field_name, filename=None, overwrite=False, incrementa
         sim.field_savers[filename] = s
 
     return s
+
 
 def save_field(sim, field_name, filename=None, incremental=False, overwrite=False, region=None):
     """
@@ -58,15 +63,16 @@ def save_field(sim, field_name, filename=None, incremental=False, overwrite=Fals
 
     """
     field_data = sim.get_field_as_dolfin_function(field_name, region=region)
-    field_saver = _get_field_saver(sim,field_name, filename, incremental=incremental, overwrite=overwrite)
+    field_saver = _get_field_saver(
+        sim, field_name, filename, incremental=incremental, overwrite=overwrite)
     field_saver.save(field_data.vector().array())
 
 
-#-----------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 # Scene rendering
-#-----------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 
 
-#-----------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 # VTK savers
-#-----------------------------------------------------------------------------------
+#-------------------------------------------------------------------------

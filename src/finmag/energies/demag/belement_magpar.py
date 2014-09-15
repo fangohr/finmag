@@ -1,10 +1,12 @@
 import instant
 
+
 def return_bele_magpar():
-    args = [["n_bvert", "bvert", "in"],["facv1_n", "facv1", "in"],["facv2_n", "facv2", "in"], ["facv3_n", "facv3", "in"],["matele_n","matele"]]
+    args = [["n_bvert", "bvert", "in"], ["facv1_n", "facv1", "in"], [
+        "facv2_n", "facv2", "in"], ["facv3_n", "facv3", "in"], ["matele_n", "matele"]]
     return instant.inline_with_numpy(C_CODE, arrays=args)
 
-C_CODE="""
+C_CODE = """
 int Bele(int n_bvert,double* bvert,int facv1_n, double* facv1, int facv2_n, double* facv2,
       int facv3_n,double* facv3,int matele_n,double* matele);
 

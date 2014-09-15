@@ -9,8 +9,10 @@ MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 averages_file = os.path.join(MODULE_DIR, "averages_no_stt.txt")
 mesh = from_geofile(os.path.join(MODULE_DIR, "mesh.geo"))
 
+
 def run_simulation():
-    L = W = 12.5e-9; H = 5e-9;
+    L = W = 12.5e-9
+    H = 5e-9
     sim = Sim(mesh, Ms=8.6e5, unit_length=1e-9)
     sim.set_m((1, 0.01, 0.01))
     sim.alpha = 0.014
@@ -23,7 +25,8 @@ def run_simulation():
     sim.add(Exchange(1.3e-11))
 
     with open(averages_file, "w") as f:
-        dt = 10e-12; t_max = 10e-9;
+        dt = 10e-12
+        t_max = 10e-9
         for t in np.arange(0, t_max, dt):
             sim.run_until(t)
             f.write("{} {} {} {}\n".format(t, *sim.m_average))

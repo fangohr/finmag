@@ -7,7 +7,7 @@ from scipy.optimize import curve_fit
 from finmag.util.oommf.comparison import compare_anisotropy
 from finmag.util.oommf import mesh
 
-K1 = 45e4 # J/m^3
+K1 = 45e4  # J/m^3
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -15,20 +15,23 @@ max_rdiffs = [[], []]
 mean_rdiffs = [[], []]
 vertices = [[], []]
 
-x_max = 100e-9;
+x_max = 100e-9
+
 
 def m_gen(rs):
     xs = rs[0]
-    return np.array([xs/x_max, np.sqrt(1 - (xs/x_max)**2), np.zeros(len(xs))])
+    return np.array([xs / x_max, np.sqrt(1 - (xs / x_max) ** 2), np.zeros(len(xs))])
+
 
 def test_1d():
     print "1D problem..."
     for x_n in [1e1, 1e2, 1e3, 1e4, 1e5, 1e6]:
         dolfin_mesh = df.IntervalMesh(int(x_n), 0, x_max)
         oommf_mesh = mesh.Mesh((int(x_n), 1, 1), size=(x_max, 1e-12, 1e-12))
-        res = compare_anisotropy(m_gen, 1.0, K1, (1, 1, 1), dolfin_mesh, oommf_mesh, dims=1, name="1D")
+        res = compare_anisotropy(
+            m_gen, 1.0, K1, (1, 1, 1), dolfin_mesh, oommf_mesh, dims=1, name="1D")
 
-        vertices[0].append(dolfin_mesh.num_vertices())  
+        vertices[0].append(dolfin_mesh.num_vertices())
         mean_rdiffs[0].append(np.mean(res["rel_diff"]))
         max_rdiffs[0].append(np.max(res["rel_diff"]))
 

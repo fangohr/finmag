@@ -17,7 +17,7 @@ CACHE = mkdtemp()
 memory = Memory(cachedir=CACHE, verbose=0)
 
 
-def points_on_line(r0, r1, spacing):                                            
+def points_on_line(r0, r1, spacing):
     """                                                                         
     Coordinates of points spaced `spacing` apart between points `r0` and `r1`.  
 
@@ -25,15 +25,15 @@ def points_on_line(r0, r1, spacing):
     while the specified `spacing` will be an upper bound to the actual spacing.
 
 
-    """                                                                         
+    """
     dim = len(r0)
-    v = np.array(r1) - np.array(r0)                                             
-    length = np.linalg.norm(v)                                                  
+    v = np.array(r1) - np.array(r0)
+    length = np.linalg.norm(v)
     steps = math.ceil(1.0 * length / spacing) + 1
-    points = np.zeros((steps, dim))                                             
-    for i in xrange(dim):                                                       
-        points[:, i] = np.linspace(r0[i], r1[i], steps)                         
-    return points                                                               
+    points = np.zeros((steps, dim))
+    for i in xrange(dim):
+        points[:, i] = np.linspace(r0[i], r1[i], steps)
+    return points
 
 
 def points_on_axis(mesh, axis, spacing, offset=0):

@@ -38,7 +38,7 @@ def test_FFT_m(tmpdir):
     # Use damped harmonic oscillator to create fake magnetisation dynamics
     mx = exp(-ts * 1e8 / alpha) * sin(omega * ts)
     my = exp(-ts * 1e8 / alpha) * cos(omega * ts)
-    mz = 1 - sqrt(mx**2 + my**2)
+    mz = 1 - sqrt(mx ** 2 + my ** 2)
     data = np.array([ts, mx, my, mz]).T
 
     # Plot the dynamics for debugging purposes
@@ -53,8 +53,10 @@ def test_FFT_m(tmpdir):
     # which are required by the file format.
     ndt_filename = 'fake_relaxation.ndt'
     np.savetxt(ndt_filename, data)
-    sp.check_call("sed -i '1 i # time  m_x  m_y  m_z' ./fake_relaxation.ndt", shell=True)
-    sp.check_call("sed -i '2 i # <s>   <>   <>   <>' ./fake_relaxation.ndt", shell=True)
+    sp.check_call(
+        "sed -i '1 i # time  m_x  m_y  m_z' ./fake_relaxation.ndt", shell=True)
+    sp.check_call(
+        "sed -i '2 i # <s>   <>   <>   <>' ./fake_relaxation.ndt", shell=True)
 
     #
     # Now compute the FFT of a resampled time series, both by hand and
@@ -69,7 +71,7 @@ def test_FFT_m(tmpdir):
     # Compute time series based on resampled timesteps
     mx_res = exp(-ts_resampled * 1e8 / alpha) * sin(omega * ts_resampled)
     my_res = exp(-ts_resampled * 1e8 / alpha) * cos(omega * ts_resampled)
-    mz_res = 1 - sqrt(mx_res**2 + my_res**2)
+    mz_res = 1 - sqrt(mx_res ** 2 + my_res ** 2)
 
     # Compute 'analytical' Fourier transform of resampled time series
     fft_mx_res_expected = abs(np.fft.rfft(mx_res))
@@ -78,7 +80,8 @@ def test_FFT_m(tmpdir):
 
     # Compute Fourier transform of resampled time series using FFT_m
     fft_freqs_res, fft_mx_res, fft_my_res, fft_mz_res = \
-        FFT_m(ndt_filename, t_step_res, t_ini=t_ini_res, t_end=t_end_res, subtract_values=None)
+        FFT_m(ndt_filename, t_step_res, t_ini=t_ini_res,
+              t_end=t_end_res, subtract_values=None)
 
     # Compare both results
     assert(np.allclose(fft_mx_res, fft_mx_res_expected, atol=0, rtol=RTOL))
@@ -122,10 +125,11 @@ def test_FFT_m_using_the_McMichael_Stiles_method(tmpdir):
     # Use damped harmonic oscillator to create fake magnetisation dynamics
     mx = exp(-ts * 1e8 / alpha) * sin(omega * ts)
     my = exp(-ts * 1e8 / alpha) * cos(omega * ts)
-    mz = 1 - sqrt(mx**2 + my**2)
+    mz = 1 - sqrt(mx ** 2 + my ** 2)
 
     # Write the data to a series of .npy files
-    num_vertices = 42 # in a real application this would be the number of mesh vertices
+    # in a real application this would be the number of mesh vertices
+    num_vertices = 42
     a = np.zeros((3, num_vertices))
     for i in xrange(num_timesteps):
         a[0, :] = mx[i]
@@ -146,35 +150,49 @@ def test_FFT_m_using_the_McMichael_Stiles_method(tmpdir):
     # Compute time series based on resampled timesteps
     mx_res = exp(-ts_resampled * 1e8 / alpha) * sin(omega * ts_resampled)
     my_res = exp(-ts_resampled * 1e8 / alpha) * cos(omega * ts_resampled)
-    mz_res = 1 - sqrt(mx_res**2 + my_res**2)
+    mz_res = 1 - sqrt(mx_res ** 2 + my_res ** 2)
 
     # Compute 'analytical' Fourier transform of resampled time series and
     # determine the power of the spectrum for each component. We also need
     # to multiply by the number of mesh nodes because the numerical algorithm
     # sums up all contributions at the individual nodes (but we can just
     # multiply because they are all identical by construction).
-    fft_mx_power_expected = num_vertices * np.absolute(np.fft.rfft(mx_res))**2
-    fft_my_power_expected = num_vertices * np.absolute(np.fft.rfft(my_res))**2
-    fft_mz_power_expected = num_vertices * np.absolute(np.fft.rfft(mz_res))**2
+    fft_mx_power_expected = num_vertices * \
+        np.absolute(np.fft.rfft(mx_res)) ** 2
+    fft_my_power_expected = num_vertices * \
+        np.absolute(np.fft.rfft(my_res)) ** 2
+    fft_mz_power_expected = num_vertices * \
+        np.absolute(np.fft.rfft(mz_res)) ** 2
 
     # Compute Fourier transform of resampled time series using FFT_m
     fft_freqs_computed, fft_mx_power_computed, fft_my_power_computed, fft_mz_power_computed = \
-        FFT_m('m_ringdown*.npy', t_step_res, t_ini=t_ini_res, t_end=t_end_res, subtract_values=None)
+        FFT_m('m_ringdown*.npy', t_step_res, t_ini=t_ini_res,
+              t_end=t_end_res, subtract_values=None)
 
-    # Check that the analytically determined power spectra are the same as the computed ones.
-    assert(np.allclose(fft_mx_power_expected, fft_mx_power_computed, atol=0, rtol=RTOL))
-    assert(np.allclose(fft_my_power_expected, fft_my_power_computed, atol=0, rtol=RTOL))
-    assert(np.allclose(fft_mz_power_expected, fft_mz_power_computed, atol=0, rtol=RTOL))
+    # Check that the analytically determined power spectra are the same as the
+    # computed ones.
+    assert(
+        np.allclose(fft_mx_power_expected, fft_mx_power_computed, atol=0, rtol=RTOL))
+    assert(
+        np.allclose(fft_my_power_expected, fft_my_power_computed, atol=0, rtol=RTOL))
+    assert(
+        np.allclose(fft_mz_power_expected, fft_mz_power_computed, atol=0, rtol=RTOL))
 
     # Plot the spectra for debugging
     fig = plt.figure(figsize=(20, 5))
     ax = fig.gca()
-    ax.plot(fft_freqs_computed, fft_mx_power_expected, label='fft_mx_power_expected')
-    ax.plot(fft_freqs_computed, fft_my_power_expected, label='fft_my_power_expected')
-    ax.plot(fft_freqs_computed, fft_mz_power_expected, label='fft_mz_power_expected')
-    ax.plot(fft_freqs_computed, fft_mx_power_computed, label='fft_mx_power_computed')
-    ax.plot(fft_freqs_computed, fft_my_power_computed, label='fft_my_power_computed')
-    ax.plot(fft_freqs_computed, fft_mz_power_computed, label='fft_mz_power_computed')
+    ax.plot(fft_freqs_computed, fft_mx_power_expected,
+            label='fft_mx_power_expected')
+    ax.plot(fft_freqs_computed, fft_my_power_expected,
+            label='fft_my_power_expected')
+    ax.plot(fft_freqs_computed, fft_mz_power_expected,
+            label='fft_mz_power_expected')
+    ax.plot(fft_freqs_computed, fft_mx_power_computed,
+            label='fft_mx_power_computed')
+    ax.plot(fft_freqs_computed, fft_my_power_computed,
+            label='fft_my_power_computed')
+    ax.plot(fft_freqs_computed, fft_mz_power_computed,
+            label='fft_mz_power_computed')
     ax.legend(loc='best')
     fig.savefig('fft_m_McMichaelStiles.png')
 
@@ -196,28 +214,28 @@ def test_analytical_inverse_DFT():
        [1] http://docs.scipy.org/doc/numpy/reference/routines.fft.html
     """
     n = 1000
-    tmin = 0.23*pi
-    tmax = 4.23*pi
+    tmin = 0.23 * pi
+    tmax = 4.23 * pi
     dt = (tmax - tmin) / (n - 1)
 
     # Time steps of the signal
     ts = np.linspace(tmin, tmax, n)
 
     # Define a simple signal that is a superposition of two waves
-    signal = sin(ts) + 2*cos(3*ts)
+    signal = sin(ts) + 2 * cos(3 * ts)
 
     # Plot the signal and its sin/cos components
     plt.figure()
     plt.plot(signal, 'x-', label='signal')
     plt.plot(sin(ts), label='sin(t)')
-    plt.plot(cos(3*ts), label='cos(3t)')
+    plt.plot(cos(3 * ts), label='cos(3t)')
     plt.legend()
     plt.savefig('fft_test_01_signal.pdf')
 
     # Perform a (real-valued) Fourier transform. Also store the
     # frequencies corresponding to the Fourier coefficients.
     rfft_vals = np.fft.rfft(signal)
-    rfft_freqs = np.arange(n // 2 + 1) / (dt*n)
+    rfft_freqs = np.arange(n // 2 + 1) / (dt * n)
 
     # Determine indices of the two peaks
     idx_peaks = sorted(abs(rfft_vals).argsort()[-2:])
@@ -238,23 +256,31 @@ def test_analytical_inverse_DFT():
         print "Fourier coefficient at index k={} is: {}".format(k, A_k)
 
         tt = 2 * pi * k * np.arange(n) / n
-        signal_analytical_1 = np.squeeze(filter_frequency_component(signal, k, tmin, tmax))
-        signal_analytical_2 = 2.0/n * (B_k * cos(tt) - C_k * sin(tt))
-        signal_analytical_3 = real(1.0/n * (A_k * exp(1j*tt) + conj(A_k) * exp(-1j*tt)))
+        signal_analytical_1 = np.squeeze(
+            filter_frequency_component(signal, k, tmin, tmax))
+        signal_analytical_2 = 2.0 / n * (B_k * cos(tt) - C_k * sin(tt))
+        signal_analytical_3 = real(
+            1.0 / n * (A_k * exp(1j * tt) + conj(A_k) * exp(-1j * tt)))
 
-        base_oscillation = sin(ts) if (k == 2) else 2*cos(3*ts)
+        base_oscillation = sin(ts) if (k == 2) else 2 * cos(3 * ts)
 
         print "Maximum deviation of filtered signal from the base sinusoidal oscillation: {}".format(max(abs(base_oscillation - signal_filtered)))
-        assert np.allclose(base_oscillation, signal_filtered, atol=0.05, rtol=0)
-        assert np.allclose(signal_filtered, signal_analytical_1, atol=1e-11, rtol=0)
-        assert np.allclose(signal_filtered, signal_analytical_2, atol=1e-11, rtol=0)
-        assert np.allclose(signal_filtered, signal_analytical_3, atol=1e-11, rtol=0)
+        assert np.allclose(
+            base_oscillation, signal_filtered, atol=0.05, rtol=0)
+        assert np.allclose(
+            signal_filtered, signal_analytical_1, atol=1e-11, rtol=0)
+        assert np.allclose(
+            signal_filtered, signal_analytical_2, atol=1e-11, rtol=0)
+        assert np.allclose(
+            signal_filtered, signal_analytical_3, atol=1e-11, rtol=0)
 
         plt.figure()
         plt.plot(ts, base_oscillation, '-', label='sin(t)')
         plt.plot(ts, signal_filtered, 'x', label='filtered (iDFT)')
-        plt.plot(ts, signal_analytical_1, '-', label='filtered (analytical #1)')
-        plt.plot(ts, signal_analytical_2, '.', label='filtered (analytical #1)')
+        plt.plot(
+            ts, signal_analytical_1, '-', label='filtered (analytical #1)')
+        plt.plot(
+            ts, signal_analytical_2, '.', label='filtered (analytical #1)')
         plt.legend()
         plt.savefig('fft_test_02_filtered_signal_for_k_{}.pdf'.format(k))
 
@@ -281,7 +307,8 @@ def test_find_peak_near_frequency(tmpdir):
     assert find_peak_near_frequency(5e9, fft_freqs, fft_mx) == (6e9, 6)
     assert find_peak_near_frequency(5e9, fft_freqs, fft_my) == (7e9, 7)
     assert find_peak_near_frequency(3.7e9, fft_freqs, fft_mx) == (6e9, 6)
-    #assert find_peak_near_frequency(4e9, fft_freqs, [fft_mx, fft_my]) == None  # no simultaneous peak
+    # assert find_peak_near_frequency(4e9, fft_freqs, [fft_mx, fft_my]) ==
+    # None  # no simultaneous peak
 
     # Just to check special cases, boundary cases etc.
     assert find_peak_near_frequency(1e9, fft_freqs, fft_mx) == (1e9, 1)

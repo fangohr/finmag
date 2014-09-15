@@ -27,28 +27,28 @@ def test_analytical_inverse_DFT():
 
     """
     n = 1000
-    tmin = 0.23*pi
-    tmax = 4.23*pi
+    tmin = 0.23 * pi
+    tmax = 4.23 * pi
     dt = (tmax - tmin) / (n - 1)
 
     # Time steps of the signal
     ts = np.linspace(tmin, tmax, n)
 
     # Define a simple signal that is a superposition of two waves
-    signal = sin(ts) + 2*cos(3*ts)
+    signal = sin(ts) + 2 * cos(3 * ts)
 
     # Plot the signal and its sin/cos components
     plt.figure()
     plt.plot(signal, 'x-', label='signal')
     plt.plot(sin(ts), label='sin(t)')
-    plt.plot(cos(3*ts), label='cos(3t)')
+    plt.plot(cos(3 * ts), label='cos(3t)')
     plt.legend()
     plt.savefig('fft_test_01_signal.pdf')
 
     # Perform a (real-valued) Fourier transform. Also store the
     # frequencies corresponding to the Fourier coefficients.
     rfft_vals = np.fft.rfft(signal)
-    rfft_freqs = np.arange(n // 2 + 1) / (dt*n)
+    rfft_freqs = np.arange(n // 2 + 1) / (dt * n)
 
     # Determine indices of the two peaks
     idx_peaks = sorted(abs(rfft_vals).argsort()[-2:])
@@ -69,23 +69,31 @@ def test_analytical_inverse_DFT():
         print "Fourier coefficient at index k={} is: {}".format(k, A_k)
 
         tt = 2 * pi * k * np.arange(n) / n
-        signal_analytical_1 = np.squeeze(filter_frequency_component(signal, k, tmin, tmax))
-        signal_analytical_2 = 2.0/n * (B_k * cos(tt) - C_k * sin(tt))
-        signal_analytical_3 = real(1.0/n * (A_k * exp(1j*tt) + conj(A_k) * exp(-1j*tt)))
+        signal_analytical_1 = np.squeeze(
+            filter_frequency_component(signal, k, tmin, tmax))
+        signal_analytical_2 = 2.0 / n * (B_k * cos(tt) - C_k * sin(tt))
+        signal_analytical_3 = real(
+            1.0 / n * (A_k * exp(1j * tt) + conj(A_k) * exp(-1j * tt)))
 
-        base_oscillation = sin(ts) if (k == 2) else 2*cos(3*ts)
+        base_oscillation = sin(ts) if (k == 2) else 2 * cos(3 * ts)
 
         print "Maximum deviation of filtered signal from the base sinusoidal oscillation: {}".format(max(abs(base_oscillation - signal_filtered)))
-        assert np.allclose(base_oscillation, signal_filtered, atol=0.05, rtol=0)
-        assert np.allclose(signal_filtered, signal_analytical_1, atol=1e-11, rtol=0)
-        assert np.allclose(signal_filtered, signal_analytical_2, atol=1e-11, rtol=0)
-        assert np.allclose(signal_filtered, signal_analytical_3, atol=1e-11, rtol=0)
+        assert np.allclose(
+            base_oscillation, signal_filtered, atol=0.05, rtol=0)
+        assert np.allclose(
+            signal_filtered, signal_analytical_1, atol=1e-11, rtol=0)
+        assert np.allclose(
+            signal_filtered, signal_analytical_2, atol=1e-11, rtol=0)
+        assert np.allclose(
+            signal_filtered, signal_analytical_3, atol=1e-11, rtol=0)
 
         plt.figure()
         plt.plot(ts, base_oscillation, '-', label='sin(t)')
         plt.plot(ts, signal_filtered, 'x', label='filtered (iDFT)')
-        plt.plot(ts, signal_analytical_1, '-', label='filtered (analytical #1)')
-        plt.plot(ts, signal_analytical_2, '.', label='filtered (analytical #1)')
+        plt.plot(
+            ts, signal_analytical_1, '-', label='filtered (analytical #1)')
+        plt.plot(
+            ts, signal_analytical_2, '.', label='filtered (analytical #1)')
         plt.legend()
         plt.savefig('fft_test_02_filtered_signal_for_k_{}.pdf'.format(k))
 
@@ -111,18 +119,19 @@ def test_power_spectral_density_from_averaged_magnetisation(tmpdir):
     alpha = 0.5  # some sort of damping constant
 
     ##
-    ## Step 1: Construct a time series of artificial magnetisation
-    ## data and save it to a .ndt file.
+    # Step 1: Construct a time series of artificial magnetisation
+    # data and save it to a .ndt file.
     ##
     t_step = 1e-11
     t_ini = 0
     t_end = 10e-9
-    ndt_filename = fft_test_helpers.create_test_ndt_file(str(tmpdir), t_step, t_ini, t_end, omega, alpha)
+    ndt_filename = fft_test_helpers.create_test_ndt_file(
+        str(tmpdir), t_step, t_ini, t_end, omega, alpha)
 
     ##
-    ## Step 2: compute the PSDs of a resampled time series, both by
-    ## hand and using compute_power_spectral_density() and check that
-    ## the results are the same.
+    # Step 2: compute the PSDs of a resampled time series, both by
+    # hand and using compute_power_spectral_density() and check that
+    # the results are the same.
     ##
     t_step_res = 2e-11
     t_ini_res = 1e-10
@@ -133,16 +142,17 @@ def test_power_spectral_density_from_averaged_magnetisation(tmpdir):
     # Compute time series based on resampled timesteps
     mx_res = exp(-ts_resampled * 1e8 / alpha) * sin(omega * ts_resampled)
     my_res = exp(-ts_resampled * 1e8 / alpha) * cos(omega * ts_resampled)
-    mz_res = 1 - sqrt(mx_res**2 + my_res**2)
+    mz_res = 1 - sqrt(mx_res ** 2 + my_res ** 2)
 
     # Compute 'analytical' power spectral densities of resampled time series
-    psd_mx_res_expected = abs(np.fft.rfft(mx_res))**2
-    psd_my_res_expected = abs(np.fft.rfft(my_res))**2
-    psd_mz_res_expected = abs(np.fft.rfft(mz_res))**2
+    psd_mx_res_expected = abs(np.fft.rfft(mx_res)) ** 2
+    psd_my_res_expected = abs(np.fft.rfft(my_res)) ** 2
+    psd_mz_res_expected = abs(np.fft.rfft(mz_res)) ** 2
 
     # Compute Fourier transform of resampled time series using FFT_m
     freqs_res, psd_mx_res, psd_my_res, psd_mz_res = \
-        compute_power_spectral_density(ndt_filename, t_step_res, t_ini=t_ini_res, t_end=t_end_res, subtract_values=None)
+        compute_power_spectral_density(
+            ndt_filename, t_step_res, t_ini=t_ini_res, t_end=t_end_res, subtract_values=None)
 
     # Compare both results
     assert(np.allclose(psd_mx_res, psd_mx_res_expected, atol=0, rtol=RTOL))
@@ -171,24 +181,26 @@ def test_power_spectral_density_from_spatially_resolved_magnetisation(tmpdir):
     omega = gamma * H  # precession frequency
 
     ##
-    ## Step 1: Construct a time series of artificial magnetisation
-    ## data and save it to a bunch of .npy files.
+    # Step 1: Construct a time series of artificial magnetisation
+    # data and save it to a bunch of .npy files.
     ##
     t_step = 1e-11
     t_ini = 0
     t_end = 10e-9
 
-    num_vertices = 42 # in a real application this would be the number of mesh vertices
-    fft_test_helpers.create_test_npy_files(str(tmpdir), t_step, t_ini, t_end, omega, alpha, num_vertices)
+    # in a real application this would be the number of mesh vertices
+    num_vertices = 42
+    fft_test_helpers.create_test_npy_files(
+        str(tmpdir), t_step, t_ini, t_end, omega, alpha, num_vertices)
 
     ##
-    ## Step 2: compute the FFT of a resampled time series, both by
-    ## hand and using FFT_m.
+    # Step 2: compute the FFT of a resampled time series, both by
+    # hand and using FFT_m.
     ##
-    ## XXX TODO: Resampling timesteps is not supported when using .npy
-    ## files. Either simplify the code below, or implement saving to
-    ## .h5 files so that it's easier to implement resampling for
-    ## spatially resolved data, too.
+    # XXX TODO: Resampling timesteps is not supported when using .npy
+    # files. Either simplify the code below, or implement saving to
+    # .h5 files so that it's easier to implement resampling for
+    # spatially resolved data, too.
     ##
     t_step_res = t_step
     t_ini_res = t_ini
@@ -198,23 +210,25 @@ def test_power_spectral_density_from_spatially_resolved_magnetisation(tmpdir):
     # Compute time series based on resampled timesteps
     mx_res = exp(-ts_resampled * 1e8 / alpha) * sin(omega * ts_resampled)
     my_res = exp(-ts_resampled * 1e8 / alpha) * cos(omega * ts_resampled)
-    mz_res = 1 - sqrt(mx_res**2 + my_res**2)
+    mz_res = 1 - sqrt(mx_res ** 2 + my_res ** 2)
 
     # Compute 'analytical' Fourier transform of resampled time series and
     # determine the power of the spectrum for each component. We also need
     # to multiply by the number of mesh nodes because the numerical algorithm
     # sums up all contributions at the individual nodes (but we can just
     # multiply because they are all identical by construction).
-    psd_mx_expected = num_vertices * np.absolute(np.fft.rfft(mx_res))**2
-    psd_my_expected = num_vertices * np.absolute(np.fft.rfft(my_res))**2
-    psd_mz_expected = num_vertices * np.absolute(np.fft.rfft(mz_res))**2
+    psd_mx_expected = num_vertices * np.absolute(np.fft.rfft(mx_res)) ** 2
+    psd_my_expected = num_vertices * np.absolute(np.fft.rfft(my_res)) ** 2
+    psd_mz_expected = num_vertices * np.absolute(np.fft.rfft(mz_res)) ** 2
 
     # Compute Fourier transform of resampled time series using
     # compute_power_spectral_density.
     freqs_computed, psd_mx_computed, psd_my_computed, psd_mz_computed = \
-        compute_power_spectral_density('m_ringdown*.npy', t_step_res, t_ini=t_ini_res, t_end=t_end_res, subtract_values=None)
+        compute_power_spectral_density(
+            'm_ringdown*.npy', t_step_res, t_ini=t_ini_res, t_end=t_end_res, subtract_values=None)
 
-    # Check that the analytically determined power spectra are the same as the computed ones.
+    # Check that the analytically determined power spectra are the same as the
+    # computed ones.
     assert(np.allclose(psd_mx_expected, psd_mx_computed, atol=0, rtol=RTOL))
     assert(np.allclose(psd_my_expected, psd_my_computed, atol=0, rtol=RTOL))
     assert(np.allclose(psd_mz_expected, psd_mz_computed, atol=0, rtol=RTOL))
@@ -253,26 +267,26 @@ def test_power_spectral_density_from_spatially_resolved_magnetisation_confined_t
     omega2 = gamma * H2  # precession frequency
 
     ##
-    ## Step 1: Construct a time series of artificial magnetisation
-    ## data and save it to a bunch of .npy files.
+    # Step 1: Construct a time series of artificial magnetisation
+    # data and save it to a bunch of .npy files.
     ##
     t_step = 1e-11
     t_ini = 0
     t_end = 10e-9
 
-    N1 = 42 # in a real application this would be the number of mesh vertices
-    N2 = 23 # in a real application this would be the number of mesh vertices
+    N1 = 42  # in a real application this would be the number of mesh vertices
+    N2 = 23  # in a real application this would be the number of mesh vertices
     fft_test_helpers.create_test_npy_files_with_two_regions(
         str(tmpdir), t_step, t_ini, t_end, omega1, alpha1, N1, omega2, alpha2, N2)
 
     ##
-    ## Step 2: compute the FFT of a resampled time series, both by
-    ## hand and using FFT_m.
+    # Step 2: compute the FFT of a resampled time series, both by
+    # hand and using FFT_m.
     ##
-    ## XXX TODO: Resampling timesteps is not supported when using .npy
-    ## files. Either simplify the code below, or implement saving to
-    ## .h5 files so that it's easier to implement resampling for
-    ## spatially resolved data, too.
+    # XXX TODO: Resampling timesteps is not supported when using .npy
+    # files. Either simplify the code below, or implement saving to
+    # .h5 files so that it's easier to implement resampling for
+    # spatially resolved data, too.
     ##
     t_step_res = t_step
     t_ini_res = t_ini
@@ -282,22 +296,24 @@ def test_power_spectral_density_from_spatially_resolved_magnetisation_confined_t
     # Compute time series based on resampled timesteps
     mx_res = exp(-ts_resampled * 1e8 / alpha1) * sin(omega1 * ts_resampled)
     my_res = exp(-ts_resampled * 1e8 / alpha1) * cos(omega1 * ts_resampled)
-    mz_res = 1 - sqrt(mx_res**2 + my_res**2)
+    mz_res = 1 - sqrt(mx_res ** 2 + my_res ** 2)
 
     # Compute 'analytical' Fourier transform of resampled time series and
     # determine the power of the spectrum for each component. We also need
     # to multiply by the number of mesh nodes because the numerical algorithm
     # sums up all contributions at the individual nodes (but we can just
     # multiply because they are all identical by construction).
-    psd_mx_expected = N1 * np.absolute(np.fft.rfft(mx_res))**2
-    psd_my_expected = N1 * np.absolute(np.fft.rfft(my_res))**2
-    psd_mz_expected = N1 * np.absolute(np.fft.rfft(mz_res))**2
+    psd_mx_expected = N1 * np.absolute(np.fft.rfft(mx_res)) ** 2
+    psd_my_expected = N1 * np.absolute(np.fft.rfft(my_res)) ** 2
+    psd_mz_expected = N1 * np.absolute(np.fft.rfft(mz_res)) ** 2
 
     # Compute Fourier transform of resampled time series using FFT_m
     freqs_computed, psd_mx_computed, psd_my_computed, psd_mz_computed = \
-        compute_power_spectral_density('m_ringdown*.npy', t_step_res, t_ini=t_ini_res, t_end=t_end_res, subtract_values=None, restrict_to_vertices=xrange(N1))
+        compute_power_spectral_density('m_ringdown*.npy', t_step_res, t_ini=t_ini_res,
+                                       t_end=t_end_res, subtract_values=None, restrict_to_vertices=xrange(N1))
 
-    # Check that the analytically determined power spectra are the same as the computed ones.
+    # Check that the analytically determined power spectra are the same as the
+    # computed ones.
     assert(np.allclose(psd_mx_expected, psd_mx_computed, atol=0, rtol=RTOL))
     assert(np.allclose(psd_my_expected, psd_my_computed, atol=0, rtol=RTOL))
     assert(np.allclose(psd_mz_expected, psd_mz_computed, atol=0, rtol=RTOL))
@@ -343,7 +359,8 @@ def test_find_peak_near_frequency(tmpdir, debug=False):
     assert find_peak_near_frequency(5e9, fft_freqs, fft_mx) == (6e9, 6)
     assert find_peak_near_frequency(5e9, fft_freqs, fft_my) == (7e9, 7)
     assert find_peak_near_frequency(3.7e9, fft_freqs, fft_mx) == (6e9, 6)
-    #assert find_peak_near_frequency(4e9, fft_freqs, [fft_mx, fft_my]) == None  # no simultaneous peak
+    # assert find_peak_near_frequency(4e9, fft_freqs, [fft_mx, fft_my]) ==
+    # None  # no simultaneous peak
 
     # Just to check special cases, boundary cases etc.
     assert find_peak_near_frequency(1e9, fft_freqs, fft_mx) == (1e9, 1)
@@ -375,22 +392,29 @@ def test_plot_power_spectral_density(tmpdir):
     t_step = 1e-11
     t_ini = 0
     t_end = 10e-9
-    num_vertices = 42 # in a real application this would be the number of mesh vertices
+    # in a real application this would be the number of mesh vertices
+    num_vertices = 42
 
     # Write a sample .ndt file with some artifical magnetisation data
-    ndt_filename = fft_test_helpers.create_test_ndt_file(str(tmpdir), t_step, t_ini, t_end, omega, alpha)
+    ndt_filename = fft_test_helpers.create_test_ndt_file(
+        str(tmpdir), t_step, t_ini, t_end, omega, alpha)
 
     # Write a sample .ndt file with some artifical magnetisation data
-    npy_filenames = fft_test_helpers.create_test_npy_files(str(tmpdir), t_step, t_ini, t_end, omega, alpha, num_vertices)
+    npy_filenames = fft_test_helpers.create_test_npy_files(
+        str(tmpdir), t_step, t_ini, t_end, omega, alpha, num_vertices)
 
     kwargs = dict(t_step=t_step, t_ini=t_ini, t_end=t_end,
                   subtract_values=None, components="xy", figsize=(5, 4),
                   ticks=5, title="Power spectral densities")
 
-    fig1 = plot_power_spectral_density(ndt_filename, log=False, outfilename='psd_ndt_nolog.png', **kwargs)
-    fig2 = plot_power_spectral_density(ndt_filename, log=True, outfilename='psd_ndt_log.png', **kwargs)
-    fig3 = plot_power_spectral_density(npy_filenames, log=False, outfilename='psd_npy_nolog.png', **kwargs)
-    fig4 = plot_power_spectral_density(npy_filenames, log=True, outfilename='psd_npy_log.png', **kwargs)
+    fig1 = plot_power_spectral_density(
+        ndt_filename, log=False, outfilename='psd_ndt_nolog.png', **kwargs)
+    fig2 = plot_power_spectral_density(
+        ndt_filename, log=True, outfilename='psd_ndt_log.png', **kwargs)
+    fig3 = plot_power_spectral_density(
+        npy_filenames, log=False, outfilename='psd_npy_nolog.png', **kwargs)
+    fig4 = plot_power_spectral_density(
+        npy_filenames, log=True, outfilename='psd_npy_log.png', **kwargs)
 
     assert(isinstance(fig1, plt.Figure))
     assert(isinstance(fig2, plt.Figure))
