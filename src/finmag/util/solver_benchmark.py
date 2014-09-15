@@ -41,7 +41,7 @@ def replace_solver_settings(args, kwargs, parameters):
     # The way how to set the solver settings depends on how the system is solved:
     #  Adaptive solve 
     if "tol" in kwargs:
-        raise NotImplementedError, 'The benchmark solver is currently not implemented for adaptive solver calls.'
+        raise NotImplementedError('The benchmark solver is currently not implemented for adaptive solver calls.')
 
     # Variational problem solver 
     elif isinstance(args[0], ufl.classes.Equation):
