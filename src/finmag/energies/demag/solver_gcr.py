@@ -10,7 +10,9 @@ from solver_gcr_qvector_pe import PEQBuilder
 
 gcr_timings = sb.demag_timings
 
-class FemBemGCRSolver(sb.FemBemDeMagSolver,PEQBuilder):
+
+class FemBemGCRSolver(sb.FemBemDeMagSolver, PEQBuilder):
+
     """
     This approach is similar to the :py:class:FKDemag <finmag.demag.fk_demag.FKDemag>`
     approach, so we will just comment on the differences between the
@@ -176,6 +178,7 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver,PEQBuilder):
             method to assemble the vector q. Choices are "pe" for point evaluation
             or "box" for the box method.
     """
+
     def __init__(self, parameters=sb.default_parameters, degree=1, element="CG",
                  project_method='magpar', bench=False, qvector_method='pe'):
         self.parameters = parameters
@@ -186,43 +189,47 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver,PEQBuilder):
         self.qvector_method = qvector_method
 
     def setup(self, m, Ms, unit_length=1):
-        #Initialize the base class
+        # Initialize the base class
         sb.FemBemDeMagSolver.__init__(self, m, self.parameters, self.degree,
                                       self.element, self.project_method,
                                       unit_length, Ms, self.bench, True)
 
-        #Define the potentials
+        # Define the potentials
         self.phia = df.Function(self.V)
         self.phib = df.Function(self.V)
 
-        #Buffer a homogeneous Dirichlet Poisson Matrix as well as BC
-        self.phia_bc = df.DirichletBC(self.V, 0, lambda x, on_boundary: on_boundary)
+        # Buffer a homogeneous Dirichlet Poisson Matrix as well as BC
+        self.phia_bc = df.DirichletBC(
+            self.V, 0, lambda x, on_boundary: on_boundary)
         self.poisson_matrix_dirichlet = self.poisson_matrix.copy()
         self.phia_bc.apply(self.poisson_matrix_dirichlet)
 
-        #Linear Solver parameters for the 1st solve
+        # Linear Solver parameters for the 1st solve
         if self.parameters:
             method = self.parameters["poisson_solver"]["method"]
             pc = self.parameters["poisson_solver"]["preconditioner"]
         else:
             method = "default"
             pc = "default"
-        self.poisson_solver = df.KrylovSolver(self.poisson_matrix_dirichlet, method, pc)
+        self.poisson_solver = df.KrylovSolver(
+            self.poisson_matrix_dirichlet, method, pc)
 
-        #Buffer the BEM
+        # Buffer the BEM
         gcr_timings.start("build BEM", self.__class__.__name__)
         self.boundary_mesh = df.BoundaryMesh(self.m.mesh(), 'exterior', False)
         self.bem, self.b2g = compute_bem_gcr(self.boundary_mesh)
         gcr_timings.stop("build BEM", self.__class__.__name__)
 
         if self.qvector_method == "box":
-            #Buffer Surface Node Areas for the box method
-            self.surface_node_areas = df.assemble(self.v * df.ds).array() + 1e-300
+            # Buffer Surface Node Areas for the box method
+            self.surface_node_areas = df.assemble(
+                self.v * df.ds).array() + 1e-300
         elif self.qvector_method == "pe":
-            #Build boundary data for the point evaluation q method
+            # Build boundary data for the point evaluation q method
             self.build_boundary_data()
         else:
-            raise Exception("Only 'box' and 'pe' are possible qvector_method values")
+            raise Exception(
+                "Only 'box' and 'pe' are possible qvector_method values")
 
     def solve(self):
         """
@@ -230,11 +237,11 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver,PEQBuilder):
         Potential is returned, demag field stored
         """
 
-        #Solve for phia using FEM
+        # Solve for phia using FEM
         logger.debug("GCR: Solving for phi_a")
         self.phia = self.solve_phia(self.phia)
 
-        #Assemble the vector q.
+        # Assemble the vector q.
         logger.debug("GCR: Solving for phi_b on the boundary")
         gcr_timings.start("Build q vector", self.__class__.__name__)
         if self.qvector_method == "pe":
@@ -242,56 +249,61 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver,PEQBuilder):
         elif self.qvector_method == "box":
             q = self.build_vector_q(self.m.f, self.Ms, self.phia)
         else:
-            raise Exception("Only 'box' and 'pe' are possible qvector_method values")
+            raise Exception(
+                "Only 'box' and 'pe' are possible qvector_method values")
 
         # Compute phi2 on boundary using the BEM matrix
-        gcr_timings.start_next("Compute phiab on the boundary", self.__class__.__name__)
+        gcr_timings.start_next(
+            "Compute phiab on the boundary", self.__class__.__name__)
         phib_boundary = np.dot(self.bem, q[self.b2g])
 
-        #Insert the boundary data into the function phib.
-        gcr_timings.start_next("Inserting bem data into a dolfin function", self.__class__.__name__)
+        # Insert the boundary data into the function phib.
+        gcr_timings.start_next(
+            "Inserting bem data into a dolfin function", self.__class__.__name__)
         self.phib.vector()[self.b2g] = phib_boundary
         gcr_timings.stop_last()
 
-        #Solve for phib on the inside of the mesh with Fem, eq. (3)
+        # Solve for phib on the inside of the mesh with Fem, eq. (3)
         logger.debug("GCR: Solve for phi_b (laplace on the inside)")
         self.phib = self.solve_laplace_inside(self.phib)
 
-        #Add together the two potentials
+        # Add together the two potentials
         gcr_timings.start("Add phi1 and phi2", self.__class__.__name__)
         self.phi.vector()[:] = self.phia.vector() + self.phib.vector()
         gcr_timings.stop_last()
 
         return self.phi
 
-    def solve_phia(self,phia):
+    def solve_phia(self, phia):
         """
         Solve for potential phia in the Magentic region using FEM.
         """
         V = phia.function_space()
 
-        #Source term depends on m (code-block 1 - second line)
-        #So it should be recalculated at every time step.
-        f = -self.Ms * (df.div(self.m.f) * self.v) * df.dx  #Source term
+        # Source term depends on m (code-block 1 - second line)
+        # So it should be recalculated at every time step.
+        f = -self.Ms * (df.div(self.m.f) * self.v) * df.dx  # Source term
         F = df.assemble(f)
         self.phia_bc.apply(F)
 
-        #Solve for phia
+        # Solve for phia
         if self.bench:
-            bench.solve(self.poisson_matrix_dirichlet,phia.vector(), F, benchmark=True)
+            bench.solve(
+                self.poisson_matrix_dirichlet, phia.vector(), F, benchmark=True)
         else:
             gcr_timings.start("1st linear solve", self.__class__.__name__)
             self.poisson_iter = self.poisson_solver.solve(phia.vector(), F)
             gcr_timings.stop("1st linear solve", self.__class__.__name__)
         return phia
 
-    def build_vector_q(self,m,Ms,phi1):
+    def build_vector_q(self, m, Ms, phi1):
         """Get the left hand side q in the BEM equation phib = bem*qf
            using the box method. Assembly is done over the entire mesh,
            afterwards the global to boundary mapping is used to extract
            the relevant data"""
 
-        q_dot_v = df.assemble(Ms * df.dot(self.n, -m + df.grad(phi1)) * self.v * df.ds).array()
+        q_dot_v = df.assemble(
+            Ms * df.dot(self.n, -m + df.grad(phi1)) * self.v * df.ds).array()
 
         q = q_dot_v / self.surface_node_areas
         return q

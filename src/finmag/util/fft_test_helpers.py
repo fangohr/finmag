@@ -19,7 +19,7 @@ def create_test_ndt_file(dirname, t_step, t_ini, t_end, omega, alpha, debug=True
     # Use damped harmonic oscillator to create fake magnetisation dynamics
     mx = exp(-ts * 1e8 / alpha) * sin(omega * ts)
     my = exp(-ts * 1e8 / alpha) * cos(omega * ts)
-    mz = 1 - sqrt(mx**2 + my**2)
+    mz = 1 - sqrt(mx ** 2 + my ** 2)
     data = np.array([ts, mx, my, mz]).T
 
     if debug:
@@ -35,8 +35,10 @@ def create_test_ndt_file(dirname, t_step, t_ini, t_end, omega, alpha, debug=True
     # which are required by the file format.
     ndt_filename = os.path.join(dirname, 'fake_relaxation.ndt')
     np.savetxt(ndt_filename, data)
-    sp.check_call("sed -i '1 i # time  m_x  m_y  m_z' ./fake_relaxation.ndt", shell=True)
-    sp.check_call("sed -i '2 i # <s>   <>   <>   <>' ./fake_relaxation.ndt", shell=True)
+    sp.check_call(
+        "sed -i '1 i # time  m_x  m_y  m_z' ./fake_relaxation.ndt", shell=True)
+    sp.check_call(
+        "sed -i '2 i # <s>   <>   <>   <>' ./fake_relaxation.ndt", shell=True)
 
     return ndt_filename
 
@@ -55,7 +57,7 @@ def create_test_npy_files(dirname, t_step, t_ini, t_end, omega, alpha, num_verti
     # Use damped harmonic oscillator to create fake magnetisation dynamics
     mx = exp(-ts * 1e8 / alpha) * sin(omega * ts)
     my = exp(-ts * 1e8 / alpha) * cos(omega * ts)
-    mz = 1 - sqrt(mx**2 + my**2)
+    mz = 1 - sqrt(mx ** 2 + my ** 2)
 
     # Write the data to a series of .npy files
     a = np.zeros((3, num_vertices))
@@ -85,11 +87,11 @@ def create_test_npy_files_with_two_regions(dirname, t_step, t_ini, t_end, omega1
     # Use damped harmonic oscillator to create fake magnetisation dynamics
     mx1 = exp(-ts * 1e8 / alpha1) * sin(omega1 * ts)
     my1 = exp(-ts * 1e8 / alpha1) * cos(omega1 * ts)
-    mz1 = 1 - sqrt(mx1**2 + my1**2)
+    mz1 = 1 - sqrt(mx1 ** 2 + my1 ** 2)
 
     mx2 = exp(-ts * 1e8 / alpha2) * sin(omega2 * ts)
     my2 = exp(-ts * 1e8 / alpha2) * cos(omega2 * ts)
-    mz2 = 1 - sqrt(mx2**2 + my2**2)
+    mz2 = 1 - sqrt(mx2 ** 2 + my2 ** 2)
 
     # Write the data to a series of .npy files
     N = num_vertices1 + num_vertices2

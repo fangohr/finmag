@@ -4,10 +4,12 @@ from finmag.energies import Exchange, Demag
 
 epsilon = 1e-16
 
+
 def test_current_time():
     size = 20e-9
     simplices = 4
-    mesh = df.BoxMesh(0, 0, 0, size, size, size, simplices, simplices, simplices)
+    mesh = df.BoxMesh(
+        0, 0, 0, size, size, size, simplices, simplices, simplices)
 
     Ms = 860e3
     A = 13.0e-12
@@ -17,7 +19,9 @@ def test_current_time():
     sim.add(Exchange(A))
     sim.add(Demag())
 
-    t = 0.0; t_max = 1e-10; dt = 1e-12;
+    t = 0.0
+    t_max = 1e-10
+    dt = 1e-12
 
     while t <= t_max:
         t += dt

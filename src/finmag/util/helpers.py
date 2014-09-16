@@ -9,9 +9,9 @@ from finmag.util import ansistrm
 from threading import Timer
 from distutils.version import LooseVersion
 import matplotlib as mpl
-#try to use 'Agg' as backend, we can remove it if something wrong.
-#mpl.use("Agg")
-#this is the first place to import pyplot in finmag
+# try to use 'Agg' as backend, we can remove it if something wrong.
+# mpl.use("Agg")
+# this is the first place to import pyplot in finmag
 import matplotlib.pyplot as plt
 import subprocess as sp
 import shlex
@@ -98,7 +98,9 @@ def set_logging_level(level):
 
 
 supported_color_schemes = ansistrm.level_maps.keys()
-supported_color_schemes_str = ", ".join(["'{}'".format(s) for s in supported_color_schemes])
+supported_color_schemes_str = ", ".join(
+    ["'{}'".format(s) for s in supported_color_schemes])
+
 
 def set_color_scheme(color_scheme):
     """
@@ -113,13 +115,15 @@ def set_color_scheme(color_scheme):
 
     """
     if color_scheme not in supported_color_schemes:
-        raise ValueError("Color scheme must be one of: {}".format(supported_color_schemes_str))
+        raise ValueError(
+            "Color scheme must be one of: {}".format(supported_color_schemes_str))
     for h in logger.handlers:
         if not isinstance(h, ansistrm.ColorizingStreamHandler):
             continue
         h.level_map = ansistrm.level_maps[color_scheme]
 # Insert supported color schemes into docstring
-set_color_scheme.__doc__ = set_color_scheme.__doc__.format(supported_color_schemes_str)
+set_color_scheme.__doc__ = set_color_scheme.__doc__.format(
+    supported_color_schemes_str)
 
 
 def start_logging_to_file(filename, formatter=None, mode='a', level=logging.DEBUG, rotating=False, maxBytes=0, backupCount=1):
@@ -161,7 +165,8 @@ def start_logging_to_file(filename, formatter=None, mode='a', level=logging.DEBU
     dirname = os.path.dirname(filename)
     if not os.path.exists(dirname):
         os.makedirs(dirname)
-    h = logging.handlers.RotatingFileHandler(filename, mode=mode, maxBytes=maxBytes, backupCount=backupCount)
+    h = logging.handlers.RotatingFileHandler(
+        filename, mode=mode, maxBytes=maxBytes, backupCount=backupCount)
     h.setLevel(level)
     h.setFormatter(formatter)
     if mode == 'a':
@@ -207,15 +212,19 @@ def get_hg_revision_info(repo_dir, revision='tip'):
     try:
         os.chdir(os.path.expanduser(repo_dir))
     except OSError:
-        raise ValueError("Expected a valid repository, but directory does not exist: '{}'".format(repo_dir))
+        raise ValueError(
+            "Expected a valid repository, but directory does not exist: '{}'".format(repo_dir))
 
     try:
-        rev_nr = int(sp.check_output(['hg', 'id', '-n', '-r', revision]).strip())
+        rev_nr = int(
+            sp.check_output(['hg', 'id', '-n', '-r', revision]).strip())
         rev_id = sp.check_output(['hg', 'id', '-i', '-r', revision]).strip()
         #rev_log = sp.check_output(['hg', 'log', '-r', revision]).strip()
-        rev_date = sp.check_output(['hg', 'log', '-r', revision, '--template', '{date|isodate}']).split()[0]
+        rev_date = sp.check_output(
+            ['hg', 'log', '-r', revision, '--template', '{date|isodate}']).split()[0]
     except sp.CalledProcessError:
-        raise ValueError("Invalid revision '{}', or invalid Mercurial repository: '{}'".format(revision, repo_dir))
+        raise ValueError(
+            "Invalid revision '{}', or invalid Mercurial repository: '{}'".format(revision, repo_dir))
 
     os.chdir(cwd_bak)
     return rev_nr, rev_id, rev_date
@@ -242,9 +251,11 @@ def binary_tarball_name(repo_dir, revision='tip', suffix=''):
     suffix :  string to be appended to the tarball
 
     """
-    # XXX TODO: Should we also check whether the repo is actually a Finmag repository?!?
+    # XXX TODO: Should we also check whether the repo is actually a Finmag
+    # repository?!?
     rev_nr, rev_id, rev_date = get_hg_revision_info(repo_dir, revision)
-    tarball_name = "FinMag-dist__{}__rev{}_{}{}.tar.bz2".format(rev_date, rev_nr, rev_id, suffix)
+    tarball_name = "FinMag-dist__{}__rev{}_{}{}.tar.bz2".format(
+        rev_date, rev_nr, rev_id, suffix)
     return tarball_name
 
 
@@ -343,6 +354,7 @@ def components(vs):
     """
     return vs.view().reshape((3, -1))
 
+
 def vectors(vs):
     """
     For a list of vectors of the form [x0, ..., xn, y0, ..., yn, z0, ..., zn]
@@ -350,8 +362,9 @@ def vectors(vs):
     [[x0, y0, z0], ..., [xn, yn, zn]].
 
     """
-    number_of_nodes = len(vs)/3
+    number_of_nodes = len(vs) / 3
     return vs.view().reshape((number_of_nodes, -1), order="F")
+
 
 def for_dolfin(vs):
     """
@@ -361,6 +374,7 @@ def for_dolfin(vs):
     and returns [x0, ..., xn, y0, ..., yn, z0, ..., zn].
     """
     return rows_to_columns(vs).flatten()
+
 
 def norm(vs):
     """
@@ -374,7 +388,7 @@ def norm(vs):
         vs = np.array(vs)
     if vs.shape == (3, ):
         return np.linalg.norm(vs)
-    return np.sqrt(np.add.reduce(vs*vs, axis=1))
+    return np.sqrt(np.add.reduce(vs * vs, axis=1))
 
 
 def crossprod(v, w):
@@ -388,7 +402,8 @@ def crossprod(v, w):
 
     """
     if df.parameters.reorder_dofs_serial != False:
-        raise RuntimeError("Please ensure that df.parameters.reorder_dofs_serial is set to False.")
+        raise RuntimeError(
+            "Please ensure that df.parameters.reorder_dofs_serial is set to False.")
     assert(v.ndim == 1 and w.ndim == 1)
     a = v.reshape(3, -1)
     b = w.reshape(3, -1)
@@ -403,19 +418,21 @@ def fnormalise(arr):
     provides: [x0, ..., xn, y0, ..., yn, z0, ..., zn].
 
     """
-    a = arr.astype(np.float64) # this copies
+    a = arr.astype(np.float64)  # this copies
 
     a = a.reshape((3, -1))
-    a /= np.sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2])
+    a /= np.sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2])
     a = a.ravel()
     return a
+
 
 def angle(v1, v2):
     """
     Returns the angle between two three-dimensional vectors.
 
     """
-    return np.arccos(np.dot(v1, v2) / (norm(v1)*norm(v2)))
+    return np.arccos(np.dot(v1, v2) / (norm(v1) * norm(v2)))
+
 
 def rows_to_columns(arr):
     """
@@ -424,6 +441,7 @@ def rows_to_columns(arr):
 
     """
     return arr.reshape(arr.size, order="F").reshape((3, -1))
+
 
 def quiver(f, mesh, filename=None, title="", **kwargs):
     """
@@ -459,7 +477,7 @@ def quiver(f, mesh, filename=None, title="", **kwargs):
     # fill the rest up with zeros.
     codimension = 3 - r.shape[0]
     if codimension > 0:
-        r = np.append(r, [np.zeros(r[0].shape[0])]*codimension, axis=0)
+        r = np.append(r, [np.zeros(r[0].shape[0])] * codimension, axis=0)
 
     if f.size == f.shape[0]:
         # dolfin provides a flat numpy array, but we would like
@@ -467,7 +485,7 @@ def quiver(f, mesh, filename=None, title="", **kwargs):
         f = components(f)
 
     figure = mlab.figure(bgcolor=(1, 1, 1), fgcolor=(0, 0, 0))
-    q = mlab.quiver3d(*(tuple(r)+tuple(f)), figure=figure, **kwargs)
+    q = mlab.quiver3d(*(tuple(r) + tuple(f)), figure=figure, **kwargs)
     q.scene.isometric_view()
     mlab.title(title)
     mlab.axes(figure=figure)
@@ -478,19 +496,22 @@ def quiver(f, mesh, filename=None, title="", **kwargs):
         mlab.show()
     mlab.close(all=True)
 
+
 def boxplot(arr, filename, **kwargs):
     plt.boxplot(list(arr), **kwargs)
     plt.savefig(filename)
 
+
 def stats(arr, axis=1):
-    median  = np.median(arr)
+    median = np.median(arr)
     average = np.mean(arr)
     minimum = np.nanmin(arr)
     maximum = np.nanmax(arr)
-    spread  = np.std(arr)
-    stats= "    min, median, max = {0}, {1}, {2}\n    mean, std = {3}, {4}".format(
-            minimum, median, maximum, average, spread)
+    spread = np.std(arr)
+    stats = "    min, median, max = {0}, {1}, {2}\n    mean, std = {3}, {4}".format(
+        minimum, median, maximum, average, spread)
     return stats
+
 
 def frexp10(x, method="string"):
     """
@@ -498,12 +519,13 @@ def frexp10(x, method="string"):
     such that x == m * 10 ** e.
 
     """
-    if method=="math":
+    if method == "math":
         lb10 = math.log10(x)
         return 10 ** (lb10 - int(lb10)), int(lb10)
     else:
         nb = ("%e" % x).split("e")
         return float(nb[0]), int(nb[1])
+
 
 def tex_sci(x, p=2):
     """
@@ -512,6 +534,7 @@ def tex_sci(x, p=2):
     """
     m, e = frexp10(x)
     return "{:.{precision}f} \\times 10^{{{}}}".format(m, e, precision=p)
+
 
 def sphinx_sci(x, p=2):
     """
@@ -570,7 +593,8 @@ def verify_function_space_type(function_space, family, degree, dim):
                 family_and_degree_are_correct)
     else:
         # `function_space` should be a dolfin.VectorFunctionSpace
-        value_shape = ufl_element.value_shape()  # for VectorFunctionSpace this should be a 1-tuple of the form (dim,)
+        # for VectorFunctionSpace this should be a 1-tuple of the form (dim,)
+        value_shape = ufl_element.value_shape()
         if len(value_shape) != 1:
             return False
         else:
@@ -579,14 +603,16 @@ def verify_function_space_type(function_space, family, degree, dim):
                     dim == value_shape[0])
 
 
-def mesh_equal(mesh1,mesh2):
-    cds1=mesh1.coordinates()
-    cds2=mesh2.coordinates()
-    return np.array_equal(cds1,cds2)
+def mesh_equal(mesh1, mesh2):
+    cds1 = mesh1.coordinates()
+    cds2 = mesh2.coordinates()
+    return np.array_equal(cds1, cds2)
 
 # TODO: In dolfin 1.2 if the pbc are used, the degree of freedom for functionspace
 #       is different from the number of  mesh coordinates, so we need to consider this
 #       problem as well
+
+
 def vector_valued_function(value, mesh_or_space, normalise=False, **kwargs):
     """
     Create a vector-valued function on the given mesh or VectorFunctionSpace.
@@ -649,8 +675,8 @@ def vector_valued_function(value, mesh_or_space, normalise=False, **kwargs):
         else:
             #fun = df.Function(S3)
             #vec = np.empty((fun.vector().size()/3, 3))
-            #vec[:] = value # using broadcasting
-            #fun.vector().set_local(vec.transpose().reshape(-1))
+            # vec[:] = value # using broadcasting
+            # fun.vector().set_local(vec.transpose().reshape(-1))
             expr = df.Constant(list(value))
             fun = df.interpolate(expr, S3)
 
@@ -663,11 +689,12 @@ def vector_valued_function(value, mesh_or_space, normalise=False, **kwargs):
             value = value.astype(np.double)
         fun.vector().set_local(value)
 
-    #if it's a normal function, we wrapper it into a dolfin expression
+    # if it's a normal function, we wrapper it into a dolfin expression
     elif hasattr(value, '__call__'):
 
         class HelperExpression(df.Expression):
-            def __init__(self,value):
+
+            def __init__(self, value):
                 super(HelperExpression, self).__init__()
                 self.fun = value
 
@@ -693,6 +720,8 @@ def vector_valued_function(value, mesh_or_space, normalise=False, **kwargs):
 # to avoid code duplication (but only if it doesn't obfuscate the
 # interface and it is clear how to distinguish whether a Lagrange or
 # DG function space should be used).
+
+
 def scalar_valued_function(value, mesh_or_space):
     """
     Create a scalar function on the given mesh or VectorFunctionSpace.
@@ -723,18 +752,19 @@ def scalar_valued_function(value, mesh_or_space):
 
     if isinstance(value, (df.Constant, df.Expression)):
         fun = df.interpolate(value, S1)
-    elif isinstance(value, (np.ndarray,list)):
+    elif isinstance(value, (np.ndarray, list)):
         fun = df.Function(S1)
-        assert(len(value)==fun.vector().size())
+        assert(len(value) == fun.vector().size())
         fun.vector().set_local(value)
-    elif isinstance(value,(int,float,long)):
+    elif isinstance(value, (int, float, long)):
         fun = df.Function(S1)
-        fun.vector()[:]=value
+        fun.vector()[:] = value
     elif hasattr(value, '__call__'):
 
-        #if it's a normal function, we wrapper it into a dolfin expression
+        # if it's a normal function, we wrapper it into a dolfin expression
         class HelperExpression(df.Expression):
-            def __init__(self,value):
+
+            def __init__(self, value):
                 super(HelperExpression, self).__init__()
                 self.fun = value
 
@@ -781,24 +811,25 @@ def scalar_valued_dg_function(value, mesh_or_space):
 
     if isinstance(value, (df.Constant, df.Expression)):
         fun = df.interpolate(value, dg)
-    elif isinstance(value, (np.ndarray,list)):
+    elif isinstance(value, (np.ndarray, list)):
         fun = df.Function(dg)
-        assert(len(value)==fun.vector().size())
+        assert(len(value) == fun.vector().size())
         fun.vector().set_local(value)
-    elif isinstance(value,(int,float,long)):
+    elif isinstance(value, (int, float, long)):
         fun = df.Function(dg)
-        fun.vector()[:]=value
+        fun.vector()[:] = value
     elif isinstance(value, df.Function):
-        mesh1=value.function_space().mesh()
+        mesh1 = value.function_space().mesh()
         fun = df.Function(dg)
-        if mesh_equal(mesh,mesh1) and value.vector().size()==fun.vector().size():
-            fun=value
+        if mesh_equal(mesh, mesh1) and value.vector().size() == fun.vector().size():
+            fun = value
         else:
             raise RuntimeError("Meshes are not compatible for given function.")
     elif hasattr(value, '__call__'):
 
         class HelperExpression(df.Expression):
-            def __init__(self,value):
+
+            def __init__(self, value):
                 super(HelperExpression, self).__init__()
                 self.fun = value
 
@@ -850,28 +881,29 @@ def vector_valued_dg_function(value, mesh_or_space, normalise=False):
             fun = df.interpolate(expr, dg)
         else:
             fun = df.Function(dg)
-            vec = np.empty((fun.vector().size()/3, 3))
-            vec[:] = value # using broadcasting
+            vec = np.empty((fun.vector().size() / 3, 3))
+            vec[:] = value  # using broadcasting
 
             fun.vector().set_local(vec.transpose().reshape(-1))
-    elif isinstance(value, (np.ndarray,list)):
+    elif isinstance(value, (np.ndarray, list)):
         fun = df.Function(dg)
-        assert(len(value)==fun.vector().size())
+        assert(len(value) == fun.vector().size())
         fun.vector().set_local(value)
-    elif isinstance(value,(int,float,long)):
+    elif isinstance(value, (int, float, long)):
         fun = df.Function(dg)
-        fun.vector()[:]=value
+        fun.vector()[:] = value
     elif isinstance(value, df.Function):
-        mesh1=value.function_space().mesh()
+        mesh1 = value.function_space().mesh()
         fun = df.Function(dg)
-        if mesh_equal(mesh,mesh1) and value.vector().size()==fun.vector().size():
-            fun=value
+        if mesh_equal(mesh, mesh1) and value.vector().size() == fun.vector().size():
+            fun = value
         else:
             raise RuntimeError("Meshes are not compatible for given function.")
     elif hasattr(value, '__call__'):
 
         class HelperExpression(df.Expression):
-            def __init__(self,value):
+
+            def __init__(self, value):
                 super(HelperExpression, self).__init__()
                 self.fun = value
 
@@ -942,11 +974,14 @@ def restriction(mesh, submesh):
     try:
         # This is the correct syntax now, see:
         # http://fenicsproject.org/qa/185/entity-mapping-between-a-submesh-and-the-parent-mesh
-        parent_vertex_indices = submesh.data().array('parent_vertex_indices', 0)
+        parent_vertex_indices = submesh.data().array(
+            'parent_vertex_indices', 0)
     except RuntimeError:
         # Legacy syntax (for dolfin <= 1.2 or so).
-        # TODO: This should be removed in the future once dolfin 1.3 is released!
-        parent_vertex_indices = submesh.data().mesh_function('parent_vertex_indices').array()
+        # TODO: This should be removed in the future once dolfin 1.3 is
+        # released!
+        parent_vertex_indices = submesh.data().mesh_function(
+            'parent_vertex_indices').array()
 
     V = df.FunctionSpace(mesh, 'CG', 1)
     V_submesh = df.FunctionSpace(submesh, 'CG', 1)
@@ -968,7 +1003,8 @@ def restriction(mesh, submesh):
             elif f.ndim == 2:
                 return f[:, parent_vertex_indices]
             else:
-                raise TypeError("Array must be 1- or 2-dimensional. Got: dim={}".format(f.ndim))
+                raise TypeError(
+                    "Array must be 1- or 2-dimensional. Got: dim={}".format(f.ndim))
         else:
             assert(isinstance(f, df.Function))
             f_arr = f.vector().array()
@@ -979,7 +1015,7 @@ def restriction(mesh, submesh):
     return restrict_to_submesh
 
 
-def mark_subdomain_by_function(fun,mesh_or_space,domain_index,subdomains):
+def mark_subdomain_by_function(fun, mesh_or_space, domain_index, subdomains):
     """
     Mark the subdomains with given index if user provide a region by function, such as
 
@@ -997,15 +1033,15 @@ def mark_subdomain_by_function(fun,mesh_or_space,domain_index,subdomains):
         mesh = mesh_or_space
 
     if hasattr(fun, '__call__'):
-        cds=mesh.coordinates()
+        cds = mesh.coordinates()
 
-        index=0
+        index = 0
         for cell in df.cells(mesh):
-            p1,p2,p3,p4=cell.entities(0)
-            coord=(cds[p1]+cds[p2]+cds[p3]+cds[p4])/4.0
+            p1, p2, p3, p4 = cell.entities(0)
+            coord = (cds[p1] + cds[p2] + cds[p3] + cds[p4]) / 4.0
             if fun(coord):
                 subdomains.array()[index] = domain_index
-            index+=1
+            index += 1
 
     else:
         raise AttributeError
@@ -1047,7 +1083,8 @@ def plot_hysteresis_loop(H_vals, m_vals, style='x-', add_point_labels=False, poi
                    can also be a list of files
     """
     if not all([isinstance(x, (types.IntType, types.FloatType)) for x in m_vals]):
-        raise ValueError("m_vals must be a list of scalar values, got: {}".format(m_vals))
+        raise ValueError(
+            "m_vals must be a list of scalar values, got: {}".format(m_vals))
 
     fig = plt.figure(figsize=figsize)
     ax = fig.gca()
@@ -1057,44 +1094,49 @@ def plot_hysteresis_loop(H_vals, m_vals, style='x-', add_point_labels=False, poi
 
     ax.plot(H_vals, m_vals, style)
 
-    ax.set_xlim(-1.1*H_max, 1.1*H_max)
+    ax.set_xlim(-1.1 * H_max, 1.1 * H_max)
     ax.set_ylim((-1.2, 1.2))
 
     if point_labels is None:
         point_labels = xrange(len(H_vals))
     # Convert point_labels into a dictionary where the keys are the point indices
     # and the values are the respective labels to be used.
-    point_labels = dict(map(lambda i: i if isinstance(i, tuple) else (i, str(i)), point_labels))
+    point_labels = dict(
+        map(lambda i: i if isinstance(i, tuple) else (i, str(i)), point_labels))
     if add_point_labels:
         for i in xrange(len(H_vals)):
             if point_labels.has_key(i):
                 x = H_vals[i]
                 y = m_vals[i]
-                ax.annotate(point_labels[i], xy=(x, y), xytext=(-10, 5) if i<N else (0, -15), textcoords='offset points')
+                ax.annotate(point_labels[i], xy=(
+                    x, y), xytext=(-10, 5) if i < N else (0, -15), textcoords='offset points')
 
     # draw the info box
     if infobox != []:
         box_text = ""
         for elt in infobox:
             if isinstance(elt, types.StringType):
-                box_text += elt+'\n'
+                box_text += elt + '\n'
             else:
                 try:
                     name, value = elt
                     box_text += "{} = {}\n".format(name, value)
                 except ValueError:
-                    raise ValueError, "All list elements in 'infobox' must be either strings or pairs of the form (name, value). Got: '{}'".format(elt)
+                    raise ValueError(
+                        "All list elements in 'infobox' must be either strings or pairs of the form (name, value). Got: '{}'".format(elt))
         box_text = box_text.rstrip()
 
         if infobox_loc not in ["top left", "top right", "bottom left", "bottom right"]:
-            raise ValueError("'infobox_loc' must be one of 'top left', 'top right', 'bottom left', 'bottom right'.")
+            raise ValueError(
+                "'infobox_loc' must be one of 'top left', 'top right', 'bottom left', 'bottom right'.")
 
         vpos, hpos = infobox_loc.split()
         x = H_max if hpos == "right" else -H_max
         y = 1.0 if vpos == "top" else -1.0
 
         ax.text(x, y, box_text, size=12,
-                horizontalalignment=hpos, verticalalignment=vpos, multialignment="left", #transform = ax.transAxes,
+                # transform = ax.transAxes,
+                horizontalalignment=hpos, verticalalignment=vpos, multialignment="left",
                 bbox=dict(boxstyle="round, pad=0.3", facecolor="white", edgecolor="green", linewidth=1))
 
     ax.set_xlabel(xlabel)
@@ -1103,11 +1145,13 @@ def plot_hysteresis_loop(H_vals, m_vals, style='x-', add_point_labels=False, poi
     plt.tight_layout()
 
     if filename:
-        filenames = [filename] if isinstance(filename, basestring) else filename
+        filenames = [filename] if isinstance(
+            filename, basestring) else filename
 
         for name in filenames:
             create_missing_directory_components(name)
             fig.savefig(name)
+
 
 def duplicate_output_to_file(filename, add_timestamp=False, timestamp_fmt='__%Y-%m-%d_%H.%M.%S'):
     """
@@ -1124,7 +1168,8 @@ def duplicate_output_to_file(filename, add_timestamp=False, timestamp_fmt='__%Y-
     create_missing_directory_components(filename)
     if add_timestamp:
         name, ext = os.path.splitext(filename)
-        filename = '{}{}{}'.format(name, datetime.strftime(datetime.now(), timestamp_fmt), ext)
+        filename = '{}{}{}'.format(
+            name, datetime.strftime(datetime.now(), timestamp_fmt), ext)
 
     logger.debug("Duplicating output to file '{}'".format(filename))
     sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
@@ -1132,6 +1177,7 @@ def duplicate_output_to_file(filename, add_timestamp=False, timestamp_fmt='__%Y-
     tee = sp.Popen(["tee", filename], stdin=sp.PIPE)
     os.dup2(tee.stdin.fileno(), sys.stdout.fileno())
     os.dup2(tee.stdin.fileno(), sys.stderr.fileno())
+
 
 def cartesian_to_spherical(vector):
     """
@@ -1147,6 +1193,7 @@ def cartesian_to_spherical(vector):
     phi = np.arctan2(unit_vector[1], unit_vector[0])
     return np.array((r, theta, phi))
 
+
 def spherical_to_cartesian(v):
     """
     Converts spherical coordinates to cartesian.
@@ -1161,6 +1208,7 @@ def spherical_to_cartesian(v):
     z = r * np.cos(theta)
     return np.array((x, y, z))
 
+
 def pointing_upwards((x, y, z)):
     """
     Returns a boolean that is true when the vector is pointing upwards.
@@ -1169,6 +1217,7 @@ def pointing_upwards((x, y, z)):
     """
     _, theta, _ = cartesian_to_spherical((x, y, z))
     return theta <= (np.pi / 4)
+
 
 def pointing_downwards((x, y, z)):
     """
@@ -1212,7 +1261,8 @@ def mesh_functions_allclose(f1, f2, fun_mask=None, rtol=1e-05, atol=1e-08):
     #            once I understand how to properly deal with dolfin Functions, in
     #            particular how to use the product of funtions.
     if f1.function_space() != f2.function_space():
-        raise ValueError("Both functions must be defined on the same FunctionSpace")
+        raise ValueError(
+            "Both functions must be defined on the same FunctionSpace")
     V = f1.function_space()
     pts = V.mesh().coordinates()
 
@@ -1223,7 +1273,7 @@ def mesh_functions_allclose(f1, f2, fun_mask=None, rtol=1e-05, atol=1e-08):
 
     v1 = f1.vector()
     v2 = f2.vector()
-    return np.allclose(np.fabs(v1*mask - v2*mask), 0.0, rtol=rtol, atol=atol)
+    return np.allclose(np.fabs(v1 * mask - v2 * mask), 0.0, rtol=rtol, atol=atol)
 
 
 def piecewise_on_subdomains(mesh, mesh_function, fun_vals):
@@ -1315,7 +1365,7 @@ def vector_field_from_dolfin_function(f, xlims=None, ylims=None, zlims=None,
         raise NotImplementedError("Please provide specific values "
                                   "for nx, ny, nz for now.")
 
-    X, Y, Z = np.mgrid[xmin:xmax:nx*1j, ymin:ymax:ny*1j, zmin:zmax:nz*1j]
+    X, Y, Z = np.mgrid[xmin:xmax:nx * 1j, ymin:ymax:ny * 1j, zmin:zmax:nz * 1j]
 
     U = np.empty((nx, ny, nz))
     V = np.empty((nx, ny, nz))
@@ -1324,7 +1374,7 @@ def vector_field_from_dolfin_function(f, xlims=None, ylims=None, zlims=None,
     for i in xrange(nx):
         for j in xrange(ny):
             for k in xrange(nz):
-                val = f(X[i,j,k], Y[i, j, k], Z[i, j, k])
+                val = f(X[i, j, k], Y[i, j, k], Z[i, j, k])
                 U[i, j, k] = val[0]
                 V[i, j, k] = val[1]
                 W[i, j, k] = val[2]
@@ -1439,7 +1489,8 @@ def probe_along_line(dolfin_function, pt_start, pt_end, N, apply_func=None):
     """
     pt_start = np.asarray(pt_start)
     pt_end = np.asarray(pt_end)
-    pts = np.array([(1 - t) *  pt_start + t * pt_end for t in np.linspace(0, 1, N)])
+    pts = np.array(
+        [(1 - t) * pt_start + t * pt_end for t in np.linspace(0, 1, N)])
     return probe(dolfin_function, pts, apply_func=apply_func)
 
 
@@ -1453,7 +1504,7 @@ def compute_dmdt(t0, m0, t1, m1):
 
     """
     dm = (m1 - m0).reshape((3, -1))
-    max_dm = np.max(np.sqrt(np.sum(dm**2, axis=0))) # max of L2-norm
+    max_dm = np.max(np.sqrt(np.sum(dm ** 2, axis=0)))  # max of L2-norm
     dt = abs(t1 - t0)
     max_dmdt = max_dm / dt
     return max_dmdt
@@ -1492,7 +1543,7 @@ def average_field(field_vals):
     """
     assert field_vals.ndim == 1
 
-    field_vals.shape = (3,-1)
+    field_vals.shape = (3, -1)
     av = np.average(field_vals, axis=1)
     field_vals.shape = (-1,)
     return av
@@ -1509,22 +1560,22 @@ def save_dg_fun(fun, name='unnamed.vtk', dataname='m', binary=False):
     mesh = funspace.mesh()
 
     points = mesh.coordinates()
-    tetras = np.array(mesh.cells(),dtype=np.int)
+    tetras = np.array(mesh.cells(), dtype=np.int)
 
     grid = pyvtk.UnstructuredGrid(points,
-                                  tetra = tetras)
+                                  tetra=tetras)
 
     m = fun.vector().array()
 
-    m.shape=(3,-1)
+    m.shape = (3, -1)
     print m
-    data=pyvtk.CellData(pyvtk.Vectors(np.transpose(m)))
-    m.shape=(-1,)
+    data = pyvtk.CellData(pyvtk.Vectors(np.transpose(m)))
+    m.shape = (-1,)
 
-    vtk = pyvtk.VtkData(grid,data,dataname)
+    vtk = pyvtk.VtkData(grid, data, dataname)
 
     if binary:
-        vtk.tofile(name,'binary')
+        vtk.tofile(name, 'binary')
     else:
         vtk.tofile(name)
 
@@ -1542,7 +1593,6 @@ def save_dg_fun_points(fun, name='unnamed.vtk', dataname='m', binary=False):
     for cell in df.cells(mesh):
         points.append(V.dofmap().tabulate_coordinates(cell)[0])
 
-
     verts = [i for i in range(len(points))]
 
     grid = pyvtk.UnstructuredGrid(points,
@@ -1550,15 +1600,14 @@ def save_dg_fun_points(fun, name='unnamed.vtk', dataname='m', binary=False):
 
     m = fun.vector().array()
 
-    m.shape=(3,-1)
-    data=pyvtk.PointData(pyvtk.Vectors(np.transpose(m),dataname))
-    m.shape=(-1,)
+    m.shape = (3, -1)
+    data = pyvtk.PointData(pyvtk.Vectors(np.transpose(m), dataname))
+    m.shape = (-1,)
 
-
-    vtk = pyvtk.VtkData(grid,data, 'Generated by Finmag')
+    vtk = pyvtk.VtkData(grid, data, 'Generated by Finmag')
 
     if binary:
-        vtk.tofile(name,'binary')
+        vtk.tofile(name, 'binary')
     else:
         vtk.tofile(name)
 
@@ -1732,15 +1781,16 @@ def vec2str(a, fmt='{}', delims='()', sep=', '):
     if a is None:
         res = 'None'
     else:
-       try:
-           ldelim = delims[0]
-       except IndexError:
-           ldelim = ""
-       try:
-           rdelim = delims[1]
-       except IndexError:
-           rdelim = ldelim
-       res = ("{ldelim}{fmt}{sep}{fmt}{sep}{fmt}{rdelim}".format(fmt=fmt, ldelim=ldelim, rdelim=rdelim, sep=sep)).format(a[0], a[1], a[2])
+        try:
+            ldelim = delims[0]
+        except IndexError:
+            ldelim = ""
+        try:
+            rdelim = delims[1]
+        except IndexError:
+            rdelim = ldelim
+        res = ("{ldelim}{fmt}{sep}{fmt}{sep}{fmt}{rdelim}".format(
+            fmt=fmt, ldelim=ldelim, rdelim=rdelim, sep=sep)).format(a[0], a[1], a[2])
     return res
 
 
@@ -1773,17 +1823,20 @@ def apply_vertexwise(f, *args):
     # XXX TODO: Some of this is horribly inefficient. Should clean it up...
     mesh = args[0].function_space().mesh()
     # XXX TODO: the following check(s) seems to fail even if the meshes are the same. How to do this properly in dolfin?
-    #assert(all((mesh == u.function_space().mesh() for u in args)))  # check that all meshes coincide
-    #assert(all(u.function_space().mesh() == u.function_space().mesh() for (u, v) in pairwise(args)))  # check that all meshes coincide
+    # assert(all((mesh == u.function_space().mesh() for u in args)))  # check that all meshes coincide
+    # assert(all(u.function_space().mesh() == u.function_space().mesh() for
+    # (u, v) in pairwise(args)))  # check that all meshes coincide
 
     # Extract the array for each dolfin.Function
     aa = [u.vector().array() for u in args]
     #V = args[0].function_space()
-    #assert(all([V == a.function_space() for a in aa]))  # XXX TODO: how to deal with functions defined on different function spaces?!?
+    # assert(all([V == a.function_space() for a in aa]))  # XXX TODO: how to
+    # deal with functions defined on different function spaces?!?
 
     # Reshape each array according to the dimension of the VectorFunctionSpace
     dims = [u.domain().geometric_dimension() for u in args]
-    aa_reshaped = [a.reshape(dim, -1).T for (a, dim) in itertools.izip(aa, dims)]
+    aa_reshaped = [
+        a.reshape(dim, -1).T for (a, dim) in itertools.izip(aa, dims)]
 
     # Evaluate f on successive rows of the reshaped arrays
     aa_evaluated = [f(*args) for args in itertools.izip(*aa_reshaped)]
@@ -1798,13 +1851,15 @@ def apply_vertexwise(f, *args):
         W = df.FunctionSpace(mesh, 'CG', 1)
     else:
         assert(all(dim_out == len(x) for x in aa_evaluated))
-        W = df.VectorFunctionSpace(mesh, 'CG', 1, dim=dim_out)  # XXX TODO: should we use df.FunctionSpace if dim_out == 1 ?
+        # XXX TODO: should we use df.FunctionSpace if dim_out == 1 ?
+        W = df.VectorFunctionSpace(mesh, 'CG', 1, dim=dim_out)
     res = df.Function(W)
     res.vector().set_local(np.array(aa_evaluated).T.reshape(-1))
     return res
 
 
 class TemporaryDirectory(object):
+
     def __init__(self, keep=False):
         self.keep = keep
 
@@ -1885,7 +1940,8 @@ def jpg2avi(jpg_filename, outfilename=None, duration=1, fps=25):
 
     """
     if not jpg_filename.endswith('.jpg'):
-        raise ValueError("jpg_filename must end in '.jpg'. Got: '{}'".format(jpg_filename))
+        raise ValueError(
+            "jpg_filename must end in '.jpg'. Got: '{}'".format(jpg_filename))
 
     pattern = re.sub('\.jpg$', '*.jpg', jpg_filename)
     pattern_escaped = re.sub('\.jpg$', '\*.jpg', jpg_filename)
@@ -1903,20 +1959,22 @@ def jpg2avi(jpg_filename, outfilename=None, duration=1, fps=25):
         mencoder_options = "vbitrate=2160000:mbd=2:keyint=132:v4mv:vqmin=3:lumi_mask=0.07:dark_mask=0.2:mpeg_quant:scplx_mask=0.1:tcplx_mask=0.1:naq"
         sh.mencoder('-ovc', 'lavc', '-lavcopts',
                     'vcodec=mpeg4:vpass=1:' + mencoder_options,
-                    '-mf', 'type=jpg:fps={}'.format(fps/duration), '-nosound',
+                    '-mf', 'type=jpg:fps={}'.format(fps /
+                                                    duration), '-nosound',
                     '-o', '/dev/null', 'mf://' + pattern)
         sh.mencoder('-ovc', 'lavc', '-lavcopts',
                     'vcodec=mpeg4:vpass=2:' + mencoder_options,
-                    '-mf', 'type=jpg:fps={}'.format(fps/duration), '-nosound',
+                    '-mf', 'type=jpg:fps={}'.format(fps /
+                                                    duration), '-nosound',
                     '-o', outfilename, 'mf://' + pattern)
         os.remove('divx2pass.log')  # tidy up output from the two-pass enoding
     except sh.CommandNotFound:
         logger.error("mencoder does not seem to be installed but is needed for "
-                  "movie creation. Please install it (e.g. on Debian/Ubuntu: "
-                  "'sudo apt-get install mencoder').")
+                     "movie creation. Please install it (e.g. on Debian/Ubuntu: "
+                     "'sudo apt-get install mencoder').")
     except sh.ErrorReturnCode as exc:
-        logger.warning("mencoder had non-zero exit status: {} (diagnostic message: '{}')".format(exc.exit_code, exc.message))
-
+        logger.warning(
+            "mencoder had non-zero exit status: {} (diagnostic message: '{}')".format(exc.exit_code, exc.message))
 
 
 def pvd2avi(pvd_filename, outfilename=None, duration=1, fps=25, **kwargs):
@@ -1948,19 +2006,22 @@ def pvd2avi(pvd_filename, outfilename=None, duration=1, fps=25, **kwargs):
 
     """
     if not pvd_filename.endswith('.pvd'):
-        raise ValueError("pvd_filename must end in '.pvd'. Got: '{}'".format(pvd_filename))
+        raise ValueError(
+            "pvd_filename must end in '.pvd'. Got: '{}'".format(pvd_filename))
 
     if outfilename == None:
         outfilename = re.sub('\.pvd$', '.avi', pvd_filename)
 
-    if kwargs.has_key('trim_border') and kwargs['trim_border'] ==True:
-        logger.warning("Cannot use 'trim_border=True' when converting a .pvd time series to .avi; using 'trim_border=False'.")
+    if kwargs.has_key('trim_border') and kwargs['trim_border'] == True:
+        logger.warning(
+            "Cannot use 'trim_border=True' when converting a .pvd time series to .avi; using 'trim_border=False'.")
     kwargs['trim_border'] = False
 
     with TemporaryDirectory() as tmpdir:
         jpg_tmpfilename = os.path.join(tmpdir, 'animation.jpg')
         render_paraview_scene(pvd_filename, outfile=jpg_tmpfilename, **kwargs)
-        jpg2avi(jpg_tmpfilename, outfilename=outfilename, duration=duration, fps=fps)
+        jpg2avi(jpg_tmpfilename, outfilename=outfilename,
+                duration=duration, fps=fps)
 
 
 def warn_about_outdated_code(min_dolfin_version, msg):
@@ -1991,7 +2052,8 @@ def format_time(num_seconds):
     seconds = r - 60 * minutes
 
     res = "{} h ".format(hours) if (hours > 0) else ""
-    res += "{} min ".format(minutes) if (minutes > 0 or (minutes == 0 and hours > 0)) else ""
+    res += "{} min ".format(minutes) if (minutes >
+                                         0 or (minutes == 0 and hours > 0)) else ""
     res += "{:.2f} seconds".format(seconds)
     return res
 
@@ -2002,10 +2064,10 @@ def make_human_readable(nbytes):
     which makes the number more digestible by a human reader. Everything less
     than 500 MB will be displayed in units of MB, everything above in units of GB.
     """
-    if nbytes < 500*1024**2:
-        res = '{:.2f} MB'.format(nbytes / 1024**2)
+    if nbytes < 500 * 1024 ** 2:
+        res = '{:.2f} MB'.format(nbytes / 1024 ** 2)
     else:
-        res = '{:.2f} GB'.format(nbytes / 1024**3)
+        res = '{:.2f} GB'.format(nbytes / 1024 ** 3)
     return res
 
 
@@ -2019,9 +2081,8 @@ def print_boundary_element_matrix_size(mesh, generalised=False):
     bm = df.BoundaryMesh(mesh, 'exterior', False)
     N = bm.num_vertices()
     byte_size_float = np.zeros(1, dtype=float).nbytes
-    memory_usage = N**2 * byte_size_float
+    memory_usage = N ** 2 * byte_size_float
 
     logger.debug("Boundary element matrix for mesh with {} vertices and {} "
                  "surface nodes will occupy {} in memory.".format(
-                 mesh.num_vertices(), N, make_human_readable(memory_usage)))
-
+                     mesh.num_vertices(), N, make_human_readable(memory_usage)))

@@ -13,6 +13,7 @@ def same_time(t0, t1):
 
 
 class TimeEvent(Event):
+
     """
     An event that triggers at a certain time, or at the end of time
     integration.
@@ -50,9 +51,9 @@ class TimeEvent(Event):
         callback_name = "unknown"
         if self.callback is not None:
             if hasattr(self.callback, "__name__"):
-                    callback_name = self.callback.__name__
+                callback_name = self.callback.__name__
             if hasattr(self.callback, "func"):
-                    callback_name = self.callback.func.__name__
+                callback_name = self.callback.func.__name__
             callback_msg = " | callback: {}".format(callback_name)
 
         msg = "<{} | last = {} | next = {} | triggering on stop: {}{}>"\
@@ -68,7 +69,7 @@ class TimeEvent(Event):
         """
         if not same_time(time, self.last):
             if (same_time(time, self.next_time) or
-                (is_stop and self.trigger_on_stop)):
+                    (is_stop and self.trigger_on_stop)):
 
                 self.trigger(time, is_stop)
 

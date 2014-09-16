@@ -4,63 +4,64 @@ from finmag import Simulation
 from finmag.energies import Exchange, DMI, Zeeman
 from dmi_helper import compute_skyrmion_number_2d
 
+
 def init_skx_down(pos):
     x = pos[0]
     y = pos[1]
-    
-    if (x-50)**2+(y-50)**2<15**2:
-        return (0,0,-1)
+
+    if (x - 50) ** 2 + (y - 50) ** 2 < 15 ** 2:
+        return (0, 0, -1)
     else:
-        return (0,0,1)
+        return (0, 0, 1)
 
 
 def compute_skyrmion_number_2d_example():
 
-    mesh = df.CircleMesh(df.Point(0,0),20,4)
-    
+    mesh = df.CircleMesh(df.Point(0, 0), 20, 4)
+
     Ms = 3.84e5
-    mu0 = 4*np.pi*1e-7
+    mu0 = 4 * np.pi * 1e-7
     Hz = 0.2
-    
+
     sim = Simulation(mesh, Ms, unit_length=1e-9, name='sim')
     sim.do_precession = False
-    
+
     sim.set_m(init_skx_down)
-    
+
     sim.add(Exchange(8.78e-12))
     sim.add(DMI(-1.58e-3))
-    sim.add(Zeeman((0,0,Hz/mu0)))
-    
+    sim.add(Zeeman((0, 0, Hz / mu0)))
+
     sim.relax(stopping_dmdt=1, dt_limit=1e-9)
-    
+
     sim.m_field.plot_with_dolfin(interactive=True)
-    
+
     print compute_skyrmion_number_2d(sim.m_field.f)
 
-    
+
 def test_compute_skyrmion_number_2d_pbc():
 
-    mesh = df.RectangleMesh(0,0,100,100,40,40)
-    
+    mesh = df.RectangleMesh(0, 0, 100, 100, 40, 40)
+
     Ms = 8.6e5
     sim = Simulation(mesh, Ms, pbc='2d', unit_length=1e-9)
     sim.set_m(init_skx_down)
 
     sim.add(Exchange(1.3e-11))
-    sim.add(DMI(D = 4e-3))
-    sim.add(Zeeman((0,0,0.45*Ms)))
-    
+    sim.add(DMI(D=4e-3))
+    sim.add(Zeeman((0, 0, 0.45 * Ms)))
+
     sim.do_precession = False
-        
+
     sim.relax(stopping_dmdt=1, dt_limit=1e-9)
-    
-    #df.plot(sim._m)
-    #df.interactive()
-    
+
+    # df.plot(sim._m)
+    # df.interactive()
+
     sky_num = compute_skyrmion_number_2d(sim.m_field.f)
-    
-    print 'sky_num = %g'%sky_num
-    
+
+    print 'sky_num = %g' % sky_num
+
     assert sky_num < -0.95 and sky_num > -1.0
 
 if __name__ == "__main__":

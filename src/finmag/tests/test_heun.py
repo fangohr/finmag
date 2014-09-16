@@ -1,6 +1,7 @@
 import numpy as np
 from finmag.native.llg import StochasticHeunIntegrator
 
+
 def test_file_builds():
     drift = lambda y, t: 2 * y
     diffusion = lambda y, t: y + 0.1

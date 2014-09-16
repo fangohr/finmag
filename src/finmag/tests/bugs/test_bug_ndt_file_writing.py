@@ -2,7 +2,7 @@ import pytest
 
 # coding: utf-8
 
-# ## Saving spatially averaged magnetisation into a file
+# Saving spatially averaged magnetisation into a file
 
 # Bug 8 June 2014. On some machines, we seem to have wrong data in the
 # ndt file. Some inspection shows that there are too many columns in
@@ -40,7 +40,6 @@ def test_ndt_writing_pretest():
 
     sim = finmag.example.barmini(name='bug-saving-average-data-june-2014')
 
-
     # What is the current magnetisation? We expect it to be $ \vec{m}
     # = [\sqrt(2), 0, \sqrt(2)]$ as this is the initial value in the
     # barmini example.
@@ -49,7 +48,7 @@ def test_ndt_writing_pretest():
 
     import math
     m = sim.get_field_as_dolfin_function('m')
-    points = [[0, 0, 0], [1, 0, 0], [2, 0,0 ], [0, 0, 5], [1, 1, 2],
+    points = [[0, 0, 0], [1, 0, 0], [2, 0, 0], [0, 0, 5], [1, 1, 2],
               [3, 3, 10]]
     for point in points:
         print("m({}) = {}".format(point, m(point)))
@@ -82,7 +81,6 @@ def test_ndt_writing_correct_number_of_columns_1line():
     sim = finmag.example.barmini(name='bug-saving-average-data-june-2014-a')
     sim.save_averages()
 
-
     # The first line contains the title for every column, the second
     # line the (SI) units in which the entity is measured, and the
     # third and any other lines contain the actual data.
@@ -90,7 +88,8 @@ def test_ndt_writing_correct_number_of_columns_1line():
     # Check that all lines in this data file have the right number of
     # entries (columns)
 
-    number_of_columns_in_ndt_file_consistent('bug_saving_average_data_june_2014_a.ndt')
+    number_of_columns_in_ndt_file_consistent(
+        'bug_saving_average_data_june_2014_a.ndt')
 
 
 #@pytest.mark.xfail
@@ -122,7 +121,6 @@ def test_ndt_writing_correct_number_of_columns_2_and_more_lines():
         'bug_saving_average_data_june_2014_b.ndt')
 
 
-
 def check_magnetisation_is_of_sensible_magnitude(ndtfile):
     import finmag
     data = finmag.util.fileio.Tablereader(ndtfile)
@@ -150,6 +148,8 @@ def test_ndt_writing_order_of_magnitude_m_1line():
         'bug_saving_average_data_june_2014_c.ndt')
 
 #@pytest.mark.xfail
+
+
 def test_ndt_writing_order_of_magnitude_m_2_and_more_lines():
 
     # Here we write multiple lines to the ndt file
@@ -165,4 +165,3 @@ def test_ndt_writing_order_of_magnitude_m_2_and_more_lines():
 
     check_magnetisation_is_of_sensible_magnitude(
         'bug_saving_average_data_june_2014_d.ndt')
-

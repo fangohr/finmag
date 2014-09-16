@@ -5,6 +5,7 @@ EPS = 1e-15
 
 
 class MagnetostaticField(object):
+
     """
     Magnetostatic field for uniform magnetisation.
 
@@ -40,6 +41,7 @@ class MagnetostaticField(object):
     in mind.
 
     """
+
     def __init__(self, Ms, Nxx, Nyy, Nzz):
         """
         Initialise object with Ms and demagnetising factors.
@@ -48,7 +50,8 @@ class MagnetostaticField(object):
         factors should be given as floats that sum to 1.
 
         """
-        assert abs(sum((Nxx, Nyy, Nzz)) - 1) < EPS, "Demagnetising factors do not sum to 1."
+        assert abs(
+            sum((Nxx, Nyy, Nzz)) - 1) < EPS, "Demagnetising factors do not sum to 1."
         self.Ms = Ms
         self.N = np.array((Nxx, Nyy, Nzz))
 

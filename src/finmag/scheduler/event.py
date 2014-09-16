@@ -9,6 +9,7 @@ EV_ACTIVE, EV_DONE, EV_REQUESTS_STOP_INTEGRATION = range(3)
 
 
 class Event(object):
+
     """
     This base class defines generic event objects from which all other
     event objects (should) inherit.
@@ -43,7 +44,7 @@ class Event(object):
         self.state = EV_ACTIVE  # The state of this event.
         self.trigger_on_stop = trigger_on_stop
         self.last = None  # The previous time or step value with which this
-                          # event last triggered.
+        # event last triggered.
 
         if callback is not None:
             self.attach(callback)

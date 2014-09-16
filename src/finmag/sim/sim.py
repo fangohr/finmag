@@ -29,11 +29,14 @@ from finmag.scheduler import scheduler
 from finmag.util.pbc2d import PeriodicBoundary1D, PeriodicBoundary2D
 from finmag.energies import Exchange, Zeeman, TimeZeeman, Demag, UniaxialAnisotropy, DMI, MacroGeometry
 
+# used for parallel testing
+#from finmag.native import cvode_petsc, llg_petsc
 
 log = logging.getLogger(name="finmag")
 
 
 class Simulation(object):
+
     """
     Unified interface to finmag's micromagnetic simulations capabilities.
 
@@ -42,7 +45,7 @@ class Simulation(object):
 
     """
     @mtimed
-    def __init__(self, mesh, Ms, unit_length=1, name='unnamed', kernel='llg' ,integrator_backend="sundials", pbc=None, average=False):
+    def __init__(self, mesh, Ms, unit_length=1, name='unnamed', kernel='llg', integrator_backend="sundials", pbc=None, average=False, parallel=False):
         """Simulation object.
 
         *Arguments*
@@ -72,7 +75,8 @@ class Simulation(object):
         self.logfilename = self.sanitized_name + '.log'
         self.ndtfilename = self.sanitized_name + '.ndt'
 
-        self.logging_handler = helpers.start_logging_to_file(self.logfilename, mode='w', level=logging.DEBUG)
+        self.logging_handler = helpers.start_logging_to_file(
+            self.logfilename, mode='w', level=logging.DEBUG)
 
         # Create a Tablewriter object for ourselves which will be used
         # by various methods to save the average magnetisation at given
@@ -94,30 +98,37 @@ class Simulation(object):
 
         self.pbc = pbc
         if pbc == '2d':
-            log.debug('Setting 2d periodic boundary conditions (in the xy-plane).')
+            log.debug(
+                'Setting 2d periodic boundary conditions (in the xy-plane).')
             self.pbc = PeriodicBoundary2D(mesh)
         elif pbc == '1d':
-            log.debug('Setting 1d periodic boundary conditions (along the x-axis)')
+            log.debug(
+                'Setting 1d periodic boundary conditions (along the x-axis)')
             self.pbc = PeriodicBoundary1D(mesh)
         elif pbc != None:
             raise ValueError("Argument 'pbc' must be one of None, '1d', '2d'.")
 
         if not mesh_size_plausible(mesh, unit_length):
-            log.warning("The mesh is {}.".format(describe_mesh_size(mesh, unit_length)))
-            log.warning("unit_length is set to {}. Are you sure this is correct?".format(unit_length))
+            log.warning(
+                "The mesh is {}.".format(describe_mesh_size(mesh, unit_length)))
+            log.warning(
+                "unit_length is set to {}. Are you sure this is correct?".format(unit_length))
 
         self.mesh = mesh
         self.Ms = Ms
         self.unit_length = unit_length
         self.integrator_backend = integrator_backend
-        self.S1 = df.FunctionSpace(mesh, "Lagrange", 1, constrained_domain=self.pbc)
-        self.S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3, constrained_domain=self.pbc)
+        self.S1 = df.FunctionSpace(
+            mesh, "Lagrange", 1, constrained_domain=self.pbc)
+        self.S3 = df.VectorFunctionSpace(
+            mesh, "Lagrange", 1, dim=3, constrained_domain=self.pbc)
 
-        if kernel=='llg':
-            self.llg = LLG(self.S1, self.S3, average = average, unit_length=unit_length)
-        elif kernel=='sllg':
+        if kernel == 'llg':
+            self.llg = LLG(
+                self.S1, self.S3, average=average, unit_length=unit_length)
+        elif kernel == 'sllg':
             self.llg = SLLG(self.S1, self.S3, unit_length=unit_length)
-        elif kernel=='llg_stt':
+        elif kernel == 'llg_stt':
             self.llg = LLG_STT(self.S1, self.S3, unit_length=unit_length)
         else:
             raise ValueError("kernel must be one of llg, sllg or llg_stt.")
@@ -164,12 +175,17 @@ class Simulation(object):
         self.reltol = 1e-6
         self.abstol = 1e-6
 
+        self.parallel = parallel
+        if self.parallel:
+            self.m_petsc = self.llg._m_field.petsc_vector()
+            #df.parameters.reorder_dofs_serial = True
+
         # We used to only create the integrator when needed. However, this can
         # lead to a bug when the user saves information to an .ndt file before
         # a time integrator exists because some columns will be missing (as the
         # time integrator creates additional columns in the .ndt file). Therefore
         # we play it safe and create the time integrator here at the beginning.
-        #self.create_integrator()
+        # self.create_integrator()
 
     def __str__(self):
         """String briefly describing simulation object"""
@@ -215,20 +231,21 @@ class Simulation(object):
     # def _m(self):
     #     return self.llg._m
 
-    def save_m_in_region(self,region,name='unnamed'):
+    def save_m_in_region(self, region, name='unnamed'):
 
         self.region_id += 1
-        helpers.mark_subdomain_by_function(region, self.mesh, self.region_id, self.domains)
+        helpers.mark_subdomain_by_function(
+            region, self.mesh, self.region_id, self.domains)
         self.dx = df.Measure("dx")[self.domains]
 
-        if name=='unnamed':
-            name='region_'+str(self.region_id)
+        if name == 'unnamed':
+            name = 'region_' + str(self.region_id)
 
-        region_id=self.region_id
-        self.tablewriter.entities[name]={
-                        'unit': '<>',
-                        'get': lambda sim: sim.llg.m_average_fun(dx=self.dx(region_id)),
-                        'header': (name+'_m_x', name+'_m_y', name+'_m_z')}
+        region_id = self.region_id
+        self.tablewriter.entities[name] = {
+            'unit': '<>',
+            'get': lambda sim: sim.llg.m_average_fun(dx=self.dx(region_id)),
+            'header': (name + '_m_x', name + '_m_y', name + '_m_z')}
 
         self.tablewriter.update_entity_order()
 
@@ -249,9 +266,9 @@ class Simulation(object):
         the L2 Norms. Returns (x,y,z) components of dmdt, where
         this max occurs.
         """
-        #FIXME:error here
-        dmdts = self.llg.dmdt.reshape((3,-1))
-        norms = np.sqrt(np.sum(dmdts**2,axis=0))
+        # FIXME:error here
+        dmdts = self.llg.dmdt.reshape((3, -1))
+        norms = np.sqrt(np.sum(dmdts ** 2, axis=0))
         index = norms.argmax()
         dmdt_x = dmdts[0][index]
         dmdt_y = dmdts[1][index]
@@ -267,7 +284,6 @@ class Simulation(object):
 
         """
         return self.llg.dmdt
-
 
     def add(self, interaction, with_time_update=None):
         """
@@ -378,7 +394,6 @@ class Simulation(object):
         """
         return self.llg.effective_field.get(interaction_name)
 
-
     def get_interaction_list(self):
         """
         Returns a list of interaction names.
@@ -388,7 +403,6 @@ class Simulation(object):
         A list of strings, each string corresponding to the name of one interaction.
         """
         return self.llg.effective_field.all()
-
 
     def remove_interaction(self, interaction_type):
         """
@@ -402,7 +416,7 @@ class Simulation(object):
             example: 'Demag', 'Exchange', 'UniaxialAnisotropy', 'Zeeman'.
         """
         log.debug("Removing interaction '{}' from simulation '{}'".format(
-                interaction_type, self.name))
+            interaction_type, self.name))
 
         # remove this interaction from TableWriter entities
         E_name = "E_{}".format(interaction_type)
@@ -493,9 +507,11 @@ class Simulation(object):
             # work as intended, so I'm using this intermediate fix for now.
             submesh = self.get_submesh(region)
             if (V_region.ufl_element().family() != 'Lagrange'):
-                raise NotImplementedError("XXX The following lines assume that we have a CG1 function space. Fix this!!")
+                raise NotImplementedError(
+                    "XXX The following lines assume that we have a CG1 function space. Fix this!!")
             if (V_region.ufl_element().value_shape() != (3,)):
-                raise NotImplementedError("This functioality is currently only implemented for 3-vector fields.")
+                raise NotImplementedError(
+                    "This functioality is currently only implemented for 3-vector fields.")
             V_submesh = df.VectorFunctionSpace(submesh, 'CG', 1, dim=3)
             f_submesh = df.interpolate(field, V_submesh)
             res = f_submesh
@@ -507,9 +523,11 @@ class Simulation(object):
             try:
                 V_region = self.region_spaces[region]
             except AttributeError:
-                raise RuntimeError("No regions defined in mesh. Please call 'mark_regions' first to define some.")
+                raise RuntimeError(
+                    "No regions defined in mesh. Please call 'mark_regions' first to define some.")
             except KeyError:
-                raise ValueError("Region not defined: '{}'. Allowed values: {}".format(region, self.region_ids.keys()))
+                raise ValueError("Region not defined: '{}'. Allowed values: {}".format(
+                    region, self.region_ids.keys()))
         else:
             V_region = self.S3
         return V_region
@@ -519,9 +537,11 @@ class Simulation(object):
             try:
                 region_id = self.region_ids[region]
             except AttributeError:
-                raise RuntimeError("No regions defined in mesh. Please call 'mark_regions' first to define some.")
+                raise RuntimeError(
+                    "No regions defined in mesh. Please call 'mark_regions' first to define some.")
             except KeyError:
-                raise ValueError("Region not defined: '{}'. Allowed values: {}".format(region, self.region_ids.keys()))
+                raise ValueError("Region not defined: '{}'. Allowed values: {}".format(
+                    region, self.region_ids.keys()))
         return region_id
 
     def probe_field(self, field_type, pts, region=None):
@@ -556,36 +576,52 @@ class Simulation(object):
         if not hasattr(self, "integrator"):
             if backend == None:
                 backend = self.integrator_backend
-            log.info("Create integrator {} with kwargs={}".format(backend, kwargs))
-            if self.kernel == 'llg_stt':
-                self.integrator = SundialsIntegrator(self.llg, self.llg.dy_m, method="bdf_diag", **kwargs)
+            log.info(
+                "Create integrator {} with kwargs={}".format(backend, kwargs))
+            if self.parallel:
+                # HF, the reason for commenting out the line below is that
+                # cython fails to compile the file otherwise. Will all be
+                # fixed when the parallel sundials is completed. Sep 2014
+                raise Exception(
+                    "The next line has been deactivated - fix to proceed with parallel")
+                #self.integrator = cvode_petsc.CvodeSolver(self.llg.sundials_rhs_petsc, 0, self.m_petsc, self.reltol, self.abstol)
+            elif self.kernel == 'llg_stt':
+                self.integrator = SundialsIntegrator(
+                    self.llg, self.llg.dy_m, method="bdf_diag", **kwargs)
             elif self.kernel == 'sllg':
                 self.integrator = self.llg
             else:
-                self.integrator = llg_integrator(self.llg, self.llg._m_field, backend=backend, **kwargs)
-                self.integrator.integrator.set_scalar_tolerances(self.reltol, self.abstol)
+                self.integrator = llg_integrator(
+                    self.llg, self.llg._m_field, backend=backend, **kwargs)
+                self.integrator.integrator.set_scalar_tolerances(
+                    self.reltol, self.abstol)
 
-            ## HF: the following code works only for sundials, i.e. not for scipy.integrate.vode.
+            # HF: the following code works only for sundials, i.e. not for
+            # scipy.integrate.vode.
 
-            #self.tablewriter.add_entity( 'steps',  {
+            # self.tablewriter.add_entity( 'steps',  {
             #    'unit': '<1>',
             #    'get': lambda sim: sim.integrator.stats()['nsteps'],
             #    'header': 'steps'})
-            self.tablewriter.modify_entity_get_method('steps', lambda sim: sim.integrator.stats()['nsteps'])
+            self.tablewriter.modify_entity_get_method(
+                'steps', lambda sim: sim.integrator.stats()['nsteps'])
 
-            #self.tablewriter.add_entity('last_step_dt', {
+            # self.tablewriter.add_entity('last_step_dt', {
             #    'unit': '<1>',
             #    'get': lambda sim: sim.integrator.stats()['hlast'],
             #    'header': 'last_step_dt'})
-            self.tablewriter.modify_entity_get_method('last_step_dt', lambda sim: sim.integrator.stats()['hlast'])
+            self.tablewriter.modify_entity_get_method(
+                'last_step_dt', lambda sim: sim.integrator.stats()['hlast'])
 
-            #self.tablewriter.add_entity('dmdt', {
+            # self.tablewriter.add_entity('dmdt', {
             #    'unit': '<A/ms>',
             #    'get': lambda sim: sim.dmdt_max,
             #    'header': ('dmdt_x', 'dmdt_y', 'dmdt_z')})
-            self.tablewriter.modify_entity_get_method('dmdt', lambda sim: sim.dmdt_max)
+            self.tablewriter.modify_entity_get_method(
+                'dmdt', lambda sim: sim.dmdt_max)
         else:
-            log.warning("Cannot create integrator - exists already: {}".format(self.integrator))
+            log.warning(
+                "Cannot create integrator - exists already: {}".format(self.integrator))
         return self.integrator
 
     def set_tol(self, reltol=1e-6, abstol=1e-6):
@@ -596,8 +632,12 @@ class Simulation(object):
         self.abstol = abstol
 
         if hasattr(self, "integrator"):
-            self.integrator.integrator.set_scalar_tolerances(reltol, abstol)
-
+            if self.parallel:
+                #self.integrator.set_options(reltol, abstol)
+                pass
+            else:
+                self.integrator.integrator.set_scalar_tolerances(
+                    reltol, abstol)
 
     def advance_time(self, t):
         """
@@ -634,6 +674,12 @@ class Simulation(object):
 
         self.scheduler.run(self.integrator, self.callbacks_at_scheduler_events)
 
+        if self.parallel:
+            # print self.llg._m_field.f.vector().array()
+            # TODO: maybe this is not necessary, check it later.
+            pass
+            # self.llg._m_field.f.vector().set_local(self.integrator.y_np)
+
         # The following line is necessary because the time integrator may
         # slightly overshoot the requested end time, so here we make sure
         # that the field values represent that requested time exactly.
@@ -664,15 +710,17 @@ class Simulation(object):
         data = sim_helpers.load_restart_data(filename)
 
         if not data['driver'] in ['cvode']:
-            log.error("Requested unknown driver `{}` for restarting. Known: {}.".format(data["driver"], "cvode"))
-            raise NotImplementedError("Unknown driver `{}` for restarting.".format(data["driver"]))
+            log.error("Requested unknown driver `{}` for restarting. Known: {}.".format(
+                data["driver"], "cvode"))
+            raise NotImplementedError(
+                "Unknown driver `{}` for restarting.".format(data["driver"]))
 
         self.llg._m_field.set_with_numpy_array_debug(data['m'])
 
         self.reset_time(data["simtime"] if (t0 == None) else t0)
 
-        log.info("Reloaded and set m (<m>=%s) and time=%s from %s." % \
-            (self.llg.m_average, self.t, filename))
+        log.info("Reloaded and set m (<m>=%s) and time=%s from %s." %
+                 (self.llg.m_average, self.t, filename))
 
     def reset_time(self, t0):
         """
@@ -680,13 +728,13 @@ class Simulation(object):
 
         This also adjusts the internal time of the scheduler and time integrator.
         """
-        #WW: Is it good to create a new integrator and with the name of reset_time? this
-        #is a bit confusing and dangerous because the user doesn't know a new integrator
-        #is created and the other setting that the user provided such as the tolerances
-        #actually doesn't have influence at all.
+        # WW: Is it good to create a new integrator and with the name of reset_time? this
+        # is a bit confusing and dangerous because the user doesn't know a new integrator
+        # is created and the other setting that the user provided such as the tolerances
+        # actually doesn't have influence at all.
         self.integrator = llg_integrator(self.llg, self.llg._m_field,
                                          backend=self.integrator_backend, t0=t0)
-        
+
         self.set_tol(self.reltol, self.abstol)
         self.scheduler.reset(t0)
         assert self.t == t0  # self.t is read from integrator
@@ -892,10 +940,12 @@ class Simulation(object):
                         # Check whether a vtk_saver for this filename already exists; this is
                         # necessary to if 'save_vtk' is scheduled multiple times with the same
                         # filename.
-                        vtk_saver = self._get_vtk_saver(filename=filename, overwrite=False)
+                        vtk_saver = self._get_vtk_saver(
+                            filename=filename, overwrite=False)
                     except IOError:
                         # If none exists, create a new one.
-                        vtk_saver = self._get_vtk_saver(filename=filename, overwrite=overwrite)
+                        vtk_saver = self._get_vtk_saver(
+                            filename=filename, overwrite=overwrite)
 
                     def aux_save(sim):
                         sim._save_m_to_vtk(vtk_saver)
@@ -976,7 +1026,8 @@ class Simulation(object):
         vtk_saver.save_field(self.llg._m_field.f, self.t)
 
     def _save_field_to_vtk(self, field_name, vtk_saver, region=None):
-        field_data = self.get_field_as_dolfin_function(field_name, region=region)
+        field_data = self.get_field_as_dolfin_function(
+            field_name, region=region)
         field_data.rename(field_name, field_name)
         vtk_saver.save_field(field_data, self.t)
 
@@ -984,7 +1035,8 @@ class Simulation(object):
         """
         Save the magnetisation to a VTK file.
         """
-        self.save_field_to_vtk('m', filename=filename, overwrite=overwrite, region=region)
+        self.save_field_to_vtk(
+            'm', filename=filename, overwrite=overwrite, region=region)
 
     def save_field_to_vtk(self, field_name, filename=None, overwrite=False, region=None):
         """
@@ -999,7 +1051,6 @@ class Simulation(object):
 
     length_scales = sim_details.length_scales
     mesh_info = sim_details.mesh_info
-
 
     def render_scene(self, outfile=None, region=None, **kwargs):
         """
@@ -1020,8 +1071,10 @@ class Simulation(object):
         field_name = kwargs.get('field_name', 'm')
 
         with helpers.TemporaryDirectory() as tmpdir:
-            filename = os.path.join(tmpdir, 'paraview_scene_{}.pvd'.format(self.name))
-            self.save_field_to_vtk(field_name=field_name, filename=filename, region=region)
+            filename = os.path.join(
+                tmpdir, 'paraview_scene_{}.pvd'.format(self.name))
+            self.save_field_to_vtk(
+                field_name=field_name, filename=filename, region=region)
             return render_paraview_scene(filename, outfile=outfile, **kwargs)
 
     def _render_scene_incremental(self, filename, **kwargs):
@@ -1059,7 +1112,6 @@ class Simulation(object):
         else:
             return plot_mesh(mesh, **kwargs)
 
-
     def close_logfile(self):
         """
         Stop logging to the logfile associated with this simulation object.
@@ -1076,13 +1128,15 @@ class Simulation(object):
     def plot_dynamics(self, components='xyz', **kwargs):
         ndt_file = kwargs.pop('ndt_file', self.ndtfilename)
         if not os.path.exists(ndt_file):
-            raise RuntimeError("File was not found: '{}'. Did you forget to schedule saving the averages to a .ndt file before running the simulation?".format(ndt_file))
+            raise RuntimeError(
+                "File was not found: '{}'. Did you forget to schedule saving the averages to a .ndt file before running the simulation?".format(ndt_file))
         return plot_dynamics(ndt_file, components=components, **kwargs)
 
     def plot_dynamics_3d(self, **kwargs):
         ndt_file = kwargs.pop('ndt_file', self.ndtfilename)
         if not os.path.exists(ndt_file):
-            raise RuntimeError("File was not found: '{}'. Did you forget to schedule saving the averages to a .ndt file before running the simulation?".format(ndt_file))
+            raise RuntimeError(
+                "File was not found: '{}'. Did you forget to schedule saving the averages to a .ndt file before running the simulation?".format(ndt_file))
         return plot_dynamics_3d(ndt_file, **kwargs)
 
     def mark_regions(self, fun_regions):
@@ -1104,12 +1158,14 @@ class Simulation(object):
         all_ids = set([fun_regions(pt) for pt in self.mesh.coordinates()])
         self.region_ids = dict(itertools.izip(all_ids, xrange(len(all_ids))))
 
-        # Create the CellFunction which marks the different mesh regions with integers
+        # Create the CellFunction which marks the different mesh regions with
+        # integers
         self.region_markers = df.CellFunction('size_t', self.mesh)
         for region_id, i in self.region_ids.items():
             class Domain(df.SubDomain):
+
                 def inside(self, pt, on_boundary):
-                        return fun_regions(pt) == region_id
+                    return fun_regions(pt) == region_id
             subdomain = Domain()
             subdomain.mark(self.region_markers, i)
 
@@ -1121,7 +1177,8 @@ class Simulation(object):
 
         # Create a restricted VectorFunctionSpace for each region
         try:
-            self.region_spaces = {region_id: create_restricted_space(region_id) for region_id in self.region_ids}
+            self.region_spaces = {
+                region_id: create_restricted_space(region_id) for region_id in self.region_ids}
         except AttributeError:
             raise RuntimeError("Marking mesh regions is only supported for dolfin > 1.2.0. "
                                "You may need to install a nightly snapshot (e.g. via an Ubuntu PPA). "
@@ -1129,8 +1186,7 @@ class Simulation(object):
 
     get_submesh = sim_helpers.get_submesh
 
-
-    def set_zhangli(self, J_profile=(1e10,0,0), P=0.5, beta=0.01, using_u0=False):
+    def set_zhangli(self, J_profile=(1e10, 0, 0), P=0.5, beta=0.01, using_u0=False):
         """
         Activates the computation of the zhang-li spin-torque term in the LLG.
 
@@ -1143,7 +1199,8 @@ class Simulation(object):
             if using_u0 = True, the factor of 1/(1+beta^2) will be dropped.
 
         """
-        self.llg.use_zhangli(J_profile=J_profile, P=P, beta=beta, using_u0=using_u0)
+        self.llg.use_zhangli(
+            J_profile=J_profile, P=P, beta=beta, using_u0=using_u0)
 
     def profile(self, statement, filename=None, N=20, sort='cumulative'):
         """
@@ -1238,7 +1295,8 @@ def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sun
         sim.add(DMI(D))
     if demag_solver != None:
         mg = MacroGeometry(nx=nx, ny=ny, dx=spacing_x, dy=spacing_y)
-        demag = Demag(solver=demag_solver, macrogeometry=mg, solver_type=demag_solver_type, parameters=demag_solver_params)
+        demag = Demag(solver=demag_solver, macrogeometry=mg,
+                      solver_type=demag_solver_type, parameters=demag_solver_params)
         sim.add(demag)
     log.debug("Successfully created simulation '{}'".format(sim.name))
 

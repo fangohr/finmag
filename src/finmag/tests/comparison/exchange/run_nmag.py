@@ -7,19 +7,20 @@ import nmeshlib.unidmesher as unidmesher
 
 # Details about the layers and the mesh and the material
 length = 20.0             # in nanometers
-mesh_unit = SI(1e-9, "m") # mesh unit (1 nm)
+mesh_unit = SI(1e-9, "m")  # mesh unit (1 nm)
 layers = [(0.0, length)]  # the mesh
 discretization = 2.0      # discretization
 
 # Initial magnetization
-xfactor = float(SI("m")/(length*mesh_unit))
+xfactor = float(SI("m") / (length * mesh_unit))
+
 
 def m0(r):
-  x = max(0.0, min(1.0, r[0]*xfactor))
-  mx = (2.0 * x - 1.0) * 2.0/3.0
-  mz = math.sin(2 * math.pi * x) / 2
-  my = (1.0 - mx*mx - mz*mz)**0.5
-  return [mx, my, mz]
+    x = max(0.0, min(1.0, r[0] * xfactor))
+    mx = (2.0 * x - 1.0) * 2.0 / 3.0
+    mz = math.sin(2 * math.pi * x) / 2
+    my = (1.0 - mx * mx - mz * mz) ** 0.5
+    return [mx, my, mz]
 
 # Create the material
 mat_Py = nmag.MagMaterial(name="Py",

@@ -13,16 +13,16 @@ def disk(d=60, h=10, maxh=5.0, relaxed=True, name='normal_modes_nanodisk', A=13e
     the relaxation which is then removed for the ringdown phase.
 
     """
-    #I don't know it's suitable to move the global definition to local one
-    #just try to make the cython happy? 
+    # I don't know it's suitable to move the global definition to local one
+    # just try to make the cython happy?
     MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
     if d == 60 and h == 10 and maxh == 5.0:
         # Use precomputed standard mesh
-        mesh = df.Mesh(os.path.join(MODULE_DIR, 'disk__d_60__h_10__maxh_5.xml.gz'))
+        mesh = df.Mesh(
+            os.path.join(MODULE_DIR, 'disk__d_60__h_10__maxh_5.xml.gz'))
     else:
         mesh = Nanodisk(d=d, h=h).create_mesh(maxh=maxh)
-
 
     # Material parameters for Permalloy
     Ms = 8e5

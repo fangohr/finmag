@@ -20,7 +20,7 @@ all : parallel
 # The directory where to place the extension modules
 MODULE_DIR = ../src/finmag/native
 # The list of extension modules to build
-MODULES = sundials.so llg.so llb.so fast_sum_lib.so treecode_bem.so neb.so #sundials_p.so
+MODULES = sundials.so llg.so llb.so fast_sum_lib.so treecode_bem.so neb.so #cvode_petsc.so
 # The directory to store the precompiled header file.
 PRECOMPILED_HEADER_DIR ?= /tmp/$(USER)/finmag-pch/$(abspath .)
 # Name of the binary that runs all unit tests
@@ -52,6 +52,11 @@ $(MODULE_DIR)/neb.so : src/neb/py_neb_module.o src/util/np_array.o src/neb/helpe
 $(MODULE_DIR)/treecode_bem.so: src/treecode_bem/treecode_bem_I.c  src/treecode_bem/treecode_bem_II.c src/treecode_bem/common.c src/treecode_bem/bem_pbc.c src/treecode_bem/treecode_bem_lib.pyx 
 	cd src/treecode_bem && python setup.py build_ext --inplace
 	install src/treecode_bem/treecode_bem.so ../src/finmag/native
+
+#$(MODULE_DIR)/cvode_petsc.so: src/cvode/cvode_petsc.pxd  src/cvode/cvode_petsc.pyx src/cvode/llg.c src/cvode/llg.h src/cvode/llg_petsc.pyx
+#	cd src/cvode && python setup.py build_ext --inplace
+#	install src/cvode/cvode_petsc.so ../src/finmag/native
+#	install src/cvode/llg_petsc.so ../src/finmag/native
 
 $(UNIT_TEST_BINARY): tests/run_ci_tests.o src/util/np_array.o src/sundials/tests/sundials_tests.o src/sundials/numpy_malloc.o 
 run_ci_tests_LDFLAGS=-lboost_prg_exec_monitor -lboost_system -lboost_unit_test_framework $(SUNDIALS_NVECTOR_SO) -L$(INSTALL_PATH)/lib -ldolfin

@@ -84,7 +84,7 @@ def from_geofile(geofile, save_result=True):
             skip_mesh_creation = True
 
     if not skip_mesh_creation:
-        xml=convert_diffpack_to_xml(run_netgen(geofile))
+        xml = convert_diffpack_to_xml(run_netgen(geofile))
         change_xml_marker_starts_with_zero(xml)
         result_filename = compress(xml)
 
@@ -92,7 +92,8 @@ def from_geofile(geofile, save_result=True):
     if not save_result and not result_file_exists:
         # We delete the .xml.gz file only if it didn't exist previously
         os.remove(result_filename)
-        logger.debug("Removing file '%s' because mesh is created on the fly." % result_filename)
+        logger.debug(
+            "Removing file '%s' because mesh is created on the fly." % result_filename)
     return mesh
 
 
@@ -120,7 +121,8 @@ def from_csg(csg, save_result=True, filename="", directory=""):
     if filename == "":
         filename = hashlib.md5(csg).hexdigest()
     if os.path.isabs(filename) and directory != "":
-        logger.warning("Ignoring 'directory' argument (value given: '{}') because 'filename' contains an absolute path: '{}'".format(directory, filename))
+        logger.warning("Ignoring 'directory' argument (value given: '{}') because 'filename' contains an absolute path: '{}'".format(
+            directory, filename))
 
     if save_result:
         if directory == "":
@@ -132,7 +134,8 @@ def from_csg(csg, save_result=True, filename="", directory=""):
             # double-check that.
             directory = os.curdir
 
-        filename = re.sub('\.xml\.gz$', '', filename)  # strip '.xml.gz' extension if present
+        # strip '.xml.gz' extension if present
+        filename = re.sub('\.xml\.gz$', '', filename)
         geofile = os.path.abspath(os.path.join(directory, filename) + ".geo")
 
         # Make sure that 'directory' actually contains all the
@@ -140,9 +143,9 @@ def from_csg(csg, save_result=True, filename="", directory=""):
         directory, _ = os.path.split(geofile)
 
         if not os.path.exists(directory):
-            logger.debug("Creating directory '{}' as it does not exist.".format(directory))
+            logger.debug(
+                "Creating directory '{}' as it does not exist.".format(directory))
             os.mkdir(directory)
-
 
         if not os.path.exists(geofile):
             with open(geofile, "w") as f:
@@ -156,7 +159,8 @@ def from_csg(csg, save_result=True, filename="", directory=""):
         # Since we used delete=False in NamedTemporaryFile, we are
         # responsible for the deletion of the file.
         os.remove(tmp.name)
-        logger.debug("Removing file '%s' because mesh is created on the fly." % tmp.name)
+        logger.debug(
+            "Removing file '%s' because mesh is created on the fly." % tmp.name)
     return mesh
 
 
@@ -174,9 +178,10 @@ def run_netgen(geofile):
     if not extension == ".geo":
         raise ValueError("Input needs to be a .geo file.")
 
-    logger.debug("Using netgen to convert {} to DIFFPACK format.".format(geofile))
+    logger.debug(
+        "Using netgen to convert {} to DIFFPACK format.".format(geofile))
     netgen_cmd = "netgen -geofile={} -meshfiletype='DIFFPACK Format' -meshfile={} -batchmode".format(
-            geofile, diffpackfile)
+        geofile, diffpackfile)
 
     status, output = commands.getstatusoutput(netgen_cmd)
     if status == 34304:
@@ -186,13 +191,15 @@ def run_netgen(geofile):
         print "netgen failed with exit code", status
         sys.exit(2)
     elif output.lower().find("error") != -1:
-        logger.warning("Netgen's exit status was 0, but an error seems to have occurred anyway (since Netgen's output contains the word 'error').")
+        logger.warning(
+            "Netgen's exit status was 0, but an error seems to have occurred anyway (since Netgen's output contains the word 'error').")
         logger.warning("Netgen output:")
         logger.warning("\n====>")
         logger.warning(output)
         logger.warning("<====\n")
     logger.debug('Done!')
     return diffpackfile
+
 
 def convert_diffpack_to_xml(diffpackfile):
     """
@@ -201,7 +208,8 @@ def convert_diffpack_to_xml(diffpackfile):
     """
     if not os.path.isfile(diffpackfile):
         raise ValueError("Can't find file: '{}'".format(diffpackfile))
-    logger.debug('Using dolfin-convert to convert {} to xml format.'.format(diffpackfile))
+    logger.debug(
+        'Using dolfin-convert to convert {} to xml format.'.format(diffpackfile))
 
     basename = os.path.splitext(diffpackfile)[0]
     xmlfile = basename + ".xml"
@@ -230,54 +238,54 @@ def change_xml_marker_starts_with_zero(xmlfile):
     community will abandon netegn later?)
     """
 
-    f=open(xmlfile,'r')
-    data=f.read()
+    f = open(xmlfile, 'r')
+    data = f.read()
     f.close()
 
-    data_begin=False
-    values=[]
+    data_begin = False
+    values = []
 
     for line in data.splitlines():
 
         if 'mesh_value_collection' in line:
             if 'dim="3"' in line:
-                data_begin=True
+                data_begin = True
             else:
-                data_begin=False
+                data_begin = False
 
         if data_begin and 'value="' in line:
-            v=line.split('value="')[1]
-            v=v.split('"')[0]
+            v = line.split('value="')[1]
+            v = v.split('"')[0]
             values.append(int(v))
 
-    if len(values)==0:
+    if len(values) == 0:
         return
 
-    if min(values)==0:
+    if min(values) == 0:
         return
-    elif min(values)<0:
+    elif min(values) < 0:
         raise ValueError("Mesh markers are wrong?!")
 
-    min_index=min(values)
+    min_index = min(values)
 
-    f=open(xmlfile,'w')
-    data_begin=False
+    f = open(xmlfile, 'w')
+    data_begin = False
     for line in data.splitlines():
 
         if 'mesh_value_collection' in line:
             if 'dim="3"' in line:
-                data_begin=True
+                data_begin = True
             else:
-                data_begin=False
+                data_begin = False
 
         if data_begin and 'value="' in line:
-            v=line.split('value="')
-            v_bak=v[0]
-            v=v[1].split('"')[0]
-            v=int(v)-min_index
-            f.write(v_bak+ 'value="%d"/>\n'%v)
+            v = line.split('value="')
+            v_bak = v[0]
+            v = v[1].split('"')[0]
+            v = int(v) - min_index
+            f.write(v_bak + 'value="%d"/>\n' % v)
         else:
-            f.write(line+'\n')
+            f.write(line + '\n')
 
     f.close()
 
@@ -333,7 +341,8 @@ def box(x0, x1, x2, y0, y1, y2, maxh, save_result=True, filename='', directory='
         tlo main;
         """).format(x0, x1, x2, y0, y1, y2, maxh=maxh)
     if save_result == True and filename == '':
-        filename = "box-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}".format(x0, x1, x2, y0, y1, y2, maxh).replace(".", "_")
+        filename = "box-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}".format(
+            x0, x1, x2, y0, y1, y2, maxh).replace(".", "_")
     return from_csg(csg, save_result=save_result, filename=filename, directory=directory)
 
 
@@ -391,7 +400,8 @@ def cylinder(r, h, maxh, save_result=True, filename='', directory=''):
         tlo fincyl;
         """).format(r=r, h=h, maxh=maxh)
     if save_result == True and filename == '':
-        filename = "cyl-{:.1f}-{:.1f}-{:.1f}".format(r, h, maxh).replace(".", "_")
+        filename = "cyl-{:.1f}-{:.1f}-{:.1f}".format(
+            r, h, maxh).replace(".", "_")
     return from_csg(csg_string, save_result=save_result, filename=filename, directory=directory)
 
 
@@ -465,8 +475,9 @@ def elliptical_nanodisk_with_cuboid_shell(d1, d2, h, maxh_disk, lx, ly, lz, maxh
     sy = 0.5 * ly
     sz = lz
 
-    EPS = 0.0  # We may have to use a very small non-zero value here if vertices
-               # are missing from the inner mesh due to rounding errors.
+    # We may have to use a very small non-zero value here if vertices
+    EPS = 0.0
+    # are missing from the inner mesh due to rounding errors.
     if valign == 'bottom':
         vdiff = EPS
     elif valign == 'top':
@@ -474,7 +485,8 @@ def elliptical_nanodisk_with_cuboid_shell(d1, d2, h, maxh_disk, lx, ly, lz, maxh
     elif valign == 'center':
         vdiff = 0.5 * (lz - h)
     else:
-        raise ValueError("Argument 'valign' must be one of 'center', 'top', 'bottom'. Got: '{}'.".format(valign))
+        raise ValueError(
+            "Argument 'valign' must be one of 'center', 'top', 'bottom'. Got: '{}'.".format(valign))
 
     snegz = snegz - vdiff
     sz = sz - vdiff
@@ -491,11 +503,12 @@ def elliptical_nanodisk_with_cuboid_shell(d1, d2, h, maxh_disk, lx, ly, lz, maxh
         solid air = box and not shell;
         tlo disk;
         tlo air -transparent;
-        """).format(r1=r1, r2=r2, h=h, r1_shell=r1 + sep, r2_shell = r2 + sep, negsep=-sep, h_shell=h + sep,
+        """).format(r1=r1, r2=r2, h=h, r1_shell=r1 + sep, r2_shell=r2 + sep, negsep=-sep, h_shell=h + sep,
                     snegx=snegx, snegy=snegy, snegz=snegz, sx=sx, sy=sy, sz=sz,
                     maxh_disk=maxh_disk, maxh_shell=maxh_shell)
     if save_result == True and filename == '':
-        filename = "ellcyl-with-shell-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{}".format(r1, r2, h, lx, ly, lz, maxh_disk, maxh_shell, sep, valign).replace(".", "_")
+        filename = "ellcyl-with-shell-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{}".format(
+            r1, r2, h, lx, ly, lz, maxh_disk, maxh_shell, sep, valign).replace(".", "_")
     return from_csg(csg_string, save_result=save_result, filename=filename, directory=directory)
 
 
@@ -535,7 +548,7 @@ def pair_of_disks(d1, d2, h1, h2, sep, theta, maxh, save_result=True, filename='
     the docstring of the `cylinder` function.
 
     """
-    theta_rad = theta * pi/180.0
+    theta_rad = theta * pi / 180.0
     r1 = 0.5 * d1
     r2 = 0.5 * d2
     sep_centers = r1 + sep + r2
@@ -553,7 +566,8 @@ def pair_of_disks(d1, d2, h1, h2, sep, theta, maxh, save_result=True, filename='
         tlo disk2;
         """).format(r1=r1, h1=h1, x2=x2, y2=y2, r2=r2, h2=h2, maxh=maxh)
     if save_result == True and filename == '':
-        filename = "diskpair-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}".format(r1, r2, h1, h2, sep, theta, maxh).replace(".", "_")
+        filename = "diskpair-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}-{:.1f}".format(
+            r1, r2, h1, h2, sep, theta, maxh).replace(".", "_")
     return from_csg(csg_string, save_result=save_result, filename=filename, directory=directory)
 
 
@@ -583,7 +597,8 @@ def elliptic_cylinder(r1, r2, h, maxh, save_result=True, filename='', directory=
         tlo fincyl;
         """).format(r1=r1, r2=r2, h=h, maxh=maxh)
     if save_result == True and filename == '':
-        filename = "ellcyl-{:.1f}-{:.1f}-{:.1f}-{:.1f}".format(r1, r2, h, maxh).replace(".", "_")
+        filename = "ellcyl-{:.1f}-{:.1f}-{:.1f}-{:.1f}".format(
+            r1, r2, h, maxh).replace(".", "_")
     return from_csg(csg_string, save_result=save_result, filename=filename, directory=directory)
 
 
@@ -610,11 +625,12 @@ def ellipsoid(r1, r2, r3, maxh, save_result=True, filename='', directory=''):
         tlo ell;
         """).format(r1=r1, r2=r2, r3=r3, maxh=maxh)
     if save_result == True and filename == '':
-        filename = "ellipsoid-{:.1f}-{:.1f}-{:.1f}-{:.1f}".format(r1, r2, r3, maxh).replace(".", "_")
+        filename = "ellipsoid-{:.1f}-{:.1f}-{:.1f}-{:.1f}".format(
+            r1, r2, r3, maxh).replace(".", "_")
     return from_csg(csg_string, save_result=save_result, filename=filename, directory=directory)
 
 
-def ring(r1,r2, h, maxh, save_result=True, filename='', directory='',with_middle_plane=False):
+def ring(r1, r2, h, maxh, save_result=True, filename='', directory='', with_middle_plane=False):
     """
     Return a dolfin mesh representing a ring with inner radius `r1`, outer
     radius `r2` and height `h`. The argument `maxh` controls the maximal element size
@@ -643,7 +659,7 @@ def ring(r1,r2, h, maxh, save_result=True, filename='', directory='',with_middle
 
 	solid ring = fincyl2 and not fincyl -maxh = {maxh};
         tlo ring;
-        """).format(r1=r1,r2=r2, h=h/2.0, maxh=maxh)
+        """).format(r1=r1, r2=r2, h=h / 2.0, maxh=maxh)
 
     if with_middle_plane:
         csg_string = textwrap.dedent("""\
@@ -661,12 +677,11 @@ def ring(r1,r2, h, maxh, save_result=True, filename='', directory='',with_middle
 
         solid ring = (fincyl2 or fincyl3) and not fincyl -maxh = {maxh};
         tlo ring;
-        """).format(r1=r1,r2=r2, h=h/2.0, maxh=maxh)
-
-
+        """).format(r1=r1, r2=r2, h=h / 2.0, maxh=maxh)
 
     if save_result == True and filename == '':
-        filename = "ring-{:.1f}-{:.1f}-{:.1f}-{:.1f}".format(r1,r2, h, maxh).replace(".", "_")
+        filename = "ring-{:.1f}-{:.1f}-{:.1f}-{:.1f}".format(
+            r1, r2, h, maxh).replace(".", "_")
     return from_csg(csg_string, save_result=save_result, filename=filename, directory=directory)
 
 
@@ -692,13 +707,15 @@ def sphere_inside_box(r_sphere, r_shell, l_box, maxh_sphere, maxh_box, maxh_shel
         solid air = box and not shell;
         tlo ball;
         tlo air -transparent;
-        """).format(x=x, y=y, z=z, r_sphere=r_sphere, r_shell=r_shell, sneg=-0.5*l_box, s=0.5*l_box,
+        """).format(x=x, y=y, z=z, r_sphere=r_sphere, r_shell=r_shell, sneg=-0.5 * l_box, s=0.5 * l_box,
                     maxh_sphere=maxh_sphere, maxh_box=maxh_box)
 
     if save_result == True and filename == '':
-        filename = 'sphere_inside_box__{:.1f}_{:.1f}_{:.1f}__{:.1f}__{:.1f}__{:.1f}__{:.1f}__{:.1f}'.format(x, y, z, r_sphere, r_shell, l_box, maxh_sphere, maxh_box)
+        filename = 'sphere_inside_box__{:.1f}_{:.1f}_{:.1f}__{:.1f}__{:.1f}__{:.1f}__{:.1f}__{:.1f}'.format(
+            x, y, z, r_sphere, r_shell, l_box, maxh_sphere, maxh_box)
 
-    mesh = from_csg(mesh_descr, save_result=save_result, filename=filename, directory=directory)
+    mesh = from_csg(
+        mesh_descr, save_result=save_result, filename=filename, directory=directory)
     return mesh
 
 
@@ -708,6 +725,7 @@ def mesh_volume(mesh):
     alternatively,  volume = assemble(Constant(1)*dx(mesh))
     """
     return sum([c.volume() for c in df.cells(mesh)])
+
 
 def nodal_volume(space, unit_length=1):
     """
@@ -724,6 +742,7 @@ def nodal_volume(space, unit_length=1):
         return df.assemble(df.dot(v, df.Constant((1, 1, 1))) * df.dx).array() * unit_length ** dim
     else:
         return df.assemble(v * df.dx).array() * unit_length ** dim
+
 
 def mesh_info(mesh):
     """
@@ -760,15 +779,16 @@ def mesh_info(mesh):
     facets = [f for f in df.facets(mesh)]
     C = mesh.num_cells()
     F = len(facets)
-    F_i = 4*C-F
-    F_s = F-F_i
+    F_i = 4 * C - F
+    F_s = F - F_i
     E = len(edges)
     V = mesh.num_vertices()
 
     lens = [e.length() for e in df.edges(mesh)]
     vals, bins = np.histogram(lens, bins=20)
-    vals = np.insert(vals, 0, 0)  # to ensure that 'vals' and 'bins' have the same number of elements
-    vals_normalised = 70.0/max(vals)*vals
+    # to ensure that 'vals' and 'bins' have the same number of elements
+    vals = np.insert(vals, 0, 0)
+    vals_normalised = 70.0 / max(vals) * vals
 
     info_string = textwrap.dedent("""\
         ===== Mesh info: ==============================
@@ -783,9 +803,10 @@ def mesh_info(mesh):
         """.format(C, F, F_s, F_i, E, V))
 
     for (b, v) in zip(bins, vals_normalised):
-        info_string += "{:.3f} {}\n".format(b, int(round(v))*'*')
+        info_string += "{:.3f} {}\n".format(b, int(round(v)) * '*')
 
     return info_string
+
 
 def mesh_quality(mesh):
     """
@@ -801,13 +822,14 @@ def mesh_quality(mesh):
 
     ratios = df.MeshQuality.radius_ratios(mesh).array()
     vals, bins = np.histogram(ratios, bins=20)
-    vals = np.insert(vals, 0, 0)  # to ensure that 'vals' and 'bins' have the same number of elements
-    vals_normalised = 70.0/max(vals)*vals
+    # to ensure that 'vals' and 'bins' have the same number of elements
+    vals = np.insert(vals, 0, 0)
+    vals_normalised = 70.0 / max(vals) * vals
 
     info_string = "======== Mesh quality info: ========\n"
 
     for (b, v) in zip(bins, vals_normalised):
-        info_string += "{:.3f} {}\n".format(b, int(round(v))*'*')
+        info_string += "{:.3f} {}\n".format(b, int(round(v)) * '*')
 
     return info_string
 
@@ -862,7 +884,8 @@ def describe_mesh_size(mesh, unit_length):
     """
     magn = order_of_magnitude(mesh_size(mesh, unit_length))
     if magn <= -15:
-        # happens when mesh expressed in meters and unit_length=1e-9 nevertheless
+        # happens when mesh expressed in meters and unit_length=1e-9
+        # nevertheless
         return "smaller than a femtometer"
     if magn < -9:
         return "smaller than a nanometer"
@@ -887,7 +910,7 @@ def describe_mesh_size(mesh, unit_length):
         return "hundreds of meters large"
 
 
-def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, dg_fun=None,**kwargs):
+def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, dg_fun=None, **kwargs):
     """
     Plot the given mesh.
 
@@ -954,9 +977,9 @@ def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, dg_fun=None,**kwar
     # dimension individually rather than the mesh volume as a whole.)
     if not kwargs.has_key('linewidth'):
         lw_threshold = 500.0 if dim == 2 else 5000.0
-        a = mesh.num_cells()/mesh_volume(mesh)
+        a = mesh.num_cells() / mesh_volume(mesh)
         if a > lw_threshold:
-            kwargs['linewidth'] = pow(lw_threshold / a, 1.0/dim)
+            kwargs['linewidth'] = pow(lw_threshold / a, 1.0 / dim)
             logger.debug("Automatically adapting linewidth to improve plot quality "
                          "(new value: linewidth = {})".format(kwargs['linewidth']))
 
@@ -987,35 +1010,39 @@ def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, dg_fun=None,**kwar
             logger.warning("Ignoring argument `figsize` because `ax` was "
                            "provided explicitly.")
 
-    if dg_fun==None:
-        dg_fun=df.Function(df.FunctionSpace(mesh, 'DG', 0))
-        dg_fun.vector()[:]=1
+    if dg_fun == None:
+        dg_fun = df.Function(df.FunctionSpace(mesh, 'DG', 0))
+        dg_fun.vector()[:] = 1
 
     if dim == 2:
         coords = mesh.coordinates()
-        x = coords[:,0]
-        y = coords[:,1]
-        triangs = np.array([[v.index() for v in df.vertices(s)] for s in df.faces(mesh)])
+        x = coords[:, 0]
+        y = coords[:, 1]
+        triangs = np.array([[v.index() for v in df.vertices(s)]
+                            for s in df.faces(mesh)])
 
         xmid = x[triangs].mean(axis=1)
         ymid = y[triangs].mean(axis=1)
 
-        zfaces=np.array([dg_fun(xmid[i],ymid[i]) for i in range(len(xmid))])
+        zfaces = np.array([dg_fun(xmid[i], ymid[i]) for i in range(len(xmid))])
 
         if scalar_field != None:
-            logger.warning("Ignoring the 'scalar_field' argument as this is not implemented for 2D meshes yet.")
+            logger.warning(
+                "Ignoring the 'scalar_field' argument as this is not implemented for 2D meshes yet.")
 
-        ## XXX TODO: It would be nice to have the triangles coloured.
-        ## This should be possible using 'tripcolor', but I haven't
-        ## figured out yet how to pass it the color information (e.g.,
-        ## uniformly coloured if we just want to plot the mesh, or
-        ## passing an array of color values if we want to plot a
-        ## scalar function on a mesh).
+        # XXX TODO: It would be nice to have the triangles coloured.
+        # This should be possible using 'tripcolor', but I haven't
+        # figured out yet how to pass it the color information (e.g.,
+        # uniformly coloured if we just want to plot the mesh, or
+        # passing an array of color values if we want to plot a
+        # scalar function on a mesh).
         #ax.tripcolor(x, y, triangles=triangs)
-        ax.tripcolor(x, y, triangles=triangs, facecolors=zfaces, edgecolors='k', **kwargs)
+        ax.tripcolor(
+            x, y, triangles=triangs, facecolors=zfaces, edgecolors='k', **kwargs)
 
     elif dim == 3:
-        # TODO: Remove this error message once matplotlib 1.3 has been released!
+        # TODO: Remove this error message once matplotlib 1.3 has been
+        # released!
         import matplotlib
         if matplotlib.__version__[:3] < '1.3':
             raise NotImplementedError(
@@ -1043,14 +1070,16 @@ def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, dg_fun=None,**kwar
 
         triangs = [[v.index() for v in df.vertices(s)] for s in df.faces(bm)]
         try:
-            ax.plot_trisurf(x, y, z, triangles=triangs, vertex_vals=scalar_field, **kwargs)
+            ax.plot_trisurf(
+                x, y, z, triangles=triangs, vertex_vals=scalar_field, **kwargs)
         except AttributeError:
             if scalar_field != None:
                 logger.warning("Ignoring 'scalar_field' argument because this "
                                "version of matplotlib doesn't support it.")
             ax.plot_trisurf(x, y, z, triangles=triangs, **kwargs)
     else:
-        raise ValueError("Plotting is only supported for 2- and 3-dimensional meshes.")
+        raise ValueError(
+            "Plotting is only supported for 2- and 3-dimensional meshes.")
 
     return ax
 
@@ -1165,7 +1194,7 @@ def plot_mesh_regions(fun_mesh_regions, regions, colors=None, alphas=None,
         res = arg
         if res == None:
             res = []
-        elif not isinstance (arg, (ListType, TupleType)):
+        elif not isinstance(arg, (ListType, TupleType)):
             res = [res]
         return res
 
@@ -1275,8 +1304,9 @@ def line_mesh(vertices):
             "(for 1D meshes) or a list of mesh nodes. Got: {}".format(vertices))
     dim = vertices.shape[-1]
 
-    # The 'cells' of the mesh are simply the intervals connecting adjacent nodes
-    cells = [[i, i+1] for i in xrange(n-1)]
+    # The 'cells' of the mesh are simply the intervals connecting adjacent
+    # nodes
+    cells = [[i, i + 1] for i in xrange(n - 1)]
 
     return build_mesh(vertices, cells)
 
@@ -1293,7 +1323,8 @@ def embed3d(mesh, z_embed=0.0):
     """
     geom_dim = mesh.geometry().dim()
     if geom_dim != 2:
-        raise NotImplementedError("Mesh currently must have geometrical dimension 2. Got: {}".format(geom_dim))
+        raise NotImplementedError(
+            "Mesh currently must have geometrical dimension 2. Got: {}".format(geom_dim))
 
     vertices = mesh.coordinates()
     cells = mesh.cells()
@@ -1304,6 +1335,7 @@ def embed3d(mesh, z_embed=0.0):
     vertices_3d[:, 2] = z_embed
 
     return build_mesh(vertices_3d, cells)
+
 
 def build_mesh(vertices, cells):
     """
@@ -1348,17 +1380,19 @@ def mesh_is_periodic(mesh, axes):
     try:
         axes = map(lambda val: {'x': 0, 'y': 1, 'z': 2}[val], axes)
     except KeyError:
-        raise ValueError("Argument 'axes' should be a string containing only 'x', 'y' and 'z'.")
+        raise ValueError(
+            "Argument 'axes' should be a string containing only 'x', 'y' and 'z'.")
 
     min_coords = coords.min(axis=0)
     max_coords = coords.max(axis=0)
     # Generate dictionary which associates each axis direction with the indices
     # of the minimal and maximal verices along that axis direction.
     extremal_vertex_indices = {
-        # XXX TODO: Maybe avoid the repeated loops if speed becomes a problem for large meshes?
+        # XXX TODO: Maybe avoid the repeated loops if speed becomes a problem
+        # for large meshes?
         axis: {'min': [i for i in xrange(len(coords)) if coords[i][axis] == min_coords[axis]],
                'max': [i for i in xrange(len(coords)) if coords[i][axis] == max_coords[axis]],
-              } for axis in axes}
+               } for axis in axes}
 
     mesh_extents = [b - a for (a, b) in zip(min_coords, max_coords)]
 
@@ -1366,13 +1400,13 @@ def mesh_is_periodic(mesh, axes):
     bbt = df.BoundingBoxTree()
     bbt.build(mesh)
 
-
     def find_matching_vertex_index(idx, axis, a):
         """
         Find index of the vertex which is identified with the vertex `idx`
         on the other side of the mesh.
         """
-        pt_coords = coords[idx].copy()  # need a copy because otherwise we edit the mesh coordinates in-place
+        pt_coords = coords[idx].copy(
+        )  # need a copy because otherwise we edit the mesh coordinates in-place
         pt_coords[axis] += a * mesh_extents[axis]  # move point to other edge
         pt = df.Point(*pt_coords)
         cell_idx, distance = bbt.compute_closest_entity(pt)
@@ -1381,12 +1415,12 @@ def mesh_is_periodic(mesh, axes):
                 return v_idx
         return None
 
-
     for axis in axes:
         idcs_edge1 = extremal_vertex_indices[axis]['min']
         idcs_edge2 = extremal_vertex_indices[axis]['max']
 
-        # If we don't have the same number of vertices on the two edges then the mesh is clearly not periodic
+        # If we don't have the same number of vertices on the two edges then
+        # the mesh is clearly not periodic
         if len(idcs_edge1) != len(idcs_edge2):
             return False
 
@@ -1398,7 +1432,8 @@ def mesh_is_periodic(mesh, axes):
             for idx1 in indices1:
                 idx2 = find_matching_vertex_index(idx1, axis, a)
                 if idx2 is None or idx2 not in indices2:
-                    # No matching vertex found on other edge, hence mesh is not periodic
+                    # No matching vertex found on other edge, hence mesh is not
+                    # periodic
                     return False
             return True
 

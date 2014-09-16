@@ -77,7 +77,8 @@ def sphere_inside_airbox(r_sphere=5.0, r_shell=10.0, l_box=50.0, maxh_sphere=2.0
                              maxh_sphere=maxh_sphere, maxh_box=maxh_box,
                              maxh_shell=maxh_shell, center_sphere=center_sphere)
 
-    ## Create a Simulation object using this mesh with a tiny Ms in the "air" region
+    # Create a Simulation object using this mesh with a tiny Ms in the "air"
+    # region
     def Ms_pyfun(pt):
         if np.linalg.norm(pt) <= 0.5 * (r_sphere + r_shell):
             return Ms
@@ -91,7 +92,8 @@ def sphere_inside_airbox(r_sphere=5.0, r_shell=10.0, l_box=50.0, maxh_sphere=2.0
         else:
             return "air"
 
-    sim = sim_with(mesh, Ms_fun, m_init=m_init, A=A, unit_length=1e-9, name='sphere_inside_airbox', **kwargs)
+    sim = sim_with(mesh, Ms_fun, m_init=m_init, A=A,
+                   unit_length=1e-9, name='sphere_inside_airbox', **kwargs)
     sim.mark_regions(fun_region_marker)
 
     return sim

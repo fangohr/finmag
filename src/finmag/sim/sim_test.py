@@ -38,6 +38,7 @@ def num_interactions(sim):
 
 
 class TestSimulation(object):
+
     @classmethod
     def setup_class(cls):
         # N.B.: The mesh and simulation are only created once for the
@@ -124,7 +125,7 @@ class TestSimulation(object):
 
         # Create reference vectors at the same positions
         v_ref = self.sim.get_interaction("Demag").compute_field()
-        v0_ref = v_ref[[0, N, 2*N]]
+        v0_ref = v_ref[[0, N, 2 * N]]
 
         # Check that the results coincide
         print "v0_probed: {}".format(v0_probed)
@@ -135,8 +136,10 @@ class TestSimulation(object):
     def test_probe_constant_m_at_individual_points(self):
         mesh = df.BoxMesh(-2, -2, -2, 2, 2, 2, 5, 5, 5)
         m_init = np.array([0.2, 0.7, -0.4])
-        m_init /= np.linalg.norm(m_init)  # normalize the vector for later comparison
-        sim = sim_with(mesh, Ms=8.6e5, m_init=m_init, unit_length=1e-9, demag_solver=None)
+        # normalize the vector for later comparison
+        m_init /= np.linalg.norm(m_init)
+        sim = sim_with(
+            mesh, Ms=8.6e5, m_init=m_init, unit_length=1e-9, demag_solver=None)
 
         # Points inside the mesh where to probe the magnetisation.
         probing_pts = [
@@ -160,7 +163,7 @@ class TestSimulation(object):
         assert((np.ma.getmask(m_probed_outside) == True).all())
 
     def test_probe_nonconstant_m_at_individual_points(self):
-        TOL=1e-5
+        TOL = 1e-5
 
         unit_length = 1e-9
         mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 1000, 2, 2)
@@ -168,7 +171,8 @@ class TestSimulation(object):
                                 "sin(x[0]*pi)",
                                 "0.0"),
                                unit_length=unit_length)
-        sim = sim_with(mesh, Ms=8.6e5, m_init=m_init, unit_length=unit_length, demag_solver=None)
+        sim = sim_with(
+            mesh, Ms=8.6e5, m_init=m_init, unit_length=unit_length, demag_solver=None)
 
         # Probe the magnetisation along two lines parallel to the x-axis.
         # We choose the limits just inside the mesh boundaries to prevent
@@ -194,8 +198,8 @@ class TestSimulation(object):
             m2 = m_probed_vals2[i]
             pt = probing_pts[i]
             x = pt[0]
-            m_expected = np.array([cos(x*pi),
-                                   sin(x*pi),
+            m_expected = np.array([cos(x * pi),
+                                   sin(x * pi),
                                    0.0])
             assert(np.linalg.norm(m - m_expected) < TOL)
             assert(np.linalg.norm(m2 - m_expected) < TOL)
@@ -215,8 +219,9 @@ class TestSimulation(object):
         nx = 5
         ny = 10
         z = 5.0  # use cutting plane in the middle of the cuboid
-        X, Y = np.mgrid[0:3:nx*1j, 0:3:ny*1j]
-        pts = np.array([[(X[i, j], Y[i,j], z) for j in xrange(ny)] for i in xrange(nx)])
+        X, Y = np.mgrid[0:3:nx * 1j, 0:3:ny * 1j]
+        pts = np.array([[(X[i, j], Y[i, j], z) for j in xrange(ny)]
+                        for i in xrange(nx)])
 
         # Probe the field
         res = sim.probe_field('m', pts)
@@ -224,9 +229,9 @@ class TestSimulation(object):
         # Check that 'res' has the right shape and values (the field vectors
         # should be constant and equal to [1/sqrt(2), 0, 1/sqrt(2)].
         assert(res.shape == (nx, ny, 3))
-        assert(np.allclose(res[..., 0], 1.0/sqrt(2)))
+        assert(np.allclose(res[..., 0], 1.0 / sqrt(2)))
         assert(np.allclose(res[..., 1], 0.0))
-        assert(np.allclose(res[..., 2], 1.0/sqrt(2)))
+        assert(np.allclose(res[..., 2], 1.0 / sqrt(2)))
 
     def test_schedule(self, tmpdir):
         os.chdir(str(tmpdir))
@@ -234,6 +239,7 @@ class TestSimulation(object):
         # Define a function to be scheduled, with one positional and
         # one keyword argument.
         res = []
+
         def f(sim, tag, optional=None):
             res.append((tag, int(sim.t * 1e13), optional))
 
@@ -252,17 +258,30 @@ class TestSimulation(object):
 
         # The keyword arguments 'at', 'every', 'at_end' and 'realtime'
         # are forbidden:
-        def f_illegal_1(sim, at=None): pass
-        def f_illegal_2(sim, after=None): pass
-        def f_illegal_3(sim, every=None): pass
-        def f_illegal_4(sim, at_end=None): pass
-        def f_illegal_5(sim, realtime=None): pass
-        with pytest.raises(ValueError): sim.schedule(f_illegal_1, at=0.0)
-        with pytest.raises(ValueError): sim.schedule(f_illegal_2, at=0.0)
-        with pytest.raises(ValueError): sim.schedule(f_illegal_3, at=0.0)
-        with pytest.raises(ValueError): sim.schedule(f_illegal_4, at=0.0)
-        with pytest.raises(ValueError): sim.schedule(f_illegal_5, at=0.0)
+        def f_illegal_1(sim, at=None):
+            pass
 
+        def f_illegal_2(sim, after=None):
+            pass
+
+        def f_illegal_3(sim, every=None):
+            pass
+
+        def f_illegal_4(sim, at_end=None):
+            pass
+
+        def f_illegal_5(sim, realtime=None):
+            pass
+        with pytest.raises(ValueError):
+            sim.schedule(f_illegal_1, at=0.0)
+        with pytest.raises(ValueError):
+            sim.schedule(f_illegal_2, at=0.0)
+        with pytest.raises(ValueError):
+            sim.schedule(f_illegal_3, at=0.0)
+        with pytest.raises(ValueError):
+            sim.schedule(f_illegal_4, at=0.0)
+        with pytest.raises(ValueError):
+            sim.schedule(f_illegal_5, at=0.0)
 
     def test_save_ndt(self, tmpdir):
         os.chdir(str(tmpdir))
@@ -282,7 +301,6 @@ class TestSimulation(object):
         assert 'H_Demag_x' in entities
         assert 'H_Demag_y' in entities
         assert 'H_Demag_z' in entities
-
 
     def test_save_restart_data(self, tmpdir):
         """
@@ -343,11 +361,13 @@ class TestSimulation(object):
         for col in ['m_x', 'm_y', 'm_z']:
             a = f1[col]
             b = f2[col]
-            a = np.concatenate([a[:10], a[11:]])  # delete the duplicate line due to the restart
+            # delete the duplicate line due to the restart
+            a = np.concatenate([a[:10], a[11:]])
             assert(np.allclose(a, b))
         assert(np.allclose(sim1.m, sim2.m, atol=1e-6))
 
-        # Check that resetting the time to zero works (this used to not work due to a bug).
+        # Check that resetting the time to zero works (this used to not work
+        # due to a bug).
         sim1.restart('barmini.npz', t0=0.0)
         assert(sim1.t == 0.0)
 
@@ -394,7 +414,7 @@ class TestSimulation(object):
         # Check that the time steps for sim2 are as expected.
         b = np.loadtxt('test_save_ndt2.ndt')
         tb = b[:, 0]
-        tb_expected = 1e-11 * np.arange(10+1)
+        tb_expected = 1e-11 * np.arange(10 + 1)
         assert(np.allclose(tb, tb_expected, atol=0))
 
         # Delete the duplicate line due to resetting the time
@@ -402,26 +422,27 @@ class TestSimulation(object):
 
         # Check that the magnetisation dynamics of sim1 and sim2 are the same.
         # skip the last one which is the steps in cvode.
-        # skipping dmdt for the moment  
-        assert(np.allclose(a[:, 1:8], b[:, 1:8], atol=1e-4,rtol=1e-8))
-        assert(np.allclose(a[:, 12:-1], b[:, 12:-1], atol=1e-4,rtol=1e-8))
+        # skipping dmdt for the moment
+        assert(np.allclose(a[:, 1:8], b[:, 1:8], atol=1e-4, rtol=1e-8))
+        assert(np.allclose(a[:, 12:-1], b[:, 12:-1], atol=1e-4, rtol=1e-8))
         # dmdt deviations are large and so would fail with the above relative tolerance.
         # Hopefully this is due to the non-reproducible m and dmdt on the i-7's
         # If not, this test should be re-written. For the time being, the rel tol
         # has been increased.
-        assert(np.allclose(a[:, 9:11], b[:, 9:11], atol=1e-4,rtol=1))
+        assert(np.allclose(a[:, 9:11], b[:, 9:11], atol=1e-4, rtol=1))
 
     def test_save_vtk(self, tmpdir):
         os.chdir(str(tmpdir))
 
         # Create an empty dummy .pvd file
-        with open('barmini.pvd', 'w'): pass
+        with open('barmini.pvd', 'w'):
+            pass
 
         sim = barmini()
         with pytest.raises(IOError):
             # existing file should not be overwritten
             sim.schedule('save_vtk', every=1e-13, overwrite=False)
-            #sim.run_until(1e-12)
+            # sim.run_until(1e-12)
 
         # This time we enforce overwriting
         sim = barmini()
@@ -431,13 +452,19 @@ class TestSimulation(object):
 
         # Schedule saving to different filenames and at various time steps.
         sim = barmini()
-        sim.schedule('save_vtk', filename='bar2.pvd', every=1e-13, overwrite=True)
-        sim.schedule('save_vtk', filename='bar2.pvd', at=2.5e-13, overwrite=False)
-        sim.schedule('save_vtk', filename='bar2.pvd', at=4.3e-13, overwrite=False)
+        sim.schedule(
+            'save_vtk', filename='bar2.pvd', every=1e-13, overwrite=True)
+        sim.schedule(
+            'save_vtk', filename='bar2.pvd', at=2.5e-13, overwrite=False)
+        sim.schedule(
+            'save_vtk', filename='bar2.pvd', at=4.3e-13, overwrite=False)
 
-        sim.schedule('save_vtk', filename='bar3.pvd', at=3.5e-13, overwrite=True)
-        sim.schedule('save_vtk', filename='bar3.pvd', every=2e-13, overwrite=True)
-        sim.schedule('save_vtk', filename='bar3.pvd', at=3.8e-13, overwrite=True)
+        sim.schedule(
+            'save_vtk', filename='bar3.pvd', at=3.5e-13, overwrite=True)
+        sim.schedule(
+            'save_vtk', filename='bar3.pvd', every=2e-13, overwrite=True)
+        sim.schedule(
+            'save_vtk', filename='bar3.pvd', at=3.8e-13, overwrite=True)
 
         # ... then run the simulation
         sim.run_until(5e-13)
@@ -449,7 +476,8 @@ class TestSimulation(object):
         assert(len(glob('bar2*.vtu')) == 8)
         assert(len(glob('bar3*.vtu')) == 6)
 
-        # Saving another snapshot with overwrite=True should erase existing .vtu files
+        # Saving another snapshot with overwrite=True should erase existing
+        # .vtu files
         sim.save_vtk(filename='bar3.pvd', overwrite=True)
         assert(len(glob('bar3*.vtu')) == 1)
 
@@ -509,13 +537,13 @@ class TestSimulation(object):
 
         # Adding Zeeman once more will trigger an error. HF would argue that this is okay:
         # it seems odd to add and remove interactions like this.
-        # 
-        # We could in principle allow this (by checking whether currently the get method 
+        #
+        # We could in principle allow this (by checking whether currently the get method
         # returns NAN for this interaction, or defining a token for NAN to be returned), but
-        # it seems to increase complexity for a use case that shouldn't really exist.
+        # it seems to increase complexity for a use case that shouldn't really
+        # exist.
         with pytest.raises(AssertionError):
             sim.add(Zeeman((0, 0, 1)))
-
 
     def test_switch_off_H_ext(self):
         """
@@ -545,7 +573,8 @@ class TestSimulation(object):
         H = sim.probe_field('Zeeman', [0.5e-9, 0.5e-9, 0.5e-9])
         assert(np.allclose(H, [-4, -5, -6]))
 
-        # Try to set H_ext in a simulation that doesn't have a Zeeman interaction yet
+        # Try to set H_ext in a simulation that doesn't have a Zeeman
+        # interaction yet
         sim = Simulation(mesh, Ms=1, unit_length=1e-9)
         sim.set_H_ext((1, 2, 3))  # this should not raise an error!
         H = sim.get_field_as_dolfin_function('Zeeman').vector().array()
@@ -556,21 +585,22 @@ class TestSimulation(object):
     def test_pbc2d_m_init(self):
 
         def m_init_fun(pos):
-            if pos[0]==0 or pos[1]==0:
-                return [0,0,1]
+            if pos[0] == 0 or pos[1] == 0:
+                return [0, 0, 1]
             else:
-                return [0,0,-1]
+                return [0, 0, -1]
 
         mesh = df.UnitSquareMesh(3, 3)
 
         m_init = vector_valued_function(m_init_fun, mesh)
         sim = Simulation(mesh, Ms=1, pbc2d=True)
         sim.set_m(m_init)
-        expect_m=np.zeros((3,16))
-        expect_m[2,:]=np.array([1, 1, 1, 1, 1, -1, -1,  1,  1, -1, -1,  1,  1,  1,  1,  1])
-        expect_m.shape=(48,)
+        expect_m = np.zeros((3, 16))
+        expect_m[2, :] = np.array(
+            [1, 1, 1, 1, 1, -1, -1,  1,  1, -1, -1,  1,  1,  1,  1,  1])
+        expect_m.shape = (48,)
 
-        assert np.array_equal(sim.m,expect_m)
+        assert np.array_equal(sim.m, expect_m)
 
     def test_set_stt(self):
         """
@@ -579,7 +609,8 @@ class TestSimulation(object):
         """
         import matplotlib.pyplot as plt
         mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 1, 1, 1)
-        sim = Simulation(mesh, Ms=8.6e5, unit_length=1e-9, name='macrospin_with_stt')
+        sim = Simulation(
+            mesh, Ms=8.6e5, unit_length=1e-9, name='macrospin_with_stt')
         sim.m = (1, 0, 0)
         sim.add(Zeeman([0, 0, 1e5]))
         sim.alpha = 0.0  # no damping
@@ -593,9 +624,12 @@ class TestSimulation(object):
 
         ts, xs, ys, zs = np.loadtxt('macrospin_with_stt.ndt').T[:4]
         fig = plt.figure(figsize=(20, 5))
-        ax1 = fig.add_subplot(131); ax1.plot(ts, xs)
-        ax2 = fig.add_subplot(132); ax2.plot(ts, ys)
-        ax3 = fig.add_subplot(133); ax3.plot(ts, zs)
+        ax1 = fig.add_subplot(131)
+        ax1.plot(ts, xs)
+        ax2 = fig.add_subplot(132)
+        ax2.plot(ts, ys)
+        ax3 = fig.add_subplot(133)
+        ax3.plot(ts, zs)
         fig.savefig('macrospin_with_stt.png')
 
         # Assert that the dynamics of m_z are symmetric over time. In
@@ -613,23 +647,28 @@ class TestSimulation(object):
         sim1 = Simulation(mesh, Ms, unit_length)
         assert("Simulation object has no exchange" in sim1.mesh_info())
         sim1.add(UniaxialAnisotropy(K1=520e3, axis=[0, 0, 1]))
-        assert(("Simulation object has no exchange") and not("the Bloch parameter = ") in sim1.mesh_info())
+        assert(("Simulation object has no exchange") and not(
+            "the Bloch parameter = ") in sim1.mesh_info())
         sim1.add(DMI(D=1.0e-3))
-        assert("Simulation object has no exchange" and not("the Helical period = ") in sim1.mesh_info())
+        assert("Simulation object has no exchange" and not(
+            "the Helical period = ") in sim1.mesh_info())
 
         # Simulations with exchange
         sim2 = Simulation(mesh, Ms, unit_length)
         sim2.add(Exchange(A=13e-12))
         assert("the Exchange length =" in sim2.mesh_info())
         sim2.add(UniaxialAnisotropy(K1=520e3, axis=[0, 0, 1]))
-        assert(("the Exchange length =") and ("the Bloch parameter = ") in sim2.mesh_info())
+        assert(("the Exchange length =") and (
+            "the Bloch parameter = ") in sim2.mesh_info())
 
         sim3 = Simulation(mesh, Ms, unit_length)
         sim3.add(Exchange(A=13e-12))
         sim3.add(DMI(D=1.0e-3))
-        assert(("the Exchange length =") and ("the Helical period = ") in sim3.mesh_info())
+        assert(("the Exchange length =") and (
+            "the Helical period = ") in sim3.mesh_info())
         sim3.add(UniaxialAnisotropy(K1=520e3, axis=[0, 0, 1]))
-        assert(("the Exchange length =") and ("the Helical period = ") and ("the Bloch parameter = ") in sim3.mesh_info())
+        assert(("the Exchange length =") and ("the Helical period = ")
+               and ("the Bloch parameter = ") in sim3.mesh_info())
 
     def test_save_field(self, tmpdir):
         os.chdir(str(tmpdir))
@@ -710,29 +749,30 @@ class TestSimulation(object):
     def test_sim_sllg(self, do_plot=False):
         mesh = df.BoxMesh(0, 0, 0, 2, 2, 2, 1, 1, 1)
         sim = Simulation(mesh, 8.6e5, unit_length=1e-9, kernel='sllg')
-        alpha=0.1
+        alpha = 0.1
         sim.alpha = alpha
         sim.set_m((1, 0, 0))
         sim.T = 0
 
-
         H0 = 1e5
         sim.add(Zeeman((0, 0, H0)))
 
-        dt = 1e-12; ts = np.linspace(0, 500 * dt, 100)
+        dt = 1e-12
+        ts = np.linspace(0, 500 * dt, 100)
 
         precession_coeff = sim.gamma / (1 + alpha ** 2)
         mz_ref = []
 
         mz = []
-        real_ts=[]
+        real_ts = []
         for t in ts:
             sim.run_until(t)
             real_ts.append(sim.t)
             mz_ref.append(np.tanh(precession_coeff * alpha * H0 * sim.t))
-            mz.append(sim.m[-1]) # same as m_average for this macrospin problem
+            # same as m_average for this macrospin problem
+            mz.append(sim.m[-1])
 
-        mz=np.array(mz)
+        mz = np.array(mz)
 
         if do_plot:
             import matplotlib.pyplot as plt
@@ -764,7 +804,7 @@ class TestSimulation(object):
         H0 = 1e5
         sim.add(Zeeman((0, 0, H0)))
 
-        real_ts=[]
+        real_ts = []
         for t in ts:
             sim.run_until(t)
             real_ts.append(sim.t)
@@ -779,7 +819,8 @@ class TestSimulation(object):
         os.chdir(str(tmpdir))
         sim = barmini(mark_regions=True)
 
-        sim.save_field_to_vtk('Demag', region='bottom', filename='demag_bottom.pvd')
+        sim.save_field_to_vtk(
+            'Demag', region='bottom', filename='demag_bottom.pvd')
         sim.save_field_to_vtk('Demag', region='top', filename='demag_top.pvd')
         sim.save_field_to_vtk('Demag', filename='demag_full.pvd')
         sim.save_field('Demag', region='bottom', filename='demag_bottom.npy')
@@ -792,12 +833,13 @@ class TestSimulation(object):
         assert len(demag_bottom) < len(demag_full)
         assert len(demag_top) < len(demag_full)
 
-        id_top =sim.region_ids['top']
+        id_top = sim.region_ids['top']
         id_bottom = sim.region_ids['bottom']
         submesh_top = df.SubMesh(sim.mesh, sim.region_markers, id_top)
         submesh_bottom = df.SubMesh(sim.mesh, sim.region_markers, id_bottom)
 
-        # Check that the retrieved restricted demag field vectors have the expected sizes.
+        # Check that the retrieved restricted demag field vectors have the
+        # expected sizes.
         assert len(demag_top) == 3 * submesh_top.num_vertices()
         assert len(demag_bottom) == 3 * submesh_bottom.num_vertices()
         assert len(demag_full) == 3 * sim.mesh.num_vertices()
@@ -811,7 +853,8 @@ def test_sim_with(tmpdir):
     """
     os.chdir(str(tmpdir))
     mesh = df.UnitCubeMesh(3, 3, 3)
-    demag_solver_params={'phi_1_solver': 'cg', 'phi_2_solver': 'cg', 'phi_1_preconditioner': 'ilu', 'phi_2_preconditioner': 'ilu'}
+    demag_solver_params = {'phi_1_solver': 'cg', 'phi_2_solver': 'cg',
+                           'phi_1_preconditioner': 'ilu', 'phi_2_preconditioner': 'ilu'}
     sim = sim_with(mesh, Ms=8e5, m_init=[1, 0, 0], alpha=1.0, unit_length=1e-9, integrator_backend='sundials',
                    A=13e-12, K1=520e3, K1_axis=[0, 1, 1], H_ext=[0, 0, 1e6], D=6.98e-3, demag_solver='FK',
                    demag_solver_params=demag_solver_params, name='test_simulation')
@@ -825,8 +868,10 @@ def test_timezeeman_is_updated_automatically(tmpdir):
 
     """
     os.chdir(str(tmpdir))
+
     def check_field_value(val):
-        assert(np.allclose(H_ext.compute_field().reshape(3, -1).T, val, atol=0, rtol=1e-8))
+        assert(
+            np.allclose(H_ext.compute_field().reshape(3, -1).T, val, atol=0, rtol=1e-8))
 
     t_off = 3e-11
     t_end = 5e-11
@@ -837,7 +882,9 @@ def test_timezeeman_is_updated_automatically(tmpdir):
 
         field_expr = df.Expression(("0", "t", "0"), t=0)
         H_ext = TimeZeeman(field_expr, t_off=t_off)
-        sim.add(H_ext)  # this should automatically register H_ext.update(), which is what we check next
+        # this should automatically register H_ext.update(), which is what we
+        # check next
+        sim.add(H_ext)
 
         for t in np.linspace(0, t_end, 11):
             f(t)
@@ -866,10 +913,12 @@ def test_ndt_writing_with_time_dependent_field(tmpdir):
     Hy_expected[20:] = 0  # should be zero after the field was switched off
 
     f = Tablereader('barmini.ndt')
-    assert np.allclose(f.timesteps(), np.linspace(0, 3e-11, 31), atol=0, rtol=TOL)
+    assert np.allclose(
+        f.timesteps(), np.linspace(0, 3e-11, 31), atol=0, rtol=TOL)
     assert np.allclose(f['H_TimeZeeman_x'], 0, atol=0, rtol=TOL)
     assert np.allclose(f['H_TimeZeeman_y'], Hy_expected, atol=0, rtol=TOL)
     assert np.allclose(f['H_TimeZeeman_z'], 0, atol=0, rtol=TOL)
+
 
 def test_removing_logger_handlers_allows_to_create_many_simulation_objects(tmpdir):
     """
@@ -879,7 +928,8 @@ def test_removing_logger_handlers_allows_to_create_many_simulation_objects(tmpdi
 
     """
     os.chdir(str(tmpdir))
-    set_logging_level('WARNING')  # avoid lots of annoying info/debugging messages
+    # avoid lots of annoying info/debugging messages
+    set_logging_level('WARNING')
 
     # Temporarily decrease the soft limit for the maximum number of
     # allowed open file descriptors (to make the test run faster and
@@ -906,7 +956,6 @@ def test_removing_logger_handlers_allows_to_create_many_simulation_objects(tmpdi
             if close_logfiles:
                 sim.close_logfile()
 
-
     # The following should raise an error because lots of loggers are
     # created without being deleted again.
     with pytest.raises(IOError):
@@ -914,11 +963,11 @@ def test_removing_logger_handlers_allows_to_create_many_simulation_objects(tmpdi
 
     # Remove all the file handlers created in the loop above
     hdls = list(logger.handlers)  # We need a copy of the list because we
-                                  # are removing handlers from it below.
+    # are removing handlers from it below.
     for h in hdls:
         if isinstance(h, logging.handlers.RotatingFileHandler):
             h.stream.close()  # this is essential, otherwise the file handler
-                              # will remain open
+            # will remain open
             logger.removeHandler(h)
 
     # The following should work since we explicitly close the logfiles
@@ -975,7 +1024,8 @@ def test_sim_initialise_vortex(tmpdir, debug=False):
     save_debugging_snapshots(sim, 'disk_with_simple_vortex2')
 
     # Try the Feldtkeller profile
-    sim.initialise_vortex('feldtkeller', beta=15, center=(10, 0, 0), right_handed=False)
+    sim.initialise_vortex(
+        'feldtkeller', beta=15, center=(10, 0, 0), right_handed=False)
     save_debugging_snapshots(sim, 'disk_with_feldtkeller_vortex')
 
     # Try a non-cylindrical sample, too, and optional arguments.
@@ -1011,31 +1061,39 @@ def test_NormalModeSimulation(tmpdir):
     os.chdir(str(tmpdir))
     nx = ny = nz = 2
     mesh = df.UnitCubeMesh(nx, ny, nz)
-    sim = normal_mode_simulation(mesh, Ms=8e5, A=13e-12, m_init=[1, 0, 0], alpha=1.0, unit_length=1e-9, H_ext=[1e5, 1e3, 0], name='sim')
+    sim = normal_mode_simulation(
+        mesh, Ms=8e5, A=13e-12, m_init=[1, 0, 0], alpha=1.0, unit_length=1e-9, H_ext=[1e5, 1e3, 0], name='sim')
     sim.relax(stopping_dmdt=10.0)
 
     t_step = 1e-13
-    sim.run_ringdown(t_end=1e-12, alpha=0.01, H_ext=[1e5, 0, 0], reset_time=True, save_ndt_every=t_step, save_m_every=t_step, m_snapshots_filename='foobar/foo_m.npy')
+    sim.run_ringdown(t_end=1e-12, alpha=0.01, H_ext=[1e5, 0, 0], reset_time=True,
+                     save_ndt_every=t_step, save_m_every=t_step, m_snapshots_filename='foobar/foo_m.npy')
 
     assert(len(glob('foobar/foo_m*.npy')) == 11)
     f = Tablereader('sim.ndt')
-    assert(np.allclose(f.timesteps(), np.linspace(0, 1e-12, 11), atol=0, rtol=1e-8))
+    assert(
+        np.allclose(f.timesteps(), np.linspace(0, 1e-12, 11), atol=0, rtol=1e-8))
 
     sim.reset_time(1.1e-12)  # hack to avoid a duplicate timestep at t=1e-12
-    sim.run_ringdown(t_end=2e-12, alpha=0.02, H_ext=[1e4, 0, 0], reset_time=False, save_ndt_every=t_step, save_vtk_every=2*t_step, vtk_snapshots_filename='baz/sim_m.pvd')
+    sim.run_ringdown(t_end=2e-12, alpha=0.02, H_ext=[1e4, 0, 0], reset_time=False,
+                     save_ndt_every=t_step, save_vtk_every=2 * t_step, vtk_snapshots_filename='baz/sim_m.pvd')
     f.reload()
     assert(os.path.exists('baz/sim_m.pvd'))
     assert(len(glob('baz/sim_m*.vtu')) == 5)
-    assert(np.allclose(f.timesteps(), np.linspace(0, 2e-12, 21), atol=0, rtol=1e-8))
+    assert(
+        np.allclose(f.timesteps(), np.linspace(0, 2e-12, 21), atol=0, rtol=1e-8))
 
     sim.plot_spectrum(use_averaged_m=True)
-    sim.plot_spectrum(use_averaged_m=True, log=True, t_step=1.5e-12, subtract_values='first', figsize=(16, 6), outfilename='fft_m.png')
-    #sim.plot_spectrum(use_averaged_m=False)
-    sim.plot_spectrum(use_averaged_m=False, t_ini=0.0, t_end=1e-12, subtract_values='average', figsize=(16, 6), outfilename='fft_m_spatially_resolved.png')
+    sim.plot_spectrum(use_averaged_m=True, log=True, t_step=1.5e-12,
+                      subtract_values='first', figsize=(16, 6), outfilename='fft_m.png')
+    # sim.plot_spectrum(use_averaged_m=False)
+    sim.plot_spectrum(use_averaged_m=False, t_ini=0.0, t_end=1e-12,
+                      subtract_values='average', figsize=(16, 6), outfilename='fft_m_spatially_resolved.png')
     assert(os.path.exists('fft_m.png'))
     assert(os.path.exists('fft_m_spatially_resolved.png'))
 
-    sim.plot_spectrum(t_step=t_step, use_averaged_m=True, outfilename='fft_m.png')
+    sim.plot_spectrum(
+        t_step=t_step, use_averaged_m=True, outfilename='fft_m.png')
 
     sim.find_peak_near_frequency(10e9, component='y', use_averaged_m=True)
 
@@ -1052,16 +1110,21 @@ def test_NormalModeSimulation(tmpdir):
 
     # Either 'peak_idx' or both 'f_approx' and 'component' must be given
     with pytest.raises(ValueError):
-        sim.export_normal_mode_animation_from_ringdown('foobar/foo_m*.npy', f_approx=0)
+        sim.export_normal_mode_animation_from_ringdown(
+            'foobar/foo_m*.npy', f_approx=0)
     with pytest.raises(ValueError):
-        sim.export_normal_mode_animation_from_ringdown('foobar/foo_m*.npy', component='x')
+        sim.export_normal_mode_animation_from_ringdown(
+            'foobar/foo_m*.npy', component='x')
 
     # Check that by default snapshots are not overwritten
-    sim = normal_mode_simulation(mesh, Ms=8e5, A=13e-12, m_init=[1, 0, 0], alpha=1.0, unit_length=1e-9, H_ext=[1e5, 1e3, 0], name='sim')
+    sim = normal_mode_simulation(
+        mesh, Ms=8e5, A=13e-12, m_init=[1, 0, 0], alpha=1.0, unit_length=1e-9, H_ext=[1e5, 1e3, 0], name='sim')
     with pytest.raises(IOError):
-        sim.run_ringdown(t_end=1e-12, alpha=0.02, H_ext=[1e4, 0, 0], save_vtk_every=2e-13, vtk_snapshots_filename='baz/sim_m.pvd')
+        sim.run_ringdown(t_end=1e-12, alpha=0.02, H_ext=[
+                         1e4, 0, 0], save_vtk_every=2e-13, vtk_snapshots_filename='baz/sim_m.pvd')
     with pytest.raises(IOError):
-        sim.run_ringdown(t_end=1e-12, alpha=0.02, H_ext=[1e4, 0, 0], save_m_every=2e-13, m_snapshots_filename='foobar/foo_m.npy')
+        sim.run_ringdown(t_end=1e-12, alpha=0.02, H_ext=[
+                         1e4, 0, 0], save_m_every=2e-13, m_snapshots_filename='foobar/foo_m.npy')
 
 
 @pytest.mark.slow
@@ -1075,14 +1138,16 @@ def test_normal_mode_simulation_with_periodic_boundary_conditions_1x1(tmpdir):
         tlo crystal;
         """)
     mesh = from_csg(csg_string)
-    sim = normal_mode_simulation(mesh, Ms=8e5, m_init=[1, 1, 0], A=13e-12, H_ext=None, unit_length=1e-9, pbc='1d')
+    sim = normal_mode_simulation(
+        mesh, Ms=8e5, m_init=[1, 1, 0], A=13e-12, H_ext=None, unit_length=1e-9, pbc='1d')
     sim.relax()
     sim.save_vtk('m_relaxed.pvd')
     omega, w, relerr = sim.compute_normal_modes(solver='scipy_sparse')
     sim.plot_spatially_resolved_normal_mode(0, outfilename='mode_0.png')
     sim.plot_spatially_resolved_normal_mode(1, outfilename='mode_1.png')
     sim.plot_spatially_resolved_normal_mode(2, outfilename='mode_2.png')
-    sim.export_eigenmode_animations([0, 1, 2], directory='animations', create_movies=False)
+    sim.export_eigenmode_animations(
+        [0, 1, 2], directory='animations', create_movies=False)
 
 
 @pytest.mark.slow
@@ -1104,14 +1169,16 @@ def test_normal_mode_simulation_with_periodic_boundary_conditions_9x9(tmpdir):
         tlo crystal;
         """)
     mesh = from_csg(csg_string)
-    sim = normal_mode_simulation(mesh, Ms=8e5, m_init=[1, 0, 0], A=13e-12, H_ext=None, unit_length=1e-9, pbc='1d')
+    sim = normal_mode_simulation(
+        mesh, Ms=8e5, m_init=[1, 0, 0], A=13e-12, H_ext=None, unit_length=1e-9, pbc='1d')
     sim.relax()
     sim.save_vtk('m_relaxed.pvd')
     omega, w, relerr = sim.compute_normal_modes(solver='scipy_sparse')
     sim.plot_spatially_resolved_normal_mode(0, outfilename='mode_0.png')
     sim.plot_spatially_resolved_normal_mode(1, outfilename='mode_1.png')
     sim.plot_spatially_resolved_normal_mode(2, outfilename='mode_2.png')
-    sim.export_eigenmode_animations([0, 1, 2], directory='animations', create_movies=False)
+    sim.export_eigenmode_animations(
+        [0, 1, 2], directory='animations', create_movies=False)
 
 
 def test_H_ext_is_set_correcy_in_normal_mode_simulation(tmpdir):
@@ -1127,7 +1194,8 @@ def test_H_ext_is_set_correcy_in_normal_mode_simulation(tmpdir):
             assert np.allclose(zeeman.compute_field().reshape(3, -1).T, value)
 
     def run_check(H_ext_1, H_ext_1_check_value, H_ext_2, H_ext_2_check_value):
-        sim = normal_mode_simulation(mesh, Ms=8e5, A=13e-12, m_init=[1, 0, 0], alpha=1.0, unit_length=1e-9, H_ext=H_ext_1, name='sim')
+        sim = normal_mode_simulation(
+            mesh, Ms=8e5, A=13e-12, m_init=[1, 0, 0], alpha=1.0, unit_length=1e-9, H_ext=H_ext_1, name='sim')
         check_H_ext(sim, H_ext_1)
         sim.run_ringdown(t_end=0.0, alpha=0.01, H_ext=H_ext_2)
         check_H_ext(sim, H_ext_2_check_value)
@@ -1152,11 +1220,15 @@ def test_compute_normal_modes(tmpdir):
     H_ext = [1e5, 0, 0]
 
     mesh = nanodisk(d, h, maxh)
-    sim = normal_mode_simulation(mesh, Ms=8e6, m_init=m_init, alpha=alpha, unit_length=1e-9, A=13e-12, H_ext=H_ext, name='nanodisk')
-    omega, w, rel_errors = sim.compute_normal_modes(n_values=10, filename_mat_A='matrix_A.npy', filename_mat_M='matrix_M.npy')
+    sim = normal_mode_simulation(
+        mesh, Ms=8e6, m_init=m_init, alpha=alpha, unit_length=1e-9, A=13e-12, H_ext=H_ext, name='nanodisk')
+    omega, w, rel_errors = sim.compute_normal_modes(
+        n_values=10, filename_mat_A='matrix_A.npy', filename_mat_M='matrix_M.npy')
     logger.debug("Frequencies found: {}".format(omega))
-    sim.export_normal_mode_animation(2, filename='animation/mode_2.pvd', num_cycles=1, num_snapshots_per_cycle=10, scaling=0.1)
-    sim.export_normal_mode_animation(5, directory='animation', num_cycles=1, num_snapshots_per_cycle=10, scaling=0.1)
+    sim.export_normal_mode_animation(
+        2, filename='animation/mode_2.pvd', num_cycles=1, num_snapshots_per_cycle=10, scaling=0.1)
+    sim.export_normal_mode_animation(
+        5, directory='animation', num_cycles=1, num_snapshots_per_cycle=10, scaling=0.1)
 
     assert(os.path.exists('animation/mode_2.pvd'))
     assert(len(glob('animation/mode_2*.vtu')) == 10)
@@ -1181,12 +1253,15 @@ def test_compute_eigenmode_animations(tmpdir):
     H_ext = [1e5, 0, 0]
 
     mesh = nanodisk(d, h, maxh)
-    sim = normal_mode_simulation(mesh, Ms=8e6, m_init=m_init, alpha=alpha, unit_length=1e-9, A=13e-12, H_ext=H_ext, name='nanodisk')
-    omega, w, rel_errors = sim.compute_normal_modes(n_values=10, filename_mat_A='matrix_A.npy', filename_mat_M='matrix_M.npy')
+    sim = normal_mode_simulation(
+        mesh, Ms=8e6, m_init=m_init, alpha=alpha, unit_length=1e-9, A=13e-12, H_ext=H_ext, name='nanodisk')
+    omega, w, rel_errors = sim.compute_normal_modes(
+        n_values=10, filename_mat_A='matrix_A.npy', filename_mat_M='matrix_M.npy')
     logger.debug("Frequencies found: {}".format(omega))
 
     # Export first 4 eigenmodes without movies
-    sim.export_eigenmode_animations(4, directory='animation_01', create_movies=False, num_cycles=1, num_snapshots_per_cycle=10, scaling=0.1)
+    sim.export_eigenmode_animations(
+        4, directory='animation_01', create_movies=False, num_cycles=1, num_snapshots_per_cycle=10, scaling=0.1)
     assert(len(glob('animation_01/*')) == 4)
     assert(len(glob('animation_01/*/*.pvd')) == 4)
     assert(len(glob('animation_01/*/*.vtu')) == 40)
@@ -1194,7 +1269,8 @@ def test_compute_eigenmode_animations(tmpdir):
     # Export first 3 eigenmodes with movies
     sim.export_eigenmode_animations(3, directory='animation_02', create_movies=True,
                                     num_cycles=1, num_snapshots_per_cycle=3, scaling=0.1)
-    assert(len(glob('animation_02/*')) == 6)  # 3+3 (3 folders for the eigenmodes and 3 movie files)
+    # 3+3 (3 folders for the eigenmodes and 3 movie files)
+    assert(len(glob('animation_02/*')) == 6)
     assert(len(glob('animation_02/*/*.pvd')) == 3)
     assert(len(glob('animation_02/*/*.vtu')) == 9)
     assert(len(glob('animation_02/*.avi')) == 3)
@@ -1223,10 +1299,11 @@ def test_compute_normal_modes_with_different_solvers(tmpdir):
     H_ext = [1e5, 0, 0]
 
     mesh = nanodisk(d, h, maxh)
-    sim = normal_mode_simulation(mesh, Ms=8e6, m_init=m_init, alpha=alpha, unit_length=1e-9, A=13e-12, H_ext=H_ext, name='nanodisk')
+    sim = normal_mode_simulation(
+        mesh, Ms=8e6, m_init=m_init, alpha=alpha, unit_length=1e-9, A=13e-12, H_ext=H_ext, name='nanodisk')
 
-    # # Monkey-patch the eigenvalue matrices because we're not
-    # # interested in realistic solutions.
+    # Monkey-patch the eigenvalue matrices because we're not
+    # interested in realistic solutions.
     # sim.A = np.diag(np.arange(1, 20+1))
     # sim.M = np.eye(20)
 
@@ -1236,22 +1313,25 @@ def test_compute_normal_modes_with_different_solvers(tmpdir):
     # Scipy dense non-Hermitian solver
     solver2 = eigensolvers.ScipyLinalgEig()
     omega2a, w2a, _ = sim.compute_normal_modes(n_values=10, solver=solver2)
-    omega2b, w2b, _ = sim.compute_normal_modes(n_values=10, solver="scipy_dense")
+    omega2b, w2b, _ = sim.compute_normal_modes(
+        n_values=10, solver="scipy_dense")
 
     # Scipy sparse non-Hermitian solver
     solver3 = eigensolvers.ScipySparseLinalgEigs(sigma=0.0, which='LM')
     omega3a, w3a, _ = sim.compute_normal_modes(n_values=10, solver=solver3)
-    omega3b, w3b, _ = sim.compute_normal_modes(n_values=10, solver="scipy_sparse")
+    omega3b, w3b, _ = sim.compute_normal_modes(
+        n_values=10, solver="scipy_sparse")
 
     # SLEPc solver
-    solver4 = eigensolvers.SLEPcEigensolver(problem_type='GNHEP', method_type='KRYLOVSCHUR', which='SMALLEST_MAGNITUDE')
+    solver4 = eigensolvers.SLEPcEigensolver(
+        problem_type='GNHEP', method_type='KRYLOVSCHUR', which='SMALLEST_MAGNITUDE')
     #omega4a, w4a, _ = sim.compute_normal_modes(n_values=10, solver=solver4)
     #omega4b, w4b, _ = sim.compute_normal_modes(n_values=10, solver="slepc_krylovschur")
     with pytest.raises(TypeError):
         # Cannot currently use the SLEPcEigensolver with a generalised
         # eigenvalue problem.
-        sim.compute_normal_modes(n_values=10, solver=solver4, use_generalised=True)
-
+        sim.compute_normal_modes(
+            n_values=10, solver=solver4, use_generalised=True)
 
     # Check that all methods compute the same eigenvalues and eigenvectors
     #
@@ -1265,7 +1345,6 @@ def test_compute_normal_modes_with_different_solvers(tmpdir):
     #assert(np.allclose(omega4a, omega1))
     #assert(np.allclose(omega4b, omega1))
 
-
     def assert_define_same_eigenspaces(vs, ws):
         """
         Assert that each pair of vectors in vs and ws defines
@@ -1276,7 +1355,6 @@ def test_compute_normal_modes_with_different_solvers(tmpdir):
             # Check that v is a constant multiple of w
             a = v / w
             assert np.allclose(a, a[0])
-
 
     assert_define_same_eigenspaces(w2a, w1)
     assert_define_same_eigenspaces(w2b, w1)
@@ -1296,7 +1374,8 @@ def test_plot_spatially_resolved_normal_modes(tmpdir):
     from finmag.example.normal_modes import disk
     sim = disk()
     sim.compute_normal_modes()
-    fig = sim.plot_spatially_resolved_normal_mode(k=0, outfilename='mode_00.png')
+    fig = sim.plot_spatially_resolved_normal_mode(
+        k=0, outfilename='mode_00.png')
     assert(isinstance(fig, plt.Figure))
 
 
@@ -1312,12 +1391,17 @@ def test_output_formats_for_exporting_normal_mode_animations(tmpdir):
     H_ext = [1e5, 0, 0]
 
     mesh = nanodisk(d, h, maxh)
-    sim = normal_mode_simulation(mesh, Ms=8e6, m_init=m_init, alpha=alpha, unit_length=1e-9, A=13e-12, H_ext=H_ext, name='nanodisk')
-    omega, _, _ = sim.compute_normal_modes(n_values=10, filename_mat_A='matrix_A.npy', filename_mat_M='matrix_M.npy')
+    sim = normal_mode_simulation(
+        mesh, Ms=8e6, m_init=m_init, alpha=alpha, unit_length=1e-9, A=13e-12, H_ext=H_ext, name='nanodisk')
+    omega, _, _ = sim.compute_normal_modes(
+        n_values=10, filename_mat_A='matrix_A.npy', filename_mat_M='matrix_M.npy')
     logger.debug("Frequencies found: {}".format(omega))
-    sim.export_normal_mode_animation(0, filename='animation/mode_0.pvd', num_cycles=1, num_snapshots_per_cycle=5, color_by_axis='y')
-    sim.export_normal_mode_animation(0, filename='animation/mode_0.jpg', num_cycles=1, num_snapshots_per_cycle=5, color_by_axis='y')
-    sim.export_normal_mode_animation(0, filename='animation/mode_0.avi', num_cycles=1, num_snapshots_per_cycle=5, color_by_axis='y')
+    sim.export_normal_mode_animation(
+        0, filename='animation/mode_0.pvd', num_cycles=1, num_snapshots_per_cycle=5, color_by_axis='y')
+    sim.export_normal_mode_animation(
+        0, filename='animation/mode_0.jpg', num_cycles=1, num_snapshots_per_cycle=5, color_by_axis='y')
+    sim.export_normal_mode_animation(
+        0, filename='animation/mode_0.avi', num_cycles=1, num_snapshots_per_cycle=5, color_by_axis='y')
 
     assert(os.path.exists('animation/mode_0.pvd'))
     assert(len(glob('animation/mode_0*.vtu')) == 5)
@@ -1359,11 +1443,13 @@ def test_setting_different_material_parameters_in_different_regions(tmpdir):
     r_sphere = 5
     center_sphere = (0, 0, 20)
 
-    nanodisk = EllipticalNanodisk(d1=d1_disk, d2=d2_disk, h=h_disk, name='Nanodisk')
+    nanodisk = EllipticalNanodisk(
+        d1=d1_disk, d2=d2_disk, h=h_disk, name='Nanodisk')
     sphere = Sphere(r=r_sphere, center=center_sphere, name='Sphere')
     disk_with_sphere = nanodisk + sphere
 
-    mesh = disk_with_sphere.create_mesh(maxh=10.0, filename=os.path.join(MODULE_DIR, 'nanodisk_with_spherical_particle.xml.gz'))
+    mesh = disk_with_sphere.create_mesh(maxh=10.0, filename=os.path.join(
+        MODULE_DIR, 'nanodisk_with_spherical_particle.xml.gz'))
     logger.debug(mesh)
 
     def is_inside_nanodisk(pt):
@@ -1385,7 +1471,8 @@ def test_setting_different_material_parameters_in_different_regions(tmpdir):
     D_nanodisk = 1.0
     D_sphere = 2.0
 
-    # Define the material parameters, where each of them takes a different value in each of the regions
+    # Define the material parameters, where each of them takes a different
+    # value in each of the regions
     def m_init(pt):
         return m_init_nanodisk if is_inside_nanodisk(pt) else m_init_sphere
 
@@ -1414,15 +1501,18 @@ def test_setting_different_material_parameters_in_different_regions(tmpdir):
     # Construct a CellFunction representing the subdomains. Unfortunately,
     # dolfin doesn't seem to provide an easy way of getting this from
     # mesh.domains() directly, so we construct it manually.
-    cell_markers = mesh.domains().markers(3)  # 3 represents the dimension of the mesh cells
+    # 3 represents the dimension of the mesh cells
+    cell_markers = mesh.domains().markers(3)
     fun_subdomains = df.CellFunction('size_t', mesh)
     for (cell_no, marker) in cell_markers.iteritems():
         fun_subdomains[cell_no] = marker
 
     submesh_nanodisk = df.SubMesh(mesh, fun_subdomains, 0)
     submesh_sphere = df.SubMesh(mesh, fun_subdomains, 1)
-    plot_mesh_with_paraview(submesh_nanodisk, camera_position=[0, -200, 100], outfile='submesh_nanodisk.png')
-    plot_mesh_with_paraview(submesh_sphere, camera_position=[0, -200, 100], outfile='submesh_sphere.png')
+    plot_mesh_with_paraview(
+        submesh_nanodisk, camera_position=[0, -200, 100], outfile='submesh_nanodisk.png')
+    plot_mesh_with_paraview(
+        submesh_sphere, camera_position=[0, -200, 100], outfile='submesh_sphere.png')
 
     f = df.File("m.pvd")
     f << sim._m
@@ -1460,7 +1550,8 @@ def test_compute_energies_with_non_normalised_m(tmpdir):
     XXX TODO: Should this be broken up into separate unit tests for the individual energies?
 
     """
-    # Create a simulation with non-uniform magnetisation and a bunch of energy terms
+    # Create a simulation with non-uniform magnetisation and a bunch of energy
+    # terms
     sim = finmag.example.normal_modes.disk()
     K1 = 7.4e5
     anis = UniaxialAnisotropy(K1=K1, axis=[1, 1, 1])
@@ -1469,12 +1560,14 @@ def test_compute_energies_with_non_normalised_m(tmpdir):
     # Compute and store the energy values for the normalised magnetisation
     m0 = sim.m
     energies = {}
-    scaling_exponents = {'Exchange': 2, 'Anisotropy': 2, 'Demag': 2, 'Zeeman': 1}
+    scaling_exponents = {
+        'Exchange': 2, 'Anisotropy': 2, 'Demag': 2, 'Zeeman': 1}
     for name in scaling_exponents.keys():
         energies[name] = sim.compute_energy(name)
 
-    # Scale the magnetisation and check whether the energy terms scale accordingly
-    vol_mesh = mesh_volume(sim.mesh) * sim.unit_length**3
+    # Scale the magnetisation and check whether the energy terms scale
+    # accordingly
+    vol_mesh = mesh_volume(sim.mesh) * sim.unit_length ** 3
     for a in np.linspace(0.0, 1.0, 20):
         sim.set_m(a * m0, normalise=False)
 
@@ -1491,9 +1584,11 @@ def test_compute_energies_with_non_normalised_m(tmpdir):
                 # Note that in the assert statement we need a tiny value of 'atol'
                 # for the case a=0 because the test will fail otherwise due to small
                 # rounding errors when subtracting the mesh volume.
-                assert(np.allclose((sim.compute_energy(name) - K1*vol_mesh), a**exponent * (energies[name] - K1*vol_mesh), atol=1e-31, rtol=1e-12))
+                assert(np.allclose((sim.compute_energy(name) - K1 * vol_mesh), a **
+                                   exponent * (energies[name] - K1 * vol_mesh), atol=1e-31, rtol=1e-12))
             else:
-                assert(np.allclose(sim.compute_energy(name), a**exponent * energies[name], atol=0, rtol=1e-12))
+                assert(np.allclose(
+                    sim.compute_energy(name), a ** exponent * energies[name], atol=0, rtol=1e-12))
 
 
 @pytest.mark.skipif("LooseVersion(df.__version__) <= LooseVersion('1.2.0')")
@@ -1530,7 +1625,8 @@ def test_compute_and_plot_power_spectral_density_in_mesh_region(tmpdir):
     def fun_regions(pt):
         return 'left' if (pt[0] < 0) else 'right'
 
-    sim = normal_mode_simulation(mesh, Ms=8.6e5, m_init=[1, 0, 0], alpha=fun_alpha, H_ext=fun_H_ext, A=13e-12, unit_length=1e-9, demag_solver=None)
+    sim = normal_mode_simulation(mesh, Ms=8.6e5, m_init=[
+                                 1, 0, 0], alpha=fun_alpha, H_ext=fun_H_ext, A=13e-12, unit_length=1e-9, demag_solver=None)
     sim.mark_regions(fun_regions)
 
     t_ini = 0.0
@@ -1553,24 +1649,27 @@ def test_compute_and_plot_power_spectral_density_in_mesh_region(tmpdir):
     mz = m_dynamics[:, 2]
 
     num_vertices = mesh.num_vertices()
-    psd_mx_expected = num_vertices * np.absolute(np.fft.rfft(mx))**2
-    psd_my_expected = num_vertices * np.absolute(np.fft.rfft(my))**2
-    psd_mz_expected = num_vertices * np.absolute(np.fft.rfft(mz))**2
+    psd_mx_expected = num_vertices * np.absolute(np.fft.rfft(mx)) ** 2
+    psd_my_expected = num_vertices * np.absolute(np.fft.rfft(my)) ** 2
+    psd_mz_expected = num_vertices * np.absolute(np.fft.rfft(mz)) ** 2
 
-    sim._compute_spectrum(use_averaged_m=False, mesh_region='left', t_step=t_step, t_ini=t_ini, t_end=t_end)
+    sim._compute_spectrum(
+        use_averaged_m=False, mesh_region='left', t_step=t_step, t_ini=t_ini, t_end=t_end)
 
     # XXX TODO: The following check doesn't work yet - I'm not even
     #           sure it's correct. Double-check this, or find a better
     #           check (perhaps check the location of the peaks?!?)
     #
-    # # Check that the analytically determined power spectra are the same as the computed ones.
+    # Check that the analytically determined power spectra are the same as the computed ones.
     # RTOL = 1e-10
     # assert(np.allclose(psd_mx_expected, sim.psd_mx, atol=0, rtol=RTOL))
     # assert(np.allclose(psd_my_expected, sim.psd_my, atol=0, rtol=RTOL))
     # assert(np.allclose(psd_mz_expected, sim.psd_mz, atol=0, rtol=RTOL))
 
-    sim.plot_spectrum(t_step=t_step, t_ini=t_ini, t_end=t_end, mesh_region='left', ticks=11, outfilename='spectrum_left.png')
-    sim.plot_spectrum(t_step=t_step, t_ini=t_ini, t_end=t_end, mesh_region='right', ticks=11, outfilename='spectrum_right.png')
+    sim.plot_spectrum(t_step=t_step, t_ini=t_ini, t_end=t_end,
+                      mesh_region='left', ticks=11, outfilename='spectrum_left.png')
+    sim.plot_spectrum(t_step=t_step, t_ini=t_ini, t_end=t_end,
+                      mesh_region='right', ticks=11, outfilename='spectrum_right.png')
 
     logger.debug("Precession frequency 1: {} GHz".format(omega1 / 1e9))
     logger.debug("Precession frequency 2: {} GHz".format(omega2 / 1e9))
@@ -1630,7 +1729,6 @@ def test_document_intended_behaviour_for_H_ext(tmpdir):
     assert(np.allclose(m_y, 0))
     assert(np.allclose(m_z, 0))
 
-
     #
     # Repeat the test above, but this time specify an external field
     # in 'run_ringdown'. This should result in a sinusoidal
@@ -1640,9 +1738,10 @@ def test_document_intended_behaviour_for_H_ext(tmpdir):
     sim = normal_mode_simulation(mesh, Ms=8.6e5, alpha=0.0, m_init=[1, 0, 0],
                                  unit_length=1e-9, A=None, H_ext=[0, 0, H],
                                  demag_solver=None, name='precession2')
-    sim.run_ringdown(t_end=1e-11, alpha=0.0, save_ndt_every=1e-13, H_ext=[0, 0, H])
+    sim.run_ringdown(
+        t_end=1e-11, alpha=0.0, save_ndt_every=1e-13, H_ext=[0, 0, H])
 
-    freq = gamma*H/(2*pi)  # expected frequency
+    freq = gamma * H / (2 * pi)  # expected frequency
 
     f = Tablereader('precession2.ndt')
     ts, m_x, m_y, m_z = f['time', 'm_x', 'm_y', 'm_z']
@@ -1650,14 +1749,14 @@ def test_document_intended_behaviour_for_H_ext(tmpdir):
     fig = plt.figure()
     ax = fig.gca()
     ax.plot(ts, m_x)
-    ax.plot(ts, np.cos(2.*pi*freq*ts))
+    ax.plot(ts, np.cos(2. * pi * freq * ts))
     fig.savefig('dynamics2.png')
 
     # Check that we get sinusoidal dynamics of the correct frequency
     TOL = 1e-3
     assert(len(ts) == 101)
-    assert(np.allclose(m_x, np.cos(2*pi*freq*ts), atol=TOL))
-    assert(np.allclose(m_y, np.sin(2*pi*freq*ts), atol=TOL))
+    assert(np.allclose(m_x, np.cos(2 * pi * freq * ts), atol=TOL))
+    assert(np.allclose(m_y, np.sin(2 * pi * freq * ts), atol=TOL))
 
 
 def test_m_average_is_robust_with_respect_to_mesh_discretization(tmpdir, debug=False):
@@ -1713,7 +1812,8 @@ def test_m_average_is_robust_with_respect_to_mesh_discretization(tmpdir, debug=F
 
     # Call gmsh and dolfin-convert to bring the mesh defined above
     # into a form that's readable by dolfin.
-    sh.gmsh('-3', '-optimize', '-optimize_netgen', '-string', 'lx={}; ly={}; lz={};'.format(lx, ly, lz), '-o', 'nanostrip.msh', 'nanostrip.geo')
+    sh.gmsh('-3', '-optimize', '-optimize_netgen', '-string',
+            'lx={}; ly={}; lz={};'.format(lx, ly, lz), '-o', 'nanostrip.msh', 'nanostrip.geo')
     sh.dolfin_convert('nanostrip.msh', 'nanostrip.xml')
 
     mesh = df.Mesh('nanostrip.xml')
@@ -1722,7 +1822,7 @@ def test_m_average_is_robust_with_respect_to_mesh_discretization(tmpdir, debug=F
     # end to the right end of the strip.
     def m_init(pt):
         x, y, z = pt
-        return [0, sin(2*pi*x/lx), cos(2*pi*x/lx)]
+        return [0, sin(2 * pi * x / lx), cos(2 * pi * x / lx)]
 
     sim = sim_with(mesh, Ms=8.6e5, m_init=m_init, unit_length=1e-9)
 
@@ -1738,7 +1838,8 @@ def test_m_average_is_robust_with_respect_to_mesh_discretization(tmpdir, debug=F
 
     if debug:
         plot_mesh_with_paraview(mesh, outfile='mesh.png')
-        sim.render_scene(color_by_axis='y', glyph_scale_factor=2, outfile='nanostrip.png')
+        sim.render_scene(
+            color_by_axis='y', glyph_scale_factor=2, outfile='nanostrip.png')
 
 
 def test_eigenfrequencies_scale_with_gyromagnetic_ratio(tmpdir):
@@ -1751,10 +1852,12 @@ def test_eigenfrequencies_scale_with_gyromagnetic_ratio(tmpdir):
 
     # Create a small test simulation and compute its eigenfrequencies
     mesh = df.BoxMesh(0, 0, 0, 10, 20, 3, 3, 6, 1)
-    sim = normal_mode_simulation(mesh, m_init=[1, 0, 0], Ms=8e5, A=13e-12, unit_length=1e-9)
+    sim = normal_mode_simulation(
+        mesh, m_init=[1, 0, 0], Ms=8e5, A=13e-12, unit_length=1e-9)
     omega_ref, _, _ = sim.compute_normal_modes()
 
-    # Set gamma to some different values and check that the eigenfrequencies scale accordingly
+    # Set gamma to some different values and check that the eigenfrequencies
+    # scale accordingly
     for a in [0.7, 1.3, 2.445, 12.0]:
         sim.gamma = a * gamma
         omega, _, _ = sim.compute_normal_modes(force_recompute_matrices=True)
@@ -1768,7 +1871,8 @@ def test_plot_dynamics(tmpdir):
     """
     os.chdir(str(tmpdir))
     mesh = df.UnitCubeMesh(1, 1, 1)
-    sim = sim_with(mesh, Ms=8e5, m_init=[1, 0, 0], A=13e-12, H_ext=[0, 0, 5e4], demag_solver=None)
+    sim = sim_with(
+        mesh, Ms=8e5, m_init=[1, 0, 0], A=13e-12, H_ext=[0, 0, 5e4], demag_solver=None)
     sim.schedule('save_ndt', every=5e-12)
     sim.run_until(5e-11)
     sim.plot_dynamics(figsize=(16, 3), outfile='dynamics_2d.png')

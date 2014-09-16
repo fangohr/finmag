@@ -16,12 +16,15 @@ def test_mesh_size():
     RTOL = 1e-3
     box_mesh = df.BoxMesh(-20, -30, 10, 30, 42, 20, 4, 4, 4)
     assert(np.isclose(mesh_size(box_mesh, unit_length=1.0), 72.0, rtol=RTOL))
-    assert(np.isclose(mesh_size(box_mesh, unit_length=3e-5), 216e-5, rtol=RTOL))
+    assert(
+        np.isclose(mesh_size(box_mesh, unit_length=3e-5), 216e-5, rtol=RTOL))
 
     s = Sphere(12.0, center=(34, 12, 17))
     sphere_mesh = s.create_mesh(maxh=3.0, save_result=False)
-    assert(np.isclose(mesh_size(sphere_mesh, unit_length=1.0), 24.0, rtol=RTOL))
-    assert(np.isclose(mesh_size(sphere_mesh, unit_length=2e4), 48e4, rtol=RTOL))
+    assert(
+        np.isclose(mesh_size(sphere_mesh, unit_length=1.0), 24.0, rtol=RTOL))
+    assert(
+        np.isclose(mesh_size(sphere_mesh, unit_length=2e4), 48e4, rtol=RTOL))
 
 
 def test_line_mesh():
@@ -29,7 +32,7 @@ def test_line_mesh():
     Create vertices lying on a spiral in 3D space, build a line-mesh from it
     and check that it has the correct vertices.
     """
-    vertices = [(sin(t), cos(t), t) for t in np.linspace(-2*pi, 4*pi, 100)]
+    vertices = [(sin(t), cos(t), t) for t in np.linspace(-2 * pi, 4 * pi, 100)]
     mesh = line_mesh(vertices)
     assert np.allclose(vertices, mesh.coordinates())
 
@@ -64,9 +67,11 @@ def test_sphere_inside_box(tmpdir, debug=False):
     TODO: Currently this test doesn't do much; it only checks whether we can execute the command `sphere_inside_box`.
     """
     os.chdir(str(tmpdir))
-    mesh = sphere_inside_box(r_sphere=10, r_shell=15, l_box=50, maxh_sphere=5.0, maxh_box=10.0, center_sphere=(10, -5, 8))
+    mesh = sphere_inside_box(r_sphere=10, r_shell=15, l_box=50,
+                             maxh_sphere=5.0, maxh_box=10.0, center_sphere=(10, -5, 8))
     if debug:
-        plot_mesh_with_paraview(mesh, representation='Wireframe', outfile='mesh__sphere_inside_box.png')
+        plot_mesh_with_paraview(
+            mesh, representation='Wireframe', outfile='mesh__sphere_inside_box.png')
         f = df.File('mesh__sphere_inside_box.pvd')
         f << mesh
         del f
@@ -113,8 +118,10 @@ def create_periodic_mesh(periodicity='none', dim=3):
             # Unit square with added 'asymmetric' points on the four sides (to break periodicity)
             #vertices = [(0, 0), (1, 0), (1, 1), (0.5, 1), (0, 1), (0, 0.5)]
             #cells = [(0, 1, 5), (1, 2, 3), (3, 4, 5), (1, 3, 5)]
-            vertices = [(0, 0), (0.7, 0), (1, 0), (1, 0.8), (1, 1), (0.3, 1), (0, 1), (0, 0.2)]
-            cells = [(0, 1, 7), (1, 2, 3), (1, 3, 7), (3, 4, 5), (3, 5, 7), (5, 6, 7)]
+            vertices = [
+                (0, 0), (0.7, 0), (1, 0), (1, 0.8), (1, 1), (0.3, 1), (0, 1), (0, 0.2)]
+            cells = [
+                (0, 1, 7), (1, 2, 3), (1, 3, 7), (3, 4, 5), (3, 5, 7), (5, 6, 7)]
         elif periodicity == 'x':
             # Unit square with added 'asymmetric' points on top/bottom side
             #vertices = [(0, 0), (1, 0), (1, 1), (0.5, 1), (0, 1)]
@@ -130,9 +137,11 @@ def create_periodic_mesh(periodicity='none', dim=3):
             vertices = [(0, 0), (1, 0), (1, 1), (0, 1)]
             cells = [(0, 1, 2), (0, 2, 3)]
         else:
-            raise ValueError("Argument 'periodicity' must have one of the values 'none', 'x', 'y', 'z'")
+            raise ValueError(
+                "Argument 'periodicity' must have one of the values 'none', 'x', 'y', 'z'")
     else:
-        raise NotImplementedError('Can only create 2d and 3d meshes with predefined periodicity.')
+        raise NotImplementedError(
+            'Can only create 2d and 3d meshes with predefined periodicity.')
 
     mesh = build_mesh(vertices, cells)
 
@@ -176,7 +185,6 @@ def test_mesh_is_periodic(tmpdir):
     assert mesh_is_periodic(mesh_rectangle, 'x')
     #assert mesh_is_periodic(mesh_rectangle, 'y')
     assert mesh_is_periodic(mesh_rectangle, 'xy')
-
 
     # Repeat this process for a bunch of 3D meshes with
     # different periodicity.

@@ -29,10 +29,12 @@ def convert(nmesh_file, xml_file):
 
 
 class Parser(object):
+
     """
     Encapsulates what we know about nmesh ASCII files.
 
     """
+
     def __init__(self, nmesh_file):
         """
         Create a parser for the nmesh ASCII file in `nmesh_file`.
@@ -107,7 +109,8 @@ class Parser(object):
     def _vertex(self, s):
         coords = s.split()
         if not len(coords) == 3:
-            raise ValueError("Can't parse coordinates from string '{}'.".format(s))
+            raise ValueError(
+                "Can't parse coordinates from string '{}'.".format(s))
         return coords
 
     def _simplices_heading(self, s):
@@ -125,10 +128,12 @@ class Parser(object):
 
 
 class Emitter(object):
+
     """
     Write a dolfin xml mesh file.
 
     """
+
     def __init__(self, xml_file):
         """
         Create the emitter.
@@ -179,7 +184,8 @@ class Emitter(object):
                 self._close_vertices()
                 self._done_with_vertices = True
         else:
-            raise ValueError("Reached number of {} vertices already. Aborting.".format(self._vertices))
+            raise ValueError(
+                "Reached number of {} vertices already. Aborting.".format(self._vertices))
 
     def simplices(self, n):
         """
@@ -197,7 +203,7 @@ class Emitter(object):
         Indexed automatically.
 
         """
-        region, v0, v1,v2, v3 = argtuple
+        region, v0, v1, v2, v3 = argtuple
         if not self._done_with_simplices:
             s = '      <tetrahedron index="{}" v0="{}" v1="{}" v2="{}" v3="{}" />'
             self._write(s.format(self.si, v0, v1, v2, v3))
@@ -207,7 +213,8 @@ class Emitter(object):
                 self._close_all()
                 self._done_with_simplices = True
         else:
-            raise ValueError("Reached number of {} simplices already. Aborting.".format(self._simplices))
+            raise ValueError(
+                "Reached number of {} simplices already. Aborting.".format(self._simplices))
 
     def done(self):
         """

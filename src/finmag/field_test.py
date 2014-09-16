@@ -5,6 +5,7 @@ from field import Field
 
 
 class TestField(object):
+
     def setup(self):
         # Create meshes of several dimensions.
         self.mesh1d = df.UnitIntervalMesh(10)
@@ -156,17 +157,110 @@ class TestField(object):
             coords = field.coords_and_values()[0]  # Values ignored.
             if field.mesh_dim() == 1:
                 field.set(expressions[0])
-                expected_values = 11.2*coords[:, 0]
-                expected_probed_value = 11.2*self.probing_coord
+                expected_values = 11.2 * coords[:, 0]
+                expected_probed_value = 11.2 * self.probing_coord
             elif field.mesh_dim() == 2:
                 field.set(expressions[1])
-                expected_values = 11.2*coords[:, 0] - 3.01*coords[:, 1]
-                expected_probed_value = (11.2 - 3.01)*self.probing_coord
+                expected_values = 11.2 * coords[:, 0] - 3.01 * coords[:, 1]
+                expected_probed_value = (11.2 - 3.01) * self.probing_coord
             elif field.mesh_dim() == 3:
                 field.set(expressions[2])
-                expected_values = 11.2*coords[:, 0] - 3.01*coords[:, 1] + \
-                    2.7*coords[:, 2]
-                expected_probed_value = (11.2 - 3.01 + 2.7)*self.probing_coord
+                expected_values = 11.2 * coords[:, 0] - 3.01 * coords[:, 1] + \
+                    2.7 * coords[:, 2]
+                expected_probed_value = (
+                    11.2 - 3.01 + 2.7) * self.probing_coord
+
+            # Check the result of coords_and_values (should be exact).
+            field_values = field.coords_and_values()[1]  # ignore coordinates
+            assert np.all(field_values[:, 0] == expected_values)
+
+            # Check the interpolated value outside the mesh node.
+            # The expected field is linear and, because of that,
+            # smaller tolerance value (tol1) is used.
+            probing_point = field.mesh_dim() * (self.probing_coord,)
+            probed_value = field.probe(probing_point)
+            assert abs(probed_value - expected_probed_value) < self.tol1
+
+    def test_set_scalar_field_with_dolfin_function(self):
+        """Test setting the scalar field with a dolfin function."""
+        # Different expressions for defining the dolfin function,
+        # depending on the mesh dimension (1D, 2D, or 3D).
+        expressions = [df.Expression("11.2*x[0]"),
+                       df.Expression("11.2*x[0] - 3.01*x[1]"),
+                       df.Expression("11.2*x[0] - 3.01*x[1] + 2.7*x[2]")]
+
+        # Setting the scalar field for different
+        # scalar function spaces and appropriate expressions.
+        for functionspace in self.scalar_fspaces:
+            field = Field(functionspace)
+            dolfin_function = df.Function(functionspace)
+
+            # Set the field and compute expected values
+            # depending on the mesh dimension.
+            coords = field.coords_and_values()[0]  # Values ignored.
+            if field.mesh_dim() == 1:
+                dolfin_function = df.interpolate(expressions[0], functionspace)
+                field.set(dolfin_function)
+                expected_values = 11.2 * coords[:, 0]
+                expected_probed_value = 11.2 * self.probing_coord
+            elif field.mesh_dim() == 2:
+                dolfin_function = df.interpolate(expressions[1], functionspace)
+                field.set(dolfin_function)
+                expected_values = 11.2 * coords[:, 0] - 3.01 * coords[:, 1]
+                expected_probed_value = (11.2 - 3.01) * self.probing_coord
+            elif field.mesh_dim() == 3:
+                dolfin_function = df.interpolate(expressions[2], functionspace)
+                field.set(dolfin_function)
+                expected_values = 11.2 * coords[:, 0] - 3.01 * coords[:, 1] + \
+                    2.7 * coords[:, 2]
+                expected_probed_value = (
+                    11.2 - 3.01 + 2.7) * self.probing_coord
+
+            # Check the result of coords_and_values (should be exact).
+            field_values = field.coords_and_values()[1]  # ignore coordinates
+            assert np.all(field_values[:, 0] == expected_values)
+
+            # Check the interpolated value outside the mesh node.
+            # The expected field is linear and, because of that,
+            # smaller tolerance value (tol1) is used.
+            probing_point = field.mesh_dim() * (self.probing_coord,)
+            probed_value = field.probe(probing_point)
+            assert abs(probed_value - expected_probed_value) < self.tol1
+
+    def test_set_scalar_field_with_generic_vector(self):
+        """Test setting the scalar field with a generic vector."""
+        # Different expressions for defining the dolfin function,
+        # depending on the mesh dimension (1D, 2D, or 3D).
+        expressions = [df.Expression("11.2*x[0]"),
+                       df.Expression("11.2*x[0] - 3.01*x[1]"),
+                       df.Expression("11.2*x[0] - 3.01*x[1] + 2.7*x[2]")]
+
+        # Setting the scalar field for different
+        # scalar function spaces and appropriate expressions.
+        for functionspace in self.scalar_fspaces:
+            field = Field(functionspace)
+            dolfin_function = df.Function(functionspace)
+
+            # Set the field and compute expected values
+            # depending on the mesh dimension.
+            coords = field.coords_and_values()[0]  # Values ignored.
+            if field.mesh_dim() == 1:
+                dolfin_function = df.interpolate(expressions[0], functionspace)
+                field.set(dolfin_function.vector())
+                expected_values = 11.2 * coords[:, 0]
+                expected_probed_value = 11.2 * self.probing_coord
+            elif field.mesh_dim() == 2:
+                dolfin_function = df.interpolate(expressions[1], functionspace)
+                field.set(dolfin_function.vector())
+                expected_values = 11.2 * coords[:, 0] - 3.01 * coords[:, 1]
+                expected_probed_value = (11.2 - 3.01) * self.probing_coord
+            elif field.mesh_dim() == 3:
+                dolfin_function = df.interpolate(expressions[2], functionspace)
+                field.set(dolfin_function.vector())
+                expected_values = 11.2 * coords[:, 0] - 3.01 * coords[:, 1] + \
+                    2.7 * coords[:, 2]
+                expected_probed_value = (
+                    11.2 - 3.01 + 2.7) * self.probing_coord
 
             # Check the result of coords_and_values (should be exact).
             field_values = field.coords_and_values()[1]  # ignore coordinates
@@ -182,9 +276,9 @@ class TestField(object):
     def test_set_scalar_field_with_python_function(self):
         """Test setting the scalar field with a python function."""
         # Python functions array for setting the scalar field.
-        python_functions = [lambda x:1.21*x[0],
-                            lambda x:1.21*x[0] - 3.21*x[1],
-                            lambda x:1.21*x[0] - 3.21*x[1] + 2.47*x[2]]
+        python_functions = [lambda x:1.21 * x[0],
+                            lambda x:1.21 * x[0] - 3.21 * x[1],
+                            lambda x:1.21 * x[0] - 3.21 * x[1] + 2.47 * x[2]]
 
         # Setting the scalar field for different
         # scalar function spaces and appropriate python functions.
@@ -196,17 +290,18 @@ class TestField(object):
             coords = field.coords_and_values()[0]  # Values ignored.
             if field.mesh_dim() == 1:
                 field.set(python_functions[0])
-                expected_values = 1.21*coords[:, 0]
-                expected_probed_value = 1.21*self.probing_coord
+                expected_values = 1.21 * coords[:, 0]
+                expected_probed_value = 1.21 * self.probing_coord
             elif field.mesh_dim() == 2:
                 field.set(python_functions[1])
-                expected_values = 1.21*coords[:, 0] - 3.21*coords[:, 1]
-                expected_probed_value = (1.21 - 3.21)*self.probing_coord
+                expected_values = 1.21 * coords[:, 0] - 3.21 * coords[:, 1]
+                expected_probed_value = (1.21 - 3.21) * self.probing_coord
             elif field.mesh_dim() == 3:
                 field.set(python_functions[2])
-                expected_values = 1.21*coords[:, 0] - 3.21*coords[:, 1] + \
-                    2.47*coords[:, 2]
-                expected_probed_value = (1.21 - 3.21 + 2.47)*self.probing_coord
+                expected_values = 1.21 * coords[:, 0] - 3.21 * coords[:, 1] + \
+                    2.47 * coords[:, 2]
+                expected_probed_value = (
+                    1.21 - 3.21 + 2.47) * self.probing_coord
 
             # Check the result of coords_and_values (should be exact).
             field_values = field.coords_and_values()[1]  # ignore coordinates
@@ -275,21 +370,137 @@ class TestField(object):
             coords = field.coords_and_values()[0]  # Values ignored.
             if field.mesh_dim() == 1:
                 field.set(expressions[0])
-                expected_values = (1.1*coords[:, 0], -2.4*coords[:, 0],
-                                   3*coords[:, 0])
+                expected_values = (1.1 * coords[:, 0], -2.4 * coords[:, 0],
+                                   3 * coords[:, 0])
             elif field.mesh_dim() == 2:
                 field.set(expressions[1])
-                expected_values = (1.1*coords[:, 0], -2.4*coords[:, 1],
-                                   3*coords[:, 1])
+                expected_values = (1.1 * coords[:, 0], -2.4 * coords[:, 1],
+                                   3 * coords[:, 1])
             elif field.mesh_dim() == 3:
                 field.set(expressions[2])
-                expected_values = (1.1*coords[:, 0], -2.4*coords[:, 1],
-                                   3*coords[:, 2])
+                expected_values = (1.1 * coords[:, 0], -2.4 * coords[:, 1],
+                                   3 * coords[:, 2])
 
             # Compute expected probed value.
-            expected_probed_value = (1.1*self.probing_coord,
-                                     -2.4*self.probing_coord,
-                                     3*self.probing_coord)
+            expected_probed_value = (1.1 * self.probing_coord,
+                                     -2.4 * self.probing_coord,
+                                     3 * self.probing_coord)
+
+            # Check vector (numpy array) values (should be exact).
+            f_array = field.f.vector().array()
+            f_array_split = np.split(f_array, field.value_dim())
+            assert np.all(f_array_split[0] == expected_values[0])
+            assert np.all(f_array_split[1] == expected_values[1])
+            assert np.all(f_array_split[2] == expected_values[2])
+
+            # Check the result of coords_and_values (should be exact).
+            coords, field_values = field.coords_and_values()
+            assert np.all(field_values[:, 0] == expected_values[0])
+            assert np.all(field_values[:, 1] == expected_values[1])
+            assert np.all(field_values[:, 2] == expected_values[2])
+
+            # Check the interpolated value outside the mesh node.
+            # The expected field is constant and, because of that,
+            # smaller tolerance value (tol1) is used.
+            probing_point = field.mesh_dim() * (self.probing_coord,)
+            probed_value = field.probe(probing_point)
+            assert abs(probed_value[0] - expected_probed_value[0]) < self.tol1
+            assert abs(probed_value[1] - expected_probed_value[1]) < self.tol1
+            assert abs(probed_value[2] - expected_probed_value[2]) < self.tol1
+
+    def test_set_vector_field_with_dolfin_function(self):
+        """Test setting the 3D vector field with a dolfin function."""
+        # Different expressions for 3D vector fields.
+        expressions = [df.Expression(['1.1*x[0]', '-2.4*x[0]', '3*x[0]']),
+                       df.Expression(['1.1*x[0]', '-2.4*x[1]', '3*x[1]']),
+                       df.Expression(['1.1*x[0]', '-2.4*x[1]', '3*x[2]'])]
+
+        # Test setting the vector field for different
+        # vector function spaces and appropriate expressions.
+        for functionspace in self.vector3d_fspaces:
+            field = Field(functionspace)
+            dolfin_function = df.Function(functionspace)
+
+            # Set the vector field and compute expected values.
+            coords = field.coords_and_values()[0]  # Values ignored.
+            if field.mesh_dim() == 1:
+                dolfin_function = df.interpolate(expressions[0], functionspace)
+                field.set(dolfin_function)
+                expected_values = (1.1 * coords[:, 0], -2.4 * coords[:, 0],
+                                   3 * coords[:, 0])
+            elif field.mesh_dim() == 2:
+                dolfin_function = df.interpolate(expressions[1], functionspace)
+                field.set(dolfin_function)
+                expected_values = (1.1 * coords[:, 0], -2.4 * coords[:, 1],
+                                   3 * coords[:, 1])
+            elif field.mesh_dim() == 3:
+                dolfin_function = df.interpolate(expressions[2], functionspace)
+                field.set(dolfin_function)
+                expected_values = (1.1 * coords[:, 0], -2.4 * coords[:, 1],
+                                   3 * coords[:, 2])
+
+            # Compute expected probed value.
+            expected_probed_value = (1.1 * self.probing_coord,
+                                     -2.4 * self.probing_coord,
+                                     3 * self.probing_coord)
+
+            # Check vector (numpy array) values (should be exact).
+            f_array = field.f.vector().array()
+            f_array_split = np.split(f_array, field.value_dim())
+            assert np.all(f_array_split[0] == expected_values[0])
+            assert np.all(f_array_split[1] == expected_values[1])
+            assert np.all(f_array_split[2] == expected_values[2])
+
+            # Check the result of coords_and_values (should be exact).
+            coords, field_values = field.coords_and_values()
+            assert np.all(field_values[:, 0] == expected_values[0])
+            assert np.all(field_values[:, 1] == expected_values[1])
+            assert np.all(field_values[:, 2] == expected_values[2])
+
+            # Check the interpolated value outside the mesh node.
+            # The expected field is constant and, because of that,
+            # smaller tolerance value (tol1) is used.
+            probing_point = field.mesh_dim() * (self.probing_coord,)
+            probed_value = field.probe(probing_point)
+            assert abs(probed_value[0] - expected_probed_value[0]) < self.tol1
+            assert abs(probed_value[1] - expected_probed_value[1]) < self.tol1
+            assert abs(probed_value[2] - expected_probed_value[2]) < self.tol1
+
+    def test_set_vector_field_with_generic_vector(self):
+        """Test setting the 3D vector field with a generic_vector."""
+        # Different expressions for 3D vector fields.
+        expressions = [df.Expression(['1.1*x[0]', '-2.4*x[0]', '3*x[0]']),
+                       df.Expression(['1.1*x[0]', '-2.4*x[1]', '3*x[1]']),
+                       df.Expression(['1.1*x[0]', '-2.4*x[1]', '3*x[2]'])]
+
+        # Test setting the vector field for different
+        # vector function spaces and appropriate expressions.
+        for functionspace in self.vector3d_fspaces:
+            field = Field(functionspace)
+            dolfin_function = df.Function(functionspace)
+
+            # Set the vector field and compute expected values.
+            coords = field.coords_and_values()[0]  # Values ignored.
+            if field.mesh_dim() == 1:
+                dolfin_function = df.interpolate(expressions[0], functionspace)
+                field.set(dolfin_function.vector())
+                expected_values = (1.1 * coords[:, 0], -2.4 * coords[:, 0],
+                                   3 * coords[:, 0])
+            elif field.mesh_dim() == 2:
+                dolfin_function = df.interpolate(expressions[1], functionspace)
+                field.set(dolfin_function.vector())
+                expected_values = (1.1 * coords[:, 0], -2.4 * coords[:, 1],
+                                   3 * coords[:, 1])
+            elif field.mesh_dim() == 3:
+                dolfin_function = df.interpolate(expressions[2], functionspace)
+                field.set(dolfin_function.vector())
+                expected_values = (1.1 * coords[:, 0], -2.4 * coords[:, 1],
+                                   3 * coords[:, 2])
+
+            # Compute expected probed value.
+            expected_probed_value = (1.1 * self.probing_coord,
+                                     -2.4 * self.probing_coord,
+                                     3 * self.probing_coord)
 
             # Check vector (numpy array) values (should be exact).
             f_array = field.f.vector().array()
@@ -316,9 +527,9 @@ class TestField(object):
     def test_set_vector_field_with_python_function(self):
         """Test setting the 3D vector field with a python function."""
         # Different python functions for setting the vector field.
-        python_functions = [lambda x:(1.21*x[0], -2.47*x[0], 3*x[0]),
-                            lambda x:(1.21*x[0], -2.47*x[1], 3*x[1]),
-                            lambda x:(1.21*x[0], -2.47*x[1], 3*x[2])]
+        python_functions = [lambda x:(1.21 * x[0], -2.47 * x[0], 3 * x[0]),
+                            lambda x:(1.21 * x[0], -2.47 * x[1], 3 * x[1]),
+                            lambda x:(1.21 * x[0], -2.47 * x[1], 3 * x[2])]
 
         # Test setting the vector field for different
         # vector function spaces and appropriate expressions.
@@ -329,21 +540,21 @@ class TestField(object):
             coords = field.coords_and_values()[0]  # Values ignored.
             if field.mesh_dim() == 1:
                 field.set(python_functions[0])
-                expected_values = (1.21*coords[:, 0], -2.47*coords[:, 0],
-                                   3*coords[:, 0])
+                expected_values = (1.21 * coords[:, 0], -2.47 * coords[:, 0],
+                                   3 * coords[:, 0])
             elif field.mesh_dim() == 2:
                 field.set(python_functions[1])
-                expected_values = (1.21*coords[:, 0], -2.47*coords[:, 1],
-                                   3*coords[:, 1])
+                expected_values = (1.21 * coords[:, 0], -2.47 * coords[:, 1],
+                                   3 * coords[:, 1])
             elif field.mesh_dim() == 3:
                 field.set(python_functions[2])
-                expected_values = (1.21*coords[:, 0], -2.47*coords[:, 1],
-                                   3*coords[:, 2])
+                expected_values = (1.21 * coords[:, 0], -2.47 * coords[:, 1],
+                                   3 * coords[:, 2])
 
             # Compute expected probed value.
-            expected_probed_value = (1.21*self.probing_coord,
-                                     -2.47*self.probing_coord,
-                                     3*self.probing_coord)
+            expected_probed_value = (1.21 * self.probing_coord,
+                                     -2.47 * self.probing_coord,
+                                     3 * self.probing_coord)
 
             # Check vector (numpy array) values (should be exact).
             f_array = field.f.vector().array()
@@ -455,14 +666,14 @@ class TestField(object):
             values = field.coords_and_values()[1]  # Ignore coordinates.
 
             # Check the components of vector field.
-            norm_exact = (value[0]**2 + value[1]**2)**0.5
+            norm_exact = (value[0] ** 2 + value[1] ** 2) ** 0.5
             normalised_c1 = value[0] / norm_exact
             normalised_c2 = value[1] / norm_exact
             assert np.all(abs(values[:, 0] - normalised_c1) < self.tol3)
             assert np.all(abs(values[:, 1] - normalised_c2) < self.tol3)
 
             # Check the norm of normalised vector field.
-            norm = (values[:, 0]**2 + values[:, 1]**2)**0.5
+            norm = (values[:, 0] ** 2 + values[:, 1] ** 2) ** 0.5
             assert np.all(abs(norm - 1) < self.tol3)
 
         # 3D vector field
@@ -473,7 +684,7 @@ class TestField(object):
             values = field.coords_and_values()[1]  # Ignore coordinates.
 
             # Check the components of vector field.
-            norm_exact = (value[0]**2 + value[1]**2 + value[2]**2)**0.5
+            norm_exact = (value[0] ** 2 + value[1] ** 2 + value[2] ** 2) ** 0.5
             normalised_c1 = value[0] / norm_exact
             normalised_c2 = value[1] / norm_exact
             normalised_c3 = value[2] / norm_exact
@@ -482,7 +693,8 @@ class TestField(object):
             assert np.all(abs(values[:, 2] - normalised_c3) < self.tol3)
 
             # Check the norm of normalised vector field.
-            norm = (values[:, 0]**2 + values[:, 1]**2 + values[:, 2]**2)**0.5
+            norm = (
+                values[:, 0] ** 2 + values[:, 1] ** 2 + values[:, 2] ** 2) ** 0.5
             assert np.all(abs(norm - 1) < self.tol3)
 
         # 4D vector field
@@ -493,8 +705,8 @@ class TestField(object):
             values = field.coords_and_values()[1]  # Ignore coordinates.
 
             # Check the components of vector field.
-            norm_exact = (value[0]**2 + value[1]**2 + value[2]**2 +
-                          value[3]**2)**0.5
+            norm_exact = (value[0] ** 2 + value[1] ** 2 + value[2] ** 2 +
+                          value[3] ** 2) ** 0.5
             normalised_c1 = value[0] / norm_exact
             normalised_c2 = value[1] / norm_exact
             normalised_c3 = value[2] / norm_exact
@@ -505,13 +717,13 @@ class TestField(object):
             assert np.all(abs(values[:, 3] - normalised_c4) < self.tol3)
 
             # Check the norm of normalised vector field.
-            norm = (values[:, 0]**2 + values[:, 1]**2 + values[:, 2]**2 +
-                    values[:, 3]**2)**0.5
+            norm = (values[:, 0] ** 2 + values[:, 1] ** 2 + values[:, 2] ** 2 +
+                    values[:, 3] ** 2) ** 0.5
             assert np.all(abs(norm - 1) < self.tol3)
 
         # Test normalisation if field is set using
         # dolfin expression or python function.
-        expressions = [lambda x:(11.2*x[0], -1.6*x[1], 0.3*x[2]),
+        expressions = [lambda x:(11.2 * x[0], -1.6 * x[1], 0.3 * x[2]),
                        df.Expression(['11.2*x[0]', '-1.6*x[1]', '0.3*x[2]'])]
 
         functionspace = self.fs3d_vector3d
@@ -521,7 +733,8 @@ class TestField(object):
             values = field.coords_and_values()[1]  # Ignore coordinates.
 
             # Check the norm of normalised vector field.
-            norm = (values[:, 0]**2 + values[:, 1]**2 + values[:, 2]**2)**0.5
+            norm = (
+                values[:, 0] ** 2 + values[:, 1] ** 2 + values[:, 2] ** 2) ** 0.5
             assert np.all(abs(norm - 1) < 0.1)  # Too big error!!!!
 
     def test_average_scalar_field(self):
@@ -529,13 +742,10 @@ class TestField(object):
         # Different expressions for setting the scalar field.
         # All expressions set the field with same average value.
 
-
         # TODO: Add test for computing average on different mesh regions.
-
-
         expressions = [df.Constant(5),
                        df.Expression('10*x[0]'),
-                       lambda x:10*x[0]]
+                       lambda x:10 * x[0]]
 
         f_av_expected = 5
 
@@ -556,7 +766,7 @@ class TestField(object):
         # All expressions set the field with same average value.
         expressions = [df.Constant((1, 5.1)),
                        df.Expression(['2*x[0]', '10.2*x[0]']),
-                       lambda x:(2*x[0], 10.2*x[0])]
+                       lambda x:(2 * x[0], 10.2 * x[0])]
 
         f_av_expected = (1, 5.1)
 
@@ -577,7 +787,7 @@ class TestField(object):
         # All expressions set the field with same average value.
         expressions = [df.Constant((1, 5.1, -3.6)),
                        df.Expression(['2*x[0]', '10.2*x[0]', '-7.2*x[0]']),
-                       lambda x:(2*x[0], 10.2*x[0], -7.2*x[0])]
+                       lambda x:(2 * x[0], 10.2 * x[0], -7.2 * x[0])]
 
         f_av_expected = (1, 5.1, -3.6)
 
@@ -600,7 +810,7 @@ class TestField(object):
         expressions = [df.Constant((1, 5.1, -3.6, 0)),
                        df.Expression(['2*x[0]', '10.2*x[0]',
                                       '-7.2*x[0]', '0']),
-                       lambda x:(2*x[0], 10.2*x[0], -7.2*x[0], 0)]
+                       lambda x:(2 * x[0], 10.2 * x[0], -7.2 * x[0], 0)]
 
         f_av_expected = (1, 5.1, -3.6, 0)
 
@@ -628,7 +838,7 @@ class TestField(object):
         for functionspace in self.scalar_fspaces:
             expected_coords = functionspace.mesh().coordinates()
             num_nodes = functionspace.mesh().num_vertices()
-            expected_values = 1.3*expected_coords[:, 0]
+            expected_values = 1.3 * expected_coords[:, 0]
 
             field = Field(functionspace, expression)
             coords, values = field.coords_and_values()
@@ -656,9 +866,9 @@ class TestField(object):
             expected_coords = functionspace.mesh().coordinates()
             num_nodes = functionspace.mesh().num_vertices()
 
-            expected_values = (1.03*expected_coords[:, 0],
-                               2.31*expected_coords[:, 0],
-                               -1*expected_coords[:, 0])
+            expected_values = (1.03 * expected_coords[:, 0],
+                               2.31 * expected_coords[:, 0],
+                               -1 * expected_coords[:, 0])
 
             field = Field(functionspace, expression)
             coords, values = field.coords_and_values()
@@ -687,16 +897,16 @@ class TestField(object):
 
             if mesh_dim == 1:
                 field.set(df.Expression('1.3*x[0]'))
-                exact_result_at_node = 1.3*0.5
-                exact_result_out_node = 1.3*self.probing_coord
+                exact_result_at_node = 1.3 * 0.5
+                exact_result_out_node = 1.3 * self.probing_coord
             elif mesh_dim == 2:
                 field.set(df.Expression('1.3*x[0] - 2.3*x[1]'))
-                exact_result_at_node = (1.3 - 2.3)*0.5
-                exact_result_out_node = (1.3 - 2.3)*self.probing_coord
+                exact_result_at_node = (1.3 - 2.3) * 0.5
+                exact_result_out_node = (1.3 - 2.3) * self.probing_coord
             elif mesh_dim == 3:
                 field.set(df.Expression('1.3*x[0] - 2.3*x[1] + 6.1*x[2]'))
-                exact_result_at_node = (1.3 - 2.3 + 6.1)*0.5
-                exact_result_out_node = (1.3 - 2.3 + 6.1)*self.probing_coord
+                exact_result_at_node = (1.3 - 2.3 + 6.1) * 0.5
+                exact_result_out_node = (1.3 - 2.3 + 6.1) * self.probing_coord
 
             # Probe and check the result at the mesh node.
             probe_point = mesh_dim * (0.5,)
@@ -719,10 +929,10 @@ class TestField(object):
                           df.Expression(['1.3*x[0]', '0.3*x[0]', '-6.2*x[0]']))
             mesh_dim = field.mesh_dim()
 
-            exact_result_at_node = (1.3*0.5, 0.3*0.5, -6.2*0.5)
-            exact_result_out_node = (1.3*self.probing_coord,
-                                     0.3*self.probing_coord,
-                                     -6.2*self.probing_coord)
+            exact_result_at_node = (1.3 * 0.5, 0.3 * 0.5, -6.2 * 0.5)
+            exact_result_out_node = (1.3 * self.probing_coord,
+                                     0.3 * self.probing_coord,
+                                     -6.2 * self.probing_coord)
 
             # Probe and check the result at the mesh node.
             probe_point = mesh_dim * (0.5,)
@@ -772,9 +982,9 @@ class TestField(object):
     def test_set_nonlinear_scalar_field(self):
         """Test setting nonlinear scalar field."""
         # Python functions array for setting the scalar field.
-        python_functions = [lambda x:1.21*x[0]*x[0],
-                            lambda x:1.21*x[0]*x[0] - 3.21*x[1],
-                            lambda x:1.21*x[0]*x[0] - 3.21*x[1] + 2.47*x[2]]
+        python_functions = [lambda x:1.21 * x[0] * x[0],
+                            lambda x:1.21 * x[0] * x[0] - 3.21 * x[1],
+                            lambda x:1.21 * x[0] * x[0] - 3.21 * x[1] + 2.47 * x[2]]
 
         # Setting the scalar field for different
         # scalar function spaces and appropriate python functions.
@@ -786,21 +996,21 @@ class TestField(object):
             coords = field.coords_and_values()[0]  # Values ignored.
             if field.mesh_dim() == 1:
                 field.set(python_functions[0])
-                expected_values = 1.21*coords[:, 0]*coords[:, 0]
-                expected_probed_value = 1.21*self.probing_coord * \
+                expected_values = 1.21 * coords[:, 0] * coords[:, 0]
+                expected_probed_value = 1.21 * self.probing_coord * \
                     self.probing_coord
             elif field.mesh_dim() == 2:
                 field.set(python_functions[1])
-                expected_values = 1.21*coords[:, 0]*coords[:, 0] - \
-                    3.21*coords[:, 1]
-                expected_probed_value = (1.21*self.probing_coord - 3.21) * \
+                expected_values = 1.21 * coords[:, 0] * coords[:, 0] - \
+                    3.21 * coords[:, 1]
+                expected_probed_value = (1.21 * self.probing_coord - 3.21) * \
                     self.probing_coord
             elif field.mesh_dim() == 3:
                 field.set(python_functions[2])
-                expected_values = 1.21*coords[:, 0]*coords[:, 0] - \
-                    3.21*coords[:, 1] + 2.47*coords[:, 2]
-                expected_probed_value = (1.21*self.probing_coord - 3.21 +
-                                         2.47)*self.probing_coord
+                expected_values = 1.21 * coords[:, 0] * coords[:, 0] - \
+                    3.21 * coords[:, 1] + 2.47 * coords[:, 2]
+                expected_probed_value = (1.21 * self.probing_coord - 3.21 +
+                                         2.47) * self.probing_coord
 
             # Check the result of coords_and_values (should be exact).
             field_values = field.coords_and_values()[1]  # ignore coordinates
@@ -829,20 +1039,20 @@ class TestField(object):
             coords = field.coords_and_values()[0]  # Values ignored.
             if field.mesh_dim() == 1:
                 field.set(expressions[0])
-                expected_values = (1.1*coords[:, 0]*coords[:, 0],
-                                   -2.4*coords[:, 0])
+                expected_values = (1.1 * coords[:, 0] * coords[:, 0],
+                                   -2.4 * coords[:, 0])
             elif field.mesh_dim() == 2:
                 field.set(expressions[1])
-                expected_values = (1.1*coords[:, 0]*coords[:, 0],
-                                   -2.4*coords[:, 0])
+                expected_values = (1.1 * coords[:, 0] * coords[:, 0],
+                                   -2.4 * coords[:, 0])
             elif field.mesh_dim() == 3:
                 field.set(expressions[2])
-                expected_values = (1.1*coords[:, 0]*coords[:, 0],
-                                   -2.4*coords[:, 1])
+                expected_values = (1.1 * coords[:, 0] * coords[:, 0],
+                                   -2.4 * coords[:, 1])
 
             # Compute expected probed value.
-            expected_probed_value = (1.1*self.probing_coord*self.probing_coord,
-                                     -2.4*self.probing_coord)
+            expected_probed_value = (1.1 * self.probing_coord * self.probing_coord,
+                                     -2.4 * self.probing_coord)
 
             # Check vector (numpy array) values (should be exact).
             f_array = field.f.vector().array()
@@ -877,21 +1087,21 @@ class TestField(object):
             coords = field.coords_and_values()[0]  # Values ignored.
             if field.mesh_dim() == 1:
                 field.set(expressions[0])
-                expected_values = (1.1*coords[:, 0]*coords[:, 0],
-                                   -2.4*coords[:, 0], 3*coords[:, 0])
+                expected_values = (1.1 * coords[:, 0] * coords[:, 0],
+                                   -2.4 * coords[:, 0], 3 * coords[:, 0])
             elif field.mesh_dim() == 2:
                 field.set(expressions[1])
-                expected_values = (1.1*coords[:, 0]*coords[:, 0],
-                                   -2.4*coords[:, 1], 3*coords[:, 1])
+                expected_values = (1.1 * coords[:, 0] * coords[:, 0],
+                                   -2.4 * coords[:, 1], 3 * coords[:, 1])
             elif field.mesh_dim() == 3:
                 field.set(expressions[2])
-                expected_values = (1.1*coords[:, 0]*coords[:, 0],
-                                   -2.4*coords[:, 1], 3*coords[:, 2])
+                expected_values = (1.1 * coords[:, 0] * coords[:, 0],
+                                   -2.4 * coords[:, 1], 3 * coords[:, 2])
 
             # Compute expected probed value.
-            expected_probed_value = (1.1*self.probing_coord*self.probing_coord,
-                                     -2.4*self.probing_coord,
-                                     3*self.probing_coord)
+            expected_probed_value = (1.1 * self.probing_coord * self.probing_coord,
+                                     -2.4 * self.probing_coord,
+                                     3 * self.probing_coord)
 
             # Check vector (numpy array) values (should be exact).
             f_array = field.f.vector().array()
@@ -932,24 +1142,24 @@ class TestField(object):
             coords = field.coords_and_values()[0]  # Values ignored.
             if field.mesh_dim() == 1:
                 field.set(expressions[0])
-                expected_values = (1.1*coords[:, 0]*coords[:, 0],
-                                   -2.4*coords[:, 0], 3*coords[:, 0],
+                expected_values = (1.1 * coords[:, 0] * coords[:, 0],
+                                   -2.4 * coords[:, 0], 3 * coords[:, 0],
                                    coords[:, 0])
             elif field.mesh_dim() == 2:
                 field.set(expressions[1])
-                expected_values = (1.1*coords[:, 0]*coords[:, 0],
-                                   -2.4*coords[:, 1], 3*coords[:, 1],
+                expected_values = (1.1 * coords[:, 0] * coords[:, 0],
+                                   -2.4 * coords[:, 1], 3 * coords[:, 1],
                                    coords[:, 0])
             elif field.mesh_dim() == 3:
                 field.set(expressions[2])
-                expected_values = (1.1*coords[:, 0]*coords[:, 0],
-                                   -2.4*coords[:, 1], 3*coords[:, 2],
+                expected_values = (1.1 * coords[:, 0] * coords[:, 0],
+                                   -2.4 * coords[:, 1], 3 * coords[:, 2],
                                    coords[:, 0])
 
             # Compute expected probed value.
-            expected_probed_value = (1.1*self.probing_coord*self.probing_coord,
-                                     -2.4*self.probing_coord,
-                                     3*self.probing_coord,
+            expected_probed_value = (1.1 * self.probing_coord * self.probing_coord,
+                                     -2.4 * self.probing_coord,
+                                     3 * self.probing_coord,
                                      self.probing_coord)
 
             # Check vector (numpy array) values (should be exact).
@@ -986,3 +1196,25 @@ class TestField(object):
 
         field = Field(self.fs3d_vector3d, value=[1, 0, 0])
         field.plot_with_dolfin(interactive=False)
+
+    def test_add_scalar_fields(self):
+        for functionspace in self.scalar_fspaces:
+            field1 = Field(functionspace, value=3.1)
+            field2 = Field(functionspace, value=3.35)
+
+            field3 = field1 + field2
+
+            assert np.allclose(field3.f.vector().array(), 6.45)
+
+    def test_add_vector_fields(self):
+        for functionspace in self.vector3d_fspaces:
+            field1 = Field(functionspace, value=(1, 2, 3))
+            field2 = Field(functionspace, value=(5, 2.1, 6))
+
+            field3 = field1 + field2
+
+            coords = field3.coords_and_values()[0]
+            for coord in coords:
+                assert abs(field3.probe(coord)[0] - 6) < self.tol1
+                assert abs(field3.probe(coord)[1] - 4.1) < self.tol1
+                assert abs(field3.probe(coord)[2] - 9) < self.tol1

@@ -45,7 +45,8 @@ def test_demag_energy_for_uniformly_magnetised_sphere():
     Ms = 800e3
     demag = setup_demag_sphere(Ms)
     E = demag.compute_energy()
-    E_expected = (1.0 / 6.0) * mu0 * Ms ** 2 * volume  # -mu0/2 Integral H * M with H = - M / 3
+    # -mu0/2 Integral H * M with H = - M / 3
+    E_expected = (1.0 / 6.0) * mu0 * Ms ** 2 * volume
     print "Got E = {}. Expected E = {}.".format(E, E_expected)
 
     REL_TOL = 3.5e-2
@@ -60,7 +61,8 @@ def test_energy_density_for_uniformly_magnetised_sphere():
     demag = setup_demag_sphere(Ms)
     rho = demag.energy_density()
 
-    E_expected = (1.0 / 6.0) * mu0 * Ms**2 * volume  # -mu0/2 Integral H * M with H = - M / 3
+    # -mu0/2 Integral H * M with H = - M / 3
+    E_expected = (1.0 / 6.0) * mu0 * Ms ** 2 * volume
     rho_expected = E_expected / volume
     print "Got mean rho = {:.3e}. Expected rho = {:.3e}.".format(np.mean(rho), rho_expected)
 
@@ -78,7 +80,8 @@ def test_energy_density_for_uniformly_magnetised_sphere_as_function():
     print "Probing the energy density at the center of the sphere."
     rho_center = rho([0.0, 0.0, 0.0])
 
-    E_expected = (1.0 / 6.0) * mu0 * Ms**2 * volume  # -mu0/2 Integral H * M with H = - M / 3
+    # -mu0/2 Integral H * M with H = - M / 3
+    E_expected = (1.0 / 6.0) * mu0 * Ms ** 2 * volume
     rho_expected = E_expected / volume
     print "Got rho = {:.3e}. Expected rho = {:.3e}.".format(rho_center, rho_expected)
 

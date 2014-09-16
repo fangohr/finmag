@@ -27,7 +27,7 @@ def test_against_nmag():
 
     diff = np.abs(np.array(finmag_dynamics) - np.array(nmag_dynamics))
     print("Deviation is %s" % (np.max(diff)))
-    assert np.max(diff[:, 0]) < EPSILON # compare timesteps
+    assert np.max(diff[:, 0]) < EPSILON  # compare timesteps
     assert np.max(diff[:, 1:]) < TOLERANCE
 
 
@@ -39,27 +39,27 @@ def plot_dynamics():
 
     if os.path.isfile(NMAG_FILE):
         nmag = np.loadtxt(NMAG_FILE)
-        nmag[:,0] *= 1e9
-        ax.plot(nmag[:,0], nmag[:,1], "rx", label="nmag m_x")
-        ax.plot(nmag[:,0], nmag[:,2], "bx", label="nmag m_y")
-        ax.plot(nmag[:,0], nmag[:,3], "gx", label="nmag m_z")
+        nmag[:, 0] *= 1e9
+        ax.plot(nmag[:, 0], nmag[:, 1], "rx", label="nmag m_x")
+        ax.plot(nmag[:, 0], nmag[:, 2], "bx", label="nmag m_y")
+        ax.plot(nmag[:, 0], nmag[:, 3], "gx", label="nmag m_z")
     else:
         print "Missing nmag file."
 
     if os.path.isfile(OOMMF_FILE):
         oommf = np.loadtxt(OOMMF_FILE)
-        oommf[:,0] *= 1e9
-        ax.plot(oommf[:,0], oommf[:, 1], "r+", label="oommf m_x")
-        ax.plot(oommf[:,0], oommf[:, 2], "b+", label="oommf m_y")
-        ax.plot(oommf[:,0], oommf[:, 3], "g+", label="oommf m_z")
+        oommf[:, 0] *= 1e9
+        ax.plot(oommf[:, 0], oommf[:, 1], "r+", label="oommf m_x")
+        ax.plot(oommf[:, 0], oommf[:, 2], "b+", label="oommf m_y")
+        ax.plot(oommf[:, 0], oommf[:, 3], "g+", label="oommf m_z")
     else:
         print "Missing oommf file."
 
     finmag = np.loadtxt(FINMAG_DYNAMICS_FILE)
-    finmag[:,0] *= 1e9
-    ax.plot(finmag[:,0], finmag[:,1], "k", label="finmag m_x")
-    ax.plot(finmag[:,0], finmag[:,2], "k", label="finmag m_y")
-    ax.plot(finmag[:,0], finmag[:,3], "k", label="finmag m_z")
+    finmag[:, 0] *= 1e9
+    ax.plot(finmag[:, 0], finmag[:, 1], "k", label="finmag m_x")
+    ax.plot(finmag[:, 0], finmag[:, 2], "k", label="finmag m_y")
+    ax.plot(finmag[:, 0], finmag[:, 3], "k", label="finmag m_z")
 
     ax.set_xlim((0, 2))
     ax.set_xlabel("time (ns)")
@@ -68,6 +68,3 @@ def plot_dynamics():
 
 if __name__ == "__main__":
     plot_dynamics()
-
-
-

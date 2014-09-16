@@ -17,7 +17,7 @@ level_maps = {
             logging.WARNING: (None, 'yellow', True),
             logging.ERROR: (None, 'red', True),
             logging.CRITICAL: ('red', 'white', True),
-         },
+        },
     'light_bg':
         {
             logging.DEBUG: (None, 'black', False),
@@ -27,8 +27,8 @@ level_maps = {
             logging.CRITICAL: ('red', 'white', True),
         },
 
-    'none': # Don't do any colouring -- sometimes colours can't be processed 
-            # by specific tools (such as nbconvert, at the moment, Dec 2012, HF
+    'none':  # Don't do any colouring -- sometimes colours can't be processed
+    # by specific tools (such as nbconvert, at the moment, Dec 2012, HF
         {
             logging.DEBUG: (None, None, False),   # do not add any colours
             logging.INFO: (None, None, False),
@@ -37,7 +37,8 @@ level_maps = {
             logging.CRITICAL: (None, None, False),
         }
 
-    }
+}
+
 
 class ColorizingStreamHandler(logging.StreamHandler):
     # color names to indices
@@ -52,7 +53,7 @@ class ColorizingStreamHandler(logging.StreamHandler):
         'white': 7,
     }
 
-    #levels to (background, foreground, bold/intense)
+    # levels to (background, foreground, bold/intense)
     if os.name == 'nt':
         level_map = level_maps['dark_bg']
     else:
@@ -105,7 +106,7 @@ class ColorizingStreamHandler(logging.StreamHandler):
             fd = getattr(self.stream, 'fileno', None)
             if fd is not None:
                 fd = fd()
-                if fd in (1, 2): # stdout or stderr
+                if fd in (1, 2):  # stdout or stderr
                     h = ctypes.windll.kernel32.GetStdHandle(-10 - fd)
             while parts:
                 text = parts.pop(0)
@@ -122,12 +123,13 @@ class ColorizingStreamHandler(logging.StreamHandler):
                             elif 30 <= p <= 37:
                                 color |= self.nt_color_map[p - 30]
                             elif p == 1:
-                                color |= 0x08 # foreground intensity on
-                            elif p == 0: # reset to default color
+                                color |= 0x08  # foreground intensity on
+                            elif p == 0:  # reset to default color
                                 color = 0x07
                             else:
-                                pass # error condition ignored
-                        ctypes.windll.kernel32.SetConsoleTextAttribute(h, color)
+                                pass  # error condition ignored
+                        ctypes.windll.kernel32.SetConsoleTextAttribute(
+                            h, color)
 
     def colorize(self, message, record):
         if record.levelno in self.level_map:
@@ -152,6 +154,7 @@ class ColorizingStreamHandler(logging.StreamHandler):
             parts[0] = self.colorize(parts[0], record)
             message = '\n'.join(parts)
         return message
+
 
 def main():
     root = logging.getLogger()

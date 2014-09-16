@@ -31,6 +31,7 @@ def write_finmagrc_template_to_file(filename):
     with open(filename, 'w') as f:
         f.write(FINMAGRC_TEMPLATE)
 
+
 def create_default_finmagrc_file():
     """
     Check whether a configuration file already exists at any of the
@@ -61,7 +62,7 @@ def create_default_finmagrc_file():
 # Template for the '.finmagrc' file. This is used in the documentation
 # and to create a default configuration file if none exists yet.
 FINMAGRC_TEMPLATE = \
-"""\
+    """\
 [logging]
 
 # Color_scheme choices: [dark_bg, light_bg, none]

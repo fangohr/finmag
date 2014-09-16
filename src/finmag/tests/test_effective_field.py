@@ -8,7 +8,8 @@
 import dolfin
 import finmag
 
-def test_get_interaction_list(): 
+
+def test_get_interaction_list():
     # has bar mini example Demag and Exchange?
     s = finmag.example.barmini()
     lst = s.get_interaction_list()
@@ -23,9 +24,6 @@ def test_get_interaction_list():
     # test simulation with no interaction
     s2 = finmag.sim_with(
         mesh=dolfin.IntervalMesh(10, 0, 1),
-        m_init=(1, 0, 0), Ms=1, 
+        m_init=(1, 0, 0), Ms=1,
         demag_solver=None, unit_length=1e-8)
     assert s2.get_interaction_list() == []
-
-
-    

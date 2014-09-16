@@ -11,6 +11,7 @@ logger = logging.getLogger('finmag')
 
 
 class UniaxialAnisotropy(EnergyBase):
+
     """
     Compute the uniaxial anisotropy field.
 
@@ -72,9 +73,9 @@ class UniaxialAnisotropy(EnergyBase):
         self.name = name
         super(UniaxialAnisotropy, self).__init__(method, in_jacobian=True)
         self.assemble = assemble
-        
+
         self.K2_input = K2
-        if K2!=0:
+        if K2 != 0:
             self.assemble = False
 
     @mtimed
@@ -96,9 +97,11 @@ class UniaxialAnisotropy(EnergyBase):
         """
         # The following two lines are duplicated again in EnergyBase.setup().
         # I wonder why there is the distinction betwen the __init__() and the
-        # setup() methods anyway? It feels a bit artifial to me.  -- Max, 23.9.2013
+        # setup() methods anyway? It feels a bit artifial to me.  -- Max,
+        # 23.9.2013
         dofmap = m.functionspace.dofmap()
-        S1 = df.FunctionSpace(m.mesh(), "Lagrange", 1, constrained_domain=dofmap.constrained_domain)
+        S1 = df.FunctionSpace(
+            m.mesh(), "Lagrange", 1, constrained_domain=dofmap.constrained_domain)
 
         # Anisotropy energy
         # HF's version inline with nmag, breaks comparison with analytical
@@ -109,14 +112,16 @@ class UniaxialAnisotropy(EnergyBase):
         self.K1 = helpers.scalar_valued_function(self.K1_waiting_for_mesh, S1)
         self.K1.rename('K1', 'uniaxial anisotropy constant')
         self.K2 = helpers.scalar_valued_function(self.K2_input, S1)
-        self.axis = helpers.vector_valued_function(self.axis_waiting_for_mesh, m.functionspace, normalise=True)
+        self.axis = helpers.vector_valued_function(
+            self.axis_waiting_for_mesh, m.functionspace, normalise=True)
         self.axis.rename('K1_axis', 'anisotropy axis')
-        E_integrand = self.K1 * (df.Constant(1) - (df.dot(self.axis, m.f)) ** 2)
-        if self.K2_input!=0:
+        E_integrand = self.K1 * \
+            (df.Constant(1) - (df.dot(self.axis, m.f)) ** 2)
+        if self.K2_input != 0:
             E_integrand -= self.K2 * df.dot(self.axis, m.f) ** 4
-            
+
         super(UniaxialAnisotropy, self).setup(E_integrand, m, Ms, unit_length)
-        
+
         if not self.assemble:
             self.H = self.m.get_numpy_array_debug()
             self.Ms = self.Ms.vector().array()
@@ -125,18 +130,18 @@ class UniaxialAnisotropy(EnergyBase):
             self.K2_arr = self.K2.vector().array()
             self.volumes = df.assemble(df.TestFunction(S1) * df.dx)
             self.compute_field = self.__compute_field_directly
-    
+
     def __compute_field_directly(self):
-        
+
         m = self.m.get_numpy_array_debug()
-        
-        m.shape=(3,-1)
-        self.H.shape=(3,-1)
-        self.u.shape=(3,-1)
-        native_llg.compute_anisotropy_field(m, self.Ms, self.H, self.u, self.K1_arr, self.K2_arr)
-        m.shape=(-1,)
-        self.H.shape=(-1,)
-        self.u.shape=(-1,)
-        
+
+        m.shape = (3, -1)
+        self.H.shape = (3, -1)
+        self.u.shape = (3, -1)
+        native_llg.compute_anisotropy_field(
+            m, self.Ms, self.H, self.u, self.K1_arr, self.K2_arr)
+        m.shape = (-1,)
+        self.H.shape = (-1,)
+        self.u.shape = (-1,)
+
         return self.H
-        

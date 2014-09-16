@@ -9,6 +9,7 @@ logger = logging.getLogger('finmag')
 
 
 class ExchangeStd(EnergyBase):
+
     """
     Compute the exchange field for LLB case.
 
@@ -64,6 +65,7 @@ class ExchangeStd(EnergyBase):
             H_exch_np = exchange_np.compute_field()
 
     """
+
     def __init__(self, C, method="box-matrix-petsc"):
         super(ExchangeStd, self).__init__(method, in_jacobian=True)
         self.C = C
@@ -72,7 +74,7 @@ class ExchangeStd(EnergyBase):
     def setup(self, S3, m, Ms, Me, unit_length=1):
         self.Me = Me
 
-        #expression for the energy
+        # expression for the energy
         exchange_factor = df.Constant(
             1 * self.C / (mu0 * Ms * unit_length ** 2))
 
@@ -83,16 +85,16 @@ class ExchangeStd(EnergyBase):
         # Needed for energy density
         S1 = df.FunctionSpace(S3.mesh(), "CG", 1)
         w = df.TestFunction(S1)
-        nodal_E = Ms * mu0 * df.dot(self.exchange_factor \
-                * df.inner(df.grad(m), df.grad(m)), w) * df.dx
+        nodal_E = Ms * mu0 * df.dot(self.exchange_factor
+                                    * df.inner(df.grad(m), df.grad(m)), w) * df.dx
 
         super(ExchangeStd, self).setup(
-                E_integrand=E,
-                nodal_E=nodal_E,
-                S3=S3,
-                m=m,
-                Ms=Ms,
-                unit_length=unit_length)
+            E_integrand=E,
+            nodal_E=nodal_E,
+            S3=S3,
+            m=m,
+            Ms=Ms,
+            unit_length=unit_length)
 
     def compute_field(self):
         """
@@ -104,61 +106,61 @@ class ExchangeStd(EnergyBase):
 
         """
 
-
         Hex = super(ExchangeStd, self).compute_field()
 
         return Hex / self.Me ** 2
 
 
 class Exchange(object):
+
     def __init__(self, mat, in_jacobian=False):
         self.C = mat._A_dg
-        self.me= mat._m_e
-        self.in_jacobian=in_jacobian
+        self.me = mat._m_e
+        self.in_jacobian = in_jacobian
 
     @mtimed
     def setup(self, S3, m, Ms0, unit_length=1.0):
         self.S3 = S3
         self.m = m
-        self.Ms0=Ms0
+        self.Ms0 = Ms0
         self.unit_length = unit_length
 
         self.mu0 = mu0
-        self.exchange_factor = 2.0 / (self.mu0 * Ms0 * self.unit_length**2)
+        self.exchange_factor = 2.0 / (self.mu0 * Ms0 * self.unit_length ** 2)
 
         u3 = df.TrialFunction(S3)
         v3 = df.TestFunction(S3)
         self.K = df.PETScMatrix()
-        df.assemble(self.C*df.inner(df.grad(u3),df.grad(v3))*df.dx, tensor=self.K)
+        df.assemble(
+            self.C * df.inner(df.grad(u3), df.grad(v3)) * df.dx, tensor=self.K)
         self.H = df.PETScVector()
 
-        self.vol = df.assemble(df.dot(v3, df.Constant([1, 1, 1])) * df.dx).array()
+        self.vol = df.assemble(
+            df.dot(v3, df.Constant([1, 1, 1])) * df.dx).array()
 
-        self.coeff=-self.exchange_factor/(self.vol*self.me**2)
+        self.coeff = -self.exchange_factor / (self.vol * self.me ** 2)
 
     def compute_field(self):
 
         self.K.mult(self.m.vector(), self.H)
 
-        return  self.coeff*self.H.array()
+        return self.coeff * self.H.array()
 
 
 if __name__ == "__main__":
 
     mesh = df.BoxMesh(0, 0, 0, 10, 1, 1, 10, 1, 1)
 
-
-
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
     C = 1.3e-11  # J/m exchange constant
-    expr = df.Expression(('4.0*sin(x[0])', '4*cos(x[0])','0'))
+    expr = df.Expression(('4.0*sin(x[0])', '4*cos(x[0])', '0'))
     m0 = df.interpolate(expr, S3)
 
     from finmag.physics.llb.material import Material
     mat = Material(mesh, name='FePt')
     mat.set_m(expr)
     mat.T = 1
-    mat.alpha=0.01
+    mat.alpha = 0.01
 
     exch = Exchange(mat)
     exch.setup(mat.S3, mat._m, mat.Ms0, unit_length=1e-9)
@@ -166,8 +168,8 @@ if __name__ == "__main__":
     #exch2 = ExchangeStd(mat)
     #exch2.setup(mat.S3, mat._m, mat.Ms0, unit_length=1e-9)
 
-    #print max(exch2.compute_field()-exch.compute_field())
+    # print max(exch2.compute_field()-exch.compute_field())
 
     print exch.compute_field()
 
-    #print timings.report()
+    # print timings.report()

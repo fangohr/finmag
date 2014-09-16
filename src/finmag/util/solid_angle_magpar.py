@@ -1,10 +1,12 @@
 import instant
 
+
 def return_csa_magpar():
-    args = [["xn", "x", "in"], ["v1n", "v1", "in"], ["v2n", "v2", "in"], ["v3n", "v3", "in"]] 
+    args = [["xn", "x", "in"], ["v1n", "v1", "in"],
+            ["v2n", "v2", "in"], ["v3n", "v3", "in"]]
     return instant.inline_with_numpy(C_CODE, arrays=args)
 
-C_CODE="""
+C_CODE = """
 double SolidAngle(int xn, double *x, int v1n, double *v1, int v2n, double *v2, int v3n, double *v3);
 
 #define my_daxpy(a,b,c,d,e,f) {(e)[0]+=b*(c)[0];(e)[1]+=b*(c)[1];(e)[2]+=b*(c)[2];}

@@ -28,15 +28,20 @@ import re
 
 __all__ = ["make_modules"]
 
-NATIVE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../../native")
-MODULES_OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../finmag/native")
+NATIVE_DIR = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "../../../native")
+MODULES_OUTPUT_DIR = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "../../finmag/native")
 MAKEFILE = os.path.join(NATIVE_DIR, "Makefile")
 
 logger = logging.getLogger("finmag")
 
+
 def replace_c_errors_with_python_errors(s):
-    repl = lambda m: r'File "%s", line %s (%s): ' % (os.path.abspath(os.path.join(NATIVE_DIR, m.group(1))), m.group(2), m.group(3))
+    repl = lambda m: r'File "%s", line %s (%s): ' % (
+        os.path.abspath(os.path.join(NATIVE_DIR, m.group(1))), m.group(2), m.group(3))
     return re.sub(r"([^\s:]+):(\d+):(\d+): ", repl, s)
+
 
 def run_make(cmd, **kwargs):
     try:
@@ -50,6 +55,8 @@ def run_make(cmd, **kwargs):
         raise Exception("make_modules: Make failed")
 
 modules_compiled = False
+
+
 def make_modules():
     global modules_compiled
     if not modules_compiled:
@@ -62,8 +69,10 @@ def make_modules():
             run_make(["make"], cwd=NATIVE_DIR)
         modules_compiled = True
 
+
 def pipe_output(cmd):
-    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, bufsize=1)
+    process = subprocess.Popen(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, bufsize=1)
     while True:
         line = process.stdout.readline()
         if not line:

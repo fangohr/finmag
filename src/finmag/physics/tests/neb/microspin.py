@@ -20,45 +20,44 @@ MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def create_simulation(mesh):
-    
+
     sim = Sim(mesh, Ms=8.6e5, unit_length=1e-9)
-    
-    sim.set_m((1,0,0))
+
+    sim.set_m((1, 0, 0))
     sim.add(UniaxialAnisotropy(-1e5, (0, 0, 1), name='Kp'))
     sim.add(UniaxialAnisotropy(1e4, (1, 0, 0), name='Kx'))
-    
+
     return sim
 
 
 def relax_system(sim):
-    
-    init_images=[(-1,0,0),(0,1,1),(1,0,0)]
-    interpolations = [10,8]
-    
-    neb = NEB_Sundials(sim, init_images, interpolations, spring=1e6, name='neb')
+
+    init_images = [(-1, 0, 0), (0, 1, 1), (1, 0, 0)]
+    interpolations = [10, 8]
+
+    neb = NEB_Sundials(
+        sim, init_images, interpolations, spring=1e6, name='neb')
 
     neb.relax(max_steps=500, save_ndt_steps=1, stopping_dmdt=1e2)
-    
+
 
 def plot_data_2d():
-    
+
     data = np.loadtxt('neb_energy.ndt')
-    
-    fig=plt.figure()
-    xs = range(1, len(data[0,:]))
-    plt.plot(xs, data[-1,1:], '.-')
-    
+
+    fig = plt.figure()
+    xs = range(1, len(data[0, :]))
+    plt.plot(xs, data[-1, 1:], '.-')
+
     plt.grid()
-    
+
     fig.savefig('last_energy.pdf')
-        
+
 
 if __name__ == "__main__":
-    mesh = df.RectangleMesh(0,0,10,10,1,1)
+    mesh = df.RectangleMesh(0, 0, 10, 10, 1, 1)
     sim = create_simulation(mesh)
     relax_system(sim)
 
-    
     plot_data_2d()
     plot_energy_3d('neb_energy.ndt')
-

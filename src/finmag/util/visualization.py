@@ -80,7 +80,7 @@ def flight_path_rotation(start_pos, axis=[0, 0, 1], angle=360):
     print "r2: {}".format(r2)
 
     def flight_path(t):
-        pos = P0 + cos(t*angle_rad) * r1 + sin(t*angle_rad) * r2
+        pos = P0 + cos(t * angle_rad) * r1 + sin(t * angle_rad) * r2
         return pos
 
     return flight_path
@@ -103,37 +103,37 @@ def flight_path_straight_line(start_pos, end_pos):
 
 
 def render_paraview_scene(
-    pvd_file,
-    outfile=None,
-    field_name='m',
-    timesteps=None,
-    camera_position=[0, -200, +200],
-    camera_focal_point=[0, 0, 0],
-    camera_view_up=[0, 0, 1],
-    view_size=(800, 600),
-    magnification=1,
-    fit_view_to_scene=True,
-    color_by_axis=0,
-    colormap='coolwarm',
-    rescale_colormap_to_data_range=True,
-    show_colorbar=True,
-    colorbar_label_format='%-#5.2g',
-    add_glyphs=True,
-    glyph_type='cones',
-    glyph_scale_factor=1.0,
-    glyph_random_mode=True,
-    glyph_mask_points=True,
-    glyph_max_number_of_points=10000,
-    show_orientation_axes=False,
-    show_center_axes=False,
-    representation="Surface With Edges",
-    palette='screen',
-    use_parallel_projection=False,
-    trim_border=True,
-    rescale=None,
-    diffuse_color=None,
-    debug=False,
-    use_display=None):
+        pvd_file,
+        outfile=None,
+        field_name='m',
+        timesteps=None,
+        camera_position=[0, -200, +200],
+        camera_focal_point=[0, 0, 0],
+        camera_view_up=[0, 0, 1],
+        view_size=(800, 600),
+        magnification=1,
+        fit_view_to_scene=True,
+        color_by_axis=0,
+        colormap='coolwarm',
+        rescale_colormap_to_data_range=True,
+        show_colorbar=True,
+        colorbar_label_format='%-#5.2g',
+        add_glyphs=True,
+        glyph_type='cones',
+        glyph_scale_factor=1.0,
+        glyph_random_mode=True,
+        glyph_mask_points=True,
+        glyph_max_number_of_points=10000,
+        show_orientation_axes=False,
+        show_center_axes=False,
+        representation="Surface With Edges",
+        palette='screen',
+        use_parallel_projection=False,
+        trim_border=True,
+        rescale=None,
+        diffuse_color=None,
+        debug=False,
+        use_display=None):
 
     # Convert color_by_axis to integer and store the name separately
     try:
@@ -156,7 +156,8 @@ def render_paraview_scene(
 
     outdir = os.path.dirname(outfile)
     if not os.path.exists(outdir):
-        logger.debug("Creating non-existing directory component '{}' of output filename.".format(outdir))
+        logger.debug(
+            "Creating non-existing directory component '{}' of output filename.".format(outdir))
         os.makedirs(outdir)
         logger.debug("Done.")
 
@@ -188,29 +189,33 @@ def render_paraview_scene(
                   {}, '{}', '{}', {},
                   {}, {}, {})
               """.format(
-            pvd_file, outfile, repr(field_name), re.sub('\n', '', repr(timesteps)),
-            camera_position, camera_focal_point, camera_view_up,
-            view_size, magnification, fit_view_to_scene, color_by_axis,
-            colormap, rescale_colormap_to_data_range, show_colorbar,
-            colorbar_label_format, add_glyphs, glyph_type,
-            glyph_scale_factor, glyph_random_mode, glyph_mask_points,
-            glyph_max_number_of_points, show_orientation_axes,
-            show_center_axes, representation, palette, use_parallel_projection,
-            trim_border, rescale, diffuse_color))
+        pvd_file, outfile, repr(field_name), re.sub('\n', '', repr(timesteps)),
+        camera_position, camera_focal_point, camera_view_up,
+        view_size, magnification, fit_view_to_scene, color_by_axis,
+        colormap, rescale_colormap_to_data_range, show_colorbar,
+        colorbar_label_format, add_glyphs, glyph_type,
+        glyph_scale_factor, glyph_random_mode, glyph_mask_points,
+        glyph_max_number_of_points, show_orientation_axes,
+        show_center_axes, representation, palette, use_parallel_projection,
+        trim_border, rescale, diffuse_color))
     with open(scriptfile, 'w') as f:
         f.write(script_string)
 
-    vis_impl_script = os.path.join(os.path.dirname(__file__), './visualization_impl.py')
+    vis_impl_script = os.path.join(
+        os.path.dirname(__file__), './visualization_impl.py')
     if not os.path.exists(vis_impl_script):
-        vis_impl_script = os.path.join(os.path.dirname(__file__), './visualization_impl.so')
+        vis_impl_script = os.path.join(
+            os.path.dirname(__file__), './visualization_impl.so')
     if not os.path.exists(vis_impl_script):
-        raise RuntimeError("Cannot use Paraview visualisation. This should not happen.")
+        raise RuntimeError(
+            "Cannot use Paraview visualisation. This should not happen.")
     shutil.copy(vis_impl_script, tmpdir)
 
     # Execute the script in a separate process
     curdir_bak = os.getcwd()
     xpra_display = None
-    use_xpra = configuration.get_config_option("visualization", "use_xpra", "True")
+    use_xpra = configuration.get_config_option(
+        "visualization", "use_xpra", "True")
     try:
         display_bak = os.environ['DISPLAY']
     except KeyError:
@@ -219,7 +224,8 @@ def render_paraview_scene(
         os.chdir(tmpdir)
 
         if use_display is None:
-            use_display = configuration.get_config_option("visualization", "use_display", None)
+            use_display = configuration.get_config_option(
+                "visualization", "use_display", None)
         if use_display is None and use_xpra.lower() != "false":
             # Try to create a display using 'xpra'
             try:
@@ -228,7 +234,8 @@ def render_paraview_scene(
                 xpra_display = find_unused_X_display(xrange(1, 100))
                 sh.xpra('start', ':{}'.format(xpra_display))
                 use_display = xpra_display
-                logger.debug("Rendering Paraview scene on display :{} using xpra.".format(xpra_display))
+                logger.debug(
+                    "Rendering Paraview scene on display :{} using xpra.".format(xpra_display))
             except sh.CommandNotFound:
                 logger.warning(
                     "Could not find the 'xpra' executable. You may want to "
@@ -246,7 +253,7 @@ def render_paraview_scene(
     except sh.ErrorReturnCode as ex:
         logger.error("Could not render Paraview scene. Stdout and stderr of the script: "
                      "'{}', '{}'".format(script_stdout.getvalue(), script_stderr.getvalue()))
-        #raise
+        # raise
     finally:
         if debug == True:
             logger.debug("Temporary directory '{}' kept for debugging. You "
@@ -270,7 +277,8 @@ def render_paraview_scene(
     try:
         image = IPython.core.display.Image(filename=outfile)
     except IOError:
-        # Something went wrong (missing X display?); let's not choke but return None instead.
+        # Something went wrong (missing X display?); let's not choke but return
+        # None instead.
         image = None
 
     if outfile_is_temporary:
@@ -292,7 +300,8 @@ def plot_dolfin_function(f, **kwargs):
     """
     # Check that f represents a 3D vector field defined on a 3D mesh.
     if not f.element().value_shape() == (3,):
-        raise TypeError("The function to be plotted must represent a 3D vector field.")
+        raise TypeError(
+            "The function to be plotted must represent a 3D vector field.")
 
     f.rename('f', 'f')
     tmpdir = tempfile.mkdtemp()
@@ -301,11 +310,11 @@ def plot_dolfin_function(f, **kwargs):
         # Save the function to a temporary file
         funcfile = df.File(tmpfilename)
         funcfile << f
-        kwargs.pop('field_name', None)  # ignore this argument as we are using our own field_name
+        # ignore this argument as we are using our own field_name
+        kwargs.pop('field_name', None)
         return render_paraview_scene(tmpfilename, field_name='f', **kwargs)
     finally:
         shutil.rmtree(tmpdir)
-
 
 
 # Set the docstring of the wrapped function so that it reflects the
