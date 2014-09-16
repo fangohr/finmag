@@ -3,11 +3,12 @@ import dolfin as df
 from finmag.field import Field
 from finmag.energies import DMI
 
-nm=1e-9
+nm = 1e-9
 simplexes = 10
-length=20*nm
-mesh = df.BoxMesh(0,0,0,length,3*nm, 3*nm, simplexes, 1, 1)
+length = 20 * nm
+mesh = df.BoxMesh(0, 0, 0, length, 3 * nm, 3 * nm, simplexes, 1, 1)
 V = df.VectorFunctionSpace(mesh, "Lagrange", 1)
+
 
 def test_dmi_field():
     """
@@ -20,9 +21,9 @@ def test_dmi_field():
 
     """
     m_initial = df.Expression((
-            '(2*x[0]-L)/L',
-            'sqrt(1 - ((2*x[0]-L)/L)*((2*x[0]-L)/L))',
-            '0'), L=length)
+        '(2*x[0]-L)/L',
+        'sqrt(1 - ((2*x[0]-L)/L)*((2*x[0]-L)/L))',
+        '0'), L=length)
     m = Field(V)
     m.set(m_initial)
     dmi1 = DMI(D=5e-3, method="box-assemble")
@@ -40,14 +41,14 @@ def test_dmi_field():
     diff13 = np.max(np.abs(H_dmi1 - H_dmi3))
 
     print "Difference between H_dmi1 and H_dmi2: max(abs(H_dmi1-H_dmi2))=%g" % diff12
-    print "Max value = %g, relative error = %g " % (max(H_dmi1), diff12/max(H_dmi1))
+    print "Max value = %g, relative error = %g " % (max(H_dmi1), diff12 / max(H_dmi1))
     print "Difference between H_dmi1 and H_dmi3: max(abs(H_dmi1-H_dmi3))=%g" % diff13
-    print "Max value = %g, relative error = %g " % (max(H_dmi1), diff13/max(H_dmi1))
+    print "Max value = %g, relative error = %g " % (max(H_dmi1), diff13 / max(H_dmi1))
 
     assert diff12 < 5e-8
     assert diff13 < 5e-8
-    assert diff12/max(H_dmi1)<1e-14
-    assert diff13/max(H_dmi1)<1e-14
+    assert diff12 / max(H_dmi1) < 1e-14
+    assert diff13 / max(H_dmi1) < 1e-14
 
-if __name__=="__main__":
+if __name__ == "__main__":
     test_dmi_field()

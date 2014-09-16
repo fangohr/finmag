@@ -3,9 +3,10 @@ import conftest
 import os
 from finmag.util.helpers import vectors, stats
 
+
 def test_against_nmag(finmag):
-    
-    #FIXME: why the tolerance is so large?
+
+    # FIXME: why the tolerance is so large?
     REL_TOLERANCE = 7e-2
 
     m_ref = np.genfromtxt(os.path.join(conftest.MODULE_DIR, "m0_nmag.txt"))
@@ -21,7 +22,8 @@ def test_against_nmag(finmag):
     mxH_computed = np.cross(m_computed, H_computed)
 
     diff = np.abs(mxH_computed - mxH_ref)
-    rel_diff = diff/ np.sqrt(np.max(mxH_ref[0]**2 + mxH_ref[1]**2 + mxH_ref[2]**2))
+    rel_diff = diff / \
+        np.sqrt(np.max(mxH_ref[0] ** 2 + mxH_ref[1] ** 2 + mxH_ref[2] ** 2))
 
     print "comparison with nmag, m x H, difference:"
     print stats(diff)

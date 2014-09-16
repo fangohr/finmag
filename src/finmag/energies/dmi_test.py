@@ -27,13 +27,13 @@ def test_dmi_uses_unit_length_2dmesh():
         maxh = 5e-9 / unit_length
         helical_period = (4 * pi * A / D) / unit_length
         k = 2 * pi / helical_period
-        #HF 27 April 2014: The next command fails in dolfin 1.3
+        # HF 27 April 2014: The next command fails in dolfin 1.3
         #mesh = df.CircleMesh(df.Point(0, 0), radius, maxh)
-        #The actual shape of the domain shouldn't matter for the test,
-        #so let's use a Rectangular mesh which should work the same:
+        # The actual shape of the domain shouldn't matter for the test,
+        # so let's use a Rectangular mesh which should work the same:
 
-        nx = ny = int(round(radius/maxh))
-        mesh = df.RectangleMesh(0, 0 ,  radius, radius, nx, ny)
+        nx = ny = int(round(radius / maxh))
+        mesh = df.RectangleMesh(0, 0,  radius, radius, nx, ny)
 
         S3 = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
         m_expr = df.Expression(("0", "cos(k * x[0])", "sin(k * x[0])"), k=k)
@@ -87,16 +87,16 @@ def test_dmi_pbc2d_1D(plot=False):
 
     def m_init_fun(p):
         print p[0]
-        if p[0]<10:
-            return [0.5,0,1]
+        if p[0] < 10:
+            return [0.5, 0, 1]
         else:
-            return [-0.5,0,-1]
+            return [-0.5, 0, -1]
 
-    mesh = df.RectangleMesh(0,0,20,2,10,1)
+    mesh = df.RectangleMesh(0, 0, 20, 2, 10, 1)
     m_init = vector_valued_function(m_init_fun, mesh)
 
     Ms = 8.6e5
-    sim = Simulation(mesh, Ms, pbc='2d',unit_length=1e-9)
+    sim = Simulation(mesh, Ms, pbc='2d', unit_length=1e-9)
     sim.set_m(m_init_fun)
 
     A = 1.3e-11
@@ -115,5 +115,5 @@ def test_dmi_pbc2d_1D(plot=False):
 
 
 if __name__ == "__main__":
-    #test_dmi_pbc2d()
+    # test_dmi_pbc2d()
     test_dmi_pbc2d_1D(plot=True)

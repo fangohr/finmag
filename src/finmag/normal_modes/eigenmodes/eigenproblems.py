@@ -20,6 +20,7 @@ color_cycle = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
 
 
 class AbstractEigenproblem(object):
+
     def __init__(self):
         pass
 
@@ -81,7 +82,8 @@ class AbstractEigenproblem(object):
 
         """
         A, M = self.instantiate(N, dtype)
-        omega, w, rel_errors = solver.solve_eigenproblem(A, M=M, num=num, **kwargs)
+        omega, w, rel_errors = solver.solve_eigenproblem(
+            A, M=M, num=num, **kwargs)
         return omega, w, rel_errors
 
     def instantiate(self, N, dtype):
@@ -264,12 +266,14 @@ class AbstractEigenproblem(object):
             # Plot analytical approximation if requested
             if plot_analytical_approximations:
                 w_approx, res_approx = \
-                    self.best_analytical_approximation(omega, w, tol_eigval=tol_eigval)
+                    self.best_analytical_approximation(
+                        omega, w, tol_eigval=tol_eigval)
                 fmt = '--x{}'.format(color_cycle[idx % len(k_vals)])
                 label = 'k={}, analyt., res.: {:.2g}'.format(k, res_approx)
                 self.plot(w_approx, fmt=fmt, fig=fig, label=label)
 
-            label = 'k={} (EV: {:.3g}, rel. err.: {:.3g})'.format(k, omega, rel_err)
+            label = 'k={} (EV: {:.3g}, rel. err.: {:.3g})'.format(
+                k, omega, rel_err)
             fmt = '-{}'.format(color_cycle[idx % len(k_vals)])
             self.plot(w, fmt=fmt, fig=fig, label=label)
 
@@ -315,7 +319,7 @@ class AbstractEigenproblem(object):
                              "Got: array of shape {}".format(v.shape))
         N = len(v)
         A, _ = self.instantiate(N, dtype=v.dtype)
-        residue = np.linalg.norm(np.dot(A, v) - a*v)
+        residue = np.linalg.norm(np.dot(A, v) - a * v)
         return residue < tol
 
     def verify_eigenpairs_numerically(self, eigenpairs, tol=1e-8):
@@ -349,17 +353,19 @@ class AbstractEigenproblem(object):
                     k_right = k
                 if abs(a) > abs(eigval) * (1. + 2 * tol_eigval):
                     break
-        eigenspace_basis = [self.get_kth_analytical_eigenvector(k, size) for k in indices]
+        eigenspace_basis = [
+            self.get_kth_analytical_eigenvector(k, size) for k in indices]
         if eigenspace_basis == []:
             if k_left != None:
                 eigval_left = self.get_kth_analytical_eigenvalue(k_left, size)
             else:
                 eigval_left = None
             if k_right != None:
-                eigval_right = self.get_kth_analytical_eigenvalue(k_right, size)
+                eigval_right = self.get_kth_analytical_eigenvalue(
+                    k_right, size)
             else:
                 eigval_right = None
-            #print "eigval_right - a: {}".format(eigval_right - eigval)
+            # print "eigval_right - a: {}".format(eigval_right - eigval)
             raise ValueError(
                 "Not an eigenvalue of {}: {} (tolerance: {}). Closest "
                 "surrounding eigenvalues: ({}, {})".format(
@@ -411,7 +417,8 @@ class AbstractEigenproblem(object):
             raise TypeError("Expected 1D array for second argument `v`. "
                             "Got: '{}'".format(v))
         size = len(v)
-        eigenspace_basis = self.get_analytical_eigenspace_basis(a, size, tol_eigval=tol_eigval)
+        eigenspace_basis = self.get_analytical_eigenspace_basis(
+            a, size, tol_eigval=tol_eigval)
         w, _, res = best_linear_combination(v, eigenspace_basis)
         return w, res
 
@@ -424,13 +431,14 @@ class AbstractEigenproblem(object):
         tolerance arguments.
 
         """
-        _, res = self.best_analytical_approximation(a, v, tol_eigval=tol_eigval)
+        _, res = self.best_analytical_approximation(
+            a, v, tol_eigval=tol_eigval)
         return res < tol_residual
 
     def verify_eigenpairs_analytically(self, eigenpairs, tol_residual=1e-8, tol_eigval=1e-8):
         for omega, w in eigenpairs:
             if not self.verify_eigenpair_analytically(
-                omega, w, tol_residual=tol_residual, tol_eigval=tol_eigval):
+                    omega, w, tol_residual=tol_residual, tol_eigval=tol_eigval):
                 return False
         # XXX TODO: Also verify that we indeed computed the N smallest
         #           solutions, not just any analytical solutions!
@@ -438,6 +446,7 @@ class AbstractEigenproblem(object):
 
 
 class DiagonalEigenproblem(AbstractEigenproblem):
+
     """
     Eigenproblem of the form
 
@@ -448,6 +457,7 @@ class DiagonalEigenproblem(AbstractEigenproblem):
        D = diag([1, 2, 3, ..., N])
 
     """
+
     def instantiate(self, N, dtype):
         """
         Return a pair (D, None), where D is a diagonal matrix of the
@@ -459,7 +469,7 @@ class DiagonalEigenproblem(AbstractEigenproblem):
         #           right?
         self.N = N
         self.dtype = dtype
-        self.diagvals = np.arange(1, N+1, dtype=dtype)
+        self.diagvals = np.arange(1, N + 1, dtype=dtype)
         return np.diag(self.diagvals), None
 
     def is_hermitian(self):
@@ -475,6 +485,7 @@ class DiagonalEigenproblem(AbstractEigenproblem):
 
 
 class RingGraphLaplaceEigenproblem(AbstractEigenproblem):
+
     """
     Eigenproblem of the form
 
@@ -490,6 +501,7 @@ class RingGraphLaplaceEigenproblem(AbstractEigenproblem):
        [..., 0,  0,  -1,  2]
 
     """
+
     def instantiate(self, N, dtype):
         """
         Return a pair (A, None), where A is a Laplacian matrix
@@ -510,10 +522,10 @@ class RingGraphLaplaceEigenproblem(AbstractEigenproblem):
         self.dtype = dtype
         A = np.zeros((N, N), dtype=dtype)
         A += np.diag(2 * np.ones(N))
-        A -= np.diag(1 * np.ones(N-1), k=1)
-        A -= np.diag(1 * np.ones(N-1), k=-1)
-        A[0, N-1] = -1
-        A[N-1, 0] = -1
+        A -= np.diag(1 * np.ones(N - 1), k=1)
+        A -= np.diag(1 * np.ones(N - 1), k=-1)
+        A[0, N - 1] = -1
+        A[N - 1, 0] = -1
         return A, None
 
     def is_hermitian(self):
@@ -542,6 +554,7 @@ def m0_cross(m0, v):
 
 
 class Nanostrip1dEigenproblemFinmag(AbstractEigenproblem):
+
     """
     Eigenproblem of the form
 
@@ -553,6 +566,7 @@ class Nanostrip1dEigenproblemFinmag(AbstractEigenproblem):
        dv/dt = -gamma * m_0 x H_exchange(v)
 
     """
+
     def __init__(self, A_ex, Ms, xmin, xmax, unit_length=1e-9, regular_mesh=True):
         """
         *Arguments*
@@ -620,11 +634,11 @@ class Nanostrip1dEigenproblemFinmag(AbstractEigenproblem):
         """
         K = self.K
         m0 = np.array([0, 0, 1])
-        v_3K = np.zeros(3*K)
-        v_3K[:2*K] = v
+        v_3K = np.zeros(3 * K)
+        v_3K[:2 * K] = v
         #v_3K.shape = (3, -1)
         res_3K = self.compute_action_rhs_linearised_LLG(m0, v_3K).ravel()
-        res = res_3K[:2*K]
+        res = res_3K[:2 * K]
         return res
 
     def instantiate(self, N, dtype, regular_mesh=None):
@@ -648,7 +662,7 @@ class Nanostrip1dEigenproblemFinmag(AbstractEigenproblem):
         self.K = N // 2
 
         if regular_mesh:
-            mesh = df.IntervalMesh(self.K-1, self.xmin, self.xmax)
+            mesh = df.IntervalMesh(self.K - 1, self.xmin, self.xmax)
         else:
             mesh = irregular_interval_mesh(self.xmin, self.xmax, self.K)
             #raise NotImplementedError()
@@ -658,26 +672,28 @@ class Nanostrip1dEigenproblemFinmag(AbstractEigenproblem):
         self.exch = Exchange(A=self.A_ex)
         self.exch.setup(v, Ms=self.Ms, unit_length=self.unit_length)
 
-        C_2Kx2K = LinearOperator(shape=(N, N), matvec=self.compute_action_rhs_linearised_LLG_2K, dtype=dtype)
+        C_2Kx2K = LinearOperator(
+            shape=(N, N), matvec=self.compute_action_rhs_linearised_LLG_2K, dtype=dtype)
         C_2Kx2K_dense = as_dense_array(C_2Kx2K)
         return C_2Kx2K_dense, None
 
     def get_kth_analytical_eigenvalue(self, k, size=None):
         i = k // 2
-        return 1j * (-1)**k * (2 * self.A_ex * gamma) / (mu0 * self.Ms) * (i * pi / self.L)**2
+        return 1j * (-1) ** k * (2 * self.A_ex * gamma) / (mu0 * self.Ms) * (i * pi / self.L) ** 2
 
     def get_kth_analytical_eigenvector(self, k, size):
         assert(iseven(size))
         i = k // 2
-        xs = np.linspace(self.xmin * self.unit_length, self.xmax * self.unit_length, size // 2)
-        v1 = np.cos(i*pi/self.L * xs)
-        v2 = np.cos(i*pi/self.L * xs) * 1j * (-1)**i
+        xs = np.linspace(
+            self.xmin * self.unit_length, self.xmax * self.unit_length, size // 2)
+        v1 = np.cos(i * pi / self.L * xs)
+        v2 = np.cos(i * pi / self.L * xs) * 1j * (-1) ** i
         return np.concatenate([v1, v2])
 
     def _set_plot_title(self, fig, title):
         fig.suptitle(title, fontsize=16, verticalalignment='bottom')
-        #fig.subplots_adjust(top=0.55)
-        #fig.tight_layout()
+        # fig.subplots_adjust(top=0.55)
+        # fig.tight_layout()
 
     def plot(self, w, fig, label, fmt=None):
         """
@@ -696,7 +712,7 @@ class Nanostrip1dEigenproblemFinmag(AbstractEigenproblem):
 
         N = len(w)
         K = N // 2
-        assert(N == 2*K)
+        assert(N == 2 * K)
 
         # Scale the vector so that its maximum entry is 1.0
         w_max = abs(w).max()

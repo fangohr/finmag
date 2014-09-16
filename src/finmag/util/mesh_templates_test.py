@@ -9,11 +9,13 @@ from meshes import mesh_volume
 from mesh_templates import *
 import logging
 
-TOL1 = 1e-2   # loose tolerance for bad approximations (e.g. for a spherical mesh)
+# loose tolerance for bad approximations (e.g. for a spherical mesh)
+TOL1 = 1e-2
 TOL2 = 1e-7   # intermediate tolerance (used e.g. for the sum of two meshes;
-              # the strict tolerance won't work here because Netgen seems to
-              # mesh combined meshes slightly differently than their components)
-TOL3 = 1e-14  # strict tolerance where we expect almost exact values (e.g. for a box mesh)
+# the strict tolerance won't work here because Netgen seems to
+# mesh combined meshes slightly differently than their components)
+# strict tolerance where we expect almost exact values (e.g. for a box mesh)
+TOL3 = 1e-14
 logger = logging.getLogger("finmag")
 
 
@@ -62,12 +64,14 @@ def test_sphere(tmpdir):
     sphere = Sphere(r, center=(2, 3, -4))
 
     sphere.create_mesh(maxh=8.0, save_result=True, directory='foo')
-    sphere.create_mesh(maxh=10.0, save_result=True, filename='bar/sphere.xml.gz')
-    assert(os.path.exists('foo/sphere__center_2_0_3_0_-4_0__r_20_0__maxh_8_0.xml.gz'))
+    sphere.create_mesh(
+        maxh=10.0, save_result=True, filename='bar/sphere.xml.gz')
+    assert(
+        os.path.exists('foo/sphere__center_2_0_3_0_-4_0__r_20_0__maxh_8_0.xml.gz'))
     assert(os.path.exists('bar/sphere.xml.gz'))
 
     mesh = sphere.create_mesh(maxh=2.5, save_result=False)
-    check_mesh_volume(mesh, 4./3 * pi * r**3, TOL1)
+    check_mesh_volume(mesh, 4. / 3 * pi * r ** 3, TOL1)
 
 
 def test_elliptical_nanodisk(tmpdir):
@@ -76,9 +80,11 @@ def test_elliptical_nanodisk(tmpdir):
     d2 = 20.0
     h = 5.0
 
-    nanodisk1 = EllipticalNanodisk(d1, d2, h, center=(2, 3, -4), valign='bottom')
+    nanodisk1 = EllipticalNanodisk(
+        d1, d2, h, center=(2, 3, -4), valign='bottom')
     assert(nanodisk1.valign == 'bottom')
-    nanodisk2 = EllipticalNanodisk(d1, d2, h, center=(2, 3, -4), valign='center')
+    nanodisk2 = EllipticalNanodisk(
+        d1, d2, h, center=(2, 3, -4), valign='center')
     assert(nanodisk2.valign == 'center')
     nanodisk3 = EllipticalNanodisk(d1, d2, h, center=(2, 3, -4), valign='top')
     assert(nanodisk3.valign == 'top')
@@ -87,7 +93,8 @@ def test_elliptical_nanodisk(tmpdir):
         EllipticalNanodisk(d1, d2, h, center=(2, 3, -4), valign='foo')
 
     mesh = nanodisk1.create_mesh(maxh=2.5)
-    assert(os.path.exists('elliptical_nanodisk__d1_30_0__d2_20_0__h_5_0__center_2_0_3_0_-4_0__valign_bottom__maxh_2_5.xml.gz'))
+    assert(os.path.exists(
+        'elliptical_nanodisk__d1_30_0__d2_20_0__h_5_0__center_2_0_3_0_-4_0__valign_bottom__maxh_2_5.xml.gz'))
     check_mesh_volume(mesh, pi * (0.5 * d1) * (0.5 * d2) * h, TOL1)
 
 
@@ -106,8 +113,9 @@ def test_nanodisk(tmpdir):
         Nanodisk(d, h, center=(2, 3, -4), valign='foo')
 
     mesh = nanodisk1.create_mesh(maxh=2.5)
-    assert(os.path.exists('nanodisk__d_20_0__h_5_0__center_2_0_3_0_-4_0__valign_bottom__maxh_2_5.xml.gz'))
-    check_mesh_volume(mesh, pi * (0.5 * d)**2 * h, TOL1)
+    assert(os.path.exists(
+        'nanodisk__d_20_0__h_5_0__center_2_0_3_0_-4_0__valign_bottom__maxh_2_5.xml.gz'))
+    check_mesh_volume(mesh, pi * (0.5 * d) ** 2 * h, TOL1)
 
 
 def test_mesh_sum(tmpdir):
@@ -117,7 +125,8 @@ def test_mesh_sum(tmpdir):
     r3 = 12.0
     maxh = 2.0
 
-    # This should raise an error because the two spheres have the same name (which is given automatically)
+    # This should raise an error because the two spheres have the same name
+    # (which is given automatically)
     sphere1 = Sphere(r1, center=(-30, 0, 0))
     sphere2 = Sphere(r2, center=(+30, 0, 0))
     with pytest.raises(ValueError):
@@ -129,7 +138,8 @@ def test_mesh_sum(tmpdir):
     sphere3 = Sphere(r3, center=(0, 10, 0), name='sphere_3')
     three_spheres = sphere1 + sphere2 + sphere3
 
-    mesh = three_spheres.create_mesh(maxh=maxh, save_result=True, directory=str(tmpdir))
+    mesh = three_spheres.create_mesh(
+        maxh=maxh, save_result=True, directory=str(tmpdir))
     meshfilename = "mesh_sum__3c528b79a337a0ffa711746e7d346c81.xml.gz"
     import glob  # for debugging only; will be removed again soon
     print("[DDD] Potential mesh files found: {}".format(glob.glob('*.xml.gz')))
@@ -138,7 +148,7 @@ def test_mesh_sum(tmpdir):
     vol1 = mesh_volume(sphere1.create_mesh(maxh=maxh))
     vol2 = mesh_volume(sphere2.create_mesh(maxh=maxh))
     vol3 = mesh_volume(sphere3.create_mesh(maxh=maxh))
-    vol_exact = sum([4./3 * pi * r**3  for r in [r1, r2, r3]])
+    vol_exact = sum([4. / 3 * pi * r ** 3 for r in [r1, r2, r3]])
 
     check_mesh_volume(mesh, vol_exact, TOL1)
     check_mesh_volume(mesh, vol1 + vol2 + vol3, TOL2)
@@ -161,7 +171,8 @@ def test_mesh_difference(tmpdir):
     box2 = Box(x2, y2, z2, x1 + 10, y1 + 10, z1 + 10, name='box2')
     box1_minus_box2 = box1 - box2
 
-    mesh = box1_minus_box2.create_mesh(maxh=10.0, save_result=True, directory=str(tmpdir))
+    mesh = box1_minus_box2.create_mesh(
+        maxh=10.0, save_result=True, directory=str(tmpdir))
     meshfilename = "mesh_difference__dd77171c4364ace36c40e5f5fe94951f.xml.gz"
     assert(os.path.exists(os.path.join(str(tmpdir), meshfilename)))
 
@@ -181,11 +192,13 @@ def test_maxh_with_mesh_primitive(tmpdir):
     with pytest.raises(ValueError):
         prim._get_maxh(random_arg=42)
 
-    # We don't use full CSG strings here because we only want to test the maxh functionality
+    # We don't use full CSG strings here because we only want to test the maxh
+    # functionality
     prim = MeshPrimitive(name='foo', csg_string='-maxh = {maxh_foo}')
     assert(prim.csg_stub(maxh=2.0) == '-maxh = 2.0')
     assert(prim.csg_stub(maxh_foo=3.0) == '-maxh = 3.0')
-    assert(prim.csg_stub(maxh=2.0, maxh_foo=3.0) == '-maxh = 3.0')  # 'personal' value of maxh should take precedence over generic one
+    # 'personal' value of maxh should take precedence over generic one
+    assert(prim.csg_stub(maxh=2.0, maxh_foo=3.0) == '-maxh = 3.0')
     with pytest.raises(ValueError):
         prim.csg_stub(maxh_bar=4.0)
 
@@ -245,9 +258,12 @@ def test_different_mesh_discretisations_for_combined_meshes(tmpdir):
     # This should render the two spheres with different mesh discretisations.
     # XXX TODO: How to best check that this worked correctly?!? Currently my best idea is
     #           to create the mesh twice, once with a fine and once with a coarse discretisation
-    #           for the second sphere, and to check that the second mesh has fewer vertices.
-    mesh1 = two_spheres.create_mesh(maxh=5.0, maxh_sphere2=8.0, save_result=True, directory=str(tmpdir))
-    mesh2 = two_spheres.create_mesh(maxh=5.0, maxh_sphere2=10.0, save_result=True, directory=str(tmpdir))
+    # for the second sphere, and to check that the second mesh has fewer
+    # vertices.
+    mesh1 = two_spheres.create_mesh(
+        maxh=5.0, maxh_sphere2=8.0, save_result=True, directory=str(tmpdir))
+    mesh2 = two_spheres.create_mesh(
+        maxh=5.0, maxh_sphere2=10.0, save_result=True, directory=str(tmpdir))
     assert(mesh1.num_vertices() > mesh2.num_vertices())
 
 
@@ -260,7 +276,8 @@ def test_box(tmpdir):
 
     box.create_mesh(maxh=8.0, save_result=True, directory='foo')
     box.create_mesh(maxh=10.0, save_result=True, filename='bar/box.xml.gz')
-    assert(os.path.exists('foo/box__0_0__0_0__0_0__10_0__20_0__30_0__maxh_8_0.xml.gz'))
+    assert(
+        os.path.exists('foo/box__0_0__0_0__0_0__10_0__20_0__30_0__maxh_8_0.xml.gz'))
     assert(os.path.exists('bar/box.xml.gz'))
 
     mesh = df.Mesh('bar/box.xml.gz')

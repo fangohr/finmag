@@ -10,13 +10,14 @@ layers = [(0.0, L)]         # the mesh
 discretization = 0.1        # discretization
 
 # Initial magnetization
-xfactor = float(SI("m")/(L*mesh_unit))
+xfactor = float(SI("m") / (L * mesh_unit))
+
 
 def m0(r):
-    return [np.cos(r[0]*np.pi*xfactor), np.sin(r[0]*np.pi*xfactor), 0]
+    return [np.cos(r[0] * np.pi * xfactor), np.sin(r[0] * np.pi * xfactor), 0]
 
 mat_Py = nmag.MagMaterial(name="Py",
-                          Ms=SI(42,"A/m"))
+                          Ms=SI(42, "A/m"))
 
 sim = nmag.Simulation("Hans' configuration", do_demag=False)
 
@@ -30,4 +31,5 @@ sim.load_mesh(mesh_file_name,
 sim.set_m(m0)
 
 mod_dir = os.path.dirname(os.path.abspath(__file__))
-np.savetxt(os.path.join(mod_dir,"nmag_exchange_energy_density.txt"), sim.get_subfield("E_exch_Py"))
+np.savetxt(os.path.join(mod_dir, "nmag_exchange_energy_density.txt"),
+           sim.get_subfield("E_exch_Py"))

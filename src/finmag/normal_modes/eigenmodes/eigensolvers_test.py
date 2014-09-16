@@ -16,7 +16,7 @@ sample_eigensolvers = [
     ScipySparseLinalgEigsh(sigma=0.0, which='LM', num=10),
     SLEPcEigensolver(problem_type='GNHEP', method_type='KRYLOVSCHUR',
                      which='SMALLEST_MAGNITUDE'),
-    ]
+]
 
 
 def test_str():
@@ -30,7 +30,7 @@ def test_str():
                 "<ScipySparseLinalgEigs: sigma=0.0, which='LM', num=10>",
                 "<ScipySparseLinalgEigsh: sigma=0.0, which='LM', num=10>",
                 "<SLEPcEigensolver: GNHEP, KRYLOVSCHUR, SMALLEST_MAGNITUDE, num=6, tol=1e-12, maxit=100>",
-               ]))
+                ]))
 
 
 def test_scipy_dense_solvers_num_argument():
@@ -49,7 +49,7 @@ def test_scipy_dense_solvers_num_argument():
     solver1 = ScipyLinalgEig()
     solver2 = ScipyLinalgEigh()
     omega1, w1, _ = diagproblem.solve(solver1, N=10, dtype=float)
-    omega2, w2, _  = diagproblem.solve(solver2, N=10, dtype=float)
+    omega2, w2, _ = diagproblem.solve(solver2, N=10, dtype=float)
     assert(len(omega1) == 10)
     assert(len(omega2) == 10)
     assert(w1.shape == (10, 10))
@@ -130,7 +130,7 @@ def test_scipy_sparse_solvers_num_argument():
 def test_compute_eigenvalues_of_diagonal_matrix(dtype, solver):
     N = 60
 
-    diagvals = np.arange(1, N+1, dtype=dtype)
+    diagvals = np.arange(1, N + 1, dtype=dtype)
     A = np.diag(diagvals)
 
     print("[DDD] Testing eigensolver {} with diagonal matrix of size "
@@ -165,14 +165,14 @@ def test_scipy_dense_solvers_accept_sparse_argument(solver):
     assert(np.allclose(w1, w3))
 
 
-# # The following test illustrates a strange failure of the scipy
-# # sparse solver to compute the correct eigenvalues for a diagonal
-# # matrix. The largest computed eigenvalue is 11 instead of the
-# # expected value 10. However, I can't reproduce this at the moment
-# # so the test is commented out.
+# The following test illustrates a strange failure of the scipy
+# sparse solver to compute the correct eigenvalues for a diagonal
+# matrix. The largest computed eigenvalue is 11 instead of the
+# expected value 10. However, I can't reproduce this at the moment
+# so the test is commented out.
 # #
 # def test_weird_wrong_computation():
-#     #solver = ScipySparseLinalgEigsh(sigma=0.0, which='LM', num=10)
+# solver = ScipySparseLinalgEigsh(sigma=0.0, which='LM', num=10)
 #     solver = sample_eigensolvers[2]
 #     diagproblem = DiagonalEigenproblem()
 #     omega, _ = diagproblem.solve(solver, N=50, dtype=float)
@@ -200,24 +200,24 @@ fixtures = itertools.product(sample_eigensolvers, available_eigenproblems)
 #       and document the known failures in the test 'test_document_failures'
 #       below.
 known_failures = \
-    [### The first case fails on omicron but passes on hathor...
-     (sample_eigensolvers[2], # ScipySparseLinalgEigs
-      available_eigenproblems[2], # Nanostrip1d
-      200,
-      float),
-     (sample_eigensolvers[4], # SLEPc
-      available_eigenproblems[1], # RingGraphLaplace
-      101,
-      float),
-     (sample_eigensolvers[4], # SLEPc
-      available_eigenproblems[2], # Nanostrip1d
-      200,
-      float),
-     (sample_eigensolvers[4], # SLEPc
-      available_eigenproblems[2], # Nanostrip1d
-      200,
-      complex),
-     ]
+    [  # The first case fails on omicron but passes on hathor...
+        (sample_eigensolvers[2],  # ScipySparseLinalgEigs
+         available_eigenproblems[2],  # Nanostrip1d
+         200,
+         float),
+        (sample_eigensolvers[4],  # SLEPc
+            available_eigenproblems[1],  # RingGraphLaplace
+            101,
+            float),
+        (sample_eigensolvers[4],  # SLEPc
+            available_eigenproblems[2],  # Nanostrip1d
+            200,
+            float),
+        (sample_eigensolvers[4],  # SLEPc
+            available_eigenproblems[2],  # Nanostrip1d
+            200,
+            complex),
+    ]
 
 
 @pytest.mark.parametrize("solver, eigenproblem", fixtures)
@@ -228,7 +228,7 @@ def test_eigensolvers(solver, eigenproblem):
         for dtype in [float, complex]:
             if (solver, eigenproblem, N, dtype) in known_failures:
                 pytest.xfail("Known failure: {}, {}, {}, {}".format(
-                        solver, eigenproblem, N, dtype))
+                    solver, eigenproblem, N, dtype))
             print("[DDD] N={}, dtype={}".format(N, dtype))
 
             if not solver_and_problem_are_compatible(solver, eigenproblem):
@@ -258,7 +258,8 @@ def test_eigensolvers(solver, eigenproblem):
                 else:
                     tol_eigval = 1e-14
                 eigenproblem.verify_eigenpairs_numerically(zip(omega, w))
-                eigenproblem.verify_eigenpairs_analytically(zip(omega, w), tol_eigval=tol_eigval)
+                eigenproblem.verify_eigenpairs_analytically(
+                    zip(omega, w), tol_eigval=tol_eigval)
             except NotImplementedError:
                 pytest.xfail("Analytical solution not implemented for "
                              "solver {}".format(solver))

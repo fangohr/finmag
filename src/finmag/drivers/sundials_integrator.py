@@ -7,12 +7,14 @@ log = logging.getLogger(name='finmag')
 
 
 class SundialsIntegrator(object):
+
     """
     Sundials time integrator. We always start integration from t = 0.
 
     Attributes:
         cur_t       The time up to which integration has been carried out.
     """
+
     def __init__(self, llg, m0, t0=0.0, reltol=1e-6, abstol=1e-6,
                  nsteps=10000, method="bdf_gmres_prec_id", tablewriter=None):
         assert method in ("adams", "bdf_diag",
@@ -23,7 +25,8 @@ class SundialsIntegrator(object):
         self.tablewriter = tablewriter
 
         if method == "adams":
-            integrator = sundials.cvode(sundials.CV_ADAMS, sundials.CV_FUNCTIONAL)
+            integrator = sundials.cvode(
+                sundials.CV_ADAMS, sundials.CV_FUNCTIONAL)
         else:
             integrator = sundials.cvode(sundials.CV_BDF, sundials.CV_NEWTON)
         self.integrator = integrator
@@ -38,7 +41,8 @@ class SundialsIntegrator(object):
         elif method == "bdf_gmres_prec_id":
             integrator.set_linear_solver_sp_gmr(sundials.PREC_LEFT)
             integrator.set_spils_jac_times_vec_fn(self.llg.sundials_jtimes)
-            integrator.set_spils_preconditioner(llg.sundials_psetup, llg.sundials_psolve)
+            integrator.set_spils_preconditioner(
+                llg.sundials_psetup, llg.sundials_psolve)
 
         integrator.set_scalar_tolerances(reltol, abstol)
         self.max_steps = nsteps
@@ -93,11 +97,12 @@ class SundialsIntegrator(object):
                 self.cur_t = self.integrator.get_current_time()
 
                 log.error("The integrator has reached its maximum of {} steps.\n"
-                       "The time is t = {} whereas you requested t = {}.\n"
-                       "You can increase the maximum number of steps if "
-                       "you really need to with integrator.max_steps = n.".format(
-                            self.max_steps, self.integrator.get_current_time(), t))
-                reached_tout = False  # not used, but this would be the right value
+                          "The time is t = {} whereas you requested t = {}.\n"
+                          "You can increase the maximum number of steps if "
+                          "you really need to with integrator.max_steps = n.".format(
+                              self.max_steps, self.integrator.get_current_time(), t))
+                # not used, but this would be the right value
+                reached_tout = False
                 raise
             else:
                 reached_tout = False
@@ -108,7 +113,8 @@ class SundialsIntegrator(object):
 
         # in any case: put integrated degrees of freedom from cvode object
         # back into llg object
-        # Weiwei: change the default m to sundials_m since sometimes we need to extend the default equation.
+        # Weiwei: change the default m to sundials_m since sometimes we need to
+        # extend the default equation.
         self.llg.sundials_m = self.m
         return reached_tout
 
@@ -126,7 +132,7 @@ class SundialsIntegrator(object):
             self.integrator.advance_time(self.cur_t + 1, self.m)
         except RuntimeError, msg:
             if "CV_TOO_MUCH_WORK" in msg.message:
-                pass # this is the error we expect
+                pass  # this is the error we expect
             else:
                 raise
         self.cur_t = self.integrator.get_current_time()
@@ -144,7 +150,8 @@ class SundialsIntegrator(object):
         log.debug("Re-initialising CVODE integrator.")
         self.integrator.reinit(self.cur_t, self.m)
 
-    n_rhs_evals = property(lambda self: self.integrator.get_num_rhs_evals(), "Number of function evaluations performed")
+    n_rhs_evals = property(lambda self: self.integrator.get_num_rhs_evals(
+    ), "Number of function evaluations performed")
 
     def stats(self):
         """ Return integrator stats as dictionary. Keys are

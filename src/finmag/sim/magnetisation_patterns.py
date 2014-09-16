@@ -56,7 +56,7 @@ def initialise_helix_2D(sim, period, axis=np.array([1, 0])):
     def m_helical(pos):
 
         # Convert to rotated co-ordinate system.
-        pos_xy = np.array([pos[0],pos[1]])
+        pos_xy = np.array([pos[0], pos[1]])
         pos_rot_matrix = R * np.transpose(np.matrix(pos_xy))
         pos_rot = np.array((pos_rot_matrix.item(0), pos_rot_matrix.item(1)))
 
@@ -101,7 +101,7 @@ def initialise_skyrmions(sim, skyrmionRadius, centres="singleCentre"):
     This function returns nothing.
     """
 
-    if centres=="singleCentre":
+    if centres == "singleCentre":
         dim = sim.mesh.topology().dim()
         centres = np.array([np.zeros(dim)])
 
@@ -130,7 +130,7 @@ def initialise_skyrmions(sim, skyrmionRadius, centres="singleCentre"):
         for zI in xrange(numCentres):
 
             loc = copy(pos)  # Assignment means the original will change if "="
-                             # operator is used.
+            # operator is used.
 
             # Convert the position vector into relative vector with respect to
             # this centre.
@@ -476,6 +476,7 @@ def initialise_vortex(sim, type, center=None, **kwargs):
 
     sim.set_m(fun_m_init)
 
+
 def initialise_target_state(diskRadius, centre, rings, right_handed=False):
     """
     Function to initialise target state (as seen in [1]).
@@ -508,13 +509,13 @@ def initialise_target_state(diskRadius, centre, rings, right_handed=False):
         y = pt[1]
         xc = x - centre[0]
         yc = y - centre[1]
-        rho = math.sqrt(xc ** 2 + yc **2)
+        rho = math.sqrt(xc ** 2 + yc ** 2)
         theta = 2 * math.atan(rho / ringRadius)
-        phi = math.atan2(yc,xc)
+        phi = math.atan2(yc, xc)
 
         # first create a (right handed) vortex structure but with modulating mz,
         # as seen in target state.
-        mz = math.cos(2*np.pi * rho / ringRadius)
+        mz = math.cos(2 * np.pi * rho / ringRadius)
         mx = -math.sin(theta) * math.sin(phi)
         my = math.sin(theta) * math.cos(phi)
 
@@ -529,6 +530,6 @@ def initialise_target_state(diskRadius, centre, rings, right_handed=False):
             mx = -mx
             my = -my
 
-        return (mx,my,mz)
+        return (mx, my, mz)
 
     return f

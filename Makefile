@@ -82,6 +82,10 @@ create-dirs:
 
 test: clean create-dirs make-modules tests test-native test-notebooks
 
+# test against PEP8 guidelines
+test-pep8:
+	flake8 --config=flake8 $(PYTHON_ROOTS)
+
 # run all Python tests
 test-python: create-dirs make-modules
 	PYTHONPATH=$(PYTHON_ROOTS) py.test $(TEST_OPTIONS) \

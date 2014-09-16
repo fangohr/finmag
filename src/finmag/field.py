@@ -3,6 +3,7 @@ import numpy as np
 
 
 class Field(object):
+
     """
     A thin wrapper around the dolfin function for unified and convenient
     operations on scalar and vector fields.
@@ -41,6 +42,7 @@ class Field(object):
         - for data storage
 
     """
+
     def __init__(self, functionspace, value=None, normalised=False,
                  name=None, unit=None):
         self.functionspace = functionspace
@@ -82,6 +84,8 @@ class Field(object):
                 raise TypeError('Function and field functionspaces '
                                 'do not match')
 
+        # Generic vector type value
+        # appropriate for both scalar and vector fields.
         elif isinstance(value, df.GenericVector):
             self.f.vector()[:] = value
 
@@ -118,6 +122,7 @@ class Field(object):
             fspace_for_wexp = self.functionspace
 
             class WrappedExpression(df.Expression):
+
                 def __init__(self, value):
                     self.fun = value
 
@@ -145,7 +150,7 @@ class Field(object):
             self.normalise()
 
     def set_with_numpy_array_debug(self, value, normalised=False):
-        """ONLY for debigging"""
+        """ONLY for debugging"""
         self.f.vector().set_local(value)
 
         if normalised:
@@ -168,10 +173,10 @@ class Field(object):
             # Vector field is normalised so that norm=1 at all mesh nodes.
             norm_squared = 0
             for i in range(self.value_dim()):
-                norm_squared += self.f[i]**2
-            norm = norm_squared**0.5
+                norm_squared += self.f[i] ** 2
+            norm = norm_squared ** 0.5
 
-            self.f = df.project(self.f/norm, self.functionspace)
+            self.f = df.project(self.f / norm, self.functionspace)
 
         else:
             # Scalar field normalisation is not required. Normalisation
@@ -180,55 +185,6 @@ class Field(object):
             # code is run in parallel.
             raise NotImplementedError('The normalisation of scalar field '
                                       'values is not implemented.')
-
-
-    def compute_pointwise_norm(self, target=None, method=1):
-        """
-        Compute the norm of the function pointwise, i.e. for every vertex.
-
-        Arguments:
-
-        ``target`` is a scalar dolfin function to accommodate the norm
-
-        ``method`` is an integer to choose the method. We are not sure what method is best at the moment.
-
-        This method is not implemented only for vector fields with 3 compoents at every vertex.
-
-        """
-
-        if not target:
-            raise NotImplementedError("This is missing - could cerate a df.Function(V) here")
-
-        assert self.value_dim() in [3], "Only implemented for 3d vector field"
-
-        if method == 1:
-            wx, wy, wz = self.f.split(deepcopy=True)
-            wnorm = np.sqrt(wx.vector() * wx.vector()  + wy.vector() * wy.vector() + wz.vector() * wz.vector())
-            target.vector().set_local(wnorm)
-
-        elif method == 2:
-            raise NotImplementedError("this code doesn't compile in Cython - deactivate for now")
-            #V_vec = self.f.function_space()
-            #dofs0 = V_vec.sub(0).dofmap().dofs()    # indices of x-components
-            #dofs1 = V_vec.sub(1).dofmap().dofs()    # indices of y-components
-            #dofs2 = V_vec.sub(2).dofmap().dofs()    # indices of z-components
-
-            #target.vector()[:] = np.sqrt(w.vector()[dofs0] * w.vector()[dofs0] +\
-            #                            w.vector()[dofs1] * w.vector()[dofs1] +\
-            #                             w.vector()[dofs2] * w.vector()[dofs2])
-
-        elif method == 3:
-            try:
-                import finmag.native.clib as clib
-            except ImportError:
-                print "please go to the finmag/native/src/clib and run 'make' to install clib"
-            f = df.as_backend_type(target.vector()).vec()
-            w = df.as_backend_type(self.f.vector()).vec()
-            clib.norm(w, f)
-
-        else:
-            raise NotImplementedError("method {} unknown".format(method))
-
 
     def average(self, dx=df.dx):
         """
@@ -279,8 +235,8 @@ class Field(object):
             values = np.empty((num_nodes, value_dim))
             for i in xrange(num_nodes):
                 try:
-                    values[i, :] = f_array[vtd_map[value_dim*i:
-                                                   value_dim*(i+1)]]
+                    values[i, :] = f_array[vtd_map[value_dim * i:
+                                                   value_dim * (i + 1)]]
                 except IndexError:
                     # This only occurs in parallel and is probably related
                     # to ghost nodes. I thought we could ignore those, but
@@ -320,9 +276,12 @@ class Field(object):
         else:
             # value_shape() returns a tuple (N,) and int is required.
             return self.functionspace.ufl_element().value_shape()[0]
-        
+
     def vector(self):
         return self.f.vector()
+
+    def petsc_vector(self):
+        return df.as_backend_type(self.f.vector()).vec()
 
     def save_pvd(self, filename):
         """Save to pvd file using dolfin code"""
@@ -345,3 +304,57 @@ class Field(object):
 
     def plot_with_dolfin(self, interactive=True):
         df.plot(self.f, interactive=True)
+
+    def compute_pointwise_norm(self, target=None, method=1):
+        """
+        Compute the norm of the function pointwise, i.e. for every vertex.
+
+        Arguments:
+
+        ``target`` is a scalar dolfin function to accommodate the norm
+
+        ``method`` is an integer to choose the method. We are not sure
+        what method is best at the moment.
+
+        This method is not implemented only for vector fields
+        with 3 compoents at every vertex.
+
+        """
+
+        if not target:
+            raise NotImplementedError("This is missing - could cerate a "
+                                      "df.Function(V) here")
+
+        assert self.value_dim() in [3], "Only implemented for 3d vector field"
+
+        if method == 1:
+            wx, wy, wz = self.f.split(deepcopy=True)
+            wnorm = np.sqrt(wx.vector() * wx.vector() +
+                            wy.vector() * wy.vector() +
+                            wz.vector() * wz.vector())
+            target.vector().set_local(wnorm)
+
+        elif method == 2:
+            raise NotImplementedError("this code doesn't compile in Cython "
+                                      "- deactivate for now")
+            # V_vec = self.f.function_space()
+            # dofs0 = V_vec.sub(0).dofmap().dofs()    # indices of x-components
+            # dofs1 = V_vec.sub(1).dofmap().dofs()    # indices of y-components
+            # dofs2 = V_vec.sub(2).dofmap().dofs()    # indices of z-components
+
+            # target.vector()[:] = np.sqrt(w.vector()[dofs0]*w.vector()[dofs0]+
+            #                            w.vector()[dofs1]*w.vector()[dofs1]+
+            #                             w.vector()[dofs2]*w.vector()[dofs2])
+
+        elif method == 3:
+            try:
+                import finmag.native.clib as clib
+            except ImportError:
+                print "please go to the finmag/native/src/clib and " + \
+                    "run 'make' to install clib"
+            f = df.as_backend_type(target.vector()).vec()
+            w = df.as_backend_type(self.f.vector()).vec()
+            clib.norm(w, f)
+
+        else:
+            raise NotImplementedError("method {} unknown".format(method))

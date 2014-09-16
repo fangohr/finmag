@@ -10,6 +10,7 @@ logger = logging.getLogger('finmag')
 
 
 class EnergyBase(object):
+
     """
     Computes a field for a given energy functional.
 
@@ -101,7 +102,7 @@ class EnergyBase(object):
         self.E = E_integrand * df.dx
         self.nodal_E = df.dot(E_integrand, df.TestFunction(self.S1)) * df.dx
         self.dE_dm = df.Constant(-1.0 / mu0) * \
-                     df.derivative(E_integrand / self.Ms * df.dx, self.m.f)
+            df.derivative(E_integrand / self.Ms * df.dx, self.m.f)
 
         self.dim = m.mesh_dim()
         self.nodal_volume_S1 = nodal_volume(self.S1, self.unit_length)
@@ -141,7 +142,7 @@ class EnergyBase(object):
                 The energy.
 
         """
-        E = df.assemble(self.E) * self.unit_length**self.dim
+        E = df.assemble(self.E) * self.unit_length ** self.dim
         return E
 
     @mtimed
@@ -161,7 +162,7 @@ class EnergyBase(object):
 
         """
         nodal_E = df.assemble(self.nodal_E).array() * \
-                  self.unit_length ** self.dim
+            self.unit_length ** self.dim
         return nodal_E / self.nodal_volume_S1
 
     def energy_density_function(self):

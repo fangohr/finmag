@@ -10,6 +10,7 @@ logger = logging.getLogger(name='finmag')
 
 
 class Material(object):
+
     """
     The aim to define this class is to collect materials properties in one class, such as
     the common parameters Ms, A, and K since these properties may have different response
@@ -32,67 +33,69 @@ class Material(object):
 
     """
 
-    def __init__(self, mesh, name='FePt',unit_length=1):
+    def __init__(self, mesh, name='FePt', unit_length=1):
         self.mesh = mesh
         self.name = name
         self.S1 = df.FunctionSpace(mesh, "Lagrange", 1)
         self.S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
 
-        self.nxyz=mesh.num_vertices()
+        self.nxyz = mesh.num_vertices()
         self._m = Field(self.S3, name='m')
 
         self._T = np.zeros(self.nxyz)
-        self._Ms = np.zeros(3*self.nxyz)
-        self._m_e = np.zeros(3*self.nxyz)
+        self._Ms = np.zeros(3 * self.nxyz)
+        self._m_e = np.zeros(3 * self.nxyz)
         self.inv_chi_par = np.zeros(self.nxyz)
-        self.h = np.zeros(3*self.nxyz)
-        self.unit_length=unit_length
+        self.h = np.zeros(3 * self.nxyz)
+        self.unit_length = unit_length
 
         self.alpha = 0.5
         self.gamma_LL = consts.gamma
 
         if self.name == 'FePt':
-            self.Tc=660
-            self.Ms0=1047785.4656
-            self.A0=2.148042e-11
-            self.K0=8.201968e6
-            self.mu_a=2.99e-23
+            self.Tc = 660
+            self.Ms0 = 1047785.4656
+            self.A0 = 2.148042e-11
+            self.K0 = 8.201968e6
+            self.mu_a = 2.99e-23
         elif self.name == 'Nickel':
-            self.Tc=630
-            self.Ms0=4.9e5
-            self.A0=9e-12
-            self.K0=0
-            self.mu_a=0.61e-23
+            self.Tc = 630
+            self.Ms0 = 4.9e5
+            self.A0 = 9e-12
+            self.K0 = 0
+            self.mu_a = 0.61e-23
         elif self.name == 'Permalloy':
-            self.Tc=870
-            self.Ms0=8.6e5
-            self.A0=13e-12
-            self.K0=0
-            #TODO: find the correct mu_a for permalloy
-            self.mu_a=1e-23
+            self.Tc = 870
+            self.Ms0 = 8.6e5
+            self.A0 = 13e-12
+            self.K0 = 0
+            # TODO: find the correct mu_a for permalloy
+            self.mu_a = 1e-23
         else:
             raise NotImplementedError("Only FePt and Nickel available")
 
         self.volumes = df.assemble(df.dot(df.TestFunction(self.S3),
-                                      df.Constant([1, 1, 1])) * df.dx).array()
+                                          df.Constant([1, 1, 1])) * df.dx).array()
 
-        self.real_vol = self.volumes*self.unit_length**3
+        self.real_vol = self.volumes * self.unit_length ** 3
 
-        self.mat=native_llb.Materials(self.Ms0,self.Tc,self.A0,self.K0,self.mu_a)
+        self.mat = native_llb.Materials(
+            self.Ms0, self.Tc, self.A0, self.K0, self.mu_a)
 
-        dg=df.FunctionSpace(mesh, "DG", 0)
+        dg = df.FunctionSpace(mesh, "DG", 0)
         self._A_dg = df.Function(dg)
-        self._m_e_dg=df.Function(dg)
+        self._m_e_dg = df.Function(dg)
 
         self.T = 0
-        self.Ms=self.Ms0*self._m_e_dg.vector().array()
+        self.Ms = self.Ms0 * self._m_e_dg.vector().array()
 
     @property
     def me(self):
         return self._m_e[0]
 
     def compute_field(self):
-        native_llb.compute_relaxation_field(self._T, self.m, self.h, self._m_e, self.inv_chi_par,self.Tc)
+        native_llb.compute_relaxation_field(
+            self._T, self.m, self.h, self._m_e, self.inv_chi_par, self.Tc)
         return self.h
 
     @property
@@ -101,9 +104,10 @@ class Material(object):
 
     @T.setter
     def T(self, value):
-        self._T[:]=helpers.scalar_valued_function(value,self.S1).vector().array()[:]
+        self._T[:] = helpers.scalar_valued_function(
+            value, self.S1).vector().array()[:]
 
-        self._T_dg=helpers.scalar_valued_dg_function(value,self.mesh)
+        self._T_dg = helpers.scalar_valued_dg_function(value, self.mesh)
 
         As = self._A_dg.vector().array()
         Ts = self._T_dg.vector().array()
@@ -116,15 +120,14 @@ class Material(object):
         self._A_dg.vector().set_local(As)
         self._m_e_dg.vector().set_local(mes)
 
-        self._m_e.shape=(3,-1)
+        self._m_e.shape = (3, -1)
         for i in range(len(self._T)):
-            self._m_e[:,i] = self.mat.m_e(self._T[i])
+            self._m_e[:, i] = self.mat.m_e(self._T[i])
             self.inv_chi_par[i] = self.mat.inv_chi_par(self._T[i])
-        self._m_e.shape=(-1,)
+        self._m_e.shape = (-1,)
 
-        #TODO: Trying to use spatial parameters
+        # TODO: Trying to use spatial parameters
         self.inv_chi_perp = self.mat.inv_chi_perp(self._T[0])
-
 
     @property
     def Ms(self):
@@ -132,11 +135,12 @@ class Material(object):
 
     @Ms.setter
     def Ms(self, value):
-        self._Ms_dg=helpers.scalar_valued_dg_function(value,self.mesh)
+        self._Ms_dg = helpers.scalar_valued_dg_function(value, self.mesh)
 
-        tmp_Ms = df.assemble(self._Ms_dg*df.dot(df.TestFunction(self.S3), df.Constant([1, 1, 1])) * df.dx)/self.volumes
+        tmp_Ms = df.assemble(
+            self._Ms_dg * df.dot(df.TestFunction(self.S3), df.Constant([1, 1, 1])) * df.dx) / self.volumes
 
-        self._Ms[:]=tmp_Ms[:]
+        self._Ms[:] = tmp_Ms[:]
 
     @property
     def m(self):
@@ -145,7 +149,6 @@ class Material(object):
         try to solve this later
         """
         return self._m.vector().array()
-
 
     def set_m(self, value, **kwargs):
         """
@@ -173,10 +176,9 @@ class Material(object):
 
 if __name__ == "__main__":
     mesh = df.UnitCubeMesh(1, 1, 1)
-    mat = Material(mesh,name='Nickel')
-    mat.set_m((1,0,0))
-    mat.T=3
+    mat = Material(mesh, name='Nickel')
+    mat.set_m((1, 0, 0))
+    mat.T = 3
     print mat.T
     print mat.inv_chi_par
     print mat.compute_field()
-

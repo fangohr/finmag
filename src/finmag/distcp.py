@@ -9,10 +9,10 @@ import argparse
 
 
 def cp_file(sourcedir, filename, targetdir):
-    #only relevant case is if we have a .so file for a given .py, then don't copy .py
-    #if the .so file is __init__.py, we need to copy an empty __init__.py
+    # only relevant case is if we have a .so file for a given .py, then don't copy .py
+    # if the .so file is __init__.py, we need to copy an empty __init__.py
 
-    #if directory does not exist, create (might be empty in the end)
+    # if directory does not exist, create (might be empty in the end)
     if not os.path.exists(targetdir):
         print "Creating directory %s" % targetdir
         os.makedirs(targetdir)
@@ -39,7 +39,7 @@ def cp_file(sourcedir, filename, targetdir):
 def scandir(dir, files=[]):
     for file_ in os.listdir(dir):
         path = os.path.join(dir, file_)
-        #print "working %s / %s" % (dir, file_)
+        # print "working %s / %s" % (dir, file_)
         if os.path.isfile(path):
             cp_file(dir, file_, os.path.join(targetdir, dir))
         elif os.path.isdir(path) and os.path.split(path) not in directories_to_ignore:
@@ -52,8 +52,10 @@ def distcp():
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Copy FinMag files to alternative location')
-    parser.add_argument('destination-dir', type=str, help='The directory to copy FinMag files to')
+    parser = argparse.ArgumentParser(
+        description='Copy FinMag files to alternative location')
+    parser.add_argument(
+        'destination-dir', type=str, help='The directory to copy FinMag files to')
     args = parser.parse_args()
 
     targetdir = vars(args)['destination-dir']

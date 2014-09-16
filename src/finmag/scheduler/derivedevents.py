@@ -9,6 +9,7 @@ log = logging.getLogger(name="finmag")
 
 
 class SingleTimeEvent(TimeEvent):
+
     """
     A time-based event that triggers at a certain time, and/or at the end of
     time integration.
@@ -59,6 +60,7 @@ class SingleTimeEvent(TimeEvent):
 
 
 class RepeatingTimeEvent(SingleTimeEvent):
+
     """
     A time-based event that triggers regularly, and/or at the end of time
     integration.

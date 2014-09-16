@@ -12,6 +12,7 @@ from finmag.util.meshes import sphere
 
 TOL = 1e-14
 
+
 @pytest.mark.skipif('subprocess.call(["which", "nsim"]) != 0')
 def test_exchange_energy_density():
     """
@@ -34,13 +35,15 @@ def test_exchange_energy_density():
     if status != 0:
         print output
         sys.exit("Error %d: Running %s failed." % (status, cmd))
-    nmag_data = np.loadtxt(os.path.join(MODULE_DIR, "nmag_exchange_energy_density.txt"))
+    nmag_data = np.loadtxt(
+        os.path.join(MODULE_DIR, "nmag_exchange_energy_density.txt"))
 
     # run finmag
     mesh = df.IntervalMesh(100, 0, 10e-9)
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
     Ms = 42
-    m = Field(S3, value=df.Expression(("cos(x[0]*pi/10e-9)", "sin(x[0]*pi/10e-9)", "0")))
+    m = Field(S3, value=df.Expression(
+        ("cos(x[0]*pi/10e-9)", "sin(x[0]*pi/10e-9)", "0")))
 
     exch = Exchange(1.3e-11)
     exch.setup(m, Ms)
@@ -54,27 +57,27 @@ def test_exchange_energy_density():
     print rel_err
     print "Max relative error:", np.max(rel_err)
     assert np.max(rel_err) < TOL, \
-            "Max relative error is %g, should be zero." % np.max(rel_err)
-
+        "Max relative error is %g, should be zero." % np.max(rel_err)
 
     print("Work out average energy density and energy")
     S1 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=1)
-    #only approximative -- using assemble would be better
+    # only approximative -- using assemble would be better
     average_energy_density = np.average(finmag_data)
     w = df.TestFunction(S1)
     vol = sum(df.assemble(df.dot(df.Constant([1]), w) * df.dx))
-    #finmag 'manually' computed, based on node values of energy density:
+    # finmag 'manually' computed, based on node values of energy density:
     energy1 = average_energy_density * vol
-    #finmag computed by energy class
+    # finmag computed by energy class
     energy2 = exch.compute_energy()
-    #comparison with Nmag
+    # comparison with Nmag
     energy3 = np.average(nmag_data) * vol
     print energy1, energy2, energy3
 
-    assert abs(energy1 - energy2) < 1e-12 # actual value is 0, but
-                                          # that must be pure luck.
+    assert abs(energy1 - energy2) < 1e-12  # actual value is 0, but
+    # that must be pure luck.
     assert abs(energy1 - energy3) < 5e-8  # actual value
-                                          # is 1.05e-8, 30 June 2012
+    # is 1.05e-8, 30 June 2012
+
 
 def test_anisotropy_energy_density():
     """
@@ -163,8 +166,6 @@ def test_DMI_energy_density_3D():
         "Max deviation %g, should be zero." % np.max(deviation)
 
 
-
-
 def test_demag_energy_density():
     """
     With a sphere mesh, unit magnetisation in x-direction,
@@ -184,7 +185,7 @@ def test_demag_energy_density():
     """
     TOL = 5e-2
 
-    mesh = sphere(r = 1.0, maxh = 0.2)
+    mesh = sphere(r=1.0, maxh=0.2)
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
     mu0 = 4 * np.pi * 1e-7
 
@@ -200,7 +201,7 @@ def test_demag_energy_density():
     print density
     print "Max deviation:", np.max(deviation)
     assert np.max(deviation) < TOL, \
-            "Max deviation is %g, should be zero." % np.max(deviation)
+        "Max deviation is %g, should be zero." % np.max(deviation)
 
 if __name__ == '__main__':
     test_exchange_energy_density()

@@ -11,6 +11,7 @@ logger = logging.getLogger('finmag')
 
 
 class Exchange(EnergyBase):
+
     """
     Compute the exchange field.
 
@@ -60,6 +61,7 @@ class Exchange(EnergyBase):
             H_exch_np = exchange_np.compute_field()
 
     """
+
     def __init__(self, A, method="box-matrix-petsc", name='Exchange'):
         self.A_waiting_for_mesh = A
         self.name = name
@@ -105,10 +107,12 @@ class Exchange(EnergyBase):
 
         """
         self.exchange_factor = df.Constant(1.0 / unit_length ** 2)
-        self.A = helpers.scalar_valued_function(self.A_waiting_for_mesh, m.mesh())
+        self.A = helpers.scalar_valued_function(
+            self.A_waiting_for_mesh, m.mesh())
         self.A.rename('A', 'exchange_constant')
         self.A_av = np.average(self.A.vector().array())
         del(self.A_waiting_for_mesh)
-        E_integrand = self.exchange_factor * self.A * df.inner(df.grad(m.f), df.grad(m.f))
+        E_integrand = self.exchange_factor * self.A * \
+            df.inner(df.grad(m.f), df.grad(m.f))
 
         super(Exchange, self).setup(E_integrand, m, Ms, unit_length)

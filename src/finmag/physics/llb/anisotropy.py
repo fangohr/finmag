@@ -7,6 +7,7 @@ logger = logging.getLogger('finmag')
 
 
 class LLBAnisotropy(EnergyBase):
+
     """
     Compute the anisotropy field for LLB case
 
@@ -33,8 +34,8 @@ class LLBAnisotropy(EnergyBase):
         self.v = df.TestFunction(S3)
 
         # Anisotropy energy
-        E = 0.5 * ((df.dot(self.e_x, self.m)) ** 2 + df.dot(self.e_y, self.m) ** 2)
-
+        E = 0.5 * \
+            ((df.dot(self.e_x, self.m)) ** 2 + df.dot(self.e_y, self.m) ** 2)
 
         # Needed for energy density
         S1 = df.FunctionSpace(S3.mesh(), "CG", 1)
@@ -44,11 +45,11 @@ class LLBAnisotropy(EnergyBase):
         self.ED = df.Function(S1)
 
         super(LLBAnisotropy, self).setup(
-                E_integrand=E,
-                S3=S3,
-                m=self.m,
-                Ms=Ms0,
-                unit_length=unit_length)
+            E_integrand=E,
+            S3=S3,
+            m=self.m,
+            Ms=Ms0,
+            unit_length=unit_length)
 
     def compute_field(self):
         """
@@ -60,11 +61,9 @@ class LLBAnisotropy(EnergyBase):
 
         """
 
-
         Han = super(LLBAnisotropy, self).compute_field()
 
         return Han * self.inv_chi_perp
-
 
 
 if __name__ == "__main__":
@@ -75,15 +74,12 @@ if __name__ == "__main__":
     mesh = BoxMesh(0, m, 0, m, 0, m, n, n, n)
 
     mat = Material(mesh)
-    mat.set_m((1,2,3))
+    mat.set_m((1, 2, 3))
 
     anis = LLBAnisotropy(mat)
-
 
     anis.setup(mat.S3, mat._m, mat.Ms0)
 
     print anis.compute_field()
     print anis.compute_energy()
     print anis.energy_density()
-
-

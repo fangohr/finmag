@@ -10,6 +10,7 @@ log = logging.getLogger(name="finmag")
 
 
 class VTK(object):
+
     """
     Can save dolfin functions to VTK files and allows for sequential snapshots.
 
@@ -27,6 +28,7 @@ class VTK(object):
     the snapshot.
 
     """
+
     def __init__(self, filename="", directory="", force_overwrite=False, prefix=""):
         """
         Force the object into one of the two modes described in the class documentation.

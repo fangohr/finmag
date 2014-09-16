@@ -10,6 +10,7 @@ from finmag.util.helpers import norm
 
 log = logging.getLogger(name="finmag")
 
+
 def hysteresis(sim, H_ext_list, fun=None, **kwargs):
     """
     Set the applied field to the first value in `H_ext_list` (which should
@@ -133,6 +134,7 @@ def hysteresis_loop(sim, H_max, direction, N, **kwargs):
         list(np.linspace(-H_max, H_max, N))
     H_vals = [h * H_dir for h in H_norms]
     m_avg = hysteresis(sim, H_vals, fun=lambda sim: sim.m_average, **kwargs)
-    # projected lengths of the averaged magnetisation values along the axis `H_dir`
+    # projected lengths of the averaged magnetisation values along the axis
+    # `H_dir`
     m_vals = [np.dot(m, H_dir) for m in m_avg]
     return (H_norms, m_vals)

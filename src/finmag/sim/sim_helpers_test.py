@@ -23,7 +23,7 @@ def test_can_read_restart_file(tmpdir):
     assert data['simtime'] == sim.t
     assert data['stats'] == sim.integrator.stats()
     assert np.all(data['m'] == sim.integrator.llg.m_numpy)
-    #writing and reading the data should take less than 10 seconds
+    # writing and reading the data should take less than 10 seconds
     assert datetime.now() - data['datetime'] < timedelta(0, 10)
 
 
@@ -36,10 +36,12 @@ def test_try_to_restart_a_simulation(tmpdir):
     # and integrate until t1.
     sim1 = barmini()
     sim1.run_until(t0)
-    print("Stats for sim1 at t = {} s:\n{}.".format(sim1.t, sim1.integrator.stats()))
+    print("Stats for sim1 at t = {} s:\n{}.".format(
+        sim1.t, sim1.integrator.stats()))
     sim_helpers.save_restart_data(sim1)
     sim1.run_until(t1)
-    print("Stats for sim1 at t = {} s:\n{}.".format(sim1.t, sim1.integrator.stats()))
+    print("Stats for sim1 at t = {} s:\n{}.".format(
+        sim1.t, sim1.integrator.stats()))
 
     # Bring new simulation object into previously saved
     # state (which is at t0)...
@@ -50,13 +52,14 @@ def test_try_to_restart_a_simulation(tmpdir):
                                      backend=sim2.integrator_backend, t0=data['simtime'])
     # ... and integrate until t1.
     sim2.run_until(t1)
-    print("Stats for sim2 at t = {} s:\n{}.".format(sim2.t, sim2.integrator.stats()))
+    print("Stats for sim2 at t = {} s:\n{}.".format(
+        sim2.t, sim2.integrator.stats()))
 
     # Check that we have the same data in both simulation objects.
     print "Time for sim1: {} s, time for sim2: {} s.".format(sim1.t, sim2.t)
     assert abs(sim1.t - sim2.t) < 1e-16
     print "Average magnetisation for sim1:\n\t{}\nfor sim2:\n\t{}.".format(
-                        sim1.m_average, sim2.m_average)
+        sim1.m_average, sim2.m_average)
     assert np.allclose(sim1.m, sim2.m, atol=5e-6, rtol=1e-8)
 
     # Check that sim2 had less work to do, since it got the
@@ -107,7 +110,7 @@ def test_run_normal_modes_computation(tmpdir):
         'save_npy_every': None,
         'save_relaxed_state': True,
         'filename': None
-        }
+    }
     params_precess = {
         'alpha': 0.0,
         'H_ext': [1e3, 0, 0],
@@ -116,7 +119,7 @@ def test_run_normal_modes_computation(tmpdir):
         'save_vtk_every': 3e-11,
         'save_npy_every': 2e-11,
         'filename': None,
-        }
+    }
     sim.run_normal_modes_computation(params_relax, params_precess)
 
     # XXX TODO: We should change the filename of the .ndt file to 'barmini_precess.ndt'
@@ -141,7 +144,8 @@ def test_create_non_existing_parent_directories(tmpdir):
             os.curdir]
 
     for d in dirs:
-        sim_helpers.create_non_existing_parent_directories(os.path.join(d, 'filename.txt'))
+        sim_helpers.create_non_existing_parent_directories(
+            os.path.join(d, 'filename.txt'))
         assert(os.path.exists(os.path.abspath(d)))
 
 
@@ -163,7 +167,7 @@ def test_get_submesh(tmpdir):
     with pytest.raises(ValueError):
         mesh_full = sim.get_submesh('foo')
 
-    id_top =sim.region_ids['top']
+    id_top = sim.region_ids['top']
     id_bottom = sim.region_ids['bottom']
     submesh_top = df.SubMesh(sim.mesh, sim.region_markers, id_top)
     submesh_bottom = df.SubMesh(sim.mesh, sim.region_markers, id_bottom)
@@ -198,7 +202,8 @@ def test_skyrmion_number():
 
     mesh3D = df.BoxMesh(-100, -100, -5, 100, 100, 5, 50, 50, 5)
     sim3D = Simulation(mesh3D, 1e5, unit_length=1e-9)
-    skCentres3D = np.array([[0, 0, 0], [-50, 70, 0], [40, -80, 0], [70, 70, 0]])
+    skCentres3D = np.array(
+        [[0, 0, 0], [-50, 70, 0], [40, -80, 0], [70, 70, 0]])
     sim3D.initialise_skyrmions(skyrmionRadius=30, centres=skCentres3D)
 
     skX_3D = sim3D.skyrmion_number()

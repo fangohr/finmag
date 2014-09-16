@@ -6,7 +6,8 @@ from finmag.util.meshes import from_csg
 from finmag.util.helpers import vec2str
 
 
-netgen_primitives = ['plane', 'cylinder', 'sphere', 'ellipticcylinder', 'ellipsoid', 'cone', 'orthobrick', 'polyhedron']
+netgen_primitives = ['plane', 'cylinder', 'sphere',
+                     'ellipticcylinder', 'ellipsoid', 'cone', 'orthobrick', 'polyhedron']
 
 
 class MeshTemplate(object):
@@ -43,7 +44,8 @@ class MeshTemplate(object):
         return hashlib.md5(csg).hexdigest()
 
     def generic_filename(self, maxh, **kwargs):
-        raise NotImplementedError("Generic mesh prototyp does not provide a filename. Please build a mesh by combining mesh primitives.")
+        raise NotImplementedError(
+            "Generic mesh prototyp does not provide a filename. Please build a mesh by combining mesh primitives.")
 
     def csg_string(self, maxh=None, **kwargs):
         csg_string = textwrap.dedent("""\
@@ -62,6 +64,7 @@ class MeshTemplate(object):
 
 
 class MeshSum(MeshTemplate):
+
     def __init__(self, mesh1, mesh2, name=None):
         if mesh1.name == mesh2.name:
             raise ValueError(
@@ -94,6 +97,7 @@ class MeshSum(MeshTemplate):
 
 
 class MeshDifference(MeshTemplate):
+
     def __init__(self, mesh1, mesh2, name=None):
         if mesh1.name == mesh2.name:
             raise ValueError(
@@ -119,11 +123,13 @@ class MeshDifference(MeshTemplate):
         return csg_stub
 
     def generic_filename(self, maxh, **kwargs):
-        filename = "mesh_difference__{}".format(self.mesh1.hash(maxh, **kwargs))
+        filename = "mesh_difference__{}".format(
+            self.mesh1.hash(maxh, **kwargs))
         return filename
 
 
 class MeshPrimitive(MeshTemplate):
+
     def _get_maxh(self, maxh=None, **kwargs):
         """
         If `kwargs` contains an item with key 'maxh_NAME' (where NAME
@@ -136,7 +142,8 @@ class MeshPrimitive(MeshTemplate):
             maxh = kwargs[key]
         except KeyError:
             if maxh == None:
-                raise ValueError("Please provide a valid value for 'maxh' (or maxh_... for each of the components of the mesh template).")
+                raise ValueError(
+                    "Please provide a valid value for 'maxh' (or maxh_... for each of the components of the mesh template).")
         return maxh
 
     def csg_stub(self, maxh=None, **kwargs):
@@ -147,6 +154,7 @@ class MeshPrimitive(MeshTemplate):
 
 
 class Sphere(MeshPrimitive):
+
     def __init__(self, r, center=(0, 0, 0), name='Sphere'):
         self.r = r
         self.center = center
@@ -162,6 +170,7 @@ class Sphere(MeshPrimitive):
 
 
 class Box(MeshPrimitive):
+
     def __init__(self, x0, y0, z0, x1, y1, z1, name='Box'):
         self.x0 = x0
         self.y0 = y0
@@ -181,6 +190,7 @@ class Box(MeshPrimitive):
 
 
 class EllipticalNanodisk(MeshPrimitive):
+
     def __init__(self, d1, d2, h, center=(0, 0, 0), valign='bottom', name='EllipticalNanodisk'):
         self.d1 = d1
         self.d2 = d2
@@ -195,9 +205,10 @@ class EllipticalNanodisk(MeshPrimitive):
             h_bottom = {'bottom': center[2],
                         'center': center[2] - 0.5 * h,
                         'top': center[2] - h,
-                       }[valign]
+                        }[valign]
         except KeyError:
-            raise ValueError("Argument 'valign' must be one of 'center', 'top', 'bottom'. Got: '{}'".format(valign))
+            raise ValueError(
+                "Argument 'valign' must be one of 'center', 'top', 'bottom'. Got: '{}'".format(valign))
         h_top = h_bottom + h
 
         self._csg_stub = textwrap.dedent("""\
@@ -213,8 +224,10 @@ class EllipticalNanodisk(MeshPrimitive):
 
 
 class Nanodisk(EllipticalNanodisk):
+
     def __init__(self, d, h, center=(0, 0, 0), valign='bottom', name='Nanodisk'):
-        super(Nanodisk, self).__init__(d, d, h, center=center, valign=valign, name=name)
+        super(Nanodisk, self).__init__(
+            d, d, h, center=center, valign=valign, name=name)
 
     def generic_filename(self, maxh, **kwargs):
         maxh = self._get_maxh(maxh, **kwargs)

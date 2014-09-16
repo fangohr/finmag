@@ -7,7 +7,7 @@ from math import sqrt, pi
 from finmag.util.consts import mu0
 
 
-@pytest.fixture(scope = "module")
+@pytest.fixture(scope="module")
 def fixt():
     """
     Create an Exchange object that will be re-used during testing.
@@ -64,10 +64,11 @@ def test_exchange_energy_analytical(fixt):
     exch = Exchange(A)
     exch.setup(m, Ms)
     E = exch.compute_energy()
-    expected_E = 3 # integrating the vector laplacian, the latter gives 3 already
+    # integrating the vector laplacian, the latter gives 3 already
+    expected_E = 3
 
     print "With m = (0, sqrt(1-x^2), x), expecting E = {}. Got E = {}.".format(expected_E, E)
-    assert abs(E - expected_E)/expected_E < REL_TOLERANCE
+    assert abs(E - expected_E) / expected_E < REL_TOLERANCE
 
 
 def test_exchange_energy_analytical_2():
@@ -87,10 +88,12 @@ def test_exchange_energy_analytical_2():
     Ms = 8e5
     A = 13e-12
     m = Field(functionspace)
-    m.set(df.Expression(['0', 'sin(2*pi*x[0]/l_x)', 'cos(2*pi*x[0]/l_x)'], l_x=lx))
+    m.set(
+        df.Expression(['0', 'sin(2*pi*x[0]/l_x)', 'cos(2*pi*x[0]/l_x)'], l_x=lx))
     exch = Exchange(A)
     exch.setup(m, Ms, unit_length=unit_length)
-    E_expected = A * 4 * pi**2 * (ly * unit_length) * (lz * unit_length) / (lx * unit_length)
+    E_expected = A * 4 * pi ** 2 * \
+        (ly * unit_length) * (lz * unit_length) / (lx * unit_length)
     E = exch.compute_energy()
     print "expected energy: {}".format(E)
     print "computed energy: {}".format(E_expected)
@@ -114,8 +117,10 @@ def test_exchange_field_supported_methods(fixt):
     H_default = exch.compute_field()
 
     supported_methods = list(Exchange._supported_methods)
-    supported_methods.remove(exch.method) # no need to compare default method with itself
-    supported_methods.remove("project") # the project method for the exchange is too bad
+    # no need to compare default method with itself
+    supported_methods.remove(exch.method)
+    # the project method for the exchange is too bad
+    supported_methods.remove("project")
 
     for method in supported_methods:
         exch = Exchange(A, method=method)
@@ -134,7 +139,7 @@ def test_exchange_length(fixt):
     m = Field(functionspace)
     Ms = 8e5
     A = 13e-12
-    l_ex_expected = sqrt(2 * A / (mu0 * Ms**2))
+    l_ex_expected = sqrt(2 * A / (mu0 * Ms ** 2))
 
     # Test with various options for A and Ms: pure number;
     # df.Constant, df.Expression.
@@ -166,22 +171,22 @@ def test_exchange_length(fixt):
 
 
 if __name__ == "__main__":
-    mesh = df.BoxMesh(0,0,0,2*np.pi,1,1,10, 1, 1)
-     
+    mesh = df.BoxMesh(0, 0, 0, 2 * np.pi, 1, 1, 10, 1, 1)
+
     S = df.FunctionSpace(mesh, "Lagrange", 1)
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
 
     expr = df.Expression(("0", "cos(x[0])", "sin(x[0])"))
-    
+
     m = df.interpolate(expr, S3)
-    
-    exch = Exchange(1,pbc2d=True)
+
+    exch = Exchange(1, pbc2d=True)
     exch.setup(S3, m, 1)
     print exch.compute_field()
-    
-    field=df.Function(S3)
+
+    field = df.Function(S3)
     field.vector().set_local(exch.compute_field())
-    
+
     df.plot(m)
     df.plot(field)
     df.interactive()

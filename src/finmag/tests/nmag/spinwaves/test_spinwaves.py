@@ -7,9 +7,11 @@ import numpy as np
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 TOLERANCE = 3e-4
 
+
 def setup_module(module):
     import run_finmag as f
     f.run_simulation()
+
 
 @pytest.mark.slow
 def test_compare_averages():
@@ -21,7 +23,9 @@ def test_compare_averages():
         t_ref, mx_ref, my_ref, mz_ref = ref[i]
         t, mx, my, mz = computed[i]
 
-        dx = abs(mx - mx_ref); dy = abs(my - my_ref); dz = abs(mz - mz_ref);
+        dx = abs(mx - mx_ref)
+        dy = abs(my - my_ref)
+        dz = abs(mz - mz_ref)
         d = max([dx, dy, dz])
 
         if d > highest_diff:
@@ -29,7 +33,7 @@ def test_compare_averages():
 
         assert d < TOLERANCE
     print "Highest difference was {0}.".format(highest_diff)
-        
+
 
 if __name__ == "__main__":
     def do_it():

@@ -42,14 +42,16 @@ def test_negative_uniform_external_field():
 
 def test_non_uniform_external_field():
     TOLERANCE = 1e-9
-    length = 10e-9; vertices = 5;
+    length = 10e-9
+    vertices = 5
     mesh = df.IntervalMesh(vertices, 0, length)
     sim = Sim(mesh, Ms)
     sim.set_m((1, 0, 0))
     # applied field
     # (0, -H, 0) for 0 <= x <= a
     # (0, +H, 0) for a <  x <= length
-    H_expr = df.Expression(("0", "H*(x[0]-a)/fabs(x[0]-a)", "0"), a=length/2, H=Ms/2)
+    H_expr = df.Expression(
+        ("0", "H*(x[0]-a)/fabs(x[0]-a)", "0"), a=length / 2, H=Ms / 2)
     sim.add(Zeeman(H_expr))
     sim.alpha = 1.0
     sim.run_until(1e-9)

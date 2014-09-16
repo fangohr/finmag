@@ -41,10 +41,10 @@ def print_eigenproblem_memory_usage(mesh, generalised=False):
     N = mesh.num_vertices()
     if generalised == False:
         byte_size_float = np.zeros(1, dtype=float).nbytes
-        memory_usage = (2*N)**2 * byte_size_float
+        memory_usage = (2 * N) ** 2 * byte_size_float
     else:
         byte_size_complex = np.zeros(1, dtype=complex).nbytes
-        memory_usage = 2 * (2*N)**2 * byte_size_complex
+        memory_usage = 2 * (2 * N) ** 2 * byte_size_complex
 
     logger.debug("Eigenproblem {} (of {}generalised eigenproblem) "
                  "for mesh with {} vertices will occupy {} "
@@ -62,8 +62,8 @@ def compute_relative_error(A, M, omega, w):
         A = as_dense_array(A)
         M = as_dense_array(M)
     lhs = np.dot(A, w)
-    rhs = omega*w if (M == None) else omega*np.dot(M, w)
-    rel_err = np.linalg.norm(lhs - rhs) / np.linalg.norm(omega*w)
+    rhs = omega * w if (M == None) else omega * np.dot(M, w)
+    rel_err = np.linalg.norm(lhs - rhs) / np.linalg.norm(omega * w)
     return rel_err
 
 
@@ -116,6 +116,7 @@ def is_scalar_multiple(v, w, tol=1e-12):
     # a, _, _, _ = np.linalg.lstsq(v_colvec, w_colvec)
     # return np.allclose(v, a*w, atol=tol, rtol=tol)
 
+
 def is_matching_eigenpair(pair1, pair2, tol_eigenval=1e-8, tol_eigenvec=1e-6):
     """
     Given two eigenpairs `pair1 = (omega1, w1)` and `pair2 = (omega2, w2)`,
@@ -126,7 +127,8 @@ def is_matching_eigenpair(pair1, pair2, tol_eigenval=1e-8, tol_eigenvec=1e-6):
     omega2, w2 = pair2
     w1 = np.asarray(w1)
     w2 = np.asarray(w2)
-    eigenvals_coincide = np.isclose(omega1, omega2, atol=tol_eigenval, rtol=tol_eigenval)
+    eigenvals_coincide = np.isclose(
+        omega1, omega2, atol=tol_eigenval, rtol=tol_eigenval)
     eigenvecs_coincide = is_scalar_multiple(w1, w2, tol=tol_eigenvec)
     return eigenvals_coincide and eigenvecs_coincide
 
@@ -149,7 +151,8 @@ def find_matching_eigenpair((omega, w), ref_eigenpairs,
                                   tol_eigenvec=tol_eigenvec)]
 
     if len(matching_indices) >= 2:
-        raise EigenproblemVerifyError("Found more than one matching eigenpair.")
+        raise EigenproblemVerifyError(
+            "Found more than one matching eigenpair.")
     elif matching_indices == []:
         return None
     else:
@@ -170,7 +173,7 @@ def std_basis_vector(i, N, dtype=None):
 
     """
     v = np.zeros(N, dtype=dtype)
-    v[i-1] = 1.0
+    v[i - 1] = 1.0
     return v
 
 
@@ -217,7 +220,8 @@ def best_linear_combination(v, basis_vecs):
     # XXX TODO: Figure out why it can happen that residuals.shape == (0,)!!
     #assert(residuals.shape == (1,))
     if residuals.shape == (0,):
-        logger.warning("[DDD] Something went wrong! Assuming the residuals are zero!")
+        logger.warning(
+            "[DDD] Something went wrong! Assuming the residuals are zero!")
         residuals = np.array([0.0])
     w = np.dot(basis_vecs.T, coeffs).ravel()
     assert(w.shape == v.shape)
@@ -283,7 +287,7 @@ def as_dense_array(A, dtype=None):
         return petsc_matrix_to_numpy_array(A, dtype=dtype)
         #raise NotImplementedError()
     elif isinstance(A, df.PETScMatrix):
-        #return petsc_matrix_to_dense_array(A.mat(), dtype=dtype)
+        # return petsc_matrix_to_dense_array(A.mat(), dtype=dtype)
         raise NotImplementedError()
     else:
         raise TypeError(
@@ -354,23 +358,24 @@ def irregular_interval_mesh(xmin, xmax, n):
     # Create an 'empty' mesh
     mesh = df.Mesh()
 
-    # Open it in the MeshEditor as a mesh of topological and geometrical dimension 1
+    # Open it in the MeshEditor as a mesh of topological and geometrical
+    # dimension 1
     editor = df.MeshEditor()
     editor.open(mesh, 1, 1)
 
     # We're going to define 5 vertices, which result in 4 'cells' (= intervals)
     editor.init_vertices(n)
-    editor.init_cells(n-1)
+    editor.init_cells(n - 1)
 
-    coords = (xmax - xmin) * np.random.random_sample(n-1) + xmin
+    coords = (xmax - xmin) * np.random.random_sample(n - 1) + xmin
     coords.sort(0)
 
     # Define the vertices and cells with their corresponding indices
     for (i, x) in enumerate(coords):
         editor.add_vertex(i, np.array([x], dtype=float))
-    editor.add_vertex(n-1, np.array([xmax], dtype=float))
-    for i in xrange(n-1):
-        editor.add_cell(i, np.array([i, i+1], dtype='uintp'))
+    editor.add_vertex(n - 1, np.array([xmax], dtype=float))
+    for i in xrange(n - 1):
+        editor.add_cell(i, np.array([i, i + 1], dtype='uintp'))
 
     editor.close()
     return mesh

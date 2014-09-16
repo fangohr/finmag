@@ -13,14 +13,17 @@ logger = logging.getLogger("finmag")
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 TOLERANCE = 0.05
-BOX_TOLERANCE = 1e-10 # tolerance for the box() method, which should be much more precise
+# tolerance for the box() method, which should be much more precise
+BOX_TOLERANCE = 1e-10
+
 
 def test_from_geofile_and_from_csg():
     radius = 1.0
     maxh = 0.3
 
     tmpdir = tempfile.mkdtemp()
-    tmpfile = tempfile.NamedTemporaryFile(suffix='.geo', dir=tmpdir, delete=False)
+    tmpfile = tempfile.NamedTemporaryFile(
+        suffix='.geo', dir=tmpdir, delete=False)
 
     csg_string = textwrap.dedent("""\
         algebraic3d
@@ -36,12 +39,14 @@ def test_from_geofile_and_from_csg():
         geofile = tmpfile.name
         xmlfile = os.path.splitext(geofile)[0] + ".xml.gz"
 
-        # Create a Dolfin mesh from the .geo file, first without saving the result
+        # Create a Dolfin mesh from the .geo file, first without saving the
+        # result
         mesh1 = from_geofile(geofile, save_result=False)
         assert(isinstance(mesh1, Mesh))
         assert(not os.path.isfile(xmlfile))
 
-        # Now do the same, but save the result (and check that the .xml.gz file is there)
+        # Now do the same, but save the result (and check that the .xml.gz file
+        # is there)
         mesh2 = from_geofile(geofile, save_result=True)
         assert(isinstance(mesh2, Mesh))
         assert(os.path.isfile(xmlfile))
@@ -57,7 +62,7 @@ def test_from_geofile_and_from_csg():
         assert(isinstance(mesh3, Mesh))
         assert(os.path.isfile(xmlfile))
         handler.flush()
-        #assert(stream.getvalue() == "The mesh '{}' already exists and is "
+        # assert(stream.getvalue() == "The mesh '{}' already exists and is "
         #       "automatically returned.\n".format(xmlfile))
 
         # 'Touch' the .geo file so that it is newer than the .xml.gz
@@ -75,17 +80,17 @@ def test_from_geofile_and_from_csg():
         assert(os.path.isfile(xmlfile))
         handler.flush()
         assert(stream.getvalue().startswith("The mesh file '{}' is outdated "
-               "(since it is older than the .geo file '{}') and will "
-               "be overwritten.\n".format(xmlfile, geofile)))
+                                            "(since it is older than the .geo file '{}') and will "
+                                            "be overwritten.\n".format(xmlfile, geofile)))
 
         # Create a mesh from a CSG string directly
         mesh5 = from_csg(csg_string, save_result=False)
 
         # Check that the volume of the sphere is approximately correct
-        vol_exact = 4.0/3*pi*radius**2
+        vol_exact = 4.0 / 3 * pi * radius ** 2
         for mesh in [mesh1, mesh2, mesh3, mesh4, mesh5]:
             vol_mesh = mesh_volume(mesh)
-            assert(abs(vol_mesh - vol_exact)/vol_exact < TOLERANCE)
+            assert(abs(vol_mesh - vol_exact) / vol_exact < TOLERANCE)
     finally:
         tmpfile.close()
         shutil.rmtree(tmpdir)
@@ -103,28 +108,32 @@ def test_box():
     #       mesh creation. In the other tests, we use 'save_result=True' so that the mesh
     #       is loaded from a file for faster execution.
     mesh = box(x0, x1, x2, y0, y1, y2, maxh=maxh, save_result=False)
-    vol_exact = abs((y0-x0)*(y1-x1)*(y2-x2))
+    vol_exact = abs((y0 - x0) * (y1 - x1) * (y2 - x2))
     vol_mesh = mesh_volume(mesh)
-    assert(abs(vol_mesh - vol_exact)/vol_exact < BOX_TOLERANCE)
+    assert(abs(vol_mesh - vol_exact) / vol_exact < BOX_TOLERANCE)
+
 
 def test_sphere():
     r = 1.0
     maxh = 0.2
 
     mesh = sphere(r=r, maxh=maxh, save_result=True, directory=MODULE_DIR)
-    vol_exact = 4.0/3*pi*r**2
+    vol_exact = 4.0 / 3 * pi * r ** 2
     vol_mesh = mesh_volume(mesh)
-    assert(abs(vol_mesh - vol_exact)/vol_exact < TOLERANCE)
+    assert(abs(vol_mesh - vol_exact) / vol_exact < TOLERANCE)
+
 
 def test_cylinder():
     r = 1.0
     h = 2.0
     maxh = 0.2
 
-    mesh = cylinder(r=r, h=h, maxh=maxh, save_result=True, directory=MODULE_DIR)
-    vol_exact = pi*r*r*h
+    mesh = cylinder(
+        r=r, h=h, maxh=maxh, save_result=True, directory=MODULE_DIR)
+    vol_exact = pi * r * r * h
     vol_mesh = mesh_volume(mesh)
-    assert(abs(vol_mesh - vol_exact)/vol_exact < TOLERANCE)
+    assert(abs(vol_mesh - vol_exact) / vol_exact < TOLERANCE)
+
 
 def test_elliptic_cylinder():
     r1 = 2.0
@@ -132,10 +141,12 @@ def test_elliptic_cylinder():
     h = 2.5
     maxh = 0.2
 
-    mesh = elliptic_cylinder(r1=r1, r2=r2, h=h, maxh=maxh, save_result=True, directory=MODULE_DIR)
-    vol_exact = pi*r1*r2*h
+    mesh = elliptic_cylinder(
+        r1=r1, r2=r2, h=h, maxh=maxh, save_result=True, directory=MODULE_DIR)
+    vol_exact = pi * r1 * r2 * h
     vol_mesh = mesh_volume(mesh)
-    assert(abs(vol_mesh - vol_exact)/vol_exact < TOLERANCE)
+    assert(abs(vol_mesh - vol_exact) / vol_exact < TOLERANCE)
+
 
 def test_ellipsoid():
     r1 = 2.0
@@ -143,10 +154,12 @@ def test_ellipsoid():
     r3 = 0.5
     maxh = 0.2
 
-    mesh = ellipsoid(r1=r1, r2=r2, r3=r3, maxh=maxh, save_result=True, directory=MODULE_DIR)
-    vol_exact = 4.0/3*pi*r1*r2*r3
+    mesh = ellipsoid(
+        r1=r1, r2=r2, r3=r3, maxh=maxh, save_result=True, directory=MODULE_DIR)
+    vol_exact = 4.0 / 3 * pi * r1 * r2 * r3
     vol_mesh = mesh_volume(mesh)
-    assert(abs(vol_mesh - vol_exact)/vol_exact < TOLERANCE)
+    assert(abs(vol_mesh - vol_exact) / vol_exact < TOLERANCE)
+
 
 def test_plot_mesh_regions():
     """
@@ -158,7 +171,8 @@ def test_plot_mesh_regions():
 
     # Write csg string to a temporary file
     mesh = from_geofile(os.path.join(MODULE_DIR, "sphere_in_cube.geo"))
-    mesh_regions = df.MeshFunction('size_t', mesh, os.path.join(MODULE_DIR, "sphere_in_cube_mat.xml"))
+    mesh_regions = df.MeshFunction(
+        'size_t', mesh, os.path.join(MODULE_DIR, "sphere_in_cube_mat.xml"))
 
     # Call plot_mesh_regions with a variety of different arguments
     ax = plot_mesh_regions(mesh_regions, regions=1)

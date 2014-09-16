@@ -44,7 +44,8 @@ def test_interaction_accepts_name():
     assert hasattr(zeeman, 'name')
     zeeman = TimeZeeman(field_expr, name='MyTimeZeeman')
     assert hasattr(zeeman, 'name')
-    zeeman = DiscreteTimeZeeman(field_expr, dt_update=2, name='MyDiscreteTimeZeeman')
+    zeeman = DiscreteTimeZeeman(
+        field_expr, dt_update=2, name='MyDiscreteTimeZeeman')
     assert hasattr(zeeman, 'name')
 
 
@@ -57,7 +58,7 @@ def test_compute_energy():
     ly = 3.0
     lz = 5.0
     nx = ny = nz = 10  # XXX TODO: why does the approximation get
-                       # worse if we use a finer mesh?!?
+    # worse if we use a finer mesh?!?
     unit_length = 1e-9
     Ms = 8e5
     H = 1e6
@@ -78,15 +79,17 @@ def test_compute_energy():
         E_computed = H_ext.compute_energy()
         assert np.allclose(E_computed, E_expected, atol=0, rtol=1e-12)
 
-    volume = lx * ly * lz * unit_length**3
+    volume = lx * ly * lz * unit_length ** 3
     E_aligned = -mu0 * Ms * H * volume
 
     check_energy_for_m((1, 0, 0), E_aligned)
     check_energy_for_m((-1, 0, 0), -E_aligned)
     check_energy_for_m((0, 1, 0), 0.0)
     check_energy_for_m((0, 0, 1), 0.0)
-    check_energy_for_m((1/sqrt(2), 1/sqrt(2), 0), E_aligned * cos(pi * 45 / 180))
-    check_energy_for_m((-0.5, 2/sqrt(3), 0), -E_aligned * cos(pi * 60 / 180))
+    check_energy_for_m(
+        (1 / sqrt(2), 1 / sqrt(2), 0), E_aligned * cos(pi * 45 / 180))
+    check_energy_for_m((-0.5, 2 / sqrt(3), 0), -E_aligned * cos(pi * 60 / 180))
+
 
 def test_energy_density_function():
     """
@@ -118,6 +121,7 @@ def test_energy_density_function():
     expected_energy = -mu0 * H
     assert (total_energy + expected_energy) < 1e-6
 
+
 def test_compute_energy_in_regions(tmpdir):
     os.chdir(str(tmpdir))
     d = 30.0
@@ -137,11 +141,13 @@ def test_compute_energy_in_regions(tmpdir):
     # Create a mesh function for the two domains (each representing one disk),
     # where the regions are marked with '0' (first disk) and '1' (second disk).
     class Disk1(df.SubDomain):
+
         def inside(self, pt, on_boundary):
             x, y, z = pt
             return np.linalg.norm([x, y]) < 0.5 * (d + sep)
 
     class Disk2(df.SubDomain):
+
         def inside(self, pt, on_boundary):
             x, y, z = pt
             return np.linalg.norm([x, y, z]) > 0.5 * (d + sep)
@@ -156,10 +162,10 @@ def test_compute_energy_in_regions(tmpdir):
     dx_disk_1 = dx(1)
     dx_disk_2 = dx(2)
 
-    volume_1 = pi * (0.5 * d)**2 * h1 * unit_length**3  # volume of disk #1
-    volume_2 = pi * (0.5 * d)**2 * h2 * unit_length**3  # volume of disk #2
-    #E_aligned_1 = -mu0 * Ms * H * volume_1  # energy of disk #1 if m || H_ext
-    #E_aligned_2 = -mu0 * Ms * H * volume_2  # energy of disk #2 if m || H_ext
+    volume_1 = pi * (0.5 * d) ** 2 * h1 * unit_length ** 3  # volume of disk #1
+    volume_2 = pi * (0.5 * d) ** 2 * h2 * unit_length ** 3  # volume of disk #2
+    # E_aligned_1 = -mu0 * Ms * H * volume_1  # energy of disk #1 if m || H_ext
+    # E_aligned_2 = -mu0 * Ms * H * volume_2  # energy of disk #2 if m || H_ext
 
     def check_energies(m=None, theta=None):
         """
@@ -170,7 +176,8 @@ def test_compute_energy_in_regions(tmpdir):
 
         """
         # Exactly one of m, theta must be given
-        assert((m is None or theta is None) and not (m is None and theta is None))
+        assert((m is None or theta is None) and not (
+            m is None and theta is None))
         if m is None:
             if theta is None:
                 raise ValueError("Exactly one of m, theta must be given.")
@@ -194,13 +201,17 @@ def test_compute_energy_in_regions(tmpdir):
         E_computed_2 = H_ext.compute_energy(dx=dx_disk_2)
         E_computed_total = H_ext.compute_energy(dx=df.dx)
 
-        # Check that the sum of the computed energies for disk #1 and #2 equals the total computed energy
-        assert np.allclose(E_computed_1 + E_computed_2, E_computed_total, atol=0, rtol=1e-12)
+        # Check that the sum of the computed energies for disk #1 and #2 equals
+        # the total computed energy
+        assert np.allclose(
+            E_computed_1 + E_computed_2, E_computed_total, atol=0, rtol=1e-12)
 
-        # Check that the computed energies are within the tolerance of the analytical expressions
+        # Check that the computed energies are within the tolerance of the
+        # analytical expressions
         assert np.allclose(E_computed_1, E_analytical_1, atol=0, rtol=RTOL)
         assert np.allclose(E_computed_2, E_analytical_2, atol=0, rtol=RTOL)
-        assert np.allclose(E_computed_total, E_analytical_total, atol=0, rtol=RTOL)
+        assert np.allclose(
+            E_computed_total, E_analytical_total, atol=0, rtol=RTOL)
         #finmag.logger.debug("E_computed: {}".format(E_computed))
         #finmag.logger.debug("E_expected: {}".format(E_expected))
         #finmag.logger.debug("E_computed - E_expected: {}".format(E_computed - E_expected))
@@ -211,6 +222,7 @@ def test_compute_energy_in_regions(tmpdir):
         check_energies(theta=-theta)
     check_energies(m=(0, 0, 1))
     check_energies(m=(2, -3, -1))
+
 
 def test_value_set_update():
     """
@@ -228,6 +240,7 @@ def test_value_set_update():
 
     assert zeeman.value == second_value
 
+
 def test_time_zeeman_init():
     field_expr = df.Expression(("0", "t", "0"), t=0)
     field_lst = [1, 0, 0]
@@ -238,9 +251,12 @@ def test_time_zeeman_init():
     TimeZeeman(field_expr, t_off=1e-9)
 
     # These should *not* work, since there is no time update
-    with pytest.raises(ValueError): TimeZeeman(field_lst, t_off=None)
-    with pytest.raises(ValueError): TimeZeeman(field_tpl, t_off=None)
-    with pytest.raises(ValueError): TimeZeeman(field_arr, t_off=None)
+    with pytest.raises(ValueError):
+        TimeZeeman(field_lst, t_off=None)
+    with pytest.raises(ValueError):
+        TimeZeeman(field_tpl, t_off=None)
+    with pytest.raises(ValueError):
+        TimeZeeman(field_arr, t_off=None)
 
     # These *should* work, since there is a time update (the field is
     # switched off at some point)
@@ -285,7 +301,6 @@ def test_time_dependent_field_switched_off():
     H_ext.update(2)
     assert diff(H_ext, np.array([0, 0, 0])) < TOL  # It's off!
     assert(H_ext.switched_off == True)
-
 
 
 def test_discrete_time_zeeman_updates_in_intervals():
@@ -345,7 +360,7 @@ def test_oscillating_zeeman():
     # Check that the field has the original value at the end of the
     # first few cycles.
     for i in xrange(19):
-        check_field_at_time(i * 1.0/freq, H)
+        check_field_at_time(i * 1.0 / freq, H)
 
     # Check that the field is switched off at the specified time (and
     # stays switched off thereafter)
@@ -375,8 +390,10 @@ def test_dipolar_field_class(tmpdir):
 
 
 def compute_field_diffs(sim):
-    vals_demag = sim.get_field_as_dolfin_function('Demag', region='air').vector().array().reshape(3, -1)
-    vals_dipole = sim.get_field_as_dolfin_function('DipolarField', region='air').vector().array().reshape(3, -1)
+    vals_demag = sim.get_field_as_dolfin_function(
+        'Demag', region='air').vector().array().reshape(3, -1)
+    vals_dipole = sim.get_field_as_dolfin_function(
+        'DipolarField', region='air').vector().array().reshape(3, -1)
     absdiffs = np.linalg.norm(vals_demag - vals_dipole, axis=0)
     reldiffs = absdiffs / np.linalg.norm(vals_dipole, axis=0)
     return absdiffs, reldiffs
@@ -403,16 +420,20 @@ def test_compare_stray_field_of_sphere_with_dipolar_field(tmpdir, debug=False):
     maxh_box = 10.0
     Ms_sphere = 8.6e5
 
-    sim = sphere_inside_airbox(r_sphere, r_shell, l_box, maxh_sphere, maxh_shell, maxh_box, center_sphere, m_init)
+    sim = sphere_inside_airbox(
+        r_sphere, r_shell, l_box, maxh_sphere, maxh_shell, maxh_box, center_sphere, m_init)
     if debug:
-        sim.render_scene(field_name='Demag', region='air', representation='Outline', outfile='ddd_demag_field_air.png')
-        sim.render_scene(field_name='Demag', region='sphere', representation='Outline', outfile='ddd_demag_field_sphere.png')
+        sim.render_scene(field_name='Demag', region='air',
+                         representation='Outline', outfile='ddd_demag_field_air.png')
+        sim.render_scene(field_name='Demag', region='sphere',
+                         representation='Outline', outfile='ddd_demag_field_sphere.png')
 
     # Add an external field representing a point dipole
     # (with the same magnetic moment as the sphere).
-    dipole_magnitude = Ms_sphere * 4/3 * pi * r_sphere**3
+    dipole_magnitude = Ms_sphere * 4 / 3 * pi * r_sphere ** 3
     logger.debug("dipole_magnitude = {}".format(dipole_magnitude))
-    H_dipole = DipolarField(pos=[0, 0, 0], m=m_init, magnitude=dipole_magnitude)
+    H_dipole = DipolarField(
+        pos=[0, 0, 0], m=m_init, magnitude=dipole_magnitude)
     sim.add(H_dipole)
 
     # Check that the absolute and relative difference between the

@@ -14,8 +14,10 @@ def test_assert_eigenproblems_were_defined():
 
     """
     assert(set(available_eigenproblems) != set())
-    assert(all([isinstance(ep, AbstractEigenproblem) for ep in available_eigenproblems]))
-    assert(any([isinstance(ep, DiagonalEigenproblem) for ep in available_eigenproblems]))
+    assert(all([isinstance(ep, AbstractEigenproblem)
+                for ep in available_eigenproblems]))
+    assert(any([isinstance(ep, DiagonalEigenproblem)
+                for ep in available_eigenproblems]))
 
 
 class MockEigenproblem(AbstractEigenproblem):
@@ -36,12 +38,14 @@ class MockEigenproblem(AbstractEigenproblem):
 
 
 class AbstractEigenproblemTest(object):
+
     """
     This class provides generic tests that will be called from each of
     the individual subclasses below (it won't be executed by py.test
     directly, however).
 
     """
+
     def test_plot_analytical_solutions(self, tmpdir):
         os.chdir(str(tmpdir))
         self.eigenproblem.plot_analytical_solutions(
@@ -58,6 +62,7 @@ class AbstractEigenproblemTest(object):
 
 
 class TestDiagonalEigenproblem(AbstractEigenproblemTest):
+
     def setup(self):
         self.eigenproblem = DiagonalEigenproblem()
         self.omega_ref = [1, 2, 3, 4]
@@ -103,8 +108,10 @@ class TestDiagonalEigenproblem(AbstractEigenproblemTest):
         solver2 = ScipySparseLinalgEigs(sigma=0.0, which='LM', num=4)
         omega1, w1, _ = self.eigenproblem.solve(solver1, N=10, dtype=float)
         omega2, w2, _ = self.eigenproblem.solve(solver2, N=10, dtype=complex)
-        assert(self.eigenproblem.verify_eigenpairs_analytically(zip(omega1, w1)))
-        assert(self.eigenproblem.verify_eigenpairs_analytically(zip(omega2, w2)))
+        assert(
+            self.eigenproblem.verify_eigenpairs_analytically(zip(omega1, w1)))
+        assert(
+            self.eigenproblem.verify_eigenpairs_analytically(zip(omega2, w2)))
 
     def test_print_analytical_eigenvalues(self):
         self.eigenproblem.print_analytical_eigenvalues(10, unit='Hz')
@@ -130,23 +137,27 @@ class TestDiagonalEigenproblem(AbstractEigenproblemTest):
 
     def test_get_kth_analytical_eigenvector(self):
         for k in xrange(self.num):
-            w = self.eigenproblem.get_kth_analytical_eigenvector(k=k, size=self.size)
+            w = self.eigenproblem.get_kth_analytical_eigenvector(
+                k=k, size=self.size)
             w_ref = self.w_ref[k]
             assert(np.allclose(w, w_ref))
 
     def test_get_analytical_eigenvectors(self):
-        w = self.eigenproblem.get_analytical_eigenvectors(num=self.num, size=self.size)
+        w = self.eigenproblem.get_analytical_eigenvectors(
+            num=self.num, size=self.size)
         assert(np.allclose(w, self.w_ref))
 
     def test_get_kth_analytical_eigenpair(self):
         for k in xrange(self.num):
-            omega, w = self.eigenproblem.get_kth_analytical_eigenpair(k=k, size=self.size)
+            omega, w = self.eigenproblem.get_kth_analytical_eigenpair(
+                k=k, size=self.size)
             omega_ref = self.omega_ref[k]
             w_ref = self.w_ref[k]
             assert(np.allclose(omega, omega_ref) and np.allclose(w, w_ref))
 
     def test_get_analytical_eigenpairs(self):
-        omega, w = self.eigenproblem.get_analytical_eigenpairs(num=self.num, size=self.size)
+        omega, w = self.eigenproblem.get_analytical_eigenpairs(
+            num=self.num, size=self.size)
         assert(np.allclose(omega, self.omega_ref))
         assert(np.allclose(w, self.w_ref))
 
@@ -179,7 +190,8 @@ class TestDiagonalEigenproblem(AbstractEigenproblemTest):
 
         # Check that with a less strict tolerance we get the expected result
         omega4b = 4.0001
-        esp4b = self.eigenproblem.get_analytical_eigenspace_basis(omega4b, N, tol_eigval=1e-3)
+        esp4b = self.eigenproblem.get_analytical_eigenspace_basis(
+            omega4b, N, tol_eigval=1e-3)
         assert_eigenspace_basis(esp4b, eigenvec4)
 
         # Check some corner cases (e.g. where 'computed' eigenvalues are
@@ -189,15 +201,18 @@ class TestDiagonalEigenproblem(AbstractEigenproblemTest):
         a3 = 7.200001
         a4 = 7.199999
         mock_eigenproblem = MockEigenproblem()
-        esp1 = mock_eigenproblem.get_analytical_eigenspace_basis(a1, size=50, tol_eigval=1e-3)
-        esp2 = mock_eigenproblem.get_analytical_eigenspace_basis(a2, size=50, tol_eigval=1e-3)
-        esp3 = mock_eigenproblem.get_analytical_eigenspace_basis(a3, size=50, tol_eigval=1e-3)
-        esp4 = mock_eigenproblem.get_analytical_eigenspace_basis(a4, size=50, tol_eigval=1e-3)
+        esp1 = mock_eigenproblem.get_analytical_eigenspace_basis(
+            a1, size=50, tol_eigval=1e-3)
+        esp2 = mock_eigenproblem.get_analytical_eigenspace_basis(
+            a2, size=50, tol_eigval=1e-3)
+        esp3 = mock_eigenproblem.get_analytical_eigenspace_basis(
+            a3, size=50, tol_eigval=1e-3)
+        esp4 = mock_eigenproblem.get_analytical_eigenspace_basis(
+            a4, size=50, tol_eigval=1e-3)
         assert(len(esp1) == 2)
         assert(len(esp2) == 2)
         assert(len(esp3) == 3)
         assert(len(esp4) == 3)
-
 
     def test_verify_eigenpair_numerically(self):
         """
@@ -226,8 +241,10 @@ class TestDiagonalEigenproblem(AbstractEigenproblemTest):
             self.eigenproblem.verify_eigenpair_numerically(1.0, v_wrong_shape)
 
     def test_verify_eigenpairs_numerically(self):
-        assert(self.eigenproblem.verify_eigenpairs_numerically(self.eigenpairs_ref) == True)
-        assert(self.eigenproblem.verify_eigenpairs_numerically(self.eigenpairs_wrong) == False)
+        assert(self.eigenproblem.verify_eigenpairs_numerically(
+            self.eigenpairs_ref) == True)
+        assert(self.eigenproblem.verify_eigenpairs_numerically(
+            self.eigenpairs_wrong) == False)
 
     def test_verify_eigenpair_analytically(self):
         """
@@ -257,11 +274,14 @@ class TestDiagonalEigenproblem(AbstractEigenproblemTest):
             self.eigenproblem.verify_eigenpair_analytically(1.0, v_wrong_shape)
 
     def test_verify_eigenpairs_analytically(self):
-        assert(self.eigenproblem.verify_eigenpairs_analytically(self.eigenpairs_ref) == True)
-        assert(self.eigenproblem.verify_eigenpairs_analytically(self.eigenpairs_wrong) == False)
+        assert(self.eigenproblem.verify_eigenpairs_analytically(
+            self.eigenpairs_ref) == True)
+        assert(self.eigenproblem.verify_eigenpairs_analytically(
+            self.eigenpairs_wrong) == False)
 
 
 class TestRingGraphLaplaceEigenproblem(AbstractEigenproblemTest):
+
     def setup(self):
         self.eigenproblem = RingGraphLaplaceEigenproblem()
 
@@ -273,9 +293,9 @@ class TestRingGraphLaplaceEigenproblem(AbstractEigenproblemTest):
         """
         A4, M4 = self.eigenproblem.instantiate(N=4, dtype=float)
         assert(M4 == None)
-        assert(np.allclose(A4, np.array([[ 2, -1,  0, -1],
+        assert(np.allclose(A4, np.array([[2, -1,  0, -1],
                                          [-1,  2, -1,  0],
-                                         [ 0, -1,  2, -1],
+                                         [0, -1,  2, -1],
                                          [-1,  0, -1,  2]])))
 
         A5, M5 = self.eigenproblem.instantiate(N=5, dtype=complex)
@@ -292,15 +312,17 @@ class TestRingGraphLaplaceEigenproblem(AbstractEigenproblemTest):
                 assert(M == None)
                 A_ref = np.zeros((N, N), dtype=dtype)
                 A_ref += np.diag(2 * np.ones(N))
-                A_ref -= np.diag(np.ones(N-1), k=1)
-                A_ref -= np.diag(np.ones(N-1), k=-1)
-                A_ref[0, N-1] = -1
-                A_ref[N-1, 0] = -1
+                A_ref -= np.diag(np.ones(N - 1), k=1)
+                A_ref -= np.diag(np.ones(N - 1), k=-1)
+                A_ref[0, N - 1] = -1
+                A_ref[N - 1, 0] = -1
 
                 assert(np.allclose(A, A_ref))
                 assert(M == None)
 
 
 class TestNanostrip1dEigenproblemFinmag(AbstractEigenproblemTest):
+
     def setup(self):
-        self.eigenproblem = Nanostrip1dEigenproblemFinmag(13e-12, 8e5, 0, 100, unit_length=1e-9)
+        self.eigenproblem = Nanostrip1dEigenproblemFinmag(
+            13e-12, 8e5, 0, 100, unit_length=1e-9)

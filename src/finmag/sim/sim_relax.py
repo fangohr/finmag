@@ -90,11 +90,13 @@ def relax(sim, save_vtk_snapshot_as=None, save_restart_data_as=None,
         if 'energies' not in sim.relaxation.keys():
             sim.relaxation['energies'] = []
             sim.relaxation['dmdt_increased_counter'] = 0
-            sim.relaxation['dmdt_increased_counter_limit'] = dmdt_increased_counter_limit
+            sim.relaxation[
+                'dmdt_increased_counter_limit'] = dmdt_increased_counter_limit
 
         # Otherwise, find dm/dt and energy and compare.
         else:
-            sim.relaxation['dmdts'].append([sim.t, compute_dmdt(sim.relaxation['last_time'], sim.relaxation['last_m'], sim.t, sim.m)])
+            sim.relaxation['dmdts'].append([sim.t, compute_dmdt(
+                sim.relaxation['last_time'], sim.relaxation['last_m'], sim.t, sim.m)])
             sim.relaxation['energies'].append(sim.total_energy())
 
             # Continue iterating if dm/dt is not low enough.
@@ -110,9 +112,9 @@ def relax(sim, save_vtk_snapshot_as=None, save_restart_data_as=None,
             # non-convergence.
             if len(sim.relaxation['dmdts']) >= 2:
                 if (sim.relaxation['dmdts'][-1][1] >
-                    sim.relaxation['dmdts'][-2][1] and
-                    sim.relaxation['energies'][-1] >
-                    sim.relaxation['energies'][-2]):
+                        sim.relaxation['dmdts'][-2][1] and
+                        sim.relaxation['energies'][-1] >
+                        sim.relaxation['energies'][-2]):
 
                     # Since dm/dt has increased, we increment the counter.
                     sim.relaxation['dmdt_increased_counter'] += 1

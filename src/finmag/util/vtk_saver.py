@@ -7,7 +7,9 @@ import dolfin as df
 
 log = logging.getLogger("finmag")
 
+
 class VTKSaver(object):
+
     def __init__(self, filename=None, overwrite=False):
         self.filename = filename
         self.f = None
@@ -37,7 +39,6 @@ class VTKSaver(object):
                     "Aborting snapshot creation. File already exists and "
                     "would overwritten: '{}' (use overwrite=True if this "
                     "is what you want)".format(self.filename))
-
 
         # Open the file here so that it stays open during all calls to
         # save(), otherwise consecutive calls will overwrite previously

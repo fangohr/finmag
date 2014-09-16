@@ -2,6 +2,7 @@ import numpy
 import numbers
 from finmag.util.consts import gamma as gamma_llg
 
+
 def make_analytic_solution(H, alpha, gamma=gamma_llg):
     """
     Returns a function `m(t)` which computes the magnetisation vector
@@ -22,7 +23,8 @@ def make_analytic_solution(H, alpha, gamma=gamma_llg):
         raise TypeError("H must be a single number, but got: {}".format(H))
     p = float(gamma) / (1 + alpha ** 2)
     theta0 = numpy.pi / 2
-    t0 = numpy.log(numpy.sin(theta0) / (1 + numpy.cos(theta0))) / (p * alpha * H)
+    t0 = numpy.log(
+        numpy.sin(theta0) / (1 + numpy.cos(theta0))) / (p * alpha * H)
 
     # Matteo uses spherical coordinates,
     # which have to be converted to cartesian coordinates.

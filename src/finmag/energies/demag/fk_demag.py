@@ -21,6 +21,7 @@ from fk_demag_pbc import BMatrixPBC
 
 logger = logging.getLogger('finmag')
 
+
 def prepared_timed(measurement_group, timer_to_use):
     def new_timed(measurement_name):
         return timed(measurement_name, measurement_group, timer_to_use)
@@ -31,6 +32,7 @@ fk_timed = prepared_timed("FKDemag", fk_timer)
 
 
 class FKDemag(object):
+
     """
     Computation of the demagnetising field using the Fredkin-Koehler hybrid
     FEM/BEM technique.
@@ -43,6 +45,7 @@ class FKDemag(object):
        http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=106342
 
     """
+
     def __init__(self, name='Demag', thin_film=False, macrogeometry=None,
                  solver_type=None, parameters=None):
         """
@@ -90,7 +93,8 @@ class FKDemag(object):
         }
         if parameters is not None:
             for (k, v) in parameters.items():
-                logger.debug("Setting demag solver parameter {}='{}'".format(k, v))
+                logger.debug(
+                    "Setting demag solver parameter {}='{}'".format(k, v))
                 if k in ['phi_1', 'phi_2']:
                     # Since self.parameters['phi_1'] is a dictionary itself,
                     # only update the keys that are given (and similarly for
@@ -144,9 +148,10 @@ class FKDemag(object):
         # for computation of energy
         self._nodal_volumes = nodal_volume(self.S1, unit_length)
         self._H_func = df.Function(m.functionspace)  # we will copy field into
-                                                     # this when we need the
-                                                     # energy
-        self._E_integrand = -0.5 * mu0 * df.dot(self._H_func, self.m.f * self.Ms)
+        # this when we need the
+        # energy
+        self._E_integrand = -0.5 * mu0 * \
+            df.dot(self._H_func, self.m.f * self.Ms)
         self._E = self._E_integrand * df.dx
         self._nodal_E = df.dot(self._E_integrand, self._test1) * df.dx
         self._nodal_E_func = df.Function(self.S1)
@@ -160,7 +165,8 @@ class FKDemag(object):
         # .finmagrc file; use 'Krylov' if this fails.
         solver_type = self.solver_type
         if solver_type is None:
-            solver_type = configuration.get_config_option('demag', 'solver_type', 'Krylov')
+            solver_type = configuration.get_config_option(
+                'demag', 'solver_type', 'Krylov')
         if solver_type == 'None':  # if the user set 'solver_type = None' in
                                    # the .finmagrc file, solver_type will be a
                                    # string so we need to catch this here.
@@ -169,15 +175,16 @@ class FKDemag(object):
 
         if solver_type == 'Krylov':
             self._poisson_solver = df.KrylovSolver(self._poisson_matrix.copy(),
-                self.parameters['phi_1_solver'], self.parameters['phi_1_preconditioner'])
+                                                   self.parameters['phi_1_solver'], self.parameters['phi_1_preconditioner'])
             self._poisson_solver.parameters.update(self.parameters['phi_1'])
             self._laplace_solver = df.KrylovSolver(
-                    self.parameters['phi_2_solver'], self.parameters['phi_2_preconditioner'])
+                self.parameters['phi_2_solver'], self.parameters['phi_2_preconditioner'])
             self._laplace_solver.parameters.update(self.parameters['phi_2'])
             # We're setting 'same_nonzero_pattern=True' to enforce the
             # same matrix sparsity pattern across different demag solves,
             # which should speed up things.
-            self._laplace_solver.parameters["preconditioner"]["structure"] = "same_nonzero_pattern"
+            self._laplace_solver.parameters["preconditioner"][
+                "structure"] = "same_nonzero_pattern"
         elif solver_type == 'LU':
             self._poisson_solver = df.LUSolver(self._poisson_matrix.copy())
             self._laplace_solver = df.LUSolver()
@@ -195,20 +202,26 @@ class FKDemag(object):
                     self._b2g_map = np.array(pbc.b2g_map, dtype=np.int)
                     self._bem = pbc.bm
                 else:
-                    self._bem, self._b2g_map = compute_bem_fk(df.BoundaryMesh(self.m.mesh(), 'exterior', False))
-        logger.debug("Boundary element matrix uses {:.2f} MB of memory.".format(self._bem.nbytes / 1024.**2))
-        self._phi_1 = df.Function(self.S1)  # solution of inhomogeneous Neumann problem
-        self._phi_2 = df.Function(self.S1)  # solution of Laplace equation inside domain
+                    self._bem, self._b2g_map = compute_bem_fk(
+                        df.BoundaryMesh(self.m.mesh(), 'exterior', False))
+        logger.debug("Boundary element matrix uses {:.2f} MB of memory.".format(
+            self._bem.nbytes / 1024. ** 2))
+        # solution of inhomogeneous Neumann problem
+        self._phi_1 = df.Function(self.S1)
+        # solution of Laplace equation inside domain
+        self._phi_2 = df.Function(self.S1)
         self._phi = df.Function(self.S1)  # magnetic potential phi_1 + phi_2
 
         # To be applied to the vector field m as first step of computation of
         # _phi_1.  This gives us div(M), which is equal to Laplace(_phi_1),
         # equation which is then solved using _poisson_solver.
-        self._Ms_times_divergence = df.assemble(self.Ms * df.inner(self._trial3, df.grad(self._test1)) * df.dx)
+        self._Ms_times_divergence = df.assemble(
+            self.Ms * df.inner(self._trial3, df.grad(self._test1)) * df.dx)
 
         # we move the boundary condition here to avoid create a instance each
         # time when compute the magnetic potential
-        self.boundary_condition = df.DirichletBC(self.S1, self._phi_2, df.DomainBoundary())
+        self.boundary_condition = df.DirichletBC(
+            self.S1, self._phi_2, df.DomainBoundary())
         self.boundary_condition.apply(self._poisson_matrix)
 
         self._setup_gradient_computation()
@@ -289,7 +302,8 @@ class FKDemag(object):
 
         """
         self._H_func.vector()[:] = self.compute_field()
-        nodal_E = df.assemble(self._nodal_E).array() * self.unit_length ** self.m.mesh_dim()
+        nodal_E = df.assemble(self._nodal_E).array() * \
+            self.unit_length ** self.m.mesh_dim()
         return nodal_E / self._nodal_volumes
 
     @mtimed(default_timer)
@@ -320,7 +334,8 @@ class FKDemag(object):
         # conditions we get from BEM * _phi_1 on the boundary.
         with fk_timed("using boundary conditions"):
             phi_1 = self._phi_1.vector()[self._b2g_map]
-            self._phi_2.vector()[self._b2g_map[:]] = np.dot(self._bem, phi_1.array())
+            self._phi_2.vector()[self._b2g_map[:]] = np.dot(
+                self._bem, phi_1.array())
             #boundary_condition = df.DirichletBC(self.S1, self._phi_2, df.DomainBoundary())
             #A = self._poisson_matrix.copy()
             #b = self._laplace_zeros
@@ -328,7 +343,7 @@ class FKDemag(object):
             A = self._poisson_matrix
             b = self._laplace_zeros
             self.boundary_condition.set_value(self._phi_2)
-            self.boundary_condition.apply(A,b)
+            self.boundary_condition.apply(A, b)
 
         # compute _phi_2 on the whole domain
         with fk_timed("second linear solve"):

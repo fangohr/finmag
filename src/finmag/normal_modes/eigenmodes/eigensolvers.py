@@ -12,6 +12,7 @@ logger = logging.getLogger("finmag")
 
 
 class AbstractEigensolver(object):
+
     def __repr__(self):
         return "<{}{}>".format(self.__class__.__name__, self._extra_info())
 
@@ -82,7 +83,7 @@ class AbstractEigensolver(object):
         df.tic()
         omegas, ws = self._solve_eigenproblem(A, M=M, num=num, tol=tol)
         logger.info("Computing the eigenvalues and eigenvectors "
-                     "took {}".format(format_time(df.toc())))
+                    "took {}".format(format_time(df.toc())))
 
         # XXX TODO: Remove this conversion to numpy.arrays once we
         #           have better support for different kinds of
@@ -100,7 +101,8 @@ class AbstractEigensolver(object):
                 "Hermitian. This might consume a lot of memory if M is big!.")
             M = as_dense_array(M)
 
-        rel_errors = np.array([compute_relative_error(A, M, omega, w) for omega, w in zip(omegas, ws)])
+        rel_errors = np.array(
+            [compute_relative_error(A, M, omega, w) for omega, w in zip(omegas, ws)])
         return omegas, ws, rel_errors
 
 
@@ -115,7 +117,8 @@ class ScipyDenseSolver(AbstractEigensolver):
         M = as_dense_array(M)  # does nothing if M is already a numpy.array
         # XXX TODO: For very large eigenproblems it is not advisable to store *all* eigenvectors here
         #           because this duplicates the size of the eigenproblem matrix. Instead, can we somehow
-        #           ensure that the returned values are sorted and immediately discard unneeded vectors?
+        # ensure that the returned values are sorted and immediately discard
+        # unneeded vectors?
         omega, w = self._solver_func(A, M)
         w = w.T  # make sure that eigenvectors are stored in rows, not columns
         omega, w = sort_eigensolutions(omega, w)
@@ -123,7 +126,7 @@ class ScipyDenseSolver(AbstractEigensolver):
         # Return only the number of requested eigenvalues
         N, _ = A.shape
         num = num or self.num
-        num = min(num, N-1)
+        num = min(num, N - 1)
         if num != None:
             omega = omega[:num]
             w = w[:num]
@@ -132,12 +135,14 @@ class ScipyDenseSolver(AbstractEigensolver):
 
 
 class ScipyLinalgEig(ScipyDenseSolver):
+
     def __init__(self, num=None):
         self.num = num
         self._solver_func = scipy.linalg.eig
 
 
 class ScipyLinalgEigh(ScipyDenseSolver):
+
     def __init__(self, num=None):
         self.num = num
         self._solver_func = scipy.linalg.eigh
@@ -201,7 +206,7 @@ class ScipySparseSolver(AbstractEigensolver):
     def _solve_eigenproblem(self, A, M=None, num=None, tol=None):
         N, _ = A.shape
         num = num or self.num
-        num = min(num, N-2)
+        num = min(num, N - 2)
         tol = tol or self.tol
 
         if self.swap_matrices:
@@ -224,12 +229,14 @@ def id_op(A):
 
 
 class ScipySparseLinalgEigs(ScipySparseSolver):
+
     def __init__(self, *args, **kwargs):
         super(ScipySparseLinalgEigs, self).__init__(*args, **kwargs)
         self._solver_func = scipy.sparse.linalg.eigs
 
 
 class ScipySparseLinalgEigsh(ScipySparseSolver):
+
     def __init__(self, *args, **kwargs):
         super(ScipySparseLinalgEigsh, self).__init__(*args, **kwargs)
         self._solver_func = scipy.sparse.linalg.eigsh
@@ -239,6 +246,7 @@ class ScipySparseLinalgEigsh(ScipySparseSolver):
 
 
 class SLEPcEigensolver(AbstractEigensolver):
+
     def __init__(self, problem_type=None, method_type=None, which=None, num=6,
                  tol=1e-12, maxit=100, shift_invert=False, swap_matrices=False, verbose=True):
         """
@@ -335,7 +343,7 @@ class SLEPcEigensolver(AbstractEigensolver):
         #           systems it seems to be slightly non-trivial to install
         #           slepc4py, and since we don't use it for the default eigen-
         #           value methods, it's better to avoid raising an ImportError
-        #           which forces users to try and install it.  -- Max, 20.3.2014
+        # which forces users to try and install it.  -- Max, 20.3.2014
         from slepc4py import SLEPc
 
         E = SLEPc.EPS()
@@ -362,7 +370,8 @@ class SLEPcEigensolver(AbstractEigensolver):
         if problem_type == None:
             raise ValueError("No problem type specified for SLEPcEigensolver.")
         if method_type == None:
-            raise ValueError("No solution method specified for SLEPcEigensolver.")
+            raise ValueError(
+                "No solution method specified for SLEPcEigensolver.")
         if which == None:
             raise ValueError("Please specify which eigenvalues to compute.")
         if swap_matrices == None:
@@ -437,10 +446,11 @@ class SLEPcEigensolver(AbstractEigensolver):
             if np.all(vi_arr == 0.0):
                 ws.append(vr_arr)
             else:
-                ws.append(vr_arr + 1j*vi_arr)
+                ws.append(vr_arr + 1j * vi_arr)
         omegas = np.array(omegas)
         ws = np.array(ws)
-        logger.warning("TODO: Check that the eigensolutions returned by SLEPc are sorted.")
+        logger.warning(
+            "TODO: Check that the eigensolutions returned by SLEPc are sorted.")
         return omegas[:num], ws[:num]
 
 

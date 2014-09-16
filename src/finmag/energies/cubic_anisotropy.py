@@ -10,8 +10,8 @@ from finmag.native import llg as native_llg
 logger = logging.getLogger('finmag')
 
 
-
 class CubicAnisotropy(EnergyBase):
+
     """
     Compute the cubic anisotropy field.
 
@@ -31,7 +31,7 @@ class CubicAnisotropy(EnergyBase):
         Define a cubic anisotropy with (fourth/six/eigth order) anisotropy
         constants `K1`, `K2`, `K3` (in J/m^3) and corresponding axes
         `u1`, `u2` and `u3`.
-        
+
         if assemble = True, the box-assemble will be used, seems that box-assemble 
         method has introduced extra error!!!
 
@@ -41,42 +41,44 @@ class CubicAnisotropy(EnergyBase):
 
         """
 
-        u3 = np.cross(u1,u2)
-        
+        u3 = np.cross(u1, u2)
+
         self.u1 = df.Constant(u1)
         self.u2 = df.Constant(u2)
         self.u3 = df.Constant(u3)
-        
+
         self.K1_input = K1
         self.K2_input = K2
         self.K3_input = K3
-        
-        self.uv = 1.0*np.array([u1,u2,u3])
+
+        self.uv = 1.0 * np.array([u1, u2, u3])
         self.uv.shape = (-1,)
-        
+
         self.name = name
         super(CubicAnisotropy, self).__init__("box-assemble", in_jacobian=True)
-        
-        self.assemble=assemble
-        
+
+        self.assemble = assemble
 
     @mtimed
     def setup(self, m, Ms, unit_length=1):
         dofmap = m.functionspace.dofmap()
-        S1 = df.FunctionSpace(m.mesh(), "Lagrange", 1, constrained_domain=dofmap.constrained_domain)
-        
+        S1 = df.FunctionSpace(
+            m.mesh(), "Lagrange", 1, constrained_domain=dofmap.constrained_domain)
+
         self.K1_dg = helpers.scalar_valued_function(self.K1_input, S1)
         self.K1_dg.rename('K1', 'fourth order anisotropy constant')
         self.K2_dg = helpers.scalar_valued_function(self.K2_input, S1)
         self.K2_dg.rename('K2', 'sixth order anisotropy constant')
         self.K3_dg = helpers.scalar_valued_function(self.K3_input, S1)
         self.K3_dg.rename('K3', 'eigth order anisotropy constant')
-        
+
         self.volumes = df.assemble(df.TestFunction(S1) * df.dx)
-        self.K1 = df.assemble(self.K1_dg*df.TestFunction(S1)* df.dx).array()/self.volumes
-        self.K2 = df.assemble(self.K2_dg*df.TestFunction(S1)* df.dx).array()/self.volumes
-        self.K3 = df.assemble(self.K3_dg*df.TestFunction(S1)* df.dx).array()/self.volumes
-        
+        self.K1 = df.assemble(
+            self.K1_dg * df.TestFunction(S1) * df.dx).array() / self.volumes
+        self.K2 = df.assemble(
+            self.K2_dg * df.TestFunction(S1) * df.dx).array() / self.volumes
+        self.K3 = df.assemble(
+            self.K3_dg * df.TestFunction(S1) * df.dx).array() / self.volumes
 
         u1msq = df.dot(self.u1, m.f) ** 2
         u2msq = df.dot(self.u2, m.f) ** 2
@@ -84,34 +86,34 @@ class CubicAnisotropy(EnergyBase):
 
         E_term1 = self.K1_dg * (u1msq * u2msq + u2msq * u3msq + u3msq * u1msq)
         E_term2 = self.K2_dg * (u1msq * u2msq * u3msq)
-        E_term3 = self.K3_dg * (u1msq ** 2 * u2msq ** 2 + u2msq ** 2 * u3msq ** 2 + u3msq ** 2 * u1msq ** 2)
+        E_term3 = self.K3_dg * \
+            (u1msq ** 2 * u2msq ** 2 + u2msq **
+             2 * u3msq ** 2 + u3msq ** 2 * u1msq ** 2)
 
         E_integrand = E_term1
-        
-        if self.K2_input!=0:
+
+        if self.K2_input != 0:
             E_integrand += E_term2
-        
-        if self.K3_input!=0:
+
+        if self.K3_input != 0:
             E_integrand += E_term3
 
         super(CubicAnisotropy, self).setup(E_integrand, m, Ms, unit_length)
-        
+
         if not self.assemble:
             self.H = self.m.get_numpy_array_debug()
             self.Ms = self.Ms.vector().array()
             self.compute_field = self.__compute_field_directly
-        
+
     def __compute_field_directly(self):
-        
+
         m = self.m.get_numpy_array_debug()
-        
-        m.shape=(3,-1)
-        self.H.shape=(3,-1)
-        native_llg.compute_cubic_field(m, self.Ms, self.H, self.uv, self.K1,self.K2,self.K3)
-        m.shape=(-1,)
-        self.H.shape=(-1,)
-        
+
+        m.shape = (3, -1)
+        self.H.shape = (3, -1)
+        native_llg.compute_cubic_field(
+            m, self.Ms, self.H, self.uv, self.K1, self.K2, self.K3)
+        m.shape = (-1,)
+        self.H.shape = (-1,)
+
         return self.H
-        
-        
-        
