@@ -1260,8 +1260,11 @@ def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sun
     where the demag field is computed as if there were repeated copies
     of the mesh present on either side of the sample. The copies are
     assumed to be arranged in a grid with `nx` tiles in x-direction and
-    `ny` tiles in y-direction. The spacing between neighbouring tiles is
-    specified by `spacing_x` and `spacing_y`.
+    `ny` tiles in y-direction, with the actual simulation tile in the
+    centre (in particular, both `nx` and `ny` should be odd numbers; by
+    default they are both 1). The spacing between neighbouring tiles is
+    specified by `spacing_x` and `spacing_y` (default: the tiles touch
+    with no gap between them).
 
     The argument `demag_solver_params` can be used to configure the demag solver
     (if the chosen solver class supports this). Example with the 'FK' solver:
