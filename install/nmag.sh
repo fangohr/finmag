@@ -60,15 +60,18 @@ fi
 
 cd $source
 
-# With more recent version of gcc (for examlpe gcc4.8), an error is 
+# With more recent version of gcc (for examlpe gcc4.8), an error is
 # raised when compiling Nmag's version of hdf5. It is just a C++ comment
-# in a C file. (in nmag-0.2.1/hdf5/tools/lib/h5diff.c) 
+# in a C file. (in nmag-0.2.1/hdf5/tools/lib/h5diff.c)
 # This patch converts it to a C comment.
 # If it looks as if the patch has been applied already, we carry on without
 # further user confirmation (-N)
+
+make .deps_hdf5_untar  # This should make the path available for the patch
+                       # (though this feels dirty)
+
 pushd hdf5/tools/lib && patch -N < $NMAGPATCHPATH
 popd
-
 
 make
 
