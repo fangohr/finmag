@@ -51,9 +51,9 @@ with Vagrant. Bento puts the box file in the location
  
     ./bento/builds/virtualbox/opscode_ubuntu-13.10_chef-provisionerless.box
 
-but it can be moved anywhere. I order to work use this box with the vagrant
-scripts in this directory, move it into the directory ./ubuntu_12.04/downloads/
-as follows:
+but it can be moved anywhere. In order to use this box with the Vagrant scripts
+in this directory, move it into the directory ./ubuntu_12.04/downloads/ as
+follows:
 
     mv ./bento/builds/virtualbox/opscode_ubuntu-13.10_chef-provisionerless.box ubuntu_12.04/downloads
 
