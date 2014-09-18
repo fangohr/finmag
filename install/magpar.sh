@@ -44,10 +44,53 @@ then
 fi
 
 cd $source/src
-patch -p1 < ${ROOTDIR}/magpar.patch
-patch -p1 < ${ROOTDIR}/magpar_code.patch
+# This section of the installation script is responsible for applying patches
+# to the code.
+#
+# Firstly, the reversibility of the patches is determined; if the patches can
+# be reversed then they have been applied already. In this case, no patching
+# needs to be done.
+#
+# The 'sed' substitutions are necessary to change the installation directory to
+# MAGPAR_PREFIX instead of HOME, but this has the unfortunate effect of making
+# the first patch irreversible, since it cares about this line. Hence we try to
+# reverse the 'sed' substitution first to counter this. These 'sed'
+# substitutions are not patches themselves because patches would have no
+# knowledge about MAGPAR_PREFIX.
 
+# We attempt to reverse the 'sed' substitution. On the first execution of this
+# script this will achieve nothing, but on subsequent runs it will reverse the
+# following substitution. However, this will only work if MAGPAR_PREFIX is the
+# same as in the first execution. Otherwise, Magpar will be installed untarred
+# somewhere else anyway.
+sed -i -e "s|MAGPAR_HOME = ${MAGPAR_PREFIX}/magpar-0.9|MAGPAR_HOME = \$(HOME)/magpar-0.9|" Makefile.in.defaults
+
+# If the patch is not reversible, apply the patch. We enter this conditional
+# block on the first execution, but not afterwards. This line might result in
+# something like:
+#     1 out of 1 hunk FAILED
+#     2 out of 2 hunks FAILED
+# being printed. This seems to be acceptable.
+if ! patch -f -R -s -p1 --dry-run < ${ROOTDIR}/magpar.patch; then
+    patch -p1 < ${ROOTDIR}/magpar.patch
+    echo "Patch 'magpar.patch' SUCCESSFULLY applied."
+else
+    echo "Patch 'magpar.patch' already applied. Skipping..."
+fi
+
+# Likewise for the second patch.
+if ! patch -f -R -s -p1 --dry-run < ${ROOTDIR}/magpar_code.patch; then
+    patch -p1 < ${ROOTDIR}/magpar_code.patch
+    echo "Patch 'magpar_code.patch' SUCCESSFULLY applied."
+else
+    echo "Patch 'magpar_code.patch' already applied. Skipping..."
+fi
+
+# Finally, we perform the sed substitution. This substitution will always be
+# made.
 sed -i -e "s|MAGPAR_HOME = \$(HOME)/magpar-0.9|MAGPAR_HOME = ${MAGPAR_PREFIX}/magpar-0.9|" Makefile.in.defaults
+
+exit
 
 make -f Makefile.libs
 make
