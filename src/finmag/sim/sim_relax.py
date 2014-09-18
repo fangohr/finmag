@@ -26,8 +26,6 @@ def relax(sim, save_vtk_snapshot_as=None, save_restart_data_as=None,
     will be automatically overwritten!
 
     """
-    if not hasattr(sim, "integrator"):
-        sim.create_integrator()
     log.info("Simulation will run until relaxation of the magnetisation.")
     log.debug("Relaxation parameters: stopping_dmdt={} (degrees per "
               "nanosecond), dt_limit={}, dmdt_increased_counter_limit={}"
