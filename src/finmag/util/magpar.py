@@ -10,8 +10,20 @@ logger = logging.getLogger(name='finmag')
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-def gen_magpar_conf(base_name, init_m,
-                    Ms=8.6e5, A=13e-12, K1=0, a=[0, 0, 1], alpha=0.1, demag=0):
+def gen_magpar_conf(base_name, init_m, Ms=8.6e5, A=13e-12, K1=0,
+                    a=[0, 0, 1], alpha=0.1, use_demag=False):
+    """
+    Generate magpar configuration files (in the current directory) which
+    can be used to run magpar and compute the various micromagnetic fields
+    for a simulation with the given parameters.
+
+    If base_name='foo', the following files are created in the current directory:
+
+       foo.inp
+       foo.0000.inp
+       foo.krn
+       allopts.txt
+    """
 
     norm_a = (a[0] ** 2 + a[1] ** 2 + a[2] ** 2) ** 0.5
     tmp_mz = a[2] / norm_a
@@ -33,7 +45,7 @@ def gen_magpar_conf(base_name, init_m,
     allopt = ["-simName ", base_name + "\n",
               "-init_mag ", "0\n",
               "-inp ", "0000\n",
-              "-demag ", str(demag)]
+              "-demag ", "1" if use_demag else "0"]
     with open("allopt.txt", "w") as allopt_file:
         allopt_file.write("".join(allopt))
 
@@ -192,7 +204,7 @@ def compute_exch_magpar(m, **kwargs):
 
 
 def compute_demag_magpar(m, **kwargs):
-    return compute("demag", m, demag=1, **kwargs)
+    return compute("demag", m, use_demag=True, **kwargs)
 
 
 def compute(field_name, m, **kwargs):
