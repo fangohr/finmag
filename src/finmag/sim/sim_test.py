@@ -1184,7 +1184,7 @@ def test_normal_mode_simulation_with_periodic_boundary_conditions_9x9(tmpdir):
     os.chdir(str(tmpdir))
     csg_string = textwrap.dedent("""
         algebraic3d
-        solid cube = orthobrick (0, 0, 0; 150, 150, 3) -maxh = 5.0;
+        solid cube = orthobrick (0, 0, 0; 150, 150, 3) -maxh = 10.0;
         solid cylA = cylinder (25,   25, 0; 25,   25, 1; 20);
         solid cylB = cylinder (75,   25, 0; 75,   25, 1; 20);
         solid cylC = cylinder (125,  25, 0; 125,  25, 1; 20);
