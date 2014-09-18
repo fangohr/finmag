@@ -157,6 +157,17 @@ def save_inp_of_inital_m(m, file_name):
 
 
 def get_field(base_name, field="anis"):
+    """
+    Read values for the given field from file with the given
+    base name.  Returns a pair `(nodes, field_vals)` where
+    `nodes` is an array of shape Nx3 containing the coordinates
+    of the mesh nodes and `field_vals` is a flat array.
+
+    TODO: Why are we returning a flat array here? Shouldn't this
+          be changed so that the field values are in the same
+          shape and order as the returned mesh nodes?  (Max, 18.9.2014)
+
+    """
     file_name = base_name + ".0001"
     fields = read_inp_gz(file_name)
 
