@@ -69,6 +69,10 @@ oommf_command=$(cat <<EOF
 tclsh $OOMMF_PREFIX/oommf/oommf.tcl "\$@"
 EOF
 )
+
+echo "Permissions needed to create an executable in '/usr/local/bin', and to\
+ fix permissions in the $OOMMF_PREFIX/oommf directory."
+
 sudo sh -c "echo '$oommf_command' > '/usr/local/bin/oommf'"
 sudo chmod a+x /usr/local/bin/oommf
 
