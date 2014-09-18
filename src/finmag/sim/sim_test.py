@@ -861,6 +861,21 @@ class TestSimulation(object):
         assert np.allclose(sim.m, m_random)
         assert np.allclose(sim.m_field.f.vector().array(), m_random)
 
+    def test_run_until_0_does_not_change_m(self):
+        """
+        Check that calling "sim.run_until(0)" does not affect the value of m.
+        """
+        # Create a new simulation
+        sim = sim_with(self.mesh, Ms=8.6e5, m_init=(1, 0, 0), alpha=1.0,
+                       unit_length=1e-9, A=13.0e-12, demag_solver='FK')
+
+        # Set sim.m to a random vector and run until time 0
+        m_random = np.random.random_sample(sim.m.shape)
+        sim.set_m(m_random, normalise=False)
+
+        # Check that m is unchanged
+        assert (sim.m == m_random).all()
+
     def test_can_call_save_restart_data_on_a_fresh_simulation_object(self, tmpdir):
         """
         Regression test to check that we can call 'sim.save_restart_data()'
