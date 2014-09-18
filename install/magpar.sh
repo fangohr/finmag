@@ -90,8 +90,6 @@ fi
 # made.
 sed -i -e "s|MAGPAR_HOME = \$(HOME)/magpar-0.9|MAGPAR_HOME = ${MAGPAR_PREFIX}/magpar-0.9|" Makefile.in.defaults
 
-exit
-
 make -f Makefile.libs
 make
 
