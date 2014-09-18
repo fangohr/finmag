@@ -876,6 +876,10 @@ class TestSimulation(object):
         # Check that m is unchanged
         assert (sim.m == m_random).all()
 
+        # For completeness, check that running until a non-zero time does change m.
+        sim.run_until(1e-14)
+        assert not np.allclose(sim.m, m_random)
+
     def test_can_call_save_restart_data_on_a_fresh_simulation_object(self, tmpdir):
         """
         Regression test to check that we can call 'sim.save_restart_data()'
