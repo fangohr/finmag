@@ -861,6 +861,18 @@ class TestSimulation(object):
         assert np.allclose(sim.m, m_random)
         assert np.allclose(sim.m_field.f.vector().array(), m_random)
 
+    def test_can_call_save_restart_data_on_a_fresh_simulation_object(self, tmpdir):
+        """
+        Regression test to check that we can call 'sim.save_restart_data()'
+        on a newly created simulation object (this used to fail because no
+        time integrator was present).
+        """
+        os.chdir(str(tmpdir))
+
+        sim = sim_with(self.mesh, Ms=8.6e5, m_init=(1, 0, 0), alpha=1.0,
+                       unit_length=1e-9, A=13.0e-12, demag_solver='FK')
+        sim.save_restart_data('my_restart_data.npz')
+
 
 def test_sim_with(tmpdir):
     """
