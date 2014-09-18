@@ -118,6 +118,7 @@ class Simulation(object):
         self.Ms = Ms
         self.unit_length = unit_length
         self.integrator_backend = integrator_backend
+        self._integrator = None
         self.S1 = df.FunctionSpace(
             mesh, "Lagrange", 1, constrained_domain=self.pbc)
         self.S3 = df.VectorFunctionSpace(
@@ -571,9 +572,23 @@ class Simulation(object):
         """
         return helpers.probe_along_line(self.get_field_as_dolfin_function(field_type, region=region), pt_start, pt_end, N)
 
+    def has_integrator(self):
+        return (self._integrator != None)
+
+    def _get_integrator(self):
+        if not self.has_integrator():
+            self.create_integrator()
+            assert self.has_integrator()
+        return self._integrator
+
+    def _set_integrator(self, value):
+        self._integrator = value
+
+    integrator = property(_get_integrator, _set_integrator)
+
     def create_integrator(self, backend=None, **kwargs):
 
-        if not hasattr(self, "integrator"):
+        if not self.has_integrator():
             if backend == None:
                 backend = self.integrator_backend
             log.info(
@@ -584,16 +599,16 @@ class Simulation(object):
                 # fixed when the parallel sundials is completed. Sep 2014
                 raise Exception(
                     "The next line has been deactivated - fix to proceed with parallel")
-                #self.integrator = cvode_petsc.CvodeSolver(self.llg.sundials_rhs_petsc, 0, self.m_petsc, self.reltol, self.abstol)
+                #self._integrator = cvode_petsc.CvodeSolver(self.llg.sundials_rhs_petsc, 0, self.m_petsc, self.reltol, self.abstol)
             elif self.kernel == 'llg_stt':
-                self.integrator = SundialsIntegrator(
+                self._integrator = SundialsIntegrator(
                     self.llg, self.llg.dy_m, method="bdf_diag", **kwargs)
             elif self.kernel == 'sllg':
-                self.integrator = self.llg
+                self._integrator = self.llg
             else:
-                self.integrator = llg_integrator(
+                self._integrator = llg_integrator(
                     self.llg, self.llg._m_field, backend=backend, **kwargs)
-                self.integrator.integrator.set_scalar_tolerances(
+                self._integrator.integrator.set_scalar_tolerances(
                     self.reltol, self.abstol)
 
             # HF: the following code works only for sundials, i.e. not for
@@ -620,9 +635,10 @@ class Simulation(object):
             self.tablewriter.modify_entity_get_method(
                 'dmdt', lambda sim: sim.dmdt_max)
         else:
+            import ipdb; ipdb.set_trace()
             log.warning(
-                "Cannot create integrator - exists already: {}".format(self.integrator))
-        return self.integrator
+                "Cannot create integrator - exists already: {}".format(self._integrator))
+        return self._integrator
 
     def set_tol(self, reltol=1e-6, abstol=1e-6):
         """
@@ -644,9 +660,6 @@ class Simulation(object):
         The lower-level counterpart to run_until, this runs without a schedule.
 
         """
-        if not hasattr(self, "integrator"):
-            self.create_integrator()
-
         log.debug("Advancing time to t = {} s.".format(t))
         self.integrator.advance_time(t)
         # The following line is necessary because the time integrator may
@@ -659,9 +672,6 @@ class Simulation(object):
         Run the simulation until the given time `t` is reached.
 
         """
-        if not hasattr(self, "integrator"):
-            self.create_integrator()
-
         log.info("Simulation will run until t = {:.2g} s.".format(t))
         self.t_max = t
 
@@ -733,7 +743,7 @@ class Simulation(object):
         # is created and the other setting that the user provided such as the tolerances
         # actually doesn't have influence at all.
         self.integrator = llg_integrator(self.llg, self.llg._m_field,
-                                         backend=self.integrator_backend, t0=t0)
+                                          backend=self.integrator_backend, t0=t0)
 
         self.set_tol(self.reltol, self.abstol)
         self.scheduler.reset(t0)
@@ -825,7 +835,7 @@ class Simulation(object):
         If an integrator is already present in the simulation, call
         its reinit() method. Otherwise do nothing.
         """
-        if hasattr(self, "integrator"):
+        if self.has_integrator():
             self.integrator.reinit()
         else:
             log.warning("Integrator reinit was requested, but no integrator "
