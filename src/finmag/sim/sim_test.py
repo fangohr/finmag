@@ -14,7 +14,7 @@ from finmag import sim_with, Simulation, set_logging_level, normal_mode_simulati
 from finmag.normal_modes.eigenmodes import eigensolvers
 from finmag.example import barmini
 from math import sqrt, cos, sin, pi
-from finmag.util.helpers import assert_number_of_files, vector_valued_function, logging_status_str
+from finmag.util.helpers import assert_number_of_files, vector_valued_function, logging_status_str, fnormalise
 from finmag.util.meshes import nanodisk, plot_mesh_with_paraview, mesh_volume, from_csg
 from finmag.util.mesh_templates import EllipticalNanodisk, Sphere
 from finmag.sim import sim_helpers
@@ -844,6 +844,54 @@ class TestSimulation(object):
         assert len(demag_bottom) == 3 * submesh_bottom.num_vertices()
         assert len(demag_full) == 3 * sim.mesh.num_vertices()
 
+    def test_setting_m_also_sets_the_field(self):
+        """
+        Check that setting 'sim.m' will also set the value for the
+        underlying field object 'sim.m_field'.
+        """
+        # Create a new simulation
+        sim = sim_with(self.mesh, Ms=8.6e5, m_init=(1, 0, 0), alpha=1.0,
+                       unit_length=1e-9, A=13.0e-12, demag_solver='FK')
+
+        # Set sim.m to a random (normalised) vector
+        m_random = fnormalise(np.random.random_sample(sim.m.shape))
+        sim.m = m_random
+
+        # Check that both sim.m and sim.m_field have the newly assigned value
+        assert np.allclose(sim.m, m_random)
+        assert np.allclose(sim.m_field.f.vector().array(), m_random)
+
+    def test_run_until_0_does_not_change_m(self):
+        """
+        Check that calling "sim.run_until(0)" does not affect the value of m.
+        """
+        # Create a new simulation
+        sim = sim_with(self.mesh, Ms=8.6e5, m_init=(1, 0, 0), alpha=1.0,
+                       unit_length=1e-9, A=13.0e-12, demag_solver='FK')
+
+        # Set sim.m to a random vector and run until time 0
+        m_random = np.random.random_sample(sim.m.shape)
+        sim.set_m(m_random, normalise=False)
+
+        # Check that m is unchanged
+        assert (sim.m == m_random).all()
+
+        # For completeness, check that running until a non-zero time does change m.
+        sim.run_until(1e-14)
+        assert not np.allclose(sim.m, m_random)
+
+    def test_can_call_save_restart_data_on_a_fresh_simulation_object(self, tmpdir):
+        """
+        Regression test to check that we can call 'sim.save_restart_data()'
+        on a newly created simulation object (this used to fail because no
+        time integrator was present).
+        """
+        os.chdir(str(tmpdir))
+
+        sim = sim_with(self.mesh, Ms=8.6e5, m_init=(1, 0, 0), alpha=1.0,
+                       unit_length=1e-9, A=13.0e-12, demag_solver='FK')
+        sim.save_restart_data('my_restart_data.npz')
+
 
 def test_sim_with(tmpdir):
     """
@@ -1155,7 +1203,7 @@ def test_normal_mode_simulation_with_periodic_boundary_conditions_9x9(tmpdir):
     os.chdir(str(tmpdir))
     csg_string = textwrap.dedent("""
         algebraic3d
-        solid cube = orthobrick (0, 0, 0; 150, 150, 3) -maxh = 5.0;
+        solid cube = orthobrick (0, 0, 0; 150, 150, 3) -maxh = 10.0;
         solid cylA = cylinder (25,   25, 0; 25,   25, 1; 20);
         solid cylB = cylinder (75,   25, 0; 75,   25, 1; 20);
         solid cylC = cylinder (125,  25, 0; 125,  25, 1; 20);
