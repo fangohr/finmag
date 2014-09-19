@@ -1,4 +1,6 @@
 import os
+import re
+import sh
 import sys
 import logging
 import finmag
@@ -137,15 +139,26 @@ def get_version_sundials():
 
 
 def get_version_paraview():
-    # XXX TODO: There should be a more cross-platform way of
-    # determining the Paraview version, but the only method I could
-    # find is in the thread [1], and it doesn't work any more for
-    # recent versions of Paraview. It's quite annoying that something
-    # as simple as "import paraview; paraview.__version__" doesn't
-    # work...
-    #
-    # [1] http://blog.gmane.org/gmane.comp.science.paraview.user/month=20090801/page=34
-    return get_debian_package_version('paraview')
+    try:
+        # XXX TODO: There should be a more cross-platform way of
+        # determining the Paraview version, but the only method I could
+        # find is in the thread [1], and it doesn't work any more for
+        # recent versions of Paraview. It's quite annoying that something
+        # as simple as "import paraview; paraview.__version__" doesn't
+        # work...
+        #
+        # [1] http://blog.gmane.org/gmane.comp.science.paraview.user/month=20090801/page=34
+        version = get_debian_package_version('paraview')
+    except:
+        try:
+            sh.pvpython('--version')
+        except sh.ErrorReturnCode_1 as ex:
+            # This is fine. (Oddly, pvpython returns
+            # with exit code 1 if successful...)
+            m = re.match('paraview version (.*)', ex.stderr.strip())
+            version = m.group(1)
+
+    return version
 
 
 def running_binary_distribution():
