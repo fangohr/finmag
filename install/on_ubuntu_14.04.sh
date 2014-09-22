@@ -58,6 +58,10 @@ sudo PETSC_DIR=/usr/lib/petsc SLEPC_DIR=/usr/lib/slepc pip install\
  https://bitbucket.org/slepc/slepc4py/downloads/slepc4py-3.4.tar.gz\
  --allow-all-external
 
-# fenicstools: this relies on pyvtk and h5py
+# fenicstools: this relies on pyvtk and h5py. Be sure to install the release of
+# fenicstools that corresponds with the latest stable dolfin release, otherwise
+# some functionality may be missing.
 sudo apt-get install python-pyvtk python-h5py
-sudo pip install git+https://github.com/mikaem/fenicstools.git
+sudo pip install --upgrade\
+ https://github.com/mikaem/fenicstools/archive/v1.4.0.tar.gz
+
