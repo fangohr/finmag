@@ -64,15 +64,26 @@ cd $source
 # raised when compiling Nmag's version of hdf5. It is just a C++ comment
 # in a C file. (in nmag-0.2.1/hdf5/tools/lib/h5diff.c)
 # This patch converts it to a C comment.
-# If it looks as if the patch has been applied already, we carry on without
-# further user confirmation (-N)
 
 make .deps_hdf5_untar  # This should make the path available for the patch
                        # (though this feels dirty)
 
-pushd hdf5/tools/lib && patch -N < $NMAGPATCHPATH
-popd
+pushd hdf5/tools/lib
 
+# If the patch is not reversible, apply the patch. We enter this conditional
+# block on the first execution, but not afterwards. This change was implemented
+# to allow the installation script to continue execution if the patch has been
+# applied previously. This block might result in something like:
+#     1 out of 1 hunk FAILED
+# being printed. This seems to be acceptable.
+if ! patch -f -R -s --dry-run < $NMAGPATCHPATH; then
+    patch < $NMAGPATCHPATH
+    echo "Patch '$NMAGPATCHPATH' SUCCESSFULLY applied."
+else
+    echo "Patch '$NMAGPATCHPATH' already applied. Skipping..."
+fi
+
+popd
 make
 
 # Hack-ish fix because some executables in nmag are not installed with
