@@ -4,18 +4,26 @@ import dolfin as df
 import os
 import logging
 import subprocess
+from finmag.util.helpers import run_in_tmpdir
 
 logger = logging.getLogger(name='finmag')
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-def gen_magpar_conf(base_name, init_m,
-                    Ms=8.6e5, A=13e-12, K1=0, a=[0, 0, 1], alpha=0.1, demag=0):
+def gen_magpar_conf(base_name, init_m, Ms=8.6e5, A=13e-12, K1=0,
+                    a=[0, 0, 1], alpha=0.1, use_demag=False):
+    """
+    Generate magpar configuration files (in the current directory) which
+    can be used to run magpar and compute the various micromagnetic fields
+    for a simulation with the given parameters.
 
-    conf_path = os.path.join(MODULE_DIR, base_name)
-    if not os.path.exists(conf_path):
-        os.makedirs(conf_path)
-    logger.debug("Saving magpar files to {}.".format(conf_path))
+    If base_name='foo', the following files are created in the current directory:
+
+       foo.inp
+       foo.0000.inp
+       foo.krn
+       allopts.txt
+    """
 
     norm_a = (a[0] ** 2 + a[1] ** 2 + a[2] ** 2) ** 0.5
     tmp_mz = a[2] / norm_a
@@ -31,43 +39,33 @@ def gen_magpar_conf(base_name, init_m,
     krn_info = "  %f   %f   %e    0     %f    %e   %f   uni" % (
         theta, phi, K1, np.pi * 4e-7 * Ms, A, alpha
     )
-    with open(os.path.join(conf_path, base_name + ".krn"), "w") as krn_file:
+    with open(base_name + ".krn", "w") as krn_file:
         krn_file.write(krn_info)
 
     allopt = ["-simName ", base_name + "\n",
               "-init_mag ", "0\n",
               "-inp ", "0000\n",
-              "-demag ", str(demag)]
-    with open(os.path.join(conf_path, "allopt.txt"), "w") as allopt_file:
+              "-demag ", "1" if use_demag else "0"]
+    with open("allopt.txt", "w") as allopt_file:
         allopt_file.write("".join(allopt))
 
-    file_name = os.path.join(conf_path, base_name + ".inp")
+    file_name = base_name + ".inp"
     save_inp_of_inital_m(init_m, file_name)
 
-    file_name = os.path.join(conf_path, base_name + ".0000.inp")
+    file_name = base_name + ".0000.inp"
     save_inp_of_inital_m(init_m, file_name)
 
     logger.debug("Completed gen_magpar_conf()")
 
 
 def run_magpar(base_name):
-    magpar_cmd = (os.path.join("magpar.exe"))
-
-    save_path = os.getcwd()
-    new_path = os.path.join(MODULE_DIR, base_name)
-
-    logger.debug("Preparing to run magpar")
-    logger.debug("save_path = {}, new_path = {}".format(save_path, new_path))
-
-    os.chdir(new_path)
+    magpar_cmd = "magpar.exe"
 
     logger.info("About to call {}".format(magpar_cmd))
-
     subprocess.check_call(magpar_cmd, stdout=subprocess.PIPE)
 
     gzcmd = ("gunzip", base_name + ".0001.gz")
     subprocess.check_call(gzcmd)
-    os.chdir(save_path)
 
 
 def read_femsh(file_name):
@@ -159,8 +157,18 @@ def save_inp_of_inital_m(m, file_name):
 
 
 def get_field(base_name, field="anis"):
-    new_path = os.path.join(MODULE_DIR, base_name)
-    file_name = os.path.join(new_path, base_name + ".0001")
+    """
+    Read values for the given field from file with the given
+    base name.  Returns a pair `(nodes, field_vals)` where
+    `nodes` is an array of shape Nx3 containing the coordinates
+    of the mesh nodes and `field_vals` is a flat array.
+
+    TODO: Why are we returning a flat array here? Shouldn't this
+          be changed so that the field values are in the same
+          shape and order as the returned mesh nodes?  (Max, 18.9.2014)
+
+    """
+    file_name = base_name + ".0001"
     fields = read_inp_gz(file_name)
 
     if field == "anis":
@@ -182,7 +190,7 @@ def get_field(base_name, field="anis"):
     field = np.array([fx, fy, fz]).reshape(1, -1, order='C')[0]
     field = field / (np.pi * 4e-7)
 
-    file_name = os.path.join(new_path, base_name + ".0001.femsh")
+    file_name = base_name + ".0001.femsh"
     nodes, connectivity = read_femsh(file_name)
 
     return nodes, field
@@ -207,19 +215,17 @@ def compute_exch_magpar(m, **kwargs):
 
 
 def compute_demag_magpar(m, **kwargs):
-    return compute("demag", m, demag=1, **kwargs)
+    return compute("demag", m, use_demag=True, **kwargs)
 
 
 def compute(field_name, m, **kwargs):
-    base_name = "test_" + field_name
+    with run_in_tmpdir():
+        base_name = "test_" + field_name
 
-    gen_magpar_conf(base_name, m, **kwargs)
-    run_magpar(base_name)
+        gen_magpar_conf(base_name, m, **kwargs)
+        run_magpar(base_name)
 
-    nodes, field = get_field(base_name, field_name)
-
-    delete = ("rm", "-rf", os.path.join(MODULE_DIR, base_name))
-    subprocess.check_call(delete)
+        nodes, field = get_field(base_name, field_name)
 
     return nodes, field
 
