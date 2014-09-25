@@ -1873,6 +1873,24 @@ class TemporaryDirectory(object):
             self.tmpdir = None
 
 
+class run_in_tmpdir(object):
+
+    def __init__(self, keep=False):
+        self.keep = keep
+        self.cwd_bak = os.getcwd()
+
+    def __enter__(self):
+        self.tmpdir = tempfile.mkdtemp()
+        os.chdir(self.tmpdir)
+        return self.tmpdir
+
+    def __exit__(self, type, value, traceback):
+        if not self.keep:
+            shutil.rmtree(self.tmpdir)
+            self.tmpdir = None
+        os.chdir(self.cwd_bak)
+
+
 @contextmanager
 def ignored(*exceptions):
     """
