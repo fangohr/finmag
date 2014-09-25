@@ -518,6 +518,31 @@ def test_TemporaryDirectory():
     os.rmdir(tmpdir2)
 
 
+def test_run_in_tmpdir():
+    cwd_bak = os.getcwd()
+
+    # Inside the 'with' block we should be in the
+    # newly created temporary directory.
+    with run_in_tmpdir() as tmpdir:
+        assert os.getcwd() == tmpdir
+        assert tmpdir != cwd_bak
+
+    # Outside the 'with' block we should be back in
+    # the previous working directory and the temporary
+    # directory should be destroyed
+    assert os.getcwd() == cwd_bak
+    assert not os.path.exists(tmpdir)
+
+    # Using 'keep=True' the temporary directory should
+    # not be deleted.
+    with run_in_tmpdir(keep=True) as tmpdir2:
+        pass
+    assert os.path.exists(tmpdir2)
+
+    # Tidy up
+    os.rmdir(tmpdir2)
+
+
 def test_contextmanager_ignored(tmpdir):
     d = {}  # dummy dictionary
     s = 'foobar'
