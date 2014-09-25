@@ -1,4 +1,4 @@
-# Need to run this with bash, not sh. 
+# Need to run this with bash, not sh.
 
 set -o errexit
 
@@ -38,26 +38,30 @@ sudo pip install -U sphinx pytest aeon sh diff-match-patch
 # [Observation: We need IPython installed to be able to import finmag. So
 # we need to make sure to also install ipython.]
 
-# the debian 1404 package for ipython is 1.2, i.e. too old, so install 
+# the debian 1404 package for ipython is 1.2, i.e. too old, so install
 # via pip:
 sudo pip install -U ipython
 sudo pip install -U pyzmq
 
-# The next step is important but not working yet (HF 12 May 2014)
+# Eigenmodes need petsc4py. SLEPc and PETSc should also be installed for this.
+sudo apt-get install python-petsc4py libpetsc3.4.2 libpetsc3.4.2-dev\
+ libslepc3.4.2 libslepc3.4.2-dev
 
-# Eigenmodes need petsc4py
-sudo apt-get install python-petsc4py
-
-
-# the following seems to have worked on osiris with ubunt14.04 but not on 
+# the following seems to have worked on osiris with ubunt14.04 but not on
 # Hans virtual machine with Ubuntu 14.04.
-export PETSC_DIR=/usr/lib/petsc
-export SLEPC_DIR=/usr/lib/slepc
-PETSC_DIR=/usr/lib/petsc SLEPC_DIR=/usr/lib/slepc sudo pip install https://bitbucket.org/slepc/slepc4py/downloads/slepc4py-3.4.tar.gz
+# export PETSC_DIR=/usr/lib/petsc
+# export SLEPC_DIR=/usr/lib/slepc
+# PETSC_DIR=/usr/lib/petsc SLEPC_DIR=/usr/lib/slepc sudo pip install https://bitbucket.org/slepc/slepc4py/downloads/slepc4py-3.4.tar.gz
 
+# The following works on virtual micromagnetics and Mark's machine.
+sudo PETSC_DIR=/usr/lib/petsc SLEPC_DIR=/usr/lib/slepc pip install\
+ https://bitbucket.org/slepc/slepc4py/downloads/slepc4py-3.4.tar.gz\
+ --allow-all-external
 
-
-# fenicstools
-# fenics tools relies on pyvtk and h5py
+# fenicstools: this relies on pyvtk and h5py. Be sure to install the release of
+# fenicstools that corresponds with the latest stable dolfin release, otherwise
+# some functionality may be missing.
 sudo apt-get install python-pyvtk python-h5py
-sudo pip install git+https://github.com/mikaem/fenicstools.git
+sudo pip install --upgrade\
+ https://github.com/mikaem/fenicstools/archive/v1.4.0.tar.gz
+
