@@ -1,0 +1,9 @@
+The ./mshr_demag_test.py and ./netgen_demag_test.py files
+generate a large mesh with mshr and netgen respectively.
+The mesh is a hollow long cylinder, which is used in a small
+finmag simulation that has only Demag energy.
+ In the Osiris
+machine, the test fails for the mshr example, for any length of
+the mesh. For the netgen example, the memory blows up when
+using a length larger than L~1150 approximately, although for 
+L=1000, the memory usage is quite low, which is strange.
