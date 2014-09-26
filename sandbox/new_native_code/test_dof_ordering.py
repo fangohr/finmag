@@ -1,3 +1,4 @@
+import equation
 import numpy as np
 import dolfin as df
 

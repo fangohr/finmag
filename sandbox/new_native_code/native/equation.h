@@ -52,5 +52,9 @@ namespace dolfin { namespace finmag {
             std::unique_ptr<Slonczewski> stt_slonczewski;
             bool do_zhangli;
             std::unique_ptr<ZhangLi> stt_zhangli;
+
+            /* temporary measure to see if we have disabled dolfin's
+             * reordering of degrees of freedom. */
+            bool reorder_dofs_serial;
     };
 }}
