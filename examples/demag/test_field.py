@@ -25,7 +25,7 @@ def test_field():
     m = Field(S3, m_function)
 
     demag = Demag()
-    demag.setup(m, Ms, unit_length=1e-9)
+    demag.setup(m, Field(df.FunctionSpace(mesh, 'DG', 0), Ms), unit_length=1e-9)
 
     # Compute demag field
     H_demag = demag.compute_field()
