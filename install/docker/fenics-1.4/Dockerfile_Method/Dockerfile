@@ -8,11 +8,8 @@ MAINTAINER finmag-team <fangohr@soton.ac.uk>
 RUN sudo gdebi --non-interactive /tmp/finmag.deb 
 RUN sudo pip install aeon sh
 # for easier debugging the docker file creation
-RUN sudo apt-get install aptitude
-RUN sudo apt-get libboost-python-dev python-netifaces
-
-
-
+#RUN sudo apt-get install aptitude
+RUN sudo apt-get install -y libboost-python-dev python-netifaces
 
 
 
@@ -21,3 +18,6 @@ RUN sudo apt-get libboost-python-dev python-netifaces
 # sudo docker run -i -t 52762ca8da0a bash -i
 # where the 52762ca8da0a needs to be replaced by the right key that is displayed
 # at the end of the successful dockerfile creation.
+
+#
+# sudo docker run -i -t --volume=`pwd`:/home/root:rw  -t 9ad62e6d390a bash -i 
