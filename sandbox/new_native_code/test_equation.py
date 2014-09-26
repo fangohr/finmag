@@ -3,6 +3,7 @@ import numpy as np
 import dolfin as df
 from equation import equation_module as eq
 
+
 @pytest.fixture
 def setup():
     mesh = df.UnitIntervalMesh(2)
@@ -16,6 +17,22 @@ def setup():
     H.assign(df.Constant((0, 1, 0)))
     dmdt = df.Function(W)
     return mesh, V, alpha, W, m, H, dmdt
+
+
+def setup_for_debugging():
+    """
+    Sets up equation for greater convenience during interactive debugging.
+
+    """
+    mesh, V, alpha, W, m, H, dmdt = setup()
+    equation = eq.Equation(m.vector(), H.vector(), dmdt.vector())
+    equation.set_alpha(alpha.vector())
+    equation.set_gamma(1.0)
+    equation.solve()
+    return {'mesh': mesh,
+            'V': V, 'alpha': alpha,
+            'W': W, 'm': m, 'H': H, 'dmdt': dmdt,
+            'equation': equation}
 
 
 def same(v, w):
@@ -73,6 +90,18 @@ def test_alpha_keeps_track_of_change(setup):
     assert same(alpha.vector(), equation.get_alpha())
 
 
+def test_solve(setup):
+    mesh, V, alpha, W, m, H, dmdt = setup
+    equation = eq.Equation(m.vector(), H.vector(), dmdt.vector())
+    equation.set_alpha(alpha.vector())
+    equation.set_gamma(1.0)
+    equation.solve()
+
+    dmdt_expected = df.Function(W)
+    dmdt_expected.assign(df.Constant((0.0, 0.5, -0.5)))
+    assert same(dmdt.vector(), dmdt_expected.vector())
+
+
 def test_pinning(setup):
     mesh, V, alpha, W, m, H, dmdt = setup
     equation = eq.Equation(m.vector(), H.vector(), dmdt.vector())
@@ -84,7 +113,9 @@ def test_pinning(setup):
     equation.solve()
     dmdt_node0 = dmdt.vector()[0:3]
     dmdt_node_others = dmdt.vector()[3:]
+    # check that first node is pinned, i.e. dmdt = 0 there
     assert np.all(dmdt_node0.array() == np.array((0, 0, 0)))
+    # check that we don't accidentally set the whole dmdt array to zero
     assert not np.all(dmdt_node_others.array() == np.array((0, 0, 0, 0, 0, 0)))
 
 
