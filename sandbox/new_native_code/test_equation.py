@@ -19,6 +19,22 @@ def setup():
     return mesh, V, alpha, W, m, H, dmdt
 
 
+def setup_for_debugging():
+    """
+    Sets up equation for greater convenience during interactive debugging.
+
+    """
+    mesh, V, alpha, W, m, H, dmdt = setup()
+    equation = eq.Equation(m.vector(), H.vector(), dmdt.vector())
+    equation.set_alpha(alpha.vector())
+    equation.set_gamma(1.0)
+    equation.solve()
+    return {'mesh': mesh,
+            'V': V, 'alpha': alpha,
+            'W': W, 'm': m, 'H': H, 'dmdt': dmdt,
+            'equation': equation}
+
+
 def same(v, w):
     """
     Returns True if the vectors `v` and `w` have the same entries.
