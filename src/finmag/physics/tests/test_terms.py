@@ -1,7 +1,6 @@
 from os import path
 import dolfin as df
-
-NATIVE_DIR = path.join(path.dirname(path.abspath(__file__)), "native")
+from finmag.physics.equation import NATIVE_DIR
 
 with open(path.join(NATIVE_DIR, "terms.h"), "r") as header:
     code = header.read()

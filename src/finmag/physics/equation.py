@@ -1,11 +1,11 @@
 """
-This module will one day solve the LLG equation or one of its many variants.
+This module solves the LLG equation or one of its many variants.
 
-Using native code tied in by instant, it shall allow to specify parameters
-and the terms of the equation that are to be used and then solve for dm/dt.
+Using native code tied in by instant, it allows to specify parameters
+and the terms of the equation that are to be used and then solves for dm/dt.
 
 No effective field computation, no saving of magnetisation to file or
-whatever, just straight up solving of the equation.
+whatever, just straight up solving of the equation of motion.
 
 """
 from os import path
@@ -22,3 +22,5 @@ equation_module = df.compile_extension_module(
     source_directory=NATIVE_DIR,
     sources=["equation.cpp", "terms.cpp", "derivatives.cpp"],
     include_dirs=[NATIVE_DIR],)
+
+Equation = equation_module.Equation
