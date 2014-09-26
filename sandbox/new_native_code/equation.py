@@ -8,14 +8,17 @@ No effective field computation, no saving of magnetisation to file or
 whatever, just straight up solving of the equation.
 
 """
-import os
+from os import path
 import dolfin as df
 
-with open("native/equation.h", "r") as header:
+MODULE_DIR = path.dirname(path.abspath(__file__))
+NATIVE_DIR = path.join(MODULE_DIR, "native")
+
+with open(path.join(NATIVE_DIR, "equation.h"), "r") as header:
     code = header.read()
 
 equation_module = df.compile_extension_module(
-        code=code,
-        source_directory="native",
-        sources=["equation.cpp", "terms.cpp", "derivatives.cpp"],
-        include_dirs=[".", os.path.abspath("native")],)
+    code=code,
+    source_directory=NATIVE_DIR,
+    sources=["equation.cpp", "terms.cpp", "derivatives.cpp"],
+    include_dirs=[NATIVE_DIR],)
