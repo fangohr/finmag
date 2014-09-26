@@ -49,7 +49,7 @@ def setup_finmag():
     m.set_with_numpy_array_debug(m_gen(coords).flatten())
 
     exchange = Exchange(A)
-    exchange.setup(m, Ms)
+    exchange.setup(m, Field(df.FunctionSpace(mesh, 'DG', 0), Ms))
 
     H_exc = df.Function(S3)
     H_exc.vector()[:] = exchange.compute_field()

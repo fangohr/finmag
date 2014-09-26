@@ -42,7 +42,7 @@ def three_dimensional_problem():
     C = 1.3e-11
 
     u_exch = Exchange(C)
-    u_exch.setup(m, Ms)
+    u_exch.setup(m, Field(df.FunctionSpace(mesh, 'DG', 0), Ms))
     finmag_exch = u_exch.compute_field()
     nodes, magpar_exch = magpar.compute_exch_magpar(m, A=C, Ms=Ms)
     print magpar_exch
