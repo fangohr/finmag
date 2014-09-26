@@ -20,7 +20,7 @@ def uniformly_magnetised_sphere():
     solutions = []
     for solver in solvers:
         demag = Demag(solver)
-        demag.setup(m, Ms, unit_length=1e-9)
+        demag.setup(m, Field(df.FunctionSpace(mesh, 'DG', 0), Ms), unit_length=1e-9)
         demag.H = demag.compute_field()
         solutions.append(demag)
     return solutions
