@@ -22,7 +22,7 @@ def setup_finmag():
     Ms = 1
 
     demag = Demag()
-    demag.setup(m, Ms, unit_length=1e-9)
+    demag.setup(m, Field(df.FunctionSpace(mesh, 'DG', 0), Ms), unit_length=1e-9)
     H = demag.compute_field()
 
     return dict(m=m, H=H, Ms=Ms, S3=S3, table=start_table())
