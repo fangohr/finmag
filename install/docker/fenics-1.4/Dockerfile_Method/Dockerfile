@@ -3,6 +3,9 @@ FROM fenicsproject/stable-ppa:1.4.0
 RUN apt-get update
 RUN apt-get -y install gdebi python-pip
 ADD ./finmag.deb /tmp/finmag.deb
+ADD ./.set-MAC-address.sh /root/.set-MAC-address.sh 
+RUN mkdir -p /root/.finmag
+ADD ./License /root/.finmag/License
 MAINTAINER finmag-team <fangohr@soton.ac.uk>
 # install finmag with dependencies
 RUN sudo gdebi --non-interactive /tmp/finmag.deb 
