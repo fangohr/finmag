@@ -1,0 +1,17 @@
+To create the docker container, we need a finmag.deb file in this directory.
+
+Then run 'sudo sh build-docker-image.sh'
+
+Next steps:
+
+- provide license file 
+- understand where the container is stored
+- how we can port the container to a different machine (Iridis eventually)
+- how can we run the docker contain without sudo rights (on iridis, say)
+- can we (and should we) not run simulations as root inside the container
+
+We also need an example to run a simulation script stored in the local
+directory inside the container. Should be straightforward, but would
+be good to add this here somewhere.
+
+Mark and Hans, 26 September 2014
