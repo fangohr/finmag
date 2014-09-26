@@ -2,15 +2,17 @@
 
 set -o errexit
 
-ROOTDIR=$(dirname $(readlink -f ${BASH_SOURCE[0]}))
+# Specify the Sundials version
+SUNDIALS=sundials-2.5.0
 
+# Read SUNDIALS_PREFIX from the environment. If it is not defined, use ../external_deps as default value.
+SUNDIALS_PREFIX=$(readlink -f ${SUNDIALS_PREFIX:-../external_deps})
 
+INSTALL_DIR=${SUNDIALS_PREFIX}/${SUNDIALS}
+TMP_BUILD_DIR=$(mktemp -d)
 
-# The default installation location is $HOME. Set
-# the SUNDIALS_PREFIX environment variable to change this.
-SUNDIALS_PREFIX=${SUNDIALS_PREFIX:-$HOME}
-
-read -p "Sundials will be installed in '$SUNDIALS_PREFIX' (this can be changed by setting the environment variable SUNDIALS_PREFIX). Is this correct? (y/n)" -r
+# Ask for confirmation on install location
+read -p "Sundials will be installed in the subdirectory '${SUNDIALS}' of the directory '${SUNDIALS_PREFIX}' (this can be changed by setting the environment variable SUNDIALS_PREFIX). Is this correct? (y/n)" -r
 echo
 
 if ! [[ $REPLY =~ ^[Yy]$ ]]; then
@@ -18,29 +20,26 @@ if ! [[ $REPLY =~ ^[Yy]$ ]]; then
     exit 0
 fi
 
-source=sundials-2.5.0
-
 if ! [ -e ${SUNDIALS_PREFIX} ]; then
    install -d ${SUNDIALS_PREFIX};
    echo "Creating directory $SUNDIALS_PREFIX";
 fi
 
-cd $SUNDIALS_PREFIX
-if [ ! -e $source.tar.gz ]
-then
-   wget http://ftp.mcs.anl.gov/pub/petsc/externalpackages/$source.tar.gz
-fi
+# Download and extract Sundials tarball in temporary build directory
+echo "Building Sundials in the temporary directory '${TMP_BUILD_DIR}' (which will be deleted after successful installation)."
+cd ${TMP_BUILD_DIR}
+wget http://ftp.mcs.anl.gov/pub/petsc/externalpackages/$SUNDIALS.tar.gz
+tar xzvf $SUNDIALS.tar.gz
 
-if [ ! -e $source ]
-then
-    tar xzvf $source.tar.gz
-fi
-
-cd $source
-./configure --prefix=${SUNDIALS_PREFIX}/$source/sundials --with-cflags=-fPIC --enable-shared --enable-lapack --enable-mpi
-#./configure
+# Build Sundials in temporary build directory and install it in $INSTALL_DIR
+cd ${TMP_BUILD_DIR}/$SUNDIALS
+./configure --prefix=${INSTALL_DIR} --with-cflags=-fPIC --enable-shared --enable-lapack --enable-mpi
 make
 make install
 
+# Remove temporary build directory
+echo "Removing directory ${TMP_BUILD_DIR}"
+rm -rf ${TMP_BUILD_DIR}
 
-echo "Please include ${SUNDIALS_PREFIX}/$source/sundials/include and add the path  ${SUNDIALS_PREFIX}/$source/sundials/lib to link the sundials."
+
+echo "In order to use this installation, add '${SUNDIALS_PREFIX}/$SUNDIALS/include' to the include directories and point the linker to '${SUNDIALS_PREFIX}/$SUNDIALS/sundials/lib'."
