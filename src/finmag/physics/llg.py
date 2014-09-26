@@ -52,8 +52,8 @@ class LLG(object):
         self.unit_length = unit_length
         self.do_slonczewski = False
         self.do_zhangli = False
-        self.effective_field = EffectiveField(
-            S3, self._m_field, self.Ms, self.unit_length)
+        self.effective_field = EffectiveField(self._m_field,
+                                              self.Ms, self.unit_length)
         # will be computed on demand, and carries volume of the mesh
         self.Volume = None
 

@@ -9,11 +9,9 @@ logger = logging.getLogger(name="finmag")
 
 class EffectiveField(object):
 
-    def __init__(self, S3, m, Ms, unit_length):
+    def __init__(self, m, Ms, unit_length):
         """
         *Arguments*
-
-        S3:  dolfin.VectorFunctionSpace
 
         m:  Field
 
@@ -21,7 +19,6 @@ class EffectiveField(object):
 
         unit_length:  float
         """
-        self.S3 = S3
         self.m_field = m
         self.Ms = Ms
         self.unit_length = unit_length
@@ -165,4 +162,4 @@ class EffectiveField(object):
 
     def get_dolfin_function(self, interaction_name, region=None):
         interaction = self.get(interaction_name)
-        return vector_valued_function(interaction.compute_field(), self.S3)
+        return vector_valued_function(interaction.compute_field(), self.m_field.functionspace)
