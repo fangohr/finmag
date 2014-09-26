@@ -38,7 +38,7 @@ def demag_energy(solver):
     m = Field(S3, m_function)
 
     demag = Demag(solver)
-    demag.setup(m, Ms, unit_length=1)
+    demag.setup(m, Field(df.FunctionSpace(mesh, 'DG', 0), Ms), unit_length=1)
 
     E = demag.compute_energy()
     rel_error = abs(E - E_analytical) / abs(E_analytical)
