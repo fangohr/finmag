@@ -41,8 +41,8 @@ class MyLLG(LLG):
 
         a = inner(u, v) * dx
         L = inner((-p * cross(M, H)
-                   - p * alpha / Ms * cross(M, cross(M, H))
-                   - c * (inner(M, M) - Ms ** 2) * M / Ms ** 2), v) * dx
+                   - p * alpha / Ms.f * cross(M, cross(M, H))
+                   - c * (inner(M, M) - Ms.f ** 2) * M / Ms.f ** 2), v) * dx
 
         self.a, self.L = a, L
 
