@@ -43,7 +43,7 @@ class LLG_STT(object):
 
         self.set_default_values()
         self.effective_field = EffectiveField(
-            self.S3, self._m_field, self.Ms, self.unit_length)
+            self._m_field, self.Ms, self.unit_length)
 
         self._t = 0
 
