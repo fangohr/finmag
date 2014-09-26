@@ -140,7 +140,7 @@ class PEQBuilder(object):
                 M_array = np.array(m(*rtup))
                 q[dof] = Ms * np.dot(n, -M_array + gphia_array)
             except:
-                q[dof] = self.movepoint(rtup, n, m, Ms, gradphia)
+                q[dof] = self.movepoint(rtup, n, m, Ms.f, gradphia)
         return q
 
     def movepoint(self, rtup, n, m, Ms, gradphia):
@@ -188,4 +188,4 @@ class PEQBuilder(object):
                                                 point could not be moved inside the mesh \
                                                 please use box method or reprogram \
                                                 solver_gcr_qvector.movepoint")
-        return Ms * np.dot(n, -M_array + gphia_array)
+        return Ms.f * np.dot(n, -M_array + gphia_array)

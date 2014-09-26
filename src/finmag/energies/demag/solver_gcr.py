@@ -282,7 +282,7 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver, PEQBuilder):
 
         # Source term depends on m (code-block 1 - second line)
         # So it should be recalculated at every time step.
-        f = -self.Ms * (df.div(self.m.f) * self.v) * df.dx  # Source term
+        f = -self.Ms.f * (df.div(self.m.f) * self.v) * df.dx  # Source term
         F = df.assemble(f)
         self.phia_bc.apply(F)
 
