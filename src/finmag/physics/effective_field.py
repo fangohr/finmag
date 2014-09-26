@@ -78,8 +78,8 @@ class EffectiveField(object):
 
         """
         if t is None and self.need_time_update:
-            raise ValueError(
-                "Some interactions require a time update, but no time step was given.")
+            raise ValueError("Some interactions require a time update, "
+                             "but no time step was given.")
 
         for update in self.need_time_update:
             update(t)
@@ -162,4 +162,5 @@ class EffectiveField(object):
 
     def get_dolfin_function(self, interaction_name, region=None):
         interaction = self.get(interaction_name)
-        return vector_valued_function(interaction.compute_field(), self.m_field.functionspace)
+        return vector_valued_function(interaction.compute_field(),
+                                      self.m_field.functionspace)
