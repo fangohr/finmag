@@ -39,7 +39,8 @@ def test_dmi_uses_unit_length_2dmesh():
         m_expr = df.Expression(("0", "cos(k * x[0])", "sin(k * x[0])"), k=k)
         m = Field(S3, m_expr, name='m')
         dmi = DMI(D)
-        dmi.setup(m, Ms, unit_length=unit_length)
+        Ms_dg = Field(df.FunctionSpace(mesh, 'DG', 0), Ms)
+        dmi.setup(m, Ms_dg, unit_length=unit_length)
         energies.append(dmi.compute_energy())
 
         H = df.Function(S3)
@@ -77,7 +78,7 @@ def test_dmi_pbc2d():
     m = Field(S3, m_expr, name='m')
 
     dmi = DMI(1)
-    dmi.setup(m, 1)
+    dmi.setup(m, Field(df.FunctionSpace(mesh, 'DG', 0), 1))
     field = dmi.compute_field()
 
     assert np.max(field) < 1e-15

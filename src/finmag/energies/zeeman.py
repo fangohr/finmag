@@ -65,7 +65,7 @@ class Zeeman(object):
         self.H = helpers.vector_valued_function(
             value, self.m.functionspace, **self.kwargs)
         self.H.rename('H_ext', 'H_ext')
-        self.E = - mu0 * self.Ms * df.dot(self.m.f, self.H)  # Energy density.
+        self.E = - mu0 * self.Ms.f * df.dot(self.m.f, self.H)  # Energy density.
 
     def average_field(self):
         """
@@ -82,7 +82,7 @@ class Zeeman(object):
         return E
 
     def energy_density(self):
-        return df.project(df.dot(self.m.f, self.H) * self.Ms * -mu0, self.S1).vector().array()
+        return df.project(df.dot(self.m.f, self.H) * self.Ms.f * -mu0, self.S1).vector().array()
 
     def energy_density_function(self):
         if not hasattr(self, "E_density_function"):

@@ -16,12 +16,13 @@ volume = 4 * pi * (radius * unit_length) ** 3 / 3
 
 def setup_demag_sphere(Ms):
     mesh = sphere(r=radius, maxh=maxh)
+    Ms_field = Field(df.FunctionSpace(mesh, 'DG', 0), Ms)
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
     m_function = df.Function(S3)
     m_function.assign(df.Constant((1, 0, 0)))
     m = Field(S3, m_function)
     demag = FKDemag()
-    demag.setup(m, Ms, unit_length)
+    demag.setup(m, Ms_field, unit_length)
     return demag
 
 
@@ -34,7 +35,7 @@ def test_interaction_accepts_name():
 
 
 def test_demag_field_for_uniformly_magnetised_sphere():
-    demag = setup_demag_sphere(Ms=1)
+    demag = setup_demag_sphere(1)
     H = demag.compute_field().reshape((3, -1))
     H_expected = np.array([-1.0 / 3.0, 0.0, 0.0])
     print "Got demagnetising field H =\n{}.\nExpected mean H = {}.".format(
@@ -53,8 +54,8 @@ def test_demag_field_for_uniformly_magnetised_sphere():
 
 @pytest.mark.slow  # this test needs a minute to complete
 def test_thin_film_argument_saves_time_on_thin_film():
-    Ms = 8e5
     mesh = box(0, 0, 0, 500, 50, 1, maxh=2.0, directory="meshes")
+    Ms = Field(df.FunctionSpace(mesh, 'DG', 0), 8e5)
     unit_length = 1e-9
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
     m_function = df.Function(S3)

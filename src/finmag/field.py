@@ -49,6 +49,7 @@ class Field(object):
         self.f = df.Function(self.functionspace)  # Create a zero-function.
 
         if value is not None:
+            self.value = value
             self.set(value, normalised=normalised)
 
         self.name = name
@@ -83,6 +84,12 @@ class Field(object):
             else:
                 raise TypeError('Function and field functionspaces '
                                 'do not match')
+
+        elif isinstance(value, Field):
+            #if value.functionspace == self.functionspace:
+            self.f = value.f
+            #else:
+            #    raise TypeError('Functionspaces do not match')
 
         # Generic vector type value
         # appropriate for both scalar and vector fields.
