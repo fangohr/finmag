@@ -86,7 +86,7 @@ class Exchange(EnergyBase):
             return res
 
         A = convert_to_number(self.A)
-        Ms = convert_to_number(self.Ms)
+        Ms = self.Ms
         return exchange_length(A, Ms)
 
     @mtimed

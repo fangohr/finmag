@@ -102,7 +102,7 @@ class EnergyBase(object):
         self.E = E_integrand * df.dx
         self.nodal_E = df.dot(E_integrand, df.TestFunction(self.S1)) * df.dx
         self.dE_dm = df.Constant(-1.0 / mu0) * \
-            df.derivative(E_integrand / self.Ms * df.dx, self.m.f)
+            df.derivative(E_integrand / self.Ms.f * df.dx, self.m.f)
 
         self.dim = m.mesh_dim()
         self.nodal_volume_S1 = nodal_volume(self.S1, self.unit_length)

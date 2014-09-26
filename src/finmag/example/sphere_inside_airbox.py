@@ -1,3 +1,5 @@
+import dolfin as df
+from finmag.field import Field
 from finmag.sim.sim import sim_with
 from finmag.util.meshes import sphere_inside_box
 from finmag.util.helpers import scalar_valued_dg_function
@@ -84,7 +86,7 @@ def sphere_inside_airbox(r_sphere=5.0, r_shell=10.0, l_box=50.0, maxh_sphere=2.0
             return Ms
         else:
             return 1.
-    Ms_fun = scalar_valued_dg_function(Ms_pyfun, mesh)
+    Ms_field = Field(df.FunctionSpace(mesh, 'DG', 0), Ms_pyfun)
 
     def fun_region_marker(pt):
         if np.linalg.norm(pt - center_sphere) <= 0.5 * (r_sphere + r_shell):
@@ -92,7 +94,7 @@ def sphere_inside_airbox(r_sphere=5.0, r_shell=10.0, l_box=50.0, maxh_sphere=2.0
         else:
             return "air"
 
-    sim = sim_with(mesh, Ms_fun, m_init=m_init, A=A,
+    sim = sim_with(mesh, Ms_field, m_init=m_init, A=A,
                    unit_length=1e-9, name='sphere_inside_airbox', **kwargs)
     sim.mark_regions(fun_region_marker)
 
