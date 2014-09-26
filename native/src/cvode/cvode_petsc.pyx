@@ -36,6 +36,9 @@ cdef inline copy_nv2arr(N_Vector v, np_c.ndarray[realtype, ndim=1, mode='c'] np_
     memcpy(np_x.data, v_data, n*sizeof(realtype))
     return 0
 
+cdef int jtv(N_Vector v, N_Vector Jv, realtype t, N_Vector y, N_Vector fy, void *user_data, N_Vector tmp) except -1:
+     
+     return 0
 
 cdef int cv_rhs(realtype t, N_Vector yv, N_Vector yvdot, void* user_data) except -1:
 
@@ -71,15 +74,18 @@ cdef class CvodeSolver(object):
     cdef void *cv_rhs
     cdef callback_fun
     cdef cv_userdata user_data
-    
+    cdef jac_fun    
+
     cdef long int nsteps,nfevals,njevals
 
-    def __cinit__(self, callback_fun, t0, y0, rtol=1e-8, atol=1e-8, max_num_steps=100000):
-        
+    def __cinit__(self, callback_fun, t0, y0, jac_fun=None, rtol=1e-8, atol=1e-8, max_num_steps=100000):
+        # y0 should be a petsc array, and we update this y0 automatically when call the given call_back function
+	
         # Create the CVODE memory block and to specify the solution method (linear multistep method and nonlinear solver iteration type)
         self.cvode_mem = CVodeCreate(CV_BDF, CV_NEWTON);
         #self.cvode_mem = CVodeCreate(CV_ADAMS, CV_FUNCTIONAL);
-
+	
+	self.jac_fun = jac_fun
         self.init_ode(callback_fun, t0, y0)
         self.set_options(rtol, atol, max_num_steps)
 

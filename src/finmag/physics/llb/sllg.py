@@ -47,7 +47,7 @@ class SLLG(object):
         self.checking_length = checking_length
         self.unit_length = unit_length
         self.DG = df.FunctionSpace(self.mesh, "DG", 0)
-        self._Ms_dg = df.Function(self.DG)
+        self._Ms_dg = Field(self.DG)
         self.effective_field = EffectiveField(
             self._m_field, self.Ms, self.unit_length)
 
@@ -199,7 +199,7 @@ class SLLG(object):
         self._Ms_dg.name = 'Saturation magnetisation'
         self.volumes = df.assemble(df.TestFunction(self.S1) * df.dx)
         Ms = df.assemble(
-            self._Ms_dg * df.TestFunction(self.S1) * df.dx).array() / self.volumes.array()
+            self._Ms_dg.f * df.TestFunction(self.S1) * df.dx).array() / self.volumes.array()
         self._Ms = Ms.copy()
         self.Ms_av = np.average(self._Ms_dg.vector().array())
 
