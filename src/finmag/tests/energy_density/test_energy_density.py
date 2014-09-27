@@ -46,7 +46,8 @@ def test_exchange_energy_density():
         ("cos(x[0]*pi/10e-9)", "sin(x[0]*pi/10e-9)", "0")))
 
     exch = Exchange(1.3e-11)
-    exch.setup(m, Ms)
+    Ms_field = Field(df.FunctionSpace(mesh, 'DG', 0), Ms)
+    exch.setup(m, Ms_field)
 
     finmag_data = exch.energy_density()
     rel_err = np.abs(nmag_data - finmag_data) / np.linalg.norm(nmag_data)
