@@ -192,7 +192,7 @@ class FemBemDeMagSolver(object):
 
         """
         self.H_demag.vector()[:] = self.compute_field()
-        E = -0.5 * self.mu0 * df.dot(self.H_demag, self.m.f * self.Ms) * df.dx
+        E = -0.5 * self.mu0 * df.dot(self.H_demag, self.m.f * self.Ms.f) * df.dx
         return df.assemble(E) * self.unit_length ** self.m.mesh_dim()
 
     def energy_density(self):
@@ -211,7 +211,7 @@ class FemBemDeMagSolver(object):
 
         """
         self.H_demag.vector()[:] = self.compute_field()
-        E = df.dot(-0.5 * self.mu0 * df.dot(self.H_demag, self.m.f * self.Ms),
+        E = df.dot(-0.5 * self.mu0 * df.dot(self.H_demag, self.m.f * self.Ms.f),
                    self.v) * df.dx
         nodal_E = df.assemble(E).array()
         return nodal_E / self.nodal_vol
