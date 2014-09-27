@@ -116,12 +116,11 @@ class LLG_STT(object):
 
     @Ms.setter
     def Ms(self, value):
-        #self._Ms_dg=helpers.scalar_valued_dg_function(value, self.S1)
-        self._Ms_dg = helpers.scalar_valued_function(value, self.S1)
-        self._Ms_dg.rename('Ms', 'Saturation magnetisation')
+        self._Ms_dg = Field(df.FunctionSpace(self.mesh, 'DG', 0), value)
+        self._Ms_dg.name = 'Ms'
         self.volumes = df.assemble(df.TestFunction(self.S1) * df.dx)
         Ms = df.assemble(
-            self._Ms_dg * df.TestFunction(self.S1) * df.dx).array() / self.volumes
+        self._Ms_dg.f * df.TestFunction(self.S1) * df.dx).array() / self.volumes
         self._Ms = Ms.copy()
         self.Ms_av = np.average(self._Ms_dg.vector().array())
 
