@@ -138,9 +138,9 @@ class PEQBuilder(object):
             try:
                 gphia_array = np.array(gradphia(*rtup))
                 M_array = np.array(m(*rtup))
-                q[dof] = Ms * np.dot(n, -M_array + gphia_array)
+                q[dof] = Ms.value * np.dot(n, -M_array + gphia_array)
             except:
-                q[dof] = self.movepoint(rtup, n, m, Ms.f, gradphia)
+                q[dof] = self.movepoint(rtup, n, m, Ms.value, gradphia)
         return q
 
     def movepoint(self, rtup, n, m, Ms, gradphia):
