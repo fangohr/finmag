@@ -44,7 +44,7 @@ def setup(K2=K2):
     m.set_with_numpy_array_debug(m_gen(coords).flatten())
 
     S1 = df.FunctionSpace(mesh, "Lagrange", 1)
-    Ms_cg = Field(df.FunctionSpace(mesh, 'DG', 0), Ms)
+    Ms_cg = Field(df.FunctionSpace(mesh, 'CG', 1), Ms)
 
     anisotropy = UniaxialAnisotropy(K1, u1, K2=K2)
     anisotropy.setup(m, Ms_cg, unit_length=1e-9)
@@ -64,7 +64,7 @@ def setup_cubic():
     m.set_with_numpy_array_debug(m_gen(coords).flatten())
 
     S1 = df.FunctionSpace(mesh, "Lagrange", 1)
-    Ms_cg = Field(df.FunctionSpace(mesh, 'DG', 0), Ms)
+    Ms_cg = Field(df.FunctionSpace(mesh, 'CG', 1), Ms)
 
     anisotropy = CubicAnisotropy(u1=u1, u2=u2, K1=K1, K2=K2, K3=K3)
     anisotropy.setup(m, Ms_cg, unit_length=1e-9)
