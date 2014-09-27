@@ -47,7 +47,7 @@ class TreecodeBEM(FKDemag):
         # we will copy field into this when we need the energy
         self._H_func = df.Function(self.m.functionspace)
         self._E_integrand = -0.5 * mu0 * \
-            df.dot(self._H_func, self.m.f * self.Ms)
+            df.dot(self._H_func, self.m.f * self.Ms.f)
         self._E = self._E_integrand * df.dx
         self._nodal_E = df.dot(self._E_integrand, self._test1) * df.dx
         self._nodal_E_func = df.Function(self.S1)
@@ -77,7 +77,7 @@ class TreecodeBEM(FKDemag):
         # This gives us div(M), which is equal to Laplace(_phi_1), equation
         # which is then solved using _poisson_solver.
         self._Ms_times_divergence = df.assemble(
-            self.Ms * df.inner(self._trial3, df.grad(self._test1)) * df.dx)
+            self.Ms.f * df.inner(self._trial3, df.grad(self._test1)) * df.dx)
 
         # we move the bounday condition here to avoid create a instance each time when compute the
         # magnetic potential
