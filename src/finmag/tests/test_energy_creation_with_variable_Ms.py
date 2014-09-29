@@ -5,7 +5,7 @@ from finmag.util.helpers import fnormalise
 from finmag.energies import Exchange, UniaxialAnisotropy, Zeeman, Demag
 
 Ms = 8.6e5
-
+mesh = df.BoxMesh(0, 0, 0, 10e-9, 10e-9, 10e-9, 5, 5, 5)
 
 def pytest_funcarg__fixt(request):
     fixt = request.cached_setup(setup=setup, scope="module")
@@ -29,7 +29,6 @@ def setup():
     VectorFunctionSpace (of type "continuous Lagrange") on which the
     magnetisation m is defined and m, Ms_funct are as above.
     """
-    mesh = df.BoxMesh(0, 0, 0, 10e-9, 10e-9, 10e-9, 5, 5, 5)
 
     m_space = df.VectorFunctionSpace(mesh, "CG", 1)
     m = Field(m_space, value=df.Expression(("1e-9", "x[0]/10", "0")))
@@ -57,9 +56,11 @@ def test_can_create_energy_object(fixt, EnergyClass, init_args):
     S3, m, Ms_func = fixt
 
     E1 = EnergyClass(*init_args)
-    E1.setup(m, Ms)
+    E1.setup(m, Field(df.FunctionSpace(mesh, "DG", 0), Ms))
 
     E2 = EnergyClass(*init_args)
-    E2.setup(m, Ms_func)
+    Ms_field = Field(df.FunctionSpace(mesh, "DG", 0))
+    Ms_field.f = Ms_func
+    E2.setup(m, Ms_field)
 
     assert(abs(E1.compute_energy() - E2.compute_energy()) < 1e-12)

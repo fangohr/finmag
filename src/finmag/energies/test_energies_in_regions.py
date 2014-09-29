@@ -25,7 +25,7 @@ class MultiDomainTest(object):
         self.mesh = mesh
         self.get_domain_id = get_domain_id
         self.domain_ids = [get_domain_id(pt) for pt in mesh.coordinates()]
-        self.Ms = Ms
+        self.Ms = Field(df.FunctionSpace(mesh, 'DG', 0), Ms)
         self.unit_length = unit_length
         #self.rtol = rtol
 

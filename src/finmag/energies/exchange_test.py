@@ -15,7 +15,7 @@ def fixt():
     """
     mesh = df.UnitCubeMesh(10, 10, 10)
     functionspace = df.VectorFunctionSpace(mesh, "CG", 1, 3)
-    Ms = 1
+    Ms = Field(df.FunctionSpace(mesh, 'DG', 0), 1)
     A = 1
     m = Field(functionspace)
     exch = Exchange(A)
@@ -56,8 +56,8 @@ def test_exchange_energy_analytical(fixt):
     REL_TOLERANCE = 1e-7
 
     A = 1
-    Ms = 1
     mesh = df.UnitCubeMesh(10, 10, 10)
+    Ms = Field(df.FunctionSpace(mesh, 'DG', 0), 1)
     functionspace = df.VectorFunctionSpace(mesh, "CG", 1, 3)
     m = Field(functionspace)
     m.set(df.Expression(("x[0]", "x[2]", "-x[1]")))
@@ -85,7 +85,7 @@ def test_exchange_energy_analytical_2():
     mesh = df.BoxMesh(0, 0, 0, lx, ly, lz, nx, ny, nz)
     unit_length = 1e-9
     functionspace = df.VectorFunctionSpace(mesh, "CG", 1, 3)
-    Ms = 8e5
+    Ms = Ms = Field(df.FunctionSpace(mesh, 'DG', 0), 8e5)
     A = 13e-12
     m = Field(functionspace)
     m.set(
@@ -106,9 +106,9 @@ def test_exchange_field_supported_methods(fixt):
 
     """
     A = 1
-    Ms = 1
     REL_TOLERANCE = 1e-12
     mesh = df.UnitCubeMesh(10, 10, 10)
+    Ms = Field(df.FunctionSpace(mesh, 'DG', 0), 1)
     functionspace = df.VectorFunctionSpace(mesh, "CG", 1, 3)
     m = Field(functionspace)
     m.set(df.Expression(("0", "sin(x[0])", "cos(x[0])")))
@@ -137,38 +137,32 @@ def test_exchange_length(fixt):
     mesh = df.UnitCubeMesh(10, 10, 10)
     functionspace = df.VectorFunctionSpace(mesh, "Lagrange", 1)
     m = Field(functionspace)
-    Ms = 8e5
+    Ms_field = Field(df.FunctionSpace(mesh, 'DG', 0), 1)
     A = 13e-12
-    l_ex_expected = sqrt(2 * A / (mu0 * Ms ** 2))
+    l_ex_expected = sqrt(2 * A / (mu0 * Ms_field.value ** 2))
 
     # Test with various options for A and Ms: pure number;
     # df.Constant, df.Expression.
     exch = Exchange(A)
-    exch.setup(m, Ms)
+    exch.setup(m, Ms_field)
     l_ex = exch.exchange_length()
     assert(np.allclose(l_ex, l_ex_expected, atol=0))
 
     exch2 = Exchange(df.Constant(A))
-    exch2.setup(m, df.Constant(Ms))
+    exch2.setup(m, Ms_field)
     l_ex2 = exch2.exchange_length()
     assert(np.allclose(l_ex2, l_ex_expected, atol=0))
 
     exch3 = Exchange(df.Expression('A', A=A))
-    exch3.setup(m, df.Expression('Ms', Ms=Ms))
+    exch3.setup(m, Ms_field)
     l_ex3 = exch3.exchange_length()
     assert(np.allclose(l_ex3, l_ex_expected, atol=0))
 
     # We should get an error with spatially non-uniform values of A or Ms
     exch4 = Exchange(df.Expression('A*x[0]', A=A))
-    exch4.setup(m, Ms)
+    exch4.setup(m, Ms_field)
     with pytest.raises(ValueError):
         exch4.exchange_length()
-
-    exch5 = Exchange(A)
-    exch5.setup(m, df.Expression('Ms*x[0]', Ms=Ms))
-    with pytest.raises(ValueError):
-        exch5.exchange_length()
-
 
 if __name__ == "__main__":
     mesh = df.BoxMesh(0, 0, 0, 2 * np.pi, 1, 1, 10, 1, 1)

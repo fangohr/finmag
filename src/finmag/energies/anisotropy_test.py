@@ -18,7 +18,7 @@ def fixt():
     mesh = df.UnitCubeMesh(1, 1, 1)
     functionspace = df.VectorFunctionSpace(mesh, "Lagrange", 1)
     K1 = 1
-    Ms = 1
+    Ms = Field(df.FunctionSpace(mesh, 'DG', 0), 1)
     a = df.Constant((0, 0, 1))
     m = Field(functionspace)
     anis = UniaxialAnisotropy(K1, a)
@@ -47,7 +47,7 @@ def test_anisotropy_energy_simple_configurations(fixt, m, expected_E):
     mesh = df.UnitCubeMesh(1, 1, 1)
     functionspace = df.VectorFunctionSpace(mesh, "Lagrange", 1)
     K1 = 1
-    Ms = 1
+    Ms = Field(df.FunctionSpace(mesh, 'DG', 0), 1)
     a = df.Constant((0, 0, 1))
     m_field = Field(functionspace)
     m_field.set(df.Constant(m))
@@ -74,7 +74,7 @@ def test_anisotropy_energy_analytical(fixt):
     mesh = df.UnitCubeMesh(1, 1, 1)
     functionspace = df.VectorFunctionSpace(mesh, "Lagrange", 1)
     K1 = 1
-    Ms = 1
+    Ms = Field(df.FunctionSpace(mesh, 'DG', 0), 1)
     a = df.Constant((0, 0, 1))
     m = Field(functionspace)
     m.set(df.Expression(("0", "sqrt(1 - pow(x[0], 2))", "x[0]")))
@@ -100,7 +100,7 @@ def test_anisotropy_field(fixt):
     H = fixt["anis"].compute_field()
 
     v = df.TestFunction(fixt["m"].functionspace)
-    g_ani = df.Constant(fixt["K1"] / (mu0 * fixt["Ms"])) * (
+    g_ani = df.Constant(fixt["K1"] / (mu0 * fixt["Ms"].value)) * (
         2 * df.dot(fixt["a"], fixt["m"].f) * df.dot(fixt["a"], v)) * df.dx
     volume = df.assemble(df.dot(v, df.Constant((1, 1, 1))) * df.dx).array()
     dE_dm = df.assemble(g_ani).array() / volume

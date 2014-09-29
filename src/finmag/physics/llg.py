@@ -52,8 +52,8 @@ class LLG(object):
         self.unit_length = unit_length
         self.do_slonczewski = False
         self.do_zhangli = False
-        self.effective_field = EffectiveField(
-            S3, self._m_field, self.Ms, self.unit_length)
+        self.effective_field = EffectiveField(self._m_field,
+                                              self.Ms, self.unit_length)
         # will be computed on demand, and carries volume of the mesh
         self.Volume = None
 
@@ -65,7 +65,7 @@ class LLG(object):
         self.gamma = consts.gamma
         self.c = 1e11  # 1/s numerical scaling correction \
         #               0.1e12 1/s is the value used by default in nmag 0.2
-        self._Ms_dg = df.Function(self.DG)
+        self._Ms_dg = Field(self.DG)
         self.Ms = 8.6e5  # A/m saturation magnetisation
         self._m_field = Field(self.S3, name='m')
         self.pins = []  # nodes where the magnetisation gets pinned
@@ -121,14 +121,14 @@ class LLG(object):
         # XXX TODO: Rename _Ms_dg to _Ms because it is not a DG0 function!!!
         # We need a DG function here, so we should use
         # scalar_valued_dg_function
-        dg_fun = helpers.scalar_valued_dg_function(value, self.DG)
+        dg_fun = Field(self.DG, value)#helpers.scalar_valued_dg_function(value, self.DG)
         self._Ms_dg.vector().set_local(dg_fun.vector().get_local())
         # FIXME: change back to DG space.
         #self._Ms_dg=helpers.scalar_valued_function(value, self.S1)
-        self._Ms_dg.rename('Ms', 'Saturation magnetisation')
+        self._Ms_dg.name = 'Saturation magnetisation'
         self.volumes = df.assemble(df.TestFunction(self.S1) * df.dx)
         Ms = df.assemble(
-            self._Ms_dg * df.TestFunction(self.S1) * df.dx).array() / self.volumes.array()
+            self._Ms_dg.f * df.TestFunction(self.S1) * df.dx).array() / self.volumes.array()
         self._Ms = Ms.copy()
         self.Ms_av = np.average(self._Ms_dg.vector().array())
 

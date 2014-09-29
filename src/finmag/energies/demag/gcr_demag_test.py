@@ -19,7 +19,8 @@ def setup_demag_sphere(Ms):
     m_function.assign(df.Constant((1, 0, 0)))
     m = Field(S3, m_function)
     demag = Demag('GCR')
-    demag.setup(m, Ms, unit_length)
+    Ms_field = Field(df.FunctionSpace(mesh, 'DG', 0), Ms)
+    demag.setup(m, Ms_field, unit_length)
     return demag
 
 

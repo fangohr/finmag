@@ -47,16 +47,16 @@ class SLLG(object):
         self.checking_length = checking_length
         self.unit_length = unit_length
         self.DG = df.FunctionSpace(self.mesh, "DG", 0)
-        self._Ms_dg = df.Function(self.DG)
+        self._Ms_dg = Field(self.DG)
         self.effective_field = EffectiveField(
-            self.S3, self._m_field, self.Ms, self.unit_length)
+            self._m_field, self.Ms, self.unit_length)
 
         self.zhangli_stt = False
 
         self.set_default_values()
 
     def set_default_values(self):
-        # self.Ms = 8.6e5  # A/m saturation magnetisation
+        self.Ms = Field(df.FunctionSpace(self.mesh, 'DG', 0), 8.6e5)  # A/m saturation magnetisation
         self._pins = np.array([], dtype="int")
         self.volumes = df.assemble(
             df.dot(df.TestFunction(self.S3), df.Constant([1, 1, 1])) * df.dx).array()
@@ -192,13 +192,25 @@ class SLLG(object):
 
     @Ms.setter
     def Ms(self, value):
-        self._Ms_dg.vector().set_local(
-            helpers.scalar_valued_dg_function(value, self.mesh).vector().array())
+        dg_fun = Field(self.DG, value)
+        self._Ms_dg.vector().set_local(dg_fun.vector().get_local())
+        # FIXME: change back to DG space.
+        #self._Ms_dg=helpers.scalar_valued_function(value, self.S1)
+        self._Ms_dg.name = 'Saturation magnetisation'
+        self.volumes = df.assemble(df.TestFunction(self.S1) * df.dx)
+        Ms = df.assemble(
+            self._Ms_dg.f * df.TestFunction(self.S1) * df.dx).array() / self.volumes.array()
+        self._Ms = Ms.copy()
+        self.Ms_av = np.average(self._Ms_dg.vector().array())
 
-        tmp = df.assemble(
-            self._Ms_dg * df.dot(df.TestFunction(self.S3), df.Constant([1, 1, 1])) * df.dx)
-        tmp = tmp / self.volumes
-        self._Ms[:] = tmp[:]
+        
+        #self._Ms_dg = value.f#.vector().set_local(
+            #helpers.scalar_valued_dg_function(value, self.mesh).vector().array())
+
+        #tmp = df.assemble(
+         #   self._Ms_dg * df.dot(df.TestFunction(self.S3), df.Constant([1, 1, 1])) * df.dx)
+        #tmp = tmp / self.volumes
+        #self._Ms[:] = tmp[:]
 
     def m_average_fun(self, dx=df.dx):
         """

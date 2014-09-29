@@ -670,7 +670,8 @@ class Nanostrip1dEigenproblemFinmag(AbstractEigenproblem):
         V = df.VectorFunctionSpace(mesh, 'CG', 1, dim=3)
         v = Field(V)
         self.exch = Exchange(A=self.A_ex)
-        self.exch.setup(v, Ms=self.Ms, unit_length=self.unit_length)
+        Ms_field = Field(df.FunctionSpace(mesh, 'DG', 0), self.Ms)
+        self.exch.setup(v, Ms_field, unit_length=self.unit_length)
 
         C_2Kx2K = LinearOperator(
             shape=(N, N), matvec=self.compute_action_rhs_linearised_LLG_2K, dtype=dtype)

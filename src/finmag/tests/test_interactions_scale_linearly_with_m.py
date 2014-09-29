@@ -21,7 +21,7 @@ def compute_field_for_linear_combination(EnergyClass, init_args, a, b, c):
     v = Field(V)
     v.set_with_numpy_array_debug(a * randvec1 + b * randvec2 + c * randvec3)
     e = EnergyClass(**init_args)
-    e.setup(v, Ms=8e5, unit_length=1e-9)
+    e.setup(v, Field(df.FunctionSpace(mesh, 'DG', 0), 8e5), unit_length=1e-9)
     return e.compute_field()
 
 

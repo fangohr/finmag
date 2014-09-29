@@ -60,10 +60,10 @@ def test_compute_energy():
     nx = ny = nz = 10  # XXX TODO: why does the approximation get
     # worse if we use a finer mesh?!?
     unit_length = 1e-9
-    Ms = 8e5
+    mesh = df.BoxMesh(0, 0, 0, lx, ly, lz, nx, ny, nz)
+    Ms = Field(df.FunctionSpace(mesh, 'DG', 0), 8e5)
     H = 1e6
 
-    mesh = df.BoxMesh(0, 0, 0, lx, ly, lz, nx, ny, nz)
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
 
     def check_energy_for_m(m, E_expected):
@@ -80,7 +80,7 @@ def test_compute_energy():
         assert np.allclose(E_computed, E_expected, atol=0, rtol=1e-12)
 
     volume = lx * ly * lz * unit_length ** 3
-    E_aligned = -mu0 * Ms * H * volume
+    E_aligned = -mu0 * Ms.value * H * volume
 
     check_energy_for_m((1, 0, 0), E_aligned)
     check_energy_for_m((-1, 0, 0), -E_aligned)
@@ -190,7 +190,7 @@ def test_compute_energy_in_regions(tmpdir):
         m_field = Field(S3)
         m_field.set(df.Constant(m))
         H_ext = Zeeman(H * np.array([1, 0, 0]))
-        H_ext.setup(m_field, Ms, unit_length=unit_length)
+        H_ext.setup(m_field, Field(df.FunctionSpace(mesh, 'DG', 0), Ms), unit_length=unit_length)
 
         #E_analytical_1 = -mu0 * Ms * H * volume_1 * cos(theta_rad)
         E_analytical_1 = -mu0 * Ms * H * volume_1 * np.dot(m, [1, 0, 0])
@@ -268,7 +268,7 @@ def test_time_zeeman_init():
 def test_time_dependent_field_update():
     field_expr = df.Expression(("0", "t", "0"), t=0)
     H_ext = TimeZeeman(field_expr)
-    H_ext.setup(m, Ms)
+    H_ext.setup(m, Field(df.FunctionSpace(m.mesh(), 'DG', 0), Ms))
 
     assert diff(H_ext, np.array([0, 0, 0])) < TOL
     H_ext.update(1)
@@ -279,7 +279,7 @@ def test_time_dependent_field_switched_off():
     # Check the time update (including switching off) with a varying field
     field_expr = df.Expression(("0", "t", "0"), t=0)
     H_ext = TimeZeeman(field_expr, t_off=1)
-    H_ext.setup(m, Ms)
+    H_ext.setup(m, Field(df.FunctionSpace(m.mesh(), 'DG', 0), Ms))
     assert diff(H_ext, np.array([0, 0, 0])) < TOL
     assert(H_ext.switched_off == False)
     H_ext.update(0.9)
@@ -292,7 +292,7 @@ def test_time_dependent_field_switched_off():
     # The same again with a constant field
     a = [42, 0, 5]
     H_ext = TimeZeeman(a, t_off=1)
-    H_ext.setup(m, Ms)
+    H_ext.setup(m, Field(df.FunctionSpace(m.mesh(), 'DG', 0), Ms))
     assert diff(H_ext, a) < TOL
     assert(H_ext.switched_off == False)
     H_ext.update(0.9)
@@ -306,7 +306,7 @@ def test_time_dependent_field_switched_off():
 def test_discrete_time_zeeman_updates_in_intervals():
     field_expr = df.Expression(("0", "t", "0"), t=0)
     H_ext = DiscreteTimeZeeman(field_expr, dt_update=2)
-    H_ext.setup(m, Ms)
+    H_ext.setup(m, Field(df.FunctionSpace(m.mesh(), 'DG', 0), Ms))
     assert diff(H_ext, np.array([0, 0, 0])) < TOL
     H_ext.update(1)
     assert diff(H_ext, np.array([0, 0, 0])) < TOL  # not yet updating
@@ -331,7 +331,7 @@ def test_discrete_time_zeeman_switchoff_only():
     """
     field_expr = df.Expression(("1", "2", "3"))
     H_ext = DiscreteTimeZeeman(field_expr, dt_update=None, t_off=2)
-    H_ext.setup(m, Ms)
+    H_ext.setup(m, Field(df.FunctionSpace(m.mesh(), 'DG', 0), Ms))
     assert diff(H_ext, np.array([1, 2, 3])) < TOL
     assert(H_ext.switched_off == False)
     H_ext.update(1)
@@ -386,7 +386,7 @@ def test_dipolar_field_class(tmpdir):
     mesh = df.BoxMesh(-50, -50, -50, 50, 50, 50, 20, 20, 20)
     V = df.VectorFunctionSpace(mesh, 'CG', 1, dim=3)
     m_field = Field(V, value=df.Constant((1, 0, 0)))
-    H_dipole.setup(m_field, Ms=8.6e5, unit_length=1e-9)
+    H_dipole.setup(m_field, Field(df.FunctionSpace(m.mesh(), 'DG', 0), 8.6e5), unit_length=1e-9)
 
 
 def compute_field_diffs(sim):

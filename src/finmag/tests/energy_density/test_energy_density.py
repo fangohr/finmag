@@ -46,7 +46,8 @@ def test_exchange_energy_density():
         ("cos(x[0]*pi/10e-9)", "sin(x[0]*pi/10e-9)", "0")))
 
     exch = Exchange(1.3e-11)
-    exch.setup(m, Ms)
+    Ms_field = Field(df.FunctionSpace(mesh, 'DG', 0), Ms)
+    exch.setup(m, Ms_field)
 
     finmag_data = exch.energy_density()
     rel_err = np.abs(nmag_data - finmag_data) / np.linalg.norm(nmag_data)
@@ -110,7 +111,7 @@ def test_anisotropy_energy_density():
     Ms = 1
 
     anis = UniaxialAnisotropy(K, a)
-    anis.setup(m, Ms)
+    anis.setup(m, Field(df.FunctionSpace(mesh, 'DG', 0), Ms))
     density = anis.energy_density()
     deviation = np.abs(density - 0.5)
 
@@ -134,7 +135,7 @@ def test_DMI_energy_density_2D():
     Ms = 1
     D = 1
     dmi = DMI(D)
-    dmi.setup(M, Ms)
+    dmi.setup(M, Field(df.FunctionSpace(mesh, 'DG', 0), Ms))
     density = dmi.energy_density()
     deviation = np.abs(density - 1.0)
 
@@ -154,7 +155,7 @@ def test_DMI_energy_density_3D():
     Ms = 10
     D = 1
     dmi = DMI(D)
-    dmi.setup(M, Ms)
+    dmi.setup(M, Field(df.FunctionSpace(mesh, 'DG', 0), Ms))
     density = dmi.energy_density()
     deviation = np.abs(density - 1.0)
 
@@ -192,7 +193,7 @@ def test_demag_energy_density():
     demag = Demag()
     m = Field(S3, value=(1, 0, 0))
     Ms = np.sqrt(6.0 / mu0)
-    demag.setup(m, Ms, 1)
+    demag.setup(m, Field(df.FunctionSpace(mesh, 'DG', 0), Ms), 1)
 
     density = demag.energy_density()
     deviation = np.abs(density - 1.0)

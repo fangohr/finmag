@@ -9,6 +9,7 @@ import numpy as np
 import cProfile
 import pstats
 from aeon import mtimed
+from finmag.field import Field
 from finmag.physics.llg import LLG
 from finmag.physics.llg_stt import LLG_STT
 from finmag.physics.llb.sllg import SLLG
@@ -115,7 +116,7 @@ class Simulation(object):
                 "unit_length is set to {}. Are you sure this is correct?".format(unit_length))
 
         self.mesh = mesh
-        self.Ms = Ms
+        self.Ms = Field(df.FunctionSpace(mesh, 'DG', 0), Ms)
         self.unit_length = unit_length
         self.integrator_backend = integrator_backend
         self._integrator = None
@@ -136,7 +137,7 @@ class Simulation(object):
 
         self.kernel = kernel
 
-        self.llg.Ms = Ms
+        self.llg.Ms = self.Ms
         self.Volume = mesh_volume(mesh)
 
         self.scheduler = scheduler.Scheduler()

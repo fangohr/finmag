@@ -55,7 +55,7 @@ def compute_scalar_potential_llg(mesh, m_expr=df.Constant([1, 0, 0]), Ms=1.):
     m.set_with_numpy_array_debug(helpers.fnormalise(m.get_numpy_array_debug()))
 
     demag = Demag()
-    demag.setup(m, Ms=Ms, unit_length=1)
+    demag.setup(m, Field(df.FunctionSpace(mesh, 'DG', 0), Ms), unit_length=1)
 
     phi = demag.compute_potential()
     normalise_phi(phi, mesh)
@@ -73,7 +73,7 @@ def compute_scalar_potential_native_fk(mesh, m_expr=df.Constant([1, 0, 0]), Ms=1
     V = df.VectorFunctionSpace(mesh, "Lagrange", 1)
     m = Field(V, value=m_expr)
     m.set_with_numpy_array_debug(helpers.fnormalise(m.get_numpy_array_debug()))
-    fkdemag.setup(m, Ms, unit_length=1)
+    fkdemag.setup(m, Field(df.FunctionSpace(mesh, 'DG', 0), Ms), unit_length=1)
     phi1 = fkdemag.compute_potential()
     normalise_phi(phi1, mesh)
     return phi1

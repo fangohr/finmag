@@ -21,7 +21,7 @@ def exchange_length(A, Ms):
     and the saturation magnetisation Ms.
 
     """
-    return sqrt(2 * A / (mu0 * Ms ** 2))
+    return sqrt(2 * A / (mu0 * Ms.value ** 2))
 
 
 def bloch_parameter(A, K1):
