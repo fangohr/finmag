@@ -36,7 +36,7 @@ def compute_finmag_anis(m_gen, Ms, K1, axis, dolfin_mesh):
     m.set_with_numpy_array_debug(m0)
 
     anis = UniaxialAnisotropy(K1, axis)
-    anis.setup(m, Ms)
+    anis.setup(m, Field(df.FunctionSpace(dolfin_mesh, 'DG', 0), Ms))
 
     anis_field = df.Function(S3)
     anis_field.vector()[:] = anis.compute_field()
@@ -66,7 +66,7 @@ def compute_finmag_exc(dolfin_mesh, m_gen, Ms, A):
     m.set_with_numpy_array_debug(m0)
 
     exchange = Exchange(A)
-    exchange.setup(m, Ms)
+    exchange.setup(m, Field(df.FunctionSpace(dolfin_mesh, 'DG', 0), Ms))
 
     finmag_exc_field = df.Function(S3)
     finmag_exc_field.vector()[:] = exchange.compute_field()

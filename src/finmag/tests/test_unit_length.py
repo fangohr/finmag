@@ -16,7 +16,7 @@ def exchange(mesh, unit_length):
     m = Field(S3, value=df.Expression(
         ("x[1]*u", "0", "sqrt(1-pow(x[1]*u, 2))"), u=unit_length))
     exch = Exchange(A)
-    exch.setup(m, Ms, unit_length=unit_length)
+    exch.setup(m, Field(df.FunctionSpace(mesh, 'DG', 0), Ms), unit_length=unit_length)
     H = exch.compute_field()
     E = exch.compute_energy()
     return m.get_numpy_array_debug(), H, E

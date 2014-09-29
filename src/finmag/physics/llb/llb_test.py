@@ -13,7 +13,7 @@ from finmag.physics.llb.material import Material
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-
+@pytest.mark.xfail
 def test_llb_sundials(do_plot=False):
     mesh = df.BoxMesh(0, 0, 0, 2, 2, 2, 1, 1, 1)
 

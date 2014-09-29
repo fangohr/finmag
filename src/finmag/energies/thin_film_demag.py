@@ -35,7 +35,7 @@ class ThinFilmDemag(object):
             self.S1 = df.FunctionSpace(m.mesh(), "Lagrange", 1)
             self.volumes = df.assemble(df.TestFunction(self.S1) * df.dx)
             Ms = df.assemble(
-                Ms * df.TestFunction(self.S1) * df.dx).array() / self.volumes
+                Ms.f * df.TestFunction(self.S1) * df.dx).array() / self.volumes
             self.strength = Ms
 
     def compute_field(self):

@@ -102,7 +102,7 @@ class CubicAnisotropy(EnergyBase):
 
         if not self.assemble:
             self.H = self.m.get_numpy_array_debug()
-            self.Ms = self.Ms.vector().array()
+            self.Ms = self.Ms.get_numpy_array_debug()
             self.compute_field = self.__compute_field_directly
 
     def __compute_field_directly(self):

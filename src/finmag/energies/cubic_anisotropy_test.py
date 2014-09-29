@@ -38,11 +38,10 @@ def test_cubic_anisotropy_energy():
     m = Field(S3)
     m.set((0, 0, 1))
 
-    Ms_cg = df.Function(S1)
-    Ms_cg.vector()[:] = Ms
+    Ms_dg = Field(df.FunctionSpace(mesh, 'DG', 0), Ms)
 
     ca = CubicAnisotropy(u1, u2, K1, K2, K3)
-    ca.setup(m, Ms_cg, unit_length)
+    ca.setup(m, Ms_dg, unit_length)
 
     energy = ca.compute_energy()
     # energy_expected = 8.3e-20  # oommf cubicEight_100pc.mif -> ErFe2.odt
