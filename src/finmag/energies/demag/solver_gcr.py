@@ -3,6 +3,7 @@ import dolfin as df
 import solver_base as sb
 import numpy as np
 from finmag.native.llg import compute_bem_gcr
+from finmag.field import Field
 logger = logging.getLogger(name='finmag')
 
 import finmag.util.solver_benchmark as bench
@@ -189,6 +190,9 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver, PEQBuilder):
         self.qvector_method = qvector_method
 
     def setup(self, m, Ms, unit_length=1):
+        assert isinstance(m, Field)
+        assert isinstance(Ms, Field)
+
         # Initialize the base class
         sb.FemBemDeMagSolver.__init__(self, m, self.parameters, self.degree,
                                       self.element, self.project_method,
@@ -245,9 +249,9 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver, PEQBuilder):
         logger.debug("GCR: Solving for phi_b on the boundary")
         gcr_timings.start("Build q vector", self.__class__.__name__)
         if self.qvector_method == "pe":
-            q = self.build_vector_q_pe(self.m.f, self.Ms, self.phia)
+            q = self.build_vector_q_pe(self.m, self.Ms, self.phia)
         elif self.qvector_method == "box":
-            q = self.build_vector_q(self.m.f, self.Ms, self.phia)
+            q = self.build_vector_q(self.m, self.Ms, self.phia)
         else:
             raise Exception(
                 "Only 'box' and 'pe' are possible qvector_method values")
@@ -301,9 +305,11 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver, PEQBuilder):
            using the box method. Assembly is done over the entire mesh,
            afterwards the global to boundary mapping is used to extract
            the relevant data"""
+        assert isinstance(m, Field)
+        assert isinstance(Ms, Field)
 
         q_dot_v = df.assemble(
-            Ms * df.dot(self.n, -m + df.grad(phi1)) * self.v * df.ds).array()
+            Ms.as_constant() * df.dot(self.n, -m.f + df.grad(phi1)) * self.v * df.ds).array()
 
         q = q_dot_v / self.surface_node_areas
         return q

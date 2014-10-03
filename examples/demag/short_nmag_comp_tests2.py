@@ -46,11 +46,11 @@ runtimes = {"bem": copy.deepcopy(initialdata),
 iterdict = {"poisson":[],"laplace":[]}
 krylov_iter = {k:copy.deepcopy(iterdict) for k in finmagsolvers.keys()}
 
-def printsolverparams(mesh, m):
+def printsolverparams(mesh, m, Ms):
     output = open(os.path.join(MODULE_DIR, "linsolveparams.rst"), "w")
     for name, DemagClass in finmagsolvers.items():
         demag = DemagClass()  # create a solver to read out its default linear solver data
-        demag.setup(m, 1, 1e-9)
+        demag.setup(m, Ms, unit_length=1e-9)
         output.write("\nFinmag %s solver parameters:\n" % name)
         output.write("%s \n"%repr(demag.parameters.to_dict()))
         output.write("\nFinmag %s solver tolerances:" % name)
@@ -100,6 +100,7 @@ for i,maxh in enumerate(meshsizes):
     #mesh.coordinates()[:] = mesh.coordinates()[:]*1e-9 #this makes the results worse!!! HF
     print "Using mesh with %g vertices" % mesh.num_vertices()
     V = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
+    DG0 = df.FunctionSpace(mesh, "DG", 0)
 
     # Old code
     """
@@ -123,10 +124,11 @@ for i,maxh in enumerate(meshsizes):
     """
 
     m = Field(V, [1, 0, 0])
+    Ms = Field(DG0, 1.0)
 
     #print solver parameters to file on the first run
     if i == 0:
-        printsolverparams(mesh,m)
+        printsolverparams(mesh, m, Ms)
 
     #Get the number of mesh vertices for the x axis in the plots.
     vertices.append(mesh.num_vertices())
@@ -136,7 +138,7 @@ for i,maxh in enumerate(meshsizes):
         #Assemble the bem and get the time.
         starttime = time.time()
         solver = finmagsolvers[demagtype]()
-        solver.setup(m, 1, 1e-9)
+        solver.setup(m, Ms, unit_length=1e-9)
         demag = solver.compute_field()
         endtime = time.time()
 
