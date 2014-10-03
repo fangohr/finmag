@@ -114,10 +114,10 @@ def DMI_interfacial(m, D, dim):
     Returns the form to compute the DMI energy:
 
     D(m_x * dm_z/dx - m_z * dm_x/dx) +
-    D(m_y * dm_z/dy - m_z * dm_y/dy) * df.dx                      (1)
+    D(m_y * dm_z/dy - m_z * dm_y/dy) * df.dx
 
-    Equation is equation (2) from the Oct 2013 paper by Rohart
-    and Thiaville (http://arxiv.org/abs/1310.0666)
+    References:
+    [1] Rohart, S. and Thiaville A., Phys. Rev. B 88, 184422 (2013)
 
     """
 
