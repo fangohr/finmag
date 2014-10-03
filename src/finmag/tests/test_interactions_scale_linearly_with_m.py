@@ -56,7 +56,7 @@ def create_demag_params(atol, rtol, maxiter):
     (Demag, {'solver_type': 'LU'}, 1e-10),
     # Demag with Krylov solver and strict tolerances should be linear in m
     (Demag, {'solver_type': 'Krylov',
-             'parameters': create_demag_params(1e-15, 1e-15, 1e4)}, 1e-10),
+             'parameters': create_demag_params(1e-15, 1e-15, 1e4)}, 1.2e-10),
     # Demag with Krylov solver and weak tolerances is *not* linear in m
     pytest.mark.xfail(
         (Demag, {'solver_type': 'Krylov', 'parameters': create_demag_params(1e-6, 1e-6, 1e4)}, 1e-8)),
