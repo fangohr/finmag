@@ -3,10 +3,11 @@ import logging
 import pylab as p
 import numpy as np
 import dolfin as df
-import progressbar as pb
 from finmag import Simulation as Sim
 from finmag.energies import Exchange, Demag
 from finmag.util.meshes import from_geofile, mesh_volume
+
+import pytest
 
 logger = logging.getLogger(name='finmag')
 
@@ -17,6 +18,7 @@ unit_length = 1e-9
 mesh = from_geofile(os.path.join(MODULE_DIR, "bar30_30_100.geo"))
 
 
+@pytest.mark.slow
 def run_finmag():
     """Run the finmag simulation and store data in averages.txt."""
 
@@ -32,14 +34,9 @@ def run_finmag():
     fh = open(os.path.join(MODULE_DIR, "averages.txt"), "w")
     fe = open(os.path.join(MODULE_DIR, "energies.txt"), "w")
 
-    # Progressbar
-    bar = pb.ProgressBar(maxval=60, \
-                    widgets=[pb.ETA(), pb.Bar('=', '[', ']'), ' ', pb.Percentage()])
-
     logger.info("Time integration")
     times = np.linspace(0, 3.0e-10, 61)
     for counter, t in enumerate(times):
-        bar.update(counter)
 
         # Integrate
         sim.run_until(t)
@@ -69,6 +66,7 @@ def run_finmag():
     fh.close()
     fe.close()
 
+@pytest.mark.slow
 def test_compare_averages():
     ref = np.loadtxt(os.path.join(MODULE_DIR, "averages_ref.txt"))
     if not os.path.isfile(os.path.join(MODULE_DIR, "averages.txt")) \
@@ -120,6 +118,7 @@ def test_compare_averages():
     p.close()
     print "Comparison of development written to exchange_demag.pdf"
 
+@pytest.mark.slow
 def test_compare_energies():
     ref = np.loadtxt(os.path.join(MODULE_DIR, "energies_ref.txt"))
     if not os.path.isfile(os.path.join(MODULE_DIR, "energies.txt")) \
@@ -177,6 +176,7 @@ def test_compare_energies():
     p.close()
     print "Energy plots written to exchange_energy.pdf and demag_energy.pdf"
 
+@pytest.mark.slow
 def test_compare_energy_density():
     """
     After ten time steps, compute the energy density through
@@ -259,6 +259,8 @@ def test_compare_energy_density():
     print "Energy density plots written to exchange_density.pdf and demag_density.pdf"
 
 if __name__ == '__main__':
+
+    run_finmag()
     test_compare_averages()
     test_compare_energies()
     test_compare_energy_density()
