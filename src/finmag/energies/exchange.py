@@ -86,6 +86,9 @@ class Exchange(EnergyBase):
                 real length of 1 unit in the mesh
 
         """
+        assert isinstance(m, Field)
+        assert isinstance(Ms, Field)
+
         # Create an exchange constant Field object A in DG0 function space.
         dg_functionspace = df.FunctionSpace(m.mesh(), 'DG', 0)
         self.A = Field(dg_functionspace, self.A_value, name='A')

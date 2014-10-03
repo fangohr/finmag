@@ -100,6 +100,7 @@ class FemBemDeMagSolver(object):
         # if normalize:
         #     self.m.vector()[:] = helpers.fnormalise(self.m.vector().array())
 
+        assert isinstance(Ms, Field)
         self.Ms = Ms
 
         # Initilize the boundary element matrix variable
