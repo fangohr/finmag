@@ -638,38 +638,6 @@ class TestSimulation(object):
         # inaccuracy, so we're only testing for m_z here.
         assert max(abs(zs - zs[::-1])) < 0.005
 
-    def test_mesh_info(self):
-        mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 1, 1, 1)
-        Ms = 8.6e5
-        unit_length = 1e-9
-
-        # Simulations without exchange
-        sim1 = Simulation(mesh, Ms, unit_length)
-        assert("Simulation object has no exchange" in sim1.mesh_info())
-        sim1.add(UniaxialAnisotropy(K1=520e3, axis=[0, 0, 1]))
-        assert(("Simulation object has no exchange") and not(
-            "the Bloch parameter = ") in sim1.mesh_info())
-        sim1.add(DMI(D=1.0e-3))
-        assert("Simulation object has no exchange" and not(
-            "the Helical period = ") in sim1.mesh_info())
-
-        # Simulations with exchange
-        sim2 = Simulation(mesh, Ms, unit_length)
-        sim2.add(Exchange(A=13e-12))
-        assert("the Exchange length =" in sim2.mesh_info())
-        sim2.add(UniaxialAnisotropy(K1=520e3, axis=[0, 0, 1]))
-        assert(("the Exchange length =") and (
-            "the Bloch parameter = ") in sim2.mesh_info())
-
-        sim3 = Simulation(mesh, Ms, unit_length)
-        sim3.add(Exchange(A=13e-12))
-        sim3.add(DMI(D=1.0e-3))
-        assert(("the Exchange length =") and (
-            "the Helical period = ") in sim3.mesh_info())
-        sim3.add(UniaxialAnisotropy(K1=520e3, axis=[0, 0, 1]))
-        assert(("the Exchange length =") and ("the Helical period = ")
-               and ("the Bloch parameter = ") in sim3.mesh_info())
-
     def test_save_field(self, tmpdir):
         os.chdir(str(tmpdir))
         sim = barmini()
