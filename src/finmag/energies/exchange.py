@@ -67,28 +67,6 @@ class Exchange(EnergyBase):
         self.name = name
         super(Exchange, self).__init__(method, in_jacobian=True)
 
-    def exchange_length(self):
-        def convert_to_number(x):
-            if isinstance(x, Number):
-                res = x
-            else:
-                # In this case we assume that x is a Constant,
-                # Function, or some other object which supports
-                # compute_vertex_values(). TODO: make sure that there
-                # are no other cases.
-                x_vec = x.compute_vertex_values(self.m.mesh())
-                if not np.allclose(x_vec, x_vec[0], atol=0):
-                    raise ValueError(
-                        "Exchange constant A and/or saturation magnetisation Ms "
-                        "are spatially non-uniform, but they must be constant to "
-                        "compute the exchange length.")
-                res = x_vec[0]
-            return res
-
-        A = convert_to_number(self.A)
-        Ms = self.Ms
-        return exchange_length(A, Ms)
-
     @mtimed
     def setup(self, m, Ms, unit_length=1):
         """
