@@ -1,11 +1,8 @@
-import dolfin as df
-import numpy as np
 import logging
+import dolfin as df
 from aeon import mtimed
 from energy_base import EnergyBase
-from finmag.util.consts import exchange_length
-from finmag.util import helpers
-from numbers import Number
+from finmag.field import Field
 
 logger = logging.getLogger('finmag')
 
@@ -28,6 +25,8 @@ class Exchange(EnergyBase):
         method
             See documentation of EnergyBase class for details.
 
+        name
+            name of the object
 
     *Example of Usage*
 
@@ -41,13 +40,14 @@ class Exchange(EnergyBase):
             n = 5
             mesh = df.BoxMesh(0, L, 0, L, 0, L, n, n, n)
 
-            S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
-            A = 1.3e-11 # J/m exchange constant
-            Ms = 0.8e6
-            m = df.project(Constant((1, 0, 0)), S3) # Initial magnetisation
+            functionspace = df.VectorFunctionSpace(mesh, 'CG', 1)
+            A = 1.3e-11  # J/m exchange constant
+            Ms = 0.8e6  # A/m saturation magnetisation
+            # Initial magnetisation
+            m = df.project(Constant((1, 0, 0)), functionspace)
 
             exchange = Exchange(A)
-            exchange.setup(S3, m, Ms)
+            exchange.setup(m, Ms)
 
             # Print energy
             print exchange.compute_energy()
@@ -57,13 +57,13 @@ class Exchange(EnergyBase):
 
             # Using 'box-matrix-numpy' method (fastest for small matrices)
             exchange_np = Exchange(A, method='box-matrix-numpy')
-            exchange_np.setup(S3, m, Ms)
+            exchange_np.setup(m, Ms)
             H_exch_np = exchange_np.compute_field()
 
     """
 
     def __init__(self, A, method="box-matrix-petsc", name='Exchange'):
-        self.A_waiting_for_mesh = A
+        self.A_value = A
         self.name = name
         super(Exchange, self).__init__(method, in_jacobian=True)
 
@@ -84,13 +84,16 @@ class Exchange(EnergyBase):
                 real length of 1 unit in the mesh
 
         """
-        self.exchange_factor = df.Constant(1.0 / unit_length ** 2)
-        self.A = helpers.scalar_valued_function(
-            self.A_waiting_for_mesh, m.mesh())
-        self.A.rename('A', 'exchange_constant')
-        self.A_av = np.average(self.A.vector().array())
-        del(self.A_waiting_for_mesh)
-        E_integrand = self.exchange_factor * self.A * \
+        # Create an exchange constant Field object A in DG0 function space.
+        dg_functionspace = df.FunctionSpace(m.mesh(), 'DG', 0)
+        self.A = Field(dg_functionspace, self.A_value, name='A')
+        del(self.A_value)
+
+        # Multiplication factor used for exchange energy computation.
+        self.exchange_factor = df.Constant(1.0/unit_length**2)
+
+        # An expression for computing the exchange energy.
+        E_integrand = self.exchange_factor * self.A.f * \
             df.inner(df.grad(m.f), df.grad(m.f))
 
         super(Exchange, self).setup(E_integrand, m, Ms, unit_length)
