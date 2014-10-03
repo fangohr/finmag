@@ -8,7 +8,6 @@ logger = logging.getLogger('finmag')
 
 
 class Exchange(EnergyBase):
-
     """
     Compute the exchange field.
 
@@ -34,26 +33,28 @@ class Exchange(EnergyBase):
 
             import dolfin as df
             from finmag.energies.exchange import Exchange
+            from finmag.field import Field
 
             # Define a mesh representing a cube with edge length L
-            L = 1e-8
+            L = 1e-8  # m
             n = 5
             mesh = df.BoxMesh(0, L, 0, L, 0, L, n, n, n)
 
-            functionspace = df.VectorFunctionSpace(mesh, 'CG', 1)
             A = 1.3e-11  # J/m exchange constant
             Ms = 0.8e6  # A/m saturation magnetisation
+
             # Initial magnetisation
-            m = df.project(Constant((1, 0, 0)), functionspace)
+            S3 = df.VectorFunctionSpace(mesh, 'CG', 1)
+            m = Field(S3, (1, 0, 0))
 
             exchange = Exchange(A)
             exchange.setup(m, Ms)
 
-            # Print energy
-            print exchange.compute_energy()
+            # Compute exchange energy.
+            E_ex = exchange.compute_energy()
 
-            # Exchange field
-            H_exch = exchange.compute_field()
+            # Compute exchange effective field.
+            H_ex = exchange.compute_field()
 
             # Using 'box-matrix-numpy' method (fastest for small matrices)
             exchange_np = Exchange(A, method='box-matrix-numpy')
@@ -62,7 +63,7 @@ class Exchange(EnergyBase):
 
     """
 
-    def __init__(self, A, method="box-matrix-petsc", name='Exchange'):
+    def __init__(self, A, method='box-matrix-petsc', name='Exchange'):
         self.A_value = A  # Value of A, later converted to a Field object.
         self.name = name
 
