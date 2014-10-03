@@ -31,6 +31,7 @@ class DMI(EnergyBase):
             Default value is 'auto' which means the dmi is automaticaly
             selected according to the mesh dimension.
 
+
     *Example of Usage*
 
         .. code-block:: python
@@ -44,12 +45,12 @@ class DMI(EnergyBase):
             n = 5
             mesh = df.BoxMesh(0, L, 0, L, 0, L, n, n, n)
 
-            D  = 5e-3  # J/m**2 DMI constant
+            D = 5e-3  # J/m**2 DMI constant
             Ms = 0.8e6  # A/m magnetisation saturation
 
             # Initial magnetisation
             S3 = df.VectorFunctionSpace(mesh, 'CG', 1)
-            m  = Field(S3, (1, 0, 0))
+            m = Field(S3, (1, 0, 0))
 
             dmi = DMI(D)
             dmi.setup(m, Ms)
@@ -93,12 +94,12 @@ class DMI(EnergyBase):
         else:
             dmi_dim = m.mesh_dim()
 
+        # Select the right expression for computing the dmi energy.
         if self.dmi_type is 'interfacial':
             E_integrand = DMI_interfacial(m, self.dmi_factor*self.D.f,
                                           dim=dmi_dim)
         else:
-            E_integrand = self.dmi_factor*self.D.f * \
-                helpers.times_curl(m.f, dmi_dim)
+            E_integrand = self.dmi_factor*self.D.f*times_curl(m.f, dmi_dim)
 
         super(DMI, self).setup(E_integrand, m, Ms, unit_length)
 
