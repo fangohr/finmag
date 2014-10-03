@@ -25,7 +25,8 @@ def fixt():
 
 def test_interaction_accepts_name():
     """
-    Check that the interaction accepts a 'name' argument and has a 'name' attribute.
+    Check that the interaction accepts a 'name' argument and
+    has a 'name' attribute.
     """
     exch = Exchange(13e-12, name='MyExchange')
     assert hasattr(exch, 'name')
@@ -40,11 +41,13 @@ def test_there_should_be_no_exchange_for_uniform_m(fixt):
     fixt["m"].set((1, 0, 0))
 
     H = fixt["exch"].compute_field()
-    print "Asserted zero exchange field for uniform m = (1, 0, 0), got H =\n{}.".format(H.reshape((3, -1)))
+    print "Asserted zero exchange field for uniform m = (1, 0, 0), " + \
+        "got H =\n{}.".format(H.reshape((3, -1)))
     assert np.max(np.abs(H)) < TOLERANCE
 
     E = fixt["exch"].compute_energy()
-    print "Asserted zero exchange energy for uniform m = (1, 0, 0), got E = {}.".format(E)
+    print "Asserted zero exchange energy for uniform m = (1, 0, 0), " + \
+        "got E = {}.".format(E)
     assert abs(E) < TOLERANCE
 
 
@@ -67,7 +70,8 @@ def test_exchange_energy_analytical(fixt):
     # integrating the vector laplacian, the latter gives 3 already
     expected_E = 3
 
-    print "With m = (0, sqrt(1-x^2), x), expecting E = {}. Got E = {}.".format(expected_E, E)
+    print "With m = (0, sqrt(1-x^2), x), " + \
+        "expecting E = {}. Got E = {}.".format(expected_E, E)
     assert abs(E - expected_E) / expected_E < REL_TOLERANCE
 
 
@@ -89,7 +93,8 @@ def test_exchange_energy_analytical_2():
     A = 13e-12
     m = Field(functionspace)
     m.set(
-        df.Expression(['0', 'sin(2*pi*x[0]/l_x)', 'cos(2*pi*x[0]/l_x)'], l_x=lx))
+        df.Expression(['0', 'sin(2*pi*x[0]/l_x)', 'cos(2*pi*x[0]/l_x)'],
+                      l_x=lx))
     exch = Exchange(A)
     exch.setup(m, Ms, unit_length=unit_length)
     E_expected = A * 4 * pi ** 2 * \
@@ -102,7 +107,8 @@ def test_exchange_energy_analytical_2():
 
 def test_exchange_field_supported_methods(fixt):
     """
-    Check that all supported methods give the same results as the default method.
+    Check that all supported methods give the same results
+    as the default method.
 
     """
     A = 1
@@ -127,7 +133,8 @@ def test_exchange_field_supported_methods(fixt):
         exch.setup(m, Ms)
         H = exch.compute_field()
         print "With method '{}', expecting H =\n{}\n, got H =\n{}.".format(
-            method, H_default.reshape((3, -1)).mean(1), H.reshape((3, -1)).mean(1))
+            method, H_default.reshape((3, -1)).mean(1),
+            H.reshape((3, -1)).mean(1))
 
         rel_diff = np.abs((H - H_default) / H_default)
         assert np.nanmax(rel_diff) < REL_TOLERANCE
