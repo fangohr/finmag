@@ -8,6 +8,7 @@ __organisation__ = "University of Southampton"
 
 import dolfin as df
 import numpy as np
+from finmag.field import Field
 
 
 class PEQBuilder(object):
@@ -117,6 +118,10 @@ class PEQBuilder(object):
 
     def build_vector_q_pe(self, m, Ms, phia):
         """Builds the vector q using point evaluation, eq. (5)"""
+
+        assert isinstance(m, Field)
+        assert isinstance(Ms, Field)
+
 ##        q = np.zeros(len(self.normtionary))
         q = np.zeros(self.V.dim())
 
@@ -137,10 +142,10 @@ class PEQBuilder(object):
 
             try:
                 gphia_array = np.array(gradphia(*rtup))
-                M_array = np.array(m(*rtup))
-                q[dof] = Ms.value * np.dot(n, -M_array + gphia_array)
+                M_array = np.array(m.f(*rtup))
+                q[dof] = Ms.as_constant() * np.dot(n, -M_array + gphia_array)
             except:
-                q[dof] = self.movepoint(rtup, n, m, Ms.value, gradphia)
+                q[dof] = self.movepoint(rtup, n, m, Ms, gradphia)
         return q
 
     def movepoint(self, rtup, n, m, Ms, gradphia):
@@ -152,40 +157,43 @@ class PEQBuilder(object):
         In 2-d one can set df.parameters["extrapolate"] = True, however this
         did not work in 3-d at the time of coding.
         """
+        assert isinstance(m, Field)
+        assert isinstance(Ms, Field)
+
         contract = 1.0 - 1e-15
         expand = 1.0 + 1e-15
         try:
             rtupnew = (rtup[0] * contract, rtup[1], rtup[2])
             gphia_array = np.array(gradphia(*rtupnew))
-            M_array = np.array(m(*rtupnew))
+            M_array = np.array(m.f(*rtupnew))
         except:
             try:
                 rtupnew = (rtup[0] * expand, rtup[1], rtup[2])
                 gphia_array = np.array(gradphia(*rtupnew))
-                M_array = np.array(m(*rtupnew))
+                M_array = np.array(m.f(*rtupnew))
             except:
                 try:
                     rtupnew = (rtup[0], rtup[1] * contract, rtup[2])
                     gphia_array = np.array(gradphia(*rtupnew))
-                    M_array = np.array(m(*rtupnew))
+                    M_array = np.array(m.f(*rtupnew))
                 except:
                     try:
                         rtupnew = (rtup[0], rtup[1] * expand, rtup[2])
                         gphia_array = np.array(gradphia(*rtupnew))
-                        M_array = np.array(m(*rtupnew))
+                        M_array = np.array(m.f(*rtupnew))
                     except:
                         try:
                             rtupnew = (rtup[0], rtup[1], rtup[2] * contract)
                             gphia_array = np.array(gradphia(*rtupnew))
-                            M_array = np.array(m(*rtupnew))
+                            M_array = np.array(m.f(*rtupnew))
                         except:
                             try:
                                 rtupnew = (rtup[0], rtup[1], rtup[2] * expand)
                                 gphia_array = np.array(gradphia(*rtupnew))
-                                M_array = np.array(m(*rtupnew))
+                                M_array = np.array(m.f(*rtupnew))
                             except:
                                 raise Exception("Failure in gcr q vector assembly, \
                                                 point could not be moved inside the mesh \
                                                 please use box method or reprogram \
                                                 solver_gcr_qvector.movepoint")
-        return Ms.f * np.dot(n, -M_array + gphia_array)
+        return Ms.as_constant() * np.dot(n, -M_array + gphia_array)
