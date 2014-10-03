@@ -6,6 +6,7 @@ from energy_base import EnergyBase
 from finmag.util import helpers
 from finmag.util.consts import mu0
 from finmag.native import llg as native_llg
+from finmag.field import Field
 
 logger = logging.getLogger('finmag')
 
@@ -95,6 +96,9 @@ class UniaxialAnisotropy(EnergyBase):
                 real length of 1 unit in the mesh
 
         """
+        assert isinstance(m, Field)
+        assert isinstance(Ms, Field)
+
         # The following two lines are duplicated again in EnergyBase.setup().
         # I wonder why there is the distinction betwen the __init__() and the
         # setup() methods anyway? It feels a bit artifial to me.  -- Max,

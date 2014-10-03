@@ -16,6 +16,7 @@ from finmag.util.consts import mu0
 from finmag.native.llg import compute_bem_fk
 from finmag.util.meshes import nodal_volume
 from finmag.util import helpers, configuration
+from finmag.field import Field
 from fk_demag_pbc import BMatrixPBC
 
 
@@ -135,6 +136,9 @@ class FKDemag(object):
             The length (in m) represented by one unit on the mesh. Default 1.
 
         """
+        assert isinstance(m, Field)
+        assert isinstance(Ms, Field)
+
         self.m = m
         self.Ms = Ms
         self.unit_length = unit_length

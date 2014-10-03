@@ -5,6 +5,7 @@ from aeon import mtimed
 from finmag.util.meshes import nodal_volume
 from finmag.util import helpers
 from finmag.util.consts import mu0
+from finmag.field import Field
 
 logger = logging.getLogger('finmag')
 
@@ -90,6 +91,9 @@ class EnergyBase(object):
 
         """
         ###license_placeholder###
+
+        assert isinstance(m, Field)
+        assert isinstance(Ms, Field)
 
         self.E_integrand = E_integrand
         dofmap = m.mesh_dofmap()
