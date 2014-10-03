@@ -3,7 +3,6 @@ import logging
 import pylab as p
 import numpy as np
 import dolfin as df
-#import progressbar as pb
 from finmag import Simulation as Sim
 from finmag.energies import Exchange, Demag
 from finmag.util.meshes import from_geofile, mesh_volume
@@ -32,14 +31,9 @@ def run_finmag():
     fh = open(os.path.join(MODULE_DIR, "averages.txt"), "w")
     fe = open(os.path.join(MODULE_DIR, "energies.txt"), "w")
 
-    # Progressbar
-    #bar = pb.ProgressBar(maxval=60, \
-    #                widgets=[pb.ETA(), pb.Bar('=', '[', ']'), ' ', pb.Percentage()])
-
     logger.info("Time integration")
     times = np.linspace(0, 3.0e-10, 61)
     for counter, t in enumerate(times):
-        #bar.update(counter)
 
         # Integrate
         sim.run_until(t)
