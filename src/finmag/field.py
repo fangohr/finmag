@@ -98,9 +98,16 @@ class Field(object):
 
         # Int, float, and basestring (str and unicode) type values
         # appropriate only for scalar fields.
-        elif isinstance(value, (int, float, basestring)):
+        elif isinstance(value, (int, float)):
             if isinstance(self.functionspace, df.FunctionSpace):
                 self.f = df.interpolate(df.Constant(value), self.functionspace)
+            else:
+                raise TypeError('{} inappropriate for setting the vector '
+                                'field value.'.format(type(value)))
+        elif isinstance(value, basestring):
+            value = str(value)  # df.Expression does not like unicode strings
+            if isinstance(self.functionspace, df.FunctionSpace):
+                self.f = df.interpolate(df.Expression(value), self.functionspace)
             else:
                 raise TypeError('{} inappropriate for setting the vector '
                                 'field value.'.format(type(value)))
@@ -193,6 +200,42 @@ class Field(object):
             raise NotImplementedError('The normalisation of scalar field '
                                       'values is not implemented.')
 
+    def is_scalar_field(self):
+        """
+        Return `True` if the Field is a scalar field and `False` otherwise.
+        """
+        return isinstance(self.functionspace, df.FunctionSpace)
+
+    def is_constant(self, eps=1e-14):
+        """
+        Return `True` if the Field has a unique constant value across the mesh
+        and `False` otherwise.
+
+        """
+        # Scalar field
+        if self.is_scalar_field():
+            maxval = self.f.vector().max()  # global (!) maximum value
+            minval = self.f.vector().min()  # global (!) minimum value
+            return (maxval - minval) < eps
+        # Vector field
+        else:
+            raise NotImplementedError()
+
+    def as_constant(self, eps=1e-14):
+        """
+        If the Field has a unique constant value across the mesh, return this value.
+        Otherwise a RuntimeError is raised.
+        """
+        if self.is_scalar_field():
+            maxval = self.f.vector().max()  # global (!) maximum value
+            minval = self.f.vector().min()  # global (!) minimum value
+            if (maxval - minval) < eps:
+                return maxval
+            else:
+                raise RuntimeError("Field does not have a unique constant value.")
+        else:
+            raise NotImplementedError()
+
     def average(self, dx=df.dx):
         """
         Return the spatial field average.
@@ -206,11 +249,11 @@ class Field(object):
         volume = df.assemble(df.Constant(1) * dx(self.mesh()))
 
         # Scalar field.
-        if isinstance(self.functionspace, df.FunctionSpace):
+        if self.is_scalar_field():
             return df.assemble(self.f * dx) / volume
 
         # Vector field.
-        elif isinstance(self.functionspace, df.VectorFunctionSpace):
+        else:
             f_average = []
             # Compute the average for every vector component independently.
             for i in xrange(self.value_dim()):
@@ -277,7 +320,7 @@ class Field(object):
         return self.functionspace.dofmap()
 
     def value_dim(self):
-        if isinstance(self.functionspace, df.FunctionSpace):
+        if self.is_scalar_field():
             # Scalar field.
             return 1
         else:

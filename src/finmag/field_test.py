@@ -1,5 +1,6 @@
 import dolfin as df
 import numpy as np
+import pytest
 import os
 from field import Field
 
@@ -138,6 +139,8 @@ class TestField(object):
                 probing_point = field.mesh_dim() * (self.probing_coord,)
                 probed_value = field.probe(probing_point)
                 assert abs(probed_value - expected_value) < self.tol1
+
+    # TODO: Add tests to set scalar/vector field using a string.
 
     def test_set_scalar_field_with_expression(self):
         """Test setting the scalar field with an expression."""
@@ -736,6 +739,41 @@ class TestField(object):
             norm = (
                 values[:, 0] ** 2 + values[:, 1] ** 2 + values[:, 2] ** 2) ** 0.5
             assert np.all(abs(norm - 1) < 0.1)  # Too big error!!!!
+
+    def test_whether_field_is_scalar_field(self):
+        for functionspace in self.scalar_fspaces:
+            field = Field(functionspace, 42)
+            assert field.is_scalar_field()
+
+        for functionspace in self.vector2d_fspaces:
+            field = Field(functionspace, [42, 23])
+            assert not field.is_scalar_field()
+
+        for functionspace in self.vector3d_fspaces:
+            field = Field(functionspace, [42, 23, 12])
+            assert not field.is_scalar_field()
+
+        for functionspace in self.vector4d_fspaces:
+            field = Field(functionspace, [42, 23, 12, 5])
+            assert not field.is_scalar_field()
+
+    def test_convert_scalar_field_to_constant_value(self):
+        """
+        Check that calling 'as_constant()' on a constant scalar field returns
+        the unique field value. Also check that calling 'as_constant()' on a
+        non-constant scalar field raises an exception.
+
+        """
+        for functionspace in self.scalar_fspaces:
+            field = Field(functionspace, 42.0)
+            assert field.is_constant()
+            assert field.as_constant() == 42.0
+
+        for functionspace in self.scalar_fspaces:
+            field = Field(functionspace, 'x[0]')
+            assert not field.is_constant()
+            with pytest.raises(RuntimeError):
+                field.as_constant()
 
     def test_average_scalar_field(self):
         """Test computing the scalar field average."""
