@@ -289,20 +289,20 @@ def assert_number_of_files(files, n):
 
 def times_curl(v, dim):
     """
-    Returns v times curl of v on meshes of dimensions 1-3.
+    Returns v times curl of v on meshes with dimensions 1, 2, or 3.
 
     Arguments:
 
-        - v is a dolfin function on a 1d, 2d or 3d vector function space
-        - dim is the number of dimensions of the mesh
+        - v is a dolfin function on a 1d, 2d or 3d vector function space.
+        - dim is the number of dimensions of the mesh.
 
-    On 3-dimensional meshes, dolfin supports computing the integrand
+    On three-dimensional meshes, dolfin supports computing the integrand
     of the DMI energy using
 
          df.inner(v, df.curl(v))        eq.1
 
     However, the curl operator is not implemented on 1d and 2d meshes.
-    With the expansion of the curl in cartesian coordinates
+    With the expansion of the curl in cartesian coordinates:
 
         curlx = dmzdy - dmydz
         curly = dmxdz - dmzdx
@@ -310,7 +310,10 @@ def times_curl(v, dim):
 
     we can compute eq. 1 with
 
-        (vx * curlx + vy * curly + vz * curlz).
+        (vx * curlx + vy * curly + vz * curlz),
+
+    including only existing derivatives. Derivatives that do not exist
+    are set to 0.
 
     """
     if dim == 3:
@@ -318,13 +321,20 @@ def times_curl(v, dim):
 
     gradv = df.grad(v)
 
+    # Derivatives along x direction exist in both 1d and 2d cases.
     dvxdx = gradv[0, 0]
     dvydx = gradv[1, 0]
     dvzdx = gradv[2, 0]
 
+    # Derivatives along z direction do not exist in 1d and 2d cases,
+    # so they are set to zero.
+    dvxdz = 0
+    dvydz = 0
+    dvzdz = 0
+
+    # Derivatives along y direction exist only in a 2d case.
+    # For 1d case, these derivatives are set to zero.
     if dim == 1:
-        # there are no derivatives in y-direction on a 1d
-        # mesh so we can set them to zero
         dvxdy = 0
         dvydy = 0
         dvzdy = 0
@@ -333,15 +343,12 @@ def times_curl(v, dim):
         dvydy = gradv[1, 1]
         dvzdy = gradv[2, 1]
 
-    # there are no derivatives along z on either 1d or 2d
-    # meshes, so we can set them to zero
-    dvxdz = 0
-    dvydz = 0
-    dvzdz = 0
-
+    # Components of the curl(v).
     curlx = dvzdy - dvydz
     curly = dvxdz - dvzdx
     curlz = dvydx - dvxdy
+
+    # Return v*curl(v).
     return v[0] * curlx + v[1] * curly + v[2] * curlz
 
 

@@ -28,7 +28,7 @@ def test_dmi_uses_unit_length_2dmesh():
         helical_period = (4 * pi * A / D) / unit_length
         k = 2 * pi / helical_period
         # HF 27 April 2014: The next command fails in dolfin 1.3
-        #mesh = df.CircleMesh(df.Point(0, 0), radius, maxh)
+        # mesh = df.CircleMesh(df.Point(0, 0), radius, maxh)
         # The actual shape of the domain shouldn't matter for the test,
         # so let's use a Rectangular mesh which should work the same:
 
@@ -47,7 +47,6 @@ def test_dmi_uses_unit_length_2dmesh():
         H.vector()[:] = dmi.compute_field()
         print H(0.0, 0.0)
 
-        print "Mesh with radius {} and maxh {} and {} vertices.".format(radius, maxh, mesh.num_vertices())
         print "Using unit_length = {}.".format(unit_length)
         print "Helical period {}.".format(helical_period)
         print "Energy {}.".format(dmi.compute_energy())
@@ -63,7 +62,8 @@ def test_dmi_uses_unit_length_2dmesh():
 
 def test_interaction_accepts_name():
     """
-    Check that the interaction accepts a 'name' argument and has a 'name' attribute.
+    Check that the interaction accepts a 'name' argument
+    and has a 'name' attribute.
     """
     dmi = DMI(1)
     assert hasattr(dmi, 'name')
