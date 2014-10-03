@@ -10,10 +10,7 @@ class TestLengthScales(object):
         # Create a 3d mesh.
         self.mesh3d = df.UnitCubeMesh(11, 10, 10)
 
-        # Function space is DG (Discontinuous Galerkin)
-        # with degree=1 unless named explicitly.
-
-        # Create scalar function spaces.
+        # Create a DG scalar function space.
         self.functionspace = df.FunctionSpace(self.mesh3d,
                                               family="DG", degree=1)
 
