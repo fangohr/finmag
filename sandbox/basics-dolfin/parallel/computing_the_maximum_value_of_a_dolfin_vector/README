@@ -1,0 +1,22 @@
+# This is an example how to compute the maximum value of a dolfin vector even in parallel
+# (across multiple processes). The snippet is taken from a comment to the question [1]
+# on the FEniCS Q&A forum. The code there is written in C++ and first assembles the maxmimum
+# value of each local vector (on each process separately) which is then assembled to get
+# the global maximum:
+#
+#    double max_u = u->vector()->max();   // get the local max
+#    max_u = dolfin::MPI::max(MPI_COMM_WORLD, max_u);  // get the global max
+#
+# Interestingly, however, in Python the second step is unncessary because
+#
+#    u.vector().max()
+#
+# will already compute the global maximum! This is illustrated in the python script 'compute_max_of_vector.py'.
+# It is most illustrative to run it in parallel, e.g.:
+#
+#    mpirun -np 10 python compute_max_of_vector.py
+#
+# This illustrates that f.vector() will return the 'local chunk' of the vector for f on each
+# process. However, f.vector().max() returns the same global maximum on each process.
+#
+# [1] http://fenicsproject.org/qa/4202/maximum-field-values-the-right-approach?show=4202#q4202
