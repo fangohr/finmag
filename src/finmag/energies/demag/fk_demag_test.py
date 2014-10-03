@@ -51,7 +51,6 @@ def test_demag_field_for_uniformly_magnetised_sphere():
     print "The values spread {} per axis. Comparing to limit {}.".format(spread, TOL)
     assert np.max(spread) < TOL
 
-"""
 @pytest.mark.slow  # this test needs a minute to complete
 def test_thin_film_argument_saves_time_on_thin_film():
     mesh = box(0, 0, 0, 500, 50, 1, maxh=2.0, directory="meshes")
@@ -81,7 +80,7 @@ def test_thin_film_argument_saves_time_on_thin_film():
     # This was 20% initially, but in order to make tests more robust this
     # value is reduced to 5%
     assert saved_relative > 0.05
-"""
+
 
 def test_demag_energy_for_uniformly_magnetised_sphere():
     Ms = 800e3
