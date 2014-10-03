@@ -15,7 +15,7 @@ class TestLengthScales(object):
 
         # Create scalar function spaces.
         self.functionspace = df.FunctionSpace(self.mesh3d,
-                                            family="DG", degree=1)
+                                              family="DG", degree=1)
 
     def test_exchange_length_constant(self):
         A = Field(self.functionspace, 2/mu0)
@@ -28,7 +28,7 @@ class TestLengthScales(object):
     def test_exchange_length_varying(self):
         A_expression = df.Expression('4/mu0*x[0] + 1e-100', mu0=mu0)
         Ms_expression = df.Expression('2/mu0*x[0] + 1e-100', mu0=mu0)
-        
+
         A = Field(self.functionspace, A_expression)
         Ms = Field(self.functionspace, Ms_expression)
 
@@ -47,7 +47,7 @@ class TestLengthScales(object):
     def test_bloch_parameter_varying(self):
         A_expression = df.Expression('4*x[0] + 1e-100')
         K1_expression = df.Expression('x[0] + 1e-100')
-        
+
         A = Field(self.functionspace, A_expression)
         K1 = Field(self.functionspace, K1_expression)
 
@@ -66,12 +66,10 @@ class TestLengthScales(object):
     def test_helical_period_varying(self):
         A_expression = df.Expression('2/pi*x[0] + 1e-100', pi=np.pi)
         D_expression = df.Expression('8*x[0] + 1e-100')
-        
+
         A = Field(self.functionspace, A_expression)
         D = Field(self.functionspace, D_expression)
 
         helical_period = ls.helical_period(A, D)
 
         assert abs(helical_period.probe((0.5, 0.5, 0.5)) - 1) < 0.05
-        
-        
