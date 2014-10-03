@@ -63,8 +63,9 @@ class Exchange(EnergyBase):
     """
 
     def __init__(self, A, method="box-matrix-petsc", name='Exchange'):
-        self.A_value = A
+        self.A_value = A  # Value of A, later converted to a Field object.
         self.name = name
+
         super(Exchange, self).__init__(method, in_jacobian=True)
 
     @mtimed
