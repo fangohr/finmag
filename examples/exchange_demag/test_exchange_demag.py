@@ -18,7 +18,6 @@ unit_length = 1e-9
 mesh = from_geofile(os.path.join(MODULE_DIR, "bar30_30_100.geo"))
 
 
-@pytest.mark.slow
 def run_finmag():
     """Run the finmag simulation and store data in averages.txt."""
 
