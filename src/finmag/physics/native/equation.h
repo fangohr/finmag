@@ -1,6 +1,7 @@
 #include <memory>
 #include <vector>
 #include <dolfin/la/GenericVector.h>
+#include <dolfin/la/PETScVector.h>
 #include "terms.h"
 
 /* compile_extension_module needs code to be wrapped in the dolfin namespace */
@@ -12,6 +13,7 @@ namespace dolfin { namespace finmag {
                      GenericVector& dmdt);
 
             void solve();
+            void solve_with(PETScVector const& vec_m, PETScVector const& vec_H, PETScVector &vec_dmdt);
            
             std::shared_ptr<GenericVector> get_pinned_nodes() const;
             void set_pinned_nodes(std::shared_ptr<GenericVector> const& value);
