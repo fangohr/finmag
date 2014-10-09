@@ -113,6 +113,18 @@ def test_fnormalise():
     expected = a5 / np.sqrt(2)
     assert np.allclose(fnormalise(a5), expected, rtol=TOLERANCE)
 
+    # test that zero vectors in the input result in NaN if 'ignore_zero_vectors=False'
+    a6 = np.array([2, 0, 0, 0, 0, 0])
+    a6_normalised = fnormalise(a6)
+    assert a6_normalised.shape == (6,)
+    assert np.allclose(a6_normalised[[0, 2, 4]], [1, 0, 0])
+    assert np.isnan(a6_normalised[[1, 3, 5]]).all()
+
+    # test that zero vectors in the input result in NaN if 'ignore_zero_vectors=False'
+    a7 = np.array([3, 0, 4, 0, 0, 0])
+    expected = np.array([0.6, 0, 0.8, 0, 0, 0])
+    assert np.allclose(fnormalise(a7, ignore_zero_vectors=True), expected, rtol=TOLERANCE)
+
 
 def test_vector_valued_function():
     """

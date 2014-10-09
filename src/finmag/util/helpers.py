@@ -417,18 +417,26 @@ def crossprod(v, w):
     return np.cross(a, b, axisa=0, axisb=0, axisc=0).reshape(-1)
 
 
-def fnormalise(arr):
+def fnormalise(arr, ignore_zero_vectors=False):
     """
     Returns a normalised copy of vectors in arr.
 
     Expects arr to be a numpy.ndarray in the form that dolfin
     provides: [x0, ..., xn, y0, ..., yn, z0, ..., zn].
 
+    If `ignore_zero_vectors` is True (default: False) then any
+    3-vector of norm zero will be left alone. Thus the resulting array
+    will still have zero vectors in the same places. Otherwise the
+    entries in the resulting array will be filled with NaN.
+
     """
     a = arr.astype(np.float64)  # this copies
 
     a = a.reshape((3, -1))
-    a /= np.sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2])
+    a_norm = np.sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2])
+    if ignore_zero_vectors:
+        a_norm[np.where(a_norm == 0)] = 1.0
+    a /= a_norm
     a = a.ravel()
     return a
 
