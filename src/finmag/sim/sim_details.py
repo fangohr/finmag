@@ -10,8 +10,8 @@ from finmag.util.meshes import mesh_info as mesh_information
 def _get_length_scales(sim):
     lengths = {}
     if (sim.has_interaction('Exchange')):
-        A = sim.get_interaction('Exchange').A_av
-        Ms = sim.Ms
+        A = sim.get_interaction('Exchange').A.as_constant()
+        Ms = sim.Ms.as_constant()
         l_ex = exchange_length(A, Ms)
         lengths['Exchange length'] = l_ex
 
